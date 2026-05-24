@@ -13,6 +13,8 @@ function buildValidResult(overrides = {}) {
         recommendation_type: "Best Overall",
         name: "Example Product A",
         category: "Example category",
+        product_page_url: "https://example.com/product-a",
+        product_image_url: "https://example.com/product-a.jpg",
         why_recommended:
           "This fake fixture exists only to prove the UI contract is strict.",
         pros: ["Clear strengths are present."],
@@ -74,6 +76,38 @@ describe("recommendation result schema", () => {
     });
 
     const result = recommendationResultSchema.safeParse(badResult);
+
+    assert.equal(result.success, false);
+  });
+
+  it("accepts empty product links and images when they cannot be verified", () => {
+    const result = recommendationResultSchema.safeParse(
+      buildValidResult({
+        recommendations: [
+          {
+            ...buildValidResult().recommendations[0],
+            product_page_url: "",
+            product_image_url: "",
+          },
+        ],
+      }),
+    );
+
+    assert.equal(result.success, true);
+  });
+
+  it("rejects invalid product links and images", () => {
+    const result = recommendationResultSchema.safeParse(
+      buildValidResult({
+        recommendations: [
+          {
+            ...buildValidResult().recommendations[0],
+            product_page_url: "not a product url",
+            product_image_url: "not an image url",
+          },
+        ],
+      }),
+    );
 
     assert.equal(result.success, false);
   });

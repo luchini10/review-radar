@@ -64,7 +64,7 @@ Do not add quotes around the key. Do not use `NEXT_PUBLIC_` for the key. The Ope
 
 Important: do not run `Copy-Item .env.local.example .env.local` again after adding your real key. That command can replace your real key with the blank example file.
 
-Optional: you can leave `OPENAI_MODEL=` blank. The app defaults to `gpt-4.1-mini`, which works with the web-search flow used by this MVP.
+Optional: you can leave `OPENAI_MODEL=` blank. The app defaults to `gpt-4.1`, which gives the recommendation engine more reliable structured research results.
 
 ## Run The App Locally
 
@@ -203,7 +203,7 @@ Check your OpenAI billing and usage limits. After funding an account or changing
 
 ### Selected model is not available
 
-Leave `OPENAI_MODEL=` blank in `.env.local` unless you know your account can use a specific model. Some newer models require organization verification, so the default is set to `gpt-4.1-mini`.
+Leave `OPENAI_MODEL=` blank in `.env.local` unless you know your account can use a specific model. The default is set to `gpt-4.1` because the app needs stronger structured product research than a basic chatbot answer.
 
 ### Search returns weak-evidence or no-results message
 

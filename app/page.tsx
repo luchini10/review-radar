@@ -20,7 +20,7 @@ const initialForm: SearchRequest = {
   dealBreaker: "",
 };
 
-const FRONTEND_RESEARCH_TIMEOUT_MS = 45000;
+const FRONTEND_RESEARCH_TIMEOUT_MS = 90000;
 
 export default function Home() {
   const [form, setForm] = useState<SearchRequest>(initialForm);

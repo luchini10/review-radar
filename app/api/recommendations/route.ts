@@ -5,10 +5,13 @@ import {
   getSearchValidationError,
   USER_ERROR_MESSAGES,
 } from "@/lib/errorMessages";
+import { collectReachableCitationUrls } from "@/lib/citationUrlVerification";
 import {
   filterResultToVerifiedCitations,
   getRecommendationResultIssue,
 } from "@/lib/recommendationResultValidation";
+import { normalizeResearchResult } from "@/lib/normalizeResearchResult";
+import { enrichProductAssets } from "@/lib/productAssets";
 import {
   recommendationResultJsonSchema,
   recommendationResultSchema,
@@ -19,7 +22,7 @@ import type { RecommendationApiRequest } from "@/types/review-radar";
 
 export const runtime = "nodejs";
 
-const SERVER_RESEARCH_TIMEOUT_MS = 45000;
+const SERVER_RESEARCH_TIMEOUT_MS = 90000;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -130,15 +133,15 @@ export async function POST(request: Request) {
 
   try {
     const client = await createOpenAIClient(apiKey);
-    const model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
+    const model = process.env.OPENAI_MODEL || "gpt-4.1";
 
     const response = await client.responses.create({
       model,
-      max_output_tokens: 12000,
+      max_output_tokens: 16000,
       tools: [
         {
           type: "web_search",
-          search_context_size: "low",
+          search_context_size: "high",
         },
       ],
       tool_choice: "required",
@@ -185,7 +188,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = recommendationResultSchema.safeParse(parsed);
+    const result = recommendationResultSchema.safeParse(
+      normalizeResearchResult(parsed),
+    );
 
     if (!result.success) {
       return NextResponse.json(
@@ -196,7 +201,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const verifiedUrls = collectVerifiedSourceUrls(response);
+    let verifiedUrls = collectVerifiedSourceUrls(response);
+
+    if (verifiedUrls.size === 0) {
+      verifiedUrls = await collectReachableCitationUrls(result.data);
+    }
+
     const verifiedResult = filterResultToVerifiedCitations(
       result.data,
       verifiedUrls,
@@ -215,7 +225,9 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ result: verifiedResult });
+    const enrichedResult = await enrichProductAssets(verifiedResult);
+
+    return NextResponse.json({ result: enrichedResult });
   } catch (error) {
     if (error instanceof MissingOpenAISdkError) {
       return NextResponse.json(

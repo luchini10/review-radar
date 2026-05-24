@@ -8,6 +8,42 @@ type ResultsSummaryProps = {
   result: RecommendationResult | null;
 };
 
+const recommendationOrder = [
+  "Best Overall",
+  "Best Budget",
+  "Best Value",
+  "Best Premium",
+  "Best Alternative",
+  "Honorable Mention",
+] as const;
+
+function getRecommendationRank(recommendationType: string) {
+  const index = recommendationOrder.findIndex((type) => type === recommendationType);
+  return index === -1 ? recommendationOrder.length : index;
+}
+
+function getSortedRecommendations(result: RecommendationResult) {
+  return [...result.recommendations].sort(
+    (first, second) =>
+      getRecommendationRank(first.recommendation_type) -
+      getRecommendationRank(second.recommendation_type),
+  );
+}
+
+function getPrimaryRecommendations(result: RecommendationResult) {
+  return getSortedRecommendations(result).filter(
+    (recommendation) =>
+      recommendation.recommendation_type !== "Honorable Mention",
+  );
+}
+
+function getHonorableMentions(result: RecommendationResult) {
+  return getSortedRecommendations(result).filter(
+    (recommendation) =>
+      recommendation.recommendation_type === "Honorable Mention",
+  );
+}
+
 function DetailList({ items }: { items: string[] }) {
   if (items.length === 0) {
     return <p className="text-sm leading-6 text-slate-400">None listed.</p>;
@@ -30,6 +66,11 @@ export function ResultsSummary({
   isLoading,
   result,
 }: ResultsSummaryProps) {
+  const primaryRecommendations = result
+    ? getPrimaryRecommendations(result)
+    : [];
+  const honorableMentions = result ? getHonorableMentions(result) : [];
+
   return (
     <aside
       aria-live="polite"
@@ -47,30 +88,30 @@ export function ResultsSummary({
 
       {!isLoading && hasSearched && result ? (
         <div className="mt-6 grid gap-5">
-          <VerdictCard
-            title="Search summary"
-            verdict={result.search_summary}
-          />
-
-          {result.assumptions.length > 0 ? (
-            <div className="rounded-xl border border-white/10 bg-slate-900 p-4">
-              <p className="text-sm font-medium uppercase tracking-[0.14em] text-cyan-300">
-                Assumptions
-              </p>
-              <div className="mt-3">
-                <DetailList items={result.assumptions} />
-              </div>
-            </div>
-          ) : null}
-
           {result.recommendations.length > 0 ? (
             <div className="grid gap-5">
-              {result.recommendations.map((recommendation) => (
+              {primaryRecommendations.map((recommendation) => (
                 <ProductCard
                   key={`${recommendation.recommendation_type}-${recommendation.name}`}
                   product={recommendation}
                 />
               ))}
+
+              {honorableMentions.length > 0 ? (
+                <section className="grid gap-4 pt-2">
+                  <p className="text-sm font-medium uppercase tracking-[0.14em] text-cyan-300">
+                    Honorable mentions
+                  </p>
+                  <div className="grid gap-5">
+                    {honorableMentions.map((recommendation) => (
+                      <ProductCard
+                        key={`${recommendation.recommendation_type}-${recommendation.name}`}
+                        product={recommendation}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ) : null}
             </div>
           ) : (
             <div className="rounded-xl border border-amber-300/30 bg-amber-300/10 p-4 text-sm leading-6 text-amber-50">

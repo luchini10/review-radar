@@ -22,11 +22,11 @@ export type RecommendationApiResponse =
 
 export type RecommendationType =
   | "Best Overall"
-  | "Best Value"
   | "Best Budget"
+  | "Best Value"
   | "Best Premium"
-  | "Best for User Need"
-  | "Avoid";
+  | "Best Alternative"
+  | "Honorable Mention";
 
 export type SourceConsensus = "Strong" | "Mixed" | "Weak" | "Niche";
 
@@ -40,6 +40,8 @@ export type ProductRecommendation = {
   recommendation_type: RecommendationType;
   name: string;
   category: string;
+  product_page_url: string;
+  product_image_url: string;
   why_recommended: string;
   pros: string[];
   cons: string[];

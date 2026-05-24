@@ -2,11 +2,11 @@ import { z } from "zod";
 
 export const recommendationTypeSchema = z.enum([
   "Best Overall",
-  "Best Value",
   "Best Budget",
+  "Best Value",
   "Best Premium",
-  "Best for User Need",
-  "Avoid",
+  "Best Alternative",
+  "Honorable Mention",
 ]);
 
 export const sourceConsensusSchema = z.enum([
@@ -24,11 +24,17 @@ export const citationSchema = z
   })
   .strict();
 
+const optionalUrlSchema = z
+  .string()
+  .refine((value) => value === "" || z.string().url().safeParse(value).success);
+
 export const productRecommendationSchema = z
   .object({
     recommendation_type: recommendationTypeSchema,
     name: z.string().min(1),
     category: z.string().min(1),
+    product_page_url: optionalUrlSchema,
+    product_image_url: optionalUrlSchema,
     why_recommended: z.string().min(1),
     pros: z.array(z.string().min(1)),
     cons: z.array(z.string().min(1)),
@@ -47,7 +53,7 @@ export const recommendationResultSchema = z
   .object({
     search_summary: z.string().min(1),
     assumptions: z.array(z.string().min(1)),
-    recommendations: z.array(productRecommendationSchema).max(6),
+    recommendations: z.array(productRecommendationSchema).max(8),
     what_to_avoid: z.array(z.string().min(1)),
     final_buying_advice: z.string().min(1),
   })
@@ -56,9 +62,9 @@ export const recommendationResultSchema = z
 const citationJsonSchema = {
   type: "object",
   properties: {
-    title: { type: "string" },
-    url: { type: "string" },
-    what_it_supports: { type: "string" },
+    title: { type: "string", minLength: 1 },
+    url: { type: "string", minLength: 1, pattern: "^https?://" },
+    what_it_supports: { type: "string", minLength: 1 },
   },
   required: ["title", "url", "what_it_supports"],
   additionalProperties: false,
@@ -71,15 +77,17 @@ const productRecommendationJsonSchema = {
       type: "string",
       enum: [
         "Best Overall",
-        "Best Value",
         "Best Budget",
+        "Best Value",
         "Best Premium",
-        "Best for User Need",
-        "Avoid",
+        "Best Alternative",
+        "Honorable Mention",
       ],
     },
     name: { type: "string" },
     category: { type: "string" },
+    product_page_url: { type: "string" },
+    product_image_url: { type: "string" },
     why_recommended: { type: "string" },
     pros: {
       type: "array",
@@ -118,6 +126,8 @@ const productRecommendationJsonSchema = {
     "recommendation_type",
     "name",
     "category",
+    "product_page_url",
+    "product_image_url",
     "why_recommended",
     "pros",
     "cons",
@@ -143,7 +153,7 @@ export const recommendationResultJsonSchema = {
     },
     recommendations: {
       type: "array",
-      maxItems: 6,
+      maxItems: 8,
       items: productRecommendationJsonSchema,
     },
     what_to_avoid: {
