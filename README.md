@@ -29,7 +29,7 @@ Both commands should print version numbers.
 Open PowerShell in this project folder:
 
 ```powershell
-cd "C:\Users\tluch\Documents\Codex\2026-05-18\plan-i-want-to-build-an"
+cd "C:\Users\tluch\Documents\GitHub\review-radar-fixed"
 ```
 
 Install the project packages:
@@ -48,10 +48,10 @@ If PowerShell says running scripts are disabled, use the Windows npm command dir
 
 The app needs an OpenAI API key to run live product research.
 
-Create a local environment file:
+Create a local environment file only if `.env.local` does not already exist:
 
 ```powershell
-Copy-Item .env.local.example .env.local
+if (!(Test-Path .env.local)) { Copy-Item .env.local.example .env.local }
 ```
 
 Open `.env.local` in VS Code or Notepad and put your key after `OPENAI_API_KEY=`:
@@ -62,7 +62,9 @@ OPENAI_API_KEY=your_api_key_here
 
 Do not add quotes around the key. Do not use `NEXT_PUBLIC_` for the key. The OpenAI key must stay server-side.
 
-Optional: you can leave `OPENAI_MODEL=` blank. The app has a default model in code.
+Important: do not run `Copy-Item .env.local.example .env.local` again after adding your real key. That command can replace your real key with the blank example file.
+
+Optional: you can leave `OPENAI_MODEL=` blank. The app defaults to `gpt-4.1-mini`, which works with the web-search flow used by this MVP.
 
 ## Run The App Locally
 
@@ -199,9 +201,17 @@ After editing `.env.local`, stop and restart the dev server.
 
 Check your OpenAI billing and usage limits. After funding an account or changing limits, it may take a little time before requests work normally.
 
+### Selected model is not available
+
+Leave `OPENAI_MODEL=` blank in `.env.local` unless you know your account can use a specific model. Some newer models require organization verification, so the default is set to `gpt-4.1-mini`.
+
 ### Search returns weak-evidence or no-results message
 
 Try a more specific product category or add a use case. Some niche products may not have enough reliable public sources.
+
+### Something went wrong while researching
+
+Restart the dev server and try again. The app uses structured JSON output, so if a response is interrupted or the OpenAI API has a temporary issue, the app rejects the result instead of showing broken product cards.
 
 ### Dependencies seem broken
 

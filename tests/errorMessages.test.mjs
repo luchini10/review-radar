@@ -42,6 +42,13 @@ describe("OpenAI failure messages", () => {
     );
   });
 
+  it("returns a clear message when the selected model is unavailable", () => {
+    assert.equal(
+      getSafeOpenAIErrorMessage({ code: "model_not_found", status: 404 }),
+      USER_ERROR_MESSAGES.modelUnavailable,
+    );
+  });
+
   it("returns a simple message for a web or network failure", () => {
     assert.equal(
       getSafeOpenAIErrorMessage({ code: "ETIMEDOUT" }),

@@ -5,7 +5,10 @@ import {
   getSearchValidationError,
   USER_ERROR_MESSAGES,
 } from "@/lib/errorMessages";
-import { getRecommendationResultIssue } from "@/lib/recommendationResultValidation";
+import {
+  filterResultToVerifiedCitations,
+  getRecommendationResultIssue,
+} from "@/lib/recommendationResultValidation";
 import {
   recommendationResultJsonSchema,
   recommendationResultSchema,
@@ -127,11 +130,11 @@ export async function POST(request: Request) {
 
   try {
     const client = await createOpenAIClient(apiKey);
-    const model = process.env.OPENAI_MODEL || "gpt-5-mini";
+    const model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
 
     const response = await client.responses.create({
       model,
-      reasoning: { effort: "low" },
+      max_output_tokens: 12000,
       tools: [
         {
           type: "web_search",
@@ -194,7 +197,11 @@ export async function POST(request: Request) {
     }
 
     const verifiedUrls = collectVerifiedSourceUrls(response);
-    const resultIssue = getRecommendationResultIssue(result.data, verifiedUrls);
+    const verifiedResult = filterResultToVerifiedCitations(
+      result.data,
+      verifiedUrls,
+    );
+    const resultIssue = getRecommendationResultIssue(verifiedResult, verifiedUrls);
 
     if (resultIssue) {
       return NextResponse.json(
@@ -208,7 +215,7 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ result: result.data });
+    return NextResponse.json({ result: verifiedResult });
   } catch (error) {
     if (error instanceof MissingOpenAISdkError) {
       return NextResponse.json(

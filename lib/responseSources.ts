@@ -10,6 +10,11 @@ function normalizeUrl(url: string) {
   try {
     const parsed = new URL(url);
     parsed.hash = "";
+    for (const key of Array.from(parsed.searchParams.keys())) {
+      if (key.toLowerCase().startsWith("utm_")) {
+        parsed.searchParams.delete(key);
+      }
+    }
     return parsed.toString().replace(/\/$/, "");
   } catch {
     return url.trim().replace(/\/$/, "");

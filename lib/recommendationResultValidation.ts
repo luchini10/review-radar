@@ -20,14 +20,118 @@ function normalizeUrl(url: string) {
   try {
     const parsed = new URL(url);
     parsed.hash = "";
+    for (const key of Array.from(parsed.searchParams.keys())) {
+      if (key.toLowerCase().startsWith("utm_")) {
+        parsed.searchParams.delete(key);
+      }
+    }
     return parsed.toString().replace(/\/$/, "");
   } catch {
     return url.trim().replace(/\/$/, "");
   }
 }
 
+function normalizeHostname(url: string) {
+  try {
+    return new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+function getVerifiedCitationUrl(url: string, verifiedUrls: Set<string>) {
+  const normalizedUrl = normalizeUrl(url);
+
+  if (verifiedUrls.has(normalizedUrl)) {
+    return normalizedUrl;
+  }
+
+  for (const verifiedUrl of verifiedUrls) {
+    const normalizedVerifiedUrl = normalizeUrl(verifiedUrl);
+
+    if (normalizedVerifiedUrl === normalizedUrl) {
+      return normalizedVerifiedUrl;
+    }
+  }
+
+  const citationHost = normalizeHostname(normalizedUrl);
+
+  if (!citationHost) {
+    return null;
+  }
+
+  for (const verifiedUrl of verifiedUrls) {
+    const normalizedVerifiedUrl = normalizeUrl(verifiedUrl);
+
+    if (normalizeHostname(normalizedVerifiedUrl) === citationHost) {
+      return normalizedVerifiedUrl;
+    }
+  }
+
+  return null;
+}
+
 function citationUrlIsVerified(url: string, verifiedUrls: Set<string>) {
-  return verifiedUrls.has(normalizeUrl(url));
+  return getVerifiedCitationUrl(url, verifiedUrls) !== null;
+}
+
+function alignSourceConsensus(sourceConsensus: string, confidenceScore: number) {
+  if (sourceConsensus === "Strong" && confidenceScore < 90) {
+    return confidenceScore >= 75 ? "Mixed" : "Weak";
+  }
+
+  if (sourceConsensus === "Weak" && confidenceScore >= 75) {
+    return "Mixed";
+  }
+
+  if (sourceConsensus === "Niche" && confidenceScore >= 90) {
+    return "Mixed";
+  }
+
+  return sourceConsensus;
+}
+
+export function filterResultToVerifiedCitations<T extends RecommendationResultLike>(
+  result: T,
+  verifiedUrls: Set<string>,
+): T {
+  return {
+    ...result,
+    recommendations: result.recommendations
+      .map((recommendation) => {
+        const citations = recommendation.citations.flatMap((citation) => {
+          const verifiedUrl = getVerifiedCitationUrl(citation.url, verifiedUrls);
+
+          if (!verifiedUrl) {
+            return [];
+          }
+
+          if (normalizeUrl(citation.url) === verifiedUrl) {
+            return [{ ...citation, url: verifiedUrl }];
+          }
+
+          return [
+            {
+              ...citation,
+              title: `Verified source: ${normalizeHostname(verifiedUrl)}`,
+              url: verifiedUrl,
+              what_it_supports:
+                "Verified source from the web research used for this recommendation.",
+            },
+          ];
+        });
+
+        return {
+          ...recommendation,
+          citations,
+          source_consensus: alignSourceConsensus(
+            recommendation.source_consensus,
+            recommendation.confidence_score,
+          ),
+        };
+      })
+      .filter((recommendation) => recommendation.citations.length > 0),
+  };
 }
 
 export function getRecommendationResultIssue(

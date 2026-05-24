@@ -2,6 +2,8 @@ export const USER_ERROR_MESSAGES = {
   badStructuredOutput: "Something went wrong while researching. Try again.",
   emptySearch: "Please enter a product category.",
   missingApiKey: "The recommendation engine is not configured yet.",
+  modelUnavailable:
+    "The selected OpenAI model is not available for this account.",
   networkError: "Something went wrong while researching. Try again.",
   noReliableEvidence: "I could not find enough reliable evidence for that search.",
   openAiFailure: "Something went wrong while researching. Try again.",
@@ -67,6 +69,10 @@ export function getSafeOpenAIErrorMessage(error: unknown) {
 
   if (status === 401) {
     return USER_ERROR_MESSAGES.missingApiKey;
+  }
+
+  if (code === "model_not_found") {
+    return USER_ERROR_MESSAGES.modelUnavailable;
   }
 
   if (status === 403) {
