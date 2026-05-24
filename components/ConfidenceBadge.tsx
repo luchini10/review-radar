@@ -4,14 +4,14 @@ type ConfidenceBadgeProps = {
 
 function getConfidenceStyle(score: number) {
   if (score >= 75) {
-    return "border-emerald-300/30 bg-emerald-300/10 text-emerald-100";
+    return "border-emerald-200 bg-emerald-50 text-emerald-700";
   }
 
   if (score >= 45) {
-    return "border-cyan-300/30 bg-cyan-300/10 text-cyan-100";
+    return "border-blue-200 bg-blue-50 text-blue-700";
   }
 
-  return "border-amber-300/30 bg-amber-300/10 text-amber-100";
+  return "border-amber-200 bg-amber-50 text-amber-700";
 }
 
 export function ConfidenceBadge({ score }: ConfidenceBadgeProps) {

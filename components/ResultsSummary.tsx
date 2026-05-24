@@ -1,4 +1,5 @@
 import type { RecommendationResult } from "@/types/review-radar";
+import { ClipboardCheck, LoaderCircle, TriangleAlert } from "lucide-react";
 import { ProductCard } from "./ProductCard";
 import { VerdictCard } from "./VerdictCard";
 
@@ -46,14 +47,14 @@ function getHonorableMentions(result: RecommendationResult) {
 
 function DetailList({ items }: { items: string[] }) {
   if (items.length === 0) {
-    return <p className="text-sm leading-6 text-slate-400">None listed.</p>;
+    return <p className="text-sm leading-6 text-slate-500">None listed.</p>;
   }
 
   return (
-    <ul className="grid gap-2 text-sm leading-6 text-slate-300">
+    <ul className="grid gap-2 text-sm leading-6 text-slate-600">
       {items.map((item) => (
         <li className="flex gap-2" key={item}>
-          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300" />
+          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
           <span>{item}</span>
         </li>
       ))}
@@ -74,15 +75,31 @@ export function ResultsSummary({
   return (
     <aside
       aria-live="polite"
-      className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"
+      className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
     >
-      <p className="text-sm font-medium uppercase tracking-[0.18em] text-cyan-300">
-        Results
-      </p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-600">
+            Results
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+            Buying verdict
+          </h2>
+        </div>
+        <span className="hidden rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700 sm:inline-flex">
+          Evidence backed
+        </span>
+      </div>
 
       {isLoading ? (
-        <div className="mt-6 rounded-xl border border-cyan-300/20 bg-cyan-300/10 p-4 text-sm leading-6 text-cyan-50">
-          Researching current public sources. This can take a little while.
+        <div className="mt-6 flex items-start gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm leading-6 text-blue-900">
+          <LoaderCircle
+            aria-hidden="true"
+            className="mt-1 h-5 w-5 shrink-0 animate-spin text-blue-600"
+          />
+          <span>
+            Researching current public sources. This can take a little while.
+          </span>
         </div>
       ) : null}
 
@@ -114,17 +131,27 @@ export function ResultsSummary({
               ) : null}
             </div>
           ) : (
-            <div className="rounded-xl border border-amber-300/30 bg-amber-300/10 p-4 text-sm leading-6 text-amber-50">
+            <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+              <TriangleAlert
+                aria-hidden="true"
+                className="mt-1 h-5 w-5 shrink-0 text-amber-600"
+              />
               No product recommendations were returned because the evidence was
               limited or the result did not include validated citations.
             </div>
           )}
 
           {result.what_to_avoid.length > 0 ? (
-            <div className="rounded-xl border border-white/10 bg-slate-900 p-4">
-              <p className="text-sm font-medium uppercase tracking-[0.14em] text-cyan-300">
-                What to avoid
-              </p>
+            <div className="rounded-lg border border-red-100 bg-red-50 p-5">
+              <div className="flex items-center gap-2">
+                <TriangleAlert
+                  aria-hidden="true"
+                  className="h-5 w-5 text-red-600"
+                />
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-red-700">
+                  What to avoid
+                </p>
+              </div>
               <div className="mt-3">
                 <DetailList items={result.what_to_avoid} />
               </div>
@@ -139,15 +166,19 @@ export function ResultsSummary({
       ) : null}
 
       {!isLoading && hasSearched && !result ? (
-        <div className="mt-6 rounded-xl border border-slate-500/30 bg-slate-900 p-4 text-sm leading-6 text-slate-300">
+        <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
           No recommendations yet. Enter a product category and run a research
           request.
         </div>
       ) : null}
 
       {!isLoading && !hasSearched ? (
-        <div className="mt-6 rounded-xl border border-slate-500/30 bg-slate-900 p-4 text-sm leading-6 text-slate-300">
-          Empty results. Enter a product category to prepare a search.
+        <div className="mt-6 flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+          <ClipboardCheck
+            aria-hidden="true"
+            className="mt-1 h-5 w-5 shrink-0 text-blue-600"
+          />
+          <span>Empty results. Enter a product category to prepare a search.</span>
         </div>
       ) : null}
     </aside>

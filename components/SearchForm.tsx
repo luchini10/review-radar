@@ -1,4 +1,11 @@
 import type { FormEvent } from "react";
+import {
+  DollarSign,
+  Search,
+  Sparkles,
+  Target,
+  TriangleAlert,
+} from "lucide-react";
 import type { SearchRequest } from "@/types/review-radar";
 
 type SearchFormProps = {
@@ -16,78 +23,95 @@ export function SearchForm({
   onSubmit,
   value,
 }: SearchFormProps) {
+  const inputClass =
+    "min-h-14 rounded-lg border border-slate-200 bg-white px-4 text-base text-slate-950 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100";
+
   return (
     <form
-      className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 shadow-2xl shadow-black/20"
+      className="rounded-lg border border-slate-200 bg-white p-5 shadow-xl shadow-blue-950/10"
       onSubmit={onSubmit}
     >
-      <div className="grid gap-5">
+      <div className="grid gap-4 lg:grid-cols-4">
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-slate-200">
+          <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
+            <Search aria-hidden="true" className="h-4 w-4 text-blue-600" />
             Product category
           </span>
           <input
-            className="min-h-12 rounded-xl border border-white/10 bg-slate-900 px-4 text-base text-white outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-300/10"
+            className={inputClass}
             name="category"
             onChange={(event) => onChange("category", event.target.value)}
-            placeholder="Vacuum, headphones, air fryer"
+            placeholder="Example: cordless vacuum"
             type="text"
             value={value.category}
           />
         </label>
 
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-slate-200">Budget</span>
+          <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
+            <DollarSign aria-hidden="true" className="h-4 w-4 text-blue-600" />
+            Budget
+          </span>
           <input
-            className="min-h-12 rounded-xl border border-white/10 bg-slate-900 px-4 text-base text-white outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-300/10"
+            className={inputClass}
             name="budget"
             onChange={(event) => onChange("budget", event.target.value)}
-            placeholder="Under $300, best value, no limit"
+            placeholder="Example: under $500"
             type="text"
             value={value.budget}
           />
         </label>
 
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-slate-200">Use case</span>
+          <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
+            <Target aria-hidden="true" className="h-4 w-4 text-blue-600" />
+            Use case
+          </span>
           <input
-            className="min-h-12 rounded-xl border border-white/10 bg-slate-900 px-4 text-base text-white outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-300/10"
+            className={inputClass}
             name="useCase"
             onChange={(event) => onChange("useCase", event.target.value)}
-            placeholder="Pet hair, small apartment, daily commuting"
+            placeholder="Pet hair, hardwood floors"
             type="text"
             value={value.useCase}
           />
         </label>
 
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-slate-200">
-            Deal-breaker
+          <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
+            <TriangleAlert
+              aria-hidden="true"
+              className="h-4 w-4 text-blue-600"
+            />
+            Deal breakers
           </span>
           <input
-            className="min-h-12 rounded-xl border border-white/10 bg-slate-900 px-4 text-base text-white outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-300/10"
+            className={inputClass}
             name="dealBreaker"
             onChange={(event) => onChange("dealBreaker", event.target.value)}
-            placeholder="Too loud, weak battery, hard to clean"
+            placeholder="Bad battery life, loud"
             type="text"
             value={value.dealBreaker}
           />
         </label>
+      </div>
 
-        {error ? (
-          <div
-            className="rounded-xl border border-red-300/30 bg-red-400/10 px-4 py-3 text-sm text-red-100"
-            role="alert"
-          >
-            {error}
-          </div>
-        ) : null}
+      {error ? (
+        <div
+          className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+          role="alert"
+        >
+          {error}
+        </div>
+      ) : null}
 
+      <div className="mt-4 flex justify-center">
         <button
-          className="min-h-12 rounded-xl bg-cyan-300 px-5 text-base font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-300"
+          className="inline-flex min-h-12 w-full max-w-sm items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 text-base font-semibold text-white shadow-lg shadow-blue-600/25 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none"
           disabled={isLoading}
           type="submit"
         >
+          <Sparkles aria-hidden="true" className="h-5 w-5" />
           {isLoading ? "Preparing search..." : "Find Recommendations"}
         </button>
       </div>
