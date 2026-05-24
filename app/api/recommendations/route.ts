@@ -133,7 +133,7 @@ export async function POST(request: Request) {
 
   try {
     const client = await createOpenAIClient(apiKey);
-    const model = process.env.OPENAI_MODEL || "gpt-4.1";
+    const model = process.env.OPENAI_MODEL || "gpt-5.4-mini";
 
     const response = await client.responses.create({
       model,
