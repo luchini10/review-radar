@@ -6,12 +6,16 @@ import {
   Target,
   TriangleAlert,
 } from "lucide-react";
+import SmartFeatures from "@/components/SmartFeatures";
 import type { SearchRequest } from "@/types/review-radar";
 
 type SearchFormProps = {
   error: string;
   isLoading: boolean;
-  onChange: (field: keyof SearchRequest, value: string) => void;
+  onChange: <K extends keyof SearchRequest>(
+    field: K,
+    value: SearchRequest[K],
+  ) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   value: SearchRequest;
 };
@@ -32,20 +36,27 @@ export function SearchForm({
       onSubmit={onSubmit}
     >
       <div className="grid gap-4 lg:grid-cols-4">
-        <label className="grid gap-2">
-          <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
-            <Search aria-hidden="true" className="h-4 w-4 text-blue-600" />
-            Product category
-          </span>
-          <input
-            className={inputClass}
-            name="category"
-            onChange={(event) => onChange("category", event.target.value)}
-            placeholder="Example: cordless vacuum"
-            type="text"
-            value={value.category}
+        <div className="grid gap-2">
+          <label className="grid gap-2">
+            <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
+              <Search aria-hidden="true" className="h-4 w-4 text-blue-600" />
+              Product category
+            </span>
+            <input
+              className={inputClass}
+              name="category"
+              onChange={(event) => onChange("category", event.target.value)}
+              placeholder="Example: cordless vacuum"
+              type="text"
+              value={value.category}
+            />
+          </label>
+          <SmartFeatures
+            productCategory={value.category}
+            selectedFeatures={value.selectedFeatures}
+            onChange={(features) => onChange("selectedFeatures", features)}
           />
-        </label>
+        </div>
 
         <label className="grid gap-2">
           <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-800">

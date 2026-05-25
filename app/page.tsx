@@ -29,6 +29,7 @@ const initialForm: SearchRequest = {
   budget: "",
   useCase: "",
   dealBreaker: "",
+  selectedFeatures: [],
 };
 
 const FRONTEND_RESEARCH_TIMEOUT_MS = 90000;
@@ -40,6 +41,7 @@ const quickSearches = [
       budget: "",
       category: "cordless vacuum",
       dealBreaker: "weak suction, poor battery life",
+      selectedFeatures: [],
       useCase: "pet hair",
     },
   },
@@ -49,6 +51,7 @@ const quickSearches = [
       budget: "under $250",
       category: "27 inch 4K monitor",
       dealBreaker: "bad color accuracy, poor warranty",
+      selectedFeatures: [],
       useCase: "home office",
     },
   },
@@ -58,6 +61,7 @@ const quickSearches = [
       budget: "",
       category: "air purifier",
       dealBreaker: "loud fan, expensive filters",
+      selectedFeatures: [],
       useCase: "dog hair and odors",
     },
   },
@@ -67,6 +71,7 @@ const quickSearches = [
       budget: "under $200",
       category: "coffee maker",
       dealBreaker: "hard to clean, weak coffee",
+      selectedFeatures: [],
       useCase: "daily home coffee",
     },
   },
@@ -76,6 +81,7 @@ const quickSearches = [
       budget: "",
       category: "office chair",
       dealBreaker: "poor lumbar support, bad return policy",
+      selectedFeatures: [],
       useCase: "back pain and long workdays",
     },
   },
@@ -157,8 +163,15 @@ export default function Home() {
   const [hasSearched, setHasSearched] = useState(false);
   const [result, setResult] = useState<RecommendationResult | null>(null);
 
-  function updateField(field: keyof SearchRequest, value: string) {
-    setForm((current) => ({ ...current, [field]: value }));
+  function updateField<K extends keyof SearchRequest>(
+    field: K,
+    value: SearchRequest[K],
+  ) {
+    setForm((current) => ({
+      ...current,
+      [field]: value,
+      ...(field === "category" ? { selectedFeatures: [] } : {}),
+    }));
     if (error) {
       setError("");
     }
@@ -201,6 +214,8 @@ export default function Home() {
           budget: form.budget || undefined,
           useCase: form.useCase || undefined,
           dealBreakers: form.dealBreaker || undefined,
+          selectedFeatures:
+            form.selectedFeatures.length > 0 ? form.selectedFeatures : undefined,
         }),
         headers: {
           "Content-Type": "application/json",

@@ -48,6 +48,52 @@ function getOptionalString(
   return trimmed ? trimmed : undefined;
 }
 
+function getOptionalStringArray(
+  body: Record<string, unknown>,
+  field: keyof RecommendationApiRequest,
+) {
+  const value = body[field];
+
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+
+  if (!Array.isArray(value)) {
+    return {
+      error: `${field} must be an array of strings.`,
+    };
+  }
+
+  if (value.length > 12) {
+    return {
+      error: `${field} cannot include more than 12 items.`,
+    };
+  }
+
+  const items: string[] = [];
+
+  for (const item of value) {
+    if (typeof item !== "string") {
+      return {
+        error: `${field} must include only strings.`,
+      };
+    }
+
+    const trimmed = item.trim();
+    if (trimmed.length > 60) {
+      return {
+        error: `${field} items must be 60 characters or shorter.`,
+      };
+    }
+
+    if (trimmed) {
+      items.push(trimmed);
+    }
+  }
+
+  return Array.from(new Set(items)).slice(0, 12);
+}
+
 function validateRequest(body: unknown) {
   if (!isRecord(body)) {
     return {
@@ -87,6 +133,18 @@ function validateRequest(body: unknown) {
     if (typeof result === "string") {
       requestBody[field] = result;
     }
+  }
+
+  const selectedFeatures = getOptionalStringArray(body, "selectedFeatures");
+
+  if (isRecord(selectedFeatures) && typeof selectedFeatures.error === "string") {
+    return {
+      error: selectedFeatures.error,
+    };
+  }
+
+  if (Array.isArray(selectedFeatures) && selectedFeatures.length > 0) {
+    requestBody.selectedFeatures = selectedFeatures;
   }
 
   return {

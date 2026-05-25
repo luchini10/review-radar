@@ -3,6 +3,7 @@ export type SearchRequest = {
   budget: string;
   useCase: string;
   dealBreaker: string;
+  selectedFeatures: string[];
 };
 
 export type RecommendationApiRequest = {
@@ -10,6 +11,7 @@ export type RecommendationApiRequest = {
   budget?: string;
   useCase?: string;
   dealBreakers?: string;
+  selectedFeatures?: string[];
 };
 
 export type RecommendationApiResponse =

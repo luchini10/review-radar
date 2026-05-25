@@ -47,6 +47,11 @@ Source consensus labels:
 `.trim();
 
 export function buildResearchPrompt(input: RecommendationApiRequest) {
+  const selectedFeaturesText =
+    input.selectedFeatures && input.selectedFeatures.length > 0
+      ? input.selectedFeatures.join(", ")
+      : "None selected";
+
   return `
 Research this buying decision:
 
@@ -54,6 +59,7 @@ Product category: ${input.query}
 Budget: ${input.budget || "Not specified"}
 Use case: ${input.useCase || "Not specified"}
 Deal breakers: ${input.dealBreakers || "Not specified"}
+Selected product features: ${selectedFeaturesText}
 
 Return JSON using exactly this shape:
 {
@@ -110,6 +116,18 @@ For common categories, return all five primary recommendation types when each pi
 Only omit a primary recommendation type when no relevant public source supports a distinct product for that slot after searching for that slot directly.
 Each recommendation must be a distinct product. Best Budget and Best Value cannot be the same product. If one product fits both slots, choose the slot it fits best and find another cited product for the other slot, or omit that slot if no distinct cited product exists.
 Do not use "Avoid" or "Best for User Need" as recommendation_type values.
+
+The user selected these important product features:
+${selectedFeaturesText}
+
+Prioritize products that match these selected features when ranking:
+- Best Overall
+- Best Budget
+- Best Value
+- Best Premium
+- Best Alternative
+
+Do not force a product to match every feature if that would produce worse recommendations. Use the selected features as strong ranking preferences.
 
 Search strategy:
 1. Search for broad best-overall consensus in the category.
