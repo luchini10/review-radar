@@ -5,6 +5,8 @@ type CitationLike = {
 type RecommendationLike = {
   citations: CitationLike[];
   confidence_score: number;
+  name?: string;
+  recommendation_type?: string;
   source_consensus: string;
 };
 
@@ -91,10 +93,26 @@ function alignSourceConsensus(sourceConsensus: string, confidenceScore: number) 
   return sourceConsensus;
 }
 
+function normalizeProductName(name: string | undefined) {
+  if (!name) {
+    return "";
+  }
+
+  return name
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\b(carpet|cleaner|portable|review|vacuum)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function filterResultToVerifiedCitations<T extends RecommendationResultLike>(
   result: T,
   verifiedUrls: Set<string>,
 ): T {
+  const seenProductNames = new Set<string>();
+
   return {
     ...result,
     recommendations: result.recommendations
@@ -130,7 +148,24 @@ export function filterResultToVerifiedCitations<T extends RecommendationResultLi
           ),
         };
       })
-      .filter((recommendation) => recommendation.citations.length > 0),
+      .filter((recommendation) => {
+        if (recommendation.citations.length === 0) {
+          return false;
+        }
+
+        const normalizedProductName = normalizeProductName(recommendation.name);
+
+        if (!normalizedProductName) {
+          return true;
+        }
+
+        if (seenProductNames.has(normalizedProductName)) {
+          return false;
+        }
+
+        seenProductNames.add(normalizedProductName);
+        return true;
+      }),
   };
 }
 

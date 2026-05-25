@@ -10,6 +10,8 @@ function buildRecommendation(overrides = {}) {
   return {
     citations: [{ url: "https://example.com/review" }],
     confidence_score: 92,
+    name: "Example Product A",
+    recommendation_type: "Best Overall",
     source_consensus: "Strong",
     ...overrides,
   };
@@ -171,5 +173,54 @@ describe("recommendation result trust validation", () => {
     assert.deepEqual(filtered.recommendations[0].citations, [
       { url: "https://example.com/review" },
     ]);
+  });
+
+  it("does not render the same product in multiple recommendation slots", () => {
+    const result = buildResult([
+      buildRecommendation({
+        name: "Bissell Little Green Portable Carpet Cleaner",
+        recommendation_type: "Best Budget",
+      }),
+      buildRecommendation({
+        citations: [{ url: "https://example.com/value-review" }],
+        name: "Bissell Little Green Portable Carpet Cleaner",
+        recommendation_type: "Best Value",
+      }),
+    ]);
+
+    const filtered = filterResultToVerifiedCitations(
+      result,
+      new Set([
+        "https://example.com/review",
+        "https://example.com/value-review",
+      ]),
+    );
+
+    assert.equal(filtered.recommendations.length, 1);
+    assert.equal(filtered.recommendations[0].recommendation_type, "Best Budget");
+  });
+
+  it("treats minor product-name formatting differences as duplicates", () => {
+    const result = buildResult([
+      buildRecommendation({
+        name: "Bissell Little Green Portable Carpet Cleaner",
+        recommendation_type: "Best Budget",
+      }),
+      buildRecommendation({
+        citations: [{ url: "https://example.com/value-review" }],
+        name: "Bissell Little Green portable cleaner",
+        recommendation_type: "Best Value",
+      }),
+    ]);
+
+    const filtered = filterResultToVerifiedCitations(
+      result,
+      new Set([
+        "https://example.com/review",
+        "https://example.com/value-review",
+      ]),
+    );
+
+    assert.equal(filtered.recommendations.length, 1);
   });
 });

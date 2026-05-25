@@ -17,6 +17,7 @@ Rules:
 - Do not put recommendations, product lists, markdown, citations, or source excerpts in search_summary.
 - If evidence is thin, conflicting, outdated, or not directly relevant, include the recommendation only when it has at least one relevant citation, then lower confidence and explain the limitation.
 - Only omit a recommendation slot when no relevant public source supports a product for that slot.
+- Never use the same product name in more than one recommendation slot.
 - Do not rank by star rating alone.
 - Penalize affiliate-only recommendations.
 - Penalize products with repeated reliability, durability, warranty, comfort, safety, or support complaints.
@@ -107,6 +108,7 @@ Then return 1-3 Honorable Mention picks if there are genuinely useful extras.
 The result is incomplete if a common category returns only one or two primary picks. Use separate search passes for each primary slot, then compare the evidence.
 For common categories, return all five primary recommendation types when each pick has at least one relevant citation. It is okay for Budget, Value, Premium, or Alternative picks to have Mixed, Weak, or Niche consensus if that accurately reflects the source quality.
 Only omit a primary recommendation type when no relevant public source supports a distinct product for that slot after searching for that slot directly.
+Each recommendation must be a distinct product. Best Budget and Best Value cannot be the same product. If one product fits both slots, choose the slot it fits best and find another cited product for the other slot, or omit that slot if no distinct cited product exists.
 Do not use "Avoid" or "Best for User Need" as recommendation_type values.
 
 Search strategy:
@@ -129,6 +131,7 @@ Do not format any field with markdown headings, bullet syntax, or numbered lists
 For each recommendation:
 - why_recommended must explain why the product earned that exact recommendation_type.
 - If a product fits more than one slot, assign it to the strongest single slot and choose a distinct product for the other slots when evidence supports one.
+- Before returning JSON, verify that every recommendations[].name appears only once. Duplicate product names make the result invalid.
 - Do not skip Best Premium just because Best Overall is also expensive; choose the next strongest higher-end option when evidence supports one.
 - product_page_url must be the exact product webpage, not a review article or homepage. Search for it directly. Use an empty string only if you cannot verify an exact product page.
 - Do not use review-site category pages, buying-guide pages, search result pages, or homepages as product_page_url.
