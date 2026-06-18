@@ -2,8 +2,12 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ReviewRadar",
-  description: "Evidence-first product research for better buying decisions.",
+  title: {
+    default: "ReviewRadar — Evidence-first product research",
+    template: "%s | ReviewRadar",
+  },
+  description:
+    "ReviewRadar researches reviews, prices, features, and tradeoffs across public sources, then returns cited ranked Best Match recommendations.",
 };
 
 export default function RootLayout({
@@ -13,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

@@ -11,7 +11,7 @@ function buildRecommendation(overrides = {}) {
     citations: [{ url: "https://example.com/review" }],
     confidence_score: 92,
     name: "Example Product A",
-    recommendation_type: "Best Overall",
+    recommendation_type: "Best Match",
     source_consensus: "Strong",
     ...overrides,
   };
@@ -175,16 +175,105 @@ describe("recommendation result trust validation", () => {
     ]);
   });
 
-  it("does not render the same product in multiple recommendation slots", () => {
+  it("drops generic category and collection pages cited as products", () => {
+    const filtered = filterResultToVerifiedCitations(
+      buildResult([
+        buildRecommendation({
+          citations: [
+            {
+              title: "Cordless vacuums for pet homes",
+              url: "https://www.sharkclean.com/sharkus_hidden.pet_cordless_vacuums",
+              what_it_supports: "Category page for multiple cordless vacuums.",
+            },
+          ],
+          name: "Shark Stratos Cordless Vacuum",
+        }),
+        buildRecommendation({
+          citations: [
+            {
+              title: "Running shoes search",
+              url: "https://www.example.com/search/running-shoes",
+              what_it_supports: "Search page for many running shoes.",
+            },
+          ],
+          name: "Example Running Shoe",
+        }),
+        buildRecommendation({
+          citations: [
+            {
+              title: "Specific product page",
+              url: "https://www.example.com/product/example-running-shoe-123",
+              what_it_supports: "Specific shoe product page.",
+            },
+          ],
+          name: "Example Running Shoe 123",
+        }),
+        buildRecommendation({
+          citations: [
+            {
+              title: "Ice Maker - Countertop Ice Makers - The Home Depot",
+              url: "https://www.homedepot.com/b/Appliances-Ice-Makers-Countertop-Ice-Makers/Ice-Maker/N-5yc1vZ2fkour4Z1z0v5al?Nao=48",
+              what_it_supports: "Category page for many ice makers.",
+            },
+          ],
+          name: "EUHOMY Countertop Ice Maker Machine",
+        }),
+        buildRecommendation({
+          citations: [
+            {
+              title: "Countertop Ice Makers - Walmart.com",
+              url: "https://www.walmart.com/cp/countertop-ice-makers/9372690",
+              what_it_supports: "Category page for many ice makers.",
+            },
+          ],
+          name: "KISSAIR Nugget Ice Maker Countertop",
+        }),
+      ]),
+      new Set([
+        "https://www.sharkclean.com/sharkus_hidden.pet_cordless_vacuums",
+        "https://www.example.com/search/running-shoes",
+        "https://www.example.com/product/example-running-shoe-123",
+        "https://www.homedepot.com/b/Appliances-Ice-Makers-Countertop-Ice-Makers/Ice-Maker/N-5yc1vZ2fkour4Z1z0v5al?Nao=48",
+        "https://www.walmart.com/cp/countertop-ice-makers/9372690",
+      ]),
+    );
+
+    assert.deepEqual(
+      filtered.recommendations.map((recommendation) => recommendation.name),
+      ["Example Running Shoe 123"],
+    );
+  });
+
+  it("does not verify a product citation by replacing it with a generic same-domain listing", () => {
+    const filtered = filterResultToVerifiedCitations(
+      buildResult([
+        buildRecommendation({
+          citations: [
+            {
+              title: "Specific product page",
+              url: "https://www.example.com/product/example-vacuum-123",
+              what_it_supports: "Specific vacuum product page.",
+            },
+          ],
+          name: "Example Vacuum 123",
+        }),
+      ]),
+      new Set(["https://www.example.com/collections/vacuums"]),
+    );
+
+    assert.equal(filtered.recommendations.length, 0);
+  });
+
+  it("does not render the same product multiple times in the candidate pool", () => {
     const result = buildResult([
       buildRecommendation({
         name: "Bissell Little Green Portable Carpet Cleaner",
-        recommendation_type: "Best Budget",
+        recommendation_type: "Best Match",
       }),
       buildRecommendation({
         citations: [{ url: "https://example.com/value-review" }],
         name: "Bissell Little Green Portable Carpet Cleaner",
-        recommendation_type: "Best Value",
+        recommendation_type: "Best Match",
       }),
     ]);
 
@@ -197,19 +286,19 @@ describe("recommendation result trust validation", () => {
     );
 
     assert.equal(filtered.recommendations.length, 1);
-    assert.equal(filtered.recommendations[0].recommendation_type, "Best Budget");
+    assert.equal(filtered.recommendations[0].recommendation_type, "Best Match");
   });
 
   it("treats minor product-name formatting differences as duplicates", () => {
     const result = buildResult([
       buildRecommendation({
         name: "Bissell Little Green Portable Carpet Cleaner",
-        recommendation_type: "Best Budget",
+        recommendation_type: "Best Match",
       }),
       buildRecommendation({
         citations: [{ url: "https://example.com/value-review" }],
         name: "Bissell Little Green portable cleaner",
-        recommendation_type: "Best Value",
+        recommendation_type: "Best Match",
       }),
     ]);
 

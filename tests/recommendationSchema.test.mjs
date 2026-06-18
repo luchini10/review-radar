@@ -1,16 +1,30 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { recommendationResultSchema } from "../lib/recommendationSchema.ts";
+import {
+  recommendationResultJsonSchema,
+  recommendationResultSchema,
+} from "../lib/recommendationSchema.ts";
 
 function buildValidResult(overrides = {}) {
   return {
     search_summary:
       "UI-only test result for schema validation. This is not real research.",
     assumptions: ["The user wants a product suitable for everyday use."],
-    recommendations: [
+    generated_queries: [
+      "example product",
+      "example product reviews",
+      "example product retailer",
+      "example product under budget",
+      "example product dimensions",
+      "example product alternatives",
+      "example product complaints",
+      "example product official",
+    ],
+    raw_candidate_count: 1,
+    candidate_products: [
       {
-        recommendation_type: "Best Overall",
+        recommendation_type: "Best Match",
         name: "Example Product A",
         category: "Example category",
         product_page_url: "https://example.com/product-a",
@@ -61,9 +75,9 @@ describe("recommendation result schema", () => {
 
   it("rejects broken citation URLs", () => {
     const badResult = buildValidResult({
-      recommendations: [
+      candidate_products: [
         {
-          ...buildValidResult().recommendations[0],
+          ...buildValidResult().candidate_products[0],
           citations: [
             {
               title: "Broken source",
@@ -83,11 +97,26 @@ describe("recommendation result schema", () => {
   it("accepts empty product links and images when they cannot be verified", () => {
     const result = recommendationResultSchema.safeParse(
       buildValidResult({
-        recommendations: [
+        candidate_products: [
           {
-            ...buildValidResult().recommendations[0],
+            ...buildValidResult().candidate_products[0],
             product_page_url: "",
             product_image_url: "",
+          },
+        ],
+      }),
+    );
+
+    assert.equal(result.success, true);
+  });
+
+  it("accepts a clearly labeled close-match candidate type", () => {
+    const result = recommendationResultSchema.safeParse(
+      buildValidResult({
+        candidate_products: [
+          {
+            ...buildValidResult().candidate_products[0],
+            recommendation_type: "Close Match",
           },
         ],
       }),
@@ -99,9 +128,9 @@ describe("recommendation result schema", () => {
   it("rejects invalid product links and images", () => {
     const result = recommendationResultSchema.safeParse(
       buildValidResult({
-        recommendations: [
+        candidate_products: [
           {
-            ...buildValidResult().recommendations[0],
+            ...buildValidResult().candidate_products[0],
             product_page_url: "not a product url",
             product_image_url: "not an image url",
           },
@@ -120,5 +149,35 @@ describe("recommendation result schema", () => {
     const result = recommendationResultSchema.safeParse(badResult);
 
     assert.equal(result.success, false);
+  });
+
+  it("keeps the OpenAI structured output schema compatible with strict mode", () => {
+    const unsupportedOpenAIKeywords = new Set([
+      "minLength",
+      "maxLength",
+      "pattern",
+      "format",
+      "minimum",
+      "maximum",
+      "multipleOf",
+    ]);
+
+    function walk(value, path = []) {
+      if (!value || typeof value !== "object") {
+        return;
+      }
+
+      for (const [key, child] of Object.entries(value)) {
+        assert.equal(
+          unsupportedOpenAIKeywords.has(key),
+          false,
+          `Unsupported OpenAI schema keyword ${key} at ${path.join(".") || "root"}`,
+        );
+
+        walk(child, [...path, key]);
+      }
+    }
+
+    walk(recommendationResultJsonSchema);
   });
 });

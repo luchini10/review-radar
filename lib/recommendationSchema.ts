@@ -1,12 +1,8 @@
 import { z } from "zod";
 
 export const recommendationTypeSchema = z.enum([
-  "Best Overall",
-  "Best Budget",
-  "Best Value",
-  "Best Premium",
-  "Best Alternative",
-  "Honorable Mention",
+  "Best Match",
+  "Close Match",
 ]);
 
 export const sourceConsensusSchema = z.enum([
@@ -53,7 +49,9 @@ export const recommendationResultSchema = z
   .object({
     search_summary: z.string().min(1),
     assumptions: z.array(z.string().min(1)),
-    recommendations: z.array(productRecommendationSchema).max(8),
+    generated_queries: z.array(z.string().min(1)).min(8).max(18),
+    raw_candidate_count: z.number().int().min(0).max(50),
+    candidate_products: z.array(productRecommendationSchema).max(50),
     what_to_avoid: z.array(z.string().min(1)),
     final_buying_advice: z.string().min(1),
   })
@@ -62,9 +60,9 @@ export const recommendationResultSchema = z
 const citationJsonSchema = {
   type: "object",
   properties: {
-    title: { type: "string", minLength: 1 },
-    url: { type: "string", minLength: 1, pattern: "^https?://" },
-    what_it_supports: { type: "string", minLength: 1 },
+    title: { type: "string" },
+    url: { type: "string" },
+    what_it_supports: { type: "string" },
   },
   required: ["title", "url", "what_it_supports"],
   additionalProperties: false,
@@ -76,12 +74,8 @@ const productRecommendationJsonSchema = {
     recommendation_type: {
       type: "string",
       enum: [
-        "Best Overall",
-        "Best Budget",
-        "Best Value",
-        "Best Premium",
-        "Best Alternative",
-        "Honorable Mention",
+        "Best Match",
+        "Close Match",
       ],
     },
     name: { type: "string" },
@@ -104,8 +98,6 @@ const productRecommendationJsonSchema = {
     estimated_price_range: { type: "string" },
     confidence_score: {
       type: "number",
-      minimum: 0,
-      maximum: 100,
     },
     source_consensus: {
       type: "string",
@@ -151,9 +143,18 @@ export const recommendationResultJsonSchema = {
       type: "array",
       items: { type: "string" },
     },
-    recommendations: {
+    generated_queries: {
       type: "array",
-      maxItems: 8,
+      minItems: 8,
+      maxItems: 18,
+      items: { type: "string" },
+    },
+    raw_candidate_count: {
+      type: "integer",
+    },
+    candidate_products: {
+      type: "array",
+      maxItems: 50,
       items: productRecommendationJsonSchema,
     },
     what_to_avoid: {
@@ -165,7 +166,9 @@ export const recommendationResultJsonSchema = {
   required: [
     "search_summary",
     "assumptions",
-    "recommendations",
+    "generated_queries",
+    "raw_candidate_count",
+    "candidate_products",
     "what_to_avoid",
     "final_buying_advice",
   ],

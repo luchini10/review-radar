@@ -1,3 +1,8 @@
+import {
+  sanitizeProductCons,
+  sanitizeProductPros,
+} from "./productCopySanitizer.ts";
+
 function normalizeUrl(value: unknown) {
   if (typeof value !== "string") {
     return "";
@@ -43,8 +48,9 @@ export function normalizeResearchResult(value: unknown) {
     return value;
   }
 
-  const recommendations = Array.isArray(value.recommendations)
-    ? value.recommendations.map((recommendation) => {
+  function normalizeProducts(products: unknown) {
+    return Array.isArray(products)
+      ? products.map((recommendation) => {
         if (!isRecord(recommendation)) {
           return recommendation;
         }
@@ -64,15 +70,29 @@ export function normalizeResearchResult(value: unknown) {
 
         return {
           ...recommendation,
+          cons: Array.isArray(recommendation.cons)
+            ? sanitizeProductCons(recommendation.cons.filter((item) => typeof item === "string"))
+            : recommendation.cons,
           product_page_url: normalizeUrl(recommendation.product_page_url),
           product_image_url: normalizeUrl(recommendation.product_image_url),
+          pros: Array.isArray(recommendation.pros)
+            ? sanitizeProductPros(recommendation.pros.filter((item) => typeof item === "string"))
+            : recommendation.pros,
           citations,
         };
       })
-    : value.recommendations;
+      : products;
+  }
 
-  return {
-    ...value,
-    recommendations,
-  };
+  const normalized = { ...value };
+
+  if ("candidate_products" in normalized) {
+    normalized.candidate_products = normalizeProducts(normalized.candidate_products);
+  }
+
+  if ("recommendations" in normalized) {
+    normalized.recommendations = normalizeProducts(normalized.recommendations);
+  }
+
+  return normalized;
 }

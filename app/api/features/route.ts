@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createOpenAIClient, MissingOpenAISdkError } from "@/lib/openaiClient";
 import {
-  fallbackFeatures,
+  getFallbackSmartFeatures,
+  smartFeatureCategoryKey,
   smartFeatureResponseJsonSchema,
   smartFeatureResponseSchema,
 } from "@/lib/smartFeatureSuggestions";
+import type { SmartFeatureResponse } from "@/types/smart-features";
 
 export const runtime = "nodejs";
 
 const FEATURE_TIMEOUT_MS = 30000;
+const generatedFeatureCache = new Map<string, SmartFeatureResponse>();
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -22,9 +25,30 @@ function getOutputText(response: unknown) {
   return "";
 }
 
-function fallbackWithWarning(warning: string) {
+function getOptionalString(body: Record<string, unknown>, field: string) {
+  const value = body[field];
+
+  if (value === undefined || value === null) {
+    return "";
+  }
+
+  return typeof value === "string" ? value.trim().slice(0, 240) : "";
+}
+
+function fallbackWithWarning(productCategory: string, warning: string) {
+  const fallback = getFallbackSmartFeatures(productCategory);
+
+  if (!fallback) {
+    return {
+      category: productCategory || "product",
+      features: [],
+      warning:
+        "Smart Features could not load for this product. You can still use Important Details.",
+    };
+  }
+
   return {
-    ...fallbackFeatures,
+    ...fallback,
     warning,
   };
 }
@@ -53,6 +77,8 @@ export async function POST(req: NextRequest) {
   }
 
   const productCategory = body.productCategory.trim();
+  const budget = getOptionalString(body, "budget");
+  const importantDetails = getOptionalString(body, "importantDetails");
 
   if (!productCategory) {
     return NextResponse.json(
@@ -69,10 +95,23 @@ export async function POST(req: NextRequest) {
   }
 
   const apiKey = process.env.OPENAI_API_KEY;
+  const catalogFeatures = getFallbackSmartFeatures(productCategory);
+
+  if (catalogFeatures) {
+    return NextResponse.json(catalogFeatures);
+  }
+
+  const cacheKey = smartFeatureCategoryKey(productCategory);
+  const cachedFeatures = generatedFeatureCache.get(cacheKey);
+
+  if (cachedFeatures) {
+    return NextResponse.json(cachedFeatures);
+  }
 
   if (!apiKey) {
     return NextResponse.json(
       fallbackWithWarning(
+        productCategory,
         "OPENAI_API_KEY is missing, so fallback features were returned.",
       ),
     );
@@ -89,11 +128,16 @@ export async function POST(req: NextRequest) {
         {
           role: "system",
           content:
-            "You generate practical product feature filters for a product recommendation app. Return useful shopping features that a normal buyer would understand. Make the features specific to the product category. Avoid vague generic features unless they are truly relevant. Do not include brand names. Do not include unsafe, illegal, adult, or unrelated suggestions.",
+            "You generate practical product feature filters for a product recommendation app. Return useful shopping features that a normal buyer would understand. Make the features specific to the product category and the user's budget/details when provided. Prioritize measurable or verifiable attributes such as width, height, capacity, color, material, finish, screen size, refresh rate, fuel type, USB-C, weight capacity, counter-depth, and garage ready. Avoid vague features like quality, popular, best, durable, or value unless tied to a measurable attribute. Do not include brand names. Do not include unsafe, illegal, adult, or unrelated suggestions. For every feature, include possibleValues as an array, unit as a string or empty string, operators, examples, and commonlyImportant.",
         },
         {
           role: "user",
-          content: `Generate 5 to 10 customizable shopping features for this product category: ${productCategory}`,
+          content: [
+            `Product category: ${productCategory}`,
+            `Budget: ${budget || "Not specified"}`,
+            `Important Details: ${importantDetails || "Not specified"}`,
+            "Generate 5 to 10 customizable shopping features and clickable option values.",
+          ].join("\n"),
         },
       ],
       text: {
@@ -113,6 +157,7 @@ export async function POST(req: NextRequest) {
     if (!outputText) {
       return NextResponse.json(
         fallbackWithWarning(
+          productCategory,
           "AI feature generation failed, so fallback features were returned.",
         ),
       );
@@ -123,16 +168,20 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         fallbackWithWarning(
+          productCategory,
           "AI feature generation returned invalid data, so fallback features were returned.",
         ),
       );
     }
+
+    generatedFeatureCache.set(cacheKey, parsed.data);
 
     return NextResponse.json(parsed.data);
   } catch (featureError) {
     if (featureError instanceof MissingOpenAISdkError) {
       return NextResponse.json(
         fallbackWithWarning(
+          productCategory,
           "OpenAI is not installed locally, so fallback features were returned.",
         ),
       );
@@ -140,6 +189,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       fallbackWithWarning(
+        productCategory,
         "AI feature generation failed, so fallback features were returned.",
       ),
     );

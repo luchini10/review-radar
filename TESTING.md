@@ -79,19 +79,12 @@ Keep the PowerShell window open while testing.
 3. Click **Find Recommendations**.
 4. Expected result: the research should consider the budget. If sources are too weak, the app should say so.
 
-### Product Search With Use Case
+### Product Search With Important Details
 
 1. Enter `vacuum`.
-2. Enter a use case such as `pet hair on carpet`.
+2. Enter important details, such as `pet hair on carpet`.
 3. Click **Find Recommendations**.
-4. Expected result: the app should favor results that address that use case, or explain that evidence is limited.
-
-### Product Search With Deal Breakers
-
-1. Enter `laptop backpack`.
-2. Enter deal breakers such as `weak zippers, poor water resistance`.
-3. Click **Find Recommendations**.
-4. Expected result: recommendations should account for the deal breakers, or clearly explain weak evidence.
+4. Expected result: the app should favor results that address that priority, or explain that evidence is limited.
 
 ### Missing API Key
 
@@ -132,3 +125,45 @@ When real results appear, confirm:
 - Weak evidence is not shown as high confidence.
 - The browser network response does not include `OPENAI_API_KEY`.
 - The browser never shows raw OpenAI responses.
+
+## Serper Discovery Checks
+
+These checks are manual because live Serper calls can spend credits.
+
+### Test A: Restrictive sleeper search
+
+Input:
+
+- Product category: `pull out couch`
+- Budget: `$1500`
+- Smart Features: `Color: Black`, `Size: Full`
+- Important Details: `Less than 64 inches`
+
+Expected:
+
+- The server searches multiple query variations.
+- The raw candidate pool increases when `SERPER_API_KEY` is configured.
+- Exact matches only include black, full/full-size sleeper products under 64 inches and within budget.
+- Wider products appear only as near matches or are rejected.
+
+### Test B: Monitor with USB-C
+
+Input:
+
+- Product category: `27 inch 4K monitor`
+- Budget: `under $250`
+- Smart Features: `USB-C`
+
+Expected:
+
+- Serper can contribute Google search product candidates.
+- Exact matches must be 27 inch, 4K, USB-C, and under $250.
+- Products without verified USB-C do not appear as exact matches.
+
+### Test C: Missing Serper key
+
+1. Temporarily remove or rename `SERPER_API_KEY` in `.env.local`.
+2. Restart the dev server.
+3. Submit a normal product search.
+4. Expected result: the app still runs and continues with the existing research path.
+5. Put the key back afterward and restart the dev server.

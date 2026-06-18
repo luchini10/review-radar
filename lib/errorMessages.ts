@@ -21,6 +21,7 @@ const vagueSearchTerms = new Set([
   "cheap",
   "good",
   "great",
+  "anything",
   "item",
   "items",
   "product",
@@ -64,6 +65,7 @@ export function getSafeOpenAIErrorMessage(error: unknown) {
 
   const status = typeof error.status === "number" ? error.status : undefined;
   const code = typeof error.code === "string" ? error.code : undefined;
+  const name = typeof error.name === "string" ? error.name : "";
   const type = typeof error.type === "string" ? error.type : undefined;
   const message = typeof error.message === "string" ? error.message : "";
 
@@ -99,7 +101,18 @@ export function getSafeOpenAIErrorMessage(error: unknown) {
     return USER_ERROR_MESSAGES.networkError;
   }
 
+  if (name === "AbortError" || name === "TimeoutError") {
+    return USER_ERROR_MESSAGES.slowResponse;
+  }
+
   if (message.toLowerCase().includes("connection error")) {
+    return USER_ERROR_MESSAGES.networkError;
+  }
+
+  if (
+    message.toLowerCase().includes("fetch failed") ||
+    message.toLowerCase().includes("network")
+  ) {
     return USER_ERROR_MESSAGES.networkError;
   }
 

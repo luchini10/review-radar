@@ -52,4 +52,39 @@ describe("research result normalization", () => {
     assert.equal(result.recommendations[0].product_image_url, "");
     assert.equal(result.recommendations[0].citations[0].url, "");
   });
+
+  it("does not add legacy recommendation keys to candidate-only results", () => {
+    const result = normalizeResearchResult({
+      candidate_products: [],
+    });
+
+    assert.equal("recommendations" in result, false);
+  });
+
+  it("removes budget-compliance bullets from normalized pros and cons", () => {
+    const result = normalizeResearchResult({
+      candidate_products: [
+        {
+          citations: [],
+          cons: [
+            "Under budget at the official retailer.",
+            "Some owners mention weak battery life.",
+          ],
+          product_image_url: "",
+          product_page_url: "",
+          pros: [
+            "Review snippets mention good suction performance.",
+            "Official price shown as $899.99, staying within the main budget.",
+          ],
+        },
+      ],
+    });
+
+    assert.deepEqual(result.candidate_products[0].pros, [
+      "Good suction performance.",
+    ]);
+    assert.deepEqual(result.candidate_products[0].cons, [
+      "Some owners mention weak battery life.",
+    ]);
+  });
 });

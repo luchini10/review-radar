@@ -44,9 +44,18 @@ async function citationUrlIsReachable(url: string) {
       signal: controller.signal,
     });
 
-    return response.status < 500 && response.status !== 404;
-  } catch {
-    return false;
+    if (response.status === 404 || response.status === 410) {
+      return false;
+    }
+
+    // Bot walls commonly answer 403/405/429/503 for automated requests even
+    // though the page exists for real shoppers. Treat those as reachable so
+    // real products are not dropped.
+    return response.status < 500 || response.status === 503;
+  } catch (error) {
+    // A timeout means the host exists but is slow or blocking automated
+    // requests; only DNS/connection failures count as unreachable.
+    return error instanceof Error && error.name === "AbortError";
   } finally {
     clearTimeout(timeout);
   }

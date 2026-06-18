@@ -1,17 +1,47 @@
+import { getCachedOrLoad, normalizeCacheKey } from "./cache.ts";
+import {
+  extractProductImageCandidatesFromHtml,
+  imageResolutionToField,
+  logImageResolutionDebug,
+  resolveBestProductImage,
+  type ProductImageCandidate,
+  type ProductImageContext,
+  type ProductImageResolution,
+} from "./productImageResolver.ts";
+import {
+  parseBestMoneyAmount,
+  priceTextLooksUnverified,
+  formatDollars,
+} from "./priceParsing.ts";
+import { searchSerperImageEvidence } from "./search/serper.ts";
+import type {
+  ProductFieldEvidence,
+  ProductMetadata,
+  ProductOffer,
+} from "@/types/review-radar";
+
 type ProductAssetRecommendation = {
+  category?: string;
+  estimated_price_range?: string;
   name: string;
+  price_value_verdict?: string;
   product_page_url: string;
   product_image_url: string;
   citations?: {
     url: string;
   }[];
+  metadata?: ProductMetadata;
 };
 
 type ProductAssetResult = {
   recommendations: ProductAssetRecommendation[];
+  exactMatches?: ProductAssetRecommendation[];
+  premiumAboveBudget?: ProductAssetRecommendation[];
+  nearMatches?: ProductAssetRecommendation[];
 };
 
 const PRODUCT_ASSET_TIMEOUT_MS = 5000;
+const PRODUCT_ASSET_CACHE_TTL_MS = 1000 * 60 * 30;
 const LIKELY_PRODUCT_PATH_PARTS = [
   "/dp/",
   "/gp/product/",
@@ -38,6 +68,24 @@ const EDITORIAL_PATH_PARTS = [
   "/review",
   "/reviews",
   "/roundup",
+];
+const knownColors = [
+  "beige",
+  "black",
+  "blue",
+  "brown",
+  "charcoal",
+  "cream",
+  "gray",
+  "grey",
+  "green",
+  "ivory",
+  "navy",
+  "red",
+  "stainless steel",
+  "tan",
+  "taupe",
+  "white",
 ];
 
 function isHttpUrl(value: string) {
@@ -152,6 +200,10 @@ function stripHtml(value: string) {
   return decodeHtml(value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " "));
 }
 
+function compactText(value: string) {
+  return stripHtml(value).replace(/\s+/g, " ").trim();
+}
+
 function getMetaContent(html: string, property: string) {
   const escapedProperty = property.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const patterns = [
@@ -210,38 +262,58 @@ function productNameHasPageMatch(productName: string, html: string) {
 }
 
 async function fetchText(url: string) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), PRODUCT_ASSET_TIMEOUT_MS);
+  const cacheKey = normalizeCacheKey(["product-page", normalizeUrl(url)]);
 
-  try {
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent":
-          "ReviewRadar/0.1 product research metadata fetcher",
-      },
-      signal: controller.signal,
-    });
+  return getCachedOrLoad(cacheKey, PRODUCT_ASSET_CACHE_TTL_MS, async () => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), PRODUCT_ASSET_TIMEOUT_MS);
 
-    if (!response.ok) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          "User-Agent":
+            "ReviewRadar/0.1 product research metadata fetcher",
+        },
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        return "";
+      }
+
+      const contentType = response.headers.get("content-type") || "";
+
+      if (!contentType.includes("text/html")) {
+        return "";
+      }
+
+      return await response.text();
+    } catch {
       return "";
+    } finally {
+      clearTimeout(timeout);
     }
-
-    const contentType = response.headers.get("content-type") || "";
-
-    if (!contentType.includes("text/html")) {
-      return "";
-    }
-
-    return await response.text();
-  } catch {
-    return "";
-  } finally {
-    clearTimeout(timeout);
-  }
+  });
 }
 
-async function getImageFromCitationPages(product: ProductAssetRecommendation) {
+function productImageContext(
+  product: ProductAssetRecommendation,
+  pageUrl = "",
+): ProductImageContext {
+  return {
+    brand: product.metadata?.brand?.value || null,
+    category: product.category || null,
+    modelNumber: product.metadata?.modelNumber?.value || null,
+    pageUrl,
+    productName: product.name,
+  };
+}
+
+async function getImageFromCitationPages(
+  product: ProductAssetRecommendation,
+): Promise<ProductImageResolution> {
   const citationUrls = product.citations?.map((citation) => citation.url) || [];
+  const rejected: ProductImageResolution["rejected"] = [];
 
   for (const citationUrl of citationUrls.slice(0, 3)) {
     const normalizedCitationUrl = normalizeUrl(citationUrl);
@@ -256,21 +328,28 @@ async function getImageFromCitationPages(product: ProductAssetRecommendation) {
       continue;
     }
 
-    const metadataImage =
-      getMetaContent(html, "og:image") ||
-      getMetaContent(html, "twitter:image") ||
-      getMetaContent(html, "twitter:image:src");
-    const resolvedMetadataImage = resolveUrl(
-      metadataImage,
-      normalizedCitationUrl,
+    const resolution = resolveBestProductImage(
+      extractProductImageCandidatesFromHtml(
+        html,
+        normalizedCitationUrl,
+        productImageContext(product, normalizedCitationUrl),
+      ),
+      productImageContext(product, normalizedCitationUrl),
     );
 
-    if (resolvedMetadataImage && isHttpUrl(resolvedMetadataImage)) {
-      return normalizeUrl(resolvedMetadataImage);
+    rejected.push(...resolution.rejected);
+
+    if (resolution.url && resolution.confidence !== "none") {
+      return resolution;
     }
   }
 
-  return "";
+  return {
+    confidence: "none",
+    rejected,
+    source: null,
+    url: "",
+  };
 }
 
 async function getProductPageFromCitationPages(product: ProductAssetRecommendation) {
@@ -321,25 +400,790 @@ async function getProductPageFromCitationPages(product: ProductAssetRecommendati
   return "";
 }
 
+async function getImageFromSerper(
+  product: ProductAssetRecommendation,
+): Promise<ProductImageResolution> {
+  const sources = await searchSerperImageEvidence(
+    `${product.name} product image`,
+    3,
+  );
+  const candidates: ProductImageCandidate[] = sources.flatMap((source) => {
+    const match = source.snippet.match(/\bImage:\s*(https?:\/\/\S+)/i);
+    const imageUrl = match?.[1]?.trim();
+
+    if (!imageUrl) {
+      return [];
+    }
+
+    return [
+      {
+        evidenceText: `${source.title} ${source.url} ${source.snippet}`,
+        source: "serp",
+        url: imageUrl,
+      },
+    ];
+  });
+
+  return resolveBestProductImage(candidates, productImageContext(product));
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function asString(value: unknown) {
+  if (typeof value === "string") {
+    return value.trim();
+  }
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+
+  return "";
+}
+
+function asNumber(value: unknown) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const match = value.replace(/,/g, "").match(/\d+(?:\.\d+)?/);
+
+  return match?.[0] ? Number(match[0]) : null;
+}
+
+function field<T>(
+  value: T,
+  sourceUrl: string,
+  sourceType: ProductFieldEvidence<T>["sourceType"],
+  confidence: ProductFieldEvidence<T>["confidence"],
+): ProductFieldEvidence<T> {
+  return {
+    confidence,
+    sourceType,
+    sourceUrl,
+    value,
+    verifiedAt: new Date().toISOString(),
+  };
+}
+
+function offerKey(offer: ProductOffer) {
+  return [
+    offer.url,
+    offer.retailer || "",
+    offer.price.value ?? "unknown",
+  ].join("|");
+}
+
+function mergeOffers(
+  existing: ProductOffer[] = [],
+  incoming: ProductOffer[] = [],
+) {
+  const seen = new Set<string>();
+  const offers: ProductOffer[] = [];
+
+  for (const offer of [...incoming, ...existing]) {
+    const key = offerKey(offer);
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    offers.push(offer);
+  }
+
+  return offers;
+}
+
+function mergeMetadata(
+  existing: ProductMetadata | undefined,
+  incoming: ProductMetadata,
+): ProductMetadata {
+  if (!existing) {
+    return incoming;
+  }
+
+  return {
+    ...existing,
+    ...incoming,
+    availability: incoming.availability || existing.availability,
+    brand: incoming.brand || existing.brand,
+    canonicalUrl: incoming.canonicalUrl || existing.canonicalUrl,
+    colors: incoming.colors || existing.colors,
+    dimensions:
+      incoming.dimensions || existing.dimensions
+        ? {
+            unit: incoming.dimensions?.unit || existing.dimensions?.unit || null,
+            depth: incoming.dimensions?.depth || existing.dimensions?.depth,
+            height: incoming.dimensions?.height || existing.dimensions?.height,
+            width: incoming.dimensions?.width || existing.dimensions?.width,
+          }
+        : undefined,
+    gtin: incoming.gtin || existing.gtin,
+    image: incoming.image || existing.image,
+    modelNumber: incoming.modelNumber || existing.modelNumber,
+    offers: mergeOffers(existing.offers, incoming.offers),
+    rating: incoming.rating || existing.rating,
+    reviewCount: incoming.reviewCount || existing.reviewCount,
+    sku: incoming.sku || existing.sku,
+    title: incoming.title || existing.title,
+  };
+}
+
+function jsonLdScripts(html: string) {
+  return Array.from(
+    html.matchAll(
+      /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi,
+    ),
+  )
+    .map((match) => stripHtml(match[1] || "").trim())
+    .filter(Boolean);
+}
+
+function flattenJsonLd(value: unknown): Record<string, unknown>[] {
+  if (Array.isArray(value)) {
+    return value.flatMap(flattenJsonLd);
+  }
+
+  if (!isRecord(value)) {
+    return [];
+  }
+
+  const graph = value["@graph"];
+  const nested = Array.isArray(graph) ? graph.flatMap(flattenJsonLd) : [];
+
+  return [value, ...nested];
+}
+
+function jsonLdTypeMatches(value: unknown, type: string): boolean {
+  if (Array.isArray(value)) {
+    return value.some((item) => jsonLdTypeMatches(item, type));
+  }
+
+  return typeof value === "string" && value.toLowerCase() === type.toLowerCase();
+}
+
+function parseJsonLdProducts(html: string) {
+  const products: Record<string, unknown>[] = [];
+
+  for (const script of jsonLdScripts(html)) {
+    try {
+      const parsed = JSON.parse(decodeHtml(script));
+      products.push(
+        ...flattenJsonLd(parsed).filter((item) =>
+          jsonLdTypeMatches(item["@type"], "Product"),
+        ),
+      );
+    } catch {
+      // Ignore malformed page metadata.
+    }
+  }
+
+  return products;
+}
+
+function allOffers(product: Record<string, unknown>) {
+  const offers = product.offers;
+
+  if (Array.isArray(offers)) {
+    return offers.filter(isRecord);
+  }
+
+  return isRecord(offers) ? [offers] : [];
+}
+
+function priceFromValue(value: unknown) {
+  return parseBestMoneyAmount(value, {
+    allowBareNumeric: true,
+    allowBareRange: true,
+  });
+}
+
+function priceFromPriceSpecification(value: unknown): number | null {
+  if (Array.isArray(value)) {
+    const prices = value
+      .map(priceFromPriceSpecification)
+      .filter((price): price is number => price !== null);
+
+    return prices.length > 0 ? Math.min(...prices) : null;
+  }
+
+  if (!isRecord(value)) {
+    return priceFromValue(value);
+  }
+
+  const directPrices = [
+    value.price,
+    value.minPrice,
+    value.lowPrice,
+    value.salePrice,
+    value.currentPrice,
+  ]
+    .map(priceFromValue)
+    .filter((price): price is number => price !== null);
+
+  if (directPrices.length > 0) {
+    return Math.min(...directPrices);
+  }
+
+  return null;
+}
+
+function priceFromOffer(offer: Record<string, unknown>) {
+  const directPrices = [
+    offer.price,
+    offer.salePrice,
+    offer.currentPrice,
+    offer.lowPrice,
+    offer.highPrice,
+  ]
+    .map(priceFromValue)
+    .filter((price): price is number => price !== null);
+  const specificationPrice = priceFromPriceSpecification(
+    offer.priceSpecification,
+  );
+
+  if (specificationPrice !== null) {
+    directPrices.push(specificationPrice);
+  }
+
+  return directPrices.length > 0 ? Math.min(...directPrices) : null;
+}
+
+function lowestOfferPrice(offers: Record<string, unknown>[]) {
+  const prices = offers
+    .map(priceFromOffer)
+    .filter((price): price is number => price !== null);
+
+  return prices.length > 0 ? Math.min(...prices) : null;
+}
+
+function getPriceCurrencyFromRecord(record: Record<string, unknown>) {
+  const directCurrency = asString(record.priceCurrency);
+
+  if (directCurrency) {
+    return directCurrency;
+  }
+
+  const specification = record.priceSpecification;
+
+  if (Array.isArray(specification)) {
+    for (const item of specification) {
+      if (isRecord(item)) {
+        const currency = asString(item.priceCurrency);
+
+        if (currency) {
+          return currency;
+        }
+      }
+    }
+  }
+
+  if (isRecord(specification)) {
+    return asString(specification.priceCurrency);
+  }
+
+  return "";
+}
+
+function getMetaItempropContent(html: string, itemprop: string) {
+  const escapedItemprop = itemprop.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const patterns = [
+    new RegExp(
+      `<meta[^>]+itemprop=["']${escapedItemprop}["'][^>]+content=["']([^"']+)["'][^>]*>`,
+      "i",
+    ),
+    new RegExp(
+      `<meta[^>]+content=["']([^"']+)["'][^>]+itemprop=["']${escapedItemprop}["'][^>]*>`,
+      "i",
+    ),
+  ];
+
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+
+    if (match?.[1]) {
+      return decodeHtml(match[1].trim());
+    }
+  }
+
+  return "";
+}
+
+function visiblePriceContextLooksPromotional(
+  text: string,
+  index: number,
+  endIndex: number,
+  nextPriceIndex: number | null,
+) {
+  const before = text.slice(Math.max(0, index - 120), index);
+  const afterEnd =
+    nextPriceIndex === null ? endIndex + 180 : Math.min(nextPriceIndex, endIndex + 180);
+  const after = text.slice(endIndex, afterEnd);
+
+  return (
+    /\b(?:apply for|\bpay\b|credit card|consumer card)\b/i.test(before) ||
+    /\b(?:after\s+\$?\d|credit card|consumer card|qualifying purchase|upon opening|coupon|promo code|with coupon|off your total)\b/i.test(
+      after,
+    )
+  );
+}
+
+function visibleProductPagePrice(html: string) {
+  const visibleText = compactText(html);
+  const matches: Array<{ endIndex: number; index: number; value: string }> = [];
+
+  for (const match of visibleText.matchAll(
+    /\$\s*(\d[\d,]*)\s*(?:\.|¢|\s)\s*(\d{2})\b/g,
+  )) {
+    matches.push({
+      endIndex: (match.index || 0) + match[0].length,
+      index: match.index || 0,
+      value: `${match[1]}.${match[2]}`,
+    });
+  }
+
+  for (const match of visibleText.matchAll(
+    /\$\s*(\d[\d,]*(?:\.\d{2})?)\b(?!\s*(?:\.|¢|\s)\s*\d{2}\b)/g,
+  )) {
+    matches.push({
+      endIndex: (match.index || 0) + match[0].length,
+      index: match.index || 0,
+      value: match[1] || "",
+    });
+  }
+
+  const sortedMatches = matches.sort((a, b) => a.index - b.index);
+
+  for (const [matchIndex, match] of sortedMatches.entries()) {
+    const nextPriceIndex = sortedMatches[matchIndex + 1]?.index ?? null;
+
+    if (
+      visiblePriceContextLooksPromotional(
+        visibleText,
+        match.index,
+        match.endIndex,
+        nextPriceIndex,
+      )
+    ) {
+      continue;
+    }
+
+    const price = priceFromValue(match.value);
+
+    if (price !== null) {
+      return price;
+    }
+  }
+
+  return null;
+}
+function priceFromPageMetadata(html: string) {
+  const metaValues = [
+    getMetaContent(html, "product:price:amount"),
+    getMetaContent(html, "og:price:amount"),
+    getMetaContent(html, "twitter:data1"),
+    getMetaContent(html, "price"),
+    getMetaItempropContent(html, "price"),
+    getMetaItempropContent(html, "lowPrice"),
+  ];
+  const dataPriceValues = Array.from(
+    html.matchAll(
+      /\b(?:data-price|data-sale-price|data-current-price|data-product-price)=["']([^"']+)["']/gi,
+    ),
+  ).map((match) => decodeHtml(match[1] || ""));
+  const namedPriceValues = [
+    ...Array.from(
+      html.matchAll(
+        /<(?:input|meta)[^>]+(?:name|id)=["'](?:price|product[_-]?price|current[_-]?price|sale[_-]?price)["'][^>]+value=["']([^"']+)["'][^>]*>/gi,
+      ),
+    ),
+    ...Array.from(
+      html.matchAll(
+        /<(?:input|meta)[^>]+value=["']([^"']+)["'][^>]+(?:name|id)=["'](?:price|product[_-]?price|current[_-]?price|sale[_-]?price)["'][^>]*>/gi,
+      ),
+    ),
+  ].map((match) => decodeHtml(match[1] || ""));
+  // Do not scrape loose `"price": 35` style values from retailer app-state.
+  // Those blobs often contain shipping thresholds, financing payments, promo
+  // amounts, or related-product prices that are not the linked product price.
+  const structuredPrices = [
+    ...metaValues,
+    ...dataPriceValues,
+    ...namedPriceValues,
+  ]
+    .map(priceFromValue)
+    .filter((price): price is number => price !== null);
+
+  if (structuredPrices.length > 0) {
+    return Math.min(...structuredPrices);
+  }
+
+  return visibleProductPagePrice(html);
+}
+
+function priceCurrencyFromPageMetadata(html: string) {
+  return (
+    getMetaContent(html, "product:price:currency") ||
+    getMetaContent(html, "og:price:currency") ||
+    getMetaItempropContent(html, "priceCurrency")
+  );
+}
+
+function getBrand(product: Record<string, unknown>) {
+  const brand = product.brand;
+
+  if (isRecord(brand)) {
+    return asString(brand.name);
+  }
+
+  return asString(brand);
+}
+
+function getAggregateRating(product: Record<string, unknown>) {
+  const rating = product.aggregateRating;
+
+  return isRecord(rating) ? rating : null;
+}
+
+function getCanonicalLink(html: string, pageUrl: string) {
+  const match = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["'][^>]*>/i);
+
+  return match?.[1] ? normalizeUrl(resolveUrl(decodeHtml(match[1]), pageUrl)) : "";
+}
+
+function extractColorsFromText(text: string) {
+  const normalized = text.toLowerCase();
+
+  return knownColors.filter((color) =>
+    new RegExp(`(^|\\W)${color.replace(/\s+/g, "\\s+")}(\\W|$)`, "i").test(
+      normalized,
+    ),
+  );
+}
+
+function extractWidthFromText(text: string) {
+  const patterns = [
+    /\b(?:width|wide|w)\s*:?\s*(\d+(?:\.\d+)?)\s*(?:inches|inch|in\.?|")\b/i,
+    /\b(\d+(?:\.\d+)?)\s*(?:inches|inch|in\.?|")\s*(?:w|wide|width)\b/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+
+    if (match?.[1]) {
+      return Number(match[1]);
+    }
+  }
+
+  return null;
+}
+
+function extractDimensionFromText(
+  text: string,
+  dimension: "depth" | "height" | "width",
+) {
+  if (dimension === "width") {
+    return extractWidthFromText(text);
+  }
+
+  const dimensionWords =
+    dimension === "depth" ? "(?:depth|deep|d)" : "(?:height|high|tall|h)";
+  const patterns = [
+    new RegExp(
+      `\\b${dimensionWords}\\s*:?\\s*(\\d+(?:\\.\\d+)?)\\s*(?:inches|inch|in\\.?|")\\b`,
+      "i",
+    ),
+    new RegExp(
+      `\\b(\\d+(?:\\.\\d+)?)\\s*(?:inches|inch|in\\.?|")\\s*${dimensionWords}\\b`,
+      "i",
+    ),
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+
+    if (match?.[1]) {
+      return Number(match[1]);
+    }
+  }
+
+  return null;
+}
+
+function extractSpecTableText(html: string) {
+  const rows = Array.from(
+    html.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi),
+  ).flatMap((row) => {
+    const cells = Array.from(
+      (row[1] || "").matchAll(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/gi),
+    ).map((cell) => compactText(cell[1] || ""));
+
+    return cells.length >= 2 ? [`${cells[0]}: ${cells.slice(1).join(" ")}`] : [];
+  });
+  const definitionRows = Array.from(
+    html.matchAll(/<dt[^>]*>([\s\S]*?)<\/dt>\s*<dd[^>]*>([\s\S]*?)<\/dd>/gi),
+  ).map((match) => `${compactText(match[1] || "")}: ${compactText(match[2] || "")}`);
+
+  return [...rows, ...definitionRows].join(" | ").slice(0, 5000);
+}
+
+function buildMetadata(input: {
+  html: string;
+  pageUrl: string;
+  product: ProductAssetRecommendation;
+  productImageUrl: string;
+}) {
+  const product = parseJsonLdProducts(input.html)[0];
+  const offers = product ? allOffers(product) : [];
+  const offer = offers[0] || null;
+  const rating = product ? getAggregateRating(product) : null;
+  const pageTitle =
+    (product ? asString(product.name) : "") ||
+    getMetaContent(input.html, "og:title") ||
+    input.product.name;
+  const canonicalUrl = getCanonicalLink(input.html, input.pageUrl) || input.pageUrl;
+  const brand = product ? getBrand(product) : "";
+  const pageMetadataPrice = priceFromPageMetadata(input.html);
+  const price = lowestOfferPrice(offers) ?? pageMetadataPrice;
+  const priceCurrency =
+    (offer ? getPriceCurrencyFromRecord(offer) : "") ||
+    priceCurrencyFromPageMetadata(input.html);
+  const availability = offer ? asString(offer.availability) : "";
+  const sku = product ? asString(product.sku) : "";
+  const modelNumber = product
+    ? asString(product.model) || asString(product.mpn)
+    : "";
+  const gtin = product
+    ? asString(product.gtin) ||
+      asString(product.gtin8) ||
+      asString(product.gtin12) ||
+      asString(product.gtin13) ||
+      asString(product.gtin14)
+    : "";
+  const colorValue = product ? asString(product.color) : "";
+  const colors = Array.from(
+    new Set([
+      ...extractColorsFromText(colorValue),
+      ...extractColorsFromText(`${pageTitle} ${input.product.name}`),
+    ]),
+  );
+  const specText = extractSpecTableText(input.html);
+  const dimensionText = `${pageTitle} ${asString(product?.description)} ${input.product.name} ${specText}`;
+  const width = extractWidthFromText(
+    dimensionText,
+  );
+  const depth = extractDimensionFromText(dimensionText, "depth");
+  const height = extractDimensionFromText(dimensionText, "height");
+  const sourceType = product ? "json_ld" : "open_graph";
+  const metadata: ProductMetadata = {
+    offers: [],
+    title: field(pageTitle, canonicalUrl, sourceType, product ? "High" : "Medium"),
+  };
+
+  metadata.canonicalUrl = field(canonicalUrl, canonicalUrl, "retailer_page", "High");
+
+  if (brand) {
+    metadata.brand = field(brand, canonicalUrl, "json_ld", "High");
+  }
+
+  if (sku) {
+    metadata.sku = field(sku, canonicalUrl, "json_ld", "High");
+  }
+
+  if (modelNumber) {
+    metadata.modelNumber = field(modelNumber, canonicalUrl, "json_ld", "High");
+  }
+
+  if (gtin) {
+    metadata.gtin = field(gtin, canonicalUrl, "json_ld", "High");
+  }
+
+  if (colors.length > 0) {
+    metadata.colors = field(colors, canonicalUrl, sourceType, product ? "High" : "Medium");
+  }
+
+  if (width !== null || depth !== null || height !== null) {
+    metadata.dimensions = {
+      unit: "in",
+      ...(width !== null
+        ? { width: field(width, canonicalUrl, sourceType, product ? "High" : "Medium") }
+        : {}),
+      ...(depth !== null
+        ? { depth: field(depth, canonicalUrl, "retailer_page", product ? "Medium" : "Low") }
+        : {}),
+      ...(height !== null
+        ? { height: field(height, canonicalUrl, "retailer_page", product ? "Medium" : "Low") }
+        : {}),
+    };
+  }
+
+  if (input.productImageUrl) {
+    metadata.image = field(input.productImageUrl, canonicalUrl, sourceType, "Medium");
+  }
+
+  if (rating) {
+    const ratingValue = asNumber(rating.ratingValue);
+    const reviewCount = asNumber(rating.reviewCount || rating.ratingCount);
+
+    if (ratingValue !== null) {
+      metadata.rating = field(ratingValue, canonicalUrl, "json_ld", "High");
+    }
+
+    if (reviewCount !== null) {
+      metadata.reviewCount = field(reviewCount, canonicalUrl, "json_ld", "High");
+    }
+  }
+
+  if (offer || price !== null || availability || priceCurrency) {
+    const priceSourceType = offer ? "json_ld" : "retailer_page";
+    const priceConfidence = offer ? "High" : "Medium";
+
+    metadata.offers.push({
+      availability: field(availability || null, canonicalUrl, priceSourceType, offer ? "High" : "Low"),
+      price: field(price, canonicalUrl, priceSourceType, priceConfidence),
+      priceCurrency: field(priceCurrency || null, canonicalUrl, priceSourceType, priceConfidence),
+      retailer: normalizeHostname(canonicalUrl) || null,
+      url: canonicalUrl,
+    });
+  }
+
+  return metadata;
+}
+
+function bestOfferPrice(metadata: ProductMetadata | undefined) {
+  const prices =
+    metadata?.offers
+      .map((offer) => offer.price.value)
+      .filter((price): price is number => price !== null && Number.isFinite(price)) ||
+    [];
+
+  return prices.length > 0 ? Math.min(...prices) : null;
+}
+
+function withVerifiedOfferPriceFields<T extends ProductAssetRecommendation>(
+  product: T,
+): T {
+  const price = bestOfferPrice(product.metadata);
+
+  if (price === null) {
+    return product;
+  }
+
+  const nextProduct = {
+    ...product,
+    estimated_price_range: formatDollars(price),
+  };
+
+  if (
+    product.price_value_verdict &&
+    priceTextLooksUnverified(product.price_value_verdict)
+  ) {
+    nextProduct.price_value_verdict =
+      "Price was found from product-page or shopping metadata; verify current price and availability before buying.";
+  }
+
+  return nextProduct;
+}
+
 async function getVerifiedProductAssets(product: ProductAssetRecommendation) {
   const citationProductPageUrl = product.product_page_url
     ? ""
     : await getProductPageFromCitationPages(product);
   const productPageUrl =
     normalizeUrl(product.product_page_url) || citationProductPageUrl;
-  const modelImage = normalizeUrl(product.product_image_url);
-  const citationImageUrl = await getImageFromCitationPages(product);
-  const fallbackImageUrl =
-    modelImage && isHttpUrl(modelImage)
-      ? modelImage
-      : citationImageUrl && isHttpUrl(citationImageUrl)
-        ? citationImageUrl
-        : "";
+  const initialImageCandidates: ProductImageCandidate[] = [];
+
+  if (product.product_image_url) {
+    initialImageCandidates.push({
+      evidenceText: `${product.name} ${product.category || ""}`,
+      source: "existing",
+      url: product.product_image_url,
+    });
+  }
+
+  if (product.metadata?.image?.value) {
+    initialImageCandidates.push({
+      evidenceText: `${product.name} ${product.metadata.image.sourceUrl}`,
+      source: "trusted_metadata",
+      url: product.metadata.image.value,
+    });
+  }
+  let imageResolution = resolveBestProductImage(
+    initialImageCandidates,
+    productImageContext(product, productPageUrl),
+  );
+  const citationImageResolution =
+    imageResolution.confidence === "none"
+      ? await getImageFromCitationPages(product)
+      : {
+          confidence: "none" as const,
+          rejected: [],
+          source: null,
+          url: "",
+        };
+  const serperImageResolution =
+    imageResolution.confidence === "none" &&
+    citationImageResolution.confidence === "none"
+      ? await getImageFromSerper(product)
+      : {
+          confidence: "none" as const,
+          rejected: [],
+          source: null,
+          url: "",
+        };
+
+  imageResolution =
+    imageResolution.confidence !== "none"
+      ? {
+          ...imageResolution,
+          rejected: [
+            ...imageResolution.rejected,
+            ...citationImageResolution.rejected,
+            ...serperImageResolution.rejected,
+          ],
+        }
+      : citationImageResolution.confidence !== "none"
+        ? {
+            ...citationImageResolution,
+            rejected: [
+              ...imageResolution.rejected,
+              ...citationImageResolution.rejected,
+              ...serperImageResolution.rejected,
+            ],
+          }
+        : {
+            ...serperImageResolution,
+            rejected: [
+              ...imageResolution.rejected,
+              ...citationImageResolution.rejected,
+              ...serperImageResolution.rejected,
+            ],
+          };
 
   if (!productPageUrl || !isHttpUrl(productPageUrl)) {
+    logImageResolutionDebug(product.name, imageResolution);
+
     return {
+      metadata: {
+        ...(product.metadata || { offers: [] }),
+        ...(imageResolution.url
+          ? {
+              image: imageResolutionToField(
+                imageResolution,
+                imageResolution.url,
+              ),
+            }
+          : {}),
+      },
       product_page_url: "",
-      product_image_url: fallbackImageUrl,
+      product_image_url: imageResolution.url,
     };
   }
 
@@ -350,9 +1194,22 @@ async function getVerifiedProductAssets(product: ProductAssetRecommendation) {
   );
 
   if (looksLikeEditorialUrl(productPageUrl)) {
+    logImageResolutionDebug(product.name, imageResolution);
+
     return {
+      metadata: {
+        ...(product.metadata || { offers: [] }),
+        ...(imageResolution.url
+          ? {
+              image: imageResolutionToField(
+                imageResolution,
+                imageResolution.url,
+              ),
+            }
+          : {}),
+      },
       product_page_url: "",
-      product_image_url: fallbackImageUrl,
+      product_image_url: imageResolution.url,
     };
   }
 
@@ -361,52 +1218,141 @@ async function getVerifiedProductAssets(product: ProductAssetRecommendation) {
     : false;
 
   if (html && !pageMatchesProduct && !likelyProductPage) {
+    logImageResolutionDebug(product.name, imageResolution);
+
     return {
+      metadata: {
+        ...(product.metadata || { offers: [] }),
+        ...(imageResolution.url
+          ? {
+              image: imageResolutionToField(
+                imageResolution,
+                imageResolution.url,
+              ),
+            }
+          : {}),
+      },
       product_page_url: "",
-      product_image_url: fallbackImageUrl,
+      product_image_url: imageResolution.url,
     };
   }
 
   if (!html && !likelyProductPage) {
+    logImageResolutionDebug(product.name, imageResolution);
+
     return {
+      metadata: {
+        ...(product.metadata || { offers: [] }),
+        ...(imageResolution.url
+          ? {
+              image: imageResolutionToField(
+                imageResolution,
+                imageResolution.url,
+              ),
+            }
+          : {}),
+      },
       product_page_url: "",
-      product_image_url: fallbackImageUrl,
+      product_image_url: imageResolution.url,
     };
   }
 
-  const metadataImage = html
-    ? getMetaContent(html, "og:image") ||
-      getMetaContent(html, "twitter:image") ||
-      getMetaContent(html, "twitter:image:src")
-    : "";
-  const resolvedMetadataImage = resolveUrl(metadataImage, productPageUrl);
-  const productImageUrl =
-    resolvedMetadataImage && isHttpUrl(resolvedMetadataImage)
-      ? normalizeUrl(resolvedMetadataImage)
-      : fallbackImageUrl;
+  if (html) {
+    const pageImageResolution = resolveBestProductImage(
+      [
+        ...initialImageCandidates,
+        ...extractProductImageCandidatesFromHtml(
+          html,
+          productPageUrl,
+          productImageContext(product, productPageUrl),
+        ),
+      ],
+      productImageContext(product, productPageUrl),
+    );
+
+    imageResolution =
+      pageImageResolution.confidence !== "none"
+        ? {
+            ...pageImageResolution,
+            rejected: [
+              ...imageResolution.rejected,
+              ...pageImageResolution.rejected,
+            ],
+          }
+        : {
+            ...imageResolution,
+            rejected: [
+              ...imageResolution.rejected,
+              ...pageImageResolution.rejected,
+            ],
+          };
+  }
+
+  const productImageUrl = imageResolution.url;
+  const metadata = html
+    ? mergeMetadata(
+        product.metadata,
+        buildMetadata({
+          html,
+          pageUrl: productPageUrl,
+          product,
+          productImageUrl,
+        }),
+      )
+    : product.metadata || { offers: [] };
+  const imageField = imageResolutionToField(imageResolution, productPageUrl);
+  const metadataWithImage = {
+    ...metadata,
+    ...(imageField ? { image: imageField } : {}),
+  };
+
+  logImageResolutionDebug(product.name, imageResolution);
 
   return {
     product_page_url: productPageUrl,
     product_image_url: productImageUrl,
+    metadata: metadataWithImage,
   };
 }
 
 export async function enrichProductAssets<T extends ProductAssetResult>(
   result: T,
 ): Promise<T> {
-  const recommendations = await Promise.all(
-    result.recommendations.map(async (recommendation) => {
+  async function enrichProducts(products: ProductAssetRecommendation[]) {
+    return Promise.all(products.map(async (recommendation) => {
       const assets = await getVerifiedProductAssets(recommendation);
 
-      return {
+      return withVerifiedOfferPriceFields({
         ...recommendation,
         ...assets,
-      };
-    }),
-  );
+      });
+    }));
+  }
+
+  const recommendations = await enrichProducts(result.recommendations);
+  const exactMatches = result.exactMatches
+    ? await enrichProducts(result.exactMatches)
+    : undefined;
+  const nearMatches = result.nearMatches
+    ? await enrichProducts(result.nearMatches)
+    : undefined;
+  const premiumAboveBudget = result.premiumAboveBudget
+    ? await enrichProducts(result.premiumAboveBudget)
+    : undefined;
 
   return {
     ...result,
+    ...(exactMatches ? { exactMatches } : {}),
+    ...(premiumAboveBudget ? { premiumAboveBudget } : {}),
+    ...(nearMatches ? { nearMatches } : {}),
     recommendations,
   };
 }
+
+export const productAssetsTestExports = {
+  buildMetadata,
+  extractDimensionFromText,
+  extractSpecTableText,
+  mergeMetadata,
+  withVerifiedOfferPriceFields,
+};

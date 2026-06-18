@@ -19,6 +19,15 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+reviewradar-*.log
+reviewradar-*.out.log
+reviewradar-*.err.log
+
+# test / eval run artifacts
+/playwright-report
+/test-results
+/playwright/.cache
+eval-results.json
 
 # TypeScript
 *.tsbuildinfo

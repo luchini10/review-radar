@@ -1,6 +1,6 @@
 # ReviewRadar
 
-ReviewRadar is an MVP product research app. You enter a product category, optional budget, use case, and deal breakers, and the app asks OpenAI to research public web sources before returning structured buying recommendations.
+ReviewRadar is an MVP product research app. You enter a product category, optional budget, and important details, and the app asks OpenAI to research public web sources before returning structured buying recommendations.
 
 The goal is to act like a buying-decision helper, not a generic chatbot. Results should include evidence-backed product picks, confidence scores, source consensus, pros and cons, common complaints, price/value notes, and citation links when reliable sources are available.
 
@@ -46,7 +46,7 @@ If PowerShell says running scripts are disabled, use the Windows npm command dir
 
 ## Create `.env.local`
 
-The app needs an OpenAI API key to run live product research.
+The app needs an OpenAI API key to run live product research. Serper is optional, but it helps ReviewRadar discover more Google search product candidates before the app applies strict filters.
 
 Create a local environment file only if `.env.local` does not already exist:
 
@@ -58,13 +58,19 @@ Open `.env.local` in VS Code or Notepad and put your key after `OPENAI_API_KEY=`
 
 ```text
 OPENAI_API_KEY=your_api_key_here
+SERPER_API_KEY=your_serper_key_here
+SEARCH_DEPTH=standard
 ```
 
-Do not add quotes around the key. Do not use `NEXT_PUBLIC_` for the key. The OpenAI key must stay server-side.
+Do not add quotes around the keys. Do not use `NEXT_PUBLIC_` for either key. API keys must stay server-side.
 
 Important: do not run `Copy-Item .env.local.example .env.local` again after adding your real key. That command can replace your real key with the blank example file.
 
 Optional: you can leave `OPENAI_MODEL=` blank. The app defaults to `gpt-5.4-mini`, which gives the recommendation engine a good balance of quality, speed, and cost.
+
+Optional: you can leave `SERPER_API_KEY=` blank. The app will skip Serper and continue using the existing OpenAI research path.
+
+Optional: `SEARCH_DEPTH` controls how broadly ReviewRadar searches before filtering. Use `dev` to spend fewer Serper credits while testing, `standard` for normal use, or `deep` for broader searches that use more credits.
 
 ## Run The App Locally
 
@@ -90,11 +96,11 @@ http://localhost:3000
 
 1. Open `http://localhost:3000`.
 2. Enter a product category, such as `vacuum` or `gaming chair`.
-3. Optionally enter a budget, use case, and deal breakers.
+3. Optionally enter a budget and important details.
 4. Click **Find Recommendations**.
 5. Wait for the research to finish.
 
-Live searches use the OpenAI API and may use paid API quota. If the app cannot find enough reliable evidence, it should show a clear message instead of making up recommendations.
+Live searches use the OpenAI API and may use paid API quota. If `SERPER_API_KEY` is configured, searches may also use Serper credits. If the app cannot find enough reliable evidence, it should show a clear message instead of making up recommendations.
 
 ## Run Local Tests
 
@@ -197,6 +203,17 @@ OPENAI_API_KEY=your_api_key_here
 
 After editing `.env.local`, stop and restart the dev server.
 
+### Serper discovery is not adding candidates
+
+Serper is optional. To enable it, check that `.env.local` contains:
+
+```text
+SERPER_API_KEY=your_serper_key_here
+SEARCH_DEPTH=standard
+```
+
+After editing `.env.local`, stop and restart the dev server. If the key is missing, invalid, rate-limited, or out of credits, the app should continue without Serper. If you want fewer Serper calls while testing, set `SEARCH_DEPTH=dev`.
+
 ### OpenAI quota or billing error
 
 Check your OpenAI billing and usage limits. After funding an account or changing limits, it may take a little time before requests work normally.
@@ -207,7 +224,7 @@ Leave `OPENAI_MODEL=` blank in `.env.local` unless you know your account can use
 
 ### Search returns weak-evidence or no-results message
 
-Try a more specific product category or add a use case. Some niche products may not have enough reliable public sources.
+Try a more specific product category or add important details. Some niche products may not have enough reliable public sources.
 
 ### Something went wrong while researching
 

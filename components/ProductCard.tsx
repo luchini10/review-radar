@@ -3,68 +3,47 @@
 import { useState } from "react";
 import {
   BadgeCheck,
-  CircleDollarSign,
+  Check,
   ExternalLink,
-  Gem,
   ImageOff,
-  RefreshCw,
-  Scale,
+  Minus,
+  Star,
   Trophy,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  buildProductRecommendationCardData,
+  type ProductCardDisplayMode,
+  type ProductCardTone,
+  type ProductRecommendationCardData,
+} from "@/lib/productCardViewModel";
+import type { ReactNode } from "react";
 import type { ProductRecommendation } from "@/types/review-radar";
-import { ConfidenceBadge } from "./ConfidenceBadge";
-import { SourceList } from "./SourceList";
-import { VerdictCard } from "./VerdictCard";
+
+export type { ProductCardDisplayMode };
 
 type ProductCardProps = {
+  displayMode?: ProductCardDisplayMode;
   product: ProductRecommendation;
 };
 
-const recommendationDescriptions: Record<string, string> = {
-  "Best Overall": "The strongest all-around recommendation.",
-  "Best Budget": "The cheapest option that is still worth buying.",
-  "Best Value":
-    "The best balance of price, quality, features, and reliability.",
-  "Best Premium": "The higher-end option for people willing to spend more.",
-  "Best Alternative":
-    "A solid backup pick if the top choice is unavailable, too expensive, or not quite the right fit.",
-  "Honorable Mention": "Worth considering, but not stronger than the main picks.",
-};
+type DetailMarker = "dot" | "pro" | "con";
 
-const recommendationIcons = {
-  "Best Alternative": RefreshCw,
-  "Best Budget": CircleDollarSign,
-  "Best Overall": Trophy,
-  "Best Premium": Gem,
-  "Best Value": Scale,
-  "Honorable Mention": BadgeCheck,
-};
-
-function DetailList({ items }: { items: string[] }) {
-  if (items.length === 0) {
-    return <p className="text-sm leading-6 text-slate-500">None listed.</p>;
-  }
-
-  return (
-    <ul className="grid gap-2 text-sm leading-6 text-slate-600">
-      {items.map((item) => (
-        <li className="flex gap-2" key={item}>
-          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
-          <span>{item}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function ProductImage({ name, src }: { name: string; src: string }) {
+function ProductImage({
+  image,
+}: {
+  image: ProductRecommendationCardData["image"];
+}) {
   const [failed, setFailed] = useState(false);
 
-  if (!src || failed) {
+  if (!image.src || failed) {
     return (
-      <div className="flex aspect-[4/3] items-center justify-center p-5 text-center text-sm leading-6 text-slate-500">
+      <div className="flex aspect-[4/3] items-center justify-center p-5 text-center text-sm leading-6 text-slate-400">
         <span className="grid justify-items-center gap-2">
-          <ImageOff aria-hidden="true" className="h-6 w-6 text-slate-400" />
+          <span className="grid h-10 w-10 place-items-center rounded-full bg-slate-100">
+            <ImageOff aria-hidden="true" className="h-5 w-5 text-slate-400" />
+          </span>
           Product image unavailable
         </span>
       </div>
@@ -74,113 +53,506 @@ function ProductImage({ name, src }: { name: string; src: string }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      alt={name}
+      alt={image.alt}
       className="aspect-[4/3] h-full w-full object-contain p-4"
       onError={() => setFailed(true)}
-      src={src}
+      src={image.src}
     />
   );
 }
 
-export function ProductCard({ product }: ProductCardProps) {
-  const typeDescription =
-    recommendationDescriptions[product.recommendation_type] ||
-    "Evidence-backed recommendation.";
-  const RecommendationIcon =
-    recommendationIcons[product.recommendation_type] || BadgeCheck;
+function detailIcon(marker: DetailMarker) {
+  if (marker === "pro") {
+    return (
+      <Check
+        aria-hidden="true"
+        className="mt-1 h-4 w-4 shrink-0 text-emerald-600"
+      />
+    );
+  }
+
+  if (marker === "con") {
+    return (
+      <Minus
+        aria-hidden="true"
+        className="mt-1 h-4 w-4 shrink-0 text-rose-500"
+      />
+    );
+  }
+
+  return <span className="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-slate-400" />;
+}
+
+function DetailList({
+  items,
+  marker = "dot",
+}: {
+  items: string[];
+  marker?: DetailMarker;
+}) {
+  if (items.length === 0) {
+    return null;
+  }
 
   return (
-    <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
-          <ProductImage name={product.name} src={product.product_image_url} />
-        </div>
+    <ul className="grid gap-2 text-sm leading-6 text-slate-600">
+      {items.map((item) => (
+        <li className="flex gap-2" key={item}>
+          {detailIcon(marker)}
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
-        <div className="min-w-0">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-0">
-              <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-50 text-blue-600">
-                  <RecommendationIcon aria-hidden="true" className="h-5 w-5" />
+function Section({
+  children,
+  title,
+}: {
+  children: ReactNode;
+  title: string;
+}) {
+  return (
+    <section className="border-t border-slate-100 pt-5">
+      <h3 className="mb-3 text-sm font-semibold text-slate-950">{title}</h3>
+      {children}
+    </section>
+  );
+}
+
+function signalToneClass(tone: ProductCardTone) {
+  if (tone === "positive") {
+    return "border-emerald-100 bg-emerald-50/60 text-emerald-950";
+  }
+
+  if (tone === "warning") {
+    return "border-amber-100 bg-amber-50/70 text-amber-950";
+  }
+
+  return "border-slate-200/80 bg-slate-50/70 text-slate-800";
+}
+
+function QuickDecisionSignals({
+  signals,
+}: {
+  signals: ProductRecommendationCardData["quickSignals"];
+}) {
+  if (signals.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      {signals.map((signal) => (
+        <div
+          className={[
+            "rounded-xl border p-3",
+            signalToneClass(signal.tone),
+          ].join(" ")}
+          key={`${signal.label}-${signal.value}`}
+        >
+          <p className="text-xs font-semibold opacity-70">
+            {signal.label}
+          </p>
+          <p className="mt-1 text-sm font-medium leading-6">{signal.value}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function RecommendationReasons({
+  reasons,
+}: {
+  reasons: ProductRecommendationCardData["recommendationReasons"];
+}) {
+  if (reasons.length === 0) {
+    return null;
+  }
+
+  return (
+    <Section title="Why we recommend it">
+      <DetailList items={reasons} marker="pro" />
+    </Section>
+  );
+}
+
+function OwnerOpinionBlock({
+  ownerOpinion,
+}: {
+  ownerOpinion: ProductRecommendationCardData["ownerOpinion"];
+}) {
+  if (!ownerOpinion) {
+    return null;
+  }
+
+  return (
+    <Section title="Owner opinion">
+      <div
+        className={[
+          "rounded-xl border p-4",
+          signalToneClass(ownerOpinion.tone),
+        ].join(" ")}
+      >
+        <p className="text-sm font-semibold">
+          Reddit signal: {ownerOpinion.label}
+        </p>
+        <p className="mt-2 text-sm leading-6">{ownerOpinion.summary}</p>
+        {ownerOpinion.praises.length > 0 ? (
+          <div className="mt-4">
+            <p className="mb-2 text-xs font-semibold opacity-70">
+              Common praise
+            </p>
+            <DetailList items={ownerOpinion.praises} marker="pro" />
+          </div>
+        ) : null}
+        {ownerOpinion.concerns.length > 0 ? (
+          <div className="mt-4">
+            <p className="mb-2 text-xs font-semibold opacity-70">
+              Common concerns
+            </p>
+            <DetailList items={ownerOpinion.concerns} marker="con" />
+          </div>
+        ) : null}
+      </div>
+    </Section>
+  );
+}
+
+function ProsConsGrid({
+  complaints,
+  cons,
+  pros,
+}: {
+  complaints: string[];
+  cons: string[];
+  pros: string[];
+}) {
+  if (pros.length === 0 && cons.length === 0 && complaints.length === 0) {
+    return null;
+  }
+
+  return (
+    <Section title="Pros and cons">
+      <div className="grid gap-5 md:grid-cols-2">
+        {pros.length > 0 ? (
+          <div>
+            <p className="mb-2 text-xs font-semibold text-slate-500">
+              Pros
+            </p>
+            <DetailList items={pros} marker="pro" />
+          </div>
+        ) : null}
+        {cons.length > 0 || complaints.length > 0 ? (
+          <div>
+            <p className="mb-2 text-xs font-semibold text-slate-500">
+              Cons
+            </p>
+            <DetailList items={[...cons, ...complaints]} marker="con" />
+          </div>
+        ) : null}
+      </div>
+    </Section>
+  );
+}
+
+function BuyerFitBlock({
+  bestFor,
+  notFor,
+}: ProductRecommendationCardData["buyerFit"]) {
+  if (bestFor.length === 0 && notFor.length === 0) {
+    return null;
+  }
+
+  return (
+    <Section title="Buyer fit">
+      <div className="grid gap-5 md:grid-cols-2">
+        {bestFor.length > 0 ? (
+          <div>
+            <p className="mb-2 text-xs font-semibold text-slate-500">
+              Best for
+            </p>
+            <DetailList items={bestFor} marker="pro" />
+          </div>
+        ) : null}
+        {notFor.length > 0 ? (
+          <div>
+            <p className="mb-2 text-xs font-semibold text-slate-500">
+              Not for
+            </p>
+            <DetailList items={notFor} marker="con" />
+          </div>
+        ) : null}
+      </div>
+    </Section>
+  );
+}
+
+function KeySpecsGrid({
+  specs,
+}: {
+  specs: ProductRecommendationCardData["specs"];
+}) {
+  const allSpecs = [...specs.universal, ...specs.categorySpecific];
+
+  if (allSpecs.length === 0) {
+    return null;
+  }
+
+  return (
+    <Section title="Key specs">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {allSpecs.map((spec) => (
+          <div
+            className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3"
+            key={`${spec.label}-${spec.value}`}
+          >
+            <p className="text-xs font-semibold text-slate-500">
+              {spec.label}
+            </p>
+            <p className="mt-1 text-sm font-medium leading-6 text-slate-900">
+              {spec.value}
+            </p>
+          </div>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+function EvidenceQualityBlock({
+  citations,
+  evidence,
+}: {
+  citations: ProductRecommendationCardData["citations"];
+  evidence: ProductRecommendationCardData["evidence"];
+}) {
+  return (
+    <Section title="Evidence quality">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge
+              className="rounded-md border-slate-200 bg-white text-slate-800"
+              variant="outline"
+            >
+              {evidence.quality}
+            </Badge>
+            <p className="text-sm font-semibold text-slate-950">
+              {evidence.sourcesChecked > 0
+                ? `${evidence.sourcesChecked} sources checked`
+                : "Limited sources found"}
+            </p>
+          </div>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            {evidence.explanation}
+          </p>
+          {evidence.warnings.length > 0 ? (
+            <div className="mt-4">
+              <p className="mb-2 text-xs font-semibold text-slate-500">
+                What to verify
+              </p>
+              <DetailList items={evidence.warnings} marker="con" />
+            </div>
+          ) : null}
+        </div>
+        <CitationList citations={citations} />
+      </div>
+    </Section>
+  );
+}
+
+function CitationList({
+  citations,
+}: {
+  citations: ProductRecommendationCardData["citations"];
+}) {
+  if (citations.length === 0) {
+    return (
+      <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-3 text-sm leading-6 text-slate-500">
+        No citation links are available for this item.
+      </p>
+    );
+  }
+
+  return (
+    <ul className="grid gap-2">
+      {citations.map((citation) => (
+        <li key={`${citation.title}-${citation.url}`}>
+          <div className="rounded-xl border border-slate-200/80 bg-white p-3 transition-colors hover:border-slate-300">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge
+                className="rounded-md border-slate-200 bg-slate-50 text-slate-600"
+                variant="outline"
+              >
+                {citation.label}
+              </Badge>
+              {citation.host ? (
+                <span className="text-xs font-medium text-slate-400">
+                  {citation.host}
                 </span>
-                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-blue-600">
-                  {product.recommendation_type}
-                </p>
-              </div>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                {typeDescription}
-              </p>
-              <h2 className="mt-3 break-words text-2xl font-semibold tracking-tight text-slate-950">
-                {product.name}
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">{product.category}</p>
-              <p className="mt-3 text-sm leading-6 text-slate-700">
-                {product.why_recommended}
-              </p>
-              {product.product_page_url ? (
-                <a
-                  className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-lg border border-blue-200 bg-white px-3 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-50"
-                  href={product.product_page_url}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  <ExternalLink aria-hidden="true" className="h-4 w-4" />
-                  View product page
-                </a>
               ) : null}
             </div>
-            <ConfidenceBadge score={product.confidence_score} />
+            <a
+              className="mt-2 inline-flex min-w-0 items-center gap-1.5 text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 transition-colors hover:decoration-slate-500"
+              href={citation.url}
+              rel="noreferrer noopener"
+              target="_blank"
+            >
+              <span className="min-w-0 break-words">{citation.title}</span>
+              <ExternalLink
+                aria-hidden="true"
+                className="h-3.5 w-3.5 shrink-0 text-slate-400"
+              />
+            </a>
+            {citation.supports ? (
+              <p className="mt-1.5 text-xs leading-5 text-slate-500">
+                Shows: {citation.supports}
+              </p>
+            ) : null}
           </div>
-        </div>
-      </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
-      <div className="mt-5 grid gap-4 border-t border-slate-100 pt-5 md:grid-cols-2">
-        <VerdictCard
-          title="Estimated price range"
-          verdict={product.estimated_price_range}
-        />
-        <VerdictCard
-          title="Source consensus"
-          verdict={product.source_consensus}
-        />
-        <VerdictCard
-          title="Price/value verdict"
-          verdict={product.price_value_verdict}
-        />
-        <VerdictCard title="Best for" verdict={product.best_for} />
-      </div>
+function NearMatchNotice({
+  nearMatch,
+}: {
+  nearMatch: ProductRecommendationCardData["nearMatch"];
+}) {
+  if (!nearMatch) {
+    return null;
+  }
 
-      <div className="mt-5 grid gap-5 border-t border-slate-100 pt-5 md:grid-cols-3">
-        <div>
-          <p className="mb-3 text-sm font-semibold text-slate-950">Pros</p>
-          <DetailList items={product.pros} />
-        </div>
-        <div>
-          <p className="mb-3 text-sm font-semibold text-slate-950">Cons</p>
-          <DetailList items={product.cons} />
-        </div>
-        <div>
-          <p className="mb-3 text-sm font-semibold text-slate-950">
-            Common complaints
-          </p>
-          <DetailList items={product.common_complaints} />
-        </div>
+  return (
+    <div className="rounded-xl border border-amber-100 bg-amber-50/70 p-4 text-sm leading-6 text-amber-950">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge
+          className="rounded-md border-amber-200 bg-white text-amber-800"
+          variant="outline"
+        >
+          {nearMatch.label}
+        </Badge>
+        <p className="font-semibold">{nearMatch.summary}</p>
       </div>
-
-      <div className="mt-5 grid gap-5 border-t border-slate-100 pt-5 md:grid-cols-2">
-        <div>
-          <p className="mb-3 text-sm font-semibold text-slate-950">Not for</p>
-          <DetailList items={product.not_for} />
+      {nearMatch.details.length > 0 ? (
+        <div className="mt-3">
+          <DetailList items={nearMatch.details} marker="con" />
         </div>
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-blue-600">
-            Citations
-          </p>
-          <div className="mt-3">
-            <SourceList sources={product.citations} />
+      ) : null}
+    </div>
+  );
+}
+
+function ProductCardHeader({
+  card,
+}: {
+  card: ProductRecommendationCardData;
+}) {
+  const RecommendationIcon =
+    card.badge.rank === 1 ? Trophy : BadgeCheck;
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[250px_minmax(0,1fr)]">
+      <div className="self-start overflow-hidden rounded-xl border border-slate-200/80 bg-white">
+        <ProductImage image={card.image} />
+      </div>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <span
+            className={
+              card.badge.tone === "blue"
+                ? "grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-700"
+                : "grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-600"
+            }
+          >
+            <RecommendationIcon aria-hidden="true" className="h-4.5 w-4.5" />
+          </span>
+          <Badge
+            className={
+              card.badge.tone === "blue"
+                ? "h-auto rounded-md border-blue-100 bg-blue-50 px-2.5 py-1 text-sm font-semibold text-blue-700"
+                : "h-auto rounded-md border-slate-200 bg-slate-100 px-2.5 py-1 text-sm font-semibold text-slate-700"
+            }
+            variant="outline"
+          >
+            {card.badge.label}
+          </Badge>
+          <span className="text-sm text-slate-500">
+            {card.badge.description}
+          </span>
+        </div>
+        <h2 className="mt-4 break-words font-display text-2xl font-semibold leading-snug text-slate-950 sm:text-[1.65rem]">
+          {card.title}
+        </h2>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
+          <span>{card.category}</span>
+          {card.rating ? (
+            <span className="inline-flex items-center gap-1.5 text-slate-600">
+              <Star
+                aria-hidden="true"
+                className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
+              />
+              {card.rating.text}
+            </span>
+          ) : null}
+        </div>
+        {card.offer ? (
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div>
+              <p className="text-xs font-semibold text-slate-500">
+                Best offer found
+              </p>
+              <p className="mt-1 font-display text-xl font-semibold leading-7 text-slate-950">
+                {card.offer.displayText}
+              </p>
+            </div>
+            {card.offer.url ? (
+              <a
+                className="inline-flex min-h-11 w-fit items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 shadow-xs transition-colors hover:border-slate-400 hover:bg-slate-50"
+                href={card.offer.url}
+                rel="noreferrer noopener"
+                target="_blank"
+              >
+                <ExternalLink aria-hidden="true" className="h-4 w-4 text-slate-500" />
+                {card.offer.ctaLabel}
+              </a>
+            ) : null}
           </div>
-        </div>
+        ) : null}
+        <p className="mt-4 text-sm leading-6 text-slate-700">
+          {card.summary}
+        </p>
       </div>
-    </article>
+    </div>
+  );
+}
+
+export function ProductCard({
+  displayMode = "recommendation",
+  product,
+}: ProductCardProps) {
+  const card = buildProductRecommendationCardData(product, displayMode);
+  const complaints = product.common_complaints
+    .filter((item) => item.trim())
+    .slice(0, 4);
+
+  return (
+    <Card className="overflow-hidden rounded-2xl border-slate-200/80 bg-white py-0 shadow-sm">
+      <CardContent className="grid gap-5 p-5 sm:p-6">
+        <ProductCardHeader card={card} />
+        <QuickDecisionSignals signals={card.quickSignals} />
+        <NearMatchNotice nearMatch={card.nearMatch} />
+        <RecommendationReasons reasons={card.recommendationReasons} />
+        <OwnerOpinionBlock ownerOpinion={card.ownerOpinion} />
+        <ProsConsGrid complaints={complaints} cons={card.cons} pros={card.pros} />
+        <BuyerFitBlock {...card.buyerFit} />
+        <KeySpecsGrid specs={card.specs} />
+        <EvidenceQualityBlock citations={card.citations} evidence={card.evidence} />
+      </CardContent>
+    </Card>
   );
 }

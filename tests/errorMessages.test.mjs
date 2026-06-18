@@ -20,6 +20,14 @@ describe("search validation messages", () => {
       getSearchValidationError("best cheap product"),
       USER_ERROR_MESSAGES.vagueSearch,
     );
+    assert.equal(
+      getSearchValidationError("anything"),
+      USER_ERROR_MESSAGES.vagueSearch,
+    );
+    assert.equal(
+      getSearchValidationError("cheap item"),
+      USER_ERROR_MESSAGES.vagueSearch,
+    );
   });
 
   it("accepts a normal product search", () => {
