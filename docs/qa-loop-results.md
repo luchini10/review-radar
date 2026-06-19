@@ -223,3 +223,96 @@ One full loop is complete. Do not continue into another issue without approval.
   Awaiting approval on which open issue to tackle next — the `$40`/financing price-extraction risk
   is the strongest candidate (shared, deterministic-testable, and user-visible). When approved I will
   run one focused loop and add a new `### Claude Change N` subsection here with before/after proof.
+
+## Agent Loop Run - 2026-06-19T05:10:55.131Z
+
+- **run id:** agent-loop-2026-06-19T05-10-43-078Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **worker result files checked:** 2
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 2287ms |
+| lint | Passed | 5368ms |
+| unit tests | Passed | 4022ms |
+| deterministic eval pipeline | Passed | 372ms |
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+## Agent Loop Run - 2026-06-19T11:20:41.187Z
+
+- **run id:** agent-loop-2026-06-19T11-20-23-084Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust, broad-mainstream, requirement-units
+- **parallel:** 1
+- **worker result files checked:** 3
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 2923ms |
+| lint | Passed | 7347ms |
+| unit tests | Passed | 5688ms |
+| deterministic eval pipeline | Passed | 485ms |
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Tooling Upgrade - 2026-06-19T11:30:00Z
+
+- **reason:** Implement the phased local QA-agent plan through Phase 6.
+- **what changed:** Added JSON worker batches, live localhost worker mode, multi-batch controller runs, stronger before/after verification, fix-agent handoff docs, and a generated agent-loop report.
+- **live QA check:** `npm run qa:worker -- --batch price-trust --mode live` successfully posted two searches to the local recommendations API and captured exact/near counts, product names, debug summaries, and suspicious flags.
+- **tooling issue found:** The first live worker pass falsely treated `$3,000` as `$3` when checking for suspiciously low prices.
+- **fix made:** The QA worker now parses comma-formatted dollar amounts before applying suspicious-low-price rules. It also flags price-comparison style pages and court-rule/dimensions pages as non-product evidence.
+- **final status:** Deterministic workers and the controller passed. The verifier accepted the comparison. Build passed.
+- **remaining risk:** Live QA can still uncover real product-quality issues; workers only report evidence and do not edit app code.
+
+## Agent Loop Run - 2026-06-19T11:29:16.713Z
+
+- **run id:** agent-loop-2026-06-19T11-28-54-598Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust, broad-mainstream, requirement-units
+- **parallel:** 1
+- **worker result files checked:** 3
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3488ms |
+| lint | Passed | 8260ms |
+| unit tests | Passed | 7597ms |
+| deterministic eval pipeline | Passed | 497ms |
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.

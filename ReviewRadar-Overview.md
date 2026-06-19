@@ -322,6 +322,21 @@ REVIEW_RADAR_CREDIBILITY_PENALTY=on node scripts/eval-pipeline.mjs
 node scripts/ab-ranking.mjs                                      # one fixed candidate set, flags off vs on
 ```
 
+**Agent QA loop** (safe local controller/worker/verifier workflow):
+```bash
+npm run qa:worker -- --batch price-trust
+npm run qa:worker -- --batch price-trust --mode live
+npm run qa:loop -- --batches price-trust,broad-mainstream,requirement-units
+npm run qa:verify -- --before docs/agent-worker-results/before.json --after docs/agent-worker-results/after.json
+```
+The worker batches live in `docs/agent-batches/`. Deterministic mode is the default. Live mode posts to
+localhost with `x-reviewradar-debug: true` and records exact/near counts, product names, suspicious flags,
+likely root causes, and debug summaries when available.
+
+The controller writes `docs/agent-next-task.md`, appends to `docs/qa-loop-results.md`, and generates
+`docs/agent-loop-report.md`. Workers do not edit code. Fix agents should use `docs/agent-fix-template.md`
+and make one generalized fix at a time.
+
 **Live debug**: send header `x-reviewradar-debug: true` (non-production only) to `POST /api/recommendations`
 to receive a `debug` payload (search plan stages, candidate specs/validation, Serper call counts,
 rejected counts, expected/missing products, seed names, model names). Example:

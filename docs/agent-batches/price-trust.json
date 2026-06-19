@@ -1,0 +1,18 @@
+{
+  "name": "price-trust",
+  "description": "Products should not show misleading prices or pass budget checks with stale, variant, financing, or conflicting price evidence.",
+  "searches": [
+    {
+      "category": "basketball hoop",
+      "budget": "$3000",
+      "priorities": "clear backboard",
+      "expectedRisk": "wrong_price_or_variant_price"
+    },
+    {
+      "category": "car seat stroller combo",
+      "budget": "$400",
+      "priorities": "infant car seat included, lightweight, easy fold",
+      "expectedRisk": "implausible_price"
+    }
+  ]
+}

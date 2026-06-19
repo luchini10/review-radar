@@ -1,0 +1,24 @@
+{
+  "name": "wrong-category",
+  "description": "Wrong product types, accessories, components, and category substitutions should not become exact matches.",
+  "searches": [
+    {
+      "category": "office chair",
+      "budget": "$300",
+      "priorities": "black, lumbar support, not a gaming chair",
+      "expectedRisk": "wrong_product_type"
+    },
+    {
+      "category": "counter depth refrigerator",
+      "budget": "$2000",
+      "priorities": "36 inches wide, stainless steel, ice maker",
+      "expectedRisk": "component_or_accessory_leakage"
+    },
+    {
+      "category": "gaming laptop",
+      "budget": "$1200",
+      "priorities": "RTX 4060 or better, 16GB RAM, not refurbished",
+      "expectedRisk": "wrong_category_or_custom_notebook_leakage"
+    }
+  ]
+}

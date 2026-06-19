@@ -9,6 +9,9 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "node --no-warnings --test tests/*.test.mjs",
+    "qa:loop": "node scripts/agent-loop-controller.mjs",
+    "qa:worker": "node scripts/qa-worker.mjs",
+    "qa:verify": "node scripts/verify-loop-result.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },

@@ -1,0 +1,24 @@
+{
+  "name": "broad-mainstream",
+  "description": "Broad common searches should return mainstream, trustworthy products instead of false no-exact states or obscure picks.",
+  "searches": [
+    {
+      "category": "basketball shoes",
+      "budget": "$300",
+      "priorities": "Nike only",
+      "expectedRisk": "false_no_exact_or_obscure_products"
+    },
+    {
+      "category": "running shoes",
+      "budget": "$200",
+      "priorities": "Nike only",
+      "expectedRisk": "brand_alias_or_popularity_gap"
+    },
+    {
+      "category": "walking shoes",
+      "budget": "$150",
+      "priorities": "New Balance only",
+      "expectedRisk": "brand_alias_or_popularity_gap"
+    }
+  ]
+}

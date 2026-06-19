@@ -1,0 +1,18 @@
+{
+  "name": "requirement-units",
+  "description": "Numeric and unit requirements should be parsed, displayed, and verified consistently across categories.",
+  "searches": [
+    {
+      "category": "garden hose",
+      "budget": "$100",
+      "priorities": "50 ft length",
+      "expectedRisk": "unit_or_requirement_evidence_gap"
+    },
+    {
+      "category": "leaf blower",
+      "budget": "$300",
+      "priorities": "at least 600 CFM",
+      "expectedRisk": "numeric_spec_matching_gap"
+    }
+  ]
+}
