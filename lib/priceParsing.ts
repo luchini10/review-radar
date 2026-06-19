@@ -3,6 +3,11 @@ type MoneyExtractionOptions = {
   allowBareRange?: boolean;
 };
 
+type ProductPriceContext = {
+  category?: string | null;
+  productName?: string | null;
+};
+
 const negativePriceContext =
   /\b(?:not|no|unknown|unavailable|unverified|verify|varies|depends|missing|absent)\b/i;
 
@@ -46,6 +51,21 @@ function isPercentMatch(text: string, matchStart: number, matchedText: string) {
   const after = text.slice(matchStart + matchedText.length, matchStart + matchedText.length + 3);
 
   return /^\s*%/.test(after) || /\d[\d,]*(?:\.\d+)?\s*%/.test(matchedText);
+}
+
+function hasInstallmentContext(text: string, matchStart: number, matchEnd: number) {
+  const before = text.slice(Math.max(0, matchStart - 64), matchStart);
+  const after = text.slice(matchEnd, matchEnd + 40);
+  const beforeHasPaymentLabel =
+    /\b(?:monthly|installments?|financing|finance|payment\s+plan|pay\s+over\s+time|affirm|afterpay|klarna)\b/i.test(
+      before,
+    );
+  const afterHasPaymentUnit =
+    /^\s*(?:\/\s*mo|\/\s*month|mo\.?\b|per\s+month\b|a\s+month\b|monthly\b|month\b|installments?\b)/i.test(
+      after,
+    );
+
+  return beforeHasPaymentLabel || afterHasPaymentUnit;
 }
 
 function textAroundMatchHasPriceContext(text: string, matchStart: number) {
@@ -95,6 +115,10 @@ export function extractMoneyAmounts(
       continue;
     }
 
+    if (hasInstallmentContext(text, matchStart, matchStart + matchedText.length)) {
+      continue;
+    }
+
     pushAmount(amounts, match[2]);
     pushAmount(amounts, match[4]);
   }
@@ -103,7 +127,13 @@ export function extractMoneyAmounts(
     /(?:[$]\s*|(?:us\$|usd)\s*)(\d[\d,]*(?:\.\d+)?)/gi;
 
   for (const match of text.matchAll(leadingCurrencyPattern)) {
-    if (!isPercentMatch(text, match.index || 0, match[0])) {
+    const matchStart = match.index || 0;
+    const matchEnd = matchStart + match[0].length;
+
+    if (
+      !isPercentMatch(text, matchStart, match[0]) &&
+      !hasInstallmentContext(text, matchStart, matchEnd)
+    ) {
       pushAmount(amounts, match[1]);
     }
   }
@@ -112,7 +142,13 @@ export function extractMoneyAmounts(
     /(\d[\d,]*(?:\.\d+)?)\s*(?:usd|dollars?)\b/gi;
 
   for (const match of text.matchAll(trailingCurrencyPattern)) {
-    if (!isPercentMatch(text, match.index || 0, match[0])) {
+    const matchStart = match.index || 0;
+    const matchEnd = matchStart + match[0].length;
+
+    if (
+      !isPercentMatch(text, matchStart, match[0]) &&
+      !hasInstallmentContext(text, matchStart, matchEnd)
+    ) {
       pushAmount(amounts, match[1]);
     }
   }
@@ -131,7 +167,13 @@ export function extractMoneyAmounts(
       continue;
     }
 
-    if (!isPercentMatch(text, match.index || 0, match[0])) {
+    const matchStart = match.index || 0;
+    const matchEnd = matchStart + match[0].length;
+
+    if (
+      !isPercentMatch(text, matchStart, match[0]) &&
+      !hasInstallmentContext(text, matchStart, matchEnd)
+    ) {
       pushAmount(amounts, match[2]);
     }
   }
@@ -194,6 +236,68 @@ export function parseBestProductPriceText(value: string | undefined) {
 const PRICE_ABS_FLOOR = 10;
 const PRICE_REL_FLOOR = 0.25;
 
+function productContextText(context: ProductPriceContext | undefined) {
+  return `${context?.category || ""} ${context?.productName || ""}`.toLowerCase();
+}
+
+export function minimumLikelyFullProductPrice(
+  context: ProductPriceContext | undefined,
+) {
+  const text = productContextText(context);
+
+  if (!text) {
+    return null;
+  }
+
+  if (
+    /\b(?:travel system|stroller combo|carseat stroller|car seat stroller|stroller and car seat|stroller \+ car seat)\b/i.test(
+      text,
+    )
+  ) {
+    return 90;
+  }
+
+  if (
+    /\b(?:in[-\s]?ground basketball hoop|basketball hoop system|regulation[-\s]?size basketball hoop|outdoor basketball hoop)\b/i.test(
+      text,
+    )
+  ) {
+    return 75;
+  }
+
+  if (
+    /\b(?:laptop|refrigerator|dishwasher|washer|dryer|mattress|treadmill|elliptical|espresso machine|gas grill|propane grill|pellet grill)\b/i.test(
+      text,
+    )
+  ) {
+    return 100;
+  }
+
+  return null;
+}
+
+export function priceEvidenceLooksImplausiblyLow(
+  offerPrices: Array<number | null | undefined>,
+  textPrice: number | null,
+  context?: ProductPriceContext,
+) {
+  const minimum = minimumLikelyFullProductPrice(context);
+
+  if (minimum === null) {
+    return false;
+  }
+
+  const signals = [
+    ...offerPrices,
+    ...(textPrice !== null ? [textPrice] : []),
+  ].filter(
+    (price): price is number =>
+      typeof price === "number" && Number.isFinite(price) && price > 0,
+  );
+
+  return signals.length > 0 && Math.max(...signals) < minimum;
+}
+
 // Reject offer prices that are implausibly low relative to the product's own
 // stronger price evidence — a "$1" financing line or a "$100" accessory parse on
 // a ~$450 grill. Returns the best (lowest) plausible price, or null when every
@@ -202,6 +306,7 @@ const PRICE_REL_FLOOR = 0.25;
 export function plausibleProductPrice(
   offerPrices: Array<number | null | undefined>,
   textPrice: number | null,
+  context?: ProductPriceContext,
 ): number | null {
   const offers = offerPrices.filter(
     (price): price is number =>
@@ -216,7 +321,12 @@ export function plausibleProductPrice(
   }
 
   const reference = Math.max(...signals);
-  const minPlausible = Math.max(PRICE_ABS_FLOOR, reference * PRICE_REL_FLOOR);
+  const contextFloor = minimumLikelyFullProductPrice(context) ?? 0;
+  const minPlausible = Math.max(
+    PRICE_ABS_FLOOR,
+    reference * PRICE_REL_FLOOR,
+    contextFloor,
+  );
   const plausibleOffers = offers
     .filter((price) => price >= minPlausible)
     .sort((first, second) => first - second);

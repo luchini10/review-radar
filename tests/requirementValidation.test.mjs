@@ -590,6 +590,36 @@ describe("requirement validation", () => {
             pros: ["Measurement guide for sectional shoppers."],
           }),
           buildProduct({
+            name: "Baseball gloves... so many models, what to consider?",
+            category: "baseball glove",
+            product_page_url:
+              "https://www.reddit.com/r/baseball/comments/example/baseball_gloves_so_many_models/",
+            why_recommended: "A discussion thread, not a product page.",
+            pros: ["Mentions several baseball gloves under $500."],
+            estimated_price_range: "$199",
+            price_value_verdict: "Appears to fit under the $500 budget.",
+          }),
+          buildProduct({
+            name: "Customer Reviews for Wilson A360 Adult Slowpitch Softball Glove",
+            category: "baseball glove",
+            product_page_url:
+              "https://www.homedepot.com/p/reviews/Wilson-A360-Adult-Slowpitch-Softball-Glove/123456",
+            why_recommended: "A reviews page, not the product page.",
+            pros: ["Review page mentions the Wilson A360 glove."],
+            estimated_price_range: "$49.95",
+            price_value_verdict: "Fits under the $500 budget.",
+          }),
+          buildProduct({
+            name: "Top Rated Baseball Gloves | RC Willey",
+            category: "baseball glove",
+            product_page_url:
+              "https://www.rcwilley.com/sports/baseball-gloves",
+            why_recommended: "A top-rated collection page, not a product page.",
+            pros: ["Lists multiple baseball gloves."],
+            estimated_price_range: "$129",
+            price_value_verdict: "Appears under the $500 budget.",
+          }),
+          buildProduct({
             name: "Wilson 2021 A360 Adult Slowpitch Softball Glove",
             category: "baseball glove",
             product_page_url:
@@ -617,6 +647,339 @@ describe("requirement validation", () => {
       result.recommendations[0].name,
       "Wilson 2021 A360 Adult Slowpitch Softball Glove",
     );
+  });
+
+  it("removes complaint, deal roundup, and buying-advice pages before exact matching", () => {
+    const result = filterResultByRequirements(
+      {
+        search_summary: "Test result.",
+        assumptions: [],
+        recommendations: [
+          buildProduct({
+            name: "Complaint about new Example Laptop quality | Example Support",
+            category: "gaming laptop",
+            product_page_url:
+              "https://support.example.com/community/conversations/example-laptop-complaint",
+            why_recommended:
+              "A complaint thread that mentions specs but is not a product page.",
+            pros: ["Mentions RTX 4060 and 16GB RAM."],
+            estimated_price_range: "$800",
+            price_value_verdict: "Appears under budget.",
+          }),
+          buildProduct({
+            name: "Example Espresso Machine Deals 2026 - Best Example Sales",
+            category: "espresso machine",
+            product_page_url:
+              "https://magazine.example.com/kitchen/best-example-espresso-machine-deals-2026",
+            why_recommended:
+              "A seasonal deals article, not a product detail page.",
+            pros: ["Mentions espresso machines with built-in grinders."],
+            estimated_price_range: "$500",
+            price_value_verdict: "Appears under budget.",
+          }),
+          buildProduct({
+            name: "Long Term Espresso Machine - Buying Advice - Page 2",
+            category: "espresso machine",
+            product_page_url:
+              "https://community.example.com/advice/long-term-espresso-machine-buying-advice-page-2",
+            why_recommended:
+              "A discussion page that should not be displayed as a product.",
+            pros: ["Discusses beginner espresso machines."],
+            estimated_price_range: "$350",
+            price_value_verdict: "Appears under budget.",
+          }),
+          buildProduct({
+            name: "The HP Victus 16 is one of the best-value gaming laptops I've ever tested",
+            category: "gaming laptop",
+            product_page_url:
+              "https://www.laptopmag.com/reviews/hp-victus-16-best-value-gaming-laptop",
+            why_recommended:
+              "A publisher article headline that should be citation evidence, not the product page.",
+            pros: ["Mentions RTX 4060 and 16GB RAM."],
+            estimated_price_range: "$600",
+            price_value_verdict: "Appears under budget.",
+          }),
+          buildProduct({
+            name: "Turn your kitchen into a cafe with the Example Magnifica Evo",
+            category: "espresso machine",
+            product_page_url:
+              "https://www.mashable.com/article/example-magnifica-evo-espresso-machine-sale",
+            why_recommended:
+              "A publisher article with a product-like headline, not a product detail page.",
+            pros: ["Mentions a beginner-friendly espresso machine."],
+            estimated_price_range: "$350",
+            price_value_verdict: "Appears under budget.",
+          }),
+          buildProduct({
+            name: "Up your game with the Example Legion gaming laptop, yours for $850",
+            category: "gaming laptop",
+            product_page_url:
+              "https://www.windowscentral.com/gaming/up-your-game-with-example-legion-laptop",
+            why_recommended:
+              "A publisher sale article headline, not a product detail page.",
+            pros: ["Mentions RTX 4060 and 16GB RAM."],
+            estimated_price_range: "$850",
+            price_value_verdict: "Appears under budget.",
+          }),
+          buildProduct({
+            name: "Delonghi Specialista Arte EC 9155 Review",
+            category: "espresso machine",
+            product_page_url:
+              "https://coffee.example.com/delonghi-specialista-arte-ec-9155-review",
+            why_recommended:
+              "A review article should be citation evidence, not the product page.",
+            pros: ["Mentions an espresso machine with grinder."],
+            estimated_price_range: "$500",
+            price_value_verdict: "Appears under budget.",
+          }),
+          buildProduct({
+            name: "Gaggia Brera RI9305/11 Review & Guide (2025)",
+            category: "espresso machine",
+            product_page_url:
+              "https://coffee.example.com/gaggia-brera-ri9305-review-guide-2025",
+            why_recommended:
+              "A review guide should be citation evidence, not the product page.",
+            pros: ["Mentions an espresso machine with grinder."],
+            estimated_price_range: "$550",
+            price_value_verdict: "Appears under budget.",
+          }),
+          buildProduct({
+            name: "Compare at 16+ Stores: Example La Specialista Coffee Machine",
+            category: "espresso machine",
+            product_page_url:
+              "https://www.price.com/compare/example-la-specialista-coffee-machine",
+            why_recommended:
+              "A price-comparison page should not be treated as the product page.",
+            pros: ["Mentions the espresso machine price at multiple stores."],
+            estimated_price_range: "$699.99",
+            price_value_verdict: "Appears under budget.",
+          }),
+          buildProduct({
+            name: "Ranking the top 74 sneakers in NBA history - ESPN",
+            category: "basketball shoes",
+            product_page_url:
+              "https://www.espn.com/nba/story/_/id/123456/ranking-top-74-sneakers-nba-history",
+            why_recommended:
+              "An editorial ranking that should support research, not display as a product.",
+            pros: ["Mentions several Nike basketball shoes."],
+            estimated_price_range: "$150",
+            price_value_verdict: "Appears under budget.",
+          }),
+          buildProduct({
+            name: "Cut in half: Nike G.T. Jump 2 Review | RunRepeat",
+            category: "basketball shoes",
+            product_page_url: "https://runrepeat.com/nike-gt-jump-2",
+            why_recommended:
+              "A review page that should support evidence, not display as the product.",
+            pros: ["Mentions traction and cushioning."],
+            estimated_price_range: "$180",
+            price_value_verdict: "Appears under budget.",
+          }),
+          buildProduct({
+            name: "Basketball Shoes For Speed | DICK'S Sporting Goods",
+            category: "basketball shoes",
+            product_page_url:
+              "https://www.dickssportinggoods.com/f/basketball-shoes-for-speed",
+            why_recommended:
+              "A retailer category page that lists many shoes.",
+            pros: ["Lists many basketball shoes."],
+            estimated_price_range: "$120",
+            price_value_verdict: "Appears under budget.",
+          }),
+          buildProduct({
+            name: "Nike Basketball Releases the Book 2, the Next Chapter in Devin ...",
+            category: "basketball shoes",
+            product_page_url:
+              "https://about.nike.com/en/newsroom/releases/nike-book-2-official-images-release-info",
+            why_recommended:
+              "A Nike newsroom release that should be evidence, not the product.",
+            pros: ["Mentions a Nike basketball shoe."],
+            estimated_price_range: "$140",
+            price_value_verdict: "Appears under budget.",
+          }),
+          buildProduct({
+            name: "Nike Men's Stability Shoes | DICK'S Sporting Goods",
+            category: "running shoes",
+            product_page_url:
+              "https://www.dickssportinggoods.com/a/nike-mens-stability-shoes-0zdz01a.html",
+            why_recommended:
+              "A retailer advice/listing page that should not display as one product.",
+            pros: ["Mentions Nike running shoes."],
+            estimated_price_range: "$130",
+            price_value_verdict: "Appears under budget.",
+          }),
+          buildProduct({
+            name: "Example Barista Express Espresso Machine",
+            category: "espresso machine",
+            product_page_url:
+              "https://shop.example.com/products/example-barista-express-espresso-machine",
+            why_recommended:
+              "A specific espresso machine product page with grinder evidence.",
+            pros: ["Built-in grinder.", "Beginner-friendly controls."],
+            estimated_price_range: "$649",
+            price_value_verdict: "Current price is under the $700 budget.",
+          }),
+          buildProduct({
+            name: "Example Barista Compact Espresso Machine - Sale Price",
+            category: "espresso machine",
+            product_page_url:
+              "https://shop.example.com/products/example-barista-compact-espresso-machine",
+            why_recommended:
+              "A specific espresso machine product page with current sale pricing.",
+            pros: ["Built-in grinder.", "Beginner-friendly setup."],
+            estimated_price_range: "$599",
+            price_value_verdict: "Sale price is under the $700 budget.",
+          }),
+          buildProduct({
+            name: "The Barista Express Espresso Machine",
+            category: "espresso machine",
+            product_page_url:
+              "https://shop.example.com/products/the-barista-express-espresso-machine",
+            why_recommended:
+              "A specific product page whose name starts with The but is not an article headline.",
+            pros: ["Built-in grinder.", "Beginner-friendly setup."],
+            estimated_price_range: "$699",
+            price_value_verdict: "Current price is under the $700 budget.",
+          }),
+        ],
+        what_to_avoid: [],
+        final_buying_advice: "Test advice.",
+      },
+      {
+        budget: "under $700",
+        priorities: "built-in grinder, beginner friendly",
+        query: "espresso machine",
+      },
+    );
+
+    assert.deepEqual(
+      result.recommendations.map((recommendation) => recommendation.name),
+      [
+        "Example Barista Express Espresso Machine",
+        "Example Barista Compact Espresso Machine - Sale Price",
+        "The Barista Express Espresso Machine",
+      ],
+    );
+    assert.equal(result.exactMatches.length, 3);
+    assert.equal(result.nearMatches.length, 0);
+  });
+
+  it("keeps bed frames out of mattress search results", () => {
+    const result = filterResultByRequirements(
+      {
+        search_summary: "Test result.",
+        assumptions: [],
+        recommendations: [
+          buildProduct({
+            category: "King size mattress",
+            estimated_price_range: "$899",
+            name: "Nectar Classic 12 King Mattress",
+            price_value_verdict: "Fits under the $1500 budget.",
+            pros: ["King mattress with medium-firm foam support."],
+            why_recommended: "A king-size mattress with verified mattress evidence.",
+          }),
+          buildProduct({
+            category: "King size mattress",
+            estimated_price_range: "$499",
+            name: "Basi King Bed Frame - Oak",
+            price_value_verdict: "Fits under the $1500 budget.",
+            pros: ["Oak king bed frame with slats."],
+            why_recommended: "A king bed frame, not a mattress.",
+          }),
+          buildProduct({
+            category: "King size mattress",
+            estimated_price_range: "$999",
+            name: "Tessu King Low Profile Upholstered Bed",
+            price_value_verdict: "Fits under the $1500 budget.",
+            pros: ["Low-profile upholstered platform bed frame."],
+            why_recommended: "An upholstered platform bed, not a mattress.",
+          }),
+          buildProduct({
+            category: "King size mattress",
+            estimated_price_range: "$399",
+            name: "Adjustable Mattress Foundation",
+            price_value_verdict: "Fits under the $1500 budget.",
+            pros: ["Adjustable mattress foundation and support base."],
+            why_recommended: "A mattress foundation, not the mattress itself.",
+          }),
+          buildProduct({
+            category: "King size mattress",
+            estimated_price_range: "$750",
+            name: "Hudson Bed | Pottery Barn",
+            price_value_verdict: "Fits under the $1500 budget.",
+            pros: ["King bed furniture from a home retailer."],
+            why_recommended: "A bed frame/furniture listing, not a mattress.",
+          }),
+        ],
+        what_to_avoid: [],
+        final_buying_advice: "Test advice.",
+      },
+      {
+        budget: "under $1500",
+        query: "king size mattress",
+        extractedRequirements: extractStructuredRequirements({
+          budget: "under $1500",
+          query: "king size mattress",
+        }),
+      },
+    );
+
+    assert.deepEqual(
+      result.exactMatches.map((product) => product.name),
+      ["Nectar Classic 12 King Mattress"],
+    );
+    assert.equal(result.nearMatches.length, 0);
+  });
+
+  it("keeps lounge chairs and pillows out of office chair searches", () => {
+    const request = {
+      priorities: "black, lumbar support, under $300",
+      query: "office chair",
+    };
+    const result = filterResultByRequirements(
+      {
+        search_summary: "Test result.",
+        assumptions: [],
+        recommendations: [
+          buildProduct({
+            category: "Office chair",
+            estimated_price_range: "$199",
+            name: "HBADA P2 Ergonomic Office Chair",
+            price_value_verdict: "Fits under $300.",
+            pros: ["Black ergonomic office chair.", "Adjustable lumbar support."],
+            why_recommended: "A black office chair with lumbar support.",
+          }),
+          buildProduct({
+            category: "Office chair",
+            estimated_price_range: "$699",
+            name: "Sunny 32 Lounge Chair - Sandstone Wool Boucle",
+            price_value_verdict: "Above the requested budget.",
+            pros: ["Lounge chair for living rooms."],
+            why_recommended: "A lounge chair, not an office task chair.",
+          }),
+          buildProduct({
+            category: "Office chair",
+            estimated_price_range: "$29",
+            name: "Lucca Velvet Small Pillow",
+            price_value_verdict: "Fits under $300.",
+            pros: ["Small pillow accessory."],
+            why_recommended: "A pillow accessory, not an office chair.",
+          }),
+        ],
+        what_to_avoid: [],
+        final_buying_advice: "Test advice.",
+      },
+      {
+        ...request,
+        extractedRequirements: extractStructuredRequirements(request),
+      },
+    );
+
+    assert.deepEqual(
+      result.exactMatches.map((product) => product.name),
+      ["HBADA P2 Ergonomic Office Chair"],
+    );
+    assert.equal(result.nearMatches.length, 0);
   });
 
   it("does not label overflow exact products as near matches", () => {

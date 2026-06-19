@@ -16,6 +16,7 @@ import {
   parseMaxBudgetAmount,
   plausibleProductPrice,
 } from "./priceParsing.ts";
+import { assessProductReliability } from "./productReliability.ts";
 import { baseProductCategoryFromQuery } from "./productCategory.ts";
 import type {
   ProductCredibilityTier,
@@ -38,6 +39,10 @@ const broadRetailerDomains = [
 ];
 
 function productPrice(product: ProductRecommendation) {
+  if (product.reliabilityCheck?.price !== undefined) {
+    return product.reliabilityCheck.price;
+  }
+
   const offerPrices =
     product.metadata?.offers
       .map((offer) => offer.price.value)
@@ -47,6 +52,10 @@ function productPrice(product: ProductRecommendation) {
   return plausibleProductPrice(
     offerPrices,
     parseBestProductPriceText(product.estimated_price_range),
+    {
+      category: product.category,
+      productName: product.name,
+    },
   );
 }
 
@@ -690,17 +699,22 @@ export function scoreProduct(
 function withScore(product: ProductRecommendation, input: RecommendationApiRequest) {
   const canonicalProduct = withHonestConfidence(withCanonicalIdentity(product));
   const marketConfidence = assessProductCredibility(canonicalProduct, input);
+  const productWithMarketConfidence = {
+    ...canonicalProduct,
+    marketConfidence,
+  };
+  const reliabilityCheck = assessProductReliability(productWithMarketConfidence);
 
   return {
-    ...canonicalProduct,
+    ...productWithMarketConfidence,
     confidence_score: Math.min(
       canonicalProduct.confidence_score,
       CONFIDENCE_CAP_BY_MARKET_TIER[marketConfidence.tier],
     ),
-    marketConfidence,
+    reliabilityCheck,
     scoreBreakdown: {
-      ...scoreProduct(canonicalProduct, input),
-      evidenceSignalCount: evidenceSignalCount(canonicalProduct),
+      ...scoreProduct(productWithMarketConfidence, input),
+      evidenceSignalCount: evidenceSignalCount(productWithMarketConfidence),
     },
   };
 }
@@ -792,6 +806,7 @@ function rankReason(product: ProductRecommendation, rank: number, input: Recomme
   const rating = ownerRating(product);
   const reviews = ownerReviewCount(product);
   const evidenceStrength = evidenceStrengthForProduct(product);
+  const priceConfidence = product.reliabilityCheck?.priceConfidence;
   const parts = [
     rank === 1
       ? "Highest ranked exact match after checking hard requirements first."
@@ -800,7 +815,7 @@ function rankReason(product: ProductRecommendation, rank: number, input: Recomme
       ? `Matches ${matchedCount} verified requirement${matchedCount === 1 ? "" : "s"}.`
       : "",
     price !== null && budget !== null
-      ? `Verified price ${formatDollars(price)} is within the ${formatDollars(budget)} limit.`
+      ? `${priceConfidence === "verified" ? "Verified" : "Usable"} price ${formatDollars(price)} is within the ${formatDollars(budget)} limit.`
       : "",
     reviews
       ? `${reviews.toLocaleString("en-US")} customer review${reviews === 1 ? "" : "s"}${
@@ -836,6 +851,9 @@ function withRank(
 }
 
 function withCloseMatch(product: ProductRecommendation): ProductRecommendation {
+  const reliabilityWarnings = product.reliabilityCheck?.warnings || [];
+  const reliabilityReason = reliabilityWarnings[0];
+
   return {
     ...product,
     recommendation_type: "Close Match",
@@ -844,7 +862,19 @@ function withCloseMatch(product: ProductRecommendation): ProductRecommendation {
     rankReason: undefined,
     matchScore: rankedMatchScore(product),
     credibilityScore: product.marketConfidence?.score,
+    near_match_reason:
+      product.near_match_reason ||
+      reliabilityReason ||
+      "Close option, but one required detail could not be verified.",
   };
+}
+
+function reliableEnoughForBestMatch(product: ProductRecommendation) {
+  if (product.reliabilityCheck?.canBeBestMatch === false) {
+    return false;
+  }
+
+  return true;
 }
 
 function selectRankedExactMatches(
@@ -987,10 +1017,14 @@ export function scoreAndSelectRecommendations(
     )
     .map(withCloseMatch)
     .slice(0, 8);
-  const selectedExact = selectRankedExactMatches(exactScored, input);
+  const reliableExact = exactScored.filter(reliableEnoughForBestMatch);
+  const reliabilityNear = exactScored
+    .filter((product) => !reliableEnoughForBestMatch(product))
+    .map(withCloseMatch);
+  const selectedExact = selectRankedExactMatches(reliableExact, input);
   const selectedNear =
     selectedExact.length < MAX_EXACT_MATCHES
-      ? nearScored.slice(0, MAX_NEAR_MATCHES)
+      ? [...reliabilityNear, ...nearScored].slice(0, MAX_NEAR_MATCHES)
       : [];
   const knownNames = [...exactScored, ...nearScored].map((product) => product.name);
   const selectedResult = ensureFinalAdviceUsesDisplayedProducts(

@@ -97,6 +97,36 @@ describe("discovery filter applies structured requirements", () => {
     assert.ok(!names.includes("GE 36 inch Gas Cooktop"));
   });
 
+  it("rejects bed-frame candidates for a mattress search", () => {
+    const input = {
+      query: "king size mattress",
+      extractedRequirements: extractStructuredRequirements({ query: "king size mattress" }),
+    };
+    const names = keptNames(
+      [
+        cand("Nectar Classic 12 King Mattress", { category: "king size mattress" }),
+        cand("Basi King Bed Frame - Oak", {
+          category: "king size mattress",
+          snippet: "Oak king bed frame with slats.",
+        }),
+        cand("Tessu King Low Profile Upholstered Bed", {
+          category: "king size mattress",
+          snippet: "Upholstered platform bed frame.",
+        }),
+        cand("Hudson Bed", {
+          category: "king size mattress",
+          snippet: "King bed furniture from a home retailer.",
+        }),
+      ],
+      input,
+    );
+
+    assert.ok(names.includes("Nectar Classic 12 King Mattress"));
+    assert.ok(!names.includes("Basi King Bed Frame - Oak"));
+    assert.ok(!names.includes("Tessu King Low Profile Upholstered Bed"));
+    assert.ok(!names.includes("Hudson Bed"));
+  });
+
   it("deprioritizes (but keeps) an off-form-factor candidate below a full-size one", () => {
     const input = {
       query: "gas grill",

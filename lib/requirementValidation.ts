@@ -309,9 +309,23 @@ const productTypeConflictRules: ProductTypeConflictRule[] = [
     requestedCategory: /\b(?:sectional|sofa|couch|loveseat)\b/,
   },
   {
+    allowedEvidence:
+      /\b(?:office chair|task chair|desk chair|ergonomic chair|computer chair|executive chair|mesh chair|work chair)\b/,
+    conflictingEvidence:
+      /\b(?:accent chair|dining chair|lounge chair|pillow|cushion|chair mat|floor mat|seat cover)\b/,
+    requestedCategory: /\b(?:office chair|task chair|desk chair|computer chair)\b/,
+  },
+  {
     allowedEvidence: /\b(?:bed frame|platform bed|storage bed)\b/,
     conflictingEvidence: /\b(?:mattress|nightstand|dresser|headboard only)\b/,
     requestedCategory: /\bbed frame\b/,
+  },
+  {
+    allowedEvidence:
+      /\bmattress\b(?!\s+(?:base|foundation|frame|pad|platform|protector|support|topper)\b)/,
+    conflictingEvidence:
+      /\b(?:bed|bed frame|platform bed|storage bed|upholstered bed|headboard|foundation|box spring|bunkie board)\b/,
+    requestedCategory: /\bmattress\b/,
   },
   {
     allowedEvidence: /\b(?:pressure washer|power washer|high pressure washer|psi|gpm|spray gun|spray wand|foam cannon|foam lance|soap cannon)\b/,
@@ -735,6 +749,9 @@ function productNameLooksGeneric(name: string) {
     /\bfor sale\b/i,
     /\bsearch results?\b/i,
     /\bresults for\b/i,
+    /^\s*compare\s+(?:at|prices?|stores?)\b/i,
+    /\bcompare\s+at\s+\d+\+?\s+stores\b/i,
+    /\bprice comparison\b/i,
     /\bshop\b/i,
     /\bshopping\b/i,
     /\bcategory\b/i,
@@ -742,8 +759,35 @@ function productNameLooksGeneric(name: string) {
     /\bbuy online\b/i,
     /^\s*how\s+to\b/i,
     /\b(?:buying guide|measurement guide|measuring guide|size guide)\b/i,
+    /\b(?:buying advice|shopping advice|purchase advice)\b/i,
+    /\b(?:what to consider|how to choose|which .+ should|so many models)\b/i,
+    /\b(?:anyone|has anyone)\s+(?:purchased|tried|used|recommend)\b/i,
+    /\b(?:customer reviews?|reviews?|questions?)\s+for\b/i,
+    /\breviews?\s*(?:&|and|-|\/)\s*guides?\b/i,
+    /\breviews?\s*$/i,
+    /\bcomplaints?\s+(?:about|for|with|on)\b/i,
+    /\b(?:support article|help library|error code list|troubleshooting|recall notice)\b/i,
+    /\b(?:deals?|sales?)\s+20\d{2}\b/i,
+    /\b20\d{2}\s+(?:deals?|sales?)\b/i,
+    /\b(?:best|top)\s+.+\s+(?:deals?|sales?)\b/i,
+    /^(?:ranking|ranked)\s+(?:the\s+)?(?:top|best)\s+\d+\b/i,
+    /^(?:the\s+)?(?:top|best)\s+\d+\b/i,
+    /^\s*cut\s+in\s+half\b/i,
+    /\breview\b\s*(?:\||-|$)/i,
+    /\b(?:official images|release info|newsroom|built for|colorways?\s+\+\s+release dates|complete guide|franchise history|shuffles?\s+its\s+lineup)\b/i,
+    /\b\w+\s+out,\s+\w+.+\s+in\?\s*$/i,
+    /\bguides?\s*\(20\d{2}\)\b/i,
+    /\byours for\b/i,
+    /\bi'?ve\s+ever\b/i,
+    /^\s*(?:the\s+)?[a-z0-9][^.!?]{5,120}\s+(?:is|are)\s+one\s+of\b/i,
+    /^\s*(?:boost|get|level up|make|save|score|snag|turn|up your|upgrade)\b.{0,120}\bwith\s+(?:the|a|an)\b/i,
+    /\brecommendations?\?/i,
+    /\bpros and cons\b/i,
     /^\s*the\s+best\b/i,
+    /^\s*(?:top rated|best rated|highest rated|popular)\b/i,
     /\bloved by our editors\b/i,
+    /\b(?:shoes|sneakers|boots|sandals|shirts|pants|jackets|chairs|desks|tables|vacuums|appliances|tools|grills|mattresses|sofas|couches)\s+(?:for|from)\s+(?:men|women|kids|top brands|speed|running|basketball|walking)\b/i,
+    /\b(?:basketball|running|walking|training|tennis|hiking)\s+(?:shoes|sneakers)\s*(?:\||-|for|from)\b/i,
     /\b(?:desks|refrigerators|microwaves|microwave ovens|countertop microwave ovens|mini fridges|sectional sleeper sofas|sofas|couches|vacuums|gloves)\s*[-|]\s*(?:wayfair|aj madison|the home depot|amazon|walmart|target|lowe'?s|best buy)\b/i,
     /^\s*\$?\d+(?:\.\d+)?\s*(?:to|-)\s*\$?\d+(?:\.\d+)?\b/i,
   ];
@@ -767,10 +811,67 @@ function productUrlLooksGeneric(url: string | undefined) {
     const hasSearchParam = ["k", "q", "query", "search"].some((key) =>
       parsed.searchParams.has(key),
     );
+    const nonProductHosts = [
+      "reddit.com",
+      "quora.com",
+      "youtube.com",
+      "youtu.be",
+      "cnet.com",
+      "consumerreports.org",
+      "forum",
+      "forums",
+      "forbes.com",
+      "goodhousekeeping.com",
+      "home-barista.com",
+      "laptopmag.com",
+      "mashable.com",
+      "nytimes.com",
+      "pcmag.com",
+      "price.com",
+      "popularmechanics.com",
+      "runrepeat.com",
+      "rtings.com",
+      "sneakerfiles.com",
+      "techradar.com",
+      "tomsguide.com",
+      "wirecutter.com",
+      "windowscentral.com",
+      "about.nike.com",
+      "news.nike.com",
+      "wwd.com",
+      "klarna.com",
+    ];
+
+    if (
+      nonProductHosts.some(
+        (value) =>
+          host === value || host.endsWith(`.${value}`) || host.includes(value),
+      )
+    ) {
+      return true;
+    }
 
     if (
       host.endsWith("amazon.com") &&
       !/\/(?:dp|gp\/product)\//i.test(parsed.pathname)
+    ) {
+      return true;
+    }
+
+    if (host === "nike.com" && !/\/t\//i.test(parsed.pathname)) {
+      return true;
+    }
+
+    if (
+      host.endsWith("dickssportinggoods.com") &&
+      /\/(?:a|c|f|s)\//i.test(parsed.pathname)
+    ) {
+      return true;
+    }
+
+    if (
+      host.endsWith("footlocker.com") &&
+      /\/(?:buy|category|search|collection)\//i.test(parsed.pathname)
     ) {
       return true;
     }
@@ -782,7 +883,14 @@ function productUrlLooksGeneric(url: string | undefined) {
       return true;
     }
 
-    return /\b(?:search|results|category|categories|collection|collections|browse|catalog|shop)\b/i.test(path);
+    if (
+      /\b(?:best|top)\b.{0,80}\b(?:deals?|sales?|coupons?)\b/i.test(path) ||
+      /\b(?:deals?|sales?|coupons?)\b.{0,40}\b20\d{2}\b/i.test(path)
+    ) {
+      return true;
+    }
+
+    return /\b(?:advice|article|articles|blog|blogs|comments|community|communities|compare|comparison|conversation|conversations|discussion|forum|forums|guide|guides|help|question|questions|q-a|reviews?|search|results|category|categories|collection|collections|browse|catalog|shop|support|thread|threads|topic|topics|troubleshooting|viewtopic)\b/i.test(path);
   } catch {
     return false;
   }
@@ -822,9 +930,47 @@ function productEvidenceTextWithoutAssignedCategory(product: ProductLike) {
   );
 }
 
+function productIdentityTextWithoutAssignedCategory(product: ProductLike) {
+  const metadata = product.metadata;
+
+  return normalizeText(
+    [
+      product.name,
+      metadata?.title?.value || "",
+      metadata?.brand?.value || "",
+      metadata?.modelNumber?.value || "",
+      metadata?.sku?.value || "",
+    ].join(" "),
+  );
+}
+
+const actualMattressIdentityPattern =
+  /\bmattress\b(?!\s+(?:base|foundation|frame|pad|platform|protector|support|topper)\b)/;
+const mattressFurnitureIdentityPattern =
+  /\b(?:bed|bed frame|platform bed|storage bed|upholstered bed|headboard|foundation|box spring|bunkie board)\b/;
+
+function hasMattressFurnitureConflict(product: ProductLike, category: string) {
+  const requestedCategory = normalizeText(category);
+
+  if (!/\bmattress\b/.test(requestedCategory)) {
+    return false;
+  }
+
+  const identityText = productIdentityTextWithoutAssignedCategory(product);
+
+  return (
+    mattressFurnitureIdentityPattern.test(identityText) &&
+    !actualMattressIdentityPattern.test(identityText)
+  );
+}
+
 function hasConflictingProductType(product: ProductLike, category: string) {
   const requestedCategory = normalizeText(category);
   const evidenceText = productEvidenceTextWithoutAssignedCategory(product);
+
+  if (hasMattressFurnitureConflict(product, requestedCategory)) {
+    return true;
+  }
 
   // Shared form-factor model: a candidate that names a component/variant of the
   // requested appliance (cooktop for an oven, ice-maker for a refrigerator)
@@ -997,6 +1143,10 @@ function getProductBestAvailablePrice(product: ProductLike) {
   return plausibleProductPrice(
     offerPrices,
     parseBestProductPriceText(product.estimated_price_range),
+    {
+      category: product.category,
+      productName: product.name,
+    },
   );
 }
 

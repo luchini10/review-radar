@@ -187,12 +187,25 @@ function bestVerifiedOffer(product: ProductRecommendation) {
 function buildOffer(product: ProductRecommendation) {
   const link = getProductPageLink(product);
   const offer = bestVerifiedOffer(product);
-  const priceText = offer ? formatMoney(offer.price.value) : "";
+  const reliability = product.reliabilityCheck;
+  const fallbackOfferPrice = offer ? offerPrice(offer) : null;
+  const reliablePrice =
+    reliability === undefined
+      ? fallbackOfferPrice
+      : reliability.price !== null &&
+          reliability.priceConfidence !== "conflicting" &&
+          reliability.priceConfidence !== "unverified"
+        ? reliability.price
+        : null;
+  const priceText = reliablePrice !== null ? formatMoney(reliablePrice) : "";
   const retailer = compact(offer?.retailer || labelFromHost(offer?.url || link?.url || ""));
   const fallbackPrice = compact(product.estimated_price_range);
-  const displayText = priceText
-    ? `${priceText}${retailer ? ` at ${retailer}` : ""}`
-    : fallbackPrice || (link ? "Verify current store price" : "");
+  const displayText =
+    reliability?.priceConfidence === "conflicting"
+      ? "Verify current store price"
+      : priceText
+        ? `${priceText}${retailer ? ` at ${retailer}` : ""}`
+        : fallbackPrice || (link ? "Verify current store price" : "");
 
   if (!displayText && !link) {
     return undefined;

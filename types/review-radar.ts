@@ -209,6 +209,22 @@ export type ProductOffer = {
   url: string;
 };
 
+export type ProductPriceConfidence =
+  | "verified"
+  | "likely"
+  | "range"
+  | "unverified"
+  | "conflicting";
+
+export type ProductReliabilityCheck = {
+  canBeBestMatch: boolean;
+  identityConfidence: "high" | "medium" | "low";
+  price: number | null;
+  priceConfidence: ProductPriceConfidence;
+  reasons: string[];
+  warnings: string[];
+};
+
 export type ProductMetadata = {
   availability?: ProductFieldEvidence<string | null>;
   brand?: ProductFieldEvidence<string | null>;
@@ -424,6 +440,7 @@ export type ProductRecommendation = {
   canonicalIdentity?: CanonicalProductIdentity;
   metadata?: ProductMetadata;
   marketConfidence?: ProductCredibility;
+  reliabilityCheck?: ProductReliabilityCheck;
   scoreBreakdown?: ScoreBreakdown;
 };
 

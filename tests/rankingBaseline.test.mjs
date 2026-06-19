@@ -130,6 +130,7 @@ function scenarioB() {
   const make = (name, price, rating, reviews, host) =>
     buildProduct(name, {
       category: "headphones",
+      estimated_price_range: `$${price}`,
       product_page_url: host,
       pros: ["Comfortable fit.", "Clear sound."],
       why_recommended: `${name} is a well-reviewed pair of headphones.`,

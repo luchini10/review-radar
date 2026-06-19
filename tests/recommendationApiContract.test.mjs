@@ -83,8 +83,8 @@ function buildProduct(overrides = {}) {
     category: "Microwave",
     citations: [
       {
-        title: "Example product review",
-        url: "https://example.com/microwave-review",
+        title: "Example product page",
+        url: "https://example.com/products/example-countertop-microwave",
         what_it_supports: "Product details and review evidence.",
       },
     ],
@@ -96,7 +96,7 @@ function buildProduct(overrides = {}) {
     not_for: ["Large families that need more capacity."],
     price_value_verdict: "Good value for a compact microwave.",
     product_image_url: "",
-    product_page_url: "https://example.com/microwave-review",
+    product_page_url: "https://example.com/products/example-countertop-microwave",
     pros: ["Compact footprint.", "Simple controls."],
     recommendation_type: "Best Match",
     source_consensus: "Mixed",

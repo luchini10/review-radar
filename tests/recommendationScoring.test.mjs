@@ -28,6 +28,20 @@ function offer(price) {
   };
 }
 
+function offerWithSource(price, sourceType, confidence = "High", url = "https://example.com/product") {
+  return {
+    availability: field("InStock"),
+    price: {
+      ...field(price, confidence),
+      sourceType,
+      sourceUrl: url,
+    },
+    priceCurrency: field("USD"),
+    retailer: "example.com",
+    url,
+  };
+}
+
 function buildProduct(name, overrides = {}) {
   return {
     recommendation_type: "Best Match",
@@ -148,6 +162,111 @@ describe("recommendation scoring and ranked Best Match selection", () => {
     assert.equal(new Set(canonicalIds).size, result.exactMatches.length);
     assert.ok(result.exactMatches.every((product) => product.scoreBreakdown));
     assert.ok(result.searchCoverage);
+  });
+
+  it("downgrades exact-looking products with conflicting price evidence", () => {
+    const input = {
+      budget: "under $3000",
+      extractedRequirements: extractStructuredRequirements({
+        budget: "under $3000",
+        query: "basketball hoop",
+      }),
+      query: "basketball hoop",
+    };
+    const conflicting = buildProduct("Conflicting Price Hoop", {
+      category: "basketball hoop",
+      estimated_price_range: "$35 at target.com",
+      metadata: {
+        ...buildProduct("Conflicting Price Hoop").metadata,
+        offers: [
+          offerWithSource(799, "json_ld", "High", "https://target.example.com/hoop"),
+          offerWithSource(35, "snippet", "Low", "https://target.example.com/hoop"),
+        ],
+      },
+    });
+    const verified = buildProduct("Verified Price Hoop", {
+      category: "basketball hoop",
+      estimated_price_range: "$899",
+      metadata: {
+        ...buildProduct("Verified Price Hoop").metadata,
+        offers: [offerWithSource(899, "json_ld", "High")],
+      },
+    });
+
+    const result = scoreAndSelectRecommendations(
+      {
+        search_summary: "",
+        assumptions: [],
+        exactMatches: [conflicting, verified],
+        nearMatches: [],
+        recommendations: [],
+        what_to_avoid: [],
+        final_buying_advice: "",
+      },
+      input,
+    );
+
+    assert.deepEqual(
+      result.exactMatches.map((product) => product.name),
+      ["Verified Price Hoop"],
+    );
+    assert.equal(result.nearMatches[0].name, "Conflicting Price Hoop");
+    assert.equal(
+      result.nearMatches[0].reliabilityCheck.priceConfidence,
+      "conflicting",
+    );
+  });
+
+  it("downgrades exact-looking products with implausibly tiny full-product prices", () => {
+    const input = {
+      budget: "under $400",
+      extractedRequirements: extractStructuredRequirements({
+        budget: "under $400",
+        query: "car seat stroller combo",
+      }),
+      query: "car seat stroller combo",
+    };
+    const suspicious = buildProduct("Graco Modes Nest Travel System", {
+      category: "car seat stroller combo",
+      estimated_price_range: "$35",
+      metadata: {
+        ...buildProduct("Graco Modes Nest Travel System").metadata,
+        offers: [offerWithSource(35, "retailer_page", "Medium")],
+      },
+      price_value_verdict: "At $35, this looks like an exceptional value.",
+    });
+    const verified = buildProduct("Evenflo Pivot Modular Travel System", {
+      category: "car seat stroller combo",
+      estimated_price_range: "$329.99",
+      metadata: {
+        ...buildProduct("Evenflo Pivot Modular Travel System").metadata,
+        offers: [offerWithSource(329.99, "json_ld", "High")],
+      },
+      price_value_verdict: "At $329.99, this is a plausible travel-system price.",
+    });
+
+    const result = scoreAndSelectRecommendations(
+      {
+        search_summary: "",
+        assumptions: [],
+        exactMatches: [suspicious, verified],
+        nearMatches: [],
+        recommendations: [],
+        what_to_avoid: [],
+        final_buying_advice: "",
+      },
+      input,
+    );
+
+    assert.deepEqual(
+      result.exactMatches.map((product) => product.name),
+      ["Evenflo Pivot Modular Travel System"],
+    );
+    assert.equal(result.nearMatches[0].name, "Graco Modes Nest Travel System");
+    assert.equal(
+      result.nearMatches[0].reliabilityCheck.priceConfidence,
+      "unverified",
+    );
   });
 
   it("keeps the visible search summary aligned with selected exact matches", () => {

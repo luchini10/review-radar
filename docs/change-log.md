@@ -14,6 +14,14 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 ## 2026-06-19
 
 ### Changed
+- Fixed a live QA non-product-page leakage issue where articles, product-family pages, price-comparison pages, retailer category/advice pages, and brand newsroom pages could appear as recommendations.
+- Strengthened product-page trust checks in three places: Serper candidate intake, final citation/result validation, and the product-card URL selector.
+- Added reusable guards for common non-product page shapes, including "ranking/top N" articles, review pages, release/newsroom pages, product lineup articles, Nike category/brand pages, DICK'S advice/category pages, Foot Locker product-family pages, Klarna comparison pages, and sneaker-news pages.
+- Added regression tests so these pages can still be used as research evidence but not shown as buyable product cards.
+- Fixed a live QA price-trust issue where high-ticket full products, especially travel systems, could show payment/promo/variant amounts like `$35` or `$10` as if they were full product prices.
+- Added reusable product-context price floors so budget validation, ranking, product reliability, and card price display treat implausibly tiny full-product prices as unverified instead of exact-match evidence.
+- Added regression tests proving the fix rejects suspicious travel-system prices while still allowing genuinely cheap categories such as garden hoses.
+- Added an opt-in controller flag for meaningful change-log updates. Future QA/fix runs can pass `--change-note` and `--change-verified` so the controller appends a plain-English `docs/change-log.md` entry and syncs the desktop markdown copy.
 - Added a safe v1 multi-agent QA loop foundation with controller, worker, and verifier scripts.
 - Moved reusable QA scenarios into JSON batch files under `docs/agent-batches/`.
 - Added deterministic and live localhost worker modes. Live mode posts to the local recommendations API with debug enabled and records exact/near counts, product names, suspicious flags, and debug summaries.
@@ -30,6 +38,25 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 - Added safer unit-label handling so selected length features do not create duplicated labels like `50 ft ft`.
 
 ### Verified
+- `node --no-warnings --test tests\recommendationResultValidation.test.mjs tests\serper.test.mjs tests\requirementValidation.test.mjs tests\productPageUrl.test.mjs`
+- `npm run typecheck`
+- `npm run lint`
+- `npm test`
+- `npm run build`
+- `npm run qa:loop -- --batches broad-mainstream`
+- `npm run qa:worker -- --batch broad-mainstream --mode live`
+- `node --no-warnings --test tests\priceParsing.test.mjs`
+- `node --no-warnings --test tests\productAssets.test.mjs`
+- `node --no-warnings --test tests\recommendationScoring.test.mjs`
+- `npm run typecheck`
+- `npm run lint`
+- `npm test`
+- `npm run qa:loop -- --batches price-trust`
+- `npm run qa:worker -- --batch price-trust --mode live`
+- `npm run build`
+- `node --check scripts\agent-loop-controller.mjs`
+- `npm run qa:loop -- --batches price-trust`
+- `npm run lint`
 - `node --check scripts\qa-worker.mjs`
 - `node --check scripts\agent-loop-controller.mjs`
 - `node --check scripts\verify-loop-result.mjs`

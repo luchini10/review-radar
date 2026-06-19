@@ -86,6 +86,18 @@ Keep `--parallel` low. It is capped in code, but API usage can still climb quick
 
 The controller only merges worker JSON files from the current run id, so stale historical files do not pollute the next-task decision.
 
+## Change Log Updates
+
+Normal QA runs should not update `docs/change-log.md`. The change log is only for meaningful changes.
+
+After a meaningful fix, feature, pipeline change, ranking/search/evidence change, or live QA fix worth remembering, pass a plain-English note:
+
+```powershell
+npm run qa:loop -- --batches price-trust,broad-mainstream --change-note "Improved price trust checks so comma-formatted prices are not misread as tiny prices." --change-verified "npm run qa:loop,npm run build"
+```
+
+The controller will append that note to `docs/change-log.md` and sync the desktop markdown copy.
+
 ## Root Cause Ranking
 
 The controller ranks repeated failures by:

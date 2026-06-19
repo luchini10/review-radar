@@ -237,6 +237,56 @@ describe("product asset metadata extraction", () => {
     assert.equal(metadata.offers[0].price.value, 799.99);
   });
 
+  it("ignores visible financing payments before the full product price", () => {
+    const metadata = buildMetadata({
+      html: `
+        <html>
+          <body>
+            <h1>Nectar Classic Memory Foam Mattress</h1>
+            <section>
+              <span>As low as $35/mo with financing</span>
+              <span>Sale price $899</span>
+            </section>
+          </body>
+        </html>
+      `,
+      pageUrl: "https://www.example.com/nectar-classic",
+      product: {
+        name: "Nectar Classic Memory Foam Mattress",
+        product_page_url: "https://www.example.com/nectar-classic",
+        product_image_url: "",
+      },
+      productImageUrl: "",
+    });
+
+    assert.equal(metadata.offers[0].price.value, 899);
+  });
+
+  it("does not display an implausibly tiny travel-system price as verified", () => {
+    const product = withVerifiedOfferPriceFields({
+      category: "car seat stroller combo",
+      estimated_price_range: "$35",
+      name: "Graco Modes Nest Travel System",
+      price_value_verdict: "At $35, this looks like an exceptional value.",
+      product_image_url: "",
+      product_page_url: "https://example.com/graco-modes-nest",
+      metadata: {
+        offers: [
+          {
+            availability: field("InStock"),
+            price: field(35, "retailer_page"),
+            priceCurrency: field("USD", "retailer_page"),
+            retailer: "example.com",
+            url: "https://example.com/graco-modes-nest",
+          },
+        ],
+      },
+    });
+
+    assert.equal(product.estimated_price_range, "Price not verified");
+    assert.match(product.price_value_verdict, /unusually low/i);
+  });
+
   it("refreshes stale displayed price text from verified offers", () => {
     const product = withVerifiedOfferPriceFields({
       estimated_price_range: "Price not verified",

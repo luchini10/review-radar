@@ -94,6 +94,15 @@ const COMPONENT_SUBSTITUTIONS: ComponentSubstitution[] = [
       /\b(?:ice\s*-?\s*maker|icemaker|water filter|air filter|replacement shelf|door bin|crisper drawer|refrigerator handle)\b/i,
     satisfiedBy: /\b(?:refrigerator|fridge|freezer|mini fridge)\b/i,
   },
+  // A bed frame, platform bed, or foundation is furniture for a mattress, not
+  // the mattress itself.
+  {
+    base: /\bmattress\b/i,
+    substitute:
+      /\b(?:bed|bed frame|platform bed|storage bed|upholstered bed|headboard|foundation|box spring|bunkie board)\b/i,
+    satisfiedBy:
+      /\bmattress\b(?!\s+(?:base|foundation|frame|pad|platform|protector|support|topper)\b)/i,
+  },
 ];
 
 // True when the candidate's evidence names a component/variant of the requested

@@ -31,6 +31,13 @@ describe("price parsing", () => {
     assert.equal(parseBestProductPriceText("less than 500 dollars"), null);
   });
 
+  it("does not treat monthly or installment payments as product prices", () => {
+    assert.equal(parseBestProductPriceText("As low as $35/mo with financing"), null);
+    assert.equal(parseBestProductPriceText("Monthly payment $35 for 36 months"), null);
+    assert.equal(parseBestProductPriceText("Starting at $999 or $35/mo"), 999);
+    assert.equal(parseBestMoneyAmount("Full price $899, or pay $35 per month"), 899);
+  });
+
   it("uses the upper bound for budget ranges", () => {
     assert.equal(parseMaxBudgetAmount("$400-$600"), 600);
     assert.equal(parseMaxBudgetAmount("between $500 and $700"), 700);
@@ -64,5 +71,32 @@ describe("plausibleProductPrice (rejects broken low prices)", () => {
 
   it("falls back to a plausible text price when there are no offers", () => {
     assert.equal(plausibleProductPrice([], 449), 449);
+  });
+
+  it("rejects implausibly tiny full-product prices for high-ticket product contexts", () => {
+    assert.equal(
+      plausibleProductPrice([35], 35, {
+        category: "car seat stroller combo",
+        productName: "Graco Modes Nest Travel System",
+      }),
+      null,
+    );
+    assert.equal(
+      plausibleProductPrice([10], null, {
+        category: "travel system",
+        productName: "Infant car seat stroller combo",
+      }),
+      null,
+    );
+  });
+
+  it("does not apply high-ticket floors to ordinary lower-priced categories", () => {
+    assert.equal(
+      plausibleProductPrice([35], 35, {
+        category: "garden hose",
+        productName: "50 ft garden hose",
+      }),
+      35,
+    );
   });
 });

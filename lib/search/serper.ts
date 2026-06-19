@@ -599,12 +599,36 @@ function titleLooksLikeSpecificProduct(title: string) {
     /\byou'?ll love\b/i,
     /\bsearch results?\b/i,
     /\bresults for\b/i,
+    /^\s*compare\s+(?:at|prices?|stores?)\b/i,
+    /\bcompare\s+at\s+\d+\+?\s+stores\b/i,
+    /\bprice comparison\b/i,
     /\bshop\b/i,
     /\bshopping\b/i,
     /\bcategory\b/i,
     /\bcollection\b/i,
     /\bbuy online\b/i,
+    /\b(?:buying advice|shopping advice|purchase advice)\b/i,
+    /\bcomplaints?\s+(?:about|for|with|on)\b/i,
+    /\breviews?\s*(?:&|and|-|\/)\s*guides?\b/i,
+    /\breviews?\s*$/i,
+    /\b(?:support article|help library|error code list|troubleshooting|recall notice)\b/i,
+    /\b(?:deals?|sales?)\s+20\d{2}\b/i,
+    /\b20\d{2}\s+(?:deals?|sales?)\b/i,
+    /\b(?:best|top)\s+.+\s+(?:deals?|sales?)\b/i,
+    /^(?:ranking|ranked)\s+(?:the\s+)?(?:top|best)\s+\d+\b/i,
+    /^(?:the\s+)?(?:top|best)\s+\d+\b/i,
+    /^\s*cut\s+in\s+half\b/i,
+    /\breview\b\s*(?:\||-|$)/i,
+    /\b(?:official images|release info|newsroom|built for|colorways?\s+\+\s+release dates|complete guide|franchise history|shuffles?\s+its\s+lineup)\b/i,
+    /\b\w+\s+out,\s+\w+.+\s+in\?\s*$/i,
+    /\bguides?\s*\(20\d{2}\)\b/i,
+    /\byours for\b/i,
+    /\bi'?ve\s+ever\b/i,
+    /^\s*(?:the\s+)?[a-z0-9][^.!?]{5,120}\s+(?:is|are)\s+one\s+of\b/i,
+    /^\s*(?:boost|get|level up|make|save|score|snag|turn|up your|upgrade)\b.{0,120}\bwith\s+(?:the|a|an)\b/i,
     /\bunder\s+\$?\d+\b/i,
+    /\b(?:shoes|sneakers|boots|sandals|shirts|pants|jackets|chairs|desks|tables|vacuums|appliances|tools|grills|mattresses|sofas|couches)\s+(?:for|from)\s+(?:men|women|kids|top brands|speed|running|basketball|walking)\b/i,
+    /\b(?:basketball|running|walking|training|tennis|hiking)\s+(?:shoes|sneakers)\s*(?:\||-|for|from)\b/i,
     /\b(?:desks|refrigerators|microwaves|microwave ovens|countertop microwave ovens|mini fridges|sectional sleeper sofas|sofas|couches|vacuums|gloves)\s*[-|]\s*(?:wayfair|aj madison|the home depot|amazon|walmart|target|lowe'?s|best buy)\b/i,
     /^\s*\$?\d+(?:\.\d+)?\s*(?:to|-)\s*\$?\d+(?:\.\d+)?\b/i,
   ];
@@ -703,13 +727,30 @@ function isEvidenceOrDiscussionDomain(url: URL) {
   const evidenceDomains = [
     "apartmenttherapy.com",
     "bareefers.org",
+    "cnet.com",
     "consumerreports.org",
     "devaise.com",
     "facebook.com",
     "forbes.com",
+    "goodhousekeeping.com",
+    "home-barista.com",
     "instagram.com",
+    "laptopmag.com",
+    "mashable.com",
+    "nytimes.com",
+    "pcmag.com",
+    "price.com",
+    "popularmechanics.com",
     "reddit.com",
+    "runrepeat.com",
+    "rtings.com",
+    "sneakerfiles.com",
+    "techradar.com",
     "theverge.com",
+    "tomsguide.com",
+    "wirecutter.com",
+    "windowscentral.com",
+    "wwd.com",
     "youtube.com",
     "youtu.be",
   ];
@@ -721,6 +762,7 @@ function pathLooksLikeEvidenceOrSupportPage(url: URL) {
   const path = url.pathname.toLowerCase();
 
   return [
+    /\/(?:advice|community|communities|conversation|conversations)\//i,
     /\/(?:article|articles)\//i,
     /\/(?:blog|blogs)\//i,
     /\/(?:forum|forums)\//i,
@@ -729,6 +771,8 @@ function pathLooksLikeEvidenceOrSupportPage(url: URL) {
     /\/(?:q-a|qa|question|questions)\//i,
     /\/(?:review|reviews)\//i,
     /\/(?:thread|threads)\//i,
+    /\/(?:topic|topics)\//i,
+    /viewtopic/i,
     /\.pdf$/i,
   ].some((pattern) => pattern.test(path));
 }
@@ -772,6 +816,22 @@ function isLikelySearchOrListingUrl(url: URL) {
 
   if (host.endsWith("target.com")) {
     return /\/(?:s|c)\//i.test(rawPath) && !isKnownProductUrl(url);
+  }
+
+  if (host === "about.nike.com" || host === "news.nike.com") {
+    return true;
+  }
+
+  if (host.endsWith("nike.com")) {
+    return !/\/t\//i.test(rawPath);
+  }
+
+  if (host.endsWith("dickssportinggoods.com")) {
+    return /\/(?:a|c|f|s)\//i.test(rawPath) && !isKnownProductUrl(url);
+  }
+
+  if (host.endsWith("footlocker.com")) {
+    return /\/(?:buy|category|search|collection)\//i.test(rawPath) && !isKnownProductUrl(url);
   }
 
   if (host.endsWith("walmart.com")) {

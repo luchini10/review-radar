@@ -67,6 +67,28 @@ describe("isComponentSubstitution", () => {
     );
   });
 
+  it("rejects bed frames and foundations for a mattress search", () => {
+    assert.equal(
+      isComponentSubstitution("Basi King Bed Frame - Oak", "king size mattress"),
+      true,
+    );
+    assert.equal(
+      isComponentSubstitution("Adjustable Mattress Foundation", "king size mattress"),
+      true,
+    );
+    assert.equal(
+      isComponentSubstitution("Hudson Bed | Pottery Barn", "king size mattress"),
+      true,
+    );
+  });
+
+  it("keeps an actual mattress for a mattress search", () => {
+    assert.equal(
+      isComponentSubstitution("Nectar Classic 12 King Mattress", "king size mattress"),
+      false,
+    );
+  });
+
   it("does not fire when the base category is unrelated", () => {
     assert.equal(isComponentSubstitution("36 inch Gas Cooktop", "leaf blower"), false);
   });

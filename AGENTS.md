@@ -50,6 +50,34 @@ Always follow `PROJECT_PLAN.md`.
 - Confidence scoring should be transparent and simple, not fake precision.
 - Preserve meaningful disagreement between sources instead of hiding it.
 
+## Markdown Documentation Rules
+
+The repo markdown files are the source of truth. Desktop copies are convenience snapshots only.
+
+Important markdown files:
+
+- `ReviewRadar-Overview.md`: update when ReviewRadar's architecture, pipeline behavior, major modules, APIs, or important system rules change.
+- `docs/qa-loop-results.md`: update after live QA sessions, result-quality investigations, or bug-fix loops where the repo should remember what failed, what was tested, and what was fixed.
+- `docs/change-log.md`: update for meaningful changes only, written in plain English.
+
+Update `docs/change-log.md` after:
+
+- major pipeline changes
+- ranking/search/evidence changes
+- UI feature changes
+- important bug fixes
+- live QA fixes worth remembering
+
+Do not update `docs/change-log.md` for typo fixes, formatting-only edits, tiny internal cleanup, or behaviorless refactors.
+
+Change-log entries should be dated and use short sections such as `Changed` and `Verified`. Only list verification commands that were actually run.
+
+Whenever any of these markdown files are updated in the repo, also copy the updated repo version to `C:\Users\tluch\Desktop\RR Markdowns`:
+
+- `ReviewRadar-Overview.md` -> `C:\Users\tluch\Desktop\RR Markdowns\ReviewRadar-Overview.md`
+- `docs/qa-loop-results.md` -> `C:\Users\tluch\Desktop\RR Markdowns\qa-loop-results.md`
+- `docs/change-log.md` -> `C:\Users\tluch\Desktop\RR Markdowns\change-log.md`
+
 ## Step 11 Rule
 
 Step 11 is `Testing and Trust Audit`, not just normal testing.

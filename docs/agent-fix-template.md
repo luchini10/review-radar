@@ -69,6 +69,12 @@ npm test
 npm run build
 ```
 
+When the fix is meaningful enough for the change log, run the controller with a plain-English change note:
+
+```powershell
+npm run qa:loop -- --batches price-trust,broad-mainstream --change-note "Describe the meaningful fix in plain English." --change-verified "npm run qa:loop,npm run build"
+```
+
 Only list commands in the final answer and change log if they were actually run.
 
 ## 7. Document

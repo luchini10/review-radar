@@ -365,7 +365,11 @@ function parseInlineBudgetAmount(value: string | undefined) {
 
   const afterAmount = text.slice((moneyMatch.index || 0) + moneyMatch[0].length);
 
-  if (/^\s*(?:inches|inch|in\.?|")\b/i.test(afterAmount)) {
+  if (
+    /^\s*(?:inches|inch|in\.?|"|feet|foot|ft\.?|pounds?|lbs?|lb\.?|ounces?|oz\.?|kilograms?|kg|grams?|g|centimeters?|cm|millimeters?|mm|hours?|hrs?|minutes?|mins?|cfm|psi|watts?|w|mah|gb|tb|hz)\b/i.test(
+      afterAmount,
+    )
+  ) {
     return null;
   }
 
@@ -414,8 +418,10 @@ function parseBudgetRule(input: RecommendationApiRequest): BudgetRule | null {
   // as the firm limit so in-range products are not wrongly rejected.
   const amount =
     parseBudgetRangeMax(input.budget, false) ??
+    parseBudgetRangeMax(input.priorities, true) ??
     parseBudgetRangeMax(input.query, true) ??
     parseMoneyAmount(input.budget) ??
+    parseInlineBudgetAmount(input.priorities) ??
     parseInlineBudgetAmount(input.query);
 
   if (amount === null) {
@@ -430,7 +436,7 @@ function parseBudgetRule(input: RecommendationApiRequest): BudgetRule | null {
       : null;
   }
 
-  const text = normalizeText(input.budget || input.query || "");
+  const text = normalizeText(input.budget || input.priorities || input.query || "");
   const flexible = /\b(?:about|around|flexible|roughly|target)\b/i.test(text);
   const operator =
     /\b(?:under|less than|below|no more than|at most|max|maximum)\b/i.test(text) ||
@@ -555,6 +561,29 @@ function sizeUnitLabel(unit: SizeConstraint["unit"]) {
   return unit === "ft" ? "ft" : "in";
 }
 
+function labelValueWithUnit(value: number, unit: SizeConstraint["unit"]) {
+  return `${value} ${sizeUnitLabel(unit)}`;
+}
+
+function selectedFeatureSizeLabel(
+  name: string,
+  operator: "at least" | "under" | "equals",
+  value: number,
+  unit: SizeConstraint["unit"],
+) {
+  const cleanName = name
+    .replace(/\s*[:=-]?\s*\d+(?:\.\d+)?\s*(?:feet|foot|ft\.?|inches|inch|in\.?)\b/gi, "")
+    .trim();
+  const labelName = cleanName || name;
+  const valueText = labelValueWithUnit(value, unit);
+
+  if (operator === "equals") {
+    return `${labelName}: ${valueText}`;
+  }
+
+  return `${labelName}: ${operator} ${valueText}`;
+}
+
 function selectedFeatureToSizeConstraints(
   feature: SelectedSmartFeature | string,
 ): SizeConstraint[] {
@@ -590,7 +619,12 @@ function selectedFeatureToSizeConstraints(
     return [
       {
         id: nextId("size"),
-        label: `${feature.name}: at least ${feature.value[0]} ${sizeUnitLabel(unit)}`,
+        label: selectedFeatureSizeLabel(
+          feature.name,
+          "at least",
+          feature.value[0],
+          unit,
+        ),
         dimension,
         operator: "min",
         unit,
@@ -598,7 +632,12 @@ function selectedFeatureToSizeConstraints(
       },
       {
         id: nextId("size"),
-        label: `${feature.name}: under ${feature.value[1]} ${sizeUnitLabel(unit)}`,
+        label: selectedFeatureSizeLabel(
+          feature.name,
+          "under",
+          feature.value[1],
+          unit,
+        ),
         dimension,
         operator: "max",
         unit,
@@ -621,10 +660,10 @@ function selectedFeatureToSizeConstraints(
       id: nextId("size"),
       label:
         feature.operator === "lte"
-          ? `${feature.name}: under ${numericValue} ${sizeUnitLabel(unit)}`
+          ? selectedFeatureSizeLabel(feature.name, "under", numericValue, unit)
           : feature.operator === "equals" && dimension === "length"
-            ? `${feature.name}: ${numericValue} ${sizeUnitLabel(unit)}`
-            : `${feature.name}: at least ${numericValue} ${sizeUnitLabel(unit)}`,
+            ? selectedFeatureSizeLabel(feature.name, "equals", numericValue, unit)
+            : selectedFeatureSizeLabel(feature.name, "at least", numericValue, unit),
       dimension,
       operator: feature.operator === "lte" ? "max" : "min",
       unit,

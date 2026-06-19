@@ -124,6 +124,26 @@ function urlLooksLikeGenericListingPage(url: string) {
     return true;
   }
 
+  const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+
+  if (host === "nike.com" && path.startsWith("/w/")) {
+    return true;
+  }
+
+  if (
+    host === "dickssportinggoods.com" &&
+    /\/(?:c|f|s)\//i.test(path)
+  ) {
+    return true;
+  }
+
+    if (
+      host === "footlocker.com" &&
+      /\/(?:buy|category|search|collection)\//i.test(path)
+    ) {
+      return true;
+    }
+
   return /(?:^|\/)(?:[^/]*(?:vacuums|vacuum-cleaners|air-purifiers|pet_cordless_vacuums|cordless_vacuums|running-shoes|dog-foods))(?:\/)?$/.test(
     path,
   );
@@ -169,6 +189,26 @@ function isNonProductPageResult(name: string | undefined, primaryUrl: string): b
       return true;
     }
 
+    if (host === "runrepeat.com") {
+      return true;
+    }
+
+    if (
+      host === "klarna.com" ||
+      host === "sneakerfiles.com" ||
+      host === "wwd.com"
+    ) {
+      return true;
+    }
+
+    if (host === "espn.com" && path.includes("/story/")) {
+      return true;
+    }
+
+    if (host === "about.nike.com" || host === "news.nike.com") {
+      return true;
+    }
+
     // Zappos: filter/category URLs always end in .zso
     if (host === "zappos.com" && path.endsWith(".zso")) {
       return true;
@@ -181,6 +221,19 @@ function isNonProductPageResult(name: string | undefined, primaryUrl: string): b
 
     // Nike: /w/ is their product listing/filter pages
     if (host === "nike.com" && path.startsWith("/w/")) {
+      return true;
+    }
+
+    // Nike buyable product pages use /t/. Brand/category/story pages are not
+    // product detail pages even when they name a shoe line.
+    if (host === "nike.com" && !/\/t\//i.test(path)) {
+      return true;
+    }
+
+    if (
+      host === "dickssportinggoods.com" &&
+      /\/(?:a|c|f|s)\//i.test(path)
+    ) {
       return true;
     }
 
@@ -214,6 +267,32 @@ function isNonProductPageResult(name: string | undefined, primaryUrl: string): b
 
   // "The 8 Best Budget Dog Foods of 2026" / "Best Budget Dog Foods 2026"
   if (/^(?:the\s+)?\d+\s+best\b/i.test(n) || /^best\s+\w.{3,}\s+of\s+20\d\d/i.test(n)) {
+    return true;
+  }
+
+  // "Ranking the top 74 sneakers..." / "Top 10 products ranked..."
+  if (
+    /^(?:ranking|ranked)\s+(?:the\s+)?(?:top|best)\s+\d+\b/i.test(n) ||
+    /^(?:the\s+)?(?:top|best)\s+\d+\b/i.test(n)
+  ) {
+    return true;
+  }
+
+  // Review pages are evidence sources, not buyable product recommendations.
+  if (
+    /^\s*cut\s+in\s+half\b/i.test(n) ||
+    /\breview\b\s*(?:\||-|$)/i.test(n) ||
+    /\b(?:official images|release info|newsroom|built for|colorways?\s+\+\s+release dates|complete guide|franchise history|shuffles?\s+its\s+lineup)\b/i.test(n) ||
+    /\b\w+\s+out,\s+\w+.+\s+in\?\s*$/i.test(n)
+  ) {
+    return true;
+  }
+
+  // Broad category/listing titles rather than a specific buyable product.
+  if (
+    /\b(?:shoes|sneakers|boots|sandals|shirts|pants|jackets|chairs|desks|tables|vacuums|appliances|tools|grills|mattresses|sofas|couches)\s+(?:for|from)\s+(?:men|women|kids|top brands|speed|running|basketball|walking)\b/i.test(n) ||
+    /\b(?:basketball|running|walking|training|tennis|hiking)\s+(?:shoes|sneakers)\s*(?:\||-|for|from)\b/i.test(n)
+  ) {
     return true;
   }
 

@@ -316,3 +316,223 @@ See `docs/agent-next-task.md`.
 ### Report
 
 See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-06-19T11:53:05.352Z
+
+- **run id:** agent-loop-2026-06-19T11-52-38-706Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust
+- **parallel:** 1
+- **worker result files checked:** 1
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3662ms |
+| lint | Passed | 10208ms |
+| unit tests | Passed | 11479ms |
+| deterministic eval pipeline | Passed | 443ms |
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-06-19T12:05:23.159Z
+
+- **run id:** agent-loop-2026-06-19T12-05-05-664Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust, broad-mainstream, requirement-units
+- **parallel:** 1
+- **worker result files checked:** 3
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 2611ms |
+| lint | Passed | 6429ms |
+| unit tests | Passed | 6176ms |
+| deterministic eval pipeline | Passed | 464ms |
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-06-19T12:18:05.497Z
+
+- **run id:** agent-loop-2026-06-19T12-06-37-552Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** live
+- **batches:** price-trust, broad-mainstream, requirement-units
+- **parallel:** 1
+- **worker result files checked:** 3
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 2665ms |
+| lint | Passed | 6117ms |
+| unit tests | Passed | 4823ms |
+| deterministic eval pipeline | Passed | 410ms |
+
+### Repeated Failure Candidates
+
+- price_evidence_or_variant_price_gap: 3 finding(s), priority 25
+- discovery_or_validation_too_strict: 1 finding(s), priority 9
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-06-19T12:31:34.914Z
+
+- **run id:** agent-loop-2026-06-19T12-31-13-809Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust
+- **parallel:** 1
+- **worker result files checked:** 1
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3086ms |
+| lint | Passed | 8605ms |
+| unit tests | Passed | 7474ms |
+| deterministic eval pipeline | Passed | 701ms |
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Price Trust Fix - 2026-06-19T12:35:00Z
+
+- **reason:** The live price-trust worker found car-seat/stroller travel systems showing suspiciously tiny prices like `$35` and `$10` as exact matches.
+- **root cause:** Shared price trust logic could treat payment, promo, accessory, or variant amounts as usable full-product prices when those were the only extracted price signals.
+- **general fix:** Added a reusable product-context plausibility floor for high-ticket full-product categories. The same price parser is now used by budget validation, product reliability, ranking, and product-card price display.
+- **before:** Live QA found 3 suspicious low-price exact-match findings for `car seat stroller combo`.
+- **after:** Focused live QA for `price-trust` found no suspicious low-price flags for the `car seat stroller combo` search. Exact matches used plausible travel-system prices instead of `$35` or `$10`.
+- **files changed:** `lib/priceParsing.ts`, `lib/productAssets.ts`, `lib/productReliability.ts`, `lib/recommendationScoring.ts`, `lib/requirementValidation.ts`, plus regression tests.
+- **verification run:**
+  - `node --no-warnings --test tests\priceParsing.test.mjs` passed.
+  - `node --no-warnings --test tests\productAssets.test.mjs` passed.
+  - `node --no-warnings --test tests\recommendationScoring.test.mjs` passed.
+  - `npm run typecheck` passed.
+  - `npm run lint` passed.
+  - `npm test` passed, 429/429 tests.
+  - `npm run qa:loop -- --batches price-trust` passed.
+  - `npm run qa:worker -- --batch price-trust --mode live` passed and cleared the stroller-combo suspicious-price flags.
+  - `npm run build` passed.
+- **remaining issue found:** The same live price-trust worker found a separate basketball-hoop non-product-page issue (`RULE NO. 1: Court Dimensions - Equipment`) in near matches. That is not part of this price fix and should be handled in a separate non-product-page loop.
+
+## Agent Loop Run - 2026-06-19T14:18:00.325Z
+
+- **run id:** agent-loop-2026-06-19T14-06-04-791Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** live
+- **batches:** price-trust, broad-mainstream, requirement-units
+- **parallel:** 1
+- **worker result files checked:** 3
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 2232ms |
+| lint | Passed | 5692ms |
+| unit tests | Passed | 4371ms |
+| deterministic eval pipeline | Passed | 432ms |
+
+### Repeated Failure Candidates
+
+- non_product_page_leakage: 1 finding(s), priority 9
+- discovery_or_validation_too_strict: 1 finding(s), priority 9
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-06-19T15:01:01.880Z
+
+- **run id:** agent-loop-2026-06-19T15-00-43-806Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream
+- **parallel:** 1
+- **worker result files checked:** 1
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 2581ms |
+| lint | Passed | 7020ms |
+| unit tests | Passed | 7240ms |
+| deterministic eval pipeline | Passed | 449ms |
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Non-Product Page Leakage Fix - 2026-06-19T15:20:00Z
+
+- **reason:** The live broad-mainstream worker found a basketball-shoes result where an article/listing-style page appeared as a product recommendation.
+- **root cause:** Review Radar had several product-page filters, but they did not cover enough modern shopping page shapes. Some article rankings, review pages, brand newsroom pages, product-family pages, retailer advice/category pages, and price-comparison pages could still pass through as if they were buyable products.
+- **general fix:** Strengthened product-page checks in Serper discovery, final citation validation, final requirement filtering, and product-card URL selection. These pages can still support research, but they should not display as product cards or replace the card's buy link.
+- **before:** Live QA reported `non_product_page_leakage` for `basketball shoes` with `Nike only`. Manual live checks also surfaced review, newsroom, retailer listing, sneaker-news, and price-comparison pages.
+- **after:** The final live `broad-mainstream` worker found no suspicious flags. `basketball shoes`, `running shoes`, and `walking shoes` all returned live results without the worker reporting non-product leakage.
+- **files changed:** `lib/search/serper.ts`, `lib/recommendationResultValidation.ts`, `lib/requirementValidation.ts`, `lib/productPageUrl.ts`, plus regression tests.
+- **verification run:**
+  - Focused non-product-page tests passed.
+  - `npm run typecheck` passed.
+  - `npm run lint` passed.
+  - `npm test` passed, 432/432 tests.
+  - `npm run build` passed.
+  - `npm run qa:loop -- --batches broad-mainstream` passed with no repeated failures.
+  - `npm run qa:worker -- --batch broad-mainstream --mode live` passed with no suspicious flags.
+- **remaining issue found:** The broad Nike running-shoes search can still be sensitive to price verification. One live run returned only near matches because prices were unverified, but the repeat live worker returned exact matches. A future fix should improve current-price retrieval for official/retailer shoe pages without weakening firm budget rules.

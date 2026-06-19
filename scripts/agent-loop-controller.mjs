@@ -9,6 +9,7 @@ const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const docsDir = join(repoRoot, "docs");
 const workerDir = join(docsDir, "agent-worker-results");
 const qaLogPath = join(docsDir, "qa-loop-results.md");
+const changeLogPath = join(docsDir, "change-log.md");
 const nextTaskPath = join(docsDir, "agent-next-task.md");
 const reportPath = join(docsDir, "agent-loop-report.md");
 const desktopMarkdownDir = join(
@@ -34,6 +35,13 @@ if (existsSync(join(repoRoot, "scripts", "eval-pipeline.mjs"))) {
 function argValue(name, fallback = "") {
   const index = process.argv.indexOf(`--${name}`);
   return index === -1 ? fallback : process.argv[index + 1] || fallback;
+}
+
+function splitList(value) {
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function nowStamp() {
@@ -313,11 +321,28 @@ function reportMarkdown(runId, commandResults, workerRuns, workerResults, repeat
     repeatedFailures[0]?.examples?.[0]?.batchName ||
     (runOptions.mode === "live" ? "price-trust" : "price-trust --mode live");
 
-  return `# Agent Loop Report\n\nGenerated: ${new Date().toISOString()}\nRun: ${runId}\nStatus: ${statusLabel(commandResults, workerRuns, verifierSummary)}\nMode: ${runOptions.mode}\nParallel workers: ${runOptions.parallel}\n\n## Batches Run\n\n${batchLines || "- No worker batches ran."}\n\n## Checks\n\n${checkLines}\n\n## Top Repeated Root Causes\n\n${rootLines}\n\n## Verifier Status\n\n${
+  return `# Agent Loop Report\n\nGenerated: ${new Date().toISOString()}\nRun: ${runId}\nStatus: ${statusLabel(commandResults, workerRuns, verifierSummary)}\nMode: ${runOptions.mode}\nParallel workers: ${runOptions.parallel}\nChange log: ${runOptions.changeNote ? "updated" : "not updated; no meaningful change note was provided"}\n\n## Batches Run\n\n${batchLines || "- No worker batches ran."}\n\n## Checks\n\n${checkLines}\n\n## Top Repeated Root Causes\n\n${rootLines}\n\n## Verifier Status\n\n${
     verifierSummary
       ? `- ${verifierSummary.accepted ? "Accepted" : "Rejected"}: ${verifierSummary.rejectedReasons?.join("; ") || "No rejection reasons."}`
       : "- No before/after verifier was requested for this controller run."
   }\n\n## Next Recommended QA Batch\n\n- ${nextBatch}\n\n## Manual Steps Still Required\n\n- Live mode requires a running local dev server and valid server-side API keys.\n- Fix agents still need explicit user approval before editing code.\n- Parallel execution is available but should stay low to avoid unnecessary API spend.\n- Workers report evidence only; they do not make product-specific patches.\n\n## Current Worker Files\n\n${workerResults.map((result) => `- ${result.file || result.runId}`).join("\n") || "- None"}\n`;
+}
+
+function changeLogMarkdown(changeNote, verifiedCommands) {
+  const verified = verifiedCommands.length
+    ? verifiedCommands.map((command) => `- \`${command}\``).join("\n")
+    : "- Verification not listed by the controller command.";
+
+  return `\n## ${new Date().toISOString().slice(0, 10)}\n\n### Changed\n- ${changeNote}\n\n### Verified\n${verified}\n`;
+}
+
+async function appendChangeLogIfNeeded(changeNote, verifiedCommands) {
+  if (!changeNote) {
+    return false;
+  }
+
+  await appendFile(changeLogPath, changeLogMarkdown(changeNote, verifiedCommands));
+  return true;
 }
 
 async function syncMarkdownSnapshots() {
@@ -351,13 +376,12 @@ async function syncMarkdownSnapshots() {
 
 async function main() {
   const runId = `agent-loop-${nowStamp()}`;
-  const batches = argValue("batches", "price-trust")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
+  const batches = splitList(argValue("batches", "price-trust"));
   const mode = argValue("mode", "deterministic");
   const parallel = Math.max(1, Math.min(Number(argValue("parallel", "1")) || 1, 4));
   const baseUrl = argValue("base-url", "http://localhost:3000");
+  const changeNote = argValue("change-note", "");
+  const changeVerified = splitList(argValue("change-verified", ""));
   await mkdir(workerDir, { recursive: true });
 
   const workerRuns = await runWorkerBatches(batches, {
@@ -375,11 +399,13 @@ async function main() {
 
   const workerResults = await loadCurrentWorkerResults(workerRuns, runId);
   const repeatedFailures = repeatedFailureSummary(workerResults);
-  const runOptions = { batches, mode, parallel };
+  const runOptions = { batches, changeNote, mode, parallel };
+  const changeLogUpdated = await appendChangeLogIfNeeded(changeNote, changeVerified);
   const runResult = {
     runId,
     createdAt: new Date().toISOString(),
     checks: commandResults,
+    changeLogUpdated,
     mode,
     parallel,
     repeatedFailures,

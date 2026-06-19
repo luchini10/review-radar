@@ -10,6 +10,8 @@ import {
 } from "./productImageResolver.ts";
 import {
   parseBestMoneyAmount,
+  parseBestProductPriceText,
+  plausibleProductPrice,
   priceTextLooksUnverified,
   formatDollars,
 } from "./priceParsing.ts";
@@ -726,10 +728,18 @@ function visiblePriceContextLooksPromotional(
   const afterEnd =
     nextPriceIndex === null ? endIndex + 180 : Math.min(nextPriceIndex, endIndex + 180);
   const after = text.slice(endIndex, afterEnd);
+  const immediateBefore = before.slice(-48);
+  const hasCurrentPriceLabel =
+    /\b(?:current|list|regular|retail|sale)\s+price\s*$/i.test(immediateBefore) ||
+    /\bprice\s*$/i.test(immediateBefore);
 
   return (
-    /\b(?:apply for|\bpay\b|credit card|consumer card)\b/i.test(before) ||
-    /\b(?:after\s+\$?\d|credit card|consumer card|qualifying purchase|upon opening|coupon|promo code|with coupon|off your total)\b/i.test(
+    (!hasCurrentPriceLabel &&
+      /\b(?:apply for|\bpay\b|credit card|consumer card|financing|finance|installments?|monthly|payment\s+plan|affirm|afterpay|klarna)\b/i.test(
+        immediateBefore,
+      )) ||
+    /^\s*(?:\/\s*mo|\/\s*month|mo\.?\b|per\s+month\b|a\s+month\b|monthly\b|month\b|installments?\b)/i.test(after) ||
+    /\b(?:after\s+\$?\d|credit card|consumer card|qualifying purchase|upon opening|coupon|promo code|with coupon|off your total|financing|finance|installments?|monthly|payment\s+plan|affirm|afterpay|klarna)\b/i.test(
       after,
     )
   );
@@ -1057,23 +1067,45 @@ function buildMetadata(input: {
   return metadata;
 }
 
-function bestOfferPrice(metadata: ProductMetadata | undefined) {
+function bestOfferPrice(
+  metadata: ProductMetadata | undefined,
+  product: ProductAssetRecommendation,
+) {
   const prices =
     metadata?.offers
       .map((offer) => offer.price.value)
       .filter((price): price is number => price !== null && Number.isFinite(price)) ||
     [];
 
-  return prices.length > 0 ? Math.min(...prices) : null;
+  return plausibleProductPrice(
+    prices,
+    parseBestProductPriceText(product.estimated_price_range),
+    {
+      category: product.category,
+      productName: product.name,
+    },
+  );
 }
 
 function withVerifiedOfferPriceFields<T extends ProductAssetRecommendation>(
   product: T,
 ): T {
-  const price = bestOfferPrice(product.metadata);
+  const price = bestOfferPrice(product.metadata, product);
 
   if (price === null) {
-    return product;
+    const hasAnyOfferPrice =
+      product.metadata?.offers.some(
+        (offer) => offer.price.value !== null && Number.isFinite(offer.price.value),
+      ) || parseBestProductPriceText(product.estimated_price_range) !== null;
+
+    return hasAnyOfferPrice
+      ? {
+          ...product,
+          estimated_price_range: "Price not verified",
+          price_value_verdict:
+            "Price evidence looked unusually low for the full product; verify the current store price before buying.",
+        }
+      : product;
   }
 
   const nextProduct = {

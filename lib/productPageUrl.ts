@@ -100,6 +100,7 @@ const OFFICIAL_BRAND_DOMAINS: Record<string, string[]> = {
   lg: ["lg.com"],
   microsoft: ["microsoft.com"],
   miele: ["miele.com", "mieleusa.com"],
+  nike: ["nike.com"],
   ninja: ["ninjakitchen.com"],
   samsung: ["samsung.com"],
   shark: ["sharkclean.com"],
@@ -320,6 +321,40 @@ function urlLooksGenericListingPage(url: string) {
     }
 
     if (host === "target.com" && path.startsWith("/c/")) {
+      return true;
+    }
+
+    if (host === "about.nike.com" || host === "news.nike.com") {
+      return true;
+    }
+
+    if (host === "nike.com" && !/\/t\//i.test(path)) {
+      return true;
+    }
+
+    if (
+      host === "dickssportinggoods.com" &&
+      /\/(?:a|c|f|s)\//i.test(path)
+    ) {
+      return true;
+    }
+
+    if (
+      host === "footlocker.com" &&
+      /\/(?:buy|category|search|collection)\//i.test(path)
+    ) {
+      return true;
+    }
+
+    if (host === "runrepeat.com") {
+      return true;
+    }
+
+    if (
+      host === "klarna.com" ||
+      host === "sneakerfiles.com" ||
+      host === "wwd.com"
+    ) {
       return true;
     }
 

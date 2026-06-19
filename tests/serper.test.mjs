@@ -363,6 +363,174 @@ describe("Serper product discovery", () => {
     assert.equal(candidates[0].name, "ALEX desk, white, 52x22 7/8 - IKEA");
   });
 
+  it("rejects complaint, deal roundup, and buying-advice organic pages", () => {
+    const candidates = normalizeSerperOrganicResults(
+      {
+        organic: [
+          {
+            title: "Complaint about new Example Laptop quality | Example Support",
+            link: "https://support.example.com/community/conversations/example-laptop-complaint",
+            displayedLink: "Example Support",
+            snippet: "Complaint thread that mentions a gaming laptop model.",
+          },
+          {
+            title: "Example Espresso Machine Deals 2026 - Best Example Sales",
+            link: "https://magazine.example.com/kitchen/best-example-espresso-machine-deals-2026",
+            displayedLink: "Example Magazine",
+            snippet: "Seasonal article collecting espresso machine deals.",
+          },
+          {
+            title: "Long Term Espresso Machine - Buying Advice - Page 2",
+            link: "https://community.example.com/advice/long-term-espresso-machine-buying-advice-page-2",
+            displayedLink: "Example Community",
+            snippet: "Forum-style advice about espresso machines.",
+          },
+          {
+            title: "The HP Victus 16 is one of the best-value gaming laptops I've ever tested",
+            link: "https://www.laptopmag.com/reviews/hp-victus-16-best-value-gaming-laptop",
+            displayedLink: "Laptop Mag",
+            snippet: "Publisher article about a gaming laptop.",
+          },
+          {
+            title: "Turn your kitchen into a cafe with the Example Magnifica Evo",
+            link: "https://www.mashable.com/article/example-magnifica-evo-espresso-machine-sale",
+            displayedLink: "Mashable",
+            snippet: "Publisher article about an espresso machine sale.",
+          },
+          {
+            title: "Up your game with the Example Legion gaming laptop, yours for $850",
+            link: "https://www.windowscentral.com/gaming/up-your-game-with-example-legion-laptop",
+            displayedLink: "Windows Central",
+            snippet: "Publisher sale article about a gaming laptop.",
+          },
+          {
+            title: "Delonghi Specialista Arte EC 9155 Review",
+            link: "https://coffee.example.com/delonghi-specialista-arte-ec-9155-review",
+            displayedLink: "Example Coffee Blog",
+            snippet: "Review article about an espresso machine.",
+          },
+          {
+            title: "Gaggia Brera RI9305/11 Review & Guide (2025)",
+            link: "https://coffee.example.com/gaggia-brera-ri9305-review-guide-2025",
+            displayedLink: "Example Coffee Blog",
+            snippet: "Review guide about an espresso machine.",
+          },
+          {
+            title: "Compare at 16+ Stores: Example La Specialista Coffee Machine",
+            link: "https://www.price.com/compare/example-la-specialista-coffee-machine",
+            displayedLink: "Price.com",
+            snippet: "Price-comparison page across multiple stores.",
+          },
+          {
+            title: "Example Barista Compact Espresso Machine - Sale Price",
+            link: "https://shop.example.com/products/example-barista-compact-espresso-machine",
+            displayedLink: "Example Store",
+            snippet:
+              "Product page for a compact espresso machine with a built-in grinder.",
+          },
+        ],
+      },
+      "espresso machine built in grinder under 700 product page",
+      "espresso machine",
+    );
+
+    assert.deepEqual(
+      candidates.map((candidate) => candidate.name),
+      ["Example Barista Compact Espresso Machine - Sale Price"],
+    );
+  });
+
+  it("rejects editorial ranking pages and retailer category pages as product candidates", () => {
+    const candidates = normalizeSerperOrganicResults(
+      {
+        organic: [
+          {
+            title: "Ranking the top 74 sneakers in NBA history - ESPN",
+            link: "https://www.espn.com/nba/story/_/id/123456/ranking-top-74-sneakers-nba-history",
+            displayedLink: "ESPN",
+            snippet: "Editorial ranking of famous sneakers, not a product page.",
+          },
+          {
+            title: "Basketball Shoes. Nike.com",
+            link: "https://www.nike.com/w/basketball-shoes-3glsmzy7ok",
+            displayedLink: "Nike",
+            snippet: "Shop basketball shoes from Nike.",
+          },
+          {
+            title: "Basketball Shoes For Speed | DICK'S Sporting Goods",
+            link: "https://www.dickssportinggoods.com/f/basketball-shoes-for-speed",
+            displayedLink: "DICK'S Sporting Goods",
+            snippet: "Retailer listing page for many basketball shoes.",
+          },
+          {
+            title: "Cut in half: Nike G.T. Jump 2 Review | RunRepeat",
+            link: "https://runrepeat.com/nike-gt-jump-2",
+            displayedLink: "RunRepeat",
+            snippet: "Review article about a Nike basketball shoe.",
+          },
+          {
+            title: "Nike Basketball Releases the Book 2, the Next Chapter in Devin ...",
+            link: "https://about.nike.com/en/newsroom/releases/nike-book-2-official-images-release-info",
+            displayedLink: "Nike Newsroom",
+            snippet: "Brand newsroom release, not a product page.",
+          },
+          {
+            title: "Nike Air Force 1",
+            link: "https://www.nike.com/air-force-1",
+            displayedLink: "Nike",
+            snippet: "Brand landing page for a shoe family.",
+          },
+          {
+            title: "Nike Men's Stability Shoes | DICK'S Sporting Goods",
+            link: "https://www.dickssportinggoods.com/a/nike-mens-stability-shoes-0zdz01a.html",
+            displayedLink: "DICK'S Sporting Goods",
+            snippet: "Retailer advice/listing page for many shoes.",
+          },
+          {
+            title: "Nike Giannis Freak 6 Colorways + Release Dates (Complete Guide)",
+            link: "https://www.sneakerfiles.com/nike-giannis-freak-6-colorways-release-dates/",
+            displayedLink: "Sneaker Files",
+            snippet: "Sneaker news guide, not a product page.",
+          },
+          {
+            title: "Book 1 \"Solar Red\" Basketball Shoes - Nike",
+            link: "https://www.nike.com/t/book-1-solar-red-basketball-shoes-HtV54G",
+            displayedLink: "Nike",
+            snippet: "Nike product page for Book 1 Solar Red basketball shoes.",
+          },
+        ],
+      },
+      "Nike basketball shoes under $300 product page",
+      "basketball shoes",
+    );
+
+    assert.deepEqual(
+      candidates.map((candidate) => candidate.name),
+      ['Book 1 "Solar Red" Basketball Shoes - Nike'],
+    );
+  });
+
+  it("keeps product detail pages whose names start with The", () => {
+    const candidates = normalizeSerperOrganicResults(
+      {
+        organic: [
+          {
+            title: "The Barista Express Espresso Machine",
+            link: "https://shop.example.com/products/the-barista-express-espresso-machine",
+            displayedLink: "Example Store",
+            snippet:
+              "Product page for The Barista Express espresso machine.",
+          },
+        ],
+      },
+      "espresso machine built in grinder under 700 product page",
+      "espresso machine",
+    );
+
+    assert.equal(candidates.length, 1);
+    assert.equal(candidates[0].name, "The Barista Express Espresso Machine");
+  });
+
   it("skips Serper safely when the API key is missing", async () => {
     const originalKey = process.env.SERPER_API_KEY;
     const originalNodeEnv = process.env.NODE_ENV;

@@ -118,6 +118,51 @@ describe("structured requirement extraction", () => {
     );
   });
 
+  it("does not duplicate units from selected numeric length features", () => {
+    const requirements = extractStructuredRequirements({
+      budget: "$100",
+      query: "garden hose",
+      selectedFeatures: [
+        {
+          name: "Length 50 ft",
+          operator: "equals",
+          unit: "ft",
+          value: "50 ft",
+        },
+      ],
+    });
+
+    assert.ok(
+      requirements.sizeConstraints.some(
+        (constraint) =>
+          constraint.dimension === "length" &&
+          constraint.operator === "min" &&
+          constraint.unit === "ft" &&
+          constraint.value === 50 &&
+          constraint.label === "Length: 50 ft",
+      ),
+    );
+    assert.equal(
+      requirements.summary.some((line) => /ft ft/i.test(line)),
+      false,
+    );
+  });
+
+  it("extracts money budgets from important details without treating measurements as budgets", () => {
+    const officeChair = extractStructuredRequirements({
+      priorities: "black, lumbar support, under $300",
+      query: "office chair",
+    });
+    const lightweightVacuum = extractStructuredRequirements({
+      priorities: "good for pet hair, under 6 lbs",
+      query: "cordless vacuum",
+    });
+
+    assert.equal(officeChair.budgetRules[0].amount, 300);
+    assert.equal(officeChair.budgetRules[0].operator, "max");
+    assert.equal(lightweightVacuum.budgetRules.length, 0);
+  });
+
   it("extracts explicit depth and feature details without treating them as vague text", () => {
     const requirements = extractStructuredRequirements({
       priorities:

@@ -138,6 +138,55 @@ describe("product page URL selection", () => {
     assert.equal(link?.label, "View Official Product Page");
   });
 
+  it("does not choose sports listing, review, or newsroom pages over a real product page", () => {
+    const productUrl =
+      "https://www.nike.com/t/gt-cut-academy-basketball-shoes-HWCFvAob";
+    const link = getProductPageLink(
+      buildProduct({
+        category: "Basketball shoes",
+        citations: [
+          {
+            title: "Nike G.T. Cut 4 listing",
+            url: "https://www.nike.com/w/gt-series-basketball-low-top-200vmz3glsmz4h1cpz7hf8e",
+            what_it_supports: "Nike category page for multiple shoes.",
+          },
+          {
+            title: "Nike newsroom release",
+            url: "https://about.nike.com/en/newsroom/releases/nike-book-2-official-images-release-info",
+            what_it_supports: "Brand newsroom article.",
+          },
+          {
+            title: "DICK'S shoe advice page",
+            url: "https://www.dickssportinggoods.com/a/nike-mens-stability-shoes-0zdz01a.html",
+            what_it_supports: "Retailer advice/listing page.",
+          },
+          {
+            title: "Foot Locker product-family page",
+            url: "https://www.footlocker.com/buy/nike-kd-17-shoes-0bcz00a",
+            what_it_supports: "Retailer product-family listing page.",
+          },
+          {
+            title: "Nike G.T. Cut Academy product page",
+            url: productUrl,
+            what_it_supports: "Specific Nike product page.",
+          },
+        ],
+        metadata: {
+          brand: field("Nike", productUrl, "manufacturer_page"),
+          canonicalUrl: field(productUrl, productUrl, "manufacturer_page"),
+          offers: [],
+          title: field("Nike G.T. Cut Academy", productUrl, "manufacturer_page"),
+        },
+        name: "Nike G.T. Cut Academy",
+        product_page_url:
+          "https://www.dickssportinggoods.com/a/nike-mens-stability-shoes-0zdz01a.html",
+      }),
+    );
+
+    assert.equal(link?.url, productUrl);
+    assert.equal(link?.label, "View Official Product Page");
+  });
+
   it("does not choose an opaque official model URL when it does not match the product", () => {
     const wrongOfficialUrl = "https://www.breville.com/en-us/product/bes870";
     const reviewUrl =

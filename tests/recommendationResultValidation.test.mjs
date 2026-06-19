@@ -244,6 +244,141 @@ describe("recommendation result trust validation", () => {
     );
   });
 
+  it("drops editorial rankings and broad retailer shoe listing pages cited as products", () => {
+    const filtered = filterResultToVerifiedCitations(
+      buildResult([
+        buildRecommendation({
+          citations: [
+            {
+              title: "ESPN sneaker ranking",
+              url: "https://www.espn.com/nba/story/_/id/123456/ranking-top-74-sneakers-nba-history",
+              what_it_supports: "Editorial ranking, not a buyable product page.",
+            },
+          ],
+          name: "Ranking the top 74 sneakers in NBA history - ESPN",
+        }),
+        buildRecommendation({
+          citations: [
+            {
+              title: "Nike category page",
+              url: "https://www.nike.com/w/basketball-shoes-3glsmzy7ok",
+              what_it_supports: "Category page for many Nike basketball shoes.",
+            },
+          ],
+          name: "Basketball Shoes. Nike.com",
+        }),
+        buildRecommendation({
+          citations: [
+            {
+              title: "DICK'S category page",
+              url: "https://www.dickssportinggoods.com/f/basketball-shoes-for-speed",
+              what_it_supports: "Listing page for many basketball shoes.",
+            },
+          ],
+          name: "Basketball Shoes For Speed | DICK'S Sporting Goods",
+        }),
+        buildRecommendation({
+          citations: [
+            {
+              title: "RunRepeat review page",
+              url: "https://runrepeat.com/nike-gt-jump-2",
+              what_it_supports: "Review page, not a buyable product page.",
+            },
+          ],
+          name: "Cut in half: Nike G.T. Jump 2 Review | RunRepeat",
+        }),
+        buildRecommendation({
+          citations: [
+            {
+              title: "Nike newsroom page",
+              url: "https://about.nike.com/en/newsroom/releases/nike-book-2-official-images-release-info",
+              what_it_supports: "Brand newsroom article, not a buyable product page.",
+            },
+          ],
+          name: "Nike Basketball Releases the Book 2, the Next Chapter in Devin ...",
+        }),
+        buildRecommendation({
+          citations: [
+            {
+              title: "Nike brand page",
+              url: "https://www.nike.com/air-force-1",
+              what_it_supports: "Brand landing page, not a buyable product page.",
+            },
+          ],
+          name: "Nike Air Force 1",
+        }),
+        buildRecommendation({
+          citations: [
+            {
+              title: "DICK'S advice listing",
+              url: "https://www.dickssportinggoods.com/a/nike-mens-stability-shoes-0zdz01a.html",
+              what_it_supports: "Retailer advice/listing page, not one product.",
+            },
+          ],
+          name: "Nike Men's Stability Shoes | DICK'S Sporting Goods",
+        }),
+        buildRecommendation({
+          citations: [
+            {
+              title: "Sneaker Files guide",
+              url: "https://www.sneakerfiles.com/nike-giannis-freak-6-colorways-release-dates/",
+              what_it_supports: "Sneaker news guide, not a buyable product page.",
+            },
+          ],
+          name: "Nike Giannis Freak 6 Colorways + Release Dates (Complete Guide)",
+        }),
+        buildRecommendation({
+          citations: [
+            {
+              title: "Klarna shopping comparison",
+              url: "https://www.klarna.com/us/shopping/sp/nike-kd-trey-5-x",
+              what_it_supports: "Price-comparison page, not a product page.",
+            },
+          ],
+          name: "Nike kd trey 5 x - Klarna",
+        }),
+        buildRecommendation({
+          citations: [
+            {
+              title: "Shoe news article",
+              url: "https://shoe-news.example.com/new-balance-lineup-update",
+              what_it_supports: "Article about a product lineup.",
+            },
+          ],
+          name: "New Balance Shuffles Its Lineup: 847 Out, FuelCell Walker Elite In?",
+        }),
+        buildRecommendation({
+          citations: [
+            {
+              title: "Specific Nike product page",
+              url: "https://www.nike.com/t/book-1-solar-red-basketball-shoes-HtV54G",
+              what_it_supports: "Specific product page.",
+            },
+          ],
+          name: 'Book 1 "Solar Red" Basketball Shoes - Nike',
+        }),
+      ]),
+      new Set([
+        "https://www.espn.com/nba/story/_/id/123456/ranking-top-74-sneakers-nba-history",
+        "https://www.nike.com/w/basketball-shoes-3glsmzy7ok",
+        "https://www.dickssportinggoods.com/f/basketball-shoes-for-speed",
+        "https://runrepeat.com/nike-gt-jump-2",
+        "https://about.nike.com/en/newsroom/releases/nike-book-2-official-images-release-info",
+        "https://www.nike.com/air-force-1",
+        "https://www.dickssportinggoods.com/a/nike-mens-stability-shoes-0zdz01a.html",
+        "https://www.sneakerfiles.com/nike-giannis-freak-6-colorways-release-dates/",
+        "https://www.klarna.com/us/shopping/sp/nike-kd-trey-5-x",
+        "https://shoe-news.example.com/new-balance-lineup-update",
+        "https://www.nike.com/t/book-1-solar-red-basketball-shoes-HtV54G",
+      ]),
+    );
+
+    assert.deepEqual(
+      filtered.recommendations.map((recommendation) => recommendation.name),
+      ['Book 1 "Solar Red" Basketball Shoes - Nike'],
+    );
+  });
+
   it("does not verify a product citation by replacing it with a generic same-domain listing", () => {
     const filtered = filterResultToVerifiedCitations(
       buildResult([
