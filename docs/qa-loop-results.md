@@ -1,0 +1,225 @@
+# Review Radar QA Loop Results
+
+Date: 2026-06-18
+Repo: `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
+Source-of-truth map: `ReviewRadar-Overview.md`
+
+## 🟧 **Codex QA Update - 2026-06-18 12:35**
+
+## Loop Scope
+
+Run exactly one improvement loop:
+
+baseline -> QA check -> pick one high-impact shared issue -> trace root cause -> make generalized fix -> add/update tests -> retest -> document before/after proof -> stop.
+
+No commits were made.
+
+## Setup Confirmation
+
+- Working repo confirmed: `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
+- `ReviewRadar-Overview.md` exists in the repo root and was read before code edits.
+- `.env.local` was checked only for key presence. Secret values were not printed.
+- Live services available: `OPENAI_API_KEY` present, `SERPER_API_KEY` present.
+- Localhost app was responding on `http://localhost:3000`.
+
+## Starting Repo State
+
+`git status --short` before this loop:
+
+```text
+ M ReviewRadar-Overview.md
+ M lib/formFactor.ts
+ M lib/priceParsing.ts
+ M lib/productAssets.ts
+ M lib/requirementExtraction.ts
+ M lib/requirementValidation.ts
+ M tests/discoveryFilter.test.mjs
+ M tests/formFactor.test.mjs
+ M tests/priceParsing.test.mjs
+ M tests/productAssets.test.mjs
+ M tests/recommendationApiContract.test.mjs
+ M tests/requirementExtraction.test.mjs
+ M tests/requirementValidation.test.mjs
+```
+
+This loop starts from that dirty working tree and does not revert unrelated existing work.
+
+## Baseline Automated Checks
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `npm run typecheck` | Passed | No type errors. |
+| `npm run lint` | Passed | No lint errors. |
+| `npm test` | Passed | 420 tests, 84 suites, 420 passed, 0 failed. |
+| `node scripts/eval-pipeline.mjs` | Passed | Red-flag checks reported no issues. |
+| `node scripts/ab-ranking.mjs` | Passed | Existing Node module-type warning only; ranking output completed. |
+
+## Baseline Live QA
+
+Live checks used `POST /api/recommendations` with `x-reviewradar-debug: true`.
+
+| Search | Exact | Near | Baseline observations |
+| --- | ---: | ---: | --- |
+| `robot vacuum`; `self-emptying, good for pet hair, avoids cords`; `under $500` | 2 | 5 | Exact results were plausible robot vacuums. Near results included obvious wrong-category items, but they were not exact. |
+| `counter depth refrigerator`; `36 inches wide, stainless steel, ice maker`; `under $2000` | 1 | 5 | Exact result looked plausible. Several near results had unknown price or missing requirement evidence. |
+| `gaming laptop`; `RTX 4060 or better, 16GB RAM, not refurbished`; `under $1200` | 1 | 5 | The only exact result was `Complaint about new Dell Laptop quality`, which is a complaint/support-style page rather than a product recommendation. |
+| `espresso machine`; `built-in grinder, beginner friendly, not a pod-only machine`; `under $700` | 5 | 4 | Exact results included product pages, but also article/forum/deals pages such as `Breville Espresso Machine Deals 2025-Best Breville Sales` and `Long Term Espresso Machine - Buying Advice - Page 2`. |
+| `car seat stroller combo`; `infant car seat included, lightweight, easy fold`; `under $400` | 6 | 4 | Exact results included plausible travel systems, but several Target/Amazon results had implausible prices like `$35` and `$10`. |
+| `electric pressure washer`; `at least 3000 PSI, hose at least 25 feet, foam cannon included`; `under $350` | 0 | 5 | No exact matches because key hard facts or prices were unknown; this is strict but not obviously wrong. |
+| `queen sleeper sofa`; `under 70 inches wide, leather, storage chaise, under 100 lbs`; `under $400` | 0 | 5 | No exact matches, which is appropriate for an over-constrained request. Near matches were far over budget or missing hard facts. |
+
+## Selected Issue
+
+Non-product evidence pages were leaking into exact matches.
+
+Baseline examples:
+
+- `gaming laptop`: `Complaint about new Dell Laptop quality` was the only exact match.
+- `espresso machine`: exact matches included `Breville Espresso Machine Deals 2025-Best Breville Sales` and `Long Term Espresso Machine - Buying Advice - Page 2`.
+
+This was selected because it is shared across categories and can make an article, support thread, review, forum, or comparison page look like a purchasable product.
+
+## Root Cause
+
+Two shared classifiers were too narrow:
+
+- Serper organic normalization in `lib/search/serper.ts` could admit complaint/support/community, deals/sales roundup, review-guide, price-comparison, and article-headline pages as `RawProductCandidate`s.
+- Final display validation in `lib/requirementValidation.ts` used `isSpecificProductRecommendation`, but its generic-title/URL checks missed the same page types. Once a non-product page had plausible price/spec text, it could pass hard requirements and become an exact match.
+
+The failure was not specific to gaming laptops or espresso machines; those searches just exposed a reusable product-identity gap.
+
+## Generalized Fix
+
+Updated the shared non-product page filters to reject these as product cards:
+
+- complaint/support/help/community/conversation pages
+- buying-advice, shopping-advice, and forum/thread-style pages
+- deals/sales roundup headlines
+- article-style sale headlines such as `up your game with... yours for...`
+- standalone review and review-guide pages
+- price-comparison pages such as `Compare at 16+ Stores`
+- known editorial/evidence hosts where the URL should be used as citation evidence, not as the product page
+
+The same change was applied at two layers:
+
+- Early discovery: Serper organic results are blocked before becoming product candidates.
+- Final safety net: merged recommendations are filtered before exact/near matching.
+
+This is a generalized classifier update, not a product-specific patch.
+
+## Files Changed In This Loop
+
+- `lib/search/serper.ts`
+- `lib/requirementValidation.ts`
+- `tests/serper.test.mjs`
+- `tests/requirementValidation.test.mjs`
+- `docs/qa-loop-results.md`
+- `ReviewRadar-Overview.md`
+
+The repo already had unrelated uncommitted files before this loop; those were left in place.
+
+## Tests Added Or Updated
+
+- `tests/serper.test.mjs`
+  - rejects complaint, deals, buying-advice, article-headline, review-guide, and price-comparison organic pages
+  - keeps product detail pages whose names start with `The`
+- `tests/requirementValidation.test.mjs`
+  - removes the same non-product page classes before exact matching
+  - keeps valid espresso-machine product pages, including a normal sale-price product page
+
+## Retest Commands
+
+Final command results:
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `node --no-warnings --test tests/requirementValidation.test.mjs` | Passed | 43 tests passed. |
+| `node --no-warnings --test tests/serper.test.mjs` | Passed | 26 tests passed. |
+| `npm run typecheck` | Passed | No type errors. |
+| `npm run lint` | Passed | No lint errors. |
+| `npm test` | Passed | 423 tests, 84 suites, 423 passed, 0 failed. |
+| `node scripts/eval-pipeline.mjs` | Passed | Red-flag checks reported no issues. |
+| `node scripts/ab-ranking.mjs` | Passed | Existing Node module-type warning only; ranking output completed. |
+
+`npm run test:e2e` was not run because the fix changed backend discovery/validation behavior, not UI rendering.
+
+## Live Before/After Proof
+
+Live verification used `POST /api/recommendations` with `x-reviewradar-debug: true`.
+
+Before:
+
+- `gaming laptop` exact result was a Dell complaint/support-style page.
+- `espresso machine` exact results included deals, buying-advice/forum, article, review, and price-comparison pages across multiple live retries.
+
+After:
+
+- `gaming laptop` rerun no longer returned the Dell complaint/support-style exact result. The later live rerun had 1 exact match from a retailer-like product page and no selected-class complaint/support/editorial exact result.
+- `espresso machine` final rerun returned 7 exact matches from manufacturer, retailer, or product-like store pages:
+  - Breville
+  - De'Longhi
+  - Whole Latte Love
+  - Best Buy
+  - ROK Coffee
+  - Page Hardware
+- The previously observed selected-class pages were absent from the final exact list:
+  - deals/sales roundup pages
+  - buying-advice pages
+  - article headlines
+  - price-comparison pages
+  - review-guide pages
+
+## Remaining Risks
+
+- Live results are nondeterministic and can expose additional publisher/review domains. The filter now covers the observed shared patterns, but not every possible article headline on the web.
+- The final espresso live check still showed a suspicious `$40` exact price for a De'Longhi/Best Buy result. That is a separate price-extraction or financing/variant issue and was not fixed in this loop.
+- Gaming-laptop near matches still included an off-category `Custom Notebooks With Logo` result, but it stayed out of exact matches due unknown hard evidence. That is a possible future wrong-category/near-match cleanup.
+- The existing TV collection/list-page risk in `ReviewRadar-Overview.md` still needs its own focused loop.
+
+## Stop Point
+
+One full loop is complete. Do not continue into another issue without approval.
+
+---
+
+## 🟩 **Claude QA Update — 2026-06-18 12:34**
+
+- **agent:** Claude
+- **date/time:** 2026-06-18 12:34 EDT
+- **reason:** Onboarding to the shared QA log. Verify the current (uncommitted) working tree
+  actually matches the baseline Codex documented, before any new test or change. No fix was
+  attempted in this entry — this is a verification-only pass.
+- **commands run:**
+  - `npm run typecheck`
+  - `npm run lint`
+  - `npm test`
+  - `node scripts/eval-pipeline.mjs`
+  - `node scripts/ab-ranking.mjs`
+  - `git status --short` and `git diff --stat` (state check)
+- **checks passed/failed:**
+
+  | Command | Result | Notes |
+  | --- | --- | --- |
+  | `npm run typecheck` | Passed | exit 0, no type errors. |
+  | `npm run lint` | Passed | no eslint output. |
+  | `npm test` | Passed | 423 tests, 84 suites, 423 passed, 0 failed — matches Codex's post-fix baseline. |
+  | `node scripts/eval-pipeline.mjs` | Passed | RED-FLAG CHECKS: ✅ no issues. |
+  | `node scripts/ab-ranking.mjs` | Passed | Node module-type warning only; confirms price floor (the `$1` Weber Spirit dropped to unverified → near). |
+
+- **live QA searches run:** None. This pass was deterministic-only (no API spend, dev server not driven).
+- **issue found:** None new. The tree is healthy and consistent with Codex's record.
+- **new vs. related to Codex's findings:** N/A (verification only). Codex's three open risks are
+  unchanged and still open: (1) suspicious `$40` De'Longhi/Best Buy exact price
+  (price-extraction / financing / variant), (2) off-category `Custom Notebooks With Logo`
+  gaming-laptop near match, (3) TV collection/list-page leakage noted in `ReviewRadar-Overview.md` §11.
+- **files changed:** None (verification only). Updated this QA log entry only.
+- **tests added/updated:** None.
+- **before/after results:** No change attempted; before == after. Baseline reconfirmed at 423/423.
+- **state note:** All of Codex's loop changes are present but **uncommitted** in the working tree
+  (`lib/search/serper.ts` +33, `lib/requirementValidation.ts`, `lib/priceParsing.ts`,
+  `lib/requirementExtraction.ts`, `lib/formFactor.ts`, `lib/productAssets.ts`, and matching tests),
+  plus this `docs/qa-loop-results.md` (untracked). The last commit is `8ff0cf3`.
+- **remaining risks / follow-up:** Per Codex's stop point, I did not start a new improvement loop.
+  Awaiting approval on which open issue to tackle next — the `$40`/financing price-extraction risk
+  is the strongest candidate (shared, deterministic-testable, and user-visible). When approved I will
+  run one focused loop and add a new `### Claude Change N` subsection here with before/after proof.
