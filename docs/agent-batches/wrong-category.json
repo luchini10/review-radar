@@ -1,6 +1,7 @@
 {
   "name": "wrong-category",
   "description": "Wrong product types, accessories, components, and category substitutions should not become exact matches.",
+  "searchesPerRun": 3,
   "searches": [
     {
       "category": "office chair",
@@ -19,6 +20,56 @@
       "budget": "$1200",
       "priorities": "RTX 4060 or better, 16GB RAM, not refurbished",
       "expectedRisk": "wrong_category_or_custom_notebook_leakage"
+    }
+  ],
+  "searchPool": [
+    {
+      "category": "office chair",
+      "budget": "$300",
+      "priorities": "black, lumbar support, not a gaming chair",
+      "expectedRisk": "wrong_product_type"
+    },
+    {
+      "category": "counter depth refrigerator",
+      "budget": "$2000",
+      "priorities": "36 inches wide, stainless steel, ice maker",
+      "expectedRisk": "component_or_accessory_leakage"
+    },
+    {
+      "category": "gaming laptop",
+      "budget": "$1200",
+      "priorities": "RTX 4060 or better, 16GB RAM, not refurbished",
+      "expectedRisk": "wrong_category_or_custom_notebook_leakage"
+    },
+    {
+      "category": "queen bed frame",
+      "budget": "$500",
+      "priorities": "storage drawers, not mattress",
+      "expectedRisk": "component_or_wrong_category_leakage"
+    },
+    {
+      "category": "tv stand",
+      "budget": "$300",
+      "priorities": "for 65 inch tv, not soundbar",
+      "expectedRisk": "wrong_product_type"
+    },
+    {
+      "category": "air purifier",
+      "budget": "$250",
+      "priorities": "HEPA, not filter replacement",
+      "expectedRisk": "accessory_or_replacement_part_leakage"
+    },
+    {
+      "category": "range oven",
+      "budget": "$1200",
+      "priorities": "gas, freestanding, not cooktop",
+      "expectedRisk": "component_or_wrong_category_leakage"
+    },
+    {
+      "category": "cordless vacuum",
+      "budget": "$300",
+      "priorities": "stick vacuum, not replacement battery",
+      "expectedRisk": "accessory_or_replacement_part_leakage"
     }
   ]
 }

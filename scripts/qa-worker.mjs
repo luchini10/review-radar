@@ -9,7 +9,10 @@ const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const docsDir = join(repoRoot, "docs");
 const batchDir = join(docsDir, "agent-batches");
 const workerDir = join(docsDir, "agent-worker-results");
+const rotationStatePath = join(workerDir, "agent-search-rotation-state.json");
 const DEFAULT_BASE_URL = "http://localhost:3000";
+const LIVE_RETRY_DELAY_MS = 2500;
+const LIVE_MAX_ATTEMPTS = 2;
 
 function argValue(name, fallback = "") {
   const index = process.argv.indexOf(`--${name}`);
@@ -22,6 +25,23 @@ function nowStamp() {
 
 async function readJson(path) {
   return JSON.parse(await readFile(path, "utf8"));
+}
+
+async function readRotationState() {
+  if (!existsSync(rotationStatePath)) {
+    return {};
+  }
+
+  try {
+    return await readJson(rotationStatePath);
+  } catch {
+    return {};
+  }
+}
+
+async function writeRotationState(state) {
+  await mkdir(workerDir, { recursive: true });
+  await writeFile(rotationStatePath, JSON.stringify(state, null, 2));
 }
 
 async function loadBatch(batchName) {
@@ -38,6 +58,58 @@ async function loadBatch(batchName) {
   }
 
   return batch;
+}
+
+function normalizedSearchPool(batch) {
+  const pool = Array.isArray(batch.searchPool) && batch.searchPool.length > 0
+    ? batch.searchPool
+    : batch.searches;
+
+  return Array.isArray(pool) ? pool : [];
+}
+
+function pickRotatedSearches(batch, state, key) {
+  const pool = normalizedSearchPool(batch);
+  const fallbackSearches = Array.isArray(batch.searches) ? batch.searches : [];
+
+  if (pool.length === 0) {
+    return {
+      batch: { ...batch, searches: fallbackSearches },
+      state,
+    };
+  }
+
+  const requestedCount =
+    Number.isInteger(batch.searchesPerRun) && batch.searchesPerRun > 0
+      ? Math.min(batch.searchesPerRun, pool.length)
+      : Math.min(fallbackSearches.length || pool.length, pool.length);
+  const currentIndex = Number.isInteger(state[key]?.nextIndex) ? state[key].nextIndex : 0;
+  const startIndex = ((currentIndex % pool.length) + pool.length) % pool.length;
+  const searches = Array.from({ length: requestedCount }, (_, offset) => {
+    return pool[(startIndex + offset) % pool.length];
+  });
+  const nextIndex = (startIndex + requestedCount) % pool.length;
+
+  return {
+    batch: {
+      ...batch,
+      rotation: {
+        enabled: Array.isArray(batch.searchPool) && batch.searchPool.length > 0,
+        poolSize: pool.length,
+        searchCount: searches.length,
+        startIndex,
+        nextIndex,
+      },
+      searches,
+    },
+    state: {
+      ...state,
+      [key]: {
+        lastRunAt: new Date().toISOString(),
+        nextIndex,
+      },
+    },
+  };
 }
 
 function runCommand(command, args) {
@@ -78,6 +150,42 @@ function finding(severity, failureType, rootCause, note, search) {
     search,
     severity,
   };
+}
+
+function sleep(ms) {
+  return new Promise((resolveSleep) => setTimeout(resolveSleep, ms));
+}
+
+function isRetryableLiveFailure(response) {
+  return (
+    response.status === 0 ||
+    response.status === 408 ||
+    response.status === 429 ||
+    response.status >= 500
+  );
+}
+
+function liveFailureRootCause(response) {
+  if (response.status === 0) {
+    return "localhost_or_api_unavailable";
+  }
+
+  if (response.status === 408 || response.status === 429 || response.status >= 500) {
+    return "transient_research_api_failure";
+  }
+
+  return "live_qa_request_failed";
+}
+
+function liveFailureNote(response) {
+  const message =
+    response.body?.error ||
+    response.body?.raw ||
+    `Live QA request failed with status ${response.status}.`;
+
+  return response.attempts && response.attempts > 1
+    ? `${message} Retried ${response.attempts} times.`
+    : message;
 }
 
 function findingsFromEval(output) {
@@ -274,6 +382,23 @@ async function postRecommendation(baseUrl, search) {
   }
 }
 
+async function postRecommendationWithRetry(baseUrl, search) {
+  let lastResponse = null;
+
+  for (let attempt = 1; attempt <= LIVE_MAX_ATTEMPTS; attempt += 1) {
+    const response = await postRecommendation(baseUrl, search);
+    lastResponse = { ...response, attempts: attempt };
+
+    if (response.ok || !isRetryableLiveFailure(response) || attempt === LIVE_MAX_ATTEMPTS) {
+      return lastResponse;
+    }
+
+    await sleep(LIVE_RETRY_DELAY_MS);
+  }
+
+  return lastResponse;
+}
+
 async function runDeterministicBatch(batch) {
   const evalAvailable = existsSync(join(repoRoot, "scripts", "eval-pipeline.mjs"));
   const command = evalAvailable
@@ -301,7 +426,7 @@ async function runLiveBatch(batch, baseUrl) {
   const findings = [];
 
   for (const search of batch.searches) {
-    const response = await postRecommendation(baseUrl, search);
+    const response = await postRecommendationWithRetry(baseUrl, search);
     const analyzed = response.ok ? analyzeLiveResult(search, response.body) : {};
     const failedGracefully = !response.ok;
     const searchFindings = response.ok
@@ -314,13 +439,14 @@ async function runLiveBatch(batch, baseUrl) {
           finding(
             "medium",
             "live_qa_unavailable",
-            "localhost_or_api_unavailable",
-            response.body?.error || `Live QA request failed with status ${response.status}.`,
+            liveFailureRootCause(response),
+            liveFailureNote(response),
             search,
           ),
         ];
 
     searches.push({
+      attempts: response.attempts,
       failedGracefully,
       responseStatus: response.status,
       search,
@@ -348,9 +474,14 @@ async function main() {
   const mode = argValue("mode", "deterministic");
   const baseUrl = argValue("base-url", DEFAULT_BASE_URL);
   const controllerRunId = argValue("run-id", "");
-  const batch = await loadBatch(batchName);
+  const loadedBatch = await loadBatch(batchName);
+  const rotationState = await readRotationState();
+  const rotationKey = `${mode}:${batchName}`;
+  const rotated = pickRotatedSearches(loadedBatch, rotationState, rotationKey);
+  const batch = rotated.batch;
   const runId = `${controllerRunId ? `${controllerRunId}.` : ""}worker-${batchName}-${nowStamp()}`;
   await mkdir(workerDir, { recursive: true });
+  await writeRotationState(rotated.state);
 
   const run =
     mode === "live"
@@ -366,6 +497,7 @@ async function main() {
     generalizedFixRequired: run.findings.length > 0,
     mode: run.mode,
     rule: "Workers report findings only. They do not edit code or create product-specific patches.",
+    searchRotation: batch.rotation,
     searches: run.searches,
   };
   const outputPath = join(workerDir, `${runId}.json`);
@@ -378,7 +510,16 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}
+
+export const qaWorkerTestExports = {
+  isRetryableLiveFailure,
+  liveFailureNote,
+  liveFailureRootCause,
+  pickRotatedSearches,
+};

@@ -1,6 +1,7 @@
 {
   "name": "requirement-units",
   "description": "Numeric and unit requirements should be parsed, displayed, and verified consistently across categories.",
+  "searchesPerRun": 2,
   "searches": [
     {
       "category": "garden hose",
@@ -13,6 +14,50 @@
       "budget": "$300",
       "priorities": "at least 600 CFM",
       "expectedRisk": "numeric_spec_matching_gap"
+    }
+  ],
+  "searchPool": [
+    {
+      "category": "garden hose",
+      "budget": "$100",
+      "priorities": "50 ft length",
+      "expectedRisk": "unit_or_requirement_evidence_gap"
+    },
+    {
+      "category": "leaf blower",
+      "budget": "$300",
+      "priorities": "at least 600 CFM",
+      "expectedRisk": "numeric_spec_matching_gap"
+    },
+    {
+      "category": "pressure washer",
+      "budget": "$300",
+      "priorities": "at least 2000 PSI, electric",
+      "expectedRisk": "numeric_spec_matching_gap"
+    },
+    {
+      "category": "office desk",
+      "budget": "$400",
+      "priorities": "under 48 inches wide, drawers",
+      "expectedRisk": "unit_or_requirement_evidence_gap"
+    },
+    {
+      "category": "microwave",
+      "budget": "$250",
+      "priorities": "1.2 cubic feet or larger, countertop",
+      "expectedRisk": "numeric_spec_matching_gap"
+    },
+    {
+      "category": "air conditioner",
+      "budget": "$500",
+      "priorities": "8000 BTU, window unit",
+      "expectedRisk": "numeric_spec_matching_gap"
+    },
+    {
+      "category": "portable monitor",
+      "budget": "$250",
+      "priorities": "15.6 inch, USB-C",
+      "expectedRisk": "unit_or_requirement_evidence_gap"
     }
   ]
 }

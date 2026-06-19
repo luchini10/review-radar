@@ -1,6 +1,7 @@
 {
   "name": "non-product-pages",
   "description": "Articles, forums, support pages, deal roundups, collection pages, and comparison pages may be evidence but must not render as product cards.",
+  "searchesPerRun": 3,
   "searches": [
     {
       "category": "espresso machine",
@@ -19,6 +20,56 @@
       "budget": "$1000",
       "priorities": "OLED or QLED, good for sports",
       "expectedRisk": "collection_or_list_page_leakage"
+    }
+  ],
+  "searchPool": [
+    {
+      "category": "espresso machine",
+      "budget": "$700",
+      "priorities": "built-in grinder, beginner friendly, not a pod-only machine",
+      "expectedRisk": "article_or_deal_page_as_product"
+    },
+    {
+      "category": "gaming laptop",
+      "budget": "$1200",
+      "priorities": "RTX 4060 or better, 16GB RAM, not refurbished",
+      "expectedRisk": "support_or_complaint_page_as_product"
+    },
+    {
+      "category": "65 inch tv",
+      "budget": "$1000",
+      "priorities": "OLED or QLED, good for sports",
+      "expectedRisk": "collection_or_list_page_leakage"
+    },
+    {
+      "category": "basketball shoes",
+      "budget": "$250",
+      "priorities": "Nike or Adidas, good ankle support",
+      "expectedRisk": "review_or_release_page_as_product"
+    },
+    {
+      "category": "robot vacuum",
+      "budget": "$500",
+      "priorities": "pet hair, self-empty",
+      "expectedRisk": "roundup_or_review_page_as_product"
+    },
+    {
+      "category": "propane grill",
+      "budget": "$900",
+      "priorities": "side burner, reliable",
+      "expectedRisk": "deal_or_buying_guide_as_product"
+    },
+    {
+      "category": "office chair",
+      "budget": "$400",
+      "priorities": "ergonomic, lumbar support",
+      "expectedRisk": "comparison_or_category_page_leakage"
+    },
+    {
+      "category": "air fryer",
+      "budget": "$200",
+      "priorities": "basket style, easy cleaning",
+      "expectedRisk": "roundup_or_review_page_as_product"
     }
   ]
 }

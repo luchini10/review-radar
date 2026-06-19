@@ -1,6 +1,7 @@
 {
   "name": "broad-mainstream",
   "description": "Broad common searches should return mainstream, trustworthy products instead of false no-exact states or obscure picks.",
+  "searchesPerRun": 3,
   "searches": [
     {
       "category": "basketball shoes",
@@ -18,6 +19,62 @@
       "category": "walking shoes",
       "budget": "$150",
       "priorities": "New Balance only",
+      "expectedRisk": "brand_alias_or_popularity_gap"
+    }
+  ],
+  "searchPool": [
+    {
+      "category": "basketball shoes",
+      "budget": "$300",
+      "priorities": "Nike only",
+      "expectedRisk": "false_no_exact_or_obscure_products"
+    },
+    {
+      "category": "running shoes",
+      "budget": "$200",
+      "priorities": "Nike only",
+      "expectedRisk": "brand_alias_or_popularity_gap"
+    },
+    {
+      "category": "walking shoes",
+      "budget": "$150",
+      "priorities": "New Balance only",
+      "expectedRisk": "brand_alias_or_popularity_gap"
+    },
+    {
+      "category": "noise cancelling headphones",
+      "budget": "$350",
+      "priorities": "Sony or Bose, wireless, strong reviews",
+      "expectedRisk": "obscure_products_or_popularity_gap"
+    },
+    {
+      "category": "cordless drill",
+      "budget": "$200",
+      "priorities": "DeWalt or Milwaukee, battery included",
+      "expectedRisk": "brand_alias_or_popularity_gap"
+    },
+    {
+      "category": "air purifier",
+      "budget": "$300",
+      "priorities": "bedroom, HEPA, quiet",
+      "expectedRisk": "false_no_exact_or_obscure_products"
+    },
+    {
+      "category": "coffee maker",
+      "budget": "$200",
+      "priorities": "drip coffee, reliable, easy cleaning",
+      "expectedRisk": "obscure_products_or_popularity_gap"
+    },
+    {
+      "category": "robot vacuum",
+      "budget": "$500",
+      "priorities": "good for pet hair, self-empty preferred",
+      "expectedRisk": "false_no_exact_or_obscure_products"
+    },
+    {
+      "category": "propane grill",
+      "budget": "$800",
+      "priorities": "Weber or Napoleon, side burner preferred",
       "expectedRisk": "brand_alias_or_popularity_gap"
     }
   ]

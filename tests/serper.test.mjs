@@ -481,16 +481,22 @@ describe("Serper product discovery", () => {
             snippet: "Brand landing page for a shoe family.",
           },
           {
-            title: "Nike Men's Stability Shoes | DICK'S Sporting Goods",
-            link: "https://www.dickssportinggoods.com/a/nike-mens-stability-shoes-0zdz01a.html",
-            displayedLink: "DICK'S Sporting Goods",
-            snippet: "Retailer advice/listing page for many shoes.",
-          },
-          {
             title: "Nike Giannis Freak 6 Colorways + Release Dates (Complete Guide)",
             link: "https://www.sneakerfiles.com/nike-giannis-freak-6-colorways-release-dates/",
             displayedLink: "Sneaker Files",
             snippet: "Sneaker news guide, not a product page.",
+          },
+          {
+            title: "RULE NO. 1: Court Dimensions – Equipment - NBA Official",
+            link: "https://official.nba.com/rule-no-1-court-dimensions-equipment/",
+            displayedLink: "NBA Official",
+            snippet: "Basketball court rules and equipment dimensions.",
+          },
+          {
+            title: "Basketball Hoop & Backboard Dimensions & Drawings - Pinterest",
+            link: "https://www.pinterest.com/pin/basketball-hoop-backboard-dimensions-drawings/",
+            displayedLink: "Pinterest",
+            snippet: "Image collection about basketball hoop dimensions.",
           },
           {
             title: "Book 1 \"Solar Red\" Basketball Shoes - Nike",

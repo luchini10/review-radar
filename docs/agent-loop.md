@@ -27,18 +27,37 @@ Current batches:
 - `wrong-category`: wrong product type or category leakage.
 - `non-product-pages`: articles, roundups, search pages, forums, and support pages leaking as product cards.
 
+Each batch can include a larger `searchPool`. The worker picks the next few searches each run,
+then saves its place in `docs/agent-worker-results/agent-search-rotation-state.json`. This keeps
+repeat agent runs from testing the exact same products every time.
+
 Add new batch files as simple JSON:
 
 ```json
 {
   "name": "example-batch",
   "description": "What this batch is trying to catch.",
+  "searchesPerRun": 2,
   "searches": [
     {
       "category": "garden hose",
       "budget": "$100",
       "priorities": "50 ft length, lightweight, kink resistant",
       "expectedRisk": "unit requirement should not create false no exact"
+    }
+  ],
+  "searchPool": [
+    {
+      "category": "garden hose",
+      "budget": "$100",
+      "priorities": "50 ft length, lightweight, kink resistant",
+      "expectedRisk": "unit requirement should not create false no exact"
+    },
+    {
+      "category": "leaf blower",
+      "budget": "$300",
+      "priorities": "at least 600 CFM",
+      "expectedRisk": "numeric spec should be verified"
     }
   ]
 }
@@ -61,6 +80,9 @@ npm run qa:worker -- --batch price-trust --mode live
 Live mode posts to `http://localhost:3000/api/recommendations` with `x-reviewradar-debug: true`.
 
 Live mode should fail gracefully when localhost is not running or API keys are missing. A live failure is recorded as evidence; it does not change app API behavior.
+
+If the batch has a `searchPool`, two back-to-back live runs may test different products by design.
+The worker result JSON includes `searchRotation` so you can see which slice was used.
 
 ## Controller Commands
 

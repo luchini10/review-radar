@@ -1,7 +1,7 @@
 # Agent Loop Report
 
-Generated: 2026-06-19T15:01:01.881Z
-Run: agent-loop-2026-06-19T15-00-43-806Z
+Generated: 2026-06-19T16:22:33.177Z
+Run: agent-loop-2026-06-19T16-22-11-790Z
 Status: passed
 Mode: deterministic
 Parallel workers: 1
@@ -9,14 +9,14 @@ Change log: not updated; no meaningful change note was provided
 
 ## Batches Run
 
-- broad-mainstream: Completed (agent-loop-2026-06-19T15-00-43-806Z.worker-broad-mainstream-2026-06-19T15-00-43-891Z.json)
+- price-trust: Completed (agent-loop-2026-06-19T16-22-11-790Z.worker-price-trust-2026-06-19T16-22-11-900Z.json)
 
 ## Checks
 
-- typecheck: Passed (2581ms)
-- lint: Passed (7020ms)
-- unit tests: Passed (7240ms)
-- deterministic eval pipeline: Passed (449ms)
+- typecheck: Passed (4628ms)
+- lint: Passed (8951ms)
+- unit tests: Passed (6435ms)
+- deterministic eval pipeline: Passed (436ms)
 
 ## Top Repeated Root Causes
 
@@ -39,4 +39,4 @@ Change log: not updated; no meaningful change note was provided
 
 ## Current Worker Files
 
-- agent-loop-2026-06-19T15-00-43-806Z.worker-broad-mainstream-2026-06-19T15-00-43-891Z.json
+- agent-loop-2026-06-19T16-22-11-790Z.worker-price-trust-2026-06-19T16-22-11-900Z.json

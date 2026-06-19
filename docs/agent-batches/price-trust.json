@@ -1,6 +1,7 @@
 {
   "name": "price-trust",
   "description": "Products should not show misleading prices or pass budget checks with stale, variant, financing, or conflicting price evidence.",
+  "searchesPerRun": 2,
   "searches": [
     {
       "category": "basketball hoop",
@@ -13,6 +14,56 @@
       "budget": "$400",
       "priorities": "infant car seat included, lightweight, easy fold",
       "expectedRisk": "implausible_price"
+    }
+  ],
+  "searchPool": [
+    {
+      "category": "basketball hoop",
+      "budget": "$3000",
+      "priorities": "clear backboard",
+      "expectedRisk": "wrong_price_or_variant_price"
+    },
+    {
+      "category": "car seat stroller combo",
+      "budget": "$400",
+      "priorities": "infant car seat included, lightweight, easy fold",
+      "expectedRisk": "implausible_price"
+    },
+    {
+      "category": "laptop",
+      "budget": "$900",
+      "priorities": "16GB RAM, 512GB SSD, not refurbished",
+      "expectedRisk": "wrong_price_or_variant_price"
+    },
+    {
+      "category": "propane grill",
+      "budget": "$700",
+      "priorities": "side burner, not charcoal",
+      "expectedRisk": "financing_or_variant_price"
+    },
+    {
+      "category": "counter depth refrigerator",
+      "budget": "$2500",
+      "priorities": "stainless steel, ice maker",
+      "expectedRisk": "wrong_price_or_variant_price"
+    },
+    {
+      "category": "espresso machine",
+      "budget": "$700",
+      "priorities": "built-in grinder, not pod-only",
+      "expectedRisk": "sale_or_refurbished_price_gap"
+    },
+    {
+      "category": "electric bike",
+      "budget": "$1500",
+      "priorities": "commuter, removable battery",
+      "expectedRisk": "variant_or_accessory_price"
+    },
+    {
+      "category": "treadmill",
+      "budget": "$1200",
+      "priorities": "folding, good warranty",
+      "expectedRisk": "financing_or_shipping_price_gap"
     }
   ]
 }

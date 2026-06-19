@@ -14,6 +14,14 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 ## 2026-06-19
 
 ### Changed
+- Added rotating product searches to the RR agent batches so repeated agent runs do not keep testing the same products every time.
+- Expanded each QA batch with a larger pool of realistic searches across shoes, appliances, tools, electronics, home goods, grills, fitness equipment, and wrong-product edge cases.
+- Added `searchRotation` metadata to worker results so it is clear which slice of a batch was tested and where the next run will continue.
+- Documented the rotating batch workflow in the agent loop docs and technical overview.
+- Fixed the live QA worker so temporary localhost, rate-limit, or server errors get one retry before they become an agent next task.
+- Made live QA failures clearer: true connection problems are labeled as localhost/API unavailable, while temporary research/API failures are labeled separately.
+- Fixed another non-product-page leakage class from live price-trust QA so basketball rules/dimensions pages, NBA court-equipment pages, and Pinterest dimension drawings cannot appear as product cards.
+- Narrowed a broad shoe-listing title filter so real Nike product pages such as a named Book 1 shoe are still accepted while generic "Basketball Shoes - Nike" listing pages stay blocked.
 - Fixed a live QA non-product-page leakage issue where articles, product-family pages, price-comparison pages, retailer category/advice pages, and brand newsroom pages could appear as recommendations.
 - Strengthened product-page trust checks in three places: Serper candidate intake, final citation/result validation, and the product-card URL selector.
 - Added reusable guards for common non-product page shapes, including "ranking/top N" articles, review pages, release/newsroom pages, product lineup articles, Nike category/brand pages, DICK'S advice/category pages, Foot Locker product-family pages, Klarna comparison pages, and sneaker-news pages.
@@ -38,6 +46,22 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 - Added safer unit-label handling so selected length features do not create duplicated labels like `50 ft ft`.
 
 ### Verified
+- `node --check scripts\qa-worker.mjs`
+- `node --no-warnings --test tests\qaWorker.test.mjs`
+- Batch JSON parse check for all files in `docs\agent-batches`
+- `npm run typecheck`
+- `npm run lint`
+- `npm test` (439/439 tests)
+- `npm run qa:worker -- --batch price-trust` twice to confirm the second run used different product searches
+- `npm run build`
+- `node --no-warnings --test tests\qaWorker.test.mjs tests\serper.test.mjs tests\recommendationResultValidation.test.mjs tests\requirementValidation.test.mjs tests\productPageUrl.test.mjs`
+- `node --check scripts\qa-worker.mjs`
+- `npm run typecheck`
+- `npm run lint`
+- `npm test` (436/436 tests)
+- `npm run qa:loop -- --batches price-trust`
+- `npm run build`
+- `npm run qa:worker -- --batch price-trust --mode live`
 - `node --no-warnings --test tests\recommendationResultValidation.test.mjs tests\serper.test.mjs tests\requirementValidation.test.mjs tests\productPageUrl.test.mjs`
 - `npm run typecheck`
 - `npm run lint`

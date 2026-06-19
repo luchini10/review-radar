@@ -350,6 +350,26 @@ describe("recommendation result trust validation", () => {
         buildRecommendation({
           citations: [
             {
+              title: "NBA rule page",
+              url: "https://official.nba.com/rule-no-1-court-dimensions-equipment/",
+              what_it_supports: "Court rule page, not a product page.",
+            },
+          ],
+          name: "RULE NO. 1: Court Dimensions – Equipment - NBA Official",
+        }),
+        buildRecommendation({
+          citations: [
+            {
+              title: "Pinterest dimensions page",
+              url: "https://www.pinterest.com/pin/basketball-hoop-backboard-dimensions-drawings/",
+              what_it_supports: "Dimensions image collection, not a product page.",
+            },
+          ],
+          name: "Basketball Hoop & Backboard Dimensions & Drawings - Pinterest",
+        }),
+        buildRecommendation({
+          citations: [
+            {
               title: "Specific Nike product page",
               url: "https://www.nike.com/t/book-1-solar-red-basketball-shoes-HtV54G",
               what_it_supports: "Specific product page.",
@@ -369,6 +389,8 @@ describe("recommendation result trust validation", () => {
         "https://www.sneakerfiles.com/nike-giannis-freak-6-colorways-release-dates/",
         "https://www.klarna.com/us/shopping/sp/nike-kd-trey-5-x",
         "https://shoe-news.example.com/new-balance-lineup-update",
+        "https://official.nba.com/rule-no-1-court-dimensions-equipment/",
+        "https://www.pinterest.com/pin/basketball-hoop-backboard-dimensions-drawings/",
         "https://www.nike.com/t/book-1-solar-red-basketball-shoes-HtV54G",
       ]),
     );

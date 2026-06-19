@@ -332,6 +332,10 @@ npm run qa:verify -- --before docs/agent-worker-results/before.json --after docs
 The worker batches live in `docs/agent-batches/`. Deterministic mode is the default. Live mode posts to
 localhost with `x-reviewradar-debug: true` and records exact/near counts, product names, suspicious flags,
 likely root causes, and debug summaries when available.
+Live workers retry temporary localhost/rate-limit/server failures before creating a next task, and label
+temporary research failures separately from true localhost availability problems.
+Batch files can include a larger `searchPool`; the worker rotates through that pool and records the
+current slice in `searchRotation`, so repeated agent runs test different product searches over time.
 
 The controller writes `docs/agent-next-task.md`, appends to `docs/qa-loop-results.md`, and generates
 `docs/agent-loop-report.md`. Workers do not edit code. Fix agents should use `docs/agent-fix-template.md`

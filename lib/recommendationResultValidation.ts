@@ -195,8 +195,16 @@ function isNonProductPageResult(name: string | undefined, primaryUrl: string): b
 
     if (
       host === "klarna.com" ||
+      host === "pinterest.com" ||
       host === "sneakerfiles.com" ||
       host === "wwd.com"
+    ) {
+      return true;
+    }
+
+    if (
+      (host === "nba.com" || host.endsWith(".nba.com")) &&
+      /\b(?:rule|rules|court|dimension|dimensions|equipment)\b/i.test(path)
     ) {
       return true;
     }
@@ -283,7 +291,8 @@ function isNonProductPageResult(name: string | undefined, primaryUrl: string): b
     /^\s*cut\s+in\s+half\b/i.test(n) ||
     /\breview\b\s*(?:\||-|$)/i.test(n) ||
     /\b(?:official images|release info|newsroom|built for|colorways?\s+\+\s+release dates|complete guide|franchise history|shuffles?\s+its\s+lineup)\b/i.test(n) ||
-    /\b\w+\s+out,\s+\w+.+\s+in\?\s*$/i.test(n)
+    /\b\w+\s+out,\s+\w+.+\s+in\?\s*$/i.test(n) ||
+    /\b(?:rule\s+no\.?|court dimensions?|backboard dimensions?|dimensions?\s*(?:&|and)\s*drawings?|equipment\s*-\s*nba official)\b/i.test(n)
   ) {
     return true;
   }
@@ -291,7 +300,7 @@ function isNonProductPageResult(name: string | undefined, primaryUrl: string): b
   // Broad category/listing titles rather than a specific buyable product.
   if (
     /\b(?:shoes|sneakers|boots|sandals|shirts|pants|jackets|chairs|desks|tables|vacuums|appliances|tools|grills|mattresses|sofas|couches)\s+(?:for|from)\s+(?:men|women|kids|top brands|speed|running|basketball|walking)\b/i.test(n) ||
-    /\b(?:basketball|running|walking|training|tennis|hiking)\s+(?:shoes|sneakers)\s*(?:\||-|for|from)\b/i.test(n)
+    /^\s*(?:basketball|running|walking|training|tennis|hiking)\s+(?:shoes|sneakers)\s*(?:\||-|for|from)\b/i.test(n)
   ) {
     return true;
   }

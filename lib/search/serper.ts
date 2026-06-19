@@ -621,6 +621,7 @@ function titleLooksLikeSpecificProduct(title: string) {
     /\breview\b\s*(?:\||-|$)/i,
     /\b(?:official images|release info|newsroom|built for|colorways?\s+\+\s+release dates|complete guide|franchise history|shuffles?\s+its\s+lineup)\b/i,
     /\b\w+\s+out,\s+\w+.+\s+in\?\s*$/i,
+    /\b(?:rule\s+no\.?|court dimensions?|backboard dimensions?|dimensions?\s*(?:&|and)\s*drawings?|equipment\s*-\s*nba official)\b/i,
     /\bguides?\s*\(20\d{2}\)\b/i,
     /\byours for\b/i,
     /\bi'?ve\s+ever\b/i,
@@ -628,7 +629,7 @@ function titleLooksLikeSpecificProduct(title: string) {
     /^\s*(?:boost|get|level up|make|save|score|snag|turn|up your|upgrade)\b.{0,120}\bwith\s+(?:the|a|an)\b/i,
     /\bunder\s+\$?\d+\b/i,
     /\b(?:shoes|sneakers|boots|sandals|shirts|pants|jackets|chairs|desks|tables|vacuums|appliances|tools|grills|mattresses|sofas|couches)\s+(?:for|from)\s+(?:men|women|kids|top brands|speed|running|basketball|walking)\b/i,
-    /\b(?:basketball|running|walking|training|tennis|hiking)\s+(?:shoes|sneakers)\s*(?:\||-|for|from)\b/i,
+    /^\s*(?:basketball|running|walking|training|tennis|hiking)\s+(?:shoes|sneakers)\s*(?:\||-|for|from)\b/i,
     /\b(?:desks|refrigerators|microwaves|microwave ovens|countertop microwave ovens|mini fridges|sectional sleeper sofas|sofas|couches|vacuums|gloves)\s*[-|]\s*(?:wayfair|aj madison|the home depot|amazon|walmart|target|lowe'?s|best buy)\b/i,
     /^\s*\$?\d+(?:\.\d+)?\s*(?:to|-)\s*\$?\d+(?:\.\d+)?\b/i,
   ];
@@ -699,6 +700,10 @@ function isKnownProductUrl(url: URL) {
     return /\/p\//i.test(path);
   }
 
+  if (host.endsWith("nike.com")) {
+    return /\/t\//i.test(path);
+  }
+
   if (host.endsWith("homedepot.com")) {
     return /\/p\//i.test(path) && !/\/p\/reviews\//i.test(path);
   }
@@ -739,6 +744,7 @@ function isEvidenceOrDiscussionDomain(url: URL) {
     "mashable.com",
     "nytimes.com",
     "pcmag.com",
+    "pinterest.com",
     "price.com",
     "popularmechanics.com",
     "reddit.com",

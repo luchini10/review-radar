@@ -536,3 +536,83 @@ See `docs/agent-loop-report.md`.
   - `npm run qa:loop -- --batches broad-mainstream` passed with no repeated failures.
   - `npm run qa:worker -- --batch broad-mainstream --mode live` passed with no suspicious flags.
 - **remaining issue found:** The broad Nike running-shoes search can still be sensitive to price verification. One live run returned only near matches because prices were unverified, but the repeat live worker returned exact matches. A future fix should improve current-price retrieval for official/retailer shoe pages without weakening firm budget rules.
+
+## Agent Loop Run - 2026-06-19T16:02:19.141Z
+
+- **run id:** agent-loop-2026-06-19T15-52-35-348Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** live
+- **batches:** price-trust, broad-mainstream, requirement-units
+- **parallel:** 1
+- **worker result files checked:** 3
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 2570ms |
+| lint | Passed | 6467ms |
+| unit tests | Passed | 5791ms |
+| deterministic eval pipeline | Passed | 460ms |
+
+### Repeated Failure Candidates
+
+- localhost_or_api_unavailable: 1 finding(s), priority 8
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-06-19T16:22:33.176Z
+
+- **run id:** agent-loop-2026-06-19T16-22-11-790Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust
+- **parallel:** 1
+- **worker result files checked:** 1
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 4628ms |
+| lint | Passed | 8951ms |
+| unit tests | Passed | 6435ms |
+| deterministic eval pipeline | Passed | 436ms |
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## RR Agent Next Task Fix - 2026-06-19T16:25:00Z
+
+- **reason:** The live `price-trust` agent run created a next task after `car seat stroller combo` returned one temporary live research error.
+- **what was checked:** Re-ran that exact local API request with debug enabled. It succeeded and returned real exact/near matches, which showed the original failure was temporary rather than a permanent localhost outage.
+- **root cause:** The live QA worker treated every live API failure as `localhost_or_api_unavailable` after one attempt. That made temporary upstream/server errors look like local app outages.
+- **general fix:** Live workers now retry temporary failures once and label failures more clearly. Connection failures stay `localhost_or_api_unavailable`; rate-limit/server/timeout-style failures become `transient_research_api_failure`; ordinary bad requests become `live_qa_request_failed`.
+- **extra issue fixed:** The live price-trust worker also surfaced basketball rules/dimensions pages in near matches. NBA court-equipment pages and Pinterest dimension drawings are now blocked as product cards across Serper intake, final result validation, requirement filtering, and product-page URL selection.
+- **before:** The next-task file pointed to `localhost_or_api_unavailable` for `car seat stroller combo`, and basketball-hoop results could include dimensions/rules pages as near-match products.
+- **after:** `docs/agent-next-task.md` now says no repeated worker failures were found. The live `price-trust` worker passed with no suspicious flags, including the stroller combo search.
+- **files changed:** `scripts/qa-worker.mjs`, `tests/qaWorker.test.mjs`, `lib/search/serper.ts`, `lib/recommendationResultValidation.ts`, `lib/requirementValidation.ts`, `lib/productPageUrl.ts`, `tests/serper.test.mjs`, and `tests/recommendationResultValidation.test.mjs`.
+- **verification run:**
+  - Focused QA worker and product-page filtering tests passed.
+  - `npm run typecheck` passed.
+  - `npm run lint` passed.
+  - `npm test` passed, 436/436 tests.
+  - `npm run qa:loop -- --batches price-trust` passed and cleared the next task.
+  - `npm run build` passed.
+  - `npm run qa:worker -- --batch price-trust --mode live` passed with no suspicious flags.
+- **remaining issue found:** None for this next-task fix. Future live runs may still find new search-quality issues in other batches.

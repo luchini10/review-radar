@@ -8,6 +8,72 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-06-19 13:08
+
+**Goal:** Make RR agent runs use different product searches over time.
+
+**What it checked:** Reviewed the QA worker, the agent batch files, the package scripts, and the agent loop docs.
+
+**What it found:** The agent batches were fixed lists. That meant repeated runs could keep testing the same products, which made the QA loop less useful over time.
+
+**What it changed:** Added rotating search pools to the worker and expanded every batch with more realistic searches. Each run now uses the next slice of that batch's pool and records the rotation details in the worker result.
+
+**Why the change matters:** The agents will cover more product categories and edge cases over time instead of getting comfortable with the same few searches.
+
+**Tests run:** Checked the QA worker syntax. Ran the focused QA worker tests. Parsed every agent batch JSON file. Typecheck passed. Lint passed. Full unit tests passed with 439/439 tests. Build passed.
+
+**Live checks run:** None. This was a worker/batch behavior change, not a live product-quality run.
+
+**Before/after proof:** Before the change, running the price-trust worker repeatedly used the same basketball-hoop and stroller-combo searches. After the change, the first run used those searches and the second run moved on to laptop and propane-grill searches.
+
+**Remaining issues:** Live agent runs may take longer over time because the rotated searches are broader and less rehearsed.
+
+**Next recommended step:** Use `Run RR live agents` again when ready and watch `searchRotation` in the worker result/report to see which searches were tested.
+
+## Codex Run - 2026-06-19 12:25
+
+**Goal:** Fix the RR agent next task from the live price-trust run.
+
+**What it checked:** Re-ran the stroller/car-seat combo API search with debug enabled, reviewed the live worker, checked product-page filters, and ran the price-trust worker again.
+
+**What it found:** The stroller/car-seat combo failure did not repeat, so it was most likely a temporary research/API failure. The worker was labeling that kind of temporary failure too broadly as a localhost problem. A separate live price-trust check also showed basketball rules/dimensions pages could appear as product-like near matches.
+
+**What it changed:** Live workers now retry temporary failures once and use clearer labels for connection problems versus temporary research/API problems. Review Radar also blocks NBA rules/dimensions pages and Pinterest dimension drawings from showing as product cards, while still allowing real product pages such as named Nike shoe pages.
+
+**Why the change matters:** The agent next-task file should now point to real repeated product-quality problems instead of one-off temporary API errors. Shoppers are also less likely to see rules, drawings, or reference pages where product recommendations belong.
+
+**Tests run:** Focused QA worker and filtering tests passed. Typecheck passed. Lint passed. Full unit tests passed with 436/436 tests. The deterministic price-trust agent loop passed. Build passed.
+
+**Live checks run:** Ran the live `price-trust` worker against localhost. It passed with no suspicious flags.
+
+**Before/after proof:** Before the fix, the next-task file pointed to `localhost_or_api_unavailable` for `car seat stroller combo`. After the fix, the next-task file says no repeated worker failures were found, and the live price-trust worker passed.
+
+**Remaining issues:** No remaining issue for this next-task fix. Future live agent runs may still find new problems in other areas.
+
+**Next recommended step:** Run the broader live agents again when ready, then fix the next repeated root cause they find.
+
+## Codex Run - 2026-06-19 12:02
+
+**Goal:** Run the live Review Radar QA agents against the real local app API.
+
+**What it checked:** Ran the price-trust, broad-mainstream, and requirement-units live worker batches against localhost. The controller also ran typecheck, lint, unit tests, and the deterministic eval pipeline.
+
+**What it found:** The code checks passed, and the broad-mainstream and requirement-units workers completed. The price-trust worker had one live API failure for `car seat stroller combo`, where the app returned the user-facing error “Something went wrong while researching. Try again.”
+
+**What it changed:** No app code was changed. The agent controller updated the latest QA report, next-task file, and QA results log.
+
+**Why the change matters:** The next task is now focused on whether the live recommendations API has a reliability/timeout problem for one price-trust search, rather than a product-ranking issue.
+
+**Tests run:** Typecheck passed. Lint passed. Unit tests passed with 432/432 tests. The deterministic eval pipeline passed.
+
+**Live checks run:** Live localhost QA ran for `price-trust`, `broad-mainstream`, and `requirement-units`.
+
+**Before/after proof:** Before this run, the previous next task had been cleared. After this run, the current next task is `localhost_or_api_unavailable` for the `car seat stroller combo` live search.
+
+**Remaining issues:** Investigate why the `car seat stroller combo` live price-trust search returned a 502 research error. Also note that the basketball-hoop price-trust search still showed a Pinterest dimensions page as a near match, although the worker did not flag it.
+
+**Next recommended step:** Fix the RR agent next task by diagnosing the 502 research failure without hardcoding that product category.
+
 ## Codex Run - 2026-06-19 11:20
 
 **Goal:** Fix the RR agent next task: non-product pages showing up as product recommendations.

@@ -352,8 +352,16 @@ function urlLooksGenericListingPage(url: string) {
 
     if (
       host === "klarna.com" ||
+      host === "pinterest.com" ||
       host === "sneakerfiles.com" ||
       host === "wwd.com"
+    ) {
+      return true;
+    }
+
+    if (
+      (host === "nba.com" || host.endsWith(".nba.com")) &&
+      /\b(?:rule|rules|court|dimension|dimensions|equipment)\b/i.test(path)
     ) {
       return true;
     }
