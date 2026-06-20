@@ -173,6 +173,21 @@ describe("extractSpecsFromText", () => {
     assert.equal(specs.btu?.value, 48000);
     assert.equal(specs.cookingAreaSqIn?.value, 646);
   });
+
+  it("parses common appliance, screen, and computer specs", () => {
+    const specs = extractSpecsFromText(
+      "1800 W 8-in-1 6-slice countertop toaster oven reaches 450 F. 65-inch TV with 120Hz. Laptop has 16GB RAM and 512GB storage.",
+    );
+
+    assert.equal(specs.wattage?.value, 1800);
+    assert.equal(specs.functionCount?.value, 8);
+    assert.equal(specs.sliceCapacity?.value, 6);
+    assert.equal(specs.temperatureF?.value, 450);
+    assert.equal(specs.screenSizeIn?.value, 65);
+    assert.equal(specs.refreshRateHz?.value, 120);
+    assert.equal(specs.memoryGb?.value, 16);
+    assert.equal(specs.storageGb?.value, 512);
+  });
 });
 
 describe("specEvidenceSatisfies", () => {

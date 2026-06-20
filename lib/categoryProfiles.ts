@@ -37,6 +37,36 @@ export const CATEGORY_PROFILES: CategoryProfile[] = [
     match: ["gas grill", "grill", "bbq", "barbecue", "barbeque"],
     keySpecs: ["btu", "cookingAreaSqIn", "burners", "weightLb"],
   },
+  {
+    key: "toaster_oven",
+    match: [
+      "toaster oven",
+      "countertop oven",
+      "countertop convection oven",
+      "air fryer toaster oven",
+    ],
+    keySpecs: ["wattage", "sliceCapacity", "functionCount", "capacityQt", "temperatureF"],
+  },
+  {
+    key: "microwave",
+    match: ["microwave", "microwave oven"],
+    keySpecs: ["wattage", "capacityQt"],
+  },
+  {
+    key: "tv",
+    match: ["tv", "television"],
+    keySpecs: ["screenSizeIn", "refreshRateHz"],
+  },
+  {
+    key: "monitor",
+    match: ["monitor", "computer monitor", "display"],
+    keySpecs: ["screenSizeIn", "refreshRateHz"],
+  },
+  {
+    key: "laptop",
+    match: ["laptop", "notebook"],
+    keySpecs: ["memoryGb", "storageGb", "screenSizeIn"],
+  },
 ];
 
 export const DEFAULT_CATEGORY_PROFILE: CategoryProfile = {

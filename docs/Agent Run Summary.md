@@ -8,6 +8,28 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-06-20 13:25
+
+**Goal:** Complete Phase 2 by making ReviewRadar rank better-documented products higher using small category-specific quality signals.
+
+**What it checked:** Reviewed category profiles, spec extraction, category-fit scoring, product eligibility, ranking tests, and a live toaster-oven search against the local API.
+
+**What it found:** Category-fit scoring already existed, but it was off by default and only covered a few categories. The live toaster-oven test also found that a quick-start guide could appear as a close match.
+
+**What it changed:** Turned category-fit scoring on by default with a safety switch. Added category profiles for toaster ovens, microwaves, TVs, monitors, and laptops. Added spec extraction for wattage, slice capacity, cooking functions, quart capacity, max temperature, screen size, refresh rate, memory, and storage. Blocked manual and quick-start guide pages from product cards.
+
+**Why the change matters:** ReviewRadar can now give a small ranking boost to products with useful category facts, so stronger and better-documented products are more likely to rise above thin listings. Manual pages can still help as evidence, but they should not appear as products.
+
+**Tests run:** Focused category/spec/product-eligibility tests passed. Typecheck passed. Lint passed. Full unit tests passed with 474/474 tests. Production build passed.
+
+**Live checks run:** Ran a live local API search for `toaster oven`, `$300`, `countertop, easy to clean, good reviews`.
+
+**Before/after proof:** The live search returned 3 exact toaster-oven matches with toaster-oven category-fit signals. No displayed result was a full-size oven, range, stove, cooktop, quick-start guide, or user manual.
+
+**Remaining issues:** Category-fit scoring is still intentionally small. More phases are needed to improve discovery breadth and deeper evidence ranking.
+
+**Next recommended step:** Move to the next phase: improve candidate discovery so the app finds more strong mainstream products before final ranking.
+
 ## Codex Run - 2026-06-20 09:10
 
 **Goal:** Complete Phase 1 of the broader product-accuracy plan by making ReviewRadar better at telling close product types apart.

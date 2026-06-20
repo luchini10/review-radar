@@ -102,9 +102,10 @@ Orchestrated in `app/api/recommendations/route.ts` → `handleRecommendationPost
 
 ### Ranking into the displayed lists (`scoreAndSelectRecommendations`)
 - Every candidate is re-validated (`applyCurrentRequirementCheck`) and scored (`scoreProduct` → `ScoreBreakdown`, `withScore`).
+- Category-fit scoring is active by default as a small capped nudge. `lib/categoryProfiles.ts` maps categories such as toaster ovens, microwaves, TVs, monitors, laptops, grills, pressure washers, leaf blowers, vacuums, and power tools to important specs. `lib/specDictionary.ts` extracts reusable facts such as wattage, slice capacity, cooking functions, quart capacity, temperature, screen size, refresh rate, memory, storage, BTU, CFM, PSI, GPM, runtime, battery-included status, and weight. This helps better-documented products rank above thin lookalikes without overriding hard requirements.
 - **Exact matches** = `requirementCheck.exactMatch === true` **and** `failed.length === 0` **and** `unknown.length === 0`. Ranked by `sortByRankedMatchStrength` (requirement fit first, then `rankedMatchScore`, then credibility tier), diversity-capped, top **7**, labeled `#N Best Match`.
 - **Near/Close matches** = not exact and not disqualified by a `Category:`/`Avoid:` failure; sorted by `totalScore`, capped at **5** for display (`MAX_NEAR_MATCHES`), and only shown when fewer than 7 exact matches exist.
-- `scoreProduct` `totalScore` combines requirement fit, owner rating/review strength, owner-opinion, expert mentions, source quality, popularity, price-value, market-confidence (×0.3), availability, and (flag-gated) category fit, minus repeated-complaint / missing-data / market-confidence / credibility-floor penalties.
+- `scoreProduct` `totalScore` combines requirement fit, owner rating/review strength, owner-opinion, expert mentions, source quality, popularity, price-value, market-confidence (×0.3), availability, and category fit, minus repeated-complaint / missing-data / market-confidence / credibility-floor penalties. Category fit can be disabled for QA with `REVIEW_RADAR_CATEGORY_SCORING=off`.
 
 ---
 

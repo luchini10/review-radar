@@ -81,6 +81,24 @@ describe("shared product eligibility classifier", () => {
     assert.equal(complaint.status, "non_product");
   });
 
+  it("rejects manual and quick-start guide pages as product cards", () => {
+    const quickStart = classify({
+      name: "Quick Start Guide: KCO211 Countertop Oven - KitchenAid",
+      sourceTitle: "Quick Start Guide: KCO211 Countertop Oven - KitchenAid",
+      url: "https://www.kitchenaid.com/service-and-support/manuals/kco211-countertop-oven.html",
+    });
+    const manual = classify({
+      name: "User Manual for Example Blender 5000",
+      sourceTitle: "User Manual for Example Blender 5000",
+      url: "https://www.example.com/products/example-blender-5000",
+    });
+
+    assert.equal(quickStart.canRenderAsProductCard, false);
+    assert.equal(quickStart.canUseAsEvidence, true);
+    assert.equal(manual.canRenderAsProductCard, false);
+    assert.equal(manual.status, "non_product");
+  });
+
   it("does not reject Article furniture product pages because of the brand domain", () => {
     const articleProduct = classify({
       name: "Article Sven Sofa",

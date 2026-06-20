@@ -587,11 +587,11 @@ function scoreDebugReasons(
   ];
 }
 
-// Phase 2 promote gate. The category-fit boost is always computed (so it shows
-// in scoreBreakdown for debug comparison) but only added to scores when enabled,
-// keeping default ranking byte-identical until the flag is flipped.
+// Category-fit is a small, capped nudge. It is on by default now that the
+// profiles/spec dictionary have regression coverage, but can be disabled for
+// before/after QA with REVIEW_RADAR_CATEGORY_SCORING=off.
 function categoryScoringEnabled() {
-  return process.env.REVIEW_RADAR_CATEGORY_SCORING === "on";
+  return process.env.REVIEW_RADAR_CATEGORY_SCORING !== "off";
 }
 
 // Phase 3 promote gate. A graded credibility penalty (never a hard block):

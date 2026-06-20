@@ -63,10 +63,10 @@ function blowerInput() {
   };
 }
 
-function withCategoryScoring(run) {
+function withoutCategoryScoring(run) {
   const previous = process.env.REVIEW_RADAR_CATEGORY_SCORING;
 
-  process.env.REVIEW_RADAR_CATEGORY_SCORING = "on";
+  process.env.REVIEW_RADAR_CATEGORY_SCORING = "off";
 
   try {
     return run();
@@ -85,6 +85,9 @@ describe("selectCategoryProfile (config-driven, generic loop)", () => {
     assert.equal(selectCategoryProfile("gas pressure washer").key, "pressure_washer");
     assert.equal(selectCategoryProfile("stick vacuum").key, "cordless_vacuum");
     assert.equal(selectCategoryProfile("gas grill").key, "grill");
+    assert.equal(selectCategoryProfile("countertop toaster oven").key, "toaster_oven");
+    assert.equal(selectCategoryProfile("65 inch TV").key, "tv");
+    assert.equal(selectCategoryProfile("gaming laptop").key, "laptop");
     assert.equal(selectCategoryProfile("standing desk").key, "default");
   });
 });
@@ -138,16 +141,16 @@ describe("computeCategoryFit (capped additive boost)", () => {
 });
 
 describe("category boost is gated by the flag", () => {
-  it("adds exactly the computed boost to totalScore only when enabled", () => {
+  it("adds exactly the computed boost by default and can be disabled", () => {
     const input = blowerInput();
     const high = buildBlower("EGO 650 CFM Cordless Leaf Blower");
     const low = buildBlower("Budget 400 CFM Leaf Blower");
 
-    const highOff = scoreProduct(high, input).totalScore;
-    const lowOff = scoreProduct(low, input).totalScore;
-    const { highOn, lowOn } = withCategoryScoring(() => ({
-      highOn: scoreProduct(high, input).totalScore,
-      lowOn: scoreProduct(low, input).totalScore,
+    const highOn = scoreProduct(high, input).totalScore;
+    const lowOn = scoreProduct(low, input).totalScore;
+    const { highOff, lowOff } = withoutCategoryScoring(() => ({
+      highOff: scoreProduct(high, input).totalScore,
+      lowOff: scoreProduct(low, input).totalScore,
     }));
 
     assert.equal(Math.round((highOn - highOff) * 100) / 100, 3);
@@ -163,27 +166,47 @@ describe("category boost is gated by the flag", () => {
 });
 
 describe("category boost reorders exact matches when enabled", () => {
-  it("ranks the in-spec blower above the weaker one (flag on)", () => {
-    withCategoryScoring(() => {
-      const input = blowerInput();
-      const result = scoreAndSelectRecommendations(
-        {
-          search_summary: "Showing exact matches.",
-          assumptions: [],
-          exactMatches: [
-            buildBlower("Budget 400 CFM Leaf Blower"),
-            buildBlower("EGO 650 CFM Cordless Leaf Blower"),
-          ],
-          nearMatches: [],
-          recommendations: [],
-          what_to_avoid: [],
-          final_buying_advice: "Choose among the displayed products.",
-        },
-        input,
-      );
+  it("ranks the in-spec blower above the weaker one by default", () => {
+    const input = blowerInput();
+    const result = scoreAndSelectRecommendations(
+      {
+        search_summary: "Showing exact matches.",
+        assumptions: [],
+        exactMatches: [
+          buildBlower("Budget 400 CFM Leaf Blower"),
+          buildBlower("EGO 650 CFM Cordless Leaf Blower"),
+        ],
+        nearMatches: [],
+        recommendations: [],
+        what_to_avoid: [],
+        final_buying_advice: "Choose among the displayed products.",
+      },
+      input,
+    );
 
-      assert.equal(result.exactMatches[0].name, "EGO 650 CFM Cordless Leaf Blower");
-      assert.equal(result.exactMatches[0].rank, 1);
+    assert.equal(result.exactMatches[0].name, "EGO 650 CFM Cordless Leaf Blower");
+    assert.equal(result.exactMatches[0].rank, 1);
+  });
+
+  it("rewards richer toaster oven facts over a thin toaster oven listing", () => {
+    const input = {
+      query: "toaster oven",
+      extractedRequirements: extractStructuredRequirements({ query: "toaster oven" }),
+    };
+    const rich = buildBlower("Ninja 1800 W 8-in-1 6-Slice Countertop Toaster Oven 450 F", {
+      category: "toaster oven",
+      why_recommended: "A well-documented countertop toaster oven.",
     });
+    const thin = buildBlower("Generic Countertop Toaster Oven", {
+      category: "toaster oven",
+      why_recommended: "A toaster oven with limited specs.",
+    });
+
+    const richScore = scoreProduct(rich, input);
+    const thinScore = scoreProduct(thin, input);
+
+    assert.equal(richScore.categoryProfileKey, "toaster_oven");
+    assert.ok((richScore.categoryFitScore || 0) > (thinScore.categoryFitScore || 0));
+    assert.ok(richScore.totalScore > thinScore.totalScore);
   });
 });

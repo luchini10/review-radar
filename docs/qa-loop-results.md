@@ -4,6 +4,56 @@ Date: 2026-06-18
 Repo: `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 Source-of-truth map: `ReviewRadar-Overview.md`
 
+## Codex QA Update - 2026-06-20 13:25
+
+## Loop Scope
+
+Implement Phase 2 of the product-accuracy plan: make category-fit scoring active by default and expand reusable category/spec signals so better-documented products rank better than thin lookalikes.
+
+## Root Causes
+
+ReviewRadar already computed a small category-fit score, but it was off by default and only covered a few categories. That meant ranking still leaned heavily on broad evidence and popularity even when a product had useful category-specific facts.
+
+The live Phase 2 toaster-oven check also exposed a separate page-quality issue: a quick-start guide could appear as a close match because manual-style pages were not clearly blocked as product cards.
+
+## Generalized Fix
+
+- Turned category-fit scoring on by default, while keeping `REVIEW_RADAR_CATEGORY_SCORING=off` as a safety switch.
+- Added reusable category profiles for toaster ovens, microwaves, TVs, monitors, and laptops.
+- Expanded shared spec extraction for facts like wattage, slice capacity, cooking functions, quart capacity, max temperature, screen size, refresh rate, memory, and storage.
+- Added a reusable manual/quick-start-guide rule to the shared product eligibility classifier.
+
+These changes are reusable across categories. They do not hardcode one product or one retailer.
+
+## Verification
+
+| Check | Result |
+| --- | --- |
+| Focused category/spec/product-eligibility tests | Passed |
+| Typecheck | Passed |
+| Lint | Passed |
+| Full unit tests | Passed, 474/474 |
+| Production build | Passed |
+| Direct live toaster-oven API test | Passed |
+
+## Before / After Proof
+
+Before the fix:
+
+- Category-fit scoring existed, but did not affect default ranking.
+- The spec dictionary could not read several common product facts used by appliances, screens, and computers.
+- A quick-start guide could appear as a close match in a live toaster-oven result.
+
+After the fix:
+
+- The live `toaster oven`, `$300`, `countertop, easy to clean, good reviews` search returned 3 exact toaster-oven matches.
+- Displayed toaster-oven results included the `toaster_oven` category profile signal.
+- No displayed result was a wall oven, range, stove, cooktop, full-size oven, quick-start guide, or user manual.
+
+## Remaining Notes
+
+Category-fit scoring is intentionally a small boost, not a hard requirement. Hard requirements, product eligibility, and trusted price checks still decide whether a product can be an exact match.
+
 ## Codex QA Update - 2026-06-20 09:10
 
 ## Loop Scope

@@ -329,6 +329,7 @@ function textLooksLikeNonProduct(value: string) {
     /\b(?:complaints?|lawsuit|recall notice)\b/i,
     /\b(?:customer reviews?|reviews?)\s+(?:for|of)\b/i,
     /\b(?:support article|help library|error code list|troubleshooting)\b/i,
+    /\b(?:quick\s*start\s*guide|user\s*manual|owners?\s*manual|owner'?s\s*manual|instruction\s*manual|installation\s*guide|installation\s*instructions|use\s+and\s+care\s+guide|care\s+guide)\b/i,
     /\b(?:buying guide|shopping guide|purchase guide|size guide|measurement guide|measuring guide)\b/i,
     /\bthings?\s+to\s+avoid\s+when\s+(?:buying|purchasing|shopping\s+for)\b/i,
     /\b(?:forum|thread|question|q&a|discussion|reddit)\b/i,
