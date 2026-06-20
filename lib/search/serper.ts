@@ -23,6 +23,12 @@ import {
 } from "../formFactor.ts";
 import { baseProductCategoryFromQuery, detectBedSize } from "../productCategory.ts";
 import { sanitizeProductPros } from "../productCopySanitizer.ts";
+import {
+  candidateEligibility,
+  classifyProductEligibility,
+} from "../productEligibility.ts";
+import { classifyProductTypeIntent } from "../productTypeIntent.ts";
+import { assessProductPriceTrust } from "../productPriceTrust.ts";
 import { parseBestMoneyAmount } from "../priceParsing.ts";
 import { getPremiumCap } from "../requirementExtraction.ts";
 import { selectedSmartFeatureSearchText } from "../smartFeatureSelection.ts";
@@ -879,6 +885,7 @@ function isLikelySearchOrListingUrl(url: URL) {
 function looksLikeSpecificProductCandidate(input: {
   imageUrl: string;
   price: number | null;
+  snippet: string;
   title: string;
   url: string;
 }) {
@@ -905,6 +912,21 @@ function looksLikeSpecificProductCandidate(input: {
   }
 
   if (parsedUrl.pathname === "/" || parsedUrl.pathname === "") {
+    return false;
+  }
+
+  const eligibility = classifyProductEligibility({
+    imageUrl: input.imageUrl,
+    name: input.title,
+    price: input.price,
+    productName: input.title,
+    snippet: input.snippet,
+    sourceTitle: input.title,
+    sourceType: "serper",
+    url: input.url,
+  });
+
+  if (!eligibility.canRenderAsProductCard) {
     return false;
   }
 
@@ -1991,6 +2013,18 @@ function cheapCandidateRejectionReason(
   candidate: RawProductCandidate,
   input: RecommendationApiRequest,
 ) {
+  const productTypeIntent = classifyProductTypeIntent({
+    candidateText: candidateEvidenceText(candidate),
+    requestedText: baseProductCategoryFromQuery(input.query),
+  });
+
+  if (
+    productTypeIntent.status === "irrelevant" ||
+    productTypeIntent.status === "complement"
+  ) {
+    return "wrong_category";
+  }
+
   if (
     isComponentSubstitution(
       candidateEvidenceText(candidate),
@@ -3202,8 +3236,8 @@ export function serperCandidateToRecommendation(
   candidate: RawProductCandidate,
 ): ProductRecommendation {
   const source = candidate.evidenceSources[0];
-
-  return {
+  const metadata = candidateMetadata(candidate);
+  const recommendation: ProductRecommendation = {
     recommendation_type: "Close Match",
     name: candidate.name,
     category: candidate.category,
@@ -3232,7 +3266,13 @@ export function serperCandidateToRecommendation(
       url: sourceItem.url,
       what_it_supports: buildSerperCitationSupport(candidate),
     })),
-    metadata: candidateMetadata(candidate),
+    metadata,
+    productEligibility: candidateEligibility(candidate),
+  };
+
+  return {
+    ...recommendation,
+    priceTrust: assessProductPriceTrust(recommendation),
   };
 }
 

@@ -96,6 +96,35 @@ describe("Serper product discovery", () => {
     assert.equal(candidates[0].evidenceSources[0].url, "https://shop.example.com/black-full-sleeper-sofa");
   });
 
+  it("does not normalize trusted-store category pages into product candidates", () => {
+    const candidates = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title: "Basketball Shoes - Nike",
+            link: "https://www.nike.com/w/mens-basketball-shoes-3glsmznik1zy7ok",
+            source: "Nike",
+            price: "$120",
+            imageUrl: "https://static.nike.com/category.jpg",
+            snippet: "Shop basketball shoes from Nike.",
+          },
+          {
+            title: "Garden Hoses - The Home Depot",
+            link: "https://www.homedepot.com/b/Outdoors-Garden-Center-Watering-Irrigation-Garden-Hoses/N-5yc1vZbx4e",
+            source: "The Home Depot",
+            price: "$39.97",
+            imageUrl: "https://images.homedepot-static.com/category.jpg",
+            snippet: "Browse garden hose products.",
+          },
+        ],
+      },
+      "basketball shoes product pages",
+      "basketball shoes",
+    );
+
+    assert.equal(candidates.length, 0);
+  });
+
   it("normalizes alternate Serper shopping fields without losing product candidates", () => {
     const candidates = normalizeSerperShoppingResults(
       {
@@ -1078,6 +1107,35 @@ describe("Serper product discovery", () => {
             source: "smart_features",
           },
         ],
+      },
+      10,
+    );
+
+    assert.equal(result.candidates.length, 0);
+    assert.equal(result.rejectedCount, 1);
+  });
+
+  it("removes full-size wall ovens from toaster oven searches", () => {
+    const [wallOvenCandidate] = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title: "GE 30 in. Built-In Electric Wall Oven with Convection",
+            link: "https://www.homedepot.com/p/ge-built-in-wall-oven",
+            price: 399,
+            imageUrl: "https://images.example.com/ge-wall-oven.jpg",
+            snippet: "Full-size built-in wall oven with conventional convection cooking.",
+          },
+        ],
+      },
+      "toaster oven under 500",
+      "toaster oven",
+    );
+    const result = cheapPreFilterRawCandidates(
+      [wallOvenCandidate],
+      {
+        budget: "under $500",
+        query: "toaster oven",
       },
       10,
     );

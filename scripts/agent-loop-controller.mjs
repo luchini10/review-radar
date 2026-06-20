@@ -272,17 +272,21 @@ function nextTaskMarkdown(runId, repeatedFailures) {
   return `# Agent Next Task\n\nGenerated: ${new Date().toISOString()}\nRun: ${runId}\n\n## Selected Root Cause\n\nInvestigate shared root cause: **${top.rootCause}**.\n\nPriority score: ${top.priorityScore}\nFrequency: ${top.frequency}\nCategories affected: ${top.sharedCategoryCount}\nExact-match affected findings: ${top.exactMatchAffectedCount}\n\n## Failing Examples\n\n${examples}\n\n## Suspected Shared Modules\n\n${modules}\n\n## Forbidden Fixes\n\n- Do not hardcode one product, store, brand, or category.\n- Do not weaken hard requirements to make a bad result pass.\n- Do not hide failures in the UI instead of fixing shared logic.\n- Do not change public API or response shape without explicit approval.\n\n## Required Tests\n\n- Add regression coverage for the root cause using at least two examples when possible.\n- Include a category-agnostic test if the failure can happen across categories.\n- Keep existing exact/near match behavior intact unless the test proves it was wrong.\n\n## Required Verification\n\n- npm run typecheck\n- npm run lint\n- npm test\n- npm run qa:loop -- --batches ${top.examples.map((example) => example.batchName).filter(Boolean).join(",") || "price-trust"}\n- npm run build\n\n## Stop Condition\n\nStop after one generalized fix and update docs/qa-loop-results.md with before/after proof.\n`;
 }
 
-function statusLabel(commandResults, workerRuns, verifierSummary) {
+function statusLabel(commandResults, workerRuns, verifierSummary, repeatedFailures = []) {
   if (commandResults.some((result) => result.code !== 0)) {
     return "failed-checks";
   }
 
   if (workerRuns.some((result) => result.code !== 0)) {
-    return "worker-findings-or-live-unavailable";
+    return "worker-error";
   }
 
   if (verifierSummary && verifierSummary.accepted === false) {
     return "rejected-by-verifier";
+  }
+
+  if (repeatedFailures.length > 0) {
+    return "needs-fix";
   }
 
   return "passed";
@@ -321,7 +325,7 @@ function reportMarkdown(runId, commandResults, workerRuns, workerResults, repeat
     repeatedFailures[0]?.examples?.[0]?.batchName ||
     (runOptions.mode === "live" ? "price-trust" : "price-trust --mode live");
 
-  return `# Agent Loop Report\n\nGenerated: ${new Date().toISOString()}\nRun: ${runId}\nStatus: ${statusLabel(commandResults, workerRuns, verifierSummary)}\nMode: ${runOptions.mode}\nParallel workers: ${runOptions.parallel}\nChange log: ${runOptions.changeNote ? "updated" : "not updated; no meaningful change note was provided"}\n\n## Batches Run\n\n${batchLines || "- No worker batches ran."}\n\n## Checks\n\n${checkLines}\n\n## Top Repeated Root Causes\n\n${rootLines}\n\n## Verifier Status\n\n${
+  return `# Agent Loop Report\n\nGenerated: ${new Date().toISOString()}\nRun: ${runId}\nStatus: ${statusLabel(commandResults, workerRuns, verifierSummary, repeatedFailures)}\nMode: ${runOptions.mode}\nParallel workers: ${runOptions.parallel}\nChange log: ${runOptions.changeNote ? "updated" : "not updated; no meaningful change note was provided"}\n\n## Batches Run\n\n${batchLines || "- No worker batches ran."}\n\n## Checks\n\n${checkLines}\n\n## Top Repeated Root Causes\n\n${rootLines}\n\n## Verifier Status\n\n${
     verifierSummary
       ? `- ${verifierSummary.accepted ? "Accepted" : "Rejected"}: ${verifierSummary.rejectedReasons?.join("; ") || "No rejection reasons."}`
       : "- No before/after verifier was requested for this controller run."

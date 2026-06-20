@@ -10,22 +10,23 @@ import {
 } from "./productImageResolver.ts";
 import {
   parseBestMoneyAmount,
-  parseBestProductPriceText,
-  plausibleProductPrice,
   priceTextLooksUnverified,
   formatDollars,
 } from "./priceParsing.ts";
+import { assessProductPriceTrust } from "./productPriceTrust.ts";
 import { searchSerperImageEvidence } from "./search/serper.ts";
 import type {
   ProductFieldEvidence,
   ProductMetadata,
   ProductOffer,
+  ProductPriceTrust,
 } from "@/types/review-radar";
 
 type ProductAssetRecommendation = {
   category?: string;
   estimated_price_range?: string;
   name: string;
+  priceTrust?: ProductPriceTrust;
   price_value_verdict?: string;
   product_page_url: string;
   product_image_url: string;
@@ -1067,50 +1068,35 @@ function buildMetadata(input: {
   return metadata;
 }
 
-function bestOfferPrice(
-  metadata: ProductMetadata | undefined,
-  product: ProductAssetRecommendation,
-) {
-  const prices =
-    metadata?.offers
-      .map((offer) => offer.price.value)
-      .filter((price): price is number => price !== null && Number.isFinite(price)) ||
-    [];
-
-  return plausibleProductPrice(
-    prices,
-    parseBestProductPriceText(product.estimated_price_range),
-    {
-      category: product.category,
-      productName: product.name,
-    },
-  );
-}
-
 function withVerifiedOfferPriceFields<T extends ProductAssetRecommendation>(
   product: T,
 ): T {
-  const price = bestOfferPrice(product.metadata, product);
+  const priceTrust = assessProductPriceTrust(product);
 
-  if (price === null) {
+  if (!priceTrust.canUseForBudget || priceTrust.price === null) {
     const hasAnyOfferPrice =
       product.metadata?.offers.some(
         (offer) => offer.price.value !== null && Number.isFinite(offer.price.value),
-      ) || parseBestProductPriceText(product.estimated_price_range) !== null;
+      ) || priceTrust.price !== null;
 
     return hasAnyOfferPrice
       ? {
           ...product,
+          priceTrust,
           estimated_price_range: "Price not verified",
           price_value_verdict:
             "Price evidence looked unusually low for the full product; verify the current store price before buying.",
         }
-      : product;
+      : {
+          ...product,
+          priceTrust,
+        };
   }
 
   const nextProduct = {
     ...product,
-    estimated_price_range: formatDollars(price),
+    priceTrust,
+    estimated_price_range: formatDollars(priceTrust.price),
   };
 
   if (

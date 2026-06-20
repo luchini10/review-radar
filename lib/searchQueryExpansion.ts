@@ -31,6 +31,12 @@ const synonymGroups: Record<string, string[]> = {
   laptop: ["laptop", "notebook", "ultrabook"],
   microwave: ["microwave", "microwave oven", "countertop microwave", "compact microwave"],
   monitor: ["monitor", "display", "computer monitor", "4k monitor"],
+  "toaster oven": [
+    "toaster oven",
+    "countertop toaster oven",
+    "countertop convection oven",
+    "air fryer toaster oven",
+  ],
   oven: [
     "oven",
     "range",
@@ -110,10 +116,14 @@ function getCategorySynonyms(category: string) {
     return synonymGroups[normalizedCategory];
   }
 
-  for (const [key, synonyms] of Object.entries(synonymGroups)) {
-    if (normalizedCategory.includes(key)) {
-      return unique([category, ...synonyms], (value) => value);
-    }
+  const matchingGroup = Object.entries(synonymGroups)
+    .filter(([key]) => normalizedCategory.includes(key))
+    .sort((first, second) => second[0].length - first[0].length)[0];
+
+  if (matchingGroup) {
+    const [, synonyms] = matchingGroup;
+
+    return unique([category, ...synonyms], (value) => value);
   }
 
   return [category];

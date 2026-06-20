@@ -95,6 +95,25 @@ describe("structured requirement extraction", () => {
     );
   });
 
+  it("extracts common audio brands from important details", () => {
+    const requirements = extractStructuredRequirements({
+      budget: "$350",
+      priorities: "Sony or Bose, wireless, strong reviews",
+      query: "noise cancelling headphones",
+    });
+
+    assert.ok(
+      requirements.brandConstraints.some(
+        (constraint) => constraint.value === "Sony",
+      ),
+    );
+    assert.ok(
+      requirements.brandConstraints.some(
+        (constraint) => constraint.value === "Bose",
+      ),
+    );
+  });
+
   it("extracts foot-based length requirements without duplicating the unit", () => {
     const requirements = extractStructuredRequirements({
       budget: "$100",

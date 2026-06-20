@@ -20,19 +20,61 @@ function metadataField(value, sourceType = "json_ld") {
   };
 }
 
+function priceFromEstimatedPriceRange(value) {
+  if (!value || /\b(?:not verified|not surfaced|unknown|unavailable|likely)\b/i.test(value)) {
+    return null;
+  }
+
+  const matches = [...value.matchAll(/\$\s*([0-9]{1,3}(?:,[0-9]{3})+|[0-9]+)(?:\.\d{1,2})?/g)]
+    .map((match) => Number(match[1].replace(/,/g, "")))
+    .filter((price) => Number.isFinite(price) && price > 0);
+
+  return matches.length > 0 ? Math.min(...matches) : null;
+}
+
+function defaultMetadataForProduct(productUrl, estimatedPriceRange) {
+  const price = priceFromEstimatedPriceRange(estimatedPriceRange);
+
+  return {
+    offers:
+      price === null
+        ? []
+        : [
+            {
+              availability: metadataField("In stock"),
+              price: metadataField(price),
+              priceCurrency: metadataField("USD"),
+              retailer: "example.com",
+              url: productUrl,
+            },
+          ],
+  };
+}
+
 function buildProduct(overrides = {}) {
+  const estimatedPriceRange = overrides.estimated_price_range || "$399-$449";
+  const productPageUrl = overrides.product_page_url || "https://example.com/couch";
+  const baseMetadata = defaultMetadataForProduct(productPageUrl, estimatedPriceRange);
+  const mergedMetadata = overrides.metadata
+    ? {
+        ...baseMetadata,
+        ...overrides.metadata,
+        offers: overrides.metadata.offers ?? baseMetadata.offers,
+      }
+    : baseMetadata;
+
   return {
     recommendation_type: "Best Match",
     name: "Example Compact Beige Couch",
     category: "Couch",
-    product_page_url: "https://example.com/couch",
+    product_page_url: productPageUrl,
     product_image_url: "https://example.com/couch.jpg",
     why_recommended:
       "A compact couch that is available in beige and measures 60 inches wide.",
     pros: ["Available in beige.", "Measures 60 inches wide."],
     cons: ["Limited stock at some retailers."],
     common_complaints: ["Delivery windows can vary."],
-    estimated_price_range: "$399-$449",
+    estimated_price_range: estimatedPriceRange,
     confidence_score: 90,
     source_consensus: "Strong",
     price_value_verdict: "Stays under a $500 budget.",
@@ -45,7 +87,9 @@ function buildProduct(overrides = {}) {
         what_it_supports: "Supports the fake test product.",
       },
     ],
+    metadata: mergedMetadata,
     ...overrides,
+    metadata: mergedMetadata,
   };
 }
 
@@ -206,6 +250,77 @@ describe("requirement validation", () => {
       adidas.requirementComparisons.some(
         (comparison) =>
           comparison.required === "Brand: Nike" &&
+          comparison.status === "failed",
+      ),
+    );
+  });
+
+  it("matches mainstream brand sub-lines when retailer titles omit the parent brand", () => {
+    const request = {
+      budget: "$200",
+      priorities: "DeWalt or Milwaukee, battery included",
+      query: "cordless drill",
+    };
+    const input = {
+      ...request,
+      extractedRequirements: extractStructuredRequirements(request),
+    };
+
+    const milwaukeeLine = validateProductAgainstRequirements(
+      buildProduct({
+        category: "cordless drill",
+        estimated_price_range: "$179",
+        name: "M12 FUEL 12V Lithium-Ion Brushless Cordless 1/2 in. Drill Driver Kit with Battery",
+        product_page_url: "https://www.homedepot.com/p/milwaukee-m12-fuel-drill-driver-kit/123",
+        pros: ["Includes a battery and charger."],
+        why_recommended: "A compact M12 Fuel drill kit with battery included.",
+        metadata: {
+          title: metadataField(
+            "M12 FUEL 12V Lithium-Ion Brushless Cordless 1/2 in. Drill Driver Kit with Battery",
+          ),
+        },
+      }),
+      input,
+    );
+    const dewaltLine = validateProductAgainstRequirements(
+      buildProduct({
+        category: "cordless drill",
+        estimated_price_range: "$149",
+        name: "20-Volt MAX Lithium-Ion Cordless 1/2 in. Compact Drill Driver Kit with Battery",
+        product_page_url: "https://www.homedepot.com/p/dewalt-20v-max-compact-drill-kit/456",
+        pros: ["Includes a compact battery."],
+        why_recommended: "A 20V MAX drill kit with battery included.",
+        metadata: {
+          title: metadataField(
+            "20-Volt MAX Lithium-Ion Cordless 1/2 in. Compact Drill Driver Kit with Battery",
+          ),
+        },
+      }),
+      input,
+    );
+    const wrongBrand = validateProductAgainstRequirements(
+      buildProduct({
+        category: "cordless drill",
+        estimated_price_range: "$89",
+        name: "RYOBI ONE+ 18V Cordless Drill Kit with Battery",
+        product_page_url: "https://www.homedepot.com/p/ryobi-one-plus-drill-kit/789",
+        pros: ["Includes a battery."],
+        why_recommended: "A Ryobi drill kit with battery included.",
+        metadata: {
+          brand: metadataField("Ryobi"),
+          title: metadataField("RYOBI ONE+ 18V Cordless Drill Kit with Battery"),
+        },
+      }),
+      input,
+    );
+
+    assert.equal(milwaukeeLine.isMatch, true);
+    assert.equal(dewaltLine.isMatch, true);
+    assert.equal(wrongBrand.isMatch, false);
+    assert.ok(
+      wrongBrand.requirementComparisons.some(
+        (comparison) =>
+          comparison.required === "Brand: DeWalt or Milwaukee" &&
           comparison.status === "failed",
       ),
     );
@@ -376,6 +491,47 @@ describe("requirement validation", () => {
 
     assert.equal(result.isMatch, true);
     assert.deepEqual(result.missingRequirements, []);
+  });
+
+  it("keeps toaster ovens separate from wall ovens and ranges", () => {
+    const toasterOven = validateProductAgainstRequirements(
+      buildProduct({
+        category: "toaster oven",
+        estimated_price_range: "$249",
+        name: "Breville Smart Oven Air Fryer Pro Countertop Toaster Oven",
+        product_page_url: "https://example.com/products/breville-smart-oven-air-fryer-pro",
+        pros: ["Countertop toaster oven with air-fry cooking modes."],
+        why_recommended: "A countertop toaster oven that fits the requested product type.",
+      }),
+      {
+        budget: "under $500",
+        category: "toaster oven",
+      },
+    );
+    const wallOven = validateProductAgainstRequirements(
+      buildProduct({
+        category: "toaster oven",
+        estimated_price_range: "$399",
+        name: "GE 30 in. Built-In Electric Wall Oven with Convection",
+        product_page_url: "https://example.com/products/ge-built-in-wall-oven",
+        pros: ["Full-size built-in wall oven."],
+        why_recommended: "A regular wall oven incorrectly labeled as toaster oven.",
+      }),
+      {
+        budget: "under $500",
+        category: "toaster oven",
+      },
+    );
+
+    assert.equal(toasterOven.isMatch, true);
+    assert.equal(wallOven.isMatch, false);
+    assert.ok(
+      wallOven.requirementComparisons.some(
+        (comparison) =>
+          comparison.required === "Category: toaster oven" &&
+          comparison.status === "failed",
+      ),
+    );
   });
 
   it("rejects products over an under-$500 budget requirement", () => {

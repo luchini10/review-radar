@@ -8,6 +8,50 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-06-20 09:10
+
+**Goal:** Complete Phase 1 of the broader product-accuracy plan by making ReviewRadar better at telling close product types apart.
+
+**What it checked:** Reviewed category matching, form-factor checks, Serper candidate filtering, search-query expansion, source-pack retailer queries, requirement validation, and the live local API behavior for a toaster-oven search.
+
+**What it found:** The app could treat `toaster oven` too much like broad `oven`. That meant full-size wall ovens, ranges, stoves, or cooktops could look close enough to pass some checks. It also trusted assigned category text too much instead of requiring product evidence to prove the product type.
+
+**What it changed:** Added a shared product-type intent classifier. Connected it to requirement validation and Serper pre-filtering. Updated toaster-oven search wording so searches stay focused on countertop/toaster-oven products. Added tests proving wall ovens and ranges do not pass toaster-oven validation.
+
+**Why the change matters:** ReviewRadar should recommend the actual kind of product the shopper asked for, not a larger sibling product, accessory, or substitute that happens to share a word.
+
+**Tests run:** Focused product-type tests passed. Typecheck passed. Lint passed. Full unit tests passed with 471/471 tests. Production build passed.
+
+**Live checks run:** Ran a live local API search for `toaster oven`, `$300`, `countertop, easy to clean, good reviews`.
+
+**Before/after proof:** The live toaster-oven search returned 2 exact toaster-oven matches and 5 close toaster-oven matches. No displayed result was a wall oven, range, stove, cooktop, or full-size oven.
+
+**Remaining issues:** This is only Phase 1. More phases are still needed for stronger category profiles, better candidate generation, and deeper evidence-based ranking.
+
+**Next recommended step:** Move to Phase 2 after confirming this product-type gate holds up in more live searches.
+
+## Codex Run - 2026-06-20 06:49
+
+**Goal:** Build one shared product trust layer so ReviewRadar stops fixing bad product pages and bad prices in scattered places.
+
+**What it checked:** Reviewed Serper product intake, final result validation, product-page button selection, price reliability, budget matching, ranking, requirement validation, and QA worker checks.
+
+**What it found:** Several parts of the app had their own page and price safety rules. That made it possible to fix one area while another area still allowed a review article, category page, fake-low price, financing amount, or weak price into results. Live QA also showed that brand alternatives like `DeWalt or Milwaukee` and `Sony or Bose` were too weakly parsed.
+
+**What it changed:** Added a shared buyable-product classifier and a shared price-trust validator. Connected them to search intake, final validation, product URL selection, exact/near match gating, scoring, card price handling, and QA workers. Also improved brand-alternative parsing and added safe brand-line aliases for major tool lines like DeWalt `20V MAX` and Milwaukee `M12 FUEL`.
+
+**Why the change matters:** ReviewRadar now has one central place to decide whether a page is a real product and whether a price can be trusted. Improving those rules once should improve the whole pipeline. Broad brand searches should also be less likely to miss obvious mainstream brands because of retailer title wording.
+
+**Tests run:** Typecheck passed. Lint passed. Full unit tests passed with 465/465 tests. Production build passed. Focused trust-layer, ranking, brand parsing, and requirement tests passed.
+
+**Live checks run:** Ran the live agent loop across price-trust, broad-mainstream, requirement-units, wrong-category, and non-product-pages batches. Also ran a direct live check for `cordless drill`, `$200`, `DeWalt or Milwaukee, battery included`.
+
+**Before/after proof:** Before this change, page and price trust rules were scattered and brand-alternative phrases could stay vague. After this change, tests confirm non-product pages cannot become product cards, suspicious prices cannot pass budget checks, evidence-only URLs cannot become product buttons, and brand alternatives become firm brand filters.
+
+**Remaining issues:** The live drill check still showed close matches but no exact matches because price evidence was missing/not trusted and `battery included` evidence was not strong enough. This should be improved through better live price discovery and kit/battery evidence enrichment, not by weakening price trust.
+
+**Next recommended step:** Improve price discovery and battery-included evidence enrichment for broad tool searches, then rerun live agents.
+
 ## Codex Run - 2026-06-20 01:00
 
 **Goal:** Fix all issues found by the advanced live QA sweep.

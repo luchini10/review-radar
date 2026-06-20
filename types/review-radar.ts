@@ -217,6 +217,36 @@ export type ProductPriceConfidence =
   | "unverified"
   | "conflicting";
 
+export type ProductEligibilityVerdict = {
+  status:
+    | "buyable_product"
+    | "likely_product"
+    | "evidence_only"
+    | "listing_or_search"
+    | "non_product"
+    | "unknown";
+  confidence: "high" | "medium" | "low";
+  canRenderAsProductCard: boolean;
+  canUseAsEvidence: boolean;
+  reasons: string[];
+};
+
+export type ProductPriceTrust = {
+  status:
+    | "verified"
+    | "usable"
+    | "needs_verification"
+    | "suspicious"
+    | "conflicting"
+    | "missing";
+  price: number | null;
+  canUseForBudget: boolean;
+  canBeExactWithBudget: boolean;
+  displayText: string;
+  warnings: string[];
+  sources: string[];
+};
+
 export type ProductReliabilityCheck = {
   canBeBestMatch: boolean;
   identityConfidence: "high" | "medium" | "low";
@@ -441,6 +471,8 @@ export type ProductRecommendation = {
   canonicalIdentity?: CanonicalProductIdentity;
   metadata?: ProductMetadata;
   marketConfidence?: ProductCredibility;
+  priceTrust?: ProductPriceTrust;
+  productEligibility?: ProductEligibilityVerdict;
   reliabilityCheck?: ProductReliabilityCheck;
   scoreBreakdown?: ScoreBreakdown;
 };

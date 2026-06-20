@@ -4,6 +4,111 @@ Date: 2026-06-18
 Repo: `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 Source-of-truth map: `ReviewRadar-Overview.md`
 
+## Codex QA Update - 2026-06-20 09:10
+
+## Loop Scope
+
+Implement Phase 1 of the broader product-accuracy plan: add a shared product-type intent layer and verify that ReviewRadar keeps close-but-wrong product types out of exact matches.
+
+## Root Causes
+
+ReviewRadar had category matching that was too broad. A request like `toaster oven` could accidentally inherit general `oven` wording, which made wall ovens, ranges, stoves, or cooktops look related enough to pass some checks.
+
+Another problem was that product validation could rely too much on the product's assigned category text. If the AI or a retailer called something a toaster oven, that label could help it pass even when the actual product evidence pointed to a different product type.
+
+## Generalized Fix
+
+- Added a reusable product-type intent classifier in `lib/productTypeIntent.ts`.
+- Wired it into requirement validation and Serper pre-filtering.
+- Made exact category matching depend on product evidence, not just the assigned category label.
+- Kept thin evidence conservative: uncertain products become `Needs Verification` instead of exact matches.
+- Updated toaster-oven search expansion so it stays focused on countertop/toaster-oven wording.
+
+This fix is reusable across product families. The first rules cover toaster ovens, microwaves, ranges, office chairs, TV stands, mattresses, bed frames, and pressure washers, and the layer is designed to grow as QA finds new product-type confusions.
+
+## Verification
+
+| Check | Result |
+| --- | --- |
+| Focused product-type tests | Passed |
+| Typecheck | Passed |
+| Lint | Passed |
+| Full unit tests | Passed, 471/471 |
+| Production build | Passed |
+| Direct live toaster-oven API test | Passed |
+
+## Before / After Proof
+
+Before the fix:
+
+- `toaster oven` could be treated too much like broad `oven`.
+- A wall oven or range could get help from broad oven synonyms.
+- The app could trust a product's assigned category too much.
+
+After the fix:
+
+- The live `toaster oven`, `$300`, `countertop, easy to clean, good reviews` search returned 2 exact toaster-oven matches and 5 close toaster-oven matches.
+- No displayed result contained wall oven, range, stove, cooktop, or full-size oven wording.
+- Focused tests now prove wall ovens and ranges do not pass toaster-oven validation.
+
+## Remaining Notes
+
+This is Phase 1 only. It improves the shared product-type gate, but more phases are still needed for stronger category profiles, better candidate generation, and deeper evidence-based ranking.
+
+## Codex QA Update - 2026-06-20 07:12
+
+## Loop Scope
+
+Implement the shared product trust layer and verify it with deterministic checks, live agents, and a direct live recheck.
+
+## Root Causes
+
+ReviewRadar had several separate page and price trust rules. That made repeated bugs more likely because one path could reject a bad product page or bad price while another path still allowed it.
+
+The live agent loop also exposed a separate brand/detail parsing issue: phrases like `DeWalt or Milwaukee` and `Sony or Bose` were being treated as details that needed review instead of firm brand alternatives.
+
+## Generalized Fix
+
+- Added one shared product-card eligibility classifier.
+- Added one shared product-price trust validator.
+- Wired both into Serper intake, final validation, product URL selection, requirement validation, scoring, price display, and QA workers.
+- Added brand-alternative parsing for common phrases like `Brand A or Brand B`.
+- Added safe product-line aliases for mainstream tool lines such as DeWalt `20V MAX` and Milwaukee `M12 FUEL`.
+
+These fixes are reusable across categories. They do not hardcode one product, one store, or one current search result.
+
+## Verification
+
+| Check | Result |
+| --- | --- |
+| Focused trust-layer tests | Passed |
+| Focused brand/requirement tests | Passed |
+| Typecheck | Passed |
+| Lint | Passed |
+| Full unit tests | Passed, 465/465 |
+| Production build | Passed |
+| Deterministic agent loop | Passed with no repeated failures |
+| Live agent loop | Found one remaining broad-search issue |
+
+## Before / After Proof
+
+Before the fix:
+
+- Page-type rules, product-button rules, price-trust rules, and QA-worker checks were scattered.
+- Bad pages and weak prices could be blocked in one place but missed in another.
+- Brand alternatives like `Sony or Bose` and `DeWalt or Milwaukee` were not always promoted to firm brand filters.
+
+After the fix:
+
+- The shared product eligibility classifier blocks evidence-only pages from becoming product cards or CTA links.
+- The shared price trust validator keeps weak, missing, suspicious, or conflicting prices out of exact budget matches.
+- QA workers now flag the same page/price classes that the app blocks.
+- Brand-alternative phrases now become real brand filters, and safe tool-line aliases can satisfy omitted parent-brand evidence.
+
+## Remaining Notes
+
+A direct live check for `cordless drill`, `$200`, `DeWalt or Milwaukee, battery included` still returned close matches but no exact matches. The remaining blocker was safer than before: prices were missing/not trusted and `battery included` was not verified strongly enough. That should be fixed later by improving live price discovery and kit/battery evidence enrichment, not by weakening the trust gate.
+
 ## Codex QA Update - 2026-06-20 01:00
 
 ## Loop Scope
@@ -901,6 +1006,157 @@ See `docs/agent-loop-report.md`.
 
 - price_evidence_or_variant_price_gap: 1 finding(s), priority 9
 - non_product_page_leakage: 1 finding(s), priority 9
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-06-20T05:05:56.009Z
+
+- **run id:** agent-loop-2026-06-20T05-05-42-076Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust, broad-mainstream, requirement-units, wrong-category, non-product-pages
+- **parallel:** 2
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 2224ms |
+| lint | Passed | 5345ms |
+| unit tests | Passed | 4389ms |
+| deterministic eval pipeline | Passed | 405ms |
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-06-20T05:17:41.339Z
+
+- **run id:** agent-loop-2026-06-20T05-07-20-774Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** live
+- **batches:** price-trust, broad-mainstream, requirement-units, wrong-category, non-product-pages
+- **parallel:** 2
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 2227ms |
+| lint | Passed | 4926ms |
+| unit tests | Passed | 4113ms |
+| deterministic eval pipeline | Passed | 374ms |
+
+### Repeated Failure Candidates
+
+- discovery_or_validation_too_strict: 1 finding(s), priority 9
+- non_product_page_leakage: 1 finding(s), priority 9
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-06-20T10:48:20.695Z
+
+- **run id:** agent-loop-2026-06-20T10-48-04-978Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust, broad-mainstream, requirement-units, wrong-category, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 2278ms |
+| lint | Passed | 5556ms |
+| unit tests | Passed | 4707ms |
+| deterministic eval pipeline | Passed | 402ms |
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-06-20T11:03:46.965Z
+
+- **run id:** agent-loop-2026-06-20T10-53-00-989Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** live
+- **batches:** price-trust, broad-mainstream, requirement-units, wrong-category, non-product-pages
+- **parallel:** 2
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 2170ms |
+| lint | Passed | 5026ms |
+| unit tests | Passed | 4372ms |
+| deterministic eval pipeline | Passed | 402ms |
+
+### Repeated Failure Candidates
+
+- discovery_or_validation_too_strict: 1 finding(s), priority 9
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-06-20T11:12:08.217Z
+
+- **run id:** agent-loop-2026-06-20T11-11-53-337Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust, broad-mainstream, requirement-units, wrong-category, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 2187ms |
+| lint | Passed | 5240ms |
+| unit tests | Passed | 4295ms |
+| deterministic eval pipeline | Passed | 398ms |
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
 
 ### Next Task
 

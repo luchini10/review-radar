@@ -10,13 +10,25 @@ import { verifyMissingRequirementEvidence } from "../lib/requirementEvidenceResc
 import { collectReachableCitationUrls } from "../lib/citationUrlVerification.ts";
 import { createRecommendationPostHandler } from "../app/api/recommendations/route.ts";
 
+const verifiedAt = "2026-01-01T00:00:00.000Z";
+
+function field(value) {
+  return {
+    confidence: "High",
+    sourceType: "json_ld",
+    sourceUrl: "https://shop.example.com/p/xdr2000-drill-kit",
+    value,
+    verifiedAt,
+  };
+}
+
 function buildProduct(overrides = {}) {
   return {
     recommendation_type: "Best Match",
     name: "Example PowerPro 20V Brushless Cordless Drill Driver Kit XDR2000",
     category: "power drill",
     product_page_url: "https://shop.example.com/p/xdr2000-drill-kit",
-    product_image_url: "",
+    product_image_url: "https://shop.example.com/xdr2000.jpg",
     why_recommended: "Strong cordless drill with kit accessories.",
     pros: ["Compact and light.", "Strong reviews for reliability."],
     cons: ["Chuck wobble reported rarely."],
@@ -34,6 +46,17 @@ function buildProduct(overrides = {}) {
         what_it_supports: "Listing data.",
       },
     ],
+    metadata: {
+      offers: [
+        {
+          availability: field("In stock"),
+          price: field(199),
+          priceCurrency: field("USD"),
+          retailer: "shop.example.com",
+          url: "https://shop.example.com/p/xdr2000-drill-kit",
+        },
+      ],
+    },
     ...overrides,
   };
 }

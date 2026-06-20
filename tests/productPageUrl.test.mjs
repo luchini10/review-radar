@@ -210,7 +210,7 @@ describe("product page URL selection", () => {
       }),
     );
 
-    assert.equal(link?.url, reviewUrl);
+    assert.equal(link, null);
     assert.notEqual(link?.url, wrongOfficialUrl);
     assert.notEqual(link?.label, "View Official Product Page");
   });
@@ -233,7 +233,7 @@ describe("product page URL selection", () => {
     assert.notEqual(link?.label, "View Official Product Page");
   });
 
-  it("falls back to citations without inventing a product page", () => {
+  it("does not promote evidence-only citations into product CTA links", () => {
     const sourceUrl = "https://www.nytimes.com/wirecutter/reviews/best-tablet/";
     const link = getProductPageLink(
       buildProduct({
@@ -252,9 +252,7 @@ describe("product page URL selection", () => {
       }),
     );
 
-    assert.equal(link?.url, sourceUrl);
-    assert.equal(link?.type, "source");
-    assert.equal(link?.label, "View Source Page");
+    assert.equal(link, null);
   });
 
   it("does not label official lineup pages as specific product pages", () => {

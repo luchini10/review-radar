@@ -12,10 +12,10 @@ import {
 } from "./productCredibility.ts";
 import {
   formatDollars,
-  parseBestProductPriceText,
   parseMaxBudgetAmount,
-  plausibleProductPrice,
 } from "./priceParsing.ts";
+import { productRecommendationEligibility } from "./productEligibility.ts";
+import { assessProductPriceTrust } from "./productPriceTrust.ts";
 import { assessProductReliability } from "./productReliability.ts";
 import { baseProductCategoryFromQuery } from "./productCategory.ts";
 import type {
@@ -39,24 +39,13 @@ const broadRetailerDomains = [
 ];
 
 function productPrice(product: ProductRecommendation) {
-  if (product.reliabilityCheck?.price !== undefined) {
-    return product.reliabilityCheck.price;
+  if (product.priceTrust) {
+    return product.priceTrust.canUseForBudget ? product.priceTrust.price : null;
   }
 
-  const offerPrices =
-    product.metadata?.offers
-      .map((offer) => offer.price.value)
-      .filter((price): price is number => price !== null && Number.isFinite(price)) ||
-    [];
+  const trust = assessProductPriceTrust(product);
 
-  return plausibleProductPrice(
-    offerPrices,
-    parseBestProductPriceText(product.estimated_price_range),
-    {
-      category: product.category,
-      productName: product.name,
-    },
-  );
+  return trust.canUseForBudget ? trust.price : null;
 }
 
 function budgetAmount(input: RecommendationApiRequest) {
@@ -698,10 +687,14 @@ export function scoreProduct(
 
 function withScore(product: ProductRecommendation, input: RecommendationApiRequest) {
   const canonicalProduct = withHonestConfidence(withCanonicalIdentity(product));
+  const productEligibility = productRecommendationEligibility(canonicalProduct);
+  const priceTrust = assessProductPriceTrust(canonicalProduct);
   const marketConfidence = assessProductCredibility(canonicalProduct, input);
   const productWithMarketConfidence = {
     ...canonicalProduct,
     marketConfidence,
+    priceTrust,
+    productEligibility,
   };
   const reliabilityCheck = assessProductReliability(productWithMarketConfidence);
 
@@ -870,6 +863,10 @@ function withCloseMatch(product: ProductRecommendation): ProductRecommendation {
 }
 
 function reliableEnoughForBestMatch(product: ProductRecommendation) {
+  if (product.productEligibility?.canRenderAsProductCard === false) {
+    return false;
+  }
+
   if (product.reliabilityCheck?.canBeBestMatch === false) {
     return false;
   }

@@ -1128,6 +1128,20 @@ function classifyImportantDetails(value: string | undefined) {
   const preferred: StructuredConstraint[] = [];
   const ambiguous: StructuredConstraint[] = [];
 
+  function addBrandRequirements(brands: string[]) {
+    brands.forEach((brand) =>
+      addUnique(
+        required,
+        constraint(
+          "brand",
+          canonicalBrand(brand),
+          `Brand: ${canonicalBrand(brand)}`,
+          "important_details",
+        ),
+      ),
+    );
+  }
+
   for (const part of sentenceParts(value)) {
     const avoidValue = parseAvoidPart(part);
     const featurePart = avoidValue ? removeAvoidClause(part) : part;
@@ -1149,17 +1163,7 @@ function classifyImportantDetails(value: string | undefined) {
       const brands = detectKnownBrands(requiredValue);
 
       if (brands.length > 0) {
-        brands.forEach((brand) =>
-          addUnique(
-            required,
-            constraint(
-              "brand",
-              canonicalBrand(brand),
-              `Brand: ${canonicalBrand(brand)}`,
-              "important_details",
-            ),
-          ),
-        );
+        addBrandRequirements(brands);
         continue;
       }
 
@@ -1206,6 +1210,15 @@ function classifyImportantDetails(value: string | undefined) {
       featurePart,
       "important_details",
     );
+    const brands = detectKnownBrands(featurePart);
+
+    if (
+      brands.length > 0 &&
+      (brands.length > 1 || /\b(?:brand|brands|from|by|only)\b/i.test(featurePart))
+    ) {
+      addBrandRequirements(brands);
+      continue;
+    }
 
     if (colors.length || materials.length || features.length || requiredFeatures.length) {
       colors.forEach((item) => addUnique(preferred, item));

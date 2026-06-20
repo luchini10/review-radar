@@ -82,6 +82,13 @@ Orchestrated in `app/api/recommendations/route.ts` → `handleRecommendationPost
 17. **Optional narration** (`REVIEW_RADAR_LLM_NARRATION=on`): a cheap explainer LLM pass that rewrites only the displayed cards' prose (`lib/finalSynthesis.ts`), guarded so it cannot change the set, prices, specs, or citations.
 18. **Finalize**: `prioritizeProductPageUrlsInResult` + `removeUserHiddenResultFields` (strips `scoreBreakdown`; hides `specConstraints` unless debug). Respond `{ result }` (+`debug` when `x-reviewradar-debug: true` and non-prod).
 
+### Shared product trust layer
+- `lib/productEligibility.ts` is the central "can this be a product card?" classifier. Serper intake, final result validation, product-page URL selection, ranking/requirement gating, and QA workers should call it instead of keeping separate page-filter lists.
+- `lib/productPriceTrust.ts` is the central "can this price be trusted?" validator. It separates verified/usable prices from vague ceilings, financing amounts, missing prices, suspicious tiny prices, and conflicting price evidence.
+- `lib/productTypeIntent.ts` is the central "is this the requested kind of product?" classifier. It separates exact product-type matches from substitutes, complements/accessories, irrelevant products, and products that need more verification. This prevents close-but-wrong products, such as wall ovens or ranges for a toaster-oven search, from passing just because they share broad category words.
+- Exact Best Matches with a shopper budget now require a renderable product page plus trusted in-budget price evidence. Weak, missing, suspicious, or conflicting prices should become close matches that need verification, not exact matches.
+- Evidence pages such as reviews, Reddit/forums, buying guides, support pages, category/search pages, and comparison pages may still help the research, but they should not become product cards or primary CTA links.
+
 ### Discovery internals (`lib/search/serper.ts` → `searchSerperForProducts`, ~line 2370)
 - **Depth budgets** from `SEARCH_DEPTH` via `SEARCH_DEPTH_CONFIGS` (`lib/search/sourcePacks.ts`): `dev` / `standard` / `deep` set max shopping/organic/retailer/direct queries, `maxEnrichedProducts`, and `maxRawCandidates`.
 - **Search types** (each wraps `fetchSerper`): `searchSerperShopping`, `searchSerperOrganic`, `searchSerperDirectRetailer`, `searchSerperOrganicEvidence`, plus image/video evidence. Results normalized into `RawProductCandidate` (`normalizeSerperShoppingResults` etc.).
@@ -110,6 +117,10 @@ Orchestrated in `app/api/recommendations/route.ts` → `handleRecommendationPost
 `ambiguousConstraints`, `summary`.
 
 **Strictness** (`StructuredConstraintStrictness`): `hard` | `soft` | `dealbreaker`.
+
+Product-type intent is checked separately from broad category words. Exact matches should satisfy the requested product type using product evidence, not just a self-assigned category label. For example, `toaster oven` can match countertop toaster ovens and air-fryer toaster ovens, but should not match wall ovens, freestanding ranges, stoves, or cooktops. If evidence is too thin, the product should be treated as needing verification rather than being promoted to an exact match.
+
+Brand alternatives in important details, such as `Sony or Bose` or `DeWalt or Milwaukee`, should become hard brand constraints. Safe product-line aliases such as DeWalt `20V MAX` and Milwaukee `M12 FUEL` are handled in `lib/brandMatching.ts` so retailer titles that omit the parent brand can still match when the line name is specific enough.
 
 **3-state validation** (`validateProductAgainstRequirements`, `lib/requirementValidation.ts`):
 each requirement resolves to **pass / fail / unknown**:

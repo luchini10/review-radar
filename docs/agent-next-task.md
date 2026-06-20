@@ -1,48 +1,51 @@
 # Agent Next Task
 
-Generated: 2026-06-20T04:35:58.337Z
-Run: agent-loop-2026-06-20T04-25-03-236Z
+Generated: 2026-06-20T11:13:00Z
 
 ## Selected Root Cause
 
-Investigate shared root cause: **price_evidence_or_variant_price_gap**.
+Investigate shared root cause: **price_and_required_kit_evidence_too_thin_for_broad_tool_searches**.
 
-Priority score: 9
-Frequency: 1
-Categories affected: 1
-Exact-match affected findings: 1
+## Failing Example
 
-## Failing Examples
-
-- counter depth refrigerator (wrong-category): suspicious_low_price - Suspiciously low price text for LG 23 cu. ft. Side by Side Refrigerator with External Ice and Water Dispenser LRSXC2306S: $100, $100.
+- Product category: `cordless drill`
+- Budget: `$200`
+- Important details: `DeWalt or Milwaukee, battery included`
+- Live result: returned close matches but no exact matches.
+- What improved already: `DeWalt or Milwaukee` now parses as hard brand alternatives, and safe line aliases such as DeWalt `20V MAX` and Milwaukee `M12 FUEL` can satisfy brand evidence.
+- What still failed: the close matches had missing or untrusted prices, and several did not verify `battery included` strongly enough.
 
 ## Suspected Shared Modules
 
-- lib/priceParsing.ts
-- lib/productAssets.ts
-- lib/recommendationScoring.ts
+- `lib/search/serper.ts`
+- `lib/searchQueryExpansion.ts`
+- `lib/productEvidence.ts`
+- `lib/requirementEvidenceRescue.ts`
+- `lib/requirementValidation.ts`
+- `lib/productPriceTrust.ts`
 
 ## Forbidden Fixes
 
-- Do not hardcode one product, store, brand, or category.
-- Do not weaken hard requirements to make a bad result pass.
-- Do not hide failures in the UI instead of fixing shared logic.
-- Do not change public API or response shape without explicit approval.
+- Do not mark missing prices as exact budget matches.
+- Do not assume every drill kit includes a battery unless evidence says so.
+- Do not hardcode one DeWalt or Milwaukee product.
+- Do not weaken the shared product trust layer to make this search pass.
 
 ## Required Tests
 
-- Add regression coverage for the root cause using at least two examples when possible.
-- Include a category-agnostic test if the failure can happen across categories.
-- Keep existing exact/near match behavior intact unless the test proves it was wrong.
+- Add regression coverage for broad tool searches where the title or metadata proves a kit includes a battery.
+- Add regression coverage showing tool-only or bare-tool drills still fail `battery included`.
+- Add coverage that trusted retailer/shopping prices can promote a qualifying in-budget drill to exact, while missing prices stay close matches.
+- Include at least one non-drill category if the fix touches generic price or kit/accessory evidence logic.
 
 ## Required Verification
 
-- npm run typecheck
-- npm run lint
-- npm test
-- npm run qa:loop -- --batches wrong-category
-- npm run build
+- `npm run typecheck`
+- `npm run lint`
+- `npm test`
+- Direct live API recheck for `cordless drill`, `$200`, `DeWalt or Milwaukee, battery included`
+- `npm run build`
 
 ## Stop Condition
 
-Stop after one generalized fix and update docs/qa-loop-results.md with before/after proof.
+Stop after one generalized fix that improves trusted price discovery and required kit/battery evidence without weakening exact-match safety.

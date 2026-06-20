@@ -22,6 +22,7 @@ const brandDefinitions: BrandDefinition[] = [
   { canonical: "Samsung", aliases: ["samsung"] },
   { canonical: "LG", aliases: ["lg"] },
   { canonical: "Sony", aliases: ["sony"] },
+  { canonical: "Bose", aliases: ["bose"] },
   { canonical: "Dell", aliases: ["dell"] },
   { canonical: "HP", aliases: ["hp"] },
   { canonical: "Lenovo", aliases: ["lenovo"] },
@@ -32,8 +33,8 @@ const brandDefinitions: BrandDefinition[] = [
   { canonical: "Dyson", aliases: ["dyson"] },
   { canonical: "Shark", aliases: ["shark"] },
   { canonical: "Bissell", aliases: ["bissell"] },
-  { canonical: "DeWalt", aliases: ["dewalt", "de walt"] },
-  { canonical: "Milwaukee", aliases: ["milwaukee"] },
+  { canonical: "DeWalt", aliases: ["dewalt", "de walt", "20v max", "20 volt max", "atomic 20v", "atomic 20 volt", "flexvolt"] },
+  { canonical: "Milwaukee", aliases: ["milwaukee", "m12 fuel", "m18 fuel", "m12 redlithium", "m18 redlithium"] },
   { canonical: "Makita", aliases: ["makita"] },
   { canonical: "Ryobi", aliases: ["ryobi"] },
 ];

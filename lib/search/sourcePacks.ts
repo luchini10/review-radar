@@ -362,6 +362,12 @@ const categorySynonyms: Record<string, string[]> = {
   desk: ["desk", "computer desk", "writing desk", "desk with drawers"],
   microwave: ["microwave", "microwave oven", "countertop microwave"],
   monitor: ["monitor", "display", "screen"],
+  "toaster oven": [
+    "toaster oven",
+    "countertop toaster oven",
+    "countertop convection oven",
+    "air fryer toaster oven",
+  ],
   oven: ["oven", "gas range", "freestanding gas range", "range", "stove"],
   refrigerator: ["refrigerator", "fridge", "compact refrigerator", "full size refrigerator"],
   "running shoes": ["running shoes", "running sneakers", "road running shoes"],
@@ -489,9 +495,9 @@ function sizeText(value: string | undefined) {
 function bestRetailerBaseQuery(input: RecommendationApiRequest) {
   const baseCategory = baseProductCategoryFromQuery(input.query);
   const normalized = normalize(baseCategory);
-  const synonyms = Object.entries(categorySynonyms).find(([key]) =>
-    normalized.includes(key),
-  )?.[1];
+  const synonyms = Object.entries(categorySynonyms)
+    .filter(([key]) => normalized.includes(key))
+    .sort((first, second) => second[0].length - first[0].length)[0]?.[1];
   const category = synonyms?.[1] || baseCategory;
   const features = Array.from(
     new Set([

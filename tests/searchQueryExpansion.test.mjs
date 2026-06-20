@@ -132,4 +132,16 @@ describe("search query expansion", () => {
     assert.match(joined, /under \$2000/);
     assert.doesNotMatch(joined, /fuel type gas/);
   });
+
+  it("keeps toaster oven searches focused on countertop/toaster oven wording", () => {
+    const queries = generateSearchQueries({
+      budget: "under $300",
+      query: "toaster oven",
+    });
+    const joined = queries.join("\n").toLowerCase();
+
+    assert.match(joined, /toaster oven/);
+    assert.match(joined, /countertop toaster oven|countertop convection oven|air fryer toaster oven/);
+    assert.doesNotMatch(joined, /\bgas range\b|\bfreestanding gas range\b|\bgas stove\b/);
+  });
 });

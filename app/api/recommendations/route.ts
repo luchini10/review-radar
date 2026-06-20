@@ -327,6 +327,8 @@ function removeUserHiddenProductFields(
 ): ProductRecommendation {
   const visibleProduct = { ...product };
   delete visibleProduct.scoreBreakdown;
+  delete visibleProduct.priceTrust;
+  delete visibleProduct.productEligibility;
 
   return visibleProduct;
 }

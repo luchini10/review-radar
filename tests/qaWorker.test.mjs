@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import { qaWorkerTestExports } from "../scripts/qa-worker.mjs";
 
 const {
+  analyzeLiveResult,
   isRetryableLiveFailure,
   liveFailureNote,
   liveFailureRootCause,
@@ -114,5 +115,90 @@ describe("QA worker search rotation", () => {
 
     assert.deepEqual(rotated.batch.searches, batch.searches);
     assert.equal(rotated.batch.rotation.enabled, false);
+  });
+});
+
+describe("live QA worker shared trust checks", () => {
+  it("flags exact matches that use non-product pages", () => {
+    const analyzed = analyzeLiveResult(
+      {
+        budget: "$200",
+        category: "basketball shoes",
+        priorities: "Nike only",
+      },
+      {
+        result: {
+          exactMatches: [
+            {
+              category: "basketball shoes",
+              citations: [
+                {
+                  title: "Basketball Shoes - Nike",
+                  url: "https://www.nike.com/w/mens-basketball-shoes-3glsmznik1zy7ok",
+                  what_it_supports: "Nike category page for many shoes.",
+                },
+              ],
+              estimated_price_range: "$120",
+              metadata: { offers: [] },
+              name: "Basketball Shoes - Nike",
+              product_page_url:
+                "https://www.nike.com/w/mens-basketball-shoes-3glsmznik1zy7ok",
+            },
+          ],
+          nearMatches: [],
+        },
+      },
+    );
+
+    assert.equal(
+      analyzed.suspiciousFlags.some(
+        (flag) =>
+          flag.failureType === "non_product_page" &&
+          flag.rootCause === "non_product_page_leakage" &&
+          flag.exactMatchAffected === true,
+      ),
+      true,
+    );
+  });
+
+  it("flags exact matches with weak or missing budget price evidence", () => {
+    const analyzed = analyzeLiveResult(
+      {
+        budget: "$300",
+        category: "office chair",
+        priorities: "white swivel with back support",
+      },
+      {
+        result: {
+          exactMatches: [
+            {
+              category: "office chair",
+              citations: [
+                {
+                  title: "Example chair product page",
+                  url: "https://www.example.com/products/example-office-chair-123",
+                  what_it_supports: "Specific chair product page.",
+                },
+              ],
+              estimated_price_range: "Under $300",
+              metadata: { offers: [] },
+              name: "Example White Swivel Office Chair",
+              product_page_url:
+                "https://www.example.com/products/example-office-chair-123",
+            },
+          ],
+          nearMatches: [],
+        },
+      },
+    );
+
+    assert.equal(
+      analyzed.suspiciousFlags.some(
+        (flag) =>
+          flag.failureType === "untrusted_exact_price" &&
+          flag.rootCause === "price_evidence_or_variant_price_gap",
+      ),
+      true,
+    );
   });
 });

@@ -4,19 +4,61 @@ import { describe, it } from "node:test";
 import { extractStructuredRequirements } from "../lib/requirementExtraction.ts";
 import { buildSearchCandidateFallbackResult } from "../lib/searchCandidateFallback.ts";
 
+const verifiedAt = "2026-01-01T00:00:00.000Z";
+
+function field(value, sourceType = "serper") {
+  return {
+    confidence: "High",
+    sourceType,
+    sourceUrl: "https://shop.example.com/product",
+    value,
+    verifiedAt,
+  };
+}
+
+function priceFromText(value) {
+  const matches = [...(value || "").matchAll(/\$\s*([0-9]{1,3}(?:,[0-9]{3})+|[0-9]+)(?:\.\d{1,2})?/g)]
+    .map((match) => Number(match[1].replace(/,/g, "")))
+    .filter((price) => Number.isFinite(price) && price > 0);
+
+  return matches.length > 0 ? Math.min(...matches) : null;
+}
+
+function offer(price, url) {
+  return {
+    availability: field("In stock"),
+    price: field(price),
+    priceCurrency: field("USD"),
+    retailer: "shop.example.com",
+    url,
+  };
+}
+
 function buildSearchCandidate(overrides = {}) {
+  const estimatedPriceRange = overrides.estimated_price_range || "$899";
+  const productUrl =
+    overrides.product_page_url ||
+    "https://appliances.example.com/products/red-refrigerator";
+  const price = priceFromText(estimatedPriceRange);
+  const metadata = {
+    ...(overrides.metadata || {}),
+    offers:
+      overrides.metadata?.offers ||
+      (price === null ? [] : [offer(price, productUrl)]),
+  };
+
   return {
     recommendation_type: "Close Match",
     name: "Example Red Refrigerator",
     category: "Refrigerator",
-    product_page_url: "https://appliances.example.com/red-refrigerator",
+    product_page_url: productUrl,
     product_image_url: "https://appliances.example.com/red-refrigerator.jpg",
     why_recommended:
       "Search result metadata found a red refrigerator product page with current price evidence.",
     pros: ["Available in red.", "Specific refrigerator product page."],
     cons: ["Long-term review evidence may be limited from this source alone."],
     common_complaints: [],
-    estimated_price_range: "$899",
+    estimated_price_range: estimatedPriceRange,
     confidence_score: 60,
     source_consensus: "Weak",
     price_value_verdict:
@@ -30,7 +72,9 @@ function buildSearchCandidate(overrides = {}) {
         what_it_supports: "Search listing metadata supports price and red color.",
       },
     ],
+    metadata,
     ...overrides,
+    metadata,
   };
 }
 
@@ -183,6 +227,7 @@ describe("search candidate fallback", () => {
             ],
             why_recommended: `${testCase.expected} is a ${testCase.expectedBrand} ${testCase.query} under budget.`,
             metadata: {
+              offers: [offer(120, "https://shop.example.com/product")],
               brand: {
                 confidence: "High",
                 sourceType: "serper",

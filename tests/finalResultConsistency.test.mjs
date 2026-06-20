@@ -8,12 +8,41 @@ import {
   getUnexpectedProductMentions,
 } from "../lib/requirementValidation.ts";
 
+const verifiedAt = "2026-01-01T00:00:00.000Z";
+
+function field(value) {
+  return {
+    confidence: "High",
+    sourceType: "json_ld",
+    sourceUrl: "https://example.com/product",
+    value,
+    verifiedAt,
+  };
+}
+
+function offer(price) {
+  return {
+    availability: field("In stock"),
+    price: field(price),
+    priceCurrency: field("USD"),
+    retailer: "example.com",
+    url: "https://example.com/product",
+  };
+}
+
 function buildProduct(name, overrides = {}) {
+  const metadata = overrides.metadata || {
+    offers: [offer(699)],
+  };
+  const productUrl =
+    overrides.product_page_url ||
+    `https://example.com/product/${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+
   return {
     recommendation_type: "Best Match",
     name,
     category: "Couch",
-    product_page_url: "https://example.com/product",
+    product_page_url: productUrl,
     product_image_url: "https://example.com/product.jpg",
     why_recommended: `${name} is a beige couch that measures 60 inches wide.`,
     pros: ["Available in beige.", "Measures 60 inches wide."],
@@ -32,7 +61,9 @@ function buildProduct(name, overrides = {}) {
         what_it_supports: "Supports this fake test product.",
       },
     ],
+    metadata,
     ...overrides,
+    metadata,
   };
 }
 

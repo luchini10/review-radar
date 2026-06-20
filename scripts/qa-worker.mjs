@@ -4,6 +4,9 @@ import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join, resolve } from "node:path";
 import { spawn } from "node:child_process";
+import { productRecommendationEligibility } from "../lib/productEligibility.ts";
+import { assessProductPriceTrust } from "../lib/productPriceTrust.ts";
+import { parseMaxBudgetAmount } from "../lib/priceParsing.ts";
 
 const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const docsDir = join(repoRoot, "docs");
@@ -293,6 +296,84 @@ function suspiciousPriceFlags(products) {
   return flags;
 }
 
+function productEligibilityFlags(products, section) {
+  const flags = [];
+
+  for (const product of products) {
+    const eligibility =
+      product.productEligibility || productRecommendationEligibility(product);
+
+    if (
+      section === "exact" &&
+      (!eligibility.canRenderAsProductCard ||
+        eligibility.status === "evidence_only" ||
+        eligibility.status === "listing_or_search" ||
+        eligibility.status === "non_product")
+    ) {
+      flags.push({
+        exactMatchAffected: true,
+        failureType: "non_product_page",
+        rootCause: "non_product_page_leakage",
+        severity: "high",
+        note: `${product.name || "A result"} is not eligible to render as a product card: ${eligibility.reasons.join(" ")}`,
+      });
+    }
+
+    if (
+      section === "near" &&
+      (eligibility.status === "listing_or_search" ||
+        eligibility.status === "non_product")
+    ) {
+      flags.push({
+        exactMatchAffected: false,
+        failureType: "non_product_page",
+        rootCause: "non_product_page_leakage",
+        severity: "medium",
+        note: `${product.name || "A near match"} looks like a non-product page: ${eligibility.reasons.join(" ")}`,
+      });
+    }
+  }
+
+  return flags;
+}
+
+function priceTrustFlags(products, search) {
+  const budget = parseMaxBudgetAmount(search?.budget || "");
+
+  if (budget === null) {
+    return [];
+  }
+
+  const flags = [];
+
+  for (const product of products) {
+    const priceTrust = product.priceTrust || assessProductPriceTrust(product);
+
+    if (!priceTrust.canBeExactWithBudget || priceTrust.price === null) {
+      flags.push({
+        exactMatchAffected: true,
+        failureType: "untrusted_exact_price",
+        rootCause: "price_evidence_or_variant_price_gap",
+        severity: "high",
+        note: `${product.name || "An exact match"} has a budget, but price is ${priceTrust.status}: ${priceTrust.displayText}.`,
+      });
+      continue;
+    }
+
+    if (priceTrust.price > budget) {
+      flags.push({
+        exactMatchAffected: true,
+        failureType: "over_budget_exact",
+        rootCause: "price_budget_validation_gap",
+        severity: "high",
+        note: `${product.name || "An exact match"} is over budget: ${priceTrust.displayText} exceeds $${budget}.`,
+      });
+    }
+  }
+
+  return flags;
+}
+
 function summarizeDebug(debug) {
   if (!debug || typeof debug !== "object") {
     return undefined;
@@ -314,8 +395,11 @@ function analyzeLiveResult(search, body) {
   const exactNames = exact.map((product) => product.name).filter(Boolean);
   const nearNames = near.map((product) => product.name).filter(Boolean);
   const flags = [
+    ...productEligibilityFlags(exact, "exact"),
+    ...productEligibilityFlags(near, "near"),
     ...suspiciousNameFlags([...exactNames, ...nearNames]),
     ...suspiciousPriceFlags(exact),
+    ...priceTrustFlags(exact, search),
   ];
 
   if (exact.length === 0 && /broad|brand|mainstream|false_no_exact/i.test(search.expectedRisk || "")) {
@@ -432,7 +516,9 @@ async function runLiveBatch(batch, baseUrl) {
     const searchFindings = response.ok
       ? (analyzed.suspiciousFlags || []).map((flag) => ({
           ...flag,
-          exactMatchAffected: flag.failureType !== "wrong_product_type" || (analyzed.exactCount || 0) > 0,
+          exactMatchAffected:
+            flag.exactMatchAffected ??
+            (flag.failureType !== "wrong_product_type" || (analyzed.exactCount || 0) > 0),
           search,
         }))
       : [
@@ -518,8 +604,11 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
 }
 
 export const qaWorkerTestExports = {
+  analyzeLiveResult,
   isRetryableLiveFailure,
   liveFailureNote,
   liveFailureRootCause,
   pickRotatedSearches,
+  priceTrustFlags,
+  productEligibilityFlags,
 };

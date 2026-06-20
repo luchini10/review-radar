@@ -13,12 +13,11 @@ import {
   detectKnownBrands,
 } from "./brandMatching.ts";
 import { isComponentSubstitution } from "./formFactor.ts";
+import { productRecommendationEligibility } from "./productEligibility.ts";
+import { classifyProductTypeIntent } from "./productTypeIntent.ts";
 import { baseProductCategoryFromQuery } from "./productCategory.ts";
-import {
-  parseBestProductPriceText,
-  parseMaxBudgetAmount,
-  plausibleProductPrice,
-} from "./priceParsing.ts";
+import { parseMaxBudgetAmount } from "./priceParsing.ts";
+import { assessProductPriceTrust } from "./productPriceTrust.ts";
 import { sanitizeProsAndCons } from "./productCopySanitizer.ts";
 import {
   evaluateSpecConstraint,
@@ -78,6 +77,8 @@ type ProductLike = Pick<
   | "pros"
   | "why_recommended"
   | "metadata"
+  | "priceTrust"
+  | "productEligibility"
 >;
 
 type FilterableRecommendationResult = Omit<
@@ -144,7 +145,9 @@ const BROAD_RETAILER_DOMAINS = [
 const categorySynonyms: Record<string, string[]> = {
   couch: ["couch", "sofa", "loveseat", "sectional", "settee"],
   oven: ["oven", "range", "stove"],
+  "pull out couch": ["pull out couch", "sleeper", "sleeper sofa", "sofa bed", "couch", "sofa"],
   sofa: ["sofa", "couch", "loveseat", "sectional", "settee"],
+  "sofa bed": ["sofa bed", "sleeper", "sleeper sofa", "pull out couch", "couch", "sofa"],
 };
 
 const comparableFeatureValues: Record<string, string[]> = {
@@ -909,7 +912,10 @@ function productUrlLooksGeneric(url: string | undefined) {
 }
 
 function isSpecificProductRecommendation(product: ProductRecommendation) {
+  const eligibility = productRecommendationEligibility(product);
+
   return (
+    eligibility.canRenderAsProductCard &&
     !productNameLooksGeneric(product.name) &&
     !productUrlLooksGeneric(product.product_page_url)
   );
@@ -979,6 +985,18 @@ function hasMattressFurnitureConflict(product: ProductLike, category: string) {
 function hasConflictingProductType(product: ProductLike, category: string) {
   const requestedCategory = normalizeText(category);
   const evidenceText = productEvidenceTextWithoutAssignedCategory(product);
+
+  const typeIntent = classifyProductTypeIntent({
+    candidateText: evidenceText,
+    requestedText: requestedCategory,
+  });
+
+  if (
+    typeIntent.status === "irrelevant" ||
+    typeIntent.status === "complement"
+  ) {
+    return true;
+  }
 
   if (hasMattressFurnitureConflict(product, requestedCategory)) {
     return true;
@@ -1141,25 +1159,9 @@ function parseMaxBudget(value: string | undefined) {
   return parseMaxBudgetAmount(value);
 }
 
-// Returns the best (lowest) available price for budget comparison.
-// Uses the minimum offer price when structured offer data is present.
-// Falls back to the minimum extracted price from estimated_price_range so that
-// a product listed at "$449–$599" is treated as available from $449, not $599.
-function getProductBestAvailablePrice(product: ProductLike) {
-  const offerPrices =
-    product.metadata?.offers
-      ?.map((offer) => offer.price.value)
-      .filter((amount): amount is number => amount !== null && Number.isFinite(amount)) ||
-    [];
-
-  return plausibleProductPrice(
-    offerPrices,
-    parseBestProductPriceText(product.estimated_price_range),
-    {
-      category: product.category,
-      productName: product.name,
-    },
-  );
+// Budget checks only use prices trusted enough to compare against a hard cap.
+function getProductBudgetPriceTrust(product: ProductLike) {
+  return product.priceTrust || assessProductPriceTrust(product);
 }
 
 function formatDollars(value: number) {
@@ -1601,12 +1603,6 @@ function categoryTerms(category: string) {
     return [categorySynonyms[normalizedCategory]];
   }
 
-  for (const [key, synonyms] of Object.entries(categorySynonyms)) {
-    if (normalizedCategory.includes(key)) {
-      return [synonyms];
-    }
-  }
-
   return normalizedCategory
     .split(/\s+/)
     .filter((term) => term.length > 2 && !["out", "for", "with"].includes(term))
@@ -1616,6 +1612,15 @@ function categoryTerms(category: string) {
 function checkCategory(product: ProductLike, category: string) {
   if (hasConflictingProductType(product, category)) {
     return false;
+  }
+
+  const typeIntent = classifyProductTypeIntent({
+    candidateText: productEvidenceTextWithoutAssignedCategory(product),
+    requestedText: category,
+  });
+
+  if (typeIntent.requestedType) {
+    return typeIntent.canBeExactMatch;
   }
 
   const groups = categoryTerms(category);
@@ -2243,15 +2248,16 @@ export function validateProductAgainstRequirements(
     const effectiveBudgetLimit = budgetLimitForProduct(
       budgetLimit,
     );
-    const productBestPrice = getProductBestAvailablePrice(product);
+    const priceTrust = getProductBudgetPriceTrust(product);
+    const productBestPrice = priceTrust.price;
     const label = `Budget: ${formatDollars(budgetLimit)} or less`;
 
-    if (productBestPrice === null) {
+    if (!priceTrust.canUseForBudget || productBestPrice === null) {
       unknownRequirements.push(label);
       addRequirementComparison(
         requirementComparisons,
         label,
-        "Price: not verified",
+        `Price: ${priceTrust.displayText}`,
         "unknown",
       );
     } else if (productBestPrice <= effectiveBudgetLimit) {
@@ -2559,7 +2565,14 @@ export function filterResultByRequirements<T extends FilterableRecommendationRes
     isSpecificProductRecommendation,
   );
   const checkedRecommendations = dedupedRecommendations.map((recommendation) => {
-    const validation = validateProductAgainstRequirements(recommendation, {
+    const productEligibility = productRecommendationEligibility(recommendation);
+    const priceTrust = assessProductPriceTrust(recommendation);
+    const trustedRecommendation = {
+      ...recommendation,
+      priceTrust,
+      productEligibility,
+    };
+    const validation = validateProductAgainstRequirements(trustedRecommendation, {
       avoid: requirements.avoid,
       budget: requirements.budget,
       category: baseProductCategoryFromQuery(requirements.query),
@@ -2568,7 +2581,7 @@ export function filterResultByRequirements<T extends FilterableRecommendationRes
       selectedFeatures: requirements.selectedFeatures,
     });
     const cleanedRecommendation = reconcileBudgetCopyForValidation(
-      recommendation,
+      trustedRecommendation,
       validation,
     );
     const sanitizedRecommendation = sanitizeProsAndCons(cleanedRecommendation);

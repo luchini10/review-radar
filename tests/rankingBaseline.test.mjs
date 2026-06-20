@@ -131,7 +131,9 @@ function scenarioB() {
     buildProduct(name, {
       category: "headphones",
       estimated_price_range: `$${price}`,
-      product_page_url: host,
+      product_page_url: `https://shop.example.com/products/${name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")}`,
       pros: ["Comfortable fit.", "Clear sound."],
       why_recommended: `${name} is a well-reviewed pair of headphones.`,
       citations: [
@@ -188,9 +190,9 @@ describe("ranking baseline snapshot", () => {
 
     assert.deepEqual(actual, {
       exact: [
-        { name: "Wave One", rank: 1, total: 159.83, match: 262.84 },
-        { name: "Pulse Three", rank: 2, total: 154.52, match: 259.39 },
-        { name: "Echo Two", rank: 3, total: 128.45, match: 226.34 },
+        { name: "Wave One", rank: 1, total: 167.99, match: 275.89 },
+        { name: "Pulse Three", rank: 2, total: 157.68, match: 261.45 },
+        { name: "Echo Two", rank: 3, total: 131.61, match: 228.39 },
       ],
       near: [],
     });

@@ -1,5 +1,9 @@
+import { classifyProductEligibility } from "./productEligibility.ts";
+
 type CitationLike = {
+  title?: string;
   url: string;
+  what_it_supports?: string;
 };
 
 type RecommendationLike = {
@@ -388,11 +392,23 @@ export function filterResultToVerifiedCitations<T extends RecommendationResultLi
           return false;
         }
 
-        const primaryUrl = recommendation.citations[0]?.url ?? "";
+        const primaryCitation = recommendation.citations[0];
+        const primaryUrl = primaryCitation?.url ?? "";
+        const eligibility = classifyProductEligibility({
+          name: recommendation.name,
+          productName: recommendation.name,
+          snippet: primaryCitation?.what_it_supports,
+          sourceTitle: primaryCitation?.title || recommendation.name,
+          sourceType: "citation",
+          url: primaryUrl,
+        });
 
         // Drop category pages, article roundups, and listing pages the AI
         // cited as products — they should never appear in exactMatches/nearMatches.
-        if (isNonProductPageResult(recommendation.name, primaryUrl)) {
+        if (
+          !eligibility.canRenderAsProductCard ||
+          isNonProductPageResult(recommendation.name, primaryUrl)
+        ) {
           return false;
         }
 

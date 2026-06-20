@@ -8,9 +8,9 @@ import {
 
 function buildRecommendation(overrides = {}) {
   return {
-    citations: [{ url: "https://example.com/review" }],
+    citations: [{ url: "https://example.com/product/example-product-a-123" }],
     confidence_score: 92,
-    name: "Example Product A",
+    name: "Example Product Model A123",
     recommendation_type: "Best Match",
     source_consensus: "Strong",
     ...overrides,
@@ -25,7 +25,7 @@ describe("recommendation result trust validation", () => {
   it("allows a supported recommendation with a verified citation URL", () => {
     const issue = getRecommendationResultIssue(
       buildResult(),
-      new Set(["https://example.com/review"]),
+      new Set(["https://example.com/product/example-product-a-123"]),
     );
 
     assert.equal(issue, null);
@@ -34,7 +34,7 @@ describe("recommendation result trust validation", () => {
   it("treats OpenAI tracking parameters as equivalent for citation checks", () => {
     const issue = getRecommendationResultIssue(
       buildResult(),
-      new Set(["https://example.com/review?utm_source=openai"]),
+      new Set(["https://example.com/product/example-product-a-123?utm_source=openai"]),
     );
 
     assert.equal(issue, null);
@@ -47,19 +47,19 @@ describe("recommendation result trust validation", () => {
           citations: [
             {
               title: "Original model citation",
-              url: "https://www.example.com/specific-review",
+              url: "https://www.example.com/product/original-model-123",
               what_it_supports: "A product-specific claim.",
             },
           ],
         }),
       ]),
-      new Set(["https://example.com/best-list?utm_source=openai"]),
+      new Set(["https://example.com/products/original-model-123?utm_source=openai"]),
     );
 
     assert.equal(filtered.recommendations.length, 1);
     assert.equal(
       filtered.recommendations[0].citations[0].url,
-      "https://example.com/best-list",
+      "https://example.com/products/original-model-123",
     );
     assert.equal(
       filtered.recommendations[0].citations[0].what_it_supports,
@@ -75,7 +75,7 @@ describe("recommendation result trust validation", () => {
           source_consensus: "Strong",
         }),
       ]),
-      new Set(["https://example.com/review"]),
+      new Set(["https://example.com/product/example-product-a-123"]),
     );
 
     assert.equal(filtered.recommendations[0].source_consensus, "Mixed");
@@ -84,7 +84,7 @@ describe("recommendation result trust validation", () => {
   it("flags no strong results found when there are no recommendations", () => {
     const issue = getRecommendationResultIssue(
       buildResult([]),
-      new Set(["https://example.com/review"]),
+      new Set(["https://example.com/product/example-product-a-123"]),
     );
 
     assert.equal(issue, "no_reliable_evidence");
@@ -99,7 +99,7 @@ describe("recommendation result trust validation", () => {
   it("rejects recommendations without citations", () => {
     const issue = getRecommendationResultIssue(
       buildResult([buildRecommendation({ citations: [] })]),
-      new Set(["https://example.com/review"]),
+      new Set(["https://example.com/product/example-product-a-123"]),
     );
 
     assert.equal(issue, "no_reliable_evidence");
@@ -117,7 +117,7 @@ describe("recommendation result trust validation", () => {
   it("rejects a strong consensus score below the strong-confidence range", () => {
     const issue = getRecommendationResultIssue(
       buildResult([buildRecommendation({ confidence_score: 80 })]),
-      new Set(["https://example.com/review"]),
+      new Set(["https://example.com/product/example-product-a-123"]),
     );
 
     assert.equal(issue, "bad_structured_output");
@@ -131,7 +131,7 @@ describe("recommendation result trust validation", () => {
           source_consensus: "Weak",
         }),
       ]),
-      new Set(["https://example.com/review"]),
+      new Set(["https://example.com/product/example-product-a-123"]),
     );
 
     assert.equal(issue, "bad_structured_output");
@@ -145,7 +145,7 @@ describe("recommendation result trust validation", () => {
           source_consensus: "Niche",
         }),
       ]),
-      new Set(["https://example.com/review"]),
+      new Set(["https://example.com/product/example-product-a-123"]),
     );
 
     assert.equal(issue, "bad_structured_output");
@@ -155,7 +155,7 @@ describe("recommendation result trust validation", () => {
     const result = buildResult([
       buildRecommendation({
         citations: [
-          { url: "https://example.com/review" },
+          { url: "https://example.com/product/example-product-a-123" },
           { url: "https://unverified.example.org/review" },
         ],
       }),
@@ -166,12 +166,12 @@ describe("recommendation result trust validation", () => {
 
     const filtered = filterResultToVerifiedCitations(
       result,
-      new Set(["https://example.com/review"]),
+      new Set(["https://example.com/product/example-product-a-123"]),
     );
 
     assert.equal(filtered.recommendations.length, 1);
     assert.deepEqual(filtered.recommendations[0].citations, [
-      { url: "https://example.com/review" },
+      { url: "https://example.com/product/example-product-a-123" },
     ]);
   });
 
@@ -460,7 +460,7 @@ describe("recommendation result trust validation", () => {
         recommendation_type: "Best Match",
       }),
       buildRecommendation({
-        citations: [{ url: "https://example.com/value-review" }],
+        citations: [{ url: "https://example.com/product/bissell-little-green-value-123" }],
         name: "Bissell Little Green Portable Carpet Cleaner",
         recommendation_type: "Best Match",
       }),
@@ -469,8 +469,8 @@ describe("recommendation result trust validation", () => {
     const filtered = filterResultToVerifiedCitations(
       result,
       new Set([
-        "https://example.com/review",
-        "https://example.com/value-review",
+        "https://example.com/product/example-product-a-123",
+        "https://example.com/product/bissell-little-green-value-123",
       ]),
     );
 
@@ -485,7 +485,7 @@ describe("recommendation result trust validation", () => {
         recommendation_type: "Best Match",
       }),
       buildRecommendation({
-        citations: [{ url: "https://example.com/value-review" }],
+        citations: [{ url: "https://example.com/product/bissell-little-green-value-123" }],
         name: "Bissell Little Green portable cleaner",
         recommendation_type: "Best Match",
       }),
@@ -494,8 +494,8 @@ describe("recommendation result trust validation", () => {
     const filtered = filterResultToVerifiedCitations(
       result,
       new Set([
-        "https://example.com/review",
-        "https://example.com/value-review",
+        "https://example.com/product/example-product-a-123",
+        "https://example.com/product/bissell-little-green-value-123",
       ]),
     );
 

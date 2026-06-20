@@ -3,6 +3,7 @@ import type {
   ProductRecommendation,
   RecommendationResult,
 } from "@/types/review-radar";
+import { classifyProductEligibility } from "./productEligibility.ts";
 
 export type ProductPageUrlType = "official" | "retailer" | "source" | "unknown";
 
@@ -420,6 +421,22 @@ function classifyCandidate(input: {
   }
 
   const host = hostname(url);
+  const eligibility = classifyProductEligibility({
+    name: input.productName,
+    productName: input.productName,
+    sourceTitle: input.sourceTitle,
+    sourceType: input.sourceType,
+    url,
+  });
+
+  if (
+    eligibility.status === "evidence_only" ||
+    eligibility.status === "listing_or_search" ||
+    eligibility.status === "non_product"
+  ) {
+    return null;
+  }
+
   const isEditorial = pathLooksEditorial(url);
   const isGenericListing = urlLooksGenericListingPage(url);
 

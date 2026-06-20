@@ -31,24 +31,38 @@ function metadataOffer(price, retailer = "Example Store") {
 }
 
 function buildProduct(overrides = {}) {
+  const estimatedPriceRange = overrides.estimated_price_range || "$149";
+  const prices = [...estimatedPriceRange.matchAll(/\$\s*([0-9]{1,3}(?:,[0-9]{3})+|[0-9]+)(?:\.\d{1,2})?/g)]
+    .map((match) => Number(match[1].replace(/,/g, "")))
+    .filter((price) => Number.isFinite(price) && price > 0);
+  const metadata =
+    overrides.metadata ||
+    (prices.length > 0
+      ? {
+          offers: [metadataOffer(Math.min(...prices))],
+        }
+      : { offers: [] });
+
   return {
     recommendation_type: "Best Match",
     name: "Example Drill Driver Kit",
     category: "power drill",
-    product_page_url: "https://example.com/drill",
-    product_image_url: "",
+    product_page_url: "https://example.com/product/example-drill-driver-kit",
+    product_image_url: "https://example.com/drill.jpg",
     why_recommended: "Compact drill driver kit with battery and charger.",
     pros: ["20V brushless motor.", "Includes battery and charger."],
     cons: [],
     common_complaints: [],
-    estimated_price_range: "$149",
+    estimated_price_range: estimatedPriceRange,
     confidence_score: 80,
     source_consensus: "Strong",
     price_value_verdict: "Good value for the kit.",
     best_for: "DIY users.",
     not_for: [],
     citations: [{ title: "Example", url: "https://example.com", what_it_supports: "Test." }],
+    metadata,
     ...overrides,
+    metadata,
   };
 }
 
@@ -260,7 +274,7 @@ describe("budget comparison — matched comparison recorded for UI", () => {
 
     assert.ok(budgetComparison, "Budget comparison should be recorded");
     assert.equal(budgetComparison?.status, "unknown");
-    assert.match(budgetComparison?.productHas || "", /not verified/i);
+    assert.match(budgetComparison?.productHas || "", /not found|not verified/i);
   });
 });
 
