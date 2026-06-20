@@ -48,4 +48,20 @@ describe("product identity", () => {
       false,
     );
   });
+
+  it("treats the same shoe model from different retailers as one product", () => {
+    assert.equal(
+      areSameCanonicalProduct(
+        product(
+          "Nike Reactx Infinity Run 4 - Men's - Champs Sports",
+          "https://www.champssports.com/product/model/nike-reactx-infinity-run-4-mens/413789.html",
+        ),
+        product(
+          "Nike Reactx Infinity Run 4 - Men's | Foot Locker",
+          "https://www.footlocker.com/product/model/nike-reactx-infinity-run-4-mens/413789.html",
+        ),
+      ),
+      true,
+    );
+  });
 });

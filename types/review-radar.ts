@@ -213,6 +213,7 @@ export type ProductPriceConfidence =
   | "verified"
   | "likely"
   | "range"
+  | "suspicious"
   | "unverified"
   | "conflicting";
 

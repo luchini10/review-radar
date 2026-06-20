@@ -386,6 +386,12 @@ describe("Serper product discovery", () => {
             snippet: "Forum-style advice about espresso machines.",
           },
           {
+            title: "7 Things to Avoid When Purchasing an Air Purifier | Example Air",
+            link: "https://www.exampleair.com/blog/things-to-avoid-when-purchasing-an-air-purifier",
+            displayedLink: "Example Air",
+            snippet: "Buying-advice article about air purifiers.",
+          },
+          {
             title: "The HP Victus 16 is one of the best-value gaming laptops I've ever tested",
             link: "https://www.laptopmag.com/reviews/hp-victus-16-best-value-gaming-laptop",
             displayedLink: "Laptop Mag",
@@ -404,8 +410,8 @@ describe("Serper product discovery", () => {
             snippet: "Publisher sale article about a gaming laptop.",
           },
           {
-            title: "Delonghi Specialista Arte EC 9155 Review",
-            link: "https://coffee.example.com/delonghi-specialista-arte-ec-9155-review",
+            title: "Review: Example Magnifica Evo Espresso Machine",
+            link: "https://coffee.example.com/reviews/example-magnifica-evo",
             displayedLink: "Example Coffee Blog",
             snippet: "Review article about an espresso machine.",
           },
@@ -422,11 +428,22 @@ describe("Serper product discovery", () => {
             snippet: "Price-comparison page across multiple stores.",
           },
           {
-            title: "Example Barista Compact Espresso Machine - Sale Price",
-            link: "https://shop.example.com/products/example-barista-compact-espresso-machine",
-            displayedLink: "Example Store",
-            snippet:
-              "Product page for a compact espresso machine with a built-in grinder.",
+            title: "The 65-inch LG C4 OLED TV Is on Sale for Its Lowest Price Ever at Example",
+            link: "https://deals.example.com/lg-c4-oled-tv-lowest-price-ever",
+            displayedLink: "Deals Example",
+            snippet: "Sale article about a TV, not a product page.",
+          },
+          {
+            title: "TCL 65 Inch TVs | P.C. Richard & Son",
+            link: "https://www.pcrichard.com/tcl-65-inch-tvs/",
+            displayedLink: "P.C. Richard & Son",
+            snippet: "Retailer listing page for multiple TVs.",
+          },
+          {
+            title: "Business Laptops - Best Buy",
+            link: "https://www.bestbuy.com/site/business-laptops/",
+            displayedLink: "Best Buy",
+            snippet: "Retailer category page for laptops.",
           },
         ],
       },
@@ -436,7 +453,7 @@ describe("Serper product discovery", () => {
 
     assert.deepEqual(
       candidates.map((candidate) => candidate.name),
-      ["Example Barista Compact Espresso Machine - Sale Price"],
+      [],
     );
   });
 
@@ -475,16 +492,16 @@ describe("Serper product discovery", () => {
             snippet: "Brand newsroom release, not a product page.",
           },
           {
-            title: "Nike Air Force 1",
-            link: "https://www.nike.com/air-force-1",
-            displayedLink: "Nike",
-            snippet: "Brand landing page for a shoe family.",
+            title: "Nike Alphafly 3: Tried and tested - Runner's World",
+            link: "https://www.runnersworld.com/uk/gear/shoes/a60703694/nike-alphafly-3-review/",
+            displayedLink: "Runner's World",
+            snippet: "Hands-on running shoe review, not a product page.",
           },
           {
-            title: "Nike Giannis Freak 6 Colorways + Release Dates (Complete Guide)",
-            link: "https://www.sneakerfiles.com/nike-giannis-freak-6-colorways-release-dates/",
-            displayedLink: "Sneaker Files",
-            snippet: "Sneaker news guide, not a product page.",
+            title: "Review: Nike Winflo 11",
+            link: "https://running.example.com/reviews/nike-winflo-11",
+            displayedLink: "Example Running",
+            snippet: "Review article about a Nike running shoe.",
           },
           {
             title: "RULE NO. 1: Court Dimensions – Equipment - NBA Official",
@@ -755,6 +772,58 @@ describe("Serper product discovery", () => {
       result.candidates[0].name,
       "Beige Left-Facing Sectional Sofa 84 in. Wide",
     );
+    assert.equal(result.rejectedCount, 1);
+  });
+
+  it("cheap pre-filter rejects exact length conflicts for plain length requirements", () => {
+    const [fiftyFootCandidate] = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title: "Flexzilla 5/8 in. x 50 ft. Garden Hose",
+            link: "https://shop.example.com/products/flexzilla-50-ft",
+            imageUrl: "https://shop.example.com/flexzilla.jpg",
+            price: 44.98,
+            snippet: "50 ft garden hose with 5/8 inch diameter.",
+          },
+        ],
+      },
+      "garden hose 50 ft length",
+      "garden hose",
+    );
+    const [hundredFootCandidate] = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title: "Gilmour Flexogen Water Hose 5/8 inch by 100 ft",
+            link: "https://shop.example.com/products/gilmour-100-ft",
+            imageUrl: "https://shop.example.com/gilmour.jpg",
+            price: 79.99,
+            snippet: "100 ft garden hose with heavy-duty construction.",
+          },
+        ],
+      },
+      "garden hose 50 ft length",
+      "garden hose",
+    );
+    const request = {
+      budget: "$100",
+      extractedRequirements: extractStructuredRequirements({
+        budget: "$100",
+        priorities: "50 ft length",
+        query: "garden hose",
+      }),
+      priorities: "50 ft length",
+      query: "garden hose",
+    };
+    const result = cheapPreFilterRawCandidates(
+      [fiftyFootCandidate, hundredFootCandidate],
+      request,
+      10,
+    );
+
+    assert.equal(result.candidates.length, 1);
+    assert.equal(result.candidates[0].name, "Flexzilla 5/8 in. x 50 ft. Garden Hose");
     assert.equal(result.rejectedCount, 1);
   });
 

@@ -94,6 +94,53 @@ describe("AI discovery strategy helpers", () => {
     assert.equal(plan.stagedQueries.pass1.length <= 8, true);
   });
 
+  it("keeps AI-added search queries budget-bound when a hard budget exists", () => {
+    const request = shoeRequest();
+    const basePlan = generateSearchPlan(request);
+    const plan = augmentSearchPlanWithDiscoveryStrategy(
+      basePlan,
+      {
+        ...strategy,
+        discoveryQueries: ["Nike LeBron basketball shoes $300"],
+      },
+      request,
+    );
+    const joined = plan.queries.map((query) => query.query).join("\n");
+
+    assert.match(joined, /Nike LeBron basketball shoes under \$300/);
+    assert.doesNotMatch(joined, /Nike LeBron basketball shoes \$300\b/);
+  });
+
+  it("keeps hard-filter budget and brand searches ahead of AI strategy expansion", () => {
+    const request = shoeRequest();
+    const basePlan = generateSearchPlan(request);
+    const crowdedStrategy = {
+      ...strategy,
+      discoveryQueries: Array.from({ length: 8 }, (_, index) =>
+        `premium Nike racing shoe line ${index + 1}`,
+      ),
+      expectedProducts: strategy.expectedProducts.map((target) => ({
+        ...target,
+        productLine: `${target.productLine} Elite`,
+      })),
+    };
+    const plan = augmentSearchPlanWithDiscoveryStrategy(
+      basePlan,
+      crowdedStrategy,
+      request,
+    );
+    const firstQueries = plan.stagedQueries.pass1
+      .slice(0, 4)
+      .map((query) => query.query)
+      .join("\n")
+      .toLowerCase();
+    const joined = plan.queries.map((query) => query.query).join("\n");
+
+    assert.match(firstQueries, /basketball shoes nike under \$300/);
+    assert.match(firstQueries, /nike basketball shoes under \$300/);
+    assert.match(joined, /premium Nike racing shoe line 1/);
+  });
+
   it("detects expected mainstream products that are missing from the first candidate pool", () => {
     const request = shoeRequest();
     const gapCheck = buildDeterministicGapCheck(request, strategy, [
@@ -163,6 +210,40 @@ describe("AI discovery strategy helpers", () => {
 
     assert.equal(parsed.expectedProducts[0].productLine, "G.T. Cut Academy");
     assert.deepEqual(fallback.expectedProducts, []);
+  });
+
+  it("normalizes AI gap-check follow-up queries to budget-bound wording", async () => {
+    const client = {
+      responses: {
+        create: async () => ({
+          output_text: JSON.stringify({
+            followUpQueries: ["Nike LeBron basketball shoes $300"],
+            missingExpectedProducts: ["Nike LeBron"],
+            notes: ["LeBron was missing."],
+            suspiciousCandidateNames: [],
+          }),
+        }),
+      },
+    };
+    const { buildOpenAIDiscoveryGapCheck } = await import("../lib/discoveryStrategy.ts");
+    const gapCheck = await buildOpenAIDiscoveryGapCheck({
+      candidates: [rawCandidate()],
+      client,
+      input: shoeRequest(),
+      model: "test-model",
+      strategy,
+    });
+
+    assert.ok(
+      gapCheck.followUpQueries.some((query) =>
+        /Nike LeBron basketball shoes under \$300/i.test(query),
+      ),
+    );
+    assert.ok(
+      !gapCheck.followUpQueries.some((query) =>
+        /Nike LeBron basketball shoes \$300\b/i.test(query),
+      ),
+    );
   });
 
   it("summarizes strategy and gap-check context for the final research prompt", () => {

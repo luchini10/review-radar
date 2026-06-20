@@ -193,6 +193,7 @@ function buildOffer(product: ProductRecommendation) {
     reliability === undefined
       ? fallbackOfferPrice
       : reliability.price !== null &&
+          reliability.priceConfidence !== "suspicious" &&
           reliability.priceConfidence !== "conflicting" &&
           reliability.priceConfidence !== "unverified"
         ? reliability.price
@@ -201,7 +202,8 @@ function buildOffer(product: ProductRecommendation) {
   const retailer = compact(offer?.retailer || labelFromHost(offer?.url || link?.url || ""));
   const fallbackPrice = compact(product.estimated_price_range);
   const displayText =
-    reliability?.priceConfidence === "conflicting"
+    reliability?.priceConfidence === "conflicting" ||
+    reliability?.priceConfidence === "suspicious"
       ? "Verify current store price"
       : priceText
         ? `${priceText}${retailer ? ` at ${retailer}` : ""}`

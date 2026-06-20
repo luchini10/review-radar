@@ -689,6 +689,17 @@ describe("requirement validation", () => {
             price_value_verdict: "Appears under budget.",
           }),
           buildProduct({
+            name: "7 Things to Avoid When Purchasing an Air Purifier | Example Air",
+            category: "air purifier",
+            product_page_url:
+              "https://www.exampleair.com/blog/things-to-avoid-when-purchasing-an-air-purifier",
+            why_recommended:
+              "A buying-advice article that should not be displayed as a product.",
+            pros: ["Mentions air purifier buying considerations."],
+            estimated_price_range: "$99",
+            price_value_verdict: "Appears under budget.",
+          }),
+          buildProduct({
             name: "The HP Victus 16 is one of the best-value gaming laptops I've ever tested",
             category: "gaming laptop",
             product_page_url:
@@ -806,6 +817,27 @@ describe("requirement validation", () => {
               "A retailer advice/listing page that should not display as one product.",
             pros: ["Mentions Nike running shoes."],
             estimated_price_range: "$130",
+            price_value_verdict: "Appears under budget.",
+          }),
+          buildProduct({
+            name: "Nike Alphafly 3: Tried and tested - Runner's World",
+            category: "running shoes",
+            product_page_url:
+              "https://www.runnersworld.com/uk/gear/shoes/a60703694/nike-alphafly-3-review/",
+            why_recommended:
+              "A running shoe review article that should support evidence, not display as the product.",
+            pros: ["Discusses Nike running shoe performance."],
+            estimated_price_range: "$285",
+            price_value_verdict: "Appears near budget.",
+          }),
+          buildProduct({
+            name: "Review: Nike Winflo 11",
+            category: "running shoes",
+            product_page_url: "https://running.example.com/reviews/nike-winflo-11",
+            why_recommended:
+              "A review article that should not display as a product card.",
+            pros: ["Mentions a Nike running shoe."],
+            estimated_price_range: "$105",
             price_value_verdict: "Appears under budget.",
           }),
           buildProduct({
@@ -1892,6 +1924,98 @@ describe("requirement validation", () => {
       result.nearMatches[0].disqualifiedReason || "",
       /Foam Cannon/i,
     );
+  });
+
+  it("keeps gaming chairs out when the buyer asks for a non-gaming office chair", () => {
+    const request = {
+      budget: "$300",
+      priorities: "black, lumbar support, not a gaming chair",
+      query: "office chair",
+    };
+    const result = filterResultByRequirements(
+      {
+        search_summary: "Test result.",
+        assumptions: [],
+        recommendations: [
+          buildProduct({
+            name: "Staples Dexley Ergonomic Mesh Swivel Task Chair, Black",
+            category: "Office chair",
+            why_recommended:
+              "Black ergonomic office chair with lumbar support for desk work.",
+            pros: ["Black mesh task chair.", "Includes lumbar support."],
+            estimated_price_range: "$189",
+          }),
+          buildProduct({
+            name: "GTRACING Gaming Chair, Office Chair with Pocket Spring Lumbar Support",
+            category: "Office chair",
+            why_recommended:
+              "Gaming chair style seating with black upholstery and lumbar pillow.",
+            pros: ["Gaming chair with lumbar pillow."],
+            estimated_price_range: "$129",
+          }),
+        ],
+        what_to_avoid: [],
+        final_buying_advice: "Test advice.",
+      },
+      {
+        ...request,
+        extractedRequirements: extractStructuredRequirements(request),
+      },
+    );
+
+    assert.equal(result.exactMatches.length, 1);
+    assert.equal(
+      result.exactMatches[0].name,
+      "Staples Dexley Ergonomic Mesh Swivel Task Chair, Black",
+    );
+    assert.equal(
+      [...result.exactMatches, ...result.nearMatches].some((product) =>
+        /gaming chair/i.test(product.name),
+      ),
+      false,
+    );
+  });
+
+  it("does not treat a 100 ft hose as an exact match for a plain 50 ft hose requirement", () => {
+    const request = {
+      budget: "$100",
+      priorities: "50 ft length",
+      query: "garden hose",
+    };
+    const result = filterResultByRequirements(
+      {
+        search_summary: "Test result.",
+        assumptions: [],
+        recommendations: [
+          buildProduct({
+            name: "Flexzilla 5/8 in. x 50 ft. Garden Hose",
+            category: "Garden hose",
+            why_recommended: "A 50 ft garden hose with flexible construction.",
+            pros: ["50 ft length."],
+            estimated_price_range: "$44.98",
+          }),
+          buildProduct({
+            name: "Gilmour Flexogen Water Hose 5/8 inch by 100 ft",
+            category: "Garden hose",
+            why_recommended: "A 100 ft garden hose for larger yards.",
+            pros: ["100 ft length."],
+            estimated_price_range: "$79.99",
+          }),
+        ],
+        what_to_avoid: [],
+        final_buying_advice: "Test advice.",
+      },
+      {
+        ...request,
+        extractedRequirements: extractStructuredRequirements(request),
+      },
+    );
+
+    assert.equal(result.exactMatches.length, 1);
+    assert.equal(result.exactMatches[0].name, "Flexzilla 5/8 in. x 50 ft. Garden Hose");
+    assert.equal(result.nearMatches.length, 1);
+    assert.equal(result.nearMatches[0].name, "Gilmour Flexogen Water Hose 5/8 inch by 100 ft");
+    assert.match(result.nearMatches[0].disqualifiedReason || "", /Length/i);
   });
 
   it("matches equivalent feature wording and unit evidence across categories", () => {

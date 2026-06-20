@@ -196,6 +196,7 @@ function isNonProductPageResult(name: string | undefined, primaryUrl: string): b
     if (
       host === "klarna.com" ||
       host === "pinterest.com" ||
+      host === "runnersworld.com" ||
       host === "sneakerfiles.com" ||
       host === "wwd.com"
     ) {
@@ -289,7 +290,12 @@ function isNonProductPageResult(name: string | undefined, primaryUrl: string): b
   // Review pages are evidence sources, not buyable product recommendations.
   if (
     /^\s*cut\s+in\s+half\b/i.test(n) ||
+    /^\s*review\s*:/i.test(n) ||
     /\breview\b\s*(?:\||-|$)/i.test(n) ||
+    /\b(?:is|are)\s+on\s+sale\b/i.test(n) ||
+    /\blowest\s+price\s+ever\b/i.test(n) ||
+    /\b(?:tried\s+and\s+tested|tested\s+and\s+reviewed|hands[-\s]?on\s+review)\b/i.test(n) ||
+    /\bthings?\s+to\s+avoid\s+when\s+(?:buying|purchasing|shopping\s+for)\b/i.test(n) ||
     /\b(?:official images|release info|newsroom|built for|colorways?\s+\+\s+release dates|complete guide|franchise history|shuffles?\s+its\s+lineup)\b/i.test(n) ||
     /\b\w+\s+out,\s+\w+.+\s+in\?\s*$/i.test(n) ||
     /\b(?:rule\s+no\.?|court dimensions?|backboard dimensions?|dimensions?\s*(?:&|and)\s*drawings?|equipment\s*-\s*nba official)\b/i.test(n)
@@ -299,8 +305,10 @@ function isNonProductPageResult(name: string | undefined, primaryUrl: string): b
 
   // Broad category/listing titles rather than a specific buyable product.
   if (
-    /\b(?:shoes|sneakers|boots|sandals|shirts|pants|jackets|chairs|desks|tables|vacuums|appliances|tools|grills|mattresses|sofas|couches)\s+(?:for|from)\s+(?:men|women|kids|top brands|speed|running|basketball|walking)\b/i.test(n) ||
-    /^\s*(?:basketball|running|walking|training|tennis|hiking)\s+(?:shoes|sneakers)\s*(?:\||-|for|from)\b/i.test(n)
+    /\b(?:shoes|sneakers|boots|sandals|shirts|pants|jackets|chairs|desks|tables|vacuums|appliances|tools|grills|mattresses|sofas|couches|tvs|televisions|laptops)\s+(?:for|from)\s+(?:men|women|kids|top brands|speed|running|basketball|walking|pc gaming)\b/i.test(n) ||
+    /^\s*(?:basketball|running|walking|training|tennis|hiking)\s+(?:shoes|sneakers)\s*(?:\||-|for|from)\b/i.test(n) ||
+    /^\s*(?:business|gaming)\s+laptops?\s*(?:\||-|for|from)\b/i.test(n) ||
+    /\b\d{2,3}\s*(?:inch|in\.?|")\s+(?:tvs?|televisions)\s*(?:\||-|for|from)\b/i.test(n)
   ) {
     return true;
   }

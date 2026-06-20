@@ -1,26 +1,31 @@
 # Agent Loop Report
 
-Generated: 2026-06-19T16:22:33.177Z
-Run: agent-loop-2026-06-19T16-22-11-790Z
+Generated: 2026-06-20T04:35:58.338Z
+Run: agent-loop-2026-06-20T04-25-03-236Z
 Status: passed
-Mode: deterministic
-Parallel workers: 1
+Mode: live
+Parallel workers: 2
 Change log: not updated; no meaningful change note was provided
 
 ## Batches Run
 
-- price-trust: Completed (agent-loop-2026-06-19T16-22-11-790Z.worker-price-trust-2026-06-19T16-22-11-900Z.json)
+- price-trust: Completed (agent-loop-2026-06-20T04-25-03-236Z.worker-price-trust-2026-06-20T04-25-03-295Z.json)
+- broad-mainstream: Completed (agent-loop-2026-06-20T04-25-03-236Z.worker-broad-mainstream-2026-06-20T04-25-03-295Z.json)
+- requirement-units: Completed (agent-loop-2026-06-20T04-25-03-236Z.worker-requirement-units-2026-06-20T04-28-25-073Z.json)
+- wrong-category: Completed (agent-loop-2026-06-20T04-25-03-236Z.worker-wrong-category-2026-06-20T04-29-27-434Z.json)
+- non-product-pages: Completed (agent-loop-2026-06-20T04-25-03-236Z.worker-non-product-pages-2026-06-20T04-31-12-087Z.json)
 
 ## Checks
 
-- typecheck: Passed (4628ms)
-- lint: Passed (8951ms)
-- unit tests: Passed (6435ms)
-- deterministic eval pipeline: Passed (436ms)
+- typecheck: Passed (2111ms)
+- lint: Passed (5076ms)
+- unit tests: Passed (4172ms)
+- deterministic eval pipeline: Passed (403ms)
 
 ## Top Repeated Root Causes
 
-- No repeated root causes found in this run.
+- price_evidence_or_variant_price_gap: 1 finding(s), 1 category, priority 9
+- non_product_page_leakage: 1 finding(s), 1 category, priority 9
 
 ## Verifier Status
 
@@ -28,7 +33,7 @@ Change log: not updated; no meaningful change note was provided
 
 ## Next Recommended QA Batch
 
-- price-trust --mode live
+- wrong-category
 
 ## Manual Steps Still Required
 
@@ -39,4 +44,8 @@ Change log: not updated; no meaningful change note was provided
 
 ## Current Worker Files
 
-- agent-loop-2026-06-19T16-22-11-790Z.worker-price-trust-2026-06-19T16-22-11-900Z.json
+- agent-loop-2026-06-20T04-25-03-236Z.worker-price-trust-2026-06-20T04-25-03-295Z.json
+- agent-loop-2026-06-20T04-25-03-236Z.worker-broad-mainstream-2026-06-20T04-25-03-295Z.json
+- agent-loop-2026-06-20T04-25-03-236Z.worker-requirement-units-2026-06-20T04-28-25-073Z.json
+- agent-loop-2026-06-20T04-25-03-236Z.worker-wrong-category-2026-06-20T04-29-27-434Z.json
+- agent-loop-2026-06-20T04-25-03-236Z.worker-non-product-pages-2026-06-20T04-31-12-087Z.json

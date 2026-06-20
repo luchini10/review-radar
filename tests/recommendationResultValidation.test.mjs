@@ -330,6 +330,36 @@ describe("recommendation result trust validation", () => {
         buildRecommendation({
           citations: [
             {
+              title: "Runner's World review",
+              url: "https://www.runnersworld.com/uk/gear/shoes/a60703694/nike-alphafly-3-review/",
+              what_it_supports: "Review article, not a product page.",
+            },
+          ],
+          name: "Nike Alphafly 3: Tried and tested - Runner's World",
+        }),
+        buildRecommendation({
+          citations: [
+            {
+              title: "Running review",
+              url: "https://running.example.com/reviews/nike-winflo-11",
+              what_it_supports: "Review article, not a product page.",
+            },
+          ],
+          name: "Review: Nike Winflo 11",
+        }),
+        buildRecommendation({
+          citations: [
+            {
+              title: "Air purifier buying advice",
+              url: "https://www.iqair.com/us/newsroom/things-to-avoid-when-purchasing-air-purifier",
+              what_it_supports: "Buying advice article, not a product page.",
+            },
+          ],
+          name: "7 Things to Avoid When Purchasing an Air Purifier | IQAir USA",
+        }),
+        buildRecommendation({
+          citations: [
+            {
               title: "Klarna shopping comparison",
               url: "https://www.klarna.com/us/shopping/sp/nike-kd-trey-5-x",
               what_it_supports: "Price-comparison page, not a product page.",
@@ -387,6 +417,8 @@ describe("recommendation result trust validation", () => {
         "https://www.nike.com/air-force-1",
         "https://www.dickssportinggoods.com/a/nike-mens-stability-shoes-0zdz01a.html",
         "https://www.sneakerfiles.com/nike-giannis-freak-6-colorways-release-dates/",
+        "https://www.runnersworld.com/uk/gear/shoes/a60703694/nike-alphafly-3-review/",
+        "https://running.example.com/reviews/nike-winflo-11",
         "https://www.klarna.com/us/shopping/sp/nike-kd-trey-5-x",
         "https://shoe-news.example.com/new-balance-lineup-update",
         "https://official.nba.com/rule-no-1-court-dimensions-equipment/",

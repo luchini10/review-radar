@@ -265,7 +265,66 @@ describe("recommendation scoring and ranked Best Match selection", () => {
     assert.equal(result.nearMatches[0].name, "Graco Modes Nest Travel System");
     assert.equal(
       result.nearMatches[0].reliabilityCheck.priceConfidence,
-      "unverified",
+      "suspicious",
+    );
+  });
+
+  it("downgrades exact-looking ordinary products with accessory-like tiny prices", () => {
+    const input = {
+      budget: "under $250",
+      extractedRequirements: extractStructuredRequirements({
+        budget: "under $250",
+        priorities: "Levoit only, HEPA filter",
+        query: "air purifier",
+      }),
+      priorities: "Levoit only, HEPA filter",
+      query: "air purifier",
+    };
+    const suspicious = buildProduct("LEVOIT Air Purifier for Home Allergies Pet Hair in Bedroom", {
+      category: "air purifier",
+      estimated_price_range: "$10",
+      why_recommended: "A Levoit air purifier with HEPA filtration for bedroom use.",
+      pros: ["HEPA filtration for bedroom air cleaning."],
+      metadata: {
+        ...buildProduct("LEVOIT Air Purifier for Home Allergies Pet Hair in Bedroom").metadata,
+        brand: field("Levoit"),
+        offers: [offerWithSource(10, "retailer_page", "Medium", "https://amazon.example.com/levoit-air-purifier")],
+      },
+      price_value_verdict: "At $10, this looks like an exceptional value.",
+    });
+    const verified = buildProduct("Levoit Core 300-P Air Purifier", {
+      category: "air purifier",
+      estimated_price_range: "$89.99",
+      why_recommended: "A Levoit air purifier with HEPA filtration for bedroom use.",
+      pros: ["HEPA filtration for bedroom air cleaning."],
+      metadata: {
+        ...buildProduct("Levoit Core 300-P Air Purifier").metadata,
+        brand: field("Levoit"),
+        offers: [offerWithSource(89.99, "json_ld", "High", "https://levoit.example.com/core-300-p")],
+      },
+      price_value_verdict: "A plausible full air-purifier price.",
+    });
+
+    const result = scoreAndSelectRecommendations(
+      {
+        search_summary: "",
+        assumptions: [],
+        exactMatches: [suspicious, verified],
+        nearMatches: [],
+        recommendations: [],
+        what_to_avoid: [],
+        final_buying_advice: "",
+      },
+      input,
+    );
+
+    assert.deepEqual(
+      result.exactMatches.map((product) => product.name),
+      ["Levoit Core 300-P Air Purifier"],
+    );
+    assert.equal(
+      result.nearMatches[0].reliabilityCheck.priceConfidence,
+      "suspicious",
     );
   });
 

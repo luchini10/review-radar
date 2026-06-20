@@ -235,6 +235,7 @@ Return candidate_products as a broad pool, not as final ranked recommendations.
 For common product categories, search enough sources to return a deep candidate pool of credible products when reliable evidence exists.
 The candidate pool is incomplete if a common category returns only one or two products. Use the generated queries and separate search passes to discover a broad candidate set, then let app-side filtering decide exact and close matches.
 For common categories, include all credible candidates with at least one relevant citation, even if some may later become near matches.
+When the user gives a realistic budget and a required brand for a broad common category, first search for mainstream brand models with verified prices inside that budget. Do not fill the pool mostly with premium, racing, flagship, collector, or unknown-price products when affordable mainstream options are available.
 Do not weaken user requirements just to make the candidate pool look fuller. The app will filter exact matches after candidate collection.
 Each candidate must be a distinct product. Do not use "Avoid", budget/value/premium award labels, or "Best for User Need" as recommendation_type values.
 

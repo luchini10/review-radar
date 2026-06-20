@@ -90,6 +90,51 @@ describe("plausibleProductPrice (rejects broken low prices)", () => {
     );
   });
 
+  it("rejects suspicious tiny prices for common full-product categories", () => {
+    const suspiciousFullProducts = [
+      {
+        category: "air purifier",
+        productName: "Levoit Core 300-P Air Purifier",
+      },
+      {
+        category: "printer",
+        productName: "Canon PIXMA wireless printer",
+      },
+      {
+        category: "vacuum",
+        productName: "Shark cordless stick vacuum",
+      },
+      {
+        category: "office chair",
+        productName: "Steelcase Series 1 Office Chair",
+      },
+      {
+        category: "cordless drill",
+        productName: "DeWalt 20V MAX Drill Driver Kit",
+      },
+      {
+        category: "counter depth refrigerator",
+        productName: "LG 23 cu. ft. Side by Side Refrigerator",
+      },
+      {
+        category: "dishwasher",
+        productName: "Bosch 300 Series Dishwasher",
+      },
+      {
+        category: "65 inch tv",
+        productName: "TCL 65 inch QLED Smart TV",
+      },
+    ];
+
+    for (const context of suspiciousFullProducts) {
+      assert.equal(
+        plausibleProductPrice([10], 10, context),
+        null,
+        `${context.category} should not treat $10 as a verified full-product price`,
+      );
+    }
+  });
+
   it("does not apply high-ticket floors to ordinary lower-priced categories", () => {
     assert.equal(
       plausibleProductPrice([35], 35, {

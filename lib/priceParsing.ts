@@ -266,11 +266,35 @@ export function minimumLikelyFullProductPrice(
   }
 
   if (
-    /\b(?:laptop|refrigerator|dishwasher|washer|dryer|mattress|treadmill|elliptical|espresso machine|gas grill|propane grill|pellet grill)\b/i.test(
+    /\b(?:refrigerator|fridge|dishwasher|dryer|washing machine|clothes washer|laundry washer|front load washer|top load washer)\b/i.test(
+      text,
+    )
+  ) {
+    return 250;
+  }
+
+  if (
+    /\b(?:laptop|mattress|treadmill|elliptical|espresso machine|gas grill|propane grill|pellet grill|television|smart tv|qled tv|oled tv|mini[-\s]?led tv|\d{2,3}\s*(?:inch|in\.?|")\s*tv)\b/i.test(
       text,
     )
   ) {
     return 100;
+  }
+
+  if (
+    /\b(?:air purifier|air cleaner|air filter purifier|dehumidifier|humidifier|vacuum|stick vacuum|robot vacuum|upright vacuum|printer|office chair|desk chair|ergonomic chair)\b/i.test(
+      text,
+    )
+  ) {
+    return 35;
+  }
+
+  if (
+    /\b(?:cordless drill|drill driver|hammer drill|impact driver|power tool|tool kit|saw|leaf blower|pressure washer)\b/i.test(
+      text,
+    )
+  ) {
+    return 25;
   }
 
   return null;

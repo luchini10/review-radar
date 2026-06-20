@@ -608,6 +608,7 @@ function titleLooksLikeSpecificProduct(title: string) {
     /\bcollection\b/i,
     /\bbuy online\b/i,
     /\b(?:buying advice|shopping advice|purchase advice)\b/i,
+    /\bthings?\s+to\s+avoid\s+when\s+(?:buying|purchasing|shopping\s+for)\b/i,
     /\bcomplaints?\s+(?:about|for|with|on)\b/i,
     /\breviews?\s*(?:&|and|-|\/)\s*guides?\b/i,
     /\breviews?\s*$/i,
@@ -615,21 +616,28 @@ function titleLooksLikeSpecificProduct(title: string) {
     /\b(?:deals?|sales?)\s+20\d{2}\b/i,
     /\b20\d{2}\s+(?:deals?|sales?)\b/i,
     /\b(?:best|top)\s+.+\s+(?:deals?|sales?)\b/i,
+    /\b(?:is|are)\s+on\s+sale\b/i,
+    /\blowest\s+price\s+ever\b/i,
     /^(?:ranking|ranked)\s+(?:the\s+)?(?:top|best)\s+\d+\b/i,
     /^(?:the\s+)?(?:top|best)\s+\d+\b/i,
     /^\s*cut\s+in\s+half\b/i,
+    /^\s*review\s*:/i,
     /\breview\b\s*(?:\||-|$)/i,
+    /\b(?:tried\s+and\s+tested|tested\s+and\s+reviewed|hands[-\s]?on\s+review)\b/i,
     /\b(?:official images|release info|newsroom|built for|colorways?\s+\+\s+release dates|complete guide|franchise history|shuffles?\s+its\s+lineup)\b/i,
     /\b\w+\s+out,\s+\w+.+\s+in\?\s*$/i,
     /\b(?:rule\s+no\.?|court dimensions?|backboard dimensions?|dimensions?\s*(?:&|and)\s*drawings?|equipment\s*-\s*nba official)\b/i,
+    /\bthings?\s+to\s+avoid\s+when\s+(?:buying|purchasing|shopping\s+for)\b/i,
     /\bguides?\s*\(20\d{2}\)\b/i,
     /\byours for\b/i,
     /\bi'?ve\s+ever\b/i,
     /^\s*(?:the\s+)?[a-z0-9][^.!?]{5,120}\s+(?:is|are)\s+one\s+of\b/i,
     /^\s*(?:boost|get|level up|make|save|score|snag|turn|up your|upgrade)\b.{0,120}\bwith\s+(?:the|a|an)\b/i,
     /\bunder\s+\$?\d+\b/i,
-    /\b(?:shoes|sneakers|boots|sandals|shirts|pants|jackets|chairs|desks|tables|vacuums|appliances|tools|grills|mattresses|sofas|couches)\s+(?:for|from)\s+(?:men|women|kids|top brands|speed|running|basketball|walking)\b/i,
+    /\b(?:shoes|sneakers|boots|sandals|shirts|pants|jackets|chairs|desks|tables|vacuums|appliances|tools|grills|mattresses|sofas|couches|tvs|televisions|laptops)\s+(?:for|from)\s+(?:men|women|kids|top brands|speed|running|basketball|walking|pc gaming)\b/i,
     /^\s*(?:basketball|running|walking|training|tennis|hiking)\s+(?:shoes|sneakers)\s*(?:\||-|for|from)\b/i,
+    /^\s*(?:business|gaming)\s+laptops?\s*(?:\||-|for|from)\b/i,
+    /\b\d{2,3}\s*(?:inch|in\.?|")\s+(?:tvs?|televisions)\s*(?:\||-|for|from)\b/i,
     /\b(?:desks|refrigerators|microwaves|microwave ovens|countertop microwave ovens|mini fridges|sectional sleeper sofas|sofas|couches|vacuums|gloves)\s*[-|]\s*(?:wayfair|aj madison|the home depot|amazon|walmart|target|lowe'?s|best buy)\b/i,
     /^\s*\$?\d+(?:\.\d+)?\s*(?:to|-)\s*\$?\d+(?:\.\d+)?\b/i,
   ];
@@ -749,6 +757,7 @@ function isEvidenceOrDiscussionDomain(url: URL) {
     "popularmechanics.com",
     "reddit.com",
     "runrepeat.com",
+    "runnersworld.com",
     "rtings.com",
     "sneakerfiles.com",
     "techradar.com",
@@ -1649,7 +1658,7 @@ function parseMaxWidth(value: string | undefined) {
 }
 
 function sizeConstraintsFromInput(input: RecommendationApiRequest): Array<{
-  dimension: "depth" | "height" | "width";
+  dimension: "depth" | "height" | "length" | "width";
   operator: "max" | "min";
   value: number;
 }> {
@@ -1661,11 +1670,14 @@ function sizeConstraintsFromInput(input: RecommendationApiRequest): Array<{
         (constraint) =>
           constraint.dimension === "width" ||
           constraint.dimension === "depth" ||
-          constraint.dimension === "height",
+          constraint.dimension === "height" ||
+          constraint.dimension === "length",
       )
       .map((constraint) => ({
         dimension:
-          constraint.dimension === "depth" || constraint.dimension === "height"
+          constraint.dimension === "depth" ||
+          constraint.dimension === "height" ||
+          constraint.dimension === "length"
             ? constraint.dimension
             : "width",
         operator: constraint.operator,
@@ -1930,6 +1942,51 @@ function requiredSizeConflict(
   return Boolean(candidateSize && candidateSize !== requiredSize);
 }
 
+function candidateDimensionValues(
+  candidate: RawProductCandidate,
+  dimension: "depth" | "height" | "length" | "width",
+) {
+  if (dimension !== "length") {
+    const value = candidate.dimensions[dimension];
+
+    return value !== null ? [value] : [];
+  }
+
+  return Array.from(
+    candidateEvidenceText(candidate).matchAll(/\b(\d+(?:\.\d+)?)\s*(?:ft|feet|foot|')\b/gi),
+  )
+    .filter(
+      (match) =>
+        !/\b(?:sq|square|cu|cubic)\s*$/i.test(
+          candidateEvidenceText(candidate).slice(
+            Math.max(0, (match.index || 0) - 12),
+            match.index || 0,
+          ),
+        ),
+    )
+    .map((match) => (match[1] ? Number(match[1]) : null))
+    .filter((value): value is number => value !== null && Number.isFinite(value));
+}
+
+function sizeConstraintConflicts(
+  constraint: ReturnType<typeof sizeConstraintsFromInput>[number],
+  values: number[],
+) {
+  if (values.length === 0) {
+    return false;
+  }
+
+  if (constraint.dimension === "length" && constraint.operator === "min") {
+    return !values.some((value) => Math.abs(value - constraint.value) < 0.1);
+  }
+
+  return values.some(
+    (value) =>
+      (constraint.operator === "max" && value > constraint.value) ||
+      (constraint.operator === "min" && value < constraint.value),
+  );
+}
+
 function cheapCandidateRejectionReason(
   candidate: RawProductCandidate,
   input: RecommendationApiRequest,
@@ -2014,13 +2071,9 @@ function cheapCandidateRejectionReason(
   const sizeConstraints = sizeConstraintsFromInput(input);
 
   for (const constraint of sizeConstraints) {
-    const value = candidate.dimensions[constraint.dimension];
+    const values = candidateDimensionValues(candidate, constraint.dimension);
 
-    if (
-      value !== null &&
-      ((constraint.operator === "max" && value > constraint.value) ||
-        (constraint.operator === "min" && value < constraint.value))
-    ) {
+    if (sizeConstraintConflicts(constraint, values)) {
       return "wrong_dimensions";
     }
   }
@@ -2065,12 +2118,11 @@ function candidateFitScore(candidate: RawProductCandidate, input: Recommendation
   }
 
   for (const constraint of sizeConstraints) {
-    const value = candidate.dimensions[constraint.dimension];
+    const values = candidateDimensionValues(candidate, constraint.dimension);
 
     if (
-      value !== null &&
-      ((constraint.operator === "max" && value <= constraint.value) ||
-        (constraint.operator === "min" && value >= constraint.value))
+      values.length > 0 &&
+      !sizeConstraintConflicts(constraint, values)
     ) {
       score += 10;
     }
@@ -2201,12 +2253,11 @@ function hardEvidenceMatchCount(candidate: RawProductCandidate, input: Recommend
   }
 
   for (const constraint of sizeConstraintsFromInput(input)) {
-    const value = candidate.dimensions[constraint.dimension];
+    const values = candidateDimensionValues(candidate, constraint.dimension);
 
     if (
-      value !== null &&
-      ((constraint.operator === "max" && value <= constraint.value) ||
-        (constraint.operator === "min" && value >= constraint.value))
+      values.length > 0 &&
+      !sizeConstraintConflicts(constraint, values)
     ) {
       count += 1;
     }

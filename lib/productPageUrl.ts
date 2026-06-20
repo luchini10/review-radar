@@ -353,6 +353,7 @@ function urlLooksGenericListingPage(url: string) {
     if (
       host === "klarna.com" ||
       host === "pinterest.com" ||
+      host === "runnersworld.com" ||
       host === "sneakerfiles.com" ||
       host === "wwd.com"
     ) {

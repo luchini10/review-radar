@@ -258,6 +258,36 @@ function budgetText(input: RecommendationApiRequest) {
   return amount ? `under $${amount}` : "";
 }
 
+function budgetBoundQuery(input: RecommendationApiRequest, query: string) {
+  const budget = budgetText(input);
+
+  if (!budget) {
+    return query;
+  }
+
+  const amount = budget.match(/\$[\d,]+/)?.[0];
+
+  if (!amount) {
+    return query;
+  }
+
+  const amountPattern = amount.replace("$", "\\$");
+  const boundedAmountPattern = new RegExp(
+    `\\b(?:under|less\\s+than|below|at\\s+most|max(?:imum)?|no\\s+more\\s+than)\\s+${amountPattern}\\b`,
+    "i",
+  );
+
+  if (boundedAmountPattern.test(query)) {
+    return query;
+  }
+
+  if (new RegExp(`${amountPattern}\\b`, "i").test(query)) {
+    return query.replace(new RegExp(`${amountPattern}\\b`, "i"), budget);
+  }
+
+  return `${query} ${budget}`;
+}
+
 function selectedBrandText(input: RecommendationApiRequest) {
   return (input.extractedRequirements?.brandConstraints || [])
     .map((constraint) => constraint.value)
@@ -294,7 +324,7 @@ export async function buildOpenAIDiscoveryStrategy(options: {
           {
             role: "system",
             content:
-              "You are the search strategist for Review Radar. Your job is to improve product discovery, not to choose final recommendations. Return mainstream products or product lines that a shopper would expect for the request, better live-search queries, product types to avoid, and facts that must be verified. Do not invent prices. Do not include unsafe, unrelated, used/refurbished, accessory-only, or category-page results unless the user asked for them.",
+              "You are the search strategist for Review Radar. Your job is to improve product discovery, not to choose final recommendations. Return mainstream products or product lines that a shopper would expect for the request, better live-search queries, product types to avoid, and facts that must be verified. When the buyer gives a brand and budget, include budget-appropriate mainstream/value product lines before premium flagship lines. Do not let premium examples replace obvious affordable candidates. Do not invent prices. Do not include unsafe, unrelated, used/refurbished, accessory-only, or category-page results unless the user asked for them.",
           },
           {
             role: "user",
@@ -496,7 +526,9 @@ export async function buildOpenAIDiscoveryGapCheck(options: {
 
       return normalizeGapCheck({
         followUpQueries: [
-          ...normalized.followUpQueries,
+          ...normalized.followUpQueries.map((query) =>
+            budgetBoundQuery(input, query),
+          ),
           ...deterministic.followUpQueries,
         ],
         missingExpectedProducts: [
@@ -556,13 +588,33 @@ export function augmentSearchPlanWithDiscoveryStrategy(
       ),
     ]);
   const strategyQueries = [
-    ...strategy.discoveryQueries.slice(0, 4).map((query) => queryCandidate(query, 1)),
-    ...targetQueries.slice(0, 4).map((query) => queryCandidate(query, 1)),
-    ...strategy.discoveryQueries.slice(4, 8).map((query) => queryCandidate(query, 2)),
-    ...targetQueries.slice(4, 8).map((query) => queryCandidate(query, 2)),
+    ...strategy.discoveryQueries
+      .slice(0, 4)
+      .map((query) => queryCandidate(budgetBoundQuery(input, query), 1)),
+    ...targetQueries
+      .slice(0, 4)
+      .map((query) => queryCandidate(budgetBoundQuery(input, query), 1)),
+    ...strategy.discoveryQueries
+      .slice(4, 8)
+      .map((query) => queryCandidate(budgetBoundQuery(input, query), 2)),
+    ...targetQueries
+      .slice(4, 8)
+      .map((query) => queryCandidate(budgetBoundQuery(input, query), 2)),
   ];
+  const protectedBasePass1 = plan.stagedQueries.pass1.slice(0, 4);
+  const protectedBaseKeys = new Set(
+    protectedBasePass1.map((query) => normalizeText(query.query)),
+  );
   const seen = new Set<string>();
-  const merged = [...strategyQueries, ...plan.queries].filter((query) => {
+  const merged = [
+    // Keep the app-generated hard-filter queries first. AI strategy queries are
+    // useful expansion, but they must not crowd out brand/budget/category searches.
+    ...protectedBasePass1,
+    ...strategyQueries,
+    ...plan.queries.filter(
+      (query) => !protectedBaseKeys.has(normalizeText(query.query)),
+    ),
+  ].filter((query) => {
     const key = normalizeText(query.query);
 
     if (!key || seen.has(key)) {

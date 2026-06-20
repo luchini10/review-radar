@@ -163,7 +163,7 @@ export function assessProductPriceReliability(
       "Price evidence looks implausibly low for the full product; it may be a payment, promo, accessory, or variant price.",
     );
     return {
-      confidence: "unverified",
+      confidence: "suspicious",
       price: null,
       warnings,
     };
@@ -279,6 +279,8 @@ export function assessProductReliability(
     reasons.push("Current price is verified from a product or retailer page.");
   } else if (price.confidence === "likely" || price.confidence === "range") {
     reasons.push("Price evidence is usable but not as strong as product-page pricing.");
+  } else if (price.confidence === "suspicious") {
+    warnings.push("Price evidence may be for an accessory, promo, payment, or variant instead of the full product.");
   }
 
   if (credibilityTier === "strong" || credibilityTier === "moderate") {
@@ -289,6 +291,7 @@ export function assessProductReliability(
 
   const canBeBestMatch =
     identity !== "low" &&
+    price.confidence !== "suspicious" &&
     price.confidence !== "conflicting" &&
     price.confidence !== "unverified";
 

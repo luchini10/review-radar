@@ -312,7 +312,7 @@ const productTypeConflictRules: ProductTypeConflictRule[] = [
     allowedEvidence:
       /\b(?:office chair|task chair|desk chair|ergonomic chair|computer chair|executive chair|mesh chair|work chair)\b/,
     conflictingEvidence:
-      /\b(?:accent chair|dining chair|lounge chair|pillow|cushion|chair mat|floor mat|seat cover)\b/,
+      /\b(?:accent chair|dining chair|lounge chair|gaming chair|racing chair|pillow|cushion|chair mat|floor mat|seat cover)\b/,
     requestedCategory: /\b(?:office chair|task chair|desk chair|computer chair)\b/,
   },
   {
@@ -355,7 +355,9 @@ const requiredCategoryEvidenceRules: Array<{
 
 const concreteAvoidPhrases = new Set([
   "fabric headboard",
+  "gaming chair",
   "padded headboard",
+  "racing chair",
   "upholstered bed",
   "upholstered bed frame",
   "upholstered headboard",
@@ -760,6 +762,7 @@ function productNameLooksGeneric(name: string) {
     /^\s*how\s+to\b/i,
     /\b(?:buying guide|measurement guide|measuring guide|size guide)\b/i,
     /\b(?:buying advice|shopping advice|purchase advice)\b/i,
+    /\bthings?\s+to\s+avoid\s+when\s+(?:buying|purchasing|shopping\s+for)\b/i,
     /\b(?:what to consider|how to choose|which .+ should|so many models)\b/i,
     /\b(?:anyone|has anyone)\s+(?:purchased|tried|used|recommend)\b/i,
     /\b(?:customer reviews?|reviews?|questions?)\s+for\b/i,
@@ -770,10 +773,14 @@ function productNameLooksGeneric(name: string) {
     /\b(?:deals?|sales?)\s+20\d{2}\b/i,
     /\b20\d{2}\s+(?:deals?|sales?)\b/i,
     /\b(?:best|top)\s+.+\s+(?:deals?|sales?)\b/i,
+    /\b(?:is|are)\s+on\s+sale\b/i,
+    /\blowest\s+price\s+ever\b/i,
     /^(?:ranking|ranked)\s+(?:the\s+)?(?:top|best)\s+\d+\b/i,
     /^(?:the\s+)?(?:top|best)\s+\d+\b/i,
     /^\s*cut\s+in\s+half\b/i,
+    /^\s*review\s*:/i,
     /\breview\b\s*(?:\||-|$)/i,
+    /\b(?:tried\s+and\s+tested|tested\s+and\s+reviewed|hands[-\s]?on\s+review)\b/i,
     /\b(?:official images|release info|newsroom|built for|colorways?\s+\+\s+release dates|complete guide|franchise history|shuffles?\s+its\s+lineup)\b/i,
     /\b\w+\s+out,\s+\w+.+\s+in\?\s*$/i,
     /\b(?:rule\s+no\.?|court dimensions?|backboard dimensions?|dimensions?\s*(?:&|and)\s*drawings?|equipment\s*-\s*nba official)\b/i,
@@ -787,8 +794,10 @@ function productNameLooksGeneric(name: string) {
     /^\s*the\s+best\b/i,
     /^\s*(?:top rated|best rated|highest rated|popular)\b/i,
     /\bloved by our editors\b/i,
-    /\b(?:shoes|sneakers|boots|sandals|shirts|pants|jackets|chairs|desks|tables|vacuums|appliances|tools|grills|mattresses|sofas|couches)\s+(?:for|from)\s+(?:men|women|kids|top brands|speed|running|basketball|walking)\b/i,
+    /\b(?:shoes|sneakers|boots|sandals|shirts|pants|jackets|chairs|desks|tables|vacuums|appliances|tools|grills|mattresses|sofas|couches|tvs|televisions|laptops)\s+(?:for|from)\s+(?:men|women|kids|top brands|speed|running|basketball|walking|pc gaming)\b/i,
     /^\s*(?:basketball|running|walking|training|tennis|hiking)\s+(?:shoes|sneakers)\s*(?:\||-|for|from)\b/i,
+    /^\s*(?:business|gaming)\s+laptops?\s*(?:\||-|for|from)\b/i,
+    /\b\d{2,3}\s*(?:inch|in\.?|")\s+(?:tvs?|televisions)\s*(?:\||-|for|from)\b/i,
     /\b(?:desks|refrigerators|microwaves|microwave ovens|countertop microwave ovens|mini fridges|sectional sleeper sofas|sofas|couches|vacuums|gloves)\s*[-|]\s*(?:wayfair|aj madison|the home depot|amazon|walmart|target|lowe'?s|best buy)\b/i,
     /^\s*\$?\d+(?:\.\d+)?\s*(?:to|-)\s*\$?\d+(?:\.\d+)?\b/i,
   ];
@@ -832,6 +841,7 @@ function productUrlLooksGeneric(url: string | undefined) {
       "price.com",
       "popularmechanics.com",
       "runrepeat.com",
+      "runnersworld.com",
       "rtings.com",
       "sneakerfiles.com",
       "techradar.com",
@@ -1482,6 +1492,32 @@ function getProductDimensionValue(
   return `${label}: ${formatNumber(Math.max(...dimensions))} ${unitLabel}`;
 }
 
+function isExactPlainLengthConstraint(constraint: NumericConstraint) {
+  return (
+    constraint.dimension === "length" &&
+    constraint.kind === "min" &&
+    /^length:\s*\d+(?:\.\d+)?\s*ft$/i.test(constraint.label)
+  );
+}
+
+function dimensionConstraintPasses(
+  constraint: NumericConstraint,
+  dimensions: number[],
+) {
+  if (isExactPlainLengthConstraint(constraint)) {
+    return dimensions.some(
+      (dimension) => Math.abs(dimension - constraint.value) < 0.1,
+    );
+  }
+
+  const productMaximumDimension = Math.max(...dimensions);
+
+  return (
+    (constraint.kind === "max" && productMaximumDimension <= constraint.value) ||
+    (constraint.kind === "min" && productMaximumDimension >= constraint.value)
+  );
+}
+
 function getKnownFeatureValues(featureName: string) {
   const normalizedName = normalizeText(featureName);
 
@@ -1600,11 +1636,15 @@ function checkCategory(product: ProductLike, category: string) {
 function getAvoidTerms(value: string | undefined) {
   return splitUserList(value).map((term) => {
     const normalized = normalizeText(term);
+    const withoutLeadingArticle = normalized.replace(/^(?:a|an|the)\s+/i, "");
     const alternatives = new Set<string>([
       term,
       normalized,
+      withoutLeadingArticle,
       semanticCanonicalValue(term),
+      semanticCanonicalValue(withoutLeadingArticle),
       ...semanticAliasesFor(term),
+      ...semanticAliasesFor(withoutLeadingArticle),
     ]);
 
     for (const [key, synonyms] of Object.entries(avoidSynonyms)) {
@@ -2365,11 +2405,7 @@ export function validateProductAgainstRequirements(
       continue;
     }
 
-    const productMaximumDimension = Math.max(...dimensions);
-    if (
-      (constraint.kind === "max" && productMaximumDimension <= constraint.value) ||
-      (constraint.kind === "min" && productMaximumDimension >= constraint.value)
-    ) {
+    if (dimensionConstraintPasses(constraint, dimensions)) {
       matchedRequirements.push(constraint.label);
     } else {
       missingRequirements.push(constraint.label);

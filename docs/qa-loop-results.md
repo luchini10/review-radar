@@ -4,6 +4,190 @@ Date: 2026-06-18
 Repo: `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 Source-of-truth map: `ReviewRadar-Overview.md`
 
+## Codex QA Update - 2026-06-20 01:00
+
+## Loop Scope
+
+Fix all issues found by the advanced live QA sweep:
+
+- suspicious low price evidence on a counter-depth refrigerator
+- non-product TV sale/listing pages
+- gaming chairs appearing when the buyer said `not a gaming chair`
+- a 100 ft hose being treated as exact for a 50 ft hose search
+- wrong-category near matches in gaming laptop results
+- a follow-up live TV check that exposed `$10` as a suspicious 65-inch TV price
+
+## Root Causes
+
+The issues came from several shared gaps:
+
+- Price trust floors covered some categories, but not enough major appliances and large TVs.
+- Non-product filters caught many article/listing pages, but missed sale-story titles and some TV/laptop category titles.
+- Avoid terms were too literal when the parsed phrase included words like `a`, as in `a gaming chair`.
+- Plain length wording like `50 ft length` was treated like a minimum instead of a specific requested length.
+- Some wrong-category candidates survived early discovery because their title still contained broad category words.
+
+## Generalized Fix
+
+- Expanded full-product price sanity checks for major appliances and large TVs.
+- Added reusable filters for sale-story titles, lowest-price-ever articles, TV listing pages, and laptop category pages.
+- Added gaming/racing chair as concrete avoidable product-type evidence.
+- Normalized avoid terms by removing leading articles like `a`, `an`, and `the`.
+- Treated plain length requests as exact length matches while keeping explicit `at least` wording as minimum logic.
+- Added early candidate filtering for exact length conflicts.
+
+These fixes are reusable across product categories and are not hardcoded to one store, one model, or one product.
+
+## Verification
+
+| Check | Result |
+| --- | --- |
+| Focused regression tests | Passed |
+| Typecheck | Passed |
+| Lint | Passed |
+| Full unit tests | Passed, 448/448 |
+| Production build | Passed |
+| Live API rechecks | Passed for the original flagged issue classes |
+
+## Before / After Proof
+
+Before the fix:
+
+- A refrigerator could show suspicious `$100` price evidence.
+- A 65-inch TV search could show sale/listing pages as product cards.
+- A non-gaming office-chair search could still show gaming chairs.
+- A 50 ft hose search could exact-match a 100 ft hose.
+- Gaming laptop near matches could include business-laptop category pages or a camera lens.
+- A later live TV check showed a 65-inch TV exact match with `$10` as verified.
+
+After the fix:
+
+- The refrigerator recheck had no suspicious `$100` displayed result.
+- The TV recheck returned buyable TV products; sale/listing pages were not displayed.
+- The office-chair recheck returned office/task chairs and no gaming-chair matches.
+- The garden-hose recheck returned 50 ft exact matches and no 100 ft exact match.
+- The gaming-laptop recheck did not include the business-laptop category page or ZEISS lens.
+- The `$10` TV price was demoted out of exact verified results as suspicious/unverified.
+
+## Remaining Notes
+
+The refrigerator live recheck still had no exact matches because current price evidence was not verified for most candidates. That is safer than showing a fake low price, but a future improvement should strengthen large-appliance price discovery so good in-budget refrigerators can be verified more often.
+
+## Codex QA Update - 2026-06-20 00:13
+
+## Loop Scope
+
+Fix the live RR agent price-trust finding where ReviewRadar could show very low prices such as `$10` or `$35` for products that should cost much more, and clean up related quality issues found during the same investigation.
+
+## Search Tested
+
+- Product category: `air purifier`
+- Budget: `$250`
+- Important details: `Levoit only, good for bedroom, HEPA filter`
+
+## Root Cause
+
+ReviewRadar already had some protection against impossible prices for high-ticket products, but the protection was too narrow. It caught obvious big-ticket examples like travel systems, grills, and basketball hoops, but not common full-product categories like air purifiers, printers, vacuums, office chairs, and cordless drills.
+
+That meant a small accessory, promo, payment-plan, or variant price could sometimes be treated as the full product price.
+
+A second issue appeared during the live check: buying-advice articles with titles like "things to avoid when purchasing" could still slip through as near-match product cards.
+
+## Generalized Fix
+
+- Added broader full-product price sanity checks for common categories where `$10` or similarly tiny numbers are suspicious.
+- Added a `suspicious` price-confidence state so the app can flag "this price looks wrong" instead of treating it like a normal unverified price.
+- Blocked suspicious-price products from exact Best Match results.
+- Updated product cards so suspicious prices show as "Verify current store price" instead of a confident low price.
+- Improved same-model deduping across retailer-heavy product titles.
+- Added reusable filters for "things to avoid when buying/purchasing/shopping for" article pages.
+
+These fixes are reusable across categories. They are not hardcoded to Levoit, air purifiers, Nike, or one retailer.
+
+## Verification
+
+| Check | Result |
+| --- | --- |
+| Focused price/filter/dedupe tests | Passed |
+| Typecheck | Passed |
+| Lint | Passed |
+| Full unit tests | Passed, 445/445 |
+| Production build | Passed |
+| Live API recheck | Passed |
+
+## Before / After Proof
+
+Before the fix, the live agent found suspicious low prices such as `$10` and `$35` that could mislead shoppers.
+
+After the fix, the Levoit air-purifier live recheck returned 6 exact matches, all with verified prices:
+
+- `Levoit Vital 100S-P` at `$119.99`
+- `Levoit Vital 200S-P` at `$189.99`
+- `Levoit Core 300S-P` at `$149.99`
+- `Levoit Core 300-P` at `$89.99`
+- `Levoit Core 400S-P` at `$219.99`
+- `Levoit Core Mini-P` at `$59.99`
+
+The suspicious `$10` style product was no longer an exact match, and the "things to avoid when purchasing an air purifier" article no longer appeared in exact or near matches.
+
+## Remaining Notes
+
+Some products can still appear as close matches when ReviewRadar cannot verify every detail. That is expected as long as they are clearly labeled and kept out of exact Best Match results.
+
+## Codex QA Update - 2026-06-19 18:20
+
+## Loop Scope
+
+Fix the remaining Nike running-shoes live issue from the previous agent run: the article-page leak was fixed, but the same broad search could still show close matches only because prices were over budget or not verified.
+
+## Search Tested
+
+- Product category: `running shoes`
+- Budget: `$200`
+- Important details: `Nike only`
+
+## Root Cause
+
+The budget checker was not the main problem. The app already knew that over-budget or unknown-price products should stay out of exact matches.
+
+The deeper issue was discovery ordering. AI-added strategy searches could be placed ahead of the app's safer brand/category/budget searches. If the helper model suggested premium Nike racing lines first, those searches could crowd out practical `Nike running shoes under $200` discovery.
+
+## Generalized Fix
+
+- Kept the app-generated hard-filter searches at the front of the search plan.
+- Still allowed AI strategy searches, but only after the buyer's core brand/category/budget searches are protected.
+- Normalized AI follow-up searches to use firm budget wording like `under $200` instead of loose wording like `$200`.
+- Updated the final research prompt so broad brand-and-budget searches look for mainstream in-budget models first, not mostly premium or unknown-price products.
+
+This is category-agnostic. It applies to broad brand + budget searches beyond Nike shoes.
+
+## Verification
+
+| Check | Result |
+| --- | --- |
+| Focused discovery/search tests | Passed |
+| Typecheck | Passed |
+| Lint | Passed |
+| Full unit tests | Passed, 442/442 |
+| Production build | Passed |
+| Live API recheck | Passed |
+
+## Before / After Proof
+
+Before the fix, the live Nike running-shoes check could return only close matches because visible candidates were over budget or not price-verified.
+
+After the fix, the same live API search returned an exact match:
+
+- `Nike Pegasus 41 Men's Road Running Shoes`
+- Price shown by ReviewRadar: `$101.97`
+- It appeared as an exact match for `$200` and `Nike only`.
+
+The debug search plan also showed budget-bound follow-ups such as `Nike Winflo road running shoes Winflo 11 under $200`.
+
+## Remaining Notes
+
+The result set can still include close matches when some products have unknown price or weaker verification, but the false "no exact matches" problem for this broad realistic Nike search was fixed.
+
 ## 🟧 **Codex QA Update - 2026-06-18 12:35**
 
 ## Loop Scope
@@ -616,3 +800,112 @@ See `docs/agent-loop-report.md`.
   - `npm run build` passed.
   - `npm run qa:worker -- --batch price-trust --mode live` passed with no suspicious flags.
 - **remaining issue found:** None for this next-task fix. Future live runs may still find new search-quality issues in other batches.
+
+## Agent Loop Run - 2026-06-19T21:38:24.108Z
+
+- **run id:** agent-loop-2026-06-19T21-27-37-433Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** live
+- **batches:** price-trust, broad-mainstream, requirement-units
+- **parallel:** 1
+- **worker result files checked:** 3
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 2241ms |
+| lint | Passed | 5238ms |
+| unit tests | Passed | 4117ms |
+| deterministic eval pipeline | Passed | 405ms |
+
+### Repeated Failure Candidates
+
+- non_product_page_leakage: 1 finding(s), priority 9
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-06-19T21:48:35.859Z
+
+- **run id:** agent-loop-2026-06-19T21-48-20-509Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream
+- **parallel:** 1
+- **worker result files checked:** 1
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3472ms |
+| lint | Passed | 6628ms |
+| unit tests | Passed | 4370ms |
+| deterministic eval pipeline | Passed | 405ms |
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Non-Product Review Article Fix - 2026-06-19T21:50:00Z
+
+- **reason:** The live `broad-mainstream` agent run found a Nike running-shoes result where review/article pages appeared in near matches.
+- **failing example:** `running shoes`, budget `$200`, priorities `Nike only`.
+- **root cause:** Review Radar already blocked many review pages, but it missed some common article title shapes, including `Review: ...` and `tried and tested` headlines. Runner's World also needed to be treated as an evidence/review source instead of a product-card source.
+- **general fix:** Added shared guards across Serper candidate intake, final result validation, requirement filtering, and product-page URL selection. Review/article pages can still support evidence, but should not render as product cards.
+- **before:** The live worker reported `non_product_page_leakage`, and the Nike running-shoes near matches included `Nike Alphafly 3: Tried and tested - Runner's World` plus other review-style pages.
+- **after:** A direct live API recheck for the same Nike running-shoes search returned no suspicious review/article names in exact or near matches.
+- **files changed:** `lib/search/serper.ts`, `lib/recommendationResultValidation.ts`, `lib/requirementValidation.ts`, `lib/productPageUrl.ts`, `tests/serper.test.mjs`, `tests/recommendationResultValidation.test.mjs`, and `tests/requirementValidation.test.mjs`.
+- **verification run:**
+  - Focused product-page filtering tests passed.
+  - `npm run typecheck` passed.
+  - `npm run lint` passed.
+  - `npm test` passed, 439/439 tests.
+  - `npm run qa:loop -- --batches broad-mainstream` passed and cleared the next task.
+  - `npm run build` passed.
+- **remaining issue found:** The same Nike running-shoes live recheck still returned good near matches but no exact matches because price/budget evidence was over budget or unverified. That is a separate price/discovery verification issue, not the article-page leak fixed here.
+
+## Agent Loop Run - 2026-06-20T04:35:58.337Z
+
+- **run id:** agent-loop-2026-06-20T04-25-03-236Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** live
+- **batches:** price-trust, broad-mainstream, requirement-units, wrong-category, non-product-pages
+- **parallel:** 2
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 2111ms |
+| lint | Passed | 5076ms |
+| unit tests | Passed | 4172ms |
+| deterministic eval pipeline | Passed | 403ms |
+
+### Repeated Failure Candidates
+
+- price_evidence_or_variant_price_gap: 1 finding(s), priority 9
+- non_product_page_leakage: 1 finding(s), priority 9
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.
