@@ -60,6 +60,15 @@ describe("research prompt", () => {
       },
       discoveryStrategy: {
         avoidCandidatePatterns: ["used shoes"],
+        buyingRubric: {
+          category: "basketball shoes",
+          commonTradeoffs: ["cushioning versus court feel"],
+          mustVerifyFacts: ["Nike brand", "basketball shoe model"],
+          qualitySignals: ["traction", "cushioning"],
+          redFlags: ["poor grip"],
+          reviewSignals: ["owner reviews mention court traction"],
+          searchQueries: ["Nike basketball shoes traction cushioning reviews"],
+        },
         discoveryQueries: ["best Nike basketball shoes under $300"],
         expectedProducts: [
           {

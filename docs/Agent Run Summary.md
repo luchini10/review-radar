@@ -8,6 +8,28 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-06-20 15:26
+
+**Goal:** Add a universal product-quality rubric so ReviewRadar can understand what matters for a search without needing a hand-written profile for every product type.
+
+**What it checked:** Reviewed discovery strategy generation, search expansion, final prompt context, ranking/scoring, debug output, and a live local API search.
+
+**What it found:** Category-fit scoring helped known categories, but it still depended on hand-written profiles. That meant new categories could fall back too much on generic popularity, price, and citation signals instead of product-specific quality signals.
+
+**What it changed:** Added a buying rubric to the OpenAI discovery strategy. Added shared rubric scoring that rewards products when their evidence supports generated quality signals and penalizes supported red flags or missing important facts. Added rubric search queries, prompt context, debug output, and tests.
+
+**Why the change matters:** ReviewRadar can now ask what matters for almost any product category, then use that answer as a controlled ranking signal. This should make recommendations more accurate without creating a custom category profile for every product.
+
+**Tests run:** Focused rubric/discovery/scoring tests passed. Typecheck passed. Lint passed. Full unit tests passed with 476/476 tests. Production build passed.
+
+**Live checks run:** Ran a live local API search for `trail running shoes`, `$150`, `good grip, cushioning, durable outsole`, avoiding road-only shoes.
+
+**Before/after proof:** The live search returned a real buyable product as `#1 Best Match`, generated rubric-based score fields, and kept missing-price products out of exact matches.
+
+**Remaining issues:** The rubric is still a scoring nudge, not a full evidence extractor. Future work can improve how product pages surface deeper rubric facts before scoring.
+
+**Next recommended step:** Run live RR agents with rotated categories to see whether the rubric improves ranking quality across products that do not have hand-written profiles.
+
 ## Codex Run - 2026-06-20 13:25
 
 **Goal:** Complete Phase 2 by making ReviewRadar rank better-documented products higher using small category-specific quality signals.

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type {
+  ProductBuyingRubric,
   ProductDiscoveryGapCheck,
   ProductDiscoveryStrategy,
   ProductDiscoveryTarget,
@@ -35,9 +36,22 @@ const discoveryTargetSchema = z
   })
   .strict();
 
+const buyingRubricSchema = z
+  .object({
+    category: z.string(),
+    commonTradeoffs: z.array(z.string().min(1)).max(8),
+    mustVerifyFacts: z.array(z.string().min(1)).max(10),
+    qualitySignals: z.array(z.string().min(1)).max(10),
+    redFlags: z.array(z.string().min(1)).max(10),
+    reviewSignals: z.array(z.string().min(1)).max(8),
+    searchQueries: z.array(z.string().min(1)).max(8),
+  })
+  .strict();
+
 export const discoveryStrategySchema = z
   .object({
     avoidCandidatePatterns: z.array(z.string().min(1)).max(12),
+    buyingRubric: buyingRubricSchema,
     discoveryQueries: z.array(z.string().min(1)).max(12),
     expectedProducts: z.array(discoveryTargetSchema).max(12),
     searchIntent: z.string(),
@@ -91,6 +105,52 @@ export const discoveryStrategyJsonSchema = {
       maxItems: 12,
       items: { type: "string" },
     },
+    buyingRubric: {
+      type: "object",
+      properties: {
+        category: { type: "string" },
+        mustVerifyFacts: {
+          type: "array",
+          maxItems: 10,
+          items: { type: "string" },
+        },
+        qualitySignals: {
+          type: "array",
+          maxItems: 10,
+          items: { type: "string" },
+        },
+        commonTradeoffs: {
+          type: "array",
+          maxItems: 8,
+          items: { type: "string" },
+        },
+        redFlags: {
+          type: "array",
+          maxItems: 10,
+          items: { type: "string" },
+        },
+        reviewSignals: {
+          type: "array",
+          maxItems: 8,
+          items: { type: "string" },
+        },
+        searchQueries: {
+          type: "array",
+          maxItems: 8,
+          items: { type: "string" },
+        },
+      },
+      required: [
+        "category",
+        "mustVerifyFacts",
+        "qualitySignals",
+        "commonTradeoffs",
+        "redFlags",
+        "reviewSignals",
+        "searchQueries",
+      ],
+      additionalProperties: false,
+    },
     verificationFacts: {
       type: "array",
       maxItems: 10,
@@ -102,6 +162,7 @@ export const discoveryStrategyJsonSchema = {
     "discoveryQueries",
     "expectedProducts",
     "avoidCandidatePatterns",
+    "buyingRubric",
     "verificationFacts",
   ],
   additionalProperties: false,
@@ -203,6 +264,7 @@ function uniqueStrings(values: string[], max = values.length) {
 function emptyDiscoveryStrategy(): ProductDiscoveryStrategy {
   return {
     avoidCandidatePatterns: [],
+    buyingRubric: undefined,
     discoveryQueries: [],
     expectedProducts: [],
     searchIntent: "",
@@ -219,9 +281,26 @@ function emptyGapCheck(): ProductDiscoveryGapCheck {
   };
 }
 
+function normalizeRubric(rubric: ProductBuyingRubric | undefined) {
+  if (!rubric) {
+    return undefined;
+  }
+
+  return {
+    category: rubric.category.trim(),
+    commonTradeoffs: uniqueStrings(rubric.commonTradeoffs, 8),
+    mustVerifyFacts: uniqueStrings(rubric.mustVerifyFacts, 10),
+    qualitySignals: uniqueStrings(rubric.qualitySignals, 10),
+    redFlags: uniqueStrings(rubric.redFlags, 10),
+    reviewSignals: uniqueStrings(rubric.reviewSignals, 8),
+    searchQueries: uniqueStrings(rubric.searchQueries, 8),
+  };
+}
+
 function normalizeStrategy(strategy: ProductDiscoveryStrategy) {
   return {
     avoidCandidatePatterns: uniqueStrings(strategy.avoidCandidatePatterns, 12),
+    buyingRubric: normalizeRubric(strategy.buyingRubric),
     discoveryQueries: uniqueStrings(strategy.discoveryQueries, 12),
     expectedProducts: strategy.expectedProducts
       .filter((target) => target.brand.trim() || target.productLine.trim())
@@ -324,11 +403,11 @@ export async function buildOpenAIDiscoveryStrategy(options: {
           {
             role: "system",
             content:
-              "You are the search strategist for Review Radar. Your job is to improve product discovery, not to choose final recommendations. Return mainstream products or product lines that a shopper would expect for the request, better live-search queries, product types to avoid, and facts that must be verified. When the buyer gives a brand and budget, include budget-appropriate mainstream/value product lines before premium flagship lines. Do not let premium examples replace obvious affordable candidates. Do not invent prices. Do not include unsafe, unrelated, used/refurbished, accessory-only, or category-page results unless the user asked for them.",
+              "You are the search strategist for Review Radar. Your job is to improve product discovery, not to choose final recommendations. Return mainstream products or product lines that a shopper would expect for the request, better live-search queries, product types to avoid, facts that must be verified, and a buying rubric that describes what evidence matters for this category. The rubric must contain evidence targets, common tradeoffs, red flags, review signals, and search queries; it must not choose winners or make product-specific claims. When the buyer gives a brand and budget, include budget-appropriate mainstream/value product lines before premium flagship lines. Do not let premium examples replace obvious affordable candidates. Do not invent prices. Do not include unsafe, unrelated, used/refurbished, accessory-only, or category-page results unless the user asked for them.",
           },
           {
             role: "user",
-            content: `${requestSummary(input)}\n\nCreate a discovery plan. Expected products are only hints; Review Radar will verify them with live product-page evidence before display.`,
+            content: `${requestSummary(input)}\n\nCreate a discovery plan and a category buying rubric. Expected products and rubric items are only hints; Review Radar will verify them with live product-page evidence before display or ranking.`,
           },
         ],
         text: {
@@ -574,7 +653,8 @@ export function augmentSearchPlanWithDiscoveryStrategy(
 ): SearchPlan {
   if (
     strategy.discoveryQueries.length === 0 &&
-    strategy.expectedProducts.length === 0
+    strategy.expectedProducts.length === 0 &&
+    !strategy.buyingRubric?.searchQueries.length
   ) {
     return plan;
   }
@@ -590,6 +670,9 @@ export function augmentSearchPlanWithDiscoveryStrategy(
   const strategyQueries = [
     ...strategy.discoveryQueries
       .slice(0, 4)
+      .map((query) => queryCandidate(budgetBoundQuery(input, query), 1)),
+    ...(strategy.buyingRubric?.searchQueries || [])
+      .slice(0, 3)
       .map((query) => queryCandidate(budgetBoundQuery(input, query), 1)),
     ...targetQueries
       .slice(0, 4)
@@ -657,6 +740,15 @@ export function discoveryContextForPrompt(
       : "",
     strategy?.verificationFacts.length
       ? `Facts Serper/product pages must verify: ${strategy.verificationFacts.join("; ")}`
+      : "",
+    strategy?.buyingRubric
+      ? `Buying rubric quality signals: ${strategy.buyingRubric.qualitySignals.join("; ")}`
+      : "",
+    strategy?.buyingRubric?.redFlags.length
+      ? `Buying rubric red flags: ${strategy.buyingRubric.redFlags.join("; ")}`
+      : "",
+    strategy?.buyingRubric?.reviewSignals.length
+      ? `Review signals to look for: ${strategy.buyingRubric.reviewSignals.join("; ")}`
       : "",
     gapCheck?.missingExpectedProducts.length
       ? `Gap check missing expected products: ${gapCheck.missingExpectedProducts.join("; ")}`

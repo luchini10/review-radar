@@ -6,6 +6,7 @@ import {
 import { candidateMatchesDiscoveryTarget } from "./discoveryStrategy.ts";
 import { getCanonicalIdentity, withCanonicalIdentity } from "./productIdentity.ts";
 import { computeCategoryFit } from "./categoryScoring.ts";
+import { computeRubricFit } from "./buyingRubric.ts";
 import {
   assessProductCredibility,
   credibilityTierRank,
@@ -584,6 +585,13 @@ function scoreDebugReasons(
           breakdown.missingDataPenalty || 0,
         )} for unverified product facts.`
       : "No meaningful missing-data penalty was applied.",
+    (breakdown.rubricFitScore || 0) > 0 || (breakdown.rubricPenalty || 0) > 0
+      ? `Buying rubric adjustment: +${Math.round(
+          breakdown.rubricFitScore || 0,
+        )} for supported category quality signals and -${Math.round(
+          breakdown.rubricPenalty || 0,
+        )} for missing or negative rubric evidence.`
+      : "No buying-rubric adjustment was applied.",
   ];
 }
 
@@ -628,6 +636,7 @@ export function scoreProduct(
       };
   const marketConfidence = assessProductCredibility(scoredProduct, input);
   const categoryFit = computeCategoryFit(scoredProduct, input);
+  const rubricFit = computeRubricFit(scoredProduct, input);
   const credibilityFloor = credibilityFloorPenalty(
     marketConfidence.tier,
     scoredProduct,
@@ -655,6 +664,9 @@ export function scoreProduct(
     qualityScore: qualityScore(scoredProduct),
     repeatedComplaintPenalty: complaintPenalty(scoredProduct),
     requirementFitScore: fitScore(scoredProduct),
+    rubricFitScore: rubricFit.boost,
+    rubricPenalty: rubricFit.penalty,
+    rubricProfileKey: rubricFit.profileKey,
     riskPenalty: riskPenalty(scoredProduct),
     sourceQualityScore: sourceQualityScore(scoredProduct),
     valueScore: priceValueScore(scoredProduct, input),
@@ -671,6 +683,8 @@ export function scoreProduct(
     breakdown.marketConfidenceScore * 0.3 +
     breakdown.availabilityScore +
     (categoryScoringEnabled() ? breakdown.categoryFitScore : 0) -
+    (breakdown.rubricPenalty || 0) +
+    (breakdown.rubricFitScore || 0) -
     breakdown.repeatedComplaintPenalty -
     breakdown.missingDataPenalty -
     breakdown.marketConfidencePenalty -
@@ -748,6 +762,8 @@ function rankedMatchScore(product: ProductRecommendation) {
     (breakdown.marketConfidenceScore || 0) * 0.25 +
     (breakdown.availabilityScore || 0) * 0.5 +
     (categoryScoringEnabled() ? breakdown.categoryFitScore || 0 : 0) +
+    (breakdown.rubricFitScore || 0) * 1.2 -
+    (breakdown.rubricPenalty || 0) * 1.2 +
     evidenceStrengthBonus +
     marketConfidenceAdjustment -
     (breakdown.missingDataPenalty || 0) * 0.85 -

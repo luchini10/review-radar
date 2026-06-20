@@ -4,6 +4,54 @@ Date: 2026-06-18
 Repo: `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 Source-of-truth map: `ReviewRadar-Overview.md`
 
+## Codex QA Update - 2026-06-20 15:26
+
+## Loop Scope
+
+Implement the universal buying-rubric phase: let OpenAI describe what matters for the searched product type, then let deterministic ReviewRadar scoring use that rubric without hand-coding every category.
+
+## Root Causes
+
+The earlier category-fit work improved known categories, but it still depended on hand-written product profiles. That does not scale to every possible shopper search. ReviewRadar needed a reusable way to ask, "For this product type, what quality signals, red flags, review themes, and facts should we verify?"
+
+## Generalized Fix
+
+- Added a `buyingRubric` to the AI discovery strategy.
+- The rubric includes quality signals, red flags, review signals, facts to verify, tradeoffs, and extra search queries.
+- Added shared rubric scoring that rewards products only when their evidence text supports the rubric.
+- Added small penalties for missing important rubric facts and stronger penalties for supported red flags.
+- Added the rubric to final prompt context and debug output.
+
+This is reusable across product categories. It is not limited to toaster ovens, shoes, electronics, or any one product family.
+
+## Verification
+
+| Check | Result |
+| --- | --- |
+| Focused rubric/discovery/scoring tests | Passed |
+| Typecheck | Passed |
+| Lint | Passed |
+| Full unit tests | Passed, 476/476 |
+| Production build | Passed |
+| Direct live trail-running-shoes API test | Passed |
+
+## Before / After Proof
+
+Before the fix:
+
+- ReviewRadar could only give category-specific fit credit when a category had a hand-built profile.
+- New or uncommon categories relied more heavily on generic popularity, price, and source signals.
+
+After the fix:
+
+- A live `trail running shoes`, `$150`, `good grip, cushioning, durable outsole`, avoiding road-only shoes search generated rubric-based score fields on the returned products.
+- The top result remained a real buyable product with verified price evidence.
+- Products with missing price evidence stayed out of the exact-match list.
+
+## Remaining Notes
+
+The rubric is intentionally a scoring nudge, not a hard gate. It should help ranking quality without overriding firm requirements, price trust, or product eligibility.
+
 ## Codex QA Update - 2026-06-20 13:25
 
 ## Loop Scope

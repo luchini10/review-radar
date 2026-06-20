@@ -53,6 +53,15 @@ function shoeRequest() {
 
 const strategy = {
   avoidCandidatePatterns: ["used shoes", "replacement laces"],
+  buyingRubric: {
+    category: "basketball shoes",
+    commonTradeoffs: ["court feel vs cushioning"],
+    mustVerifyFacts: ["traction", "cushioning", "support"],
+    qualitySignals: ["traction", "cushioning", "ankle support"],
+    redFlags: ["durability complaints", "poor grip"],
+    reviewSignals: ["owner reviews mention grip", "expert testing mentions support"],
+    searchQueries: ["Nike basketball shoes traction cushioning reviews $300"],
+  },
   discoveryQueries: [
     "best Nike basketball shoes under $300",
     "top rated Nike basketball sneakers",
@@ -89,6 +98,7 @@ describe("AI discovery strategy helpers", () => {
     const joined = plan.queries.map((query) => query.query).join("\n");
 
     assert.match(joined, /best Nike basketball shoes under \$300/);
+    assert.match(joined, /Nike basketball shoes traction cushioning reviews under \$300/);
     assert.match(joined, /Nike G\.T\. Cut Academy basketball shoes under \$300/);
     assert.ok(plan.queries.length <= 18);
     assert.equal(plan.stagedQueries.pass1.length <= 8, true);
@@ -209,7 +219,13 @@ describe("AI discovery strategy helpers", () => {
     });
 
     assert.equal(parsed.expectedProducts[0].productLine, "G.T. Cut Academy");
+    assert.equal(parsed.buyingRubric?.category, "basketball shoes");
+    assert.deepEqual(parsed.buyingRubric?.qualitySignals.slice(0, 2), [
+      "traction",
+      "cushioning",
+    ]);
     assert.deepEqual(fallback.expectedProducts, []);
+    assert.equal(fallback.buyingRubric, undefined);
   });
 
   it("normalizes AI gap-check follow-up queries to budget-bound wording", async () => {
@@ -255,6 +271,8 @@ describe("AI discovery strategy helpers", () => {
     });
 
     assert.match(context, /Expected mainstream products or lines/);
+    assert.match(context, /Buying rubric quality signals: traction; cushioning; ankle support/);
+    assert.match(context, /Buying rubric red flags: durability complaints; poor grip/);
     assert.match(context, /Gap check missing expected products: Nike LeBron/);
     assert.match(context, /Suspicious candidates to treat cautiously/);
   });

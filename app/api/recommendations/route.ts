@@ -912,6 +912,7 @@ async function handleRecommendationPost(
       discoveryExpectedProducts: discoveryStrategy.expectedProducts.map(
         (target) => [target.brand, target.productLine].filter(Boolean).join(" "),
       ),
+      discoveryBuyingRubric: discoveryStrategy.buyingRubric,
       discoveryFollowUpQueries: discoveryGapCheck.followUpQueries,
       discoveryMissingExpectedProducts:
         discoveryGapCheck.missingExpectedProducts,

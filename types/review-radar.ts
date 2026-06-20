@@ -171,8 +171,19 @@ export type ProductDiscoveryTarget = {
   whyExpected: string;
 };
 
+export type ProductBuyingRubric = {
+  category: string;
+  commonTradeoffs: string[];
+  mustVerifyFacts: string[];
+  qualitySignals: string[];
+  redFlags: string[];
+  reviewSignals: string[];
+  searchQueries: string[];
+};
+
 export type ProductDiscoveryStrategy = {
   avoidCandidatePatterns: string[];
+  buyingRubric?: ProductBuyingRubric;
   discoveryQueries: string[];
   expectedProducts: ProductDiscoveryTarget[];
   searchIntent: string;
@@ -329,6 +340,9 @@ export type ScoreBreakdown = {
   qualityScore: number;
   repeatedComplaintPenalty?: number;
   requirementFitScore?: number;
+  rubricFitScore?: number;
+  rubricPenalty?: number;
+  rubricProfileKey?: string;
   riskPenalty: number;
   scoreDebug?: string[];
   sourceQualityScore?: number;
