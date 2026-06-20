@@ -8,6 +8,28 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-06-20 16:23
+
+**Goal:** Test the new recommendation logic with a stainless-steel refrigerator search under `$2,500`, then fix any serious issue found.
+
+**What it checked:** Ran a live local API search, inspected exact and close matches, reviewed price-trust behavior, and ran focused and full project checks.
+
+**What it found:** The rubric worked, but price trust had a problem. A full-size LG refrigerator could treat a `$515` promo/add-on-sized amount as if it were the verified refrigerator price.
+
+**What it changed:** Tightened the shared price sanity rules for full-size refrigerators while keeping compact and mini fridges separate. Added a regression test so a fake-low full-size refrigerator price is suspicious, but a real compact fridge price can still pass.
+
+**Why the change matters:** ReviewRadar should not tell shoppers a full-size refrigerator costs a few hundred dollars when that number is likely a promo, add-on, accessory, or bad extracted price.
+
+**Tests run:** Focused price, asset, scoring, and requirement tests passed. Typecheck passed. Lint passed. Full unit tests passed with 477/477 tests. Production build passed.
+
+**Live checks run:** Ran `refrigerator`, `$2500`, `must be stainless steel` against the local API before and after the fix.
+
+**Before/after proof:** Before the fix, a suspicious `$515` full-size refrigerator could be exact. After the fix, exact matches had verified under-budget prices and stainless-steel evidence, while missing-price products stayed as close matches.
+
+**Remaining issues:** Price extraction can still be improved for close matches where the app finds a product page but cannot verify the current store price.
+
+**Next recommended step:** Run live RR agents again with appliance-heavy searches to see whether this catches other fake-low full-product prices.
+
 ## Codex Run - 2026-06-20 15:26
 
 **Goal:** Add a universal product-quality rubric so ReviewRadar can understand what matters for a search without needing a hand-written profile for every product type.

@@ -105,6 +105,42 @@ describe("shared product price trust", () => {
     assert.equal(trust.canBeExactWithBudget, false);
   });
 
+  it("rejects promo-sized prices for full-size refrigerators without blocking compact fridges", () => {
+    const fullSizeTrust = assessProductPriceTrust(
+      product({
+        category: "Refrigerator",
+        estimated_price_range: "$515",
+        metadata: {
+          offers: [
+            offer(515, "https://www.lg.com/us/refrigerators/lg-lf25s6560s-french-3-door-refrigerator", {
+              retailer: "lg.com",
+              sourceType: "manufacturer_page",
+            }),
+          ],
+        },
+        name: "LG 25 cu. ft. Smart Standard-Depth MAX French Door Refrigerator",
+      }),
+    );
+
+    assert.equal(fullSizeTrust.status, "suspicious");
+    assert.equal(fullSizeTrust.price, null);
+    assert.equal(fullSizeTrust.canBeExactWithBudget, false);
+
+    const compactTrust = assessProductPriceTrust(
+      product({
+        category: "Mini fridge",
+        estimated_price_range: "$129",
+        metadata: {
+          offers: [offer(129, "https://www.example.com/compact-fridge")],
+        },
+        name: "Example 3.2 cu ft compact mini fridge",
+      }),
+    );
+
+    assert.equal(compactTrust.status, "verified");
+    assert.equal(compactTrust.price, 129);
+  });
+
   it("keeps text-only prices visible but not strong enough for exact budget matching", () => {
     const trust = assessProductPriceTrust(
       product({

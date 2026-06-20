@@ -265,8 +265,21 @@ export function minimumLikelyFullProductPrice(
     return 75;
   }
 
+  if (/\b(?:mini fridge|compact fridge|beverage fridge|wine fridge)\b/i.test(text)) {
+    return 80;
+  }
+
   if (
-    /\b(?:refrigerator|fridge|dishwasher|dryer|washing machine|clothes washer|laundry washer|front load washer|top load washer)\b/i.test(
+    /\b(?:french door|side[-\s]?by[-\s]?side|bottom freezer|top freezer|counter[-\s]?depth|standard[-\s]?depth|\d{2,3}\s*(?:cu\.?\s*ft|cubic feet?))\b/i.test(
+      text,
+    ) &&
+    /\b(?:refrigerator|fridge)\b/i.test(text)
+  ) {
+    return 600;
+  }
+
+  if (
+    /\b(?:refrigerator|dishwasher|dryer|washing machine|clothes washer|laundry washer|front load washer|top load washer)\b/i.test(
       text,
     )
   ) {

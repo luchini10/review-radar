@@ -4,6 +4,51 @@ Date: 2026-06-18
 Repo: `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 Source-of-truth map: `ReviewRadar-Overview.md`
 
+## Codex QA Update - 2026-06-20 16:23
+
+## Loop Scope
+
+Live-test the new universal buying-rubric flow with a refrigerator search requiring stainless steel and a `$2,500` budget.
+
+## Root Causes
+
+The rubric itself worked, but the live test exposed a price-trust issue. A full-size LG refrigerator could treat a `$515` promo/add-on-sized amount as a verified refrigerator price. The shared refrigerator price sanity floor was too low for full-size refrigerators.
+
+## Generalized Fix
+
+- Raised the shared suspicious-price floor for full-size refrigerator contexts such as French-door, side-by-side, top-freezer, bottom-freezer, counter-depth, standard-depth, and large cu. ft. refrigerators.
+- Kept compact, mini, beverage, and wine fridges separate so genuinely cheap small fridges are not blocked.
+- Added a regression test proving a `$515` full-size French-door refrigerator price becomes suspicious, while a `$129` compact mini fridge can still be verified.
+
+This is reusable price-trust logic, not a one-product LG patch.
+
+## Verification
+
+| Check | Result |
+| --- | --- |
+| Focused price/asset/scoring/requirement tests | Passed |
+| Typecheck | Passed |
+| Lint | Passed |
+| Full unit tests | Passed, 477/477 |
+| Production build | Passed |
+| Direct live refrigerator API recheck | Passed |
+
+## Before / After Proof
+
+Before the fix:
+
+- The live refrigerator search could rank a full-size refrigerator as an exact match using a suspicious `$515` price.
+
+After the fix:
+
+- The live `refrigerator`, `$2500`, `must be stainless steel` search returned exact matches with verified prices under budget and stainless-steel evidence.
+- The fake-low `$515` refrigerator price no longer appeared as an exact match.
+- Products with missing price evidence stayed in close matches as `Price not verified`.
+
+## Remaining Notes
+
+This improves safety for full-size refrigerator prices, but richer price extraction could still improve close matches that currently have missing store prices.
+
 ## Codex QA Update - 2026-06-20 15:26
 
 ## Loop Scope
