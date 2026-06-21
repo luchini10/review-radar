@@ -1564,3 +1564,31 @@ See `docs/agent-loop-report.md`.
   - A wrong-but-not-implausible text price could still let a slightly-over-budget product look in-budget; mitigated by the implausibly-low filter, capped confidence, and the "needs verification" label. If stricter behavior is wanted, add a small under-budget margin for text-only prices.
   - Best long-term fix remains Phase 5 rescue reliably attaching STRUCTURED offer prices so fewer products depend on text prices at all.
   - Still open from the phase analysis: consolidate the three overlapping product-type/conflict tables (`formFactor.ts`, `productTypeIntent.ts`, `productTypeConflictRules`) and generalize `productTypeIntent`'s hardcoded 8-category list. Separate loop.
+
+---
+
+## 🟩 **Claude QA Update — 2026-06-21 01:27**
+
+### Claude Change 2 — Phase 1 (step 1): shared product-type verdict helper
+
+- **agent:** Claude
+- **date/time:** 2026-06-21 01:27 EDT
+- **reason:** Phase 1 of the product-accuracy hardening plan. "Right category, wrong type" rejection (cooktop-for-oven, bed-frame-for-mattress, gaming-chair-for-office-chair) was duplicated: discovery (`cheapCandidateRejectionReason` in `lib/search/serper.ts`) and validation (`hasConflictingProductType` in `lib/requirementValidation.ts`) each repeated the SAME pair of checks — `classifyProductTypeIntent` (wrong type / accessory) + `isComponentSubstitution`. This is the strangler-migration first step: add one shared verdict, route both callers through it, prove parity. **No behavior change yet** — coverage broadening and table consolidation come in later steps.
+- **change:** new `lib/productTypeMatch.ts` exports `classifyProductTypeMatch({ evidenceText, requestedCategory }) -> { canBeExactMatch, status, reason }`, composing `classifyProductTypeIntent` + `isComponentSubstitution`. Both callsites now call it instead of inlining the two checks. Removed the now-dead `isComponentSubstitution`/`classifyProductTypeIntent` imports from serper, and the `isComponentSubstitution` import from validation (it still uses `classifyProductTypeIntent` at a separate exact-eligibility gate, so that import stays).
+- **commands run / checks:**
+  - `node --test tests/productTypeMatch.test.mjs` — Passed (5/5)
+  - `npm run typecheck` — Passed
+  - `npm run lint` — Passed
+  - `npm test` — Passed (**493/493**; the 488 prior tests all still green = parity, +5 new)
+  - `node scripts/eval-pipeline.mjs` — RED-FLAG CHECKS: no issues
+- **live QA searches run:** None (parity step, deterministic).
+- **issue new vs. related to Codex:** **Related/structural** — consolidates wrong-type logic Codex spread across `formFactor.ts`, `productTypeIntent.ts`, and `requirementValidation.ts`.
+- **files changed:**
+  - `lib/productTypeMatch.ts` (new shared helper)
+  - `lib/search/serper.ts` (route `cheapCandidateRejectionReason` through helper; drop dead imports)
+  - `lib/requirementValidation.ts` (route `hasConflictingProductType`'s intent+component-sub pair through helper; drop dead import)
+  - `tests/productTypeMatch.test.mjs` (new)
+- **before/after:** identical results (parity). The two callers now share one verdict function instead of duplicating it; serper and validation can no longer drift apart on the intent+component-substitution checks.
+- **remaining risks / follow-up (next Phase 1 steps):**
+  - Fold the cross-category conflict rules (`productTypeConflictRules`), required-category evidence (`requiredCategoryEvidenceRules`), and the bespoke `hasMattressFurnitureConflict` into the shared helper so discovery applies them too (broadens coverage beyond `productTypeIntent`'s 8 categories) — with parity tests before removing the originals.
+  - Then de-duplicate the mattress rule that currently lives in both `formFactor.ts` and `productTypeIntent.ts`.

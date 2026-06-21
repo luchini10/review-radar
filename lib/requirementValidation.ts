@@ -12,9 +12,9 @@ import {
   canonicalBrand,
   detectKnownBrands,
 } from "./brandMatching.ts";
-import { isComponentSubstitution } from "./formFactor.ts";
 import { productRecommendationEligibility } from "./productEligibility.ts";
 import { classifyProductTypeIntent } from "./productTypeIntent.ts";
+import { classifyProductTypeMatch } from "./productTypeMatch.ts";
 import { baseProductCategoryFromQuery } from "./productCategory.ts";
 import { parseMaxBudgetAmount } from "./priceParsing.ts";
 import { assessProductPriceTrust } from "./productPriceTrust.ts";
@@ -986,27 +986,16 @@ function hasConflictingProductType(product: ProductLike, category: string) {
   const requestedCategory = normalizeText(category);
   const evidenceText = productEvidenceTextWithoutAssignedCategory(product);
 
-  const typeIntent = classifyProductTypeIntent({
-    candidateText: evidenceText,
-    requestedText: requestedCategory,
-  });
-
+  // Shared product-type verdict: product-type intent (wrong type / accessory) +
+  // the component-substitution model (a cooktop for an oven, an ice-maker for a
+  // refrigerator). Discovery and validation call the same helper so they agree.
   if (
-    typeIntent.status === "irrelevant" ||
-    typeIntent.status === "complement"
+    !classifyProductTypeMatch({ evidenceText, requestedCategory }).canBeExactMatch
   ) {
     return true;
   }
 
   if (hasMattressFurnitureConflict(product, requestedCategory)) {
-    return true;
-  }
-
-  // Shared form-factor model: a candidate that names a component/variant of the
-  // requested appliance (cooktop for an oven, ice-maker for a refrigerator)
-  // without being the appliance itself is the wrong product. Data-driven and
-  // cross-category — replaces the former per-category refrigerator/oven blocks.
-  if (isComponentSubstitution(evidenceText, requestedCategory)) {
     return true;
   }
 

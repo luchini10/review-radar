@@ -17,17 +17,14 @@ import {
 } from "../brandMatching.ts";
 import { getCachedOrLoad, normalizeCacheKey } from "../cache.ts";
 import { candidateMatchesDiscoveryTarget } from "../discoveryStrategy.ts";
-import {
-  isComponentSubstitution,
-  offFormFactorModifiers,
-} from "../formFactor.ts";
+import { offFormFactorModifiers } from "../formFactor.ts";
 import { baseProductCategoryFromQuery, detectBedSize } from "../productCategory.ts";
 import { sanitizeProductPros } from "../productCopySanitizer.ts";
 import {
   candidateEligibility,
   classifyProductEligibility,
 } from "../productEligibility.ts";
-import { classifyProductTypeIntent } from "../productTypeIntent.ts";
+import { classifyProductTypeMatch } from "../productTypeMatch.ts";
 import { assessProductPriceTrust } from "../productPriceTrust.ts";
 import { parseBestMoneyAmount } from "../priceParsing.ts";
 import { getPremiumCap } from "../requirementExtraction.ts";
@@ -2013,23 +2010,11 @@ function cheapCandidateRejectionReason(
   candidate: RawProductCandidate,
   input: RecommendationApiRequest,
 ) {
-  const productTypeIntent = classifyProductTypeIntent({
-    candidateText: candidateEvidenceText(candidate),
-    requestedText: baseProductCategoryFromQuery(input.query),
-  });
-
   if (
-    productTypeIntent.status === "irrelevant" ||
-    productTypeIntent.status === "complement"
-  ) {
-    return "wrong_category";
-  }
-
-  if (
-    isComponentSubstitution(
-      candidateEvidenceText(candidate),
-      baseProductCategoryFromQuery(input.query),
-    )
+    !classifyProductTypeMatch({
+      evidenceText: candidateEvidenceText(candidate),
+      requestedCategory: baseProductCategoryFromQuery(input.query),
+    }).canBeExactMatch
   ) {
     return "wrong_category";
   }
