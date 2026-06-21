@@ -6,6 +6,7 @@ import {
   buildVerificationQueries,
   missingFactFromLabel,
   sourceTrustedForRequirementVerification,
+  verifyMissingRequirementEvidence,
 } from "../lib/requirementEvidenceRescue.ts";
 import { extractStructuredRequirements } from "../lib/requirementExtraction.ts";
 import { validateProductAgainstRequirements } from "../lib/requirementValidation.ts";
@@ -167,5 +168,73 @@ describe("numeric spec evidence rescue", () => {
       assert.ok(after.matchedRequirements.some((label) => /cfm/i.test(label)));
       assert.equal(after.isMatch, true);
     });
+  });
+});
+
+describe("rubric fact evidence rescue", () => {
+  it("retries critical rubric facts and clears them when evidence verifies the fact", async () => {
+    const originalKey = process.env.SERPER_API_KEY;
+    const originalFetch = global.fetch;
+
+    process.env.SERPER_API_KEY = "test-serper-key";
+    global.fetch = async () =>
+      new Response(
+        JSON.stringify({
+          shopping: [
+            {
+              title:
+                "Whirlpool WMH31017HS 1.7 cu. ft. Over-the-Range Microwave Oven",
+              link: "https://shop.example.com/p/whirlpool-wmh31017hs",
+              source: "Example Store",
+              price: "$229",
+              snippet: "Whirlpool WMH31017HS microwave current price $229.",
+            },
+          ],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+
+    try {
+      const productWithRubricGap = {
+        ...product,
+        evidenceBucket: {
+          negativeEvidence: [],
+          positiveEvidence: [],
+          repeatedComplaints: [],
+          unknowns: [
+            {
+              importance: "critical",
+              topic: "Rubric fact: Current product price",
+              reason: "Current price was not clearly verified.",
+            },
+          ],
+        },
+        metadata: { offers: [] },
+      };
+      const rescued = await verifyMissingRequirementEvidence(
+        {
+          assumptions: [],
+          exactMatches: [productWithRubricGap],
+          final_buying_advice: "test",
+          nearMatches: [],
+          recommendations: [productWithRubricGap],
+          search_summary: "test",
+          what_to_avoid: [],
+        },
+        { query: "microwave" },
+        { maxFactsPerProduct: 2, maxProducts: 1 },
+      );
+      const rescuedProduct = rescued.exactMatches[0];
+
+      assert.ok(rescuedProduct.metadata.offers.some((offer) => offer.price.value === 229));
+      assert.equal(rescuedProduct.evidenceBucket.unknowns.length, 0);
+    } finally {
+      global.fetch = originalFetch;
+      if (originalKey === undefined) {
+        delete process.env.SERPER_API_KEY;
+      } else {
+        process.env.SERPER_API_KEY = originalKey;
+      }
+    }
   });
 });

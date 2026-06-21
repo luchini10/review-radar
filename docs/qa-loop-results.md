@@ -4,6 +4,55 @@ Date: 2026-06-18
 Repo: `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 Source-of-truth map: `ReviewRadar-Overview.md`
 
+## Codex QA Update - 2026-06-21 00:07
+
+## Loop Scope
+
+Implement Phase 5 and Phase 6: use important missing rubric facts for deeper verification retries, then run a full QA/hardening pass.
+
+## Root Causes
+
+ReviewRadar could track missing rubric facts and weight them by importance, but it did not yet actively retry the most important missing facts during the existing evidence-rescue pass. That meant a product could keep a critical rubric gap even when a targeted follow-up search might verify it.
+
+## Generalized Fix
+
+- Extended the existing requirement-evidence rescue step to include critical and important rubric facts.
+- Used remaining verification slots after hard requirement rescue, so hard requirements still come first.
+- Retried missing high-value rubric facts with product-specific searches.
+- Cleared a missing rubric fact only when matching evidence verified the same product.
+- Added a regression test proving a missing `Current product price` rubric fact can be retried, verified from shopping evidence, added as an offer, and removed from the unknowns list.
+
+This is reusable across categories because the retry uses the shared rubric importance rules, not one product-specific rule.
+
+## Verification
+
+| Check | Result |
+| --- | --- |
+| Focused rescue/evidence/scoring tests | Passed |
+| Typecheck | Passed |
+| Lint | Passed |
+| Full unit tests | Passed, 486/486 |
+| Production build | Passed |
+| Deterministic QA agent loop | Passed |
+| Direct live refrigerator API smoke test | Passed |
+
+## Before / After Proof
+
+Before the fix:
+
+- Missing important rubric facts lowered confidence, but ReviewRadar did not specifically retry them in the rescue pass.
+
+After the fix:
+
+- Critical and important rubric facts now get targeted verification retries when there is room.
+- Verified rubric gaps are cleared instead of staying as stale warnings.
+- The deterministic QA loop across price trust, broad mainstream, unit requirements, wrong category, and non-product pages found no repeated root causes.
+- The live `refrigerator`, `$2500`, `must be stainless steel` smoke test returned 3 exact matches and 5 close matches. The top exact match had a verified `$2,099` price and still showed one remaining dimension/clearance gap honestly.
+
+## Remaining Notes
+
+Live QA should continue rotating categories. The next useful work is tuning only if live results show a specific high-value fact is too hard to verify or too easy to over-trust.
+
 ## Codex QA Update - 2026-06-20 23:05
 
 ## Loop Scope
@@ -1441,6 +1490,36 @@ See `docs/agent-loop-report.md`.
 | lint | Passed | 5240ms |
 | unit tests | Passed | 4295ms |
 | deterministic eval pipeline | Passed | 398ms |
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-06-21T04:07:39.498Z
+
+- **run id:** agent-loop-2026-06-21T04-06-58-648Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust, broad-mainstream, requirement-units, wrong-category, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 6275ms |
+| lint | Passed | 13410ms |
+| unit tests | Passed | 7875ms |
+| deterministic eval pipeline | Passed | 605ms |
 
 ### Repeated Failure Candidates
 

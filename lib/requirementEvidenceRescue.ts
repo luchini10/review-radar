@@ -17,6 +17,12 @@ import {
   featureEvidenceSupports,
   validateProductAgainstRequirements,
 } from "./requirementValidation.ts";
+import {
+  classifyRubricFactImportance,
+  isRubricFactUnknownTopic,
+  rubricFactFromUnknownTopic,
+  rubricImportanceRank,
+} from "./rubricFactImportance.ts";
 import { extractSpecsFromText } from "./specExtraction.ts";
 
 type VerifiableFactKind = "color" | "dimension" | "feature" | "price" | "spec";
@@ -26,6 +32,7 @@ type MissingFact = {
   kind: VerifiableFactKind;
   label: string;
   queryTerm: string;
+  rubricUnknownTopic?: string;
   spec?: string;
   value?: string;
 };
@@ -388,6 +395,31 @@ function hasVerifiedPrice(product: ProductRecommendation) {
   );
 }
 
+function removeVerifiedRubricUnknown(
+  product: ProductRecommendation,
+  fact: MissingFact,
+) {
+  if (!fact.rubricUnknownTopic || !product.evidenceBucket?.unknowns.length) {
+    return product;
+  }
+
+  const unknowns = product.evidenceBucket.unknowns.filter(
+    (item) => item.topic !== fact.rubricUnknownTopic,
+  );
+
+  if (unknowns.length === product.evidenceBucket.unknowns.length) {
+    return product;
+  }
+
+  return {
+    ...product,
+    evidenceBucket: {
+      ...product.evidenceBucket,
+      unknowns,
+    },
+  };
+}
+
 function candidateColorEvidence(candidate: RawProductCandidate, fact: MissingFact) {
   const expectedColor = normalizeText(fact.value || fact.queryTerm);
   const colors = candidate.availableColors.filter((color) => {
@@ -637,6 +669,7 @@ async function applyCandidateEvidence(
       if (price !== null) {
         metadata = mergeOffer(metadata, price, candidate);
         updated = addVerificationCitation(updated, candidate, fact);
+        updated = removeVerifiedRubricUnknown(updated, fact);
 
         if (!updated.product_page_url && candidate.productUrl) {
           updated = {
@@ -662,6 +695,7 @@ async function applyCandidateEvidence(
       if (colors.length > 0) {
         metadata = mergeColors(metadata, colors, candidate.productUrl);
         updated = addVerificationCitation(updated, candidate, fact);
+        updated = removeVerifiedRubricUnknown(updated, fact);
         break;
       }
     }
@@ -677,6 +711,7 @@ async function applyCandidateEvidence(
           candidate.productUrl,
         );
         updated = addVerificationCitation(updated, candidate, fact);
+        updated = removeVerifiedRubricUnknown(updated, fact);
         break;
       }
     }
@@ -687,6 +722,7 @@ async function applyCandidateEvidence(
     ) {
       updated = addVerificationCitation(updated, candidate, fact);
       updated = addVerifiedFeaturePro(updated, fact);
+      updated = removeVerifiedRubricUnknown(updated, fact);
       break;
     }
 
@@ -700,7 +736,7 @@ async function applyCandidateEvidence(
       );
 
       if (updatedWithSpec !== updated) {
-        updated = updatedWithSpec;
+        updated = removeVerifiedRubricUnknown(updatedWithSpec, fact);
         break;
       }
     }
@@ -744,6 +780,7 @@ async function applyOrganicEvidence(
           source.url,
         ),
       };
+      updated = removeVerifiedRubricUnknown(updated, fact);
     }
 
     if (fact.kind === "dimension") {
@@ -762,27 +799,60 @@ async function applyOrganicEvidence(
             source.url,
           ),
         };
+        updated = removeVerifiedRubricUnknown(updated, fact);
       }
     }
 
     if (fact.kind === "feature") {
       updated = addVerifiedFeaturePro(updated, fact);
+      updated = removeVerifiedRubricUnknown(updated, fact);
     }
 
     if (fact.kind === "spec") {
-      updated = applySpecEvidenceFromText(
+      const updatedWithSpec = applySpecEvidenceFromText(
         updated,
         fact,
         evidenceText(source),
         source.url,
         source.title,
       );
+
+      if (updatedWithSpec !== updated) {
+        updated = removeVerifiedRubricUnknown(updatedWithSpec, fact);
+      }
     }
 
     break;
   }
 
   return updated;
+}
+
+function rubricUnknownFacts(product: ProductRecommendation) {
+  return (product.evidenceBucket?.unknowns || [])
+    .filter((item) => isRubricFactUnknownTopic(item.topic))
+    .map((item) => {
+      const label = rubricFactFromUnknownTopic(item.topic);
+      const importance =
+        item.importance || classifyRubricFactImportance(label).importance;
+
+      return {
+        fact: {
+          ...missingFactFromLabel(label),
+          label,
+          rubricUnknownTopic: item.topic,
+        },
+        importance,
+      };
+    })
+    .filter((item) => item.importance !== "minor")
+    .sort((a, b) => {
+      const importance =
+        rubricImportanceRank(b.importance) - rubricImportanceRank(a.importance);
+
+      return importance || a.fact.label.localeCompare(b.fact.label);
+    })
+    .map((item) => item.fact);
 }
 
 async function rescueProduct(
@@ -798,8 +868,9 @@ async function rescueProduct(
     priorities: requirements.priorities,
     selectedFeatures: requirements.selectedFeatures,
   });
+  const rubricFactsToVerify = rubricUnknownFacts(product);
 
-  if (validation.unknownRequirements.length === 0) {
+  if (validation.unknownRequirements.length === 0 && rubricFactsToVerify.length === 0) {
     const unverifedPriceFailures = validation.missingRequirements.filter(
       (label) =>
         missingFactFromLabel(label).kind === "price" && !hasVerifiedPrice(product),
@@ -819,13 +890,22 @@ async function rescueProduct(
   const labelsToVerify = Array.from(
     new Set([...validation.unknownRequirements, ...unverifiedPriceFailures]),
   );
-  let updated = product;
-
-  for (const { fact, query } of buildVerificationQueries(
+  const requirementQueries = buildVerificationQueries(
     product,
     labelsToVerify.slice(0, maxFacts),
     category,
-  )) {
+  );
+  const rubricQueries = rubricFactsToVerify
+    .slice(0, Math.max(0, maxFacts - requirementQueries.length))
+    .map((fact) => ({
+      fact,
+      query: `${product.name} ${fact.queryTerm} ${category}`
+        .replace(/\s+/g, " ")
+        .trim(),
+    }));
+  let updated = product;
+
+  for (const { fact, query } of [...requirementQueries, ...rubricQueries]) {
     if (fact.kind === "spec" && !specSearchEnabled()) {
       continue;
     }

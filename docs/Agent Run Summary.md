@@ -8,6 +8,28 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-06-21 00:07
+
+**Goal:** Implement Phase 5 and Phase 6 by making ReviewRadar retry important missing rubric facts, then run a full hardening pass.
+
+**What it checked:** Reviewed the requirement-evidence rescue flow, rubric missing facts, scoring/evidence tests, full project checks, deterministic QA agents, and a live localhost API search.
+
+**What it found:** ReviewRadar could track and weight missing rubric facts, but it was not yet using those high-value gaps to drive targeted rescue searches.
+
+**What it changed:** Extended the existing rescue step so it retries critical and important rubric facts after hard requirements. If a retry verifies the fact for the same product, the specific missing rubric gap is cleared and the supporting evidence is kept.
+
+**Why the change matters:** ReviewRadar now gets one more chance to prove important facts like price, dimensions, fit, capacity, or compatibility before final ranking. That should reduce stale "missing fact" warnings and improve trust.
+
+**Tests run:** Focused rescue/evidence/scoring tests passed. Typecheck passed. Lint passed. Full unit tests passed with 486/486 tests. Production build passed. Deterministic QA agents passed.
+
+**Live checks run:** Ran `refrigerator`, `$2500`, `must be stainless steel` against the local API.
+
+**Before/after proof:** The new regression test proves a missing `Current product price` rubric fact can be retried, verified, added as offer metadata, and removed from the missing-facts list. The live refrigerator smoke test returned 3 exact matches and 5 close matches, with the top product showing a verified `$2,099` price and one remaining dimension/clearance gap honestly.
+
+**Remaining issues:** No repeated root causes were found in the deterministic QA loop. Live QA should keep rotating product categories.
+
+**Next recommended step:** Run live RR agents later with different product categories to see whether rubric-fact retries help beyond appliances.
+
 ## Codex Run - 2026-06-20 23:05
 
 **Goal:** Make missing buying-rubric facts smarter by giving them importance levels.
