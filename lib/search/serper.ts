@@ -9,10 +9,8 @@ import type {
 } from "@/types/review-radar";
 import type { SelectedSmartFeature } from "@/types/smart-features";
 import {
-  brandAliasesFor,
   brandEvidenceMatches,
   canonicalBrand,
-  detectKnownBrands,
   inferKnownBrand,
 } from "../brandMatching.ts";
 import { getCachedOrLoad, normalizeCacheKey } from "../cache.ts";
@@ -2350,13 +2348,12 @@ export function cheapPreFilterRawCandidates(
 // the list into structured, priced shopping candidates instead of relying only on
 // raw shopping results and the LLM's guesses.
 //
-// It is category-agnostic: a seed is a run of "name tokens" (a brand/proper-noun
-// or a model token) that EITHER starts at a known brand (`detectKnownBrands`) OR
-// contains a model-number token. That second path means it works even for brands
-// the dictionary does not yet know — real editorial picks almost always carry a
-// model number ("Weber Spirit II E-310", "Traeger Pro 575") — while generic
-// category phrases ("Best Gas Grills") are rejected because they have no model
-// number and are not a known brand. No product category or name is hardcoded.
+// It is category-agnostic: a seed is a run of "name tokens" (TitleCase / proper
+// nouns / model tokens) that contains a real MODEL NUMBER. Real editorial picks
+// almost always carry a model number ("Weber Spirit II E-310", "Traeger Pro 575"),
+// while generic phrases ("Best Gas Grills"), brand+stray-word noise ("DeWalt Find"),
+// and bare years ("2026 Lab") are rejected because they have no model number. No
+// product category or brand is hardcoded.
 const SEED_NAME_STOPWORDS = new Set([
   "the", "a", "an", "and", "or", "is", "are", "was", "our", "we", "best", "top",
   "pick", "picks", "value", "budget", "overall", "editor", "editors", "choice",
@@ -2371,6 +2368,14 @@ function trimSeedToken(token: string) {
 
 function seedTokenHasDigit(token: string) {
   return /[0-9]/.test(token);
+}
+
+// A model-number token has a digit but is NOT a bare 4-digit year — best-of
+// article titles are full of years ("2026") and brand+word noise ("DeWalt Find"),
+// neither of which is a product. Real picks carry a model number: "WD4080",
+// "E-310", "575", "6-Gallon".
+function isSeedModelNumberToken(token: string) {
+  return seedTokenHasDigit(token) && !/^(?:19|20)\d{2}$/.test(token);
 }
 
 // A "name token" is part of a product name: a TitleCase word, a roman numeral, or
@@ -2391,6 +2396,31 @@ function isSeedNameToken(token: string) {
   );
 }
 
+// Best-of / top-rated editorial queries the seeding step mines for every search,
+// so the canonical top products for ANY category get pulled into the candidate
+// pool (not just whatever live shopping happened to surface). Budget-aware so it
+// anchors on the best products that FIT the shopper's budget. Category-agnostic.
+export function buildBestOfSeedQueries(
+  category: string,
+  maxBudget: number | null,
+): string[] {
+  const base = (category || "").trim();
+
+  if (!base) {
+    return [];
+  }
+
+  const budgetSuffix = maxBudget !== null ? ` under $${maxBudget}` : "";
+
+  return Array.from(
+    new Set([
+      `best ${base}${budgetSuffix}`,
+      `top rated ${base}`,
+      `most popular ${base}`,
+    ]),
+  );
+}
+
 export function extractSeedProductNames(
   sources: Array<{ title?: string; snippet?: string }>,
   maxSeeds = 6,
@@ -2400,23 +2430,7 @@ export function extractSeedProductNames(
 
   for (const source of sources) {
     const rawText = `${source?.title || ""} . ${source?.snippet || ""}`;
-
-    // Longest alias first so multi-word brands ("Char-Broil") win over a partial.
-    const aliasTokenLists = detectKnownBrands(rawText)
-      .flatMap((brand) =>
-        brandAliasesFor(brand).map((alias) => ({
-          tokens: alias.split(/\s+/).map((token) => token.toLowerCase()).filter(Boolean),
-        })),
-      )
-      .filter((alias) => alias.tokens.length > 0)
-      .sort((first, second) => second.tokens.length - first.tokens.length);
-
     const rawTokens = rawText.split(/\s+/).map(trimSeedToken).filter(Boolean);
-    const lowerTokens = rawTokens.map((token) => token.toLowerCase());
-    const startsKnownBrand = (index: number) =>
-      aliasTokenLists.some((alias) =>
-        alias.tokens.every((token, offset) => lowerTokens[index + offset] === token),
-      );
 
     let index = 0;
 
@@ -2426,7 +2440,6 @@ export function extractSeedProductNames(
         continue;
       }
 
-      const start = index;
       const run: string[] = [];
 
       while (
@@ -2438,9 +2451,10 @@ export function extractSeedProductNames(
         index += 1;
       }
 
-      // Accept a run only when it is anchored: it starts at a known brand, or it
-      // carries a model number. A bare two-word TitleCase phrase is not enough.
-      if (run.length >= 2 && (startsKnownBrand(start) || run.some(seedTokenHasDigit))) {
+      // Accept a run only when it carries a real model number. A brand prefix plus
+      // a stray word ("DeWalt Find"), a bare year ("2026 Lab"), or a generic phrase
+      // ("Best Gas Grills") is not a product name.
+      if (run.length >= 2 && run.some(isSeedModelNumberToken)) {
         const name = run.join(" ").replace(/\s+/g, " ").trim();
         const key = name.toLowerCase();
 
@@ -2712,18 +2726,26 @@ export async function searchSerperForProducts(
 
   await runDiscoveryTasks(tasksForStage(plan.stagedQueries.pass1));
 
-  // Editorial seeding: mine known-good product names from "best of" articles and
-  // shopping-search them, so curated picks enter the pool as structured, priced
-  // candidates rather than only competing as organic evidence. Category-agnostic
-  // (brand-anchored) and budget-bounded by the search depth.
-  const editorialQueries = uniqueStatStrings(
-    plan.queries
-      .filter((query) => query.family === "editorial_review")
+  // Editorial seeding: mine known-good product names from "best of" / "top rated"
+  // lists and shopping-search them, so the category's canonical top products enter
+  // the pool as structured, priced candidates. The best-of queries are built here
+  // (budget-aware) so EVERY search — any category — anchors on the top products,
+  // not just whatever live shopping happened to surface. Plan-generated editorial
+  // "best/top" queries are also mined; the complaints/long-term query is skipped
+  // because it surfaces problems, not top picks.
+  const editorialQueries = uniqueStatStrings([
+    ...buildBestOfSeedQueries(baseCategoryName, maxBudgetFromInput(input)),
+    ...plan.queries
+      .filter(
+        (query) =>
+          query.family === "editorial_review" &&
+          /\b(?:best|top[\s-]?rated|most popular)\b/i.test(query.query),
+      )
       .map((query) => query.query),
-  );
+  ]);
 
   if (editorialQueries.length > 0) {
-    const editorialEvidenceBudget = searchConfig.depth === "deep" ? 2 : 1;
+    const editorialEvidenceBudget = searchConfig.depth === "deep" ? 3 : 2;
     const editorialSources = (
       await runWithConcurrency(
         editorialQueries

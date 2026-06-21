@@ -1728,3 +1728,24 @@ See `docs/agent-loop-report.md`.
 - **finding:** **NOT a bug or a systematic cap.** The exact count varies run-to-run because discovery (live Serper) + the LLM `web_search` research call are non-deterministic and surface a different product set each run. With no user criteria the only hard requirement is the category, so the exact count = "distinct shop-vacs found that verify as shop-vacs," capped at 7. A 3-exact run simply surfaced fewer distinct/verifiable products that time.
 - **lever:** `SEARCH_DEPTH` (`.env.local`, currently `deep`). `deep` runs the most discovery queries (5 shopping / 3 organic / 6 retailer / 3 direct, ≤100 raw / 15 enriched) → fills the 7 slots; `standard`/`dev` run fewer → fewer candidates → fewer exact. A low-depth run is the likely systematic cause of a 3-exact screenshot.
 - **recommendation:** keep `deep` for best coverage. If more *consistent* fill is wanted regardless of depth, the discovery-consistency levers (more retailer/seed queries, market-coverage rescue threshold) are the place to look — a separate change, not needed to explain this.
+
+---
+
+## 🟩 **Claude QA Update — 2026-06-21 12:52**
+
+### Claude Change 8 — Lever 1: reliable best-of seeding + cleaner seed extraction
+
+- **agent:** Claude
+- **goal context:** user wants every search to surface the 7 best/top-rated/most-trusted products (and, with criteria, the best 7 that match).
+- **change:**
+  1. `buildBestOfSeedQueries(category, maxBudget)` (serper.ts) — every search now mines budget-aware "best / top rated / most popular `<category>`" lists, built in the seeding step so it fires for ANY category (previously seeding drew only from the thin search-plan editorial queries and underfired — `seedProductNames` was empty for shop vac).
+  2. Tightened `extractSeedProductNames`: a seed must carry a real **model-number** token (digit, not a bare year). Drops brand+stray-word noise ("DeWalt Find") and year noise ("2026 Lab"); removed the now-dead brand-anchor path + imports.
+  3. Surfaced `seedProductNames`/`seedSearchesRun` in the route debug payload (observability).
+- **checks:** `npm test` **503/503**, typecheck, lint clean.
+- **live (3 shop-vac runs):** seeding fires every time (`seedSearchesRun` 10). Before the extractor fix, seeds were junk ("DeWalt Find", "2026 Lab"); after, they are real models (Stanley/Craftsman/Vacmaster/Ridgid), with some residual prefix noise ("Everyday Use Stanley 6-Gallon").
+- **KEY FINDING (refines the earlier "3 exact" diagnosis):** in one run, **7 exact-eligible** candidates displayed as **3** because they **de-duplicated to 3 distinct canonical products** (same popular vacs found as multiple listings). So a low displayed count is driven by **distinct-product count + canonical de-dup**, not only run-to-run discovery variance. Best-of seeding raises the distinct-pool *only if the lists name diverse models*; seeding the same 3-4 popular vacs still collapses to 3-4.
+- **follow-ups (toward the goal):**
+  - **Lever 2** — rank the eligible set by rating/review-volume/trust so the best win the slots.
+  - **Investigate canonical de-dup** — confirm it is not over-collapsing genuinely different models (the strongest lead for "only 3 shown").
+  - Strip residual seed prefixes ("Everyday Use", "Big Messes For").
+- **files changed:** `lib/search/serper.ts`, `app/api/recommendations/route.ts` (debug fields), `tests/seedProductNames.test.mjs`.

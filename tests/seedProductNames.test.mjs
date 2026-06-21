@@ -1,7 +1,30 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { extractSeedProductNames } from "../lib/search/serper.ts";
+import {
+  buildBestOfSeedQueries,
+  extractSeedProductNames,
+} from "../lib/search/serper.ts";
+
+describe("buildBestOfSeedQueries (best-of anchoring)", () => {
+  it("builds best-of / top-rated / most-popular queries for any category", () => {
+    assert.deepEqual(buildBestOfSeedQueries("shop vac", null), [
+      "best shop vac",
+      "top rated shop vac",
+      "most popular shop vac",
+    ]);
+  });
+
+  it("makes the best-of query budget-aware so it anchors on the best products that fit", () => {
+    const queries = buildBestOfSeedQueries("shop vac", 200);
+    assert.equal(queries[0], "best shop vac under $200");
+    assert.ok(queries.includes("top rated shop vac"));
+  });
+
+  it("returns nothing for an empty category", () => {
+    assert.deepEqual(buildBestOfSeedQueries("", null), []);
+  });
+});
 
 describe("extractSeedProductNames", () => {
   it("mines brand + model names from editorial titles and snippets", () => {
@@ -15,6 +38,15 @@ describe("extractSeedProductNames", () => {
 
     assert.ok(seeds.includes("Weber Spirit II E-310"));
     assert.ok(seeds.includes("Traeger Pro 575"));
+  });
+
+  it("rejects brand+word and bare-year noise from messy best-of snippets", () => {
+    const seeds = extractSeedProductNames([
+      { title: "DeWalt Find the best shop vacs", snippet: "Our 2026 Lab tested the top picks." },
+    ]);
+
+    assert.ok(!seeds.includes("DeWalt Find"));
+    assert.ok(!seeds.some((seed) => /^2026\b/.test(seed)));
   });
 
   it("rejects generic category phrases that carry no model number", () => {

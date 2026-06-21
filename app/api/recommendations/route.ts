@@ -933,6 +933,8 @@ async function handleRecommendationPost(
       searchDepth: serperResult.stats.searchDepth,
       serperShoppingCalls: serperResult.stats.shoppingCalls,
       serperOrganicCalls: serperResult.stats.organicCalls,
+      seedSearchesRun: serperResult.stats.seedSearchesRun,
+      seedProductNames: serperResult.stats.seedProductNames,
       serperRetailerDomainCalls: serperResult.stats.retailerDomainCalls,
       serperDirectRetailerCalls: serperResult.stats.directRetailerCalls,
       preFilteredCandidateCount: serperResult.stats.preFilteredCandidates,
