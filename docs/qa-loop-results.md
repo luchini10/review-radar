@@ -4,6 +4,54 @@ Date: 2026-06-18
 Repo: `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 Source-of-truth map: `ReviewRadar-Overview.md`
 
+## Codex QA Update - 2026-06-20 22:47
+
+## Loop Scope
+
+Start Phase 4: make missing buying-rubric facts affect trust, confidence, and ranking without making them automatic hard failures.
+
+## Root Causes
+
+The buying rubric could already say what facts matter for a product category and could guide evidence searches, but products that were missing important rubric facts could still look too confident. ReviewRadar needed a reusable way to say, "this product may still be useful, but important facts are not verified yet."
+
+## Generalized Fix
+
+- Added missing rubric facts into the evidence unknowns as `Rubric fact: ...` items.
+- Added a capped score penalty when products are missing important rubric facts.
+- Added a confidence cap when a product is missing important rubric facts.
+- Kept the behavior soft: missing rubric facts make a product less trusted, but do not automatically remove it from exact matches.
+- Added safeguards so facts already supported by known price, finish/color, type, dimensions, capacity, model, or availability data are not falsely marked missing.
+
+This is reusable across categories because the missing facts come from the generated buying rubric for the current search, not from one product-specific patch.
+
+## Verification
+
+| Check | Result |
+| --- | --- |
+| Focused product-evidence and scoring tests | Passed |
+| Typecheck | Passed |
+| Lint | Passed |
+| Full unit tests | Passed, 483/483 |
+| Production build | Passed |
+| Direct live refrigerator API recheck | Passed |
+
+## Before / After Proof
+
+Before the fix:
+
+- A product could be missing important rubric facts but still look more certain than it deserved.
+- Missing rubric details were not consistently visible as evidence gaps.
+
+After the fix:
+
+- The live `refrigerator`, `$2500`, `must be stainless steel` search returned 2 exact matches and 5 close matches.
+- The stronger exact match had no missing rubric facts.
+- Weaker or missing-price products carried rubric unknowns and lower confidence instead of being over-promoted.
+
+## Remaining Notes
+
+This phase improves trust and ranking pressure. It does not yet force deeper page extraction for every missing fact, so future phases can keep improving how ReviewRadar verifies hard-to-find specs.
+
 ## Codex QA Update - 2026-06-20 20:57
 
 ## Loop Scope

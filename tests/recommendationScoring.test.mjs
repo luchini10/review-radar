@@ -892,6 +892,71 @@ describe("recommendation scoring and ranked Best Match selection", () => {
     assert.ok(completeProduct.totalScore > sparseProduct.totalScore);
   });
 
+  it("penalizes products with missing buying-rubric facts without making them hard failures", () => {
+    const input = {
+      budget: "under $2500",
+      query: "refrigerator",
+    };
+    const complete = buildProduct("Complete Stainless Refrigerator", {
+      category: "refrigerator",
+      confidence_score: 94,
+      evidenceBucket: {
+        negativeEvidence: [],
+        positiveEvidence: [
+          {
+            claim: "Exact dimensions and installation fit",
+            confidence: "Medium",
+            sourceTitle: "Spec sheet",
+            sourceUrl: "https://example.com/specs",
+            snippet: "Dimensions and installation fit are verified.",
+          },
+        ],
+        repeatedComplaints: [],
+        unknowns: [],
+      },
+    });
+    const missingRubricFacts = buildProduct("Thin Stainless Refrigerator", {
+      category: "refrigerator",
+      confidence_score: 94,
+      evidenceBucket: {
+        negativeEvidence: [],
+        positiveEvidence: [],
+        repeatedComplaints: [],
+        unknowns: [
+          {
+            topic: "Rubric fact: Exact dimensions and installation fit",
+            reason: "Important rubric fact was not clearly verified.",
+          },
+          {
+            topic: "Rubric fact: Total capacity",
+            reason: "Important rubric fact was not clearly verified.",
+          },
+        ],
+      },
+    });
+    const completeScore =
+      recommendationScoringTestExports.scoreProduct(complete, input);
+    const thinScore =
+      recommendationScoringTestExports.scoreProduct(missingRubricFacts, input);
+    const result = scoreAndSelectRecommendations(
+      {
+        assumptions: [],
+        exactMatches: [missingRubricFacts],
+        final_buying_advice: "",
+        nearMatches: [],
+        recommendations: [missingRubricFacts],
+        search_summary: "",
+        what_to_avoid: [],
+      },
+      input,
+    );
+
+    assert.ok((thinScore.missingDataPenalty || 0) > (completeScore.missingDataPenalty || 0));
+    assert.ok(completeScore.totalScore > thinScore.totalScore);
+    assert.equal(result.exactMatches.length, 1);
+    assert.equal(result.exactMatches[0].confidence_score, 78);
+  });
+
   it("does not let a broad marketplace page outrank a specialist source by default", () => {
     const input = {
       budget: "under $1000",

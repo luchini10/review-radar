@@ -8,6 +8,28 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-06-20 22:47
+
+**Goal:** Start Phase 4 by making missing buying-rubric facts lower confidence and ranking strength without automatically rejecting useful products.
+
+**What it checked:** Reviewed product evidence enrichment, missing-data scoring, confidence caps, focused tests, full project checks, and a live refrigerator search.
+
+**What it found:** ReviewRadar could use the buying rubric for searches and scoring, but products missing important rubric facts could still look too confident. Those missing facts needed to be tracked in one reusable way.
+
+**What it changed:** Added missing rubric facts as evidence unknowns. Added a capped ranking penalty and confidence cap when important rubric facts are missing. Added safeguards so already verified price, finish, type, dimensions, capacity, model, and availability facts are not falsely marked missing.
+
+**Why the change matters:** Shoppers should see the strongest, best-verified products first. A product can still be shown when some facts are missing, but ReviewRadar should be more cautious about ranking and trust.
+
+**Tests run:** Focused product-evidence and scoring tests passed. Typecheck passed. Lint passed. Full unit tests passed with 483/483 tests. Production build passed.
+
+**Live checks run:** Ran `refrigerator`, `$2500`, `must be stainless steel` against the local API.
+
+**Before/after proof:** The live run returned 2 exact matches and 5 close matches. The stronger exact match had no missing rubric facts, while weaker or missing-price products carried rubric unknowns and lower confidence.
+
+**Remaining issues:** This does not yet force deeper extraction for every missing fact. Future phases can improve how ReviewRadar verifies specs that are hard to find.
+
+**Next recommended step:** Move to the next phase only after another live QA run confirms the confidence/ranking pressure is helping across more than appliances.
+
 ## Codex Run - 2026-06-20 20:57
 
 **Goal:** Start Phase 3 by making the buying rubric guide product evidence searches and evidence classification.

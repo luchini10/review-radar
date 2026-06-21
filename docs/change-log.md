@@ -14,6 +14,10 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 ## 2026-06-20
 
 ### Changed
+- Started Phase 4 by making missing buying-rubric facts affect evidence completeness, confidence, and ranking.
+- Products now record important unverified rubric facts as `Rubric fact: ...` evidence unknowns, so ReviewRadar can see when a recommendation is missing facts shoppers would reasonably expect.
+- Missing rubric facts now add a capped missing-data penalty and cap confidence, but they do not hard-reject the product by themselves.
+- Added safeguards so already verified price, finish/color, product type, dimensions, capacity, model, and availability facts are not falsely marked missing.
 - Started Phase 3 by making the buying rubric guide evidence gathering, not just ranking.
 - Added rubric-specific evidence searches for product facts, quality signals, owner-review themes, and red flags.
 - Attached the generated buying rubric to products internally before review-evidence enrichment, then stripped it from normal user-facing API responses.
@@ -55,6 +59,12 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 - Added a reusable buying-advice page filter so articles such as "7 Things to Avoid When Purchasing..." can still inform research but cannot appear as product cards.
 
 ### Verified
+- `node --no-warnings --test tests\productEvidence.test.mjs tests\recommendationScoring.test.mjs`
+- `npm run typecheck`
+- `npm run lint`
+- `npm test` (483/483 tests)
+- `npm run build`
+- Direct live API recheck for `refrigerator`, `$2500`, `must be stainless steel`: returned 2 exact matches and 5 close matches. The stronger exact match had no missing rubric facts, while weaker or missing-price products carried rubric unknowns and lower confidence instead of being over-promoted.
 - `node --no-warnings --test tests\productEvidence.test.mjs tests\buyingRubric.test.mjs tests\recommendationScoring.test.mjs`
 - `npm run typecheck`
 - `npm run lint`

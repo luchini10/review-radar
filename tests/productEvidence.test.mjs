@@ -82,6 +82,16 @@ function buildRubricProduct(overrides = {}) {
   });
 }
 
+function field(value) {
+  return {
+    confidence: "High",
+    sourceType: "json_ld",
+    sourceUrl: "https://example.com/product",
+    value,
+    verifiedAt: "2026-06-20T00:00:00.000Z",
+  };
+}
+
 describe("product evidence enrichment", () => {
   it("generates review evidence queries for product-specific topics", () => {
     const queries = buildProductEvidenceQueries(buildProduct());
@@ -219,6 +229,53 @@ describe("product evidence enrichment", () => {
       bucket.positiveEvidence.some((item) => /stainless steel/i.test(item.claim)),
     );
     assert.equal(bucket.negativeEvidence.length, 0);
+  });
+
+  it("records missing buying-rubric verification facts as evidence unknowns", () => {
+    const product = buildRubricProduct();
+    const bucket = buildBucketFromSources(product, [
+      {
+        title: "Official refrigerator page",
+        url: "https://example.com/refrigerator",
+        snippet:
+          "The page confirms a stainless steel finish and consistent temperature controls.",
+      },
+    ]);
+
+    assert.ok(
+      bucket.unknowns.some((item) =>
+        /Rubric fact: Exact dimensions and installation fit/i.test(item.topic),
+      ),
+    );
+  });
+
+  it("does not mark rubric price or finish facts missing when structured data already verifies them", () => {
+    const product = buildRubricProduct({
+      estimated_price_range: "$1,999",
+      metadata: {
+        offers: [
+          {
+            availability: field("InStock"),
+            price: field(1999),
+            priceCurrency: field("USD"),
+            retailer: "example.com",
+            url: "https://example.com/refrigerator",
+          },
+        ],
+      },
+    });
+    const bucket = buildBucketFromSources(product, [
+      {
+        title: "Official refrigerator page",
+        url: "https://example.com/refrigerator",
+        snippet:
+          "The listing title says stainless steel and the page shows the current sale price.",
+      },
+    ]);
+    const topics = bucket.unknowns.map((item) => item.topic).join("\n");
+
+    assert.doesNotMatch(topics, /price is at or below/i);
+    assert.doesNotMatch(topics, /stainless steel finish/i);
   });
 
   it("treats sparse review coverage or missing downside checks as thin evidence", () => {

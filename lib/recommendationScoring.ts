@@ -424,11 +424,19 @@ function missingDataPenalty(product: ProductRecommendation) {
   const unknownRequired = product.requirementCheck?.unknown.length || 0;
   const softUnknown = product.requirementCheck?.softUnknown?.length || 0;
   const weakIdentity = product.canonicalIdentity?.confidence === "Low" ? 5 : 0;
+  const rubricUnknowns =
+    product.evidenceBucket?.unknowns.filter((item) =>
+      /^Rubric fact:/i.test(item.topic),
+    ).length || 0;
 
   return clamp(
-    missing * 2.5 + unknownRequired * 8 + softUnknown * 4 + weakIdentity,
+    missing * 2.5 +
+      unknownRequired * 8 +
+      softUnknown * 4 +
+      weakIdentity +
+      Math.min(12, rubricUnknowns * 2.5),
     0,
-    35,
+    45,
   );
 }
 
@@ -487,6 +495,11 @@ function withHonestConfidence<T extends ProductRecommendation>(product: T): T {
   const cap = Math.min(
     CONFIDENCE_CAP_BY_EVIDENCE[strength],
     CONFIDENCE_CAP_BY_MARKET_TIER[marketConfidence.tier],
+    product.evidenceBucket?.unknowns.some((item) =>
+      /^Rubric fact:/i.test(item.topic),
+    )
+      ? 78
+      : 100,
   );
 
   if (

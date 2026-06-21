@@ -1086,6 +1086,174 @@ function addImportantUnknowns(
         "Convenience features are listed, but long-term durability evidence was not found in the review snippets.",
     });
   }
+
+  addRubricUnknowns(product, bucket, sources);
+}
+
+function rubricVerificationText(
+  product: ProductRecommendation,
+  sources: SerperEvidenceSource[],
+) {
+  return normalizeText(
+    [
+      productContextText(product),
+      product.metadata?.title?.value,
+      product.metadata?.brand?.value,
+      product.metadata?.modelNumber?.value,
+      product.metadata?.gtin?.value,
+      product.metadata?.canonicalUrl?.value,
+      product.metadata?.colors?.value?.join(" "),
+      product.metadata?.dimensions?.width?.value,
+      product.metadata?.dimensions?.height?.value,
+      product.metadata?.dimensions?.depth?.value,
+      ...(product.metadata?.offers || []).flatMap((offer) => [
+        offer.price.value,
+        offer.retailer,
+        offer.availability.value,
+      ]),
+      ...sources.flatMap((source) => [source.title, source.snippet]),
+      ...bucketEvidenceText(bucketFromProduct(product)),
+    ]
+      .filter((value) => value !== undefined && value !== null)
+      .join(" "),
+  );
+}
+
+function bucketEvidenceText(bucket: ProductEvidenceBucket | undefined) {
+  if (!bucket) {
+    return [];
+  }
+
+  return [
+    ...bucket.positiveEvidence.flatMap((item) => [item.claim, item.snippet]),
+    ...bucket.negativeEvidence.flatMap((item) => [item.claim, item.snippet]),
+  ];
+}
+
+function bucketFromProduct(product: ProductRecommendation) {
+  return product.evidenceBucket;
+}
+
+function addRubricUnknowns(
+  product: ProductRecommendation,
+  bucket: ProductEvidenceBucket,
+  sources: SerperEvidenceSource[],
+) {
+  const rubric = product.buyingRubric;
+
+  if (!rubric?.mustVerifyFacts.length) {
+    return;
+  }
+
+  const verificationText = rubricVerificationText(product, sources);
+  const alreadyKnown = [
+    ...bucket.positiveEvidence.flatMap((item) => [item.claim, item.snippet]),
+    ...bucket.negativeEvidence.flatMap((item) => [item.claim, item.snippet]),
+  ]
+    .map(normalizeText)
+    .join(" ");
+  const combined = `${verificationText} ${alreadyKnown}`;
+  const missingFacts = uniqueStrings(rubric.mustVerifyFacts)
+    .filter((fact) => !rubricFactIsOptional(fact))
+    .filter((fact) => !rubricFactSatisfiedByKnownData(product, fact, combined))
+    .filter((fact) => !rubricItemMatches(combined, fact))
+    .slice(0, 4);
+
+  for (const fact of missingFacts) {
+    bucket.unknowns.push({
+      topic: `Rubric fact: ${rubricEvidenceTitle(fact)}`,
+      reason:
+        "The buying rubric says this is an important fact, but the evidence gathered for this product did not clearly verify it.",
+    });
+  }
+}
+
+function rubricFactIsOptional(fact: string) {
+  return /\bif\s+(?:shown|listed|available|relevant|important|included|applicable)\b|\bif any\b/i.test(
+    fact,
+  );
+}
+
+function hasVerifiedOffer(product: ProductRecommendation) {
+  return (product.metadata?.offers || []).some(
+    (offer) =>
+      offer.price.value !== null &&
+      Number.isFinite(offer.price.value) &&
+      offer.price.value > 0,
+  );
+}
+
+function hasKnownDimensions(product: ProductRecommendation, text: string) {
+  const dimensions = product.metadata?.dimensions;
+
+  return Boolean(
+    dimensions?.width?.value ||
+      dimensions?.height?.value ||
+      dimensions?.depth?.value ||
+      /\b(?:width|height|depth|dimension|clearance|fit)\b.{0,80}\b\d+(?:\.\d+)?\s*(?:in|inch|inches|")\b/i.test(
+        text,
+      ),
+  );
+}
+
+function rubricFactSatisfiedByKnownData(
+  product: ProductRecommendation,
+  fact: string,
+  normalizedEvidenceText: string,
+) {
+  const normalizedFact = normalizeText(fact);
+  const originalText = [
+    product.name,
+    product.category,
+    product.why_recommended,
+    product.best_for,
+    product.price_value_verdict,
+    ...product.citations.map((citation) => citation.what_it_supports),
+  ].join(" ");
+
+  if (/\b(?:price|budget|at or below|under)\b/.test(normalizedFact)) {
+    return hasVerifiedOffer(product) || /\$\s*\d/.test(product.estimated_price_range);
+  }
+
+  if (/\b(?:stainless|finish|color)\b/.test(normalizedFact)) {
+    return /\b(?:stainless steel|fingerprint resistant stainless|monochromatic stainless)\b/i.test(
+      originalText,
+    ) || /\b(?:stainless steel|fingerprint resistant stainless|monochromatic stainless)\b/i.test(
+      normalizedEvidenceText,
+    );
+  }
+
+  if (/\b(?:type|configuration|french door|side by side|top freezer|bottom freezer|counter depth|standard depth)\b/.test(normalizedFact)) {
+    return /\b(?:french door|side[-\s]?by[-\s]?side|top[-\s]?freezer|bottom[-\s]?freezer|counter[-\s]?depth|standard[-\s]?depth|freezerless|mini fridge|compact)\b/i.test(
+      originalText,
+    );
+  }
+
+  if (/\b(?:dimension|width|height|depth|clearance|installation|fit)\b/.test(normalizedFact)) {
+    return hasKnownDimensions(product, originalText);
+  }
+
+  if (/\b(?:capacity|cubic|cu ft|freezer split|refrigerator freezer split)\b/.test(normalizedFact)) {
+    return /\b\d+(?:\.\d+)?\s*(?:cu\.?\s*ft|cubic feet?)\b/i.test(originalText);
+  }
+
+  if (/\b(?:model|model number|gtin)\b/.test(normalizedFact)) {
+    return Boolean(
+      product.metadata?.modelNumber?.value ||
+        product.metadata?.gtin?.value ||
+        /\b[A-Z]{2,}\d{2,}[A-Z0-9-]*\b/.test(originalText),
+    );
+  }
+
+  if (/\b(?:availability|in stock|delivery|sold by|retailer|brand)\b/.test(normalizedFact)) {
+    return Boolean(
+      product.metadata?.offers?.some((offer) => offer.availability.value) ||
+        product.product_page_url ||
+        product.citations.length > 0,
+    );
+  }
+
+  return rubricItemMatches(normalizedEvidenceText, fact);
 }
 
 function confidenceRank(confidence: EvidenceConfidence) {
