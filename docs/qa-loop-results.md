@@ -1766,3 +1766,18 @@ See `docs/agent-loop-report.md`.
   - After: **10 eligible → 7 DISPLAYED** distinct vacs (incl. three different Vacmaster 8-gal models the old code merged). The list now fills all 7.
 - **impact:** directly resolves the "only 3 exact" symptom. More distinct products survive de-dup, so the 7 slots fill reliably. This is the strongest single lever found for the user's "show 7 best" goal.
 - **files changed:** `lib/productIdentity.ts`, `tests/productIdentity.test.mjs`.
+
+---
+
+## 🟩 **Claude QA Update — 2026-06-21 18:31**
+
+### Claude Investigation — variant-collapse attempt (reverted) + Lever 2 (already satisfied)
+
+- **agent:** Claude
+- **context:** user wants (a) same product / different model number collapsed to the most popular one, and (b) the displayed 7 to be the top-rated / most-trusted / most-popular.
+
+**Variant-collapse (a) — ATTEMPTED, REVERTED.** Tried making selection de-dup by product *family* via the existing `areSameCanonicalProduct`/`sameProductFamilyTitle`. **It over-collapses:** that matcher is size-blind — `"Stanley 5 Gallon 3 HP"` and `"Stanley 6 Gallon 3 HP"` merge to one because they share the "3 HP" token, and `"RIDGID 4 Gallon 5.0 HP"` merges with `"RIDGID 5 Gallon 3 HP"` on a spurious "5". A live shop-vac run dropped 7 eligible → 3 displayed. This would undo the canonical-id size fix and merge genuinely different products, so I reverted it (working tree back to commit `fa66148`). **Correct variant-collapse needs a size-AWARE family key** (group by brand + extracted size; collapse only within the same size) — a separate, careful build. It also has an inherent tension with "show 7": collapsing variants reduces the count when a category genuinely has few distinct families.
+
+**Lever 2 (b) — INVESTIGATED, already substantially satisfied (no change).** The ranked-match score already weights rating (`ownerRatingScore`, ≤20), review-volume (`ownerReviewStrengthScore`, ≤20), and trust (`marketConfidence` tier / evidence strength). `broadSearchPopularityMultiplier` amplifies popularity ×1.25 for broad/no-criteria searches and ×0.75 for constrained ones — exactly the "no criteria → most popular" intent. A/B confirms decisive trust-driven ordering (strong #1/186, moderate #2/161, weak #3–5/~78–99). The "show 7" bottlenecks were de-dup (fixed) + discovery breadth (Lever 1), not ranking — so no scoring change is warranted (over-tuning would unbalance Phase 2's de-stacking).
+- **checks (post-revert):** `npm test` 504/504, typecheck, lint clean.
+- **recommended next:** build the **size-aware variant-collapse** properly (the user's actual ask), accepting the count tradeoff — this is the remaining concrete improvement.
