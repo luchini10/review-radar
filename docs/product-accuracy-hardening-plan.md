@@ -48,6 +48,14 @@ nothing from it.
 **Proof:** unlisted categories (shop vac, blender, monitor) get correct wrong-type handling; all
 existing type tests still pass; eval red-flags clean.
 **Risk:** medium (touches discovery + validation). Mitigated by the migration order.
+**Status: DONE (steps 1–2, commits `b97709c`, `9262fae`).** Shared `lib/productTypeMatch.ts`
+(`classifyProductTypeMatch`) now backs discovery + validation; the cross-category conflict rules
+moved into it so discovery applies them too. 496/496 tests, eval clean.
+**Step 3 (mattress de-duplication) INTENTIONALLY SKIPPED** — per the standing "no product-specific
+fixes" rule, collapsing the 4 mattress encodings is product-specific cleanup with no
+find-correct-products benefit and real regression risk. The bespoke `hasMattressFurnitureConflict`
+in `requirementValidation` is left in place but flagged as a future "fold into the general model and
+delete" candidate, not a fix to keep.
 
 ## Phase 2 — Audit penalty stacking (stop over-penalizing thin-but-valid products)
 **Problem:** `scoreProduct.totalScore` subtracts many overlapping penalties (missing-data,
