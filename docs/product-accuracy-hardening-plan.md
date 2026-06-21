@@ -71,11 +71,23 @@ checks stay clean.
 **Risk:** medium (visible ranking). Get go-ahead before running.
 **Status: DONE (items 1 + 4; commit `bbaac9c`-series — Phase 2 commit).** Credibility de-stacked to
 one term per ranking score; dead `riskPenalty` removed. 496/496 tests, eval red-flags clean,
-baseline order unchanged (margins narrowed). **Item 2 (rubric double-penalty) deferred** — the two
-rubric penalties are not a clean duplicate and one carries Codex's critical-vs-minor importance
-weighting; needs an importance-preserving dedup. **Item 3 (missingData/evidenceStrength overlap)
-deferred** as marginal/arbitrary. Follow-up: `REVIEW_RADAR_CREDIBILITY_PENALTY` is now a no-op flag
-(line can be removed from `.env.local`).
+baseline order unchanged (margins narrowed).
+
+**Item 2 (rubric double-penalty) — CLOSED, decided NOT to change.** The two rubric penalties are not
+a clean duplicate: `missingDataPenalty`'s slice is importance-weighted (critical 5 > minor 0.75) and
+reads `evidenceBucket.unknowns`; `computeRubricFit`'s is uniform and reads `rubric.mustVerifyFacts`.
+They overlap only on the *intersection* (a fact that is both a mustVerifyFact AND flagged unknown).
+Removing either drops single-count signal for the non-intersection, and merging to penalize the
+union once would require threading `input.discoveryStrategy.buyingRubric` into `missingDataPenalty`
+(a bigger refactor). The residual double-count is small (≤~16 inside a 45 cap) vs the ~58 credibility
+issue that was the real problem — not worth the regression risk to Codex's importance weighting.
+
+**Item 3 (missingData/evidenceStrength overlap) — CLOSED, decided NOT to change.** Both penalize thin
+metadata, but trimming the overlap is arbitrary tuning with no clear correct value and real ranking
+risk; the credibility de-stack already addressed the dominant over-penalization.
+
+**Follow-up:** `REVIEW_RADAR_CREDIBILITY_PENALTY` is now a no-op flag (line can be removed from
+`.env.local`).
 
 ## Phase 3 — Make rescue attach *structured* prices more reliably (investigation-first)
 **Problem:** the upstream cause behind Phase 0 — too many products only have text prices because the
@@ -101,6 +113,16 @@ real retailer pages on unlisted hosts pass while article/forum/list shapes are s
 **Proof:** tests prove real product pages on unlisted hosts pass while the page classes Codex already
 fixed stay blocked (regression guard).
 **Risk:** medium (false-negative risk if loosened too far).
+**Status: INVESTIGATED → no change (decided NOT to loosen).** On reading `classifyProductEligibility`,
+the premise was overstated: the classifier is already page-SHAPE-first (it checks
+`textLooksLikeNonProduct` / `textLooksLikeListing` / `isLikelyListingOrSearchUrl` /
+`pathLooksLikeProductDetail` / `isKnownProductUrl` before anything host-specific), and the
+`evidenceOnlyDomains` list only blocks ~33 LISTED editorial/social hosts (wirecutter, rtings, reddit,
+nytimes, youtube…) — it does **not** block unlisted retailers, so it is not a source of retailer
+false-blocks. The one real over-block (a Nike product page) came from a title pattern that Codex
+already narrowed. Loosening this heavily-tested, high-stakes classifier risks reintroducing the
+non-product-page leakage it exists to prevent, for a speculative gain. Better left as-is; revisit
+only if a concrete new false-block is observed in live QA.
 
 ## Phase 5 — Harden the buying-rubric fuzzy matcher
 **Problem:** `computeRubricFit`'s `itemMatches` uses a 45%-token-overlap heuristic that can mis-credit
