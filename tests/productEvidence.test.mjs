@@ -11,6 +11,7 @@ const {
   buildNegativeEvidenceRetryQueries,
   buildProductEvidenceQueries,
   buildRedditOwnerOpinionQueries,
+  buildRubricEvidenceQueries,
   buildReviewEvidenceLadderQueries,
   reviewEvidenceIsThin,
 } =
@@ -52,6 +53,35 @@ function buildProduct(overrides = {}) {
   };
 }
 
+function buildRubricProduct(overrides = {}) {
+  return buildProduct({
+    category: "Refrigerator",
+    name: "Example 25 cu ft Stainless French Door Refrigerator",
+    buyingRubric: {
+      category: "Refrigerator",
+      commonTradeoffs: ["More capacity can mean a larger footprint."],
+      mustVerifyFacts: [
+        "Product page explicitly states stainless steel finish",
+        "Exact dimensions and installation fit",
+      ],
+      qualitySignals: [
+        "Fingerprint-resistant stainless steel",
+        "Consistent temperature controls",
+      ],
+      redFlags: [
+        "Review complaints about loud operation",
+        "Specs conflict across retailer and manufacturer pages",
+      ],
+      reviewSignals: [
+        "Repeated comments on temperature stability",
+        "Door seal quality and longevity over time",
+      ],
+      searchQueries: [],
+    },
+    ...overrides,
+  });
+}
+
 describe("product evidence enrichment", () => {
   it("generates review evidence queries for product-specific topics", () => {
     const queries = buildProductEvidenceQueries(buildProduct());
@@ -75,6 +105,23 @@ describe("product evidence enrichment", () => {
     assert.match(joined, /youtube review long term/);
     assert.match(joined, /complaints problems/);
     assert.match(joined, /broken stopped working warranty issues/);
+  });
+
+  it("adds buying-rubric facts and review themes to evidence searches", () => {
+    const product = buildRubricProduct();
+    const rubricQueries = buildRubricEvidenceQueries(product).join("\n").toLowerCase();
+    const ladderQueries = buildReviewEvidenceLadderQueries(product).join("\n").toLowerCase();
+    const negativeQueries = buildNegativeEvidenceRetryQueries(product).join("\n").toLowerCase();
+    const redditQueries = buildRedditOwnerOpinionQueries(product).join("\n").toLowerCase();
+
+    assert.match(rubricQueries, /stainless steel finish specifications/);
+    assert.match(rubricQueries, /fingerprint-resistant stainless steel reviews/);
+    assert.match(rubricQueries, /temperature stability owner reviews/);
+    assert.match(rubricQueries, /loud operation complaints/);
+    assert.match(ladderQueries, /fingerprint-resistant stainless steel reviews/);
+    assert.match(negativeQueries, /loud operation complaints/);
+    assert.match(redditQueries, /site:reddit\.com/);
+    assert.match(redditQueries, /temperature stability/);
   });
 
   it("generates negative evidence retry queries for thin finalist evidence", () => {
@@ -121,6 +168,57 @@ describe("product evidence enrichment", () => {
     assert.ok(
       bucket.ownerOpinion?.concerns.some((item) => /support|warranty|buying/i.test(item)),
     );
+  });
+
+  it("turns rubric-supported source text into product evidence", () => {
+    const product = buildRubricProduct();
+    const bucket = buildBucketFromSources(product, [
+      {
+        title: "Expert refrigerator review",
+        url: "https://reviews.example.com/fridge",
+        snippet:
+          "Testing found consistent temperature controls and repeated comments on temperature stability.",
+      },
+      {
+        title: "Owner complaints",
+        url: "https://reviews.example.com/noise",
+        snippet:
+          "Several owners report loud operation during compressor cycles.",
+      },
+    ]);
+
+    assert.ok(
+      bucket.positiveEvidence.some((item) =>
+        /temperature|controls/i.test(item.claim),
+      ),
+    );
+    assert.ok(
+      bucket.negativeEvidence.some((item) =>
+        /loud operation/i.test(item.claim),
+      ),
+    );
+  });
+
+  it("does not turn positive evidence into a negated rubric red flag", () => {
+    const product = buildRubricProduct({
+      buyingRubric: {
+        ...buildRubricProduct().buyingRubric,
+        redFlags: ["Finish not explicitly verified as stainless steel"],
+      },
+    });
+    const bucket = buildBucketFromSources(product, [
+      {
+        title: "Official refrigerator product page",
+        url: "https://example.com/refrigerator",
+        snippet:
+          "This product page explicitly states a fingerprint-resistant stainless steel finish.",
+      },
+    ]);
+
+    assert.ok(
+      bucket.positiveEvidence.some((item) => /stainless steel/i.test(item.claim)),
+    );
+    assert.equal(bucket.negativeEvidence.length, 0);
   });
 
   it("treats sparse review coverage or missing downside checks as thin evidence", () => {

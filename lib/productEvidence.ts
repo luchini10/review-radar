@@ -24,6 +24,7 @@ const MAX_EVIDENCE_RESULTS_PER_QUERY = 6;
 const MAX_TRUST_LADDER_QUERIES_PER_PRODUCT = 5;
 const MAX_TRUST_LADDER_CALLS_TOTAL = 32;
 const MAX_REDDIT_OPINION_QUERIES_PER_PRODUCT = 2;
+const MAX_RUBRIC_QUERY_TERMS = 3;
 
 type EvidenceSearchState = {
   callsUsed: number;
@@ -406,7 +407,43 @@ export function buildProductEvidenceQueries(product: ProductRecommendation) {
   ];
   const categoryQueries = categoryTerms(product).map((term) => `${name} ${term}`);
 
-  return uniqueStrings([...baseQueries, ...categoryQueries]);
+  return uniqueStrings([
+    ...baseQueries,
+    ...buildRubricEvidenceQueries(product),
+    ...categoryQueries,
+  ]);
+}
+
+function rubricSearchTerms(product: ProductRecommendation) {
+  const rubric = product.buyingRubric;
+
+  if (!rubric) {
+    return {
+      facts: [],
+      negative: [],
+      positive: [],
+      reviews: [],
+    };
+  }
+
+  return {
+    facts: uniqueStrings(rubric.mustVerifyFacts).slice(0, MAX_RUBRIC_QUERY_TERMS),
+    negative: uniqueStrings(rubric.redFlags).slice(0, MAX_RUBRIC_QUERY_TERMS),
+    positive: uniqueStrings(rubric.qualitySignals).slice(0, MAX_RUBRIC_QUERY_TERMS),
+    reviews: uniqueStrings(rubric.reviewSignals).slice(0, MAX_RUBRIC_QUERY_TERMS),
+  };
+}
+
+export function buildRubricEvidenceQueries(product: ProductRecommendation) {
+  const name = productSearchName(product);
+  const terms = rubricSearchTerms(product);
+
+  return uniqueStrings([
+    ...terms.facts.map((term) => `${name} ${term} specifications`),
+    ...terms.positive.map((term) => `${name} ${term} reviews`),
+    ...terms.reviews.map((term) => `${name} ${term} owner reviews`),
+    ...terms.negative.map((term) => `${name} ${term} complaints`),
+  ]);
 }
 
 export function buildReviewEvidenceLadderQueries(product: ProductRecommendation) {
@@ -415,9 +452,11 @@ export function buildReviewEvidenceLadderQueries(product: ProductRecommendation)
   const categoryContext =
     category && !normalizeText(name).includes(category) ? product.category : "";
   const base = [name, categoryContext].filter(Boolean).join(" ");
+  const rubricQueries = buildRubricEvidenceQueries(product);
 
   return uniqueStrings([
     `${name} exact product review`,
+    ...rubricQueries.slice(0, 3),
     `${name} customer reviews owner reviews`,
     `${name} hands on review tested`,
     `${name} reddit forum owners`,
@@ -431,8 +470,12 @@ export function buildReviewEvidenceLadderQueries(product: ProductRecommendation)
 
 export function buildNegativeEvidenceRetryQueries(product: ProductRecommendation) {
   const name = productSearchName(product);
+  const rubricNegativeQueries = rubricSearchTerms(product).negative.map(
+    (term) => `${name} ${term} complaints`,
+  );
 
   return uniqueStrings([
+    ...rubricNegativeQueries,
     `${name} complaints problems`,
     `${name} broken stopped working`,
     `${name} warranty customer service issues`,
@@ -444,8 +487,12 @@ export function buildNegativeEvidenceRetryQueries(product: ProductRecommendation
 
 export function buildRedditOwnerOpinionQueries(product: ProductRecommendation) {
   const name = productSearchName(product);
+  const rubricReviewQueries = rubricSearchTerms(product).reviews.map(
+    (term) => `site:reddit.com ${name} ${term}`,
+  );
 
   return uniqueStrings([
+    ...rubricReviewQueries,
     `site:reddit.com ${name} review owners`,
     `site:reddit.com ${name} problems worth it`,
     `site:reddit.com ${name} long term owner opinion`,
@@ -584,6 +631,116 @@ function containsAny(text: string, terms: string[]) {
   const normalized = normalizeText(text);
 
   return terms.some((term) => normalized.includes(normalizeText(term)));
+}
+
+function meaningfulRubricTokens(value: string) {
+  return normalizeText(value)
+    .split(" ")
+    .filter(
+      (token) =>
+        token.length > 3 &&
+        !/^(with|that|from|good|best|high|low|clear|page|product|explicit|mentions|without|details|verified|current|selling|price|listed|available|important|quality|review|reviews|owner|owners)$/.test(
+          token,
+        ),
+    );
+}
+
+function rubricItemMatches(text: string, item: string) {
+  const normalizedItem = normalizeText(item);
+
+  if (!normalizedItem) {
+    return false;
+  }
+
+  if (text.includes(normalizedItem)) {
+    return true;
+  }
+
+  const tokens = meaningfulRubricTokens(item);
+  const matchedTokens = tokens.filter((token) => text.includes(token));
+
+  if (tokens.length === 0) {
+    return false;
+  }
+
+  if (tokens.length <= 2) {
+    return matchedTokens.length === tokens.length;
+  }
+
+  return (
+    matchedTokens.length >= Math.min(3, Math.ceil(tokens.length * 0.45)) &&
+    matchedTokens.length / tokens.length >= 0.4
+  );
+}
+
+function rubricRedFlagNeedsNegativeContext(item: string) {
+  return /\b(?:not|no|without|missing|unclear|ambiguous|unverified|conflict|conflicting|complaint|complaints|poor|issue|issues|problem|problems|fail|failure)\b/i.test(
+    item,
+  );
+}
+
+function sourceHasNegativeContext(text: string) {
+  return /\b(?:not|no|without|missing|unclear|ambiguous|unverified|unknown|conflict|conflicting|complaint|complaints|poor|issue|issues|problem|problems|fail|failure|loud|noisy|leak|broken|stopped)\b/i.test(
+    text,
+  );
+}
+
+function rubricEvidenceTitle(value: string) {
+  return value
+    .replace(/\b(?:product page explicitly states|current selling price is|if listed|if relevant)\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[.]+$/, "");
+}
+
+function addRubricEvidence(
+  product: ProductRecommendation,
+  source: SerperEvidenceSource,
+  bucket: ProductEvidenceBucket,
+) {
+  const rubric = product.buyingRubric;
+
+  if (!rubric) {
+    return;
+  }
+
+  const text = normalizeText(`${source.title} ${source.snippet}`);
+
+  for (const signal of [
+    ...rubric.qualitySignals,
+    ...rubric.reviewSignals,
+    ...rubric.mustVerifyFacts,
+  ]) {
+    if (!rubricItemMatches(text, signal)) {
+      continue;
+    }
+
+    addEvidenceItem(bucket.positiveEvidence, {
+      claim: rubricEvidenceTitle(signal),
+      confidence: "Medium",
+      sourceTitle: source.title,
+      sourceUrl: source.url,
+      snippet: source.snippet,
+    });
+  }
+
+  for (const redFlag of rubric.redFlags) {
+    if (!rubricItemMatches(text, redFlag)) {
+      continue;
+    }
+
+    if (rubricRedFlagNeedsNegativeContext(redFlag) && !sourceHasNegativeContext(text)) {
+      continue;
+    }
+
+    addEvidenceItem(bucket.negativeEvidence, {
+      claim: rubricEvidenceTitle(redFlag),
+      confidence: "Medium",
+      sourceTitle: source.title,
+      sourceUrl: source.url,
+      snippet: source.snippet,
+    });
+  }
 }
 
 function firstCitation(product: ProductRecommendation) {
@@ -1027,6 +1184,7 @@ function buildBucketFromSources(
 
   for (const source of sources) {
     classifySourceEvidence(product, source, bucket);
+    addRubricEvidence(product, source, bucket);
   }
 
   addImportantUnknowns(product, bucket, sources);
@@ -1145,6 +1303,7 @@ export const productEvidenceTestExports = {
   buildNegativeEvidenceRetryQueries,
   buildProductEvidenceQueries,
   buildRedditOwnerOpinionQueries,
+  buildRubricEvidenceQueries,
   buildReviewEvidenceLadderQueries,
   collectRepeatedComplaints,
   reviewEvidenceIsThin,

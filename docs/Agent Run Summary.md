@@ -8,6 +8,28 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-06-20 20:57
+
+**Goal:** Start Phase 3 by making the buying rubric guide product evidence searches and evidence classification.
+
+**What it checked:** Reviewed the evidence ladder, product evidence queries, Reddit owner-opinion searches, negative-evidence retries, rubric scoring, and a live refrigerator search.
+
+**What it found:** The rubric could describe what matters, but evidence gathering was still mostly generic. A live refrigerator run also showed that positive stainless-steel evidence could accidentally match a negated red flag about stainless steel not being verified.
+
+**What it changed:** Added rubric-guided evidence queries for product facts, quality signals, owner-review themes, and red flags. Attached the rubric internally to products before evidence enrichment. Let rubric-supported source text become positive or negative evidence. Added a guard so negated red flags require negative or uncertain source context.
+
+**Why the change matters:** ReviewRadar can now actively look for the facts and review themes that matter for each product category instead of only using the rubric at the end for ranking.
+
+**Tests run:** Focused rubric/evidence/scoring tests passed. Typecheck passed. Lint passed. Full unit tests passed with 480/480 tests. Production build passed.
+
+**Live checks run:** Ran `refrigerator`, `$2500`, `must be stainless steel` against the local API.
+
+**Before/after proof:** The live run generated a refrigerator-specific rubric, returned exact matches, kept missing-price products as close matches, and did not show the negated stainless-steel red-flag false positive.
+
+**Remaining issues:** Better page extraction could still help close matches where product pages exist but current prices or specs are not extracted.
+
+**Next recommended step:** Run live RR agents with varied categories to see whether rubric-guided evidence improves non-appliance searches too.
+
 ## Codex Run - 2026-06-20 16:23
 
 **Goal:** Test the new recommendation logic with a stainless-steel refrigerator search under `$2,500`, then fix any serious issue found.

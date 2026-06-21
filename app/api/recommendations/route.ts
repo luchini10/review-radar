@@ -64,6 +64,7 @@ import {
 } from "../../../lib/search/serper.ts";
 import { scoreAndSelectRecommendations } from "../../../lib/recommendationScoring.ts";
 import type {
+  ProductBuyingRubric,
   ProductRecommendation,
   RecommendationApiRequest,
   RecommendationResult,
@@ -326,11 +327,34 @@ function removeUserHiddenProductFields(
   product: ProductRecommendation,
 ): ProductRecommendation {
   const visibleProduct = { ...product };
+  delete visibleProduct.buyingRubric;
   delete visibleProduct.scoreBreakdown;
   delete visibleProduct.priceTrust;
   delete visibleProduct.productEligibility;
 
   return visibleProduct;
+}
+
+function attachBuyingRubricToProducts(
+  result: RecommendationResult,
+  buyingRubric: ProductBuyingRubric | undefined,
+): RecommendationResult {
+  if (!buyingRubric) {
+    return result;
+  }
+
+  const attach = (product: ProductRecommendation): ProductRecommendation => ({
+    ...product,
+    buyingRubric,
+  });
+
+  return {
+    ...result,
+    exactMatches: result.exactMatches.map(attach),
+    premiumAboveBudget: (result.premiumAboveBudget || []).map(attach),
+    nearMatches: result.nearMatches.map(attach),
+    recommendations: result.recommendations.map(attach),
+  };
 }
 
 function removeUserHiddenResultFields(
@@ -792,9 +816,13 @@ async function handleRecommendationPost(
       verifiedResult,
       requestWithDiscovery,
     );
+    const rubricAwareResult = attachBuyingRubricToProducts(
+      requirementFilteredResult,
+      discoveryStrategy.buyingRubric,
+    );
     const evidenceEnrichedResult =
       await routeDependencies.enrichResultWithReviewEvidence(
-        requirementFilteredResult,
+        rubricAwareResult,
         {
           mode: "trust_ladder",
           maxProducts: serperResult.stats.maxEnrichedProducts,

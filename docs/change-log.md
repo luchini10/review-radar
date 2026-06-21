@@ -14,6 +14,11 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 ## 2026-06-20
 
 ### Changed
+- Started Phase 3 by making the buying rubric guide evidence gathering, not just ranking.
+- Added rubric-specific evidence searches for product facts, quality signals, owner-review themes, and red flags.
+- Attached the generated buying rubric to products internally before review-evidence enrichment, then stripped it from normal user-facing API responses.
+- Changed review evidence enrichment so rubric-supported facts can become positive evidence and rubric red flags can become negative evidence.
+- Added a negation guard so positive evidence like "stainless steel finish" does not accidentally trigger a red flag like "finish not explicitly verified as stainless steel."
 - Fixed a live refrigerator QA issue where a full-size refrigerator could treat a promo/add-on-sized `$515` amount as a verified full refrigerator price.
 - Raised the shared suspicious-price floor for full-size refrigerator contexts such as French-door, side-by-side, top-freezer, bottom-freezer, counter-depth, standard-depth, and large cu. ft. refrigerators, while keeping compact/mini fridges separate so genuinely cheap small fridges can still pass.
 - Added a universal OpenAI-generated buying rubric to the discovery strategy so ReviewRadar can learn what matters for the searched product category without needing a hand-written profile for every product type.
@@ -50,6 +55,12 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 - Added a reusable buying-advice page filter so articles such as "7 Things to Avoid When Purchasing..." can still inform research but cannot appear as product cards.
 
 ### Verified
+- `node --no-warnings --test tests\productEvidence.test.mjs tests\buyingRubric.test.mjs tests\recommendationScoring.test.mjs`
+- `npm run typecheck`
+- `npm run lint`
+- `npm test` (480/480 tests)
+- `npm run build`
+- Direct live API recheck for `refrigerator`, `$2500`, `must be stainless steel`: the run generated a refrigerator buying rubric, returned exact matches, kept missing-price products as close matches, and did not produce the negated stainless-steel red-flag false positive.
 - `node --no-warnings --test tests\productPriceTrust.test.mjs tests\priceParsing.test.mjs tests\productAssets.test.mjs tests\recommendationScoring.test.mjs tests\requirementValidation.test.mjs`
 - `npm run typecheck`
 - `npm run lint`

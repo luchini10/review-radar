@@ -4,6 +4,55 @@ Date: 2026-06-18
 Repo: `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 Source-of-truth map: `ReviewRadar-Overview.md`
 
+## Codex QA Update - 2026-06-20 20:57
+
+## Loop Scope
+
+Implement Phase 3: use the generated buying rubric to guide evidence gathering, not only final ranking.
+
+## Root Causes
+
+The buying rubric could already describe what matters for a product category, but the evidence ladder was not fully using those rubric facts. That meant ReviewRadar could know that a product category needs certain facts or review themes, but still search mostly generic review queries.
+
+## Generalized Fix
+
+- Added rubric-specific evidence queries for facts to verify, quality signals, owner-review themes, and red flags.
+- Added those queries into the existing review evidence ladder, negative evidence retry, and Reddit owner-opinion search path.
+- Attached the generated rubric to products internally before evidence enrichment.
+- Converted rubric-supported source text into positive or negative evidence.
+- Added a negation guard so positive evidence does not accidentally trigger negative red flags.
+
+This is reusable across categories because it uses the generated rubric for the current search instead of adding one-off product rules.
+
+## Verification
+
+| Check | Result |
+| --- | --- |
+| Focused rubric/evidence/scoring tests | Passed |
+| Typecheck | Passed |
+| Lint | Passed |
+| Full unit tests | Passed, 480/480 |
+| Production build | Passed |
+| Direct live refrigerator API recheck | Passed |
+
+## Before / After Proof
+
+Before the fix:
+
+- The rubric helped ranking, but evidence searches were still mostly generic.
+- A negated red flag like "finish not explicitly verified" could match positive stainless-steel evidence.
+
+After the fix:
+
+- The live `refrigerator`, `$2500`, `must be stainless steel` search generated a refrigerator-specific buying rubric.
+- Returned exact matches used verified prices and stainless-steel requirement evidence.
+- Missing-price products stayed in close matches.
+- The negated stainless-steel red-flag false positive did not appear.
+
+## Remaining Notes
+
+The evidence ladder now follows the rubric, but deeper page extraction could still improve products where store pages exist yet current prices or specs are not extracted.
+
 ## Codex QA Update - 2026-06-20 16:23
 
 ## Loop Scope

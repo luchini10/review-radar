@@ -485,6 +485,7 @@ export type ProductRecommendation = {
   canonicalIdentity?: CanonicalProductIdentity;
   metadata?: ProductMetadata;
   marketConfidence?: ProductCredibility;
+  buyingRubric?: ProductBuyingRubric;
   priceTrust?: ProductPriceTrust;
   productEligibility?: ProductEligibilityVerdict;
   reliabilityCheck?: ProductReliabilityCheck;
