@@ -569,21 +569,6 @@ function marketConfidencePenalty(product: ProductRecommendation) {
   return tier === "moderate" ? 5 : 0;
 }
 
-function riskPenalty(product: ProductRecommendation) {
-  const failed = product.requirementCheck?.failed.length || 0;
-  const unknown = product.requirementCheck?.unknown.length || 0;
-  const hardFilterPenalty = failed * 30 + unknown * 10;
-
-  return clamp(
-    hardFilterPenalty +
-      complaintPenalty(product) +
-      missingDataPenalty(product) +
-      marketConfidencePenalty(product),
-    0,
-    80,
-  );
-}
-
 function scoreDebugReasons(
   product: ProductRecommendation,
   input: RecommendationApiRequest,
@@ -648,14 +633,6 @@ function categoryScoringEnabled() {
   return process.env.REVIEW_RADAR_CATEGORY_SCORING !== "off";
 }
 
-// Phase 3 promote gate. A graded credibility penalty (never a hard block):
-// weak/moderate market-confidence tiers are pushed down further, softened when
-// the product still carries strong independent evidence. Always computed for
-// debug visibility; only applied to scores when enabled, so default ranking
-// stays byte-identical until the flag is flipped.
-function credibilityPenaltyEnabled() {
-  return process.env.REVIEW_RADAR_CREDIBILITY_PENALTY === "on";
-}
 
 function credibilityFloorPenalty(
   tier: ProductCredibilityTier,
@@ -713,7 +690,6 @@ export function scoreProduct(
     rubricFitScore: rubricFit.boost,
     rubricPenalty: rubricFit.penalty,
     rubricProfileKey: rubricFit.profileKey,
-    riskPenalty: riskPenalty(scoredProduct),
     sourceQualityScore: sourceQualityScore(scoredProduct),
     valueScore: priceValueScore(scoredProduct, input),
   };
@@ -733,8 +709,7 @@ export function scoreProduct(
     (breakdown.rubricFitScore || 0) -
     breakdown.repeatedComplaintPenalty -
     breakdown.missingDataPenalty -
-    breakdown.marketConfidencePenalty -
-    (credibilityPenaltyEnabled() ? credibilityFloor : 0);
+    breakdown.marketConfidencePenalty;
 
   return {
     ...breakdown,
@@ -813,9 +788,7 @@ function rankedMatchScore(product: ProductRecommendation) {
     evidenceStrengthBonus +
     marketConfidenceAdjustment -
     (breakdown.missingDataPenalty || 0) * 0.85 -
-    (breakdown.repeatedComplaintPenalty || 0) * 1.1 -
-    (breakdown.marketConfidencePenalty || 0) -
-    (credibilityPenaltyEnabled() ? breakdown.credibilityFloorPenalty || 0 : 0)
+    (breakdown.repeatedComplaintPenalty || 0) * 1.1
   );
 }
 

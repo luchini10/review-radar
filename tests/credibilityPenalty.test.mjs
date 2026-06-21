@@ -109,28 +109,30 @@ describe("credibilityFloorPenalty (graded, evidence-softened)", () => {
   });
 });
 
-describe("credibility penalty is gated by the flag", () => {
-  it("subtracts exactly the computed penalty from totalScore only when enabled", () => {
+describe("credibility floor penalty is computed for debug but consolidated out of scoring", () => {
+  // Phase 2 consolidation: weak credibility used to be charged via three stacked
+  // terms (marketConfidenceAdjustment + marketConfidencePenalty + the flag-gated
+  // credibilityFloorPenalty). The floor penalty is still computed for debug
+  // visibility, but it is no longer subtracted from any score, so the legacy
+  // REVIEW_RADAR_CREDIBILITY_PENALTY flag is now a no-op.
+  it("no longer changes totalScore when the legacy flag is toggled", () => {
     const input = { query: "gadget" };
     const weak = weakProduct();
-    const penalty = scoreProduct(weak, input).credibilityFloorPenalty;
-    const off = scoreProduct(weak, input).totalScore;
+    const breakdown = scoreProduct(weak, input);
+    const off = breakdown.totalScore;
     const on = withCredibilityPenalty(() => scoreProduct(weak, input).totalScore);
 
-    assert.ok(penalty > 0);
-    assert.equal(Math.round((off - on) * 100) / 100, penalty);
+    assert.ok(breakdown.credibilityFloorPenalty > 0); // still computed for debug
+    assert.equal(off, on); // ...but not applied, so the flag is a no-op
   });
 
-  it("widens the strong-over-weak score margin when enabled", () => {
+  it("still ranks a strong product above a weak one via the always-on credibility term", () => {
     const input = { query: "gadget" };
-    const strong = strongProduct();
-    const weak = weakProduct();
-    const marginOff = scoreProduct(strong, input).totalScore - scoreProduct(weak, input).totalScore;
-    const marginOn = withCredibilityPenalty(
-      () => scoreProduct(strong, input).totalScore - scoreProduct(weak, input).totalScore,
-    );
+    const margin =
+      scoreProduct(strongProduct(), input).totalScore -
+      scoreProduct(weakProduct(), input).totalScore;
 
-    assert.ok(marginOn > marginOff);
+    assert.ok(margin > 0);
   });
 });
 

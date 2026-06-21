@@ -1620,3 +1620,36 @@ See `docs/agent-loop-report.md`.
 - **remaining risks / follow-up (next Phase 1 step):**
   - De-duplicate the mattress rule that now appears in `formFactor.ts` (component substitution), `productTypeIntent.ts` (mattress/bed_frame), the moved conflict rules, AND `hasMattressFurnitureConflict` — four overlapping encodings. Consolidate carefully (identity-text vs evidence-text nuance) with parity tests, then remove redundancies.
   - `requiredCategoryEvidenceRules` + `hasMattressFurnitureConflict` remain validation-only by design (absence/identity based).
+
+---
+
+## 🟩 **Claude QA Update — 2026-06-21 07:39**
+
+### Claude Change 4 — Phase 2: de-stack credibility penalties + remove dead riskPenalty
+
+- **agent:** Claude
+- **date/time:** 2026-06-21 07:39 EDT
+- **reason:** Audit (logged in the plan) found weak-credibility products penalized 3–4× for one signal — `marketConfidenceAdjustment` (−18) + `marketConfidencePenalty` (−22) + flag-gated `credibilityFloorPenalty` (−18) + reduced raw score, ≈ −58 in `rankedMatchScore`. "Weak credibility" usually just means *few reviews/sources*, i.e. the thin-but-valid budget/niche product, so this over-buries legitimate picks.
+- **changes (tuning only — no new gates, no loosening of hard requirements):**
+  - **Item 1 — credibility consolidated to one term per score.** `rankedMatchScore` keeps `marketConfidenceAdjustment` (symmetric tier term) and drops `marketConfidencePenalty` + `credibilityFloorPenalty`. `totalScore` keeps `marketConfidencePenalty` and drops `credibilityFloorPenalty`. `credibilityFloorPenalty` is still *computed* for debug, just no longer subtracted; the now-unused `credibilityPenaltyEnabled()` flag helper was removed (so `REVIEW_RADAR_CREDIBILITY_PENALTY` is a no-op).
+  - **Item 4 — deleted dead `riskPenalty`** (computed and stored, but never consumed in either ranking score) and its `ScoreBreakdown.riskPenalty` type field.
+  - **Item 2 (rubric dedup) — investigated and DEFERRED.** The two rubric penalties are NOT a clean duplicate: `missingDataPenalty`'s slice is importance-weighted (critical 5 > minor 0.75, Codex's Phase 4) and reads `evidenceBucket.unknowns`, while `computeRubricFit`'s reads `rubric.mustVerifyFacts` uniformly. Removing one drops Codex's importance weighting, so I reverted it.
+  - **Item 3 (missingData/evidenceStrength overlap) — DEFERRED** as marginal/arbitrary tuning.
+- **commands run / checks:**
+  - `npm run typecheck` — Passed
+  - `npm run lint` — Passed
+  - `npm test` — Passed (**496/496**)
+  - `node scripts/eval-pipeline.mjs` — RED-FLAG CHECKS: no issues (suspicious/wrong/over-budget items still stay OUT of exact — no accidental loosening)
+  - `DUMP_SNAPSHOT=1 node --test tests/rankingBaseline.test.mjs` — regenerated + reviewed
+- **live QA searches run:** None (deterministic A/B + baseline + eval).
+- **issue new vs. related to Codex:** **Related** — tunes the scoring Codex layered up across phases (market confidence, credibility floor, rubric). Retires the credibility-floor flag experiment by folding it into the always-on term.
+- **files changed:**
+  - `lib/recommendationScoring.ts` (credibility consolidation; removed `credibilityPenaltyEnabled` + `riskPenalty`)
+  - `types/review-radar.ts` (removed `ScoreBreakdown.riskPenalty`)
+  - `tests/rankingBaseline.test.mjs` (updated `match` snapshots — order unchanged, margins narrowed)
+  - `tests/credibilityPenalty.test.mjs` (rewrote the two flag-mechanism tests to the new no-op reality)
+- **before/after (baseline snapshot, flag-off default):** **order preserved in every scenario**; only the over-penalty margin narrowed. Scenario A sofas `rankedMatchScore`: weak Brook/Dune +22 each, moderate Cedar/Aspen +5; Scenario B headphones: moderate Pulse/Echo +5, strong Wave unchanged. `totalScore` unchanged at flag-off (credibility-floor was already gated off there). Eval red-flags clean — the `$1` Weber, Twin mattress, etc. still land in near, not exact.
+- **remaining risks / follow-up:**
+  - `REVIEW_RADAR_CREDIBILITY_PENALTY` is now a no-op flag; the line in `.env.local` can be removed in a cleanup pass.
+  - Items 2 (rubric dedup, needs importance-preserving design) and 3 (missingData/evidenceStrength overlap) remain open — deferred deliberately, not abandoned.
+  - A live spot-check on a thin-credibility category (e.g. a niche/budget search) is recommended to confirm the ranking feels right on real results.

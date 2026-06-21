@@ -69,6 +69,13 @@ sensible weight. Tuning only — no new gates, no loosening of hard requirements
 over-budget / suspicious-price items still stay OUT of exact (no accidental loosening). Red-flag
 checks stay clean.
 **Risk:** medium (visible ranking). Get go-ahead before running.
+**Status: DONE (items 1 + 4; commit `bbaac9c`-series — Phase 2 commit).** Credibility de-stacked to
+one term per ranking score; dead `riskPenalty` removed. 496/496 tests, eval red-flags clean,
+baseline order unchanged (margins narrowed). **Item 2 (rubric double-penalty) deferred** — the two
+rubric penalties are not a clean duplicate and one carries Codex's critical-vs-minor importance
+weighting; needs an importance-preserving dedup. **Item 3 (missingData/evidenceStrength overlap)
+deferred** as marginal/arbitrary. Follow-up: `REVIEW_RADAR_CREDIBILITY_PENALTY` is now a no-op flag
+(line can be removed from `.env.local`).
 
 ## Phase 3 — Make rescue attach *structured* prices more reliably (investigation-first)
 **Problem:** the upstream cause behind Phase 0 — too many products only have text prices because the

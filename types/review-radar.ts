@@ -343,7 +343,6 @@ export type ScoreBreakdown = {
   rubricFitScore?: number;
   rubricPenalty?: number;
   rubricProfileKey?: string;
-  riskPenalty: number;
   scoreDebug?: string[];
   sourceQualityScore?: number;
   totalScore: number;

@@ -176,10 +176,10 @@ describe("ranking baseline snapshot", () => {
 
     assert.deepEqual(actual, {
       exact: [
-        { name: "Cedar Sofa", rank: 1, total: 161.99, match: 284.16 },
-        { name: "Aspen Sofa", rank: 2, total: 153.96, match: 277.5 },
-        { name: "Brook Sofa", rank: 3, total: 126.39, match: 224.34 },
-        { name: "Dune Sofa", rank: 4, total: 109.37, match: 203.58 },
+        { name: "Cedar Sofa", rank: 1, total: 161.99, match: 289.16 },
+        { name: "Aspen Sofa", rank: 2, total: 153.96, match: 282.5 },
+        { name: "Brook Sofa", rank: 3, total: 126.39, match: 246.34 },
+        { name: "Dune Sofa", rank: 4, total: 109.37, match: 225.58 },
       ],
       near: [],
     });
@@ -191,8 +191,8 @@ describe("ranking baseline snapshot", () => {
     assert.deepEqual(actual, {
       exact: [
         { name: "Wave One", rank: 1, total: 167.99, match: 275.89 },
-        { name: "Pulse Three", rank: 2, total: 157.68, match: 261.45 },
-        { name: "Echo Two", rank: 3, total: 131.61, match: 228.39 },
+        { name: "Pulse Three", rank: 2, total: 157.68, match: 266.45 },
+        { name: "Echo Two", rank: 3, total: 131.61, match: 233.39 },
       ],
       near: [],
     });
