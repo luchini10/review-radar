@@ -1694,3 +1694,23 @@ See `docs/agent-loop-report.md`.
 - **live QA:** None (deterministic; rubric is unset in tests so the baseline is unaffected).
 - **files changed:** `lib/buyingRubric.ts`, `tests/buyingRubric.test.mjs` (whole-word + false-positive guards).
 - **before/after:** `itemMatches("the trailer gripped the rail", "trail grip")` was **true** (substring), now **false**; real matches ("strong trail grip on dirt") still **true**.
+
+---
+
+## 🟩 **Claude QA Update — 2026-06-21 08:06**
+
+### Claude Change 7 — Phase 3 live measurement (validation, no code change)
+
+- **agent:** Claude
+- **date/time:** 2026-06-21 08:06 EDT
+- **reason:** Phase 3's remaining item — measure the rescue/price behavior on a real search, against the running localhost:3000 dev server (one live POST, debug header). Chose `shop vac` / `$400` (the original "0 exact" case).
+- **result (HTTP 200, 113s, 1 live search):** **2 exact + 4 near** (was 0 exact originally — Phases 0/1/3 confirmed working live). Per-product price source:
+  - Vacmaster Professional Beast 12-gal — structured **$149.99**, reliability verified → exact ✅
+  - DEWALT DXV06P 6-gal — a $1 json_ld offer lingered in `metadata.offers`, but price-trust/reliability correctly used the plausible **$70** text price (verified) → exact shows $70 ✅
+  - BOSCH GAS18V-3N — $10 offer correctly flagged **suspicious** → near, card says "verify price" ✅
+  - RIDGID / Koblenz / Ego — no price evidence → unverified → near ✅
+- **honest correction:** my first pass read the raw lowest offer and mis-flagged the DEWALT as a "$1 exact match". On inspecting `reliabilityCheck`, the card shows **$70** (the $1 was ignored). Not a user-facing bug.
+- **conclusion:** the price-trust + reliability stack handles implausible structured offers correctly (uses the plausible signal, or marks suspicious). Products that stay text-only/unverified land in near, not falsely exact. **No urgent further Phase 3 tuning needed.**
+- **minor hygiene note (low priority, not fixing):** an implausible offer ($1) can remain in `metadata.offers` even when display/reliability ignore it; no consumer surfaces it, so harmless. Could be scrubbed in a future cleanup.
+- **checks:** `npm test` 499/499 (deterministic suite unaffected by the live run).
+- **files changed:** none (measurement only; this log + plan status).

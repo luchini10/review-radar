@@ -101,8 +101,13 @@ strengthen the price-rescue path. No promises of "more verified prices" until th
 **Status: step 1 DONE (deterministic, no live API spent).** Code investigation found the rescue used
 one descriptive query for both the organic AND shopping legs; the shopping leg now searches product
 identity (`buildRescueShoppingQuery`), which shopping engines actually match on. 497/497 tests.
-**Still open:** the live measurement (success-rate %, which retailers bot-wall) and tuning
-`looksLikeSameProduct` / the `maxProducts` cap — do those with live data, cost-aware.
+**Step 2 (live measurement) DONE.** One live `shop vac` / `$400` run: **2 exact + 4 near** (was 0
+exact originally). Price-trust/reliability correctly handled implausible structured offers (a `$1`
+DEWALT offer was ignored in favour of the plausible `$70`; a `$10` Bosch was flagged suspicious into
+near); text-only/unverified products landed in near, not falsely exact. **Conclusion: no urgent
+further Phase 3 tuning needed** — `looksLikeSameProduct` / `maxProducts` are not bottlenecks in this
+sample. Minor low-priority hygiene note: an implausible offer can linger in `metadata.offers` even
+when no consumer surfaces it.
 
 ## Phase 4 — Make non-product-page filtering more principled (fewer false blocks)
 **Problem:** `lib/productEligibility.ts` leans on a hardcoded ~33-domain blocklist + a growing regex
