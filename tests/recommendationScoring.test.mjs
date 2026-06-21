@@ -1050,7 +1050,7 @@ describe("recommendation scoring and ranked Best Match selection", () => {
   });
 });
 
-describe("source diversity in ranked selection", () => {
+describe("product diversity in ranked selection", () => {
   function fromHost(name, host, reviews) {
     const base = buildProduct(name);
 
@@ -1060,8 +1060,8 @@ describe("source diversity in ranked selection", () => {
     });
   }
 
-  it("does not let a single retailer fill every slot", () => {
-    const alphas = [1, 2, 3, 4, 5, 6].map((i) =>
+  it("allows repeated retailers when final products are distinct", () => {
+    const alphas = [1, 2, 3, 4, 5, 6, 7].map((i) =>
       fromHost(`Alpha Sofa ${i}`, "alpha-store.com", 3000 - i),
     );
     const betas = [1, 2].map((i) => fromHost(`Beta Sofa ${i}`, "beta-store.com", 120 - i));
@@ -1083,12 +1083,14 @@ describe("source diversity in ranked selection", () => {
 
     assert.equal(result.exactMatches.length, 7);
     assert.ok(
-      hosts.filter((host) => host === "beta-store.com").length >= 2,
-      "both lower-scored second-source products should still be shown",
+      hosts.every((host) => host === "alpha-store.com"),
+      "the seven strongest distinct products should not be blocked only because they share a retailer",
     );
     assert.ok(
-      hosts.filter((host) => host === "alpha-store.com").length <= 5,
-      "the dominant retailer should be capped, not fill every slot",
+      result.exactMatches[0].scoreBreakdown?.scoreDebug?.some((line) =>
+        /repeated retailers/i.test(line),
+      ),
+      "debug output should explain that retailer repetition was allowed for distinct products",
     );
   });
 });

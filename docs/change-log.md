@@ -13,6 +13,14 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-21
 
+### Codex - Product diversity instead of retailer diversity
+- Changed final Best Match selection so ReviewRadar no longer blocks strong products just because several come from the same retailer. Retailer limits now stay in early discovery only, where they prevent one site from flooding the candidate pool.
+- Final selection now focuses on distinct products: exact duplicate products are still merged, near-duplicate model families are still collapsed, and genuinely different products can all appear even if they share a retailer.
+- When duplicate products from different retailers merge, ReviewRadar now keeps alternate retailer offer evidence on the product metadata instead of losing those links.
+- Added debug wording so QA can see when repeated retailers were allowed because the products were distinct.
+- Live QA also found an eBay "Best ... Cleaners" browse page appearing as an exact wet/dry-vac product. The shared product eligibility classifier now blocks eBay browse/category shapes like `/t/`, `/b/`, and `/sch/` from rendering as product cards.
+- Verified: focused product-diversity, Serper, and product-eligibility tests; `npm run typecheck`; `npm run lint`; `npm test` (513/513 tests); `npm run build`; `node scripts/eval-pipeline.mjs`; deterministic RR agent loop; live API checks for `cordless drill` and `wet dry vac`. The wet/dry-vac rerun changed from an eBay browse page exact match to a real Vacmaster product page exact match.
+
 ### 🟩 Claude — Rubric matcher uses whole-word matching (Phase 5)
 - Tightened how the buying-rubric ranking nudge decides a product "has" a quality/review signal. It was matching substrings, so "grip" counted "gripped" and "trail" counted "trailer" — false matches that inflated a product's rubric score. It now matches whole words/phrases only. This is a small ranking nudge (it never overrides hard requirements, price trust, or product eligibility), so impact is bounded; it just makes the nudge more accurate.
 - Verified: `npm run typecheck`, `npm run lint`, `npm test` (499/499 tests), `node scripts/eval-pipeline.mjs` (red-flag checks clean).

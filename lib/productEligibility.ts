@@ -284,6 +284,10 @@ function isLikelyListingOrSearchUrl(parsed: URL) {
     return /\/(?:browse|cp|search)\//i.test(path) && !isKnownProductUrl(parsed);
   }
 
+  if (domainMatches(host, "ebay.com")) {
+    return /\/(?:b|sch|t)\//i.test(path) && !isKnownProductUrl(parsed);
+  }
+
   if (domainMatches(host, "bestbuy.com")) {
     return /\/site\/(?:searchpage|shop|collection)\b/i.test(path) &&
       !isKnownProductUrl(parsed);
@@ -363,6 +367,7 @@ function textLooksLikeListing(value: string) {
     /\bresults for\b/i,
     /^\s*compare\s+(?:at|prices?|stores?)\b/i,
     /^\s*shop\s+(?:all|by|for|from|category|collection)\b/i,
+    /^\s*best\s+.+\s+-\s+(?:ebay|amazon|walmart|target|the home depot|lowe'?s|best buy)\b/i,
     /\bshopping\s+(?:advice|guide|results?)\b/i,
     /\bcategory\b/i,
     /\bcollection\b/i,

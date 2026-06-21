@@ -45,6 +45,17 @@ describe("shared product eligibility classifier", () => {
     assert.equal(homeDepotCategory.status, "listing_or_search");
   });
 
+  it("rejects marketplace browse pages that look like best-product collections", () => {
+    const ebayBrowsePage = classify({
+      name: "Best Craftsman Wet & Dry Vacuum Cleaners - eBay",
+      sourceTitle: "Best Craftsman Wet & Dry Vacuum Cleaners - eBay",
+      url: "https://www.ebay.com/t/Craftsman-Wet-Dry-Vacuum-Cleaners/184337/bn_91238194",
+    });
+
+    assert.equal(ebayBrowsePage.canRenderAsProductCard, false);
+    assert.equal(ebayBrowsePage.status, "listing_or_search");
+  });
+
   it("keeps evidence pages useful as evidence but not product cards", () => {
     const reddit = classify({
       name: "Best running shoes discussion",

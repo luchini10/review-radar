@@ -8,6 +8,28 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-06-21 19:09
+
+**Goal:** Change ReviewRadar so the final top results prefer distinct strong products instead of forcing different retailers.
+
+**What it checked:** Reviewed the current markdown notes, final ranking code, duplicate product merging, product-page eligibility rules, focused tests, full project checks, deterministic QA agents, and live localhost API searches.
+
+**What it found:** The final selector could still hide strong products from the same retailer. Live QA also found a separate trust issue where an eBay browse page could appear as an exact wet/dry-vac product.
+
+**What it changed:** Removed the final retailer cap from Best Match selection. Kept duplicate-product and near-duplicate-family limits. Preserved alternate retailer offers when the same product is merged. Added a shared rule so eBay browse/category pages cannot become product cards.
+
+**Why the change matters:** ReviewRadar should pick the best distinct products, not artificially spread picks across retailers. It should also keep browse pages out of exact product cards.
+
+**Tests run:** Focused tests passed. Typecheck passed. Lint passed. Full unit tests passed with 513/513 tests. Production build passed. Deterministic eval passed. Deterministic RR agents passed.
+
+**Live checks run:** Ran `cordless drill`, `$300`, `brushless, battery and charger`; and `wet dry vac`, `$200`, `shop vacuum, good suction, reliable`.
+
+**Before/after proof:** The wet/dry-vac search first showed an eBay browse page as an exact match. After the classifier fix, the exact match became a real Vacmaster product page. The new product-diversity test also proves seven distinct products from the same retailer can all stay visible.
+
+**Remaining issues:** Live searches can still return fewer exact matches when price or required details cannot be verified. That is expected behavior, but it should keep showing as close matches rather than fake exact matches.
+
+**Next recommended step:** Run live RR agents on more retailer-heavy categories like grills, refrigerators, TVs, air purifiers, and office chairs to confirm the top 7 improves across more product types.
+
 ## Codex Run - 2026-06-21 00:07
 
 **Goal:** Implement Phase 5 and Phase 6 by making ReviewRadar retry important missing rubric facts, then run a full hardening pass.

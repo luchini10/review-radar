@@ -4,6 +4,55 @@ Date: 2026-06-18
 Repo: `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 Source-of-truth map: `ReviewRadar-Overview.md`
 
+## Codex QA Update - 2026-06-21 19:09
+
+## Loop Scope
+
+Change final selection so ReviewRadar prioritizes distinct, high-quality products instead of forcing retailer diversity in the final top 7.
+
+## Root Causes
+
+The final Best Match selector still had a retailer/source cap. That could hide genuinely strong, distinct products just because the same retailer sold several of the best options. During live QA, a separate shared-trust issue also appeared: an eBay browse page shaped like `Best Craftsman Wet & Dry Vacuum Cleaners - eBay` was treated as an exact product card.
+
+## Generalized Fix
+
+- Removed the final retailer cap from exact Best Match selection.
+- Kept product-level dedupe and variant-family collapse, so duplicate products and near-duplicate model families still cannot fill the list.
+- Kept retailer throttling as an early discovery guard only, so one host cannot flood the raw candidate pool before scoring.
+- Preserved alternate retailer offer metadata when duplicate products merge.
+- Added debug wording that explains repeated retailers are allowed when products are distinct.
+- Added a shared product-eligibility rule for marketplace browse/listing paths like eBay `/t/`, `/b/`, and `/sch/`, plus title wording like `Best ... - eBay`.
+
+This is reusable across categories because it changes the shared final selector, shared duplicate merge path, and shared product-page classifier. It does not hardcode drills, vacuums, eBay product names, or one exact search.
+
+## Verification
+
+| Check | Result |
+| --- | --- |
+| Focused product-diversity, Serper, and product-eligibility tests | Passed |
+| Typecheck | Passed |
+| Lint | Passed |
+| Full unit tests | Passed, 513/513 |
+| Production build | Passed |
+| Deterministic eval pipeline | Passed, red-flag checks clean |
+| Deterministic RR agent loop | Passed, no repeated failures |
+
+## Live Checks
+
+- `cordless drill`, `$300`, `brushless, battery and charger`: returned 1 exact match and 5 close matches. This confirmed the live API still returned a real product after removing the final retailer cap.
+- `wet dry vac`, `$200`, `shop vacuum, good suction, reliable`: before the marketplace-listing fix, the exact match was an eBay browse page. After the fix, the exact match became `Vacmaster 12-Gallon 5.5 Peak HP RS Wet/Dry Vacuum` with a real Vacmaster product page.
+
+## Before/After Proof
+
+- Before: final selection could skip strong products from a repeated retailer even when they were distinct products.
+- After: final selection allows repeated retailers when products are distinct, while still blocking exact duplicate products and near-duplicate model families.
+- Before: eBay browse/category pages could look product-like enough to become exact product cards.
+- After: those marketplace browse shapes are blocked by the shared product eligibility classifier.
+
+## Remaining Notes
+
+Live API searches still depend on the live web and may return fewer exact matches when price or required details cannot be verified. That is expected. The important rule is that weak/unknown evidence should become close matches, while exact matches must be real product cards with trusted requirement evidence.
+
 ## Codex QA Update - 2026-06-21 00:07
 
 ## Loop Scope
@@ -1794,3 +1843,63 @@ See `docs/agent-loop-report.md`.
   - **live (shop vac):** 8 eligible → **5 distinct displayed** (RYOBI 6-gal, RYOBI 4.75-gal, Vacmaster 12-gal, Bosch 9-gal, Bosch 20-gal). Same-brand different-size pairs (RYOBI 6 vs 4.75, Bosch 9 vs 20) correctly kept; 3 same-brand+size variants collapsed. **Tradeoff confirmed:** collapse can drop the count below 7 when few distinct families exist — broaden discovery to refill, don't loosen collapse.
 - **shipped (2) — HTTP 502 crash fix** (`817d1a6`). `hasRejectedTerm`/`isKnownNonProductImage` in `lib/productImageResolver.ts` called `decodeURIComponent` unguarded; a product/image URL with a bad "%" escape (e.g. a filename with "50% off") threw `URIError` deep in image enrichment and 502'd the ENTIRE search (caught live during the variant-collapse test — two shop-vac runs failed at the `filter_requirements`/enrichment stage before this fix). Added `safeDecodeURIComponent` fallback. Regression test added.
 - **checks:** `npm test` 511/511, typecheck, lint, eval-pipeline clean.
+
+## Agent Loop Run - 2026-06-21T22:59:56.760Z
+
+- **run id:** agent-loop-2026-06-21T22-59-29-493Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust, broad-mainstream, requirement-units, wrong-category, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 4889ms |
+| lint | Passed | 9039ms |
+| unit tests | Passed | 8214ms |
+| deterministic eval pipeline | Passed | 557ms |
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-06-21T23:08:53.057Z
+
+- **run id:** agent-loop-2026-06-21T23-08-36-117Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust, broad-mainstream, requirement-units, wrong-category, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 2528ms |
+| lint | Passed | 6289ms |
+| unit tests | Passed | 4773ms |
+| deterministic eval pipeline | Passed | 434ms |
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task
+
+See `docs/agent-next-task.md`.
+
+### Report
+
+See `docs/agent-loop-report.md`.

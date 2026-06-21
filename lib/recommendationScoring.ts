@@ -876,6 +876,15 @@ function withRank(
     matchScore: rankedMatchScore(product),
     credibilityScore: product.marketConfidence?.score,
     slot_reasoning: reason,
+    scoreBreakdown: product.scoreBreakdown
+      ? {
+          ...product.scoreBreakdown,
+          scoreDebug: [
+            ...(product.scoreBreakdown.scoreDebug || []),
+            "Final selection allows repeated retailers when products are distinct; duplicate exact products and near-duplicate variant families are handled by product identity instead of retailer caps.",
+          ],
+        }
+      : product.scoreBreakdown,
   };
 }
 
@@ -922,13 +931,7 @@ function selectRankedExactMatches(
   // different families and both stay; products with unknown brand/size are never
   // collapsed.
   const usedFamily = new Set<string>();
-  const domainCounts = new Map<string, number>();
-  // Source-diversity: no single retailer/source may fill more than half the
-  // displayed slots while other-source options exist, so one catalog can't
-  // dominate the results. Applies to every category — purely host-based.
-  const perDomainCap = Math.ceil(MAX_EXACT_MATCHES / 2);
   const selected: ProductRecommendation[] = [];
-  const deferred: ProductRecommendation[] = [];
 
   for (const product of sorted) {
     const id = canonicalId(product);
@@ -949,29 +952,11 @@ function selectRankedExactMatches(
       usedFamily.add(family);
     }
 
-    const host = hostname(product.product_page_url);
-
-    if (host && (domainCounts.get(host) || 0) >= perDomainCap) {
-      deferred.push(product);
-      continue;
-    }
-
-    domainCounts.set(host, (domainCounts.get(host) || 0) + 1);
     selected.push(product);
 
     if (selected.length >= MAX_EXACT_MATCHES) {
       break;
     }
-  }
-
-  // Backfill from deferred (still best-first) so the diversity preference never
-  // reduces how many results we show.
-  for (const product of deferred) {
-    if (selected.length >= MAX_EXACT_MATCHES) {
-      break;
-    }
-
-    selected.push(product);
   }
 
   return selected.map((product, index) => withRank(product, index, input));

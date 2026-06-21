@@ -3400,12 +3400,36 @@ function mergeRecommendationEvidence(
       return true;
     }),
   ];
+  const seenOfferUrls = new Set(
+    (existing.metadata?.offers || [])
+      .map((offer) => normalizeUrlKey(offer.url))
+      .filter(Boolean),
+  );
+  const incomingOffers = (incoming.metadata?.offers || []).filter((offer) => {
+    const key = normalizeUrlKey(offer.url);
+
+    if (!key || seenOfferUrls.has(key)) {
+      return false;
+    }
+
+    seenOfferUrls.add(key);
+    return true;
+  });
+  const metadata =
+    existing.metadata || incoming.metadata
+      ? {
+          ...(incoming.metadata || { offers: [] }),
+          ...(existing.metadata || { offers: [] }),
+          offers: [...(existing.metadata?.offers || []), ...incomingOffers],
+        }
+      : undefined;
 
   return {
     ...existing,
     product_page_url: existing.product_page_url || incoming.product_page_url,
     product_image_url: existing.product_image_url || incoming.product_image_url,
     citations,
+    metadata,
   };
 }
 

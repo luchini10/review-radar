@@ -1278,4 +1278,83 @@ describe("Serper product discovery", () => {
     assert.equal(result.duplicateCount, 1);
     assert.equal(result.products[0].product_image_url, "https://example.com/image.jpg");
   });
+
+  it("keeps alternate retailer offer evidence when duplicate products merge", () => {
+    const existing = buildProduct({
+      product_page_url: "https://www.homedepot.com/p/example-drill/123",
+      metadata: {
+        ...buildProduct().metadata,
+        offers: [
+          {
+            availability: {
+              confidence: "Medium",
+              sourceType: "serper",
+              sourceUrl: "https://www.homedepot.com/p/example-drill/123",
+              value: null,
+              verifiedAt: "2026-06-21T00:00:00.000Z",
+            },
+            price: {
+              confidence: "Medium",
+              sourceType: "serper",
+              sourceUrl: "https://www.homedepot.com/p/example-drill/123",
+              value: 199,
+              verifiedAt: "2026-06-21T00:00:00.000Z",
+            },
+            priceCurrency: {
+              confidence: "Medium",
+              sourceType: "serper",
+              sourceUrl: "https://www.homedepot.com/p/example-drill/123",
+              value: "USD",
+              verifiedAt: "2026-06-21T00:00:00.000Z",
+            },
+            retailer: "Home Depot",
+            url: "https://www.homedepot.com/p/example-drill/123",
+          },
+        ],
+      },
+      name: "DeWalt DCD800 20V MAX Cordless Drill",
+    });
+    const incoming = buildProduct({
+      name: "DeWalt DCD800 20V MAX Cordless Drill - Lowe's",
+      product_page_url: "https://www.lowes.com/pd/dewalt-dcd800/456",
+      metadata: {
+        ...buildProduct().metadata,
+        offers: [
+          {
+            availability: {
+              confidence: "Medium",
+              sourceType: "serper",
+              sourceUrl: "https://www.lowes.com/pd/dewalt-dcd800/456",
+              value: null,
+              verifiedAt: "2026-06-21T00:00:00.000Z",
+            },
+            price: {
+              confidence: "Medium",
+              sourceType: "serper",
+              sourceUrl: "https://www.lowes.com/pd/dewalt-dcd800/456",
+              value: 209,
+              verifiedAt: "2026-06-21T00:00:00.000Z",
+            },
+            priceCurrency: {
+              confidence: "Medium",
+              sourceType: "serper",
+              sourceUrl: "https://www.lowes.com/pd/dewalt-dcd800/456",
+              value: "USD",
+              verifiedAt: "2026-06-21T00:00:00.000Z",
+            },
+            retailer: "Lowe's",
+            url: "https://www.lowes.com/pd/dewalt-dcd800/456",
+          },
+        ],
+      },
+    });
+    const result = mergeProductRecommendations([existing], [incoming]);
+
+    assert.equal(result.products.length, 1);
+    assert.equal(result.duplicateCount, 1);
+    assert.deepEqual(
+      result.products[0].metadata.offers.map((offer) => offer.retailer),
+      ["Home Depot", "Lowe's"],
+    );
+  });
 });
