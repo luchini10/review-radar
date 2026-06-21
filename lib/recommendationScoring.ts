@@ -5,6 +5,7 @@ import {
 } from "./requirementValidation.ts";
 import { candidateMatchesDiscoveryTarget } from "./discoveryStrategy.ts";
 import { getCanonicalIdentity, withCanonicalIdentity } from "./productIdentity.ts";
+import { variantFamilyKey } from "./productVariantFamily.ts";
 import { computeCategoryFit } from "./categoryScoring.ts";
 import { computeRubricFit } from "./buyingRubric.ts";
 import {
@@ -915,6 +916,12 @@ function selectRankedExactMatches(
 ) {
   const sorted = sortByRankedMatchStrength(products);
   const used = new Set<string>();
+  // Variant-family de-dup: same brand + same size collapses to the single most
+  // popular/trusted product (`sorted` is best-first), so the slots show distinct
+  // products instead of three model-number variants of one. Different sizes are
+  // different families and both stay; products with unknown brand/size are never
+  // collapsed.
+  const usedFamily = new Set<string>();
   const domainCounts = new Map<string, number>();
   // Source-diversity: no single retailer/source may fill more than half the
   // displayed slots while other-source options exist, so one catalog can't
@@ -930,7 +937,18 @@ function selectRankedExactMatches(
       continue;
     }
 
+    const family = variantFamilyKey(product);
+
+    if (family && usedFamily.has(family)) {
+      continue;
+    }
+
     used.add(id);
+
+    if (family) {
+      usedFamily.add(family);
+    }
+
     const host = hostname(product.product_page_url);
 
     if (host && (domainCounts.get(host) || 0) >= perDomainCap) {
