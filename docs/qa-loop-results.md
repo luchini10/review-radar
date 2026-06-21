@@ -1532,3 +1532,35 @@ See `docs/agent-next-task.md`.
 ### Report
 
 See `docs/agent-loop-report.md`.
+
+---
+
+## 🟩 **Claude QA Update — 2026-06-21 00:54**
+
+### Claude Change 1 — Budget-usable text prices
+
+- **agent:** Claude
+- **date/time:** 2026-06-21 00:54 EDT
+- **reason:** Live search `shop vac` / `$400` returned **0 exact + 4 near** even though many shop vacs are clearly under $400. Root-caused the over-strict price-trust gate from the 06-20 price-trust layer: a product whose price comes only from recommendation text (no structured `metadata.offers`) was marked `canUseForBudget: false`, so its budget requirement resolved to **unknown**, and the exact-match gate (`unknown.length === 0`) forced every such product into near matches. Retailers frequently bot-wall the structured-offer fetch, so this hit normal budget searches across all categories (Codex saw the same on cordless drills).
+- **root cause:** `assessProductPriceTrust` (`lib/productPriceTrust.ts`) returned `canUseForBudget: false` for ALL text-only prices, even ones that had already passed the implausibly-low and conflicting-signal checks. `productPrice()` (scoring) and the budget requirement check both gate on `canUseForBudget`, so these products had no usable price at all (and also took a missing-price penalty).
+- **generalized fix (no product types referenced):** in the text-only branch, a **specific, plausible** text price (one that already cleared implausibly-low + conflicting) is now `canUseForBudget: true` (budget-usable, exact-eligible) while still `status: "needs_verification"` and displayed as `"$X needs verification"`. A **vague** price (range, or "around/about/approximately") stays `canUseForBudget: false`. All of Codex's price protections (suspicious-low, financing/payment, conflicting, full-size-appliance floors) run UPSTREAM of this branch and are unchanged. Confidence stays capped because text-only evidence is thin, and the card still tells the shopper to verify the current store price. Side benefit: removes a misleading "price looked unusually low" card message that previously hit plausible text-priced products.
+- **commands run / checks:**
+  - `node --test tests/productPriceTrust.test.mjs` — Passed (9/9)
+  - `node --test tests/requirementValidation.test.mjs` — Passed (48/48)
+  - `npm run typecheck` — Passed
+  - `npm run lint` — Passed
+  - `npm test` — Passed (**488/488**, up from 486; +2 net tests)
+  - `node scripts/eval-pipeline.mjs` — RED-FLAG CHECKS: no issues
+- **live QA searches run:** None this loop (deterministic + unit/integration proof). A live `shop vac / $400` recheck is the recommended confirmation once the dev server is up.
+- **issue new vs. related to Codex:** **Related** — this loosens the 06-20 price-trust layer's over-correction without weakening any of its fake-cheap protections.
+- **files changed:**
+  - `lib/productPriceTrust.ts` (text-only branch)
+  - `tests/productPriceTrust.test.mjs` (updated the old "text price not budget-usable" assertion to the new intent; added a vague-range guard test)
+  - `tests/requirementValidation.test.mjs` (new integration test: a specific in-budget text price satisfies the budget requirement; a vague price stays unknown)
+- **before/after:**
+  - Before: product with `estimated_price_range: "$129"`, no offers, budget $400 -> budget requirement **unknown** -> cannot be exact (near only); `productPrice()` returned `null`.
+  - After: same product -> budget requirement **matched** at $129 -> exact-eligible. `"around $129"` (vague) still resolves to **unknown** (correctly cannot be exact).
+- **remaining risks / follow-up:**
+  - A wrong-but-not-implausible text price could still let a slightly-over-budget product look in-budget; mitigated by the implausibly-low filter, capped confidence, and the "needs verification" label. If stricter behavior is wanted, add a small under-budget margin for text-only prices.
+  - Best long-term fix remains Phase 5 rescue reliably attaching STRUCTURED offer prices so fewer products depend on text prices at all.
+  - Still open from the phase analysis: consolidate the three overlapping product-type/conflict tables (`formFactor.ts`, `productTypeIntent.ts`, `productTypeConflictRules`) and generalize `productTypeIntent`'s hardcoded 8-category list. Separate loop.

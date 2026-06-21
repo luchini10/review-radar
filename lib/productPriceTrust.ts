@@ -228,14 +228,28 @@ export function assessProductPriceTrust(
   }
 
   if (textSignal) {
-    warnings.push("Price came from recommendation text instead of product-page pricing.");
+    // A specific, plausible text price (it already cleared the implausibly-low and
+    // conflicting checks above) is good enough to test against a budget and to be an
+    // exact match. Otherwise budget-only or thin-evidence searches return zero exact
+    // matches even for clearly in-budget products, because retailers often bot-wall
+    // the structured-offer fetch and only a recommendation-text price survives. A
+    // vague range/approx ("around $250", "$250 to $350") stays unusable since it is
+    // too imprecise for a firm budget. Cross-category: no product type is referenced.
+    // Confidence stays capped (thin evidence) and the card still tells the shopper to
+    // verify the current store price.
+    const looksVague = textPriceLooksLikeRange(product.estimated_price_range);
+    const trustedTextPrice = !looksVague && plausible !== null;
+
+    warnings.push(
+      trustedTextPrice
+        ? "Price came from recommendation text; usable for budget but verify the current store price."
+        : "Price came from recommendation text instead of product-page pricing.",
+    );
 
     return {
-      canBeExactWithBudget: false,
-      canUseForBudget: false,
-      displayText: textPriceLooksLikeRange(product.estimated_price_range)
-        ? `${formatDollars(textSignal.price)} needs verification`
-        : statusDisplay("needs_verification", textSignal.price),
+      canBeExactWithBudget: trustedTextPrice,
+      canUseForBudget: trustedTextPrice,
+      displayText: `${formatDollars(textSignal.price)} needs verification`,
       price: textSignal.price,
       sources,
       status: "needs_verification",

@@ -116,6 +116,41 @@ describe("requirement validation", () => {
     assert.match(miss.disqualifiedReason || "", /Color: Beige/);
   });
 
+  it("lets a specific in-budget text price (no structured offer) satisfy a budget requirement", () => {
+    const requirements = {
+      category: "shop vac",
+      budget: "$400",
+      extractedRequirements: extractStructuredRequirements({
+        query: "shop vac",
+        budget: "$400",
+      }),
+    };
+    const baseOverrides = {
+      name: "Example 12 Gallon Wet Dry Shop Vac",
+      category: "shop vac",
+      why_recommended: "A 12-gallon wet/dry shop vac with a strong motor.",
+      pros: ["12-gallon tank."],
+      cons: ["Hose could be longer."],
+      metadata: { offers: [] },
+    };
+
+    const specificPrice = validateProductAgainstRequirements(
+      buildProduct({ ...baseOverrides, estimated_price_range: "$129" }),
+      requirements,
+    );
+    // Budget is the only hard requirement; a specific, plausible in-budget text price
+    // should MATCH it (exact-eligible) instead of being forced into near matches.
+    assert.ok(specificPrice.matchedRequirements.some((item) => /Budget:/i.test(item)));
+    assert.ok(!specificPrice.unknownRequirements.some((item) => /Budget:/i.test(item)));
+
+    const vaguePrice = validateProductAgainstRequirements(
+      buildProduct({ ...baseOverrides, estimated_price_range: "around $129" }),
+      requirements,
+    );
+    // A vague price stays unknown for budget, so it cannot be an exact match.
+    assert.ok(vaguePrice.unknownRequirements.some((item) => /Budget:/i.test(item)));
+  });
+
   it("treats multiple selected colors as acceptable alternatives", () => {
     const beigeMatch = validateProductAgainstRequirements(buildProduct(), {
       category: "couch",

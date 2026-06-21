@@ -141,7 +141,7 @@ describe("shared product price trust", () => {
     assert.equal(compactTrust.price, 129);
   });
 
-  it("keeps text-only prices visible but not strong enough for exact budget matching", () => {
+  it("treats a specific, plausible text-only price as budget-usable but flagged for verification", () => {
     const trust = assessProductPriceTrust(
       product({
         estimated_price_range: "$299",
@@ -149,9 +149,26 @@ describe("shared product price trust", () => {
       }),
     );
 
+    // A specific text price that cleared the implausibly-low/conflicting checks is good
+    // enough to test against a budget (so clearly-in-budget products are not all forced
+    // into near matches), while still flagged as needs-verification on the card.
     assert.equal(trust.status, "needs_verification");
     assert.equal(trust.price, 299);
-    assert.equal(trust.canUseForBudget, false);
+    assert.equal(trust.canUseForBudget, true);
+    assert.match(trust.displayText, /needs verification/i);
+  });
+
+  it("does not treat a vague text price range as budget-usable", () => {
+    const rangeTrust = assessProductPriceTrust(
+      product({ estimated_price_range: "$250 to $350", metadata: { offers: [] } }),
+    );
+    assert.equal(rangeTrust.canUseForBudget, false);
+    assert.equal(rangeTrust.status, "needs_verification");
+
+    const approxTrust = assessProductPriceTrust(
+      product({ estimated_price_range: "around $250", metadata: { offers: [] } }),
+    );
+    assert.equal(approxTrust.canUseForBudget, false);
   });
 
   it("uses the lowest trustworthy purchasable offer when multiple verified offers exist", () => {
