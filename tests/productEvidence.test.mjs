@@ -249,6 +249,33 @@ describe("product evidence enrichment", () => {
     );
   });
 
+  it("keeps critical missing rubric facts ahead of minor missing facts", () => {
+    const product = buildRubricProduct({
+      buyingRubric: {
+        ...buildRubricProduct().buyingRubric,
+        mustVerifyFacts: [
+          "Available color options",
+          "Remote control app support",
+          "Exact dimensions and installation fit",
+          "Current product price",
+        ],
+      },
+    });
+    const bucket = buildBucketFromSources(product, [
+      {
+        title: "Sparse refrigerator page",
+        url: "https://example.com/refrigerator",
+        snippet: "The page confirms a stainless steel refrigerator.",
+      },
+    ]);
+    const rubricUnknowns = bucket.unknowns.filter((item) =>
+      /^Rubric fact:/i.test(item.topic),
+    );
+
+    assert.equal(rubricUnknowns[0].importance, "critical");
+    assert.match(rubricUnknowns[0].topic, /dimensions|price/i);
+  });
+
   it("does not mark rubric price or finish facts missing when structured data already verifies them", () => {
     const product = buildRubricProduct({
       estimated_price_range: "$1,999",

@@ -954,7 +954,60 @@ describe("recommendation scoring and ranked Best Match selection", () => {
     assert.ok((thinScore.missingDataPenalty || 0) > (completeScore.missingDataPenalty || 0));
     assert.ok(completeScore.totalScore > thinScore.totalScore);
     assert.equal(result.exactMatches.length, 1);
-    assert.equal(result.exactMatches[0].confidence_score, 78);
+    assert.equal(result.exactMatches[0].confidence_score, 72);
+  });
+
+  it("penalizes missing critical rubric facts more than missing minor rubric facts", () => {
+    const input = {
+      budget: "under $2500",
+      query: "refrigerator",
+    };
+    const missingMinorFact = buildProduct("Minor Missing Fact Refrigerator", {
+      category: "refrigerator",
+      estimated_price_range: "$1,999",
+      evidenceBucket: {
+        negativeEvidence: [],
+        positiveEvidence: [],
+        repeatedComplaints: [],
+        unknowns: [
+          {
+            importance: "minor",
+            topic: "Rubric fact: Available color options",
+            reason: "Minor cosmetic fact was not clearly verified.",
+          },
+        ],
+      },
+    });
+    const missingCriticalFact = buildProduct("Critical Missing Fact Refrigerator", {
+      category: "refrigerator",
+      estimated_price_range: "$1,999",
+      evidenceBucket: {
+        negativeEvidence: [],
+        positiveEvidence: [],
+        repeatedComplaints: [],
+        unknowns: [
+          {
+            importance: "critical",
+            topic: "Rubric fact: Current product price",
+            reason: "Critical purchase fact was not clearly verified.",
+          },
+        ],
+      },
+    });
+    const minorScore = recommendationScoringTestExports.scoreProduct(
+      missingMinorFact,
+      input,
+    );
+    const criticalScore = recommendationScoringTestExports.scoreProduct(
+      missingCriticalFact,
+      input,
+    );
+
+    assert.equal(
+      (criticalScore.missingDataPenalty || 0) -
+        (minorScore.missingDataPenalty || 0),
+      4.25,
+    );
   });
 
   it("does not let a broad marketplace page outrank a specialist source by default", () => {

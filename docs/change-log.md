@@ -14,6 +14,9 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 ## 2026-06-20
 
 ### Changed
+- Added a shared importance list for missing buying-rubric facts, so missing facts are weighted as `critical`, `important`, or `minor` instead of all counting the same.
+- Critical missing facts such as current price, availability, product type, compatibility, dimensions/fit, capacity, and safety now affect ranking and confidence more than minor cosmetic or convenience facts.
+- Missing rubric facts are now sorted by importance before they are stored, so a minor missing detail cannot crowd out a more important missing fact.
 - Started Phase 4 by making missing buying-rubric facts affect evidence completeness, confidence, and ranking.
 - Products now record important unverified rubric facts as `Rubric fact: ...` evidence unknowns, so ReviewRadar can see when a recommendation is missing facts shoppers would reasonably expect.
 - Missing rubric facts now add a capped missing-data penalty and cap confidence, but they do not hard-reject the product by themselves.
@@ -59,6 +62,11 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 - Added a reusable buying-advice page filter so articles such as "7 Things to Avoid When Purchasing..." can still inform research but cannot appear as product cards.
 
 ### Verified
+- `node --no-warnings --test tests\productEvidence.test.mjs tests\recommendationScoring.test.mjs`
+- `npm run typecheck`
+- `npm run lint`
+- `npm test` (485/485 tests)
+- `npm run build`
 - `node --no-warnings --test tests\productEvidence.test.mjs tests\recommendationScoring.test.mjs`
 - `npm run typecheck`
 - `npm run lint`

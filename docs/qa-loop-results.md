@@ -4,6 +4,54 @@ Date: 2026-06-18
 Repo: `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 Source-of-truth map: `ReviewRadar-Overview.md`
 
+## Codex QA Update - 2026-06-20 23:05
+
+## Loop Scope
+
+Refine Phase 4 so missing buying-rubric facts have different importance levels instead of all counting the same.
+
+## Root Causes
+
+ReviewRadar was starting to track missing rubric facts, but it treated a missing minor detail too much like a missing critical buying fact. That could make the ranking pressure too blunt.
+
+## Generalized Fix
+
+- Added a shared rubric-fact importance helper.
+- Classified missing rubric facts as `critical`, `important`, or `minor`.
+- Critical facts include current price, availability, product type, compatibility, dimensions/fit, capacity, and safety.
+- Minor facts include mostly cosmetic or convenience details such as color options, finish, shipping window, or app controls.
+- Sorted missing rubric facts by importance before keeping them.
+- Changed scoring so critical missing facts reduce confidence and ranking more than minor missing facts.
+
+This is reusable across categories because the importance rules are based on the kind of buying fact, not on one product category.
+
+## Verification
+
+| Check | Result |
+| --- | --- |
+| Focused product-evidence and scoring tests | Passed |
+| Typecheck | Passed |
+| Lint | Passed |
+| Full unit tests | Passed, 485/485 |
+| Production build | Passed |
+
+## Before / After Proof
+
+Before the fix:
+
+- One missing minor fact could count the same as one missing critical fact.
+- Several minor missing facts could crowd out more important missing facts from the evidence gaps list.
+
+After the fix:
+
+- Missing current price or dimensions has more ranking impact than missing color options.
+- Critical missing rubric facts are kept ahead of minor missing facts.
+- Products are still not hard-rejected just because a rubric fact is missing.
+
+## Remaining Notes
+
+The importance list is intentionally generic. Future live QA can tune the categories if a fact is consistently too harsh or too soft.
+
 ## Codex QA Update - 2026-06-20 22:47
 
 ## Loop Scope

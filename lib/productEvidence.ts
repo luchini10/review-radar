@@ -17,6 +17,10 @@ import {
   sanitizeProductCons,
   sanitizeProductPros,
 } from "./productCopySanitizer.ts";
+import {
+  classifyRubricFactImportance,
+  rubricImportanceRank,
+} from "./rubricFactImportance.ts";
 
 const MAX_EVIDENCE_QUERIES_PER_PRODUCT = 3;
 const MAX_EVIDENCE_CALLS_TOTAL = 16;
@@ -1157,13 +1161,24 @@ function addRubricUnknowns(
     .filter((fact) => !rubricFactIsOptional(fact))
     .filter((fact) => !rubricFactSatisfiedByKnownData(product, fact, combined))
     .filter((fact) => !rubricItemMatches(combined, fact))
+    .map((fact) => ({
+      fact,
+      importance: classifyRubricFactImportance(fact),
+    }))
+    .sort((a, b) => {
+      const rank =
+        rubricImportanceRank(b.importance.importance) -
+        rubricImportanceRank(a.importance.importance);
+
+      return rank || b.importance.weight - a.importance.weight;
+    })
     .slice(0, 4);
 
-  for (const fact of missingFacts) {
+  for (const { fact, importance } of missingFacts) {
     bucket.unknowns.push({
+      importance: importance.importance,
       topic: `Rubric fact: ${rubricEvidenceTitle(fact)}`,
-      reason:
-        "The buying rubric says this is an important fact, but the evidence gathered for this product did not clearly verify it.",
+      reason: `${importance.reason} The evidence gathered for this product did not clearly verify it.`,
     });
   }
 }

@@ -8,6 +8,28 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-06-20 23:05
+
+**Goal:** Make missing buying-rubric facts smarter by giving them importance levels.
+
+**What it checked:** Reviewed missing rubric facts, evidence unknowns, ranking penalties, confidence caps, focused tests, and full project checks.
+
+**What it found:** Missing rubric facts were being counted too evenly. A missing minor detail could count too much like a missing critical fact.
+
+**What it changed:** Added a shared importance helper that labels missing rubric facts as critical, important, or minor. Critical facts now lower ranking and confidence more than minor facts. Missing facts are sorted by importance before they are stored.
+
+**Why the change matters:** ReviewRadar should care more about missing price, availability, product type, fit, capacity, compatibility, or safety than missing a smaller cosmetic or convenience detail.
+
+**Tests run:** Focused product-evidence and scoring tests passed. Typecheck passed. Lint passed. Full unit tests passed with 485/485 tests. Production build passed.
+
+**Live checks run:** No live API search was needed for this small ranking refinement.
+
+**Before/after proof:** Before, one missing minor fact could count like one missing critical fact. After, missing current price or dimensions carries more ranking pressure than missing color options.
+
+**Remaining issues:** Live QA should keep watching whether the importance levels are too harsh or too soft for certain product types.
+
+**Next recommended step:** Run live RR agents on varied products to see whether the new importance weighting improves ranking quality.
+
 ## Codex Run - 2026-06-20 22:47
 
 **Goal:** Start Phase 4 by making missing buying-rubric facts lower confidence and ranking strength without automatically rejecting useful products.

@@ -19,6 +19,11 @@ import { productRecommendationEligibility } from "./productEligibility.ts";
 import { assessProductPriceTrust } from "./productPriceTrust.ts";
 import { assessProductReliability } from "./productReliability.ts";
 import { baseProductCategoryFromQuery } from "./productCategory.ts";
+import {
+  classifyRubricFactImportance,
+  isRubricFactUnknownTopic,
+  rubricFactFromUnknownTopic,
+} from "./rubricFactImportance.ts";
 import type {
   ProductCredibilityTier,
   ProductRecommendation,
@@ -424,20 +429,33 @@ function missingDataPenalty(product: ProductRecommendation) {
   const unknownRequired = product.requirementCheck?.unknown.length || 0;
   const softUnknown = product.requirementCheck?.softUnknown?.length || 0;
   const weakIdentity = product.canonicalIdentity?.confidence === "Low" ? 5 : 0;
-  const rubricUnknowns =
-    product.evidenceBucket?.unknowns.filter((item) =>
-      /^Rubric fact:/i.test(item.topic),
-    ).length || 0;
+  const rubricUnknownPenalty = rubricUnknownPenaltyForProduct(product);
 
   return clamp(
     missing * 2.5 +
       unknownRequired * 8 +
       softUnknown * 4 +
       weakIdentity +
-      Math.min(12, rubricUnknowns * 2.5),
+      rubricUnknownPenalty,
     0,
     45,
   );
+}
+
+function rubricUnknownPenaltyForProduct(product: ProductRecommendation) {
+  const rubricUnknowns =
+    product.evidenceBucket?.unknowns.filter((item) =>
+      isRubricFactUnknownTopic(item.topic),
+    ) || [];
+  const weightedPenalty = rubricUnknowns.reduce((total, item) => {
+    const verdict = classifyRubricFactImportance(
+      rubricFactFromUnknownTopic(item.topic),
+    );
+
+    return total + verdict.weight;
+  }, 0);
+
+  return Math.min(16, weightedPenalty);
 }
 
 export type EvidenceStrength = "strong" | "medium" | "weak";
@@ -492,14 +510,11 @@ const CONFIDENCE_CAP_BY_MARKET_TIER = {
 function withHonestConfidence<T extends ProductRecommendation>(product: T): T {
   const strength = evidenceStrengthForProduct(product);
   const marketConfidence = product.marketConfidence || assessProductCredibility(product);
+  const rubricConfidenceCap = rubricUnknownConfidenceCap(product);
   const cap = Math.min(
     CONFIDENCE_CAP_BY_EVIDENCE[strength],
     CONFIDENCE_CAP_BY_MARKET_TIER[marketConfidence.tier],
-    product.evidenceBucket?.unknowns.some((item) =>
-      /^Rubric fact:/i.test(item.topic),
-    )
-      ? 78
-      : 100,
+    rubricConfidenceCap,
   );
 
   if (
@@ -516,6 +531,24 @@ function withHonestConfidence<T extends ProductRecommendation>(product: T): T {
     evidence_strength: strength,
     marketConfidence,
   };
+}
+
+function rubricUnknownConfidenceCap(product: ProductRecommendation) {
+  const rubricUnknowns =
+    product.evidenceBucket?.unknowns.filter((item) =>
+      isRubricFactUnknownTopic(item.topic),
+    ) || [];
+
+  if (!rubricUnknowns.length) {
+    return 100;
+  }
+
+  return Math.min(
+    ...rubricUnknowns.map((item) =>
+      classifyRubricFactImportance(rubricFactFromUnknownTopic(item.topic))
+        .confidenceCap,
+    ),
+  );
 }
 
 function marketConfidenceTier(product: ProductRecommendation) {

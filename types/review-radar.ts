@@ -401,6 +401,7 @@ export type RepeatedComplaintEvidence = {
 };
 
 export type ProductEvidenceUnknown = {
+  importance?: "critical" | "important" | "minor";
   topic: string;
   reason: string;
 };
