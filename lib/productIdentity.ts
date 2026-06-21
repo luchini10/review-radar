@@ -44,7 +44,11 @@ function normalizeText(value: string) {
 function normalizeTitle(value: string) {
   return normalizeText(value)
     .split(" ")
-    .filter((word) => word.length > 1 && !genericWords.has(word))
+    // Keep multi-character words AND any single DIGIT — a single-digit size/spec
+    // ("5 Gallon" vs "6 Gallon") is often the only thing distinguishing two real
+    // products, so dropping it merged different models into one canonical id and
+    // collapsed the result list. Single letters are still dropped as noise.
+    .filter((word) => (word.length > 1 || /\d/.test(word)) && !genericWords.has(word))
     .slice(0, 10)
     .join(" ");
 }

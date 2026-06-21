@@ -1749,3 +1749,20 @@ See `docs/agent-loop-report.md`.
   - **Investigate canonical de-dup** — confirm it is not over-collapsing genuinely different models (the strongest lead for "only 3 shown").
   - Strip residual seed prefixes ("Everyday Use", "Big Messes For").
 - **files changed:** `lib/search/serper.ts`, `app/api/recommendations/route.ts` (debug fields), `tests/seedProductNames.test.mjs`.
+
+---
+
+## 🟩 **Claude QA Update — 2026-06-21 14:45**
+
+### Claude Change 9 — Fix canonical de-dup over-collapsing different-size products (the "only 3 exact" root cause)
+
+- **agent:** Claude
+- **investigation:** the user's "only 3 exact" for shop vac. Traced the displayed-count drop to canonical **de-duplication**: `getCanonicalIdentity` falls back to `normalizeTitle` for thin-metadata products, and `normalizeTitle` filtered every token of length ≤ 1 — so a single-digit size ("5 Gallon" vs "6 Gallon") was dropped and two different vacs got the **same** canonical id and were merged.
+- **proof of bug (deterministic):** `getCanonicalIdentity("Stanley 5 Gallon Wet/Dry Vacuum")` and `...6 Gallon...` both produced id `"stanley gallon wet dry vacuum"` → merged. (12/14/16-gallon survived because they are 2-digit.)
+- **fix:** `normalizeTitle` now keeps single-DIGIT tokens (a single-digit size/spec is often the only differentiator); single letters are still dropped as noise. `lib/productIdentity.ts`.
+- **checks:** `npm test` **504/504** (+ regression test that 5-gal vs 6-gal and 9-gal vs 16-gal stay DISTINCT), typecheck, lint, eval clean.
+- **live before/after (shop vac, no criteria):**
+  - Before this fix: 7 exact-eligible collapsed to **3 displayed**.
+  - After: **10 eligible → 7 DISPLAYED** distinct vacs (incl. three different Vacmaster 8-gal models the old code merged). The list now fills all 7.
+- **impact:** directly resolves the "only 3 exact" symptom. More distinct products survive de-dup, so the 7 slots fill reliably. This is the strongest single lever found for the user's "show 7 best" goal.
+- **files changed:** `lib/productIdentity.ts`, `tests/productIdentity.test.mjs`.

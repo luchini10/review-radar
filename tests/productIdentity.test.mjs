@@ -23,6 +23,25 @@ function product(name, product_page_url = "") {
 }
 
 describe("product identity", () => {
+  it("keeps products that differ only by a single-digit size as DISTINCT", () => {
+    // Regression: these used to collapse to the same canonical id (the single-digit
+    // size was dropped), merging different vacs and shrinking the result list.
+    assert.equal(
+      areSameCanonicalProduct(
+        product("Stanley 5 Gallon Wet/Dry Vacuum"),
+        product("Stanley 6 Gallon Wet/Dry Vacuum"),
+      ),
+      false,
+    );
+    assert.equal(
+      areSameCanonicalProduct(
+        product("Craftsman 9 Gallon Wet/Dry Vac"),
+        product("Craftsman 16 Gallon Wet/Dry Vac"),
+      ),
+      false,
+    );
+  });
+
   it("treats a named model and its product-family listing as the same product", () => {
     assert.equal(
       areSameCanonicalProduct(
