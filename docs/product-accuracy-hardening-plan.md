@@ -109,3 +109,5 @@ or mis-flag. Capped nudge, so bounded impact, but false matches still nudge rank
 cases.
 **Files:** `lib/buyingRubric.ts`, `tests/buyingRubric.test.mjs`.
 **Risk:** low (capped nudge).
+**Status: DONE.** `itemMatches` now matches whole words/phrases instead of substrings
+("grip" no longer matches "gripped"). 499/499 tests, eval clean.

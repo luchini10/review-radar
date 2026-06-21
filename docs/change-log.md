@@ -13,6 +13,10 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-21
 
+### 🟩 Claude — Rubric matcher uses whole-word matching (Phase 5)
+- Tightened how the buying-rubric ranking nudge decides a product "has" a quality/review signal. It was matching substrings, so "grip" counted "gripped" and "trail" counted "trailer" — false matches that inflated a product's rubric score. It now matches whole words/phrases only. This is a small ranking nudge (it never overrides hard requirements, price trust, or product eligibility), so impact is bounded; it just makes the nudge more accurate.
+- Verified: `npm run typecheck`, `npm run lint`, `npm test` (499/499 tests), `node scripts/eval-pipeline.mjs` (red-flag checks clean).
+
 ### 🟩 Claude — Rescue shopping leg searches product identity (Phase 3, step 1)
 - Improved how the evidence-rescue pass finds a real, structured price for a product that only had a text price. It now searches the product's identity (name + category) on Google Shopping instead of a descriptive phrase like "current price", which is noise for a shopping engine. This should raise the rate at which a trusted store price gets attached, so fewer products are left needing price verification. Investigation-only (no live API spent); the organic-evidence search is unchanged. A live measurement of the success rate remains a recommended follow-up.
 - Verified: `npm run typecheck`, `npm run lint`, `npm test` (497/497 tests).

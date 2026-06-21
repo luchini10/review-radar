@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { computeRubricFit } from "../lib/buyingRubric.ts";
+import { buyingRubricTestExports, computeRubricFit } from "../lib/buyingRubric.ts";
+
+const { itemMatches } = buyingRubricTestExports;
 import {
   recommendationScoringTestExports,
   scoreAndSelectRecommendations,
@@ -90,6 +92,20 @@ function input() {
     query: "trail running shoes",
   };
 }
+
+describe("rubric item matching is whole-word, not substring", () => {
+  it("matches a whole phrase and whole tokens", () => {
+    assert.equal(itemMatches("strong trail grip on loose dirt", "trail grip"), true);
+    assert.equal(itemMatches("excellent cushioning underfoot", "cushioning"), true);
+  });
+
+  it("does not match substrings (no false positives)", () => {
+    // "trail" must not match "trailer"; "grip" must not match "gripped".
+    assert.equal(itemMatches("the trailer gripped the rail", "trail grip"), false);
+    // "outsole" must not be matched by the unrelated word "console".
+    assert.equal(itemMatches("a gaming console on the shelf", "durable outsole"), false);
+  });
+});
 
 describe("universal buying rubric scoring", () => {
   it("boosts supported rubric evidence and penalizes supported red flags", () => {

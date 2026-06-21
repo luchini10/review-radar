@@ -48,6 +48,12 @@ function evidenceText(product: ProductRecommendation) {
   ].join(" ");
 }
 
+function containsWholePhrase(text: string, phrase: string) {
+  // `text` and `phrase` are normalized (lowercase, single-spaced), so pad with
+  // spaces to match the phrase only on word boundaries.
+  return ` ${text} `.includes(` ${phrase} `);
+}
+
 function itemMatches(text: string, item: string) {
   const normalizedItem = normalizeText(item);
 
@@ -55,10 +61,15 @@ function itemMatches(text: string, item: string) {
     return false;
   }
 
-  if (text.includes(normalizedItem)) {
+  // Whole-phrase match is the strongest signal.
+  if (containsWholePhrase(text, normalizedItem)) {
     return true;
   }
 
+  // Match individual tokens on WHOLE WORDS, not substrings, so "grip" no longer
+  // matches "gripped" and "trail" no longer matches "trailer" — substring matches
+  // were inflating rubric fit with false positives.
+  const textWords = new Set(text.split(" ").filter(Boolean));
   const tokens = normalizedItem
     .split(" ")
     .filter(
@@ -69,7 +80,7 @@ function itemMatches(text: string, item: string) {
         ),
     );
 
-  const matchedTokens = tokens.filter((token) => text.includes(token));
+  const matchedTokens = tokens.filter((token) => textWords.has(token));
 
   if (tokens.length === 1) {
     return matchedTokens.length === 1 && tokens[0].length >= 6;

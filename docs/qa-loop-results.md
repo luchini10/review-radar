@@ -1679,3 +1679,18 @@ See `docs/agent-loop-report.md`.
 - **remaining risks / follow-up (Phase 3 still open):**
   - **Live measurement still recommended** to quantify the structured-price success rate and identify the dominant failure mode (bot-walled retailers vs `looksLikeSameProduct` mismatches). This needs the dev server + live API; flagged for a cost-aware run.
   - `looksLikeSameProduct` strictness and the `maxProducts` rescue cap (6 dev / 10 standard / 15 deep) are the other levers — tune only with live data.
+
+---
+
+## 🟩 **Claude QA Update — 2026-06-21 07:55**
+
+### Claude Change 6 — Phase 5: rubric matcher uses whole-word matching
+
+- **agent:** Claude
+- **date/time:** 2026-06-21 07:55 EDT
+- **reason:** Phase 5 — `computeRubricFit`'s `itemMatches` (buyingRubric.ts) matched rubric signals with **substring** `text.includes(token)`, so "grip" matched "gripped", "trail" matched "trailer", "outsole" could be hit by "console" — false positives that inflated the rubric ranking nudge.
+- **change:** match whole phrases and whole tokens on word boundaries (`containsWholePhrase` + a word `Set`) instead of substrings. Thresholds unchanged. Capped nudge, so bounded impact.
+- **checks:** `npm test` **499/499**, typecheck, lint, eval red-flags clean.
+- **live QA:** None (deterministic; rubric is unset in tests so the baseline is unaffected).
+- **files changed:** `lib/buyingRubric.ts`, `tests/buyingRubric.test.mjs` (whole-word + false-positive guards).
+- **before/after:** `itemMatches("the trailer gripped the rail", "trail grip")` was **true** (substring), now **false**; real matches ("strong trail grip on dirt") still **true**.
