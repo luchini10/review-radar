@@ -1714,3 +1714,17 @@ See `docs/agent-loop-report.md`.
 - **minor hygiene note (low priority, not fixing):** an implausible offer ($1) can remain in `metadata.offers` even when display/reliability ignore it; no consumer surfaces it, so harmless. Could be scrubbed in a future cleanup.
 - **checks:** `npm test` 499/499 (deterministic suite unaffected by the live run).
 - **files changed:** none (measurement only; this log + plan status).
+
+---
+
+## 🟩 **Claude QA Update — 2026-06-21 11:53**
+
+### Claude Investigation — "shop vac" sometimes shows only 3 exact matches (no code change)
+
+- **agent:** Claude
+- **question:** Why did `shop vac` (no budget, no details) show only 3 exact matches when ~7 are expected?
+- **method:** one live POST to localhost:3000 with the debug header, same query, no criteria.
+- **result:** reproduced → **7 displayed exact** (debug: **11 exact-eligible** before the 7-cap, **0 near**; 12 Serper candidates, depth `deep`). All 7 are clean wet/dry vacs with zero failed/unknown requirements.
+- **finding:** **NOT a bug or a systematic cap.** The exact count varies run-to-run because discovery (live Serper) + the LLM `web_search` research call are non-deterministic and surface a different product set each run. With no user criteria the only hard requirement is the category, so the exact count = "distinct shop-vacs found that verify as shop-vacs," capped at 7. A 3-exact run simply surfaced fewer distinct/verifiable products that time.
+- **lever:** `SEARCH_DEPTH` (`.env.local`, currently `deep`). `deep` runs the most discovery queries (5 shopping / 3 organic / 6 retailer / 3 direct, ≤100 raw / 15 enriched) → fills the 7 slots; `standard`/`dev` run fewer → fewer candidates → fewer exact. A low-depth run is the likely systematic cause of a 3-exact screenshot.
+- **recommendation:** keep `deep` for best coverage. If more *consistent* fill is wanted regardless of depth, the discovery-consistency levers (more retailer/seed queries, market-coverage rescue threshold) are the place to look — a separate change, not needed to explain this.
