@@ -16,6 +16,21 @@ const context = {
 };
 
 describe("product image resolver", () => {
+  it("does not throw on a malformed image URL (bad % escape)", () => {
+    // Regression: a literal "%" (e.g. "50% off") made decodeURIComponent throw
+    // URIError and crashed the whole search (HTTP 502).
+    assert.doesNotThrow(() => {
+      validateProductImageCandidate(
+        {
+          evidenceText: "Apple iPad Pro M4",
+          source: "serp",
+          url: "https://img.example.com/sale-50%off-ipad.jpg",
+        },
+        context,
+      );
+    });
+  });
+
   it("accepts a relevant HTTPS product image URL", () => {
     const result = validateProductImageCandidate(
       {

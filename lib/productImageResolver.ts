@@ -247,13 +247,24 @@ function urlLooksImageLike(url: string) {
   }
 }
 
+// A malformed URL (a bad "%" escape) makes decodeURIComponent throw URIError,
+// which previously crashed the whole request (HTTP 502) from deep in enrichment.
+// Decode defensively and fall back to the raw string.
+function safeDecodeURIComponent(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 function hasRejectedTerm(url: string) {
-  const normalized = decodeURIComponent(url).toLowerCase();
+  const normalized = safeDecodeURIComponent(url).toLowerCase();
   return PLACEHOLDER_TERMS.some((term) => normalized.includes(term));
 }
 
 function isKnownNonProductImage(url: string) {
-  const decoded = decodeURIComponent(url);
+  const decoded = safeDecodeURIComponent(url);
 
   return NON_PRODUCT_IMAGE_PATTERNS.some((pattern) => pattern.test(decoded));
 }
