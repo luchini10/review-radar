@@ -86,6 +86,11 @@ strengthen the price-rescue path. No promises of "more verified prices" until th
 **Proof:** live debug runs (shop vac, drill, fridge) show more products reaching exact with *verified*
 (not text) prices, before vs. after.
 **Risk:** medium-high; live API + cost. Get go-ahead before running.
+**Status: step 1 DONE (deterministic, no live API spent).** Code investigation found the rescue used
+one descriptive query for both the organic AND shopping legs; the shopping leg now searches product
+identity (`buildRescueShoppingQuery`), which shopping engines actually match on. 497/497 tests.
+**Still open:** the live measurement (success-rate %, which retailers bot-wall) and tuning
+`looksLikeSameProduct` / the `maxProducts` cap — do those with live data, cost-aware.
 
 ## Phase 4 — Make non-product-page filtering more principled (fewer false blocks)
 **Problem:** `lib/productEligibility.ts` leans on a hardcoded ~33-domain blocklist + a growing regex

@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   applySpecEvidenceFromText,
+  buildRescueShoppingQuery,
   buildVerificationQueries,
   missingFactFromLabel,
   sourceTrustedForRequirementVerification,
@@ -115,6 +116,18 @@ describe("numeric spec evidence rescue", () => {
     assert.equal(queries[0].fact.kind, "spec");
     assert.match(queries[0].query, /600 cfm/i);
     assert.match(queries[0].query, /leaf blower/i);
+  });
+
+  it("searches product identity (not the descriptive fact phrase) for the rescue shopping leg", () => {
+    const shoppingQuery = buildRescueShoppingQuery(
+      { name: "Weber Spirit II E-310" },
+      "gas grill",
+    );
+
+    assert.equal(shoppingQuery, "Weber Spirit II E-310 gas grill");
+    // The descriptive verification phrase ("current price") is noise for a
+    // shopping engine and must not be in the shopping query.
+    assert.ok(!/current price/i.test(shoppingQuery));
   });
 
   it("records a found spec value as a verified pro + citation", () => {

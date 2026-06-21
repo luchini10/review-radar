@@ -648,13 +648,28 @@ export function buildVerificationQueries(
   });
 }
 
+// Google Shopping matches on product IDENTITY (brand + model), so the rescue
+// shopping leg searches the product name + category rather than the descriptive
+// verification phrase ("... current price ...") used for the organic-evidence
+// leg. The descriptive words are noise for a shopping engine and reduce the
+// match rate — the very thing that leaves products with a text-only price.
+// General across all fact kinds and categories.
+export function buildRescueShoppingQuery(
+  product: Pick<ProductRecommendation, "name">,
+  category: string,
+) {
+  return `${product.name} ${category}`.replace(/\s+/g, " ").trim();
+}
+
 async function applyCandidateEvidence(
   product: ProductRecommendation,
   fact: MissingFact,
-  query: string,
   category: string,
 ) {
-  const candidates = await searchSerperShopping(query, category);
+  const candidates = await searchSerperShopping(
+    buildRescueShoppingQuery(product, category),
+    category,
+  );
   let updated = product;
   let metadata: ProductMetadata = updated.metadata || { offers: [] };
 
@@ -910,7 +925,7 @@ async function rescueProduct(
       continue;
     }
 
-    updated = await applyCandidateEvidence(updated, fact, query, category);
+    updated = await applyCandidateEvidence(updated, fact, category);
     updated = await applyOrganicEvidence(updated, fact, query);
   }
 

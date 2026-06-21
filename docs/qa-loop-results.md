@@ -1653,3 +1653,29 @@ See `docs/agent-loop-report.md`.
   - `REVIEW_RADAR_CREDIBILITY_PENALTY` is now a no-op flag; the line in `.env.local` can be removed in a cleanup pass.
   - Items 2 (rubric dedup, needs importance-preserving design) and 3 (missingData/evidenceStrength overlap) remain open — deferred deliberately, not abandoned.
   - A live spot-check on a thin-credibility category (e.g. a niche/budget search) is recommended to confirm the ranking feels right on real results.
+
+---
+
+## 🟩 **Claude QA Update — 2026-06-21 07:48**
+
+### Claude Change 5 — Phase 3 (step 1): rescue shopping leg searches product identity
+
+- **agent:** Claude
+- **date/time:** 2026-06-21 07:48 EDT
+- **reason:** Phase 3 (investigation-first) — make the evidence-rescue pass attach *structured* offer prices more reliably so fewer products fall back to text-only prices (the root cause behind Phase 0). Did the code investigation of the rescue path (`lib/requirementEvidenceRescue.ts`): price rescue runs always (not flag-gated), and for each displayed product missing a verified price it shopping-searches and attaches a structured Medium-confidence offer when a result matches via `looksLikeSameProduct`.
+- **finding:** the rescue used ONE descriptive query for both the organic-evidence leg AND the Google Shopping leg: `"<name> current price <category>"`. Google Shopping matches on product IDENTITY (brand + model), so "current price" is noise that lowers the shopping match rate — directly reducing how often a structured price gets attached.
+- **change (general, all categories):** added `buildRescueShoppingQuery(product, category)` = `"<name> <category>"` and used it for the shopping leg in `applyCandidateEvidence`; the organic leg keeps the descriptive query (where "current price" helps find pricing pages). No live API was spent — this came from code reading.
+- **commands run / checks:**
+  - `node --test tests/requirementEvidenceRescue.test.mjs` — Passed (10/10)
+  - `npm run typecheck` — Passed
+  - `npm run lint` — Passed
+  - `npm test` — Passed (**497/497**, +1 new)
+- **live QA searches run:** None. I prioritized the clearly-correct deterministic fix over a costly live measurement. The full live measurement (success-rate %, which retailers bot-wall structured offers) was NOT run.
+- **issue new vs. related to Codex:** **Related** — strengthens Codex's Phase 5 rescue.
+- **files changed:**
+  - `lib/requirementEvidenceRescue.ts` (`buildRescueShoppingQuery`; `applyCandidateEvidence` uses it; dropped the now-unused `query` param from that function)
+  - `tests/requirementEvidenceRescue.test.mjs` (asserts the shopping leg searches identity, not "current price")
+- **before/after:** *Before* — rescue shopping query `"Weber Spirit II E-310 current price gas grill"`. *After* — `"Weber Spirit II E-310 gas grill"`. The organic leg is unchanged.
+- **remaining risks / follow-up (Phase 3 still open):**
+  - **Live measurement still recommended** to quantify the structured-price success rate and identify the dominant failure mode (bot-walled retailers vs `looksLikeSameProduct` mismatches). This needs the dev server + live API; flagged for a cost-aware run.
+  - `looksLikeSameProduct` strictness and the `maxProducts` rescue cap (6 dev / 10 standard / 15 deep) are the other levers — tune only with live data.
