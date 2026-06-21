@@ -299,53 +299,6 @@ const avoidSynonyms: Record<string, string[]> = {
   ],
 };
 
-type ProductTypeConflictRule = {
-  allowedEvidence?: RegExp;
-  conflictingEvidence: RegExp;
-  requestedCategory: RegExp;
-};
-
-const productTypeConflictRules: ProductTypeConflictRule[] = [
-  {
-    allowedEvidence: /\b(?:sectional|sofa|couch|loveseat)\b/,
-    conflictingEvidence: /\b(?:ottoman|bench|coffee table|side table|mattress|bed frame)\b/,
-    requestedCategory: /\b(?:sectional|sofa|couch|loveseat)\b/,
-  },
-  {
-    allowedEvidence:
-      /\b(?:office chair|task chair|desk chair|ergonomic chair|computer chair|executive chair|mesh chair|work chair)\b/,
-    conflictingEvidence:
-      /\b(?:accent chair|dining chair|lounge chair|gaming chair|racing chair|pillow|cushion|chair mat|floor mat|seat cover)\b/,
-    requestedCategory: /\b(?:office chair|task chair|desk chair|computer chair)\b/,
-  },
-  {
-    allowedEvidence: /\b(?:bed frame|platform bed|storage bed)\b/,
-    conflictingEvidence: /\b(?:mattress|nightstand|dresser|headboard only)\b/,
-    requestedCategory: /\bbed frame\b/,
-  },
-  {
-    allowedEvidence:
-      /\bmattress\b(?!\s+(?:base|foundation|frame|pad|platform|protector|support|topper)\b)/,
-    conflictingEvidence:
-      /\b(?:bed|bed frame|platform bed|storage bed|upholstered bed|headboard|foundation|box spring|bunkie board)\b/,
-    requestedCategory: /\bmattress\b/,
-  },
-  {
-    allowedEvidence: /\b(?:pressure washer|power washer|high pressure washer|psi|gpm|spray gun|spray wand|foam cannon|foam lance|soap cannon)\b/,
-    conflictingEvidence: /\b(?:washer dryer|washer and dryer|electric dryer|front load washer|top load washer|laundry center|laundry tower|washing machine|dryer set|laundry)\b/,
-    requestedCategory: /\bpressure washer\b/,
-  },
-  {
-    conflictingEvidence: /\b(?:monitor|display|speaker|subwoofer|soundbar|amplifier|receiver|projector|camera|headphones|earbuds)\b/,
-    requestedCategory: /\b(?:tv stand|media console|media unit|entertainment center|bookcase|bookshelf|shelving unit|storage cabinet)\b/,
-  },
-  {
-    allowedEvidence: /\b(?:speaker|subwoofer|soundbar|amplifier|receiver|audio)\b/,
-    conflictingEvidence: /\b(?:tv stand|media console|sofa|couch|chair|table|dresser|bed frame)\b/,
-    requestedCategory: /\b(?:speaker|subwoofer|soundbar|amplifier|receiver)\b/,
-  },
-];
-
 const requiredCategoryEvidenceRules: Array<{
   evidence: RegExp;
   requestedCategory: RegExp;
@@ -986,9 +939,10 @@ function hasConflictingProductType(product: ProductLike, category: string) {
   const requestedCategory = normalizeText(category);
   const evidenceText = productEvidenceTextWithoutAssignedCategory(product);
 
-  // Shared product-type verdict: product-type intent (wrong type / accessory) +
+  // Shared product-type verdict: product-type intent (wrong type / accessory),
   // the component-substitution model (a cooktop for an oven, an ice-maker for a
-  // refrigerator). Discovery and validation call the same helper so they agree.
+  // refrigerator), and the cross-category conflict rules. Discovery and
+  // validation call the same helper so they agree.
   if (
     !classifyProductTypeMatch({ evidenceText, requestedCategory }).canBeExactMatch
   ) {
@@ -996,20 +950,6 @@ function hasConflictingProductType(product: ProductLike, category: string) {
   }
 
   if (hasMattressFurnitureConflict(product, requestedCategory)) {
-    return true;
-  }
-
-  if (productTypeConflictRules.some((rule) => {
-    if (!rule.requestedCategory.test(requestedCategory)) {
-      return false;
-    }
-
-    if (!rule.conflictingEvidence.test(evidenceText)) {
-      return false;
-    }
-
-    return rule.allowedEvidence ? !rule.allowedEvidence.test(evidenceText) : true;
-  })) {
     return true;
   }
 

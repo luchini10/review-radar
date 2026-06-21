@@ -127,6 +127,28 @@ describe("discovery filter applies structured requirements", () => {
     assert.ok(!names.includes("Hudson Bed"));
   });
 
+  it("rejects a cross-category conflict candidate at discovery (washing machine for pressure washer)", () => {
+    const input = {
+      query: "electric pressure washer",
+      extractedRequirements: extractStructuredRequirements({ query: "electric pressure washer" }),
+    };
+    const names = keptNames(
+      [
+        cand("Sun Joe SPX3000 Electric Pressure Washer 2030 PSI", {
+          category: "electric pressure washer",
+          keySpecs: ["2030 PSI"],
+        }),
+        cand("Samsung 4.5 cu ft Front Load Washing Machine", {
+          category: "electric pressure washer",
+        }),
+      ],
+      input,
+    );
+
+    assert.ok(names.includes("Sun Joe SPX3000 Electric Pressure Washer 2030 PSI"));
+    assert.ok(!names.includes("Samsung 4.5 cu ft Front Load Washing Machine"));
+  });
+
   it("deprioritizes (but keeps) an off-form-factor candidate below a full-size one", () => {
     const input = {
       query: "gas grill",

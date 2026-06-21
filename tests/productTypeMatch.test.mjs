@@ -50,6 +50,28 @@ describe("classifyProductTypeMatch (shared wrong-product-type verdict)", () => {
     assert.equal(verdict.status, "ok");
   });
 
+  it("rejects a cross-category conflict caught only by the conflict rules (ottoman for a sofa)", () => {
+    // "sofa" has no product-type-intent rule, so this exercises the conflict-rule
+    // path specifically (not intent or component substitution).
+    const verdict = classifyProductTypeMatch({
+      evidenceText: "Storage Ottoman Bench with tray top",
+      requestedCategory: "sofa",
+    });
+
+    assert.equal(verdict.canBeExactMatch, false);
+    assert.equal(verdict.status, "type_conflict");
+  });
+
+  it("keeps a real product that shares words with a conflict rule", () => {
+    const verdict = classifyProductTypeMatch({
+      evidenceText: "Sun Joe SPX3000 Electric Pressure Washer 2030 PSI",
+      requestedCategory: "pressure washer",
+    });
+
+    assert.equal(verdict.canBeExactMatch, true);
+    assert.equal(verdict.status, "ok");
+  });
+
   it("does not block categories without a type rule (no false rejection)", () => {
     const verdict = classifyProductTypeMatch({
       evidenceText: "Stinger 12 Gallon Wet/Dry Shop Vacuum",

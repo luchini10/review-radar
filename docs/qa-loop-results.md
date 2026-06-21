@@ -1592,3 +1592,31 @@ See `docs/agent-loop-report.md`.
 - **remaining risks / follow-up (next Phase 1 steps):**
   - Fold the cross-category conflict rules (`productTypeConflictRules`), required-category evidence (`requiredCategoryEvidenceRules`), and the bespoke `hasMattressFurnitureConflict` into the shared helper so discovery applies them too (broadens coverage beyond `productTypeIntent`'s 8 categories) — with parity tests before removing the originals.
   - Then de-duplicate the mattress rule that currently lives in both `formFactor.ts` and `productTypeIntent.ts`.
+
+---
+
+## 🟩 **Claude QA Update — 2026-06-21 01:37**
+
+### Claude Change 3 — Phase 1 (step 2): cross-category conflict rules moved into the shared helper
+
+- **agent:** Claude
+- **date/time:** 2026-06-21 01:37 EDT
+- **reason:** Continue Phase 1. The cross-category conflict table (`productTypeConflictRules`: sofa↔ottoman/bed, office-chair↔gaming/mat, bed-frame↔mattress, mattress↔bed furniture, pressure-washer↔laundry, tv-stand↔electronics, speaker↔furniture) lived only in `requirementValidation`, so **discovery never applied it** — wrong-type candidates survived the candidate pool and were only filtered later. Move it into the shared `classifyProductTypeMatch` so discovery and validation use one set.
+- **change:** moved `productTypeConflictRules` + its type into `lib/productTypeMatch.ts` as `PRODUCT_TYPE_CONFLICT_RULES`, with an internal `normalizeProductTypeText` (mirror of `requirementValidation.normalizeText`, noted to keep in sync) so the rules evaluate consistently regardless of caller. `classifyProductTypeMatch` now returns `type_conflict` for these. `requirementValidation.hasConflictingProductType` delegates and no longer holds the table. **Deliberately kept in validation only:** `requiredCategoryEvidenceRules` (rejects on the *absence* of evidence — unsafe on thin discovery snippets) and the identity-based `hasMattressFurnitureConflict`.
+- **commands run / checks:**
+  - `node --test tests/productTypeMatch.test.mjs tests/discoveryFilter.test.mjs` — Passed
+  - `npm run typecheck` — Passed
+  - `npm run lint` — Passed
+  - `npm test` — Passed (**496/496**; prior validation tests still green = parity, +3 new)
+  - `node scripts/eval-pipeline.mjs` — RED-FLAG CHECKS: no issues (no over-rejection of the blower/vacuum/grill/shoes/mattress fixtures)
+- **live QA searches run:** None (deterministic; a live `pressure washer` / `office chair` spot-check is recommended).
+- **issue new vs. related to Codex:** **Related/structural** — finishes unifying the wrong-type tables Codex spread across modules.
+- **files changed:**
+  - `lib/productTypeMatch.ts` (conflict rules + normalize + `type_conflict` verdict)
+  - `lib/requirementValidation.ts` (removed the table + type; delegates to the helper)
+  - `tests/productTypeMatch.test.mjs` (conflict-rule case + false-positive guard)
+  - `tests/discoveryFilter.test.mjs` (washing machine rejected at discovery for a pressure-washer search)
+- **before/after:** *Before* — a washing machine for an "electric pressure washer" search survived the discovery candidate pool (only filtered at validation). *After* — it is rejected at discovery via the shared helper. Validation behavior is unchanged (parity). Conflict rules with an `allowedEvidence` guard keep real products that merely share words (e.g. a Sun Joe pressure washer).
+- **remaining risks / follow-up (next Phase 1 step):**
+  - De-duplicate the mattress rule that now appears in `formFactor.ts` (component substitution), `productTypeIntent.ts` (mattress/bed_frame), the moved conflict rules, AND `hasMattressFurnitureConflict` — four overlapping encodings. Consolidate carefully (identity-text vs evidence-text nuance) with parity tests, then remove redundancies.
+  - `requiredCategoryEvidenceRules` + `hasMattressFurnitureConflict` remain validation-only by design (absence/identity based).
