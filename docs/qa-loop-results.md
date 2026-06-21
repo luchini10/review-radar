@@ -1781,3 +1781,16 @@ See `docs/agent-loop-report.md`.
 **Lever 2 (b) — INVESTIGATED, already substantially satisfied (no change).** The ranked-match score already weights rating (`ownerRatingScore`, ≤20), review-volume (`ownerReviewStrengthScore`, ≤20), and trust (`marketConfidence` tier / evidence strength). `broadSearchPopularityMultiplier` amplifies popularity ×1.25 for broad/no-criteria searches and ×0.75 for constrained ones — exactly the "no criteria → most popular" intent. A/B confirms decisive trust-driven ordering (strong #1/186, moderate #2/161, weak #3–5/~78–99). The "show 7" bottlenecks were de-dup (fixed) + discovery breadth (Lever 1), not ranking — so no scoring change is warranted (over-tuning would unbalance Phase 2's de-stacking).
 - **checks (post-revert):** `npm test` 504/504, typecheck, lint clean.
 - **recommended next:** build the **size-aware variant-collapse** properly (the user's actual ask), accepting the count tradeoff — this is the remaining concrete improvement.
+
+---
+
+## 🟩 **Claude QA Update — 2026-06-21 18:47**
+
+### Claude — size-aware variant collapse (shipped) + HTTP 502 crash fix
+
+- **agent:** Claude
+- **shipped (1) — size-aware variant collapse** (`9170312`). New `lib/productVariantFamily.ts`: `detectPrimarySize` reads only true size/capacity units (gallon, inch, cu ft, quart, liter, oz, lb, ml) — never power (HP) — and `variantFamilyKey` = brand + size (null/never-collapse when either unknown). Wired into `selectRankedExactMatches`, keeping the most popular/trusted per brand+size family. This is the SAFE replacement for the reverted size-blind `areSameCanonicalProduct` approach.
+  - **deterministic tests:** 8-gal HP variants collapse; 4-gal(5.0HP) vs 5-gal(3HP) and 5-gal vs 6-gal stay DISTINCT.
+  - **live (shop vac):** 8 eligible → **5 distinct displayed** (RYOBI 6-gal, RYOBI 4.75-gal, Vacmaster 12-gal, Bosch 9-gal, Bosch 20-gal). Same-brand different-size pairs (RYOBI 6 vs 4.75, Bosch 9 vs 20) correctly kept; 3 same-brand+size variants collapsed. **Tradeoff confirmed:** collapse can drop the count below 7 when few distinct families exist — broaden discovery to refill, don't loosen collapse.
+- **shipped (2) — HTTP 502 crash fix** (`817d1a6`). `hasRejectedTerm`/`isKnownNonProductImage` in `lib/productImageResolver.ts` called `decodeURIComponent` unguarded; a product/image URL with a bad "%" escape (e.g. a filename with "50% off") threw `URIError` deep in image enrichment and 502'd the ENTIRE search (caught live during the variant-collapse test — two shop-vac runs failed at the `filter_requirements`/enrichment stage before this fix). Added `safeDecodeURIComponent` fallback. Regression test added.
+- **checks:** `npm test` 511/511, typecheck, lint, eval-pipeline clean.
