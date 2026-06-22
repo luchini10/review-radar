@@ -555,6 +555,37 @@ function comparisonSpec(comparison: RequirementComparison) {
   };
 }
 
+// Schema.org ItemAvailability values (e.g. "https://schema.org/InStock") are not
+// reader-friendly. Map the known ones to a plain label; fall back to the raw value
+// for anything unrecognized so we never hide real data.
+const AVAILABILITY_LABELS: Record<string, string> = {
+  instock: "In Stock",
+  outofstock: "Out of Stock",
+  soldout: "Sold Out",
+  preorder: "Pre-Order",
+  presale: "Pre-Sale",
+  backorder: "Backordered",
+  discontinued: "Discontinued",
+  instoreonly: "In Store Only",
+  onlineonly: "Online Only",
+  limitedavailability: "Limited Availability",
+  madetoorder: "Made to Order",
+};
+
+function formatAvailability(value: string | null | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const key = value
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/^schema\.org\//, "")
+    .replace(/[^a-z]/g, "");
+
+  return AVAILABILITY_LABELS[key] || value;
+}
+
 function buildSpecs(product: ProductRecommendation, offer: ProductRecommendationCardData["offer"]) {
   const dimensions = product.metadata?.dimensions;
   const unit = dimensions?.unit || "in";
@@ -569,7 +600,7 @@ function buildSpecs(product: ProductRecommendation, offer: ProductRecommendation
     offer?.displayText ? { label: "Current offer", value: offer.displayText } : null,
     offer?.retailer ? { label: "Retailer", value: offer.retailer } : null,
     bestVerifiedOffer(product)?.availability.value
-      ? { label: "Availability", value: sourceValue(bestVerifiedOffer(product)?.availability.value) }
+      ? { label: "Availability", value: formatAvailability(bestVerifiedOffer(product)?.availability.value) }
       : null,
     product.metadata?.colors?.value?.length
       ? { label: "Colors", value: product.metadata.colors.value.slice(0, 4).join(", ") }
