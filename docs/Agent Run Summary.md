@@ -8,6 +8,50 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-06-22 08:10
+
+**Goal:** Reduce ReviewRadar search time without weakening product trust, price trust, or hard requirement checks.
+
+**What it checked:** Reviewed the new timing output, the recommendation API route, final OpenAI research call, review evidence enrichment, missing-evidence rescue, local environment settings, and the related tests.
+
+**What it found:** The slow timed search was not slow because of GPT-5.5. It used GPT-5.4 Mini. The biggest delays were final OpenAI research, review evidence enrichment, missing-evidence rescue, Serper discovery, and optional narration.
+
+**What it changed:** Added a shared speed policy that limits expensive verification to the products most likely to be shown. Review evidence and missing-detail rescue now check a few products at the same time instead of one-by-one. Rescue now focuses on the most important facts first. The final OpenAI step now gets a stronger shortlist instead of every raw candidate. Optional narration is off by default locally.
+
+**Why the change matters:** ReviewRadar keeps the strict trust rules, but it stops spending full proof effort on lower-priority products that probably will not appear in the visible results. This makes normal deep searches faster without intentionally lowering result quality.
+
+**Tests run:** Focused performance, evidence, rescue, and API contract tests passed. Typecheck passed. Lint passed. Full unit tests passed with 522/522 tests. Production build passed.
+
+**Live checks run:** Ran the same timed localhost search: `toaster oven`, `$200`, `air fry, easy to clean, compact countertop size`.
+
+**Before/after proof:** Before this work, that search took about 124 seconds. After the speed changes, it took about 72 seconds. The slowest stages after the fix were final OpenAI research, Serper discovery, AI discovery strategy, review evidence enrichment, and missing-evidence rescue.
+
+**Remaining issues:** The timed toaster-oven search still returned near matches instead of exact matches. That appears to be a separate requirement strictness or evidence-verification issue, not the speed issue fixed in this run.
+
+**Next recommended step:** Run a QA pass focused on why `compact countertop size` keeps products in near matches, then decide whether that phrase should be treated as a softer preference or verified in a more reliable way.
+
+## Codex Run - 2026-06-22 07:37
+
+**Goal:** Add timing logs so slow ReviewRadar searches can be diagnosed by stage.
+
+**What it checked:** Reviewed the recommendation API route, model defaults, request payload wiring, debug response behavior, and API contract tests.
+
+**What it found:** ReviewRadar was still defaulting to GPT-5.4 Mini, so the slowdown was likely from the heavier search and verification pipeline rather than GPT-5.5.
+
+**What it changed:** Added timing checkpoints around model calls, Serper discovery, follow-up discovery, final research, citation filtering, requirement filtering, review evidence enrichment, product-page/asset enrichment, missing-evidence rescue, scoring, optional narration, and final cleanup. Debug responses now include timing data, and the dev server prints a compact timing summary.
+
+**Why the change matters:** After a slow test search, we can see whether the time went to OpenAI, Serper, product-page fetching, evidence rescue, narration, or another stage instead of guessing.
+
+**Tests run:** API contract timing test passed. Typecheck passed. Lint passed. Full unit tests passed with 514/514 tests. Production build passed.
+
+**Live checks run:** None. This change prepares the next live checks by making their timing visible.
+
+**Before/after proof:** Before, a slow search only showed a generic timeout or long wait. After, debug output includes total time and the slowest stages, such as `openai_final_research`, `serper_discovery`, `product_asset_enrichment`, or `missing_requirement_evidence_rescue`.
+
+**Remaining issues:** We still need one or two live searches from the app to identify the actual slowest stage in real use.
+
+**Next recommended step:** Start the dev server, run a slow search, then inspect the `[ReviewRadar timing]` output from the terminal.
+
 ## Codex Run - 2026-06-21 19:09
 
 **Goal:** Change ReviewRadar so the final top results prefer distinct strong products instead of forcing different retailers.

@@ -21,6 +21,7 @@ import {
   classifyRubricFactImportance,
   rubricImportanceRank,
 } from "./rubricFactImportance.ts";
+import { mapWithConcurrency } from "./recommendationPerformance.ts";
 
 const MAX_EVIDENCE_QUERIES_PER_PRODUCT = 3;
 const MAX_EVIDENCE_CALLS_TOTAL = 16;
@@ -37,6 +38,8 @@ type EvidenceSearchState = {
 type ReviewEvidenceMode = "standard" | "trust_ladder";
 
 type ProductEvidenceEnrichmentOptions = {
+  concurrency?: number;
+  fullTrustLadderProductCount?: number;
   maxProducts?: number;
   mode?: ReviewEvidenceMode;
 };
@@ -1447,16 +1450,29 @@ export async function enrichResultWithReviewEvidence(
     productsToEnrich.set(product.name, product);
   }
 
-  const enrichedByName = new Map<string, ProductRecommendation>();
+  const products = Array.from(productsToEnrich.entries());
+  const fullTrustLadderProductCount = options.fullTrustLadderProductCount ?? products.length;
+  const enrichedProducts = await mapWithConcurrency(
+    products,
+    options.concurrency ?? 1,
+    async ([name, product], index) => {
+      const weakEvidence =
+        product.source_consensus === "Weak" ||
+        product.confidence_score < 65 ||
+        product.citations.length < 2;
+      const mode =
+        options.mode === "trust_ladder" &&
+        (index < fullTrustLadderProductCount || weakEvidence)
+          ? "trust_ladder"
+          : "standard";
 
-  for (const [name, product] of productsToEnrich) {
-    enrichedByName.set(
-      name,
-      await enrichProductWithReviewEvidence(product, state, {
-        mode: options.mode,
-      }),
-    );
-  }
+      return [
+        name,
+        await enrichProductWithReviewEvidence(product, state, { mode }),
+      ] as const;
+    },
+  );
+  const enrichedByName = new Map<string, ProductRecommendation>(enrichedProducts);
 
   const enrich = (product: ProductRecommendation) =>
     enrichedByName.get(product.name) || product;

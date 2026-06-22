@@ -54,11 +54,29 @@ describe("requirement evidence rescue", () => {
 
     assert.deepEqual(
       queries.map((item) => item.fact.kind),
-      ["price", "color", "dimension"],
+      ["price", "color"],
     );
     assert.match(queries[0].query, /Whirlpool WMH31017HS/i);
     assert.match(queries[0].query, /current price microwave/i);
     assert.match(queries[1].query, /stainless steel microwave/i);
+  });
+
+  it("can build additional rescue facts when explicitly requested", () => {
+    const queries = buildVerificationQueries(
+      product,
+      [
+        "Budget: $250 or less",
+        "Finish Color: Stainless Steel",
+        "Width: under 30 inches",
+      ],
+      "microwave",
+      3,
+    );
+
+    assert.deepEqual(
+      queries.map((item) => item.fact.kind),
+      ["price", "color", "dimension"],
+    );
     assert.match(queries[2].query, /width dimensions specifications microwave/i);
   });
 

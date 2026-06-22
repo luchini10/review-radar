@@ -286,6 +286,31 @@ describe("recommendation API contract", () => {
     assert.equal(timeouts[timeouts.length - 1], 180000);
   });
 
+  it("includes stage timing data in debug responses", async () => {
+    const handler = buildHandler();
+    const response = await readJson(
+      await handler(
+        jsonRequest(
+          { query: "microwave" },
+          {
+            "x-reviewradar-debug": "true",
+          },
+        ),
+      ),
+    );
+
+    assert.equal(response.status, 200);
+    assert.ok(response.body.debug.timing);
+    assert.equal(typeof response.body.debug.timing.totalMs, "number");
+    assert.equal(Array.isArray(response.body.debug.timing.stages), true);
+    assert.equal(Array.isArray(response.body.debug.timing.slowestStages), true);
+    assert.ok(
+      response.body.debug.timing.stages.some(
+        (stage) => stage.label === "openai_final_research",
+      ),
+    );
+  });
+
   it("returns a stable near-match response shape when a mocked product misses a hard requirement", async () => {
     const blackMicrowave = buildProduct({
       best_for: "Shoppers who can be flexible on color.",

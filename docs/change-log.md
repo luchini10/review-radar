@@ -11,7 +11,24 @@ Update this file after:
 
 Do not update this file for tiny typo fixes, formatting-only edits, or internal cleanup that does not change behavior.
 
+## 2026-06-22
+
+### Codex - Faster searches without loosening trust gates
+- Added a shared performance policy so ReviewRadar spends expensive proof work on the products most likely to be shown, instead of automatically enriching and rescuing up to the full deep-search product cap every time.
+- Review evidence enrichment and missing-evidence rescue now run independent product checks with a small concurrency limit, defaulting to 3 at a time. The same price trust, product eligibility, and hard-requirement checks still apply.
+- Missing-evidence rescue now checks the highest-impact facts first and defaults to 2 facts per product: price/budget first, then hard requirements, then critical/important rubric facts. Minor rubric facts are no longer rescued during the main search.
+- The final OpenAI research step now receives a stronger shortlist instead of every raw candidate, while preserving hard-match candidates, expected mainstream products, priced products, source-diverse products, and close matches that could become exact.
+- Added adaptive final-search context selection so strong candidate coverage can use a lighter OpenAI search context, while weak coverage still gets the deeper context.
+- Optional LLM narration is off by default locally because it added time without changing product accuracy.
+- Live timing proof: the `toaster oven`, `$200`, `air fry, easy to clean, compact countertop size` search improved from about 124 seconds before the speed work to about 72 seconds after it. The same run still returned near matches rather than exact matches, so that looks like a separate strictness/verification issue rather than a speed issue.
+- Verified: `node --no-warnings --test tests\recommendationPerformance.test.mjs tests\productEvidence.test.mjs tests\requirementEvidenceRescue.test.mjs tests\recommendationApiContract.test.mjs`; `npm run typecheck`; `npm run lint`; `npm test` (522/522 tests); `npm run build`; live localhost timed search with debug timing.
+
 ## 2026-06-21
+
+### Codex - Recommendation timing logs
+- Added per-stage timing logs to the recommendation API so slow searches can be diagnosed by stage instead of guessing. The timing now tracks model calls, Serper discovery, follow-up discovery, final research, citation filtering, requirement filtering, review evidence enrichment, product-page/asset enrichment, missing-evidence rescue, scoring, optional narration, and final cleanup.
+- Debug responses now include `debug.timing` when the request uses `x-reviewradar-debug: true`. The dev server also prints a compact `[ReviewRadar timing]` summary with the slowest stages, total time, model, search depth, and result counts.
+- Verified: `node --no-warnings --test tests\recommendationApiContract.test.mjs`; `npm run typecheck`; `npm run lint`; `npm test` (514/514 tests); `npm run build`.
 
 ### Codex - Product diversity instead of retailer diversity
 - Changed final Best Match selection so ReviewRadar no longer blocks strong products just because several come from the same retailer. Retailer limits now stay in early discovery only, where they prevent one site from flooding the candidate pool.

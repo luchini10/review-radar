@@ -23,6 +23,7 @@ import {
   rubricFactFromUnknownTopic,
   rubricImportanceRank,
 } from "./rubricFactImportance.ts";
+import { mapWithConcurrency } from "./recommendationPerformance.ts";
 import { extractSpecsFromText } from "./specExtraction.ts";
 
 type VerifiableFactKind = "color" | "dimension" | "feature" | "price" | "spec";
@@ -44,12 +45,13 @@ function specSearchEnabled() {
 }
 
 type VerificationOptions = {
+  concurrency?: number;
   maxFactsPerProduct?: number;
   maxProducts?: number;
 };
 
 const MAX_PRODUCTS_TO_VERIFY = 8;
-const MAX_FACTS_PER_PRODUCT = 3;
+const MAX_FACTS_PER_PRODUCT = 2;
 const COLOR_VALUES = [
   "beige",
   "black",
@@ -635,8 +637,9 @@ export function buildVerificationQueries(
   product: ProductRecommendation,
   missingLabels: string[],
   category: string,
+  maxFacts = MAX_FACTS_PER_PRODUCT,
 ) {
-  return missingLabels.slice(0, MAX_FACTS_PER_PRODUCT).map((label) => {
+  return missingLabels.slice(0, maxFacts).map((label) => {
     const fact = missingFactFromLabel(label);
 
     return {
@@ -909,6 +912,7 @@ async function rescueProduct(
     product,
     labelsToVerify.slice(0, maxFacts),
     category,
+    maxFacts,
   );
   const rubricQueries = rubricFactsToVerify
     .slice(0, Math.max(0, maxFacts - requirementQueries.length))
@@ -971,10 +975,15 @@ export async function verifyMissingRequirementEvidence<T extends RecommendationR
 ): Promise<T> {
   const maxProducts = options.maxProducts ?? MAX_PRODUCTS_TO_VERIFY;
   const productsToVerify = productsNeedingVerification(result).slice(0, maxProducts);
+  const rescuedProducts = await mapWithConcurrency(
+    productsToVerify,
+    options.concurrency ?? 1,
+    (product) => rescueProduct(product, requirements, options),
+  );
   const replacements = new Map<string, ProductRecommendation>();
 
-  for (const product of productsToVerify) {
-    const rescued = await rescueProduct(product, requirements, options);
+  for (const [index, product] of productsToVerify.entries()) {
+    const rescued = rescuedProducts[index];
 
     if (rescued !== product) {
       replacements.set(product.name, rescued);

@@ -55,6 +55,12 @@ import {
 import {
   generateSearchPlan,
 } from "../../../lib/searchQueryExpansion.ts";
+import {
+  buildAdaptiveVerificationBudget,
+  chooseFinalResearchContext,
+  selectFinalResearchCandidates,
+  shouldRunFollowUpDiscovery,
+} from "../../../lib/recommendationPerformance.ts";
 import { buildSearchCandidateFallbackResult } from "../../../lib/searchCandidateFallback.ts";
 import {
   mergeSerperSearchResults,
@@ -323,6 +329,68 @@ function logDiscoveryDebug(stats: Record<string, unknown>) {
   console.info("[ReviewRadar discovery]", stats);
 }
 
+type TimingStage = {
+  durationMs: number;
+  label: string;
+};
+
+function roundMs(value: number) {
+  return Math.round(value);
+}
+
+function createRequestTiming() {
+  const startedAt = performance.now();
+  const stages: TimingStage[] = [];
+
+  function record(label: string, started: number) {
+    stages.push({
+      durationMs: roundMs(performance.now() - started),
+      label,
+    });
+  }
+
+  return {
+    async measure<T>(label: string, fn: () => Promise<T>): Promise<T> {
+      const started = performance.now();
+
+      try {
+        return await fn();
+      } finally {
+        record(label, started);
+      }
+    },
+    measureSync<T>(label: string, fn: () => T): T {
+      const started = performance.now();
+
+      try {
+        return fn();
+      } finally {
+        record(label, started);
+      }
+    },
+    summary() {
+      const totalMs = roundMs(performance.now() - startedAt);
+      const slowestStages = [...stages]
+        .sort((a, b) => b.durationMs - a.durationMs)
+        .slice(0, 5);
+
+      return {
+        slowestStages,
+        stages,
+        totalMs,
+      };
+    },
+  };
+}
+
+function logTimingDebug(stats: Record<string, unknown>) {
+  if (process.env.NODE_ENV === "production") {
+    return;
+  }
+
+  console.info("[ReviewRadar timing]", stats);
+}
+
 function removeUserHiddenProductFields(
   product: ProductRecommendation,
 ): ProductRecommendation {
@@ -481,6 +549,11 @@ async function handleRecommendationPost(
   routeDependencies: RecommendationRouteDependencies,
 ) {
   const includeDebug = wantsLocalDebug(request);
+  const timing = createRequestTiming();
+  const withTimingDebug = (debug: Record<string, unknown>) => ({
+    ...debug,
+    timing: timing.summary(),
+  });
   let debugStage = "read_request";
   let body: unknown;
   // Captured after Serper discovery so a later AI-research failure can still
@@ -493,7 +566,7 @@ async function handleRecommendationPost(
   } | null = null;
 
   try {
-    body = await request.json();
+    body = await timing.measure("read_request_body", () => request.json());
   } catch {
     return NextResponse.json(
       { error: REQUEST_ERROR_MESSAGES.invalidJson },
@@ -520,15 +593,23 @@ async function handleRecommendationPost(
 
   try {
     debugStage = "openai_request";
-    const client = await routeDependencies.createOpenAIClient(apiKey);
+    const client = await timing.measure("create_openai_client", () =>
+      routeDependencies.createOpenAIClient(apiKey),
+    );
     const helperResearchModel = helperModel();
     const finalSynthesisModel = finalResearchModel();
-    const extractedRequirements = extractStructuredRequirements(validation.data);
+    const extractedRequirements = timing.measureSync(
+      "extract_requirements",
+      () => extractStructuredRequirements(validation.data),
+    );
     const requestWithRequirements = {
       ...validation.data,
       extractedRequirements,
     };
-    const requirementConflicts = detectRequirementConflicts(requestWithRequirements);
+    const requirementConflicts = timing.measureSync(
+      "detect_requirement_conflicts",
+      () => detectRequirementConflicts(requestWithRequirements),
+    );
 
     if (requirementConflicts.length > 0) {
       return NextResponse.json(
@@ -540,15 +621,23 @@ async function handleRecommendationPost(
     }
 
     debugStage = "discovery_strategy";
-    const discoveryStrategy = await buildOpenAIDiscoveryStrategy({
-      client,
-      input: requestWithRequirements,
-      model: helperResearchModel,
-    });
-    const searchPlan = augmentSearchPlanWithDiscoveryStrategy(
-      generateSearchPlan(requestWithRequirements),
-      discoveryStrategy,
-      requestWithRequirements,
+    const discoveryStrategy = await timing.measure(
+      "openai_discovery_strategy",
+      () =>
+        buildOpenAIDiscoveryStrategy({
+          client,
+          input: requestWithRequirements,
+          model: helperResearchModel,
+        }),
+    );
+    const searchPlan = timing.measureSync(
+      "build_search_plan",
+      () =>
+        augmentSearchPlanWithDiscoveryStrategy(
+          generateSearchPlan(requestWithRequirements),
+          discoveryStrategy,
+          requestWithRequirements,
+        ),
     );
     const generatedQueries = searchPlan.queries.map((query) => query.query);
     const requestWithStrategy = {
@@ -557,33 +646,57 @@ async function handleRecommendationPost(
     };
 
     debugStage = "serper_discovery";
-    let serperResult = await routeDependencies.searchSerperForProducts(
-      searchPlan,
-      requestWithStrategy,
+    let serperResult = await timing.measure(
+      "serper_discovery",
+      () =>
+        routeDependencies.searchSerperForProducts(
+          searchPlan,
+          requestWithStrategy,
+        ),
     );
 
     debugStage = "discovery_gap_check";
-    const discoveryGapCheck = await buildOpenAIDiscoveryGapCheck({
-      candidates: serperResult.candidates,
-      client,
-      input: requestWithStrategy,
-      model: helperResearchModel,
-      strategy: discoveryStrategy,
-    });
+    const discoveryGapCheck = await timing.measure(
+      "openai_discovery_gap_check",
+      () =>
+        buildOpenAIDiscoveryGapCheck({
+          candidates: serperResult.candidates,
+          client,
+          input: requestWithStrategy,
+          model: helperResearchModel,
+          strategy: discoveryStrategy,
+        }),
+    );
 
-    if (discoveryGapCheck.followUpQueries.length > 0) {
+    const runFollowUpDiscovery = timing.measureSync(
+      "decide_follow_up_discovery",
+      () =>
+        shouldRunFollowUpDiscovery({
+          candidates: serperResult.candidates,
+          followUpQueryCount: discoveryGapCheck.followUpQueries.length,
+          marketCoverage: serperResult.stats.marketCoverage,
+          missingExpectedProductCount:
+            discoveryGapCheck.missingExpectedProducts.length,
+        }),
+    );
+
+    if (runFollowUpDiscovery) {
       const followUpSerperResult =
-        await routeDependencies.searchSerperForProducts(
-          discoveryGapCheck.followUpQueries,
-          {
-            ...requestWithStrategy,
-            discoveryGapCheck,
-          },
+        await timing.measure(
+          "serper_follow_up_discovery",
+          () =>
+            routeDependencies.searchSerperForProducts(
+              discoveryGapCheck.followUpQueries,
+              {
+                ...requestWithStrategy,
+                discoveryGapCheck,
+              },
+            ),
         );
 
-      serperResult = mergeSerperSearchResults(
-        serperResult,
-        followUpSerperResult,
+      serperResult = timing.measureSync(
+        "merge_follow_up_discovery",
+        () => mergeSerperSearchResults(serperResult, followUpSerperResult),
       );
     }
 
@@ -599,43 +712,65 @@ async function handleRecommendationPost(
       serperResult,
     };
 
-    const response = await client.responses.create({
-      model: finalSynthesisModel,
-      max_output_tokens: 16000,
-      tools: [
-        {
-          type: "web_search",
-          search_context_size: "high",
+    const finalResearchCandidates = timing.measureSync(
+      "shortlist_final_research_candidates",
+      () =>
+        selectFinalResearchCandidates({
+          candidates: serperResult.candidates,
+          expectedProducts: discoveryStrategy.expectedProducts,
+        }),
+    );
+    const finalSearchContextSize = timing.measureSync(
+      "choose_final_search_context",
+      () =>
+        chooseFinalResearchContext({
+          candidates: finalResearchCandidates,
+          discoveryGapCount: runFollowUpDiscovery
+            ? discoveryGapCheck.followUpQueries.length
+            : 0,
+          sourceTimeouts: serperResult.stats.sourceTimeouts,
+        }),
+    );
+
+    const response = await timing.measure("openai_final_research", () =>
+      client.responses.create({
+        model: finalSynthesisModel,
+        max_output_tokens: 16000,
+        tools: [
+          {
+            type: "web_search",
+            search_context_size: finalSearchContextSize,
+          },
+        ],
+        tool_choice: "required",
+        include: ["web_search_call.action.sources"],
+        input: [
+          {
+            role: "system",
+            content: researchSystemPrompt,
+          },
+          {
+            role: "user",
+            content: buildResearchPrompt(
+              requestWithDiscovery,
+              generatedQueries,
+              finalResearchCandidates,
+              serperResult.stats.marketCoverage,
+            ),
+          },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "review_radar_recommendations",
+            schema: recommendationResultJsonSchema,
+            strict: true,
+          },
         },
-      ],
-      tool_choice: "required",
-      include: ["web_search_call.action.sources"],
-      input: [
-        {
-          role: "system",
-          content: researchSystemPrompt,
-        },
-        {
-          role: "user",
-          content: buildResearchPrompt(
-            requestWithDiscovery,
-            generatedQueries,
-            serperResult.candidates,
-            serperResult.stats.marketCoverage,
-          ),
-        },
-      ],
-      text: {
-        format: {
-          type: "json_schema",
-          name: "review_radar_recommendations",
-          schema: recommendationResultJsonSchema,
-          strict: true,
-        },
-      },
-    }, {
-      timeout: SERVER_RESEARCH_TIMEOUT_MS,
-    });
+      }, {
+        timeout: SERVER_RESEARCH_TIMEOUT_MS,
+      }),
+    );
 
     const outputText = getOutputText(response);
 
@@ -643,11 +778,11 @@ async function handleRecommendationPost(
       return errorResponse(
         USER_ERROR_MESSAGES.noReliableEvidence,
         502,
-        {
+        withTimingDebug({
           finalSynthesisModel,
           stage: "read_output_text",
           outputTextLength: 0,
-        },
+        }),
         includeDebug,
       );
     }
@@ -656,30 +791,33 @@ async function handleRecommendationPost(
 
     try {
       debugStage = "parse_output_text";
-      parsed = JSON.parse(outputText);
+      parsed = timing.measureSync("parse_final_research_json", () =>
+        JSON.parse(outputText),
+      );
     } catch {
       return errorResponse(
         USER_ERROR_MESSAGES.badStructuredOutput,
         502,
-        {
+        withTimingDebug({
           finalSynthesisModel,
           stage: "parse_output_text",
           outputTextLength: outputText.length,
-        },
+        }),
         includeDebug,
       );
     }
 
     debugStage = "validate_structured_output";
-    const result = recommendationResultSchema.safeParse(
-      normalizeResearchResult(parsed),
+    const result = timing.measureSync(
+      "validate_final_research_schema",
+      () => recommendationResultSchema.safeParse(normalizeResearchResult(parsed)),
     );
 
     if (!result.success) {
       return errorResponse(
         USER_ERROR_MESSAGES.badStructuredOutput,
         502,
-        {
+        withTimingDebug({
           finalSynthesisModel,
           stage: "validate_structured_output",
           issues: result.error.issues.slice(0, 12).map((issue) => ({
@@ -687,17 +825,22 @@ async function handleRecommendationPost(
             code: issue.code,
             message: issue.message,
           })),
-        },
+        }),
         includeDebug,
       );
     }
 
-    const serperRecommendations = serperResult.candidates.map(
-      serperCandidateToRecommendation,
+    const serperRecommendations = timing.measureSync(
+      "normalize_serper_candidates",
+      () => serperResult.candidates.map(serperCandidateToRecommendation),
     );
-    const mergedCandidates = mergeProductRecommendations(
-      result.data.candidate_products,
-      serperRecommendations,
+    const mergedCandidates = timing.measureSync(
+      "merge_ai_and_serper_candidates",
+      () =>
+        mergeProductRecommendations(
+          result.data.candidate_products,
+          serperRecommendations,
+        ),
     );
     const candidateResult = {
       ...result.data,
@@ -710,7 +853,10 @@ async function handleRecommendationPost(
     };
 
     debugStage = "verify_citations";
-    let verifiedUrls = collectVerifiedSourceUrls(response);
+    let verifiedUrls = timing.measureSync(
+      "collect_verified_openai_sources",
+      () => collectVerifiedSourceUrls(response),
+    );
     // Serper candidate URLs come from live Google results, so they are
     // treated as verified without a network re-check. Re-fetching them
     // dropped real products whenever retailers bot-walled the request
@@ -725,12 +871,14 @@ async function handleRecommendationPost(
 
     if (verifiedUrls.size === 0) {
       verifiedUrls =
-        await routeDependencies.collectReachableCitationUrls(candidateResult);
+        await timing.measure("collect_reachable_citation_urls", () =>
+          routeDependencies.collectReachableCitationUrls(candidateResult),
+        );
     }
 
-    const verifiedResult = filterResultToVerifiedCitations(
-      candidateResult,
-      verifiedUrls,
+    const verifiedResult = timing.measureSync(
+      "filter_to_verified_citations",
+      () => filterResultToVerifiedCitations(candidateResult, verifiedUrls),
     );
     const discoveryCoverage = {
       executedQueryCount:
@@ -747,7 +895,10 @@ async function handleRecommendationPost(
         pass3: searchPlan.stagedQueries.pass3.length,
       },
     };
-    const resultIssue = getRecommendationResultIssue(verifiedResult, verifiedUrls);
+    const resultIssue = timing.measureSync(
+      "check_recommendation_result_quality",
+      () => getRecommendationResultIssue(verifiedResult, verifiedUrls),
+    );
 
     if (resultIssue) {
       if (
@@ -755,18 +906,23 @@ async function handleRecommendationPost(
         serperRecommendations.length > 0
       ) {
         debugStage = "search_candidate_fallback";
-        const prioritizedFallbackResult = await buildServerSearchFallbackResult({
-          baseResult: candidateResult,
-          discoveryCoverage,
-          maxEnrichedProducts: serperResult.stats.maxEnrichedProducts,
-          requestWithRequirements: requestWithDiscovery,
-          routeDependencies,
-          serperRecommendations,
-        });
+        const prioritizedFallbackResult = await timing.measure(
+          "search_candidate_fallback",
+          () =>
+            buildServerSearchFallbackResult({
+              baseResult: candidateResult,
+              discoveryCoverage,
+              maxEnrichedProducts: serperResult.stats.maxEnrichedProducts,
+              requestWithRequirements: requestWithDiscovery,
+              routeDependencies,
+              serperRecommendations,
+            }),
+        );
         const fallbackDebug = {
           fallbackReason: resultIssue,
           fallbackSource: "serper_candidates",
           serperCandidateCount: serperRecommendations.length,
+          timing: timing.summary(),
           verifiedUrlCount: verifiedUrls.size,
         };
         const userVisibleFallbackResult = removeUserHiddenResultFields(
@@ -799,48 +955,78 @@ async function handleRecommendationPost(
           ? USER_ERROR_MESSAGES.noReliableEvidence
           : USER_ERROR_MESSAGES.badStructuredOutput,
         resultIssue === "no_reliable_evidence" ? 422 : 502,
-        {
+        withTimingDebug({
           finalSynthesisModel,
           stage: "trust_validation",
           resultIssue,
           verifiedUrlCount: verifiedUrls.size,
           candidateCount: candidateResult.recommendations.length,
           remainingCount: verifiedResult.recommendations.length,
-        },
+        }),
         includeDebug,
       );
     }
 
     debugStage = "filter_requirements";
-    const requirementFilteredResult = filterResultByRequirements(
-      verifiedResult,
-      requestWithDiscovery,
+    const requirementFilteredResult = timing.measureSync(
+      "filter_requirements",
+      () => filterResultByRequirements(verifiedResult, requestWithDiscovery),
     );
-    const rubricAwareResult = attachBuyingRubricToProducts(
-      requirementFilteredResult,
-      discoveryStrategy.buyingRubric,
+    const rubricAwareResult = timing.measureSync(
+      "attach_buying_rubric",
+      () =>
+        attachBuyingRubricToProducts(
+          requirementFilteredResult,
+          discoveryStrategy.buyingRubric,
+        ),
+    );
+    const verificationBudget = timing.measureSync(
+      "build_adaptive_verification_budget",
+      () =>
+        buildAdaptiveVerificationBudget({
+          categoryGroup: serperResult.stats.categoryGroup,
+          maxEnrichedProducts: serperResult.stats.maxEnrichedProducts,
+          request: requestWithDiscovery,
+          result: rubricAwareResult,
+          serperCandidateCount: serperRecommendations.length,
+        }),
     );
     const evidenceEnrichedResult =
-      await routeDependencies.enrichResultWithReviewEvidence(
-        rubricAwareResult,
-        {
-          mode: "trust_ladder",
-          maxProducts: serperResult.stats.maxEnrichedProducts,
-        },
+      await timing.measure(
+        "review_evidence_enrichment",
+        () =>
+          routeDependencies.enrichResultWithReviewEvidence(
+            rubricAwareResult,
+            {
+              mode: "trust_ladder",
+              concurrency: verificationBudget.concurrency,
+              fullTrustLadderProductCount:
+                verificationBudget.fullTrustLadderProductCount,
+              maxProducts: verificationBudget.maxProducts,
+            },
+          ),
       );
     const assetEnrichedResult =
-      await routeDependencies.enrichProductAssets(evidenceEnrichedResult);
-    const verifiedFactsResult =
-      await routeDependencies.verifyMissingRequirementEvidence(
-      assetEnrichedResult,
-      requestWithDiscovery,
-      {
-        maxProducts: serperResult.stats.maxEnrichedProducts,
-      },
+      await timing.measure("product_asset_enrichment", () =>
+        routeDependencies.enrichProductAssets(evidenceEnrichedResult),
       );
-    const revalidatedAssetResult = revalidateResultCandidates(
-      verifiedFactsResult,
-      requestWithDiscovery,
+    const verifiedFactsResult =
+      await timing.measure(
+        "missing_requirement_evidence_rescue",
+        () =>
+          routeDependencies.verifyMissingRequirementEvidence(
+            assetEnrichedResult,
+            requestWithDiscovery,
+            {
+              concurrency: verificationBudget.concurrency,
+              maxFactsPerProduct: verificationBudget.maxFactsPerProduct,
+              maxProducts: verificationBudget.maxProducts,
+            },
+          ),
+      );
+    const revalidatedAssetResult = timing.measureSync(
+      "revalidate_after_enrichment",
+      () => revalidateResultCandidates(verifiedFactsResult, requestWithDiscovery),
     );
 
     if (
@@ -852,20 +1038,24 @@ async function handleRecommendationPost(
       })
     ) {
       debugStage = "no_exact_sanity_fallback";
-      const sanityFallbackResult = await buildServerSearchFallbackResult({
-        baseResult: {
-          ...candidateResult,
-          search_summary:
-            "ReviewRadar expanded this common search after the first pass found no exact matches.",
-          final_buying_advice:
-            "These products come from expanded shopping search results checked against your required filters. Verify current price, fit, and availability before buying.",
-        },
-        discoveryCoverage,
-        maxEnrichedProducts: serperResult.stats.maxEnrichedProducts,
-        requestWithRequirements: requestWithDiscovery,
-        routeDependencies,
-        serperRecommendations,
-      });
+      const sanityFallbackResult = await timing.measure(
+        "no_exact_sanity_fallback",
+        () =>
+          buildServerSearchFallbackResult({
+            baseResult: {
+              ...candidateResult,
+              search_summary:
+                "ReviewRadar expanded this common search after the first pass found no exact matches.",
+              final_buying_advice:
+                "These products come from expanded shopping search results checked against your required filters. Verify current price, fit, and availability before buying.",
+            },
+            discoveryCoverage,
+            maxEnrichedProducts: serperResult.stats.maxEnrichedProducts,
+            requestWithRequirements: requestWithDiscovery,
+            routeDependencies,
+            serperRecommendations,
+          }),
+      );
 
       if (
         sanityFallbackResult.exactMatches.length > 0 ||
@@ -879,6 +1069,7 @@ async function handleRecommendationPost(
                   fallbackReason: "no_exact_common_search_sanity_check",
                   fallbackSource: "serper_candidates",
                   serperCandidateCount: serperRecommendations.length,
+                  timing: timing.summary(),
                 },
               }
             : { result: removeUserHiddenResultFields(sanityFallbackResult) },
@@ -886,15 +1077,19 @@ async function handleRecommendationPost(
       }
     }
 
-    const enrichedResult = scoreAndSelectRecommendations(
-      {
-        ...revalidatedAssetResult,
-        extractedRequirements,
-      },
-      requestWithDiscovery,
-      discoveryCoverage,
+    const enrichedResult = timing.measureSync(
+      "score_and_select_results",
+      () =>
+        scoreAndSelectRecommendations(
+          {
+            ...revalidatedAssetResult,
+            extractedRequirements,
+          },
+          requestWithDiscovery,
+          discoveryCoverage,
+        ),
     );
-    const discoveryDebug = {
+    const discoveryDebug: Record<string, unknown> = {
       generatedQueries,
       // Shadow-mode spec extraction: surfaced for before/after comparison only.
       // The per-candidate extraction work is gated on includeDebug so production
@@ -939,6 +1134,11 @@ async function handleRecommendationPost(
       serperDirectRetailerCalls: serperResult.stats.directRetailerCalls,
       preFilteredCandidateCount: serperResult.stats.preFilteredCandidates,
       rejectedCandidateCount: serperResult.stats.rejectedCandidates,
+      finalResearchCandidateCount: finalResearchCandidates.length,
+      finalResearchOriginalCandidateCount: serperResult.candidates.length,
+      finalSearchContextSize,
+      followUpDiscoveryRun: runFollowUpDiscovery,
+      verificationBudget,
       discoveryExpectedProducts: discoveryStrategy.expectedProducts.map(
         (target) => [target.brand, target.productLine].filter(Boolean).join(" "),
       ),
@@ -960,45 +1160,74 @@ async function handleRecommendationPost(
     // failure falls back to the deterministic prose.
     let narratedResult = enrichedResult;
 
-    if (process.env.REVIEW_RADAR_LLM_NARRATION === "on") {
+    if (process.env.REVIEW_RADAR_LLM_NARRATION?.trim() === "on") {
       try {
-        const narrationResponse = await client.responses.create(
-          {
-            model: helperResearchModel,
-            max_output_tokens: 4000,
-            input: [
-              { role: "system", content: narrationSystemPrompt },
+        const narrationResponse = await timing.measure(
+          "openai_narration",
+          () =>
+            client.responses.create(
               {
-                role: "user",
-                content: buildSynthesisPrompt(enrichedResult, requestWithDiscovery),
+                model: helperResearchModel,
+                max_output_tokens: 4000,
+                input: [
+                  { role: "system", content: narrationSystemPrompt },
+                  {
+                    role: "user",
+                    content: buildSynthesisPrompt(
+                      enrichedResult,
+                      requestWithDiscovery,
+                    ),
+                  },
+                ],
+                text: {
+                  format: {
+                    type: "json_schema",
+                    name: "review_radar_narration",
+                    schema: narrationResultJsonSchema,
+                    strict: true,
+                  },
+                },
               },
-            ],
-            text: {
-              format: {
-                type: "json_schema",
-                name: "review_radar_narration",
-                schema: narrationResultJsonSchema,
-                strict: true,
-              },
-            },
-          },
-          { timeout: 60000 },
+              { timeout: 60000 },
+            ),
         );
-        const narration = parseNarration(getOutputText(narrationResponse));
+        const narration = timing.measureSync("parse_narration", () =>
+          parseNarration(getOutputText(narrationResponse)),
+        );
 
         if (narration) {
-          narratedResult = applyNarrationToResult(enrichedResult, narration);
+          narratedResult = timing.measureSync("apply_narration", () =>
+            applyNarrationToResult(enrichedResult, narration),
+          );
         }
       } catch (error) {
-        logDiscoveryDebug({
+        logDiscoveryDebug(withTimingDebug({
           stage: "llm_narration_failed",
           error: summarizeCaughtError(error),
-        });
+        }));
       }
     }
 
-    const prioritizedResult = prioritizeProductPageUrlsInResult(narratedResult);
-    const userVisibleResult = removeUserHiddenResultFields(prioritizedResult);
+    const prioritizedResult = timing.measureSync(
+      "prioritize_product_page_urls",
+      () => prioritizeProductPageUrlsInResult(narratedResult),
+    );
+    const userVisibleResult = timing.measureSync(
+      "remove_user_hidden_fields",
+      () => removeUserHiddenResultFields(prioritizedResult),
+    );
+    const timingSummary = timing.summary();
+
+    discoveryDebug.timing = timingSummary;
+    logTimingDebug({
+      exactMatches: prioritizedResult.exactMatches.length,
+      finalSynthesisModel,
+      nearMatches: prioritizedResult.nearMatches.length,
+      query: validation.data.query,
+      searchDepth: serperResult.stats.searchDepth,
+      slowestStages: timingSummary.slowestStages,
+      totalMs: timingSummary.totalMs,
+    });
 
     return NextResponse.json(
       includeDebug
@@ -1019,45 +1248,62 @@ async function handleRecommendationPost(
     // If AI research failed after Serper discovery succeeded, fall back to
     // the verified search candidates instead of failing the whole request.
     if (fallbackContext && fallbackContext.serperResult.candidates.length > 0) {
+      const activeFallbackContext = fallbackContext;
+
       try {
-        const serperRecommendations =
-          fallbackContext.serperResult.candidates.map(
-            serperCandidateToRecommendation,
-          );
-        const stats = fallbackContext.serperResult.stats;
-        const prioritizedFallbackResult = await buildServerSearchFallbackResult({
-          baseResult: {
-            search_summary:
-              "Live AI research was unavailable, so these picks come from shopping search results checked against your filters.",
-            assumptions: [
-              "AI research failed during this search, so results rely on shopping search data only.",
-            ],
-            generated_queries: fallbackContext.generatedQueries,
-            raw_candidate_count: serperRecommendations.length,
-            recommendations: [],
-            what_to_avoid: [],
-            final_buying_advice:
-              "These picks come from live shopping search results. Verify current price, specs, and availability before buying.",
-          },
-          discoveryCoverage: {
-            executedQueryCount:
-              stats.shoppingCalls +
-              stats.organicCalls +
-              stats.retailerDomainCalls +
-              stats.directRetailerCalls,
-            generatedQueryCount: fallbackContext.generatedQueries.length,
-            rawCandidateCount: serperRecommendations.length,
-            sourceTimeouts: stats.sourceTimeouts,
-            stageCounts: {
-              pass1: fallbackContext.searchPlan.stagedQueries.pass1.length,
-              pass2: fallbackContext.searchPlan.stagedQueries.pass2.length,
-              pass3: fallbackContext.searchPlan.stagedQueries.pass3.length,
-            },
-          },
-          maxEnrichedProducts: stats.maxEnrichedProducts,
-          requestWithRequirements: fallbackContext.requestWithRequirements,
-          routeDependencies,
-          serperRecommendations,
+        const serperRecommendations = timing.measureSync(
+          "fallback_normalize_serper_candidates",
+          () =>
+            activeFallbackContext.serperResult.candidates.map(
+              serperCandidateToRecommendation,
+            ),
+        );
+        const stats = activeFallbackContext.serperResult.stats;
+        const prioritizedFallbackResult = await timing.measure(
+          "ai_error_search_fallback",
+          () =>
+            buildServerSearchFallbackResult({
+              baseResult: {
+                search_summary:
+                  "Live AI research was unavailable, so these picks come from shopping search results checked against your filters.",
+                assumptions: [
+                  "AI research failed during this search, so results rely on shopping search data only.",
+                ],
+                generated_queries: activeFallbackContext.generatedQueries,
+                raw_candidate_count: serperRecommendations.length,
+                recommendations: [],
+                what_to_avoid: [],
+                final_buying_advice:
+                  "These picks come from live shopping search results. Verify current price, specs, and availability before buying.",
+              },
+              discoveryCoverage: {
+                executedQueryCount:
+                  stats.shoppingCalls +
+                  stats.organicCalls +
+                  stats.retailerDomainCalls +
+                  stats.directRetailerCalls,
+                generatedQueryCount: activeFallbackContext.generatedQueries.length,
+                rawCandidateCount: serperRecommendations.length,
+                sourceTimeouts: stats.sourceTimeouts,
+                stageCounts: {
+                  pass1: activeFallbackContext.searchPlan.stagedQueries.pass1.length,
+                  pass2: activeFallbackContext.searchPlan.stagedQueries.pass2.length,
+                  pass3: activeFallbackContext.searchPlan.stagedQueries.pass3.length,
+                },
+              },
+              maxEnrichedProducts: stats.maxEnrichedProducts,
+              requestWithRequirements: activeFallbackContext.requestWithRequirements,
+              routeDependencies,
+              serperRecommendations,
+            }),
+        );
+
+        logTimingDebug({
+          fallbackSource: "serper_candidates",
+          query: activeFallbackContext.requestWithRequirements.query,
+          slowestStages: timing.summary().slowestStages,
+          stage: debugStage,
+          totalMs: timing.summary().totalMs,
         });
 
         if (
@@ -1068,12 +1314,12 @@ async function handleRecommendationPost(
             includeDebug
               ? {
                   result: prioritizedFallbackResult,
-                  debug: {
+                  debug: withTimingDebug({
                     fallbackReason: "ai_research_error",
                     fallbackSource: "serper_candidates",
                     stage: debugStage,
                     error: summarizeCaughtError(error),
-                  },
+                  }),
                 }
               : {
                   result: removeUserHiddenResultFields(
@@ -1083,20 +1329,20 @@ async function handleRecommendationPost(
           );
         }
       } catch (fallbackError) {
-        logDiscoveryDebug({
+        logDiscoveryDebug(withTimingDebug({
           stage: "ai_error_search_fallback_failed",
           error: summarizeCaughtError(fallbackError),
-        });
+        }));
       }
     }
 
     return errorResponse(
       getSafeOpenAIErrorMessage(error),
       502,
-      {
+      withTimingDebug({
         stage: debugStage,
         error: summarizeCaughtError(error),
-      },
+      }),
       includeDebug,
     );
   }
