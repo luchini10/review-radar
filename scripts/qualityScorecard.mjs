@@ -193,9 +193,12 @@ if (process.env.RR_FUNNEL) {
       const lastIdx = present.lastIndexOf(true);
       if (lastIdx === funnel.stages.length - 1) continue; // survived to final
       const droppedAfter = ABBR[funnel.stages[lastIdx].stage];
+      const finalStage = funnel.stages[funnel.stages.length - 1];
+      const shownAsNear = covers1(it, finalStage.near || []);
+      const fate = shownAsNear ? "shown-as-NEAR" : "REMOVED";
       const s = snap(it);
       const detail = s ? `tier${s.sourceTier} price=${s.priceVerified ? "verified" : "unverified"}(${(s.price || "—").slice(0, 14)}) cites=${s.evidenceCount} req=${s.requirement ? `${s.requirement.passed}/${s.requirement.failed}f/${s.requirement.unknown}u` : "n/a"}` : "(no snapshot)";
-      console.log(`     DROP ${it.brand.padEnd(14)} after ${String(droppedAfter).padEnd(7)} | ${detail}`);
+      console.log(`     DROP ${it.brand.padEnd(14)} after ${String(droppedAfter).padEnd(7)} ${fate.padEnd(13)} | ${detail}`);
     }
     const neverFound = core.filter((it) => !covers1(it, funnel.stages[0].names));
     if (neverFound.length) console.log(`     never discovered: ${neverFound.map((it) => it.brand).join(", ")}`);
