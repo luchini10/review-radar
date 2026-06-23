@@ -1123,7 +1123,10 @@ async function handleRecommendationPost(
             raw: serperResult.stats.funnel?.rawNames || [],
             seeds: serperResult.stats.seedProductNames,
             postDedupe: serperResult.stats.funnel?.dedupedNames || [],
-            candidatePool: resultNames(serperRecommendations),
+            serperCandidates: resultNames(serperRecommendations),
+            // Full discovered pool = Serper candidates + LLM web_search products, so
+            // candidatePool is a true superset of what filtering/ranking sees.
+            candidatePool: resultNames(candidateResult.recommendations),
             rejectedCheap: serperResult.stats.funnel?.rejected || [],
             postFilter: resultNames(requirementFilteredResult.recommendations),
             final7: resultNames(revalidatedAssetResult.exactMatches),
