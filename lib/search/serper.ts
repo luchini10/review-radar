@@ -81,6 +81,17 @@ export type SerperSearchStats = {
   marketCoverage?: MarketCoverageSnapshot;
   seedSearchesRun: number;
   seedProductNames: string[];
+  // Debug-only discovery funnel (names per stage + cheap-filter rejections). Read by
+  // the route's stageFunnel debug payload to measure where products are lost. Never
+  // affects discovery/ranking.
+  funnel?: DiscoveryFunnel;
+};
+
+export type DiscoveryFunnel = {
+  rawNames: string[]; // every candidate discovered, before dedupe/filter
+  dedupedNames: string[]; // after canonical dedupe
+  keptNames: string[]; // after the cheap pre-filter
+  rejected: Array<{ name: string; reason: string }>; // cut by the cheap filter, with reason
 };
 
 export type MarketCoverageSnapshot = {
@@ -2322,13 +2333,13 @@ export function cheapPreFilterRawCandidates(
   maxCandidates = DEFAULT_MAX_RAW_CANDIDATES,
 ) {
   const kept: RawProductCandidate[] = [];
-  let rejectedCount = 0;
+  const rejected: Array<{ name: string; reason: string }> = [];
 
   for (const candidate of candidates) {
     const reason = cheapCandidateRejectionReason(candidate, input);
 
     if (reason) {
-      rejectedCount += 1;
+      rejected.push({ name: candidate.name, reason });
       continue;
     }
 
@@ -2339,7 +2350,8 @@ export function cheapPreFilterRawCandidates(
     candidates: kept
       .sort((first, second) => candidateFitScore(second, input) - candidateFitScore(first, input))
       .slice(0, maxCandidates),
-    rejectedCount,
+    rejectedCount: rejected.length,
+    rejected,
   };
 }
 
@@ -2988,6 +3000,12 @@ export async function searchSerperForProducts(
         ...marketCoverageSnapshot(preFiltered.candidates),
         rescueQueriesRun,
       },
+      funnel: {
+        rawNames: collected.map((candidate) => candidate.name),
+        dedupedNames: deduped.candidates.map((candidate) => candidate.name),
+        keptNames: preFiltered.candidates.map((candidate) => candidate.name),
+        rejected: preFiltered.rejected,
+      },
     },
   };
 }
@@ -3080,6 +3098,21 @@ export function mergeSerperSearchResults(
         deduped.candidates,
         primaryRescueQueries + followUpRescueQueries,
       ),
+      funnel:
+        primary.stats.funnel || followUp.stats.funnel
+          ? {
+              rawNames: [
+                ...(primary.stats.funnel?.rawNames || []),
+                ...(followUp.stats.funnel?.rawNames || []),
+              ],
+              dedupedNames: deduped.candidates.map((candidate) => candidate.name),
+              keptNames: deduped.candidates.map((candidate) => candidate.name),
+              rejected: [
+                ...(primary.stats.funnel?.rejected || []),
+                ...(followUp.stats.funnel?.rejected || []),
+              ],
+            }
+          : undefined,
     },
   };
 }

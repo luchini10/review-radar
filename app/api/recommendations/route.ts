@@ -69,6 +69,7 @@ import {
   serperCandidateToRecommendation,
 } from "../../../lib/search/serper.ts";
 import { scoreAndSelectRecommendations } from "../../../lib/recommendationScoring.ts";
+import { candidateSnapshot, resultNames } from "../../../lib/recommendationFunnel.ts";
 import type {
   ProductBuyingRubric,
   ProductRecommendation,
@@ -1115,6 +1116,28 @@ async function handleRecommendationPost(
         pass2: searchPlan.stagedQueries.pass2.map((query) => query.query),
         pass3: searchPlan.stagedQueries.pass3.map((query) => query.query),
       },
+      // Stage-by-stage discovery funnel (debug only): names that survive each stage,
+      // so a scorecard can measure WHERE core leaders are lost. Measurement only.
+      stageFunnel: includeDebug
+        ? {
+            raw: serperResult.stats.funnel?.rawNames || [],
+            seeds: serperResult.stats.seedProductNames,
+            postDedupe: serperResult.stats.funnel?.dedupedNames || [],
+            candidatePool: resultNames(serperRecommendations),
+            rejectedCheap: serperResult.stats.funnel?.rejected || [],
+            postFilter: resultNames(requirementFilteredResult.recommendations),
+            final7: resultNames(revalidatedAssetResult.exactMatches),
+            belowFinal: resultNames(revalidatedAssetResult.nearMatches),
+            candidates: [
+              ...revalidatedAssetResult.exactMatches.map((product) =>
+                candidateSnapshot(product),
+              ),
+              ...revalidatedAssetResult.nearMatches.map((product) =>
+                candidateSnapshot(product),
+              ),
+            ],
+          }
+        : undefined,
       serperCandidateCount: serperResult.stats.collectedCandidates,
       serperDuplicateCount: serperResult.stats.duplicateCandidatesRemoved,
       mergedDuplicateCount: mergedCandidates.duplicateCount,

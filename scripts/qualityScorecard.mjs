@@ -23,7 +23,7 @@ import { GOLD } from "./goldBenchmark.mjs";
 
 const BASE = process.env.RR_BASE || "http://localhost:3000";
 const RUNS = Number(process.env.RR_RUNS || 2);
-const FILTER = process.env.RR_FILTER || "";
+const FILTER = (process.env.RR_FILTER || "").split(",").map((s) => s.trim()).filter(Boolean);
 const TYPE = process.env.RR_TYPE || "";
 const TIMEOUT_MS = 260000;
 
@@ -69,7 +69,7 @@ async function once(g) {
       citations: (p.citations || []).length,
       consensus: (p.source_consensus || "").toLowerCase(),
     });
-    return { ok: true, ms, serperCalls, exact: (r.exactMatches || []).map(map), near: (r.nearMatches || []).map(map) };
+    return { ok: true, ms, serperCalls, exact: (r.exactMatches || []).map(map), near: (r.nearMatches || []).map(map), funnel: d.stageFunnel || null };
   } catch (e) {
     return { ok: false, ms: Date.now() - started, serperCalls: 0, error: String(e.name || e) };
   } finally { clearTimeout(t); }
@@ -123,8 +123,9 @@ function scoreQuery(g, runs) {
   };
 }
 
-const set = GOLD.filter((g) => (!TYPE || g.type === TYPE) && (!FILTER || g.id.includes(FILTER)));
+const set = GOLD.filter((g) => (!TYPE || g.type === TYPE) && (!FILTER.length || FILTER.some((f) => g.id.includes(f))));
 const results = [];
+const funnelData = [];
 for (const g of set) {
   const runs = [];
   for (let i = 0; i < RUNS; i++) {
@@ -133,6 +134,7 @@ for (const g of set) {
     process.stderr.write(`  [${g.id}] run ${i + 1}/${RUNS}: ${r.ok ? `exact=${r.exact.length} ${r.ms}ms` : "ERR " + r.error}\n`);
   }
   results.push(scoreQuery(g, runs));
+  funnelData.push({ g, funnel: runs.find((r) => r.ok && r.funnel)?.funnel || null });
 }
 
 const mean = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
@@ -171,6 +173,34 @@ const totalSerper = results.reduce((a, r) => a + r.serperCalls, 0);
 const totalSec = Math.round(results.reduce((a, r) => a + r.avgMs * RUNS, 0) / 1000);
 out(`\ncost proxy: ${totalCalls} searches | ${totalSerper} Serper calls | ${totalSec}s wall (OpenAI token cost not exposed by the API)`);
 out(`errors ${results.reduce((a, r) => a + r.errors, 0)}/${totalCalls}`);
+
+// ---- Stage funnel: where are the CORE LEADERS lost? (RR_FUNNEL=1) ----
+if (process.env.RR_FUNNEL) {
+  console.log("\n================ STAGE FUNNEL — core-leader coverage by stage ================\n");
+  console.log("query                     | raw | seed | dedupe | cand | filter | final7 | droppedC | rankedLowC | core");
+  console.log("--------------------------+-----+------+--------+------+--------+--------+----------+------------+-----");
+  for (const { g, funnel } of funnelData) {
+    if (!funnel) { console.log(`${g.id.padEnd(25)} | (no funnel)`); continue; }
+    const core = g.coreLeaders || [];
+    const cov = (names) => countCovered(names || [], core);
+    const reached = (item, names) => (names || []).some((n) => covers(n, item));
+    const inFinal = (it) => reached(it, funnel.final7);
+    const inBelow = (it) => reached(it, funnel.belowFinal);
+    const inCand = (it) => reached(it, funnel.candidatePool) || reached(it, funnel.raw);
+    const rankedLow = core.filter((it) => inBelow(it) && !inFinal(it)).length;
+    const dropped = core.filter((it) => inCand(it) && !inFinal(it) && !inBelow(it)).length;
+    console.log(
+      `${g.id.padEnd(25)} | ${String(cov(funnel.raw)).padEnd(3)} | ${String(cov(funnel.seeds)).padEnd(4)} | ${String(cov(funnel.postDedupe)).padEnd(6)} | ${String(cov(funnel.candidatePool)).padEnd(4)} | ${String(cov(funnel.postFilter)).padEnd(6)} | ${String(cov(funnel.final7)).padEnd(6)} | ${String(dropped).padEnd(8)} | ${String(rankedLow).padEnd(10)} | ${core.length}`,
+    );
+    const lostFilter = core.filter((it) => reached(it, funnel.candidatePool) && !reached(it, funnel.postFilter)).map((it) => it.brand);
+    const lostRank = core.filter((it) => reached(it, funnel.postFilter) && !inFinal(it)).map((it) => it.brand);
+    const neverFound = core.filter((it) => !inCand(it)).map((it) => it.brand);
+    if (lostFilter.length) console.log(`    lost at FILTER:   ${lostFilter.join(", ")}`);
+    if (lostRank.length) console.log(`    lost at RANKING:  ${lostRank.join(", ")}`);
+    if (neverFound.length) console.log(`    never discovered: ${neverFound.join(", ")}`);
+  }
+  console.log("\nraw=discovered  dedupe=post-canonical  cand=pool  filter=post-requirement  final7=shown  droppedC/rankedLowC=leaders lost after discovery");
+}
 
 writeFileSync("./.rr_baseline.json", JSON.stringify(results, null, 2));
 writeFileSync("./.rr_baseline.md", lines.join("\n"));
