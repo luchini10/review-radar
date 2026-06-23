@@ -49,12 +49,69 @@ describe("extractSeedProductNames", () => {
     assert.ok(!seeds.some((seed) => /^2026\b/.test(seed)));
   });
 
-  it("rejects generic category phrases that carry no model number", () => {
-    const seeds = extractSeedProductNames([
-      { title: "The Best Gas Grills", snippet: "We tested every Gas Grill on the market." },
-    ]);
+  it("rejects the searched category itself as a seed (not a product)", () => {
+    const seeds = extractSeedProductNames(
+      [{ title: "The Best Gas Grills", snippet: "We tested every Gas Grill on the market." }],
+      6,
+      "gas grill",
+    );
 
-    assert.ok(!seeds.some((seed) => /gas grill/i.test(seed)));
+    assert.ok(!seeds.some((seed) => /^gas grills?$/i.test(seed)));
+  });
+
+  it("accepts brand-led names with no model number (the coverage fix)", () => {
+    const seeds = extractSeedProductNames(
+      [
+        {
+          title: "The best air purifiers",
+          snippet: "The Coway Airmega is our top pick; the Levoit Core is the best value.",
+          url: "https://www.wirecutter.com/reviews/best-air-purifier/",
+        },
+      ],
+      6,
+      "air purifier",
+    );
+
+    assert.ok(seeds.includes("Coway Airmega"));
+    assert.ok(seeds.includes("Levoit Core"));
+  });
+
+  it("excludes source/retailer names from seeds", () => {
+    const seeds = extractSeedProductNames(
+      [{ title: "Consumer Reports tested these", snippet: "Amazon Prime members save more." }],
+      6,
+      "air purifier",
+    );
+
+    assert.ok(!seeds.some((seed) => /^consumer reports$/i.test(seed)));
+    assert.ok(!seeds.some((seed) => /^amazon prime$/i.test(seed)));
+  });
+
+  it("rejects source names mid-run and year-led brand mashes", () => {
+    const seeds = extractSeedProductNames(
+      [
+        { title: "Recommendations RTINGS.com", snippet: "2026 Shark Eufy WIRED Dyson Spot Stain picks" },
+      ],
+      6,
+      "robot vacuum",
+    );
+
+    assert.ok(!seeds.some((seed) => /rtings/i.test(seed)));
+    assert.ok(!seeds.some((seed) => /^2026\b/.test(seed)));
+    assert.ok(!seeds.some((seed) => /wired/i.test(seed)));
+  });
+
+  it("mines Tier-1 editorial sources before lower-tier ones", () => {
+    const seeds = extractSeedProductNames(
+      [
+        { title: "Random blog", snippet: "Try the Acme Blastoid model.", url: "https://spammyseo.example.com/x" },
+        { title: "Wirecutter picks", snippet: "The Coway Airmega leads our test.", url: "https://www.wirecutter.com/x" },
+      ],
+      1,
+      "air purifier",
+    );
+
+    assert.deepEqual(seeds, ["Coway Airmega"]);
   });
 
   it("never emits a bare brand with no model token", () => {

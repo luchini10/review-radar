@@ -37,6 +37,7 @@ import {
   type DirectRetailerEngine,
   type SearchDepthConfig,
 } from "./sourcePacks.ts";
+import { sourceTier, SOURCE_NAME_TOKENS } from "./sourceTier.ts";
 
 export const MAX_RESULTS_PER_QUERY = 10;
 // Serper often returns more results than requested (especially /shopping).
@@ -2360,6 +2361,11 @@ const SEED_NAME_STOPWORDS = new Set([
   "tested", "review", "reviews", "for", "with", "of", "at", "to", "in", "on", "by",
   "this", "that", "it", "its", "also", "new", "vs", "versus", "why", "how", "what",
   "plus", "get", "buy", "under", "over", "most", "more", "guide", "year", "deals",
+  // common editorial-sentence words that are not product names
+  "find", "see", "shop", "check", "read", "learn", "compare", "save", "deal",
+  "sale", "today", "now", "here", "makes", "make", "your", "you", "their", "out",
+  "from", "list", "ranked", "rated", "rating", "buying", "good", "great", "love",
+  "tried", "use", "used", "than", "but", "all", "some", "which", "these", "those",
 ]);
 
 function trimSeedToken(token: string) {
@@ -2421,14 +2427,76 @@ export function buildBestOfSeedQueries(
   );
 }
 
+// A "word token" is a lexical proper-noun word (ends in a lowercase letter), not a
+// bare model/acronym — used to recognize brand-led names like "Coway Airmega".
+function isSeedWordToken(token: string) {
+  return token.length >= 2 && /^[A-Za-z][A-Za-z.&'-]*[a-z]$/.test(token);
+}
+
+// A run is "brand-led" when it has at least two proper-noun words (brand + product
+// line), e.g. "Herman Miller Aeron", "Coway Airmega", "Shark Matrix" — even with no
+// model number. Dictionary-free, so it works for ANY brand/category.
+function isBrandLedSeedRun(run: string[]) {
+  return run.filter(isSeedWordToken).length >= 2;
+}
+
+function normalizeSeedWords(tokens: string[]) {
+  return tokens.map((token) => token.toLowerCase().replace(/[^a-z0-9]/g, "")).filter(Boolean);
+}
+
+// Light de-pluralize so "Grills" matches a "grill" category ("gas" stays "gas").
+function depluralizeWord(word: string) {
+  return word.length > 3 && word.endsWith("s") && !word.endsWith("ss")
+    ? word.slice(0, -1)
+    : word;
+}
+
+// A run that is just the searched category ("Robot Vacuum" for a robot vacuum
+// search, "Gas Grills" for a gas grill search) is the category, not a product.
+function isCategorySubsetRun(run: string[], category: string) {
+  const catWords = new Set(
+    normalizeSeedWords((category || "").split(/\s+/)).map(depluralizeWord),
+  );
+
+  if (catWords.size === 0) {
+    return false;
+  }
+
+  const runWords = normalizeSeedWords(run).map(depluralizeWord);
+
+  return runWords.length > 0 && runWords.every((word) => catWords.has(word));
+}
+
+// A run containing a SOURCE/retailer name ("Consumer Reports", "RTINGS.com",
+// "WIRED", "Amazon Prime") is editorial/snippet noise, not a product name. Checks
+// every token (with a trailing TLD stripped) so "RTINGS.com" matches "rtings".
+function containsSourceName(run: string[]) {
+  return normalizeSeedWords(run).some(
+    (word) => SOURCE_NAME_TOKENS.has(word) || SOURCE_NAME_TOKENS.has(word.replace(/(?:com|org|net)$/, "")),
+  );
+}
+
+// A run that starts with a bare year ("2026 Shark Eufy ...") is a best-of headline
+// fragment, not a product.
+function isYearLedRun(run: string[]) {
+  return /^(?:19|20)\d{2}$/.test(run[0] || "");
+}
+
 export function extractSeedProductNames(
-  sources: Array<{ title?: string; snippet?: string }>,
+  sources: Array<{ title?: string; snippet?: string; url?: string }>,
   maxSeeds = 6,
+  category = "",
 ): string[] {
+  // Mine the most trusted (Tier-1 editorial) lists first so their named leaders
+  // win the limited seed slots.
+  const ordered = [...sources].sort(
+    (first, second) => sourceTier(first.url || "") - sourceTier(second.url || ""),
+  );
+
   const seen = new Map<string, { name: string; order: number }>();
   let order = 0;
 
-  for (const source of sources) {
+  for (const source of ordered) {
     const rawText = `${source?.title || ""} . ${source?.snippet || ""}`;
     const rawTokens = rawText.split(/\s+/).map(trimSeedToken).filter(Boolean);
 
@@ -2451,10 +2519,17 @@ export function extractSeedProductNames(
         index += 1;
       }
 
-      // Accept a run only when it carries a real model number. A brand prefix plus
-      // a stray word ("DeWalt Find"), a bare year ("2026 Lab"), or a generic phrase
-      // ("Best Gas Grills") is not a product name.
-      if (run.length >= 2 && run.some(isSeedModelNumberToken)) {
+      // Accept a run that carries a real model number ("Weber Spirit II E-310") OR
+      // is brand-led ("Coway Airmega"). Reject category-only and source-name runs,
+      // and bare-year / generic noise (no model number AND not brand-led).
+      const accepted =
+        run.length >= 2 &&
+        (run.some(isSeedModelNumberToken) || isBrandLedSeedRun(run)) &&
+        !isCategorySubsetRun(run, category) &&
+        !containsSourceName(run) &&
+        !isYearLedRun(run);
+
+      if (accepted) {
         const name = run.join(" ").replace(/\s+/g, " ").trim();
         const key = name.toLowerCase();
 
@@ -2762,6 +2837,7 @@ export async function searchSerperForProducts(
     const seedNames = extractSeedProductNames(
       editorialSources,
       searchConfig.maxGoogleShoppingQueries,
+      baseCategoryName,
     ).filter(
       (seed) =>
         !searchedShoppingQueries.some(
