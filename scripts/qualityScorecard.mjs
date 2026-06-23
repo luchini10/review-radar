@@ -1,18 +1,24 @@
-// TWO-SCORECARD QUALITY HARNESS (Phase 0).
+// TWO-SCORECARD QUALITY HARNESS (Phase 0) — measurement only, never touches the pipeline.
 //
 // Grades the live pipeline against scripts/goldBenchmark.mjs on two separate skills:
 //   BROAD      -> surfaces the recognized CORE LEADERS (main coverage metric);
 //                 alternates are fine but don't substitute; wrong-types are penalized.
 //   CONSTRAINT -> satisfies the hard requirements (budget/feature) with confident
-//                 price; judged on violations, NOT broad brand leadership.
-// Both also report stability, wrong-type leakage into the final 7, price confidence,
-// and a weak-winner flag on the #1 pick.
+//                 price; judged on violations + EMPTY results, NOT brand leadership.
+//
+// Guardrails:
+//   - Empty constraint results are an explicit FAILURE (EMPTY flag), never a silent
+//     "0 violations" pass.
+//   - Records per query: type, poolCore, final7Core, alternates, wrong-type leak,
+//     wrong-type winner, weak#1, price confidence, exact count, elapsed, serper calls.
+//   - Writes a machine record (.rr_baseline.json) + a markdown block (.rr_baseline.md)
+//     for the QA log.
 //
 // Usage:
 //   node scripts/qualityScorecard.mjs                              # all, RR_RUNS (default 2)
 //   RR_RUNS=1 RR_FILTER=robot node scripts/qualityScorecard.mjs    # subset, 1 run
-//   RR_TYPE=broad node scripts/qualityScorecard.mjs
 
+import { writeFileSync } from "node:fs";
 import { GOLD } from "./goldBenchmark.mjs";
 
 const BASE = process.env.RR_BASE || "http://localhost:3000";
@@ -25,8 +31,6 @@ const norm = (s) => ` ${(s || "").toLowerCase().replace(/[^a-z0-9+]+/g, " ").rep
 const priceNum = (s) => { const m = (s || "").replace(/,/g, "").match(/\$?\s*(\d+(?:\.\d+)?)/); return m ? Number(m[1]) : null; };
 const priceVerified = (p) => /\d/.test(p.estimated_price_range || "") && !/not verified|not found/i.test(p.estimated_price_range || "");
 
-// A leader is "covered" by a product if its name has every brand token AND (no model
-// lines, or at least one line token).
 function covers(name, item) {
   const hay = norm(name);
   const brandTokens = norm(item.brand).trim().split(" ");
@@ -53,7 +57,9 @@ async function once(g) {
     });
     const o = await res.json();
     const ms = Date.now() - started;
-    if (o.error) return { ok: false, ms, error: o.error };
+    const d = o.debug || {};
+    const serperCalls = (d.serperShoppingCalls || 0) + (d.serperOrganicCalls || 0) + (d.serperRetailerDomainCalls || 0) + (d.serperDirectRetailerCalls || 0) + (d.seedSearchesRun || 0);
+    if (o.error) return { ok: false, ms, serperCalls, error: o.error };
     const r = o.result || o;
     const map = (p) => ({
       name: p.name || "",
@@ -63,9 +69,9 @@ async function once(g) {
       citations: (p.citations || []).length,
       consensus: (p.source_consensus || "").toLowerCase(),
     });
-    return { ok: true, ms, exact: (r.exactMatches || []).map(map), near: (r.nearMatches || []).map(map) };
+    return { ok: true, ms, serperCalls, exact: (r.exactMatches || []).map(map), near: (r.nearMatches || []).map(map) };
   } catch (e) {
-    return { ok: false, ms: Date.now() - started, error: String(e.name || e) };
+    return { ok: false, ms: Date.now() - started, serperCalls: 0, error: String(e.name || e) };
   } finally { clearTimeout(t); }
 }
 
@@ -95,20 +101,25 @@ function scoreQuery(g, runs) {
   });
 
   const exactCounts = runs.map((r) => (r.exact || []).length);
+  const emptyRuns = ok.filter((r) => r.exact.length === 0).length;
+  const emptyResult = ok.length > 0 && emptyRuns === ok.length; // every successful run returned nothing
   const allExact = ok.flatMap((r) => r.exact);
   const priceOk = allExact.length ? Math.round((allExact.filter((p) => p.verified).length / allExact.length) * 100) : 0;
+  const avgMs = runs.length ? Math.round(runs.reduce((a, r) => a + r.ms, 0) / runs.length) : 0;
+  const serperCalls = runs.reduce((a, r) => a + (r.serperCalls || 0), 0);
 
   let budgetViol = 0, featUnconfirmed = 0;
-  if (g.type === "constraint") {
+  if (g.type === "constraint" && !emptyResult) {
     for (const r of ok) for (const p of r.exact) for (const c of g.constraints || []) {
       if (c.kind === "budget" && p.priceNum !== null && p.priceNum > c.max) budgetViol++;
       if (c.kind === "feature" && !c.any.some((k) => p.text.includes(norm(k).trim()))) featUnconfirmed++;
     }
   }
   return {
+    id: g.id, type: g.type, query: g.query,
     coreTotal: (g.coreLeaders || []).length, altTotal: (g.acceptableAlternates || []).length,
-    poolCore, finalCore, altPool, wrongLeak, wrongWins, weakWinner, exactCounts, priceOk,
-    stab: stability(ok), budgetViol, featUnconfirmed, errors: runs.length - ok.length,
+    poolCore, finalCore, altPool, wrongLeak, wrongWins, weakWinner, exactCounts, emptyRuns, emptyResult,
+    priceOk, stab: stability(ok), budgetViol, featUnconfirmed, avgMs, serperCalls, errors: runs.length - ok.length,
   };
 }
 
@@ -121,32 +132,46 @@ for (const g of set) {
     runs.push(r);
     process.stderr.write(`  [${g.id}] run ${i + 1}/${RUNS}: ${r.ok ? `exact=${r.exact.length} ${r.ms}ms` : "ERR " + r.error}\n`);
   }
-  results.push({ g, ...scoreQuery(g, runs) });
+  results.push(scoreQuery(g, runs));
 }
 
 const mean = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 const wt = (r) => (r.wrongWins ? "WINS#1" : r.wrongLeak ? "leak" : "ok");
+const lines = [];
+const out = (s = "") => { console.log(s); lines.push(s); };
 
-const broad = results.filter((r) => r.g.type === "broad");
+const broad = results.filter((r) => r.type === "broad");
 if (broad.length) {
-  console.log("\n================ BROAD SCORECARD  (goal: surface the CORE LEADERS) ================\n");
-  console.log("query                     | poolCore | final7Core | alt | stab | wrong-type | weak#1 | price | exacts");
-  console.log("--------------------------+----------+------------+-----+------+------------+--------+-------+-------");
+  out("\n## BROAD SCORECARD  (goal: surface the CORE LEADERS)\n");
+  out("| query | poolCore | final7Core | alt | stab | wrong-type | weak#1 | price | exacts | avg s |");
+  out("|---|---|---|---|---|---|---|---|---|---|");
   for (const r of broad)
-    console.log(`${r.g.id.padEnd(25)} | ${`${r.poolCore}/${r.coreTotal}`.padEnd(8)} | ${`${r.finalCore}/${r.coreTotal}`.padEnd(10)} | ${String(r.altPool).padEnd(3)} | ${`${r.stab}%`.padEnd(4)} | ${wt(r).padEnd(10)} | ${(r.weakWinner ? "WEAK" : "ok").padEnd(6)} | ${`${r.priceOk}%`.padEnd(5)} | [${r.exactCounts.join(",")}]`);
-  console.log(`\n  mean poolCore ${mean(broad.map((r) => r.poolCore)).toFixed(1)}/${broad[0].coreTotal} | mean final7Core ${mean(broad.map((r) => r.finalCore)).toFixed(1)} | wrong-type leaks ${broad.filter((r) => r.wrongLeak).length}/${broad.length} (wins#1: ${broad.filter((r) => r.wrongWins).length}) | weak#1 ${broad.filter((r) => r.weakWinner).length}/${broad.length} | mean stability ${Math.round(mean(broad.map((r) => r.stab)))}%`);
-  console.log("  target: poolCore>=5, final7Core>=3, 0 wrong-type in final 7, 0 weak#1");
+    out(`| ${r.id} | ${r.poolCore}/${r.coreTotal} | ${r.finalCore}/${r.coreTotal} | ${r.altPool} | ${r.stab}% | ${wt(r)} | ${r.weakWinner ? "WEAK" : "ok"} | ${r.priceOk}% | [${r.exactCounts.join(",")}] | ${(r.avgMs / 1000).toFixed(0)} |`);
+  out(`\nmean poolCore ${mean(broad.map((r) => r.poolCore)).toFixed(1)}/${broad[0].coreTotal} | mean final7Core ${mean(broad.map((r) => r.finalCore)).toFixed(1)} | wrong-type leaks ${broad.filter((r) => r.wrongLeak).length}/${broad.length} (wins#1 ${broad.filter((r) => r.wrongWins).length}) | weak#1 ${broad.filter((r) => r.weakWinner).length}/${broad.length} | mean stability ${Math.round(mean(broad.map((r) => r.stab)))}% | mean price ${Math.round(mean(broad.map((r) => r.priceOk)))}%`);
+  out("target: poolCore>=5, final7Core>=3, 0 wrong-type, 0 weak#1");
 }
 
-const con = results.filter((r) => r.g.type === "constraint");
+const con = results.filter((r) => r.type === "constraint");
 if (con.length) {
-  console.log("\n================ CONSTRAINT SCORECARD  (goal: satisfy hard requirements) ================\n");
-  console.log("query                     | exacts | budgetViol | feat-unconf | price | wrong-type | weak#1 | stab | (core)");
-  console.log("--------------------------+--------+------------+-------------+-------+------------+--------+------+-------");
-  for (const r of con)
-    console.log(`${r.g.id.padEnd(25)} | ${`[${r.exactCounts.join(",")}]`.padEnd(6)} | ${String(r.budgetViol).padEnd(10)} | ${String(r.featUnconfirmed).padEnd(11)} | ${`${r.priceOk}%`.padEnd(5)} | ${wt(r).padEnd(10)} | ${(r.weakWinner ? "WEAK" : "ok").padEnd(6)} | ${`${r.stab}%`.padEnd(4)} | ${r.poolCore}/${r.coreTotal}`);
-  console.log(`\n  budget violations ${con.reduce((a, r) => a + r.budgetViol, 0)} | feature-unconfirmed ${con.reduce((a, r) => a + r.featUnconfirmed, 0)} | wrong-type leaks ${con.filter((r) => r.wrongLeak).length}/${con.length} | weak#1 ${con.filter((r) => r.weakWinner).length}/${con.length}`);
-  console.log("  target: 0 budget violations, low feature-unconfirmed, high price confidence, 0 wrong-type");
+  out("\n## CONSTRAINT SCORECARD  (goal: satisfy hard requirements)\n");
+  out("| query | result | budgetViol | feat-unconf | price | wrong-type | weak#1 | stab | (core) | avg s |");
+  out("|---|---|---|---|---|---|---|---|---|---|");
+  for (const r of con) {
+    const result = r.emptyResult ? "EMPTY" : `[${r.exactCounts.join(",")}]`;
+    const bv = r.emptyResult ? "-" : String(r.budgetViol);
+    const fu = r.emptyResult ? "-" : String(r.featUnconfirmed);
+    out(`| ${r.id} | ${result} | ${bv} | ${fu} | ${r.priceOk}% | ${wt(r)} | ${r.weakWinner ? "WEAK" : "ok"} | ${r.stab}% | ${r.poolCore}/${r.coreTotal} | ${(r.avgMs / 1000).toFixed(0)} |`);
+  }
+  out(`\nEMPTY results ${con.filter((r) => r.emptyResult).length}/${con.length} (FAIL) | budget violations ${con.reduce((a, r) => a + r.budgetViol, 0)} | feature-unconfirmed ${con.reduce((a, r) => a + r.featUnconfirmed, 0)} | wrong-type leaks ${con.filter((r) => r.wrongLeak).length}/${con.length}`);
+  out("target: 0 EMPTY, 0 budget violations, low feature-unconfirmed, high price confidence");
 }
 
-console.log(`\nruns/query ${RUNS} | queries ${set.length} | errors ${results.reduce((a, r) => a + r.errors, 0)}`);
+const totalCalls = set.length * RUNS;
+const totalSerper = results.reduce((a, r) => a + r.serperCalls, 0);
+const totalSec = Math.round(results.reduce((a, r) => a + r.avgMs * RUNS, 0) / 1000);
+out(`\ncost proxy: ${totalCalls} searches | ${totalSerper} Serper calls | ${totalSec}s wall (OpenAI token cost not exposed by the API)`);
+out(`errors ${results.reduce((a, r) => a + r.errors, 0)}/${totalCalls}`);
+
+writeFileSync("./.rr_baseline.json", JSON.stringify(results, null, 2));
+writeFileSync("./.rr_baseline.md", lines.join("\n"));
+console.log("\nrecords -> ./.rr_baseline.json , ./.rr_baseline.md");
