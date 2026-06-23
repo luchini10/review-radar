@@ -1996,3 +1996,24 @@ Added a measurement-only stage funnel (debug `stageFunnel`: raw → seeds → po
 **Recommended next phase: FILTERING investigation (not ranking).** It is the most surgical, highest-confidence win — the leaders are already found, then thrown away between candidate pool and post-filter. Then revisit discovery for the never-found brands. Ranking (Phase 4 marketTrust) is deferred — the funnel shows it isn't where leaders are lost.
 
 Note: constraint searches that take the search-candidate fallback path don't emit `stageFunnel` (one query showed "(no funnel)"); broad funnels carry the signal. Measurement only — no pipeline changes.
+
+---
+
+## 🟩 **Claude QA Update — 2026-06-23 13:20**
+
+### Filtering investigation STEP 1 — proven drop step (per-stage funnel, 5 queries × 2 runs)
+
+Added a full per-stage pipeline trace (cand → citation-verify → requirement-filter → enrich → assets → rescue → reval → final) with per-leader REMOVED-vs-shown-as-NEAR and snapshot detail. Measurement only.
+
+**Proven primary culprit: CITATION VERIFICATION (`filterResultToVerifiedCitations`).** It REMOVES strong product-page leaders entirely, right after discovery:
+- shop-vac: **RIDGID** (verified price, 3 citations), **Craftsman** (verified, 2 cites), **Shop-Vac** (verified, 3 cites) — all REMOVED `after verify`.
+- robot-vacuum (one run): cand=3 → **verify=0** — Roborock, Roomba (verified price), Ecovacs all REMOVED at citation verify, wiping the category.
+- These carry their own product URLs + 2–3 citations and sometimes verified prices, but their URLs aren't in the verified-URL set (they arrive via the LLM web_search path, which isn't auto-verified the way Serper candidate URLs are).
+
+**Secondary effect: final selection (`scoreAndSelectRecommendations`).** Some requirement-passing leaders (Weber/Napoleon/Char-Broil, req x/0f/0u) are REMOVED or demoted to NEAR — entangled with the "exact needs verified price" reliability rule + the 5-near cap. Murkier; address separately, after the citation-verify fix.
+
+**Ruled out:** dedupe/canonical (zero loss), requirement-filter-alone (drops mostly recovered at reval), ranking order (survivors reach final).
+
+**Proposed STEP-2 fix (generic, trust-preserving):** allow a candidate with its OWN product-page URL (Serper-discovered, or a recognized retailer/brand/Tier-1–2 domain) to survive citation verification as self-cited — attach its product URL as a verified citation before the drop. Still requires a real product URL + source metadata; uncited prose / non-product pages stay dropped. No category- or product-specific logic. Then rerun the 5-query diagnostic + full Phase 0/1 baseline.
+
+Note: high run-to-run variance persists (robot-vacuum cand was 5 one run, 3 the next) — the citation-verify REMOVED pattern held across both.
