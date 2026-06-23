@@ -1972,3 +1972,27 @@ Per-query coverage: office-chair 2→4, shop-vac 1→3, gas-grill 3→2, others 
 **Diagnostic:** live probe shows seeds now include real leaders (Dreame, Roborock, Shark, Roomba) and the displayed set carried 4 core leaders in one run — discovery now finds the leaders; the remaining displayed-coverage gap is RANKING (Phase 4).
 
 **Verdict: Phase 1 PARTIAL PASS** — all do-not-regress targets met; all four improvement targets moved right but short of the aspirational numbers. Next: expose candidate-pool names in debug to separate discovery vs ranking coverage.
+
+---
+
+## 🟩 **Claude QA Update — 2026-06-23 12:56**
+
+### Stage-funnel diagnostic — where are the core leaders lost?
+
+Added a measurement-only stage funnel (debug `stageFunnel`: raw → seeds → postDedupe → candidatePool[merged Serper+LLM] → postFilter → final7, + per-candidate snapshots and cheap-filter rejection reasons). Scorecard `RR_FUNNEL=1` reports core-leader coverage per stage. 5-query diagnostic (1 run each):
+
+| query | raw | dedupe | cand | filter | final7 | lost where |
+|---|---|---|---|---|---|---|
+| robot-vacuum | 2 | 2 | 5 | 5 | 5 | discovery only (ecovacs, narwal never found) |
+| gas-grill | 2 | 2 | 5 | 5 | 5 | discovery only (char-broil, monument never found) |
+| shop-vac | 0 | 0 | 3 | 1 | 1 | **FILTER drops craftsman + shop-vac**; 4 never found |
+| con-gas-grill 4-burner | 0 | 0 | 2 | 0 | 0 | **FILTER drops char-broil + nexgrill** |
+
+**Conclusion — three findings:**
+1. **Ranking is NOT the bottleneck.** Every leader that survives filtering reaches the final 7 (filter == final7; rankedTooLow ≈ 0). My earlier "ranking" hypothesis is disproven by the funnel.
+2. **Dedupe/canonical loses nothing** (raw == dedupe everywhere). Rule it out.
+3. **The two real loss points are DISCOVERY and FILTERING.** Discovery (Serper raw 0–2/7; the LLM research rescues to 2–5) still misses 2–4 leaders per query. And **filtering drops already-discovered top brands** — a follow-up shop-vac probe showed RIDGID and Craftsman present in the candidate pool but **gone after filtering** (citation-verify / requirement filter), leaving a final 7 of mostly Vacmaster + Armor-All variants with the #1 brand (RIDGID) absent.
+
+**Recommended next phase: FILTERING investigation (not ranking).** It is the most surgical, highest-confidence win — the leaders are already found, then thrown away between candidate pool and post-filter. Then revisit discovery for the never-found brands. Ranking (Phase 4 marketTrust) is deferred — the funnel shows it isn't where leaders are lost.
+
+Note: constraint searches that take the search-candidate fallback path don't emit `stageFunnel` (one query showed "(no funnel)"); broad funnels carry the signal. Measurement only — no pipeline changes.
