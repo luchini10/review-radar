@@ -1116,29 +1116,42 @@ async function handleRecommendationPost(
         pass2: searchPlan.stagedQueries.pass2.map((query) => query.query),
         pass3: searchPlan.stagedQueries.pass3.map((query) => query.query),
       },
-      // Stage-by-stage discovery funnel (debug only): names that survive each stage,
-      // so a scorecard can measure WHERE core leaders are lost. Measurement only.
+      // Stage-by-stage pipeline funnel (debug only): the product names present in the
+      // working set after EACH stage, so a scorecard can pinpoint exactly where a
+      // candidate (e.g. a known leader) is dropped. Plus rich per-candidate snapshots
+      // of the discovered pool so a dropped leader's detail is available. Measurement
+      // only — reads existing results, changes nothing.
       stageFunnel: includeDebug
         ? {
             raw: serperResult.stats.funnel?.rawNames || [],
             seeds: serperResult.stats.seedProductNames,
-            postDedupe: serperResult.stats.funnel?.dedupedNames || [],
-            serperCandidates: resultNames(serperRecommendations),
-            // Full discovered pool = Serper candidates + LLM web_search products, so
-            // candidatePool is a true superset of what filtering/ranking sees.
-            candidatePool: resultNames(candidateResult.recommendations),
             rejectedCheap: serperResult.stats.funnel?.rejected || [],
-            postFilter: resultNames(requirementFilteredResult.recommendations),
-            final7: resultNames(revalidatedAssetResult.exactMatches),
-            belowFinal: resultNames(revalidatedAssetResult.nearMatches),
-            candidates: [
-              ...revalidatedAssetResult.exactMatches.map((product) =>
-                candidateSnapshot(product),
-              ),
-              ...revalidatedAssetResult.nearMatches.map((product) =>
-                candidateSnapshot(product),
-              ),
+            stages: [
+              { stage: "candidatePool", names: resultNames(candidateResult.recommendations) },
+              { stage: "afterCitationVerify", names: resultNames(verifiedResult.recommendations) },
+              { stage: "afterRequirementFilter", names: resultNames(requirementFilteredResult.recommendations) },
+              { stage: "afterEnrichment", names: resultNames(evidenceEnrichedResult.recommendations) },
+              { stage: "afterAssets", names: resultNames(assetEnrichedResult.recommendations) },
+              { stage: "afterRescue", names: resultNames(verifiedFactsResult.recommendations) },
+              {
+                stage: "afterRevalidation",
+                names: [
+                  ...resultNames(revalidatedAssetResult.exactMatches),
+                  ...resultNames(revalidatedAssetResult.nearMatches),
+                ],
+              },
+              {
+                stage: "final",
+                names: resultNames(enrichedResult.exactMatches),
+                near: resultNames(enrichedResult.nearMatches),
+              },
             ],
+            // Rich snapshots of the full discovered pool + the post-verify and
+            // post-filter sets, so a dropped leader's brand/tier/price/citations and
+            // requirementCheck are inspectable at the point it was last present.
+            poolCandidates: candidateResult.recommendations.map((product) => candidateSnapshot(product)),
+            postVerifyCandidates: verifiedResult.recommendations.map((product) => candidateSnapshot(product)),
+            postFilterCandidates: requirementFilteredResult.recommendations.map((product) => candidateSnapshot(product)),
           }
         : undefined,
       serperCandidateCount: serperResult.stats.collectedCandidates,

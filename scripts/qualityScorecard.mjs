@@ -174,32 +174,34 @@ const totalSec = Math.round(results.reduce((a, r) => a + r.avgMs * RUNS, 0) / 10
 out(`\ncost proxy: ${totalCalls} searches | ${totalSerper} Serper calls | ${totalSec}s wall (OpenAI token cost not exposed by the API)`);
 out(`errors ${results.reduce((a, r) => a + r.errors, 0)}/${totalCalls}`);
 
-// ---- Stage funnel: where are the CORE LEADERS lost? (RR_FUNNEL=1) ----
+// ---- Stage funnel: which exact stage drops each CORE LEADER? (RR_FUNNEL=1) ----
 if (process.env.RR_FUNNEL) {
-  console.log("\n================ STAGE FUNNEL — core-leader coverage by stage ================\n");
-  console.log("query                     | raw | seed | dedupe | cand | filter | final7 | droppedC | rankedLowC | core");
-  console.log("--------------------------+-----+------+--------+------+--------+--------+----------+------------+-----");
+  const ABBR = { candidatePool: "cand", afterCitationVerify: "verify", afterRequirementFilter: "reqFilt", afterEnrichment: "enrich", afterAssets: "assets", afterRescue: "rescue", afterRevalidation: "reval", final: "final" };
+  console.log("\n================ STAGE FUNNEL — core-leader attrition (count surviving each stage) ================\n");
   for (const { g, funnel } of funnelData) {
-    if (!funnel) { console.log(`${g.id.padEnd(25)} | (no funnel)`); continue; }
+    if (!funnel || !funnel.stages) { console.log(`### ${g.id}: (no funnel — fallback path)`); continue; }
     const core = g.coreLeaders || [];
-    const cov = (names) => countCovered(names || [], core);
-    const reached = (item, names) => (names || []).some((n) => covers(n, item));
-    const inFinal = (it) => reached(it, funnel.final7);
-    const inBelow = (it) => reached(it, funnel.belowFinal);
-    const inCand = (it) => reached(it, funnel.candidatePool) || reached(it, funnel.raw);
-    const rankedLow = core.filter((it) => inBelow(it) && !inFinal(it)).length;
-    const dropped = core.filter((it) => inCand(it) && !inFinal(it) && !inBelow(it)).length;
-    console.log(
-      `${g.id.padEnd(25)} | ${String(cov(funnel.raw)).padEnd(3)} | ${String(cov(funnel.seeds)).padEnd(4)} | ${String(cov(funnel.postDedupe)).padEnd(6)} | ${String(cov(funnel.candidatePool)).padEnd(4)} | ${String(cov(funnel.postFilter)).padEnd(6)} | ${String(cov(funnel.final7)).padEnd(6)} | ${String(dropped).padEnd(8)} | ${String(rankedLow).padEnd(10)} | ${core.length}`,
-    );
-    const lostFilter = core.filter((it) => reached(it, funnel.candidatePool) && !reached(it, funnel.postFilter)).map((it) => it.brand);
-    const lostRank = core.filter((it) => reached(it, funnel.postFilter) && !inFinal(it)).map((it) => it.brand);
-    const neverFound = core.filter((it) => !inCand(it)).map((it) => it.brand);
-    if (lostFilter.length) console.log(`    lost at FILTER:   ${lostFilter.join(", ")}`);
-    if (lostRank.length) console.log(`    lost at RANKING:  ${lostRank.join(", ")}`);
-    if (neverFound.length) console.log(`    never discovered: ${neverFound.join(", ")}`);
+    const covers1 = (item, names) => (names || []).some((n) => covers(n, item));
+    const stageCov = funnel.stages.map((s) => ({ name: ABBR[s.stage] || s.stage, n: core.filter((it) => covers1(it, s.names)).length, names: s.names }));
+    console.log(`### ${g.id}  (core=${core.length})`);
+    console.log("   " + stageCov.map((s) => `${s.name}=${s.n}`).join("  →  "));
+    // per-leader: last stage present -> dropped after that stage
+    const snap = (it) => [...(funnel.postFilterCandidates || []), ...(funnel.postVerifyCandidates || []), ...(funnel.poolCandidates || [])].find((c) => covers(c.name, it));
+    for (const it of core) {
+      const present = funnel.stages.map((s) => covers1(it, s.names));
+      if (!present[0]) continue; // never in candidate pool = discovery miss (reported separately)
+      const lastIdx = present.lastIndexOf(true);
+      if (lastIdx === funnel.stages.length - 1) continue; // survived to final
+      const droppedAfter = ABBR[funnel.stages[lastIdx].stage];
+      const s = snap(it);
+      const detail = s ? `tier${s.sourceTier} price=${s.priceVerified ? "verified" : "unverified"}(${(s.price || "—").slice(0, 14)}) cites=${s.evidenceCount} req=${s.requirement ? `${s.requirement.passed}/${s.requirement.failed}f/${s.requirement.unknown}u` : "n/a"}` : "(no snapshot)";
+      console.log(`     DROP ${it.brand.padEnd(14)} after ${String(droppedAfter).padEnd(7)} | ${detail}`);
+    }
+    const neverFound = core.filter((it) => !covers1(it, funnel.stages[0].names));
+    if (neverFound.length) console.log(`     never discovered: ${neverFound.map((it) => it.brand).join(", ")}`);
+    console.log("");
   }
-  console.log("\nraw=discovered  dedupe=post-canonical  cand=pool  filter=post-requirement  final7=shown  droppedC/rankedLowC=leaders lost after discovery");
+  console.log("stages: cand→verify(citations)→reqFilt(requirements)→enrich→assets→rescue→reval→final");
 }
 
 writeFileSync("./.rr_baseline.json", JSON.stringify(results, null, 2));
