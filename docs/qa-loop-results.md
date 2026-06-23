@@ -1903,3 +1903,43 @@ See `docs/agent-next-task.md`.
 ### Report
 
 See `docs/agent-loop-report.md`.
+
+---
+
+## 🟩 **Claude QA Update — 2026-06-23 10:29**
+
+### Phase 0 quality baseline (two-scorecard harness vs gold benchmark)
+
+Measurement only — no pipeline changes. Tooling: `scripts/qualityScorecard.mjs` + `scripts/goldBenchmark.mjs` (14 gold queries, 2 runs each). **This is the number every later phase must beat.**
+
+**BROAD scorecard (goal: surface the core market leaders)**
+
+| query | poolCore | final7Core | stab | wrong-type | weak#1 | price | exacts |
+|---|---|---|---|---|---|---|---|
+| robot-vacuum | 3/7 | 3/7 | 8% | leak | WEAK | 57% | [7,7] |
+| office-chair | 2/7 | 2/7 | 56% | ok | ok | 79% | [7,7] |
+| air-purifier | 5/7 | 5/7 | 8% | ok | ok | 93% | [7,7] |
+| gas-grill | 3/7 | 3/7 | 8% | leak | WEAK | 54% | [6,7] |
+| cordless-drill | 4/7 | 4/7 | 17% | ok | WEAK | 7% | [7,7] |
+| toaster-oven | 3/7 | 3/7 | 40% | leak | ok | 50% | [7,7] |
+| shop-vac | 1/7 | 1/7 | 0% | ok | WEAK | 73% | [4,7] |
+| dog-feeder | 3/7 | 3/7 | 17% | ok | WEAK | 86% | [7,7] |
+
+**mean poolCore 3.0/7 (target ≥5) · final7Core 3.0 · wrong-type leaks 3/8 · weak#1 5/8 · stability 19% · price 62%**
+
+**CONSTRAINT scorecard (goal: satisfy hard requirements)**
+
+| query | result | budgetViol | feat-unconf | price | wrong-type | weak#1 |
+|---|---|---|---|---|---|---|
+| robot-vac <$300 self-empty | **EMPTY** | - | - | 0% | ok | ok |
+| office-chair <$300 lumbar | [1,1] | 0 | 0 | 50% | ok | WEAK |
+| gas-grill <$600 4-burner | [3,2] | 0 | 0 | 100% | **WINS#1** | WEAK |
+| air-purifier large HEPA | [3,4] | 0 | 2 | 57% | ok | WEAK |
+| cordless-drill <$150 brushless | [1,0] | 0 | 0 | 100% | ok | ok |
+| dog-feeder <$80 | [3,3] | 0 | 0 | 100% | ok | WEAK |
+
+**EMPTY 1/6 · budget violations 0 · feature-unconfirmed 2 · wrong-type leaks 1/6 (1 WINS#1)**
+
+**Cost proxy:** 28 searches · 1135 Serper calls (~40/search) · ~86s/search · OpenAI token cost not exposed by the API.
+
+**Headline failures:** (1) missing core leaders — mean 3/7, only air-purifier hits ≥5; (2) weak Best Overall — 5/8 broad + 4/6 constraint; (3) wrong-type leakage — 3/8 broad, and a wrong type WINS#1 on the gas-grill constraint; (4) price confidence — cordless-drill 7%, several 50–57%; (5) instability — mean 19%; (6) one EMPTY constraint result. Budget compliance is good (0 violations) when results exist.
