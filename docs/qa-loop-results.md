@@ -1943,3 +1943,32 @@ Measurement only — no pipeline changes. Tooling: `scripts/qualityScorecard.mjs
 **Cost proxy:** 28 searches · 1135 Serper calls (~40/search) · ~86s/search · OpenAI token cost not exposed by the API.
 
 **Headline failures:** (1) missing core leaders — mean 3/7, only air-purifier hits ≥5; (2) weak Best Overall — 5/8 broad + 4/6 constraint; (3) wrong-type leakage — 3/8 broad, and a wrong type WINS#1 on the gas-grill constraint; (4) price confidence — cordless-drill 7%, several 50–57%; (5) instability — mean 19%; (6) one EMPTY constraint result. Budget compliance is good (0 violations) when results exist.
+
+---
+
+## 🟩 **Claude QA Update — 2026-06-23 11:44**
+
+### Phase 1 result — source-tiered discovery (before → after, 14×2 baseline)
+
+Generalized discovery only. Same gold benchmark + scorecard.
+
+**BROAD aggregate**
+
+| metric | Phase 0 | Phase 1 | target | verdict |
+|---|---|---|---|---|
+| mean poolCore | 3.0/7 | **3.4/7** | ≥4.5 | improved, below target |
+| mean final7Core | 3.0 | **3.3** | ≥4.0 | improved, below target |
+| weak#1 | 5/8 | **4/8** | ≤3/8 | improved, just short |
+| wrong-type leaks | 3/8 | **2/8** | ≤1/8 | improved, just short |
+| stability | 19% | **12%** | — | regressed (breadth↔variance) |
+| price | 62% | 58% | — | ~flat |
+
+Per-query coverage: office-chair 2→4, shop-vac 1→3, gas-grill 3→2, others ~flat.
+
+**CONSTRAINT:** EMPTY 1/6 → **0/6** (fixed robot-vac); wrong-type WINS#1 1 → **0** (fixed gas-grill); budget violations 0 → 0; feature-unconfirmed 2 → 7 (air-purifier now returns 7, more unconfirmed).
+
+**Cost:** 1135 → **1280** Serper calls (**+12.8%**, target ≤+25–40%) — PASS.
+
+**Diagnostic:** live probe shows seeds now include real leaders (Dreame, Roborock, Shark, Roomba) and the displayed set carried 4 core leaders in one run — discovery now finds the leaders; the remaining displayed-coverage gap is RANKING (Phase 4).
+
+**Verdict: Phase 1 PARTIAL PASS** — all do-not-regress targets met; all four improvement targets moved right but short of the aspirational numbers. Next: expose candidate-pool names in debug to separate discovery vs ranking coverage.
