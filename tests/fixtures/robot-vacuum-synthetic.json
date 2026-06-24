@@ -1,0 +1,353 @@
+{
+  "_query": "best robot vacuum",
+  "_savedAt": "2026-06-24T00:00:00.000Z",
+  "_version": "1",
+  "_synthetic": true,
+  "_goldLeaders": [
+    "Roborock S8 Pro Ultra",
+    "iRobot Roomba j7+",
+    "Shark Matrix RV2502WD"
+  ],
+  "result": {
+    "exactMatches": [
+      {
+        "recommendation_type": "Best Match",
+        "rank": 1,
+        "name": "Roborock S8 Pro Ultra",
+        "category": "Robot Vacuum",
+        "product_page_url": "https://us.roborock.com/products/roborock-s8-pro-ultra",
+        "product_image_url": "",
+        "why_recommended": "Top-rated self-emptying robot vacuum with exceptional navigation and mopping.",
+        "pros": ["Obstacle avoidance", "Self-emptying dock", "Strong suction"],
+        "cons": ["Expensive"],
+        "common_complaints": [],
+        "estimated_price_range": "$1,199",
+        "confidence_score": 82,
+        "source_consensus": "Strong",
+        "price_value_verdict": "Premium but worth it for the features.",
+        "best_for": "Homes with pets and furniture",
+        "not_for": ["Tight budgets"],
+        "citations": [
+          {
+            "title": "Roborock S8 Pro Ultra – Official Product Page",
+            "url": "https://us.roborock.com/products/roborock-s8-pro-ultra",
+            "what_it_supports": "Product specs and pricing",
+            "citation_type": "product-page-self"
+          }
+        ]
+      },
+      {
+        "recommendation_type": "Best Match",
+        "rank": 2,
+        "name": "iRobot Roomba j7+",
+        "category": "Robot Vacuum",
+        "product_page_url": "https://www.irobot.com/en_US/roomba-j7-plus/4650875.html",
+        "product_image_url": "",
+        "why_recommended": "Excellent object avoidance and self-emptying base.",
+        "pros": ["Smart mapping", "Self-emptying"],
+        "cons": ["Less powerful suction than competitors"],
+        "common_complaints": [],
+        "estimated_price_range": "$649",
+        "confidence_score": 78,
+        "source_consensus": "Strong",
+        "price_value_verdict": "Good value for auto-empty.",
+        "best_for": "Families with kids and toys on floors",
+        "not_for": ["Pet hair focus"],
+        "citations": [
+          {
+            "title": "iRobot Roomba j7+ – Official Product Page",
+            "url": "https://www.irobot.com/en_US/roomba-j7-plus/4650875.html",
+            "what_it_supports": "Product specs and self-emptying base",
+            "citation_type": "product-page-self"
+          }
+        ]
+      },
+      {
+        "recommendation_type": "Best Match",
+        "rank": 3,
+        "name": "iRobot Roomba i7+",
+        "category": "Robot Vacuum",
+        "product_page_url": "https://www.irobot.com/en_US/roomba-i7-plus/7550.html",
+        "product_image_url": "",
+        "why_recommended": "Proven workhorse with strong editorial support.",
+        "pros": ["Self-emptying", "Strong editorial reviews", "Reliable navigation"],
+        "cons": ["Older model"],
+        "common_complaints": [],
+        "estimated_price_range": "$499",
+        "confidence_score": 85,
+        "source_consensus": "Strong",
+        "price_value_verdict": "Strong value for editorial-validated performance.",
+        "best_for": "Buyers who trust editorial reviews",
+        "not_for": ["Latest-gen seekers"],
+        "citations": [
+          {
+            "title": "The Best Robot Vacuums",
+            "url": "https://www.wirecutter.com/reviews/best-robot-vacuums",
+            "what_it_supports": "Top pick for most people",
+            "citation_type": "independent-editorial"
+          },
+          {
+            "title": "iRobot Roomba i7+ on Amazon",
+            "url": "https://www.amazon.com/dp/B07H6VMPKM",
+            "what_it_supports": "Price and availability",
+            "citation_type": "retailer-marketplace"
+          }
+        ]
+      },
+      {
+        "recommendation_type": "Best Match",
+        "rank": 4,
+        "name": "Eufy RoboVac X9 Pro",
+        "category": "Robot Vacuum",
+        "product_page_url": "https://www.amazon.com/dp/B0BVMRKZFJ",
+        "product_image_url": "",
+        "why_recommended": "Strong mopping + vacuuming combo at a competitive price.",
+        "pros": ["Mopping capability", "Good price"],
+        "cons": ["Average navigation"],
+        "common_complaints": [],
+        "estimated_price_range": "$699",
+        "confidence_score": 72,
+        "source_consensus": "Mixed",
+        "price_value_verdict": "Good combo value.",
+        "best_for": "Hardwood floor owners",
+        "not_for": ["Carpet-heavy homes"],
+        "citations": [
+          {
+            "title": "Eufy RoboVac X9 Pro on Amazon",
+            "url": "https://www.amazon.com/dp/B0BVMRKZFJ",
+            "what_it_supports": "Price and reviews",
+            "citation_type": "retailer-marketplace"
+          }
+        ]
+      }
+    ],
+    "nearMatches": []
+  },
+  "debug": {
+    "stageFunnel": {
+      "raw": [
+        "Roborock S8 Pro Ultra",
+        "iRobot Roomba j7+",
+        "iRobot Roomba i7+",
+        "Shark Matrix RV2502WD",
+        "Eufy RoboVac X9 Pro",
+        "Bissell SpinWave 2507",
+        "Dreame L10s Ultra"
+      ],
+      "seeds": ["Roborock S8 Pro Ultra", "iRobot Roomba j7+", "iRobot Roomba i7+"],
+      "rejectedCheap": [],
+      "stages": [
+        {
+          "stage": "candidatePool",
+          "names": [
+            "Roborock S8 Pro Ultra",
+            "iRobot Roomba j7+",
+            "iRobot Roomba i7+",
+            "Shark Matrix RV2502WD",
+            "Eufy RoboVac X9 Pro",
+            "Bissell SpinWave 2507",
+            "Dreame L10s Ultra"
+          ]
+        },
+        {
+          "stage": "afterCitationVerify",
+          "names": [
+            "iRobot Roomba i7+",
+            "Eufy RoboVac X9 Pro"
+          ]
+        },
+        {
+          "stage": "afterRequirementFilter",
+          "names": [
+            "iRobot Roomba i7+",
+            "Eufy RoboVac X9 Pro"
+          ]
+        },
+        {
+          "stage": "afterEnrichment",
+          "names": [
+            "iRobot Roomba i7+",
+            "Eufy RoboVac X9 Pro"
+          ]
+        },
+        {
+          "stage": "afterAssets",
+          "names": [
+            "iRobot Roomba i7+",
+            "Eufy RoboVac X9 Pro"
+          ]
+        },
+        {
+          "stage": "afterRescue",
+          "names": [
+            "iRobot Roomba i7+",
+            "Eufy RoboVac X9 Pro",
+            "Roborock S8 Pro Ultra",
+            "iRobot Roomba j7+"
+          ]
+        },
+        {
+          "stage": "afterRevalidation",
+          "names": [
+            "Roborock S8 Pro Ultra",
+            "iRobot Roomba j7+",
+            "iRobot Roomba i7+",
+            "Eufy RoboVac X9 Pro"
+          ]
+        },
+        {
+          "stage": "final",
+          "names": [
+            "Roborock S8 Pro Ultra",
+            "iRobot Roomba j7+",
+            "iRobot Roomba i7+",
+            "Eufy RoboVac X9 Pro"
+          ]
+        }
+      ],
+      "poolCandidates": [
+        {
+          "name": "Roborock S8 Pro Ultra",
+          "brand": "Roborock",
+          "model": "S8 Pro Ultra",
+          "sourceTier": 3,
+          "evidenceCount": 0,
+          "hosts": ["us.roborock.com"],
+          "price": "$1,199",
+          "priceVerified": true,
+          "requirement": { "passed": 0, "failed": 0, "unknown": 0 },
+          "score": null
+        },
+        {
+          "name": "iRobot Roomba j7+",
+          "brand": "iRobot",
+          "model": "j7+",
+          "sourceTier": 3,
+          "evidenceCount": 0,
+          "hosts": ["irobot.com"],
+          "price": "$649",
+          "priceVerified": true,
+          "requirement": { "passed": 0, "failed": 0, "unknown": 0 },
+          "score": null
+        },
+        {
+          "name": "iRobot Roomba i7+",
+          "brand": "iRobot",
+          "model": "i7+",
+          "sourceTier": 3,
+          "evidenceCount": 2,
+          "hosts": ["irobot.com", "wirecutter.com", "amazon.com"],
+          "price": "$499",
+          "priceVerified": true,
+          "requirement": { "passed": 0, "failed": 0, "unknown": 0 },
+          "score": null
+        },
+        {
+          "name": "Shark Matrix RV2502WD",
+          "brand": "Shark",
+          "model": "RV2502WD",
+          "sourceTier": 3,
+          "evidenceCount": 0,
+          "hosts": ["sharkclean.com"],
+          "price": "$429",
+          "priceVerified": true,
+          "requirement": { "passed": 0, "failed": 0, "unknown": 0 },
+          "score": null
+        },
+        {
+          "name": "Eufy RoboVac X9 Pro",
+          "brand": "Eufy",
+          "model": "X9 Pro",
+          "sourceTier": 2,
+          "evidenceCount": 1,
+          "hosts": ["amazon.com"],
+          "price": "$699",
+          "priceVerified": true,
+          "requirement": { "passed": 0, "failed": 0, "unknown": 0 },
+          "score": null
+        },
+        {
+          "name": "Bissell SpinWave 2507",
+          "brand": "Bissell",
+          "model": "2507",
+          "sourceTier": 3,
+          "evidenceCount": 0,
+          "hosts": ["bissell.com"],
+          "price": "$199",
+          "priceVerified": true,
+          "requirement": { "passed": 0, "failed": 0, "unknown": 0 },
+          "score": null
+        },
+        {
+          "name": "Dreame L10s Ultra",
+          "brand": "Dreame",
+          "model": "L10s Ultra",
+          "sourceTier": 3,
+          "evidenceCount": 0,
+          "hosts": ["dreametech.com"],
+          "price": "$799",
+          "priceVerified": true,
+          "requirement": { "passed": 0, "failed": 0, "unknown": 0 },
+          "score": null
+        }
+      ],
+      "postVerifyCandidates": [
+        {
+          "name": "iRobot Roomba i7+",
+          "brand": "iRobot",
+          "model": "i7+",
+          "sourceTier": 3,
+          "evidenceCount": 2,
+          "hosts": ["irobot.com", "wirecutter.com", "amazon.com"],
+          "price": "$499",
+          "priceVerified": true,
+          "requirement": { "passed": 0, "failed": 0, "unknown": 0 },
+          "score": null
+        },
+        {
+          "name": "Eufy RoboVac X9 Pro",
+          "brand": "Eufy",
+          "model": "X9 Pro",
+          "sourceTier": 2,
+          "evidenceCount": 1,
+          "hosts": ["amazon.com"],
+          "price": "$699",
+          "priceVerified": true,
+          "requirement": { "passed": 0, "failed": 0, "unknown": 0 },
+          "score": null
+        }
+      ],
+      "postFilterCandidates": [
+        {
+          "name": "iRobot Roomba i7+",
+          "brand": "iRobot",
+          "model": "i7+",
+          "sourceTier": 3,
+          "evidenceCount": 2,
+          "hosts": ["irobot.com", "wirecutter.com", "amazon.com"],
+          "price": "$499",
+          "priceVerified": true,
+          "requirement": { "passed": 0, "failed": 0, "unknown": 0 },
+          "score": null
+        },
+        {
+          "name": "Eufy RoboVac X9 Pro",
+          "brand": "Eufy",
+          "model": "X9 Pro",
+          "sourceTier": 2,
+          "evidenceCount": 1,
+          "hosts": ["amazon.com"],
+          "price": "$699",
+          "priceVerified": true,
+          "requirement": { "passed": 0, "failed": 0, "unknown": 0 },
+          "score": null
+        }
+      ]
+    },
+    "searchPlanStages": {
+      "pass1": ["best robot vacuum", "robot vacuum cleaner"],
+      "pass2": ["robot vacuum self-emptying", "robot vacuum pet hair"],
+      "pass3": []
+    }
+  }
+}

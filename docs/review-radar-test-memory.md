@@ -40,7 +40,7 @@ The scorecard (`scripts/qualityScorecard.mjs`) has explicit modes. Each prints a
 
 | Mode | Command | Cost | Answers |
 |---|---|---|---|
-| **replay-only** | (Phase 2 — not built yet) | 0 | Deterministic code change on a saved candidate set. No Serper/OpenAI. |
+| **replay-only** | `npm run qa:replay -- <fixture>` or `npm run qa:replay -- --all` | 0 | Stage funnel, citation strength, thin/weak winner, lost-leader report from a saved fixture. No Serper/OpenAI. |
 | **citation replay** | `node scripts/citationStrengthDiagnostic.mjs --replay` | 0 | Re-inspect a saved payload's citation strength with zero spend. |
 | **diagnostic** | `npm run qa:scorecard -- --mode diagnostic` | ~470 Serper / ~12 min | Did a SPECIFIC suspected issue change at a known drop point? (smoke, not proof) |
 | **stress** | `npm run qa:scorecard -- --mode stress --filter <id> --confirm` | ~376 Serper / ~10 min | Why does ONE query swing so much? |
@@ -62,7 +62,7 @@ The scorecard (`scripts/qualityScorecard.mjs`) has explicit modes. Each prints a
 | Phase | Goal | Status |
 |---|---|---|
 | **1. Measurement foundation** | Test modes, cost guard, cost estimates, before/after rules, this doc | **DONE (2026-06-24)** |
-| **2. Replay fixtures** | Save live debug payloads + candidate pools to `tests/fixtures/review-radar-live/`; replay tests for citation verify, citation strength, requirement filter, price trust, product-type, revalidation, final selection. Replay script `scripts/replay-quality-fixtures.mjs`. | NEXT |
+| **2. Replay fixtures** | Save live debug payloads + candidate pools to `tests/fixtures/review-radar-live/`; replay tests for citation verify, citation strength, requirement filter, price trust, product-type, revalidation, final selection. Replay script `scripts/replay-quality-fixtures.mjs`. | **DONE (2026-06-24)** |
 | **3. Lost-leader diagnostics** | Trace each expected leader through every stage (never-found → raw → seed → pool → citation → requirement → price → reval → near → ranked-low → duplicate-collapsed → final 7). Extend the funnel/scorecard. | Planned |
 | **4. Variance & confidence** | Scorecard reports mean/best/worst/range/stddev/stability; PASS/FAIL/INCONCLUSIVE classification; confidence warning when noise > effect. Replaces the misleading `best()` metric. | Planned |
 | **5. Discovery quality** | Source-tiered discovery finds true leaders (editorial/lab, marketplace, manufacturer, community); better seed extraction; no source spam. | Planned (after measurement) |
@@ -157,6 +157,7 @@ The scorecard (`scripts/qualityScorecard.mjs`) has explicit modes. Each prints a
 | Theme 1 (plan) | Full structured requirements at discovery filter | Committed: spec/size/color conflicts rejected at candidatePool stage |
 | Citation strength | `citation_type` tagging + weak#1 vs thin#1 split + `citationStrengthDiagnostic.mjs` | Committed 2026-06-24: measurement foundation for thin-winner risk |
 | Measurement Phase 1 | Scorecard test modes + cost guard + cost estimates + this doc | Committed 2026-06-24: expensive baselines now require `--confirm` + approval |
+| Measurement Phase 2 | Replay fixtures: `tests/fixtures/`, `replay-quality-fixtures.mjs`, `save-debug-fixture.mjs`, 14 deterministic tests on synthetic fixture | Committed 2026-06-24: zero-cost stage-funnel + citation-strength replay proven on synthetic fixture |
 
 ---
 
@@ -238,9 +239,14 @@ If run-to-run variance in core leaders (±2–3) exceeds the expected effect siz
 | `lib/recommendationFunnel.ts` | Stage snapshot types for funnel debug |
 | `lib/productVariantFamily.ts` | Size-aware variant collapse |
 | `lib/search/sourceTier.ts` | Domain → Tier 1/2/3/4 classifier |
+| `scripts/replay-quality-fixtures.mjs` | Load a saved debug payload; report stage funnel, citation strength, thin/weak winner, lost leaders. Exports `analyzeFixture()` for tests. `npm run qa:replay -- <file>` or `--all`. |
+| `scripts/save-debug-fixture.mjs` | Call the API once with debug header; save payload to `tests/fixtures/review-radar-live/<slug>.json`. `npm run qa:save-fixture -- "query" [--gold "Brand Model"]`. |
+| `tests/fixtures/robot-vacuum-synthetic.json` | Synthetic "best robot vacuum" fixture (7 pool candidates, citation-verify drop, rescue pattern, thin winner, 1 lost leader). Baseline for replay tests. |
+| `tests/fixtures/review-radar-live/` | Live fixtures saved by `save-debug-fixture.mjs`. Not committed (add `_goldLeaders` before saving). |
+| `tests/replayFixtures.test.mjs` | 14 deterministic tests on the synthetic fixture — stage funnel, citation strength, thin-winner, lost-leader drop-point. 0 API calls. |
 | `docs/qa-loop-results.md` | Append-only QA log (Claude: 🟩 green, Codex: 🟧 orange) |
 | `ReviewRadar-Overview.md` | Repo-root source of truth — read before major changes |
 
 ---
 
-*Last updated: 2026-06-24 (Measurement Phase 1: test modes + cost guard + corrected cost numbers). Maintained append-only — add entries, do not overwrite prior findings.*
+*Last updated: 2026-06-24 (Measurement Phase 2: replay fixtures — `replay-quality-fixtures.mjs`, `save-debug-fixture.mjs`, synthetic fixture, 14 deterministic tests). Maintained append-only — add entries, do not overwrite prior findings.*
