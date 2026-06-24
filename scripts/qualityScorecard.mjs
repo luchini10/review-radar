@@ -14,18 +14,62 @@
 //   - Writes a machine record (.rr_baseline.json) + a markdown block (.rr_baseline.md)
 //     for the QA log.
 //
-// Usage:
-//   node scripts/qualityScorecard.mjs                              # all, RR_RUNS (default 2)
-//   RR_RUNS=1 RR_FILTER=robot node scripts/qualityScorecard.mjs    # subset, 1 run
+// Usage (test modes — see docs/review-radar-test-memory.md "Test Modes"):
+//   node scripts/qualityScorecard.mjs --mode diagnostic            # 5-query smoke, runs freely
+//   node scripts/qualityScorecard.mjs --mode normal --confirm      # full 14×2 baseline (approval-gated)
+//   node scripts/qualityScorecard.mjs --mode high --confirm        # full 14×5 high-confidence baseline
+//   node scripts/qualityScorecard.mjs --mode stress --filter shop-vac --confirm   # 1 query × 8 runs
+//   node scripts/qualityScorecard.mjs --mode normal --dry-run      # PRINT cost plan only, no calls
+//   RR_RUNS=1 RR_FILTER=robot node scripts/qualityScorecard.mjs    # legacy env-driven subset
+//
+// COST GUARD: any run whose estimated Serper calls exceed GUARD_SERPER refuses to
+// execute unless --confirm is passed. --dry-run prints the cost plan and exits for
+// ANY mode. This makes "don't run an expensive baseline by accident" a code rule,
+// not just a doc convention.
 
 import { writeFileSync } from "node:fs";
 import { GOLD } from "./goldBenchmark.mjs";
 
+// ── CLI flags (cross-platform; npm passes args after `--`) ───────────────────
+const ARGV = process.argv.slice(2);
+const hasFlag = (name) => ARGV.includes(name);
+const flagVal = (name) => {
+  const i = ARGV.indexOf(name);
+  return i >= 0 && ARGV[i + 1] && !ARGV[i + 1].startsWith("--") ? ARGV[i + 1] : null;
+};
+
 const BASE = process.env.RR_BASE || "http://localhost:3000";
-const RUNS = Number(process.env.RR_RUNS || 2);
-const FILTER = (process.env.RR_FILTER || "").split(",").map((s) => s.trim()).filter(Boolean);
-const TYPE = process.env.RR_TYPE || "";
+const FILTER = (flagVal("--filter") || process.env.RR_FILTER || "")
+  .split(",").map((s) => s.trim()).filter(Boolean);
+const TYPE = flagVal("--type") || process.env.RR_TYPE || "";
+const MODE = (flagVal("--mode") || process.env.RR_MODE || "").toLowerCase();
+const DRY_RUN = hasFlag("--dry-run") || process.env.RR_DRYRUN === "1";
+const CONFIRM = hasFlag("--confirm") || process.env.RR_CONFIRM === "1";
 const TIMEOUT_MS = 260000;
+
+// ── Cost model (estimates only, derived from the LAST real baseline) ─────────
+// Last measured: 1325 Serper calls / 28 searches ≈ 47/search; ~30 min / 28 ≈ 75s/search.
+// These are rough — actual cost varies with discovery depth, rescue, and seeding.
+const SERPER_PER_SEARCH = 47;
+const SECONDS_PER_SEARCH = 75;
+const GUARD_SERPER = 600; // ≈ 13 searches; full-set baselines exceed this, diagnostics don't
+
+// ── Test-mode presets (runs/query + query subset + rationale) ────────────────
+// Subset IDs reference the gold benchmark (test data — allowed to name products).
+const DIAGNOSTIC_IDS = [
+  "broad-robot-vacuum",        // known citation-verify wipeout
+  "broad-shop-vac",            // known filter drop (ridgid/craftsman)
+  "broad-gas-grill",           // known discovery miss
+  "con-gas-grill-600-4burner", // constraint filter drop
+  "con-robot-vac-300-selfempty", // constraint + self-empty feature
+];
+const MODES = {
+  diagnostic: { runs: 2, ids: DIAGNOSTIC_IDS, question: "Did a SPECIFIC suspected issue change at a known drop point? (smoke, not proof)" },
+  normal:     { runs: 2, ids: null,           question: "Broad before/after smoke across all 14 queries. Too noisy alone to prove small gains." },
+  high:       { runs: 5, ids: null,           question: "Is a change LARGER than run-to-run variance? (5 runs → mean/range/stability)" },
+  stress:     { runs: 8, ids: null,           question: "Why does ONE query swing so much? (single query × many runs — requires --filter)" },
+};
+const RUNS = MODE && MODES[MODE] ? MODES[MODE].runs : Number(process.env.RR_RUNS || 2);
 
 const norm = (s) => ` ${(s || "").toLowerCase().replace(/[^a-z0-9+]+/g, " ").replace(/\s+/g, " ").trim()} `;
 const priceNum = (s) => { const m = (s || "").replace(/,/g, "").match(/\$?\s*(\d+(?:\.\d+)?)/); return m ? Number(m[1]) : null; };
@@ -61,14 +105,23 @@ async function once(g) {
     const serperCalls = (d.serperShoppingCalls || 0) + (d.serperOrganicCalls || 0) + (d.serperRetailerDomainCalls || 0) + (d.serperDirectRetailerCalls || 0) + (d.seedSearchesRun || 0);
     if (o.error) return { ok: false, ms, serperCalls, error: o.error };
     const r = o.result || o;
-    const map = (p) => ({
-      name: p.name || "",
-      text: norm([p.name, p.why_recommended, (p.pros || []).join(" "), (p.cons || []).join(" ")].join(" ")),
-      priceNum: priceNum(p.estimated_price_range),
-      verified: priceVerified(p),
-      citations: (p.citations || []).length,
-      consensus: (p.source_consensus || "").toLowerCase(),
-    });
+    const map = (p) => {
+      const cits = p.citations || [];
+      const citTypes = cits.map(c => c.citation_type || "weak-uncorroborated");
+      const hasIndependent = citTypes.some(t => t === "independent-editorial");
+      const selfCitedOnly = cits.length > 0 && citTypes.every(t => t === "product-page-self");
+      return {
+        name: p.name || "",
+        text: norm([p.name, p.why_recommended, (p.pros || []).join(" "), (p.cons || []).join(" ")].join(" ")),
+        priceNum: priceNum(p.estimated_price_range),
+        verified: priceVerified(p),
+        citations: cits.length,
+        citTypes,
+        hasIndependent,
+        selfCitedOnly,
+        consensus: (p.source_consensus || "").toLowerCase(),
+      };
+    };
     return { ok: true, ms, serperCalls, exact: (r.exactMatches || []).map(map), near: (r.nearMatches || []).map(map), funnel: d.stageFunnel || null };
   } catch (e) {
     return { ok: false, ms: Date.now() - started, serperCalls: 0, error: String(e.name || e) };
@@ -94,10 +147,24 @@ function scoreQuery(g, runs) {
 
   const wrongLeak = ok.some((r) => r.exact.some((p) => nameHitsWrongType(p.name, g.wrongTypeTerms)));
   const wrongWins = ok.some((r) => r.exact[0] && nameHitsWrongType(r.exact[0].name, g.wrongTypeTerms));
+  // weakWinner: genuinely weak #1 (no price, zero citations, wrong type, weak consensus,
+  //   or < 2 citations with NO product-page self-citation).
+  // thinWinner: real product-page self-cite only — not strong, but not the same as uncorroborated.
+  //   Only flagged here; does not count as weakWinner to avoid double-counting.
   const weakWinner = ok.some((r) => {
     const top = r.exact[0];
     if (!top) return false;
-    return !top.verified || top.citations < 2 || /weak|limited/.test(top.consensus) || nameHitsWrongType(top.name, g.wrongTypeTerms);
+    if (nameHitsWrongType(top.name, g.wrongTypeTerms)) return true;   // wrong category
+    if (!top.verified) return true;                                     // no verified price
+    if (top.citations === 0) return true;                               // no citation at all
+    if (top.selfCitedOnly) return /weak|limited/.test(top.consensus);  // self-cited: only weak if consensus also weak
+    return top.citations < 2 || /weak|limited/.test(top.consensus);
+  });
+  const thinWinner = ok.some((r) => {
+    const top = r.exact[0];
+    if (!top) return false;
+    // Thin = self-cited only, but otherwise ok (price verified, consensus not weak).
+    return top.selfCitedOnly && top.verified && !/weak|limited/.test(top.consensus);
   });
 
   const exactCounts = runs.map((r) => (r.exact || []).length);
@@ -118,12 +185,58 @@ function scoreQuery(g, runs) {
   return {
     id: g.id, type: g.type, query: g.query,
     coreTotal: (g.coreLeaders || []).length, altTotal: (g.acceptableAlternates || []).length,
-    poolCore, finalCore, altPool, wrongLeak, wrongWins, weakWinner, exactCounts, emptyRuns, emptyResult,
+    poolCore, finalCore, altPool, wrongLeak, wrongWins, weakWinner, thinWinner, exactCounts, emptyRuns, emptyResult,
     priceOk, stab: stability(ok), budgetViol, featUnconfirmed, avgMs, serperCalls, errors: runs.length - ok.length,
   };
 }
 
-const set = GOLD.filter((g) => (!TYPE || g.type === TYPE) && (!FILTER.length || FILTER.some((f) => g.id.includes(f))));
+// Build the active query set: a mode's `ids` define the subset, but an explicit
+// --filter/--type still narrows further (so `--mode stress --filter shop-vac` works).
+const modeIds = MODE && MODES[MODE] ? MODES[MODE].ids : null;
+const set = GOLD.filter((g) => {
+  if (TYPE && g.type !== TYPE) return false;
+  if (modeIds && !modeIds.includes(g.id)) return false;
+  if (FILTER.length && !FILTER.some((f) => g.id.includes(f))) return false;
+  return true;
+});
+
+// ── Cost plan + guard (printed for every invocation) ─────────────────────────
+const searches = set.length * RUNS;
+const estSerper = searches * SERPER_PER_SEARCH;
+const estSeconds = searches * SECONDS_PER_SEARCH;
+const fmtMin = (s) => `${Math.floor(s / 60)}m${String(s % 60).padStart(2, "0")}s`;
+const modeLabel = MODE && MODES[MODE] ? MODE : (FILTER.length || TYPE ? "custom-subset" : "custom-full");
+const question = MODE && MODES[MODE] ? MODES[MODE].question : "Custom run (no preset). State the question this answers before approving.";
+
+console.log("\n=== ReviewRadar scorecard — COST PLAN ===");
+console.log(`  mode:            ${modeLabel}${DRY_RUN ? " (DRY RUN)" : ""}`);
+console.log(`  queries:         ${set.length}  [${set.map((g) => g.id).join(", ") || "(none — check --filter/--type)"}]`);
+console.log(`  runs/query:      ${RUNS}`);
+console.log(`  total searches:  ${searches}`);
+console.log(`  est Serper calls:~${Math.round(estSerper * 0.8)}–${Math.round(estSerper * 1.2)}  (≈${SERPER_PER_SEARCH}/search, from last baseline)`);
+console.log(`  est runtime:     ~${fmtMin(Math.round(estSeconds * 0.8))}–${fmtMin(Math.round(estSeconds * 1.2))}  (≈${SECONDS_PER_SEARCH}s/search)`);
+console.log(`  answers:         ${question}`);
+console.log(`  reports:         poolCore, final7Core, alt, wrong-type, weak#1/thin#1, price, stability, budget/feature viol`);
+if (MODE === "stress" && !FILTER.length) {
+  console.log("\n  ✖ stress mode needs --filter <id> to target a SINGLE query. Aborting.");
+  process.exit(1);
+}
+if (!set.length) {
+  console.log("\n  ✖ no queries matched. Aborting.");
+  process.exit(1);
+}
+if (DRY_RUN) {
+  console.log("\n  DRY RUN — no live calls made. Re-run without --dry-run to execute.\n");
+  process.exit(0);
+}
+if (estSerper > GUARD_SERPER && !CONFIRM) {
+  console.log(`\n  ⛔ COST GUARD: this run is estimated at ~${estSerper} Serper calls (> ${GUARD_SERPER}).`);
+  console.log("     This is an expensive live baseline. Get explicit approval, then re-run with --confirm.");
+  console.log("     (Or use --mode diagnostic for a cheap 5-query smoke, or --dry-run to preview cost.)\n");
+  process.exit(0);
+}
+console.log(`\n  proceeding with live run${CONFIRM ? " (--confirm)" : ""}...\n`);
+
 const results = [];
 const funnelData = [];
 for (const g of set) {
@@ -145,12 +258,12 @@ const out = (s = "") => { console.log(s); lines.push(s); };
 const broad = results.filter((r) => r.type === "broad");
 if (broad.length) {
   out("\n## BROAD SCORECARD  (goal: surface the CORE LEADERS)\n");
-  out("| query | poolCore | final7Core | alt | stab | wrong-type | weak#1 | price | exacts | avg s |");
-  out("|---|---|---|---|---|---|---|---|---|---|");
+  out("| query | poolCore | final7Core | alt | stab | wrong-type | weak#1 | thin#1 | price | exacts | avg s |");
+  out("|---|---|---|---|---|---|---|---|---|---|---|");
   for (const r of broad)
-    out(`| ${r.id} | ${r.poolCore}/${r.coreTotal} | ${r.finalCore}/${r.coreTotal} | ${r.altPool} | ${r.stab}% | ${wt(r)} | ${r.weakWinner ? "WEAK" : "ok"} | ${r.priceOk}% | [${r.exactCounts.join(",")}] | ${(r.avgMs / 1000).toFixed(0)} |`);
-  out(`\nmean poolCore ${mean(broad.map((r) => r.poolCore)).toFixed(1)}/${broad[0].coreTotal} | mean final7Core ${mean(broad.map((r) => r.finalCore)).toFixed(1)} | wrong-type leaks ${broad.filter((r) => r.wrongLeak).length}/${broad.length} (wins#1 ${broad.filter((r) => r.wrongWins).length}) | weak#1 ${broad.filter((r) => r.weakWinner).length}/${broad.length} | mean stability ${Math.round(mean(broad.map((r) => r.stab)))}% | mean price ${Math.round(mean(broad.map((r) => r.priceOk)))}%`);
-  out("target: poolCore>=5, final7Core>=3, 0 wrong-type, 0 weak#1");
+    out(`| ${r.id} | ${r.poolCore}/${r.coreTotal} | ${r.finalCore}/${r.coreTotal} | ${r.altPool} | ${r.stab}% | ${wt(r)} | ${r.weakWinner ? "WEAK" : "ok"} | ${r.thinWinner ? "THIN" : "ok"} | ${r.priceOk}% | [${r.exactCounts.join(",")}] | ${(r.avgMs / 1000).toFixed(0)} |`);
+  out(`\nmean poolCore ${mean(broad.map((r) => r.poolCore)).toFixed(1)}/${broad[0].coreTotal} | mean final7Core ${mean(broad.map((r) => r.finalCore)).toFixed(1)} | wrong-type leaks ${broad.filter((r) => r.wrongLeak).length}/${broad.length} (wins#1 ${broad.filter((r) => r.wrongWins).length}) | weak#1 ${broad.filter((r) => r.weakWinner).length}/${broad.length} | thin#1 ${broad.filter((r) => r.thinWinner).length}/${broad.length} (self-cited-only winner, price ok) | mean stability ${Math.round(mean(broad.map((r) => r.stab)))}% | mean price ${Math.round(mean(broad.map((r) => r.priceOk)))}%`);
+  out("target: poolCore>=5, final7Core>=3, 0 wrong-type, 0 weak#1 — thin#1 is measurement only (no target yet)");
 }
 
 const con = results.filter((r) => r.type === "constraint");

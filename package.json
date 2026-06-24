@@ -12,6 +12,8 @@
     "qa:loop": "node scripts/agent-loop-controller.mjs",
     "qa:worker": "node scripts/qa-worker.mjs",
     "qa:verify": "node scripts/verify-loop-result.mjs",
+    "qa:scorecard": "node scripts/qualityScorecard.mjs",
+    "qa:plan": "node scripts/qualityScorecard.mjs --dry-run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },
