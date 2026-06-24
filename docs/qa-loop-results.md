@@ -2017,3 +2017,30 @@ Added a full per-stage pipeline trace (cand → citation-verify → requirement-
 **Proposed STEP-2 fix (generic, trust-preserving):** allow a candidate with its OWN product-page URL (Serper-discovered, or a recognized retailer/brand/Tier-1–2 domain) to survive citation verification as self-cited — attach its product URL as a verified citation before the drop. Still requires a real product URL + source metadata; uncited prose / non-product pages stay dropped. No category- or product-specific logic. Then rerun the 5-query diagnostic + full Phase 0/1 baseline.
 
 Note: high run-to-run variance persists (robot-vacuum cand was 5 one run, 3 the next) — the citation-verify REMOVED pattern held across both.
+
+---
+
+## 🟩 **Claude QA Update — 2026-06-24 00:32**
+
+### Filtering STEP 2 result — citation-rescue fix (honest, inconclusive)
+
+Full 14×2 baseline after the product-page citation rescue:
+
+| metric | Phase 0 | Phase 1 | +citation fix |
+|---|---|---|---|
+| mean poolCore | 3.0 | 3.4 | **2.6** |
+| final7Core | 3.0 | 3.3 | 2.3 |
+| weak#1 | 5/8 | 4/8 | **6/8** |
+| wrong-type leaks | 3/8 | 2/8 | 3/8 |
+| stability | 19% | 12% | 19% |
+| budget violations | 0 | 0 | 0 |
+| constraint EMPTY | 1/6 | 0/6 | 0/6 |
+| Serper calls | 1135 | 1280 | 1325 |
+
+**Mixed/inconclusive.** Two measurements disagree:
+1. **Funnel (controlled): the fix works** — citation-verify drops fell; RIDGID (verified price, 3 cites) now survives verification; 535 tests prove rescue + that article/listing/search/uncited pages still drop.
+2. **End-to-end baseline: no confirmed gain** — coverage came in LOW (2.6 vs Phase 1 3.4), weak#1 up 4→6.
+
+**Why:** (a) weak#1 rise is a real side effect — a rescued product is self-cited by its one product page, and weak#1 flags <2 citations; (b) the coverage drop is most likely VARIANCE — per-query coverage swings ±2–3 (shop-vac 1 here vs 4 in the same-day funnel run), stability 19%. **At 2 runs/query the run-to-run variance now EXCEEDS the effect size — we cannot measure ±1.0 coverage changes. Measurement wall.**
+
+**Decision pending (user):** (A) keep the fix on mechanistic merits + make determinism/variance the next priority so quality changes become measurable; or (B) revert since the only end-to-end number didn't improve. Claude leans A (funnel proof + real bug fixed > one noisy baseline), but flagged for user call. Budget/trust criteria all held (0 budget violations, no wrong-type winners, non-product pages still dropped).
