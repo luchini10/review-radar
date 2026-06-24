@@ -1570,6 +1570,92 @@ describe("requirement validation", () => {
     assert.match(result.disqualifiedReason || "", /Category: refrigerator/);
   });
 
+  it("excludes confirmed wrong-type vacuums from robot vacuum exact and near matches", () => {
+    const wrongTypes = [
+      {
+        label: "stick vacuum",
+        name: "Shark Rocket Bagless Corded Washable Filter Stick Vacuum",
+        why_recommended: "Found as a broader product candidate from Google search results.",
+        pros: ["Corded design.", "Lightweight."],
+      },
+      {
+        label: "wet/dry vac",
+        name: "Milwaukee M18 18-Volt 2 Gal. Lithium-Ion Cordless Wet Dry",
+        why_recommended: "Found as a broader product candidate from Google search results.",
+        pros: ["Compact 11-inch width.", "4.5 rating from 5586 reviews."],
+      },
+      {
+        label: "canister vacuum",
+        name: "KENMORE 200 Series Bagged Canister Vacuum Cleaner BC4002",
+        why_recommended: "Found as a broader product candidate from Google search results.",
+        pros: ["Bagged canister design.", "HEPA filter."],
+      },
+    ];
+
+    for (const { label, name, why_recommended, pros } of wrongTypes) {
+      const result = validateProductAgainstRequirements(
+        buildProduct({ name, why_recommended, pros, category: "robot vacuum self-emptying" }),
+        { category: "robot vacuum self-emptying" },
+      );
+      assert.equal(result.isMatch, false, `${label}: should not be an exact match`);
+      assert.ok(
+        result.missingRequirements.some((r) => /Category:/i.test(r)),
+        `${label}: Category should be a hard fail, not unverified (must be in missingRequirements)`,
+      );
+      assert.match(
+        result.disqualifiedReason || "",
+        /Misses required filter: Category:/,
+        `${label}: disqualifiedReason must start with 'Misses required filter'`,
+      );
+    }
+  });
+
+  it("confirms robot vacuum category when why_recommended identifies the product as a robot vacuum", () => {
+    const result = validateProductAgainstRequirements(
+      buildProduct({
+        name: "Roborock S8 MaxV Ultra",
+        category: "Robot vacuum and mop combo",
+        estimated_price_range: "$799",
+        why_recommended:
+          "Official Roborock pages describe this as a flagship robot vacuum and mop with LiDAR navigation.",
+        pros: ["Obstacle avoidance.", "Self-empty dock."],
+      }),
+      { category: "robot vacuum" },
+    );
+
+    assert.equal(result.isMatch, true);
+    assert.ok(
+      result.matchedRequirements.some((r) => /Category: robot vacuum/i.test(r)),
+    );
+  });
+
+  it("keeps robot vacuum with sparse evidence as near match (unverified, not hard fail)", () => {
+    // Evidence text does not contain 'robot vacuum'; why_recommended describes the dock
+    // but not the product type explicitly. Should be unverified (near match), not excluded.
+    const result = validateProductAgainstRequirements(
+      buildProduct({
+        name: "Roborock S7 MaxV Ultra",
+        category: "Robot vacuum and mop combo",
+        estimated_price_range: "$599",
+        why_recommended:
+          "This older Roborock flagship with automated wash-fill-empty dock and premium vacuum-mop design.",
+        pros: ["Dual rubber brushes.", "Multi-floor mapping system."],
+      }),
+      { category: "robot vacuum" },
+    );
+
+    assert.equal(result.isMatch, false, "sparse evidence: not an exact match");
+    assert.ok(
+      result.unknownRequirements.some((r) => /Category: robot vacuum/i.test(r)),
+      "category should be in unknownRequirements (unverified), not missingRequirements",
+    );
+    assert.ok(
+      !result.missingRequirements.some((r) => /Category: robot vacuum/i.test(r)),
+      "category must NOT be in missingRequirements (would disqualify from near match)",
+    );
+    assert.match(result.disqualifiedReason || "", /Needs verification: Category:/);
+  });
+
   it("validates difficult concrete feature requirements when product evidence supports them", () => {
     const cases = [
       {

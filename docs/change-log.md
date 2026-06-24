@@ -11,6 +11,23 @@ Update this file after:
 
 Do not update this file for tiny typo fixes, formatting-only edits, or internal cleanup that does not change behavior.
 
+## 2026-06-24
+
+### 🟩 Claude — Phase 3B: wrong-type vacuum products blocked from robot vacuum results
+- Wet/dry vacs, stick vacuums, canister vacuums, and handheld vacuums were appearing in exact matches and near matches for robot vacuum searches because `PRODUCT_TYPE_RULES` had no `robot_vacuum` entry. The product-type check returned `{requestedType: null}` for all robot vacuum queries, falling through to a loose category-term check that trusted the LLM's mislabeled `product.category` field.
+- **Fix 1 — `robot_vacuum` rule in `productTypeIntent.ts`:** New rule with `blocked` pattern covering stick/canister/hand/wet-dry/upright/shop-vac vacuums and `allowed` pattern requiring explicit robot vacuum type signals. Wet/dry is matched on "wet dry" alone (without requiring "vac") to handle truncated Serper product titles like "Milwaukee…Wet/Dry …".
+- **Fix 2 — `allowedCheckText` parameter in `classifyProductTypeIntent`:** The `allowed` check can now use a richer text (evidence + `why_recommended`) separate from the `blocked` check. This lets sparse-name products like "Roborock S8 MaxV Ultra" confirm their type via the recommendation narrative ("flagship robot vacuum and mop") without risking that query-echoing text in `why_recommended` (e.g., "ice maker found during refrigerator search") falsely satisfies a component-substitution `satisfiedBy` guard.
+- **Fix 3 — three-state `checkCategory` in `requirementValidation.ts`:** Changed from boolean to `"pass"|"fail"|"unverified"`. Wrong type → `missingRequirements` → disqualified from both exact and near matches (as before for hard failures). Unverified type (product can't prove it's the right type from evidence, but not confirmed wrong) → `unknownRequirements` → allowed as near match with "Needs verification: Category:" label. This is the correct behavior per the design spec.
+- **Outcome:** Milwaukee M18 Wet/Dry Vac, ONE+ Hand Vacuum, Shark Rocket Stick Vacuum, RYOBI Stick Vacuum, KENMORE Canister Vacuum all classified `irrelevant` → excluded from both exact and near matches. Valid robot vacuums (Roborock S8, Dreame X30, iRobot Roomba 105 Vac Robot) retain exact match status. Sparse-evidence products (Roborock S7 MaxV Ultra, iRobot Combo Robot) correctly become near matches.
+- **Scope:** generic fix — applies to all robot vacuum and "robotic vacuum" queries. No product names or brands hardcoded. The same three-state `checkCategory` mechanism also benefits all other product-type categories.
+- Verified: `npm run typecheck`, `npm run lint`, `npm test` (564/564 tests), `node scripts/eval-pipeline.mjs` (red-flag checks clean).
+
+### 🟩 Claude — Phase 3A: requirement-filter diagnostics + spec preWindow fix
+- The stage funnel's `afterRequirementFilter` stage was tracking only EXACT matches, not near matches. This made constrained queries look like "0 products" at that stage when all products were correctly demoted to near-match status (unknown budget = unverified price). Fixed: added `near:` field to the `afterRequirementFilter` stage.
+- Fixed a latent spec-extraction bug: "gas grill under $600 4-burner" was extracting "4-burner" as `max 4 burners` (wrong direction) because the "under" from "$600" bled into the 28-char preWindow before the burner spec. Fixed by stripping `DIRECTION_WORD\s+\$price` patterns from the preWindow before direction detection.
+- Fixed spec label: `operator: "max"` labeled constraints as "under N" but evaluation is `<= N`. Changed to "at most N".
+- 3 new tests added to `tests/specExtraction.test.mjs`. 557 tests pass at this commit.
+
 ## 2026-06-22
 
 ### Codex - Faster searches without loosening trust gates

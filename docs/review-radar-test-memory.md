@@ -64,6 +64,7 @@ The scorecard (`scripts/qualityScorecard.mjs`) has explicit modes. Each prints a
 | **1. Measurement foundation** | Test modes, cost guard, cost estimates, before/after rules, this doc | **DONE (2026-06-24)** |
 | **2. Replay fixtures** | Save live debug payloads + candidate pools to `tests/fixtures/review-radar-live/`; replay tests for citation verify, citation strength, requirement filter, price trust, product-type, revalidation, final selection. Replay script `scripts/replay-quality-fixtures.mjs`. | **DONE (2026-06-24)** |
 | **3A. Requirement-filter diagnostics** | Investigate "0 afterRequirementFilter" pattern on constrained queries. Build per-candidate diagnostic. Classify root cause. Fix funnel tracking + spec parsing bugs. | **DONE (2026-06-24)** |
+| **3B. Wrong-type contamination fix** | Block confirmed wrong-type products from robot vacuum exact matches AND near matches. Add `robot_vacuum` rule to `productTypeIntent.ts`. Three-state `checkCategory` (pass/fail/unverified). `why_recommended` used via `allowedCheckText` to confirm type without poisoning blocked checks. | **DONE (2026-06-24)** |
 | **3. Lost-leader diagnostics** | Trace each expected leader through every stage (never-found → raw → seed → pool → citation → requirement → price → reval → near → ranked-low → duplicate-collapsed → final 7). Extend the funnel/scorecard. | Planned |
 | **4. Variance & confidence** | Scorecard reports mean/best/worst/range/stddev/stability; PASS/FAIL/INCONCLUSIVE classification; confidence warning when noise > effect. Replaces the misleading `best()` metric. | Planned |
 | **5. Discovery quality** | Source-tiered discovery finds true leaders (editorial/lab, marketplace, manufacturer, community); better seed extraction; no source spam. | Planned (after measurement) |
@@ -125,6 +126,16 @@ The scorecard (`scripts/qualityScorecard.mjs`) has explicit modes. Each prints a
 - **Spec validation is still disabled** (`REVIEW_RADAR_SPEC_VALIDATION !== "on"`), so this bug had no live impact — but it would have caused wrong-direction spec filtering if validation were enabled.
 - **3 new tests added** to `tests/specExtraction.test.mjs`. All 557 tests pass.
 
+### 10. Wrong-type vacuums passing robot vacuum category check (FIXED — committed 2026-06-24)
+- **Root cause (proven by Phase 3B investigation):** `PRODUCT_TYPE_RULES` in `productTypeIntent.ts` had no `robot_vacuum` rule → `classifyProductTypeIntent` returned `{requestedType: null, status: "unknown"}` for all robot vacuum queries → `checkCategory` fell through to `categoryTerms` text matching → LLM-mislabeled `product.category = "robot vacuum"` on stick/wet-dry/canister vacuums caused them to pass the category check.
+- **Wrong-type products found in fixtures:** Milwaukee M18 Wet/Dry Vac, ONE+ Hand Vacuum in EXACT MATCHES (best-robot-vacuum); Shark Rocket Stick, RYOBI Stick, Kenmore Canister in NEAR MATCHES (robot-vacuum-under-300-self-emptying).
+- **Fixes shipped (3 changes):**
+  - `robot_vacuum` rule added to `PRODUCT_TYPE_RULES`: `blocked = /stick vacuum|canister vacuum|hand vacuum|wet dry|shop vac|upright vacuum/`, `allowed = /robot vac|robot vacuum|robot cleaner|robot mop|robotic vacuum/`
+  - `classifyProductTypeIntent` gained an optional `allowedCheckText` parameter (separate from `candidateText`): used for the `isAllowed` check only, so `why_recommended` can confirm robot vacuum type without risk of query-echoing text falsely satisfying the `satisfiedBy` guard in `isComponentSubstitution`
+  - `checkCategory` converted from boolean to `CategoryVerdict = "pass"|"fail"|"unverified"`: wrong type → `missingRequirements` (blocked from near); unverified → `unknownRequirements` (allowed as near match); pass → `matchedRequirements`
+- **Validated behavior:** Milwaukee, ONE+ Hand Vac, Shark Rocket, RYOBI Stick, Kenmore Canister → `irrelevant` → excluded. Roborock S8 MaxV Ultra (name sparse, but why_recommended says "robot vacuum and mop") → `exact` via `allowedCheckText`. Roborock S7 MaxV Ultra (neither name nor why_recommended confirm type) → `needs_verification` → near match.
+- **7 new tests added** (4 in `productTypeIntent.test.mjs`, 3 in `requirementValidation.test.mjs`). **564 tests pass.**
+
 ---
 
 ## Known Open Issues (proven but not yet fixed)
@@ -152,14 +163,13 @@ The scorecard (`scripts/qualityScorecard.mjs`) has explicit modes. Each prints a
 - Observed in funnel output but not yet isolated to a single mechanism ("murkier"). Needs a Phase 3 lost-leader trace before acting.
 - Separate from the citation-verify bug. Deferred.
 
-### E. Wrong-type products reaching near matches on robot vacuum  · **PROVEN**
-- "Shark Rocket Bagless Corded Stick Vacuum", "RYOBI ONE+ Cordless Stick Vacuum", "KENMORE Bagged Canister Vacuum" appear in robot vacuum under $300 near matches.
-- `Category: robot vacuum self-emptying` check passes for these — the category match is too permissive.
-- These are the correct products to have as near matches? No — a stick vacuum or canister vacuum is NOT a near match for "robot vacuum self-emptying."
-- Root cause: product-type check classifies them as matching the `robot vacuum` category because of loose text matching on "vacuum."
-- **Impact:** near matches are polluted with wrong-type products, which harms result quality for constrained queries.
-- **Do not fix with product-specific patches.** A generic product-type conflict rule (e.g. using `formFactor.ts` or `hasConflictingProductType`) is the right fix.
-- Status: documented. Will be addressed by Phase 3 product-type fixes.
+### E. Wrong-type products reaching near matches on robot vacuum  · **FIXED (Phase 3B, committed 2026-06-24)**
+- "Shark Rocket Bagless Corded Stick Vacuum", "RYOBI ONE+ Cordless Stick Vacuum", "KENMORE Bagged Canister Vacuum" appeared in robot vacuum under $300 near matches. Milwaukee M18 Wet/Dry Vac and ONE+ Hand Vacuum appeared in EXACT MATCHES for "best robot vacuum."
+- Root cause: no `robot_vacuum` rule in `PRODUCT_TYPE_RULES` → `classifyProductTypeIntent` returned `{requestedType: null}` for all robot vacuum queries → fell through to `categoryTerms` which used LLM `product.category` (mislabeled "robot vacuum" by LLM).
+- **Fix shipped (Phase 3B):** (1) `robot_vacuum` rule added to `productTypeIntent.ts` — blocks stick/canister/hand/wet-dry/upright/shop-vac vacuums; allows "robot vacuum/vac/cleaner/mop". (2) `checkCategory` made three-state (pass/fail/unverified): wrong-type → hard fail → excluded from exact+near; unverified → near match; confirmed → exact match. (3) `allowedCheckText` parameter added to `classifyProductTypeIntent` — `checkCategory` passes `evidenceText + why_recommended` for the allowed check so sparse names like "Roborock S8 MaxV Ultra" can confirm their type via the recommendation narrative without risking query-echoing text in why_recommended satisfying the substitute guard.
+- **Why "wet dry" without requiring "vac":** Serper returns truncated product titles like "Milwaukee M18...Wet/Dry ..." — the word "Vac" is cut off. The `blocked` pattern matches "wet dry" alone, which is specific enough.
+- **Sparse-name behavior:** Products whose evidence + why_recommended don't confirm robot vacuum type → "unverified" → near match with "Needs verification: Category: robot vacuum". Not excluded from near matches.
+- 7 new tests added. 564 tests pass.
 
 ### D. Seed extraction junk (partially fixed)  · **PROVEN (fixed)**
 - "Recommendations RTINGS.com" and year-led mashes ("2026 Shark Eufy WIRED Dyson...") appeared as seed product names.
@@ -182,6 +192,7 @@ The scorecard (`scripts/qualityScorecard.mjs`) has explicit modes. Each prints a
 | Measurement Phase 1 | Scorecard test modes + cost guard + cost estimates + this doc | Committed 2026-06-24: expensive baselines now require `--confirm` + approval |
 | Measurement Phase 2 | Replay fixtures: `tests/fixtures/`, `replay-quality-fixtures.mjs`, `save-debug-fixture.mjs`, 14 deterministic tests on synthetic fixture | Committed 2026-06-24: zero-cost stage-funnel + citation-strength replay proven on synthetic fixture |
 | Phase 3A | Requirement-filter diagnostics on constrained queries ("gas grill under $600 4-burner", "robot vacuum under $300 self-emptying"). Root cause: funnel measurement inconsistency (exact-only tracking at filter stage) + latent spec preWindow direction-word poisoning. Fixed funnel + spec extraction + label. 3 new tests. | Committed 2026-06-24: 557 tests pass, typecheck + lint clean. No behavior change to filtering. |
+| Phase 3B | Wrong-type contamination fix — wet/dry vacs, stick vacuums, canister vacuums, hand vacuums in robot vacuum exact/near matches. Root causes: no `robot_vacuum` rule in productTypeIntent; `checkCategory` binary (no three-state). Fixed: `robot_vacuum` rule, three-state category verdict, `allowedCheckText` for why_recommended. 7 new tests. | Committed 2026-06-24: 564 tests pass, typecheck + lint clean. Wrong-type products blocked from both exact and near matches. |
 
 ---
 

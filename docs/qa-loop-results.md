@@ -2090,3 +2090,44 @@ Full 14×2 baseline after the product-page citation rescue:
 **Why:** (a) weak#1 rise is a real side effect — a rescued product is self-cited by its one product page, and weak#1 flags <2 citations; (b) the coverage drop is most likely VARIANCE — per-query coverage swings ±2–3 (shop-vac 1 here vs 4 in the same-day funnel run), stability 19%. **At 2 runs/query the run-to-run variance now EXCEEDS the effect size — we cannot measure ±1.0 coverage changes. Measurement wall.**
 
 **Decision pending (user):** (A) keep the fix on mechanistic merits + make determinism/variance the next priority so quality changes become measurable; or (B) revert since the only end-to-end number didn't improve. Claude leans A (funnel proof + real bug fixed > one noisy baseline), but flagged for user call. Budget/trust criteria all held (0 budget violations, no wrong-type winners, non-product pages still dropped).
+
+---
+
+## <span style="color:green">**Claude QA Update — 2026-06-24 Phase 3B**</span>
+
+### Phase 3B: Wrong-type vacuum contamination fix
+
+**Issue traced:** Wrong-type products appearing in robot vacuum results — wet/dry vacs and hand vacuums in EXACT matches, stick/canister vacuums in NEAR matches.
+
+**Root cause (fixture-proven, no live calls):**
+1. `PRODUCT_TYPE_RULES` in `productTypeIntent.ts` had no `robot_vacuum` rule → `classifyProductTypeIntent` returned `{requestedType: null}` → fell through to `categoryTerms` using `productText(product)` which includes `product.category` (LLM-mislabeled "robot vacuum" on wrong products)
+2. `checkCategory` was binary (boolean) — no way to distinguish "confirmed wrong type" from "can't verify type" — both became hard failures blocking near matches too
+
+**Products fixed (from live fixtures, no new calls):**
+
+| Product | Was | Now |
+|---|---|---|
+| Milwaukee M18 18-Volt Cordless Wet/Dry … | EXACT (best robot vacuum) | EXCLUDED (hard fail) |
+| ONE+ 18V Cordless Wet/Dry Hand Vacuum | EXACT (best robot vacuum) | EXCLUDED (hard fail) |
+| Shark Rocket Bagless Corded Stick Vacuum | NEAR (robot vacuum under $300) | EXCLUDED (hard fail) |
+| RYOBI ONE+ HP 18V Cordless Pet Stick Vacuum | NEAR (robot vacuum under $300) | EXCLUDED (hard fail) |
+| KENMORE 200 Series Bagged Canister Vacuum | NEAR (robot vacuum under $300) | EXCLUDED (hard fail) |
+| Roborock S8 MaxV Ultra (sparse name, rich why_recommended) | EXACT (correct) | EXACT (maintained via allowedCheckText) |
+| Roborock S7 MaxV Ultra (sparse name, sparse why_recommended) | EXACT (was passing via LLM category) | NEAR (unverified — correct behavior) |
+
+**Three changes shipped:**
+
+| Change | File | Purpose |
+|---|---|---|
+| `robot_vacuum` rule added | `lib/productTypeIntent.ts` | Blocks stick/canister/hand/wet-dry/upright/shop-vac vacuum products from robot vacuum queries |
+| `allowedCheckText` parameter | `lib/productTypeIntent.ts` | Uses `why_recommended` for allowed check only; blocked check stays on lean evidence |
+| Three-state `checkCategory` | `lib/requirementValidation.ts` | `"fail"` → missingRequirements; `"unverified"` → unknownRequirements; `"pass"` → matchedRequirements |
+
+**Key design decision — allowedCheckText split:**  
+Adding `why_recommended` to the blocked check caused a regression: "A standalone built-in ice maker found during refrigerator search" contains "refrigerator" → satisfied the `satisfiedBy` guard in `isComponentSubstitution` → ice maker passed as a refrigerator. Solution: `allowedCheckText` is a separate input used ONLY for the `allowed` pattern check. The `blocked`, `complement`, and `isComponentSubstitution` checks still use the lean evidence text (name + pros + metadata).
+
+**Regression check:**
+- All 564 tests pass (up from 557 before Phase 3B)
+- Typecheck + lint clean
+- `eval-pipeline.mjs` red-flag checks: ✅ no issues
+- Existing ice maker / refrigerator / office chair / mattress tests all pass (no regressions)

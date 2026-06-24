@@ -95,6 +95,20 @@ const PRODUCT_TYPE_RULES: ProductTypeRule[] = [
       /\b(?:washer dryer|washer and dryer|front load washer|top load washer|washing machine|electric dryer|gas dryer|laundry center|laundry tower)\b/i,
     complements: /\b(?:hose|nozzle|surface cleaner|extension wand|pump protector)\b/i,
   },
+  {
+    id: "robot_vacuum",
+    requested: /\b(?:robot\s+(?:vac|vacuum)|robotic\s+vacuum)\b/i,
+    // "robot mop" covers combo robot vacuum-and-mop units; "robot cleaner" covers
+    // some branded naming conventions that omit "vacuum"
+    allowed:
+      /\b(?:robot\s+(?:vac|vacuum|cleaner|mop)|robotic\s+(?:vac|vacuum))\b/i,
+    // Block confirmed non-robot vacuum subtypes. "wet dry" (without requiring "vac"
+    // after it) also catches truncated product names like "Wet/Dry ..." from Serper.
+    blocked:
+      /\b(?:stick\s+(?:vac|vacuum)|canister\s+(?:vac|vacuum)|hand(?:held)?\s+(?:vac|vacuum)|upright\s+(?:vac|vacuum)|wet\s+dry|shop\s+vac)\b/i,
+    complements:
+      /\b(?:replacement\s+(?:filter|brush|mop\s+pad|side\s+brush)|dustbin|boundary\s+strip|virtual\s+wall)\b/i,
+  },
 ];
 
 const ACCESSORY_CONTEXT =
@@ -121,10 +135,20 @@ export function productTypeIntentForQuery(query: string | undefined) {
 
 export function classifyProductTypeIntent(input: {
   candidateText: string | undefined;
+  // Optional richer text used only for the allowed check. When provided,
+  // `candidateText` is still used for blocked/complement checks. This lets callers
+  // include the recommendation narrative (why_recommended) for confirming the
+  // right type without risking that query-echoing language in that field falsely
+  // satisfies a substitute/component guard (e.g. "ice maker found during
+  // refrigerator search" must not satisfy the refrigerator satisfiedBy guard).
+  allowedCheckText?: string | undefined;
   requestedText: string | undefined;
 }): ProductTypeIntentVerdict {
   const rule = productTypeIntentForQuery(input.requestedText);
   const candidateText = normalize(input.candidateText);
+  const allowedCheckText = input.allowedCheckText
+    ? normalize(input.allowedCheckText)
+    : candidateText;
 
   if (!rule) {
     return {
@@ -144,7 +168,7 @@ export function classifyProductTypeIntent(input: {
     };
   }
 
-  const isAllowed = rule.allowed.test(candidateText);
+  const isAllowed = rule.allowed.test(allowedCheckText);
   const isBlocked = rule.blocked.test(candidateText);
   const isComplement = rule.complements?.test(candidateText) || false;
 

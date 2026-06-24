@@ -1538,24 +1538,45 @@ function categoryTerms(category: string) {
     .map((term) => [term, ...(categorySynonyms[term] || [])]);
 }
 
-function checkCategory(product: ProductLike, category: string) {
+type CategoryVerdict = "pass" | "fail" | "unverified";
+
+function checkCategory(product: ProductLike, category: string): CategoryVerdict {
+  // Confirmed wrong type (blocked by evidence, component-substitution, or
+  // cross-category conflict rules) → hard fail, excluded from exact AND near.
   if (hasConflictingProductType(product, category)) {
-    return false;
+    return "fail";
   }
 
+  // Include why_recommended as a richer type-confirmation source, but only for
+  // the allowed check (not blocked/substitute). This surfaces "robot vacuum and mop"
+  // from the recommendation narrative without letting query-echoing phrases like
+  // "ice maker found during refrigerator search" satisfy a substitution guard.
+  const evidenceText = productEvidenceTextWithoutAssignedCategory(product);
+  const typeConfirmationText = normalizeText(
+    [evidenceText, product.why_recommended || ""].join(" "),
+  );
+
   const typeIntent = classifyProductTypeIntent({
-    candidateText: productEvidenceTextWithoutAssignedCategory(product),
+    allowedCheckText: typeConfirmationText,
+    candidateText: evidenceText,
     requestedText: category,
   });
 
   if (typeIntent.requestedType) {
-    return typeIntent.canBeExactMatch;
+    // A product-type rule exists for this category.
+    if (typeIntent.status === "exact") return "pass";
+    // "needs_verification": the product isn't confirmed wrong-type (would have been
+    // caught above), but can't prove it's the right type from its evidence text.
+    // Allow it as a near match; do not exclude it entirely.
+    return "unverified";
   }
 
+  // No specific rule — fall back to term matching using full product text
+  // (which includes the LLM category field as a soft signal).
   const groups = categoryTerms(category);
 
   if (groups.length === 0) {
-    return true;
+    return "pass";
   }
 
   const text = productText(product);
@@ -1564,7 +1585,7 @@ function checkCategory(product: ProductLike, category: string) {
   );
   const requiredMatches = Math.min(2, groups.length);
 
-  return matches.length >= requiredMatches;
+  return matches.length >= requiredMatches ? "pass" : "unverified";
 }
 
 function getAvoidTerms(value: string | undefined) {
@@ -2157,18 +2178,31 @@ export function validateProductAgainstRequirements(
 
   const requestedCategory = requirements.category?.trim();
 
-  if (requestedCategory && checkCategory(product, requestedCategory)) {
-    matchedRequirements.push(`Category: ${requestedCategory}`);
-  } else if (requestedCategory) {
+  if (requestedCategory) {
+    const categoryVerdict = checkCategory(product, requestedCategory);
     const label = `Category: ${requestedCategory}`;
 
-    missingRequirements.push(label);
-    addRequirementComparison(
-      requirementComparisons,
-      label,
-      `Category: ${product.category || "not verified"}`,
-      "failed",
-    );
+    if (categoryVerdict === "pass") {
+      matchedRequirements.push(label);
+    } else if (categoryVerdict === "fail") {
+      missingRequirements.push(label);
+      addRequirementComparison(
+        requirementComparisons,
+        label,
+        `Category: ${product.category || "not verified"}`,
+        "failed",
+      );
+    } else {
+      // "unverified": product type cannot be confirmed from its own evidence text,
+      // but it is not a confirmed wrong type. Keep it as a near-match candidate.
+      unknownRequirements.push(label);
+      addRequirementComparison(
+        requirementComparisons,
+        label,
+        `Category: ${product.category || "not verified"}`,
+        "unknown",
+      );
+    }
   }
 
   const budgetLimit = maxBudgetFromRequirements(requirements);
