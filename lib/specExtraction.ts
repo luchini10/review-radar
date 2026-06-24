@@ -47,7 +47,7 @@ function numericLabel(
   }
 
   if (operator === "max") {
-    return `${label}: under ${value}${unitSuffix(unit)}`;
+    return `${label}: at most ${value}${unitSuffix(unit)}`;
   }
 
   return `${label}: ${value}${unitSuffix(unit)}`;
@@ -93,9 +93,16 @@ export function extractSpecConstraints(
           const index = match.index ?? 0;
           const matched = match[0];
           const preWindow = lower.slice(Math.max(0, index - 28), index);
+          // Strip direction words that immediately precede a price amount so they
+          // don't bleed into the direction classification for the spec that follows
+          // (e.g. "under $600 4-burner" must not make burners a max constraint).
+          const cleanedPreWindow = preWindow.replace(
+            /(?:at least|minimum|\bmin\b|no less than|over|more than|greater than|above|starting at|under|less than|below|at most|max(?:imum)?|no more than|up to|within)\s+\$[\d,]+/gi,
+            "",
+          );
           const hasPlus = /\d\s*\+/.test(matched);
-          const hasMinWord = MIN_WORDS.test(preWindow);
-          const hasMaxWord = MAX_WORDS.test(preWindow);
+          const hasMinWord = MIN_WORDS.test(cleanedPreWindow);
+          const hasMaxWord = MAX_WORDS.test(cleanedPreWindow);
           const operator: SpecConstraint["operator"] =
             hasPlus || hasMinWord
               ? "min"
@@ -108,7 +115,7 @@ export function extractSpecConstraints(
                     : "min";
           const explicit = hasPlus || hasMinWord || hasMaxWord;
           const strictness: SpecConstraint["strictness"] =
-            explicit || source === "smart_feature" || HARD_WORDS.test(preWindow)
+            explicit || source === "smart_feature" || HARD_WORDS.test(cleanedPreWindow)
               ? "hard"
               : "soft";
 

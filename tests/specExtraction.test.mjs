@@ -114,6 +114,35 @@ describe("extractSpecConstraints", () => {
   it("returns nothing for text with no recognizable specs", () => {
     assert.deepEqual(extractSpecConstraints("comfortable running shoes for flat feet"), []);
   });
+
+  it("does not let a price-budget 'under $N' bleed into a spec direction that follows", () => {
+    // "under $600" is a budget constraint; "4-burner" should read as a min (higher-is-better)
+    const burners = bySpec(
+      extractSpecConstraints("gas grill under $600 4-burner"),
+      "burners",
+    );
+
+    assert.ok(burners, "burners extracted");
+    assert.equal(burners.operator, "min", "direction must not inherit 'under' from price context");
+    assert.equal(burners.value, 4);
+    assert.equal(burners.strictness, "soft", "no explicit direction word → soft");
+  });
+
+  it("still reads 'under N' as a max when there is no price amount before the spec", () => {
+    const psi = bySpec(extractSpecConstraints("pressure washer under 2000 psi"), "psi");
+
+    assert.equal(psi.operator, "max");
+    assert.equal(psi.value, 2000);
+    assert.equal(psi.strictness, "hard");
+  });
+
+  it("labels a max constraint as 'at most N' not 'under N'", () => {
+    const weight = bySpec(extractSpecConstraints("lightweight under 8 lbs"), "weightLb");
+
+    assert.ok(weight);
+    assert.equal(weight.operator, "max");
+    assert.ok(weight.label.includes("at most 8"), `expected 'at most 8' in "${weight.label}"`);
+  });
 });
 
 describe("extractProductSpecs", () => {

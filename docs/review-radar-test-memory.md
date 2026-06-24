@@ -63,6 +63,7 @@ The scorecard (`scripts/qualityScorecard.mjs`) has explicit modes. Each prints a
 |---|---|---|
 | **1. Measurement foundation** | Test modes, cost guard, cost estimates, before/after rules, this doc | **DONE (2026-06-24)** |
 | **2. Replay fixtures** | Save live debug payloads + candidate pools to `tests/fixtures/review-radar-live/`; replay tests for citation verify, citation strength, requirement filter, price trust, product-type, revalidation, final selection. Replay script `scripts/replay-quality-fixtures.mjs`. | **DONE (2026-06-24)** |
+| **3A. Requirement-filter diagnostics** | Investigate "0 afterRequirementFilter" pattern on constrained queries. Build per-candidate diagnostic. Classify root cause. Fix funnel tracking + spec parsing bugs. | **DONE (2026-06-24)** |
 | **3. Lost-leader diagnostics** | Trace each expected leader through every stage (never-found → raw → seed → pool → citation → requirement → price → reval → near → ranked-low → duplicate-collapsed → final 7). Extend the funnel/scorecard. | Planned |
 | **4. Variance & confidence** | Scorecard reports mean/best/worst/range/stddev/stability; PASS/FAIL/INCONCLUSIVE classification; confidence warning when noise > effect. Replaces the misleading `best()` metric. | Planned |
 | **5. Discovery quality** | Source-tiered discovery finds true leaders (editorial/lab, marketplace, manufacturer, community); better seed extraction; no source spam. | Planned (after measurement) |
@@ -111,6 +112,19 @@ The scorecard (`scripts/qualityScorecard.mjs`) has explicit modes. Each prints a
 ### 7. `candidatePool` labeling bug (FIXED)
 - Previously the stage funnel set `candidatePool` to `serperRecommendations` (Serper-only), causing coverage to appear to *increase* across stages. Fixed to use `candidateResult.recommendations` (merged Serper+LLM pool).
 
+### 8. Stage funnel `afterRequirementFilter` tracking inconsistency (FIXED — committed 2026-06-24)
+- **Root cause (proven by Phase 3A investigation):** The stage funnel's `afterRequirementFilter` stage tracked only EXACT matches (`requirementFilteredResult.recommendations`), but earlier stages tracked ALL surviving candidates. So the "dramatic drop to 0" on constrained queries was a measurement artifact: products were correctly demoted to NEAR-MATCH status (unknown budget → need verification), NOT eliminated. The `afterRevalidation` stage combined both exact+near, making it look like a "rescue from 0" when it was just the funnel's inconsistency.
+- **Fix shipped:** Added `near: resultNames(requirementFilteredResult.nearMatches)` to the `afterRequirementFilter` stage in the route. The replay script already reads `s.near` and folds it into stage counts — no change needed there.
+- **Verified behavior:** for constrained queries with no verified prices at filter time, ALL candidates correctly go to near-match (0 exact), then rescue+revalidation promotes some to exact once evidence is found. This is the 3-state system working as designed.
+- **Do not weaken the hard-requirement or budget gates.** The behavior is correct; the measurement was lying.
+
+### 9. Spec preWindow direction-word poisoning (FIXED — committed 2026-06-24)
+- **Root cause (proven by Phase 3A):** `extractSpecConstraints` checks a 28-character preWindow before each spec match for direction words ("under", "at least", etc.). When a query contains "under $N spec" (e.g. "gas grill under $600 4-burner"), the "under" from the price context bled into the spec's preWindow, making "4-burner" extract as `max 4 burners` (at most 4) instead of the correct `min 4 burners` (at least 4, since `direction: "higher"`).
+- **Additional bug:** the label for `operator: "max"` said "under N" but the code evaluated `≤ N` (not `< N`). Label was semantically wrong.
+- **Fixes shipped:** (a) Strip `DIRECTION_WORD\s+\$[\d,]+` patterns from preWindow before direction detection, so price-modifying words don't affect the spec direction. (b) Change label from "under N" → "at most N" to match the `<=` evaluation. Both fixes are in `lib/specExtraction.ts`.
+- **Spec validation is still disabled** (`REVIEW_RADAR_SPEC_VALIDATION !== "on"`), so this bug had no live impact — but it would have caused wrong-direction spec filtering if validation were enabled.
+- **3 new tests added** to `tests/specExtraction.test.mjs`. All 557 tests pass.
+
 ---
 
 ## Known Open Issues (proven but not yet fixed)
@@ -138,6 +152,15 @@ The scorecard (`scripts/qualityScorecard.mjs`) has explicit modes. Each prints a
 - Observed in funnel output but not yet isolated to a single mechanism ("murkier"). Needs a Phase 3 lost-leader trace before acting.
 - Separate from the citation-verify bug. Deferred.
 
+### E. Wrong-type products reaching near matches on robot vacuum  · **PROVEN**
+- "Shark Rocket Bagless Corded Stick Vacuum", "RYOBI ONE+ Cordless Stick Vacuum", "KENMORE Bagged Canister Vacuum" appear in robot vacuum under $300 near matches.
+- `Category: robot vacuum self-emptying` check passes for these — the category match is too permissive.
+- These are the correct products to have as near matches? No — a stick vacuum or canister vacuum is NOT a near match for "robot vacuum self-emptying."
+- Root cause: product-type check classifies them as matching the `robot vacuum` category because of loose text matching on "vacuum."
+- **Impact:** near matches are polluted with wrong-type products, which harms result quality for constrained queries.
+- **Do not fix with product-specific patches.** A generic product-type conflict rule (e.g. using `formFactor.ts` or `hasConflictingProductType`) is the right fix.
+- Status: documented. Will be addressed by Phase 3 product-type fixes.
+
 ### D. Seed extraction junk (partially fixed)  · **PROVEN (fixed)**
 - "Recommendations RTINGS.com" and year-led mashes ("2026 Shark Eufy WIRED Dyson...") appeared as seed product names.
 - Fixed: `containsSourceName` + `isYearLedRun` filters added to `lib/search/serper.ts`.
@@ -158,6 +181,7 @@ The scorecard (`scripts/qualityScorecard.mjs`) has explicit modes. Each prints a
 | Citation strength | `citation_type` tagging + weak#1 vs thin#1 split + `citationStrengthDiagnostic.mjs` | Committed 2026-06-24: measurement foundation for thin-winner risk |
 | Measurement Phase 1 | Scorecard test modes + cost guard + cost estimates + this doc | Committed 2026-06-24: expensive baselines now require `--confirm` + approval |
 | Measurement Phase 2 | Replay fixtures: `tests/fixtures/`, `replay-quality-fixtures.mjs`, `save-debug-fixture.mjs`, 14 deterministic tests on synthetic fixture | Committed 2026-06-24: zero-cost stage-funnel + citation-strength replay proven on synthetic fixture |
+| Phase 3A | Requirement-filter diagnostics on constrained queries ("gas grill under $600 4-burner", "robot vacuum under $300 self-emptying"). Root cause: funnel measurement inconsistency (exact-only tracking at filter stage) + latent spec preWindow direction-word poisoning. Fixed funnel + spec extraction + label. 3 new tests. | Committed 2026-06-24: 557 tests pass, typecheck + lint clean. No behavior change to filtering. |
 
 ---
 

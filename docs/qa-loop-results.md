@@ -4,6 +4,52 @@ Date: 2026-06-18
 Repo: `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 Source-of-truth map: `ReviewRadar-Overview.md`
 
+## <span style="color:green">**Claude QA Update — 2026-06-24 (Phase 3A)**</span>
+
+### Investigation: Requirement filter "0 candidates" on constrained queries
+
+**Queries investigated:** "gas grill under $600 4-burner" (21 pool → 0 afterRequirementFilter → 8 afterRevalidation → 1 exact + 5 near) and "robot vacuum under $300 self-emptying" (17 pool → 0 afterRequirementFilter → 8 afterRevalidation → 3 exact + 5 near).
+
+**Root cause classification:**
+
+| Cause | Status |
+|---|---|
+| A. Products fully removed | **DISPROVEN** — products demoted to near-match, not removed |
+| B. Correctly demoted to near (unknown budget) | **CONFIRMED** — 3-state system working as designed |
+| C. Funnel measurement mislabeling | **CONFIRMED** — `afterRequirementFilter` tracked exact-only; `afterRevalidation` tracked exact+near; inconsistency made the "rescue from 0" look dramatic |
+| D. Rescue/revalidation path misleading | **PARTIALLY** — the "0→8" is really "near-matches already existed, now some get prices verified and join exact set" |
+| Requirement parsing issue (gas grill) | **CONFIRMED (latent)** — "under $600 4-burner" extracted spec as `max 4 burners` (at most 4) due to price-context word bleeding; correct is `min 4 burners` (at least 4). Latent because spec validation is disabled. |
+| Requirement parsing issue (label) | **CONFIRMED** — `operator: "max"` labeled "under N" but evaluates `<=N`. Label fixed. |
+
+**Specific finding — per-candidate analysis (gas grill constrained):**
+- Only 1 product (Royal Gourmet $362.99) got a verified price ≤ $600 → only 1 exact match
+- Weber Spirit E-425 verified at $679 → hard budget fail (correct: $679 > $600)
+- Nexgrill 4-Burner verified at $279 but **fails "Gas" dealbreaker** → near match with "Misses required filter: Gas" (suspicious: name says "Gas Grill" but feature evidence fails)
+- All others: budget unknown (price not verified) → near match "Needs verification: Budget: $600 or less"
+- Spec constraint `"Burners: under 4 burners"` passed for ALL products (because actual evaluation is `<=4`, and all are 4-burner grills). The wrong label didn't hide a real problem.
+
+**Specific finding — per-candidate analysis (robot vacuum constrained):**
+- Budget ($300) is the only hard constraint (no spec constraints extracted for "self-emptying")
+- 3 products got verified prices ≤ $300 → exact matches
+- eufy L60: verified $559.99 → hard fail (correct)
+- 4 others: price not verified → near matches (correct 3-state behavior)
+- **Wrong-type contamination in near matches:** Shark Rocket Stick Vacuum, RYOBI Cordless Stick Vacuum, KENMORE Canister Vacuum appear as near matches for "robot vacuum" → category check is too permissive
+
+**Fixes shipped (no behavior change, all diagnostic/label):**
+
+| Fix | File | Description |
+|---|---|---|
+| Stage funnel near-match tracking | `app/api/recommendations/route.ts` | Added `near: resultNames(requirementFilteredResult.nearMatches)` to `afterRequirementFilter` stage — funnel now shows near count at filter stage, not just 0 |
+| Spec label fix | `lib/specExtraction.ts` | `operator: "max"` label changed from "under N" → "at most N" to match `<=` evaluation |
+| Spec preWindow direction fix | `lib/specExtraction.ts` | Strip `DIRECTION_WORD + $price` patterns from preWindow before direction detection; prevents "under $600" from making "4-burner" extract as `max 4` |
+| Tests | `tests/specExtraction.test.mjs` | 3 new tests: price-budget preWindow isolation, "under 2000 psi" still works, "at most N" label |
+
+**Verification:** 557/557 tests pass, typecheck clean, lint clean.
+
+**Open issue logged:** wrong-type products (stick vacuums, canister vacuums) appearing in robot vacuum near matches — the category check is too permissive. Documented as Issue E in test memory. Needs Phase 3 product-type fix (generic, not product-specific).
+
+**No full baseline run.** Confirmed by replay + per-candidate analysis. Behavior of filtering/pricing unchanged.
+
 ## Codex QA Update - 2026-06-21 19:09
 
 ## Loop Scope

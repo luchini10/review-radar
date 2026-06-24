@@ -1129,7 +1129,7 @@ async function handleRecommendationPost(
             stages: [
               { stage: "candidatePool", names: resultNames(candidateResult.recommendations) },
               { stage: "afterCitationVerify", names: resultNames(verifiedResult.recommendations) },
-              { stage: "afterRequirementFilter", names: resultNames(requirementFilteredResult.recommendations) },
+              { stage: "afterRequirementFilter", names: resultNames(requirementFilteredResult.recommendations), near: resultNames(requirementFilteredResult.nearMatches) },
               { stage: "afterEnrichment", names: resultNames(evidenceEnrichedResult.recommendations) },
               { stage: "afterAssets", names: resultNames(assetEnrichedResult.recommendations) },
               { stage: "afterRescue", names: resultNames(verifiedFactsResult.recommendations) },
