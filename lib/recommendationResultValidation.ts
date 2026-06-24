@@ -1,9 +1,22 @@
 import { classifyProductEligibility } from "./productEligibility.ts";
+import { sourceTier } from "./search/sourceTier.ts";
+
+// How confident we are in the independence and quality of a citation.
+// This is attached to every citation that survives verification so that
+// downstream scoring and diagnostics can distinguish real independent
+// support from a product page self-cite.
+export type CitationType =
+  | "product-page-self"     // product's own buyable page (rescue or same host)
+  | "independent-editorial" // Tier-1 editorial/expert review source
+  | "retailer-marketplace"  // Tier-2 major marketplace (Amazon, BestBuy, etc.)
+  | "weak-uncorroborated";  // Tier 3/4: manufacturer, community, or unknown
 
 type CitationLike = {
   title?: string;
   url: string;
   what_it_supports?: string;
+  // string to stay compatible with the public Citation type in types/review-radar.ts
+  citation_type?: string;
 };
 
 type RecommendationLike = {
@@ -21,6 +34,15 @@ type RecommendationResultLike = {
 export type RecommendationResultIssue =
   | "bad_structured_output"
   | "no_reliable_evidence";
+
+// Classify a verified citation URL by source independence.
+// "product-page-self" is only set explicitly at the rescue callsite, not here.
+export function classifyCitationType(url: string): CitationType {
+  const tier = sourceTier(url);
+  if (tier === 1) return "independent-editorial";
+  if (tier === 2) return "retailer-marketplace";
+  return "weak-uncorroborated";
+}
 
 // Common tracking/affiliate params that don't identify the product, stripped so the
 // same product URL compares equal regardless of how it was decorated.
@@ -130,6 +152,7 @@ function rescueProductPageCitation(
         what_it_supports:
           citation.what_it_supports ||
           "Product page used as the source for this recommendation.",
+        citation_type: "product-page-self" as CitationType,
       };
     }
   }
@@ -419,8 +442,10 @@ export function filterResultToVerifiedCitations<T extends RecommendationResultLi
             return [];
           }
 
+          const citationType = classifyCitationType(verifiedUrl);
+
           if (normalizeUrl(citation.url) === verifiedUrl) {
-            return [{ ...citation, url: verifiedUrl }];
+            return [{ ...citation, url: verifiedUrl, citation_type: citationType }];
           }
 
           return [
@@ -430,6 +455,7 @@ export function filterResultToVerifiedCitations<T extends RecommendationResultLi
               url: verifiedUrl,
               what_it_supports:
                 "Verified source from the web research used for this recommendation.",
+              citation_type: citationType,
             },
           ];
         });

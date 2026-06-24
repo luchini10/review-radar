@@ -36,6 +36,8 @@ export type Citation = {
   title: string;
   url: string;
   what_it_supports: string;
+  // Set by the pipeline after citation verification; not provided by the AI.
+  citation_type?: string;
 };
 
 export type RequirementCheck = {

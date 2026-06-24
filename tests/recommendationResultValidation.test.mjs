@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import {
   filterResultToVerifiedCitations,
   getRecommendationResultIssue,
+  classifyCitationType,
 } from "../lib/recommendationResultValidation.ts";
 
 function buildRecommendation(overrides = {}) {
@@ -170,9 +171,9 @@ describe("recommendation result trust validation", () => {
     );
 
     assert.equal(filtered.recommendations.length, 1);
-    assert.deepEqual(filtered.recommendations[0].citations, [
-      { url: "https://example.com/product/example-product-a-123" },
-    ]);
+    const cits = filtered.recommendations[0].citations;
+    assert.equal(cits.length, 1);
+    assert.equal(cits[0].url, "https://example.com/product/example-product-a-123");
   });
 
   it("drops generic category and collection pages cited as products", () => {
@@ -556,5 +557,63 @@ describe("product-page citation rescue (citation verification)", () => {
     );
 
     assert.equal(filtered.recommendations.length, 0);
+  });
+});
+
+describe("citation type classification", () => {
+  it("classifies Tier-1 editorial URLs as independent-editorial", () => {
+    assert.equal(classifyCitationType("https://www.wirecutter.com/reviews/best-robot-vacuums/"), "independent-editorial");
+    assert.equal(classifyCitationType("https://rtings.com/robot-vacuums"), "independent-editorial");
+    assert.equal(classifyCitationType("https://www.cnet.com/home/kitchen-and-household/best-blenders/"), "independent-editorial");
+  });
+
+  it("classifies Tier-2 marketplace URLs as retailer-marketplace", () => {
+    assert.equal(classifyCitationType("https://www.amazon.com/dp/B0ABCDEF12"), "retailer-marketplace");
+    assert.equal(classifyCitationType("https://www.homedepot.com/p/RIDGID-12-Gallon-6-0/12345"), "retailer-marketplace");
+    assert.equal(classifyCitationType("https://www.bestbuy.com/site/product/12345.p"), "retailer-marketplace");
+  });
+
+  it("classifies manufacturer/unknown URLs as weak-uncorroborated", () => {
+    assert.equal(classifyCitationType("https://www.irobot.com/en_US/roomba-960.html"), "weak-uncorroborated");
+    assert.equal(classifyCitationType("https://somebrand.com/product/model-x"), "weak-uncorroborated");
+    assert.equal(classifyCitationType("https://reddit.com/r/Roborock/comments/abc123"), "weak-uncorroborated");
+  });
+
+  it("tags rescued citations as product-page-self in the full filter pipeline", () => {
+    // Candidate has a product-page URL not in verifiedUrls → gets rescued.
+    const rec = buildRecommendation({
+      name: "Example Vacuum Model X100",
+      citations: [{ url: "https://www.homedepot.com/p/Example-Vacuum-Model-X100/12345678" }],
+    });
+    const filtered = filterResultToVerifiedCitations(
+      buildResult([rec]),
+      new Set(), // no verifiedUrls → triggers rescue path
+    );
+    assert.equal(filtered.recommendations.length, 1);
+    const cit = filtered.recommendations[0].citations[0];
+    assert.equal(cit.citation_type, "product-page-self");
+  });
+
+  it("tags verified editorial citations with their type when paired with a product-page citation", () => {
+    // Real scenario: product page (Amazon) as primary, editorial (Wirecutter) as secondary.
+    // The primary URL passes product eligibility; both citations get type-tagged.
+    const rec = buildRecommendation({
+      citations: [
+        { url: "https://www.amazon.com/dp/B0A1B2C3D4" },
+        { url: "https://www.wirecutter.com/reviews/best-robot-vacuums/" },
+      ],
+    });
+    const filtered = filterResultToVerifiedCitations(
+      buildResult([rec]),
+      new Set([
+        "https://www.amazon.com/dp/B0A1B2C3D4",
+        "https://www.wirecutter.com/reviews/best-robot-vacuums/",
+      ]),
+    );
+    assert.equal(filtered.recommendations.length, 1);
+    const cits = filtered.recommendations[0].citations;
+    const byType = Object.fromEntries(cits.map(c => [c.citation_type, c.url]));
+    assert.equal(byType["independent-editorial"], "https://www.wirecutter.com/reviews/best-robot-vacuums"); // trailing slash stripped by normalizeUrl
+    assert.equal(byType["retailer-marketplace"], "https://www.amazon.com/dp/B0A1B2C3D4");
   });
 });
