@@ -502,3 +502,59 @@ describe("recommendation result trust validation", () => {
     assert.equal(filtered.recommendations.length, 1);
   });
 });
+
+describe("product-page citation rescue (citation verification)", () => {
+  const prod = (url, name = "RIDGID 12 Gallon NXT Wet/Dry Vac HD1200") =>
+    buildResult([buildRecommendation({ name, citations: [{ url }] })]);
+
+  it("keeps a real product-page candidate whose URL is not in the verified set", () => {
+    const filtered = filterResultToVerifiedCitations(
+      prod("https://www.homedepot.com/p/RIDGID-12-Gallon-NXT-Wet-Dry-Vac-HD1200/204825270"),
+      new Set(), // web research verified nothing
+    );
+
+    assert.equal(filtered.recommendations.length, 1);
+    assert.equal(filtered.recommendations[0].citations.length, 1);
+  });
+
+  it("matches a verified URL despite tracking params and a trailing slash", () => {
+    const filtered = filterResultToVerifiedCitations(
+      prod("https://www.homedepot.com/p/RIDGID-NXT/204825270/?gclid=abc&ref=nav&utm_source=x"),
+      new Set(["https://www.homedepot.com/p/RIDGID-NXT/204825270"]),
+    );
+
+    assert.equal(filtered.recommendations.length, 1);
+  });
+
+  it("still drops article/review pages cited as products", () => {
+    const filtered = filterResultToVerifiedCitations(
+      prod("https://www.tomsguide.com/best-picks/best-robot-vacuums", "Best Robot Vacuums 2026"),
+      new Set(),
+    );
+
+    assert.equal(filtered.recommendations.length, 0);
+  });
+
+  it("still drops category/listing and search pages", () => {
+    const listing = filterResultToVerifiedCitations(
+      prod("https://www.homedepot.com/b/Tools-Wet-Dry-Vacuums/N-5yc1vZc29k"),
+      new Set(),
+    );
+    const search = filterResultToVerifiedCitations(
+      prod("https://www.amazon.com/s?k=shop+vac"),
+      new Set(),
+    );
+
+    assert.equal(listing.recommendations.length, 0);
+    assert.equal(search.recommendations.length, 0);
+  });
+
+  it("never rescues an uncited recommendation (no product URL)", () => {
+    const filtered = filterResultToVerifiedCitations(
+      buildResult([buildRecommendation({ citations: [] })]),
+      new Set(),
+    );
+
+    assert.equal(filtered.recommendations.length, 0);
+  });
+});

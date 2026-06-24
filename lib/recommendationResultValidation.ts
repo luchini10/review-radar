@@ -22,15 +22,26 @@ export type RecommendationResultIssue =
   | "bad_structured_output"
   | "no_reliable_evidence";
 
+// Common tracking/affiliate params that don't identify the product, stripped so the
+// same product URL compares equal regardless of how it was decorated.
+const TRACKING_PARAMS = new Set([
+  "gclid", "fbclid", "msclkid", "dclid", "mc_eid", "mc_cid", "igshid", "ref", "ref_",
+  "referrer", "_branch_match_id", "ascsubtag", "linkcode", "creative", "creativeasin",
+  "camp", "tag", "_encoding", "smid",
+]);
+
 function normalizeUrl(url: string) {
   try {
     const parsed = new URL(url);
     parsed.hash = "";
+    parsed.hostname = parsed.hostname.toLowerCase();
     for (const key of Array.from(parsed.searchParams.keys())) {
-      if (key.toLowerCase().startsWith("utm_")) {
+      const lower = key.toLowerCase();
+      if (lower.startsWith("utm_") || TRACKING_PARAMS.has(lower)) {
         parsed.searchParams.delete(key);
       }
     }
+    parsed.searchParams.sort();
     return parsed.toString().replace(/\/$/, "");
   } catch {
     return url.trim().replace(/\/$/, "");
@@ -79,6 +90,51 @@ function getVerifiedCitationUrl(url: string, verifiedUrls: Set<string>) {
 
 function citationUrlIsVerified(url: string, verifiedUrls: Set<string>) {
   return getVerifiedCitationUrl(url, verifiedUrls) !== null;
+}
+
+// A URL is "self-citable" when it passes the SAME product-page eligibility used to
+// filter the result below: a real buyable/likely product page, not a category,
+// search, listing, article, review, or forum page. Trust-preserving — only genuine
+// product pages qualify.
+function isSelfCitableProductPage(name: string | undefined, url: string) {
+  if (!url) {
+    return false;
+  }
+
+  const eligibility = classifyProductEligibility({
+    name,
+    productName: name,
+    sourceTitle: name,
+    sourceType: "citation",
+    url,
+  });
+
+  return eligibility.canRenderAsProductCard && !isNonProductPageResult(name, url);
+}
+
+// Product-page citation rescue: a real product-page candidate (often from the
+// LLM/web_search path) can carry valid product URLs that simply aren't in the
+// verified-URL set. Rather than drop it, self-cite its own product page when that
+// page passes product-page eligibility. Uncited prose (no URL) is never rescued.
+function rescueProductPageCitation(
+  recommendation: RecommendationLike,
+): CitationLike | null {
+  for (const citation of recommendation.citations) {
+    if (citation.url && isSelfCitableProductPage(recommendation.name, citation.url)) {
+      const url = normalizeUrl(citation.url);
+
+      return {
+        ...citation,
+        title: citation.title || `Product page: ${normalizeHostname(url)}`,
+        url,
+        what_it_supports:
+          citation.what_it_supports ||
+          "Product page used as the source for this recommendation.",
+      };
+    }
+  }
+
+  return null;
 }
 
 function alignSourceConsensus(sourceConsensus: string, confidenceScore: number) {
@@ -378,9 +434,19 @@ export function filterResultToVerifiedCitations<T extends RecommendationResultLi
           ];
         });
 
+        // If web research verified none of this candidate's citations, but it is a
+        // real product-page candidate, self-cite its own product page instead of
+        // dropping it. The downstream eligibility filter re-checks the same rules.
+        const finalCitations =
+          citations.length === 0
+            ? [rescueProductPageCitation(recommendation)].filter(
+                (citation): citation is CitationLike => citation !== null,
+              )
+            : citations;
+
         return {
           ...recommendation,
-          citations,
+          citations: finalCitations,
           source_consensus: alignSourceConsensus(
             recommendation.source_consensus,
             recommendation.confidence_score,
