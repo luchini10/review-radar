@@ -299,3 +299,25 @@ If run-to-run variance in core leaders (±2–3) exceeds the expected effect siz
 **Unconfirmed for future investigation:** Weber E-325 and Weber Genesis E-435 pass the category check (have "Gas Grill" in name) but score below all 7 winners. Exact scoring reason requires per-candidate enriched data not currently saved in fixtures. Future: add `exactScoredBreakdown` / `nearScoredReason` to debug output.
 
 **Fixture unchanged:** `gas-grill.json` replay still shows same funnel results — this fix affects future LIVE runs, not the already-saved fixture (scoring happened in the live run, not replay).
+
+---
+
+## Final-selection trace instrumentation (2026-06-25): debug-only, behavior-change-free
+
+**What:** Added `debug.stageFunnel.finalSelectionTrace` — a per-candidate array capturing why every candidate that reached `scoreAndSelectRecommendations` was selected, collapsed, disqualified, or ranked below cutoff. Zero behavior change.
+
+**Types** in `lib/recommendationFunnel.ts`:
+- `FinalSelectionDecisionReason` — 10-value union (selected, ranked_below_cutoff, duplicate_identity_collapsed, variant_family_collapsed, not_reliable_enough_for_exact, near_only_exact_full, disqualified_category, disqualified_avoid, disqualified_other, missing_trace_reason)
+- `FinalSelectionCandidateStream` — 5-value union (exactScored, reliabilityNear, nearScored, disqualified, unknown)
+- `FinalSelectionTraceEntry` — full shape with identity, stream, reason, score, citation, price-trust, form-factor modifiers
+
+**Implementation** in `lib/recommendationScoring.ts`:
+- Private `scoreAndSelectImpl` (shared body); public `scoreAndSelectRecommendations` unchanged; new public `scoreAndSelectRecommendationsWithTrace` returns `{ result, finalSelectionTrace }`
+- `buildFinalSelectionTrace` classifies each afterRevalidation candidate by stream (via set membership) and reason (via `collapseReasonMap` which re-traces the `selectRankedExactMatches` loop)
+- `nearCandidatesAll` (pre-slice) captured alongside `nearScored` (post-slice top 8) so ranked-9+ candidates get `ranked_below_cutoff`
+
+**Route:** `app/api/recommendations/route.ts` destructures `scoreAndSelectRecommendationsWithTrace` and attaches `finalSelectionTrace` to `stageFunnel` debug payload.
+
+**Replay script:** `scripts/replay-quality-fixtures.mjs` prints trace grouped by decision reason (selected first by rank, then not-selected grouped by reason with stream/score/collapsedBy). Prints "not present" message for old fixtures.
+
+**Tests:** `tests/finalSelectionTrace.test.mjs` — 11 deterministic tests covering trace existence, shape, stream classification, all 4 disqualification paths, ranked_below_cutoff, identical result parity, score data, citation counts, and off-form-factor modifiers. All 11 pass; full suite 579/579 green.

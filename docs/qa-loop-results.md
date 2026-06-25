@@ -2184,3 +2184,24 @@ This is a GENERIC bug: the `extractedRequirements` system already recognizes "pr
 - Weber EP-325 from Costco: discovery-level gap (not found at major retailers) → broadRetailerPenalty fires correctly but unfairly. Fix: improve editorial seeding / discovery to find brand products from major retailers first.
 - Gold leaders (Weber Spirit II E-310, etc.): not found by discovery at all. Separate discovery issue.
 - Kenmore 2-Burner Portable Tabletop (#2 in final 7): wrong form factor for "gas grill" query. Addressed by Theme 2 (form-factor filtering) — already in the plan.
+
+---
+
+## <span style="color:green">**Claude QA Update — 2026-06-25 00:00**</span>
+
+**Final-selection trace instrumentation — complete, 579/579 green**
+
+Added `debug.stageFunnel.finalSelectionTrace` — a debug-only, behavior-change-free per-candidate record of why every candidate reaching `scoreAndSelectRecommendations` was selected, dropped, collapsed, or excluded.
+
+**Coverage:**
+- All 4 disqualification paths traced: `disqualified_category`, `disqualified_avoid`, `not_reliable_enough_for_exact`, `ranked_below_cutoff`
+- Collapse logic mirrors `selectRankedExactMatches` via `collapseReasonMap` (idWinner + familyWinner maps)
+- `nearCandidatesAll` pre-slice captured for ranked-9+ candidates
+- `offFormFactorModifiers` attached observationally (no ranking effect)
+
+**Test key findings:**
+- `nearProduct` requires stripping ALL color text (why_recommended + pros), not just `metadata.colors`, since the validation engine also reads prose fields
+- "bonded leather" avoid requires `common_complaints` to trigger (it's a non-concrete term → uses `productNegativeText`, not `productPositiveText`)
+- Single-letter-prefix names ("A Sofa") fail `hasBasicProductIdentity` → `reliabilityNear` stream; multi-word names required for exactScored tests
+
+**No behavior change confirmed:** existing `scoreAndSelectRecommendations` call sites unchanged; `scoreAndSelectRecommendationsWithTrace` is the new path used only in the route's debug payload.

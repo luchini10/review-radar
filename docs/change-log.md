@@ -11,6 +11,15 @@ Update this file after:
 
 Do not update this file for tiny typo fixes, formatting-only edits, or internal cleanup that does not change behavior.
 
+## 2026-06-25
+
+### 🟩 Claude — Final-selection trace instrumentation (debug-only)
+- Added `debug.stageFunnel.finalSelectionTrace` — a per-candidate record capturing why every candidate that reached `scoreAndSelectRecommendations` was selected, dropped, collapsed, or excluded. Zero behavior change to ranking, scoring, filtering, or any other pipeline stage.
+- New types in `lib/recommendationFunnel.ts`: `FinalSelectionDecisionReason` (10 values), `FinalSelectionCandidateStream` (5 values), `FinalSelectionTraceEntry` (full candidate snapshot).
+- New `scoreAndSelectRecommendationsWithTrace` export from `lib/recommendationScoring.ts`; all 30+ existing call sites use the unchanged `scoreAndSelectRecommendations` function.
+- Route attaches `finalSelectionTrace` to the `stageFunnel` debug payload. Replay script prints trace grouped by decision reason.
+- 11 deterministic tests in `tests/finalSelectionTrace.test.mjs`; full suite 579/579 green.
+
 ## 2026-06-24
 
 ### 🟩 Claude — Phase 3B: wrong-type vacuum products blocked from robot vacuum results
