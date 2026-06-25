@@ -68,7 +68,10 @@ import {
   searchSerperForProducts,
   serperCandidateToRecommendation,
 } from "../../../lib/search/serper.ts";
-import { scoreAndSelectRecommendations } from "../../../lib/recommendationScoring.ts";
+import {
+  scoreAndSelectRecommendations,
+  scoreAndSelectRecommendationsWithTrace,
+} from "../../../lib/recommendationScoring.ts";
 import { candidateSnapshot, resultNames } from "../../../lib/recommendationFunnel.ts";
 import type {
   ProductBuyingRubric,
@@ -1078,10 +1081,10 @@ async function handleRecommendationPost(
       }
     }
 
-    const enrichedResult = timing.measureSync(
+    const { result: enrichedResult, finalSelectionTrace } = timing.measureSync(
       "score_and_select_results",
       () =>
-        scoreAndSelectRecommendations(
+        scoreAndSelectRecommendationsWithTrace(
           {
             ...revalidatedAssetResult,
             extractedRequirements,
@@ -1152,6 +1155,12 @@ async function handleRecommendationPost(
             poolCandidates: candidateResult.recommendations.map((product) => candidateSnapshot(product)),
             postVerifyCandidates: verifiedResult.recommendations.map((product) => candidateSnapshot(product)),
             postFilterCandidates: requirementFilteredResult.recommendations.map((product) => candidateSnapshot(product)),
+            // Per-candidate trace of every final-selection decision: which stream
+            // each candidate ended up in (exactScored / nearScored / etc.) and
+            // exactly why it was selected, collapsed, dropped, or demoted. This
+            // covers candidates that reach scoreAndSelectRecommendations — pipeline
+            // stages before this point are covered by the stages[] funnel above.
+            finalSelectionTrace,
           }
         : undefined,
       serperCandidateCount: serperResult.stats.collectedCandidates,

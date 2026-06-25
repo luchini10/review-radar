@@ -120,6 +120,7 @@ export function analyzeFixture(payload) {
   const result = payload.result || {};
   const debug = payload.debug || {};
   const stageFunnel = debug.stageFunnel || null;
+  const finalSelectionTrace = stageFunnel?.finalSelectionTrace || null;
 
   const finalExact = result.exactMatches || [];
   const finalNear = result.nearMatches || [];
@@ -184,10 +185,71 @@ export function analyzeFixture(payload) {
     lostLeaders,
     lostLeaderDropPoints,
     dropMap,
+    finalSelectionTrace,
   };
 }
 
 // ── CLI report printer ────────────────────────────────────────────────────────
+
+function printFinalSelectionTrace(trace) {
+  if (!trace) {
+    console.log("\nFinal-selection trace: not present. This fixture was likely saved before trace instrumentation existed.");
+    return;
+  }
+
+  if (!Array.isArray(trace) || trace.length === 0) {
+    console.log("\nFinal-selection trace: empty.");
+    return;
+  }
+
+  const selected = trace.filter((e) => e.selected);
+  const notSelected = trace.filter((e) => !e.selected);
+
+  console.log(`\nFinal-Selection Trace (${trace.length} candidates):`);
+
+  // Selected products first
+  console.log(`\n  Selected (${selected.length}):`);
+  for (const e of selected.sort((a, b) => (a.finalRank ?? 99) - (b.finalRank ?? 99))) {
+    const rankLabel = e.finalRank != null ? `#${e.finalRank}` : "near";
+    const score = e.rankedMatchScore != null ? ` score=${e.rankedMatchScore}` : "";
+    const tier = e.marketConfidenceTier ? ` tier=${e.marketConfidenceTier}` : "";
+    const form = e.offFormFactorModifiers.length > 0 ? ` ⚑ form-factor: ${e.offFormFactorModifiers.join(",")}` : "";
+    console.log(`    [${rankLabel}] ${(e.name || "").slice(0, 50)}${score}${tier}${form}`);
+  }
+
+  // Not-selected products by reason
+  const byReason = {};
+  for (const e of notSelected) {
+    (byReason[e.decisionReason] = byReason[e.decisionReason] || []).push(e);
+  }
+
+  const reasonOrder = [
+    "ranked_below_cutoff",
+    "near_only_exact_full",
+    "not_reliable_enough_for_exact",
+    "duplicate_identity_collapsed",
+    "variant_family_collapsed",
+    "disqualified_category",
+    "disqualified_avoid",
+    "disqualified_other",
+    "missing_trace_reason",
+  ];
+
+  for (const reason of reasonOrder) {
+    const group = byReason[reason];
+    if (!group || group.length === 0) continue;
+    console.log(`\n  ${reason} (${group.length}):`);
+    for (const e of group) {
+      const stream = e.stream ? ` [${e.stream}]` : "";
+      const score = e.rankedMatchScore != null ? ` score=${e.rankedMatchScore}` : "";
+      const collBy = e.collapsedBy ? ` ← ${e.collapsedBy.slice(0, 30)}` : "";
+      const form = e.offFormFactorModifiers.length > 0 ? ` ⚑ ${e.offFormFactorModifiers.join(",")}` : "";
+      const req = e.failed.length > 0 ? ` failed=${e.failed.join(";")}` : "";
+      const unk = e.unknown.length > 0 ? ` unknown=${e.unknown.join(";")}` : "";
+      console.log(`    ${(e.name || "").slice(0, 50)}${stream}${score}${collBy}${form}${req}${unk}`);
+    }
+  }
+}
 
 function printReport(analysis) {
   const { query, isSynthetic, goldLeaders, stageFunnelAnalysis, finalProducts, citationAnalysis, lostLeaders, lostLeaderDropPoints } = analysis;
@@ -270,6 +332,9 @@ function printReport(analysis) {
       }
     }
   }
+
+  // Final-selection trace
+  printFinalSelectionTrace(analysis.finalSelectionTrace);
 }
 
 // ── CLI entry point ───────────────────────────────────────────────────────────

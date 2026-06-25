@@ -6,6 +6,12 @@ import {
 import { candidateMatchesDiscoveryTarget } from "./discoveryStrategy.ts";
 import { getCanonicalIdentity, withCanonicalIdentity } from "./productIdentity.ts";
 import { variantFamilyKey } from "./productVariantFamily.ts";
+import { offFormFactorModifiers } from "./formFactor.ts";
+import type {
+  FinalSelectionCandidateStream,
+  FinalSelectionDecisionReason,
+  FinalSelectionTraceEntry,
+} from "./recommendationFunnel.ts";
 import { computeCategoryFit } from "./categoryScoring.ts";
 import { computeRubricFit } from "./buyingRubric.ts";
 import {
@@ -1022,11 +1028,207 @@ function hasDisqualifyingRequirementFailure(product: ProductRecommendation) {
   return failed.some((requirement) => /^(?:Category|Avoid):/i.test(requirement));
 }
 
-export function scoreAndSelectRecommendations(
+// Build a per-candidate trace explaining every selection decision in
+// scoreAndSelectRecommendations. Pure debug — reads existing computed values,
+// changes nothing, never affects the returned product set or ranking.
+function buildFinalSelectionTrace(
+  revalidatedCandidates: ProductRecommendation[],
+  exactScored: ProductRecommendation[],
+  nearCandidatesAll: ProductRecommendation[],   // pre-slice, sorted by totalScore
+  nearScored: ProductRecommendation[],           // sliced to 8
+  reliabilityNear: ProductRecommendation[],
+  selectedExact: ProductRecommendation[],
+  selectedNear: ProductRecommendation[],
+  input: RecommendationApiRequest,
+): FinalSelectionTraceEntry[] {
+  const exactScoredNames = new Set(exactScored.map((p) => p.name));
+  const nearCandidatesAllNames = new Set(nearCandidatesAll.map((p) => p.name));
+  const reliabilityNearNames = new Set(reliabilityNear.map((p) => p.name));
+  const selectedExactNames = new Set(selectedExact.map((p) => p.name));
+  const selectedNearNames = new Set(selectedNear.map((p) => p.name));
+  const exactFull = selectedExact.length >= MAX_EXACT_MATCHES;
+
+  // Build lookup from name → scored product (has scoreBreakdown, priceTrust, etc.)
+  const scoredByName = new Map<string, ProductRecommendation>(
+    [...exactScored, ...nearCandidatesAll].map((p) => [p.name, p]),
+  );
+
+  // Re-trace the collapse logic from selectRankedExactMatches so we can report
+  // which product "won" the slot that each dropped candidate was competing for.
+  const reliableExact = exactScored.filter(reliableEnoughForBestMatch);
+  const collapseReasonMap = new Map<string, { reason: FinalSelectionDecisionReason; collapsedBy: string | null }>();
+  {
+    const usedIds = new Set<string>();
+    const idWinner = new Map<string, string>();
+    const usedFamilies = new Set<string>();
+    const familyWinner = new Map<string, string>();
+    let slotsFilled = 0;
+
+    for (const product of sortByRankedMatchStrength(reliableExact)) {
+      const id = canonicalId(product);
+
+      if (usedIds.has(id)) {
+        collapseReasonMap.set(product.name, {
+          reason: "duplicate_identity_collapsed",
+          collapsedBy: idWinner.get(id) ?? null,
+        });
+        continue;
+      }
+
+      const family = variantFamilyKey(product);
+
+      if (family && usedFamilies.has(family)) {
+        collapseReasonMap.set(product.name, {
+          reason: "variant_family_collapsed",
+          collapsedBy: familyWinner.get(family) ?? null,
+        });
+        continue;
+      }
+
+      usedIds.add(id);
+      idWinner.set(id, product.name);
+
+      if (family) {
+        usedFamilies.add(family);
+        familyWinner.set(family, product.name);
+      }
+
+      slotsFilled++;
+
+      // Products after the MAX_EXACT_MATCHES slot are ranked below the cutoff.
+      // The original loop breaks at exactly MAX_EXACT_MATCHES, so any product
+      // that would be the (N+1)th slot is ranked_below_cutoff.
+      if (slotsFilled > MAX_EXACT_MATCHES) {
+        collapseReasonMap.set(product.name, { reason: "ranked_below_cutoff", collapsedBy: null });
+      }
+    }
+  }
+
+  const requestedCategory = baseProductCategoryFromQuery(input.query);
+
+  return revalidatedCandidates.map((rawProduct): FinalSelectionTraceEntry => {
+    const name = rawProduct.name || "";
+    const scored = scoredByName.get(name);
+    const product = scored ?? rawProduct;
+    const check = product.requirementCheck;
+    const breakdown = product.scoreBreakdown;
+    const priceTrust = product.priceTrust;
+
+    // Classify which stream this candidate ended up in.
+    let stream: FinalSelectionCandidateStream;
+    if (exactScoredNames.has(name)) {
+      stream = reliabilityNearNames.has(name) ? "reliabilityNear" : "exactScored";
+    } else if (nearCandidatesAllNames.has(name)) {
+      stream = "nearScored";
+    } else {
+      const disqualifying = (check?.failed ?? []).some((r) => /^(?:Category|Avoid):/i.test(r));
+      stream = disqualifying ? "disqualified" : "unknown";
+    }
+
+    const selected = selectedExactNames.has(name) || selectedNearNames.has(name);
+    const selectedExactItem = selectedExact.find((p) => p.name === name);
+    const finalRank = selectedExactItem?.rank ?? null;
+
+    const reliableEnoughForExact =
+      exactScoredNames.has(name) ? !reliabilityNearNames.has(name) : null;
+
+    // Determine why the candidate was or was not selected.
+    let decisionReason: FinalSelectionDecisionReason;
+    if (selected) {
+      decisionReason = "selected";
+    } else if (stream === "exactScored") {
+      const collapse = collapseReasonMap.get(name);
+      decisionReason = collapse?.reason ?? "missing_trace_reason";
+    } else if (stream === "reliabilityNear") {
+      decisionReason = "not_reliable_enough_for_exact";
+    } else if (stream === "nearScored") {
+      if (exactFull) {
+        decisionReason = "near_only_exact_full";
+      } else {
+        decisionReason = "ranked_below_cutoff";
+      }
+    } else if (stream === "disqualified") {
+      const failed = check?.failed ?? [];
+      if (failed.some((r) => /^Category:/i.test(r))) {
+        decisionReason = "disqualified_category";
+      } else if (failed.some((r) => /^Avoid:/i.test(r))) {
+        decisionReason = "disqualified_avoid";
+      } else {
+        decisionReason = "disqualified_other";
+      }
+    } else {
+      decisionReason = "missing_trace_reason";
+    }
+
+    const collapseInfo = collapseReasonMap.get(name);
+    const collapsedBy = collapseInfo?.collapsedBy ?? null;
+
+    // Citation type breakdown.
+    const citTypes = (product.citations ?? []).map(
+      (c) => c.citation_type ?? "weak-uncorroborated",
+    );
+    const independentCitationCount = citTypes.filter(
+      (t) => t === "independent-editorial",
+    ).length;
+    const retailerCitationCount = citTypes.filter(
+      (t) => t === "retailer-marketplace",
+    ).length;
+
+    // Form-factor signals — observational only.
+    const candidateText = [product.name, product.category, ...(product.pros ?? [])]
+      .filter(Boolean)
+      .join(" ");
+    const offModifiers = offFormFactorModifiers(candidateText, requestedCategory);
+
+    return {
+      name,
+      canonicalId: product.canonicalIdentity?.canonicalId ?? null,
+      variantFamilyKey: variantFamilyKey(product),
+      brand: product.metadata?.brand?.value ?? product.canonicalIdentity?.brand ?? null,
+      model:
+        product.metadata?.modelNumber?.value ??
+        product.canonicalIdentity?.modelNumber ??
+        null,
+      productUrl: product.product_page_url ?? "",
+      stream,
+      selected,
+      finalRank,
+      decisionReason,
+      collapsedBy,
+      reliableEnoughForExact,
+      exactMatch: check?.exactMatch ?? false,
+      failed: check?.failed ?? [],
+      unknown: check?.unknown ?? [],
+      passed: check?.passed ?? [],
+      rankedMatchScore: breakdown ? Math.round(rankedMatchScore(product) * 10) / 10 : null,
+      totalScore: breakdown ? Math.round((breakdown.totalScore ?? 0) * 10) / 10 : null,
+      requirementFitScore: breakdown?.requirementFitScore ?? breakdown?.fitScore ?? null,
+      sourceQualityScore: breakdown?.sourceQualityScore ?? null,
+      priceValueScore: breakdown?.priceValueScore ?? breakdown?.valueScore ?? null,
+      missingDataPenalty: breakdown?.missingDataPenalty ?? null,
+      marketConfidenceTier: breakdown?.marketConfidenceTier ?? product.marketConfidence?.tier ?? null,
+      evidenceStrength: product.evidence_strength ?? null,
+      citationCount: (product.citations ?? []).length,
+      independentCitationCount,
+      retailerCitationCount,
+      price: priceTrust?.price ?? null,
+      priceTrustStatus: priceTrust?.status ?? null,
+      canUseForBudget: priceTrust?.canUseForBudget ?? null,
+      offFormFactorModifiers: offModifiers,
+    };
+  });
+}
+
+type ScoreAndSelectOutput = {
+  result: RecommendationResult;
+  finalSelectionTrace: FinalSelectionTraceEntry[];
+};
+
+function scoreAndSelectImpl(
   result: RecommendationResult,
   input: RecommendationApiRequest,
-  coverage: Partial<SearchCoverage> = {},
-): RecommendationResult {
+  coverage: Partial<SearchCoverage>,
+): ScoreAndSelectOutput {
   const revalidatedCandidates = [...result.exactMatches, ...result.nearMatches].map(
     (product) => applyCurrentRequirementCheck(product, input),
   );
@@ -1038,7 +1240,10 @@ export function scoreAndSelectRecommendations(
         product.requirementCheck.unknown.length === 0,
     )
     .map((product) => withScore(product, input));
-  const nearScored = revalidatedCandidates
+  // nearCandidatesAll: all candidates that cleared the near filter, sorted by
+  // totalScore, before the 8-product slice. Needed for the trace to identify
+  // products ranked 9th+ (ranked_below_cutoff in the near pool).
+  const nearCandidatesAll = revalidatedCandidates
     .filter(
       (product) =>
         product.requirementCheck?.exactMatch !== true &&
@@ -1049,9 +1254,8 @@ export function scoreAndSelectRecommendations(
       (first, second) =>
         (second.scoreBreakdown?.totalScore || 0) -
         (first.scoreBreakdown?.totalScore || 0),
-    )
-    .map(withCloseMatch)
-    .slice(0, 8);
+    );
+  const nearScored = nearCandidatesAll.map(withCloseMatch).slice(0, 8);
   const reliableExact = exactScored.filter(reliableEnoughForBestMatch);
   const reliabilityNear = exactScored
     .filter((product) => !reliableEnoughForBestMatch(product))
@@ -1099,7 +1303,34 @@ export function scoreAndSelectRecommendations(
     knownNames,
   );
 
-  return selectedResult;
+  const finalSelectionTrace = buildFinalSelectionTrace(
+    revalidatedCandidates,
+    exactScored,
+    nearCandidatesAll,
+    nearScored,
+    reliabilityNear,
+    selectedExact,
+    selectedNear,
+    input,
+  );
+
+  return { result: selectedResult, finalSelectionTrace };
+}
+
+export function scoreAndSelectRecommendations(
+  result: RecommendationResult,
+  input: RecommendationApiRequest,
+  coverage: Partial<SearchCoverage> = {},
+): RecommendationResult {
+  return scoreAndSelectImpl(result, input, coverage).result;
+}
+
+export function scoreAndSelectRecommendationsWithTrace(
+  result: RecommendationResult,
+  input: RecommendationApiRequest,
+  coverage: Partial<SearchCoverage> = {},
+): ScoreAndSelectOutput {
+  return scoreAndSelectImpl(result, input, coverage);
 }
 
 export const recommendationScoringTestExports = {
