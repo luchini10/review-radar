@@ -2131,3 +2131,56 @@ Adding `why_recommended` to the blocked check caused a regression: "A standalone
 - Typecheck + lint clean
 - `eval-pipeline.mjs` red-flag checks: ✅ no issues
 - Existing ice maker / refrigerator / office chair / mattress tests all pass (no regressions)
+
+---
+
+## <span style="color:green">**Claude QA Update — 2026-06-25 Phase 3C**</span>
+
+### Phase 3C: Final selection dropping strong leaders (gas grill fixture)
+
+**Investigation method:** Used saved `tests/fixtures/review-radar-live/gas-grill.json` only — zero live calls.
+
+**Full stage funnel (gas grill fixture):**
+`candidatePool(18) → afterCitationVerify(18) → afterRequirementFilter(12) → afterEnrichment(12) → afterAssets(12) → afterRescue(12) → afterRevalidation(15) → final(7)`
+
+**8 products dropped at afterRevalidation → final:**
+
+| Product | Root cause | Classification |
+|---|---|---|
+| Coleman Xcursion 1-Burner Butane Grill (rescued) | "butane" not in gas aliases → feature-1 unverified → nearScored → not selected when 7 exact exist | Correct behavior — wrong fuel type |
+| Primus Kuchoma Grill (rescued) | Wrong form factor (camping) → category unverified | Correct behavior — wrong category |
+| Snow Peak Grill Burner (rescued) | Wrong form factor (camping) → category unverified | Correct behavior — wrong category |
+| Coleman 4-in-1 Portable Propane Gas Camping Stove | Camping stove, wrong form factor, scored below 7 winners | Correct behavior — wrong form factor |
+| **Weber Spirit EP-325 Gas Grill** | costco.com ∈ broadRetailerDomains → `broadRetailerPenalty=10` (no independent citations) → `sourceQualityScore` clamped to 0 → `rankedMatchScore ≈ 73`, below 86.44 cutoff | **Generic scoring issue — discovery gap leads to broad-retailer penalty on legitimate premium product. Discovery never found Weber EP-325 from a major retailer; root fix is in discovery.** |
+| **Napoleon Rogue 425 SB** | Name "Napoleon Rogue 425 SB" has no "gas" or "grill" → `checkCategory("gas grill")` depended on LLM-assigned category containing "gas"; if category = "propane grill", "gas" term group fails → `unknown=[category]` → nearScored → dropped | **Generic bug: categoryTerms didn't expand "gas" with requirement aliases ("propane") → FIXED** |
+| Weber Spirit E-325 Gas Grill | Name has "Gas Grill" → passes checkCategory → in exactScored → scored below all 7 winners | Root cause unconfirmed without enriched product data. Likely: lower sourceQualityScore from manufacturer-only source vs retailer-sourced winners, or higher missingDataPenalty |
+| Weber Genesis E-435 Gas Grill | Same as Weber E-325 | Root cause unconfirmed without enriched product data |
+
+**Gold leader coverage:** All 4 gold leaders "LOST: not-in-pool" — specific model variants (Weber Spirit II E-310, Genesis E-325s, etc.) were not discovered. Discovery is finding related but different models (E-325 vs E-310, E-435 vs E-325s). Separate discovery issue, out of scope for Phase 3C.
+
+**Root cause confirmed and fixed — generic:**
+
+`categoryTerms()` split the query category ("gas grill") into term groups (`[["gas"], ["grill"]]`) and checked them literally via `containsTerm`. The word "propane" does NOT contain "gas" → a product described only as a "propane grill" (no "gas" in any field) fails the "gas" term group → `checkCategory → "unverified"` → `unknown.length > 0` → excluded from `exactScored` → dropped when 7 exact matches already exist.
+
+This is a GENERIC bug: the `extractedRequirements` system already recognizes "propane" as an alias for "gas" (the `feature-1` dealbreaker has `aliases: ["gas", "propane", "natural gas", ...]`), but `categoryTerms` didn't consult it.
+
+**Fix:** `categoryTerms(category, extractedRequirements?)` now expands each term group with aliases from any `requiredConstraint` whose `value` or `aliases` match that term. "gas" expands to ["gas", "propane", "natural gas", "natural-gas", "gas powered", ...] when the gas dealbreaker is present. `checkCategory` passes `extractedRequirements` through.
+
+**Safety:** "grill" still required (both term groups must match) → a propane heater can't satisfy "gas grill" with just "propane". Butane remains unmatched (not in gas aliases). No change to the 3-state verdict logic or requirement checking logic.
+
+**Tests added:** 4 new deterministic tests in `tests/requirementValidation.test.mjs` (describe: "categoryTerms alias expansion via extractedRequirements"):
+1. Propane-only text passes gas grill category check when gas alias is in requirements
+2. Propane-only text is still unverified without alias expansion (no regression)
+3. Butane product is still unverified even with gas aliases
+4. Product with "gas" in name always passes without needing alias expansion
+
+**Verdict:**
+- 568 tests pass (up from 564 before Phase 3C)
+- Typecheck clean, lint clean
+- `eval-pipeline.mjs` gas grill scenario: ✅ no red flags
+
+**Known remaining gaps (future work, not in scope for 3C):**
+- Weber E-325/Genesis E-435 scoring root cause unconfirmed — requires enriched product data not saved in fixture. Future: save per-candidate `exactScored`/`nearScored` classification + `rankedMatchScore` breakdown to debug output.
+- Weber EP-325 from Costco: discovery-level gap (not found at major retailers) → broadRetailerPenalty fires correctly but unfairly. Fix: improve editorial seeding / discovery to find brand products from major retailers first.
+- Gold leaders (Weber Spirit II E-310, etc.): not found by discovery at all. Separate discovery issue.
+- Kenmore 2-Burner Portable Tabletop (#2 in final 7): wrong form factor for "gas grill" query. Addressed by Theme 2 (form-factor filtering) — already in the plan.

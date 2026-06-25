@@ -2785,3 +2785,155 @@ describe("requirement validation", () => {
     );
   });
 });
+
+// ── Category term alias expansion (Phase 3C fix) ──────────────────────────────
+// When a category term (e.g. "gas") matches a required-constraint value, the
+// constraint's aliases ("propane", "natural gas", …) are accepted as equivalent
+// in the category check. This prevents products described as "propane grills"
+// from landing in `unknownRequirements` when the user searched "gas grill".
+
+describe("categoryTerms alias expansion via extractedRequirements", () => {
+  const gasGrillRequirements = {
+    requiredConstraints: [
+      {
+        id: "feature-1",
+        label: "Feature: Gas",
+        type: "dealbreaker",
+        strictness: "dealbreaker",
+        value: "gas",
+        source: "important_details",
+        aliases: [
+          "gas",
+          "gas powered",
+          "gas-powered",
+          "gas engine",
+          "gas-engine",
+          "gas motor",
+          "gas-motor",
+          "natural gas",
+          "natural-gas",
+          "propane",
+        ],
+      },
+    ],
+    avoidConstraints: [],
+    preferredConstraints: [],
+    sizeConstraints: [],
+    colorConstraints: [],
+    materialConstraints: [],
+    brandConstraints: [],
+    budgetRules: [],
+    ambiguousConstraints: [],
+    summary: [],
+  };
+
+  function buildPropaneGrillProduct(overrides = {}) {
+    return buildProduct({
+      name: "Napoleon Rogue 425 SB",
+      category: "propane grill",
+      why_recommended: "A high-quality propane grill with four burners.",
+      pros: ["Powerful propane burners", "Cast iron cooking grates"],
+      cons: ["High price point"],
+      common_complaints: [],
+      citations: [
+        {
+          title: "Napoleon Rogue 425 SB - napoleon.com",
+          url: "https://www.napoleon.com/en/us/barbecues/rogue-425-sb",
+          what_it_supports: "Official product page for the Napoleon Rogue 425 SB propane grill.",
+        },
+      ],
+      product_page_url: "https://www.napoleon.com/en/us/barbecues/rogue-425-sb",
+      estimated_price_range: "$649",
+      ...overrides,
+    });
+  }
+
+  it("propane-only text passes gas grill category check when gas alias is in requirements", () => {
+    const product = buildPropaneGrillProduct();
+    const result = validateProductAgainstRequirements(product, {
+      category: "gas grill",
+      extractedRequirements: gasGrillRequirements,
+    });
+
+    // With alias expansion: "propane" satisfies the "gas" term group → exact match
+    assert.equal(
+      result.unknownRequirements.some((r) => r.startsWith("Category:")),
+      false,
+      "propane grill should not be unverified for 'gas grill' when propane is a gas alias",
+    );
+    assert.equal(
+      result.matchedRequirements.some((r) => r.startsWith("Category:")),
+      true,
+      "propane grill should pass category check for 'gas grill'",
+    );
+  });
+
+  it("propane-only text is still unverified for gas grill without alias expansion", () => {
+    const product = buildPropaneGrillProduct();
+    const result = validateProductAgainstRequirements(product, {
+      category: "gas grill",
+      // No extractedRequirements → no alias expansion
+    });
+
+    // Without alias expansion: "propane" does not satisfy the "gas" term literal
+    assert.equal(
+      result.unknownRequirements.some((r) => r.startsWith("Category:")),
+      true,
+      "propane grill without alias data should be unverified for 'gas grill'",
+    );
+  });
+
+  it("butane product is still unverified for gas grill even with gas aliases (butane is not a gas alias)", () => {
+    const butaneProduct = buildProduct({
+      name: "Coleman Xcursion 1-Burner Butane Grill",
+      category: "butane grill",
+      why_recommended: "A portable butane grill for camping.",
+      pros: ["Compact", "Uses butane cartridges"],
+      cons: ["Butane only"],
+      common_complaints: [],
+      citations: [],
+      product_page_url: "https://www.rei.com/product/12345/coleman-xcursion-butane-grill",
+      estimated_price_range: "$49",
+    });
+    const result = validateProductAgainstRequirements(butaneProduct, {
+      category: "gas grill",
+      extractedRequirements: gasGrillRequirements,
+    });
+
+    // "butane" is not in the gas aliases → category "butane grill" has "grill"
+    // but the "gas" term group still not satisfied → unverified
+    assert.equal(
+      result.unknownRequirements.some((r) => r.startsWith("Category:")),
+      true,
+      "butane grill should remain unverified for 'gas grill' even with gas aliases",
+    );
+  });
+
+  it("product with gas in name always passes without needing alias expansion", () => {
+    const product = buildProduct({
+      name: "Weber Spirit E-325 Gas Grill",
+      category: "gas grill",
+      why_recommended: "Weber Spirit gas grill with 3 burners.",
+      pros: ["Durable gas burners", "Side table included"],
+      cons: ["Higher price"],
+      common_complaints: [],
+      citations: [],
+      product_page_url: "https://www.weber.com/us/en/products/gas-grills/spirit-series/46110001.html",
+      estimated_price_range: "$549",
+    });
+    const result = validateProductAgainstRequirements(product, {
+      category: "gas grill",
+      extractedRequirements: gasGrillRequirements,
+    });
+
+    assert.equal(
+      result.matchedRequirements.some((r) => r.startsWith("Category:")),
+      true,
+      "gas grill product with 'gas' in name should always pass category check",
+    );
+    assert.equal(
+      result.unknownRequirements.some((r) => r.startsWith("Category:")),
+      false,
+    );
+  });
+});

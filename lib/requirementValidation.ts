@@ -1525,7 +1525,10 @@ function getProductFeatureValueForGroup(
   return `${featureName}: not verified`;
 }
 
-function categoryTerms(category: string) {
+function categoryTerms(
+  category: string,
+  extractedRequirements?: StructuredRequirements,
+): string[][] {
   const normalizedCategory = normalizeText(category);
 
   if (categorySynonyms[normalizedCategory]) {
@@ -1535,12 +1538,32 @@ function categoryTerms(category: string) {
   return normalizedCategory
     .split(/\s+/)
     .filter((term) => term.length > 2 && !["out", "for", "with"].includes(term))
-    .map((term) => [term, ...(categorySynonyms[term] || [])]);
+    .map((term) => {
+      const synAliases = categorySynonyms[term] || [];
+      // When a category term matches a required constraint's value or aliases,
+      // expand the term group with that constraint's aliases so semantically
+      // equivalent vocabulary ("propane" for "gas") passes the check.
+      const reqAliases = (extractedRequirements?.requiredConstraints ?? []).flatMap(
+        (constraint) => {
+          const constraintValue = normalizeText(constraint.value);
+          const constraintAliases = (constraint.aliases ?? []).map((a) => normalizeText(a));
+          if (constraintValue === term || constraintAliases.includes(term)) {
+            return constraintAliases;
+          }
+          return [];
+        },
+      );
+      return [term, ...synAliases, ...new Set(reqAliases)];
+    });
 }
 
 type CategoryVerdict = "pass" | "fail" | "unverified";
 
-function checkCategory(product: ProductLike, category: string): CategoryVerdict {
+function checkCategory(
+  product: ProductLike,
+  category: string,
+  extractedRequirements?: StructuredRequirements,
+): CategoryVerdict {
   // Confirmed wrong type (blocked by evidence, component-substitution, or
   // cross-category conflict rules) → hard fail, excluded from exact AND near.
   if (hasConflictingProductType(product, category)) {
@@ -1573,7 +1596,7 @@ function checkCategory(product: ProductLike, category: string): CategoryVerdict 
 
   // No specific rule — fall back to term matching using full product text
   // (which includes the LLM category field as a soft signal).
-  const groups = categoryTerms(category);
+  const groups = categoryTerms(category, extractedRequirements);
 
   if (groups.length === 0) {
     return "pass";
@@ -2179,7 +2202,7 @@ export function validateProductAgainstRequirements(
   const requestedCategory = requirements.category?.trim();
 
   if (requestedCategory) {
-    const categoryVerdict = checkCategory(product, requestedCategory);
+    const categoryVerdict = checkCategory(product, requestedCategory, requirements.extractedRequirements);
     const label = `Category: ${requestedCategory}`;
 
     if (categoryVerdict === "pass") {

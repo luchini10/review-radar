@@ -285,3 +285,17 @@ If run-to-run variance in core leaders (±2–3) exceeds the expected effect siz
 ---
 
 *Last updated: 2026-06-24 (Measurement Phase 2: replay fixtures — `replay-quality-fixtures.mjs`, `save-debug-fixture.mjs`, synthetic fixture, 14 deterministic tests). Maintained append-only — add entries, do not overwrite prior findings.*
+
+---
+
+## Phase 3C (2026-06-25): categoryTerms alias expansion
+
+**Finding:** `categoryTerms()` did literal word-group matching without consulting `extractedRequirements` aliases. For "gas grill" queries, "propane" is a well-known alias for "gas" in the requirement system, but a product described only as a "propane grill" (no "gas" in any text field) failed the category check → "unverified" → excluded from exactScored → dropped when 7 exact matches exist.
+
+**Fix:** `categoryTerms(category, extractedRequirements?)` now expands each term group with aliases from `requiredConstraints` where the constraint value or aliases include the category term. Generic: works for any query where category terms map to dealbreaker requirement values.
+
+**Tests:** 4 new tests in `requirementValidation.test.mjs` — "categoryTerms alias expansion via extractedRequirements". All pass.
+
+**Unconfirmed for future investigation:** Weber E-325 and Weber Genesis E-435 pass the category check (have "Gas Grill" in name) but score below all 7 winners. Exact scoring reason requires per-candidate enriched data not currently saved in fixtures. Future: add `exactScoredBreakdown` / `nearScoredReason` to debug output.
+
+**Fixture unchanged:** `gas-grill.json` replay still shows same funnel results — this fix affects future LIVE runs, not the already-saved fixture (scoring happened in the live run, not replay).
