@@ -121,6 +121,7 @@ export function analyzeFixture(payload) {
   const debug = payload.debug || {};
   const stageFunnel = debug.stageFunnel || null;
   const finalSelectionTrace = stageFunnel?.finalSelectionTrace || null;
+  const sourceUpgradeTraces = stageFunnel?.sourceUpgradeTraces || null;
 
   const finalExact = result.exactMatches || [];
   const finalNear = result.nearMatches || [];
@@ -185,11 +186,31 @@ export function analyzeFixture(payload) {
     lostLeaders,
     lostLeaderDropPoints,
     dropMap,
+    sourceUpgradeTraces,
     finalSelectionTrace,
   };
 }
 
 // ── CLI report printer ────────────────────────────────────────────────────────
+
+function printSourceUpgradeTraces(traces) {
+  if (!traces) {
+    console.log("\nSource-upgrade trace: not present (fixture pre-dates Phase 3E).");
+    return;
+  }
+  if (!Array.isArray(traces) || traces.length === 0) {
+    console.log("\nSource-upgrade trace: no candidates qualified for upgrade.");
+    return;
+  }
+  console.log(`\nSource-Quality Upgrade (${traces.length} attempted):`);
+  for (const t of traces) {
+    const fields = t.attachedFields?.length > 0 ? t.attachedFields.join(", ") : "(none)";
+    const status = t.evidenceAttached ? `✓ attached: ${fields}` : "✗ no match found";
+    console.log(`  ${(t.name || "").slice(0, 50)}`);
+    console.log(`    query: ${t.query}`);
+    console.log(`    ${status}`);
+  }
+}
 
 function printFinalSelectionTrace(trace) {
   if (!trace) {
@@ -332,6 +353,9 @@ function printReport(analysis) {
       }
     }
   }
+
+  // Source-quality upgrade trace
+  printSourceUpgradeTraces(analysis.sourceUpgradeTraces);
 
   // Final-selection trace
   printFinalSelectionTrace(analysis.finalSelectionTrace);

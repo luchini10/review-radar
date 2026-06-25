@@ -173,6 +173,7 @@ function buildHandler({
     enrichProductAssets: async (result) => result,
     enrichResultWithReviewEvidence: async (result) => result,
     searchSerperForProducts,
+    upgradeWeakSourceEvidence: async (result) => ({ result, sourceUpgradeTraces: [] }),
     verifyMissingRequirementEvidence: async (result) => result,
   });
 }
@@ -233,6 +234,7 @@ describe("recommendation API contract", () => {
       enrichProductAssets: async (result) => result,
       enrichResultWithReviewEvidence: async (result) => result,
       searchSerperForProducts: async () => emptySerperResult(),
+      upgradeWeakSourceEvidence: async (result) => ({ result, sourceUpgradeTraces: [] }),
       verifyMissingRequirementEvidence: async (result) => result,
     });
 

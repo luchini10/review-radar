@@ -17,7 +17,10 @@ import { normalizeResearchResult } from "../../../lib/normalizeResearchResult.ts
 import { enrichResultWithReviewEvidence } from "../../../lib/productEvidence.ts";
 import { prioritizeProductPageUrlsInResult } from "../../../lib/productPageUrl.ts";
 import { enrichProductAssets } from "../../../lib/productAssets.ts";
-import { verifyMissingRequirementEvidence } from "../../../lib/requirementEvidenceRescue.ts";
+import {
+  upgradeWeakSourceEvidence,
+  verifyMissingRequirementEvidence,
+} from "../../../lib/requirementEvidenceRescue.ts";
 import {
   recommendationResultJsonSchema,
   recommendationResultSchema,
@@ -111,6 +114,7 @@ type RecommendationRouteDependencies = {
   enrichProductAssets: typeof enrichProductAssets;
   enrichResultWithReviewEvidence: typeof enrichResultWithReviewEvidence;
   searchSerperForProducts: typeof searchSerperForProducts;
+  upgradeWeakSourceEvidence: typeof upgradeWeakSourceEvidence;
   verifyMissingRequirementEvidence: typeof verifyMissingRequirementEvidence;
 };
 
@@ -120,6 +124,7 @@ const defaultRecommendationRouteDependencies: RecommendationRouteDependencies = 
   enrichProductAssets,
   enrichResultWithReviewEvidence,
   searchSerperForProducts,
+  upgradeWeakSourceEvidence,
   verifyMissingRequirementEvidence,
 };
 
@@ -1081,12 +1086,21 @@ async function handleRecommendationPost(
       }
     }
 
+    const { result: sourceUpgradedResult, sourceUpgradeTraces } =
+      await timing.measure(
+        "source_quality_upgrade",
+        () =>
+          routeDependencies.upgradeWeakSourceEvidence(
+            revalidatedAssetResult,
+            requestWithDiscovery,
+          ),
+      );
     const { result: enrichedResult, finalSelectionTrace } = timing.measureSync(
       "score_and_select_results",
       () =>
         scoreAndSelectRecommendationsWithTrace(
           {
-            ...revalidatedAssetResult,
+            ...sourceUpgradedResult,
             extractedRequirements,
           },
           requestWithDiscovery,
@@ -1160,6 +1174,7 @@ async function handleRecommendationPost(
             // exactly why it was selected, collapsed, dropped, or demoted. This
             // covers candidates that reach scoreAndSelectRecommendations — pipeline
             // stages before this point are covered by the stages[] funnel above.
+            sourceUpgradeTraces,
             finalSelectionTrace,
           }
         : undefined,

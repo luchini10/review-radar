@@ -13,6 +13,15 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-25
 
+### 🟩 Claude — Phase 3E: Source-quality upgrade for high-fit weakly-sourced candidates
+- New pre-scoring pass in `lib/requirementEvidenceRescue.ts`: `upgradeWeakSourceEvidence` runs AFTER requirement rescue and revalidation, BEFORE `scoreAndSelectRecommendationsWithTrace`.
+- Targets candidates that (a) have a model-number token (strong product identity), (b) pass all hard requirements, and (c) have weak source evidence — no verified price, no owner rating, and zero external citations (all citations from the same host as the product page).
+- For each qualifying candidate (capped at `MAX_SOURCE_UPGRADE_CANDIDATES = 3`) a single `searchSerperShopping` call finds the same product on a better-sourced page; after passing the existing `looksLikeSameProduct` identity gate, price, rating, reviewCount, and citation are merged via existing rescue helpers (`mergeOffer`, `addVerificationCitation`).
+- Wired into the route as `routeDependencies.upgradeWeakSourceEvidence`; identity-mocked in the API contract test.
+- Debug visibility: `debug.stageFunnel.sourceUpgradeTraces` records every attempted upgrade (query, fields attached, identity result). Replay script prints the traces.
+- 18 deterministic tests in `tests/sourceQualityUpgrade.test.mjs` covering 3 categories (gas grill, robot vacuum, TV) and 7 negative cases (price present, rating present, external citation present, failed requirement, no model token, identity mismatch, cap enforcement). Full suite 597/597 green.
+- Safety invariants: no product-specific patches, no score weight changes, no budget/eligibility loosening; the upgrade is metadata-only and the candidate set (names/types) is unchanged.
+
 ### 🟩 Claude — Final-selection trace instrumentation (debug-only)
 - Added `debug.stageFunnel.finalSelectionTrace` — a per-candidate record capturing why every candidate that reached `scoreAndSelectRecommendations` was selected, dropped, collapsed, or excluded. Zero behavior change to ranking, scoring, filtering, or any other pipeline stage.
 - New types in `lib/recommendationFunnel.ts`: `FinalSelectionDecisionReason` (10 values), `FinalSelectionCandidateStream` (5 values), `FinalSelectionTraceEntry` (full candidate snapshot).

@@ -2205,3 +2205,37 @@ Added `debug.stageFunnel.finalSelectionTrace` — a debug-only, behavior-change-
 - Single-letter-prefix names ("A Sofa") fail `hasBasicProductIdentity` → `reliabilityNear` stream; multi-word names required for exactScored tests
 
 **No behavior change confirmed:** existing `scoreAndSelectRecommendations` call sites unchanged; `scoreAndSelectRecommendationsWithTrace` is the new path used only in the route's debug payload.
+
+---
+
+## <span style="color:green">**Claude QA Update — 2026-06-25 01:00**</span>
+
+**Phase 3E: Source-quality upgrade — complete, 597/597 green**
+
+New pre-scoring pass `upgradeWeakSourceEvidence` in `lib/requirementEvidenceRescue.ts`. Runs after requirement rescue + revalidation, before final scoring.
+
+**Trigger conditions (ALL must be true):**
+- Model-number token in product name/metadata (regex `[A-Z]{1,5}[-\s]?\d{2,}[A-Z0-9-]*`)
+- Zero failed requirements (`requirementCheck.failed.length === 0`)
+- No verified price, no owner rating, no external citations (all citation hosts === product page host)
+
+**What the upgrade does:**
+- Calls `searchSerperShopping(productName + category, category)` for up to 3 qualifying candidates
+- Passes each shopping result through `looksLikeSameProduct` identity gate (reuses existing rescue helper)
+- Merges: price (via `mergeOffer`), rating + reviewCount (new `mergeRatingData`), citation (via `addVerificationCitation`), image if missing
+- No changes to candidate set (names/types unchanged — metadata-only upgrade)
+
+**Root cause for Weber/Napoleon loss (confirmed via prior session analysis):**
+These candidates had manufacturer-page URLs, no owner rating, no verified price, zero external citations. The new upgrade would fire on them (both have clear model tokens: E-325, EP-325, Rogue XT). On a live run, a `searchSerperShopping` call for "Weber Spirit E-325 gas grill" would return Home Depot / Lowe's listings with price ~$449 and rating ~4.5/280 reviews. Merging these improves `sourceQualityScore` (independent citation bonus +2), `ownerRatingScore` (from 0 to ~5), and `priceValueScore` (from ~4 to ~6). Combined effect: rankedMatchScore rises from below 9.9 to potentially competitive range.
+
+**Test coverage (18 tests):**
+- Positive: gas grill, robot vacuum, TV — 3 unrelated categories ✓
+- Negative: price present, rating present, external citation present, failed requirement, no model token, identity mismatch, cap (3) enforcement, no candidates qualify ✓
+
+**Safety gates confirmed active:**
+- `needsSourceUpgrade` skips failed-requirement candidates
+- `looksLikeSameProduct` blocks identity mismatches before any merge
+- `mergeOffer` is idempotent (existing price is never overwritten)
+- `MAX_SOURCE_UPGRADE_CANDIDATES = 3` limits API cost per request
+
+**Debug visibility:** `debug.stageFunnel.sourceUpgradeTraces` (query, evidenceAttached, attachedFields per candidate). Replay script prints section.

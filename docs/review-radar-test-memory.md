@@ -321,3 +321,36 @@ If run-to-run variance in core leaders (±2–3) exceeds the expected effect siz
 **Replay script:** `scripts/replay-quality-fixtures.mjs` prints trace grouped by decision reason (selected first by rank, then not-selected grouped by reason with stream/score/collapsedBy). Prints "not present" message for old fixtures.
 
 **Tests:** `tests/finalSelectionTrace.test.mjs` — 11 deterministic tests covering trace existence, shape, stream classification, all 4 disqualification paths, ranked_below_cutoff, identical result parity, score data, citation counts, and off-form-factor modifiers. All 11 pass; full suite 579/579 green.
+
+---
+
+## 2026-06-25 — Phase 3E: Source-quality upgrade (tests/sourceQualityUpgrade.test.mjs)
+
+**What was built:** `upgradeWeakSourceEvidence` in `lib/requirementEvidenceRescue.ts` — a pre-scoring pass that finds retailer evidence for manufacturer-page candidates before final scoring.
+
+**Trigger logic (`needsSourceUpgrade`):**
+- Must have a model-number token (regex `\b[A-Z]{1,5}[-\s]?\d{2,}[A-Z0-9-]*\b` applied to `product.name`, plus `metadata.modelNumber/sku/gtin`) with length ≥ 4 after normalization
+- Must have `requirementCheck.failed.length === 0` (not disqualified)
+- Must have ALL THREE weak-evidence signals: no verified price (`offers[].price.confidence !== "Low" && price !== null`), no `metadata.rating.value`, zero citations where `sourceHost(citation.url) !== sourceHost(product_page_url)`
+
+**Key behaviors tested:**
+- 3-category coverage: gas grill (E-325 model token), robot vacuum (RV1001AE), TV (QN65Q80C)
+- `looksLikeSameProduct` identity gate reused (same function as requirement rescue)
+- `mergeOffer` idempotent — never overwrites existing price
+- `mergeRatingData` only writes when `!metadata.rating?.value` (null/undefined both excluded)
+- `addVerificationCitation` deduplicates by URL (existing URL → no second citation added)
+- Cap: `MAX_SOURCE_UPGRADE_CANDIDATES = 3` — 4 qualifying candidates → 3 searches, 3 traces
+- Negative: identity mismatch (Char-Broil result for Weber E-325 query) → trace shows `evidenceAttached: false`
+
+**Negative cases confirmed:**
+- Has verified price → `needsSourceUpgrade = false` → `searchFn` never called
+- Has failed requirement → `needsSourceUpgrade = false` → `searchFn` never called
+- No model-number token ("Best Charcoal Grill Ever") → `needsSourceUpgrade = false`
+- Has external citation (different host) → `needsSourceUpgrade = false`
+- Has `metadata.rating.value` set → `needsSourceUpgrade = false`
+
+**Route integration:** `routeDependencies.upgradeWeakSourceEvidence` called after `revalidatedAssetResult`, before `scoreAndSelectRecommendationsWithTrace`. Contract test identity mock: `async (result) => ({ result, sourceUpgradeTraces: [] })`.
+
+**Debug visibility:** `debug.stageFunnel.sourceUpgradeTraces` → array of `{ name, query, evidenceAttached, attachedFields }`. Replay script prints section.
+
+**Suite count:** 18 new tests; total 597/597 green. TypeScript clean.

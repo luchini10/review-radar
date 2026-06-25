@@ -968,6 +968,220 @@ function productsNeedingVerification(result: RecommendationResult) {
   });
 }
 
+// ── Phase 3E: Source-quality upgrade ─────────────────────────────────────────
+// A light second-pass that runs AFTER the requirement rescue and revalidation,
+// but BEFORE final scoring. It targets candidates that:
+//   1. Have a model-number token in their name/metadata (strong product identity)
+//   2. Pass all hard requirements (requirementCheck.failed is empty)
+//   3. Have weak source evidence: no verified price, no owner rating, and zero
+//      external citations (every citation host matches the product-page host)
+//
+// For each qualifying candidate (capped at MAX_SOURCE_UPGRADE_CANDIDATES) a
+// single shopping search finds the same product on a retailer or editorial page
+// and merges newly-found price, rating, review-count, and citation data before
+// scoring runs.
+//
+// Safety invariants (never violated):
+//   - Identity gate: looksLikeSameProduct must pass before any evidence is merged
+//   - Failed-requirement candidates are never touched
+//   - mergeOffer is reused as-is: adds an offer only when no price exists yet
+//   - No budget or eligibility rules are changed
+//   - The candidate set (names / product types) is unchanged: upgrade is metadata-only
+
+const MAX_SOURCE_UPGRADE_CANDIDATES = 3;
+
+export type SourceUpgradeTrace = {
+  name: string;
+  query: string;
+  evidenceAttached: boolean;
+  attachedFields: string[];
+};
+
+type SourceUpgradeOutcome<T> = {
+  result: T;
+  sourceUpgradeTraces: SourceUpgradeTrace[];
+};
+
+function countExternalCitations(product: ProductRecommendation) {
+  const productHost = sourceHost(product.product_page_url);
+
+  return (product.citations || []).filter(
+    (c) => c.url && sourceHost(c.url) !== productHost,
+  ).length;
+}
+
+export function needsSourceUpgrade(product: ProductRecommendation) {
+  if ((product.requirementCheck?.failed?.length ?? 0) > 0) return false;
+  if (modelTokens(product).length === 0) return false;
+
+  return (
+    !hasVerifiedPrice(product) &&
+    !product.metadata?.rating?.value &&
+    countExternalCitations(product) === 0
+  );
+}
+
+function mergeRatingData(
+  metadata: ProductMetadata,
+  candidate: RawProductCandidate,
+): ProductMetadata {
+  const hasRating = Boolean(metadata.rating?.value);
+  const hasReviewCount = Boolean(metadata.reviewCount?.value);
+
+  if (
+    (hasRating || candidate.rating === null) &&
+    (hasReviewCount || candidate.reviewCount === null)
+  ) {
+    return metadata;
+  }
+
+  return {
+    ...metadata,
+    ...(!hasRating && candidate.rating !== null
+      ? { rating: field(candidate.rating, candidate.productUrl, "serper", "Medium") }
+      : {}),
+    ...(!hasReviewCount && candidate.reviewCount !== null
+      ? { reviewCount: field(candidate.reviewCount, candidate.productUrl, "serper", "Medium") }
+      : {}),
+  };
+}
+
+async function upgradeProductSource(
+  product: ProductRecommendation,
+  category: string,
+  searchFn: (query: string, category: string) => Promise<RawProductCandidate[]>,
+): Promise<{ product: ProductRecommendation; trace: SourceUpgradeTrace }> {
+  const query = buildRescueShoppingQuery(product, category);
+  const trace: SourceUpgradeTrace = {
+    name: product.name,
+    query,
+    evidenceAttached: false,
+    attachedFields: [],
+  };
+
+  const candidates = await searchFn(query, category);
+  let updated = product;
+  let metadata = updated.metadata || { offers: [] };
+
+  for (const candidate of candidates.slice(0, 6)) {
+    if (!looksLikeSameProduct(updated, candidate)) continue;
+
+    let attached = false;
+
+    const price = candidatePriceEvidence(candidate);
+    if (price !== null && !hasVerifiedPrice(updated)) {
+      metadata = mergeOffer(metadata, price, candidate);
+      trace.attachedFields.push("price");
+      attached = true;
+    }
+
+    const hasRatingBefore = Boolean(metadata.rating?.value);
+    const hasReviewCountBefore = Boolean(metadata.reviewCount?.value);
+    metadata = mergeRatingData(metadata, candidate);
+    if (!hasRatingBefore && Boolean(metadata.rating?.value)) {
+      trace.attachedFields.push("rating");
+      attached = true;
+    }
+    if (!hasReviewCountBefore && Boolean(metadata.reviewCount?.value)) {
+      trace.attachedFields.push("reviewCount");
+      attached = true;
+    }
+
+    const syntheticFact: MissingFact = {
+      kind: "price",
+      label: "Source upgrade",
+      queryTerm: "",
+    };
+    const withCitation = addVerificationCitation(updated, candidate, syntheticFact);
+    if (withCitation !== updated) {
+      updated = withCitation;
+      trace.attachedFields.push("citation");
+      attached = true;
+    }
+
+    if (!updated.product_image_url && candidate.imageUrl) {
+      updated = { ...updated, product_image_url: candidate.imageUrl };
+      trace.attachedFields.push("image");
+      attached = true;
+    }
+
+    if (attached) {
+      trace.evidenceAttached = true;
+      break;
+    }
+  }
+
+  return { product: { ...updated, metadata }, trace };
+}
+
+export async function upgradeWeakSourceEvidence<T extends RecommendationResult>(
+  result: T,
+  requirements: RecommendationApiRequest,
+  options: {
+    concurrency?: number;
+    searchFn?: (query: string, category: string) => Promise<RawProductCandidate[]>;
+  } = {},
+): Promise<SourceUpgradeOutcome<T>> {
+  const category = baseProductCategoryFromQuery(requirements.query);
+  const searchFn = options.searchFn ?? searchSerperShopping;
+
+  const seen = new Set<string>();
+  const allCandidates = [
+    ...result.recommendations,
+    ...result.exactMatches,
+    ...result.nearMatches,
+    ...(result.premiumAboveBudget || []),
+  ];
+  const uniqueCandidates = allCandidates.filter((p) => {
+    const key = productReplacementKey(p);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  const upgradeTargets = uniqueCandidates
+    .filter(needsSourceUpgrade)
+    .slice(0, MAX_SOURCE_UPGRADE_CANDIDATES);
+
+  if (upgradeTargets.length === 0) {
+    return { result, sourceUpgradeTraces: [] };
+  }
+
+  const upgrades = await mapWithConcurrency(
+    upgradeTargets,
+    options.concurrency ?? 1,
+    (product) => upgradeProductSource(product, category, searchFn),
+  );
+
+  const replacements = new Map<string, ProductRecommendation>();
+  const sourceUpgradeTraces: SourceUpgradeTrace[] = [];
+
+  for (const [index, product] of upgradeTargets.entries()) {
+    const { product: upgraded, trace } = upgrades[index];
+    sourceUpgradeTraces.push(trace);
+    if (trace.evidenceAttached) {
+      replacements.set(product.name, upgraded);
+    }
+  }
+
+  if (replacements.size === 0) {
+    return { result, sourceUpgradeTraces };
+  }
+
+  return {
+    result: {
+      ...result,
+      recommendations: replaceProductsByName(result.recommendations, replacements),
+      exactMatches: replaceProductsByName(result.exactMatches, replacements),
+      nearMatches: replaceProductsByName(result.nearMatches, replacements),
+      premiumAboveBudget: result.premiumAboveBudget
+        ? replaceProductsByName(result.premiumAboveBudget, replacements)
+        : undefined,
+    },
+    sourceUpgradeTraces,
+  };
+}
+
 export async function verifyMissingRequirementEvidence<T extends RecommendationResult>(
   result: T,
   requirements: RecommendationApiRequest,
