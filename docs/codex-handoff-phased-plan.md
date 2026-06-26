@@ -16,15 +16,15 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 3I - query construction fix for source-quality upgrade (recommended next)**.
+Current phase: **Phase 3J - focused live proof after source-upgrade query construction fix**.
 
-Phase 3H is complete. The fresh Phase 3G-trace diagnostic showed one gas-grill source-upgrade attempt where `candidatesReturned = 0` and `noMatchReason = shopping_results_empty`; cordless drill had no source-upgrade attempt in that live run. The proven next bottleneck for the observed attempt is shopping search coverage / query construction, not identity matching or attachable-field extraction.
+Phase 3I Path A is implemented and deterministic-testable, but not live-proven. The source-upgrade query builder now uses concise product identity for source-quality upgrade searches while leaving the general missing-evidence rescue query path unchanged.
 
-Do not broaden model-token detection yet. Do not tune scoring. Do not loosen identity, price, citation, product, or requirement gates. The next behavior phase should be the smallest generalized query-construction fix.
+Do not broaden model-token detection yet. Do not tune scoring. Do not loosen identity, price, citation, product, or requirement gates. The next phase should be a focused live proof, not another behavior change.
 
 Recommended next phase:
 
-- Phase 3I Path A: add a source-upgrade-specific shopping query builder that prefers product identity over long display titles, removes redundant category suffixes, and is proven with deterministic tests plus a focused live re-test.
+- Phase 3J: save and replay fresh debug fixtures for `gas grill` and `cordless drill`; inspect source-upgrade traces to see whether candidates now return and whether evidence attaches safely.
 
 ---
 
@@ -276,24 +276,23 @@ QA log:
 
 ## Remaining Planned Phases
 
-### Phase 3I - Fix proven source-upgrade bottleneck - TODO / NEXT
+### Phase 3I - Fix proven source-upgrade bottleneck - DONE / NOT LIVE-PROVEN
 
 Phase 3H proved Path A for the observed source-upgrade attempt.
 
-Possible paths:
+Implemented path:
 
-- Path A, query construction fix: **recommended next.** Use because Phase 3H showed `candidatesReturned = 0` for the observed gas-grill source-upgrade attempt. Shorten source-upgrade rescue query, remove redundant category suffix, prefer brand + model or brand + model + product noun. Avoid overlong queries like `"4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid gas grill"`. Do not hardcode brands or categories.
-- Path B, identity matching fix: use if Phase 3H shows `candidatesReturned > 0` but `identityMatch = false`. Improve same-product matching, safer partial model-token matching, and brand/model normalization without merging accessories, bundles, parts, or wrong variants.
-- Path C, attachable fields fix: use if identity matches but no evidence attaches. Improve extraction/merging of price/rating/review/citation fields from shopping result while keeping price trust strict.
+- Path A, query construction fix. Added a source-upgrade-specific shopping query builder that prefers concise product identity over long display titles and removes redundant category suffixes.
+- General missing-evidence rescue still uses `buildRescueShoppingQuery`; only source-quality upgrade uses the new builder.
+- Example deterministic outputs: `4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid` -> `4-Burner Propane Gas Grill`; `Napoleon Rogue XT 425 SIB Gas Grill` -> `Napoleon Rogue XT 425 SIB`; `Makita XFD131 18V LXT Cordless Drill` -> `Makita XFD131`; `Tapo RV30C Plus Robot Vacuum` -> `Tapo RV30C Plus`.
+- No scoring, ranking, trigger, identity, model-token, price-trust, citation-trust, product-eligibility, or merge-safety changes.
 
-Exit criteria:
+Status:
 
-- Deterministic tests prove the specific bottleneck is fixed.
-- Negative safety tests still pass.
-- No scoring/ranking weight changes.
-- Live re-test proves improvement.
+- Deterministic tests added and focused source-quality-upgrade tests pass.
+- Not live-proven. Do not mark source-upgrade mini-track complete until Phase 3J proves candidates return and evidence attaches safely.
 
-### Phase 3J - Live proof after source-upgrade bottleneck fix - TODO
+### Phase 3J - Live proof after source-upgrade bottleneck fix - TODO / NEXT
 
 Purpose: after Phase 3I behavior fix, rerun live searches to prove source upgrade attaches safe evidence.
 
@@ -624,24 +623,24 @@ Do this only after backend trust and ranking are stronger.
 
 ## Immediate Next Task for Codex
 
-Run Phase 3I Path A.
+Run Phase 3J.
 
-Make the smallest generalized source-upgrade query-construction fix. Do not change scoring, ranking, discovery breadth, source-upgrade trigger logic, identity matching, model-token detection, price trust, citation trust, product trust, or requirement filtering.
+Phase 3I Path A is implemented but not live-proven. Do not make another behavior change before the live proof.
 
 Task:
 
-1. Add or adjust a source-upgrade-specific shopping query builder.
-2. Prefer product identity over long display titles.
-3. Remove redundant category suffixes when the product name already contains the category/product noun.
-4. Keep the identity gate unchanged.
-5. Add deterministic positive and negative tests.
-6. Re-run focused live diagnostics for `gas grill` and `cordless drill` only after tests pass.
+1. Save fresh debug fixtures for `gas grill` and `cordless drill`.
+2. Replay both fixtures.
+3. Inspect `sourceUpgradeTraces`, `candidatesReturned`, `candidatesEvaluated`, `noMatchReason`, `candidateSample`, `evidenceAttached`, `attachedFields`, and `finalSelectionTrace`.
+4. Determine whether the shorter source-upgrade queries now return candidates.
+5. If candidates return, verify identity, attachable fields, safety, and natural score/rank impact.
 
 Do not:
 
 - hardcode Nexgrill, Napoleon, Weber, Makita, drills, or grills;
 - broaden model-token detection in this phase;
 - loosen trust gates to improve attachment rate;
+- change source-upgrade query construction again before observing live Phase 3J traces;
 - run a full baseline.
 
-Exit criteria: query construction is improved generically, tests prove it, and the focused live re-test shows whether candidates are returned for source-upgrade attempts.
+Exit criteria: focused live traces show whether Phase 3I improved candidate return/attachment, and the QA log records the result.

@@ -665,6 +665,96 @@ export function buildRescueShoppingQuery(
   return `${product.name} ${category}`.replace(/\s+/g, " ").trim();
 }
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function queryWords(value: string) {
+  return normalizeText(value)
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function containsCategoryWords(query: string, category: string) {
+  const queryWordSet = new Set(queryWords(query));
+  const categoryWords = queryWords(category).filter(
+    (word) => !GENERIC_PRODUCT_WORDS.has(word),
+  );
+
+  return categoryWords.length > 0 && categoryWords.every((word) => queryWordSet.has(word));
+}
+
+function removeTrailingCategory(query: string, category: string) {
+  const pattern = new RegExp(`\\s+${escapeRegExp(category)}\\s*$`, "i");
+  return query.replace(pattern, "").trim();
+}
+
+function stripRetailDisplayFiller(query: string) {
+  return query
+    .replace(
+      /\s+in\s+(?:black|white|gray|grey|red|blue|green|brown|stainless steel)\b.*$/i,
+      "",
+    )
+    .replace(
+      /\s+with\s+(?:stainless steel|black|white|gray|grey|red|blue|green|brown)\b.*$/i,
+      "",
+    )
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const MODEL_SUFFIX_WORDS = new Set([
+  "ai",
+  "combo",
+  "max",
+  "plus",
+  "pro",
+  "se",
+  "sib",
+  "ultra",
+]);
+
+function buildModelIdentityQuery(name: string) {
+  const match = name.match(/\b[A-Z]{1,5}[-\s]?\d{2,}[A-Z0-9-]*\b/);
+
+  if (!match || match.index === undefined) {
+    return "";
+  }
+
+  const before = name
+    .slice(0, match.index)
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(-2);
+  const model = match[0].replace(/\s+/g, " ");
+  const after = name.slice(match.index + match[0].length).trim().split(/\s+/);
+  const suffix = after[0]?.replace(/[^a-z0-9+-]/gi, "");
+  const suffixWords =
+    suffix && MODEL_SUFFIX_WORDS.has(suffix.toLowerCase()) ? [suffix] : [];
+
+  return [...before, model, ...suffixWords].join(" ").replace(/\s+/g, " ").trim();
+}
+
+export function buildSourceUpgradeShoppingQuery(
+  product: Pick<ProductRecommendation, "name" | "metadata">,
+  category: string,
+) {
+  const modelIdentity = buildModelIdentityQuery(product.name);
+
+  if (modelIdentity) {
+    return removeTrailingCategory(modelIdentity, category);
+  }
+
+  let query = stripRetailDisplayFiller(product.name);
+
+  if (!containsCategoryWords(query, category)) {
+    query = `${query} ${category}`;
+  }
+
+  return query.replace(/\s+/g, " ").trim();
+}
+
 async function applyCandidateEvidence(
   product: ProductRecommendation,
   fact: MissingFact,
@@ -1073,7 +1163,7 @@ async function upgradeProductSource(
   category: string,
   searchFn: (query: string, category: string) => Promise<RawProductCandidate[]>,
 ): Promise<{ product: ProductRecommendation; trace: SourceUpgradeTrace }> {
-  const query = buildRescueShoppingQuery(product, category);
+  const query = buildSourceUpgradeShoppingQuery(product, category);
   const trace: SourceUpgradeTrace = {
     name: product.name,
     query,

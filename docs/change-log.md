@@ -13,6 +13,14 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-26
 
+### Codex - Phase 3I Path A: source-upgrade query construction
+- Added a source-upgrade-specific shopping query builder in `lib/requirementEvidenceRescue.ts` so source-quality upgrade searches use concise product identity instead of long display titles plus duplicated category suffixes.
+- Existing general missing-evidence rescue still uses `buildRescueShoppingQuery`; only `upgradeWeakSourceEvidence` now uses the new source-upgrade query builder.
+- Query examples now covered: `Napoleon Rogue XT 425 SIB Gas Grill` -> `Napoleon Rogue XT 425 SIB`; `4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid` -> `4-Burner Propane Gas Grill`; `Makita XFD131 18V LXT Cordless Drill` -> `Makita XFD131`; `Tapo RV30C Plus Robot Vacuum` -> `Tapo RV30C Plus`.
+- No changes to scoring, ranking, final selection, discovery breadth, source-upgrade trigger conditions, `hasUsefulCommerceEvidence`, identity matching, model-token detection, product-type rules, price trust, citation trust, product eligibility, or same-product merge safety.
+- Added deterministic tests in `tests/sourceQualityUpgrade.test.mjs`; `npm test` is 611/611 green and eval red-flag checks are clean. Phase 3I is implemented but not live-proven. Next step is Phase 3J focused live proof.
+
+
 ### 🟩 Claude — Phase 3G: Source-upgrade search-result diagnostics (debug-only, no behavior change)
 - Extended `SourceUpgradeTrace` in `lib/requirementEvidenceRescue.ts` with 4 new diagnostic fields: `candidatesReturned`, `candidatesEvaluated`, `noMatchReason`, `candidateSample`.
 - New exported type `SourceUpgradeCandidateSample` (name, host, price, rating, identityMatch, rejectionReason).

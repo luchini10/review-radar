@@ -8,6 +8,22 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-06-26 Phase 3I
+
+**Goal:** Implement Phase 3I Path A by improving only the source-quality-upgrade shopping query construction.
+
+**What it checked:** Read the Phase 3I handoff docs, Phase 3H QA result, `lib/requirementEvidenceRescue.ts`, and `tests/sourceQualityUpgrade.test.mjs`. Confirmed the Phase 3H bottleneck was a source-upgrade query that returned zero shopping candidates before identity matching or evidence attachment.
+
+**What it changed:** Added a source-upgrade-specific query builder that prefers concise product identity over long display titles and avoids duplicated category suffixes. The general missing-evidence rescue query path was left unchanged.
+
+**Why the change matters:** Source-quality upgrade now searches cleaner identity phrases such as `4-Burner Propane Gas Grill`, `Napoleon Rogue XT 425 SIB`, `Makita XFD131`, and `Tapo RV30C Plus` instead of overlong queries like `... Gas Grill gas grill`.
+
+**Tests run:** Focused source-quality-upgrade tests passed. Full verification commands are recorded in the Phase 3I QA log entry.
+
+**Live checks run:** None in this phase. Phase 3I is deterministic only; Phase 3J is the focused live proof.
+
+**Next recommended step:** Run Phase 3J focused live proof for `gas grill` and `cordless drill` after all deterministic checks are green.
+
 ## Codex Run - 2026-06-26
 
 **Goal:** Save the user-provided Codex phased handoff plan and make the next task clear for future agents.

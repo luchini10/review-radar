@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  buildSourceUpgradeShoppingQuery,
   needsSourceUpgrade,
   upgradeWeakSourceEvidence,
 } from "../lib/requirementEvidenceRescue.ts";
@@ -85,6 +86,62 @@ function makeResult(products) {
     final_buying_advice: "",
   };
 }
+
+// ── Phase 3I: source-upgrade query construction ─────────────────────────────
+
+describe("buildSourceUpgradeShoppingQuery", () => {
+  it("prefers concise model identity and removes redundant category suffix", () => {
+    const query = buildSourceUpgradeShoppingQuery(
+      { name: "Napoleon Rogue XT 425 SIB Gas Grill" },
+      "gas grill",
+    );
+
+    assert.equal(query, "Napoleon Rogue XT 425 SIB");
+    assert.ok(!query.toLowerCase().endsWith("gas grill gas grill"));
+  });
+
+  it("shortens long retailer-style display titles while preserving useful identity", () => {
+    const original = "4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid";
+    const query = buildSourceUpgradeShoppingQuery({ name: original }, "gas grill");
+
+    assert.equal(query, "4-Burner Propane Gas Grill");
+    assert.ok(query.length < original.length);
+    assert.ok(query.includes("4-Burner Propane Gas Grill"));
+    assert.ok(!query.includes("in Black with Stainless Steel Main Lid"));
+    assert.ok(!query.toLowerCase().endsWith("gas grill gas grill"));
+    assert.notEqual(query.toLowerCase(), "gas grill");
+  });
+
+  it("prefers brand plus model token for cordless drills", () => {
+    const query = buildSourceUpgradeShoppingQuery(
+      { name: "Makita XFD131 18V LXT Cordless Drill" },
+      "cordless drill",
+    );
+
+    assert.equal(query, "Makita XFD131");
+    assert.ok(!query.includes("18V LXT Cordless Drill cordless drill"));
+  });
+
+  it("keeps useful model suffix words without duplicating robot vacuum", () => {
+    const query = buildSourceUpgradeShoppingQuery(
+      { name: "Tapo RV30C Plus Robot Vacuum" },
+      "robot vacuum",
+    );
+
+    assert.equal(query, "Tapo RV30C Plus");
+    assert.ok(!query.toLowerCase().endsWith("robot vacuum robot vacuum"));
+  });
+
+  it("keeps generic no-model products specific enough for shopping search", () => {
+    const query = buildSourceUpgradeShoppingQuery(
+      { name: "4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid" },
+      "gas grill",
+    );
+
+    assert.equal(query, "4-Burner Propane Gas Grill");
+    assert.notEqual(query.toLowerCase(), "gas grill");
+  });
+});
 
 // ── needsSourceUpgrade (pure trigger logic) ──────────────────────────────────
 
@@ -479,6 +536,39 @@ describe("upgradeWeakSourceEvidence", () => {
     assert.equal(t.noMatchReason, "shopping_results_empty");
     assert.equal(t.evidenceAttached, false);
     assert.deepEqual(t.candidateSample, []);
+  });
+
+  it("records the shortened Phase 3I source-upgrade query in traces", async () => {
+    const product = weakProduct(
+      "4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid",
+      {
+        extra: {
+          metadata: {
+            gtin: {
+              confidence: "Medium",
+              sourceType: "serper",
+              sourceUrl: "https://nexgrill.com/products/page",
+              value: "044376297978",
+              verifiedAt: "2024-01-01",
+            },
+            offers: [],
+          },
+        },
+      },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("gas grill");
+    let querySeen = "";
+    const searchFn = async (query) => {
+      querySeen = query;
+      return [];
+    };
+
+    const { sourceUpgradeTraces } = await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(querySeen, "4-Burner Propane Gas Grill");
+    assert.equal(sourceUpgradeTraces[0].query, "4-Burner Propane Gas Grill");
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "shopping_results_empty");
   });
 
   it("records identity_rejected and candidateSample when candidates are returned but none match the product", async () => {

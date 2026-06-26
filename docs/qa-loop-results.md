@@ -2730,3 +2730,62 @@ Exit criteria for Phase 3I:
 ### Phase 3H status
 
 DONE. The current next phase is Phase 3I Path A (query construction), pending a behavior-change pass with tests.
+
+---
+
+## <span style="color:green">**Codex QA Update - 2026-06-26 (Phase 3I Path A: source-upgrade query construction)**</span>
+
+**Focused behavior fix. No scoring, ranking, final selection, discovery breadth, source-upgrade trigger condition, `hasUsefulCommerceEvidence`, identity matching, model-token detection, product-type rule, price-trust, citation-trust, product-eligibility, or same-product merge-safety changes. No live searches were run in this phase.**
+
+### Problem addressed
+
+Phase 3H showed one gas-grill source-upgrade attempt failed before identity matching:
+
+```text
+4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid gas grill
+```
+
+The trace had `candidatesReturned: 0`, `candidatesEvaluated: 0`, `noMatchReason: shopping_results_empty`, and `candidateSample: []`. The query was long, display-title-like, and repeated the category.
+
+### Implementation
+
+- Added `buildSourceUpgradeShoppingQuery` in `lib/requirementEvidenceRescue.ts`.
+- Wired only `upgradeProductSource` to the new builder.
+- Left `buildRescueShoppingQuery` unchanged for the general missing-evidence rescue path.
+- The new builder prefers model-identity windows when a name contains a model token, strips low-value display filler such as color/material suffixes for no-model retail titles, and appends the category only when the cleaned query does not already contain the category words.
+
+### Deterministic query examples
+
+| Input | Category | Source-upgrade query |
+|---|---|---|
+| `4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid` | `gas grill` | `4-Burner Propane Gas Grill` |
+| `Napoleon Rogue XT 425 SIB Gas Grill` | `gas grill` | `Napoleon Rogue XT 425 SIB` |
+| `Makita XFD131 18V LXT Cordless Drill` | `cordless drill` | `Makita XFD131` |
+| `Tapo RV30C Plus Robot Vacuum` | `robot vacuum` | `Tapo RV30C Plus` |
+
+### Tests added / preserved
+
+- Added direct tests for `buildSourceUpgradeShoppingQuery`.
+- Added a source-upgrade trace test proving the long gas-grill display title now records `4-Burner Propane Gas Grill` as the source-upgrade query.
+- Existing safety tests still cover trigger exclusions, failed requirements, no-model-token behavior, cap enforcement, identity mismatch, duplicate citation handling, no attachable evidence, and successful same-product attachment.
+
+### Verification
+
+- `node --no-warnings --test tests/sourceQualityUpgrade.test.mjs` - 32/32 pass.
+- `npm run typecheck` - clean.
+- `npm run lint` - 0 errors, 3 pre-existing unused-variable warnings.
+- `npm test` - 611/611 pass.
+- `node scripts/eval-pipeline.mjs` - red-flag checks clean.
+
+### Status
+
+Phase 3I Path A is implemented and deterministic-testable, but **not live-proven**. The source-upgrade mini-track is not complete.
+
+### Recommended next step
+
+Run Phase 3J focused live proof:
+
+1. Save and replay fresh fixtures for `gas grill` and `cordless drill`.
+2. Confirm whether source-upgrade attempts now return candidates.
+3. If candidates return, inspect identity matches, attachable fields, safety, and final-selection impact.
+4. Do not run a full baseline.
