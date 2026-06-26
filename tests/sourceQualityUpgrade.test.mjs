@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  buildSourceUpgradeFallbackShoppingQuery,
   buildSourceUpgradeShoppingQuery,
   needsSourceUpgrade,
   upgradeWeakSourceEvidence,
@@ -143,6 +144,67 @@ describe("buildSourceUpgradeShoppingQuery", () => {
   });
 });
 
+describe("buildSourceUpgradeFallbackShoppingQuery", () => {
+  it("adds category context to compact model-only source-upgrade queries", () => {
+    const primary = buildSourceUpgradeShoppingQuery(
+      { name: "Makita XCV11Z 18V LXT Brushless Cordless 2-Gallon HEPA Filter Wet/Dry Vacuum" },
+      "shop vac",
+    );
+    const fallback = buildSourceUpgradeFallbackShoppingQuery(
+      { name: "Makita XCV11Z 18V LXT Brushless Cordless 2-Gallon HEPA Filter Wet/Dry Vacuum" },
+      "shop vac",
+      primary,
+    );
+
+    assert.equal(primary, "Makita XCV11Z");
+    assert.equal(fallback, "Makita XCV11Z shop vac");
+  });
+
+  it("keeps product identity in fallback queries across categories", () => {
+    assert.equal(
+      buildSourceUpgradeFallbackShoppingQuery(
+        { name: "RIDGID WD1450 14 Gallon Wet/Dry Vac" },
+        "shop vac",
+        "RIDGID WD1450",
+      ),
+      "RIDGID WD1450 shop vac",
+    );
+    assert.equal(
+      buildSourceUpgradeFallbackShoppingQuery(
+        { name: "Tapo RV30C Plus Robot Vacuum" },
+        "robot vacuum",
+        "Tapo RV30C Plus",
+      ),
+      "Tapo RV30C Plus robot vacuum",
+    );
+  });
+
+  it("does not duplicate category words in fallback queries", () => {
+    const fallback = buildSourceUpgradeFallbackShoppingQuery(
+      { name: "Napoleon Rogue XT 425 SIB Gas Grill" },
+      "gas grill",
+      "Napoleon Rogue XT 425 SIB",
+    );
+
+    assert.equal(fallback, "Napoleon Rogue XT 425 SIB gas grill");
+    assert.ok(!fallback.toLowerCase().includes("gas grill gas grill"));
+  });
+
+  it("does not reintroduce long retailer-display filler into fallback queries", () => {
+    const product = { name: "4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid" };
+    const primary = buildSourceUpgradeShoppingQuery(product, "gas grill");
+    const fallback = buildSourceUpgradeFallbackShoppingQuery(product, "gas grill", primary);
+
+    assert.equal(primary, "4-Burner Propane Gas Grill");
+    assert.equal(fallback, "");
+    assert.ok(!fallback.includes("in Black with Stainless Steel Main Lid"));
+    assert.notEqual(
+      fallback,
+      "4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid gas grill",
+    );
+  });
+});
+
 // ── needsSourceUpgrade (pure trigger logic) ──────────────────────────────────
 
 describe("needsSourceUpgrade", () => {
@@ -274,6 +336,101 @@ describe("needsSourceUpgrade", () => {
 // ── upgradeWeakSourceEvidence (integration, mocked searchFn) ─────────────────
 
 describe("upgradeWeakSourceEvidence", () => {
+  it("does not use fallback when the primary source-upgrade query returns candidates", async () => {
+    const product = weakProduct("Weber Spirit E-325 3-Burner Gas Grill");
+    const result = makeResult([product]);
+    const req = makeReq("gas grill");
+    const calls = [];
+    const searchFn = async (query) => {
+      calls.push(query);
+      return [
+        shoppingResult("Weber Spirit E-325 3-Burner Natural Gas Grill", {
+          price: 499,
+          productUrl: "https://homedepot.com/p/weber-e325",
+        }),
+      ];
+    };
+
+    const { sourceUpgradeTraces } = await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.deepEqual(calls, ["Weber Spirit E-325"]);
+    assert.equal(sourceUpgradeTraces[0].primaryQuery, "Weber Spirit E-325");
+    assert.equal(sourceUpgradeTraces[0].fallbackUsed, false);
+    assert.equal(sourceUpgradeTraces[0].fallbackQuery, undefined);
+    assert.equal(sourceUpgradeTraces[0].primaryCandidatesReturned, 1);
+    assert.equal(sourceUpgradeTraces[0].fallbackCandidatesReturned, 0);
+    assert.equal(sourceUpgradeTraces[0].candidatesReturned, 1);
+  });
+
+  it("uses one fallback search when the primary source-upgrade query returns zero candidates", async () => {
+    const product = weakProduct(
+      "Makita XCV11Z 18V LXT Brushless Cordless 2-Gallon HEPA Filter Wet/Dry Vacuum",
+      { category: "shop vac" },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const calls = [];
+    const searchFn = async (query) => {
+      calls.push(query);
+      if (calls.length === 1) return [];
+      return [
+        shoppingResult("Makita XCV11Z 18V LXT Cordless Wet/Dry Vacuum", {
+          category: "shop vac",
+          price: 189,
+          productUrl: "https://homedepot.com/p/makita-xcv11z",
+        }),
+      ];
+    };
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.deepEqual(calls, ["Makita XCV11Z", "Makita XCV11Z shop vac"]);
+    const t = sourceUpgradeTraces[0];
+    assert.equal(t.fallbackUsed, true);
+    assert.equal(t.fallbackQuery, "Makita XCV11Z shop vac");
+    assert.equal(t.primaryCandidatesReturned, 0);
+    assert.equal(t.fallbackCandidatesReturned, 1);
+    assert.equal(t.candidatesReturned, 1);
+    assert.equal(t.evidenceAttached, true);
+    assert.ok(upgraded.exactMatches[0].metadata?.offers?.some((o) => o.price?.value === 189));
+  });
+
+  it("keeps identity safety when fallback candidates are wrong products", async () => {
+    const product = weakProduct("RIDGID WD1450 14 Gallon Wet/Dry Vac", {
+      host: "ridgid.com",
+      category: "shop vac",
+    });
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const calls = [];
+    const searchFn = async (query) => {
+      calls.push(query);
+      if (calls.length === 1) return [];
+      return [
+        shoppingResult("RIDGID VF5000 Replacement Filter", {
+          category: "shop vac accessory",
+          price: 29,
+          productUrl: "https://homedepot.com/p/ridgid-vf5000-filter",
+        }),
+      ];
+    };
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    const t = sourceUpgradeTraces[0];
+    assert.deepEqual(calls, ["RIDGID WD1450", "RIDGID WD1450 shop vac"]);
+    assert.equal(t.fallbackUsed, true);
+    assert.equal(t.candidatesReturned, 1);
+    assert.equal(t.candidatesEvaluated, 0);
+    assert.equal(t.noMatchReason, "identity_rejected");
+    assert.equal(t.evidenceAttached, false);
+    assert.equal(t.candidateSample[0].identityMatch, false);
+    assert.equal(t.candidateSample[0].rejectionReason, "identity_mismatch");
+    assert.ok(!upgraded.exactMatches[0].metadata?.offers?.some((o) => o.price?.value === 29));
+  });
+
   it("attaches price, rating, reviewCount, and citation when a retailer match is found (gas grill)", async () => {
     const product = weakProduct("Weber Spirit E-325 3-Burner Gas Grill");
     const result = makeResult([product]);
@@ -469,8 +626,9 @@ describe("upgradeWeakSourceEvidence", () => {
 
     const { sourceUpgradeTraces } = await upgradeWeakSourceEvidence(result, req, { searchFn });
 
-    assert.equal(callCount, 3, "at most 3 upgrade searches run");
+    assert.equal(callCount, 6, "3 upgrade targets run with one fallback search each");
     assert.equal(sourceUpgradeTraces.length, 3);
+    assert.ok(sourceUpgradeTraces.every((t) => t.fallbackUsed), "each target used at most one fallback");
   });
 
   it("returns empty traces when no candidates qualify", async () => {
@@ -532,6 +690,9 @@ describe("upgradeWeakSourceEvidence", () => {
 
     const t = sourceUpgradeTraces[0];
     assert.equal(t.candidatesReturned, 0);
+    assert.equal(t.primaryCandidatesReturned, 0);
+    assert.equal(t.fallbackCandidatesReturned, 0);
+    assert.equal(t.fallbackUsed, true);
     assert.equal(t.candidatesEvaluated, 0);
     assert.equal(t.noMatchReason, "shopping_results_empty");
     assert.equal(t.evidenceAttached, false);
@@ -558,16 +719,19 @@ describe("upgradeWeakSourceEvidence", () => {
     );
     const result = makeResult([product]);
     const req = makeReq("gas grill");
-    let querySeen = "";
+    const queriesSeen = [];
     const searchFn = async (query) => {
-      querySeen = query;
+      queriesSeen.push(query);
       return [];
     };
 
     const { sourceUpgradeTraces } = await upgradeWeakSourceEvidence(result, req, { searchFn });
 
-    assert.equal(querySeen, "4-Burner Propane Gas Grill");
+    assert.deepEqual(queriesSeen, ["4-Burner Propane Gas Grill"]);
     assert.equal(sourceUpgradeTraces[0].query, "4-Burner Propane Gas Grill");
+    assert.equal(sourceUpgradeTraces[0].primaryQuery, "4-Burner Propane Gas Grill");
+    assert.equal(sourceUpgradeTraces[0].fallbackQuery, undefined);
+    assert.equal(sourceUpgradeTraces[0].fallbackUsed, false);
     assert.equal(sourceUpgradeTraces[0].noMatchReason, "shopping_results_empty");
   });
 
@@ -588,6 +752,9 @@ describe("upgradeWeakSourceEvidence", () => {
 
     const t = sourceUpgradeTraces[0];
     assert.equal(t.candidatesReturned, 1);
+    assert.equal(t.primaryCandidatesReturned, 1);
+    assert.equal(t.fallbackCandidatesReturned, 0);
+    assert.equal(t.fallbackUsed, false);
     assert.equal(t.candidatesEvaluated, 0);
     assert.equal(t.noMatchReason, "identity_rejected");
     assert.equal(t.evidenceAttached, false);
@@ -616,6 +783,9 @@ describe("upgradeWeakSourceEvidence", () => {
     const t = sourceUpgradeTraces[0];
     assert.equal(t.evidenceAttached, true);
     assert.equal(t.candidatesReturned, 1);
+    assert.equal(t.primaryCandidatesReturned, 1);
+    assert.equal(t.fallbackCandidatesReturned, 0);
+    assert.equal(t.fallbackUsed, false);
     assert.equal(t.candidatesEvaluated, 1);
     assert.equal(t.noMatchReason, undefined);
     assert.equal(t.candidateSample.length, 1);

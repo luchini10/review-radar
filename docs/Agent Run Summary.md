@@ -591,3 +591,17 @@ New entries should keep the same format and stay easy to read.
 **Live checks run:** `robot vacuum` and `shop vac` only. No full baseline.
 
 **Next recommended step:** Run a focused Phase 3K source-upgrade search-coverage fallback with deterministic tests before another live proof.
+
+## Codex Run - 2026-06-26 Phase 3K
+
+**Goal:** Add a small source-upgrade fallback query when compact model-only shopping searches return zero candidates.
+
+**What it changed:** Source upgrade now tries the compact identity query first, then one identity-plus-category fallback only after zero shopping candidates. The debug trace records primary/fallback queries and candidate counts.
+
+**What stayed the same:** Scoring, ranking, discovery, source-upgrade trigger logic, useful-commerce evidence logic, identity matching, model-token detection, trust gates, product eligibility, and the max source-upgrade target count were not changed.
+
+**Tests run:** Focused source-quality tests passed 39/39. Typecheck passed. Lint had 0 errors and 3 pre-existing warnings. Full tests passed 618/618. Eval red-flag checks were clean.
+
+**Live checks run:** None. This phase is implemented but not live-proven.
+
+**Next recommended step:** Run Phase 3L live proof on `shop vac` plus one unrelated previously attempted category to see whether the fallback returns candidates and attaches evidence safely.

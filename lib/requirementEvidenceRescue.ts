@@ -755,6 +755,38 @@ export function buildSourceUpgradeShoppingQuery(
   return query.replace(/\s+/g, " ").trim();
 }
 
+const MAX_SOURCE_UPGRADE_QUERY_LENGTH = 120;
+
+function clampQueryLength(query: string) {
+  let words = query.replace(/\s+/g, " ").trim().split(/\s+/).filter(Boolean);
+
+  while (words.join(" ").length > MAX_SOURCE_UPGRADE_QUERY_LENGTH && words.length > 1) {
+    words = words.slice(0, -1);
+  }
+
+  return words.join(" ");
+}
+
+export function buildSourceUpgradeFallbackShoppingQuery(
+  product: Pick<ProductRecommendation, "name" | "metadata">,
+  category: string,
+  primaryQuery = buildSourceUpgradeShoppingQuery(product, category),
+) {
+  const base = primaryQuery.replace(/\s+/g, " ").trim();
+  if (!base) return "";
+
+  const baseWords = new Set(queryWords(base));
+  const contextWords = queryWords(category).filter(
+    (word) => !GENERIC_PRODUCT_WORDS.has(word) && !baseWords.has(word),
+  );
+
+  if (contextWords.length === 0) {
+    return "";
+  }
+
+  return clampQueryLength(`${base} ${contextWords.join(" ")}`);
+}
+
 async function applyCandidateEvidence(
   product: ProductRecommendation,
   fact: MissingFact,
@@ -1093,8 +1125,13 @@ export type SourceUpgradeCandidateSample = {
 export type SourceUpgradeTrace = {
   name: string;
   query: string;
+  primaryQuery: string;
+  fallbackQuery?: string;
+  fallbackUsed: boolean;
   evidenceAttached: boolean;
   attachedFields: string[];
+  primaryCandidatesReturned: number;
+  fallbackCandidatesReturned: number;
   candidatesReturned: number;
   candidatesEvaluated: number;
   noMatchReason?: "shopping_results_empty" | "identity_rejected" | "no_attachable_fields";
@@ -1164,18 +1201,33 @@ async function upgradeProductSource(
   searchFn: (query: string, category: string) => Promise<RawProductCandidate[]>,
 ): Promise<{ product: ProductRecommendation; trace: SourceUpgradeTrace }> {
   const query = buildSourceUpgradeShoppingQuery(product, category);
+  const fallbackQuery = buildSourceUpgradeFallbackShoppingQuery(product, category, query);
   const trace: SourceUpgradeTrace = {
     name: product.name,
     query,
+    primaryQuery: query,
+    fallbackUsed: false,
     evidenceAttached: false,
     attachedFields: [],
+    primaryCandidatesReturned: 0,
+    fallbackCandidatesReturned: 0,
     candidatesReturned: 0,
     candidatesEvaluated: 0,
     candidateSample: [],
   };
 
-  const candidates = await searchFn(query, category);
-  trace.candidatesReturned = candidates.length;
+  let candidates = await searchFn(query, category);
+  trace.primaryCandidatesReturned = candidates.length;
+
+  if (candidates.length === 0 && fallbackQuery && fallbackQuery !== query) {
+    trace.fallbackQuery = fallbackQuery;
+    trace.fallbackUsed = true;
+    candidates = await searchFn(fallbackQuery, category);
+    trace.fallbackCandidatesReturned = candidates.length;
+  }
+
+  trace.candidatesReturned =
+    trace.primaryCandidatesReturned + trace.fallbackCandidatesReturned;
 
   if (candidates.length === 0) {
     trace.noMatchReason = "shopping_results_empty";

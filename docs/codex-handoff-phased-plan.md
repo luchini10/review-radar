@@ -16,15 +16,15 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 3K - source-upgrade search-coverage fallback**.
+Current phase: **Phase 3L - live proof after source-upgrade fallback ladder**.
 
-Phase 3I Path A is implemented and partially live-proven. Phase 3J ran `gas grill` and `cordless drill` but neither produced a source-upgrade attempt. The Phase 3J extension ran `robot vacuum` and `shop vac`; `shop vac` produced two source-upgrade attempts using shortened Phase 3I queries (`Makita XCV11Z`, `RIDGID WD1450`), but both returned `candidatesReturned: 0`.
+Phase 3I Path A is implemented and partially live-proven. Phase 3K added a bounded fallback ladder for source-upgrade shopping searches: compact identity query first, then one broader identity-plus-category query only when the primary returns zero candidates. This is deterministic-testable but not live-proven.
 
-Do not broaden model-token detection yet. Do not tune scoring. Do not loosen identity, price, citation, product, or requirement gates. The next phase should be a focused source-upgrade search-coverage fallback, not scoring/ranking work.
+Do not broaden model-token detection yet. Do not tune scoring. Do not loosen identity, price, citation, product, or requirement gates. The next phase should be a focused live proof of the fallback trace, not another behavior change.
 
 Recommended next phase:
 
-- Phase 3K: add deterministic tests and the smallest safe source-upgrade shopping fallback for compact model-only queries that return zero candidates. Preserve the compact model query as the first attempt; fallback should broaden with the category/product noun only after zero results. Do not hardcode Makita, RIDGID, shop vac, robot vacuum, or any specific product.
+- Phase 3L: save and replay fresh debug fixtures for `shop vac` first, then one unrelated previously attempted category such as `robot vacuum` or `gas grill`; inspect primary/fallback trace fields, candidates returned, identity matches, attached fields, final-selection impact, and unsafe merge risk. Do not run a full baseline.
 
 ---
 
@@ -345,30 +345,87 @@ QA log:
 
 - See `docs/qa-loop-results.md` entry "Codex QA Update - 2026-06-26 (Phase 3J extension: source-upgrade live proof retry)".
 
-### Phase 3K - Source-upgrade search-coverage fallback - TODO / NEXT
+### Phase 3K - Source-upgrade search-coverage fallback - DONE / NOT LIVE-PROVEN
 
 Purpose: keep compact model identity as the safest first query, but add a narrowly tested fallback when that compact query returns zero shopping candidates.
 
-Planned behavior:
+Implemented behavior:
 
 - First attempt remains the Phase 3I compact source-upgrade query.
 - If and only if the first source-upgrade shopping search returns zero candidates, retry with a minimally broader query that includes the base category/product noun.
 - Preserve identity matching, attachable-field extraction, trigger logic, scoring, ranking, discovery, model-token detection, and all trust gates.
 - Do not hardcode brands, product names, or categories.
 
-Tests:
+Trace additions:
+
+- `primaryQuery`
+- `fallbackQuery`
+- `fallbackUsed`
+- `primaryCandidatesReturned`
+- `fallbackCandidatesReturned`
+- existing `candidatesReturned` remains the total returned count for the attempted query path.
+
+Deterministic examples:
+
+- `Makita XCV11Z` -> `Makita XCV11Z shop vac`
+- `RIDGID WD1450` -> `RIDGID WD1450 shop vac`
+- `Tapo RV30C Plus` -> `Tapo RV30C Plus robot vacuum`
+- `Napoleon Rogue XT 425 SIB` -> `Napoleon Rogue XT 425 SIB gas grill`
+- `4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid` stays `4-Burner Propane Gas Grill`; no fallback because the cleaned primary already contains category words.
+
+Tests completed:
 
 - Deterministic tests prove fallback only runs after zero candidates.
-- Tests cover at least two unrelated categories.
-- Negative/safety tests prove identity matching still blocks wrong products, accessories, parts, bundles, and wrong variants.
+- Tests prove fallback does not run when primary candidates return.
+- Tests cover multiple unrelated categories.
+- Negative/safety tests prove identity matching still blocks wrong fallback candidates.
+- Existing trigger, model-token, duplicate citation, no-attachable-fields, candidate sample, and successful attachment tests still pass.
 
 Exit criteria:
 
-- Focused tests pass.
-- Replay/debug trace can show both the primary query and fallback query path.
-- No behavior outside source-upgrade search coverage changes.
+- Focused tests pass: `node --no-warnings --test tests/sourceQualityUpgrade.test.mjs` is 39/39 green.
+- Full suite passes: `npm test` is 618/618 green.
+- Eval red-flag checks are clean.
+- No behavior outside source-upgrade search coverage changed.
 
-### Phase 3L - Model-token detection broadening - TODO
+Status:
+
+- Implemented but not live-proven. Do not mark source-upgrade mini-track complete until Phase 3L proves fallback returns candidates and attaches safe evidence, or clearly exposes the next bottleneck.
+
+QA log:
+
+- See `docs/qa-loop-results.md` entry "Codex QA Update - 2026-06-26 (Phase 3K: source-upgrade query fallback ladder)".
+
+### Phase 3L - Live proof after source-upgrade fallback ladder - TODO / NEXT
+
+Purpose: prove whether Phase 3K improves live `candidatesReturned` and whether any returned candidates attach safe evidence.
+
+Run:
+
+- `shop vac`
+- one unrelated previously attempted category, preferably `robot vacuum` or `gas grill`
+
+Measure:
+
+- source-upgrade attempts
+- `primaryQuery`
+- `fallbackQuery`
+- `fallbackUsed`
+- `primaryCandidatesReturned`
+- `fallbackCandidatesReturned`
+- total `candidatesReturned`
+- identity matches
+- evidence attached / attached fields
+- final-selection impact
+- unsafe candidate/merge risk
+
+Exit criteria:
+
+- Fallback trace fields appear in fresh fixtures.
+- Fallback returns candidates in at least one live attempt, or the trace proves shopping coverage remains zero even after category fallback.
+- Any attached evidence is same-product and safe.
+
+### Phase 3M - Model-token detection broadening - TODO
 
 Only do after source-upgrade query/search-coverage behavior is proven, or after a focused eligibility diagnostic proves that model-token detection is now the source-upgrade blocker.
 
@@ -392,7 +449,7 @@ Tests:
 - Negative tests for generic product names, accessories, parts, and bundles.
 - Prove max attempts still limit cost.
 
-### Phase 3M - Source-quality upgrade final validation - TODO
+### Phase 3N - Source-quality upgrade final validation - TODO
 
 Purpose: run a focused live validation after 3I/3J/3K.
 
@@ -680,17 +737,17 @@ Do this only after backend trust and ranking are stronger.
 
 ## Immediate Next Task for Codex
 
-Run Phase 3K.
+Run Phase 3L.
 
-Phase 3I Path A is implemented and partially live-proven. Phase 3J extension proved real source-upgrade attempts use shortened queries, but `Makita XCV11Z` and `RIDGID WD1450` both returned zero shopping candidates. Do not broaden model-token detection yet.
+Phase 3K is implemented and deterministic-testable, but not live-proven. Do not make another behavior change before the live proof.
 
 Task:
 
-1. Add deterministic tests for a source-upgrade shopping fallback when the compact model-only query returns zero candidates.
-2. Keep the compact Phase 3I query as the first attempt.
-3. Add the smallest safe fallback query that broadens with the base category/product noun only after zero candidates.
-4. Preserve identity matching, attachable-field extraction, trigger logic, scoring, ranking, discovery, model-token detection, and trust gates.
-5. Update QA docs after the focused behavior change.
+1. Save a fresh debug fixture for `shop vac`.
+2. Save one fresh debug fixture for an unrelated previously attempted category, preferably `robot vacuum` or `gas grill`.
+3. Replay both fixtures.
+4. Inspect source-upgrade primary/fallback trace fields, candidates returned, identity matches, evidence attachment, final-selection impact, and unsafe merge risk.
+5. Update QA docs after the live proof.
 
 Do not:
 
@@ -700,4 +757,4 @@ Do not:
 - change scoring/ranking/discovery/trigger/identity behavior;
 - run a full baseline.
 
-Exit criteria: focused deterministic tests prove the fallback runs only after zero candidates and remains safe. A later live proof can then test whether candidates return.
+Exit criteria: focused live traces show whether Phase 3K improves candidate return/attachment, or prove the next bottleneck after fallback.

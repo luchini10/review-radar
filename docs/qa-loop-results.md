@@ -3033,3 +3033,103 @@ Run a focused Phase 3K source-upgrade search-coverage fix before model-token bro
 5. Do not hardcode Makita, RIDGID, shop vac, robot vacuum, or any specific product.
 
 Do not broaden model-token detection until source-upgrade search coverage has at least one live attempt with returned candidates or the fallback is proven insufficient.
+
+---
+
+## <span style="color:green">**Codex QA Update - 2026-06-26 (Phase 3K: source-upgrade query fallback ladder)**</span>
+
+**Focused behavior fix. No scoring, ranking, final selection, discovery, source-upgrade trigger logic, `hasUsefulCommerceEvidence`, identity matching, model-token detection, product-type rules, price trust, citation trust, product eligibility, or same-product merge-safety changes. No live searches were run.**
+
+### Live finding addressed
+
+Phase 3J extension proved the Phase 3I compact source-upgrade query was live-wired, but `shop vac` attempts for `Makita XCV11Z` and `RIDGID WD1450` both returned:
+
+- `candidatesReturned: 0`
+- `candidatesEvaluated: 0`
+- `noMatchReason: shopping_results_empty`
+- `evidenceAttached: false`
+
+The failure happened before identity matching or attachable-field extraction.
+
+### Implementation
+
+- Added `buildSourceUpgradeFallbackShoppingQuery` in `lib/requirementEvidenceRescue.ts`.
+- `upgradeProductSource` now runs the existing compact Phase 3I query first.
+- If and only if the primary source-upgrade shopping search returns zero candidates, it runs one fallback search with compact category/product-noun context appended.
+- No fallback is used when the primary query returns candidates.
+- No fallback is used when the cleaned primary query already contains the category context.
+- Existing `MAX_SOURCE_UPGRADE_CANDIDATES = 3` target cap is unchanged; each target can now make at most one fallback search.
+
+### Deterministic examples
+
+| Product/title | Primary query | Fallback query |
+|---|---|---|
+| `Makita XCV11Z 18V LXT Brushless Cordless 2-Gallon HEPA Filter Wet/Dry Vacuum` | `Makita XCV11Z` | `Makita XCV11Z shop vac` |
+| `RIDGID WD1450 14 Gallon Wet/Dry Vac` | `RIDGID WD1450` | `RIDGID WD1450 shop vac` |
+| `Tapo RV30C Plus Robot Vacuum` | `Tapo RV30C Plus` | `Tapo RV30C Plus robot vacuum` |
+| `Napoleon Rogue XT 425 SIB Gas Grill` | `Napoleon Rogue XT 425 SIB` | `Napoleon Rogue XT 425 SIB gas grill` |
+| `4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid` | `4-Burner Propane Gas Grill` | none; cleaned primary already has category words |
+
+### Trace fields added / updated
+
+`SourceUpgradeTrace` now records:
+
+- `primaryQuery`
+- `fallbackQuery`
+- `fallbackUsed`
+- `primaryCandidatesReturned`
+- `fallbackCandidatesReturned`
+- existing `candidatesReturned` as the total returned count across the attempted query path
+
+Replay now prints the primary query, whether fallback was used, fallback query, and primary/fallback result split. Old fixtures without these fields still replay without crashing.
+
+### Tests added / preserved
+
+- Added direct fallback-query builder tests for compact model-only queries, category-word de-duplication, identity preservation, and long-display-title noise prevention.
+- Added integration tests proving fallback is not used when primary returns candidates.
+- Added integration tests proving fallback is used once when primary returns zero candidates.
+- Added identity-safety test proving a wrong fallback candidate does not merge.
+- Updated cap coverage to prove only 3 upgrade targets are attempted, with at most one fallback search per target.
+- Existing trigger, model-token, identity mismatch, duplicate citation, no-attachable-fields, candidate sample, and successful same-product attachment tests still pass.
+
+### Boundary proof
+
+Changed files:
+
+- `lib/requirementEvidenceRescue.ts`
+- `tests/sourceQualityUpgrade.test.mjs`
+- `scripts/replay-quality-fixtures.mjs`
+
+Not changed:
+
+- scoring / ranking / final selection files
+- discovery files
+- source-upgrade trigger condition
+- `hasUsefulCommerceEvidence`
+- `looksLikeSameProduct`
+- model-token detection
+- price trust, citation trust, product eligibility, product-type rules
+- max source-upgrade candidate count
+
+### Verification
+
+- `node --no-warnings --test tests/sourceQualityUpgrade.test.mjs` - 39/39 pass.
+- `npm run typecheck` - clean.
+- `npm run lint` - 0 errors, 3 pre-existing unused-variable warnings.
+- `npm test` - 618/618 pass.
+- `node scripts/eval-pipeline.mjs` - red-flag checks clean.
+- `npm run qa:replay -- tests/fixtures/review-radar-live/shop-vac.json` - old Phase 3J-extension fixture replays without crashing.
+
+### Status
+
+Phase 3K is implemented and deterministic-testable, but **not live-proven**. The source-upgrade mini-track is not complete.
+
+### Recommended next step
+
+Run Phase 3L live proof after fallback ladder:
+
+1. Save and replay fresh fixtures for `shop vac` first, then one unrelated previously attempted category such as `robot vacuum` or `gas grill`.
+2. Confirm whether source-upgrade attempts now show primary/fallback trace fields.
+3. Determine whether fallback increases `candidatesReturned`.
+4. If candidates return, inspect identity matching, attachable fields, safety, and final-selection impact.
+5. Do not run a full baseline.

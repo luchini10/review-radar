@@ -208,6 +208,10 @@ function printSourceUpgradeTraces(traces) {
     const status = t.evidenceAttached ? `✓ attached: ${fields}` : "✗ no match found";
     console.log(`  ${(t.name || "").slice(0, 50)}`);
     console.log(`    query: ${t.query}`);
+    if (t.primaryQuery || t.fallbackQuery !== undefined || t.fallbackUsed !== undefined) {
+      console.log(`    primary: ${t.primaryQuery || t.query}`);
+      console.log(`    fallback: ${t.fallbackUsed ? t.fallbackQuery || "(missing)" : "not used"}`);
+    }
     console.log(`    ${status}`);
     // Phase 3G diagnostic fields — gracefully absent in pre-3G fixtures
     if (t.candidatesReturned !== undefined) {
@@ -215,6 +219,11 @@ function printSourceUpgradeTraces(traces) {
       console.log(
         `    results: ${t.candidatesReturned} returned, ${t.candidatesEvaluated ?? 0} identity-matched${reason}`,
       );
+      if (t.primaryCandidatesReturned !== undefined || t.fallbackCandidatesReturned !== undefined) {
+        console.log(
+          `    result split: primary=${t.primaryCandidatesReturned ?? "?"}, fallback=${t.fallbackCandidatesReturned ?? 0}`,
+        );
+      }
     }
     if (Array.isArray(t.candidateSample) && t.candidateSample.length > 0) {
       console.log(`    candidates:`);

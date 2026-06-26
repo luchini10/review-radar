@@ -13,6 +13,13 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-26
 
+### Codex - Phase 3K: source-upgrade query fallback ladder
+- Added a bounded source-upgrade fallback query path in `lib/requirementEvidenceRescue.ts`: the compact Phase 3I identity query runs first, and a single broader identity-plus-category query runs only if the primary shopping search returns zero candidates.
+- New fallback examples covered: `Makita XCV11Z` -> `Makita XCV11Z shop vac`; `RIDGID WD1450` -> `RIDGID WD1450 shop vac`; `Tapo RV30C Plus` -> `Tapo RV30C Plus robot vacuum`; `Napoleon Rogue XT 425 SIB` -> `Napoleon Rogue XT 425 SIB gas grill`.
+- Added trace fields for `primaryQuery`, `fallbackQuery`, `fallbackUsed`, `primaryCandidatesReturned`, and `fallbackCandidatesReturned`; replay now prints the query split while remaining compatible with old fixtures.
+- No changes to scoring, ranking, discovery, source-upgrade trigger logic, `hasUsefulCommerceEvidence`, identity matching, model-token detection, product-type rules, price trust, citation trust, product eligibility, or max source-upgrade target count.
+- Added deterministic tests in `tests/sourceQualityUpgrade.test.mjs`; `npm test` is 618/618 green and eval red-flag checks are clean. Phase 3K is implemented but not live-proven. Next step is Phase 3L live proof.
+
 ### Codex - Phase 3I Path A: source-upgrade query construction
 - Added a source-upgrade-specific shopping query builder in `lib/requirementEvidenceRescue.ts` so source-quality upgrade searches use concise product identity instead of long display titles plus duplicated category suffixes.
 - Existing general missing-evidence rescue still uses `buildRescueShoppingQuery`; only `upgradeWeakSourceEvidence` now uses the new source-upgrade query builder.

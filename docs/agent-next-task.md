@@ -4,9 +4,9 @@ Generated: 2026-06-26
 
 ## Current next task
 
-**Phase 3K - source-upgrade search-coverage fallback**
+**Phase 3L - live proof after source-upgrade fallback ladder**
 
-Phase 3I Path A is implemented and partially live-proven. Phase 3J ran the requested `gas grill` and `cordless drill` live proof, but both fresh fixtures had `sourceUpgradeTraces: []`. The Phase 3J extension then ran `robot vacuum` and `shop vac`; `shop vac` produced two source-upgrade attempts using shortened Phase 3I queries, but both returned zero shopping candidates.
+Phase 3K is implemented and deterministic-testable, but not live-proven. It kept the compact Phase 3I query as the primary source-upgrade search and added one fallback search with category/product-noun context only when the primary returns zero candidates.
 
 The deterministic source-upgrade query builder now produces cleaner queries:
 
@@ -17,36 +17,45 @@ The deterministic source-upgrade query builder now produces cleaner queries:
 
 ## Required next phase
 
-Run a focused behavior change with deterministic tests. Do not run live searches before deterministic tests pass.
+Run a focused live proof. Do not run a full baseline.
 
-Behavior scope:
+Live searches:
 
-1. Keep the compact Phase 3I source-upgrade query as the first attempt.
-2. If that source-upgrade shopping search returns zero candidates, retry with a minimally broader query that appends the base category/product noun.
-3. Preserve existing identity matching and merge safety.
+1. `shop vac`
+2. one unrelated previously attempted category, preferably `robot vacuum` or `gas grill`
 
-Tests should prove:
+Inspect:
 
-- fallback runs only after zero candidates;
-- no fallback runs when primary candidates return;
-- the trace/debug output makes the primary/fallback path visible;
-- wrong products, accessories, parts, bundles, and wrong variants remain blocked by identity matching.
+- `sourceUpgradeTraces`
+- `primaryQuery`
+- `fallbackQuery`
+- `fallbackUsed`
+- `primaryCandidatesReturned`
+- `fallbackCandidatesReturned`
+- total `candidatesReturned`
+- `candidatesEvaluated`
+- `noMatchReason`
+- `candidateSample`
+- `evidenceAttached`
+- `attachedFields`
+- `finalSelectionTrace`
 
 Answer:
 
-1. Is compact model identity still the first query?
-2. Does the fallback run only after zero shopping candidates?
-3. Does the fallback preserve identity safety?
-4. Does the trace show enough detail for a later live proof?
+1. Did fallback run in a fresh live source-upgrade attempt?
+2. Did fallback increase `candidatesReturned` above zero?
+3. If candidates returned, did identity matching accept or reject them?
+4. Did evidence attach safely?
+5. Did final-selection trace show natural score/rank impact?
+6. Did any unsafe candidate appear close to merging?
 
 Do not:
 
 - change scoring, ranking, discovery breadth, source-upgrade trigger logic, identity matching, model-token detection, price trust, citation trust, product trust, or requirement filtering;
 - hardcode brands, products, or categories;
-- run live searches before deterministic tests pass;
 - run a full baseline.
 
 Reference:
 
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` Phase 3J extension entry
+- `docs/qa-loop-results.md` Phase 3K entry
