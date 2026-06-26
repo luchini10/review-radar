@@ -2916,3 +2916,120 @@ Run a tiny Phase 3J extension before any behavior change:
 4. If no attempts fire again, then move to a focused source-upgrade eligibility/model-token diagnostic before broadening model-token detection.
 
 Do not change query construction again until at least one live source-upgrade attempt using the Phase 3I builder has been observed.
+
+---
+
+## <span style="color:green">**Codex QA Update - 2026-06-26 (Phase 3J extension: source-upgrade live proof retry)**</span>
+
+**Diagnostic-only live proof retry. No app code, scoring, ranking, discovery, source-upgrade trigger, query construction, identity matching, model-token detection, trust gate, or requirement-filtering changes. No full baseline.**
+
+### Commands run
+
+```text
+git status --short --branch
+npm run qa:save-fixture -- "robot vacuum"
+npm run qa:save-fixture -- "shop vac"
+npm run qa:replay -- tests/fixtures/review-radar-live/robot-vacuum.json
+npm run qa:replay -- tests/fixtures/review-radar-live/shop-vac.json
+```
+
+Server status before live saves: `http://localhost:3000` returned HTTP 200.
+
+### Fixtures saved
+
+- `tests/fixtures/review-radar-live/robot-vacuum.json` (`_savedAt: 2026-06-26T16:43:45.998Z`)
+- `tests/fixtures/review-radar-live/shop-vac.json` (`_savedAt: 2026-06-26T16:45:23.359Z`)
+
+### Robot vacuum result
+
+Final exact matches:
+
+1. `Shark ION Robotic Vacuum Cleaning System S87 Bagless with ...`
+2. `Roomba Combo j9+ Auto-Fill Robot Vacuum & Mop`
+3. `Shark Matrix Plus 2 in 1 Robot Vacuum & Mop with Sonic ... - Best Buy`
+4. `Roborock Q7 Series`
+5. `Roomba j6+ Vac Robot + AutoEmpty™ Dock`
+6. `Roomba Combo j5`
+7. `Eufy X8 Pro Robot Vacuum Joins the Eufy Clean Lineup`
+
+Source-upgrade diagnostics:
+
+| Field | Value |
+|---|---|
+| `sourceUpgradeTraces` count | 0 |
+| Products attempted | none |
+| Query used | n/a |
+| Shortened Phase 3I query observed | no attempt fired |
+| `candidatesReturned` | n/a |
+| `candidatesEvaluated` | n/a |
+| `noMatchReason` | n/a |
+| `candidateSample` | n/a |
+| `evidenceAttached` | false / no attempt |
+| `attachedFields` | `[]` |
+
+Final-selection trace:
+
+- Present with 10 candidates.
+- Selected scores: Shark ION S87 `218.4`, Roomba Combo j9+ `149.7`, Shark Matrix Plus `147.4`, Roborock Q7 Series `140.3`, Roomba j6+ `136.5`, Roomba Combo j5 `127.1`, Eufy X8 Pro `101.9`.
+- No source-upgrade score/rank impact because no source-upgrade attempt fired.
+
+Safety observations:
+
+- No `candidateSample` existed because no source-upgrade shopping search ran.
+- No unsafe merge occurred.
+
+### Shop vac result
+
+Final exact matches:
+
+1. `M18 FUEL PACKOUT 18-Volt Lithium-Ion Cordless 2.5 Gal. Wet/Dry ...`
+2. `Makita XCV11Z 18V LXT Brushless Cordless 2-Gallon HEPA Filter Wet/Dry Vacuum`
+3. `RIDGID WD1450 14 Gallon Wet/Dry Vac`
+
+Source-upgrade diagnostics:
+
+| Product attempted | Query used | Shortened Phase 3I style? | `candidatesReturned` | `candidatesEvaluated` | `noMatchReason` | `evidenceAttached` | `attachedFields` |
+|---|---|---:|---:|---:|---|---:|---|
+| `Makita XCV11Z 18V LXT Brushless Cordless 2-Gallon HEPA Filter Wet/Dry Vacuum` | `Makita XCV11Z` | yes | 0 | 0 | `shopping_results_empty` | false | `[]` |
+| `RIDGID WD1450 14 Gallon Wet/Dry Vac` | `RIDGID WD1450` | yes | 0 | 0 | `shopping_results_empty` | false | `[]` |
+
+Candidate samples:
+
+- Makita XCV11Z: `[]`
+- RIDGID WD1450: `[]`
+
+Final-selection trace:
+
+- Present with 7 candidates.
+- Selected exact scores: Milwaukee M18 FUEL PACKOUT `120.2`, Makita XCV11Z `112.2`, RIDGID WD1450 `104.3`.
+- Selected near scores: DEWALT DXV09P `135.3`, M18 FUEL Compact Vacuum `167`, Milwaukee M18 FUEL PACKOUT 2.5 Gallon `67.8`.
+- No source-upgrade score/rank impact because no evidence attached.
+
+Safety observations:
+
+- No shopping candidates were returned, so no unsafe candidate was close to merging.
+- No accessory, replacement part, wrong model, wrong product type, misleading bundle, category/listing page, article page, suspicious low price, or financing price was observed in `candidateSample` because both samples were empty.
+
+### Phase 3I proof verdict
+
+**Partially proven.**
+
+- Proven: the Phase 3I source-upgrade query builder is wired into live source-upgrade attempts. `shop vac` used shortened queries (`Makita XCV11Z`, `RIDGID WD1450`) rather than long display titles or duplicated category suffixes.
+- Not proven: the query fix improves candidate return or evidence attachment. Both attempted shortened queries returned `candidatesReturned: 0`.
+- Not implicated by this run: identity matching and attachable-field extraction. Both attempts failed before candidates existed.
+
+### Next bottleneck
+
+The current bottleneck is **query construction / shopping search coverage**, specifically search coverage for compact model-only source-upgrade queries. The live evidence does not point to identity matching, attachable-field extraction, model-token detection, or source-upgrade trigger logic for the observed `shop vac` attempts.
+
+### Recommended next task
+
+Run a focused Phase 3K source-upgrade search-coverage fix before model-token broadening:
+
+1. Add deterministic tests for source-upgrade fallback query behavior when a compact model-only query returns zero candidates.
+2. Keep the existing compact model query as the first attempt.
+3. Add the smallest safe fallback that appends the base product category/product noun only after zero results, e.g. model identity first, then model identity plus category.
+4. Preserve identity matching, attachable-field extraction, trigger logic, scoring, ranking, discovery, and all trust gates.
+5. Do not hardcode Makita, RIDGID, shop vac, robot vacuum, or any specific product.
+
+Do not broaden model-token detection until source-upgrade search coverage has at least one live attempt with returned candidates or the fallback is proven insufficient.

@@ -16,15 +16,15 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 3J extension - live proof on previously trigger-producing categories**.
+Current phase: **Phase 3K - source-upgrade search-coverage fallback**.
 
-Phase 3I Path A is implemented and deterministic-testable, but still not live-proven. Phase 3J ran the requested `gas grill` and `cordless drill` live proof and saved fresh fixtures, but both searches produced `sourceUpgradeTraces: []`, so the new source-upgrade query builder was not exercised live.
+Phase 3I Path A is implemented and partially live-proven. Phase 3J ran `gas grill` and `cordless drill` but neither produced a source-upgrade attempt. The Phase 3J extension ran `robot vacuum` and `shop vac`; `shop vac` produced two source-upgrade attempts using shortened Phase 3I queries (`Makita XCV11Z`, `RIDGID WD1450`), but both returned `candidatesReturned: 0`.
 
-Do not broaden model-token detection yet. Do not tune scoring. Do not loosen identity, price, citation, product, or requirement gates. The next phase should be another focused live proof on categories that previously produced source-upgrade attempts, not a behavior change.
+Do not broaden model-token detection yet. Do not tune scoring. Do not loosen identity, price, citation, product, or requirement gates. The next phase should be a focused source-upgrade search-coverage fallback, not scoring/ranking work.
 
 Recommended next phase:
 
-- Phase 3J extension: save and replay fresh debug fixtures for `robot vacuum` and `shop vac`; inspect source-upgrade traces to see whether candidates now return and whether evidence attaches safely. Stop after those fixtures. Do not run a full baseline.
+- Phase 3K: add deterministic tests and the smallest safe source-upgrade shopping fallback for compact model-only queries that return zero candidates. Preserve the compact model query as the first attempt; fallback should broaden with the category/product noun only after zero results. Do not hardcode Makita, RIDGID, shop vac, robot vacuum, or any specific product.
 
 ---
 
@@ -318,27 +318,59 @@ QA log:
 
 - See `docs/qa-loop-results.md` entry "Codex QA Update - 2026-06-26 (Phase 3J: focused live proof after source-upgrade query fix)".
 
-### Phase 3J extension - Live proof on previously trigger-producing categories - TODO / NEXT
+### Phase 3J extension - Live proof on previously trigger-producing categories - DONE / PARTIAL
 
 Purpose: observe at least one live source-upgrade attempt using the Phase 3I query builder before making another behavior change.
 
-Run:
+Run completed:
 
 - `robot vacuum`
 - `shop vac`
 
-Measure attempts, candidates returned, identity matches, evidence attached, score movement in finalSelectionTrace, final 7 movement, and unsafe merge count.
+Findings:
+
+- Fresh `robot vacuum` fixture saved at `2026-06-26T16:43:45.998Z`; it had `sourceUpgradeTraces: []`.
+- Fresh `shop vac` fixture saved at `2026-06-26T16:45:23.359Z`; it had 2 source-upgrade attempts.
+- `shop vac` attempt 1: `Makita XCV11Z 18V LXT Brushless Cordless 2-Gallon HEPA Filter Wet/Dry Vacuum`; query `Makita XCV11Z`; `candidatesReturned: 0`; `noMatchReason: shopping_results_empty`; no evidence attached.
+- `shop vac` attempt 2: `RIDGID WD1450 14 Gallon Wet/Dry Vac`; query `RIDGID WD1450`; `candidatesReturned: 0`; `noMatchReason: shopping_results_empty`; no evidence attached.
+- The Phase 3I shortened query builder is live-wired and used by real source-upgrade attempts.
+- Candidate return/evidence attachment is still not proven.
+
+Verdict:
+
+- Partial proof. The shortened query path is live, but compact model-only source-upgrade queries can still return zero shopping candidates.
+- The observed bottleneck is query construction / shopping search coverage for model-only queries, not identity matching, attachable-field extraction, model-token detection, or trigger logic.
+
+QA log:
+
+- See `docs/qa-loop-results.md` entry "Codex QA Update - 2026-06-26 (Phase 3J extension: source-upgrade live proof retry)".
+
+### Phase 3K - Source-upgrade search-coverage fallback - TODO / NEXT
+
+Purpose: keep compact model identity as the safest first query, but add a narrowly tested fallback when that compact query returns zero shopping candidates.
+
+Planned behavior:
+
+- First attempt remains the Phase 3I compact source-upgrade query.
+- If and only if the first source-upgrade shopping search returns zero candidates, retry with a minimally broader query that includes the base category/product noun.
+- Preserve identity matching, attachable-field extraction, trigger logic, scoring, ranking, discovery, model-token detection, and all trust gates.
+- Do not hardcode brands, product names, or categories.
+
+Tests:
+
+- Deterministic tests prove fallback only runs after zero candidates.
+- Tests cover at least two unrelated categories.
+- Negative/safety tests prove identity matching still blocks wrong products, accessories, parts, bundles, and wrong variants.
 
 Exit criteria:
 
-- At least one source-upgrade attempt fires and records the Phase 3I shortened query, or the run proves that current live fixtures no longer produce eligible targets.
-- If candidates return, identity/attachment/safety are inspected.
-- No unsafe merges.
-- Debug traces clearly explain what happened.
+- Focused tests pass.
+- Replay/debug trace can show both the primary query and fallback query path.
+- No behavior outside source-upgrade search coverage changes.
 
-### Phase 3K - Model-token detection broadening - TODO
+### Phase 3L - Model-token detection broadening - TODO
 
-Only do after source-upgrade query/identity behavior is proven, or after a focused eligibility diagnostic proves that model-token detection is now the source-upgrade blocker.
+Only do after source-upgrade query/search-coverage behavior is proven, or after a focused eligibility diagnostic proves that model-token detection is now the source-upgrade blocker.
 
 Purpose: some good products do not trigger source upgrade because their model names do not fit the current model-token regex.
 
@@ -360,7 +392,7 @@ Tests:
 - Negative tests for generic product names, accessories, parts, and bundles.
 - Prove max attempts still limit cost.
 
-### Phase 3L - Source-quality upgrade final validation - TODO
+### Phase 3M - Source-quality upgrade final validation - TODO
 
 Purpose: run a focused live validation after 3I/3J/3K.
 
@@ -648,24 +680,24 @@ Do this only after backend trust and ranking are stronger.
 
 ## Immediate Next Task for Codex
 
-Run the Phase 3J extension.
+Run Phase 3K.
 
-Phase 3I Path A is implemented but not live-proven. Phase 3J ran `gas grill` and `cordless drill`, but both fresh fixtures had `sourceUpgradeTraces: []`. Do not make another behavior change before trying previously trigger-producing categories.
+Phase 3I Path A is implemented and partially live-proven. Phase 3J extension proved real source-upgrade attempts use shortened queries, but `Makita XCV11Z` and `RIDGID WD1450` both returned zero shopping candidates. Do not broaden model-token detection yet.
 
 Task:
 
-1. Save fresh debug fixtures for `robot vacuum` and `shop vac`.
-2. Replay both fixtures.
-3. Inspect `sourceUpgradeTraces`, `candidatesReturned`, `candidatesEvaluated`, `noMatchReason`, `candidateSample`, `evidenceAttached`, `attachedFields`, and `finalSelectionTrace`.
-4. Determine whether the shorter source-upgrade queries now return candidates.
-5. If candidates return, verify identity, attachable fields, safety, and natural score/rank impact.
+1. Add deterministic tests for a source-upgrade shopping fallback when the compact model-only query returns zero candidates.
+2. Keep the compact Phase 3I query as the first attempt.
+3. Add the smallest safe fallback query that broadens with the base category/product noun only after zero candidates.
+4. Preserve identity matching, attachable-field extraction, trigger logic, scoring, ranking, discovery, model-token detection, and trust gates.
+5. Update QA docs after the focused behavior change.
 
 Do not:
 
-- hardcode Nexgrill, Napoleon, Weber, Makita, drills, or grills;
+- hardcode Makita, RIDGID, shop vac, robot vacuum, or any specific product/category;
 - broaden model-token detection in this phase;
 - loosen trust gates to improve attachment rate;
-- change source-upgrade query construction again before observing live Phase 3J traces;
+- change scoring/ranking/discovery/trigger/identity behavior;
 - run a full baseline.
 
-Exit criteria: focused live traces show whether Phase 3I improved candidate return/attachment, or prove no eligible source-upgrade targets appear in these previously trigger-producing categories. Record the result in the QA log.
+Exit criteria: focused deterministic tests prove the fallback runs only after zero candidates and remains safe. A later live proof can then test whether candidates return.

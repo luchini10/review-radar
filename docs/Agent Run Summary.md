@@ -577,3 +577,17 @@ New entries should keep the same format and stay easy to read.
 **Live checks run:** `gas grill` and `cordless drill` only. No full baseline.
 
 **Next recommended step:** Run a tiny Phase 3J extension on previously trigger-producing categories, starting with `robot vacuum` and `shop vac`, before making another behavior change.
+
+## Codex Run - 2026-06-26 Phase 3J Extension
+
+**Goal:** Retry the source-upgrade live proof on categories more likely to produce source-upgrade attempts.
+
+**What it checked:** Saved and replayed fresh live fixtures for `robot vacuum` and `shop vac`, then inspected source-upgrade traces, candidate counts, candidate samples, evidence attachment, and final-selection trace.
+
+**What it found:** `robot vacuum` produced no source-upgrade attempts. `shop vac` produced two attempts using the shortened Phase 3I queries `Makita XCV11Z` and `RIDGID WD1450`, but both returned zero shopping candidates and attached no evidence.
+
+**What changed:** Docs only. The QA log, phased handoff, next-task file, and this summary were updated.
+
+**Live checks run:** `robot vacuum` and `shop vac` only. No full baseline.
+
+**Next recommended step:** Run a focused Phase 3K source-upgrade search-coverage fallback with deterministic tests before another live proof.
