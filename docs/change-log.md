@@ -24,6 +24,12 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-25
 
+### 🟩 Claude — Phase 3C: Fuel-type requirement alias expansion for category matching
+- `checkCategory` in `lib/requirementValidation.ts` used raw query words ("gas", "grill") to verify product type. Products described only as "propane grills" don't contain the word "gas", so they landed in `unknownRequirements` → excluded from exact-scored pool → dropped when 7 exact matches already existed.
+- Fix: `categoryTerms()` now accepts `extractedRequirements` and expands each term group with aliases from any `requiredConstraint` whose value or aliases match that term. For gas grill queries the "gas" requirement carries aliases including "propane" and "natural gas", so a product described only as "propane" now passes the category check.
+- Safety: both term groups still required ("grill" unaided by gas aliases), so a propane heater cannot satisfy "gas grill". Butane remains unmatched. 3-state verdict logic and requirement-checking unchanged.
+- 4 new deterministic tests (propane-passes, backward-compat, butane-boundary, gas-in-name fast path). 568/568 tests pass. TypeScript clean.
+
 ### 🟩 Claude — Phase 3F: Loosen source-quality upgrade trigger (replace external-citation count with useful-commerce-evidence check)
 - Replaced `countExternalCitations(product) === 0` in `needsSourceUpgrade` with `!hasUsefulCommerceEvidence(product)`.
 - `hasUsefulCommerceEvidence` returns `true` only when a product has at least one citation from a **tier-1 editorial** (`sourceTier === 1`: Wirecutter, RTINGS, etc.) or **tier-2 marketplace/retailer** (`sourceTier === 2`: Amazon, Home Depot, etc.) source that is distinct from the product's own page host.
@@ -50,6 +56,22 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-24
 
+### 🟩 Claude — Citation-strength classification (tag citations by source independence)
+- Added `citation_type` to every verified citation: `"product-page-self"` (own product page via rescue path), `"independent-editorial"` (tier-1 editorial/expert), `"retailer-marketplace"` (tier-2 marketplace), `"weak-uncorroborated"` (tier 3/4). `classifyCitationType()` in `lib/recommendationResultValidation.ts` maps source tier → type via `sourceTier.ts`; rescued citations are explicitly tagged `product-page-self` so a self-cite can let a product survive citation verification without being ranked as strongly supported.
+- New `scripts/citationStrengthDiagnostic.mjs`: per-candidate citation-type breakdown for one live query, then replayable from a saved payload at zero cost. Flags thin-winner crowd-out when the #1 slot is held by a `product-page-self`-only candidate with a stronger product ranked below it.
+- No pipeline behavior change (no trust-gate changes). 540/540 tests. TypeScript clean.
+
+### 🟩 Claude — Measurement Phase 2: replay fixtures + deterministic stage-funnel tests
+- `scripts/replay-quality-fixtures.mjs`: exports `analyzeFixture()`; CLI reports stage funnel (raw → dedupe → cheap-filter → pool → final-7), citation strength classification (INDEPENDENT / RETAILER / SELF-ONLY / WEAK / NONE), thin/weak winner analysis, and gold-leader drop-point tracking. Zero API cost after initial save.
+- `scripts/save-debug-fixture.mjs`: call the API once with `x-reviewradar-debug: true`, save payload to `tests/fixtures/review-radar-live/<slug>.json` for free replay. `npm run qa:replay` / `npm run qa:save-fixture`.
+- `tests/fixtures/robot-vacuum-synthetic.json`: synthetic fixture with a 7-candidate pool demonstrating citation-verify drop, rescue pattern, thin winner at #1, and 1 lost gold leader (Shark Matrix).
+- 14 deterministic tests in `tests/replayFixtures.test.mjs` proving `analyzeFixture()` stage counts, drop/rescue events, citation classification, thinWinner flag, betterSupportedBelowWinner, and lostLeaders. 554/554 tests.
+
+### 🟩 Claude — Measurement Phase 1: scorecard test modes + cost guard
+- `qualityScorecard.mjs` now requires explicit mode selection (`--mode diagnostic|normal|high|stress`). Bare invocation (was a silent ~1316-call baseline) now refuses to run. Any run estimated > 600 Serper calls blocks without `--confirm`. `--dry-run` prints the full plan for any mode at zero cost. Every run prints queries / runs / estimated Serper calls / estimated runtime / the question it answers.
+- Cost model derived from the last real baseline: ~47 Serper calls/search, ~75 s/search. `npm run qa:plan` prints mode costs without running.
+- `docs/review-radar-test-memory.md`: corrected the ~4× underestimated cost numbers, added the test-modes table, the PASS/FAIL/INCONCLUSIVE before/after rules with a safety floor, and PROVEN/SUSPECTED/UNKNOWN tags for diagnostic findings.
+
 ### 🟩 Claude — Phase 3B: wrong-type vacuum products blocked from robot vacuum results
 - Wet/dry vacs, stick vacuums, canister vacuums, and handheld vacuums were appearing in exact matches and near matches for robot vacuum searches because `PRODUCT_TYPE_RULES` had no `robot_vacuum` entry. The product-type check returned `{requestedType: null}` for all robot vacuum queries, falling through to a loose category-term check that trusted the LLM's mislabeled `product.category` field.
 - **Fix 1 — `robot_vacuum` rule in `productTypeIntent.ts`:** New rule with `blocked` pattern covering stick/canister/hand/wet-dry/upright/shop-vac vacuums and `allowed` pattern requiring explicit robot vacuum type signals. Wet/dry is matched on "wet dry" alone (without requiring "vac") to handle truncated Serper product titles like "Milwaukee…Wet/Dry …".
@@ -65,7 +87,38 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 - Fixed spec label: `operator: "max"` labeled constraints as "under N" but evaluation is `<= N`. Changed to "at most N".
 - 3 new tests added to `tests/specExtraction.test.mjs`. 557 tests pass at this commit.
 
+## 2026-06-23
+
+### 🟩 Claude — Filtering STEP 2: Product-page citation rescue (fix citation-verify over-strictness)
+- **Root cause found (STEP 1):** real product-page leaders (RIDGID RT1200, Craftsman CMEC6150K, Roborock S8 MaxV Ultra — own product URLs, 2–3 citations, sometimes verified prices) were REMOVED at `filterResultToVerifiedCitations` because their URLs were not in the verified-URL set. These products arrive via the LLM/web_search path, not the auto-verified Serper path.
+- **Fix 1 — URL normalization:** lowercase host, strip a curated tracking/affiliate param set (not just `utm_`), sort remaining params, drop trailing slash → more verified-URL matches on the same underlying pages.
+- **Fix 2 — Product-page rescue:** when web research verified none of a candidate's citations, self-cite its own product page IF that URL passes the same `canRenderAsProductCard` eligibility check used to filter the result (not a category/search/listing/article/review/forum page). Uncited prose is never rescued.
+- Regression tests: real product page survives without a pre-verified URL; normalizes despite tracking params/trailing slash; article/review/category/listing/search pages still drop; uncited recommendation never rescued. 535/535 tests.
+
+### 🟩 Claude — Stage-by-stage discovery funnel + diagnostic findings (measurement, debug only)
+- **`lib/recommendationFunnel.ts`**: per-candidate snapshot (brand/model, source tier, evidence count, hosts, price+confidence, requirement pass/fail/unknown, score). Used for zero-cost stage funnel tracking.
+- **Debug funnel** in `route.ts` (`stageFunnel.candidatePool` / `.rejectedCheap` / `.postFilter` / `.final7`): exposes where core leaders are lost without changing discovery/filter/ranking.
+- **Funnel improvement:** `candidatePool` is now the true merged Serper+LLM superset (previously only tracked Serper candidates). "REMOVED vs ranked-below-cutoff" distinction added at the final stage so diagnostics show whether a leader was filtered out or merely outranked.
+- **Diagnostic finding:** core leaders (RIDGID, Craftsman, Roborock) were lost at `afterCitationVerify` (filtering), not at discovery or ranking. This pointed directly at the citation-rescue fix above.
+
+### 🟩 Claude — Phase 1: Source-tiered discovery — seed brand-led market leaders
+- **Problem found by Phase 0:** mean core-leader coverage 3.0/7 across 14 queries. Many best-of leaders are named as "brand + line" without a model number (Coway Airmega, Herman Miller Aeron, Shark Matrix); the old `extractSeedProductNames` required a model-number-bearing token and discarded them.
+- **New `lib/search/sourceTier.ts`**: generalized domain→tier classifier (1 = editorial, 2 = marketplace, 3 = brand/manufacturer, 4 = other) + `SOURCE_NAME_TOKENS` blocklist. Cross-category, no per-category logic.
+- **`extractSeedProductNames` expanded**: now also accepts brand-led proper-noun names (≥2 word tokens, dict-free), mines Tier-1 editorial sources first, and rejects category-only/source-name/year-led/multi-brand-mash title runs. Expanded stopwords.
+- Cost-neutral: fills the existing seed-shopping budget with better names rather than adding Serper calls. 530/530 tests.
+
+### 🟩 Claude — Phase 0: Quality measurement harness + gold benchmark
+- **`scripts/goldBenchmark.mjs`**: 14 gold queries (8 broad, 6 constraint). Broad queries define `coreLeaders` (the required-coverage targets), `acceptableAlternates`, and `wrongTypeTerms` (penalized in the final 7). Constraint queries define budget/feature requirements.
+- **`scripts/qualityScorecard.mjs`**: grades the pipeline against the gold benchmark in two scorecards — broad (core-leader coverage in pool + final-7, wrong-type leakage, weak-#1 flag, price confidence, stability) and constraint (budget/feature violations + price confidence).
+- **`scripts/qualityConsistencyHarness.mjs`**: stability / exact-rate / price probe across a fixed query set.
+- **Phase 0 baseline recorded:** mean core-leader coverage 3.0/7 in the final-7, 4.2/7 in the candidate pool — leaders were present but not reaching the final slot (confirmed separately via the funnel).
+- Benchmark data is product-specific by design; pipeline logic stays generalized. No behavior changes.
+
 ## 2026-06-22
+
+### Codex — Show plain availability label instead of raw schema.org value
+- Product cards were showing raw `InStock` / `OutOfStock` schema.org values from Serper metadata. Changed to display human-readable labels ("In stock", "Out of stock", "Limited availability", "Pre-order") by mapping the schema.org token in `lib/productCardViewModel.ts`. No logic change — display only.
+- Verified: `npm run typecheck`, `npm run lint`, `npm test` (530/530 tests).
 
 ### Codex - Faster searches without loosening trust gates
 - Added a shared performance policy so ReviewRadar spends expensive proof work on the products most likely to be shown, instead of automatically enriching and rescuing up to the full deep-search product cap every time.

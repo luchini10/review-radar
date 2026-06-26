@@ -77,10 +77,11 @@ Orchestrated in `app/api/recommendations/route.ts` → `handleRecommendationPost
 12. **Result-issue gate** (`getRecommendationResultIssue`): triggers fallbacks (see §9).
 13. **Requirement filtering** (`filterResultByRequirements`, `lib/requirementValidation.ts`).
 14. **Enrichment chain**: `enrichResultWithReviewEvidence` (trust-ladder) → `enrichProductAssets` (images/price/metadata) → `verifyMissingRequirementEvidence` (rescue unknown facts) → `revalidateResultCandidates`. `buildAdaptiveVerificationBudget` keeps expensive enrichment/rescue focused on likely visible products, defaults to 3-product concurrency, and checks the most important missing facts first. The trust ladder now receives the generated `buyingRubric` internally so it can search for category-specific facts, quality signals, owner-review themes, and red flags before ranking.
-15. **No-exact sanity fallback** (`shouldRunNoExactSanityFallback`) for common searches.
-16. **Score & select** (`scoreAndSelectRecommendations`, `lib/recommendationScoring.ts`).
-17. **Optional narration** (`REVIEW_RADAR_LLM_NARRATION=on`): a cheap explainer LLM pass that rewrites only the displayed cards' prose (`lib/finalSynthesis.ts`), guarded so it cannot change the set, prices, specs, or citations. It is off by default for normal searches because it improves wording, not product accuracy.
-18. **Finalize**: `prioritizeProductPageUrlsInResult` + `removeUserHiddenResultFields` (strips `scoreBreakdown`; hides `specConstraints` unless debug). Respond `{ result }` (+`debug` when `x-reviewradar-debug: true` and non-prod).
+15. **Source-quality upgrade** (`upgradeWeakSourceEvidence`, `lib/requirementEvidenceRescue.ts`): runs AFTER `revalidateResultCandidates` and BEFORE scoring. For each candidate that (a) has a model-number token (strong product identity), (b) passes all hard requirements, and (c) has no verified price, no owner rating, and no tier-1 editorial or tier-2 marketplace citation from a different host (`hasUsefulCommerceEvidence` using `sourceTier.ts`), a single `searchSerperShopping` call looks for the same product on a better-sourced page. After passing the `looksLikeSameProduct` identity gate, price, rating, reviewCount, citation, and image are merged via existing rescue helpers. Cap: `MAX_SOURCE_UPGRADE_CANDIDATES = 3`. Debug visibility: `debug.stageFunnel.sourceUpgradeTraces` — one `SourceUpgradeTrace` per attempt recording `name`, `query`, `candidatesReturned`, `candidatesEvaluated`, `noMatchReason` (`"shopping_results_empty"` / `"identity_rejected"` / `"no_attachable_fields"`), `candidateSample` (≤5 shopping results with identity match result and rejection reason), `evidenceAttached`, and `attachedFields`.
+16. **No-exact sanity fallback** (`shouldRunNoExactSanityFallback`) for common searches.
+17. **Score & select** (`scoreAndSelectRecommendations`, `lib/recommendationScoring.ts`).
+18. **Optional narration** (`REVIEW_RADAR_LLM_NARRATION=on`): a cheap explainer LLM pass that rewrites only the displayed cards' prose (`lib/finalSynthesis.ts`), guarded so it cannot change the set, prices, specs, or citations. It is off by default for normal searches because it improves wording, not product accuracy.
+19. **Finalize**: `prioritizeProductPageUrlsInResult` + `removeUserHiddenResultFields` (strips `scoreBreakdown`; hides `specConstraints` unless debug). Respond `{ result }` (+`debug` when `x-reviewradar-debug: true` and non-prod).
 
 ### Shared product trust layer
 - `lib/productEligibility.ts` is the central "can this be a product card?" classifier. Serper intake, final result validation, product-page URL selection, ranking/requirement gating, and QA workers should call it instead of keeping separate page-filter lists.
@@ -166,12 +167,13 @@ each requirement resolves to **pass / fail / unknown**:
 - `lib/requirementExtraction.ts` — `extractStructuredRequirements`, Zod schemas, `getPremiumCap`.
 - `lib/requirementValidation.ts` — `validateProductAgainstRequirements`, `filterResultByRequirements`, `revalidateResultCandidates`, `buildNoExactMatchesResult`, `hasFirmRequirementFilters`, product-type conflict table, `hasConflictingProductType`.
 - `lib/requirementConflicts.ts` — contradictory-requirement detection.
-- `lib/requirementEvidenceRescue.ts` — `verifyMissingRequirementEvidence` (flip unknown→pass from found evidence).
+- `lib/requirementEvidenceRescue.ts` — `verifyMissingRequirementEvidence` (flip unknown→pass from found evidence); `upgradeWeakSourceEvidence` (pre-scoring source-quality upgrade — see step 15); `needsSourceUpgrade`, `hasUsefulCommerceEvidence` (trigger conditions); `SourceUpgradeTrace` / `SourceUpgradeCandidateSample` (debug types).
 - `lib/specDictionary.ts` / `lib/specExtraction.ts` — numeric/boolean spec registry + extraction/validation (`extractSpecsFromText`, `evaluateSpecConstraint`, `validateSpecConstraints`).
 - `lib/formFactor.ts` — form-factor/subtype model: `detectFormFactors`, `offFormFactorModifiers`, `isComponentSubstitution`.
 
 **Discovery & search**
 - `lib/search/serper.ts` — all Serper calls, candidate normalization, pre-filter, editorial seeding, orchestration, dedupe, merge.
+- `lib/search/sourceTier.ts` — generalized domain→tier classifier: 1 = editorial (Wirecutter, RTINGS, etc.), 2 = marketplace/retailer (Amazon, Home Depot, etc.), 3 = manufacturer/brand, 4 = other. Used by editorial seeding priority, `hasUsefulCommerceEvidence`, and citation-strength classification. `SOURCE_NAME_TOKENS` blocklist prevents source names from being mistaken for product names during seed extraction.
 - `lib/search/sourcePacks.ts` — category groups, retailer/source packs, `SEARCH_DEPTH_CONFIGS`.
 - `lib/searchQueryExpansion.ts` — `generateSearchPlan`, query families/staging.
 - `lib/discoveryStrategy.ts` — `buildOpenAIDiscoveryStrategy`, `buildOpenAIDiscoveryGapCheck`, `augmentSearchPlanWithDiscoveryStrategy`.
@@ -261,6 +263,8 @@ citation verification → filterResultToVerifiedCitations
 filterResultByRequirements → enrichReviewEvidence → enrichProductAssets
         → verifyMissingRequirementEvidence → revalidateResultCandidates
    ▼
+upgradeWeakSourceEvidence (source-quality upgrade, ≤3 shopping calls) → sourceUpgradeTraces
+   ▼
 scoreAndSelectRecommendations → exactMatches[≤7] + nearMatches[≤5] (+ ScoreBreakdown)
    ▼
 (optional) LLM narration (guarded prose rewrite)
@@ -344,6 +348,18 @@ REVIEW_RADAR_CREDIBILITY_PENALTY=on node scripts/eval-pipeline.mjs
 node scripts/ab-ranking.mjs                                      # one fixed candidate set, flags off vs on
 ```
 
+**Quality measurement + live replay** (targeted API spend):
+```bash
+npm run qa:plan -- --mode diagnostic          # print cost plan for a mode, no API calls
+npm run qa:scorecard -- --mode diagnostic     # 5-query × 2-run diagnostic (needs --confirm above 600 Serper)
+npm run qa:save-fixture -- "gas grill"        # call live API once, save debug payload → tests/fixtures/review-radar-live/gas-grill.json
+npm run qa:replay -- tests/fixtures/review-radar-live/gas-grill.json  # replay at zero cost
+npm run qa:replay -- --all                    # replay all saved live fixtures
+node scripts/citationStrengthDiagnostic.mjs  # citation-type breakdown for one live query
+```
+
+Saved fixtures (`tests/fixtures/review-radar-live/*.json`) contain the full debug payload and can be replayed for zero additional API cost to inspect stage funnel, source-upgrade traces, final-selection traces, and citation strength. The replay script prints `Source-Quality Upgrade` including `candidatesReturned`, `candidatesEvaluated`, `noMatchReason`, and a candidate sample per attempted upgrade (Phase 3G+).
+
 **Agent QA loop** (safe local controller/worker/verifier workflow):
 ```bash
 npm run qa:worker -- --batch price-trust
@@ -365,7 +381,11 @@ and make one generalized fix at a time.
 
 **Live debug**: send header `x-reviewradar-debug: true` (non-production only) to `POST /api/recommendations`
 to receive a `debug` payload (search plan stages, candidate specs/validation, Serper call counts,
-rejected counts, expected/missing products, seed names, model names). Example:
+rejected counts, expected/missing products, seed names, model names). Key debug fields:
+- `debug.stageFunnel.candidatePool` / `.rejectedCheap` / `.postFilter` / `.final7` — per-stage candidate snapshots (`lib/recommendationFunnel.ts`) showing where each candidate was lost.
+- `debug.stageFunnel.sourceUpgradeTraces` — one `SourceUpgradeTrace` per source-upgrade attempt (Phase 3E+): `candidatesReturned`, `candidatesEvaluated`, `noMatchReason`, `candidateSample`, `evidenceAttached`, `attachedFields`. Replay with `scripts/replay-quality-fixtures.mjs`.
+- `debug.stageFunnel.finalSelectionTrace` — per-candidate record of why every candidate that reached `scoreAndSelectRecommendations` was selected, dropped, collapsed, or excluded (`FinalSelectionDecisionReason` enum, 10 values). Replay with `scripts/replay-quality-fixtures.mjs`.
+Example:
 ```powershell
 $body = @{ query = "cordless leaf blower"; priorities = "at least 600 cfm"; budget = "under $300" } | ConvertTo-Json
 Invoke-RestMethod -Method Post -Uri "http://localhost:3000/api/recommendations" `
@@ -399,5 +419,5 @@ Invoke-RestMethod -Method Post -Uri "http://localhost:3000/api/recommendations" 
 - **Internal discovery functions aren't exported.** `cheapCandidateRejectionReason` and `candidateFitScore` are private; tests must go through `cheapPreFilterRawCandidates`. Keep that entry point stable.
 - **Client-only result shaping.** Dealbreaker-strength and near-match grouping happen in the browser and do not re-run the search; they only hide/show already-returned products.
 - **Collection/list-page leakage.** The June 18, 2026 QA loop added broader non-product filtering for review/support/community/deals/comparison/article-style pages at Serper normalization and final validation. TV-style collection/list pages may still need category-specific live verification. **Needs verification** after the next TV-focused loop.
-- **Uncommitted work.** A large amount of pipeline work is currently **uncommitted on `main`** in this working tree — `git status` before assuming the committed history reflects current behavior.
+- **Live-fixture staleness.** `tests/fixtures/review-radar-live/*.json` are not committed (gitignored). Replay after a behavior change may show old source-upgrade or funnel results. Re-save with `npm run qa:save-fixture` after any meaningful pipeline change.
 - **Verification gaps (read the code before trusting):** exact Serper request/quardrails in `fetchSerper`; precise category-group routing in `sourcePacks.ts`; the full requirement-extraction grammar in `requirementExtraction.ts`. These are large and were not exhaustively traced here.
