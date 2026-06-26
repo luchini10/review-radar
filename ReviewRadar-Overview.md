@@ -421,3 +421,71 @@ Invoke-RestMethod -Method Post -Uri "http://localhost:3000/api/recommendations" 
 - **Collection/list-page leakage.** The June 18, 2026 QA loop added broader non-product filtering for review/support/community/deals/comparison/article-style pages at Serper normalization and final validation. TV-style collection/list pages may still need category-specific live verification. **Needs verification** after the next TV-focused loop.
 - **Live-fixture staleness.** `tests/fixtures/review-radar-live/*.json` are not committed (gitignored). Replay after a behavior change may show old source-upgrade or funnel results. Re-save with `npm run qa:save-fixture` after any meaningful pipeline change.
 - **Verification gaps (read the code before trusting):** exact Serper request/quardrails in `fetchSerper`; precise category-group routing in `sourcePacks.ts`; the full requirement-extraction grammar in `requirementExtraction.ts`. These are large and were not exhaustively traced here.
+
+---
+
+## 12. Recent Claude work summary (as of 2026-06-26)
+
+This section is the handoff map for agents picking up after the June 2026 Claude work. It is factual state, not a proposal.
+
+**Measurement infrastructure built**
+- Phase 0 added `scripts/goldBenchmark.mjs`, `scripts/qualityScorecard.mjs`, and `scripts/qualityConsistencyHarness.mjs`: a 14-query gold benchmark, broad/constraint scorecards, and stability probes. Baseline finding: mean core-leader coverage was about 3.0/7 in final-7 and 4.2/7 in candidate pool; leaders were often present upstream but lost before final selection.
+- Measurement Phase 1 made scorecard modes explicit (`diagnostic`, `normal`, `high`, `stress`), added `npm run qa:plan`, corrected the cost model to about 47 Serper calls/search and 75 s/search, and blocks estimated runs above 600 Serper calls without `--confirm`.
+- Measurement Phase 2 added replayable debug fixtures: `scripts/save-debug-fixture.mjs`, `scripts/replay-quality-fixtures.mjs`, `tests/fixtures/robot-vacuum-synthetic.json`, and `tests/replayFixtures.test.mjs`. Saved live fixtures in `tests/fixtures/review-radar-live/*.json` can be replayed at zero API cost but are gitignored and can go stale.
+- Additional diagnostics now include `scripts/citationStrengthDiagnostic.mjs`, `debug.stageFunnel.*`, `docs/review-radar-test-memory.md`, and append-only QA reports in `docs/qa-loop-results.md`. Use these before spending on live baselines.
+
+**Discovery improvements**
+- Phase 0 found a coverage gap: many editorial market leaders were not entering the candidate pool, especially brand-led names without model numbers (`Coway Airmega`, `Herman Miller Aeron`, `Shark Matrix`).
+- Phase 1 added `lib/search/sourceTier.ts`, a generic domain tier classifier: tier 1 editorial/lab, tier 2 marketplace/retailer, tier 3 brand/manufacturer, tier 4 other, plus source-name token blocking.
+- `lib/search/serper.ts` `extractSeedProductNames` now accepts brand-led proper-noun product names, mines tier-1 editorial sources first, and rejects category-only, source-name, year-led, and multi-brand mash title runs. This was cost-neutral: it uses the existing seed-shopping budget rather than adding Serper calls.
+- Discovery Themes 2 and 3 from the earlier plan (form-factor model, and editorial seeding enabled for good sources) are committed, but may warrant re-evaluation as live evidence changes.
+
+**Filtering fix**
+- The funnel diagnostic found core leaders such as RIDGID, Craftsman, and Roborock were lost at `afterCitationVerify`, not discovery or ranking.
+- `filterResultToVerifiedCitations` was dropping real LLM/web-search product-page candidates because their citation URLs were not in the verified URL set built from Serper/Responses sources.
+- Filtering STEP 2 added URL normalization and `rescueProductPageCitation`: a zero-citation candidate can self-cite its own product page only if that URL passes product-card eligibility. Article, review, category, search, listing, forum, and uncited prose still drop.
+- Result: the specific citation-verify drop is fixed mechanically; broad before/after baselines were inconclusive because live variance is larger than the expected effect size.
+
+**Product-accuracy hardening**
+- Phase 0 (text-price fix): specific, plausible text-only prices can satisfy budget checks while still displaying as needing verification; vague ranges and suspicious/financing/conflicting prices remain unusable for exact budget matches.
+- Phase 1 (product-type verdict helper): `lib/productTypeMatch.ts` centralizes wrong-type/accessory/component-substitution verdicts so discovery and validation use the same product-type logic.
+- Phase 1 step 2 (conflict rules at discovery): cross-category conflict rules moved into the shared helper so obvious wrong-type candidates can be rejected before the candidate pool; missing-evidence and identity-only rules remain validation-only.
+- Phase 2 (credibility de-stacking): duplicated weak-credibility penalties were consolidated so thin-but-valid products are not buried several times for the same sparse-evidence signal; hard gates were not loosened.
+- Phase 3 (shopping-leg identity query): price/evidence rescue now uses product identity (`name + category`) for the Google Shopping leg instead of noisy `"current price"` wording; organic evidence search remains descriptive.
+- Phase 5 (whole-word rubric matching): rubric quality-signal matching uses whole words/phrases instead of substring matches, preventing false positives such as `trail` in `trailer`.
+- Phase 6 hardening pass: full deterministic checks, QA loop, and live smoke testing were run after the rubric/rescue work; future phases should preserve these trust gates.
+
+**Requirement-filtering fixes**
+- Phase 3A fixed diagnostics: `afterRequirementFilter` now records near matches as well as exact matches, so normal demotion to near-match is not misread as product loss.
+- Phase 3A also fixed spec extraction: price wording such as `under $600` no longer poisons the nearby `4-burner` direction check; `operator: "max"` labels now say `at most N` to match `<=`.
+- Phase 3B added a `robot_vacuum` product-type rule, richer `allowedCheckText`, and three-state `checkCategory` (`pass` / `fail` / `unverified`), blocking wet/dry, stick, canister, hand, upright, and shop vacs from both exact and near robot-vacuum results when confirmed wrong.
+- Phase 3C expanded `categoryTerms()` with aliases from `extractedRequirements`, so a `gas grill` query can accept `propane grill` / `natural gas grill` evidence while still requiring the grill term. Butane and non-grill products remain blocked.
+
+**Source-quality upgrade system**
+- Phase 3E added `upgradeWeakSourceEvidence` in `lib/requirementEvidenceRescue.ts`, wired after requirement rescue/revalidation and before scoring.
+- Trigger: `needsSourceUpgrade` requires a model-number token, no failed hard requirements, no verified price, no owner rating, and weak commerce evidence. Phase 3F changed the final condition from `countExternalCitations(product) === 0` to `!hasUsefulCommerceEvidence(product)`.
+- `hasUsefulCommerceEvidence` is true only for a distinct-host tier-1 editorial citation or tier-2 marketplace/retailer citation. Tier-3 manufacturer/brand citations, same-brand subdomains, tier-4 mentions, and same-host self-cites do not block upgrade eligibility.
+- Mechanism: one `searchSerperShopping` call per qualifying candidate, capped by `MAX_SOURCE_UPGRADE_CANDIDATES = 3`; candidate evidence attaches only after `looksLikeSameProduct` passes. Existing merge helpers add price, rating, review count, citation, and image without overwriting trusted existing fields.
+- Phase 3F live diagnostic: trigger improved from 0/4 categories to attempts in 3/4 categories, but 4 live attempts across 4 categories attached 0 evidence. The current open question is why `evidenceAttached: false` occurs: Serper may be returning zero shopping candidates, or candidates may be failing identity.
+- Phase 3G added the missing debug fields to answer that: `candidatesReturned`, `candidatesEvaluated`, `noMatchReason`, and `candidateSample`. Existing Phase 3F fixtures do not contain these fields; `candidatesReturned` remains unknown until fresh 3G fixtures are re-saved.
+
+**Debug visibility added**
+- `debug.stageFunnel.candidatePool`: merged Serper + LLM candidate snapshots, not Serper-only.
+- `debug.stageFunnel.rejectedCheap`: cheap pre-filter rejections and reasons.
+- `debug.stageFunnel.sourceUpgradeTraces`: source-upgrade attempts, including Phase 3G shopping-result diagnostics.
+- `debug.stageFunnel.finalSelectionTrace`: debug-only per-candidate selection outcome from `scoreAndSelectRecommendationsWithTrace`, including selected, ranked-below-cutoff, duplicate/variant collapsed, reliability near-only, and disqualified reasons.
+
+**Not done yet / open questions**
+- Source-upgrade `candidatesReturned` is not yet confirmed via a fresh Phase 3G fixture run; do not infer whether search returned zero results or identity rejected them from old fixtures.
+- Model-token gaps are not fixed: examples include Napoleon Rogue 525, Samsung Bespoke descriptive names, and FEIN Turbo II 9-20-36.
+- Query construction redundancy remains: product names can already contain the category, producing queries such as `"Gas Grill gas grill"`; if Phase 3G shows zero candidates returned, shorter model-focused queries are the likely next target.
+- Source upgrade has not yet shown evidence attachments in live runs; unit tests prove safety and merge behavior, not live effectiveness.
+- Discovery Themes 2 and 3 are committed but may need another look if source-quality traces show candidate quality or source selection is still the limiting factor.
+
+**Standing rules for future agents**
+- No product-specific patches. Generalize by product type, source class, evidence shape, or reusable trust rule.
+- No behavior changes without tests. Debug-only changes still need deterministic tests when they affect exported shapes or replay output.
+- Do not run a full `normal` or `high` baseline without explicit approval; first report prior findings, cheaper replay/diagnostic alternatives, estimated Serper calls, and runtime.
+- Do not weaken price trust, citation trust, product eligibility, product-type, hard-requirement, or exact-budget gates to improve coverage.
+- Do not commit `.env.local`, real API keys, or live fixture outputs containing private/debug payloads.
+- `docs/qa-loop-results.md` is append-only. Use the existing Claude green-header format for Claude entries and preserve prior findings rather than rewriting them.

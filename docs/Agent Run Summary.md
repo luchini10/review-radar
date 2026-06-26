@@ -8,6 +8,18 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-06-26
+
+**Goal:** Save the user-provided Codex phased handoff plan and make the next task clear for future agents.
+
+**What it changed:** Created `docs/codex-handoff-phased-plan.md` with the full phased plan and updated `docs/agent-next-task.md` so the current next task is Phase 3H: live diagnostic using Phase 3G fields.
+
+**Why the change matters:** Future Codex and Claude sessions now have a durable repo-local handoff file that names the current phase, the diagnostic fields to inspect, and the rule to avoid coding before the Phase 3H bottleneck is proven.
+
+**Tests run:** None. Documentation-only cleanup; no app code or live searches.
+
+**Next recommended step:** Run the Phase 3H live diagnostic for `cordless drill` and `gas grill`, then update the handoff plan and QA log with the result.
+
 ## Codex Run - 2026-06-22 08:10
 
 **Goal:** Reduce ReviewRadar search time without weakening product trust, price trust, or hard requirement checks.
