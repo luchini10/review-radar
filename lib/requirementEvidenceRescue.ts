@@ -25,6 +25,7 @@ import {
 } from "./rubricFactImportance.ts";
 import { mapWithConcurrency } from "./recommendationPerformance.ts";
 import { extractSpecsFromText } from "./specExtraction.ts";
+import { sourceTier } from "./search/sourceTier.ts";
 
 type VerifiableFactKind = "color" | "dimension" | "feature" | "price" | "spec";
 
@@ -1002,12 +1003,20 @@ type SourceUpgradeOutcome<T> = {
   sourceUpgradeTraces: SourceUpgradeTrace[];
 };
 
-function countExternalCitations(product: ProductRecommendation) {
+// Returns true when a product already has a useful independent commerce source —
+// a tier-1 editorial citation or a tier-2 marketplace/retailer citation that is
+// not the product's own page. Same-brand subdomains (store.ridgid.com vs
+// ridgid.com) and manufacturer sites on different domains (makitatools.com when
+// the product page is on amazon.com) are tier-3 and therefore do NOT count as
+// useful commerce evidence.
+function hasUsefulCommerceEvidence(product: ProductRecommendation): boolean {
   const productHost = sourceHost(product.product_page_url);
-
-  return (product.citations || []).filter(
-    (c) => c.url && sourceHost(c.url) !== productHost,
-  ).length;
+  return (product.citations || []).some((c) => {
+    const host = sourceHost(c.url || "");
+    if (!host || host === productHost) return false;
+    const tier = sourceTier(host);
+    return tier === 1 || tier === 2;
+  });
 }
 
 export function needsSourceUpgrade(product: ProductRecommendation) {
@@ -1017,7 +1026,7 @@ export function needsSourceUpgrade(product: ProductRecommendation) {
   return (
     !hasVerifiedPrice(product) &&
     !product.metadata?.rating?.value &&
-    countExternalCitations(product) === 0
+    !hasUsefulCommerceEvidence(product)
   );
 }
 

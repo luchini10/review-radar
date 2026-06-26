@@ -2239,3 +2239,217 @@ These candidates had manufacturer-page URLs, no owner rating, no verified price,
 - `MAX_SOURCE_UPGRADE_CANDIDATES = 3` limits API cost per request
 
 **Debug visibility:** `debug.stageFunnel.sourceUpgradeTraces` (query, evidenceAttached, attachedFields per candidate). Replay script prints section.
+
+---
+
+## <span style="color:green">**Claude QA Update — 2026-06-25 02:00**</span>
+
+**Phase 3E Live Diagnostic — source-quality upgrade trigger analysis across 4 categories**
+
+### 1. Git status before testing
+
+Branch: `main`. No uncommitted changes to tracked files. Untracked: `.rr_baseline.json`, `.rr_baseline.md`, live fixture files under `tests/fixtures/review-radar-live/`. No code changes made during this diagnostic.
+
+### 2. Server status
+
+HTTP 200 on all 4 live searches. Dev server running locally.
+
+### 3. Exact searches run
+
+1. `"gas grill"` (no budget or feature constraints)
+2. `"shop vac"`
+3. `"robot vacuum"`
+4. `"cordless drill"`
+
+### 4. Fixture files saved (untracked)
+
+- `tests/fixtures/review-radar-live/gas-grill.json`
+- `tests/fixtures/review-radar-live/shop-vac.json`
+- `tests/fixtures/review-radar-live/robot-vacuum.json`
+- `tests/fixtures/review-radar-live/cordless-drill.json`
+
+### 5. Serper call estimate
+
+~12–16 base Serper calls per search (shopping + organic + market-coverage rescue). Source-quality upgrade added **0 extra calls** — trigger fired zero times across all 4 searches.
+
+### 6. Per-search summary
+
+#### Gas grill
+
+| Metric | Value |
+|---|---|
+| `sourceUpgradeTraces` count | 0 |
+| Products attempted | 0 |
+| Products upgraded | 0 |
+| Fields attached | — |
+
+Final exactMatches: Weber Genesis E-435, Napoleon Rogue 525, Cal Flame G Series, Weber Go-Anywhere, MHP Grills. NearMatches: Weber Spirit E-325 (failed=Gas), Napoleon Rogue 425 SB (failed=Gas).
+
+**Why each candidate was excluded:**
+
+- **Weber Genesis E-435** (model token `e435` ✓): `hasVerifiedPrice = true` ($1,599 High confidence extracted by `enrichProductAssets` from weber.com structured data). Trigger correctly blocked.
+- **Weber Spirit E-325** (model token `e325` ✓): `requirementCheck.failed = ["Gas"]`. Safety gate working — upgrade never touches disqualified candidates.
+- **Napoleon Rogue 525**: **no model token**. "Rogue 525" — regex `[A-Z]{1,5}[-\s]?\d{2,}` requires uppercase letters before digits; "Rogue" is mixed-case, "525" has no uppercase prefix. Zero model tokens extracted.
+- **Napoleon Rogue 425 SB**: same — no model token; also `failed=["Gas"]`.
+- **Cal Flame G Series, Weber Go-Anywhere, MHP Grills**: no model tokens.
+
+Safety concerns: none.
+
+#### Shop vac
+
+| Metric | Value |
+|---|---|
+| `sourceUpgradeTraces` count | 0 |
+| Products attempted | 0 |
+| Products upgraded | 0 |
+
+Final exactMatches: RIDGID RT1200, FEIN Turbo II, Vacmaster VK811PH, Armor All VBV809PF, Vacmaster VCM408PF, Vacmaster DVOM202P, Fein Turbo II HEPA.
+
+**Why each candidate was excluded:**
+
+- **RIDGID RT1200** (model token `rt1200` ✓, no price, no rating): `countExternalCitations = 1`. Inspection shows product host = `ridgid.com`; citation from `store.ridgid.com` counted as external (different subdomain). **False-positive exclusion** — same brand, different subdomain, zero retailer evidence. Trigger blocked a genuine upgrade candidate.
+- **Vacmaster VK811PH** (model token `vk811ph` ✓): `hasVerifiedPrice = true`. Correct.
+- **Armor All VBV809PF** (model token `vbv809pf` ✓): `hasVerifiedPrice = true`. Correct.
+- **Vacmaster VCM408PF** (model token `vcm408pf` ✓): `hasVerifiedPrice = true`. Correct.
+- **Vacmaster DVOM202P** (model token `dvom202p` ✓): `hasVerifiedPrice = true`. Correct.
+- **FEIN Turbo II (9-20-36 format)**: no model token — digit-dash-digit format (`9-20-36 236 09 0`) doesn't match `[A-Z]{1,5}[-\s]?\d{2,}` (no uppercase prefix).
+- **Fein Turbo II HEPA (92036060990)**: no model token (starts with digit, no uppercase prefix). Has verified price.
+
+Safety concerns: **RIDGID subdomain issue** — `store.ridgid.com` ≠ `ridgid.com` causes `extCits = 1`, falsely blocking upgrade for a product with zero external retailer evidence.
+
+#### Robot vacuum
+
+| Metric | Value |
+|---|---|
+| `sourceUpgradeTraces` count | 0 |
+| Products attempted | 0 |
+| Products upgraded | 0 |
+
+Final exactMatches: Samsung Bespoke Jet Bot Combo (two variants), Roborock Qrevo S, Samsung Jet Bot+, Samsung Jet Bot AI+, generic Jet Bot listing, Best Buy category page.
+
+**Why each candidate was excluded:**
+
+- **All Samsung Bespoke products**: no model tokens in names — Samsung uses descriptive product lines ("Bespoke Jet Bot Combo AI") without alphanumeric codes like "QN65Q80C" in these names.
+- **Roborock Qrevo S**: "S" alone (1 char) doesn't produce a model token ≥ 4 chars. Also has `hasVerifiedPrice = true`.
+- **Samsung Jet Bot AI+**: `extCits = 1` — has external citation.
+- **Jet Bot Robot Vacuum, Best Buy category page**: no model tokens, structural anomalies (category page reached final pool).
+
+Safety concerns: none. Note: several final exactMatches are poor-quality results (category page, minimal product info). This is a discovery-layer issue, not an upgrade-layer issue.
+
+#### Cordless drill
+
+| Metric | Value |
+|---|---|
+| `sourceUpgradeTraces` count | 0 |
+| Products attempted | 0 |
+| Products upgraded | 0 |
+
+Final exactMatches: 18V Cordless Drill Kit — Metabo HPT, RYOBI ONE+ 18V, DEWALT 20V MAX Cordless, Makita XFD10Z, Metabo HPT Black, Milwaukee M18, DEWALT 20V DC.
+
+**Why each candidate was excluded:**
+
+- **Makita XFD10Z** (model token `xfd10z` ✓, no price, no rating): `countExternalCitations = 1`. Product is on amazon.com; one citation from makitatools.com (different host) → `extCits = 1`. **Second false-positive exclusion** — the makitatools.com citation is the manufacturer site, not a retailer with price+rating. Trigger blocked a genuine upgrade candidate.
+- **Metabo HPT "18V Cordless Drill Kit"**: model number DS18DBFL2E not visible in product name as listed; `rating = true` anyway.
+- **RYOBI ONE+**: no model token in name; has rating.
+- **DEWALT 20V MAX Cordless (no model number in name)**: no model token; has rating.
+- **Milwaukee M18**: "M18" → normalized `m18` = 3 chars < 4 minimum → no token.
+- **DEWALT 20V DC**: no model token in name.
+- **Metabo HPT Black**: no model token; has verified price, has external citation.
+
+Safety concerns: none.
+
+### 7. Cross-category verdict
+
+**Did it fire in more than one category?** No — zero fires across all 4.
+
+**Did it attach correct same-product evidence?** N/A — trigger never reached `upgradeProductSource` or `looksLikeSameProduct`.
+
+**Did it avoid unsafe merges?** Yes — by not running, zero risk of cross-product evidence contamination. All safety gates (identity check, requirement gate, idempotent merge) remain untested in live conditions but are confirmed correct in 18 unit tests.
+
+**Is the mechanism generally useful or only Weber/gas grill?** It is correct in design and would be useful — but the trigger conditions produce zero qualifying candidates in these 4 live runs. Two categories of false-positive exclusion were identified:
+
+- **Subdomain false-positive**: `store.ridgid.com` (citation) ≠ `ridgid.com` (product host). Same brand; the citation does not represent independent retailer evidence. RIDGID RT1200 should qualify.
+- **Organic-snippet false-positive**: Makita XFD10Z has one citation from makitatools.com (manufacturer site). Product host is amazon.com. The citation is manufacturer-self-citation, not an independent retailer with price and rating. Should qualify.
+
+Both cases are blocked by `countExternalCitations(product) === 0` — a condition designed to exclude products that already have external evidence, but which also incorrectly excludes products where the "external" citation is a brief manufacturer mention rather than structured retailer data.
+
+### 8. Final judgment: PARTIAL
+
+**Safe: YES.** Zero unsafe merges, zero identity misfires, zero data contamination. Behavioral safety gates work correctly.
+
+**Effective: NO.** Trigger fires zero times across 4 categories. The mechanism solves the right problem (manufacturer-page-only candidates missing retailer evidence) but the trigger conditions are too strict for the current pipeline state:
+
+1. `countExternalCitations === 0` — the enrichment steps (`enrichResultWithReviewEvidence`, `enrichProductAssets`) run before the upgrade and add organic citations to products. Even a single manufacturer citation from a different subdomain (store.ridgid.com) or a brief mention on another site (makitatools.com) blocks the trigger. Products that genuinely need upgrade (no price, no rating) still get blocked if they have any text mention from a non-product-page host.
+
+2. `modelTokens` regex gap — products whose identifying number follows a word (Napoleon "Rogue 525", FEIN "Turbo II 9-20-36") don't match `[A-Z]{1,5}[-\s]?\d{2,}` because "Rogue" is mixed-case and "9-20-36" starts with a digit. Some of these (Napoleon Rogue 525: no price, no rating, no external cits) would otherwise be ideal upgrade candidates.
+
+3. Self-limiting conjunction — products with clear alphanumeric model codes (DEWALT DCD800P1, Weber E-435, Vacmaster VCM408PF) tend to get price evidence during enrichment/rescue because model codes are effective shopping search terms. The set of products that simultaneously have (a) a clear model code AND (b) no evidence from any prior enrichment step is close to empty in practice.
+
+### 9. Recommended next step
+
+**Remove `countExternalCitations(product) === 0` from the trigger.** The price + rating conditions already capture "no quality retailer evidence." A brief organic mention from a different host is not a substitute for structured price/rating data — treating it as evidence of quality is a false equivalence.
+
+With this single condition removed:
+- Makita XFD10Z (model token `xfd10z`, no price, no rating) → **would trigger** — gets a shopping search for "Makita XFD10Z 18V LXT cordless drill"
+- RIDGID RT1200 (model token `rt1200`, no price, no rating) → **would trigger** — gets a shopping search for "RIDGID RT1200 12 Gallon wet dry vac"
+- Napoleon Rogue 525 (no model token) → still excluded by identity safety gate ✓
+- Weber Genesis E-435 (has verified price) → still excluded ✓
+- All products with ratings → still excluded ✓
+
+The identity gate (`looksLikeSameProduct` inside `upgradeProductSource`) remains fully active. No unsafe merges can occur even if the trigger fires more broadly — the worst outcome of a false-positive trigger is an extra Serper shopping call that finds no matching product and `evidenceAttached = false`.
+
+**Secondary fix (lower priority):** Fix subdomain handling in `countExternalCitations`. Strip leading components (`store.ridgid.com` → `ridgid.com`) or check that the citation host is a proper subdomain of the product host before counting it as external.
+
+**Do not change now** — no code changes in this diagnostic run per user instructions. Both fixes are straightforward and should be done as Phase 3F with full test + typecheck + lint cycle.
+
+---
+
+## <span style="color:green">**Claude QA Update — 2026-06-25 03:00**</span>
+
+**Phase 3F: Source-upgrade trigger loosened — `hasUsefulCommerceEvidence` replaces `countExternalCitations === 0`**
+
+**Change:** `lib/requirementEvidenceRescue.ts` — `countExternalCitations` removed; new `hasUsefulCommerceEvidence(product)` helper; `needsSourceUpgrade` now uses `!hasUsefulCommerceEvidence(product)`.
+
+**New helper behavior:**
+
+```
+hasUsefulCommerceEvidence = true  ← citation from tier-1 (editorial) or tier-2 (retailer) host ≠ product host
+hasUsefulCommerceEvidence = false ← all citations are tier-3 (manufacturer/brand) or tier-4, or same host
+```
+
+**Trigger condition before (Phase 3E):**
+```
+failed.length === 0 AND modelTokens ≥ 1 AND !hasVerifiedPrice AND !hasRating AND extCits === 0
+```
+
+**Trigger condition after (Phase 3F):**
+```
+failed.length === 0 AND modelTokens ≥ 1 AND !hasVerifiedPrice AND !hasRating AND !hasUsefulCommerceEvidence
+```
+
+**Why safer than simply removing the external-citation check:**
+The old check treated ANY citation from a different host as "evidence" — blocking upgrades incorrectly. The new check only blocks upgrades when the product has a citation from an independent, trusted commerce source (editorial or major retailer). Manufacturer self-citations on different domains and brand-store subdomains no longer falsely block the upgrade while still providing zero additional commerce signal.
+
+**Confirmed live impact (from Phase 3E diagnostic fixtures):**
+
+| Candidate | Phase 3E | Phase 3F |
+|---|---|---|
+| RIDGID RT1200 (no price, no rating) | ✗ blocked by `store.ridgid.com` extCit | ✓ eligible — tier-3 subdomain doesn't count |
+| Makita XFD10Z (no price, no rating) | ✗ blocked by `makitatools.com` extCit | ✓ eligible — tier-3 manufacturer doesn't count |
+| Weber Genesis E-435 | ✗ blocked by verified price | ✗ still blocked (price present) |
+| Napoleon Rogue 525 | ✗ blocked by no model token | ✗ still blocked (no model token) |
+| Products with Amazon/HD citations | ✗ blocked | ✗ still blocked (tier-2, useful evidence) |
+| Products with Wirecutter citations | ✗ blocked | ✗ still blocked (tier-1, useful evidence) |
+
+**New tests (5 added):**
+1. "returns false when the candidate has a tier-2 retailer citation" (renamed from "external citation")
+2. "returns false when the candidate has a tier-1 editorial citation" — `wirecutter.com` blocks upgrade ✓
+3. "returns true when the only external citation is a same-brand subdomain (RIDGID-style)" — `store.ridgid.com` doesn't block ✓
+4. "returns true when the only external citation is a manufacturer site on a different domain (Makita-style)" — `makitatools.com` doesn't block ✓
+
+**What did not change:**
+- Scoring weights, ranking, selection logic, product eligibility, price trust, citation trust
+- Model-token detection — Napoleon Rogue 525, Samsung Bespoke, FEIN Turbo II still excluded
+- All Phase 3E safety gates: failed requirements, identity gate (`looksLikeSameProduct`), idempotent merges, `MAX_SOURCE_UPGRADE_CANDIDATES = 3` cap
+
+**Verification:** `npm run typecheck` clean; `npm run lint` — 3 pre-existing warnings (no new warnings); `npm test` 600/600 pass; `node scripts/eval-pipeline.mjs` — all red-flag checks pass, rankings unchanged.

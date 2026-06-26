@@ -126,7 +126,8 @@ describe("needsSourceUpgrade", () => {
     assert.equal(needsSourceUpgrade(p), false);
   });
 
-  it("returns false when the candidate has at least one external citation", () => {
+  it("returns false when the candidate has a tier-2 retailer citation from a different host", () => {
+    // homedepot.com is tier-2: counts as useful commerce evidence → no upgrade needed
     const p = weakProduct("Weber Spirit E-325 3-Burner Gas Grill", {
       extra: {
         citations: [
@@ -136,6 +137,47 @@ describe("needsSourceUpgrade", () => {
       },
     });
     assert.equal(needsSourceUpgrade(p), false);
+  });
+
+  it("returns false when the candidate has a tier-1 editorial citation", () => {
+    // wirecutter.com is tier-1: counts as useful commerce evidence → no upgrade needed
+    const p = weakProduct("Weber Spirit E-325 3-Burner Gas Grill", {
+      extra: {
+        citations: [
+          { title: "Best Gas Grills", url: "https://www.wirecutter.com/reviews/best-gas-grills/", what_it_supports: "Expert review." },
+        ],
+      },
+    });
+    assert.equal(needsSourceUpgrade(p), false);
+  });
+
+  it("returns true when the only external citation is a same-brand subdomain (RIDGID-style)", () => {
+    // store.ridgid.com is tier-3 (manufacturer subdomain): not useful commerce evidence
+    const p = weakProduct("RIDGID 12 Gallon 5.0 Peak HP NXT Wet/Dry Vac (RT1200)", {
+      host: "ridgid.com",
+      extra: {
+        citations: [
+          { title: "RIDGID RT1200", url: "https://ridgid.com/products/rt1200", what_it_supports: "Product page." },
+          { title: "RIDGID RT1200 store", url: "https://store.ridgid.com/products/rt1200", what_it_supports: "Brand store listing." },
+        ],
+      },
+    });
+    assert.equal(needsSourceUpgrade(p), true);
+  });
+
+  it("returns true when the only external citation is a manufacturer site on a different domain (Makita-style)", () => {
+    // makitatools.com is tier-3 (manufacturer): not useful commerce evidence
+    // product is on amazon.com (tier-2) but the self-citation doesn't count
+    const p = weakProduct("Makita XFD10Z 18V LXT Cordless Drill", {
+      host: "amazon.com",
+      extra: {
+        citations: [
+          { title: "Makita XFD10Z Amazon", url: "https://amazon.com/dp/B00OC3MBYU", what_it_supports: "Product listing." },
+          { title: "Makita XFD10Z spec", url: "https://makitatools.com/products/xfd10z", what_it_supports: "Manufacturer spec page." },
+        ],
+      },
+    });
+    assert.equal(needsSourceUpgrade(p), true);
   });
 
   it("returns false when the candidate has failed requirements", () => {

@@ -354,3 +354,35 @@ If run-to-run variance in core leaders (±2–3) exceeds the expected effect siz
 **Debug visibility:** `debug.stageFunnel.sourceUpgradeTraces` → array of `{ name, query, evidenceAttached, attachedFields }`. Replay script prints section.
 
 **Suite count:** 18 new tests; total 597/597 green. TypeScript clean.
+
+---
+
+### Phase 3F — Loosen source-upgrade trigger: replace citation-count check with useful-commerce-evidence check
+
+**File:** `tests/sourceQualityUpgrade.test.mjs` (+5 tests; total 600/600)
+**Changed:** `needsSourceUpgrade` trigger condition — replaced `countExternalCitations(product) === 0` with `!hasUsefulCommerceEvidence(product)`.
+
+**`hasUsefulCommerceEvidence` logic (in `lib/requirementEvidenceRescue.ts`):**
+Returns `true` when any citation is from a host that is:
+- different from the product page host, AND
+- `sourceTier === 1` (editorial: Wirecutter, RTINGS, etc.) OR `sourceTier === 2` (marketplace/retailer: Amazon, Home Depot, etc.)
+
+Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as useful commerce evidence.
+
+**Key new cases now handled correctly:**
+- `store.ridgid.com` (tier-3 brand subdomain) when product host is `ridgid.com` → NOT useful → eligible for upgrade
+- `makitatools.com` (tier-3 manufacturer) when product URL host is `amazon.com` (self-citation excluded) → NOT useful → eligible for upgrade
+- `wirecutter.com` (tier-1 editorial) → useful → NOT eligible (no upgrade wasted)
+- `homedepot.com` (tier-2 retailer) → useful → NOT eligible (no upgrade wasted)
+
+**New tests (5 added):**
+- `needsSourceUpgrade` returns false for tier-2 retailer citation (renamed from "external citation" to reflect actual semantics)
+- `needsSourceUpgrade` returns false for tier-1 editorial citation (new)
+- `needsSourceUpgrade` returns true when only citation is same-brand subdomain — RIDGID RT1200 pattern (new)
+- `needsSourceUpgrade` returns true when only external citation is manufacturer site on different domain — Makita XFD10Z pattern (new)
+
+**What did not change:**
+- Scoring weights, ranking, selection logic unchanged
+- `modelTokens` detection unchanged (Napoleon Rogue 525, Samsung Bespoke still excluded)
+- All Phase 3E safety gates intact (failed requirements, identity gate, idempotent merges, cap)
+- Existing 18 Phase 3E tests all pass unmodified

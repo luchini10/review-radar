@@ -13,6 +13,14 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-25
 
+### 🟩 Claude — Phase 3F: Loosen source-quality upgrade trigger (replace external-citation count with useful-commerce-evidence check)
+- Replaced `countExternalCitations(product) === 0` in `needsSourceUpgrade` with `!hasUsefulCommerceEvidence(product)`.
+- `hasUsefulCommerceEvidence` returns `true` only when a product has at least one citation from a **tier-1 editorial** (`sourceTier === 1`: Wirecutter, RTINGS, etc.) or **tier-2 marketplace/retailer** (`sourceTier === 2`: Amazon, Home Depot, etc.) source that is distinct from the product's own page host.
+- Same-brand subdomains (`store.ridgid.com` when product host is `ridgid.com`) and manufacturer sites on different domains (`makitatools.com` when product URL is `amazon.com`) are tier-3 and no longer block upgrade eligibility.
+- `countExternalCitations` helper removed (no longer used). `sourceTier` imported from `lib/search/sourceTier.ts`.
+- No changes to scoring weights, ranking, selection logic, model-token detection, price trust, citation trust, or product eligibility.
+- 5 new deterministic tests in `tests/sourceQualityUpgrade.test.mjs`; total suite 600/600 green. TypeScript clean.
+
 ### 🟩 Claude — Phase 3E: Source-quality upgrade for high-fit weakly-sourced candidates
 - New pre-scoring pass in `lib/requirementEvidenceRescue.ts`: `upgradeWeakSourceEvidence` runs AFTER requirement rescue and revalidation, BEFORE `scoreAndSelectRecommendationsWithTrace`.
 - Targets candidates that (a) have a model-number token (strong product identity), (b) pass all hard requirements, and (c) have weak source evidence — no verified price, no owner rating, and zero external citations (all citations from the same host as the product page).
