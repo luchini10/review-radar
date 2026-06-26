@@ -4,9 +4,9 @@ Generated: 2026-06-26
 
 ## Current next task
 
-**Phase 3J - focused live proof after source-upgrade query construction fix**
+**Phase 3J extension - live proof on previously trigger-producing categories**
 
-Phase 3I Path A is implemented but not live-proven.
+Phase 3I Path A is implemented but still not live-proven. Phase 3J ran the requested `gas grill` and `cordless drill` live proof, but both fresh fixtures had `sourceUpgradeTraces: []`, so the source-upgrade query builder was not exercised live.
 
 The deterministic source-upgrade query builder now produces cleaner queries:
 
@@ -17,12 +17,12 @@ The deterministic source-upgrade query builder now produces cleaner queries:
 
 ## Required next phase
 
-Run focused live proof only after deterministic checks are green.
+Run one more focused live proof before any behavior change.
 
 Live searches:
 
-1. `gas grill`
-2. `cordless drill`
+1. `robot vacuum`
+2. `shop vac`
 
 Inspect:
 
@@ -37,11 +37,13 @@ Inspect:
 
 Answer:
 
-1. Did source-upgrade attempts now return candidates?
-2. Did identity matching accept or reject returned candidates?
-3. Did evidence attach safely?
-4. Did any unsafe candidate appear close to merging?
-5. Did final-selection trace show natural score/rank impact?
+1. Did a source-upgrade attempt fire in either previously trigger-producing category?
+2. Did the trace show the Phase 3I shortened query?
+3. Did source-upgrade attempts now return candidates?
+4. Did identity matching accept or reject returned candidates?
+5. Did evidence attach safely?
+6. Did any unsafe candidate appear close to merging?
+7. Did final-selection trace show natural score/rank impact?
 
 Do not:
 
@@ -52,4 +54,4 @@ Do not:
 Reference:
 
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` Phase 3I entry
+- `docs/qa-loop-results.md` Phase 3J entry

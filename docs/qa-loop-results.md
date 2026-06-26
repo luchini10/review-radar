@@ -2789,3 +2789,130 @@ Run Phase 3J focused live proof:
 2. Confirm whether source-upgrade attempts now return candidates.
 3. If candidates return, inspect identity matches, attachable fields, safety, and final-selection impact.
 4. Do not run a full baseline.
+
+---
+
+## <span style="color:green">**Codex QA Update - 2026-06-26 (Phase 3J: focused live proof after source-upgrade query fix)**</span>
+
+**Live diagnostic/proof run only. No app code, scoring, ranking, discovery, source-upgrade trigger, query construction, identity matching, model-token detection, trust gate, or requirement-filtering changes. No full baseline.**
+
+### Commands run
+
+```text
+git status --short --branch
+npm run qa:save-fixture -- "gas grill"
+npm run qa:save-fixture -- "cordless drill"
+npm run qa:replay -- tests/fixtures/review-radar-live/gas-grill.json
+npm run qa:replay -- tests/fixtures/review-radar-live/cordless-drill.json
+```
+
+Server status before live saves: `http://localhost:3000` returned HTTP 200.
+
+### Fixtures saved
+
+- `tests/fixtures/review-radar-live/gas-grill.json` (`_savedAt: 2026-06-26T16:34:59.605Z`)
+- `tests/fixtures/review-radar-live/cordless-drill.json` (`_savedAt: 2026-06-26T16:36:22.976Z`)
+
+### Gas grill result
+
+Final exact matches:
+
+1. `Royal Gourmet 5-Burner BBQ Liquid Propane Gas Grill with Side Burner`
+2. `Weber Spirit E-210 Gas Grill`
+3. `Broil King Signet 320`
+4. `Napoleon Freestyle 425`
+5. `2-Burner Gas Grill - Permasteel`
+6. `Primus Kuchoma Grill | REI Co-op`
+7. `Go-Anywhere 1-Burner Portable Propane Gas Grill in Black`
+
+Source-upgrade diagnostics:
+
+| Field | Value |
+|---|---|
+| `sourceUpgradeTraces` count | 0 |
+| Products attempted | none |
+| Query used | n/a |
+| New shortened Phase 3I query observed | no attempt fired |
+| `candidatesReturned` | n/a |
+| `candidatesEvaluated` | n/a |
+| `noMatchReason` | n/a |
+| `candidateSample` | n/a |
+| `evidenceAttached` | false / no attempt |
+| `attachedFields` | `[]` |
+
+Final-selection trace:
+
+- Present with 13 candidates.
+- Selected scores: Royal Gourmet `225.2`, Weber Spirit E-210 `202.9`, Broil King Signet 320 `140.4`, Napoleon Freestyle 425 `126.6`, Permasteel `123.4`, Primus Kuchoma `116.1`, Weber Go-Anywhere `94.4`.
+- No source-upgrade score/rank impact because no source-upgrade attempt fired.
+
+Safety observations:
+
+- No `candidateSample` existed because no source-upgrade shopping search ran.
+- No unsafe merge occurred.
+
+### Cordless drill result
+
+Final exact matches:
+
+1. `M18 18V Lithium-Ion Brushless Cordless 1/2 in. Compact Drill/Driver ...`
+2. `DEWALT 20V MAX Cordless 1/2 in. Drill/Driver, (2) 20V 1.3Ah ...`
+3. `RYOBI ONE+ 18V Cordless 1/2 in. Drill/Driver Kit with (1) Compact ...`
+4. `Makita 18V LXT Compact Driver-Drill (XFD10Z)`
+5. `20V Lithium-Ion Cordless 3/8 in. Drill/Driver with 1.5 Ah Battery and ...`
+6. `RYOBI ONE+ 18V 1/2 in. Drill/Driver Kit (PCL206K1)`
+7. `MILWAUKEE, M18™, Compact, Drill Kit - 22UT50 - Grainger`
+
+Source-upgrade diagnostics:
+
+| Field | Value |
+|---|---|
+| `sourceUpgradeTraces` count | 0 |
+| Products attempted | none |
+| Query used | n/a |
+| New shortened Phase 3I query observed | no attempt fired |
+| `candidatesReturned` | n/a |
+| `candidatesEvaluated` | n/a |
+| `noMatchReason` | n/a |
+| `candidateSample` | n/a |
+| `evidenceAttached` | false / no attempt |
+| `attachedFields` | `[]` |
+
+Final-selection trace:
+
+- Present with 14 candidates.
+- Selected scores: Milwaukee M18 `242.7`, DEWALT 20V MAX `239.7`, Ryobi ONE+ `237.2`, Makita XFD10Z `187.7`, generic 20V lithium-ion drill `164.7`, Ryobi PCL206K1 `161.2`, Milwaukee/Grainger `132.5`.
+- No source-upgrade score/rank impact because no source-upgrade attempt fired.
+
+Safety observations:
+
+- No `candidateSample` existed because no source-upgrade shopping search ran.
+- No unsafe merge occurred.
+
+### Phase 3I proof verdict
+
+Inconclusive. Phase 3J completed the requested live proof scope, but it did **not** prove whether the Phase 3I query-construction fix improves `candidatesReturned`, because neither `gas grill` nor `cordless drill` produced a source-upgrade attempt in this fresh run.
+
+Compared with Phase 3H:
+
+- Phase 3H `gas grill`: 1 attempt fired for `4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid`, old long query, `candidatesReturned: 0`.
+- Phase 3J `gas grill`: 0 attempts; the old attempted product dropped before final selection, and no replacement source-upgrade target qualified.
+- Phase 3H `cordless drill`: 0 attempts.
+- Phase 3J `cordless drill`: 0 attempts.
+
+### Next bottleneck
+
+For this exact two-search proof run, the bottleneck is not query construction, identity matching, or attachable-field extraction. The observable blocker is **source-upgrade eligibility / live fixture coverage**: no product reached `upgradeProductSource`, so the new query builder was never exercised live.
+
+This does not invalidate Phase 3I. It means the live searches selected for Phase 3J were not sufficient to prove it.
+
+### Recommended next phase
+
+Run a tiny Phase 3J extension before any behavior change:
+
+1. Save and replay fresh debug fixtures for previously trigger-producing categories, starting with `robot vacuum` and `shop vac`.
+2. Stop after those fixtures; do not run a full baseline.
+3. If a source-upgrade attempt fires, inspect whether the shortened query returns candidates and whether evidence attaches safely.
+4. If no attempts fire again, then move to a focused source-upgrade eligibility/model-token diagnostic before broadening model-token detection.
+
+Do not change query construction again until at least one live source-upgrade attempt using the Phase 3I builder has been observed.

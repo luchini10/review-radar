@@ -16,15 +16,15 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 3J - focused live proof after source-upgrade query construction fix**.
+Current phase: **Phase 3J extension - live proof on previously trigger-producing categories**.
 
-Phase 3I Path A is implemented and deterministic-testable, but not live-proven. The source-upgrade query builder now uses concise product identity for source-quality upgrade searches while leaving the general missing-evidence rescue query path unchanged.
+Phase 3I Path A is implemented and deterministic-testable, but still not live-proven. Phase 3J ran the requested `gas grill` and `cordless drill` live proof and saved fresh fixtures, but both searches produced `sourceUpgradeTraces: []`, so the new source-upgrade query builder was not exercised live.
 
-Do not broaden model-token detection yet. Do not tune scoring. Do not loosen identity, price, citation, product, or requirement gates. The next phase should be a focused live proof, not another behavior change.
+Do not broaden model-token detection yet. Do not tune scoring. Do not loosen identity, price, citation, product, or requirement gates. The next phase should be another focused live proof on categories that previously produced source-upgrade attempts, not a behavior change.
 
 Recommended next phase:
 
-- Phase 3J: save and replay fresh debug fixtures for `gas grill` and `cordless drill`; inspect source-upgrade traces to see whether candidates now return and whether evidence attaches safely.
+- Phase 3J extension: save and replay fresh debug fixtures for `robot vacuum` and `shop vac`; inspect source-upgrade traces to see whether candidates now return and whether evidence attaches safely. Stop after those fixtures. Do not run a full baseline.
 
 ---
 
@@ -292,28 +292,53 @@ Status:
 - Deterministic tests added and focused source-quality-upgrade tests pass.
 - Not live-proven. Do not mark source-upgrade mini-track complete until Phase 3J proves candidates return and evidence attaches safely.
 
-### Phase 3J - Live proof after source-upgrade bottleneck fix - TODO / NEXT
+### Phase 3J - Live proof after source-upgrade bottleneck fix - DONE / INCONCLUSIVE
 
 Purpose: after Phase 3I behavior fix, rerun live searches to prove source upgrade attaches safe evidence.
 
-Run:
+Run completed:
 
 - `cordless drill`
 - `gas grill`
-- optionally `robot vacuum`
-- optionally `shop vac`
+
+Findings:
+
+- Fresh `gas grill` fixture saved at `2026-06-26T16:34:59.605Z`.
+- Fresh `cordless drill` fixture saved at `2026-06-26T16:36:22.976Z`.
+- Both replays had `sourceUpgradeTraces: []`.
+- No source-upgrade query was issued, so the Phase 3I shortened query builder was not live-exercised.
+- No candidates returned/evaluated, no evidence attached, no final-selection impact, and no unsafe merge risk appeared.
+
+Verdict:
+
+- Phase 3J completed the requested two-search scope but did not prove whether Phase 3I improves `candidatesReturned`.
+- The immediate blocker is source-upgrade eligibility / live fixture coverage, not a proven query, identity, or attachable-field bottleneck.
+
+QA log:
+
+- See `docs/qa-loop-results.md` entry "Codex QA Update - 2026-06-26 (Phase 3J: focused live proof after source-upgrade query fix)".
+
+### Phase 3J extension - Live proof on previously trigger-producing categories - TODO / NEXT
+
+Purpose: observe at least one live source-upgrade attempt using the Phase 3I query builder before making another behavior change.
+
+Run:
+
+- `robot vacuum`
+- `shop vac`
 
 Measure attempts, candidates returned, identity matches, evidence attached, score movement in finalSelectionTrace, final 7 movement, and unsafe merge count.
 
 Exit criteria:
 
-- Evidence attaches safely in at least one real category.
+- At least one source-upgrade attempt fires and records the Phase 3I shortened query, or the run proves that current live fixtures no longer produce eligible targets.
+- If candidates return, identity/attachment/safety are inspected.
 - No unsafe merges.
 - Debug traces clearly explain what happened.
 
 ### Phase 3K - Model-token detection broadening - TODO
 
-Only do after source-upgrade query/identity behavior is proven.
+Only do after source-upgrade query/identity behavior is proven, or after a focused eligibility diagnostic proves that model-token detection is now the source-upgrade blocker.
 
 Purpose: some good products do not trigger source upgrade because their model names do not fit the current model-token regex.
 
@@ -623,13 +648,13 @@ Do this only after backend trust and ranking are stronger.
 
 ## Immediate Next Task for Codex
 
-Run Phase 3J.
+Run the Phase 3J extension.
 
-Phase 3I Path A is implemented but not live-proven. Do not make another behavior change before the live proof.
+Phase 3I Path A is implemented but not live-proven. Phase 3J ran `gas grill` and `cordless drill`, but both fresh fixtures had `sourceUpgradeTraces: []`. Do not make another behavior change before trying previously trigger-producing categories.
 
 Task:
 
-1. Save fresh debug fixtures for `gas grill` and `cordless drill`.
+1. Save fresh debug fixtures for `robot vacuum` and `shop vac`.
 2. Replay both fixtures.
 3. Inspect `sourceUpgradeTraces`, `candidatesReturned`, `candidatesEvaluated`, `noMatchReason`, `candidateSample`, `evidenceAttached`, `attachedFields`, and `finalSelectionTrace`.
 4. Determine whether the shorter source-upgrade queries now return candidates.
@@ -643,4 +668,4 @@ Do not:
 - change source-upgrade query construction again before observing live Phase 3J traces;
 - run a full baseline.
 
-Exit criteria: focused live traces show whether Phase 3I improved candidate return/attachment, and the QA log records the result.
+Exit criteria: focused live traces show whether Phase 3I improved candidate return/attachment, or prove no eligible source-upgrade targets appear in these previously trigger-producing categories. Record the result in the QA log.

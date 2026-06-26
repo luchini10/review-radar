@@ -563,3 +563,17 @@ New entries should keep the same format and stay easy to read.
 **Remaining issues:** No remaining setup issue for this file or shortcut. No app behavior was changed.
 
 **Next recommended step:** Use this file after future Codex sessions to record a short, readable summary of what happened.
+
+## Codex Run - 2026-06-26 Phase 3J
+
+**Goal:** Run the focused live proof after the Phase 3I source-upgrade query cleanup.
+
+**What it checked:** Saved and replayed fresh live fixtures for `gas grill` and `cordless drill`, then inspected the new source-upgrade trace fields and final-selection trace.
+
+**What it found:** Both fresh fixtures had `sourceUpgradeTraces: []`, so no source-upgrade attempt fired and the shorter Phase 3I query was not exercised live. This makes Phase 3J complete but inconclusive, not a proof that the query fix worked or failed.
+
+**What changed:** Docs only. The QA log, phased handoff, next-task file, and this summary were updated.
+
+**Live checks run:** `gas grill` and `cordless drill` only. No full baseline.
+
+**Next recommended step:** Run a tiny Phase 3J extension on previously trigger-producing categories, starting with `robot vacuum` and `shop vac`, before making another behavior change.
