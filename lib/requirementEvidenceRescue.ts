@@ -991,11 +991,24 @@ function productsNeedingVerification(result: RecommendationResult) {
 
 const MAX_SOURCE_UPGRADE_CANDIDATES = 3;
 
+export type SourceUpgradeCandidateSample = {
+  name: string;
+  host: string;
+  price: number | null;
+  rating: number | null;
+  identityMatch: boolean;
+  rejectionReason: "identity_mismatch" | "no_attachable_fields" | null;
+};
+
 export type SourceUpgradeTrace = {
   name: string;
   query: string;
   evidenceAttached: boolean;
   attachedFields: string[];
+  candidatesReturned: number;
+  candidatesEvaluated: number;
+  noMatchReason?: "shopping_results_empty" | "identity_rejected" | "no_attachable_fields";
+  candidateSample: SourceUpgradeCandidateSample[];
 };
 
 type SourceUpgradeOutcome<T> = {
@@ -1066,20 +1079,50 @@ async function upgradeProductSource(
     query,
     evidenceAttached: false,
     attachedFields: [],
+    candidatesReturned: 0,
+    candidatesEvaluated: 0,
+    candidateSample: [],
   };
 
   const candidates = await searchFn(query, category);
+  trace.candidatesReturned = candidates.length;
+
+  if (candidates.length === 0) {
+    trace.noMatchReason = "shopping_results_empty";
+    return { product, trace };
+  }
+
   let updated = product;
   let metadata = updated.metadata || { offers: [] };
+  let anyIdentityMatch = false;
+  const sampleEntries: SourceUpgradeCandidateSample[] = [];
 
   for (const candidate of candidates.slice(0, 6)) {
-    if (!looksLikeSameProduct(updated, candidate)) continue;
+    const identityMatch = looksLikeSameProduct(updated, candidate);
+    const candidatePrice = candidatePriceEvidence(candidate);
+
+    let sampleEntry: SourceUpgradeCandidateSample | null = null;
+    if (sampleEntries.length < 5) {
+      sampleEntry = {
+        name: (candidate.name || "").slice(0, 80),
+        host: sourceHost(candidate.productUrl || ""),
+        price: candidatePrice,
+        rating: candidate.rating ?? null,
+        identityMatch,
+        rejectionReason: identityMatch ? "no_attachable_fields" : "identity_mismatch",
+      };
+      sampleEntries.push(sampleEntry);
+    }
+
+    if (!identityMatch) continue;
+
+    anyIdentityMatch = true;
+    trace.candidatesEvaluated++;
 
     let attached = false;
 
-    const price = candidatePriceEvidence(candidate);
-    if (price !== null && !hasVerifiedPrice(updated)) {
-      metadata = mergeOffer(metadata, price, candidate);
+    if (candidatePrice !== null && !hasVerifiedPrice(updated)) {
+      metadata = mergeOffer(metadata, candidatePrice, candidate);
       trace.attachedFields.push("price");
       attached = true;
     }
@@ -1115,9 +1158,15 @@ async function upgradeProductSource(
     }
 
     if (attached) {
+      if (sampleEntry) sampleEntry.rejectionReason = null;
       trace.evidenceAttached = true;
       break;
     }
+  }
+
+  trace.candidateSample = sampleEntries;
+  if (!trace.evidenceAttached) {
+    trace.noMatchReason = anyIdentityMatch ? "no_attachable_fields" : "identity_rejected";
   }
 
   return { product: { ...updated, metadata }, trace };

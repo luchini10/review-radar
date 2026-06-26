@@ -386,3 +386,34 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 - `modelTokens` detection unchanged (Napoleon Rogue 525, Samsung Bespoke still excluded)
 - All Phase 3E safety gates intact (failed requirements, identity gate, idempotent merges, cap)
 - Existing 18 Phase 3E tests all pass unmodified
+
+### Phase 3G — Source-upgrade search-result diagnostics (2026-06-26)
+
+**What changed:** `SourceUpgradeTrace` in `lib/requirementEvidenceRescue.ts` extended with 4 new debug-only fields. No behavior change.
+
+**New type:** `SourceUpgradeCandidateSample { name, host, price, rating, identityMatch, rejectionReason }` (exported).
+
+**New `SourceUpgradeTrace` fields:**
+
+| Field | Type | Meaning |
+|---|---|---|
+| `candidatesReturned` | `number` | Total shopping results Serper returned (0 = empty results) |
+| `candidatesEvaluated` | `number` | Candidates that passed `looksLikeSameProduct` |
+| `noMatchReason` | `string?` | Why nothing attached: `shopping_results_empty`, `identity_rejected`, or `no_attachable_fields`. Absent when `evidenceAttached=true` |
+| `candidateSample` | `SourceUpgradeCandidateSample[]` | First ≤5 candidates with name, host, price, rating, identityMatch, rejectionReason |
+
+**`rejectionReason` values per candidate:**
+- `"identity_mismatch"` — `looksLikeSameProduct` returned false
+- `"no_attachable_fields"` — identity passed but no price/rating/citation/image to attach
+- `null` — this was the winning match (`evidenceAttached=true`)
+
+**Replay script:** `printSourceUpgradeTraces` in `scripts/replay-quality-fixtures.mjs` now prints results count, identity-match count, `noMatchReason`, and candidate sample per trace entry. Gracefully skips new fields when absent (pre-3G fixtures).
+
+**Tests added (5 new, total 605):**
+1. Empty results → `candidatesReturned:0`, `noMatchReason:"shopping_results_empty"`, `candidateSample:[]`
+2. All candidates fail identity → `candidatesReturned:1`, `candidatesEvaluated:0`, `noMatchReason:"identity_rejected"`, `candidateSample[0].rejectionReason:"identity_mismatch"`
+3. Evidence attached → `evidenceAttached:true`, `candidatesEvaluated:1`, `noMatchReason:undefined`, `candidateSample[0].rejectionReason:null`
+4. candidateSample capped at 5 even with 7+ candidates
+5. Old-format traces (no new fields) handled gracefully by replay guard
+
+**Safety gates unchanged:** trigger logic, scoring, ranking, identity matching, query construction, price trust, citation trust all unmodified.

@@ -11,6 +11,17 @@ Update this file after:
 
 Do not update this file for tiny typo fixes, formatting-only edits, or internal cleanup that does not change behavior.
 
+## 2026-06-26
+
+### 🟩 Claude — Phase 3G: Source-upgrade search-result diagnostics (debug-only, no behavior change)
+- Extended `SourceUpgradeTrace` in `lib/requirementEvidenceRescue.ts` with 4 new diagnostic fields: `candidatesReturned`, `candidatesEvaluated`, `noMatchReason`, `candidateSample`.
+- New exported type `SourceUpgradeCandidateSample` (name, host, price, rating, identityMatch, rejectionReason).
+- `noMatchReason` takes one of three values: `"shopping_results_empty"` (Serper returned 0), `"identity_rejected"` (candidates returned but none passed `looksLikeSameProduct`), or `"no_attachable_fields"` (identity passed but no price/rating/citation/image to attach). Absent when `evidenceAttached = true`.
+- `candidateSample` records up to 5 candidates with per-candidate rejection reason (`"identity_mismatch"`, `"no_attachable_fields"`, or `null` for the winning match).
+- Updated `scripts/replay-quality-fixtures.mjs` `printSourceUpgradeTraces` to display new fields; degrades gracefully for pre-3G fixtures that lack the fields.
+- No changes to trigger logic, scoring, ranking, identity matching, query construction, price trust, or citation trust.
+- 5 new tests in `tests/sourceQualityUpgrade.test.mjs`; total suite 605/605 green. TypeScript clean.
+
 ## 2026-06-25
 
 ### 🟩 Claude — Phase 3F: Loosen source-quality upgrade trigger (replace external-citation count with useful-commerce-evidence check)

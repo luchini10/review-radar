@@ -2453,3 +2453,138 @@ The old check treated ANY citation from a different host as "evidence" — block
 - All Phase 3E safety gates: failed requirements, identity gate (`looksLikeSameProduct`), idempotent merges, `MAX_SOURCE_UPGRADE_CANDIDATES = 3` cap
 
 **Verification:** `npm run typecheck` clean; `npm run lint` — 3 pre-existing warnings (no new warnings); `npm test` 600/600 pass; `node scripts/eval-pipeline.mjs` — all red-flag checks pass, rankings unchanged.
+
+---
+
+## <span style="color:green">**Claude QA Update — 2026-06-26 (Phase 3G: Source-upgrade diagnostics)**</span>
+
+**Debug-only enhancement to `SourceUpgradeTrace` — no behavior change**
+
+**Files changed:**
+- `lib/requirementEvidenceRescue.ts` — `SourceUpgradeTrace` extended; new `SourceUpgradeCandidateSample` type exported
+- `scripts/replay-quality-fixtures.mjs` — `printSourceUpgradeTraces` extended with new fields; degrades gracefully for pre-3G fixtures
+- `tests/sourceQualityUpgrade.test.mjs` — 5 new diagnostic tests added
+
+**New trace fields:** `candidatesReturned`, `candidatesEvaluated`, `noMatchReason` (`shopping_results_empty` / `identity_rejected` / `no_attachable_fields`), `candidateSample` (≤5 candidates with name, host, price, rating, identityMatch, rejectionReason).
+
+**Trigger logic unchanged:** `needsSourceUpgrade`, `hasUsefulCommerceEvidence`, `looksLikeSameProduct`, `buildRescueShoppingQuery`, all scoring/ranking — unmodified.
+
+**Verification:** `npm run typecheck` clean · `npm run lint` 3 pre-existing warnings, 0 errors · `npm test` 605/605 · `node scripts/eval-pipeline.mjs` no red-flag issues, product order unchanged.
+
+---
+
+## <span style="color:green">**Claude QA Update — 2026-06-26 (Phase 3F Live Diagnostic)**</span>
+
+**Source-upgrade re-run after Phase 3F trigger change — 4 categories, fresh fixtures**
+
+### Git status / server status
+
+Branch: `main` (commit `49d4b7b`). No uncommitted code changes. Untracked: live fixture files only. Dev server: HTTP 200.
+
+### Exact searches run
+
+`"gas grill"` · `"shop vac"` · `"robot vacuum"` · `"cordless drill"` — fresh fixtures saved with `node scripts/save-debug-fixture.mjs`.
+
+### Per-search summary
+
+#### Gas grill — **1 attempt, 0 attached**
+
+Final exact matches: Weber Genesis E-415, Royal Gourmet 5-Burner, Char-Broil 4-Burner, Dyna-Glo DGB390SNP-D, Weber Q1200, Gourmet Pro 6-Burner, Napoleon Rogue XT 425 SIB.
+
+| Field | Value |
+|---|---|
+| `sourceUpgradeTraces` count | **1** (was 0 in Phase 3E) |
+| Product attempted | Napoleon Rogue XT 425 SIB Gas Grill |
+| Trigger reason | Model token `xt425` ✓ · no verified price · no owner rating · citations: napoleon.com (tier-3), t3.com (tier-4), reddit.com (tier-4) → `hasUsefulCommerceEvidence = false` ✓ |
+| Query sent | `Napoleon Rogue XT 425 SIB Gas Grill gas grill` |
+| Evidence attached | ✗ no match found |
+| Attached fields | — |
+| Rejection reason | Shopping search returned no product matching `xt425` token or sufficient word overlap |
+| finalSelectionTrace impact | Napoleon Rogue XT 425 SIB still at #7 with weak tier; would move up substantially if price+rating were attached |
+| Safety concerns | None — no evidence attached |
+
+#### Shop vac — **0 attempts**
+
+Final exact matches: DEWALT Stealthsonic 12-Gal, DEWALT DXV12P-QTA, KARCHER WD 3 + HOME.
+
+`sourceUpgradeTraces: []` — no candidates qualified.
+
+**Why no attempts:** RIDGID was not in the LLM output for this live run (different candidate set than Phase 3E). DEWALT DXV12P-QTA has a model token (`dxv12pqta`) and no price/rating but has a `homedepot.com` citation (tier-2) → `hasUsefulCommerceEvidence = true` → correctly excluded. All other candidates either have tier-2 retailer citations or no model tokens.
+
+Safety concerns: None.
+
+#### Robot vacuum — **1 attempt, 0 attached**
+
+Final exact matches: ECOVACS DEEBOT T30 OMNI, Shark Matrix Plus 2-in-1, eufy X10 Pro Omni, Roborock Q5 Max+, iRobot Roomba Combo j7+, Roomba Combo j5+, Shark Matrix Plus 2 in 1.
+
+| Field | Value |
+|---|---|
+| `sourceUpgradeTraces` count | **1** (was 0 in Phase 3E) |
+| Product attempted | Tapo RV30C Plus |
+| Trigger reason | Model token `rv30c` ✓ · no price · no rating · product URL = tp-link.com (tier-3) · citations: tp-link.com (tier-3 self) → `hasUsefulCommerceEvidence = false` ✓ |
+| Query sent | `Tapo RV30C Plus robot vacuum` |
+| Evidence attached | ✗ no match found |
+| Rejection reason | Serper shopping returned no product with matching `rv30c` token; Tapo has limited shopping index coverage |
+| finalSelectionTrace impact | Tapo RV30C Plus was `ranked_below_cutoff` (score 106.4) — would have moved into top-7 only with substantial evidence gain |
+| Safety concerns | None — no evidence attached |
+
+#### Cordless drill — **2 attempts, 0 attached**
+
+Final exact matches: Milwaukee M18 (3601-21P), DEWALT 20V MAX DCD771C2, Ryobi ONE+ 18V, Black+Decker 20V, Makita XFD10Z, Makita XFD131, Milwaukee M18 Grainger.
+
+| Field | Value |
+|---|---|
+| `sourceUpgradeTraces` count | **2** (was 0 in Phase 3E) |
+| Products attempted | Makita XFD131 · WORX WX177L |
+| Trigger reasons | `xfd131` (6 chars) · `wx177l` (6 chars) — both valid tokens; both have only tier-3/4 citations; no price; no rating |
+| Queries sent | `Makita 18V LXT Lithium-Ion Brushless Cordless 1/2 in. Driver-Drill (XFD131) cordless drill` · `WORX Nitro 20V SwitchDriver 2-in-1 Brushless Cordless Drill/Driver (WX177L) cordless drill` |
+| Evidence attached | ✗ no match found (both) |
+| Rejection reason | Long product-name queries may retrieve generic category results rather than model-specific ones; Serper shopping coverage for WORX is limited; XFD131Z (tool-only suffix) would still match "xfd131" as a substring, so identity is not the issue — 0 candidates returned is the likely cause |
+| finalSelectionTrace impact | Makita XFD131 is already at #6 weak-tier; WORX WX177L was ranked_below_cutoff (score 88.5) |
+| Safety concerns | None — no evidence attached |
+
+### Specific RIDGID / Makita check
+
+**RIDGID RT1200:** Not in the candidate pool for this live run — the LLM returned different shop-vac products this time. In Phase 3E, RIDGID appeared in the pool but was blocked by the old `extCits > 0` check. In this run, no RIDGID product appeared at all. This reflects normal LLM output variance between sessions.
+
+**Makita XFD10Z (Phase 3E model):** Not attempted — it IS in the final pool but has an `amazon.com` citation (tier-2) → `hasUsefulCommerceEvidence = true` → correctly excluded. Phase 3F correctly did NOT attempt upgrade for a product that already has a major retailer citation.
+
+**Makita XFD131 (new model this run):** Attempted ✓. Query ran. No shopping result returned with matching token. The identity gate would have passed (substring "xfd131" ⊂ "xfd131z") — the issue is search coverage.
+
+### Cross-category verdict
+
+**Trigger fixed: YES.** Phase 3F made the trigger fire in 3 out of 4 categories (was 0 out of 4 in Phase 3E). The `hasUsefulCommerceEvidence` condition correctly unblocked products with only manufacturer/tier-3 citations.
+
+**Evidence attached: NO.** 4 attempts across 3 categories, 0 evidence attachments.
+
+**Bottleneck identified:** The mechanism is now limited at the Serper shopping search step, not the trigger. One of two sub-problems applies to each attempt:
+1. Serper shopping returns zero results for these specific model-name queries
+2. Serper returns results but they don't pass `looksLikeSameProduct`
+
+These are indistinguishable from the current trace alone — `evidenceAttached: false` doesn't record `candidatesReturned`. The word-token fallback in `looksLikeSameProduct` (3+ overlapping significant words) should catch most same-brand/same-number matches, so the more likely issue is Serper returning 0 shopping results for the very long/specific model queries.
+
+**Is the trigger too strict, too loose, or about right?**
+About right. The 4 attempted products are genuine upgrade candidates (real named models, weak sources, no commercial evidence). No false positives. The issue is entirely downstream (search coverage / query construction).
+
+### Final judgment: PARTIAL (improved from FAIL)
+
+**Safe:** YES — zero unsafe evidence merges. All attempted candidates triggered correctly and the identity gate would have been the final safety check.
+
+**Effective:** PARTIAL — trigger fires (progress from Phase 3E), but no evidence was actually attached in this live run.
+
+**Phase 3F verdict:** The trigger change works as designed. The mechanism has now reached its natural next limitation — shopping search coverage and query quality.
+
+### Recommended next step
+
+**Add `candidatesReturned` to `SourceUpgradeTrace`** (one field, 2-line code change). This distinguishes "Serper returned 0 results" from "Serper returned results but identity matching failed." Without this, every diagnostic guess is. Example trace after the fix:
+```json
+{
+  "name": "Napoleon Rogue XT 425 SIB Gas Grill",
+  "query": "Napoleon Rogue XT 425 SIB Gas Grill gas grill",
+  "candidatesReturned": 0,
+  "evidenceAttached": false,
+  "attachedFields": []
+}
+```
+
+If `candidatesReturned = 0` for all 4 attempts → the next fix is query construction (shorter model-focused query, remove redundant category suffix). If `candidatesReturned > 0` → the next fix is `looksLikeSameProduct` tuning or stricter/looser identity rules. This is a debug-only addition (no behavior change, no score change).

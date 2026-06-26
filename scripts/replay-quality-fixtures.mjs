@@ -209,6 +209,25 @@ function printSourceUpgradeTraces(traces) {
     console.log(`  ${(t.name || "").slice(0, 50)}`);
     console.log(`    query: ${t.query}`);
     console.log(`    ${status}`);
+    // Phase 3G diagnostic fields — gracefully absent in pre-3G fixtures
+    if (t.candidatesReturned !== undefined) {
+      const reason = t.noMatchReason ? ` (${t.noMatchReason})` : "";
+      console.log(
+        `    results: ${t.candidatesReturned} returned, ${t.candidatesEvaluated ?? 0} identity-matched${reason}`,
+      );
+    }
+    if (Array.isArray(t.candidateSample) && t.candidateSample.length > 0) {
+      console.log(`    candidates:`);
+      for (const s of t.candidateSample) {
+        const matchTag = s.identityMatch ? "✓" : "✗";
+        const priceStr = s.price != null ? ` $${s.price}` : " (no price)";
+        const ratingStr = s.rating != null ? ` ★${s.rating}` : "";
+        const reasonStr = s.rejectionReason ? ` [${s.rejectionReason}]` : " [attached]";
+        console.log(
+          `      ${matchTag} ${(s.name || "").slice(0, 55)}${priceStr}${ratingStr}${reasonStr}`,
+        );
+      }
+    }
   }
 }
 
