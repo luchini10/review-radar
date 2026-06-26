@@ -2588,3 +2588,145 @@ About right. The 4 attempted products are genuine upgrade candidates (real named
 ```
 
 If `candidatesReturned = 0` for all 4 attempts → the next fix is query construction (shorter model-focused query, remove redundant category suffix). If `candidatesReturned > 0` → the next fix is `looksLikeSameProduct` tuning or stricter/looser identity rules. This is a debug-only addition (no behavior change, no score change).
+
+---
+
+## <span style="color:green">**Claude/Codex QA Update - 2026-06-26 (Phase 3H: Phase 3G trace live diagnostic)**</span>
+
+**Diagnostic-only run. No app code changed. No scoring, ranking, discovery, source-upgrade logic, query construction, identity matching, model-token detection, price trust, citation trust, product trust, or requirement filtering changed. No full baseline run.**
+
+### Git status before diagnostic
+
+`git status --short` showed only pre-existing untracked local artifacts:
+
+- `.rr_baseline.json`
+- `.rr_baseline.md`
+- untracked live fixtures under `tests/fixtures/review-radar-live/`
+
+No tracked app-code changes were present.
+
+### Server status
+
+Local app server was already reachable at `http://localhost:3000` with HTTP 200. No new dev server was started.
+
+### Exact commands run
+
+```bash
+npm run qa:save-fixture -- "cordless drill"
+npm run qa:save-fixture -- "gas grill"
+npm run qa:replay -- tests/fixtures/review-radar-live/cordless-drill.json
+npm run qa:replay -- tests/fixtures/review-radar-live/gas-grill.json
+```
+
+Saved fixtures:
+
+- `tests/fixtures/review-radar-live/cordless-drill.json` (`_savedAt: 2026-06-26T15:48:14.895Z`)
+- `tests/fixtures/review-radar-live/gas-grill.json` (`_savedAt: 2026-06-26T15:49:42.574Z`)
+
+### Cordless drill
+
+Final exact matches:
+
+1. Milwaukee M18 18V Brushless Cordless 1/2 in. Compact Drill/Driver 3601-21P
+2. DEWALT 20V MAX Cordless 1/2 in. Drill/Driver, (2) 20V 1.3Ah ...
+3. RYOBI ONE+ 18V Cordless 3/8 in. Drill/Driver Kit PCL201K1SB3
+4. DEWALT 20V MAX Compact Drill/Driver Kit DCD771C2
+5. Makita 18V Compact Lithium-Ion Cordless 1/2" Driver-Drill XFD10Z
+6. 20V Lithium-Ion Cordless 3/8 in. Drill/Driver with 1.5 Ah Battery and ...
+7. MILWAUKEE, M18(TM), Compact, Drill Kit - 22UT50 - Grainger
+
+Source-upgrade result:
+
+| Field | Value |
+|---|---|
+| `sourceUpgradeTraces` count | 0 |
+| Products attempted | none |
+| Evidence attached | none |
+| Candidate sample | none |
+| Safety concerns | none from source-upgrade; no upgrade ran |
+
+Interpretation: this live run did not reproduce the Phase 3F cordless-drill source-upgrade attempts. The final products either already had tier-2 retailer evidence, verified/text price evidence, ratings, or otherwise did not qualify for `needsSourceUpgrade`. Because no attempt ran, this fixture does not diagnose query construction or identity matching.
+
+Final-selection trace impact:
+
+- 14 candidates reached final selection.
+- 7 selected.
+- 4 were `not_reliable_enough_for_exact`.
+- 1 was `variant_family_collapsed` (`Makita (XFD131) ...` collapsed behind the selected Makita XFD10Z-family candidate).
+- No source-upgrade score/rank impact was measurable because no source-upgrade attempt occurred.
+
+### Gas grill
+
+Final exact matches:
+
+1. Napoleon Rogue 425
+2. Dyna-Glo Premier 3 Burner Natural Gas Grill - GHP Group Inc
+3. Primus Kuchoma Grill | REI Co-op
+4. 4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid
+5. Coleman 4-in-1 Portable Propane Gas Camping Stove | REI Co-op
+6. Vantage Gas BBQ Station - Grillo Outdoor Kitchens
+7. Dyna-Glo 4-Burner Propane Gas Grill in Matte Black with TriVantage ...
+
+Source-upgrade result:
+
+| Field | Value |
+|---|---|
+| `sourceUpgradeTraces` count | 1 |
+| Product attempted | `4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid` |
+| Query used | `4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid gas grill` |
+| `candidatesReturned` | 0 |
+| `candidatesEvaluated` | 0 |
+| `noMatchReason` | `shopping_results_empty` |
+| `candidateSample` | `[]` |
+| `evidenceAttached` | false |
+| `attachedFields` | `[]` |
+
+Final-selection trace for attempted product:
+
+- Product was selected at final rank #4.
+- `stream: exactScored`
+- `rankedMatchScore: 107.5`
+- `marketConfidenceTier: weak`
+- `citationCount: 1`
+- `independentCitationCount: 0`
+- `retailerCitationCount: 0`
+- `price: null`
+- `priceTrustStatus: missing`
+- `canUseForBudget: false`
+- No failed or unknown requirements.
+
+Safety observations:
+
+- No shopping candidates were returned, so no unsafe candidate was close to merging.
+- No accessory, replacement part, bundle, wrong model, wrong product type, suspicious low price, financing price, category/listing page, or article-page merge risk was observed in `candidateSample` because it was empty.
+
+### Cross-search verdict
+
+Phase 3H proves the bottleneck for the observed source-upgrade attempt is **shopping search coverage / query construction**, not identity matching and not attachable-field extraction:
+
+- `cordless drill`: no source-upgrade target qualified in this live run, so no bottleneck data.
+- `gas grill`: one source-upgrade attempt ran and Serper shopping returned zero candidates (`candidatesReturned: 0`, `noMatchReason: shopping_results_empty`).
+
+This confirms the Phase 3G fields work and resolves the ambiguity from Phase 3F for the observed attempt: the failure happened before identity matching.
+
+### Recommended Phase 3I
+
+Use **Phase 3I Path A: query construction fix**, but keep it small and generalized.
+
+Smallest proposed behavior fix:
+
+- Add a source-upgrade-specific shopping query builder that prefers product identity over the full long display title.
+- Remove redundant category suffixes when the product name already contains the category/product noun.
+- Prefer compact patterns such as brand + model token, brand + model token + product noun, or cleaned name with duplicated category terms removed.
+- Do not hardcode Nexgrill, Napoleon, Weber, Makita, drills, or grills.
+- Keep `looksLikeSameProduct`, `needsSourceUpgrade`, `hasUsefulCommerceEvidence`, price trust, citation trust, and scoring unchanged.
+
+Exit criteria for Phase 3I:
+
+- Deterministic tests prove the source-upgrade query is shorter and avoids duplicate category words.
+- Negative tests prove generic names, accessories, parts, bundles, and wrong variants do not become easier to merge.
+- Live re-test on `gas grill` and `cordless drill` shows whether candidates are returned and whether identity/attachment succeeds.
+
+### Phase 3H status
+
+DONE. The current next phase is Phase 3I Path A (query construction), pending a behavior-change pass with tests.

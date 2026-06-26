@@ -16,32 +16,15 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 3H - live diagnostic with new Phase 3G trace fields**.
+Current phase: **Phase 3I - query construction fix for source-quality upgrade (recommended next)**.
 
-Do not code first. The next step is to run a tiny live diagnostic using the new `SourceUpgradeTrace` fields added in Phase 3G.
+Phase 3H is complete. The fresh Phase 3G-trace diagnostic showed one gas-grill source-upgrade attempt where `candidatesReturned = 0` and `noMatchReason = shopping_results_empty`; cordless drill had no source-upgrade attempt in that live run. The proven next bottleneck for the observed attempt is shopping search coverage / query construction, not identity matching or attachable-field extraction.
 
-Key question: when source-quality upgrade attempts fail, is it because:
+Do not broaden model-token detection yet. Do not tune scoring. Do not loosen identity, price, citation, product, or requirement gates. The next behavior phase should be the smallest generalized query-construction fix.
 
-1. Serper returned zero shopping results,
-2. Serper returned candidates but identity matching rejected them,
-3. candidates matched but had no attachable fields,
-4. or unsafe candidates were correctly rejected?
+Recommended next phase:
 
-Run focused live diagnostics first on:
-
-1. `cordless drill`
-2. `gas grill`
-
-Inspect:
-
-- `sourceUpgradeTraces`
-- `candidatesReturned`
-- `candidatesEvaluated`
-- `noMatchReason`
-- `candidateSample`
-- `finalSelectionTrace`
-
-Do not change code until this diagnostic proves the bottleneck.
+- Phase 3I Path A: add a source-upgrade-specific shopping query builder that prefers product identity over long display titles, removes redundant category suffixes, and is proven with deterministic tests plus a focused live re-test.
 
 ---
 
@@ -258,58 +241,48 @@ Main lesson: the next live diagnostic can now prove whether the bottleneck is qu
 
 ## Current Phase
 
-### Phase 3H - Live diagnostic using Phase 3G fields - CURRENT / NEXT
+### Phase 3H - Live diagnostic using Phase 3G fields - DONE
 
 Purpose: use the new diagnostics to identify the real source-upgrade bottleneck.
 
-Do not change code yet.
-
-Run:
+Diagnostic searches run:
 
 1. `cordless drill`
 2. `gas grill`
 
-Why:
+Findings:
 
-- Cordless drill had 2 source-upgrade attempts in Phase 3F.
-- Gas grill had the Napoleon Rogue XT attempt.
-- These should quickly reveal whether search returns no candidates or identity matching rejects them.
+- `cordless drill`: no source-upgrade target qualified in the fresh live run; `sourceUpgradeTraces: []`.
+- `gas grill`: 1 source-upgrade attempt ran for `4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid`.
+- Gas-grill query used: `4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid gas grill`.
+- Gas-grill trace: `candidatesReturned: 0`, `candidatesEvaluated: 0`, `noMatchReason: shopping_results_empty`, `candidateSample: []`, `evidenceAttached: false`.
+- No unsafe candidate was close to merging because no shopping candidates were returned.
+- The attempted gas-grill product was already selected at final rank #4; no source-upgrade score/rank impact was possible.
 
-Inspect:
+Verdict:
 
-- `sourceUpgradeTraces`
-- `candidatesReturned`
-- `candidatesEvaluated`
-- `noMatchReason`
-- `candidateSample`
-- `finalSelectionTrace`
+- Phase 3H proves the observed bottleneck is shopping search coverage / query construction. It does not prove an identity-matching or attachable-field problem.
 
-Decision rules:
+Saved fixtures:
 
-- If `candidatesReturned = 0`, next behavior phase is likely query construction.
-- If `candidatesReturned > 0` and `candidatesEvaluated = 0`, next behavior phase is likely same-product identity matching.
-- If `candidatesEvaluated > 0` but `evidenceAttached = false`, next behavior phase is likely attachable-field extraction.
-- If unsafe candidates appear, fix safety before increasing attachment rate.
-- If evidence attaches safely, measure score/final-selection impact.
+- `tests/fixtures/review-radar-live/cordless-drill.json`
+- `tests/fixtures/review-radar-live/gas-grill.json`
 
-Exit criteria:
+QA log:
 
-- A clear bottleneck is identified.
-- No code changes made.
-- QA log updated with diagnostic result.
-- Codex recommends the next smallest behavior phase based on trace data.
+- See `docs/qa-loop-results.md` entry "Claude/Codex QA Update - 2026-06-26 (Phase 3H: Phase 3G trace live diagnostic)".
 
 ---
 
 ## Remaining Planned Phases
 
-### Phase 3I - Fix proven source-upgrade bottleneck - TODO
+### Phase 3I - Fix proven source-upgrade bottleneck - TODO / NEXT
 
-Only do after Phase 3H proves the bottleneck.
+Phase 3H proved Path A for the observed source-upgrade attempt.
 
 Possible paths:
 
-- Path A, query construction fix: use if Phase 3H shows `candidatesReturned = 0`. Shorten source-upgrade rescue query, remove redundant category suffix, prefer brand + model or brand + model + product noun. Avoid overlong queries like `"Napoleon Rogue XT 425 SIB Gas Grill gas grill"`. Do not hardcode brands or categories.
+- Path A, query construction fix: **recommended next.** Use because Phase 3H showed `candidatesReturned = 0` for the observed gas-grill source-upgrade attempt. Shorten source-upgrade rescue query, remove redundant category suffix, prefer brand + model or brand + model + product noun. Avoid overlong queries like `"4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid gas grill"`. Do not hardcode brands or categories.
 - Path B, identity matching fix: use if Phase 3H shows `candidatesReturned > 0` but `identityMatch = false`. Improve same-product matching, safer partial model-token matching, and brand/model normalization without merging accessories, bundles, parts, or wrong variants.
 - Path C, attachable fields fix: use if identity matches but no evidence attaches. Improve extraction/merging of price/rating/review/citation fields from shopping result while keeping price trust strict.
 
@@ -651,31 +624,24 @@ Do this only after backend trust and ranking are stronger.
 
 ## Immediate Next Task for Codex
 
-Run Phase 3H.
+Run Phase 3I Path A.
 
-Do not code first.
+Make the smallest generalized source-upgrade query-construction fix. Do not change scoring, ranking, discovery breadth, source-upgrade trigger logic, identity matching, model-token detection, price trust, citation trust, product trust, or requirement filtering.
 
-Task: run focused live diagnostics for:
+Task:
 
-1. `cordless drill`
-2. `gas grill`
+1. Add or adjust a source-upgrade-specific shopping query builder.
+2. Prefer product identity over long display titles.
+3. Remove redundant category suffixes when the product name already contains the category/product noun.
+4. Keep the identity gate unchanged.
+5. Add deterministic positive and negative tests.
+6. Re-run focused live diagnostics for `gas grill` and `cordless drill` only after tests pass.
 
-Inspect:
+Do not:
 
-- `sourceUpgradeTraces`
-- `candidatesReturned`
-- `candidatesEvaluated`
-- `noMatchReason`
-- `candidateSample`
-- `finalSelectionTrace`
+- hardcode Nexgrill, Napoleon, Weber, Makita, drills, or grills;
+- broaden model-token detection in this phase;
+- loosen trust gates to improve attachment rate;
+- run a full baseline.
 
-Then report:
-
-1. Did source upgrade attempt?
-2. Did Serper return candidates?
-3. Did identity matching reject them?
-4. Did any candidates match but lack attachable fields?
-5. Was any unsafe candidate close to being merged?
-6. What is the next smallest behavior fix?
-
-Only after that should Codex propose Phase 3I.
+Exit criteria: query construction is improved generically, tests prove it, and the focused live re-test shows whether candidates are returned for source-upgrade attempts.
