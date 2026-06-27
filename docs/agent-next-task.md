@@ -4,58 +4,52 @@ Generated: 2026-06-26
 
 ## Current next task
 
-**Phase 3L - live proof after source-upgrade fallback ladder**
+**Phase 3M - source-upgrade shopping-provider coverage diagnostic**
 
-Phase 3K is implemented and deterministic-testable, but not live-proven. It kept the compact Phase 3I query as the primary source-upgrade search and added one fallback search with category/product-noun context only when the primary returns zero candidates.
+Phase 3L partially proved Phase 3K live. For `shop vac`, source upgrade attempted `DEWALT 10 Gallon Stainless Steel Wet/Dry Vacuum DXV10SB`:
 
-The deterministic source-upgrade query builder now produces cleaner queries:
+- primary `Wet/Dry Vacuum DXV10SB`: 0 candidates
+- fallback `Wet/Dry Vacuum DXV10SB shop vac`: 0 candidates
+- `fallbackUsed: true`
+- `candidatesEvaluated: 0`
+- `noMatchReason: shopping_results_empty`
+- `evidenceAttached: false`
 
-- `4-Burner Propane Gas Grill in Black with Stainless Steel Main Lid` -> `4-Burner Propane Gas Grill`
-- `Napoleon Rogue XT 425 SIB Gas Grill` -> `Napoleon Rogue XT 425 SIB`
-- `Makita XFD131 18V LXT Cordless Drill` -> `Makita XFD131`
-- `Tapo RV30C Plus Robot Vacuum` -> `Tapo RV30C Plus`
+This proves the fallback is live-wired and correctly gated, but it did not improve shopping coverage in this sample. Identity matching and evidence attachment were not reached.
 
 ## Required next phase
 
-Run a focused live proof. Do not run a full baseline.
+Run a focused diagnostic. Do not change behavior or run a full baseline.
 
-Live searches:
+Diagnose the exact Phase 3L query path:
 
-1. `shop vac`
-2. one unrelated previously attempted category, preferably `robot vacuum` or `gas grill`
+1. Confirm whether the upstream Serper shopping response contains zero results for the primary and fallback queries.
+2. Confirm whether shopping results are lost during parsing or candidate normalization.
+3. Confirm the category and invocation context passed to the search wrapper.
+4. Identify the smallest next fix only after the zero-result layer is proven.
 
 Inspect:
 
-- `sourceUpgradeTraces`
-- `primaryQuery`
-- `fallbackQuery`
-- `fallbackUsed`
-- `primaryCandidatesReturned`
-- `fallbackCandidatesReturned`
-- total `candidatesReturned`
-- `candidatesEvaluated`
-- `noMatchReason`
-- `candidateSample`
-- `evidenceAttached`
-- `attachedFields`
-- `finalSelectionTrace`
+- the raw shopping response count
+- parsed shopping result count
+- normalized candidate count
+- search query and category arguments
+- errors or response-shape differences hidden by the current zero-candidate result
 
 Answer:
 
-1. Did fallback run in a fresh live source-upgrade attempt?
-2. Did fallback increase `candidatesReturned` above zero?
-3. If candidates returned, did identity matching accept or reject them?
-4. Did evidence attach safely?
-5. Did final-selection trace show natural score/rank impact?
-6. Did any unsafe candidate appear close to merging?
+1. Does the upstream provider return zero results?
+2. If not, where are returned shopping results discarded?
+3. Is the source-upgrade invocation context different from ordinary shopping discovery?
+4. What is the smallest safe next phase?
 
 Do not:
 
-- change scoring, ranking, discovery breadth, source-upgrade trigger logic, identity matching, model-token detection, price trust, citation trust, product trust, or requirement filtering;
+- change query construction, fallback behavior, parsing, identity matching, extraction, scoring, ranking, discovery, source-upgrade trigger logic, model-token detection, or trust gates during this diagnostic;
 - hardcode brands, products, or categories;
 - run a full baseline.
 
 Reference:
 
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` Phase 3K entry
+- `docs/qa-loop-results.md` Phase 3L entry

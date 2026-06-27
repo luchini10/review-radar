@@ -16,15 +16,15 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 3L - live proof after source-upgrade fallback ladder**.
+Current phase: **Phase 3M - source-upgrade shopping-provider coverage diagnostic**.
 
-Phase 3I Path A is implemented and partially live-proven. Phase 3K added a bounded fallback ladder for source-upgrade shopping searches: compact identity query first, then one broader identity-plus-category query only when the primary returns zero candidates. This is deterministic-testable but not live-proven.
+Phase 3I Path A and the Phase 3K fallback ladder are live-wired. Phase 3L proved that the fallback runs after an empty primary result, but the observed `shop vac` fallback also returned zero candidates. The remaining observed bottleneck is source-upgrade shopping-search coverage before identity matching or evidence attachment.
 
-Do not broaden model-token detection yet. Do not tune scoring. Do not loosen identity, price, citation, product, or requirement gates. The next phase should be a focused live proof of the fallback trace, not another behavior change.
+Do not broaden model-token detection yet. Do not tune scoring. Do not loosen identity, price, citation, product, or requirement gates. The next phase should diagnose why the existing Serper shopping path returns no candidates for both compact and identity-plus-category source-upgrade queries.
 
 Recommended next phase:
 
-- Phase 3L: save and replay fresh debug fixtures for `shop vac` first, then one unrelated previously attempted category such as `robot vacuum` or `gas grill`; inspect primary/fallback trace fields, candidates returned, identity matches, attached fields, final-selection impact, and unsafe merge risk. Do not run a full baseline.
+- Phase 3M: run a narrow provider/search-coverage diagnostic for the exact primary and fallback queries observed in Phase 3L. Determine whether the zero result comes from the upstream shopping response, Serper parsing/normalization, or source-upgrade invocation context. Do not change behavior or run a full baseline until the layer returning zero is proven.
 
 ---
 
@@ -396,36 +396,59 @@ QA log:
 
 - See `docs/qa-loop-results.md` entry "Codex QA Update - 2026-06-26 (Phase 3K: source-upgrade query fallback ladder)".
 
-### Phase 3L - Live proof after source-upgrade fallback ladder - TODO / NEXT
+### Phase 3L - Live proof after source-upgrade fallback ladder - DONE / PARTIAL
 
 Purpose: prove whether Phase 3K improves live `candidatesReturned` and whether any returned candidates attach safe evidence.
 
-Run:
+Run completed:
 
 - `shop vac`
-- one unrelated previously attempted category, preferably `robot vacuum` or `gas grill`
+- `robot vacuum`
 
-Measure:
+Findings:
 
-- source-upgrade attempts
-- `primaryQuery`
-- `fallbackQuery`
-- `fallbackUsed`
-- `primaryCandidatesReturned`
-- `fallbackCandidatesReturned`
-- total `candidatesReturned`
-- identity matches
-- evidence attached / attached fields
-- final-selection impact
-- unsafe candidate/merge risk
+- `shop vac` produced one source-upgrade attempt for `DEWALT 10 Gallon Stainless Steel Wet/Dry Vacuum DXV10SB`.
+- Primary query `Wet/Dry Vacuum DXV10SB` returned 0 candidates.
+- Fallback query `Wet/Dry Vacuum DXV10SB shop vac` ran and returned 0 candidates.
+- Trace: `fallbackUsed: true`, `candidatesReturned: 0`, `candidatesEvaluated: 0`, `noMatchReason: shopping_results_empty`, `candidateSample: []`, `evidenceAttached: false`.
+- The attempted product remained selected at rank #4 with score 124.8; no evidence or score/rank change occurred.
+- `robot vacuum` produced `sourceUpgradeTraces: []`, so it did not exercise the fallback.
+- No unsafe candidate or merge risk appeared because no shopping candidates were returned.
+- The conditional `gas grill` search was not run because `shop vac` produced a source-upgrade trace.
+
+Verdict:
+
+- Phase 3K is partially live-proven: the fallback is correctly wired, gated, and traced.
+- Phase 3K did not improve `candidatesReturned` in this sample.
+- The next observed bottleneck remains source-upgrade shopping-search coverage before identity matching or attachable-field extraction.
+
+QA log:
+
+- See `docs/qa-loop-results.md` entry "Codex QA Update - 2026-06-26 (Phase 3L: live proof after source-upgrade fallback ladder)".
+
+### Phase 3M - Source-upgrade shopping-provider coverage diagnostic - TODO / NEXT
+
+Purpose: identify which layer produces zero candidates for both compact and category-context source-upgrade queries.
+
+Diagnose:
+
+- the exact primary and fallback query strings observed in Phase 3L
+- the upstream Serper shopping response count
+- shopping-result parsing/normalization count
+- source-upgrade invocation context and category passed to the search wrapper
+
+Boundaries:
+
+- Diagnostic only; do not change query construction, fallback behavior, identity matching, extraction, scoring, ranking, discovery, triggers, model-token detection, or trust gates.
+- Do not run a full baseline.
+- Do not propose a search-source adjustment until the zero-result layer is proven.
 
 Exit criteria:
 
-- Fallback trace fields appear in fresh fixtures.
-- Fallback returns candidates in at least one live attempt, or the trace proves shopping coverage remains zero even after category fallback.
-- Any attached evidence is same-product and safe.
+- The diagnostic identifies whether zero candidates originate upstream, during parsing/normalization, or in invocation context.
+- The smallest safe follow-up can then be specified, or Phase 3N model-token work can resume if no search-path defect is found.
 
-### Phase 3M - Model-token detection broadening - TODO
+### Phase 3N - Model-token detection broadening - TODO
 
 Only do after source-upgrade query/search-coverage behavior is proven, or after a focused eligibility diagnostic proves that model-token detection is now the source-upgrade blocker.
 
@@ -449,7 +472,7 @@ Tests:
 - Negative tests for generic product names, accessories, parts, and bundles.
 - Prove max attempts still limit cost.
 
-### Phase 3N - Source-quality upgrade final validation - TODO
+### Phase 3O - Source-quality upgrade final validation - TODO
 
 Purpose: run a focused live validation after 3I/3J/3K.
 
@@ -737,24 +760,25 @@ Do this only after backend trust and ranking are stronger.
 
 ## Immediate Next Task for Codex
 
-Run Phase 3L.
+Run Phase 3M.
 
-Phase 3K is implemented and deterministic-testable, but not live-proven. Do not make another behavior change before the live proof.
+Phase 3L proved the Phase 3K fallback is live-wired and runs after an empty primary result. In the observed `shop vac` attempt, both queries returned zero candidates, so the failure still occurs before identity matching or evidence attachment.
 
 Task:
 
-1. Save a fresh debug fixture for `shop vac`.
-2. Save one fresh debug fixture for an unrelated previously attempted category, preferably `robot vacuum` or `gas grill`.
-3. Replay both fixtures.
-4. Inspect source-upgrade primary/fallback trace fields, candidates returned, identity matches, evidence attachment, final-selection impact, and unsafe merge risk.
-5. Update QA docs after the live proof.
+1. Use the exact Phase 3L primary and fallback queries to diagnose the source-upgrade shopping path.
+2. Determine whether Serper returns no shopping results upstream or whether results are lost during parsing/normalization.
+3. Confirm the category and invocation context passed to the existing search wrapper.
+4. Record the smallest next fix only after the zero-result layer is proven.
+5. Update QA docs after the diagnostic.
 
 Do not:
 
-- hardcode Makita, RIDGID, shop vac, robot vacuum, or any specific product/category;
-- broaden model-token detection in this phase;
-- loosen trust gates to improve attachment rate;
-- change scoring/ranking/discovery/trigger/identity behavior;
+- change behavior during the diagnostic;
+- hardcode DEWALT, shop vac, or any specific product/category;
+- broaden model-token detection;
+- loosen trust gates;
+- change scoring, ranking, discovery, trigger, query, fallback, identity, or extraction behavior;
 - run a full baseline.
 
-Exit criteria: focused live traces show whether Phase 3K improves candidate return/attachment, or prove the next bottleneck after fallback.
+Exit criteria: prove whether the zero candidate count originates upstream, in Serper result parsing/normalization, or in the source-upgrade invocation context.

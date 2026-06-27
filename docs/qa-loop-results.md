@@ -3133,3 +3133,111 @@ Run Phase 3L live proof after fallback ladder:
 3. Determine whether fallback increases `candidatesReturned`.
 4. If candidates return, inspect identity matching, attachable fields, safety, and final-selection impact.
 5. Do not run a full baseline.
+
+## <span style="color:green">**Codex QA Update - 2026-06-26 (Phase 3L: live proof after source-upgrade fallback ladder)**</span>
+
+**Live diagnostic/proof only. No app code, scoring, ranking, discovery, source-upgrade trigger, query construction, fallback behavior, identity matching, model-token detection, requirement filtering, or trust-gate changes. No full baseline.**
+
+### Scope and server
+
+- Repo: `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
+- Starting commit: `f5a982f820f81649ec296b1d67f821326e32955e`
+- Local server: `http://localhost:3000` returned HTTP 200.
+- Live searches run: `shop vac`, `robot vacuum`.
+- Conditional `gas grill` search was not run because `shop vac` produced a source-upgrade trace.
+
+### Commands
+
+```text
+npm run qa:save-fixture -- "shop vac"
+npm run qa:save-fixture -- "robot vacuum"
+npm run qa:replay -- tests/fixtures/review-radar-live/shop-vac.json
+npm run qa:replay -- tests/fixtures/review-radar-live/robot-vacuum.json
+```
+
+### Fresh fixtures
+
+- `tests/fixtures/review-radar-live/shop-vac.json` - saved `2026-06-27T01:10:14.036Z`
+- `tests/fixtures/review-radar-live/robot-vacuum.json` - saved `2026-06-27T01:11:38.159Z`
+
+### `shop vac`
+
+Final exact products:
+
+1. `Armor All 2.5 Gallon 2 Peak HP Utility Wet/Dry Vacuum AA255`
+2. `DEWALT DWV015 10-Gallon Wet/Dry HEPA Dust Extractor`
+3. `CRAFTSMAN CMXEVBE17925 5 Gallon 5.0 Peak HP Wet Dry Vac ...`
+4. `DEWALT 10 Gallon Stainless Steel Wet/Dry Vacuum DXV10SB`
+5. `RIDGID 12 Gallon 5.0 Peak HP NXT Wet/Dry Vacuum`
+
+Source-upgrade trace:
+
+- Attempts: 1.
+- Product: `DEWALT 10 Gallon Stainless Steel Wet/Dry Vacuum DXV10SB`.
+- `primaryQuery: Wet/Dry Vacuum DXV10SB`
+- `primaryCandidatesReturned: 0`
+- `fallbackQuery: Wet/Dry Vacuum DXV10SB shop vac`
+- `fallbackUsed: true`
+- `fallbackCandidatesReturned: 0`
+- total `candidatesReturned: 0`
+- `candidatesEvaluated: 0`
+- `noMatchReason: shopping_results_empty`
+- `candidateSample: []`
+- `evidenceAttached: false`
+- attached fields: none
+
+Final-selection impact:
+
+- The attempted product remained selected at rank #4.
+- `rankedMatchScore: 124.8`
+- `sourceQualityScore: 27.2`
+- `missingDataPenalty: 27`
+- `priceTrustStatus: missing`
+- No evidence attached, so no score, confidence, or rank improvement occurred.
+
+Safety:
+
+- No returned or sampled candidate existed.
+- No accessory, part, wrong model/type, bundle, listing/article page, suspicious price, financing price, or unrelated-brand merge approached attachment.
+
+### `robot vacuum`
+
+Final exact products:
+
+1. `ECOVACS DEEBOT T20 OMNI`
+2. `eufy X10 Pro Omni`
+3. `iRobot Roomba Combo j7+`
+4. `Roborock Q5 Pro`
+5. `Narwal Freo Z10 Turbo Robot Vacuum & Mop`
+6. `iRobot Roomba j7`
+7. `Roborock S8 Pro Ultra`
+
+Source-upgrade trace:
+
+- `sourceUpgradeTraces: 0`
+- No product qualified for source upgrade.
+- No primary or fallback query ran.
+- No candidate, identity, attachment, score, rank, or safety impact occurred.
+
+### Verdict
+
+**Phase 3K proof verdict: partially proven.**
+
+- Proven: the Phase 3K fallback is live-wired, runs only after an empty primary result, uses compact category context, and emits the expected trace fields.
+- Not proven: the fallback did not increase `candidatesReturned` in the observed attempt and no evidence attached.
+- The fallback query was bounded and did not duplicate category wording or return noisy candidates.
+- Phase 3L is complete with a partial result; this is not a fallback-control-flow failure.
+
+### Next bottleneck
+
+The observed bottleneck is **source-upgrade fallback shopping-search coverage**. Both source-upgrade shopping queries returned zero before identity matching, product-page eligibility, field extraction, price/rating extraction, or citation trust could run.
+
+### Recommended next task
+
+Run Phase 3M as a diagnostic-only shopping-provider coverage investigation:
+
+1. Use the exact observed primary and fallback queries.
+2. Distinguish upstream Serper zero results from shopping-response parsing/normalization loss.
+3. Confirm source-upgrade query/category invocation context.
+4. Propose the smallest search-source or parsing fix only after the zero-result layer is proven.
+5. Keep model-token broadening deferred and do not run a full baseline.

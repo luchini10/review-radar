@@ -605,3 +605,19 @@ New entries should keep the same format and stay easy to read.
 **Live checks run:** None. This phase is implemented but not live-proven.
 
 **Next recommended step:** Run Phase 3L live proof on `shop vac` plus one unrelated previously attempted category to see whether the fallback returns candidates and attaches evidence safely.
+
+## Codex Run - 2026-06-26 Phase 3L
+
+**Goal:** Live-prove the Phase 3K source-upgrade fallback ladder.
+
+**What it checked:** Saved and replayed fresh `shop vac` and `robot vacuum` fixtures, then inspected primary/fallback counts, identity evaluation, evidence attachment, final selection, and safety.
+
+**What it found:** `shop vac` produced one source-upgrade attempt. Primary `Wet/Dry Vacuum DXV10SB` returned zero candidates, so fallback `Wet/Dry Vacuum DXV10SB shop vac` correctly ran; it also returned zero. `robot vacuum` produced no source-upgrade attempt.
+
+**What changed:** Docs only. No app behavior changed.
+
+**Live checks run:** `shop vac` and `robot vacuum` only. The conditional `gas grill` search was not needed. No full baseline.
+
+**Verdict:** Phase 3K is partially live-proven: fallback control flow and trace fields work, but fallback shopping coverage did not improve in this sample. No unsafe candidate or merge appeared.
+
+**Next recommended step:** Run Phase 3M as a diagnostic-only check to locate whether the zero candidates originate in the upstream Serper response, shopping-result parsing/normalization, or source-upgrade invocation context.
