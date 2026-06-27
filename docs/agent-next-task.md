@@ -4,7 +4,7 @@ Generated: 2026-06-27
 
 ## Current next task
 
-**Phase 3O - brand-preserving source-upgrade query identity**
+**Focused live proof after Phase 3N, RR-051, and Phase 3O - approval required**
 
 Phase 3N fixed RR-048 and RR-049 deterministically:
 
@@ -15,35 +15,26 @@ Phase 3N fixed RR-048 and RR-049 deterministically:
 
 Phase 3N is implemented but not live-proven. One approved `shop vac` proof produced `sourceUpgradeTraces: 0`, so no normalization, identity, or attachment path ran. RR-042 remains open until a trigger-producing focused live proof confirms normalized candidates return and source upgrade behaves safely.
 
-RR-047 remains open: the query builder detects `DeWalt` but drops it when selecting only the words immediately before model `DXV10SB`.
+RR-047 is fixed deterministically. The query builder now prefers trusted metadata brand, then existing shared brand detection, and preserves that brand with compact model identity. The confirmed primary/fallback pair is now `DeWalt DXV10SB` and `DeWalt DXV10SB shop vac`.
 
 RR-051 is fixed deterministically. Serper snippets now carry explicit source/query provenance, and source-upgrade identity ignores query-derived fallback snippets plus the request-derived category while retaining source titles, merchant data, URLs, provider specs, and real provider snippets.
 
 ## Required next phase
 
-Implement one focused source-upgrade query-identity fix. Do not run a full baseline.
+Request explicit approval for one focused `shop vac` live proof covering the combined RR-048, RR-049, RR-051, and RR-047 fixes. Do not run a full baseline.
 
-Required behavior:
+The proof should confirm:
 
-1. Preserve a reliably detected brand when building a compact model-based source-upgrade query.
-2. Keep the model token and compact category context.
-3. Avoid duplicate brand/category words and long retailer-display-title noise.
-4. Keep the Phase 3I primary and Phase 3K single-fallback bounds.
-
-Tests must cover:
-
-- brand-led long titles where the model appears late
-- already compact brand/model titles
-- titles without a reliably detected brand
-- duplicate brand/category prevention
-- unchanged trigger, fallback count, identity matching, and non-debug result shape
-
-After deterministic tests pass, request approval for one focused `shop vac` live proof covering Phase 3N plus Phase 3O.
+1. A source-upgrade attempt fires.
+2. The trace uses the brand-preserving primary/fallback identity.
+3. Normalized candidates reach identity evaluation.
+4. Query-derived fallback text does not influence identity.
+5. Evidence attaches only for a safe same-product candidate.
 
 Do not:
 
-- change scoring, ranking, discovery, source-upgrade trigger logic, fallback count, identity matching, model-token detection, eligibility, extraction, or trust gates;
-- add product-, brand-, or category-specific branches;
+- change app behavior before the proof;
+- run any category beyond the explicitly approved focused query;
 - run a full baseline.
 
 Reference:

@@ -112,6 +112,41 @@ function makeResult(products) {
 // ── Phase 3I: source-upgrade query construction ─────────────────────────────
 
 describe("buildSourceUpgradeShoppingQuery", () => {
+  it("preserves a detected brand with a late model token", () => {
+    const query = buildSourceUpgradeShoppingQuery(
+      {
+        name: "DEWALT 10 Gallon Stainless Steel Wet/Dry Vacuum DXV10SB",
+      },
+      "shop vac",
+    );
+
+    assert.equal(query, "DeWalt DXV10SB");
+    assert.notEqual(query, "Wet/Dry Vacuum DXV10SB");
+    assert.ok(!query.includes("10 Gallon Stainless Steel Wet/Dry Vacuum"));
+  });
+
+  it("prefers a trusted metadata brand over title-detected casing", () => {
+    const query = buildSourceUpgradeShoppingQuery(
+      {
+        name: "DEWALT 10 Gallon Stainless Steel Wet/Dry Vacuum DXV10SB",
+        metadata: { brand: { value: "DEWALT" } },
+      },
+      "shop vac",
+    );
+
+    assert.equal(query, "DEWALT DXV10SB");
+  });
+
+  it("does not duplicate a brand already embedded in a model token", () => {
+    const query = buildSourceUpgradeShoppingQuery(
+      { name: "Nike NIKE123 Running Shoe" },
+      "running shoe",
+    );
+
+    assert.equal(query, "NIKE123");
+    assert.ok(!query.toLowerCase().startsWith("nike nike"));
+  });
+
   it("prefers concise model identity and removes redundant category suffix", () => {
     const query = buildSourceUpgradeShoppingQuery(
       { name: "Napoleon Rogue XT 425 SIB Gas Grill" },
@@ -163,9 +198,36 @@ describe("buildSourceUpgradeShoppingQuery", () => {
     assert.equal(query, "4-Burner Propane Gas Grill");
     assert.notEqual(query.toLowerCase(), "gas grill");
   });
+
+  it("does not invent a brand for an unbranded model title", () => {
+    const query = buildSourceUpgradeShoppingQuery(
+      { name: "10 Gallon Wet Dry Vacuum XZ5000" },
+      "shop vac",
+    );
+
+    assert.equal(query, "Dry Vacuum XZ5000");
+    assert.ok(!query.startsWith("DeWalt "));
+    assert.ok(!query.startsWith("Makita "));
+  });
 });
 
 describe("buildSourceUpgradeFallbackShoppingQuery", () => {
+  it("inherits the corrected brand-preserving primary identity", () => {
+    const product = {
+      name: "DEWALT 10 Gallon Stainless Steel Wet/Dry Vacuum DXV10SB",
+    };
+    const primary = buildSourceUpgradeShoppingQuery(product, "shop vac");
+    const fallback = buildSourceUpgradeFallbackShoppingQuery(
+      product,
+      "shop vac",
+      primary,
+    );
+
+    assert.equal(primary, "DeWalt DXV10SB");
+    assert.equal(fallback, "DeWalt DXV10SB shop vac");
+    assert.ok(!fallback.includes("10 Gallon Stainless Steel Wet/Dry Vacuum"));
+  });
+
   it("adds category context to compact model-only source-upgrade queries", () => {
     const primary = buildSourceUpgradeShoppingQuery(
       { name: "Makita XCV11Z 18V LXT Brushless Cordless 2-Gallon HEPA Filter Wet/Dry Vacuum" },
@@ -898,7 +960,7 @@ describe("upgradeWeakSourceEvidence", () => {
     assert.deepEqual(t.candidateSample, []);
   });
 
-  it("records query identity inputs when model phrase selection drops a detected brand", async () => {
+  it("records brand-preserving query identity inputs", async () => {
     const product = weakProduct(
       "DEWALT 10 Gallon Stainless Steel Wet/Dry Vacuum DXV10SB",
       { category: "shop vac" },
@@ -917,11 +979,11 @@ describe("upgradeWeakSourceEvidence", () => {
     assert.equal(t.metadataBrand, null);
     assert.equal(t.detectedBrand, "DeWalt");
     assert.deepEqual(t.detectedModelTokens, ["dxv10sb"]);
-    assert.equal(t.modelIdentityPhrase, "Wet/Dry Vacuum DXV10SB");
-    assert.equal(t.selectedIdentityPhrase, "Wet/Dry Vacuum DXV10SB");
+    assert.equal(t.modelIdentityPhrase, "DeWalt DXV10SB");
+    assert.equal(t.selectedIdentityPhrase, "DeWalt DXV10SB");
     assert.equal(t.categoryContext, "shop vac");
-    assert.equal(t.primaryQuery, "Wet/Dry Vacuum DXV10SB");
-    assert.equal(t.fallbackQuery, "Wet/Dry Vacuum DXV10SB shop vac");
+    assert.equal(t.primaryQuery, "DeWalt DXV10SB");
+    assert.equal(t.fallbackQuery, "DeWalt DXV10SB shop vac");
   });
 
   it("records raw-zero separately from normalization or eligibility loss", async () => {

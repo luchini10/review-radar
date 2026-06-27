@@ -18,9 +18,9 @@
 | High | 24 |
 | Medium | 18 |
 | Low | 5 |
-| Open | 5 |
+| Open | 4 |
 | Needs Investigation | 6 |
-| Fixed | 39 |
+| Fixed | 40 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -1095,7 +1095,7 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 | **Phase** | Phase 3M |
 | **Severity** | High |
 | **Title** | Source-upgrade model identity drops a detected brand from long product titles |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** The attempted product still contained `DEWALT` in its full name, and shared brand detection correctly returned `DeWalt`. However, `buildModelIdentityQuery` ignored that detected brand and selected only the two words immediately before model token `DXV10SB`, producing `Wet/Dry Vacuum DXV10SB`. The fallback inherited the same brandless identity phrase. This is a general defect for brand-led product titles where descriptive product nouns appear between the brand and model token.
 
@@ -1108,6 +1108,8 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 **Actual:** The selected identity phrase excludes the brand even though brand detection succeeded.
 
 **Suggested fix or next action:** After the normalization fix in Phase 3N, implement a separate brand-preserving query phase. Prefer metadata brand, then shared detected brand, and combine it with the model token without restoring long retailer-title noise. Add positive tests across unrelated brands and negative tests for false brand inference.
+
+**Phase 3O fix:** Completed deterministically. Source-upgrade query construction now resolves brand from trusted product metadata first, then the existing shared brand detector. When a compact model token is present, the reliable brand is prepended unless that brand is already embedded in the model identity. Products without a reliable brand retain the existing nearby-word identity behavior. The confirmed query changed from `Wet/Dry Vacuum DXV10SB` to `DeWalt DXV10SB`; fallback now uses `DeWalt DXV10SB shop vac`. No model-token, identity-matching, trigger, fallback-count, eligibility, scoring, ranking, or trust behavior changed.
 
 ---
 
@@ -1313,12 +1315,11 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (5 issues)
+### Open (4 issues)
 - RR-034: `modelTokens` misses mixed-case word-preceded numbers
 - RR-035: `modelTokens` misses Samsung Bespoke / FEIN naming
 - RR-043: Product-type taxonomy coverage incomplete
 - RR-044: `modelTokens` minimum length too restrictive for short model numbers
-- RR-047: Source-upgrade model identity drops a detected brand
 
 ### Needs Investigation (6 issues)
 - RR-013: Thin winner crowd-out
@@ -1328,8 +1329,8 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 
-### Fixed (39 issues)
-RR-001 through RR-012, RR-014, RR-016 through RR-023, RR-025 through RR-033, RR-036, RR-038 through RR-040, RR-046, RR-048 through RR-051
+### Fixed (40 issues)
+RR-001 through RR-012, RR-014, RR-016 through RR-023, RR-025 through RR-033, RR-036, RR-038 through RR-040, RR-046 through RR-051
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -1338,11 +1339,10 @@ RR-001 through RR-012, RR-014, RR-016 through RR-023, RR-025 through RR-033, RR-
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-047** (High) — Phase 3O: preserve a detected brand in compact model-identity queries after normalization is fixed.
-2. **RR-042** (Medium) — Re-test the Phase 3L fallback after RR-048/RR-049 are fixed; raw provider coverage is proven, normalized coverage is not.
-3. **RR-041** (Medium) — Source-upgrade attempts remain inconsistent across live runs; add trigger-rate visibility if proof coverage continues to fail.
-4. **RR-043** (High) — Product-type taxonomy incomplete; add rules for all gold-benchmark categories.
-5. **RR-034 + RR-035 + RR-044** (Medium, batch) — Model-token detection gaps; fix together to avoid partial improvements.
-6. **RR-013** (Medium) — Thin winner crowd-out; requires citation-strength score integration (scoring change, not diagnostic).
-7. **RR-015** (High) — Run-to-run stability; requires deeper investigation into LLM temperature or deterministic candidate pinning.
-8. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain; re-measure with raw/structural/eligible diagnostics before changing sources.
+1. **RR-042** (Medium) — Run an approval-gated focused live proof after RR-048/RR-049/RR-051/RR-047 fixes; raw provider coverage is proven, live normalized coverage is not.
+2. **RR-041** (Medium) — Source-upgrade attempts remain inconsistent across live runs; add trigger-rate visibility if proof coverage continues to fail.
+3. **RR-043** (High) — Product-type taxonomy incomplete; add rules for all gold-benchmark categories.
+4. **RR-034 + RR-035 + RR-044** (Medium, batch) — Model-token detection gaps; fix together to avoid partial improvements.
+5. **RR-013** (Medium) — Thin winner crowd-out; requires citation-strength score integration (scoring change, not diagnostic).
+6. **RR-015** (High) — Run-to-run stability; requires deeper investigation into LLM temperature or deterministic candidate pinning.
+7. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain; re-measure with raw/structural/eligible diagnostics before changing sources.

@@ -15,7 +15,7 @@ import {
   type SerperShoppingSearchDiagnostics,
   type SerperShoppingSearchResult,
 } from "./search/serper.ts";
-import { inferKnownBrand } from "./brandMatching.ts";
+import { brandEvidenceMatches, inferKnownBrand } from "./brandMatching.ts";
 import { baseProductCategoryFromQuery } from "./productCategory.ts";
 import {
   featureEvidenceSupports,
@@ -717,7 +717,7 @@ const MODEL_SUFFIX_WORDS = new Set([
   "ultra",
 ]);
 
-function buildModelIdentityQuery(name: string) {
+function buildModelIdentityQuery(name: string, detectedBrand: string | null) {
   const match = name.match(/\b[A-Z]{1,5}[-\s]?\d{2,}[A-Z0-9-]*\b/);
 
   if (!match || match.index === undefined) {
@@ -735,15 +735,31 @@ function buildModelIdentityQuery(name: string) {
   const suffix = after[0]?.replace(/[^a-z0-9+-]/gi, "");
   const suffixWords =
     suffix && MODEL_SUFFIX_WORDS.has(suffix.toLowerCase()) ? [suffix] : [];
+  const modelIdentity = [model, ...suffixWords].join(" ");
 
-  return [...before, model, ...suffixWords].join(" ").replace(/\s+/g, " ").trim();
+  if (detectedBrand) {
+    return brandEvidenceMatches(modelIdentity, detectedBrand)
+      ? modelIdentity
+      : `${detectedBrand} ${modelIdentity}`;
+  }
+
+  return [...before, modelIdentity].join(" ").replace(/\s+/g, " ").trim();
+}
+
+function sourceUpgradeBrand(
+  product: Pick<ProductRecommendation, "name" | "metadata">,
+) {
+  return product.metadata?.brand?.value?.trim() || inferKnownBrand(product.name);
 }
 
 export function buildSourceUpgradeShoppingQuery(
   product: Pick<ProductRecommendation, "name" | "metadata">,
   category: string,
 ) {
-  const modelIdentity = buildModelIdentityQuery(product.name);
+  const modelIdentity = buildModelIdentityQuery(
+    product.name,
+    sourceUpgradeBrand(product),
+  );
 
   if (modelIdentity) {
     return removeTrailingCategory(modelIdentity, category);
@@ -1228,7 +1244,11 @@ async function upgradeProductSource(
   searchFn: SourceUpgradeSearchFn,
 ): Promise<{ product: ProductRecommendation; trace: SourceUpgradeTrace }> {
   const cleanedProductName = stripRetailDisplayFiller(product.name);
-  const modelIdentityPhrase = buildModelIdentityQuery(product.name);
+  const detectedBrand = sourceUpgradeBrand(product);
+  const modelIdentityPhrase = buildModelIdentityQuery(
+    product.name,
+    detectedBrand,
+  );
   const query = buildSourceUpgradeShoppingQuery(product, category);
   const fallbackQuery = buildSourceUpgradeFallbackShoppingQuery(product, category, query);
   const metadataBrand = product.metadata?.brand?.value || null;
@@ -1237,7 +1257,7 @@ async function upgradeProductSource(
     originalProductName: product.name,
     cleanedProductName,
     metadataBrand,
-    detectedBrand: metadataBrand || inferKnownBrand(product.name),
+    detectedBrand,
     detectedModelTokens: modelTokens(product),
     modelIdentityPhrase,
     selectedIdentityPhrase: query,

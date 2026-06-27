@@ -3497,3 +3497,54 @@ npm run qa:replay -- tests/fixtures/review-radar-live/shop-vac.json
 - RR-047: Open and unchanged; Phase 3O remains next.
 - RR-042: Needs Investigation and unchanged pending a later trigger-producing live proof.
 - RR-048 and RR-049: Fixed and unchanged.
+
+## <span style="color:green">**Codex QA Update - 2026-06-27 (Phase 3O: RR-047 brand-preserving source-upgrade query identity)**</span>
+
+**Focused source-upgrade query fix. No scoring, ranking, final-selection, discovery breadth, source-upgrade trigger, fallback control flow, identity matching, RR-051 provenance safety, model-token detection, product eligibility, requirement filtering, price trust, or citation trust changes. No live search and no full baseline.**
+
+### Root cause
+
+- `buildModelIdentityQuery` accepted only a product name.
+- It selected up to two nearby words before the model token and had no access to the brand already detected elsewhere for tracing.
+- For `DEWALT 10 Gallon Stainless Steel Wet/Dry Vacuum DXV10SB`, shared detection found `DeWalt`, but query construction emitted `Wet/Dry Vacuum DXV10SB`.
+
+### Fix
+
+- Source-upgrade brand resolution now prefers trusted metadata brand, then the existing shared `inferKnownBrand` result.
+- The compact model identity prepends that reliable brand unless shared brand matching confirms the brand is already embedded.
+- If no reliable brand exists, the previous nearby-word behavior remains unchanged.
+- Fallback construction remains the same and naturally inherits the corrected primary identity.
+
+### Query proof
+
+- `DEWALT 10 Gallon Stainless Steel Wet/Dry Vacuum DXV10SB`
+  - before primary: `Wet/Dry Vacuum DXV10SB`
+  - after primary: `DeWalt DXV10SB`
+  - after fallback: `DeWalt DXV10SB shop vac`
+- `Makita XCV11Z 18V LXT Cordless Vacuum` remains `Makita XCV11Z`.
+- `Napoleon Rogue XT 425 SIB Gas Grill` remains `Napoleon Rogue XT 425 SIB`; fallback remains category-deduplicated.
+- Unbranded model titles do not receive an invented brand.
+
+### Safety proof
+
+- Metadata brand has precedence over title-detected casing.
+- Brands already embedded in a model token are not duplicated.
+- Fallback still runs at most once and does not restore retailer-title filler.
+- RR-051 query-derived text cannot satisfy candidate identity.
+- RR-048 Google Shopping offer safety and RR-049 Shop-Vac title safety remain green.
+- User-facing non-debug result shape remains unchanged.
+
+### Verification
+
+- Focused source-quality and Serper tests: 89/89 pass.
+- `npm run typecheck` - clean.
+- `npm run lint` - 0 errors, 3 pre-existing warnings.
+- `npm test` - 639/639 pass.
+- `node scripts/eval-pipeline.mjs` - red-flag checks clean.
+- No live search was run.
+
+### Status
+
+- RR-047: Fixed.
+- RR-042: Needs Investigation pending an approval-gated trigger-producing live proof.
+- RR-048, RR-049, and RR-051: Fixed and unchanged.

@@ -671,3 +671,21 @@ New entries should keep the same format and stay easy to read.
 **Issue status:** RR-051 fixed. RR-047 remains open for Phase 3O. RR-042 remains under investigation pending a trigger-producing live proof.
 
 **Next recommended step:** Phase 3O should preserve detected brand identity in compact source-upgrade queries.
+
+## Codex Run - 2026-06-27 Phase 3O
+
+**Goal:** Fix RR-047 by preserving reliable brand identity in compact source-upgrade model queries.
+
+**What it changed:** Source-upgrade query construction now resolves trusted metadata brand first, then the existing shared detected brand, and combines it with the model token unless already present. Unbranded products retain the prior nearby-word behavior.
+
+**Before/after:** `Wet/Dry Vacuum DXV10SB` became `DeWalt DXV10SB`; fallback became `DeWalt DXV10SB shop vac`. Long retailer-title filler is not restored.
+
+**What stayed the same:** Scoring, ranking, discovery, trigger logic, fallback control flow and count, identity matching, RR-051 provenance safety, model-token detection, product eligibility, requirement filtering, and trust gates.
+
+**Tests run:** Focused tests passed 89/89. Typecheck passed. Lint had 0 errors and 3 pre-existing warnings. Full tests passed 639/639. Eval red-flag checks were clean.
+
+**Live checks run:** None.
+
+**Issue status:** RR-047 fixed. RR-042 remains under investigation pending an approved focused live proof. RR-048, RR-049, and RR-051 remain fixed.
+
+**Next recommended step:** Request approval for one focused `shop vac` live proof of the combined source-upgrade fixes.

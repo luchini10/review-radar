@@ -13,6 +13,15 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-27
 
+### Codex - Phase 3O: brand-preserving source-upgrade query identity
+- Fixed RR-047 by passing the existing metadata-first/shared detected brand into compact model query construction.
+- Reliable brand is prepended to the model identity unless already present; unbranded products retain the existing nearby-word behavior.
+- `DEWALT 10 Gallon Stainless Steel Wet/Dry Vacuum DXV10SB` now produces `DeWalt DXV10SB`, with fallback `DeWalt DXV10SB shop vac`, instead of brandless `Wet/Dry Vacuum DXV10SB`.
+- Existing Makita, RIDGID, Napoleon, category-deduplication, long-title cleanup, and one-fallback behavior remain intact.
+- No model-token, identity-matching, RR-051 provenance, scoring, ranking, trigger, eligibility, requirement-filtering, or trust behavior changed.
+- Verification: focused tests 89/89; typecheck clean; lint 0 errors with 3 pre-existing warnings; full suite 639/639; eval red-flag checks clean.
+- No live search was run. RR-047 is fixed; RR-042 remains open pending an approval-gated focused live proof.
+
 ### Codex - RR-051: source-upgrade identity provenance safety
 - Marked Serper candidate snippets as `source-derived` or `query-derived`.
 - Source-upgrade same-product identity now ignores synthetic query-derived fallback snippets and the request-derived category, preventing the target query from supplying identity evidence to a returned candidate.
