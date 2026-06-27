@@ -3618,3 +3618,44 @@ npm run qa:replay -- tests/fixtures/review-radar-live/shop-vac.json
 - RR-002 reopened: `$10` full shop-vac offer treated as verified.
 - RR-042 remains `Needs Investigation`.
 - RR-047, RR-048, RR-049, and RR-051 remain deterministically fixed, but the combined live system is unsafe until RR-052/RR-053 are addressed.
+
+## <span style="color:green">**Codex QA Update - 2026-06-27 (RR-053 URL-query identity safety fix)**</span>
+
+**Verdict: PASS deterministically. RR-053 is fixed. No live search or full baseline was run.**
+
+### Root cause
+
+- `lib/requirementEvidenceRescue.ts` included complete candidate URLs in `evidenceText`.
+- Google Shopping offer URLs echo the source-upgrade search in query parameters such as `q=HP+HD0900`.
+- The model-token identity fast path therefore found `HD0900` in the URL even when the source title was the unrelated `Hp 15.6" HD Windows Laptop`.
+
+### Fix
+
+- Candidate URL identity is now limited to normalized host plus path.
+- The complete query string and fragment are excluded, covering `q`, `oq`, `query`, `search`, tracking, advertising, and other synthetic parameters without a brittle parameter denylist.
+- Merchant product-page paths remain available to identity matching.
+- Source-derived titles and metadata remain the basis for valid Google Shopping offer identity.
+
+### Deterministic proof
+
+- Exact Phase 3O regression: HP laptop + Google offer `q=HP+HD0900` is identity-rejected; no price, rating, review count, or citation attaches.
+- Positive Google offer: a source title carrying RIDGID `HD0900` still passes independently of URL query text.
+- Positive merchant URL: `/products/makita-xcv11z` still provides model path identity while its query parameters are ignored.
+- RR-051 query-derived snippet safety, RR-048 offer eligibility, RR-049 Shop-Vac title handling, and RR-047 brand-preserving query construction remain green.
+
+### Verification
+
+- Focused source-quality + Serper tests: `92/92` pass.
+- `npm run typecheck`: clean.
+- `npm run lint`: `0` errors, `3` pre-existing warnings.
+- `npm test`: `642/642` pass.
+- `node scripts/eval-pipeline.mjs`: red-flag checks clean.
+
+### Boundaries and status
+
+- No scoring, ranking, final selection, discovery, source-upgrade trigger, query construction, fallback behavior, brand detection, model-token detection, product eligibility, price trust, or citation trust changes.
+- No live search.
+- RR-053: Fixed.
+- RR-052: Open and unchanged.
+- RR-002 and RR-042: Needs Investigation and unchanged.
+- Recommended next task: fix RR-052 only, preventing horsepower `Peak HP` context from becoming Hewlett-Packard brand identity while preserving genuine HP-brand detection.

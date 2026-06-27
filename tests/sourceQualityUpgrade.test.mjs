@@ -665,6 +665,126 @@ describe("upgradeWeakSourceEvidence", () => {
     );
   });
 
+  it("does not match an HP laptop through a Google offer query parameter", async () => {
+    const product = weakProduct(
+      "RIDGID 9 Gallon 4.25 Peak HP NXT Wet/Dry Vac HD0900",
+      { category: "shop vac" },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const candidates = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title: 'Hp 15.6" HD Windows Laptop',
+            link:
+              "https://www.google.com/search?ibp=oshop&q=HP+HD0900&udm=28&prds=localAnnotatedOfferId%3A1%2Ccatalogid%3A123",
+            source: "Walmart",
+            price: "$429",
+            rating: 4.3,
+            ratingCount: 10,
+          },
+        ],
+      },
+      "HP HD0900",
+      "shop vac",
+      { allowGoogleShoppingOfferEvidence: true },
+    );
+    const searchFn = async () => diagnosticSearchResult(candidates);
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(candidates.length, 1);
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.equal(sourceUpgradeTraces[0].candidateSample[0].identityMatch, false);
+    assert.ok(
+      !upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 429,
+      ),
+    );
+    assert.ok(
+      !upgraded.exactMatches[0].citations.some((citation) =>
+        citation.title.includes("Windows Laptop"),
+      ),
+    );
+  });
+
+  it("accepts a Google offer when the source title carries the target model", async () => {
+    const product = weakProduct(
+      "RIDGID 9 Gallon 4.25 Peak HP NXT Wet/Dry Vac HD0900",
+      { category: "shop vac" },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const candidates = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title: "RIDGID 9 Gallon NXT Wet/Dry Shop Vacuum HD0900",
+            link:
+              "https://www.google.com/search?ibp=oshop&q=unrelated+terms&udm=28&prds=localAnnotatedOfferId%3A1%2Ccatalogid%3A456",
+            source: "Home Depot",
+            price: "$129",
+            rating: 4.6,
+            ratingCount: 880,
+          },
+        ],
+      },
+      "HP HD0900",
+      "shop vac",
+      { allowGoogleShoppingOfferEvidence: true },
+    );
+    const searchFn = async () => diagnosticSearchResult(candidates);
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(candidates.length, 1);
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, true);
+    assert.ok(
+      upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 129,
+      ),
+    );
+  });
+
+  it("preserves model identity from a merchant product URL path", async () => {
+    const product = weakProduct("Makita XCV11Z Cordless Wet/Dry Vacuum", {
+      category: "shop vac",
+    });
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const candidates = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title: "Cordless Wet Dry Vacuum Tool Only",
+            link:
+              "https://hardware.example.com/products/makita-xcv11z?query=wrong-model&search=other-product",
+            source: "Example Hardware",
+            price: "$189",
+          },
+        ],
+      },
+      "Makita XCV11Z",
+      "shop vac",
+    );
+    const searchFn = async () => diagnosticSearchResult(candidates);
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(candidates.length, 1);
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, true);
+    assert.ok(
+      upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 189,
+      ),
+    );
+  });
+
   it("does not let a query-derived fallback snippet satisfy wrong-product identity", async () => {
     const product = weakProduct("Weber Spirit E-325 3-Burner Gas Grill");
     const result = makeResult([product]);

@@ -705,3 +705,23 @@ New entries should keep the same format and stay easy to read.
 **Issues:** Opened RR-052 and RR-053. Reopened RR-002. RR-042 remains under investigation.
 
 **Next recommended step:** Fix RR-053 identity provenance first, then RR-052 ambiguous HP brand detection. Handle RR-002 price trust separately before another approved live proof.
+
+## Codex Run - 2026-06-27 RR-053
+
+**Goal:** Prevent Google Shopping/search URL query parameters from satisfying source-upgrade same-product identity.
+
+**Root cause:** Identity evidence included complete candidate URLs. An HP laptop offer URL echoed `HP HD0900` in `q=`, allowing the target vacuum model to satisfy the model-token fast path despite a mismatching laptop title.
+
+**What changed:** Candidate URL identity is now host plus path only. Query strings and fragments are ignored. Safe merchant product paths remain usable.
+
+**What it proved:** The exact HP-laptop regression is rejected with no commerce evidence attached. A matching RIDGID source title still passes on a Google Shopping offer, and a real Makita model path still passes.
+
+**What stayed the same:** Scoring, ranking, final selection, discovery, source-upgrade trigger, query/fallback construction, brand detection, model-token detection, product eligibility, requirement filtering, and price/citation trust.
+
+**Tests run:** Focused tests passed 92/92. Typecheck passed. Lint had 0 errors and 3 pre-existing warnings. Full tests passed 642/642. Eval red-flag checks were clean.
+
+**Live checks run:** None.
+
+**Issue status:** RR-053 fixed. RR-052 remains open. RR-002 and RR-042 remain under investigation.
+
+**Next recommended step:** Fix RR-052 only by separating horsepower `HP` context from genuine Hewlett-Packard brand identity.

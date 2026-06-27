@@ -13,6 +13,15 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-27
 
+### Codex - RR-053: exclude URL queries from source-upgrade identity
+- Fixed the unsafe Phase 3O merge where an HP laptop matched a RIDGID HD0900 vacuum only because a Google Shopping offer URL echoed `HP HD0900` in its `q` parameter.
+- Same-product identity now uses only URL host and path; the entire query string and fragment are excluded, including search, tracking, and advertising parameters.
+- Merchant product-page model paths remain usable, and valid Google Shopping offers can still pass through source-derived product titles and metadata.
+- Added deterministic regressions for the exact HP-laptop rejection, valid Google source-title identity, and retained merchant-path identity.
+- No scoring, ranking, discovery, source-upgrade query/fallback, trigger, brand detection, model-token, eligibility, price trust, or citation trust behavior changed.
+- Verification: focused tests 92/92; typecheck clean; lint 0 errors with 3 pre-existing warnings; full suite 642/642; eval red-flag checks clean.
+- No live search was run. RR-053 is fixed; RR-052 is the next isolated safety fix, while RR-002 remains separate.
+
 ### Codex - Phase 3O focused live proof: unsafe result
 - Ran exactly one approved `shop vac` save/replay after the RR-048, RR-049, RR-051, and RR-047 fixes.
 - Two source-upgrade attempts fired, each returning 40 raw, 20 structural, 20 eligible, and 20 normalized candidates.

@@ -179,6 +179,15 @@ function modelTokens(product: ProductRecommendation) {
     .filter((token) => token.length >= 4);
 }
 
+function identityUrlText(value: string) {
+  try {
+    const parsed = new URL(value);
+    return `${parsed.hostname.replace(/^www\./, "")} ${parsed.pathname}`;
+  } catch {
+    return value.split(/[?#]/, 1)[0] || "";
+  }
+}
+
 function evidenceText(candidate: RawProductCandidate | SerperEvidenceSource) {
   if ("evidenceSources" in candidate) {
     return normalizeText(
@@ -191,13 +200,19 @@ function evidenceText(candidate: RawProductCandidate | SerperEvidenceSource) {
         ...candidate.evidenceSources.flatMap((source) => [
           source.title,
           source.snippetProvenance === "query-derived" ? "" : source.snippet,
-          source.url,
+          identityUrlText(source.url),
         ]),
       ].join(" "),
     );
   }
 
-  return normalizeText([candidate.title, candidate.snippet, candidate.url].join(" "));
+  return normalizeText(
+    [
+      candidate.title,
+      candidate.snippet,
+      identityUrlText(candidate.url),
+    ].join(" "),
+  );
 }
 
 function evidenceUrl(candidate: RawProductCandidate | SerperEvidenceSource) {

@@ -16,15 +16,15 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 3N - Serper Shopping product-link/title eligibility fix**.
+Current phase: **RR-052 - horsepower `HP` brand-disambiguation safety fix**.
 
-Phase 3M proved Serper Shopping is returning raw results. For the exact Phase 3L primary, fallback, and a brand-preserving control, Serper returned 40 raw results and 20 structurally usable results per query, but the existing normalization/eligibility path returned zero candidates. Google Shopping product links shaped as `google.com/search?ibp=oshop...` are rejected as search/listing URLs, and some legitimate `Shop-Vac` titles are rejected by the generic `shop` title rule.
+Phase 3N safely admitted specific Google Shopping offers for source-upgrade evidence and fixed the `Shop-Vac` title false positive. RR-051 removed synthetic query-derived snippets from same-product identity. Phase 3O preserved reliable brand identity in compact model queries.
 
-The query builder also has a separate identity defect: it detected `DeWalt` in the product name but built `Wet/Dry Vacuum DXV10SB` because the model-identity heuristic kept only the two words immediately before the model token. Fix the proven normalization bottleneck first; keep brand preservation as a separate follow-up.
+The Phase 3O live proof then exposed two separate safety defects. RR-053 is now fixed deterministically: URL query strings and fragments cannot provide product identity, while merchant product paths and source-derived Shopping titles remain usable. RR-052 remains open because `Peak HP` horsepower wording is still detected as the Hewlett-Packard brand. Reopened RR-002 remains a separate price-trust investigation.
 
 Recommended next phase:
 
-- Phase 3N: add the smallest safe normalization/eligibility fix for Serper Shopping product-detail result links and the `Shop-Vac` brand/title false positive. Preserve category/listing/article safety and prove behavior with negative tests. Do not combine this with brand-preserving query construction.
+- RR-052 only: prevent horsepower `HP` context from becoming Hewlett-Packard brand identity while preserving genuine HP-brand detection. Do not combine this with RR-002 price trust or another live proof.
 
 ---
 
@@ -454,36 +454,43 @@ Verdict:
 - Brand-dropping query identity is a real general defect, but the brand-preserving control still returned zero eligible candidates, so it is secondary.
 - No scoring, ranking, discovery, trigger, query, fallback, identity, extraction, or trust-gate behavior changed.
 
-### Phase 3N - Serper Shopping product-link/title eligibility fix - TODO / NEXT
+### Phase 3N - Serper Shopping product-link/title eligibility fix - DONE
 
 Purpose: safely retain specific product offers returned by Serper Shopping when their result URL is a Google Shopping offer link, without allowing ordinary search/category pages to become product evidence.
 
-Required scope:
+Completed work:
 
-- Distinguish Google Shopping offer URLs (`ibp=oshop`, `udm=28`, product/catalog identifiers) from generic Google search pages.
-- Determine whether a safe merchant product URL can be extracted; otherwise define whether the Google Shopping offer URL can remain evidence-only.
-- Narrow the generic-title rule so the `Shop-Vac` brand is not rejected merely for containing `shop`, while generic shop/category titles remain blocked.
-- Preserve all product-page, article, category, accessory, wrong-model, suspicious-price, and identity gates.
-- Do not change source-upgrade query construction in this phase.
+- Added a narrowly gated source-upgrade evidence mode for specific Google Shopping offers with offer indicators, product identifiers, specific titles, positive prices, and merchant metadata.
+- Kept ordinary Google searches and category/listing pages blocked as product cards.
+- Preferred merchant product URLs where present.
+- Allowed specific `Shop-Vac` product titles while retaining generic `shop` category/listing rejection.
+- Fixed RR-048 and RR-049 deterministically.
 
-Exit criteria:
+### RR-051 - Query-derived identity provenance safety - DONE
 
-- Correct specific-product shopping results survive normalization safely.
-- Generic Google search pages, category/listing pages, article pages, accessories, parts, and wrong products remain blocked.
-- A focused live proof reaches source-upgrade identity sampling or clearly exposes the next gate.
+Completed work:
 
-### Phase 3O - Brand-preserving source-upgrade identity query - TODO
+- Marked Serper snippets as source-derived or query-derived.
+- Excluded synthetic query fallback snippets and request-derived category text from same-product identity.
+- Preserved source titles, real provider snippets, merchant data, specs, and safe URL evidence.
 
-Purpose: prevent a detected brand at the start of a long product title from being lost when model identity is built from the two words nearest the model token.
+### Phase 3O - Brand-preserving source-upgrade identity query - DONE
 
-Known case:
+Completed work:
 
-- `DEWALT 10 Gallon Stainless Steel Wet/Dry Vacuum DXV10SB`
-- detected brand: `DeWalt`
-- current identity phrase: `Wet/Dry Vacuum DXV10SB`
-- desired general shape: detected brand + model + compact category context
+- Resolved trusted metadata brand first, then the existing shared detected brand.
+- Combined reliable brand with compact model identity without restoring retailer-title filler.
+- Changed `Wet/Dry Vacuum DXV10SB` to `DeWalt DXV10SB`, with fallback `DeWalt DXV10SB shop vac`.
+- Fixed RR-047 deterministically.
 
-Keep this separate from Phase 3N so normalization and query effects remain measurable.
+### RR-053 - URL-query identity safety - DONE
+
+Completed work:
+
+- Limited candidate URL identity to host plus path.
+- Excluded the complete query string and fragment, preventing Google Shopping `q=HP+HD0900` from supplying target identity to an HP laptop.
+- Retained merchant product-path identity and valid source-title identity for Google Shopping offers.
+- Exact negative and positive regressions pass; no live search was run.
 
 ### Phase 3P - Model-token detection broadening - TODO
 
@@ -797,24 +804,25 @@ Do this only after backend trust and ranking are stronger.
 
 ## Immediate Next Task for Codex
 
-Run Phase 3N.
+Fix RR-052 only.
 
-Phase 3M proved Serper returned 40 raw shopping results for each tested query, but the first 20 structurally valid results all failed normalization/eligibility. Correct product offers using Google Shopping search URLs were rejected as search/listing pages, and specific `Shop-Vac` titles could be rejected by the generic `shop` title rule.
+The Phase 3O live proof showed `Peak HP` in RIDGID vacuum names being treated as Hewlett-Packard brand identity. RR-053 has removed the separate URL-query identity bypass. RR-002 remains a separate price-trust investigation.
 
 Task:
 
-1. Design the smallest safe distinction between Google Shopping offer URLs and ordinary Google search/listing URLs.
-2. Narrow the title false positive for the `Shop-Vac` brand without allowing generic shop/category titles.
-3. Add positive and negative deterministic tests before live proof.
-4. Preserve downstream product identity, eligibility, price, citation, and requirement gates.
-5. Run only a focused live proof after deterministic tests pass.
+1. Distinguish horsepower `HP` context from genuine Hewlett-Packard brand use with the existing shared brand system.
+2. Preserve genuine HP computer-brand detection.
+3. Cover both title-derived and metadata-derived `HP` inputs deterministically.
+4. Keep source-upgrade query, fallback, identity, eligibility, scoring, ranking, and trust behavior unchanged.
+5. Do not run live proof without explicit approval after deterministic checks pass.
 
 Do not:
 
 - change scoring, ranking, final selection, discovery, source-upgrade trigger logic, identity matching, query construction, fallback behavior, or model-token detection;
-- treat arbitrary Google search URLs as product pages;
-- hardcode DEWALT or a single product;
+- change RR-053 URL-query identity behavior;
+- fix RR-002 price trust in the same phase;
+- hardcode RIDGID or a single product;
 - loosen trust gates;
 - run a full baseline.
 
-Exit criteria: safe product-specific Serper Shopping results survive normalization while generic/listing/article/unsafe results remain blocked.
+Exit criteria: horsepower wording cannot become Hewlett-Packard brand identity, genuine HP products still detect correctly, and all deterministic safety checks pass.
