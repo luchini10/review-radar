@@ -635,8 +635,8 @@ Do not continue to the next Phase 4 step until all six files are updated as appr
 - Existing issue IDs updated: RR-002, RR-007, RR-008, RR-013, RR-015, RR-017, RR-022, RR-043, RR-056.
 - Status changes: None during 4F.
 - Required docs updated: All six Phase 4 documentation files.
-- Docs committed: Pending this phase checkpoint.
-- Commit: Pending.
+- Docs committed: Yes.
+- Commit: `844754e` (`docs: complete phase 4 issue harvest`).
 - Result: 61 total issues; broad quality remains inconsistent, with RR-058 the highest-priority Phase 5 safety fix.
 
 ---
