@@ -3454,3 +3454,46 @@ npm run qa:replay -- tests/fixtures/review-radar-live/shop-vac.json
 - RR-042 remains `Needs Investigation`.
 - RR-051 remains `Needs Investigation`; no snippet-less source-upgrade candidate reached identity matching in this run.
 - No additional live search was run.
+
+## <span style="color:green">**Codex QA Update - 2026-06-27 (RR-051: source-upgrade identity provenance safety)**</span>
+
+**Focused identity-safety fix. No scoring, ranking, final-selection, discovery breadth, source-upgrade trigger, query construction, fallback behavior, model-token detection, product eligibility, requirement filtering, price trust, or citation trust changes. No live search and no full baseline.**
+
+### Root cause
+
+- `buildCandidateFromResult` stored a synthetic query-derived fallback in the same `evidenceSources[].snippet` field used for real provider snippets.
+- `looksLikeSameProduct` consumed every candidate snippet and the request-derived candidate category as identity evidence.
+- A snippet-less wrong product could therefore inherit the target brand/model from `Found by Serper for query "..."` and pass the model-token identity fast path.
+
+### Fix
+
+- Added optional `snippetProvenance` to raw candidate evidence sources with values `source-derived` or `query-derived`.
+- Serper normalization marks real provider snippets as source-derived and synthetic fallback snippets as query-derived.
+- Source-upgrade identity ignores query-derived snippets and the request-derived category.
+- Provider title, inferred brand, merchant/source, URL, provider-derived specs, colors, and real provider snippets remain trusted identity evidence.
+- Synthetic fallback text remains present for diagnostics and existing non-identity behavior.
+
+### Safety proof
+
+- The exact snippet-less wrong-product regression changed from unsafe attachment to `identity_rejected`.
+- A generic source title cannot borrow the target model from the query.
+- A snippet-less candidate with the correct model in its provider title still attaches normally.
+- A real-title Google Shopping offer from RR-048 still attaches without a provider snippet.
+- The RR-049 specific `Shop-Vac` title behavior remains green.
+- Query construction, fallback count, trigger behavior, model-token behavior, and user-facing result shape remain unchanged.
+
+### Verification
+
+- Focused source-quality and Serper tests: 84/84 pass.
+- `npm run typecheck` - clean.
+- `npm run lint` - 0 errors, 3 pre-existing warnings.
+- `npm test` - 634/634 pass.
+- `node scripts/eval-pipeline.mjs` - red-flag checks clean.
+- No live search was run.
+
+### Status
+
+- RR-051: Fixed.
+- RR-047: Open and unchanged; Phase 3O remains next.
+- RR-042: Needs Investigation and unchanged pending a later trigger-producing live proof.
+- RR-048 and RR-049: Fixed and unchanged.

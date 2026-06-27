@@ -17,7 +17,7 @@ Phase 3N is implemented but not live-proven. One approved `shop vac` proof produ
 
 RR-047 remains open: the query builder detects `DeWalt` but drops it when selecting only the words immediately before model `DXV10SB`.
 
-RR-051 is a separate high-severity safety investigation: query-derived fallback snippet text may influence identity matching for snippet-less candidates. Do not rely on snippet-less source-upgrade evidence until that path has a deterministic safety fix.
+RR-051 is fixed deterministically. Serper snippets now carry explicit source/query provenance, and source-upgrade identity ignores query-derived fallback snippets plus the request-derived category while retaining source titles, merchant data, URLs, provider specs, and real provider snippets.
 
 ## Required next phase
 

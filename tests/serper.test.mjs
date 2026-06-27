@@ -95,6 +95,10 @@ describe("Serper product discovery", () => {
     assert.deepEqual(candidates[0].availableColors, ["black"]);
     assert.equal(candidates[0].dimensions.width, 63);
     assert.equal(candidates[0].evidenceSources[0].url, "https://shop.example.com/black-full-sleeper-sofa");
+    assert.equal(
+      candidates[0].evidenceSources[0].snippetProvenance,
+      "source-derived",
+    );
   });
 
   it("distinguishes raw Serper shopping results from eligibility-filtered candidates", () => {
@@ -200,6 +204,10 @@ describe("Serper product discovery", () => {
     assert.equal(
       evidenceCandidates[0].productUrl,
       "https://www.google.com/search?ibp=oshop&udm=28&prds=pid%3A123456789",
+    );
+    assert.equal(
+      evidenceCandidates[0].evidenceSources[0].snippetProvenance,
+      "query-derived",
     );
   });
 

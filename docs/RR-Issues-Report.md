@@ -19,8 +19,8 @@
 | Medium | 18 |
 | Low | 5 |
 | Open | 5 |
-| Needs Investigation | 7 |
-| Fixed | 38 |
+| Needs Investigation | 6 |
+| Fixed | 39 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -843,7 +843,7 @@
 | **Phase** | Phase 3E |
 | **Severity** | Medium |
 | **Title** | `modelTokens` regex misses mixed-case word-preceded numbers (Napoleon Rogue 525, Rogue XT 425) |
-| **Status** | Fixed |
+| **Status** | Open |
 
 **Description:** The `modelTokens` regex requires an uppercase letter directly preceding or within a short alphanumeric sequence (e.g., "XFD131", "WD1450"). Products with model numbers preceded by a lowercase word — like "Napoleon Rogue 525" or "Napoleon Rogue XT 425 SIB" — do not have a qualifying uppercase token directly adjacent to the number, so no model token is extracted. Products without a model token are ineligible for `upgradeWeakSourceEvidence`.
 
@@ -1119,7 +1119,7 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 | **Phase** | Phase 3M |
 | **Severity** | High |
 | **Title** | Correct Google Shopping product offers are rejected as generic search/listing URLs |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** Direct Phase 3M probes showed that Serper returned 40 raw shopping results and 20 structurally usable results for every tested query, but zero candidates survived normalization. A correct `DEWALT DXV10SB` offer was present. Serper represented it with a Google Shopping offer URL shaped as `https://www.google.com/search?ibp=oshop&...&udm=28...`; `isLikelySearchOrListingUrl` rejected it before source-upgrade identity matching or attachment.
 
@@ -1195,7 +1195,7 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 | **Phase** | Phase 3N |
 | **Severity** | High |
 | **Title** | Query-derived fallback snippet can contaminate source-upgrade identity matching |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** During Phase 3N negative-test construction, a normalized Serper shopping candidate without its own snippet inherited the existing fallback text `Found by Serper for query "<query>"`. Because the source-upgrade query contains the target product identity, that generated text can make a different returned product appear to share the target identity. In the deterministic probe, a wrong-product candidate attached evidence until candidate-specific snippet text was supplied. Phase 3N did not change this behavior because identity matching and snippet construction were explicitly out of scope.
 
@@ -1209,7 +1209,9 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 
 **Suggested fix or next action:** Before relying on snippet-less candidates in live source-upgrade proof, isolate query provenance from candidate identity text. The smallest safe phase should either exclude generated query fallback text from `looksLikeSameProduct` or mark its provenance so it cannot satisfy brand/model identity. Add a regression test with a snippet-less wrong model. Do not weaken identity matching.
 
-**Phase 3N live-proof note:** The approved `shop vac` proof produced no source-upgrade attempt, so no candidate reached identity matching and this risk was neither reproduced nor cleared live. Status remains `Needs Investigation`.
+**Phase 3N live-proof note:** The approved `shop vac` proof produced no source-upgrade attempt, so no candidate reached identity matching and the risk was not cleared by that live run. RR-051 was subsequently fixed deterministically as recorded below.
+
+**RR-051 fix:** Completed deterministically after Phase 3N. Serper normalization now labels each candidate snippet as `source-derived` or `query-derived`. Source-upgrade identity evaluation ignores query-derived snippets and the request-derived candidate category while continuing to use the provider title, inferred brand, merchant, URL, provider-derived specs, and real provider snippets. The synthetic fallback text remains available for diagnostics and existing non-identity behavior. Regression tests prove the exact snippet-less wrong-product attachment is blocked, generic source titles cannot borrow the target model from the query, and real same-model titles plus RR-048 Google Shopping offers still attach normally.
 
 ---
 
@@ -1318,17 +1320,16 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 - RR-044: `modelTokens` minimum length too restrictive for short model numbers
 - RR-047: Source-upgrade model identity drops a detected brand
 
-### Needs Investigation (7 issues)
+### Needs Investigation (6 issues)
 - RR-013: Thin winner crowd-out
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-041: Source-upgrade trigger not firing in Phase 3J live runs
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-- RR-051: Query-derived fallback snippet can contaminate source-upgrade identity matching
 
-### Fixed (38 issues)
-RR-001 through RR-012, RR-014, RR-016 through RR-023, RR-025 through RR-033, RR-036, RR-038 through RR-040, RR-046, RR-048 through RR-050
+### Fixed (39 issues)
+RR-001 through RR-012, RR-014, RR-016 through RR-023, RR-025 through RR-033, RR-036, RR-038 through RR-040, RR-046, RR-048 through RR-051
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -1337,12 +1338,11 @@ RR-001 through RR-012, RR-014, RR-016 through RR-023, RR-025 through RR-033, RR-
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-051** (High) — Prevent generated query fallback text from satisfying same-product identity before live source-upgrade proof.
-2. **RR-047** (High) — Phase 3O: preserve a detected brand in compact model-identity queries after normalization is fixed.
-3. **RR-042** (Medium) — Re-test the Phase 3L fallback after RR-048/RR-049 are fixed; raw provider coverage is proven, normalized coverage is not.
-4. **RR-041** (Medium) — Source-upgrade attempts remain inconsistent across live runs; add trigger-rate visibility if proof coverage continues to fail.
-5. **RR-043** (High) — Product-type taxonomy incomplete; add rules for all gold-benchmark categories.
-6. **RR-034 + RR-035 + RR-044** (Medium, batch) — Model-token detection gaps; fix together to avoid partial improvements.
-7. **RR-013** (Medium) — Thin winner crowd-out; requires citation-strength score integration (scoring change, not diagnostic).
-8. **RR-015** (High) — Run-to-run stability; requires deeper investigation into LLM temperature or deterministic candidate pinning.
-9. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain; re-measure with raw/structural/eligible diagnostics before changing sources.
+1. **RR-047** (High) — Phase 3O: preserve a detected brand in compact model-identity queries after normalization is fixed.
+2. **RR-042** (Medium) — Re-test the Phase 3L fallback after RR-048/RR-049 are fixed; raw provider coverage is proven, normalized coverage is not.
+3. **RR-041** (Medium) — Source-upgrade attempts remain inconsistent across live runs; add trigger-rate visibility if proof coverage continues to fail.
+4. **RR-043** (High) — Product-type taxonomy incomplete; add rules for all gold-benchmark categories.
+5. **RR-034 + RR-035 + RR-044** (Medium, batch) — Model-token detection gaps; fix together to avoid partial improvements.
+6. **RR-013** (Medium) — Thin winner crowd-out; requires citation-strength score integration (scoring change, not diagnostic).
+7. **RR-015** (High) — Run-to-run stability; requires deeper investigation into LLM temperature or deterministic candidate pinning.
+8. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain; re-measure with raw/structural/eligible diagnostics before changing sources.

@@ -185,13 +185,12 @@ function evidenceText(candidate: RawProductCandidate | SerperEvidenceSource) {
       [
         candidate.name,
         candidate.brand || "",
-        candidate.category,
         candidate.retailer || "",
         candidate.availableColors.join(" "),
         candidate.keySpecs.join(" "),
         ...candidate.evidenceSources.flatMap((source) => [
           source.title,
-          source.snippet,
+          source.snippetProvenance === "query-derived" ? "" : source.snippet,
           source.url,
         ]),
       ].join(" "),

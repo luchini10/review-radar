@@ -1118,6 +1118,9 @@ function buildCandidateFromResult(
         snippet:
           input.snippet ||
           `Found by Serper for query "${input.query}". Verify current price and availability before buying.`,
+        snippetProvenance: input.snippet
+          ? "source-derived"
+          : "query-derived",
       },
     ],
     requirementCheck: {

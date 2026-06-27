@@ -603,6 +603,148 @@ describe("upgradeWeakSourceEvidence", () => {
     );
   });
 
+  it("does not let a query-derived fallback snippet satisfy wrong-product identity", async () => {
+    const product = weakProduct("Weber Spirit E-325 3-Burner Gas Grill");
+    const result = makeResult([product]);
+    const req = makeReq("gas grill");
+    const candidates = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title: "Char-Broil Performance 475 4-Burner Gas Grill",
+            link: "https://hardware.example.com/products/char-broil-475",
+            source: "Example Hardware",
+            price: "$399",
+          },
+        ],
+      },
+      "Weber Spirit E-325 gas grill",
+      "gas grill",
+    );
+    const searchFn = async () => diagnosticSearchResult(candidates);
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(candidates.length, 1);
+    assert.match(
+      candidates[0].evidenceSources[0].snippet,
+      /Weber Spirit E-325 gas grill/,
+    );
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.ok(
+      !upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 399,
+      ),
+    );
+  });
+
+  it("accepts a snippet-less candidate whose source title carries the target model", async () => {
+    const product = weakProduct("DEWALT DXV10SB 10 Gallon Wet/Dry Vacuum", {
+      category: "shop vac",
+    });
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const candidates = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title: "DEWALT DXV10SB 10 Gallon Stainless Steel Wet/Dry Vacuum",
+            link: "https://hardware.example.com/products/dewalt-dxv10sb",
+            source: "Example Hardware",
+            price: "$199",
+          },
+        ],
+      },
+      "DEWALT DXV10SB shop vac",
+      "shop vac",
+    );
+    const searchFn = async () => diagnosticSearchResult(candidates);
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(candidates.length, 1);
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, true);
+    assert.ok(
+      upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 199,
+      ),
+    );
+  });
+
+  it("does not let a generic source title borrow a target model from the query", async () => {
+    const product = weakProduct("DEWALT DXV10SB 10 Gallon Wet/Dry Vacuum", {
+      category: "shop vac",
+    });
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const candidates = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title: "Premium Stainless Steel Cleaning Machine",
+            link: "https://hardware.example.com/products/cleaning-machine",
+            source: "Example Hardware",
+            price: "$129",
+          },
+        ],
+      },
+      "DEWALT DXV10SB shop vac",
+      "shop vac",
+    );
+    const searchFn = async () => diagnosticSearchResult(candidates);
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(candidates.length, 1);
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.ok(
+      !upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 129,
+      ),
+    );
+  });
+
+  it("accepts a real-title Google Shopping offer without a provider snippet", async () => {
+    const product = weakProduct("DEWALT DXV10SB 10 Gallon Wet/Dry Vacuum", {
+      category: "shop vac",
+    });
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const candidates = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title: "DEWALT DXV10SB 10 Gallon Stainless Steel Wet/Dry Vacuum",
+            link:
+              "https://www.google.com/search?ibp=oshop&udm=28&prds=pid%3A123456789",
+            source: "Example Hardware",
+            price: "$199",
+          },
+        ],
+      },
+      "DEWALT DXV10SB shop vac",
+      "shop vac",
+      { allowGoogleShoppingOfferEvidence: true },
+    );
+    const searchFn = async () => diagnosticSearchResult(candidates);
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(candidates.length, 1);
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, true);
+    assert.ok(
+      upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 199,
+      ),
+    );
+  });
+
   it("does NOT upgrade a candidate that has a verified price already", async () => {
     const product = weakProduct("Weber Spirit E-325 3-Burner Gas Grill", {
       extra: {

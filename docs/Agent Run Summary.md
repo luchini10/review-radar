@@ -653,3 +653,21 @@ New entries should keep the same format and stay easy to read.
 **Issue status:** RR-048 and RR-049 are deterministically fixed. RR-042 remains open pending live proof. RR-047 remains open for Phase 3O.
 
 **Next recommended step:** Phase 3O should preserve detected brand identity in compact source-upgrade model queries, followed by an approved focused `shop vac` live proof.
+
+## Codex Run - 2026-06-27 RR-051
+
+**Goal:** Prevent synthetic query fallback text from helping a source-upgrade candidate pass same-product identity.
+
+**What it changed:** Serper candidate snippets now record whether they came from the provider or from ReviewRadar's query fallback. Source-upgrade identity ignores query-derived snippets and the request-derived category while retaining real source identity evidence.
+
+**What it proved:** The exact snippet-less wrong-product attachment is blocked; generic source titles cannot borrow target models from the query; real same-model titles and valid Google Shopping offers still attach.
+
+**What stayed the same:** Query construction, fallback behavior, trigger logic, model-token detection, product eligibility, scoring, ranking, final selection, requirement filtering, and trust gates.
+
+**Tests run:** Focused tests passed 84/84. Typecheck passed. Lint had 0 errors and 3 pre-existing warnings. Full tests passed 634/634. Eval red-flag checks were clean.
+
+**Live checks run:** None.
+
+**Issue status:** RR-051 fixed. RR-047 remains open for Phase 3O. RR-042 remains under investigation pending a trigger-producing live proof.
+
+**Next recommended step:** Phase 3O should preserve detected brand identity in compact source-upgrade queries.

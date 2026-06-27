@@ -448,6 +448,7 @@ export type RawProductCandidate = {
     title: string;
     url: string;
     snippet: string;
+    snippetProvenance?: "source-derived" | "query-derived";
   }[];
   requirementCheck: RequirementCheck;
 };

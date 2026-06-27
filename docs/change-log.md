@@ -13,6 +13,16 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-27
 
+### Codex - RR-051: source-upgrade identity provenance safety
+- Marked Serper candidate snippets as `source-derived` or `query-derived`.
+- Source-upgrade same-product identity now ignores synthetic query-derived fallback snippets and the request-derived category, preventing the target query from supplying identity evidence to a returned candidate.
+- Provider titles, inferred brand, merchant, URL, provider-derived specs, colors, and real provider snippets continue to participate in identity matching.
+- Synthetic fallback text remains available for diagnostics and existing non-identity behavior.
+- Added exact negative regressions plus positive same-model and Google Shopping offer boundaries.
+- No query, fallback, trigger, model-token, eligibility, scoring, ranking, requirement-filtering, or trust-gate behavior changed.
+- Verification: focused tests 84/84; typecheck clean; lint 0 errors with 3 pre-existing warnings; full suite 634/634; eval red-flag checks clean.
+- No live search was run. RR-051 is fixed; RR-047 remains the next Phase 3O target.
+
 ### Codex - Phase 3N: Google Shopping offer and Shop-Vac title eligibility
 - Added an explicit source-upgrade evidence mode for narrowly identified Google Shopping offers. The URL must be a Google `/search` offer carrying `ibp=oshop`, `udm=28`, and a product/catalog identifier, and the result must also have a specific title, positive price, and merchant/source metadata.
 - Kept general discovery and shared product-card eligibility unchanged: ordinary Google search pages, incomplete offer URLs, generic titles, and Google offer URLs used as product cards remain blocked.
