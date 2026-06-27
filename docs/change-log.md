@@ -13,6 +13,16 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-27
 
+### Codex - Phase 3N: Google Shopping offer and Shop-Vac title eligibility
+- Added an explicit source-upgrade evidence mode for narrowly identified Google Shopping offers. The URL must be a Google `/search` offer carrying `ibp=oshop`, `udm=28`, and a product/catalog identifier, and the result must also have a specific title, positive price, and merchant/source metadata.
+- Kept general discovery and shared product-card eligibility unchanged: ordinary Google search pages, incomplete offer URLs, generic titles, and Google offer URLs used as product cards remain blocked.
+- Prefer a supplied merchant product URL over the Google Shopping offer URL in source-upgrade evidence mode.
+- Narrowed the generic `shop` title rule so specific `Shop-Vac` products survive while `Shop Vacuums`, `Shop All Vacuums`, `Shop By Category`, and similar listing titles remain blocked.
+- Existing same-product identity matching still gates attachment. No scoring, ranking, final-selection, trigger, query/fallback, model-token, price-trust, citation-trust, or requirement-filtering behavior changed.
+- Verification: focused tests 88/88; typecheck clean; lint 0 errors with 3 pre-existing warnings; full suite 630/630; eval red-flag checks clean.
+- One approved `shop vac` live proof was run. It produced `sourceUpgradeTraces: 0`, so the normalization change was not exercised. No unsafe candidate, card, link, identity evaluation, or evidence attachment appeared.
+- RR-048 and RR-049 are deterministically fixed but not live-proven; RR-042 and RR-051 remain `Needs Investigation`, and RR-047 remains open for Phase 3O.
+
 ### Codex - Phase 3M: source-upgrade raw Serper and query-identity diagnostics
 - Added debug-only source-upgrade query-input tracing for original/cleaned name, metadata/detected brand, model tokens, selected identity phrase, and category context.
 - Added Serper Shopping diagnostics that distinguish raw results, structurally usable results, eligibility-passing candidates, organic fallback candidates, and final returned candidates. Rejection counts and capped raw samples explain normalization losses.

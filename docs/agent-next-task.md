@@ -1,50 +1,53 @@
 # Agent Next Task
 
-Generated: 2026-06-26
+Generated: 2026-06-27
 
 ## Current next task
 
-**Phase 3N - Serper Shopping product-link/title eligibility fix**
+**Phase 3O - brand-preserving source-upgrade query identity**
 
-Phase 3M proved that Serper raw coverage is not empty:
+Phase 3N fixed RR-048 and RR-049 deterministically:
 
-- `Wet/Dry Vacuum DXV10SB`: 40 raw, 20 structural, 0 eligible
-- `Wet/Dry Vacuum DXV10SB shop vac`: 40 raw, 20 structural, 0 eligible
-- `DEWALT DXV10SB shop vac`: 40 raw, 20 structural, 0 eligible
+- Source-upgrade Serper normalization can now retain a specific Google Shopping offer only when evidence mode is explicitly enabled and the URL/result carry offer identifiers, a specific title, price, and merchant metadata.
+- Ordinary Google searches and Google Shopping/category pages remain blocked as product cards.
+- Merchant product URLs are preferred over Google offer URLs in evidence mode.
+- Specific `Shop-Vac` product titles survive, while generic shop/category titles remain blocked.
 
-A correct DEWALT result was present but used a `google.com/search?ibp=oshop...` Google Shopping offer URL and was rejected by the search/listing URL gate. Some specific `Shop-Vac` titles were also rejected because the generic title rule treats `shop` as non-product wording.
+Phase 3N is implemented but not live-proven. One approved `shop vac` proof produced `sourceUpgradeTraces: 0`, so no normalization, identity, or attachment path ran. RR-042 remains open until a trigger-producing focused live proof confirms normalized candidates return and source upgrade behaves safely.
 
-The query builder separately detected `DeWalt` but dropped it when it selected only the two words immediately before model `DXV10SB`. That query fix is deferred until after normalization is repaired because the brand-preserving control was also reduced to zero eligible candidates.
+RR-047 remains open: the query builder detects `DeWalt` but drops it when selecting only the words immediately before model `DXV10SB`.
+
+RR-051 is a separate high-severity safety investigation: query-derived fallback snippet text may influence identity matching for snippet-less candidates. Do not rely on snippet-less source-upgrade evidence until that path has a deterministic safety fix.
 
 ## Required next phase
 
-Implement one focused normalization/eligibility fix. Do not run a full baseline.
+Implement one focused source-upgrade query-identity fix. Do not run a full baseline.
 
 Required behavior:
 
-1. Safely distinguish Google Shopping offer URLs from ordinary Google search/listing URLs.
-2. Prefer or extract a real merchant product URL when the response provides one.
-3. Avoid rejecting the `Shop-Vac` brand merely because it contains `shop`.
-4. Keep generic shop/category titles and unsafe pages blocked.
+1. Preserve a reliably detected brand when building a compact model-based source-upgrade query.
+2. Keep the model token and compact category context.
+3. Avoid duplicate brand/category words and long retailer-display-title noise.
+4. Keep the Phase 3I primary and Phase 3K single-fallback bounds.
 
 Tests must cover:
 
-- a specific Google Shopping offer result
-- an ordinary Google search URL that must remain blocked
-- a specific `Shop-Vac` product title
-- a generic shop/category title that must remain blocked
-- accessories, parts, wrong models, listing pages, article pages, and unsafe prices
-- unchanged non-debug result shape
+- brand-led long titles where the model appears late
+- already compact brand/model titles
+- titles without a reliably detected brand
+- duplicate brand/category prevention
+- unchanged trigger, fallback count, identity matching, and non-debug result shape
 
-After deterministic tests pass, run one focused live proof to confirm candidates reach source-upgrade identity sampling.
+After deterministic tests pass, request approval for one focused `shop vac` live proof covering Phase 3N plus Phase 3O.
 
 Do not:
 
-- change query construction, fallback behavior, identity matching, extraction, scoring, ranking, discovery, source-upgrade trigger logic, model-token detection, or trust gates;
-- hardcode brands, products, or categories;
+- change scoring, ranking, discovery, source-upgrade trigger logic, fallback count, identity matching, model-token detection, eligibility, extraction, or trust gates;
+- add product-, brand-, or category-specific branches;
 - run a full baseline.
 
 Reference:
 
+- `docs/RR-Issues-Report.md`
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` Phase 3M entry
+- `docs/qa-loop-results.md` Phase 3N entry

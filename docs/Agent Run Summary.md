@@ -637,3 +637,19 @@ New entries should keep the same format and stay easy to read.
 **Live checks run:** Fresh `shop vac` and conditionally allowed `gas grill` fixtures, followed by three direct focused Serper Shopping probes. No full baseline.
 
 **Next recommended step:** Phase 3N should safely normalize specific Google Shopping offer links and fix the `Shop-Vac` title false positive, while preserving all category/listing/article/accessory safety gates. Brand-preserving query construction remains a separate Phase 3O.
+
+## Codex Run - 2026-06-27 Phase 3N
+
+**Goal:** Fix RR-048 and RR-049 without widening general discovery or product-card eligibility.
+
+**What it changed:** Source upgrade can now explicitly normalize a narrowly identified Google Shopping offer as evidence, preferring a merchant URL when available. Specific `Shop-Vac` product titles no longer collide with the generic `shop` page rule.
+
+**What stayed the same:** Ordinary Google searches and Google offer URLs remain blocked as product cards. Scoring, ranking, final selection, source-upgrade trigger and query/fallback behavior, identity matching, model-token detection, and trust gates were not changed.
+
+**Tests run:** Focused tests passed 88/88. Typecheck passed. Lint had 0 errors and 3 pre-existing warnings. Full tests passed 630/630. Eval red-flag checks were clean.
+
+**Live checks run:** One approved `shop vac` save/replay. It produced no source-upgrade attempt, so Phase 3N remains not live-proven. No unsafe candidate or evidence attachment appeared.
+
+**Issue status:** RR-048 and RR-049 are deterministically fixed. RR-042 remains open pending live proof. RR-047 remains open for Phase 3O.
+
+**Next recommended step:** Phase 3O should preserve detected brand identity in compact source-upgrade model queries, followed by an approved focused `shop vac` live proof.

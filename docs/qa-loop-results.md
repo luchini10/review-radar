@@ -3361,3 +3361,96 @@ Recommended order:
 - `npm test` - 624/624 pass.
 - `node scripts/eval-pipeline.mjs` - red-flag checks clean.
 - User-facing non-debug result shape remains unchanged.
+
+## <span style="color:green">**Codex QA Update - 2026-06-27 (Phase 3N: RR-048 / RR-049 eligibility fixes)**</span>
+
+**Focused behavior fix. No scoring, ranking, final-selection, discovery breadth, source-upgrade trigger, query construction, fallback behavior, identity matching, model-token detection, requirement filtering, or trust-gate changes. No live search and no full baseline.**
+
+### RR-048 fix
+
+- Added an explicit Serper Shopping normalization option enabled only by the default source-upgrade evidence search.
+- A Google Shopping URL is eligible in this mode only when it has Google host, `/search`, `ibp=oshop`, `udm=28`, a product/catalog identifier in `prds`, a specific title, a positive price, and non-Google merchant/source metadata.
+- If Serper supplies a direct merchant URL, evidence mode prefers it over the Google offer URL.
+- General discovery does not enable this mode.
+- The shared product-card classifier still rejects both ordinary Google searches and Google Shopping offer URLs.
+- Existing `looksLikeSameProduct` identity matching still runs before any evidence attaches.
+
+### RR-049 fix
+
+- Replaced the broad title-level `shop` rejection with narrow listing/action shapes.
+- A specific title such as `Shop-Vac 10-Gallon 5.5 HP Wet/Dry Shop Vacuum with Accessories` now survives normalization.
+- Generic titles including `Shop Vacuums`, `Shop Wet/Dry Vacuums`, `Shop Vacuum Cleaners`, `Shop All Vacuums`, `Shop Tools`, `Shop By Category`, and `Best Shop Vacuums` remain blocked.
+
+### Safety proof
+
+- Evidence-only normalization does not widen ordinary discovery.
+- Ordinary and incomplete Google search/offer URLs remain blocked.
+- Generic Google Shopping titles remain blocked.
+- Missing merchant/source metadata remains blocked.
+- Merchant URLs are preferred when available.
+- A wrong-model Google Shopping offer can normalize for identity evaluation but does not attach evidence.
+- Existing source-upgrade trigger, query/fallback, identity, scoring, ranking, eligibility, and trust tests remain green.
+
+### Verification
+
+- Focused Serper, product-eligibility, and source-upgrade tests: 88/88 pass.
+- `npm run typecheck` - clean.
+- `npm run lint` - 0 errors, 3 pre-existing warnings.
+- `npm test` - 630/630 pass.
+- `node scripts/eval-pipeline.mjs` - red-flag checks clean.
+- No live search was run.
+
+### Status and next task
+
+- RR-048: fixed deterministically; live proof pending.
+- RR-049: fixed deterministically; live proof pending.
+- RR-042: remains open until a focused live run proves normalized candidates return and source upgrade behaves safely.
+- RR-047: remains open; Phase 3O should preserve detected brand identity in source-upgrade queries.
+- Phase 3N is complete but not live-proven.
+- Recommended next task: Phase 3O, then request approval for one focused `shop vac` live proof of Phase 3N plus Phase 3O.
+
+### Additional observation (RR-051)
+
+During negative-test construction, a Serper candidate with no result snippet inherited the existing query-derived fallback text. That query text can influence the existing identity matcher. No identity or snippet behavior was changed because it is outside Phase 3N. Treat this as a separate safety investigation before relying on snippet-less candidates in live proof.
+
+## <span style="color:green">**Codex QA Update - 2026-06-27 (Phase 3N: focused `shop vac` live proof)**</span>
+
+**One approved live search only. No app-code, scoring, ranking, discovery, trigger, query, fallback, identity, model-token, requirement-filtering, or trust-gate changes were made during the proof.**
+
+### Command
+
+```text
+npm run qa:save-fixture -- "shop vac"
+npm run qa:replay -- tests/fixtures/review-radar-live/shop-vac.json
+```
+
+### Result
+
+- Candidate pool: 17.
+- Final candidates: 4.
+- Final exact matches: 2.
+- `sourceUpgradeTraces`: 0.
+- No product qualified for source upgrade.
+- Attempted product: none.
+- Primary/fallback query: none.
+- Raw, structural, eligible, and returned source-upgrade counts: unavailable because no source-upgrade search ran.
+- Rejection reasons and candidate samples: unavailable because no source-upgrade search ran.
+- Candidates reaching source-upgrade identity matching: 0.
+- Evidence attached by source upgrade: false / none.
+- Unsafe product, card, or link allowed by Phase 3N: none observed.
+
+### Final products
+
+- Exact #1: `5-Gallon* 3 Peak HP Wet/Dry Vacuum VOC507PF - Vacmaster.com`.
+- Exact #2: `Hyper Tough Wet Dry Vacuum 1.5 Gallon 2 Peak HP`.
+- Near: `DEWALT Portable Wet/Dry Vacuum 6 Gal 4 HP (DXV06P)`.
+- Near: `WD Multi-Purpose Wet-Dry Vacuum Cleaner - Kärcher`.
+
+### Verdict
+
+- Live proof is **inconclusive** because Phase 3N normalization was not exercised.
+- This is a source-upgrade proof-coverage failure, not evidence that RR-048/RR-049 regressed.
+- RR-048 and RR-049 remain deterministically fixed.
+- RR-042 remains `Needs Investigation`.
+- RR-051 remains `Needs Investigation`; no snippet-less source-upgrade candidate reached identity matching in this run.
+- No additional live search was run.

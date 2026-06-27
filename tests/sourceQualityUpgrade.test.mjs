@@ -7,6 +7,7 @@ import {
   needsSourceUpgrade,
   upgradeWeakSourceEvidence,
 } from "../lib/requirementEvidenceRescue.ts";
+import { normalizeSerperShoppingResults } from "../lib/search/serper.ts";
 
 // ── Fixture helpers ───────────────────────────────────────────────────────────
 
@@ -564,6 +565,42 @@ describe("upgradeWeakSourceEvidence", () => {
     assert.ok(!p.metadata?.offers?.some((o) => o.price?.value), "no price merged");
     assert.ok(!p.metadata?.rating?.value, "no rating merged");
     assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+  });
+
+  it("does not attach an allowed Google Shopping offer when identity mismatches", async () => {
+    const product = weakProduct("Weber Spirit E-325 3-Burner Gas Grill");
+    const result = makeResult([product]);
+    const req = makeReq("gas grill");
+    const candidates = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title: "Char-Broil Performance 475 4-Burner Gas Grill",
+            link:
+              "https://www.google.com/search?ibp=oshop&udm=28&prds=pid%3A987654321",
+            source: "Example Hardware",
+            price: "$399",
+            snippet: "Char-Broil Performance 475 gas grill offer.",
+          },
+        ],
+      },
+      "Weber Spirit E-325 gas grill",
+      "gas grill",
+      { allowGoogleShoppingOfferEvidence: true },
+    );
+    const searchFn = async () => diagnosticSearchResult(candidates);
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(candidates.length, 1);
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.ok(
+      !upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 399,
+      ),
+    );
   });
 
   it("does NOT upgrade a candidate that has a verified price already", async () => {

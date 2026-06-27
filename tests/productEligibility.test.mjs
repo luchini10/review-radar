@@ -45,6 +45,23 @@ describe("shared product eligibility classifier", () => {
     assert.equal(homeDepotCategory.status, "listing_or_search");
   });
 
+  it("keeps Google search and Shopping offer URLs out of product cards", () => {
+    const ordinarySearch = classify({
+      name: "DEWALT DXV10SB Wet/Dry Vacuum",
+      sourceTitle: "DEWALT DXV10SB Wet/Dry Vacuum",
+      url: "https://www.google.com/search?q=DEWALT+DXV10SB",
+    });
+    const shoppingOffer = classify({
+      name: "DEWALT DXV10SB Wet/Dry Vacuum",
+      sourceTitle: "DEWALT DXV10SB Wet/Dry Vacuum",
+      url:
+        "https://www.google.com/search?ibp=oshop&udm=28&prds=pid%3A123456789",
+    });
+
+    assert.equal(ordinarySearch.canRenderAsProductCard, false);
+    assert.equal(shoppingOffer.canRenderAsProductCard, false);
+  });
+
   it("rejects marketplace browse pages that look like best-product collections", () => {
     const ebayBrowsePage = classify({
       name: "Best Craftsman Wet & Dry Vacuum Cleaners - eBay",

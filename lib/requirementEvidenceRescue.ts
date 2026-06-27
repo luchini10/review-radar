@@ -1370,7 +1370,12 @@ export async function upgradeWeakSourceEvidence<T extends RecommendationResult>(
   } = {},
 ): Promise<SourceUpgradeOutcome<T>> {
   const category = baseProductCategoryFromQuery(requirements.query);
-  const searchFn = options.searchFn ?? searchSerperShoppingWithDiagnostics;
+  const searchFn =
+    options.searchFn ??
+    ((query, searchCategory) =>
+      searchSerperShoppingWithDiagnostics(query, searchCategory, {
+        allowGoogleShoppingOfferEvidence: true,
+      }));
 
   const seen = new Set<string>();
   const allCandidates = [

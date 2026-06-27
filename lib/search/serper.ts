@@ -508,6 +508,26 @@ function firstString(...values: unknown[]) {
   return "";
 }
 
+function preferredShoppingResultUrl(
+  result: SerperShoppingResult,
+  preferMerchantUrl = false,
+) {
+  const urls = [result.productLink, result.product_link, result.link]
+    .map(asString)
+    .filter(Boolean);
+
+  if (!preferMerchantUrl) {
+    return urls[0] || "";
+  }
+
+  const merchantUrl = urls.find((value) => {
+    const parsed = parseUrl(value);
+    return parsed && !normalizedHost(parsed).endsWith("google.com");
+  });
+
+  return merchantUrl || urls[0] || "";
+}
+
 function parseReviewCount(value: unknown) {
   return asNumber(value);
 }
@@ -640,7 +660,8 @@ function titleLooksLikeSpecificProduct(title: string) {
     /^\s*compare\s+(?:at|prices?|stores?)\b/i,
     /\bcompare\s+at\s+\d+\+?\s+stores\b/i,
     /\bprice comparison\b/i,
-    /\bshop\b/i,
+    /^\s*shop\s+(?:all|by|for|from|category|collection|tools?|vacuums?|vacuum cleaners?|wet\s*\/?\s*dry vacuums?)\b/i,
+    /^\s*(?:best|top)\s+shop\s+vacuums?\b/i,
     /\bshopping\b/i,
     /\bcategory\b/i,
     /\bcollection\b/i,
@@ -917,13 +938,41 @@ function isLikelySearchOrListingUrl(url: URL) {
 type SpecificProductCandidateInput = {
   imageUrl: string;
   price: number | null;
+  retailer: string;
   snippet: string;
   title: string;
   url: string;
 };
 
+export type SerperShoppingNormalizationOptions = {
+  allowGoogleShoppingOfferEvidence?: boolean;
+};
+
+function isSpecificGoogleShoppingOffer(
+  input: SpecificProductCandidateInput,
+  parsedUrl: URL,
+) {
+  const host = normalizedHost(parsedUrl);
+  const productIdentifiers = parsedUrl.searchParams.get("prds") || "";
+
+  return (
+    (host === "google.com" || host.endsWith(".google.com")) &&
+    parsedUrl.pathname.toLowerCase() === "/search" &&
+    parsedUrl.searchParams.get("ibp") === "oshop" &&
+    parsedUrl.searchParams.get("udm") === "28" &&
+    /(?:pid|productid|catalogid|localannotatedofferid):/i.test(
+      productIdentifiers,
+    ) &&
+    input.price !== null &&
+    input.price > 0 &&
+    Boolean(input.retailer) &&
+    !/\bgoogle\b/i.test(normalizeText(input.retailer))
+  );
+}
+
 function specificProductCandidateRejectionReason(
   input: SpecificProductCandidateInput,
+  options: SerperShoppingNormalizationOptions = {},
 ) {
   const parsedUrl = parseUrl(input.url);
 
@@ -935,7 +984,11 @@ function specificProductCandidateRejectionReason(
     return "generic_or_non_product_title";
   }
 
-  if (isLikelySearchOrListingUrl(parsedUrl)) {
+  const isAllowedGoogleShoppingOffer =
+    options.allowGoogleShoppingOfferEvidence === true &&
+    isSpecificGoogleShoppingOffer(input, parsedUrl);
+
+  if (isLikelySearchOrListingUrl(parsedUrl) && !isAllowedGoogleShoppingOffer) {
     return "search_or_listing_url";
   }
 
@@ -962,11 +1015,12 @@ function specificProductCandidateRejectionReason(
     url: input.url,
   });
 
-  if (!eligibility.canRenderAsProductCard) {
+  if (!eligibility.canRenderAsProductCard && !isAllowedGoogleShoppingOffer) {
     return "product_eligibility_rejected";
   }
 
   if (
+    isAllowedGoogleShoppingOffer ||
     isKnownProductUrl(parsedUrl) ||
     pathLooksLikeProductDetail(parsedUrl) ||
     titleHasModelOrSku(input.title) ||
@@ -978,27 +1032,41 @@ function specificProductCandidateRejectionReason(
   return "insufficient_product_detail";
 }
 
-function looksLikeSpecificProductCandidate(input: SpecificProductCandidateInput) {
-  return specificProductCandidateRejectionReason(input) === null;
+function looksLikeSpecificProductCandidate(
+  input: SpecificProductCandidateInput,
+  options: SerperShoppingNormalizationOptions = {},
+) {
+  return specificProductCandidateRejectionReason(input, options) === null;
 }
 
-function buildCandidateFromResult(input: {
-  category: string;
-  imageUrl: string;
-  price: number | null;
-  query: string;
-  rating: number | null;
-  retailer: string | null;
-  reviewCount: number | null;
-  snippet: string;
-  title: string;
-  url: string;
-}): RawProductCandidate | null {
+function buildCandidateFromResult(
+  input: {
+    category: string;
+    imageUrl: string;
+    price: number | null;
+    query: string;
+    rating: number | null;
+    retailer: string | null;
+    reviewCount: number | null;
+    snippet: string;
+    title: string;
+    url: string;
+  },
+  options: SerperShoppingNormalizationOptions = {},
+): RawProductCandidate | null {
   if (!input.title || !isHttpUrl(input.url)) {
     return null;
   }
 
-  if (!looksLikeSpecificProductCandidate(input)) {
+  if (
+    !looksLikeSpecificProductCandidate(
+      {
+        ...input,
+        retailer: input.retailer || "",
+      },
+      options,
+    )
+  ) {
     return null;
   }
 
@@ -1065,12 +1133,16 @@ export function normalizeSerperShoppingResults(
   response: SerperResponse,
   query: string,
   category: string,
+  options: SerperShoppingNormalizationOptions = {},
 ) {
   return (response.shopping || [])
     .slice(0, MAX_NORMALIZED_RESULTS_PER_QUERY)
     .flatMap((result) => {
       const title = asString(result.title);
-      const productUrl = firstString(result.productLink, result.product_link, result.link);
+      const productUrl = preferredShoppingResultUrl(
+        result,
+        options.allowGoogleShoppingOfferEvidence,
+      );
       const snippet = compact([
         asString(result.snippet),
         Array.isArray(result.extensions) ? result.extensions.join(" ") : "",
@@ -1098,7 +1170,7 @@ export function normalizeSerperShoppingResults(
         snippet,
         title,
         url: productUrl,
-      });
+      }, options);
 
       return candidate ? [candidate] : [];
     });
@@ -1106,17 +1178,14 @@ export function normalizeSerperShoppingResults(
 
 function structurallyNormalizableShoppingResult(result: SerperShoppingResult) {
   const title = asString(result.title);
-  const productUrl = firstString(
-    result.productLink,
-    result.product_link,
-    result.link,
-  );
+  const productUrl = preferredShoppingResultUrl(result);
 
   return Boolean(title && isHttpUrl(productUrl));
 }
 
 function shoppingResultDiagnosticInput(
   result: SerperShoppingResult,
+  options: SerperShoppingNormalizationOptions = {},
 ): SpecificProductCandidateInput {
   return {
     imageUrl: firstString(
@@ -1129,6 +1198,7 @@ function shoppingResultDiagnosticInput(
       result.extractedPrice ?? result.extracted_price ?? result.price,
       result.priceRaw ?? result.price_raw,
     ),
+    retailer: asString(result.source),
     snippet: compact([
       asString(result.snippet),
       Array.isArray(result.extensions) ? result.extensions.join(" ") : "",
@@ -1137,7 +1207,10 @@ function shoppingResultDiagnosticInput(
         : "",
     ]).join(" "),
     title: asString(result.title),
-    url: firstString(result.productLink, result.product_link, result.link),
+    url: preferredShoppingResultUrl(
+      result,
+      options.allowGoogleShoppingOfferEvidence,
+    ),
   };
 }
 
@@ -1145,6 +1218,7 @@ export function diagnoseSerperShoppingResponse(
   response: SerperResponse,
   query: string,
   category: string,
+  options: SerperShoppingNormalizationOptions = {},
 ): SerperShoppingSearchResult {
   const rawShoppingResults = response.shopping || [];
   const consideredShoppingResults = rawShoppingResults.slice(
@@ -1155,6 +1229,7 @@ export function diagnoseSerperShoppingResponse(
     response,
     query,
     category,
+    options,
   );
   const organicCandidates =
     shoppingCandidates.length === 0
@@ -1165,8 +1240,11 @@ export function diagnoseSerperShoppingResponse(
   const shoppingRejectionReasons: Record<string, number> = {};
   const shoppingRejectionSample = consideredShoppingResults
     .map((result) => {
-      const input = shoppingResultDiagnosticInput(result);
-      const rejectionReason = specificProductCandidateRejectionReason(input);
+      const input = shoppingResultDiagnosticInput(result, options);
+      const rejectionReason = specificProductCandidateRejectionReason(
+        input,
+        options,
+      );
 
       if (rejectionReason) {
         shoppingRejectionReasons[rejectionReason] =
@@ -1472,6 +1550,7 @@ function directRetailerSiteQuery(engine: DirectRetailerEngine) {
 export async function searchSerperShoppingWithDiagnostics(
   query: string,
   category = query,
+  options: SerperShoppingNormalizationOptions = {},
 ): Promise<SerperShoppingSearchResult> {
   try {
     const response = await fetchSerper({
@@ -1499,7 +1578,7 @@ export async function searchSerperShoppingWithDiagnostics(
       };
     }
 
-    return diagnoseSerperShoppingResponse(response, query, category);
+    return diagnoseSerperShoppingResponse(response, query, category, options);
   } catch (error) {
     logSerperWarning("Shopping search skipped after an API error.", {
       query,

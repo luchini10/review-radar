@@ -168,6 +168,149 @@ describe("Serper product discovery", () => {
     );
   });
 
+  it("allows a specific Google Shopping offer only in evidence normalization mode", () => {
+    const response = {
+      shopping: [
+        {
+          title:
+            "DEWALT DXV10SB 10 Gal. Stainless Steel Wet/Dry Vacuum with Accessories",
+          link:
+            "https://www.google.com/search?ibp=oshop&udm=28&prds=pid%3A123456789",
+          source: "Acme Hardware",
+          price: "$199",
+          imageUrl: "https://example.com/dxv10sb.jpg",
+        },
+      ],
+    };
+
+    const discoveryCandidates = normalizeSerperShoppingResults(
+      response,
+      "DEWALT DXV10SB shop vac",
+      "shop vac",
+    );
+    const evidenceCandidates = normalizeSerperShoppingResults(
+      response,
+      "DEWALT DXV10SB shop vac",
+      "shop vac",
+      { allowGoogleShoppingOfferEvidence: true },
+    );
+
+    assert.equal(discoveryCandidates.length, 0);
+    assert.equal(evidenceCandidates.length, 1);
+    assert.equal(
+      evidenceCandidates[0].productUrl,
+      "https://www.google.com/search?ibp=oshop&udm=28&prds=pid%3A123456789",
+    );
+  });
+
+  it("keeps ordinary and incomplete Google search pages out of evidence normalization", () => {
+    const candidates = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title: "DEWALT DXV10SB Wet/Dry Vacuum",
+            link: "https://www.google.com/search?q=DEWALT+DXV10SB",
+            source: "Acme Hardware",
+            price: "$199",
+          },
+          {
+            title: "DEWALT DXV10SB Wet/Dry Vacuum",
+            link:
+              "https://www.google.com/search?ibp=oshop&udm=28&q=DEWALT+DXV10SB",
+            source: "Acme Hardware",
+            price: "$199",
+          },
+          {
+            title: "Shop Wet/Dry Vacuums",
+            link:
+              "https://www.google.com/search?ibp=oshop&udm=28&prds=pid%3A123456789",
+            source: "Acme Hardware",
+            price: "$199",
+          },
+          {
+            title: "DEWALT DXV10SB Wet/Dry Vacuum",
+            link:
+              "https://www.google.com/search?ibp=oshop&udm=28&prds=pid%3A123456789",
+            source: "",
+            price: "$199",
+          },
+        ],
+      },
+      "DEWALT DXV10SB shop vac",
+      "shop vac",
+      { allowGoogleShoppingOfferEvidence: true },
+    );
+
+    assert.equal(candidates.length, 0);
+  });
+
+  it("prefers a merchant product URL over a Google Shopping offer URL", () => {
+    const [candidate] = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title: "DEWALT DXV10SB 10 Gal. Wet/Dry Vacuum",
+            productLink:
+              "https://www.google.com/search?ibp=oshop&udm=28&prds=pid%3A123456789",
+            link: "https://hardware.example.com/products/dewalt-dxv10sb",
+            source: "Acme Hardware",
+            price: "$199",
+          },
+        ],
+      },
+      "DEWALT DXV10SB shop vac",
+      "shop vac",
+      { allowGoogleShoppingOfferEvidence: true },
+    );
+
+    assert.equal(
+      candidate.productUrl,
+      "https://hardware.example.com/products/dewalt-dxv10sb",
+    );
+  });
+
+  it("distinguishes specific Shop-Vac products from generic shop pages", () => {
+    const specific = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title:
+              "Shop-Vac 10-Gallon 5.5 HP Wet/Dry Shop Vacuum with Accessories",
+            link: "https://store.example.com/products/sv-10-gallon-55hp",
+            source: "Example Store",
+            price: "$129",
+          },
+        ],
+      },
+      "shop vac",
+      "shop vac",
+    );
+    const genericTitles = [
+      "Shop Vacuums",
+      "Shop Wet/Dry Vacuums",
+      "Shop Vacuum Cleaners",
+      "Shop All Vacuums",
+      "Shop Tools",
+      "Shop By Category",
+      "Best Shop Vacuums",
+    ];
+    const generic = normalizeSerperShoppingResults(
+      {
+        shopping: genericTitles.map((title, index) => ({
+          title,
+          link: `https://store.example.com/category/${index}`,
+          source: "Example Store",
+          price: "$129",
+        })),
+      },
+      "shop vac",
+      "shop vac",
+    );
+
+    assert.equal(specific.length, 1);
+    assert.equal(generic.length, 0);
+  });
+
   it("does not normalize trusted-store category pages into product candidates", () => {
     const candidates = normalizeSerperShoppingResults(
       {
