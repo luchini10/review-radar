@@ -538,6 +538,17 @@ Exit criteria: decide whether the source-quality mini-track is complete or needs
 
 This diagnostic track supersedes entering fix mode immediately. Run each phase in order, update the canonical issue report, and commit docs-only findings after each phase. Do not fix discovered defects during this track.
 
+Required documentation after every Phase 4 step:
+
+- `docs/RR-Issues-Report.md`
+- `docs/qa-loop-results.md`
+- `docs/agent-next-task.md`
+- `docs/change-log.md`
+- `docs/Agent Run Summary.md`
+- `docs/codex-handoff-phased-plan.md`
+
+Do not continue to the next Phase 4 step until all six files are updated as appropriate and the docs-only commit is complete when docs changed. Each completed-step record below must state the completed step, next step, diagnostic-only status, stop-condition result, new and updated issue IDs, docs commit status, and commit hash.
+
 - Phase 4A - Diagnostic issue-harvest setup - **DONE**
 - Phase 4B - Source-upgrade safety and reliability diagnostics - **IN PROGRESS**
 - Phase 4C - Price trust and fake-low price diagnostics - **TODO**
@@ -545,7 +556,18 @@ This diagnostic track supersedes entering fix mode immediately. Run each phase i
 - Phase 4E - Market-leader discovery and citation diagnostics - **TODO**
 - Phase 4F - Broad rotating product quality sweep - **TODO**
 
-Phase 4A confirmed all 53 issue IDs are contiguous and unique, all records contain the required schema, summary counts reconcile, and overlapping records describe distinct failure layers. No issue status changed.
+### Phase 4A completion record
+
+- Completed step: Phase 4A - Diagnostic issue-harvest setup.
+- Next step: Phase 4B - Source-upgrade safety and reliability diagnostics.
+- Diagnostic-only: Yes; docs audit only, with no live search or behavior change.
+- Stop condition hit: No.
+- New issue IDs opened: None.
+- Existing issue IDs updated: None; relationships and next diagnostic needs were documented without changing status or severity.
+- Required docs updated: All six Phase 4 documentation files.
+- Docs committed: Yes.
+- Commit: `dd8c0c4` (`docs: prepare phase 4 issue harvest`).
+- Result: all 53 issue IDs are contiguous and unique, all records contain the required schema, summary counts reconcile, and overlapping records describe distinct failure layers.
 
 ---
 
