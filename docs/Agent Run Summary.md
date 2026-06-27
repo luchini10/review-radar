@@ -793,3 +793,21 @@ New entries should keep the same format and stay easy to read.
 **App/test changes:** None.
 
 **Next recommended step:** Phase 4E market-leader discovery and citation diagnostics with at most five fresh searches.
+
+## Codex Run - 2026-06-27 Phase 4E
+
+**Goal:** Measure broad leader recall, citation quality, source diversity, and final-slate concentration.
+
+**Searches:** Fresh `robot vacuum`, `gas grill`, `cordless drill`, `air purifier`, and `running shoes` fixtures.
+
+**Benchmark result:** The four categories covered by `scripts/goldBenchmark.mjs` averaged `3.75/7` core leader families in the pool and `3.0/7` in final results.
+
+**Main failures:** Ecovacs and Char-Broil leaders were lost at citation verify; repeated Roomba/Roborock, Nexgrill/Napoleon, RYOBI/DEWALT, and Blueair/GermGuardian families consumed large portions of final slates; retailer-only winners often outranked stronger evidence.
+
+**Positive control:** Running shoes returned recognizable mainstream models across five brands, with independent editorial support on six of seven finalists.
+
+**Issues:** Opened RR-056. Reopened RR-014 and RR-022. Updated RR-013 and RR-017.
+
+**App/test changes:** None.
+
+**Next recommended step:** Phase 4F broad rotating sweep with at most ten searches, followed by the final Phase 4 report.

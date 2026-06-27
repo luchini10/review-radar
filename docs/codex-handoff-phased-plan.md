@@ -16,7 +16,7 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 4E - market-leader discovery and citation diagnostics**.
+Current phase: **Phase 4F - broad rotating product quality sweep**.
 
 Phase 3N safely admitted specific Google Shopping offers for source-upgrade evidence and fixed the `Shop-Vac` title false positive. RR-051 removed synthetic query-derived snippets from same-product identity. Phase 3O preserved reliable brand identity in compact model queries.
 
@@ -24,7 +24,7 @@ The Phase 3O live proof then exposed two separate safety defects. RR-053 is now 
 
 Recommended next phase:
 
-- Phase 4E: run at most five focused live diagnostics (`robot vacuum`, `gas grill`, `cordless drill`, `air purifier`, `running shoes`) and document leader recall, citation strength/diversity, weak winners, duplicates, and source concentration without fixing anything.
+- Phase 4F: run at most ten broad rotating searches and document overall final-slate quality, recurring issue classes, and readiness for Phase 5 fix planning without fixing anything.
 
 ---
 
@@ -553,8 +553,8 @@ Do not continue to the next Phase 4 step until all six files are updated as appr
 - Phase 4B - Source-upgrade safety and reliability diagnostics - **DONE**
 - Phase 4C - Price trust and fake-low price diagnostics - **DONE**
 - Phase 4D - Product-type leakage and requirement diagnostics - **DONE**
-- Phase 4E - Market-leader discovery and citation diagnostics - **NEXT**
-- Phase 4F - Broad rotating product quality sweep - **TODO**
+- Phase 4E - Market-leader discovery and citation diagnostics - **DONE**
+- Phase 4F - Broad rotating product quality sweep - **NEXT**
 
 ### Phase 4A completion record
 
@@ -610,6 +610,20 @@ Do not continue to the next Phase 4 step until all six files are updated as appr
 - Docs committed: Yes.
 - Commit: `df52791` (`docs: record phase 4D type diagnostics`).
 - Result: cross-category containment failed; a current fallback omitted diagnostics; a valid generator falsely failed `Portable`.
+
+### Phase 4E completion record
+
+- Completed step: Phase 4E - Market-leader discovery and citation diagnostics.
+- Next step: Phase 4F - Broad rotating product quality sweep.
+- Diagnostic-only: Yes; five live save/replay pairs plus offline benchmark comparison, with no behavior change.
+- Stop condition hit: No.
+- New issue IDs opened: RR-056.
+- Existing issue IDs updated: RR-013, RR-014, RR-017, RR-022.
+- Status changes: RR-014 and RR-022 reopened as Needs Investigation.
+- Required docs updated: All six Phase 4 documentation files.
+- Docs committed: Pending this phase checkpoint.
+- Commit: Pending.
+- Result: benchmark final leader coverage averaged 3.0/7; citation loss and family concentration remain systemic, while running shoes showed a strong positive-control slate.
 
 ---
 
@@ -883,24 +897,24 @@ Do this only after backend trust and ranking are stronger.
 
 ## Immediate Next Task for Codex
 
-Run Phase 4E market-leader discovery and citation diagnostics.
+Run Phase 4F broad rotating product quality sweep.
 
-Use at most five live searches: `robot vacuum`, `gas grill`, `cordless drill`, `air purifier`, and `running shoes`. Do not fix anything found.
+Use at most ten live searches: `coffee maker`, `office chair`, `wireless earbuds`, `electric toothbrush`, `leaf blower`, `dog food`, `dehumidifier`, `dash cam`, `treadmill`, and `gaming monitor`. Do not fix anything found.
 
 Task:
 
-1. Capture the final seven and obvious missing market leaders.
-2. Record citation strength, source diversity, retailer-only winners, and source concentration.
-3. Identify duplicates/variant flooding and weak products outranking known stronger candidates.
-4. Clarify RR-013/RR-014/RR-015/RR-037 where the sample provides direct evidence.
-5. Update and commit all six required documentation files, then continue automatically to Phase 4F.
+1. Capture final products, obvious bad picks, missing leaders, bad prices, wrong types, weak citations, duplicate flooding, and source concentration.
+2. Record image concerns when visible in fixture/debug metadata.
+3. Assign an overall quality verdict per category.
+4. Open or update issues without fixing them.
+5. Update and commit all six required documentation files, produce the final Phase 4 report, and stop before Phase 5.
 
 Do not:
 
 - change app code, tests, scoring, ranking, discovery, source-upgrade, identity, brand, price, citation, eligibility, requirement, or UI behavior;
-- exceed five fresh live searches;
+- exceed ten fresh live searches;
 - close an issue because it is absent from a limited sample;
 - commit generated live fixtures or baseline artifacts;
 - run a full baseline.
 
-Exit criteria: all five searches are documented, leader/citation/diversity outcomes are captured, issue evidence/status is updated conservatively, and the docs-only Phase 4E commit is complete.
+Exit criteria: all ten searches are documented, the issue map and fix-order recommendation are complete, the docs-only Phase 4F commit is complete, and no Phase 5 fix work has begun.

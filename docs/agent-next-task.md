@@ -4,27 +4,27 @@ Generated: 2026-06-27
 
 ## Current next task
 
-**Phase 4E: market-leader discovery and citation diagnostics**
+**Phase 4F: broad rotating product quality sweep**
 
-Phase 4D completed four live diagnostics:
+Phase 4E completed five live diagnostics:
 
-- `robot vacuum`: GE washer/dryer survived in final near results.
-- `basketball hoop`: wall art entered exact scoring below cutoff.
-- `air purifier`: category/documentation pages selected; current fallback response omitted stage/final/source-upgrade traces.
-- `portable generator`: category pages and a battery power station selected; valid Generac product falsely failed literal `Portable`.
+- Benchmark final leader coverage: robot vacuum `3/7`, gas grill `3/7`, cordless drill `4/7`, air purifier `2/7`; mean `3.0/7`.
+- Ecovacs and Char-Broil leaders were lost at citation verification.
+- Same-brand/family concentration repeatedly consumed four or five final slots.
+- Running shoes was the positive control with recognizable models and strong editorial citation coverage.
 
-Opened RR-054 for missing fallback diagnostics and RR-055 for the false literal requirement failure. Reopened RR-009. RR-007, RR-013, RR-017, and RR-043 received additional evidence.
+Opened RR-056 for slate concentration. Reopened RR-014 and RR-022. RR-013 and RR-017 received additional evidence.
 
 ## Required next phase
 
-Run Phase 4E market-leader discovery and citation diagnostics with at most five fresh searches: `robot vacuum`, `gas grill`, `cordless drill`, `air purifier`, and `running shoes`.
+Run Phase 4F broad rotating product quality sweep with at most ten fresh searches: `coffee maker`, `office chair`, `wireless earbuds`, `electric toothbrush`, `leaf blower`, `dog food`, `dehumidifier`, `dash cam`, `treadmill`, and `gaming monitor`.
 
-Capture the final seven, obvious missing leaders, duplicates/variants, citation strength/diversity, retailer-only winners, and weak products outranking stronger candidates. Focus on RR-013, RR-014, RR-015, and RR-037 while preserving any product-type/non-product evidence. Do not fix anything.
+Capture final products, obvious bad picks, missing leaders, bad prices, wrong types, weak citations, duplicate flooding, source concentration, image concerns visible in debug data, and an overall verdict for each category. Open or update issues without fixing them. Finish with the complete Phase 4 report and do not enter Phase 5.
 
 Do not:
 
 - change app code, tests, scoring, ranking, discovery, source-upgrade, identity, brand, trust, eligibility, or UI behavior;
-- exceed five fresh live searches;
+- exceed ten fresh live searches;
 - close an issue merely because it is absent from this sample;
 - run a full baseline.
 
@@ -32,4 +32,4 @@ Reference:
 
 - `docs/RR-Issues-Report.md`
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` latest Phase 4D entry
+- `docs/qa-loop-results.md` latest Phase 4E entry

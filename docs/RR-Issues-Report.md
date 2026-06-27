@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 4D product-type diagnostics
+## Compiled for AI Agent Consumption — Phase 0 through Phase 4E market-leader diagnostics
 
 **Generated:** 2026-06-27  
-**Scope:** All phases from initial measurement harness through Phase 4D product-type leakage and requirement diagnostics
+**Scope:** All phases from initial measurement harness through Phase 4E market-leader discovery and citation diagnostics
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -13,14 +13,14 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 55 |
+| Total Issues | 56 |
 | Critical | 5 |
 | High | 26 |
-| Medium | 19 |
+| Medium | 20 |
 | Low | 5 |
-| Open | 7 |
-| Needs Investigation | 11 |
-| Fixed | 36 |
+| Open | 8 |
+| Needs Investigation | 13 |
+| Fixed | 34 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -53,6 +53,7 @@
 | Phase 4B — Source-upgrade safety/reliability diagnostics | 0 |
 | Phase 4C — Price trust and fake-low price diagnostics | 0 |
 | Phase 4D — Product-type/requirement diagnostics | 2 |
+| Phase 4E — Market-leader/citation diagnostics | 1 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -373,6 +374,8 @@
 
 **Phase 4D evidence:** Fresh `robot vacuum`, `air purifier`, and `portable generator` runs again selected weakly supported winners. `basketball hoop` also had only weak citations at the top, although replay did not identify a better-supported product below it.
 
+**Phase 4E evidence:** `gas grill` provides the clearest crowd-out example: retailer-only Nexgrill ranked #1 while independently cited Weber Spirit E-210 ranked #3. `cordless drill` similarly placed a retailer-only RYOBI winner above a source-upgraded Makita with stronger market-confidence inputs. Running shoes was the positive control: six of seven finalists carried independent editorial support.
+
 ---
 
 ### PHASE 0 — QUALITY MEASUREMENT HARNESS (2026-06-23)
@@ -387,7 +390,7 @@
 | **Phase** | Phase 0 — Measurement |
 | **Severity** | High |
 | **Title** | Mean core-leader coverage critically low (3.0 / 7 in final results) |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** The Phase 0 quality baseline revealed that across 14 gold-benchmark queries, core leaders (the expected top products per category) appeared in the final-7 results only 3.0 out of 7 times on average. Leaders were reaching the candidate pool (4.2/7 average) but being eliminated between pool and final result.
 
@@ -398,6 +401,8 @@
 **Actual:** 3.0/7 — less than half of expected leaders appeared.
 
 **Fix:** Addressed in multiple phases: Phase 1 (seed extraction for brand-led names), Filtering STEP 2 (citation rescue for product-page leaders), Phase 3B (3-state category check), Phase 3C (fuel-type aliases).
+
+**Phase 4E regression:** Reopened. Against the repository's current broad gold benchmark, final core-leader-family coverage was robot vacuum `3/7`, gas grill `3/7`, cordless drill `4/7`, and air purifier `2/7`: mean `3.0/7`, exactly the original critical-low baseline. Pool coverage was only `4/7`, `4/7`, `5/7`, and `2/7`, respectively, showing both discovery absence and later filtering loss.
 
 ---
 
@@ -478,6 +483,8 @@
 **Phase 4C evidence:** The `pressure washer` run selected `ZEP 64 oz. All-In-One Pressure Wash` detergent at exact rank #2 and carried six Viking dishwashers into the near stream after revalidation. The detergent is a consumable/accessory, not a pressure washer. This is a direct final-result wrong-type failure; the dishwashers show broader downstream contamination.
 
 **Phase 4D evidence:** Wrong-type leakage generalized. The GE washer/dryer again survived into the final robot-vacuum near stream. Basketball wall art entered the exact-scored hoop pool. BioLite BaseCharge power station reached exact rank #6 for `portable generator`, with Goal Zero and EcoFlow power stations also exact-scored below cutoff.
+
+**Phase 4E evidence:** Blackstone propane griddle reached exact rank #5 for `gas grill`. The final slate also included portable/camping grills while full-size benchmark families were missing, reinforcing product-type and form-factor contamination as a leader-recall cost.
 
 ---
 
@@ -581,7 +588,7 @@
 | **Phase** | Phase 1 — Source-tiered discovery |
 | **Severity** | High |
 | **Title** | Real product-page leaders dropped at citation-verify stage (LLM-path products) |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** Products that arrived via the LLM/web_search path (not the auto-verified Serper path) had their citation URLs absent from the verified-URL set. When `filterResultToVerifiedCitations` ran, it found no verified citations for these products and removed them entirely — even when those products were major market leaders. RIDGID RT1200, Craftsman CMEC6150K, and Roborock S8 MaxV Ultra were all lost at this stage.
 
@@ -594,6 +601,8 @@
 **Actual:** LLM-path products with zero pre-verified URLs were completely removed.
 
 **Fix:** Product-page rescue added: when no citations are pre-verified, self-cite the product's own page if it passes `canRenderAsProductCard` eligibility. URL normalization also improved (tracking params stripped, trailing slash dropped) to improve pre-verified URL matching.
+
+**Phase 4E regression:** Reopened. Ecovacs DEEBOT T30S and T50 OMNI each entered the robot-vacuum pool with one `ecovacs.com` source and were dropped at `afterCitationVerify`. Char-Broil Performance 2-Burner entered the gas-grill pool with `charbroil.com` plus `walmart.com` evidence and was also dropped there. These are benchmark leader families with product/retailer evidence, so the citation-rescue path is not reliably preserving them.
 
 ---
 
@@ -1553,9 +1562,56 @@ Four approved fresh searches were saved and replayed: `robot vacuum`, `basketbal
 
 ---
 
+### PHASE 4E — MARKET-LEADER DISCOVERY AND CITATION DIAGNOSTICS (2026-06-27)
+
+Five approved fresh searches were saved and replayed: `robot vacuum`, `gas grill`, `cordless drill`, `air purifier`, and `running shoes`. The first four were graded against the broad core-leader families in `scripts/goldBenchmark.mjs`; running shoes was assessed qualitatively because no broad gold list exists for it.
+
+#### RR-056
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-056 |
+| **Phase** | Phase 4E |
+| **Severity** | Medium |
+| **Title** | Final-seven slates allow same-brand/model-family concentration to crowd out category diversity |
+| **Status** | Open |
+
+**Description:** Broad final slates repeatedly spend multiple slots on closely related products from the same brand or family while benchmark leader families are absent. Robot vacuum selected three Roombas and two Roborocks; gas grill selected two Nexgrills and two Napoleons; cordless drill selected two RYOBIs and two DEWALTs; air purifier selected two Blueairs and two GermGuardians.
+
+**Where it occurs:** Candidate diversity/variant-family handling and final selection for broad searches
+
+**Steps to reproduce:** Save/replay the four Phase 4E benchmarked broad searches and group the final seven by brand/family. Compare those counts with missing core leader families from `scripts/goldBenchmark.mjs`.
+
+**Expected:** Distinct legitimate models may coexist, but broad final-seven results should avoid repeated family concentration when strong products from missing leader families are available or discoverable.
+
+**Actual:** Four or five final slots can be consumed by two brands while final leader-family coverage remains between `2/7` and `4/7`.
+
+**Suggested fix or next action:** Diagnose diversity at the candidate-pool and final-selection layers separately. In a later fix phase, prefer an existing generalized family-diversity mechanism or bounded family cap only after proving it does not collapse genuinely distinct models. Do not add brand-specific caps.
+
+**Benchmark result:**
+
+| Search | Core families in pool | Core families in final | Notable loss/concentration |
+|--------|-----------------------|------------------------|----------------------------|
+| `robot vacuum` | 4/7 | 3/7 | Ecovacs dropped at citation verify; Narwal/Dreame absent; 3 Roombas + 2 Roborocks |
+| `gas grill` | 4/7 | 3/7 | Char-Broil dropped at citation verify; Broil King/Monument/Dyna-Glo absent; 2 Nexgrills + 2 Napoleons |
+| `cordless drill` | 5/7 | 4/7 | Milwaukee below exact reliability; Bosch/RIDGID absent; 2 RYOBIs + 2 DEWALTs |
+| `air purifier` | 2/7 | 2/7 | Coway/Winix/Honeywell/Alen/Dyson absent; 2 Blueairs + 2 GermGuardians |
+
+Mean benchmark coverage was `3.75/7` in the candidate pool and `3.0/7` in final results. `running shoes` was the positive-control category: the final seven contained recognizable ASICS, Brooks, New Balance, HOKA, and Saucony models, and six had independent editorial citations.
+
+**Phase result:**
+
+- New issue: RR-056.
+- Reopened: RR-014 and RR-022.
+- Evidence updated: RR-013 and RR-017.
+- No issue status was improved from a limited sample.
+- No app behavior or test code changed.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (7 issues)
+### Open (8 issues)
 - RR-034: `modelTokens` misses mixed-case word-preceded numbers
 - RR-035: `modelTokens` misses Samsung Bespoke / FEIN naming
 - RR-043: Product-type taxonomy coverage incomplete
@@ -1563,22 +1619,25 @@ Four approved fresh searches were saved and replayed: `robot vacuum`, `basketbal
 - RR-052: Horsepower abbreviation `HP` is misclassified as the Hewlett-Packard brand
 - RR-054: Fresh fallback responses omit current diagnostic traces
 - RR-055: Literal `Portable` requirement fails an explicitly portable generator
+- RR-056: Same-brand/model-family concentration crowds out broad-slate diversity
 
-### Needs Investigation (11 issues)
+### Needs Investigation (13 issues)
 - RR-002: Tiny accessory/promo prices treated as verified full-product prices
 - RR-007: Category/browse pages appearing as exact product matches
 - RR-008: Review/article/support pages appearing as product cards
 - RR-009: Documentation/manual pages appearing as product cards
 - RR-013: Thin winner crowd-out
+- RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-017: Cross-category wrong-type products carried downstream
+- RR-022: Real product-page leaders dropped at citation verification
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-041: Source-upgrade trigger not firing in Phase 3J live runs
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 
-### Fixed (36 issues)
-RR-001, RR-003 through RR-006, RR-010 through RR-012, RR-014, RR-016, RR-018 through RR-023, RR-025 through RR-033, RR-036, RR-038 through RR-040, RR-046 through RR-051, RR-053
+### Fixed (34 issues)
+RR-001, RR-003 through RR-006, RR-010 through RR-012, RR-016, RR-018 through RR-021, RR-023, RR-025 through RR-033, RR-036, RR-038 through RR-040, RR-046 through RR-051, RR-053
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -1590,11 +1649,12 @@ RR-001, RR-003 through RR-006, RR-010 through RR-012, RR-014, RR-016, RR-018 thr
 1. **RR-052** (High) — Stop horsepower `HP` context from becoming Hewlett-Packard brand identity while preserving genuine HP-brand detection.
 2. **RR-002** (Critical) — Re-investigate the verified `$10` full shop-vac offer and restore suspicious-price protection.
 3. **RR-007 + RR-008 + RR-009 + RR-017 + RR-043** (High cluster) — Category, support/documentation, and wrong-type targets contaminate final and near streams across categories.
-4. **RR-055** (High) — Literal positive requirement evidence can be marked failed and remove a valid product.
-5. **RR-042** (Medium) — Normalization and attachment can work, but fallback reliability and safe useful target attachment remain unproven.
-6. **RR-041** (Medium) — Source-upgrade attempts remain inconsistent across live runs; add trigger-rate visibility if proof coverage continues to fail.
-7. **RR-054** (Medium) — Current fallback responses can omit the diagnostic envelope needed to investigate other defects.
-8. **RR-034 + RR-035 + RR-044** (Medium, batch) — Model-token detection gaps; fix together to avoid partial improvements.
-9. **RR-013** (Medium) — Thin winner crowd-out; requires citation-strength score integration (scoring change, not diagnostic).
-10. **RR-015** (High) — Run-to-run stability; requires deeper investigation into LLM temperature or deterministic candidate pinning.
-11. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain; re-measure with raw/structural/eligible diagnostics before changing sources.
+4. **RR-014 + RR-022 + RR-056** (High/Medium cluster) — Leader recall has regressed to 3.0/7, product-page leaders are lost at citation verify, and repeated families crowd out diversity.
+5. **RR-055** (High) — Literal positive requirement evidence can be marked failed and remove a valid product.
+6. **RR-042** (Medium) — Normalization and attachment can work, but fallback reliability and safe useful target attachment remain unproven.
+7. **RR-041** (Medium) — Source-upgrade attempts remain inconsistent across live runs; add trigger-rate visibility if proof coverage continues to fail.
+8. **RR-054** (Medium) — Current fallback responses can omit the diagnostic envelope needed to investigate other defects.
+9. **RR-034 + RR-035 + RR-044** (Medium, batch) — Model-token detection gaps; fix together to avoid partial improvements.
+10. **RR-013** (Medium) — Thin winner crowd-out; requires citation-strength score integration (scoring change, not diagnostic).
+11. **RR-015** (High) — Run-to-run stability; requires deeper investigation into LLM temperature or deterministic candidate pinning.
+12. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain; re-measure with raw/structural/eligible diagnostics before changing sources.

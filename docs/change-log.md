@@ -13,6 +13,14 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-27
 
+### Codex - Phase 4E market-leader discovery and citation diagnostics
+- Ran five approved live searches: `robot vacuum`, `gas grill`, `cordless drill`, `air purifier`, and `running shoes`.
+- Reopened RR-014 after the four benchmarked categories averaged only `3.0/7` core leader families in final results.
+- Reopened RR-022 after Ecovacs and Char-Broil leader products were again dropped at citation verification.
+- Opened RR-056 after repeated same-brand/model-family concentration consumed four or five final slots.
+- Confirmed RR-013 with retailer-only winners outranking independently supported alternatives; running shoes was a positive-control category with strong editorial coverage.
+- No app code, tests, discovery, citation, diversity, scoring, ranking, or behavior changed.
+
 ### Codex - Phase 4D product-type leakage and requirement diagnostics
 - Ran four approved live searches: `robot vacuum`, `basketball hoop`, `air purifier`, and `portable generator`.
 - Opened RR-054 after a fresh Serper-fallback debug response omitted stage-funnel, source-upgrade, and final-selection traces.

@@ -3868,3 +3868,56 @@ npm run qa:replay -- tests/fixtures/review-radar-live/portable-generator.json
 - No full baseline.
 
 Recommended next task: Phase 4E market-leader discovery and citation diagnostics.
+
+## <span style="color:green">**Codex QA Update - 2026-06-27 (Phase 4E: market-leader discovery and citation diagnostics)**</span>
+
+**Verdict: FAIL across 3 of 4 benchmarked categories; PASS/stronger for running shoes. Mean final core-leader-family coverage is 3.0/7.**
+
+### Commands
+
+Five `qa:save-fixture` + `qa:replay` pairs were run for:
+
+```text
+robot vacuum
+gas grill
+cordless drill
+air purifier
+running shoes
+```
+
+Leader-family coverage used `scripts/goldBenchmark.mjs`.
+
+### Coverage
+
+| Search | Pool | Final | Missing/lost |
+|--------|-----:|------:|--------------|
+| `robot vacuum` | 4/7 | 3/7 | Ecovacs lost at citation verify; Narwal/Dreame absent |
+| `gas grill` | 4/7 | 3/7 | Char-Broil lost at citation verify; Broil King/Monument/Dyna-Glo absent |
+| `cordless drill` | 5/7 | 4/7 | Milwaukee below exact reliability; Bosch/RIDGID absent |
+| `air purifier` | 2/7 | 2/7 | Coway/Winix/Honeywell/Alen/Dyson absent |
+
+Mean: pool `3.75/7`; final `3.0/7`.
+
+### Citation and diversity findings
+
+- `robot vacuum`: eufy winner had weak support; three Roombas + two Roborocks occupied five slots.
+- `gas grill`: retailer-only Nexgrill winner outranked independently cited Weber; two Nexgrills + two Napoleons occupied four slots; Blackstone griddle exact #5.
+- `cordless drill`: retailer-only RYOBI winner; two RYOBIs + two DEWALTs occupied four slots; source-upgraded Makita attached safe price/rating/review/citation evidence at rank #4.
+- `air purifier`: weak Blueair winner; two Blueairs + two GermGuardians occupied four slots; Daikin category page exact #6.
+- `running shoes`: positive control. ASICS, Brooks, New Balance, HOKA, and Saucony models filled the slate; six of seven had independent editorial citations. Nike Pegasus 42 was just below cutoff.
+
+### Issue outcome
+
+- Opened RR-056: same-brand/model-family concentration crowds out broad-slate diversity.
+- Reopened RR-014: mean core-leader coverage has regressed to `3.0/7`.
+- Reopened RR-022: legitimate leader products again dropped at citation verification.
+- Updated RR-013 and RR-017.
+- Counts: 56 total; 5 Critical, 26 High, 20 Medium, 5 Low; 8 Open, 13 Needs Investigation, 34 Fixed, 1 Won't Fix.
+
+### Boundaries
+
+- Five live searches, within budget.
+- No app code, tests, discovery, citation, scoring, ranking, diversity, eligibility, or UI change.
+- No full baseline.
+
+Recommended next task: Phase 4F broad rotating product quality sweep, then stop before Phase 5.
