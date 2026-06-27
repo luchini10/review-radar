@@ -621,8 +621,8 @@ Do not continue to the next Phase 4 step until all six files are updated as appr
 - Existing issue IDs updated: RR-013, RR-014, RR-017, RR-022.
 - Status changes: RR-014 and RR-022 reopened as Needs Investigation.
 - Required docs updated: All six Phase 4 documentation files.
-- Docs committed: Pending this phase checkpoint.
-- Commit: Pending.
+- Docs committed: Yes.
+- Commit: `eea3955` (`docs: record phase 4E leader diagnostics`).
 - Result: benchmark final leader coverage averaged 3.0/7; citation loss and family concentration remain systemic, while running shoes showed a strong positive-control slate.
 
 ---
