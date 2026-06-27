@@ -3828,3 +3828,43 @@ npm run qa:replay -- tests/fixtures/review-radar-live/pressure-washer.json
 - No full baseline.
 
 Recommended next task: Phase 4D product-type leakage and requirement diagnostics.
+
+## <span style="color:green">**Codex QA Update - 2026-06-27 (Phase 4D: product-type leakage and requirement diagnostics)**</span>
+
+**Verdict: FAIL for cross-category containment. Wrong types and non-product pages reached exact/final streams, and a valid product failed a literal requirement.**
+
+### Commands
+
+```text
+npm run qa:save-fixture -- "robot vacuum"
+npm run qa:replay -- tests/fixtures/review-radar-live/robot-vacuum.json
+npm run qa:save-fixture -- "basketball hoop"
+npm run qa:replay -- tests/fixtures/review-radar-live/basketball-hoop.json
+npm run qa:save-fixture -- "air purifier"
+npm run qa:replay -- tests/fixtures/review-radar-live/air-purifier.json
+npm run qa:save-fixture -- "portable generator"
+npm run qa:replay -- tests/fixtures/review-radar-live/portable-generator.json
+```
+
+### Per-search findings
+
+- `robot vacuum` (`2026-06-27T18:58:42.739Z`): 8 pool; 5 exact + 2 near. The GE Profile washer/dryer again survived after revalidation into final near results with unknown category. It should be rejected, not retained as a near robot vacuum.
+- `basketball hoop` (`2026-06-27T19:00:03.849Z`): 21 pool; 7 exact. Final seven were hoop systems, but `The Kids Room ... Basketball Hoop ... Canvas Wall Art` entered the exact-scored stream. Mini/indoor hoop variants were not classified as failures because the query was broad.
+- `air purifier` (`2026-06-27T19:01:41.696Z`): 5 exact + 5 near. `H7123 ... device.report` exact #4 is a documentation/device page; Daikin indoor-air-quality collection exact #5 is not a specific product. The current debug response used `fallbackReason: no_reliable_evidence` and omitted `stageFunnel`, source-upgrade traces, and final-selection trace.
+- `portable generator` (`2026-06-27T19:03:28.036Z`): 22 pool; 7 exact. Champion and Briggs collection pages reached exact #5/#7. BioLite BaseCharge power station reached exact #6; Goal Zero/EcoFlow power stations entered exact scoring below cutoff. `Generac GP3300i Portable Inverter Generator` was excluded with `failed: ["Portable"]` despite literal title and URL evidence.
+
+### Issue outcome
+
+- Opened RR-054: current fallback responses can omit the diagnostic trace envelope.
+- Opened RR-055: literal `Portable` requirement can fail an explicitly portable product.
+- Reopened RR-009: documentation/device page selected as a product.
+- Updated RR-007, RR-013, RR-017, RR-043.
+- Counts: 55 total; 5 Critical, 26 High, 19 Medium, 5 Low; 7 Open, 11 Needs Investigation, 36 Fixed, 1 Won't Fix.
+
+### Boundaries
+
+- Four live searches, within budget.
+- No app code, tests, product-type taxonomy, requirement logic, scoring, ranking, discovery, eligibility, or UI change.
+- No full baseline.
+
+Recommended next task: Phase 4E market-leader discovery and citation diagnostics.

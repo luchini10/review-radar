@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 4C price-trust diagnostics
+## Compiled for AI Agent Consumption — Phase 0 through Phase 4D product-type diagnostics
 
 **Generated:** 2026-06-27  
-**Scope:** All phases from initial measurement harness through Phase 4C price trust and fake-low price diagnostics
+**Scope:** All phases from initial measurement harness through Phase 4D product-type leakage and requirement diagnostics
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -13,14 +13,14 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 53 |
+| Total Issues | 55 |
 | Critical | 5 |
-| High | 25 |
-| Medium | 18 |
+| High | 26 |
+| Medium | 19 |
 | Low | 5 |
-| Open | 5 |
-| Needs Investigation | 10 |
-| Fixed | 37 |
+| Open | 7 |
+| Needs Investigation | 11 |
+| Fixed | 36 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -52,6 +52,7 @@
 | Phase 4A — Diagnostic issue-harvest setup | 0 |
 | Phase 4B — Source-upgrade safety/reliability diagnostics | 0 |
 | Phase 4C — Price trust and fake-low price diagnostics | 0 |
+| Phase 4D — Product-type/requirement diagnostics | 2 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -224,6 +225,8 @@
 
 **Phase 4C evidence:** `Pressure Washers - Best Buy` survived into the exact-scored stream below the final cutoff. It was not selected, but confirms that generic retailer category pages can still pass far enough to consume ranking slots.
 
+**Phase 4D evidence:** Category/collection pages were selected across two more categories: `Air Purifiers, Ventilators & Monitors for Clean Air - Daikin Comfort` exact rank #5, `Portable Generators for RV, Home, and Projects` exact rank #5, and `Portable Generators - Briggs & Stratton` exact rank #7.
+
 ---
 
 #### RR-008
@@ -260,7 +263,7 @@
 | **Phase** | Pre-Phase 0 (Codex baseline) |
 | **Severity** | High |
 | **Title** | Manual/quick-start guide pages appearing as close-match product cards |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** Product manual and quick-start guide pages (e.g., "Breville BOV845BSS Quick Guide") were appearing as close-match product cards for toaster oven searches. These are support/documentation pages, not product listings.
 
@@ -271,6 +274,8 @@
 **Actual:** Manual pages appeared as close matches.
 
 **Fix:** Manual and quick-start guide URL/title patterns added to the non-product-page blocklist.
+
+**Phase 4D regression:** Reopened. `H7123 - Smart Pet Air Purifier - device.report` reached exact rank #4 for `air purifier`. `device.report/govee/h7123` is a documentation/device-information page rather than a merchant or manufacturer product offer. The original explicit manual-title patterns remain fixed, but documentation mirrors can still become exact product cards.
 
 ---
 
@@ -365,6 +370,8 @@
 **Phase 4B evidence:** The fresh `robot vacuum` replay flagged a retailer-only winner (`Shark ION ... S87`) and the `gas grill` replay flagged another retailer-only winner (`Go-Anywhere 1-Burner ...`). Neither run supplied independent editorial support for the winner. This broadens the observed weak-winner pattern beyond self-only citations; status remains Needs Investigation pending the dedicated Phase 4E comparison of stronger products below each winner.
 
 **Phase 4C evidence:** All three replays flagged weak or retailer-only winners: STANLEY SL18125P-1 (`shop vac`), DEWALT DCD771C2 (`cordless drill`), and RYOBI RY141803 (`pressure washer`). Phase 4E still needs to establish whether clearly better-supported products were available below each winner.
+
+**Phase 4D evidence:** Fresh `robot vacuum`, `air purifier`, and `portable generator` runs again selected weakly supported winners. `basketball hoop` also had only weak citations at the top, although replay did not identify a better-supported product below it.
 
 ---
 
@@ -469,6 +476,8 @@
 **Phase 4B regression:** Reopened. A GE Profile washer/dryer entered the `robot vacuum` candidate pool, was demoted to near, then reappeared after revalidation. A Thermador 36-inch gas range/PDF entered the `gas grill` pool, reached source upgrade, received a matching `$7,949` Google Shopping range offer plus citation, and remained in the scored near stream. Neither wrong-type target reached the final seven, but both consumed downstream validation/enrichment work and the range consumed a source-upgrade call.
 
 **Phase 4C evidence:** The `pressure washer` run selected `ZEP 64 oz. All-In-One Pressure Wash` detergent at exact rank #2 and carried six Viking dishwashers into the near stream after revalidation. The detergent is a consumable/accessory, not a pressure washer. This is a direct final-result wrong-type failure; the dishwashers show broader downstream contamination.
+
+**Phase 4D evidence:** Wrong-type leakage generalized. The GE washer/dryer again survived into the final robot-vacuum near stream. Basketball wall art entered the exact-scored hoop pool. BioLite BaseCharge power station reached exact rank #6 for `portable generator`, with Goal Zero and EcoFlow power stations also exact-scored below cutoff.
 
 ---
 
@@ -1332,6 +1341,8 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 
 **Suggested fix:** Audit all categories in the gold benchmark and add a `PRODUCT_TYPE_RULES` entry for each, at minimum covering the most common substitution/confusion class (e.g., for "air purifier": dehumidifiers; for "blender": food processors). Phase 3B noted this as "DONE / PARTIAL — product-type taxonomy coverage remains incomplete."
 
+**Phase 4D confirmation:** The missing-taxonomy concern is live and cross-category. Basketball wall art passed exact scoring for `basketball hoop`; battery power stations passed exact category matching for `portable generator`; pressure-wash detergent had already reached exact rank #2 in Phase 4C. These are distinct substitution classes and support a shared taxonomy-coverage fix rather than product-specific patches.
+
 ---
 
 #### RR-044
@@ -1480,19 +1491,84 @@ Other reviewed low prices were plausible for their product shape: `$36.55` for a
 
 ---
 
+### PHASE 4D — PRODUCT-TYPE LEAKAGE AND REQUIREMENT DIAGNOSTICS (2026-06-27)
+
+Four approved fresh searches were saved and replayed: `robot vacuum`, `basketball hoop`, `air purifier`, and `portable generator`. No app behavior or test code changed.
+
+#### RR-054
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-054 |
+| **Phase** | Phase 4D |
+| **Severity** | Medium |
+| **Title** | Fresh fallback responses can omit stage-funnel, source-upgrade, and final-selection traces |
+| **Status** | Open |
+
+**Description:** The fresh `air purifier` debug fixture was saved with the current script and debug request header, but the API took the `fallbackReason: no_reliable_evidence` / `fallbackSource: serper_candidates` path. Its debug object contained only fallback metadata, candidate count, timing, and verified URL count. It omitted `stageFunnel`, `sourceUpgradeTraces`, and `finalSelectionTrace`, so replay described the fixture as if it pre-dated current instrumentation.
+
+**Where it occurs:** Recommendations API search-candidate fallback response/debug assembly; `scripts/save-debug-fixture.mjs`; `scripts/replay-quality-fixtures.mjs`
+
+**Steps to reproduce:** Save a fresh debug fixture for `air purifier` when the API enters the `no_reliable_evidence` Serper-candidate fallback. Replay it and observe `No stage funnel data`, `Source-upgrade trace: not present`, and `Final-selection trace: not present` despite a current `_savedAt` timestamp.
+
+**Expected:** Every current debug response, including fallback responses, preserves the stage funnel and final-selection diagnostics or emits an explicit current-path trace explaining which stages were bypassed.
+
+**Actual:** The fallback response silently drops the current trace contract, preventing product-type, source-upgrade, and ranking-layer diagnosis for that search.
+
+**Suggested fix or next action:** In a later fix phase, preserve a minimal common debug envelope across normal and fallback responses, and distinguish “current fallback path omitted this stage” from “old fixture lacks this field.” Add a deterministic fallback-response trace test before changing behavior.
+
+---
+
+#### RR-055
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-055 |
+| **Phase** | Phase 4D |
+| **Severity** | High |
+| **Title** | Literal `Portable` requirement fails a product explicitly titled Portable Inverter Generator |
+| **Status** | Open |
+
+**Description:** In the fresh `portable generator` run, `Generac GP3300i Portable Inverter Generator` was classified as a near candidate with failed requirement `Portable`. The product title contains the exact word, its manufacturer URL path contains `/portable-generators/`, and the category check passed. The false failure removed a valid product while collection pages and battery power stations filled final slots.
+
+**Where it occurs:** Requirement extraction/validation and post-enrichment revalidation for plain descriptive attributes; final-selection trace `failed` requirement handling
+
+**Steps to reproduce:** Save and replay `portable generator`. Inspect the final-selection trace for `Generac GP3300i Portable Inverter Generator`; observe `stream: nearScored`, `decisionReason: near_only_exact_full`, `failed: ["Portable"]`, and `passed: ["Category: portable generator"]`.
+
+**Expected:** Exact positive evidence in the product title and manufacturer product URL satisfies the `Portable` requirement.
+
+**Actual:** The literal requirement is marked failed, the product receives score `39.6`, and it is excluded from the final seven.
+
+**Suggested fix or next action:** Diagnose which evidence source or negation/polarity path generated the false failure. Add a deterministic requirement test for a literal positive adjective in product title plus URL before changing shared matching behavior. Do not special-case Generac.
+
+**Phase result:**
+
+- New issues: RR-054 and RR-055.
+- Reopened: RR-009.
+- Evidence updated: RR-007, RR-013, RR-017, RR-043.
+- `robot vacuum`: 5 exact + 2 near; GE washer/dryer remained near.
+- `basketball hoop`: 7 exact; wall art entered exact scoring but missed final cutoff.
+- `air purifier`: 5 exact + 5 near; category/documentation pages selected; current debug traces missing on fallback.
+- `portable generator`: 7 exact; category pages and a power station selected; valid Generac product falsely failed `Portable`.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (5 issues)
+### Open (7 issues)
 - RR-034: `modelTokens` misses mixed-case word-preceded numbers
 - RR-035: `modelTokens` misses Samsung Bespoke / FEIN naming
 - RR-043: Product-type taxonomy coverage incomplete
 - RR-044: `modelTokens` minimum length too restrictive for short model numbers
 - RR-052: Horsepower abbreviation `HP` is misclassified as the Hewlett-Packard brand
+- RR-054: Fresh fallback responses omit current diagnostic traces
+- RR-055: Literal `Portable` requirement fails an explicitly portable generator
 
-### Needs Investigation (10 issues)
+### Needs Investigation (11 issues)
 - RR-002: Tiny accessory/promo prices treated as verified full-product prices
 - RR-007: Category/browse pages appearing as exact product matches
 - RR-008: Review/article/support pages appearing as product cards
+- RR-009: Documentation/manual pages appearing as product cards
 - RR-013: Thin winner crowd-out
 - RR-015: Run-to-run stability ~19%
 - RR-017: Cross-category wrong-type products carried downstream
@@ -1501,8 +1577,8 @@ Other reviewed low prices were plausible for their product shape: `$36.55` for a
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 
-### Fixed (37 issues)
-RR-001, RR-003 through RR-006, RR-009 through RR-012, RR-014, RR-016, RR-018 through RR-023, RR-025 through RR-033, RR-036, RR-038 through RR-040, RR-046 through RR-051, RR-053
+### Fixed (36 issues)
+RR-001, RR-003 through RR-006, RR-010 through RR-012, RR-014, RR-016, RR-018 through RR-023, RR-025 through RR-033, RR-036, RR-038 through RR-040, RR-046 through RR-051, RR-053
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -1513,11 +1589,12 @@ RR-001, RR-003 through RR-006, RR-009 through RR-012, RR-014, RR-016, RR-018 thr
 
 1. **RR-052** (High) — Stop horsepower `HP` context from becoming Hewlett-Packard brand identity while preserving genuine HP-brand detection.
 2. **RR-002** (Critical) — Re-investigate the verified `$10` full shop-vac offer and restore suspicious-price protection.
-3. **RR-007 + RR-008 + RR-017** (High) — Reopened live regressions allow category/support/wrong-type targets downstream; diagnose breadth in Phase 4D before fixing.
-4. **RR-042** (Medium) — Normalization and attachment can work, but fallback reliability and safe useful target attachment remain unproven.
-5. **RR-041** (Medium) — Source-upgrade attempts remain inconsistent across live runs; add trigger-rate visibility if proof coverage continues to fail.
-6. **RR-043** (High) — Product-type taxonomy incomplete; add rules for all gold-benchmark categories.
-7. **RR-034 + RR-035 + RR-044** (Medium, batch) — Model-token detection gaps; fix together to avoid partial improvements.
-8. **RR-013** (Medium) — Thin winner crowd-out; requires citation-strength score integration (scoring change, not diagnostic).
-9. **RR-015** (High) — Run-to-run stability; requires deeper investigation into LLM temperature or deterministic candidate pinning.
-10. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain; re-measure with raw/structural/eligible diagnostics before changing sources.
+3. **RR-007 + RR-008 + RR-009 + RR-017 + RR-043** (High cluster) — Category, support/documentation, and wrong-type targets contaminate final and near streams across categories.
+4. **RR-055** (High) — Literal positive requirement evidence can be marked failed and remove a valid product.
+5. **RR-042** (Medium) — Normalization and attachment can work, but fallback reliability and safe useful target attachment remain unproven.
+6. **RR-041** (Medium) — Source-upgrade attempts remain inconsistent across live runs; add trigger-rate visibility if proof coverage continues to fail.
+7. **RR-054** (Medium) — Current fallback responses can omit the diagnostic envelope needed to investigate other defects.
+8. **RR-034 + RR-035 + RR-044** (Medium, batch) — Model-token detection gaps; fix together to avoid partial improvements.
+9. **RR-013** (Medium) — Thin winner crowd-out; requires citation-strength score integration (scoring change, not diagnostic).
+10. **RR-015** (High) — Run-to-run stability; requires deeper investigation into LLM temperature or deterministic candidate pinning.
+11. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain; re-measure with raw/structural/eligible diagnostics before changing sources.

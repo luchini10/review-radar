@@ -13,6 +13,14 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-27
 
+### Codex - Phase 4D product-type leakage and requirement diagnostics
+- Ran four approved live searches: `robot vacuum`, `basketball hoop`, `air purifier`, and `portable generator`.
+- Opened RR-054 after a fresh Serper-fallback debug response omitted stage-funnel, source-upgrade, and final-selection traces.
+- Opened RR-055 after `Generac GP3300i Portable Inverter Generator` falsely failed the literal `Portable` requirement.
+- Reopened RR-009 after a `device.report` documentation page reached exact rank #4 for air purifiers.
+- Added cross-category evidence to RR-007/RR-017/RR-043: category pages, wall art, power stations, and a washer/dryer survived into exact or near scoring.
+- No app code, tests, product-type rules, requirement logic, ranking, or behavior changed.
+
 ### Codex - Phase 4C price trust and fake-low price diagnostics
 - Ran three approved live searches: `shop vac`, `cordless drill`, and `pressure washer`.
 - Reproduced RR-002 on a different product: a Vacmaster 1.5-gallon wet/dry vacuum received a `$10` Amazon retailer-page offer, `priceTrustStatus: verified`, `canUseForBudget: true`, and exact rank #7.

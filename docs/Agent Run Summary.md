@@ -777,3 +777,19 @@ New entries should keep the same format and stay easy to read.
 **App/test changes:** None.
 
 **Next recommended step:** Phase 4D product-type leakage and requirement diagnostics with at most four fresh searches.
+
+## Codex Run - 2026-06-27 Phase 4D
+
+**Goal:** Diagnose wrong product types, accessories/parts, variants, and requirement leakage across four categories.
+
+**Searches:** Fresh `robot vacuum`, `basketball hoop`, `air purifier`, and `portable generator` fixtures, each replayed once.
+
+**Result:** Wrong-type containment failed across categories. A washer/dryer remained near for robot vacuums; basketball wall art entered exact scoring; air-purifier documentation/category pages were selected; generator category pages and a battery power station reached final exact slots.
+
+**New issues:** RR-054 for missing debug traces on current fallback responses; RR-055 for a valid `Generac ... Portable Inverter Generator` falsely failing `Portable`.
+
+**Other issues:** Reopened RR-009 and updated RR-007, RR-013, RR-017, and RR-043.
+
+**App/test changes:** None.
+
+**Next recommended step:** Phase 4E market-leader discovery and citation diagnostics with at most five fresh searches.
