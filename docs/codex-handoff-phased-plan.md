@@ -16,15 +16,15 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 3M - source-upgrade shopping-provider coverage diagnostic**.
+Current phase: **Phase 3N - Serper Shopping product-link/title eligibility fix**.
 
-Phase 3I Path A and the Phase 3K fallback ladder are live-wired. Phase 3L proved that the fallback runs after an empty primary result, but the observed `shop vac` fallback also returned zero candidates. The remaining observed bottleneck is source-upgrade shopping-search coverage before identity matching or evidence attachment.
+Phase 3M proved Serper Shopping is returning raw results. For the exact Phase 3L primary, fallback, and a brand-preserving control, Serper returned 40 raw results and 20 structurally usable results per query, but the existing normalization/eligibility path returned zero candidates. Google Shopping product links shaped as `google.com/search?ibp=oshop...` are rejected as search/listing URLs, and some legitimate `Shop-Vac` titles are rejected by the generic `shop` title rule.
 
-Do not broaden model-token detection yet. Do not tune scoring. Do not loosen identity, price, citation, product, or requirement gates. The next phase should diagnose why the existing Serper shopping path returns no candidates for both compact and identity-plus-category source-upgrade queries.
+The query builder also has a separate identity defect: it detected `DeWalt` in the product name but built `Wet/Dry Vacuum DXV10SB` because the model-identity heuristic kept only the two words immediately before the model token. Fix the proven normalization bottleneck first; keep brand preservation as a separate follow-up.
 
 Recommended next phase:
 
-- Phase 3M: run a narrow provider/search-coverage diagnostic for the exact primary and fallback queries observed in Phase 3L. Determine whether the zero result comes from the upstream shopping response, Serper parsing/normalization, or source-upgrade invocation context. Do not change behavior or run a full baseline until the layer returning zero is proven.
+- Phase 3N: add the smallest safe normalization/eligibility fix for Serper Shopping product-detail result links and the `Shop-Vac` brand/title false positive. Preserve category/listing/article safety and prove behavior with negative tests. Do not combine this with brand-preserving query construction.
 
 ---
 
@@ -426,29 +426,66 @@ QA log:
 
 - See `docs/qa-loop-results.md` entry "Codex QA Update - 2026-06-26 (Phase 3L: live proof after source-upgrade fallback ladder)".
 
-### Phase 3M - Source-upgrade shopping-provider coverage diagnostic - TODO / NEXT
+### Phase 3M - Source-upgrade raw Serper and query-identity diagnostic - DONE
 
 Purpose: identify which layer produces zero candidates for both compact and category-context source-upgrade queries.
 
-Diagnose:
+Instrumentation added:
 
-- the exact primary and fallback query strings observed in Phase 3L
-- the upstream Serper shopping response count
-- shopping-result parsing/normalization count
-- source-upgrade invocation context and category passed to the search wrapper
+- Query trace fields: original and cleaned product name, metadata/detected brand, model tokens, selected model identity phrase, category context, primary/fallback queries.
+- Serper fields: raw shopping count, considered/structurally usable count, eligible shopping count, organic fallback count, returned count, result source, rejection-reason counts, and capped raw-result samples.
+- Source-upgrade field: attachable candidate count.
+- Replay prints the new fields and remains compatible with older fixtures.
 
-Boundaries:
+Live findings:
 
-- Diagnostic only; do not change query construction, fallback behavior, identity matching, extraction, scoring, ranking, discovery, triggers, model-token detection, or trust gates.
-- Do not run a full baseline.
-- Do not propose a search-source adjustment until the zero-result layer is proven.
+- Fresh `shop vac` and conditionally allowed `gas grill` fixtures produced no source-upgrade attempts, so direct focused Serper probes were used.
+- `Wet/Dry Vacuum DXV10SB`: 40 raw, 20 structural, 0 eligible; final sample split was 10 `search_or_listing_url` and 10 `generic_or_non_product_title`.
+- `Wet/Dry Vacuum DXV10SB shop vac`: 40 raw, 20 structural, 0 eligible; 3 `search_or_listing_url`, 17 `generic_or_non_product_title`.
+- `DEWALT DXV10SB shop vac`: 40 raw, 20 structural, 0 eligible; 13 `search_or_listing_url`, 7 `generic_or_non_product_title`.
+- A correct `DEWALT DXV10SB` result was present in raw output but used a Google Shopping result URL shaped as `https://www.google.com/search?ibp=oshop...`; the listing-URL gate rejected it.
+- `Shop-Vac` titles can hit the broad generic-title `shop` pattern even when they are specific products.
+- The product object retained `DEWALT` in its name. Metadata brand was absent, but shared brand detection returned `DeWalt`. `buildModelIdentityQuery` dropped it by selecting only `Wet/Dry Vacuum` immediately before `DXV10SB`; fallback inherited the brandless phrase.
+
+Verdict:
+
+- Serper raw coverage is not the observed bottleneck.
+- The immediate bottleneck is Serper Shopping product eligibility/normalization before source-upgrade identity matching.
+- Brand-dropping query identity is a real general defect, but the brand-preserving control still returned zero eligible candidates, so it is secondary.
+- No scoring, ranking, discovery, trigger, query, fallback, identity, extraction, or trust-gate behavior changed.
+
+### Phase 3N - Serper Shopping product-link/title eligibility fix - TODO / NEXT
+
+Purpose: safely retain specific product offers returned by Serper Shopping when their result URL is a Google Shopping offer link, without allowing ordinary search/category pages to become product evidence.
+
+Required scope:
+
+- Distinguish Google Shopping offer URLs (`ibp=oshop`, `udm=28`, product/catalog identifiers) from generic Google search pages.
+- Determine whether a safe merchant product URL can be extracted; otherwise define whether the Google Shopping offer URL can remain evidence-only.
+- Narrow the generic-title rule so the `Shop-Vac` brand is not rejected merely for containing `shop`, while generic shop/category titles remain blocked.
+- Preserve all product-page, article, category, accessory, wrong-model, suspicious-price, and identity gates.
+- Do not change source-upgrade query construction in this phase.
 
 Exit criteria:
 
-- The diagnostic identifies whether zero candidates originate upstream, during parsing/normalization, or in invocation context.
-- The smallest safe follow-up can then be specified, or Phase 3N model-token work can resume if no search-path defect is found.
+- Correct specific-product shopping results survive normalization safely.
+- Generic Google search pages, category/listing pages, article pages, accessories, parts, and wrong products remain blocked.
+- A focused live proof reaches source-upgrade identity sampling or clearly exposes the next gate.
 
-### Phase 3N - Model-token detection broadening - TODO
+### Phase 3O - Brand-preserving source-upgrade identity query - TODO
+
+Purpose: prevent a detected brand at the start of a long product title from being lost when model identity is built from the two words nearest the model token.
+
+Known case:
+
+- `DEWALT 10 Gallon Stainless Steel Wet/Dry Vacuum DXV10SB`
+- detected brand: `DeWalt`
+- current identity phrase: `Wet/Dry Vacuum DXV10SB`
+- desired general shape: detected brand + model + compact category context
+
+Keep this separate from Phase 3N so normalization and query effects remain measurable.
+
+### Phase 3P - Model-token detection broadening - TODO
 
 Only do after source-upgrade query/search-coverage behavior is proven, or after a focused eligibility diagnostic proves that model-token detection is now the source-upgrade blocker.
 
@@ -472,7 +509,7 @@ Tests:
 - Negative tests for generic product names, accessories, parts, and bundles.
 - Prove max attempts still limit cost.
 
-### Phase 3O - Source-quality upgrade final validation - TODO
+### Phase 3Q - Source-quality upgrade final validation - TODO
 
 Purpose: run a focused live validation after 3I/3J/3K.
 
@@ -760,25 +797,24 @@ Do this only after backend trust and ranking are stronger.
 
 ## Immediate Next Task for Codex
 
-Run Phase 3M.
+Run Phase 3N.
 
-Phase 3L proved the Phase 3K fallback is live-wired and runs after an empty primary result. In the observed `shop vac` attempt, both queries returned zero candidates, so the failure still occurs before identity matching or evidence attachment.
+Phase 3M proved Serper returned 40 raw shopping results for each tested query, but the first 20 structurally valid results all failed normalization/eligibility. Correct product offers using Google Shopping search URLs were rejected as search/listing pages, and specific `Shop-Vac` titles could be rejected by the generic `shop` title rule.
 
 Task:
 
-1. Use the exact Phase 3L primary and fallback queries to diagnose the source-upgrade shopping path.
-2. Determine whether Serper returns no shopping results upstream or whether results are lost during parsing/normalization.
-3. Confirm the category and invocation context passed to the existing search wrapper.
-4. Record the smallest next fix only after the zero-result layer is proven.
-5. Update QA docs after the diagnostic.
+1. Design the smallest safe distinction between Google Shopping offer URLs and ordinary Google search/listing URLs.
+2. Narrow the title false positive for the `Shop-Vac` brand without allowing generic shop/category titles.
+3. Add positive and negative deterministic tests before live proof.
+4. Preserve downstream product identity, eligibility, price, citation, and requirement gates.
+5. Run only a focused live proof after deterministic tests pass.
 
 Do not:
 
-- change behavior during the diagnostic;
-- hardcode DEWALT, shop vac, or any specific product/category;
-- broaden model-token detection;
+- change scoring, ranking, final selection, discovery, source-upgrade trigger logic, identity matching, query construction, fallback behavior, or model-token detection;
+- treat arbitrary Google search URLs as product pages;
+- hardcode DEWALT or a single product;
 - loosen trust gates;
-- change scoring, ranking, discovery, trigger, query, fallback, identity, or extraction behavior;
 - run a full baseline.
 
-Exit criteria: prove whether the zero candidate count originates upstream, in Serper result parsing/normalization, or in the source-upgrade invocation context.
+Exit criteria: safe product-specific Serper Shopping results survive normalization while generic/listing/article/unsafe results remain blocked.

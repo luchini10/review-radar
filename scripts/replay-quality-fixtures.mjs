@@ -203,15 +203,71 @@ function printSourceUpgradeTraces(traces) {
     return;
   }
   console.log(`\nSource-Quality Upgrade (${traces.length} attempted):`);
+  const printSearchDiagnostics = (label, diagnostics) => {
+    if (!diagnostics) return;
+    const error = diagnostics.errorKind ? ` error=${diagnostics.errorKind}` : "";
+    console.log(
+      `    ${label} Serper: raw shopping=${diagnostics.rawShoppingResults ?? "?"}, ` +
+        `structural=${diagnostics.structurallyNormalizedShoppingResults ?? "?"}, ` +
+        `eligible=${diagnostics.eligibleShoppingCandidates ?? "?"}, ` +
+        `raw organic=${diagnostics.rawOrganicResults ?? "?"}, ` +
+        `organic eligible=${diagnostics.eligibleOrganicFallbackCandidates ?? "?"}, ` +
+        `returned=${diagnostics.returnedCandidates ?? "?"}, ` +
+        `source=${diagnostics.resultSource ?? "?"}${error}`,
+    );
+    if (
+      diagnostics.shoppingRejectionReasons &&
+      Object.keys(diagnostics.shoppingRejectionReasons).length > 0
+    ) {
+      console.log(
+        `    ${label} rejection counts: ${Object.entries(
+          diagnostics.shoppingRejectionReasons,
+        )
+          .map(([reason, count]) => `${reason}=${count}`)
+          .join(", ")}`,
+      );
+    }
+    if (
+      Array.isArray(diagnostics.shoppingRejectionSample) &&
+      diagnostics.shoppingRejectionSample.length > 0
+    ) {
+      console.log(`    ${label} raw sample:`);
+      for (const sample of diagnostics.shoppingRejectionSample) {
+        console.log(
+          `      ${(sample.title || "").slice(0, 70)} ` +
+            `[${sample.host || "no-host"}] ` +
+            `[${sample.rejectionReason || "eligible"}]`,
+        );
+        if (sample.url) {
+          console.log(`        ${sample.url}`);
+        }
+      }
+    }
+  };
   for (const t of traces) {
     const fields = t.attachedFields?.length > 0 ? t.attachedFields.join(", ") : "(none)";
     const status = t.evidenceAttached ? `✓ attached: ${fields}` : "✗ no match found";
     console.log(`  ${(t.name || "").slice(0, 50)}`);
+    if (t.originalProductName || t.detectedBrand || t.detectedModelTokens) {
+      console.log(`    original: ${t.originalProductName || t.name}`);
+      console.log(`    cleaned: ${t.cleanedProductName || "(not recorded)"}`);
+      console.log(
+        `    identity inputs: metadata brand=${t.metadataBrand || "(none)"}, ` +
+          `detected brand=${t.detectedBrand || "(none)"}, ` +
+          `model tokens=${t.detectedModelTokens?.join(", ") || "(none)"}`,
+      );
+      console.log(
+        `    identity phrase: ${t.modelIdentityPhrase || t.selectedIdentityPhrase || "(not recorded)"}`,
+      );
+      console.log(`    category context: ${t.categoryContext || "(not recorded)"}`);
+    }
     console.log(`    query: ${t.query}`);
     if (t.primaryQuery || t.fallbackQuery !== undefined || t.fallbackUsed !== undefined) {
       console.log(`    primary: ${t.primaryQuery || t.query}`);
       console.log(`    fallback: ${t.fallbackUsed ? t.fallbackQuery || "(missing)" : "not used"}`);
     }
+    printSearchDiagnostics("primary", t.primarySearchDiagnostics);
+    printSearchDiagnostics("fallback", t.fallbackSearchDiagnostics);
     console.log(`    ${status}`);
     // Phase 3G diagnostic fields — gracefully absent in pre-3G fixtures
     if (t.candidatesReturned !== undefined) {
@@ -219,6 +275,9 @@ function printSourceUpgradeTraces(traces) {
       console.log(
         `    results: ${t.candidatesReturned} returned, ${t.candidatesEvaluated ?? 0} identity-matched${reason}`,
       );
+      if (t.attachableCandidates !== undefined) {
+        console.log(`    attachable candidates: ${t.attachableCandidates}`);
+      }
       if (t.primaryCandidatesReturned !== undefined || t.fallbackCandidatesReturned !== undefined) {
         console.log(
           `    result split: primary=${t.primaryCandidatesReturned ?? "?"}, fallback=${t.fallbackCandidatesReturned ?? 0}`,

@@ -75,6 +75,26 @@ function shoppingResult(name, opts = {}) {
   };
 }
 
+function diagnosticSearchResult(candidates, overrides = {}) {
+  return {
+    candidates,
+    diagnostics: {
+      responseReceived: true,
+      rawShoppingResults: candidates.length,
+      shoppingResultsConsidered: candidates.length,
+      structurallyNormalizedShoppingResults: candidates.length,
+      eligibleShoppingCandidates: candidates.length,
+      rawOrganicResults: 0,
+      eligibleOrganicFallbackCandidates: 0,
+      returnedCandidates: candidates.length,
+      resultSource: candidates.length > 0 ? "shopping" : "none",
+      shoppingRejectionReasons: {},
+      shoppingRejectionSample: [],
+      ...overrides,
+    },
+  };
+}
+
 /** A result wrapper that puts products into exactMatches. */
 function makeResult(products) {
   return {
@@ -697,6 +717,80 @@ describe("upgradeWeakSourceEvidence", () => {
     assert.equal(t.noMatchReason, "shopping_results_empty");
     assert.equal(t.evidenceAttached, false);
     assert.deepEqual(t.candidateSample, []);
+  });
+
+  it("records query identity inputs when model phrase selection drops a detected brand", async () => {
+    const product = weakProduct(
+      "DEWALT 10 Gallon Stainless Steel Wet/Dry Vacuum DXV10SB",
+      { category: "shop vac" },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const searchFn = async () => diagnosticSearchResult([]);
+
+    const { sourceUpgradeTraces } = await upgradeWeakSourceEvidence(result, req, {
+      searchFn,
+    });
+
+    const t = sourceUpgradeTraces[0];
+    assert.equal(t.originalProductName, product.name);
+    assert.equal(t.cleanedProductName, product.name);
+    assert.equal(t.metadataBrand, null);
+    assert.equal(t.detectedBrand, "DeWalt");
+    assert.deepEqual(t.detectedModelTokens, ["dxv10sb"]);
+    assert.equal(t.modelIdentityPhrase, "Wet/Dry Vacuum DXV10SB");
+    assert.equal(t.selectedIdentityPhrase, "Wet/Dry Vacuum DXV10SB");
+    assert.equal(t.categoryContext, "shop vac");
+    assert.equal(t.primaryQuery, "Wet/Dry Vacuum DXV10SB");
+    assert.equal(t.fallbackQuery, "Wet/Dry Vacuum DXV10SB shop vac");
+  });
+
+  it("records raw-zero separately from normalization or eligibility loss", async () => {
+    const product = weakProduct("Makita XCV11Z Cordless Wet/Dry Vacuum", {
+      category: "shop vac",
+    });
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    let callCount = 0;
+    const searchFn = async () => {
+      callCount++;
+      return callCount === 1
+        ? diagnosticSearchResult([])
+        : diagnosticSearchResult([], {
+            rawShoppingResults: 3,
+            shoppingResultsConsidered: 3,
+            structurallyNormalizedShoppingResults: 2,
+            eligibleShoppingCandidates: 0,
+          });
+    };
+
+    const { sourceUpgradeTraces } = await upgradeWeakSourceEvidence(result, req, {
+      searchFn,
+    });
+
+    const t = sourceUpgradeTraces[0];
+    assert.equal(t.primarySearchDiagnostics.rawShoppingResults, 0);
+    assert.equal(t.primarySearchDiagnostics.eligibleShoppingCandidates, 0);
+    assert.equal(t.fallbackSearchDiagnostics.rawShoppingResults, 3);
+    assert.equal(
+      t.fallbackSearchDiagnostics.structurallyNormalizedShoppingResults,
+      2,
+    );
+    assert.equal(t.fallbackSearchDiagnostics.eligibleShoppingCandidates, 0);
+    assert.equal(t.candidatesReturned, 0);
+    assert.equal(t.attachableCandidates, 0);
+  });
+
+  it("keeps source-upgrade diagnostics outside the user-facing result shape", async () => {
+    const product = weakProduct("Weber Spirit E-325 3-Burner Gas Grill");
+    const result = makeResult([product]);
+    const output = await upgradeWeakSourceEvidence(result, makeReq(), {
+      searchFn: async () => diagnosticSearchResult([]),
+    });
+
+    assert.deepEqual(Object.keys(output.result).sort(), Object.keys(result).sort());
+    assert.equal("sourceUpgradeTraces" in output.result, false);
+    assert.ok(output.sourceUpgradeTraces.length > 0);
   });
 
   it("records the shortened Phase 3I source-upgrade query in traces", async () => {

@@ -621,3 +621,19 @@ New entries should keep the same format and stay easy to read.
 **Verdict:** Phase 3K is partially live-proven: fallback control flow and trace fields work, but fallback shopping coverage did not improve in this sample. No unsafe candidate or merge appeared.
 
 **Next recommended step:** Run Phase 3M as a diagnostic-only check to locate whether the zero candidates originate in the upstream Serper response, shopping-result parsing/normalization, or source-upgrade invocation context.
+
+## Codex Run - 2026-06-27 Phase 3M
+
+**Goal:** Determine whether source-upgrade zero results came from Serper, query identity, normalization, or later filtering.
+
+**What it changed:** Added debug-only query and Serper Shopping trace fields plus replay output. No product-selection behavior changed.
+
+**What it found:** Serper returned 40 raw results for the primary, fallback, and brand-preserving control queries. The first 20 results in each response were structurally usable, but all were rejected during product eligibility normalization. Correct product offers used Google Shopping search URLs that the listing-page gate blocks, and some `Shop-Vac` titles hit the generic `shop` title rule.
+
+**Query finding:** The product title still contained DEWALT and brand detection found `DeWalt`, but the model-identity helper selected only `Wet/Dry Vacuum DXV10SB`. This is real but secondary because the brand-preserving control was also reduced to zero eligible candidates.
+
+**Tests run:** Focused tests passed 90/90. Typecheck passed. Lint had 0 errors and 3 pre-existing warnings. Full tests passed 624/624. Eval red-flag checks were clean.
+
+**Live checks run:** Fresh `shop vac` and conditionally allowed `gas grill` fixtures, followed by three direct focused Serper Shopping probes. No full baseline.
+
+**Next recommended step:** Phase 3N should safely normalize specific Google Shopping offer links and fix the `Shop-Vac` title false positive, while preserving all category/listing/article/accessory safety gates. Brand-preserving query construction remains a separate Phase 3O.

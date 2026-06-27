@@ -3241,3 +3241,123 @@ Run Phase 3M as a diagnostic-only shopping-provider coverage investigation:
 3. Confirm source-upgrade query/category invocation context.
 4. Propose the smallest search-source or parsing fix only after the zero-result layer is proven.
 5. Keep model-token broadening deferred and do not run a full baseline.
+
+## <span style="color:green">**Codex QA Update - 2026-06-27 (Phase 3M: raw Serper and query-identity diagnostic)**</span>
+
+**Diagnostic-first phase. Added debug-only instrumentation; no scoring, ranking, final-selection, discovery, source-upgrade trigger, query construction, fallback, identity matching, model-token, evidence attachment, requirement-filtering, or trust-gate behavior changed. No full baseline.**
+
+### Starting state
+
+- Repo: `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
+- Starting commit: `1020fd797d3c0c7ff54003c520e0674dbe0be409`
+- Existing untracked baseline and live-fixture files were preserved.
+
+### Instrumentation
+
+Source-upgrade query inputs now record:
+
+- `originalProductName`
+- `cleanedProductName`
+- `metadataBrand`
+- `detectedBrand`
+- `detectedModelTokens`
+- `modelIdentityPhrase`
+- `selectedIdentityPhrase`
+- `categoryContext`
+
+Each default Serper Shopping call can now record:
+
+- response received / error kind
+- raw shopping result count
+- shopping results considered
+- structurally normalizable shopping results
+- eligibility-passing shopping candidates
+- raw/eligible organic fallback results
+- returned candidate count and source
+- rejection-reason counts
+- a capped raw sample with title, host, URL, and rejection reason
+
+The source-upgrade trace also records `attachableCandidates`. Replay prints all new fields and safely skips them for old fixtures.
+
+### Query-identity diagnosis
+
+Attempted Phase 3L product:
+
+- Original name: `DEWALT 10 Gallon Stainless Steel Wet/Dry Vacuum DXV10SB`
+- Cleaned name: unchanged
+- Metadata brand: absent
+- Shared detected brand: `DeWalt`
+- Detected model token: `dxv10sb`
+- Model identity phrase: `Wet/Dry Vacuum DXV10SB`
+- Primary query: `Wet/Dry Vacuum DXV10SB`
+- Fallback query: `Wet/Dry Vacuum DXV10SB shop vac`
+- Category context: `shop vac`
+
+Cause:
+
+- The product still contained `DEWALT`.
+- Brand detection succeeded from the title.
+- `buildModelIdentityQuery` did not use detected brand. It kept the last two words before the model token (`Wet/Dry Vacuum`) and appended `DXV10SB`.
+- Fallback construction intentionally starts from the primary identity phrase, so it inherited the missing brand.
+- This is a general defect for long brand-led titles whose model token appears after descriptive product nouns.
+
+### Focused live runs
+
+The server returned HTTP 200.
+
+```text
+npm run qa:save-fixture -- "shop vac"
+npm run qa:replay -- tests/fixtures/review-radar-live/shop-vac.json
+npm run qa:save-fixture -- "gas grill"
+npm run qa:replay -- tests/fixtures/review-radar-live/gas-grill.json
+```
+
+- `shop vac` fixture saved `2026-06-27T04:16:33.926Z`; `sourceUpgradeTraces: 0`.
+- The conditionally allowed `gas grill` fixture saved `2026-06-27T04:18:04.710Z`; `sourceUpgradeTraces: 0`.
+- Because neither category exercised source upgrade, three smaller direct Serper Shopping probes were run for the exact primary, fallback, and brand-preserving control queries.
+
+### Raw Serper results
+
+| Query | Raw | Structural | Eligible | Returned | Rejection summary |
+|---|---:|---:|---:|---:|---|
+| `Wet/Dry Vacuum DXV10SB` | 40 | 20 | 0 | 0 | 10 search/listing URL; 10 generic/non-product title |
+| `Wet/Dry Vacuum DXV10SB shop vac` | 40 | 20 | 0 | 0 | 3 search/listing URL; 17 generic/non-product title |
+| `DEWALT DXV10SB shop vac` | 40 | 20 | 0 | 0 | 13 search/listing URL; 7 generic/non-product title |
+
+Important raw sample:
+
+- Title: `DEWALT DXV10SB 10 Gal. Stainless Steel Wet/Dry Vacuum with Hose Accessories and Accessory Bag`
+- URL shape: `https://www.google.com/search?ibp=oshop&...&udm=28...`
+- Rejection: `search_or_listing_url`
+
+Additional title finding:
+
+- Specific products whose brand is `Shop-Vac` can be rejected by the broad generic-title `shop` pattern.
+
+### Direct answers
+
+- **Was Serper truly returning zero raw shopping results?** No. It returned 40 for every tested query.
+- **Were results lost after Serper?** Yes. All first 20 structurally usable results per query were rejected during normalization/product eligibility.
+- **Did query construction drop the brand?** Yes. Brand detection found `DeWalt`, but `buildModelIdentityQuery` selected only the two words immediately before `DXV10SB`.
+- **Did the missing brand cause the observed zero eligible candidates?** Not by itself. The brand-preserving control also returned 40 raw and 0 eligible candidates.
+- **Were identity matching or attachable-field extraction reached?** No.
+
+### Verdict and next phase
+
+Primary bottleneck: **Serper Shopping product-link/title eligibility normalization**.
+
+Secondary confirmed defect: **brand-dropping source-upgrade identity construction**.
+
+Recommended order:
+
+1. Phase 3N: safely handle specific Google Shopping offer URLs and the `Shop-Vac` title false positive while preserving listing/article/accessory safety.
+2. Phase 3O: separately preserve detected brand in compact source-upgrade identity queries.
+
+### Verification
+
+- Focused instrumentation tests: 90/90 pass.
+- `npm run typecheck` - clean.
+- `npm run lint` - 0 errors, 3 pre-existing warnings.
+- `npm test` - 624/624 pass.
+- `node scripts/eval-pipeline.mjs` - red-flag checks clean.
+- User-facing non-debug result shape remains unchanged.

@@ -183,6 +183,31 @@ type SerperResponse = {
   error?: unknown;
 };
 
+export type SerperShoppingSearchDiagnostics = {
+  responseReceived: boolean;
+  rawShoppingResults: number;
+  shoppingResultsConsidered: number;
+  structurallyNormalizedShoppingResults: number;
+  eligibleShoppingCandidates: number;
+  rawOrganicResults: number;
+  eligibleOrganicFallbackCandidates: number;
+  returnedCandidates: number;
+  resultSource: "shopping" | "organic_fallback" | "none";
+  shoppingRejectionReasons: Record<string, number>;
+  shoppingRejectionSample: Array<{
+    title: string;
+    host: string;
+    url: string;
+    rejectionReason: string | null;
+  }>;
+  errorKind?: "api_error" | "missing_api_key_or_query";
+};
+
+export type SerperShoppingSearchResult = {
+  candidates: RawProductCandidate[];
+  diagnostics: SerperShoppingSearchDiagnostics;
+};
+
 const knownColors = [
   "beige",
   "black",
@@ -889,37 +914,41 @@ function isLikelySearchOrListingUrl(url: URL) {
   return genericPathPatterns.some((pattern) => pattern.test(path));
 }
 
-function looksLikeSpecificProductCandidate(input: {
+type SpecificProductCandidateInput = {
   imageUrl: string;
   price: number | null;
   snippet: string;
   title: string;
   url: string;
-}) {
+};
+
+function specificProductCandidateRejectionReason(
+  input: SpecificProductCandidateInput,
+) {
   const parsedUrl = parseUrl(input.url);
 
   if (!input.title || !parsedUrl || !isHttpUrl(input.url)) {
-    return false;
+    return "invalid_structure";
   }
 
   if (!titleLooksLikeSpecificProduct(input.title)) {
-    return false;
+    return "generic_or_non_product_title";
   }
 
   if (isLikelySearchOrListingUrl(parsedUrl)) {
-    return false;
+    return "search_or_listing_url";
   }
 
   if (isEvidenceOrDiscussionDomain(parsedUrl)) {
-    return false;
+    return "evidence_or_discussion_domain";
   }
 
   if (pathLooksLikeEvidenceOrSupportPage(parsedUrl)) {
-    return false;
+    return "evidence_or_support_path";
   }
 
   if (parsedUrl.pathname === "/" || parsedUrl.pathname === "") {
-    return false;
+    return "root_url";
   }
 
   const eligibility = classifyProductEligibility({
@@ -934,15 +963,23 @@ function looksLikeSpecificProductCandidate(input: {
   });
 
   if (!eligibility.canRenderAsProductCard) {
-    return false;
+    return "product_eligibility_rejected";
   }
 
-  return (
+  if (
     isKnownProductUrl(parsedUrl) ||
     pathLooksLikeProductDetail(parsedUrl) ||
     titleHasModelOrSku(input.title) ||
     (input.price !== null && Boolean(input.imageUrl && isHttpUrl(input.imageUrl)))
-  );
+  ) {
+    return null;
+  }
+
+  return "insufficient_product_detail";
+}
+
+function looksLikeSpecificProductCandidate(input: SpecificProductCandidateInput) {
+  return specificProductCandidateRejectionReason(input) === null;
 }
 
 function buildCandidateFromResult(input: {
@@ -1065,6 +1102,109 @@ export function normalizeSerperShoppingResults(
 
       return candidate ? [candidate] : [];
     });
+}
+
+function structurallyNormalizableShoppingResult(result: SerperShoppingResult) {
+  const title = asString(result.title);
+  const productUrl = firstString(
+    result.productLink,
+    result.product_link,
+    result.link,
+  );
+
+  return Boolean(title && isHttpUrl(productUrl));
+}
+
+function shoppingResultDiagnosticInput(
+  result: SerperShoppingResult,
+): SpecificProductCandidateInput {
+  return {
+    imageUrl: firstString(
+      result.imageUrl,
+      result.image,
+      result.thumbnailUrl,
+      result.thumbnail,
+    ),
+    price: parsePrice(
+      result.extractedPrice ?? result.extracted_price ?? result.price,
+      result.priceRaw ?? result.price_raw,
+    ),
+    snippet: compact([
+      asString(result.snippet),
+      Array.isArray(result.extensions) ? result.extensions.join(" ") : "",
+      asString(result.position)
+        ? `Position: ${asString(result.position)}`
+        : "",
+    ]).join(" "),
+    title: asString(result.title),
+    url: firstString(result.productLink, result.product_link, result.link),
+  };
+}
+
+export function diagnoseSerperShoppingResponse(
+  response: SerperResponse,
+  query: string,
+  category: string,
+): SerperShoppingSearchResult {
+  const rawShoppingResults = response.shopping || [];
+  const consideredShoppingResults = rawShoppingResults.slice(
+    0,
+    MAX_NORMALIZED_RESULTS_PER_QUERY,
+  );
+  const shoppingCandidates = normalizeSerperShoppingResults(
+    response,
+    query,
+    category,
+  );
+  const organicCandidates =
+    shoppingCandidates.length === 0
+      ? normalizeSerperOrganicResults(response, query, category)
+      : [];
+  const candidates =
+    shoppingCandidates.length > 0 ? shoppingCandidates : organicCandidates;
+  const shoppingRejectionReasons: Record<string, number> = {};
+  const shoppingRejectionSample = consideredShoppingResults
+    .map((result) => {
+      const input = shoppingResultDiagnosticInput(result);
+      const rejectionReason = specificProductCandidateRejectionReason(input);
+
+      if (rejectionReason) {
+        shoppingRejectionReasons[rejectionReason] =
+          (shoppingRejectionReasons[rejectionReason] || 0) + 1;
+      }
+
+      return {
+        title: input.title.slice(0, 120),
+        host: parseUrl(input.url)?.hostname.replace(/^www\./, "") || "",
+        url: input.url.slice(0, 300),
+        rejectionReason,
+      };
+    })
+    .slice(0, 5);
+
+  return {
+    candidates,
+    diagnostics: {
+      responseReceived: true,
+      rawShoppingResults: rawShoppingResults.length,
+      shoppingResultsConsidered: consideredShoppingResults.length,
+      structurallyNormalizedShoppingResults:
+        consideredShoppingResults.filter(structurallyNormalizableShoppingResult)
+          .length,
+      eligibleShoppingCandidates: shoppingCandidates.length,
+      rawOrganicResults: (response.organic || []).length,
+      eligibleOrganicFallbackCandidates: organicCandidates.length,
+      returnedCandidates: candidates.length,
+      resultSource:
+        shoppingCandidates.length > 0
+          ? "shopping"
+          : organicCandidates.length > 0
+            ? "organic_fallback"
+            : "none",
+      shoppingRejectionReasons,
+      shoppingRejectionSample,
+    },
+  };
 }
 
 export function normalizeSerperOrganicResults(
@@ -1329,10 +1469,10 @@ function directRetailerSiteQuery(engine: DirectRetailerEngine) {
   return engine === "walmart" ? "site:walmart.com" : "site:homedepot.com";
 }
 
-export async function searchSerperShopping(
+export async function searchSerperShoppingWithDiagnostics(
   query: string,
   category = query,
-): Promise<RawProductCandidate[]> {
+): Promise<SerperShoppingSearchResult> {
   try {
     const response = await fetchSerper({
       q: query,
@@ -1340,25 +1480,58 @@ export async function searchSerperShopping(
     });
 
     if (!response) {
-      return [];
+      return {
+        candidates: [],
+        diagnostics: {
+          responseReceived: false,
+          rawShoppingResults: 0,
+          shoppingResultsConsidered: 0,
+          structurallyNormalizedShoppingResults: 0,
+          eligibleShoppingCandidates: 0,
+          rawOrganicResults: 0,
+          eligibleOrganicFallbackCandidates: 0,
+          returnedCandidates: 0,
+          resultSource: "none",
+          shoppingRejectionReasons: {},
+          shoppingRejectionSample: [],
+          errorKind: "missing_api_key_or_query",
+        },
+      };
     }
 
-    const shoppingCandidates = normalizeSerperShoppingResults(
-      response,
-      query,
-      category,
-    );
-
-    return shoppingCandidates.length > 0
-      ? shoppingCandidates
-      : normalizeSerperOrganicResults(response, query, category);
+    return diagnoseSerperShoppingResponse(response, query, category);
   } catch (error) {
     logSerperWarning("Shopping search skipped after an API error.", {
       query,
       message: error instanceof Error ? error.message : "Unknown error",
     });
-    return [];
+    return {
+      candidates: [],
+      diagnostics: {
+        responseReceived: false,
+        rawShoppingResults: 0,
+        shoppingResultsConsidered: 0,
+        structurallyNormalizedShoppingResults: 0,
+        eligibleShoppingCandidates: 0,
+        rawOrganicResults: 0,
+        eligibleOrganicFallbackCandidates: 0,
+        returnedCandidates: 0,
+        resultSource: "none",
+        shoppingRejectionReasons: {},
+        shoppingRejectionSample: [],
+        errorKind: "api_error",
+      },
+    };
   }
+}
+
+export async function searchSerperShopping(
+  query: string,
+  category = query,
+): Promise<RawProductCandidate[]> {
+  const result = await searchSerperShoppingWithDiagnostics(query, category);
+
+  return result.candidates;
 }
 
 export async function searchSerperOrganic(

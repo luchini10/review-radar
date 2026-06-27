@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   cheapPreFilterRawCandidates,
+  diagnoseSerperShoppingResponse,
   mergeProductRecommendations,
   normalizeSerperImageSources,
   normalizeSerperDirectResults,
@@ -94,6 +95,77 @@ describe("Serper product discovery", () => {
     assert.deepEqual(candidates[0].availableColors, ["black"]);
     assert.equal(candidates[0].dimensions.width, 63);
     assert.equal(candidates[0].evidenceSources[0].url, "https://shop.example.com/black-full-sleeper-sofa");
+  });
+
+  it("distinguishes raw Serper shopping results from eligibility-filtered candidates", () => {
+    const rawZero = diagnoseSerperShoppingResponse(
+      { shopping: [] },
+      "Example X100 vacuum",
+      "vacuum",
+    );
+    const filteredZero = diagnoseSerperShoppingResponse(
+      {
+        shopping: [
+          {
+            title: "Vacuums - Example Store",
+            link: "https://shop.example.com/vacuums",
+            source: "Example Store",
+            price: "$99",
+          },
+        ],
+      },
+      "Example X100 vacuum",
+      "vacuum",
+    );
+
+    assert.equal(rawZero.diagnostics.rawShoppingResults, 0);
+    assert.equal(rawZero.diagnostics.structurallyNormalizedShoppingResults, 0);
+    assert.equal(rawZero.diagnostics.eligibleShoppingCandidates, 0);
+    assert.equal(filteredZero.diagnostics.rawShoppingResults, 1);
+    assert.equal(
+      filteredZero.diagnostics.structurallyNormalizedShoppingResults,
+      1,
+    );
+    assert.equal(filteredZero.diagnostics.eligibleShoppingCandidates, 0);
+    assert.equal(filteredZero.diagnostics.returnedCandidates, 0);
+    assert.equal(filteredZero.diagnostics.resultSource, "none");
+    assert.equal(
+      filteredZero.diagnostics.shoppingRejectionReasons
+        .product_eligibility_rejected,
+      1,
+    );
+    assert.equal(filteredZero.diagnostics.shoppingRejectionSample.length, 1);
+  });
+
+  it("diagnoses Google Shopping product links rejected by the listing-URL gate", () => {
+    const result = diagnoseSerperShoppingResponse(
+      {
+        shopping: [
+          {
+            title:
+              "DEWALT DXV10SB 10 Gal. Stainless Steel Wet/Dry Vacuum with Accessories",
+            link: "https://www.google.com/search?q=DEWALT+DXV10SB&udm=28",
+            source: "Example Retailer",
+            price: "$199",
+            imageUrl: "https://example.com/dxv10sb.jpg",
+          },
+        ],
+      },
+      "DEWALT DXV10SB shop vac",
+      "shop vac",
+    );
+
+    assert.equal(result.diagnostics.rawShoppingResults, 1);
+    assert.equal(result.diagnostics.structurallyNormalizedShoppingResults, 1);
+    assert.equal(result.diagnostics.eligibleShoppingCandidates, 0);
+    assert.equal(
+      result.diagnostics.shoppingRejectionReasons.search_or_listing_url,
+      1,
+    );
+    assert.equal(
+      result.diagnostics.shoppingRejectionSample[0].host,
+      "google.com",
+    );
   });
 
   it("does not normalize trusted-store category pages into product candidates", () => {

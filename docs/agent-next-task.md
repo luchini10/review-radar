@@ -4,52 +4,47 @@ Generated: 2026-06-26
 
 ## Current next task
 
-**Phase 3M - source-upgrade shopping-provider coverage diagnostic**
+**Phase 3N - Serper Shopping product-link/title eligibility fix**
 
-Phase 3L partially proved Phase 3K live. For `shop vac`, source upgrade attempted `DEWALT 10 Gallon Stainless Steel Wet/Dry Vacuum DXV10SB`:
+Phase 3M proved that Serper raw coverage is not empty:
 
-- primary `Wet/Dry Vacuum DXV10SB`: 0 candidates
-- fallback `Wet/Dry Vacuum DXV10SB shop vac`: 0 candidates
-- `fallbackUsed: true`
-- `candidatesEvaluated: 0`
-- `noMatchReason: shopping_results_empty`
-- `evidenceAttached: false`
+- `Wet/Dry Vacuum DXV10SB`: 40 raw, 20 structural, 0 eligible
+- `Wet/Dry Vacuum DXV10SB shop vac`: 40 raw, 20 structural, 0 eligible
+- `DEWALT DXV10SB shop vac`: 40 raw, 20 structural, 0 eligible
 
-This proves the fallback is live-wired and correctly gated, but it did not improve shopping coverage in this sample. Identity matching and evidence attachment were not reached.
+A correct DEWALT result was present but used a `google.com/search?ibp=oshop...` Google Shopping offer URL and was rejected by the search/listing URL gate. Some specific `Shop-Vac` titles were also rejected because the generic title rule treats `shop` as non-product wording.
+
+The query builder separately detected `DeWalt` but dropped it when it selected only the two words immediately before model `DXV10SB`. That query fix is deferred until after normalization is repaired because the brand-preserving control was also reduced to zero eligible candidates.
 
 ## Required next phase
 
-Run a focused diagnostic. Do not change behavior or run a full baseline.
+Implement one focused normalization/eligibility fix. Do not run a full baseline.
 
-Diagnose the exact Phase 3L query path:
+Required behavior:
 
-1. Confirm whether the upstream Serper shopping response contains zero results for the primary and fallback queries.
-2. Confirm whether shopping results are lost during parsing or candidate normalization.
-3. Confirm the category and invocation context passed to the search wrapper.
-4. Identify the smallest next fix only after the zero-result layer is proven.
+1. Safely distinguish Google Shopping offer URLs from ordinary Google search/listing URLs.
+2. Prefer or extract a real merchant product URL when the response provides one.
+3. Avoid rejecting the `Shop-Vac` brand merely because it contains `shop`.
+4. Keep generic shop/category titles and unsafe pages blocked.
 
-Inspect:
+Tests must cover:
 
-- the raw shopping response count
-- parsed shopping result count
-- normalized candidate count
-- search query and category arguments
-- errors or response-shape differences hidden by the current zero-candidate result
+- a specific Google Shopping offer result
+- an ordinary Google search URL that must remain blocked
+- a specific `Shop-Vac` product title
+- a generic shop/category title that must remain blocked
+- accessories, parts, wrong models, listing pages, article pages, and unsafe prices
+- unchanged non-debug result shape
 
-Answer:
-
-1. Does the upstream provider return zero results?
-2. If not, where are returned shopping results discarded?
-3. Is the source-upgrade invocation context different from ordinary shopping discovery?
-4. What is the smallest safe next phase?
+After deterministic tests pass, run one focused live proof to confirm candidates reach source-upgrade identity sampling.
 
 Do not:
 
-- change query construction, fallback behavior, parsing, identity matching, extraction, scoring, ranking, discovery, source-upgrade trigger logic, model-token detection, or trust gates during this diagnostic;
+- change query construction, fallback behavior, identity matching, extraction, scoring, ranking, discovery, source-upgrade trigger logic, model-token detection, or trust gates;
 - hardcode brands, products, or categories;
 - run a full baseline.
 
 Reference:
 
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` Phase 3L entry
+- `docs/qa-loop-results.md` Phase 3M entry

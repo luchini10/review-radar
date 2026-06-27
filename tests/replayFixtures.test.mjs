@@ -110,4 +110,32 @@ describe("analyzeFixture — synthetic robot vacuum fixture", () => {
   it("maps Roborock to final (rescued → survived)", () => {
     assert.equal(analysis.dropMap["Roborock S8 Pro Ultra"], "final");
   });
+
+  it("accepts old source-upgrade traces without Phase 3M diagnostic fields", () => {
+    const oldFixture = {
+      _query: "gas grill",
+      result: { exactMatches: [], nearMatches: [] },
+      debug: {
+        stageFunnel: {
+          stages: [],
+          sourceUpgradeTraces: [
+            {
+              name: "Weber Spirit E-325",
+              query: "Weber Spirit E-325 gas grill",
+              evidenceAttached: false,
+              attachedFields: [],
+            },
+          ],
+        },
+      },
+    };
+
+    const oldAnalysis = analyzeFixture(oldFixture);
+
+    assert.equal(oldAnalysis.sourceUpgradeTraces.length, 1);
+    assert.equal(
+      oldAnalysis.sourceUpgradeTraces[0].primarySearchDiagnostics,
+      undefined,
+    );
+  });
 });

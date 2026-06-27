@@ -11,6 +11,18 @@ Update this file after:
 
 Do not update this file for tiny typo fixes, formatting-only edits, or internal cleanup that does not change behavior.
 
+## 2026-06-27
+
+### Codex - Phase 3M: source-upgrade raw Serper and query-identity diagnostics
+- Added debug-only source-upgrade query-input tracing for original/cleaned name, metadata/detected brand, model tokens, selected identity phrase, and category context.
+- Added Serper Shopping diagnostics that distinguish raw results, structurally usable results, eligibility-passing candidates, organic fallback candidates, and final returned candidates. Rejection counts and capped raw samples explain normalization losses.
+- Refactored the existing product-candidate boolean checks into equivalent rejection reasons without changing which candidates pass.
+- Live diagnosis proved all three tested query forms returned 40 raw shopping results and 20 structurally usable results, but zero passed eligibility.
+- A correct DEWALT result used a `google.com/search?ibp=oshop...` Google Shopping offer URL and was rejected as a search/listing URL. Specific `Shop-Vac` titles can also be rejected by the broad generic `shop` title rule.
+- Separately confirmed that brand detection found `DeWalt`, but `buildModelIdentityQuery` dropped it by keeping only the two words before `DXV10SB`. Query behavior was not changed in this phase.
+- No scoring, ranking, discovery, source-upgrade trigger, query/fallback, identity, extraction, or trust-gate behavior changed.
+- Verification: focused tests 90/90; typecheck clean; lint 0 errors with 3 pre-existing warnings; full suite 624/624; eval red-flag checks clean.
+
 ## 2026-06-26
 
 ### Codex - Phase 3K: source-upgrade query fallback ladder

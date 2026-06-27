@@ -10,8 +10,12 @@ import type {
 import {
   searchSerperOrganicEvidence,
   searchSerperShopping,
+  searchSerperShoppingWithDiagnostics,
   type SerperEvidenceSource,
+  type SerperShoppingSearchDiagnostics,
+  type SerperShoppingSearchResult,
 } from "./search/serper.ts";
+import { inferKnownBrand } from "./brandMatching.ts";
 import { baseProductCategoryFromQuery } from "./productCategory.ts";
 import {
   featureEvidenceSupports,
@@ -1124,6 +1128,14 @@ export type SourceUpgradeCandidateSample = {
 
 export type SourceUpgradeTrace = {
   name: string;
+  originalProductName: string;
+  cleanedProductName: string;
+  metadataBrand: string | null;
+  detectedBrand: string | null;
+  detectedModelTokens: string[];
+  modelIdentityPhrase: string;
+  selectedIdentityPhrase: string;
+  categoryContext: string;
   query: string;
   primaryQuery: string;
   fallbackQuery?: string;
@@ -1134,6 +1146,9 @@ export type SourceUpgradeTrace = {
   fallbackCandidatesReturned: number;
   candidatesReturned: number;
   candidatesEvaluated: number;
+  attachableCandidates: number;
+  primarySearchDiagnostics?: SerperShoppingSearchDiagnostics;
+  fallbackSearchDiagnostics?: SerperShoppingSearchDiagnostics;
   noMatchReason?: "shopping_results_empty" | "identity_rejected" | "no_attachable_fields";
   candidateSample: SourceUpgradeCandidateSample[];
 };
@@ -1195,15 +1210,39 @@ function mergeRatingData(
   };
 }
 
+type SourceUpgradeSearchFn = (
+  query: string,
+  category: string,
+) => Promise<RawProductCandidate[] | SerperShoppingSearchResult>;
+
+function sourceUpgradeSearchResult(
+  result: RawProductCandidate[] | SerperShoppingSearchResult,
+) {
+  return Array.isArray(result)
+    ? { candidates: result, diagnostics: undefined }
+    : result;
+}
+
 async function upgradeProductSource(
   product: ProductRecommendation,
   category: string,
-  searchFn: (query: string, category: string) => Promise<RawProductCandidate[]>,
+  searchFn: SourceUpgradeSearchFn,
 ): Promise<{ product: ProductRecommendation; trace: SourceUpgradeTrace }> {
+  const cleanedProductName = stripRetailDisplayFiller(product.name);
+  const modelIdentityPhrase = buildModelIdentityQuery(product.name);
   const query = buildSourceUpgradeShoppingQuery(product, category);
   const fallbackQuery = buildSourceUpgradeFallbackShoppingQuery(product, category, query);
+  const metadataBrand = product.metadata?.brand?.value || null;
   const trace: SourceUpgradeTrace = {
     name: product.name,
+    originalProductName: product.name,
+    cleanedProductName,
+    metadataBrand,
+    detectedBrand: metadataBrand || inferKnownBrand(product.name),
+    detectedModelTokens: modelTokens(product),
+    modelIdentityPhrase,
+    selectedIdentityPhrase: query,
+    categoryContext: category,
     query,
     primaryQuery: query,
     fallbackUsed: false,
@@ -1213,16 +1252,23 @@ async function upgradeProductSource(
     fallbackCandidatesReturned: 0,
     candidatesReturned: 0,
     candidatesEvaluated: 0,
+    attachableCandidates: 0,
     candidateSample: [],
   };
 
-  let candidates = await searchFn(query, category);
+  const primaryResult = sourceUpgradeSearchResult(await searchFn(query, category));
+  let candidates = primaryResult.candidates;
+  trace.primarySearchDiagnostics = primaryResult.diagnostics;
   trace.primaryCandidatesReturned = candidates.length;
 
   if (candidates.length === 0 && fallbackQuery && fallbackQuery !== query) {
     trace.fallbackQuery = fallbackQuery;
     trace.fallbackUsed = true;
-    candidates = await searchFn(fallbackQuery, category);
+    const fallbackResult = sourceUpgradeSearchResult(
+      await searchFn(fallbackQuery, category),
+    );
+    candidates = fallbackResult.candidates;
+    trace.fallbackSearchDiagnostics = fallbackResult.diagnostics;
     trace.fallbackCandidatesReturned = candidates.length;
   }
 
@@ -1301,6 +1347,7 @@ async function upgradeProductSource(
 
     if (attached) {
       if (sampleEntry) sampleEntry.rejectionReason = null;
+      trace.attachableCandidates++;
       trace.evidenceAttached = true;
       break;
     }
@@ -1319,11 +1366,11 @@ export async function upgradeWeakSourceEvidence<T extends RecommendationResult>(
   requirements: RecommendationApiRequest,
   options: {
     concurrency?: number;
-    searchFn?: (query: string, category: string) => Promise<RawProductCandidate[]>;
+    searchFn?: SourceUpgradeSearchFn;
   } = {},
 ): Promise<SourceUpgradeOutcome<T>> {
   const category = baseProductCategoryFromQuery(requirements.query);
-  const searchFn = options.searchFn ?? searchSerperShopping;
+  const searchFn = options.searchFn ?? searchSerperShoppingWithDiagnostics;
 
   const seen = new Set<string>();
   const allCandidates = [
