@@ -639,6 +639,27 @@ Do not continue to the next Phase 4 step until all six files are updated as appr
 - Commit: `844754e` (`docs: complete phase 4 issue harvest`).
 - Result: 61 total issues; broad quality remains inconsistent, with RR-058 the highest-priority Phase 5 safety fix.
 
+## Phase 5 Implementation Program
+
+Phase 5 is executed one approved step at a time. Each step must preserve existing trust gates, add deterministic regressions for every fix, run focused and full verification, update all required docs, commit the completed step, and stop before the next step.
+
+### Phase 5A completion record
+
+- Completed step: Phase 5A - Source-upgrade safety hardening (RR-058 only).
+- Next step: Phase 5B - Source-upgrade identity coverage (RR-052, RR-057, RR-034, RR-035, RR-044), only after explicit instruction.
+- Diagnostic-only: No. This was a narrow behavior fix preceded by a deterministic reproduction.
+- Stop condition hit: No.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-058 changed from Open to Fixed.
+- Behavior: source-upgrade identity rejects explicit candidate product-type conflicts before model/token overlap acceptance and rejects explicit different models within the same model family.
+- Preserved: RR-048, RR-049, RR-051, RR-053, exact model matches, merchant model paths, valid sparse same-product evidence, trigger/fallback/query behavior, scoring/ranking, price/citation trust, and user-facing shape.
+- Verification: focused tests 170/170; typecheck passed; lint 0 errors with 3 pre-existing warnings; full tests 647/647; eval red-flag checks clean.
+- Live proof: Not run.
+- Required docs updated: issue register, QA log, next task, change log, run summary, phased handoff, test memory, and technical overview.
+- Docs committed: Pending final Phase 5A commit.
+- Commit: Pending.
+- Result: the exact Whynter RPD-411WG dehumidifier / wine-refrigerator offer is deterministically rejected with no commerce evidence attached.
+
 ---
 
 ## Larger Product-Quality Phases After Diagnostic Harvest
@@ -911,21 +932,21 @@ Do this only after backend trust and ranking are stronger.
 
 ## Immediate Next Task for Codex
 
-Stop. Phase 4A through 4F are complete.
+Stop. Phase 5A is complete.
 
 Task:
 
-Recommended Phase 5 start, only after explicit approval:
+Recommended next step, only after explicit instruction:
 
-1. Fix RR-058 only.
-2. Prove the exact Whynter dehumidifier/wine-refrigerator negative case deterministically.
-3. Preserve RR-051/RR-053 query-provenance safety and valid same-model Google offers.
-4. Do not combine price, ranking, discovery, brand, or model-token work into that phase.
+1. Run Phase 5B only.
+2. Fix RR-052, RR-057, RR-034, RR-035, and RR-044 as the source-upgrade identity-coverage cluster.
+3. Re-run the exact Phase 5A Whynter negative, no-token product-type negative, same-product positive, and same-family different-model negative.
+4. Do not combine price, ranking, discovery, product-card eligibility, or other later Phase 5 work into Phase 5B.
 
 Do not:
 
-- start Phase 5 without approval;
-- make any behavior change as part of the completed Phase 4 track;
+- start Phase 5B automatically;
+- weaken Phase 5A, RR-051, or RR-053 identity safety;
 - run another live search or full baseline without approval.
 
-Exit criteria met: all Phase 4 steps are documented and committed, the issue map/fix order is complete, and Phase 5 has not begun.
+Exit criteria met: RR-058 is deterministically fixed, all required checks are green, the issue/docs ledger is current, and Phase 5B has not begun.

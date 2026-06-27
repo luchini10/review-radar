@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 4F broad quality sweep
+## Compiled for AI Agent Consumption — Phase 0 through Phase 5A source-upgrade safety hardening
 
 **Generated:** 2026-06-27  
-**Scope:** All phases from initial measurement harness through the complete Phase 4 diagnostic issue-harvest track
+**Scope:** All phases from initial measurement harness through Phase 5A source-upgrade safety hardening
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -18,9 +18,9 @@
 | High | 26 |
 | Medium | 24 |
 | Low | 5 |
-| Open | 13 |
+| Open | 12 |
 | Needs Investigation | 13 |
-| Fixed | 34 |
+| Fixed | 35 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -55,6 +55,7 @@
 | Phase 4D — Product-type/requirement diagnostics | 2 |
 | Phase 4E — Market-leader/citation diagnostics | 1 |
 | Phase 4F — Broad rotating quality sweep | 5 |
+| Phase 5A — Source-upgrade safety hardening | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -1664,7 +1665,7 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 | **Phase** | Phase 4F |
 | **Severity** | Critical |
 | **Title** | Same-brand wrong-product Google offer can pass source-upgrade identity without the target model in its title |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** Target `Whynter RPD-411WG ... Dehumidifier` received price, rating, review count, and citation from `Whynter 34 Bottle Freestanding Wine Refrigerator`. The candidate title contains Whynter but not `RPD-411WG`; the target model appears in the Google Shopping search URL, which RR-053 excludes from identity. Nevertheless, trace recorded `identityMatch: true`, attached `$479` wine-refrigerator evidence, and the contaminated dehumidifier ranked #1.
 
@@ -1676,9 +1677,11 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 
 **Actual:** A same-brand wine refrigerator with no visible target model passed and contaminated a dehumidifier card.
 
-**Suggested fix or next action:** Before any further live source-upgrade proof, diagnose which normalized candidate field supplied the identity pass. Add the exact negative regression and require source-derived model evidence when the target has a strong model token. Preserve valid title/path identity and RR-051/RR-053 protections.
+**Suggested fix or next action:** Implemented in Phase 5A. Keep the exact product-type, same-family model, RR-051, and RR-053 regressions green during all later source-upgrade identity work.
 
 **Independent confirmation:** Whynter's official page identifies RPD-411WG as a discontinued 40-pint dehumidifier: `https://www.whynter.com/product/whynter-energy-star-40-pint-portable-dehumidifier-2/`. The attached candidate was therefore a different product, not a mislabeled target.
+
+**Phase 5A resolution:** `looksLikeSameProduct` now consults the shared `classifyProductTypeMatch` verdict before source-upgrade token/model acceptance. The shared conflict layer recognizes explicit wine/beverage refrigerator evidence as incompatible with a dehumidifier request, independent of model-token extraction. Source titles that present a different explicit token in the same model family are also rejected, while exact model matches, sparse candidates without an explicit conflict, merchant model paths, and measurement-bearing same-product titles remain valid. The exact RPD-411WG/wine-refrigerator regression now returns `identity_rejected` and attaches no price, rating, review count, or citation.
 
 ---
 
@@ -1778,7 +1781,7 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (13 issues)
+### Open (12 issues)
 - RR-034: `modelTokens` misses mixed-case word-preceded numbers
 - RR-035: `modelTokens` misses Samsung Bespoke / FEIN naming
 - RR-043: Product-type taxonomy coverage incomplete
@@ -1788,7 +1791,6 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 - RR-055: Literal `Portable` requirement fails an explicitly portable generator
 - RR-056: Same-brand/model-family concentration crowds out broad-slate diversity
 - RR-057: Measurement text can displace the real model in source-upgrade queries
-- RR-058: Same-brand wrong-product offer can pass source-upgrade identity
 - RR-059: Niche form factors can win broad category searches
 - RR-060: True same-model duplicates can occupy multiple final slots
 - RR-061: Product image metadata accepts non-image or irrelevant assets
@@ -1808,8 +1810,8 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 
-### Fixed (34 issues)
-RR-001, RR-003 through RR-006, RR-010 through RR-012, RR-016, RR-018 through RR-021, RR-023, RR-025 through RR-033, RR-036, RR-038 through RR-040, RR-046 through RR-051, RR-053
+### Fixed (35 issues)
+RR-001, RR-003 through RR-006, RR-010 through RR-012, RR-016, RR-018 through RR-021, RR-023, RR-025 through RR-033, RR-036, RR-038 through RR-040, RR-046 through RR-051, RR-053, RR-058
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -1818,16 +1820,15 @@ RR-001, RR-003 through RR-006, RR-010 through RR-012, RR-016, RR-018 through RR-
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-058** (Critical) — Block same-brand wrong-product source-upgrade attachment before any further live source-upgrade proof.
-2. **RR-002** (Critical) — Restore cross-category suspicious-price protection for verified `$10` full products.
-3. **RR-052 + RR-057 + RR-034 + RR-035 + RR-044** (High/Medium model-identity cluster) — Fix false brands, missed models, and measurement-token false positives as one tested identity batch.
-4. **RR-007 + RR-008 + RR-009 + RR-017 + RR-043** (High cluster) — Category, support/documentation, and wrong-type targets contaminate final and near streams across categories.
-5. **RR-014 + RR-022 + RR-056 + RR-060** (High/Medium quality cluster) — Leader recall, citation loss, family concentration, and true duplicates jointly degrade broad slates.
-6. **RR-055** (High) — Literal positive requirement evidence can be marked failed and remove a valid product.
-7. **RR-059** (Medium) — Broad-query form-factor handling lets niche products outrank mainstream products.
-8. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
-9. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
-10. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
-11. **RR-013** (Medium) — Thin/retailer-only winners still outrank stronger evidence.
-12. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
-13. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
+1. **RR-002** (Critical) — Restore cross-category suspicious-price protection for verified `$10` full products.
+2. **RR-052 + RR-057 + RR-034 + RR-035 + RR-044** (High/Medium model-identity cluster) — Fix false brands, missed models, and measurement-token false positives as one tested identity batch.
+3. **RR-007 + RR-008 + RR-009 + RR-017 + RR-043** (High cluster) — Category, support/documentation, and wrong-type targets contaminate final and near streams across categories.
+4. **RR-014 + RR-022 + RR-056 + RR-060** (High/Medium quality cluster) — Leader recall, citation loss, family concentration, and true duplicates jointly degrade broad slates.
+5. **RR-055** (High) — Literal positive requirement evidence can be marked failed and remove a valid product.
+6. **RR-059** (Medium) — Broad-query form-factor handling lets niche products outrank mainstream products.
+7. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
+8. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
+9. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
+10. **RR-013** (Medium) — Thin/retailer-only winners still outrank stronger evidence.
+11. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
+12. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.

@@ -62,6 +62,16 @@ describe("classifyProductTypeMatch (shared wrong-product-type verdict)", () => {
     assert.equal(verdict.status, "type_conflict");
   });
 
+  it("rejects an explicit wine-refrigerator mismatch for a dehumidifier without relying on a model token", () => {
+    const verdict = classifyProductTypeMatch({
+      evidenceText: "Whynter 34 Bottle Freestanding Wine Refrigerator",
+      requestedCategory: "dehumidifier",
+    });
+
+    assert.equal(verdict.canBeExactMatch, false);
+    assert.equal(verdict.status, "type_conflict");
+  });
+
   it("keeps a real product that shares words with a conflict rule", () => {
     const verdict = classifyProductTypeMatch({
       evidenceText: "Sun Joe SPX3000 Electric Pressure Washer 2030 PSI",

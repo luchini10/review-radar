@@ -665,6 +665,163 @@ describe("upgradeWeakSourceEvidence", () => {
     );
   });
 
+  it("rejects the RR-058 same-brand wine-refrigerator offer for a Whynter dehumidifier", async () => {
+    const product = weakProduct(
+      "Whynter RPD-411WG Energy Star 40 Pint Portable Dehumidifier ...",
+      {
+        category: "dehumidifier",
+        host: "whynter.com",
+        extra: {
+          metadata: {
+            offers: [],
+            title: {
+              confidence: "Medium",
+              sourceType: "open_graph",
+              sourceUrl: "https://whynter.com/product/rpd-411wg",
+              value:
+                "Whynter RPD-411WG Energy Star 40 Pint Portable Dehumidifier (Discontinued) - Whynter LLC",
+              verifiedAt: "2026-06-27",
+            },
+          },
+        },
+      },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("dehumidifier");
+    const candidates = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title: "Whynter 34 Bottle Freestanding Wine Refrigerator",
+            link:
+              "https://www.google.com/search?ibp=oshop&q=Whynter+RPD-411WG&udm=28&prds=localAnnotatedOfferId%3A1%2Ccatalogid%3A15307214737657659465",
+            source: "Trusted Humidors",
+            price: "$479",
+            rating: 4.1,
+            ratingCount: 204,
+          },
+        ],
+      },
+      "Whynter RPD-411WG",
+      "dehumidifier",
+      { allowGoogleShoppingOfferEvidence: true },
+    );
+    const searchFn = async () => diagnosticSearchResult(candidates);
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(candidates.length, 1);
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.equal(sourceUpgradeTraces[0].candidateSample[0].identityMatch, false);
+    assert.ok(
+      !upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 479,
+      ),
+    );
+    assert.ok(
+      !upgraded.exactMatches[0].citations.some((citation) =>
+        citation.title.includes("Wine Refrigerator"),
+      ),
+    );
+  });
+
+  it("keeps a same-brand same-product dehumidifier offer valid", async () => {
+    const product = weakProduct(
+      "Whynter RPD-411WG Energy Star 40 Pint Portable Dehumidifier",
+      { category: "dehumidifier", host: "whynter.com" },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("dehumidifier");
+    const searchFn = async () => [
+      shoppingResult("Whynter RPD-411WG 40 Pint Portable Dehumidifier", {
+        category: "dehumidifier",
+        price: 299,
+        productUrl: "https://retailer.example.com/products/whynter-rpd-411wg",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, true);
+    assert.ok(
+      upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 299,
+      ),
+    );
+  });
+
+  it("does not mistake uppercase measurement text for a conflicting model", async () => {
+    const product = weakProduct("EGO LB7654 765 CFM Cordless Leaf Blower", {
+      category: "leaf blower",
+      host: "egopowerplus.com",
+    });
+    const result = makeResult([product]);
+    const req = makeReq("leaf blower");
+    const searchFn = async () => [
+      shoppingResult("EGO 765 CFM Cordless Leaf Blower", {
+        category: "leaf blower",
+        price: 299,
+        productUrl: "https://retailer.example.com/products/ego-765-cfm-blower",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, true);
+    assert.ok(
+      upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 299,
+      ),
+    );
+  });
+
+  it("rejects a same-brand dehumidifier with a different explicit model", async () => {
+    const product = weakProduct(
+      "Whynter RPD-411WG Energy Star 40 Pint Portable Dehumidifier",
+      {
+        category: "dehumidifier",
+        host: "whynter.com",
+        extra: {
+          metadata: {
+            offers: [],
+            title: {
+              confidence: "Medium",
+              sourceType: "open_graph",
+              sourceUrl: "https://whynter.com/product/rpd-411wg",
+              value:
+                "Whynter RPD-411WG Energy Star 40 Pint Portable Dehumidifier - Whynter LLC",
+              verifiedAt: "2026-06-27",
+            },
+          },
+        },
+      },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("dehumidifier");
+    const searchFn = async () => [
+      shoppingResult("Whynter RPD-561EGP Energy Star 50 Pint Dehumidifier", {
+        category: "dehumidifier",
+        price: 379,
+        productUrl: "https://retailer.example.com/products/whynter-rpd-561egp",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.ok(
+      !upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 379,
+      ),
+    );
+  });
+
   it("does not match an HP laptop through a Google offer query parameter", async () => {
     const product = weakProduct(
       "RIDGID 9 Gallon 4.25 Peak HP NXT Wet/Dry Vac HD0900",

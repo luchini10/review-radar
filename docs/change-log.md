@@ -13,6 +13,15 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-27
 
+### Codex - Phase 5A source-upgrade safety hardening
+- Fixed RR-058, where repeated same-brand tokens could let a Whynter wine-refrigerator offer pass source-upgrade identity for an RPD-411WG dehumidifier and attach price, rating, review count, and citation evidence.
+- Source-upgrade identity now checks the shared product-type verdict before model/token overlap acceptance. Explicit wine/beverage refrigerator evidence conflicts with a dehumidifier request even when model extraction is absent or incomplete.
+- Added a bounded same-family model conflict check so an explicit candidate model such as `RPD-561EGP` cannot satisfy a target such as `RPD-411WG` through broad shared title words.
+- Preserved exact model matches, valid same-brand same-product offers, merchant model paths, sparse candidates without an explicit conflict, and titles containing uppercase measurement text such as `765 CFM`.
+- Did not change source-upgrade trigger/fallback/query construction, scoring, ranking, discovery queries, product eligibility, price/citation trust, or requirement gates.
+- Verification: focused identity/source-quality tests 170/170; typecheck clean; lint 0 errors with 3 pre-existing warnings; full suite 647/647; eval red-flag checks clean.
+- No live search or full baseline was run.
+
 ### Codex - Phase 4F broad rotating quality sweep / Phase 4 complete
 - Ran ten approved live searches across coffee makers, office chairs, wireless earbuds, electric toothbrushes, leaf blowers, dog food, dehumidifiers, dash cams, treadmills, and gaming monitors.
 - Opened RR-057 through RR-061 for measurement-token query identity, unsafe same-brand cross-product source upgrade, broad-query form-factor dominance, true same-model duplicates, and invalid/irrelevant image assets.

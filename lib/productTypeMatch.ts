@@ -72,6 +72,12 @@ const PRODUCT_TYPE_CONFLICT_RULES: ProductTypeConflictRule[] = [
     requestedCategory: /\b(?:office chair|task chair|desk chair|computer chair)\b/,
   },
   {
+    allowedEvidence: /\bdehumidifier\b/,
+    conflictingEvidence:
+      /\b(?:wine|beverage)\s+(?:refrigerator|fridge|cooler)\b/,
+    requestedCategory: /\bdehumidifier\b/,
+  },
+  {
     allowedEvidence: /\b(?:bed frame|platform bed|storage bed)\b/,
     conflictingEvidence: /\b(?:mattress|nightstand|dresser|headboard only)\b/,
     requestedCategory: /\bbed frame\b/,

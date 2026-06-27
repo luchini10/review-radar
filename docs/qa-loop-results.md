@@ -4023,3 +4023,52 @@ Currently isolated or less-generalized:
 - Phase 5 was not started.
 
 Recommended direction: begin Phase 5 with a narrow deterministic RR-058 identity-safety phase after explicit approval.
+
+## <span style="color:green">**Codex QA Update - 2026-06-27 (Phase 5A: source-upgrade safety hardening)**</span>
+
+**Verdict: PASS deterministically. RR-058 is fixed; no live proof or full baseline ran.**
+
+### Reproduction and root cause
+
+- The exact Phase 4F Whynter case was reproduced against current code before the fix.
+- Target: `Whynter RPD-411WG Energy Star 40 Pint Portable Dehumidifier ...`.
+- Unsafe candidate: `Whynter 34 Bottle Freestanding Wine Refrigerator`.
+- The Google Shopping URL carried the target query, but RR-053 correctly excluded that query string from identity evidence.
+- The remaining token-overlap fallback counted repeated target tokens from `product.name` and `metadata.title`; repeated `Whynter` occurrences could satisfy its match threshold without product-type agreement.
+- The same fallback could also accept a same-brand, same-type title that named a different explicit model.
+
+### Behavior change
+
+- `looksLikeSameProduct` now asks `classifyProductTypeMatch` for an explicit product-type verdict before accepting exact-model or token-overlap identity.
+- The shared conflict registry now treats wine/beverage refrigerators, fridges, and coolers as explicit mismatches for dehumidifier requests unless the evidence also identifies a dehumidifier.
+- Candidate source titles with an explicit different token in the same model family are rejected (`RPD-411WG` versus `RPD-561EGP`).
+- The model-family check is supplemental, not the sole guard. The product-type veto works with no target model token.
+- Exact source-derived model matches, merchant URL model paths, valid same-product titles, sparse candidates without explicit conflict, and uppercase measurement text remain allowed.
+
+### Deterministic proof
+
+- The exact Whynter wine-refrigerator candidate now returns `identity_rejected`.
+- No `$479` offer, 4.1 rating, 204-review count, or wine-refrigerator citation attaches.
+- A matching Whynter RPD-411WG dehumidifier still attaches evidence.
+- A Whynter RPD-561EGP offer is rejected for the RPD-411WG target.
+- `EGO 765 CFM Cordless Leaf Blower` remains valid for an EGO LB7654 target; measurement text is not treated as a conflicting model family.
+- RR-048/RR-049/RR-051/RR-053 and existing accessory, wrong-model, wrong-type, suspicious-price, query-provenance, and user-facing shape regressions remain green.
+
+### Verification
+
+```text
+focused source/type/identity/Serper/requirement tests: 170/170 passed
+npm run typecheck: passed
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 647/647 passed
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+### Issue and scope outcome
+
+- RR-058: Fixed.
+- Register totals: 61 total; 6 Critical, 26 High, 24 Medium, 5 Low; 12 Open, 13 Needs Investigation, 35 Fixed, 1 Won't Fix.
+- No new issue ID opened.
+- No live search, full baseline, scoring, ranking, source-upgrade trigger/fallback/query, price trust, citation trust, broad product eligibility, or UI change.
+
+Recommended direction: stop after Phase 5A. Begin Phase 5B only on explicit instruction, preserving all Phase 5A safety regressions while addressing RR-052, RR-057, RR-034, RR-035, and RR-044.

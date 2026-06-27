@@ -30,6 +30,7 @@ import {
 import { mapWithConcurrency } from "./recommendationPerformance.ts";
 import { extractSpecsFromText } from "./specExtraction.ts";
 import { sourceTier } from "./search/sourceTier.ts";
+import { classifyProductTypeMatch } from "./productTypeMatch.ts";
 
 type VerifiableFactKind = "color" | "dimension" | "feature" | "price" | "spec";
 
@@ -165,18 +166,45 @@ function significantTokens(value: string) {
     );
 }
 
+function modelTokensFromText(value: string) {
+  return (value.match(/\b[A-Z]{1,5}[-\s]?\d{2,}[A-Z0-9-]*\b/g) || [])
+    .map((token) => normalizeText(token).replace(/\s+/g, ""))
+    .filter((token) => token.length >= 4);
+}
+
 function modelTokens(product: ProductRecommendation) {
   const metadataTokens = [
     product.metadata?.modelNumber?.value || "",
     product.metadata?.sku?.value || "",
     product.metadata?.gtin?.value || "",
   ];
-  const nameTokens =
-    product.name.match(/\b[A-Z]{1,5}[-\s]?\d{2,}[A-Z0-9-]*\b/g) || [];
+  const nameTokens = modelTokensFromText(product.name);
 
   return [...metadataTokens, ...nameTokens]
     .map((token) => normalizeText(token).replace(/\s+/g, ""))
     .filter((token) => token.length >= 4);
+}
+
+function modelFamilyPrefix(value: string) {
+  return value.replace(/[^a-z0-9]/g, "").match(/^[a-z]+/)?.[0] || "";
+}
+
+function hasConflictingModelToken(
+  targetModelTokens: string[],
+  candidateModelTokens: string[],
+) {
+  return candidateModelTokens.some((candidateModel) => {
+    const candidatePrefix = modelFamilyPrefix(candidateModel);
+    if (!candidatePrefix) return false;
+
+    return targetModelTokens.some((targetModel) => {
+      const targetPrefix = modelFamilyPrefix(targetModel);
+      return (
+        targetPrefix === candidatePrefix &&
+        targetModel !== candidateModel
+      );
+    });
+  });
 }
 
 function identityUrlText(value: string) {
@@ -226,12 +254,33 @@ function evidenceTitle(candidate: RawProductCandidate | SerperEvidenceSource) {
 function looksLikeSameProduct(
   product: ProductRecommendation,
   candidate: RawProductCandidate | SerperEvidenceSource,
+  requestedCategory?: string,
 ) {
   const text = evidenceText(candidate);
   const normalizedEvidence = text.replace(/\s+/g, "");
+  const productTypeVerdict = requestedCategory
+    ? classifyProductTypeMatch({
+        evidenceText: text,
+        requestedCategory,
+      })
+    : null;
 
-  if (modelTokens(product).some((model) => normalizedEvidence.includes(model))) {
+  if (productTypeVerdict && !productTypeVerdict.canBeExactMatch) {
+    return false;
+  }
+
+  const targetModelTokens = modelTokens(product);
+  if (targetModelTokens.some((model) => normalizedEvidence.includes(model))) {
     return true;
+  }
+
+  const candidateModelTokens = modelTokensFromText(evidenceTitle(candidate));
+  if (
+    targetModelTokens.length > 0 &&
+    candidateModelTokens.length > 0 &&
+    hasConflictingModelToken(targetModelTokens, candidateModelTokens)
+  ) {
+    return false;
   }
 
   const productTokens = significantTokens(
@@ -1320,7 +1369,7 @@ async function upgradeProductSource(
   const sampleEntries: SourceUpgradeCandidateSample[] = [];
 
   for (const candidate of candidates.slice(0, 6)) {
-    const identityMatch = looksLikeSameProduct(updated, candidate);
+    const identityMatch = looksLikeSameProduct(updated, candidate, category);
     const candidatePrice = candidatePriceEvidence(candidate);
 
     let sampleEntry: SourceUpgradeCandidateSample | null = null;

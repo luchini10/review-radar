@@ -417,3 +417,36 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 5. Old-format traces (no new fields) handled gracefully by replay guard
 
 **Safety gates unchanged:** trigger logic, scoring, ranking, identity matching, query construction, price trust, citation trust all unmodified.
+
+---
+
+## 2026-06-27 — Phase 5A: Source-upgrade same-product safety (RR-058)
+
+**Reproduced failure:** `Whynter RPD-411WG ... Dehumidifier` accepted `Whynter 34 Bottle Freestanding Wine Refrigerator` from a specific Google Shopping offer and attached `$479`, rating 4.1, 204 reviews, and a citation.
+
+**Exact root cause:** RR-053 correctly removed the Google `q=Whynter+RPD-411WG` parameter from identity evidence. The remaining token-overlap fallback still counted repeated tokens from the target's `name` and `metadata.title`; repeated `Whynter` occurrences could satisfy the overlap threshold without any product-type agreement. Broad overlap could likewise override a different explicit same-family model.
+
+**Fix:**
+- Source-upgrade calls `classifyProductTypeMatch` before exact-model/token-overlap identity acceptance.
+- The shared conflict registry treats explicit wine/beverage refrigerator, fridge, or cooler evidence as incompatible with a dehumidifier request unless dehumidifier evidence is also present.
+- A source title with a different explicit token in the same model family is rejected (`RPD-411WG` versus `RPD-561EGP`).
+- The model check remains supplemental. The product-type rejection works without any target model token.
+
+**Preserved positives:**
+- exact source-derived model title;
+- merchant URL path carrying the exact model;
+- same-brand same-product dehumidifier;
+- sparse candidates with no explicit type/model conflict;
+- uppercase measurement text such as `765 CFM` when it is not the target model family;
+- RR-048/RR-049/RR-051/RR-053 behavior and normal user-facing result shape.
+
+**Deterministic verification:**
+- New RR-058/type/model/measurement tests: 4 source-upgrade regressions plus 1 shared product-type regression.
+- Focused source/type/identity/Serper/requirement tests: 170/170.
+- Typecheck: passed.
+- Lint: 0 errors, 3 pre-existing warnings.
+- Full suite: 647/647.
+- `node scripts/eval-pipeline.mjs`: no red-flag issues.
+- Live calls: 0.
+
+**Status:** RR-058 Fixed. Do not remove or weaken these regressions during Phase 5B model-token expansion.

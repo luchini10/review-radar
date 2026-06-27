@@ -829,3 +829,23 @@ New entries should keep the same format and stay easy to read.
 **App/test changes:** None. Twenty-five approved live searches ran across Phase 4B through 4F; no full baseline.
 
 **Next recommended step:** Stop before Phase 5. With explicit approval, start with RR-058 only.
+
+## Codex Run - 2026-06-27 Phase 5A
+
+**Goal:** Fix RR-058 only by preventing unsafe same-brand wrong-product evidence from passing source-upgrade identity.
+
+**Root cause:** RR-053 already removed Google Shopping query parameters from identity evidence, but the fallback overlap matcher counted repeated target tokens from the product name and metadata title. Repeated `Whynter` tokens could satisfy the threshold without a product-type check, and broad shared title words could also override an explicitly different same-family model.
+
+**What changed:** Source-upgrade identity now consults the shared product-type verdict first. Wine/beverage refrigerator evidence explicitly conflicts with a dehumidifier request. A candidate source title that names a different model in the same model family is also rejected.
+
+**What it proved:** The exact RPD-411WG dehumidifier / Whynter wine-refrigerator case now attaches nothing and reports `identity_rejected`. Valid same-product Whynter offers still attach; explicit RPD-561EGP evidence does not attach to RPD-411WG; uppercase measurement text does not create a false model conflict.
+
+**What stayed the same:** Scoring, ranking, final selection, source-upgrade trigger, primary/fallback query construction, retry count, brand detection, target model-token extraction, product eligibility, price/citation trust, and user-facing result shape.
+
+**Tests run:** Focused safety coverage passed 170/170. Typecheck passed. Lint had 0 errors and 3 pre-existing warnings. Full tests passed 647/647. Eval red-flag checks were clean.
+
+**Live checks run:** None.
+
+**Issues:** RR-058 fixed. No issue opened. Register totals are 61 total, 12 Open, 13 Needs Investigation, 35 Fixed, and 1 Won't Fix.
+
+**Next recommended step:** Stop. Begin Phase 5B only after explicit instruction, preserving Phase 5A while fixing the RR-052/RR-057/RR-034/RR-035/RR-044 identity-coverage cluster.
