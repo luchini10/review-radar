@@ -759,3 +759,21 @@ New entries should keep the same format and stay easy to read.
 **App/test changes:** None.
 
 **Next recommended step:** Phase 4C price-trust diagnostics with at most three fresh searches.
+
+## Codex Run - 2026-06-27 Phase 4C
+
+**Goal:** Diagnose fake-low, suspicious, accessory, and installment prices without changing trust behavior.
+
+**Searches:** Fresh `shop vac`, `cordless drill`, and `pressure washer` fixtures, each replayed once.
+
+**Primary result:** RR-002 reproduced on a second product. A Vacmaster 1.5-gallon vacuum received a `$10` Amazon offer, `verified` trust, `canUseForBudget: true`, and exact rank #7.
+
+**Other price evidence:** Reviewed drill prices ($159/$219), pressure-washer prices ($99/$189/$229), and compact-vacuum prices ($36.55/$75.99/$100/$100.33) were plausible full-product or kit amounts. No installment price appeared.
+
+**Other findings:** RR-052 reproduced twice. Pressure-washer detergent ranked exact #2, an advice article exact #6, a category page entered scoring, and six dishwashers survived into near.
+
+**Issues:** Updated RR-002, RR-007, RR-008, RR-013, RR-017, and RR-052. No new issue ID and no status-count change.
+
+**App/test changes:** None.
+
+**Next recommended step:** Phase 4D product-type leakage and requirement diagnostics with at most four fresh searches.

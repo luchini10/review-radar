@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 4B source-upgrade diagnostics
+## Compiled for AI Agent Consumption — Phase 0 through Phase 4C price-trust diagnostics
 
 **Generated:** 2026-06-27  
-**Scope:** All phases from initial measurement harness through Phase 4B source-upgrade safety and reliability diagnostics
+**Scope:** All phases from initial measurement harness through Phase 4C price trust and fake-low price diagnostics
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -51,6 +51,7 @@
 | RR-053 — URL-query identity safety fix | 0 |
 | Phase 4A — Diagnostic issue-harvest setup | 0 |
 | Phase 4B — Source-upgrade safety/reliability diagnostics | 0 |
+| Phase 4C — Price trust and fake-low price diagnostics | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -106,6 +107,8 @@
 **Fix:** Added a `suspicious` price confidence state and product-class-specific sanity floors. Suspicious-price products are blocked from exact match status.
 
 **Phase 3O live-proof regression:** The focused `shop vac` fixture returned `Amazon.com: RIDGID Wet Dry Vacuums VAC1200...` with a `$10` retailer-page offer. Final-selection trace recorded `priceTrustStatus: verified`, `canUseForBudget: true`, and selected the product as exact rank #5. RR-002 is reopened pending a general price-trust investigation; no fix was attempted during the diagnostic.
+
+**Phase 4C reproducibility confirmation:** A fresh independent `shop vac` run reproduced the same defect on a different product. `Vacmaster 1.5-Gallon Wet/Dry Vac - Amazon.com` received a `$10` `retailer_page` offer from its Amazon product URL, `priceTrustStatus: verified`, and `canUseForBudget: true`, then reached exact rank #7. No budget was supplied, so the run proves unsafe trust and exact eligibility but cannot quantify a budget-specific rank boost. The recurrence across RIDGID and Vacmaster establishes a general full-product price-sanity gap rather than a single listing anomaly.
 
 ---
 
@@ -219,6 +222,8 @@
 
 **Phase 4B regression:** Reopened. The fresh `gas grill` fixture selected `Gas Outdoor BBQ Grills Made in the USA - MHP Grills` at exact rank #6. Its only citation is `https://mhpgrills.com/products/grills`, a product collection rather than a specific product page. The original eBay URL patterns remain fixed, but the general category/listing-page class is not contained across hosts.
 
+**Phase 4C evidence:** `Pressure Washers - Best Buy` survived into the exact-scored stream below the final cutoff. It was not selected, but confirms that generic retailer category pages can still pass far enough to consume ranking slots.
+
 ---
 
 #### RR-008
@@ -242,6 +247,8 @@
 **Fix:** Shared product-eligibility classifier now blocks article/review/buying-advice page shapes. Buying-advice page filter added as a reusable helper.
 
 **Phase 4B regression:** Reopened. The fresh `shop vac` fixture selected `Garage Pro® Wet/Dry Vac | No / Low Suction - bissell support` at exact rank #6. The product URL and only citation point to `support.bissell.com/app/answers/...`, a troubleshooting article rather than a product offer. Review/buying-advice patterns remain covered, but support/troubleshooting pages are still eligible as product cards.
+
+**Phase 4C evidence:** `Are Power Washers and Pressure Washers Different? - Best Buy` reached exact rank #6, and `12 common drilling problems and how to avoid them - Euromarc` survived into the cordless-drill near stream. This confirms the regression across support, retailer-learning, and general advice pages.
 
 ---
 
@@ -357,6 +364,8 @@
 
 **Phase 4B evidence:** The fresh `robot vacuum` replay flagged a retailer-only winner (`Shark ION ... S87`) and the `gas grill` replay flagged another retailer-only winner (`Go-Anywhere 1-Burner ...`). Neither run supplied independent editorial support for the winner. This broadens the observed weak-winner pattern beyond self-only citations; status remains Needs Investigation pending the dedicated Phase 4E comparison of stronger products below each winner.
 
+**Phase 4C evidence:** All three replays flagged weak or retailer-only winners: STANLEY SL18125P-1 (`shop vac`), DEWALT DCD771C2 (`cordless drill`), and RYOBI RY141803 (`pressure washer`). Phase 4E still needs to establish whether clearly better-supported products were available below each winner.
+
 ---
 
 ### PHASE 0 — QUALITY MEASUREMENT HARNESS (2026-06-23)
@@ -458,6 +467,8 @@
 **Fix:** Shared `lib/productTypeMatch.ts` wired into discovery; conflict rules applied early.
 
 **Phase 4B regression:** Reopened. A GE Profile washer/dryer entered the `robot vacuum` candidate pool, was demoted to near, then reappeared after revalidation. A Thermador 36-inch gas range/PDF entered the `gas grill` pool, reached source upgrade, received a matching `$7,949` Google Shopping range offer plus citation, and remained in the scored near stream. Neither wrong-type target reached the final seven, but both consumed downstream validation/enrichment work and the range consumed a source-upgrade call.
+
+**Phase 4C evidence:** The `pressure washer` run selected `ZEP 64 oz. All-In-One Pressure Wash` detergent at exact rank #2 and carried six Viking dishwashers into the near stream after revalidation. The detergent is a consumable/accessory, not a pressure washer. This is a direct final-result wrong-type failure; the dishwashers show broader downstream contamination.
 
 ---
 
@@ -1265,6 +1276,8 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 
 **Suggested fix or next action:** Add context-sensitive handling for short ambiguous brand aliases using the existing shared brand system. `HP` adjacent to horsepower quantities or `Peak HP` must not be brand evidence. Preserve genuine HP computer-brand detection in brand-led titles. Also audit why one live product already had `metadataBrand: HP` before source upgrade.
 
+**Phase 4C reproducibility confirmation:** A fresh `shop vac` run produced three source-upgrade attempts. RIDGID `WD4522` and STANLEY `SL18199P` were both assigned detected brand `HP`, producing `HP WD4522` and `HP SL18199P`. The former still found a correct vacuum and attached safely; the latter returned 20 HP-computer candidates and attached nothing. RR-052 is confirmed reproducible and can waste searches or suppress useful evidence even when RR-053 prevents unsafe query-echo identity.
+
 ---
 
 #### RR-053
@@ -1439,6 +1452,31 @@ The `gas grill` attempt targeted `[PDF] PRL364NLG 36-INCH GAS PRO GRAND® RANGE 
 - RR-052 was not exercised because `shop vac` produced no source-upgrade trace.
 - RR-045 remains unconfirmed because the `robot vacuum` run produced no Tapo upgrade attempt.
 - No unsafe cross-product source-upgrade merge was observed. Safe useful source upgrade is still not proven because the only attachment enriched a wrong-type target.
+
+---
+
+### PHASE 4C — PRICE TRUST AND FAKE-LOW PRICE DIAGNOSTICS (2026-06-27)
+
+Three approved fresh searches were saved and replayed: `shop vac`, `cordless drill`, and `pressure washer`. No app behavior or test code changed.
+
+**Price result:**
+
+| Search | Lowest budget-usable price | Trust | Finding |
+|--------|----------------------------|-------|---------|
+| `shop vac` | `$10` Vacmaster 1.5-Gallon Wet/Dry Vac | `verified`; `canUseForBudget: true` | Suspicious fake-low full-product price; exact rank #7 |
+| `cordless drill` | `$159` RYOBI kit | `verified`; `canUseForBudget: true` | Plausible full-kit price |
+| `pressure washer` | `$99` RYOBI RY141803 | `usable`; `canUseForBudget: true` | Plausible full-product price |
+
+Other reviewed low prices were plausible for their product shape: `$36.55` for a 1-gallon STANLEY portable vacuum, `$75.99` for a 2.5-gallon Armor All vacuum, `$100` for a 1.5-gallon Vacmaster, `$189` for AR Blue Clean XM2200, and `$229` for DeWalt DWPW2400. No financing/installment amount was observed.
+
+**Issue result:**
+
+- New issue IDs opened: none.
+- RR-002 confirmed reproducible on a second brand/product and remains Needs Investigation.
+- RR-052 confirmed reproducible on RIDGID WD4522 and STANLEY SL18199P source-upgrade queries.
+- Additional evidence added to reopened RR-007, RR-008, and RR-017.
+- RR-013 received three more weak/retailer-winner examples.
+- RR-001 and RR-003 remain Fixed; this sample did not directly exercise refrigerator or financing-price behavior.
 
 ---
 

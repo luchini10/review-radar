@@ -16,7 +16,7 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 4C - price trust and fake-low price diagnostics**.
+Current phase: **Phase 4D - product-type leakage and requirement diagnostics**.
 
 Phase 3N safely admitted specific Google Shopping offers for source-upgrade evidence and fixed the `Shop-Vac` title false positive. RR-051 removed synthetic query-derived snippets from same-product identity. Phase 3O preserved reliable brand identity in compact model queries.
 
@@ -24,7 +24,7 @@ The Phase 3O live proof then exposed two separate safety defects. RR-053 is now 
 
 Recommended next phase:
 
-- Phase 4C: run at most three focused live diagnostics (`shop vac`, `cordless drill`, `pressure washer`) and document suspicious price provenance, trust status, budget usability, and rank impact without fixing anything.
+- Phase 4D: run at most four focused live diagnostics (`robot vacuum`, `basketball hoop`, `air purifier`, `portable generator`) and document wrong types, accessories, variants, and requirement leakage without fixing anything.
 
 ---
 
@@ -551,8 +551,8 @@ Do not continue to the next Phase 4 step until all six files are updated as appr
 
 - Phase 4A - Diagnostic issue-harvest setup - **DONE**
 - Phase 4B - Source-upgrade safety and reliability diagnostics - **DONE**
-- Phase 4C - Price trust and fake-low price diagnostics - **NEXT**
-- Phase 4D - Product-type leakage and requirement diagnostics - **TODO**
+- Phase 4C - Price trust and fake-low price diagnostics - **DONE**
+- Phase 4D - Product-type leakage and requirement diagnostics - **NEXT**
 - Phase 4E - Market-leader discovery and citation diagnostics - **TODO**
 - Phase 4F - Broad rotating product quality sweep - **TODO**
 
@@ -582,6 +582,20 @@ Do not continue to the next Phase 4 step until all six files are updated as appr
 - Docs committed: Yes.
 - Commit: `01d4fcb` (`docs: record phase 4B diagnostics`).
 - Result: source upgrade fired in 1/3 searches; URL/query identity safety held, but the only attachment enriched a wrong-type range/PDF target.
+
+### Phase 4C completion record
+
+- Completed step: Phase 4C - Price trust and fake-low price diagnostics.
+- Next step: Phase 4D - Product-type leakage and requirement diagnostics.
+- Diagnostic-only: Yes; three live save/replay pairs, with no behavior change.
+- Stop condition hit: No.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-002, RR-007, RR-008, RR-013, RR-017, RR-052.
+- Status changes: None; RR-002 remains Needs Investigation and RR-052 remains Open.
+- Required docs updated: All six Phase 4 documentation files.
+- Docs committed: Pending this phase checkpoint.
+- Commit: Pending.
+- Result: RR-002 reproduced on a second product at `$10` verified/budget-usable/exact; no other fake-low or installment price was observed.
 
 ---
 
@@ -855,24 +869,24 @@ Do this only after backend trust and ranking are stronger.
 
 ## Immediate Next Task for Codex
 
-Run Phase 4C price trust and fake-low price diagnostics.
+Run Phase 4D product-type leakage and requirement diagnostics.
 
-Use at most three live searches: `shop vac`, `cordless drill`, and `pressure washer`. Do not fix anything found.
+Use at most four live searches: `robot vacuum`, `basketball hoop`, `air purifier`, and `portable generator`. Do not fix anything found.
 
 Task:
 
-1. Capture every suspicious price and its product title, URL/host, citation type, trust status, and budget usability.
-2. Determine whether each price belongs to the full product, an accessory/part, a used item, an installment, or a quantity/variant mismatch.
-3. Record exact-match and rank impact.
-4. Clarify RR-002 and regression-check fixed price-trust issues where the sample provides direct evidence.
-5. Update and commit all six required documentation files, then continue automatically to Phase 4D.
+1. Capture wrong product categories, accessories/parts, and variants.
+2. Record exact/near status and any violated requirement.
+3. Decide whether each item should have been rejected or downgraded.
+4. Clarify RR-017/RR-043 and update RR-007/RR-008 if non-product pages recur.
+5. Update and commit all six required documentation files, then continue automatically to Phase 4E.
 
 Do not:
 
 - change app code, tests, scoring, ranking, discovery, source-upgrade, identity, brand, price, citation, eligibility, requirement, or UI behavior;
-- exceed three fresh live searches;
+- exceed four fresh live searches;
 - close an issue because it is absent from a limited sample;
 - commit generated live fixtures or baseline artifacts;
 - run a full baseline.
 
-Exit criteria: all three searches are documented, suspicious price provenance and rank impact are captured, issue evidence/status is updated conservatively, and the docs-only Phase 4C commit is complete.
+Exit criteria: all four searches are documented, wrong-type/requirement outcomes are captured, issue evidence/status is updated conservatively, and the docs-only Phase 4D commit is complete.

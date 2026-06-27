@@ -3760,3 +3760,71 @@ npm run qa:replay -- tests/fixtures/review-radar-live/gas-grill.json
 - No full baseline.
 
 Recommended next task: Phase 4C price-trust and fake-low-price diagnostics.
+
+## <span style="color:green">**Codex QA Update - 2026-06-27 (Phase 4C: price trust and fake-low price diagnostics)**</span>
+
+**Verdict: RR-002 CONFIRMED REPRODUCIBLE. One fake-low full-product price was trusted and selected; other reviewed low prices were plausible.**
+
+### Commands
+
+```text
+npm run qa:save-fixture -- "shop vac"
+npm run qa:replay -- tests/fixtures/review-radar-live/shop-vac.json
+npm run qa:save-fixture -- "cordless drill"
+npm run qa:replay -- tests/fixtures/review-radar-live/cordless-drill.json
+npm run qa:save-fixture -- "pressure washer"
+npm run qa:replay -- tests/fixtures/review-radar-live/pressure-washer.json
+```
+
+### `shop vac`
+
+- Saved: `2026-06-27T18:51:13.691Z`.
+- Candidate pool / exact / near: `27 / 7 / 0`.
+- Confirmed suspicious product: `Vacmaster 1.5-Gallon Wet/Dry Vac - Amazon.com`.
+- Price: `$10`; source: Amazon product URL; citation type: retailer/marketplace.
+- Trace: `priceTrustStatus: verified`, `canUseForBudget: true`.
+- Result impact: exact rank #7. No budget was supplied, so budget-specific rank lift is not measurable.
+- The same failure previously occurred on a different RIDGID product, proving RR-002 is not product-specific.
+- Other low prices were plausible for compact full products: STANLEY 1-gallon `$36.55`, Armor All 2.5-gallon `$75.99`, Vacmaster 1.5-gallon `$100`, RIDGID 4.5-gallon `$100.33`.
+- RR-052 also reproduced: RIDGID WD4522 and STANLEY SL18199P became `HP WD4522` and `HP SL18199P`. Unrelated HP computers were identity-rejected.
+
+### `cordless drill`
+
+- Saved: `2026-06-27T18:52:51.149Z`.
+- Candidate pool / exact / near: `37 / 7 / 0`.
+- Five finalists had missing/unverified prices.
+- Verified prices: RYOBI drill kit `$159`; Bosch right-angle drill kit `$219`.
+- Both were plausible full-kit prices with product-page evidence and `canUseForBudget: true`.
+- No fake-low, accessory price, or installment amount observed.
+
+### `pressure washer`
+
+- Saved: `2026-06-27T18:54:42.707Z`.
+- Candidate pool / exact / near: `32 / 7 / 0`.
+- Attached full-product prices were plausible:
+  - RYOBI RY141803 `$99`, usable and budget-usable;
+  - AR Blue Clean XM2200 `$189`, usable and budget-usable;
+  - DeWalt DWPW2400 `$229`, usable and budget-usable.
+- No fake-low or installment amount observed.
+- Product-quality contamination:
+  - ZEP pressure-wash detergent exact rank #2;
+  - Best Buy advice article exact rank #6;
+  - Best Buy pressure-washer category page exact-scored below cutoff;
+  - six Viking dishwashers survived into near after revalidation.
+
+### Issue outcome
+
+- New issues: none.
+- RR-002: confirmed reproducible; remains Needs Investigation.
+- RR-052: confirmed reproducible; remains Open.
+- RR-007, RR-008, RR-013, RR-017: additional evidence.
+- RR-001 and RR-003 remain Fixed; not directly exercised by these categories.
+- Counts unchanged: 53 total; 5 Open, 10 Needs Investigation, 37 Fixed, 1 Won't Fix.
+
+### Boundaries
+
+- Three live searches, within budget.
+- No app code, tests, scoring, ranking, discovery, price trust, source-upgrade, identity, eligibility, or UI change.
+- No full baseline.
+
+Recommended next task: Phase 4D product-type leakage and requirement diagnostics.

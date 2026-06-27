@@ -13,6 +13,14 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-27
 
+### Codex - Phase 4C price trust and fake-low price diagnostics
+- Ran three approved live searches: `shop vac`, `cordless drill`, and `pressure washer`.
+- Reproduced RR-002 on a different product: a Vacmaster 1.5-gallon wet/dry vacuum received a `$10` Amazon retailer-page offer, `priceTrustStatus: verified`, `canUseForBudget: true`, and exact rank #7.
+- Reviewed the other low/verified prices; they were plausible full-product or kit prices, and no installment amount appeared.
+- Reconfirmed RR-052 through `HP WD4522` and `HP SL18199P` source-upgrade queries.
+- Added product-type/non-product evidence to RR-007, RR-008, and RR-017 after pressure-washer detergent, an advice article, a category page, and dishwashers survived downstream.
+- No app code, tests, scoring, ranking, price trust, or behavior changed.
+
 ### Codex - Phase 4B source-upgrade safety and reliability diagnostics
 - Ran three approved live searches: `shop vac`, `robot vacuum`, and `gas grill`.
 - Source upgrade fired only for `gas grill`; its one primary query returned 2 raw/structural/eligible/normalized Google Shopping offers and attached price plus citation to a matching Thermador range target.
