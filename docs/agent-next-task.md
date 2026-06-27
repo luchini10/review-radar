@@ -4,37 +4,25 @@ Generated: 2026-06-27
 
 ## Current next task
 
-**RR-052: prevent horsepower `HP` from becoming Hewlett-Packard brand identity**
+**Phase 4B: source-upgrade safety and reliability diagnostics**
 
-Phase 3N fixed RR-048 and RR-049 deterministically:
-
-- Source-upgrade Serper normalization can now retain a specific Google Shopping offer only when evidence mode is explicitly enabled and the URL/result carry offer identifiers, a specific title, price, and merchant metadata.
-- Ordinary Google searches and Google Shopping/category pages remain blocked as product cards.
-- Merchant product URLs are preferred over Google offer URLs in evidence mode.
-- Specific `Shop-Vac` product titles survive, while generic shop/category titles remain blocked.
-
-Phase 3N is implemented but not live-proven. One approved `shop vac` proof produced `sourceUpgradeTraces: 0`, so no normalization, identity, or attachment path ran. RR-042 remains open until a trigger-producing focused live proof confirms normalized candidates return and source upgrade behaves safely.
-
-RR-047 remains fixed deterministically.
-
-RR-051 is fixed deterministically. Serper snippets now carry explicit source/query provenance, and source-upgrade identity ignores query-derived fallback snippets plus the request-derived category while retaining source titles, merchant data, URLs, provider specs, and real provider snippets.
-
-RR-053 is fixed deterministically. Source-upgrade identity now ignores all URL query parameters and fragments while retaining safe host/path identity. The HP laptop whose Google Shopping URL contained `q=HP+HD0900` is rejected, valid source-title identity still passes, and merchant model paths remain usable.
+Phase 4A completed the issue-harvest setup. All 53 issue records are unique and structurally complete, summary totals reconcile, and related records were grouped without merging distinct failure layers.
 
 ## Required next phase
 
-Fix RR-052 only: `Peak HP` and horsepower measurements must not become Hewlett-Packard brand identity. Preserve genuine HP computer-brand detection. Reassess reopened RR-002 separately after RR-052; a `$10` full shop-vac offer was treated as verified.
+Run limited live diagnostics for `shop vac`, `robot vacuum`, and `gas grill`. Capture source-upgrade trigger counts, attempted products, primary/fallback queries, raw/structural/eligible/returned counts, rejection reasons, candidate samples, identity outcomes, attachment outcomes, and any unsafe evidence.
+
+Use the results to clarify RR-041, RR-042, RR-045, and RR-052 and regression-check RR-047, RR-048, RR-049, RR-051, and RR-053. Do not fix any issue.
 
 Do not:
 
-- combine these safety defects into scoring or ranking work;
-- change source-upgrade query/fallback behavior;
-- change URL-query identity handling fixed by RR-053;
-- run another live search before deterministic safety tests pass and approval is granted;
+- change app code, tests, scoring, ranking, discovery, source-upgrade, identity, brand, trust, eligibility, or UI behavior;
+- exceed three fresh live searches;
+- close an issue merely because it is absent from this sample;
 - run a full baseline.
 
 Reference:
 
 - `docs/RR-Issues-Report.md`
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` latest RR-053 entry
+- `docs/qa-loop-results.md` latest Phase 4A entry

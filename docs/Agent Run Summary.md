@@ -725,3 +725,19 @@ New entries should keep the same format and stay easy to read.
 **Issue status:** RR-053 fixed. RR-052 remains open. RR-002 and RR-042 remain under investigation.
 
 **Next recommended step:** Fix RR-052 only by separating horsepower `HP` context from genuine Hewlett-Packard brand identity.
+
+## Codex Run - 2026-06-27 Phase 4A
+
+**Goal:** Prepare the canonical issue register for a diagnostic-first Phase 4 issue harvest.
+
+**What it checked:** All 53 issue sections, ID continuity/uniqueness, required schema fields, severity/status totals, duplicate titles, overlap clusters, and unresolved diagnostic needs.
+
+**What it found:** The register is internally consistent. IDs RR-001 through RR-053 are contiguous and unique; totals reconcile at 5 Critical, 25 High, 18 Medium, 5 Low, with 5 Open, 7 Needs Investigation, 40 Fixed, and 1 Won't Fix. Related records describe distinct layers rather than duplicates.
+
+**What changed:** Documentation now groups related issues and maps unresolved evidence needs to Phase 4B through 4F. No issue status or severity changed.
+
+**Live checks run:** None.
+
+**App/test changes:** None.
+
+**Next recommended step:** Phase 4B source-upgrade safety and reliability diagnostics with at most three approved live searches.

@@ -3659,3 +3659,35 @@ npm run qa:replay -- tests/fixtures/review-radar-live/shop-vac.json
 - RR-052: Open and unchanged.
 - RR-002 and RR-042: Needs Investigation and unchanged.
 - Recommended next task: fix RR-052 only, preventing horsepower `Peak HP` context from becoming Hewlett-Packard brand identity while preserving genuine HP-brand detection.
+
+## <span style="color:green">**Codex QA Update - 2026-06-27 (Phase 4A: diagnostic issue-harvest setup)**</span>
+
+**Verdict: PASS. The issue register is structurally ready for the Phase 4 diagnostic track. Docs only; no live search or behavior change.**
+
+### Audit
+
+- Parsed all 53 issue sections from `docs/RR-Issues-Report.md`.
+- IDs are contiguous from RR-001 through RR-053, unique, and not reused.
+- Every record contains ID, phase, severity, title, status, description/evidence, affected mechanism, expected behavior, actual behavior, and a fix/next-action field.
+- No duplicate IDs or exact duplicate titles were found.
+- Actual totals match the header:
+  - severity: 5 Critical, 25 High, 18 Medium, 5 Low;
+  - status: 5 Open, 7 Needs Investigation, 40 Fixed, 1 Won't Fix.
+
+### Organization
+
+- Retained RR-041/RR-042/RR-052 as distinct source-upgrade layers.
+- Retained RR-002 separately from fixed RR-001/RR-003 price failures.
+- Retained RR-034/RR-035/RR-044 as distinct model-token reproductions but one likely future fix batch.
+- Assigned unresolved evidence needs to Phase 4B through 4F.
+- Added the standing rule that absence in a limited live sample is not proof of a fix.
+
+### Boundaries
+
+- No app code or tests changed.
+- No fixture was created or overwritten.
+- No live search or baseline ran.
+- No issue status or severity changed.
+- No new issue was opened.
+
+Recommended next task: Phase 4B source-upgrade safety and reliability diagnostics, limited to `shop vac`, `robot vacuum`, and `gas grill`.

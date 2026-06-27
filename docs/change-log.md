@@ -13,6 +13,13 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-27
 
+### Codex - Phase 4A diagnostic issue-harvest setup
+- Audited all 53 issue records before starting the Phase 4 live diagnostic track.
+- Confirmed IDs are contiguous and unique, every record has the required schema, and severity/status totals reconcile.
+- Documented related issue clusters without merging distinct failure layers.
+- Added explicit Phase 4 status discipline: limited-sample absence does not close an issue.
+- No app code, tests, fixtures, behavior, or live searches changed.
+
 ### Codex - RR-053: exclude URL queries from source-upgrade identity
 - Fixed the unsafe Phase 3O merge where an HP laptop matched a RIDGID HD0900 vacuum only because a Google Shopping offer URL echoed `HP HD0900` in its `q` parameter.
 - Same-product identity now uses only URL host and path; the entire query string and fragment are excluded, including search, tracking, and advertising parameters.

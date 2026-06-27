@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through RR-053 identity-safety fix
+## Compiled for AI Agent Consumption — Phase 0 through Phase 4A diagnostic setup
 
 **Generated:** 2026-06-27  
-**Scope:** All phases from initial measurement harness through the RR-053 identity-safety fix
+**Scope:** All phases from initial measurement harness through Phase 4A diagnostic issue-harvest setup
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -49,6 +49,7 @@
 | Phase 3N — Shopping-offer/title eligibility fixes | 1 |
 | Phase 3O — Brand-preserving query live proof | 2 |
 | RR-053 — URL-query identity safety fix | 0 |
+| Phase 4A — Diagnostic issue-harvest setup | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -1368,6 +1369,32 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 **Actual:** Documentation underestimated costs; bare `qualityScorecard.mjs` invocation ran ~1316 Serper calls without warning.
 
 **Fix:** Scorecard now requires explicit `--mode` flag. Bare invocation refuses to run. Any run estimated > 600 Serper calls blocks without `--confirm`. `--dry-run` prints the full plan at zero cost. Cost model updated to reflect actual ~47 Serper calls/search.
+
+---
+
+### PHASE 4A — DIAGNOSTIC ISSUE-HARVEST SETUP (2026-06-27)
+
+No new defect was opened during Phase 4A. This phase audited and organized the existing register without changing product behavior or closing issues from absence of fresh evidence.
+
+**Audit result:**
+
+- IDs `RR-001` through `RR-053` are contiguous, unique, and not reused.
+- All 53 issue records contain ID, phase, severity, title, status, description/evidence, affected mechanism, expected behavior, actual behavior, and a fix or next-action field.
+- Summary totals reconcile with the records: 5 Critical, 25 High, 18 Medium, 5 Low; 5 Open, 7 Needs Investigation, 40 Fixed, 1 Won't Fix.
+- No exact duplicate titles or duplicate issue IDs were found.
+
+**Related issue clusters retained as separate records:**
+
+| Cluster | Issues | Why they are not duplicates | Next diagnostic phase |
+|---------|--------|-----------------------------|-----------------------|
+| Source-upgrade reliability and safety | RR-041, RR-042, RR-052 | Trigger coverage, normalization/attachment behavior, and false brand identity are distinct failure layers | Phase 4B |
+| Price trust | RR-002; fixed regressions RR-001 and RR-003 | Tiny full-product price, category-specific fake-low price, and installment parsing are distinct price-evidence failures | Phase 4C |
+| Product-type coverage | RR-043 plus fixed wrong-type issues | RR-043 tracks missing taxonomy breadth; earlier records document specific repaired leak classes | Phase 4D |
+| Market-leader and evidence quality | RR-013, RR-014, RR-037 | Thin-winner ranking, aggregate leader recall, and category-specific pool variance are distinct | Phase 4E |
+| Model-token eligibility | RR-034, RR-035, RR-044 | Different token-shape failures share one likely future implementation batch but retain separate reproduction evidence | Phase 4F or later fix planning |
+| Stability and source coverage | RR-015, RR-045 | Run variability and provider-layer coverage are separate uncertainties | Phase 4B/4F |
+
+**Status discipline for Phase 4:** Fixed issues remain fixed unless a fresh regression directly contradicts the fix. Open and Needs Investigation issues remain unresolved until their named diagnostic evidence is collected. A problem not observed in a limited live sample is not considered fixed.
 
 ---
 

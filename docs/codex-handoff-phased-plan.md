@@ -16,7 +16,7 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **RR-052 - horsepower `HP` brand-disambiguation safety fix**.
+Current phase: **Phase 4B - source-upgrade safety and reliability diagnostics**.
 
 Phase 3N safely admitted specific Google Shopping offers for source-upgrade evidence and fixed the `Shop-Vac` title false positive. RR-051 removed synthetic query-derived snippets from same-product identity. Phase 3O preserved reliable brand identity in compact model queries.
 
@@ -24,7 +24,7 @@ The Phase 3O live proof then exposed two separate safety defects. RR-053 is now 
 
 Recommended next phase:
 
-- RR-052 only: prevent horsepower `HP` context from becoming Hewlett-Packard brand identity while preserving genuine HP-brand detection. Do not combine this with RR-002 price trust or another live proof.
+- Phase 4B: run at most three focused live diagnostics (`shop vac`, `robot vacuum`, `gas grill`) and document source-upgrade trigger, candidate, identity, and attachment behavior without fixing anything.
 
 ---
 
@@ -534,9 +534,24 @@ Exit criteria: decide whether the source-quality mini-track is complete or needs
 
 ---
 
-## Larger Product-Quality Phases After Source-Upgrade Track
+## Phase 4A-4F Diagnostic Issue-Harvest Track
 
-### Phase 4 - Discovery coverage / market-leader recall - TODO
+This diagnostic track supersedes entering fix mode immediately. Run each phase in order, update the canonical issue report, and commit docs-only findings after each phase. Do not fix discovered defects during this track.
+
+- Phase 4A - Diagnostic issue-harvest setup - **DONE**
+- Phase 4B - Source-upgrade safety and reliability diagnostics - **IN PROGRESS**
+- Phase 4C - Price trust and fake-low price diagnostics - **TODO**
+- Phase 4D - Product-type leakage and requirement diagnostics - **TODO**
+- Phase 4E - Market-leader discovery and citation diagnostics - **TODO**
+- Phase 4F - Broad rotating product quality sweep - **TODO**
+
+Phase 4A confirmed all 53 issue IDs are contiguous and unique, all records contain the required schema, summary counts reconcile, and overlapping records describe distinct failure layers. No issue status changed.
+
+---
+
+## Larger Product-Quality Phases After Diagnostic Harvest
+
+### Legacy Product-Quality Phase 4 - Discovery coverage / market-leader recall - DEFERRED
 
 Purpose: fix products that never enter the candidate pool. Source upgrade can only help products already found.
 
@@ -804,25 +819,24 @@ Do this only after backend trust and ranking are stronger.
 
 ## Immediate Next Task for Codex
 
-Fix RR-052 only.
+Run Phase 4B source-upgrade safety and reliability diagnostics.
 
-The Phase 3O live proof showed `Peak HP` in RIDGID vacuum names being treated as Hewlett-Packard brand identity. RR-053 has removed the separate URL-query identity bypass. RR-002 remains a separate price-trust investigation.
+Use at most three live searches: `shop vac`, `robot vacuum`, and `gas grill`. Do not fix anything found.
 
 Task:
 
-1. Distinguish horsepower `HP` context from genuine Hewlett-Packard brand use with the existing shared brand system.
-2. Preserve genuine HP computer-brand detection.
-3. Cover both title-derived and metadata-derived `HP` inputs deterministically.
-4. Keep source-upgrade query, fallback, identity, eligibility, scoring, ranking, and trust behavior unchanged.
-5. Do not run live proof without explicit approval after deterministic checks pass.
+1. Capture final products and exact/near counts.
+2. Capture every source-upgrade attempt, query, raw/structural/eligible/returned count, rejection reason, candidate sample, identity result, and attachment result.
+3. Check RR-052 contamination and regression safety for RR-047, RR-048, RR-049, RR-051, and RR-053.
+4. Clarify RR-041, RR-042, and RR-045 where the sample provides direct evidence.
+5. Update and commit documentation only, then continue automatically to Phase 4C.
 
 Do not:
 
-- change scoring, ranking, final selection, discovery, source-upgrade trigger logic, identity matching, query construction, fallback behavior, or model-token detection;
-- change RR-053 URL-query identity behavior;
-- fix RR-002 price trust in the same phase;
-- hardcode RIDGID or a single product;
-- loosen trust gates;
+- change app code, tests, scoring, ranking, discovery, source-upgrade, identity, brand, price, citation, eligibility, requirement, or UI behavior;
+- exceed three fresh live searches;
+- close an issue because it is absent from a limited sample;
+- commit generated live fixtures or baseline artifacts;
 - run a full baseline.
 
-Exit criteria: horsepower wording cannot become Hewlett-Packard brand identity, genuine HP products still detect correctly, and all deterministic safety checks pass.
+Exit criteria: all three searches are documented, issue evidence/status is updated conservatively, and the docs-only Phase 4B commit is complete.
