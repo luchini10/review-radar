@@ -607,8 +607,8 @@ Do not continue to the next Phase 4 step until all six files are updated as appr
 - Existing issue IDs updated: RR-007, RR-009, RR-013, RR-017, RR-043.
 - Status changes: RR-009 reopened as Needs Investigation.
 - Required docs updated: All six Phase 4 documentation files.
-- Docs committed: Pending this phase checkpoint.
-- Commit: Pending.
+- Docs committed: Yes.
+- Commit: `df52791` (`docs: record phase 4D type diagnostics`).
 - Result: cross-category containment failed; a current fallback omitted diagnostics; a valid generator falsely failed `Portable`.
 
 ---
