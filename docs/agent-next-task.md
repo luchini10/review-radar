@@ -4,7 +4,7 @@ Generated: 2026-06-27
 
 ## Current next task
 
-**Focused live proof after Phase 3N, RR-051, and Phase 3O - approval required**
+**Safety fixes required after failed Phase 3O live proof**
 
 Phase 3N fixed RR-048 and RR-049 deterministically:
 
@@ -15,26 +15,23 @@ Phase 3N fixed RR-048 and RR-049 deterministically:
 
 Phase 3N is implemented but not live-proven. One approved `shop vac` proof produced `sourceUpgradeTraces: 0`, so no normalization, identity, or attachment path ran. RR-042 remains open until a trigger-producing focused live proof confirms normalized candidates return and source upgrade behaves safely.
 
-RR-047 is fixed deterministically. The query builder now prefers trusted metadata brand, then existing shared brand detection, and preserves that brand with compact model identity. The confirmed primary/fallback pair is now `DeWalt DXV10SB` and `DeWalt DXV10SB shop vac`.
+RR-047 remains fixed deterministically, but the live proof exposed unsafe upstream identity inputs and a URL-provenance bypass.
 
 RR-051 is fixed deterministically. Serper snippets now carry explicit source/query provenance, and source-upgrade identity ignores query-derived fallback snippets plus the request-derived category while retaining source titles, merchant data, URLs, provider specs, and real provider snippets.
 
 ## Required next phase
 
-Request explicit approval for one focused `shop vac` live proof covering the combined RR-048, RR-049, RR-051, and RR-047 fixes. Do not run a full baseline.
+Fix safety before any further live source-upgrade proof:
 
-The proof should confirm:
-
-1. A source-upgrade attempt fires.
-2. The trace uses the brand-preserving primary/fallback identity.
-3. Normalized candidates reach identity evaluation.
-4. Query-derived fallback text does not influence identity.
-5. Evidence attaches only for a safe same-product candidate.
+1. RR-053 first: Google Shopping offer query parameters must not satisfy same-product identity.
+2. RR-052 next: `Peak HP` must not become Hewlett-Packard brand identity.
+3. Reassess reopened RR-002 separately: a `$10` full shop-vac offer was treated as verified.
 
 Do not:
 
-- change app behavior before the proof;
-- run any category beyond the explicitly approved focused query;
+- combine these safety defects into scoring or ranking work;
+- change source-upgrade query/fallback behavior beyond the proven safety causes;
+- run another live search before deterministic safety tests pass and approval is granted;
 - run a full baseline.
 
 Reference:

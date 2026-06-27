@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 3N
+## Compiled for AI Agent Consumption — Phase 0 through Phase 3O live proof
 
 **Generated:** 2026-06-27  
-**Scope:** All phases from initial measurement harness through Phase 3N Serper Shopping eligibility fixes  
+**Scope:** All phases from initial measurement harness through the Phase 3O focused live proof
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -13,14 +13,14 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 51 |
-| Critical | 4 |
-| High | 24 |
+| Total Issues | 53 |
+| Critical | 5 |
+| High | 25 |
 | Medium | 18 |
 | Low | 5 |
-| Open | 4 |
-| Needs Investigation | 6 |
-| Fixed | 40 |
+| Open | 6 |
+| Needs Investigation | 7 |
+| Fixed | 39 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -47,6 +47,7 @@
 | Phase 3L — Fallback live proof | 1 |
 | Phase 3M — Raw Serper and query-identity diagnostic | 4 |
 | Phase 3N — Shopping-offer/title eligibility fixes | 1 |
+| Phase 3O — Brand-preserving query live proof | 2 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -89,7 +90,7 @@
 | **Phase** | Pre-Phase 0 (Codex baseline) |
 | **Severity** | Critical |
 | **Title** | Tiny accessory/promo prices treated as verified full-product prices |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** Products like air purifiers, cordless drills, vacuums, and office chairs could have `$10` or similarly tiny prices treated as verified full-product prices. An accessory listing price, promotional add-on, or variant price was being accepted without a sanity floor for the product class.
 
@@ -100,6 +101,8 @@
 **Actual:** Tiny prices passed as verified; products ranked as exact matches.
 
 **Fix:** Added a `suspicious` price confidence state and product-class-specific sanity floors. Suspicious-price products are blocked from exact match status.
+
+**Phase 3O live-proof regression:** The focused `shop vac` fixture returned `Amazon.com: RIDGID Wet Dry Vacuums VAC1200...` with a `$10` retailer-page offer. Final-selection trace recorded `priceTrustStatus: verified`, `canUseForBudget: true`, and selected the product as exact rank #5. RR-002 is reopened pending a general price-trust investigation; no fix was attempted during the diagnostic.
 
 ---
 
@@ -1217,6 +1220,58 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 
 ---
 
+### PHASE 3O — BRAND-PRESERVING QUERY LIVE PROOF (2026-06-27)
+
+---
+
+#### RR-052
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-052 |
+| **Phase** | Phase 3O live proof |
+| **Severity** | High |
+| **Title** | Horsepower abbreviation `HP` is misclassified as the Hewlett-Packard brand |
+| **Status** | Open |
+
+**Description:** The focused `shop vac` proof attempted source upgrade for two RIDGID vacuums whose names contain `Peak HP`. Existing shared brand detection interpreted the unit token `HP` as the Hewlett-Packard brand. One candidate already carried `metadataBrand: HP`; the other had no metadata brand but `inferKnownBrand` returned `HP`. Phase 3O correctly preserved that detected brand, producing the unrelated shopping queries `HP HD0900` and `HP HD06001`.
+
+**Where it occurs:** `lib/brandMatching.ts` — short `HP` brand alias handling; upstream product metadata brand inference; `lib/requirementEvidenceRescue.ts` — `sourceUpgradeBrand`
+
+**Steps to reproduce:** Run source-upgrade query construction for `RIDGID 9 Gallon 4.25 Peak HP NXT Wet/Dry Vac HD0900` or `RIDGID 6 Gal. 3.5 Peak HP NXT Wet/Dry Vac HD06001`. Observe detected brand `HP` and primary queries `HP HD0900` / `HP HD06001`.
+
+**Expected:** `HP` used as a horsepower unit in product specifications is not treated as a computer brand. The reliable product identity remains RIDGID plus model where available.
+
+**Actual:** `HP` is trusted as brand identity and redirects source-upgrade shopping search toward Hewlett-Packard products.
+
+**Suggested fix or next action:** Add context-sensitive handling for short ambiguous brand aliases using the existing shared brand system. `HP` adjacent to horsepower quantities or `Peak HP` must not be brand evidence. Preserve genuine HP computer-brand detection in brand-led titles. Also audit why one live product already had `metadataBrand: HP` before source upgrade.
+
+---
+
+#### RR-053
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-053 |
+| **Phase** | Phase 3O live proof |
+| **Severity** | Critical |
+| **Title** | Google Shopping offer URL query parameters can satisfy same-product identity |
+| **Status** | Open |
+
+**Description:** RR-051 excluded query-derived fallback snippets, but source-upgrade identity still consumes the complete candidate URL. Google Shopping offer URLs echo the source-upgrade search in their `q` parameter. For target model `HD0900`, the first returned candidate was `Hp 15.6" HD Windows Laptop`; its URL contained `q=HP+HD0900`. The model-token fast path found `HD0900` in that URL, marked the laptop as the same product, and attached its `$429` price, 4.3 rating, review count, and citation to the RIDGID vacuum.
+
+**Where it occurs:** `lib/requirementEvidenceRescue.ts` — `evidenceText` / `looksLikeSameProduct`; Google Shopping offer URLs produced by `lib/search/serper.ts`
+
+**Steps to reproduce:** Replay the Phase 3O `shop vac` fixture saved at `2026-06-27T14:13:24.432Z`. Inspect the first source-upgrade trace for RIDGID HD0900. Candidate sample shows `Hp 15.6" HD Windows Laptop`, `identityMatch: true`, and all commerce fields attached.
+
+**Expected:** Identity matching uses source-derived product identity. Search/query parameters embedded in an evidence URL cannot satisfy brand or model identity.
+
+**Actual:** The target model echoed in the Google offer URL bypasses RR-051 snippet provenance and causes an unsafe cross-product evidence merge.
+
+**Suggested fix or next action:** Treat search/query parameters as query-derived identity text. Identity evaluation should use a normalized evidence URL identity that excludes search terms and tracking/query parameters while retaining safe host/path signals where useful. Add a deterministic regression using a wrong product title and a Google offer URL whose `q` parameter contains the target model. Safety must be fixed before another live source-upgrade proof.
+
+---
+
 ### CROSS-PHASE / INFRASTRUCTURE
 
 ---
@@ -1315,13 +1370,16 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (4 issues)
+### Open (6 issues)
 - RR-034: `modelTokens` misses mixed-case word-preceded numbers
 - RR-035: `modelTokens` misses Samsung Bespoke / FEIN naming
 - RR-043: Product-type taxonomy coverage incomplete
 - RR-044: `modelTokens` minimum length too restrictive for short model numbers
+- RR-052: Horsepower abbreviation `HP` is misclassified as the Hewlett-Packard brand
+- RR-053: Google Shopping offer URL query parameters can satisfy same-product identity
 
-### Needs Investigation (6 issues)
+### Needs Investigation (7 issues)
+- RR-002: Tiny accessory/promo prices treated as verified full-product prices
 - RR-013: Thin winner crowd-out
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
@@ -1329,8 +1387,8 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 
-### Fixed (40 issues)
-RR-001 through RR-012, RR-014, RR-016 through RR-023, RR-025 through RR-033, RR-036, RR-038 through RR-040, RR-046 through RR-051
+### Fixed (39 issues)
+RR-001, RR-003 through RR-012, RR-014, RR-016 through RR-023, RR-025 through RR-033, RR-036, RR-038 through RR-040, RR-046 through RR-051
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -1339,10 +1397,13 @@ RR-001 through RR-012, RR-014, RR-016 through RR-023, RR-025 through RR-033, RR-
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-042** (Medium) — Run an approval-gated focused live proof after RR-048/RR-049/RR-051/RR-047 fixes; raw provider coverage is proven, live normalized coverage is not.
-2. **RR-041** (Medium) — Source-upgrade attempts remain inconsistent across live runs; add trigger-rate visibility if proof coverage continues to fail.
-3. **RR-043** (High) — Product-type taxonomy incomplete; add rules for all gold-benchmark categories.
-4. **RR-034 + RR-035 + RR-044** (Medium, batch) — Model-token detection gaps; fix together to avoid partial improvements.
-5. **RR-013** (Medium) — Thin winner crowd-out; requires citation-strength score integration (scoring change, not diagnostic).
-6. **RR-015** (High) — Run-to-run stability; requires deeper investigation into LLM temperature or deterministic candidate pinning.
-7. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain; re-measure with raw/structural/eligible diagnostics before changing sources.
+1. **RR-053** (Critical) — Remove Google Shopping search/query parameters from same-product identity evidence before any further live source-upgrade proof.
+2. **RR-052** (High) — Stop horsepower `HP` context from becoming Hewlett-Packard brand identity while preserving genuine HP-brand detection.
+3. **RR-002** (Critical) — Re-investigate the verified `$10` full shop-vac offer and restore suspicious-price protection.
+4. **RR-042** (Medium) — Keep open until source upgrade returns and attaches safe evidence after the new safety defects are fixed.
+5. **RR-041** (Medium) — Source-upgrade attempts remain inconsistent across live runs; add trigger-rate visibility if proof coverage continues to fail.
+6. **RR-043** (High) — Product-type taxonomy incomplete; add rules for all gold-benchmark categories.
+7. **RR-034 + RR-035 + RR-044** (Medium, batch) — Model-token detection gaps; fix together to avoid partial improvements.
+8. **RR-013** (Medium) — Thin winner crowd-out; requires citation-strength score integration (scoring change, not diagnostic).
+9. **RR-015** (High) — Run-to-run stability; requires deeper investigation into LLM temperature or deterministic candidate pinning.
+10. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain; re-measure with raw/structural/eligible diagnostics before changing sources.

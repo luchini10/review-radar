@@ -3548,3 +3548,73 @@ npm run qa:replay -- tests/fixtures/review-radar-live/shop-vac.json
 - RR-047: Fixed.
 - RR-042: Needs Investigation pending an approval-gated trigger-producing live proof.
 - RR-048, RR-049, and RR-051: Fixed and unchanged.
+
+## <span style="color:green">**Codex QA Update - 2026-06-27 (Phase 3O combined-fix `shop vac` live proof)**</span>
+
+**Verdict: FAIL due to unsafe cross-product evidence attachment. One approved `shop vac` live search only. No app-code changes, unrelated searches, or full baseline.**
+
+### Commands
+
+```text
+npm run qa:save-fixture -- "shop vac"
+npm run qa:replay -- tests/fixtures/review-radar-live/shop-vac.json
+```
+
+- Fixture saved: `2026-06-27T14:13:24.432Z`.
+- Candidate pool: 15.
+- Final candidates/exact matches: 6.
+- Source-upgrade traces: 2.
+
+### Attempt 1 — unsafe
+
+- Product: `RIDGID 9 Gallon 4.25 Peak HP NXT Wet/Dry Vac HD0900`.
+- Metadata brand: `HP`.
+- Detected brand: `HP`.
+- Model token: `hd0900`.
+- Primary query: `HP HD0900`.
+- Fallback: not used (`fallbackUsed: false`).
+- Raw / structural / eligible / returned: `40 / 20 / 20 / 20`.
+- Rejection reasons: none; all considered candidates passed shopping normalization.
+- First raw/candidate sample: `Hp 15.6" HD Windows Laptop`, Google Shopping offer URL, `$429`, rating `4.3`.
+- Candidate reached identity matching and incorrectly passed.
+- Attached: price, rating, review count, citation.
+- Cause: Google offer URL contained `q=HP+HD0900`, and the full URL participated in identity matching.
+- Final impact: RIDGID HD0900 selected rank #1, `rankedMatchScore: 240.2`, source quality `30`, price `$429`, market tier `strong`. Exact pre-upgrade score/rank is not present, but unsafe attached fields materially changed ranking inputs.
+
+### Attempt 2 — same-product result, unsafe query identity
+
+- Product: `RIDGID 6 Gal. 3.5 Peak HP NXT Wet/Dry Vac HD06001`.
+- Metadata brand: none.
+- Detected brand: `HP`.
+- Model token: `hd06001`.
+- Primary query: `HP HD06001`.
+- Fallback: not used (`fallbackUsed: false`).
+- Raw / structural / eligible / returned: `40 / 20 / 20 / 20`.
+- Rejection reasons: none.
+- Candidate sample: `Ridgid NXT Wet/Dry Shop Vacuum HD06001`, `$89.98`, rating `4.1`.
+- Candidate reached identity matching and passed on a same-model title.
+- Attached: price, rating, review count, citation.
+- Final impact: selected rank #2 with `rankedMatchScore: 224`.
+- Although the candidate was the correct model, the query was built from the false `HP` brand.
+
+### Additional price-trust regression
+
+- `Amazon.com: RIDGID Wet Dry Vacuums VAC1200...` appeared at exact rank #5 with price `$10`.
+- Final trace: `priceTrustStatus: verified`, `canUseForBudget: true`.
+- RR-002 reopened.
+
+### Safety conclusion
+
+- RR-047 brand preservation is wired live, but it preserved an incorrectly detected `HP` brand.
+- RR-048 Google offer normalization returned eligible candidates.
+- RR-049 Shop-Vac generic-title filtering continued to remove generic/service/video listings.
+- RR-051 snippet provenance did not cause the unsafe merge; a new query-derived URL path bypassed it.
+- Unsafe laptop evidence attached to a vacuum. No further live search or behavior fix was attempted.
+
+### Issues
+
+- RR-052 opened: horsepower `HP` misclassified as Hewlett-Packard brand.
+- RR-053 opened: Google Shopping URL query parameters can satisfy identity.
+- RR-002 reopened: `$10` full shop-vac offer treated as verified.
+- RR-042 remains `Needs Investigation`.
+- RR-047, RR-048, RR-049, and RR-051 remain deterministically fixed, but the combined live system is unsafe until RR-052/RR-053 are addressed.

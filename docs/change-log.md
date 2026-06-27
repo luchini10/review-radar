@@ -13,6 +13,15 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-27
 
+### Codex - Phase 3O focused live proof: unsafe result
+- Ran exactly one approved `shop vac` save/replay after the RR-048, RR-049, RR-051, and RR-047 fixes.
+- Two source-upgrade attempts fired, each returning 40 raw, 20 structural, 20 eligible, and 20 normalized candidates.
+- `Peak HP` was misclassified as Hewlett-Packard brand, producing queries `HP HD0900` and `HP HD06001`.
+- The first attempt incorrectly identity-matched an HP laptop because its Google Shopping URL echoed target model `HD0900` in the `q` parameter. Laptop price, rating, review count, and citation attached to a RIDGID vacuum.
+- Opened RR-052 for ambiguous `HP` brand detection and RR-053 for query parameters contaminating URL identity evidence.
+- Reopened RR-002 after a RIDGID VAC1200 appeared with a verified, budget-usable `$10` price.
+- No app changes, additional live searches, or full baseline. The live fixture remains untracked.
+
 ### Codex - Phase 3O: brand-preserving source-upgrade query identity
 - Fixed RR-047 by passing the existing metadata-first/shared detected brand into compact model query construction.
 - Reliable brand is prepended to the model identity unless already present; unbranded products retain the existing nearby-word behavior.

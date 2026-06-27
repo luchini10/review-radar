@@ -689,3 +689,19 @@ New entries should keep the same format and stay easy to read.
 **Issue status:** RR-047 fixed. RR-042 remains under investigation pending an approved focused live proof. RR-048, RR-049, and RR-051 remain fixed.
 
 **Next recommended step:** Request approval for one focused `shop vac` live proof of the combined source-upgrade fixes.
+
+## Codex Run - 2026-06-27 Phase 3O Live Proof
+
+**Goal:** Live-test the combined RR-048, RR-049, RR-051, and RR-047 source-upgrade fixes with one `shop vac` search.
+
+**Verdict:** Failed due to unsafe evidence attachment.
+
+**What it found:** Source upgrade fired twice and returned normalized Google Shopping candidates. Both RIDGID vacuum names were misread as HP-brand products because `Peak HP` was treated as Hewlett-Packard. The first `HP HD0900` result was an HP laptop; its offer URL echoed `HD0900` in the query parameter, identity matching passed, and laptop price/rating/review/citation data attached to the vacuum.
+
+**Additional finding:** A RIDGID VAC1200 appeared with a verified, budget-usable `$10` price.
+
+**What changed:** Docs only. No app behavior changed and no second live search ran.
+
+**Issues:** Opened RR-052 and RR-053. Reopened RR-002. RR-042 remains under investigation.
+
+**Next recommended step:** Fix RR-053 identity provenance first, then RR-052 ambiguous HP brand detection. Handle RR-002 price trust separately before another approved live proof.
