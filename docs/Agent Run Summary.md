@@ -741,3 +741,21 @@ New entries should keep the same format and stay easy to read.
 **App/test changes:** None.
 
 **Next recommended step:** Phase 4B source-upgrade safety and reliability diagnostics with at most three approved live searches.
+
+## Codex Run - 2026-06-27 Phase 4B
+
+**Goal:** Diagnose source-upgrade trigger coverage, candidate normalization, identity safety, and attachment behavior after RR-047/RR-048/RR-049/RR-051/RR-053.
+
+**Searches:** Fresh `shop vac`, `robot vacuum`, and `gas grill` fixtures, each replayed once.
+
+**Result:** `shop vac` and `robot vacuum` produced no source-upgrade traces. `gas grill` produced one attempt: `[PDF] PRL364NLG` returned 2 raw, 2 structural, 2 eligible, and 2 normalized offers. A PLR book was identity-rejected despite the query in its URL; a matching Thermador range attached price and citation.
+
+**Safety verdict:** No cross-product evidence merge occurred, and RR-051/RR-053 held live. Safe useful attachment is not proven because the only upgraded target was itself a wrong-type gas range/PDF in a gas-grill search.
+
+**Other findings:** A Bissell troubleshooting article and an MHP product collection reached exact final results. A GE washer/dryer survived into the robot-vacuum near stream.
+
+**Issues:** Reopened RR-007, RR-008, and RR-017. Updated evidence for RR-013, RR-041, RR-042, RR-048, RR-051, and RR-053. No new issue ID.
+
+**App/test changes:** None.
+
+**Next recommended step:** Phase 4C price-trust diagnostics with at most three fresh searches.

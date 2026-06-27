@@ -4,15 +4,21 @@ Generated: 2026-06-27
 
 ## Current next task
 
-**Phase 4B: source-upgrade safety and reliability diagnostics**
+**Phase 4C: price trust and fake-low price diagnostics**
 
-Phase 4A completed the issue-harvest setup. All 53 issue records are unique and structurally complete, summary totals reconcile, and related records were grouped without merging distinct failure layers.
+Phase 4B completed three live diagnostics:
+
+- `shop vac`: 0 source-upgrade attempts; a Bissell troubleshooting page reached exact rank #6.
+- `robot vacuum`: 0 source-upgrade attempts; a GE washer/dryer survived into the near stream.
+- `gas grill`: 1 source-upgrade attempt; 2/2/2/2 raw/structural/eligible/returned offers, with a PLR book safely rejected and matching Thermador range evidence attached to a wrong-type range/PDF target.
+
+RR-007, RR-008, and RR-017 were reopened. RR-041 and RR-042 remain under investigation. RR-048, RR-051, and RR-053 received positive live regression evidence. No new issue ID was needed.
 
 ## Required next phase
 
-Run limited live diagnostics for `shop vac`, `robot vacuum`, and `gas grill`. Capture source-upgrade trigger counts, attempted products, primary/fallback queries, raw/structural/eligible/returned counts, rejection reasons, candidate samples, identity outcomes, attachment outcomes, and any unsafe evidence.
+Run Phase 4C price-trust diagnostics with at most three fresh searches: `shop vac`, `cordless drill`, and `pressure washer`.
 
-Use the results to clarify RR-041, RR-042, RR-045, and RR-052 and regression-check RR-047, RR-048, RR-049, RR-051, and RR-053. Do not fix any issue.
+Capture every suspicious price, title, source URL/host, citation type, trust status, `canUseForBudget`, likely accessory/part/used/quantity mismatch, and final exact/rank impact. Focus on RR-002 and regression evidence for fixed RR-001/RR-003 where applicable. Do not fix anything.
 
 Do not:
 
@@ -25,4 +31,4 @@ Reference:
 
 - `docs/RR-Issues-Report.md`
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` latest Phase 4A entry
+- `docs/qa-loop-results.md` latest Phase 4B entry

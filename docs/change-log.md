@@ -13,6 +13,15 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-27
 
+### Codex - Phase 4B source-upgrade safety and reliability diagnostics
+- Ran three approved live searches: `shop vac`, `robot vacuum`, and `gas grill`.
+- Source upgrade fired only for `gas grill`; its one primary query returned 2 raw/structural/eligible/normalized Google Shopping offers and attached price plus citation to a matching Thermador range target.
+- Confirmed RR-051/RR-053 live safety: a PLR-book offer whose URL echoed the target query was rejected as an identity mismatch.
+- Reopened RR-007 after an MHP product-collection page reached exact rank #6.
+- Reopened RR-008 after a Bissell troubleshooting article reached exact rank #6.
+- Reopened RR-017 after a washer/dryer and a gas range/PDF survived downstream, with the range receiving source-upgrade evidence.
+- RR-041/RR-042 remain under investigation; no app code, tests, scoring, ranking, or behavior changed.
+
 ### Codex - Phase 4A diagnostic issue-harvest setup
 - Audited all 53 issue records before starting the Phase 4 live diagnostic track.
 - Confirmed IDs are contiguous and unique, every record has the required schema, and severity/status totals reconcile.

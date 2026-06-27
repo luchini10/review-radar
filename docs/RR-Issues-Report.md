@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 4A diagnostic setup
+## Compiled for AI Agent Consumption — Phase 0 through Phase 4B source-upgrade diagnostics
 
 **Generated:** 2026-06-27  
-**Scope:** All phases from initial measurement harness through Phase 4A diagnostic issue-harvest setup
+**Scope:** All phases from initial measurement harness through Phase 4B source-upgrade safety and reliability diagnostics
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -19,8 +19,8 @@
 | Medium | 18 |
 | Low | 5 |
 | Open | 5 |
-| Needs Investigation | 7 |
-| Fixed | 40 |
+| Needs Investigation | 10 |
+| Fixed | 37 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -50,6 +50,7 @@
 | Phase 3O — Brand-preserving query live proof | 2 |
 | RR-053 — URL-query identity safety fix | 0 |
 | Phase 4A — Diagnostic issue-harvest setup | 0 |
+| Phase 4B — Source-upgrade safety/reliability diagnostics | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -204,7 +205,7 @@
 | **Phase** | Pre-Phase 0 (Codex baseline) |
 | **Severity** | High |
 | **Title** | eBay browse/category pages appearing as exact product matches |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** eBay browse and category pages (URLs matching `/t/`, `/b/`, `/sch/` patterns) were passing the product eligibility check and appearing as exact product recommendations. These are listing pages, not individual product pages.
 
@@ -216,6 +217,8 @@
 
 **Fix:** Product eligibility classifier now explicitly blocks eBay browse/category URL shapes.
 
+**Phase 4B regression:** Reopened. The fresh `gas grill` fixture selected `Gas Outdoor BBQ Grills Made in the USA - MHP Grills` at exact rank #6. Its only citation is `https://mhpgrills.com/products/grills`, a product collection rather than a specific product page. The original eBay URL patterns remain fixed, but the general category/listing-page class is not contained across hosts.
+
 ---
 
 #### RR-008
@@ -226,7 +229,7 @@
 | **Phase** | Pre-Phase 0 (Codex baseline) |
 | **Severity** | High |
 | **Title** | Review/article titles appearing as product cards |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** Pages with titles like "Runner's World: Nike Winflo 11 Review" or "7 Things to Avoid When Purchasing…" were passing eligibility and appearing as product cards in results.
 
@@ -237,6 +240,8 @@
 **Actual:** These pages appeared as recommendations.
 
 **Fix:** Shared product-eligibility classifier now blocks article/review/buying-advice page shapes. Buying-advice page filter added as a reusable helper.
+
+**Phase 4B regression:** Reopened. The fresh `shop vac` fixture selected `Garage Pro® Wet/Dry Vac | No / Low Suction - bissell support` at exact rank #6. The product URL and only citation point to `support.bissell.com/app/answers/...`, a troubleshooting article rather than a product offer. Review/buying-advice patterns remain covered, but support/troubleshooting pages are still eligible as product cards.
 
 ---
 
@@ -350,6 +355,8 @@
 
 **Suggested fix:** Incorporate `citation_type` into the ranking score — e.g., a small bonus for `independent-editorial` citations and a small penalty for `SELF-ONLY` citation strength. Do not change the hard trust gates, only the ranking nudge.
 
+**Phase 4B evidence:** The fresh `robot vacuum` replay flagged a retailer-only winner (`Shark ION ... S87`) and the `gas grill` replay flagged another retailer-only winner (`Go-Anywhere 1-Burner ...`). Neither run supplied independent editorial support for the winner. This broadens the observed weak-winner pattern beyond self-only citations; status remains Needs Investigation pending the dedicated Phase 4E comparison of stronger products below each winner.
+
 ---
 
 ### PHASE 0 — QUALITY MEASUREMENT HARNESS (2026-06-23)
@@ -438,7 +445,7 @@
 | **Phase** | Phase 0 — Hardening Plan |
 | **Severity** | High |
 | **Title** | Cross-category wrong-type products carried through to ranking (discovery-only check missing) |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** The cross-category product-type conflict rules (e.g., washing machine for a pressure-washer search, ottoman for a sofa search, gaming chair for an office-chair search) were only applied at the validation stage, not at discovery. Wrong-type candidates populated the candidate pool and consumed ranking budget.
 
@@ -449,6 +456,8 @@
 **Actual:** Wrong-type products were filtered only at validation; they took up space in the discovery pool.
 
 **Fix:** Shared `lib/productTypeMatch.ts` wired into discovery; conflict rules applied early.
+
+**Phase 4B regression:** Reopened. A GE Profile washer/dryer entered the `robot vacuum` candidate pool, was demoted to near, then reappeared after revalidation. A Thermador 36-inch gas range/PDF entered the `gas grill` pool, reached source upgrade, received a matching `$7,949` Google Shopping range offer plus citation, and remained in the scored near stream. Neither wrong-type target reached the final seven, but both consumed downstream validation/enrichment work and the range consumed a source-upgrade call.
 
 ---
 
@@ -1044,6 +1053,8 @@
 
 **Correction / Phase 3J extension update:** The extension did not confirm an attempt for `robot vacuum`; that run also had `sourceUpgradeTraces: []`. The extension produced two attempts for `shop vac` (`Makita XCV11Z` and `RIDGID WD1450`). Both compact model queries returned zero normalized candidates. The original suggested-fix sentence is retained for history, but its category attribution was incorrect.
 
+**Phase 4B evidence:** Trigger inconsistency persists. Fresh `shop vac` and `robot vacuum` fixtures each produced zero traces, while `gas grill` produced one attempt against a wrong-type Thermador range/PDF target. The trigger is operational, but its live coverage is sparse and target quality is not reliable. Status remains Needs Investigation.
+
 ---
 
 ### PHASE 3J EXTENSION — TRIGGER-PRODUCING CATEGORIES (2026-06-26)
@@ -1085,6 +1096,8 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 **Suggested fix or next action:** Phase 3M completed the requested provider/search-coverage diagnostic. Implement RR-048/RR-049 in Phase 3N, then rerun the focused fallback proof before closing RR-042.
 
 **Phase 3N update:** The Phase 3L live attempt was `DEWALT 10 Gallon Stainless Steel Wet/Dry Vacuum DXV10SB`, with primary `Wet/Dry Vacuum DXV10SB` and fallback `Wet/Dry Vacuum DXV10SB shop vac`. Phase 3M proved Serper returned 40 raw shopping results for each query; all considered results were lost during normalization/product eligibility. Phase 3N fixed RR-048/RR-049 deterministically. The approved Phase 3N `shop vac` proof produced `sourceUpgradeTraces: 0`, so normalization was not exercised. RR-042 remains `Needs Investigation` until a trigger-producing focused live proof confirms candidates survive normalization and proceed safely through identity and attachment.
+
+**Phase 4B evidence:** Candidate normalization and attachment now work live for one primary-query attempt: `[PDF] PRL364NLG` returned 2 raw, 2 structural, 2 eligible, and 2 normalized Google Shopping offers; one candidate identity-matched and attached price plus citation. The fallback path was not exercised, and the upgraded target was a wrong-type range/PDF in a gas-grill search. RR-042 therefore remains Needs Investigation: provider/normalization emptiness is disproved for this attempt, but fallback reliability and safe useful attachment remain unproven.
 
 ---
 
@@ -1139,6 +1152,8 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 **Actual:** The generic Google search/listing rule rejects the specific offer, so no candidate reaches identity matching.
 
 **Suggested fix or next action:** Completed deterministically in Phase 3N. Source upgrade explicitly enables an evidence-only normalization mode that requires Google host, `/search`, `ibp=oshop`, `udm=28`, a product/catalog identifier, specific title, positive price, and merchant/source metadata. Merchant URLs are preferred when available. General discovery and the shared product-card classifier still reject Google search/offer URLs. Identity matching remains mandatory before attachment. Focused live proof is still pending under RR-042.
+
+**Phase 4B live evidence:** Fixed behavior is now observed live. The `gas grill` source-upgrade attempt retained two specific Google Shopping offers (`raw/structural/eligible/returned = 2/2/2/2`) for identity evaluation. This does not make Google offer URLs valid product-card URLs; it only confirms the evidence-only normalization path is active.
 
 ---
 
@@ -1220,6 +1235,8 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 
 **RR-051 fix:** Completed deterministically after Phase 3N. Serper normalization now labels each candidate snippet as `source-derived` or `query-derived`. Source-upgrade identity evaluation ignores query-derived snippets and the request-derived candidate category while continuing to use the provider title, inferred brand, merchant, URL, provider-derived specs, and real provider snippets. The synthetic fallback text remains available for diagnostics and existing non-identity behavior. Regression tests prove the exact snippet-less wrong-product attachment is blocked, generic source titles cannot borrow the target model from the query, and real same-model titles plus RR-048 Google Shopping offers still attach normally.
 
+**Phase 4B live evidence:** The unrelated `The PLR Handbook` Google Shopping result did not borrow identity from the `[PDF] PRL364NLG` source-upgrade query and was rejected as `identity_mismatch`. RR-051 remains Fixed.
+
 ---
 
 ### PHASE 3O — BRAND-PRESERVING QUERY LIVE PROOF (2026-06-27)
@@ -1273,6 +1290,8 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 **Suggested fix or next action:** Treat search/query parameters as query-derived identity text. Identity evaluation should use a normalized evidence URL identity that excludes search terms and tracking/query parameters while retaining safe host/path signals where useful. Add a deterministic regression using a wrong product title and a Google offer URL whose `q` parameter contains the target model. Safety must be fixed before another live source-upgrade proof.
 
 **RR-053 fix:** Completed deterministically on 2026-06-27. Source-upgrade identity now reduces candidate URLs to host plus path before normalization, excluding the complete query string and fragment. Google Shopping `q`, `oq`, `query`, `search`, tracking, and advertising parameters therefore cannot provide brand/model identity. Existing merchant product-page path identity remains available. Regression coverage proves the Phase 3O HP-laptop candidate is rejected with no commerce evidence attached, a matching Google Shopping source title still passes, and a real merchant model path still passes. No live search was run.
+
+**Phase 4B live evidence:** RR-053 is now live-proven for a negative query-echo case. The PLR-book offer URL contained the source-upgrade query `[PDF] PRL364NLG`, but the book remained `identityMatch: false`; query parameters did not supply model identity. RR-053 remains Fixed.
 
 ---
 
@@ -1398,6 +1417,31 @@ No new defect was opened during Phase 4A. This phase audited and organized the e
 
 ---
 
+### PHASE 4B — SOURCE-UPGRADE SAFETY AND RELIABILITY DIAGNOSTICS (2026-06-27)
+
+Three approved fresh searches were saved and replayed: `shop vac`, `robot vacuum`, and `gas grill`. No app behavior or test code changed.
+
+**Source-upgrade result:**
+
+| Search | Exact / near | Upgrade attempts | Outcome |
+|--------|--------------|------------------|---------|
+| `shop vac` | 7 / 0 | 0 | Trigger path not exercised |
+| `robot vacuum` | 7 / 0 | 0 | Trigger path not exercised |
+| `gas grill` | 7 / 0 | 1 | Primary returned 2; one identity match attached price + citation |
+
+The `gas grill` attempt targeted `[PDF] PRL364NLG 36-INCH GAS PRO GRAND® RANGE WITH GRILL (LP)`. Query `[PDF] PRL364NLG` returned 2 raw, 2 structural, 2 eligible, and 2 normalized Google Shopping offers. `The PLR Handbook` was rejected as an identity mismatch even though its URL echoed the query; `Thermador Pro Harmony 36'' ... Gas Range` identity-matched and attached a `$7,949` price plus citation. The URL-query and query-derived identity protections held, but source upgrade enriched a wrong-type range/PDF target.
+
+**Issue result:**
+
+- New issue IDs opened: none.
+- Reopened: RR-007 (brand collection page selected), RR-008 (support article selected), RR-017 (wrong-type products carried downstream).
+- Evidence updated: RR-013, RR-041, RR-042, RR-048, RR-051, RR-053.
+- RR-052 was not exercised because `shop vac` produced no source-upgrade trace.
+- RR-045 remains unconfirmed because the `robot vacuum` run produced no Tapo upgrade attempt.
+- No unsafe cross-product source-upgrade merge was observed. Safe useful source upgrade is still not proven because the only attachment enriched a wrong-type target.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (5 issues)
@@ -1407,17 +1451,20 @@ No new defect was opened during Phase 4A. This phase audited and organized the e
 - RR-044: `modelTokens` minimum length too restrictive for short model numbers
 - RR-052: Horsepower abbreviation `HP` is misclassified as the Hewlett-Packard brand
 
-### Needs Investigation (7 issues)
+### Needs Investigation (10 issues)
 - RR-002: Tiny accessory/promo prices treated as verified full-product prices
+- RR-007: Category/browse pages appearing as exact product matches
+- RR-008: Review/article/support pages appearing as product cards
 - RR-013: Thin winner crowd-out
 - RR-015: Run-to-run stability ~19%
+- RR-017: Cross-category wrong-type products carried downstream
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-041: Source-upgrade trigger not firing in Phase 3J live runs
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 
-### Fixed (40 issues)
-RR-001, RR-003 through RR-012, RR-014, RR-016 through RR-023, RR-025 through RR-033, RR-036, RR-038 through RR-040, RR-046 through RR-051, RR-053
+### Fixed (37 issues)
+RR-001, RR-003 through RR-006, RR-009 through RR-012, RR-014, RR-016, RR-018 through RR-023, RR-025 through RR-033, RR-036, RR-038 through RR-040, RR-046 through RR-051, RR-053
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -1428,10 +1475,11 @@ RR-001, RR-003 through RR-012, RR-014, RR-016 through RR-023, RR-025 through RR-
 
 1. **RR-052** (High) — Stop horsepower `HP` context from becoming Hewlett-Packard brand identity while preserving genuine HP-brand detection.
 2. **RR-002** (Critical) — Re-investigate the verified `$10` full shop-vac offer and restore suspicious-price protection.
-3. **RR-042** (Medium) — Keep open until source upgrade returns and attaches safe evidence after the new safety defects are fixed.
-4. **RR-041** (Medium) — Source-upgrade attempts remain inconsistent across live runs; add trigger-rate visibility if proof coverage continues to fail.
-5. **RR-043** (High) — Product-type taxonomy incomplete; add rules for all gold-benchmark categories.
-6. **RR-034 + RR-035 + RR-044** (Medium, batch) — Model-token detection gaps; fix together to avoid partial improvements.
-7. **RR-013** (Medium) — Thin winner crowd-out; requires citation-strength score integration (scoring change, not diagnostic).
-8. **RR-015** (High) — Run-to-run stability; requires deeper investigation into LLM temperature or deterministic candidate pinning.
-9. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain; re-measure with raw/structural/eligible diagnostics before changing sources.
+3. **RR-007 + RR-008 + RR-017** (High) — Reopened live regressions allow category/support/wrong-type targets downstream; diagnose breadth in Phase 4D before fixing.
+4. **RR-042** (Medium) — Normalization and attachment can work, but fallback reliability and safe useful target attachment remain unproven.
+5. **RR-041** (Medium) — Source-upgrade attempts remain inconsistent across live runs; add trigger-rate visibility if proof coverage continues to fail.
+6. **RR-043** (High) — Product-type taxonomy incomplete; add rules for all gold-benchmark categories.
+7. **RR-034 + RR-035 + RR-044** (Medium, batch) — Model-token detection gaps; fix together to avoid partial improvements.
+8. **RR-013** (Medium) — Thin winner crowd-out; requires citation-strength score integration (scoring change, not diagnostic).
+9. **RR-015** (High) — Run-to-run stability; requires deeper investigation into LLM temperature or deterministic candidate pinning.
+10. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain; re-measure with raw/structural/eligible diagnostics before changing sources.

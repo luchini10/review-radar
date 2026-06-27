@@ -3691,3 +3691,72 @@ npm run qa:replay -- tests/fixtures/review-radar-live/shop-vac.json
 - No new issue was opened.
 
 Recommended next task: Phase 4B source-upgrade safety and reliability diagnostics, limited to `shop vac`, `robot vacuum`, and `gas grill`.
+
+## <span style="color:green">**Codex QA Update - 2026-06-27 (Phase 4B: source-upgrade safety and reliability diagnostics)**</span>
+
+**Verdict: PARTIAL / UNSAFE TARGET QUALITY. Source upgrade attached same-product evidence without a cross-product merge, but only 1 of 3 searches triggered and that attachment enriched a wrong-type gas-range/PDF target.**
+
+### Commands
+
+```text
+npm run qa:save-fixture -- "shop vac"
+npm run qa:replay -- tests/fixtures/review-radar-live/shop-vac.json
+npm run qa:save-fixture -- "robot vacuum"
+npm run qa:replay -- tests/fixtures/review-radar-live/robot-vacuum.json
+npm run qa:save-fixture -- "gas grill"
+npm run qa:replay -- tests/fixtures/review-radar-live/gas-grill.json
+```
+
+### `shop vac`
+
+- Saved: `2026-06-27T18:41:27.019Z`.
+- Candidate pool / exact / near: `19 / 7 / 0`.
+- Source-upgrade traces: `0`.
+- Final seven: BISSELL Garage Pro 18P03; Bissell Garage Pro/Sylvane; Vacmaster VOC507PF; Vacmaster Beast VJH1211PF; Vacmaster 1.5gal/Target; Bissell `No / Low Suction` support page; Bissell/NFM.
+- No source-upgrade query, candidates, identity evaluation, or attachment occurred.
+- Safety finding: `support.bissell.com/app/answers/.../no-low-suction` was selected as exact rank #6. RR-008 reopened.
+
+### `robot vacuum`
+
+- Saved: `2026-06-27T18:43:32.797Z`.
+- Candidate pool / exact / near: `14 / 7 / 0`.
+- Source-upgrade traces: `0`.
+- Final seven: Shark ION S87; Roomba j7; Samsung Bespoke Jet Bot Combo; Shark Matrix; Roomba Combo i3+; Roborock Q5 Pro+; Shark IQ 2-in-1.
+- No source-upgrade query, candidates, identity evaluation, or attachment occurred.
+- Winner had retailer-only citation support.
+- Safety finding: `Ultrafast 2-in-1-washer Dryer Combo | GE Profile Appliances` entered the pool, was demoted to near, and reappeared after revalidation. It was not selected. RR-017 reopened.
+
+### `gas grill`
+
+- Saved: `2026-06-27T18:45:03.050Z`.
+- Candidate pool / exact / near: `22 / 7 / 0`.
+- Source-upgrade traces: `1`.
+- Attempted product: `[PDF] PRL364NLG 36-INCH GAS PRO GRAND® RANGE WITH GRILL (LP)`.
+- Detected brand: none; model token: `prl364nlg`.
+- Primary query: `[PDF] PRL364NLG`; fallback not used.
+- Raw / structural / eligible / returned: `2 / 2 / 2 / 2`.
+- Rejection reasons: none during Shopping normalization.
+- Candidate sample:
+  - `The PLR Handbook ...`, `$1.99`: identity mismatch; no attachment.
+  - `Thermador Pro Harmony 36'' ... Gas Range`, `$7,949`: identity passed; price and citation attached.
+- RR-051/RR-053 safety held: the book URL echoed `[PDF] PRL364NLG` in its Google query parameter but could not satisfy identity.
+- No cross-product evidence attached, but the upgraded target itself was a wrong product type and PDF result for a gas-grill search. RR-017 reopened.
+- `Gas Outdoor BBQ Grills Made in the USA - MHP Grills`, citation `/products/grills`, reached exact rank #6. RR-007 reopened.
+- The source-upgraded range remained `not_reliable_enough_for_exact`; it did not enter the final seven.
+
+### Issue outcome
+
+- New issues: none.
+- Reopened: RR-007, RR-008, RR-017.
+- Evidence updated: RR-013, RR-041, RR-042, RR-048, RR-051, RR-053.
+- RR-052 not exercised; `shop vac` had no source-upgrade attempt.
+- RR-045 remains unconfirmed; no Tapo attempt occurred.
+- Counts: 53 total; 5 Open, 10 Needs Investigation, 37 Fixed, 1 Won't Fix.
+
+### Boundaries
+
+- Three live searches, within budget.
+- No app code, test, fixture schema, scoring, ranking, discovery, identity, source-upgrade, trust, eligibility, or UI change.
+- No full baseline.
+
+Recommended next task: Phase 4C price-trust and fake-low-price diagnostics.
