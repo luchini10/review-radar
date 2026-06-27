@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 4E market-leader diagnostics
+## Compiled for AI Agent Consumption — Phase 0 through Phase 4F broad quality sweep
 
 **Generated:** 2026-06-27  
-**Scope:** All phases from initial measurement harness through Phase 4E market-leader discovery and citation diagnostics
+**Scope:** All phases from initial measurement harness through the complete Phase 4 diagnostic issue-harvest track
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -13,12 +13,12 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 56 |
-| Critical | 5 |
+| Total Issues | 61 |
+| Critical | 6 |
 | High | 26 |
-| Medium | 20 |
+| Medium | 24 |
 | Low | 5 |
-| Open | 8 |
+| Open | 13 |
 | Needs Investigation | 13 |
 | Fixed | 34 |
 | Won't Fix | 1 |
@@ -54,6 +54,7 @@
 | Phase 4C — Price trust and fake-low price diagnostics | 0 |
 | Phase 4D — Product-type/requirement diagnostics | 2 |
 | Phase 4E — Market-leader/citation diagnostics | 1 |
+| Phase 4F — Broad rotating quality sweep | 5 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -111,6 +112,8 @@
 **Phase 3O live-proof regression:** The focused `shop vac` fixture returned `Amazon.com: RIDGID Wet Dry Vacuums VAC1200...` with a `$10` retailer-page offer. Final-selection trace recorded `priceTrustStatus: verified`, `canUseForBudget: true`, and selected the product as exact rank #5. RR-002 is reopened pending a general price-trust investigation; no fix was attempted during the diagnostic.
 
 **Phase 4C reproducibility confirmation:** A fresh independent `shop vac` run reproduced the same defect on a different product. `Vacmaster 1.5-Gallon Wet/Dry Vac - Amazon.com` received a `$10` `retailer_page` offer from its Amazon product URL, `priceTrustStatus: verified`, and `canUseForBudget: true`, then reached exact rank #7. No budget was supplied, so the run proves unsafe trust and exact eligibility but cannot quantify a budget-specific rank boost. The recurrence across RIDGID and Vacmaster establishes a general full-product price-sanity gap rather than a single listing anomaly.
+
+**Phase 4F evidence:** The pattern generalized beyond vacuums. A generic front/rear dash camera reached exact rank #7 with `$10`, and generic Bluetooth earbuds reached exact rank #7 with `$10`; both prices were budget-usable in final-selection trace. The earbud price may be a real low-end offer, but the dash-camera bundle is suspicious enough to reinforce the missing cross-category sanity floor.
 
 ---
 
@@ -228,6 +231,8 @@
 
 **Phase 4D evidence:** Category/collection pages were selected across two more categories: `Air Purifiers, Ventilators & Monitors for Clean Air - Daikin Comfort` exact rank #5, `Portable Generators for RV, Home, and Projects` exact rank #5, and `Portable Generators - Briggs & Stratton` exact rank #7.
 
+**Phase 4F evidence:** Category/collection pages continued to enter scoring or final results: Best Buy coffee-maker collections, PetSmart limited-ingredient dog-food diets at exact rank #3, and brand/category pages for leaf blowers. This is systemic across retailer and manufacturer hosts.
+
 ---
 
 #### RR-008
@@ -253,6 +258,8 @@
 **Phase 4B regression:** Reopened. The fresh `shop vac` fixture selected `Garage Pro® Wet/Dry Vac | No / Low Suction - bissell support` at exact rank #6. The product URL and only citation point to `support.bissell.com/app/answers/...`, a troubleshooting article rather than a product offer. Review/buying-advice patterns remain covered, but support/troubleshooting pages are still eligible as product cards.
 
 **Phase 4C evidence:** `Are Power Washers and Pressure Washers Different? - Best Buy` reached exact rank #6, and `12 common drilling problems and how to avoid them - Euromarc` survived into the cordless-drill near stream. This confirms the regression across support, retailer-learning, and general advice pages.
+
+**Phase 4F evidence:** Comparison/review/advice pages repeatedly entered exact scoring: `Nothing Ear A vs Sennheiser...`, `Gas-Powered Leaf Blowers: the End is Nigh`, and a defective-running-shoes article. They missed final cutoff in these runs but still consumed scored candidates.
 
 ---
 
@@ -376,6 +383,8 @@
 
 **Phase 4E evidence:** `gas grill` provides the clearest crowd-out example: retailer-only Nexgrill ranked #1 while independently cited Weber Spirit E-210 ranked #3. `cordless drill` similarly placed a retailer-only RYOBI winner above a source-upgraded Makita with stronger market-confidence inputs. Running shoes was the positive control: six of seven finalists carried independent editorial support.
 
+**Phase 4F evidence:** Eight of ten rotating searches had weak or retailer-only winners; most finalist citations were manufacturer/self or retailer-only. Wireless earbuds was the strongest citation result, while dog food had no independently supported finalist and seven citations concentrated on Chewy.
+
 ---
 
 ### PHASE 0 — QUALITY MEASUREMENT HARNESS (2026-06-23)
@@ -427,6 +436,8 @@
 **Actual:** ~19% stability — entire product slate changes between runs.
 
 **Suggested fix:** Investigate LLM temperature reduction; deterministic query ordering; pinning the candidate pool via the replay fixture system before introducing scoring changes; seed-name deduplication to stabilize the discovery pool.
+
+**Phase 4 run evidence:** Fresh repeated queries varied materially within the same day. The Phase 4B robot-vacuum final seven shared only Shark ION with the Phase 4D exact set; subsequent Phase 4E shifted again toward three Roombas and two Roborocks. Gas-grill and cordless-drill slates likewise changed products and upgrade-trigger counts between phases. This is qualitative confirmation of RR-015, not a replacement for the formal consistency harness.
 
 ---
 
@@ -485,6 +496,8 @@
 **Phase 4D evidence:** Wrong-type leakage generalized. The GE washer/dryer again survived into the final robot-vacuum near stream. Basketball wall art entered the exact-scored hoop pool. BioLite BaseCharge power station reached exact rank #6 for `portable generator`, with Goal Zero and EcoFlow power stations also exact-scored below cutoff.
 
 **Phase 4E evidence:** Blackstone propane griddle reached exact rank #5 for `gas grill`. The final slate also included portable/camping grills while full-size benchmark families were missing, reinforcing product-type and form-factor contamination as a leader-recall cost.
+
+**Phase 4F evidence:** `YADA ... Digital Wireless Backup Camera With 3.5" Dash Monitor` reached exact rank #2 for `dash cam`, and source upgrade attached matching backup-camera evidence. The candidate was the same item as the target but the target itself was the wrong product type.
 
 ---
 
@@ -603,6 +616,8 @@
 **Fix:** Product-page rescue added: when no citations are pre-verified, self-cite the product's own page if it passes `canRenderAsProductCard` eligibility. URL normalization also improved (tracking params stripped, trailing slash dropped) to improve pre-verified URL matching.
 
 **Phase 4E regression:** Reopened. Ecovacs DEEBOT T30S and T50 OMNI each entered the robot-vacuum pool with one `ecovacs.com` source and were dropped at `afterCitationVerify`. Char-Broil Performance 2-Burner entered the gas-grill pool with `charbroil.com` plus `walmart.com` evidence and was also dropped there. These are benchmark leader families with product/retailer evidence, so the citation-rescue path is not reliably preserving them.
+
+**Phase 4F evidence:** The same loss pattern affected major leaders in new categories: AirPods Pro 2, Bose QuietComfort Ultra, Galaxy Buds3 Pro, Soundcore Liberty 4 NC, Jabra Elite 8 Active, Oral-B iO 6/2, EGO and RYOBI blowers, Purina Pro Plan, Hill's Science Diet, Horizon T202, Sole F80, and NordicTrack T9 were dropped at citation verification.
 
 ---
 
@@ -1352,6 +1367,8 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 
 **Phase 4D confirmation:** The missing-taxonomy concern is live and cross-category. Basketball wall art passed exact scoring for `basketball hoop`; battery power stations passed exact category matching for `portable generator`; pressure-wash detergent had already reached exact rank #2 in Phase 4C. These are distinct substitution classes and support a shared taxonomy-coverage fix rather than product-specific patches.
 
+**Phase 4F evidence:** Backup cameras passed as dash cams, and an under-desk walking pad won a broad treadmill query. These add automotive and fitness substitution/form-factor classes to the taxonomy gap.
+
 ---
 
 #### RR-044
@@ -1588,6 +1605,8 @@ Five approved fresh searches were saved and replayed: `robot vacuum`, `gas grill
 
 **Suggested fix or next action:** Diagnose diversity at the candidate-pool and final-selection layers separately. In a later fix phase, prefer an existing generalized family-diversity mechanism or bounded family cap only after proving it does not collapse genuinely distinct models. Do not add brand-specific caps.
 
+**Phase 4F evidence:** Family concentration recurred in 7/10 rotating categories: two Ninjas (coffee), two Zodys (office chairs), duplicate Sennheisers (earbuds), four Sonicares (toothbrushes), multiple Blue Buffalo products (dog food), three Whynters plus two Mideas (dehumidifiers), and three Gigabytes plus three LGs (gaming monitors).
+
 **Benchmark result:**
 
 | Search | Core families in pool | Core families in final | Notable loss/concentration |
@@ -1609,9 +1628,157 @@ Mean benchmark coverage was `3.75/7` in the candidate pool and `3.0/7` in final 
 
 ---
 
+### PHASE 4F — BROAD ROTATING PRODUCT QUALITY SWEEP (2026-06-27)
+
+Ten approved fresh searches were saved and replayed: `coffee maker`, `office chair`, `wireless earbuds`, `electric toothbrush`, `leaf blower`, `dog food`, `dehumidifier`, `dash cam`, `treadmill`, and `gaming monitor`.
+
+#### RR-057
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-057 |
+| **Phase** | Phase 4F |
+| **Severity** | Medium |
+| **Title** | Source-upgrade model-token extraction can prefer measurement text over the real model |
+| **Status** | Open |
+
+**Description:** For `BLACK+DECKER ... (BEBL7000)`, model-token extraction emitted `amp250`, `mph400`, and `bebl7000`, then built identity phrase/query `BLACK+DECKER 12 AMP 250` instead of using the actual model `BEBL7000`. The search still found the product, but the query is broader and can return unrelated 12-amp products.
+
+**Where it occurs:** `lib/requirementEvidenceRescue.ts` model-token extraction and compact identity selection
+
+**Steps to reproduce:** Replay the Phase 4F `leaf blower` fixture and inspect the source-upgrade trace for BLACK+DECKER BEBL7000.
+
+**Expected:** Units/specifications such as amps, MPH, CFM, voltage, and capacity do not outrank a clear alphanumeric manufacturer model.
+
+**Actual:** Measurement-derived tokens become the selected identity phrase while the true model is omitted from the query.
+
+**Suggested fix or next action:** Extend the future RR-034/RR-035/RR-044 model-token batch to classify and suppress measurement-derived false positives before selecting identity. Add unrelated-category tests; do not special-case leaf blowers.
+
+---
+
+#### RR-058
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-058 |
+| **Phase** | Phase 4F |
+| **Severity** | Critical |
+| **Title** | Same-brand wrong-product Google offer can pass source-upgrade identity without the target model in its title |
+| **Status** | Open |
+
+**Description:** Target `Whynter RPD-411WG ... Dehumidifier` received price, rating, review count, and citation from `Whynter 34 Bottle Freestanding Wine Refrigerator`. The candidate title contains Whynter but not `RPD-411WG`; the target model appears in the Google Shopping search URL, which RR-053 excludes from identity. Nevertheless, trace recorded `identityMatch: true`, attached `$479` wine-refrigerator evidence, and the contaminated dehumidifier ranked #1.
+
+**Where it occurs:** `lib/requirementEvidenceRescue.ts` source-upgrade same-product identity; normalized Google Shopping candidate identity fields
+
+**Steps to reproduce:** Replay the Phase 4F `dehumidifier` fixture and inspect the RPD-411WG source-upgrade trace. Confirm one returned candidate, wine-refrigerator title, identity pass, all commerce fields attached, and final rank #1.
+
+**Expected:** A target with a strong model token requires that model or equivalent source-derived identity in the candidate. Shared brand alone cannot override a wrong product type/title.
+
+**Actual:** A same-brand wine refrigerator with no visible target model passed and contaminated a dehumidifier card.
+
+**Suggested fix or next action:** Before any further live source-upgrade proof, diagnose which normalized candidate field supplied the identity pass. Add the exact negative regression and require source-derived model evidence when the target has a strong model token. Preserve valid title/path identity and RR-051/RR-053 protections.
+
+**Independent confirmation:** Whynter's official page identifies RPD-411WG as a discontinued 40-pint dehumidifier: `https://www.whynter.com/product/whynter-energy-star-40-pint-portable-dehumidifier-2/`. The attached candidate was therefore a different product, not a mislabeled target.
+
+---
+
+#### RR-059
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-059 |
+| **Phase** | Phase 4F |
+| **Severity** | Medium |
+| **Title** | Niche compact/portable form factors can win broad category searches |
+| **Status** | Open |
+
+**Description:** Broad searches can rank niche form factors above standard products even when the user did not request the niche. AeroPress, a compact manual/travel brewer, won `coffee maker`; an under-desk walking pad won `treadmill`; earlier Phase 4 gas-grill runs similarly favored portable/tabletop products.
+
+**Where it occurs:** Broad-intent form-factor detection/modifiers and final ranking
+
+**Steps to reproduce:** Replay Phase 4F `coffee maker` and `treadmill` fixtures. Compare winner form-factor flags with full-size alternatives below.
+
+**Expected:** Niche form factors remain eligible for broad searches but do not dominate unless their evidence/quality clearly outweighs mainstream category expectations.
+
+**Actual:** Compact/travel/under-desk variants can win while strong conventional products rank below.
+
+**Suggested fix or next action:** Measure form-factor prevalence and ranking impact before changing weights. Prefer a generalized broad-query form-factor prior; do not hardcode appliance categories.
+
+---
+
+#### RR-060
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-060 |
+| **Phase** | Phase 4F |
+| **Severity** | Medium |
+| **Title** | True same-model duplicates can occupy multiple final slots |
+| **Status** | Open |
+
+**Description:** `gaming monitor` selected `Gigabyte M27Q Gaming Monitor (Rev. 1.0)` at rank #1 and `Gigabyte M27Q 27" QHD ...` at rank #2. Both source-upgrade traces used `Gigabyte M27Q` and attached the same `$160` offer. They are retailer/manufacturer representations of the same model, yet remained separate cards while other variants were correctly collapsed.
+
+**Where it occurs:** Canonical product identity, duplicate merge, variant-family collapse, and final selection
+
+**Steps to reproduce:** Replay the Phase 4F `gaming monitor` fixture and compare the first two final cards and their source-upgrade identity queries/offers.
+
+**Expected:** The same manufacturer model sold through multiple sources is one product card with merged evidence.
+
+**Actual:** Duplicate M27Q cards consume two final slots.
+
+**Suggested fix or next action:** Diagnose why canonical IDs/variant keys diverged for the two M27Q representations. Add cross-retailer same-model tests while preserving RR-010's distinct-size behavior.
+
+---
+
+#### RR-061
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-061 |
+| **Phase** | Phase 4F |
+| **Severity** | Medium |
+| **Title** | Product image metadata can contain page URLs, generic brand assets, or unrelated navigation images |
+| **Status** | Open |
+
+**Description:** All 70 final cards had a non-empty image field, but several were not usable product images. Leaf-blower examples included a truncated Home Depot image directory, Greenworks/BLACK+DECKER product-page URLs, a WORX navigation banner, and an EGO brand logo. Dog-food examples included a Blue Buffalo logo and PetSmart category hero. An LG gaming-monitor image ended in `.html`.
+
+**Where it occurs:** Product asset/image candidate validation and enrichment
+
+**Steps to reproduce:** Inspect `product_image_url` across the ten Phase 4F fixtures, especially `leaf-blower.json`, `dog-food.json`, and `gaming-monitor.json`.
+
+**Expected:** Product image fields resolve to actual inspectable images depicting the specific product.
+
+**Actual:** Non-image URLs and generic/irrelevant assets pass image validation.
+
+**Suggested fix or next action:** Add diagnostic classification for direct image response/content type and product-specific relevance. In a later fix phase, reject page URLs and known generic navigation/logo assets without weakening valid CDN image support.
+
+**Sweep result:**
+
+| Search | Verdict | Main findings |
+|--------|---------|---------------|
+| `coffee maker` | Partial | Real products and safe upgrade; compact AeroPress winner; weak citations; category pages scored |
+| `office chair` | Partial | Plausible products; weak citations; duplicate Zody family; set-of-two listing |
+| `wireless earbuds` | Fail | Five leaders dropped at citation verify; duplicate Sennheiser; generic `$10` finalist |
+| `electric toothbrush` | Partial/Fail | Safe upgrades; four Sonicare slots; Oral-B leaders lost/below cutoff |
+| `leaf blower` | Partial/Fail | Real products; weak winner; EGO held below; measurement-token query; bad image assets |
+| `dog food` | Fail | Retailer-only/weak evidence; category page #3; leaders dropped; source concentration |
+| `dehumidifier` | Fail | Unsafe wine-refrigerator evidence attached to #1 dehumidifier |
+| `dash cam` | Fail | Backup camera exact #2 and enriched; suspicious `$10` generic dash cam |
+| `treadmill` | Partial/Fail | Under-desk winner over full-size leaders; walking-pad concentration |
+| `gaming monitor` | Fail | Six of seven from Gigabyte/LG; duplicate M27Q cards |
+
+**Phase result:**
+
+- New issues: RR-057 through RR-061.
+- Existing evidence updated: RR-002, RR-007, RR-008, RR-013, RR-015, RR-017, RR-022, RR-043, RR-056.
+- No issue was fixed or closed.
+- No app behavior or test code changed.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (8 issues)
+### Open (13 issues)
 - RR-034: `modelTokens` misses mixed-case word-preceded numbers
 - RR-035: `modelTokens` misses Samsung Bespoke / FEIN naming
 - RR-043: Product-type taxonomy coverage incomplete
@@ -1620,6 +1787,11 @@ Mean benchmark coverage was `3.75/7` in the candidate pool and `3.0/7` in final 
 - RR-054: Fresh fallback responses omit current diagnostic traces
 - RR-055: Literal `Portable` requirement fails an explicitly portable generator
 - RR-056: Same-brand/model-family concentration crowds out broad-slate diversity
+- RR-057: Measurement text can displace the real model in source-upgrade queries
+- RR-058: Same-brand wrong-product offer can pass source-upgrade identity
+- RR-059: Niche form factors can win broad category searches
+- RR-060: True same-model duplicates can occupy multiple final slots
+- RR-061: Product image metadata accepts non-image or irrelevant assets
 
 ### Needs Investigation (13 issues)
 - RR-002: Tiny accessory/promo prices treated as verified full-product prices
@@ -1646,15 +1818,16 @@ RR-001, RR-003 through RR-006, RR-010 through RR-012, RR-016, RR-018 through RR-
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-052** (High) — Stop horsepower `HP` context from becoming Hewlett-Packard brand identity while preserving genuine HP-brand detection.
-2. **RR-002** (Critical) — Re-investigate the verified `$10` full shop-vac offer and restore suspicious-price protection.
-3. **RR-007 + RR-008 + RR-009 + RR-017 + RR-043** (High cluster) — Category, support/documentation, and wrong-type targets contaminate final and near streams across categories.
-4. **RR-014 + RR-022 + RR-056** (High/Medium cluster) — Leader recall has regressed to 3.0/7, product-page leaders are lost at citation verify, and repeated families crowd out diversity.
-5. **RR-055** (High) — Literal positive requirement evidence can be marked failed and remove a valid product.
-6. **RR-042** (Medium) — Normalization and attachment can work, but fallback reliability and safe useful target attachment remain unproven.
-7. **RR-041** (Medium) — Source-upgrade attempts remain inconsistent across live runs; add trigger-rate visibility if proof coverage continues to fail.
-8. **RR-054** (Medium) — Current fallback responses can omit the diagnostic envelope needed to investigate other defects.
-9. **RR-034 + RR-035 + RR-044** (Medium, batch) — Model-token detection gaps; fix together to avoid partial improvements.
-10. **RR-013** (Medium) — Thin winner crowd-out; requires citation-strength score integration (scoring change, not diagnostic).
-11. **RR-015** (High) — Run-to-run stability; requires deeper investigation into LLM temperature or deterministic candidate pinning.
-12. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain; re-measure with raw/structural/eligible diagnostics before changing sources.
+1. **RR-058** (Critical) — Block same-brand wrong-product source-upgrade attachment before any further live source-upgrade proof.
+2. **RR-002** (Critical) — Restore cross-category suspicious-price protection for verified `$10` full products.
+3. **RR-052 + RR-057 + RR-034 + RR-035 + RR-044** (High/Medium model-identity cluster) — Fix false brands, missed models, and measurement-token false positives as one tested identity batch.
+4. **RR-007 + RR-008 + RR-009 + RR-017 + RR-043** (High cluster) — Category, support/documentation, and wrong-type targets contaminate final and near streams across categories.
+5. **RR-014 + RR-022 + RR-056 + RR-060** (High/Medium quality cluster) — Leader recall, citation loss, family concentration, and true duplicates jointly degrade broad slates.
+6. **RR-055** (High) — Literal positive requirement evidence can be marked failed and remove a valid product.
+7. **RR-059** (Medium) — Broad-query form-factor handling lets niche products outrank mainstream products.
+8. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
+9. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
+10. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
+11. **RR-013** (Medium) — Thin/retailer-only winners still outrank stronger evidence.
+12. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
+13. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.

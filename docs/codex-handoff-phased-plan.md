@@ -16,7 +16,7 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 4F - broad rotating product quality sweep**.
+Current phase: **Phase 4 diagnostic issue-harvest track complete. Stop before Phase 5.**
 
 Phase 3N safely admitted specific Google Shopping offers for source-upgrade evidence and fixed the `Shop-Vac` title false positive. RR-051 removed synthetic query-derived snippets from same-product identity. Phase 3O preserved reliable brand identity in compact model queries.
 
@@ -24,7 +24,7 @@ The Phase 3O live proof then exposed two separate safety defects. RR-053 is now 
 
 Recommended next phase:
 
-- Phase 4F: run at most ten broad rotating searches and document overall final-slate quality, recurring issue classes, and readiness for Phase 5 fix planning without fixing anything.
+- Await an explicit Phase 5 prompt. Recommended first fix: RR-058 source-upgrade identity safety only.
 
 ---
 
@@ -554,7 +554,7 @@ Do not continue to the next Phase 4 step until all six files are updated as appr
 - Phase 4C - Price trust and fake-low price diagnostics - **DONE**
 - Phase 4D - Product-type leakage and requirement diagnostics - **DONE**
 - Phase 4E - Market-leader discovery and citation diagnostics - **DONE**
-- Phase 4F - Broad rotating product quality sweep - **NEXT**
+- Phase 4F - Broad rotating product quality sweep - **DONE**
 
 ### Phase 4A completion record
 
@@ -624,6 +624,20 @@ Do not continue to the next Phase 4 step until all six files are updated as appr
 - Docs committed: Yes.
 - Commit: `eea3955` (`docs: record phase 4E leader diagnostics`).
 - Result: benchmark final leader coverage averaged 3.0/7; citation loss and family concentration remain systemic, while running shoes showed a strong positive-control slate.
+
+### Phase 4F completion record
+
+- Completed step: Phase 4F - Broad rotating product quality sweep.
+- Next step: None automatically; stop before Phase 5.
+- Diagnostic-only: Yes; ten live save/replay pairs and offline fixture inspection, with no behavior change.
+- Stop condition hit: No. The critical RR-058 finding was documented as instructed; no fix was attempted.
+- New issue IDs opened: RR-057, RR-058, RR-059, RR-060, RR-061.
+- Existing issue IDs updated: RR-002, RR-007, RR-008, RR-013, RR-015, RR-017, RR-022, RR-043, RR-056.
+- Status changes: None during 4F.
+- Required docs updated: All six Phase 4 documentation files.
+- Docs committed: Pending this phase checkpoint.
+- Commit: Pending.
+- Result: 61 total issues; broad quality remains inconsistent, with RR-058 the highest-priority Phase 5 safety fix.
 
 ---
 
@@ -897,24 +911,21 @@ Do this only after backend trust and ranking are stronger.
 
 ## Immediate Next Task for Codex
 
-Run Phase 4F broad rotating product quality sweep.
-
-Use at most ten live searches: `coffee maker`, `office chair`, `wireless earbuds`, `electric toothbrush`, `leaf blower`, `dog food`, `dehumidifier`, `dash cam`, `treadmill`, and `gaming monitor`. Do not fix anything found.
+Stop. Phase 4A through 4F are complete.
 
 Task:
 
-1. Capture final products, obvious bad picks, missing leaders, bad prices, wrong types, weak citations, duplicate flooding, and source concentration.
-2. Record image concerns when visible in fixture/debug metadata.
-3. Assign an overall quality verdict per category.
-4. Open or update issues without fixing them.
-5. Update and commit all six required documentation files, produce the final Phase 4 report, and stop before Phase 5.
+Recommended Phase 5 start, only after explicit approval:
+
+1. Fix RR-058 only.
+2. Prove the exact Whynter dehumidifier/wine-refrigerator negative case deterministically.
+3. Preserve RR-051/RR-053 query-provenance safety and valid same-model Google offers.
+4. Do not combine price, ranking, discovery, brand, or model-token work into that phase.
 
 Do not:
 
-- change app code, tests, scoring, ranking, discovery, source-upgrade, identity, brand, price, citation, eligibility, requirement, or UI behavior;
-- exceed ten fresh live searches;
-- close an issue because it is absent from a limited sample;
-- commit generated live fixtures or baseline artifacts;
-- run a full baseline.
+- start Phase 5 without approval;
+- make any behavior change as part of the completed Phase 4 track;
+- run another live search or full baseline without approval.
 
-Exit criteria: all ten searches are documented, the issue map and fix-order recommendation are complete, the docs-only Phase 4F commit is complete, and no Phase 5 fix work has begun.
+Exit criteria met: all Phase 4 steps are documented and committed, the issue map/fix order is complete, and Phase 5 has not begun.

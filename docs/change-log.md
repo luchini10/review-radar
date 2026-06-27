@@ -13,6 +13,14 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-27
 
+### Codex - Phase 4F broad rotating quality sweep / Phase 4 complete
+- Ran ten approved live searches across coffee makers, office chairs, wireless earbuds, electric toothbrushes, leaf blowers, dog food, dehumidifiers, dash cams, treadmills, and gaming monitors.
+- Opened RR-057 through RR-061 for measurement-token query identity, unsafe same-brand cross-product source upgrade, broad-query form-factor dominance, true same-model duplicates, and invalid/irrelevant image assets.
+- RR-058 is the critical finding: wine-refrigerator evidence attached to Whynter RPD-411WG dehumidifier and helped it rank #1.
+- Added broad evidence to price trust, product eligibility/type, citation loss, weak winners, run variance, and final-family concentration.
+- Phase 4 ended with 61 issues: 13 Open, 13 Needs Investigation, 34 Fixed, 1 Won't Fix.
+- No app code, tests, fixtures, scoring, ranking, discovery, identity, trust, eligibility, or UI behavior changed.
+
 ### Codex - Phase 4E market-leader discovery and citation diagnostics
 - Ran five approved live searches: `robot vacuum`, `gas grill`, `cordless drill`, `air purifier`, and `running shoes`.
 - Reopened RR-014 after the four benchmarked categories averaged only `3.0/7` core leader families in final results.

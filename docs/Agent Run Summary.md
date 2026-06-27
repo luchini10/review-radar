@@ -811,3 +811,21 @@ New entries should keep the same format and stay easy to read.
 **App/test changes:** None.
 
 **Next recommended step:** Phase 4F broad rotating sweep with at most ten searches, followed by the final Phase 4 report.
+
+## Codex Run - 2026-06-27 Phase 4F / Phase 4 Complete
+
+**Goal:** Finish the diagnostic issue harvest with a ten-category rotating quality sweep and produce the Phase 5 fix-order recommendation.
+
+**Searches:** Coffee maker, office chair, wireless earbuds, electric toothbrush, leaf blower, dog food, dehumidifier, dash cam, treadmill, and gaming monitor.
+
+**Overall verdict:** ReviewRadar can produce strong category slates, as shown by running shoes and portions of earbuds/office chairs, but broad reliability is not ready for unsupervised trust.
+
+**Critical finding:** RR-058. A Whynter wine-refrigerator Google offer passed source-upgrade identity for RPD-411WG dehumidifier, attached all commerce evidence, and helped the contaminated target rank #1.
+
+**New issues:** RR-057 through RR-061. Phase 4 overall opened RR-054 through RR-061 and reopened RR-007, RR-008, RR-009, RR-014, RR-017, and RR-022.
+
+**Final counts:** 61 total; 6 Critical, 26 High, 24 Medium, 5 Low; 13 Open, 13 Needs Investigation, 34 Fixed, 1 Won't Fix.
+
+**App/test changes:** None. Twenty-five approved live searches ran across Phase 4B through 4F; no full baseline.
+
+**Next recommended step:** Stop before Phase 5. With explicit approval, start with RR-058 only.

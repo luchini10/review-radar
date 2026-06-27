@@ -3921,3 +3921,105 @@ Mean: pool `3.75/7`; final `3.0/7`.
 - No full baseline.
 
 Recommended next task: Phase 4F broad rotating product quality sweep, then stop before Phase 5.
+
+## <span style="color:green">**Codex QA Update - 2026-06-27 (Phase 4F: broad rotating quality sweep / final Phase 4 report)**</span>
+
+**Overall Phase 4 verdict: NOT READY for broad unsupervised trust. The system can produce strong slates, but safety, eligibility, price, leader recall, citation, diversity, and stability failures remain systemic. No Phase 5 fixes were started.**
+
+### Phases completed
+
+- Phase 4A: issue-register audit and diagnostic setup.
+- Phase 4B: source-upgrade safety/reliability diagnostics.
+- Phase 4C: fake-low price diagnostics.
+- Phase 4D: product-type and requirement diagnostics.
+- Phase 4E: market-leader and citation diagnostics.
+- Phase 4F: ten-category rotating quality sweep.
+
+### Live searches
+
+Twenty-five fresh save/replay pairs ran within the approved budgets:
+
+- 4B: `shop vac`, `robot vacuum`, `gas grill`.
+- 4C: `shop vac`, `cordless drill`, `pressure washer`.
+- 4D: `robot vacuum`, `basketball hoop`, `air purifier`, `portable generator`.
+- 4E: `robot vacuum`, `gas grill`, `cordless drill`, `air purifier`, `running shoes`.
+- 4F: `coffee maker`, `office chair`, `wireless earbuds`, `electric toothbrush`, `leaf blower`, `dog food`, `dehumidifier`, `dash cam`, `treadmill`, `gaming monitor`.
+
+Each used:
+
+```text
+npm run qa:save-fixture -- "<query>"
+npm run qa:replay -- tests/fixtures/review-radar-live/<slug>.json
+```
+
+### Phase 4F category verdicts
+
+| Search | Verdict | Main finding |
+|--------|---------|--------------|
+| coffee maker | Partial | Safe upgrade; compact AeroPress winner; weak citations |
+| office chair | Partial | Plausible slate; weak evidence; duplicate Zody family |
+| wireless earbuds | Fail | Major leaders lost at citation verify; duplicate Sennheiser; generic `$10` pick |
+| electric toothbrush | Partial/Fail | Safe upgrades; four Sonicare slots |
+| leaf blower | Partial/Fail | EGO held below; measurement text displaced real model; bad image assets |
+| dog food | Fail | Category page #3; retailer-only evidence; leaders lost |
+| dehumidifier | Fail | Wine-refrigerator evidence attached to #1 dehumidifier |
+| dash cam | Fail | Backup camera exact #2 and enriched; suspicious `$10` pick |
+| treadmill | Partial/Fail | Under-desk winner over mainstream full-size products |
+| gaming monitor | Fail | Six slots from Gigabyte/LG; duplicate M27Q cards |
+
+### Issue outcome
+
+- Total: 61.
+- Severity: 6 Critical, 26 High, 24 Medium, 5 Low.
+- Status: 13 Open, 13 Needs Investigation, 34 Fixed, 1 Won't Fix.
+- New in Phase 4: RR-054 through RR-061.
+- Reopened in Phase 4: RR-007, RR-008, RR-009, RR-014, RR-017, RR-022.
+- Confirmed/expanded: RR-002, RR-013, RR-015, RR-041, RR-042, RR-043, RR-052, RR-056.
+- Fixed regressions positively observed: RR-048, RR-051, RR-053.
+
+### Most critical blockers
+
+1. RR-058: same-brand wrong-product source-upgrade evidence attached and changed rank.
+2. RR-002: `$10` full-product prices remain verified and budget-usable.
+3. RR-052/RR-057: source-upgrade identity queries can use false brands or measurement tokens.
+4. RR-007/RR-008/RR-009/RR-017/RR-043: non-product and wrong-type candidates reach exact/final streams.
+5. RR-014/RR-022/RR-056/RR-060: leader recall, citation loss, family concentration, and duplicates degrade final seven.
+
+### Systemic versus isolated
+
+Systemic:
+
+- Product/category/documentation-page eligibility.
+- Wrong-type and accessory containment.
+- Retailer/self-only citation weakness and leader loss.
+- Family concentration and duplicate handling.
+- Fake-low price trust.
+- Run-to-run variability.
+- Product-image validity.
+
+Currently isolated or less-generalized:
+
+- RR-054 fallback trace omission: one fresh fallback-path reproduction.
+- RR-055 literal `Portable` false failure: one direct product reproduction.
+- RR-057 measurement-token query selection: one direct trace, structurally general.
+- RR-045 Tapo raw coverage remains unconfirmed.
+
+### Recommended Phase 5 fix order
+
+1. RR-058 identity safety.
+2. RR-002 price safety.
+3. RR-052/RR-057 plus RR-034/RR-035/RR-044 model identity.
+4. RR-007/RR-008/RR-009/RR-017/RR-043 eligibility/type containment.
+5. RR-055 requirement matching.
+6. RR-022/RR-014/RR-056/RR-060 discovery/citation/diversity.
+7. RR-059/RR-061 form-factor/image quality.
+8. RR-054/RR-015/RR-041/RR-042 diagnostic reliability.
+
+### Boundaries
+
+- No app code or tests changed.
+- No issue was fixed during Phase 4.
+- No full baseline ran.
+- Phase 5 was not started.
+
+Recommended direction: begin Phase 5 with a narrow deterministic RR-058 identity-safety phase after explicit approval.
