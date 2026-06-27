@@ -656,8 +656,8 @@ Phase 5 is executed one approved step at a time. Each step must preserve existin
 - Verification: focused tests 170/170; typecheck passed; lint 0 errors with 3 pre-existing warnings; full tests 647/647; eval red-flag checks clean.
 - Live proof: Not run.
 - Required docs updated: issue register, QA log, next task, change log, run summary, phased handoff, test memory, and technical overview.
-- Docs committed: Pending final Phase 5A commit.
-- Commit: Pending.
+- Docs committed: Yes.
+- Commit: `a4ff1c0` (`fix: harden source-upgrade identity safety`).
 - Result: the exact Whynter RPD-411WG dehumidifier / wine-refrigerator offer is deterministically rejected with no commerce evidence attached.
 
 ---
