@@ -593,8 +593,8 @@ Do not continue to the next Phase 4 step until all six files are updated as appr
 - Existing issue IDs updated: RR-002, RR-007, RR-008, RR-013, RR-017, RR-052.
 - Status changes: None; RR-002 remains Needs Investigation and RR-052 remains Open.
 - Required docs updated: All six Phase 4 documentation files.
-- Docs committed: Pending this phase checkpoint.
-- Commit: Pending.
+- Docs committed: Yes.
+- Commit: `99b2ca8` (`docs: record phase 4C price diagnostics`).
 - Result: RR-002 reproduced on a second product at `$10` verified/budget-usable/exact; no other fake-low or installment price was observed.
 
 ---
