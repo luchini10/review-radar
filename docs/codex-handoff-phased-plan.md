@@ -579,8 +579,8 @@ Do not continue to the next Phase 4 step until all six files are updated as appr
 - Existing issue IDs updated: RR-007, RR-008, RR-013, RR-017, RR-041, RR-042, RR-048, RR-051, RR-053.
 - Status changes: RR-007, RR-008, and RR-017 reopened as Needs Investigation.
 - Required docs updated: All six Phase 4 documentation files.
-- Docs committed: Pending this phase checkpoint.
-- Commit: Pending.
+- Docs committed: Yes.
+- Commit: `01d4fcb` (`docs: record phase 4B diagnostics`).
 - Result: source upgrade fired in 1/3 searches; URL/query identity safety held, but the only attachment enriched a wrong-type range/PDF target.
 
 ---
