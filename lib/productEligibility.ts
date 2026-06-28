@@ -161,6 +161,25 @@ function hasSearchParam(parsed: URL) {
   return ["k", "q", "query", "search"].some((key) => parsed.searchParams.has(key));
 }
 
+function hasListingParam(parsed: URL) {
+  return [
+    "categoryid",
+    "department",
+    "facet",
+    "facets",
+    "filter",
+    "filters",
+    "qp",
+  ].some((key) => parsed.searchParams.has(key));
+}
+
+function pathHasCatalogIdentifier(parsed: URL) {
+  return parsed.pathname
+    .split("/")
+    .filter(Boolean)
+    .some((segment) => /^(?:ab|pcm)?cat[a-z0-9_-]*\.c$/i.test(segment));
+}
+
 function isKnownProductUrl(parsed: URL) {
   const host = normalizedEligibilityHost(parsed);
   const path = urlPath(parsed);
@@ -334,6 +353,14 @@ function isLikelyListingOrSearchUrl(parsed: URL) {
   const host = normalizedEligibilityHost(parsed);
   const path = urlPath(parsed);
   const normalizedPath = normalizeText(path);
+  const knownProductUrl = isKnownProductUrl(parsed);
+
+  if (
+    !knownProductUrl &&
+    (hasListingParam(parsed) || pathHasCatalogIdentifier(parsed))
+  ) {
+    return true;
+  }
 
   if (
     hasSearchParam(parsed) &&
@@ -387,8 +414,8 @@ function isLikelyListingOrSearchUrl(parsed: URL) {
   if (domainMatches(host, "bestbuy.com")) {
     return (
       /\/site\/(?:searchpage|shop|collection)\b/i.test(path) ||
-      /\/site\/[^/]+\/[^/]+\.c$/i.test(path)
-    ) && !isKnownProductUrl(parsed);
+      /\/site\/(?:[^/]+\/)*[^/]+\.c$/i.test(path)
+    ) && !knownProductUrl;
   }
 
   if (domainMatches(host, "dickssportinggoods.com")) {
@@ -415,7 +442,7 @@ function isLikelyListingOrSearchUrl(parsed: URL) {
     return true;
   }
 
-  return /\b(?:search|results|category|categories|collection|collections|browse|catalog|shop)\b/i.test(
+  return /\b(?:search|results|category|categories|collection|collections|browse|catalog|department|departments|shop)\b/i.test(
     normalizedPath,
   );
 }

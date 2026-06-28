@@ -311,6 +311,45 @@ describe("recommendation result trust validation", () => {
     );
   });
 
+  it("drops nested retailer catalog pages during final citation filtering", () => {
+    const categoryUrl =
+      "https://www.bestbuy.com/site/outdoor-power-equipment/pressure-washers/pcmcat1597940389709.c?id=pcmcat1597940389709";
+    const productUrl =
+      "https://www.bestbuy.com/site/greenworks-2000-psi-electric-pressure-washer/6543210.p";
+    const filtered = filterResultToVerifiedCitations(
+      buildResult([
+        buildRecommendation({
+          category: "pressure washer",
+          citations: [
+            {
+              title: "Pressure Washers - Best Buy",
+              url: categoryUrl,
+              what_it_supports: "Category page for multiple pressure washers.",
+            },
+          ],
+          name: "Pressure Washers - Best Buy",
+        }),
+        buildRecommendation({
+          category: "pressure washer",
+          citations: [
+            {
+              title: "Greenworks 2000 PSI Electric Pressure Washer",
+              url: productUrl,
+              what_it_supports: "Specific retailer product page.",
+            },
+          ],
+          name: "Greenworks 2000 PSI Electric Pressure Washer",
+        }),
+      ]),
+      new Set([categoryUrl, productUrl]),
+    );
+
+    assert.deepEqual(
+      filtered.recommendations.map((item) => item.name),
+      ["Greenworks 2000 PSI Electric Pressure Washer"],
+    );
+  });
+
   it("drops editorial rankings and broad retailer shoe listing pages cited as products", () => {
     const filtered = filterResultToVerifiedCitations(
       buildResult([

@@ -780,7 +780,10 @@ function isKnownProductUrl(url: URL) {
   }
 
   if (host.endsWith("bestbuy.com")) {
-    return /\/site\//i.test(path) && !/\/site\/questions\//i.test(path);
+    return (
+      /\/site\/[^/]+\/\d+\.p$/i.test(path) ||
+      /\/product\/[^/]+\/[a-z0-9]+\/sku\/\d+$/i.test(path)
+    );
   }
 
   if (host.endsWith("wayfair.com")) {
@@ -856,6 +859,29 @@ function isLikelySearchOrListingUrl(url: URL) {
   const path = normalizeText(url.pathname);
   const rawPath = url.pathname.toLowerCase();
   const searchKeys = ["k", "q", "query", "search"];
+  const listingKeys = [
+    "categoryid",
+    "department",
+    "facet",
+    "facets",
+    "filter",
+    "filters",
+    "qp",
+  ];
+  const knownProductUrl = isKnownProductUrl(url);
+
+  if (
+    !knownProductUrl &&
+    (
+      listingKeys.some((key) => url.searchParams.has(key)) ||
+      rawPath
+        .split("/")
+        .filter(Boolean)
+        .some((segment) => /^(?:ab|pcm)?cat[a-z0-9_-]*\.c$/i.test(segment))
+    )
+  ) {
+    return true;
+  }
 
   if (
     searchKeys.some((key) => url.searchParams.has(key)) &&
@@ -913,7 +939,10 @@ function isLikelySearchOrListingUrl(url: URL) {
   }
 
   if (host.endsWith("bestbuy.com")) {
-    return /\/site\/(?:searchpage|shop|collection)\b/i.test(rawPath) && !isKnownProductUrl(url);
+    return (
+      /\/site\/(?:searchpage|shop|collection)\b/i.test(rawPath) ||
+      /\/site\/(?:[^/]+\/)*[^/]+\.c$/i.test(rawPath)
+    ) && !knownProductUrl;
   }
 
   if (host.endsWith("ikea.com")) {
@@ -929,6 +958,8 @@ function isLikelySearchOrListingUrl(url: URL) {
     /\bcollections\b/i,
     /\bbrowse\b/i,
     /\bcatalog\b/i,
+    /\bdepartment\b/i,
+    /\bdepartments\b/i,
     /\bshop\b/i,
   ];
 

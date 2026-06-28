@@ -496,6 +496,13 @@ describe("Serper product discovery", () => {
             snippet: "Shop countertop microwave ovens at Best Buy.",
           },
           {
+            title: "Pressure Washers - Best Buy",
+            link:
+              "https://www.bestbuy.com/site/outdoor-power-equipment/pressure-washers/pcmcat1597940389709.c?id=pcmcat1597940389709",
+            displayedLink: "Best Buy",
+            snippet: "Shop pressure washers at Best Buy.",
+          },
+          {
             title: "Customer Reviews for Frigidaire 7.5 cu. ft. Retro Mini Fridge in Red",
             link: "https://www.homedepot.com/p/reviews/Frigidaire-7-5-cu-ft-Retro-Mini-Fridge-in-Red/123456",
             displayedLink: "Home Depot",

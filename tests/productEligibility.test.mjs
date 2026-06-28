@@ -45,6 +45,46 @@ describe("shared product eligibility classifier", () => {
     assert.equal(homeDepotCategory.status, "listing_or_search");
   });
 
+  it("rejects nested catalog, department, browse, and faceted listing pages", () => {
+    const bestBuyCatalog = classify({
+      category: "pressure washer",
+      name: "Pressure Washers - Best Buy",
+      sourceTitle: "Pressure Washers - Best Buy",
+      url:
+        "https://www.bestbuy.com/site/outdoor-power-equipment/pressure-washers/pcmcat1597940389709.c?id=pcmcat1597940389709",
+    });
+    const retailerDepartment = classify({
+      category: "pressure washer",
+      name: "Pressure Washers - Example Retailer",
+      sourceTitle: "Pressure Washers - Example Retailer",
+      url:
+        "https://retailer.example.com/departments/outdoor-power/pressure-washers",
+    });
+    const retailerBrowse = classify({
+      category: "pressure washer",
+      name: "Browse Pressure Washers",
+      sourceTitle: "Browse Pressure Washers",
+      url: "https://shop.example.com/browse/outdoor/pressure-washers",
+    });
+    const facetedListing = classify({
+      category: "pressure washer",
+      name: "Pressure Washers - Example Store",
+      sourceTitle: "Pressure Washers - Example Store",
+      url:
+        "https://store.example.com/outdoor/pressure-washers?facet=brand&filter=electric",
+    });
+
+    for (const result of [
+      bestBuyCatalog,
+      retailerDepartment,
+      retailerBrowse,
+      facetedListing,
+    ]) {
+      assert.equal(result.canRenderAsProductCard, false);
+      assert.equal(result.status, "listing_or_search");
+    }
+  });
+
   it("rejects generic manufacturer product-family collections across hosts", () => {
     const mhp = classify({
       category: "gas grill",
