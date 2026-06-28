@@ -727,8 +727,8 @@ Phase 5 is executed one approved step at a time. Each step must preserve existin
 - Saved-fixture proof: current-code reassessment no longer extracts `$19,999`; a stray `$1` visible value is contained as suspicious and exact-ineligible.
 - Live proof: one `dash cam` search; VIOFO A229 Pro 2CH exact #2 at `$349.99` from matching JSON-LD; no malformed high verified price.
 - Required docs updated: issue register, QA log, next task, change log, run summary, phased handoff, test memory, and technical overview.
-- Docs committed: Pending.
-- Commit: Pending.
+- Docs committed: Yes.
+- Commit: `685a840` (`fix: scope product-page price metadata`).
 - Result: RR-062 is fixed. Phase 5D has not started.
 
 ---
