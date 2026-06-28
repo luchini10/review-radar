@@ -1059,9 +1059,9 @@ Exit criteria met: RR-017, RR-043, and RR-055 are fixed with deterministic and b
 - Stop condition hit: No. The root cause was isolated without weakening a trust gate or overlapping RR-022/RR-013.
 - New issue IDs opened: None.
 - Existing issue IDs updated: RR-007 changed from Needs Investigation to Fixed.
-- Docs committed: Pending documentation commit.
+- Docs committed: Yes.
 - Implementation commit: `06ccd36`.
-- Documentation commit: Pending.
+- Documentation commit: `2800a52`.
 - Verification: fail-first 3 failures; focused 89/89; broader Phase 5E safety 177/177; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 686/686; eval clean.
 - Live validation: exactly one `pressure washer` call. Six exact and one near product remained, all with specific product-detail primary URLs; no Best Buy catalog card. No full baseline.
 
