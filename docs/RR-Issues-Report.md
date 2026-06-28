@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 5C price-trust restoration
+## Compiled for AI Agent Consumption — Phase 0 through RR-062 diagnostic
 
-**Generated:** 2026-06-27  
-**Scope:** All phases from initial measurement harness through Phase 5C price-trust restoration
+**Generated:** 2026-06-28
+**Scope:** All phases from initial measurement harness through the RR-062 diagnostic
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -18,8 +18,8 @@
 | High | 27 |
 | Medium | 24 |
 | Low | 5 |
-| Open | 7 |
-| Needs Investigation | 13 |
+| Open | 8 |
+| Needs Investigation | 12 |
 | Fixed | 41 |
 | Won't Fix | 1 |
 
@@ -58,6 +58,7 @@
 | Phase 5A — Source-upgrade safety hardening | 0 |
 | Phase 5B — Source-upgrade identity coverage | 0 |
 | Phase 5C — Price-trust restoration | 1 |
+| RR-062 diagnostic mini-phase | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -1807,27 +1808,27 @@ Phase 5C fixed RR-002 after fail-first reproduction and ran three approved focus
 | **Phase** | Phase 5C |
 | **Severity** | High |
 | **Title** | Malformed product-page price can be verified at roughly 100x the plausible product price |
-| **Status** | Needs Investigation |
+| **Status** | Open |
 
-**Description:** A fresh `dash cam` live search selected `VIOFO A229 Pro` at exact rank #4 with a verified displayed price of `$19,999`. The same run's source-upgrade evidence found a plausible `$322.99` offer, but final product metadata contained a `retailer_page` offer of `19999` from the VIOFO landing page and price trust accepted it without warning.
+**Description:** A fresh `dash cam` live search selected `VIOFO A229 Pro` at exact rank #4 with a verified displayed price of `$19,999`. Diagnostic review corrected an earlier attribution error: the separate `$322.99` source-upgrade sample belonged to `BlackVue DR770X`, not VIOFO. VIOFO carried only one parsed `retailer_page` offer, `19999`, from its landing page.
 
-**Where it occurs:** Product-page price extraction in `lib/productAssets.ts`, followed by plausibility/trust classification in `lib/priceParsing.ts` and `lib/productPriceTrust.ts`
+**Where it occurs:** `priceFromPageMetadata` / `buildMetadata` in `lib/productAssets.ts`, followed by `parseBestMoneyAmount` in `lib/priceParsing.ts` and trust classification in `lib/productPriceTrust.ts`
 
-**Steps to reproduce:** Replay the fresh Phase 5C `tests/fixtures/review-radar-live/dash-cam.json`; inspect final exact product `VIOFO A229 Pro`, its `metadata.offers`, and `priceTrust`.
+**Steps to reproduce:** Inspect the fresh Phase 5C `tests/fixtures/review-radar-live/dash-cam.json`: VIOFO has no verified price through candidate, verification, or filtering stages, then gains a single `19999` retailer-page offer during asset enrichment. Fetch the cited VIOFO landing page and pass its HTML through the current product-asset metadata extractor; an unrelated A139 widget contains `data-price="19999"` and reproduces the same offer.
 
-**Expected:** The product page's actual decimal price is parsed correctly, or a wildly implausible high outlier is held for verification instead of becoming a verified card price.
+**Expected:** Only product-scoped price metadata should enrich the target. A Shopify-style minor-unit value from an unrelated page widget should not become a verified `$19,999` target-product price.
 
-**Actual:** `19999` was accepted as a High/Medium retailer-page signal, displayed as `$19,999`, marked `verified`, and remained budget-usable.
+**Actual:** `priceFromPageMetadata` scans unscoped `data-price` attributes across the page. `priceFromValue` allows bare numerics, so `data-price="19999"` is parsed as 19,999 dollars rather than 19,999 minor units. The extractor chooses it despite the surrounding widget identifying a different product (`A139`), then Medium-confidence retailer-page evidence is marked `verified`, budget-usable, and exact-eligible.
 
-**Current status:** The exact extraction path is uncertain. The page may contain a decimal price that was flattened, a variant amount in minor units, or unrelated numeric metadata. No Phase 5C code was changed for this issue.
+**Current status:** Open. The diagnostic confirmed the extraction and trust path without changing behavior. This is not RR-002's missing low-price floor, model-number parsing, Serper Shopping, source upgrade, or a merge conflict. It is unscoped structured-page extraction plus minor-unit misinterpretation, with no high-outlier/product-affinity containment in price trust.
 
-**Suggested fix or next action:** Reproduce the landing-page extraction deterministically and locate whether the `19999` value comes from visible-price parsing, structured metadata, or embedded state. Add a generalized malformed/high-outlier safeguard only after proving the source; preserve legitimate high-end products and do not bundle this with Phase 5D eligibility work.
+**Suggested fix or next action:** Fix RR-062 in a separate narrow phase before Phase 5D. Scope structured `data-price` evidence to the matching product or require explicit currency/decimal/product context before accepting bare integer metadata. Add deterministic negatives for unrelated widgets and Shopify minor units plus positives for valid product-scoped metadata and legitimate high-end products. Do not use a blunt global maximum or bundle this with Phase 5D eligibility work.
 
 ---
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (7 issues)
+### Open (8 issues)
 - RR-043: Product-type taxonomy coverage incomplete
 - RR-054: Fresh fallback responses omit current diagnostic traces
 - RR-055: Literal `Portable` requirement fails an explicitly portable generator
@@ -1835,8 +1836,9 @@ Phase 5C fixed RR-002 after fail-first reproduction and ran three approved focus
 - RR-059: Niche form factors can win broad category searches
 - RR-060: True same-model duplicates can occupy multiple final slots
 - RR-061: Product image metadata accepts non-image or irrelevant assets
+- RR-062: Malformed product-page price verified at roughly 100x plausible value
 
-### Needs Investigation (13 issues)
+### Needs Investigation (12 issues)
 - RR-007: Category/browse pages appearing as exact product matches
 - RR-008: Review/article/support pages appearing as product cards
 - RR-009: Documentation/manual pages appearing as product cards
@@ -1849,7 +1851,6 @@ Phase 5C fixed RR-002 after fail-first reproduction and ran three approved focus
 - RR-041: Source-upgrade trigger not firing in Phase 3J live runs
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-- RR-062: Malformed product-page price verified at roughly 100x plausible value
 
 ### Fixed (41 issues)
 RR-001 through RR-006, RR-010 through RR-012, RR-016, RR-018 through RR-021, RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-044, RR-046 through RR-053, RR-057, RR-058
@@ -1861,7 +1862,7 @@ RR-001 through RR-006, RR-010 through RR-012, RR-016, RR-018 through RR-021, RR-
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-062** (High) — Diagnose the malformed `$19,999` product-page price before changing high-price trust behavior.
+1. **RR-062** (High) — Fix the confirmed unscoped `data-price` / minor-unit extraction defect before Phase 5D, without imposing a blunt global high-price cap.
 2. **RR-007 + RR-008 + RR-009 + RR-017 + RR-043** (High cluster) — Category, support/documentation, and wrong-type targets contaminate final and near streams across categories.
 3. **RR-014 + RR-022 + RR-056 + RR-060** (High/Medium quality cluster) — Leader recall, citation loss, family concentration, and true duplicates jointly degrade broad slates.
 4. **RR-055** (High) — Literal positive requirement evidence can be marked failed and remove a valid product.

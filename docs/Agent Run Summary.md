@@ -889,3 +889,25 @@ New entries should keep the same format and stay easy to read.
 **Issues:** RR-002 Fixed; RR-062 High / Needs Investigation. Register totals: 62 total, 7 Open, 13 Needs Investigation, 41 Fixed, 1 Won't Fix.
 
 **Next recommended step:** Stop. Decide whether to diagnose RR-062 separately before Phase 5D; do not combine the two.
+
+## Codex Run - 2026-06-28 RR-062 Diagnostic
+
+**Goal:** Diagnose the malformed VIOFO A229 Pro `$19,999` price before Phase 5D without changing app behavior.
+
+**Verdict:** Root cause confirmed from the saved Phase 5C fixture and a read-only reproduction against the cited VIOFO page. No ReviewRadar live search ran.
+
+**Evidence path:** VIOFO carried no verified price through candidate verification and requirement filtering. Asset enrichment then added a lone Medium-confidence `retailer_page` offer of `19999`. The page contains an unrelated A139 widget with `data-price="19999"`, and current `buildMetadata` reproduced the same offer.
+
+**Root cause:** Broad page-metadata extraction scans unscoped structured price attributes. Bare `19999` is parsed as dollars instead of Shopify-style minor units, without checking that the surrounding product is A139 rather than A229 Pro. Price trust verifies the lone retailer-page signal because it has low-price protections but no corresponding product-affinity or malformed-high-price guard.
+
+**Correction:** The `$322.99` source-upgrade sample in the Phase 5C fixture belongs to BlackVue DR770X, not VIOFO. VIOFO was not source-upgraded, so RR-062 is not a merge conflict.
+
+**Classification:** Separate from RR-002. This is structured-page extraction/minor-unit handling with a secondary high-outlier containment gap; it is not Serper, source-upgrade identity, model parsing, or stale evidence.
+
+**Tests run:** Focused price/assets/scoring/requirements/Serper tests passed 153/153. Typecheck passed. Lint had 0 errors and 3 pre-existing warnings. Full tests passed 665/665. Eval red-flag checks were clean.
+
+**Changes:** Documentation only. App code, tests, fixtures, scoring, ranking, trust, eligibility, and UI behavior are unchanged.
+
+**Issues:** RR-062 changed from Needs Investigation to Open. Register totals remain 62: 8 Open, 12 Needs Investigation, 41 Fixed, and 1 Won't Fix.
+
+**Next recommended step:** Stop. With explicit instruction, fix RR-062 narrowly before Phase 5D by product-scoping structured metadata and safely handling bare minor-unit values without imposing a global high-price cap.

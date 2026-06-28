@@ -13,6 +13,15 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-28
 
+### Codex - RR-062 malformed-high-price diagnostic
+- Confirmed RR-062 from the saved Phase 5C `dash cam` fixture without changing behavior or running another ReviewRadar search.
+- Corrected the earlier evidence attribution: `$322.99` belonged to BlackVue DR770X source-upgrade output, not VIOFO A229 Pro. VIOFO had only one `19999` retailer-page offer.
+- Traced the offer to asset enrichment. The VIOFO landing page contains an unrelated A139 widget with `data-price="19999"`; broad page-metadata extraction accepts the bare value as 19,999 dollars instead of Shopify-style minor units and does not bind it to the target product.
+- Price trust then marks the lone Medium-confidence retailer-page signal verified because current plausibility logic contains low-price floors but no product-affinity or malformed-high-price containment.
+- Classified RR-062 as a new structured-page extraction/minor-unit defect, not RR-002, Serper, source upgrade, model parsing, stale evidence, or a merge conflict. RR-062 moved from Needs Investigation to Open.
+- Verification: focused price/assets/scoring/requirements/Serper tests 153/153; typecheck clean; lint 0 errors with 3 pre-existing warnings; full suite 665/665; eval red-flag checks clean.
+- Recommended a separate narrow RR-062 fix before Phase 5D; no app code, tests, fixtures, scoring, ranking, trust, eligibility, or UI behavior changed.
+
 ### Codex - Phase 5C cross-category tiny-price trust
 - Fixed RR-002 after reproducing current `verified`/budget-usable `$10` behavior from saved `shop vac`, `dash cam`, and `wireless earbuds` products.
 - Root cause: those contexts had no class floor, while the shared absolute floor was exactly `$10`; the inclusive plausibility check accepted the offer and strong retailer metadata promoted it to `verified`.

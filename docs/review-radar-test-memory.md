@@ -546,6 +546,44 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 
 **Live calls:** Three approved calls: `shop vac`, `dash cam`, `wireless earbuds`. No `$10` exact result. Do not commit the generated live fixtures.
 
-**New issue:** RR-062. Fresh dash-cam output verified VIOFO A229 Pro at `$19,999`; source-upgrade separately found `$322.99`. Reproduce the product-page extraction path before any fix.
+**New issue:** RR-062. Fresh dash-cam output verified VIOFO A229 Pro at `$19,999`. The `$322.99` source-upgrade sample was later confirmed to belong to BlackVue DR770X, not VIOFO.
 
 **Status:** Phase 5C complete. Keep RR-002 regressions green; RR-062 remains isolated and unresolved.
+
+---
+
+## 2026-06-28 — RR-062 malformed-high-price diagnostic
+
+**Issue diagnosed:** RR-062; no behavior fix.
+
+**Saved-fixture stage proof:**
+- VIOFO A229 Pro has no verified price in `candidatePool`, `postVerifyCandidates`, or `postFilterCandidates`.
+- Asset enrichment adds a single Medium-confidence `retailer_page` offer of `19999` from the VIOFO A229 landing page.
+- VIOFO has no source-upgrade trace. The fixture's `$322.99` source-upgrade sample belongs to BlackVue DR770X, so there is no VIOFO price merge conflict.
+
+**Exact extraction proof:**
+- The current cited page contains an unrelated A139 widget with `data-price="19999"`.
+- Passing that page through current `buildMetadata` reproduces the exact 19,999 offer.
+- `priceFromPageMetadata` scans structured price attributes across the full page.
+- `priceFromValue` permits bare numerics, so a Shopify-style minor-unit integer is treated as dollars.
+- The price is not checked for surrounding product identity before enrichment.
+
+**Trust path:**
+- One Medium-confidence retailer-page signal is sufficient for `verified`.
+- Existing `plausibleProductPrice` and class floors protect against malformed low prices.
+- They do not protect against a lone malformed high integer, missing minor-unit context, or unrelated same-page product metadata.
+
+**Classification:** This is not RR-002, Serper, source upgrade, model-number parsing, stale evidence, or merge selection. It is unscoped structured-page extraction plus minor-unit misinterpretation, with a secondary high-outlier/product-affinity containment gap.
+
+**Future regression requirements:**
+- Reject or correctly normalize bare minor-unit `data-price` values that are not product-scoped.
+- Reject unrelated product-widget prices on a target landing page.
+- Preserve valid product-scoped structured metadata.
+- Preserve legitimate high-end product prices; do not implement a blunt global maximum.
+- Keep all RR-002 low-price, installment, text-price, and exact-budget tests green.
+
+**Verification:** Focused price/assets/scoring/requirements/Serper tests 153/153; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 665/665; eval red-flag checks clean.
+
+**Live calls:** No ReviewRadar search. One read-only retrieval of the cited VIOFO page was used to identify the raw field.
+
+**Status:** RR-062 is Open with a confirmed root cause. Fix it in a separate narrow phase before Phase 5D.

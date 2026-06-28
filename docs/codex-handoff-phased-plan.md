@@ -16,15 +16,15 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 5C complete. Stop before any next phase.**
+Current phase: **RR-062 diagnostic complete. Stop before the behavior fix or Phase 5D.**
 
 Phase 3N safely admitted specific Google Shopping offers for source-upgrade evidence and fixed the `Shop-Vac` title false positive. RR-051 removed synthetic query-derived snippets from same-product identity. Phase 3O preserved reliable brand identity in compact model queries.
 
-The Phase 3O live proof then exposed two separate safety defects. RR-053 is fixed deterministically: URL query strings and fragments cannot provide product identity, while merchant product paths and source-derived Shopping titles remain usable. Phase 5A fixed RR-058 by rejecting explicit product-type conflicts before source-upgrade attachment. Phase 5B fixed RR-052 and the RR-057/RR-034/RR-035/RR-044 model-coverage cluster without weakening Phase 5A identity safety. Phase 5C fixed reopened RR-002 across shop-vac, dash-camera, and wireless-earbud `$10` offers.
+The Phase 3O live proof then exposed two separate safety defects. RR-053 is fixed deterministically: URL query strings and fragments cannot provide product identity, while merchant product paths and source-derived Shopping titles remain usable. Phase 5A fixed RR-058 by rejecting explicit product-type conflicts before source-upgrade attachment. Phase 5B fixed RR-052 and the RR-057/RR-034/RR-035/RR-044 model-coverage cluster without weakening Phase 5A identity safety. Phase 5C fixed reopened RR-002 across shop-vac, dash-camera, and wireless-earbud `$10` offers. The RR-062 diagnostic then confirmed that an unrelated A139 `data-price="19999"` widget on VIOFO's A229 page is parsed as 19,999 dollars during asset enrichment.
 
 Recommended next phase:
 
-- Await explicit instruction. Recommended first decision: run a narrow RR-062 malformed-high-price diagnostic before Phase 5D, or explicitly defer RR-062 and continue the master sequence with Phase 5D only.
+- Await explicit instruction. Recommended next work is a narrow RR-062 behavior fix before Phase 5D: product-scope structured prices and handle bare minor-unit metadata safely without a blunt global maximum.
 
 ---
 
@@ -695,6 +695,24 @@ Phase 5 is executed one approved step at a time. Each step must preserve existin
 - Commit: `9a8a293` (`fix: restore cross-category tiny-price trust`).
 - Result: RR-002 is fixed with deterministic and live proof. RR-062 is isolated and remains unmodified.
 
+### RR-062 diagnostic mini-phase completion record
+
+- Completed step: RR-062 malformed-high-price diagnostic before Phase 5D.
+- Next step: Narrow RR-062 behavior fix, only after explicit instruction; Phase 5D remains deferred.
+- Diagnostic-only: Yes. No app behavior, tests, fixtures, scoring, ranking, trust, eligibility, source-upgrade, or UI changes.
+- Stop condition hit: No. The root cause was confirmed; implementation was intentionally excluded.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-062 changed from Needs Investigation to Open after root-cause confirmation.
+- Evidence: the saved Phase 5C fixture shows VIOFO gains `19999` only during asset enrichment; the current cited page has an unrelated A139 widget with `data-price="19999"`, and current metadata extraction reproduces the exact offer.
+- Correction: the `$322.99` source-upgrade sample belongs to BlackVue DR770X, not VIOFO; VIOFO was not source-upgraded.
+- Root cause: unscoped structured-page price extraction treats a Shopify-style minor-unit integer as dollars, and price trust has no product-affinity or malformed-high-price containment for that lone retailer-page signal.
+- Verification: focused tests 153/153; typecheck passed; lint 0 errors with 3 pre-existing warnings; full tests 665/665; eval red-flag checks clean.
+- Live proof: No ReviewRadar search. One read-only retrieval of the already cited VIOFO source page was used to identify the raw field.
+- Required docs updated: issue register, QA log, next task, change log, run summary, phased handoff, and test memory.
+- Docs committed: Pending.
+- Commit: Pending.
+- Result: RR-062 is diagnosed and remains unfixed. A separate narrow fix is recommended before Phase 5D.
+
 ---
 
 ## Larger Product-Quality Phases After Diagnostic Harvest
@@ -967,22 +985,22 @@ Do this only after backend trust and ranking are stronger.
 
 ## Immediate Next Task for Codex
 
-Stop. Phase 5C is complete.
+Stop. The RR-062 diagnostic is complete.
 
 Task:
 
 Recommended next step, only after explicit instruction:
 
-1. Decide whether to run a narrow diagnostic-only RR-062 phase before Phase 5D.
-2. If RR-062 is approved, reproduce the malformed VIOFO `$19,999` extraction before changing code and keep that work separate from Phase 5D.
-3. If RR-062 is explicitly deferred, run Phase 5D only for RR-007, RR-008, and RR-009.
-4. Do not combine price extraction, product-card eligibility, ranking, discovery, or later Phase 5 work.
+1. If approved, fix RR-062 in a separate narrow phase before Phase 5D.
+2. Product-scope structured page prices and handle bare minor-unit metadata safely.
+3. Preserve valid structured product prices and legitimate high-end products; do not add a blunt global maximum.
+4. Keep Phase 5D limited to RR-007, RR-008, and RR-009.
 
 Do not:
 
-- start RR-062 work or Phase 5D automatically;
-- treat the exact RR-062 extraction source as known before deterministic reproduction;
+- start the RR-062 behavior fix or Phase 5D automatically;
+- combine RR-062 with product-card eligibility, ranking, discovery, or later Phase 5 work;
 - weaken existing price, citation, product, requirement, or identity safety;
 - run another live search or full baseline without approval.
 
-Exit criteria met: RR-002 is fixed deterministically and in three focused live searches, RR-062 is logged without an out-of-scope fix, the issue/docs ledger is current, and no later phase has begun.
+Exit criteria met: RR-062 is reproduced from the saved fixture, its raw page field and extraction/trust path are confirmed, its status is Open, no behavior changed, and Phase 5D has not begun.

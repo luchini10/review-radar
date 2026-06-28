@@ -4190,7 +4190,7 @@ Exactly three approved searches ran; no full baseline ran.
 **`dash cam`**
 - Final exact products: BlackVue DR770X; Garmin X310; Cobra SC220C; VIOFO A229 Pro; Nextbase 322GW; YADA BT53872M-2; Scosche HD DVR.
 - No `$10` or below-floor exact product and no suspicious-low candidate in the final trace.
-- New unrelated issue RR-062: VIOFO A229 Pro displayed `$19,999`, `verified`, `canUseForBudget: true`, despite source-upgrade finding a plausible `$322.99` offer. No fix was attempted.
+- New unrelated issue RR-062: VIOFO A229 Pro displayed `$19,999`, `verified`, `canUseForBudget: true`. A later diagnostic confirmed the apparent `$322.99` comparison belonged to BlackVue DR770X, not VIOFO. No fix was attempted in Phase 5C.
 
 **`wireless earbuds`**
 - Final exact products: Anker comparison/Space A40; Bose QuietComfort Ultra 2nd Gen; Soundcore Liberty 4 NC; Nothing Ear (a); Logitech Zone; Nothing Ear(a); Soundcore Space A40.
@@ -4206,3 +4206,51 @@ Exactly three approved searches ran; no full baseline ran.
 - Live fixture files remain untracked and are not part of the commit.
 
 Recommended direction: stop after Phase 5C. Decide whether to run a narrow RR-062 diagnostic before Phase 5D; do not combine malformed high-price extraction with Phase 5D eligibility work.
+
+## <span style="color:green">**Codex QA Update - 2026-06-28 (RR-062 malformed-high-price diagnostic)**</span>
+
+**Verdict: ROOT CAUSE CONFIRMED. RR-062 reproduces from the saved Phase 5C fixture and current VIOFO page through the existing asset metadata path. No behavior changed and no ReviewRadar live search ran.**
+
+### Evidence path
+
+- Saved fixture: `tests/fixtures/review-radar-live/dash-cam.json`, saved at `2026-06-28T06:19:29.520Z`.
+- VIOFO A229 Pro had `price: "Not verified in this pass"` and `priceVerified: false` in candidate, post-verification, and post-filter stages.
+- Asset enrichment added one offer: `sourceType: retailer_page`, `sourceUrl: https://www.viofo.com/pages/a229-pro-1ch-2ch-3ch-landing-page`, `price: 19999`, `confidence: Medium`, `currency: null`.
+- Current-page read-only reproduction found an unrelated A139 widget with `data-price="19999"`. Passing the page through current `buildMetadata` reproduced the exact 19,999 retailer-page offer.
+- `priceFromPageMetadata` scans structured `data-price` attributes across the full page. `priceFromValue` permits bare numeric values, so the Shopify-style minor-unit integer becomes 19,999 dollars. The extraction is not scoped to the target product.
+- `assessProductPriceTrust` accepts the lone Medium retailer-page signal as verified. Existing plausibility checks guard malformed low prices but do not detect this high malformed value, product mismatch, or missing minor-unit context.
+
+### Corrected comparison
+
+- The earlier Phase 5C note that VIOFO also had a plausible `$322.99` offer was incorrect.
+- `$322.99` belonged to BlackVue DR770X in `sourceUpgradeTraces[0]`.
+- VIOFO did not receive a source-upgrade attempt and had no competing price signal, so this was not a merge conflict or outlier-selection dispute.
+
+### Classification
+
+- Not the RR-002 low-price-floor family.
+- Not Serper Shopping, organic normalization, OpenAI output, source upgrade, identity matching, model-number parsing, stale evidence, or a wrong-source merge.
+- Primary defect: unscoped structured-page price extraction plus minor-unit misinterpretation.
+- Secondary containment gap: no product-affinity or malformed-high-price guard before a lone retailer-page signal becomes verified.
+
+### Verification
+
+```text
+focused price/assets/scoring/requirement/Serper tests: 153/153 passed
+npm run typecheck: passed
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 665/665 passed
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+- ReviewRadar live searches: 0.
+- Read-only direct source-page retrieval: 1, solely to identify the raw field behind the saved fixture.
+- App code, tests, fixtures, scoring, ranking, price trust, source-upgrade identity, citation trust, eligibility, and UI: unchanged.
+
+### Issue outcome
+
+- RR-062 moved from Needs Investigation to Open because the root cause is confirmed and awaits a focused fix.
+- Register totals remain 62: 6 Critical, 27 High, 24 Medium, 5 Low; 8 Open, 12 Needs Investigation, 41 Fixed, 1 Won't Fix.
+- No new issue ID opened.
+
+Recommended direction: fix RR-062 in a separate narrow phase before Phase 5D. Scope structured prices to the target product and handle bare minor-unit metadata safely; preserve legitimate high-end products and avoid a global maximum-price rule.
