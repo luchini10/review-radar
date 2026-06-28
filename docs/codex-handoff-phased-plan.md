@@ -673,8 +673,8 @@ Phase 5 is executed one approved step at a time. Each step must preserve existin
 - Verification: focused tests 183/183; typecheck passed; lint 0 errors with 3 pre-existing warnings; full tests 660/660; eval red-flag checks clean.
 - Live proof: Not run.
 - Required docs updated: issue register, QA log, next task, change log, run summary, phased handoff, test memory, and technical overview.
-- Docs committed: Pending final Phase 5B commit.
-- Commit: Pending.
+- Docs committed: Yes.
+- Commit: `872ee5d` (`fix: expand source-upgrade identity coverage`).
 - Result: assigned false-brand/false-model query cases are corrected, legitimate model-family targets become eligible, and expanded coverage does not loosen attachment identity.
 
 ---
