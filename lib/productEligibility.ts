@@ -140,6 +140,19 @@ function evidenceOnlyDomain(host: string) {
   return evidenceOnlyDomains.some((domain) => domainMatches(host, domain));
 }
 
+function hostLooksLikeSupportOrDocumentation(host: string) {
+  const labels = host.split(".").filter(Boolean);
+  const firstLabel = labels[0] || "";
+  const compactHost = labels.join("");
+
+  return (
+    /^(?:docs?|help|knowledgebase|manuals?|support)$/i.test(firstLabel) ||
+    /(?:devicereport|manualslib|manualsplus|productdocumentation|productmanuals)/i.test(
+      compactHost,
+    )
+  );
+}
+
 function urlPath(parsed: URL | null) {
   return parsed?.pathname.toLowerCase() || "";
 }
@@ -177,7 +190,10 @@ function isKnownProductUrl(parsed: URL) {
   }
 
   if (domainMatches(host, "bestbuy.com")) {
-    return /\/site\//i.test(path) && !/\/site\/questions\//i.test(path);
+    return (
+      /\/site\/[^/]+\/\d+\.p$/i.test(path) ||
+      /\/product\/[^/]+\/[a-z0-9]+\/sku\/\d+$/i.test(path)
+    );
   }
 
   if (domainMatches(host, "wayfair.com")) {
@@ -218,20 +234,100 @@ function pathLooksLikeEvidenceOrSupportPage(parsed: URL) {
   const path = urlPath(parsed);
 
   return [
+    /\/app\/answers(?:\/|$)/i,
+    /\/(?:answer|answers)\//i,
     /\/(?:advice|community|communities|conversation|conversations)\//i,
     /\/(?:article|articles)\//i,
     /\/(?:blog|blogs)\//i,
+    /\/(?:discover-learn|learning-center|learn)\//i,
+    /\/(?:docs|documentation|manual|manuals)\//i,
     /\/(?:forum|forums)\//i,
     /\/(?:help|help-library|support)\//i,
+    /\/(?:customer-care|customer-service)(?:\/|$)/i,
+    /\/(?:knowledge-base|knowledgebase|kb)\//i,
     /\/(?:news|newsroom)\//i,
     /\/(?:post|posts|reel|reels)\//i,
     /\/(?:q-a|qa|question|questions)\//i,
     /\/(?:review|reviews)\//i,
     /\/(?:thread|threads)\//i,
     /\/(?:topic|topics)\//i,
+    /\/(?:troubleshoot|troubleshooting)\//i,
     /viewtopic/i,
     /\.pdf$/i,
   ].some((pattern) => pattern.test(path));
+}
+
+function stemCategoryToken(token: string) {
+  if (token.endsWith("ies") && token.length > 4) {
+    return `${token.slice(0, -3)}y`;
+  }
+
+  if (token.endsWith("s") && !token.endsWith("ss") && token.length > 3) {
+    return token.slice(0, -1);
+  }
+
+  return token;
+}
+
+function normalizedPathTokens(value: string) {
+  return normalizeText(value.replace(/[-/]+/g, " "))
+    .split(" ")
+    .filter(Boolean)
+    .map(stemCategoryToken);
+}
+
+function pathLooksLikeGenericProductCollection(
+  parsed: URL,
+  title: string,
+  category: string | null | undefined,
+) {
+  if (!category || titleHasModelOrSku(title)) {
+    return false;
+  }
+
+  const segments = parsed.pathname.split("/").filter(Boolean);
+  const productSegmentIndex = segments.findIndex((segment) =>
+    /^products?$/i.test(segment),
+  );
+
+  if (productSegmentIndex < 0 || productSegmentIndex === segments.length - 1) {
+    return false;
+  }
+
+  const finalSegment = segments[segments.length - 1] || "";
+
+  if (/\d/.test(finalSegment)) {
+    return false;
+  }
+
+  const categoryTokens = new Set(normalizedPathTokens(category));
+  const genericLandingTokens = new Set([
+    "all",
+    "commercial",
+    "featured",
+    "home",
+    "indoor",
+    "outdoor",
+    "portable",
+    "product",
+    "quality",
+    "residential",
+    "solution",
+    "system",
+  ]);
+  const distinctiveTokens = normalizedPathTokens(finalSegment).filter(
+    (token) =>
+      !categoryTokens.has(token) && !genericLandingTokens.has(token),
+  );
+  const titleTokens = normalizedPathTokens(title);
+  const categoryAppearsNearTitleStart = Array.from(categoryTokens).every(
+    (token) => {
+      const index = titleTokens.indexOf(token);
+      return index >= 0 && index <= 4;
+    },
+  );
+
+  return distinctiveTokens.length === 0 && categoryAppearsNearTitleStart;
 }
 
 function isLikelyListingOrSearchUrl(parsed: URL) {
@@ -289,8 +385,10 @@ function isLikelyListingOrSearchUrl(parsed: URL) {
   }
 
   if (domainMatches(host, "bestbuy.com")) {
-    return /\/site\/(?:searchpage|shop|collection)\b/i.test(path) &&
-      !isKnownProductUrl(parsed);
+    return (
+      /\/site\/(?:searchpage|shop|collection)\b/i.test(path) ||
+      /\/site\/[^/]+\/[^/]+\.c$/i.test(path)
+    ) && !isKnownProductUrl(parsed);
   }
 
   if (domainMatches(host, "dickssportinggoods.com")) {
@@ -333,6 +431,7 @@ function textLooksLikeNonProduct(value: string) {
     /\b(?:complaints?|lawsuit|recall notice)\b/i,
     /\b(?:customer reviews?|reviews?)\s+(?:for|of)\b/i,
     /\b(?:support article|help library|error code list|troubleshooting)\b/i,
+    /\b(?:device|product)\.report\b/i,
     /\b(?:quick\s*start\s*guide|user\s*manual|owners?\s*manual|owner'?s\s*manual|instruction\s*manual|installation\s*guide|installation\s*instructions|use\s+and\s+care\s+guide|care\s+guide)\b/i,
     /\b(?:buying guide|shopping guide|purchase guide|size guide|measurement guide|measuring guide)\b/i,
     /\bthings?\s+to\s+avoid\s+when\s+(?:buying|purchasing|shopping\s+for)\b/i,
@@ -477,7 +576,23 @@ export function classifyProductEligibility(
     ]);
   }
 
-  if (evidenceOnlyDomain(host) || pathLooksLikeEvidenceOrSupportPage(parsedUrl)) {
+  if (
+    pathLooksLikeGenericProductCollection(
+      parsedUrl,
+      titleText,
+      input.category,
+    )
+  ) {
+    return verdict("listing_or_search", "high", false, false, [
+      "URL and title look like a generic product-family collection.",
+    ]);
+  }
+
+  if (
+    evidenceOnlyDomain(host) ||
+    hostLooksLikeSupportOrDocumentation(host) ||
+    pathLooksLikeEvidenceOrSupportPage(parsedUrl)
+  ) {
     return verdict("evidence_only", "high", false, true, [
       "URL belongs to an evidence, review, discussion, news, or support source.",
     ]);

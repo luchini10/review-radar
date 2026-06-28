@@ -535,6 +535,48 @@ describe("Serper product discovery", () => {
     );
   });
 
+  it("rejects Phase 5D collection, support, and documentation shapes during discovery", () => {
+    const candidates = normalizeSerperOrganicResults(
+      {
+        organic: [
+          {
+            title:
+              "Air Purifiers, Ventilators & Monitors for Clean Air - Daikin Comfort",
+            link: "https://daikincomfort.com/products/indoor-air-quality",
+            displayedLink: "Daikin Comfort",
+            snippet: "Indoor air quality product family.",
+          },
+          {
+            title: "Levoit Core 300S | Low Airflow - Support",
+            link:
+              "https://support.example.com/app/answers/detail/a_id/300/low-airflow",
+            displayedLink: "Example Support",
+            snippet: "Troubleshooting an air purifier with low airflow.",
+          },
+          {
+            title: "H7123 - Smart Pet Air Purifier - device.report",
+            link: "https://device.report/govee/h7123",
+            displayedLink: "device.report",
+            snippet: "Device information for the Govee H7123.",
+          },
+          {
+            title: "Levoit Core 300S-P Smart Air Purifier",
+            link: "https://levoit.com/products/core-300s-p-smart-air-purifier",
+            displayedLink: "Levoit",
+            snippet: "Levoit Core 300S-P product page.",
+          },
+        ],
+      },
+      "air purifier product page",
+      "air purifier",
+    );
+
+    assert.deepEqual(
+      candidates.map((candidate) => candidate.name),
+      ["Levoit Core 300S-P Smart Air Purifier"],
+    );
+  });
+
   it("does not treat review, video, forum, or homepage results as product cards", () => {
     const candidates = normalizeSerperOrganicResults(
       {

@@ -9,6 +9,7 @@ import {
 
 function buildRecommendation(overrides = {}) {
   return {
+    category: "example product",
     citations: [{ url: "https://example.com/product/example-product-a-123" }],
     confidence_score: 92,
     name: "Example Product Model A123",
@@ -242,6 +243,71 @@ describe("recommendation result trust validation", () => {
     assert.deepEqual(
       filtered.recommendations.map((recommendation) => recommendation.name),
       ["Example Running Shoe 123"],
+    );
+  });
+
+  it("drops Phase 5D collection, support, and documentation cards at final citation filtering", () => {
+    const badRecommendations = [
+      {
+        category: "gas grill",
+        name: "Gas Outdoor BBQ Grills Made in the USA - MHP Grills",
+        url: "https://mhpgrills.com/products/grills",
+      },
+      {
+        category: "shop vac",
+        name: "Garage Pro Wet/Dry Vac | No / Low Suction - BISSELL Support",
+        url:
+          "https://support.bissell.com/app/answers/detail/a_id/1234/no-low-suction",
+      },
+      {
+        category: "air purifier",
+        name: "H7123 - Smart Pet Air Purifier - device.report",
+        url: "https://device.report/govee/h7123",
+      },
+      {
+        category: "shop vac",
+        name: "New Customer Service | Shop-Vac Store",
+        url: "https://www.shopvac.com/pages/customer-service",
+      },
+    ].map((input) =>
+      buildRecommendation({
+        category: input.category,
+        citations: [
+          {
+            title: input.name,
+            url: input.url,
+            what_it_supports:
+              "Supports this product candidate's listing metadata from search results.",
+          },
+        ],
+        name: input.name,
+      }),
+    );
+    const valid = buildRecommendation({
+      category: "air purifier",
+      citations: [
+        {
+          title: "Levoit Core 300S-P Smart Air Purifier",
+          url: "https://levoit.com/products/core-300s-p-smart-air-purifier",
+          what_it_supports: "Specific manufacturer product page.",
+        },
+      ],
+      name: "Levoit Core 300S-P Smart Air Purifier",
+    });
+    const allUrls = new Set([
+      ...badRecommendations.flatMap((item) =>
+        item.citations.map((citation) => citation.url),
+      ),
+      valid.citations[0].url,
+    ]);
+    const filtered = filterResultToVerifiedCitations(
+      buildResult([...badRecommendations, valid]),
+      allUrls,
+    );
+
+    assert.deepEqual(
+      filtered.recommendations.map((item) => item.name),
+      ["Levoit Core 300S-P Smart Air Purifier"],
     );
   });
 

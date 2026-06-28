@@ -936,6 +936,7 @@ function isLikelySearchOrListingUrl(url: URL) {
 }
 
 type SpecificProductCandidateInput = {
+  category?: string;
   imageUrl: string;
   price: number | null;
   retailer: string;
@@ -1005,6 +1006,7 @@ function specificProductCandidateRejectionReason(
   }
 
   const eligibility = classifyProductEligibility({
+    category: input.category,
     imageUrl: input.imageUrl,
     name: input.title,
     price: input.price,

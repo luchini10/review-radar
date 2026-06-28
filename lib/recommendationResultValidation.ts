@@ -20,6 +20,7 @@ type CitationLike = {
 };
 
 type RecommendationLike = {
+  category?: string;
   citations: CitationLike[];
   confidence_score: number;
   name?: string;
@@ -118,12 +119,17 @@ function citationUrlIsVerified(url: string, verifiedUrls: Set<string>) {
 // filter the result below: a real buyable/likely product page, not a category,
 // search, listing, article, review, or forum page. Trust-preserving — only genuine
 // product pages qualify.
-function isSelfCitableProductPage(name: string | undefined, url: string) {
+function isSelfCitableProductPage(
+  name: string | undefined,
+  category: string | undefined,
+  url: string,
+) {
   if (!url) {
     return false;
   }
 
   const eligibility = classifyProductEligibility({
+    category,
     name,
     productName: name,
     sourceTitle: name,
@@ -142,7 +148,14 @@ function rescueProductPageCitation(
   recommendation: RecommendationLike,
 ): CitationLike | null {
   for (const citation of recommendation.citations) {
-    if (citation.url && isSelfCitableProductPage(recommendation.name, citation.url)) {
+    if (
+      citation.url &&
+      isSelfCitableProductPage(
+        recommendation.name,
+        recommendation.category,
+        citation.url,
+      )
+    ) {
       const url = normalizeUrl(citation.url);
 
       return {
@@ -487,6 +500,7 @@ export function filterResultToVerifiedCitations<T extends RecommendationResultLi
         const primaryCitation = recommendation.citations[0];
         const primaryUrl = primaryCitation?.url ?? "";
         const eligibility = classifyProductEligibility({
+          category: recommendation.category,
           name: recommendation.name,
           productName: recommendation.name,
           snippet: primaryCitation?.what_it_supports,

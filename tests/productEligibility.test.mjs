@@ -45,6 +45,138 @@ describe("shared product eligibility classifier", () => {
     assert.equal(homeDepotCategory.status, "listing_or_search");
   });
 
+  it("rejects generic manufacturer product-family collections across hosts", () => {
+    const mhp = classify({
+      category: "gas grill",
+      imageUrl: null,
+      name: "Gas Outdoor BBQ Grills Made in the USA - MHP Grills",
+      price: null,
+      sourceTitle: "Gas Outdoor BBQ Grills Made in the USA - MHP Grills",
+      url: "https://mhpgrills.com/products/grills",
+    });
+    const daikin = classify({
+      category: "air purifier",
+      imageUrl: null,
+      name: "Air Purifiers, Ventilators & Monitors for Clean Air - Daikin Comfort",
+      price: null,
+      sourceTitle:
+        "Air Purifiers, Ventilators & Monitors for Clean Air - Daikin Comfort",
+      url: "https://daikincomfort.com/products/indoor-air-quality",
+    });
+    const champion = classify({
+      category: "portable generator",
+      imageUrl: null,
+      name: "Portable Generators for RV, Home, and Projects",
+      price: null,
+      sourceTitle: "Portable Generators for RV, Home, and Projects",
+      url:
+        "https://www.championpowerequipment.com/products/generators/portable-generators/",
+    });
+    const briggs = classify({
+      category: "portable generator",
+      imageUrl: null,
+      name: "Portable Generators - Briggs & Stratton",
+      price: null,
+      sourceTitle: "Portable Power for Home, Work & Play | Briggs & Stratton",
+      url:
+        "https://www.briggsandstratton.com/en-us/products/portable-generators",
+    });
+
+    for (const result of [mhp, daikin, champion, briggs]) {
+      assert.equal(result.canRenderAsProductCard, false);
+      assert.equal(result.status, "listing_or_search");
+    }
+  });
+
+  it("rejects support, learning-center, and retailer advice pages as product cards", () => {
+    const bissell = classify({
+      category: "shop vac",
+      name: "Garage Pro Wet/Dry Vac | No / Low Suction - BISSELL Support",
+      sourceTitle:
+        "Garage Pro Wet/Dry Vac | No / Low Suction - BISSELL Support",
+      snippet: "Supports this product candidate's listing metadata from search results.",
+      url: "https://support.bissell.com/app/answers/detail/a_id/1234/no-low-suction",
+    });
+    const bestBuy = classify({
+      category: "pressure washer",
+      name: "Are Power Washers and Pressure Washers Different? - Best Buy",
+      sourceTitle:
+        "Are Power Washers and Pressure Washers Different? - Best Buy",
+      snippet: "Supports this product candidate's listing metadata from search results.",
+      url:
+        "https://www.bestbuy.com/discover-learn/are-power-washers-and-pressure-washers-different/pcmcat1687983764520",
+    });
+    const petsmart = classify({
+      category: "dog food",
+      name: "Limited Ingredient Dog Food Diets | PetSmart",
+      sourceTitle: "Limited Ingredient Dog Food Diets | PetSmart",
+      snippet: "Supports this product candidate's listing metadata from search results.",
+      url:
+        "https://www.petsmart.com/learning-center/dog-care/put-a-lid-on-it/A0289.html",
+    });
+    const shopVac = classify({
+      category: "shop vac",
+      name: "New Customer Service | Shop-Vac Store",
+      sourceTitle: "New Customer Service | Shop-Vac Store",
+      snippet: "Contact and support information for Shop-Vac customers.",
+      url: "https://www.shopvac.com/pages/customer-service",
+    });
+
+    for (const result of [bissell, bestBuy, petsmart, shopVac]) {
+      assert.equal(result.canRenderAsProductCard, false);
+      assert.equal(result.canUseAsEvidence, true);
+    }
+  });
+
+  it("rejects documentation mirrors even when the title contains a model", () => {
+    const deviceReport = classify({
+      category: "air purifier",
+      name: "H7123 - Smart Pet Air Purifier - device.report",
+      sourceTitle: "H7123 - Smart Pet Air Purifier - device.report",
+      snippet: "Supports this product candidate's listing metadata from search results.",
+      url: "https://device.report/govee/h7123",
+    });
+    const manualsLibrary = classify({
+      category: "toaster oven",
+      name: "Breville BOV845BSS Smart Oven User Guide",
+      sourceTitle: "Breville BOV845BSS Smart Oven User Guide",
+      snippet: "Documentation and device information for model BOV845BSS.",
+      url: "https://manualslib.example/breville/bov845bss",
+    });
+
+    for (const result of [deviceReport, manualsLibrary]) {
+      assert.equal(result.canRenderAsProductCard, false);
+      assert.equal(result.canUseAsEvidence, true);
+    }
+  });
+
+  it("preserves specific manufacturer and retailer product-detail pages", () => {
+    const manufacturer = classify({
+      category: "coffee maker",
+      name: "AeroPress Coffee Maker - Original",
+      sourceTitle: "AeroPress Coffee Maker - Original",
+      url: "https://aeropress.com/products/aeropress-coffee-maker",
+    });
+    const bestBuyLegacy = classify({
+      category: "robot vacuum",
+      name: "Shark Matrix Self-Emptying Robot Vacuum RV2310AE",
+      sourceTitle: "Shark Matrix Self-Emptying Robot Vacuum RV2310AE",
+      url:
+        "https://www.bestbuy.com/site/shark-matrix-self-emptying-robot-vacuum/6542043.p",
+    });
+    const bestBuyModern = classify({
+      category: "gaming monitor",
+      name: "Gigabyte M27Q 27-inch Gaming Monitor",
+      sourceTitle: "Gigabyte M27Q 27-inch Gaming Monitor",
+      url:
+        "https://www.bestbuy.com/product/gigabyte-m27q-27-inch-gaming-monitor/J3ZW92F97X/sku/10467600",
+    });
+
+    for (const result of [manufacturer, bestBuyLegacy, bestBuyModern]) {
+      assert.equal(result.canRenderAsProductCard, true);
+    }
+  });
+
   it("keeps Google search and Shopping offer URLs out of product cards", () => {
     const ordinarySearch = classify({
       name: "DEWALT DXV10SB Wet/Dry Vacuum",
