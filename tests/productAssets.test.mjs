@@ -129,6 +129,7 @@ describe("product asset metadata extraction", () => {
     });
     const metaMetadata = buildMetadata({
       html: `
+        <meta property="og:title" content="Example Vacuum">
         <meta property="product:price:amount" content="129.99">
         <meta property="product:price:currency" content="USD">
       `,
@@ -150,6 +151,7 @@ describe("product asset metadata extraction", () => {
       html: `
         <html>
           <body>
+            <h1>Example Air Purifier</h1>
             <input type="hidden" name="price" value="109.99">
             <input type="hidden" name="quantity" value="42">
           </body>
@@ -165,6 +167,233 @@ describe("product asset metadata extraction", () => {
     });
 
     assert.equal(metadata.offers[0].price.value, 109.99);
+  });
+
+  it("does not attach an unrelated same-page widget price to the target product", () => {
+    const metadata = buildMetadata({
+      html: `
+        <html>
+          <head>
+            <meta property="og:title" content="VIOFO A229 Pro">
+          </head>
+          <body>
+            <h1>VIOFO A229 Pro</h1>
+            <div
+              data-title="A139 2CH Dual Channel Dash Cam Front 2K"
+              data-price="19999"
+              data-id=""
+            ></div>
+          </body>
+        </html>
+      `,
+      pageUrl:
+        "https://www.viofo.com/pages/a229-pro-1ch-2ch-3ch-landing-page",
+      product: {
+        name: "VIOFO A229 Pro",
+        product_page_url:
+          "https://www.viofo.com/pages/a229-pro-1ch-2ch-3ch-landing-page",
+        product_image_url: "",
+      },
+      productImageUrl: "",
+    });
+
+    assert.equal(metadata.offers.length, 0);
+  });
+
+  it("does not attach unscoped data-price values, including bare integers", () => {
+    const metadata = buildMetadata({
+      html: `
+        <html>
+          <body>
+            <h1>VIOFO A229 Pro</h1>
+            <div data-price="19999"></div>
+            <div data-price="349.99"></div>
+          </body>
+        </html>
+      `,
+      pageUrl: "https://example.com/viofo-a229-pro",
+      product: {
+        name: "VIOFO A229 Pro",
+        product_page_url: "https://example.com/viofo-a229-pro",
+        product_image_url: "",
+      },
+      productImageUrl: "",
+    });
+
+    assert.equal(metadata.offers.length, 0);
+  });
+
+  it("keeps explicit product-scoped structured prices without a global ceiling", () => {
+    const normalMetadata = buildMetadata({
+      html: `
+        <html>
+          <body>
+            <h1>VIOFO A229 Pro</h1>
+            <div data-title="VIOFO A229 Pro" data-price="349.99"></div>
+          </body>
+        </html>
+      `,
+      pageUrl: "https://example.com/viofo-a229-pro",
+      product: {
+        name: "VIOFO A229 Pro",
+        product_page_url: "https://example.com/viofo-a229-pro",
+        product_image_url: "",
+      },
+      productImageUrl: "",
+    });
+    const expensiveMetadata = buildMetadata({
+      html: `
+        <html>
+          <body>
+            <h1>Reference Cinema Projector X9000</h1>
+            <div
+              data-title="Reference Cinema Projector X9000"
+              data-price="$19,999.00"
+            ></div>
+          </body>
+        </html>
+      `,
+      pageUrl: "https://example.com/projector-x9000",
+      product: {
+        name: "Reference Cinema Projector X9000",
+        product_page_url: "https://example.com/projector-x9000",
+        product_image_url: "",
+      },
+      productImageUrl: "",
+    });
+
+    assert.equal(normalMetadata.offers[0].price.value, 349.99);
+    assert.equal(expensiveMetadata.offers[0].price.value, 19999);
+  });
+
+  it("converts bare minor units only with matching product binding and an explicit unit marker", () => {
+    const metadata = buildMetadata({
+      html: `
+        <html>
+          <body>
+            <h1>VIOFO A229 Pro</h1>
+            <div
+              data-title="VIOFO A229 Pro"
+              data-price="34999"
+              data-price-unit="cents"
+            ></div>
+            <div
+              data-title="VIOFO A139"
+              data-price="9999"
+              data-price-unit="cents"
+            ></div>
+          </body>
+        </html>
+      `,
+      pageUrl: "https://example.com/viofo-a229-pro",
+      product: {
+        name: "VIOFO A229 Pro",
+        product_page_url: "https://example.com/viofo-a229-pro",
+        product_image_url: "",
+      },
+      productImageUrl: "",
+    });
+
+    assert.equal(metadata.offers[0].price.value, 349.99);
+  });
+
+  it("keeps schema.org product offers when the title matches the target", () => {
+    const metadata = buildMetadata({
+      html: `
+        <script type="application/ld+json">
+          {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": "Reference Cinema Projector X9000",
+            "offers": {
+              "@type": "Offer",
+              "price": "19999",
+              "priceCurrency": "USD"
+            }
+          }
+        </script>
+      `,
+      pageUrl: "https://example.com/projector-x9000",
+      product: {
+        name: "Reference Cinema Projector X9000",
+        product_page_url: "https://example.com/projector-x9000",
+        product_image_url: "",
+      },
+      productImageUrl: "",
+    });
+
+    assert.equal(metadata.offers[0].price.value, 19999);
+    assert.equal(metadata.offers[0].price.sourceType, "json_ld");
+  });
+
+  it("keeps an exact one-word schema.org product identity", () => {
+    const metadata = buildMetadata({
+      html: `
+        <script type="application/ld+json">
+          {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": "AirPods",
+            "offers": {
+              "@type": "Offer",
+              "price": "129.99",
+              "priceCurrency": "USD"
+            }
+          }
+        </script>
+      `,
+      pageUrl: "https://example.com/airpods",
+      product: {
+        name: "AirPods",
+        product_page_url: "https://example.com/airpods",
+        product_image_url: "",
+      },
+      productImageUrl: "",
+    });
+
+    assert.equal(metadata.offers[0].price.value, 129.99);
+  });
+
+  it("selects the matching schema.org product instead of an unrelated same-page product", () => {
+    const metadata = buildMetadata({
+      html: `
+        <script type="application/ld+json">
+          {
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "Product",
+                "name": "VIOFO A139 Dash Cam",
+                "offers": {
+                  "@type": "Offer",
+                  "price": "199.99",
+                  "priceCurrency": "USD"
+                }
+              },
+              {
+                "@type": "Product",
+                "name": "VIOFO A229 Pro",
+                "offers": {
+                  "@type": "Offer",
+                  "price": "349.99",
+                  "priceCurrency": "USD"
+                }
+              }
+            ]
+          }
+        </script>
+      `,
+      pageUrl: "https://example.com/viofo-a229-pro",
+      product: {
+        name: "VIOFO A229 Pro",
+        product_page_url: "https://example.com/viofo-a229-pro",
+        product_image_url: "",
+      },
+      productImageUrl: "",
+    });
+
+    assert.equal(metadata.offers[0].price.value, 349.99);
+    assert.equal(metadata.title?.value, "VIOFO A229 Pro");
   });
 
   it("extracts visible product-page prices and replaces vague price ceilings", () => {

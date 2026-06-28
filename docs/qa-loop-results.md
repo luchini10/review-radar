@@ -4254,3 +4254,65 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - No new issue ID opened.
 
 Recommended direction: fix RR-062 in a separate narrow phase before Phase 5D. Scope structured prices to the target product and handle bare minor-unit metadata safely; preserve legitimate high-end products and avoid a global maximum-price rule.
+
+## <span style="color:green">**Codex QA Update - 2026-06-28 (RR-062 product-scoped price extraction fix)**</span>
+
+**Verdict: PASS. RR-062 is fixed deterministically, in saved-fixture reassessment, and in one focused `dash cam` live proof. Phase 5D was not started.**
+
+### Fail-first reproduction
+
+- Added the exact VIOFO/A139 page shape: target `VIOFO A229 Pro`, unrelated same-page `data-title="A139 ..."` and `data-price="19999"`.
+- Before the fix, both that widget and an entirely unscoped `data-price="19999"` produced a `19999` retailer-page offer.
+- No scoring, ranking, price-trust threshold, source-upgrade, citation, product-type, or UI change was needed.
+
+### Behavior change
+
+- Schema.org `Product` nodes are selected by target-product identity instead of taking the first product on the page.
+- Page-level metadata, named price fields, and visible-price fallback require page identity that agrees with the target.
+- Element-level `data-price` fields require matching product identity in the same tag.
+- Bare integers are ambiguous by default and are ignored. They convert from minor units only when the element also has matching product identity and an explicit `cents`/`minor` unit marker.
+- Explicit decimal/currency element prices remain supported.
+- Standard schema.org `Offer.price` values retain schema semantics, including a legitimate `$19,999` product. No global maximum-price rule was added.
+
+### Deterministic proof
+
+```text
+fail-first product-assets run: 2 new RR-062 assertions failed before the fix
+focused product-assets tests: 20/20 passed
+focused price/assets/scoring/requirements tests: 123/123 passed
+npm run typecheck: passed
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 672/672 passed
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+- RR-002 shop-vac, dash-camera, wireless-earbud, installment, conflicting-price, and exact-selection protections remain green.
+- New positives cover matching page metadata, matching JSON-LD among multiple same-page products, explicit product-scoped decimal prices, explicitly marked minor units, and legitimate expensive prices.
+
+### Saved-fixture reassessment
+
+- The immutable Phase 5C fixture still contains its historical `$19,999` result.
+- Reassessing the saved pre-asset VIOFO candidate against the current cited page no longer extracts `19999`.
+- Current-page extraction encountered a stray `$1` visible value; RR-002 correctly marked it `suspicious`, `price: null`, `canUseForBudget: false`, and exact-ineligible.
+
+### Focused live proof
+
+- Exactly one approved live search ran: `dash cam`, saved at `2026-06-28T12:35:16.767Z`.
+- Final exact products: 70MAI A500S; VIOFO A229 Pro 2CH; VIOFO A119 Mini 2; Nextbase 622GW; Garmin X310; Nextbase 322GW; Scosche HD DVR.
+- VIOFO A229 Pro 2CH was exact #2 at `$349.99`, `verified`, budget-usable, from a matching `json_ld` offer on its product URL.
+- Other verified final prices ranged from `$49.99` to `$399.99`.
+- No `$19,999` value and no malformed high verified price appeared.
+
+### Adjacent observations
+
+- 70MAI A500S remained a weak-evidence #1, adding live evidence to RR-013.
+- Source upgrade attached a listing-style YADA Backup Systems candidate to a YADA backup-camera target that ranked below the final cutoff. This adds evidence to existing RR-007/RR-017 work but did not contaminate the final seven.
+- No new issue ID was opened and neither adjacent issue was fixed in this phase.
+
+### Issue and scope outcome
+
+- RR-062: Fixed.
+- Register totals remain 62: 6 Critical, 27 High, 24 Medium, 5 Low; 7 Open, 12 Needs Investigation, 42 Fixed, 1 Won't Fix.
+- The live fixture remains untracked and is not part of the commit.
+
+Recommended direction: stop after RR-062. Phase 5D is next only after explicit instruction and remains limited to RR-007, RR-008, and RR-009.

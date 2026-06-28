@@ -587,3 +587,38 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Live calls:** No ReviewRadar search. One read-only retrieval of the cited VIOFO page was used to identify the raw field.
 
 **Status:** RR-062 is Open with a confirmed root cause. Fix it in a separate narrow phase before Phase 5D.
+
+---
+
+## 2026-06-28 — RR-062 product-scoped price extraction
+
+**Issue fixed:** RR-062.
+
+**Fail-first reproduction:**
+- Target `VIOFO A229 Pro` plus unrelated same-page `data-title="A139 ..."` / `data-price="19999"` produced a 19,999 retailer-page offer.
+- A completely unscoped `data-price="19999"` did the same.
+
+**Binding rules:**
+- Select the schema.org `Product` whose identity agrees with the requested product instead of taking the first node.
+- Page-level metadata, named price fields, and visible-price fallback require matching page identity.
+- Element-level `data-price` fields require matching product identity in the same tag.
+- Bare integer element prices are ignored unless a matching product element explicitly declares `cents`, `minor`, or an equivalent supported minor-unit marker.
+- Do not assume every bare integer is cents.
+- Standard schema.org `Offer.price` retains schema semantics.
+
+**Required positives:**
+- Matching page-level meta price.
+- Matching element-level decimal/currency price.
+- Explicitly marked minor-unit conversion with matching product identity.
+- Matching product among multiple same-page JSON-LD products.
+- Legitimate `$19,999` structured product price. There is no global upper-price cap.
+
+**RR-002 regression boundary:** Suspicious-low shop-vac, dash-camera, wireless-earbud, installment, conflicting-price, text-price, and exact-selection tests remain green.
+
+**Verification:** Product-assets 20/20; focused price/assets/scoring/requirements 123/123; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 672/672; eval red-flag checks clean.
+
+**Saved fixture:** Immutable replay remains historical. Reassessing the saved pre-asset VIOFO candidate against current page extraction removes `19999`; a stray `$1` visible value is classified suspicious and exact-ineligible by RR-002.
+
+**Live call:** One `dash cam` save/replay. VIOFO A229 Pro 2CH ranked exact #2 at `$349.99`, verified from matching JSON-LD. No malformed high verified price appeared.
+
+**Status:** RR-062 Fixed. Keep these product-binding and explicit-minor-unit regressions green during later asset work.

@@ -608,6 +608,130 @@ function priceFromValue(value: unknown) {
   });
 }
 
+function normalizedIdentityTokens(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter((token) => token.length > 1);
+}
+
+function productIdentityTextMatches(targetName: string, evidenceName: string) {
+  const targetTokens = normalizedIdentityTokens(targetName);
+  const evidenceTokens = normalizedIdentityTokens(evidenceName);
+
+  if (targetTokens.length === 0 || evidenceTokens.length === 0) {
+    return false;
+  }
+
+  if (targetTokens.join(" ") === evidenceTokens.join(" ")) {
+    return true;
+  }
+
+  const targetModels = targetTokens.filter(
+    (token) => /\d/.test(token) && /[a-z]/.test(token),
+  );
+  const evidenceModels = evidenceTokens.filter(
+    (token) => /\d/.test(token) && /[a-z]/.test(token),
+  );
+
+  if (
+    targetModels.length > 0 &&
+    evidenceModels.length > 0 &&
+    !targetModels.some((token) => evidenceModels.includes(token))
+  ) {
+    return false;
+  }
+
+  const evidenceSet = new Set(evidenceTokens);
+  const overlap = targetTokens.filter((token) => evidenceSet.has(token)).length;
+  const shorterLength = Math.min(targetTokens.length, evidenceTokens.length);
+
+  return overlap >= 2 && overlap / shorterLength >= 0.5;
+}
+
+function selectMatchingJsonLdProduct(
+  products: Record<string, unknown>[],
+  targetName: string,
+) {
+  return (
+    products.find((product) =>
+      productIdentityTextMatches(targetName, asString(product.name)),
+    ) || null
+  );
+}
+
+function getFirstHeadingText(html: string) {
+  const match = html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i);
+  return match?.[1] ? compactText(match[1]) : "";
+}
+
+function getTagAttribute(tag: string, attribute: string) {
+  const escapedAttribute = attribute.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = tag.match(
+    new RegExp(`\\b${escapedAttribute}=["']([^"']*)["']`, "i"),
+  );
+
+  return match?.[1] ? decodeHtml(match[1].trim()) : "";
+}
+
+function explicitPriceText(value: string) {
+  return (
+    /[$€£¥]/.test(value) ||
+    /\b[A-Z]{3}\b/.test(value) ||
+    /\d[.,]\d{2}\b/.test(value)
+  );
+}
+
+function priceFromProductScopedDataTag(tag: string, targetName: string) {
+  const identityText = [
+    "data-product-title",
+    "data-product-name",
+    "data-title",
+    "aria-label",
+    "title",
+  ]
+    .map((attribute) => getTagAttribute(tag, attribute))
+    .find((value) => value.length > 0);
+
+  if (!identityText || !productIdentityTextMatches(targetName, identityText)) {
+    return null;
+  }
+
+  const rawPrice = [
+    "data-product-price",
+    "data-current-price",
+    "data-sale-price",
+    "data-price",
+  ]
+    .map((attribute) => getTagAttribute(tag, attribute))
+    .find((value) => value.length > 0);
+
+  if (!rawPrice) {
+    return null;
+  }
+
+  const unit = [
+    "data-price-unit",
+    "data-price-format",
+    "data-currency-unit",
+  ]
+    .map((attribute) => getTagAttribute(tag, attribute).toLowerCase())
+    .find((value) => value.length > 0);
+
+  if (/^\d+$/.test(rawPrice)) {
+    if (unit && /^(?:cent|cents|minor|minor-unit|minor-units)$/.test(unit)) {
+      return Number(rawPrice) / 100;
+    }
+
+    return null;
+  }
+
+  return explicitPriceText(rawPrice) ? priceFromValue(rawPrice) : null;
+}
+
 function priceFromPriceSpecification(value: unknown): number | null {
   if (Array.isArray(value)) {
     const prices = value
@@ -795,38 +919,54 @@ function visibleProductPagePrice(html: string) {
 
   return null;
 }
-function priceFromPageMetadata(html: string) {
-  const metaValues = [
-    getMetaContent(html, "product:price:amount"),
-    getMetaContent(html, "og:price:amount"),
-    getMetaContent(html, "twitter:data1"),
-    getMetaContent(html, "price"),
-    getMetaItempropContent(html, "price"),
-    getMetaItempropContent(html, "lowPrice"),
-  ];
-  const dataPriceValues = Array.from(
-    html.matchAll(
-      /\b(?:data-price|data-sale-price|data-current-price|data-product-price)=["']([^"']+)["']/gi,
+function priceFromPageMetadata(input: {
+  html: string;
+  pageIdentityTitle: string;
+  targetName: string;
+}) {
+  const pageIdentityMatches = productIdentityTextMatches(
+    input.targetName,
+    input.pageIdentityTitle,
+  );
+  const metaValues = pageIdentityMatches
+    ? [
+        getMetaContent(input.html, "product:price:amount"),
+        getMetaContent(input.html, "og:price:amount"),
+        getMetaContent(input.html, "twitter:data1"),
+        getMetaContent(input.html, "price"),
+        getMetaItempropContent(input.html, "price"),
+        getMetaItempropContent(input.html, "lowPrice"),
+      ]
+    : [];
+  const dataPrices = Array.from(
+    input.html.matchAll(
+      /<[^>]+\b(?:data-price|data-sale-price|data-current-price|data-product-price)=["'][^"']+["'][^>]*>/gi,
     ),
-  ).map((match) => decodeHtml(match[1] || ""));
+  )
+    .map((match) =>
+      priceFromProductScopedDataTag(match[0], input.targetName),
+    )
+    .filter((price): price is number => price !== null);
   const namedPriceValues = [
     ...Array.from(
-      html.matchAll(
+      input.html.matchAll(
         /<(?:input|meta)[^>]+(?:name|id)=["'](?:price|product[_-]?price|current[_-]?price|sale[_-]?price)["'][^>]+value=["']([^"']+)["'][^>]*>/gi,
       ),
     ),
     ...Array.from(
-      html.matchAll(
+      input.html.matchAll(
         /<(?:input|meta)[^>]+value=["']([^"']+)["'][^>]+(?:name|id)=["'](?:price|product[_-]?price|current[_-]?price|sale[_-]?price)["'][^>]*>/gi,
       ),
     ),
-  ].map((match) => decodeHtml(match[1] || ""));
+  ]
+    .map((match) => decodeHtml(match[1] || ""))
+    .filter((value) => pageIdentityMatches && explicitPriceText(value));
   // Do not scrape loose `"price": 35` style values from retailer app-state.
   // Those blobs often contain shipping thresholds, financing payments, promo
   // amounts, or related-product prices that are not the linked product price.
   const structuredPrices = [
     ...metaValues,
-    ...dataPriceValues,
+    ...dataPrices,
     ...namedPriceValues,
   ]
     .map(priceFromValue)
@@ -836,7 +976,7 @@ function priceFromPageMetadata(html: string) {
     return Math.min(...structuredPrices);
   }
 
-  return visibleProductPagePrice(html);
+  return pageIdentityMatches ? visibleProductPagePrice(input.html) : null;
 }
 
 function priceCurrencyFromPageMetadata(html: string) {
@@ -951,17 +1091,28 @@ function buildMetadata(input: {
   product: ProductAssetRecommendation;
   productImageUrl: string;
 }) {
-  const product = parseJsonLdProducts(input.html)[0];
+  const product = selectMatchingJsonLdProduct(
+    parseJsonLdProducts(input.html),
+    input.product.name,
+  );
   const offers = product ? allOffers(product) : [];
   const offer = offers[0] || null;
   const rating = product ? getAggregateRating(product) : null;
-  const pageTitle =
+  const pageIdentityTitle =
     (product ? asString(product.name) : "") ||
     getMetaContent(input.html, "og:title") ||
+    getMetaContent(input.html, "twitter:title") ||
+    getFirstHeadingText(input.html);
+  const pageTitle =
+    pageIdentityTitle ||
     input.product.name;
   const canonicalUrl = getCanonicalLink(input.html, input.pageUrl) || input.pageUrl;
   const brand = product ? getBrand(product) : "";
-  const pageMetadataPrice = priceFromPageMetadata(input.html);
+  const pageMetadataPrice = priceFromPageMetadata({
+    html: input.html,
+    pageIdentityTitle,
+    targetName: input.product.name,
+  });
   const price = lowestOfferPrice(offers) ?? pageMetadataPrice;
   const priceCurrency =
     (offer ? getPriceCurrencyFromRecord(offer) : "") ||

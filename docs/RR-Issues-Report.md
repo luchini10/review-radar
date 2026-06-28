@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through RR-062 diagnostic
+## Compiled for AI Agent Consumption — Phase 0 through RR-062 fix
 
 **Generated:** 2026-06-28
-**Scope:** All phases from initial measurement harness through the RR-062 diagnostic
+**Scope:** All phases from initial measurement harness through the RR-062 behavior fix
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -18,9 +18,9 @@
 | High | 27 |
 | Medium | 24 |
 | Low | 5 |
-| Open | 8 |
+| Open | 7 |
 | Needs Investigation | 12 |
-| Fixed | 41 |
+| Fixed | 42 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -59,6 +59,7 @@
 | Phase 5B — Source-upgrade identity coverage | 0 |
 | Phase 5C — Price-trust restoration | 1 |
 | RR-062 diagnostic mini-phase | 0 |
+| RR-062 behavior-fix mini-phase | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -1367,7 +1368,7 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 | **Phase** | Cross-phase |
 | **Severity** | High |
 | **Title** | Product-type taxonomy coverage incomplete — many categories have no type rule |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** `PRODUCT_TYPE_RULES` (in `lib/productTypeIntent.ts`) currently covers only a subset of product categories. Categories without a rule fall through to the loose LLM-labeled-category check. This means wrong-type contamination (the class of bug fixed in Phase 3B for robot vacuums) is likely present for any category not yet in `PRODUCT_TYPE_RULES`.
 
@@ -1820,15 +1821,15 @@ Phase 5C fixed RR-002 after fail-first reproduction and ran three approved focus
 
 **Actual:** `priceFromPageMetadata` scans unscoped `data-price` attributes across the page. `priceFromValue` allows bare numerics, so `data-price="19999"` is parsed as 19,999 dollars rather than 19,999 minor units. The extractor chooses it despite the surrounding widget identifying a different product (`A139`), then Medium-confidence retailer-page evidence is marked `verified`, budget-usable, and exact-eligible.
 
-**Current status:** Open. The diagnostic confirmed the extraction and trust path without changing behavior. This is not RR-002's missing low-price floor, model-number parsing, Serper Shopping, source upgrade, or a merge conflict. It is unscoped structured-page extraction plus minor-unit misinterpretation, with no high-outlier/product-affinity containment in price trust.
+**Current status:** Fixed. Asset enrichment now binds schema.org products, page-level prices, and element-level structured prices to the target product. Unscoped `data-price` values are ignored. Bare integer element prices are ambiguous by default and convert from minor units only when matching product context and an explicit `cents`/`minor` marker are both present. Standard schema.org `Offer.price` semantics and legitimate expensive prices remain supported.
 
-**Suggested fix or next action:** Fix RR-062 in a separate narrow phase before Phase 5D. Scope structured `data-price` evidence to the matching product or require explicit currency/decimal/product context before accepting bare integer metadata. Add deterministic negatives for unrelated widgets and Shopify minor units plus positives for valid product-scoped metadata and legitimate high-end products. Do not use a blunt global maximum or bundle this with Phase 5D eligibility work.
+**Suggested fix or next action:** Keep the RR-062 regressions green. Deterministic tests cover the VIOFO/A139 widget, unscoped bare integers, explicitly marked minor units, multiple schema.org products, valid matching structured prices, and a legitimate `$19,999` product. Saved-fixture reassessment removed the malformed high offer; one fresh `dash cam` run verified VIOFO A229 Pro 2CH at `$349.99` from matching JSON-LD with no malformed high price.
 
 ---
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (8 issues)
+### Open (7 issues)
 - RR-043: Product-type taxonomy coverage incomplete
 - RR-054: Fresh fallback responses omit current diagnostic traces
 - RR-055: Literal `Portable` requirement fails an explicitly portable generator
@@ -1836,7 +1837,6 @@ Phase 5C fixed RR-002 after fail-first reproduction and ran three approved focus
 - RR-059: Niche form factors can win broad category searches
 - RR-060: True same-model duplicates can occupy multiple final slots
 - RR-061: Product image metadata accepts non-image or irrelevant assets
-- RR-062: Malformed product-page price verified at roughly 100x plausible value
 
 ### Needs Investigation (12 issues)
 - RR-007: Category/browse pages appearing as exact product matches
@@ -1852,8 +1852,8 @@ Phase 5C fixed RR-002 after fail-first reproduction and ran three approved focus
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 
-### Fixed (41 issues)
-RR-001 through RR-006, RR-010 through RR-012, RR-016, RR-018 through RR-021, RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-044, RR-046 through RR-053, RR-057, RR-058
+### Fixed (42 issues)
+RR-001 through RR-006, RR-010 through RR-012, RR-016, RR-018 through RR-021, RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-044, RR-046 through RR-053, RR-057, RR-058, RR-062
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -1862,11 +1862,10 @@ RR-001 through RR-006, RR-010 through RR-012, RR-016, RR-018 through RR-021, RR-
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-062** (High) — Fix the confirmed unscoped `data-price` / minor-unit extraction defect before Phase 5D, without imposing a blunt global high-price cap.
-2. **RR-007 + RR-008 + RR-009 + RR-017 + RR-043** (High cluster) — Category, support/documentation, and wrong-type targets contaminate final and near streams across categories.
-3. **RR-014 + RR-022 + RR-056 + RR-060** (High/Medium quality cluster) — Leader recall, citation loss, family concentration, and true duplicates jointly degrade broad slates.
-4. **RR-055** (High) — Literal positive requirement evidence can be marked failed and remove a valid product.
-5. **RR-059** (Medium) — Broad-query form-factor handling lets niche products outrank mainstream products.
+1. **RR-007 + RR-008 + RR-009 + RR-017 + RR-043** (High cluster) — Category, support/documentation, and wrong-type targets contaminate final and near streams across categories.
+2. **RR-014 + RR-022 + RR-056 + RR-060** (High/Medium quality cluster) — Leader recall, citation loss, family concentration, and true duplicates jointly degrade broad slates.
+3. **RR-055** (High) — Literal positive requirement evidence can be marked failed and remove a valid product.
+4. **RR-059** (Medium) — Broad-query form-factor handling lets niche products outrank mainstream products.
 6. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
 7. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
 8. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.

@@ -911,3 +911,23 @@ New entries should keep the same format and stay easy to read.
 **Issues:** RR-062 changed from Needs Investigation to Open. Register totals remain 62: 8 Open, 12 Needs Investigation, 41 Fixed, and 1 Won't Fix.
 
 **Next recommended step:** Stop. With explicit instruction, fix RR-062 narrowly before Phase 5D by product-scoping structured metadata and safely handling bare minor-unit values without imposing a global high-price cap.
+
+## Codex Run - 2026-06-28 RR-062 Behavior Fix
+
+**Goal:** Fix only RR-062 before Phase 5D by binding structured prices to the target product without blocking legitimate expensive products.
+
+**Root cause:** Asset enrichment treated page-wide and element-level price metadata as equivalent. It accepted an unrelated A139 `data-price="19999"` widget on the VIOFO A229 page, parsed the ambiguous bare integer as dollars, and promoted the resulting lone retailer-page offer to verified.
+
+**What changed:** Matching schema.org products are selected by identity. Page-level and visible price fallbacks require matching page identity. Element-level structured prices require matching product context in the same tag. Bare integers convert from minor units only when the matching element explicitly declares `cents` or `minor`; otherwise they are ignored.
+
+**Generalization and safety:** The rule applies to every product and host. There is no brand exception and no global price ceiling. Matching decimal/currency prices, explicit minor-unit values, standard schema.org offers, and a legitimate `$19,999` product remain valid. RR-002 and all existing price, scoring, and exact-budget protections remain green.
+
+**Tests run:** Two RR-062 assertions failed before the fix. Product-assets passed 20/20; focused price/assets/scoring/requirements passed 123/123; typecheck passed; lint had 0 errors and 3 pre-existing warnings; full tests passed 672/672; eval red-flag checks were clean.
+
+**Quality proof:** Saved-fixture reassessment no longer extracts `$19,999`; a stray `$1` visible value is contained as suspicious by RR-002. Exactly one fresh `dash cam` search ran. VIOFO A229 Pro 2CH ranked exact #2 at `$349.99`, verified from matching JSON-LD. No malformed high verified price appeared.
+
+**Adjacent observations:** The live run added evidence to existing RR-013 (weak 70MAI winner) and RR-007/RR-017 (listing-style YADA backup-camera evidence below cutoff). No new issue ID opened and no adjacent behavior changed.
+
+**Issues:** RR-062 changed from Open to Fixed. Register totals remain 62: 7 Open, 12 Needs Investigation, 42 Fixed, and 1 Won't Fix.
+
+**Next recommended step:** Stop. Start Phase 5D only after explicit instruction, limited to RR-007, RR-008, and RR-009.

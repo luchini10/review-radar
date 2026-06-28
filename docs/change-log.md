@@ -13,6 +13,16 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-28
 
+### Codex - RR-062 product-scoped price extraction
+- Fixed RR-062 by separating page/product-bound structured prices from arbitrary same-page widget values.
+- Schema.org products are selected by target identity; page-level and visible fallbacks require matching page identity; element-level `data-price` fields require matching identity in the same tag.
+- Bare integer element prices are ignored unless the matching product element explicitly declares a minor-unit format such as `cents`. Standard schema.org offers keep their documented semantics.
+- No global maximum was added. Deterministic positives preserve matching decimal prices, explicit minor-unit conversion, and a legitimate `$19,999` schema.org/product-scoped price.
+- RR-002 suspicious-low handling, installment protection, exact-budget behavior, scoring, ranking, citation trust, source-upgrade identity, product-type logic, and UI behavior are unchanged.
+- Verification: product-assets 20/20; focused price/assets/scoring/requirements 123/123; typecheck clean; lint 0 errors with 3 pre-existing warnings; full suite 672/672; eval red-flag checks clean.
+- Saved-fixture reassessment removed the malformed high price. One focused `dash cam` live run verified VIOFO A229 Pro 2CH at `$349.99` from matching JSON-LD; no malformed high verified price appeared.
+- RR-062 is Fixed. No new issue was opened, no full baseline ran, and Phase 5D did not start.
+
 ### Codex - RR-062 malformed-high-price diagnostic
 - Confirmed RR-062 from the saved Phase 5C `dash cam` fixture without changing behavior or running another ReviewRadar search.
 - Corrected the earlier evidence attribution: `$322.99` belonged to BlackVue DR770X source-upgrade output, not VIOFO A229 Pro. VIOFO had only one `19999` retailer-page offer.

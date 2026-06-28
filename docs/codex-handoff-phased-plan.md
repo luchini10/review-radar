@@ -16,15 +16,15 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **RR-062 diagnostic complete. Stop before the behavior fix or Phase 5D.**
+Current phase: **RR-062 fixed. Stop before Phase 5D.**
 
 Phase 3N safely admitted specific Google Shopping offers for source-upgrade evidence and fixed the `Shop-Vac` title false positive. RR-051 removed synthetic query-derived snippets from same-product identity. Phase 3O preserved reliable brand identity in compact model queries.
 
-The Phase 3O live proof then exposed two separate safety defects. RR-053 is fixed deterministically: URL query strings and fragments cannot provide product identity, while merchant product paths and source-derived Shopping titles remain usable. Phase 5A fixed RR-058 by rejecting explicit product-type conflicts before source-upgrade attachment. Phase 5B fixed RR-052 and the RR-057/RR-034/RR-035/RR-044 model-coverage cluster without weakening Phase 5A identity safety. Phase 5C fixed reopened RR-002 across shop-vac, dash-camera, and wireless-earbud `$10` offers. The RR-062 diagnostic then confirmed that an unrelated A139 `data-price="19999"` widget on VIOFO's A229 page is parsed as 19,999 dollars during asset enrichment.
+The Phase 3O live proof then exposed two separate safety defects. RR-053 is fixed deterministically: URL query strings and fragments cannot provide product identity, while merchant product paths and source-derived Shopping titles remain usable. Phase 5A fixed RR-058 by rejecting explicit product-type conflicts before source-upgrade attachment. Phase 5B fixed RR-052 and the RR-057/RR-034/RR-035/RR-044 model-coverage cluster without weakening Phase 5A identity safety. Phase 5C fixed reopened RR-002 across shop-vac, dash-camera, and wireless-earbud `$10` offers. RR-062 then product-scoped structured page prices so an unrelated A139 `data-price="19999"` widget cannot become VIOFO A229 evidence.
 
 Recommended next phase:
 
-- Await explicit instruction. Recommended next work is a narrow RR-062 behavior fix before Phase 5D: product-scope structured prices and handle bare minor-unit metadata safely without a blunt global maximum.
+- Await explicit instruction. The next master-plan step is Phase 5D for RR-007, RR-008, and RR-009 only.
 
 ---
 
@@ -713,6 +713,24 @@ Phase 5 is executed one approved step at a time. Each step must preserve existin
 - Commit: `be9d9df` (`docs: diagnose RR-062 price extraction`).
 - Result: RR-062 is diagnosed and remains unfixed. A separate narrow fix is recommended before Phase 5D.
 
+### RR-062 behavior-fix mini-phase completion record
+
+- Completed step: RR-062 product-scoped structured-price behavior fix.
+- Next step: Phase 5D - Product-card eligibility cleanup (RR-007, RR-008, RR-009 only), after explicit instruction.
+- Diagnostic-only: No. This was a narrow asset-extraction behavior fix preceded by fail-first reproduction.
+- Stop condition hit: No.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-062 changed from Open to Fixed; RR-013 and RR-007/RR-017 received adjacent live evidence without status changes.
+- Behavior: matching schema.org products are selected by identity; page-level and visible prices require matching page identity; element-level prices require matching product context; bare integer minor units require an explicit unit marker.
+- Safety: no global price maximum; legitimate `$19,999` product-bound evidence remains valid; RR-002 and all existing price/scoring/exact-budget protections remain green.
+- Verification: product-assets 20/20; focused tests 123/123; typecheck passed; lint 0 errors with 3 pre-existing warnings; full tests 672/672; eval red-flag checks clean.
+- Saved-fixture proof: current-code reassessment no longer extracts `$19,999`; a stray `$1` visible value is contained as suspicious and exact-ineligible.
+- Live proof: one `dash cam` search; VIOFO A229 Pro 2CH exact #2 at `$349.99` from matching JSON-LD; no malformed high verified price.
+- Required docs updated: issue register, QA log, next task, change log, run summary, phased handoff, test memory, and technical overview.
+- Docs committed: Pending.
+- Commit: Pending.
+- Result: RR-062 is fixed. Phase 5D has not started.
+
 ---
 
 ## Larger Product-Quality Phases After Diagnostic Harvest
@@ -985,22 +1003,22 @@ Do this only after backend trust and ranking are stronger.
 
 ## Immediate Next Task for Codex
 
-Stop. The RR-062 diagnostic is complete.
+Stop. RR-062 is fixed.
 
 Task:
 
 Recommended next step, only after explicit instruction:
 
-1. If approved, fix RR-062 in a separate narrow phase before Phase 5D.
-2. Product-scope structured page prices and handle bare minor-unit metadata safely.
-3. Preserve valid structured product prices and legitimate high-end products; do not add a blunt global maximum.
-4. Keep Phase 5D limited to RR-007, RR-008, and RR-009.
+1. Start Phase 5D only after explicit instruction.
+2. Keep Phase 5D limited to RR-007, RR-008, and RR-009.
+3. Reproduce each page shape before editing and generalize by structural page cues.
+4. Preserve valid manufacturer and merchant product pages.
 
 Do not:
 
-- start the RR-062 behavior fix or Phase 5D automatically;
-- combine RR-062 with product-card eligibility, ranking, discovery, or later Phase 5 work;
+- start Phase 5D automatically;
+- reopen RR-062 behavior or combine price extraction with Phase 5D;
 - weaken existing price, citation, product, requirement, or identity safety;
 - run another live search or full baseline without approval.
 
-Exit criteria met: RR-062 is reproduced from the saved fixture, its raw page field and extraction/trust path are confirmed, its status is Open, no behavior changed, and Phase 5D has not begun.
+Exit criteria met: RR-062 is fixed deterministically and in one focused live proof, the issue/docs ledger is current, and Phase 5D has not begun.
