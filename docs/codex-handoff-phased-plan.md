@@ -1025,8 +1025,9 @@ Do this only after backend trust and ranking are stronger.
 - Stop condition hit: Adjacent issue only. `Pressure Washers - Best Buy` reached exact #7 twice, reopening RR-007; no out-of-scope eligibility fix was attempted.
 - New issue IDs opened: None.
 - Existing issue IDs updated: RR-017, RR-043, and RR-055 Fixed; RR-007 changed from Fixed to Needs Investigation.
-- Docs committed: Pending.
-- Commit hash: Pending.
+- Docs committed: Yes.
+- Implementation commit: `3fa7b27`.
+- Documentation commit: `ed22630`.
 - Verification: fail-first 4 suites; focused 83/83; broad safety 314/314; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 684/684; eval clean.
 - Live validation: exactly four calls - `shop vac`, `pressure washer` twice, and `portable generator`; no full baseline. Generated fixtures remain untracked.
 
