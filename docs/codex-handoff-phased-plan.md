@@ -1011,8 +1011,9 @@ Do this only after backend trust and ranking are stronger.
 - Stop condition hit: No. Issue definitions were clear, untracked generated files were separable, no trust gate needed weakening, RR-013 remained out of scope, and RR-062 code was untouched.
 - New issue IDs opened: None.
 - Existing issue IDs updated: RR-007, RR-008, and RR-009 changed from Needs Investigation to Fixed. RR-013, RR-017/RR-043, and RR-055 received adjacent live evidence without status changes.
-- Docs committed: Pending.
-- Commit hash: Pending.
+- Docs committed: Yes.
+- Implementation commit: `f9d6419`.
+- Documentation commit: `a6afb1e`.
 - Verification: fail-first 5 assertions; focused 78/78; broad focused 192/192; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 678/678; eval clean.
 - Live validation: exactly `portable generator`, `shop vac`, and `air purifier`; no full baseline. Generated fixtures remain untracked.
 
