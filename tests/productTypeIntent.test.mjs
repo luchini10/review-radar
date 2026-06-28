@@ -97,4 +97,60 @@ describe("product type intent classifier", () => {
     assert.equal(v.status, "needs_verification");
     assert.equal(v.canBeExactMatch, false);
   });
+
+  it("rejects reproduced cross-category substitutions while preserving real products", () => {
+    const cases = [
+      {
+        requestedText: "pressure washer",
+        wrong: "ZEP 64 oz. All-In-One Pressure Wash ZUPPWC64",
+        valid: "Sun Joe SPX3000 Electric Pressure Washer 2030 PSI",
+      },
+      {
+        requestedText: "portable generator",
+        wrong: "BioLite BaseCharge 1500 Portable Power Station",
+        valid: "Generac GP3300i Portable Inverter Generator",
+      },
+      {
+        requestedText: "basketball hoop",
+        wrong: "Basketball Hoop Orange Sports Design Canvas Wall Art",
+        valid: "Spalding 54-inch Portable Basketball Hoop",
+      },
+      {
+        requestedText: "dash cam",
+        wrong: "YADA Digital Wireless Backup Camera with 3.5-inch Dash Monitor",
+        valid: "Garmin Dash Cam X310",
+      },
+      {
+        requestedText: "robot vacuum",
+        wrong: "GE Profile UltraFast Washer Dryer Combo",
+        valid: "Roborock Q5 Pro Robot Vacuum",
+      },
+    ];
+
+    for (const item of cases) {
+      const wrong = classifyProductTypeIntent({
+        requestedText: item.requestedText,
+        candidateText:
+          item.requestedText === "pressure washer"
+            ? `${item.wrong} Use this with your pressure washer to clean outdoor surfaces.`
+            : item.wrong,
+        candidateIdentityText: item.wrong,
+      });
+      const valid = classifyProductTypeIntent({
+        requestedText: item.requestedText,
+        candidateText: item.valid,
+      });
+
+      assert.equal(
+        wrong.canBeExactMatch,
+        false,
+        `${item.wrong} should not match ${item.requestedText}`,
+      );
+      assert.equal(
+        valid.canBeExactMatch,
+        true,
+        `${item.valid} should match ${item.requestedText}`,
+      );
+    }
+  });
 });

@@ -17,6 +17,7 @@ type ProductTypeRule = {
   allowed: RegExp;
   blocked: RegExp;
   complements?: RegExp;
+  exclusiveComplements?: RegExp;
   id: string;
   requested: RegExp;
 };
@@ -90,10 +91,52 @@ const PRODUCT_TYPE_RULES: ProductTypeRule[] = [
     id: "pressure_washer",
     requested: /\b(?:pressure washer|power washer)\b/i,
     allowed:
-      /\b(?:pressure washer|power washer|high pressure washer|psi|gpm|spray gun|spray wand|foam cannon|foam lance|soap cannon)\b/i,
+      /\b(?:pressure washer|power washer|high pressure washer)\b/i,
     blocked:
-      /\b(?:washer dryer|washer and dryer|front load washer|top load washer|washing machine|electric dryer|gas dryer|laundry center|laundry tower)\b/i,
-    complements: /\b(?:hose|nozzle|surface cleaner|extension wand|pump protector)\b/i,
+      /\b(?:washer dryer|washer and dryer|front load washer|top load washer|washing machine|electric dryer|gas dryer|laundry center|laundry tower|dishwasher|dish washer)\b/i,
+    complements:
+      /\b(?:hose|nozzle|surface cleaner|extension wand|pump protector|spray gun|spray wand|foam cannon|foam lance|soap cannon|detergent|cleaning solution|cleaner concentrate)\b|(?:\d+(?:\.\d+)?\s*(?:fl\s*)?oz\b.{0,80}\bpressure wash)\b/i,
+    exclusiveComplements:
+      /\b(?:pressure washer|power washer)\s+(?:hose|nozzle|surface cleaner|extension wand|spray gun|spray wand|foam cannon|foam lance|soap cannon|detergent|soap|cleaning solution|cleaner concentrate)\b|\b(?:hose|nozzle|surface cleaner|extension wand|spray gun|spray wand|foam cannon|foam lance|soap cannon|detergent|soap|cleaning solution|cleaner concentrate)\s+(?:for|compatible with)\s+(?:a\s+)?(?:pressure washer|power washer)\b|(?:\d+(?:\.\d+)?\s*(?:fl\s*)?oz\b.{0,80}\bpressure wash)\b/i,
+  },
+  {
+    id: "portable_generator",
+    requested:
+      /\b(?:portable generator|inverter generator|dual fuel generator|tri fuel generator)\b/i,
+    allowed:
+      /\b(?:portable|inverter|gas(?:oline)?|propane|dual[-\s]?fuel|tri[-\s]?fuel)\s+(?:powered\s+)?generator\b|\bgenerator set\b|\bdual[-\s]?fuel inverter\b/i,
+    blocked:
+      /\b(?:portable\s+)?power station\b|\b(?:solar|battery|standby|whole[-\s]?home)\s+generator\b/i,
+    complements:
+      /\b(?:generator cover|transfer switch|wheel kit|parallel kit|power cord|inlet box)\b/i,
+    exclusiveComplements:
+      /\b(?:generator|inverter generator)\s+(?:cover|transfer switch|wheel kit|parallel kit|power cord|inlet box)\b/i,
+  },
+  {
+    id: "basketball_hoop",
+    requested:
+      /\b(?:basketball hoop|basketball goal|basketball system)\b/i,
+    allowed:
+      /\b(?:basketball hoop|basketball goal|basketball system|hoop)\b/i,
+    blocked:
+      /\b(?:wall art|canvas art|canvas print|poster|art print|wall decal|hula hoop|embroidery hoop)\b/i,
+    complements:
+      /\b(?:wall art|canvas art|canvas print|poster|art print|wall decal|replacement net|replacement rim|replacement backboard|mounting bracket|anchor kit)\b/i,
+    exclusiveComplements:
+      /\b(?:wall art|canvas art|canvas print|poster|art print|wall decal|basketball hoop\s+(?:net|rim|backboard|mount|anchor kit))\b/i,
+  },
+  {
+    id: "dash_cam",
+    requested:
+      /\b(?:dash cam|dashboard camera|dashboard cam|driving recorder)\b/i,
+    allowed:
+      /\b(?:dash cam|dashboard camera|dashboard cam|car dvr|driving recorder)\b/i,
+    blocked:
+      /\b(?:backup camera|back-up camera|reversing camera|rear[-\s]?view camera|security camera|action camera)\b/i,
+    complements:
+      /\b(?:dash cam mount|hardwire kit|power cable|replacement cable|memory card)\b/i,
+    exclusiveComplements:
+      /\b(?:dash cam|dashboard camera)\s+(?:mount|hardwire kit|power cable|replacement cable|memory card)\b/i,
   },
   {
     id: "robot_vacuum",
@@ -105,7 +148,7 @@ const PRODUCT_TYPE_RULES: ProductTypeRule[] = [
     // Block confirmed non-robot vacuum subtypes. "wet dry" (without requiring "vac"
     // after it) also catches truncated product names like "Wet/Dry ..." from Serper.
     blocked:
-      /\b(?:stick\s+(?:vac|vacuum)|canister\s+(?:vac|vacuum)|hand(?:held)?\s+(?:vac|vacuum)|upright\s+(?:vac|vacuum)|wet\s+dry|shop\s+vac)\b/i,
+      /\b(?:stick\s+(?:vac|vacuum)|canister\s+(?:vac|vacuum)|hand(?:held)?\s+(?:vac|vacuum)|upright\s+(?:vac|vacuum)|wet\s+dry|shop\s+vac|washer dryer|washer and dryer|washing machine|front load washer|top load washer|laundry center|laundry tower)\b/i,
     complements:
       /\b(?:replacement\s+(?:filter|brush|mop\s+pad|side\s+brush)|dustbin|boundary\s+strip|virtual\s+wall)\b/i,
   },
@@ -135,6 +178,10 @@ export function productTypeIntentForQuery(query: string | undefined) {
 
 export function classifyProductTypeIntent(input: {
   candidateText: string | undefined;
+  // Product identity (normally title/name) excludes incidental source snippets.
+  // Explicit complement shapes here may override allowed words found only in
+  // broader evidence.
+  candidateIdentityText?: string | undefined;
   // Optional richer text used only for the allowed check. When provided,
   // `candidateText` is still used for blocked/complement checks. This lets callers
   // include the recommendation narrative (why_recommended) for confirming the
@@ -146,6 +193,9 @@ export function classifyProductTypeIntent(input: {
 }): ProductTypeIntentVerdict {
   const rule = productTypeIntentForQuery(input.requestedText);
   const candidateText = normalize(input.candidateText);
+  const candidateIdentityText = normalize(
+    input.candidateIdentityText ?? input.candidateText,
+  );
   const allowedCheckText = input.allowedCheckText
     ? normalize(input.allowedCheckText)
     : candidateText;
@@ -171,8 +221,15 @@ export function classifyProductTypeIntent(input: {
   const isAllowed = rule.allowed.test(allowedCheckText);
   const isBlocked = rule.blocked.test(candidateText);
   const isComplement = rule.complements?.test(candidateText) || false;
+  const isExclusiveComplement =
+    rule.exclusiveComplements?.test(candidateIdentityText) || false;
 
-  if (isComplement && (!isAllowed || ACCESSORY_CONTEXT.test(candidateText))) {
+  if (
+    isComplement &&
+    (!isAllowed ||
+      isExclusiveComplement ||
+      ACCESSORY_CONTEXT.test(candidateText))
+  ) {
     return {
       canBeExactMatch: false,
       reason: `Candidate looks like an accessory or complement for ${rule.id}, not the product itself.`,

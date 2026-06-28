@@ -109,6 +109,7 @@ type ParsedSelectedFeature = {
 };
 
 type SelectedFeatureGroup = {
+  allowsLiteralIdentityMatch: boolean;
   label: string;
   name: string;
   values: string[];
@@ -944,7 +945,11 @@ function hasConflictingProductType(product: ProductLike, category: string) {
   // refrigerator), and the cross-category conflict rules. Discovery and
   // validation call the same helper so they agree.
   if (
-    !classifyProductTypeMatch({ evidenceText, requestedCategory }).canBeExactMatch
+    !classifyProductTypeMatch({
+      evidenceText,
+      identityText: productIdentityTextWithoutAssignedCategory(product),
+      requestedCategory,
+    }).canBeExactMatch
   ) {
     return true;
   }
@@ -1029,11 +1034,13 @@ function groupSelectedFeatures(
         existing.values.push(feature.value);
       }
 
+      existing.allowsLiteralIdentityMatch ||= feature.name === "Feature";
       existing.label = `${existing.name}: ${existing.values.join(" or ")}`;
       continue;
     }
 
     groups.set(key, {
+      allowsLiteralIdentityMatch: feature.name === "Feature",
       label: feature.name === "Feature" ? feature.value : feature.label,
       name: displayName,
       values: [feature.value],
@@ -2319,6 +2326,25 @@ export function validateProductAgainstRequirements(
     const hasKnownFeatureValueSet = getKnownFeatureValues(featureGroup.name).length > 0;
 
     if (directMatchingValue) {
+      matchedRequirements.push(featureGroup.label);
+      continue;
+    }
+
+    // A literal attribute in provider/merchant identity is stronger than
+    // comparative review prose such as "not as portable as smaller models".
+    // Query-assigned category and generated explanation text are excluded.
+    const literalIdentityValue =
+      featureGroup.allowsLiteralIdentityMatch
+        ? featureGroup.values.find(
+            (value) =>
+              matchSemanticFeatureEvidence(
+                productIdentityTextWithoutAssignedCategory(product),
+                value,
+              ).status === "pass",
+          )
+        : undefined;
+
+    if (literalIdentityValue) {
       matchedRequirements.push(featureGroup.label);
       continue;
     }

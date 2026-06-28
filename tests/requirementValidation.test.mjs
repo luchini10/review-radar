@@ -2786,6 +2786,112 @@ describe("requirement validation", () => {
   });
 });
 
+describe("Phase 5E product-type revalidation", () => {
+  it("hard-fails explicit substitutions and preserves valid controls", () => {
+    const cases = [
+      {
+        query: "pressure washer",
+        wrong: "ZEP 64 oz All-In-One Pressure Wash",
+        valid: "Sun Joe SPX3000 Electric Pressure Washer 2030 PSI",
+      },
+      {
+        query: "portable generator",
+        wrong: "Goal Zero Yeti 3000X Portable Power Station",
+        valid: "Honda EU2200i Super Quiet Inverter Generator",
+      },
+      {
+        query: "basketball hoop",
+        wrong: "Basketball Hoop Orange Sports Design Canvas Wall Art",
+        valid: "Spalding 54-inch Portable Basketball Hoop",
+      },
+      {
+        query: "dash cam",
+        wrong: "YADA Digital Wireless Backup Camera with Dash Monitor",
+        valid: "Garmin Dash Cam X310",
+      },
+      {
+        query: "robot vacuum",
+        wrong: "GE Profile UltraFast Washer Dryer Combo",
+        valid: "Roborock Q5 Pro Robot Vacuum",
+      },
+    ];
+
+    for (const item of cases) {
+      const requirements = {
+        category: item.query,
+        extractedRequirements: extractStructuredRequirements({
+          query: item.query,
+        }),
+      };
+      const wrong = validateProductAgainstRequirements(
+        buildProduct({ category: item.query, name: item.wrong }),
+        requirements,
+      );
+      const valid = validateProductAgainstRequirements(
+        buildProduct({ category: item.query, name: item.valid }),
+        requirements,
+      );
+
+      assert.ok(
+        wrong.missingRequirements.includes(`Category: ${item.query}`),
+        item.wrong,
+      );
+      assert.ok(
+        valid.matchedRequirements.includes(`Category: ${item.query}`),
+        item.valid,
+      );
+      assert.deepEqual(valid.missingRequirements, [], item.valid);
+    }
+  });
+});
+
+describe("literal product-identity requirement evidence", () => {
+  it("keeps an explicitly portable product matched despite comparative negative prose", () => {
+    const request = {
+      priorities: "Portable",
+      query: "portable generator",
+    };
+    const result = validateProductAgainstRequirements(
+      buildProduct({
+        category: "Portable generator",
+        cons: ["Not as portable as smaller inverter generators."],
+        name: "Generac GP3300i Portable Inverter Generator",
+        product_page_url:
+          "https://www.generac.com/residential-products/portable-generators/3300-portable-inverter-generator",
+      }),
+      {
+        category: request.query,
+        priorities: request.priorities,
+        extractedRequirements: extractStructuredRequirements(request),
+      },
+    );
+
+    assert.deepEqual(result.missingRequirements, []);
+    assert.deepEqual(result.unknownRequirements, []);
+    assert.ok(result.matchedRequirements.includes("Portable"));
+  });
+
+  it("does not turn an explicitly non-portable product into a positive match", () => {
+    const request = {
+      priorities: "Portable",
+      query: "generator",
+    };
+    const result = validateProductAgainstRequirements(
+      buildProduct({
+        category: "Generator",
+        name: "Stationary Standby Generator - Not Portable",
+      }),
+      {
+        category: request.query,
+        priorities: request.priorities,
+        extractedRequirements: extractStructuredRequirements(request),
+      },
+    );
+
+    assert.ok(result.missingRequirements.includes("Portable"));
+  });
+});
+
 // ── Category term alias expansion (Phase 3C fix) ──────────────────────────────
 // When a category term (e.g. "gas") matches a required-constraint value, the
 // constraint's aliases ("propane", "natural gas", …) are accepted as equivalent

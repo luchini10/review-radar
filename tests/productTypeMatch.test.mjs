@@ -91,4 +91,27 @@ describe("classifyProductTypeMatch (shared wrong-product-type verdict)", () => {
     assert.equal(verdict.canBeExactMatch, true);
     assert.equal(verdict.status, "ok");
   });
+
+  it("rejects Phase 5E substitution classes through the shared verdict", () => {
+    const cases = [
+      ["ZEP 64 oz All-In-One Pressure Wash", "pressure washer"],
+      ["Goal Zero Yeti 3000X Portable Power Station", "portable generator"],
+      ["Basketball Hoop Blueprint Canvas Wall Art", "basketball hoop"],
+      ["YADA Digital Wireless Backup Camera with Dash Monitor", "dash cam"],
+      ["GE Profile UltraFast Washer Dryer Combo", "robot vacuum"],
+    ];
+
+    for (const [evidenceText, requestedCategory] of cases) {
+      const verdict = classifyProductTypeMatch({
+        evidenceText,
+        requestedCategory,
+      });
+
+      assert.equal(
+        verdict.canBeExactMatch,
+        false,
+        `${evidenceText} should not match ${requestedCategory}`,
+      );
+    }
+  });
 });

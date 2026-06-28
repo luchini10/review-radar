@@ -124,6 +124,7 @@ function hasProductTypeConflict(evidenceText: string, requestedCategory: string)
 
 export function classifyProductTypeMatch(input: {
   evidenceText: string | undefined;
+  identityText?: string | undefined;
   requestedCategory: string | undefined;
 }): ProductTypeMatchVerdict {
   const evidenceText = input.evidenceText || "";
@@ -131,6 +132,7 @@ export function classifyProductTypeMatch(input: {
 
   const intent = classifyProductTypeIntent({
     candidateText: evidenceText,
+    candidateIdentityText: input.identityText,
     requestedText: requestedCategory,
   });
 

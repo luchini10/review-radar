@@ -149,6 +149,56 @@ describe("discovery filter applies structured requirements", () => {
     assert.ok(!names.includes("Samsung 4.5 cu ft Front Load Washing Machine"));
   });
 
+  it("rejects Phase 5E substitutions at discovery without removing valid products", () => {
+    const cases = [
+      {
+        query: "pressure washer",
+        wrong: "ZEP 64 oz All-In-One Pressure Wash",
+        valid: "Sun Joe SPX3000 Electric Pressure Washer 2030 PSI",
+      },
+      {
+        query: "portable generator",
+        wrong: "BioLite BaseCharge 1500 Portable Power Station",
+        valid: "Honda EU2200i Super Quiet Inverter Generator",
+      },
+      {
+        query: "basketball hoop",
+        wrong: "Basketball Hoop Orange Sports Design Canvas Wall Art",
+        valid: "Spalding 54-inch Portable Basketball Hoop",
+      },
+      {
+        query: "dash cam",
+        wrong: "YADA Digital Wireless Backup Camera with Dash Monitor",
+        valid: "Garmin Dash Cam X310",
+      },
+    ];
+
+    for (const item of cases) {
+      const input = {
+        query: item.query,
+        extractedRequirements: extractStructuredRequirements({
+          query: item.query,
+        }),
+      };
+      const names = keptNames(
+        [
+          cand(item.wrong, {
+            category: item.query,
+            snippet:
+              item.query === "pressure washer"
+                ? "Use this with your pressure washer to clean outdoor surfaces."
+                : "",
+          }),
+          cand(item.valid, { category: item.query }),
+        ],
+        input,
+      );
+
+      assert.ok(!names.includes(item.wrong), item.wrong);
+      assert.ok(names.includes(item.valid), item.valid);
+    }
+  });
+
   it("deprioritizes (but keeps) an off-form-factor candidate below a full-size one", () => {
     const input = {
       query: "gas grill",

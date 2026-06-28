@@ -2280,6 +2280,7 @@ function cheapCandidateRejectionReason(
   if (
     !classifyProductTypeMatch({
       evidenceText: candidateEvidenceText(candidate),
+      identityText: candidate.name,
       requestedCategory: baseProductCategoryFromQuery(input.query),
     }).canBeExactMatch
   ) {
