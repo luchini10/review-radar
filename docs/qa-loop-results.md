@@ -4133,3 +4133,76 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - No live search, full baseline, scoring, ranking, discovery-query breadth, source-upgrade trigger/fallback count, price trust, citation trust, or UI change.
 
 Recommended direction: stop after Phase 5B. Begin Phase 5C only on explicit instruction and reproduce RR-002 before changing price trust.
+
+## <span style="color:green">**Codex QA Update - 2026-06-28 (Phase 5C: price-trust restoration)**</span>
+
+**Verdict: PASS for RR-002. Deterministic, saved-fixture reassessment, and three focused live searches prove `$10` full-product offers are no longer verified, budget-usable, or exact-eligible.**
+
+### Pre-fix reproduction and root cause
+
+- Current code was exercised against the saved Phase 4/3O products before editing.
+- `shop vac`: `Amazon.com: RIDGID Wet Dry Vacuums VAC1200 ...` returned `minimumLikelyFullProductPrice: null`, then `$10`, `verified`, `canUseForBudget: true`.
+- `dash cam`: generic front/rear 1080P camera returned the same `$10` verified/budget-usable result.
+- `wireless earbuds`: generic Bluetooth 5.4 earbuds returned the same result.
+- Root cause: the shared class floor recognized singular `vacuum` but not plural/wet-dry/shop-vac forms and had no dash-camera or wireless-earbud class. The fallback `PRICE_ABS_FLOOR` is exactly `$10`, and `price >= floor` admitted the offer. A strong retailer signal then promoted it to `verified`.
+- The installment parser and exact-selection code were functioning as designed; the bad classification originated in the shared plausibility context.
+
+### Behavior change
+
+- Plural `vacuums`, `shop vac`, and wet/dry-vac wording now share the established `$35` vacuum floor.
+- Dash-camera classes use a conservative `$20` full-product floor.
+- Wireless/true-wireless/Bluetooth earbud classes use a conservative `$12` floor.
+- Below-floor evidence returns `suspicious`, `price: null`, `canUseForBudget: false`, and `canBeExactWithBudget: false`.
+- Product assets display `Price not verified`; reliability keeps suspicious candidates out of exact Best Matches.
+- The existing absolute floor remains `$10`. A `$12.99` low-end wireless-earbud offer remains verified and budget-usable.
+
+### Deterministic verification
+
+```text
+focused price/assets/scoring/requirement tests: 116/116 passed
+npm run typecheck: passed
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 665/665 passed
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+- Regressions cover the exact plural shop-vac fixture title, dash camera, wireless earbuds, asset display, budget eligibility, and exact-result demotion.
+- RR-001 full-size appliance floors, RR-003 installment handling, conflicting-price behavior, specific text-price budget behavior, and real low-cost products remain green.
+
+### Saved fixture proof
+
+- Normal replay is immutable and correctly retains each pre-fix fixture's historical `$10` exact result.
+- Current-code reassessment of those saved product objects changes all three from `verified / $10 / budget true / exact` to `suspicious / null / budget false / exact-ineligible`.
+- Fixtures used:
+  - `shop-vac.json` originally saved 2026-06-27T14:13:24.432Z
+  - `dash-cam.json` originally saved 2026-06-27T19:32:23.958Z
+  - `wireless-earbuds.json` originally saved 2026-06-27T19:23:16.508Z
+
+### Fresh live proof
+
+Exactly three approved searches ran; no full baseline ran.
+
+**`shop vac`**
+- Final exact products: RIDGID WD4070; RIDGID HD0900; RIDGID HD1200; three BISSELL CrossWave variants.
+- No `$10` exact product.
+- One `$1` DEWALT offer and four `$10` BISSELL/Amazon offers were `suspicious`, `price: null`, `canUseForBudget: false`; none received an exact rank.
+
+**`dash cam`**
+- Final exact products: BlackVue DR770X; Garmin X310; Cobra SC220C; VIOFO A229 Pro; Nextbase 322GW; YADA BT53872M-2; Scosche HD DVR.
+- No `$10` or below-floor exact product and no suspicious-low candidate in the final trace.
+- New unrelated issue RR-062: VIOFO A229 Pro displayed `$19,999`, `verified`, `canUseForBudget: true`, despite source-upgrade finding a plausible `$322.99` offer. No fix was attempted.
+
+**`wireless earbuds`**
+- Final exact products: Anker comparison/Space A40; Bose QuietComfort Ultra 2nd Gen; Soundcore Liberty 4 NC; Nothing Ear (a); Logitech Zone; Nothing Ear(a); Soundcore Space A40.
+- Two generic `$10` candidates were `suspicious`, `price: null`, `canUseForBudget: false`, and `not_reliable_enough_for_exact`.
+- Soundcore Liberty 4 NC at `$20` remained `verified`, budget-usable, and exact rank #3, providing a live low-cost positive.
+
+### Issue and scope outcome
+
+- RR-002: Fixed.
+- RR-062: opened High / Needs Investigation; exact extraction source remains uncertain.
+- Register: 62 total; 6 Critical, 27 High, 24 Medium, 5 Low; 7 Open, 13 Needs Investigation, 41 Fixed, 1 Won't Fix.
+- No scoring, ranking, product eligibility, product-type taxonomy, citation verification, discovery, source-upgrade identity, UI, or full-baseline change.
+- Live fixture files remain untracked and are not part of the commit.
+
+Recommended direction: stop after Phase 5C. Decide whether to run a narrow RR-062 diagnostic before Phase 5D; do not combine malformed high-price extraction with Phase 5D eligibility work.

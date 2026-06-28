@@ -124,6 +124,18 @@ describe("plausibleProductPrice (rejects broken low prices)", () => {
         category: "65 inch tv",
         productName: "TCL 65 inch QLED Smart TV",
       },
+      {
+        category: "shop vac",
+        productName: "RIDGID VAC1200 Heavy Duty Wet Dry Vacuums",
+      },
+      {
+        category: "dash cam",
+        productName: "Front and Rear 1080P Dash Camera for Cars",
+      },
+      {
+        category: "wireless earbuds",
+        productName: "Bluetooth 5.4 Wireless Earbuds",
+      },
     ];
 
     for (const context of suspiciousFullProducts) {
@@ -142,6 +154,16 @@ describe("plausibleProductPrice (rejects broken low prices)", () => {
         productName: "50 ft garden hose",
       }),
       35,
+    );
+  });
+
+  it("keeps genuinely cheap wireless audio products plausible above the tiny-price floor", () => {
+    assert.equal(
+      plausibleProductPrice([12.99], 12.99, {
+        category: "wireless earbuds",
+        productName: "Basic Bluetooth Wireless Earbuds with Microphone",
+      }),
+      12.99,
     );
   });
 });

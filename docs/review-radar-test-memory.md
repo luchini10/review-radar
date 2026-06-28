@@ -500,3 +500,52 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 - Live calls: 0.
 
 **Status:** Phase 5B complete. Keep these identity coverage and safety cases green during later source-upgrade reliability work.
+
+---
+
+## 2026-06-28 — Phase 5C: Cross-category tiny-price trust
+
+**Issue fixed:** RR-002.
+
+**Pre-fix deterministic reproduction:**
+- Saved shop-vac, dash-cam, and wireless-earbud products each carried a `$10` retailer offer and `$10` recommendation text.
+- `minimumLikelyFullProductPrice` returned `null` for all three contexts.
+- Because the global absolute floor is exactly `$10`, `plausibleProductPrice` returned `10`.
+- `assessProductPriceTrust` then returned `verified`, `canUseForBudget: true`, and `canBeExactWithBudget: true`.
+- The exact saved shop-vac title uses plural `Wet Dry Vacuums`; singular test titles would not reproduce the gap because singular `vacuum` was already covered.
+
+**Fix boundary:**
+- Existing vacuum floor now recognizes plural `vacuums`, `shop vac`, and wet/dry-vac forms.
+- Dash-camera full products use a `$20` minimum.
+- Wireless/true-wireless/Bluetooth earbuds use a `$12` minimum.
+- Global `PRICE_ABS_FLOOR = 10` remains unchanged.
+- No source-host, retailer, brand, or model exception was added.
+
+**Required outcomes:**
+- Below class floor: `status: suspicious`, `price: null`, `canUseForBudget: false`, `canBeExactWithBudget: false`.
+- Asset display: `Price not verified`.
+- Final selection: suspicious candidate moves out of exact Best Matches.
+- Positive boundary: `$12.99` wireless earbuds remain `verified`; fresh `$20` Soundcore earbuds remained exact.
+
+**Regression coverage:**
+- Exact plural RIDGID fixture title.
+- Shop-vac, dash-camera, and wireless-earbud `$10` negatives.
+- Asset display rewrite.
+- Exact Best Match demotion.
+- Real cheap wireless-earbud positive.
+- Existing installment, refrigerator, conflicting-price, ordinary cheap product, and text-price budget tests.
+
+**Verification:**
+- Focused price/assets/scoring/requirements tests: 116/116.
+- Typecheck: passed.
+- Lint: 0 errors, 3 pre-existing warnings.
+- Full suite: 665/665.
+- Eval red-flag checks: clean.
+
+**Fixture semantics:** `qa:replay` analyzes frozen result JSON and does not re-run current trust code. Preserve the old replay as historical proof, then separately reassess saved product objects when validating a trust-code change.
+
+**Live calls:** Three approved calls: `shop vac`, `dash cam`, `wireless earbuds`. No `$10` exact result. Do not commit the generated live fixtures.
+
+**New issue:** RR-062. Fresh dash-cam output verified VIOFO A229 Pro at `$19,999`; source-upgrade separately found `$322.99`. Reproduce the product-page extraction path before any fix.
+
+**Status:** Phase 5C complete. Keep RR-002 regressions green; RR-062 remains isolated and unresolved.

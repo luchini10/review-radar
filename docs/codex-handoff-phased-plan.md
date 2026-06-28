@@ -16,15 +16,15 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 5B complete. Stop before Phase 5C.**
+Current phase: **Phase 5C complete. Stop before any next phase.**
 
 Phase 3N safely admitted specific Google Shopping offers for source-upgrade evidence and fixed the `Shop-Vac` title false positive. RR-051 removed synthetic query-derived snippets from same-product identity. Phase 3O preserved reliable brand identity in compact model queries.
 
-The Phase 3O live proof then exposed two separate safety defects. RR-053 is fixed deterministically: URL query strings and fragments cannot provide product identity, while merchant product paths and source-derived Shopping titles remain usable. Phase 5A fixed RR-058 by rejecting explicit product-type conflicts before source-upgrade attachment. Phase 5B fixed RR-052 and the RR-057/RR-034/RR-035/RR-044 model-coverage cluster without weakening Phase 5A identity safety. Reopened RR-002 remains a separate price-trust investigation.
+The Phase 3O live proof then exposed two separate safety defects. RR-053 is fixed deterministically: URL query strings and fragments cannot provide product identity, while merchant product paths and source-derived Shopping titles remain usable. Phase 5A fixed RR-058 by rejecting explicit product-type conflicts before source-upgrade attachment. Phase 5B fixed RR-052 and the RR-057/RR-034/RR-035/RR-044 model-coverage cluster without weakening Phase 5A identity safety. Phase 5C fixed reopened RR-002 across shop-vac, dash-camera, and wireless-earbud `$10` offers.
 
 Recommended next phase:
 
-- Await explicit instruction for Phase 5C. Reproduce and fix RR-002 only; do not start later Phase 5 work.
+- Await explicit instruction. Recommended first decision: run a narrow RR-062 malformed-high-price diagnostic before Phase 5D, or explicitly defer RR-062 and continue the master sequence with Phase 5D only.
 
 ---
 
@@ -677,6 +677,24 @@ Phase 5 is executed one approved step at a time. Each step must preserve existin
 - Commit: `872ee5d` (`fix: expand source-upgrade identity coverage`).
 - Result: assigned false-brand/false-model query cases are corrected, legitimate model-family targets become eligible, and expanded coverage does not loosen attachment identity.
 
+### Phase 5C completion record
+
+- Completed step: Phase 5C - Price-trust restoration (RR-002 only).
+- Next step: Decision required. Recommended RR-062 diagnostic-only reproduction before Phase 5D; otherwise Phase 5D owns RR-007/RR-008/RR-009 only.
+- Diagnostic-only: No. This was a focused behavior fix preceded by deterministic reproduction.
+- Stop condition hit: No for RR-002. A separate out-of-scope malformed-high-price issue was found and logged as RR-062 without a fix.
+- New issue IDs opened: RR-062 (High, Needs Investigation).
+- Existing issue IDs updated: RR-002 changed from Needs Investigation to Fixed; RR-001 and RR-003 remain Fixed.
+- Behavior: shared class-sensitive full-product floors now cover plural/wet-dry/shop-vac wording, dash cameras, and wireless earbuds; below-floor prices become suspicious and budget/exact-ineligible.
+- Safety: global absolute floor unchanged; `$12.99` low-end wireless earbuds remain verified; full-size appliance, installment, conflicting-price, and specific text-price behavior remain green.
+- Verification: focused tests 116/116; typecheck passed; lint 0 errors with 3 pre-existing warnings; full tests 665/665; eval red-flag checks clean.
+- Fixture proof: frozen replays retain the historical defect; current-code reassessment changes all three saved `$10` products to suspicious and exact-ineligible.
+- Live proof: three approved searches (`shop vac`, `dash cam`, `wireless earbuds`); no `$10` exact result, and a real `$20` earbud remained verified.
+- Required docs updated: issue register, QA log, next task, change log, run summary, phased handoff, test memory, and technical overview.
+- Docs committed: Pending final Phase 5C commit.
+- Commit: Pending.
+- Result: RR-002 is fixed with deterministic and live proof. RR-062 is isolated and remains unmodified.
+
 ---
 
 ## Larger Product-Quality Phases After Diagnostic Harvest
@@ -949,22 +967,22 @@ Do this only after backend trust and ranking are stronger.
 
 ## Immediate Next Task for Codex
 
-Stop. Phase 5B is complete.
+Stop. Phase 5C is complete.
 
 Task:
 
 Recommended next step, only after explicit instruction:
 
-1. Run Phase 5C only.
-2. Reproduce RR-002's verified/budget-usable `$10` full-product cases before editing.
-3. Restore generalized suspicious-price handling while preserving RR-001, RR-003, legitimate low-cost compact products, and exact-budget trust.
-4. Do not combine product-card eligibility, ranking, discovery, or other later Phase 5 work into Phase 5C.
+1. Decide whether to run a narrow diagnostic-only RR-062 phase before Phase 5D.
+2. If RR-062 is approved, reproduce the malformed VIOFO `$19,999` extraction before changing code and keep that work separate from Phase 5D.
+3. If RR-062 is explicitly deferred, run Phase 5D only for RR-007, RR-008, and RR-009.
+4. Do not combine price extraction, product-card eligibility, ranking, discovery, or later Phase 5 work.
 
 Do not:
 
-- start Phase 5C automatically;
-- change price trust before the RR-002 regression is reproduced and located;
+- start RR-062 work or Phase 5D automatically;
+- treat the exact RR-062 extraction source as known before deterministic reproduction;
 - weaken existing price, citation, product, requirement, or identity safety;
 - run another live search or full baseline without approval.
 
-Exit criteria met: all five Phase 5B issues are deterministically fixed, Phase 5A safety remains green, the issue/docs ledger is current, and Phase 5C has not begun.
+Exit criteria met: RR-002 is fixed deterministically and in three focused live searches, RR-062 is logged without an out-of-scope fix, the issue/docs ledger is current, and no later phase has begun.

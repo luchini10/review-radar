@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 5B source-upgrade identity coverage
+## Compiled for AI Agent Consumption — Phase 0 through Phase 5C price-trust restoration
 
 **Generated:** 2026-06-27  
-**Scope:** All phases from initial measurement harness through Phase 5B source-upgrade identity coverage
+**Scope:** All phases from initial measurement harness through Phase 5C price-trust restoration
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -13,14 +13,14 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 61 |
+| Total Issues | 62 |
 | Critical | 6 |
-| High | 26 |
+| High | 27 |
 | Medium | 24 |
 | Low | 5 |
 | Open | 7 |
 | Needs Investigation | 13 |
-| Fixed | 40 |
+| Fixed | 41 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -57,6 +57,7 @@
 | Phase 4F — Broad rotating quality sweep | 5 |
 | Phase 5A — Source-upgrade safety hardening | 0 |
 | Phase 5B — Source-upgrade identity coverage | 0 |
+| Phase 5C — Price-trust restoration | 1 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -99,7 +100,7 @@
 | **Phase** | Pre-Phase 0 (Codex baseline) |
 | **Severity** | Critical |
 | **Title** | Tiny accessory/promo prices treated as verified full-product prices |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** Products like air purifiers, cordless drills, vacuums, and office chairs could have `$10` or similarly tiny prices treated as verified full-product prices. An accessory listing price, promotional add-on, or variant price was being accepted without a sanity floor for the product class.
 
@@ -116,6 +117,10 @@
 **Phase 4C reproducibility confirmation:** A fresh independent `shop vac` run reproduced the same defect on a different product. `Vacmaster 1.5-Gallon Wet/Dry Vac - Amazon.com` received a `$10` `retailer_page` offer from its Amazon product URL, `priceTrustStatus: verified`, and `canUseForBudget: true`, then reached exact rank #7. No budget was supplied, so the run proves unsafe trust and exact eligibility but cannot quantify a budget-specific rank boost. The recurrence across RIDGID and Vacmaster establishes a general full-product price-sanity gap rather than a single listing anomaly.
 
 **Phase 4F evidence:** The pattern generalized beyond vacuums. A generic front/rear dash camera reached exact rank #7 with `$10`, and generic Bluetooth earbuds reached exact rank #7 with `$10`; both prices were budget-usable in final-selection trace. The earbud price may be a real low-end offer, but the dash-camera bundle is suspicious enough to reinforce the missing cross-category sanity floor.
+
+**Phase 5C resolution:** The current implementation was reproduced before editing against all three saved products. `minimumLikelyFullProductPrice` returned `null` for `shop vac`, `dash cam`, and `wireless earbuds`; the fallback absolute floor was exactly `$10`, so an inclusive comparison admitted each `$10` offer as plausible and the strong retailer signal promoted it to `verified`. The shared class-sensitive floor now recognizes plural and wet/dry/shop-vac wording, dash-camera classes, and wireless-earbud classes. Reproduced `$10` offers now return `status: suspicious`, `price: null`, `canUseForBudget: false`, and `canBeExactWithBudget: false`; product assets display `Price not verified`, and exact selection demotes the product. The existing `$10` absolute floor, installment protection, full-size appliance floors, and specific text-price budget behavior remain intact. A `$12.99` low-end wireless-earbud offer remains verified.
+
+**Phase 5C live proof:** Fresh `shop vac`, `dash cam`, and `wireless earbuds` searches produced no `$10` exact match. Shop-vac `$1`/`$10` offers were suspicious and budget-ineligible; two `$10` wireless-earbud candidates were rejected from exact selection; a real `$20` Soundcore earbud remained verified and selected. No broad baseline ran.
 
 ---
 
@@ -1790,6 +1795,36 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 
 ---
 
+### PHASE 5C — PRICE-TRUST RESTORATION (2026-06-28)
+
+Phase 5C fixed RR-002 after fail-first reproduction and ran three approved focused live searches. The `dash cam` proof also exposed one separate malformed high-price defect; it was logged but not fixed in this phase.
+
+#### RR-062
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-062 |
+| **Phase** | Phase 5C |
+| **Severity** | High |
+| **Title** | Malformed product-page price can be verified at roughly 100x the plausible product price |
+| **Status** | Needs Investigation |
+
+**Description:** A fresh `dash cam` live search selected `VIOFO A229 Pro` at exact rank #4 with a verified displayed price of `$19,999`. The same run's source-upgrade evidence found a plausible `$322.99` offer, but final product metadata contained a `retailer_page` offer of `19999` from the VIOFO landing page and price trust accepted it without warning.
+
+**Where it occurs:** Product-page price extraction in `lib/productAssets.ts`, followed by plausibility/trust classification in `lib/priceParsing.ts` and `lib/productPriceTrust.ts`
+
+**Steps to reproduce:** Replay the fresh Phase 5C `tests/fixtures/review-radar-live/dash-cam.json`; inspect final exact product `VIOFO A229 Pro`, its `metadata.offers`, and `priceTrust`.
+
+**Expected:** The product page's actual decimal price is parsed correctly, or a wildly implausible high outlier is held for verification instead of becoming a verified card price.
+
+**Actual:** `19999` was accepted as a High/Medium retailer-page signal, displayed as `$19,999`, marked `verified`, and remained budget-usable.
+
+**Current status:** The exact extraction path is uncertain. The page may contain a decimal price that was flattened, a variant amount in minor units, or unrelated numeric metadata. No Phase 5C code was changed for this issue.
+
+**Suggested fix or next action:** Reproduce the landing-page extraction deterministically and locate whether the `19999` value comes from visible-price parsing, structured metadata, or embedded state. Add a generalized malformed/high-outlier safeguard only after proving the source; preserve legitimate high-end products and do not bundle this with Phase 5D eligibility work.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (7 issues)
@@ -1802,7 +1837,6 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 - RR-061: Product image metadata accepts non-image or irrelevant assets
 
 ### Needs Investigation (13 issues)
-- RR-002: Tiny accessory/promo prices treated as verified full-product prices
 - RR-007: Category/browse pages appearing as exact product matches
 - RR-008: Review/article/support pages appearing as product cards
 - RR-009: Documentation/manual pages appearing as product cards
@@ -1815,9 +1849,10 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 - RR-041: Source-upgrade trigger not firing in Phase 3J live runs
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
+- RR-062: Malformed product-page price verified at roughly 100x plausible value
 
-### Fixed (40 issues)
-RR-001, RR-003 through RR-006, RR-010 through RR-012, RR-016, RR-018 through RR-021, RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-044, RR-046 through RR-053, RR-057, RR-058
+### Fixed (41 issues)
+RR-001 through RR-006, RR-010 through RR-012, RR-016, RR-018 through RR-021, RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-044, RR-046 through RR-053, RR-057, RR-058
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -1826,7 +1861,7 @@ RR-001, RR-003 through RR-006, RR-010 through RR-012, RR-016, RR-018 through RR-
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-002** (Critical) — Restore cross-category suspicious-price protection for verified `$10` full products.
+1. **RR-062** (High) — Diagnose the malformed `$19,999` product-page price before changing high-price trust behavior.
 2. **RR-007 + RR-008 + RR-009 + RR-017 + RR-043** (High cluster) — Category, support/documentation, and wrong-type targets contaminate final and near streams across categories.
 3. **RR-014 + RR-022 + RR-056 + RR-060** (High/Medium quality cluster) — Leader recall, citation loss, family concentration, and true duplicates jointly degrade broad slates.
 4. **RR-055** (High) — Literal positive requirement evidence can be marked failed and remove a valid product.

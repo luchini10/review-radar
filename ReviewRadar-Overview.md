@@ -509,6 +509,14 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - Phase 5A's product-type conflict guard and all RR-058 regressions remain intact. Broader extraction improves query coverage only; it does not permit same-brand wrong-product evidence to attach.
 - Verification: focused tests 183/183; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 660/660; eval red-flag checks clean. No live search ran.
 
+**Phase 5C - price-trust restoration**
+- RR-002 is fixed. The price-trust path still uses class-sensitive sanity floors, but it now normalizes plural and wet/dry/shop-vac wording and includes conservative dash-camera and wireless-earbud full-product floors.
+- A price below the applicable class floor yields `status: suspicious`, `price: null`, `canUseForBudget: false`, and `canBeExactWithBudget: false`. Asset enrichment rewrites the display to `Price not verified`, and reliability selection keeps the product out of exact Best Matches.
+- The rule is deliberately bounded: the global absolute floor remains `$10`, a `$12.99` low-end wireless-earbud offer remains valid, and existing refrigerator, installment, conflicting-price, and specific text-price protections are unchanged.
+- Saved pre-fix fixtures are immutable evidence and still replay their frozen bad result. Reassessing their product objects through current code changes all three `$10` examples to suspicious. Fresh `shop vac`, `dash cam`, and `wireless earbuds` runs produced no `$10` exact match.
+- RR-062 remains Needs Investigation: a fresh dash-cam run parsed and verified a VIOFO product-page amount as `$19,999`. That separate high-price extraction defect was logged but not changed in Phase 5C.
+- Verification: focused tests 116/116; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 665/665; eval red-flag checks clean.
+
 **Current boundary**
-- Stop after Phase 5B. Phase 5C is the next program step and requires a new explicit instruction.
-- Phase 5C owns RR-002 only. Reproduce the suspicious-price regression deterministically before changing price-trust behavior, and preserve RR-001 and RR-003.
+- Stop after Phase 5C. Do not start another phase without explicit instruction.
+- Recommended immediate decision: diagnose RR-062 separately before Phase 5D, or explicitly defer it and continue the master sequence. Phase 5D must remain limited to RR-007, RR-008, and RR-009.

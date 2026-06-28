@@ -295,11 +295,27 @@ export function minimumLikelyFullProductPrice(
   }
 
   if (
-    /\b(?:air purifier|air cleaner|air filter purifier|dehumidifier|humidifier|vacuum|stick vacuum|robot vacuum|upright vacuum|printer|office chair|desk chair|ergonomic chair)\b/i.test(
+    /\b(?:air purifier|air cleaner|air filter purifier|dehumidifier|humidifier|vacuums?|stick vacuums?|robot vacuums?|upright vacuums?|shop vacs?|wet[/\s-]?dry vacs?|printer|office chair|desk chair|ergonomic chair)\b/i.test(
       text,
     )
   ) {
     return 35;
+  }
+
+  if (
+    /\b(?:dash cams?|dash cameras?|dashboard cameras?|car dvrs?|driving recorders?)\b/i.test(
+      text,
+    )
+  ) {
+    return 20;
+  }
+
+  if (
+    /\b(?:true wireless (?:earbuds?|headphones?)|wireless earbuds?|bluetooth earbuds?)\b/i.test(
+      text,
+    )
+  ) {
+    return 12;
   }
 
   if (

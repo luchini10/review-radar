@@ -328,6 +328,78 @@ describe("recommendation scoring and ranked Best Match selection", () => {
     );
   });
 
+  it("does not select a $10 shop vac as an exact Best Match", () => {
+    const input = {
+      budget: "under $200",
+      extractedRequirements: extractStructuredRequirements({
+        budget: "under $200",
+        query: "shop vac",
+      }),
+      query: "shop vac",
+    };
+    const suspicious = buildProduct(
+      "Amazon.com: RIDGID Wet Dry Vacuums VAC1200 Heavy Duty Wet ...",
+      {
+        category: "shop vac",
+        estimated_price_range: "$10",
+        metadata: {
+          ...buildProduct(
+            "Amazon.com: RIDGID Wet Dry Vacuums VAC1200 Heavy Duty Wet ...",
+          ).metadata,
+          offers: [
+            offerWithSource(
+              10,
+              "retailer_page",
+              "High",
+              "https://example.com/ridgid-vac1200",
+            ),
+          ],
+        },
+        price_value_verdict: "At $10, this looks like an exceptional value.",
+        why_recommended: "A heavy-duty wet dry shop vacuum.",
+      },
+    );
+    const verified = buildProduct("Craftsman 9 Gallon Wet Dry Vacuum", {
+      category: "shop vac",
+      estimated_price_range: "$89.99",
+      metadata: {
+        ...buildProduct("Craftsman 9 Gallon Wet Dry Vacuum").metadata,
+        offers: [
+          offerWithSource(
+            89.99,
+            "retailer_page",
+            "High",
+            "https://example.com/craftsman-shop-vac",
+          ),
+        ],
+      },
+      why_recommended: "A full-size wet dry shop vacuum.",
+    });
+
+    const result = scoreAndSelectRecommendations(
+      {
+        search_summary: "",
+        assumptions: [],
+        exactMatches: [suspicious, verified],
+        nearMatches: [],
+        recommendations: [],
+        what_to_avoid: [],
+        final_buying_advice: "",
+      },
+      input,
+    );
+
+    assert.deepEqual(
+      result.exactMatches.map((candidate) => candidate.name),
+      ["Craftsman 9 Gallon Wet Dry Vacuum"],
+    );
+    assert.equal(
+      result.nearMatches.find((candidate) => candidate.name === suspicious.name)
+        ?.priceTrust?.status,
+      "suspicious",
+    );
+  });
+
   it("keeps the visible search summary aligned with selected exact matches", () => {
     const result = scoreAndSelectRecommendations(
       {

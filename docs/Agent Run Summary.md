@@ -867,3 +867,25 @@ New entries should keep the same format and stay easy to read.
 **Issues:** RR-052, RR-057, RR-034, RR-035, and RR-044 fixed. No new issue opened. Register totals are 61 total, 7 Open, 13 Needs Investigation, 40 Fixed, and 1 Won't Fix.
 
 **Next recommended step:** Stop. Begin Phase 5C only after explicit instruction; reproduce RR-002 before changing price trust.
+
+## Codex Run - 2026-06-28 Phase 5C
+
+**Goal:** Fix RR-002 only by restoring cross-category trust handling for `$10` full-product offers while preserving legitimate cheap products.
+
+**Root cause:** Shop-vac/plural wet-dry-vac, dash-camera, and wireless-earbud contexts had no class floor. The fallback absolute floor was exactly `$10`, so the inclusive plausibility check accepted `$10`; strong retailer metadata then marked it verified and budget-usable.
+
+**What changed:** The existing class-sensitive floor now normalizes plural/wet-dry/shop-vac wording and includes conservative dash-camera and wireless-earbud floors. Below-floor evidence becomes suspicious, loses its trusted price and budget eligibility, displays as unverified, and cannot remain an exact Best Match. A `$12.99` wireless-earbud offer remains valid.
+
+**Deterministic proof:** Four fail-first integration points reproduced the issue. Focused tests passed 116/116; typecheck passed; lint had 0 errors and 3 pre-existing warnings; full tests passed 665/665; eval red-flag checks were clean.
+
+**Fixture proof:** Frozen replay retained the old `$10` exact results as historical evidence. Reassessing the same saved products through current code changed shop vac, dash cam, and wireless earbuds to suspicious, null-price, budget-ineligible, and exact-ineligible.
+
+**Live proof:** Exactly three approved searches ran. No `$10` item reached exact results. Shop-vac `$1`/`$10` offers were suspicious and budget-ineligible; two `$10` earbuds were rejected from exact selection; a real `$20` Soundcore earbud remained verified at exact #3.
+
+**New finding:** RR-062 opened after VIOFO A229 Pro received a verified `$19,999` product-page price in the fresh dash-cam run. It is separate from tiny-price RR-002, remains Needs Investigation, and was not fixed.
+
+**Scope:** Only `lib/priceParsing.ts` behavior changed. No scoring, ranking, eligibility, taxonomy, citation, discovery, source-upgrade identity, UI, or full-baseline change.
+
+**Issues:** RR-002 Fixed; RR-062 High / Needs Investigation. Register totals: 62 total, 7 Open, 13 Needs Investigation, 41 Fixed, 1 Won't Fix.
+
+**Next recommended step:** Stop. Decide whether to diagnose RR-062 separately before Phase 5D; do not combine the two.

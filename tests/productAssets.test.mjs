@@ -287,6 +287,32 @@ describe("product asset metadata extraction", () => {
     assert.match(product.price_value_verdict, /unusually low/i);
   });
 
+  it("does not display a reproduced $10 shop-vac offer as verified", () => {
+    const product = withVerifiedOfferPriceFields({
+      category: "shop vac",
+      estimated_price_range: "$10",
+      name: "Amazon.com: RIDGID Wet Dry Vacuums VAC1200 Heavy Duty Wet ...",
+      price_value_verdict: "At $10, this looks like an exceptional value.",
+      product_image_url: "",
+      product_page_url: "https://example.com/ridgid-vac1200",
+      metadata: {
+        offers: [
+          {
+            availability: field("InStock"),
+            price: field(10, "retailer_page"),
+            priceCurrency: field("USD", "retailer_page"),
+            retailer: "example.com",
+            url: "https://example.com/ridgid-vac1200",
+          },
+        ],
+      },
+    });
+
+    assert.equal(product.estimated_price_range, "Price not verified");
+    assert.equal(product.priceTrust.status, "suspicious");
+    assert.equal(product.priceTrust.canUseForBudget, false);
+  });
+
   it("refreshes stale displayed price text from verified offers", () => {
     const product = withVerifiedOfferPriceFields({
       estimated_price_range: "Price not verified",

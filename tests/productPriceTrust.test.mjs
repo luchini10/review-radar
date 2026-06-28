@@ -105,6 +105,60 @@ describe("shared product price trust", () => {
     assert.equal(trust.canBeExactWithBudget, false);
   });
 
+  it("rejects the reproduced cross-category $10 full-product offers", () => {
+    const cases = [
+      {
+        category: "shop vac",
+        name: "Amazon.com: RIDGID Wet Dry Vacuums VAC1200 Heavy Duty Wet ...",
+      },
+      {
+        category: "dash cam",
+        name: "Dash Cam Front and Rear, 1080P Dash Camera for Cars, 3 ...",
+      },
+      {
+        category: "wireless earbuds",
+        name: "Wireless Earbuds, Bluetooth 5.4 Headphones Bass Stereo, Ear ...",
+      },
+    ];
+
+    for (const testCase of cases) {
+      const trust = assessProductPriceTrust(
+        product({
+          ...testCase,
+          estimated_price_range: "$10",
+          metadata: {
+            offers: [offer(10, "https://www.amazon.com/dp/example")],
+          },
+        }),
+      );
+
+      assert.equal(trust.status, "suspicious", testCase.category);
+      assert.equal(trust.price, null, testCase.category);
+      assert.equal(trust.canUseForBudget, false, testCase.category);
+      assert.equal(trust.canBeExactWithBudget, false, testCase.category);
+    }
+  });
+
+  it("keeps a plausible genuinely cheap wireless-earbud offer verified above the tiny-price floor", () => {
+    const trust = assessProductPriceTrust(
+      product({
+        category: "wireless earbuds",
+        estimated_price_range: "$12.99",
+        metadata: {
+          offers: [
+            offer(12.99, "https://www.example.com/products/wireless-earbuds"),
+          ],
+        },
+        name: "Basic Bluetooth Wireless Earbuds with Microphone",
+      }),
+    );
+
+    assert.equal(trust.status, "verified");
+    assert.equal(trust.price, 12.99);
+    assert.equal(trust.canUseForBudget, true);
+    assert.equal(trust.canBeExactWithBudget, true);
+  });
+
   it("rejects promo-sized prices for full-size refrigerators without blocking compact fridges", () => {
     const fullSizeTrust = assessProductPriceTrust(
       product({

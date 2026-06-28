@@ -11,6 +11,18 @@ Update this file after:
 
 Do not update this file for tiny typo fixes, formatting-only edits, or internal cleanup that does not change behavior.
 
+## 2026-06-28
+
+### Codex - Phase 5C cross-category tiny-price trust
+- Fixed RR-002 after reproducing current `verified`/budget-usable `$10` behavior from saved `shop vac`, `dash cam`, and `wireless earbuds` products.
+- Root cause: those contexts had no class floor, while the shared absolute floor was exactly `$10`; the inclusive plausibility check accepted the offer and strong retailer metadata promoted it to `verified`.
+- Expanded the existing shared class-sensitive floor to normalize plural/wet-dry/shop-vac wording and cover dash-camera and wireless-earbud full-product classes. No source-specific or product-specific rule was added.
+- Reproduced `$10` offers now return `suspicious`, no trusted price, `canUseForBudget: false`, and cannot remain exact Best Matches. Product assets show `Price not verified`.
+- Preserved RR-001 full-size appliance floors, RR-003 installment parsing, the global `$10` absolute floor, plausible `$12.99` wireless earbuds, specific text-price budget behavior, and all non-price pipeline behavior.
+- Verification: focused price/assets/scoring/requirements tests 116/116; typecheck clean; lint 0 errors with 3 pre-existing warnings; full suite 665/665; eval red-flag checks clean.
+- Frozen fixture replay retained the historical bad outputs, while current-code reassessment changed all three saved `$10` products to suspicious and exact-ineligible.
+- Three approved fresh searches found no `$10` exact match. Opened RR-062 after `dash cam` verified VIOFO A229 Pro at a malformed `$19,999`; no RR-062 fix was attempted.
+
 ## 2026-06-27
 
 ### Codex - Phase 5B source-upgrade identity coverage
