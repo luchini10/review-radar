@@ -4072,3 +4072,64 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - No live search, full baseline, scoring, ranking, source-upgrade trigger/fallback/query, price trust, citation trust, broad product eligibility, or UI change.
 
 Recommended direction: stop after Phase 5A. Begin Phase 5B only on explicit instruction, preserving all Phase 5A safety regressions while addressing RR-052, RR-057, RR-034, RR-035, and RR-044.
+
+## <span style="color:green">**Codex QA Update - 2026-06-27 (Phase 5B: source-upgrade identity coverage)**</span>
+
+**Verdict: PASS deterministically. RR-052, RR-057, RR-034, RR-035, and RR-044 are fixed; Phase 5A safety remains green.**
+
+### Reproduced pre-fix behavior
+
+- `RIDGID ... 4.25 Peak HP ... HD0900` with `metadataBrand: HP` produced `HP HD0900`.
+- `BLACK+DECKER 12 AMP 250 MPH 400 CFM ... BEBL7000` selected `AMP 250` and produced `BLACK+DECKER 12 AMP 250`.
+- `Napoleon Rogue 525`, Samsung `Bespoke Jet Bot AI+`, FEIN `9-20-36`, and Milwaukee `M18` did not qualify for source upgrade.
+- `Rogue XT 425` and FEIN `FMM 350` already partially worked and were retained as preservation cases.
+- Nine fail-first assertions demonstrated the assigned gaps before behavior changed.
+
+### Behavior change
+
+- Shared brand matching removes `HP` only in explicit horsepower contexts (`4.25 Peak HP`, `5 HP`, `horsepower (HP)`), preserving genuine HP computer titles.
+- Ambiguous metadata HP is ignored only when the title proves the occurrence is a measurement.
+- Model extraction now creates ranked strong/family candidates instead of choosing the first regex match.
+- Separated measurement and descriptor-number phrases are suppressed before selection; compact IDs such as `BEBL7000` and `LB7654` remain valid.
+- Added mixed word-number (`Rogue 525`), series context (`Rogue XT 425 SIB`), descriptive family (`Bespoke Jet Bot AI+`), numeric-dash (`9-20-36`), uppercase word-number/suffix (`FMM 350 QSL`), and short brand-qualified (`M18 FUEL`) coverage.
+- Structural leading-title brand fallback supports reliable compact queries without adding product-specific brand rules.
+
+### Safety proof
+
+- Short/descriptive family tokens are not strong exact-model evidence.
+- A family-only target must also find the requested product noun in source-derived candidate evidence before attachment.
+- `Milwaukee M18 FUEL Circular Saw` cannot enrich `Milwaukee M18 FUEL Cordless Drill`; a matching M18 hammer drill can.
+- Different FEIN numeric-dash models reject.
+- Measurement-only and unbranded short-token titles remain ineligible.
+- The exact RR-058 Whynter wine-refrigerator negative, no-token product-type conflict, valid same-product positive, same-family different-model negative, RR-051 query provenance, and RR-053 URL-query protection all remain green.
+
+### Before/after query examples
+
+| Input | Before | After |
+|-------|--------|-------|
+| RIDGID Peak HP HD0900 | `HP HD0900` | `RIDGID HD0900` |
+| BLACK+DECKER BEBL7000 | `BLACK+DECKER 12 AMP 250` | `BLACK+DECKER BEBL7000` |
+| Napoleon Rogue 525 | long fallback title / ineligible | `Napoleon Rogue 525` / eligible |
+| Samsung Bespoke Jet Bot AI+ | long fallback title / ineligible | `Samsung Bespoke Jet Bot AI+` / eligible |
+| FEIN Turbo II 9-20-36 | long fallback title / ineligible | `FEIN Turbo II 9-20-36` / eligible |
+| Milwaukee M18 FUEL | `Milwaukee M18` / ineligible | `Milwaukee M18 FUEL` / eligible with family safety |
+
+### Verification
+
+```text
+focused source/brand/type/identity/Serper/requirement tests: 183/183 passed
+npm run typecheck: passed
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 660/660 passed
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+### Issue and scope outcome
+
+- Fixed: RR-052, RR-057, RR-034, RR-035, RR-044.
+- RR-058 remains Fixed.
+- No new issue ID opened.
+- Register totals: 61 total; 6 Critical, 26 High, 24 Medium, 5 Low; 7 Open, 13 Needs Investigation, 40 Fixed, 1 Won't Fix.
+- No live search, full baseline, scoring, ranking, discovery-query breadth, source-upgrade trigger/fallback count, price trust, citation trust, or UI change.
+
+Recommended direction: stop after Phase 5B. Begin Phase 5C only on explicit instruction and reproduce RR-002 before changing price trust.

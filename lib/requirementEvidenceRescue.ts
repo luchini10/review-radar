@@ -15,7 +15,10 @@ import {
   type SerperShoppingSearchDiagnostics,
   type SerperShoppingSearchResult,
 } from "./search/serper.ts";
-import { brandEvidenceMatches, inferKnownBrand } from "./brandMatching.ts";
+import {
+  brandAppearsOnlyAsMeasurement,
+  inferKnownBrand,
+} from "./brandMatching.ts";
 import { baseProductCategoryFromQuery } from "./productCategory.ts";
 import {
   featureEvidenceSupports,
@@ -166,23 +169,188 @@ function significantTokens(value: string) {
     );
 }
 
-function modelTokensFromText(value: string) {
-  return (value.match(/\b[A-Z]{1,5}[-\s]?\d{2,}[A-Z0-9-]*\b/g) || [])
-    .map((token) => normalizeText(token).replace(/\s+/g, ""))
-    .filter((token) => token.length >= 4);
+type ModelIdentityStrength = "family" | "strong";
+
+type ModelIdentityCandidate = {
+  end: number;
+  normalized: string;
+  raw: string;
+  score: number;
+  start: number;
+  strength: ModelIdentityStrength;
+  style: "compact" | "descriptive" | "digit_dash" | "word_number";
+};
+
+type ExtractedModelIdentity = {
+  candidates: ModelIdentityCandidate[];
+  familyTokens: string[];
+  strongTokens: string[];
+  tokens: string[];
+};
+
+const MEASUREMENT_MODEL_PREFIXES = new Set([
+  "amp",
+  "amps",
+  "ah",
+  "btu",
+  "cfm",
+  "db",
+  "ft",
+  "gal",
+  "gallon",
+  "gpm",
+  "hp",
+  "hz",
+  "in",
+  "inch",
+  "kw",
+  "lb",
+  "mah",
+  "mph",
+  "oz",
+  "pint",
+  "psi",
+  "rpm",
+  "v",
+  "vac",
+  "volt",
+  "volts",
+  "w",
+  "watt",
+  "watts",
+]);
+
+const NON_MODEL_WORD_NUMBER_PREFIXES = new Set([
+  "best",
+  "count",
+  "generic",
+  "generation",
+  "model",
+  "pack",
+  "series",
+  "set",
+  "size",
+  "type",
+]);
+
+function normalizeModelToken(value: string) {
+  return normalizeText(value).replace(/[^a-z0-9]/g, "");
 }
 
-function modelTokens(product: ProductRecommendation) {
+function isMeasurementModelToken(value: string) {
+  if (!/\s/.test(value)) return false;
+  const prefix = normalizeModelToken(value).match(/^[a-z]+/)?.[0] || "";
+  return (
+    MEASUREMENT_MODEL_PREFIXES.has(prefix) ||
+    NON_MODEL_WORD_NUMBER_PREFIXES.has(prefix)
+  );
+}
+
+function extractModelIdentity(
+  value: string,
+  options: { brandQualified?: boolean } = {},
+): ExtractedModelIdentity {
+  const byToken = new Map<string, ModelIdentityCandidate>();
+
+  const addCandidate = (
+    match: RegExpMatchArray,
+    style: ModelIdentityCandidate["style"],
+    score: number,
+    strength: ModelIdentityStrength = "strong",
+  ) => {
+    if (match.index === undefined) return;
+    const raw = match[0].trim();
+    const normalized = normalizeModelToken(raw);
+    if (!normalized || isMeasurementModelToken(raw)) return;
+
+    const shortToken = normalized.length < 4;
+    if (
+      !options.brandQualified &&
+      (shortToken || strength === "family" || style === "digit_dash")
+    ) {
+      return;
+    }
+
+    const candidate: ModelIdentityCandidate = {
+      end: match.index + match[0].length,
+      normalized,
+      raw,
+      score,
+      start: match.index,
+      strength: shortToken ? "family" : strength,
+      style,
+    };
+    const existing = byToken.get(normalized);
+    if (!existing || candidate.score > existing.score) {
+      byToken.set(normalized, candidate);
+    }
+  };
+
+  for (const match of value.matchAll(/\b[A-Z]{1,5}[-\s]?\d{2,}[A-Z0-9-]*\b/g)) {
+    const compact = !/\s/.test(match[0]);
+    addCandidate(match, "compact", compact ? 120 : 90);
+  }
+  for (const match of value.matchAll(/\b\d{1,3}(?:-\d{1,4}){2,}\b/g)) {
+    addCandidate(match, "digit_dash", 105);
+  }
+  for (const match of value.matchAll(
+    /\b[A-Z][a-z][A-Za-z0-9-]{2,}\s+\d{2,4}[A-Z0-9-]*\b/g,
+  )) {
+    addCandidate(match, "word_number", 100);
+  }
+  for (const match of value.matchAll(
+    /\b(?:[A-Z][a-z][A-Za-z0-9+.-]{2,}|[A-Z]{2,})(?:\s+(?:[A-Z][A-Za-z0-9+.-]{1,}|[A-Z]{2,})){1,3}\s+[A-Z][A-Za-z0-9.-]*\+/g,
+  )) {
+    addCandidate(match, "descriptive", 80, "family");
+  }
+
+  const candidates = Array.from(byToken.values()).sort(
+    (first, second) => second.score - first.score || first.start - second.start,
+  );
+  const strongTokens = candidates
+    .filter((candidate) => candidate.strength === "strong")
+    .map((candidate) => candidate.normalized);
+  const familyTokens = candidates
+    .filter((candidate) => candidate.strength === "family")
+    .map((candidate) => candidate.normalized);
+
+  return {
+    candidates,
+    familyTokens,
+    strongTokens,
+    tokens: [...strongTokens, ...familyTokens],
+  };
+}
+
+function productModelIdentity(product: ProductRecommendation): ExtractedModelIdentity {
+  const brandQualified = Boolean(sourceUpgradeBrand(product));
+  const fromName = extractModelIdentity(product.name, { brandQualified });
   const metadataTokens = [
     product.metadata?.modelNumber?.value || "",
     product.metadata?.sku?.value || "",
     product.metadata?.gtin?.value || "",
-  ];
-  const nameTokens = modelTokensFromText(product.name);
+  ]
+    .map(normalizeModelToken)
+    .filter(
+      (token) => token.length >= 4 || (brandQualified && token.length >= 2),
+    );
+  const metadataStrong = metadataTokens.filter((token) => token.length >= 4);
+  const metadataFamily = metadataTokens.filter((token) => token.length < 4);
 
-  return [...metadataTokens, ...nameTokens]
-    .map((token) => normalizeText(token).replace(/\s+/g, ""))
-    .filter((token) => token.length >= 4);
+  return {
+    candidates: fromName.candidates,
+    familyTokens: Array.from(
+      new Set([...metadataFamily, ...fromName.familyTokens]),
+    ),
+    strongTokens: Array.from(
+      new Set([...metadataStrong, ...fromName.strongTokens]),
+    ),
+    tokens: Array.from(new Set([...metadataTokens, ...fromName.tokens])),
+  };
+}
+
+function modelTokens(product: ProductRecommendation) {
+  return productModelIdentity(product).tokens;
 }
 
 function modelFamilyPrefix(value: string) {
@@ -205,6 +373,28 @@ function hasConflictingModelToken(
       );
     });
   });
+}
+
+function hasConflictingDigitDashModel(
+  targetIdentity: ExtractedModelIdentity,
+  candidateIdentity: ExtractedModelIdentity,
+) {
+  const targetModels = targetIdentity.candidates.filter(
+    (candidate) =>
+      candidate.strength === "strong" && candidate.style === "digit_dash",
+  );
+  const candidateModels = candidateIdentity.candidates.filter(
+    (candidate) =>
+      candidate.strength === "strong" && candidate.style === "digit_dash",
+  );
+
+  return (
+    targetModels.length > 0 &&
+    candidateModels.length > 0 &&
+    !candidateModels.some((candidate) =>
+      targetModels.some((target) => target.normalized === candidate.normalized),
+    )
+  );
 }
 
 function identityUrlText(value: string) {
@@ -251,6 +441,37 @@ function evidenceTitle(candidate: RawProductCandidate | SerperEvidenceSource) {
   return "name" in candidate ? candidate.name : candidate.title;
 }
 
+const FAMILY_IDENTITY_CATEGORY_MODIFIERS = new Set([
+  "best",
+  "cordless",
+  "electric",
+  "gas",
+  "portable",
+  "smart",
+  "wet",
+  "wireless",
+]);
+
+function familyIdentitySupportsCategory(evidence: string, category: string) {
+  const evidenceWords = new Set(normalizeText(evidence).split(/\s+/).filter(Boolean));
+  const categoryWords = normalizeText(category)
+    .split(/\s+/)
+    .filter(
+      (word) =>
+        word.length >= 3 && !FAMILY_IDENTITY_CATEGORY_MODIFIERS.has(word),
+    );
+
+  return (
+    categoryWords.length > 0 &&
+    categoryWords.every(
+      (word) =>
+        evidenceWords.has(word) ||
+        (word === "vac" && evidenceWords.has("vacuum")) ||
+        (word === "tv" && evidenceWords.has("television")),
+    )
+  );
+}
+
 function looksLikeSameProduct(
   product: ProductRecommendation,
   candidate: RawProductCandidate | SerperEvidenceSource,
@@ -269,26 +490,49 @@ function looksLikeSameProduct(
     return false;
   }
 
-  const targetModelTokens = modelTokens(product);
-  if (targetModelTokens.some((model) => normalizedEvidence.includes(model))) {
+  const targetIdentity = productModelIdentity(product);
+  if (
+    targetIdentity.strongTokens.some((model) =>
+      normalizedEvidence.includes(model),
+    )
+  ) {
     return true;
   }
 
-  const candidateModelTokens = modelTokensFromText(evidenceTitle(candidate));
+  const candidateTitle = evidenceTitle(candidate);
+  const candidateBrand = inferKnownBrand(candidateTitle) || leadingBrandFromTitle(candidateTitle);
+  const candidateIdentity = extractModelIdentity(candidateTitle, {
+    brandQualified: Boolean(candidateBrand),
+  });
   if (
-    targetModelTokens.length > 0 &&
-    candidateModelTokens.length > 0 &&
-    hasConflictingModelToken(targetModelTokens, candidateModelTokens)
+    targetIdentity.strongTokens.length > 0 &&
+    candidateIdentity.strongTokens.length > 0 &&
+    (hasConflictingModelToken(
+      targetIdentity.strongTokens,
+      candidateIdentity.strongTokens,
+    ) || hasConflictingDigitDashModel(targetIdentity, candidateIdentity))
   ) {
     return false;
   }
 
-  const productTokens = significantTokens(
-    [
-      product.name,
-      product.metadata?.brand?.value || "",
-      product.metadata?.title?.value || "",
-    ].join(" "),
+  if (
+    targetIdentity.strongTokens.length === 0 &&
+    targetIdentity.familyTokens.length > 0 &&
+    (!requestedCategory || !familyIdentitySupportsCategory(text, requestedCategory))
+  ) {
+    return false;
+  }
+
+  const productTokens = Array.from(
+    new Set(
+      significantTokens(
+        [
+          product.name,
+          product.metadata?.brand?.value || "",
+          product.metadata?.title?.value || "",
+        ].join(" "),
+      ),
+    ),
   );
   const candidateTokens = new Set(significantTokens(text));
   const matches = productTokens.filter((token) => candidateTokens.has(token));
@@ -773,6 +1017,7 @@ function stripRetailDisplayFiller(query: string) {
 const MODEL_SUFFIX_WORDS = new Set([
   "ai",
   "combo",
+  "fuel",
   "max",
   "plus",
   "pro",
@@ -781,39 +1026,174 @@ const MODEL_SUFFIX_WORDS = new Set([
   "ultra",
 ]);
 
-function buildModelIdentityQuery(name: string, detectedBrand: string | null) {
-  const match = name.match(/\b[A-Z]{1,5}[-\s]?\d{2,}[A-Z0-9-]*\b/);
+const LEADING_BRAND_STOPWORDS = new Set([
+  "best",
+  "black",
+  "built",
+  "compact",
+  "cordless",
+  "electric",
+  "energy",
+  "generic",
+  "heavy",
+  "new",
+  "portable",
+  "premium",
+  "professional",
+  "smart",
+  "stainless",
+  "the",
+  "white",
+]);
 
-  if (!match || match.index === undefined) {
+const MODEL_CONTEXT_STOPWORDS = new Set([
+  "blower",
+  "desktop",
+  "drill",
+  "grill",
+  "laptop",
+  "pc",
+  "refrigerator",
+  "tool",
+  "tv",
+  "vac",
+  "vacuum",
+]);
+
+function leadingBrandFromTitle(name: string) {
+  const firstWord = name.trim().split(/\s+/)[0] || "";
+  if (!firstWord || firstWord.includes("/") || /\d/.test(firstWord)) return null;
+
+  const candidate = firstWord
+    .replace(/^[^A-Za-z]+/, "")
+    .replace(/[^A-Za-z0-9+&.-]+$/, "");
+  const normalized = normalizeText(candidate);
+
+  if (
+    candidate.length < 2 ||
+    !normalized ||
+    LEADING_BRAND_STOPWORDS.has(normalized)
+  ) {
+    return null;
+  }
+
+  return candidate;
+}
+
+function identityWordsBefore(
+  name: string,
+  candidate: ModelIdentityCandidate,
+  count: number,
+  detectedBrand: string | null,
+) {
+  if (count <= 0) return [];
+
+  const detectedBrandNormalized = normalizeText(detectedBrand || "");
+  return name
+    .slice(0, candidate.start)
+    .trim()
+    .split(/\s+/)
+    .slice(-count)
+    .map((word) => word.replace(/[^A-Za-z0-9+&.-]/g, ""))
+    .filter((word) => {
+      const normalized = normalizeText(word);
+      return (
+        normalized &&
+        normalized !== detectedBrandNormalized &&
+        !GENERIC_PRODUCT_WORDS.has(normalized) &&
+        !MEASUREMENT_MODEL_PREFIXES.has(normalized) &&
+        (!detectedBrand || !MODEL_CONTEXT_STOPWORDS.has(normalized)) &&
+        !/^\d/.test(normalized)
+      );
+    });
+}
+
+function identitySuffixAfter(
+  name: string,
+  candidate: ModelIdentityCandidate,
+) {
+  const suffix =
+    name
+      .slice(candidate.end)
+      .trim()
+      .split(/\s+/)[0]
+      ?.replace(/[^A-Za-z0-9+&-]/g, "") || "";
+  const normalized = normalizeText(suffix);
+
+  if (
+    !suffix ||
+    MEASUREMENT_MODEL_PREFIXES.has(normalized) ||
+    (!MODEL_SUFFIX_WORDS.has(normalized) && !/^[A-Z]{2,4}\+?$/.test(suffix))
+  ) {
     return "";
   }
 
-  const before = name
-    .slice(0, match.index)
-    .trim()
-    .split(/\s+/)
+  return suffix;
+}
+
+function selectedModelIdentityPhrase(
+  name: string,
+  detectedBrand: string | null,
+) {
+  const identity = extractModelIdentity(name, {
+    brandQualified: Boolean(detectedBrand),
+  });
+  const candidate = identity.candidates[0];
+  if (!candidate) return "";
+
+  let prefixCount = 0;
+  if (candidate.style === "digit_dash") {
+    prefixCount = 2;
+  } else if (candidate.style === "compact" && /\s/.test(candidate.raw)) {
+    prefixCount = 1;
+  } else if (detectedBrand && candidate.style === "compact") {
+    prefixCount = 1;
+  } else if (!detectedBrand && candidate.style === "compact") {
+    prefixCount = 2;
+  }
+
+  const prefix = identityWordsBefore(
+    name,
+    candidate,
+    prefixCount,
+    detectedBrand,
+  );
+  const suffix = identitySuffixAfter(name, candidate);
+
+  return [...prefix, candidate.raw.replace(/\s+/g, " "), suffix]
     .filter(Boolean)
-    .slice(-2);
-  const model = match[0].replace(/\s+/g, " ");
-  const after = name.slice(match.index + match[0].length).trim().split(/\s+/);
-  const suffix = after[0]?.replace(/[^a-z0-9+-]/gi, "");
-  const suffixWords =
-    suffix && MODEL_SUFFIX_WORDS.has(suffix.toLowerCase()) ? [suffix] : [];
-  const modelIdentity = [model, ...suffixWords].join(" ");
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function buildModelIdentityQuery(name: string, detectedBrand: string | null) {
+  const modelIdentity = selectedModelIdentityPhrase(name, detectedBrand);
+  if (!modelIdentity) return "";
 
   if (detectedBrand) {
-    return brandEvidenceMatches(modelIdentity, detectedBrand)
+    return normalizeModelToken(modelIdentity).includes(
+      normalizeModelToken(detectedBrand),
+    )
       ? modelIdentity
       : `${detectedBrand} ${modelIdentity}`;
   }
 
-  return [...before, modelIdentity].join(" ").replace(/\s+/g, " ").trim();
+  return modelIdentity;
 }
 
 function sourceUpgradeBrand(
   product: Pick<ProductRecommendation, "name" | "metadata">,
 ) {
-  return product.metadata?.brand?.value?.trim() || inferKnownBrand(product.name);
+  const metadataBrand = product.metadata?.brand?.value?.trim() || "";
+  if (
+    metadataBrand &&
+    !brandAppearsOnlyAsMeasurement(product.name, metadataBrand)
+  ) {
+    return metadataBrand;
+  }
+
+  return inferKnownBrand(product.name) || leadingBrandFromTitle(product.name);
 }
 
 export function buildSourceUpgradeShoppingQuery(

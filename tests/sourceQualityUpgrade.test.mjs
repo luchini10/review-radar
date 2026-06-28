@@ -137,6 +137,29 @@ describe("buildSourceUpgradeShoppingQuery", () => {
     assert.equal(query, "DEWALT DXV10SB");
   });
 
+  it("does not trust horsepower HP metadata as the product brand", () => {
+    const query = buildSourceUpgradeShoppingQuery(
+      {
+        name: "RIDGID 9 Gallon 4.25 Peak HP NXT Wet/Dry Vac HD0900",
+        metadata: { brand: { value: "HP" } },
+      },
+      "shop vac",
+    );
+
+    assert.equal(query, "RIDGID HD0900");
+    assert.ok(!query.startsWith("HP "));
+  });
+
+  it("preserves genuine HP computer brand identity", () => {
+    assert.equal(
+      buildSourceUpgradeShoppingQuery(
+        { name: "HP Pavilion TP01-3020 Desktop PC" },
+        "desktop computer",
+      ),
+      "HP Pavilion TP01-3020",
+    );
+  });
+
   it("does not duplicate a brand already embedded in a model token", () => {
     const query = buildSourceUpgradeShoppingQuery(
       { name: "Nike NIKE123 Running Shoe" },
@@ -177,6 +200,77 @@ describe("buildSourceUpgradeShoppingQuery", () => {
 
     assert.equal(query, "Makita XFD131");
     assert.ok(!query.includes("18V LXT Cordless Drill cordless drill"));
+  });
+
+  it("prefers a real compact model over amp, MPH, and CFM measurements", () => {
+    const query = buildSourceUpgradeShoppingQuery(
+      {
+        name:
+          "BLACK+DECKER 12 AMP 250 MPH 400 CFM 3-in-1 Leaf Blower Vacuum (BEBL7000)",
+      },
+      "leaf blower",
+    );
+
+    assert.equal(query, "BLACK+DECKER BEBL7000");
+    assert.ok(!/\b(?:AMP|MPH|CFM)\b/.test(query));
+  });
+
+  it("supports mixed-case word-plus-number model families", () => {
+    assert.equal(
+      buildSourceUpgradeShoppingQuery(
+        { name: "Napoleon Rogue 525 Gas Grill" },
+        "gas grill",
+      ),
+      "Napoleon Rogue 525",
+    );
+    assert.equal(
+      buildSourceUpgradeShoppingQuery(
+        { name: "Napoleon Rogue XT 425 SIB Gas Grill" },
+        "gas grill",
+      ),
+      "Napoleon Rogue XT 425 SIB",
+    );
+  });
+
+  it("supports descriptive and digit-dash model families", () => {
+    assert.equal(
+      buildSourceUpgradeShoppingQuery(
+        { name: "Samsung Bespoke Jet Bot AI+ Robot Vacuum" },
+        "robot vacuum",
+      ),
+      "Samsung Bespoke Jet Bot AI+",
+    );
+    assert.equal(
+      buildSourceUpgradeShoppingQuery(
+        { name: "Samsung Jet Bot AI+ Robot Vacuum" },
+        "robot vacuum",
+      ),
+      "Samsung Jet Bot AI+",
+    );
+    assert.equal(
+      buildSourceUpgradeShoppingQuery(
+        { name: "FEIN Turbo II 9-20-36 Wet/Dry Vacuum" },
+        "shop vac",
+      ),
+      "FEIN Turbo II 9-20-36",
+    );
+    assert.equal(
+      buildSourceUpgradeShoppingQuery(
+        { name: "FEIN MULTIMASTER FMM 350 QSL Oscillating Multi-Tool" },
+        "multi tool",
+      ),
+      "FEIN MULTIMASTER FMM 350 QSL",
+    );
+  });
+
+  it("accepts short model families only with brand-qualified identity", () => {
+    assert.equal(
+      buildSourceUpgradeShoppingQuery(
+        { name: "Milwaukee M18 FUEL Cordless Drill" },
+        "cordless drill",
+      ),
+      "Milwaukee M18 FUEL",
+    );
   });
 
   it("keeps useful model suffix words without duplicating robot vacuum", () => {
@@ -414,6 +508,42 @@ describe("needsSourceUpgrade", () => {
     });
     assert.equal(needsSourceUpgrade(p), true);
   });
+
+  it("makes mixed, descriptive, digit-dash, and short brand-qualified models eligible", () => {
+    const cases = [
+      ["Napoleon Rogue 525 Gas Grill", "gas grill"],
+      ["Samsung Bespoke Jet Bot AI+ Robot Vacuum", "robot vacuum"],
+      ["FEIN Turbo II 9-20-36 Wet/Dry Vacuum", "shop vac"],
+      ["Milwaukee M18 FUEL Cordless Drill", "cordless drill"],
+    ];
+
+    for (const [name, category] of cases) {
+      assert.equal(
+        needsSourceUpgrade(weakProduct(name, { category })),
+        true,
+        `${name} should qualify`,
+      );
+    }
+  });
+
+  it("does not make measurement-only or unbranded short-token titles eligible", () => {
+    assert.equal(
+      needsSourceUpgrade(
+        weakProduct("Generic 12 AMP 250 MPH 400 CFM Leaf Blower", {
+          category: "leaf blower",
+        }),
+      ),
+      false,
+    );
+    assert.equal(
+      needsSourceUpgrade(
+        weakProduct("Generic M18 Cordless Tool", {
+          category: "cordless tool",
+        }),
+      ),
+      false,
+    );
+  });
 });
 
 // ── upgradeWeakSourceEvidence (integration, mocked searchFn) ─────────────────
@@ -512,6 +642,86 @@ describe("upgradeWeakSourceEvidence", () => {
     assert.equal(t.candidateSample[0].identityMatch, false);
     assert.equal(t.candidateSample[0].rejectionReason, "identity_mismatch");
     assert.ok(!upgraded.exactMatches[0].metadata?.offers?.some((o) => o.price?.value === 29));
+  });
+
+  it("does not let a short platform-family token merge a different product type", async () => {
+    const product = weakProduct("Milwaukee M18 FUEL Cordless Drill", {
+      category: "cordless drill",
+      host: "milwaukeetool.com",
+    });
+    const result = makeResult([product]);
+    const req = makeReq("cordless drill");
+    const searchFn = async () => [
+      shoppingResult("Milwaukee M18 FUEL Circular Saw", {
+        category: "circular saw",
+        price: 249,
+        productUrl: "https://retailer.example.com/products/m18-fuel-circular-saw",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.ok(
+      !upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 249,
+      ),
+    );
+  });
+
+  it("allows a brand-qualified short family when the product type also matches", async () => {
+    const product = weakProduct("Milwaukee M18 FUEL Cordless Drill", {
+      category: "cordless drill",
+      host: "milwaukeetool.com",
+    });
+    const result = makeResult([product]);
+    const req = makeReq("cordless drill");
+    const searchFn = async () => [
+      shoppingResult("Milwaukee M18 FUEL 1/2 in Cordless Hammer Drill", {
+        category: "cordless drill",
+        price: 199,
+        productUrl: "https://retailer.example.com/products/m18-fuel-hammer-drill",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, true);
+    assert.ok(
+      upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 199,
+      ),
+    );
+  });
+
+  it("rejects a different explicit numeric-dash model from the same brand", async () => {
+    const product = weakProduct("FEIN Turbo II 9-20-36 Wet/Dry Vacuum", {
+      category: "shop vac",
+      host: "fein.com",
+    });
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const searchFn = async () => [
+      shoppingResult("FEIN Turbo II 9-20-37 Wet/Dry Vacuum", {
+        category: "shop vac",
+        price: 349,
+        productUrl: "https://retailer.example.com/products/fein-9-20-37",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.ok(
+      !upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 349,
+      ),
+    );
   });
 
   it("attaches price, rating, reviewCount, and citation when a retailer match is found (gas grill)", async () => {

@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 5A source-upgrade safety hardening
+## Compiled for AI Agent Consumption — Phase 0 through Phase 5B source-upgrade identity coverage
 
 **Generated:** 2026-06-27  
-**Scope:** All phases from initial measurement harness through Phase 5A source-upgrade safety hardening
+**Scope:** All phases from initial measurement harness through Phase 5B source-upgrade identity coverage
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -18,9 +18,9 @@
 | High | 26 |
 | Medium | 24 |
 | Low | 5 |
-| Open | 12 |
+| Open | 7 |
 | Needs Investigation | 13 |
-| Fixed | 35 |
+| Fixed | 40 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -56,6 +56,7 @@
 | Phase 4E — Market-leader/citation diagnostics | 1 |
 | Phase 4F — Broad rotating quality sweep | 5 |
 | Phase 5A — Source-upgrade safety hardening | 0 |
+| Phase 5B — Source-upgrade identity coverage | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -902,7 +903,7 @@
 | **Phase** | Phase 3E |
 | **Severity** | Medium |
 | **Title** | `modelTokens` regex misses mixed-case word-preceded numbers (Napoleon Rogue 525, Rogue XT 425) |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** The `modelTokens` regex requires an uppercase letter directly preceding or within a short alphanumeric sequence (e.g., "XFD131", "WD1450"). Products with model numbers preceded by a lowercase word — like "Napoleon Rogue 525" or "Napoleon Rogue XT 425 SIB" — do not have a qualifying uppercase token directly adjacent to the number, so no model token is extracted. Products without a model token are ineligible for `upgradeWeakSourceEvidence`.
 
@@ -914,7 +915,9 @@
 
 **Actual:** No model token extracted; product skips source-upgrade eligibility.
 
-**Suggested fix:** Extend the model-token regex to accept `WORD + DIGITS` patterns (not just `UPPERCASE + DIGITS`) when the preceding word is not a category term or stopword. Verify no false positives on generic descriptor phrases ("the 500", "size 12").
+**Suggested fix:** Implemented in Phase 5B. Keep the mixed word-number positives and generic descriptor/measurement negatives green.
+
+**Phase 5B resolution:** Source-upgrade model extraction now recognizes mixed-case word-plus-number identities such as `Rogue 525` and preserves series context for `Rogue XT 425 SIB`. These products now qualify for source upgrade and produce compact identity queries without accepting generic `size`, `series`, `pack`, or measurement-number phrases as models.
 
 ---
 
@@ -926,7 +929,7 @@
 | **Phase** | Phase 3E |
 | **Severity** | Medium |
 | **Title** | `modelTokens` regex misses Samsung Bespoke / FEIN descriptive naming conventions |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** Samsung Bespoke products (Jet Bot AI+, Bespoke Jet) use descriptive brand-line names without standard model-number formats. FEIN tool models use digit-dash formats (e.g., "FEIN MULTIMASTER FMM 350 QSL") that the current regex does not match. Both product families have no extractable model token and are ineligible for source-upgrade.
 
@@ -938,7 +941,9 @@
 
 **Note:** This was acknowledged in Phase 3E and intentionally deferred. Fix should be batched with RR-034 when model-token detection is improved.
 
-**Suggested fix:** For Samsung Bespoke: treat `Bespoke <Line>` as a pseudo-model token. For FEIN: add `\d{3,}[-]\w+` to the regex. Validate against a test fixture set before deploying.
+**Suggested fix:** Implemented in Phase 5B. Preserve brand qualification for descriptive and numeric-dash identities and retain different-model rejection.
+
+**Phase 5B resolution:** Brand-qualified descriptive families such as `Bespoke Jet Bot AI+`, numeric-dash models such as `9-20-36`, and FEIN-style uppercase word-number models such as `FMM 350 QSL` now qualify and build compact queries. Descriptive/numeric-dash identities without brand qualification remain ineligible, and a different explicit numeric-dash model is rejected before evidence attachment.
 
 ---
 
@@ -1296,7 +1301,7 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 | **Phase** | Phase 3O live proof |
 | **Severity** | High |
 | **Title** | Horsepower abbreviation `HP` is misclassified as the Hewlett-Packard brand |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** The focused `shop vac` proof attempted source upgrade for two RIDGID vacuums whose names contain `Peak HP`. Existing shared brand detection interpreted the unit token `HP` as the Hewlett-Packard brand. One candidate already carried `metadataBrand: HP`; the other had no metadata brand but `inferKnownBrand` returned `HP`. Phase 3O correctly preserved that detected brand, producing the unrelated shopping queries `HP HD0900` and `HP HD06001`.
 
@@ -1308,9 +1313,11 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 
 **Actual:** `HP` is trusted as brand identity and redirects source-upgrade shopping search toward Hewlett-Packard products.
 
-**Suggested fix or next action:** Add context-sensitive handling for short ambiguous brand aliases using the existing shared brand system. `HP` adjacent to horsepower quantities or `Peak HP` must not be brand evidence. Preserve genuine HP computer-brand detection in brand-led titles. Also audit why one live product already had `metadataBrand: HP` before source upgrade.
+**Suggested fix or next action:** Implemented in Phase 5B. Preserve horsepower-context negatives and genuine HP computer-brand positives in the shared brand tests.
 
 **Phase 4C reproducibility confirmation:** A fresh `shop vac` run produced three source-upgrade attempts. RIDGID `WD4522` and STANLEY `SL18199P` were both assigned detected brand `HP`, producing `HP WD4522` and `HP SL18199P`. The former still found a correct vacuum and attached safely; the latter returned 20 HP-computer candidates and attached nothing. RR-052 is confirmed reproducible and can waste searches or suppress useful evidence even when RR-053 prevents unsafe query-echo identity.
+
+**Phase 5B resolution:** Shared brand matching now removes `HP` only when it appears in explicit horsepower context such as `4.25 Peak HP`, `5 HP`, or `horsepower (HP)`. Genuine brand-led HP computer titles remain positive. Source upgrade also ignores ambiguous `metadataBrand: HP` when the product title proves that occurrence is a measurement, then uses structurally reliable leading title identity; the reproduced RIDGID query is now `RIDGID HD0900`.
 
 ---
 
@@ -1380,7 +1387,7 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 | **Phase** | Cross-phase |
 | **Severity** | Medium |
 | **Title** | `modelTokens` minimum length too restrictive — short model numbers excluded |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** The model-token regex likely enforces a minimum token length (≥4 characters as noted in diagnostic comments). This excludes short but definitive model identifiers like "M18" (3 characters, Milwaukee), "S" suffix (Roborock Qrevo S), and similar. Products with short model numbers are ineligible for source-upgrade even though their identity is unambiguous.
 
@@ -1392,7 +1399,9 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 
 **Note:** Threshold details uncertain — confirm exact minimum length in code before fixing. Related to RR-034 and RR-035; fix should be batched.
 
-**Suggested fix:** Lower minimum length to 2 characters for tokens that are preceded by a recognized brand name, while keeping the 4-character floor for standalone tokens without brand context.
+**Suggested fix:** Implemented in Phase 5B. Keep short tokens family-strength only unless stronger product identity is present.
+
+**Phase 5B resolution:** Short identities such as `M18` are accepted only when brand-qualified. They can make a candidate eligible and build `Milwaukee M18 FUEL`, but are classified as family-strength rather than strong exact-model evidence. Attachment additionally requires source-derived requested-category evidence, so an M18 circular saw cannot enrich an M18 cordless drill.
 
 ---
 
@@ -1641,7 +1650,7 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 | **Phase** | Phase 4F |
 | **Severity** | Medium |
 | **Title** | Source-upgrade model-token extraction can prefer measurement text over the real model |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** For `BLACK+DECKER ... (BEBL7000)`, model-token extraction emitted `amp250`, `mph400`, and `bebl7000`, then built identity phrase/query `BLACK+DECKER 12 AMP 250` instead of using the actual model `BEBL7000`. The search still found the product, but the query is broader and can return unrelated 12-amp products.
 
@@ -1653,7 +1662,9 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 
 **Actual:** Measurement-derived tokens become the selected identity phrase while the true model is omitted from the query.
 
-**Suggested fix or next action:** Extend the future RR-034/RR-035/RR-044 model-token batch to classify and suppress measurement-derived false positives before selecting identity. Add unrelated-category tests; do not special-case leaf blowers.
+**Suggested fix or next action:** Implemented in Phase 5B. Keep measurement-only ineligibility and compact-model priority tests green across categories.
+
+**Phase 5B resolution:** Ranked extraction filters separated unit-number phrases (`AMP 250`, `MPH 400`, `CFM 400`, HP, PSI, GPM, BTU, voltage, capacity, and similar measurements) before model selection, while preserving compact manufacturer IDs such as `BEBL7000` and `LB7654`. The reproduced query is now `BLACK+DECKER BEBL7000`; measurement-only titles do not become source-upgrade eligible.
 
 ---
 
@@ -1781,16 +1792,11 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (12 issues)
-- RR-034: `modelTokens` misses mixed-case word-preceded numbers
-- RR-035: `modelTokens` misses Samsung Bespoke / FEIN naming
+### Open (7 issues)
 - RR-043: Product-type taxonomy coverage incomplete
-- RR-044: `modelTokens` minimum length too restrictive for short model numbers
-- RR-052: Horsepower abbreviation `HP` is misclassified as the Hewlett-Packard brand
 - RR-054: Fresh fallback responses omit current diagnostic traces
 - RR-055: Literal `Portable` requirement fails an explicitly portable generator
 - RR-056: Same-brand/model-family concentration crowds out broad-slate diversity
-- RR-057: Measurement text can displace the real model in source-upgrade queries
 - RR-059: Niche form factors can win broad category searches
 - RR-060: True same-model duplicates can occupy multiple final slots
 - RR-061: Product image metadata accepts non-image or irrelevant assets
@@ -1810,8 +1816,8 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 
-### Fixed (35 issues)
-RR-001, RR-003 through RR-006, RR-010 through RR-012, RR-016, RR-018 through RR-021, RR-023, RR-025 through RR-033, RR-036, RR-038 through RR-040, RR-046 through RR-051, RR-053, RR-058
+### Fixed (40 issues)
+RR-001, RR-003 through RR-006, RR-010 through RR-012, RR-016, RR-018 through RR-021, RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-044, RR-046 through RR-053, RR-057, RR-058
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -1821,14 +1827,13 @@ RR-001, RR-003 through RR-006, RR-010 through RR-012, RR-016, RR-018 through RR-
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
 1. **RR-002** (Critical) — Restore cross-category suspicious-price protection for verified `$10` full products.
-2. **RR-052 + RR-057 + RR-034 + RR-035 + RR-044** (High/Medium model-identity cluster) — Fix false brands, missed models, and measurement-token false positives as one tested identity batch.
-3. **RR-007 + RR-008 + RR-009 + RR-017 + RR-043** (High cluster) — Category, support/documentation, and wrong-type targets contaminate final and near streams across categories.
-4. **RR-014 + RR-022 + RR-056 + RR-060** (High/Medium quality cluster) — Leader recall, citation loss, family concentration, and true duplicates jointly degrade broad slates.
-5. **RR-055** (High) — Literal positive requirement evidence can be marked failed and remove a valid product.
-6. **RR-059** (Medium) — Broad-query form-factor handling lets niche products outrank mainstream products.
-7. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
-8. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
-9. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
-10. **RR-013** (Medium) — Thin/retailer-only winners still outrank stronger evidence.
-11. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
-12. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
+2. **RR-007 + RR-008 + RR-009 + RR-017 + RR-043** (High cluster) — Category, support/documentation, and wrong-type targets contaminate final and near streams across categories.
+3. **RR-014 + RR-022 + RR-056 + RR-060** (High/Medium quality cluster) — Leader recall, citation loss, family concentration, and true duplicates jointly degrade broad slates.
+4. **RR-055** (High) — Literal positive requirement evidence can be marked failed and remove a valid product.
+5. **RR-059** (Medium) — Broad-query form-factor handling lets niche products outrank mainstream products.
+6. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
+7. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
+8. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
+9. **RR-013** (Medium) — Thin/retailer-only winners still outrank stronger evidence.
+10. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
+11. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.

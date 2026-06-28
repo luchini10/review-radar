@@ -450,3 +450,53 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 - Live calls: 0.
 
 **Status:** RR-058 Fixed. Do not remove or weaken these regressions during Phase 5B model-token expansion.
+
+---
+
+## 2026-06-27 — Phase 5B: Source-upgrade identity coverage
+
+**Issues fixed:** RR-052, RR-057, RR-034, RR-035, RR-044.
+
+**Pre-fix reproductions:**
+- RIDGID `4.25 Peak HP ... HD0900` plus ambiguous `metadataBrand: HP` produced `HP HD0900`.
+- BLACK+DECKER BEBL7000 selected `AMP 250` before the real compact model.
+- Napoleon `Rogue 525`, Samsung `Bespoke Jet Bot AI+`, FEIN `9-20-36`, and Milwaukee `M18` were not source-upgrade eligible.
+- Nine fail-first assertions failed before implementation.
+
+**Brand behavior:**
+- `HP` is removed from brand evidence only in explicit horsepower contexts: number + optional `Peak` + HP, `Peak/maximum/rated HP`, or `horsepower (HP)`.
+- Genuine HP computer-brand titles remain positive.
+- Ambiguous metadata HP is ignored only when the product title proves it is a measurement occurrence.
+- When trusted metadata/shared brand inference is absent, a guarded non-generic leading title token can supply compact query identity.
+
+**Model extraction:**
+- Candidates are ranked as `strong` or `family`; selection no longer uses the first regex match.
+- Strong coverage: compact alphanumeric models, uppercase word-number models, mixed word-number series, and brand-qualified numeric-dash models.
+- Family coverage: brand-qualified descriptive families and short tokens such as M18.
+- Separated unit-number/descriptor-number phrases are suppressed (AMP, MPH, CFM, HP, PSI, GPM, BTU, voltage, capacity, size, pack, series, and related forms).
+- Meaningful adjacent series/suffix context is preserved (`Spirit E-325`, `Rogue XT 425 SIB`, `FMM 350 QSL`, `M18 FUEL`) without restoring long product-title filler.
+
+**Attachment safety:**
+- Only strong tokens can take the exact-model fast path.
+- Family-only identity requires the requested category/product noun in source-derived candidate evidence.
+- Different explicit same-family tokens reject.
+- Different brand-qualified numeric-dash models reject.
+- Product token overlap is deduplicated, so repeated metadata/title brand tokens cannot inflate identity.
+
+**Key regressions:**
+- M18 circular saw -> M18 cordless drill: rejected.
+- M18 hammer drill -> M18 cordless drill: accepted.
+- FEIN 9-20-37 -> FEIN 9-20-36: rejected.
+- Measurement-only and unbranded M18 titles: ineligible.
+- Exact Phase 5A Whynter wrong-type, no-token type mismatch, valid same-product, and different-model cases: green.
+- RR-048/RR-049/RR-051/RR-053: green.
+
+**Verification:**
+- Focused source/brand/type/identity/Serper/requirement tests: 183/183.
+- Typecheck: passed.
+- Lint: 0 errors, 3 pre-existing warnings.
+- Full suite: 660/660.
+- `node scripts/eval-pipeline.mjs`: no red-flag issues.
+- Live calls: 0.
+
+**Status:** Phase 5B complete. Keep these identity coverage and safety cases green during later source-upgrade reliability work.

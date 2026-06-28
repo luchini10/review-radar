@@ -75,6 +75,25 @@ function matchesAlias(text: string, alias: string) {
   return compact(normalizedText).includes(compact(normalizedAlias));
 }
 
+function brandEvidenceText(text: string, canonical: string) {
+  if (canonical !== "HP") {
+    return text;
+  }
+
+  return text
+    .replace(/\bhorsepower\s*\(\s*hp\s*\)/gi, " ")
+    .replace(/\b\d+(?:\.\d+)?\s*(?:peak\s+)?hp\b/gi, " ")
+    .replace(/\b(?:peak|max(?:imum)?|rated)\s+hp\b/gi, " ");
+}
+
+function definitionMatches(text: string, definition: BrandDefinition) {
+  const evidence = brandEvidenceText(text, definition.canonical);
+  return (
+    matchesAlias(evidence, definition.canonical) ||
+    definition.aliases.some((alias) => matchesAlias(evidence, alias))
+  );
+}
+
 export function canonicalBrand(value: string) {
   const normalizedValue = normalize(value)
     .replace(/\bonly\b/g, " ")
@@ -111,10 +130,7 @@ export function detectKnownBrands(text: string) {
   const matches = new Set<string>();
 
   for (const definition of brandDefinitions) {
-    if (
-      matchesAlias(text, definition.canonical) ||
-      definition.aliases.some((alias) => matchesAlias(text, alias))
-    ) {
+    if (definitionMatches(text, definition)) {
       matches.add(definition.canonical);
     }
   }
@@ -123,7 +139,25 @@ export function detectKnownBrands(text: string) {
 }
 
 export function brandEvidenceMatches(text: string, requiredBrand: string) {
-  return brandAliasesFor(requiredBrand).some((alias) => matchesAlias(text, alias));
+  const canonical = canonicalBrand(requiredBrand);
+  const evidence = brandEvidenceText(text, canonical);
+  return brandAliasesFor(requiredBrand).some((alias) => matchesAlias(evidence, alias));
+}
+
+export function brandAppearsOnlyAsMeasurement(
+  text: string,
+  requiredBrand: string,
+) {
+  const canonical = canonicalBrand(requiredBrand);
+  if (canonical !== "HP") return false;
+
+  const aliases = brandAliasesFor(requiredBrand);
+  return (
+    aliases.some((alias) => matchesAlias(text, alias)) &&
+    !aliases.some((alias) =>
+      matchesAlias(brandEvidenceText(text, canonical), alias),
+    )
+  );
 }
 
 export function inferKnownBrand(text: string) {

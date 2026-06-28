@@ -16,15 +16,15 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 4 diagnostic issue-harvest track complete. Stop before Phase 5.**
+Current phase: **Phase 5B complete. Stop before Phase 5C.**
 
 Phase 3N safely admitted specific Google Shopping offers for source-upgrade evidence and fixed the `Shop-Vac` title false positive. RR-051 removed synthetic query-derived snippets from same-product identity. Phase 3O preserved reliable brand identity in compact model queries.
 
-The Phase 3O live proof then exposed two separate safety defects. RR-053 is now fixed deterministically: URL query strings and fragments cannot provide product identity, while merchant product paths and source-derived Shopping titles remain usable. RR-052 remains open because `Peak HP` horsepower wording is still detected as the Hewlett-Packard brand. Reopened RR-002 remains a separate price-trust investigation.
+The Phase 3O live proof then exposed two separate safety defects. RR-053 is fixed deterministically: URL query strings and fragments cannot provide product identity, while merchant product paths and source-derived Shopping titles remain usable. Phase 5A fixed RR-058 by rejecting explicit product-type conflicts before source-upgrade attachment. Phase 5B fixed RR-052 and the RR-057/RR-034/RR-035/RR-044 model-coverage cluster without weakening Phase 5A identity safety. Reopened RR-002 remains a separate price-trust investigation.
 
 Recommended next phase:
 
-- Await an explicit Phase 5 prompt. Recommended first fix: RR-058 source-upgrade identity safety only.
+- Await explicit instruction for Phase 5C. Reproduce and fix RR-002 only; do not start later Phase 5 work.
 
 ---
 
@@ -660,6 +660,23 @@ Phase 5 is executed one approved step at a time. Each step must preserve existin
 - Commit: `a4ff1c0` (`fix: harden source-upgrade identity safety`).
 - Result: the exact Whynter RPD-411WG dehumidifier / wine-refrigerator offer is deterministically rejected with no commerce evidence attached.
 
+### Phase 5B completion record
+
+- Completed step: Phase 5B - Source-upgrade identity coverage (RR-052, RR-057, RR-034, RR-035, RR-044).
+- Next step: Phase 5C - Price trust restoration (RR-002 only), only after explicit instruction.
+- Diagnostic-only: No. This was a focused behavior fix preceded by fail-first deterministic reproduction.
+- Stop condition hit: No.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-052, RR-057, RR-034, RR-035, and RR-044 changed from Open to Fixed; RR-058 remains Fixed.
+- Behavior: context-sensitive HP brand evidence; ranked model extraction with measurement suppression; mixed word-number, descriptive, numeric-dash, uppercase suffix, and short brand-qualified family coverage.
+- Safety: family-only identities require source-derived category evidence before attachment; same-family and numeric-dash model conflicts reject; all Phase 5A/RR-051/RR-053 regressions remain green.
+- Verification: focused tests 183/183; typecheck passed; lint 0 errors with 3 pre-existing warnings; full tests 660/660; eval red-flag checks clean.
+- Live proof: Not run.
+- Required docs updated: issue register, QA log, next task, change log, run summary, phased handoff, test memory, and technical overview.
+- Docs committed: Pending final Phase 5B commit.
+- Commit: Pending.
+- Result: assigned false-brand/false-model query cases are corrected, legitimate model-family targets become eligible, and expanded coverage does not loosen attachment identity.
+
 ---
 
 ## Larger Product-Quality Phases After Diagnostic Harvest
@@ -932,21 +949,22 @@ Do this only after backend trust and ranking are stronger.
 
 ## Immediate Next Task for Codex
 
-Stop. Phase 5A is complete.
+Stop. Phase 5B is complete.
 
 Task:
 
 Recommended next step, only after explicit instruction:
 
-1. Run Phase 5B only.
-2. Fix RR-052, RR-057, RR-034, RR-035, and RR-044 as the source-upgrade identity-coverage cluster.
-3. Re-run the exact Phase 5A Whynter negative, no-token product-type negative, same-product positive, and same-family different-model negative.
-4. Do not combine price, ranking, discovery, product-card eligibility, or other later Phase 5 work into Phase 5B.
+1. Run Phase 5C only.
+2. Reproduce RR-002's verified/budget-usable `$10` full-product cases before editing.
+3. Restore generalized suspicious-price handling while preserving RR-001, RR-003, legitimate low-cost compact products, and exact-budget trust.
+4. Do not combine product-card eligibility, ranking, discovery, or other later Phase 5 work into Phase 5C.
 
 Do not:
 
-- start Phase 5B automatically;
-- weaken Phase 5A, RR-051, or RR-053 identity safety;
+- start Phase 5C automatically;
+- change price trust before the RR-002 regression is reproduced and located;
+- weaken existing price, citation, product, requirement, or identity safety;
 - run another live search or full baseline without approval.
 
-Exit criteria met: RR-058 is deterministically fixed, all required checks are green, the issue/docs ledger is current, and Phase 5B has not begun.
+Exit criteria met: all five Phase 5B issues are deterministically fixed, Phase 5A safety remains green, the issue/docs ledger is current, and Phase 5C has not begun.

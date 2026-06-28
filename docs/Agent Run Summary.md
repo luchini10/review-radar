@@ -849,3 +849,21 @@ New entries should keep the same format and stay easy to read.
 **Issues:** RR-058 fixed. No issue opened. Register totals are 61 total, 12 Open, 13 Needs Investigation, 35 Fixed, and 1 Won't Fix.
 
 **Next recommended step:** Stop. Begin Phase 5B only after explicit instruction, preserving Phase 5A while fixing the RR-052/RR-057/RR-034/RR-035/RR-044 identity-coverage cluster.
+
+## Codex Run - 2026-06-27 Phase 5B
+
+**Goal:** Fix only RR-052, RR-057, RR-034, RR-035, and RR-044 while preserving all Phase 5A source-upgrade safety.
+
+**Root causes:** Shared brand matching treated horsepower `HP` as Hewlett-Packard and source upgrade trusted that ambiguous metadata. Model selection chose the first matching regex, allowing measurement phrases to outrank real models. The extractor omitted mixed word-number, descriptive, numeric-dash, and short brand-qualified family identities.
+
+**What changed:** HP brand evidence is now context-sensitive. Source-upgrade model extraction ranks strong and family candidates, removes separated measurement/descriptor-number false positives, preserves meaningful series context, and supports the assigned model shapes. Structural leading-title identity supplies a brand when shared metadata/brand detection is absent.
+
+**Safety:** Family-only identities can make a target eligible but cannot attach evidence without source-derived requested-category evidence. Different explicit same-family and numeric-dash models reject. Phase 5A RR-058 and RR-051/RR-053 provenance tests remain green.
+
+**Tests run:** Nine fail-first assertions reproduced the gaps. Focused tests passed 183/183. Typecheck passed. Lint had 0 errors and 3 pre-existing warnings. Full tests passed 660/660. Eval red-flag checks were clean.
+
+**Live checks run:** None.
+
+**Issues:** RR-052, RR-057, RR-034, RR-035, and RR-044 fixed. No new issue opened. Register totals are 61 total, 7 Open, 13 Needs Investigation, 40 Fixed, and 1 Won't Fix.
+
+**Next recommended step:** Stop. Begin Phase 5C only after explicit instruction; reproduce RR-002 before changing price trust.

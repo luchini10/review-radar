@@ -13,6 +13,16 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-27
 
+### Codex - Phase 5B source-upgrade identity coverage
+- Fixed RR-052 by making the shared HP alias context-sensitive: explicit horsepower uses no longer become Hewlett-Packard brand evidence, while genuine HP computer titles remain supported.
+- Source upgrade now disregards ambiguous `metadataBrand: HP` when the title proves it is a measurement and falls back to structural leading-title brand identity.
+- Fixed RR-057 by ranking compact manufacturer IDs above separated unit-number phrases and suppressing AMP, MPH, CFM, HP, PSI, GPM, BTU, voltage, capacity, and similar measurement tokens.
+- Fixed RR-034/RR-035/RR-044 by supporting mixed word-number series, brand-qualified descriptive families, numeric-dash models, and short brand-qualified family tokens.
+- Family-strength identities such as `M18 FUEL` can trigger an upgrade search but cannot satisfy same-product attachment without source-derived requested-category evidence. Different explicit same-family and numeric-dash models remain blocked.
+- Preserved Phase 5A RR-058, RR-048/RR-049/RR-051/RR-053, exact model/path identity, trigger/fallback limits, scoring/ranking, price/citation trust, and normal result shape.
+- Verification: focused source/brand/type/identity/Serper/requirement tests 183/183; typecheck clean; lint 0 errors with 3 pre-existing warnings; full suite 660/660; eval red-flag checks clean.
+- No live search or full baseline was run.
+
 ### Codex - Phase 5A source-upgrade safety hardening
 - Fixed RR-058, where repeated same-brand tokens could let a Whynter wine-refrigerator offer pass source-upgrade identity for an RPD-411WG dehumidifier and attach price, rating, review count, and citation evidence.
 - Source-upgrade identity now checks the shared product-type verdict before model/token overlap acceptance. Explicit wine/beverage refrigerator evidence conflicts with a dehumidifier request even when model extraction is absent or incomplete.

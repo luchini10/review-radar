@@ -501,6 +501,14 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - The exact Phase 4F Whynter case now yields `identity_rejected` and attaches no price, rating, review count, or citation. Valid same-product offers, exact model titles, merchant model paths, RR-051/RR-053 provenance protections, and normal user-facing response shape remain green.
 - Verification: focused tests 170/170; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 647/647; eval red-flag checks clean. No live search ran.
 
+**Phase 5B - source-upgrade identity coverage**
+- RR-052, RR-057, RR-034, RR-035, and RR-044 are fixed deterministically. Source-upgrade query identity now ranks model candidates instead of accepting the first model-like token, so measurements such as horsepower, amps, MPH, and CFM do not outrank real model identity.
+- Brand matching removes explicit horsepower uses before interpreting `HP` as Hewlett-Packard. Genuine HP product names remain detectable, while titles such as `4.25 Peak HP` no longer create an HP brand identity.
+- Compact query identity now supports mixed word-number series, descriptive product families, FEIN-style numeric-dash and word-number forms, and short brand-qualified family tokens such as `M18`. Meaningful series qualifiers are retained without restoring long retailer-title noise.
+- Strong model tokens may provide exact-model confirmation. Family-only tokens require source-derived product-type/category agreement, and same-family model conflicts remain hard rejections. Query-derived text still cannot satisfy identity matching.
+- Phase 5A's product-type conflict guard and all RR-058 regressions remain intact. Broader extraction improves query coverage only; it does not permit same-brand wrong-product evidence to attach.
+- Verification: focused tests 183/183; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 660/660; eval red-flag checks clean. No live search ran.
+
 **Current boundary**
-- Stop after Phase 5A. Phase 5B is the next approved program step but requires a new explicit instruction.
-- Phase 5B owns RR-052, RR-057, RR-034, RR-035, and RR-044. It must re-run all Phase 5A safety regressions while changing brand/model coverage.
+- Stop after Phase 5B. Phase 5C is the next program step and requires a new explicit instruction.
+- Phase 5C owns RR-002 only. Reproduce the suspicious-price regression deterministically before changing price-trust behavior, and preserve RR-001 and RR-003.
