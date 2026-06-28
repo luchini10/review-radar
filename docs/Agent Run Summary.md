@@ -931,3 +931,21 @@ New entries should keep the same format and stay easy to read.
 **Issues:** RR-062 changed from Open to Fixed. Register totals remain 62: 7 Open, 12 Needs Investigation, 42 Fixed, and 1 Won't Fix.
 
 **Next recommended step:** Stop. Start Phase 5D only after explicit instruction, limited to RR-007, RR-008, and RR-009.
+
+## Codex Run - 2026-06-28 Phase 5D
+
+**Goal:** Fix RR-007, RR-008, and RR-009 without changing ranking, scoring, citation thresholds, product-type logic, price trust, or RR-062 behavior.
+
+**Root cause:** Shared eligibility had structural blind spots: category-shaped `/product(s)/...` collections, support/advice/customer-service routes, and semantic documentation mirrors could look like specific products. Category context was not consistently supplied at discovery and final citation filtering.
+
+**What changed:** Category context now reaches the shared classifier at both boundaries. Generic manufacturer collections are identified structurally, Best Buy product URL recognition is SKU-specific, and support/advice/learning/customer-service/documentation shapes are evidence-only. Valid product-detail pages remain eligible.
+
+**Proof:** Five assertions failed before implementation. Focused tests passed 78/78; broad focused tests passed 192/192; typecheck passed; lint had 0 errors and 3 pre-existing warnings; full tests passed 678/678; eval red-flag checks were clean. Saved Phase 4 candidates reassess correctly.
+
+**Live validation:** Exactly three searches ran. Generator collection pages, the Daikin collection, and `device.report` did not reach final/scored results. `shop vac` exposed a Shop-Vac customer-service path that survived citation verification but not requirement filtering; that exact path is now covered deterministically. No full baseline ran.
+
+**Issues:** RR-007, RR-008, and RR-009 changed from Needs Investigation to Fixed. RR-013, RR-017/RR-043, and RR-055 received adjacent evidence only. No new issue ID. Totals: 62 issues; 7 Open, 9 Needs Investigation, 45 Fixed, 1 Won't Fix.
+
+**Scope:** `lib/productAssets.ts` and RR-062 were untouched. Generated baselines and live fixtures remain untracked and uncommitted.
+
+**Next recommended step:** Stop. Phase 5E is next only after explicit instruction and should remain limited to RR-017, RR-043, and RR-055.

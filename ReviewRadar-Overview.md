@@ -519,6 +519,13 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - Saved-fixture reassessment removed `$19,999`. One fresh `dash cam` run verified VIOFO A229 Pro 2CH at `$349.99` from matching JSON-LD, with no malformed high verified price.
 - Verification after RR-062: product-assets 20/20; focused tests 123/123; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 672/672; eval red-flag checks clean.
 
+**Phase 5D - product-card eligibility cleanup**
+- RR-007, RR-008, and RR-009 are fixed through the shared `productEligibility` layer used by Serper discovery and final citation filtering.
+- Requested-category context now reaches both boundaries. Category-shaped manufacturer collections are rejected structurally, and Best Buy product-detail recognition is restricted to specific legacy and modern SKU URL shapes.
+- Support, advice, learning-center, customer-service, manual, and semantic documentation-mirror pages are evidence-only. They may support a product, but cannot render as recommendation cards or be rescued as primary product citations.
+- Valid manufacturer and merchant detail pages remain eligible. RR-062 price extraction, scoring, ranking, citation thresholds, source-upgrade identity, and product-type logic are unchanged.
+- Verification: fail-first 5 assertions; focused 78/78; broad focused 192/192; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 678/678; eval clean. Three focused live checks ran; no full baseline.
+
 **Current boundary**
-- Stop after RR-062. Do not start another phase without explicit instruction.
-- Phase 5D is next and must remain limited to RR-007, RR-008, and RR-009.
+- Stop after Phase 5D. Do not start another phase without explicit instruction.
+- Phase 5E is next and must remain limited to RR-017, RR-043, and RR-055.

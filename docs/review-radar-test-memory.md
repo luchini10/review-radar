@@ -622,3 +622,24 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Live call:** One `dash cam` save/replay. VIOFO A229 Pro 2CH ranked exact #2 at `$349.99`, verified from matching JSON-LD. No malformed high verified price appeared.
 
 **Status:** RR-062 Fixed. Keep these product-binding and explicit-minor-unit regressions green during later asset work.
+
+---
+
+## 2026-06-28 — Phase 5D product-card eligibility
+
+**Issues fixed:** RR-007, RR-008, RR-009.
+
+**Regression contract:**
+- Generic category/family collections must not render as cards, including manufacturer `/products/...` paths whose title repeats the requested category.
+- Support, advice, learning-center, customer-service, manual, and documentation pages may remain evidence, but never primary product cards.
+- Documentation mirrors with model-looking titles, prices, or images remain evidence-only.
+- Valid manufacturer and merchant product-detail pages must continue to pass.
+- Requested category must be supplied to eligibility at Serper discovery and final citation filtering.
+
+**Required examples:** Keep MHP, Daikin, Champion, Briggs, Best Buy collections, Bissell support, Best Buy advice, PetSmart learning, Shop-Vac customer service, `device.report`, and manual-library negatives green. Keep AeroPress and both supported Best Buy product URL shapes positive.
+
+**Verification:** Fail-first 5 assertions; focused 78/78; broad focused 192/192; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 678/678; eval clean.
+
+**Live calls:** Exactly three: `portable generator`, `shop vac`, `air purifier`. No full baseline. Generated fixtures remain untracked.
+
+**Status:** RR-007/RR-008/RR-009 Fixed. Preserve RR-062 tests and do not use Phase 5D eligibility to alter ranking or citation-strength policy.

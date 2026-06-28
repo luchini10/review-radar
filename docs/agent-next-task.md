@@ -4,27 +4,27 @@ Generated: 2026-06-28
 
 ## Current next task
 
-**RR-062 fixed — stop before Phase 5D**
+**Phase 5D complete — stop before Phase 5E**
 
-The narrow RR-062 mini-phase product-scoped structured prices and fixed the VIOFO `$19,999` failure. The canonical register contains 62 issues:
+Phase 5D fixed RR-007, RR-008, and RR-009 at the shared product-card eligibility boundary. The canonical register contains 62 issues:
 
 - 6 Critical, 27 High, 24 Medium, 5 Low;
-- 7 Open, 12 Needs Investigation, 42 Fixed, 1 Won't Fix.
+- 7 Open, 9 Needs Investigation, 45 Fixed, 1 Won't Fix.
 
-Unscoped and wrong-product `data-price` fields no longer become target offers. Bare integer element prices remain ambiguous unless matching product identity and an explicit minor-unit marker make conversion safe. Standard matching schema.org offers and legitimate expensive products remain supported. Saved-fixture reassessment removed the malformed value, and one fresh `dash cam` run verified VIOFO A229 Pro 2CH at `$349.99` from matching JSON-LD.
+Generic category/family collections, support/advice/customer-service routes, and documentation mirrors remain usable as evidence when appropriate but cannot render as recommendation cards. Valid manufacturer and merchant product-detail pages remain eligible. RR-062 product-scoped price behavior was not changed.
 
 ## Required next phase
 
 Do not start the next step automatically. The next master-plan step is:
 
-**Phase 5D — Product-card eligibility cleanup**
+**Phase 5E — Product-type and requirement truthfulness**
 
-Phase 5D remains limited to RR-007, RR-008, and RR-009. Reproduce each page shape before editing, generalize by structural page cues, and preserve valid manufacturer and merchant product pages.
+Phase 5E remains limited to RR-017, RR-043, and RR-055. Reproduce the surviving wrong-type and literal-positive requirement cases before editing, generalize through shared product-type/requirement layers, and preserve existing type and requirement protections.
 
 Do not:
 
-- start Phase 5D without a new explicit instruction;
-- reopen RR-062 behavior or combine price extraction with Phase 5D;
+- start Phase 5E without a new explicit instruction;
+- reopen Phase 5D or RR-062 behavior without a failing regression;
 - weaken low-price, exact-budget, installment, citation, product, or identity trust gates;
 - run another live search or full baseline without approval.
 
@@ -32,4 +32,4 @@ Reference:
 
 - `docs/RR-Issues-Report.md`
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` latest Phase 5C entry
+- `docs/qa-loop-results.md` latest Phase 5D entry

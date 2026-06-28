@@ -16,15 +16,15 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **RR-062 fixed. Stop before Phase 5D.**
+Current phase: **Phase 5D complete. Stop before Phase 5E.**
 
 Phase 3N safely admitted specific Google Shopping offers for source-upgrade evidence and fixed the `Shop-Vac` title false positive. RR-051 removed synthetic query-derived snippets from same-product identity. Phase 3O preserved reliable brand identity in compact model queries.
 
-The Phase 3O live proof then exposed two separate safety defects. RR-053 is fixed deterministically: URL query strings and fragments cannot provide product identity, while merchant product paths and source-derived Shopping titles remain usable. Phase 5A fixed RR-058 by rejecting explicit product-type conflicts before source-upgrade attachment. Phase 5B fixed RR-052 and the RR-057/RR-034/RR-035/RR-044 model-coverage cluster without weakening Phase 5A identity safety. Phase 5C fixed reopened RR-002 across shop-vac, dash-camera, and wireless-earbud `$10` offers. RR-062 then product-scoped structured page prices so an unrelated A139 `data-price="19999"` widget cannot become VIOFO A229 evidence.
+The Phase 3O live proof then exposed two separate safety defects. RR-053 is fixed deterministically: URL query strings and fragments cannot provide product identity, while merchant product paths and source-derived Shopping titles remain usable. Phase 5A fixed RR-058 by rejecting explicit product-type conflicts before source-upgrade attachment. Phase 5B fixed RR-052 and the RR-057/RR-034/RR-035/RR-044 model-coverage cluster without weakening Phase 5A identity safety. Phase 5C fixed reopened RR-002 across shop-vac, dash-camera, and wireless-earbud `$10` offers. RR-062 then product-scoped structured page prices so an unrelated A139 `data-price="19999"` widget cannot become VIOFO A229 evidence. Phase 5D fixed cross-host collection, support/advice, and documentation-mirror product cards through the shared eligibility layer.
 
 Recommended next phase:
 
-- Await explicit instruction. The next master-plan step is Phase 5D for RR-007, RR-008, and RR-009 only.
+- Await explicit instruction. The next master-plan step is Phase 5E for RR-017, RR-043, and RR-055 only.
 
 ---
 
@@ -1003,22 +1003,35 @@ Do this only after backend trust and ranking are stronger.
 
 ## Immediate Next Task for Codex
 
-Stop. RR-062 is fixed.
+### Phase 5D completion record
+
+- Completed step: Phase 5D product-card eligibility cleanup.
+- Next step: Phase 5E product-type and requirement truthfulness, only after explicit instruction.
+- Diagnostic-only: No. This phase reproduced and fixed RR-007, RR-008, and RR-009.
+- Stop condition hit: No. Issue definitions were clear, untracked generated files were separable, no trust gate needed weakening, RR-013 remained out of scope, and RR-062 code was untouched.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-007, RR-008, and RR-009 changed from Needs Investigation to Fixed. RR-013, RR-017/RR-043, and RR-055 received adjacent live evidence without status changes.
+- Docs committed: Pending.
+- Commit hash: Pending.
+- Verification: fail-first 5 assertions; focused 78/78; broad focused 192/192; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 678/678; eval clean.
+- Live validation: exactly `portable generator`, `shop vac`, and `air purifier`; no full baseline. Generated fixtures remain untracked.
+
+Stop. Phase 5D is complete.
 
 Task:
 
 Recommended next step, only after explicit instruction:
 
-1. Start Phase 5D only after explicit instruction.
-2. Keep Phase 5D limited to RR-007, RR-008, and RR-009.
-3. Reproduce each page shape before editing and generalize by structural page cues.
-4. Preserve valid manufacturer and merchant product pages.
+1. Start Phase 5E only after explicit instruction.
+2. Keep Phase 5E limited to RR-017, RR-043, and RR-055.
+3. Reproduce wrong-type substitution and literal-positive requirement failures before editing.
+4. Preserve Phase 5D eligibility and all existing trust protections.
 
 Do not:
 
-- start Phase 5D automatically;
-- reopen RR-062 behavior or combine price extraction with Phase 5D;
+- start Phase 5E automatically;
+- reopen Phase 5D or RR-062 behavior without a failing regression;
 - weaken existing price, citation, product, requirement, or identity safety;
 - run another live search or full baseline without approval.
 
-Exit criteria met: RR-062 is fixed deterministically and in one focused live proof, the issue/docs ledger is current, and Phase 5D has not begun.
+Exit criteria met: RR-007, RR-008, and RR-009 are fixed with deterministic and limited live proof, the issue/docs ledger is current, and Phase 5E has not begun.

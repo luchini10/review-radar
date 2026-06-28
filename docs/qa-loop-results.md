@@ -4316,3 +4316,57 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - The live fixture remains untracked and is not part of the commit.
 
 Recommended direction: stop after RR-062. Phase 5D is next only after explicit instruction and remains limited to RR-007, RR-008, and RR-009.
+
+## <span style="color:green">**Codex QA Update - 2026-06-28 (Phase 5D product-card eligibility cleanup)**</span>
+
+**Verdict: PASS. RR-007, RR-008, and RR-009 are fixed through the shared product-eligibility boundary. No RR-013, ranking, scoring, price, or RR-062 behavior changed.**
+
+### Root cause and fail-first proof
+
+- Collection pages could pass as specific products because generic `/product(s)/...` paths were accepted when their titles contained category language; Best Buy also had an overbroad `/site/` product allow rule.
+- Support/advice coverage missed support subdomains and paths such as `/app/answers`, `/discover-learn`, `/learning-center`, and `/customer-service`.
+- Documentation mirrors such as `device.report` looked product-specific when they carried a model-like title and asset metadata.
+- Five assertions failed before the implementation across the shared classifier, Serper discovery normalization, and final citation filtering.
+
+### Behavior change
+
+- The shared classifier receives requested-category context during Serper discovery and final citation validation.
+- Category-shaped manufacturer collections are rejected by structural path/title/category agreement, without host or brand allowlists.
+- Known Best Buy product URLs are restricted to specific legacy `.p` and modern `/sku/` product shapes.
+- Support, advice, learning, customer-service, manual, and documentation host/path shapes are evidence-only: they remain usable as citations but cannot render as product cards.
+- Semantic documentation mirrors such as `device.report` and manual-library hosts are evidence-only.
+- Valid manufacturer and merchant product-detail pages remain eligible.
+
+### Deterministic and saved-fixture proof
+
+```text
+fail-first: 5 assertions failed before the fix
+focused eligibility/Serper/final-filter tests: 78/78 passed
+broad focused eligibility/validation/scoring/assets tests: 192/192 passed
+npm run typecheck: passed
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 678/678 passed
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+- Saved Phase 4 candidates reassessed through current code reject Daikin, Champion, and Briggs collections as `listing_or_search`; PetSmart learning content is `evidence_only`.
+- RR-062 product-scoped price tests remain green. `lib/productAssets.ts` was not changed.
+
+### Limited live validation
+
+- Exactly three focused searches ran: `portable generator`, `shop vac`, and `air purifier`. No full baseline ran.
+- `portable generator`: neither Champion nor Briggs collection pages appeared in final or scored streams.
+- `shop vac`: all three final cards were actual wet/dry vacuums. A `New Customer Service | Shop-Vac Store` page survived citation verification but was removed by requirement filtering; Phase 5D then added its `/customer-service` shape to the shared classifier and final-filter regressions. The exact post-fix path is deterministic but was not live-rerun.
+- `air purifier`: seven actual air-purifier cards were selected; neither the Daikin collection nor `device.report` appeared in the saved run.
+
+### Adjacent evidence and issue outcome
+
+- Existing RR-013 evidence: the Champion generator winner had weak support.
+- Existing RR-017/RR-043 evidence: Goal Zero and BioLite power stations remained in a portable-generator result.
+- Existing RR-055 evidence: a product with literal portable wording still failed the Portable requirement.
+- No adjacent issue was changed and no new issue ID was opened.
+- RR-007, RR-008, and RR-009 changed from Needs Investigation to Fixed.
+- Register totals: 62 issues; 6 Critical, 27 High, 24 Medium, 5 Low; 7 Open, 9 Needs Investigation, 45 Fixed, 1 Won't Fix.
+- Fresh live fixtures remain untracked and are not committed.
+
+Recommended direction: stop after Phase 5D. Phase 5E should address RR-017, RR-043, and RR-055 only, after explicit instruction.

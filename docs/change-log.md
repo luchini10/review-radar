@@ -13,6 +13,15 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-28
 
+### Codex - Phase 5D product-card eligibility cleanup
+- Fixed RR-007, RR-008, and RR-009 at the shared product-eligibility boundary used by Serper discovery and final citation filtering.
+- Added category-aware structural detection for generic manufacturer/retailer collections, narrowed Best Buy product-detail URL recognition, and classified support/advice/learning/customer-service/documentation shapes as evidence-only.
+- Added generalized documentation-host recognition for support subdomains, `device.report`, and manual-library shapes. These sources remain available as evidence but cannot render as recommendation cards.
+- Preserved valid manufacturer and merchant product pages, RR-062 product-scoped price extraction, citation verification, product-type and price trust, scoring, ranking, source-upgrade identity, and final-selection policy.
+- Verification: fail-first 5 assertions; focused 78/78; broad focused 192/192; typecheck clean; lint 0 errors with 3 pre-existing warnings; full suite 678/678; eval red-flag checks clean.
+- Three limited live searches found no Champion/Briggs collection cards, Daikin collection, or `device.report` card in final results. A Shop-Vac customer-service path discovered during live validation was added to deterministic shared/final-filter coverage before closeout.
+- RR-007, RR-008, and RR-009 are Fixed. No new issue was opened and no full baseline ran.
+
 ### Codex - RR-062 product-scoped price extraction
 - Fixed RR-062 by separating page/product-bound structured prices from arbitrary same-page widget values.
 - Schema.org products are selected by target identity; page-level and visible fallbacks require matching page identity; element-level `data-price` fields require matching identity in the same tag.
