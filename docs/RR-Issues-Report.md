@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 5D
+## Compiled for AI Agent Consumption — Phase 0 through Phase 5E
 
 **Generated:** 2026-06-28
-**Scope:** All phases from initial measurement harness through Phase 5D
+**Scope:** All phases from initial measurement harness through Phase 5E
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -18,9 +18,9 @@
 | High | 27 |
 | Medium | 24 |
 | Low | 5 |
-| Open | 7 |
+| Open | 5 |
 | Needs Investigation | 9 |
-| Fixed | 45 |
+| Fixed | 47 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -61,6 +61,7 @@
 | RR-062 diagnostic mini-phase | 0 |
 | RR-062 behavior-fix mini-phase | 0 |
 | Phase 5D — Product-card eligibility cleanup | 0 |
+| Phase 5E — Product-type and requirement truthfulness | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -223,7 +224,7 @@
 | **Phase** | Pre-Phase 0 (Codex baseline) |
 | **Severity** | High |
 | **Title** | eBay browse/category pages appearing as exact product matches |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** eBay browse and category pages (URLs matching `/t/`, `/b/`, `/sch/` patterns) were passing the product eligibility check and appearing as exact product recommendations. These are listing pages, not individual product pages.
 
@@ -244,6 +245,8 @@
 **Phase 4F evidence:** Category/collection pages continued to enter scoring or final results: Best Buy coffee-maker collections, PetSmart limited-ingredient dog-food diets at exact rank #3, and brand/category pages for leaf blowers. This is systemic across retailer and manufacturer hosts.
 
 **Phase 5D fix:** Root cause was incomplete structural coverage in the shared product-eligibility classifier. Generic `/product(s)/...` family collections could appear product-like when their titles contained category words, and Best Buy's broad `/site/` allow rule accepted category pages. Eligibility now receives the requested category during discovery and final citation validation, recognizes category-shaped manufacturer collection paths without host allowlists, and limits known Best Buy product URLs to specific legacy and modern SKU shapes. Deterministic tests cover MHP, Daikin, Champion, Briggs & Stratton, and Best Buy collection negatives while preserving valid AeroPress and Best Buy product-detail positives. Saved Phase 4 fixtures reassessed through current code reject Daikin, Champion, and Briggs collection pages. Fresh `portable generator` results contained no Champion or Briggs collection card.
+
+**Phase 5E regression:** Reopened. Both focused `pressure washer` live attempts selected `Pressure Washers - Best Buy` as exact #7. The Phase 5E product-type fix correctly removed ZEP detergent, but this broad retailer collection still passed product eligibility and final citation validation. No page-eligibility code changed because RR-007 is outside Phase 5E. Diagnose the exact current Best Buy URL/title shape in a later eligibility phase.
 
 ---
 
@@ -493,7 +496,7 @@
 | **Phase** | Phase 0 — Hardening Plan |
 | **Severity** | High |
 | **Title** | Cross-category wrong-type products carried through to ranking (discovery-only check missing) |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** The cross-category product-type conflict rules (e.g., washing machine for a pressure-washer search, ottoman for a sofa search, gaming chair for an office-chair search) were only applied at the validation stage, not at discovery. Wrong-type candidates populated the candidate pool and consumed ranking budget.
 
@@ -514,6 +517,8 @@
 **Phase 4E evidence:** Blackstone propane griddle reached exact rank #5 for `gas grill`. The final slate also included portable/camping grills while full-size benchmark families were missing, reinforcing product-type and form-factor contamination as a leader-recall cost.
 
 **Phase 4F evidence:** `YADA ... Digital Wireless Backup Camera With 3.5" Dash Monitor` reached exact rank #2 for `dash cam`, and source upgrade attached matching backup-camera evidence. The candidate was the same item as the target but the target itself was the wrong product type.
+
+**Phase 5E fix:** The shared product-type layer now rejects the reproduced substitution classes at discovery and revalidation: pressure-washer consumables and dishwashers, portable power stations and non-portable generator types, basketball wall art and hoop accessories, backup cameras for dash-cam requests, and washer/dryer appliances for robot-vacuum requests. Explicit wrong types become hard category failures; sparse candidates with no conflicting evidence remain unverified rather than rejected. Identity/title text is evaluated separately from incidental source snippets so a consumable title cannot borrow `pressure washer` from surrounding search evidence. Deterministic tests cover every negative plus unrelated valid controls. A focused pressure-washer recheck removed ZEP from the final-selection trace, and a portable-generator run contained no power station.
 
 ---
 
@@ -1391,6 +1396,8 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 
 **Phase 4F evidence:** Backup cameras passed as dash cams, and an under-desk walking pad won a broad treadmill query. These add automotive and fitness substitution/form-factor classes to the taxonomy gap.
 
+**Phase 5E fix:** The confirmed taxonomy gaps are covered through shared `PRODUCT_TYPE_RULES` entries for portable generators, basketball hoops, and dash cams, plus strengthened pressure-washer and robot-vacuum rules. Each rule distinguishes allowed hardware, explicit substitutes, and exclusive complements without brand or product exceptions. Unknown categories and thin evidence retain the existing non-rejecting fallback. The issue record previously said Fixed while the appendix and fresh evidence treated it as Open; Phase 5E resolves that ledger inconsistency and records the reproduced taxonomy set as Fixed. Future newly reproduced category classes should receive deterministic coverage before extending the registry.
+
 ---
 
 #### RR-044
@@ -1577,7 +1584,7 @@ Four approved fresh searches were saved and replayed: `robot vacuum`, `basketbal
 | **Phase** | Phase 4D |
 | **Severity** | High |
 | **Title** | Literal `Portable` requirement fails a product explicitly titled Portable Inverter Generator |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** In the fresh `portable generator` run, `Generac GP3300i Portable Inverter Generator` was classified as a near candidate with failed requirement `Portable`. The product title contains the exact word, its manufacturer URL path contains `/portable-generators/`, and the category check passed. The false failure removed a valid product while collection pages and battery power stations filled final slots.
 
@@ -1590,6 +1597,8 @@ Four approved fresh searches were saved and replayed: `robot vacuum`, `basketbal
 **Actual:** The literal requirement is marked failed, the product receives score `39.6`, and it is excluded from the final seven.
 
 **Suggested fix or next action:** Diagnose which evidence source or negation/polarity path generated the false failure. Add a deterministic requirement test for a literal positive adjective in product title plus URL before changing shared matching behavior. Do not special-case Generac.
+
+**Phase 5E fix:** Comparative negative prose such as `not as portable as smaller models` could override a literal positive identity token. Plain feature groups now check provider/merchant identity text before broader review prose; query-assigned category and generated explanation text remain excluded. `Generac GP3300i Portable Inverter Generator` passes the deterministic reproduction even with the comparative con, while `Stationary Standby Generator - Not Portable` still fails. In the focused live generator run, twelve unrelated portable/inverter generator candidates passed `Portable` with no failures. GP3300i itself was dropped earlier by citation verification, so its exact post-fix live path was not observed.
 
 **Phase result:**
 
@@ -1816,7 +1825,7 @@ Phase 5C fixed RR-002 after fail-first reproduction and ran three approved focus
 | **Phase** | Phase 5C |
 | **Severity** | High |
 | **Title** | Malformed product-page price can be verified at roughly 100x the plausible product price |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** A fresh `dash cam` live search selected `VIOFO A229 Pro` at exact rank #4 with a verified displayed price of `$19,999`. Diagnostic review corrected an earlier attribution error: the separate `$322.99` source-upgrade sample belonged to `BlackVue DR770X`, not VIOFO. VIOFO carried only one parsed `retailer_page` offer, `19999`, from its landing page.
 
@@ -1836,28 +1845,26 @@ Phase 5C fixed RR-002 after fail-first reproduction and ran three approved focus
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (7 issues)
-- RR-043: Product-type taxonomy coverage incomplete
+### Open (5 issues)
 - RR-054: Fresh fallback responses omit current diagnostic traces
-- RR-055: Literal `Portable` requirement fails an explicitly portable generator
 - RR-056: Same-brand/model-family concentration crowds out broad-slate diversity
 - RR-059: Niche form factors can win broad category searches
 - RR-060: True same-model duplicates can occupy multiple final slots
 - RR-061: Product image metadata accepts non-image or irrelevant assets
 
 ### Needs Investigation (9 issues)
+- RR-007: Category/browse pages appearing as exact product matches
 - RR-013: Thin winner crowd-out
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
-- RR-017: Cross-category wrong-type products carried downstream
 - RR-022: Real product-page leaders dropped at citation verification
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-041: Source-upgrade trigger not firing in Phase 3J live runs
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 
-### Fixed (45 issues)
-RR-001 through RR-012, RR-016, RR-018 through RR-021, RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-044, RR-046 through RR-053, RR-057, RR-058, RR-062
+### Fixed (47 issues)
+RR-001 through RR-006, RR-008 through RR-012, RR-016 through RR-021, RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055, RR-057, RR-058, RR-062
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -1866,7 +1873,7 @@ RR-001 through RR-012, RR-016, RR-018 through RR-021, RR-023, RR-025 through RR-
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-017 + RR-043 + RR-055** (High cluster) — Wrong-product-type candidates and literal positive-requirement failures still contaminate or remove valid results.
+1. **RR-007** (High) — A Best Buy pressure-washer collection still renders as an exact product card despite Phase 5D's shared eligibility fix.
 2. **RR-014 + RR-022 + RR-056 + RR-060** (High/Medium quality cluster) — Leader recall, citation loss, family concentration, and true duplicates jointly degrade broad slates.
 3. **RR-059** (Medium) — Broad-query form-factor handling lets niche products outrank mainstream products.
 4. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.

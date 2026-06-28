@@ -643,3 +643,28 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Live calls:** Exactly three: `portable generator`, `shop vac`, `air purifier`. No full baseline. Generated fixtures remain untracked.
 
 **Status:** RR-007/RR-008/RR-009 Fixed. Preserve RR-062 tests and do not use Phase 5D eligibility to alter ranking or citation-strength policy.
+
+---
+
+## 2026-06-28 — Phase 5E product-type and literal requirement truthfulness
+
+**Issues fixed:** RR-017, RR-043, RR-055. **Issue reopened:** RR-007.
+
+**Product-type regression contract:**
+- Reject pressure-washer consumables/dishwashers, portable power stations, basketball wall art/accessories, backup cameras, and washer/dryer appliances for the corresponding product requests.
+- Keep explicit valid hardware exact-capable and thin unknown products unverified rather than rejected.
+- Evaluate exclusive complement shape from candidate identity/name, not incidental source snippets.
+- Apply the same shared type verdict during Serper prefiltering and requirement revalidation.
+
+**Literal requirement contract:**
+- Literal provider/merchant identity can satisfy a generic feature even when comparative review prose is negative.
+- Query-assigned category and generated explanation text cannot satisfy the feature.
+- Identity text that explicitly negates the feature still fails.
+
+**Required tests:** Keep the ZEP, Goal Zero/BioLite, basketball wall-art, YADA, GE washer/dryer, Generac comparative-portability, explicitly non-portable generator, sparse valid hoop, source-upgrade RR-058, RR-062 asset, RR-002 price, and Phase 5D eligibility regressions green.
+
+**Verification:** Focused 83/83; broad safety matrix 314/314; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 684/684; eval clean.
+
+**Live calls:** Four total: `shop vac`, `pressure washer` twice, and `portable generator`. ZEP disappeared after the final refinement; no power stations survived; multiple unrelated generators passed `Portable`. No broad baseline.
+
+**Known boundary:** `Pressure Washers - Best Buy` still rendered exact #7, reopening RR-007. The Shop-Vac customer-service candidate remained absent from final cards but survived citation verification before requirement filtering.

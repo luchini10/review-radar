@@ -16,15 +16,15 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 5D complete. Stop before Phase 5E.**
+Current phase: **Phase 5E complete. Decision required before Phase 5F.**
 
 Phase 3N safely admitted specific Google Shopping offers for source-upgrade evidence and fixed the `Shop-Vac` title false positive. RR-051 removed synthetic query-derived snippets from same-product identity. Phase 3O preserved reliable brand identity in compact model queries.
 
-The Phase 3O live proof then exposed two separate safety defects. RR-053 is fixed deterministically: URL query strings and fragments cannot provide product identity, while merchant product paths and source-derived Shopping titles remain usable. Phase 5A fixed RR-058 by rejecting explicit product-type conflicts before source-upgrade attachment. Phase 5B fixed RR-052 and the RR-057/RR-034/RR-035/RR-044 model-coverage cluster without weakening Phase 5A identity safety. Phase 5C fixed reopened RR-002 across shop-vac, dash-camera, and wireless-earbud `$10` offers. RR-062 then product-scoped structured page prices so an unrelated A139 `data-price="19999"` widget cannot become VIOFO A229 evidence. Phase 5D fixed cross-host collection, support/advice, and documentation-mirror product cards through the shared eligibility layer.
+The Phase 3O live proof then exposed two separate safety defects. RR-053 is fixed deterministically: URL query strings and fragments cannot provide product identity, while merchant product paths and source-derived Shopping titles remain usable. Phase 5A fixed RR-058 by rejecting explicit product-type conflicts before source-upgrade attachment. Phase 5B fixed RR-052 and the RR-057/RR-034/RR-035/RR-044 model-coverage cluster without weakening Phase 5A identity safety. Phase 5C fixed reopened RR-002 across shop-vac, dash-camera, and wireless-earbud `$10` offers. RR-062 then product-scoped structured page prices so an unrelated A139 `data-price="19999"` widget cannot become VIOFO A229 evidence. Phase 5D fixed cross-host collection, support/advice, and documentation-mirror product cards through the shared eligibility layer. Phase 5E fixed the reproduced wrong-product-type and literal-positive-requirement classes, but live QA reopened RR-007 for a Best Buy pressure-washer collection.
 
 Recommended next phase:
 
-- Await explicit instruction. The next master-plan step is Phase 5E for RR-017, RR-043, and RR-055 only.
+- Await explicit instruction. Recommended next is a narrow RR-007 eligibility diagnostic/fix. If explicitly deferred, the next master-plan step is Phase 5F for RR-022 only.
 
 ---
 
@@ -1017,22 +1017,35 @@ Do this only after backend trust and ranking are stronger.
 - Verification: fail-first 5 assertions; focused 78/78; broad focused 192/192; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 678/678; eval clean.
 - Live validation: exactly `portable generator`, `shop vac`, and `air purifier`; no full baseline. Generated fixtures remain untracked.
 
-Stop. Phase 5D is complete.
+### Phase 5E completion record
+
+- Completed step: Phase 5E product-type and requirement truthfulness.
+- Next step: Decision required. Recommended narrow RR-007 eligibility follow-up; if deferred explicitly, Phase 5F citation retention for RR-022 only.
+- Diagnostic-only: No. This phase reproduced and fixed RR-017, RR-043, and RR-055.
+- Stop condition hit: Adjacent issue only. `Pressure Washers - Best Buy` reached exact #7 twice, reopening RR-007; no out-of-scope eligibility fix was attempted.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-017, RR-043, and RR-055 Fixed; RR-007 changed from Fixed to Needs Investigation.
+- Docs committed: Pending.
+- Commit hash: Pending.
+- Verification: fail-first 4 suites; focused 83/83; broad safety 314/314; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 684/684; eval clean.
+- Live validation: exactly four calls - `shop vac`, `pressure washer` twice, and `portable generator`; no full baseline. Generated fixtures remain untracked.
+
+Stop. Phase 5E is complete.
 
 Task:
 
 Recommended next step, only after explicit instruction:
 
-1. Start Phase 5E only after explicit instruction.
-2. Keep Phase 5E limited to RR-017, RR-043, and RR-055.
-3. Reproduce wrong-type substitution and literal-positive requirement failures before editing.
-4. Preserve Phase 5D eligibility and all existing trust protections.
+1. Decide whether to address reopened RR-007 before Phase 5F.
+2. If RR-007 is deferred, keep Phase 5F limited to RR-022.
+3. Do not combine page eligibility and citation-retention behavior.
+4. Preserve Phase 5E type/requirement rules and all existing trust protections.
 
 Do not:
 
-- start Phase 5E automatically;
-- reopen Phase 5D or RR-062 behavior without a failing regression;
+- start Phase 5F or an RR-007 fix automatically;
+- combine RR-007 and RR-022;
 - weaken existing price, citation, product, requirement, or identity safety;
 - run another live search or full baseline without approval.
 
-Exit criteria met: RR-007, RR-008, and RR-009 are fixed with deterministic and limited live proof, the issue/docs ledger is current, and Phase 5E has not begun.
+Exit criteria met: RR-017, RR-043, and RR-055 are fixed with deterministic and bounded live proof; RR-007 is explicitly reopened; Phase 5F has not begun.

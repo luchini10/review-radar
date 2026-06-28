@@ -13,6 +13,15 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-28
 
+### Codex - Phase 5E product-type and requirement truthfulness
+- Fixed RR-017/RR-043 by extending the shared product-type registry for reproduced pressure-washer consumables/dishwashers, portable power stations, basketball wall art/accessories, backup cameras, and washer/dryer substitutions.
+- Added an identity-versus-broader-evidence distinction so incidental source snippets cannot make a wrong product title pass type matching.
+- Fixed RR-055 by allowing literal provider/merchant identity evidence to satisfy a plain feature before comparative review prose, while preserving explicit negation failures and excluding assigned category/explanation text.
+- Preserved unknown-product verification behavior, valid sparse products, all source-upgrade safety, price/RR-062, Phase 5D deterministic eligibility, citation, scoring, and ranking protections.
+- Verification: focused 83/83; broad safety matrix 314/314; typecheck clean; lint 0 errors with 3 pre-existing warnings; full suite 684/684; eval clean.
+- Four bounded live calls ran. The pressure-washer recheck removed ZEP from the trace; portable-generator results contained no power stations and twelve candidates passed `Portable`; the shop-vac customer-service page remained absent from final cards.
+- Reopened RR-007 after `Pressure Washers - Best Buy` reached exact #7 twice. No eligibility fix was made in Phase 5E.
+
 ### Codex - Phase 5D product-card eligibility cleanup
 - Fixed RR-007, RR-008, and RR-009 at the shared product-eligibility boundary used by Serper discovery and final citation filtering.
 - Added category-aware structural detection for generic manufacturer/retailer collections, narrowed Best Buy product-detail URL recognition, and classified support/advice/learning/customer-service/documentation shapes as evidence-only.

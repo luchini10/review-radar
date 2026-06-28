@@ -949,3 +949,25 @@ New entries should keep the same format and stay easy to read.
 **Scope:** `lib/productAssets.ts` and RR-062 were untouched. Generated baselines and live fixtures remain untracked and uncommitted.
 
 **Next recommended step:** Stop. Phase 5E is next only after explicit instruction and should remain limited to RR-017, RR-043, and RR-055.
+
+## Codex Run - 2026-06-28 Phase 5E
+
+**Goal:** Fix RR-017, RR-043, and RR-055 without changing ranking, scoring, price trust, citation thresholds, source-upgrade identity, or Phase 5D eligibility behavior.
+
+**Root causes:** The shared product-type registry lacked the reproduced substitution families, and broad source snippets could lend requested-type words to wrong product titles. Separately, comparative negative prose could override a literal positive feature in product identity.
+
+**What changed:** Added bounded type rules for portable generators, basketball hoops, and dash cams; strengthened pressure-washer and robot-vacuum rules; separated title/name identity from broader evidence for exclusive complements; and made literal identity authoritative for generic feature requirements before comparative prose.
+
+**Proof:** Fail-first had four failing suites. Focused tests passed 83/83; broad safety tests 314/314; typecheck passed; lint had 0 errors and 3 pre-existing warnings; full tests passed 684/684; eval was clean.
+
+**Live validation:** Four searches total. Shop-vac support content did not become a card. The first pressure-washer attempt exposed snippet borrowing; after refinement, ZEP disappeared from the trace. Portable-generator results contained no power stations, and twelve generator candidates passed `Portable`.
+
+**Remaining proof gap:** GP3300i was removed at citation verification in the final generator run, so its post-fix live requirement path was not observed. Dash cam, basketball hoop, and robot vacuum were proved deterministically and against saved historical shapes, not with new live calls.
+
+**Adjacent finding:** `Pressure Washers - Best Buy` reached exact #7 twice. RR-007 reopened; page eligibility was not changed.
+
+**Issues:** RR-017/RR-043/RR-055 Fixed; RR-007 Needs Investigation. Totals: 62 issues; 5 Open, 9 Needs Investigation, 47 Fixed, 1 Won't Fix. No new issue ID.
+
+**Scope:** Eight implementation/test files plus required docs. Generated baselines and live fixtures remain untracked.
+
+**Next recommended step:** Stop. Prefer a narrow RR-007 eligibility diagnostic before Phase 5F; otherwise require an explicit decision to defer it and proceed to RR-022.

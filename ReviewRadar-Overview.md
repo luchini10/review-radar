@@ -526,6 +526,15 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - Valid manufacturer and merchant detail pages remain eligible. RR-062 price extraction, scoring, ranking, citation thresholds, source-upgrade identity, and product-type logic are unchanged.
 - Verification: fail-first 5 assertions; focused 78/78; broad focused 192/192; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 678/678; eval clean. Three focused live checks ran; no full baseline.
 
+**Phase 5E - product-type and requirement truthfulness**
+- RR-017 and RR-043 are fixed for the confirmed substitution classes. The shared type registry now covers pressure-washer consumables/dishwashers, portable power stations, basketball wall art/accessories, backup cameras, and washer/dryer products in robot-vacuum requests.
+- Candidate identity is distinct from broader source evidence for exclusive-complement checks. A wrong product title cannot borrow requested-type words from incidental snippets; sparse unknown products remain unverified rather than rejected.
+- RR-055 is fixed. Literal provider/merchant identity satisfies generic feature requirements before comparative review prose, while assigned category, generated explanation text, and explicitly negated identity remain non-supporting.
+- Discovery and revalidation use the same type verdict. Scoring, ranking, price trust, citation thresholds, source-upgrade identity, and page eligibility are unchanged.
+- Verification: focused 83/83; broad safety matrix 314/314; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 684/684; eval clean.
+- Four focused live calls ran. ZEP detergent disappeared after the final refinement, portable-generator results contained no power stations, and multiple products passed `Portable`.
+- RR-007 reopened because `Pressure Washers - Best Buy` still rendered exact #7. The shop-vac customer-service candidate remained absent from final cards but survived citation verification before requirement filtering.
+
 **Current boundary**
-- Stop after Phase 5D. Do not start another phase without explicit instruction.
-- Phase 5E is next and must remain limited to RR-017, RR-043, and RR-055.
+- Stop after Phase 5E. Do not start another phase without explicit instruction.
+- Recommended next: diagnose reopened RR-007 narrowly. If deferred explicitly, Phase 5F is RR-022 citation retention only.

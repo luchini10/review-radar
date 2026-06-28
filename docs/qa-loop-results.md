@@ -4370,3 +4370,61 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - Fresh live fixtures remain untracked and are not committed.
 
 Recommended direction: stop after Phase 5D. Phase 5E should address RR-017, RR-043, and RR-055 only, after explicit instruction.
+
+## <span style="color:green">**Codex QA Update - 2026-06-28 (Phase 5E product-type and requirement truthfulness)**</span>
+
+**Verdict: PASS with an adjacent Phase 5D regression. RR-017, RR-043, and RR-055 are fixed. RR-007 reopened after a Best Buy collection page returned as an exact card.**
+
+### Diagnosis and fail-first proof
+
+- The central type layer had only nine intent rules and eight conflict families. ZEP pressure-wash consumable, portable power stations, basketball wall art, backup cameras, and a washer/dryer all returned `canBeExactMatch: true`.
+- Discovery and requirement revalidation shared that incomplete verdict, so wrong types could consume candidate budget or become exact results.
+- RR-055 reproduced when `Generac GP3300i Portable Inverter Generator` had comparative con text such as `not as portable as smaller inverter generators`: broad negative prose overrode the literal identity.
+- Initial focused run: 4 failing suites. A first live pressure-washer proof then exposed a subtler path: source snippets containing `pressure washer` could override a consumable-shaped product title.
+
+### Behavior change
+
+- Added shared intent coverage for portable generators, basketball hoops, and dash cams; strengthened pressure-washer and robot-vacuum rules.
+- Rules distinguish allowed hardware, explicit wrong types, and exclusive complements. Unknown/thin evidence remains unverified rather than rejected.
+- Discovery now supplies candidate identity separately from broader evidence. A title-shaped complement such as a 64-ounce pressure-wash consumable cannot borrow product identity from an incidental source snippet.
+- Revalidation supplies product name/metadata identity through the same shared verdict.
+- Plain feature groups accept literal provider/merchant identity before comparative review prose. Assigned category and generated explanation text remain excluded; explicitly negated identity still fails.
+- No scoring, ranking, price, citation threshold, source-upgrade identity, or page-eligibility logic changed.
+
+### Deterministic proof
+
+```text
+focused product-type/requirement tests: 83/83 passed
+broad type/form-factor/Serper/result/source-upgrade/price/assets/eligibility matrix: 314/314 passed
+npm run typecheck: passed
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 684/684 passed
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+- Negatives: ZEP consumable, Goal Zero/BioLite power stations, basketball wall art, YADA backup camera, GE washer/dryer.
+- Positives: Sun Joe pressure washer, Honda/Generac generators, Spalding hoop, Garmin dash cam, Roborock robot vacuum, and sparse valid hoop fixtures.
+- RR-058 source-upgrade safety, RR-052/model coverage, RR-002 price trust, RR-062 product-scoped prices, and Phase 5D deterministic eligibility tests remain green.
+
+### Saved evidence and live proof
+
+- Saved pre-fix fixtures preserve the historical ZEP exact #2, power-station selections, basketball wall art exact scoring, YADA exact scoring, and RR-055 Generac failure. Current deterministic reassessment rejects each explicit wrong type and passes the literal Generac requirement.
+- Exactly four live searches ran; no broad baseline:
+  1. `shop vac`: one exact Kärcher wet/dry vacuum and two near HART vacuums. `New Customer Service | Shop-Vac Store` survived citation verification but requirement filtering removed it before enrichment/scoring/display.
+  2. First `pressure washer`: ZEP still reached exact #4 because snippet text overrode title identity. This led to the identity/evidence separation.
+  3. `pressure washer` recheck: ZEP disappeared from the final-selection trace; seven real pressure-washer candidates remained exact-capable.
+  4. `portable generator`: seven fuel-powered portable/inverter generators selected; no power station appeared. Twelve generator candidates passed `Portable` with no failures.
+- GP3300i itself was removed at citation verification in the final generator run, so its exact post-fix live requirement path remains unobserved.
+- Dash-cam, basketball-hoop, and robot-vacuum fixes are deterministic/saved-evidence reassessments only in this phase.
+
+### Adjacent finding and issue outcome
+
+- `Pressure Washers - Best Buy` was selected exact #7 in both pressure-washer attempts. RR-007 reopened as Needs Investigation; no Phase 5E page-eligibility fix was attempted.
+- The shop-vac support/customer-service page remained safely absent from final cards, but its survival through citation verification shows the Phase 5D boundary is not uniformly early.
+- RR-017: Fixed.
+- RR-043: Fixed; its record/appendix status inconsistency is reconciled.
+- RR-055: Fixed.
+- Register: 62 issues; 6 Critical, 27 High, 24 Medium, 5 Low; 5 Open, 9 Needs Investigation, 47 Fixed, 1 Won't Fix.
+- Live fixtures remain untracked and uncommitted.
+
+Recommended direction: stop after Phase 5E. Diagnose reopened RR-007 narrowly before Phase 5F, or explicitly accept deferral and proceed to RR-022 citation retention.
