@@ -691,8 +691,8 @@ Phase 5 is executed one approved step at a time. Each step must preserve existin
 - Fixture proof: frozen replays retain the historical defect; current-code reassessment changes all three saved `$10` products to suspicious and exact-ineligible.
 - Live proof: three approved searches (`shop vac`, `dash cam`, `wireless earbuds`); no `$10` exact result, and a real `$20` earbud remained verified.
 - Required docs updated: issue register, QA log, next task, change log, run summary, phased handoff, test memory, and technical overview.
-- Docs committed: Pending final Phase 5C commit.
-- Commit: Pending.
+- Docs committed: Yes.
+- Commit: `9a8a293` (`fix: restore cross-category tiny-price trust`).
 - Result: RR-002 is fixed with deterministic and live proof. RR-062 is isolated and remains unmodified.
 
 ---
