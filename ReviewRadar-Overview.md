@@ -536,5 +536,13 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - RR-007 reopened because `Pressure Washers - Best Buy` still rendered exact #7. The shop-vac customer-service candidate remained absent from final cards but survived citation verification before requirement filtering.
 
 **Current boundary**
-- Stop after Phase 5E. Do not start another phase without explicit instruction.
-- Recommended next: diagnose reopened RR-007 narrowly. If deferred explicitly, Phase 5F is RR-022 citation retention only.
+- Stop after the RR-007 regression cleanup. Do not start another phase without explicit instruction.
+- Recommended next: Phase 5F for RR-022 citation retention only.
+
+**RR-007 regression cleanup - nested catalog-page containment**
+- Phase 5E exposed a remaining category-page shape: a Best Buy `pcmcat...c` catalog identifier nested beneath department and category path segments. Phase 5D's shallower route check missed it, and Serper's local helper still treated every Best Buy `/site/` route as product detail.
+- The shared eligibility layer now recognizes nested catalog identifiers, generic department/browse routes, and faceted-listing parameters. Explicit known product-detail URL shapes remain eligible.
+- Serper's Best Buy shortcut is restricted to the supported legacy `.p` and modern `/sku/` detail patterns, so discovery and final citation validation agree on the page shape.
+- Fail-first proof covered shared eligibility, Serper normalization, and final citation filtering. Focused tests passed 177/177 across eligibility plus Phase 5E type/requirement behavior; full tests passed 686/686; eval was clean.
+- One focused `pressure washer` run returned six exact products and one near product, all with specific product-detail primary URLs. The Best Buy category page was absent. A Craftsman collection remained secondary evidence only.
+- RR-007 is Fixed. No scoring, ranking, citation threshold, price, product-type, requirement, source-upgrade identity, or UI behavior changed.

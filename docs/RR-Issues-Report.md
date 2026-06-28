@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 5E
+## Compiled for AI Agent Consumption — Phase 0 through RR-007 regression cleanup
 
 **Generated:** 2026-06-28
-**Scope:** All phases from initial measurement harness through Phase 5E
+**Scope:** All phases from initial measurement harness through the RR-007 regression cleanup
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -19,8 +19,8 @@
 | Medium | 24 |
 | Low | 5 |
 | Open | 5 |
-| Needs Investigation | 9 |
-| Fixed | 47 |
+| Needs Investigation | 8 |
+| Fixed | 48 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -62,6 +62,7 @@
 | RR-062 behavior-fix mini-phase | 0 |
 | Phase 5D — Product-card eligibility cleanup | 0 |
 | Phase 5E — Product-type and requirement truthfulness | 0 |
+| RR-007 regression cleanup mini-phase | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -224,7 +225,7 @@
 | **Phase** | Pre-Phase 0 (Codex baseline) |
 | **Severity** | High |
 | **Title** | eBay browse/category pages appearing as exact product matches |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** eBay browse and category pages (URLs matching `/t/`, `/b/`, `/sch/` patterns) were passing the product eligibility check and appearing as exact product recommendations. These are listing pages, not individual product pages.
 
@@ -247,6 +248,8 @@
 **Phase 5D fix:** Root cause was incomplete structural coverage in the shared product-eligibility classifier. Generic `/product(s)/...` family collections could appear product-like when their titles contained category words, and Best Buy's broad `/site/` allow rule accepted category pages. Eligibility now receives the requested category during discovery and final citation validation, recognizes category-shaped manufacturer collection paths without host allowlists, and limits known Best Buy product URLs to specific legacy and modern SKU shapes. Deterministic tests cover MHP, Daikin, Champion, Briggs & Stratton, and Best Buy collection negatives while preserving valid AeroPress and Best Buy product-detail positives. Saved Phase 4 fixtures reassessed through current code reject Daikin, Champion, and Briggs collection pages. Fresh `portable generator` results contained no Champion or Briggs collection card.
 
 **Phase 5E regression:** Reopened. Both focused `pressure washer` live attempts selected `Pressure Washers - Best Buy` as exact #7. The Phase 5E product-type fix correctly removed ZEP detergent, but this broad retailer collection still passed product eligibility and final citation validation. No page-eligibility code changed because RR-007 is outside Phase 5E. Diagnose the exact current Best Buy URL/title shape in a later eligibility phase.
+
+**RR-007 regression-cleanup fix:** The exact catalog URL ended in a nested `pcmcat...c` identifier beneath `/site/outdoor-power-equipment/pressure-washers/`. Phase 5D's Best Buy listing rule only recognized a shallower two-segment `.c` route, while Serper's local helper treated every `/site/` route as a known product. Shared eligibility now rejects nested catalog identifiers, department/browse paths, and faceted listing parameters unless the URL matches a known product-detail shape. Serper uses the same narrowed Best Buy SKU/detail patterns. Fail-first coverage reproduced the page at shared eligibility, discovery normalization, and final citation filtering. A fresh single `pressure washer` live run returned six exact products plus one near product, all with specific product-detail primary URLs; the Best Buy catalog page was absent. RR-007 is Fixed.
 
 ---
 
@@ -1852,8 +1855,7 @@ Phase 5C fixed RR-002 after fail-first reproduction and ran three approved focus
 - RR-060: True same-model duplicates can occupy multiple final slots
 - RR-061: Product image metadata accepts non-image or irrelevant assets
 
-### Needs Investigation (9 issues)
-- RR-007: Category/browse pages appearing as exact product matches
+### Needs Investigation (8 issues)
 - RR-013: Thin winner crowd-out
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
@@ -1863,8 +1865,8 @@ Phase 5C fixed RR-002 after fail-first reproduction and ran three approved focus
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 
-### Fixed (47 issues)
-RR-001 through RR-006, RR-008 through RR-012, RR-016 through RR-021, RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055, RR-057, RR-058, RR-062
+### Fixed (48 issues)
+RR-001 through RR-012, RR-016 through RR-021, RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055, RR-057, RR-058, RR-062
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -1873,12 +1875,11 @@ RR-001 through RR-006, RR-008 through RR-012, RR-016 through RR-021, RR-023, RR-
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-007** (High) — A Best Buy pressure-washer collection still renders as an exact product card despite Phase 5D's shared eligibility fix.
-2. **RR-014 + RR-022 + RR-056 + RR-060** (High/Medium quality cluster) — Leader recall, citation loss, family concentration, and true duplicates jointly degrade broad slates.
-3. **RR-059** (Medium) — Broad-query form-factor handling lets niche products outrank mainstream products.
-4. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
-5. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
-6. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
-7. **RR-013** (Medium) — Thin/retailer-only winners still outrank stronger evidence.
-8. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
-9. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
+1. **RR-014 + RR-022 + RR-056 + RR-060** (High/Medium quality cluster) — Leader recall, citation loss, family concentration, and true duplicates jointly degrade broad slates.
+2. **RR-059** (Medium) — Broad-query form-factor handling lets niche products outrank mainstream products.
+3. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
+4. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
+5. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
+6. **RR-013** (Medium) — Thin/retailer-only winners still outrank stronger evidence.
+7. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
+8. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.

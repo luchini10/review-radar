@@ -16,15 +16,15 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 5E complete. Decision required before Phase 5F.**
+Current phase: **RR-007 regression cleanup complete. Phase 5F requires explicit instruction.**
 
 Phase 3N safely admitted specific Google Shopping offers for source-upgrade evidence and fixed the `Shop-Vac` title false positive. RR-051 removed synthetic query-derived snippets from same-product identity. Phase 3O preserved reliable brand identity in compact model queries.
 
-The Phase 3O live proof then exposed two separate safety defects. RR-053 is fixed deterministically: URL query strings and fragments cannot provide product identity, while merchant product paths and source-derived Shopping titles remain usable. Phase 5A fixed RR-058 by rejecting explicit product-type conflicts before source-upgrade attachment. Phase 5B fixed RR-052 and the RR-057/RR-034/RR-035/RR-044 model-coverage cluster without weakening Phase 5A identity safety. Phase 5C fixed reopened RR-002 across shop-vac, dash-camera, and wireless-earbud `$10` offers. RR-062 then product-scoped structured page prices so an unrelated A139 `data-price="19999"` widget cannot become VIOFO A229 evidence. Phase 5D fixed cross-host collection, support/advice, and documentation-mirror product cards through the shared eligibility layer. Phase 5E fixed the reproduced wrong-product-type and literal-positive-requirement classes, but live QA reopened RR-007 for a Best Buy pressure-washer collection.
+The Phase 3O live proof then exposed two separate safety defects. RR-053 is fixed deterministically: URL query strings and fragments cannot provide product identity, while merchant product paths and source-derived Shopping titles remain usable. Phase 5A fixed RR-058 by rejecting explicit product-type conflicts before source-upgrade attachment. Phase 5B fixed RR-052 and the RR-057/RR-034/RR-035/RR-044 model-coverage cluster without weakening Phase 5A identity safety. Phase 5C fixed reopened RR-002 across shop-vac, dash-camera, and wireless-earbud `$10` offers. RR-062 then product-scoped structured page prices so an unrelated A139 `data-price="19999"` widget cannot become VIOFO A229 evidence. Phase 5D fixed cross-host collection, support/advice, and documentation-mirror product cards through the shared eligibility layer. Phase 5E fixed the reproduced wrong-product-type and literal-positive-requirement classes. The narrow RR-007 cleanup then fixed the remaining nested catalog-route gap and live-proved the pressure-washer slate without a category card.
 
 Recommended next phase:
 
-- Await explicit instruction. Recommended next is a narrow RR-007 eligibility diagnostic/fix. If explicitly deferred, the next master-plan step is Phase 5F for RR-022 only.
+- Await explicit instruction. The next master-plan step is Phase 5F for RR-022 citation retention only.
 
 ---
 
@@ -1050,3 +1050,19 @@ Do not:
 - run another live search or full baseline without approval.
 
 Exit criteria met: RR-017, RR-043, and RR-055 are fixed with deterministic and bounded live proof; RR-007 is explicitly reopened; Phase 5F has not begun.
+
+### RR-007 regression cleanup completion record
+
+- Completed step: Narrow RR-007 nested catalog/listing-page regression cleanup.
+- Next step: Phase 5F citation retention for RR-022 only, after explicit instruction.
+- Diagnostic-only: No. The mini-phase reproduced and fixed the shared eligibility gap.
+- Stop condition hit: No. The root cause was isolated without weakening a trust gate or overlapping RR-022/RR-013.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-007 changed from Needs Investigation to Fixed.
+- Docs committed: Pending documentation commit.
+- Implementation commit: `06ccd36`.
+- Documentation commit: Pending.
+- Verification: fail-first 3 failures; focused 89/89; broader Phase 5E safety 177/177; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 686/686; eval clean.
+- Live validation: exactly one `pressure washer` call. Six exact and one near product remained, all with specific product-detail primary URLs; no Best Buy catalog card. No full baseline.
+
+Stop. The RR-007 cleanup is complete. Do not start Phase 5F without explicit instruction.

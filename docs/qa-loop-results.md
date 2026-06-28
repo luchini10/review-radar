@@ -4428,3 +4428,58 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - Live fixtures remain untracked and uncommitted.
 
 Recommended direction: stop after Phase 5E. Diagnose reopened RR-007 narrowly before Phase 5F, or explicitly accept deferral and proceed to RR-022 citation retention.
+
+## <span style="color:green">**Codex QA Update - 2026-06-28 (RR-007 regression cleanup)**</span>
+
+**Verdict: PASS. The nested retailer catalog-page regression is fixed deterministically and in one focused live proof. RR-007 returns to Fixed. Phase 5F did not start.**
+
+### Diagnosis and fail-first proof
+
+- The selected page was `Pressure Washers - Best Buy` at `https://www.bestbuy.com/site/outdoor-power-equipment/pressure-washers/pcmcat1597940389709.c?id=pcmcat1597940389709`.
+- Phase 5D's Best Buy listing expression matched only a shallower `/site/<category>/<catalog>.c` shape. The live route contained an extra department/category segment.
+- Serper also had a broader local shortcut that treated every Best Buy `/site/` path as a known product. Shared eligibility then interpreted the multi-segment `/site/` path and category title as product detail.
+- The Serper-origin candidate therefore passed discovery normalization and the same shared verdict at final citation filtering.
+- Three fail-first tests reproduced the bad admission at shared eligibility, Serper normalization, and final filtering.
+
+### Behavior change
+
+- Shared eligibility recognizes nested `abcat...c`, `cat...c`, and `pcmcat...c` catalog identifiers independently of path depth.
+- Generic department/browse routes and strong faceted-listing query keys are treated as listing structure.
+- Known product-detail URL exceptions are evaluated before those generic query signals.
+- Serper's Best Buy product shortcut is narrowed to supported legacy `.p` and modern `/sku/` detail URLs, and its listing diagnostics recognize the same nested catalog shape.
+- No scoring, ranking, final selection, citation threshold, product type, price trust, source-upgrade identity, requirement, or UI behavior changed.
+
+### Deterministic proof
+
+```text
+fail-first focused run: 3 failing tests
+focused eligibility/result/Serper/product-URL tests: 89/89 passed
+broader Phase 5E safety matrix: 177/177 passed
+npm run typecheck: passed
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 686/686 passed
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+- Negatives include the exact nested Best Buy route, unrelated department/browse/faceted retailer pages, Phase 5D manufacturer collections, support/customer-service/advice/manual/documentation pages, and existing retailer category routes.
+- Positives preserve supported Best Buy SKU pages, Home Depot/Lowe's/Walmart/Amazon/Target-style product routes already covered by the suite, and specific manufacturer product pages.
+- Phase 5E product-type and literal requirement regressions remained green.
+
+### Focused live proof
+
+- Exactly one live search ran: `pressure washer`. No full baseline or unrelated live search ran.
+- Final result: six exact products and one near product. Every final card used a specific primary product-detail URL.
+- `Pressure Washers - Best Buy` and its `pcmcat1597940389709` URL were absent from the fixture.
+- A Craftsman pressure-washer family page appeared only as a secondary citation behind the specific Craftsman CMEPW2800 product page. It did not become a product card.
+- No obvious valid product-page over-blocking appeared in the final slate.
+- The run also showed a weak/retailer-supported winner and source-upgrade activity, but neither belongs to RR-007 and no adjacent behavior changed.
+
+### Issue outcome
+
+- RR-007: Fixed.
+- No new issue ID opened.
+- Register: 62 issues; 6 Critical, 27 High, 24 Medium, 5 Low; 5 Open, 8 Needs Investigation, 48 Fixed, 1 Won't Fix.
+- Implementation commit: `06ccd36`.
+- The fresh live fixture remains untracked and uncommitted.
+
+Recommended direction: stop after the RR-007 cleanup. Phase 5F is next only after explicit instruction and must remain limited to RR-022 citation retention.

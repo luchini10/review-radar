@@ -668,3 +668,24 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Live calls:** Four total: `shop vac`, `pressure washer` twice, and `portable generator`. ZEP disappeared after the final refinement; no power stations survived; multiple unrelated generators passed `Portable`. No broad baseline.
 
 **Known boundary:** `Pressure Washers - Best Buy` still rendered exact #7, reopening RR-007. The Shop-Vac customer-service candidate remained absent from final cards but survived citation verification before requirement filtering.
+
+---
+
+## 2026-06-28 — RR-007 nested catalog-page regression cleanup
+
+**Issue fixed:** RR-007.
+
+**Regression contract:**
+- Reject nested retailer catalog identifiers such as `abcat...c`, `cat...c`, and `pcmcat...c` regardless of category-path depth.
+- Reject generic department/browse routes and strong faceted-listing parameters unless the URL is a known product-detail shape.
+- Do not treat every retailer `/site/` path as product detail; preserve only explicit supported SKU/detail patterns.
+- Keep valid retailer SKU pages and specific manufacturer product pages eligible.
+- Category, collection, support, manual, and documentation pages may remain secondary evidence when safe but cannot become the primary product card.
+
+**Required tests:** Keep the exact `Pressure Washers - Best Buy` URL negative at shared eligibility, Serper normalization, and final citation filtering. Keep unrelated department/browse/faceted negatives, Phase 5D collection/support/documentation negatives, Best Buy legacy/modern SKU positives, and Phase 5E type/requirement regressions green.
+
+**Verification:** Fail-first 3 failures; focused card-path tests 89/89; broader Phase 5E safety matrix 177/177; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 686/686; eval clean.
+
+**Live call:** Exactly one `pressure washer` save/replay. Six exact and one near product used specific product-detail primary URLs; the Best Buy catalog page was absent. A Craftsman family page remained secondary evidence only.
+
+**Status:** RR-007 Fixed. Phase 5F remains unstarted and must stay limited to RR-022.

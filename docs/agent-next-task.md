@@ -4,34 +4,34 @@ Generated: 2026-06-28
 
 ## Current next task
 
-**Phase 5E complete — decision required before Phase 5F**
+**RR-007 regression cleanup complete - Phase 5F requires explicit instruction**
 
-Phase 5E fixed RR-017, RR-043, and RR-055. The canonical register contains 62 issues:
+The RR-007 follow-up is complete. The canonical register contains 62 issues:
 
 - 6 Critical, 27 High, 24 Medium, 5 Low;
-- 5 Open, 9 Needs Investigation, 47 Fixed, 1 Won't Fix.
+- 5 Open, 8 Needs Investigation, 48 Fixed, 1 Won't Fix.
 
-The shared type layer now rejects the reproduced consumable, appliance, power-station, wall-art, and backup-camera substitutions at discovery and revalidation. Literal provider/merchant identity satisfies plain feature requirements before comparative review prose, without trusting assigned category or generated explanation text.
+The nested Best Buy `pcmcat...c` catalog route is now rejected at both Serper discovery and final product-card validation. The shared rule also recognizes generic department/browse paths and faceted listing parameters while preserving explicit retailer SKU routes and specific manufacturer product pages.
 
-Phase 5E live QA reopened RR-007: `Pressure Washers - Best Buy` reached exact #7 twice. The required shop-vac check remained safe at the final-card boundary, but its customer-service candidate survived citation verification before requirement filtering.
+One focused `pressure washer` live proof returned six exact products and one near product, all with specific product-detail primary URLs. `Pressure Washers - Best Buy` was absent. A Craftsman family page appeared only as a secondary citation behind a valid Craftsman product page and did not become a card.
 
 ## Required next phase
 
-Do not start the next step automatically. The next master-plan step is:
+Do not start the next step automatically. The next master-plan phase is:
 
-**Decision: RR-007 follow-up or Phase 5F**
+**Phase 5F - Citation retention (RR-022 only)**
 
-Recommended: diagnose the exact current Best Buy collection URL/title path in a narrow RR-007 eligibility follow-up before Phase 5F. If that regression is explicitly deferred, the next master-plan phase is Phase 5F for RR-022 citation retention only.
+Phase 5F must reproduce concrete dropped leaders before changing behavior and must not weaken citation or product-card trust gates. Keep RR-013 ranking/citation weighting out of scope.
 
 Do not:
 
-- start Phase 5F or an RR-007 fix without a new explicit instruction;
-- combine RR-007 eligibility with RR-022 citation retention;
-- weaken low-price, exact-budget, installment, citation, product, or identity trust gates;
+- start Phase 5F without a new explicit instruction;
+- combine RR-022 citation retention with RR-013 ranking policy;
+- weaken low-price, exact-budget, installment, citation, product, requirement, or identity trust gates;
 - run another live search or full baseline without approval.
 
 Reference:
 
 - `docs/RR-Issues-Report.md`
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` latest Phase 5E entry
+- `docs/qa-loop-results.md` latest RR-007 regression-cleanup entry

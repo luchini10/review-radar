@@ -13,6 +13,14 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-28
 
+### Codex - RR-007 nested catalog-page regression cleanup
+- Fixed the Phase 5E regression where `Pressure Washers - Best Buy` could render as an exact product card.
+- The shared eligibility layer now rejects nested catalog identifiers such as `pcmcat...c`, generic department/browse routes, and faceted listing parameters unless the URL is a known product-detail shape.
+- Serper no longer treats every Best Buy `/site/` URL as a product; only the supported legacy `.p` and modern `/sku/` detail shapes receive that shortcut.
+- Preserved valid retailer SKU pages, manufacturer product pages, evidence-only citations, Phase 5E product-type behavior, all price/citation/identity trust gates, scoring, and ranking.
+- Fail-first proof reproduced the page in shared eligibility, Serper discovery, and final citation validation. Focused tests passed 177/177; typecheck passed; lint had 0 errors and 3 pre-existing warnings; full tests passed 686/686; eval had no red flags.
+- One focused `pressure washer` live proof returned six exact products plus one near product, all with specific product-page primary URLs. No Best Buy catalog card appeared. RR-007 is Fixed.
+
 ### Codex - Phase 5E product-type and requirement truthfulness
 - Fixed RR-017/RR-043 by extending the shared product-type registry for reproduced pressure-washer consumables/dishwashers, portable power stations, basketball wall art/accessories, backup cameras, and washer/dryer substitutions.
 - Added an identity-versus-broader-evidence distinction so incidental source snippets cannot make a wrong product title pass type matching.

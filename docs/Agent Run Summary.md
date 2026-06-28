@@ -971,3 +971,21 @@ New entries should keep the same format and stay easy to read.
 **Scope:** Eight implementation/test files plus required docs. Generated baselines and live fixtures remain untracked.
 
 **Next recommended step:** Stop. Prefer a narrow RR-007 eligibility diagnostic before Phase 5F; otherwise require an explicit decision to defer it and proceed to RR-022.
+
+## Codex Run - 2026-06-28 RR-007 regression cleanup
+
+**Goal:** Fix only the reopened RR-007 category/listing-page regression before Phase 5F.
+
+**Root cause:** The Phase 5D Best Buy listing rule assumed a shallower `.c` catalog path, while the live page nested `pcmcat1597940389709.c` below department and category segments. Serper separately treated every Best Buy `/site/` path as product detail. The candidate therefore passed discovery and final shared eligibility.
+
+**What changed:** Shared eligibility now recognizes nested catalog identifiers, generic department/browse paths, and faceted-listing parameters while exempting known product-detail URL shapes. Serper's Best Buy shortcut is limited to supported legacy `.p` and modern `/sku/` URLs and its listing diagnostics use the same catalog signal.
+
+**Proof:** Three tests failed before implementation. Focused tests passed 89/89; broader Phase 5E safety tests passed 177/177; typecheck passed; lint had 0 errors and 3 pre-existing warnings; full tests passed 686/686; eval reported no red flags.
+
+**Live validation:** Exactly one `pressure washer` search ran. It returned six exact products and one near product, all with specific product-detail primary URLs. The Best Buy catalog page was absent. A Craftsman collection URL remained only as secondary evidence behind a valid product-detail card.
+
+**Issues:** RR-007 changed from Needs Investigation to Fixed. No new issue ID. Totals: 62 issues; 5 Open, 8 Needs Investigation, 48 Fixed, 1 Won't Fix.
+
+**Scope:** No scoring, ranking, price, citation, product-type, requirement, source-upgrade identity, or UI behavior changed. Generated baselines and live fixtures remain untracked.
+
+**Next recommended step:** Stop. Phase 5F may begin only after explicit instruction and should address RR-022 citation retention only.
