@@ -709,8 +709,8 @@ Phase 5 is executed one approved step at a time. Each step must preserve existin
 - Verification: focused tests 153/153; typecheck passed; lint 0 errors with 3 pre-existing warnings; full tests 665/665; eval red-flag checks clean.
 - Live proof: No ReviewRadar search. One read-only retrieval of the already cited VIOFO source page was used to identify the raw field.
 - Required docs updated: issue register, QA log, next task, change log, run summary, phased handoff, and test memory.
-- Docs committed: Pending.
-- Commit: Pending.
+- Docs committed: Yes.
+- Commit: `be9d9df` (`docs: diagnose RR-062 price extraction`).
 - Result: RR-062 is diagnosed and remains unfixed. A separate narrow fix is recommended before Phase 5D.
 
 ---
