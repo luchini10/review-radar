@@ -583,5 +583,19 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - One live `dog food` run returned 6 exact and 5 near products with only specific primary product URLs. Final saved-fixture reassessment removes two additional wrong-variant citations found during that run; no second live call ran.
 
 **Current boundary**
-- Stop after the RR-007/RR-063 safety mini-phase. Do not start another phase without explicit instruction.
-- Recommended next: Phase 5G for RR-013 only. Do not combine ranking changes with citation retention or product eligibility.
+- RR-013 is Fixed through the Phase 5G bounded product-specific citation-strength adjustment.
+- Phase 5H is next only after explicit instruction.
+
+**Phase 5G - product-specific citation-strength ranking**
+- Scoring now consumes the verified `citation_type` only when `classifyProductEvidenceIdentity` says the citation matches the displayed product.
+- `citationStrengthScore` is capped: one independent editorial source `+6`, multiple independent sources plus retailer corroboration up to `+8`, retailer-only support `+2` to `+4`, and true self-only support `-2`.
+- Generic family/category/editorial pages, conflicting recipe/model citations, unknown specific-product pages, and untyped evidence receive no Phase 5G credit.
+- When typed citations exist, citation-derived source quality, expert mentions, and evidence-strength counts use the same product-specific subset. Hostname shape alone is not independent corroboration.
+- The score affects total and ranked-match scoring but never exact/near eligibility. Retailer-only and self-only products remain eligible.
+- `citationStrengthScore` is visible in debug score breakdowns and `finalSelectionTrace`. `REVIEW_RADAR_CITATION_STRENGTH=off` isolates the Phase 5G delta for A/B measurement.
+- Verification: focused 57/57; broad safety 348/348; full suite 712/712; typecheck clean; lint 0 errors with 3 pre-existing warnings; eval clean.
+- Isolated A/B moved retailer-only Nexgrill from #1 to #2 and independently supported Weber from #2 to #1; the suspicious `$1` product remained near-only. No live search or broad baseline ran.
+
+**Current boundary**
+- Stop after Phase 5G. Do not start another phase without explicit instruction.
+- Recommended next: Phase 5H for RR-056, RR-060, and RR-059 only, using RR-014 as an outcome metric rather than a separate fix.

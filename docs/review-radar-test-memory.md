@@ -774,3 +774,33 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Live call:** Exactly one `dog food` save/replay. Six exact and five near products used only specific primary product URLs. No family/category/editorial/support/manual/documentation card survived. The final post-live refinement was checked by passing the saved fixture through current citation filtering; the Blue Buffalo puppy/oatmeal and unrelated Iams citations were removed.
 
 **Status:** RR-007 and RR-063 Fixed. RR-013 unchanged. Phase 5G remains unstarted.
+
+---
+
+## 2026-06-29 - Phase 5G product-specific citation-strength ranking
+
+**Issue fixed:** RR-013.
+
+**Regression contract:**
+- Rank only already-eligible products; citation strength must never rescue a failed price, type, requirement, page, or identity gate.
+- Use verified `citation_type` only when the citation is `same_product` under the shared evidence-identity classifier.
+- One independent source scores `+6`; multiple independent sources and retailer corroboration cap at `+8`.
+- Retailer-only support scores `+2` to `+4`; safe retailer-only products remain eligible and competitive.
+- A true self-only citation set scores `-2`, not a hard rejection.
+- Generic family/category/editorial evidence, wrong recipes/models, unknown specific-product pages, and untyped citations receive no Phase 5G credit.
+- Typed citation-derived source-quality, expert-mention, and evidence-strength counts use the same product-specific subset.
+- Preserve RR-022 retention, RR-007/RR-008/RR-063 page and identity safety, RR-002/RR-062 price trust, Phase 5E type/requirements, and source-upgrade identity.
+
+**Required examples:** Keep the gas-grill and headphones retailer-versus-independent comparisons, generic dog-food editorial/family negatives, wrong Purina recipe negative, retailer-only positive, self-only bounded penalty, and Phase 5G OFF/ON switch green.
+
+**A/B command:** `node scripts/ab-ranking.mjs --citation-strength`.
+
+**A/B result:** Nexgrill `#1 -> #2`; Weber `#2 -> #1`; suspicious `$1` Weber stayed near-only. Only `REVIEW_RADAR_CITATION_STRENGTH` changed between runs.
+
+**Verification:** Fail-first 3 failures; focused 57/57; broad safety 348/348; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 712/712; eval clean.
+
+**Fixture result:** Gas-grill and cordless-drill snapshots have no independently supported challenger. Running-shoes reassessment credits exact product-specific Saucony/Kayano editorial evidence and withholds credit from generic or wrong-model citations.
+
+**Live calls:** None. No broad baseline.
+
+**Status:** RR-013 Fixed. Phase 5H remains unstarted.

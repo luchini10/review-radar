@@ -2,7 +2,7 @@
 ## Compiled for AI Agent Consumption — Phase 0 through Phase 5F
 
 **Generated:** 2026-06-29
-**Scope:** All phases from initial measurement harness through the RR-007/RR-063 product-evidence safety mini-phase
+**Scope:** All phases from initial measurement harness through Phase 5G
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -19,8 +19,8 @@
 | Medium | 24 |
 | Low | 5 |
 | Open | 5 |
-| Needs Investigation | 7 |
-| Fixed | 50 |
+| Needs Investigation | 6 |
+| Fixed | 51 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -67,6 +67,7 @@
 | Phase 5F dog-food live confirmation | 0 |
 | RR-008 cleanup mini-phase | 1 |
 | RR-007/RR-063 product-evidence safety mini-phase | 0 |
+| Phase 5G — Evidence-strength ranking | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -397,7 +398,7 @@
 | **Phase** | Pre-Phase 0 (Codex baseline) |
 | **Severity** | Medium |
 | **Title** | Thin winner crowd-out — self-cited-only product ranks #1 above independently-sourced alternatives |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** After the product-page citation rescue was added (RR-029), a product with only one citation (its own product page, via the rescue path) can pass citation verification and potentially rank #1. If that product has a verified price and non-weak source consensus, it will crowd out independently-supported alternatives with real editorial or retailer citations. This is the "thin winner" scenario.
 
@@ -420,6 +421,8 @@
 **Phase 4E evidence:** `gas grill` provides the clearest crowd-out example: retailer-only Nexgrill ranked #1 while independently cited Weber Spirit E-210 ranked #3. `cordless drill` similarly placed a retailer-only RYOBI winner above a source-upgraded Makita with stronger market-confidence inputs. Running shoes was the positive control: six of seven finalists carried independent editorial support.
 
 **Phase 4F evidence:** Eight of ten rotating searches had weak or retailer-only winners; most finalist citations were manufacturer/self or retailer-only. Wireless earbuds was the strongest citation result, while dog food had no independently supported finalist and seven citations concentrated on Chewy.
+
+**Phase 5G fix:** Ranking now receives a bounded product-specific citation-strength adjustment only after existing citation verification and product-evidence identity checks. One distinct independent editorial source scores `+6`, additional independent corroboration is capped at `+8`, retailer-only support scores `+2` to `+4`, and a true product-page-self-only citation set scores `-2`. Generic family/category/editorial pages, conflicting recipes/models, unknown specific-product citations, and untyped evidence receive no Phase 5G credit. Typed citation-derived source-quality, expert-mention, and evidence-strength signals use the same identity-safe citation set, so manufacturer or retailer host shape alone no longer impersonates independent corroboration. A fail-first gas-grill case and unrelated headphones case both reproduced retailer-only winners by about one ranked point before the fix and independently supported winners after it. The isolated A/B moved Nexgrill from #1 to #2 and Weber from #2 to #1 while a suspicious `$1` Weber remained near-only. RR-013 is Fixed deterministically; no live search or broad baseline ran.
 
 ---
 
@@ -1921,6 +1924,32 @@ No new issue ID was opened.
 
 ---
 
+### PHASE 5G — EVIDENCE-STRENGTH RANKING (2026-06-29)
+
+No new issue ID was opened.
+
+**Root cause:** Scoring counted citation quantity and non-big-box hostnames, not verified `citation_type` plus same-product identity. A manufacturer self-cite or retailer host outside a short broad-retailer list could receive "independent" source credit, while a real product-specific editorial citation had no dedicated ranking component.
+
+**Behavior result:**
+- Added a capped `citationStrengthScore` to total and ranked-match scoring.
+- Only typed, product-specific citations can earn the adjustment.
+- Generic, conflicting, unknown-specific, and untyped citations cannot improve Phase 5G rank.
+- Product-specific citation identity also scopes citation count, independent-source, expert-mention, and evidence-strength signals when typed citations are present.
+- Retailer evidence remains useful, self-only products remain eligible, and no eligibility or exact/near gate changed.
+
+**Proof:**
+- Fail-first: 3 failures across gas grills, headphones, and identity-safe citation scoring.
+- Focused ranking/trace tests: 57/57.
+- Broad safety matrix: 348/348.
+- Full suite: 712/712.
+- Typecheck passed; lint had 0 errors and 3 pre-existing warnings; eval reported no red flags.
+- Isolated A/B: retailer-only Nexgrill `#1 -> #2`; independently supported Weber `#2 -> #1`; suspicious `$1` product stayed near-only.
+- Saved-fixture reassessment: current gas-grill/cordless-drill fixtures contain no independently supported challenger and cannot prove RR-013; running shoes retained only product-specific independent credit and withheld it from generic or wrong-model editorial citations.
+
+**Issue result:** RR-013 is Fixed. No other issue status changed. No live search or full baseline ran.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (5 issues)
@@ -1930,8 +1959,7 @@ No new issue ID was opened.
 - RR-060: True same-model duplicates can occupy multiple final slots
 - RR-061: Product image metadata accepts non-image or irrelevant assets
 
-### Needs Investigation (7 issues)
-- RR-013: Thin winner crowd-out
+### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
@@ -1939,8 +1967,8 @@ No new issue ID was opened.
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 
-### Fixed (50 issues)
-RR-001 through RR-012, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055, RR-057, RR-058, RR-062, RR-063
+### Fixed (51 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055, RR-057, RR-058, RR-062, RR-063
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -1954,6 +1982,5 @@ RR-001 through RR-012, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 3. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
 4. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
 5. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
-6. **RR-013** (Medium) — Thin/retailer-only winners still outrank stronger evidence.
-7. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
-8. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
+6. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
+7. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.

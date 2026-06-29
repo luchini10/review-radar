@@ -4716,3 +4716,72 @@ The live output exposed two additional RR-063 shapes: the Blue Buffalo adult car
 - Generated baselines and live fixtures remain untracked and uncommitted.
 
 Recommended direction: stop. Phase 5G for RR-013 is next only after explicit instruction; preserve the new primary-link and citation-identity guards.
+
+## <span style="color:green">**Codex QA Update - 2026-06-29 (Phase 5G evidence-strength ranking)**</span>
+
+**Verdict: PASS with no live run. RR-013 is fixed deterministically through an isolated, identity-safe citation-strength ranking adjustment. No eligibility, citation-retention, discovery, or Phase 5H behavior changed.**
+
+### Diagnosis and fail-first proof
+
+- `sourceQualityScore` counted citation quantity and treated any citation host outside a short broad-retailer list as independent.
+- Manufacturer self-cites and retailers such as Home Depot could therefore receive independence credit without an independent editorial source.
+- Verified `citation_type` and the RR-063 product-evidence identity verdict were visible in diagnostics but unused by ranking.
+- Two fail-first comparisons reproduced the defect:
+  - gas grill: retailer-only Nexgrill ranked above independently supported Weber by about 1 ranked point;
+  - headphones: retailer-only StoreSound ranked above independently supported AudioPro by a narrow margin.
+- A third fail-first assertion confirmed there was no product-specific citation-strength scorer.
+
+### Behavior change
+
+- Added `citationStrengthScore` to total scoring, ranked-match scoring, score debug, and `finalSelectionTrace`.
+- Product-specific independent editorial support scores `+6`; additional independent corroboration and one retailer source are capped at `+8`.
+- Retailer-only product support scores `+2` to `+4`.
+- A true product-page-self-only citation set scores `-2`; the product remains eligible.
+- Generic family/category/editorial, conflicting recipe/model, unknown specific-product, and untyped citations receive no Phase 5G credit.
+- When verified citation types are present, citation count, independent-source, expert-mention, and evidence-strength signals use the same product-specific citation set. Host shape alone no longer supplies independence credit.
+- `REVIEW_RADAR_CITATION_STRENGTH=off` disables only this Phase 5G behavior for deterministic A/B comparison. Default behavior is on.
+- No brand, retailer, product, or category boost was added. Exact/near eligibility and every hard trust gate are unchanged.
+
+### Deterministic and A/B proof
+
+```text
+fail-first Phase 5G tests: 3 failures
+focused ranking/trace tests: 57/57 passed
+broad safety matrix: 348/348 passed
+npm run typecheck: passed
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 712/712 passed
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+`node scripts/ab-ranking.mjs --citation-strength` held other ranking flags constant:
+
+- retailer-only Nexgrill: `#1 -> #2`, citation strength `+2`;
+- independently supported Weber: `#2 -> #1`, citation strength `+6`;
+- suspicious `$1` Weber: remained near-only despite independent support;
+- retailer-only products remained ranked when safe;
+- no eligibility set changed.
+
+Ranking-baseline snapshots were deliberately regenerated. Self-only typed products received the bounded negative adjustment without reordering the stable couch scenario. Product-specific RTINGS/CNET support received `+6` while a weak uncorroborated headphone source did not.
+
+### Saved-fixture reassessment
+
+- Current `gas grill` and `cordless drill` fixtures contain no independently supported challenger beneath the winner, so they cannot prove or disprove RR-013 and were not used as a causal success claim.
+- The saved gas-grill finalists remained the same set under OFF/ON reassessment; only lower ordering shifted.
+- In `running shoes`, exact Saucony Ride 19 and ASICS GEL-KAYANO 33 editorial citations received independent credit. Generic best-running-shoes evidence and citations for ASICS Nimbus 27/24 or New Balance 1080v15 did not credit Nimbus 28 or 1080v14.
+- These fixture results confirm product-specific scoping, not live provider quality.
+
+### Live proof
+
+No live search ran. The available saved weak-winner fixtures lacked an independent challenger, while the isolated A/B reproduced the exact ranking defect without provider variance. No broad baseline ran.
+
+### Issue outcome
+
+- RR-013: Fixed.
+- No other issue status changed.
+- No new issue ID opened.
+- Register: 63 issues; 6 Critical, 28 High, 24 Medium, 5 Low; 5 Open, 6 Needs Investigation, 51 Fixed, 1 Won't Fix.
+- Implementation commit: `94c2e06`.
+- Generated baselines and live fixtures remain untracked and uncommitted.
+
+Recommended direction: stop. Phase 5H is next only after explicit instruction and must remain limited to RR-056, RR-060, and RR-059, with RR-014 used only as the outcome metric.

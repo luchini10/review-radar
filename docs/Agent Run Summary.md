@@ -1069,3 +1069,25 @@ New entries should keep the same format and stay easy to read.
 **Scope:** Nine implementation/test files plus required docs. Generated baselines and live fixtures remain untracked. Implementation commit: `01414c1`.
 
 **Next recommended step:** Stop. Phase 5G may start only after explicit instruction and must remain limited to RR-013 evidence-strength ranking.
+
+## Codex Run - 2026-06-29 Phase 5G
+
+**Goal:** Fix only RR-013 by ranking product-specific independent evidence above otherwise comparable retailer-only or self-only evidence without changing eligibility.
+
+**Root cause:** Scoring used citation count and hostname heuristics but ignored verified `citation_type`. Manufacturer self-cites and retailers outside a short broad-retailer list could receive false independence credit, while genuine product-specific editorial support had no dedicated ranking term.
+
+**What changed:** Added a capped `citationStrengthScore`: independent `+6` to `+8`, retailer-only `+2` to `+4`, self-only `-2`. Generic, conflicting, unknown-specific, and untyped citations receive no Phase 5G credit. Typed citation-derived source-quality and evidence signals use the same identity-safe citation set.
+
+**Fail-first and proof:** Gas-grill and headphones cases both selected retailer-only winners before the fix. Focused ranking/trace tests passed 57/57; broad safety passed 348/348; typecheck passed; lint had 0 errors and 3 pre-existing warnings; full tests passed 712/712; eval had no red flags.
+
+**A/B result:** With only Phase 5G toggled, Nexgrill moved #1 to #2 and Weber moved #2 to #1. The suspicious `$1` Weber stayed near-only. Retailer-only products remained eligible and rankable.
+
+**Fixture proof:** Current gas-grill and cordless-drill fixtures lack an independent challenger. Running-shoes reassessment credited exact Saucony/Kayano editorial evidence while withholding credit from generic articles and wrong-model citations.
+
+**Live proof:** None. No live search or broad baseline ran because the deterministic A/B gave cleaner causal proof than a variable provider response.
+
+**Issues:** RR-013 Fixed; no other status changed. Totals: 63 issues; 5 Open, 6 Needs Investigation, 51 Fixed, 1 Won't Fix.
+
+**Scope:** Seven implementation/test/harness files plus required docs. No discovery, citation retention, product identity, page eligibility, price, type, requirement, source-upgrade, or UI behavior changed. Implementation commit: `94c2e06`.
+
+**Next recommended step:** Stop. Phase 5H may begin only after explicit instruction and must remain limited to RR-056, RR-060, and RR-059.

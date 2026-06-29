@@ -13,6 +13,15 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-29
 
+### Codex - Phase 5G product-specific citation-strength ranking
+- Fixed RR-013 with a bounded `citationStrengthScore` that uses verified citation types only when the citation matches the displayed product under the shared evidence-identity guard.
+- Product-specific independent support receives `+6` to `+8`, retailer-only support `+2` to `+4`, and true self-only support `-2`. Generic, conflicting, unknown-specific, and untyped citations receive no Phase 5G credit.
+- Typed citation-derived source quality, expert mentions, and evidence-strength counts now use the same identity-safe citation set; manufacturer or retailer host shape alone no longer impersonates independent corroboration.
+- Added `citationStrengthScore` to score breakdowns and final-selection traces, plus an isolated `REVIEW_RADAR_CITATION_STRENGTH=off` A/B switch.
+- The deterministic gas-grill A/B moved retailer-only Nexgrill from #1 to #2 and independently supported Weber from #2 to #1. A suspicious `$1` product remained near-only.
+- Verification: fail-first 3 failures; focused ranking/trace 57/57; broad safety 348/348; typecheck clean; lint 0 errors with 3 pre-existing warnings; full suite 712/712; eval red-flag checks clean.
+- No live search or broad baseline ran. RR-013 is Fixed; no other issue status changed and Phase 5H did not start.
+
 ### Codex - RR-007/RR-063 product-evidence identity safety
 - Fixed RR-007 by treating generic brand/family/category/collection routes as evidence-only, including numeric-ID slugs such as Chewy `/brands/...-7437`.
 - Product-link selection now requires source-derived same-product identity and no longer lets the generated recommendation name prove an existing primary URL.

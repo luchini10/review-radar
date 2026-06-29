@@ -1129,3 +1129,19 @@ Stop. Do not start Phase 5G or fix RR-007/RR-063 without explicit instruction.
 - Live validation: exactly one `dog food` call. Six exact and five near products remained; every primary URL was a specific product-detail route. No generic family, editorial, support, manual, or documentation page became a card. Final saved-fixture reassessment removes the Blue Buffalo and Iams mismatched citations.
 
 Stop. Do not start Phase 5G without explicit instruction.
+
+### Phase 5G completion record
+
+- Completed step: Phase 5G evidence-strength ranking.
+- Next step: Phase 5H broad-slate diversity and form-factor quality, only after explicit instruction.
+- Diagnostic-only: No. This phase reproduced and fixed RR-013.
+- Stop condition hit: No. The ranking change remained bounded and did not require weakening any trust or eligibility gate.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-013 changed from Needs Investigation to Fixed. No other status changed.
+- Docs committed: Pending this completion record.
+- Implementation commit: `94c2e06`.
+- Verification: fail-first 3 failures; focused ranking/trace 57/57; broad safety 348/348; typecheck passed; lint 0 errors with 3 existing warnings; full suite 712/712; eval clean.
+- A/B: Nexgrill `#1 -> #2`; Weber `#2 -> #1`; suspicious `$1` Weber remained near-only.
+- Live validation: None. Saved weak-winner fixtures lacked an independent challenger, so no provider-variance call was spent. No broad baseline ran.
+
+Stop. Do not start Phase 5H without explicit instruction.
