@@ -1075,9 +1075,9 @@ Stop. The RR-007 cleanup is complete. Do not start Phase 5F without explicit ins
 - Stop condition hit: Bounded live-proof caveat only. The second live call exposed a generic Purina family card; the final deterministic path-binding guard fixed that exact shape, but the two-call cap prevented a post-refinement live recheck.
 - New issue IDs opened: None.
 - Existing issue IDs updated: RR-022 changed from Needs Investigation to Fixed. RR-007 remains Fixed with an added family-page regression. RR-013 remains Needs Investigation and unchanged.
-- Docs committed: Pending documentation commit.
+- Docs committed: Yes.
 - Implementation commit: `dc0f403`.
-- Documentation commit: Pending.
+- Documentation commit: `b3e78fe`.
 - Verification: fail-first 3 failures; focused 69/69; broad safety 282/282; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 690/690; eval clean.
 - Live validation: exactly two calls - `electric toothbrush` and `dog food`. The first had 28/28 citation retention. The second exposed the final safety refinement; no third call or full baseline ran.
 
