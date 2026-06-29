@@ -1091,8 +1091,8 @@ Stop. Phase 5F is complete. Do not start Phase 5G without explicit instruction.
 - Stop condition hit: Yes. A BK Pets Substack editorial article became exact card #5, so the run stopped without a code fix or Phase 5G work.
 - New issue IDs opened: None. The finding is a recurrence of RR-008.
 - Existing issue IDs updated: RR-022 remains Fixed and is now live-confirmed for dog-food citation retention; RR-007 remains Fixed; RR-008 changed from Fixed to Needs Investigation; RR-013 remains unchanged.
-- Docs committed: Pending this record's documentation-only commit.
-- Commit hash: Pending.
+- Docs committed: Yes.
+- Documentation commit: `826b9c9`.
 - Verification: focused eligibility/citation/API tests 60/60; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 690/690; eval clean.
 - Live validation: one `dog food` call. Six specific Purina/Hill's candidates survived citation verification; the generic Purina family card did not recur. The final slate contained seven exact and zero near products, including one unsafe editorial article card.
 
