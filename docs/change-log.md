@@ -11,6 +11,18 @@ Update this file after:
 
 Do not update this file for tiny typo fixes, formatting-only edits, or internal cleanup that does not change behavior.
 
+## 2026-06-29
+
+### Codex - RR-007/RR-063 product-evidence identity safety
+- Fixed RR-007 by treating generic brand/family/category/collection routes as evidence-only, including numeric-ID slugs such as Chewy `/brands/...-7437`.
+- Product-link selection now requires source-derived same-product identity and no longer lets the generated recommendation name prove an existing primary URL.
+- Unsafe stale primary URLs are cleared immediately after citation filtering, before page enrichment or asset extraction can consume them.
+- Fixed RR-063 with a shared product-evidence identity verdict. Explicit recipe, flavor, life-stage, recipe-base, supplement-flavor, cosmetic-shade, and model conflicts are removed; unknown specific-product citations are also rejected.
+- Exact product pages, safe package-size variants, and secondary generic/editorial evidence remain supported. RR-022 citation retention remains green.
+- Verification: fail-first 8 failures plus missing module; focused 84/84; broad safety 295/295; typecheck clean; lint 0 errors with 3 pre-existing warnings; full suite 706/706; eval red-flag checks clean.
+- Exactly one `dog food` live call returned 6 exact and 5 near products, all with specific primary URLs and no family/editorial/support/documentation cards. Two additional citation mismatches from that run were removed by the final code when the saved fixture was reassessed; no second live call ran.
+- RR-007 and RR-063 are Fixed. RR-013 and Phase 5G were not changed.
+
 ## 2026-06-28
 
 ### Codex - RR-008 article-card eligibility cleanup

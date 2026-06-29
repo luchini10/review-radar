@@ -750,3 +750,27 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Adjacent findings:** Chewy `/brands/` family slugs with numeric IDs still pass the generic product-detail fallback (reopened RR-007). Same-brand citations can refer to different recipes (RR-063). Preserve the RR-008 fix while addressing those separately.
 
 **Status:** RR-008 Fixed. Stop before Phase 5G pending explicit direction on RR-007/RR-063.
+
+---
+
+## 2026-06-29 - RR-007/RR-063 product-evidence identity safety
+
+**Issues fixed:** RR-007 and RR-063.
+
+**Regression contract:**
+- Generic `/brand`, `/brands`, `/family`, `/category`, and `/collection` routes cannot become primary product-card URLs, including final slugs with numeric catalog IDs.
+- Do not use the generated recommendation name as source evidence for an existing primary URL.
+- Primary links need source-derived same-product identity; unsafe stale links must be cleared before page enrichment.
+- Specific product-page citations with conflicting models, food recipes/proteins, flavors, life stages, recipe bases, supplement flavors, or cosmetic shades must be removed.
+- A product-page citation with unknown same-product identity cannot support the card.
+- Exact same-product pages and safe package-size variants remain valid.
+- Generic family/editorial pages may remain secondary evidence but cannot become the card URL.
+- Preserve RR-022 retention, RR-008 editorial blocking, RR-007/RR-009 page negatives, RR-002/RR-062 price trust, Phase 5E type/requirements, and source-upgrade identity safety.
+
+**Required examples:** Keep Chewy and unrelated retailer family routes negative; specific Chewy `/dp/`, Walmart `/ip/`, retailer `/product/`, and manufacturer detail pages positive. Keep Purina Salmon versus Beef/Rice, Hill's Chicken versus Salmon, JustFoodForDogs Chicken/Rice versus Fish/Sweet Potato, Blue Buffalo Adult Chicken/Rice versus Puppy Chicken/Oatmeal, Iams Lamb/Rice versus Small/Toy, and Samsung QN90D versus QN85D negative. Keep exact products and package-size variants positive.
+
+**Verification:** Fail-first 8 failures plus missing module; focused 84/84; broad safety 295/295; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 706/706; eval clean.
+
+**Live call:** Exactly one `dog food` save/replay. Six exact and five near products used only specific primary product URLs. No family/category/editorial/support/manual/documentation card survived. The final post-live refinement was checked by passing the saved fixture through current citation filtering; the Blue Buffalo puppy/oatmeal and unrelated Iams citations were removed.
+
+**Status:** RR-007 and RR-063 Fixed. RR-013 unchanged. Phase 5G remains unstarted.

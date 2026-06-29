@@ -570,5 +570,18 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - The same run reopened RR-007 for Chewy `/brands/` family pages used as primary card URLs and opened RR-063 for same-brand wrong-recipe citations. Those issues were not fixed.
 
 **Current boundary**
-- Stop after the RR-008 cleanup. Do not start another phase without explicit instruction.
-- Recommended next: address RR-007/RR-063 product-card and citation-identity safety. Phase 5G for RR-013 remains queued behind that decision.
+- RR-007 and RR-063 are Fixed. Generic brand/family/category routes cannot become primary links, and product-specific citations must agree with the displayed product identity.
+- Phase 5G for RR-013 is next only after explicit instruction.
+
+**RR-007/RR-063 product-evidence identity safety**
+- `lib/productEvidenceIdentity.ts` provides a shared `same_product` / `generic_evidence` / `conflicting_product` / `unknown` verdict for product links and citations.
+- Generic brand, family, category, and collection URLs are secondary evidence only, even when their final slug includes a numeric catalog identifier.
+- Primary product links require source-derived identity. The generated recommendation name is not evidence for an existing `product_page_url`, and an unsafe stale primary URL is cleared before product-page enrichment and asset extraction.
+- Citation filtering removes explicit model, recipe, flavor, life-stage, recipe-base, supplement-flavor, and cosmetic-shade conflicts. A specific product-page citation with unknown same-product identity is also removed.
+- Exact same-product pages and safe package-size variants remain valid. Generic family/editorial evidence may remain secondary, preserving RR-022 retention without letting weak evidence become a product card.
+- Verification: focused 84/84; broad safety 295/295; full suite 706/706; typecheck clean; lint 0 errors with 3 pre-existing warnings; eval clean.
+- One live `dog food` run returned 6 exact and 5 near products with only specific primary product URLs. Final saved-fixture reassessment removes two additional wrong-variant citations found during that run; no second live call ran.
+
+**Current boundary**
+- Stop after the RR-007/RR-063 safety mini-phase. Do not start another phase without explicit instruction.
+- Recommended next: Phase 5G for RR-013 only. Do not combine ranking changes with citation retention or product eligibility.

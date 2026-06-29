@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
 ## Compiled for AI Agent Consumption — Phase 0 through Phase 5F
 
-**Generated:** 2026-06-28
-**Scope:** All phases from initial measurement harness through Phase 5F
+**Generated:** 2026-06-29
+**Scope:** All phases from initial measurement harness through the RR-007/RR-063 product-evidence safety mini-phase
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -19,8 +19,8 @@
 | Medium | 24 |
 | Low | 5 |
 | Open | 5 |
-| Needs Investigation | 9 |
-| Fixed | 48 |
+| Needs Investigation | 7 |
+| Fixed | 50 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -66,6 +66,7 @@
 | Phase 5F — Citation retention | 0 |
 | Phase 5F dog-food live confirmation | 0 |
 | RR-008 cleanup mini-phase | 1 |
+| RR-007/RR-063 product-evidence safety mini-phase | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -228,7 +229,7 @@
 | **Phase** | Pre-Phase 0 (Codex baseline) |
 | **Severity** | High |
 | **Title** | eBay browse/category pages appearing as exact product matches |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** eBay browse and category pages (URLs matching `/t/`, `/b/`, `/sch/` patterns) were passing the product eligibility check and appearing as exact product recommendations. These are listing pages, not individual product pages.
 
@@ -257,6 +258,8 @@
 **Phase 5F safety update:** The first `dog food` live proof after citation retention exposed `Pro Plan Wet & Dry Dog Food | Purina US` at exact #7 from the generic family URL `/pro-plan/products/dog-food`. Phase 5F added a retention-layer product-specific path/title gate: generic category slugs cannot become primary cards even when provider-verified, while exact product slugs remain eligible after reachability verification. The exact family negative and specific Purina/Hill's positives are deterministic regressions. RR-007 remains Fixed; the final guard was not re-run live because the approved two-call Phase 5F limit was exhausted.
 
 **RR-008 cleanup live regression:** Reopened. Three final dog-food cards used generic Chewy family/brand URLs as their primary buy links: `/brands/purina-pro-plan-dog-food-7437`, `/brands/royal-canin-dog-food-150798`, and `/brands/fresh-frozen-16636`. The shared fallback treats a long final slug containing letters and digits as product detail, so these category identifiers bypass current listing checks. A Pedigree `/brands/complete-nutrition-7216` page also survived as the primary citation ahead of a specific `/dp/` product page. This is a generalized `/brands/` and `/f/` listing-shape gap, not an RR-008 article regression.
+
+**Product-evidence safety resolution:** Fixed. Shared eligibility now recognizes retailer/manufacturer brand, family, category, and collection route segments as generic evidence even when the final slug includes a numeric catalog ID. Product-link selection requires source-derived same-product identity and no longer treats the generated card name as proof for an existing primary URL. Generic family URLs can remain secondary evidence, but cannot become a card URL or buy link; an unsafe stale primary URL is cleared before asset enrichment. In the single fresh `dog food` run, all eleven final cards used specific `/dp/`, `/ip/`, or `/product/` URLs and no `/brands/` or `/f/` route became primary. Deterministic tests cover Chewy and unrelated retailer family routes while preserving specific retailer and manufacturer detail pages.
 
 ---
 
@@ -1873,7 +1876,7 @@ Phase 5C fixed RR-002 after fail-first reproduction and ran three approved focus
 | **Phase** | RR-008 cleanup mini-phase |
 | **Severity** | High |
 | **Title** | Same-brand wrong-recipe citations can support specific product cards |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** The post-RR-008 `dog food` live proof returned specific cards with citations for different recipes or variants from the same brand. The Purina Sensitive Skin & Stomach Salmon card cited a Complete Essentials Beef & Rice product; the JustFoodForDogs Chicken & Rice card cited Fish & Sweet Potato; and the Hill's Perfect Digestion Chicken card included a Salmon recipe citation.
 
@@ -1885,9 +1888,36 @@ Phase 5C fixed RR-002 after fail-first reproduction and ran three approved focus
 
 **Actual:** Same-brand but different-recipe product pages survive as retailer citations for the target product. In one case the mismatched recipe is the primary citation even though the card names a different recipe.
 
-**Current status:** Needs Investigation. No citation-identity behavior changed in the RR-008 cleanup.
+**Current status:** Fixed. Citation verification now uses a shared product-evidence identity verdict. Specific product-page citations with explicit model, recipe, flavor, life-stage, recipe-base, supplement-flavor, or cosmetic-shade conflicts are removed. Product-page citations whose identity cannot be tied to the displayed product are also removed. Exact same-product pages and package-size variants remain valid; generic family/editorial evidence may remain secondary only.
 
-**Suggested fix or next action:** Diagnose where citations are merged or prioritized without same-product identity checks. Apply source-derived identity binding before a citation can become product-specific evidence; preserve generic editorial/category evidence as secondary only and do not weaken RR-022 retention.
+**Suggested fix or next action:** Keep the RR-063 identity matrix green during later citation/ranking work. The one fresh `dog food` run initially exposed two additional shapes: Blue Buffalo Adult Chicken/Brown Rice carried a Small Breed Puppy Chicken/Oatmeal citation, and Iams Adult Lamb/Rice carried an unrelated Small & Toy Breeds citation. The final deterministic refinement rejects both when the saved fixture is reassessed, but the one-call cap prevented a second live request. RR-022 retention remains green for exact product pages.
+
+---
+
+### RR-007/RR-063 PRODUCT-EVIDENCE SAFETY MINI-PHASE (2026-06-29)
+
+No new issue ID was opened.
+
+**Root causes:**
+- Generic `/brand(s)/`, `/family`, `/category`, and `/collection` routes with letter-plus-digit slugs could satisfy the fallback product-path heuristic.
+- Product-link selection evaluated an existing `product_page_url` with the generated card name as its source title, allowing self-derived text to manufacture identity.
+- Citation verification proved reachability and page eligibility but did not require product-specific evidence to match the displayed recipe, flavor, formula, life stage, shade, or model.
+
+**Behavior result:**
+- Generic family routes are evidence-only and cannot become primary product URLs.
+- Primary product links require source-derived same-product identity. Unsafe stale links are cleared immediately after citation filtering, before page enrichment can use them.
+- Explicit variant/model conflicts and unknown specific-product citations are removed, while exact product pages and safe package-size variants remain.
+- RR-022 retention is preserved: exact product pages still survive, and generic family/editorial material may remain secondary.
+
+**Proof:**
+- Fail-first focused run: 8 failures plus the absent shared identity module.
+- Focused final run: 84/84.
+- Broad safety matrix: 295/295.
+- Full suite: 706/706.
+- Typecheck passed; lint had 0 errors and 3 pre-existing warnings; eval reported no red flags.
+- Exactly one `dog food` live call ran. It returned 6 exact and 5 near products, all with specific primary product URLs and no editorial/support/manual/documentation card. The saved fixture reassessed through the final rules removes the two post-live citation mismatches without another API call.
+
+**Issue result:** RR-007 and RR-063 are Fixed. RR-008 and RR-022 remain Fixed. RR-013 and Phase 5G were not changed.
 
 ---
 
@@ -1900,8 +1930,7 @@ Phase 5C fixed RR-002 after fail-first reproduction and ran three approved focus
 - RR-060: True same-model duplicates can occupy multiple final slots
 - RR-061: Product image metadata accepts non-image or irrelevant assets
 
-### Needs Investigation (9 issues)
-- RR-007: Generic category/listing pages can still pass through unrecognized retailer route shapes
+### Needs Investigation (7 issues)
 - RR-013: Thin winner crowd-out
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
@@ -1909,10 +1938,9 @@ Phase 5C fixed RR-002 after fail-first reproduction and ran three approved focus
 - RR-041: Source-upgrade trigger not firing in Phase 3J live runs
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-- RR-063: Same-brand wrong-recipe citations can support specific product cards
 
-### Fixed (48 issues)
-RR-001 through RR-006, RR-008 through RR-012, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055, RR-057, RR-058, RR-062
+### Fixed (50 issues)
+RR-001 through RR-012, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055, RR-057, RR-058, RR-062, RR-063
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -1921,12 +1949,11 @@ RR-001 through RR-006, RR-008 through RR-012, RR-016 through RR-023, RR-025 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-007 + RR-063** (High trust cluster) — Block remaining generic retailer family routes and bind product-specific citations to the same recipe/model before ranking changes.
-2. **RR-014 + RR-056 + RR-060** (High/Medium quality cluster) — Leader recall, family concentration, and true duplicates jointly degrade broad slates.
-3. **RR-059** (Medium) — Broad-query form-factor handling lets niche products outrank mainstream products.
-4. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
-5. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
-6. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
-7. **RR-013** (Medium) — Thin/retailer-only winners still outrank stronger evidence.
-8. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
-9. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
+1. **RR-014 + RR-056 + RR-060** (High/Medium quality cluster) — Leader recall, family concentration, and true duplicates jointly degrade broad slates.
+2. **RR-059** (Medium) — Broad-query form-factor handling lets niche products outrank mainstream products.
+3. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
+4. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
+5. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
+6. **RR-013** (Medium) — Thin/retailer-only winners still outrank stronger evidence.
+7. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
+8. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.

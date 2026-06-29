@@ -1113,3 +1113,18 @@ Stop. Do not start Phase 5G until RR-008 is explicitly addressed or deferred.
 - Live validation: exactly one `dog food` call. BK Pets/Substack/editorial cards were absent. Seven exact products and zero near products remained. RR-007/RR-063 findings prevented a fully clean live verdict.
 
 Stop. Do not start Phase 5G or fix RR-007/RR-063 without explicit instruction.
+
+### RR-007/RR-063 product-evidence safety completion record
+
+- Completed step: Narrow primary product-link and citation-identity safety mini-phase.
+- Next step: Phase 5G evidence-strength ranking for RR-013 only, after explicit instruction.
+- Diagnostic-only: No. This phase reproduced and fixed RR-007 and RR-063.
+- Stop condition hit: Bounded live-proof caveat only. The one live call exposed two additional RR-063 variants; the final deterministic refinement was reassessed against the saved fixture without a second live call.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-007 and RR-063 changed from Needs Investigation to Fixed. RR-008 and RR-022 remain Fixed. RR-013 remains unchanged.
+- Docs committed: Pending this completion record.
+- Implementation commit: `01414c1`.
+- Verification: fail-first 8 failures plus missing module; focused 84/84; broad safety 295/295; typecheck passed; lint 0 errors with 3 existing warnings; full suite 706/706; eval clean.
+- Live validation: exactly one `dog food` call. Six exact and five near products remained; every primary URL was a specific product-detail route. No generic family, editorial, support, manual, or documentation page became a card. Final saved-fixture reassessment removes the Blue Buffalo and Iams mismatched citations.
+
+Stop. Do not start Phase 5G without explicit instruction.

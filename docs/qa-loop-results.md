@@ -4656,3 +4656,63 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - Fresh live fixtures remain untracked and uncommitted.
 
 Recommended direction: stop before Phase 5G. Address the RR-007/RR-063 product-card and citation-identity safety cluster first, after explicit instruction.
+
+## <span style="color:green">**Codex QA Update - 2026-06-29 (RR-007/RR-063 product-evidence safety)**</span>
+
+**Verdict: PASS with a bounded post-live refinement caveat. RR-007 and RR-063 are fixed, RR-022 retention remains intact, and Phase 5G/RR-013 were not changed.**
+
+### Diagnosis
+
+- Chewy `/brands/...-7437` family URLs passed shared eligibility because `/brands/` was not a generic-listing route and a long letter-plus-digit final slug satisfied the fallback product-detail heuristic.
+- Product-link selection classified an existing `product_page_url` with the generated recommendation name as `sourceTitle`, so self-derived text could falsely prove product identity.
+- Citation verification checked URL verification and page eligibility but did not bind a specific citation to the card's recipe, flavor, formula, life stage, shade, or model.
+- Product assets could consume an unsafe stale primary URL before final URL prioritization.
+
+### Behavior change
+
+- Added a shared product-evidence identity verdict: `same_product`, `generic_evidence`, `conflicting_product`, or `unknown`.
+- Generic brand/family/category/collection routes remain usable as secondary evidence but cannot become a primary card URL or buy link.
+- Primary product links require source-derived identity. Existing URLs are no longer allowed to borrow the generated card name as source proof.
+- Specific product citations with explicit recipe, flavor, life-stage, recipe-base, supplement-flavor, cosmetic-shade, or model conflicts are removed.
+- A specific product-page citation with unknown same-product identity is removed; exact same-product pages and safe package-size variants remain valid.
+- Primary URLs are sanitized immediately after citation filtering, before product-page enrichment or asset extraction.
+- No scoring, ranking, RR-013 weighting, price trust, product type, requirement logic, source-upgrade identity, or UI behavior changed.
+
+### Deterministic proof
+
+```text
+fail-first focused run: 8 failures plus missing shared identity module
+focused final run: 84/84 passed
+broad safety matrix: 295/295 passed
+npm run typecheck: passed
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 706/706 passed
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+The matrix keeps RR-007/RR-008/RR-009 page rules, RR-022 citation retention, RR-002/RR-062 price trust, Phase 5E type/requirement behavior, and Phase 5A/5B source-upgrade safety green.
+
+### Single live dog-food proof
+
+- Exactly one approved `dog food` call ran; no broad baseline or second live call ran.
+- Funnel: 15 candidates, 11 after citation verification, 11 after requirement filtering, 6 exact, 5 near.
+- Exact products: Blue Buffalo Adult Chicken/Brown Rice; Pedigree Adult Steak/Vegetable; Pedigree Choice Cuts Country Stew/Chicken/Rice; Nature's Recipe Lamb/Barley/Brown Rice; Wellness Duck/Oatmeal; Pedigree Steak/Vegetable.
+- Near products: Purina Pro Plan Beef/Rice; Pedigree Grilled Steak/Vegetable; Pedigree Roasted Chicken/Vegetable; Iams Adult Lamb/Rice; Purina Dog Chow Lamb/Turkey.
+- All eleven primary URLs were specific Chewy `/dp/`, Walmart `/ip/`, or Petco `/product/` pages. No Chewy `/brands/` or generic `/f/` page became primary.
+- No editorial, blog, support, manual, documentation, category, or collection page became a final card.
+- A generic Purina family page remained secondary evidence behind a specific Purina `/dp/` page, which is intended.
+
+The live output exposed two additional RR-063 shapes: the Blue Buffalo adult card carried a puppy/oatmeal citation, and Iams Lamb/Rice carried a Small & Toy Breeds citation. The final deterministic refinement added life-stage and recipe-base conflicts and rejects unknown specific-product citations. Reassessing the saved live fixture through final code removes both citations while retaining every exact primary product citation. The one-call cap was honored, so this final refinement is saved-fixture/deterministic proof rather than a second live proof.
+
+### Issue outcome
+
+- RR-007: Fixed.
+- RR-063: Fixed, with the post-live refinement caveat above.
+- RR-008 and RR-022: remain Fixed.
+- RR-013: unchanged; Phase 5G did not start.
+- No new issue ID opened.
+- Register: 63 issues; 6 Critical, 28 High, 24 Medium, 5 Low; 5 Open, 7 Needs Investigation, 50 Fixed, 1 Won't Fix.
+- Implementation commit: `01414c1`.
+- Generated baselines and live fixtures remain untracked and uncommitted.
+
+Recommended direction: stop. Phase 5G for RR-013 is next only after explicit instruction; preserve the new primary-link and citation-identity guards.

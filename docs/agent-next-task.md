@@ -1,33 +1,33 @@
 # Agent Next Task
 
-Generated: 2026-06-28
+Generated: 2026-06-29
 
 ## Current next task
 
-**RR-008 cleanup complete - RR-007/RR-063 safety work requires explicit instruction**
+**RR-007/RR-063 safety cleanup complete - Phase 5G requires explicit instruction**
 
-RR-008 is fixed. Shared eligibility blocks editorial-question titles and hosted publishing pages without broadly invalidating legitimate commerce/manufacturer `/p/` routes. The canonical register contains 63 issues:
+RR-007 and RR-063 are fixed. Generic brand/family/category routes cannot become primary product links, and specific product citations must agree with the displayed product identity. The canonical register contains 63 issues:
 
 - 6 Critical, 28 High, 24 Medium, 5 Low;
-- 5 Open, 9 Needs Investigation, 48 Fixed, 1 Won't Fix.
+- 5 Open, 7 Needs Investigation, 50 Fixed, 1 Won't Fix.
 
-Citation verification now checks product-specific LLM product pages for reachability even when other provider URLs are already verified. Exactly verified product pages become primary citations, while editorial, category, and other evidence remains secondary. Product-specific path/title binding prevents generic family pages, support, manuals, documentation, and unrelated self-cites from using this retention path.
+Citation verification now separates primary product proof from secondary evidence. Primary links need source-derived same-product identity. Explicit wrong recipe, flavor, life stage, formula, shade, or model citations are removed, as are specific product pages whose identity cannot be tied to the card. Generic family/editorial evidence may remain secondary but cannot become the primary URL.
 
-The single post-fix `dog food` run contained no BK Pets, Substack, newsletter, blog, or editorial final card. Purina and Hill's candidates survived citation verification and reached the final slate, so RR-022 remains Fixed.
+The single `dog food` run returned 6 exact and 5 near products with only specific product-detail primary URLs. No family, editorial, support, manual, or documentation page became a card. Two additional citation mismatches found in that run were covered by a final deterministic refinement and confirmed by saved-fixture reassessment without another live call.
 
-That run exposed two separate safety defects. RR-007 reopened because Chewy `/brands/...` family pages became primary card URLs. RR-063 opened because same-brand citations for different recipes were attached to specific cards. Neither was fixed during the RR-008 phase.
+RR-008 and RR-022 remain Fixed. RR-013 scoring/ranking behavior was not changed.
 
 ## Required next phase
 
 Do not start the next step automatically. The next master-plan phase is:
 
-**Decision required: RR-007/RR-063 product-card and citation-identity safety**
+**Phase 5G - evidence-strength ranking (RR-013 only)**
 
-Prefer safety work before ranking: contain remaining generic retailer family routes and require product-specific citations to match the target recipe/model. Preserve category/editorial evidence as secondary only, valid retailer/manufacturer product pages, and all RR-022 retention behavior. Phase 5G remains queued behind an explicit decision on these defects.
+Phase 5G may begin only after explicit instruction. Keep it isolated to the bounded RR-013 citation-strength ranking change in the master plan. Preserve the new product-evidence identity gate and all earlier page, price, type, requirement, citation-retention, and source-upgrade protections.
 
 Do not:
 
-- start RR-007/RR-063 work or Phase 5G without a new explicit instruction;
+- start Phase 5G without a new explicit instruction;
 - combine RR-013 ranking policy with citation retention or product eligibility;
 - weaken price, citation, product, requirement, product-type, or identity trust gates;
 - run another live search or full baseline without approval.

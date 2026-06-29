@@ -1049,3 +1049,23 @@ New entries should keep the same format and stay easy to read.
 **Implementation commit:** `98b695a`.
 
 **Next recommended step:** Stop before Phase 5G. Address the RR-007/RR-063 safety cluster only after explicit instruction.
+
+## Codex Run - 2026-06-29 RR-007/RR-063 product-evidence safety
+
+**Goal:** Fix generic family pages becoming primary product links and wrong-variant citations supporting specific product cards, without touching RR-013 or Phase 5G.
+
+**Root causes:** Generic brand/family routes with numeric slugs passed the fallback product-path heuristic. Product-link selection let the generated card name act as source evidence for an existing URL. Citation verification checked reachability/page shape but not product-specific recipe/model identity.
+
+**What changed:** Added a shared product-evidence identity verdict. Generic family/category routes are secondary-only; primary links require source-derived same-product identity; explicit recipe, flavor, life-stage, recipe-base, supplement-flavor, cosmetic-shade, and model conflicts are removed; unknown specific-product citations are rejected. Unsafe stale primary URLs are cleared before enrichment.
+
+**Proof:** Fail-first produced 8 failures plus the missing identity module. Focused tests passed 84/84, broad safety tests 295/295, typecheck passed, lint had 0 errors and 3 pre-existing warnings, full tests passed 706/706, and eval had no red flags.
+
+**Live result:** Exactly one `dog food` search ran. It returned 6 exact and 5 near products, all with specific `/dp/`, `/ip/`, or `/product/` primary URLs. No family, category, editorial, support, manual, or documentation page became a card. A generic Purina family page remained secondary only.
+
+**Post-live refinement:** The run exposed a Blue Buffalo adult-versus-puppy/oatmeal citation and an unrelated Iams formula. Final deterministic rules remove both when the saved fixture is reassessed. No second live call ran.
+
+**Issues:** RR-007 and RR-063 Fixed; RR-008 and RR-022 remain Fixed; RR-013 unchanged. Totals: 63 issues; 5 Open, 7 Needs Investigation, 50 Fixed, 1 Won't Fix.
+
+**Scope:** Nine implementation/test files plus required docs. Generated baselines and live fixtures remain untracked. Implementation commit: `01414c1`.
+
+**Next recommended step:** Stop. Phase 5G may start only after explicit instruction and must remain limited to RR-013 evidence-strength ranking.
