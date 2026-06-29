@@ -132,6 +132,7 @@ export type FinalSelectionTraceEntry = {
   totalScore: number | null;
   requirementFitScore: number | null;
   sourceQualityScore: number | null;
+  citationStrengthScore: number | null;
   priceValueScore: number | null;
   missingDataPenalty: number | null;
   marketConfidenceTier: string | null;

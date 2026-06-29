@@ -393,6 +393,10 @@ describe("final-selection trace", () => {
     // Scored candidates should have numeric score fields.
     assert.ok(typeof entry.totalScore === "number", "totalScore should be a number for exactScored");
     assert.ok(typeof entry.rankedMatchScore === "number", "rankedMatchScore should be a number");
+    assert.ok(
+      typeof entry.citationStrengthScore === "number",
+      "citationStrengthScore should be a number",
+    );
   });
 
   it("citation counts reflect actual citation list", () => {

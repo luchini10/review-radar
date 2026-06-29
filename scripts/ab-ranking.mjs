@@ -1,9 +1,8 @@
-// Deterministic A/B: scores ONE fixed candidate set with the new-pipeline flags
-// OFF then ON, so the difference is purely the flags (no live re-fetch). The
-// fixture mirrors the real "gas grill, propane, under $700" results, including
-// the broken $1 / $100 prices, so it also shows the always-on price floor.
+// Deterministic A/B: scores one fixed candidate set without live re-fetching.
+// Pass --citation-strength to hold the legacy flags constant and isolate only
+// the Phase 5G product-specific citation-strength ranking adjustment.
 //
-//   node scripts/ab-ranking.mjs
+//   node scripts/ab-ranking.mjs --citation-strength
 
 import {
   recommendationScoringTestExports,
@@ -17,8 +16,16 @@ const FLAGS = [
   "REVIEW_RADAR_CREDIBILITY_PENALTY",
   "REVIEW_RADAR_SPEC_SEARCH",
 ];
+const CITATION_STRENGTH_FLAG = "REVIEW_RADAR_CITATION_STRENGTH";
+const citationStrengthMode = process.argv.includes("--citation-strength");
 
 function setFlags(on) {
+  if (citationStrengthMode) {
+    for (const flag of FLAGS) process.env[flag] = "on";
+    process.env[CITATION_STRENGTH_FLAG] = on ? "on" : "off";
+    return;
+  }
+
   for (const flag of FLAGS) {
     if (on) process.env[flag] = "on";
     else delete process.env[flag];
@@ -77,43 +84,64 @@ function grill(name, o) {
   };
 }
 
-const editorial = (title, host) => ({
-  title,
+const editorial = (productName, title, host) => ({
+  citation_type: "independent-editorial",
+  title: `${title}: ${productName}`,
   url: `https://${host}/best-gas-grills`,
   what_it_supports: "Hands-on tested performance.",
 });
-const retailer = (host) => ({
-  title: "Product page",
+const productSource = (productName, host) => ({
+  citation_type: /samsclub|homedepot/i.test(host)
+    ? "retailer-marketplace"
+    : "weak-uncorroborated",
+  title: `${productName} product page`,
   url: `https://${host}/product`,
   what_it_supports: "Specs and price.",
 });
 
+const weberE310 = "Weber Spirit E-310 Gas Grill (Liquid Propane)";
+const membersMark5 = "Member's Mark 5-Burner Propane Gas Grill";
+const membersMark4 = "Member's Mark Pro 4-Burner Gas Grill (Propane)";
+const charBroil = "Char-Broil Performance 4-Burner Gas Grill (Propane)";
+const nexgrill = "Nexgrill 3-Burner Liquid Propane Gas Grill";
+const weberE315 = "Weber Spirit II E-315 Gas Grill (Liquid Propane)";
+
 const candidates = [
-  grill("Weber Spirit E-310 Gas Grill (Liquid Propane)", {
+  grill(weberE310, {
     host: "weber.com", brand: "Weber", offer: 449, priceText: "$449", consensus: "Mixed",
-    rating: 4.6, reviews: 1500,
-    cites: [retailer("weber.com"), editorial("Wirecutter: best gas grills", "wirecutter.com"), editorial("RTINGS gas grill test", "rtings.com")],
+    rating: 4.6, reviews: 1100,
+    cites: [
+      editorial(weberE310, "Wirecutter: best gas grills", "wirecutter.com"),
+    ],
   }),
-  grill("Member's Mark 5-Burner Propane Gas Grill", {
+  grill(membersMark5, {
     host: "samsclub.com", brand: "Member's Mark", offer: 349, priceText: "$349", consensus: "Weak",
-    rating: null, reviews: 40, cites: [retailer("samsclub.com")],
+    rating: null, reviews: 40, cites: [productSource(membersMark5, "samsclub.com")],
   }),
-  grill("Member's Mark Pro 4-Burner Gas Grill (Propane)", {
+  grill(membersMark4, {
     host: "samsclub.com", brand: "Member's Mark", offer: 499, priceText: "$499", consensus: "Weak",
-    rating: null, reviews: 25, cites: [retailer("samsclub.com")],
+    rating: null, reviews: 25, cites: [productSource(membersMark4, "samsclub.com")],
   }),
-  grill("Char-Broil Performance 4-Burner Gas Grill (Propane)", {
+  grill(charBroil, {
     host: "charbroil.com", brand: "Char-Broil", offer: 249, priceText: "$249", consensus: "Mixed",
-    rating: 4.3, reviews: 300, cites: [retailer("charbroil.com"), retailer("homedepot.com")],
+    rating: 4.3, reviews: 300,
+    cites: [
+      productSource(charBroil, "charbroil.com"),
+      productSource(charBroil, "homedepot.com"),
+    ],
   }),
-  grill("Nexgrill 3-Burner Liquid Propane Gas Grill", {
-    host: "nexgrill.com", brand: "Nexgrill", offer: 199, priceText: "$199", consensus: "Weak",
-    rating: 4.0, reviews: 30, cites: [retailer("nexgrill.com")],
+  grill(nexgrill, {
+    host: "homedepot.com", brand: "Nexgrill", offer: 399, priceText: "$399", consensus: "Strong",
+    rating: 4.7, reviews: 1400, cites: [productSource(nexgrill, "homedepot.com")],
   }),
-  // Broken $1 price — should be floored to "unverified" and drop out of exact.
-  grill("Weber Spirit II E-315 Gas Grill (Liquid Propane)", {
+  // Broken $1 price - should be floored to "unverified" and drop out of exact.
+  grill(weberE315, {
     host: "weber.com", brand: "Weber", offer: 1, priceText: "$1", consensus: "Mixed",
-    rating: 4.5, reviews: 800, cites: [retailer("weber.com"), editorial("Wirecutter pick", "wirecutter.com")],
+    rating: 4.5, reviews: 800,
+    cites: [
+      productSource(weberE315, "weber.com"),
+      editorial(weberE315, "Wirecutter pick", "wirecutter.com"),
+    ],
   }),
 ];
 
@@ -152,7 +180,11 @@ const rank = (res, name) => {
   return res.nearMatches.some((p) => p.name === name) ? "near" : "-";
 };
 
-console.log("\nSame 6 candidates scored OLD (flags off) vs NEW (flags on).");
+console.log(
+  citationStrengthMode
+    ? "\nSame 6 candidates scored with Phase 5G citation strength OFF vs ON."
+    : "\nSame 6 candidates scored OLD (flags off) vs NEW (flags on).",
+);
 console.log("rawPrice = price before the floor; usedPrice = after the floor.\n");
 console.log(
   "  " +
@@ -161,7 +193,8 @@ console.log(
     "usedPrice".padEnd(11) +
     "tier".padEnd(10) +
     "OLD rank/total".padEnd(16) +
-    "NEW rank/total",
+    "NEW rank/total".padEnd(16) +
+    "citScore",
 );
 for (const p of [...off.exactMatches, ...off.nearMatches]) {
   const sb = p.scoreBreakdown || {};
@@ -175,6 +208,7 @@ for (const p of [...off.exactMatches, ...off.nearMatches]) {
       (used === null ? "unverified" : `$${used}`).padEnd(11) +
       (sb.marketConfidenceTier || "?").padEnd(10) +
       `${rank(off, p.name)} / ${r1(sb.totalScore || 0)}`.padEnd(16) +
-      `${rank(on, p.name)} / ${r1(onP?.scoreBreakdown?.totalScore || 0)}`,
+      `${rank(on, p.name)} / ${r1(onP?.scoreBreakdown?.totalScore || 0)}`.padEnd(16) +
+      `${r1(onP?.scoreBreakdown?.citationStrengthScore || 0)}`,
   );
 }

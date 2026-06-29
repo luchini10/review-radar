@@ -23,6 +23,7 @@ import {
   parseMaxBudgetAmount,
 } from "./priceParsing.ts";
 import { productRecommendationEligibility } from "./productEligibility.ts";
+import { classifyProductEvidenceIdentity } from "./productEvidenceIdentity.ts";
 import { assessProductPriceTrust } from "./productPriceTrust.ts";
 import { assessProductReliability } from "./productReliability.ts";
 import { baseProductCategoryFromQuery } from "./productCategory.ts";
@@ -242,9 +243,82 @@ const expertSourcePatterns = [
   /\bcnet\b/i,
 ];
 
+function citationStrengthScoringEnabled() {
+  return process.env.REVIEW_RADAR_CITATION_STRENGTH !== "off";
+}
+
+function productSpecificCitations(product: ProductRecommendation) {
+  const hasTypedCitations = product.citations.some(
+    (citation) => citation.citation_type,
+  );
+
+  // Older deterministic fixtures predate citation_type. Preserve their
+  // historical baseline while production results use the verified type.
+  if (!citationStrengthScoringEnabled() || !hasTypedCitations) {
+    return product.citations;
+  }
+
+  return product.citations.filter(
+    (citation) =>
+      classifyProductEvidenceIdentity({
+        category: product.category,
+        productName: product.name,
+        sourceTitle: citation.title,
+        url: citation.url,
+      }) === "same_product",
+  );
+}
+
+function productSpecificCitationStrengthScore(product: ProductRecommendation) {
+  if (!citationStrengthScoringEnabled()) {
+    return 0;
+  }
+
+  const typedCitations = product.citations.filter(
+    (citation) => citation.citation_type,
+  );
+
+  if (typedCitations.length === 0) {
+    return 0;
+  }
+
+  const eligibleCitations = productSpecificCitations(product);
+  const hostsByType = (citationType: string) =>
+    new Set(
+      eligibleCitations
+        .filter((citation) => citation.citation_type === citationType)
+        .map((citation) => hostname(citation.url))
+        .filter(Boolean),
+    ).size;
+  const independentCount = hostsByType("independent-editorial");
+  const retailerCount = hostsByType("retailer-marketplace");
+
+  if (independentCount > 0) {
+    return Math.min(
+      8,
+      6 + Math.max(0, independentCount - 1) * 2 + Math.min(1, retailerCount),
+    );
+  }
+
+  if (retailerCount > 0) {
+    return Math.min(4, 2 + Math.max(0, retailerCount - 1));
+  }
+
+  if (
+    eligibleCitations.length > 0 &&
+    eligibleCitations.every(
+      (citation) => citation.citation_type === "product-page-self",
+    )
+  ) {
+    return -2;
+  }
+
+  return 0;
+}
+
 function expertMentionScore(product: ProductRecommendation) {
   const sourceTexts = [
-    ...product.citations.map(
+    ...productSpecificCitations(product).map(
       (citation) =>
         `${citation.title} ${citation.url} ${citation.what_it_supports}`,
     ),
@@ -279,14 +353,27 @@ function evidenceFieldCount(product: ProductRecommendation) {
 
 function sourceQualityScore(product: ProductRecommendation) {
   const metadataBonus = evidenceFieldCount(product) * 1.2;
-  const citationBonus = Math.min(9, product.citations.length * 2);
+  const eligibleCitations = productSpecificCitations(product);
+  const citationBonus = Math.min(9, eligibleCitations.length * 2);
   const productHost = hostname(product.product_page_url);
-  const citationHosts = product.citations
+  const citationHosts = eligibleCitations
     .map((citation) => hostname(citation.url))
     .filter(Boolean);
-  const independentCitationCount = citationHosts.filter(
-    (host) => !isBroadRetailerHost(host),
-  ).length;
+  const hasTypedCitations = product.citations.some(
+    (citation) => citation.citation_type,
+  );
+  const independentCitationCount =
+    citationStrengthScoringEnabled() && hasTypedCitations
+      ? new Set(
+          eligibleCitations
+            .filter(
+              (citation) =>
+                citation.citation_type === "independent-editorial",
+            )
+            .map((citation) => hostname(citation.url))
+            .filter(Boolean),
+        ).size
+      : citationHosts.filter((host) => !isBroadRetailerHost(host)).length;
   const broadRetailerPenalty =
     productHost && isBroadRetailerHost(productHost)
       ? independentCitationCount > 0
@@ -474,12 +561,17 @@ function distinctCitationHostCount(product: ProductRecommendation) {
 }
 
 function evidenceSignalCount(product: ProductRecommendation) {
+  const eligibleCitations = productSpecificCitations(product);
+
   return [
     productPrice(product) !== null,
     ownerRating(product) !== null,
     (ownerReviewCount(product) || 0) >= 10,
-    product.citations.length >= 2,
-    distinctCitationHostCount(product) >= 2,
+    eligibleCitations.length >= 2,
+    distinctCitationHostCount({
+      ...product,
+      citations: eligibleCitations,
+    }) >= 2,
     Boolean(product.product_image_url),
     Boolean(product.metadata?.brand?.value),
     Boolean(product.metadata?.modelNumber?.value || product.metadata?.gtin?.value),
@@ -600,6 +692,9 @@ function scoreDebugReasons(
     `Evidence uses ${product.citations.length} citation(s), ${evidenceFieldCount(
       product,
     )} structured metadata field(s), and ${product.source_consensus} source consensus.`,
+    `Product-specific citation-strength adjustment ${Math.round(
+      breakdown.citationStrengthScore || 0,
+    )}; generic, conflicting, and untyped citation evidence receives no Phase 5G credit.`,
     `Popularity signal ${Math.round(
       breakdown.popularityScore || 0,
     )} from review volume, rating, known-brand evidence, and source visibility.`,
@@ -675,6 +770,8 @@ export function scoreProduct(
     availabilityScore: availabilityScore(scoredProduct),
     categoryFitScore: categoryFit.boost,
     categoryProfileKey: categoryFit.profileKey,
+    citationStrengthScore:
+      productSpecificCitationStrengthScore(scoredProduct),
     credibilityFloorPenalty: credibilityFloor,
     evidenceScore: evidenceScore(scoredProduct),
     expertMentionScore: expertMentionScore(scoredProduct),
@@ -706,6 +803,7 @@ export function scoreProduct(
     breakdown.ownerReviewStrengthScore +
     breakdown.ownerOpinionScore +
     breakdown.expertMentionScore +
+    breakdown.citationStrengthScore +
     breakdown.sourceQualityScore +
     breakdown.popularityScore +
     breakdown.priceValueScore +
@@ -783,6 +881,7 @@ function rankedMatchScore(product: ProductRecommendation) {
     (breakdown.qualityScore || 0) * 1.2 +
     (breakdown.priceValueScore || breakdown.valueScore || 0) * 0.9 +
     (breakdown.sourceQualityScore || 0) * 0.75 +
+    (breakdown.citationStrengthScore || 0) +
     (breakdown.ownerRatingScore || 0) * 0.65 +
     (breakdown.ownerReviewStrengthScore || 0) * 0.65 +
     (breakdown.ownerOpinionScore || 0) +
@@ -1204,6 +1303,7 @@ function buildFinalSelectionTrace(
       totalScore: breakdown ? Math.round((breakdown.totalScore ?? 0) * 10) / 10 : null,
       requirementFitScore: breakdown?.requirementFitScore ?? breakdown?.fitScore ?? null,
       sourceQualityScore: breakdown?.sourceQualityScore ?? null,
+      citationStrengthScore: breakdown?.citationStrengthScore ?? null,
       priceValueScore: breakdown?.priceValueScore ?? breakdown?.valueScore ?? null,
       missingDataPenalty: breakdown?.missingDataPenalty ?? null,
       marketConfidenceTier: breakdown?.marketConfidenceTier ?? product.marketConfidence?.tier ?? null,
@@ -1338,6 +1438,7 @@ export const recommendationScoringTestExports = {
   evidenceSignalCount,
   evidenceStrengthForProduct,
   hasMajorUnresolvedDrawback,
+  productSpecificCitationStrengthScore,
   rankedMatchScore,
   marketConfidenceTier,
   productPrice,

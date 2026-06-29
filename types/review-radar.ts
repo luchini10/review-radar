@@ -325,6 +325,7 @@ export type ScoreBreakdown = {
   availabilityScore: number;
   categoryFitScore?: number;
   categoryProfileKey?: string;
+  citationStrengthScore?: number;
   credibilityFloorPenalty?: number;
   evidenceScore: number;
   evidenceSignalCount?: number;

@@ -47,8 +47,9 @@ function buildProduct(name, overrides = {}) {
     not_for: [],
     citations: [
       {
-        title: "Product page",
-        url: "https://example.com/product",
+        citation_type: "product-page-self",
+        title: `${name} product page`,
+        url: `https://example.com/${name.toLowerCase().replace(/\s+/g, "-")}`,
         what_it_supports: "Supports specs and price.",
       },
     ],
@@ -137,7 +138,15 @@ function scenarioB() {
       pros: ["Comfortable fit.", "Clear sound."],
       why_recommended: `${name} is a well-reviewed pair of headphones.`,
       citations: [
-        { title: "Review", url: host, what_it_supports: "Supports performance." },
+        {
+          citation_type:
+            /rtings|cnet/i.test(host)
+              ? "independent-editorial"
+              : "weak-uncorroborated",
+          title: `${name} performance review`,
+          url: host,
+          what_it_supports: "Supports performance.",
+        },
       ],
       metadata: {
         offers: [offer(price)],
@@ -176,10 +185,10 @@ describe("ranking baseline snapshot", () => {
 
     assert.deepEqual(actual, {
       exact: [
-        { name: "Cedar Sofa", rank: 1, total: 161.99, match: 289.16 },
-        { name: "Aspen Sofa", rank: 2, total: 153.96, match: 282.5 },
-        { name: "Brook Sofa", rank: 3, total: 126.39, match: 246.34 },
-        { name: "Dune Sofa", rank: 4, total: 109.37, match: 225.58 },
+        { name: "Cedar Sofa", rank: 1, total: 159.19, match: 286.56 },
+        { name: "Aspen Sofa", rank: 2, total: 150.98, match: 279.26 },
+        { name: "Brook Sofa", rank: 3, total: 123.41, match: 243.1 },
+        { name: "Dune Sofa", rank: 4, total: 106.39, match: 222.33 },
       ],
       near: [],
     });
@@ -190,9 +199,9 @@ describe("ranking baseline snapshot", () => {
 
     assert.deepEqual(actual, {
       exact: [
-        { name: "Wave One", rank: 1, total: 167.99, match: 275.89 },
-        { name: "Pulse Three", rank: 2, total: 157.68, match: 266.45 },
-        { name: "Echo Two", rank: 3, total: 131.61, match: 233.39 },
+        { name: "Wave One", rank: 1, total: 173.99, match: 281.89 },
+        { name: "Pulse Three", rank: 2, total: 163.68, match: 272.45 },
+        { name: "Echo Two", rank: 3, total: 130.67, match: 232.19 },
       ],
       near: [],
     });
