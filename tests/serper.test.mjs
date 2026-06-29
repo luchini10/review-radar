@@ -758,6 +758,34 @@ describe("Serper product discovery", () => {
     );
   });
 
+  it("rejects question-style publishing articles without blocking genuine /p/ products", () => {
+    const candidates = normalizeSerperOrganicResults(
+      {
+        organic: [
+          {
+            title: "Is Costco (Kirkland) Dog Food Actually Good? - The BK Pets",
+            link: "https://thebkpets.substack.com/p/is-costco-kirkland-dog-food-actually",
+            displayedLink: "The BK Pets",
+            snippet: "An editorial assessment of Kirkland dog food.",
+          },
+          {
+            title: "Example X100 Cordless Drill",
+            link: "https://manufacturer.example.com/p/example-x100-cordless-drill",
+            displayedLink: "Example Manufacturer",
+            snippet: "Product page for the Example X100 cordless drill.",
+          },
+        ],
+      },
+      "cordless drill product page",
+      "cordless drill",
+    );
+
+    assert.deepEqual(
+      candidates.map((candidate) => candidate.name),
+      ["Example X100 Cordless Drill"],
+    );
+  });
+
   it("rejects editorial ranking pages and retailer category pages as product candidates", () => {
     const candidates = normalizeSerperOrganicResults(
       {

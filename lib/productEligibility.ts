@@ -23,6 +23,7 @@ type ProductEligibilityInput = {
 const evidenceOnlyDomains = [
   "apartmenttherapy.com",
   "bareefers.org",
+  "blogspot.com",
   "cnet.com",
   "consumerreports.org",
   "facebook.com",
@@ -33,6 +34,7 @@ const evidenceOnlyDomains = [
   "klarna.com",
   "laptopmag.com",
   "mashable.com",
+  "medium.com",
   "nytimes.com",
   "pcmag.com",
   "pinterest.com",
@@ -43,6 +45,7 @@ const evidenceOnlyDomains = [
   "runnersworld.com",
   "rtings.com",
   "sneakerfiles.com",
+  "substack.com",
   "techradar.com",
   "theverge.com",
   "thespruce.com",
@@ -51,6 +54,7 @@ const evidenceOnlyDomains = [
   "tomsguide.com",
   "wirecutter.com",
   "windowscentral.com",
+  "wordpress.com",
   "wwd.com",
   "youtube.com",
   "youtu.be",
@@ -483,6 +487,19 @@ function textLooksLikeNonProduct(value: string) {
   ].some((pattern) => pattern.test(value));
 }
 
+function textLooksLikeEditorialTitle(value: string) {
+  const title = value.trim();
+
+  if (!title) {
+    return false;
+  }
+
+  return [
+    /^(?:is|are|was|were|do|does|did|can|could|should|would|will|what|which|who|why|how)\b.{4,180}\?\s*(?:[-|:]\s*.+)?$/i,
+    /\b(?:actually good|should you buy|worth (?:buying|it)|our (?:long-term )?verdict|pros and cons|everything you need to know|what you need to know)\b/i,
+  ].some((pattern) => pattern.test(title));
+}
+
 function textLooksLikeListing(value: string) {
   if (!value) {
     return false;
@@ -569,7 +586,11 @@ export function classifyProductEligibility(
   const titleText = [name, title].filter(Boolean).join(" ");
   const parsedUrl = parseHttpUrl(input.url);
 
-  if (textLooksLikeNonProduct(combinedText)) {
+  if (
+    textLooksLikeNonProduct(combinedText) ||
+    textLooksLikeEditorialTitle(name) ||
+    textLooksLikeEditorialTitle(title)
+  ) {
     return verdict("non_product", "high", false, true, [
       "Title or snippet looks like an article, support page, complaint, error, or other non-product content.",
     ]);

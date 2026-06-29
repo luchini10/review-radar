@@ -299,6 +299,54 @@ describe("shared product eligibility classifier", () => {
     assert.equal(manual.status, "non_product");
   });
 
+  it("rejects question-style articles and hosted publishing pages with product-like paths", () => {
+    const dogFoodArticle = classify({
+      category: "dog food",
+      name: "Is Costco (Kirkland) Dog Food Actually Good? - The BK Pets",
+      sourceTitle: "Is Costco (Kirkland) Dog Food Actually Good? - The BK Pets",
+      url: "https://thebkpets.substack.com/p/is-costco-kirkland-dog-food-actually",
+    });
+    const unrelatedQuestionArticle = classify({
+      category: "robot vacuum",
+      name: "Should You Buy This Robot Vacuum? - Home Tech Journal",
+      sourceTitle: "Should You Buy This Robot Vacuum? - Home Tech Journal",
+      url: "https://home-tech.example.com/p/should-you-buy-this-robot-vacuum",
+    });
+    const hostedPublishingPage = classify({
+      category: "coffee maker",
+      name: "Our Long-Term Verdict on the Example Espresso Pro",
+      sourceTitle: "Our Long-Term Verdict on the Example Espresso Pro",
+      url: "https://examplewriter.medium.com/p/example-espresso-pro-verdict",
+    });
+
+    for (const result of [
+      dogFoodArticle,
+      unrelatedQuestionArticle,
+      hostedPublishingPage,
+    ]) {
+      assert.equal(result.canRenderAsProductCard, false);
+      assert.equal(result.canUseAsEvidence, true);
+    }
+  });
+
+  it("preserves genuine commerce and manufacturer product routes that use /p/", () => {
+    const targetProduct = classify({
+      category: "coffee maker",
+      name: "Ninja Luxe Cafe Premier Espresso Machine ES601",
+      sourceTitle: "Ninja Luxe Cafe Premier Espresso Machine ES601",
+      url: "https://www.target.com/p/ninja-luxe-cafe-premier-espresso-machine-es601/-/A-91730000",
+    });
+    const manufacturerProduct = classify({
+      category: "cordless drill",
+      name: "Example X100 Cordless Drill",
+      sourceTitle: "Example X100 Cordless Drill",
+      url: "https://manufacturer.example.com/p/example-x100-cordless-drill",
+    });
+
+    assert.equal(targetProduct.canRenderAsProductCard, true);
+    assert.equal(manufacturerProduct.canRenderAsProductCard, true);
+  });
+
   it("does not reject Article furniture product pages because of the brand domain", () => {
     const articleProduct = classify({
       name: "Article Sven Sofa",

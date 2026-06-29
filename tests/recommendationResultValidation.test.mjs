@@ -542,6 +542,29 @@ describe("recommendation result trust validation", () => {
     );
   });
 
+  it("drops a verified question-style article even when its /p/ path looks product-like", () => {
+    const articleUrl =
+      "https://thebkpets.substack.com/p/is-costco-kirkland-dog-food-actually";
+    const filtered = filterResultToVerifiedCitations(
+      buildResult([
+        buildRecommendation({
+          category: "dog food",
+          citations: [
+            {
+              title: "Is Costco (Kirkland) Dog Food Actually Good? - The BK Pets",
+              url: articleUrl,
+              what_it_supports: "Editorial discussion of Kirkland dog food.",
+            },
+          ],
+          name: "Is Costco (Kirkland) Dog Food Actually Good? - The BK Pets",
+        }),
+      ]),
+      new Set([articleUrl]),
+    );
+
+    assert.equal(filtered.recommendations.length, 0);
+  });
+
   it("retains a valid product page instead of replacing it with a generic same-domain listing", () => {
     const productUrl =
       "https://www.homedepot.com/p/EGO-POWER-650-CFM-Cordless-Leaf-Blower-LB6504/123456789";
