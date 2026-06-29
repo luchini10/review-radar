@@ -1082,3 +1082,18 @@ Stop. The RR-007 cleanup is complete. Do not start Phase 5F without explicit ins
 - Live validation: exactly two calls - `electric toothbrush` and `dog food`. The first had 28/28 citation retention. The second exposed the final safety refinement; no third call or full baseline ran.
 
 Stop. Phase 5F is complete. Do not start Phase 5G without explicit instruction.
+
+### Phase 5F dog-food live-confirmation record
+
+- Completed step: Focused post-refinement `dog food` live confirmation.
+- Next step: Narrow RR-008 article-card eligibility cleanup, after explicit instruction. Phase 5G remains queued behind it.
+- Diagnostic-only: Yes. Exactly one live search and replay ran; no app behavior changed.
+- Stop condition hit: Yes. A BK Pets Substack editorial article became exact card #5, so the run stopped without a code fix or Phase 5G work.
+- New issue IDs opened: None. The finding is a recurrence of RR-008.
+- Existing issue IDs updated: RR-022 remains Fixed and is now live-confirmed for dog-food citation retention; RR-007 remains Fixed; RR-008 changed from Fixed to Needs Investigation; RR-013 remains unchanged.
+- Docs committed: Pending this record's documentation-only commit.
+- Commit hash: Pending.
+- Verification: focused eligibility/citation/API tests 60/60; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 690/690; eval clean.
+- Live validation: one `dog food` call. Six specific Purina/Hill's candidates survived citation verification; the generic Purina family card did not recur. The final slate contained seven exact and zero near products, including one unsafe editorial article card.
+
+Stop. Do not start Phase 5G until RR-008 is explicitly addressed or deferred.

@@ -4558,3 +4558,47 @@ Exactly two approved live calls ran; no broad baseline.
 - Fresh live fixtures remain untracked and uncommitted.
 
 Recommended direction: stop after Phase 5F. Optionally approve one focused `dog food` confirmation of the final guard; otherwise Phase 5G is next only on explicit instruction and must remain limited to RR-013.
+
+## <span style="color:orange">**Codex QA Update - 2026-06-28 (Phase 5F dog-food live confirmation)**</span>
+
+**Verdict: PARTIAL. RR-022 is now live-confirmed for the dog-food citation-retention path, but the run exposed a separate RR-008 article-card regression. No code changed and Phase 5G did not start.**
+
+### Live command and funnel
+
+- Exactly one approved live search ran: `npm run qa:save-fixture -- "dog food"`.
+- The fresh fixture was replayed with `npm run qa:replay -- tests/fixtures/review-radar-live/dog-food.json`.
+- Funnel: 23 candidate-pool products, 16 after citation verification, 10 after requirement filtering, 7 final exact products, 0 near products.
+- Seven citation-stage drops were Royal Canin Medium Adult wet food plus six Chewy/PetSmart editorial, category, or listing pages.
+- Six specific Purina/Hill's products survived citation verification: three Purina Pro Plan sensitive-skin/stomach formulas and three Hill's Science Diet adult/puppy formulas.
+- Those six products were removed later by requirement filtering. This is not an RR-022 citation-retention failure.
+- The generic Purina family URL `/pro-plan/products/dog-food` did not become a product card.
+
+### Final products and safety result
+
+The seven exact cards were Merrick Grain-Free Dry Dog Food, Kirkland Nature's Domain Salmon & Sweet Potato, Royal Canin Small Digestive Care, Royal Canin Small Adult, `Is Costco (Kirkland) Dog Food Actually Good?`, Blue Buffalo Homestyle Recipe Adult Wet Food, and Nature's Recipe Small Breed Dog Food. There were no near matches.
+
+The run failed the full product-card safety check because the BK Pets Substack article reached exact rank #5. Its `/p/is-costco-kirkland-dog-food-actually` route was treated as a product-detail path and its question-style title was not recognized as editorial. It entered through Serper, survived citation verification and requirement filtering, and remained the primary card URL. This is a direct RR-008 recurrence, not a reason to weaken or revert RR-022.
+
+No generic Purina/Hill's family page, category page, support page, manual, or documentation page became a final card. One Royal Canin family/category URL remained secondary evidence behind a specific Royal Canin product URL, which is the intended evidence-only behavior.
+
+### Verification
+
+```text
+focused eligibility/citation/API tests: 60/60 passed
+npm run typecheck: passed
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 690/690 passed
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+### Issue outcome
+
+- RR-022 remains Fixed and is now live-confirmed for dog food.
+- RR-007 remains Fixed; the generic Purina family card did not recur.
+- RR-008 changed from Fixed to Needs Investigation.
+- RR-013 remains unchanged; no scoring or ranking work started.
+- No new issue ID opened because the article card is the existing RR-008 defect class.
+- Register remains 62 issues: 6 Critical, 27 High, 24 Medium, 5 Low; 5 Open, 8 Needs Investigation, 48 Fixed, 1 Won't Fix.
+- The fresh fixture remains untracked and uncommitted.
+
+Recommended direction: stop before Phase 5G. Address RR-008 with a narrow generalized article-question and cross-host `/p/` eligibility cleanup, then proceed to Phase 5G only after explicit instruction.

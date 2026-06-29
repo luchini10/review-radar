@@ -19,8 +19,8 @@
 | Medium | 24 |
 | Low | 5 |
 | Open | 5 |
-| Needs Investigation | 7 |
-| Fixed | 49 |
+| Needs Investigation | 8 |
+| Fixed | 48 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -64,6 +64,7 @@
 | Phase 5E — Product-type and requirement truthfulness | 0 |
 | RR-007 regression cleanup mini-phase | 0 |
 | Phase 5F — Citation retention | 0 |
+| Phase 5F dog-food live confirmation | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -264,7 +265,7 @@
 | **Phase** | Pre-Phase 0 (Codex baseline) |
 | **Severity** | High |
 | **Title** | Review/article titles appearing as product cards |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** Pages with titles like "Runner's World: Nike Winflo 11 Review" or "7 Things to Avoid When Purchasing…" were passing eligibility and appearing as product cards in results.
 
@@ -283,6 +284,8 @@
 **Phase 4F evidence:** Comparison/review/advice pages repeatedly entered exact scoring: `Nothing Ear A vs Sennheiser...`, `Gas-Powered Leaf Blowers: the End is Nigh`, and a defective-running-shoes article. They missed final cutoff in these runs but still consumed scored candidates.
 
 **Phase 5D fix:** Shared eligibility now recognizes support/documentation subdomains and structural paths including `/app/answers`, advice, discover/learn, learning-center, help, support, customer-service, and troubleshooting. These pages remain usable as evidence but cannot render as product cards or serve as rescued primary product citations. Deterministic coverage includes Bissell support, Best Buy advice, PetSmart learning-center, and the live-observed Shop-Vac customer-service page. The fresh `shop vac` run produced only actual vacuum cards; it also exposed the Shop-Vac customer-service path surviving citation verification before requirement filtering, and that exact shape was added to the shared classifier and final-filter regressions before closeout.
+
+**Phase 5F dog-food confirmation regression:** Reopened. `Is Costco (Kirkland) Dog Food Actually Good? - The BK Pets` reached exact rank #5 with its Substack article URL as the primary product page. The shared classifier treated the title as product-specific because the article-question shape is not covered, and generic `/p/` path handling treated the Substack post route as a product-detail path. The candidate survived Serper discovery, citation verification, requirement filtering, and final card validation. Fix this as a generalized article-question/evidence-page eligibility gap; do not add a Substack-only block.
 
 ---
 
@@ -649,6 +652,8 @@
 **Phase 5F fix:** Citation retention had two related defects. First, product-page rescue ran only when zero citations survived, so a verified editorial or same-host category URL suppressed rescue and then became the primary citation; final card validation dropped the otherwise valid product. Second, reachability checks ran only when the global verified URL set was empty, so one verified source elsewhere prevented unverified LLM product pages from being checked. The route now performs a targeted reachability pass only for product-specific, path/title-bound URLs not already exactly verified. Final filtering promotes an exactly verified product page ahead of secondary editorial/category evidence and rejects generic family slugs, support/manual/documentation pages, unrelated self-cites, and unreachable URLs.
 
 Deterministic tests cover Oral-B and EGO retention, specific Purina and Hill's product paths, same-host category substitution, unrelated global verification, and the generic Purina family negative. Frozen Phase 4 fixtures still show their historical drops by design. A fresh `electric toothbrush` run retained all 28 pool candidates through citation verification and selected seven specific product-page cards, including Oral-B and Philips leaders. The initial `dog food` run still dropped Purina/Hill's candidates and exposed the generic Purina family card; the final product-path binding refinement addresses both shapes deterministically but was not live-retested because the two-call limit was reached. RR-022 is Fixed with that bounded live-proof caveat.
+
+**Phase 5F dog-food live confirmation:** The post-refinement run moved six specific Purina/Hill's candidates from the 23-product pool into the 16-product `afterCitationVerify` set, proving that their manufacturer product citations now survive citation verification. They were subsequently removed by requirement filtering, not citation verification. The generic Purina `/pro-plan/products/dog-food` family card did not return. RR-022 remains Fixed and its dog-food citation-retention path is now live-confirmed. The separate BK Pets article card reopened RR-008.
 
 ---
 
@@ -1862,7 +1867,8 @@ Phase 5C fixed RR-002 after fail-first reproduction and ran three approved focus
 - RR-060: True same-model duplicates can occupy multiple final slots
 - RR-061: Product image metadata accepts non-image or irrelevant assets
 
-### Needs Investigation (7 issues)
+### Needs Investigation (8 issues)
+- RR-008: Review/article pages can still appear as product cards through generic `/p/` routes
 - RR-013: Thin winner crowd-out
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
@@ -1871,8 +1877,8 @@ Phase 5C fixed RR-002 after fail-first reproduction and ran three approved focus
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 
-### Fixed (49 issues)
-RR-001 through RR-012, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055, RR-057, RR-058, RR-062
+### Fixed (48 issues)
+RR-001 through RR-007, RR-009 through RR-012, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055, RR-057, RR-058, RR-062
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -1881,11 +1887,12 @@ RR-001 through RR-012, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-014 + RR-056 + RR-060** (High/Medium quality cluster) — Leader recall, family concentration, and true duplicates jointly degrade broad slates.
-2. **RR-059** (Medium) — Broad-query form-factor handling lets niche products outrank mainstream products.
-3. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
-4. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
-5. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
-6. **RR-013** (Medium) — Thin/retailer-only winners still outrank stronger evidence.
-7. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
-8. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
+1. **RR-008** (High) — Close the generic `/p/` article-question eligibility gap before changing ranking policy.
+2. **RR-014 + RR-056 + RR-060** (High/Medium quality cluster) — Leader recall, family concentration, and true duplicates jointly degrade broad slates.
+3. **RR-059** (Medium) — Broad-query form-factor handling lets niche products outrank mainstream products.
+4. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
+5. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
+6. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
+7. **RR-013** (Medium) — Thin/retailer-only winners still outrank stronger evidence.
+8. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
+9. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.

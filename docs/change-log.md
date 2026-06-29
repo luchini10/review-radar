@@ -13,6 +13,14 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-28
 
+### Codex - Phase 5F dog-food live confirmation
+- Ran exactly one post-refinement `dog food` live check; no app behavior changed and no broad baseline ran.
+- Six specific Purina/Hill's candidates survived citation verification, live-confirming RR-022 for the dog-food path. They were removed later by requirement filtering.
+- The generic Purina `/pro-plan/products/dog-food` family card did not recur.
+- Reopened RR-008 after a BK Pets Substack article reached exact rank #5. The shared classifier treated its generic `/p/` article route as product detail and did not recognize the question-style title as editorial.
+- Verification remained green: focused 60/60, typecheck clean, lint 0 errors with 3 pre-existing warnings, full suite 690/690, and eval with no red flags.
+- Stop before Phase 5G. The next recommended work is a narrow generalized RR-008 eligibility cleanup.
+
 ### Codex - Phase 5F citation retention
 - Fixed RR-022 by separating global source verification from candidate-specific product-page verification.
 - LLM product pages that are not already exactly provider-verified now receive a targeted reachability check; already verified Serper URLs are not fetched again.

@@ -1009,3 +1009,21 @@ New entries should keep the same format and stay easy to read.
 **Scope:** Four implementation/test files plus required docs. No scoring, ranking, price, type, requirement, source-upgrade identity, UI, or broad discovery change. Generated baselines and live fixtures remain untracked.
 
 **Next recommended step:** Stop. Optionally approve one dog-food confirmation of the final guard; Phase 5G otherwise requires explicit instruction and must address RR-013 only.
+
+## Codex Run - 2026-06-28 Phase 5F dog-food live confirmation
+
+**Goal:** Live-confirm the final Phase 5F citation-retention and path-binding behavior with exactly one `dog food` search.
+
+**Verdict:** Partial. RR-022 is live-confirmed for dog food, but the run reopened RR-008.
+
+**Live result:** The funnel went from 23 candidates to 16 after citation verification, 10 after requirement filtering, and 7 exact cards. Six specific Purina/Hill's products survived citation verification and were removed only at the requirement stage. The generic Purina `/pro-plan/products/dog-food` family card did not recur.
+
+**Safety finding:** `Is Costco (Kirkland) Dog Food Actually Good? - The BK Pets` became exact #5. Its Substack `/p/` route passed generic product-detail-path handling, and the question-style editorial title was not recognized as non-product content. No code fix was attempted.
+
+**Proof:** Focused eligibility/citation/API tests passed 60/60; typecheck passed; lint had 0 errors and 3 pre-existing warnings; full tests passed 690/690; eval reported no red flags.
+
+**Issues:** RR-022 remains Fixed and is live-confirmed for this path. RR-007 remains Fixed. RR-008 changed to Needs Investigation. RR-013 remains unchanged. Totals: 62 issues; 5 Open, 8 Needs Investigation, 48 Fixed, 1 Won't Fix.
+
+**Scope:** Documentation only. The fresh dog-food fixture and all existing generated fixtures/baselines remain untracked and uncommitted.
+
+**Next recommended step:** Stop before Phase 5G. Address RR-008 with a narrow generalized article-question and cross-host generic `/p/` eligibility cleanup after explicit instruction.

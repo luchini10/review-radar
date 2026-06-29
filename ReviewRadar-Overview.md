@@ -556,6 +556,12 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - Verification: fail-first 3 failures; focused 69/69; broad safety 282/282; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 690/690; eval clean.
 - Live proof: `electric toothbrush` retained all 28 pool candidates through citation verification. The initial `dog food` call exposed remaining product drops and a generic family card; the final guard covers those shapes deterministically but was not live-retested because the approved two-call cap was exhausted.
 
+**Phase 5F dog-food live confirmation**
+- One approved post-refinement `dog food` run moved six specific Purina/Hill's products through citation verification, confirming RR-022 live for this path. They were removed later by requirement filtering.
+- The generic Purina `/pro-plan/products/dog-food` family card did not recur, so RR-007 remains Fixed.
+- The run exposed a separate RR-008 recurrence: a BK Pets Substack editorial question page reached exact #5 because generic cross-host `/p/` handling treated the article route as product detail and the title was not recognized as editorial.
+- No app behavior changed. Phase 5G did not start.
+
 **Current boundary**
-- Stop after Phase 5F. Do not start another phase without explicit instruction.
-- Recommended next: Phase 5G for RR-013 evidence-strength ranking only. An optional focused dog-food confirmation requires separate live-search approval.
+- Stop after the Phase 5F dog-food confirmation. Do not start another phase without explicit instruction.
+- Recommended next: narrow RR-008 article-card eligibility cleanup. Phase 5G for RR-013 remains queued behind that safety regression.

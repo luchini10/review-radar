@@ -713,3 +713,19 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Live calls:** Two total. `electric toothbrush` had 28 pool and 28 post-citation candidates with seven specific product-page exact cards. The initial `dog food` call still dropped 11 and exposed a generic Purina family card; the final path-binding guard covers specific Purina/Hill's positives and the family negative deterministically. The final refinement was not live-retested because the call cap was exhausted.
 
 **Status:** RR-022 Fixed with a bounded live-proof caveat. RR-013 unchanged. Preserve this separation in Phase 5G.
+
+---
+
+## 2026-06-28 — Phase 5F dog-food live confirmation
+
+**Purpose:** Confirm the final product-path binding code after the original Phase 5F live-call cap.
+
+**Live call:** Exactly one `dog food` save/replay. The funnel was 23 pool, 16 after citation verification, 10 after requirements, and 7 exact.
+
+**What was proved:** Six specific Purina/Hill's candidates survived citation verification. The generic Purina `/pro-plan/products/dog-food` family card did not recur. RR-022 is live-confirmed for dog food; the later requirement-stage removals are outside citation retention.
+
+**New regression shape:** A Substack article titled `Is Costco (Kirkland) Dog Food Actually Good?` became exact #5. Generic cross-host `/p/` handling can classify an editorial post route as product detail when the title does not match existing review/article phrases. Track this under reopened RR-008, not RR-022.
+
+**Verification:** Focused eligibility/citation/API tests 60/60; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 690/690; eval clean.
+
+**Status:** RR-022 remains Fixed; RR-008 Needs Investigation. Before Phase 5G, prefer a narrow generalized regression test and eligibility fix that blocks article-question pages without invalidating genuine retailer/manufacturer `/p/` product routes.
