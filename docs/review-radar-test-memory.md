@@ -729,3 +729,24 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Verification:** Focused eligibility/citation/API tests 60/60; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 690/690; eval clean.
 
 **Status:** RR-022 remains Fixed; RR-008 Needs Investigation. Before Phase 5G, prefer a narrow generalized regression test and eligibility fix that blocks article-question pages without invalidating genuine retailer/manufacturer `/p/` product routes.
+
+---
+
+## 2026-06-28 — RR-008 article-card cleanup
+
+**Issue fixed:** RR-008.
+
+**Regression contract:**
+- Interrogative product-opinion titles such as `Is ... actually good?`, `Should you buy ...?`, `worth it`, and `our verdict` are evidence-only.
+- Hosted publishing platforms remain evidence-only even when they use product-looking `/p/` paths.
+- Genuine retailer and manufacturer `/p/` product pages remain eligible.
+- The same decision must hold in shared eligibility, Serper normalization, and final citation filtering.
+- Preserve RR-022 product-page retention and all RR-007/RR-009 support, listing, manual, and documentation negatives.
+
+**Verification:** Fail-first 3 failures; focused 87/87; broad price/type/requirement/citation/source-upgrade matrix 192/192; typecheck passed; lint 0 errors with 3 existing warnings; full suite 694/694; eval clean.
+
+**Live call:** Exactly one `dog food` save/replay. BK Pets and all Substack/editorial cards were absent. Purina/Hill's products survived citation verification. Seven exact products and zero near products remained.
+
+**Adjacent findings:** Chewy `/brands/` family slugs with numeric IDs still pass the generic product-detail fallback (reopened RR-007). Same-brand citations can refer to different recipes (RR-063). Preserve the RR-008 fix while addressing those separately.
+
+**Status:** RR-008 Fixed. Stop before Phase 5G pending explicit direction on RR-007/RR-063.

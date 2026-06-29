@@ -562,6 +562,13 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - The run exposed a separate RR-008 recurrence: a BK Pets Substack editorial question page reached exact #5 because generic cross-host `/p/` handling treated the article route as product detail and the title was not recognized as editorial.
 - No app behavior changed. Phase 5G did not start.
 
+**RR-008 article-card cleanup**
+- Shared eligibility now recognizes interrogative and editorial decision-title shapes before product-path shortcuts. Hosted publishing platforms remain evidence-only even when they use `/p/`.
+- The rule is generalized and preserves valid retailer/manufacturer `/p/` products; it does not contain a BK Pets-specific exception.
+- Deterministic proof covers shared eligibility, Serper discovery, and final citation validation. The single post-fix `dog food` run contained no BK Pets, Substack, newsletter, blog, or editorial final card.
+- RR-008 is Fixed. RR-022 remains Fixed and Purina/Hill's products survived citation verification.
+- The same run reopened RR-007 for Chewy `/brands/` family pages used as primary card URLs and opened RR-063 for same-brand wrong-recipe citations. Those issues were not fixed.
+
 **Current boundary**
-- Stop after the Phase 5F dog-food confirmation. Do not start another phase without explicit instruction.
-- Recommended next: narrow RR-008 article-card eligibility cleanup. Phase 5G for RR-013 remains queued behind that safety regression.
+- Stop after the RR-008 cleanup. Do not start another phase without explicit instruction.
+- Recommended next: address RR-007/RR-063 product-card and citation-identity safety. Phase 5G for RR-013 remains queued behind that decision.

@@ -16,15 +16,15 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 5F complete. Phase 5G requires explicit instruction.**
+Current phase: **RR-008 cleanup complete. RR-007/RR-063 safety work requires explicit instruction before Phase 5G.**
 
 Phase 3N safely admitted specific Google Shopping offers for source-upgrade evidence and fixed the `Shop-Vac` title false positive. RR-051 removed synthetic query-derived snippets from same-product identity. Phase 3O preserved reliable brand identity in compact model queries.
 
-The Phase 3O live proof then exposed two separate safety defects. RR-053 is fixed deterministically: URL query strings and fragments cannot provide product identity, while merchant product paths and source-derived Shopping titles remain usable. Phase 5A fixed RR-058 by rejecting explicit product-type conflicts before source-upgrade attachment. Phase 5B fixed RR-052 and the RR-057/RR-034/RR-035/RR-044 model-coverage cluster without weakening Phase 5A identity safety. Phase 5C fixed reopened RR-002 across shop-vac, dash-camera, and wireless-earbud `$10` offers. RR-062 then product-scoped structured page prices so an unrelated A139 `data-price="19999"` widget cannot become VIOFO A229 evidence. Phase 5D fixed cross-host collection, support/advice, and documentation-mirror product cards through the shared eligibility layer. Phase 5E fixed the reproduced wrong-product-type and literal-positive-requirement classes. The narrow RR-007 cleanup fixed the remaining nested catalog-route gap. Phase 5F fixed RR-022 with targeted product-page reachability and product-specific primary citation retention while keeping generic family/evidence pages out of cards.
+The Phase 3O live proof then exposed two separate safety defects. RR-053 is fixed deterministically: URL query strings and fragments cannot provide product identity, while merchant product paths and source-derived Shopping titles remain usable. Phase 5A fixed RR-058 by rejecting explicit product-type conflicts before source-upgrade attachment. Phase 5B fixed RR-052 and the RR-057/RR-034/RR-035/RR-044 model-coverage cluster without weakening Phase 5A identity safety. Phase 5C fixed reopened RR-002 across shop-vac, dash-camera, and wireless-earbud `$10` offers. RR-062 then product-scoped structured page prices so an unrelated A139 `data-price="19999"` widget cannot become VIOFO A229 evidence. Phase 5D fixed cross-host collection, support/advice, and documentation-mirror product cards through the shared eligibility layer. Phase 5E fixed the reproduced wrong-product-type and literal-positive-requirement classes. The narrow RR-007 cleanup fixed the remaining nested catalog-route gap. Phase 5F fixed RR-022 with targeted product-page reachability and product-specific primary citation retention. The RR-008 cleanup now blocks editorial questions and hosted publishing pages while preserving genuine `/p/` product routes.
 
 Recommended next phase:
 
-- Await explicit instruction. The next master-plan step is Phase 5G for RR-013 evidence-strength ranking only.
+- Await explicit instruction. Prefer RR-007/RR-063 product-card and citation-identity safety work before Phase 5G.
 
 ---
 
@@ -1097,3 +1097,19 @@ Stop. Phase 5F is complete. Do not start Phase 5G without explicit instruction.
 - Live validation: one `dog food` call. Six specific Purina/Hill's candidates survived citation verification; the generic Purina family card did not recur. The final slate contained seven exact and zero near products, including one unsafe editorial article card.
 
 Stop. Do not start Phase 5G until RR-008 is explicitly addressed or deferred.
+
+### RR-008 cleanup mini-phase completion record
+
+- Completed step: RR-008 article/question-page product-card cleanup.
+- Next step: Explicit decision on RR-007/RR-063 safety work. Phase 5G remains queued.
+- Diagnostic-only: No. RR-008 behavior and deterministic tests changed.
+- Stop condition hit: Yes, adjacent live safety findings. Generic Chewy family pages became primary card URLs and wrong-recipe same-brand citations survived; no out-of-scope fix was attempted.
+- New issue IDs opened: RR-063.
+- Existing issue IDs updated: RR-008 changed from Needs Investigation to Fixed; RR-007 changed from Fixed to Needs Investigation; RR-022 remains Fixed; RR-013 remains unchanged.
+- Docs committed: Pending.
+- Implementation commit: `98b695a`.
+- Documentation commit: Pending.
+- Verification: fail-first 3 failures; focused 87/87; broad safety 192/192; typecheck passed; lint 0 errors with 3 existing warnings; full suite 694/694; eval clean.
+- Live validation: exactly one `dog food` call. BK Pets/Substack/editorial cards were absent. Seven exact products and zero near products remained. RR-007/RR-063 findings prevented a fully clean live verdict.
+
+Stop. Do not start Phase 5G or fix RR-007/RR-063 without explicit instruction.

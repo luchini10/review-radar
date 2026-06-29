@@ -1027,3 +1027,25 @@ New entries should keep the same format and stay easy to read.
 **Scope:** Documentation only. The fresh dog-food fixture and all existing generated fixtures/baselines remain untracked and uncommitted.
 
 **Next recommended step:** Stop before Phase 5G. Address RR-008 with a narrow generalized article-question and cross-host generic `/p/` eligibility cleanup after explicit instruction.
+
+## Codex Run - 2026-06-28 RR-008 article-card cleanup
+
+**Goal:** Fix only the reopened RR-008 editorial/question-page product-card regression before Phase 5G.
+
+**Root cause:** Existing title rules missed interrogative/opinion titles, while generic `/p/` handling made the BK Pets Substack article look like product detail in shared eligibility, Serper, and final validation.
+
+**What changed:** Shared eligibility now blocks interrogative and buying-decision editorial title shapes. Hosted publishing platforms are evidence-only. Genuine retailer and manufacturer `/p/` products remain valid; no host-specific BK Pets rule was added.
+
+**Proof:** Three focused assertions failed before implementation. Focused eligibility/result/Serper tests passed 87/87; broad price/type/requirement/citation/source-upgrade regressions passed 192/192; typecheck passed; lint had 0 errors and 3 existing warnings; full tests passed 694/694; eval was clean.
+
+**Live result:** Exactly one `dog food` search ran. The BK Pets article and all Substack/editorial cards were absent. Seven exact products and no near products remained; Purina and Hill's survived citation verification and final selection.
+
+**Adjacent findings:** RR-007 reopened because Chewy `/brands/` family pages became primary product links. RR-063 opened because several cards carried same-brand citations for different recipes. No out-of-scope behavior changed.
+
+**Issues:** RR-008 Fixed; RR-007 Needs Investigation; RR-063 High / Needs Investigation; RR-022 remains Fixed; RR-013 unchanged. Totals: 63 issues; 5 Open, 9 Needs Investigation, 48 Fixed, 1 Won't Fix.
+
+**Scope:** Two implementation files, three test files, and required docs. Generated baselines and live fixtures remain untracked.
+
+**Implementation commit:** `98b695a`.
+
+**Next recommended step:** Stop before Phase 5G. Address the RR-007/RR-063 safety cluster only after explicit instruction.

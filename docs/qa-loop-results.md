@@ -4602,3 +4602,57 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - The fresh fixture remains untracked and uncommitted.
 
 Recommended direction: stop before Phase 5G. Address RR-008 with a narrow generalized article-question and cross-host `/p/` eligibility cleanup, then proceed to Phase 5G only after explicit instruction.
+
+## <span style="color:orange">**Codex QA Update - 2026-06-28 (RR-008 article-card cleanup)**</span>
+
+**Verdict: TARGETED PASS / LIVE PARTIAL. RR-008 is fixed deterministically and the exact BK Pets article disappeared live, but the dog-food run exposed reopened RR-007 category links and new RR-063 wrong-recipe citations. Phase 5G did not start.**
+
+### Root cause and behavior change
+
+- `textLooksLikeNonProduct` did not recognize interrogative editorial titles such as `Is ... actually good?`.
+- Generic `/p/` handling in shared eligibility, Serper normalization, and final product-path validation made the Substack article look like product detail.
+- The fix adds a shared editorial-title verdict for question, opinion, verdict, and buying-decision title shapes.
+- Hosted publishing platforms such as Substack, Medium, Blogspot, and WordPress are evidence-only even when a path resembles `/p/product-name`.
+- The fix does not globally reject `/p/`. Target and unrelated manufacturer `/p/` product pages remain valid.
+- No scoring, ranking, RR-013, RR-022 retention, price, product type, source-upgrade identity, requirement, or UI behavior changed.
+
+### Deterministic proof
+
+```text
+fail-first focused run: 3 failures
+focused eligibility/result/Serper tests: 87/87 passed
+broad price/type/requirement/citation/source-upgrade matrix: 192/192 passed
+npm run typecheck: passed
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 694/694 passed
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+### Single live dog-food proof
+
+- Exactly one live `dog food` call ran; no broad baseline.
+- Funnel: 36 pool, 23 after citation verification, 12 after requirement filtering, 7 exact, 0 near.
+- The BK Pets article and all Substack content were absent from the full fixture and candidate pool.
+- No newsletter, blog, editorial, support, manual, or documentation page became a final card.
+- The seven exact products were Purina Pro Plan Sensitive Skin & Stomach Salmon, Royal Canin Small Adult, JustFoodForDogs Chicken & Rice, Pedigree Roasted Chicken, Hill's Sensitive Stomach & Skin Small Bites, Purina Dog Chow Real Chicken, and Hill's Perfect Digestion Chicken.
+- Purina and Hill's products survived citation verification and reached the final slate, preserving RR-022 behavior.
+
+### Adjacent live failures
+
+- RR-007 reopened: Purina, Royal Canin, and JustFoodForDogs cards used Chewy `/brands/...` family pages as primary buy links. The long letter-plus-digit family slug passes the generic product-detail fallback.
+- A Pedigree `/brands/complete-nutrition-7216` family page survived as primary citation ahead of a specific `/dp/` product page.
+- RR-063 opened: same-brand wrong-recipe citations survived for Purina Salmon versus Beef & Rice, JustFoodForDogs Chicken versus Fish & Sweet Potato, and Hill's Chicken versus Salmon.
+- These defects were diagnosed and documented only. No out-of-scope fix was made.
+
+### Issue outcome
+
+- RR-008: Fixed.
+- RR-007: changed from Fixed to Needs Investigation.
+- RR-063: new High / Needs Investigation issue.
+- RR-022: remains Fixed.
+- RR-013: unchanged.
+- Register: 63 issues; 6 Critical, 28 High, 24 Medium, 5 Low; 5 Open, 9 Needs Investigation, 48 Fixed, 1 Won't Fix.
+- Implementation commit: `98b695a`.
+- Fresh live fixtures remain untracked and uncommitted.
+
+Recommended direction: stop before Phase 5G. Address the RR-007/RR-063 product-card and citation-identity safety cluster first, after explicit instruction.

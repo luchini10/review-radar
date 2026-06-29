@@ -13,6 +13,14 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-28
 
+### Codex - RR-008 article-card eligibility cleanup
+- Fixed the live BK Pets regression by classifying interrogative/editorial decision titles as non-product evidence before product-path shortcuts.
+- Hosted publishing platforms including Substack, Medium, Blogspot, and WordPress remain usable as evidence but cannot render as product cards.
+- Preserved real Target and generic manufacturer `/p/` product routes; the fix is title/page-shape based rather than a Substack-only block.
+- Fail-first tests reproduced the issue through shared eligibility, Serper discovery, and final citation validation. Focused tests passed 87/87, broad safety tests 192/192, full tests 694/694, and eval reported no red flags.
+- One `dog food` live run contained no BK Pets or editorial card and preserved Purina/Hill's citation retention.
+- Reopened RR-007 for Chewy `/brands/` family pages used as primary card links. Opened RR-063 for same-brand wrong-recipe citations. No out-of-scope fix or Phase 5G work occurred.
+
 ### Codex - Phase 5F dog-food live confirmation
 - Ran exactly one post-refinement `dog food` live check; no app behavior changed and no broad baseline ran.
 - Six specific Purina/Hill's candidates survived citation verification, live-confirming RR-022 for the dog-food path. They were removed later by requirement filtering.
