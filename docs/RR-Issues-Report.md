@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through RR-007 regression cleanup
+## Compiled for AI Agent Consumption — Phase 0 through Phase 5F
 
 **Generated:** 2026-06-28
-**Scope:** All phases from initial measurement harness through the RR-007 regression cleanup
+**Scope:** All phases from initial measurement harness through Phase 5F
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -19,8 +19,8 @@
 | Medium | 24 |
 | Low | 5 |
 | Open | 5 |
-| Needs Investigation | 8 |
-| Fixed | 48 |
+| Needs Investigation | 7 |
+| Fixed | 49 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -63,6 +63,7 @@
 | Phase 5D — Product-card eligibility cleanup | 0 |
 | Phase 5E — Product-type and requirement truthfulness | 0 |
 | RR-007 regression cleanup mini-phase | 0 |
+| Phase 5F — Citation retention | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -250,6 +251,8 @@
 **Phase 5E regression:** Reopened. Both focused `pressure washer` live attempts selected `Pressure Washers - Best Buy` as exact #7. The Phase 5E product-type fix correctly removed ZEP detergent, but this broad retailer collection still passed product eligibility and final citation validation. No page-eligibility code changed because RR-007 is outside Phase 5E. Diagnose the exact current Best Buy URL/title shape in a later eligibility phase.
 
 **RR-007 regression-cleanup fix:** The exact catalog URL ended in a nested `pcmcat...c` identifier beneath `/site/outdoor-power-equipment/pressure-washers/`. Phase 5D's Best Buy listing rule only recognized a shallower two-segment `.c` route, while Serper's local helper treated every `/site/` route as a known product. Shared eligibility now rejects nested catalog identifiers, department/browse paths, and faceted listing parameters unless the URL matches a known product-detail shape. Serper uses the same narrowed Best Buy SKU/detail patterns. Fail-first coverage reproduced the page at shared eligibility, discovery normalization, and final citation filtering. A fresh single `pressure washer` live run returned six exact products plus one near product, all with specific product-detail primary URLs; the Best Buy catalog page was absent. RR-007 is Fixed.
+
+**Phase 5F safety update:** The first `dog food` live proof after citation retention exposed `Pro Plan Wet & Dry Dog Food | Purina US` at exact #7 from the generic family URL `/pro-plan/products/dog-food`. Phase 5F added a retention-layer product-specific path/title gate: generic category slugs cannot become primary cards even when provider-verified, while exact product slugs remain eligible after reachability verification. The exact family negative and specific Purina/Hill's positives are deterministic regressions. RR-007 remains Fixed; the final guard was not re-run live because the approved two-call Phase 5F limit was exhausted.
 
 ---
 
@@ -625,7 +628,7 @@
 | **Phase** | Phase 1 — Source-tiered discovery |
 | **Severity** | High |
 | **Title** | Real product-page leaders dropped at citation-verify stage (LLM-path products) |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** Products that arrived via the LLM/web_search path (not the auto-verified Serper path) had their citation URLs absent from the verified-URL set. When `filterResultToVerifiedCitations` ran, it found no verified citations for these products and removed them entirely — even when those products were major market leaders. RIDGID RT1200, Craftsman CMEC6150K, and Roborock S8 MaxV Ultra were all lost at this stage.
 
@@ -642,6 +645,10 @@
 **Phase 4E regression:** Reopened. Ecovacs DEEBOT T30S and T50 OMNI each entered the robot-vacuum pool with one `ecovacs.com` source and were dropped at `afterCitationVerify`. Char-Broil Performance 2-Burner entered the gas-grill pool with `charbroil.com` plus `walmart.com` evidence and was also dropped there. These are benchmark leader families with product/retailer evidence, so the citation-rescue path is not reliably preserving them.
 
 **Phase 4F evidence:** The same loss pattern affected major leaders in new categories: AirPods Pro 2, Bose QuietComfort Ultra, Galaxy Buds3 Pro, Soundcore Liberty 4 NC, Jabra Elite 8 Active, Oral-B iO 6/2, EGO and RYOBI blowers, Purina Pro Plan, Hill's Science Diet, Horizon T202, Sole F80, and NordicTrack T9 were dropped at citation verification.
+
+**Phase 5F fix:** Citation retention had two related defects. First, product-page rescue ran only when zero citations survived, so a verified editorial or same-host category URL suppressed rescue and then became the primary citation; final card validation dropped the otherwise valid product. Second, reachability checks ran only when the global verified URL set was empty, so one verified source elsewhere prevented unverified LLM product pages from being checked. The route now performs a targeted reachability pass only for product-specific, path/title-bound URLs not already exactly verified. Final filtering promotes an exactly verified product page ahead of secondary editorial/category evidence and rejects generic family slugs, support/manual/documentation pages, unrelated self-cites, and unreachable URLs.
+
+Deterministic tests cover Oral-B and EGO retention, specific Purina and Hill's product paths, same-host category substitution, unrelated global verification, and the generic Purina family negative. Frozen Phase 4 fixtures still show their historical drops by design. A fresh `electric toothbrush` run retained all 28 pool candidates through citation verification and selected seven specific product-page cards, including Oral-B and Philips leaders. The initial `dog food` run still dropped Purina/Hill's candidates and exposed the generic Purina family card; the final product-path binding refinement addresses both shapes deterministically but was not live-retested because the two-call limit was reached. RR-022 is Fixed with that bounded live-proof caveat.
 
 ---
 
@@ -1855,18 +1862,17 @@ Phase 5C fixed RR-002 after fail-first reproduction and ran three approved focus
 - RR-060: True same-model duplicates can occupy multiple final slots
 - RR-061: Product image metadata accepts non-image or irrelevant assets
 
-### Needs Investigation (8 issues)
+### Needs Investigation (7 issues)
 - RR-013: Thin winner crowd-out
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
-- RR-022: Real product-page leaders dropped at citation verification
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-041: Source-upgrade trigger not firing in Phase 3J live runs
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 
-### Fixed (48 issues)
-RR-001 through RR-012, RR-016 through RR-021, RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055, RR-057, RR-058, RR-062
+### Fixed (49 issues)
+RR-001 through RR-012, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055, RR-057, RR-058, RR-062
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -1875,7 +1881,7 @@ RR-001 through RR-012, RR-016 through RR-021, RR-023, RR-025 through RR-036, RR-
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-014 + RR-022 + RR-056 + RR-060** (High/Medium quality cluster) — Leader recall, citation loss, family concentration, and true duplicates jointly degrade broad slates.
+1. **RR-014 + RR-056 + RR-060** (High/Medium quality cluster) — Leader recall, family concentration, and true duplicates jointly degrade broad slates.
 2. **RR-059** (Medium) — Broad-query form-factor handling lets niche products outrank mainstream products.
 3. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
 4. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.

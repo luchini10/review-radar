@@ -4483,3 +4483,78 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - The fresh live fixture remains untracked and uncommitted.
 
 Recommended direction: stop after the RR-007 cleanup. Phase 5F is next only after explicit instruction and must remain limited to RR-022 citation retention.
+
+## <span style="color:green">**Codex QA Update - 2026-06-28 (Phase 5F citation retention)**</span>
+
+**Verdict: PASS with a bounded live-proof caveat. RR-022 is fixed deterministically; one live category proved zero citation-stage loss, while the final dog-food safety refinement was not live-retested after the two-call cap was reached.**
+
+### Diagnosis and fail-first proof
+
+- Current code reproduced two RR-022 paths before editing:
+  1. A verified editorial citation survived, suppressed product-page rescue, became primary, and caused final product-card validation to drop a valid Oral-B product page.
+  2. Same-host verification replaced an EGO product URL with a Home Depot category URL; rescue again did not run because one citation survived.
+- Product-page rescue was conditional on `citations.length === 0`, even though a surviving citation could be evidence-only.
+- The route ran reachability verification only when the global verified URL set was empty. A verified URL for any other candidate prevented unverified LLM product pages from being checked.
+- Three fail-first tests reproduced retailer replacement, editorial-first manufacturer loss, and final trust rejection.
+
+### Behavior change
+
+- The route builds a product-page-only verification result for URLs that are not already exactly verified and performs one targeted reachability pass.
+- Serper candidate URLs remain pre-verified and are not re-fetched.
+- Final citation filtering prioritizes an exactly verified product page, keeps verified editorial/category evidence secondary, and de-duplicates exact URLs.
+- A product-specific path/title gate recognizes explicit retailer detail routes, model paths, and distinctive manufacturer slugs.
+- Unknown manufacturer pages can pass only when the final slug agrees with distinctive product-name tokens and the exact URL passes reachability verification.
+- Generic category/family slugs, unrelated global verification, unreachable self-cites, support, manuals, documentation, search, browse, and listing pages cannot use this path.
+- No scoring, ranking, RR-013 weighting, price, product-type, source-upgrade identity, requirement, UI, or broad discovery behavior changed.
+
+### Deterministic proof
+
+```text
+fail-first focused run: 3 failures
+focused citation/API/card-path tests: 69/69 passed
+broad safety matrix: 282/282 passed
+npm run typecheck: passed
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 690/690 passed
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+- Positive coverage: Oral-B manufacturer page plus editorial evidence; EGO retailer page versus same-host category evidence; specific Purina and Hill's manufacturer paths; normal retailer SKU and manufacturer product pages.
+- Negative coverage: unrelated provider verification, generic Purina `/pro-plan/products/dog-food`, Home Depot category pages, Phase 5D collections/support/manual/documentation, RR-007 nested catalogs, and existing non-product pages.
+- RR-002/RR-062 price, Phase 5E type/requirement, and Phase 5A/5B source-upgrade safety regressions remain green.
+
+### Saved fixture reassessment
+
+- Frozen Phase 4 fixtures remain historical and still show their original citation-stage drops:
+  - `electric toothbrush`: 3 dropped.
+  - `dog food`: 5 dropped.
+  - `wireless earbuds`: 3 dropped.
+- The fixtures do not retain the complete pre-verification citation objects, so current retention code cannot be applied directly to those frozen candidates. Their exact leader/product URL shapes are instead covered by deterministic current-code tests.
+
+### Focused live proof
+
+Exactly two approved live calls ran; no broad baseline.
+
+**`electric toothbrush`**
+- Candidate pool and after-citation counts were both 28; zero candidates were dropped at citation verification.
+- Seven exact cards used specific product pages, including Philips Sonicare 3100/4100/6100, Oral-B iO Series 5, Oral-B Pro 1000, and LaserGlow.
+- No category, support, manual, or documentation page became a final card.
+
+**`dog food`**
+- This call ran before the final path-binding refinement.
+- It dropped 11 candidates at citation verification, including specific Purina Pro Plan and Hill's Science Diet products.
+- It also selected `Pro Plan Wet & Dry Dog Food | Purina US` exact #7 from `/pro-plan/products/dog-food`, exposing an unsafe generic family path.
+- The final deterministic refinement makes specific Purina/Hill's slugs reachability-eligible and blocks that family slug even when provider-verified.
+- No third live call ran because the approved two-call cap was exhausted. The final dog-food behavior remains deterministic rather than live-proven.
+
+### Issue outcome
+
+- RR-022: Fixed.
+- RR-007: remains Fixed with the new family-path regression.
+- RR-013: unchanged; no ranking or citation-strength weighting changed.
+- No new issue ID opened.
+- Register: 62 issues; 6 Critical, 27 High, 24 Medium, 5 Low; 5 Open, 7 Needs Investigation, 49 Fixed, 1 Won't Fix.
+- Implementation commit: `dc0f403`.
+- Fresh live fixtures remain untracked and uncommitted.
+
+Recommended direction: stop after Phase 5F. Optionally approve one focused `dog food` confirmation of the final guard; otherwise Phase 5G is next only on explicit instruction and must remain limited to RR-013.

@@ -535,7 +535,7 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - Four focused live calls ran. ZEP detergent disappeared after the final refinement, portable-generator results contained no power stations, and multiple products passed `Portable`.
 - RR-007 reopened because `Pressure Washers - Best Buy` still rendered exact #7. The shop-vac customer-service candidate remained absent from final cards but survived citation verification before requirement filtering.
 
-**Current boundary**
+**Boundary after Phase 5E**
 - Stop after the RR-007 regression cleanup. Do not start another phase without explicit instruction.
 - Recommended next: Phase 5F for RR-022 citation retention only.
 
@@ -546,3 +546,16 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - Fail-first proof covered shared eligibility, Serper normalization, and final citation filtering. Focused tests passed 177/177 across eligibility plus Phase 5E type/requirement behavior; full tests passed 686/686; eval was clean.
 - One focused `pressure washer` run returned six exact products and one near product, all with specific product-detail primary URLs. The Best Buy category page was absent. A Craftsman collection remained secondary evidence only.
 - RR-007 is Fixed. No scoring, ranking, citation threshold, price, product-type, requirement, source-upgrade identity, or UI behavior changed.
+
+**Phase 5F - citation retention**
+- RR-022 is Fixed. Citation verification now performs a targeted reachability pass for product-specific LLM URLs that are not already exactly provider- or Serper-verified.
+- The final citation list promotes an exactly verified product page ahead of secondary editorial or same-host category evidence. A surviving weak citation can no longer suppress valid product-page retention.
+- The retention path requires an explicit retailer detail route, model-bearing path, or distinctive final-slug/name agreement. Unknown manufacturer pages require exact reachability verification.
+- Generic family slugs, categories, listings, support, manuals, documentation, unreachable URLs, and unrelated self-cites remain blocked. `/pro-plan/products/dog-food` is a deterministic negative; specific Purina and Hill's product slugs are positives.
+- No RR-013 citation-strength scoring, ranking, price, product-type, source-upgrade identity, requirement, UI, or broad discovery behavior changed.
+- Verification: fail-first 3 failures; focused 69/69; broad safety 282/282; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 690/690; eval clean.
+- Live proof: `electric toothbrush` retained all 28 pool candidates through citation verification. The initial `dog food` call exposed remaining product drops and a generic family card; the final guard covers those shapes deterministically but was not live-retested because the approved two-call cap was exhausted.
+
+**Current boundary**
+- Stop after Phase 5F. Do not start another phase without explicit instruction.
+- Recommended next: Phase 5G for RR-013 evidence-strength ranking only. An optional focused dog-food confirmation requires separate live-search approval.

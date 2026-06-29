@@ -989,3 +989,23 @@ New entries should keep the same format and stay easy to read.
 **Scope:** No scoring, ranking, price, citation, product-type, requirement, source-upgrade identity, or UI behavior changed. Generated baselines and live fixtures remain untracked.
 
 **Next recommended step:** Stop. Phase 5F may begin only after explicit instruction and should address RR-022 citation retention only.
+
+## Codex Run - 2026-06-28 Phase 5F
+
+**Goal:** Fix RR-022 citation retention without changing RR-013 scoring/ranking policy or weakening product-card trust.
+
+**Root cause:** Product-page rescue ran only when zero citations survived. A verified editorial or same-host category URL could therefore suppress rescue, become primary, and make final eligibility drop a valid leader. Candidate-specific reachability also never ran when any URL anywhere in the response was already verified.
+
+**What changed:** Added targeted reachability verification for unverified, product-specific LLM URLs; prioritized exactly verified product pages before secondary evidence; and added product path/title binding for manufacturer URL shapes. Generic family slugs, unrelated self-cites, and evidence-only pages remain blocked.
+
+**Proof:** Three fail-first tests reproduced the current failure. Focused tests passed 69/69 and the broad safety matrix passed 282/282. Typecheck passed; lint had 0 errors and 3 pre-existing warnings; full tests passed 690/690; eval reported no red flags.
+
+**Fixture proof:** Frozen electric-toothbrush, dog-food, and wireless-earbud fixtures still show historical drops and cannot be reprocessed because they omit complete pre-verification citation objects. Current deterministic tests cover the reproduced URL/evidence shapes.
+
+**Live validation:** Two searches ran. `electric toothbrush` retained all 28 candidates through citation verification and selected seven specific product-page cards. The first `dog food` run still dropped Purina/Hill's leaders and exposed a generic Purina family card; the final code deterministically retains the specific product slugs and blocks the family slug. No third call ran after the final refinement because the two-call cap was exhausted.
+
+**Issues:** RR-022 Fixed; RR-007 remains Fixed; RR-013 unchanged. No new issue ID. Totals: 62 issues; 5 Open, 7 Needs Investigation, 49 Fixed, 1 Won't Fix.
+
+**Scope:** Four implementation/test files plus required docs. No scoring, ranking, price, type, requirement, source-upgrade identity, UI, or broad discovery change. Generated baselines and live fixtures remain untracked.
+
+**Next recommended step:** Stop. Optionally approve one dog-food confirmation of the final guard; Phase 5G otherwise requires explicit instruction and must address RR-013 only.

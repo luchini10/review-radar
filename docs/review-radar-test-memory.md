@@ -689,3 +689,27 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Live call:** Exactly one `pressure washer` save/replay. Six exact and one near product used specific product-detail primary URLs; the Best Buy catalog page was absent. A Craftsman family page remained secondary evidence only.
 
 **Status:** RR-007 Fixed. Phase 5F remains unstarted and must stay limited to RR-022.
+
+---
+
+## 2026-06-28 — Phase 5F citation retention
+
+**Issue fixed:** RR-022.
+
+**Regression contract:**
+- Verify unverified LLM product-page URLs per candidate even when unrelated provider URLs already exist.
+- Do not re-fetch already verified Serper product URLs.
+- Put an exactly verified, product-specific page first; editorial/category evidence may remain secondary only.
+- Require explicit retailer detail shape, model path, or distinctive final-slug/name agreement.
+- Unknown manufacturer pages need exact reachability verification before they can be primary.
+- Never let unrelated global verification, a forged self-cite, generic family slug, category, support, manual, documentation, or unreachable URL rescue a card.
+
+**Required examples:** Keep Oral-B plus editorial evidence, EGO versus same-host category substitution, specific Purina/Hill's paths, and normal retailer/manufacturer pages positive. Keep `/pro-plan/products/dog-food`, Home Depot categories, Phase 5D support/docs/collections, RR-007 nested catalogs, and unrelated verification negative.
+
+**Verification:** Fail-first 3 failures; focused 69/69; broad safety matrix 282/282; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 690/690; eval clean.
+
+**Fixture semantics:** Frozen Phase 4 electric-toothbrush, dog-food, and wireless-earbud fixtures preserve historical drops but omit full pre-verification citation objects, so current retention cannot be replayed directly against them.
+
+**Live calls:** Two total. `electric toothbrush` had 28 pool and 28 post-citation candidates with seven specific product-page exact cards. The initial `dog food` call still dropped 11 and exposed a generic Purina family card; the final path-binding guard covers specific Purina/Hill's positives and the family negative deterministically. The final refinement was not live-retested because the call cap was exhausted.
+
+**Status:** RR-022 Fixed with a bounded live-proof caveat. RR-013 unchanged. Preserve this separation in Phase 5G.

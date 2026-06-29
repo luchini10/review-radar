@@ -13,6 +13,17 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-28
 
+### Codex - Phase 5F citation retention
+- Fixed RR-022 by separating global source verification from candidate-specific product-page verification.
+- LLM product pages that are not already exactly provider-verified now receive a targeted reachability check; already verified Serper URLs are not fetched again.
+- Final citation filtering promotes an exactly verified, product-specific URL ahead of editorial or same-host category evidence instead of dropping the candidate because weaker evidence happened to be first.
+- Added product path/title binding for unknown manufacturer URL shapes. Specific Purina, Hill's, Oral-B, EGO, and generic manufacturer product pages are retainable; generic family paths such as `/products/dog-food` remain blocked.
+- Unrelated global verification, unreachable self-cites, categories, collections, support, customer-service, manuals, documentation, and unsafe primary links remain rejected.
+- RR-013 scoring and ranking policy did not change. No price, product-type, source-upgrade identity, requirement, UI, or shared discovery change was made.
+- Verification: fail-first 3 failures; focused safety matrix 282/282; typecheck clean; lint 0 errors with 3 pre-existing warnings; full suite 690/690; eval red-flag checks clean.
+- Two bounded live calls ran. `electric toothbrush` retained all 28 candidates through citation verification. The initial `dog food` proof exposed remaining drops and a generic Purina family card; the final deterministic refinement covers those exact product/family shapes but was not live-retested because the two-call cap was exhausted.
+- RR-022 is Fixed with the bounded live-proof caveat. RR-007 remains Fixed. No full baseline ran.
+
 ### Codex - RR-007 nested catalog-page regression cleanup
 - Fixed the Phase 5E regression where `Pressure Washers - Best Buy` could render as an exact product card.
 - The shared eligibility layer now rejects nested catalog identifiers such as `pcmcat...c`, generic department/browse routes, and faceted listing parameters unless the URL is a known product-detail shape.
