@@ -1106,9 +1106,9 @@ Stop. Do not start Phase 5G until RR-008 is explicitly addressed or deferred.
 - Stop condition hit: Yes, adjacent live safety findings. Generic Chewy family pages became primary card URLs and wrong-recipe same-brand citations survived; no out-of-scope fix was attempted.
 - New issue IDs opened: RR-063.
 - Existing issue IDs updated: RR-008 changed from Needs Investigation to Fixed; RR-007 changed from Fixed to Needs Investigation; RR-022 remains Fixed; RR-013 remains unchanged.
-- Docs committed: Pending.
+- Docs committed: Yes.
 - Implementation commit: `98b695a`.
-- Documentation commit: Pending.
+- Documentation commit: `418275b`.
 - Verification: fail-first 3 failures; focused 87/87; broad safety 192/192; typecheck passed; lint 0 errors with 3 existing warnings; full suite 694/694; eval clean.
 - Live validation: exactly one `dog food` call. BK Pets/Substack/editorial cards were absent. Seven exact products and zero near products remained. RR-007/RR-063 findings prevented a fully clean live verdict.
 
