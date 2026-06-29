@@ -1122,8 +1122,9 @@ Stop. Do not start Phase 5G or fix RR-007/RR-063 without explicit instruction.
 - Stop condition hit: Bounded live-proof caveat only. The one live call exposed two additional RR-063 variants; the final deterministic refinement was reassessed against the saved fixture without a second live call.
 - New issue IDs opened: None.
 - Existing issue IDs updated: RR-007 and RR-063 changed from Needs Investigation to Fixed. RR-008 and RR-022 remain Fixed. RR-013 remains unchanged.
-- Docs committed: Pending this completion record.
+- Docs committed: Yes.
 - Implementation commit: `01414c1`.
+- Documentation commit: `d97b2ab`.
 - Verification: fail-first 8 failures plus missing module; focused 84/84; broad safety 295/295; typecheck passed; lint 0 errors with 3 existing warnings; full suite 706/706; eval clean.
 - Live validation: exactly one `dog food` call. Six exact and five near products remained; every primary URL was a specific product-detail route. No generic family, editorial, support, manual, or documentation page became a card. Final saved-fixture reassessment removes the Blue Buffalo and Iams mismatched citations.
 
