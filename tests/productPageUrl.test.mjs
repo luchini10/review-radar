@@ -138,6 +138,67 @@ describe("product page URL selection", () => {
     assert.equal(link?.label, "View Official Product Page");
   });
 
+  it("replaces a retailer family URL with a matching specific product citation", () => {
+    const familyUrl =
+      "https://www.chewy.com/brands/purina-pro-plan-dog-food-7437";
+    const productUrl =
+      "https://www.chewy.com/purina-pro-plan-sensitive-skin/dp/123456";
+    const product = buildProduct({
+      category: "Dog food",
+      citations: [
+        {
+          title: "Purina Pro Plan Dog Food: Wet & Dry Dog Food | Chewy",
+          url: familyUrl,
+          what_it_supports: "Brand-family information.",
+        },
+        {
+          title:
+            "Purina Pro Plan Sensitive Skin & Stomach Salmon & Rice Dry Dog Food",
+          url: productUrl,
+          what_it_supports: "Specific product page.",
+        },
+      ],
+      metadata: {
+        brand: field("Purina", productUrl),
+        offers: [],
+      },
+      name: "Purina Pro Plan Sensitive Skin & Stomach Salmon & Rice Dry Dog Food",
+      product_page_url: familyUrl,
+    });
+    const link = getProductPageLink(product);
+    const result = prioritizeProductPageUrlsInResult(buildResult(product));
+
+    assert.equal(link?.url, productUrl);
+    assert.equal(link?.isProductPage, true);
+    assert.equal(result.recommendations[0].product_page_url, productUrl);
+  });
+
+  it("clears a generic family URL when no specific product page is available", () => {
+    const familyUrl =
+      "https://www.chewy.com/brands/royal-canin-dog-food-150798";
+    const product = buildProduct({
+      category: "Dog food",
+      citations: [
+        {
+          title: "Royal Canin Dog Food - Free Shipping | Chewy",
+          url: familyUrl,
+          what_it_supports: "Brand-family information.",
+        },
+      ],
+      metadata: {
+        brand: field("Royal Canin", familyUrl),
+        offers: [],
+      },
+      name: "Royal Canin Small Adult Dry Dog Food",
+      product_page_url: familyUrl,
+    });
+    const result = prioritizeProductPageUrlsInResult(buildResult(product));
+
+    assert.equal(getProductPageLink(product), null);
+    assert.equal(result.recommendations[0].product_page_url, "");
+    assert.equal(result.exactMatches[0].product_page_url, "");
+  });
+
   it("does not choose sports listing, review, or newsroom pages over a real product page", () => {
     const productUrl =
       "https://www.nike.com/t/gt-cut-academy-basketball-shoes-HWCFvAob";
@@ -255,7 +316,7 @@ describe("product page URL selection", () => {
     assert.equal(link, null);
   });
 
-  it("does not label official lineup pages as specific product pages", () => {
+  it("does not use official lineup pages as product CTA links", () => {
     const lineupUrl = "https://cowaymega.com/pages/airmega";
     const link = getProductPageLink(
       buildProduct({
@@ -278,10 +339,7 @@ describe("product page URL selection", () => {
       }),
     );
 
-    assert.equal(link?.url, lineupUrl);
-    assert.equal(link?.type, "official");
-    assert.equal(link?.isProductPage, false);
-    assert.equal(link?.label, "View Official Brand Page");
+    assert.equal(link, null);
   });
 
   it("recognizes Honeywell Plugged In as an official product domain", () => {

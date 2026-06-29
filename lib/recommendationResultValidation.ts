@@ -1,4 +1,5 @@
 import { classifyProductEligibility } from "./productEligibility.ts";
+import { classifyProductEvidenceIdentity } from "./productEvidenceIdentity.ts";
 import { sourceTier } from "./search/sourceTier.ts";
 
 // How confident we are in the independence and quality of a citation.
@@ -202,6 +203,7 @@ function isSelfCitableProductPage(
   name: string | undefined,
   category: string | undefined,
   url: string,
+  sourceTitle?: string,
 ) {
   if (!url) {
     return false;
@@ -211,12 +213,18 @@ function isSelfCitableProductPage(
     category,
     name,
     productName: name,
-    sourceTitle: name,
+    sourceTitle: sourceTitle || name,
     sourceType: "citation",
     url,
   });
 
   return (
+    classifyProductEvidenceIdentity({
+      category,
+      productName: name || "",
+      sourceTitle,
+      url,
+    }) === "same_product" &&
     (
       eligibility.canRenderAsProductCard ||
       (eligibility.status === "unknown" && eligibility.canUseAsEvidence)
@@ -240,6 +248,7 @@ function rescueProductPageCitation(
         recommendation.name,
         recommendation.category,
         citation.url,
+        citation.title,
       )
     ) {
       const url = normalizeUrl(citation.url);
@@ -268,6 +277,7 @@ function prioritizeProductPageCitation(
       recommendation.name,
       recommendation.category,
       citation.url,
+      citation.title,
     ),
   );
   const primaryCitation =
@@ -313,6 +323,7 @@ export function getProductPageCitationVerificationResult<
               recommendation.name,
               recommendation.category,
               citation.url,
+              citation.title,
             ),
         ),
       }))
@@ -603,6 +614,31 @@ export function filterResultToVerifiedCitations<T extends RecommendationResultLi
           }
 
           const citationType = classifyCitationType(verifiedUrl);
+          const evidenceIdentity = classifyProductEvidenceIdentity({
+            category: recommendation.category,
+            productName: recommendation.name || "",
+            sourceTitle: citation.title,
+            url: verifiedUrl,
+          });
+
+          if (evidenceIdentity === "conflicting_product") {
+            return [];
+          }
+
+          if (evidenceIdentity === "unknown") {
+            const citationEligibility = classifyProductEligibility({
+              category: recommendation.category,
+              name: citation.title,
+              productName: citation.title,
+              sourceTitle: citation.title,
+              sourceType: "citation",
+              url: verifiedUrl,
+            });
+
+            if (citationEligibility.canRenderAsProductCard) {
+              return [];
+            }
+          }
 
           if (normalizeUrl(citation.url) === verifiedUrl) {
             return [{ ...citation, url: verifiedUrl, citation_type: citationType }];
@@ -659,6 +695,7 @@ export function filterResultToVerifiedCitations<T extends RecommendationResultLi
             recommendation.name,
             recommendation.category,
             primaryUrl,
+            primaryCitation?.title,
           );
         const primaryPathMatchesRecommendation =
           productPagePathMatchesRecommendation(

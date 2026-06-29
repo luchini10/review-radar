@@ -5,6 +5,7 @@ import type {
   RawProductCandidate,
 } from "@/types/review-radar";
 import { parseBestProductPriceText } from "./priceParsing.ts";
+import { isGenericProductEvidenceUrl } from "./productEvidenceIdentity.ts";
 
 type ProductEligibilityInput = {
   brand?: string | null;
@@ -358,6 +359,10 @@ function isLikelyListingOrSearchUrl(parsed: URL) {
   const path = urlPath(parsed);
   const normalizedPath = normalizeText(path);
   const knownProductUrl = isKnownProductUrl(parsed);
+
+  if (isGenericProductEvidenceUrl(parsed.toString())) {
+    return true;
+  }
 
   if (
     !knownProductUrl &&

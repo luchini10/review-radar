@@ -16,7 +16,10 @@ import {
 } from "../../../lib/recommendationResultValidation.ts";
 import { normalizeResearchResult } from "../../../lib/normalizeResearchResult.ts";
 import { enrichResultWithReviewEvidence } from "../../../lib/productEvidence.ts";
-import { prioritizeProductPageUrlsInResult } from "../../../lib/productPageUrl.ts";
+import {
+  prioritizeProductPageUrl,
+  prioritizeProductPageUrlsInResult,
+} from "../../../lib/productPageUrl.ts";
 import { enrichProductAssets } from "../../../lib/productAssets.ts";
 import {
   upgradeWeakSourceEvidence,
@@ -903,7 +906,19 @@ async function handleRecommendationPost(
 
     const verifiedResult = timing.measureSync(
       "filter_to_verified_citations",
-      () => filterResultToVerifiedCitations(candidateResult, verifiedUrls),
+      () => {
+        const filteredResult = filterResultToVerifiedCitations(
+          candidateResult,
+          verifiedUrls,
+        );
+
+        return {
+          ...filteredResult,
+          recommendations: filteredResult.recommendations.map(
+            prioritizeProductPageUrl,
+          ),
+        };
+      },
     );
     const discoveryCoverage = {
       executedQueryCount:

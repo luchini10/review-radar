@@ -643,6 +643,180 @@ describe("recommendation result trust validation", () => {
     );
   });
 
+  it("keeps generic family evidence secondary and removes wrong-recipe product citations", () => {
+    const familyUrl =
+      "https://www.chewy.com/brands/purina-pro-plan-dog-food-7437";
+    const wrongRecipeUrl =
+      "https://www.chewy.com/purina-pro-plan-beef-rice/dp/222222";
+    const exactProductUrl =
+      "https://www.chewy.com/purina-pro-plan-sensitive-skin-salmon/dp/111111";
+    const filtered = filterResultToVerifiedCitations(
+      buildResult([
+        buildRecommendation({
+          category: "dog food",
+          citations: [
+            {
+              title: "Purina Pro Plan Dog Food: Wet & Dry Dog Food | Chewy",
+              url: familyUrl,
+              what_it_supports: "Brand-family evidence.",
+            },
+            {
+              title:
+                "Purina Pro Plan Complete Essentials Beef & Rice Dry Dog Food",
+              url: wrongRecipeUrl,
+              what_it_supports: "A different Purina recipe.",
+            },
+            {
+              title:
+                "Purina Pro Plan Sensitive Skin & Stomach Salmon & Rice Dry Dog Food",
+              url: exactProductUrl,
+              what_it_supports: "The exact product page.",
+            },
+          ],
+          name:
+            "Purina Pro Plan Sensitive Skin & Stomach Salmon & Rice Dry Dog Food",
+        }),
+      ]),
+      new Set([familyUrl, wrongRecipeUrl, exactProductUrl]),
+    );
+
+    assert.equal(filtered.recommendations.length, 1);
+    assert.equal(filtered.recommendations[0].citations[0].url, exactProductUrl);
+    assert.equal(
+      filtered.recommendations[0].citations.some(
+        (citation) => citation.url === wrongRecipeUrl,
+      ),
+      false,
+    );
+    assert.equal(
+      filtered.recommendations[0].citations.some(
+        (citation) => citation.url === familyUrl,
+      ),
+      true,
+    );
+  });
+
+  it("rejects explicit recipe conflicts across unrelated food products", () => {
+    const cases = [
+      {
+        name: "Hill's Perfect Digestion Chicken & Brown Rice Dry Dog Food",
+        citationTitle:
+          "Hill's Perfect Digestion Salmon & Brown Rice Dry Dog Food",
+        url: "https://www.chewy.com/hills-perfect-digestion-salmon/dp/333333",
+      },
+      {
+        name: "JustFoodForDogs Chicken & Rice Fresh Dog Food",
+        citationTitle: "JustFoodForDogs Fish & Sweet Potato Fresh Dog Food",
+        url: "https://www.chewy.com/justfoodfordogs-fish-sweet-potato/dp/444444",
+      },
+      {
+        name:
+          "Blue Buffalo Life Protection Adult Chicken & Brown Rice Dry Dog Food",
+        citationTitle:
+          "Blue Buffalo Life Protection Small Breed Puppy Chicken & Oatmeal Dry Dog Food",
+        url: "https://www.chewy.com/blue-buffalo-puppy-oatmeal/dp/555556",
+      },
+    ];
+
+    for (const item of cases) {
+      const filtered = filterResultToVerifiedCitations(
+        buildResult([
+          buildRecommendation({
+            category: "dog food",
+            citations: [
+              {
+                title: item.citationTitle,
+                url: item.url,
+                what_it_supports: "A different recipe.",
+              },
+            ],
+            name: item.name,
+          }),
+        ]),
+        new Set([item.url]),
+      );
+
+      assert.equal(filtered.recommendations.length, 0);
+    }
+  });
+
+  it("drops a specific product-page citation when same-product identity is unknown", () => {
+    const exactUrl = "https://www.walmart.com/ip/iams-adult-lamb-rice/14651646";
+    const unrelatedUrl =
+      "https://www.walmart.com/ip/iams-adult-small-toy-breeds/11027222";
+    const filtered = filterResultToVerifiedCitations(
+      buildResult([
+        buildRecommendation({
+          category: "dog food",
+          citations: [
+            {
+              title: "Iams Proactive Health Adult Lamb Meal & Rice",
+              url: exactUrl,
+              what_it_supports: "The exact product.",
+            },
+            {
+              title:
+                "Iams Proactive Health Adult Small & Toy Breeds Dry Dog Food",
+              url: unrelatedUrl,
+              what_it_supports: "A different Iams formula.",
+            },
+          ],
+          name: "Iams Proactive Health Adult Lamb Meal & Rice",
+        }),
+      ]),
+      new Set([exactUrl, unrelatedUrl]),
+    );
+
+    assert.equal(filtered.recommendations.length, 1);
+    assert.deepEqual(
+      filtered.recommendations[0].citations.map((citation) => citation.url),
+      [exactUrl],
+    );
+  });
+
+  it("keeps exact same-product citations and rejects explicit model conflicts", () => {
+    const exactUrl =
+      "https://www.chewy.com/hills-perfect-digestion-chicken/dp/555555";
+    const exact = filterResultToVerifiedCitations(
+      buildResult([
+        buildRecommendation({
+          category: "dog food",
+          citations: [
+            {
+              title:
+                "Hill's Perfect Digestion Chicken & Brown Rice Dry Dog Food, 12-lb bag",
+              url: exactUrl,
+              what_it_supports: "The exact product in another package size.",
+            },
+          ],
+          name: "Hill's Perfect Digestion Chicken & Brown Rice Dry Dog Food",
+        }),
+      ]),
+      new Set([exactUrl]),
+    );
+    const wrongModelUrl =
+      "https://www.bestbuy.com/site/samsung-qn85d-tv/123456.p";
+    const wrongModel = filterResultToVerifiedCitations(
+      buildResult([
+        buildRecommendation({
+          category: "television",
+          citations: [
+            {
+              title: "Samsung QN85D 65-inch Neo QLED TV",
+              url: wrongModelUrl,
+              what_it_supports: "A different Samsung TV model.",
+            },
+          ],
+          name: "Samsung QN90D 65-inch Neo QLED TV",
+        }),
+      ]),
+      new Set([wrongModelUrl]),
+    );
+
+    assert.equal(exact.recommendations.length, 1);
+    assert.equal(wrongModel.recommendations.length, 0);
+  });
+
   it("targets specific manufacturer pages but not generic product-family pages", () => {
     const purinaProductUrl =
       "https://shop.purina.com/pro-plan-reg-savor-adult-shredded-blend-beef-rice-formula";
@@ -771,7 +945,9 @@ describe("recommendation result trust validation", () => {
 
 describe("product-page citation rescue (citation verification)", () => {
   const prod = (url, name = "RIDGID 12 Gallon NXT Wet/Dry Vac HD1200") =>
-    buildResult([buildRecommendation({ name, citations: [{ url }] })]);
+    buildResult([
+      buildRecommendation({ name, citations: [{ title: name, url }] }),
+    ]);
 
   it("keeps a real product-page candidate whose URL is not in the verified set", () => {
     const filtered = filterResultToVerifiedCitations(
@@ -893,7 +1069,10 @@ describe("citation type classification", () => {
     // The primary URL passes product eligibility; both citations get type-tagged.
     const rec = buildRecommendation({
       citations: [
-        { url: "https://www.amazon.com/dp/B0A1B2C3D4" },
+        {
+          title: "Example Product Model A123",
+          url: "https://www.amazon.com/dp/B0A1B2C3D4",
+        },
         { url: "https://www.wirecutter.com/reviews/best-robot-vacuums/" },
       ],
     });

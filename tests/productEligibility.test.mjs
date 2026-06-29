@@ -128,6 +128,46 @@ describe("shared product eligibility classifier", () => {
     }
   });
 
+  it("rejects retailer brand and family routes even when their slugs contain numeric IDs", () => {
+    const chewyBrand = classify({
+      category: "dog food",
+      name: "Purina Pro Plan Adult Sensitive Skin & Stomach Salmon Dog Food",
+      sourceTitle: "Purina Pro Plan Dog Food: Wet & Dry Dog Food | Chewy",
+      url: "https://www.chewy.com/brands/purina-pro-plan-dog-food-7437",
+    });
+    const unrelatedRetailerBrand = classify({
+      category: "protein powder",
+      name: "Example Nutrition Vanilla Whey Protein",
+      sourceTitle: "Example Nutrition Protein Products",
+      url: "https://www.petco.example/brand/example-nutrition-protein-8421",
+    });
+
+    for (const result of [chewyBrand, unrelatedRetailerBrand]) {
+      assert.equal(result.canRenderAsProductCard, false);
+      assert.equal(result.status, "listing_or_search");
+    }
+  });
+
+  it("preserves specific retailer product-detail routes across stores", () => {
+    const chewyProduct = classify({
+      category: "dog food",
+      name: "Purina Pro Plan Sensitive Skin & Stomach Salmon & Rice Dry Dog Food",
+      sourceTitle:
+        "Purina Pro Plan Sensitive Skin & Stomach Salmon & Rice Dry Dog Food",
+      url: "https://www.chewy.com/purina-pro-plan-sensitive-skin/dp/123456",
+    });
+    const walmartProduct = classify({
+      category: "dog food",
+      name: "Purina Pro Plan Sensitive Skin & Stomach Salmon & Rice Dry Dog Food",
+      sourceTitle:
+        "Purina Pro Plan Sensitive Skin & Stomach Salmon & Rice Dry Dog Food",
+      url: "https://www.walmart.com/ip/Purina-Pro-Plan-Sensitive-Skin-Salmon/987654321",
+    });
+
+    assert.equal(chewyProduct.canRenderAsProductCard, true);
+    assert.equal(walmartProduct.canRenderAsProductCard, true);
+  });
+
   it("rejects support, learning-center, and retailer advice pages as product cards", () => {
     const bissell = classify({
       category: "shop vac",

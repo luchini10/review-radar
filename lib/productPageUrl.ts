@@ -4,6 +4,10 @@ import type {
   RecommendationResult,
 } from "@/types/review-radar";
 import { classifyProductEligibility } from "./productEligibility.ts";
+import {
+  classifyProductEvidenceIdentity,
+  isGenericProductEvidenceUrl,
+} from "./productEvidenceIdentity.ts";
 
 export type ProductPageUrlType = "official" | "retailer" | "source" | "unknown";
 
@@ -421,6 +425,22 @@ function classifyCandidate(input: {
   }
 
   const host = hostname(url);
+  const identityTitle =
+    input.sourceType === "primary" ? "" : input.sourceTitle;
+  const evidenceIdentity = classifyProductEvidenceIdentity({
+    productName: input.productName,
+    sourceTitle: identityTitle,
+    url,
+  });
+
+  if (
+    evidenceIdentity === "generic_evidence" ||
+    evidenceIdentity === "conflicting_product" ||
+    isGenericProductEvidenceUrl(url)
+  ) {
+    return null;
+  }
+
   const eligibility = classifyProductEligibility({
     name: input.productName,
     productName: input.productName,
@@ -473,8 +493,9 @@ function classifyCandidate(input: {
 
   const isProductPage =
     !isEditorial &&
+    evidenceIdentity === "same_product" &&
     (pathMentions ||
-      (productPath && (!opaqueProductCode || (independentTitle && titleMatches))));
+      (productPath && independentTitle && titleMatches));
   const retailer = isReputableRetailer(host);
   const type: ProductPageUrlType = official
     ? "official"
@@ -602,9 +623,9 @@ function getProductPageCandidates(product: ProductRecommendation) {
 export function getProductPageLink(
   product: ProductRecommendation,
 ): ProductPageLink | null {
-  const bestCandidate = getProductPageCandidates(product).sort(
-    (left, right) => right.score - left.score,
-  )[0];
+  const bestCandidate = getProductPageCandidates(product)
+    .filter((candidate) => candidate.isProductPage)
+    .sort((left, right) => right.score - left.score)[0];
 
   if (!bestCandidate) {
     return null;
@@ -623,14 +644,15 @@ export function prioritizeProductPageUrl(
   product: ProductRecommendation,
 ): ProductRecommendation {
   const link = getProductPageLink(product);
+  const nextUrl = link?.url || "";
 
-  if (!link || link.url === product.product_page_url) {
+  if (nextUrl === product.product_page_url) {
     return product;
   }
 
   return {
     ...product,
-    product_page_url: link.url,
+    product_page_url: nextUrl,
   };
 }
 
