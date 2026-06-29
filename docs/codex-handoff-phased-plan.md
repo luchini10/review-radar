@@ -1138,8 +1138,9 @@ Stop. Do not start Phase 5G without explicit instruction.
 - Stop condition hit: No. The ranking change remained bounded and did not require weakening any trust or eligibility gate.
 - New issue IDs opened: None.
 - Existing issue IDs updated: RR-013 changed from Needs Investigation to Fixed. No other status changed.
-- Docs committed: Pending this completion record.
+- Docs committed: Yes.
 - Implementation commit: `94c2e06`.
+- Documentation commit: `c8905e5`.
 - Verification: fail-first 3 failures; focused ranking/trace 57/57; broad safety 348/348; typecheck passed; lint 0 errors with 3 existing warnings; full suite 712/712; eval clean.
 - A/B: Nexgrill `#1 -> #2`; Weber `#2 -> #1`; suspicious `$1` Weber remained near-only.
 - Live validation: None. Saved weak-winner fixtures lacked an independent challenger, so no provider-variance call was spent. No broad baseline ran.
