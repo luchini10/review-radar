@@ -316,6 +316,13 @@ describe("recommendation API contract", () => {
   it("returns a stable near-match response shape when a mocked product misses a hard requirement", async () => {
     const blackMicrowave = buildProduct({
       best_for: "Shoppers who can be flexible on color.",
+      citations: [
+        {
+          title: "Black countertop microwave",
+          url: "https://example.com/products/black-countertop-microwave",
+          what_it_supports: "Product details and review evidence.",
+        },
+      ],
       cons: ["Black finish does not match a white-finish requirement."],
       name: "Black Countertop Microwave",
       pros: ["Compact footprint.", "Simple controls."],
@@ -391,6 +398,52 @@ describe("recommendation API contract", () => {
     assert.deepEqual(response.body, {
       error: USER_ERROR_MESSAGES.noReliableEvidence,
     });
+  });
+
+  it("retains a strict product page when only companion editorial evidence is provider-verified", async () => {
+    const productUrl =
+      "https://example.com/products/example-countertop-microwave";
+    const editorialUrl =
+      "https://www.techradar.com/home/small-appliances/best-microwaves";
+    const product = buildProduct({
+      citations: [
+        {
+          title: "Best microwaves",
+          url: editorialUrl,
+          what_it_supports: "Independent comparison evidence.",
+        },
+        {
+          title: "Example Countertop Microwave",
+          url: productUrl,
+          what_it_supports: "Specific manufacturer product page.",
+        },
+      ],
+    });
+    const handler = buildHandler({
+      collectReachableCitationUrls: async (result) =>
+        new Set(
+          result.recommendations.flatMap((recommendation) =>
+            recommendation.citations
+              .map((citation) => citation.url)
+              .filter((url) => url === productUrl),
+          ),
+        ),
+      response: modelResponse([product], [editorialUrl]),
+    });
+    const response = await readJson(
+      await handler(jsonRequest({ query: "microwave" })),
+    );
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.result.exactMatches[0].name, product.name);
+    assert.equal(
+      response.body.result.exactMatches[0].citations[0].url,
+      productUrl,
+    );
+    assert.equal(
+      response.body.result.exactMatches[0].citations[1].url,
+      editorialUrl,
+    );
   });
 
   it("returns safe provider failure messages without raw secrets", async () => {

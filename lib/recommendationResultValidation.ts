@@ -115,10 +115,89 @@ function citationUrlIsVerified(url: string, verifiedUrls: Set<string>) {
   return getVerifiedCitationUrl(url, verifiedUrls) !== null;
 }
 
-// A URL is "self-citable" when it passes the SAME product-page eligibility used to
-// filter the result below: a real buyable/likely product page, not a category,
-// search, listing, article, review, or forum page. Trust-preserving — only genuine
-// product pages qualify.
+function citationUrlIsExactlyVerified(url: string, verifiedUrls: Set<string>) {
+  const normalizedUrl = normalizeUrl(url);
+
+  return Array.from(verifiedUrls).some(
+    (verifiedUrl) => normalizeUrl(verifiedUrl) === normalizedUrl,
+  );
+}
+
+function normalizedIdentityTokens(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .split(" ")
+    .filter((token) => token.length > 1)
+    .map((token) =>
+      token.endsWith("s") && !token.endsWith("ss") && token.length > 3
+        ? token.slice(0, -1)
+        : token,
+    );
+}
+
+function productPagePathMatchesRecommendation(
+  name: string | undefined,
+  category: string | undefined,
+  url: string,
+) {
+  try {
+    const parsed = new URL(url);
+    const path = decodeURIComponent(parsed.pathname.toLowerCase());
+
+    if (
+      /\/(?:c-p|dp|gp\/product|ip|item|p|pd|pdp|product|sku)\//i.test(path) ||
+      /\/sku\/\d+$/i.test(path) ||
+      /\/\d+\.p$/i.test(path)
+    ) {
+      return true;
+    }
+
+    const finalSegment = path.split("/").filter(Boolean).pop() || "";
+    const categoryTokens = new Set(normalizedIdentityTokens(category || ""));
+    const genericTokens = new Set([
+      "buy",
+      "and",
+      "for",
+      "official",
+      "of",
+      "online",
+      "product",
+      "shop",
+      "store",
+      "the",
+      "usa",
+    ]);
+    const pathTokens = normalizedIdentityTokens(finalSegment).filter(
+      (token) => !categoryTokens.has(token) && !genericTokens.has(token),
+    );
+    const nameTokens = new Set(
+      normalizedIdentityTokens(name || "").filter(
+        (token) => !categoryTokens.has(token) && !genericTokens.has(token),
+      ),
+    );
+    const sharedDistinctiveTokens = new Set(
+      pathTokens.filter((token) => nameTokens.has(token)),
+    );
+
+    return (
+      sharedDistinctiveTokens.size >= 2 ||
+      pathTokens.some(
+        (token) =>
+          token.length >= 4 &&
+          /[a-z]/i.test(token) &&
+          /\d/.test(token) &&
+          nameTokens.has(token),
+      )
+    );
+  } catch {
+    return false;
+  }
+}
+
+// Strict citation retention accepts normal card-eligible pages and a narrow
+// unknown-page fallback when the product name and final URL slug agree. The
+// latter still needs an exact reachability verification before it can be primary.
 function isSelfCitableProductPage(
   name: string | undefined,
   category: string | undefined,
@@ -137,7 +216,14 @@ function isSelfCitableProductPage(
     url,
   });
 
-  return eligibility.canRenderAsProductCard && !isNonProductPageResult(name, url);
+  return (
+    (
+      eligibility.canRenderAsProductCard ||
+      (eligibility.status === "unknown" && eligibility.canUseAsEvidence)
+    ) &&
+    !isNonProductPageResult(name, url) &&
+    productPagePathMatchesRecommendation(name, category, url)
+  );
 }
 
 // Product-page citation rescue: a real product-page candidate (often from the
@@ -171,6 +257,67 @@ function rescueProductPageCitation(
   }
 
   return null;
+}
+
+function prioritizeProductPageCitation(
+  recommendation: RecommendationLike,
+  verifiedCitations: CitationLike[],
+) {
+  const verifiedProductPage = verifiedCitations.find((citation) =>
+    isSelfCitableProductPage(
+      recommendation.name,
+      recommendation.category,
+      citation.url,
+    ),
+  );
+  const primaryCitation =
+    verifiedProductPage ||
+    (verifiedCitations.length === 0
+      ? rescueProductPageCitation(recommendation)
+      : null);
+
+  if (!primaryCitation) {
+    return verifiedCitations;
+  }
+
+  const seenUrls = new Set<string>();
+
+  return [primaryCitation, ...verifiedCitations].filter((citation) => {
+    const normalizedUrl = normalizeUrl(citation.url);
+
+    if (seenUrls.has(normalizedUrl)) {
+      return false;
+    }
+
+    seenUrls.add(normalizedUrl);
+    return true;
+  });
+}
+
+export function getProductPageCitationVerificationResult<
+  T extends RecommendationResultLike,
+>(result: T, verifiedUrls: Set<string>): T {
+  const exactlyVerifiedUrls = new Set(
+    Array.from(verifiedUrls, (url) => normalizeUrl(url)),
+  );
+
+  return {
+    ...result,
+    recommendations: result.recommendations
+      .map((recommendation) => ({
+        ...recommendation,
+        citations: recommendation.citations.filter(
+          (citation) =>
+            !exactlyVerifiedUrls.has(normalizeUrl(citation.url)) &&
+            isSelfCitableProductPage(
+              recommendation.name,
+              recommendation.category,
+              citation.url,
+            ),
+        ),
+      }))
+      .filter((recommendation) => recommendation.citations.length > 0),
+  };
 }
 
 function alignSourceConsensus(sourceConsensus: string, confidenceScore: number) {
@@ -473,15 +620,13 @@ export function filterResultToVerifiedCitations<T extends RecommendationResultLi
           ];
         });
 
-        // If web research verified none of this candidate's citations, but it is a
-        // real product-page candidate, self-cite its own product page instead of
-        // dropping it. The downstream eligibility filter re-checks the same rules.
-        const finalCitations =
-          citations.length === 0
-            ? [rescueProductPageCitation(recommendation)].filter(
-                (citation): citation is CitationLike => citation !== null,
-              )
-            : citations;
+        // Product cards need a product-page primary citation. A verified editorial
+        // or same-host category source may remain secondary, but must not suppress
+        // strict product-page rescue or replace the product URL.
+        const finalCitations = prioritizeProductPageCitation(
+          recommendation,
+          citations,
+        );
 
         return {
           ...recommendation,
@@ -508,11 +653,28 @@ export function filterResultToVerifiedCitations<T extends RecommendationResultLi
           sourceType: "citation",
           url: primaryUrl,
         });
+        const isExactlyVerifiedSpecificProductPage =
+          citationUrlIsExactlyVerified(primaryUrl, verifiedUrls) &&
+          isSelfCitableProductPage(
+            recommendation.name,
+            recommendation.category,
+            primaryUrl,
+          );
+        const primaryPathMatchesRecommendation =
+          productPagePathMatchesRecommendation(
+            recommendation.name,
+            recommendation.category,
+            primaryUrl,
+          );
 
         // Drop category pages, article roundups, and listing pages the AI
         // cited as products — they should never appear in exactMatches/nearMatches.
         if (
-          !eligibility.canRenderAsProductCard ||
+          (
+            !eligibility.canRenderAsProductCard &&
+            !isExactlyVerifiedSpecificProductPage
+          ) ||
+          !primaryPathMatchesRecommendation ||
           isNonProductPageResult(recommendation.name, primaryUrl)
         ) {
           return false;

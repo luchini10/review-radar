@@ -11,6 +11,7 @@ import {
 import { collectReachableCitationUrls } from "../../../lib/citationUrlVerification.ts";
 import {
   filterResultToVerifiedCitations,
+  getProductPageCitationVerificationResult,
   getRecommendationResultIssue,
 } from "../../../lib/recommendationResultValidation.ts";
 import { normalizeResearchResult } from "../../../lib/normalizeResearchResult.ts";
@@ -877,6 +878,21 @@ async function handleRecommendationPost(
     );
 
     verifiedUrls = new Set([...verifiedUrls, ...serperVerifiedUrls]);
+
+    const productPagesNeedingVerification =
+      getProductPageCitationVerificationResult(candidateResult, verifiedUrls);
+
+    if (productPagesNeedingVerification.recommendations.length > 0) {
+      const reachableProductPageUrls = await timing.measure(
+        "collect_reachable_product_page_urls",
+        () =>
+          routeDependencies.collectReachableCitationUrls(
+            productPagesNeedingVerification,
+          ),
+      );
+
+      verifiedUrls = new Set([...verifiedUrls, ...reachableProductPageUrls]);
+    }
 
     if (verifiedUrls.size === 0) {
       verifiedUrls =

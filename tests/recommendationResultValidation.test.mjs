@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   filterResultToVerifiedCitations,
+  getProductPageCitationVerificationResult,
   getRecommendationResultIssue,
   classifyCitationType,
 } from "../lib/recommendationResultValidation.ts";
@@ -49,19 +50,21 @@ describe("recommendation result trust validation", () => {
           citations: [
             {
               title: "Original model citation",
-              url: "https://www.example.com/product/original-model-123",
+              url: "https://www.example.com/product/example-product-model-a123",
               what_it_supports: "A product-specific claim.",
             },
           ],
         }),
       ]),
-      new Set(["https://example.com/products/original-model-123?utm_source=openai"]),
+      new Set([
+        "https://example.com/product/example-product-model-a123-details?utm_source=openai",
+      ]),
     );
 
     assert.equal(filtered.recommendations.length, 1);
     assert.equal(
       filtered.recommendations[0].citations[0].url,
-      "https://example.com/products/original-model-123",
+      "https://example.com/product/example-product-model-a123-details",
     );
     assert.equal(
       filtered.recommendations[0].citations[0].what_it_supports,
@@ -539,24 +542,158 @@ describe("recommendation result trust validation", () => {
     );
   });
 
-  it("does not verify a product citation by replacing it with a generic same-domain listing", () => {
+  it("retains a valid product page instead of replacing it with a generic same-domain listing", () => {
+    const productUrl =
+      "https://www.homedepot.com/p/EGO-POWER-650-CFM-Cordless-Leaf-Blower-LB6504/123456789";
+    const categoryUrl =
+      "https://www.homedepot.com/b/Outdoors-Outdoor-Power-Equipment-Leaf-Blowers/N-5yc1vZbxav";
+    const result = buildResult([
+        buildRecommendation({
+          category: "leaf blower",
+          citations: [
+            {
+              title: "EGO POWER+ 650 CFM Cordless Leaf Blower",
+              url: productUrl,
+              what_it_supports: "Specific retailer product page.",
+            },
+          ],
+          name: "EGO POWER+ 650 CFM Cordless Leaf Blower",
+        }),
+      ]);
+    const verificationResult = getProductPageCitationVerificationResult(
+      result,
+      new Set([categoryUrl]),
+    );
+    const filtered = filterResultToVerifiedCitations(
+      result,
+      new Set([categoryUrl, productUrl]),
+    );
+
+    assert.deepEqual(
+      verificationResult.recommendations[0].citations.map(
+        (citation) => citation.url,
+      ),
+      [productUrl],
+    );
+    assert.equal(filtered.recommendations.length, 1);
+    assert.equal(filtered.recommendations[0].citations[0].url, productUrl);
+    assert.notEqual(filtered.recommendations[0].citations[0].url, categoryUrl);
+  });
+
+  it("keeps a valid manufacturer product page primary when editorial evidence is verified", () => {
+    const productUrl =
+      "https://oralb.com/en-us/products/electric-toothbrushes/io-series-6";
+    const editorialUrl =
+      "https://www.techradar.com/health-fitness/best-electric-toothbrush";
     const filtered = filterResultToVerifiedCitations(
       buildResult([
         buildRecommendation({
+          category: "electric toothbrush",
           citations: [
             {
-              title: "Specific product page",
-              url: "https://www.example.com/product/example-vacuum-123",
-              what_it_supports: "Specific vacuum product page.",
+              title: "Best electric toothbrushes",
+              url: editorialUrl,
+              what_it_supports: "Independent comparison evidence.",
+            },
+            {
+              title: "Oral-B iO Series 6 Electric Toothbrush",
+              url: productUrl,
+              what_it_supports: "Specific manufacturer product page.",
             },
           ],
-          name: "Example Vacuum 123",
+          name: "Oral-B iO Series 6 Electric Toothbrush",
         }),
       ]),
-      new Set(["https://www.example.com/collections/vacuums"]),
+      new Set([editorialUrl, productUrl]),
     );
 
-    assert.equal(filtered.recommendations.length, 0);
+    assert.equal(filtered.recommendations.length, 1);
+    assert.equal(filtered.recommendations[0].citations[0].url, productUrl);
+    assert.equal(
+      filtered.recommendations[0].citations[0].citation_type,
+      "weak-uncorroborated",
+    );
+    assert.equal(filtered.recommendations[0].citations[1].url, editorialUrl);
+    assert.equal(
+      filtered.recommendations[0].citations[1].citation_type,
+      "independent-editorial",
+    );
+  });
+
+  it("targets specific manufacturer pages but not generic product-family pages", () => {
+    const purinaProductUrl =
+      "https://shop.purina.com/pro-plan-reg-savor-adult-shredded-blend-beef-rice-formula";
+    const hillsProductUrl =
+      "https://www.hillspet.com/dog-food/science-diet-puppy-large-breed-dry";
+    const purinaFamilyUrl =
+      "https://www.purina.com/pro-plan/products/dog-food";
+    const result = buildResult([
+      buildRecommendation({
+        category: "dog food",
+        citations: [
+          {
+            title: "Complete Essentials Shredded Blend Beef & Rice Dry Dog Food",
+            url: purinaProductUrl,
+          },
+        ],
+        name:
+          "Purina Pro Plan Complete Essentials Shredded Blend Beef and Rice Formula",
+      }),
+      buildRecommendation({
+        category: "dog food",
+        citations: [
+          {
+            title: "Puppy Large Breed Chicken & Brown Rice Recipe",
+            url: hillsProductUrl,
+          },
+        ],
+        name: "Hill's Science Diet Puppy Large Breed Chicken & Brown Rice Recipe",
+      }),
+      buildRecommendation({
+        category: "dog food",
+        citations: [
+          {
+            title: "Pro Plan Wet & Dry Dog Food | Purina US",
+            url: purinaFamilyUrl,
+          },
+        ],
+        name: "Pro Plan Wet & Dry Dog Food | Purina US",
+      }),
+    ]);
+    const verificationResult = getProductPageCitationVerificationResult(
+      result,
+      new Set(),
+    );
+    const filtered = filterResultToVerifiedCitations(
+      result,
+      new Set([purinaProductUrl, hillsProductUrl, purinaFamilyUrl]),
+    );
+
+    assert.deepEqual(
+      verificationResult.recommendations.map((recommendation) => ({
+        name: recommendation.name,
+        url: recommendation.citations[0].url,
+      })),
+      [
+        {
+          name:
+            "Purina Pro Plan Complete Essentials Shredded Blend Beef and Rice Formula",
+          url: purinaProductUrl,
+        },
+        {
+          name:
+            "Hill's Science Diet Puppy Large Breed Chicken & Brown Rice Recipe",
+          url: hillsProductUrl,
+        },
+      ],
+    );
+    assert.deepEqual(
+      filtered.recommendations.map((recommendation) => recommendation.name),
+      [
+        "Purina Pro Plan Complete Essentials Shredded Blend Beef and Rice Formula",
+        "Hill's Science Diet Puppy Large Breed Chicken & Brown Rice Recipe",
+      ],
+    );
   });
 
   it("does not render the same product multiple times in the candidate pool", () => {
@@ -697,6 +834,35 @@ describe("citation type classification", () => {
     assert.equal(filtered.recommendations.length, 1);
     const cit = filtered.recommendations[0].citations[0];
     assert.equal(cit.citation_type, "product-page-self");
+  });
+
+  it("does not let a strict product-page self-cite borrow unrelated verification", () => {
+    const productUrl =
+      "https://oralb.com/en-us/products/electric-toothbrushes/io-series-6";
+    const editorialUrl =
+      "https://www.techradar.com/health-fitness/best-electric-toothbrush";
+    const selfCited = buildResult([
+        buildRecommendation({
+          category: "electric toothbrush",
+          citations: [
+            {
+              title: "Oral-B iO Series 6 Electric Toothbrush",
+              url: productUrl,
+              citation_type: "product-page-self",
+            },
+            {
+              title: "Best electric toothbrushes",
+              url: editorialUrl,
+            },
+          ],
+          name: "Oral-B iO Series 6 Electric Toothbrush",
+        }),
+      ]);
+
+    assert.equal(
+      getRecommendationResultIssue(selfCited, new Set([editorialUrl])),
+      "no_reliable_evidence",
+    );
   });
 
   it("tags verified editorial citations with their type when paired with a product-page citation", () => {
