@@ -1032,6 +1032,166 @@ describe("upgradeWeakSourceEvidence", () => {
     );
   });
 
+  it("rejects DiamondClean Smart 9300 commerce evidence for a DiamondClean 9000 card", async () => {
+    const product = weakProduct(
+      "Philips Sonicare DiamondClean 9000 Rechargeable toothbrush",
+      {
+        category: "electric toothbrush",
+        host: "usa.philips.com",
+        extra: {
+          metadata: {
+            brand: {
+              confidence: "High",
+              sourceType: "json_ld",
+              sourceUrl:
+                "https://www.usa.philips.com/c-p/HX9911_90/diamondclean-9000-rechargeable-toothbrush",
+              value: "Sonicare",
+              verifiedAt: "2026-06-30",
+            },
+            modelNumber: {
+              confidence: "High",
+              sourceType: "json_ld",
+              sourceUrl:
+                "https://www.usa.philips.com/c-p/HX9911_90/diamondclean-9000-rechargeable-toothbrush",
+              value: "HX9911/90",
+              verifiedAt: "2026-06-30",
+            },
+            offers: [],
+          },
+        },
+      },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("electric toothbrush");
+    const searchFn = async () => [
+      shoppingResult(
+        "Philips Sonicare DiamondClean Smart 9300 Electric Toothbrush",
+        {
+          category: "electric toothbrush",
+          price: 229.99,
+          rating: 4.3,
+          reviewCount: 1800,
+          productUrl:
+            "https://www.google.com/search?ibp=oshop&q=Sonicare+DiamondClean+9000&udm=28&prds=catalogid%3A9864359891775329041",
+        },
+      ),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.equal(sourceUpgradeTraces[0].candidateSample[0].identityMatch, false);
+    assert.ok(
+      !upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 229.99,
+      ),
+    );
+    assert.ok(
+      !upgraded.exactMatches[0].citations.some((citation) =>
+        citation.title.includes("Smart 9300"),
+      ),
+    );
+  });
+
+  it("keeps exact DiamondClean 9000 commerce evidence valid across retailers", async () => {
+    const product = weakProduct(
+      "Philips Sonicare DiamondClean 9000 Rechargeable toothbrush",
+      {
+        category: "electric toothbrush",
+        host: "usa.philips.com",
+      },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("electric toothbrush");
+    const searchFn = async () => [
+      shoppingResult(
+        "Philips Sonicare DiamondClean 9000 Rechargeable Toothbrush, Pink",
+        {
+          category: "electric toothbrush",
+          price: 249.99,
+          productUrl:
+            "https://retailer.example.com/products/sonicare-diamondclean-9000-pink",
+        },
+      ),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, true);
+    assert.ok(
+      upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 249.99,
+      ),
+    );
+  });
+
+  it("rejects another same-family model swap outside the DiamondClean line", async () => {
+    const product = weakProduct(
+      "Oral-B Smart 1500 Electric Rechargeable Toothbrush",
+      {
+        category: "electric toothbrush",
+        host: "oralb.com",
+      },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("electric toothbrush");
+    const searchFn = async () => [
+      shoppingResult("Oral-B Smart 3000 Electric Toothbrush", {
+        category: "electric toothbrush",
+        price: 79.99,
+        productUrl:
+          "https://retailer.example.com/products/oral-b-smart-3000",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.ok(
+      !upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 79.99,
+      ),
+    );
+  });
+
+  it("allows safe package-count variation when the explicit model is unchanged", async () => {
+    const product = weakProduct(
+      "Philips Sonicare DiamondClean 9000 Rechargeable Toothbrush, 1 Count",
+      {
+        category: "electric toothbrush",
+        host: "usa.philips.com",
+      },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("electric toothbrush");
+    const searchFn = async () => [
+      shoppingResult(
+        "Philips Sonicare DiamondClean 9000 Rechargeable Toothbrush, 2 Count",
+        {
+          category: "electric toothbrush",
+          price: 399.99,
+          productUrl:
+            "https://retailer.example.com/products/sonicare-diamondclean-9000-two-pack",
+        },
+      ),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, true);
+    assert.ok(
+      upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 399.99,
+      ),
+    );
+  });
+
   it("does not match an HP laptop through a Google offer query parameter", async () => {
     const product = weakProduct(
       "RIDGID 9 Gallon 4.25 Peak HP NXT Wet/Dry Vac HD0900",

@@ -62,6 +62,20 @@ describe("product evidence identity", () => {
     }
   });
 
+  it("detects conflicting standalone model-series numbers with shared family identity", () => {
+    assert.equal(
+      classifyProductEvidenceIdentity({
+        category: "electric toothbrush",
+        productName:
+          "Philips Sonicare DiamondClean 9000 Rechargeable toothbrush",
+        sourceTitle:
+          "Philips Sonicare DiamondClean Smart 9300 Electric Toothbrush",
+        url: "https://store.example.com/philips-sonicare-diamondclean-smart-9300",
+      }),
+      "conflicting_product",
+    );
+  });
+
   it("keeps exact products and safe package-size variants", () => {
     assert.equal(
       classifyProductEvidenceIdentity({
@@ -69,6 +83,15 @@ describe("product evidence identity", () => {
         productName: "Example Chicken & Rice Dry Dog Food",
         sourceTitle: "Example Chicken & Rice Dry Dog Food, 12-lb bag",
         url: "https://store.example.com/example-chicken-rice/dp/5",
+      }),
+      "same_product",
+    );
+    assert.equal(
+      classifyProductEvidenceIdentity({
+        category: "supplement",
+        productName: "Example Daily Supplement 120 Count",
+        sourceTitle: "Example Daily Supplement 180 Count",
+        url: "https://store.example.com/example-daily-supplement/dp/7",
       }),
       "same_product",
     );

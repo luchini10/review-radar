@@ -98,6 +98,64 @@ const COLOR_VARIANTS = new Set([
   "yellow",
 ]);
 
+const NUMERIC_SERIES_UNITS = new Set([
+  "amp",
+  "amps",
+  "btu",
+  "cfm",
+  "count",
+  "ct",
+  "cup",
+  "cups",
+  "gallon",
+  "gallons",
+  "gb",
+  "ghz",
+  "gram",
+  "grams",
+  "hp",
+  "hz",
+  "inch",
+  "inches",
+  "lb",
+  "lbs",
+  "liter",
+  "liters",
+  "mah",
+  "mph",
+  "ounce",
+  "ounces",
+  "oz",
+  "pack",
+  "packs",
+  "pint",
+  "pints",
+  "psi",
+  "qt",
+  "quarts",
+  "tb",
+  "volt",
+  "volts",
+  "watt",
+  "watts",
+]);
+
+const NUMERIC_SERIES_CONTEXT_WORDS = new Set([
+  ...GENERIC_IDENTITY_WORDS,
+  "cordless",
+  "edition",
+  "electric",
+  "generation",
+  "model",
+  "plus",
+  "pro",
+  "rechargeable",
+  "series",
+  "smart",
+  "ultra",
+  "wireless",
+]);
+
 function normalizeText(value: string | null | undefined) {
   return (value || "")
     .toLowerCase()
@@ -192,6 +250,63 @@ function explicitModelConflict(productName: string, sourceText: string) {
   );
 }
 
+type NumericSeriesIdentity = {
+  anchors: Set<string>;
+  value: string;
+};
+
+function numericSeriesIdentities(value: string, category?: string | null) {
+  const cleanValue = value.replace(/\$\s*\d[\d,]*(?:\.\d+)?/g, " ");
+  const valueTokens = tokens(cleanValue);
+  const categoryWords = categoryTokens(category);
+  const identities: NumericSeriesIdentity[] = [];
+
+  for (let index = 0; index < valueTokens.length; index += 1) {
+    const token = valueTokens[index];
+    if (!/^\d{3,5}$/.test(token)) continue;
+
+    const numericValue = Number(token);
+    if (numericValue >= 1900 && numericValue <= 2099) continue;
+    if (NUMERIC_SERIES_UNITS.has(valueTokens[index + 1] || "")) continue;
+
+    const anchors = new Set(
+      valueTokens
+        .slice(Math.max(0, index - 4), index)
+        .filter(
+          (word) =>
+            word.length >= 3 &&
+            /[a-z]/.test(word) &&
+            !NUMERIC_SERIES_CONTEXT_WORDS.has(word) &&
+            !categoryWords.has(word),
+        ),
+    );
+    if (anchors.size > 0) {
+      identities.push({ anchors, value: token });
+    }
+  }
+
+  return identities;
+}
+
+function explicitNumericSeriesConflict(
+  productName: string,
+  sourceText: string,
+  category?: string | null,
+) {
+  const productSeries = numericSeriesIdentities(productName, category);
+  const sourceSeries = numericSeriesIdentities(sourceText, category);
+
+  return productSeries.some((productIdentity) =>
+    sourceSeries.some(
+      (sourceIdentity) =>
+        productIdentity.value !== sourceIdentity.value &&
+        Array.from(productIdentity.anchors).some((anchor) =>
+          sourceIdentity.anchors.has(anchor),
+        ),
+    ),
+  );
+}
+
 function valuesFromGroup(value: string, group: Set<string>) {
   return new Set(tokens(value).filter((token) => group.has(token)));
 }
@@ -221,6 +336,10 @@ export function hasExplicitVariantConflict(
   }
 
   if (explicitModelConflict(productName, sourceText)) {
+    return true;
+  }
+
+  if (explicitNumericSeriesConflict(productName, sourceText, category)) {
     return true;
   }
 

@@ -34,6 +34,7 @@ import { mapWithConcurrency } from "./recommendationPerformance.ts";
 import { extractSpecsFromText } from "./specExtraction.ts";
 import { sourceTier } from "./search/sourceTier.ts";
 import { classifyProductTypeMatch } from "./productTypeMatch.ts";
+import { hasExplicitVariantConflict } from "./productEvidenceIdentity.ts";
 
 type VerifiableFactKind = "color" | "dimension" | "feature" | "price" | "spec";
 
@@ -490,6 +491,17 @@ function looksLikeSameProduct(
     return false;
   }
 
+  const candidateTitle = evidenceTitle(candidate);
+  if (
+    hasExplicitVariantConflict(
+      product.name,
+      `${candidateTitle} ${identityUrlText(evidenceUrl(candidate))}`,
+      requestedCategory,
+    )
+  ) {
+    return false;
+  }
+
   const targetIdentity = productModelIdentity(product);
   if (
     targetIdentity.strongTokens.some((model) =>
@@ -499,7 +511,6 @@ function looksLikeSameProduct(
     return true;
   }
 
-  const candidateTitle = evidenceTitle(candidate);
   const candidateBrand = inferKnownBrand(candidateTitle) || leadingBrandFromTitle(candidateTitle);
   const candidateIdentity = extractModelIdentity(candidateTitle, {
     brandQualified: Boolean(candidateBrand),
