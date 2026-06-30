@@ -833,3 +833,26 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Eligibility recurrence:** RR-007 and RR-008 reopened. An Oral-B twin-pack/category page, an ANSI blog, and two Electric Teeth comparisons remained `reliableEnoughForExact` below cutoff. They did not render, but future eligibility tests must assert these shapes never enter the exact-scored product-card pool.
 
 **Status:** Phase 5H complete. Stop before Phase 5I pending explicit RR-064 direction, then address RR-007/RR-008 separately.
+
+---
+
+## 2026-06-30 - RR-064 source-upgrade conflicting-model safety
+
+**Issue fixed:** RR-064.
+
+**Regression contract:**
+- Source-derived explicit model/series conflicts must reject before exact-model or family-overlap positives.
+- `DiamondClean 9000` must reject `DiamondClean Smart 9300`, even when a Google Shopping `q=` parameter repeats the target query.
+- Different alphabetic prefixes do not make conflicting series values safe when meaningful family identity is shared.
+- Years, prices, measurement values, and package/count differences are not model-series conflicts.
+- Query-derived snippets, search parameters, and generated fallback text remain unusable as identity evidence.
+- Exact same-product offers across retailers and safe color/count variants remain attachable.
+- Preserve RR-051, RR-053, RR-058, RR-063, RR-022, Phase 5G scoring, and Phase 5H selection regressions.
+
+**Required examples:** Keep the DiamondClean 9000/9300 negative, Smart 1500/3000 negative, exact DiamondClean 9000 positive, same-model color/count positives, Whynter wine-refrigerator negative, HP-query-parameter negative, and valid source-title/merchant-path positives green.
+
+**Verification:** Fail-first 1 RR-064 failure with 71 controls passing; focused broad safety 157/157; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 729/729; eval clean.
+
+**Live call:** Exactly one `electric toothbrush` save/replay. Smart 9300 was rejected for DiamondClean 9000, then an explicit 9000 offer attached. The 2100 attempt rejected a 4100 candidate before attaching a 2100 offer. No broad baseline ran.
+
+**Status:** RR-064 Fixed. RR-007/RR-008 remain Needs Investigation; address them separately before Phase 5I.

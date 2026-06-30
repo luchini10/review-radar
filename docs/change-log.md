@@ -11,6 +11,16 @@ Update this file after:
 
 Do not update this file for tiny typo fixes, formatting-only edits, or internal cleanup that does not change behavior.
 
+## 2026-06-30
+
+### Codex - RR-064 source-upgrade conflicting-model safety
+- Fixed RR-064 by applying the shared explicit product-variant conflict guard before source-upgrade positive model/family overlap.
+- Added conservative standalone series-number conflict detection for values such as DiamondClean `9000` versus Smart `9300` when source-derived evidence shares meaningful product-family context.
+- Excluded years, dollar prices, package/count variants, and measurements from series-number identity; exact-model, color, and package-count offers remain valid.
+- Fail-first reproduced the exact live-shaped 9000/9300 unsafe attachment. Focused safety passed 157/157; typecheck clean; lint 0 errors with 3 pre-existing warnings; full suite 729/729; eval clean.
+- One focused `electric toothbrush` live run rejected Smart 9300 as `identity_mismatch`, safely attached an explicit 9000 offer, and independently rejected 4100 evidence for a 2100 target. No broad baseline ran.
+- RR-007/RR-008 remain Needs Investigation and were not changed. Phase 5I did not start.
+
 ## 2026-06-29
 
 ### Codex - Phase 5H broad-slate diversity and form-factor quality

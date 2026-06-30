@@ -1163,3 +1163,18 @@ Stop. Do not start Phase 5H without explicit instruction.
 - Live validation: exactly one `electric toothbrush` call. A fourth Sonicare candidate received the capped family penalty and was replaced by a distinct Oral-B product. The same run exposed RR-064 plus below-cutoff exact eligibility for an Oral-B category page, an ANSI blog, and two comparison articles. No second live call or full baseline ran.
 
 Stop. Do not start Phase 5I. Address RR-064 first after explicit instruction, then the reopened RR-007/RR-008 eligibility gap.
+
+### RR-064 source-upgrade identity mini-phase completion record
+
+- Completed step: RR-064 same-family conflicting-model source-upgrade safety fix.
+- Next step: Narrow reopened RR-007/RR-008 pre-final eligibility cleanup. Do not start Phase 5I first.
+- Diagnostic-only: No. The phase reproduced and fixed RR-064.
+- Stop condition hit: No. The fix strengthened shared identity safety without changing ranking, discovery, query construction, trigger behavior, normalization, or trust gates.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-064 changed from Needs Investigation to Fixed. RR-007 and RR-008 remain Needs Investigation.
+- Docs committed: Pending this documentation commit.
+- Implementation commit: `938b839`.
+- Verification: fail-first 1 RR-064 failure with 71 controls passing; focused identity/source-upgrade and broad safety 157/157; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 729/729; eval clean.
+- Live validation: exactly one `electric toothbrush` call. Smart 9300 was rejected as `identity_mismatch` for the DiamondClean 9000 target; an explicit 9000 result attached. A 2100 attempt also rejected a 4100 before attaching a 2100 result. No broad baseline ran.
+
+Stop. Do not start Phase 5I. Address reopened RR-007/RR-008 eligibility only after explicit instruction.

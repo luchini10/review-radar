@@ -1,34 +1,34 @@
 # Agent Next Task
 
-Generated: 2026-06-29
+Generated: 2026-06-30
 
 ## Current next task
 
-**Phase 5H complete - stop for Critical RR-064 before Phase 5I**
+**RR-064 fixed - address reopened RR-007/RR-008 before Phase 5I**
 
-RR-056, RR-059, and RR-060 are fixed. Final selection now collapses strict exact-model duplicates, applies a soft capped model-family repeat adjustment, and demotes unrequested niche form factors only at selection time. The canonical register contains 64 issues:
+RR-064 is Fixed. Source upgrade now rejects source-derived explicit series-number conflicts before any positive family overlap, so `DiamondClean 9300` cannot donate commerce evidence to `DiamondClean 9000`. The canonical register contains 64 issues:
 
 - 7 Critical, 28 High, 24 Medium, 5 Low;
-- 2 Open, 9 Needs Investigation, 52 Fixed, 1 Won't Fix.
+- 2 Open, 8 Needs Investigation, 53 Fixed, 1 Won't Fix.
 
-Saved-fixture reassessment collapsed the duplicate Gigabyte M27Q, moved a mainstream coffee maker above AeroPress, and moved Horizon 7.0 AT above an under-desk treadmill. Five available RR-014 benchmark fixtures stayed neutral at mean `3.0/7`; no broad baseline ran.
+Fail-first reproduced the exact 9000/9300 unsafe attachment. Focused safety tests passed 157/157; the full suite passed 729/729; typecheck and eval passed; lint reported 0 errors and 3 pre-existing warnings.
 
-One focused `electric toothbrush` live run proved the family adjustment can replace a fourth Sonicare with a distinct Oral-B product. It also opened RR-064: source upgrade attached DiamondClean Smart 9300 price/rating/review/citation evidence to a DiamondClean 9000 card. RR-007 and RR-008 reopened because a retailer category page and three editorial/comparison pages remained exact-eligible below cutoff, although none rendered.
+One focused `electric toothbrush` live run returned the same Smart 9300 candidate and rejected it as `identity_mismatch`; a matching explicit 9000 offer attached instead. A separate 2100 attempt rejected a 4100 candidate before attaching a 2100 offer. No broad baseline ran.
 
-Phase 5H implementation commit: `230d7bc`.
+RR-064 implementation commit: `938b839`.
 
 ## Required next phase
 
 Do not start the next step automatically. The next master-plan phase is:
 
-**Narrow RR-064 source-upgrade same-family different-model identity diagnosis/fix**
+**Narrow reopened RR-007/RR-008 pre-final eligibility cleanup**
 
-Reproduce the DiamondClean 9000/9300 identity pass deterministically before editing. The likely gap is descriptive-family model handling, but it is not yet proven. Preserve valid exact-model Google Shopping attachment and all RR-051, RR-053, RR-058, Phase 5B, and Phase 5H regressions. After RR-064, address reopened RR-007/RR-008 separately before Phase 5I.
+Contain category and editorial/comparison pages that remain `reliableEnoughForExact` below the final cutoff. Keep these pages available only as secondary evidence where safe; do not let them enter the product-card exact stream. Preserve RR-022 citation retention, RR-063 product-evidence identity, RR-064 source-upgrade identity, and the completed Phase 5H selection behavior.
 
 Do not:
 
-- start Phase 5I before RR-064 is explicitly resolved or deferred;
-- change Phase 5H final-selection calibration while diagnosing RR-064;
+- start Phase 5I before reopened RR-007/RR-008 are explicitly resolved or deferred;
+- change Phase 5H final-selection calibration during the eligibility cleanup;
 - loosen source-upgrade identity to improve attachment rate;
 - weaken price, citation, product, requirement, product-type, or identity trust gates;
 - run another live search or full baseline without approval.
@@ -37,4 +37,4 @@ Reference:
 
 - `docs/RR-Issues-Report.md`
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` latest Phase 5H entry
+- `docs/qa-loop-results.md` latest RR-064 entry

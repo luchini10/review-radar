@@ -1113,3 +1113,21 @@ New entries should keep the same format and stay easy to read.
 **Scope:** Eleven implementation/test/debug files plus required docs. Generated baselines and live fixtures remain untracked. Implementation commit: `230d7bc`; documentation commit: `d78a9f5`.
 
 **Next recommended step:** Stop before Phase 5I. Run a narrow fail-first RR-064 source-upgrade identity phase first, then address RR-007/RR-008 eligibility separately.
+
+## Codex Run - 2026-06-30 RR-064 source-upgrade identity safety
+
+**Goal:** Fix only RR-064 by preventing same-family conflicting models from donating source-upgrade price, rating, review-count, or citation evidence.
+
+**Root cause:** The existing conflict detector compared alphabetic model prefixes. `diamondclean9000` and `smart9300` therefore did not conflict, and shared Philips/Sonicare/DiamondClean words later passed the fallback overlap.
+
+**What changed:** The shared RR-063 variant guard now recognizes conflicting standalone 3-5 digit series values under meaningful shared family context, excluding years, prices, package counts, and measurements. Source upgrade applies this guard before any positive family/model overlap.
+
+**Proof:** The exact 9000/9300 case failed before the fix. Focused tests passed 157/157; typecheck passed; lint had 0 errors and 3 pre-existing warnings; full tests passed 729/729; eval had no red flags.
+
+**Live result:** One `electric toothbrush` run returned Smart 9300 first and rejected it as `identity_mismatch`, then safely attached an explicit 9000 offer. A 2100 attempt independently rejected a 4100 before attaching a 2100 result. No broad baseline ran.
+
+**Issues:** RR-064 Fixed; RR-007/RR-008 remain Needs Investigation. Totals: 64 issues; 2 Open, 8 Needs Investigation, 53 Fixed, 1 Won't Fix.
+
+**Scope:** Four implementation/test files plus required docs. No ranking, scoring, discovery, query, trigger, normalization, price, requirement, product-type, page-eligibility, or UI behavior changed. Implementation commit: `938b839`.
+
+**Next recommended step:** Stop. Address reopened RR-007/RR-008 pre-final eligibility separately before Phase 5I.

@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 5H
+## Compiled for AI Agent Consumption — Phase 0 through RR-064 cleanup
 
-**Generated:** 2026-06-29
-**Scope:** All phases from initial measurement harness through Phase 5H
+**Generated:** 2026-06-30
+**Scope:** All phases from initial measurement harness through the RR-064 source-upgrade identity mini-phase
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -19,8 +19,8 @@
 | Medium | 24 |
 | Low | 5 |
 | Open | 2 |
-| Needs Investigation | 9 |
-| Fixed | 52 |
+| Needs Investigation | 8 |
+| Fixed | 53 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -69,6 +69,7 @@
 | RR-007/RR-063 product-evidence safety mini-phase | 0 |
 | Phase 5G — Evidence-strength ranking | 0 |
 | Phase 5H — Broad-slate diversity and form-factor quality | 1 |
+| RR-064 source-upgrade identity mini-phase | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -231,7 +232,7 @@
 | **Phase** | Pre-Phase 0 (Codex baseline) |
 | **Severity** | High |
 | **Title** | eBay browse/category pages appearing as exact product matches |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** eBay browse and category pages (URLs matching `/t/`, `/b/`, `/sch/` patterns) were passing the product eligibility check and appearing as exact product recommendations. These are listing pages, not individual product pages.
 
@@ -1985,9 +1986,11 @@ No new issue ID was opened.
 
 **Actual:** The candidate passed identity and attached price, rating, review count, and citation. The wrong-model citation remained on the final #1 card.
 
-**Current status:** Needs Investigation. The likely gap is descriptive-family token handling allowing shared `DiamondClean` identity to outrank the explicit `9000` versus `9300` conflict, but this has not yet been proven deterministically. Phase 5H did not change source-upgrade identity and did not fix this issue.
+**Current status:** Fixed on 2026-06-30. Fail-first reproduction confirmed that `DiamondClean 9000` and `Smart 9300` produced different alphabetic model prefixes, bypassed the existing same-prefix conflict check, and then passed on shared `Philips` / `Sonicare` / `DiamondClean` overlap.
 
-**Suggested fix or next action:** Stop before Phase 5I. Run a narrow fail-first RR-064 source-upgrade identity phase, add the exact 9000/9300 negative plus unrelated same-family different-model regressions, and preserve valid exact-model Google Shopping attachment and all RR-051/RR-053/RR-058 protections.
+**Suggested fix or next action:** Completed. The shared RR-063 explicit-variant guard now recognizes conflicting standalone 3-5 digit series numbers when source-derived target and candidate text share meaningful family context. Years, prices, package/count values, and measurements are excluded. Source upgrade runs this conflict guard before positive token/family overlap. Exact-model, color, and package-count variants remain valid.
+
+**Resolution proof:** The exact live-shaped 9000/9300 case failed before the fix and passed afterward without attaching price, rating, review count, or citation. Focused safety tests passed 157/157; the full suite passed 729/729; typecheck and eval passed; lint reported 0 errors and 3 pre-existing warnings. One focused live `electric toothbrush` run returned the same 9300 candidate first and rejected it as `identity_mismatch`, then safely attached a source-derived explicit 9000 offer. The 2100 attempt independently rejected a 4100 result before attaching a 2100 result.
 
 ---
 
@@ -1997,7 +2000,7 @@ No new issue ID was opened.
 - RR-054: Fresh fallback responses omit current diagnostic traces
 - RR-061: Product image metadata accepts non-image or irrelevant assets
 
-### Needs Investigation (9 issues)
+### Needs Investigation (8 issues)
 - RR-007: Retailer category/listing page can remain product-card eligible below cutoff
 - RR-008: Editorial/comparison pages can remain product-card eligible below cutoff
 - RR-014: Mean core-leader coverage critically low
@@ -2006,10 +2009,8 @@ No new issue ID was opened.
 - RR-041: Source-upgrade trigger not firing in Phase 3J live runs
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-- RR-064: Source upgrade attached DiamondClean 9300 evidence to a DiamondClean 9000 card
-
-### Fixed (52 issues)
-RR-001 through RR-006, RR-009 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055 through RR-060, RR-062, RR-063
+### Fixed (53 issues)
+RR-001 through RR-006, RR-009 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055 through RR-060, RR-062 through RR-064
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2018,11 +2019,10 @@ RR-001 through RR-006, RR-009 through RR-013, RR-016 through RR-023, RR-025 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-064** (Critical) — Block conflicting explicit same-family models before any further source-upgrade reliability work.
-2. **RR-007 + RR-008** (High) — Contain category and editorial pages that remain exact-eligible below the final cutoff.
-3. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
-4. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
-5. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
-6. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
-7. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
-8. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
+1. **RR-007 + RR-008** (High) — Contain category and editorial pages that remain exact-eligible below the final cutoff.
+2. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
+3. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
+4. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
+5. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
+6. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
+7. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.

@@ -4855,3 +4855,66 @@ The live run also exposed RR-064: target DiamondClean 9000 accepted a Google Sho
 - Generated baselines and all live fixtures remain untracked and uncommitted.
 
 Recommended direction: stop before Phase 5I. Diagnose and fix RR-064 first, then address the reopened RR-007/RR-008 pre-final eligibility leak; preserve the completed Phase 5H selection behavior.
+
+## <span style="color:green">**Codex QA Update - 2026-06-30 (RR-064 source-upgrade identity safety)**</span>
+
+**Verdict: PASS. RR-064 is Fixed deterministically and live. Conflicting same-family series models can no longer donate source-upgrade commerce evidence, while exact-model and safe non-model variants remain attachable.**
+
+### Confirmed root cause and fail-first
+
+- Source upgrade already rejected strong model tokens with the same alphabetic prefix, such as `RPD-411WG` versus `RPD-561EGP`.
+- The live target extracted `diamondclean9000`; the candidate extracted `smart9300`. Their prefixes differed, so the conflict check did not fire.
+- Shared `Philips`, `Sonicare`, and `DiamondClean` tokens then satisfied the fallback overlap and attached the 9300 price, rating, review count, and citation.
+- The exact live-shaped target, candidate title, metadata, and Google Shopping URL reproduced the unsafe attachment before implementation. The focused file reported 71 passes and the one new RR-064 failure.
+
+### Behavior change
+
+- Extended the shared RR-063 explicit-variant guard with conservative standalone series-number identity.
+- A 3-5 digit series value can conflict only when target and source-derived candidate text share meaningful product-family context.
+- Years, dollar prices, package/count values, and numeric measurements are excluded.
+- `looksLikeSameProduct` now applies the shared conflict guard before exact-model or broad family positives.
+- Google Shopping query parameters and query-derived snippets remain excluded from identity.
+- No source-upgrade trigger, query, search, candidate normalization, scoring, ranking, selection, price, citation, requirement, product type, or page-eligibility behavior changed.
+
+### Deterministic proof
+
+```text
+fail-first source-quality test: 1 RR-064 failure; 71 controls passed
+focused identity/source-upgrade matrix: 77/77 passed
+focused broad safety matrix: 157/157 passed
+npm run typecheck: passed
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 729/729 passed
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+- DiamondClean Smart 9300 is rejected for a DiamondClean 9000 target and attaches no commerce fields.
+- Exact DiamondClean 9000 offers remain valid across retailers.
+- Oral-B Smart 3000 is rejected for Smart 1500.
+- Same-model color and package-count differences remain valid.
+- RR-051, RR-053, RR-058, RR-063, page eligibility, citation retention, and Phase 5G scoring controls remain green.
+
+### Focused live proof
+
+Exactly one `electric toothbrush` save/replay ran:
+
+- three source-upgrade attempts fired;
+- the DiamondClean 9000 attempt returned 20 candidates;
+- Smart 9300 appeared first and was rejected as `identity_mismatch`;
+- an explicit `Philips Sonicare 9000 Special Edition Rechargeable Toothbrush` candidate then matched and safely attached price, rating, review count, and citation;
+- the 2100 attempt rejected a 4100 candidate and attached a 2100 offer;
+- the 4100 attempt attached a 4100 offer;
+- no conflicting model donated evidence and no broad baseline ran.
+
+The final 9000 card remained #1, but its commerce evidence now came from an explicit 9000 result rather than the 9300. Ranking was not changed or A/B tested.
+
+### Issue outcome
+
+- RR-064: Fixed.
+- RR-007 and RR-008: remain Needs Investigation and were not changed.
+- No new issue ID opened.
+- Register: 64 issues; 7 Critical, 28 High, 24 Medium, 5 Low; 2 Open, 8 Needs Investigation, 53 Fixed, 1 Won't Fix.
+- Implementation commit: `938b839`.
+- Generated baselines and all live fixtures remain untracked and uncommitted.
+
+Recommended direction: stop. Address reopened RR-007/RR-008 pre-final eligibility separately before Phase 5I; preserve the RR-064 shared conflict guard.

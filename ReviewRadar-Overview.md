@@ -569,7 +569,7 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - RR-008 is Fixed. RR-022 remains Fixed and Purina/Hill's products survived citation verification.
 - The same run reopened RR-007 for Chewy `/brands/` family pages used as primary card URLs and opened RR-063 for same-brand wrong-recipe citations. Those issues were not fixed.
 
-**Current boundary**
+**Phase 5H stop condition (superseded by the RR-064 fix below)**
 - RR-007 and RR-063 are Fixed. Generic brand/family/category routes cannot become primary links, and product-specific citations must agree with the displayed product identity.
 - Phase 5G for RR-013 is next only after explicit instruction.
 
@@ -616,3 +616,11 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - Critical RR-064 was opened from the live proof: DiamondClean Smart 9300 commerce evidence attached to a DiamondClean 9000 card.
 - RR-007 and RR-008 reopened because an Oral-B category page, an ANSI blog, and two comparison articles remained exact-eligible below cutoff, although none rendered.
 - Stop before Phase 5I. Diagnose/fix RR-064 narrowly first, then address the eligibility recurrence separately; do not weaken source-upgrade identity or alter Phase 5H selection calibration.
+
+**RR-064 source-upgrade identity safety (2026-06-30)**
+- Source upgrade applies the shared `hasExplicitVariantConflict` guard before any positive strong-model or family-token overlap.
+- The guard recognizes conflicting standalone 3-5 digit model-series values when source-derived target and candidate text share meaningful product-family context. This closes the `DiamondClean 9000` versus `DiamondClean Smart 9300` gap that evaded same-prefix model checks.
+- Years, prices, package/count values, and measurements are excluded from series identity. Exact-model offers and safe color/count variants remain attachable.
+- Candidate URL query parameters, source-upgrade query text, and query-derived snippets remain excluded from identity. The rule operates on source title and safe URL path evidence.
+- One focused live run rejected Smart 9300 for DiamondClean 9000 and then attached an explicit 9000 offer; a separate 2100 attempt rejected a 4100 result before attaching a 2100 result.
+- RR-064 is Fixed. Reopened RR-007/RR-008 pre-final eligibility containment remains the next required cleanup before Phase 5I.
