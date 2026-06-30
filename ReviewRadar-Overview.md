@@ -599,3 +599,20 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 **Current boundary**
 - Stop after Phase 5G. Do not start another phase without explicit instruction.
 - Recommended next: Phase 5H for RR-056, RR-060, and RR-059 only, using RR-014 as an outcome metric rather than a separate fix.
+
+**Phase 5H - broad-slate diversity and form-factor quality**
+- Final selection uses `areSameExactModelProduct` for hard duplicate collapse. Same canonical IDs, exact normalized titles, and same-brand shared strong model tokens compete for one slot; explicit model and size conflicts stay distinct.
+- The strict final-slot predicate is separate from the broader canonical/evidence-family helper. Evidence merging may recognize a product family without forcing a hard duplicate collapse.
+- `modelFamilyKey` identifies conservative product lines, including parent-brand/sub-brand shapes. Repeated family members receive a selection-only `12`-point adjustment per prior member, capped at `24`; there is no hard brand or retailer cap.
+- Broad requests receive a capped `50`-point selection-only prior against unrequested walking-pad/under-desk, travel, tabletop, mini, handheld, portable, and compact/small-space form factors. Explicit or compatible niche requests remove the prior.
+- These adjustments do not modify `scoreBreakdown`, Phase 5G citation strength, exact/near eligibility, discovery, citation retention, product-link identity, price trust, type/requirement validation, or source-upgrade identity.
+- Debug `finalSelectionTrace` includes `modelFamilyKey`, `familyRepeatCount`, `familyConcentrationPenalty`, `formFactorPenalty`, and `adjustedSelectionScore`.
+- Verification: focused/broad safety 303/303; typecheck clean; lint 0 errors with 3 pre-existing warnings; full suite 724/724; eval clean. The Phase 5G A/B is unchanged.
+- Saved fixtures collapse the duplicate M27Q, move a mainstream coffee maker above AeroPress, and move Horizon 7.0 AT above an under-desk treadmill. Five RR-014 benchmark fixtures stayed neutral at mean `3.0/7`; no broad baseline ran.
+- One live `electric toothbrush` run suppressed a fourth Sonicare family candidate in favor of a distinct Oral-B product.
+
+**Current boundary**
+- RR-056, RR-059, and RR-060 are Fixed. RR-014 remains Needs Investigation.
+- Critical RR-064 was opened from the live proof: DiamondClean Smart 9300 commerce evidence attached to a DiamondClean 9000 card.
+- RR-007 and RR-008 reopened because an Oral-B category page, an ANSI blog, and two comparison articles remained exact-eligible below cutoff, although none rendered.
+- Stop before Phase 5I. Diagnose/fix RR-064 narrowly first, then address the eligibility recurrence separately; do not weaken source-upgrade identity or alter Phase 5H selection calibration.

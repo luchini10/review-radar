@@ -1091,3 +1091,25 @@ New entries should keep the same format and stay easy to read.
 **Scope:** Seven implementation/test/harness files plus required docs. No discovery, citation retention, product identity, page eligibility, price, type, requirement, source-upgrade, or UI behavior changed. Implementation commit: `94c2e06`.
 
 **Next recommended step:** Stop. Phase 5H may begin only after explicit instruction and must remain limited to RR-056, RR-060, and RR-059.
+
+## Codex Run - 2026-06-29 Phase 5H
+
+**Goal:** Fix RR-056 family concentration, RR-060 exact-model duplicates, and RR-059 broad-query niche-form-factor dominance, using RR-014 only as an outcome metric.
+
+**Root causes:** Final selection compared URL-derived canonical IDs instead of strict shared model identity; its old family key was brand plus size and hard-collapsed rather than softly calibrating model-line repetition; form-factor flags were observational and did not include walking-pad/under-desk identity.
+
+**What changed:** Added strict exact-model final-slot collapse, a conservative model-line key with a `12`/`24` soft repeat adjustment, and a `50`-point selection-only prior for unrequested niche form factors. Explicit niche requests remove the prior. Repeated retailers and genuinely distinct same-brand products remain allowed. Phase 5G score components and every hard trust/eligibility gate are unchanged.
+
+**Fail-first and proof:** Three Phase 5H assertions failed before implementation. Focused selection/identity/form-factor and broad safety tests passed 303/303; typecheck passed; lint had 0 errors and 3 pre-existing warnings; full tests passed 724/724; eval had no red flags. The Phase 5G A/B remained Nexgrill `#1 -> #2`, Weber `#2 -> #1`, with the suspicious `$1` item near-only.
+
+**Fixture proof:** The duplicate M27Q collapsed while M27Q2 remained. A mainstream 14-cup coffee maker moved above AeroPress, and Horizon 7.0 AT moved above the under-desk treadmill. Distinct Milwaukee M18 kits remained separate. Five RR-014 benchmark fixtures stayed neutral at mean `3.0/7`; no leader-recall gain is claimed.
+
+**Live result:** Exactly one `electric toothbrush` search ran. A fourth Sonicare candidate received the capped family adjustment and fell below the final seven; Oral-B Pro 1000 filled the distinct slot. No non-product page became a final card, but one category page and three editorial/comparison pages remained exact-eligible below cutoff.
+
+**Adjacent findings:** Opened RR-064 after DiamondClean Smart 9300 commerce evidence attached to a DiamondClean 9000 card and the contaminated card ranked #1. Reopened RR-007/RR-008 because an Oral-B bundles/category page, an ANSI blog, and two comparison articles remained `reliableEnoughForExact` below cutoff. No source-upgrade or eligibility code changed in response.
+
+**Issues:** RR-056, RR-059, and RR-060 Fixed; RR-007/RR-008 reopened; RR-014 remains Needs Investigation; RR-064 Critical / Needs Investigation. Totals: 64 issues; 2 Open, 9 Needs Investigation, 52 Fixed, 1 Won't Fix.
+
+**Scope:** Eleven implementation/test/debug files plus required docs. Generated baselines and live fixtures remain untracked. Implementation commit: `230d7bc`.
+
+**Next recommended step:** Stop before Phase 5I. Run a narrow fail-first RR-064 source-upgrade identity phase first, then address RR-007/RR-008 eligibility separately.

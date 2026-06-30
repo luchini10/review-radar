@@ -1146,3 +1146,19 @@ Stop. Do not start Phase 5G without explicit instruction.
 - Live validation: None. Saved weak-winner fixtures lacked an independent challenger, so no provider-variance call was spent. No broad baseline ran.
 
 Stop. Do not start Phase 5H without explicit instruction.
+
+### Phase 5H completion record
+
+- Completed step: Phase 5H broad-slate diversity and form-factor quality.
+- Next step: Narrow RR-064 source-upgrade same-family different-model identity diagnosis/fix, followed by reopened RR-007/RR-008 pre-final eligibility containment. Do not start Phase 5I first.
+- Diagnostic-only: No. This phase reproduced and fixed RR-056, RR-059, and RR-060.
+- Stop condition hit: Yes. The single focused live run exposed Critical RR-064 and showed category/editorial pages remaining exact-eligible below cutoff. No out-of-scope source-upgrade or eligibility fix was attempted.
+- New issue IDs opened: RR-064.
+- Existing issue IDs updated: RR-056, RR-059, and RR-060 changed from Open to Fixed. RR-007 and RR-008 reopened as Needs Investigation. RR-014 remains Needs Investigation and was used only as an outcome metric.
+- Docs committed: Pending the Phase 5H documentation commit.
+- Implementation commit: `230d7bc`.
+- Verification: fail-first 3 failures with 2 controls already green; focused safety/selection matrix 303/303; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 724/724; eval clean.
+- Fixture/A-B proof: M27Q duplicate collapsed; coffee-maker and treadmill mainstream winners rose; five RR-014 broad fixtures remained neutral at mean `3.0/7`; the Phase 5G citation-strength A/B was unchanged.
+- Live validation: exactly one `electric toothbrush` call. A fourth Sonicare candidate received the capped family penalty and was replaced by a distinct Oral-B product. The same run exposed RR-064 plus below-cutoff exact eligibility for an Oral-B category page, an ANSI blog, and two comparison articles. No second live call or full baseline ran.
+
+Stop. Do not start Phase 5I. Address RR-064 first after explicit instruction, then the reopened RR-007/RR-008 eligibility gap.

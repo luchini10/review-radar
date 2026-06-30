@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 5F
+## Compiled for AI Agent Consumption — Phase 0 through Phase 5H
 
 **Generated:** 2026-06-29
-**Scope:** All phases from initial measurement harness through Phase 5G
+**Scope:** All phases from initial measurement harness through Phase 5H
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -13,14 +13,14 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 63 |
-| Critical | 6 |
+| Total Issues | 64 |
+| Critical | 7 |
 | High | 28 |
 | Medium | 24 |
 | Low | 5 |
-| Open | 5 |
-| Needs Investigation | 6 |
-| Fixed | 51 |
+| Open | 2 |
+| Needs Investigation | 9 |
+| Fixed | 52 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -68,6 +68,7 @@
 | RR-008 cleanup mini-phase | 1 |
 | RR-007/RR-063 product-evidence safety mini-phase | 0 |
 | Phase 5G — Evidence-strength ranking | 0 |
+| Phase 5H — Broad-slate diversity and form-factor quality | 1 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -230,7 +231,7 @@
 | **Phase** | Pre-Phase 0 (Codex baseline) |
 | **Severity** | High |
 | **Title** | eBay browse/category pages appearing as exact product matches |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** eBay browse and category pages (URLs matching `/t/`, `/b/`, `/sch/` patterns) were passing the product eligibility check and appearing as exact product recommendations. These are listing pages, not individual product pages.
 
@@ -262,6 +263,8 @@
 
 **Product-evidence safety resolution:** Fixed. Shared eligibility now recognizes retailer/manufacturer brand, family, category, and collection route segments as generic evidence even when the final slug includes a numeric catalog ID. Product-link selection requires source-derived same-product identity and no longer treats the generated card name as proof for an existing primary URL. Generic family URLs can remain secondary evidence, but cannot become a card URL or buy link; an unsafe stale primary URL is cleared before asset enrichment. In the single fresh `dog food` run, all eleven final cards used specific `/dp/`, `/ip/`, or `/product/` URLs and no `/brands/` or `/f/` route became primary. Deterministic tests cover Chewy and unrelated retailer family routes while preserving specific retailer and manufacturer detail pages.
 
+**Phase 5H live regression:** Reopened as Needs Investigation. `Electric Toothbrushes - Twin Packs and Bundles - Page 1 - Oral-B` survived citation verification, requirement filtering, reliability, and exact scoring as `reliableEnoughForExact: true`. It missed the final cards only because seven stronger products filled the cutoff. No category/listing page rendered, and Phase 5H did not change eligibility, but the pre-final product-card gate is not containing this shape.
+
 ---
 
 #### RR-008
@@ -272,7 +275,7 @@
 | **Phase** | Pre-Phase 0 (Codex baseline) |
 | **Severity** | High |
 | **Title** | Review/article titles appearing as product cards |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** Pages with titles like "Runner's World: Nike Winflo 11 Review" or "7 Things to Avoid When Purchasing…" were passing eligibility and appearing as product cards in results.
 
@@ -295,6 +298,8 @@
 **Phase 5F dog-food confirmation regression:** Reopened. `Is Costco (Kirkland) Dog Food Actually Good? - The BK Pets` reached exact rank #5 with its Substack article URL as the primary product page. The shared classifier treated the title as product-specific because the article-question shape is not covered, and generic `/p/` path handling treated the Substack post route as a product-detail path. The candidate survived Serper discovery, citation verification, requirement filtering, and final card validation. Fix this as a generalized article-question/evidence-page eligibility gap; do not add a Substack-only block.
 
 **RR-008 cleanup resolution:** Fixed. Shared eligibility now treats interrogative editorial titles and phrases such as `actually good`, `should you buy`, `worth it`, `our verdict`, and `what you need to know` as non-product evidence. Hosted publishing platforms including Substack, Medium, Blogspot, and WordPress are evidence-only even when they use product-looking `/p/` routes. Real retailer and manufacturer `/p/` pages remain eligible. Fail-first tests reproduced the defect through shared eligibility, Serper normalization, and final citation validation; all three passed after the fix. In the single post-fix `dog food` run, the BK Pets article was absent from the candidate pool and no newsletter/blog/editorial page became a final card.
+
+**Phase 5H live regression:** Reopened as Needs Investigation. An ANSI standards blog and two Electric Teeth comparison articles survived as `reliableEnoughForExact: true` exact-scored candidates. They remained below the final cutoff and did not render, but the eligibility/reliability boundary still treats these evidence pages as potential product cards when fewer than seven stronger products exist. Phase 5H did not change this behavior.
 
 ---
 
@@ -451,6 +456,8 @@
 **Fix:** Addressed in multiple phases: Phase 1 (seed extraction for brand-led names), Filtering STEP 2 (citation rescue for product-page leaders), Phase 3B (3-state category check), Phase 3C (fuel-type aliases).
 
 **Phase 4E regression:** Reopened. Against the repository's current broad gold benchmark, final core-leader-family coverage was robot vacuum `3/7`, gas grill `3/7`, cordless drill `4/7`, and air purifier `2/7`: mean `3.0/7`, exactly the original critical-low baseline. Pool coverage was only `4/7`, `4/7`, `5/7`, and `2/7`, respectively, showing both discovery absence and later filtering loss.
+
+**Phase 5H outcome metric:** Status remains Needs Investigation. Offline reassessment of five available broad benchmark fixtures kept core-leader coverage neutral: robot vacuum `5/7`, gas grill `3/7`, cordless drill `4/7`, air purifier `3/7`, and shop vac `0/7` before and after Phase 5H (mean `3.0/7`). Exact duplicates and niche winners improved where relevant, but no full baseline or discovery change ran, so Phase 5H does not claim a leader-recall gain.
 
 ---
 
@@ -1650,7 +1657,7 @@ Five approved fresh searches were saved and replayed: `robot vacuum`, `gas grill
 | **Phase** | Phase 4E |
 | **Severity** | Medium |
 | **Title** | Final-seven slates allow same-brand/model-family concentration to crowd out category diversity |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** Broad final slates repeatedly spend multiple slots on closely related products from the same brand or family while benchmark leader families are absent. Robot vacuum selected three Roombas and two Roborocks; gas grill selected two Nexgrills and two Napoleons; cordless drill selected two RYOBIs and two DEWALTs; air purifier selected two Blueairs and two GermGuardians.
 
@@ -1665,6 +1672,8 @@ Five approved fresh searches were saved and replayed: `robot vacuum`, `gas grill
 **Suggested fix or next action:** Diagnose diversity at the candidate-pool and final-selection layers separately. In a later fix phase, prefer an existing generalized family-diversity mechanism or bounded family cap only after proving it does not collapse genuinely distinct models. Do not add brand-specific caps.
 
 **Phase 4F evidence:** Family concentration recurred in 7/10 rotating categories: two Ninjas (coffee), two Zodys (office chairs), duplicate Sennheisers (earbuds), four Sonicares (toothbrushes), multiple Blue Buffalo products (dog food), three Whynters plus two Mideas (dehumidifiers), and three Gigabytes plus three LGs (gaming monitors).
+
+**Phase 5H resolution:** Final selection now derives a conservative model-line family key and applies a soft repeat penalty of `12` points per prior selected family member, capped at `24`. It is not a retailer or brand cap: distinct same-brand and same-retailer products remain eligible and can rank together. A fail-first eight-product Sonicare slate previously used three family slots and excluded a distinct alternative; after the fix the third near-variant fell below that alternative. One focused live `electric toothbrush` run applied the capped family adjustment to a fourth Sonicare candidate and replaced it with a distinct Oral-B product. The live pool contained no safe third-brand finalist, so broader discovery diversity remains outside this fix and RR-014 remains open.
 
 **Benchmark result:**
 
@@ -1753,7 +1762,7 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 | **Phase** | Phase 4F |
 | **Severity** | Medium |
 | **Title** | Niche compact/portable form factors can win broad category searches |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** Broad searches can rank niche form factors above standard products even when the user did not request the niche. AeroPress, a compact manual/travel brewer, won `coffee maker`; an under-desk walking pad won `treadmill`; earlier Phase 4 gas-grill runs similarly favored portable/tabletop products.
 
@@ -1767,6 +1776,8 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 
 **Suggested fix or next action:** Measure form-factor prevalence and ranking impact before changing weights. Prefer a generalized broad-query form-factor prior; do not hardcode appliance categories.
 
+**Phase 5H resolution:** Broad final selection now applies a bounded `50`-point selection-only prior to unrequested niche form factors detected from product identity text. Walking-pad/under-desk, travel, tabletop, mini, handheld, portable, and compact/small-space wording are generalized aliases. The adjustment disappears when the request explicitly names that form factor or a compatible niche. Saved-fixture reassessment moved the `coffee maker` winner from AeroPress to a mainstream 14-cup machine and the `treadmill` winner from an under-desk unit to Horizon 7.0 AT; the niche products remained visible below the winner.
+
 ---
 
 #### RR-060
@@ -1777,7 +1788,7 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 | **Phase** | Phase 4F |
 | **Severity** | Medium |
 | **Title** | True same-model duplicates can occupy multiple final slots |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** `gaming monitor` selected `Gigabyte M27Q Gaming Monitor (Rev. 1.0)` at rank #1 and `Gigabyte M27Q 27" QHD ...` at rank #2. Both source-upgrade traces used `Gigabyte M27Q` and attached the same `$160` offer. They are retailer/manufacturer representations of the same model, yet remained separate cards while other variants were correctly collapsed.
 
@@ -1790,6 +1801,8 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 **Actual:** Duplicate M27Q cards consume two final slots.
 
 **Suggested fix or next action:** Diagnose why canonical IDs/variant keys diverged for the two M27Q representations. Add cross-retailer same-model tests while preserving RR-010's distinct-size behavior.
+
+**Phase 5H resolution:** Final selection now uses a strict exact-model identity predicate rather than URL-only canonical IDs or the broader evidence-family merger. Same canonical IDs, exact normalized titles, and same-brand shared strong model tokens collapse; explicit different model tokens and different sizes remain distinct. The saved gaming-monitor fixture collapses the two M27Q retailer/manufacturer representations into one card while preserving M27Q2, M27Q-P, and unrelated same-brand products. Synthetic coverage proves a distinct eighth candidate fills the freed seventh slot.
 
 ---
 
@@ -1950,25 +1963,53 @@ No new issue ID was opened.
 
 ---
 
+### PHASE 5H — BROAD-SLATE DIVERSITY AND FORM-FACTOR QUALITY (2026-06-29)
+
+#### RR-064
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-064 |
+| **Phase** | Phase 5H live validation |
+| **Severity** | Critical |
+| **Title** | Source upgrade can attach same-family evidence from a conflicting explicit model |
+| **Status** | Needs Investigation |
+
+**Description:** The focused Phase 5H `electric toothbrush` live run upgraded target `Philips Sonicare DiamondClean 9000 Rechargeable toothbrush` with a Google Shopping candidate titled `Philips Sonicare DiamondClean Smart 9300 Electric Toothbrush`. The trace recorded `identityMatch: true` and attached the candidate's `$229.99` price, 4.3 rating, review count, and citation to the 9000 card, which ranked exact #1.
+
+**Where it occurs:** `lib/requirementEvidenceRescue.ts` source-upgrade `looksLikeSameProduct` / descriptive-family model identity; Google Shopping evidence attachment
+
+**Steps to reproduce:** Replay `tests/fixtures/review-radar-live/electric-toothbrush.json` from the Phase 5H live validation. Inspect the `Sonicare DiamondClean 9000` source-upgrade trace and its attached candidate sample.
+
+**Expected:** Explicit candidate model `9300` conflicts with target model `9000` / `HX9911/90`; shared `Philips Sonicare DiamondClean` family wording cannot override that conflict. No commerce fields attach.
+
+**Actual:** The candidate passed identity and attached price, rating, review count, and citation. The wrong-model citation remained on the final #1 card.
+
+**Current status:** Needs Investigation. The likely gap is descriptive-family token handling allowing shared `DiamondClean` identity to outrank the explicit `9000` versus `9300` conflict, but this has not yet been proven deterministically. Phase 5H did not change source-upgrade identity and did not fix this issue.
+
+**Suggested fix or next action:** Stop before Phase 5I. Run a narrow fail-first RR-064 source-upgrade identity phase, add the exact 9000/9300 negative plus unrelated same-family different-model regressions, and preserve valid exact-model Google Shopping attachment and all RR-051/RR-053/RR-058 protections.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (5 issues)
+### Open (2 issues)
 - RR-054: Fresh fallback responses omit current diagnostic traces
-- RR-056: Same-brand/model-family concentration crowds out broad-slate diversity
-- RR-059: Niche form factors can win broad category searches
-- RR-060: True same-model duplicates can occupy multiple final slots
 - RR-061: Product image metadata accepts non-image or irrelevant assets
 
-### Needs Investigation (6 issues)
+### Needs Investigation (9 issues)
+- RR-007: Retailer category/listing page can remain product-card eligible below cutoff
+- RR-008: Editorial/comparison pages can remain product-card eligible below cutoff
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-041: Source-upgrade trigger not firing in Phase 3J live runs
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
+- RR-064: Source upgrade attached DiamondClean 9300 evidence to a DiamondClean 9000 card
 
-### Fixed (51 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055, RR-057, RR-058, RR-062, RR-063
+### Fixed (52 issues)
+RR-001 through RR-006, RR-009 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055 through RR-060, RR-062, RR-063
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -1977,10 +2018,11 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-014 + RR-056 + RR-060** (High/Medium quality cluster) — Leader recall, family concentration, and true duplicates jointly degrade broad slates.
-2. **RR-059** (Medium) — Broad-query form-factor handling lets niche products outrank mainstream products.
-3. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
-4. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
-5. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
-6. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
-7. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
+1. **RR-064** (Critical) — Block conflicting explicit same-family models before any further source-upgrade reliability work.
+2. **RR-007 + RR-008** (High) — Contain category and editorial pages that remain exact-eligible below the final cutoff.
+3. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
+4. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
+5. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
+6. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
+7. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
+8. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.

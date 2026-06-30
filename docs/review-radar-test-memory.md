@@ -804,3 +804,32 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Live calls:** None. No broad baseline.
 
 **Status:** RR-013 Fixed. Phase 5H remains unstarted.
+
+---
+
+## 2026-06-29 - Phase 5H final-selection diversity/form-factor quality
+
+**Issues fixed:** RR-056, RR-059, RR-060. RR-014 was measurement-only and remains Needs Investigation.
+
+**Regression contract:**
+- Hard-collapse only strict exact-model duplicates: same canonical identity, exact normalized title, or same-brand shared strong model token.
+- Preserve explicit different models (`M27Q`, `M27Q2`, `M27Q-P`), different sizes, distinct same-brand products, and distinct same-retailer products.
+- Keep broad canonical/evidence-family matching separate from strict final-slot duplicate identity.
+- Family concentration is a soft selection adjustment (`12` per prior member, cap `24`), never a hard brand/retailer cap or an eligibility rule.
+- Unrequested niche form factors receive a bounded selection-only prior (`50` cap); explicitly requested or compatible niche forms receive no prior.
+- Do not modify Phase 5G `citationStrengthScore` or any hard price, citation, page, product-type, requirement, or source-upgrade gate.
+- Keep new trace fields present: `modelFamilyKey`, `familyRepeatCount`, `familyConcentrationPenalty`, `formFactorPenalty`, `adjustedSelectionScore`.
+
+**Required examples:** Keep cross-retailer M27Q duplicate collapse, M27Q2/M27Q-P negatives, same-retailer distinct positives, Sonicare third-variant replacement, broad under-desk treadmill demotion, explicit under-desk positive, and Phase 5G citation scoring green.
+
+**Fixture proof:** Gaming monitor collapses the second M27Q card; coffee maker moves the 14-cup mainstream product above AeroPress; treadmill moves Horizon 7.0 AT above the under-desk winner; cordless drill keeps distinct Milwaukee M18 kits. Five RR-014 benchmark fixtures stayed neutral at mean `3.0/7`.
+
+**Verification:** Fail-first 3 failures with 2 controls green; focused/broad safety 303/303; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 724/724; eval clean; Phase 5G A/B unchanged.
+
+**Live call:** Exactly one `electric toothbrush` save/replay. A fourth Sonicare received the capped family penalty and fell below the final seven; a distinct Oral-B product filled the slot.
+
+**New safety issue:** RR-064. The same live run attached DiamondClean Smart 9300 price/rating/review/citation evidence to a DiamondClean 9000 target. Treat this as a Critical source-upgrade identity stop condition. Reproduce deterministically before editing; preserve RR-051/RR-053/RR-058 and valid exact-model attachment.
+
+**Eligibility recurrence:** RR-007 and RR-008 reopened. An Oral-B twin-pack/category page, an ANSI blog, and two Electric Teeth comparisons remained `reliableEnoughForExact` below cutoff. They did not render, but future eligibility tests must assert these shapes never enter the exact-scored product-card pool.
+
+**Status:** Phase 5H complete. Stop before Phase 5I pending explicit RR-064 direction, then address RR-007/RR-008 separately.

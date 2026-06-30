@@ -4785,3 +4785,72 @@ No live search ran. The available saved weak-winner fixtures lacked an independe
 - Generated baselines and live fixtures remain untracked and uncommitted.
 
 Recommended direction: stop. Phase 5H is next only after explicit instruction and must remain limited to RR-056, RR-060, and RR-059, with RR-014 used only as the outcome metric.
+
+## <span style="color:green">**Codex QA Update - 2026-06-29 (Phase 5H broad-slate diversity and form-factor quality)**</span>
+
+**Verdict: PASS for the scoped Phase 5H fixes, with a live stop condition before Phase 5I. RR-056, RR-059, and RR-060 are Fixed. The one focused live run opened Critical RR-064 for pre-existing wrong-model source-upgrade attachment; Phase 5H did not alter or fix that subsystem.**
+
+### Diagnosis and fail-first proof
+
+- RR-060: final selection compared URL-derived canonical IDs, so Gigabyte's manufacturer M27Q page and Best Buy's M27Q listing occupied separate slots despite the same strong model identity.
+- RR-056: the existing variant key was only brand plus physical size and was a hard collapse. It could not represent model lines such as Philips Sonicare, and it was too coarse for a general diversity rule.
+- RR-059: `offFormFactorModifiers` was trace-only. Walking-pad/under-desk wording was not represented, and explicit niche requests were reduced to the base category in diagnostics.
+- Three fail-first assertions reproduced the M27Q duplicate, a third Sonicare near-variant excluding a distinct alternative, and an under-desk treadmill winning a broad query.
+- Same-retailer/same-brand distinct-product and Phase 5G citation-strength controls passed before the behavior change.
+
+### Behavior change
+
+- Added a strict exact-model predicate for final-slot collapse. Same canonical IDs, exact normalized titles, and same-brand shared strong model tokens collapse; explicit different models and sizes remain distinct.
+- Kept the broader canonical/evidence-family helper separate so RR-060 does not turn a loose product-family match into a hard final-slot collapse.
+- Added a conservative product-line family key, including generic parent-brand/sub-brand shapes such as Philips/Sonicare.
+- Replaced hard family collapse with a selection-only repeat penalty: `12` per prior family member, capped at `24`.
+- Added a bounded `50`-point selection-only prior for unrequested walking-pad/under-desk, travel, tabletop, mini, handheld, portable, and compact/small-space form factors.
+- Explicitly requested or compatible niche wording removes the form-factor prior.
+- No Phase 5G score component, requirement score, eligibility rule, citation rule, price rule, discovery query, or retailer cap changed.
+- `finalSelectionTrace` now records `modelFamilyKey`, `familyRepeatCount`, `familyConcentrationPenalty`, `formFactorPenalty`, and `adjustedSelectionScore`. Replay prints the new fields and remains compatible with older traces.
+
+### Deterministic and saved-fixture proof
+
+```text
+fail-first Phase 5H tests: 3 failures; 2 controls passed
+focused Phase 5H/identity/form-factor/trace/ranking tests: 303/303 passed
+npm run typecheck: passed
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 724/724 passed
+node scripts/eval-pipeline.mjs: no red-flag issues
+node scripts/ab-ranking.mjs --citation-strength: Phase 5G movement unchanged
+```
+
+- `gaming monitor`: the two M27Q cards collapse to one; M27Q2 remains distinct.
+- `coffee maker`: mainstream 14-cup machine `#2 -> #1`; travel/compact AeroPress `#1 -> #2`.
+- `treadmill`: Horizon 7.0 AT becomes #1; the under-desk winner moves below it and remains visible.
+- `cordless drill`: two distinct Milwaukee M18 kits remain separate under the strict predicate.
+- RR-014 metric: five saved broad benchmark fixtures remained neutral before/after at robot vacuum `5/7`, gas grill `3/7`, cordless drill `4/7`, air purifier `3/7`, and shop vac `0/7` (mean `3.0/7`). No leader-recall gain is claimed.
+
+### Focused live proof
+
+Exactly one `electric toothbrush` save/replay ran:
+
+- funnel: 25 pool, 22 after citation verification, 12 after requirements, 12 after revalidation, 7 final;
+- exact slate: three Philips Sonicare products and four distinct Oral-B products;
+- Philips Sonicare 2100 received `familyRepeatCount: 2`, the capped `familyConcentrationPenalty: 24`, and `family_concentration_adjusted`; it fell below the final seven;
+- Oral-B Pro 1000 filled the distinct final slot;
+- no category, listing, support, manual, documentation, or article page became a final card;
+- one Oral-B category page, one ANSI blog, and two Electric Teeth comparison articles nevertheless remained `reliableEnoughForExact: true` in the below-cutoff `exactScored` stream. They did not render, but this reopens RR-007 and RR-008 for the pre-final eligibility gap;
+- no broad baseline or second live query ran.
+
+The live run also exposed RR-064: target DiamondClean 9000 accepted a Google Shopping candidate titled DiamondClean Smart 9300, recorded `identityMatch: true`, and attached `$229.99`, rating, review count, and citation evidence. The contaminated card ranked #1. This is a source-upgrade identity issue outside Phase 5H and was not fixed.
+
+### Issue outcome
+
+- RR-056: Fixed.
+- RR-059: Fixed.
+- RR-060: Fixed.
+- RR-014: remains Needs Investigation; saved benchmark coverage stayed neutral.
+- RR-007 and RR-008: reopened as Needs Investigation because category/editorial pages remained exact-eligible below cutoff.
+- RR-064: opened Critical / Needs Investigation.
+- Register: 64 issues; 7 Critical, 28 High, 24 Medium, 5 Low; 2 Open, 9 Needs Investigation, 52 Fixed, 1 Won't Fix.
+- Implementation commit: `230d7bc`.
+- Generated baselines and all live fixtures remain untracked and uncommitted.
+
+Recommended direction: stop before Phase 5I. Diagnose and fix RR-064 first, then address the reopened RR-007/RR-008 pre-final eligibility leak; preserve the completed Phase 5H selection behavior.

@@ -13,6 +13,15 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-29
 
+### Codex - Phase 5H broad-slate diversity and form-factor quality
+- Fixed RR-060 with a strict exact-model final-slot identity check. Cross-retailer representations of the same strong model collapse, while explicit different models and sizes remain distinct.
+- Fixed RR-056 with a conservative model-line key and soft repeat adjustment (`12`, capped at `24`) instead of a hard brand or retailer cap.
+- Fixed RR-059 with a bounded selection-only prior for unrequested walking-pad/under-desk, travel, tabletop, mini, handheld, portable, and compact/small-space form factors. Explicit niche requests remain eligible to win.
+- Added final-selection trace fields for model family, repeat count, family/form-factor adjustments, and adjusted selection score; replay reports the fields.
+- Saved fixtures collapse the duplicate M27Q, move a mainstream 14-cup coffee maker above AeroPress, and move Horizon 7.0 AT above an under-desk treadmill. Five RR-014 benchmark fixtures stayed neutral at mean `3.0/7`.
+- Verification: fail-first 3 failures; focused/broad safety 303/303; typecheck clean; lint 0 errors with 3 pre-existing warnings; full suite 724/724; eval clean; Phase 5G A/B unchanged.
+- One `electric toothbrush` live call confirmed the family adjustment, then opened Critical RR-064 because DiamondClean Smart 9300 evidence attached to a DiamondClean 9000 card. It also reopened RR-007/RR-008 because a category page and three editorial/comparison pages remained exact-eligible below cutoff. No out-of-scope fix or Phase 5I work occurred.
+
 ### Codex - Phase 5G product-specific citation-strength ranking
 - Fixed RR-013 with a bounded `citationStrengthScore` that uses verified citation types only when the citation matches the displayed product under the shared evidence-identity guard.
 - Product-specific independent support receives `+6` to `+8`, retailer-only support `+2` to `+4`, and true self-only support `-2`. Generic, conflicting, unknown-specific, and untyped citations receive no Phase 5G credit.
