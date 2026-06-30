@@ -151,7 +151,9 @@ function hostLooksLikeSupportOrDocumentation(host: string) {
   const compactHost = labels.join("");
 
   return (
-    /^(?:docs?|help|knowledgebase|manuals?|support)$/i.test(firstLabel) ||
+    /^(?:blog|docs?|help|journal|knowledgebase|manuals?|news|press|stories|support)$/i.test(
+      firstLabel,
+    ) ||
     /(?:devicereport|manualslib|manualsplus|productdocumentation|productmanuals)/i.test(
       compactHost,
     )
@@ -271,11 +273,13 @@ function pathLooksLikeEvidenceOrSupportPage(parsed: URL) {
     /\/(?:knowledge-base|knowledgebase|kb)\//i,
     /\/(?:news|newsroom)\//i,
     /\/(?:post|posts|reel|reels)\//i,
+    /\/(?:press-release|press-releases|standard|standards)\//i,
     /\/(?:q-a|qa|question|questions)\//i,
     /\/(?:review|reviews)\//i,
     /\/(?:thread|threads)\//i,
     /\/(?:topic|topics)\//i,
     /\/(?:troubleshoot|troubleshooting)\//i,
+    /(?:^|[-/])(?:comparison|comparisons|versus|vs)(?:[-/]|$)/i,
     /viewtopic/i,
     /\.pdf$/i,
   ].some((pattern) => pattern.test(path));
@@ -502,6 +506,13 @@ function textLooksLikeEditorialTitle(value: string) {
   return [
     /^(?:is|are|was|were|do|does|did|can|could|should|would|will|what|which|who|why|how)\b.{4,180}\?\s*(?:[-|:]\s*.+)?$/i,
     /\b(?:actually good|should you buy|worth (?:buying|it)|our (?:long-term )?verdict|pros and cons|everything you need to know|what you need to know)\b/i,
+    /\b(?:comparison|comparison chart|comparison guide)\b/i,
+    /\b[a-z0-9-]+\s+(?:vs\.?|versus)\s+[a-z0-9-]+\b/i,
+    /\b(?:press release|standards? article)\b/i,
+    /^\s*(?:ansi|astm|iec|ieee|iso|ul)\s+\d{3,}(?::\d{4})?\b/i,
+    /^\s*[^|]{2,100}\b(?:announces?|debuts?|introduces?|launches?|unveils?)\b/i,
+    /\b(?:twin|multi)[ -]?packs?\s+(?:and|&)\s+bundles?\b/i,
+    /(?:^|[-|])\s*page\s+\d+\s*(?:[-|]|$)/i,
   ].some((pattern) => pattern.test(title));
 }
 

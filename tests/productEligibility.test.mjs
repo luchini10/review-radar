@@ -369,6 +369,69 @@ describe("shared product eligibility classifier", () => {
     }
   });
 
+  it("rejects the reopened electric-toothbrush category and editorial page shapes", () => {
+    const cases = [
+      classify({
+        category: "electric toothbrush",
+        name: "Electric Toothbrushes - Twin Packs and Bundles - Page 1 - Oral-B",
+        sourceTitle:
+          "Electric Toothbrushes - Twin Packs and Bundles - Page 1 - Oral-B",
+        url:
+          "https://oralb.com/en-us/products/electric-toothbrushes/twin-packs-and-bundles/",
+      }),
+      classify({
+        category: "electric toothbrush",
+        name: "ISO 20127:2020—Powered Toothbrushes - The ANSI Blog",
+        sourceTitle: "ISO 20127:2020—Powered Toothbrushes - The ANSI Blog",
+        url:
+          "https://blog.ansi.org/iso-20127-2020-powered-toothbrushes/",
+      }),
+      classify({
+        category: "electric toothbrush",
+        name: "Oral-B iO Series comparison (chart included) - Electric Teeth",
+        sourceTitle:
+          "Oral-B iO Series comparison (chart included) - Electric Teeth",
+        url:
+          "https://www.electricteeth.com/oral-b-io-series-comparison/",
+      }),
+      classify({
+        category: "electric toothbrush",
+        name:
+          "Colgate-Palmolive Launches hum by Colgate: The New Smart Electric Toothbrush",
+        sourceTitle:
+          "Colgate-Palmolive Launches hum by Colgate: The New Smart Electric Toothbrush",
+        url:
+          "https://www.multivu.com/players/English/8761151-colgate-hum-smart-electric-toothbrush",
+      }),
+    ];
+
+    for (const result of cases) {
+      assert.equal(result.canRenderAsProductCard, false);
+      assert.equal(result.canUseAsEvidence, true);
+    }
+  });
+
+  it("keeps specific electric-toothbrush product pages card-eligible", () => {
+    const oralB = classify({
+      category: "electric toothbrush",
+      name: "Oral-B iO Series 7 Electric Toothbrush",
+      sourceTitle: "Oral-B iO Series 7 Electric Toothbrush",
+      url:
+        "https://oralb.com/en-us/products/electric-toothbrushes/oral-b-io-series-7-electric-toothbrush-white-alabaster/",
+    });
+    const sonicare = classify({
+      category: "electric toothbrush",
+      name: "Philips Sonicare DiamondClean 9000 Rechargeable Toothbrush HX9912/95",
+      sourceTitle:
+        "Philips Sonicare DiamondClean 9000 Rechargeable Toothbrush HX9912/95",
+      url:
+        "https://www.usa.philips.com/p-p/HX9912_95/diamondclean-9000-rechargeable-sonic-toothbrush",
+    });
+
+    assert.equal(oralB.canRenderAsProductCard, true);
+    assert.equal(sonicare.canRenderAsProductCard, true);
+  });
+
   it("preserves genuine commerce and manufacturer product routes that use /p/", () => {
     const targetProduct = classify({
       category: "coffee maker",

@@ -786,6 +786,60 @@ describe("Serper product discovery", () => {
     );
   });
 
+  it("rejects reopened category, standards, comparison, and press-release shapes", () => {
+    const candidates = normalizeSerperOrganicResults(
+      {
+        organic: [
+          {
+            title:
+              "Electric Toothbrushes - Twin Packs and Bundles - Page 1 - Oral-B",
+            link:
+              "https://oralb.com/en-us/products/electric-toothbrushes/twin-packs-and-bundles/",
+            displayedLink: "Oral-B",
+            snippet: "Browse twin packs and electric toothbrush bundles.",
+          },
+          {
+            title: "ISO 20127:2020—Powered Toothbrushes - The ANSI Blog",
+            link:
+              "https://blog.ansi.org/iso-20127-2020-powered-toothbrushes/",
+            displayedLink: "ANSI",
+            snippet: "Standards article about powered toothbrushes.",
+          },
+          {
+            title:
+              "Oral-B iO Series comparison (chart included) - Electric Teeth",
+            link:
+              "https://www.electricteeth.com/oral-b-io-series-comparison/",
+            displayedLink: "Electric Teeth",
+            snippet: "Editorial comparison chart for multiple Oral-B models.",
+          },
+          {
+            title:
+              "Colgate-Palmolive Launches hum by Colgate: The New Smart Electric Toothbrush",
+            link:
+              "https://www.multivu.com/players/English/8761151-colgate-hum-smart-electric-toothbrush",
+            displayedLink: "MultiVu",
+            snippet: "Press release announcing a new smart toothbrush.",
+          },
+          {
+            title: "Oral-B iO Series 7 Electric Toothbrush",
+            link:
+              "https://oralb.com/en-us/products/electric-toothbrushes/oral-b-io-series-7-electric-toothbrush-white-alabaster/",
+            displayedLink: "Oral-B",
+            snippet: "Specific iO Series 7 product page.",
+          },
+        ],
+      },
+      "electric toothbrush product page",
+      "electric toothbrush",
+    );
+
+    assert.deepEqual(
+      candidates.map((candidate) => candidate.name),
+      ["Oral-B iO Series 7 Electric Toothbrush"],
+    );
+  });
+
   it("rejects editorial ranking pages and retailer category pages as product candidates", () => {
     const candidates = normalizeSerperOrganicResults(
       {

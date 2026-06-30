@@ -2458,6 +2458,60 @@ describe("requirement validation", () => {
     );
   });
 
+  it("removes category and editorial pages before exact requirement scoring", () => {
+    const unsafe = [
+      buildProduct({
+        category: "Electric Toothbrush",
+        name:
+          "Electric Toothbrushes - Twin Packs and Bundles - Page 1 - Oral-B",
+        product_page_url:
+          "https://oralb.com/en-us/products/electric-toothbrushes/twin-packs-and-bundles/",
+      }),
+      buildProduct({
+        category: "Electric Toothbrush",
+        name: "ISO 20127:2020—Powered Toothbrushes - The ANSI Blog",
+        product_page_url:
+          "https://blog.ansi.org/iso-20127-2020-powered-toothbrushes/",
+      }),
+      buildProduct({
+        category: "Electric Toothbrush",
+        name: "Oral-B iO Series comparison (chart included) - Electric Teeth",
+        product_page_url:
+          "https://www.electricteeth.com/oral-b-io-series-comparison/",
+      }),
+      buildProduct({
+        category: "Electric Toothbrush",
+        name:
+          "Colgate-Palmolive Launches hum by Colgate: The New Smart Electric Toothbrush",
+        product_page_url:
+          "https://www.multivu.com/players/English/8761151-colgate-hum-smart-electric-toothbrush",
+      }),
+    ];
+    const valid = buildProduct({
+      category: "Electric Toothbrush",
+      name: "Oral-B iO Series 7 Electric Toothbrush",
+      product_page_url:
+        "https://oralb.com/en-us/products/electric-toothbrushes/oral-b-io-series-7-electric-toothbrush-white-alabaster/",
+    });
+    const result = filterResultByRequirements(
+      {
+        search_summary: "Test result.",
+        assumptions: [],
+        recommendations: [...unsafe, valid],
+        what_to_avoid: [],
+        final_buying_advice: "Test advice.",
+      },
+      {
+        query: "electric toothbrush",
+      },
+    );
+
+    assert.deepEqual(
+      result.exactMatches.map((product) => product.name),
+      ["Oral-B iO Series 7 Electric Toothbrush"],
+    );
+  });
+
   it("keeps conflicting product subtypes out of exact matches", () => {
     const request = {
       budget: "under $180",

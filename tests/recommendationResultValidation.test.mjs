@@ -565,6 +565,69 @@ describe("recommendation result trust validation", () => {
     assert.equal(filtered.recommendations.length, 0);
   });
 
+  it("drops reopened category and editorial shapes before product-card validation", () => {
+    const unsafe = [
+      {
+        name: "Electric Toothbrushes - Twin Packs and Bundles - Page 1 - Oral-B",
+        url:
+          "https://oralb.com/en-us/products/electric-toothbrushes/twin-packs-and-bundles/",
+      },
+      {
+        name: "ISO 20127:2020—Powered Toothbrushes - The ANSI Blog",
+        url:
+          "https://blog.ansi.org/iso-20127-2020-powered-toothbrushes/",
+      },
+      {
+        name: "Oral-B iO Series comparison (chart included) - Electric Teeth",
+        url:
+          "https://www.electricteeth.com/oral-b-io-series-comparison/",
+      },
+      {
+        name:
+          "Colgate-Palmolive Launches hum by Colgate: The New Smart Electric Toothbrush",
+        url:
+          "https://www.multivu.com/players/English/8761151-colgate-hum-smart-electric-toothbrush",
+      },
+    ];
+    const productUrl =
+      "https://oralb.com/en-us/products/electric-toothbrushes/oral-b-io-series-7-electric-toothbrush-white-alabaster";
+    const recommendations = [
+      ...unsafe.map((item) =>
+        buildRecommendation({
+          category: "electric toothbrush",
+          citations: [
+            {
+              title: item.name,
+              url: item.url,
+              what_it_supports: "Verified page found during product research.",
+            },
+          ],
+          name: item.name,
+        }),
+      ),
+      buildRecommendation({
+        category: "electric toothbrush",
+        citations: [
+          {
+            title: "Oral-B iO Series 7 Electric Toothbrush",
+            url: productUrl,
+            what_it_supports: "Specific manufacturer product page.",
+          },
+        ],
+        name: "Oral-B iO Series 7 Electric Toothbrush",
+      }),
+    ];
+    const filtered = filterResultToVerifiedCitations(
+      buildResult(recommendations),
+      new Set([...unsafe.map((item) => item.url), productUrl]),
+    );
+
+    assert.deepEqual(
+      filtered.recommendations.map((recommendation) => recommendation.name),
+      ["Oral-B iO Series 7 Electric Toothbrush"],
+    );
+  });
+
   it("retains a valid product page instead of replacing it with a generic same-domain listing", () => {
     const productUrl =
       "https://www.homedepot.com/p/EGO-POWER-650-CFM-Cordless-Leaf-Blower-LB6504/123456789";
@@ -640,6 +703,45 @@ describe("recommendation result trust validation", () => {
     assert.equal(
       filtered.recommendations[0].citations[1].citation_type,
       "independent-editorial",
+    );
+  });
+
+  it("keeps comparison evidence secondary behind a specific product page", () => {
+    const productUrl =
+      "https://oralb.com/en-us/products/electric-toothbrushes/oral-b-io-series-7-electric-toothbrush-white-alabaster";
+    const comparisonUrl =
+      "https://www.electricteeth.com/oral-b-io-series-comparison";
+    const filtered = filterResultToVerifiedCitations(
+      buildResult([
+        buildRecommendation({
+          category: "electric toothbrush",
+          citations: [
+            {
+              title: "Oral-B iO Series 7 Electric Toothbrush",
+              url: productUrl,
+              what_it_supports: "Specific manufacturer product page.",
+            },
+            {
+              title:
+                "Oral-B iO Series comparison (chart included) - Electric Teeth",
+              url: comparisonUrl,
+              what_it_supports:
+                "Secondary editorial comparison across multiple iO models.",
+            },
+          ],
+          name: "Oral-B iO Series 7 Electric Toothbrush",
+        }),
+      ]),
+      new Set([productUrl, comparisonUrl]),
+    );
+
+    assert.equal(filtered.recommendations.length, 1);
+    assert.equal(filtered.recommendations[0].citations[0].url, productUrl);
+    assert.equal(
+      filtered.recommendations[0].citations.some(
+        (citation) => citation.url === comparisonUrl,
+      ),
+      true,
     );
   });
 
