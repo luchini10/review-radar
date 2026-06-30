@@ -128,6 +128,37 @@ describe("shared product eligibility classifier", () => {
     }
   });
 
+  it("rejects opaque manufacturer collection routes before product-looking shortcuts", () => {
+    const boschCollection = classify({
+      category: "shop vac",
+      imageUrl:
+        "https://www.bosch-pt.com.au/binary/ocsmedia/optimized/full/wet-dry-extractors.png",
+      name: "Wet/dry extractors Dust extraction systems - Bosch Professional",
+      price: 499,
+      sourceTitle:
+        "Wet/dry extractors Dust extraction systems - Bosch Professional",
+      sourceType: "primary",
+      url:
+        "https://www.bosch-pt.com.au/au/en/wet-dry-extractors-2549705-ocs-c/",
+    });
+    const unrelatedProductRange = classify({
+      category: "air purifier",
+      imageUrl: "https://manufacturer.example.com/images/air-purifier-range.jpg",
+      name: "Air purifiers Indoor air quality systems - Example Professional",
+      price: 299,
+      sourceTitle:
+        "Air purifiers Indoor air quality systems - Example Professional",
+      sourceType: "primary",
+      url:
+        "https://manufacturer.example.com/en/air-purifiers-834712-product-range/",
+    });
+
+    for (const result of [boschCollection, unrelatedProductRange]) {
+      assert.equal(result.canRenderAsProductCard, false);
+      assert.equal(result.status, "listing_or_search");
+    }
+  });
+
   it("rejects retailer brand and family routes even when their slugs contain numeric IDs", () => {
     const chewyBrand = classify({
       category: "dog food",
@@ -255,6 +286,21 @@ describe("shared product eligibility classifier", () => {
     for (const result of [manufacturer, bestBuyLegacy, bestBuyModern]) {
       assert.equal(result.canRenderAsProductCard, true);
     }
+  });
+
+  it("preserves a model-specific Bosch manufacturer product page", () => {
+    const boschProduct = classify({
+      category: "shop vac",
+      imageUrl: "https://www.boschtools.com/images/gas18v-3n.jpg",
+      name: "Bosch GAS18V-3N 18V Cordless Wet/Dry Vacuum",
+      price: 179,
+      sourceTitle: "GAS18V-3N 18V Vacuum Cleaners - Bosch Power Tools",
+      url:
+        "https://www.boschtools.com/us/en/products/gas18v-3n-06019c62d1",
+    });
+
+    assert.equal(boschProduct.canRenderAsProductCard, true);
+    assert.equal(boschProduct.status, "buyable_product");
   });
 
   it("keeps Google search and Shopping offer URLs out of product cards", () => {

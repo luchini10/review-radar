@@ -358,6 +358,60 @@ function pathLooksLikeGenericProductCollection(
   return distinctiveTokens.length === 0 && categoryAppearsNearTitleStart;
 }
 
+function pathLooksLikeOpaqueProductCollection(parsed: URL, title: string) {
+  if (isKnownProductUrl(parsed)) {
+    return false;
+  }
+
+  const segments = parsed.pathname
+    .toLowerCase()
+    .split("/")
+    .filter(Boolean);
+  const finalSegment = segments[segments.length - 1] || "";
+
+  // Some manufacturer CMS routes encode a category/collection in an opaque
+  // suffix. Digits in these slugs are catalog identifiers, not product models.
+  if (
+    /(?:^|[-_.])ocs[-_.]?c$/i.test(finalSegment) ||
+    /(?:^|[-_.])product[-_.]?(?:collection|family|lineup|range)s?$/i.test(
+      finalSegment,
+    )
+  ) {
+    return true;
+  }
+
+  const collectionSegmentIndex = segments.findIndex((segment) =>
+    /^(?:families|family|lineup|lineups|range|ranges|series)$/i.test(segment),
+  );
+
+  if (collectionSegmentIndex < 0) {
+    return false;
+  }
+
+  const trailingPath = segments.slice(collectionSegmentIndex + 1).join(" ");
+
+  if (!trailingPath) {
+    return true;
+  }
+
+  // A concrete model in both the title and the path is affirmative detail-page
+  // evidence. Without that agreement, a nested family/series route stays a
+  // collection even if it contains images, prices, or catalog-like digits.
+  const titleModels = normalizeText(title)
+    .split(" ")
+    .filter(
+      (token) =>
+        token.length >= 3 &&
+        /[a-z]/i.test(token) &&
+        /\d/.test(token) &&
+        /^[a-z0-9-]+$/i.test(token),
+    );
+
+  return !titleModels.some((model) =>
+    normalizeText(trailingPath).split(" ").includes(model),
+  );
+}
+
 function isLikelyListingOrSearchUrl(parsed: URL) {
   const host = normalizedEligibilityHost(parsed);
   const path = urlPath(parsed);
@@ -640,6 +694,12 @@ export function classifyProductEligibility(
     ]);
   }
 
+  if (pathLooksLikeOpaqueProductCollection(parsedUrl, titleText)) {
+    return verdict("listing_or_search", "high", false, false, [
+      "URL has a manufacturer collection, family, lineup, range, or series page shape.",
+    ]);
+  }
+
   if (
     pathLooksLikeGenericProductCollection(
       parsedUrl,
@@ -784,6 +844,7 @@ export function citationEligibility(
 export const productEligibilityTestExports = {
   isKnownProductUrl,
   isLikelyListingOrSearchUrl,
+  pathLooksLikeOpaqueProductCollection,
   pathLooksLikeEvidenceOrSupportPage,
   textLooksLikeListing,
   textLooksLikeNonProduct,

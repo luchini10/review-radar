@@ -249,6 +249,49 @@ describe("recommendation result trust validation", () => {
     );
   });
 
+  it("drops opaque manufacturer collection routes before product-card validation", () => {
+    const boschCollectionUrl =
+      "https://www.bosch-pt.com.au/au/en/wet-dry-extractors-2549705-ocs-c/";
+    const specificProductUrl =
+      "https://www.boschtools.com/us/en/products/gas18v-3n-06019c62d1";
+    const filtered = filterResultToVerifiedCitations(
+      buildResult([
+        buildRecommendation({
+          category: "shop vac",
+          citations: [
+            {
+              title:
+                "Wet/dry extractors Dust extraction systems - Bosch Professional",
+              url: boschCollectionUrl,
+              what_it_supports:
+                "A manufacturer collection containing multiple dust extractors.",
+            },
+          ],
+          name:
+            "Wet/dry extractors Dust extraction systems - Bosch Professional",
+        }),
+        buildRecommendation({
+          category: "shop vac",
+          citations: [
+            {
+              title: "GAS18V-3N 18V Vacuum Cleaners - Bosch Power Tools",
+              url: specificProductUrl,
+              what_it_supports:
+                "The model-specific manufacturer page for Bosch GAS18V-3N.",
+            },
+          ],
+          name: "Bosch GAS18V-3N 18V Cordless Wet/Dry Vacuum",
+        }),
+      ]),
+      new Set([boschCollectionUrl, specificProductUrl]),
+    );
+
+    assert.deepEqual(
+      filtered.recommendations.map((recommendation) => recommendation.name),
+      ["Bosch GAS18V-3N 18V Cordless Wet/Dry Vacuum"],
+    );
+  });
+
   it("drops Phase 5D collection, support, and documentation cards at final citation filtering", () => {
     const badRecommendations = [
       {
