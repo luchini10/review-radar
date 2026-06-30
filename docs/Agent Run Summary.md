@@ -1146,6 +1146,6 @@ New entries should keep the same format and stay easy to read.
 
 **Issues:** RR-007 and RR-008 Fixed; no new issue opened. Totals: 64 issues; 2 Open, 6 Needs Investigation, 55 Fixed, 1 Won't Fix.
 
-**Scope:** One implementation file, four test files, and required docs. No ranking, discovery breadth, source-upgrade, price, type, requirement, final-selection, or UI behavior changed. Implementation commit: `50b0713`.
+**Scope:** One implementation file, four test files, and required docs. No ranking, discovery breadth, source-upgrade, price, type, requirement, final-selection, or UI behavior changed. Implementation commit: `50b0713`; documentation commit: `0762ff3`.
 
 **Next recommended step:** Stop. Phase 5I may start only after explicit instruction.

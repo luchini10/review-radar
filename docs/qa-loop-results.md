@@ -4980,6 +4980,7 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - No new issue ID opened.
 - Register: 64 issues; 7 Critical, 28 High, 24 Medium, 5 Low; 2 Open, 6 Needs Investigation, 55 Fixed, 1 Won't Fix.
 - Implementation commit: `50b0713`.
+- Documentation commit: `0762ff3`.
 - Generated baselines and all live fixtures remain untracked and uncommitted.
 
 Recommended direction: stop. Phase 5I is next only after explicit instruction; preserve the shared page-eligibility and identity guards.
