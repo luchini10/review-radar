@@ -5282,6 +5282,6 @@ This is RR-066. RR-065 correctly excludes retailer/source provenance; RR-066 is 
 - RR-041/RR-042: remain Needs Investigation.
 - RR-007, RR-008, RR-063, RR-064, RR-065: remain Fixed.
 - Register: 66 issues; 9 Critical, 28 High, 24 Medium, 5 Low; 3 Open, 6 Needs Investigation, 56 Fixed, 1 Won't Fix.
-- Documentation commit: pending.
+- Documentation commit: `e2894cf`.
 
 Recommended direction: fix RR-066 narrowly before another Phase 5I retry. For a reliable model-qualified target, source-derived candidate evidence must carry the target model or an equally strong exact identifier; same brand plus product type alone cannot attach commerce evidence.

@@ -1256,8 +1256,8 @@ Stop. Do not retry Phase 5I or start Phase 5J without explicit instruction.
 - Stop condition hit: Yes. A RIDGID WD4522 target rejected an exact-model candidate whose provider title omitted RIDGID, then accepted a different 10-gallon RIDGID vacuum carrying the brand/type but no WD4522 model and attached price, rating, review count, and citation.
 - New issue IDs opened: RR-066, Critical/Open.
 - Existing issue IDs updated: RR-041 and RR-042 remain Needs Investigation with new deterministic/live evidence. RR-007, RR-008, RR-063, RR-064, and RR-065 remain Fixed.
-- Docs committed: Pending.
-- Documentation commit: Pending.
+- Docs committed: Yes.
+- Documentation commit: `e2894cf`.
 - Candidate verification: fail-first 78/80; focused final 113/113; broad named safety 346/346; typecheck passed; lint 0 errors with 3 existing warnings; full candidate suite 751/751; eval clean.
 - Restored-repository verification: typecheck passed; lint 0 errors with the same 3 warnings; full suite 747/747; eval clean.
 - Live validation: exactly one `shop vac` call. Stanley SL18115 attached safely; Armor All VOM205P used the bounded fallback safely; RIDGID WD4522 exposed RR-066. No second live search or full baseline ran.

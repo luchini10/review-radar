@@ -1218,6 +1218,6 @@ New entries should keep the same format and stay easy to read.
 
 **Issues:** RR-041/RR-042 remain Needs Investigation. RR-066 is Open. RR-007, RR-008, RR-063, RR-064, and RR-065 remain Fixed. Totals: 66 issues; 9 Critical, 28 High, 24 Medium, 5 Low; 3 Open, 6 Needs Investigation, 56 Fixed, 1 Won't Fix.
 
-**Scope:** Documentation only after rollback. The generated baselines and live fixtures remain untracked. Documentation commit: pending.
+**Scope:** Documentation only after rollback. The generated baselines and live fixtures remain untracked. Documentation commit: `e2894cf`.
 
 **Next recommended step:** Fix RR-066 narrowly before retrying Phase 5I. A model-qualified target must not accept brand-plus-type evidence that omits the target model.
