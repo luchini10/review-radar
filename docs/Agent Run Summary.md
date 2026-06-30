@@ -1198,6 +1198,6 @@ New entries should keep the same format and stay easy to read.
 
 **Issues:** RR-007 Fixed; RR-008/RR-063/RR-064/RR-065 remain Fixed; RR-041/RR-042 remain Needs Investigation. Totals: 65 issues; 2 Open, 6 Needs Investigation, 56 Fixed, 1 Won't Fix.
 
-**Scope:** Implementation commit `6346087`. No Phase 5I trigger/fallback retry, Phase 5J work, ranking, discovery, source-upgrade, identity, price, product-type, requirement, final-selection, or UI change.
+**Scope:** Implementation commit `6346087`; documentation commit `f002533`. No Phase 5I trigger/fallback retry, Phase 5J work, ranking, discovery, source-upgrade, identity, price, product-type, requirement, final-selection, or UI change.
 
 **Next recommended step:** Stop. Retry Phase 5I for RR-041/RR-042 only after explicit instruction.
