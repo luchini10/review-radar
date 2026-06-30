@@ -4,8 +4,15 @@ import {
   validateProductAgainstRequirements,
 } from "./requirementValidation.ts";
 import { candidateMatchesDiscoveryTarget } from "./discoveryStrategy.ts";
-import { getCanonicalIdentity, withCanonicalIdentity } from "./productIdentity.ts";
-import { variantFamilyKey } from "./productVariantFamily.ts";
+import {
+  areSameExactModelProduct,
+  getCanonicalIdentity,
+  withCanonicalIdentity,
+} from "./productIdentity.ts";
+import {
+  modelFamilyKey,
+  variantFamilyKey,
+} from "./productVariantFamily.ts";
 import { offFormFactorModifiers } from "./formFactor.ts";
 import type {
   FinalSelectionCandidateStream,
@@ -43,6 +50,10 @@ import type {
 
 const MAX_EXACT_MATCHES = 7;
 const MAX_NEAR_MATCHES = 5;
+const MODEL_FAMILY_REPEAT_PENALTY = 12;
+const MODEL_FAMILY_REPEAT_PENALTY_CAP = 24;
+const OFF_FORM_FACTOR_PENALTY = 50;
+const OFF_FORM_FACTOR_PENALTY_CAP = 50;
 const broadRetailerDomains = [
   "amazon.com",
   "costco.com",
@@ -986,7 +997,7 @@ function withRank(
           ...product.scoreBreakdown,
           scoreDebug: [
             ...(product.scoreBreakdown.scoreDebug || []),
-            "Final selection allows repeated retailers when products are distinct; duplicate exact products and near-duplicate variant families are handled by product identity instead of retailer caps.",
+            "Final selection allows repeated retailers and distinct same-brand products; exact-model duplicates collapse, while repeated model families and unrequested niche form factors receive bounded selection-only adjustments.",
           ],
         }
       : product.scoreBreakdown,
@@ -1024,47 +1035,203 @@ function reliableEnoughForBestMatch(product: ProductRecommendation) {
   return true;
 }
 
+type ExactSelectionDiagnostic = {
+  reason: FinalSelectionDecisionReason;
+  collapsedBy: string | null;
+  modelFamilyKey: string | null;
+  familyRepeatCount: number;
+  familyConcentrationPenalty: number;
+  formFactorPenalty: number;
+  adjustedSelectionScore: number;
+  offFormFactorModifiers: string[];
+};
+
+type ExactSelectionResult = {
+  products: ProductRecommendation[];
+  diagnostics: Map<string, ExactSelectionDiagnostic>;
+};
+
+function selectionRequestText(input: RecommendationApiRequest) {
+  return [
+    input.query,
+    ...(input.selectedFeatures || []),
+    input.priorities,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function selectionCandidateText(product: ProductRecommendation) {
+  return [
+    product.name,
+    product.category,
+    product.metadata?.title?.value,
+    product.best_for,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function selectionFamilyKeys(
+  product: ProductRecommendation,
+  requestedText: string,
+) {
+  return [
+    variantFamilyKey(product),
+    modelFamilyKey(product, requestedText),
+  ].filter((value): value is string => Boolean(value));
+}
+
+function selectionAdjustment(
+  product: ProductRecommendation,
+  input: RecommendationApiRequest,
+  familyCounts: Map<string, number>,
+) {
+  const requestedText = selectionRequestText(input);
+  const familyKeys = selectionFamilyKeys(product, requestedText);
+  const familyRepeatCount = familyKeys.reduce(
+    (highest, key) => Math.max(highest, familyCounts.get(key) || 0),
+    0,
+  );
+  const familyConcentrationPenalty = Math.min(
+    MODEL_FAMILY_REPEAT_PENALTY_CAP,
+    familyRepeatCount * MODEL_FAMILY_REPEAT_PENALTY,
+  );
+  const offModifiers = offFormFactorModifiers(
+    selectionCandidateText(product),
+    requestedText,
+  );
+  const formFactorPenalty = Math.min(
+    OFF_FORM_FACTOR_PENALTY_CAP,
+    offModifiers.length * OFF_FORM_FACTOR_PENALTY,
+  );
+
+  return {
+    modelFamilyKey: modelFamilyKey(product, requestedText),
+    familyKeys,
+    familyRepeatCount,
+    familyConcentrationPenalty,
+    formFactorPenalty,
+    adjustedSelectionScore:
+      rankedMatchScore(product) -
+      familyConcentrationPenalty -
+      formFactorPenalty,
+    offFormFactorModifiers: offModifiers,
+  };
+}
+
+function requirementFitScore(product: ProductRecommendation) {
+  return (
+    product.scoreBreakdown?.requirementFitScore ||
+    product.scoreBreakdown?.fitScore ||
+    0
+  );
+}
+
 function selectRankedExactMatches(
   products: ProductRecommendation[],
   input: RecommendationApiRequest,
-) {
+): ExactSelectionResult {
   const sorted = sortByRankedMatchStrength(products);
-  const used = new Set<string>();
-  // Variant-family de-dup: same brand + same size collapses to the single most
-  // popular/trusted product (`sorted` is best-first), so the slots show distinct
-  // products instead of three model-number variants of one. Different sizes are
-  // different families and both stay; products with unknown brand/size are never
-  // collapsed.
-  const usedFamily = new Set<string>();
-  const selected: ProductRecommendation[] = [];
+  const diagnostics = new Map<string, ExactSelectionDiagnostic>();
+  const unique: ProductRecommendation[] = [];
 
+  // Exact-model identity is a hard safety invariant. URL variants and retailer
+  // listings of the same manufacturer model compete for one slot; similar but
+  // explicitly different model/size tokens remain separate candidates.
   for (const product of sorted) {
-    const id = canonicalId(product);
+    const duplicateWinner = unique.find((candidate) =>
+      areSameExactModelProduct(candidate, product),
+    );
 
-    if (used.has(id)) {
+    if (duplicateWinner) {
+      const adjustment = selectionAdjustment(product, input, new Map());
+      diagnostics.set(product.name, {
+        reason: "duplicate_identity_collapsed",
+        collapsedBy: duplicateWinner.name,
+        ...adjustment,
+      });
       continue;
     }
 
-    const family = variantFamilyKey(product);
+    unique.push(product);
+  }
 
-    if (family && usedFamily.has(family)) {
-      continue;
-    }
+  const selected: ProductRecommendation[] = [];
+  const remaining = [...unique];
+  const familyCounts = new Map<string, number>();
+  const baseOrder = new Map(sorted.map((product, index) => [product.name, index]));
 
-    used.add(id);
+  while (remaining.length > 0 && selected.length < MAX_EXACT_MATCHES) {
+    remaining.sort((first, second) => {
+      const requirementDelta =
+        requirementFitScore(second) - requirementFitScore(first);
 
-    if (family) {
-      usedFamily.add(family);
-    }
+      if (requirementDelta !== 0) {
+        return requirementDelta;
+      }
 
-    selected.push(product);
+      const firstAdjustment = selectionAdjustment(first, input, familyCounts);
+      const secondAdjustment = selectionAdjustment(second, input, familyCounts);
+      const adjustedDelta =
+        secondAdjustment.adjustedSelectionScore -
+        firstAdjustment.adjustedSelectionScore;
 
-    if (selected.length >= MAX_EXACT_MATCHES) {
+      if (adjustedDelta !== 0) {
+        return adjustedDelta;
+      }
+
+      const tierDelta =
+        credibilityTierRank(marketConfidenceTier(first)) -
+        credibilityTierRank(marketConfidenceTier(second));
+
+      if (tierDelta !== 0) {
+        return tierDelta;
+      }
+
+      return (baseOrder.get(first.name) ?? 0) - (baseOrder.get(second.name) ?? 0);
+    });
+
+    const product = remaining.shift();
+
+    if (!product) {
       break;
+    }
+
+    const adjustment = selectionAdjustment(product, input, familyCounts);
+    selected.push(product);
+    diagnostics.set(product.name, {
+      reason: "selected",
+      collapsedBy: null,
+      ...adjustment,
+    });
+
+    for (const key of adjustment.familyKeys) {
+      familyCounts.set(key, (familyCounts.get(key) || 0) + 1);
     }
   }
 
-  return selected.map((product, index) => withRank(product, index, input));
+  for (const product of remaining) {
+    const adjustment = selectionAdjustment(product, input, familyCounts);
+    const reason: FinalSelectionDecisionReason =
+      adjustment.familyConcentrationPenalty >= adjustment.formFactorPenalty &&
+      adjustment.familyConcentrationPenalty > 0
+        ? "family_concentration_adjusted"
+        : adjustment.formFactorPenalty > 0
+          ? "off_form_factor_adjusted"
+          : "ranked_below_cutoff";
+
+    diagnostics.set(product.name, {
+      reason,
+      collapsedBy: null,
+      ...adjustment,
+    });
+  }
+
+  return {
+    products: selected.map((product, index) => withRank(product, index, input)),
+    diagnostics,
+  };
 }
 
 function canonicalCount(products: ProductRecommendation[]) {
@@ -1139,6 +1306,7 @@ function buildFinalSelectionTrace(
   selectedExact: ProductRecommendation[],
   selectedNear: ProductRecommendation[],
   input: RecommendationApiRequest,
+  exactSelectionDiagnostics: Map<string, ExactSelectionDiagnostic>,
 ): FinalSelectionTraceEntry[] {
   const exactScoredNames = new Set(exactScored.map((p) => p.name));
   const nearCandidatesAllNames = new Set(nearCandidatesAll.map((p) => p.name));
@@ -1151,59 +1319,6 @@ function buildFinalSelectionTrace(
   const scoredByName = new Map<string, ProductRecommendation>(
     [...exactScored, ...nearCandidatesAll].map((p) => [p.name, p]),
   );
-
-  // Re-trace the collapse logic from selectRankedExactMatches so we can report
-  // which product "won" the slot that each dropped candidate was competing for.
-  const reliableExact = exactScored.filter(reliableEnoughForBestMatch);
-  const collapseReasonMap = new Map<string, { reason: FinalSelectionDecisionReason; collapsedBy: string | null }>();
-  {
-    const usedIds = new Set<string>();
-    const idWinner = new Map<string, string>();
-    const usedFamilies = new Set<string>();
-    const familyWinner = new Map<string, string>();
-    let slotsFilled = 0;
-
-    for (const product of sortByRankedMatchStrength(reliableExact)) {
-      const id = canonicalId(product);
-
-      if (usedIds.has(id)) {
-        collapseReasonMap.set(product.name, {
-          reason: "duplicate_identity_collapsed",
-          collapsedBy: idWinner.get(id) ?? null,
-        });
-        continue;
-      }
-
-      const family = variantFamilyKey(product);
-
-      if (family && usedFamilies.has(family)) {
-        collapseReasonMap.set(product.name, {
-          reason: "variant_family_collapsed",
-          collapsedBy: familyWinner.get(family) ?? null,
-        });
-        continue;
-      }
-
-      usedIds.add(id);
-      idWinner.set(id, product.name);
-
-      if (family) {
-        usedFamilies.add(family);
-        familyWinner.set(family, product.name);
-      }
-
-      slotsFilled++;
-
-      // Products after the MAX_EXACT_MATCHES slot are ranked below the cutoff.
-      // The original loop breaks at exactly MAX_EXACT_MATCHES, so any product
-      // that would be the (N+1)th slot is ranked_below_cutoff.
-      if (slotsFilled > MAX_EXACT_MATCHES) {
-        collapseReasonMap.set(product.name, { reason: "ranked_below_cutoff", collapsedBy: null });
-      }
-    }
-  }
-
-  const requestedCategory = baseProductCategoryFromQuery(input.query);
 
   return revalidatedCandidates.map((rawProduct): FinalSelectionTraceEntry => {
     const name = rawProduct.name || "";
@@ -1236,8 +1351,8 @@ function buildFinalSelectionTrace(
     if (selected) {
       decisionReason = "selected";
     } else if (stream === "exactScored") {
-      const collapse = collapseReasonMap.get(name);
-      decisionReason = collapse?.reason ?? "missing_trace_reason";
+      const selectionDiagnostic = exactSelectionDiagnostics.get(name);
+      decisionReason = selectionDiagnostic?.reason ?? "missing_trace_reason";
     } else if (stream === "reliabilityNear") {
       decisionReason = "not_reliable_enough_for_exact";
     } else if (stream === "nearScored") {
@@ -1259,8 +1374,8 @@ function buildFinalSelectionTrace(
       decisionReason = "missing_trace_reason";
     }
 
-    const collapseInfo = collapseReasonMap.get(name);
-    const collapsedBy = collapseInfo?.collapsedBy ?? null;
+    const selectionDiagnostic = exactSelectionDiagnostics.get(name);
+    const collapsedBy = selectionDiagnostic?.collapsedBy ?? null;
 
     // Citation type breakdown.
     const citTypes = (product.citations ?? []).map(
@@ -1273,16 +1388,20 @@ function buildFinalSelectionTrace(
       (t) => t === "retailer-marketplace",
     ).length;
 
-    // Form-factor signals — observational only.
-    const candidateText = [product.name, product.category, ...(product.pros ?? [])]
-      .filter(Boolean)
-      .join(" ");
-    const offModifiers = offFormFactorModifiers(candidateText, requestedCategory);
+    const offModifiers =
+      selectionDiagnostic?.offFormFactorModifiers ??
+      offFormFactorModifiers(
+        selectionCandidateText(product),
+        selectionRequestText(input),
+      );
 
     return {
       name,
       canonicalId: product.canonicalIdentity?.canonicalId ?? null,
       variantFamilyKey: variantFamilyKey(product),
+      modelFamilyKey:
+        selectionDiagnostic?.modelFamilyKey ??
+        modelFamilyKey(product, selectionRequestText(input)),
       brand: product.metadata?.brand?.value ?? product.canonicalIdentity?.brand ?? null,
       model:
         product.metadata?.modelNumber?.value ??
@@ -1315,6 +1434,13 @@ function buildFinalSelectionTrace(
       priceTrustStatus: priceTrust?.status ?? null,
       canUseForBudget: priceTrust?.canUseForBudget ?? null,
       offFormFactorModifiers: offModifiers,
+      familyRepeatCount: selectionDiagnostic?.familyRepeatCount ?? 0,
+      familyConcentrationPenalty:
+        selectionDiagnostic?.familyConcentrationPenalty ?? 0,
+      formFactorPenalty: selectionDiagnostic?.formFactorPenalty ?? 0,
+      adjustedSelectionScore:
+        selectionDiagnostic?.adjustedSelectionScore ??
+        (breakdown ? Math.round(rankedMatchScore(product) * 10) / 10 : null),
     };
   });
 }
@@ -1360,7 +1486,8 @@ function scoreAndSelectImpl(
   const reliabilityNear = exactScored
     .filter((product) => !reliableEnoughForBestMatch(product))
     .map(withCloseMatch);
-  const selectedExact = selectRankedExactMatches(reliableExact, input);
+  const exactSelection = selectRankedExactMatches(reliableExact, input);
+  const selectedExact = exactSelection.products;
   const selectedNear =
     selectedExact.length < MAX_EXACT_MATCHES
       ? [...reliabilityNear, ...nearScored].slice(0, MAX_NEAR_MATCHES)
@@ -1412,6 +1539,7 @@ function scoreAndSelectImpl(
     selectedExact,
     selectedNear,
     input,
+    exactSelection.diagnostics,
   );
 
   return { result: selectedResult, finalSelectionTrace };

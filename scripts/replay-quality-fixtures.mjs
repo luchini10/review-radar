@@ -323,6 +323,16 @@ function printFinalSelectionTrace(trace) {
     const tier = e.marketConfidenceTier ? ` tier=${e.marketConfidenceTier}` : "";
     const form = e.offFormFactorModifiers.length > 0 ? ` ⚑ form-factor: ${e.offFormFactorModifiers.join(",")}` : "";
     console.log(`    [${rankLabel}] ${(e.name || "").slice(0, 50)}${score}${tier}${form}`);
+    if (
+      (e.familyConcentrationPenalty || 0) > 0 ||
+      (e.formFactorPenalty || 0) > 0
+    ) {
+      console.log(
+        `      selection adjusted=${e.adjustedSelectionScore ?? "?"} ` +
+          `familyPenalty=${e.familyConcentrationPenalty || 0} ` +
+          `formPenalty=${e.formFactorPenalty || 0}`,
+      );
+    }
   }
 
   // Not-selected products by reason
@@ -337,6 +347,8 @@ function printFinalSelectionTrace(trace) {
     "not_reliable_enough_for_exact",
     "duplicate_identity_collapsed",
     "variant_family_collapsed",
+    "family_concentration_adjusted",
+    "off_form_factor_adjusted",
     "disqualified_category",
     "disqualified_avoid",
     "disqualified_other",
@@ -355,6 +367,16 @@ function printFinalSelectionTrace(trace) {
       const req = e.failed.length > 0 ? ` failed=${e.failed.join(";")}` : "";
       const unk = e.unknown.length > 0 ? ` unknown=${e.unknown.join(";")}` : "";
       console.log(`    ${(e.name || "").slice(0, 50)}${stream}${score}${collBy}${form}${req}${unk}`);
+      if (
+        (e.familyConcentrationPenalty || 0) > 0 ||
+        (e.formFactorPenalty || 0) > 0
+      ) {
+        console.log(
+          `      selection adjusted=${e.adjustedSelectionScore ?? "?"} ` +
+            `familyPenalty=${e.familyConcentrationPenalty || 0} ` +
+            `formPenalty=${e.formFactorPenalty || 0}`,
+        );
+      }
     }
   }
 }

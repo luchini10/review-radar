@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   detectPrimarySize,
+  modelFamilyKey,
   variantFamilyKey,
 } from "../lib/productVariantFamily.ts";
 
@@ -69,5 +70,53 @@ describe("variantFamilyKey (brand + size)", () => {
   it("returns null (never collapses) when brand or size is unknown", () => {
     assert.equal(variantFamilyKey(product("DeWalt Cordless Drill")), null); // no size
     assert.equal(variantFamilyKey(product("8 Gallon Wet Dry Vacuum")), null); // no brand token
+  });
+});
+
+describe("modelFamilyKey (brand + product line)", () => {
+  it("groups numbered products from the same named model line", () => {
+    assert.equal(
+      modelFamilyKey(
+        product("Philips Sonicare 4100 Electric Toothbrush", "Philips"),
+        "electric toothbrush",
+      ),
+      modelFamilyKey(
+        product("Philips Sonicare 5300 Electric Toothbrush", "Philips"),
+        "electric toothbrush",
+      ),
+    );
+  });
+
+  it("recognizes a parent-brand plus metadata sub-brand as one product line", () => {
+    assert.equal(
+      modelFamilyKey(
+        product("Philips Sonicare 3100 Rechargeable Toothbrush", "Sonicare"),
+        "electric toothbrush",
+      ),
+      modelFamilyKey(
+        product("Philips Sonicare ProtectiveClean 6100 Toothbrush", "Sonicare"),
+        "electric toothbrush",
+      ),
+    );
+  });
+
+  it("keeps distinct product lines from the same brand separate", () => {
+    assert.notEqual(
+      modelFamilyKey(
+        product("Ninja DualBrew CFP101 Coffee Maker", "Ninja"),
+        "coffee maker",
+      ),
+      modelFamilyKey(
+        product("Ninja Espresso ES601 Machine", "Ninja"),
+        "coffee maker",
+      ),
+    );
+  });
+
+  it("does not create a family from brand or category words alone", () => {
+    assert.equal(
+      modelFamilyKey(product("Acme Electric Toothbrush", "Acme"), "electric toothbrush"),
+      null,
+    );
   });
 });

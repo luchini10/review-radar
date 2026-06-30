@@ -24,12 +24,30 @@
 
 const FORM_FACTOR_MODIFIERS: Array<{ canonical: string; aliases: string[] }> = [
   { canonical: "tabletop", aliases: ["tabletop", "table top", "table-top"] },
-  { canonical: "travel", aliases: ["travel", "travel size", "travel-size"] },
+  {
+    canonical: "walking-pad",
+    aliases: ["walking pad", "walking-pad", "walkingpad", "under desk", "under-desk"],
+  },
+  {
+    canonical: "travel",
+    aliases: ["travel", "traveler", "travelers", "travel-friendly", "travel size", "travel-size"],
+  },
   { canonical: "mini", aliases: ["mini", "miniature"] },
   { canonical: "handheld", aliases: ["handheld", "hand held", "hand-held"] },
   { canonical: "portable", aliases: ["portable"] },
-  { canonical: "compact", aliases: ["compact"] },
+  {
+    canonical: "compact",
+    aliases: ["compact", "small space", "smaller space", "space saving", "space-saving"],
+  },
 ];
+
+const REQUESTED_FORM_FACTOR_COMPATIBILITY: Record<string, Set<string>> = {
+  "walking-pad": new Set(["compact", "portable"]),
+  handheld: new Set(["compact", "portable"]),
+  mini: new Set(["compact", "portable"]),
+  tabletop: new Set(["compact", "portable"]),
+  travel: new Set(["compact", "mini", "portable"]),
+};
 
 function aliasPattern(alias: string) {
   // Match the alias with flexible whitespace/hyphen between words, on word
@@ -64,9 +82,14 @@ export function offFormFactorModifiers(
   requestedText: string | undefined,
 ): string[] {
   const requested = detectFormFactors(requestedText);
+  const compatible = new Set(
+    [...requested].flatMap((modifier) => [
+      ...(REQUESTED_FORM_FACTOR_COMPATIBILITY[modifier] || []),
+    ]),
+  );
 
   return [...detectFormFactors(candidateText)].filter(
-    (modifier) => !requested.has(modifier),
+    (modifier) => !requested.has(modifier) && !compatible.has(modifier),
   );
 }
 

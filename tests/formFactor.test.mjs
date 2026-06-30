@@ -11,6 +11,10 @@ describe("detectFormFactors", () => {
   it("detects niche/smaller form-factor modifiers on word boundaries", () => {
     assert.deepEqual([...detectFormFactors("Cuisinart Tabletop Gas Grill")], ["tabletop"]);
     assert.deepEqual([...detectFormFactors("Handheld Travel Steamer")].sort(), ["handheld", "travel"]);
+    assert.deepEqual(
+      [...detectFormFactors("Under Desk Walking Pad Treadmill")],
+      ["walking-pad"],
+    );
   });
 
   it("does not fire inside unrelated words", () => {
@@ -35,6 +39,13 @@ describe("offFormFactorModifiers", () => {
   it("does not flag a modifier the user explicitly requested", () => {
     assert.deepEqual(
       offFormFactorModifiers("Coleman Portable Gas Grill", "portable gas grill"),
+      [],
+    );
+    assert.deepEqual(
+      offFormFactorModifiers(
+        "Sunny Compact Under Desk Walking Pad Treadmill",
+        "under desk treadmill",
+      ),
       [],
     );
   });

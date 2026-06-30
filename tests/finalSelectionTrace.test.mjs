@@ -223,6 +223,8 @@ describe("final-selection trace", () => {
           "ranked_below_cutoff",
           "duplicate_identity_collapsed",
           "variant_family_collapsed",
+          "family_concentration_adjusted",
+          "off_form_factor_adjusted",
           "not_reliable_enough_for_exact",
           "near_only_exact_full",
           "disqualified_category",
@@ -237,6 +239,9 @@ describe("final-selection trace", () => {
       assert.ok(Array.isArray(entry.unknown), "entry.unknown should be array");
       assert.ok(Array.isArray(entry.passed), "entry.passed should be array");
       assert.ok(Array.isArray(entry.offFormFactorModifiers), "entry.offFormFactorModifiers should be array");
+      assert.ok(typeof entry.familyRepeatCount === "number", "entry.familyRepeatCount should be number");
+      assert.ok(typeof entry.familyConcentrationPenalty === "number", "entry.familyConcentrationPenalty should be number");
+      assert.ok(typeof entry.formFactorPenalty === "number", "entry.formFactorPenalty should be number");
       assert.ok(typeof entry.citationCount === "number", "entry.citationCount should be number");
     }
   });

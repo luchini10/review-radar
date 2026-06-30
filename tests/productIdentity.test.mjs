@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { areSameCanonicalProduct } from "../lib/productIdentity.ts";
+import {
+  areSameCanonicalProduct,
+  areSameExactModelProduct,
+} from "../lib/productIdentity.ts";
 
 function product(name, product_page_url = "") {
   return {
@@ -60,9 +63,52 @@ describe("product identity", () => {
 
   it("does not merge different explicit model numbers", () => {
     assert.equal(
-      areSameCanonicalProduct(
+      areSameExactModelProduct(
         product("Acme Comfort Plus Sleeper Sofa SS2000"),
         product("Acme Comfort Plus Sleeper Sofa SS3000"),
+      ),
+      false,
+    );
+  });
+
+  it("treats retailer-specific M27Q titles as the same exact model", () => {
+    assert.equal(
+      areSameExactModelProduct(
+        product(
+          "Gigabyte M27Q Gaming Monitor (Rev. 1.0)",
+          "https://www.gigabyte.com/Monitor/M27Q-rev-10",
+        ),
+        product(
+          'Gigabyte M27Q 27" QHD FreeSync Premium IPS Gaming Monitor',
+          "https://www.bestbuy.com/site/gigabyte-m27q/12345.p",
+        ),
+      ),
+      true,
+    );
+  });
+
+  it("keeps related but explicitly different model variants distinct", () => {
+    assert.equal(
+      areSameExactModelProduct(
+        product("Gigabyte M27Q Gaming Monitor"),
+        product("Gigabyte M27Q2 QD Gaming Monitor"),
+      ),
+      false,
+    );
+    assert.equal(
+      areSameExactModelProduct(
+        product("Gigabyte M27Q Gaming Monitor"),
+        product("Gigabyte M27Q-P Gaming Monitor"),
+      ),
+      false,
+    );
+  });
+
+  it("does not treat shared specification tokens as exact model identity", () => {
+    assert.equal(
+      areSameExactModelProduct(
+        product("Acme AX3000 WiFi6 Router"),
+        product("Acme RE7000 WiFi6 Range Extender"),
       ),
       false,
     );

@@ -29,6 +29,13 @@ const GENERIC_BRAND_WORDS = new Set([
   "pounds", "cubic", "peak", "vacuum", "vac",
 ]);
 
+const GENERIC_FAMILY_WORDS = new Set([
+  "and", "best", "buy", "classic", "compact", "corded", "cordless", "electric",
+  "for", "full", "generation", "gen", "large", "maker", "max", "new", "original",
+  "plus", "premium", "pro", "professional", "rev", "series", "small", "smart",
+  "the", "with", "wireless",
+]);
+
 function normalize(value: string | null | undefined) {
   return (value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
 }
@@ -91,4 +98,75 @@ export function variantFamilyKey(product: ProductRecommendation): string | null 
   }
 
   return `${brand}|${size}`;
+}
+
+// Product-line family = same brand + a distinctive line name after removing the
+// requested category and model/spec tokens. This is intentionally narrower than
+// a brand key: Ninja DualBrew and Ninja Espresso remain separate, while Philips
+// Sonicare 4100/4300/5300 share the Sonicare line. The key is used only for a
+// bounded final-selection adjustment, never as an eligibility or hard-collapse
+// rule.
+export function modelFamilyKey(
+  product: ProductRecommendation,
+  requestedText: string | undefined,
+): string | null {
+  const brand = variantBrand(product);
+
+  if (!brand) {
+    return null;
+  }
+
+  const brandTokens = new Set(normalize(brand).split(" ").filter(Boolean));
+  const requestTokens = new Set(
+    normalize(requestedText)
+      .split(" ")
+      .filter((token) => token.length >= 3),
+  );
+  const titleTokens = normalize(product.name || product.metadata?.title?.value)
+    .split(" ")
+    .filter(Boolean);
+  const metadataBrandTokens = normalize(product.metadata?.brand?.value)
+    .split(" ")
+    .filter(Boolean);
+
+  if (metadataBrandTokens.length > 0) {
+    const brandStart = titleTokens.findIndex((token, index) =>
+      metadataBrandTokens.every(
+        (brandToken, offset) => titleTokens[index + offset] === brandToken,
+      ),
+    );
+    const parentBrand =
+      brandStart > 0
+        ? titleTokens
+            .slice(0, brandStart)
+            .find(
+              (token) =>
+                token.length >= 3 &&
+                !/\d/.test(token) &&
+                !GENERIC_BRAND_WORDS.has(token) &&
+                !GENERIC_FAMILY_WORDS.has(token),
+            )
+        : null;
+
+    if (parentBrand) {
+      return `${parentBrand}|line:${metadataBrandTokens.join("-")}`;
+    }
+  }
+
+  const lineToken = titleTokens.find((token, index) => {
+    const previous = titleTokens[index - 1] || "";
+    const next = titleTokens[index + 1] || "";
+
+    return (
+      token.length >= 4 &&
+      !/\d/.test(token) &&
+      !brandTokens.has(token) &&
+      !requestTokens.has(token) &&
+      !GENERIC_BRAND_WORDS.has(token) &&
+      !GENERIC_FAMILY_WORDS.has(token) &&
+      (/\d/.test(next) || (/[a-z]/.test(previous) && /\d/.test(previous)))
+    );
+  });
+
+  return lineToken ? `${brand}|line:${lineToken}` : null;
 }

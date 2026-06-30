@@ -3,6 +3,7 @@ import type {
   ProductMetadata,
   ProductRecommendation,
 } from "@/types/review-radar";
+import { canonicalBrand, detectKnownBrands } from "./brandMatching.ts";
 
 const genericWords = new Set([
   "and",
@@ -61,6 +62,67 @@ function titleTokens(value: string) {
 
 function modelLikeTokens(tokens: string[]) {
   return tokens.filter((token) => /\d/.test(token));
+}
+
+function strongModelTokens(value: string) {
+  const rawTokens = value.match(/[A-Za-z0-9]+(?:[-/.][A-Za-z0-9]+)*/g) || [];
+  const tokens = new Set<string>();
+
+  for (const raw of rawTokens) {
+    const normalized = raw.toLowerCase().replace(/[^a-z0-9]+/g, "");
+
+    if (
+      normalized.length < 4 ||
+      normalized.length > 24 ||
+      !/[a-z]/.test(normalized) ||
+      !/\d/.test(normalized) ||
+      /^\d+(?:p|hz|gb|tb|mah|w|v|in|inch)$/i.test(normalized) ||
+      /^(?:ddr|gen|hdmi|hdr|ips|oled|qled|series|uhd|usb|wifi)\d+[a-z]*$/i.test(
+        normalized,
+      )
+    ) {
+      continue;
+    }
+
+    tokens.add(normalized);
+  }
+
+  return tokens;
+}
+
+function identityBrand(product: ProductRecommendation) {
+  const explicit =
+    product.metadata?.brand?.value ||
+    product.canonicalIdentity?.brand;
+
+  if (explicit) {
+    return normalizeText(canonicalBrand(explicit));
+  }
+
+  const detected = detectKnownBrands(
+    `${product.name || ""} ${product.metadata?.title?.value || ""}`,
+  );
+
+  if (detected.length > 0) {
+    return normalizeText(canonicalBrand(detected[0]));
+  }
+
+  const first = normalizeText(product.name).split(" ")[0] || "";
+
+  return first.length >= 3 && !/\d/.test(first) ? first : "";
+}
+
+function productStrongModelTokens(product: ProductRecommendation) {
+  return strongModelTokens(
+    [
+      product.metadata?.modelNumber?.value,
+      product.canonicalIdentity?.modelNumber,
+      product.name,
+      product.metadata?.title?.value,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  );
 }
 
 function nonModelTokens(tokens: string[]) {
@@ -202,7 +264,43 @@ export function areSameCanonicalProduct(
   );
 }
 
+export function areSameExactModelProduct(
+  first: ProductRecommendation,
+  second: ProductRecommendation,
+) {
+  const firstIdentity = first.canonicalIdentity || getCanonicalIdentity(first);
+  const secondIdentity = second.canonicalIdentity || getCanonicalIdentity(second);
+  const firstBrand = identityBrand(first);
+  const secondBrand = identityBrand(second);
+  const firstModels = productStrongModelTokens(first);
+  const secondModels = productStrongModelTokens(second);
+  const sharedStrongModel = [...firstModels].some((token) => secondModels.has(token));
+
+  if (firstModels.size > 0 && secondModels.size > 0 && !sharedStrongModel) {
+    return false;
+  }
+
+  if (firstIdentity.canonicalId && firstIdentity.canonicalId === secondIdentity.canonicalId) {
+    return true;
+  }
+
+  if (
+    sharedStrongModel &&
+    firstBrand &&
+    secondBrand &&
+    firstBrand === secondBrand
+  ) {
+    return true;
+  }
+
+  const firstTitle = firstIdentity.normalizedTitle;
+  const secondTitle = secondIdentity.normalizedTitle;
+
+  return Boolean(firstTitle && secondTitle && firstTitle === secondTitle);
+}
+
 export const productIdentityTestExports = {
   normalizeTitle,
   sameProductFamilyTitle,
+  strongModelTokens,
 };

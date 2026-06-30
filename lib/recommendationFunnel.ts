@@ -85,6 +85,8 @@ export type FinalSelectionDecisionReason =
   | "ranked_below_cutoff"
   | "duplicate_identity_collapsed"
   | "variant_family_collapsed"
+  | "family_concentration_adjusted"
+  | "off_form_factor_adjusted"
   | "not_reliable_enough_for_exact"
   | "near_only_exact_full"
   | "disqualified_category"
@@ -110,6 +112,7 @@ export type FinalSelectionTraceEntry = {
   name: string;
   canonicalId: string | null;
   variantFamilyKey: string | null;
+  modelFamilyKey: string | null;
   brand: string | null;
   model: string | null;
   productUrl: string;
@@ -145,6 +148,10 @@ export type FinalSelectionTraceEntry = {
   price: number | null;
   priceTrustStatus: string | null;
   canUseForBudget: boolean | null;
-  // Form-factor visibility (observational only — does not affect ranking yet)
+  // Final-selection-only diversity and form-factor visibility.
   offFormFactorModifiers: string[];
+  familyRepeatCount: number;
+  familyConcentrationPenalty: number;
+  formFactorPenalty: number;
+  adjustedSelectionScore: number | null;
 };
