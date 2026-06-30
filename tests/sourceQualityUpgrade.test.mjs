@@ -839,6 +839,173 @@ describe("upgradeWeakSourceEvidence", () => {
     assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
   });
 
+  it("does not let a retailer-prefixed RIDGID target accept an Amazon Basics vacuum", async () => {
+    const product = weakProduct(
+      "Amazon.com: RIDGID Wet Dry Vacuums VAC1200 Heavy Duty Wet/Dry Vacuum",
+      {
+        category: "shop vac",
+        host: "amazon.com",
+      },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const searchFn = async () => [
+      shoppingResult("Amazon Basics 6-Gallon 3.5 HP Wet/Dry Vacuum", {
+        category: "shop vac",
+        price: 62.99,
+        productUrl:
+          "https://www.google.com/search?ibp=oshop&q=RIDGID+VAC1200&udm=28&prds=catalogid%3A18395467410602476782",
+        retailer: "Amazon.com",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.equal(sourceUpgradeTraces[0].detectedBrand, "RIDGID");
+    assert.match(sourceUpgradeTraces[0].primaryQuery, /\bRIDGID\b/);
+    assert.match(sourceUpgradeTraces[0].primaryQuery, /\bVAC1200\b/);
+    assert.doesNotMatch(sourceUpgradeTraces[0].primaryQuery, /Amazon/i);
+    assert.ok(
+      !upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 62.99,
+      ),
+    );
+    assert.ok(
+      !upgraded.exactMatches[0].citations.some((citation) =>
+        citation.title.includes("Amazon Basics"),
+      ),
+    );
+  });
+
+  it("accepts an Amazon-hosted RIDGID page when source title and path carry RIDGID VAC1200", async () => {
+    const product = weakProduct(
+      "Amazon.com: RIDGID Wet Dry Vacuums VAC1200 Heavy Duty Wet/Dry Vacuum",
+      {
+        category: "shop vac",
+        host: "amazon.com",
+      },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const searchFn = async () => [
+      shoppingResult("RIDGID VAC1200 Heavy Duty Wet/Dry Vacuum", {
+        category: "shop vac",
+        price: 149,
+        productUrl:
+          "https://amazon.com/RIDGID-VAC1200-Heavy-Duty-Vacuum/dp/B0EXAMPLE",
+        retailer: "Amazon.com",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].detectedBrand, "RIDGID");
+    assert.match(sourceUpgradeTraces[0].primaryQuery, /\bRIDGID\b/);
+    assert.match(sourceUpgradeTraces[0].primaryQuery, /\bVAC1200\b/);
+    assert.doesNotMatch(sourceUpgradeTraces[0].primaryQuery, /Amazon/i);
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, true);
+    assert.ok(
+      upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 149,
+      ),
+    );
+  });
+
+  it("keeps Amazon Basics valid when it is the target product brand", async () => {
+    const product = weakProduct(
+      "Amazon Basics ABV60 6-Gallon Wet/Dry Vacuum",
+      {
+        category: "shop vac",
+        host: "amazon.com",
+      },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const searchFn = async () => [
+      shoppingResult("Amazon Basics ABV60 6-Gallon Wet/Dry Vacuum", {
+        brand: "Amazon Basics",
+        category: "shop vac",
+        price: 69,
+        productUrl:
+          "https://amazon.com/Amazon-Basics-ABV60-Wet-Dry-Vacuum/dp/B0EXAMPLE",
+        retailer: "Amazon.com",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].detectedBrand, "Amazon Basics");
+    assert.equal(sourceUpgradeTraces[0].primaryQuery, "Amazon Basics ABV60");
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, true);
+    assert.ok(
+      upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 69,
+      ),
+    );
+  });
+
+  it("does not let a seller label supply the target model", async () => {
+    const product = weakProduct(
+      "RIDGID Wet Dry Vacuums VAC1200 Heavy Duty Wet/Dry Vacuum",
+      { category: "shop vac" },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const searchFn = async () => [
+      shoppingResult("RIDGID Shop Vac", {
+        brand: "RIDGID",
+        category: "shop vac",
+        price: 89,
+        productUrl: "https://hardware.example.com/products/utility-vacuum",
+        retailer: "VAC1200 Marketplace",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.ok(
+      !upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 89,
+      ),
+    );
+  });
+
+  it("does not let a URL hostname supply the target model", async () => {
+    const product = weakProduct("Makita XCV11Z Cordless Wet/Dry Vacuum", {
+      category: "shop vac",
+    });
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const searchFn = async () => [
+      shoppingResult("Makita Shop Vac", {
+        brand: "Makita",
+        category: "shop vac",
+        price: 129,
+        productUrl:
+          "https://xcv11z.hardware.example.com/products/utility-vacuum?query=Makita+XCV11Z",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.ok(
+      !upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 129,
+      ),
+    );
+  });
+
   it("does not attach an allowed Google Shopping offer when identity mismatches", async () => {
     const product = weakProduct("Weber Spirit E-325 3-Burner Gas Grill");
     const result = makeResult([product]);

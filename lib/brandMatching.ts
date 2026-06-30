@@ -1,3 +1,5 @@
+import { SOURCE_NAME_TOKENS } from "./search/sourceTier.ts";
+
 type BrandDefinition = {
   aliases: string[];
   canonical: string;
@@ -37,6 +39,7 @@ const brandDefinitions: BrandDefinition[] = [
   { canonical: "Milwaukee", aliases: ["milwaukee", "m12 fuel", "m18 fuel", "m12 redlithium", "m18 redlithium"] },
   { canonical: "Makita", aliases: ["makita"] },
   { canonical: "Ryobi", aliases: ["ryobi"] },
+  { canonical: "Amazon Basics", aliases: ["amazon basics"] },
 ];
 
 function normalize(value: string) {
@@ -50,6 +53,45 @@ function normalize(value: string) {
 
 function compact(value: string) {
   return normalize(value).replace(/\s+/g, "");
+}
+
+const ADDITIONAL_SOURCE_LABEL_KEYS = new Set([
+  "ebay",
+  "marketplace",
+  "retailer",
+]);
+
+function sourceLabelKey(value: string) {
+  return compact(
+    value
+      .replace(/^\s*the\s+/i, "")
+      .replace(/\.(?:com|org|net)\b/gi, " "),
+  );
+}
+
+export function isSourceOrRetailerLabel(value: string | null | undefined) {
+  const raw = (value || "").trim();
+  if (!raw) return false;
+
+  const key = sourceLabelKey(raw);
+  return (
+    /\.(?:com|org|net)\b/i.test(raw) ||
+    SOURCE_NAME_TOKENS.has(key) ||
+    ADDITIONAL_SOURCE_LABEL_KEYS.has(key) ||
+    /(?:marketplace|retailer|store)$/.test(key)
+  );
+}
+
+export function stripLeadingSourceOrRetailerLabel(value: string) {
+  let cleaned = value.trim();
+
+  for (let pass = 0; pass < 2; pass += 1) {
+    const match = cleaned.match(/^([^:]{2,50}):\s*(.+)$/);
+    if (!match || !isSourceOrRetailerLabel(match[1])) break;
+    cleaned = match[2].trim();
+  }
+
+  return cleaned;
 }
 
 function aliasPattern(alias: string) {
@@ -69,6 +111,19 @@ function matchesAlias(text: string, alias: string) {
   }
 
   if (normalizedAlias.length <= 3) {
+    return false;
+  }
+
+  if (
+    !normalizedAlias.includes(" ") &&
+    normalizedText
+      .split(/\s+/)
+      .some(
+        (word) =>
+          word.length > normalizedAlias.length &&
+          word.includes(normalizedAlias),
+      )
+  ) {
     return false;
   }
 

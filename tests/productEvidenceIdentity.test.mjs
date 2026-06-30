@@ -107,4 +107,30 @@ describe("product evidence identity", () => {
       false,
     );
   });
+
+  it("does not let a retailer prefix make a different private-label product look identical", () => {
+    assert.equal(
+      classifyProductEvidenceIdentity({
+        category: "shop vac",
+        productName:
+          "Amazon.com: RIDGID Wet Dry Vacuums VAC1200 Heavy Duty Wet/Dry Vacuum",
+        sourceTitle: "Amazon Basics 6-Gallon 3.5 HP Wet/Dry Vacuum",
+        url: "https://amazon.com/dp/B0EXAMPLE?q=RIDGID+VAC1200",
+      }),
+      "conflicting_product",
+    );
+  });
+
+  it("keeps a retailer-prefixed target tied to a specific matching product page", () => {
+    assert.equal(
+      classifyProductEvidenceIdentity({
+        category: "shop vac",
+        productName:
+          "Amazon.com: RIDGID Wet Dry Vacuums VAC1200 Heavy Duty Wet/Dry Vacuum",
+        sourceTitle: "RIDGID VAC1200 Heavy Duty Wet/Dry Vacuum",
+        url: "https://amazon.com/RIDGID-VAC1200-Wet-Dry-Vacuum/dp/B0EXAMPLE",
+      }),
+      "same_product",
+    );
+  });
 });

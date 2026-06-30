@@ -16,8 +16,11 @@ import {
   type SerperShoppingSearchResult,
 } from "./search/serper.ts";
 import {
+  brandEvidenceMatches,
   brandAppearsOnlyAsMeasurement,
   inferKnownBrand,
+  isSourceOrRetailerLabel,
+  stripLeadingSourceOrRetailerLabel,
 } from "./brandMatching.ts";
 import { baseProductCategoryFromQuery } from "./productCategory.ts";
 import {
@@ -325,7 +328,10 @@ function extractModelIdentity(
 
 function productModelIdentity(product: ProductRecommendation): ExtractedModelIdentity {
   const brandQualified = Boolean(sourceUpgradeBrand(product));
-  const fromName = extractModelIdentity(product.name, { brandQualified });
+  const fromName = extractModelIdentity(
+    stripLeadingSourceOrRetailerLabel(product.name),
+    { brandQualified },
+  );
   const metadataTokens = [
     product.metadata?.modelNumber?.value || "",
     product.metadata?.sku?.value || "",
@@ -401,7 +407,7 @@ function hasConflictingDigitDashModel(
 function identityUrlText(value: string) {
   try {
     const parsed = new URL(value);
-    return `${parsed.hostname.replace(/^www\./, "")} ${parsed.pathname}`;
+    return parsed.pathname;
   } catch {
     return value.split(/[?#]/, 1)[0] || "";
   }
@@ -411,13 +417,12 @@ function evidenceText(candidate: RawProductCandidate | SerperEvidenceSource) {
   if ("evidenceSources" in candidate) {
     return normalizeText(
       [
-        candidate.name,
-        candidate.brand || "",
-        candidate.retailer || "",
+        stripLeadingSourceOrRetailerLabel(candidate.name),
+        isSourceOrRetailerLabel(candidate.brand) ? "" : candidate.brand || "",
         candidate.availableColors.join(" "),
         candidate.keySpecs.join(" "),
         ...candidate.evidenceSources.flatMap((source) => [
-          source.title,
+          stripLeadingSourceOrRetailerLabel(source.title),
           source.snippetProvenance === "query-derived" ? "" : source.snippet,
           identityUrlText(source.url),
         ]),
@@ -427,7 +432,7 @@ function evidenceText(candidate: RawProductCandidate | SerperEvidenceSource) {
 
   return normalizeText(
     [
-      candidate.title,
+      stripLeadingSourceOrRetailerLabel(candidate.title),
       candidate.snippet,
       identityUrlText(candidate.url),
     ].join(" "),
@@ -439,7 +444,9 @@ function evidenceUrl(candidate: RawProductCandidate | SerperEvidenceSource) {
 }
 
 function evidenceTitle(candidate: RawProductCandidate | SerperEvidenceSource) {
-  return "name" in candidate ? candidate.name : candidate.title;
+  return stripLeadingSourceOrRetailerLabel(
+    "name" in candidate ? candidate.name : candidate.title,
+  );
 }
 
 const FAMILY_IDENTITY_CATEGORY_MODIFIERS = new Set([
@@ -480,6 +487,7 @@ function looksLikeSameProduct(
 ) {
   const text = evidenceText(candidate);
   const normalizedEvidence = text.replace(/\s+/g, "");
+  const productName = stripLeadingSourceOrRetailerLabel(product.name);
   const productTypeVerdict = requestedCategory
     ? classifyProductTypeMatch({
         evidenceText: text,
@@ -494,7 +502,7 @@ function looksLikeSameProduct(
   const candidateTitle = evidenceTitle(candidate);
   if (
     hasExplicitVariantConflict(
-      product.name,
+      productName,
       `${candidateTitle} ${identityUrlText(evidenceUrl(candidate))}`,
       requestedCategory,
     )
@@ -503,6 +511,14 @@ function looksLikeSameProduct(
   }
 
   const targetIdentity = productModelIdentity(product);
+  const targetBrand = sourceUpgradeBrand(product);
+  if (
+    targetBrand &&
+    !brandEvidenceMatches(text, targetBrand)
+  ) {
+    return false;
+  }
+
   if (
     targetIdentity.strongTokens.some((model) =>
       normalizedEvidence.includes(model),
@@ -538,9 +554,13 @@ function looksLikeSameProduct(
     new Set(
       significantTokens(
         [
-          product.name,
-          product.metadata?.brand?.value || "",
-          product.metadata?.title?.value || "",
+          productName,
+          isSourceOrRetailerLabel(product.metadata?.brand?.value)
+            ? ""
+            : product.metadata?.brand?.value || "",
+          stripLeadingSourceOrRetailerLabel(
+            product.metadata?.title?.value || "",
+          ),
         ].join(" "),
       ),
     ),
@@ -1100,6 +1120,9 @@ function identityWordsBefore(
   if (count <= 0) return [];
 
   const detectedBrandNormalized = normalizeText(detectedBrand || "");
+  const detectedBrandWords = new Set(
+    detectedBrandNormalized.split(/\s+/).filter(Boolean),
+  );
   return name
     .slice(0, candidate.start)
     .trim()
@@ -1111,6 +1134,7 @@ function identityWordsBefore(
       return (
         normalized &&
         normalized !== detectedBrandNormalized &&
+        !detectedBrandWords.has(normalized) &&
         !GENERIC_PRODUCT_WORDS.has(normalized) &&
         !MEASUREMENT_MODEL_PREFIXES.has(normalized) &&
         (!detectedBrand || !MODEL_CONTEXT_STOPWORDS.has(normalized)) &&
@@ -1196,23 +1220,26 @@ function buildModelIdentityQuery(name: string, detectedBrand: string | null) {
 function sourceUpgradeBrand(
   product: Pick<ProductRecommendation, "name" | "metadata">,
 ) {
+  const productName = stripLeadingSourceOrRetailerLabel(product.name);
   const metadataBrand = product.metadata?.brand?.value?.trim() || "";
   if (
     metadataBrand &&
-    !brandAppearsOnlyAsMeasurement(product.name, metadataBrand)
+    !isSourceOrRetailerLabel(metadataBrand) &&
+    !brandAppearsOnlyAsMeasurement(productName, metadataBrand)
   ) {
     return metadataBrand;
   }
 
-  return inferKnownBrand(product.name) || leadingBrandFromTitle(product.name);
+  return inferKnownBrand(productName) || leadingBrandFromTitle(productName);
 }
 
 export function buildSourceUpgradeShoppingQuery(
   product: Pick<ProductRecommendation, "name" | "metadata">,
   category: string,
 ) {
+  const productName = stripLeadingSourceOrRetailerLabel(product.name);
   const modelIdentity = buildModelIdentityQuery(
-    product.name,
+    productName,
     sourceUpgradeBrand(product),
   );
 
@@ -1220,7 +1247,7 @@ export function buildSourceUpgradeShoppingQuery(
     return removeTrailingCategory(modelIdentity, category);
   }
 
-  let query = stripRetailDisplayFiller(product.name);
+  let query = stripRetailDisplayFiller(productName);
 
   if (!containsCategoryWords(query, category)) {
     query = `${query} ${category}`;

@@ -1,3 +1,5 @@
+import { stripLeadingSourceOrRetailerLabel } from "./brandMatching.ts";
+
 export type ProductEvidenceIdentity =
   | "same_product"
   | "generic_evidence"
@@ -424,16 +426,19 @@ export function classifyProductEvidenceIdentity(
   }
 
   const pathText = urlPathText(input.url);
-  const sourceTitle = input.sourceTitle || "";
+  const productName = stripLeadingSourceOrRetailerLabel(input.productName);
+  const sourceTitle = stripLeadingSourceOrRetailerLabel(
+    input.sourceTitle || "",
+  );
 
   if (
     hasExplicitVariantConflict(
-      input.productName,
+      productName,
       sourceTitle,
       input.category,
     ) ||
     hasExplicitVariantConflict(
-      input.productName,
+      productName,
       pathText,
       input.category,
     )
@@ -443,12 +448,12 @@ export function classifyProductEvidenceIdentity(
 
   if (
     textSupportsProductIdentity(
-      input.productName,
+      productName,
       sourceTitle,
       input.category,
     ) ||
     textSupportsProductIdentity(
-      input.productName,
+      productName,
       pathText,
       input.category,
     )
