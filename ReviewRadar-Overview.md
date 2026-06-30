@@ -659,3 +659,16 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - RR-007 is Fixed. RR-008, RR-063, RR-064, and RR-065 remain Fixed.
 - RR-041/RR-042 remain Needs Investigation; Phase 5I was not retried and Phase 5J was not started.
 - Retry Phase 5I only after explicit instruction.
+
+**Phase 5I retry safety stop / RR-066 (2026-06-30)**
+- A conservative candidate retry treated a product as upgrade-worthy when at least two of verified price, owner rating, and same-product commerce evidence were missing. It retained the existing strong-identity prerequisite, candidate cap of three, and one bounded fallback after zero primary candidates or no safe primary attachment.
+- The candidate behavior passed focused, broad safety, full-suite, and eval checks, but the single live `shop vac` proof exposed a missing source-upgrade identity invariant.
+- Target `RIDGID ... WD4522` rejected exact-model evidence whose provider title omitted the brand, then accepted a different 10-gallon RIDGID wet/dry vacuum that carried the brand and product type but no `WD4522` model. It attached price, rating, review count, and citation.
+- RR-065 remains correct for retailer/source provenance. RR-066 is distinct: when the target has a reliable strong model, brand plus type alone cannot prove same-product identity if the candidate omits the target model.
+- The stop condition fired. All candidate Phase 5I trigger, fallback, trace, replay, API, and test edits were rolled back. The final repository retains the pre-retry behavior and passes 747/747 tests.
+
+**Current boundary**
+- RR-066 is Critical/Open and must be fixed before another Phase 5I retry.
+- RR-041/RR-042 remain Needs Investigation. No Phase 5I behavior is implemented or committed.
+- RR-007, RR-008, RR-063, RR-064, and RR-065 remain Fixed.
+- Phase 5J has not started.

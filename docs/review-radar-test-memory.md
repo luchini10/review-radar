@@ -943,3 +943,23 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Fixture/live proof:** Frozen fixture replay remains historical. Current-code reassessment changes the Bosch record to `listing_or_search`. One fresh `shop vac` call returned only specific product-page final URLs and no collection/listing/family card.
 
 **Status:** RR-007 Fixed. RR-041/RR-042 remain Needs Investigation. Phase 5I/5J were not started.
+
+---
+
+## 2026-06-30 - Phase 5I retry safety memory / RR-066
+
+**Fail-first contract:**
+- A reliable model-qualified product missing verified price and same-product commerce evidence must not be suppressed solely because it has one owner rating.
+- A nonempty primary result set whose candidates all fail safe identity must not permanently suppress the existing single bounded fallback.
+
+**New safety contract:**
+- A target with a reliable strong model such as `WD4522` cannot accept source-upgrade evidence that proves only the brand and product type.
+- Source-derived candidate title, safe URL path, or product metadata must carry the target model or an equally strong exact product identifier.
+- An exact model-bearing candidate whose provider title omits the brand should remain eligible when no conflicting brand or product evidence exists.
+- RR-065 and RR-066 are separate: RR-065 excludes retailer/source provenance; RR-066 closes the same-brand/model-omission path.
+
+**Verification evidence:** The candidate Phase 5I implementation passed focused tests 113/113, a broad named safety matrix 346/346, typecheck, lint with 0 errors and 3 existing warnings, 751/751 full tests, and eval. The live run exposed a deterministic coverage gap. After rollback, the restored repository passed typecheck, lint with the same warnings, 747/747 tests, and eval.
+
+**Live-call rule:** The only approved `shop vac` call was used. It safely upgraded Stanley SL18115 and Armor All VOM205P, but unsafely attached a different 10-gallon RIDGID vacuum to the 4.5-gallon WD4522 target. Do not spend another Phase 5I live call until RR-066 is fixed deterministically.
+
+**Status:** RR-066 Open/Critical. RR-041/RR-042 remain Needs Investigation. The final repository contains no Phase 5I retry behavior; Phase 5J must not start.

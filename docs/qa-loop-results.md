@@ -5216,3 +5216,72 @@ Exactly one `shop vac` save/replay ran.
 - Fresh live fixtures and generated baselines remain untracked and uncommitted.
 
 Recommended direction: stop. Retry Phase 5I for RR-041/RR-042 only after explicit instruction; preserve the RR-007 classifier and RR-063/RR-064/RR-065 identity guards.
+
+## <span style="color:green">**Codex QA Update - 2026-06-30 (Phase 5I retry safety stop / RR-066)**</span>
+
+**Verdict: STOPPED AND ROLLED BACK. RR-041/RR-042 remain Needs Investigation. Critical RR-066 opened. No Phase 5I behavior was committed and Phase 5J did not start.**
+
+### Fail-first diagnosis
+
+Two deterministic cases reproduced the current RR-041/RR-042 gaps before editing:
+
+- a model-qualified product with only one owner-rating pillar did not trigger source upgrade despite lacking verified price and same-product commerce evidence;
+- a primary shopping search that returned candidates but rejected all of them on identity did not run the existing single bounded fallback.
+
+The candidate implementation used a conservative missing-two-of-three trigger, required reliable product identity, prioritized the weakest qualifying candidates under the existing cap of three, and allowed one distinct fallback only after zero primary candidates or no safe primary attachment. Debug-only decision and outcome fields explained trigger, skip, retry, accept, and reject paths.
+
+### Deterministic proof before live validation
+
+```text
+fail-first source-quality tests: 78/80 pass; only the two intended RR-041/RR-042 assertions failed
+focused final: 113/113 pass
+broad named safety matrix: 346/346 pass
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test with candidate code: 751/751 pass
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+The deterministic matrix kept RR-007, RR-008, RR-063, RR-064, RR-065, price trust, citation trust, product type, requirements, ranking, and final-selection protections green. It did not contain the same-brand/no-model candidate shape exposed live.
+
+### Single focused live proof and stop condition
+
+Exactly one approved `shop vac` save/replay ran.
+
+- Candidate pool: 16; after citation verification: 13; after requirements/revalidation: 9; final: 7.
+- Source-upgrade decisions: 9; selected attempts: 3.
+- `Stanley SL18115`: primary exact evidence attached safely.
+- `Armor All VOM205P`: primary returned zero; bounded fallback found exact evidence and attached safely.
+- `RIDGID WD4522`: unsafe attachment triggered the stop condition.
+
+Unsafe RIDGID trace:
+
+- target: `RIDGID 4.5 Gallon 5.0 Peak HP PRO PACK Wet Dry Vac (WD4522)`;
+- detected brand: `RIDGID`; model: `wd4522`; primary query: `RIDGID WD4522`;
+- Serper: 40 raw, 20 structural, 20 eligible/returned;
+- exact-model sample `WD4522 4.5 Gallon 5.0-Peak HP ProPack Wet/Dry Shop Vacuum ...` was rejected because its provider title omitted the brand;
+- wrong candidate `Ridgid 10 Gallon 6.0 Peak HP Stainless Steel Wet/Dry Shop Vacuum` carried the brand and same type but no WD4522 model;
+- the wrong candidate passed identity and attached `$139`, rating `4.3`, review count, and citation;
+- the contaminated target reached the reliability-near set, not the final exact seven, but attachment itself was unsafe.
+
+This is RR-066. RR-065 correctly excludes retailer/source provenance; RR-066 is the distinct case where brand plus type can pass when a model-qualified target meets a candidate that exposes no model token.
+
+### Rollback and restored-repository proof
+
+- Restored all six Phase 5I app, replay, and test files.
+- No trigger, fallback, trace, API, replay, test, ranking, discovery, eligibility, identity, price, product-type, requirement, final-selection, or UI behavior remains changed.
+- Restored typecheck: pass.
+- Restored lint: 0 errors and the same 3 warnings.
+- Restored full suite: 747/747 pass.
+- Restored eval: no red flags.
+- Fresh live fixtures and generated baselines remain untracked and uncommitted.
+
+### Issue outcome
+
+- RR-066: Open, Critical.
+- RR-041/RR-042: remain Needs Investigation.
+- RR-007, RR-008, RR-063, RR-064, RR-065: remain Fixed.
+- Register: 66 issues; 9 Critical, 28 High, 24 Medium, 5 Low; 3 Open, 6 Needs Investigation, 56 Fixed, 1 Won't Fix.
+- Documentation commit: pending.
+
+Recommended direction: fix RR-066 narrowly before another Phase 5I retry. For a reliable model-qualified target, source-derived candidate evidence must carry the target model or an equally strong exact identifier; same brand plus product type alone cannot attach commerce evidence.

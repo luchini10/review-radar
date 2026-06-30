@@ -4,29 +4,30 @@ Generated: 2026-06-30
 
 ## Current next task
 
-**RR-007 opaque collection-page recurrence fixed - Phase 5I retry awaits explicit approval**
+**RR-066 source-upgrade model-identity safety must be fixed before another Phase 5I retry**
 
-RR-007 is Fixed again. The shared product-page classifier now treats opaque manufacturer collection suffixes and contextual product-range/family/lineup/series routes as strong negative page-shape evidence before product-detail, image, price, or model-like shortcuts.
+The Phase 5I retry stopped and was rolled back after its single approved `shop vac` live proof exposed Critical RR-066.
 
-The exact Bosch `/ocs-c/` record reassesses from `buyable_product` to `listing_or_search`. A fresh `shop vac` run returned only specific product-detail primary URLs. Valid Bosch/manufacturer and major-retailer detail pages remain eligible. RR-008, RR-063, RR-064, RR-065, and all named safety regressions remain green.
+Target `RIDGID 4.5 Gallon 5.0 Peak HP PRO PACK Wet Dry Vac (WD4522)` rejected an exact-model candidate whose title omitted RIDGID, then accepted `Ridgid 10 Gallon 6.0 Peak HP Stainless Steel Wet/Dry Shop Vacuum`, which carried the brand and product type but no WD4522 model. The wrong product donated price, rating, review count, and citation evidence.
 
-RR-041 and RR-042 remain Needs Investigation. Their Phase 5I fail-first cases are documented, but the candidate trigger/fallback change was rolled back after RR-065. This RR-007 cleanup did not retry or change that logic.
+The stop condition was honored. All Phase 5I trigger, fallback, trace, replay, and test edits were removed. The restored repository passes 747/747 tests. RR-041 and RR-042 remain Needs Investigation; Phase 5J has not started.
 
-The canonical register now contains 65 issues:
+The canonical register now contains 66 issues:
 
-- 8 Critical, 28 High, 24 Medium, 5 Low;
-- 2 Open, 6 Needs Investigation, 56 Fixed, 1 Won't Fix.
+- 9 Critical, 28 High, 24 Medium, 5 Low;
+- 3 Open, 6 Needs Investigation, 56 Fixed, 1 Won't Fix.
 
 ## Required next phase
 
 Do not start automatically. The next task, only after explicit instruction, is:
 
-**Retry Phase 5I for RR-041/RR-042 trigger/fallback reliability**
+**Fix RR-066 source-upgrade same-brand/model-omission identity safety**
 
-Restore the documented fail-first cases and re-evaluate the smallest bounded trigger/fallback change against the now-fixed RR-065 identity and RR-007 eligibility protections. Do not treat lower safe attachment rates as a reason to weaken identity.
+Add a narrow, fail-first identity guard for model-qualified targets. When a target has a reliable strong model token, brand plus product type alone must not prove same-product identity; source-derived candidate title, safe path, or metadata must carry the target model or an equally strong exact product identifier. Preserve valid exact-model offers whose provider title omits the brand when there is no conflicting brand/product evidence.
 
 Do not:
 
+- retry RR-041/RR-042 trigger or fallback behavior in the RR-066 fix;
 - start Phase 5J;
 - weaken RR-063/RR-064/RR-065 source-derived identity rules;
 - change Phase 5H final-selection calibration;
@@ -38,4 +39,4 @@ Reference:
 
 - `docs/RR-Issues-Report.md`
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` latest RR-007 opaque collection-page cleanup entry
+- `docs/qa-loop-results.md` latest Phase 5I retry / RR-066 safety-stop entry

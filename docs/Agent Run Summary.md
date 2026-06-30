@@ -1201,3 +1201,23 @@ New entries should keep the same format and stay easy to read.
 **Scope:** Implementation commit `6346087`; documentation commit `f002533`. No Phase 5I trigger/fallback retry, Phase 5J work, ranking, discovery, source-upgrade, identity, price, product-type, requirement, final-selection, or UI change.
 
 **Next recommended step:** Stop. Retry Phase 5I for RR-041/RR-042 only after explicit instruction.
+
+## Codex Run - 2026-06-30 Phase 5I retry safety stop
+
+**Goal:** Retry only RR-041/RR-042 with a conservative trigger and bounded fallback while preserving all source-upgrade identity and product-card safety gates.
+
+**Fail-first diagnosis:** A lone owner rating blocks upgrade even when verified price and same-product commerce evidence are missing. A nonempty primary result set also prevents fallback when every candidate fails identity. The two intended assertions failed with 78/80 source-quality tests passing.
+
+**Candidate change:** Locally required two of three missing evidence pillars, retained strong identity and the cap of three, and allowed one distinct fallback after zero primary candidates or no safe primary attachment. Debug-only trace fields explained trigger, retry, and outcome decisions.
+
+**Deterministic proof:** Focused tests passed 113/113; the broad named safety matrix passed 346/346; typecheck passed; lint had 0 errors and 3 existing warnings; the candidate full suite passed 751/751; eval had no red flags.
+
+**Live stop:** The one approved `shop vac` run safely upgraded Stanley SL18115 and Armor All VOM205P, but target RIDGID WD4522 rejected an exact-model candidate whose title omitted RIDGID and then accepted a different 10-gallon RIDGID vacuum with no WD4522 model. It attached `$139`, rating `4.3`, review count, and citation. The contaminated product stayed near-only, but the attachment was unsafe.
+
+**Outcome:** Opened Critical RR-066. Restored all six Phase 5I implementation/test files; no behavior remains changed or committed. The restored repository passes 747/747 tests, typecheck, lint with the same 3 warnings, and eval.
+
+**Issues:** RR-041/RR-042 remain Needs Investigation. RR-066 is Open. RR-007, RR-008, RR-063, RR-064, and RR-065 remain Fixed. Totals: 66 issues; 9 Critical, 28 High, 24 Medium, 5 Low; 3 Open, 6 Needs Investigation, 56 Fixed, 1 Won't Fix.
+
+**Scope:** Documentation only after rollback. The generated baselines and live fixtures remain untracked. Documentation commit: pending.
+
+**Next recommended step:** Fix RR-066 narrowly before retrying Phase 5I. A model-qualified target must not accept brand-plus-type evidence that omits the target model.

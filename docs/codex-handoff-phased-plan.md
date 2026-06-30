@@ -1247,3 +1247,20 @@ Stop. Address RR-007 only after explicit instruction; preserve RR-065 provenance
 - Scope: RR-041/RR-042 were not retried or fixed. Phase 5I and Phase 5J were not started. No ranking, discovery, source-upgrade, identity, price, product-type, requirement, final-selection, or UI behavior changed.
 
 Stop. Do not retry Phase 5I or start Phase 5J without explicit instruction.
+
+### Phase 5I retry safety-stop record
+
+- Completed step: Phase 5I retry diagnosis, fail-first proof, candidate implementation, deterministic verification, and one focused live safety check.
+- Next step: Narrow Critical RR-066 source-upgrade same-brand/model-omission identity fix. Do not retry RR-041/RR-042 or start Phase 5J first.
+- Diagnostic-only: Final repository outcome is diagnostic/docs-only. The candidate trigger, fallback, trace, replay, API, and test changes were fully rolled back.
+- Stop condition hit: Yes. A RIDGID WD4522 target rejected an exact-model candidate whose provider title omitted RIDGID, then accepted a different 10-gallon RIDGID vacuum carrying the brand/type but no WD4522 model and attached price, rating, review count, and citation.
+- New issue IDs opened: RR-066, Critical/Open.
+- Existing issue IDs updated: RR-041 and RR-042 remain Needs Investigation with new deterministic/live evidence. RR-007, RR-008, RR-063, RR-064, and RR-065 remain Fixed.
+- Docs committed: Pending.
+- Documentation commit: Pending.
+- Candidate verification: fail-first 78/80; focused final 113/113; broad named safety 346/346; typecheck passed; lint 0 errors with 3 existing warnings; full candidate suite 751/751; eval clean.
+- Restored-repository verification: typecheck passed; lint 0 errors with the same 3 warnings; full suite 747/747; eval clean.
+- Live validation: exactly one `shop vac` call. Stanley SL18115 attached safely; Armor All VOM205P used the bounded fallback safely; RIDGID WD4522 exposed RR-066. No second live search or full baseline ran.
+- Uncommitted artifacts: generated baselines and live fixtures, including the refreshed `shop-vac.json`, remain untracked and excluded from commits.
+
+Stop. Fix RR-066 only after explicit instruction. Preserve the fail-first RR-041/RR-042 cases for a later Phase 5I retry; do not start Phase 5J.

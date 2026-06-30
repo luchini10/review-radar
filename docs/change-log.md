@@ -13,6 +13,13 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-30
 
+### Codex - Phase 5I retry safety stop / RR-066
+- Reproduced RR-041/RR-042 again: a lone rating suppresses an otherwise weak model-qualified candidate, and a nonempty primary result set whose candidates all fail identity prevents the bounded fallback.
+- A conservative candidate trigger/fallback change passed 751/751 tests and eval, but the single `shop vac` live proof exposed Critical RR-066.
+- A RIDGID WD4522 target rejected exact-model evidence whose title omitted the brand, then accepted a different 10-gallon RIDGID vacuum carrying the brand and type but no WD4522 model. The wrong product attached price, rating, review count, and citation evidence.
+- The stop condition fired. Every Phase 5I app, replay, and test edit was rolled back; no behavior change was committed. The restored repository passed 747/747 tests, typecheck, lint with 0 errors, and eval.
+- RR-041/RR-042 remain Needs Investigation. RR-066 is Critical/Open and must be fixed narrowly before another Phase 5I retry. Phase 5J did not start.
+
 ### Codex - RR-007 opaque manufacturer collection-page cleanup
 - Fixed the Bosch `/ocs-c/` recurrence by recognizing opaque manufacturer collection suffixes and contextual product-range/family/lineup/series routes before product-detail, image, price, or model-like shortcuts.
 - The fix is page-shape based, not Bosch-specific. Product-looking collection pages stay blocked even with images, prices, and catalog-like digits; specific Bosch/manufacturer and known retailer detail pages remain eligible.

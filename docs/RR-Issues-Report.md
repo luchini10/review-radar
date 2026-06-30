@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through RR-007 opaque collection-page cleanup
+## Compiled for AI Agent Consumption — Phase 0 through Phase 5I retry safety stop
 
 **Generated:** 2026-06-30
-**Scope:** All phases from initial measurement harness through the RR-007 opaque collection-page cleanup
+**Scope:** All phases from initial measurement harness through the stopped Phase 5I retry
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -13,12 +13,12 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 65 |
-| Critical | 8 |
+| Total Issues | 66 |
+| Critical | 9 |
 | High | 28 |
 | Medium | 24 |
 | Low | 5 |
-| Open | 2 |
+| Open | 3 |
 | Needs Investigation | 6 |
 | Fixed | 56 |
 | Won't Fix | 1 |
@@ -74,6 +74,7 @@
 | Phase 5I — Trigger/fallback reliability safety stop | 1 |
 | RR-065 identity-safety mini-phase | 0 |
 | RR-007 opaque collection-page cleanup | 0 |
+| Phase 5I retry — same-brand/model-omission safety stop | 1 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -1170,6 +1171,8 @@ Deterministic tests cover Oral-B and EGO retention, specific Purina and Hill's p
 
 **Phase 4B evidence:** Trigger inconsistency persists. Fresh `shop vac` and `robot vacuum` fixtures each produced zero traces, while `gas grill` produced one attempt against a wrong-type Thermador range/PDF target. The trigger is operational, but its live coverage is sparse and target quality is not reliable. Status remains Needs Investigation.
 
+**Phase 5I retry evidence:** Two fail-first tests again proved that a lone owner rating suppresses an otherwise weak product and that a nonempty primary result set whose candidates all fail identity prevents the one bounded fallback from running. A conservative missing-two-of-three trigger and post-rejection fallback passed deterministic verification, but the single live `shop vac` proof exposed Critical RR-066. All Phase 5I behavior, replay, and test edits were rolled back. Status remains Needs Investigation.
+
 ---
 
 ### PHASE 3J EXTENSION — TRIGGER-PRODUCING CATEGORIES (2026-06-26)
@@ -1213,6 +1216,8 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 **Phase 3N update:** The Phase 3L live attempt was `DEWALT 10 Gallon Stainless Steel Wet/Dry Vacuum DXV10SB`, with primary `Wet/Dry Vacuum DXV10SB` and fallback `Wet/Dry Vacuum DXV10SB shop vac`. Phase 3M proved Serper returned 40 raw shopping results for each query; all considered results were lost during normalization/product eligibility. Phase 3N fixed RR-048/RR-049 deterministically. The approved Phase 3N `shop vac` proof produced `sourceUpgradeTraces: 0`, so normalization was not exercised. RR-042 remains `Needs Investigation` until a trigger-producing focused live proof confirms candidates survive normalization and proceed safely through identity and attachment.
 
 **Phase 4B evidence:** Candidate normalization and attachment now work live for one primary-query attempt: `[PDF] PRL364NLG` returned 2 raw, 2 structural, 2 eligible, and 2 normalized Google Shopping offers; one candidate identity-matched and attached price plus citation. The fallback path was not exercised, and the upgraded target was a wrong-type range/PDF in a gas-grill search. RR-042 therefore remains Needs Investigation: provider/normalization emptiness is disproved for this attempt, but fallback reliability and safe useful attachment remain unproven.
+
+**Phase 5I retry evidence:** The candidate fallback control flow was proven deterministically and live, but the live run attached wrong-product evidence before the fallback path could be accepted as safe. The behavior change was rolled back. RR-042 remains Needs Investigation until RR-066 is fixed and a later bounded retry proves fallback reliability without weakening model identity.
 
 ---
 
@@ -2057,11 +2062,44 @@ No new issue ID was opened.
 
 ---
 
+### PHASE 5I RETRY — SAME-BRAND/MODEL-OMISSION SAFETY STOP (2026-06-30)
+
+#### RR-066
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-066 |
+| **Phase** | Phase 5I retry live validation |
+| **Severity** | Critical |
+| **Title** | Source upgrade can attach same-brand, same-type evidence that omits the target model |
+| **Status** | Open |
+
+**Description:** The conservative Phase 5I retry reached a model-qualified RIDGID target and evaluated live Google Shopping candidates. A candidate carrying the exact `WD4522` model but omitting the RIDGID brand was rejected under the RR-065 brand requirement. A different RIDGID 10-gallon vacuum carried the brand and same product type but no `WD4522` model; it passed identity and donated price, rating, review count, and citation evidence to the 4.5-gallon WD4522 target.
+
+**Where it occurs:** `lib/requirementEvidenceRescue.ts` source-upgrade same-product identity path when the target has a reliable model token but the candidate exposes no model token
+
+**Steps to reproduce:** Apply the stopped Phase 5I retry candidate logic, run the single approved `npm run qa:save-fixture -- "shop vac"` command, and replay `tests/fixtures/review-radar-live/shop-vac.json`. Inspect the source-upgrade trace for `RIDGID 4.5 Gallon 5.0 Peak HP PRO PACK Wet Dry Vac (WD4522)`. The exact-model `WD4522` candidate is rejected because its title lacks RIDGID, then `Ridgid 10 Gallon 6.0 Peak HP Stainless Steel Wet/Dry Shop Vacuum` is accepted despite omitting WD4522.
+
+**Expected:** A target with reliable model `WD4522` must not accept source-derived evidence that proves only RIDGID brand and wet/dry-vac type. Exact target-model evidence should remain usable even when a provider title omits the brand, provided no conflicting brand/product evidence is present.
+
+**Actual:** The wrong 10-gallon RIDGID vacuum passed identity and attached `$139`, rating `4.3`, review count, and citation evidence to the 4.5-gallon WD4522 target. The contaminated target reached the reliability-near set rather than the final exact seven, but the evidence attachment itself was unsafe.
+
+**Current status:** Open. The Phase 5I stop condition fired immediately. All candidate trigger, fallback, trace, replay, and test changes were rolled back; no Phase 5I behavior was committed.
+
+**Suggested fix or next action:** Before retrying Phase 5I, add a narrow deterministic source-upgrade identity guard: when the target has a reliable strong model, brand plus type alone cannot satisfy same-product identity. Require the target model or an equally strong exact product identifier in source-derived candidate title, safe path, or metadata. Preserve RR-065 provenance rules and allow an exact model-bearing candidate whose provider title merely omits the brand when no conflicting brand/product evidence exists.
+
+**Phase evidence:** Fail-first behavior tests passed 78/80 before implementation. The candidate Phase 5I implementation passed focused tests 113/113, a broad named safety matrix 346/346, typecheck, lint with 0 errors and 3 existing warnings, the full 751/751 suite, and eval. The live stop showed deterministic coverage lacked the same-brand/no-model negative. After rollback, the restored repository passed typecheck, lint with the same warnings, 747/747 tests, and eval with no red flags.
+
+**Issue result:** RR-066 opened as Critical/Open. RR-041/RR-042 remain Needs Investigation. RR-007, RR-008, RR-063, RR-064, and RR-065 remain Fixed. Phase 5J did not start.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (2 issues)
+### Open (3 issues)
 - RR-054: Fresh fallback responses omit current diagnostic traces
 - RR-061: Product image metadata accepts non-image or irrelevant assets
+- RR-066: Source upgrade accepts same-brand, same-type evidence that omits the target model
 
 ### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
@@ -2080,9 +2118,10 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
-2. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
-3. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
-4. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
-5. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
-6. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
+1. **RR-066** (Critical) — Close the same-brand/model-omission source-upgrade identity hole before another Phase 5I retry.
+2. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent and must remain rolled back until RR-066 is fixed.
+3. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
+4. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
+5. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
+6. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
+7. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
