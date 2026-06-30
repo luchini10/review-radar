@@ -13,6 +13,12 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-30
 
+### Codex - RR-065 retailer/source identity safety
+- Fixed RR-065 by treating explicit leading source/retailer labels, seller fields, URL hosts, URL query strings, and query-derived snippets as provenance rather than product identity.
+- Source upgrade now requires a reliable target brand in source-derived candidate title/brand/path evidence. Merchant product paths remain useful, exact cross-retailer matches still attach, and Amazon Basics remains valid when it is the actual product brand.
+- The exact retailer-prefixed RIDGID VAC1200 versus Amazon Basics case failed before the fix. Focused identity passed 90/90; broad safety passed 340/340; typecheck and eval passed; lint had 0 errors and 3 existing warnings; full suite passed 744/744; ranking baseline stayed stable.
+- One focused `shop vac` run safely attached exact RIDGID HD1400 evidence. It separately reopened RR-007 because a Bosch `/ocs-c/` wet/dry-extractor collection became exact #3. No eligibility fix, Phase 5I retry, or Phase 5J work occurred.
+
 ### Codex - Phase 5I trigger/fallback reliability safety stop
 - Reproduced RR-041/RR-042 deterministically: a lone rating suppresses an otherwise weak candidate, and a nonempty all-rejected primary result set prevents the bounded fallback from running.
 - A conservative missing-two-of-three trigger and one post-rejection fallback passed 738/738 tests and eval locally, but the first focused `shop vac` live proof exposed Critical RR-065.

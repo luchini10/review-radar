@@ -4,34 +4,31 @@ Generated: 2026-06-30
 
 ## Current next task
 
-**Phase 5I stopped on Critical RR-065 - fix identity safety before retrying**
+**RR-065 fixed - narrow RR-007 Bosch category-page recurrence is next**
 
-Phase 5I reproduced two real reliability gaps: the current trigger requires price, rating, and useful commerce evidence all to be absent, and the fallback runs only when primary search returns zero candidates. A conservative missing-two-of-three trigger plus one bounded fallback after `primary_no_safe_attachment` passed deterministic verification, but the first focused `shop vac` live proof exposed Critical RR-065:
+RR-065 is Fixed. Shared identity normalization now treats explicit leading source/retailer labels, seller fields, URL hosts, URL query parameters, and query-derived text as provenance rather than product identity. A reliable target brand must appear in source-derived title/brand/path evidence. Product URL paths remain usable.
 
-- target: `Amazon.com: RIDGID Wet Dry Vacuums VAC1200 Heavy Duty Wet ...`;
-- primary `SKIL ... VA1200D-10` result: safely rejected;
-- fallback `Amazon Basics 6-Gallon 3.5 HP Wet/Dry Vacuum`: incorrectly identity-matched;
-- attached field: wrong-product citation.
+The exact retailer-prefixed RIDGID VAC1200 versus Amazon Basics regression is blocked. A real Amazon-hosted RIDGID VAC1200 page and a real Amazon Basics target remain valid. RR-063/RR-064 and all named safety regressions remain green.
 
-The target card's retailer-prefixed name caused `Amazon.com` to be treated as a brand. Shared Amazon wording plus the same broad product type then allowed a candidate with neither RIDGID nor VAC1200 identity to pass. The Phase 5I app/test changes were rolled back, the second live search was not run, and no behavior change was committed.
+One focused `shop vac` live run safely attached exact RIDGID HD1400 evidence. It also reopened RR-007: `Wet/dry extractors Dust extraction systems - Bosch Professional` became exact #3 using Bosch collection URL `/au/en/wet-dry-extractors-2549705-ocs-c/`, while a specific Home Depot VAC090AH page remained secondary.
 
 The canonical register now contains 65 issues:
 
 - 8 Critical, 28 High, 24 Medium, 5 Low;
-- 3 Open, 6 Needs Investigation, 55 Fixed, 1 Won't Fix.
+- 2 Open, 7 Needs Investigation, 55 Fixed, 1 Won't Fix.
 
 ## Required next phase
 
-Do not start Phase 5J or retry the broader Phase 5I change automatically. The next task is:
+Do not retry Phase 5I or start Phase 5J automatically. The next task is:
 
-**Narrow RR-065 source-upgrade identity-safety fix**
+**Narrow RR-007 Bosch `/ocs-c/` category-page cleanup**
 
-Prevent retailer/source prefixes from acting as product brands, and require source-derived brand/model agreement for a model-qualified target before same-category overlap can satisfy source-upgrade identity. Preserve exact same-product cross-retailer offers and all RR-051/RR-053/RR-058/RR-063/RR-064 protections. After RR-065 is fixed deterministically, restore and revalidate the two Phase 5I fail-first cases before another focused live proof.
+Diagnose why the Bosch product-family collection survived shared eligibility and became a primary card while a specific retailer product page was available. Fix only the generalized collection-page shape, preserve valid Bosch/manufacturer product pages, and do not alter RR-065 identity behavior.
 
 Do not:
 
 - start Phase 5J;
-- retry Phase 5I fallback broadening before RR-065 is fixed;
+- retry Phase 5I trigger/fallback broadening before RR-007 is contained;
 - change Phase 5H final-selection calibration;
 - loosen source-upgrade identity to improve attachment rate;
 - weaken price, citation, product, requirement, product-type, or identity trust gates;

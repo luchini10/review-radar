@@ -632,3 +632,17 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - Specific retailer/manufacturer product pages remain card-eligible. Safe editorial/category/comparison pages may remain secondary citations, but cannot become primary links, exact candidates, or product-specific ranking proof.
 - Current-code fixture reassessment removes the pre-fix MultiVu press-release exact card. One post-fix live run returned five specific toothbrush cards and no unsafe page in the exact-scored trace; RR-064 remained safe.
 - RR-007 and RR-008 are Fixed. Phase 5I remains unstarted pending explicit instruction.
+
+**RR-065 retailer/source identity safety (2026-06-30)**
+- Product identity distinguishes source provenance from product identity. Explicit leading retailer/source labels are removed before brand/model comparison; seller fields and URL host/query text cannot satisfy identity.
+- Safe product URL path segments remain usable. Query-derived snippets remain excluded under RR-051/RR-053.
+- Source upgrade requires a reliably detected target brand to appear in source-derived candidate title, brand, snippet, or safe path evidence before any commerce fields attach.
+- Retailers remain valid sellers. Amazon Basics is recognized as a real private-label brand and remains attachable when it is the actual target product.
+- Product-evidence identity uses the same leading-source-label normalization, preserving RR-063 variant safety.
+- No Phase 5I trigger or fallback condition changed. Discovery, ranking, eligibility, price, requirements, final selection, and UI are unchanged.
+- Deterministic verification passed 744/744 tests with a stable ranking baseline. One focused `shop vac` run safely attached exact RIDGID HD1400 evidence.
+
+**Current boundary**
+- RR-065 is Fixed. RR-041/RR-042 remain Needs Investigation; Phase 5I has not been retried.
+- RR-007 reopened from the same live run because a Bosch `/ocs-c/` wet/dry-extractor collection became a primary exact card.
+- Address only that RR-007 collection shape before retrying Phase 5I. Do not start Phase 5J.

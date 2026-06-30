@@ -900,3 +900,25 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Live-call rule:** Do not spend another Phase 5I proof call until RR-065 is fixed deterministically. The untracked `shop-vac.json` records the stop-condition run but is not a committed fixture.
 
 **Status:** RR-065 Open. RR-041/RR-042 remain Needs Investigation. Phase 5I behavior is not implemented; Phase 5J must not start.
+
+---
+
+## 2026-06-30 - RR-065 retailer/source identity safety
+
+**Regression contract:**
+- Strip only explicit leading source/retailer labels before target and source-title identity checks.
+- Seller/retailer fields, URL hostnames, URL query parameters, and query-derived snippets cannot satisfy brand or model identity.
+- Safe merchant product URL paths remain identity evidence.
+- When a reliable target brand exists, source-derived candidate evidence must contain it before source upgrade attaches.
+- `Amazon.com: RIDGID ... VAC1200` must reject Amazon Basics, SKIL, and other wrong-brand vacuums.
+- A real Amazon-hosted RIDGID VAC1200 page remains valid when title/path carries RIDGID/model identity.
+- Amazon Basics remains valid when it is the actual target brand.
+- Preserve RR-051, RR-053, RR-058, RR-063, RR-064, RR-007/RR-008 deterministic coverage, RR-013, RR-022, RR-002/RR-062, Phase 5E, and Phase 5H.
+
+**Brand-matching caveat:** Compact alias matching remains behavior-compatible for ranking stability, but an alias cannot be inferred from inside a longer token (`ASICS` inside `Basics`). Multiword brands must not duplicate one of their own words in compact source-upgrade queries.
+
+**Verification:** Fail-first 74/75; focused identity 90/90; broad named safety 340/340; ranking baseline stable; typecheck passed; lint 0 errors with 3 existing warnings; full suite 744/744; eval clean.
+
+**Live call:** Exactly one `shop vac` save/replay. RIDGID HD1400 safely attached exact evidence; no wrong-brand upgrade attached. The prior retailer-prefixed VAC1200 target did not recur. A Bosch `/ocs-c/` category collection became exact #3 and reopened RR-007.
+
+**Status:** RR-065 Fixed. RR-007 Needs Investigation. RR-041/RR-042 unchanged. Do not retry Phase 5I until RR-007 is contained.

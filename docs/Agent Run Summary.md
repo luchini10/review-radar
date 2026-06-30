@@ -1165,3 +1165,21 @@ New entries should keep the same format and stay easy to read.
 **Issues:** 65 total; 8 Critical, 28 High, 24 Medium, 5 Low; 3 Open, 6 Needs Investigation, 55 Fixed, 1 Won't Fix.
 
 **Next recommended step:** Fix RR-065 narrowly, then restore the two Phase 5I fail-first cases and retry the bounded reliability work.
+
+## Codex Run - 2026-06-30 RR-065 identity safety
+
+**Goal:** Fix only RR-065 so retailer/source provenance cannot satisfy source-upgrade product identity.
+
+**Root cause:** `sourceUpgradeBrand` consumed the unsanitized card title, while candidate identity included seller and URL-host text. `Amazon.com: RIDGID ... VAC1200` therefore used `Amazon.com` as brand, and an Amazon Basics vacuum passed on retailer plus broad wet/dry overlap because it exposed no explicit conflicting model for RR-063/RR-064 to reject.
+
+**What changed:** Shared normalization removes only explicit leading source labels; seller and URL-host/query provenance are excluded; safe product paths remain. Reliable target brands must appear in source-derived candidate evidence. Amazon Basics remains a valid product brand. No Phase 5I trigger/fallback behavior changed.
+
+**Proof:** Exact fail-first RR-065 reproduction failed with 74/75 source tests passing. Afterward, focused identity passed 90/90, broad named safety passed 340/340, typecheck passed, lint had 0 errors and 3 existing warnings, full tests passed 744/744, ranking baseline stayed stable, and eval had no red flags.
+
+**Live result:** One `shop vac` run safely attached an exact RIDGID HD1400 offer from 20 eligible candidates. No wrong-brand identity attached. The prior VAC1200 target did not recur. The same run reopened RR-007 because a Bosch `/ocs-c/` family collection became exact #3 with a specific Home Depot VAC090AH page only secondary.
+
+**Issues:** RR-065 Fixed; RR-007 Needs Investigation; RR-041/RR-042 unchanged; RR-063/RR-064 remain Fixed. Totals: 65 issues; 2 Open, 7 Needs Investigation, 55 Fixed, 1 Won't Fix.
+
+**Commit:** Implementation `04f2933`.
+
+**Next recommended step:** Fix the narrow RR-007 Bosch collection route before retrying Phase 5I. Do not start Phase 5J.

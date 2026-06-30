@@ -1212,3 +1212,20 @@ Stop. Do not start Phase 5I without explicit instruction.
 - Rollback: all Phase 5I app, replay, and test edits were removed. No behavior change is present or committed.
 
 Stop. Fix RR-065 only after explicit instruction, then resume Phase 5I. Do not start Phase 5J.
+
+### RR-065 identity-safety completion record
+
+- Completed step: Narrow RR-065 retailer/source identity-safety mini-phase.
+- Next step: Narrow reopened RR-007 Bosch `/ocs-c/` collection-page cleanup. Do not retry Phase 5I or start Phase 5J first.
+- Diagnostic-only: No. RR-065 was reproduced and fixed.
+- Stop condition hit: Yes, adjacent only. The single live proof exposed an out-of-scope RR-007 category-page recurrence; no eligibility fix was attempted.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-065 changed from Open to Fixed. RR-007 changed from Fixed to Needs Investigation. RR-041/RR-042 remain Needs Investigation. RR-063/RR-064 remain Fixed.
+- Docs committed: Pending at this record write.
+- Implementation commit: `04f2933`.
+- Documentation commit: Pending.
+- Verification: fail-first 74/75; focused identity 90/90; broad named safety 340/340; ranking baseline stable; typecheck passed; lint 0 errors with 3 existing warnings; full suite 744/744; eval clean.
+- Live validation: exactly one `shop vac` call. RIDGID HD1400 safely attached exact source-derived price/rating/review/citation evidence. No wrong-brand source-upgrade merge appeared. Bosch `/ocs-c/` collection exact #3 reopened RR-007.
+- Scope: No trigger/fallback, ranking, discovery, eligibility, price, product-type, requirement, final-selection, or UI behavior changed. Phase 5I and Phase 5J were not started.
+
+Stop. Address RR-007 only after explicit instruction; preserve RR-065 provenance-aware identity.

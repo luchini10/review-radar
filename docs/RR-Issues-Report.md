@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 5I safety stop
+## Compiled for AI Agent Consumption — Phase 0 through RR-065 identity safety
 
 **Generated:** 2026-06-30
-**Scope:** All phases from initial measurement harness through the stopped Phase 5I trigger/fallback reliability attempt
+**Scope:** All phases from initial measurement harness through the RR-065 identity-safety mini-phase
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -18,8 +18,8 @@
 | High | 28 |
 | Medium | 24 |
 | Low | 5 |
-| Open | 3 |
-| Needs Investigation | 6 |
+| Open | 2 |
+| Needs Investigation | 7 |
 | Fixed | 55 |
 | Won't Fix | 1 |
 
@@ -72,6 +72,7 @@
 | RR-064 source-upgrade identity mini-phase | 0 |
 | RR-007/RR-008 pre-final eligibility cleanup | 0 |
 | Phase 5I — Trigger/fallback reliability safety stop | 1 |
+| RR-065 identity-safety mini-phase | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -234,7 +235,7 @@
 | **Phase** | Pre-Phase 0 (Codex baseline) |
 | **Severity** | High |
 | **Title** | eBay browse/category pages appearing as exact product matches |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** eBay browse and category pages (URLs matching `/t/`, `/b/`, `/sch/` patterns) were passing the product eligibility check and appearing as exact product recommendations. These are listing pages, not individual product pages.
 
@@ -269,6 +270,8 @@
 **Phase 5H live regression:** Reopened as Needs Investigation. `Electric Toothbrushes - Twin Packs and Bundles - Page 1 - Oral-B` survived citation verification, requirement filtering, reliability, and exact scoring as `reliableEnoughForExact: true`. It missed the final cards only because seven stronger products filled the cutoff. No category/listing page rendered, and Phase 5H did not change eligibility, but the pre-final product-card gate is not containing this shape.
 
 **Pre-final eligibility cleanup resolution (2026-06-30):** Fixed again. The title was not recognized as a paginated bundle/category collection, and the generic deep `/products/...` shortcut therefore classified it as `buyable_product`. Shared title-only evidence-page detection now catches paginated collection and twin/multi-pack bundle titles before any product-detail URL, image, price, or model shortcut. Fail-first coverage reproduces the page through shared eligibility, Serper normalization, final citation validation, and requirement filtering. The focused live run dropped Oral-B lineup/category pages during citation verification; no category/listing page entered the 12 exact-scored candidates or five final cards.
+
+**RR-065 live-proof regression (2026-06-30):** Reopened as Needs Investigation. The single post-fix `shop vac` run selected `Wet/dry extractors Dust extraction systems - Bosch Professional` as exact #3 with primary URL `https://www.bosch-pt.com.au/au/en/wet-dry-extractors-2549705-ocs-c/`. This is a Bosch product-family/category collection; a specific Home Depot Bosch VAC090AH product page was present only as a secondary citation. RR-065 did not alter eligibility or product-link selection. Diagnose the shared `/ocs-c/` collection shape separately before retrying Phase 5I.
 
 ---
 
@@ -1980,7 +1983,7 @@ No new issue ID was opened.
 | **Phase** | Phase 5H live validation |
 | **Severity** | Critical |
 | **Title** | Source upgrade can attach same-family evidence from a conflicting explicit model |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** The focused Phase 5H `electric toothbrush` live run upgraded target `Philips Sonicare DiamondClean 9000 Rechargeable toothbrush` with a Google Shopping candidate titled `Philips Sonicare DiamondClean Smart 9300 Electric Toothbrush`. The trace recorded `identityMatch: true` and attached the candidate's `$229.99` price, 4.3 rating, review count, and citation to the 9000 card, which ranked exact #1.
 
@@ -2010,7 +2013,7 @@ No new issue ID was opened.
 | **Phase** | Phase 5I live validation |
 | **Severity** | Critical |
 | **Title** | Source-upgrade fallback can attach same-category wrong-product evidence through a retailer-like brand token |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** A fail-first Phase 5I implementation broadened the weak-evidence trigger and allowed the existing single fallback query after a nonempty primary result set produced no safe attachment. In the one focused `shop vac` live run, target `Amazon.com: RIDGID Wet Dry Vacuums VAC1200 Heavy Duty Wet ...` was assigned detected brand `Amazon.com` and model token `vac1200`. The primary result `SKIL ... VA1200D-10` was correctly rejected. The fallback result `Amazon Basics 6-Gallon 3.5 HP Wet/Dry Vacuum` then passed same-product identity and donated a citation despite being a different brand and product with no `VAC1200` identity.
 
@@ -2022,22 +2025,24 @@ No new issue ID was opened.
 
 **Actual:** Shared `Amazon` wording plus same product type was sufficient for the fallback candidate to pass identity; the candidate attached a wrong-product citation.
 
-**Current status:** Open. The unsafe Phase 5I behavior changes and fail-first test edits were rolled back immediately. No app-code change was committed, the second permitted live search was not run, and RR-041/RR-042 remain Needs Investigation.
+**Current status:** Fixed on 2026-06-30. Shared identity normalization strips only explicit leading source/retailer labels, excludes seller fields and URL host/query text from candidate identity, and requires a reliable target brand to appear in source-derived title/brand/path evidence. Product URL paths remain usable. Amazon Basics is recognized as a legitimate private-label brand rather than being globally blocked.
 
-**Suggested fix or next action:** Fix RR-065 before retrying Phase 5I. Reuse shared source/retailer-name filtering so retailer prefixes cannot act as brands, and require source-derived target model/brand agreement for model-qualified targets before same-category overlap can pass. Preserve exact same-product cross-retailer offers and all RR-051/RR-053/RR-058/RR-063/RR-064 regressions. Then restore the two Phase 5I fail-first cases and repeat one focused `shop vac` proof.
+**Suggested fix or next action:** Completed. Explicit Amazon, Walmart, Home Depot, Best Buy, Target, Chewy, Lowe's, eBay, Costco, Sam's Club, domain-shaped, marketplace, retailer, and store labels are provenance, not product identity. Exact source-derived RIDGID/model evidence on Amazon remains attachable, while Amazon Basics remains valid only when it is the actual product brand.
 
 **Phase 5I evidence for RR-041/RR-042:** Deterministic fail-first tests proved the current trigger suppresses a candidate when a lone rating is present and that fallback stops after a nonempty primary set whose candidates all fail identity. A conservative missing-two-of-three trigger and one bounded post-rejection fallback passed 738/738 tests and eval before live proof. The live run proved the fallback control flow worked, but RR-065 made the result unsafe. Those behavior changes were rolled back; neither RR-041 nor RR-042 is Fixed.
+
+**Resolution proof:** The exact live-shaped retailer-prefixed RIDGID VAC1200 versus Amazon Basics case failed before the fix and passes afterward with no evidence attachment. Deterministic tests also prove seller labels, URL hosts, URL query parameters, and query-derived text cannot supply identity; a real Amazon-hosted RIDGID VAC1200 page and a real Amazon Basics target remain valid. Focused identity tests passed 90/90, broad named regressions passed 340/340, full tests passed 744/744, typecheck and eval passed, and lint had 0 errors with 3 existing warnings. One `shop vac` live run safely attached price/rating/review/citation evidence from an exact RIDGID HD1400 result; no wrong-brand source-upgrade attachment appeared. The run did not reproduce the retailer-prefixed VAC1200 target and separately reopened RR-007.
 
 ---
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (3 issues)
+### Open (2 issues)
 - RR-054: Fresh fallback responses omit current diagnostic traces
 - RR-061: Product image metadata accepts non-image or irrelevant assets
-- RR-065: Source-upgrade fallback can attach same-category wrong-product evidence through a retailer-like brand token
 
-### Needs Investigation (6 issues)
+### Needs Investigation (7 issues)
+- RR-007: Category/listing pages can still become product cards (`/ocs-c/` Bosch collection recurrence)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
@@ -2045,7 +2050,7 @@ No new issue ID was opened.
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 ### Fixed (55 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055 through RR-060, RR-062 through RR-064
+RR-001 through RR-006, RR-008 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055 through RR-060, RR-062 through RR-065
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2054,7 +2059,7 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-065** (Critical) — Close the retailer-prefix / same-category wrong-product identity hole before retrying broader fallback behavior.
+1. **RR-007** (High) — Contain the Bosch `/ocs-c/` product-family collection route before retrying Phase 5I.
 2. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
 3. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
 4. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.

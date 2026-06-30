@@ -5054,3 +5054,100 @@ This is Critical RR-065. The fallback control flow worked, but the broader retry
 - Register: 65 issues; 8 Critical, 28 High, 24 Medium, 5 Low; 3 Open, 6 Needs Investigation, 55 Fixed, 1 Won't Fix.
 
 Recommended direction: fix RR-065 narrowly before retrying Phase 5I. Retailer/source prefixes must not become product brands, and a model-qualified target must not accept same-category evidence that lacks source-derived target brand/model identity. Preserve the deterministic Phase 5I fail-first cases for the later retry.
+
+## <span style="color:green">**Codex QA Update - 2026-06-30 (RR-065: retailer/source identity safety)**</span>
+
+**Verdict: RR-065 FIXED. Phase 5I was not retried and Phase 5J did not start. The single live proof reopened RR-007 for a Bosch category-page shape.**
+
+### Fail-first root cause
+
+The exact live-shaped deterministic case reproduced before editing:
+
+- target: `Amazon.com: RIDGID Wet Dry Vacuums VAC1200 Heavy Duty Wet/Dry Vacuum`;
+- candidate: `Amazon Basics 6-Gallon 3.5 HP Wet/Dry Vacuum`;
+- candidate seller: `Amazon.com`;
+- Google offer query included `RIDGID VAC1200`;
+- current source-upgrade identity attached the wrong product.
+
+Failure path:
+
+1. `sourceUpgradeBrand` used the unsanitized generated card name and selected leading `Amazon.com` as the target brand.
+2. Candidate identity text included `candidate.retailer` and URL hostname.
+3. URL query parameters were already excluded by RR-053 and query-derived snippets by RR-051, but retailer/source provenance still contributed identity.
+4. RR-063/RR-064 found no explicit conflicting model because the Amazon Basics candidate exposed no competing model token.
+5. Token overlap reached the fallback positive through shared `Amazon.com`, `wet`, and `dry` wording.
+
+### Generalized fix
+
+- Added shared leading source/retailer-label normalization using existing source-name data plus domain, marketplace, retailer, and store shapes.
+- Explicit prefixes such as Amazon, Walmart, Home Depot, Best Buy, Target, Chewy, Lowe's, eBay, Costco, and Sam's Club are removed only when they appear as leading provenance labels.
+- Seller/retailer fields and URL hostnames no longer contribute source-upgrade product identity.
+- URL paths remain usable; query strings remain excluded.
+- A reliable target brand must appear in source-derived candidate title, brand, snippet, or safe path evidence before source upgrade can attach.
+- Product-evidence identity applies the same prefix normalization.
+- Amazon Basics is recognized as a real private-label brand and is not globally blocked.
+- Multiword brand identity no longer duplicates a trailing brand word in compact queries.
+- Phase 5I trigger conditions, fallback conditions/call count, discovery, ranking, eligibility, price, type, requirement, final selection, and UI were unchanged.
+
+### Deterministic proof
+
+```text
+fail-first source-quality run: 74/75 pass; exact RR-065 assertion failed
+focused brand/product-evidence/source-upgrade identity: 90/90 pass
+broad named safety matrix: 340/340 pass
+ranking baseline: stable
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 744/744 pass
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+Deterministic positives:
+
+- Amazon-hosted RIDGID VAC1200 title/path evidence attaches.
+- Amazon Basics attaches when Amazon Basics is the actual target brand.
+- Exact same-product cross-retailer and merchant-path evidence remains valid.
+
+Deterministic negatives:
+
+- retailer-prefixed RIDGID cannot accept Amazon Basics;
+- seller labels cannot supply a target model;
+- URL host/query text cannot supply a target model;
+- query-derived snippets cannot supply identity;
+- RR-058 wrong type, RR-063 wrong variant, and RR-064 nearby-model conflicts remain blocked.
+
+### Single focused live proof
+
+Exactly one `shop vac` save/replay ran against the healthy local server.
+
+- Funnel: 22 pool, 16 after citation verification, 7 after requirements, 5 after revalidation/final.
+- Source-upgrade attempts: 1.
+- Target: `RIDGID 14 Gallon 6.0 Peak HP NXT Wet Dry Vac HD1400`.
+- Query: `RIDGID HD1400`.
+- Serper: 40 raw, 20 structural, 20 eligible/returned.
+- Exact source-derived `RIDGID HD1400` offer attached price, rating, review count, and citation.
+- No wrong-brand, retailer-prefix, hostname, query-parameter, or wrong-model evidence attached.
+- The prior retailer-prefixed VAC1200 target did not appear, so that exact shape remains live-unreproduced; deterministic coverage is exact.
+
+### Adjacent stop condition
+
+The live result reopened RR-007:
+
+- exact #3: `Wet/dry extractors Dust extraction systems - Bosch Professional`;
+- primary URL: `https://www.bosch-pt.com.au/au/en/wet-dry-extractors-2549705-ocs-c/`;
+- shape: Bosch family/category collection;
+- a specific Home Depot Bosch VAC090AH product page was present only as a secondary citation.
+
+No eligibility or product-link code was changed in this phase.
+
+### Issue outcome
+
+- RR-065: Fixed.
+- RR-007: Needs Investigation.
+- RR-041/RR-042: unchanged, Needs Investigation.
+- RR-063/RR-064: remain Fixed.
+- Register: 65 issues; 8 Critical, 28 High, 24 Medium, 5 Low; 2 Open, 7 Needs Investigation, 55 Fixed, 1 Won't Fix.
+- Implementation commit: `04f2933`.
+- Fresh live fixtures and generated baselines remain untracked and uncommitted.
+
+Recommended direction: fix only the reopened RR-007 Bosch `/ocs-c/` collection route before retrying Phase 5I. Preserve RR-065 identity provenance rules.
