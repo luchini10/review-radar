@@ -4915,6 +4915,7 @@ The final 9000 card remained #1, but its commerce evidence now came from an expl
 - No new issue ID opened.
 - Register: 64 issues; 7 Critical, 28 High, 24 Medium, 5 Low; 2 Open, 8 Needs Investigation, 53 Fixed, 1 Won't Fix.
 - Implementation commit: `938b839`.
+- Documentation commit: `ce20707`.
 - Generated baselines and all live fixtures remain untracked and uncommitted.
 
 Recommended direction: stop. Address reopened RR-007/RR-008 pre-final eligibility separately before Phase 5I; preserve the RR-064 shared conflict guard.

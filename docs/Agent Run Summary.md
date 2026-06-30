@@ -1128,6 +1128,6 @@ New entries should keep the same format and stay easy to read.
 
 **Issues:** RR-064 Fixed; RR-007/RR-008 remain Needs Investigation. Totals: 64 issues; 2 Open, 8 Needs Investigation, 53 Fixed, 1 Won't Fix.
 
-**Scope:** Four implementation/test files plus required docs. No ranking, scoring, discovery, query, trigger, normalization, price, requirement, product-type, page-eligibility, or UI behavior changed. Implementation commit: `938b839`.
+**Scope:** Four implementation/test files plus required docs. No ranking, scoring, discovery, query, trigger, normalization, price, requirement, product-type, page-eligibility, or UI behavior changed. Implementation commit: `938b839`; documentation commit: `ce20707`.
 
 **Next recommended step:** Stop. Address reopened RR-007/RR-008 pre-final eligibility separately before Phase 5I.

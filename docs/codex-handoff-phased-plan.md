@@ -1172,8 +1172,9 @@ Stop. Do not start Phase 5I. Address RR-064 first after explicit instruction, th
 - Stop condition hit: No. The fix strengthened shared identity safety without changing ranking, discovery, query construction, trigger behavior, normalization, or trust gates.
 - New issue IDs opened: None.
 - Existing issue IDs updated: RR-064 changed from Needs Investigation to Fixed. RR-007 and RR-008 remain Needs Investigation.
-- Docs committed: Pending this documentation commit.
+- Docs committed: Yes.
 - Implementation commit: `938b839`.
+- Documentation commit: `ce20707`.
 - Verification: fail-first 1 RR-064 failure with 71 controls passing; focused identity/source-upgrade and broad safety 157/157; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 729/729; eval clean.
 - Live validation: exactly one `electric toothbrush` call. Smart 9300 was rejected as `identity_mismatch` for the DiamondClean 9000 target; an explicit 9000 result attached. A 2100 attempt also rejected a 4100 before attaching a 2100 result. No broad baseline ran.
 
