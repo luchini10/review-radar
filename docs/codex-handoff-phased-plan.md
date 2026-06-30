@@ -1205,8 +1205,8 @@ Stop. Do not start Phase 5I without explicit instruction.
 - Stop condition hit: Yes. Fallback attached an Amazon Basics citation to `Amazon.com: RIDGID ... VAC1200` after treating the retailer prefix as target brand identity.
 - New issue IDs opened: RR-065.
 - Existing issue IDs updated: RR-041 and RR-042 remain Needs Investigation with new fail-first/live evidence. RR-007, RR-008, RR-063, and RR-064 remain Fixed and were not changed.
-- Docs committed: Pending at this record write.
-- Commit hash: Pending.
+- Docs committed: Yes.
+- Documentation commit: `23cee7f`.
 - Verification: fail-first 734/736 with only the two intended failures; focused 92/92 after the candidate fix; candidate full suite 738/738 and eval clean. After rollback, the restored repository passed typecheck, lint with 0 errors and 3 pre-existing warnings, 735/735 tests, and eval.
 - Live validation: exactly one `shop vac` call. HD0900 attached safe exact evidence. The VAC1200 target rejected a SKIL primary candidate, retried fallback, then unsafely attached an Amazon Basics citation. The second planned live search was skipped.
 - Rollback: all Phase 5I app, replay, and test edits were removed. No behavior change is present or committed.
