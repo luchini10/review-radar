@@ -1110,6 +1110,6 @@ New entries should keep the same format and stay easy to read.
 
 **Issues:** RR-056, RR-059, and RR-060 Fixed; RR-007/RR-008 reopened; RR-014 remains Needs Investigation; RR-064 Critical / Needs Investigation. Totals: 64 issues; 2 Open, 9 Needs Investigation, 52 Fixed, 1 Won't Fix.
 
-**Scope:** Eleven implementation/test/debug files plus required docs. Generated baselines and live fixtures remain untracked. Implementation commit: `230d7bc`.
+**Scope:** Eleven implementation/test/debug files plus required docs. Generated baselines and live fixtures remain untracked. Implementation commit: `230d7bc`; documentation commit: `d78a9f5`.
 
 **Next recommended step:** Stop before Phase 5I. Run a narrow fail-first RR-064 source-upgrade identity phase first, then address RR-007/RR-008 eligibility separately.

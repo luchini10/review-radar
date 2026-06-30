@@ -4851,6 +4851,7 @@ The live run also exposed RR-064: target DiamondClean 9000 accepted a Google Sho
 - RR-064: opened Critical / Needs Investigation.
 - Register: 64 issues; 7 Critical, 28 High, 24 Medium, 5 Low; 2 Open, 9 Needs Investigation, 52 Fixed, 1 Won't Fix.
 - Implementation commit: `230d7bc`.
+- Documentation commit: `d78a9f5`.
 - Generated baselines and all live fixtures remain untracked and uncommitted.
 
 Recommended direction: stop before Phase 5I. Diagnose and fix RR-064 first, then address the reopened RR-007/RR-008 pre-final eligibility leak; preserve the completed Phase 5H selection behavior.

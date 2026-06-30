@@ -1155,7 +1155,8 @@ Stop. Do not start Phase 5H without explicit instruction.
 - Stop condition hit: Yes. The single focused live run exposed Critical RR-064 and showed category/editorial pages remaining exact-eligible below cutoff. No out-of-scope source-upgrade or eligibility fix was attempted.
 - New issue IDs opened: RR-064.
 - Existing issue IDs updated: RR-056, RR-059, and RR-060 changed from Open to Fixed. RR-007 and RR-008 reopened as Needs Investigation. RR-014 remains Needs Investigation and was used only as an outcome metric.
-- Docs committed: Pending the Phase 5H documentation commit.
+- Docs committed: Yes.
+- Documentation commit: `d78a9f5`.
 - Implementation commit: `230d7bc`.
 - Verification: fail-first 3 failures with 2 controls already green; focused safety/selection matrix 303/303; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 724/724; eval clean.
 - Fixture/A-B proof: M27Q duplicate collapsed; coffee-maker and treadmill mainstream winners rose; five RR-014 broad fixtures remained neutral at mean `3.0/7`; the Phase 5G citation-strength A/B was unchanged.
