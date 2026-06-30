@@ -4984,3 +4984,73 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - Generated baselines and all live fixtures remain untracked and uncommitted.
 
 Recommended direction: stop. Phase 5I is next only after explicit instruction; preserve the shared page-eligibility and identity guards.
+
+## <span style="color:green">**Codex QA Update - 2026-06-30 (Phase 5I: trigger/fallback reliability safety stop)**</span>
+
+**Verdict: STOPPED / NO BEHAVIOR COMMITTED. RR-041 and RR-042 remain Needs Investigation. Critical RR-065 opened. Phase 5J did not start.**
+
+### Fail-first diagnosis
+
+Two deterministic failures reproduced the current reliability gaps:
+
+1. A model-qualified candidate with a lone owner rating did not trigger source upgrade even though verified price and product-specific commerce evidence were missing. `needsSourceUpgrade` required all three evidence pillars to be absent.
+2. A primary source-upgrade search that returned only wrong-model candidates did not run the existing bounded fallback. Fallback was gated only on `primaryCandidates.length === 0`, not on the absence of any safe attachment.
+
+The fail-first full run passed 734/736 tests and failed only those two new assertions.
+
+### Candidate implementation and deterministic proof
+
+A conservative local implementation:
+
+- triggered only when at least two of verified price, owner rating, and product-specific independent commerce citation were missing;
+- prioritized candidates missing all three pillars within the unchanged three-target cap;
+- allowed at most one existing fallback query after either primary emptiness or `primary_no_safe_attachment`;
+- preserved every existing identity, eligibility, product-type, price, citation, and requirement gate;
+- added debug-only trigger/skip/cap, primary/fallback outcome, fallback-reason, and candidate-stage fields.
+
+Verification before live proof:
+
+```text
+focused source-upgrade/replay: 92/92 pass
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 738/738 pass
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+The existing RR-051, RR-053, RR-058, RR-063, and RR-064 negative regressions remained green deterministically. Saved `shop vac` replay still showed zero historical attempts; saved `electric toothbrush` replay showed two safe primary-query attachments but predates the new decision fields.
+
+### Focused live stop condition
+
+The local server was healthy on port 3000. Exactly one approved `shop vac` live save/replay ran. The planned second `air purifier` call was not run after unsafe evidence appeared.
+
+Funnel: 16 pool, 10 after citation verification, 2 after requirement filtering/revalidation, 2 final.
+
+Source-upgrade decisions: 2 triggers.
+
+1. `RIDGID 9 Gallon 4.25 Peak HP NXT Wet Dry Vac HD0900`
+   - trigger: missing verified price, rating, and product-specific commerce citation;
+   - primary `RIDGID HD0900`: 31 raw, 20 structural, 19 eligible/returned;
+   - first five sampled nearby models were rejected;
+   - an exact source-derived match attached price, rating, review count, and citation.
+2. `Amazon.com: RIDGID Wet Dry Vacuums VAC1200 Heavy Duty Wet ...`
+   - detected brand: `Amazon.com`; model: `vac1200`;
+   - primary `Amazon.com Vacuums VAC1200`: SKIL `VA1200D-10` safely rejected;
+   - fallback `Amazon.com Vacuums VAC1200 shop vac` ran because the primary produced no safe attachment;
+   - fallback candidate `Amazon Basics 6-Gallon 3.5 HP Wet/Dry Vacuum` incorrectly passed identity and attached a citation;
+   - the candidate contained neither RIDGID nor VAC1200 identity.
+
+This is Critical RR-065. The fallback control flow worked, but the broader retry exposed an unsafe retailer-prefix/same-category identity pass. Continuing would have reduced evidence trust.
+
+### Rollback and issue outcome
+
+- All local Phase 5I app, script, and test edits were rolled back.
+- No app-code or behavior change was committed.
+- Restored repository recheck: typecheck passed; lint had 0 errors and the same 3 warnings; full suite passed 735/735; eval had no red flags.
+- The fresh `shop-vac.json`, other live fixtures, and generated baselines remain untracked and uncommitted.
+- RR-041: remains Needs Investigation.
+- RR-042: remains Needs Investigation.
+- RR-065: Open, Critical.
+- Register: 65 issues; 8 Critical, 28 High, 24 Medium, 5 Low; 3 Open, 6 Needs Investigation, 55 Fixed, 1 Won't Fix.
+
+Recommended direction: fix RR-065 narrowly before retrying Phase 5I. Retailer/source prefixes must not become product brands, and a model-qualified target must not accept same-category evidence that lacks source-derived target brand/model identity. Preserve the deterministic Phase 5I fail-first cases for the later retry.

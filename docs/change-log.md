@@ -13,6 +13,12 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-30
 
+### Codex - Phase 5I trigger/fallback reliability safety stop
+- Reproduced RR-041/RR-042 deterministically: a lone rating suppresses an otherwise weak candidate, and a nonempty all-rejected primary result set prevents the bounded fallback from running.
+- A conservative missing-two-of-three trigger and one post-rejection fallback passed 738/738 tests and eval locally, but the first focused `shop vac` live proof exposed Critical RR-065.
+- Target `Amazon.com: RIDGID ... VAC1200` rejected a SKIL primary result, then incorrectly accepted an Amazon Basics fallback result and attached its citation. A retailer/source prefix had been treated as the target brand, and same-category overlap overrode the missing RIDGID/VAC1200 identity.
+- Stopped immediately, skipped the second live search, rolled back every app/script/test change, and committed no behavior change. The restored repository passed 735/735 tests, typecheck, lint with 0 errors, and eval. RR-041/RR-042 remain Needs Investigation; RR-065 is Open and must be fixed before Phase 5I is retried. Phase 5J did not start.
+
 ### Codex - RR-007/RR-008 pre-final eligibility cleanup
 - Fixed the Phase 5H recurrence by recognizing paginated bundle/category titles, standards documents, comparison/vs pages, press-release announcement titles, and common editorial subdomains before product-detail URL, image, price, or model shortcuts.
 - The fix is shared across discovery, verified-citation filtering, requirement filtering, product-link validation, and final reliability because those boundaries consume `classifyProductEligibility`.

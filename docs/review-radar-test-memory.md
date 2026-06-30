@@ -879,3 +879,24 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Fixture/live proof:** Current code removes the pre-fix MultiVu final #7 card. Exactly one post-fix `electric toothbrush` run returned five specific product cards and no unsafe page in the exact-scored trace. An Oral-B lineup page remained secondary with `unknown` product identity. RR-064 source-upgrade attachment stayed model-safe. No broad baseline ran.
 
 **Status:** RR-007/RR-008 Fixed. Phase 5I remains unstarted pending explicit instruction.
+
+---
+
+## 2026-06-30 - Phase 5I reliability attempt stopped by RR-065
+
+**Fail-first contract:**
+- A model-qualified product with only one evidence pillar must not be considered source-complete when two of verified price, rating, and product-specific commerce citation are missing.
+- A nonempty primary candidate set with zero safe attachments is distinct from success; any future fallback retry must remain bounded to one call.
+
+**Safety finding:**
+- A bounded retry after `primary_no_safe_attachment` exposed an unsafe identity pass for target `Amazon.com: RIDGID ... VAC1200`.
+- Retailer/source prefixes must not become product brands.
+- Same category plus a shared retailer token cannot replace source-derived target brand/model identity.
+- A model-qualified target must reject candidates that lack its source-derived brand/model, even when product type agrees.
+- Keep RR-051 query-text isolation, RR-053 URL-query isolation, RR-058 type agreement, RR-063 variant identity, and RR-064 explicit model-series conflict regressions green.
+
+**Verification evidence:** Candidate implementation: focused source-upgrade/replay 92/92, typecheck pass, lint 0 errors with 3 existing warnings, full suite 738/738, eval clean. One live `shop vac` call then exposed RR-065; all candidate app/test changes were rolled back. The restored repository then passed typecheck, lint with the same 3 warnings, 735/735 tests, and eval.
+
+**Live-call rule:** Do not spend another Phase 5I proof call until RR-065 is fixed deterministically. The untracked `shop-vac.json` records the stop-condition run but is not a committed fixture.
+
+**Status:** RR-065 Open. RR-041/RR-042 remain Needs Investigation. Phase 5I behavior is not implemented; Phase 5J must not start.

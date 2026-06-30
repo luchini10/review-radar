@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through RR-007/RR-008 pre-final cleanup
+## Compiled for AI Agent Consumption — Phase 0 through Phase 5I safety stop
 
 **Generated:** 2026-06-30
-**Scope:** All phases from initial measurement harness through the RR-007/RR-008 pre-final eligibility cleanup
+**Scope:** All phases from initial measurement harness through the stopped Phase 5I trigger/fallback reliability attempt
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -13,12 +13,12 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 64 |
-| Critical | 7 |
+| Total Issues | 65 |
+| Critical | 8 |
 | High | 28 |
 | Medium | 24 |
 | Low | 5 |
-| Open | 2 |
+| Open | 3 |
 | Needs Investigation | 6 |
 | Fixed | 55 |
 | Won't Fix | 1 |
@@ -71,6 +71,7 @@
 | Phase 5H — Broad-slate diversity and form-factor quality | 1 |
 | RR-064 source-upgrade identity mini-phase | 0 |
 | RR-007/RR-008 pre-final eligibility cleanup | 0 |
+| Phase 5I — Trigger/fallback reliability safety stop | 1 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -1999,11 +2000,42 @@ No new issue ID was opened.
 
 ---
 
+### PHASE 5I — TRIGGER/FALLBACK RELIABILITY SAFETY STOP (2026-06-30)
+
+#### RR-065
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-065 |
+| **Phase** | Phase 5I live validation |
+| **Severity** | Critical |
+| **Title** | Source-upgrade fallback can attach same-category wrong-product evidence through a retailer-like brand token |
+| **Status** | Open |
+
+**Description:** A fail-first Phase 5I implementation broadened the weak-evidence trigger and allowed the existing single fallback query after a nonempty primary result set produced no safe attachment. In the one focused `shop vac` live run, target `Amazon.com: RIDGID Wet Dry Vacuums VAC1200 Heavy Duty Wet ...` was assigned detected brand `Amazon.com` and model token `vac1200`. The primary result `SKIL ... VA1200D-10` was correctly rejected. The fallback result `Amazon Basics 6-Gallon 3.5 HP Wet/Dry Vacuum` then passed same-product identity and donated a citation despite being a different brand and product with no `VAC1200` identity.
+
+**Where it occurs:** `lib/requirementEvidenceRescue.ts` source-upgrade `looksLikeSameProduct` identity path; target brand extraction from retailer-prefixed card names; bounded fallback attachment
+
+**Steps to reproduce:** Use the stopped Phase 5I code that retries fallback after `primary_no_safe_attachment`, then run `npm run qa:save-fixture -- "shop vac"`. Inspect the `Amazon.com: RIDGID ... VAC1200` source-upgrade trace. The primary SKIL candidate is rejected; the fallback Amazon Basics candidate is marked `identityMatch: true` and attaches a citation.
+
+**Expected:** Retailer/source prefixes such as `Amazon.com:` must not become target product brands. A model-qualified RIDGID VAC1200 target must reject an Amazon Basics vacuum that lacks the target brand and model, even though both are shop vacuums.
+
+**Actual:** Shared `Amazon` wording plus same product type was sufficient for the fallback candidate to pass identity; the candidate attached a wrong-product citation.
+
+**Current status:** Open. The unsafe Phase 5I behavior changes and fail-first test edits were rolled back immediately. No app-code change was committed, the second permitted live search was not run, and RR-041/RR-042 remain Needs Investigation.
+
+**Suggested fix or next action:** Fix RR-065 before retrying Phase 5I. Reuse shared source/retailer-name filtering so retailer prefixes cannot act as brands, and require source-derived target model/brand agreement for model-qualified targets before same-category overlap can pass. Preserve exact same-product cross-retailer offers and all RR-051/RR-053/RR-058/RR-063/RR-064 regressions. Then restore the two Phase 5I fail-first cases and repeat one focused `shop vac` proof.
+
+**Phase 5I evidence for RR-041/RR-042:** Deterministic fail-first tests proved the current trigger suppresses a candidate when a lone rating is present and that fallback stops after a nonempty primary set whose candidates all fail identity. A conservative missing-two-of-three trigger and one bounded post-rejection fallback passed 738/738 tests and eval before live proof. The live run proved the fallback control flow worked, but RR-065 made the result unsafe. Those behavior changes were rolled back; neither RR-041 nor RR-042 is Fixed.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (2 issues)
+### Open (3 issues)
 - RR-054: Fresh fallback responses omit current diagnostic traces
 - RR-061: Product image metadata accepts non-image or irrelevant assets
+- RR-065: Source-upgrade fallback can attach same-category wrong-product evidence through a retailer-like brand token
 
 ### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
@@ -2022,9 +2054,10 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
-2. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
-3. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
-4. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
-5. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
-6. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
+1. **RR-065** (Critical) — Close the retailer-prefix / same-category wrong-product identity hole before retrying broader fallback behavior.
+2. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
+3. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
+4. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
+5. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
+6. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
+7. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.

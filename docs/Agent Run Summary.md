@@ -1149,3 +1149,19 @@ New entries should keep the same format and stay easy to read.
 **Scope:** One implementation file, four test files, and required docs. No ranking, discovery breadth, source-upgrade, price, type, requirement, final-selection, or UI behavior changed. Implementation commit: `50b0713`; documentation commit: `0762ff3`.
 
 **Next recommended step:** Stop. Phase 5I may start only after explicit instruction.
+
+## Codex Run - 2026-06-30 Phase 5I safety stop
+
+**Goal:** Fix only RR-041/RR-042 source-upgrade trigger and fallback reliability without weakening evidence trust.
+
+**Diagnosis:** Current trigger logic requires verified price, owner rating, and useful commerce evidence all to be absent. Current fallback runs only after zero primary candidates, not after a nonempty primary set produces no safe attachment. Two fail-first tests reproduced those paths.
+
+**Candidate change:** A conservative missing-two-of-three trigger and one bounded fallback after `primary_no_safe_attachment`, plus debug-only decision/outcome fields. Focused tests passed 92/92; typecheck passed; lint had 0 errors and 3 pre-existing warnings; full tests passed 738/738; eval had no red flags.
+
+**Live stop:** One `shop vac` run triggered two upgrades. RIDGID HD0900 safely attached exact evidence. Target `Amazon.com: RIDGID ... VAC1200` rejected a SKIL primary result, then incorrectly accepted `Amazon Basics 6-Gallon 3.5 HP Wet/Dry Vacuum` from fallback and attached its citation. The retailer-prefixed target name supplied false `Amazon.com` brand identity; the candidate had neither RIDGID nor VAC1200 identity.
+
+**Outcome:** Opened Critical RR-065. Rolled back every app, replay, and test edit; no behavior was committed. The restored repository passed 735/735 tests, typecheck, lint with 0 errors, and eval. RR-041/RR-042 remain Needs Investigation. The second live search and Phase 5J were not run.
+
+**Issues:** 65 total; 8 Critical, 28 High, 24 Medium, 5 Low; 3 Open, 6 Needs Investigation, 55 Fixed, 1 Won't Fix.
+
+**Next recommended step:** Fix RR-065 narrowly, then restore the two Phase 5I fail-first cases and retry the bounded reliability work.
