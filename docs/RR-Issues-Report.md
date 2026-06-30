@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through RR-064 cleanup
+## Compiled for AI Agent Consumption — Phase 0 through RR-007/RR-008 pre-final cleanup
 
 **Generated:** 2026-06-30
-**Scope:** All phases from initial measurement harness through the RR-064 source-upgrade identity mini-phase
+**Scope:** All phases from initial measurement harness through the RR-007/RR-008 pre-final eligibility cleanup
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -19,8 +19,8 @@
 | Medium | 24 |
 | Low | 5 |
 | Open | 2 |
-| Needs Investigation | 8 |
-| Fixed | 53 |
+| Needs Investigation | 6 |
+| Fixed | 55 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -70,6 +70,7 @@
 | Phase 5G — Evidence-strength ranking | 0 |
 | Phase 5H — Broad-slate diversity and form-factor quality | 1 |
 | RR-064 source-upgrade identity mini-phase | 0 |
+| RR-007/RR-008 pre-final eligibility cleanup | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -266,6 +267,8 @@
 
 **Phase 5H live regression:** Reopened as Needs Investigation. `Electric Toothbrushes - Twin Packs and Bundles - Page 1 - Oral-B` survived citation verification, requirement filtering, reliability, and exact scoring as `reliableEnoughForExact: true`. It missed the final cards only because seven stronger products filled the cutoff. No category/listing page rendered, and Phase 5H did not change eligibility, but the pre-final product-card gate is not containing this shape.
 
+**Pre-final eligibility cleanup resolution (2026-06-30):** Fixed again. The title was not recognized as a paginated bundle/category collection, and the generic deep `/products/...` shortcut therefore classified it as `buyable_product`. Shared title-only evidence-page detection now catches paginated collection and twin/multi-pack bundle titles before any product-detail URL, image, price, or model shortcut. Fail-first coverage reproduces the page through shared eligibility, Serper normalization, final citation validation, and requirement filtering. The focused live run dropped Oral-B lineup/category pages during citation verification; no category/listing page entered the 12 exact-scored candidates or five final cards.
+
 ---
 
 #### RR-008
@@ -276,7 +279,7 @@
 | **Phase** | Pre-Phase 0 (Codex baseline) |
 | **Severity** | High |
 | **Title** | Review/article titles appearing as product cards |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** Pages with titles like "Runner's World: Nike Winflo 11 Review" or "7 Things to Avoid When Purchasing…" were passing eligibility and appearing as product cards in results.
 
@@ -301,6 +304,8 @@
 **RR-008 cleanup resolution:** Fixed. Shared eligibility now treats interrogative editorial titles and phrases such as `actually good`, `should you buy`, `worth it`, `our verdict`, and `what you need to know` as non-product evidence. Hosted publishing platforms including Substack, Medium, Blogspot, and WordPress are evidence-only even when they use product-looking `/p/` routes. Real retailer and manufacturer `/p/` pages remain eligible. Fail-first tests reproduced the defect through shared eligibility, Serper normalization, and final citation validation; all three passed after the fix. In the single post-fix `dog food` run, the BK Pets article was absent from the candidate pool and no newsletter/blog/editorial page became a final card.
 
 **Phase 5H live regression:** Reopened as Needs Investigation. An ANSI standards blog and two Electric Teeth comparison articles survived as `reliableEnoughForExact: true` exact-scored candidates. They remained below the final cutoff and did not render, but the eligibility/reliability boundary still treats these evidence pages as potential product cards when fewer than seven stronger products exist. Phase 5H did not change this behavior.
+
+**Pre-final eligibility cleanup resolution (2026-06-30):** Fixed again. Standards codes, comparison/vs titles, press-release announcement verbs, and blog/news/press/journal/stories subdomains were absent from the shared evidence-page vocabulary. Product-looking paths, model-like digits, images, or parsed prices could therefore promote these pages. The shared classifier now recognizes those structural signals before product-detail shortcuts. The fresh pre-fix fixture's final #7 MultiVu `Launches hum by Colgate` press-release card is removed by current-code reassessment. One post-fix live run produced five specific product cards and no standards, blog, comparison, or press page in the exact-scored trace. A broad Oral-B comparison page remained only as a secondary citation with `unknown` product identity, so it cannot become a card, primary link, or product-specific ranking proof.
 
 ---
 
@@ -2000,17 +2005,15 @@ No new issue ID was opened.
 - RR-054: Fresh fallback responses omit current diagnostic traces
 - RR-061: Product image metadata accepts non-image or irrelevant assets
 
-### Needs Investigation (8 issues)
-- RR-007: Retailer category/listing page can remain product-card eligible below cutoff
-- RR-008: Editorial/comparison pages can remain product-card eligible below cutoff
+### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-041: Source-upgrade trigger not firing in Phase 3J live runs
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-### Fixed (53 issues)
-RR-001 through RR-006, RR-009 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055 through RR-060, RR-062 through RR-064
+### Fixed (55 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055 through RR-060, RR-062 through RR-064
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2019,10 +2022,9 @@ RR-001 through RR-006, RR-009 through RR-013, RR-016 through RR-023, RR-025 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-007 + RR-008** (High) — Contain category and editorial pages that remain exact-eligible below the final cutoff.
-2. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
-3. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
-4. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
-5. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
-6. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
-7. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
+1. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
+2. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
+3. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
+4. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
+5. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
+6. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.

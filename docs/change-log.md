@@ -13,6 +13,14 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-30
 
+### Codex - RR-007/RR-008 pre-final eligibility cleanup
+- Fixed the Phase 5H recurrence by recognizing paginated bundle/category titles, standards documents, comparison/vs pages, press-release announcement titles, and common editorial subdomains before product-detail URL, image, price, or model shortcuts.
+- The fix is shared across discovery, verified-citation filtering, requirement filtering, product-link validation, and final reliability because those boundaries consume `classifyProductEligibility`.
+- Specific retailer/manufacturer product pages remain card-eligible. Comparison/category pages may remain secondary evidence, but cannot become a card, primary buy link, or product-specific citation-strength proof.
+- Fail-first reproduced four unsafe shapes at four boundaries. Focused boundary tests passed 157/157; broad safety passed 330/330; typecheck clean; lint 0 errors with 3 pre-existing warnings; full suite 735/735; eval clean.
+- Current-code fixture reassessment removes the pre-fix final MultiVu press-release card. One post-fix `electric toothbrush` live run returned five specific product cards and no unsafe page in the exact-scored trace; RR-064 remained safe. No broad baseline ran.
+- RR-007 and RR-008 are Fixed. Phase 5I did not start.
+
 ### Codex - RR-064 source-upgrade conflicting-model safety
 - Fixed RR-064 by applying the shared explicit product-variant conflict guard before source-upgrade positive model/family overlap.
 - Added conservative standalone series-number conflict detection for values such as DiamondClean `9000` versus Smart `9300` when source-derived evidence shares meaningful product-family context.

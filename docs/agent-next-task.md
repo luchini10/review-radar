@@ -4,31 +4,31 @@ Generated: 2026-06-30
 
 ## Current next task
 
-**RR-064 fixed - address reopened RR-007/RR-008 before Phase 5I**
+**RR-007/RR-008 cleanup complete - Phase 5I is next only after explicit instruction**
 
-RR-064 is Fixed. Source upgrade now rejects source-derived explicit series-number conflicts before any positive family overlap, so `DiamondClean 9300` cannot donate commerce evidence to `DiamondClean 9000`. The canonical register contains 64 issues:
+RR-007 and RR-008 are Fixed again. The shared eligibility classifier now blocks paginated bundle/category pages, standards documents, comparison/vs pages, press-release titles, and common editorial subdomains before any product-detail shortcut. The canonical register contains 64 issues:
 
 - 7 Critical, 28 High, 24 Medium, 5 Low;
-- 2 Open, 8 Needs Investigation, 53 Fixed, 1 Won't Fix.
+- 2 Open, 6 Needs Investigation, 55 Fixed, 1 Won't Fix.
 
-Fail-first reproduced the exact 9000/9300 unsafe attachment. Focused safety tests passed 157/157; the full suite passed 729/729; typecheck and eval passed; lint reported 0 errors and 3 pre-existing warnings.
+Fail-first reproduced all four shapes through shared eligibility, Serper discovery, verified-citation filtering, and requirement filtering. Focused boundary tests passed 157/157; broad safety passed 330/330; the full suite passed 735/735; typecheck and eval passed; lint reported 0 errors and 3 pre-existing warnings.
 
-One focused `electric toothbrush` live run returned the same Smart 9300 candidate and rejected it as `identity_mismatch`; a matching explicit 9000 offer attached instead. A separate 2100 attempt rejected a 4100 candidate before attaching a 2100 offer. No broad baseline ran.
+One focused `electric toothbrush` live run produced five specific retailer/manufacturer product cards. Oral-B category/lineup pages were dropped during citation verification; no category, blog, standards, comparison, or press page entered the exact-scored trace. A broad Oral-B comparison page remained secondary evidence only with `unknown` product identity. RR-064 source-upgrade model safety remained green. No broad baseline ran.
 
-RR-064 implementation commit: `938b839`.
+RR-007/RR-008 implementation commit: `50b0713`.
 
 ## Required next phase
 
 Do not start the next step automatically. The next master-plan phase is:
 
-**Narrow reopened RR-007/RR-008 pre-final eligibility cleanup**
+**Phase 5I - source-upgrade trigger and fallback reliability**
 
-Contain category and editorial/comparison pages that remain `reliableEnoughForExact` below the final cutoff. Keep these pages available only as secondary evidence where safe; do not let them enter the product-card exact stream. Preserve RR-022 citation retention, RR-063 product-evidence identity, RR-064 source-upgrade identity, and the completed Phase 5H selection behavior.
+Resolve RR-041 and RR-042 on the cleaned pipeline. Address RR-037 or RR-045 only if deterministic root causes are confirmed. Establish the post-safety-fix attachment baseline explicitly, and do not improve reliability by loosening RR-053, RR-058, RR-063, or RR-064 identity gates.
 
 Do not:
 
-- start Phase 5I before reopened RR-007/RR-008 are explicitly resolved or deferred;
-- change Phase 5H final-selection calibration during the eligibility cleanup;
+- start Phase 5I without explicit instruction;
+- change Phase 5H final-selection calibration;
 - loosen source-upgrade identity to improve attachment rate;
 - weaken price, citation, product, requirement, product-type, or identity trust gates;
 - run another live search or full baseline without approval.
@@ -37,4 +37,4 @@ Reference:
 
 - `docs/RR-Issues-Report.md`
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` latest RR-064 entry
+- `docs/qa-loop-results.md` latest RR-007/RR-008 cleanup entry

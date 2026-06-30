@@ -1131,3 +1131,21 @@ New entries should keep the same format and stay easy to read.
 **Scope:** Four implementation/test files plus required docs. No ranking, scoring, discovery, query, trigger, normalization, price, requirement, product-type, page-eligibility, or UI behavior changed. Implementation commit: `938b839`; documentation commit: `ce20707`.
 
 **Next recommended step:** Stop. Address reopened RR-007/RR-008 pre-final eligibility separately before Phase 5I.
+
+## Codex Run - 2026-06-30 RR-007/RR-008 pre-final eligibility cleanup
+
+**Goal:** Fix only the reopened category/listing and editorial/comparison page leaks before Phase 5I.
+
+**Root causes:** The shared classifier did not recognize paginated bundle collections, standards identifiers, comparison/vs titles, press-release announcement verbs, or common editorial subdomains. Product-detail path, image, price, or model shortcuts could then promote those pages.
+
+**What changed:** Added generalized title, path, and subdomain evidence-page signals before every product shortcut. Specific product pages remain eligible; safe comparison/category evidence may remain secondary but cannot become a card, primary link, or product-specific proof.
+
+**Proof:** Four boundary assertions failed before implementation. Focused tests passed 157/157; broad safety passed 330/330; typecheck passed; lint had 0 errors and 3 pre-existing warnings; full tests passed 735/735; eval had no red flags.
+
+**Fixture/live result:** Current code removes the pre-fix MultiVu final #7 card. One fresh `electric toothbrush` run returned five specific product cards and no category, standards, blog, comparison, or press page in the exact-scored trace. An Oral-B lineup page remained secondary evidence only. RR-064 model safety remained green.
+
+**Issues:** RR-007 and RR-008 Fixed; no new issue opened. Totals: 64 issues; 2 Open, 6 Needs Investigation, 55 Fixed, 1 Won't Fix.
+
+**Scope:** One implementation file, four test files, and required docs. No ranking, discovery breadth, source-upgrade, price, type, requirement, final-selection, or UI behavior changed. Implementation commit: `50b0713`.
+
+**Next recommended step:** Stop. Phase 5I may start only after explicit instruction.

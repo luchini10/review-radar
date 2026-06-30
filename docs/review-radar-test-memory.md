@@ -856,3 +856,26 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Live call:** Exactly one `electric toothbrush` save/replay. Smart 9300 was rejected for DiamondClean 9000, then an explicit 9000 offer attached. The 2100 attempt rejected a 4100 candidate before attaching a 2100 offer. No broad baseline ran.
 
 **Status:** RR-064 Fixed. RR-007/RR-008 remain Needs Investigation; address them separately before Phase 5I.
+
+---
+
+## 2026-06-30 - RR-007/RR-008 pre-final eligibility cleanup
+
+**Issues fixed:** RR-007 and RR-008.
+
+**Regression contract:**
+- Paginated category/bundle titles cannot become products, including deep `/products/...` routes.
+- Standards identifiers/documents, comparison/vs titles, and press-release announcement titles are evidence-only.
+- Blog/news/press/journal/stories subdomains and comparison/standards/press-release paths are evidence-only before product-detail shortcuts.
+- Product-looking digits, images, prices, and deep paths cannot override an evidence-page signal.
+- Specific retailer/manufacturer product pages remain card-eligible.
+- Safe editorial/category/comparison sources may remain secondary citations but cannot become a primary link, exact candidate, or product-specific ranking proof.
+- Preserve RR-022 retention, RR-063/RR-064 identity, RR-013 ranking, RR-002/RR-062 price, Phase 5E type/requirements, and Phase 5H selection.
+
+**Required examples:** Keep Oral-B twin-pack/category, ANSI standards, Electric Teeth comparison, and MultiVu announcement negatives; specific Oral-B/Sonicare positives; secondary comparison evidence; unrelated retailer categories and hosted editorial pages; and all named safety controls green.
+
+**Verification:** Fail-first 4 failures with 152 controls passing; focused 157/157; broad named-regression safety 330/330; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 735/735; eval clean.
+
+**Fixture/live proof:** Current code removes the pre-fix MultiVu final #7 card. Exactly one post-fix `electric toothbrush` run returned five specific product cards and no unsafe page in the exact-scored trace. An Oral-B lineup page remained secondary with `unknown` product identity. RR-064 source-upgrade attachment stayed model-safe. No broad baseline ran.
+
+**Status:** RR-007/RR-008 Fixed. Phase 5I remains unstarted pending explicit instruction.

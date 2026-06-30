@@ -1179,3 +1179,19 @@ Stop. Do not start Phase 5I. Address RR-064 first after explicit instruction, th
 - Live validation: exactly one `electric toothbrush` call. Smart 9300 was rejected as `identity_mismatch` for the DiamondClean 9000 target; an explicit 9000 result attached. A 2100 attempt also rejected a 4100 before attaching a 2100 result. No broad baseline ran.
 
 Stop. Do not start Phase 5I. Address reopened RR-007/RR-008 eligibility only after explicit instruction.
+
+### RR-007/RR-008 pre-final eligibility cleanup completion record
+
+- Completed step: Reopened RR-007/RR-008 pre-final product-card eligibility cleanup.
+- Next step: Phase 5I source-upgrade trigger and fallback reliability, only after explicit instruction.
+- Diagnostic-only: No. The phase reproduced and fixed RR-007/RR-008.
+- Stop condition hit: No. The shared eligibility fix did not require weakening citation retention, identity, price, product-type, requirement, or ranking gates.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-007 and RR-008 changed from Needs Investigation to Fixed. RR-063 and RR-064 remain Fixed.
+- Docs committed: Pending this documentation commit.
+- Implementation commit: `50b0713`.
+- Verification: fail-first 4 failures with 152 controls passing; focused boundary 157/157; broad named-regression safety 330/330; typecheck passed; lint 0 errors with 3 pre-existing warnings; full suite 735/735; eval clean.
+- Fixture proof: current-code reassessment removes the pre-fix final MultiVu press-release card.
+- Live validation: exactly one `electric toothbrush` call. Five specific product cards remained; no category, standards, blog, comparison, or press page entered the exact-scored trace. A broad Oral-B comparison page remained secondary only, and RR-064 source-upgrade identity stayed safe. No broad baseline ran.
+
+Stop. Do not start Phase 5I without explicit instruction.

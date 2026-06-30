@@ -624,3 +624,11 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - Candidate URL query parameters, source-upgrade query text, and query-derived snippets remain excluded from identity. The rule operates on source title and safe URL path evidence.
 - One focused live run rejected Smart 9300 for DiamondClean 9000 and then attached an explicit 9000 offer; a separate 2100 attempt rejected a 4100 result before attaching a 2100 result.
 - RR-064 is Fixed. Reopened RR-007/RR-008 pre-final eligibility containment remains the next required cleanup before Phase 5I.
+
+**RR-007/RR-008 pre-final eligibility cleanup (2026-06-30)**
+- `classifyProductEligibility` is the shared product-card gate consumed by Serper normalization, citation validation, requirement filtering, product-link selection, and final scoring.
+- Evidence-page signals now run before all product-detail shortcuts. They include paginated collection/bundle titles, standards identifiers, comparison/vs titles, press-release announcement verbs, common editorial subdomains, and comparison/standards/press-release paths.
+- Deep `/products/...` paths, model-like digits, images, and parsed prices cannot turn an evidence page into a product card.
+- Specific retailer/manufacturer product pages remain card-eligible. Safe editorial/category/comparison pages may remain secondary citations, but cannot become primary links, exact candidates, or product-specific ranking proof.
+- Current-code fixture reassessment removes the pre-fix MultiVu press-release exact card. One post-fix live run returned five specific toothbrush cards and no unsafe page in the exact-scored trace; RR-064 remained safe.
+- RR-007 and RR-008 are Fixed. Phase 5I remains unstarted pending explicit instruction.

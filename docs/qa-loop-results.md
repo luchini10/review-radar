@@ -4919,3 +4919,67 @@ The final 9000 card remained #1, but its commerce evidence now came from an expl
 - Generated baselines and all live fixtures remain untracked and uncommitted.
 
 Recommended direction: stop. Address reopened RR-007/RR-008 pre-final eligibility separately before Phase 5I; preserve the RR-064 shared conflict guard.
+
+## <span style="color:green">**Codex QA Update - 2026-06-30 (RR-007/RR-008 pre-final eligibility cleanup)**</span>
+
+**Verdict: PASS. RR-007 and RR-008 are Fixed again. Category, standards, comparison, and press-release pages are blocked before exact scoring or product-card use, while specific product pages and safe secondary evidence remain available.**
+
+### Confirmed failure paths
+
+- Oral-B `Twin Packs and Bundles - Page 1` was not recognized as a paginated category title. A deep `/products/...` route then produced `buyable_product`.
+- `ISO 20127:2020` and Electric Teeth comparison titles were absent from the editorial vocabulary. Product-looking paths, image/price signals, or model-like digits could promote them.
+- The fresh pre-fix fixture added a stronger RR-008 example: MultiVu `Colgate-Palmolive Launches hum...` was classified `buyable_product`, enriched from the press-release page, and selected exact #7.
+- The shared positive verdict propagated through Serper normalization, verified-citation filtering, requirement filtering, and scoring. Fail-first tests reproduced four unsafe shapes at all four boundaries.
+
+### Behavior change
+
+- Added title-only evidence signals for paginated collection/bundle titles, standards identifiers, comparison/vs titles, and press-release announcement verbs.
+- Added generalized evidence-only recognition for blog/news/press/journal/stories subdomains and comparison/standards/press-release paths.
+- These checks run before all product-detail URL, image, price, and model shortcuts.
+- Specific retailer and manufacturer product pages continue through unchanged.
+- Safe editorial/category/comparison pages may remain secondary citations. They cannot become product cards, primary links, or product-specific proof.
+- No ranking, discovery breadth/query generation, source-upgrade, product-evidence identity, price, product-type, requirement, final-selection, or UI logic changed.
+
+### Deterministic proof
+
+```text
+fail-first boundary matrix: 4 failures; 152 controls passed
+focused boundary matrix: 157/157 passed
+broad named-regression matrix: 330/330 passed
+npm run typecheck: passed
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 735/735 passed
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+- Oral-B category, ANSI standards, Electric Teeth comparison, and MultiVu press-release pages are rejected by shared eligibility.
+- Serper no longer normalizes those pages as product candidates.
+- Verified-citation validation drops them as primary products.
+- Requirement filtering removes them before exact scoring.
+- Specific Oral-B/Sonicare product pages remain eligible.
+- A comparison page remains a secondary citation behind an exact product page and receives `unknown`, not product-specific, identity.
+- RR-064, RR-063, RR-013, RR-022, RR-002/RR-062, Phase 5E, and Phase 5H regressions remain green.
+
+### Fixture and live proof
+
+- Current-code reassessment of the pre-fix fixture removes final #7 `Colgate-Palmolive Launches hum...`, leaving six specific products.
+- Exactly one post-fix `electric toothbrush` live save/replay ran.
+- Funnel: 23 pool, 16 after citation verification, 12 after requirements/revalidation, five final.
+- Citation verification dropped `Oral-B iO Series Electric Toothbrushes` and `Our best electric toothbrushes | Oral-B`.
+- All 12 exact-scored entries and all five final cards were specific products; every final primary URL was a Walmart, Amazon, Oral-B, or Philips product-detail page.
+- No ANSI, blog, comparison, category, or press-release page entered the exact-scored trace.
+- A broad Oral-B comparison/lineup page remained only as secondary evidence on the iO Series 6 card; product-evidence identity classified it `unknown`.
+- Source upgrade attached Smart 1500 evidence only to Smart 1500 and Sonicare 1100 evidence only to 1100. No RR-064 model contamination appeared.
+- No broad baseline or second live query ran.
+
+### Issue outcome
+
+- RR-007: Fixed.
+- RR-008: Fixed.
+- RR-064 and RR-063: remain Fixed.
+- No new issue ID opened.
+- Register: 64 issues; 7 Critical, 28 High, 24 Medium, 5 Low; 2 Open, 6 Needs Investigation, 55 Fixed, 1 Won't Fix.
+- Implementation commit: `50b0713`.
+- Generated baselines and all live fixtures remain untracked and uncommitted.
+
+Recommended direction: stop. Phase 5I is next only after explicit instruction; preserve the shared page-eligibility and identity guards.
