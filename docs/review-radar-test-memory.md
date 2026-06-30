@@ -922,3 +922,24 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Live call:** Exactly one `shop vac` save/replay. RIDGID HD1400 safely attached exact evidence; no wrong-brand upgrade attached. The prior retailer-prefixed VAC1200 target did not recur. A Bosch `/ocs-c/` category collection became exact #3 and reopened RR-007.
 
 **Status:** RR-065 Fixed. RR-007 Needs Investigation. RR-041/RR-042 unchanged. Do not retry Phase 5I until RR-007 is contained.
+
+---
+
+## 2026-06-30 - RR-007 opaque collection-page eligibility
+
+**Regression contract:**
+- Opaque manufacturer collection suffixes such as `ocs-c` are collection evidence, not product model identity.
+- Product-range/family/lineup routes cannot become cards merely because they contain images, prices, product words, or catalog-like digits.
+- Contextual family/series routes need concrete model identity in both title and trailing path before they can avoid the collection verdict.
+- Collection/listing negatives run before product-detail, price/image, internal-record, and model-like shortcuts.
+- Known retailer detail routes and specific manufacturer product pages remain card-eligible.
+- Safe generic evidence may remain secondary through existing evidence paths, but cannot become a primary link or exact product proof.
+- Preserve RR-008, RR-013, RR-022, RR-063, RR-064, RR-065, RR-002, RR-062, Phase 5E, and Phase 5H regressions.
+
+**Required examples:** Keep the exact Bosch `/wet-dry-extractors-2549705-ocs-c/` negative, an unrelated opaque product-range negative, a model-specific Bosch positive, known retailer positives, and final citation-filter rejection green.
+
+**Verification:** Fail-first 59/61; focused final 61/61; broad named safety 308/308; typecheck passed; lint 0 errors with 3 existing warnings; full suite 747/747; eval clean.
+
+**Fixture/live proof:** Frozen fixture replay remains historical. Current-code reassessment changes the Bosch record to `listing_or_search`. One fresh `shop vac` call returned only specific product-page final URLs and no collection/listing/family card.
+
+**Status:** RR-007 Fixed. RR-041/RR-042 remain Needs Investigation. Phase 5I/5J were not started.

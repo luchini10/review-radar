@@ -4,31 +4,31 @@ Generated: 2026-06-30
 
 ## Current next task
 
-**RR-065 fixed - narrow RR-007 Bosch category-page recurrence is next**
+**RR-007 opaque collection-page recurrence fixed - Phase 5I retry awaits explicit approval**
 
-RR-065 is Fixed. Shared identity normalization now treats explicit leading source/retailer labels, seller fields, URL hosts, URL query parameters, and query-derived text as provenance rather than product identity. A reliable target brand must appear in source-derived title/brand/path evidence. Product URL paths remain usable.
+RR-007 is Fixed again. The shared product-page classifier now treats opaque manufacturer collection suffixes and contextual product-range/family/lineup/series routes as strong negative page-shape evidence before product-detail, image, price, or model-like shortcuts.
 
-The exact retailer-prefixed RIDGID VAC1200 versus Amazon Basics regression is blocked. A real Amazon-hosted RIDGID VAC1200 page and a real Amazon Basics target remain valid. RR-063/RR-064 and all named safety regressions remain green.
+The exact Bosch `/ocs-c/` record reassesses from `buyable_product` to `listing_or_search`. A fresh `shop vac` run returned only specific product-detail primary URLs. Valid Bosch/manufacturer and major-retailer detail pages remain eligible. RR-008, RR-063, RR-064, RR-065, and all named safety regressions remain green.
 
-One focused `shop vac` live run safely attached exact RIDGID HD1400 evidence. It also reopened RR-007: `Wet/dry extractors Dust extraction systems - Bosch Professional` became exact #3 using Bosch collection URL `/au/en/wet-dry-extractors-2549705-ocs-c/`, while a specific Home Depot VAC090AH page remained secondary.
+RR-041 and RR-042 remain Needs Investigation. Their Phase 5I fail-first cases are documented, but the candidate trigger/fallback change was rolled back after RR-065. This RR-007 cleanup did not retry or change that logic.
 
 The canonical register now contains 65 issues:
 
 - 8 Critical, 28 High, 24 Medium, 5 Low;
-- 2 Open, 7 Needs Investigation, 55 Fixed, 1 Won't Fix.
+- 2 Open, 6 Needs Investigation, 56 Fixed, 1 Won't Fix.
 
 ## Required next phase
 
-Do not retry Phase 5I or start Phase 5J automatically. The next task is:
+Do not start automatically. The next task, only after explicit instruction, is:
 
-**Narrow RR-007 Bosch `/ocs-c/` category-page cleanup**
+**Retry Phase 5I for RR-041/RR-042 trigger/fallback reliability**
 
-Diagnose why the Bosch product-family collection survived shared eligibility and became a primary card while a specific retailer product page was available. Fix only the generalized collection-page shape, preserve valid Bosch/manufacturer product pages, and do not alter RR-065 identity behavior.
+Restore the documented fail-first cases and re-evaluate the smallest bounded trigger/fallback change against the now-fixed RR-065 identity and RR-007 eligibility protections. Do not treat lower safe attachment rates as a reason to weaken identity.
 
 Do not:
 
 - start Phase 5J;
-- retry Phase 5I trigger/fallback broadening before RR-007 is contained;
+- weaken RR-063/RR-064/RR-065 source-derived identity rules;
 - change Phase 5H final-selection calibration;
 - loosen source-upgrade identity to improve attachment rate;
 - weaken price, citation, product, requirement, product-type, or identity trust gates;
@@ -38,4 +38,4 @@ Reference:
 
 - `docs/RR-Issues-Report.md`
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` latest RR-007/RR-008 cleanup entry
+- `docs/qa-loop-results.md` latest RR-007 opaque collection-page cleanup entry

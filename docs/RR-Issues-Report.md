@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through RR-065 identity safety
+## Compiled for AI Agent Consumption — Phase 0 through RR-007 opaque collection-page cleanup
 
 **Generated:** 2026-06-30
-**Scope:** All phases from initial measurement harness through the RR-065 identity-safety mini-phase
+**Scope:** All phases from initial measurement harness through the RR-007 opaque collection-page cleanup
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -19,8 +19,8 @@
 | Medium | 24 |
 | Low | 5 |
 | Open | 2 |
-| Needs Investigation | 7 |
-| Fixed | 55 |
+| Needs Investigation | 6 |
+| Fixed | 56 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -73,6 +73,7 @@
 | RR-007/RR-008 pre-final eligibility cleanup | 0 |
 | Phase 5I — Trigger/fallback reliability safety stop | 1 |
 | RR-065 identity-safety mini-phase | 0 |
+| RR-007 opaque collection-page cleanup | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -235,7 +236,7 @@
 | **Phase** | Pre-Phase 0 (Codex baseline) |
 | **Severity** | High |
 | **Title** | eBay browse/category pages appearing as exact product matches |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** eBay browse and category pages (URLs matching `/t/`, `/b/`, `/sch/` patterns) were passing the product eligibility check and appearing as exact product recommendations. These are listing pages, not individual product pages.
 
@@ -272,6 +273,8 @@
 **Pre-final eligibility cleanup resolution (2026-06-30):** Fixed again. The title was not recognized as a paginated bundle/category collection, and the generic deep `/products/...` shortcut therefore classified it as `buyable_product`. Shared title-only evidence-page detection now catches paginated collection and twin/multi-pack bundle titles before any product-detail URL, image, price, or model shortcut. Fail-first coverage reproduces the page through shared eligibility, Serper normalization, final citation validation, and requirement filtering. The focused live run dropped Oral-B lineup/category pages during citation verification; no category/listing page entered the 12 exact-scored candidates or five final cards.
 
 **RR-065 live-proof regression (2026-06-30):** Reopened as Needs Investigation. The single post-fix `shop vac` run selected `Wet/dry extractors Dust extraction systems - Bosch Professional` as exact #3 with primary URL `https://www.bosch-pt.com.au/au/en/wet-dry-extractors-2549705-ocs-c/`. This is a Bosch product-family/category collection; a specific Home Depot Bosch VAC090AH product page was present only as a secondary citation. RR-065 did not alter eligibility or product-link selection. Diagnose the shared `/ocs-c/` collection shape separately before retrying Phase 5I.
+
+**Opaque collection-page cleanup (2026-06-30):** Fixed again. The shared classifier treated the final slug `wet-dry-extractors-2549705-ocs-c` as product-specific only because it contained letters and digits. Existing collection checks did run first, but they did not recognize opaque manufacturer CMS collection suffixes or product-range/family/lineup route shapes. A new strong-negative page-shape check runs before every product-detail, image, price, and model-like shortcut. It recognizes opaque `ocs-c` collection suffixes and contextual manufacturer family/lineup/range/series routes while preserving explicit known retailer detail routes and model-bearing manufacturer detail pages. The exact saved Bosch record now reassesses from `buyable_product` to `listing_or_search`. One fresh `shop vac` run returned three exact and four near products, all with specific manufacturer/retailer product URLs; no Bosch `/ocs-c/` or other collection/listing/family route appeared.
 
 ---
 
@@ -2035,22 +2038,40 @@ No new issue ID was opened.
 
 ---
 
+### RR-007 OPAQUE COLLECTION-PAGE CLEANUP (2026-06-30)
+
+No new issue ID was opened.
+
+**Root cause:** `classifyProductEligibility` checked known collection/listing negatives before positive shortcuts, but the negative classifier did not recognize opaque manufacturer CMS collection suffixes. The Bosch final slug contained letters plus digits, so the generic model-like slug heuristic returned `buyable_product`. That verdict survived citation verification, requirement filtering, reliability, scoring, and final card selection.
+
+**Behavior result:**
+- Opaque `ocs-c` collection routes and product-range/family/lineup shapes are classified as `listing_or_search` before weak product-detail shortcuts.
+- Contextual family/series routes require concrete model identity in both title and trailing path before they can avoid the collection verdict.
+- Product-looking images, prices, category words, and catalog-like digits cannot override the strong collection shape.
+- Known retailer detail routes and specific manufacturer pages, including Bosch model pages, remain eligible.
+- RR-041/RR-042 logic, source-upgrade identity, ranking, discovery, price, product type, requirements, final selection, and UI are unchanged.
+
+**Proof:** Fail-first focused tests passed 59/61 and failed only the exact Bosch classifier/final-card assertions. Final focused tests passed 61/61; the broad named safety matrix passed 308/308; typecheck passed; lint had 0 errors and 3 existing warnings; the full suite passed 747/747; eval reported no red flags. Current-code reassessment flips the frozen Bosch fixture record from card-eligible to blocked. Exactly one live `shop vac` run returned only specific product-detail primary URLs and no collection/category/brand/family/listing page.
+
+**Issue result:** RR-007 is Fixed. RR-008, RR-063, RR-064, and RR-065 remain Fixed. RR-041/RR-042 remain Needs Investigation and were not retried. Phase 5I and Phase 5J were not started.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (2 issues)
 - RR-054: Fresh fallback responses omit current diagnostic traces
 - RR-061: Product image metadata accepts non-image or irrelevant assets
 
-### Needs Investigation (7 issues)
-- RR-007: Category/listing pages can still become product cards (`/ocs-c/` Bosch collection recurrence)
+### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-041: Source-upgrade trigger not firing in Phase 3J live runs
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-### Fixed (55 issues)
-RR-001 through RR-006, RR-008 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055 through RR-060, RR-062 through RR-065
+### Fixed (56 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055 through RR-060, RR-062 through RR-065
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2059,10 +2080,9 @@ RR-001 through RR-006, RR-008 through RR-013, RR-016 through RR-023, RR-025 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-007** (High) — Contain the Bosch `/ocs-c/` product-family collection route before retrying Phase 5I.
+1. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
 2. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
 3. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
-4. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent after safety fixes.
-5. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
-6. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
-7. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
+4. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
+5. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
+6. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.

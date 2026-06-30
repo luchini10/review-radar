@@ -5151,3 +5151,68 @@ No eligibility or product-link code was changed in this phase.
 - Fresh live fixtures and generated baselines remain untracked and uncommitted.
 
 Recommended direction: fix only the reopened RR-007 Bosch `/ocs-c/` collection route before retrying Phase 5I. Preserve RR-065 identity provenance rules.
+
+## <span style="color:green">**Codex QA Update - 2026-06-30 (RR-007 opaque collection-page cleanup)**</span>
+
+**Verdict: PASS. RR-007 is Fixed again. Opaque manufacturer collection routes cannot become exact candidates, product cards, primary buy links, or product-specific proof. Phase 5I was not retried and Phase 5J did not start.**
+
+### Confirmed root cause and fail-first
+
+- The shared eligibility classifier already evaluated known negative page shapes before positive product shortcuts.
+- Its negative coverage did not recognize the Bosch CMS suffix `ocs-c` or comparable opaque product-range/family/lineup shapes.
+- Final slug `wet-dry-extractors-2549705-ocs-c` contained letters and digits, so the generic final-slug heuristic treated catalog identity as model identity and returned `buyable_product`.
+- Enrichment supplied a product-looking image, and the incorrect verdict propagated through citation verification, requirement filtering, reliability, scoring, and final selection.
+- Earlier RR-007 fixes covered explicit brand/category/collection segments, nested catalog IDs, generic `/products/...` families, and title-only collections, but not opaque CMS collection suffixes.
+- Fail-first focused run passed 59/61; only the exact Bosch classifier and final verified-citation filtering assertions failed.
+
+### Generalized behavior change
+
+- Added a shared strong-negative classifier for opaque manufacturer collection suffixes and contextual family/lineup/range/series routes.
+- `ocs-c` and explicit product-range/family/lineup shapes classify as `listing_or_search` before product-detail, image, price, internal-record, or model-like shortcuts.
+- Contextual family/series routes require a concrete model token in both the source title and trailing path to avoid the collection verdict.
+- Product-looking images, prices, category words, and catalog-like digits do not override a collection shape.
+- Known retailer detail patterns and model-specific manufacturer pages, including Bosch GAS18V-3N, remain card-eligible.
+- No host-specific Bosch allow/block rule was added.
+
+### Deterministic and fixture proof
+
+```text
+fail-first focused: 59/61 pass; only two intended RR-007 assertions failed
+focused final: 61/61 pass
+broad named safety matrix: 308/308 pass
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 747/747 pass
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+The frozen fixture replay remains historical and still prints its stored pre-fix result. Current-code reassessment of that exact record changes:
+
+```text
+stored:  buyable_product / canRenderAsProductCard=true
+current: listing_or_search / canRenderAsProductCard=false
+```
+
+### Single focused live proof
+
+Exactly one `shop vac` save/replay ran.
+
+- Funnel: 18 pool, 13 after citation verification, 7 after requirements/revalidation, 7 final.
+- Exact: BISSELL Garage Pro; RIDGID 12 Gallon NXT; RIDGID 16 Gallon NXT.
+- Near: specific DEWALT DXV06P, DEWALT DCV580H, CRAFTSMAN CMCV002B, and BISSELL/Amazon 18P03 product pages.
+- Every final primary URL was a specific manufacturer or retailer product-detail page.
+- No Bosch `/ocs-c/`, collection, category, brand, family, listing, support, manual, documentation, or editorial page became exact-eligible or final.
+- Source upgrade had zero qualifying attempts. RR-041/RR-042 were not exercised, retried, or changed.
+- No unsafe product, link, citation, price, or identity merge appeared.
+
+### Issue outcome
+
+- RR-007: Fixed.
+- RR-008, RR-063, RR-064, RR-065: remain Fixed.
+- RR-041/RR-042: unchanged, Needs Investigation.
+- No new issue ID opened.
+- Register: 65 issues; 8 Critical, 28 High, 24 Medium, 5 Low; 2 Open, 6 Needs Investigation, 56 Fixed, 1 Won't Fix.
+- Implementation commit: `6346087`.
+- Fresh live fixtures and generated baselines remain untracked and uncommitted.
+
+Recommended direction: stop. Retry Phase 5I for RR-041/RR-042 only after explicit instruction; preserve the RR-007 classifier and RR-063/RR-064/RR-065 identity guards.

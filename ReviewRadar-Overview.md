@@ -646,3 +646,16 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - RR-065 is Fixed. RR-041/RR-042 remain Needs Investigation; Phase 5I has not been retried.
 - RR-007 reopened from the same live run because a Bosch `/ocs-c/` wet/dry-extractor collection became a primary exact card.
 - Address only that RR-007 collection shape before retrying Phase 5I. Do not start Phase 5J.
+
+**RR-007 opaque collection-page eligibility cleanup (2026-06-30)**
+- Shared product eligibility now recognizes opaque manufacturer collection suffixes such as `ocs-c` and contextual product-range/family/lineup/series routes before any product-detail, image, price, internal-record, or model-like shortcut.
+- Strong collection shape overrides weak product-looking signals, including catalog-like digits. Contextual family/series routes require concrete model identity in both the title and trailing path before they can qualify as detail pages.
+- The exact Bosch collection now classifies as `listing_or_search`; model-specific Bosch pages, known retailer detail routes, and specific manufacturer product pages remain card-eligible.
+- The shared verdict propagates through Serper normalization, citation validation, requirement filtering, product-link selection, reliability, and final scoring without changing those subsystems.
+- Verification: fail-first 59/61; focused final 61/61; broad named safety 308/308; typecheck clean; lint 0 errors with 3 existing warnings; full suite 747/747; eval clean.
+- Current-code reassessment blocks the frozen Bosch fixture record. One fresh `shop vac` run returned three exact and four near products, all with specific product-detail primary URLs; no collection/listing/family route appeared.
+
+**Current boundary**
+- RR-007 is Fixed. RR-008, RR-063, RR-064, and RR-065 remain Fixed.
+- RR-041/RR-042 remain Needs Investigation; Phase 5I was not retried and Phase 5J was not started.
+- Retry Phase 5I only after explicit instruction.

@@ -1183,3 +1183,21 @@ New entries should keep the same format and stay easy to read.
 **Commit:** Implementation `04f2933`.
 
 **Next recommended step:** Fix the narrow RR-007 Bosch collection route before retrying Phase 5I. Do not start Phase 5J.
+
+## Codex Run - 2026-06-30 RR-007 opaque collection-page cleanup
+
+**Goal:** Fix only the reopened RR-007 manufacturer collection-page shape before any Phase 5I retry.
+
+**Root cause:** Negative eligibility checks ran before positive shortcuts, but they did not recognize Bosch's opaque `ocs-c` CMS collection suffix. The final slug contained letters and digits, so the generic detail heuristic classified it as `buyable_product`; that verdict survived every later product-card boundary.
+
+**What changed:** Added a shared strong-negative classifier for opaque collection suffixes and contextual manufacturer family/lineup/range/series routes. Collection shape wins over weak image, price, category-word, and catalog-digit signals. Known retailer detail routes and model-specific manufacturer pages remain eligible.
+
+**Proof:** Fail-first passed 59/61 with only the exact classifier and final-card assertions failing. Focused final passed 61/61; broad named safety passed 308/308; typecheck passed; lint had 0 errors and 3 existing warnings; full suite passed 747/747; eval had no red flags.
+
+**Fixture/live result:** The frozen fixture still records its historical output, but current-code reassessment flips the Bosch page to `listing_or_search`. Exactly one fresh `shop vac` run returned BISSELL Garage Pro and two specific RIDGID NXT models as exact, plus four specific product-page near matches. No collection/category/brand/family/listing route appeared.
+
+**Issues:** RR-007 Fixed; RR-008/RR-063/RR-064/RR-065 remain Fixed; RR-041/RR-042 remain Needs Investigation. Totals: 65 issues; 2 Open, 6 Needs Investigation, 56 Fixed, 1 Won't Fix.
+
+**Scope:** Implementation commit `6346087`. No Phase 5I trigger/fallback retry, Phase 5J work, ranking, discovery, source-upgrade, identity, price, product-type, requirement, final-selection, or UI change.
+
+**Next recommended step:** Stop. Retry Phase 5I for RR-041/RR-042 only after explicit instruction.

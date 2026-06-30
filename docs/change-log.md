@@ -13,6 +13,13 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-30
 
+### Codex - RR-007 opaque manufacturer collection-page cleanup
+- Fixed the Bosch `/ocs-c/` recurrence by recognizing opaque manufacturer collection suffixes and contextual product-range/family/lineup/series routes before product-detail, image, price, or model-like shortcuts.
+- The fix is page-shape based, not Bosch-specific. Product-looking collection pages stay blocked even with images, prices, and catalog-like digits; specific Bosch/manufacturer and known retailer detail pages remain eligible.
+- Fail-first passed 59/61 and failed only the two intended Bosch assertions. Focused final passed 61/61; broad safety passed 308/308; typecheck and eval passed; lint had 0 errors and 3 existing warnings; full suite passed 747/747.
+- Current-code reassessment flips the frozen Bosch card from `buyable_product` to `listing_or_search`. One fresh `shop vac` run returned three exact and four near products, all with specific product URLs and no collection/listing/family page.
+- RR-007 is Fixed. RR-041/RR-042 were not retried, Phase 5I/5J did not start, and no ranking, discovery, source-upgrade, identity, price, product-type, requirement, final-selection, or UI logic changed.
+
 ### Codex - RR-065 retailer/source identity safety
 - Fixed RR-065 by treating explicit leading source/retailer labels, seller fields, URL hosts, URL query strings, and query-derived snippets as provenance rather than product identity.
 - Source upgrade now requires a reliable target brand in source-derived candidate title/brand/path evidence. Merchant product paths remain useful, exact cross-retailer matches still attach, and Amazon Basics remains valid when it is the actual product brand.

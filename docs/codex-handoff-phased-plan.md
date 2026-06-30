@@ -1229,3 +1229,21 @@ Stop. Fix RR-065 only after explicit instruction, then resume Phase 5I. Do not s
 - Scope: No trigger/fallback, ranking, discovery, eligibility, price, product-type, requirement, final-selection, or UI behavior changed. Phase 5I and Phase 5J were not started.
 
 Stop. Address RR-007 only after explicit instruction; preserve RR-065 provenance-aware identity.
+
+### RR-007 opaque collection-page cleanup completion record
+
+- Completed step: Narrow RR-007 root-cause eligibility cleanup for opaque manufacturer collection routes.
+- Next step: Phase 5I RR-041/RR-042 trigger/fallback reliability retry, only after explicit instruction. Phase 5J remains unstarted.
+- Diagnostic-only: No. The exact Bosch failure was reproduced, and shared product-page classification behavior changed.
+- Stop condition hit: No. The fix strengthened a shared negative eligibility gate without weakening trust or entering another phase.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-007 changed from Needs Investigation to Fixed. RR-008, RR-063, RR-064, and RR-065 remain Fixed. RR-041/RR-042 remain Needs Investigation.
+- Docs committed: Pending this closeout commit.
+- Implementation commit: `6346087`.
+- Documentation commit: Pending.
+- Verification: fail-first 59/61 with only two intended failures; focused final 61/61; broad named safety 308/308; typecheck passed; lint 0 errors with 3 existing warnings; full suite 747/747; eval clean.
+- Fixture proof: current-code reassessment changes the frozen Bosch `/ocs-c/` record from `buyable_product` to `listing_or_search`.
+- Live validation: exactly one `shop vac` call. Three exact and four near products remained, all with specific product-detail primary URLs; no collection/category/brand/family/listing route appeared. Source upgrade did not fire.
+- Scope: RR-041/RR-042 were not retried or fixed. Phase 5I and Phase 5J were not started. No ranking, discovery, source-upgrade, identity, price, product-type, requirement, final-selection, or UI behavior changed.
+
+Stop. Do not retry Phase 5I or start Phase 5J without explicit instruction.
