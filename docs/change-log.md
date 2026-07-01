@@ -13,6 +13,14 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-30
 
+### Codex - RR-066 model-qualified source-upgrade identity safety
+- Fixed the identity ordering that rejected exact model-bearing evidence when a provider omitted the brand, then allowed model-qualified targets to fall through to broad same-brand/product-type token overlap.
+- Source upgrade now requires an exact normalized target strong model in source-derived candidate evidence. Brand, product type, size, and capacity cannot replace missing model proof.
+- Exact model evidence may omit the provider brand only when product type agrees and no explicit conflicting brand/product signal exists. Punctuation variants, merchant paths, safe count/color variants, and non-model family behavior remain supported.
+- Fail-first passed 80/84 with only four intended RR-066 failures. Focused final passed 84/84; broad safety passed 304/304; typecheck and eval passed; lint had 0 errors and 3 existing warnings; full suite passed 752/752.
+- One focused `shop vac` run rejected nearby RIDGID HD09001/HD0919/HD1900 evidence and safely attached exact Armor All VOM205P evidence. WD4522 did not recur live.
+- RR-066 is Fixed. RR-041/RR-042 were not changed or retried, and Phase 5I/5J did not start.
+
 ### Codex - Phase 5I retry safety stop / RR-066
 - Reproduced RR-041/RR-042 again: a lone rating suppresses an otherwise weak model-qualified candidate, and a nonempty primary result set whose candidates all fail identity prevents the bounded fallback.
 - A conservative candidate trigger/fallback change passed 751/751 tests and eval, but the single `shop vac` live proof exposed Critical RR-066.

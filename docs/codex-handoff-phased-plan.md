@@ -1264,3 +1264,21 @@ Stop. Do not retry Phase 5I or start Phase 5J without explicit instruction.
 - Uncommitted artifacts: generated baselines and live fixtures, including the refreshed `shop-vac.json`, remain untracked and excluded from commits.
 
 Stop. Fix RR-066 only after explicit instruction. Preserve the fail-first RR-041/RR-042 cases for a later Phase 5I retry; do not start Phase 5J.
+
+### RR-066 model-qualified identity-safety completion record
+
+- Completed step: Narrow RR-066 source-upgrade model-qualified identity-safety mini-phase.
+- Next step: Phase 5I RR-041/RR-042 trigger/fallback reliability retry, only after explicit instruction. Phase 5J remains unstarted.
+- Diagnostic-only: No. The exact live failure was reproduced deterministically and shared source-upgrade identity behavior was strengthened.
+- Stop condition hit: No. The fix tightened model evidence requirements without weakening any trust gate or entering another phase.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-066 changed from Open to Fixed. RR-041/RR-042 remain Needs Investigation. RR-007, RR-008, RR-063, RR-064, and RR-065 remain Fixed.
+- Docs committed: Pending.
+- Implementation commit: `b3cfab7`.
+- Documentation commit: Pending.
+- Verification: fail-first 80/84 with only four intended RR-066 failures; focused final 84/84; broad named safety 304/304; typecheck passed; lint 0 errors with 3 existing warnings; full suite 752/752; eval clean.
+- Live validation: exactly one `shop vac` call. Nearby RIDGID HD09001/HD0919/HD1900 offers were rejected for HD0900; exact Armor All VOM205P evidence attached safely. WD4522 did not recur.
+- Scope: No RR-041/RR-042 trigger/fallback change, Phase 5I retry, Phase 5J work, ranking, discovery, price, page eligibility, product type, requirements, final selection, citation retention, or UI change.
+- Uncommitted artifacts: `.claude/`, generated baselines, and live fixtures including refreshed `shop-vac.json` remain untracked and excluded from commits.
+
+Stop. Do not retry Phase 5I or start Phase 5J without explicit instruction.

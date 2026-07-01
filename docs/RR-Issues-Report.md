@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 5I retry safety stop
+## Compiled for AI Agent Consumption — Phase 0 through RR-066 identity safety
 
 **Generated:** 2026-06-30
-**Scope:** All phases from initial measurement harness through the stopped Phase 5I retry
+**Scope:** All phases from initial measurement harness through the RR-066 identity-safety mini-phase
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -18,9 +18,9 @@
 | High | 28 |
 | Medium | 24 |
 | Low | 5 |
-| Open | 3 |
+| Open | 2 |
 | Needs Investigation | 6 |
-| Fixed | 56 |
+| Fixed | 57 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -75,6 +75,7 @@
 | RR-065 identity-safety mini-phase | 0 |
 | RR-007 opaque collection-page cleanup | 0 |
 | Phase 5I retry — same-brand/model-omission safety stop | 1 |
+| RR-066 identity-safety mini-phase | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -2041,6 +2042,8 @@ No new issue ID was opened.
 
 **Resolution proof:** The exact live-shaped retailer-prefixed RIDGID VAC1200 versus Amazon Basics case failed before the fix and passes afterward with no evidence attachment. Deterministic tests also prove seller labels, URL hosts, URL query parameters, and query-derived text cannot supply identity; a real Amazon-hosted RIDGID VAC1200 page and a real Amazon Basics target remain valid. Focused identity tests passed 90/90, broad named regressions passed 340/340, full tests passed 744/744, typecheck and eval passed, and lint had 0 errors with 3 existing warnings. One `shop vac` live run safely attached price/rating/review/citation evidence from an exact RIDGID HD1400 result; no wrong-brand source-upgrade attachment appeared. The run did not reproduce the retailer-prefixed VAC1200 target and separately reopened RR-007.
 
+**RR-066 refinement:** RR-065 still excludes retailer/source labels, seller fields, URL hosts/queries, and generated query text from product identity. When a target has a reliable strong model, RR-066 now permits a provider title that omits the brand only if source-derived evidence carries the exact normalized target model, product type agrees, and no explicit conflicting brand/product signal exists.
+
 ---
 
 ### RR-007 OPAQUE COLLECTION-PAGE CLEANUP (2026-06-30)
@@ -2072,7 +2075,7 @@ No new issue ID was opened.
 | **Phase** | Phase 5I retry live validation |
 | **Severity** | Critical |
 | **Title** | Source upgrade can attach same-brand, same-type evidence that omits the target model |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** The conservative Phase 5I retry reached a model-qualified RIDGID target and evaluated live Google Shopping candidates. A candidate carrying the exact `WD4522` model but omitting the RIDGID brand was rejected under the RR-065 brand requirement. A different RIDGID 10-gallon vacuum carried the brand and same product type but no `WD4522` model; it passed identity and donated price, rating, review count, and citation evidence to the 4.5-gallon WD4522 target.
 
@@ -2084,22 +2087,23 @@ No new issue ID was opened.
 
 **Actual:** The wrong 10-gallon RIDGID vacuum passed identity and attached `$139`, rating `4.3`, review count, and citation evidence to the 4.5-gallon WD4522 target. The contaminated target reached the reliability-near set rather than the final exact seven, but the evidence attachment itself was unsafe.
 
-**Current status:** Open. The Phase 5I stop condition fired immediately. All candidate trigger, fallback, trace, replay, and test changes were rolled back; no Phase 5I behavior was committed.
+**Current status:** Fixed on 2026-06-30. Model-qualified targets no longer fall through to broad brand/type token overlap. Source-derived candidate evidence must contain an exact normalized target strong model; an explicit conflicting brand or model still vetoes attachment.
 
-**Suggested fix or next action:** Before retrying Phase 5I, add a narrow deterministic source-upgrade identity guard: when the target has a reliable strong model, brand plus type alone cannot satisfy same-product identity. Require the target model or an equally strong exact product identifier in source-derived candidate title, safe path, or metadata. Preserve RR-065 provenance rules and allow an exact model-bearing candidate whose provider title merely omits the brand when no conflicting brand/product evidence exists.
+**Suggested fix or next action:** Completed. `looksLikeSameProduct` now normalizes model punctuation consistently, evaluates product-type and explicit variant conflicts first, rejects every model-qualified candidate missing the target strong model, rejects explicit conflicting brands/models, and accepts exact model-bearing source evidence when the provider omits the brand and no conflict exists. Non-model-qualified family behavior is unchanged.
 
 **Phase evidence:** Fail-first behavior tests passed 78/80 before implementation. The candidate Phase 5I implementation passed focused tests 113/113, a broad named safety matrix 346/346, typecheck, lint with 0 errors and 3 existing warnings, the full 751/751 suite, and eval. The live stop showed deterministic coverage lacked the same-brand/no-model negative. After rollback, the restored repository passed typecheck, lint with the same warnings, 747/747 tests, and eval with no red flags.
 
-**Issue result:** RR-066 opened as Critical/Open. RR-041/RR-042 remain Needs Investigation. RR-007, RR-008, RR-063, RR-064, and RR-065 remain Fixed. Phase 5J did not start.
+**Resolution proof:** The live-shaped WD4522 versus different 10-gallon RIDGID candidate and a second-category Makita XFD131 omission both fail identity with no price, rating, review count, image, URL, or citation donation. Exact brandless WD4522 evidence attaches; a conflicting-brand WD4522 candidate remains blocked; exact models with punctuation variants, merchant paths, color/count variants, and measurement text remain valid. Fail-first passed 80/84 with only four intended failures. Final focused passed 84/84; broad named safety passed 304/304; full suite passed 752/752; typecheck and eval passed; lint had 0 errors and 3 existing warnings. One live `shop vac` run rejected nearby RIDGID `HD09001`, `HD0919`, and `HD1900` offers while safely attaching exact Armor All `VOM205P` evidence. WD4522 did not recur live.
+
+**Issue result:** RR-066 is Fixed. RR-041/RR-042 remain Needs Investigation and were not changed or retried. RR-007, RR-008, RR-063, RR-064, and RR-065 remain Fixed. Phase 5I and Phase 5J did not start.
 
 ---
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (3 issues)
+### Open (2 issues)
 - RR-054: Fresh fallback responses omit current diagnostic traces
 - RR-061: Product image metadata accepts non-image or irrelevant assets
-- RR-066: Source upgrade accepts same-brand, same-type evidence that omits the target model
 
 ### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
@@ -2108,8 +2112,8 @@ No new issue ID was opened.
 - RR-041: Source-upgrade trigger not firing in Phase 3J live runs
 - RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-### Fixed (56 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055 through RR-060, RR-062 through RR-065
+### Fixed (57 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055 through RR-060, RR-062 through RR-066
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2118,10 +2122,9 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-066** (Critical) — Close the same-brand/model-omission source-upgrade identity hole before another Phase 5I retry.
-2. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent and must remain rolled back until RR-066 is fixed.
-3. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
-4. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
-5. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
-6. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
-7. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
+1. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent; any retry must preserve RR-063 through RR-066 identity safety.
+2. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
+3. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
+4. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
+5. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
+6. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.

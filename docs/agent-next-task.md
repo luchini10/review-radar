@@ -4,32 +4,33 @@ Generated: 2026-06-30
 
 ## Current next task
 
-**RR-066 source-upgrade model-identity safety must be fixed before another Phase 5I retry**
+**RR-066 fixed - Phase 5I retry awaits explicit approval**
 
-The Phase 5I retry stopped and was rolled back after its single approved `shop vac` live proof exposed Critical RR-066.
+RR-066 is Fixed in implementation commit `b3cfab7`.
 
-Target `RIDGID 4.5 Gallon 5.0 Peak HP PRO PACK Wet Dry Vac (WD4522)` rejected an exact-model candidate whose title omitted RIDGID, then accepted `Ridgid 10 Gallon 6.0 Peak HP Stainless Steel Wet/Dry Shop Vacuum`, which carried the brand and product type but no WD4522 model. The wrong product donated price, rating, review count, and citation evidence.
+Model-qualified source-upgrade targets now require exact normalized target-model identity in source-derived candidate evidence. Brand plus product type, size, or capacity cannot donate commerce evidence when that model is absent. Exact model-bearing evidence may omit the provider brand only when product type agrees and no explicit conflicting brand or product signal exists.
 
-The stop condition was honored. All Phase 5I trigger, fallback, trace, replay, and test edits were removed. The restored repository passes 747/747 tests. RR-041 and RR-042 remain Needs Investigation; Phase 5J has not started.
+The live-shaped RIDGID WD4522 wrong-product case and a Makita XFD131 cross-category control are blocked deterministically. Exact brandless WD4522 evidence remains attachable. One focused `shop vac` run rejected nearby RIDGID models and safely attached exact Armor All VOM205P evidence; WD4522 did not recur.
+
+RR-041 and RR-042 remain Needs Investigation. Their Phase 5I trigger/fallback behavior remains rolled back and unchanged. Phase 5I and Phase 5J have not started.
 
 The canonical register now contains 66 issues:
 
 - 9 Critical, 28 High, 24 Medium, 5 Low;
-- 3 Open, 6 Needs Investigation, 56 Fixed, 1 Won't Fix.
+- 2 Open, 6 Needs Investigation, 57 Fixed, 1 Won't Fix.
 
 ## Required next phase
 
 Do not start automatically. The next task, only after explicit instruction, is:
 
-**Fix RR-066 source-upgrade same-brand/model-omission identity safety**
+**Retry Phase 5I for RR-041/RR-042 trigger/fallback reliability**
 
-Add a narrow, fail-first identity guard for model-qualified targets. When a target has a reliable strong model token, brand plus product type alone must not prove same-product identity; source-derived candidate title, safe path, or metadata must carry the target model or an equally strong exact product identifier. Preserve valid exact-model offers whose provider title omits the brand when there is no conflicting brand/product evidence.
+Restore the documented fail-first trigger/fallback cases and re-evaluate the smallest bounded reliability change against the now-fixed RR-063/RR-064/RR-065/RR-066 identity protections. Lower safe attachment rates are expected when candidates omit model proof and must not be treated as a reason to weaken identity.
 
 Do not:
 
-- retry RR-041/RR-042 trigger or fallback behavior in the RR-066 fix;
 - start Phase 5J;
-- weaken RR-063/RR-064/RR-065 source-derived identity rules;
+- weaken RR-063/RR-064/RR-065/RR-066 source-derived identity rules;
 - change Phase 5H final-selection calibration;
 - loosen source-upgrade identity to improve attachment rate;
 - weaken price, citation, product, requirement, product-type, or identity trust gates;
@@ -39,4 +40,4 @@ Reference:
 
 - `docs/RR-Issues-Report.md`
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` latest Phase 5I retry / RR-066 safety-stop entry
+- `docs/qa-loop-results.md` latest RR-066 identity-safety entry

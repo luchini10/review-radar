@@ -5285,3 +5285,77 @@ This is RR-066. RR-065 correctly excludes retailer/source provenance; RR-066 is 
 - Documentation commit: `e2894cf`.
 
 Recommended direction: fix RR-066 narrowly before another Phase 5I retry. For a reliable model-qualified target, source-derived candidate evidence must carry the target model or an equally strong exact identifier; same brand plus product type alone cannot attach commerce evidence.
+
+## <span style="color:green">**Codex QA Update - 2026-06-30 (RR-066 model-qualified identity safety)**</span>
+
+**Verdict: PASS. RR-066 is Fixed deterministically and safely exercised live. RR-041/RR-042 were not changed or retried; Phase 5I and Phase 5J did not start.**
+
+### Confirmed root cause and fail-first
+
+`looksLikeSameProduct` evaluated identity in the unsafe order:
+
+1. it required the target brand before considering exact model identity, so a provider title containing `WD4522` but omitting `RIDGID` was rejected;
+2. if a model-qualified target found no exact model and the candidate exposed no conflicting model token, identity fell through to broad significant-token overlap;
+3. `RIDGID`, wet/dry-vac wording, and other shared product words therefore allowed a different 10-gallon RIDGID vacuum to pass for the 4.5-gallon WD4522 target;
+4. once that single identity gate returned true, price, rating, review count, image, and citation attachment all trusted the same unsafe verdict.
+
+Fail-first source-quality tests passed 80/84. The only four failures were:
+
+- live-shaped WD4522 versus the different 10-gallon RIDGID vacuum;
+- same RIDGID brand and 4.5-gallon capacity with no WD4522 model;
+- exact WD4522 evidence whose provider title omitted the brand;
+- Makita XFD131 versus a same-brand cordless drill with no XFD131 model.
+
+An explicit conflicting-brand `CRAFTSMAN WD4522` control already passed before editing.
+
+### Generalized identity fix
+
+- Product-type and explicit variant/model conflicts remain hard vetoes.
+- A target with strong model identity must find an exact normalized target model in source-derived candidate title, safe path, snippet, or metadata.
+- Brand, product type, size, and capacity cannot replace missing model proof.
+- Model punctuation is normalized consistently, so `E-325`/`E325` and `RPD-411WG`/`RPD411WG` remain equivalent.
+- An exact model-bearing candidate may omit the brand only when no explicit conflicting brand exists.
+- Explicit conflicting brands and models still reject.
+- Non-model-qualified family behavior is unchanged.
+- Query text, generated fallback snippets, retailer labels, seller fields, URL hosts, and URL query parameters remain excluded under RR-051/RR-053/RR-065.
+- No trigger, fallback, discovery, ranking, selection, price, page eligibility, product-type, requirement, citation-retention, or UI behavior changed.
+
+### Deterministic proof
+
+```text
+fail-first source-quality: 80/84 pass; only four intended RR-066 failures
+focused source-quality final: 84/84 pass
+broad named safety matrix: 304/304 pass
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 752/752 pass
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+The exact RR-066 negative attaches no price, rating, review count, image, URL, or citation. Exact brandless WD4522 evidence attaches. Safe same-model color/count variants, normalized punctuation variants, merchant-path identity, product-type gates, RR-063/RR-064/RR-065, RR-007/RR-008, RR-013, RR-022, RR-002/RR-062, Phase 5E, and Phase 5H remain green.
+
+### Single focused live proof
+
+Exactly one `shop vac` save/replay ran.
+
+- Funnel: 16 candidates; 12 after citation verification; 5 after requirements; 5 final.
+- Exact: Armor All VOM205P and RIDGID HD0900.
+- Source-upgrade attempts: 2.
+- RIDGID HD0900 returned 20 candidates and rejected all 20. Samples `HD09001`, `HD0919`, and `HD1900` were identity mismatches; no commerce evidence attached.
+- Armor All VOM205P returned 20 candidates. Exact source-derived VOM205P evidence attached price `$37.17`, rating `4.3`, review count, and citation.
+- No wrong-brand, wrong-model, category, collection, article, support, or documentation evidence attached.
+- WD4522 did not recur, so its exact live shape remains deterministically proven rather than post-fix live-reproduced.
+
+The run used the pre-existing trigger behavior. RR-041/RR-042 trigger/fallback logic was not changed, restored, or claimed fixed.
+
+### Issue outcome
+
+- RR-066: Fixed.
+- RR-041/RR-042: remain Needs Investigation.
+- RR-007, RR-008, RR-063, RR-064, RR-065: remain Fixed.
+- Register: 66 issues; 9 Critical, 28 High, 24 Medium, 5 Low; 2 Open, 6 Needs Investigation, 57 Fixed, 1 Won't Fix.
+- Implementation commit: `b3cfab7`.
+- Documentation commit: pending.
+- Generated baselines, `.claude/`, and live fixtures remain untracked and uncommitted.
+
+Recommended direction: stop. Retry Phase 5I for RR-041/RR-042 only after explicit instruction, preserving the RR-066 requirement that model-qualified targets receive model-level source evidence.

@@ -672,3 +672,17 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - RR-041/RR-042 remain Needs Investigation. No Phase 5I behavior is implemented or committed.
 - RR-007, RR-008, RR-063, RR-064, and RR-065 remain Fixed.
 - Phase 5J has not started.
+
+**RR-066 model-qualified source-upgrade identity safety (2026-06-30)**
+- `looksLikeSameProduct` keeps product-type and explicit variant/model conflicts as hard vetoes.
+- When the target has a strong model, candidate evidence must contain the exact normalized model in source-derived title, safe URL path, snippet, or metadata. Brand, product type, size, capacity, and broad family overlap cannot replace model proof.
+- Model punctuation is normalized consistently. An exact model-bearing candidate may omit the provider brand only when no explicit conflicting brand or product signal exists.
+- Explicit candidate brands and models still conflict normally. Query text, generated snippets, retailer/source labels, seller fields, URL hosts, and URL query parameters remain excluded from identity.
+- Non-model-qualified family behavior is unchanged. The identity verdict continues to gate every source-upgrade commerce field before price, rating, review count, image, and citation attachment.
+- Verification passed 84/84 focused, 304/304 broad safety, and 752/752 full tests. One live `shop vac` run rejected nearby RIDGID models and safely attached exact Armor All VOM205P evidence; WD4522 did not recur.
+
+**Current boundary**
+- RR-066 is Fixed. RR-007, RR-008, RR-063, RR-064, and RR-065 remain Fixed.
+- RR-041/RR-042 remain Needs Investigation. Their trigger/fallback behavior remains rolled back and unchanged.
+- Phase 5I and Phase 5J have not started.
+- Retry Phase 5I only after explicit instruction and never weaken the model-level identity requirement to improve attachment rate.

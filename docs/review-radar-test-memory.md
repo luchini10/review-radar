@@ -963,3 +963,24 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Live-call rule:** The only approved `shop vac` call was used. It safely upgraded Stanley SL18115 and Armor All VOM205P, but unsafely attached a different 10-gallon RIDGID vacuum to the 4.5-gallon WD4522 target. Do not spend another Phase 5I live call until RR-066 is fixed deterministically.
 
 **Status:** RR-066 Open/Critical. RR-041/RR-042 remain Needs Investigation. The final repository contains no Phase 5I retry behavior; Phase 5J must not start.
+
+---
+
+## 2026-06-30 - RR-066 model-qualified identity safety
+
+**Regression contract:**
+- When the target has a strong model, source-upgrade evidence must contain the exact normalized target model in source-derived title, safe path, snippet, or metadata.
+- Same brand, product type, size, capacity, and broad family wording cannot replace missing model proof.
+- Exact model evidence may omit the provider brand only when no explicit conflicting brand/product signal exists.
+- Explicit conflicting brands and models remain hard rejections.
+- Normalize punctuation for model equivalence (`E-325`/`E325`, `RPD-411WG`/`RPD411WG`).
+- Query-derived snippets, retailer prefixes, seller fields, URL hosts, and URL query parameters remain excluded.
+- Non-model-qualified family behavior remains unchanged.
+
+**Required examples:** Keep the live-shaped WD4522 versus different 10-gallon RIDGID negative, same-capacity/no-model negative, exact brandless WD4522 positive, conflicting-brand WD4522 negative, Makita XFD131 same-brand/no-model negative, safe color/count variant positives, merchant-path identity, measurement controls, and RR-063/RR-064/RR-065 regressions green.
+
+**Verification:** Fail-first 80/84; focused final 84/84; broad named safety 304/304; typecheck passed; lint 0 errors with 3 existing warnings; full suite 752/752; eval clean.
+
+**Live call:** Exactly one `shop vac` save/replay. RIDGID HD0900 rejected nearby HD09001, HD0919, and HD1900 offers. Exact Armor All VOM205P evidence attached price, rating, review count, and citation. No unsafe evidence or non-product page attached. WD4522 did not recur.
+
+**Status:** RR-066 Fixed. RR-041/RR-042 remain Needs Investigation. Do not retry Phase 5I until explicitly instructed; preserve this model-proof contract.

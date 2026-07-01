@@ -1221,3 +1221,21 @@ New entries should keep the same format and stay easy to read.
 **Scope:** Documentation only after rollback. The generated baselines and live fixtures remain untracked. Documentation commit: `e2894cf`.
 
 **Next recommended step:** Fix RR-066 narrowly before retrying Phase 5I. A model-qualified target must not accept brand-plus-type evidence that omits the target model.
+
+## Codex Run - 2026-06-30 RR-066 model-qualified identity safety
+
+**Goal:** Fix only RR-066 so a strong-model target cannot accept commerce evidence based on brand plus product type when the candidate omits the target model.
+
+**Root cause:** `looksLikeSameProduct` required target-brand evidence before exact model acceptance, then allowed strong-model targets with no candidate model conflict to fall through to broad token overlap. This rejected the brandless exact WD4522 offer while accepting a different branded RIDGID vacuum with no WD4522 model.
+
+**What changed:** Product-type and variant conflicts remain first. Strong-model targets now require an exact punctuation-normalized target model in source-derived candidate evidence. An omitted provider brand is allowed only for an exact model with no explicit conflicting brand. Non-model family behavior is unchanged.
+
+**Proof:** Fail-first passed 80/84 with only four intended failures. Focused final passed 84/84; broad named safety passed 304/304; typecheck passed; lint had 0 errors and 3 existing warnings; full suite passed 752/752; eval had no red flags.
+
+**Live result:** One `shop vac` run rejected nearby RIDGID HD09001, HD0919, and HD1900 offers for HD0900 and attached nothing. Exact Armor All VOM205P evidence attached price, rating, review count, and citation. No unsafe page or wrong-product evidence attached. WD4522 did not recur.
+
+**Issues:** RR-066 Fixed. RR-041/RR-042 remain Needs Investigation. RR-007, RR-008, RR-063, RR-064, and RR-065 remain Fixed. Totals: 66 issues; 9 Critical, 28 High, 24 Medium, 5 Low; 2 Open, 6 Needs Investigation, 57 Fixed, 1 Won't Fix.
+
+**Scope:** Two implementation/test files plus required docs. No Phase 5I trigger/fallback behavior, Phase 5J work, ranking, discovery, price, eligibility, product-type, requirement, final-selection, citation-retention, or UI change. Implementation commit: `b3cfab7`; documentation commit: pending.
+
+**Next recommended step:** Stop. Retry Phase 5I for RR-041/RR-042 only after explicit instruction and preserve the RR-066 model-level identity requirement.
