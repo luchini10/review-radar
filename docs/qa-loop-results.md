@@ -5428,6 +5428,7 @@ The HART fallback sample included exact-looking `Hart 12 Gallon Wet/Dry Vacuum V
 - RR-007, RR-008, RR-063, RR-064, RR-065, and RR-066: remain Fixed.
 - Register: 67 issues; 9 Critical, 28 High, 25 Medium, 5 Low; 3 Open, 4 Needs Investigation, 59 Fixed, 1 Won't Fix.
 - Implementation commit: `57f1a69`.
+- Documentation commit: `2667824`.
 - Generated baselines, `.claude/`, and all live fixtures remain untracked and uncommitted.
 
 Recommended direction: fix RR-067 narrowly before Phase 5J. Reuse measurement-aware brand handling for candidate metadata while retaining genuine HP and explicit-brand conflict controls.

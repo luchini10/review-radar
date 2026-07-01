@@ -1292,8 +1292,9 @@ Stop. Do not retry Phase 5I or start Phase 5J without explicit instruction.
 - Stop condition hit: No. The live run exposed a safe false-negative, not unsafe evidence, wrong-product attachment, page leakage, suspicious price, or ranking regression.
 - New issue IDs opened: RR-067, Medium/Open.
 - Existing issue IDs updated: RR-041 and RR-042 changed from Needs Investigation to Fixed. RR-007, RR-008, RR-063, RR-064, RR-065, and RR-066 remain Fixed.
-- Docs committed: Pending in this record.
+- Docs committed: Yes.
 - Implementation commit: `57f1a69`.
+- Documentation commit: `2667824`.
 - Verification: fail-first 110/121 with only 11 intended failures; focused final 121/121; focused source-quality 90/90; broad named safety 342/342; typecheck passed; lint 0 errors with 3 existing warnings; full suite 760/760; eval clean.
 - Live validation: exactly one `shop vac` call. RIDGID WD1060 and DEWALT DXV09P attached exact evidence safely. HART VOC1212PW used the zero-primary fallback, attached nothing, and exposed RR-067 because provider metadata labeled horsepower `HP` as brand identity.
 - Scope: No discovery, ranking, final-selection, price, page eligibility, product-type, requirement, product-evidence identity, source-upgrade model identity, citation-retention, or UI behavior changed. Phase 5J did not start.
