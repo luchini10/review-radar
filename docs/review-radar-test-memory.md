@@ -1089,3 +1089,28 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Live call:** Exactly one `shop vac` save/replay. Two exact and one near Armor All utility wet/dry vacuum remained. No household floor cleaner survived. Exact AA255W evidence attached rating, review count, and citation safely. The normal path ran, so RR-054 fallback traces remain deterministic-only. Two product images were visually verified; one context-matched image host returned HTTP 403 to the diagnostic fetch and was not visually inspectable.
 
 **Status:** RR-068 Fixed. Phase 6 not started. Phase 5 closeout remains next only after explicit instruction.
+
+---
+
+## 2026-07-01 - Phase 5 closeout regression baseline
+
+**Closeout baseline:**
+- Focused high-risk matrix: 448/448 across 39 suites.
+- Full suite: 781/781 across 117 suites.
+- Typecheck: pass.
+- Lint: 0 errors, 3 pre-existing warnings.
+- Eval pipeline: no red-flag issues.
+
+**Covered protections:** RR-007/RR-008, RR-041/RR-042, RR-054, RR-061, RR-063 through RR-068, RR-002/RR-062, RR-013, RR-022, Phase 5E product-type/requirement behavior, and Phase 5H final-selection behavior.
+
+**Fixture guidance:**
+- Saved live fixtures are historical provider snapshots, not automatic current-code executions.
+- Use replay to verify trace compatibility and inspect saved funnel evidence.
+- When a fixture predates a later identity or filtering fix, run the saved result through the relevant current-code validator before drawing a current-status conclusion.
+- The current `shop vac` fixture is post-RR-068 and contains no household floor cleaner.
+- The `dog food`, `electric toothbrush`, `air purifier`, and `dash cam` fixtures include useful historical traces but predate some later fields or guards.
+- RR-054 fresh fallback diagnostics remain deterministic-only until an approved live request actually enters fallback.
+
+**Cost rule:** No live search ran for closeout. Do not refresh fixtures or run a broad baseline merely to replace historical snapshots; require an approved measurement question and budget.
+
+**Status:** Phase 5 closed. RR-014, RR-015, RR-037, and RR-045 remain intentional measurement/provider-variance investigations for later planning. Phase 6 has not started.

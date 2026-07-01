@@ -16,17 +16,20 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **RR-068 cleanup complete. Phase 5 closeout requires explicit instruction.**
+Current phase: **Phase 5 closed. Phase 6 readiness planning requires explicit instruction.**
 
-RR-068 is Fixed in implementation commit `cc2da0a`. Shared product-type intent now separates conventional shop/utility wet-dry vacuums from household floor washers, vacuum mops, hard-floor cleaners, and carpet/spot/upholstery cleaners.
+Phase 5 closeout passed with 448/448 focused high-risk tests and 781/781 full tests. Typecheck and eval passed; lint reported 0 errors and 3 existing warnings. The register has 68 issues: 63 Fixed, 4 Needs Investigation, 1 Won't Fix, and 0 Open.
 
-The saved Phase 5J fixture now removes all four CrossWave cards while retaining RIDGID/Vacmaster utility vacs. One fresh `shop vac` run returned only conventional Armor All utility wet/dry vacuums. RR-054/RR-061 and all prior safety protections remain green.
+RR-014, RR-015, RR-037, and RR-045 intentionally remain Needs Investigation for later measurement or provider-variance work. They do not block Phase 5 closure.
 
 Recommended next phase:
 
-- Await explicit instruction. Run Phase 5 closeout/remeasurement from the master plan.
+- Await explicit instruction for Phase 6A planning/readiness only.
+- Define fixed queries, budget, stop conditions, fixture policy, and success metrics before running the reliability gauntlet.
 - Preserve RR-068, RR-061/RR-054, RR-041/RR-042, RR-067, and all RR-063 through RR-066 protections.
-- Do not start or create the Phase 6 reliability gauntlet yet.
+- Do not create Phase 6 artifacts or run live searches before that instruction.
+
+Note: historical sections in this document that use "Phase 6" for earlier product-type work retain their original labels. They do not mean the future reliability Phase 6 has started.
 
 ---
 
@@ -1357,3 +1360,22 @@ Stop. Do not start Phase 6. Address RR-068 only after explicit instruction, then
 - Documentation commit: `12402b3`.
 
 Stop. Do not start Phase 6. Run Phase 5 closeout only after explicit instruction.
+
+### Phase 5 closeout and remeasurement completion record
+
+- Completed step: Phase 5 closeout, deterministic remeasurement, saved-fixture reassessment, issue-register audit, and readiness documentation.
+- Next step: Phase 6A planning/readiness only after explicit instruction. Do not execute the reliability gauntlet yet.
+- Diagnostic-only: Yes. No production code or app behavior changed.
+- Stop condition hit: No. All deterministic checks passed, no fixed issue regressed, and no new blocker was found.
+- New issue IDs opened: None.
+- Existing issue IDs updated: No status changes. RR-014, RR-015, RR-037, and RR-045 intentionally remain Needs Investigation; all other Phase 5 protections remain Fixed.
+- Issue totals: 68 total; 9 Critical, 29 High, 25 Medium, 5 Low; 63 Fixed, 4 Needs Investigation, 1 Won't Fix, 0 Open.
+- Verification: focused high-risk matrix 448/448 across 39 suites; typecheck passed; lint 0 errors with 3 existing warnings; full suite 781/781 across 117 suites; eval reported no red flags.
+- Fixture proof: current `shop vac` replay has no household floor cleaner; historical dog-food identity conflict is removed by current-code reassessment; older fixture traces remain archival where later fields are absent.
+- Live validation: None. No API calls or broad baseline ran.
+- Scope: Documentation and verification only. No ranking, discovery, source-upgrade, identity, price, eligibility, image, product-type, final-selection, UI, or API behavior changed.
+- Uncommitted artifacts: `.claude/`, two generated baseline files, and 22 live fixtures remain untracked and excluded from the closeout commit.
+- Docs committed: Pending.
+- Documentation commit: Pending.
+
+Stop. Phase 5 is closed. Do not start Phase 6 without explicit instruction.

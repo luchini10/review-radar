@@ -5654,3 +5654,45 @@ Several valid-looking RIDGID/Shop-Vac titles did not survive the later strict fi
 - Phase 6 was not started.
 
 Recommended direction: run Phase 5 closeout/remeasurement only after explicit instruction. Reassess RR-014, RR-015, RR-037, and RR-045 from fresh evidence before any Phase 6 work.
+
+## <span style="color:green">**Codex QA Update - 2026-07-01 (Phase 5 closeout and remeasurement)**</span>
+
+**Verdict: PASS. Phase 5 is closed and ready for a separately approved Phase 6 planning step. Phase 6 did not start.**
+
+### Issue and documentation audit
+
+- Verified 68 unique issue IDs through RR-068.
+- Severity totals: 9 Critical, 29 High, 25 Medium, 5 Low.
+- Status totals: 63 Fixed, 4 Needs Investigation, 1 Won't Fix, 0 Open.
+- RR-054, RR-061, and RR-068 are Fixed.
+- RR-014, RR-015, RR-037, and RR-045 intentionally remain Needs Investigation for coverage, stability, or provider-variance measurement. They are not unresolved Phase 5 behavior blockers.
+- No issue status changed and no new issue opened.
+
+### Deterministic closeout proof
+
+```text
+focused high-risk Phase 5 matrix: 448/448 pass across 39 suites
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 781/781 pass across 117 suites
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+The focused matrix covered RR-007/RR-008, RR-041/RR-042, RR-054, RR-061, RR-063 through RR-068, RR-002/RR-062, RR-013, RR-022, Phase 5E, and Phase 5H. `ab-ranking.mjs` was not rerun because ranking was untouched and the citation-strength/final-selection regressions were already included.
+
+### Saved-fixture reassessment
+
+- `shop vac`: 17 candidates, 12 after citation verification, 3 final; all three were conventional Armor All utility wet/dry vacuums. No CrossWave or household floor cleaner survived. Exact AA255W source-upgrade evidence attached safely.
+- `dog food`: replay retains an archival pre-fix recipe conflict, but current `filterResultToVerifiedCitations` reassessment removes every conflicting citation while retaining safe citations.
+- `electric toothbrush`: both archived source upgrades attached exact same-model evidence. The fixture predates current source-upgrade decision fields.
+- `air purifier` and `dash cam`: replayed successfully and preserved historical source-upgrade diagnostics. Some traces predate later identity/query safety fields and are treated as archival, not fresh current-code behavior.
+- RR-054 fallback output remains deterministic-only because the representative saved requests used the normal recommendation path.
+
+### Scope and artifacts
+
+- No live search, API call, broad baseline, or Phase 6 work ran.
+- No production code or app behavior changed.
+- Tracked worktree was clean before documentation updates.
+- `.claude/`, `.rr_baseline.json`, `.rr_baseline.md`, and 22 saved live fixture files remain untracked and excluded from the docs-only closeout commit.
+
+Recommended direction: approve Phase 6A planning/readiness only. Define the fixed query set, cost ceiling, stop conditions, fixture policy, and success metrics before any live reliability execution.

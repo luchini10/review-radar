@@ -13,6 +13,12 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-01
 
+### Codex - Phase 5 closeout and remeasurement
+- Closed Phase 5 after auditing all 68 issues and confirming 63 Fixed, 4 intentional Needs Investigation, 1 Won't Fix, and 0 Open.
+- Reverified the high-risk Phase 5 protections with 448/448 focused tests and 781/781 full tests. Typecheck and eval passed; lint reported 0 errors and 3 existing warnings.
+- Replayed representative saved fixtures without live API spend. The current shop-vac fixture contains only conventional utility vacuums; older fixtures are explicitly treated as historical snapshots where they predate later trace or identity fields.
+- No issue status, production code, app behavior, or ranking/discovery/trust behavior changed. Phase 6 did not start.
+
 ### Codex - RR-068 shop-vac versus household floor-cleaner safety
 - Added shared `shop_vac` and `household_floor_cleaner` product-type intents so wet/dry household floor washers, vacuum mops, hard-floor cleaners, and carpet/spot/upholstery cleaners cannot become exact shop-vac products merely because they use `wet dry vacuum` wording.
 - Strong household subtype identity overrides generic wet/dry wording for shop-vac requests. Conventional shop/utility/garage/jobsite wet-dry vac signals remain valid, and explicit household floor-cleaner searches remain supported.

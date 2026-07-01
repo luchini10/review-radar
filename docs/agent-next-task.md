@@ -4,40 +4,36 @@ Generated: 2026-07-01
 
 ## Current next task
 
-**RR-068 fixed - Phase 5 closeout is next**
+**Phase 5 closed - Phase 6 readiness planning requires explicit instruction**
 
-RR-068 is Fixed in implementation commit `cc2da0a`.
+Phase 5 closeout passed without behavior changes. The focused high-risk matrix passed 448/448, the full suite passed 781/781, typecheck and eval passed, and lint reported 0 errors with 3 existing warnings.
 
-The shared product-type registry now separates conventional shop/utility wet-dry vacuums from household floor washers, vacuum mops, hard-floor cleaners, and carpet/spot/upholstery cleaners. Strong household subtype evidence overrides incidental `wet dry vacuum` wording for shop-vac intent.
-
-Conventional utility vacs remain valid, and explicit `hard floor cleaner`, `vacuum mop`, `wet dry mop`, `floor washer`, and product-family searches remain valid. Discovery type evidence excludes retailer labels and query-derived fallback snippets.
-
-The saved Phase 5J fixture reassessment removed all four CrossWave cards while retaining RIDGID and Vacmaster utility vacs. One fresh `shop vac` run returned two exact and one near product, all conventional Armor All utility wet/dry vacuums.
-
-RR-054/RR-061 and RR-007/RR-008/RR-041/RR-042/RR-063 through RR-067 remain green. No ranking, final-selection, price, image, page-eligibility, source-upgrade, or UI behavior changed.
-
-The canonical register now contains 68 issues:
+The canonical register contains 68 issues:
 
 - 9 Critical, 29 High, 25 Medium, 5 Low;
 - 0 Open, 4 Needs Investigation, 63 Fixed, 1 Won't Fix.
 
+RR-014, RR-015, RR-037, and RR-045 intentionally remain Needs Investigation. They concern leader coverage, stability, or live provider variance and are not Phase 5 blockers.
+
+Saved-fixture replay confirmed the current `shop vac` fixture has no household floor cleaner. Older fixtures remain historical snapshots and may omit later trace fields; current deterministic tests and current-code reassessment are authoritative for the completed safety fixes. No closeout live search ran.
+
 ## Required next task
 
-Do not start automatically. The next task is Phase 5 closeout/remeasurement from the master Phase 5 plan.
+Do not start automatically. Await a separate Phase 6A planning/readiness instruction.
 
-Reassess RR-014, RR-015, RR-037, and RR-045 from fresh evidence before changing their statuses. Prefer no app-code changes unless closeout reveals a new deterministic bug.
+The planning step should define the reliability gauntlet's fixed query set, budget, stop conditions, fixture policy, and success metrics before any live execution. It should reassess RR-014, RR-015, RR-037, and RR-045 from fresh evidence without assuming a status change.
 
 Do not:
 
-- start Phase 6 or create its reliability gauntlet;
+- start Phase 6 execution or create reliability-gauntlet artifacts without explicit approval;
 - alter the completed RR-068, RR-061, or RR-054 behavior without a proven regression;
 - change ranking, discovery breadth, final selection, price, citation, or source-upgrade behavior during closeout without a new scoped instruction;
 - weaken RR-063 through RR-067 source-derived identity rules;
 - weaken price, citation, product, requirement, product-type, or identity trust gates;
-- run another live search or full baseline without approval.
+- run a live search or full baseline without approval.
 
 Reference:
 
 - `docs/RR-Issues-Report.md`
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` latest RR-068 entry
+- `docs/qa-loop-results.md` latest Phase 5 closeout entry

@@ -744,3 +744,15 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 **Current boundary**
 - RR-068 is Fixed. RR-054/RR-061 and RR-007/RR-008/RR-041/RR-042/RR-063 through RR-067 remain Fixed.
 - Phase 6 has not started. Phase 5 closeout/remeasurement is next only after explicit instruction.
+
+## 13. Phase 5 closeout status (2026-07-01)
+
+- **Verdict:** Phase 5 is closed. No production behavior changed during closeout.
+- **Issue register:** 68 total; 9 Critical, 29 High, 25 Medium, 5 Low; 63 Fixed, 4 Needs Investigation, 1 Won't Fix, 0 Open.
+- **Intentional carryovers:** RR-014 leader coverage, RR-015 run-to-run stability, RR-037 RIDGID live candidate-pool variance, and RR-045 Tapo provider coverage remain measurement/provider questions. They are not Phase 5 behavior blockers.
+- **Deterministic baseline:** 448/448 focused high-risk tests, 781/781 full tests, clean typecheck, lint with 0 errors and 3 existing warnings, and eval with no red flags.
+- **Fixture boundary:** Saved live fixtures are historical snapshots. Replay proves compatibility and preserves captured funnel evidence; current-code validators and deterministic regressions determine whether later fixes remain effective.
+- **Cost boundary:** No closeout live search or broad baseline ran.
+- **Next step:** Phase 6A planning/readiness requires explicit instruction. Define its query set, budget, stop conditions, fixture policy, and success metrics before execution.
+
+Historical references elsewhere in this document to an earlier "Phase 6" product-type hardening pass retain their original project labels. They do not indicate that the future reliability Phase 6 has started.
