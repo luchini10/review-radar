@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 5J
+## Compiled for AI Agent Consumption — Phase 0 through RR-068 cleanup
 
 **Generated:** 2026-07-01
-**Scope:** All phases from initial measurement harness through the completed Phase 5J image/diagnostic work and its RR-068 live finding
+**Scope:** All phases from initial measurement harness through the completed RR-068 product-type safety cleanup
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -18,9 +18,9 @@
 | High | 29 |
 | Medium | 25 |
 | Low | 5 |
-| Open | 1 |
+| Open | 0 |
 | Needs Investigation | 4 |
-| Fixed | 62 |
+| Fixed | 63 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -79,6 +79,7 @@
 | Phase 5I retry — trigger/fallback reliability | 1 |
 | RR-067 brand/unit identity cleanup | 0 |
 | Phase 5J — Asset quality and fallback diagnostics | 1 |
+| RR-068 product-type safety mini-phase | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -2154,7 +2155,7 @@ No new issue ID was opened.
 | **Phase** | Phase 5J live proof |
 | **Severity** | High |
 | **Title** | Bissell CrossWave floor cleaners can rank as exact shop-vac products |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** The single Phase 5J `shop vac` live proof returned multiple Bissell CrossWave floor-cleaning appliances as exact results. The seven-card exact slate included CrossWave Cordless Max 2554A, CrossWave Multi-Surface 1785A, CrossWave All-in-One 1785A, and CrossWave HF3 3649A. These are household multi-surface wet/dry floor cleaners, not conventional shop vacuums or wet/dry utility vacs.
 
@@ -2166,9 +2167,13 @@ No new issue ID was opened.
 
 **Actual:** Four CrossWave floor-cleaner cards passed citation verification, requirement filtering, revalidation, and exact selection. The #1 exact result was a CrossWave Cordless Max.
 
-**Current status:** Open. The Phase 5J diff did not change discovery, product-type intent/matching, requirement validation, ranking, or final selection. RR-068 is therefore an adjacent pre-existing coverage gap exposed by the approved live check, not caused by the RR-061/RR-054 implementation.
+**Current status:** Fixed. The Phase 5J diff did not change discovery, product-type intent/matching, requirement validation, ranking, or final selection. RR-068 was therefore an adjacent pre-existing coverage gap exposed by the approved live check, not caused by the RR-061/RR-054 implementation.
 
 **Suggested fix or next action:** Before Phase 6, run a narrow fail-first product-type phase for the generalized utility wet/dry vacuum versus floor-washing/mopping appliance distinction. Test at discovery and revalidation across unrelated brands; preserve valid conventional shop vacs and do not add Bissell-specific rules.
+
+**RR-068 resolution:** The shared product-type registry now distinguishes `shop_vac` intent from `household_floor_cleaner` intent. Strong household identities such as floor washers, vacuum mops, hard-floor cleaners, carpet/spot/upholstery cleaners, and representative cross-brand floor-cleaner families override incidental `wet dry vacuum` wording for shop-vac requests. Conventional shop/utility/garage/jobsite wet-dry vac signals remain valid, and explicit floor-cleaner searches continue to accept the household products. Discovery type evidence excludes retailer labels and query-derived fallback snippets. The existing discovery prefilter and requirement revalidation consume the same verdict; ranking and final selection were not changed.
+
+**RR-068 proof:** Fail-first passed 118/124 with only six intended RR-068 failures. Focused final passed 125/125, broad safety passed 455/455, the full suite passed 781/781, typecheck and eval passed, and lint reported 0 errors with 3 existing warnings. Revalidating the saved Phase 5J fixture removed all four CrossWave products from exact and near results while retaining RIDGID HD0900 and two Vacmaster utility vacuums as exact. One fresh `shop vac` run returned two exact and one near product, all conventional Armor All utility wet/dry vacuums; no household floor cleaner appeared. Exact AA255W source-upgrade evidence attached safely. RR-068 is Fixed.
 
 **Phase 5J result:** RR-054 and RR-061 are Fixed. Focused tests passed 174/174, the broad named safety matrix passed 417/417, the full suite passed 772/772, typecheck and eval passed, and lint reported 0 errors with 3 existing warnings. The one live `shop vac` run showed seven non-empty image URLs with image responses and no logo, placeholder, category, article, support, or HTML page used as an image. The normal pipeline ran, so RR-054 live fallback behavior remains deterministic-only. RR-068 was documented and not fixed. Phase 6 did not start.
 
@@ -2176,16 +2181,16 @@ No new issue ID was opened.
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (1 issue)
-- RR-068: Bissell CrossWave floor cleaners can rank as exact shop-vac products
+### Open (0 issues)
+- None.
 
 ### Needs Investigation (4 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-### Fixed (62 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-067
+### Fixed (63 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-068
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2194,7 +2199,6 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-068** (High) - Separate shop-vac utility products from household wet/dry floor cleaners before Phase 6.
-2. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
-3. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
-4. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
+1. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
+2. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
+3. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.

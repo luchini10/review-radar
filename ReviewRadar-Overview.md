@@ -730,3 +730,17 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - RR-054 and RR-061 are Fixed.
 - High RR-068 is Open: Bissell CrossWave household floor cleaners appeared as exact shop-vac results. Phase 5J did not touch the product-type pipeline, and RR-068 was not fixed.
 - Phase 6 has not started. Resolve RR-068 and complete Phase 5 closeout before any Phase 6 reliability work.
+
+**RR-068 - shop-vac versus household floor-cleaner type safety (2026-07-01)**
+- RR-068 is Fixed. `productTypeIntent` now has shared `shop_vac` and `household_floor_cleaner` intent classes.
+- Strong household subtype identity includes floor washers, wet/dry or vacuum mops, hard-floor cleaners, carpet/spot/upholstery cleaners, and representative cross-brand household floor-cleaner families. These signals override incidental `wet dry vacuum` words for shop-vac requests.
+- Conventional shop, utility, garage, workshop, contractor, drum, and jobsite wet-dry vacuum evidence remains exact-eligible. Gallon/peak-HP utility context remains a positive signal.
+- Explicit household searches such as `hard floor cleaner`, `vacuum mop`, `wet dry mop`, `floor washer`, and household product-family searches remain supported.
+- Discovery product-type evidence uses the source title, product brand/specs, and source-derived snippets. It excludes retailer labels, assigned category, hosts, URL query parameters, and query-derived fallback snippets.
+- The shared type verdict runs in the existing Serper prefilter and requirement revalidation. No ranking, final-selection, price, image, page-eligibility, source-upgrade, identity, or UI behavior changed.
+- Verification passed 125/125 focused, 455/455 broad safety, and 781/781 full tests; typecheck and eval passed; lint reported 0 errors and 3 existing warnings.
+- The saved Phase 5J fixture now removes all four CrossWave cards while retaining RIDGID and Vacmaster utility vacuums. One fresh `shop vac` run returned only conventional Armor All utility wet/dry vacuums.
+
+**Current boundary**
+- RR-068 is Fixed. RR-054/RR-061 and RR-007/RR-008/RR-041/RR-042/RR-063 through RR-067 remain Fixed.
+- Phase 6 has not started. Phase 5 closeout/remeasurement is next only after explicit instruction.

@@ -8,6 +8,28 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-07-01 RR-068
+
+**Goal:** Fix only the household floor-cleaner product-type leak in shop-vac searches before Phase 6.
+
+**What it checked:** Proved that no shop-vac product-type rule existed. Discovery accepted CrossWave/Floor ONE candidates through broad wet/dry vocabulary, and requirement validation fell back to category-term matching that could use the assigned category.
+
+**What it changed:** Added shared `shop_vac` and `household_floor_cleaner` intent classes. Strong floor-washer, vacuum-mop, hard-floor-cleaner, carpet/spot/upholstery-cleaner, and cross-brand floor-cleaner-family identity now vetoes shop-vac exact eligibility even when a title also says `wet dry vacuum`. Discovery type evidence excludes retailer labels and query-derived snippets.
+
+**Why the change matters:** Household floor-washing appliances no longer masquerade as utility wet/dry vacuums. Real shop/garage/jobsite wet-dry vacuums still pass, and explicit floor-cleaner searches still work.
+
+**Tests run:** Fail-first 118/124 with six intended failures; focused final 125/125; broad safety 455/455; full suite 781/781; typecheck passed; lint 0 errors with 3 existing warnings; eval clean.
+
+**Fixture proof:** Revalidating the Phase 5J fixture removed all four CrossWave products from exact and near results while keeping RIDGID HD0900 and two Vacmaster utility vacuums exact.
+
+**Live checks run:** Exactly one `shop vac` save/replay. Two exact and one near result remained, all conventional Armor All utility wet/dry vacuums. Exact AA255W source-upgrade evidence attached safely. No household floor cleaner, unsafe page, suspicious price, or wrong-model evidence appeared.
+
+**Scope:** RR-068 only. RR-054/RR-061 and RR-007/RR-008/RR-041/RR-042/RR-063 through RR-067 remain green. No ranking, final-selection, price, image, general page-eligibility, source-upgrade, or UI behavior changed. Phase 6 was not started.
+
+**Implementation commit:** `cc2da0a`.
+
+**Next recommended step:** Run Phase 5 closeout/remeasurement only after explicit instruction; do not start Phase 6 automatically.
+
 ## Codex Run - 2026-07-01 Phase 5J
 
 **Goal:** Fix RR-061 product-image safety and RR-054 fallback debug visibility only, without starting Phase 6.

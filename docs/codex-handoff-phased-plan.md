@@ -16,16 +16,16 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 5J complete. RR-068 is the next required safety task before Phase 6.**
+Current phase: **RR-068 cleanup complete. Phase 5 closeout requires explicit instruction.**
 
-RR-061 and RR-054 are Fixed in implementation commit `708ee98`. Product images now require safe asset shape plus source-derived same-product context, and every recommendation-producing Serper fallback preserves the diagnostics it actually ran in debug mode.
+RR-068 is Fixed in implementation commit `cc2da0a`. Shared product-type intent now separates conventional shop/utility wet-dry vacuums from household floor washers, vacuum mops, hard-floor cleaners, and carpet/spot/upholstery cleaners.
 
-The single live `shop vac` proof showed real image responses with no page/logo/category/support image. It separately opened High RR-068 because four Bissell CrossWave household floor cleaners reached exact shop-vac cards. Phase 5J did not touch the product-type pipeline, and RR-068 was not fixed.
+The saved Phase 5J fixture now removes all four CrossWave cards while retaining RIDGID/Vacmaster utility vacs. One fresh `shop vac` run returned only conventional Armor All utility wet/dry vacuums. RR-054/RR-061 and all prior safety protections remain green.
 
 Recommended next phase:
 
-- Await explicit instruction. Diagnose/fix RR-068 narrowly before Phase 6.
-- Preserve RR-061/RR-054, RR-041/RR-042, RR-067, and all RR-063 through RR-066 protections.
+- Await explicit instruction. Run Phase 5 closeout/remeasurement from the master plan.
+- Preserve RR-068, RR-061/RR-054, RR-041/RR-042, RR-067, and all RR-063 through RR-066 protections.
 - Do not start or create the Phase 6 reliability gauntlet yet.
 
 ---
@@ -1338,3 +1338,22 @@ Stop. Do not start Phase 5J without explicit instruction.
 - Documentation commit: `49c9711`.
 
 Stop. Do not start Phase 6. Address RR-068 only after explicit instruction, then complete Phase 5 closeout.
+
+### RR-068 product-type safety completion record
+
+- Completed step: Narrow RR-068 shop-vac versus household floor-cleaner product-type fix.
+- Next step: Phase 5 closeout/remeasurement only after explicit instruction. Do not start Phase 6.
+- Diagnostic-only: No. The phase reproduced and fixed RR-068.
+- Stop condition: No confirmed stop condition. The live result was thin, but direct current-code checks classify every dropped valid utility-vac title as exact; the new rule did not overblock them.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-068 changed from Open to Fixed. RR-054/RR-061 and RR-007/RR-008/RR-041/RR-042/RR-063 through RR-067 remain Fixed.
+- Implementation: shared household-floor-cleaner and shop-vac intent classes; strong household subtype identity vetoes shop-vac exact eligibility; source-derived discovery evidence excludes retailer labels and query-derived snippets.
+- Verification: fail-first 118/124 with six intended failures; focused final 125/125; broad safety 455/455; typecheck passed; lint 0 errors and 3 existing warnings; full suite 781/781; eval clean.
+- Fixture proof: all four saved CrossWave cards are removed from exact/near; RIDGID HD0900 and two Vacmaster utility vacs remain exact.
+- Live validation: exactly one `shop vac` call. Two exact and one near conventional Armor All utility wet/dry vac remained; no household floor cleaner appeared. Exact AA255W evidence attached safely.
+- Scope: No ranking, final selection, source-upgrade trigger/fallback or identity, price, image, general page eligibility, citation policy, or UI behavior changed. Phase 6 was not started.
+- Docs updated: Yes; all required tracking documents were updated.
+- Implementation commit: `cc2da0a`.
+- Documentation commit: pending finalization.
+
+Stop. Do not start Phase 6. Run Phase 5 closeout only after explicit instruction.

@@ -1066,3 +1066,26 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **New issue:** RR-068 (High/Open). Four Bissell CrossWave household wet/dry floor cleaners reached exact shop-vac results. This is a product-type coverage regression outside Phase 5J; no fix was attempted.
 
 **Status:** RR-054/RR-061 Fixed. RR-068 Open. Phase 6 not started.
+
+---
+
+## 2026-07-01 - RR-068 shop-vac product-type contract
+
+**Issue fixed:** RR-068.
+
+**Regression contract:**
+- For shop-vac, wet-dry-vac, utility-vac, garage-vac, workshop-vac, contractor-vac, and jobsite-vac intent, household floor washers are wrong product type.
+- Strong household signals include floor washer/cleaner, hard-floor cleaner, vacuum or wet/dry mop, carpet cleaner, spot cleaner, upholstery cleaner, multi-surface household cleaner, and representative cross-brand floor-cleaner families.
+- Household subtype identity overrides incidental `wet dry vacuum` wording.
+- Preserve real wet/dry utility vacuums across RIDGID, Shop-Vac, Vacmaster, Craftsman, DEWALT, Stanley, Armor All, Milwaukee, HART, and unrelated brands.
+- Explicit household floor-cleaner searches must continue accepting those products.
+- Discovery type evidence must exclude assigned category, retailer/seller labels, hosts, URL query parameters, and query-derived fallback snippets.
+- The shared verdict must reject at discovery and revalidation; do not use ranking or final-selection changes.
+
+**Verification:** Fail-first 118/124 with six intended failures; focused final 125/125; broad named safety 455/455; typecheck passed; lint 0 errors with 3 existing warnings; full suite 781/781; eval clean.
+
+**Fixture reassessment:** The saved Phase 5J `shop vac` fixture loses all four CrossWave exact cards and retains RIDGID HD0900 plus two Vacmaster utility vacuums as exact. CrossWave does not move to near.
+
+**Live call:** Exactly one `shop vac` save/replay. Two exact and one near Armor All utility wet/dry vacuum remained. No household floor cleaner survived. Exact AA255W evidence attached rating, review count, and citation safely. The normal path ran, so RR-054 fallback traces remain deterministic-only. Two product images were visually verified; one context-matched image host returned HTTP 403 to the diagnostic fetch and was not visually inspectable.
+
+**Status:** RR-068 Fixed. Phase 6 not started. Phase 5 closeout remains next only after explicit instruction.

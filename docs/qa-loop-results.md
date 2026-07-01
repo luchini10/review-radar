@@ -5581,3 +5581,76 @@ These are household wet/dry floor-cleaning/mopping appliances, not conventional 
 - Generated baselines, `.claude/`, and live fixtures remain untracked and uncommitted.
 
 Recommended direction: diagnose and fix RR-068 narrowly before Phase 6. Use a generalized product-type distinction between conventional wet/dry utility vacuums and household wet/dry floor washers; do not add Bissell-specific logic.
+
+## <span style="color:green">**Codex QA Update - 2026-07-01 (RR-068 shop-vac product-type safety)**</span>
+
+**Verdict: PASS. RR-068 is Fixed deterministically and live. Phase 6 did not start.**
+
+### Confirmed root cause and fail-first
+
+`productTypeIntent.ts` had no `shop_vac` rule and no household floor-cleaner class. At discovery, CrossWave/Floor ONE candidates therefore passed through generic category relevance because their source titles used broad `wet dry vacuum` wording. At requirement validation, no type rule existed, so category checking fell back to term matching that treated the assigned `shop vac` category as a soft signal. Final selection received those products as exact-eligible and did not cause the error.
+
+The fail-first run passed 118/124. The six intended failures proved:
+
+- CrossWave, Floor ONE, HydroVac, FloorMate, and carpet/spot/upholstery cleaners were not rejected for shop-vac intent;
+- conventional utility vacs did not receive an explicit product-type verdict;
+- explicit household floor-cleaner requests had no specific type rule;
+- shared type matching accepted the wrong subtype;
+- requirement revalidation kept CrossWave exact;
+- Serper prefilter retained CrossWave and Floor ONE.
+
+### Generalized fix
+
+- Added shared `household_floor_cleaner` and `shop_vac` intent classes.
+- Strong household subtype identity covers floor washers/cleaners, hard-floor cleaners, vacuum/wet-dry mops, carpet/spot/upholstery cleaners, multi-surface household cleaners, and representative product families across multiple brands.
+- Strong household identity overrides incidental `wet dry vacuum` wording for shop-vac intent.
+- Conventional shop/utility/garage/workshop/contractor/jobsite/drum wet-dry vacuum evidence remains valid, including gallon/peak-HP utility context.
+- Explicit `hard floor cleaner`, `vacuum mop`, `wet dry mop`, `floor washer`, and household product-family searches remain valid.
+- Discovery product-type evidence excludes retailer labels and query-derived fallback snippets. Assigned category, hosts, and URL query parameters are not used.
+- The existing shared verdict propagates through the Serper prefilter and requirement revalidation. Ranking and final selection were not changed.
+
+### Deterministic and fixture proof
+
+```text
+fail-first: 118/124 pass; only 6 intended RR-068 failures
+focused final: 125/125 pass
+broad named safety matrix: 455/455 pass
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 781/781 pass
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+Revalidating the saved Phase 5J fixture against current code:
+
+- removed all four CrossWave products from exact and near results;
+- retained RIDGID HD0900 and two Vacmaster conventional utility vacuums as exact;
+- used no ranking or final-selection adjustment.
+
+The broad matrix retained RR-054/RR-061, RR-007/RR-008, RR-041/RR-042, RR-063 through RR-067, RR-002/RR-062, RR-013, Phase 5E, and Phase 5H behavior.
+
+### Single focused live proof
+
+Exactly one `shop vac` save/replay ran.
+
+- Funnel: 17 pool, 12 after citation verification, 3 after strict filtering/revalidation, 3 final.
+- Final: two exact and one near, all Armor All conventional utility wet/dry vacuums.
+- No CrossWave, Floor ONE, HydroVac, FloorMate, vacuum mop, floor washer, hard-floor cleaner, carpet cleaner, spot cleaner, or upholstery cleaner survived.
+- Exact Armor All AA255W source-upgrade evidence attached rating, review count, and citation from an exact same-product offer.
+- No wrong model, category/listing/support page, suspicious price, or query-derived identity attached.
+- Two final product images were visually confirmed as the correct Armor All vacuum. A third context-matched image URL returned HTTP 403 to the diagnostic fetch, so it was not visually inspectable; no wrong image was observed.
+- The normal path ran. RR-054 fallback diagnostics remain deterministically green rather than live-exercised.
+
+Several valid-looking RIDGID/Shop-Vac titles did not survive the later strict filter, producing a thin Armor All slate. Direct classifier checks return `exact` for every one of those utility-vac titles, so the new type rule did not block them. This live variance remains within the already tracked RR-014/RR-015 coverage/stability concerns and was not changed here.
+
+### Scope and issue outcome
+
+- RR-068: Fixed.
+- RR-054/RR-061 and RR-007/RR-008/RR-041/RR-042/RR-063 through RR-067: remain Fixed.
+- Register: 68 issues; 9 Critical, 29 High, 25 Medium, 5 Low; 0 Open, 4 Needs Investigation, 63 Fixed, 1 Won't Fix.
+- No ranking, final selection, price trust, image logic, general page eligibility, source-upgrade trigger/fallback, source-upgrade identity, citation policy, or UI behavior changed.
+- Implementation commit: `cc2da0a`.
+- Generated baselines, `.claude/`, and live fixtures remain untracked and uncommitted.
+- Phase 6 was not started.
+
+Recommended direction: run Phase 5 closeout/remeasurement only after explicit instruction. Reassess RR-014, RR-015, RR-037, and RR-045 from fresh evidence before any Phase 6 work.

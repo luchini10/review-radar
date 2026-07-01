@@ -13,6 +13,13 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-01
 
+### Codex - RR-068 shop-vac versus household floor-cleaner safety
+- Added shared `shop_vac` and `household_floor_cleaner` product-type intents so wet/dry household floor washers, vacuum mops, hard-floor cleaners, and carpet/spot/upholstery cleaners cannot become exact shop-vac products merely because they use `wet dry vacuum` wording.
+- Strong household subtype identity overrides generic wet/dry wording for shop-vac requests. Conventional shop/utility/garage/jobsite wet-dry vac signals remain valid, and explicit household floor-cleaner searches remain supported.
+- Discovery type checks now exclude retailer labels and query-derived snippets; the same shared verdict runs at discovery and requirement revalidation. Ranking, final selection, price, source-upgrade, image, page eligibility, and UI behavior were unchanged.
+- Fail-first passed 118/124 with six intended failures; focused final passed 125/125; broad safety passed 455/455; full tests passed 781/781; typecheck and eval passed; lint had 0 errors and 3 existing warnings.
+- Saved Phase 5J reassessment removed all four CrossWave cards and retained RIDGID/Vacmaster utility vacs. One fresh `shop vac` run returned only conventional Armor All utility wet/dry vacs. RR-068 is Fixed; Phase 6 did not start.
+
 ### Codex - Phase 5J image safety and fallback diagnostics
 - Fixed RR-061 by requiring image-like assets to have source-derived product context. Page URLs, truncated image directories, SVG/UI/logo/placeholder assets, generic category/navigation/editorial artwork, and unrelated JSON-LD/social metadata no longer become product images.
 - Same-product retailer/manufacturer images, standard JPEG/PNG/WebP assets, Google Shopping thumbnails, and opaque hashed CDN product images remain supported. Source-upgrade images now use the same resolver after the existing identity gate.
