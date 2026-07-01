@@ -1375,7 +1375,7 @@ Stop. Do not start Phase 6. Run Phase 5 closeout only after explicit instruction
 - Live validation: None. No API calls or broad baseline ran.
 - Scope: Documentation and verification only. No ranking, discovery, source-upgrade, identity, price, eligibility, image, product-type, final-selection, UI, or API behavior changed.
 - Uncommitted artifacts: `.claude/`, two generated baseline files, and 22 live fixtures remain untracked and excluded from the closeout commit.
-- Docs committed: Pending.
-- Documentation commit: Pending.
+- Docs committed: Yes.
+- Documentation commit: `50cc047`.
 
 Stop. Phase 5 is closed. Do not start Phase 6 without explicit instruction.
