@@ -1003,6 +1003,163 @@ describe("upgradeWeakSourceEvidence", () => {
     assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
   });
 
+  it("accepts exact HART VOC1212PW evidence when provider HP metadata is only a horsepower artifact", async () => {
+    const product = weakProduct(
+      "HART 12 Gallon 6 Peak HP Wet/Dry Vacuum VOC1212PW 3701",
+      {
+        category: "shop vac",
+        host: "harttools.com",
+        extra: {
+          metadata: {
+            brand: { value: "HP" },
+            offers: [],
+          },
+        },
+      },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const searchFn = async () => [
+      shoppingResult(
+        "HART 12 Gallon 5 Peak HP Wet/Dry Vacuum VOC1212PW 3701",
+        {
+          brand: "HP",
+          category: "shop vac",
+          price: 71.88,
+          rating: 4.4,
+          reviewCount: 624,
+          productUrl:
+            "https://retailer.example.com/products/hart-voc1212pw-wet-dry-vacuum",
+        },
+      ),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].candidateSample[0].identityMatch, true);
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, true);
+    assert.ok(
+      upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 71.88,
+      ),
+    );
+    assert.equal(upgraded.exactMatches[0].metadata?.rating?.value, 4.4);
+  });
+
+  it("does not let horsepower HP metadata conflict with exact-model tool evidence across brands", async () => {
+    const cases = [
+      ["RIDGID HD0900 5 Peak HP Wet/Dry Vacuum", "HD0900"],
+      ["DEWALT DXV09P 5 Peak HP Wet/Dry Vacuum", "DXV09P"],
+      ["Milwaukee 0880-20 3.5 HP Wet/Dry Vacuum", "0880-20"],
+      ["Makita XCV11Z 2 HP Wet/Dry Vacuum", "XCV11Z"],
+      ["Stanley SL18115 4 Peak HP Wet/Dry Vacuum", "SL18115"],
+      ["Armor All VOM205P 2 Peak HP Wet/Dry Vacuum", "VOM205P"],
+      ["Amazon Basics ABV1200 3.5 HP Wet/Dry Vacuum", "ABV1200"],
+    ];
+    const outcomes = [];
+
+    for (const [name, model] of cases) {
+      const product = weakProduct(name, {
+        category: "shop vac",
+        extra: { metadata: { offers: [], modelNumber: { value: model } } },
+      });
+      const searchFn = async () => [
+        shoppingResult(name, {
+          brand: "HP",
+          category: "shop vac",
+          price: 99,
+          productUrl: `https://retailer.example.com/products/${model.toLowerCase()}`,
+        }),
+      ];
+      const outcome = await upgradeWeakSourceEvidence(
+        makeResult([product]),
+        makeReq("shop vac"),
+        { searchFn },
+      );
+      outcomes.push([
+        name,
+        outcome.sourceUpgradeTraces[0].evidenceAttached,
+      ]);
+    }
+
+    assert.deepEqual(
+      outcomes,
+      cases.map(([name]) => [name, true]),
+    );
+  });
+
+  it("preserves genuine HP metadata for exact Hewlett-Packard source evidence", async () => {
+    const product = weakProduct("HP LaserJet Pro M404dn Printer", {
+      category: "printer",
+      host: "hp.com",
+      extra: {
+        metadata: {
+          brand: { value: "HP" },
+          modelNumber: { value: "M404dn" },
+          offers: [],
+        },
+      },
+    });
+    const searchFn = async () => [
+      shoppingResult("HP LaserJet Pro M404dn Printer", {
+        brand: "HP",
+        category: "printer",
+        price: 349,
+        productUrl:
+          "https://retailer.example.com/products/hp-laserjet-pro-m404dn",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(
+        makeResult([product]),
+        makeReq("printer"),
+        { searchFn },
+      );
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, true);
+    assert.ok(
+      upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 349,
+      ),
+    );
+  });
+
+  it("does not let polluted HP metadata hide a source-derived conflicting brand", async () => {
+    const product = weakProduct("HP LaserJet Pro M404dn Printer", {
+      category: "printer",
+      host: "hp.com",
+      extra: {
+        metadata: {
+          brand: { value: "HP" },
+          modelNumber: { value: "M404dn" },
+          offers: [],
+        },
+      },
+    });
+    const searchFn = async () => [
+      shoppingResult("Dell M404dn Office Printer", {
+        brand: "HP",
+        category: "printer",
+        price: 199,
+        productUrl:
+          "https://retailer.example.com/products/dell-m404dn-office-printer",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(
+        makeResult([product]),
+        makeReq("printer"),
+        { searchFn },
+      );
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.equal(upgraded.exactMatches[0].metadata?.offers?.length, 0);
+  });
+
   it("rejects the RR-066 same-brand same-type candidate that omits target model WD4522", async () => {
     const product = weakProduct(
       "RIDGID 4.5 Gallon 5.0 Peak HP PRO PACK Wet Dry Vac WD4522",

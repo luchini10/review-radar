@@ -18,6 +18,7 @@ import {
 import {
   brandEvidenceMatches,
   brandAppearsOnlyAsMeasurement,
+  canonicalBrand,
   inferKnownBrand,
   isSourceOrRetailerLabel,
   stripLeadingSourceOrRetailerLabel,
@@ -452,12 +453,58 @@ function evidenceTitle(candidate: RawProductCandidate | SerperEvidenceSource) {
   );
 }
 
+function sourceDerivedBrandEvidence(
+  candidate: RawProductCandidate | SerperEvidenceSource,
+) {
+  if ("evidenceSources" in candidate) {
+    return [
+      stripLeadingSourceOrRetailerLabel(candidate.name),
+      candidate.availableColors.join(" "),
+      candidate.keySpecs.join(" "),
+      ...candidate.evidenceSources.flatMap((source) => [
+        stripLeadingSourceOrRetailerLabel(source.title),
+        source.snippetProvenance === "query-derived" ? "" : source.snippet,
+        identityUrlText(source.url),
+      ]),
+    ].join(" ");
+  }
+
+  return [
+    stripLeadingSourceOrRetailerLabel(candidate.title),
+    candidate.snippet,
+    identityUrlText(candidate.url),
+  ].join(" ");
+}
+
 function evidenceBrand(
   candidate: RawProductCandidate | SerperEvidenceSource,
   candidateTitle: string,
+  targetBrand: string | null,
 ) {
   const explicitBrand = "brand" in candidate ? candidate.brand?.trim() : "";
   if (explicitBrand && !isSourceOrRetailerLabel(explicitBrand)) {
+    if (canonicalBrand(explicitBrand) === "HP") {
+      const sourceEvidence = sourceDerivedBrandEvidence(candidate);
+      const knownSourceBrand = inferKnownBrand(sourceEvidence);
+
+      if (
+        knownSourceBrand &&
+        canonicalBrand(knownSourceBrand) !== "HP"
+      ) {
+        return knownSourceBrand;
+      }
+
+      if (
+        targetBrand &&
+        canonicalBrand(targetBrand) !== "HP" &&
+        brandEvidenceMatches(sourceEvidence, targetBrand) &&
+        (brandAppearsOnlyAsMeasurement(sourceEvidence, explicitBrand) ||
+          !brandEvidenceMatches(sourceEvidence, explicitBrand))
+      ) {
+        return targetBrand;
+      }
+    }
+
     return explicitBrand;
   }
 
@@ -527,7 +574,7 @@ function looksLikeSameProduct(
 
   const targetIdentity = productModelIdentity(product);
   const targetBrand = sourceUpgradeBrand(product);
-  const candidateBrand = evidenceBrand(candidate, candidateTitle);
+  const candidateBrand = evidenceBrand(candidate, candidateTitle, targetBrand);
   const candidateIdentity = extractModelIdentity(candidateTitle, {
     brandQualified: Boolean(candidateBrand),
   });

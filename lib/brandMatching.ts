@@ -26,7 +26,7 @@ const brandDefinitions: BrandDefinition[] = [
   { canonical: "Sony", aliases: ["sony"] },
   { canonical: "Bose", aliases: ["bose"] },
   { canonical: "Dell", aliases: ["dell"] },
-  { canonical: "HP", aliases: ["hp"] },
+  { canonical: "HP", aliases: ["hp", "hewlett packard", "hewlett-packard"] },
   { canonical: "Lenovo", aliases: ["lenovo"] },
   { canonical: "GE", aliases: ["ge", "ge appliances"] },
   { canonical: "Whirlpool", aliases: ["whirlpool"] },
@@ -138,7 +138,15 @@ function brandEvidenceText(text: string, canonical: string) {
   return text
     .replace(/\bhorsepower\s*\(\s*hp\s*\)/gi, " ")
     .replace(/\b\d+(?:\.\d+)?\s*(?:peak\s+)?hp\b/gi, " ")
-    .replace(/\b(?:peak|max(?:imum)?|rated)\s+hp\b/gi, " ");
+    .replace(/\b(?:peak|max(?:imum)?|rated)\s+hp\b/gi, " ")
+    .replace(
+      /\b(?:motor|engine|pump|compressor|suction)\s+(?:rated\s+)?hp\b/gi,
+      " ",
+    )
+    .replace(
+      /\bhp\s+(?:motor|engine|pump|compressor|suction|rating)\b/gi,
+      " ",
+    );
 }
 
 function definitionMatches(text: string, definition: BrandDefinition) {
