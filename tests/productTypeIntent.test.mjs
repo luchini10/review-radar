@@ -98,6 +98,67 @@ describe("product type intent classifier", () => {
     assert.equal(v.canBeExactMatch, false);
   });
 
+  it("shop_vac: rejects household wet floor cleaners even when their titles say wet dry vacuum", () => {
+    const householdFloorCleaners = [
+      "BISSELL CrossWave HF3 Cordless Multi-Surface Wet Dry Vacuum 3649A",
+      "Tineco Floor ONE S5 Smart Cordless Wet Dry Vacuum Cleaner and Mop",
+      "Shark HydroVac Cordless Pro XL 3-in-1 Vacuum Mop",
+      "Hoover FloorMate Deluxe Hard Floor Cleaner",
+      "Portable Carpet Cleaner and Upholstery Spot Cleaner",
+    ];
+
+    for (const candidateText of householdFloorCleaners) {
+      const verdict = classifyProductTypeIntent({
+        requestedText: "shop vac",
+        candidateText,
+      });
+
+      assert.equal(verdict.status, "irrelevant", candidateText);
+      assert.equal(verdict.canBeExactMatch, false, candidateText);
+    }
+  });
+
+  it("shop_vac: preserves conventional wet-dry utility vacuums", () => {
+    const utilityVacuums = [
+      "RIDGID 9 Gallon 4.25 Peak HP NXT Wet Dry Vac HD0900",
+      "Shop-Vac 10 Gallon 5.5 Peak HP Wet/Dry Shop Vacuum",
+      "Vacmaster Professional Beast Series 12 Gallon Wet/Dry Vacuum",
+      "DEWALT DXV09P 9 Gallon Wet/Dry Utility Vacuum",
+      "Milwaukee M18 2 Gallon Cordless Wet/Dry Jobsite Vacuum",
+      "Armor All 2.5 Gallon Utility Wet/Dry Vacuum VOM205P",
+    ];
+
+    for (const candidateText of utilityVacuums) {
+      const verdict = classifyProductTypeIntent({
+        requestedText: "wet dry vac",
+        candidateText,
+      });
+
+      assert.equal(verdict.status, "exact", candidateText);
+      assert.equal(verdict.canBeExactMatch, true, candidateText);
+    }
+  });
+
+  it("floor-cleaner intent keeps household wet floor cleaners valid", () => {
+    const cases = [
+      ["hard floor cleaner", "Hoover FloorMate Deluxe Hard Floor Cleaner"],
+      ["vacuum mop", "Shark HydroVac Cordless Pro XL Vacuum Mop"],
+      ["wet dry mop", "Tineco Floor ONE S5 Wet Dry Vacuum Cleaner and Mop"],
+      ["floor washer", "BISSELL CrossWave Cordless Multi-Surface Floor Washer"],
+      ["Bissell CrossWave", "BISSELL CrossWave HF3 Wet Dry Vacuum 3649A"],
+    ];
+
+    for (const [requestedText, candidateText] of cases) {
+      const verdict = classifyProductTypeIntent({
+        requestedText,
+        candidateText,
+      });
+
+      assert.equal(verdict.status, "exact", `${requestedText}: ${candidateText}`);
+      assert.equal(verdict.canBeExactMatch, true, requestedText);
+    }
+  });
+
   it("rejects reproduced cross-category substitutions while preserving real products", () => {
     const cases = [
       {

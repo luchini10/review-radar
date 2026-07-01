@@ -2117,6 +2117,21 @@ function candidateEvidenceText(candidate: RawProductCandidate) {
   );
 }
 
+function candidateProductTypeEvidenceText(candidate: RawProductCandidate) {
+  return normalizeText(
+    [
+      candidate.name,
+      candidate.brand || "",
+      candidate.availableColors.join(" "),
+      candidate.keySpecs.join(" "),
+      candidate.evidenceSources
+        .filter((source) => source.snippetProvenance !== "query-derived")
+        .map((source) => `${source.title} ${source.snippet}`)
+        .join(" "),
+    ].join(" "),
+  );
+}
+
 function categoryLooksRelevant(candidate: RawProductCandidate, input: RecommendationApiRequest) {
   const text = candidateText(candidate);
   const baseCategory = baseProductCategoryFromQuery(input.query);
@@ -2314,7 +2329,7 @@ function cheapCandidateRejectionReason(
 ) {
   if (
     !classifyProductTypeMatch({
-      evidenceText: candidateEvidenceText(candidate),
+      evidenceText: candidateProductTypeEvidenceText(candidate),
       identityText: candidate.name,
       requestedCategory: baseProductCategoryFromQuery(input.query),
     }).canBeExactMatch

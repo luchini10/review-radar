@@ -82,7 +82,7 @@ describe("classifyProductTypeMatch (shared wrong-product-type verdict)", () => {
     assert.equal(verdict.status, "ok");
   });
 
-  it("does not block categories without a type rule (no false rejection)", () => {
+  it("keeps a valid wet-dry shop vacuum after the shop-vac rule is enabled", () => {
     const verdict = classifyProductTypeMatch({
       evidenceText: "Stinger 12 Gallon Wet/Dry Shop Vacuum",
       requestedCategory: "shop vac",
@@ -90,6 +90,46 @@ describe("classifyProductTypeMatch (shared wrong-product-type verdict)", () => {
 
     assert.equal(verdict.canBeExactMatch, true);
     assert.equal(verdict.status, "ok");
+  });
+
+  it("rejects household floor washers for shop-vac intent without trusting assigned category text", () => {
+    const wrong = [
+      "BISSELL CrossWave Cordless Max Wet Dry Vac 2554A",
+      "Tineco Floor ONE S7 Wet Dry Vacuum Mop",
+      "Shark HydroVac Multi-Surface Floor Cleaner",
+      "Hoover FloorMate Hard Floor Cleaner",
+      "Portable Carpet and Upholstery Spot Cleaner",
+    ];
+
+    for (const evidenceText of wrong) {
+      const verdict = classifyProductTypeMatch({
+        evidenceText,
+        identityText: evidenceText,
+        requestedCategory: "shop vac",
+      });
+
+      assert.equal(verdict.canBeExactMatch, false, evidenceText);
+      assert.equal(verdict.status, "wrong_type", evidenceText);
+    }
+  });
+
+  it("keeps conventional shop vacuums valid across unrelated brands", () => {
+    const valid = [
+      "HART 12 Gallon 6 Peak HP Wet Dry Shop Vacuum VOC1212PW",
+      "Stanley 5 Gallon Wet/Dry Utility Vacuum SL18115",
+      "CRAFTSMAN 12 Gallon Corded Wet Dry Shop Vacuum",
+      "Vacmaster 8 Gallon Wet/Dry Vacuum VOC809PF",
+    ];
+
+    for (const evidenceText of valid) {
+      const verdict = classifyProductTypeMatch({
+        evidenceText,
+        requestedCategory: "shop vac",
+      });
+
+      assert.equal(verdict.canBeExactMatch, true, evidenceText);
+      assert.equal(verdict.status, "ok", evidenceText);
+    }
   });
 
   it("rejects Phase 5E substitution classes through the shared verdict", () => {

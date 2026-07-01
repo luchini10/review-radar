@@ -2899,6 +2899,95 @@ describe("Phase 5E product-type revalidation", () => {
   });
 });
 
+describe("RR-068 shop-vac product-type revalidation", () => {
+  it("hard-fails household floor cleaners and keeps utility wet-dry vacuums exact-eligible", () => {
+    const requirements = {
+      category: "shop vac",
+      extractedRequirements: extractStructuredRequirements({
+        query: "shop vac",
+      }),
+    };
+    const wrong = [
+      "BISSELL CrossWave HF3 Cordless Multi-Surface Wet Dry Vacuum 3649A",
+      "Tineco Floor ONE S5 Wet Dry Vacuum Cleaner and Mop",
+      "Shark HydroVac Cordless Vacuum Mop",
+      "Hoover FloorMate Deluxe Hard Floor Cleaner",
+      "Portable Carpet and Upholstery Spot Cleaner",
+    ];
+    const valid = [
+      "RIDGID 9 Gallon 4.25 Peak HP NXT Wet Dry Vac HD0900",
+      "Shop-Vac 10 Gallon Wet/Dry Shop Vacuum",
+      "Vacmaster 8 Gallon Wet/Dry Utility Vacuum VOC809PF",
+      "DEWALT DXV09P 9 Gallon Wet/Dry Jobsite Vacuum",
+    ];
+
+    for (const name of wrong) {
+      const result = validateProductAgainstRequirements(
+        buildProduct({
+          category: "shop vac",
+          name,
+          pros: [],
+          why_recommended: "Assigned to the requested category.",
+        }),
+        requirements,
+      );
+
+      assert.ok(
+        result.missingRequirements.includes("Category: shop vac"),
+        name,
+      );
+    }
+
+    for (const name of valid) {
+      const result = validateProductAgainstRequirements(
+        buildProduct({
+          category: "shop vac",
+          name,
+          pros: [],
+          why_recommended: "Source evidence identifies a utility wet/dry vacuum.",
+        }),
+        requirements,
+      );
+
+      assert.ok(
+        result.matchedRequirements.includes("Category: shop vac"),
+        name,
+      );
+      assert.deepEqual(result.missingRequirements, [], name);
+    }
+  });
+
+  it("keeps explicit household floor-cleaner searches valid", () => {
+    const cases = [
+      ["hard floor cleaner", "Hoover FloorMate Deluxe Hard Floor Cleaner"],
+      ["vacuum mop", "Shark HydroVac Cordless Vacuum Mop"],
+      ["wet dry mop", "Tineco Floor ONE S5 Wet Dry Vacuum Cleaner and Mop"],
+      ["floor washer", "BISSELL CrossWave Multi-Surface Floor Washer"],
+    ];
+
+    for (const [query, name] of cases) {
+      const result = validateProductAgainstRequirements(
+        buildProduct({
+          category: query,
+          name,
+          pros: [],
+          why_recommended: "Source evidence identifies the requested floor cleaner.",
+        }),
+        {
+          category: query,
+          extractedRequirements: extractStructuredRequirements({ query }),
+        },
+      );
+
+      assert.ok(
+        result.matchedRequirements.includes(`Category: ${query}`),
+        `${query}: ${name}`,
+      );
+      assert.deepEqual(result.missingRequirements, [], query);
+    }
+  });
+});
+
 describe("literal product-identity requirement evidence", () => {
   it("keeps an explicitly portable product matched despite comparative negative prose", () => {
     const request = {

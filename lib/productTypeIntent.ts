@@ -17,12 +17,42 @@ type ProductTypeRule = {
   allowed: RegExp;
   blocked: RegExp;
   complements?: RegExp;
+  exclusiveBlocked?: RegExp;
   exclusiveComplements?: RegExp;
   id: string;
   requested: RegExp;
 };
 
+const HOUSEHOLD_FLOOR_CLEANER_PATTERN =
+  /\b(?:crosswave|hydrovac|floor\s+one|floormate|wet\s+dry\s+(?:vacuum\s+)?mop|vacuum\s+mop|mop\s+vacuum|hard\s+floor\s+(?:cleaner|washer)|floor\s+(?:cleaner|washer|scrubber)|multi\s+surface\s+(?:wet\s+dry\s+)?(?:floor\s+)?(?:cleaner|washer|vacuum)|carpet\s+cleaner|spot\s+cleaner|upholstery\s+cleaner|portable\s+carpet(?:\s+and\s+upholstery)?\s+(?:cleaner|washer))\b/i;
+
+const SHOP_VAC_PATTERN =
+  /\b(?:shop\s+(?:vac|vacuum)|shopvac|wet\s+dry\s+(?:(?:shop|utility)\s+)?(?:vac|vacuum)|wetdry\s+(?:vac|vacuum)|utility\s+(?:wet\s+dry\s+)?(?:vac|vacuum)|(?:garage|jobsite|workshop|contractor|drum)\s+(?:vac|vacuum))s?\b/i;
+
+const SHOP_VAC_CONTEXT_PATTERN =
+  /\b(?:\d+(?:\.\d+)?\s*(?:gal|gallon)s?\b.{0,80}\b(?:peak\s+)?(?:hp|horsepower)|(?:peak\s+)?(?:hp|horsepower)\b.{0,80}\b\d+(?:\.\d+)?\s*(?:gal|gallon)s?|(?:garage|workshop|jobsite|contractor|debris|sawdust)\b.{0,80}\b(?:vac|vacuum|cleanup)|(?:vac|vacuum)\b.{0,80}\b(?:garage|workshop|jobsite|contractor|debris|sawdust))\b/i;
+
 const PRODUCT_TYPE_RULES: ProductTypeRule[] = [
+  {
+    id: "household_floor_cleaner",
+    requested: HOUSEHOLD_FLOOR_CLEANER_PATTERN,
+    allowed: HOUSEHOLD_FLOOR_CLEANER_PATTERN,
+    blocked: SHOP_VAC_PATTERN,
+    complements:
+      /\b(?:cleaning\s+solution|cleaning\s+formula|replacement\s+(?:brush|brushroll|filter|pad)|brush\s+roll|mop\s+pad)\b/i,
+  },
+  {
+    id: "shop_vac",
+    requested: SHOP_VAC_PATTERN,
+    allowed: new RegExp(
+      `${SHOP_VAC_PATTERN.source}|${SHOP_VAC_CONTEXT_PATTERN.source}`,
+      "i",
+    ),
+    blocked: HOUSEHOLD_FLOOR_CLEANER_PATTERN,
+    exclusiveBlocked: HOUSEHOLD_FLOOR_CLEANER_PATTERN,
+    complements:
+      /\b(?:replacement\s+(?:filter|hose|bag|nozzle)|vacuum\s+(?:filter|hose|bag|nozzle)|dust\s+bag|accessory\s+kit)\b/i,
+  },
   {
     id: "toaster_oven",
     requested:
@@ -220,9 +250,20 @@ export function classifyProductTypeIntent(input: {
 
   const isAllowed = rule.allowed.test(allowedCheckText);
   const isBlocked = rule.blocked.test(candidateText);
+  const isExclusiveBlocked =
+    rule.exclusiveBlocked?.test(candidateIdentityText) || false;
   const isComplement = rule.complements?.test(candidateText) || false;
   const isExclusiveComplement =
     rule.exclusiveComplements?.test(candidateIdentityText) || false;
+
+  if (isExclusiveBlocked) {
+    return {
+      canBeExactMatch: false,
+      reason: `Candidate is a different product type than requested ${rule.id}.`,
+      requestedType: rule.id,
+      status: "irrelevant",
+    };
+  }
 
   if (
     isComplement &&

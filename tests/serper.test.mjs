@@ -1070,6 +1070,92 @@ describe("Serper product discovery", () => {
     assert.equal(result.rejectedCount, 1);
   });
 
+  it("cheap pre-filter removes household floor cleaners from shop-vac discovery", () => {
+    const response = {
+      shopping: [
+        {
+          title:
+            "BISSELL CrossWave HF3 Cordless Multi-Surface Wet Dry Vacuum 3649A",
+          link: "https://shop.example.com/products/crosswave-hf3-3649a",
+          imageUrl: "https://shop.example.com/images/crosswave-hf3.jpg",
+          price: 199,
+          snippet: "Household hard-floor cleaner and vacuum mop.",
+        },
+        {
+          title: "Tineco Floor ONE S5 Wet Dry Vacuum Cleaner and Mop",
+          link: "https://shop.example.com/products/floor-one-s5",
+          imageUrl: "https://shop.example.com/images/floor-one-s5.jpg",
+          price: 249,
+          snippet: "Multi-surface household floor washer.",
+        },
+        {
+          title: "RIDGID 9 Gallon NXT Wet Dry Shop Vacuum HD0900",
+          link: "https://shop.example.com/products/ridgid-hd0900",
+          imageUrl: "https://shop.example.com/images/ridgid-hd0900.jpg",
+          price: 99,
+          snippet:
+            "4.25 Peak HP utility wet/dry vacuum for garage and jobsite debris.",
+        },
+      ],
+    };
+    const candidates = normalizeSerperShoppingResults(
+      response,
+      "shop vac",
+      "shop vac",
+    );
+    const result = cheapPreFilterRawCandidates(
+      candidates,
+      {
+        extractedRequirements: extractStructuredRequirements({
+          query: "shop vac",
+        }),
+        query: "shop vac",
+      },
+      10,
+    );
+
+    assert.deepEqual(
+      result.candidates.map((candidate) => candidate.name),
+      ["RIDGID 9 Gallon NXT Wet Dry Shop Vacuum HD0900"],
+    );
+    assert.equal(result.rejectedCount, 2);
+  });
+
+  it("does not derive shop-vac product type from retailer labels or query-derived snippets", () => {
+    const [candidate] = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title: "RIDGID 9 Gallon NXT Wet Dry Shop Vacuum HD0900",
+            link: "https://shop.example.com/products/ridgid-hd0900",
+            imageUrl: "https://shop.example.com/images/ridgid-hd0900.jpg",
+            price: 99,
+            source: "CrossWave Floor Cleaner Outlet",
+          },
+        ],
+      },
+      "CrossWave floor cleaner",
+      "shop vac",
+    );
+    assert.equal(
+      candidate.evidenceSources[0].snippetProvenance,
+      "query-derived",
+    );
+    const result = cheapPreFilterRawCandidates(
+      [candidate],
+      {
+        extractedRequirements: extractStructuredRequirements({
+          query: "shop vac",
+        }),
+        query: "shop vac",
+      },
+      10,
+    );
+
+    assert.equal(result.candidates.length, 1);
+    assert.equal(result.rejectedCount, 0);
+  });
+
   it("cheap pre-filter treats multiple selected colors as alternatives", () => {
     const [beigeCandidate] = normalizeSerperShoppingResults(
       {
