@@ -5359,3 +5359,75 @@ The run used the pre-existing trigger behavior. RR-041/RR-042 trigger/fallback l
 - Generated baselines, `.claude/`, and live fixtures remain untracked and uncommitted.
 
 Recommended direction: stop. Retry Phase 5I for RR-041/RR-042 only after explicit instruction, preserving the RR-066 requirement that model-qualified targets receive model-level source evidence.
+
+## <span style="color:green">**Codex QA Update - 2026-06-30 (Phase 5I trigger/fallback reliability retry)**</span>
+
+**Verdict: PASS. RR-041 and RR-042 are Fixed. The completed implementation preserves RR-063 through RR-066 safety. Medium RR-067 opened from a safe live false-negative. Phase 5J did not start.**
+
+### Fail-first diagnosis
+
+The focused pre-edit run passed 110/121 tests. The 11 intended failures proved:
+
+- a lone verified price, owner rating, or weak/generic citation could suppress an otherwise weak candidate under the old all-three-missing trigger;
+- a nonempty primary result set whose candidates all failed identity stopped without using the existing bounded fallback;
+- trigger/skip and primary/fallback outcome fields were absent from the debug/API/replay contract.
+
+RR-041's root cause was an all-or-nothing trigger. RR-042's root cause was a fallback condition tied only to `candidates.length === 0`, not to the safety outcome of the returned candidates.
+
+### Implemented behavior
+
+- Source-upgrade eligibility now evaluates three pillars: verified price, owner rating, and independent identity-safe product-specific commerce evidence.
+- A requirement-passing candidate with reliable model identity is eligible only when at least two pillars are missing.
+- Commerce evidence counts only when it comes from another host, is source tier 1/2, and the shared product-evidence classifier says `same_product`.
+- The unchanged candidate cap of three prioritizes candidates missing the most pillars.
+- The original zero-primary fallback remains.
+- One distinct fallback may also run when a nonempty primary set has zero identity matches.
+- No fallback runs after any identity match, including a match with no attachable fields.
+- Primary and fallback candidates use the same unchanged RR-063/RR-064/RR-065/RR-066 identity gate.
+- Debug-only `sourceUpgradeDecisions`, `missingEvidence`, `triggerReason`, `primaryOutcome`, `fallbackReason`, `fallbackOutcome`, and candidate-stage fields explain decisions. Old fixtures remain replayable.
+
+No discovery, ranking, final selection, price trust, page eligibility, product type, requirement logic, source identity, citation retention, or UI behavior changed.
+
+### Deterministic proof
+
+```text
+focused source-upgrade/API/replay: 121/121 pass
+focused source-quality final: 90/90 pass
+broad named safety matrix: 342/342 pass
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 760/760 pass
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+The matrix includes wrong-brand, nearby-model, same-brand wrong-model, generic/evidence-page, query-text, URL-query, source-prefix, price, product-type, requirement, eligibility, citation, ranking, and final-selection controls. The user-facing result shape is unchanged.
+
+### Single focused live proof
+
+Exactly one approved `shop vac` save/replay ran.
+
+- Funnel: 15 candidates, 13 after citation verification, 4 after requirements, 4 final.
+- Exact products: DEWALT DXV09P; 16-Gallon Beast Series wet/dry vacuum; RIDGID WD1060; HART VOC1212PW.
+- Decisions: three selected for upgrade; the Beast Series candidate skipped for weak identity.
+- RIDGID WD1060: primary returned 20. Exact source-derived WD1060 evidence attached price `$100.71` and citation.
+- DEWALT DXV09P: primary returned 20. Exact source-derived evidence attached rating `4.4`, review count, and citation.
+- HART VOC1212PW: primary returned zero. Fallback `HART VOC1212PW shop vac` returned 13; every candidate was safely rejected and no evidence attached.
+- No wrong product, category, collection, article, support, documentation page, query-derived identity, suspicious price, or unsafe merge attached.
+
+The new post-identity-rejection fallback branch did not occur live and remains deterministic-only. The live run did exercise the preserved zero-primary fallback.
+
+### Adjacent RR-067 finding
+
+The HART fallback sample included exact-looking `Hart 12 Gallon Wet/Dry Vacuum Voc1212pw 3701`, but provider metadata labeled its brand `HP` from horsepower wording. A zero-cost deterministic probe reproduced that exact-model rejection in both primary and fallback evaluation. This is RR-067, a safe false-negative: no unsafe evidence attached, so the stop condition was not hit and Phase 5I was not rolled back.
+
+### Issue outcome
+
+- RR-041: Fixed.
+- RR-042: Fixed.
+- RR-067: Open, Medium.
+- RR-007, RR-008, RR-063, RR-064, RR-065, and RR-066: remain Fixed.
+- Register: 67 issues; 9 Critical, 28 High, 25 Medium, 5 Low; 3 Open, 4 Needs Investigation, 59 Fixed, 1 Won't Fix.
+- Implementation commit: `57f1a69`.
+- Generated baselines, `.claude/`, and all live fixtures remain untracked and uncommitted.
+
+Recommended direction: fix RR-067 narrowly before Phase 5J. Reuse measurement-aware brand handling for candidate metadata while retaining genuine HP and explicit-brand conflict controls.

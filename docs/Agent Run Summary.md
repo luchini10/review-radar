@@ -8,6 +8,24 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-06-30 Phase 5I retry
+
+**Goal:** Fix RR-041 and RR-042 only by making source-upgrade eligibility and its single fallback more reliable without weakening product identity.
+
+**What it checked:** Reproduced the current all-or-nothing trigger and empty-results-only fallback before editing. Audited the RR-063 through RR-066 identity boundary, API debug contract, fixture replay, eligibility, price, citation, product-type, requirements, ranking, and final selection.
+
+**What it changed:** A model-qualified, requirement-passing candidate now upgrades when it is missing at least two of verified price, owner rating, and identity-safe product-specific commerce evidence. The existing zero-result fallback remains, and the same one fallback may run after all nonempty primary candidates are identity-rejected. Debug traces now record selection reasons and primary/fallback outcomes.
+
+**Why the change matters:** One weak signal can no longer hide an otherwise unsupported candidate, while unsafe primary results no longer consume the only safe retry opportunity. Both stages still require the same source-derived same-product identity before any commerce field attaches.
+
+**Tests run:** Focused source-upgrade/API/replay 121/121; focused source-quality 90/90; broad named safety 342/342; typecheck passed; lint 0 errors with 3 existing warnings; full suite 760/760; eval reported no red flags.
+
+**Live checks run:** One approved `shop vac` save/replay. Exact RIDGID WD1060 and DEWALT DXV09P evidence attached safely. HART VOC1212PW used the zero-primary fallback and safely rejected all returned candidates.
+
+**Remaining issue:** RR-067 is open. Provider metadata can misread horsepower `HP` as candidate brand and reject exact HART/model evidence. This is a safe false-negative, not an unsafe attachment.
+
+**Next recommended step:** Fix RR-067 narrowly before Phase 5J, preserving genuine HP and explicit conflicting-brand controls.
+
 ## Codex Run - 2026-06-26 Phase 3I
 
 **Goal:** Implement Phase 3I Path A by improving only the source-quality-upgrade shopping query construction.

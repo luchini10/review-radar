@@ -984,3 +984,36 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Live call:** Exactly one `shop vac` save/replay. RIDGID HD0900 rejected nearby HD09001, HD0919, and HD1900 offers. Exact Armor All VOM205P evidence attached price, rating, review count, and citation. No unsafe evidence or non-product page attached. WD4522 did not recur.
 
 **Status:** RR-066 Fixed. RR-041/RR-042 remain Needs Investigation. Do not retry Phase 5I until explicitly instructed; preserve this model-proof contract.
+
+---
+
+## 2026-06-30 - Phase 5I trigger/fallback reliability
+
+**Issues fixed:** RR-041 and RR-042.
+
+**Trigger regression contract:**
+- Evaluate verified price, owner rating, and identity-safe product-specific commerce evidence as separate evidence pillars.
+- A model-qualified, requirement-passing candidate triggers only when at least two pillars are missing.
+- A lone price, rating, or generic/weak citation cannot suppress upgrade when two important pillars are absent.
+- A candidate with at least two safe pillars skips unnecessary upgrade.
+- Commerce evidence counts only when it is independent, source tier 1/2, and classified `same_product`.
+- Failed requirements and weak model identity remain hard skips.
+- Keep the maximum selected candidates at three and prioritize the most missing pillars without changing candidate membership.
+
+**Fallback regression contract:**
+- Preserve the one fallback after an empty primary search.
+- Permit the same one fallback after a nonempty primary set has zero identity matches.
+- Do not fall back after an identity match, including `no_attachable_fields`.
+- Never perform more than one fallback or reuse the primary query.
+- Apply the identical RR-063/RR-064/RR-065/RR-066 identity gate to primary and fallback evidence.
+- Query text, URL query parameters, source/retailer prefixes, seller/host metadata, generic pages, wrong brands, nearby models, and same-brand wrong models cannot donate identity or commerce fields.
+
+**Trace contract:** Keep debug-only `sourceUpgradeDecisions`, `missingEvidence`, `triggerReason`, stage-tagged candidate samples, `primaryOutcome`, `fallbackReason`, and `fallbackOutcome`. Old fixtures without these fields must replay, and normal API results must not expose them.
+
+**Verification:** Fail-first 110/121 with only 11 intended failures; focused final 121/121; focused source-quality 90/90; broad named safety 342/342; typecheck passed; lint 0 errors with 3 existing warnings; full suite 760/760; eval clean.
+
+**Live call:** Exactly one `shop vac` save/replay. Exact RIDGID WD1060 and DEWALT DXV09P evidence attached safely. HART VOC1212PW used the zero-primary fallback and attached nothing. The new post-identity-rejection fallback is proven deterministically but did not occur in the one live run.
+
+**New issue:** RR-067. Candidate metadata can label horsepower `HP` as a conflicting brand and reject an exact HART/model offer. Preserve this safe rejection until a narrow measurement-aware candidate-brand fix is tested against genuine HP and explicit-brand conflicts.
+
+**Status:** RR-041/RR-042 Fixed. RR-067 Open/Medium. Phase 5J not started.

@@ -13,6 +13,14 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-06-30
 
+### Codex - Phase 5I source-upgrade trigger/fallback reliability
+- Fixed RR-041 by replacing the all-three-missing trigger with a conservative missing-two-of-three evidence rule covering verified price, owner rating, and identity-safe product-specific commerce evidence.
+- Fixed RR-042 by preserving the zero-result fallback and allowing the same single bounded fallback after a nonempty primary result set has zero identity matches. No retry occurs after an identity match or more than once.
+- Product-specific commerce evidence now counts only when the shared identity classifier confirms the same product. The unchanged RR-063 through RR-066 identity gate protects both primary and fallback candidates.
+- Added debug-only selection decisions and primary/fallback outcomes to API traces and fixture replay; user-facing result shape is unchanged and old fixtures remain compatible.
+- Fail-first produced 11 intended failures. Focused verification passed 121/121, broad safety passed 342/342, typecheck and eval passed, lint had 0 errors and 3 existing warnings, and the full suite passed 760/760.
+- One `shop vac` run safely attached exact RIDGID WD1060 and DEWALT DXV09P evidence. A HART fallback attached nothing and exposed Medium RR-067, a candidate-side horsepower `HP` brand false-negative. No unsafe evidence attached. Phase 5J did not start.
+
 ### Codex - RR-066 model-qualified source-upgrade identity safety
 - Fixed the identity ordering that rejected exact model-bearing evidence when a provider omitted the brand, then allowed model-qualified targets to fall through to broad same-brand/product-type token overlap.
 - Source upgrade now requires an exact normalized target strong model in source-derived candidate evidence. Brand, product type, size, and capacity cannot replace missing model proof.

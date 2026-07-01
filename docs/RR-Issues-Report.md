@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through RR-066 identity safety
+## Compiled for AI Agent Consumption — Phase 0 through Phase 5I retry
 
 **Generated:** 2026-06-30
-**Scope:** All phases from initial measurement harness through the RR-066 identity-safety mini-phase
+**Scope:** All phases from initial measurement harness through the completed Phase 5I trigger/fallback retry
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -13,14 +13,14 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 66 |
+| Total Issues | 67 |
 | Critical | 9 |
 | High | 28 |
-| Medium | 24 |
+| Medium | 25 |
 | Low | 5 |
-| Open | 2 |
-| Needs Investigation | 6 |
-| Fixed | 57 |
+| Open | 3 |
+| Needs Investigation | 4 |
+| Fixed | 59 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -76,6 +76,7 @@
 | RR-007 opaque collection-page cleanup | 0 |
 | Phase 5I retry — same-brand/model-omission safety stop | 1 |
 | RR-066 identity-safety mini-phase | 0 |
+| Phase 5I retry — trigger/fallback reliability | 1 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -1156,7 +1157,7 @@ Deterministic tests cover Oral-B and EGO retention, specific Purina and Hill's p
 | **Phase** | Phase 3J |
 | **Severity** | Medium |
 | **Title** | Source-upgrade trigger not firing in Phase 3J live runs — eligibility gap after query fix |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** Phase 3J live runs for `cordless drill` and `gas grill` returned `sourceUpgradeTraces: []` — the trigger never fired. Even after the Phase 3F trigger fix and the Phase 3I query fix, no products qualified for source-upgrade in these specific live runs. The issue is that the product set encountered at runtime may not include weakly-sourced products with model tokens, or the live result variance means the fixture used for Phase 3J captured a run where already-strong candidates appeared.
 
@@ -1173,6 +1174,8 @@ Deterministic tests cover Oral-B and EGO retention, specific Purina and Hill's p
 **Phase 4B evidence:** Trigger inconsistency persists. Fresh `shop vac` and `robot vacuum` fixtures each produced zero traces, while `gas grill` produced one attempt against a wrong-type Thermador range/PDF target. The trigger is operational, but its live coverage is sparse and target quality is not reliable. Status remains Needs Investigation.
 
 **Phase 5I retry evidence:** Two fail-first tests again proved that a lone owner rating suppresses an otherwise weak product and that a nonempty primary result set whose candidates all fail identity prevents the one bounded fallback from running. A conservative missing-two-of-three trigger and post-rejection fallback passed deterministic verification, but the single live `shop vac` proof exposed Critical RR-066. All Phase 5I behavior, replay, and test edits were rolled back. Status remains Needs Investigation.
+
+**Completed Phase 5I resolution:** The fail-first trigger cases proved that the old all-three-missing rule let any one partial signal suppress an otherwise weak candidate. Source upgrade now runs only when a model-qualified, requirement-passing candidate is missing at least two of three evidence pillars: verified price, owner rating, and identity-safe product-specific commerce evidence. A commerce citation counts only when it is independent, tier 1/2, and classified as the same product. Candidates with two or more safe pillars skip upgrade, failed-requirement and weak-identity candidates remain excluded, and the unchanged three-candidate cap prefers the candidates missing the most pillars. Deterministic trigger/API/replay tests passed, and the single live `shop vac` proof showed three of four candidates selected with explicit skip/selection reasons. RR-041 is Fixed.
 
 ---
 
@@ -1200,7 +1203,7 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 | **Phase** | Phase 3L |
 | **Severity** | Medium |
 | **Title** | Source-upgrade fallback query fires but still returns 0 candidates — coverage gap |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** Phase 3K added a fallback query path (`buildSourceUpgradeFallbackShoppingQuery`) that runs after the primary compact query returns 0 candidates. The Phase 3L live proof showed the fallback fires (e.g., `"Makita XCV11Z"` → fallback: `"Makita XCV11Z shop vac"`), but the fallback query also returned 0 candidates. The bottleneck is upstream of identity matching — Serper shopping returns no results at all for either the compact or the category-appended query.
 
@@ -1219,6 +1222,8 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 **Phase 4B evidence:** Candidate normalization and attachment now work live for one primary-query attempt: `[PDF] PRL364NLG` returned 2 raw, 2 structural, 2 eligible, and 2 normalized Google Shopping offers; one candidate identity-matched and attached price plus citation. The fallback path was not exercised, and the upgraded target was a wrong-type range/PDF in a gas-grill search. RR-042 therefore remains Needs Investigation: provider/normalization emptiness is disproved for this attempt, but fallback reliability and safe useful attachment remain unproven.
 
 **Phase 5I retry evidence:** The candidate fallback control flow was proven deterministically and live, but the live run attached wrong-product evidence before the fallback path could be accepted as safe. The behavior change was rolled back. RR-042 remains Needs Investigation until RR-066 is fixed and a later bounded retry proves fallback reliability without weakening model identity.
+
+**Completed Phase 5I resolution:** The old fallback condition tested only whether the primary search returned zero candidates. It did not retry when a nonempty primary set was entirely rejected by the same-product identity gate. The source-upgrade attempt now preserves the existing zero-result fallback and also runs the same single bounded fallback when every primary candidate is identity-rejected. It does not retry after any identity match, including a match with no attachable fields, never performs more than one fallback, and applies the unchanged RR-063 through RR-066 identity gate to both stages. Deterministic tests prove an exact fallback match can attach while wrong-brand, nearby-model, same-brand wrong-model, generic, and query-derived evidence remain blocked. The live `shop vac` run exercised the original zero-primary fallback safely; the new post-rejection branch is deterministic-only because no approved live attempt reached that exact branch. RR-042 is Fixed.
 
 ---
 
@@ -2099,21 +2104,50 @@ No new issue ID was opened.
 
 ---
 
+### PHASE 5I RETRY — TRIGGER/FALLBACK RELIABILITY (2026-06-30)
+
+#### RR-067
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-067 |
+| **Phase** | Phase 5I retry live validation |
+| **Severity** | Medium |
+| **Title** | Candidate-side horsepower `HP` brand metadata rejects exact-model source-upgrade evidence |
+| **Status** | Open |
+
+**Description:** The approved `shop vac` live proof returned an exact-looking fallback candidate, `Hart 12 Gallon Wet/Dry Vacuum Voc1212pw 3701`, for target `HART 12 Gallon 6 Peak HP Wet/Dry Vacuum VOC1212PW 3701`. The target query correctly used brand `HART` and model `VOC1212PW`, but provider metadata labeled the candidate brand as `HP` from the horsepower phrase. The explicit brand-conflict veto then rejected the exact model-bearing candidate. A deterministic probe reproduced the same primary and fallback rejection with no evidence attachment.
+
+**Where it occurs:** `lib/requirementEvidenceRescue.ts` — candidate-side explicit brand selection in `evidenceBrand` / `looksLikeSameProduct`
+
+**Steps to reproduce:** Evaluate a HART `VOC1212PW` target against a source-derived candidate whose title contains the same HART/model identity but whose explicit `brand` field is `HP` because the title includes `6 Peak HP`. The candidate is rejected as an identity mismatch.
+
+**Expected:** Candidate-side `HP` metadata that appears only as horsepower measurement text must not create a Hewlett-Packard conflict. Exact HART/model source evidence should remain eligible, while genuine HP computer products and real conflicting brands remain blocked.
+
+**Actual:** The exact model candidate is safely rejected, causing a false negative and preventing evidence attachment.
+
+**Current status:** Open. This is a safe false-negative, not an unsafe merge, so the Phase 5I stop condition was not hit and no Phase 5I behavior was rolled back.
+
+**Suggested fix or next action:** Run a narrow RR-067 identity-normalization mini-phase before Phase 5J. Reuse the existing measurement-aware brand logic on candidate metadata, with deterministic HART horsepower and genuine Hewlett-Packard controls. Do not loosen exact-model or explicit-conflict requirements.
+
+**Phase 5I result:** RR-041 and RR-042 are Fixed. The final focused source-upgrade tests passed 121/121, the broad named safety matrix passed 342/342, the full suite passed 760/760, typecheck and eval passed, and lint reported 0 errors with 3 pre-existing warnings. One `shop vac` live run safely attached exact RIDGID WD1060 and DEWALT DXV09P evidence, safely rejected all HART fallback candidates, and exposed RR-067. No wrong product, unsafe page, or query-derived identity attached. Phase 5J did not start.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (2 issues)
+### Open (3 issues)
 - RR-054: Fresh fallback responses omit current diagnostic traces
 - RR-061: Product image metadata accepts non-image or irrelevant assets
+- RR-067: Candidate-side horsepower HP brand metadata rejects exact-model source-upgrade evidence
 
-### Needs Investigation (6 issues)
+### Needs Investigation (4 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
-- RR-041: Source-upgrade trigger not firing in Phase 3J live runs
-- RR-042: Source-upgrade fallback returns 0 normalized candidates (Phase 3L)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-### Fixed (57 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-040, RR-043, RR-044, RR-046 through RR-053, RR-055 through RR-060, RR-062 through RR-066
+### Fixed (59 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-053, RR-055 through RR-060, RR-062 through RR-066
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2122,7 +2156,7 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-042 + RR-041** (Medium) — Source-upgrade trigger/fallback reliability remains inconsistent; any retry must preserve RR-063 through RR-066 identity safety.
+1. **RR-067** (Medium) — Ignore candidate-side horsepower `HP` as brand evidence without weakening genuine HP or exact-model identity safety.
 2. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
 3. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
 4. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.

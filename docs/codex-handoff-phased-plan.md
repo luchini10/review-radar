@@ -16,15 +16,16 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **RR-008 cleanup complete. RR-007/RR-063 safety work requires explicit instruction before Phase 5G.**
+Current phase: **Phase 5I complete. RR-041 and RR-042 are Fixed. RR-067 requires explicit instruction before Phase 5J.**
 
-Phase 3N safely admitted specific Google Shopping offers for source-upgrade evidence and fixed the `Shop-Vac` title false positive. RR-051 removed synthetic query-derived snippets from same-product identity. Phase 3O preserved reliable brand identity in compact model queries.
+Phase 5I now selects model-qualified, requirement-passing candidates that are missing at least two of verified price, owner rating, and identity-safe product-specific commerce evidence. The existing zero-result fallback remains, and one bounded fallback may also run when every nonempty primary candidate is rejected by same-product identity. Primary and fallback candidates use the same RR-063 through RR-066 source-derived identity gate.
 
-The Phase 3O live proof then exposed two separate safety defects. RR-053 is fixed deterministically: URL query strings and fragments cannot provide product identity, while merchant product paths and source-derived Shopping titles remain usable. Phase 5A fixed RR-058 by rejecting explicit product-type conflicts before source-upgrade attachment. Phase 5B fixed RR-052 and the RR-057/RR-034/RR-035/RR-044 model-coverage cluster without weakening Phase 5A identity safety. Phase 5C fixed reopened RR-002 across shop-vac, dash-camera, and wireless-earbud `$10` offers. RR-062 then product-scoped structured page prices so an unrelated A139 `data-price="19999"` widget cannot become VIOFO A229 evidence. Phase 5D fixed cross-host collection, support/advice, and documentation-mirror product cards through the shared eligibility layer. Phase 5E fixed the reproduced wrong-product-type and literal-positive-requirement classes. The narrow RR-007 cleanup fixed the remaining nested catalog-route gap. Phase 5F fixed RR-022 with targeted product-page reachability and product-specific primary citation retention. The RR-008 cleanup now blocks editorial questions and hosted publishing pages while preserving genuine `/p/` product routes.
+One approved `shop vac` proof safely attached exact RIDGID WD1060 and DEWALT DXV09P evidence. The HART VOC1212PW attempt used the zero-result fallback and safely rejected all candidates. That run opened Medium RR-067: candidate metadata can misread horsepower `HP` as a conflicting brand and reject exact HART/model evidence. This is a safe false-negative; no stop condition or rollback was required.
 
 Recommended next phase:
 
-- Await explicit instruction. Prefer RR-007/RR-063 product-card and citation-identity safety work before Phase 5G.
+- Await explicit instruction. Fix RR-067 narrowly before Phase 5J.
+- Preserve the completed RR-041/RR-042 trigger/fallback behavior and all RR-063 through RR-066 identity protections.
 
 ---
 
@@ -1282,3 +1283,20 @@ Stop. Fix RR-066 only after explicit instruction. Preserve the fail-first RR-041
 - Uncommitted artifacts: `.claude/`, generated baselines, and live fixtures including refreshed `shop-vac.json` remain untracked and excluded from commits.
 
 Stop. Do not retry Phase 5I or start Phase 5J without explicit instruction.
+
+### Phase 5I trigger/fallback reliability completion record
+
+- Completed step: Phase 5I RR-041/RR-042 source-upgrade trigger and fallback reliability retry.
+- Next step: Narrow RR-067 candidate-side horsepower-brand normalization, only after explicit instruction. Phase 5J remains unstarted.
+- Diagnostic-only: No. The phase reproduced and fixed RR-041 and RR-042.
+- Stop condition hit: No. The live run exposed a safe false-negative, not unsafe evidence, wrong-product attachment, page leakage, suspicious price, or ranking regression.
+- New issue IDs opened: RR-067, Medium/Open.
+- Existing issue IDs updated: RR-041 and RR-042 changed from Needs Investigation to Fixed. RR-007, RR-008, RR-063, RR-064, RR-065, and RR-066 remain Fixed.
+- Docs committed: Pending in this record.
+- Implementation commit: `57f1a69`.
+- Verification: fail-first 110/121 with only 11 intended failures; focused final 121/121; focused source-quality 90/90; broad named safety 342/342; typecheck passed; lint 0 errors with 3 existing warnings; full suite 760/760; eval clean.
+- Live validation: exactly one `shop vac` call. RIDGID WD1060 and DEWALT DXV09P attached exact evidence safely. HART VOC1212PW used the zero-primary fallback, attached nothing, and exposed RR-067 because provider metadata labeled horsepower `HP` as brand identity.
+- Scope: No discovery, ranking, final-selection, price, page eligibility, product-type, requirement, product-evidence identity, source-upgrade model identity, citation-retention, or UI behavior changed. Phase 5J did not start.
+- Uncommitted artifacts: `.claude/`, generated baselines, and live fixtures including refreshed `shop-vac.json` remain untracked and excluded from commits.
+
+Stop. Fix RR-067 only after explicit instruction; do not start Phase 5J automatically.

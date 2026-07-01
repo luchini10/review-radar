@@ -686,3 +686,19 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - RR-041/RR-042 remain Needs Investigation. Their trigger/fallback behavior remains rolled back and unchanged.
 - Phase 5I and Phase 5J have not started.
 - Retry Phase 5I only after explicit instruction and never weaken the model-level identity requirement to improve attachment rate.
+
+**Phase 5I - source-upgrade trigger/fallback reliability (2026-06-30)**
+- RR-041 is Fixed. Source-upgrade selection evaluates three evidence pillars: verified price, owner rating, and independent identity-safe product-specific commerce evidence. A model-qualified, requirement-passing candidate is eligible when at least two pillars are missing.
+- Product-specific commerce evidence counts only when it comes from a different host, is source tier 1/2, and `classifyProductEvidenceIdentity` returns `same_product`. Generic or merely reputable evidence cannot suppress an otherwise needed upgrade.
+- The unchanged cap of three prioritizes candidates missing the most pillars. Failed-requirement and weak-identity candidates remain excluded.
+- RR-042 is Fixed. The existing fallback after zero primary candidates remains, and the same single bounded fallback may run after a nonempty primary candidate set produces zero identity matches.
+- Fallback never runs after any identity match, including a match with no attachable fields. Both stages use the unchanged RR-063 through RR-066 source-derived identity guard before price, rating, review count, image, or citation attachment.
+- Debug-only `sourceUpgradeDecisions` records selected/skipped candidates, missing pillars, model tokens, and reason. Attempt traces add `triggerReason`, `missingEvidence`, stage-tagged samples, `primaryOutcome`, `fallbackReason`, and `fallbackOutcome`. Replay treats absent fields as pre-Phase-5I data.
+- The API exposes these fields only inside debug `stageFunnel`; the user-facing result contract is unchanged.
+- Verification passed 121/121 focused source-upgrade/API/replay tests, 342/342 broad safety tests, and 760/760 full tests; typecheck and eval passed; lint reported 0 errors and 3 existing warnings.
+- One `shop vac` run safely attached exact RIDGID WD1060 and DEWALT DXV09P evidence. The HART VOC1212PW zero-primary fallback safely attached nothing and exposed RR-067, a candidate-side horsepower `HP` brand false-negative.
+
+**Current boundary**
+- RR-041 and RR-042 are Fixed. RR-007, RR-008, RR-063, RR-064, RR-065, and RR-066 remain Fixed.
+- RR-067 is Medium/Open. Candidate metadata can misread horsepower `HP` as Hewlett-Packard and reject exact HART/model evidence; this is a safe false-negative.
+- Phase 5J has not started. Address RR-067 narrowly only after explicit instruction.
