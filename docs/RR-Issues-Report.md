@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 5 closeout
+## Compiled for AI Agent Consumption — Phase 0 through Phase 6A instrument
 
 **Generated:** 2026-07-01
-**Scope:** All phases from initial measurement harness through the completed Phase 5 closeout
+**Scope:** All phases from initial measurement harness through the completed Phase 6A reliability instrument
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -81,6 +81,7 @@
 | Phase 5J — Asset quality and fallback diagnostics | 1 |
 | RR-068 product-type safety mini-phase | 0 |
 | Phase 5 closeout and remeasurement | 0 |
+| Phase 6A reliability instrument | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -2193,6 +2194,22 @@ No new issue ID was opened.
 **Fixture evidence:** The current `shop vac` fixture contains only conventional utility wet/dry vacuums and no household floor cleaner. Historical `dog food`, `electric toothbrush`, `air purifier`, and `dash cam` replays remain useful for trace compatibility but predate some later identity and diagnostic fields. Current-code reassessment removes the historical dog-food recipe conflict, and deterministic regressions remain the authority for RR-041/RR-042, RR-054, and RR-063 through RR-068. No live search ran.
 
 **Scope:** Documentation and verification only. No production code, app behavior, issue status, ranking, discovery, source-upgrade, identity, price, eligibility, image, product-type, final-selection, UI, or API behavior changed. Phase 6 did not start.
+
+---
+
+### PHASE 6A — RELIABILITY INSTRUMENT (2026-07-01)
+
+**Verdict:** Phase 6A planning/documentation passed. The v0.1-draft reliability rubric, report templates, release gates, seven batch definitions, core-10, variance-pilot design, fixture policy, and zeroed budget ledger are documented.
+
+**Register audit:** 68 unique IDs through RR-068; 9 Critical, 29 High, 25 Medium, and 5 Low. Status totals remain 63 Fixed, 4 Needs Investigation, 1 Won't Fix, and 0 Open.
+
+**Planning-only outcome:** No new issue was opened and no existing status changed. RR-014, RR-015, RR-037, and RR-045 remain intentional measurement/provider-variance investigations.
+
+**Instrument validation:** `shop-vac.json` and `gas-grill.json` were scored from `npm run qa:replay` output only and labeled M3 historical evidence. Shop-vac scored 65/C with incomplete safety/high-impact evidence. Historical gas-grill scored 69 on quality but F overall because an exact result was explicitly a propane camping stove. This is an archival fixture finding, not a new current-code regression; no M2 reassessment or fix was performed.
+
+**Verification:** Typecheck passed; lint reported 0 errors and the same 3 existing warnings; the full suite passed 781/781 across 117 suites; `node scripts/eval-pipeline.mjs` reported no red-flag issues.
+
+**Scope:** Documentation/templates only. No live search, API call, app code, app test, pipeline behavior, executable script, issue fix, or Phase 6B work ran.
 
 ---
 

@@ -8,6 +8,24 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-07-01 Phase 6A
+
+**Goal:** Build only the Phase 6 reliability instrument: rubric v0.1-draft, report templates, release gates, live batch definitions, and fixture policy.
+
+**What it checked:** Verified the 68-issue register (0 Open, 4 Needs Investigation), Phase 5 completion records, 64 test files, 22 live fixtures, all eight existing measurement tools, and the current debug-envelope field groups.
+
+**What it changed:** Added `docs/phase-6-scorecard-template.md` and `docs/phase-6-live-search-batches.md`. The scorecard documents the plan-defined safety/quality axes, process gates, deduction formula, ranking anchors, evidence modes, missing-data handling, report formats, schema, and proposed approval-only extensions. The batches document defines B1–B7, core-10, rotation, the 2×3 variance pilot, fixture tiers, and a zeroed ledger.
+
+**Worked examples:** Replay-only M3 scoring produced 65/C for the current shop-vac fixture with incomplete evidence. Historical gas-grill produced quality 69 but final F because an exact card was a camping stove. No M2 current-code claim was made.
+
+**Tests run:** Typecheck passed; lint 0 errors with 3 existing warnings; full suite 781/781 across 117 suites; eval clean.
+
+**Live checks run:** None. Phase 6A used zero live calls.
+
+**Scope:** Documentation/templates only. No app code, app tests, pipeline behavior, executable scripts, issues, or fixes changed. Phase 6B and later did not start.
+
+**Next recommended step:** Phase 6B regression wall only, after explicit instruction.
+
 ## Codex Run - 2026-07-01 Phase 5 closeout
 
 **Goal:** Verify Phase 5 is complete, all high-risk protections remain green, the issue register is accurate, and the repo is ready for a separately approved Phase 6 planning step.

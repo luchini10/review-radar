@@ -4,9 +4,16 @@ Generated: 2026-07-01
 
 ## Current next task
 
-**Phase 5 closed - Phase 6 readiness planning requires explicit instruction**
+**Phase 6A complete - Phase 6B regression wall requires explicit instruction**
 
-Phase 5 closeout passed without behavior changes. The focused high-risk matrix passed 448/448, the full suite passed 781/781, typecheck and eval passed, and lint reported 0 errors with 3 existing warnings.
+Phase 6A created the reliability scorecard v0.1-draft and live-search batch/fixture policy. The instrument is documentation only: no live search, behavior change, executable script change, issue fix, or Phase 6B work ran.
+
+The two required historical fixture examples were scored from `qa:replay` output as M3 evidence:
+
+- `shop-vac.json`: quality 65, grade C, incomplete safety/high-impact evidence;
+- `gas-grill.json`: quality 69, final grade F because the recorded exact slate included a camping stove.
+
+These are historical instrument examples, not current-code findings. Missing fields are `NotScored` and listed as proposed trace/automation work needing approval.
 
 The canonical register contains 68 issues:
 
@@ -15,25 +22,30 @@ The canonical register contains 68 issues:
 
 RR-014, RR-015, RR-037, and RR-045 intentionally remain Needs Investigation. They concern leader coverage, stability, or live provider variance and are not Phase 5 blockers.
 
-Saved-fixture replay confirmed the current `shop vac` fixture has no household floor cleaner. Older fixtures remain historical snapshots and may omit later trace fields; current deterministic tests and current-code reassessment are authoritative for the completed safety fixes. No closeout live search ran.
+Verification passed: typecheck; lint with 0 errors and 3 existing warnings; 781/781 tests across 117 suites; eval with no red flags.
 
 ## Required next task
 
-Do not start automatically. Await a separate Phase 6A planning/readiness instruction.
+Do not start automatically. Await a separate instruction for **Phase 6B regression wall only**.
 
-The planning step should define the reliability gauntlet's fixed query set, budget, stop conditions, fixture policy, and success metrics before any live execution. It should reassess RR-014, RR-015, RR-037, and RR-045 from fresh evidence without assuming a status change.
+Phase 6B is zero-live work: map RR-007 through RR-068 to existing deterministic tests/fixtures and identify or close mapping gaps with distilled regression fixtures and tests under the master plan. Do not begin the Phase 6C patch audit, Phase 6D variance pilot, rubric freeze, or live baseline.
 
 Do not:
 
-- start Phase 6 execution or create reliability-gauntlet artifacts without explicit approval;
+- start Phase 6B or any later sub-phase without explicit approval;
+- change the v0.1-draft rubric or provisional thresholds without recording a versioned rationale;
+- implement proposed trace additions or automation from the scorecard document without approval;
 - alter the completed RR-068, RR-061, or RR-054 behavior without a proven regression;
-- change ranking, discovery breadth, final selection, price, citation, or source-upgrade behavior during closeout without a new scoped instruction;
+- change ranking, discovery breadth, final selection, price, citation, source-upgrade behavior, or any app behavior during regression-wall work;
 - weaken RR-063 through RR-067 source-derived identity rules;
 - weaken price, citation, product, requirement, product-type, or identity trust gates;
 - run a live search or full baseline without approval.
 
 Reference:
 
+- `docs/phase-6-reliability-gauntlet-plan.md`
+- `docs/phase-6-scorecard-template.md`
+- `docs/phase-6-live-search-batches.md`
 - `docs/RR-Issues-Report.md`
 - `docs/codex-handoff-phased-plan.md`
 - `docs/qa-loop-results.md` latest Phase 5 closeout entry

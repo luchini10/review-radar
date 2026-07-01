@@ -1379,3 +1379,21 @@ Stop. Do not start Phase 6. Run Phase 5 closeout only after explicit instruction
 - Documentation commit: `50cc047`.
 
 Stop. Phase 5 is closed. Do not start Phase 6 without explicit instruction.
+
+### Phase 6A reliability instrument completion record
+
+- Completed step: Phase 6A documentation/template instrument only.
+- Next step: Phase 6B regression wall only, after explicit instruction. Do not start Phase 6C, 6D, rubric freeze, baseline, dossier analysis, or fixes.
+- Diagnostic-only: Yes. No production behavior, app code, app test, pipeline, or executable script changed.
+- Stop condition hit: No. No live search ran, no code diff appeared, and no later phase started.
+- New issue IDs opened: None.
+- Existing issue IDs updated: No status changes. RR-014, RR-015, RR-037, and RR-045 remain Needs Investigation.
+- Issue totals: 68 total; 9 Critical, 29 High, 25 Medium, 5 Low; 63 Fixed, 4 Needs Investigation, 1 Won't Fix, 0 Open.
+- Instrument: `phase-6-scorecard-template.md` contains rubric v0.1-draft, binary safety, separate process gates, quality deductions, evidence modes, ranking anchors, report templates, JSON Schema, worked examples, and approval-only trace/automation proposals. `phase-6-live-search-batches.md` contains B1–B7, fixed core-10, rotation, 2×3 variance pilot, fixture policy, and a zeroed budget ledger.
+- Inventory: 64 `tests/*.test.mjs` files, 22 saved live fixtures, and all eight plan-named measurement scripts verified.
+- Fixture validation: `shop-vac.json` scored 65/C from M3 replay output with incomplete evidence. Historical `gas-grill.json` scored 69 quality/F final because an exact card was a camping stove. Neither example is an M2 current-code claim.
+- Verification: typecheck passed; lint 0 errors with 3 existing warnings; full suite 781/781 across 117 suites; eval reported no red flags.
+- Live validation: None. Budget used 0.
+- Scope: Documentation/templates only. No fixes and no Phase 6B work.
+
+Stop. Do not start Phase 6B without explicit instruction.

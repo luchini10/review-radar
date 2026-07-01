@@ -13,6 +13,13 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-01
 
+### Codex - Phase 6A reliability instrument
+- Added the v0.1-draft two-axis reliability rubric with per-search binary safety, separate process gates, the plan-defined 0–100 deduction formula, written ranking anchors, evidence-mode labeling, missing-data rules, report templates, and a documented JSON Schema.
+- Inventoried the 64 test files, 22 saved live fixtures, eight existing measurement tools, and current debug-envelope fields so future automation extends the existing system rather than duplicating it.
+- Defined all seven live-search batches, a fixed core-10 backed by existing fixture categories, rotation and three-tier fixture policy, a 2-query × 3-run Phase 6D variance pilot, and a budget ledger initialized at zero.
+- Hand-scored `shop-vac.json` and `gas-grill.json` from replay output only as M3 historical evidence. Missing replay evidence is `NotScored`; proposed trace/printer/automation additions require approval.
+- No live search, behavior change, executable script change, issue fix, or Phase 6B work ran. Typecheck, 781/781 tests, and eval passed; lint reported 0 errors and 3 existing warnings.
+
 ### Codex - Phase 5 closeout and remeasurement
 - Closed Phase 5 after auditing all 68 issues and confirming 63 Fixed, 4 intentional Needs Investigation, 1 Won't Fix, and 0 Open.
 - Reverified the high-risk Phase 5 protections with 448/448 focused tests and 781/781 full tests. Typecheck and eval passed; lint reported 0 errors and 3 existing warnings.

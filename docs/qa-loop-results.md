@@ -5696,3 +5696,51 @@ The focused matrix covered RR-007/RR-008, RR-041/RR-042, RR-054, RR-061, RR-063 
 - `.claude/`, `.rr_baseline.json`, `.rr_baseline.md`, and 22 saved live fixture files remain untracked and excluded from the docs-only closeout commit.
 
 Recommended direction: approve Phase 6A planning/readiness only. Define the fixed query set, cost ceiling, stop conditions, fixture policy, and success metrics before any live reliability execution.
+
+## <span style="color:green">**Codex QA Update - 2026-07-01 (Phase 6A reliability instrument)**</span>
+
+**Verdict: PASS. Phase 6A documentation/templates are complete. No live search, behavior change, executable script change, issue fix, or Phase 6B work ran.**
+
+### Inventory and register
+
+- Verified 64 top-level `tests/*.test.mjs` files.
+- Verified 22 JSON fixtures in `tests/fixtures/review-radar-live/`.
+- Verified all eight plan-named measurement tools and documented their current measurements and evidence modes.
+- Verified 68 issues: 63 Fixed, 4 Needs Investigation, 1 Won't Fix, and 0 Open.
+- No issue was opened or changed. RR-014, RR-015, RR-037, and RR-045 remain Needs Investigation.
+
+### Instrument
+
+- Added `docs/phase-6-scorecard-template.md` with rubric `v0.1-draft`.
+- Preserved per-search binary safety and separate program process gates.
+- Implemented the plan-defined quality formula: start 100; High −15; Medium −8; ranking anchor 3 −4; one deduction per metric; floor 0.
+- Added NotScored handling, incomplete-High B cap, A/B/C/D/F bands, M1–M4 labels, written 1–5 ranking anchors, per-search and before/after templates, release-gate tiers, and a machine-readable JSON Schema.
+- Marked thresholds provisional until the v1.0 freeze after Phase 6D.
+- Added `docs/phase-6-live-search-batches.md` with B1–B7, per-batch allocations, fixed core-10, rotation, 2-query × 3-run variance pilot, three-tier fixture policy, staleness rules, and a ledger initialized at zero.
+
+### Replay-only hand scoring
+
+Both examples used `npm run qa:replay` output only. Every scored metric is M3 historical evidence; replay did not run current validators and no M2 claim was made.
+
+- `shop-vac.json`: quality score 65, final grade C. The weak-evidence winner, citation tier mix, ranking anchor 3, and one-brand broad slate produced deductions. Safety/high-impact evidence is incomplete; low count opened manual review but was NotScored because replay did not establish avoidable loss.
+- `gas-grill.json`: quality score 69, final grade F. The recorded exact #7 `Coleman 4-in-1 Portable Propane Gas Camping Stove` manually confirms an M3 wrong-product exact safety failure. The weak-evidence winner, citation tier mix, and ranking anchor 2 also deducted. This is an archival fixture result, not a newly proven current-code regression.
+
+The hand pass clarified evidence states, safety completeness, low-count proof requirements, the provisional citation floor, and the M2/M3 boundary. Missing fields are listed as proposed trace additions; executable extensions are listed as proposed automation needing approval.
+
+### Verification
+
+```text
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm test: 781/781 pass across 117 suites
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+### Scope and budget
+
+- Live calls: 0.
+- Budget ledger: 0 used.
+- No production code, app test, pipeline behavior, executable script, fixture, overview, or test-memory file changed.
+- Phase 6B and later remain unstarted.
+
+Recommended direction: Phase 6B regression wall only, after explicit instruction.
