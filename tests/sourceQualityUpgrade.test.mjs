@@ -839,6 +839,166 @@ describe("upgradeWeakSourceEvidence", () => {
     assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
   });
 
+  it("rejects the RR-066 same-brand same-type candidate that omits target model WD4522", async () => {
+    const product = weakProduct(
+      "RIDGID 4.5 Gallon 5.0 Peak HP PRO PACK Wet Dry Vac WD4522",
+      {
+        category: "shop vac",
+        host: "ridgid.com",
+        extra: {
+          metadata: {
+            brand: { value: "RIDGID" },
+            modelNumber: { value: "WD4522" },
+            offers: [],
+          },
+        },
+      },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const searchFn = async () => [
+      shoppingResult(
+        "Ridgid 10 Gallon 6.0 Peak HP Stainless Steel Wet/Dry Shop Vacuum",
+        {
+          brand: "RIDGID",
+          category: "shop vac",
+          price: 139,
+          rating: 4.3,
+          reviewCount: 412,
+          imageUrl: "https://images.example.com/ridgid-10-gallon.jpg",
+          productUrl:
+            "https://retailer.example.com/products/ridgid-10-gallon-stainless-vacuum",
+        },
+      ),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    const upgradedProduct = upgraded.exactMatches[0];
+    assert.equal(sourceUpgradeTraces[0].candidateSample[0].identityMatch, false);
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.deepEqual(sourceUpgradeTraces[0].attachedFields, []);
+    assert.equal(upgradedProduct.metadata?.offers?.length, 0);
+    assert.equal(upgradedProduct.metadata?.rating, undefined);
+    assert.equal(upgradedProduct.metadata?.reviewCount, undefined);
+    assert.equal(upgradedProduct.product_image_url, "");
+    assert.equal(upgradedProduct.product_page_url, product.product_page_url);
+    assert.ok(
+      !upgradedProduct.citations.some((citation) =>
+        citation.title.includes("10 Gallon"),
+      ),
+    );
+  });
+
+  it("does not accept matching brand and capacity without the target model", async () => {
+    const product = weakProduct(
+      "RIDGID 4.5 Gallon 5.0 Peak HP PRO PACK Wet Dry Vac WD4522",
+      { category: "shop vac", host: "ridgid.com" },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const searchFn = async () => [
+      shoppingResult("RIDGID 4.5 Gallon Wet/Dry Shop Vacuum", {
+        brand: "RIDGID",
+        category: "shop vac",
+        price: 109,
+        productUrl:
+          "https://retailer.example.com/products/ridgid-4-5-gallon-wet-dry-vacuum",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.equal(upgraded.exactMatches[0].metadata?.offers?.length, 0);
+  });
+
+  it("accepts exact WD4522 evidence whose provider title omits the brand", async () => {
+    const product = weakProduct(
+      "RIDGID 4.5 Gallon 5.0 Peak HP PRO PACK Wet Dry Vac WD4522",
+      { category: "shop vac", host: "ridgid.com" },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const searchFn = async () => [
+      shoppingResult(
+        "WD4522 4.5 Gallon 5.0-Peak HP ProPack Wet/Dry Shop Vacuum",
+        {
+          brand: null,
+          category: "shop vac",
+          price: 119,
+          productUrl:
+            "https://retailer.example.com/products/wd4522-propack-wet-dry-vacuum",
+        },
+      ),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, true);
+    assert.equal(sourceUpgradeTraces[0].candidateSample[0].identityMatch, true);
+    assert.ok(
+      upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 119,
+      ),
+    );
+  });
+
+  it("rejects an explicit conflicting brand even when its title reuses WD4522", async () => {
+    const product = weakProduct(
+      "RIDGID 4.5 Gallon 5.0 Peak HP PRO PACK Wet Dry Vac WD4522",
+      { category: "shop vac", host: "ridgid.com" },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const searchFn = async () => [
+      shoppingResult("CRAFTSMAN WD4522 Wet/Dry Shop Vacuum", {
+        brand: "CRAFTSMAN",
+        category: "shop vac",
+        price: 99,
+        productUrl:
+          "https://retailer.example.com/products/craftsman-wd4522-vacuum",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.equal(upgraded.exactMatches[0].metadata?.offers?.length, 0);
+  });
+
+  it("rejects same-brand same-type model omission in an unrelated category", async () => {
+    const product = weakProduct("Makita XFD131 18V LXT Cordless Drill Kit", {
+      category: "cordless drill",
+      host: "makitatools.com",
+    });
+    const result = makeResult([product]);
+    const req = makeReq("cordless drill");
+    const searchFn = async () => [
+      shoppingResult("Makita 18V LXT Cordless Drill Driver Kit", {
+        brand: "Makita",
+        category: "cordless drill",
+        price: 129,
+        productUrl:
+          "https://retailer.example.com/products/makita-lxt-cordless-drill-kit",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.equal(upgraded.exactMatches[0].metadata?.offers?.length, 0);
+  });
+
   it("does not let a retailer-prefixed RIDGID target accept an Amazon Basics vacuum", async () => {
     const product = weakProduct(
       "Amazon.com: RIDGID Wet Dry Vacuums VAC1200 Heavy Duty Wet/Dry Vacuum",
@@ -1138,10 +1298,11 @@ describe("upgradeWeakSourceEvidence", () => {
     const result = makeResult([product]);
     const req = makeReq("leaf blower");
     const searchFn = async () => [
-      shoppingResult("EGO 765 CFM Cordless Leaf Blower", {
+      shoppingResult("EGO LB7654 765 CFM Cordless Leaf Blower", {
         category: "leaf blower",
         price: 299,
-        productUrl: "https://retailer.example.com/products/ego-765-cfm-blower",
+        productUrl:
+          "https://retailer.example.com/products/ego-lb7654-765-cfm-blower",
       }),
     ];
 

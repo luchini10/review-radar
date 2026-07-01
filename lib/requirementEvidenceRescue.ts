@@ -449,6 +449,18 @@ function evidenceTitle(candidate: RawProductCandidate | SerperEvidenceSource) {
   );
 }
 
+function evidenceBrand(
+  candidate: RawProductCandidate | SerperEvidenceSource,
+  candidateTitle: string,
+) {
+  const explicitBrand = "brand" in candidate ? candidate.brand?.trim() : "";
+  if (explicitBrand && !isSourceOrRetailerLabel(explicitBrand)) {
+    return explicitBrand;
+  }
+
+  return inferKnownBrand(candidateTitle) || leadingBrandFromTitle(candidateTitle);
+}
+
 const FAMILY_IDENTITY_CATEGORY_MODIFIERS = new Set([
   "best",
   "cordless",
@@ -486,7 +498,7 @@ function looksLikeSameProduct(
   requestedCategory?: string,
 ) {
   const text = evidenceText(candidate);
-  const normalizedEvidence = text.replace(/\s+/g, "");
+  const normalizedEvidence = normalizeModelToken(text);
   const productName = stripLeadingSourceOrRetailerLabel(product.name);
   const productTypeVerdict = requestedCategory
     ? classifyProductTypeMatch({
@@ -512,32 +524,43 @@ function looksLikeSameProduct(
 
   const targetIdentity = productModelIdentity(product);
   const targetBrand = sourceUpgradeBrand(product);
-  if (
-    targetBrand &&
-    !brandEvidenceMatches(text, targetBrand)
-  ) {
-    return false;
-  }
-
-  if (
-    targetIdentity.strongTokens.some((model) =>
-      normalizedEvidence.includes(model),
-    )
-  ) {
-    return true;
-  }
-
-  const candidateBrand = inferKnownBrand(candidateTitle) || leadingBrandFromTitle(candidateTitle);
+  const candidateBrand = evidenceBrand(candidate, candidateTitle);
   const candidateIdentity = extractModelIdentity(candidateTitle, {
     brandQualified: Boolean(candidateBrand),
   });
-  if (
-    targetIdentity.strongTokens.length > 0 &&
+  const hasConflictingStrongModel =
     candidateIdentity.strongTokens.length > 0 &&
     (hasConflictingModelToken(
       targetIdentity.strongTokens,
       candidateIdentity.strongTokens,
-    ) || hasConflictingDigitDashModel(targetIdentity, candidateIdentity))
+    ) || hasConflictingDigitDashModel(targetIdentity, candidateIdentity));
+
+  if (targetIdentity.strongTokens.length > 0) {
+    if (hasConflictingStrongModel) {
+      return false;
+    }
+
+    const hasExactStrongModel = targetIdentity.strongTokens.some((model) =>
+      normalizedEvidence.includes(model),
+    );
+    if (!hasExactStrongModel) {
+      return false;
+    }
+
+    if (
+      targetBrand &&
+      candidateBrand &&
+      !brandEvidenceMatches(candidateBrand, targetBrand)
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
+  if (
+    targetBrand &&
+    !brandEvidenceMatches(text, targetBrand)
   ) {
     return false;
   }
