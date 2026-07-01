@@ -1310,8 +1310,9 @@ Stop. Fix RR-067 only after explicit instruction; do not start Phase 5J automati
 - Stop condition hit: No. Deterministic and live checks found no unsafe attachment, page leakage, suspicious price, or ranking regression.
 - New issue IDs opened: None.
 - Existing issue IDs updated: RR-067 changed from Open to Fixed. RR-041, RR-042, RR-007, RR-008, RR-063, RR-064, RR-065, and RR-066 remain Fixed.
-- Docs committed: Pending in this record.
+- Docs committed: Yes.
 - Implementation commit: `025afcb`.
+- Documentation commit: `44144c7`.
 - Verification: fail-first 95/97 with only two intended failures; focused final 98/98; broad named safety 346/346; typecheck passed; lint 0 errors with 3 existing warnings; full suite 764/764; eval clean.
 - Live validation: exactly one `shop vac` call. HART did not recur. Exact RIDGID WD3050 evidence with `3.5-Peak HP` attached safely; nearby WD3050A and unrelated products remained rejected. No second call or broad baseline ran.
 - Scope: No Phase 5I trigger/fallback, discovery, ranking, final selection, price, eligibility, product type, requirements, source-upgrade model gate, citation retention, or UI behavior changed. Phase 5J did not start.

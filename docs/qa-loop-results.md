@@ -5493,6 +5493,7 @@ HART VOC1212PW did not recur. Its exact post-fix behavior remains deterministic 
 - RR-007, RR-008, RR-063, RR-064, RR-065, and RR-066: remain Fixed.
 - Register: 67 issues; 9 Critical, 28 High, 25 Medium, 5 Low; 2 Open, 4 Needs Investigation, 60 Fixed, 1 Won't Fix.
 - Implementation commit: `025afcb`.
+- Documentation commit: `44144c7`.
 - Generated baselines, `.claude/`, and live fixtures remain untracked and uncommitted.
 
 Recommended direction: Phase 5J for RR-061 and RR-054 only, after explicit instruction.
