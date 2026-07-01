@@ -1038,3 +1038,31 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Live call:** Exactly one `shop vac` save/replay. HART did not recur. RIDGID WD3050 source evidence containing `3.5-Peak HP` attached exact price/rating/review/citation data; WD3050A, another-size RIDGID vacuum, and an unrelated blower remained rejected. No second live call ran.
 
 **Status:** RR-067 Fixed. Phase 5J not started.
+
+---
+
+## 2026-07-01 - Phase 5J image and fallback-debug contracts
+
+**Issues fixed:** RR-061 and RR-054.
+
+**Product-image regression contract:**
+- Reject non-image/page URLs, image-directory endpoints, SVG/UI/logo/icon/favicon/placeholder/tracking assets, and generic category/navigation/editorial artwork.
+- Do not bind JSON-LD, social metadata, existing image fields, generated names, query text, seller labels, hosts, or URL query parameters to a product without source-derived same-product context.
+- Product-page metadata requires matching page identity; JSON-LD images require a matching Product name.
+- Source-upgrade images use the shared resolver only after the existing same-product evidence gate.
+- Preserve same-product retailer/manufacturer images, Google Shopping thumbnails, JPEG/PNG/WebP assets, and opaque hashed CDN product images when source context is verified.
+
+**Fallback-debug regression contract:**
+- Every recommendation-producing Serper fallback exposes the stages it actually ran when debug mode is enabled.
+- Preserve search-plan context, candidate funnel/snapshots, final-selection trace, empty source-upgrade traces, and explicit reasons for citation/source-upgrade stages bypassed by fallback.
+- Do not fabricate diagnostics for stages that did not run.
+- Never expose these fields in normal non-debug responses or change recommendation content.
+- Old fixtures without `fallbackTrace` remain replay-compatible.
+
+**Verification:** Fail-first focused 35/41 with six intended failures; focused final 174/174; broad named safety 417/417; typecheck passed; lint 0 errors with 3 existing warnings; full suite 772/772; eval clean.
+
+**Live call:** Exactly one `shop vac` save/replay. Seven final image URLs returned image bodies; no page, logo, placeholder, category, article, support, or HTML page was used as an image. The request used the normal path, so RR-054 remains live-unconfirmed and deterministically proven.
+
+**New issue:** RR-068 (High/Open). Four Bissell CrossWave household wet/dry floor cleaners reached exact shop-vac results. This is a product-type coverage regression outside Phase 5J; no fix was attempted.
+
+**Status:** RR-054/RR-061 Fixed. RR-068 Open. Phase 6 not started.

@@ -5497,3 +5497,87 @@ HART VOC1212PW did not recur. Its exact post-fix behavior remains deterministic 
 - Generated baselines, `.claude/`, and live fixtures remain untracked and uncommitted.
 
 Recommended direction: Phase 5J for RR-061 and RR-054 only, after explicit instruction.
+
+## <span style="color:green">**Codex QA Update - 2026-07-01 (Phase 5J: image safety and fallback diagnostics)**</span>
+
+**Verdict: PASS for the scoped RR-061/RR-054 work. RR-061 and RR-054 are Fixed. High RR-068 opened from the single live check and was not fixed. Phase 6 did not start.**
+
+### Fail-first diagnosis
+
+RR-061 had three shared failure paths:
+
+- Existing image fields and trusted metadata were paired with generated product/category text, allowing the candidate to manufacture its own relevance.
+- Product-page extraction appended the target name to social and JSON-LD image evidence, so unrelated same-page metadata could match.
+- Source-upgrade evidence assigned `candidate.imageUrl` directly after identity matching instead of passing it through the image resolver.
+
+The resolver also treated `/product` and `/products` path words as image-like and lacked explicit rejection for page extensions, truncated image directories, and generic navigation/category/editorial artwork.
+
+RR-054 occurred because `buildServerSearchFallbackResult` ran requirement filtering, enrichment, asset handling, rescue, revalidation, and scoring but returned only the recommendation result. The no-reliable-evidence, no-exact sanity, and AI-error fallback response branches therefore assembled only fallback metadata and timing. They discarded the available funnel and final-selection trace, and replay had no current fallback-path marker.
+
+The fail-first focused run passed 35/41. The six intended failures covered missing fallback diagnostics, page/directory image URLs, generic artwork, unrelated page metadata, and replay fallback visibility.
+
+### Generalized RR-061 fix
+
+- Added source-context verification to the shared image resolver.
+- Rejected HTML/page extensions, image-directory endpoints, SVG/UI/logo/icon/favicon/placeholder/tracking assets, and generic category/navigation/editorial artwork.
+- Removed broad `product`/`products` path shortcuts from image-likeness.
+- Product-page social metadata uses actual page title/H1 identity rather than generated card text.
+- JSON-LD images require a matching Product name.
+- Existing and trusted metadata images require source-derived relevance; opaque hashed CDN images remain valid when same-product context is already verified.
+- Source-upgrade images now pass through the resolver after the unchanged same-product identity gate.
+
+### Generalized RR-054 fix
+
+- `buildServerSearchFallbackResult` now returns both the recommendation result and a debug-only trace of the stages it actually ran.
+- Fallback debug responses include search-plan stages, candidate funnel/snapshots, empty source-upgrade traces, real final-selection traces, and explicit citation/source-upgrade bypass reasons.
+- No diagnostics are fabricated for stages the fallback path did not run.
+- Replay prints `fallbackTrace` and safely treats absent fields as older fixture data.
+- Non-debug responses expose no debug fields and preserve identical recommendation names/content.
+
+### Deterministic proof
+
+```text
+focused Phase 5J: 174/174 pass
+broad named safety matrix: 417/417 pass
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 772/772 pass
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+The broad matrix retained RR-007/RR-008 page eligibility, RR-013 ranking, RR-022 citation retention, RR-041/RR-042 source-upgrade reliability, RR-063 through RR-067 identity safety, RR-002/RR-062 price trust, Phase 5E type/requirements, and Phase 5H final selection.
+
+No ranking, discovery breadth, product-type, requirement, price, citation, source-upgrade trigger/fallback, source-upgrade identity, final-selection, UI, or general page-eligibility behavior changed. The only `requirementEvidenceRescue.ts` change validates an image after the pre-existing same-product identity decision.
+
+### Single focused live proof
+
+Exactly one `shop vac` save/replay ran.
+
+- Funnel: 30 pool, 20 after citation verification, 11 after requirements, 7 final exact.
+- All seven final cards had non-empty image URLs that returned image bodies.
+- The image set used retailer/manufacturer/CDN product assets. No HTML page, logo, placeholder, category, article, support, documentation, or obvious navigation image became a card image.
+- The request used the normal pipeline, not a Serper-candidate fallback. RR-054 therefore remains deterministic-only for fresh fallback output.
+- Source upgrade attempted three products. No wrong-model or query-derived evidence attached; existing RR-041/RR-042 trace behavior remained visible.
+
+### Adjacent stop-condition finding: RR-068
+
+Four of seven exact cards were Bissell CrossWave household floor cleaners:
+
+- CrossWave Cordless Max 2554A;
+- CrossWave Multi-Surface 1785A;
+- CrossWave All-in-One 1785A;
+- CrossWave HF3 3649A.
+
+These are household wet/dry floor-cleaning/mopping appliances, not conventional shop vacuums or utility wet/dry vacs. The Phase 5J implementation did not touch discovery, product-type intent/matching, requirement validation, ranking, or final selection, so this is an adjacent pre-existing coverage gap rather than a Phase 5J regression. It is recorded as High/Open RR-068. No fix was attempted.
+
+### Issue outcome
+
+- RR-054: Fixed.
+- RR-061: Fixed.
+- RR-068: Open, High.
+- RR-041/RR-042 and RR-007/RR-008/RR-063 through RR-067: remain green.
+- Register: 68 issues; 9 Critical, 29 High, 25 Medium, 5 Low; 1 Open, 4 Needs Investigation, 62 Fixed, 1 Won't Fix.
+- Implementation commit: `708ee98`.
+- Generated baselines, `.claude/`, and live fixtures remain untracked and uncommitted.
+
+Recommended direction: diagnose and fix RR-068 narrowly before Phase 6. Use a generalized product-type distinction between conventional wet/dry utility vacuums and household wet/dry floor washers; do not add Bissell-specific logic.

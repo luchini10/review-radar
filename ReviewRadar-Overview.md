@@ -716,3 +716,17 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 **Current boundary**
 - RR-067 is Fixed. RR-041/RR-042 and RR-063 through RR-066 remain Fixed.
 - Phase 5J has not started. It is next for RR-061 and RR-054 only, after explicit instruction.
+
+**Phase 5J - product image safety and fallback diagnostics (2026-07-01)**
+- RR-061 is Fixed. The shared product-image resolver rejects HTML/page URLs, truncated image directories, SVG/UI/logo/placeholder assets, tracking pixels, generic category/navigation/editorial artwork, and unrelated JSON-LD/social metadata.
+- Image relevance must come from source-derived product context. Product-page metadata is usable only after page identity matches the target; JSON-LD images require a matching Product name. Generated card names and query text cannot manufacture image identity.
+- Same-product retailer/manufacturer images, standard JPEG/PNG/WebP assets, Google Shopping thumbnails, and opaque hashed CDN images remain supported. Source-upgrade images pass through the same resolver only after the existing same-product identity gate.
+- RR-054 is Fixed. Every recommendation-producing Serper fallback returns the actual fallback stage funnel in debug mode, including candidate snapshots, final-selection trace, search-plan context, empty source-upgrade traces, and explicit reasons for stages that the fallback path bypassed.
+- Normal non-debug recommendation content and shape are unchanged. Replay prints the new fallback trace and treats absent fields as old-fixture data.
+- Verification passed 174/174 focused, 417/417 broad safety, and 772/772 full tests; typecheck and eval passed; lint reported 0 errors and 3 existing warnings.
+- One `shop vac` live proof showed real image responses and no page/logo/category/support image. It did not take a fallback path, so RR-054 live behavior remains deterministic-only.
+
+**Current boundary**
+- RR-054 and RR-061 are Fixed.
+- High RR-068 is Open: Bissell CrossWave household floor cleaners appeared as exact shop-vac results. Phase 5J did not touch the product-type pipeline, and RR-068 was not fixed.
+- Phase 6 has not started. Resolve RR-068 and complete Phase 5 closeout before any Phase 6 reliability work.

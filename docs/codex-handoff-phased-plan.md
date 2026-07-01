@@ -16,16 +16,17 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **RR-067 cleanup complete. Phase 5J requires explicit instruction.**
+Current phase: **Phase 5J complete. RR-068 is the next required safety task before Phase 6.**
 
-RR-067 is Fixed. Candidate-side ambiguous HP metadata no longer overrides stronger source-derived product identity when HP is horsepower/spec syntax or when safe evidence supports another brand. Genuine HP and Hewlett-Packard products remain valid.
+RR-061 and RR-054 are Fixed in implementation commit `708ee98`. Product images now require safe asset shape plus source-derived same-product context, and every recommendation-producing Serper fallback preserves the diagnostics it actually ran in debug mode.
 
-The exact HART VOC1212PW regression and seven unrelated tool/vacuum controls pass deterministically. One focused `shop vac` run did not reproduce HART, but exact RIDGID WD3050 evidence containing `3.5-Peak HP` attached while nearby and unrelated products remained rejected. RR-041/RR-042 and RR-063 through RR-066 remain Fixed.
+The single live `shop vac` proof showed real image responses with no page/logo/category/support image. It separately opened High RR-068 because four Bissell CrossWave household floor cleaners reached exact shop-vac cards. Phase 5J did not touch the product-type pipeline, and RR-068 was not fixed.
 
 Recommended next phase:
 
-- Await explicit instruction. Start Phase 5J for RR-061 and RR-054 only.
-- Preserve RR-041/RR-042 trigger/fallback behavior, RR-067 brand/unit disambiguation, and all RR-063 through RR-066 identity protections.
+- Await explicit instruction. Diagnose/fix RR-068 narrowly before Phase 6.
+- Preserve RR-061/RR-054, RR-041/RR-042, RR-067, and all RR-063 through RR-066 protections.
+- Do not start or create the Phase 6 reliability gauntlet yet.
 
 ---
 
@@ -1319,3 +1320,21 @@ Stop. Fix RR-067 only after explicit instruction; do not start Phase 5J automati
 - Uncommitted artifacts: `.claude/`, generated baselines, and live fixtures including refreshed `shop-vac.json` remain untracked and excluded from commits.
 
 Stop. Do not start Phase 5J without explicit instruction.
+
+### Phase 5J asset quality and fallback diagnostics completion record
+
+- Completed step: Phase 5J for RR-061 and RR-054 only.
+- Next step: Narrow RR-068 product-type diagnosis/fix before Phase 6, only after explicit instruction.
+- Diagnostic-only: No. RR-061 and RR-054 behavior was fixed after fail-first proof.
+- Stop condition: Yes, during the one approved `shop vac` live check. Four Bissell CrossWave household floor cleaners appeared as exact shop-vac results. Taylor approved documenting this as separate RR-068 and completing Phase 5J without fixing it.
+- New issue IDs opened: RR-068, High/Open.
+- Existing issue IDs updated: RR-054 and RR-061 changed from Open to Fixed. RR-041/RR-042 and RR-007/RR-008/RR-063 through RR-067 remain Fixed.
+- Implementation: image candidates require safe asset shape plus source-derived same-product context; fallback responses expose the stages they actually ran only in debug mode. Normal recommendation content is unchanged.
+- Verification: fail-first 35/41 with six intended failures; focused final 174/174; broad safety 417/417; typecheck passed; lint 0 errors and 3 existing warnings; full suite 772/772; eval clean.
+- Live validation: exactly one `shop vac` call. Seven final image URLs returned image bodies with no page/logo/category/support asset. The normal path ran, so RR-054 live fallback behavior remains deterministic-only.
+- Scope: No discovery, product-type, requirement, ranking, final-selection, price, citation, source-upgrade trigger/fallback, source-upgrade identity, general page eligibility, or UI behavior changed. RR-068 was not fixed. Phase 6 was not started.
+- Docs updated: Yes; all required Phase 5 documents were updated.
+- Implementation commit: `708ee98`.
+- Documentation commit: pending finalization.
+
+Stop. Do not start Phase 6. Address RR-068 only after explicit instruction, then complete Phase 5 closeout.

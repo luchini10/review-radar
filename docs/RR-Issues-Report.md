@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through RR-067 cleanup
+## Compiled for AI Agent Consumption — Phase 0 through Phase 5J
 
 **Generated:** 2026-07-01
-**Scope:** All phases from initial measurement harness through the completed RR-067 brand/unit identity cleanup
+**Scope:** All phases from initial measurement harness through the completed Phase 5J image/diagnostic work and its RR-068 live finding
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -13,14 +13,14 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 67 |
+| Total Issues | 68 |
 | Critical | 9 |
-| High | 28 |
+| High | 29 |
 | Medium | 25 |
 | Low | 5 |
-| Open | 2 |
+| Open | 1 |
 | Needs Investigation | 4 |
-| Fixed | 60 |
+| Fixed | 62 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -78,6 +78,7 @@
 | RR-066 identity-safety mini-phase | 0 |
 | Phase 5I retry — trigger/fallback reliability | 1 |
 | RR-067 brand/unit identity cleanup | 0 |
+| Phase 5J — Asset quality and fallback diagnostics | 1 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -1618,7 +1619,7 @@ Four approved fresh searches were saved and replayed: `robot vacuum`, `basketbal
 | **Phase** | Phase 4D |
 | **Severity** | Medium |
 | **Title** | Fresh fallback responses can omit stage-funnel, source-upgrade, and final-selection traces |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** The fresh `air purifier` debug fixture was saved with the current script and debug request header, but the API took the `fallbackReason: no_reliable_evidence` / `fallbackSource: serper_candidates` path. Its debug object contained only fallback metadata, candidate count, timing, and verified URL count. It omitted `stageFunnel`, `sourceUpgradeTraces`, and `finalSelectionTrace`, so replay described the fixture as if it pre-dated current instrumentation.
 
@@ -1631,6 +1632,8 @@ Four approved fresh searches were saved and replayed: `robot vacuum`, `basketbal
 **Actual:** The fallback response silently drops the current trace contract, preventing product-type, source-upgrade, and ranking-layer diagnosis for that search.
 
 **Suggested fix or next action:** In a later fix phase, preserve a minimal common debug envelope across normal and fallback responses, and distinguish “current fallback path omitted this stage” from “old fixture lacks this field.” Add a deterministic fallback-response trace test before changing behavior.
+
+**Phase 5J resolution:** Every recommendation-producing Serper-candidate fallback now builds a debug-only fallback trace from the stages it actually ran. Debug responses include the search plan, candidate funnel, available snapshots, empty source-upgrade traces with explicit bypass reasons, and the real final-selection trace. Replay prints the fallback reason and bypassed stages while remaining compatible with old fixtures. Normal non-debug responses retain the same recommendation content and expose none of these fields.
 
 ---
 
@@ -1839,7 +1842,7 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 | **Phase** | Phase 4F |
 | **Severity** | Medium |
 | **Title** | Product image metadata can contain page URLs, generic brand assets, or unrelated navigation images |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** All 70 final cards had a non-empty image field, but several were not usable product images. Leaf-blower examples included a truncated Home Depot image directory, Greenworks/BLACK+DECKER product-page URLs, a WORX navigation banner, and an EGO brand logo. Dog-food examples included a Blue Buffalo logo and PetSmart category hero. An LG gaming-monitor image ended in `.html`.
 
@@ -1852,6 +1855,8 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 **Actual:** Non-image URLs and generic/irrelevant assets pass image validation.
 
 **Suggested fix or next action:** Add diagnostic classification for direct image response/content type and product-specific relevance. In a later fix phase, reject page URLs and known generic navigation/logo assets without weakening valid CDN image support.
+
+**Phase 5J resolution:** Image candidates now require an image-like asset shape plus source-derived product context. HTML/page URLs, truncated image directories, SVG/UI assets, logos, icons, favicons, placeholders, tracking pixels, category/navigation/editorial artwork, and unrelated JSON-LD or social metadata are rejected. Product-page metadata is trusted only after page identity matches the target, and JSON-LD images require a matching Product name. Source-upgrade images pass through the same resolver only after the existing same-product identity gate. Verified same-product retailer/manufacturer images, standard image formats, Google Shopping thumbnails, and opaque hashed CDN assets remain supported.
 
 **Sweep result:**
 
@@ -2139,19 +2144,48 @@ No new issue ID was opened.
 
 ---
 
+### PHASE 5J - ASSET QUALITY AND FALLBACK DIAGNOSTICS (2026-07-01)
+
+#### RR-068
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-068 |
+| **Phase** | Phase 5J live proof |
+| **Severity** | High |
+| **Title** | Bissell CrossWave floor cleaners can rank as exact shop-vac products |
+| **Status** | Open |
+
+**Description:** The single Phase 5J `shop vac` live proof returned multiple Bissell CrossWave floor-cleaning appliances as exact results. The seven-card exact slate included CrossWave Cordless Max 2554A, CrossWave Multi-Surface 1785A, CrossWave All-in-One 1785A, and CrossWave HF3 3649A. These are household multi-surface wet/dry floor cleaners, not conventional shop vacuums or wet/dry utility vacs.
+
+**Where it occurs:** Shared product-type intent/match handling for `shop vac`; discovery requirement filtering, revalidation, and exact-match eligibility
+
+**Steps to reproduce:** Run one debug search for `shop vac`, save the fixture, and replay it. Inspect the final seven exact cards and observe the four Bissell CrossWave products.
+
+**Expected:** A broad `shop vac` search returns conventional wet/dry utility vacuums. Wet/dry floor-cleaning/mopping appliances are rejected or safely demoted as a conflicting product subtype.
+
+**Actual:** Four CrossWave floor-cleaner cards passed citation verification, requirement filtering, revalidation, and exact selection. The #1 exact result was a CrossWave Cordless Max.
+
+**Current status:** Open. The Phase 5J diff did not change discovery, product-type intent/matching, requirement validation, ranking, or final selection. RR-068 is therefore an adjacent pre-existing coverage gap exposed by the approved live check, not caused by the RR-061/RR-054 implementation.
+
+**Suggested fix or next action:** Before Phase 6, run a narrow fail-first product-type phase for the generalized utility wet/dry vacuum versus floor-washing/mopping appliance distinction. Test at discovery and revalidation across unrelated brands; preserve valid conventional shop vacs and do not add Bissell-specific rules.
+
+**Phase 5J result:** RR-054 and RR-061 are Fixed. Focused tests passed 174/174, the broad named safety matrix passed 417/417, the full suite passed 772/772, typecheck and eval passed, and lint reported 0 errors with 3 existing warnings. The one live `shop vac` run showed seven non-empty image URLs with image responses and no logo, placeholder, category, article, support, or HTML page used as an image. The normal pipeline ran, so RR-054 live fallback behavior remains deterministic-only. RR-068 was documented and not fixed. Phase 6 did not start.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (2 issues)
-- RR-054: Fresh fallback responses omit current diagnostic traces
-- RR-061: Product image metadata accepts non-image or irrelevant assets
+### Open (1 issue)
+- RR-068: Bissell CrossWave floor cleaners can rank as exact shop-vac products
 
 ### Needs Investigation (4 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-### Fixed (60 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-053, RR-055 through RR-060, RR-062 through RR-067
+### Fixed (62 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-067
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2160,8 +2194,7 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
-2. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
-3. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
-4. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
-5. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
+1. **RR-068** (High) - Separate shop-vac utility products from household wet/dry floor cleaners before Phase 6.
+2. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
+3. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
+4. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.

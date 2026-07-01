@@ -4,36 +4,35 @@ Generated: 2026-07-01
 
 ## Current next task
 
-**RR-067 fixed - Phase 5J awaits explicit instruction**
+**Phase 5J complete - RR-068 must be handled before Phase 6**
 
-RR-067 is Fixed in implementation commit `025afcb`.
+Phase 5J fixed RR-061 and RR-054 in implementation commit `708ee98`.
 
-Candidate-side ambiguous `HP` metadata no longer overrides stronger source-derived product identity. Horsepower/spec syntax is treated as measurement evidence; genuine HP and Hewlett-Packard products remain supported.
+Product images now require an image-like asset plus source-derived same-product context. Page URLs, image directories, UI/logo/placeholder assets, generic navigation/category/editorial artwork, and unrelated page metadata are rejected. Verified same-product product-page, retailer, manufacturer, Google Shopping, and opaque CDN image assets remain supported.
 
-The exact HART VOC1212PW case and seven unrelated brand controls pass deterministically. Genuine HP LaserJet evidence attaches, while source-derived Dell conflict evidence remains rejected despite polluted HP metadata.
+Fresh Serper-candidate fallback responses now preserve their actual debug funnel, final-selection trace, search plan, empty source-upgrade traces, and explicit bypass reasons. Normal non-debug response content is unchanged and old fixtures remain compatible.
 
-One focused `shop vac` run did not reproduce HART. It did safely attach exact RIDGID WD3050 evidence containing `3.5-Peak HP`; nearby WD3050A and unrelated candidates remained rejected. RR-041/RR-042 behavior and RR-063 through RR-066 safety remain green.
+The single live `shop vac` proof showed seven real image responses with no page, logo, placeholder, category, article, or support asset used as a card image. It did not enter a fallback path, so RR-054 remains live-unconfirmed but deterministically fixed.
 
-The canonical register now contains 67 issues:
+The same run opened RR-068: four Bissell CrossWave household floor cleaners reached the seven exact `shop vac` cards. Phase 5J did not touch product-type, requirement, ranking, discovery, final-selection, or page-eligibility behavior, and RR-068 was not fixed.
 
-- 9 Critical, 28 High, 25 Medium, 5 Low;
-- 2 Open, 4 Needs Investigation, 60 Fixed, 1 Won't Fix.
+The canonical register now contains 68 issues:
 
-## Required next phase
+- 9 Critical, 29 High, 25 Medium, 5 Low;
+- 1 Open, 4 Needs Investigation, 62 Fixed, 1 Won't Fix.
 
-Do not start automatically. The next task, only after explicit instruction, is:
+## Required next task
 
-**Phase 5J asset quality and diagnostics**
+Do not start automatically. Before Phase 6, run a narrow fail-first RR-068 product-type phase.
 
-Follow the master Phase 5 plan for RR-061 and RR-054 only. Diagnose before editing, preserve all completed product-card, evidence-identity, source-upgrade, price, ranking, type, and requirement protections, and stop after Phase 5J.
+The generalized target is the distinction between conventional wet/dry utility/shop vacuums and household wet/dry floor washers or mopping appliances. Preserve valid utility wet/dry vacuums across brands and avoid a Bissell-specific rule.
 
 Do not:
 
-- start Phase 5J without explicit instruction;
-- change the completed RR-041/RR-042 trigger/fallback or RR-067 brand/unit behavior;
-- weaken RR-063/RR-064/RR-065/RR-066 source-derived identity rules;
-- change Phase 5H final-selection calibration;
-- loosen source-upgrade identity to improve attachment rate;
+- start Phase 6 or create its reliability gauntlet;
+- alter the completed RR-061 image or RR-054 fallback-debug behavior without a proven regression;
+- change ranking, discovery breadth, final selection, price, citation, or source-upgrade behavior to fix RR-068;
+- weaken RR-063 through RR-067 source-derived identity rules;
 - weaken price, citation, product, requirement, product-type, or identity trust gates;
 - run another live search or full baseline without approval.
 
@@ -41,4 +40,4 @@ Reference:
 
 - `docs/RR-Issues-Report.md`
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` latest RR-067 cleanup entry
+- `docs/qa-loop-results.md` latest Phase 5J entry

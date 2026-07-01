@@ -8,6 +8,28 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-07-01 Phase 5J
+
+**Goal:** Fix RR-061 product-image safety and RR-054 fallback debug visibility only, without starting Phase 6.
+
+**What it checked:** Reproduced image candidates that accepted page URLs, image directories, generic artwork, and unrelated page metadata. Reproduced fresh fallback responses that ran filtering, enrichment, revalidation, and final selection but omitted those diagnostics from debug output.
+
+**What it changed:** Product images now require safe asset shape plus source-derived same-product context. Product-page identity scopes metadata and JSON-LD images, and source-upgrade images use the shared resolver after the existing identity gate. Recommendation-producing Serper fallbacks now emit the stages they actually ran, final-selection trace, search plan, source-upgrade empties, and explicit bypass reasons in debug mode only.
+
+**Why the change matters:** Suspicious page/logo/category/navigation assets no longer fill product image fields, while valid product images still attach. Current fallback fixtures remain diagnosable instead of looking like old pre-trace data.
+
+**Tests run:** Fail-first focused 35/41 with six intended failures; focused final 174/174; broad safety 417/417; full suite 772/772; typecheck passed; lint 0 errors with 3 existing warnings; eval clean.
+
+**Live checks run:** Exactly one `shop vac` save/replay. Seven final cards had real image responses; no page, logo, placeholder, category, article, support, or HTML asset was used as an image. The normal path ran, so RR-054 live fallback output remains deterministic-only.
+
+**Adjacent issue:** Opened High RR-068. Four Bissell CrossWave household floor cleaners appeared among seven exact shop-vac cards. Phase 5J did not alter product-type, requirement, ranking, discovery, final-selection, or page-eligibility behavior, and no RR-068 fix was attempted.
+
+**Scope:** RR-061 and RR-054 only. RR-041/RR-042 and RR-007/RR-008/RR-063 through RR-067 remain deterministically green. Phase 6 was not started.
+
+**Implementation commit:** `708ee98`.
+
+**Next recommended step:** Diagnose and fix RR-068 narrowly before Phase 6, using a generalized shop-vac utility-product versus floor-washer subtype rule.
+
 ## Codex Run - 2026-07-01 RR-067
 
 **Goal:** Fix only the candidate-side horsepower `HP` brand false-negative before Phase 5J.

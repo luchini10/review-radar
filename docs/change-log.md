@@ -13,6 +13,13 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-01
 
+### Codex - Phase 5J image safety and fallback diagnostics
+- Fixed RR-061 by requiring image-like assets to have source-derived product context. Page URLs, truncated image directories, SVG/UI/logo/placeholder assets, generic category/navigation/editorial artwork, and unrelated JSON-LD/social metadata no longer become product images.
+- Same-product retailer/manufacturer images, standard JPEG/PNG/WebP assets, Google Shopping thumbnails, and opaque hashed CDN product images remain supported. Source-upgrade images now use the same resolver after the existing identity gate.
+- Fixed RR-054 by preserving actual fallback-path stage funnels, final-selection traces, search-plan context, empty source-upgrade traces, and explicit bypass reasons in debug responses. Normal non-debug recommendation content is unchanged, and old fixtures still replay.
+- Verification passed 174/174 focused tests, 417/417 broad safety tests, 772/772 full tests, typecheck, lint with 0 errors and 3 existing warnings, and eval with no red flags.
+- One `shop vac` live proof returned real image responses with no page/logo/category/support image. It did not use a fallback path. The run separately opened High RR-068 because four Bissell CrossWave household floor cleaners reached exact shop-vac results; RR-068 was documented but not fixed. Phase 6 did not start.
+
 ### Codex - RR-067 horsepower/HP brand disambiguation
 - Fixed candidate-side identity handling that trusted provider `brand: "HP"` before checking whether source-derived evidence used HP as horsepower or supported a different product brand.
 - Ambiguous HP metadata now yields only to stronger source-derived title/path/snippet identity; seller, host, URL query, and query-derived text remain excluded.
