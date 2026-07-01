@@ -121,6 +121,8 @@ export function analyzeFixture(payload) {
   const debug = payload.debug || {};
   const stageFunnel = debug.stageFunnel || null;
   const finalSelectionTrace = stageFunnel?.finalSelectionTrace || null;
+  const sourceUpgradeDecisions =
+    stageFunnel?.sourceUpgradeDecisions ?? null;
   const sourceUpgradeTraces = stageFunnel?.sourceUpgradeTraces || null;
 
   const finalExact = result.exactMatches || [];
@@ -186,12 +188,37 @@ export function analyzeFixture(payload) {
     lostLeaders,
     lostLeaderDropPoints,
     dropMap,
+    sourceUpgradeDecisions,
     sourceUpgradeTraces,
     finalSelectionTrace,
   };
 }
 
 // ── CLI report printer ────────────────────────────────────────────────────────
+
+function printSourceUpgradeDecisions(decisions) {
+  if (!Array.isArray(decisions)) {
+    console.log("\nSource-upgrade decisions: not present.");
+    return;
+  }
+  if (decisions.length === 0) {
+    console.log("\nSource-upgrade decisions: no candidates evaluated.");
+    return;
+  }
+
+  const selectedCount = decisions.filter((decision) => decision.selected).length;
+  console.log(
+    `\nSource-Upgrade Decisions (${selectedCount}/${decisions.length} selected):`,
+  );
+  for (const decision of decisions) {
+    const marker = decision.selected ? "selected" : "skipped";
+    const missing = decision.missingEvidence?.join(", ") || "(none)";
+    console.log(
+      `  [${marker}] ${(decision.name || "").slice(0, 55)} ` +
+        `reason=${decision.reason || "unknown"} missing=${missing}`,
+    );
+  }
+}
 
 function printSourceUpgradeTraces(traces) {
   if (!traces) {
@@ -265,6 +292,19 @@ function printSourceUpgradeTraces(traces) {
     if (t.primaryQuery || t.fallbackQuery !== undefined || t.fallbackUsed !== undefined) {
       console.log(`    primary: ${t.primaryQuery || t.query}`);
       console.log(`    fallback: ${t.fallbackUsed ? t.fallbackQuery || "(missing)" : "not used"}`);
+    }
+    if (t.triggerReason || t.missingEvidence) {
+      console.log(
+        `    trigger: ${t.triggerReason || "(not recorded)"}; ` +
+          `missing=${t.missingEvidence?.join(", ") || "(none)"}`,
+      );
+    }
+    if (t.primaryOutcome || t.fallbackOutcome || t.fallbackReason) {
+      console.log(
+        `    outcomes: primary=${t.primaryOutcome || "?"}, ` +
+          `fallback=${t.fallbackOutcome || "not run"}, ` +
+          `fallback reason=${t.fallbackReason || "(none)"}`,
+      );
     }
     printSearchDiagnostics("primary", t.primarySearchDiagnostics);
     printSearchDiagnostics("fallback", t.fallbackSearchDiagnostics);
@@ -463,7 +503,8 @@ function printReport(analysis) {
     }
   }
 
-  // Source-quality upgrade trace
+  // Source-quality upgrade decisions and attempt trace
+  printSourceUpgradeDecisions(analysis.sourceUpgradeDecisions);
   printSourceUpgradeTraces(analysis.sourceUpgradeTraces);
 
   // Final-selection trace

@@ -37,7 +37,10 @@ import { mapWithConcurrency } from "./recommendationPerformance.ts";
 import { extractSpecsFromText } from "./specExtraction.ts";
 import { sourceTier } from "./search/sourceTier.ts";
 import { classifyProductTypeMatch } from "./productTypeMatch.ts";
-import { hasExplicitVariantConflict } from "./productEvidenceIdentity.ts";
+import {
+  classifyProductEvidenceIdentity,
+  hasExplicitVariantConflict,
+} from "./productEvidenceIdentity.ts";
 
 type VerifiableFactKind = "color" | "dimension" | "feature" | "price" | "spec";
 
@@ -1620,13 +1623,13 @@ function productsNeedingVerification(result: RecommendationResult) {
 // but BEFORE final scoring. It targets candidates that:
 //   1. Have a model-number token in their name/metadata (strong product identity)
 //   2. Pass all hard requirements (requirementCheck.failed is empty)
-//   3. Have weak source evidence: no verified price, no owner rating, and zero
-//      external citations (every citation host matches the product-page host)
+//   3. Are missing at least two evidence pillars: verified price, owner rating,
+//      or identity-safe product-specific commerce evidence
 //
 // For each qualifying candidate (capped at MAX_SOURCE_UPGRADE_CANDIDATES) a
-// single shopping search finds the same product on a retailer or editorial page
-// and merges newly-found price, rating, review-count, and citation data before
-// scoring runs.
+// primary shopping search, plus at most one bounded fallback, finds the same
+// product on a retailer or editorial page and merges newly-found price, rating,
+// review-count, and citation data before scoring runs.
 //
 // Safety invariants (never violated):
 //   - Identity gate: looksLikeSameProduct must pass before any evidence is merged
@@ -1638,6 +1641,7 @@ function productsNeedingVerification(result: RecommendationResult) {
 const MAX_SOURCE_UPGRADE_CANDIDATES = 3;
 
 export type SourceUpgradeCandidateSample = {
+  stage?: "fallback" | "primary";
   name: string;
   host: string;
   price: number | null;
@@ -1645,6 +1649,31 @@ export type SourceUpgradeCandidateSample = {
   identityMatch: boolean;
   rejectionReason: "identity_mismatch" | "no_attachable_fields" | null;
 };
+
+export type SourceUpgradeEvidencePillar =
+  | "owner_rating"
+  | "product_specific_commerce_evidence"
+  | "verified_price";
+
+export type SourceUpgradeDecision = {
+  missingEvidence: SourceUpgradeEvidencePillar[];
+  modelTokens: string[];
+  name: string;
+  reason:
+    | "candidate_cap"
+    | "failed_requirements"
+    | "selected_for_upgrade"
+    | "sufficient_evidence"
+    | "weak_identity";
+  selected: boolean;
+  shouldUpgrade: boolean;
+};
+
+type SourceUpgradeSearchOutcome =
+  | "evidence_attached"
+  | "identity_rejected"
+  | "no_attachable_fields"
+  | "shopping_results_empty";
 
 export type SourceUpgradeTrace = {
   name: string;
@@ -1658,8 +1687,13 @@ export type SourceUpgradeTrace = {
   categoryContext: string;
   query: string;
   primaryQuery: string;
+  triggerReason: "missing_multiple_evidence_pillars";
+  missingEvidence: SourceUpgradeEvidencePillar[];
   fallbackQuery?: string;
+  fallbackReason?: "primary_empty" | "primary_identity_rejected";
   fallbackUsed: boolean;
+  primaryOutcome?: SourceUpgradeSearchOutcome;
+  fallbackOutcome?: SourceUpgradeSearchOutcome;
   evidenceAttached: boolean;
   attachedFields: string[];
   primaryCandidatesReturned: number;
@@ -1675,6 +1709,7 @@ export type SourceUpgradeTrace = {
 
 type SourceUpgradeOutcome<T> = {
   result: T;
+  sourceUpgradeDecisions: SourceUpgradeDecision[];
   sourceUpgradeTraces: SourceUpgradeTrace[];
 };
 
@@ -1690,19 +1725,68 @@ function hasUsefulCommerceEvidence(product: ProductRecommendation): boolean {
     const host = sourceHost(c.url || "");
     if (!host || host === productHost) return false;
     const tier = sourceTier(host);
-    return tier === 1 || tier === 2;
+    if (tier !== 1 && tier !== 2) return false;
+
+    return (
+      classifyProductEvidenceIdentity({
+        category: product.category,
+        productName: product.name,
+        sourceTitle: c.title,
+        url: c.url,
+      }) === "same_product"
+    );
   });
 }
 
-export function needsSourceUpgrade(product: ProductRecommendation) {
-  if ((product.requirementCheck?.failed?.length ?? 0) > 0) return false;
-  if (modelTokens(product).length === 0) return false;
+function sourceUpgradeDecision(product: ProductRecommendation): SourceUpgradeDecision {
+  const detectedModelTokens = modelTokens(product);
+  const missingEvidence: SourceUpgradeEvidencePillar[] = [];
 
-  return (
-    !hasVerifiedPrice(product) &&
-    !product.metadata?.rating?.value &&
-    !hasUsefulCommerceEvidence(product)
-  );
+  if (!hasVerifiedPrice(product)) {
+    missingEvidence.push("verified_price");
+  }
+  if (!product.metadata?.rating?.value) {
+    missingEvidence.push("owner_rating");
+  }
+  if (!hasUsefulCommerceEvidence(product)) {
+    missingEvidence.push("product_specific_commerce_evidence");
+  }
+
+  if ((product.requirementCheck?.failed?.length ?? 0) > 0) {
+    return {
+      missingEvidence,
+      modelTokens: detectedModelTokens,
+      name: product.name,
+      reason: "failed_requirements",
+      selected: false,
+      shouldUpgrade: false,
+    };
+  }
+
+  if (detectedModelTokens.length === 0) {
+    return {
+      missingEvidence,
+      modelTokens: detectedModelTokens,
+      name: product.name,
+      reason: "weak_identity",
+      selected: false,
+      shouldUpgrade: false,
+    };
+  }
+
+  const shouldUpgrade = missingEvidence.length >= 2;
+  return {
+    missingEvidence,
+    modelTokens: detectedModelTokens,
+    name: product.name,
+    reason: shouldUpgrade ? "selected_for_upgrade" : "sufficient_evidence",
+    selected: false,
+    shouldUpgrade,
+  };
+}
+
+export function needsSourceUpgrade(product: ProductRecommendation) {
+  return sourceUpgradeDecision(product).shouldUpgrade;
 }
 
 function mergeRatingData(
@@ -1747,6 +1831,7 @@ async function upgradeProductSource(
   product: ProductRecommendation,
   category: string,
   searchFn: SourceUpgradeSearchFn,
+  decision: SourceUpgradeDecision,
 ): Promise<{ product: ProductRecommendation; trace: SourceUpgradeTrace }> {
   const cleanedProductName = stripRetailDisplayFiller(product.name);
   const detectedBrand = sourceUpgradeBrand(product);
@@ -1769,6 +1854,8 @@ async function upgradeProductSource(
     categoryContext: category,
     query,
     primaryQuery: query,
+    triggerReason: "missing_multiple_evidence_pillars",
+    missingEvidence: decision.missingEvidence,
     fallbackUsed: false,
     evidenceAttached: false,
     attachedFields: [],
@@ -1780,106 +1867,137 @@ async function upgradeProductSource(
     candidateSample: [],
   };
 
-  const primaryResult = sourceUpgradeSearchResult(await searchFn(query, category));
-  let candidates = primaryResult.candidates;
-  trace.primarySearchDiagnostics = primaryResult.diagnostics;
-  trace.primaryCandidatesReturned = candidates.length;
-
-  if (candidates.length === 0 && fallbackQuery && fallbackQuery !== query) {
-    trace.fallbackQuery = fallbackQuery;
-    trace.fallbackUsed = true;
-    const fallbackResult = sourceUpgradeSearchResult(
-      await searchFn(fallbackQuery, category),
-    );
-    candidates = fallbackResult.candidates;
-    trace.fallbackSearchDiagnostics = fallbackResult.diagnostics;
-    trace.fallbackCandidatesReturned = candidates.length;
-  }
-
-  trace.candidatesReturned =
-    trace.primaryCandidatesReturned + trace.fallbackCandidatesReturned;
-
-  if (candidates.length === 0) {
-    trace.noMatchReason = "shopping_results_empty";
-    return { product, trace };
-  }
-
   let updated = product;
   let metadata = updated.metadata || { offers: [] };
   let anyIdentityMatch = false;
   const sampleEntries: SourceUpgradeCandidateSample[] = [];
 
-  for (const candidate of candidates.slice(0, 6)) {
-    const identityMatch = looksLikeSameProduct(updated, candidate, category);
-    const candidatePrice = candidatePriceEvidence(candidate);
+  const evaluateCandidates = (
+    candidates: RawProductCandidate[],
+    stage: "fallback" | "primary",
+  ): SourceUpgradeSearchOutcome => {
+    if (candidates.length === 0) {
+      return "shopping_results_empty";
+    }
 
-    let sampleEntry: SourceUpgradeCandidateSample | null = null;
-    if (sampleEntries.length < 5) {
-      sampleEntry = {
-        name: (candidate.name || "").slice(0, 80),
-        host: sourceHost(candidate.productUrl || ""),
-        price: candidatePrice,
-        rating: candidate.rating ?? null,
-        identityMatch,
-        rejectionReason: identityMatch ? "no_attachable_fields" : "identity_mismatch",
+    let stageIdentityMatch = false;
+
+    for (const candidate of candidates.slice(0, 6)) {
+      const identityMatch = looksLikeSameProduct(updated, candidate, category);
+      const candidatePrice = candidatePriceEvidence(candidate);
+
+      let sampleEntry: SourceUpgradeCandidateSample | null = null;
+      if (sampleEntries.length < 5) {
+        sampleEntry = {
+          stage,
+          name: (candidate.name || "").slice(0, 80),
+          host: sourceHost(candidate.productUrl || ""),
+          price: candidatePrice,
+          rating: candidate.rating ?? null,
+          identityMatch,
+          rejectionReason: identityMatch ? "no_attachable_fields" : "identity_mismatch",
+        };
+        sampleEntries.push(sampleEntry);
+      }
+
+      if (!identityMatch) continue;
+
+      stageIdentityMatch = true;
+      anyIdentityMatch = true;
+      trace.candidatesEvaluated++;
+
+      let attached = false;
+
+      if (candidatePrice !== null && !hasVerifiedPrice(updated)) {
+        metadata = mergeOffer(metadata, candidatePrice, candidate);
+        trace.attachedFields.push("price");
+        attached = true;
+      }
+
+      const hasRatingBefore = Boolean(metadata.rating?.value);
+      const hasReviewCountBefore = Boolean(metadata.reviewCount?.value);
+      metadata = mergeRatingData(metadata, candidate);
+      if (!hasRatingBefore && Boolean(metadata.rating?.value)) {
+        trace.attachedFields.push("rating");
+        attached = true;
+      }
+      if (!hasReviewCountBefore && Boolean(metadata.reviewCount?.value)) {
+        trace.attachedFields.push("reviewCount");
+        attached = true;
+      }
+
+      const syntheticFact: MissingFact = {
+        kind: "price",
+        label: "Source upgrade",
+        queryTerm: "",
       };
-      sampleEntries.push(sampleEntry);
+      const withCitation = addVerificationCitation(updated, candidate, syntheticFact);
+      if (withCitation !== updated) {
+        updated = withCitation;
+        trace.attachedFields.push("citation");
+        attached = true;
+      }
+
+      if (!updated.product_image_url && candidate.imageUrl) {
+        updated = { ...updated, product_image_url: candidate.imageUrl };
+        trace.attachedFields.push("image");
+        attached = true;
+      }
+
+      if (attached) {
+        if (sampleEntry) sampleEntry.rejectionReason = null;
+        trace.attachableCandidates++;
+        trace.evidenceAttached = true;
+        return "evidence_attached";
+      }
     }
 
-    if (!identityMatch) continue;
+    return stageIdentityMatch ? "no_attachable_fields" : "identity_rejected";
+  };
 
-    anyIdentityMatch = true;
-    trace.candidatesEvaluated++;
+  const primaryResult = sourceUpgradeSearchResult(await searchFn(query, category));
+  trace.primarySearchDiagnostics = primaryResult.diagnostics;
+  trace.primaryCandidatesReturned = primaryResult.candidates.length;
+  trace.primaryOutcome = evaluateCandidates(primaryResult.candidates, "primary");
 
-    let attached = false;
+  const fallbackReason =
+    trace.primaryOutcome === "shopping_results_empty"
+      ? "primary_empty"
+      : trace.primaryOutcome === "identity_rejected"
+        ? "primary_identity_rejected"
+        : undefined;
 
-    if (candidatePrice !== null && !hasVerifiedPrice(updated)) {
-      metadata = mergeOffer(metadata, candidatePrice, candidate);
-      trace.attachedFields.push("price");
-      attached = true;
-    }
-
-    const hasRatingBefore = Boolean(metadata.rating?.value);
-    const hasReviewCountBefore = Boolean(metadata.reviewCount?.value);
-    metadata = mergeRatingData(metadata, candidate);
-    if (!hasRatingBefore && Boolean(metadata.rating?.value)) {
-      trace.attachedFields.push("rating");
-      attached = true;
-    }
-    if (!hasReviewCountBefore && Boolean(metadata.reviewCount?.value)) {
-      trace.attachedFields.push("reviewCount");
-      attached = true;
-    }
-
-    const syntheticFact: MissingFact = {
-      kind: "price",
-      label: "Source upgrade",
-      queryTerm: "",
-    };
-    const withCitation = addVerificationCitation(updated, candidate, syntheticFact);
-    if (withCitation !== updated) {
-      updated = withCitation;
-      trace.attachedFields.push("citation");
-      attached = true;
-    }
-
-    if (!updated.product_image_url && candidate.imageUrl) {
-      updated = { ...updated, product_image_url: candidate.imageUrl };
-      trace.attachedFields.push("image");
-      attached = true;
-    }
-
-    if (attached) {
-      if (sampleEntry) sampleEntry.rejectionReason = null;
-      trace.attachableCandidates++;
-      trace.evidenceAttached = true;
-      break;
-    }
+  if (
+    !trace.evidenceAttached &&
+    fallbackReason &&
+    fallbackQuery &&
+    fallbackQuery !== query
+  ) {
+    trace.fallbackQuery = fallbackQuery;
+    trace.fallbackReason = fallbackReason;
+    trace.fallbackUsed = true;
+    const fallbackResult = sourceUpgradeSearchResult(
+      await searchFn(fallbackQuery, category),
+    );
+    trace.fallbackSearchDiagnostics = fallbackResult.diagnostics;
+    trace.fallbackCandidatesReturned = fallbackResult.candidates.length;
+    trace.fallbackOutcome = evaluateCandidates(
+      fallbackResult.candidates,
+      "fallback",
+    );
   }
+
+  trace.candidatesReturned =
+    trace.primaryCandidatesReturned + trace.fallbackCandidatesReturned;
 
   trace.candidateSample = sampleEntries;
   if (!trace.evidenceAttached) {
-    trace.noMatchReason = anyIdentityMatch ? "no_attachable_fields" : "identity_rejected";
+    trace.noMatchReason =
+      trace.candidatesReturned === 0
+        ? "shopping_results_empty"
+        : anyIdentityMatch
+          ? "no_attachable_fields"
+          : "identity_rejected";
   }
 
   return { product: { ...updated, metadata }, trace };
@@ -1915,18 +2033,55 @@ export async function upgradeWeakSourceEvidence<T extends RecommendationResult>(
     return true;
   });
 
-  const upgradeTargets = uniqueCandidates
-    .filter(needsSourceUpgrade)
+  const evaluatedCandidates = uniqueCandidates.map((product, index) => ({
+    decision: sourceUpgradeDecision(product),
+    index,
+    product,
+  }));
+  const selectedCandidates = evaluatedCandidates
+    .filter(({ decision }) => decision.shouldUpgrade)
+    .sort(
+      (first, second) =>
+        second.decision.missingEvidence.length -
+          first.decision.missingEvidence.length ||
+        first.index - second.index,
+    )
     .slice(0, MAX_SOURCE_UPGRADE_CANDIDATES);
+  const selectedIndexes = new Set(
+    selectedCandidates.map(({ index }) => index),
+  );
+  const sourceUpgradeDecisions = evaluatedCandidates.map(
+    ({ decision, index }) => {
+      if (selectedIndexes.has(index)) {
+        return {
+          ...decision,
+          reason: "selected_for_upgrade" as const,
+          selected: true,
+        };
+      }
+
+      if (decision.shouldUpgrade) {
+        return {
+          ...decision,
+          reason: "candidate_cap" as const,
+          selected: false,
+        };
+      }
+
+      return decision;
+    },
+  );
+  const upgradeTargets = selectedCandidates.map(({ product }) => product);
 
   if (upgradeTargets.length === 0) {
-    return { result, sourceUpgradeTraces: [] };
+    return { result, sourceUpgradeDecisions, sourceUpgradeTraces: [] };
   }
 
   const upgrades = await mapWithConcurrency(
-    upgradeTargets,
+    selectedCandidates,
     options.concurrency ?? 1,
-    (product) => upgradeProductSource(product, category, searchFn),
+    ({ decision, product }) =>
+      upgradeProductSource(product, category, searchFn, decision),
   );
 
   const replacements = new Map<string, ProductRecommendation>();
@@ -1941,7 +2096,7 @@ export async function upgradeWeakSourceEvidence<T extends RecommendationResult>(
   }
 
   if (replacements.size === 0) {
-    return { result, sourceUpgradeTraces };
+    return { result, sourceUpgradeDecisions, sourceUpgradeTraces };
   }
 
   return {
@@ -1954,6 +2109,7 @@ export async function upgradeWeakSourceEvidence<T extends RecommendationResult>(
         ? replaceProductsByName(result.premiumAboveBudget, replacements)
         : undefined,
     },
+    sourceUpgradeDecisions,
     sourceUpgradeTraces,
   };
 }

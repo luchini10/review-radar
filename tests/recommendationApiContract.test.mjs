@@ -148,6 +148,11 @@ function buildHandler({
   onModelCreate = () => {},
   response = modelResponse([buildProduct()]),
   searchSerperForProducts = async () => emptySerperResult(),
+  upgradeWeakSourceEvidence = async (result) => ({
+    result,
+    sourceUpgradeDecisions: [],
+    sourceUpgradeTraces: [],
+  }),
 } = {}) {
   return createRecommendationPostHandler({
     collectReachableCitationUrls,
@@ -173,7 +178,7 @@ function buildHandler({
     enrichProductAssets: async (result) => result,
     enrichResultWithReviewEvidence: async (result) => result,
     searchSerperForProducts,
-    upgradeWeakSourceEvidence: async (result) => ({ result, sourceUpgradeTraces: [] }),
+    upgradeWeakSourceEvidence,
     verifyMissingRequirementEvidence: async (result) => result,
   });
 }
@@ -310,6 +315,45 @@ describe("recommendation API contract", () => {
       response.body.debug.timing.stages.some(
         (stage) => stage.label === "openai_final_research",
       ),
+    );
+  });
+
+  it("includes source-upgrade trigger decisions only in debug responses", async () => {
+    const sourceUpgradeDecisions = [
+      {
+        missingEvidence: ["verified_price", "owner_rating"],
+        modelTokens: ["example100"],
+        name: "Example Countertop Microwave",
+        reason: "selected_for_upgrade",
+        selected: true,
+        shouldUpgrade: true,
+      },
+    ];
+    const handler = buildHandler({
+      upgradeWeakSourceEvidence: async (result) => ({
+        result,
+        sourceUpgradeDecisions,
+        sourceUpgradeTraces: [],
+      }),
+    });
+
+    const debugResponse = await readJson(
+      await handler(
+        jsonRequest(
+          { query: "microwave" },
+          { "x-reviewradar-debug": "true" },
+        ),
+      ),
+    );
+
+    assert.equal(debugResponse.status, 200);
+    assert.deepEqual(
+      debugResponse.body.debug.stageFunnel.sourceUpgradeDecisions,
+      sourceUpgradeDecisions,
+    );
+    assert.equal(
+      "sourceUpgradeDecisions" in debugResponse.body.result,
+      false,
     );
   });
 

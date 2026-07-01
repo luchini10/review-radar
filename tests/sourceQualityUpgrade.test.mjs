@@ -391,7 +391,7 @@ describe("needsSourceUpgrade", () => {
     assert.equal(needsSourceUpgrade(p), true);
   });
 
-  it("returns false when the candidate already has a verified price", () => {
+  it("returns true when verified price is the only evidence pillar present", () => {
     const p = weakProduct("Weber Spirit E-325 3-Burner Gas Grill", {
       extra: {
         metadata: {
@@ -407,10 +407,10 @@ describe("needsSourceUpgrade", () => {
         },
       },
     });
-    assert.equal(needsSourceUpgrade(p), false);
+    assert.equal(needsSourceUpgrade(p), true);
   });
 
-  it("returns false when the candidate already has an owner rating", () => {
+  it("returns true when owner rating is the only evidence pillar present", () => {
     const p = weakProduct("Weber Spirit E-325 3-Burner Gas Grill", {
       extra: {
         metadata: {
@@ -419,10 +419,10 @@ describe("needsSourceUpgrade", () => {
         },
       },
     });
-    assert.equal(needsSourceUpgrade(p), false);
+    assert.equal(needsSourceUpgrade(p), true);
   });
 
-  it("returns false when the candidate has a tier-2 retailer citation from a different host", () => {
+  it("returns true when a product-specific retailer citation is the only evidence pillar present", () => {
     // homedepot.com is tier-2: counts as useful commerce evidence → no upgrade needed
     const p = weakProduct("Weber Spirit E-325 3-Burner Gas Grill", {
       extra: {
@@ -432,10 +432,10 @@ describe("needsSourceUpgrade", () => {
         ],
       },
     });
-    assert.equal(needsSourceUpgrade(p), false);
+    assert.equal(needsSourceUpgrade(p), true);
   });
 
-  it("returns false when the candidate has a tier-1 editorial citation", () => {
+  it("returns true when a generic tier-1 article is not same-product commerce evidence", () => {
     // wirecutter.com is tier-1: counts as useful commerce evidence → no upgrade needed
     const p = weakProduct("Weber Spirit E-325 3-Burner Gas Grill", {
       extra: {
@@ -444,6 +444,47 @@ describe("needsSourceUpgrade", () => {
         ],
       },
     });
+    assert.equal(needsSourceUpgrade(p), true);
+  });
+
+  it("returns false when two strong evidence pillars are already present", () => {
+    const p = weakProduct("Weber Spirit E-325 3-Burner Gas Grill", {
+      extra: {
+        metadata: {
+          offers: [
+            {
+              price: { value: 499, confidence: "High", sourceType: "serper", sourceUrl: "https://homedepot.com/p/weber-e325", verifiedAt: "2024-01-01" },
+              priceCurrency: { value: "USD", confidence: "High", sourceType: "serper", sourceUrl: "https://homedepot.com/p/weber-e325", verifiedAt: "2024-01-01" },
+              availability: { value: null, confidence: "Low", sourceType: "serper", sourceUrl: "https://homedepot.com/p/weber-e325", verifiedAt: "2024-01-01" },
+              retailer: "Home Depot",
+              url: "https://homedepot.com/p/weber-e325",
+            },
+          ],
+          rating: { value: 4.6, confidence: "Medium", sourceType: "serper", sourceUrl: "https://homedepot.com/p/weber-e325", verifiedAt: "2024-01-01" },
+        },
+      },
+    });
+
+    assert.equal(needsSourceUpgrade(p), false);
+  });
+
+  it("returns false when rating and exact same-product commerce evidence are present", () => {
+    const p = weakProduct("Weber Spirit E-325 3-Burner Gas Grill", {
+      extra: {
+        citations: [
+          {
+            title: "Weber Spirit E-325 3-Burner Gas Grill",
+            url: "https://homedepot.com/p/weber-spirit-e-325-gas-grill",
+            what_it_supports: "Exact retailer product page.",
+          },
+        ],
+        metadata: {
+          offers: [],
+          rating: { value: 4.6, confidence: "Medium", sourceType: "serper", sourceUrl: "https://homedepot.com/p/weber-spirit-e-325-gas-grill", verifiedAt: "2024-01-01" },
+        },
+      },
+    });
+
     assert.equal(needsSourceUpgrade(p), false);
   });
 
@@ -573,6 +614,129 @@ describe("upgradeWeakSourceEvidence", () => {
     assert.equal(sourceUpgradeTraces[0].primaryCandidatesReturned, 1);
     assert.equal(sourceUpgradeTraces[0].fallbackCandidatesReturned, 0);
     assert.equal(sourceUpgradeTraces[0].candidatesReturned, 1);
+  });
+
+  it("uses one fallback when every nonempty primary candidate fails identity", async () => {
+    const product = weakProduct(
+      "Makita XCV11Z 18V LXT Cordless Wet/Dry Vacuum",
+      { category: "shop vac", host: "makitatools.com" },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const calls = [];
+    const searchFn = async (query) => {
+      calls.push(query);
+      if (calls.length === 1) {
+        return [
+          shoppingResult("Makita XCV12Z Cordless Wet/Dry Vacuum", {
+            category: "shop vac",
+            price: 219,
+            productUrl: "https://retailer.example.com/products/makita-xcv12z",
+          }),
+        ];
+      }
+
+      return [
+        shoppingResult("Makita XCV11Z 18V LXT Cordless Wet/Dry Vacuum", {
+          category: "shop vac",
+          price: 189,
+          productUrl: "https://retailer.example.com/products/makita-xcv11z",
+        }),
+      ];
+    };
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    const trace = sourceUpgradeTraces[0];
+    assert.deepEqual(calls, ["Makita XCV11Z", "Makita XCV11Z shop vac"]);
+    assert.equal(trace.primaryCandidatesReturned, 1);
+    assert.equal(trace.primaryOutcome, "identity_rejected");
+    assert.equal(trace.fallbackUsed, true);
+    assert.equal(trace.fallbackReason, "primary_identity_rejected");
+    assert.equal(trace.fallbackCandidatesReturned, 1);
+    assert.equal(trace.fallbackOutcome, "evidence_attached");
+    assert.equal(trace.evidenceAttached, true);
+    assert.ok(
+      upgraded.exactMatches[0].metadata?.offers?.some(
+        (offer) => offer.price?.value === 189,
+      ),
+    );
+  });
+
+  it("does not retry fallback after a primary identity match with no attachable fields", async () => {
+    const product = weakProduct("Weber Spirit E-325 3-Burner Gas Grill");
+    const result = makeResult([product]);
+    const req = makeReq("gas grill");
+    const calls = [];
+    const searchFn = async (query) => {
+      calls.push(query);
+      return [
+        {
+          ...shoppingResult("Weber Spirit E-325 3-Burner Gas Grill", {
+            productUrl: product.product_page_url,
+          }),
+          price: null,
+          rating: null,
+          reviewCount: null,
+        },
+      ];
+    };
+
+    const { sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    const trace = sourceUpgradeTraces[0];
+    assert.deepEqual(calls, ["Weber Spirit E-325"]);
+    assert.equal(trace.primaryOutcome, "no_attachable_fields");
+    assert.equal(trace.fallbackUsed, false);
+    assert.equal(trace.fallbackReason, undefined);
+    assert.equal(trace.evidenceAttached, false);
+  });
+
+  it("keeps both primary and fallback wrong-product evidence rejected", async () => {
+    const product = weakProduct(
+      "Amazon.com: RIDGID Wet Dry Vacuums VAC1200 Heavy Duty Wet/Dry Vacuum",
+      { category: "shop vac", host: "amazon.com" },
+    );
+    const result = makeResult([product]);
+    const req = makeReq("shop vac");
+    const calls = [];
+    const searchFn = async (query) => {
+      calls.push(query);
+      if (calls.length === 1) {
+        return [
+          shoppingResult("SKIL VA1200D-10 Wet/Dry Shop Vacuum", {
+            category: "shop vac",
+            price: 99,
+            productUrl: "https://retailer.example.com/products/skil-va1200d-10",
+          }),
+        ];
+      }
+
+      return [
+        shoppingResult("Amazon Basics 6-Gallon 3.5 HP Wet/Dry Vacuum", {
+          brand: "Amazon Basics",
+          category: "shop vac",
+          price: 62.99,
+          productUrl:
+            "https://www.google.com/search?ibp=oshop&q=RIDGID+VAC1200&udm=28&prds=catalogid%3A18395467410602476782",
+          retailer: "Amazon.com",
+        }),
+      ];
+    };
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    const trace = sourceUpgradeTraces[0];
+    assert.equal(calls.length, 2);
+    assert.equal(trace.primaryOutcome, "identity_rejected");
+    assert.equal(trace.fallbackUsed, true);
+    assert.equal(trace.fallbackOutcome, "identity_rejected");
+    assert.equal(trace.evidenceAttached, false);
+    assert.equal(trace.noMatchReason, "identity_rejected");
+    assert.equal(upgraded.exactMatches[0].metadata?.offers?.length, 0);
   });
 
   it("uses one fallback search when the primary source-upgrade query returns zero candidates", async () => {
@@ -1782,7 +1946,7 @@ describe("upgradeWeakSourceEvidence", () => {
     );
   });
 
-  it("does NOT upgrade a candidate that has a verified price already", async () => {
+  it("does NOT upgrade a candidate that already has verified price and rating", async () => {
     const product = weakProduct("Weber Spirit E-325 3-Burner Gas Grill", {
       extra: {
         metadata: {
@@ -1795,6 +1959,7 @@ describe("upgradeWeakSourceEvidence", () => {
               url: "https://homedepot.com/p/x",
             },
           ],
+          rating: { value: 4.6, confidence: "Medium", sourceType: "structured", sourceUrl: "https://homedepot.com/p/x", verifiedAt: "2024-01-01" },
         },
       },
     });
@@ -1805,7 +1970,7 @@ describe("upgradeWeakSourceEvidence", () => {
 
     const { sourceUpgradeTraces } = await upgradeWeakSourceEvidence(result, req, { searchFn });
 
-    assert.equal(called, false, "search was never called (product already upgraded)");
+    assert.equal(called, false, "search was never called (two evidence pillars already present)");
     assert.equal(sourceUpgradeTraces.length, 0, "no traces — no eligible candidates");
   });
 
@@ -1879,6 +2044,63 @@ describe("upgradeWeakSourceEvidence", () => {
 
     assert.equal(called, false);
     assert.equal(sourceUpgradeTraces.length, 0);
+  });
+
+  it("records selected and skipped source-upgrade trigger decisions", async () => {
+    const weakWithRating = weakProduct(
+      "Makita XCV11Z 18V LXT Cordless Wet/Dry Vacuum",
+      {
+        category: "shop vac",
+        extra: {
+          metadata: {
+            offers: [],
+            rating: { value: 4.4, confidence: "Medium", sourceType: "serper", sourceUrl: "https://retailer.example.com/products/makita-xcv11z", verifiedAt: "2026-06-30" },
+          },
+        },
+      },
+    );
+    const strong = weakProduct("RIDGID HD0900 9 Gallon Wet/Dry Vacuum", {
+      category: "shop vac",
+      extra: {
+        metadata: {
+          offers: [
+            {
+              price: { value: 129, confidence: "High", sourceType: "serper", sourceUrl: "https://homedepot.com/p/ridgid-hd0900", verifiedAt: "2026-06-30" },
+              priceCurrency: { value: "USD", confidence: "High", sourceType: "serper", sourceUrl: "https://homedepot.com/p/ridgid-hd0900", verifiedAt: "2026-06-30" },
+              availability: { value: null, confidence: "Low", sourceType: "serper", sourceUrl: "https://homedepot.com/p/ridgid-hd0900", verifiedAt: "2026-06-30" },
+              retailer: "Home Depot",
+              url: "https://homedepot.com/p/ridgid-hd0900",
+            },
+          ],
+          rating: { value: 4.6, confidence: "Medium", sourceType: "serper", sourceUrl: "https://homedepot.com/p/ridgid-hd0900", verifiedAt: "2026-06-30" },
+        },
+      },
+    });
+    const result = makeResult([weakWithRating, strong]);
+    const req = makeReq("shop vac");
+    const searchFn = async () => [];
+
+    const { sourceUpgradeDecisions } =
+      await upgradeWeakSourceEvidence(result, req, { searchFn });
+
+    const selected = sourceUpgradeDecisions.find(
+      (decision) => decision.name === weakWithRating.name,
+    );
+    const skipped = sourceUpgradeDecisions.find(
+      (decision) => decision.name === strong.name,
+    );
+
+    assert.equal(selected?.selected, true);
+    assert.equal(selected?.reason, "selected_for_upgrade");
+    assert.deepEqual(selected?.missingEvidence, [
+      "verified_price",
+      "product_specific_commerce_evidence",
+    ]);
+    assert.equal(skipped?.selected, false);
+    assert.equal(skipped?.reason, "sufficient_evidence");
+    assert.deepEqual(skipped?.missingEvidence, [
+      "product_specific_commerce_evidence",
+    ]);
   });
 
   it("leaves citation list unchanged when the URL is already present", async () => {
@@ -2005,7 +2227,9 @@ describe("upgradeWeakSourceEvidence", () => {
     });
 
     assert.deepEqual(Object.keys(output.result).sort(), Object.keys(result).sort());
+    assert.equal("sourceUpgradeDecisions" in output.result, false);
     assert.equal("sourceUpgradeTraces" in output.result, false);
+    assert.ok(output.sourceUpgradeDecisions.length > 0);
     assert.ok(output.sourceUpgradeTraces.length > 0);
   });
 
@@ -2061,15 +2285,20 @@ describe("upgradeWeakSourceEvidence", () => {
     const { sourceUpgradeTraces } = await upgradeWeakSourceEvidence(result, req, { searchFn });
 
     const t = sourceUpgradeTraces[0];
-    assert.equal(t.candidatesReturned, 1);
+    assert.equal(t.candidatesReturned, 2);
     assert.equal(t.primaryCandidatesReturned, 1);
-    assert.equal(t.fallbackCandidatesReturned, 0);
-    assert.equal(t.fallbackUsed, false);
+    assert.equal(t.fallbackCandidatesReturned, 1);
+    assert.equal(t.fallbackUsed, true);
+    assert.equal(t.primaryOutcome, "identity_rejected");
+    assert.equal(t.fallbackReason, "primary_identity_rejected");
+    assert.equal(t.fallbackOutcome, "identity_rejected");
     assert.equal(t.candidatesEvaluated, 0);
     assert.equal(t.noMatchReason, "identity_rejected");
     assert.equal(t.evidenceAttached, false);
-    assert.equal(t.candidateSample.length, 1);
+    assert.equal(t.candidateSample.length, 2);
     assert.equal(t.candidateSample[0].identityMatch, false);
+    assert.equal(t.candidateSample[0].stage, "primary");
+    assert.equal(t.candidateSample[1].stage, "fallback");
     assert.equal(t.candidateSample[0].rejectionReason, "identity_mismatch");
     assert.equal(t.candidateSample[0].price, 399);
     assert.equal(t.candidateSample[0].rating, 4.2);
@@ -2121,7 +2350,7 @@ describe("upgradeWeakSourceEvidence", () => {
     const { sourceUpgradeTraces } = await upgradeWeakSourceEvidence(result, req, { searchFn });
 
     const t = sourceUpgradeTraces[0];
-    assert.equal(t.candidatesReturned, 7);
+    assert.equal(t.candidatesReturned, 14);
     assert.equal(t.candidatesEvaluated, 0);
     assert.equal(t.noMatchReason, "identity_rejected");
     assert.ok(t.candidateSample.length <= 5, "sample capped at 5");

@@ -1117,7 +1117,11 @@ async function handleRecommendationPost(
       }
     }
 
-    const { result: sourceUpgradedResult, sourceUpgradeTraces } =
+    const {
+      result: sourceUpgradedResult,
+      sourceUpgradeDecisions = [],
+      sourceUpgradeTraces,
+    } =
       await timing.measure(
         "source_quality_upgrade",
         () =>
@@ -1205,6 +1209,7 @@ async function handleRecommendationPost(
             // exactly why it was selected, collapsed, dropped, or demoted. This
             // covers candidates that reach scoreAndSelectRecommendations — pipeline
             // stages before this point are covered by the stages[] funnel above.
+            sourceUpgradeDecisions,
             sourceUpgradeTraces,
             finalSelectionTrace,
           }

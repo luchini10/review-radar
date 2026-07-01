@@ -137,5 +137,45 @@ describe("analyzeFixture — synthetic robot vacuum fixture", () => {
       oldAnalysis.sourceUpgradeTraces[0].primarySearchDiagnostics,
       undefined,
     );
+    assert.equal(oldAnalysis.sourceUpgradeDecisions, null);
+  });
+
+  it("preserves source-upgrade trigger decisions for replay diagnostics", () => {
+    const sourceUpgradeDecisions = [
+      {
+        missingEvidence: ["verified_price", "owner_rating"],
+        modelTokens: ["e325"],
+        name: "Weber Spirit E-325",
+        reason: "selected_for_upgrade",
+        selected: true,
+        shouldUpgrade: true,
+      },
+      {
+        missingEvidence: ["product_specific_commerce_evidence"],
+        modelTokens: ["hd0900"],
+        name: "RIDGID HD0900",
+        reason: "sufficient_evidence",
+        selected: false,
+        shouldUpgrade: false,
+      },
+    ];
+    const fixture = {
+      _query: "shop vac",
+      result: { exactMatches: [], nearMatches: [] },
+      debug: {
+        stageFunnel: {
+          sourceUpgradeDecisions,
+          sourceUpgradeTraces: [],
+          stages: [],
+        },
+      },
+    };
+
+    const fixtureAnalysis = analyzeFixture(fixture);
+
+    assert.deepEqual(
+      fixtureAnalysis.sourceUpgradeDecisions,
+      sourceUpgradeDecisions,
+    );
   });
 });
