@@ -1273,9 +1273,9 @@ Stop. Fix RR-066 only after explicit instruction. Preserve the fail-first RR-041
 - Stop condition hit: No. The fix tightened model evidence requirements without weakening any trust gate or entering another phase.
 - New issue IDs opened: None.
 - Existing issue IDs updated: RR-066 changed from Open to Fixed. RR-041/RR-042 remain Needs Investigation. RR-007, RR-008, RR-063, RR-064, and RR-065 remain Fixed.
-- Docs committed: Pending.
+- Docs committed: Yes.
 - Implementation commit: `b3cfab7`.
-- Documentation commit: Pending.
+- Documentation commit: `d00c0ba`.
 - Verification: fail-first 80/84 with only four intended RR-066 failures; focused final 84/84; broad named safety 304/304; typecheck passed; lint 0 errors with 3 existing warnings; full suite 752/752; eval clean.
 - Live validation: exactly one `shop vac` call. Nearby RIDGID HD09001/HD0919/HD1900 offers were rejected for HD0900; exact Armor All VOM205P evidence attached safely. WD4522 did not recur.
 - Scope: No RR-041/RR-042 trigger/fallback change, Phase 5I retry, Phase 5J work, ranking, discovery, price, page eligibility, product type, requirements, final selection, citation retention, or UI change.

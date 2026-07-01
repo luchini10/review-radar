@@ -5355,7 +5355,7 @@ The run used the pre-existing trigger behavior. RR-041/RR-042 trigger/fallback l
 - RR-007, RR-008, RR-063, RR-064, RR-065: remain Fixed.
 - Register: 66 issues; 9 Critical, 28 High, 24 Medium, 5 Low; 2 Open, 6 Needs Investigation, 57 Fixed, 1 Won't Fix.
 - Implementation commit: `b3cfab7`.
-- Documentation commit: pending.
+- Documentation commit: `d00c0ba`.
 - Generated baselines, `.claude/`, and live fixtures remain untracked and uncommitted.
 
 Recommended direction: stop. Retry Phase 5I for RR-041/RR-042 only after explicit instruction, preserving the RR-066 requirement that model-qualified targets receive model-level source evidence.

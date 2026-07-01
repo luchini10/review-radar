@@ -1236,6 +1236,6 @@ New entries should keep the same format and stay easy to read.
 
 **Issues:** RR-066 Fixed. RR-041/RR-042 remain Needs Investigation. RR-007, RR-008, RR-063, RR-064, and RR-065 remain Fixed. Totals: 66 issues; 9 Critical, 28 High, 24 Medium, 5 Low; 2 Open, 6 Needs Investigation, 57 Fixed, 1 Won't Fix.
 
-**Scope:** Two implementation/test files plus required docs. No Phase 5I trigger/fallback behavior, Phase 5J work, ranking, discovery, price, eligibility, product-type, requirement, final-selection, citation-retention, or UI change. Implementation commit: `b3cfab7`; documentation commit: pending.
+**Scope:** Two implementation/test files plus required docs. No Phase 5I trigger/fallback behavior, Phase 5J work, ranking, discovery, price, eligibility, product-type, requirement, final-selection, citation-retention, or UI change. Implementation commit: `b3cfab7`; documentation commit: `d00c0ba`.
 
 **Next recommended step:** Stop. Retry Phase 5I for RR-041/RR-042 only after explicit instruction and preserve the RR-066 model-level identity requirement.
