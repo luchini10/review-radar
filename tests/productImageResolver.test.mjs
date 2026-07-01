@@ -72,6 +72,111 @@ describe("product image resolver", () => {
     }
   });
 
+  it("rejects RR-061 page URLs and truncated image directories", () => {
+    const urls = [
+      "https://images.thdstatic.com/productImages/",
+      "https://www.greenworksofficial.com/products/40v-cordless-axial-leaf-blower-2416102az",
+      "https://www.blackanddecker.com/products/bcbl700d1",
+      "https://www.lg.com/us/images/360/he/monitors/39GX90SA-W.html",
+    ];
+
+    for (const url of urls) {
+      const result = validateProductImageCandidate(
+        {
+          evidenceText: "Apple iPad Pro M4",
+          source: "existing",
+          url,
+        },
+        context,
+      );
+
+      assert.equal(result.accepted, false, url);
+    }
+  });
+
+  it("rejects generic navigation, category, editorial, and brand artwork", () => {
+    const urls = [
+      "https://cdn.example.com/images/top-nav-image-home-and-rec.webp",
+      "https://cdn.example.com/images/dog-food-category-hero.jpg",
+      "https://cdn.example.com/images/review-best-tablets-thumbnail.jpg",
+      "https://cdn.example.com/images/brand-beyond-belief-banner.png",
+    ];
+
+    for (const url of urls) {
+      const result = validateProductImageCandidate(
+        {
+          evidenceText: "Apple iPad Pro M4",
+          source: "existing",
+          url,
+        },
+        context,
+      );
+
+      assert.equal(result.accepted, false, url);
+    }
+  });
+
+  it("accepts a hashed CDN asset when same-product source context is verified", () => {
+    const result = validateProductImageCandidate(
+      {
+        contextVerified: true,
+        evidenceText: "Apple iPad Pro M4 retailer product offer",
+        source: "trusted_metadata",
+        url: "https://cdn.example.com/assets/8f93a2b717c4",
+      },
+      context,
+    );
+
+    assert.equal(result.accepted, true);
+  });
+
+  it("does not bind unrelated JSON-LD or generic social metadata to the target", () => {
+    const candidates = extractProductImageCandidatesFromHtml(
+      `
+        <html>
+          <head>
+            <title>Shop All Tablets</title>
+            <meta property="og:title" content="Best tablets and accessories">
+            <meta property="og:image" content="/images/tablet-category-hero.jpg">
+            <script type="application/ld+json">
+              {
+                "@context": "https://schema.org",
+                "@graph": [
+                  {
+                    "@type": "Product",
+                    "name": "Unrelated Android Tablet Z10",
+                    "image": "https://cdn.example.com/images/android-z10.jpg"
+                  },
+                  {
+                    "@type": "Product",
+                    "name": "Apple iPad Pro M4",
+                    "image": "https://cdn.example.com/assets/ipad-m4-hash.webp"
+                  }
+                ]
+              }
+            </script>
+          </head>
+        </html>
+      `,
+      "https://retailer.example.com/tablets",
+      context,
+    );
+    const resolution = resolveBestProductImage(candidates, context);
+
+    assert.equal(
+      resolution.url,
+      "https://cdn.example.com/assets/ipad-m4-hash.webp",
+    );
+    assert.ok(
+      resolution.rejected.some((item) =>
+        item.url.includes("tablet-category-hero"),
+      ),
+    );
+    assert.ok(
+      !candidates.some((candidate) => candidate.url.includes("android-z10")),
+    );
+  });
+
   it("extracts og:image, twitter:image, JSON-LD, and matching page images", () => {
     const candidates = extractProductImageCandidatesFromHtml(
       `

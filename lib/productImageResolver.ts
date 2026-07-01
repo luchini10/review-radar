@@ -12,6 +12,7 @@ export type ProductImageCandidateSource =
 
 export type ProductImageCandidate = {
   baseUrl?: string;
+  contextVerified?: boolean;
   evidenceText?: string;
   height?: number | null;
   source: ProductImageCandidateSource;
@@ -41,6 +42,7 @@ export type ProductImageResolution = {
 };
 
 const IMAGE_EXTENSIONS = [".avif", ".gif", ".jpeg", ".jpg", ".png", ".webp"];
+const PAGE_EXTENSIONS = [".aspx", ".htm", ".html", ".php"];
 const PLACEHOLDER_TERMS = [
   "blank",
   "default-image",
@@ -71,10 +73,13 @@ const IMAGE_PATH_TERMS = [
   "media",
   "photo",
   "photos",
-  "product",
-  "products",
   "static",
 ];
+
+const HARD_NON_PRODUCT_ASSET_PATTERN =
+  /(?:^|[-_/])(?:article|badge|blog|category|collection|favicon|icon|logo|manual|navigation|nav|rating|review|social|sprite|stars?|support|top-nav|tracking|wordmark|banner)(?:[-_/.]|$)/i;
+const SOFT_NON_PRODUCT_ASSET_PATTERN =
+  /(?:^|[-_/])hero(?:[-_/.]|$)/i;
 
 const SOURCE_PRIORITY: Record<ProductImageCandidateSource, number> = {
   existing: 600,
@@ -210,6 +215,38 @@ function urlHasImageExtension(url: string) {
   }
 }
 
+function urlHasPageExtension(url: string) {
+  try {
+    const path = new URL(url).pathname.toLowerCase();
+    return PAGE_EXTENSIONS.some((extension) => path.endsWith(extension));
+  } catch {
+    return false;
+  }
+}
+
+function urlEndsAtImageDirectory(url: string) {
+  try {
+    const path = decodeURIComponent(new URL(url).pathname)
+      .toLowerCase()
+      .replace(/\/+$/, "");
+    const finalSegment = path.split("/").filter(Boolean).at(-1) || "";
+
+    return [
+      "assets",
+      "image",
+      "images",
+      "img",
+      "media",
+      "photo",
+      "photos",
+      "productimage",
+      "productimages",
+    ].includes(finalSegment);
+  } catch {
+    return false;
+  }
+}
+
 const TRUSTED_IMAGE_HOST_SUFFIXES = [
   // Google Shopping/search thumbnails (e.g. encrypted-tbn0.gstatic.com/shopping?q=tbn:...)
   // are valid product images but have no extension or image-like path.
@@ -226,7 +263,7 @@ function isTrustedImageHost(hostname: string) {
   );
 }
 
-function urlLooksImageLike(url: string) {
+function urlLooksImageLike(url: string, contextVerified = false) {
   try {
     const parsed = new URL(url);
     const path = decodeURIComponent(parsed.pathname).toLowerCase();
@@ -240,7 +277,8 @@ function urlLooksImageLike(url: string) {
       search.has("width") ||
       search.has("w") ||
       search.has("height") ||
-      search.has("h")
+      search.has("h") ||
+      (contextVerified && Boolean(path.split("/").filter(Boolean).at(-1)))
     );
   } catch {
     return false;
@@ -267,6 +305,30 @@ function isKnownNonProductImage(url: string) {
   const decoded = safeDecodeURIComponent(url);
 
   return NON_PRODUCT_IMAGE_PATTERNS.some((pattern) => pattern.test(decoded));
+}
+
+function nonProductAssetReason(
+  candidate: ProductImageCandidate,
+  url: string,
+  context: ProductImageContext,
+) {
+  const decodedPath = safeDecodeURIComponent(new URL(url).pathname);
+
+  if (HARD_NON_PRODUCT_ASSET_PATTERN.test(decodedPath)) {
+    return "generic navigation, category, editorial, logo, or UI artwork";
+  }
+
+  if (
+    SOFT_NON_PRODUCT_ASSET_PATTERN.test(decodedPath) &&
+    !(
+      candidate.contextVerified &&
+      textMatchesContext(candidate.evidenceText || "", context)
+    )
+  ) {
+    return "generic hero artwork is not tied to the product";
+  }
+
+  return "";
 }
 
 function dimensionFromUrl(url: string, names: string[]) {
@@ -367,16 +429,20 @@ function candidateConfidence(
   const strongMatch = textMatchesContext(evidence, context);
   const weakMatch = weakTextMatchesContext(evidence, context);
 
+  if (candidate.contextVerified) {
+    return strongMatch || weakMatch ? "high" : "medium";
+  }
+
   if (
     candidate.source === "existing" ||
     candidate.source === "serp" ||
     candidate.source === "trusted_metadata"
   ) {
-    return strongMatch || weakMatch ? "high" : "medium";
+    return strongMatch || weakMatch ? "high" : "none";
   }
 
   if (candidate.source === "metadata" || candidate.source === "json_ld") {
-    return strongMatch || weakMatch ? "high" : "medium";
+    return strongMatch || weakMatch ? "high" : "none";
   }
 
   if (strongMatch) {
@@ -407,6 +473,28 @@ export function validateProductImageCandidate(
 
   const lowerUrl = url.toLowerCase();
 
+  if (urlHasPageExtension(url)) {
+    return {
+      accepted: false,
+      rejection: {
+        reason: "HTML or page URL cannot be used as a product image",
+        source: candidate.source,
+        url,
+      },
+    };
+  }
+
+  if (urlEndsAtImageDirectory(url)) {
+    return {
+      accepted: false,
+      rejection: {
+        reason: "image URL points to a directory rather than an asset",
+        source: candidate.source,
+        url,
+      },
+    };
+  }
+
   if (lowerUrl.endsWith(".svg") || lowerUrl.includes(".svg?")) {
     return {
       accepted: false,
@@ -436,7 +524,20 @@ export function validateProductImageCandidate(
     };
   }
 
-  if (!urlLooksImageLike(url)) {
+  const genericAssetReason = nonProductAssetReason(candidate, url, context);
+
+  if (genericAssetReason) {
+    return {
+      accepted: false,
+      rejection: {
+        reason: genericAssetReason,
+        source: candidate.source,
+        url,
+      },
+    };
+  }
+
+  if (!urlLooksImageLike(url, candidate.contextVerified)) {
     return {
       accepted: false,
       rejection: {
@@ -606,8 +707,20 @@ export function extractProductImageCandidatesFromHtml(
   html: string,
   pageUrl: string,
   context: ProductImageContext,
+  options: { pageIdentityVerified?: boolean } = {},
 ): ProductImageCandidate[] {
   const candidates: ProductImageCandidate[] = [];
+  const pageIdentityText = [
+    getMetaContent(html, "og:title"),
+    getMetaContent(html, "twitter:title"),
+    stripHtml(html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1] || ""),
+    stripHtml(html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)?.[1] || ""),
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const pageIdentityVerified =
+    Boolean(options.pageIdentityVerified) ||
+    textMatchesContext(pageIdentityText, context);
   const metaImages = [
     getMetaContent(html, "og:image"),
     getMetaContent(html, "og:image:secure_url"),
@@ -618,7 +731,8 @@ export function extractProductImageCandidatesFromHtml(
   for (const image of metaImages) {
     candidates.push({
       baseUrl: pageUrl,
-      evidenceText: context.productName,
+      contextVerified: pageIdentityVerified,
+      evidenceText: pageIdentityText,
       source: "metadata",
       url: image,
     });
@@ -632,16 +746,17 @@ export function extractProductImageCandidatesFromHtml(
       );
 
       for (const product of products) {
-        const evidenceText = [
-          typeof product.name === "string" ? product.name : "",
-          context.productName,
-        ]
-          .filter(Boolean)
-          .join(" ");
+        const evidenceText =
+          typeof product.name === "string" ? product.name : "";
+
+        if (!textMatchesContext(evidenceText, context)) {
+          continue;
+        }
 
         for (const image of imageValues(product.image)) {
           candidates.push({
             baseUrl: pageUrl,
+            contextVerified: true,
             evidenceText,
             source: "json_ld",
             url: image,
@@ -668,6 +783,7 @@ export function extractProductImageCandidatesFromHtml(
 
     candidates.push({
       baseUrl: pageUrl,
+      contextVerified: pageIdentityVerified,
       evidenceText: [
         attrs.alt,
         attrs.title,

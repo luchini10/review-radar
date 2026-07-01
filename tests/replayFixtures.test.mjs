@@ -178,4 +178,45 @@ describe("analyzeFixture — synthetic robot vacuum fixture", () => {
       sourceUpgradeDecisions,
     );
   });
+
+  it("preserves current fallback-path diagnostics while old fixtures remain compatible", () => {
+    const fallbackTrace = {
+      reason: "ai_research_error",
+      source: "serper_candidates",
+      stagesBypassed: [
+        {
+          stage: "source_quality_upgrade",
+          reason: "fallback_path_does_not_run_source_upgrade",
+        },
+      ],
+    };
+    const fixture = {
+      _query: "microwave",
+      result: { exactMatches: [], nearMatches: [] },
+      debug: {
+        fallbackTrace,
+        stageFunnel: {
+          path: "search_candidate_fallback",
+          stages: [
+            { stage: "candidatePool", names: ["Example Microwave"] },
+            { stage: "final", names: ["Example Microwave"] },
+          ],
+          sourceUpgradeDecisions: [],
+          sourceUpgradeTraces: [],
+          finalSelectionTrace: [],
+        },
+      },
+    };
+
+    const analysis = analyzeFixture(fixture);
+
+    assert.deepEqual(analysis.fallbackTrace, fallbackTrace);
+    assert.equal(analysis.stageFunnelAnalysis.length, 2);
+
+    const oldAnalysis = analyzeFixture({
+      _query: "microwave",
+      result: { exactMatches: [], nearMatches: [] },
+    });
+    assert.equal(oldAnalysis.fallbackTrace, null);
+  });
 });

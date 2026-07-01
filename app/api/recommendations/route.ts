@@ -76,7 +76,6 @@ import {
   serperCandidateToRecommendation,
 } from "../../../lib/search/serper.ts";
 import {
-  scoreAndSelectRecommendations,
   scoreAndSelectRecommendationsWithTrace,
 } from "../../../lib/recommendationScoring.ts";
 import { candidateSnapshot, resultNames } from "../../../lib/recommendationFunnel.ts";
@@ -513,19 +512,81 @@ async function buildServerSearchFallbackResult(options: {
     fallbackVerifiedFactsResult,
     requestWithRequirements,
   );
-  const fallbackResult = scoreAndSelectRecommendations(
-    {
-      ...fallbackRevalidatedResult,
-      extractedRequirements: requestWithRequirements.extractedRequirements,
-    },
-    requestWithRequirements,
-    {
-      ...discoveryCoverage,
-      rawCandidateCount: serperRecommendations.length,
-    },
-  );
+  const { result: fallbackResult, finalSelectionTrace } =
+    scoreAndSelectRecommendationsWithTrace(
+      {
+        ...fallbackRevalidatedResult,
+        extractedRequirements: requestWithRequirements.extractedRequirements,
+      },
+      requestWithRequirements,
+      {
+        ...discoveryCoverage,
+        rawCandidateCount: serperRecommendations.length,
+      },
+    );
+  const prioritizedResult = prioritizeProductPageUrlsInResult(fallbackResult);
 
-  return prioritizeProductPageUrlsInResult(fallbackResult);
+  return {
+    result: prioritizedResult,
+    stageFunnel: {
+      path: "search_candidate_fallback" as const,
+      stages: [
+        {
+          stage: "candidatePool",
+          names: resultNames(serperRecommendations),
+        },
+        {
+          stage: "afterRequirementFilter",
+          names: resultNames(searchCandidateResult.recommendations),
+          near: resultNames(searchCandidateResult.nearMatches),
+        },
+        {
+          stage: "afterEnrichment",
+          names: resultNames(fallbackEvidenceResult.recommendations),
+          near: resultNames(fallbackEvidenceResult.nearMatches),
+        },
+        {
+          stage: "afterAssets",
+          names: resultNames(fallbackAssetResult.recommendations),
+          near: resultNames(fallbackAssetResult.nearMatches),
+        },
+        {
+          stage: "afterRescue",
+          names: resultNames(fallbackVerifiedFactsResult.recommendations),
+          near: resultNames(fallbackVerifiedFactsResult.nearMatches),
+        },
+        {
+          stage: "afterRevalidation",
+          names: resultNames(fallbackRevalidatedResult.exactMatches),
+          near: resultNames(fallbackRevalidatedResult.nearMatches),
+        },
+        {
+          stage: "final",
+          names: resultNames(prioritizedResult.exactMatches),
+          near: resultNames(prioritizedResult.nearMatches),
+        },
+      ],
+      poolCandidates: serperRecommendations.map((product) =>
+        candidateSnapshot(product),
+      ),
+      postFilterCandidates: searchCandidateResult.recommendations.map(
+        (product) => candidateSnapshot(product),
+      ),
+      sourceUpgradeDecisions: [],
+      sourceUpgradeTraces: [],
+      finalSelectionTrace,
+      stagesBypassed: [
+        {
+          stage: "citation_verification",
+          reason: "serper_candidates_are_provider_verified",
+        },
+        {
+          stage: "source_quality_upgrade",
+          reason: "fallback_path_does_not_run_source_upgrade",
+        },
+      ],
+    },
+  };
 }
 
 function shouldRunNoExactSanityFallback(options: {
@@ -946,7 +1007,7 @@ async function handleRecommendationPost(
         serperRecommendations.length > 0
       ) {
         debugStage = "search_candidate_fallback";
-        const prioritizedFallbackResult = await timing.measure(
+        const fallbackOutcome = await timing.measure(
           "search_candidate_fallback",
           () =>
             buildServerSearchFallbackResult({
@@ -958,10 +1019,28 @@ async function handleRecommendationPost(
               serperRecommendations,
             }),
         );
+        const prioritizedFallbackResult = fallbackOutcome.result;
         const fallbackDebug = {
           fallbackReason: resultIssue,
           fallbackSource: "serper_candidates",
+          fallbackTrace: {
+            reason: resultIssue,
+            source: "serper_candidates",
+            stagesBypassed: fallbackOutcome.stageFunnel.stagesBypassed,
+          },
+          generatedQueries,
+          searchPlanStages: {
+            pass1: searchPlan.stagedQueries.pass1.map((query) => query.query),
+            pass2: searchPlan.stagedQueries.pass2.map((query) => query.query),
+            pass3: searchPlan.stagedQueries.pass3.map((query) => query.query),
+          },
           serperCandidateCount: serperRecommendations.length,
+          stageFunnel: {
+            ...fallbackOutcome.stageFunnel,
+            raw: serperResult.stats.funnel?.rawNames || [],
+            seeds: serperResult.stats.seedProductNames,
+            rejectedCheap: serperResult.stats.funnel?.rejected || [],
+          },
           timing: timing.summary(),
           verifiedUrlCount: verifiedUrls.size,
         };
@@ -1078,7 +1157,7 @@ async function handleRecommendationPost(
       })
     ) {
       debugStage = "no_exact_sanity_fallback";
-      const sanityFallbackResult = await timing.measure(
+      const sanityFallbackOutcome = await timing.measure(
         "no_exact_sanity_fallback",
         () =>
           buildServerSearchFallbackResult({
@@ -1096,6 +1175,7 @@ async function handleRecommendationPost(
             serperRecommendations,
           }),
       );
+      const sanityFallbackResult = sanityFallbackOutcome.result;
 
       if (
         sanityFallbackResult.exactMatches.length > 0 ||
@@ -1108,7 +1188,32 @@ async function handleRecommendationPost(
                 debug: {
                   fallbackReason: "no_exact_common_search_sanity_check",
                   fallbackSource: "serper_candidates",
+                  fallbackTrace: {
+                    reason: "no_exact_common_search_sanity_check",
+                    source: "serper_candidates",
+                    stagesBypassed:
+                      sanityFallbackOutcome.stageFunnel.stagesBypassed,
+                  },
+                  generatedQueries,
+                  searchPlanStages: {
+                    pass1: searchPlan.stagedQueries.pass1.map(
+                      (query) => query.query,
+                    ),
+                    pass2: searchPlan.stagedQueries.pass2.map(
+                      (query) => query.query,
+                    ),
+                    pass3: searchPlan.stagedQueries.pass3.map(
+                      (query) => query.query,
+                    ),
+                  },
                   serperCandidateCount: serperRecommendations.length,
+                  stageFunnel: {
+                    ...sanityFallbackOutcome.stageFunnel,
+                    raw: serperResult.stats.funnel?.rawNames || [],
+                    seeds: serperResult.stats.seedProductNames,
+                    rejectedCheap:
+                      serperResult.stats.funnel?.rejected || [],
+                  },
                   timing: timing.summary(),
                 },
               }
@@ -1358,7 +1463,7 @@ async function handleRecommendationPost(
             ),
         );
         const stats = activeFallbackContext.serperResult.stats;
-        const prioritizedFallbackResult = await timing.measure(
+        const fallbackOutcome = await timing.measure(
           "ai_error_search_fallback",
           () =>
             buildServerSearchFallbackResult({
@@ -1396,6 +1501,7 @@ async function handleRecommendationPost(
               serperRecommendations,
             }),
         );
+        const prioritizedFallbackResult = fallbackOutcome.result;
 
         logTimingDebug({
           fallbackSource: "serper_candidates",
@@ -1416,6 +1522,33 @@ async function handleRecommendationPost(
                   debug: withTimingDebug({
                     fallbackReason: "ai_research_error",
                     fallbackSource: "serper_candidates",
+                    fallbackTrace: {
+                      reason: "ai_research_error",
+                      source: "serper_candidates",
+                      stagesBypassed:
+                        fallbackOutcome.stageFunnel.stagesBypassed,
+                    },
+                    generatedQueries: activeFallbackContext.generatedQueries,
+                    searchPlanStages: {
+                      pass1:
+                        activeFallbackContext.searchPlan.stagedQueries.pass1.map(
+                          (query) => query.query,
+                        ),
+                      pass2:
+                        activeFallbackContext.searchPlan.stagedQueries.pass2.map(
+                          (query) => query.query,
+                        ),
+                      pass3:
+                        activeFallbackContext.searchPlan.stagedQueries.pass3.map(
+                          (query) => query.query,
+                        ),
+                    },
+                    stageFunnel: {
+                      ...fallbackOutcome.stageFunnel,
+                      raw: stats.funnel?.rawNames || [],
+                      seeds: stats.seedProductNames,
+                      rejectedCheap: stats.funnel?.rejected || [],
+                    },
                     stage: debugStage,
                     error: summarizeCaughtError(error),
                   }),

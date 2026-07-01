@@ -31,7 +31,9 @@ type ProductAssetRecommendation = {
   product_page_url: string;
   product_image_url: string;
   citations?: {
+    title?: string;
     url: string;
+    what_it_supports?: string;
   }[];
   metadata?: ProductMetadata;
 };
@@ -336,6 +338,7 @@ async function getImageFromCitationPages(
         html,
         normalizedCitationUrl,
         productImageContext(product, normalizedCitationUrl),
+        { pageIdentityVerified: true },
       ),
       productImageContext(product, normalizedCitationUrl),
     );
@@ -1271,15 +1274,28 @@ async function getVerifiedProductAssets(product: ProductAssetRecommendation) {
 
   if (product.product_image_url) {
     initialImageCandidates.push({
-      evidenceText: `${product.name} ${product.category || ""}`,
+      evidenceText: "",
       source: "existing",
       url: product.product_image_url,
     });
   }
 
   if (product.metadata?.image?.value) {
+    const imageSourceUrl = normalizeUrl(product.metadata.image.sourceUrl);
+    const supportingCitation = product.citations?.find(
+      (citation) => normalizeUrl(citation.url) === imageSourceUrl,
+    );
+    const sourceEvidence = supportingCitation
+      ? `${supportingCitation.title || ""} ${
+          supportingCitation.what_it_supports || ""
+        }`
+      : "";
+
     initialImageCandidates.push({
-      evidenceText: `${product.name} ${product.metadata.image.sourceUrl}`,
+      contextVerified:
+        Boolean(sourceEvidence) &&
+        productNameHasPageMatch(product.name, sourceEvidence),
+      evidenceText: sourceEvidence,
       source: "trusted_metadata",
       url: product.metadata.image.value,
     });
@@ -1434,6 +1450,7 @@ async function getVerifiedProductAssets(product: ProductAssetRecommendation) {
           html,
           productPageUrl,
           productImageContext(product, productPageUrl),
+          { pageIdentityVerified: pageMatchesProduct },
         ),
       ],
       productImageContext(product, productPageUrl),

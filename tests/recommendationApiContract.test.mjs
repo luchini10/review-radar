@@ -77,6 +77,64 @@ function emptySerperResult() {
   };
 }
 
+function fallbackSerperResult() {
+  return {
+    candidates: [
+      {
+        id: "fallback-microwave-em720",
+        name: "Example Countertop Microwave EM720",
+        brand: null,
+        category: "microwave",
+        productUrl:
+          "https://shop.example.com/p/example-countertop-microwave-em720",
+        imageUrl:
+          "https://shop.example.com/images/example-countertop-microwave-em720.jpg",
+        retailer: "Example Store",
+        price: 89,
+        rating: 4.5,
+        reviewCount: 120,
+        availableColors: [],
+        dimensions: {
+          width: null,
+          depth: null,
+          height: null,
+          unit: null,
+        },
+        keySpecs: [],
+        evidenceSources: [],
+        requirementCheck: {
+          exactMatch: false,
+          passed: [],
+          failed: [],
+          unknown: [],
+        },
+      },
+    ],
+    stats: {
+      categoryGroup: "appliances",
+      collectedCandidates: 1,
+      directRetailerCalls: 0,
+      duplicateCandidatesRemoved: 0,
+      funnel: {
+        rawNames: ["Example Countertop Microwave EM720"],
+        rejected: [],
+      },
+      maxEnrichedProducts: 1,
+      organicCalls: 0,
+      preFilteredCandidates: 1,
+      rejectedCandidates: 0,
+      retailerDomainCalls: 0,
+      searchedRetailerDomainQueries: [],
+      searchedShoppingQueries: ["Example Countertop Microwave EM720"],
+      searchDepth: "standard",
+      seedProductNames: ["Example Countertop Microwave EM720"],
+      selectedSourcePack: "appliances",
+      shoppingCalls: 1,
+      sourceTimeouts: 0,
+    },
+  };
+}
+
 function buildProduct(overrides = {}) {
   return {
     best_for: "Small kitchens that need a compact appliance.",
@@ -354,6 +412,58 @@ describe("recommendation API contract", () => {
     assert.equal(
       "sourceUpgradeDecisions" in debugResponse.body.result,
       false,
+    );
+  });
+
+  it("preserves current diagnostics on no-reliable-evidence fallback responses", async () => {
+    const handler = buildHandler({
+      response: modelResponse([buildProduct()], []),
+      searchSerperForProducts: async () => fallbackSerperResult(),
+    });
+    const debugResponse = await readJson(
+      await handler(
+        jsonRequest(
+          { query: "microwave" },
+          { "x-reviewradar-debug": "true" },
+        ),
+      ),
+    );
+    const normalResponse = await readJson(
+      await handler(jsonRequest({ query: "microwave" })),
+    );
+
+    assert.equal(debugResponse.status, 200);
+    assert.equal(
+      debugResponse.body.debug.fallbackReason,
+      "no_reliable_evidence",
+    );
+    assert.equal(
+      debugResponse.body.debug.stageFunnel.path,
+      "search_candidate_fallback",
+    );
+    assert.deepEqual(
+      debugResponse.body.debug.stageFunnel.sourceUpgradeTraces,
+      [],
+    );
+    assert.ok(
+      Array.isArray(
+        debugResponse.body.debug.stageFunnel.finalSelectionTrace,
+      ),
+    );
+    assert.equal(
+      debugResponse.body.debug.fallbackTrace.stagesBypassed.some(
+        (entry) => entry.stage === "source_quality_upgrade",
+      ),
+      true,
+    );
+    assert.equal("debug" in normalResponse.body, false);
+    assert.deepEqual(
+      debugResponse.body.result.exactMatches.map((product) => product.name),
+      normalResponse.body.result.exactMatches.map((product) => product.name),
+    );
+    assert.deepEqual(
+      debugResponse.body.result.nearMatches.map((product) => product.name),
+      normalResponse.body.result.nearMatches.map((product) => product.name),
     );
   });
 

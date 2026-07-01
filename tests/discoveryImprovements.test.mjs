@@ -417,6 +417,7 @@ describe("AI research failure fallback", () => {
 
       assert.equal(response.status, 200);
       assert.ok(body.result);
+      assert.equal("debug" in body, false);
 
       const shownProducts = [
         ...body.result.exactMatches,
@@ -427,6 +428,48 @@ describe("AI research failure fallback", () => {
         shownProducts.some((product) =>
           product.name.includes("Example Countertop Microwave"),
         ),
+      );
+
+      const debugResponse = await handler(
+        new Request("http://localhost/api/recommendations", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-reviewradar-debug": "true",
+          },
+          body: JSON.stringify({ query: "microwave" }),
+        }),
+      );
+      const debugBody = await debugResponse.json();
+
+      assert.equal(debugResponse.status, 200);
+      assert.equal(debugBody.debug.fallbackReason, "ai_research_error");
+      assert.equal(
+        debugBody.debug.stageFunnel.path,
+        "search_candidate_fallback",
+      );
+      assert.deepEqual(
+        debugBody.debug.stageFunnel.stages.map((stage) => stage.stage),
+        [
+          "candidatePool",
+          "afterRequirementFilter",
+          "afterEnrichment",
+          "afterAssets",
+          "afterRescue",
+          "afterRevalidation",
+          "final",
+        ],
+      );
+      assert.deepEqual(
+        debugBody.debug.stageFunnel.sourceUpgradeTraces,
+        [],
+      );
+      assert.ok(
+        Array.isArray(debugBody.debug.stageFunnel.finalSelectionTrace),
+      );
+      assert.equal(
+        "stageFunnel" in debugBody.result,
+        false,
       );
     } finally {
       if (originalOpenAiKey === undefined) {

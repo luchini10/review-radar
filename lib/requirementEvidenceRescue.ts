@@ -42,6 +42,7 @@ import {
   classifyProductEvidenceIdentity,
   hasExplicitVariantConflict,
 } from "./productEvidenceIdentity.ts";
+import { resolveBestProductImage } from "./productImageResolver.ts";
 
 type VerifiableFactKind = "color" | "dimension" | "feature" | "price" | "spec";
 
@@ -1361,6 +1362,32 @@ export function buildSourceUpgradeFallbackShoppingQuery(
   return clampQueryLength(`${base} ${contextWords.join(" ")}`);
 }
 
+function safeSameProductCandidateImage(
+  product: ProductRecommendation,
+  candidate: RawProductCandidate,
+  category: string,
+) {
+  if (!candidate.imageUrl) return "";
+
+  return resolveBestProductImage(
+    [
+      {
+        contextVerified: true,
+        evidenceText: evidenceText(candidate),
+        source: "serp",
+        url: candidate.imageUrl,
+      },
+    ],
+    {
+      brand: sourceUpgradeBrand(product),
+      category,
+      modelNumber: modelTokens(product)[0] || null,
+      pageUrl: candidate.productUrl,
+      productName: product.name,
+    },
+  ).url;
+}
+
 async function applyCandidateEvidence(
   product: ProductRecommendation,
   fact: MissingFact,
@@ -1393,10 +1420,16 @@ async function applyCandidateEvidence(
           };
         }
 
-        if (!updated.product_image_url && candidate.imageUrl) {
+        const candidateImage = safeSameProductCandidateImage(
+          updated,
+          candidate,
+          category,
+        );
+
+        if (!updated.product_image_url && candidateImage) {
           updated = {
             ...updated,
-            product_image_url: candidate.imageUrl,
+            product_image_url: candidateImage,
           };
         }
 
@@ -1985,8 +2018,13 @@ async function upgradeProductSource(
         attached = true;
       }
 
-      if (!updated.product_image_url && candidate.imageUrl) {
-        updated = { ...updated, product_image_url: candidate.imageUrl };
+      const candidateImage = safeSameProductCandidateImage(
+        updated,
+        candidate,
+        category,
+      );
+      if (!updated.product_image_url && candidateImage) {
+        updated = { ...updated, product_image_url: candidateImage };
         trace.attachedFields.push("image");
         attached = true;
       }

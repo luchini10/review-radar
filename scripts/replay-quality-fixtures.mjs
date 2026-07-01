@@ -119,6 +119,7 @@ export function analyzeFixture(payload) {
 
   const result = payload.result || {};
   const debug = payload.debug || {};
+  const fallbackTrace = debug.fallbackTrace ?? null;
   const stageFunnel = debug.stageFunnel || null;
   const finalSelectionTrace = stageFunnel?.finalSelectionTrace || null;
   const sourceUpgradeDecisions =
@@ -188,6 +189,7 @@ export function analyzeFixture(payload) {
     lostLeaders,
     lostLeaderDropPoints,
     dropMap,
+    fallbackTrace,
     sourceUpgradeDecisions,
     sourceUpgradeTraces,
     finalSelectionTrace,
@@ -428,6 +430,18 @@ function printReport(analysis) {
   console.log(`\n${"=".repeat(70)}`);
   console.log(`FIXTURE REPLAY: "${query}"${tag}`);
   console.log("=".repeat(70));
+
+  if (analysis.fallbackTrace) {
+    console.log(
+      `\nFallback Path: reason=${analysis.fallbackTrace.reason || "unknown"} ` +
+        `source=${analysis.fallbackTrace.source || "unknown"}`,
+    );
+    for (const bypassed of analysis.fallbackTrace.stagesBypassed || []) {
+      console.log(
+        `  bypassed ${bypassed.stage}: ${bypassed.reason || "not recorded"}`,
+      );
+    }
+  }
 
   // Stage funnel
   if (stageFunnelAnalysis.length > 0) {

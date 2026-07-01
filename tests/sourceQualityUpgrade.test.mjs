@@ -978,6 +978,64 @@ describe("upgradeWeakSourceEvidence", () => {
     assert.equal(sourceUpgradeTraces[0].evidenceAttached, true);
   });
 
+  it("does not attach generic navigation artwork from same-product upgrade evidence", async () => {
+    const product = weakProduct("RIDGID WD3050 3 Gallon Wet/Dry Vacuum", {
+      category: "shop vac",
+    });
+    const searchFn = async () => [
+      shoppingResult("RIDGID WD3050 3 Gallon Wet/Dry Vacuum", {
+        brand: "RIDGID",
+        category: "shop vac",
+        imageUrl:
+          "https://cdn.example.com/images/top-nav-shop-vac-banner.webp",
+        productUrl:
+          "https://retailer.example.com/products/ridgid-wd3050-vacuum",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(
+        makeResult([product]),
+        makeReq("shop vac"),
+        { searchFn },
+      );
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, true);
+    assert.equal(
+      sourceUpgradeTraces[0].attachedFields.includes("image"),
+      false,
+    );
+    assert.equal(upgraded.exactMatches[0].product_image_url, "");
+  });
+
+  it("attaches a hashed CDN image from identity-safe same-product upgrade evidence", async () => {
+    const product = weakProduct("RIDGID WD3050 3 Gallon Wet/Dry Vacuum", {
+      category: "shop vac",
+    });
+    const searchFn = async () => [
+      shoppingResult("RIDGID WD3050 3 Gallon Wet/Dry Vacuum", {
+        brand: "RIDGID",
+        category: "shop vac",
+        imageUrl: "https://cdn.example.com/assets/a91f842b77",
+        productUrl:
+          "https://retailer.example.com/products/ridgid-wd3050-vacuum",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(
+        makeResult([product]),
+        makeReq("shop vac"),
+        { searchFn },
+      );
+
+    assert.ok(sourceUpgradeTraces[0].attachedFields.includes("image"));
+    assert.equal(
+      upgraded.exactMatches[0].product_image_url,
+      "https://cdn.example.com/assets/a91f842b77",
+    );
+  });
+
   it("does NOT upgrade when the shopping result fails identity check (different model)", async () => {
     const product = weakProduct("Weber Spirit E-325 3-Burner Gas Grill");
     const result = makeResult([product]);
