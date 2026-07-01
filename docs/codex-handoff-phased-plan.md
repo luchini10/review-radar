@@ -1354,6 +1354,6 @@ Stop. Do not start Phase 6. Address RR-068 only after explicit instruction, then
 - Scope: No ranking, final selection, source-upgrade trigger/fallback or identity, price, image, general page eligibility, citation policy, or UI behavior changed. Phase 6 was not started.
 - Docs updated: Yes; all required tracking documents were updated.
 - Implementation commit: `cc2da0a`.
-- Documentation commit: pending finalization.
+- Documentation commit: `12402b3`.
 
 Stop. Do not start Phase 6. Run Phase 5 closeout only after explicit instruction.
