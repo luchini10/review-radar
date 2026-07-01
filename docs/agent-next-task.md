@@ -1,36 +1,36 @@
 # Agent Next Task
 
-Generated: 2026-06-30
+Generated: 2026-07-01
 
 ## Current next task
 
-**Phase 5I complete - address RR-067 before Phase 5J**
+**RR-067 fixed - Phase 5J awaits explicit instruction**
 
-Phase 5I is implemented in commit `57f1a69`.
+RR-067 is Fixed in implementation commit `025afcb`.
 
-RR-041 is Fixed. A model-qualified, requirement-passing candidate now receives an upgrade opportunity when it is missing at least two of verified price, owner rating, and identity-safe product-specific commerce evidence. One weak or generic evidence signal cannot suppress an otherwise weak candidate.
+Candidate-side ambiguous `HP` metadata no longer overrides stronger source-derived product identity. Horsepower/spec syntax is treated as measurement evidence; genuine HP and Hewlett-Packard products remain supported.
 
-RR-042 is Fixed. The existing zero-result fallback remains, and one bounded fallback may also run when a nonempty primary candidate set is entirely rejected by same-product identity. No fallback runs after an identity match, and primary/fallback candidates pass the same RR-063 through RR-066 safety gate.
+The exact HART VOC1212PW case and seven unrelated brand controls pass deterministically. Genuine HP LaserJet evidence attaches, while source-derived Dell conflict evidence remains rejected despite polluted HP metadata.
 
-The single `shop vac` proof safely attached exact RIDGID WD1060 and DEWALT DXV09P evidence. A HART VOC1212PW fallback returned an exact-looking model candidate but safely rejected it because provider metadata mislabeled horsepower `HP` as a brand. That false-negative is RR-067; no unsafe evidence attached.
+One focused `shop vac` run did not reproduce HART. It did safely attach exact RIDGID WD3050 evidence containing `3.5-Peak HP`; nearby WD3050A and unrelated candidates remained rejected. RR-041/RR-042 behavior and RR-063 through RR-066 safety remain green.
 
 The canonical register now contains 67 issues:
 
 - 9 Critical, 28 High, 25 Medium, 5 Low;
-- 3 Open, 4 Needs Investigation, 59 Fixed, 1 Won't Fix.
+- 2 Open, 4 Needs Investigation, 60 Fixed, 1 Won't Fix.
 
 ## Required next phase
 
 Do not start automatically. The next task, only after explicit instruction, is:
 
-**Narrow RR-067 candidate-side horsepower-brand normalization**
+**Phase 5J asset quality and diagnostics**
 
-Reuse the existing measurement-aware brand logic when considering explicit candidate metadata. Prove that HART `VOC1212PW` evidence is not rejected merely because `Peak HP` was parsed as Hewlett-Packard, while genuine HP computer products and explicit conflicting brands remain protected.
+Follow the master Phase 5 plan for RR-061 and RR-054 only. Diagnose before editing, preserve all completed product-card, evidence-identity, source-upgrade, price, ranking, type, and requirement protections, and stop after Phase 5J.
 
 Do not:
 
-- start Phase 5J;
-- change the completed RR-041/RR-042 trigger or fallback behavior;
+- start Phase 5J without explicit instruction;
+- change the completed RR-041/RR-042 trigger/fallback or RR-067 brand/unit behavior;
 - weaken RR-063/RR-064/RR-065/RR-066 source-derived identity rules;
 - change Phase 5H final-selection calibration;
 - loosen source-upgrade identity to improve attachment rate;
@@ -41,4 +41,4 @@ Reference:
 
 - `docs/RR-Issues-Report.md`
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` latest Phase 5I retry entry
+- `docs/qa-loop-results.md` latest RR-067 cleanup entry

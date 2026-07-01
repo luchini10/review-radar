@@ -16,16 +16,16 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 5I complete. RR-041 and RR-042 are Fixed. RR-067 requires explicit instruction before Phase 5J.**
+Current phase: **RR-067 cleanup complete. Phase 5J requires explicit instruction.**
 
-Phase 5I now selects model-qualified, requirement-passing candidates that are missing at least two of verified price, owner rating, and identity-safe product-specific commerce evidence. The existing zero-result fallback remains, and one bounded fallback may also run when every nonempty primary candidate is rejected by same-product identity. Primary and fallback candidates use the same RR-063 through RR-066 source-derived identity gate.
+RR-067 is Fixed. Candidate-side ambiguous HP metadata no longer overrides stronger source-derived product identity when HP is horsepower/spec syntax or when safe evidence supports another brand. Genuine HP and Hewlett-Packard products remain valid.
 
-One approved `shop vac` proof safely attached exact RIDGID WD1060 and DEWALT DXV09P evidence. The HART VOC1212PW attempt used the zero-result fallback and safely rejected all candidates. That run opened Medium RR-067: candidate metadata can misread horsepower `HP` as a conflicting brand and reject exact HART/model evidence. This is a safe false-negative; no stop condition or rollback was required.
+The exact HART VOC1212PW regression and seven unrelated tool/vacuum controls pass deterministically. One focused `shop vac` run did not reproduce HART, but exact RIDGID WD3050 evidence containing `3.5-Peak HP` attached while nearby and unrelated products remained rejected. RR-041/RR-042 and RR-063 through RR-066 remain Fixed.
 
 Recommended next phase:
 
-- Await explicit instruction. Fix RR-067 narrowly before Phase 5J.
-- Preserve the completed RR-041/RR-042 trigger/fallback behavior and all RR-063 through RR-066 identity protections.
+- Await explicit instruction. Start Phase 5J for RR-061 and RR-054 only.
+- Preserve RR-041/RR-042 trigger/fallback behavior, RR-067 brand/unit disambiguation, and all RR-063 through RR-066 identity protections.
 
 ---
 
@@ -1301,3 +1301,20 @@ Stop. Do not retry Phase 5I or start Phase 5J without explicit instruction.
 - Uncommitted artifacts: `.claude/`, generated baselines, and live fixtures including refreshed `shop-vac.json` remain untracked and excluded from commits.
 
 Stop. Fix RR-067 only after explicit instruction; do not start Phase 5J automatically.
+
+### RR-067 brand/unit identity cleanup completion record
+
+- Completed step: Narrow RR-067 candidate-side horsepower/HP brand disambiguation.
+- Next step: Phase 5J asset quality and diagnostics for RR-061/RR-054 only, after explicit instruction.
+- Diagnostic-only: No. The phase reproduced and fixed RR-067.
+- Stop condition hit: No. Deterministic and live checks found no unsafe attachment, page leakage, suspicious price, or ranking regression.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-067 changed from Open to Fixed. RR-041, RR-042, RR-007, RR-008, RR-063, RR-064, RR-065, and RR-066 remain Fixed.
+- Docs committed: Pending in this record.
+- Implementation commit: `025afcb`.
+- Verification: fail-first 95/97 with only two intended failures; focused final 98/98; broad named safety 346/346; typecheck passed; lint 0 errors with 3 existing warnings; full suite 764/764; eval clean.
+- Live validation: exactly one `shop vac` call. HART did not recur. Exact RIDGID WD3050 evidence with `3.5-Peak HP` attached safely; nearby WD3050A and unrelated products remained rejected. No second call or broad baseline ran.
+- Scope: No Phase 5I trigger/fallback, discovery, ranking, final selection, price, eligibility, product type, requirements, source-upgrade model gate, citation retention, or UI behavior changed. Phase 5J did not start.
+- Uncommitted artifacts: `.claude/`, generated baselines, and live fixtures including refreshed `shop-vac.json` remain untracked and excluded from commits.
+
+Stop. Do not start Phase 5J without explicit instruction.

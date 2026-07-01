@@ -11,6 +11,15 @@ Update this file after:
 
 Do not update this file for tiny typo fixes, formatting-only edits, or internal cleanup that does not change behavior.
 
+## 2026-07-01
+
+### Codex - RR-067 horsepower/HP brand disambiguation
+- Fixed candidate-side identity handling that trusted provider `brand: "HP"` before checking whether source-derived evidence used HP as horsepower or supported a different product brand.
+- Ambiguous HP metadata now yields only to stronger source-derived title/path/snippet identity; seller, host, URL query, and query-derived text remain excluded.
+- Expanded measurement handling for numeric, peak/max/rated, motor, engine, pump, compressor, suction, and HP-motor syntax while preserving genuine HP and Hewlett-Packard computers, monitors, and printers.
+- Fail-first passed 95/97 with only two intended failures. Focused final passed 98/98; broad safety passed 346/346; typecheck and eval passed; lint had 0 errors and 3 existing warnings; full suite passed 764/764.
+- One `shop vac` run did not reproduce HART, but exact RIDGID WD3050 `3.5-Peak HP` evidence attached safely while nearby/wrong products remained rejected. No second live call or Phase 5J work occurred.
+
 ## 2026-06-30
 
 ### Codex - Phase 5I source-upgrade trigger/fallback reliability

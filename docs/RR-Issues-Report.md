@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 5I retry
+## Compiled for AI Agent Consumption — Phase 0 through RR-067 cleanup
 
-**Generated:** 2026-06-30
-**Scope:** All phases from initial measurement harness through the completed Phase 5I trigger/fallback retry
+**Generated:** 2026-07-01
+**Scope:** All phases from initial measurement harness through the completed RR-067 brand/unit identity cleanup
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -18,9 +18,9 @@
 | High | 28 |
 | Medium | 25 |
 | Low | 5 |
-| Open | 3 |
+| Open | 2 |
 | Needs Investigation | 4 |
-| Fixed | 59 |
+| Fixed | 60 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -77,6 +77,7 @@
 | Phase 5I retry — same-brand/model-omission safety stop | 1 |
 | RR-066 identity-safety mini-phase | 0 |
 | Phase 5I retry — trigger/fallback reliability | 1 |
+| RR-067 brand/unit identity cleanup | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -2114,7 +2115,7 @@ No new issue ID was opened.
 | **Phase** | Phase 5I retry live validation |
 | **Severity** | Medium |
 | **Title** | Candidate-side horsepower `HP` brand metadata rejects exact-model source-upgrade evidence |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** The approved `shop vac` live proof returned an exact-looking fallback candidate, `Hart 12 Gallon Wet/Dry Vacuum Voc1212pw 3701`, for target `HART 12 Gallon 6 Peak HP Wet/Dry Vacuum VOC1212PW 3701`. The target query correctly used brand `HART` and model `VOC1212PW`, but provider metadata labeled the candidate brand as `HP` from the horsepower phrase. The explicit brand-conflict veto then rejected the exact model-bearing candidate. A deterministic probe reproduced the same primary and fallback rejection with no evidence attachment.
 
@@ -2126,28 +2127,31 @@ No new issue ID was opened.
 
 **Actual:** The exact model candidate is safely rejected, causing a false negative and preventing evidence attachment.
 
-**Current status:** Open. This is a safe false-negative, not an unsafe merge, so the Phase 5I stop condition was not hit and no Phase 5I behavior was rolled back.
+**Current status:** Fixed on 2026-07-01. The original Phase 5I observation was a safe false-negative, not an unsafe merge, so no Phase 5I behavior was rolled back.
 
-**Suggested fix or next action:** Run a narrow RR-067 identity-normalization mini-phase before Phase 5J. Reuse the existing measurement-aware brand logic on candidate metadata, with deterministic HART horsepower and genuine Hewlett-Packard controls. Do not loosen exact-model or explicit-conflict requirements.
+**Suggested fix or next action:** Completed. Preserve the measurement-aware candidate-brand normalization, exact-model requirement, genuine HP controls, and explicit source-derived conflict veto.
 
 **Phase 5I result:** RR-041 and RR-042 are Fixed. The final focused source-upgrade tests passed 121/121, the broad named safety matrix passed 342/342, the full suite passed 760/760, typecheck and eval passed, and lint reported 0 errors with 3 pre-existing warnings. One `shop vac` live run safely attached exact RIDGID WD1060 and DEWALT DXV09P evidence, safely rejected all HART fallback candidates, and exposed RR-067. No wrong product, unsafe page, or query-derived identity attached. Phase 5J did not start.
+
+**RR-067 resolution:** Candidate-side brand resolution no longer trusts ambiguous `HP` metadata ahead of stronger source-derived product identity. When the explicit provider brand canonicalizes to HP, the identity path inspects source title, safe URL path, source-derived snippets, and product metadata that excludes seller, host, URL query, query-derived text, and the polluted brand field itself. If those sources support the non-HP target brand or a different known brand, they override the ambiguous HP field. Numeric, peak/max/rated, motor, engine, pump, compressor, and suction HP syntax is treated as measurement evidence. Genuine HP and Hewlett-Packard computers, monitors, and printers remain HP products.
+
+**Resolution proof:** The exact HART VOC1212PW case and seven unrelated tool/vacuum brand controls failed before the fix and now attach exact-model evidence safely. Genuine HP LaserJet evidence still attaches, while a source-derived Dell conflict remains rejected even when provider metadata says HP. Focused tests passed 98/98; broad safety passed 346/346; the full suite passed 764/764; typecheck and eval passed; lint reported 0 errors and 3 existing warnings. One focused `shop vac` run did not reproduce HART, but exact RIDGID WD3050 evidence containing `3.5-Peak HP` attached while WD3050A and unrelated products remained rejected. RR-067 is Fixed.
 
 ---
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (3 issues)
+### Open (2 issues)
 - RR-054: Fresh fallback responses omit current diagnostic traces
 - RR-061: Product image metadata accepts non-image or irrelevant assets
-- RR-067: Candidate-side horsepower HP brand metadata rejects exact-model source-upgrade evidence
 
 ### Needs Investigation (4 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-### Fixed (59 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-053, RR-055 through RR-060, RR-062 through RR-066
+### Fixed (60 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-053, RR-055 through RR-060, RR-062 through RR-067
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2156,9 +2160,8 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-067** (Medium) — Ignore candidate-side horsepower `HP` as brand evidence without weakening genuine HP or exact-model identity safety.
-2. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
-3. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
-4. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
-5. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
-6. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
+1. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
+2. **RR-061** (Medium) — Validate that product image fields are real, relevant image assets.
+3. **RR-054** (Medium) — Preserve diagnostic traces on current fallback responses.
+4. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
+5. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.

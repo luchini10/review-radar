@@ -1017,3 +1017,24 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **New issue:** RR-067. Candidate metadata can label horsepower `HP` as a conflicting brand and reject an exact HART/model offer. Preserve this safe rejection until a narrow measurement-aware candidate-brand fix is tested against genuine HP and explicit-brand conflicts.
 
 **Status:** RR-041/RR-042 Fixed. RR-067 Open/Medium. Phase 5J not started.
+
+---
+
+## 2026-07-01 - RR-067 candidate horsepower/HP brand identity
+
+**Issue fixed:** RR-067.
+
+**Regression contract:**
+- Provider `brand: "HP"` is ambiguous when safe source evidence uses HP as horsepower or explicitly supports a different product brand.
+- Resolve candidate brand from source title, safe URL path, source-derived snippets, colors, and key specs without using seller, retailer, host, URL query, query-derived text, generated card text, or the provider brand field itself.
+- Numeric, peak/max/rated, motor, engine, pump, compressor, suction, and HP-motor syntax cannot establish Hewlett-Packard brand identity.
+- Exact HART VOC1212PW and unrelated RIDGID, DEWALT, Milwaukee, Makita, Stanley, Armor All, and Amazon Basics model evidence must not be rejected by polluted HP metadata.
+- Genuine HP/Hewlett-Packard laptop, desktop, PC, monitor, LaserJet, OfficeJet, DeskJet, Pavilion, Envy, Omen, and Spectre evidence remains valid.
+- Source-derived conflicting brands remain hard rejections even when provider metadata says HP.
+- Preserve RR-041/RR-042 trigger/fallback behavior and RR-063/RR-064/RR-065/RR-066 identity safety.
+
+**Verification:** Fail-first 95/97 with only two intended RR-067 failures; focused final 98/98; broad named safety 346/346; typecheck passed; lint 0 errors with 3 existing warnings; full suite 764/764; eval clean.
+
+**Live call:** Exactly one `shop vac` save/replay. HART did not recur. RIDGID WD3050 source evidence containing `3.5-Peak HP` attached exact price/rating/review/citation data; WD3050A, another-size RIDGID vacuum, and an unrelated blower remained rejected. No second live call ran.
+
+**Status:** RR-067 Fixed. Phase 5J not started.

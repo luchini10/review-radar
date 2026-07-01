@@ -702,3 +702,17 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - RR-041 and RR-042 are Fixed. RR-007, RR-008, RR-063, RR-064, RR-065, and RR-066 remain Fixed.
 - RR-067 is Medium/Open. Candidate metadata can misread horsepower `HP` as Hewlett-Packard and reject exact HART/model evidence; this is a safe false-negative.
 - Phase 5J has not started. Address RR-067 narrowly only after explicit instruction.
+
+**RR-067 candidate brand/unit disambiguation (2026-07-01)**
+- Candidate-side explicit `HP` metadata is no longer automatically authoritative. The identity layer first builds source-derived brand evidence from product title, safe URL path, source-derived snippets, colors, and key specs.
+- Seller/retailer labels, URL hosts, URL query parameters, query-derived snippets, generated card text, and the candidate brand field itself are excluded from that source-derived check.
+- If safe evidence supports a different known brand, or explicitly supports the non-HP target brand while HP is absent or measurement-only, the ambiguous HP metadata is ignored.
+- Horsepower normalization covers numeric HP, peak/max/rated HP, motor/engine/pump/compressor/suction HP, and HP-motor forms.
+- Genuine `HP` and `Hewlett-Packard` aliases remain brand evidence for computers, monitors, and printers. A source-derived conflicting brand still vetoes attachment even when provider metadata says HP.
+- The change affects only source-upgrade candidate brand resolution. The Phase 5I trigger/fallback, RR-063 through RR-066 identity rules, discovery, ranking, final selection, eligibility, price, type/requirements, citation retention, and UI are unchanged.
+- Verification passed 98/98 focused, 346/346 broad safety, and 764/764 full tests; typecheck and eval passed; lint reported 0 errors and 3 existing warnings.
+- One `shop vac` run did not reproduce HART. Exact RIDGID WD3050 evidence with `3.5-Peak HP` attached safely, while WD3050A and unrelated products remained rejected.
+
+**Current boundary**
+- RR-067 is Fixed. RR-041/RR-042 and RR-063 through RR-066 remain Fixed.
+- Phase 5J has not started. It is next for RR-061 and RR-054 only, after explicit instruction.

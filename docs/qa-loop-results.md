@@ -5432,3 +5432,67 @@ The HART fallback sample included exact-looking `Hart 12 Gallon Wet/Dry Vacuum V
 - Generated baselines, `.claude/`, and all live fixtures remain untracked and uncommitted.
 
 Recommended direction: fix RR-067 narrowly before Phase 5J. Reuse measurement-aware brand handling for candidate metadata while retaining genuine HP and explicit-brand conflict controls.
+
+## <span style="color:green">**Codex QA Update - 2026-07-01 (RR-067 brand/unit identity cleanup)**</span>
+
+**Verdict: PASS. RR-067 is Fixed. RR-041/RR-042 and RR-063 through RR-066 remain green. Phase 5J did not start.**
+
+### Confirmed root cause and fail-first
+
+RR-052 protected target-side `metadata.brand` in `sourceUpgradeBrand`, but candidate-side `evidenceBrand` still returned any non-retailer provider brand before checking whether `HP` represented horsepower or conflicted with stronger source-derived identity. Exact HART/model evidence could therefore be rejected at the source-upgrade identity gate before commerce attachment.
+
+Fail-first brand/source-upgrade tests passed 95/97. The only failures were:
+
+- exact HART VOC1212PW evidence with provider `brand: "HP"`;
+- an unrelated-brand matrix covering RIDGID, DEWALT, Milwaukee, Makita, Stanley, Armor All, and Amazon Basics with exact models plus horsepower text.
+
+Genuine HP LaserJet attachment passed before editing.
+
+### Generalized fix
+
+- Candidate brand resolution now examines source-derived title, safe URL path, source-derived snippet, colors, and key specs without including the provider brand field itself.
+- Seller, retailer, host, URL query parameters, and query-derived snippets remain excluded.
+- Ambiguous HP metadata yields to a different known source-derived brand or to the non-HP target brand when that brand is explicitly present in safe source evidence.
+- Numeric, peak/max/rated, motor, engine, pump, compressor, suction, and HP-motor measurement syntax is removed before Hewlett-Packard brand matching.
+- Genuine `HP` and `Hewlett-Packard` aliases remain valid for laptops, desktops, PCs, monitors, LaserJet, OfficeJet, DeskJet, Pavilion, Envy, Omen, and Spectre products.
+- A source-derived Dell conflict remains a rejection even if provider metadata incorrectly says HP.
+- No query, trigger, fallback, scoring, ranking, discovery, eligibility, price, product-type, requirement, final-selection, citation-retention, or UI behavior changed.
+
+### Deterministic proof
+
+```text
+fail-first brand/source-upgrade: 95/97 pass; only 2 intended RR-067 failures
+focused final: 98/98 pass
+broad named safety matrix: 346/346 pass
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm test: 764/764 pass
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+The matrix retained RR-007/RR-008 page eligibility, RR-013 ranking, RR-022 citation retention, RR-041/RR-042 trigger/fallback behavior, RR-063/RR-064/RR-065/RR-066 identity safety, RR-002/RR-062 price trust, Phase 5E type/requirements, and Phase 5H selection.
+
+### Single focused live proof
+
+Exactly one `shop vac` save/replay ran.
+
+- Funnel: 16 pool, 14 after citation verification, 7 after requirements, 7 final.
+- Five exact and two near products remained.
+- Source upgrade selected three products and made three primary attempts; no fallback was needed.
+- RIDGID WD3050 returned 20 candidates. Exact `Ridgid WD3050 3 Gallon 3.5-Peak HP ...` evidence attached price `$69.97`, rating `4.4`, review count, and citation.
+- Nearby `WD3050A`, a 4-gallon RIDGID vacuum, and an unrelated RIDGID blower remained rejected.
+- DEWALT DXV12P and DXV06P attempts attached product-specific citations; wrong-model samples remained rejected.
+- No category, collection, article, support, documentation page, wrong product, wrong model, query-derived identity, or unsafe price attached through source upgrade.
+
+HART VOC1212PW did not recur. Its exact post-fix behavior remains deterministic rather than live-confirmed. No second live call or broad baseline ran.
+
+### Issue outcome
+
+- RR-067: Fixed.
+- RR-041 and RR-042: remain Fixed.
+- RR-007, RR-008, RR-063, RR-064, RR-065, and RR-066: remain Fixed.
+- Register: 67 issues; 9 Critical, 28 High, 25 Medium, 5 Low; 2 Open, 4 Needs Investigation, 60 Fixed, 1 Won't Fix.
+- Implementation commit: `025afcb`.
+- Generated baselines, `.claude/`, and live fixtures remain untracked and uncommitted.
+
+Recommended direction: Phase 5J for RR-061 and RR-054 only, after explicit instruction.

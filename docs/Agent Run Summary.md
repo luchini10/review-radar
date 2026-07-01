@@ -8,6 +8,22 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-07-01 RR-067
+
+**Goal:** Fix only the candidate-side horsepower `HP` brand false-negative before Phase 5J.
+
+**What it checked:** Traced target and candidate brand resolution separately. Confirmed RR-052 already protected target metadata, while candidate `evidenceBrand` trusted provider brand fields before checking safe source-derived identity.
+
+**What it changed:** Ambiguous HP metadata now yields to a different source-derived known brand or to the non-HP target brand when safe title/path/snippet evidence supports it. Horsepower measurement syntax is removed before HP brand matching. Genuine HP and Hewlett-Packard products remain supported.
+
+**Why the change matters:** Exact HART/tool evidence is no longer rejected because a provider confused horsepower with Hewlett-Packard, while wrong-brand and wrong-model evidence remains blocked.
+
+**Tests run:** Fail-first 95/97; focused final 98/98; broad safety 346/346; full suite 764/764; typecheck passed; lint 0 errors with 3 existing warnings; eval clean.
+
+**Live checks run:** One `shop vac` save/replay. HART did not recur. Exact RIDGID WD3050 evidence containing `3.5-Peak HP` attached price, rating, review count, and citation; nearby WD3050A and unrelated products remained rejected.
+
+**Next recommended step:** Phase 5J for RR-061 and RR-054 only, after explicit instruction.
+
 ## Codex Run - 2026-06-30 Phase 5I retry
 
 **Goal:** Fix RR-041 and RR-042 only by making source-upgrade eligibility and its single fallback more reliable without weakening product identity.
