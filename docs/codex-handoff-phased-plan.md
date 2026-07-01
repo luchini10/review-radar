@@ -1335,6 +1335,6 @@ Stop. Do not start Phase 5J without explicit instruction.
 - Scope: No discovery, product-type, requirement, ranking, final-selection, price, citation, source-upgrade trigger/fallback, source-upgrade identity, general page eligibility, or UI behavior changed. RR-068 was not fixed. Phase 6 was not started.
 - Docs updated: Yes; all required Phase 5 documents were updated.
 - Implementation commit: `708ee98`.
-- Documentation commit: pending finalization.
+- Documentation commit: `49c9711`.
 
 Stop. Do not start Phase 6. Address RR-068 only after explicit instruction, then complete Phase 5 closeout.
