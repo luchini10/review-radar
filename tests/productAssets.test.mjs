@@ -586,4 +586,23 @@ describe("product asset metadata extraction", () => {
     );
     assert.equal(result.recommendations[0].metadata?.image?.confidence, "High");
   });
+
+  it("drops a generic retailer flyout image instead of rendering it", async () => {
+    const result = await enrichProductAssets({
+      recommendations: [
+        {
+          category: "shop vac",
+          citations: [],
+          name:
+            "Amazon.com: RIDGID Wet Dry Vacuums VAC4000 Powerful and ...",
+          product_image_url:
+            "https://images-na.ssl-images-amazon.com/images/G/01/omaha/images/yoda/flyout_72dpi._V270255989_.png",
+          product_page_url: "",
+        },
+      ],
+    });
+
+    assert.equal(result.recommendations[0].product_image_url, "");
+    assert.equal(result.recommendations[0].metadata?.image, undefined);
+  });
 });

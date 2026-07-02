@@ -16,7 +16,7 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 6D clean post-RR-069 restart stopped at 1/6 on an RR-061 image-safety regression.**
+Current phase: **Reopened RR-061 is fixed deterministically. Phase 6D remains stopped pending fresh approval.**
 
 The original four-call Phase 6D attempt remains aborted pre-fix RR-069
 evidence. A separately approved six-call clean restart stopped after A1 when
@@ -24,17 +24,22 @@ the same generic Amazon `yoda/flyout_72dpi` navigation asset appeared as the
 High-confidence product image for two different product cards. Five restart
 calls remain unspent and blocked.
 
+The RR-061 fix expanded the shared non-product image vocabulary for
+flyout/menu/department/layout/masthead assets and removed retailer/source/domain
+words plus URL hosts from product-image identity. The exact captured URL is
+rejected for both affected cards, while same-product Amazon and opaque CDN
+images remain valid.
+
 `docs/phase-6-reliability-gauntlet-plan.md` is the sole source of truth for all Phase 6 scope, sequencing, budgets, gates, evidence rules, and completion criteria. Every supporting Phase 6 artifact implements that master and must not override it.
 
-The register contains 69 issues: 63 Fixed, 5 Needs Investigation, 1 Won't Fix,
-and 0 Open. RR-061 was reopened; RR-014/RR-015/RR-037/RR-045 remain Needs
-Investigation. The restart changed no production code, tests, scripts,
-fixtures, or behavior.
+The register contains 69 issues: 64 Fixed, 4 Needs Investigation, 1 Won't Fix,
+and 0 Open. RR-061 and RR-069 are Fixed; RR-014/RR-015/RR-037/RR-045 remain
+Needs Investigation.
 
 Recommended next phase:
 
-- Await explicit instruction for a narrow generalized RR-061 image-safety diagnosis/fix.
-- Do not resume Phase 6D with the five unspent calls; a later restart requires fresh explicit approval.
+- Human-review the deterministic RR-061 fix.
+- Do not resume Phase 6D with the five unspent calls; a clean restart requires fresh explicit approval for all six calls.
 - Preserve RR-068/RR-054, RR-041/RR-042, RR-067, and all RR-063 through RR-066 protections.
 - Do not start Phase 6E, freeze rubric v1.0, compile leader snapshots, or change production behavior during the stopped pilot.
 
@@ -1536,3 +1541,22 @@ Stop. Do not resume Phase 6D without explicit instruction and live-budget approv
 - Phase 6D restart stop commit: `29e02f2`.
 
 Stop. Do not fix RR-061, resume Phase 6D, or start Phase 6E without explicit instruction.
+
+### Reopened RR-061 image-safety completion record
+
+- Completed step: Narrow reopened RR-061 behavior fix only.
+- Next step: Human-review the deterministic fix, then require fresh explicit approval for a new clean six-call Phase 6D restart. Do not reuse the five calls from the stopped window.
+- Diagnostic-only: No. One shared image-validation behavior fix followed fail-first proof.
+- Stop condition hit: No new stop condition. The prior Phase 6D stop remains in force.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-061 moved from Needs Investigation to Fixed. RR-014, RR-015, RR-037, and RR-045 remain Needs Investigation; RR-069 remains Fixed.
+- Root cause: The shared resolver omitted flyout/menu/layout asset terms and allowed retailer/domain words plus the image hostname to satisfy image relevance.
+- Fix: Reject generalized retailer site-artwork paths, remove source/domain words from product-image identity, and ignore image hosts during relevance matching.
+- Positive controls: Same-product Amazon images, opaque hashed CDN images, Google Shopping thumbnails, and identity-safe source-upgrade images remain valid.
+- Verification: fail-first 31/35 with four intended failures; focused 135/135; broad trust 376/376; full suite 791/791; typecheck/eval pass; lint 0 errors/3 existing warnings.
+- Live proof: None. The saved A1 fixture is historical evidence; current behavior is proven by fixture-derived M1 tests.
+- Phase state: Phase 6D was not resumed; rubric v1.0 is not frozen; Phase 6E did not start.
+- Docs committed: Pending.
+- Commit hash: Pending.
+
+Stop. Do not resume Phase 6D or start Phase 6E without explicit instruction.

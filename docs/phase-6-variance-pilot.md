@@ -56,6 +56,17 @@ same 3 warnings; 786/786 tests across 117 suites; and offline eval with no red
 flags. The offline variance harness requires at least two fixtures and
 correctly declined to calculate statistics from A1 alone.
 
+**Post-stop RR-061 update:** RR-061 was fixed deterministically in a separate
+narrow phase. The shared resolver now rejects flyout/menu/department/layout
+asset paths and cannot use retailer/source/domain words or image hosts as
+product identity. The exact captured URL is rejected for both affected cards;
+verified same-product Amazon and opaque CDN images remain valid. Fail-first
+was 31/35 with four intended failures; focused image/source-upgrade coverage
+passed 135/135, the broader trust wall passed 376/376, and the full suite
+passed 791/791. No live search ran. Phase 6D remains stopped, the five-call
+balance is not reusable, rubric v1.0 remains unfrozen, and Phase 6E did not
+start.
+
 ## Aborted pre-fix scope and budget
 
 Taylor approved exactly six live searches in alternating order:

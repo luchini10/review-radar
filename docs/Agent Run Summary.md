@@ -1493,3 +1493,25 @@ New entries should keep the same format and stay easy to read.
 **Commit:** Phase 6D restart stop report `29e02f2`.
 
 **Next recommended step:** Run a narrow generalized RR-061 image-safety phase only after explicit instruction, then request a fresh Phase 6D restart approval.
+
+## Codex Run - 2026-07-02 Reopened RR-061 image safety
+
+**Goal:** Fix only the retailer navigation-image regression that stopped the clean Phase 6D restart.
+
+**Root cause:** The shared image resolver was active, but it did not classify flyout/menu/department/layout paths as non-product assets. Its relevance text also included the image hostname and retailer/domain words from generated product names, allowing `Amazon.com` to contribute the two matches needed for High confidence.
+
+**What changed:** The resolver now rejects generalized flyout/menu/department/layout/masthead paths, excludes source/retailer/domain words from product-image identity, and ignores URL hosts for relevance. Cross-product image reuse remains diagnostic rather than an unconditional block.
+
+**Safety proof:** The exact live URL is rejected for both affected cards and enrichment leaves a rejected image empty. Verified same-product Amazon images, opaque hashed CDN images, Google Shopping thumbnails, and identity-safe source-upgrade images remain valid.
+
+**Verification:** Fail-first 31/35 with four intended failures; focused 135/135; broad trust matrix 376/376; full suite 791/791; typecheck and eval passed; lint 0 errors/3 existing warnings.
+
+**Scope:** RR-061 only. No live search, ranking, discovery, final-selection, price, identity, source-upgrade behavior, product type, page eligibility, UI, API shape, or Phase 6 policy change.
+
+**Issues:** RR-061 Fixed. Totals: 69 issues; 10 Critical, 29 High, 25 Medium, 5 Low; 0 Open, 4 Needs Investigation, 64 Fixed, 1 Won't Fix.
+
+**Phase state:** Phase 6D remains stopped; the five-call balance is not reusable. Rubric v1.0 remains unfrozen and Phase 6E did not start.
+
+**Commit:** Pending.
+
+**Next recommended step:** Human-review the fix, then explicitly approve a fresh clean six-call Phase 6D restart.

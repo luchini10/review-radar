@@ -1,4 +1,5 @@
 import type { ProductFieldEvidence } from "@/types/review-radar";
+import { SOURCE_NAME_TOKENS } from "./search/sourceTier.ts";
 
 export type ProductImageConfidence = "high" | "medium" | "low" | "none";
 
@@ -76,8 +77,18 @@ const IMAGE_PATH_TERMS = [
   "static",
 ];
 
+const NON_PRODUCT_IDENTITY_WORDS = new Set([
+  "com",
+  "http",
+  "https",
+  "marketplace",
+  "retailer",
+  "store",
+  "www",
+]);
+
 const HARD_NON_PRODUCT_ASSET_PATTERN =
-  /(?:^|[-_/])(?:article|badge|blog|category|collection|favicon|icon|logo|manual|navigation|nav|rating|review|social|sprite|stars?|support|top-nav|tracking|wordmark|banner)(?:[-_/.]|$)/i;
+  /(?:^|[-_/])(?:article|badge|banner|blog|category|collection|departments?|favicon|flyouts?|icon|layouts?|logo|manual|masthead|menus?|navigation|nav|rating|review|social|sprite|stars?|support|top-nav|tracking|wordmark)(?:[-_/.]|$)/i;
 const SOFT_NON_PRODUCT_ASSET_PATTERN =
   /(?:^|[-_/])hero(?:[-_/.]|$)/i;
 
@@ -150,7 +161,12 @@ function normalizeText(value: string | null | undefined) {
 function productWords(value: string | null | undefined) {
   return normalizeText(value)
     .split(/\s+/)
-    .filter((word) => word.length >= 3);
+    .filter(
+      (word) =>
+        word.length >= 3 &&
+        !NON_PRODUCT_IDENTITY_WORDS.has(word) &&
+        !SOURCE_NAME_TOKENS.has(word),
+    );
 }
 
 function compactProductWords(context: ProductImageContext) {
@@ -200,7 +216,7 @@ function weakTextMatchesContext(text: string, context: ProductImageContext) {
 function urlSearchText(url: string) {
   try {
     const parsed = new URL(url);
-    return decodeURIComponent(`${parsed.hostname} ${parsed.pathname}`);
+    return decodeURIComponent(parsed.pathname);
   } catch {
     return url;
   }

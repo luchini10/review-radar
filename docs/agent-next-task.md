@@ -4,7 +4,7 @@ Generated: 2026-07-02
 
 ## Current next task
 
-**RR-061 reopened - Phase 6D clean restart stopped at 1/6**
+**RR-061 fixed deterministically - Phase 6D remains stopped**
 
 Taylor approved six new post-RR-069 variance calls and explicitly excluded the
 earlier four pre-fix fixtures from the clean sample. The restart stopped after
@@ -12,6 +12,16 @@ its first `shop vac` call because two different Amazon product cards received
 the same generic `yoda/flyout_72dpi` navigation asset as High-confidence
 product imagery. This is a live RR-061 regression and an absolute Phase 6
 image-safety stop.
+
+The narrow RR-061 phase fixed both image-only causes without resuming live
+measurement:
+
+- generalized flyout/menu/department/layout/masthead image paths are rejected;
+- image relevance no longer treats retailer/source/domain words or the image
+  hostname as product identity;
+- the exact live URL is rejected for both captured product names;
+- verified same-product Amazon and opaque hashed CDN images remain valid;
+- rejected suspicious images leave the product image empty.
 
 `docs/phase-6-variance-pilot.md` preserves both attempts:
 
@@ -24,17 +34,18 @@ image-safety stop.
   rule, or provider/model attribution can be estimated from one clean run;
 - RR-015 and RR-037 remain Needs Investigation.
 
-The clean restart spent 1/6 approved calls; five remain unspent and blocked.
+The clean restart spent 1/6 approved calls; five remain unspent and blocked
+because the stopped execution window is not reusable.
 Rubric v1.0 was not frozen, leader snapshots were not compiled, and Phase 6E
-did not start. No production behavior changed.
+did not start.
 
 The canonical register now contains 69 issues:
 
 - 10 Critical, 29 High, 25 Medium, 5 Low;
-- 0 Open, 5 Needs Investigation, 63 Fixed, 1 Won't Fix.
+- 0 Open, 4 Needs Investigation, 64 Fixed, 1 Won't Fix.
 
-RR-069 remains Fixed. RR-061 is reopened as Needs Investigation alongside
-RR-014, RR-015, RR-037, and RR-045.
+RR-061 and RR-069 are Fixed. RR-014, RR-015, RR-037, and RR-045 remain Needs
+Investigation.
 
 ## Master-plan amendment notice - 2026-07-01 (Claude, docs-only)
 
@@ -93,11 +104,11 @@ the repository file; the repo file is the only copy.
 
 ## Required next task
 
-Do not start automatically. Diagnose/fix the reopened RR-061 image-safety
-regression in a separate explicitly approved phase before requesting another
-clean Phase 6D restart. Do not spend the remaining five approved restart calls:
-the safety stop invalidated that execution window. Do not start Phase 6E until
-Phase 6D completes safely and the freeze package is explicitly approved.
+Do not start automatically. Human-review the deterministic RR-061 fix, then
+request a fresh explicit six-search approval before attempting another clean
+Phase 6D restart. Do not spend the five calls left from the stopped window.
+Do not start Phase 6E until Phase 6D completes safely and the freeze package is
+explicitly approved.
 
 Do not:
 
@@ -105,7 +116,7 @@ Do not:
 - reopen RR-069 without a deterministic regression;
 - change the v0.1-draft rubric or provisional thresholds without recording a versioned rationale;
 - implement proposed trace additions or automation from the scorecard document without approval;
-- alter completed RR-068 or RR-054 behavior; RR-061 now has a proven live regression but still requires a separately approved fix;
+- alter completed RR-054/RR-061/RR-068 behavior without a new deterministic regression;
 - change ranking, discovery breadth, final selection, price, citation, source-upgrade behavior, or any app behavior during the variance pilot;
 - weaken RR-063 through RR-067 source-derived identity rules;
 - weaken price, citation, product, requirement, product-type, or identity trust gates;
@@ -122,4 +133,4 @@ Reference:
 - `docs/phase-6-variance-pilot.md`
 - `docs/RR-Issues-Report.md`
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` latest Phase 6C entry
+- `docs/qa-loop-results.md` latest RR-061 entry

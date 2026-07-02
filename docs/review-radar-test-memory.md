@@ -1248,3 +1248,29 @@ Rubric v1.0 remains unfrozen.
 **Cost:** 1/6 clean-restart searches and 37 observed Serper calls. The Tier A
 fixture is untracked and must not be committed. No additional live call is
 permitted after this safety stop without a new approval.
+
+---
+
+## 2026-07-02 - Reopened RR-061 retailer navigation-image guard
+
+**Fail-first:** Image/asset tests passed 31/35. The four intended failures
+covered the exact Amazon flyout URL, generalized flyout/menu/layout assets,
+retailer/domain identity pollution, and enrichment fallback to no image.
+
+**Rule:** Trusted retailer-page provenance does not make an image product
+specific. Reject structural site-artwork terms before confidence scoring.
+Product-image identity must exclude source/retailer/domain words and must not
+use the image hostname. URL reuse across products is a diagnostic signal, not
+an automatic rejection, because legitimate variants may share imagery.
+
+**Positive controls:** Preserve verified same-product Amazon imagery, opaque
+hashed CDN images, Google Shopping thumbnails, and source-upgrade images that
+pass existing same-product identity.
+
+**Verification:** Focused image/asset/source-upgrade tests 135/135; broad trust
+matrix 376/376; full suite 791/791; typecheck/eval pass; lint 0 errors with 3
+existing warnings.
+
+**Live boundary:** No live call ran. The fixture remains historical M4 evidence
+and the distilled tests are current M1 proof. Phase 6D remains stopped and
+requires a fresh six-call approval for any later restart.

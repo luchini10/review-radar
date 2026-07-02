@@ -1,6 +1,6 @@
 # Phase 6 Live Search Batches
 
-**Status:** Clean post-RR-069 Phase 6D restart stopped at 1/6 on RR-061; the earlier 4/6 pilot is aborted pre-fix evidence and excluded
+**Status:** RR-061 fixed deterministically after the clean restart stopped at 1/6; any new Phase 6D restart requires fresh approval
 **Rubric:** `v0.1-draft`; quality thresholds remain provisional until the v1.0 freeze after Phase 6D; safety tolerance is absolute at zero failures
 **Governing source of truth:** `docs/phase-6-reliability-gauntlet-plan.md`. This batch document implements the master plan and must not override it.
 

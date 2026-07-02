@@ -116,6 +116,85 @@ describe("product image resolver", () => {
     }
   });
 
+  it("rejects retailer flyout, menu, department, and layout artwork", () => {
+    const urls = [
+      "https://images.example.com/site/flyout_72dpi.png",
+      "https://images.example.com/assets/mega-menu-tablets.webp",
+      "https://images.example.com/departments/electronics.jpg",
+      "https://images.example.com/layout/header-tablet.png",
+    ];
+
+    for (const url of urls) {
+      const result = validateProductImageCandidate(
+        {
+          contextVerified: true,
+          evidenceText: "Apple iPad Pro M4 product page",
+          source: "trusted_metadata",
+          url,
+        },
+        context,
+      );
+
+      assert.equal(result.accepted, false, url);
+    }
+  });
+
+  it("rejects the reopened RR-061 Amazon flyout asset for unrelated products", () => {
+    const url =
+      "https://images-na.ssl-images-amazon.com/images/G/01/omaha/images/yoda/flyout_72dpi._V270255989_.png";
+    const products = [
+      "Amazon.com: RIDGID Wet Dry Vacuums VAC4000 Powerful and ...",
+      "Fein Turbo I Wet/Dry Dust Extractor, Ultra-Quiet Vacuum - Amazon.com",
+    ];
+
+    for (const productName of products) {
+      const result = validateProductImageCandidate(
+        {
+          evidenceText: "",
+          source: "existing",
+          url,
+        },
+        {
+          category: "shop vac",
+          productName,
+        },
+      );
+
+      assert.equal(result.accepted, false, productName);
+    }
+  });
+
+  it("does not use retailer/domain words alone as product-image identity", () => {
+    const result = validateProductImageCandidate(
+      {
+        evidenceText: "",
+        source: "existing",
+        url: "https://images-na.ssl-images-amazon.com/assets/site-shell-83a91.png",
+      },
+      {
+        category: "shop vac",
+        productName:
+          "Amazon.com: RIDGID Wet Dry Vacuums VAC4000 Powerful and ...",
+      },
+    );
+
+    assert.equal(result.accepted, false);
+  });
+
+  it("keeps a real Amazon product image with same-product context", () => {
+    const result = validateProductImageCandidate(
+      {
+        contextVerified: true,
+        evidenceText: "Apple iPad Pro M4 retailer product offer",
+        source: "trusted_metadata",
+        url: "https://m.media-amazon.com/images/I/71A1b2C3d4L.jpg",
+      },
+      context,
+    );
+
+    assert.equal(result.accepted, true);
+  });
+
   it("accepts a hashed CDN asset when same-product source context is verified", () => {
     const result = validateProductImageCandidate(
       {

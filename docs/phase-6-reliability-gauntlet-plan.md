@@ -2,7 +2,7 @@
 
 **Status:** Canonical merged plan; Phases 6A-6C complete; Phase 6D restart stopped
 **Prepared:** 2026-07-01
-**Execution state:** The clean post-RR-069 Phase 6D restart stopped at 1/6 after reopening RR-061; further live work requires a separate approved safety phase
+**Execution state:** RR-061 was fixed deterministically after the 1/6 restart stop; Phase 6D remains stopped and any clean restart requires fresh explicit approval
 **Repository:** `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 **Canonical repository path:** `docs/phase-6-reliability-gauntlet-plan.md`
 
@@ -915,6 +915,12 @@ asset to two different final product cards as High-confidence product imagery.
 RR-061 was reopened as Needs Investigation and the remaining five calls were
 not spent. The clean sample is insufficient for variance inference. Rubric
 v1.0 remains unfrozen and Phase 6E has not started.
+
+RR-061 was then fixed deterministically without resuming Phase 6D. The shared
+image resolver rejects generalized retailer flyout/menu/department/layout
+assets and excludes source/domain/host text from product-image identity while
+preserving same-product retailer and opaque CDN images. The stopped five-call
+balance is not reusable; a future clean pilot requires fresh explicit approval.
 
 Goal:
 

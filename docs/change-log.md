@@ -13,6 +13,14 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-02
 
+### Codex - Reopened RR-061 retailer navigation image safety
+- Fixed the live image-safety regression where the same Amazon `yoda/flyout_72dpi` navigation asset rendered on RIDGID VAC4000 and Fein Turbo I cards.
+- Confirmed the shared resolver was used, but its hard non-product vocabulary omitted flyout/menu/department/layout shapes and its relevance check could match retailer/domain words from generated titles against image hosts.
+- Added generalized flyout/menu/department/layout/masthead rejection, excluded retailer/source/domain words from image identity, and removed image-host text from relevance matching.
+- Preserved verified same-product Amazon images, opaque hashed CDN images, Google Shopping thumbnails, and source-upgrade image validation.
+- Fail-first passed 31/35 with four intended failures; focused coverage passed 135/135; the broader trust wall passed 376/376; full tests passed 791/791. Typecheck and eval passed; lint reported 0 errors and 3 existing warnings.
+- No live search ran. Phase 6D remains stopped, the remaining five-call balance is not reusable, rubric v1.0 remains unfrozen, and Phase 6E did not start.
+
 ### Codex - Phase 6D clean restart safety stop
 - Excluded the earlier four pre-fix pilot fixtures from the clean post-RR-069 variance sample and initialized a separate six-search restart ledger.
 - Ran only restart A1 (`shop vac`) before the absolute safety gate stopped the phase.

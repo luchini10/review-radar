@@ -6039,3 +6039,45 @@ moved from Fixed to Needs Investigation. No fix was attempted.
 - Phase 6D restart stop commit: `29e02f2`.
 
 Recommended direction: diagnose and fix RR-061 in a separate approved generalized image-safety phase before requesting a fresh clean Phase 6D restart.
+
+## <span style="color:green">**Codex QA Update - 2026-07-02 (Reopened RR-061 image safety)**</span>
+
+**Verdict: PASS. RR-061 is Fixed deterministically. Phase 6D was not resumed and Phase 6E did not start.**
+
+### Fail-first and root cause
+
+- The saved A1 fixture supplied the exact unsafe URL and two affected product names; current-code unit and enrichment tests distilled that historical evidence.
+- Fail-first image/asset coverage passed 31/35. Exactly four intended tests failed: generalized flyout/menu/layout rejection, the exact two-card regression, retailer/domain identity exclusion, and end-to-end fallback to no image.
+- The retailer-page path did use `resolveBestProductImage`.
+- `flyout`, `menu`, `department`, and `layout` were absent from the hard non-product asset vocabulary.
+- Product relevance included the image hostname and retailer/domain words from names such as `Amazon.com:`. Matching `amazon` plus `com` could therefore assign High confidence without product identity.
+
+### Generalized fix
+
+- The shared resolver now rejects flyout/menu/department/layout/masthead asset paths before confidence scoring.
+- Source/retailer/domain words are excluded from product-image identity.
+- Image URL hosts cannot supply product relevance; only source-derived evidence and the image path participate.
+- The exact `yoda/flyout_72dpi` URL is rejected for both RIDGID VAC4000 and Fein Turbo I.
+- A rejected suspicious image leaves `product_image_url` empty.
+- Same-product Amazon product imagery and opaque hashed CDN assets remain valid with verified source context.
+- Cross-product URL reuse remains a diagnostic signal, not an unconditional rejection rule, because legitimate variants may share imagery.
+
+### Verification and boundaries
+
+```text
+fail-first image/asset: 31/35; exactly 4 intended failures
+focused image/asset/source-upgrade: 135/135
+broad trust regression wall: 376/376 across 25 suites
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm test: 791/791 across 117 suites
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+- RR-054 fallback traces and RR-069 source-upgrade specificity remain green.
+- RR-007/RR-008, RR-041/RR-042, RR-063 through RR-068, RR-002/RR-062, RR-013, Phase 5E, and Phase 5H protections remain green.
+- No ranking, discovery, final-selection, price, product identity, source-upgrade behavior, product type, page eligibility, UI, API shape, or gauntlet policy changed.
+- No live search ran. Phase 6D remains stopped and the five calls from that execution window remain unusable.
+- Issue totals: 69 total; 10 Critical, 29 High, 25 Medium, 5 Low; 0 Open, 4 Needs Investigation, 64 Fixed, 1 Won't Fix.
+
+Recommended direction: human-review the RR-061 fix, then request fresh explicit approval for a new clean six-call Phase 6D restart.

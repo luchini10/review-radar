@@ -809,3 +809,12 @@ No production pipeline or API contract changed in Phase 6A.
 - **Measurement:** A1 produced 20 candidates, 4 exact, 2 near, and 6 final products in 83.219 seconds with 37 executed Serper queries. One run cannot support overlap, rank-correlation, stage-variance, significance, sample-size, or attribution conclusions.
 - **State:** Five restart calls remain unspent and blocked. RR-015/RR-037 remain Needs Investigation. Rubric v1.0 is not frozen, leader snapshots are not compiled, and Phase 6E has not started.
 - **Behavior boundary:** No production behavior changed during the restart. A separate approved generalized RR-061 phase is required before another Phase 6D attempt.
+
+## 19. Reopened RR-061 retailer navigation-image safety (2026-07-02)
+
+- **Failure path:** A trusted retailer product page supplied a generic Amazon `yoda/flyout_72dpi` navigation PNG. The shared resolver did not recognize `flyout`, and retailer/domain words from the generated card title matched the image host, incorrectly producing High-confidence image relevance.
+- **Guard:** The shared product-image resolver rejects flyout/menu/department/layout/masthead asset paths before confidence scoring. Source/retailer/domain words are excluded from image identity, and URL hosts cannot supply product relevance.
+- **Safe fallback:** Rejected images leave `product_image_url` empty; the product remains otherwise eligible.
+- **Preserved positives:** Verified same-product Amazon images, opaque hashed CDN images, Google Shopping thumbnails, and identity-safe source-upgrade images still pass.
+- **Proof:** Fail-first 31/35 with four intended failures; focused 135/135; broad trust 376/376; full suite 791/791; typecheck/eval pass; lint 0 errors/3 warnings.
+- **Phase state:** RR-061 is Fixed. No live search ran. Phase 6D remains stopped, rubric v1.0 remains unfrozen, and Phase 6E has not started.
