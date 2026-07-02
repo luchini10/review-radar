@@ -4,6 +4,19 @@
 
 ---
 
+## Phase 6B Regression Wall (2026-07-01)
+
+- Canonical index: `docs/phase-6-regression-wall.md`.
+- Range: RR-007 through RR-068 (62 issues).
+- Deterministic gaps found and closed: RR-012 schema availability formatting and RR-025 near-match funnel retention.
+- Measurement-only: RR-014 leader coverage and RR-015 run-to-run stability.
+- Provider-variance-bound: RR-037 candidate-pool recurrence and RR-045 Tapo coverage.
+- Do not treat a green deterministic wall as proof of live leader recall, stability, or provider coverage.
+- No `test:wall` command exists. A focused wall runner is documented only as proposed automation requiring explicit approval.
+- Phase 6B verification: focused additions 22/22; full suite 782/782; typecheck passed; lint 0 errors/3 existing warnings; eval clean; zero live calls.
+
+---
+
 ## Cost Reference
 
 > **Real per-search cost (corrected 2026-06-24):** the last measured baseline was **1325 Serper calls over 28 searches ≈ 47 Serper calls/search**, wall time ≈ **75 s/search**. The old table here said "~280–350 for a full 14×2 baseline" — that was a **~4× underestimate** (it predated editorial seeding + rubric rescue). Use ~47/search going forward. The scorecard now prints a live cost estimate before every run.

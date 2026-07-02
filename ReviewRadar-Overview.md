@@ -770,3 +770,13 @@ Historical references elsewhere in this document to an earlier "Phase 6" product
 - **Next:** Phase 6B regression-wall mapping only after explicit instruction.
 
 No production pipeline or API contract changed in Phase 6A.
+
+## 15. Phase 6B regression wall status (2026-07-01)
+
+- **State:** Phase 6B is complete. `docs/phase-6-regression-wall.md` is the issue-to-protection index for RR-007 through RR-068.
+- **Coverage:** 62 issues are mapped: 57 Fixed, 4 Needs Investigation, and 1 Won't Fix.
+- **Deterministic gaps closed:** RR-012 now directly tests shopper-friendly schema availability labels; RR-025 now directly tests near-match retention in the requirement-filter funnel.
+- **Measurement boundary:** RR-014/RR-015 require aggregate measurement. RR-037/RR-045 require provider/live variance evidence. Deterministic green tests do not close them.
+- **Behavior boundary:** No production pipeline, API, UI, script, fixture, ranking, discovery, trust, identity, eligibility, source-upgrade, requirement, or final-selection behavior changed.
+- **Cost:** Zero live calls.
+- **Next:** Phase 6C patch audit only after explicit instruction.

@@ -8,6 +8,24 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-07-01 Phase 6B
+
+**Goal:** Build the zero-live Phase 6 regression wall for RR-007 through RR-068 without changing production behavior.
+
+**What it checked:** Audited 68 issue records, 64 top-level test modules, the tracked synthetic fixture, current Phase 6 measurement artifacts, and the existing deterministic protections for all required safety and quality mechanisms.
+
+**What it changed:** Added `docs/phase-6-regression-wall.md`. Added one direct RR-012 availability-formatting test and strengthened the existing fallback test to directly prove RR-025 near-match funnel retention.
+
+**Coverage result:** All 62 wall issues are classified. The range contains 57 Fixed, 4 Needs Investigation, and 1 Won't Fix. RR-014/RR-015 remain measurement-only; RR-037/RR-045 remain provider-variance-bound. No production behavior gap or later fix-phase blocker was found.
+
+**Tests run:** Focused additions passed 22/22; typecheck passed; lint reported 0 errors and 3 existing warnings; full suite passed 782/782 across 117 suites; eval reported no red flags.
+
+**Live checks run:** None. Phase 6B used zero live calls.
+
+**Scope:** No production code, script, live fixture, generated baseline, app/API/UI behavior, ranking, discovery, identity, price, citation, eligibility, source-upgrade, requirement, or final-selection behavior changed. Phase 6C did not start.
+
+**Next recommended step:** Phase 6C patch audit only after explicit approval.
+
 ## Codex Run - 2026-07-01 Phase 6 master-plan promotion
 
 **Goal:** Add the complete reconciled Phase 6 master to the repo and make it authoritative for all Phase 6 work.

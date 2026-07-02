@@ -16,20 +16,20 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 6A instrument complete and reconciled. Phase 6B requires explicit instruction.**
+Current phase: **Phase 6B regression wall complete. Phase 6C requires explicit instruction.**
 
-Phase 6A retained the 64-test/22-fixture inventory, v0.1-draft scorecard, two M3 historical examples, seven batches, six-call variance design, and zeroed budget ledger. Reconciliation made safety zero tolerance absolute, separated `NotApplicable` from missing `NotScored`, retained the auditable deduction formula, and moved leader-target approval before the baseline.
+Phase 6B mapped all 62 issues from RR-007 through RR-068 in `docs/phase-6-regression-wall.md`. The wall found two direct deterministic gaps and closed both in tests: RR-012 schema availability formatting and RR-025 near-match funnel retention. No production behavior gap was found.
 
 `docs/phase-6-reliability-gauntlet-plan.md` is the sole source of truth for all Phase 6 scope, sequencing, budgets, gates, evidence rules, and completion criteria. Every supporting Phase 6 artifact implements that master and must not override it.
 
-The register remains 68 issues: 63 Fixed, 4 Needs Investigation, 1 Won't Fix, and 0 Open. No live call, behavior change, issue fix, script change, test change, or Phase 6B work ran.
+The register remains 68 issues: 63 Fixed, 4 Needs Investigation, 1 Won't Fix, and 0 Open. RR-014/RR-015 remain measurement-only and RR-037/RR-045 remain provider-variance-bound. Phase 6B used zero live calls and changed no production code, scripts, fixtures, or behavior.
 
 Recommended next phase:
 
-- Await explicit instruction for Phase 6B regression-wall work only.
-- Map RR-007 through RR-068 to existing deterministic coverage and close only genuine test gaps.
+- Await explicit instruction for Phase 6C patch-audit work only.
+- Use the canonical master and `docs/phase-6-regression-wall.md`; do not reinterpret the wall's measurement/provider classifications as deterministic failures.
 - Preserve RR-068, RR-061/RR-054, RR-041/RR-042, RR-067, and all RR-063 through RR-066 protections.
-- Do not start Phase 6C, the Phase 6D live variance pilot, rubric freeze, or baseline.
+- Do not start the Phase 6D live variance pilot, rubric freeze, or baseline.
 
 Note: historical sections in this document that use "Phase 6" for earlier product-type work retain their original labels. They do not mean the future reliability Phase 6 has started.
 
@@ -1432,3 +1432,22 @@ Stop. Do not start Phase 6B without explicit instruction.
 - Documentation commit: `d1ff4c1`.
 
 Stop. Do not start Phase 6B without explicit instruction.
+
+### Phase 6B regression wall completion record
+
+- Completed step: Indexed RR-007 through RR-068 and closed only direct deterministic test gaps.
+- Next step: Phase 6C patch audit only after explicit instruction.
+- Diagnostic-only: Yes. Tests and documentation only; no production behavior changed.
+- Stop condition hit: No. No production behavior gap, trust-gate regression, or later fix-phase blocker was found.
+- New issue IDs opened: None.
+- Existing issue IDs updated: No status changes. RR-014/RR-015 remain measurement-only; RR-037/RR-045 remain provider-variance-bound.
+- Issue totals: 68 total; 9 Critical, 29 High, 25 Medium, 5 Low; 63 Fixed, 4 Needs Investigation, 1 Won't Fix, 0 Open.
+- Regression wall: 62 issues; 57 Fixed, 4 Needs Investigation, 1 Won't Fix.
+- Gaps closed: RR-012 availability-label regression and RR-025 near-match funnel regression.
+- Verification: focused additions 22/22; typecheck passed; lint 0 errors with 3 existing warnings; full suite 782/782 across 117 suites; eval reported no red flags.
+- Live validation: None. Budget used 0.
+- Scope: No app/API/UI behavior, production code, script, fixture, generated baseline, ranking, discovery, identity, price, citation, eligibility, source-upgrade, requirement, or final-selection change.
+- Docs committed: Pending Phase 6B commit.
+- Commit hash: Pending.
+
+Stop. Do not start Phase 6C without explicit instruction.

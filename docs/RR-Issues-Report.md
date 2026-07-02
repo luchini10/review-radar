@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 6 master-plan promotion
+## Compiled for AI Agent Consumption — Phase 0 through Phase 6B
 
 **Generated:** 2026-07-01
-**Scope:** All phases from initial measurement harness through the completed Phase 6 master-plan source-of-truth promotion
+**Scope:** All phases from initial measurement harness through the completed Phase 6B regression wall
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -84,6 +84,7 @@
 | Phase 6A reliability instrument | 0 |
 | Phase 6A master-plan reconciliation | 0 |
 | Phase 6 master-plan source-of-truth promotion | 0 |
+| Phase 6B regression wall | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -2236,6 +2237,22 @@ No new issue ID was opened.
 **Register:** 68 issues; 63 Fixed, 4 Needs Investigation, 1 Won't Fix, 0 Open. No issue was opened, closed, or reclassified.
 
 **Scope:** Documentation governance only. No app behavior, tests, scripts, fixtures, live calls, fixes, or Phase 6B work.
+
+---
+
+### PHASE 6B - REGRESSION WALL (2026-07-01)
+
+**Verdict:** Phase 6B passed. All 62 issues from RR-007 through RR-068 are indexed in `docs/phase-6-regression-wall.md`; no new behavior defect was found and no issue status changed.
+
+**Register:** 68 issues; 63 Fixed, 4 Needs Investigation, 1 Won't Fix, 0 Open. The wall range contains 57 Fixed, 4 Needs Investigation, and 1 Won't Fix.
+
+**Coverage result:** Two direct deterministic test gaps were found and closed without production changes. RR-012 now directly tests shopper-friendly schema availability labels. RR-025 now directly tests that a budget-unverified product remains visible in `afterRequirementFilter.near`.
+
+**Measurement boundary:** RR-014 and RR-015 remain measurement-only. RR-037 and RR-045 remain provider-variance-bound. Deterministic green tests do not close them.
+
+**Verification:** Focused additions passed 22/22. Typecheck passed; lint reported 0 errors and 3 existing warnings; the full suite passed 782/782 across 117 suites; eval reported no red flags.
+
+**Scope:** Zero live calls. No production code, app/API/UI behavior, scripts, live fixtures, generated baselines, ranking, discovery, identity, price, citation, eligibility, source-upgrade, requirement, or final-selection behavior changed.
 
 ---
 

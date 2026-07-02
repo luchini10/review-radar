@@ -107,6 +107,28 @@ describe("product card view model", () => {
     assert.equal(specLabels.includes("Rating"), false);
   });
 
+  it("formats schema.org availability tokens as shopper-friendly labels", () => {
+    const card = buildProductRecommendationCardData(
+      buildProduct({
+        metadata: {
+          ...buildProduct().metadata,
+          offers: [
+            {
+              ...offer(899.99),
+              availability: field("https://schema.org/LimitedAvailability"),
+            },
+          ],
+        },
+      }),
+    );
+    const availability = card.specs.universal.find(
+      (spec) => spec.label === "Availability",
+    );
+
+    assert.equal(availability?.value, "Limited Availability");
+    assert.doesNotMatch(availability?.value || "", /LimitedAvailability/);
+  });
+
   it("hides optional fields cleanly when metadata is sparse", () => {
     const card = buildProductRecommendationCardData(
       buildProduct({

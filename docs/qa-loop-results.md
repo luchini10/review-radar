@@ -5801,3 +5801,40 @@ Recommended direction: Phase 6B regression wall only after explicit instruction.
 - Phase 6B remains unstarted.
 
 Recommended direction: Phase 6B regression wall only after explicit instruction.
+
+## <span style="color:green">**Codex QA Update - 2026-07-01 (Phase 6B regression wall)**</span>
+
+**Verdict: PASS. RR-007 through RR-068 are indexed, the only two direct deterministic gaps are closed, and no production behavior blocker was found. Phase 6C did not start.**
+
+### Register and wall
+
+- Verified 68 unique issue IDs through RR-068.
+- Whole-register totals remain 9 Critical, 29 High, 25 Medium, 5 Low; 63 Fixed, 4 Needs Investigation, 1 Won't Fix, 0 Open.
+- Wall range RR-007 through RR-068 contains 62 issues: 57 Fixed, 4 Needs Investigation, 1 Won't Fix.
+- Added `docs/phase-6-regression-wall.md` with per-ID mechanism, severity, status, classification, tests/fixtures, confidence, gap state, and notes.
+- RR-014/RR-015 are measurement-only; RR-037/RR-045 are provider-variance-bound. No status changed.
+
+### Deterministic gaps
+
+- RR-012 lacked a direct assertion for schema.org availability token formatting. Added a view-model regression for `LimitedAvailability` -> `Limited Availability`.
+- RR-025 had stage-name coverage but no direct assertion that near matches survived `afterRequirementFilter`. The fallback test now proves `names: []` and the budget-unverified candidate in `near`.
+- No production behavior gap or later approved fix-phase blocker was found.
+
+### Verification
+
+```text
+focused additions: 22/22 pass
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm test: 782/782 pass across 117 suites
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+### Scope
+
+- Live calls: 0.
+- No production code, executable script, fixture, baseline, app/API/UI behavior, ranking, discovery, identity, price, citation, eligibility, source-upgrade, requirement, or final-selection behavior changed.
+- `.claude/`, two generated baseline files, and 22 local live fixture JSON files remain untracked and excluded.
+- No `test:wall` automation was added; it remains an approval-only proposal.
+
+Recommended direction: Phase 6C patch audit only after explicit instruction.

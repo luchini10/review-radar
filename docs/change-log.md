@@ -13,6 +13,12 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-01
 
+### Codex - Phase 6B regression wall
+- Added `docs/phase-6-regression-wall.md`, mapping all 62 issues from RR-007 through RR-068 to deterministic protection, measurement/provider status, historical guards, or accepted fixture compatibility.
+- Closed two direct regression-test gaps without changing production behavior: schema availability labels for RR-012 and near-match funnel retention for RR-025.
+- Kept RR-014/RR-015 measurement-only and RR-037/RR-045 provider-variance-bound; no issue status changed and no behavior blocker was found.
+- Verification passed 22/22 focused tests, 782/782 full tests, typecheck, lint with 0 errors and 3 existing warnings, and offline eval with no red flags. No live calls ran.
+
 ### Codex - Phase 6 master-plan source-of-truth promotion
 - Promoted the complete reconciled desktop Phase 6 master into `docs/phase-6-reliability-gauntlet-plan.md`, replacing the shorter predecessor at the established canonical path.
 - Declared that file the sole authority for Phase 6 scope, sequencing, budgets, gates, evidence rules, and completion criteria.

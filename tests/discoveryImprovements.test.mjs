@@ -370,6 +370,21 @@ describe("AI research failure fallback", () => {
           },
         ],
       });
+      const nearSerperCandidate = buildRawCandidate({
+        id: "serper-microwave-near",
+        name: "Example Countertop Microwave EM721",
+        category: "microwave",
+        productUrl: "https://shop.example.com/p/example-microwave-em721",
+        imageUrl: "https://shop.example.com/images/em721.jpg",
+        price: null,
+        evidenceSources: [
+          {
+            title: "Example Countertop Microwave EM721",
+            url: "https://shop.example.com/p/example-microwave-em721",
+            snippet: "Compact countertop microwave product listing.",
+          },
+        ],
+      });
       const handler = createRecommendationPostHandler({
         collectReachableCitationUrls: async () => new Set(),
         createOpenAIClient: async () => ({
@@ -382,7 +397,7 @@ describe("AI research failure fallback", () => {
         enrichProductAssets: async (result) => result,
         enrichResultWithReviewEvidence: async (result) => result,
         searchSerperForProducts: async () => ({
-          candidates: [serperCandidate],
+          candidates: [serperCandidate, nearSerperCandidate],
           stats: {
             categoryGroup: "appliances",
             generatedQueries: [],
@@ -395,10 +410,10 @@ describe("AI research failure fallback", () => {
             organicCalls: 0,
             retailerDomainCalls: 0,
             directRetailerCalls: 0,
-            collectedCandidates: 1,
+            collectedCandidates: 2,
             duplicateCandidatesRemoved: 0,
             maxEnrichedProducts: 6,
-            preFilteredCandidates: 1,
+            preFilteredCandidates: 2,
             rejectedCandidates: 0,
             searchDepth: "dev",
             sourceTimeouts: 0,
@@ -410,7 +425,7 @@ describe("AI research failure fallback", () => {
         new Request("http://localhost/api/recommendations", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ query: "microwave" }),
+          body: JSON.stringify({ query: "microwave under $100" }),
         }),
       );
       const body = await response.json();
@@ -437,7 +452,7 @@ describe("AI research failure fallback", () => {
             "content-type": "application/json",
             "x-reviewradar-debug": "true",
           },
-          body: JSON.stringify({ query: "microwave" }),
+          body: JSON.stringify({ query: "microwave under $100" }),
         }),
       );
       const debugBody = await debugResponse.json();
@@ -464,6 +479,16 @@ describe("AI research failure fallback", () => {
         debugBody.debug.stageFunnel.sourceUpgradeTraces,
         [],
       );
+      const afterRequirementFilter =
+        debugBody.debug.stageFunnel.stages.find(
+          (stage) => stage.stage === "afterRequirementFilter",
+        );
+      assert.deepEqual(afterRequirementFilter.names, [
+        "Example Countertop Microwave EM720",
+      ]);
+      assert.deepEqual(afterRequirementFilter.near, [
+        "Example Countertop Microwave EM721",
+      ]);
       assert.ok(
         Array.isArray(debugBody.debug.stageFunnel.finalSelectionTrace),
       );
