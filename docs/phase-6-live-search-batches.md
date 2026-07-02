@@ -1,6 +1,6 @@
 # Phase 6 Live Search Batches
 
-**Status:** Phase 6A definitions only; no live searches executed  
+**Status:** Phase 6D stopped after 4/6 pilot searches on Critical RR-069
 **Rubric:** `v0.1-draft`; quality thresholds remain provisional until the v1.0 freeze after Phase 6D; safety tolerance is absolute at zero failures
 **Governing source of truth:** `docs/phase-6-reliability-gauntlet-plan.md`. This batch document implements the master plan and must not override it.
 
@@ -8,8 +8,8 @@
 
 - Test files: **64** top-level `tests/*.test.mjs`
 - Saved live fixtures: **22** JSON files in `tests/fixtures/review-radar-live/`
-- Phase 6A live budget: **0**
-- Phase 6A live calls used: **0**
+- Phase 6D pilot budget: **6 approved searches**
+- Phase 6D searches used: **4**; **2 blocked by the RR-069 safety stop**
 
 The fixture corpus is the free foundation. Batch definitions describe future approved work; they are not authorization to run it.
 
@@ -182,8 +182,8 @@ The 6D report will derive the delta-significance decision rule from these observ
 | B4 | 2 | 0 | 0 | 0 |
 | B5 | 2 | 0 | 0 | 0 |
 | B6 | 1 | 0 | 0 | 0 |
-| B7 (6D only) | 6 | 0 | 0 | 0 |
-| **Total** | **21 across separate phases** | **0** | **0** | **0** |
+| B7 (6D only) | 6 | 6 | 4 | 2 (blocked by safety stop) |
+| **Total** | **21 across separate phases** | **6** | **4** | **2 (blocked)** |
 
 The 21-call draft total is not one run budget: B1–B6 are the 15-call maximum baseline allocation, while B7 is a separate six-call pilot.
 
@@ -192,5 +192,15 @@ The 21-call draft total is not one run budget: B1–B6 are the 15-call maximum b
 | Date | Sub-phase | Batch | Query/run | Purpose | Approval reference | Fixture path | Serper calls | Status |
 |---|---|---|---|---|---|---|---:|---|
 | 2026-07-01 | Phase 6A | — | None | Documentation, fixture replay, and instrument validation only | Phase 6A budget = 0 | — | 0 | No live calls |
+| 2026-07-02 04:34 ET | Phase 6D | B7 | `shop vac` A1 | Broad variance and RR-037 pool presence | Taylor's explicit Phase 6D six-search approval | `tests/fixtures/review-radar-live/shop-vac.phase6d-run1.json` | 37 | Safe; 2 exact/5 near; RIDGID left after citation verification |
+| 2026-07-02 04:37 ET | Phase 6D | B7 | `robot vacuum under $300 self-emptying` B1 | Constrained variance and exact-honesty measurement | Taylor's explicit Phase 6D six-search approval | `tests/fixtures/review-radar-live/robot-vacuum-under-300-self-emptying.phase6d-run1.json` | 38 | Safe; 1 exact/5 near; verified $299.99 exact |
+| 2026-07-02 04:39 ET | Phase 6D | B7 | `shop vac` A2 | Broad variance and RR-037 pool presence | Taylor's explicit Phase 6D six-search approval | `tests/fixtures/review-radar-live/shop-vac.phase6d-run2.json` | 37 | Safe; 2 exact/4 near; RIDGID reached exact and near |
+| 2026-07-02 04:41 ET | Phase 6D | B7 | `robot vacuum under $300 self-emptying` B2 | Constrained variance and exact-honesty measurement | Taylor's explicit Phase 6D six-search approval | `tests/fixtures/review-radar-live/robot-vacuum-under-300-self-emptying.phase6d-run2.json` | 38 | **STOP:** generic Q10-series evidence attached to Q10 X5+ target; opened RR-069 |
 
-**Ledger total used: 0 live calls.**
+**Phase 6D approval:** exactly 6 live searches: `shop vac` x3 and
+`robot vacuum under $300 self-emptying` x3. Estimated cost is approximately
+280 Serper calls at the previously observed approximately 47 calls/search.
+
+**Ledger total used: 4 of 6 approved Phase 6D live searches; 150 observed Serper calls.**
+The remaining two approved searches were not spent because the Phase 6 safety
+stop fired on B2.

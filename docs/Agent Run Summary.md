@@ -1429,3 +1429,21 @@ New entries should keep the same format and stay easy to read.
 **Scope:** Two implementation/test files plus required docs. No Phase 5I trigger/fallback behavior, Phase 5J work, ranking, discovery, price, eligibility, product-type, requirement, final-selection, citation-retention, or UI change. Implementation commit: `b3cfab7`; documentation commit: `d00c0ba`.
 
 **Next recommended step:** Stop. Retry Phase 5I for RR-041/RR-042 only after explicit instruction and preserve the RR-066 model-level identity requirement.
+
+## Codex Run - 2026-07-02 Phase 6D variance pilot safety stop
+
+**Goal:** Run the approved 2x3 repeated live variance pilot, update RR-015 and RR-037, and prepare the rubric freeze proposal only if the pilot remained safe.
+
+**Execution:** Alternated `shop vac` and `robot vacuum under $300 self-emptying`. Four of six searches completed, using 150 observed Serper calls. Each fixture was preserved under a unique untracked Phase 6D path and inspected before the next call.
+
+**Stop finding:** Constrained run B2 targeted Roborock Q10 X5+ but accepted generic Q10-series shopping evidence that omitted X5+. Source upgrade attached price, rating, review count, and citation. This opened Critical RR-069 and stopped A3/B3.
+
+**Partial measurement:** Shop-vac candidate/final Jaccard was `0.1429/0.0000`; constrained candidate/final Jaccard was `0.0000/0.0000`. Raw-provider overlap was `0.2857-0.3158`, query-plan overlap was `0.3333-0.3636`, and no final product was shared in either pair. RIDGID entered both shop-vac pools but varied from one candidate removed at requirement filtering to five candidates with three reaching final exact/near.
+
+**Attribution:** Both provider output and model/search planning varied. Current traces do not support a causal percentage split. Relevant OpenAI calls do not explicitly pin temperature or seed.
+
+**Scope:** No production behavior changed. The approved `qualityConsistencyHarness.mjs` extension adds offline fixture analysis only. Rubric v1.0 was not frozen, leader snapshots were not compiled, and Phase 6E did not start.
+
+**Issues:** RR-069 Open; RR-015 and RR-037 remain Needs Investigation. Totals: 69 issues; 10 Critical, 29 High, 25 Medium, 5 Low; 1 Open, 4 Needs Investigation, 63 Fixed, 1 Won't Fix.
+
+**Next recommended step:** Fix RR-069 deterministically before requesting approval to resume Phase 6D.

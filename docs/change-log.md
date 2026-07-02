@@ -13,6 +13,14 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-02
 
+### Codex - Phase 6D variance pilot safety stop
+- Ran four of six approved repeated live searches before the safety gate stopped the pilot.
+- Added an offline fixture-analysis mode to `scripts/qualityConsistencyHarness.mjs` for pairwise provider, plan, pool, and final overlap; rank correlation; stage ranges; latency/cost; and RIDGID stage presence.
+- Opened Critical RR-069 after generic Roborock Q10-series shopping evidence attached price, rating, review count, and citation to a specific Q10 X5+ target.
+- Recorded partial RR-015/RR-037 evidence in `docs/phase-6-variance-pilot.md`; both remain Needs Investigation.
+- Spent 4/6 live searches and 150 observed Serper calls. The remaining two searches were not run.
+- No production behavior changed. Rubric v1.0 was not frozen, the leader package was not compiled, and Phase 6E did not start.
+
 ### Codex - Phase 6C product-specific patch audit
 - Added `docs/phase-6-product-specific-patch-audit.md` after auditing all 61 tracked production TypeScript/JavaScript files.
 - Classified 5 generalized-data groups, 4 source/category-rule groups, 1 non-behavioral comment/example group, and 0 must-generalize blockers.

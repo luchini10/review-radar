@@ -1,8 +1,8 @@
 # ReviewRadar Phase 6 Reliability Gauntlet - Master Plan
 
-**Status:** Canonical merged plan; Phases 6A, 6B, and 6C complete
+**Status:** Canonical merged plan; Phases 6A-6C complete; Phase 6D stopped
 **Prepared:** 2026-07-01
-**Execution state:** Phase 6C product-specific patch audit complete; Phase 6D variance pilot requires explicit instruction
+**Execution state:** Phase 6D stopped after 4/6 searches on Critical RR-069; freeze and Phase 6E blocked
 **Repository:** `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 **Canonical repository path:** `docs/phase-6-reliability-gauntlet-plan.md`
 
@@ -900,6 +900,14 @@ Exit:
 
 ### Phase 6D - Variance pilot
 
+**Execution result (2026-07-02): STOPPED.** Four of six approved searches ran.
+Constrained run B2 attached generic Roborock Q10-series shopping evidence to a
+specific Q10 X5+ target, opening Critical RR-069. A3 and B3 were not spent.
+`docs/phase-6-variance-pilot.md` records the partial RR-015/RR-037 evidence.
+The v1.0 freeze proposal, market-leader method/snapshots, and Phase 6E remain
+blocked until RR-069 is fixed deterministically and Phase 6D resumption is
+explicitly approved.
+
 Goal:
 
 Measure enough current variance to stop interpreting single-run movement as
@@ -1200,6 +1208,7 @@ No Phase 6 step may continue automatically before required docs are complete.
 | 6A | `docs/phase-6-live-search-batches.md` |
 | 6B | `docs/phase-6-regression-wall.md` |
 | 6C | `docs/phase-6-product-specific-patch-audit.md` |
+| 6D (stopped pilot) | `docs/phase-6-variance-pilot.md` |
 | 6D (freeze point) | `docs/phase-6-market-leader-evaluation.md` |
 | 6D (freeze point) | approved QA-only leader snapshot data |
 | 6E+ | versioned baseline and comparison reports |

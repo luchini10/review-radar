@@ -1152,3 +1152,38 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Cost boundary:** Phase 6A and its reconciliation used zero live calls. Phase 6B and 6C are also zero-live phases. Do not run the six-call Phase 6D pilot without explicit approval.
 
 **Status:** Phase 6A complete and reconciled. Phase 6B regression wall is next only after explicit instruction.
+
+---
+
+## 2026-07-02 - Phase 6D stopped-pilot measurement guidance
+
+**Budget and safety:** Four of six approved M4 searches ran, using 150 observed
+Serper calls. The remaining two calls were not spent after Critical RR-069
+triggered the absolute safety stop. A live measurement budget is a ceiling,
+not a target to finish after unsafe evidence appears.
+
+**Fixture handling:** Repeated calls overwrite query-slug fixtures. Copy the
+historical anchor first, move every fresh result to a unique untracked Tier A
+path immediately, inspect it, update the ledger, and restore the historical
+anchor path when the run ends.
+
+**Offline analyzer:** `scripts/qualityConsistencyHarness.mjs --fixtures ...`
+computes pairwise raw-provider, query-plan, candidate-pool, and final-set
+Jaccard; three-run intersection/union when available; shared-product Spearman
+rank correlation; exact/near and funnel-stage ranges; latency; observed Serper
+calls; and RIDGID stage presence. The mode reads fixtures only and makes no
+live calls. The script's default mode remains its historical live harness and
+still requires separate approval.
+
+**Interpretation:** Stable exact counts do not imply stable products. In the
+partial pilot, both query pairs kept the same exact count while final-set
+Jaccard was zero. Raw-provider and query-plan overlap should be reported
+separately; current traces do not support a causal percentage split.
+
+**Model configuration:** Relevant OpenAI Responses API calls do not explicitly
+set temperature or seed. Record this as unpinned model-side configuration,
+without claiming it alone caused the observed variance.
+
+**Freeze rule:** A stopped two-run sample cannot freeze a variance threshold,
+rubric v1.0, leader method, or snapshots. Fix RR-069 deterministically and
+obtain explicit approval before resuming Phase 6D.

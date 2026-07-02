@@ -5887,3 +5887,63 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - Phase 6C commit: `388f955`.
 
 Recommended direction: Phase 6D variance pilot only after explicit approval of the six-search plan and estimated ~280 Serper-call budget.
+
+## <span style="color:green">**Codex QA Update - 2026-07-02 (Phase 6D variance pilot safety stop)**</span>
+
+**Verdict: STOPPED. Four of six approved searches ran; constrained run B2 exposed Critical RR-069, so A3/B3 were not spent and rubric v1.0 was not frozen.**
+
+### Live ledger
+
+| Run | Query | Serper calls | Latency | Result |
+|---|---|---:|---:|---|
+| A1 | `shop vac` | 37 | 108.439s | Safe; 2 exact/5 near |
+| B1 | `robot vacuum under $300 self-emptying` | 38 | 90.287s | Safe; 1 exact/5 near |
+| A2 | `shop vac` | 37 | 78.188s | Safe; 2 exact/4 near |
+| B2 | `robot vacuum under $300 self-emptying` | 38 | 63.174s | **STOP: unsafe generic-series evidence attachment** |
+
+Budget spent: 4/6 searches and 150 observed Serper calls. The failed shell
+attempt that expanded `$300` exited before invoking the app and spent no call.
+
+### RR-069 safety finding
+
+- Target: `Roborock Q10 X5+ Robot Vacuum and Mop, Self-Emptying, Hands ...`.
+- Detected model tokens: `q10`, `roborockq10x5`.
+- Selected identity/query: `Roborock Q10`.
+- Accepted source candidate: `Roborock - Q10 Series Robot Vacuum and Mop with Self-Emptying, 10,000Pa Suction,`.
+- Attached fields: price, rating, review count, citation.
+- The source title did not carry X5+; a neighboring Q10 S5+ target rejected the same generic series candidate.
+- RR-069 opened as Critical/Open. No behavior change or fix was attempted.
+
+### Partial variance evidence
+
+| Metric | `shop vac` | constrained robot vacuum |
+|---|---:|---:|
+| Raw-provider Jaccard | 0.2857 | 0.3158 |
+| Query-plan Jaccard | 0.3636 | 0.3333 |
+| Candidate-pool Jaccard | 0.1429 | 0.0000 |
+| Final-set Jaccard | 0.0000 | 0.0000 |
+
+- No final product was shared within either pair, so rank correlation was unscoreable.
+- RIDGID appeared in both completed shop-vac pools: one candidate in A1 and five in A2.
+- A1 lost RIDGID at requirement filtering; A2 carried three RIDGID candidates to the final exact/near slate.
+- RR-015 and RR-037 remain Needs Investigation because the planned third runs did not occur.
+- Provider and model/plan variance are both visible. Current traces cannot allocate causal percentages.
+- Relevant OpenAI response calls do not explicitly pin temperature or seed.
+
+### Verification and scope
+
+```text
+node --check scripts/qualityConsistencyHarness.mjs: pass
+offline fixture-analysis smoke test: pass
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm test: 782/782 pass across 117 suites
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+- `qualityConsistencyHarness.mjs` gained only the pre-approved offline fixture-analysis mode.
+- No production code or app behavior changed.
+- Four Phase 6D Tier A fixtures remain untracked; historical fixture paths were restored.
+- No leader snapshots or market-leader method were compiled, no freeze proposal was approved, and Phase 6E did not start.
+
+Recommended direction: fix RR-069 deterministically before requesting approval to resume Phase 6D.

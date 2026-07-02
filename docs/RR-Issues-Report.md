@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 6C
+## Compiled for AI Agent Consumption — Phase 0 through Phase 6D safety stop
 
 **Generated:** 2026-07-02
-**Scope:** All phases from initial measurement harness through the completed Phase 6C product-specific patch audit
+**Scope:** All phases from initial measurement harness through the stopped Phase 6D variance pilot
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -13,12 +13,12 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 68 |
-| Critical | 9 |
+| Total Issues | 69 |
+| Critical | 10 |
 | High | 29 |
 | Medium | 25 |
 | Low | 5 |
-| Open | 0 |
+| Open | 1 |
 | Needs Investigation | 4 |
 | Fixed | 63 |
 | Won't Fix | 1 |
@@ -86,6 +86,7 @@
 | Phase 6 master-plan source-of-truth promotion | 0 |
 | Phase 6B regression wall | 0 |
 | Phase 6C product-specific patch audit | 0 |
+| Phase 6D variance pilot | 1 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -509,6 +510,8 @@
 **Suggested fix:** Investigate LLM temperature reduction; deterministic query ordering; pinning the candidate pool via the replay fixture system before introducing scoring changes; seed-name deduplication to stabilize the discovery pool.
 
 **Phase 4 run evidence:** Fresh repeated queries varied materially within the same day. The Phase 4B robot-vacuum final seven shared only Shark ION with the Phase 4D exact set; subsequent Phase 4E shifted again toward three Roombas and two Roborocks. Gas-grill and cordless-drill slates likewise changed products and upgrade-trigger counts between phases. This is qualitative confirmation of RR-015, not a replacement for the formal consistency harness.
+
+**Phase 6D partial pilot evidence:** The safety-stopped pilot completed two of three runs for each approved query. Pairwise candidate-pool Jaccard was `0.1429` for `shop vac` and `0.0000` for `robot vacuum under $300 self-emptying`; final-set Jaccard was `0.0000` for both. Raw-provider overlap was `0.2857` and `0.3158`, while generated/search-plan overlap was `0.3636` and `0.3333`. No final product was shared within either query pair, so rank correlation was unscoreable. The evidence confirms material current variance but is below the planned three-run sample and cannot establish a final significance threshold. Status remains Needs Investigation.
 
 ---
 
@@ -1071,6 +1074,8 @@ Deterministic tests cover Oral-B and EGO retention, specific Purina and Hill's p
 **Actual:** RIDGID present in ~50% of observed live runs.
 
 **Suggested fix:** Improve discovery seed coverage for RIDGID (brand + model explicitly seeded); or add RIDGID to the gold benchmark `coreLeaders` for shop-vac searches and track coverage via the quality scorecard.
+
+**Phase 6D partial pilot evidence:** RIDGID entered the merged candidate pool in both completed `shop vac` runs, but exposure varied sharply: one RIDGID candidate in A1 versus five in A2. In A1, the sole RIDGID candidate survived citation verification and was removed by requirement filtering. In A2, three RIDGID candidates survived through the final exact/near slate, including one exact card. Raw provider traces contained zero RIDGID names in A1 and three in A2. This disproves total pool absence for these two runs but confirms the underlying provider/plan variance. The third planned run was not spent after Critical RR-069 triggered the safety stop, so RR-037 remains Needs Investigation.
 
 ---
 
@@ -2273,10 +2278,40 @@ No new issue ID was opened.
 
 ---
 
+### PHASE 6D - VARIANCE PILOT SAFETY STOP (2026-07-02)
+
+#### RR-069
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-069 |
+| **Phase** | Phase 6D variance pilot |
+| **Severity** | Critical |
+| **Title** | Generic model-series shopping evidence can attach to a different specific submodel |
+| **Status** | Open |
+
+**Description:** During constrained pilot run B2, source upgrade targeted `Roborock Q10 X5+ Robot Vacuum and Mop, Self-Emptying, Hands ...` but attached price, rating, review count, and citation from `Roborock - Q10 Series Robot Vacuum and Mop with Self-Emptying, 10,000Pa Suction,`. The source title did not identify `X5+`. A neighboring `Q10 S5+` target in the same run correctly rejected the same generic series candidate, demonstrating inconsistent specificity handling.
+
+**Where it occurs:** Source-upgrade model identity construction and same-product evidence matching in `lib/requirementEvidenceRescue.ts` / shared product identity helpers; visible in `debug.stageFunnel.sourceUpgradeTraces`
+
+**Steps to reproduce:** Replay the untracked Tier A fixture `tests/fixtures/review-radar-live/robot-vacuum-under-300-self-emptying.phase6d-run2.json`. Inspect the source-upgrade trace for the Q10 X5+ target. The target records model tokens `q10` and `roborockq10x5`, selects identity phrase/query `Roborock Q10`, marks the generic Q10-series candidate `identityMatch: true`, and records `evidenceAttached: true` with `price`, `rating`, `reviewCount`, and `citation`.
+
+**Expected:** A specific Q10 X5+ target may accept evidence only when source-derived product evidence identifies X5+ or an independently proven exact same-product offer. Generic Q10-series evidence and different Q10 variants must remain secondary or be rejected for attachment.
+
+**Actual:** Generic Q10-series evidence passed the source-upgrade identity gate and donated four product-specific fields to the Q10 X5+ candidate.
+
+**Current status:** Open. The Phase 6D pilot stopped immediately after the fourth of six approved searches. No behavior fix was attempted, the unsafe fixture was preserved untracked, and rubric v1.0 was not frozen.
+
+**Suggested fix or next action:** Run a narrow fail-first identity-safety phase before resuming Phase 6D. Reproduce the exact X5+/generic-Q10 case and unrelated series/submodel controls; preserve exact same-model positives, RR-063 through RR-067 protections, query/URL provenance exclusions, and all existing source-upgrade safety gates.
+
+**Phase 6D measurement consequence:** RR-015 and RR-037 received partial two-run evidence only. The remaining two approved searches were not spent. The market-leader snapshot package and rubric freeze proposal are blocked until RR-069 is fixed deterministically and the variance pilot is explicitly re-approved.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (0 issues)
-- None.
+### Open (1 issue)
+- RR-069: Generic model-series shopping evidence can attach to a different specific submodel
 
 ### Needs Investigation (4 issues)
 - RR-014: Mean core-leader coverage critically low
@@ -2296,3 +2331,4 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 1. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
 2. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
 3. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
+4. **RR-069** (Critical) — Generic model-series evidence attached to a specific Q10 X5+ target; fix before resuming live measurement.

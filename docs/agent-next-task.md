@@ -4,35 +4,33 @@ Generated: 2026-07-02
 
 ## Current next task
 
-**Phase 6C complete - Phase 6D variance pilot requires explicit instruction**
+**Phase 6D stopped - fix Critical RR-069 before resuming the pilot**
 
-Phase 6C created `docs/phase-6-product-specific-patch-audit.md` after auditing all 61 tracked production TypeScript/JavaScript files.
+The Phase 6D variance pilot spent four of six approved searches and stopped on
+the master plan's safety gate. Constrained run B2 attached generic Roborock
+Q10-series price/rating/review/citation evidence to a specific Q10 X5+ target.
+The source title did not identify X5+.
 
-The sole Phase 6 program source of truth is `docs/phase-6-reliability-gauntlet-plan.md`. Supporting scorecard, batch, wall, audit, benchmark, and report documents implement that master and cannot override its scope, sequencing, budgets, gates, or completion criteria.
+`docs/phase-6-variance-pilot.md` contains the partial RR-015/RR-037 report:
 
-Phase 6C verdict: **PASS WITH WATCH ITEMS**.
+- shop-vac pool/final Jaccard: `0.1429` / `0.0000`;
+- constrained pool/final Jaccard: `0.0000` / `0.0000`;
+- raw-provider overlap: `0.2857-0.3158`;
+- query-plan overlap: `0.3333-0.3636`;
+- RIDGID entered both completed shop-vac pools, but exposure ranged from one
+  pool candidate removed at requirement filtering to five pool candidates
+  with three reaching the final exact/near slate.
 
-- 5 finding groups are acceptable generalized data.
-- 4 finding groups are acceptable source/category rules.
-- 1 finding group is suspicious but non-behavioral comments/examples.
-- 0 must-generalize blockers were found.
+The remaining A3/B3 searches were not spent. Rubric v1.0 was not frozen,
+leader snapshots were not compiled, and Phase 6E did not start.
 
-Watch items are maintenance risks, not current defects:
+The canonical register now contains 69 issues:
 
-- duplicated retailer/product-page route knowledge can drift across defensive pipeline boundaries;
-- the `HP` brand/unit collision should remain centralized;
-- named cross-brand floor-cleaner family terms should remain shared taxonomy data, not become a product denylist.
+- 10 Critical, 29 High, 25 Medium, 5 Low;
+- 1 Open, 4 Needs Investigation, 63 Fixed, 1 Won't Fix.
 
-No production code, test, script, fixture, baseline, app/API/UI behavior, ranking, discovery, identity, price, citation, eligibility, source-upgrade, product-type, requirement, or final-selection behavior changed. Live calls: 0.
-
-The canonical register contains 68 issues:
-
-- 9 Critical, 29 High, 25 Medium, 5 Low;
-- 0 Open, 4 Needs Investigation, 63 Fixed, 1 Won't Fix.
-
-RR-014, RR-015, RR-037, and RR-045 intentionally remain Needs Investigation. RR-037 belongs to the Phase 6D pilot; RR-045 belongs to Phase 6E.
-
-Verification passed: typecheck; lint with 0 errors and 3 existing warnings; 782/782 tests across 117 suites; eval with no red flags.
+RR-069 is Open. RR-014, RR-015, RR-037, and RR-045 remain Needs
+Investigation.
 
 ## Master-plan amendment notice - 2026-07-01 (Claude, docs-only)
 
@@ -91,20 +89,27 @@ the repository file; the repo file is the only copy.
 
 ## Required next task
 
-Do not start automatically. Await a separate instruction and approved six-search budget for **Phase 6D variance pilot only**.
+Do not start automatically. Await a narrow fail-first behavior-fix instruction
+for **RR-069 only**.
 
-Phase 6D is the first live Phase 6 step. Its fixed design is `shop vac` repeated three times plus one approved fixture-overlapping constrained query repeated three times. Report the estimated ~280 Serper calls before execution. Do not begin the Phase 6E baseline, dossier analysis, or fixes.
+The fix should require specific source-derived submodel identity before generic
+series evidence can attach to a specific target, while preserving exact
+same-product positives and RR-063 through RR-067 protections. After a green
+deterministic fix, Phase 6D requires explicit re-approval before spending the
+two unrun pilot searches or restarting the pilot design.
 
 Do not:
 
-- start Phase 6D or any later sub-phase without explicit approval and the exact constrained query;
+- resume Phase 6D or start any later sub-phase without explicit approval;
+- fix RR-069 inside the stopped measurement phase;
 - change the v0.1-draft rubric or provisional thresholds without recording a versioned rationale;
 - implement proposed trace additions or automation from the scorecard document without approval;
 - alter the completed RR-068, RR-061, or RR-054 behavior without a proven regression;
 - change ranking, discovery breadth, final selection, price, citation, source-upgrade behavior, or any app behavior during the variance pilot;
 - weaken RR-063 through RR-067 source-derived identity rules;
 - weaken price, citation, product, requirement, product-type, or identity trust gates;
-- run a live search or full baseline without approval.
+- run another live search or full baseline without approval;
+- freeze rubric v1.0 or approve leader snapshots before a clean Phase 6D completion.
 
 Reference:
 
@@ -113,6 +118,7 @@ Reference:
 - `docs/phase-6-live-search-batches.md`
 - `docs/phase-6-regression-wall.md`
 - `docs/phase-6-product-specific-patch-audit.md`
+- `docs/phase-6-variance-pilot.md`
 - `docs/RR-Issues-Report.md`
 - `docs/codex-handoff-phased-plan.md`
 - `docs/qa-loop-results.md` latest Phase 6C entry

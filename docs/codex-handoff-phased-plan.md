@@ -1471,3 +1471,23 @@ Stop. Do not start Phase 6C without explicit instruction.
 - Phase 6C commit: `388f955`.
 
 Stop. Do not start Phase 6D without explicit instruction and live-budget approval.
+
+### Phase 6D variance pilot safety-stop record
+
+- Completed step: Partial Phase 6D variance pilot; four of six approved searches executed.
+- Next step: Narrow fail-first RR-069 identity-safety fix only, after explicit instruction. Do not resume Phase 6D or start Phase 6E automatically.
+- Classification: M4 diagnostic/measurement only, plus one approved measurement-harness extension.
+- Stop condition hit: Yes. Constrained run B2 attached generic Q10-series evidence to a specific Roborock Q10 X5+ target.
+- New issue IDs opened: RR-069 (Critical, Open).
+- Existing issue IDs updated: RR-015 and RR-037 received partial pilot evidence and remain Needs Investigation.
+- Issue totals: 69 total; 10 Critical, 29 High, 25 Medium, 5 Low; 63 Fixed, 4 Needs Investigation, 1 Won't Fix, 1 Open.
+- Live budget spent: 4 of 6 approved searches; 150 observed Serper calls. A3/B3 were not spent after the stop.
+- Partial variance: shop-vac pool/final Jaccard `0.1429/0.0000`; constrained pool/final Jaccard `0.0000/0.0000`.
+- RR-037: RIDGID appeared in both completed shop-vac pools, but varied from one pool candidate removed at requirements to five pool candidates with three reaching final exact/near.
+- Attribution: mixed provider and model/plan variance; current traces cannot allocate causal percentages. Relevant OpenAI calls do not explicitly pin temperature or seed.
+- Fixtures: four new Tier A pilot fixtures preserved untracked; historical anchor paths restored.
+- Freeze state: No market-leader method/snapshots were compiled, no freeze proposal was approved, rubric remains `v0.1-draft`, and Phase 6E is blocked.
+- Production behavior: Unchanged. Only `scripts/qualityConsistencyHarness.mjs` gained the approved offline fixture-analysis mode.
+- Docs committed: Pending this Phase 6D stop commit.
+
+Stop. Fix RR-069 deterministically before any further live measurement.
