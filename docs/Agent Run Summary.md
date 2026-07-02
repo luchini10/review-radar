@@ -1540,6 +1540,6 @@ New entries should keep the same format and stay easy to read.
 
 **Phase state:** Rubric v1.0 not frozen; leader snapshots not compiled; Phase 6E not started.
 
-**Commit:** Pending.
+**Commit:** Phase 6D safety-stop report `566a7bf`.
 
 **Next recommended step:** Diagnose/fix RR-061 wrong-model image safety separately; keep RR-070 independently scoped.

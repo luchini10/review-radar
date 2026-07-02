@@ -6130,5 +6130,6 @@ offline variance harness: ran; no within-query pairs
 - No production code, tests, scripts, behavior, rubric, ranking, discovery, trust, image, source-upgrade, final-selection, UI, or API change occurred.
 - Issue totals: 70 total; 10 Critical, 29 High, 26 Medium, 5 Low; 0 Open, 6 Needs Investigation, 63 Fixed, 1 Won't Fix.
 - Rubric v1.0 remains unfrozen; leader snapshots were not compiled; Phase 6E did not start.
+- Phase 6D safety-stop commit: `566a7bf`.
 
 Recommended direction: fix RR-061 wrong-model image safety in a separate approved phase; keep RR-070 separately scoped unless explicitly combined.

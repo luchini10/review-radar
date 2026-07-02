@@ -1574,7 +1574,7 @@ Stop. Do not resume Phase 6D or start Phase 6E without explicit instruction.
 - Measurement result: One run per query; all pairwise overlaps, rank correlation, stage-loss variation, significance, sample-size inference, and provider/model attribution are unavailable.
 - Verification: typecheck passed; lint 0 errors/3 existing warnings; full suite 791/791; offline eval no red flags; offline harness produced empty pair arrays.
 - Phase state: Rubric v1.0 is not frozen; leader snapshots were not compiled; Phase 6E did not start.
-- Docs committed: Pending.
-- Commit hash: Pending.
+- Docs committed: Yes.
+- Phase 6D safety-stop commit: `566a7bf`.
 
 Stop. Do not fix RR-061/RR-070, resume Phase 6D, or start Phase 6E without explicit instruction.
