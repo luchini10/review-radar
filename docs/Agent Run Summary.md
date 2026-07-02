@@ -8,6 +8,24 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-07-01 Phase 6A reconciliation
+
+**Goal:** Reconcile the committed Phase 6A instrument with the merged Phase 6 master plan without deleting completed work.
+
+**What it checked:** Compared the canonical plan, scorecard, live-batch policy, worked historical examples, tracking docs, and commit `d01fda5`.
+
+**What it changed:** Documentation only. Safety remains zero-tolerance and is no longer labeled provisional. `NotApplicable` now differs from missing `NotScored` evidence. The existing deduction formula remains the canonical v0.1 draft. Leader targets must be approved after Phase 6D and before Phase 6E.
+
+**What it preserved:** Both historical worked examples, the seven batches, six-call variance design, 12-15-call baseline ceiling, fixture policy, script inventory, proposed automation, and every Phase 6A verification result.
+
+**Tests run:** Typecheck passed; lint reported 0 errors and 3 existing warnings; full suite passed 781/781 across 117 suites; eval reported no red flags.
+
+**Live checks run:** None.
+
+**Scope:** No production code, test, script, fixture, app behavior, issue status, or Phase 6B work changed.
+
+**Next recommended step:** Phase 6B regression wall only after explicit instruction.
+
 ## Codex Run - 2026-07-01 Phase 6A
 
 **Goal:** Build only the Phase 6 reliability instrument: rubric v0.1-draft, report templates, release gates, live batch definitions, and fixture policy.

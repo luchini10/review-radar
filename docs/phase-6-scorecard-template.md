@@ -2,10 +2,10 @@
 
 **Rubric version:** `v0.1-draft`  
 **Status:** Phase 6A instrument only; not frozen and not a release claim  
-**Threshold marker:** Every numeric or categorical cutoff marked **[P]** is **provisional until the v1.0 freeze after Phase 6D**.  
+**Threshold marker:** Quality deductions, grade bands, review floors, and staleness cutoffs marked **[P]** are provisional until the v1.0 freeze after Phase 6D. Product-safety tolerance is absolute at zero failures and is not provisional.
 **Authority:** `docs/phase-6-reliability-gauntlet-plan.md`, especially sections 4–6, 8, and 11
 
-This document is the contract for the existing ReviewRadar measurement tools and any approved extensions to them. It does not create a second scoring system. Where a current tool cannot produce the required evidence, the metric is `NotScored` and the gap is listed for approval; no missing field is inferred.
+This document is the contract for the existing ReviewRadar measurement tools and any approved extensions to them. It does not create a second scoring system. Where a current tool cannot produce the required evidence, the metric is `NotScored` and the gap is listed for approval; no missing field is inferred. Where a metric does not apply to the query shape, it is `NotApplicable`, not missing evidence.
 
 ## 1. Measurement modes
 
@@ -55,25 +55,29 @@ Field presence is not the same as scoreability. A field omitted by the replay re
 
 ## 3. Scoring algorithm
 
-1. Score the **per-search safety axis** independently. Its allowed failure count is **0 [P]**.
+1. Score the **per-search safety axis** independently. Its allowed failure count is **0 (absolute)**.
 2. Start quality at **100 [P]**.
 3. For each High-impact quality metric that fails, deduct **15 [P]** once.
 4. For each Medium-impact quality metric that fails, deduct **8 [P]** once, except ranking sensibility score **3 [P]**, which deducts **4 [P]**.
 5. Never deduct more than once for the same metric in one search, regardless of instance count.
 6. `qualityScore = max(0 [P], 100 [P] - sum(deductions))`.
-7. `NotScored` produces no deduction and marks the report incomplete. If any High-impact metric is `NotScored`, the final grade cannot exceed **B [P]**.
-8. Any safety failure forces final grade **F [P]**, regardless of the quality score.
-9. Otherwise: **A ≥90 [P]**, **B ≥75 [P]**, **C ≥60 [P]**, **D <60 [P]**.
+7. `NotScored` produces no deduction and marks the applicable report surface incomplete. If any applicable High-impact metric is `NotScored`, the final grade cannot exceed **B [P]**.
+8. `NotApplicable` produces no deduction and no completeness penalty. It requires a query-shape reason.
+9. Any safety failure forces final grade **F (absolute)**, regardless of the quality score.
+10. Otherwise: **A ≥90 [P]**, **B ≥75 [P]**, **C ≥60 [P]**, **D <60 [P]**.
 
 The numerical quality score remains visible when safety forces F. This preserves diagnosis without softening the safety outcome.
+
+**Reconciled scoring choice:** `v0.1-draft` retains this deduction model. It is easier to audit across partially scored historical fixtures than a proportionally redistributed component-weight model, and both completed worked examples already use it. Phase 6D may calibrate deduction sizes and quality thresholds before v1.0; replacing the formula requires an explicit rubric-version decision.
 
 ### Metric result states
 
 - `Pass`: evidence proves the metric did not cross its threshold.
 - `Fail`: evidence proves the metric crossed its threshold; apply its one allowed deduction or safety failure.
 - `NotScored`: required data is missing, stale for the claim, not printed by the authorized report, or insufficient to establish a pattern. Apply no deduction.
+- `NotApplicable`: the metric does not apply to this query shape. Apply no deduction and do not mark completeness false.
 
-For a query shape to which a metric does not apply, use `NotScored` with reason `not_applicable_to_query_shape`; do not invent a fourth numeric state. Safety incompleteness does not itself force F, but a report with an unscored safety metric cannot be presented as complete safety proof or used alone for release approval.
+Safety incompleteness does not itself force F, but a report with an applicable unscored safety metric cannot be presented as complete safety proof or used alone for release approval.
 
 ## 4. Safety axis — per search, binary
 
@@ -90,7 +94,7 @@ Any one `Fail` means final grade F and triggers the stop condition. These are se
 | `S7` | Unsafe image | Any accepted card image is a page, logo, banner, placeholder, tracker, generic artwork, or other rejected asset class | M2/M3/M4; M1 supports resolver behavior only | Image-resolver verdict and source identity context |
 | `S8` | False exact on a hard constraint | Any exact card violates a stated dealbreaker/hard requirement after manual confirmation | M2 validator-layer / M3 / M4; M1 supports validation only | Requirement states, source evidence, manual confirmation |
 
-**Safety threshold: 0 failures [P]. Provisional until the v1.0 freeze after Phase 6D.**
+**Safety threshold: 0 failures. Absolute and effective now; it is not part of Phase 6D calibration.**
 
 ## 5. Process gates — separate from search grades
 
@@ -111,7 +115,7 @@ These block release or approval but never masquerade as per-search safety or qua
 4. **Log only:** weak citations, missing images, conservative false negatives, and single-run M4 anomalies.
 5. **Deferrable:** wording, display, and report formatting.
 
-All thresholds in this tier list are provisional until the v1.0 freeze after Phase 6D.
+Safety stop thresholds and process-gate red conditions are effective now. Quality review floors and manual-score cutoffs marked [P] remain provisional until the v1.0 freeze after Phase 6D.
 
 ## 6. Quality axis
 
@@ -136,7 +140,7 @@ All thresholds in this tier list are provisional until the v1.0 freeze after Pha
 | `QM5` | Repeated conservative false negatives | The same conservative mechanism wrongly excludes at least **2 [P]** valid candidates in the search. A single instance is logged, not deducted. | M1/M2/M3/M4, with the affected search named | Validity evidence and repeated shared loss reason |
 | `QM6` | Image coverage | Fewer than **6 of 7 [P]** final cards have an accepted safe product image. For fewer than 7 finals, require `ceil(6 × finalCount / 7) [P]`. | M2/M3/M4 | Per-final accepted image verdict |
 
-All thresholds and weights in sections 3–6 are provisional until the v1.0 freeze after Phase 6D.
+Quality thresholds and deduction weights in sections 3–6 are provisional until the v1.0 freeze after Phase 6D. Safety zero tolerance is absolute.
 
 ### Ranking sensibility anchors
 
@@ -154,8 +158,9 @@ Use the whole visible ordering and cutoff evidence. Do not average sub-opinions 
 
 - Missing or inadequate evidence is `NotScored`, never Pass.
 - `NotScored` deducts 0.
-- Any `NotScored` High-impact metric sets `qualityCompleteHigh=false` and caps the non-safety grade at B.
-- Any `NotScored` safety metric sets `safetyComplete=false`. It does not create a failure, but the report cannot claim complete safety or independently approve release.
+- Any applicable `NotScored` High-impact metric sets `qualityCompleteHigh=false` and caps the non-safety grade at B.
+- Any applicable `NotScored` safety metric sets `safetyComplete=false`. It does not create a failure, but the report cannot claim complete safety or independently approve release.
+- `NotApplicable` requires an explicit query-shape reason, deducts 0, and does not reduce completeness.
 - Schema-stale fixtures remain usable for the metrics they actually contain.
 - Market-stale fixtures older than **60 days [P]** cannot support leader trend claims.
 - A metric may cite multiple modes, but each claim must say what each mode proves. M3 history and M2 reassessment must never be blended into an unlabeled “current replay” claim.
@@ -173,11 +178,11 @@ The staleness threshold is provisional until the v1.0 freeze after Phase 6D.
 - Capture/evaluation date: <date>
 - Evidence modes used: M1 | M2 | M3 | M4
 - Mode boundary: <what this evidence proves and cannot prove>
-- Threshold status: provisional until v1.0 freeze after 6D
+- Threshold status: quality provisional until v1.0 freeze after 6D; safety zero tolerance absolute
 
 #### Safety
 
-| ID | Metric | Result (Pass/Fail/NotScored) | Mode | Evidence | Note |
+| ID | Metric | Result (Pass/Fail/NotScored/NotApplicable) | Mode | Evidence | Note |
 |---|---|---|---|---|---|
 | S1 | Wrong product/model as exact | | | | |
 | S2 | Wrong-model evidence attached | | | | |
@@ -192,7 +197,7 @@ Safety failures: <n>; safetyComplete: true|false
 
 #### Quality
 
-| ID | Metric | Result | Mode | Deduction | Evidence / NotScored reason |
+| ID | Metric | Result | Mode | Deduction | Evidence / NotScored or NotApplicable reason |
 |---|---|---|---|---:|---|
 | QH1 | Leader coverage | | | | |
 | QH2 | Duplicate canonical model | | | | |
@@ -281,7 +286,7 @@ This schema is the proposed committed report shape. It is documentation, not an 
   "properties": {
     "rubricVersion": { "const": "v0.1-draft" },
     "thresholdStatus": {
-      "const": "provisional until v1.0 freeze after 6D"
+      "const": "quality provisional until v1.0 freeze after 6D; safety zero tolerance absolute"
     },
     "query": { "type": "string", "minLength": 1 },
     "searchKind": {
@@ -354,7 +359,7 @@ This schema is the proposed committed report shape. It is documentation, not an 
         "required": ["id", "result", "evidence"],
         "properties": {
           "id": { "enum": ["G1", "G2", "G3", "G4"] },
-          "result": { "enum": ["Pass", "Fail", "NotScored"] },
+          "result": { "enum": ["Pass", "Fail", "NotScored", "NotApplicable"] },
           "evidence": { "type": "string" }
         }
       }
@@ -380,10 +385,11 @@ This schema is the proposed committed report shape. It is documentation, not an 
       "type": "object",
       "required": ["id", "result", "modes", "evidence"],
       "properties": {
-        "result": { "enum": ["Pass", "Fail", "NotScored"] },
+        "result": { "enum": ["Pass", "Fail", "NotScored", "NotApplicable"] },
         "modes": { "$ref": "#/$defs/modeList" },
         "evidence": { "type": "string" },
-        "notScoredReason": { "type": ["string", "null"] }
+        "notScoredReason": { "type": ["string", "null"] },
+        "notApplicableReason": { "type": ["string", "null"] }
       }
     },
     "safetyMetric": {
@@ -435,6 +441,7 @@ The hand pass caused these v0.1-draft clarifications:
 2. Made low final count a review trigger first; the High deduction remains `NotScored` until the replay proves avoidable loss, exactly as the master plan requires.
 3. Made safety completeness explicit. An incomplete historical fixture may receive a diagnostic grade, but it cannot serve as complete safety proof.
 4. Defined the provisional citation-tier floor using the existing replay/citation diagnostic labels and scaled it for slates smaller than seven.
+5. Reconciliation retained the auditable deduction formula, made safety zero tolerance absolute, and separated query-shape `NotApplicable` from missing-evidence `NotScored`.
 5. Required a current-code execution marker before any replay-derived claim may be called M2.
 
 No rubric weight, plan-defined grade band, or plan-defined safety/process separation changed.
@@ -457,7 +464,7 @@ No rubric weight, plan-defined grade band, or plan-defined safety/process separa
 | S5 | NotScored | M3 | The one source-upgrade identity phrase is visible, but complete provenance verdicts are not printed for every attachment. |
 | S6 | NotScored | M3 | Citation tiers are printed; product-specificity verdicts are not. |
 | S7 | NotScored | M3 | Images and resolver verdicts are not printed. |
-| S8 | NotScored | M3 | No explicit hard constraint appears beyond product type; product type is covered by S1, and requirement evidence for all selected candidates is not printed. |
+| S8 | NotApplicable | M3 | The saved broad query has no separate hard constraint; product type remains covered by S1. |
 
 Safety failures: **0**. `safetyComplete=false`; this is not complete safety proof.
 
@@ -502,7 +509,7 @@ Safety failures: **0**. `safetyComplete=false`; this is not complete safety proo
 | S5 | NotScored | M3 | Complete identity provenance is not printed. |
 | S6 | NotScored | M3 | Citation strength is printed; product-specificity verdicts are not. |
 | S7 | NotScored | M3 | Images and resolver verdicts are not printed. |
-| S8 | NotScored | M3 | No separate stated hard constraint is present in the saved broad request; selected-candidate requirement states are not printed. |
+| S8 | NotApplicable | M3 | The saved broad request has no separate stated hard constraint. |
 
 Safety failures: **1**. Final grade is F. `safetyComplete=false`.
 

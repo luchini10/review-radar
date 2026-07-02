@@ -1114,3 +1114,26 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 **Cost rule:** No live search ran for closeout. Do not refresh fixtures or run a broad baseline merely to replace historical snapshots; require an approved measurement question and budget.
 
 **Status:** Phase 5 closed. RR-014, RR-015, RR-037, and RR-045 remain intentional measurement/provider-variance investigations for later planning. Phase 6 has not started.
+
+---
+
+## 2026-07-01 - Phase 6A reconciled measurement contract
+
+**Evidence labels:**
+- M1: deterministic tests and fixed-candidate controls.
+- M2: a named current-code validator/classifier applied to frozen fixture input.
+- M3: historical fixture/replay output.
+- M4: approved fresh live behavior.
+
+**Rubric contract:**
+- Product-safety tolerance is absolute at zero failures and is never calibrated from baseline performance.
+- Quality uses the v0.1-draft deduction model: High −15, Medium −8, ranking anchor 3 −4, one deduction per metric, floor 0.
+- `NotApplicable` means the metric does not apply to the query shape; no deduction or completeness penalty.
+- `NotScored` means applicable evidence is missing, stale, or insufficient; no deduction, but completeness is reduced.
+- Applicable unscored High-impact metrics cap the non-safety grade at B.
+- Quality deductions, floors, and significance rules remain provisional until the post-6D/pre-6E v1.0 freeze.
+- Leader-quality targets must be approved at that freeze before baseline results are inspected.
+
+**Cost boundary:** Phase 6A and its reconciliation used zero live calls. Phase 6B and 6C are also zero-live phases. Do not run the six-call Phase 6D pilot without explicit approval.
+
+**Status:** Phase 6A complete and reconciled. Phase 6B regression wall is next only after explicit instruction.

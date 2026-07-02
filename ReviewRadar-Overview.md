@@ -756,3 +756,17 @@ This section is the handoff map for agents picking up after the June 2026 Claude
 - **Next step:** Phase 6A planning/readiness requires explicit instruction. Define its query set, budget, stop conditions, fixture policy, and success metrics before execution.
 
 Historical references elsewhere in this document to an earlier "Phase 6" product-type hardening pass retain their original project labels. They do not indicate that the future reliability Phase 6 has started.
+
+## 14. Phase 6A reliability instrument status (2026-07-01)
+
+- **State:** Phase 6A planning/documentation is complete and reconciled. Phase 6B has not started.
+- **Instrument:** The repo contains the canonical Phase 6 plan, v0.1-draft scorecard, and seven-batch/live-budget policy.
+- **Evidence modes:** M1 deterministic, M2 named current-code reassessment, M3 historical fixture scoring, and M4 approved fresh live behavior.
+- **Safety:** Product-safety tolerance is absolute at zero failures. It is not calibrated from baseline performance.
+- **Quality:** The canonical draft uses an auditable deduction formula: High −15, Medium −8, ranking anchor 3 −4, one deduction per metric, floor 0.
+- **Completeness:** `NotApplicable` is query-shape inapplicability; `NotScored` is missing/stale/insufficient applicable evidence.
+- **Freeze:** Quality deductions, review floors, significance rules, and leader-quality targets freeze after Phase 6D and before Phase 6E. Baseline results cannot select their own success target.
+- **Cost:** Phase 6A and reconciliation used zero live calls.
+- **Next:** Phase 6B regression-wall mapping only after explicit instruction.
+
+No production pipeline or API contract changed in Phase 6A.

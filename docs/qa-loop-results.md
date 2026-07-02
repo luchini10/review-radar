@@ -5744,3 +5744,40 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - Phase 6B and later remain unstarted.
 
 Recommended direction: Phase 6B regression wall only, after explicit instruction.
+
+## <span style="color:green">**Codex QA Update - 2026-07-01 (Phase 6A master-plan reconciliation)**</span>
+
+**Verdict: PASS. The completed Phase 6A work was retained and reconciled. No live search, behavior change, script/test/fixture change, issue fix, or Phase 6B work ran.**
+
+### Reconciled policies
+
+- Product-safety tolerance is absolute at zero failures and is not part of Phase 6D calibration.
+- `NotApplicable` now represents a metric that does not apply to the query shape; it carries no deduction or completeness penalty.
+- `NotScored` remains reserved for missing, stale, or insufficient applicable evidence and continues to affect completeness.
+- The existing High −15 / Medium −8 / ranking-anchor-3 −4 deduction model remains the canonical v0.1 draft because it is explicit, auditable, and already used by both historical worked examples.
+- Leader-quality targets must be approved during the post-6D/pre-6E rubric freeze, before baseline results are inspected.
+
+### Preserved Phase 6A evidence
+
+- `shop-vac.json` remains 65/C as M3 historical partial evidence.
+- `gas-grill.json` remains quality 69/final F as M3 historical partial evidence.
+- The seven batches, fixed core-10, six-call variance pilot, 12–15-call baseline ceiling, fixture policy, zeroed ledger, proposed traces, and proposed automation remain intact.
+- Phase 6A verification remains typecheck pass, lint 0 errors with 3 existing warnings, 781/781 tests, and eval with no red flags.
+
+### Scope
+
+- Live calls: 0.
+- Issue changes: none.
+- App/test/script/fixture changes: none.
+- Phase 6B remains unstarted.
+
+### Verification
+
+```text
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm test: 781/781 pass across 117 suites
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+Recommended direction: Phase 6B regression wall only after explicit instruction.

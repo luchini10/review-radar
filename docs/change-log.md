@@ -13,6 +13,12 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-01
 
+### Codex - Phase 6A master-plan reconciliation
+- Retained the completed Phase 6A scorecard, historical examples, and live-batch definitions; no work was discarded.
+- Made product-safety zero tolerance absolute rather than provisional, separated query-shape `NotApplicable` from missing-evidence `NotScored`, and retained the auditable deduction formula as the canonical v0.1 draft.
+- Moved leader-quality target approval to the post-6D/pre-6E rubric freeze so baseline performance cannot set its own success target.
+- Documentation only: no app behavior, scripts, tests, fixtures, issue status, or live budget changed.
+
 ### Codex - Phase 6A reliability instrument
 - Added the v0.1-draft two-axis reliability rubric with per-search binary safety, separate process gates, the plan-defined 0–100 deduction formula, written ranking anchors, evidence-mode labeling, missing-data rules, report templates, and a documented JSON Schema.
 - Inventoried the 64 test files, 22 saved live fixtures, eight existing measurement tools, and current debug-envelope fields so future automation extends the existing system rather than duplicating it.

@@ -4,9 +4,16 @@ Generated: 2026-07-01
 
 ## Current next task
 
-**Phase 6A complete - Phase 6B regression wall requires explicit instruction**
+**Phase 6A complete and reconciled - Phase 6B regression wall requires explicit instruction**
 
 Phase 6A created the reliability scorecard v0.1-draft and live-search batch/fixture policy. The instrument is documentation only: no live search, behavior change, executable script change, issue fix, or Phase 6B work ran.
+
+The post-6A reconciliation retained all completed artifacts and made four policies canonical:
+
+- safety tolerance is absolute at zero failures and is not calibrated;
+- `NotApplicable` is distinct from missing `NotScored` evidence;
+- the auditable High/Medium deduction formula remains the canonical v0.1 draft;
+- leader-quality targets must be approved after Phase 6D and before Phase 6E, not after reading baseline results.
 
 The two required historical fixture examples were scored from `qa:replay` output as M3 evidence:
 

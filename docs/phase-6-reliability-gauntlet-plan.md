@@ -1,8 +1,9 @@
 # Phase 6 Reliability Gauntlet Plan
 
-**Status:** Adopted plan. Drafted by Claude (2026-07-01), revised per Codex review same day.
+**Status:** Adopted plan. Phase 6A completed and reconciled on 2026-07-01; Phase 6B requires explicit instruction.
 **Prerequisite state (verified):** Phase 5 closed. Issue register: 68 issues — 63 Fixed, 4 Needs Investigation (RR-014, RR-015, RR-037, RR-045), 1 Won't Fix (RR-024), 0 Open.
 **Revision note:** This version applies all 12 corrections from the Codex review: accurate inventory counts (64 test files, 22 live fixtures); rubric versioning (v0.1-draft → v1.0 freeze before paid baseline); a defined 0–100 scoring formula; explicit fixture-evidence semantics; a stronger variance pilot (2 queries × 3 runs); a relaxed dossier rule (deterministic cross-category controls can substitute for a second live sighting); final-count demoted from auto-deduction to funnel-review trigger; per-search safety metrics separated from program-level process gates; the product-token denylist demoted to an advisory aid; the full tracking-doc set restored to the Phase 6A prompt; validator-layer labeling for offline constraint mutation; and calibration rules that set floors from baseline but targets independently of current performance.
+**Phase 6A reconciliation:** The completed Phase 6A artifacts are retained. The `v0.1-draft` deduction model is the canonical draft because it is explicit, auditable, and already hand-applied to two historical fixtures. Product-safety zero tolerance is absolute now, not provisional. `NotApplicable` is distinct from missing `NotScored` evidence. Leader-quality targets must be approved after Phase 6D variance calibration and before Phase 6E baseline execution; they cannot be chosen after inspecting baseline performance.
 
 ---
 
@@ -58,6 +59,8 @@ Two axes. **Safety** is per-search, binary, zero-tolerance. **Quality** is a 0�
 
 ### 5.1 Safety axis (per-search evidence failures; any one ⇒ grade F + stop condition)
 
+The allowed safety-failure count is permanently zero. Safety definitions may be clarified only to improve measurement precision; the zero-tolerance policy is not provisional and is not calibrated against baseline performance.
+
 | Metric | Measured by | Debug source | Mode |
 |---|---|---|---|
 | Wrong product or wrong model as exact | Exact card identity vs its own evidence | `finalSelectionTrace`, citation identity fields | Auto-flag + manual confirm |
@@ -77,6 +80,8 @@ Regression-wall failure (any RR-007→RR-068 test red) · patch-audit must-gener
 
 Start at 100; subtract per-metric deductions (one deduction per metric per search, not per instance); floor at 0.
 
+This deduction formula is the canonical Phase 6 draft. A component-weight alternative was considered during reconciliation but rejected for `v0.1-draft` because proportional redistribution and partially unscored historical fixtures would make the score harder to audit. Phase 6D may calibrate deduction sizes and quality thresholds before the v1.0 freeze, but replacing the formula requires a documented rubric-version decision rather than silent drift.
+
 **High-impact metrics (−15 each):**
 - Leader coverage below floor (per section 8)
 - Duplicate same-canonical-model cards in final (`productVariantFamily` keys)
@@ -92,7 +97,7 @@ Start at 100; subtract per-metric deductions (one deduction per metric per searc
 - Repeated conservative false negatives (pattern-level, not single instance)
 - Image coverage below floor
 
-**Missing-data policy:** a metric that cannot be measured (e.g., old fixture lacking fields — RR-024) is marked NotScored: no deduction, scorecard flagged incomplete. A search cannot earn an A unless all High-impact metrics were scored; incomplete-High caps the grade at B.
+**Missing-data policy:** a metric that cannot be measured (e.g., old fixture lacking fields — RR-024) is marked `NotScored`: no deduction, scorecard flagged incomplete. A metric that does not apply to the query shape is marked `NotApplicable`: no deduction and no completeness penalty. A search cannot earn an A unless all applicable High-impact metrics were scored; incomplete applicable High metrics cap the grade at B.
 
 **Manual aggregation:** manual metrics use written anchors defined in the scorecard template; the anchor bands map to the fixed deductions above. No free-form judgment enters the number.
 
@@ -197,13 +202,13 @@ Stop immediately when: unsafe evidence attaches; wrong model attaches; suspiciou
 | **6B Regression wall** | RR-007→068 mapped or gap-closed | 0 | Wall green; mapping complete |
 | **6C Patch audit** | Classify all `lib/` findings | 0 | 0 unresolved blockers |
 | **6D Variance pilot** | Quantify RR-015: **2 queries (1 broad + 1 constrained, both with existing fixtures) × 3 runs each**; measure pool/final overlap; derive the provisional delta-significance decision rule | 6 | Rule written; RR-015 updated with pilot data — explicitly **not** closable from the pilot alone |
-| **⟶ Rubric freeze v1.0** | Apply hand-scoring + trace-gap + variance learnings; freeze weights, thresholds, decision rule | 0 | v1.0 committed before any baseline spend |
+| **⟶ Rubric freeze v1.0** | Apply hand-scoring + trace-gap + variance learnings; freeze deductions, quality thresholds, significance rule, and the user-approved leader-quality target | 0 | v1.0 and target committed before any baseline spend; safety zero tolerance remains unchanged |
 | **6E Baseline** | 22 fixtures (M3 + M2) + 12–15 fresh M4; Baseline Report v1 | 12–15 | Every search graded; ledger current |
-| **6F Dossier analysis** | Loss-stage histogram, constraint audit, ranked dossier queue; set targets (independent of current performance) | 0 | Every High/Critical finding dossiered or parked |
+| **6F Dossier analysis** | Loss-stage histogram, constraint audit, and ranked dossier queue under the pre-approved v1.0 targets | 0 | Every High/Critical finding dossiered or parked |
 | **6G Fix loop** (repeats) | One dossier per run: fail-first → shared fix → wall + full suite → M1/M2 before/after → 1 live proof | 1/run | Dossier metric improves; no safety regression |
 | **6H Progress review** | Paired comparison; re-baseline decision; go/no-go | ≤3 | See Definition of Reliable |
 
-**Definition of Reliable (Phase 6 exit):** two consecutive baselines with 0 per-search safety failures across the full corpus; leader final-coverage meets the 6F-set target (not the baseline floor) on the core-10; each carryover (RR-014/015/037/045) closed with improvement evidence or formally reclassified provider-bound with data; wall green; audit clean. On exit, Phase 6 converts to standing cadence (quarterly baseline, wall in every fix run).
+**Definition of Reliable (Phase 6 exit):** two consecutive baselines with 0 per-search safety failures across the full corpus; leader final-coverage meets the user-approved target frozen after 6D and before 6E on the core-10; each carryover (RR-014/015/037/045) closed with improvement evidence or formally reclassified provider-bound with data; wall green; audit clean. On exit, Phase 6 converts to standing cadence (quarterly baseline, wall in every fix run).
 
 ## 16. Codex workflows
 
@@ -253,7 +258,7 @@ Inventory before designing (verify counts at run time; expect ~64 test files, ~2
 scripts/qualityScorecard.mjs, scripts/goldBenchmark.mjs, scripts/qualityConsistencyHarness.mjs, scripts/ab-ranking.mjs, scripts/replay-quality-fixtures.mjs, scripts/save-debug-fixture.mjs, scripts/eval-pipeline.mjs, scripts/citationStrengthDiagnostic.mjs, tests/fixtures/review-radar-live/. Document what each measures and which debug-envelope fields exist. The rubric must be the documented contract these tools implement or will be extended to implement — do not design a parallel system.
 
 Create exactly:
-1. docs/phase-6-scorecard-template.md — rubric v0.1-draft implementing plan section 5 exactly: safety axis (per-search, binary), process gates (separate), quality axis with the defined deduction formula (High −15, Medium −8, ranking=3 −4, one deduction per metric, floor 0), missing-data policy (NotScored; incomplete-High caps at B), manual anchors written out for ranking sensibility (1–5), grade bands (F on safety; A ≥90 / B ≥75 / C ≥60 / D <60), evidence-mode labels (M1–M4) on every metric, per-search report template, before/after template, and a machine-readable scorecard JSON schema. Mark every threshold "provisional until v1.0 freeze after 6D".
+1. docs/phase-6-scorecard-template.md — rubric v0.1-draft implementing plan section 5 exactly: absolute zero-tolerance safety axis (per-search, binary), process gates (separate), quality axis with the defined deduction formula (High −15, Medium −8, ranking=3 −4, one deduction per metric, floor 0), missing-data policy (`NotScored` for missing evidence, `NotApplicable` for irrelevant query shapes; incomplete applicable High caps at B), manual anchors written out for ranking sensibility (1–5), grade bands (F on safety; A ≥90 / B ≥75 / C ≥60 / D <60), evidence-mode labels (M1–M4) on every metric, per-search report template, before/after template, and a machine-readable scorecard JSON schema. Mark quality thresholds provisional until v1.0 freeze after 6D; safety zero tolerance is effective now.
 2. docs/phase-6-live-search-batches.md — the seven batches from plan section 7 with purpose, examples, exposed failure, key metrics, evidence modes, and per-batch approval counts; core-10 fixed set overlapping existing fixture categories; rotation policy; the variance-pilot design (2 queries × 3 runs, one broad + one constrained, both with existing fixtures); budget ledger initialized at 0.
 
 Then validate the instrument: hand-apply the rubric to TWO saved fixtures (tests/fixtures/review-radar-live/shop-vac.json and gas-grill.json) using npm run qa:replay output only. Label every scored metric with its evidence mode (M2 or M3 — state which and why). Include both completed scorecards as worked examples in the scorecard doc. If a metric cannot be measured from real replay output, revise the draft rubric now and record the change. List missing debug fields under "Proposed trace additions (needs approval)".

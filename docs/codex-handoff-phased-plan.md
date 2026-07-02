@@ -16,18 +16,18 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 5 closed. Phase 6 readiness planning requires explicit instruction.**
+Current phase: **Phase 6A instrument complete and reconciled. Phase 6B requires explicit instruction.**
 
-Phase 5 closeout passed with 448/448 focused high-risk tests and 781/781 full tests. Typecheck and eval passed; lint reported 0 errors and 3 existing warnings. The register has 68 issues: 63 Fixed, 4 Needs Investigation, 1 Won't Fix, and 0 Open.
+Phase 6A retained the 64-test/22-fixture inventory, v0.1-draft scorecard, two M3 historical examples, seven batches, six-call variance design, and zeroed budget ledger. Reconciliation made safety zero tolerance absolute, separated `NotApplicable` from missing `NotScored`, retained the auditable deduction formula, and moved leader-target approval before the baseline.
 
-RR-014, RR-015, RR-037, and RR-045 intentionally remain Needs Investigation for later measurement or provider-variance work. They do not block Phase 5 closure.
+The register remains 68 issues: 63 Fixed, 4 Needs Investigation, 1 Won't Fix, and 0 Open. No live call, behavior change, issue fix, script change, test change, or Phase 6B work ran.
 
 Recommended next phase:
 
-- Await explicit instruction for Phase 6A planning/readiness only.
-- Define fixed queries, budget, stop conditions, fixture policy, and success metrics before running the reliability gauntlet.
+- Await explicit instruction for Phase 6B regression-wall work only.
+- Map RR-007 through RR-068 to existing deterministic coverage and close only genuine test gaps.
 - Preserve RR-068, RR-061/RR-054, RR-041/RR-042, RR-067, and all RR-063 through RR-066 protections.
-- Do not create Phase 6 artifacts or run live searches before that instruction.
+- Do not start Phase 6C, the Phase 6D live variance pilot, rubric freeze, or baseline.
 
 Note: historical sections in this document that use "Phase 6" for earlier product-type work retain their original labels. They do not mean the future reliability Phase 6 has started.
 
@@ -1395,5 +1395,22 @@ Stop. Phase 5 is closed. Do not start Phase 6 without explicit instruction.
 - Verification: typecheck passed; lint 0 errors with 3 existing warnings; full suite 781/781 across 117 suites; eval reported no red flags.
 - Live validation: None. Budget used 0.
 - Scope: Documentation/templates only. No fixes and no Phase 6B work.
+
+Stop. Do not start Phase 6B without explicit instruction.
+
+### Phase 6A master-plan reconciliation completion record
+
+- Completed step: Docs-only reconciliation of committed Phase 6A with the merged Phase 6 master plan.
+- Next step: Phase 6B regression wall only after explicit instruction.
+- Diagnostic-only: Yes. No app code, tests, scripts, fixtures, behavior, or live calls changed.
+- Stop condition hit: No.
+- New issue IDs opened: None.
+- Existing issue IDs updated: No status changes.
+- Policies reconciled: absolute zero-tolerance safety; distinct `NotApplicable` and missing `NotScored`; canonical v0.1 deduction formula; leader target frozen after 6D and before 6E.
+- Preserved: both historical scorecards, all batches/budgets, fixture policy, proposed automation, and Phase 6A verification.
+- Verification: typecheck passed; lint 0 errors with 3 existing warnings; full suite 781/781 across 117 suites; eval reported no red flags.
+- Live validation: None. Budget used 0.
+- Docs committed: Pending.
+- Documentation commit: Pending.
 
 Stop. Do not start Phase 6B without explicit instruction.

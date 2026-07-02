@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 6A instrument
+## Compiled for AI Agent Consumption — Phase 0 through Phase 6A reconciliation
 
 **Generated:** 2026-07-01
-**Scope:** All phases from initial measurement harness through the completed Phase 6A reliability instrument
+**Scope:** All phases from initial measurement harness through the completed Phase 6A master-plan reconciliation
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -82,6 +82,7 @@
 | RR-068 product-type safety mini-phase | 0 |
 | Phase 5 closeout and remeasurement | 0 |
 | Phase 6A reliability instrument | 0 |
+| Phase 6A master-plan reconciliation | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -2210,6 +2211,20 @@ No new issue ID was opened.
 **Verification:** Typecheck passed; lint reported 0 errors and the same 3 existing warnings; the full suite passed 781/781 across 117 suites; `node scripts/eval-pipeline.mjs` reported no red-flag issues.
 
 **Scope:** Documentation/templates only. No live search, API call, app code, app test, pipeline behavior, executable script, issue fix, or Phase 6B work ran.
+
+---
+
+### PHASE 6A MASTER-PLAN RECONCILIATION (2026-07-01)
+
+**Verdict:** The completed Phase 6A instrument was retained and reconciled with the merged master plan. No issue was opened, closed, or reclassified.
+
+**Policy corrections:** Product-safety tolerance is absolute at zero failures; query-shape `NotApplicable` is distinct from missing-evidence `NotScored`; the existing deduction formula remains the canonical v0.1 draft; leader-quality targets must be approved after Phase 6D and before Phase 6E.
+
+**Register:** 68 issues; 63 Fixed, 4 Needs Investigation, 1 Won't Fix, 0 Open. RR-014, RR-015, RR-037, and RR-045 remain unchanged.
+
+**Verification:** Typecheck passed; lint reported 0 errors and 3 existing warnings; full suite passed 781/781 across 117 suites; eval reported no red flags.
+
+**Scope:** Documentation only. No app behavior, tests, scripts, fixtures, live calls, fixes, or Phase 6B work.
 
 ---
 

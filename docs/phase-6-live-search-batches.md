@@ -1,7 +1,7 @@
 # Phase 6 Live Search Batches
 
 **Status:** Phase 6A definitions only; no live searches executed  
-**Rubric:** `v0.1-draft`; score thresholds remain provisional until the v1.0 freeze after Phase 6D  
+**Rubric:** `v0.1-draft`; quality thresholds remain provisional until the v1.0 freeze after Phase 6D; safety tolerance is absolute at zero failures
 **Governing plan:** `docs/phase-6-reliability-gauntlet-plan.md`
 
 ## 1. Runtime inventory
@@ -194,4 +194,3 @@ The 21-call draft total is not one run budget: B1–B6 are the 15-call maximum b
 | 2026-07-01 | Phase 6A | — | None | Documentation, fixture replay, and instrument validation only | Phase 6A budget = 0 | — | 0 | No live calls |
 
 **Ledger total used: 0 live calls.**
-
