@@ -1410,7 +1410,7 @@ Stop. Do not start Phase 6B without explicit instruction.
 - Preserved: both historical scorecards, all batches/budgets, fixture policy, proposed automation, and Phase 6A verification.
 - Verification: typecheck passed; lint 0 errors with 3 existing warnings; full suite 781/781 across 117 suites; eval reported no red flags.
 - Live validation: None. Budget used 0.
-- Docs committed: Pending.
-- Documentation commit: Pending.
+- Docs committed: Yes.
+- Documentation commit: `d1ff4c1`.
 
 Stop. Do not start Phase 6B without explicit instruction.
