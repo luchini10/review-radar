@@ -1512,6 +1512,6 @@ New entries should keep the same format and stay easy to read.
 
 **Phase state:** Phase 6D remains stopped; the five-call balance is not reusable. Rubric v1.0 remains unfrozen and Phase 6E did not start.
 
-**Commit:** Pending.
+**Commit:** RR-061 implementation and deterministic proof `a174551`.
 
 **Next recommended step:** Human-review the fix, then explicitly approve a fresh clean six-call Phase 6D restart.

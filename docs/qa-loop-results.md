@@ -6079,5 +6079,6 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - No ranking, discovery, final-selection, price, product identity, source-upgrade behavior, product type, page eligibility, UI, API shape, or gauntlet policy changed.
 - No live search ran. Phase 6D remains stopped and the five calls from that execution window remain unusable.
 - Issue totals: 69 total; 10 Critical, 29 High, 25 Medium, 5 Low; 0 Open, 4 Needs Investigation, 64 Fixed, 1 Won't Fix.
+- RR-061 implementation commit: `a174551`.
 
 Recommended direction: human-review the RR-061 fix, then request fresh explicit approval for a new clean six-call Phase 6D restart.

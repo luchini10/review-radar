@@ -1556,7 +1556,7 @@ Stop. Do not fix RR-061, resume Phase 6D, or start Phase 6E without explicit ins
 - Verification: fail-first 31/35 with four intended failures; focused 135/135; broad trust 376/376; full suite 791/791; typecheck/eval pass; lint 0 errors/3 existing warnings.
 - Live proof: None. The saved A1 fixture is historical evidence; current behavior is proven by fixture-derived M1 tests.
 - Phase state: Phase 6D was not resumed; rubric v1.0 is not frozen; Phase 6E did not start.
-- Docs committed: Pending.
-- Commit hash: Pending.
+- Docs committed: Yes.
+- RR-061 implementation commit: `a174551`.
 
 Stop. Do not resume Phase 6D or start Phase 6E without explicit instruction.
