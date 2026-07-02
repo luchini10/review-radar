@@ -1488,6 +1488,7 @@ Stop. Do not start Phase 6D without explicit instruction and live-budget approva
 - Fixtures: four new Tier A pilot fixtures preserved untracked; historical anchor paths restored.
 - Freeze state: No market-leader method/snapshots were compiled, no freeze proposal was approved, rubric remains `v0.1-draft`, and Phase 6E is blocked.
 - Production behavior: Unchanged. Only `scripts/qualityConsistencyHarness.mjs` gained the approved offline fixture-analysis mode.
-- Docs committed: Pending this Phase 6D stop commit.
+- Docs committed: Yes.
+- Phase 6D stop commit: `80461e8`.
 
 Stop. Fix RR-069 deterministically before any further live measurement.

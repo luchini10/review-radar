@@ -5945,5 +5945,6 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - No production code or app behavior changed.
 - Four Phase 6D Tier A fixtures remain untracked; historical fixture paths were restored.
 - No leader snapshots or market-leader method were compiled, no freeze proposal was approved, and Phase 6E did not start.
+- Phase 6D stop commit: `80461e8`.
 
 Recommended direction: fix RR-069 deterministically before requesting approval to resume Phase 6D.

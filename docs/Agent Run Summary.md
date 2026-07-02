@@ -1446,4 +1446,6 @@ New entries should keep the same format and stay easy to read.
 
 **Issues:** RR-069 Open; RR-015 and RR-037 remain Needs Investigation. Totals: 69 issues; 10 Critical, 29 High, 25 Medium, 5 Low; 1 Open, 4 Needs Investigation, 63 Fixed, 1 Won't Fix.
 
+**Commit:** Phase 6D stop report and approved measurement tooling `80461e8`.
+
 **Next recommended step:** Fix RR-069 deterministically before requesting approval to resume Phase 6D.
