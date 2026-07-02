@@ -1466,6 +1466,6 @@ New entries should keep the same format and stay easy to read.
 
 **Issues:** RR-069 Fixed. Totals: 69 issues; 10 Critical, 29 High, 25 Medium, 5 Low; 0 Open, 4 Needs Investigation, 64 Fixed, 1 Won't Fix.
 
-**Commit:** Implementation and deterministic tests `1411901`.
+**Commits:** Implementation and deterministic tests `1411901`; documentation closeout `fd1484d`.
 
 **Next recommended step:** Await explicit approval for how to resume Phase 6D; do not start Phase 6E.

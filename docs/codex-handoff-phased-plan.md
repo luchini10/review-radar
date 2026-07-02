@@ -1508,6 +1508,6 @@ Stop. Fix RR-069 deterministically before any further live measurement.
 - Fixture/live proof: Phase 6D B2 fixture replay remains historical M4 evidence; current behavior is proven by M1 tests. Live calls: 0.
 - Phase state: Phase 6D remains at 4/6 searches; rubric v1.0 is not frozen; Phase 6E did not start.
 - Implementation committed: Yes, `1411901`.
-- Docs committed: Pending this mini-phase closeout commit.
+- Docs committed: Yes, `fd1484d`.
 
 Stop. Do not resume Phase 6D without explicit instruction and live-budget approval.

@@ -5987,5 +5987,6 @@ unsafe attachment. The deterministic test distilled from that trace is the M1
 current-code proof. No live search ran.
 
 - Implementation commit: `1411901`.
+- Documentation closeout commit: `fd1484d`.
 
 Recommended direction: keep Phase 6D paused until Taylor explicitly approves how to resume the variance pilot.
