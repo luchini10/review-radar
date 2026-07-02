@@ -5781,3 +5781,23 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 ```
 
 Recommended direction: Phase 6B regression wall only after explicit instruction.
+
+## <span style="color:green">**Codex QA Update - 2026-07-01 (Phase 6 master-plan source-of-truth promotion)**</span>
+
+**Verdict: PASS. The reconciled Phase 6 master is now in the repo and is the sole source of truth for all Phase 6 work.**
+
+### Promotion
+
+- Replaced the shorter `docs/phase-6-reliability-gauntlet-plan.md` with the complete reconciled desktop master at the same canonical path.
+- Preserved existing links from the scorecard, batch policy, handoff, and next-task documents.
+- Updated supporting Phase 6 and tracking documents to state that they implement the master and cannot override it.
+- Kept the issue report as the issue-status authority and `ReviewRadar-Overview.md` as the product architecture authority; neither conflicts with the Phase 6 program authority.
+
+### Scope
+
+- App/test/script/fixture changes: none.
+- Issue changes: none.
+- Live calls: 0.
+- Phase 6B remains unstarted.
+
+Recommended direction: Phase 6B regression wall only after explicit instruction.

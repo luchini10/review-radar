@@ -3,7 +3,7 @@
 **Rubric version:** `v0.1-draft`  
 **Status:** Phase 6A instrument only; not frozen and not a release claim  
 **Threshold marker:** Quality deductions, grade bands, review floors, and staleness cutoffs marked **[P]** are provisional until the v1.0 freeze after Phase 6D. Product-safety tolerance is absolute at zero failures and is not provisional.
-**Authority:** `docs/phase-6-reliability-gauntlet-plan.md`, especially sections 4–6, 8, and 11
+**Phase 6 source of truth:** `docs/phase-6-reliability-gauntlet-plan.md`. This scorecard implements the master plan and must not override it.
 
 This document is the contract for the existing ReviewRadar measurement tools and any approved extensions to them. It does not create a second scoring system. Where a current tool cannot produce the required evidence, the metric is `NotScored` and the gap is listed for approval; no missing field is inferred. Where a metric does not apply to the query shape, it is `NotApplicable`, not missing evidence.
 

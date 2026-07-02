@@ -760,7 +760,7 @@ Historical references elsewhere in this document to an earlier "Phase 6" product
 ## 14. Phase 6A reliability instrument status (2026-07-01)
 
 - **State:** Phase 6A planning/documentation is complete and reconciled. Phase 6B has not started.
-- **Instrument:** The repo contains the canonical Phase 6 plan, v0.1-draft scorecard, and seven-batch/live-budget policy.
+- **Instrument:** `docs/phase-6-reliability-gauntlet-plan.md` is the sole Phase 6 program source of truth. The v0.1-draft scorecard and seven-batch/live-budget policy implement it and cannot override it.
 - **Evidence modes:** M1 deterministic, M2 named current-code reassessment, M3 historical fixture scoring, and M4 approved fresh live behavior.
 - **Safety:** Product-safety tolerance is absolute at zero failures. It is not calibrated from baseline performance.
 - **Quality:** The canonical draft uses an auditable deduction formula: High −15, Medium −8, ranking anchor 3 −4, one deduction per metric, floor 0.

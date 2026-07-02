@@ -8,6 +8,22 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-07-01 Phase 6 master-plan promotion
+
+**Goal:** Add the complete reconciled Phase 6 master to the repo and make it authoritative for all Phase 6 work.
+
+**What it changed:** Replaced the shorter repo plan at `docs/phase-6-reliability-gauntlet-plan.md` with the complete desktop master. Updated the scorecard, batches, handoff, next task, Overview, test memory, QA log, change log, and issue register to name the master as the sole Phase 6 program source of truth.
+
+**Authority boundary:** The master governs Phase 6 scope, sequence, budgets, gates, evidence rules, and exit criteria. Supporting Phase 6 artifacts cannot override it. The issue report remains authoritative for issue status, and the Overview remains authoritative for product architecture.
+
+**Verification:** The desktop and repo master copies matched exactly after promotion. All tracked changes were documentation only.
+
+**Live checks run:** None.
+
+**Scope:** No production code, test, script, fixture, app behavior, issue status, or Phase 6B work changed.
+
+**Next recommended step:** Phase 6B regression wall only after explicit instruction.
+
 ## Codex Run - 2026-07-01 Phase 6A reconciliation
 
 **Goal:** Reconcile the committed Phase 6A instrument with the merged Phase 6 master plan without deleting completed work.

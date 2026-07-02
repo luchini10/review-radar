@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 6A reconciliation
+## Compiled for AI Agent Consumption — Phase 0 through Phase 6 master-plan promotion
 
 **Generated:** 2026-07-01
-**Scope:** All phases from initial measurement harness through the completed Phase 6A master-plan reconciliation
+**Scope:** All phases from initial measurement harness through the completed Phase 6 master-plan source-of-truth promotion
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -83,6 +83,7 @@
 | Phase 5 closeout and remeasurement | 0 |
 | Phase 6A reliability instrument | 0 |
 | Phase 6A master-plan reconciliation | 0 |
+| Phase 6 master-plan source-of-truth promotion | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -2225,6 +2226,16 @@ No new issue ID was opened.
 **Verification:** Typecheck passed; lint reported 0 errors and 3 existing warnings; full suite passed 781/781 across 117 suites; eval reported no red flags.
 
 **Scope:** Documentation only. No app behavior, tests, scripts, fixtures, live calls, fixes, or Phase 6B work.
+
+---
+
+### PHASE 6 MASTER-PLAN SOURCE-OF-TRUTH PROMOTION (2026-07-01)
+
+**Verdict:** The reconciled desktop master was promoted into `docs/phase-6-reliability-gauntlet-plan.md`, replacing the shorter repo plan at the established path. It is now the sole Phase 6 program source of truth.
+
+**Register:** 68 issues; 63 Fixed, 4 Needs Investigation, 1 Won't Fix, 0 Open. No issue was opened, closed, or reclassified.
+
+**Scope:** Documentation governance only. No app behavior, tests, scripts, fixtures, live calls, fixes, or Phase 6B work.
 
 ---
 

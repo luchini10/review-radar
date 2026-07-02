@@ -13,6 +13,12 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-01
 
+### Codex - Phase 6 master-plan source-of-truth promotion
+- Promoted the complete reconciled desktop Phase 6 master into `docs/phase-6-reliability-gauntlet-plan.md`, replacing the shorter predecessor at the established canonical path.
+- Declared that file the sole authority for Phase 6 scope, sequencing, budgets, gates, evidence rules, and completion criteria.
+- Updated supporting Phase 6 and tracking docs to implement the master without overriding it.
+- Documentation only: no app behavior, tests, scripts, fixtures, issue status, or live budget changed.
+
 ### Codex - Phase 6A master-plan reconciliation
 - Retained the completed Phase 6A scorecard, historical examples, and live-batch definitions; no work was discarded.
 - Made product-safety zero tolerance absolute rather than provisional, separated query-shape `NotApplicable` from missing-evidence `NotScored`, and retained the auditable deduction formula as the canonical v0.1 draft.

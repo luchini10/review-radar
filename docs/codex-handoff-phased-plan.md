@@ -20,6 +20,8 @@ Current phase: **Phase 6A instrument complete and reconciled. Phase 6B requires 
 
 Phase 6A retained the 64-test/22-fixture inventory, v0.1-draft scorecard, two M3 historical examples, seven batches, six-call variance design, and zeroed budget ledger. Reconciliation made safety zero tolerance absolute, separated `NotApplicable` from missing `NotScored`, retained the auditable deduction formula, and moved leader-target approval before the baseline.
 
+`docs/phase-6-reliability-gauntlet-plan.md` is the sole source of truth for all Phase 6 scope, sequencing, budgets, gates, evidence rules, and completion criteria. Every supporting Phase 6 artifact implements that master and must not override it.
+
 The register remains 68 issues: 63 Fixed, 4 Needs Investigation, 1 Won't Fix, and 0 Open. No live call, behavior change, issue fix, script change, test change, or Phase 6B work ran.
 
 Recommended next phase:
@@ -1395,6 +1397,22 @@ Stop. Phase 5 is closed. Do not start Phase 6 without explicit instruction.
 - Verification: typecheck passed; lint 0 errors with 3 existing warnings; full suite 781/781 across 117 suites; eval reported no red flags.
 - Live validation: None. Budget used 0.
 - Scope: Documentation/templates only. No fixes and no Phase 6B work.
+
+Stop. Do not start Phase 6B without explicit instruction.
+
+### Phase 6 master-plan source-of-truth promotion record
+
+- Completed step: Promoted the reconciled desktop Phase 6 master into `docs/phase-6-reliability-gauntlet-plan.md`, replacing the shorter predecessor at the same canonical path.
+- Next step: Phase 6B regression wall only after explicit instruction.
+- Diagnostic-only: Yes. Documentation governance only.
+- Stop condition hit: No.
+- New issue IDs opened: None.
+- Existing issue IDs updated: No status changes.
+- Authority: The canonical plan is the sole Phase 6 program source of truth. Scorecard, batch, wall, audit, benchmark, report, QA, and handoff docs cannot override it.
+- Verification: Repo and desktop master copies were byte-identical at promotion; all tracked changes are markdown only.
+- Live validation: None. Budget used 0.
+- Docs committed: Pending.
+- Documentation commit: Pending.
 
 Stop. Do not start Phase 6B without explicit instruction.
 

@@ -8,6 +8,8 @@ Generated: 2026-07-01
 
 Phase 6A created the reliability scorecard v0.1-draft and live-search batch/fixture policy. The instrument is documentation only: no live search, behavior change, executable script change, issue fix, or Phase 6B work ran.
 
+The sole Phase 6 program source of truth is `docs/phase-6-reliability-gauntlet-plan.md`. Supporting scorecard, batch, wall, audit, benchmark, and report documents implement that master and cannot override its scope, sequencing, budgets, gates, or completion criteria.
+
 The post-6A reconciliation retained all completed artifacts and made four policies canonical:
 
 - safety tolerance is absolute at zero failures and is not calibrated;
@@ -55,4 +57,4 @@ Reference:
 - `docs/phase-6-live-search-batches.md`
 - `docs/RR-Issues-Report.md`
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` latest Phase 5 closeout entry
+- `docs/qa-loop-results.md` latest Phase 6 master-plan promotion entry

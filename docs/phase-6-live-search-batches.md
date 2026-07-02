@@ -2,7 +2,7 @@
 
 **Status:** Phase 6A definitions only; no live searches executed  
 **Rubric:** `v0.1-draft`; quality thresholds remain provisional until the v1.0 freeze after Phase 6D; safety tolerance is absolute at zero failures
-**Governing plan:** `docs/phase-6-reliability-gauntlet-plan.md`
+**Governing source of truth:** `docs/phase-6-reliability-gauntlet-plan.md`. This batch document implements the master plan and must not override it.
 
 ## 1. Runtime inventory
 

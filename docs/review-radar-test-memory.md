@@ -1119,6 +1119,8 @@ Tier-3 citations (manufacturer/brand sites) and tier-4 citations do NOT count as
 
 ## 2026-07-01 - Phase 6A reconciled measurement contract
 
+**Phase 6 authority:** `docs/phase-6-reliability-gauntlet-plan.md` is the sole source of truth for Phase 6 scope, sequence, budgets, gates, evidence rules, and exit criteria. This test-memory section records operational lessons and cannot override the master plan.
+
 **Evidence labels:**
 - M1: deterministic tests and fixed-candidate controls.
 - M2: a named current-code validator/classifier applied to frozen fixture input.
