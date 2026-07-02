@@ -800,3 +800,12 @@ No production pipeline or API contract changed in Phase 6A.
 - **Preserved:** Brandless exact-model evidence remains valid without a conflicting brand. Query text, URL query parameters, hosts, sellers, and generated card text remain excluded from identity. Trigger, fallback, query construction, ranking, discovery, price, eligibility, image, product type, requirements, final selection, UI, and API response shape are unchanged.
 - **Proof:** Fail-first 97/100; focused final 100/100; broad safety 439/439; full suite 786/786; typecheck and eval pass; lint 0 errors with 3 existing warnings.
 - **Phase state:** RR-069 is Fixed. No live search ran. Phase 6D remains paused after 4/6 searches, rubric v1.0 remains unfrozen, and Phase 6E has not started.
+
+## 18. Phase 6D clean-restart safety stop (2026-07-02)
+
+- **Sample boundary:** The original four Phase 6D calls are aborted pre-fix RR-069 evidence and are excluded from the clean post-fix sample.
+- **Restart:** Taylor approved six new alternating calls. Only A1 (`shop vac`) ran before the absolute safety gate stopped execution.
+- **Finding:** Two different Amazon product cards received the same generic `yoda/flyout_72dpi` navigation PNG as High-confidence retailer-page product imagery. RR-061 is reopened as Needs Investigation.
+- **Measurement:** A1 produced 20 candidates, 4 exact, 2 near, and 6 final products in 83.219 seconds with 37 executed Serper queries. One run cannot support overlap, rank-correlation, stage-variance, significance, sample-size, or attribution conclusions.
+- **State:** Five restart calls remain unspent and blocked. RR-015/RR-037 remain Needs Investigation. Rubric v1.0 is not frozen, leader snapshots are not compiled, and Phase 6E has not started.
+- **Behavior boundary:** No production behavior changed during the restart. A separate approved generalized RR-061 phase is required before another Phase 6D attempt.

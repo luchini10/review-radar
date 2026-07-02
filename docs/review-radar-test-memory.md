@@ -1218,3 +1218,33 @@ eval pass; lint 0 errors with 3 existing warnings.
 historical evidence and still prints the original unsafe attachment. The
 distilled deterministic reproduction is M1 current-code proof. No live call
 ran, and Phase 6D remains paused.
+
+---
+
+## 2026-07-02 - Phase 6D clean-restart image-safety stop
+
+**Restart boundary:** The original four Phase 6D calls are aborted pre-fix
+RR-069 evidence. Never pool them with a post-fix sample. Taylor approved six
+new calls; the restart stopped after A1 and its remaining five calls are
+blocked.
+
+**Live finding:** A fresh `shop vac` response assigned the same Amazon
+`yoda/flyout_72dpi` navigation PNG to two different final products. Both image
+records had High confidence and `retailer_page` provenance. A direct-image
+extension and a matching product-page source are therefore not sufficient to
+establish product-image relevance.
+
+**Safety rule:** Repeated cross-product image identity and known generic
+site/navigation asset shapes must be treated as product-image warning signals.
+Any later fix must preserve opaque hashed product CDNs and should be proven
+across unrelated hosts/products rather than adding an Amazon-only filename
+exception.
+
+**Measurement consequence:** One clean run cannot estimate pairwise Jaccard,
+shared rank correlation, stage-loss variance, significance, sample size, or
+provider/model attribution. Keep RR-015 and RR-037 Needs Investigation.
+Rubric v1.0 remains unfrozen.
+
+**Cost:** 1/6 clean-restart searches and 37 observed Serper calls. The Tier A
+fixture is untracked and must not be committed. No additional live call is
+permitted after this safety stop without a new approval.

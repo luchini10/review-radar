@@ -1,8 +1,8 @@
 # ReviewRadar Phase 6 Reliability Gauntlet - Master Plan
 
-**Status:** Canonical merged plan; Phases 6A-6C complete; Phase 6D paused
+**Status:** Canonical merged plan; Phases 6A-6C complete; Phase 6D restart stopped
 **Prepared:** 2026-07-01
-**Execution state:** RR-069 fixed deterministically after the 4/6-search stop; Phase 6D resumption requires explicit approval
+**Execution state:** The clean post-RR-069 Phase 6D restart stopped at 1/6 after reopening RR-061; further live work requires a separate approved safety phase
 **Repository:** `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 **Canonical repository path:** `docs/phase-6-reliability-gauntlet-plan.md`
 
@@ -907,6 +907,14 @@ specific Q10 X5+ target, opening Critical RR-069. A3 and B3 were not spent.
 RR-069 was later fixed deterministically without resuming the pilot. The v1.0
 freeze proposal, market-leader method/snapshots, and Phase 6E remain blocked
 until Phase 6D resumption is explicitly approved and completed safely.
+
+**Clean restart result (2026-07-02): STOPPED.** Taylor approved six new calls
+and excluded the prior four fixtures from the clean sample. Restart A1
+(`shop vac`) assigned the same generic Amazon `yoda/flyout_72dpi` navigation
+asset to two different final product cards as High-confidence product imagery.
+RR-061 was reopened as Needs Investigation and the remaining five calls were
+not spent. The clean sample is insufficient for variance inference. Rubric
+v1.0 remains unfrozen and Phase 6E has not started.
 
 Goal:
 

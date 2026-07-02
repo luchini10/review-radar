@@ -3,13 +3,60 @@
 **Date:** 2026-07-02  
 **Mode:** M4 repeated live sampling, measurement-only  
 **Rubric:** `v0.1-draft`, not frozen  
-**Verdict:** **STOPPED ON CRITICAL SAFETY FAILURE**
+**Verdict:** **CLEAN RESTART STOPPED AT 1/6 ON IMAGE-SAFETY FAILURE**
 
 **Post-stop update:** RR-069 was fixed deterministically in a separate narrow
-mini-phase. Phase 6D was not resumed, A3/B3 remain unspent, the partial
-measurements below are unchanged, and rubric `v1.0` remains unfrozen.
+mini-phase. Taylor approved a new clean six-call post-fix restart on 2026-07-02.
+The four observations below remain RR-069 discovery evidence, are excluded
+from the clean restart sample, and must not be pooled with its measurements.
+Rubric `v1.0` remains unfrozen.
 
-## Scope and budget
+## Clean post-RR-069 restart - stopped
+
+Taylor approved a separate six-search restart under the fixed RR-069 code:
+`shop vac` x3 and a request with query `robot vacuum`, budget `under $300`,
+priorities `self-emptying`, and no selected features x3. Calls were to
+alternate A1, B1, A2, B2, A3, B3 with debug mode enabled.
+
+Only A1 ran. It returned four exact and two near products from a 20-candidate
+pool in 83.219 seconds with 37 executed Serper queries and no request errors.
+The safety inspection found the same generic Amazon navigation image on two
+different near products:
+
+- RIDGID VAC4000;
+- Fein Turbo I.
+
+Both cards used
+`https://images-na.ssl-images-amazon.com/images/G/01/omaha/images/yoda/flyout_72dpi._V270255989_.png`.
+The pipeline stored the value as High-confidence `retailer_page` image
+metadata from each product page and exposed it as `product_image_url`. This is
+not product-specific imagery. RR-061 was reopened as Needs Investigation and
+the remaining five calls were not spent. No behavior fix was attempted.
+
+Because the clean restart has only one valid observation for one query:
+
+- candidate-pool and final-set pairwise Jaccard are unavailable;
+- three-run intersection/union is unavailable;
+- shared-product rank correlation is unavailable;
+- exact range is observed only as `4-4`;
+- near range is observed only as `2-2`;
+- total-final range is observed only as `6-6`;
+- stage-loss variation and latency/error variation are not estimable;
+- no constrained-query observation exists;
+- no post-RR-069 RR-015 significance inference is valid;
+- RR-037 remains Needs Investigation despite RIDGID reaching the A1 pool and
+  final set.
+
+The clean restart fixture is untracked Tier A evidence:
+`tests/fixtures/review-radar-live/phase-6d-restart-shop-vac.run1.json`.
+It is not pooled with the four pre-fix fixtures below.
+
+Required closeout verification passed: typecheck; lint with 0 errors and the
+same 3 warnings; 786/786 tests across 117 suites; and offline eval with no red
+flags. The offline variance harness requires at least two fixtures and
+correctly declined to calculate statistics from A1 alone.
+
+## Aborted pre-fix scope and budget
 
 Taylor approved exactly six live searches in alternating order:
 
@@ -20,10 +67,10 @@ Taylor approved exactly six live searches in alternating order:
 5. `shop vac` A3
 6. `robot vacuum under $300 self-emptying` B3
 
-The pilot stopped after B2 because RR-069 met the Phase 6 safety-stop rule.
+This pre-fix pilot stopped after B2 because RR-069 met the Phase 6 safety-stop rule.
 Four searches were spent; A3 and B3 were not run. Observed Serper calls were
 `37 + 38 + 37 + 38 = 150`, below the approved estimate of approximately 280.
-All four Tier A fixtures remain untracked.
+All four Tier A fixtures remain untracked and excluded from the clean restart.
 
 ## Safety stop: RR-069
 

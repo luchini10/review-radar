@@ -4,38 +4,37 @@ Generated: 2026-07-02
 
 ## Current next task
 
-**RR-069 fixed - Phase 6D remains paused pending explicit approval**
+**RR-061 reopened - Phase 6D clean restart stopped at 1/6**
 
-The Phase 6D variance pilot spent four of six approved searches and stopped on
-the master plan's safety gate. The later narrow RR-069 mini-phase fixed the
-generic-series/specific-submodel identity gap deterministically without
-resuming live measurement.
+Taylor approved six new post-RR-069 variance calls and explicitly excluded the
+earlier four pre-fix fixtures from the clean sample. The restart stopped after
+its first `shop vac` call because two different Amazon product cards received
+the same generic `yoda/flyout_72dpi` navigation asset as High-confidence
+product imagery. This is a live RR-061 regression and an absolute Phase 6
+image-safety stop.
 
-`docs/phase-6-variance-pilot.md` contains the partial RR-015/RR-037 report:
+`docs/phase-6-variance-pilot.md` preserves both attempts:
 
-- shop-vac pool/final Jaccard: `0.1429` / `0.0000`;
-- constrained pool/final Jaccard: `0.0000` / `0.0000`;
-- raw-provider overlap: `0.2857-0.3158`;
-- query-plan overlap: `0.3333-0.3636`;
-- RIDGID entered both completed shop-vac pools, but exposure ranged from one
-  pool candidate removed at requirement filtering to five pool candidates
-  with three reaching the final exact/near slate.
+- the original 4/6 sample is labeled aborted pre-fix RR-069 evidence and is not
+  part of clean variance measurement;
+- clean restart A1 used the exact broad request shape and debug mode;
+- A1 returned 4 exact and 2 near products from 20 candidates in 83.219 seconds
+  with 37 executed Serper queries;
+- no pairwise overlap, rank correlation, stage-loss variation, significance
+  rule, or provider/model attribution can be estimated from one clean run;
+- RR-015 and RR-037 remain Needs Investigation.
 
-The fix requires source-derived evidence to carry the distinguishing submodel
-for targets such as Q10 X5+, while preserving exact punctuation/spacing/Plus
-variants and brandless exact-model evidence. Focused tests passed 100/100, the
-broad safety matrix passed 439/439, and the full suite passed 786/786.
-
-The remaining A3/B3 searches are still unspent. Rubric v1.0 was not frozen,
-leader snapshots were not compiled, and Phase 6E did not start.
+The clean restart spent 1/6 approved calls; five remain unspent and blocked.
+Rubric v1.0 was not frozen, leader snapshots were not compiled, and Phase 6E
+did not start. No production behavior changed.
 
 The canonical register now contains 69 issues:
 
 - 10 Critical, 29 High, 25 Medium, 5 Low;
-- 0 Open, 4 Needs Investigation, 64 Fixed, 1 Won't Fix.
+- 0 Open, 5 Needs Investigation, 63 Fixed, 1 Won't Fix.
 
-RR-069 is Fixed. RR-014, RR-015, RR-037, and RR-045 remain Needs
-Investigation.
+RR-069 remains Fixed. RR-061 is reopened as Needs Investigation alongside
+RR-014, RR-015, RR-037, and RR-045.
 
 ## Master-plan amendment notice - 2026-07-01 (Claude, docs-only)
 
@@ -94,19 +93,19 @@ the repository file; the repo file is the only copy.
 
 ## Required next task
 
-Do not start automatically. Await explicit instruction and live-budget approval
-before resuming **Phase 6D only**. Taylor must decide whether to spend the two
-unrun A3/B3 searches or restart the 2x3 pilot for a clean comparable sample.
-Do not start Phase 6E until Phase 6D completes safely and the freeze package is
-explicitly approved.
+Do not start automatically. Diagnose/fix the reopened RR-061 image-safety
+regression in a separate explicitly approved phase before requesting another
+clean Phase 6D restart. Do not spend the remaining five approved restart calls:
+the safety stop invalidated that execution window. Do not start Phase 6E until
+Phase 6D completes safely and the freeze package is explicitly approved.
 
 Do not:
 
-- resume Phase 6D or start any later sub-phase without explicit approval;
+- resume Phase 6D or start any later sub-phase without a separate explicit approval;
 - reopen RR-069 without a deterministic regression;
 - change the v0.1-draft rubric or provisional thresholds without recording a versioned rationale;
 - implement proposed trace additions or automation from the scorecard document without approval;
-- alter the completed RR-068, RR-061, or RR-054 behavior without a proven regression;
+- alter completed RR-068 or RR-054 behavior; RR-061 now has a proven live regression but still requires a separately approved fix;
 - change ranking, discovery breadth, final selection, price, citation, source-upgrade behavior, or any app behavior during the variance pilot;
 - weaken RR-063 through RR-067 source-derived identity rules;
 - weaken price, citation, product, requirement, product-type, or identity trust gates;

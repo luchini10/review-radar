@@ -16,20 +16,27 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 6C product-specific patch audit complete. Phase 6D requires explicit instruction and live-budget approval.**
+Current phase: **Phase 6D clean post-RR-069 restart stopped at 1/6 on an RR-061 image-safety regression.**
 
-Phase 6C audited all 61 tracked production TypeScript/JavaScript files. `docs/phase-6-product-specific-patch-audit.md` records 5 acceptable generalized-data groups, 4 acceptable source/category-rule groups, 1 suspicious but non-behavioral comment/example group, and 0 must-generalize blockers.
+The original four-call Phase 6D attempt remains aborted pre-fix RR-069
+evidence. A separately approved six-call clean restart stopped after A1 when
+the same generic Amazon `yoda/flyout_72dpi` navigation asset appeared as the
+High-confidence product image for two different product cards. Five restart
+calls remain unspent and blocked.
 
 `docs/phase-6-reliability-gauntlet-plan.md` is the sole source of truth for all Phase 6 scope, sequencing, budgets, gates, evidence rules, and completion criteria. Every supporting Phase 6 artifact implements that master and must not override it.
 
-The register remains 68 issues: 63 Fixed, 4 Needs Investigation, 1 Won't Fix, and 0 Open. RR-014/RR-015 remain measurement-only and RR-037/RR-045 remain provider-variance-bound. Phase 6C used zero live calls and changed no production code, tests, scripts, fixtures, or behavior.
+The register contains 69 issues: 63 Fixed, 5 Needs Investigation, 1 Won't Fix,
+and 0 Open. RR-061 was reopened; RR-014/RR-015/RR-037/RR-045 remain Needs
+Investigation. The restart changed no production code, tests, scripts,
+fixtures, or behavior.
 
 Recommended next phase:
 
-- Await explicit instruction and approved budget for the Phase 6D variance pilot only.
-- Use the canonical master, regression wall, and patch audit. Do not reinterpret maintenance watch items as product defects.
-- Preserve RR-068, RR-061/RR-054, RR-041/RR-042, RR-067, and all RR-063 through RR-066 protections.
-- Phase 6D is exactly six live searches: `shop vac` x3 plus one approved fixture-overlapping constrained query x3. Do not start Phase 6E, dossier analysis, or fixes.
+- Await explicit instruction for a narrow generalized RR-061 image-safety diagnosis/fix.
+- Do not resume Phase 6D with the five unspent calls; a later restart requires fresh explicit approval.
+- Preserve RR-068/RR-054, RR-041/RR-042, RR-067, and all RR-063 through RR-066 protections.
+- Do not start Phase 6E, freeze rubric v1.0, compile leader snapshots, or change production behavior during the stopped pilot.
 
 Note: historical sections in this document that use "Phase 6" for earlier product-type work retain their original labels. They do not mean the future reliability Phase 6 has started.
 
@@ -1511,3 +1518,21 @@ Stop. Fix RR-069 deterministically before any further live measurement.
 - Docs committed: Yes, `fd1484d`.
 
 Stop. Do not resume Phase 6D without explicit instruction and live-budget approval.
+
+### Phase 6D clean post-RR-069 restart safety-stop record
+
+- Completed step: Restart initialization plus one of six approved live searches.
+- Next step: Narrow RR-061 image-safety regression phase only after explicit instruction. Do not resume Phase 6D or start Phase 6E.
+- Diagnostic-only: Yes. One M4 fixture was captured and inspected; no app behavior changed.
+- Stop condition hit: Yes. Two different Amazon product cards used the same generic `yoda/flyout_72dpi` navigation asset as High-confidence product imagery.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-061 moved from Fixed to Needs Investigation. RR-015, RR-037, RR-045, and RR-014 remain Needs Investigation; RR-069 remains Fixed.
+- Live budget: Clean restart used 1/6 searches and 37 observed Serper calls. Five calls remain unspent and blocked. The earlier four-call sample remains aborted pre-fix evidence and is excluded.
+- Fixture: `tests/fixtures/review-radar-live/phase-6d-restart-shop-vac.run1.json` is untracked Tier A evidence and must not be committed.
+- Measurement result: No clean pairwise variance, rank correlation, significance threshold, or provider/model attribution can be computed from one run.
+- Verification: typecheck passed; lint 0 errors/3 existing warnings; full suite 786/786; offline eval no red flags. The variance harness requires at least two fixtures and declined the one-run sample.
+- Phase state: Rubric v1.0 is not frozen; leader snapshots were not compiled; Phase 6E did not start.
+- Docs committed: Pending this closeout commit.
+- Commit hash: Pending.
+
+Stop. Do not fix RR-061, resume Phase 6D, or start Phase 6E without explicit instruction.

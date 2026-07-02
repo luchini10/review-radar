@@ -13,6 +13,14 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-02
 
+### Codex - Phase 6D clean restart safety stop
+- Excluded the earlier four pre-fix pilot fixtures from the clean post-RR-069 variance sample and initialized a separate six-search restart ledger.
+- Ran only restart A1 (`shop vac`) before the absolute safety gate stopped the phase.
+- Reopened RR-061 as Needs Investigation after two different Amazon product cards received the same generic `yoda/flyout_72dpi` navigation asset as High-confidence product imagery.
+- Preserved the new untracked Tier A fixture, spent 1/6 restart searches and 37 observed Serper calls, and left five calls unspent.
+- No production code, test, script, ranking, discovery, trust, eligibility, source-upgrade, final-selection, UI, or API behavior changed.
+- RR-015 and RR-037 remain Needs Investigation because one clean run cannot support variance inference. Rubric v1.0 remains unfrozen and Phase 6E did not start.
+
 ### Codex - RR-069 specific-submodel source-upgrade identity safety
 - Fixed the source-upgrade path that allowed generic Q10-series evidence to donate price, rating, review count, and citation to a specific Q10 X5+ target.
 - Added a generalized distinguishing-submodel guard for adjacent base/suffix identities, compact equivalents, explicit kit numbers, and multiple model identifiers.

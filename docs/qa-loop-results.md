@@ -5990,3 +5990,51 @@ current-code proof. No live search ran.
 - Documentation closeout commit: `fd1484d`.
 
 Recommended direction: keep Phase 6D paused until Taylor explicitly approves how to resume the variance pilot.
+
+## <span style="color:green">**Codex QA Update - 2026-07-02 (Phase 6D clean restart safety stop)**</span>
+
+**Verdict: STOPPED. The clean post-RR-069 restart used 1/6 approved searches before an RR-061 image-safety regression stopped the phase.**
+
+### Restart boundary and exact call
+
+- The earlier four Phase 6D fixtures are now labeled aborted pre-fix RR-069 evidence and excluded from the clean sample.
+- Restart A1 sent query `shop vac` with blank budget, blank priorities/details, no selected features, and debug mode enabled.
+- The response was preserved as untracked Tier A fixture `tests/fixtures/review-radar-live/phase-6d-restart-shop-vac.run1.json`.
+- A1 used 37 observed Serper queries and completed the pipeline in 83.219 seconds.
+- The restart ledger is 1/6 used; five calls remain unspent and blocked.
+
+### Safety stop
+
+Two different final Amazon product cards, RIDGID VAC4000 and Fein Turbo I,
+received the same image:
+
+`https://images-na.ssl-images-amazon.com/images/G/01/omaha/images/yoda/flyout_72dpi._V270255989_.png`
+
+The pipeline recorded it as High-confidence `retailer_page` image metadata and
+exposed it as `product_image_url` on both cards. The path identifies a generic
+Amazon flyout/navigation asset rather than product-specific imagery. RR-061
+moved from Fixed to Needs Investigation. No fix was attempted.
+
+### Measurement consequence
+
+- Candidate pool: 20.
+- Final: 4 exact, 2 near, 6 total.
+- Source upgrade attempted three products and attached no evidence; no RR-069 recurrence was observed in A1.
+- Pairwise candidate/final Jaccard, shared-product rank correlation, stage-loss variation, latency/error variation, and provider/model attribution are unavailable from one clean observation.
+- RR-015 and RR-037 remain Needs Investigation. RIDGID reached the A1 pool and final set, but one run cannot estimate its variance.
+- No provisional significance rule or sample-size estimate was changed.
+
+### Scope and phase state
+
+- Typecheck passed.
+- Lint reported 0 errors and 3 existing warnings.
+- The full suite passed 786/786 across 117 suites.
+- Offline eval reported no red-flag issues.
+- The variance harness requires at least two fixtures and correctly did not calculate one-run overlap statistics.
+- No production code, tests, scripts, ranking, discovery, trust, identity, eligibility, source-upgrade, requirement, final-selection, UI, or API behavior changed.
+- Rubric v1.0 was not frozen.
+- Leader snapshots were not compiled.
+- Phase 6E did not start.
+- Issue totals: 69 total; 10 Critical, 29 High, 25 Medium, 5 Low; 0 Open, 5 Needs Investigation, 63 Fixed, 1 Won't Fix.
+
+Recommended direction: diagnose and fix RR-061 in a separate approved generalized image-safety phase before requesting a fresh clean Phase 6D restart.

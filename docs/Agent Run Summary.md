@@ -1469,3 +1469,27 @@ New entries should keep the same format and stay easy to read.
 **Commits:** Implementation and deterministic tests `1411901`; documentation closeout `fd1484d`.
 
 **Next recommended step:** Await explicit approval for how to resume Phase 6D; do not start Phase 6E.
+
+## Codex Run - 2026-07-02 Phase 6D clean restart safety stop
+
+**Goal:** Run a clean six-call post-RR-069 variance pilot while excluding the earlier four pre-fix fixtures.
+
+**Execution:** Confirmed RR-069 Fixed, clean tracked state, exact request fields, debug mode, healthy local server, and six unused fixture names. Marked the earlier 4/6 attempt as aborted pre-fix evidence. Restart A1 ran `shop vac` with blank budget/details and no selected features, saving a distinct untracked Tier A fixture.
+
+**Stop finding:** A1 assigned the same Amazon `yoda/flyout_72dpi` navigation asset to RIDGID VAC4000 and Fein Turbo I. Both records classified it as High-confidence retailer-page image metadata and exposed it as the card image. RR-061 was reopened as Needs Investigation.
+
+**Budget:** 1/6 clean-restart searches used; 37 observed Serper calls; five calls unspent and blocked. The original four-call sample remains excluded.
+
+**Measurement:** A1 had 20 pool candidates, 4 exact, 2 near, 6 final, 83.219-second pipeline latency, and no request error. One observation cannot produce pairwise Jaccard, shared rank correlation, stage-loss variance, significance guidance, or provider/model attribution. RR-015 and RR-037 remain Needs Investigation.
+
+**Verification:** Typecheck passed; lint reported 0 errors and 3 existing warnings; the full suite passed 786/786 across 117 suites; offline eval reported no red flags. The offline variance harness requires at least two fixtures and correctly declined the one-run sample.
+
+**Scope:** Measurement and documentation only. No production code, tests, scripts, ranking, discovery, trust, identity, eligibility, source-upgrade, product-type, final-selection, UI, or API behavior changed.
+
+**Issues:** 69 total; 10 Critical, 29 High, 25 Medium, 5 Low; 0 Open, 5 Needs Investigation, 63 Fixed, 1 Won't Fix. RR-061 is Needs Investigation; RR-069 remains Fixed.
+
+**Phase state:** Rubric v1.0 was not frozen; leader snapshots were not compiled; Phase 6E did not start.
+
+**Commit:** Pending closeout.
+
+**Next recommended step:** Run a narrow generalized RR-061 image-safety phase only after explicit instruction, then request a fresh Phase 6D restart approval.

@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through RR-069 safety fix
+## Compiled for AI Agent Consumption — Phase 0 through the Phase 6D restart safety stop
 
 **Generated:** 2026-07-02
-**Scope:** All phases from initial measurement harness through the RR-069 source-upgrade identity safety fix
+**Scope:** All phases from initial measurement harness through the clean post-RR-069 Phase 6D restart safety stop
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -19,8 +19,8 @@
 | Medium | 25 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 4 |
-| Fixed | 64 |
+| Needs Investigation | 5 |
+| Fixed | 63 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -87,6 +87,7 @@
 | Phase 6B regression wall | 0 |
 | Phase 6C product-specific patch audit | 0 |
 | Phase 6D variance pilot | 1 |
+| Phase 6D post-RR-069 restart | 0 |
 | RR-069 source-upgrade identity safety mini-phase | 0 |
 | Cross-phase / Infrastructure | 4 |
 
@@ -1855,7 +1856,7 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 | **Phase** | Phase 4F |
 | **Severity** | Medium |
 | **Title** | Product image metadata can contain page URLs, generic brand assets, or unrelated navigation images |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** All 70 final cards had a non-empty image field, but several were not usable product images. Leaf-blower examples included a truncated Home Depot image directory, Greenworks/BLACK+DECKER product-page URLs, a WORX navigation banner, and an EGO brand logo. Dog-food examples included a Blue Buffalo logo and PetSmart category hero. An LG gaming-monitor image ended in `.html`.
 
@@ -1870,6 +1871,10 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 **Suggested fix or next action:** Add diagnostic classification for direct image response/content type and product-specific relevance. In a later fix phase, reject page URLs and known generic navigation/logo assets without weakening valid CDN image support.
 
 **Phase 5J resolution:** Image candidates now require an image-like asset shape plus source-derived product context. HTML/page URLs, truncated image directories, SVG/UI assets, logos, icons, favicons, placeholders, tracking pixels, category/navigation/editorial artwork, and unrelated JSON-LD or social metadata are rejected. Product-page metadata is trusted only after page identity matches the target, and JSON-LD images require a matching Product name. Source-upgrade images pass through the same resolver only after the existing same-product identity gate. Verified same-product retailer/manufacturer images, standard image formats, Google Shopping thumbnails, and opaque hashed CDN assets remain supported.
+
+**Phase 6D clean-restart regression (2026-07-02):** Reopened as Needs Investigation. The first clean post-RR-069 `shop vac` run assigned the same Amazon navigation asset, `https://images-na.ssl-images-amazon.com/images/G/01/omaha/images/yoda/flyout_72dpi._V270255989_.png`, to two unrelated final cards: RIDGID VAC4000 and Fein Turbo I. In both records the asset was stored as High-confidence `retailer_page` image metadata and rendered as `product_image_url`. The image-like `.png` extension and product-page source context were therefore sufficient even though the path identifies a generic site flyout asset and the same URL was reused across different products.
+
+**Current status:** Needs Investigation. The live restart stopped immediately at 1/6 under the absolute image-safety gate. Diagnose a generalized way to reject generic site/navigation assets, including cross-product repeated images, without weakening valid hashed Amazon/CDN product images. No fix was attempted during the measurement-only phase.
 
 **Sweep result:**
 
@@ -2316,13 +2321,14 @@ No new issue ID was opened.
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (4 issues)
+### Needs Investigation (5 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-### Fixed (64 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-069
+- RR-061: Product image metadata can contain page URLs, generic brand assets, or unrelated navigation images
+### Fixed (63 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-060, RR-062 through RR-069
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)

@@ -1,15 +1,15 @@
 # Phase 6 Live Search Batches
 
-**Status:** RR-069 fixed deterministically; Phase 6D remains paused after 4/6 pilot searches
+**Status:** Clean post-RR-069 Phase 6D restart stopped at 1/6 on RR-061; the earlier 4/6 pilot is aborted pre-fix evidence and excluded
 **Rubric:** `v0.1-draft`; quality thresholds remain provisional until the v1.0 freeze after Phase 6D; safety tolerance is absolute at zero failures
 **Governing source of truth:** `docs/phase-6-reliability-gauntlet-plan.md`. This batch document implements the master plan and must not override it.
 
 ## 1. Runtime inventory
 
 - Test files: **64** top-level `tests/*.test.mjs`
-- Saved live fixtures: **22** JSON files in `tests/fixtures/review-radar-live/`
-- Phase 6D pilot budget: **6 approved searches**
-- Phase 6D searches used: **4**; **2 blocked by the RR-069 safety stop**
+- Saved category fixtures: **22** JSON files, plus **5** untracked Phase 6D Tier A fixtures
+- Aborted pre-fix Phase 6D pilot: **4 of 6 searches used** before the RR-069 safety stop
+- Clean post-RR-069 restart budget: **6 newly approved searches**; tracked separately below
 
 The fixture corpus is the free foundation. Batch definitions describe future approved work; they are not authorization to run it.
 
@@ -192,16 +192,22 @@ The 21-call draft total is not one run budget: B1–B6 are the 15-call maximum b
 | Date | Sub-phase | Batch | Query/run | Purpose | Approval reference | Fixture path | Serper calls | Status |
 |---|---|---|---|---|---|---|---:|---|
 | 2026-07-01 | Phase 6A | — | None | Documentation, fixture replay, and instrument validation only | Phase 6A budget = 0 | — | 0 | No live calls |
-| 2026-07-02 04:34 ET | Phase 6D | B7 | `shop vac` A1 | Broad variance and RR-037 pool presence | Taylor's explicit Phase 6D six-search approval | `tests/fixtures/review-radar-live/shop-vac.phase6d-run1.json` | 37 | Safe; 2 exact/5 near; RIDGID left after citation verification |
-| 2026-07-02 04:37 ET | Phase 6D | B7 | `robot vacuum under $300 self-emptying` B1 | Constrained variance and exact-honesty measurement | Taylor's explicit Phase 6D six-search approval | `tests/fixtures/review-radar-live/robot-vacuum-under-300-self-emptying.phase6d-run1.json` | 38 | Safe; 1 exact/5 near; verified $299.99 exact |
-| 2026-07-02 04:39 ET | Phase 6D | B7 | `shop vac` A2 | Broad variance and RR-037 pool presence | Taylor's explicit Phase 6D six-search approval | `tests/fixtures/review-radar-live/shop-vac.phase6d-run2.json` | 37 | Safe; 2 exact/4 near; RIDGID reached exact and near |
-| 2026-07-02 04:41 ET | Phase 6D | B7 | `robot vacuum under $300 self-emptying` B2 | Constrained variance and exact-honesty measurement | Taylor's explicit Phase 6D six-search approval | `tests/fixtures/review-radar-live/robot-vacuum-under-300-self-emptying.phase6d-run2.json` | 38 | **STOP:** generic Q10-series evidence attached to Q10 X5+ target; opened RR-069 |
+| 2026-07-02 04:34 ET | Phase 6D pre-fix (aborted) | B7 | `shop vac` A1 | Broad variance and RR-037 pool presence | Original six-search approval; excluded from clean restart | `tests/fixtures/review-radar-live/shop-vac.phase6d-run1.json` | 37 | Historical only; safe; 2 exact/5 near; RIDGID left after citation verification |
+| 2026-07-02 04:37 ET | Phase 6D pre-fix (aborted) | B7 | `robot vacuum under $300 self-emptying` B1 | Constrained variance and exact-honesty measurement | Original six-search approval; excluded from clean restart | `tests/fixtures/review-radar-live/robot-vacuum-under-300-self-emptying.phase6d-run1.json` | 38 | Historical only; safe; 1 exact/5 near; verified $299.99 exact |
+| 2026-07-02 04:39 ET | Phase 6D pre-fix (aborted) | B7 | `shop vac` A2 | Broad variance and RR-037 pool presence | Original six-search approval; excluded from clean restart | `tests/fixtures/review-radar-live/shop-vac.phase6d-run2.json` | 37 | Historical only; safe; 2 exact/4 near; RIDGID reached exact and near |
+| 2026-07-02 04:41 ET | Phase 6D pre-fix (aborted) | B7 | `robot vacuum under $300 self-emptying` B2 | Constrained variance and exact-honesty measurement | Original six-search approval; excluded from clean restart | `tests/fixtures/review-radar-live/robot-vacuum-under-300-self-emptying.phase6d-run2.json` | 38 | **Historical STOP evidence:** generic Q10-series evidence attached to Q10 X5+ target; opened RR-069 |
+| 2026-07-02 15:43 ET | Phase 6D clean restart | B7 | `shop vac` A1 | Clean post-RR-069 variance and RR-037 pool presence | Taylor's explicit six-new-search restart approval | `tests/fixtures/review-radar-live/phase-6d-restart-shop-vac.run1.json` | 37 | **STOP:** two Amazon product cards received the same generic `yoda/flyout_72dpi` navigation asset as a High-confidence product image; reopened RR-061 |
 
-**Phase 6D approval:** exactly 6 live searches: `shop vac` x3 and
-`robot vacuum under $300 self-emptying` x3. Estimated cost is approximately
-280 Serper calls at the previously observed approximately 47 calls/search.
+**Original Phase 6D approval:** the four rows above are an aborted pre-fix
+pilot. They remain RR-069 discovery evidence and are excluded from every clean
+post-fix variance calculation.
 
-**Ledger total used: 4 of 6 approved Phase 6D live searches; 150 observed Serper calls.**
-The remaining two approved searches were not spent because the Phase 6 safety
-stop fired on B2. RR-069 was later fixed deterministically, but the pilot was
-not resumed and the remaining searches require explicit reapproval.
+**Clean restart approval:** exactly six new live searches, alternating
+`shop vac` x3 and a request with query `robot vacuum`, budget `under $300`,
+priorities `self-emptying`, and no selected features x3. Debug mode is required
+for all six calls. Estimated cost remains approximately 280 Serper calls.
+
+**Clean restart ledger:** 1 of 6 approved searches used; 5 remain unspent and
+blocked by the RR-061 safety stop. Observed restart Serper calls: 37. The
+aborted pre-fix ledger remains 4 searches and 150 observed Serper calls; the
+two samples are not combined.
