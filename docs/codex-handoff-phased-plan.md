@@ -1411,8 +1411,8 @@ Stop. Do not start Phase 6B without explicit instruction.
 - Authority: The canonical plan is the sole Phase 6 program source of truth. Scorecard, batch, wall, audit, benchmark, report, QA, and handoff docs cannot override it.
 - Verification: Repo and desktop master copies were byte-identical at promotion; all tracked changes are markdown only.
 - Live validation: None. Budget used 0.
-- Docs committed: Pending.
-- Documentation commit: Pending.
+- Docs committed: Yes.
+- Documentation commit: `4d0c3c9`.
 
 Stop. Do not start Phase 6B without explicit instruction.
 
