@@ -1378,6 +1378,147 @@ describe("upgradeWeakSourceEvidence", () => {
     assert.equal(upgraded.exactMatches[0].metadata?.offers?.length, 0);
   });
 
+  it("rejects generic Q10-series commerce evidence for the specific RR-069 Q10 X5+ target", async () => {
+    const product = weakProduct(
+      "Roborock Q10 X5+ Robot Vacuum and Mop, Self-Emptying",
+      { category: "robot vacuum", host: "roborock.com" },
+    );
+    const searchFn = async () =>
+      [
+        ["Roborock Q10 Series Robot Vacuum and Mop", "series"],
+        ["Roborock Q10 Robot Vacuum and Mop", "generic"],
+        ["Roborock Q10 Lineup Robot Vacuum and Mop", "lineup"],
+        ["Roborock Q10 S5+ Robot Vacuum and Mop", "nearby-s5"],
+        ["Roborock Q10 X50+ Robot Vacuum and Mop", "nearby-x50"],
+      ].map(([name, slug]) =>
+        shoppingResult(name, {
+          brand: "Roborock",
+          category: "robot vacuum",
+          price: 259.99,
+          rating: 4.7,
+          reviewCount: 241,
+          productUrl:
+            `https://retailer.example.com/collections/roborock-q10-${slug}`,
+        }),
+      );
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(
+        makeResult([product]),
+        makeReq("robot vacuum"),
+        { searchFn },
+      );
+
+    const upgradedProduct = upgraded.exactMatches[0];
+    assert.ok(
+      sourceUpgradeTraces[0].candidateSample.every(
+        (candidate) => candidate.identityMatch === false,
+      ),
+    );
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.deepEqual(sourceUpgradeTraces[0].attachedFields, []);
+    assert.equal(upgradedProduct.metadata?.offers?.length, 0);
+    assert.equal(upgradedProduct.metadata?.rating, undefined);
+    assert.equal(upgradedProduct.metadata?.reviewCount, undefined);
+    assert.deepEqual(upgradedProduct.citations, product.citations);
+  });
+
+  it("rejects a generic base-series monitor for a specific monitor submodel", async () => {
+    const product = weakProduct(
+      "Samsung Odyssey G70B S32BG70 32-inch Gaming Monitor",
+      { category: "gaming monitor", host: "samsung.com" },
+    );
+    const searchFn = async () => [
+      shoppingResult("Samsung Odyssey G70B Series Gaming Monitor", {
+        brand: "Samsung",
+        category: "gaming monitor",
+        price: 499.99,
+        productUrl:
+          "https://retailer.example.com/collections/samsung-odyssey-g70b-series",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(
+        makeResult([product]),
+        makeReq("gaming monitor"),
+        { searchFn },
+      );
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.equal(upgraded.exactMatches[0].metadata?.offers?.length, 0);
+  });
+
+  it("rejects a generic base-series power-tool kit for a specific kit model", async () => {
+    const product = weakProduct(
+      "Milwaukee M18FUEL 3697-22 Cordless Drill and Impact Driver Combo Kit",
+      { category: "cordless drill", host: "milwaukeetool.com" },
+    );
+    const searchFn = async () => [
+      shoppingResult("Milwaukee M18FUEL Series Cordless Drill Combo Kit", {
+        brand: "Milwaukee",
+        category: "cordless drill",
+        price: 399,
+        productUrl:
+          "https://retailer.example.com/collections/milwaukee-m18fuel-series",
+      }),
+    ];
+
+    const { result: upgraded, sourceUpgradeTraces } =
+      await upgradeWeakSourceEvidence(
+        makeResult([product]),
+        makeReq("cordless drill"),
+        { searchFn },
+      );
+
+    assert.equal(sourceUpgradeTraces[0].evidenceAttached, false);
+    assert.equal(sourceUpgradeTraces[0].noMatchReason, "identity_rejected");
+    assert.equal(upgraded.exactMatches[0].metadata?.offers?.length, 0);
+  });
+
+  it("accepts exact Q10 X5+ evidence and safe plus/spacing variants", async () => {
+    for (const candidateName of [
+      "Roborock Q10 X5+ Robot Vacuum and Mop",
+      "Roborock Q10 X5 Plus Robot Vacuum and Mop",
+      "Roborock Q10X5+ Robot Vacuum and Mop",
+    ]) {
+      const product = weakProduct(
+        "Roborock Q10 X5+ Robot Vacuum and Mop, Self-Emptying",
+        { category: "robot vacuum", host: "roborock.com" },
+      );
+      const searchFn = async () => [
+        shoppingResult(candidateName, {
+          brand: "Roborock",
+          category: "robot vacuum",
+          price: 349.99,
+          productUrl:
+            "https://retailer.example.com/products/roborock-q10-x5-plus",
+        }),
+      ];
+
+      const { result: upgraded, sourceUpgradeTraces } =
+        await upgradeWeakSourceEvidence(
+          makeResult([product]),
+          makeReq("robot vacuum"),
+          { searchFn },
+        );
+
+      assert.equal(
+        sourceUpgradeTraces[0].evidenceAttached,
+        true,
+        candidateName,
+      );
+      assert.ok(
+        upgraded.exactMatches[0].metadata?.offers?.some(
+          (offer) => offer.price?.value === 349.99,
+        ),
+        candidateName,
+      );
+    }
+  });
+
   it("does not let a retailer-prefixed RIDGID target accept an Amazon Basics vacuum", async () => {
     const product = weakProduct(
       "Amazon.com: RIDGID Wet Dry Vacuums VAC1200 Heavy Duty Wet/Dry Vacuum",

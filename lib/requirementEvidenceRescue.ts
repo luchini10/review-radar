@@ -409,6 +409,96 @@ function hasConflictingDigitDashModel(
   );
 }
 
+const MODEL_ATOM_PATTERN =
+  /(?:[a-z]{1,8}[-/.]?\d+[a-z0-9]*(?:[-/.][a-z0-9]+)*|\d{3,}(?:[-/.]\d+)+)/gi;
+
+function modelAtoms(value: string) {
+  return new Set(
+    Array.from(value.matchAll(MODEL_ATOM_PATTERN), (match) =>
+      normalizeModelToken(match[0]),
+    ).filter(Boolean),
+  );
+}
+
+function compoundModelRequirement(value: string) {
+  const atoms = Array.from(value.matchAll(MODEL_ATOM_PATTERN));
+
+  for (let index = 0; index < atoms.length - 1; index++) {
+    const current = atoms[index];
+    const next = atoms[index + 1];
+    if (
+      current.index === undefined ||
+      next.index === undefined ||
+      /\S/.test(value.slice(current.index + current[0].length, next.index))
+    ) {
+      continue;
+    }
+
+    const base = normalizeModelToken(current[0]);
+    const distinguishing = normalizeModelToken(next[0]);
+    const numericDashSuffix = /^\d+(?:[-/.]\d+)+$/.test(next[0]);
+    if (
+      base &&
+      distinguishing &&
+      (distinguishing.length < 4 || numericDashSuffix)
+    ) {
+      return {
+        base,
+        combined: `${base}${distinguishing}`,
+        distinguishing,
+      };
+    }
+  }
+
+  return null;
+}
+
+function mostSpecificStrongModel(
+  targetIdentity: ExtractedModelIdentity,
+) {
+  const strongCandidates = targetIdentity.candidates.filter(
+    (candidate) => candidate.strength === "strong",
+  );
+  if (strongCandidates.length < 2) return null;
+
+  return [...strongCandidates].sort((first, second) => {
+    const stylePriority = {
+      compact: 3,
+      descriptive: 1,
+      digit_dash: 4,
+      word_number: 2,
+    };
+
+    return (
+      stylePriority[second.style] - stylePriority[first.style] ||
+      second.start - first.start ||
+      second.normalized.length - first.normalized.length
+    );
+  })[0]?.normalized || null;
+}
+
+function evidenceHasSpecificTargetModel(
+  productName: string,
+  targetIdentity: ExtractedModelIdentity,
+  evidence: string,
+) {
+  const evidenceAtoms = modelAtoms(evidence);
+  const compoundModel = compoundModelRequirement(productName);
+
+  if (
+    compoundModel &&
+    !evidenceAtoms.has(compoundModel.combined) &&
+    !(evidenceAtoms.has(compoundModel.base) &&
+      evidenceAtoms.has(compoundModel.distinguishing))
+  ) {
+    return false;
+  }
+
+  const specificStrongModel = mostSpecificStrongModel(targetIdentity);
+
+  return !specificStrongModel || evidenceAtoms.has(specificStrongModel);
+}
+
 function identityUrlText(value: string) {
   try {
     const parsed = new URL(value);
@@ -585,6 +675,16 @@ function looksLikeSameProduct(
       targetIdentity.strongTokens,
       candidateIdentity.strongTokens,
     ) || hasConflictingDigitDashModel(targetIdentity, candidateIdentity));
+
+  if (
+    !evidenceHasSpecificTargetModel(
+      productName,
+      targetIdentity,
+      text,
+    )
+  ) {
+    return false;
+  }
 
   if (targetIdentity.strongTokens.length > 0) {
     if (hasConflictingStrongModel) {
