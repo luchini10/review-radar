@@ -1,8 +1,8 @@
 # ReviewRadar Phase 6 Reliability Gauntlet - Master Plan
 
-**Status:** Canonical merged plan; Phase 6A completed and reconciled
+**Status:** Canonical merged plan; Phases 6A and 6B complete
 **Prepared:** 2026-07-01
-**Execution state:** Phase 6A planning instrument complete; Phase 6B requires explicit instruction
+**Execution state:** Phase 6A instrument and Phase 6B regression wall complete; Phase 6C patch audit requires explicit instruction
 **Repository:** `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 **Canonical repository path:** `docs/phase-6-reliability-gauntlet-plan.md`
 
@@ -262,6 +262,9 @@ After Phase 6D variance calibration, but before Phase 6E baseline:
 - approve deduction sizes and quality thresholds;
 - approve minimum quality floors;
 - approve the leader-quality target independently of baseline performance;
+- approve the market-leader evaluation method document and the initial dated
+  leader snapshots (compiled per section 10) — the measurement targets must be
+  fixed before the phase that measures against them runs;
 - define the variance significance rule;
 - freeze rubric `v1.0`;
 - record the exact version in every baseline report.
@@ -390,6 +393,11 @@ Required metrics:
 - trust summary;
 - overall safety verdict;
 - quality score and grade.
+
+The binding classification of each quality metric as High-impact or
+Medium-impact for the deduction formula lives in
+`docs/phase-6-scorecard-template.md`. The scorecard template owns that mapping;
+this plan intentionally does not duplicate it.
 
 ### 8.4 Result adequacy must not reward unsafe volume
 
@@ -579,7 +587,7 @@ averaged as if they came from the same current system distribution.
 
 ## 13. Live Budget Policy
 
-| Run type | Maximum live calls | Approval |
+| Run type | Maximum live searches | Approval |
 |---|---:|---|
 | Planning and templates | 0 | No live work allowed |
 | Regression wall | 0 | Deterministic only |
@@ -587,18 +595,32 @@ averaged as if they came from the same current system distribution.
 | Variance pilot | 6 | Explicit approval |
 | First fresh baseline | 12-15 | Exact query list and cost plan approved |
 | One fix proof | 1 | Phase-specific approval |
-| Second fix-proof call | 1 additional | Ask first |
+| Second fix-proof search | 1 additional | Ask first |
 | Affected-slice rerun | Up to 3 | Ask first |
 | Full re-baseline | 12-15 | Ask; only when justified |
+
+One budget unit above is one full ReviewRadar search (one end-to-end pipeline
+run), never one Serper API call. At the observed ~47 Serper calls per search,
+the variance pilot (6 searches) is roughly 280 Serper calls, and the first
+fresh baseline (12-15 searches) is roughly 565-705 Serper calls. Approvals are
+given in searches; cost estimates are reported in Serper calls.
 
 Phase 6D variance pilot:
 
 - one broad query repeated three times;
 - one constrained query repeated three times;
-- six total calls;
+- six total searches;
+- the broad query should be `shop vac`, so the repeat-run pool overlap directly
+  measures RR-037's candidate-pool variance (does RIDGID enter the pool
+  consistently?) at no extra cost;
+- the constrained query should overlap an existing saved fixture and the
+  planned core set (for example the saved `robot vacuum under $300
+  self-emptying` shape) so historical context exists;
 - fixed inputs and debug mode;
 - overlap measured at candidate pool, exact, near, and final levels;
-- no claim that six calls fully close RR-015.
+- pilot fixtures are saved and may be retro-scored under frozen rubric v1.0,
+  letting them double as baseline evidence for those two queries;
+- no claim that six searches fully close RR-015.
 
 The existing quality scorecard estimates roughly 47 Serper calls per search.
 Before Phase 6E, run the existing dry-run/cost plan and report the estimated
@@ -829,6 +851,10 @@ Exit:
 
 ### Phase 6B - Regression wall
 
+**Status:** Completed. Wall tests and mapping committed (`e2f3cf3` wall tests,
+`e6c32af` handoff docs); see `docs/phase-6-regression-wall.md` and the phase
+record in `docs/codex-handoff-phased-plan.md`.
+
 Goal:
 
 Map Phase 5 issues to deterministic protection and close real test gaps.
@@ -878,9 +904,10 @@ proof.
 
 Live budget:
 
-- six approved calls;
-- one broad query x3;
-- one constrained query x3.
+- six approved searches;
+- one broad query x3 (`shop vac`, per section 13, doubling as the RR-037
+  pool-variance measurement);
+- one constrained query x3 (fixture-overlapping shape, per section 13).
 
 Metrics:
 
@@ -889,20 +916,35 @@ Metrics:
 - exact/near count range;
 - rank correlation for shared products;
 - stage-loss variation;
-- latency and error variation.
+- latency and error variation;
+- variance-source attribution where traces allow: overlap loss split between
+  provider-result differences (different raw candidates returned) and
+  plan/selection differences (same candidates, different LLM planning or
+  selection outcomes);
+- whether the pipeline pins LLM temperature/seed anywhere it matters, recorded
+  in the pilot report.
+
+The attribution matters because it decides whether RR-015 is fixable (pin or
+seed the model side) or manageable-only (provider-inherent) — which determines
+what the Phase 6G fix loop should work on.
 
 Deliverables:
 
 - RR-015 pilot report;
+- RR-037 pool-variance report from the repeated shop-vac runs;
 - provisional significance rule;
+- provisional attribution of variance between provider-bound and
+  model/plan-bound sources;
 - recommendation for sample size;
 - explicit statement of what remains unproven.
 
 Exit:
 
 - rubric weights and thresholds reviewed;
+- market-leader evaluation method and initial leader snapshots compiled and
+  approved (freeze-point deliverables, section 7);
 - rubric v1.0 frozen before Phase 6E;
-- RR-015 updated from evidence but not necessarily closed;
+- RR-015 and RR-037 updated from evidence but not necessarily closed;
 - stop for Phase 6E approval.
 
 ### Phase 6E - Baseline
@@ -916,8 +958,10 @@ Inputs:
 - all 22 historical fixtures, separately labeled;
 - current-code reassessment where supported;
 - 12-15 approved fresh searches;
+- one designated fresh search must probe RR-045 (Tapo provider coverage) and
+  record raw provider counts, so RR-045 is updated from evidence in this phase;
 - fixed core categories plus rotating categories;
-- approved leader snapshots.
+- approved leader snapshots (produced at the 6D freeze point).
 
 Deliverables:
 
@@ -1153,8 +1197,8 @@ No Phase 6 step may continue automatically before required docs are complete.
 | 6A | `docs/phase-6-live-search-batches.md` |
 | 6B | `docs/phase-6-regression-wall.md` |
 | 6C | `docs/phase-6-product-specific-patch-audit.md` |
-| 6E | `docs/phase-6-market-leader-evaluation.md` |
-| 6E | approved QA-only leader snapshot data |
+| 6D (freeze point) | `docs/phase-6-market-leader-evaluation.md` |
+| 6D (freeze point) | approved QA-only leader snapshot data |
 | 6E+ | versioned baseline and comparison reports |
 
 No executable script or benchmark data file is created in Phase 6A. Missing
@@ -1350,6 +1394,11 @@ Stop after Phase 6A.
 
 Use this reconciled document as the canonical Phase 6 strategy.
 
-Phase 6A is complete. Start only Phase 6B after explicit approval. Do not run
-the variance pilot or spend live API calls until the preceding zero-cost phases
-are complete, documented, and approved.
+Phases 6A and 6B are complete. Start only Phase 6C after explicit approval. Do
+not run the variance pilot or spend live API calls until the preceding
+zero-cost phases are complete, documented, and approved.
+
+Whenever a sub-phase completes, update the Status/Execution-state header at the
+top of this document in the same commit. This plan is the sole source of truth
+for sequencing; a stale execution-state line here is itself a
+documentation-consistency defect.

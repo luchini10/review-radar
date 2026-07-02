@@ -32,6 +32,61 @@ RR-014, RR-015, RR-037, and RR-045 intentionally remain Needs Investigation. Det
 
 Verification passed: focused additions 22/22; typecheck; lint with 0 errors and 3 existing warnings; 782/782 tests across 117 suites; eval with no red flags. Live calls: 0.
 
+## Master-plan amendment notice - 2026-07-01 (Claude, docs-only)
+
+`docs/phase-6-reliability-gauntlet-plan.md` was amended after Phase 6B closed.
+Read the amended master plan before starting Phase 6C. Seven changes, none of
+which alter Phase 6C scope, the v0.1-draft rubric content, budgets totals,
+gates, or any issue status:
+
+1. **Execution-state header corrected.** The plan header claimed Phase 6B still
+   required instruction after 6B was already committed. It now reads "Phases 6A
+   and 6B complete; Phase 6C patch audit requires explicit instruction." A
+   standing rule was added at the end of the plan: every completed sub-phase
+   must update the plan's Status/Execution-state header in the same commit — a
+   stale header in the sole source of truth is itself a
+   documentation-consistency defect. A Phase 6B status block citing commits
+   `e2f3cf3` and `e6c32af` was added to the roadmap.
+2. **Leader snapshots moved to the 6D freeze point.** The market-leader
+   evaluation method doc and the initial dated leader snapshots were listed as
+   Phase 6E artifacts — the same phase that consumes them as baseline truth.
+   They are now freeze-point deliverables (after the variance pilot, before any
+   baseline search runs), so measurement targets are fixed before the phase
+   that measures against them. Section 7 freeze checklist, the section 24
+   artifact table, and the 6D exit criteria were updated to match.
+3. **Budget units disambiguated.** The section 13 budget table previously
+   counted "live calls" while the cost note counted ~47 Serper calls per
+   search. The table now counts "live searches" (one unit = one end-to-end
+   pipeline run), with derived Serper estimates stated: pilot 6 searches ≈ 280
+   Serper calls; first baseline 12-15 searches ≈ 565-705 Serper calls.
+   Approvals are given in searches; costs are reported in Serper calls.
+4. **Variance-pilot queries pinned, RR-037 now owned by 6D.** The pilot's broad
+   query is `shop vac` x3, so the repeat-run candidate-pool overlap directly
+   measures RR-037's RIDGID pool variance at no extra cost. The constrained
+   query must overlap an existing saved fixture and the planned core set (for
+   example the saved robot-vacuum-under-300-self-emptying shape). Pilot
+   fixtures are saved and may be retro-scored under frozen rubric v1.0 as
+   baseline evidence for those two queries. RR-037 was added to the 6D
+   deliverables and exit criteria.
+5. **RR-045 now owned by 6E.** One designated fresh baseline search must probe
+   Tapo raw provider coverage and record raw provider counts, so RR-045 is
+   updated from evidence rather than lingering unowned until 6H.
+6. **Variance-source attribution added to 6D metrics.** Where traces allow,
+   overlap loss must be split between provider-result differences (different
+   raw candidates returned) and plan/selection differences (same candidates,
+   different LLM planning or selection outcomes), plus a recorded check on
+   whether the pipeline pins LLM temperature/seed anywhere it matters. This
+   attribution decides whether RR-015 is fixable (pin/seed the model side) or
+   manageable-only (provider-inherent), which determines what the 6G fix loop
+   should target.
+7. **Metric-mapping ownership stated.** Section 8.3 now records that
+   `docs/phase-6-scorecard-template.md` owns the binding High-impact vs
+   Medium-impact classification for the deduction formula; the master plan
+   intentionally does not duplicate that mapping.
+
+The Desktop copy of the master plan was deleted and replaced with a shortcut to
+the repository file; the repo file is the only copy.
+
 ## Required next task
 
 Do not start automatically. Await a separate instruction for **Phase 6C patch audit only**.
