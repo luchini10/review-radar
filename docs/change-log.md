@@ -13,6 +13,14 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-02
 
+### Codex - Fresh Phase 6D restart safety stop
+- Began a fresh post-RR-069/post-RR-061 six-call variance window and kept both earlier stopped samples excluded.
+- A1 `shop vac` was safe; B1 constrained `robot vacuum` rendered a Saros Z70 image on a Roborock Q5 Max+ card, reopening RR-061 and stopping the pilot.
+- Opened Medium RR-070 after unrelated `Bose` Serper brand metadata produced source-upgrade query `Bose ILIFE A12 Pro`; no evidence attached.
+- Spent 2/6 searches and 75 observed Serper queries. Four calls were not run.
+- One run per query cannot support pairwise overlap, rank correlation, significance, sample-size, or provider/model attribution conclusions. RR-014/RR-015/RR-037/RR-045 remain Needs Investigation.
+- Typecheck and eval passed; lint reported 0 errors and 3 existing warnings; the full suite passed 791/791. No production behavior changed, rubric v1.0 was not frozen, and Phase 6E did not start.
+
 ### Codex - Reopened RR-061 retailer navigation image safety
 - Fixed the live image-safety regression where the same Amazon `yoda/flyout_72dpi` navigation asset rendered on RIDGID VAC4000 and Fein Turbo I cards.
 - Confirmed the shared resolver was used, but its hard non-product vocabulary omitted flyout/menu/department/layout shapes and its relevance check could match retailer/domain words from generated titles against image hosts.

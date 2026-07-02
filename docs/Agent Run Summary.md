@@ -1515,3 +1515,31 @@ New entries should keep the same format and stay easy to read.
 **Commit:** RR-061 implementation and deterministic proof `a174551`.
 
 **Next recommended step:** Human-review the fix, then explicitly approve a fresh clean six-call Phase 6D restart.
+
+## Codex Run - 2026-07-02 Fresh Phase 6D restart safety stop
+
+**Goal:** Run a new post-RR-069/post-RR-061 2x3 variance sample without pooling either earlier stopped attempt.
+
+**Execution:** Readiness passed 114/114 focused tests. A1 used broad `shop vac`; B1 used query `robot vacuum`, budget `under $300`, priorities `self-emptying`, and no selected features. Both used debug mode and distinct untracked fixtures at commit `baeb6a0`.
+
+**A1:** Safe. Pool 19, citation 11, requirement 5, final 3, exact/near 1/2, latency 92.592s, 37 Serper queries. RIDGID reached a final near slot; no household floor cleaner, unsafe price, page, image, or evidence attachment appeared.
+
+**B1 stop:** Pool 9, citation 7, requirement 6, final 6, exact/near 1/5, latency 88.463s, 38 Serper queries. Roborock Q5 Max+ rendered `Saros_Z70_Silver_ID.png` from its matching product page. RR-061 reopened.
+
+**Additional finding:** ILIFE A12 Pro carried unrelated `Bose` Serper brand metadata into query `Bose ILIFE A12 Pro`. No result or evidence attached. Opened RR-070 Medium/Needs Investigation.
+
+**Measurement:** One run per query means all pairwise overlaps, rank correlation, stage-loss variation, significance, sample-size inference, and provider/model attribution are unavailable. RR-014/RR-015/RR-037/RR-045 remain Needs Investigation.
+
+**Budget:** 2/6 searches, 75 observed Serper queries; four calls unspent and blocked.
+
+**Verification:** Typecheck passed; lint 0 errors/3 existing warnings; full suite 791/791; eval no red flags; offline harness pair arrays empty.
+
+**Scope:** Measurement/docs only. No production code, tests, scripts, ranking, discovery, trust, identity, image, source-upgrade, product-type, final-selection, UI, or API behavior changed.
+
+**Issues:** 70 total; 10 Critical, 29 High, 26 Medium, 5 Low; 0 Open, 6 Needs Investigation, 63 Fixed, 1 Won't Fix.
+
+**Phase state:** Rubric v1.0 not frozen; leader snapshots not compiled; Phase 6E not started.
+
+**Commit:** Pending.
+
+**Next recommended step:** Diagnose/fix RR-061 wrong-model image safety separately; keep RR-070 independently scoped.

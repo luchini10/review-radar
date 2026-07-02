@@ -1,8 +1,8 @@
 # ReviewRadar Phase 6 Reliability Gauntlet - Master Plan
 
-**Status:** Canonical merged plan; Phases 6A-6C complete; Phase 6D restart stopped
+**Status:** Canonical merged plan; Phases 6A-6C complete; fresh Phase 6D restart stopped
 **Prepared:** 2026-07-01
-**Execution state:** RR-061 was fixed deterministically after the 1/6 restart stop; Phase 6D remains stopped and any clean restart requires fresh explicit approval
+**Execution state:** Fresh Phase 6D restart stopped at 2/6 after wrong-model imagery reopened RR-061 and opened RR-070; Phase 6E remains unauthorized
 **Repository:** `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 **Canonical repository path:** `docs/phase-6-reliability-gauntlet-plan.md`
 
@@ -921,6 +921,13 @@ image resolver rejects generalized retailer flyout/menu/department/layout
 assets and excludes source/domain/host text from product-image identity while
 preserving same-product retailer and opaque CDN images. The stopped five-call
 balance is not reusable; a future clean pilot requires fresh explicit approval.
+
+**Fresh post-RR-061 restart result (2026-07-02): STOPPED.** A1 was safe. B1
+rendered a Saros Z70 image on a Roborock Q5 Max+ card, reopening RR-061, and
+separately exposed unrelated `Bose` metadata in an ILIFE A12 Pro source-upgrade
+query, opening RR-070. Two of six calls and 75 observed Serper queries were
+spent; four calls were blocked. No variance inference, rubric freeze, or
+Phase 6E work is permitted from this stopped sample.
 
 Goal:
 

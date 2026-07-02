@@ -16,7 +16,7 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Reopened RR-061 is fixed deterministically. Phase 6D remains stopped pending fresh approval.**
+Current phase: **Fresh Phase 6D restart stopped at 2/6; RR-061 reopened and RR-070 opened.**
 
 The original four-call Phase 6D attempt remains aborted pre-fix RR-069
 evidence. A separately approved six-call clean restart stopped after A1 when
@@ -24,22 +24,22 @@ the same generic Amazon `yoda/flyout_72dpi` navigation asset appeared as the
 High-confidence product image for two different product cards. Five restart
 calls remain unspent and blocked.
 
-The RR-061 fix expanded the shared non-product image vocabulary for
-flyout/menu/department/layout/masthead assets and removed retailer/source/domain
-words plus URL hosts from product-image identity. The exact captured URL is
-rejected for both affected cards, while same-product Amazon and opaque CDN
-images remain valid.
+The navigation-image RR-061 fix remains effective, but constrained B1 exposed
+a different image gap: verified Q5 Max+ page context allowed an image whose
+path explicitly identified Saros Z70. B1 also assigned unrelated `Bose` Serper
+brand metadata to ILIFE A12 Pro and constructed `Bose ILIFE A12 Pro`; no
+evidence attached.
 
 `docs/phase-6-reliability-gauntlet-plan.md` is the sole source of truth for all Phase 6 scope, sequencing, budgets, gates, evidence rules, and completion criteria. Every supporting Phase 6 artifact implements that master and must not override it.
 
-The register contains 69 issues: 64 Fixed, 4 Needs Investigation, 1 Won't Fix,
-and 0 Open. RR-061 and RR-069 are Fixed; RR-014/RR-015/RR-037/RR-045 remain
-Needs Investigation.
+The register contains 70 issues: 63 Fixed, 6 Needs Investigation, 1 Won't Fix,
+and 0 Open. RR-061 and RR-070 are Needs Investigation; RR-069 remains Fixed.
 
 Recommended next phase:
 
-- Human-review the deterministic RR-061 fix.
-- Do not resume Phase 6D with the five unspent calls; a clean restart requires fresh explicit approval for all six calls.
+- Await explicit instruction for a narrow RR-061 wrong-model image diagnosis/fix.
+- Keep RR-070 separate unless explicitly combined.
+- Do not resume Phase 6D with the four unspent calls; any later clean restart requires fresh approval.
 - Preserve RR-068/RR-054, RR-041/RR-042, RR-067, and all RR-063 through RR-066 protections.
 - Do not start Phase 6E, freeze rubric v1.0, compile leader snapshots, or change production behavior during the stopped pilot.
 
@@ -1560,3 +1560,21 @@ Stop. Do not fix RR-061, resume Phase 6D, or start Phase 6E without explicit ins
 - RR-061 implementation commit: `a174551`.
 
 Stop. Do not resume Phase 6D or start Phase 6E without explicit instruction.
+
+### Fresh post-RR-061 Phase 6D restart safety-stop record
+
+- Completed step: Two of six approved live searches, A1 then B1.
+- Next step: Narrow RR-061 wrong-model image safety phase after explicit instruction. Keep RR-070 separately scoped unless explicitly combined.
+- Diagnostic-only: Yes. No production code, tests, scripts, or behavior changed.
+- Stop condition hit: Yes. B1 rendered Saros Z70 imagery on a Roborock Q5 Max+ card.
+- New issue IDs opened: RR-070 (Medium, Needs Investigation) for unrelated `Bose` metadata contaminating an ILIFE A12 Pro source-upgrade query.
+- Existing issue IDs updated: RR-061 moved from Fixed to Needs Investigation. RR-069 remains Fixed. RR-014/RR-015/RR-037/RR-045 remain Needs Investigation.
+- Live budget: 2/6 searches and 75 observed Serper queries. Four calls remain unspent and blocked.
+- Fixtures: two new untracked Tier A post-RR-061 fixtures. Never pool them with either earlier stopped sample.
+- Measurement result: One run per query; all pairwise overlaps, rank correlation, stage-loss variation, significance, sample-size inference, and provider/model attribution are unavailable.
+- Verification: typecheck passed; lint 0 errors/3 existing warnings; full suite 791/791; offline eval no red flags; offline harness produced empty pair arrays.
+- Phase state: Rubric v1.0 is not frozen; leader snapshots were not compiled; Phase 6E did not start.
+- Docs committed: Pending.
+- Commit hash: Pending.
+
+Stop. Do not fix RR-061/RR-070, resume Phase 6D, or start Phase 6E without explicit instruction.

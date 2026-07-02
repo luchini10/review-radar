@@ -818,3 +818,12 @@ No production pipeline or API contract changed in Phase 6A.
 - **Preserved positives:** Verified same-product Amazon images, opaque hashed CDN images, Google Shopping thumbnails, and identity-safe source-upgrade images still pass.
 - **Proof:** Fail-first 31/35 with four intended failures; focused 135/135; broad trust 376/376; full suite 791/791; typecheck/eval pass; lint 0 errors/3 warnings.
 - **Phase state:** RR-061 is Fixed. No live search ran. Phase 6D remains stopped, rubric v1.0 remains unfrozen, and Phase 6E has not started.
+
+## 20. Fresh Phase 6D restart safety stop (2026-07-02)
+
+- **Sample:** Fresh commit-pinned post-RR-069/post-RR-061 window; earlier partial samples excluded. A1/B1 ran, A2-B3 did not.
+- **A1:** Safe `shop vac` result: 19 pool, 11 citation-verified, 5 requirement-valid, 3 final, 1 exact/2 near, 92.592s, 37 Serper queries.
+- **Stop:** B1 rendered `Saros_Z70_Silver_ID.png` on a Roborock Q5 Max+ card. Matching page/title context incorrectly outweighed explicit conflicting image-model identity. RR-061 is Needs Investigation again.
+- **RR-070:** ILIFE A12 Pro received unrelated `Bose` metadata brand and source-upgrade query `Bose ILIFE A12 Pro`; no evidence attached. This is a separate Medium Needs Investigation query-identity defect.
+- **Measurement:** One run per query cannot produce pairwise overlap, rank correlation, stage variance, significance, sample-size, or attribution conclusions. RR-014/RR-015/RR-037/RR-045 remain Needs Investigation.
+- **State:** 2/6 searches and 75 Serper queries spent; four calls blocked. No app behavior changed, rubric v1.0 remains unfrozen, and Phase 6E did not start.

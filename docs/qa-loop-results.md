@@ -6082,3 +6082,53 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - RR-061 implementation commit: `a174551`.
 
 Recommended direction: human-review the RR-061 fix, then request fresh explicit approval for a new clean six-call Phase 6D restart.
+
+## <span style="color:green">**Codex QA Update - 2026-07-02 (Fresh Phase 6D restart safety stop)**</span>
+
+**Verdict: STOPPED. Two of six fresh post-RR-069/post-RR-061 searches ran; B1 rendered wrong-model imagery, so A2-B3 were not spent.**
+
+### Sample and budget
+
+- Code commit: `baeb6a0`.
+- A1: `shop vac`, blank budget/details, no selected features.
+- B1: `robot vacuum`, budget `under $300`, priorities `self-emptying`, no selected features.
+- Debug mode was enabled and both fixtures were saved under unique untracked post-RR-061 paths.
+- Live budget: 2/6 searches and 75 observed Serper queries; four calls blocked.
+- Both earlier partial pilots remain excluded.
+
+### A1 safety result
+
+- Candidate pool 19; citation-verified 11; requirement-valid 5; final 3.
+- Exact/near 1/2; latency 92.592 seconds; 37 Serper queries.
+- All final cards were wet/dry vacuums with product-detail URLs and plausible product imagery.
+- Suspicious prices remained untrusted, no household floor cleaner appeared, and RIDGID reached a final near slot.
+- Source upgrade attached only a secondary citation for a generic-model Vacmaster target and rejected nearby DEWALT/RIDGID models.
+
+### B1 stop and RR-070
+
+- Candidate pool 9; citation-verified 7; requirement-valid 6; final 6.
+- Exact/near 1/5; latency 88.463 seconds; 38 Serper queries.
+- `Roborock Q5 Max+` rendered `Saros_Z70_Silver_ID.png` from its matching Q5 Max+ product page. The image path explicitly names a different model. RR-061 reopened as Needs Investigation.
+- `ILIFE A12 Pro` carried unrelated Serper metadata brand `Bose`; source upgrade queried `Bose ILIFE A12 Pro`, returned no candidates, and attached nothing. Opened RR-070 Medium/Needs Investigation.
+- RR-069 remained green: Q5 Pro Plus, Q5 DuoRoller+, Q7 M5+, and Q10 X5+ candidates were all rejected for the Q5 Max+ target and attached nothing.
+
+### Measurement and verification
+
+- There is one run per query. Harness pair arrays are empty; all overlap, rank-correlation, stage-variance, significance, sample-size, and provider/model attribution findings are unavailable.
+- A1 confirms RIDGID can enter raw, pool, and final stages but cannot close RR-037 from one run.
+- RR-014/RR-015/RR-037/RR-045 remain Needs Investigation.
+
+```text
+readiness image/source-upgrade: 114/114
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm test: 791/791 across 117 suites
+node scripts/eval-pipeline.mjs: no red-flag issues
+offline variance harness: ran; no within-query pairs
+```
+
+- No production code, tests, scripts, behavior, rubric, ranking, discovery, trust, image, source-upgrade, final-selection, UI, or API change occurred.
+- Issue totals: 70 total; 10 Critical, 29 High, 26 Medium, 5 Low; 0 Open, 6 Needs Investigation, 63 Fixed, 1 Won't Fix.
+- Rubric v1.0 remains unfrozen; leader snapshots were not compiled; Phase 6E did not start.
+
+Recommended direction: fix RR-061 wrong-model image safety in a separate approved phase; keep RR-070 separately scoped unless explicitly combined.

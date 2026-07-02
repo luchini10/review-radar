@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through the reopened RR-061 image-safety fix
+## Compiled for AI Agent Consumption — Phase 0 through the post-RR-061 Phase 6D restart stop
 
 **Generated:** 2026-07-02
-**Scope:** All phases from initial measurement harness through the reopened RR-061 image-safety fix
+**Scope:** All phases from initial measurement harness through the post-RR-061 Phase 6D restart safety stop
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -13,14 +13,14 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 69 |
+| Total Issues | 70 |
 | Critical | 10 |
 | High | 29 |
-| Medium | 25 |
+| Medium | 26 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 4 |
-| Fixed | 64 |
+| Needs Investigation | 6 |
+| Fixed | 63 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -88,6 +88,7 @@
 | Phase 6C product-specific patch audit | 0 |
 | Phase 6D variance pilot | 1 |
 | Phase 6D post-RR-069 restart | 0 |
+| Phase 6D post-RR-061 restart | 1 |
 | Reopened RR-061 image-safety mini-phase | 0 |
 | RR-069 source-upgrade identity safety mini-phase | 0 |
 | Cross-phase / Infrastructure | 4 |
@@ -1857,7 +1858,7 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 | **Phase** | Phase 4F |
 | **Severity** | Medium |
 | **Title** | Product image metadata can contain page URLs, generic brand assets, or unrelated navigation images |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** All 70 final cards had a non-empty image field, but several were not usable product images. Leaf-blower examples included a truncated Home Depot image directory, Greenworks/BLACK+DECKER product-page URLs, a WORX navigation banner, and an EGO brand logo. Dog-food examples included a Blue Buffalo logo and PetSmart category hero. An LG gaming-monitor image ended in `.html`.
 
@@ -1880,6 +1881,8 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 **Reopened RR-061 resolution (2026-07-02):** Fixed deterministically. The retailer-page path did use the shared image resolver, but `flyout`, `menu`, `department`, and `layout` were absent from its hard non-product asset vocabulary. In parallel, image relevance compared source/retailer words from generated titles against the image hostname: `Amazon.com` supplied both `amazon` and `com`, allowing a generic Amazon asset to receive High confidence. The shared resolver now rejects generalized flyout/menu/department/layout/masthead paths, excludes source/retailer/domain words from product-image identity, and does not use URL hosts as image identity. The exact `yoda/flyout_72dpi` asset is rejected for both captured cards. Same-product Amazon images and opaque hashed CDN images remain valid when source-derived product context verifies them; rejected images leave the product image empty.
 
 **Resolution proof:** Fail-first image/asset tests passed 31/35 with exactly four intended failures. Focused image, asset, and source-upgrade tests passed 135/135; the broader trust wall passed 376/376; and the full suite passed 791/791 across 117 suites. Typecheck and offline eval passed; lint reported 0 errors and 3 existing warnings. No live search ran. Phase 6D remains stopped and Phase 6E did not start. Implementation commit: `a174551`.
+
+**Post-fix Phase 6D regression (2026-07-02):** Reopened as Needs Investigation. Constrained B1 rendered `https://global.roborock.com/cdn/shop/files/Saros_Z70_Silver_ID.png?v=1758784729` on the `Roborock Q5 Max+` card. The source page and metadata title correctly identified Q5 Max+, but the image path explicitly identified a different Roborock model, Saros Z70. The resolver assigned Medium-confidence `retailer_page` image metadata because verified page context outweighed the conflicting image-model identity. The Phase 6 safety gate stopped the fresh pilot at 2/6. Diagnose a generalized image-path model-conflict guard that preserves generic hashed product images; no fix was attempted in the measurement phase.
 
 **Sweep result:**
 
@@ -2321,18 +2324,44 @@ No new issue ID was opened.
 
 ---
 
+#### RR-070
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-070 |
+| **Phase** | Phase 6D post-RR-061 restart |
+| **Severity** | Medium |
+| **Title** | Unrelated provider brand metadata can contaminate source-upgrade queries |
+| **Status** | Needs Investigation |
+
+**Description:** Constrained robot-vacuum B1 produced an `ILIFE A12 Pro` candidate whose Serper-derived metadata brand was `Bose`, sourced from an AliExpress product URL. Source upgrade trusted that metadata brand and constructed `Bose ILIFE A12 Pro` instead of an ILIFE-based query. Both primary and fallback searches returned zero results, so no evidence attached.
+
+**Where it occurs:** Upstream candidate/product metadata brand assignment and `lib/requirementEvidenceRescue.ts` source-upgrade brand/query selection
+
+**Steps to reproduce:** Replay untracked Tier A fixture `tests/fixtures/review-radar-live/phase-6d-post-rr061-robot-vacuum-under-300-self-emptying.run1.json`. Inspect the ILIFE A12 Pro product metadata and source-upgrade trace: `metadataBrand: Bose`, `detectedBrand: Bose`, query `Bose ILIFE A12 Pro`, zero returned candidates, and no attached evidence.
+
+**Expected:** Brand metadata that conflicts with clear source-derived title identity does not override the product title when constructing a source-upgrade query. The query should preserve ILIFE/A12 Pro identity without inventing or trusting Bose.
+
+**Actual:** Unrelated metadata brand `Bose` overrode the title brand and made both bounded source-upgrade searches ineffective.
+
+**Current status:** Needs Investigation. This did not attach unsafe evidence and was not the Phase 6 stop trigger, but it is a generalized query-identity/coverage defect. Diagnose the provenance of the incorrect brand and require metadata/title agreement or an equivalent reliability check before using metadata brand in source-upgrade query construction. Do not fix it inside the stopped measurement phase.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (4 issues)
+### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-### Fixed (64 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-069
+- RR-061: Product image metadata can contain page URLs, generic brand assets, or unrelated navigation images
+- RR-070: Unrelated provider brand metadata can contaminate source-upgrade queries
+### Fixed (63 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-060, RR-062 through RR-069
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)

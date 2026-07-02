@@ -3,13 +3,69 @@
 **Date:** 2026-07-02  
 **Mode:** M4 repeated live sampling, measurement-only  
 **Rubric:** `v0.1-draft`, not frozen  
-**Verdict:** **CLEAN RESTART STOPPED AT 1/6 ON IMAGE-SAFETY FAILURE**
+**Verdict:** **FRESH POST-RR-061 RESTART STOPPED AT 2/6 ON WRONG-MODEL IMAGE**
 
 **Post-stop update:** RR-069 was fixed deterministically in a separate narrow
 mini-phase. Taylor approved a new clean six-call post-fix restart on 2026-07-02.
 The four observations below remain RR-069 discovery evidence, are excluded
 from the clean restart sample, and must not be pooled with its measurements.
 Rubric `v1.0` remains unfrozen.
+
+## Fresh post-RR-061 restart - stopped
+
+Taylor approved a new six-call window under commit `baeb6a0`, with both earlier
+partial samples excluded. The exact alternating plan was A1/B1/A2/B2/A3/B3:
+
+- A: `shop vac`, blank budget/details, no selected features;
+- B: `robot vacuum`, budget `under $300`, priorities `self-emptying`, no
+  selected features;
+- debug mode enabled for every call.
+
+Only A1 and B1 ran:
+
+| Run | Pool | Citation | Requirement | Final | Exact/Near | Latency | Serper |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| A1 `shop vac` | 19 | 11 | 5 | 3 | 1/2 | 92.592s | 37 |
+| B1 constrained robot vacuum | 9 | 7 | 6 | 6 | 1/5 | 88.463s | 38 |
+
+A1 was safe. Its three final cards were specific wet/dry vacuums with
+product-detail URLs and plausible product imagery. Suspicious prices remained
+untrusted, RIDGID reached a near slot, no household floor cleaner appeared,
+and source upgrade attached only a secondary citation to the generic-model
+Vacmaster target while rejecting nearby DEWALT/RIDGID models.
+
+B1 stopped the pilot. `Roborock Q5 Max+` used the correct product page and a
+matching Open Graph title, but its rendered image was
+`Saros_Z70_Silver_ID.png`, explicitly identifying a different Roborock model.
+The image became Medium-confidence retailer-page metadata because verified page
+context outweighed the image-path model conflict. RR-061 reopened.
+
+B1 also opened Medium RR-070: the `ILIFE A12 Pro` candidate carried unrelated
+Serper metadata brand `Bose`, producing source-upgrade query
+`Bose ILIFE A12 Pro`. No candidates returned and no evidence attached, so this
+was not the safety stop, but it is a separate query-identity coverage defect.
+
+The fresh ledger stopped at 2/6 searches and 75 observed Serper queries. Four
+calls were not spent. Both fixtures remain untracked Tier A evidence:
+
+- `tests/fixtures/review-radar-live/phase-6d-post-rr061-shop-vac.run1.json`;
+- `tests/fixtures/review-radar-live/phase-6d-post-rr061-robot-vacuum-under-300-self-emptying.run1.json`.
+
+There is only one observation per query. The offline harness reports empty
+pair arrays, so candidate/raw-provider/query-plan/citation/requirement/final
+overlap, rank correlation, stage-loss variation, significance, and
+provider/model attribution are all unavailable. Single-run intersection/union
+values of 1 are tautologies and are not variance evidence.
+
+RR-014, RR-015, RR-037, and RR-045 remain Needs Investigation. A1 confirms
+RIDGID can enter the raw set, pool, and final near slate, but one observation
+cannot resolve RR-037. The constrained query did not target Tapo provider
+coverage, and the stopped sample says nothing new about RR-014.
+
+Closeout verification passed: typecheck; lint with 0 errors and 3 existing
+warnings; 791/791 tests across 117 suites; and offline eval with no red flags.
+No production code, tests, scripts, or behavior changed. Rubric v1.0 remains
+unfrozen and Phase 6E did not start.
 
 ## Clean post-RR-069 restart - stopped
 

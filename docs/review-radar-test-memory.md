@@ -1274,3 +1274,26 @@ existing warnings.
 **Live boundary:** No live call ran. The fixture remains historical M4 evidence
 and the distilled tests are current M1 proof. Phase 6D remains stopped and
 requires a fresh six-call approval for any later restart.
+
+---
+
+## 2026-07-02 - Fresh Phase 6D restart stopped on wrong-model imagery
+
+**Sample boundary:** Commit `baeb6a0`, A1/B1 only. Both earlier partial pilots
+remain excluded. Never pool any of the three samples.
+
+**Safety finding:** A correct product page/title does not prove every image on
+that page belongs to the target. B1 rendered a Saros Z70 image on a Q5 Max+
+card because page-context confidence outweighed explicit conflicting image-path
+model identity. Reopen RR-061; do not weaken valid hashed-image support.
+
+**Secondary finding:** Source-upgrade query construction trusted unrelated
+`Bose` Serper brand metadata for ILIFE A12 Pro. No evidence attached. Track as
+RR-070 and reproduce deterministically before changing behavior.
+
+**Variance boundary:** One observation per query yields no pairwise metrics.
+Harness three-run intersection/union values for one-run groups are tautologies,
+not stability evidence. Report empty pair arrays and unavailable inference.
+
+**Cost and checks:** 2/6 live searches, 75 observed Serper queries; four calls
+blocked. Typecheck/eval pass, lint 0 errors/3 warnings, full suite 791/791.

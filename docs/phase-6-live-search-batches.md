@@ -1,15 +1,16 @@
 # Phase 6 Live Search Batches
 
-**Status:** RR-061 fixed deterministically after the clean restart stopped at 1/6; any new Phase 6D restart requires fresh approval
+**Status:** Fresh post-RR-069/post-RR-061 Phase 6D restart stopped at 2/6 on wrong-model image safety
 **Rubric:** `v0.1-draft`; quality thresholds remain provisional until the v1.0 freeze after Phase 6D; safety tolerance is absolute at zero failures
 **Governing source of truth:** `docs/phase-6-reliability-gauntlet-plan.md`. This batch document implements the master plan and must not override it.
 
 ## 1. Runtime inventory
 
 - Test files: **64** top-level `tests/*.test.mjs`
-- Saved category fixtures: **22** JSON files, plus **5** untracked Phase 6D Tier A fixtures
+- Saved category fixtures: **22** JSON files, plus **7** untracked Phase 6D Tier A fixtures
 - Aborted pre-fix Phase 6D pilot: **4 of 6 searches used** before the RR-069 safety stop
 - Clean post-RR-069 restart budget: **6 newly approved searches**; tracked separately below
+- Fresh post-RR-061 restart: **2 of 6 searches used** before the wrong-model image safety stop
 
 The fixture corpus is the free foundation. Batch definitions describe future approved work; they are not authorization to run it.
 
@@ -197,6 +198,8 @@ The 21-call draft total is not one run budget: B1–B6 are the 15-call maximum b
 | 2026-07-02 04:39 ET | Phase 6D pre-fix (aborted) | B7 | `shop vac` A2 | Broad variance and RR-037 pool presence | Original six-search approval; excluded from clean restart | `tests/fixtures/review-radar-live/shop-vac.phase6d-run2.json` | 37 | Historical only; safe; 2 exact/4 near; RIDGID reached exact and near |
 | 2026-07-02 04:41 ET | Phase 6D pre-fix (aborted) | B7 | `robot vacuum under $300 self-emptying` B2 | Constrained variance and exact-honesty measurement | Original six-search approval; excluded from clean restart | `tests/fixtures/review-radar-live/robot-vacuum-under-300-self-emptying.phase6d-run2.json` | 38 | **Historical STOP evidence:** generic Q10-series evidence attached to Q10 X5+ target; opened RR-069 |
 | 2026-07-02 15:43 ET | Phase 6D clean restart | B7 | `shop vac` A1 | Clean post-RR-069 variance and RR-037 pool presence | Taylor's explicit six-new-search restart approval | `tests/fixtures/review-radar-live/phase-6d-restart-shop-vac.run1.json` | 37 | **STOP:** two Amazon product cards received the same generic `yoda/flyout_72dpi` navigation asset as a High-confidence product image; reopened RR-061 |
+| 2026-07-02 16:21 ET | Phase 6D post-RR-061 restart | B7 | `shop vac` A1 | Fresh broad variance and RR-037 pool presence | Taylor's fresh six-search approval | `tests/fixtures/review-radar-live/phase-6d-post-rr061-shop-vac.run1.json` | 37 | Safe; 1 exact/2 near; valid product images; RIDGID reached near; no unsafe attachment |
+| 2026-07-02 16:24 ET | Phase 6D post-RR-061 restart | B7 | constrained `robot vacuum` B1 | Fresh constrained variance and safety | Taylor's fresh six-search approval | `tests/fixtures/review-radar-live/phase-6d-post-rr061-robot-vacuum-under-300-self-emptying.run1.json` | 38 | **STOP:** Roborock Q5 Max+ rendered a Saros Z70 image; ILIFE A12 Pro also carried unrelated `Bose` brand metadata into its source-upgrade query |
 
 **Original Phase 6D approval:** the four rows above are an aborted pre-fix
 pilot. They remain RR-069 discovery evidence and are excluded from every clean
@@ -211,3 +214,12 @@ for all six calls. Estimated cost remains approximately 280 Serper calls.
 blocked by the RR-061 safety stop. Observed restart Serper calls: 37. The
 aborted pre-fix ledger remains 4 searches and 150 observed Serper calls; the
 two samples are not combined.
+
+**Fresh post-RR-061 restart approval:** exactly six new live searches in
+alternating order: broad `shop vac` A1/A2/A3 with blank budget/details and no
+selected features; constrained `robot vacuum` B1/B2/B3 with budget
+`under $300`, priorities `self-emptying`, and no selected features. All calls
+use debug mode and commit `baeb6a0`. Earlier aborted samples remain excluded.
+
+**Fresh post-RR-061 ledger:** 2 of 6 approved searches used; 4 remain
+unspent and blocked by the safety stop. Observed Serper calls: 75.
