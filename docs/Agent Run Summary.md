@@ -1490,6 +1490,6 @@ New entries should keep the same format and stay easy to read.
 
 **Phase state:** Rubric v1.0 was not frozen; leader snapshots were not compiled; Phase 6E did not start.
 
-**Commit:** Pending closeout.
+**Commit:** Phase 6D restart stop report `29e02f2`.
 
 **Next recommended step:** Run a narrow generalized RR-061 image-safety phase only after explicit instruction, then request a fresh Phase 6D restart approval.

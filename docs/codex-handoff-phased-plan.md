@@ -1532,7 +1532,7 @@ Stop. Do not resume Phase 6D without explicit instruction and live-budget approv
 - Measurement result: No clean pairwise variance, rank correlation, significance threshold, or provider/model attribution can be computed from one run.
 - Verification: typecheck passed; lint 0 errors/3 existing warnings; full suite 786/786; offline eval no red flags. The variance harness requires at least two fixtures and declined the one-run sample.
 - Phase state: Rubric v1.0 is not frozen; leader snapshots were not compiled; Phase 6E did not start.
-- Docs committed: Pending this closeout commit.
-- Commit hash: Pending.
+- Docs committed: Yes.
+- Phase 6D restart stop commit: `29e02f2`.
 
 Stop. Do not fix RR-061, resume Phase 6D, or start Phase 6E without explicit instruction.

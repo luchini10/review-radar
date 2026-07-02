@@ -6036,5 +6036,6 @@ moved from Fixed to Needs Investigation. No fix was attempted.
 - Leader snapshots were not compiled.
 - Phase 6E did not start.
 - Issue totals: 69 total; 10 Critical, 29 High, 25 Medium, 5 Low; 0 Open, 5 Needs Investigation, 63 Fixed, 1 Won't Fix.
+- Phase 6D restart stop commit: `29e02f2`.
 
 Recommended direction: diagnose and fix RR-061 in a separate approved generalized image-safety phase before requesting a fresh clean Phase 6D restart.
