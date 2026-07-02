@@ -26,6 +26,8 @@ New entries should keep the same format and stay easy to read.
 
 **Scope:** No production code, test, script, fixture, baseline, app/API/UI behavior, ranking, discovery, identity, price, citation, eligibility, source-upgrade, product-type, requirement, or final-selection behavior changed. Phase 6D did not start.
 
+**Phase 6C commit:** `388f955`.
+
 **Next recommended step:** Phase 6D variance pilot only after explicit approval of all six searches and the estimated ~280 Serper-call budget.
 
 ## Codex Run - 2026-07-01 Phase 6B

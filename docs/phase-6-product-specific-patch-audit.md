@@ -170,3 +170,5 @@ current unsafe product-shaped behavior.
 
 Phase 6D may begin only after explicit approval of its six-search variance
 pilot. Phase 6C itself used zero live calls.
+
+Phase 6C audit commit: `388f955`.

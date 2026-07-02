@@ -1467,7 +1467,7 @@ Stop. Do not start Phase 6C without explicit instruction.
 - Fixtures created or reassessed: None.
 - Verification: typecheck passed; lint 0 errors with 3 existing warnings; full suite 782/782 across 117 suites; eval reported no red flags.
 - Scope: No production code, tests, scripts, fixtures, baselines, app/API/UI behavior, ranking, discovery, identity, price, citation, eligibility, source-upgrade, product-type, requirement, or final-selection change.
-- Docs committed: Pending Phase 6C commit.
-- Commit hash: Pending.
+- Docs committed: Yes.
+- Phase 6C commit: `388f955`.
 
 Stop. Do not start Phase 6D without explicit instruction and live-budget approval.

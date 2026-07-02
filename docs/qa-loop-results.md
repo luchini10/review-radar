@@ -5884,5 +5884,6 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - Fixtures created/reassessed: none.
 - No production code, tests, scripts, fixtures, baselines, app/API/UI behavior, ranking, discovery, identity, price, citation, eligibility, source-upgrade, product-type, requirement, or final-selection behavior changed.
 - Proposed AST-aware/static tripwires were documented but not implemented.
+- Phase 6C commit: `388f955`.
 
 Recommended direction: Phase 6D variance pilot only after explicit approval of the six-search plan and estimated ~280 Serper-call budget.

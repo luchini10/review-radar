@@ -876,8 +876,8 @@ Exit:
 
 ### Phase 6C - Product-specific patch audit
 
-**Status:** Completed. Static audit and handoff documentation committed in the
-Phase 6C closeout; see `docs/phase-6-product-specific-patch-audit.md`.
+**Status:** Completed in commit `388f955`. See
+`docs/phase-6-product-specific-patch-audit.md`.
 
 Goal:
 
