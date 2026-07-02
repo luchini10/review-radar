@@ -2,16 +2,16 @@
 
 **Phase:** 6B  
 **Date:** 2026-07-01  
-**Scope:** RR-007 through RR-068  
+**Scope:** RR-007 through RR-069
 **Mode:** Zero-live-call, no-production-behavior regression audit
 
 This document is the Phase 6 index from each applicable issue to its current protection. It distinguishes deterministic regressions from measurements that require saved-fixture reassessment, repeated runs, or provider coverage. It does not claim that a deterministic test proves live provider quality.
 
 ## Audit summary
 
-- Issue-register total: **68** unique issues (`RR-001` through `RR-068`).
-- Phase 6B wall range: **62** issues (`RR-007` through `RR-068`).
-- Statuses in wall range: **57 Fixed**, **4 Needs Investigation**, **1 Won't Fix**.
+- Issue-register total: **69** unique issues (`RR-001` through `RR-069`).
+- Current wall range: **63** issues (`RR-007` through `RR-069`).
+- Statuses in wall range: **58 Fixed**, **4 Needs Investigation**, **1 Won't Fix**.
 - Severities in wall range: **7 Critical**, **25 High**, **25 Medium**, **5 Low**.
 - Deterministic test modules inventoried: **64** top-level `tests/*.test.mjs` files.
 - Tracked distilled fixture: `tests/fixtures/robot-vacuum-synthetic.json`.
@@ -98,6 +98,7 @@ This document is the Phase 6 index from each applicable issue to its current pro
 | RR-066 | Same-brand/same-type evidence passed without model agreement | Critical | Fixed | Deterministic protection | `sourceQualityUpgrade.test.mjs` | High | Closed existing. Reliable target model requires source-derived model support. |
 | RR-067 | Conflicting candidate brand metadata rejected exact evidence | Medium | Fixed | Deterministic protection | `sourceQualityUpgrade.test.mjs`; `brandMatching.test.mjs` | High | Closed existing. Source-derived exact identity wins over polluted metadata without weakening conflict checks. |
 | RR-068 | Household wet floor cleaners passed as shop vacs | High | Fixed | Deterministic protection | `productTypeIntent.test.mjs`; `productTypeMatch.test.mjs`; `requirementValidation.test.mjs`; `serper.test.mjs` | High | Closed existing. CrossWave/FloorMate/HydroVac shapes are blocked for shop-vac intent and remain valid for floor-cleaner intent. |
+| RR-069 | Generic model-series commerce evidence attached to a specific submodel | Critical | Fixed | Deterministic protection | `sourceQualityUpgrade.test.mjs` | High | Added after Phase 6B. Generic Q10 series/plain/lineup and unrelated monitor/tool series evidence cannot donate commerce fields to specific submodels; exact normalized variants remain valid. |
 
 ## Required mechanism wall
 

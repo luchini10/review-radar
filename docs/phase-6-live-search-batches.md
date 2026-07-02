@@ -1,6 +1,6 @@
 # Phase 6 Live Search Batches
 
-**Status:** Phase 6D stopped after 4/6 pilot searches on Critical RR-069
+**Status:** RR-069 fixed deterministically; Phase 6D remains paused after 4/6 pilot searches
 **Rubric:** `v0.1-draft`; quality thresholds remain provisional until the v1.0 freeze after Phase 6D; safety tolerance is absolute at zero failures
 **Governing source of truth:** `docs/phase-6-reliability-gauntlet-plan.md`. This batch document implements the master plan and must not override it.
 
@@ -182,8 +182,8 @@ The 6D report will derive the delta-significance decision rule from these observ
 | B4 | 2 | 0 | 0 | 0 |
 | B5 | 2 | 0 | 0 | 0 |
 | B6 | 1 | 0 | 0 | 0 |
-| B7 (6D only) | 6 | 6 | 4 | 2 (blocked by safety stop) |
-| **Total** | **21 across separate phases** | **6** | **4** | **2 (blocked)** |
+| B7 (6D only) | 6 | 6 | 4 | 2 (unspent; reapproval required) |
+| **Total** | **21 across separate phases** | **6** | **4** | **2 (unspent)** |
 
 The 21-call draft total is not one run budget: B1–B6 are the 15-call maximum baseline allocation, while B7 is a separate six-call pilot.
 
@@ -203,4 +203,5 @@ The 21-call draft total is not one run budget: B1–B6 are the 15-call maximum b
 
 **Ledger total used: 4 of 6 approved Phase 6D live searches; 150 observed Serper calls.**
 The remaining two approved searches were not spent because the Phase 6 safety
-stop fired on B2.
+stop fired on B2. RR-069 was later fixed deterministically, but the pilot was
+not resumed and the remaining searches require explicit reapproval.

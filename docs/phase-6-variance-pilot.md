@@ -5,6 +5,10 @@
 **Rubric:** `v0.1-draft`, not frozen  
 **Verdict:** **STOPPED ON CRITICAL SAFETY FAILURE**
 
+**Post-stop update:** RR-069 was fixed deterministically in a separate narrow
+mini-phase. Phase 6D was not resumed, A3/B3 remain unspent, the partial
+measurements below are unchanged, and rubric `v1.0` remains unfrozen.
+
 ## Scope and budget
 
 Taylor approved exactly six live searches in alternating order:
@@ -33,6 +37,12 @@ count, and citation.
 The source title did not identify X5+. A Q10 S5+ target in the same run rejected
 the same generic Q10-series candidate. This is unsafe nearby-series evidence,
 not harmless score variance. No app fix was attempted in Phase 6D.
+
+The later RR-069 mini-phase added a generalized distinguishing-submodel guard.
+M1 tests now reject generic Q10 series/plain/lineup evidence and nearby S5+/X50+
+models for a Q10 X5+ target while accepting `Q10 X5+`, `Q10 X5 Plus`, and
+`Q10X5+`. Cross-category monitor and power-tool controls are green. The saved
+fixture remains M4 historical evidence and still replays the original failure.
 
 ## Partial RR-015 variance report
 
@@ -138,4 +148,3 @@ performance must not be used to lower the quality target.
 - Release-grade sample size.
 - Approved leader method and snapshots.
 - Rubric v1.0 and Phase 6E readiness.
-

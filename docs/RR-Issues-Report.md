@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 6D safety stop
+## Compiled for AI Agent Consumption — Phase 0 through RR-069 safety fix
 
 **Generated:** 2026-07-02
-**Scope:** All phases from initial measurement harness through the stopped Phase 6D variance pilot
+**Scope:** All phases from initial measurement harness through the RR-069 source-upgrade identity safety fix
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -18,9 +18,9 @@
 | High | 29 |
 | Medium | 25 |
 | Low | 5 |
-| Open | 1 |
+| Open | 0 |
 | Needs Investigation | 4 |
-| Fixed | 63 |
+| Fixed | 64 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -87,6 +87,7 @@
 | Phase 6B regression wall | 0 |
 | Phase 6C product-specific patch audit | 0 |
 | Phase 6D variance pilot | 1 |
+| RR-069 source-upgrade identity safety mini-phase | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -2288,7 +2289,7 @@ No new issue ID was opened.
 | **Phase** | Phase 6D variance pilot |
 | **Severity** | Critical |
 | **Title** | Generic model-series shopping evidence can attach to a different specific submodel |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** During constrained pilot run B2, source upgrade targeted `Roborock Q10 X5+ Robot Vacuum and Mop, Self-Emptying, Hands ...` but attached price, rating, review count, and citation from `Roborock - Q10 Series Robot Vacuum and Mop with Self-Emptying, 10,000Pa Suction,`. The source title did not identify `X5+`. A neighboring `Q10 S5+` target in the same run correctly rejected the same generic series candidate, demonstrating inconsistent specificity handling.
 
@@ -2300,26 +2301,28 @@ No new issue ID was opened.
 
 **Actual:** Generic Q10-series evidence passed the source-upgrade identity gate and donated four product-specific fields to the Q10 X5+ candidate.
 
-**Current status:** Open. The Phase 6D pilot stopped immediately after the fourth of six approved searches. No behavior fix was attempted, the unsafe fixture was preserved untracked, and rubric v1.0 was not frozen.
+**Current status:** Fixed deterministically. Source-upgrade identity now checks the target's distinguishing submodel before either the strong-model or brand-qualified-family acceptance branch. Adjacent base/suffix identities such as `Q10 X5+`, compact equivalents such as `Q10X5+`, and exact kit/model identifiers are normalized as product identity. Generic base-series/family/lineup evidence cannot donate commerce fields to a more specific target.
 
 **Suggested fix or next action:** Run a narrow fail-first identity-safety phase before resuming Phase 6D. Reproduce the exact X5+/generic-Q10 case and unrelated series/submodel controls; preserve exact same-model positives, RR-063 through RR-067 protections, query/URL provenance exclusions, and all existing source-upgrade safety gates.
 
 **Phase 6D measurement consequence:** RR-015 and RR-037 received partial two-run evidence only. The remaining two approved searches were not spent. The market-leader snapshot package and rubric freeze proposal are blocked until RR-069 is fixed deterministically and the variance pilot is explicitly re-approved.
 
+**Resolution proof:** The fail-first source-quality run passed 97/100 with only the exact Q10 X5+, monitor-series, and power-tool-series negatives failing. After the fix, focused source-quality tests passed 100/100 and the broad identity/trust matrix passed 439/439 across 32 suites. Exact `Q10 X5+`, `Q10 X5 Plus`, and `Q10X5+` evidence still attaches; generic Q10 series/plain/lineup evidence plus nearby Q10 S5+/X50+ variants do not attach. Brandless exact WD4522 evidence and all RR-063 through RR-068 protections remain green. Typecheck and eval passed, lint reported 0 errors with 3 existing warnings, and the full suite passed 786/786 across 117 suites. No live search ran. Phase 6D remains paused pending explicit approval. Implementation commit: `1411901`.
+
 ---
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (1 issue)
-- RR-069: Generic model-series shopping evidence can attach to a different specific submodel
+### Open (0 issues)
+- None.
 
 ### Needs Investigation (4 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-### Fixed (63 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-068
+### Fixed (64 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-069
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2331,4 +2334,3 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 1. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
 2. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
 3. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
-4. **RR-069** (Critical) — Generic model-series evidence attached to a specific Q10 X5+ target; fix before resuming live measurement.

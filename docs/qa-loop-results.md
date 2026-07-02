@@ -5948,3 +5948,44 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - Phase 6D stop commit: `80461e8`.
 
 Recommended direction: fix RR-069 deterministically before requesting approval to resume Phase 6D.
+
+## <span style="color:green">**Codex QA Update - 2026-07-02 (RR-069 source-upgrade identity safety)**</span>
+
+**Verdict: PASS. RR-069 is Fixed deterministically. Phase 6D remains paused at 4/6 searches and Phase 6E did not start.**
+
+### Fail-first and root cause
+
+- Focused source-quality tests passed 97/100 before the fix.
+- Only the intended failures remained: generic Q10-series evidence for Q10 X5+, generic G70B monitor-series evidence for S32BG70, and generic M18FUEL kit-series evidence for 3697-22.
+- `looksLikeSameProduct` accepted a candidate when any strong target model token appeared.
+- Q10 was a brand-qualified family token, so the RR-066 strong-model branch did not apply; generic Q10 evidence reached the family overlap path despite the target's X5+ suffix.
+
+### Fix and safety proof
+
+- Added a shared attachment-time distinguishing-submodel check before both strong-model and family acceptance.
+- Adjacent base/suffix forms, compact forms, explicit digit-dash kit identifiers, and the most specific of multiple strong identifiers are compared using source-derived model atoms.
+- Generic Q10 series/plain/lineup evidence plus Q10 S5+/X50+ nearby models cannot donate commerce fields to Q10 X5+.
+- Exact `Q10 X5+`, `Q10 X5 Plus`, and `Q10X5+` evidence still attaches.
+- Cross-category monitor and power-tool controls are green.
+- Brandless exact WD4522, exact dehumidifier, query/URL provenance exclusions, and RR-063 through RR-068 remain green.
+- Trigger, fallback, query construction, ranking, discovery, price, eligibility, images, product type, requirements, final selection, UI, and gauntlet policy did not change.
+
+### Verification
+
+```text
+fail-first source-quality: 97/100; only 3 intended failures
+focused source-quality final: 100/100
+broad identity/trust matrix: 439/439 across 32 suites
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm test: 786/786 across 117 suites
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+The Phase 6D B2 fixture replay remains M4 historical evidence of the original
+unsafe attachment. The deterministic test distilled from that trace is the M1
+current-code proof. No live search ran.
+
+- Implementation commit: `1411901`.
+
+Recommended direction: keep Phase 6D paused until Taylor explicitly approves how to resume the variance pilot.

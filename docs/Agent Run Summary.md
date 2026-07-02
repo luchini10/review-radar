@@ -1449,3 +1449,23 @@ New entries should keep the same format and stay easy to read.
 **Commit:** Phase 6D stop report and approved measurement tooling `80461e8`.
 
 **Next recommended step:** Fix RR-069 deterministically before requesting approval to resume Phase 6D.
+
+## Codex Run - 2026-07-02 RR-069 source-upgrade identity safety
+
+**Goal:** Fix only RR-069 so generic family/series commerce evidence cannot attach to a more specific model-qualified target.
+
+**Root cause:** The source-upgrade identity gate accepted any matching strong target model. For Q10 X5+, Q10 was classified as a brand-qualified family token and X5+ was not independently required, so the RR-066 strong-model guard did not run and generic Q10-series evidence passed the family path.
+
+**What changed:** A shared attachment-time guard now requires the distinguishing submodel for adjacent base/suffix identities, compact equivalents, digit-dash kit identifiers, and multiple strong model identifiers. It runs before both strong and family acceptance. Query construction, trigger, fallback, and evidence extraction were not changed.
+
+**Proof:** Fail-first passed 97/100 with only the Q10, monitor, and power-tool series/submodel negatives failing. Focused final passed 100/100; broad identity/trust coverage passed 439/439; full tests passed 786/786; typecheck and eval passed; lint reported 0 errors and 3 existing warnings.
+
+**Positive controls:** `Q10 X5+`, `Q10 X5 Plus`, and `Q10X5+` attach safely. Brandless exact WD4522 and exact dehumidifier evidence remain valid. Generic Q10 series/plain/lineup and nearby S5+/X50+ evidence attach nothing.
+
+**Fixture/live boundary:** The saved Phase 6D B2 fixture remains historical proof of the original failure. No live search ran. Phase 6D stayed paused at 4/6 searches, rubric v1.0 remained unfrozen, and Phase 6E did not start.
+
+**Issues:** RR-069 Fixed. Totals: 69 issues; 10 Critical, 29 High, 25 Medium, 5 Low; 0 Open, 4 Needs Investigation, 64 Fixed, 1 Won't Fix.
+
+**Commit:** Implementation and deterministic tests `1411901`.
+
+**Next recommended step:** Await explicit approval for how to resume Phase 6D; do not start Phase 6E.

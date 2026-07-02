@@ -1,8 +1,8 @@
 # ReviewRadar Phase 6 Reliability Gauntlet - Master Plan
 
-**Status:** Canonical merged plan; Phases 6A-6C complete; Phase 6D stopped
+**Status:** Canonical merged plan; Phases 6A-6C complete; Phase 6D paused
 **Prepared:** 2026-07-01
-**Execution state:** Phase 6D stopped after 4/6 searches on Critical RR-069; freeze and Phase 6E blocked
+**Execution state:** RR-069 fixed deterministically after the 4/6-search stop; Phase 6D resumption requires explicit approval
 **Repository:** `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 **Canonical repository path:** `docs/phase-6-reliability-gauntlet-plan.md`
 
@@ -904,9 +904,9 @@ Exit:
 Constrained run B2 attached generic Roborock Q10-series shopping evidence to a
 specific Q10 X5+ target, opening Critical RR-069. A3 and B3 were not spent.
 `docs/phase-6-variance-pilot.md` records the partial RR-015/RR-037 evidence.
-The v1.0 freeze proposal, market-leader method/snapshots, and Phase 6E remain
-blocked until RR-069 is fixed deterministically and Phase 6D resumption is
-explicitly approved.
+RR-069 was later fixed deterministically without resuming the pilot. The v1.0
+freeze proposal, market-leader method/snapshots, and Phase 6E remain blocked
+until Phase 6D resumption is explicitly approved and completed safely.
 
 Goal:
 

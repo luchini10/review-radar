@@ -1187,3 +1187,34 @@ without claiming it alone caused the observed variance.
 **Freeze rule:** A stopped two-run sample cannot freeze a variance threshold,
 rubric v1.0, leader method, or snapshots. Fix RR-069 deterministically and
 obtain explicit approval before resuming Phase 6D.
+
+---
+
+## 2026-07-02 - RR-069 distinguishing-submodel identity guard
+
+**Fail-first:** `tests/sourceQualityUpgrade.test.mjs` passed 97/100. The only
+failures were generic base-series evidence attaching to specific robot-vacuum,
+monitor, and power-tool-kit models.
+
+**Rule:** When a source-upgrade target carries a base model plus distinguishing
+submodel, source-derived evidence must carry the distinguishing identity before
+donating product-specific commerce fields. Normalize punctuation, spacing, and
+Plus forms. For multiple explicit identifiers, prefer established compact or
+digit-dash model shapes over descriptive number phrases.
+
+**Required controls:**
+- reject generic series/plain/family/lineup evidence;
+- reject nearby suffixes such as S5+ or X50+ for X5+;
+- preserve exact `Q10 X5+`, `Q10 X5 Plus`, and `Q10X5+`;
+- preserve brandless exact WD4522 evidence with no conflicting brand;
+- preserve exact hyphenated models such as RPD-411WG;
+- keep query, host, seller, URL query, and generated text excluded from identity.
+
+**Verification:** Focused source-quality 100/100; broad identity/trust matrix
+439/439 across 32 suites; full suite 786/786 across 117 suites; typecheck and
+eval pass; lint 0 errors with 3 existing warnings.
+
+**Evidence boundary:** Replaying the untracked Phase 6D B2 fixture remains M4
+historical evidence and still prints the original unsafe attachment. The
+distilled deterministic reproduction is M1 current-code proof. No live call
+ran, and Phase 6D remains paused.

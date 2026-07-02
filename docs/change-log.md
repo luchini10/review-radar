@@ -13,6 +13,15 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-02
 
+### Codex - RR-069 specific-submodel source-upgrade identity safety
+- Fixed the source-upgrade path that allowed generic Q10-series evidence to donate price, rating, review count, and citation to a specific Q10 X5+ target.
+- Added a generalized distinguishing-submodel guard for adjacent base/suffix identities, compact equivalents, explicit kit numbers, and multiple model identifiers.
+- Generic series/plain/lineup evidence and nearby Q10 S5+/X50+ models are rejected; exact `Q10 X5+`, `Q10 X5 Plus`, and `Q10X5+` evidence remains valid.
+- Added unrelated monitor and power-tool series/submodel regressions while preserving brandless exact WD4522 evidence and RR-063 through RR-068 protections.
+- Fail-first passed 97/100 with only three intended failures. Focused final passed 100/100, the broad safety matrix passed 439/439, and the full suite passed 786/786. Typecheck and eval passed; lint reported 0 errors and 3 existing warnings.
+- No live search ran. Phase 6D remains paused at 4/6 searches; Phase 6E did not start.
+- Implementation commit: `1411901`.
+
 ### Codex - Phase 6D variance pilot safety stop
 - Ran four of six approved repeated live searches before the safety gate stopped the pilot.
 - Added an offline fixture-analysis mode to `scripts/qualityConsistencyHarness.mjs` for pairwise provider, plan, pool, and final overlap; rank correlation; stage ranges; latency/cost; and RIDGID stage presence.

@@ -790,3 +790,13 @@ No production pipeline or API contract changed in Phase 6A.
 - **Watch items:** Product-page route knowledge is repeated across defensive boundaries; HP brand/unit handling and cross-brand floor-cleaner families should remain centralized and regression-tested.
 - **Cost:** Zero live calls.
 - **Next:** Phase 6D variance pilot only after explicit approval of six live searches and the estimated ~280 Serper-call budget.
+
+## 17. RR-069 specific-submodel source-upgrade identity safety (2026-07-02)
+
+- **Failure:** Phase 6D B2 attached generic Roborock Q10-series price, rating, review count, and citation evidence to a specific Q10 X5+ target.
+- **Root cause:** The source-upgrade identity gate accepted any matching strong target model. Q10 was a brand-qualified family token, so RR-066's strong-model branch did not require X5+ and the generic candidate passed the family path.
+- **Guard:** Before either strong-model or family acceptance, source-derived evidence must now prove the target's distinguishing submodel when the target carries a base series plus suffix, compact equivalent, explicit kit identifier, or multiple model identifiers.
+- **Normalization:** Punctuation, spacing, hyphens, slashes, and Plus forms are normalized. `Q10 X5+`, `Q10 X5 Plus`, and `Q10X5+` are accepted equivalents; Q10 series/plain/lineup and nearby S5+/X50+ evidence are not.
+- **Preserved:** Brandless exact-model evidence remains valid without a conflicting brand. Query text, URL query parameters, hosts, sellers, and generated card text remain excluded from identity. Trigger, fallback, query construction, ranking, discovery, price, eligibility, image, product type, requirements, final selection, UI, and API response shape are unchanged.
+- **Proof:** Fail-first 97/100; focused final 100/100; broad safety 439/439; full suite 786/786; typecheck and eval pass; lint 0 errors with 3 existing warnings.
+- **Phase state:** RR-069 is Fixed. No live search ran. Phase 6D remains paused after 4/6 searches, rubric v1.0 remains unfrozen, and Phase 6E has not started.

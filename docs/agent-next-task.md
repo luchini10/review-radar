@@ -4,12 +4,12 @@ Generated: 2026-07-02
 
 ## Current next task
 
-**Phase 6D stopped - fix Critical RR-069 before resuming the pilot**
+**RR-069 fixed - Phase 6D remains paused pending explicit approval**
 
 The Phase 6D variance pilot spent four of six approved searches and stopped on
-the master plan's safety gate. Constrained run B2 attached generic Roborock
-Q10-series price/rating/review/citation evidence to a specific Q10 X5+ target.
-The source title did not identify X5+.
+the master plan's safety gate. The later narrow RR-069 mini-phase fixed the
+generic-series/specific-submodel identity gap deterministically without
+resuming live measurement.
 
 `docs/phase-6-variance-pilot.md` contains the partial RR-015/RR-037 report:
 
@@ -21,15 +21,20 @@ The source title did not identify X5+.
   pool candidate removed at requirement filtering to five pool candidates
   with three reaching the final exact/near slate.
 
-The remaining A3/B3 searches were not spent. Rubric v1.0 was not frozen,
+The fix requires source-derived evidence to carry the distinguishing submodel
+for targets such as Q10 X5+, while preserving exact punctuation/spacing/Plus
+variants and brandless exact-model evidence. Focused tests passed 100/100, the
+broad safety matrix passed 439/439, and the full suite passed 786/786.
+
+The remaining A3/B3 searches are still unspent. Rubric v1.0 was not frozen,
 leader snapshots were not compiled, and Phase 6E did not start.
 
 The canonical register now contains 69 issues:
 
 - 10 Critical, 29 High, 25 Medium, 5 Low;
-- 1 Open, 4 Needs Investigation, 63 Fixed, 1 Won't Fix.
+- 0 Open, 4 Needs Investigation, 64 Fixed, 1 Won't Fix.
 
-RR-069 is Open. RR-014, RR-015, RR-037, and RR-045 remain Needs
+RR-069 is Fixed. RR-014, RR-015, RR-037, and RR-045 remain Needs
 Investigation.
 
 ## Master-plan amendment notice - 2026-07-01 (Claude, docs-only)
@@ -89,19 +94,16 @@ the repository file; the repo file is the only copy.
 
 ## Required next task
 
-Do not start automatically. Await a narrow fail-first behavior-fix instruction
-for **RR-069 only**.
-
-The fix should require specific source-derived submodel identity before generic
-series evidence can attach to a specific target, while preserving exact
-same-product positives and RR-063 through RR-067 protections. After a green
-deterministic fix, Phase 6D requires explicit re-approval before spending the
-two unrun pilot searches or restarting the pilot design.
+Do not start automatically. Await explicit instruction and live-budget approval
+before resuming **Phase 6D only**. Taylor must decide whether to spend the two
+unrun A3/B3 searches or restart the 2x3 pilot for a clean comparable sample.
+Do not start Phase 6E until Phase 6D completes safely and the freeze package is
+explicitly approved.
 
 Do not:
 
 - resume Phase 6D or start any later sub-phase without explicit approval;
-- fix RR-069 inside the stopped measurement phase;
+- reopen RR-069 without a deterministic regression;
 - change the v0.1-draft rubric or provisional thresholds without recording a versioned rationale;
 - implement proposed trace additions or automation from the scorecard document without approval;
 - alter the completed RR-068, RR-061, or RR-054 behavior without a proven regression;

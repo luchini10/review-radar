@@ -1492,3 +1492,22 @@ Stop. Do not start Phase 6D without explicit instruction and live-budget approva
 - Phase 6D stop commit: `80461e8`.
 
 Stop. Fix RR-069 deterministically before any further live measurement.
+
+### RR-069 source-upgrade identity safety completion record
+
+- Completed step: Narrow RR-069 behavior fix only.
+- Next step: Phase 6D remains paused. Await explicit approval to spend A3/B3 or restart the pilot; do not start Phase 6E.
+- Classification: Behavior/safety fix with M1 deterministic proof; zero live calls.
+- Stop condition hit: No new stop condition. The existing Phase 6D stop remains in force administratively until explicit resumption approval.
+- New issue IDs opened: None.
+- Existing issue IDs updated: RR-069 moved from Open to Fixed. RR-014, RR-015, RR-037, and RR-045 remain Needs Investigation.
+- Issue totals: 69 total; 10 Critical, 29 High, 25 Medium, 5 Low; 64 Fixed, 4 Needs Investigation, 1 Won't Fix, 0 Open.
+- Root cause: Generic Q10 evidence satisfied a brand-qualified family path because the target's X5+ distinguishing suffix was not required and RR-066's strong-model branch did not apply.
+- Fix: Attachment identity now requires a distinguishing submodel across normalized base/suffix, compact, kit-number, and multiple-model shapes before strong or family acceptance.
+- Verification: fail-first 97/100; focused final 100/100; broad safety 439/439; full suite 786/786; typecheck/eval pass; lint 0 errors with 3 existing warnings.
+- Fixture/live proof: Phase 6D B2 fixture replay remains historical M4 evidence; current behavior is proven by M1 tests. Live calls: 0.
+- Phase state: Phase 6D remains at 4/6 searches; rubric v1.0 is not frozen; Phase 6E did not start.
+- Implementation committed: Yes, `1411901`.
+- Docs committed: Pending this mini-phase closeout commit.
+
+Stop. Do not resume Phase 6D without explicit instruction and live-budget approval.
