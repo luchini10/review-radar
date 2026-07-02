@@ -24,6 +24,8 @@ New entries should keep the same format and stay easy to read.
 
 **Scope:** No production code, script, live fixture, generated baseline, app/API/UI behavior, ranking, discovery, identity, price, citation, eligibility, source-upgrade, requirement, or final-selection behavior changed. Phase 6C did not start.
 
+**Phase 6B commit:** `e2f3cf3`.
+
 **Next recommended step:** Phase 6C patch audit only after explicit approval.
 
 ## Codex Run - 2026-07-01 Phase 6 master-plan promotion

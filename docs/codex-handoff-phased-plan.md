@@ -1447,7 +1447,7 @@ Stop. Do not start Phase 6B without explicit instruction.
 - Verification: focused additions 22/22; typecheck passed; lint 0 errors with 3 existing warnings; full suite 782/782 across 117 suites; eval reported no red flags.
 - Live validation: None. Budget used 0.
 - Scope: No app/API/UI behavior, production code, script, fixture, generated baseline, ranking, discovery, identity, price, citation, eligibility, source-upgrade, requirement, or final-selection change.
-- Docs committed: Pending Phase 6B commit.
-- Commit hash: Pending.
+- Docs committed: Yes.
+- Phase 6B commit: `e2f3cf3`.
 
 Stop. Do not start Phase 6C without explicit instruction.

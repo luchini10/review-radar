@@ -5836,5 +5836,6 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - No production code, executable script, fixture, baseline, app/API/UI behavior, ranking, discovery, identity, price, citation, eligibility, source-upgrade, requirement, or final-selection behavior changed.
 - `.claude/`, two generated baseline files, and 22 local live fixture JSON files remain untracked and excluded.
 - No `test:wall` automation was added; it remains an approval-only proposal.
+- Phase 6B commit: `e2f3cf3`.
 
 Recommended direction: Phase 6C patch audit only after explicit instruction.
