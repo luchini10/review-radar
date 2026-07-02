@@ -8,6 +8,26 @@ The technical overview lives in `ReviewRadar-Overview.md`.
 
 New entries should keep the same format and stay easy to read.
 
+## Codex Run - 2026-07-02 Phase 6C
+
+**Goal:** Audit the production tree for product-specific patches without changing behavior or starting the live variance pilot.
+
+**What it checked:** Audited all 61 tracked production TypeScript/JavaScript files, 62 production-touching commits since 2026-06-20, issue-specific model/brand/product terms, model-token literals, conditional/scoring uses, 207 unique hard-coded domains across 20 files, and production imports.
+
+**Verdict:** PASS WITH WATCH ITEMS. Five finding groups are acceptable generalized data, four are acceptable source/category rules, one is comments/examples with no behavior, and zero are must-generalize blockers.
+
+**Watch items:** Product-page host/path rules are repeated across defensive boundaries and can drift. HP unit/brand disambiguation and named floor-cleaner families are justified shared mechanisms but should stay centralized and regression-tested.
+
+**What changed:** Added `docs/phase-6-product-specific-patch-audit.md` and updated Phase 6 tracking documents only.
+
+**Tests run:** Typecheck passed; lint reported 0 errors and 3 existing warnings; full suite passed 782/782 across 117 suites; eval reported no red flags.
+
+**Live checks run:** None. Phase 6C used zero live calls.
+
+**Scope:** No production code, test, script, fixture, baseline, app/API/UI behavior, ranking, discovery, identity, price, citation, eligibility, source-upgrade, product-type, requirement, or final-selection behavior changed. Phase 6D did not start.
+
+**Next recommended step:** Phase 6D variance pilot only after explicit approval of all six searches and the estimated ~280 Serper-call budget.
+
 ## Codex Run - 2026-07-01 Phase 6B
 
 **Goal:** Build the zero-live Phase 6 regression wall for RR-007 through RR-068 without changing production behavior.

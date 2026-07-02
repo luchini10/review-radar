@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase 6B
+## Compiled for AI Agent Consumption — Phase 0 through Phase 6C
 
-**Generated:** 2026-07-01
-**Scope:** All phases from initial measurement harness through the completed Phase 6B regression wall
+**Generated:** 2026-07-02
+**Scope:** All phases from initial measurement harness through the completed Phase 6C product-specific patch audit
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -85,6 +85,7 @@
 | Phase 6A master-plan reconciliation | 0 |
 | Phase 6 master-plan source-of-truth promotion | 0 |
 | Phase 6B regression wall | 0 |
+| Phase 6C product-specific patch audit | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -2253,6 +2254,22 @@ No new issue ID was opened.
 **Verification:** Focused additions passed 22/22. Typecheck passed; lint reported 0 errors and 3 existing warnings; the full suite passed 782/782 across 117 suites; eval reported no red flags.
 
 **Scope:** Zero live calls. No production code, app/API/UI behavior, scripts, live fixtures, generated baselines, ranking, discovery, identity, price, citation, eligibility, source-upgrade, requirement, or final-selection behavior changed.
+
+---
+
+### PHASE 6C - PRODUCT-SPECIFIC PATCH AUDIT (2026-07-02)
+
+**Verdict:** PASS WITH WATCH ITEMS. The static audit found no unresolved must-generalize production patch and no new behavior defect.
+
+**Register:** 68 issues; 63 Fixed, 4 Needs Investigation, 1 Won't Fix, 0 Open. No issue was opened, closed, or reclassified.
+
+**Audit result:** All 61 tracked production TypeScript/JavaScript files were audited. Findings classify as 5 acceptable generalized-data groups, 4 acceptable source/category-rule groups, 1 suspicious but non-behavioral comment/example group, and 0 must-generalize blockers.
+
+**Watch items:** Retailer/product-page route knowledge is duplicated across several defensive pipeline boundaries and may drift. The `HP` brand/unit collision and named cross-brand floor-cleaner families should remain centralized shared data with regression tests. These are maintenance risks, not current defects.
+
+**Verification:** Typecheck passed; lint reported 0 errors and 3 existing warnings; the full suite passed 782/782 across 117 suites; offline eval reported no red flags.
+
+**Scope:** Zero live calls. No production code, test, script, fixture, baseline, app/API/UI behavior, ranking, discovery, identity, price, citation, eligibility, source-upgrade, product-type, requirement, or final-selection behavior changed.
 
 ---
 

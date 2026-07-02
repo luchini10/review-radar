@@ -11,6 +11,15 @@ Update this file after:
 
 Do not update this file for tiny typo fixes, formatting-only edits, or internal cleanup that does not change behavior.
 
+## 2026-07-02
+
+### Codex - Phase 6C product-specific patch audit
+- Added `docs/phase-6-product-specific-patch-audit.md` after auditing all 61 tracked production TypeScript/JavaScript files.
+- Classified 5 generalized-data groups, 4 source/category-rule groups, 1 non-behavioral comment/example group, and 0 must-generalize blockers.
+- Recorded watch items for duplicated retailer route knowledge, centralized HP brand/unit disambiguation, and cross-brand floor-cleaner taxonomy maintenance.
+- Typecheck and offline eval passed; lint reported 0 errors and 3 existing warnings; the full suite passed 782/782 across 117 suites.
+- No issue status, production code, test, script, fixture, baseline, live budget, or app behavior changed. Phase 6D did not start.
+
 ## 2026-07-01
 
 ### Codex - Phase 6B regression wall

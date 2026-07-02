@@ -16,20 +16,20 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
-Current phase: **Phase 6B regression wall complete. Phase 6C requires explicit instruction.**
+Current phase: **Phase 6C product-specific patch audit complete. Phase 6D requires explicit instruction and live-budget approval.**
 
-Phase 6B mapped all 62 issues from RR-007 through RR-068 in `docs/phase-6-regression-wall.md`. The wall found two direct deterministic gaps and closed both in tests: RR-012 schema availability formatting and RR-025 near-match funnel retention. No production behavior gap was found.
+Phase 6C audited all 61 tracked production TypeScript/JavaScript files. `docs/phase-6-product-specific-patch-audit.md` records 5 acceptable generalized-data groups, 4 acceptable source/category-rule groups, 1 suspicious but non-behavioral comment/example group, and 0 must-generalize blockers.
 
 `docs/phase-6-reliability-gauntlet-plan.md` is the sole source of truth for all Phase 6 scope, sequencing, budgets, gates, evidence rules, and completion criteria. Every supporting Phase 6 artifact implements that master and must not override it.
 
-The register remains 68 issues: 63 Fixed, 4 Needs Investigation, 1 Won't Fix, and 0 Open. RR-014/RR-015 remain measurement-only and RR-037/RR-045 remain provider-variance-bound. Phase 6B used zero live calls and changed no production code, scripts, fixtures, or behavior.
+The register remains 68 issues: 63 Fixed, 4 Needs Investigation, 1 Won't Fix, and 0 Open. RR-014/RR-015 remain measurement-only and RR-037/RR-045 remain provider-variance-bound. Phase 6C used zero live calls and changed no production code, tests, scripts, fixtures, or behavior.
 
 Recommended next phase:
 
-- Await explicit instruction for Phase 6C patch-audit work only.
-- Use the canonical master and `docs/phase-6-regression-wall.md`; do not reinterpret the wall's measurement/provider classifications as deterministic failures.
+- Await explicit instruction and approved budget for the Phase 6D variance pilot only.
+- Use the canonical master, regression wall, and patch audit. Do not reinterpret maintenance watch items as product defects.
 - Preserve RR-068, RR-061/RR-054, RR-041/RR-042, RR-067, and all RR-063 through RR-066 protections.
-- Do not start the Phase 6D live variance pilot, rubric freeze, or baseline.
+- Phase 6D is exactly six live searches: `shop vac` x3 plus one approved fixture-overlapping constrained query x3. Do not start Phase 6E, dossier analysis, or fixes.
 
 Note: historical sections in this document that use "Phase 6" for earlier product-type work retain their original labels. They do not mean the future reliability Phase 6 has started.
 
@@ -1451,3 +1451,23 @@ Stop. Do not start Phase 6B without explicit instruction.
 - Phase 6B commit: `e2f3cf3`.
 
 Stop. Do not start Phase 6C without explicit instruction.
+
+### Phase 6C product-specific patch audit completion record
+
+- Completed step: Static audit of all tracked production TypeScript/JavaScript files for product-shaped production logic.
+- Next step: Phase 6D variance pilot only after explicit approval of six live searches and the estimated ~280 Serper-call budget.
+- Classification: Diagnostic/static audit; documentation only.
+- Measurement rung: M1 deterministic source audit.
+- Stop condition hit: No. No must-generalize blocker or Critical safety issue was found.
+- New issue IDs opened: None.
+- Existing issue IDs updated: No status changes.
+- Issue totals: 68 total; 9 Critical, 29 High, 25 Medium, 5 Low; 63 Fixed, 4 Needs Investigation, 1 Won't Fix, 0 Open.
+- Audit result: 5 acceptable generalized-data groups, 4 acceptable source/category-rule groups, 1 suspicious but non-behavioral group, 0 must-generalize blockers.
+- Live budget spent: 0 searches / 0 Serper calls.
+- Fixtures created or reassessed: None.
+- Verification: typecheck passed; lint 0 errors with 3 existing warnings; full suite 782/782 across 117 suites; eval reported no red flags.
+- Scope: No production code, tests, scripts, fixtures, baselines, app/API/UI behavior, ranking, discovery, identity, price, citation, eligibility, source-upgrade, product-type, requirement, or final-selection change.
+- Docs committed: Pending Phase 6C commit.
+- Commit hash: Pending.
+
+Stop. Do not start Phase 6D without explicit instruction and live-budget approval.

@@ -1,36 +1,38 @@
 # Agent Next Task
 
-Generated: 2026-07-01
+Generated: 2026-07-02
 
 ## Current next task
 
-**Phase 6B complete - Phase 6C patch audit requires explicit instruction**
+**Phase 6C complete - Phase 6D variance pilot requires explicit instruction**
 
-Phase 6B created `docs/phase-6-regression-wall.md` and mapped every issue from RR-007 through RR-068 to deterministic protection, measurement-only status, provider variance, historical/docs guards, or accepted compatibility behavior.
+Phase 6C created `docs/phase-6-product-specific-patch-audit.md` after auditing all 61 tracked production TypeScript/JavaScript files.
 
 The sole Phase 6 program source of truth is `docs/phase-6-reliability-gauntlet-plan.md`. Supporting scorecard, batch, wall, audit, benchmark, and report documents implement that master and cannot override its scope, sequencing, budgets, gates, or completion criteria.
 
-The wall contains 62 issues:
+Phase 6C verdict: **PASS WITH WATCH ITEMS**.
 
-- 57 Fixed;
-- 4 Needs Investigation;
-- 1 Won't Fix.
+- 5 finding groups are acceptable generalized data.
+- 4 finding groups are acceptable source/category rules.
+- 1 finding group is suspicious but non-behavioral comments/examples.
+- 0 must-generalize blockers were found.
 
-Two direct deterministic test gaps were closed without production changes:
+Watch items are maintenance risks, not current defects:
 
-- RR-012 now directly verifies shopper-friendly schema availability labels.
-- RR-025 now directly verifies that `afterRequirementFilter` retains near-match names.
+- duplicated retailer/product-page route knowledge can drift across defensive pipeline boundaries;
+- the `HP` brand/unit collision should remain centralized;
+- named cross-brand floor-cleaner family terms should remain shared taxonomy data, not become a product denylist.
 
-RR-014 and RR-015 remain measurement-only. RR-037 and RR-045 remain provider-variance-bound. No deterministic behavior blocker was found.
+No production code, test, script, fixture, baseline, app/API/UI behavior, ranking, discovery, identity, price, citation, eligibility, source-upgrade, product-type, requirement, or final-selection behavior changed. Live calls: 0.
 
 The canonical register contains 68 issues:
 
 - 9 Critical, 29 High, 25 Medium, 5 Low;
 - 0 Open, 4 Needs Investigation, 63 Fixed, 1 Won't Fix.
 
-RR-014, RR-015, RR-037, and RR-045 intentionally remain Needs Investigation. Deterministic green tests do not close those aggregate or provider-bound questions.
+RR-014, RR-015, RR-037, and RR-045 intentionally remain Needs Investigation. RR-037 belongs to the Phase 6D pilot; RR-045 belongs to Phase 6E.
 
-Verification passed: focused additions 22/22; typecheck; lint with 0 errors and 3 existing warnings; 782/782 tests across 117 suites; eval with no red flags. Live calls: 0.
+Verification passed: typecheck; lint with 0 errors and 3 existing warnings; 782/782 tests across 117 suites; eval with no red flags.
 
 ## Master-plan amendment notice - 2026-07-01 (Claude, docs-only)
 
@@ -89,17 +91,17 @@ the repository file; the repo file is the only copy.
 
 ## Required next task
 
-Do not start automatically. Await a separate instruction for **Phase 6C patch audit only**.
+Do not start automatically. Await a separate instruction and approved six-search budget for **Phase 6D variance pilot only**.
 
-Phase 6C should audit the accumulated patch set against the canonical plan and regression wall. Do not begin the Phase 6D variance pilot, rubric freeze, live baseline, dossier analysis, or fixes.
+Phase 6D is the first live Phase 6 step. Its fixed design is `shop vac` repeated three times plus one approved fixture-overlapping constrained query repeated three times. Report the estimated ~280 Serper calls before execution. Do not begin the Phase 6E baseline, dossier analysis, or fixes.
 
 Do not:
 
-- start Phase 6C or any later sub-phase without explicit approval;
+- start Phase 6D or any later sub-phase without explicit approval and the exact constrained query;
 - change the v0.1-draft rubric or provisional thresholds without recording a versioned rationale;
 - implement proposed trace additions or automation from the scorecard document without approval;
 - alter the completed RR-068, RR-061, or RR-054 behavior without a proven regression;
-- change ranking, discovery breadth, final selection, price, citation, source-upgrade behavior, or any app behavior during regression-wall work;
+- change ranking, discovery breadth, final selection, price, citation, source-upgrade behavior, or any app behavior during the variance pilot;
 - weaken RR-063 through RR-067 source-derived identity rules;
 - weaken price, citation, product, requirement, product-type, or identity trust gates;
 - run a live search or full baseline without approval.
@@ -110,6 +112,7 @@ Reference:
 - `docs/phase-6-scorecard-template.md`
 - `docs/phase-6-live-search-batches.md`
 - `docs/phase-6-regression-wall.md`
+- `docs/phase-6-product-specific-patch-audit.md`
 - `docs/RR-Issues-Report.md`
 - `docs/codex-handoff-phased-plan.md`
-- `docs/qa-loop-results.md` latest Phase 6B entry
+- `docs/qa-loop-results.md` latest Phase 6C entry

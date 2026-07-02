@@ -1,8 +1,8 @@
 # ReviewRadar Phase 6 Reliability Gauntlet - Master Plan
 
-**Status:** Canonical merged plan; Phases 6A and 6B complete
+**Status:** Canonical merged plan; Phases 6A, 6B, and 6C complete
 **Prepared:** 2026-07-01
-**Execution state:** Phase 6A instrument and Phase 6B regression wall complete; Phase 6C patch audit requires explicit instruction
+**Execution state:** Phase 6C product-specific patch audit complete; Phase 6D variance pilot requires explicit instruction
 **Repository:** `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 **Canonical repository path:** `docs/phase-6-reliability-gauntlet-plan.md`
 
@@ -875,6 +875,9 @@ Exit:
 - stop for Phase 6C approval.
 
 ### Phase 6C - Product-specific patch audit
+
+**Status:** Completed. Static audit and handoff documentation committed in the
+Phase 6C closeout; see `docs/phase-6-product-specific-patch-audit.md`.
 
 Goal:
 

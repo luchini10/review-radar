@@ -5839,3 +5839,50 @@ node scripts/eval-pipeline.mjs: no red-flag issues
 - Phase 6B commit: `e2f3cf3`.
 
 Recommended direction: Phase 6C patch audit only after explicit instruction.
+
+## <span style="color:green">**Codex QA Update - 2026-07-02 (Phase 6C product-specific patch audit)**</span>
+
+**Verdict: PASS WITH WATCH ITEMS. No must-generalize production patch was found. Phase 6D did not start.**
+
+### Audit scope and method
+
+- Audited all 61 tracked production TypeScript/JavaScript files: 57 under `lib/`, 2 API routes, and 2 app modules.
+- Reviewed 62 production-touching commits since 2026-06-20.
+- Searched issue-specific brands/products/models, model-token literals, product/brand/retailer conditionals, scoring/final-selection logic, host/path exceptions, and production imports.
+- Inventoried 618 domain-literal occurrences representing 207 unique domains across 20 production files, then inspected each behavioral cluster in context.
+- Verified production does not import tests, fixtures, benchmarks, issue IDs, leader snapshots, or Phase 6 measurement artifacts.
+
+### Findings
+
+- Acceptable generalized-data groups: 5.
+- Acceptable source/category-rule groups: 4.
+- Suspicious but non-behavioral comment/example groups: 1.
+- Must-generalize blockers: 0.
+- No issue-specific Phase 3-5 model token appears in executable production logic. CrossWave/HydroVac/Floor One/FloorMate occur only in the shared cross-brand household-floor-cleaner taxonomy.
+- No product-specific scoring or final-selection adjustment exists.
+
+### Watch items
+
+- Product-page host/path knowledge is repeated across discovery, citation validation, primary-link selection, and final validation. The duplication is defensive but may drift.
+- HP brand/horsepower disambiguation is justified shared collision handling and should remain centralized.
+- Named floor-cleaner families are justified cross-brand taxonomy data and must not grow into a one-product denylist.
+
+No issue was opened or reclassified because these are maintenance risks, not current defects.
+
+### Verification
+
+```text
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm test: 782/782 pass across 117 suites
+node scripts/eval-pipeline.mjs: no red-flag issues
+```
+
+### Scope
+
+- Live calls: 0.
+- Fixtures created/reassessed: none.
+- No production code, tests, scripts, fixtures, baselines, app/API/UI behavior, ranking, discovery, identity, price, citation, eligibility, source-upgrade, product-type, requirement, or final-selection behavior changed.
+- Proposed AST-aware/static tripwires were documented but not implemented.
+
+Recommended direction: Phase 6D variance pilot only after explicit approval of the six-search plan and estimated ~280 Serper-call budget.

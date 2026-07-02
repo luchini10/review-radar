@@ -780,3 +780,13 @@ No production pipeline or API contract changed in Phase 6A.
 - **Behavior boundary:** No production pipeline, API, UI, script, fixture, ranking, discovery, trust, identity, eligibility, source-upgrade, requirement, or final-selection behavior changed.
 - **Cost:** Zero live calls.
 - **Next:** Phase 6C patch audit only after explicit instruction.
+
+## 16. Phase 6C product-specific patch audit status (2026-07-02)
+
+- **State:** Phase 6C is complete with verdict PASS WITH WATCH ITEMS. `docs/phase-6-product-specific-patch-audit.md` is the static process-gate record.
+- **Scope:** All 61 tracked production TypeScript/JavaScript files were audited. No production behavior, test, script, fixture, baseline, or live-search change occurred.
+- **Result:** 5 acceptable generalized-data groups, 4 acceptable source/category-rule groups, 1 non-behavioral comment/example group, and 0 must-generalize blockers.
+- **Preserved mechanisms:** Shared brand aliases, product-type and variant vocabularies, category/spec/feature registries, source/domain packs, and narrow provider URL/image adapters remain legitimate generalized infrastructure.
+- **Watch items:** Product-page route knowledge is repeated across defensive boundaries; HP brand/unit handling and cross-brand floor-cleaner families should remain centralized and regression-tested.
+- **Cost:** Zero live calls.
+- **Next:** Phase 6D variance pilot only after explicit approval of six live searches and the estimated ~280 Serper-call budget.
