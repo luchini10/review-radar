@@ -6,6 +6,7 @@ import {
 import { extractStructuredRequirements, getPremiumCap } from "./requirementExtraction.ts";
 import { baseProductCategoryFromQuery } from "./productCategory.ts";
 import { selectedSmartFeatureSearchText } from "./smartFeatureSelection.ts";
+import type { SearchPlanObservabilityObserver } from "./searchObservabilityTypes.ts";
 import type {
   RecommendationApiRequest,
   SearchPlan,
@@ -349,6 +350,7 @@ function omitPhrasesAlreadyInBase(phrases: string[], base: string) {
 
 function addQuery(
   queries: SearchQueryCandidate[],
+  observer: SearchPlanObservabilityObserver | undefined,
   stage: SearchQueryStage,
   family: SearchQueryFamily,
   query: string,
@@ -359,14 +361,27 @@ function addQuery(
     return;
   }
 
-  queries.push({
+  const candidate: SearchQueryCandidate = {
     family,
     query: clean,
     stage,
+  };
+  const queryId = observer?.registerSearchQuery({
+    origin: "deterministic_plan",
+    phase: "deterministic_plan_assembly",
+    query: clean,
+    family,
+    stage,
+    sourceDetail: family,
   });
+
+  queries.push(observer?.attachSearchQueryId(candidate, queryId) || candidate);
 }
 
-export function generateSearchPlan(input: RecommendationApiRequest): SearchPlan {
+export function generateSearchPlan(
+  input: RecommendationApiRequest,
+  observer?: SearchPlanObservabilityObserver,
+): SearchPlan {
   const category = baseProductCategoryFromQuery(input.query);
   const categoryGroup = detectCategoryGroup(category);
   const sourcePack = getSourcePack(categoryGroup);
@@ -403,19 +418,32 @@ export function generateSearchPlan(input: RecommendationApiRequest): SearchPlan 
   const reviewBase = phrase([ovenGasBase, baseSearchText, preferenceText]);
   const retailerQueries = sourcePack.retailerDomains
     .slice(0, config.maxRetailerDomainQueries)
-    .map((domain, index) => ({
-      family: "retailer_domain" as const,
-      query: sourceDomainQuery(domain, productBase),
-      stage: (index < 3 ? 1 : index < 5 ? 2 : 3) as SearchQueryStage,
-    }));
+    .map((domain, index) => {
+      const candidate = {
+        family: "retailer_domain" as const,
+        query: sourceDomainQuery(domain, productBase),
+        stage: (index < 3 ? 1 : index < 5 ? 2 : 3) as SearchQueryStage,
+      };
+      const queryId = observer?.registerSearchQuery({
+        origin: "retailer_domain",
+        phase: "deterministic_plan_assembly",
+        query: candidate.query,
+        family: candidate.family,
+        stage: candidate.stage,
+        sourceDetail: domain,
+      });
+
+      return observer?.attachSearchQueryId(candidate, queryId) || candidate;
+    });
   const queries: SearchQueryCandidate[] = [];
 
-  addQuery(queries, 1, "canonical_shopping", phrase([category, searchText || hardText, preferenceText, budget]));
-  addQuery(queries, 1, "canonical_shopping", phrase([ovenGasBase, primaryBaseRequirement, budget]));
-  addQuery(queries, 1, "hard_filter", phrase([primaryRequirement, category, budget]));
-  addQuery(queries, 1, "hard_filter", phrase([secondRequirement, ovenGasBase, budget]));
+  addQuery(queries, observer, 1, "canonical_shopping", phrase([category, searchText || hardText, preferenceText, budget]));
+  addQuery(queries, observer, 1, "canonical_shopping", phrase([ovenGasBase, primaryBaseRequirement, budget]));
+  addQuery(queries, observer, 1, "hard_filter", phrase([primaryRequirement, category, budget]));
+  addQuery(queries, observer, 1, "hard_filter", phrase([secondRequirement, ovenGasBase, budget]));
   addQuery(
     queries,
+    observer,
     1,
     "synonym",
     phrase([
@@ -427,47 +455,87 @@ export function generateSearchPlan(input: RecommendationApiRequest): SearchPlan 
     ]),
   );
   if (ovenGasBase === "gas range") {
-    addQuery(queries, 1, "canonical_shopping", phrase(["stainless steel gas range", budget]));
-    addQuery(queries, 2, "canonical_shopping", phrase(["freestanding gas range", baseSearchText, budget]));
-    addQuery(queries, 2, "canonical_shopping", phrase(["gas stove", baseSearchText, budget]));
+    addQuery(queries, observer, 1, "canonical_shopping", phrase(["stainless steel gas range", budget]));
+    addQuery(queries, observer, 2, "canonical_shopping", phrase(["freestanding gas range", baseSearchText, budget]));
+    addQuery(queries, observer, 2, "canonical_shopping", phrase(["gas stove", baseSearchText, budget]));
   }
-  addQuery(queries, 1, "canonical_shopping", phrase([synonyms[3] || category, primaryBaseRequirement, "sale", budget]));
+  addQuery(queries, observer, 1, "canonical_shopping", phrase([synonyms[3] || category, primaryBaseRequirement, "sale", budget]));
   queries.push(...retailerQueries.filter((query) => query.stage === 1));
-  addQuery(queries, 1, "canonical_shopping", phrase([category, "product page", searchText || hardText, preferenceText]));
+  addQuery(queries, observer, 1, "canonical_shopping", phrase([category, "product page", searchText || hardText, preferenceText]));
 
   queries.push(...retailerQueries.filter((query) => query.stage === 2));
-  addQuery(queries, 2, "owner_experience", phrase([synonyms[1] || category, "reddit", searchText || hardText]));
-  addQuery(queries, 2, "owner_experience", phrase([synonyms[1] || category, "YouTube review", primaryBaseRequirement]));
+  addQuery(queries, observer, 2, "owner_experience", phrase([synonyms[1] || category, "reddit", searchText || hardText]));
+  addQuery(queries, observer, 2, "owner_experience", phrase([synonyms[1] || category, "YouTube review", primaryBaseRequirement]));
   addQuery(
     queries,
+    observer,
     2,
     "editorial_review",
     sourceDomainQuery(sourcePack.expertReviewDomains[0] || "", phrase(["best", reviewBase, budget])),
   );
   addQuery(
     queries,
+    observer,
     2,
     "owner_experience",
     sourceDomainQuery(sourcePack.ownerDiscussionDomains[0] || "", phrase([reviewBase, "owner reviews", avoid.join(" ")])),
   );
-  addQuery(queries, 2, "canonical_shopping", phrase([synonyms[4] || synonyms[3] || category, "best value", budget]));
-  addQuery(queries, 2, "canonical_shopping", phrase([synonyms[1] || category, "premium best quality", premiumBudget]));
+  addQuery(queries, observer, 2, "canonical_shopping", phrase([synonyms[4] || synonyms[3] || category, "best value", budget]));
+  addQuery(queries, observer, 2, "canonical_shopping", phrase([synonyms[1] || category, "premium best quality", premiumBudget]));
 
   queries.push(...retailerQueries.filter((query) => query.stage === 3));
-  addQuery(queries, 3, "editorial_review", phrase([synonyms[1] || category, "complaints problems long term"]));
+  addQuery(queries, observer, 3, "editorial_review", phrase([synonyms[1] || category, "complaints problems long term"]));
   addQuery(
     queries,
+    observer,
     3,
     "fallback",
     sourceDomainQuery(sourcePack.manufacturerDomains[0] || "", phrase([reviewBase, "official specs"])),
   );
-  addQuery(queries, 3, "fallback", phrase([synonyms[2] || category, "top rated", primaryBaseRequirement]));
-  addQuery(queries, 3, "fallback", phrase([category, "dimensions specs", searchText || hardText]));
+  addQuery(queries, observer, 3, "fallback", phrase([synonyms[2] || category, "top rated", primaryBaseRequirement]));
+  addQuery(queries, observer, 3, "fallback", phrase([category, "dimensions specs", searchText || hardText]));
 
-  const uniqueQueries = unique(queries, (item) => item.query);
-  const pass1 = uniqueQueries.filter((query) => query.stage === 1).slice(0, 8);
-  const pass2 = uniqueQueries.filter((query) => query.stage === 2).slice(0, 6);
-  const pass3 = uniqueQueries.filter((query) => query.stage === 3).slice(0, 4);
+  const uniqueQueries: SearchQueryCandidate[] = [];
+  const seenQueries = new Map<string, string | undefined>();
+
+  for (const query of queries) {
+    const key = normalize(query.query);
+
+    if (!key) {
+      continue;
+    }
+    if (seenQueries.has(key)) {
+      observer?.recordQueryMerge(
+        observer.searchQueryId(query),
+        seenQueries.get(key),
+      );
+      continue;
+    }
+
+    seenQueries.set(key, observer?.searchQueryId(query));
+    uniqueQueries.push(query);
+  }
+
+  function observedStage(
+    stage: SearchQueryStage,
+    limit: number,
+  ) {
+    const candidates = uniqueQueries.filter((query) => query.stage === stage);
+
+    for (const query of candidates.slice(limit)) {
+      observer?.recordQueryCull(
+        observer.searchQueryId(query),
+        "pass_stage_truncation",
+        `deterministic pass-${stage} cap ${limit}`,
+      );
+    }
+
+    return candidates.slice(0, limit);
+  }
+
+  const pass1 = observedStage(1, 8);
+  const pass2 = observedStage(2, 6);
+  const pass3 = observedStage(3, 4);
   const allQueries = [...pass1, ...pass2, ...pass3];
 
   return {

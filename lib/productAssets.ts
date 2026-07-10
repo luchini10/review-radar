@@ -412,6 +412,13 @@ async function getImageFromSerper(
   const sources = await searchSerperImageEvidence(
     `${product.name} product image`,
     3,
+    {
+      origin: "image",
+      phase: "product_asset_enrichment",
+      purpose: "image",
+      originalQuery: `${product.name} product image`,
+      sourceDetail: product.name,
+    },
   );
   const candidates: ProductImageCandidate[] = sources.flatMap((source) => {
     const match = source.snippet.match(/\bImage:\s*(https?:\/\/\S+)/i);

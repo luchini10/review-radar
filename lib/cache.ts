@@ -3,6 +3,8 @@ type CacheEntry<T> = {
   value: T;
 };
 
+type CacheLookupObserver = (outcome: "hit" | "miss") => void;
+
 const cache = new Map<string, CacheEntry<unknown>>();
 
 function now() {
@@ -24,13 +26,16 @@ export async function getCachedOrLoad<T>(
   key: string,
   ttlMs: number,
   loader: () => Promise<T>,
+  onLookup?: CacheLookupObserver,
 ) {
   const existing = cache.get(key) as CacheEntry<T> | undefined;
 
   if (existing && existing.expiresAt > now()) {
+    onLookup?.("hit");
     return existing.value;
   }
 
+  onLookup?.("miss");
   const value = await loader();
   cache.set(key, {
     expiresAt: now() + ttlMs,

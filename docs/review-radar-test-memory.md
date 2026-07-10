@@ -1297,3 +1297,30 @@ not stability evidence. Report empty pair arrays and unavailable inference.
 
 **Cost and checks:** 2/6 live searches, 75 observed Serper queries; four calls
 blocked. Typecheck/eval pass, lint 0 errors/3 warnings, full suite 791/791.
+
+---
+
+## 2026-07-10 - Phase A request-scoped search-observability ledger
+
+**Scope:** Debug-only instrumentation inside `debug.stageFunnel.searchLedger`.
+No live provider calls and no search/ranking/trust behavior changes.
+
+**Stable test entry points:**
+
+- `tests/searchObservabilityLedger.test.mjs` mocks Serper `fetch` and covers retry/fallback attempt linkage, cache hit/miss dual hooks, query dedupe/cull/truncation/recategorization, bounded result digests, candidate provenance unions and merge IDs, exact first-loss assignment, post-discovery search origins, reconciliation, raw AI planning JSON, privacy canaries, disabled-debug behavior, flags, and commit header fields.
+- `tests/recommendationApiContract.test.mjs` proves the ledger is emitted inside the existing stage funnel only for debug requests.
+- `tests/replayFixtures.test.mjs` proves saved ledgers are preserved and summarized without Serper/OpenAI calls and that older fixtures remain compatible.
+- `scripts/benchmark-search-ledger.mjs` compares representative plan assembly/serialization with the ledger disabled and enabled using alternating order and trimmed means. Default result: 0.757 ms/request overhead, 0.0009% projected against 84 seconds, within the under-200-ms/under-2% budget.
+
+**Trace fields to preserve:**
+
+- `header`: request/commit, `REVIEW_RADAR_*` flags, models, initial cache-empty state.
+- `rawAi.strategy` and `rawAi.gapCheck`: strict-schema JSON only; never prompts.
+- `planAssembly`: stable query ID/origin, original/normalized/outbound query, status, cap/cull/merge target, events.
+- `dispatch.cacheLookups`, `.attempts`, and `.reconciliation`: sanitized bodies and at most 10 result digests per attempt; never keys or headers.
+- `candidateLineage`: multi-query provenance, merge/collapse target, stage results, final outcome/score/selection, one first loss.
+- `contributions.byQuery` and `.byOrigin`: zero-contribution applies only to product discovery.
+
+**Regression rule:** Client-shared plan modules accept an optional observer and must not import the server-only `AsyncLocalStorage` implementation. `npm run build` protects this boundary.
+
+**Verification:** 802/802 tests across 118 suites; typecheck/build/eval pass; lint 0 errors/3 existing warnings. Live calls: 0.

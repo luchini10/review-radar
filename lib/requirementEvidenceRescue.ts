@@ -1493,9 +1493,20 @@ async function applyCandidateEvidence(
   fact: MissingFact,
   category: string,
 ) {
+  const rescueOrigin = fact.rubricUnknownTopic
+    ? "rubric_fact_rescue"
+    : "requirement_fact_rescue";
+  const rescueQuery = buildRescueShoppingQuery(product, category);
   const candidates = await searchSerperShopping(
-    buildRescueShoppingQuery(product, category),
+    rescueQuery,
     category,
+    {
+      origin: rescueOrigin,
+      phase: "missing_requirement_evidence_rescue",
+      purpose: "requirement_rescue",
+      originalQuery: rescueQuery,
+      sourceDetail: fact.label,
+    },
   );
   let updated = product;
   let metadata: ProductMetadata = updated.metadata || { offers: [] };
@@ -1605,7 +1616,15 @@ async function applyOrganicEvidence(
     return product;
   }
 
-  const sources = await searchSerperOrganicEvidence(query, 4);
+  const sources = await searchSerperOrganicEvidence(query, 4, {
+    origin: fact.rubricUnknownTopic
+      ? "rubric_fact_rescue"
+      : "requirement_fact_rescue",
+    phase: "missing_requirement_evidence_rescue",
+    purpose: "requirement_rescue",
+    originalQuery: query,
+    sourceDetail: fact.label,
+  });
   let updated = product;
 
   for (const source of sources) {
@@ -2202,6 +2221,12 @@ export async function upgradeWeakSourceEvidence<T extends RecommendationResult>(
     ((query, searchCategory) =>
       searchSerperShoppingWithDiagnostics(query, searchCategory, {
         allowGoogleShoppingOfferEvidence: true,
+      }, {
+        origin: "source_quality_upgrade",
+        phase: "source_quality_upgrade",
+        purpose: "source_upgrade",
+        originalQuery: query,
+        sourceDetail: searchCategory,
       }));
 
   const seen = new Set<string>();

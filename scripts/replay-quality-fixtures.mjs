@@ -125,6 +125,27 @@ export function analyzeFixture(payload) {
   const sourceUpgradeDecisions =
     stageFunnel?.sourceUpgradeDecisions ?? null;
   const sourceUpgradeTraces = stageFunnel?.sourceUpgradeTraces || null;
+  const searchLedger = stageFunnel?.searchLedger || null;
+  const searchLedgerAnalysis = searchLedger
+    ? {
+        requestId: searchLedger.header?.requestId || "unknown",
+        commitHash: searchLedger.header?.commitHash || "unknown",
+        plannedQueries: searchLedger.planAssembly?.length || 0,
+        dispatchedQueries:
+          searchLedger.planAssembly?.filter((query) => query.status === "dispatched")
+            .length || 0,
+        culledQueries:
+          searchLedger.planAssembly?.filter((query) => query.status === "culled")
+            .length || 0,
+        physicalAttempts: searchLedger.dispatch?.attempts?.length || 0,
+        reconciliation: searchLedger.dispatch?.reconciliation || null,
+        candidates: searchLedger.candidateLineage?.candidates?.length || 0,
+        discardedCandidates:
+          searchLedger.candidateLineage?.discardedCandidateCount || 0,
+        unknownFirstLossCount:
+          searchLedger.candidateLineage?.unknownFirstLossCount || 0,
+      }
+    : null;
 
   const finalExact = result.exactMatches || [];
   const finalNear = result.nearMatches || [];
@@ -193,6 +214,8 @@ export function analyzeFixture(payload) {
     sourceUpgradeDecisions,
     sourceUpgradeTraces,
     finalSelectionTrace,
+    searchLedger,
+    searchLedgerAnalysis,
   };
 }
 
@@ -439,6 +462,28 @@ function printReport(analysis) {
     for (const bypassed of analysis.fallbackTrace.stagesBypassed || []) {
       console.log(
         `  bypassed ${bypassed.stage}: ${bypassed.reason || "not recorded"}`,
+      );
+    }
+  }
+
+  if (analysis.searchLedgerAnalysis) {
+    const ledger = analysis.searchLedgerAnalysis;
+    const reconciliation = ledger.reconciliation;
+    console.log(
+      `\nSearch Ledger: request=${ledger.requestId} commit=${ledger.commitHash} ` +
+        `planned=${ledger.plannedQueries} dispatched=${ledger.dispatchedQueries} ` +
+        `culled=${ledger.culledQueries}`,
+    );
+    console.log(
+      `  attempts=${ledger.physicalAttempts} candidates=${ledger.candidates} ` +
+        `discarded=${ledger.discardedCandidates} unknown-first-loss=${ledger.unknownFirstLossCount}`,
+    );
+    if (reconciliation) {
+      console.log(
+        `  reconciliation logical=${reconciliation.logicalSearches} ` +
+          `cache-hit=${reconciliation.cacheHits} cache-miss=${reconciliation.cacheMisses} ` +
+          `physical=${reconciliation.physicalAttempts} retries=${reconciliation.retries} ` +
+          `fallbacks=${reconciliation.fallbacks} balanced=${reconciliation.balanced}`,
       );
     }
   }

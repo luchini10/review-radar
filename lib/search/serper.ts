@@ -27,6 +27,26 @@ import { assessProductPriceTrust } from "../productPriceTrust.ts";
 import { parseBestMoneyAmount } from "../priceParsing.ts";
 import { getPremiumCap } from "../requirementExtraction.ts";
 import { selectedSmartFeatureSearchText } from "../smartFeatureSelection.ts";
+import {
+  attachSearchQueryId,
+  ensureDispatchedQuery,
+  normalizeObservedQuery,
+  queryOrigin,
+  recordCandidateDedupeCapLoss,
+  recordCandidateMerge,
+  recordCandidatePrefilter,
+  recordLogicalSearchResults,
+  recordNormalizedCandidates,
+  recordQueryCull,
+  recordQueryRecategorized,
+  recordRawCandidateCapLoss,
+  recordSearchAttempt,
+  recordSearchCacheLookup,
+  registerSearchQuery,
+  searchQueryId,
+  type SearchQueryContext,
+  type SearchResultDigest,
+} from "../searchObservabilityLedger.ts";
 import { evaluateSpecConstraint, extractSpecsFromText } from "../specExtraction.ts";
 import {
   detectCategoryGroup,
@@ -1468,7 +1488,89 @@ export function normalizeSerperVideoSources(
     });
 }
 
-async function fetchSerper(params: Record<string, string>) {
+type SerperFetchResult = {
+  response: SerperResponse;
+  queryId: string | undefined;
+};
+
+function serperRawResultCount(response: SerperResponse) {
+  return (
+    (response.shopping || []).length +
+    (response.organic || []).length +
+    (response.images || []).length +
+    (response.videos || []).length
+  );
+}
+
+function serperResultDigests(response: SerperResponse): SearchResultDigest[] {
+  const results = [
+    ...(response.shopping || []),
+    ...(response.organic || []),
+    ...(response.images || []),
+    ...(response.videos || []),
+  ] as Array<Record<string, unknown>>;
+
+  return results.slice(0, MAX_RESULTS_PER_QUERY).map((result, index) => {
+    const url = firstString(
+      result.productLink,
+      result.product_link,
+      result.link,
+      result.imageUrl,
+    );
+
+    return {
+      position: asNumber(result.position) ?? index + 1,
+      title: asString(result.title).replace(/\s+/g, " ").trim().slice(0, 180),
+      host: parseUrl(url)?.hostname.replace(/^www\./, "") || "",
+      price: parsePrice(
+        result.extractedPrice ?? result.extracted_price ?? result.price,
+        result.priceRaw ?? result.price_raw,
+      ),
+    };
+  });
+}
+
+function defaultSearchQueryContext(
+  searchType: string,
+  query: string,
+): SearchQueryContext {
+  if (searchType === "images") {
+    return {
+      origin: "image",
+      phase: "product_asset_enrichment",
+      purpose: "image",
+      originalQuery: query,
+    };
+  }
+  if (searchType === "evidence" || searchType === "videos") {
+    return {
+      origin: "review_evidence",
+      phase: "review_evidence_enrichment",
+      purpose: "evidence",
+      originalQuery: query,
+    };
+  }
+  if (searchType.startsWith("direct-")) {
+    return {
+      origin: "direct_retailer",
+      phase: "serper_discovery",
+      purpose: "product_discovery",
+      originalQuery: query,
+    };
+  }
+
+  return {
+    origin: "deterministic_plan",
+    phase: "serper_discovery",
+    purpose: "product_discovery",
+    originalQuery: query,
+  };
+}
+
+async function fetchSerper(
+  params: Record<string, string>,
+  context?: SearchQueryContext,
+): Promise<SerperFetchResult | null> {
   const apiKey = process.env.SERPER_API_KEY;
   const query = params.q || params.query;
   const searchType = params.searchType || "search";
@@ -1479,6 +1581,14 @@ async function fetchSerper(params: Record<string, string>) {
     return null;
   }
 
+  const queryContext = context || defaultSearchQueryContext(searchType, query);
+  const queryId = ensureDispatchedQuery(
+    queryContext,
+    query,
+    searchType,
+    endpoint,
+  );
+
   const cacheKey = normalizeCacheKey([
     "serper",
     serperVerticalForSearchType(searchType),
@@ -1488,25 +1598,34 @@ async function fetchSerper(params: Record<string, string>) {
     String(MAX_RESULTS_PER_QUERY),
   ]);
 
-  return getCachedOrLoad(cacheKey, SERPER_CACHE_TTL_MS, async () => {
-    const requestBody = JSON.stringify({
-      gl: "us",
-      hl: "en",
-      num: MAX_RESULTS_PER_QUERY,
-      q: query,
-    });
+  const sanitizedRequestBody = {
+    gl: "us",
+    hl: "en",
+    num: MAX_RESULTS_PER_QUERY,
+    q: query,
+  };
+  const requestBody = JSON.stringify(sanitizedRequestBody);
+  let attemptNumber = 0;
+  const response = await getCachedOrLoad(cacheKey, SERPER_CACHE_TTL_MS, async () => {
     const requestHeaders = {
       "Content-Type": "application/json",
       "X-API-KEY": apiKey,
     };
     // Each attempt gets its own AbortController so a timed-out attempt does
     // not poison the retry or the vertical-to-standard fallback request.
-    const runRequest = async (url: string) => {
+    const runRequest = async (
+      url: string,
+      retryStatus: "initial" | "retry",
+      verticalFallbackStatus: "none" | "fallback_initial" | "fallback_retry",
+    ) => {
+      attemptNumber += 1;
       const controller = new AbortController();
       const timeout = setTimeout(
         () => controller.abort(),
         SERPER_REQUEST_TIMEOUT_MS,
       );
+      const startedAt = performance.now();
+      let responseStatus: number | null = null;
 
       try {
         const response = await fetch(url, {
@@ -1515,6 +1634,7 @@ async function fetchSerper(params: Record<string, string>) {
           body: requestBody,
           signal: controller.signal,
         });
+        responseStatus = response.status;
 
         if (!response.ok) {
           throw new Error(`Serper request failed with status ${response.status}`);
@@ -1526,14 +1646,60 @@ async function fetchSerper(params: Record<string, string>) {
           throw new Error("Serper returned an error.");
         }
 
+        const results = serperResultDigests(data);
+        recordSearchAttempt({
+          queryId: queryId || "untracked",
+          attemptNumber,
+          retryStatus,
+          verticalFallbackStatus,
+          endpoint: url,
+          searchType,
+          originalQuery: queryContext.originalQuery || query,
+          normalizedQuery: normalizeObservedQuery(
+            queryContext.originalQuery || query,
+          ),
+          finalOutboundQuery: query,
+          requestBody: sanitizedRequestBody,
+          responseStatus,
+          durationMs: Math.round((performance.now() - startedAt) * 1000) / 1000,
+          rawResultCount: serperRawResultCount(data),
+          results,
+          error: null,
+        });
+
         return data;
+      } catch (error) {
+        recordSearchAttempt({
+          queryId: queryId || "untracked",
+          attemptNumber,
+          retryStatus,
+          verticalFallbackStatus,
+          endpoint: url,
+          searchType,
+          originalQuery: queryContext.originalQuery || query,
+          normalizedQuery: normalizeObservedQuery(
+            queryContext.originalQuery || query,
+          ),
+          finalOutboundQuery: query,
+          requestBody: sanitizedRequestBody,
+          responseStatus,
+          durationMs: Math.round((performance.now() - startedAt) * 1000) / 1000,
+          rawResultCount: 0,
+          results: [],
+          error: responseStatus === null ? "request_error" : "serper_error",
+        });
+        throw error;
       } finally {
         clearTimeout(timeout);
       }
     };
-    const runRequestWithRetry = async (url: string) => {
+    const runRequestWithRetry = async (url: string, fallback: boolean) => {
       try {
-        return await runRequest(url);
+        return await runRequest(
+          url,
+          "initial",
+          fallback ? "fallback_initial" : "none",
+        );
       } catch (error) {
         if (!isTransientSerperError(error)) {
           throw error;
@@ -1544,12 +1710,16 @@ async function fetchSerper(params: Record<string, string>) {
           message: error instanceof Error ? error.message : "Unknown error",
         });
 
-        return await runRequest(url);
+        return await runRequest(
+          url,
+          "retry",
+          fallback ? "fallback_retry" : "none",
+        );
       }
     };
 
     try {
-      return await runRequestWithRetry(endpoint);
+      return await runRequestWithRetry(endpoint, false);
     } catch (error) {
       if (endpoint === fallbackEndpoint) {
         throw error;
@@ -1560,9 +1730,18 @@ async function fetchSerper(params: Record<string, string>) {
         message: error instanceof Error ? error.message : "Unknown error",
       });
 
-      return await runRequest(fallbackEndpoint);
+      return await runRequestWithRetry(fallbackEndpoint, true);
     }
+  }, (outcome) => {
+    recordSearchCacheLookup({ queryId, cacheKey, outcome });
   });
+  const results = serperResultDigests(response);
+  recordLogicalSearchResults(queryId, results);
+
+  return {
+    response,
+    queryId,
+  };
 }
 
 function isTransientSerperError(error: unknown) {
@@ -1591,12 +1770,16 @@ export async function searchSerperShoppingWithDiagnostics(
   query: string,
   category = query,
   options: SerperShoppingNormalizationOptions = {},
+  context?: SearchQueryContext,
 ): Promise<SerperShoppingSearchResult> {
   try {
-    const response = await fetchSerper({
-      q: query,
-      searchType: "shopping",
-    });
+    const response = await fetchSerper(
+      {
+        q: query,
+        searchType: "shopping",
+      },
+      context,
+    );
 
     if (!response) {
       return {
@@ -1618,7 +1801,18 @@ export async function searchSerperShoppingWithDiagnostics(
       };
     }
 
-    return diagnoseSerperShoppingResponse(response, query, category, options);
+    const result = diagnoseSerperShoppingResponse(
+      response.response,
+      query,
+      category,
+      options,
+    );
+    recordNormalizedCandidates(
+      response.queryId,
+      result.candidates,
+      result.diagnostics.shoppingRejectionSample,
+    );
+    return result;
   } catch (error) {
     logSerperWarning("Shopping search skipped after an API error.", {
       query,
@@ -1647,8 +1841,14 @@ export async function searchSerperShoppingWithDiagnostics(
 export async function searchSerperShopping(
   query: string,
   category = query,
+  context?: SearchQueryContext,
 ): Promise<RawProductCandidate[]> {
-  const result = await searchSerperShoppingWithDiagnostics(query, category);
+  const result = await searchSerperShoppingWithDiagnostics(
+    query,
+    category,
+    {},
+    context,
+  );
 
   return result.candidates;
 }
@@ -1656,14 +1856,28 @@ export async function searchSerperShopping(
 export async function searchSerperOrganic(
   query: string,
   category = query,
+  context?: SearchQueryContext,
 ): Promise<RawProductCandidate[]> {
   try {
-    const response = await fetchSerper({
-      q: query,
-      searchType: "organic",
-    });
+    const response = await fetchSerper(
+      {
+        q: query,
+        searchType: "organic",
+      },
+      context,
+    );
 
-    return response ? normalizeSerperOrganicResults(response, query, category) : [];
+    if (!response) {
+      return [];
+    }
+
+    const candidates = normalizeSerperOrganicResults(
+      response.response,
+      query,
+      category,
+    );
+    recordNormalizedCandidates(response.queryId, candidates);
+    return candidates;
   } catch (error) {
     logSerperWarning("Organic search skipped after an API error.", {
       query,
@@ -1677,16 +1891,29 @@ export async function searchSerperDirectRetailer(
   engine: DirectRetailerEngine,
   query: string,
   category = query,
+  context?: SearchQueryContext,
 ): Promise<RawProductCandidate[]> {
   try {
-    const response = await fetchSerper({
-      q: `${directRetailerSiteQuery(engine)} ${query}`,
-      searchType: `direct-${engine}`,
-    });
+    const response = await fetchSerper(
+      {
+        q: `${directRetailerSiteQuery(engine)} ${query}`,
+        searchType: `direct-${engine}`,
+      },
+      context,
+    );
 
-    return response
-      ? normalizeSerperDirectResults(response, query, category, engine)
-      : [];
+    if (!response) {
+      return [];
+    }
+
+    const candidates = normalizeSerperDirectResults(
+      response.response,
+      query,
+      category,
+      engine,
+    );
+    recordNormalizedCandidates(response.queryId, candidates);
+    return candidates;
   } catch (error) {
     logSerperWarning("Direct retailer search skipped after an API error.", {
       engine,
@@ -1700,14 +1927,20 @@ export async function searchSerperDirectRetailer(
 export async function searchSerperOrganicEvidence(
   query: string,
   maxResults = 6,
+  context?: SearchQueryContext,
 ): Promise<SerperEvidenceSource[]> {
   try {
-    const response = await fetchSerper({
-      q: query,
-      searchType: "evidence",
-    });
+    const response = await fetchSerper(
+      {
+        q: query,
+        searchType: "evidence",
+      },
+      context,
+    );
 
-    return response ? normalizeSerperOrganicSources(response, maxResults) : [];
+    return response
+      ? normalizeSerperOrganicSources(response.response, maxResults)
+      : [];
   } catch (error) {
     logSerperWarning("Evidence search skipped after an API error.", {
       query,
@@ -1745,22 +1978,26 @@ export function normalizeSerperOrganicSources(
 export async function searchSerperImageEvidence(
   query: string,
   maxResults = 6,
+  context?: SearchQueryContext,
 ): Promise<SerperEvidenceSource[]> {
   try {
-    const response = await fetchSerper({
-      q: query,
-      searchType: "images",
-    });
+    const response = await fetchSerper(
+      {
+        q: query,
+        searchType: "images",
+      },
+      context,
+    );
 
     if (!response) {
       return [];
     }
 
-    const imageSources = normalizeSerperImageSources(response, maxResults);
+    const imageSources = normalizeSerperImageSources(response.response, maxResults);
 
     return imageSources.length > 0
       ? imageSources
-      : normalizeSerperOrganicSources(response, maxResults);
+      : normalizeSerperOrganicSources(response.response, maxResults);
   } catch (error) {
     logSerperWarning("Image evidence search skipped after an API error.", {
       query,
@@ -1773,22 +2010,26 @@ export async function searchSerperImageEvidence(
 export async function searchSerperVideoEvidence(
   query: string,
   maxResults = 6,
+  context?: SearchQueryContext,
 ): Promise<SerperEvidenceSource[]> {
   try {
-    const response = await fetchSerper({
-      q: query,
-      searchType: "videos",
-    });
+    const response = await fetchSerper(
+      {
+        q: query,
+        searchType: "videos",
+      },
+      context,
+    );
 
     if (!response) {
       return [];
     }
 
-    const videoSources = normalizeSerperVideoSources(response, maxResults);
+    const videoSources = normalizeSerperVideoSources(response.response, maxResults);
 
     return videoSources.length > 0
       ? videoSources
-      : normalizeSerperOrganicSources(response, maxResults);
+      : normalizeSerperOrganicSources(response.response, maxResults);
   } catch (error) {
     logSerperWarning("Video evidence search skipped after an API error.", {
       query,
@@ -1861,6 +2102,7 @@ export function dedupeRawCandidates(candidates: RawProductCandidate[]) {
     const existing = seen.get(key);
 
     if (existing) {
+      recordCandidateMerge(existing, candidate);
       seen.set(key, mergeRawCandidateEvidence(existing, candidate));
       duplicateCount += 1;
       continue;
@@ -1869,8 +2111,14 @@ export function dedupeRawCandidates(candidates: RawProductCandidate[]) {
     seen.set(key, candidate);
   }
 
+  const uniqueCandidates = Array.from(seen.values());
+
+  for (const candidate of uniqueCandidates.slice(DEFAULT_MAX_RAW_CANDIDATES)) {
+    recordCandidateDedupeCapLoss(candidate, "default_max_raw_candidates_cap");
+  }
+
   return {
-    candidates: Array.from(seen.values()).slice(0, DEFAULT_MAX_RAW_CANDIDATES),
+    candidates: uniqueCandidates.slice(0, DEFAULT_MAX_RAW_CANDIDATES),
     duplicateCount,
   };
 }
@@ -2648,16 +2896,24 @@ export function cheapPreFilterRawCandidates(
 
     if (reason) {
       rejected.push({ name: candidate.name, reason });
+      recordCandidatePrefilter(candidate, false, reason);
       continue;
     }
 
+    recordCandidatePrefilter(candidate, true);
     kept.push(candidate);
   }
 
+  const sortedCandidates = kept.sort(
+    (first, second) => candidateFitScore(second, input) - candidateFitScore(first, input),
+  );
+
+  for (const candidate of sortedCandidates.slice(maxCandidates)) {
+    recordRawCandidateCapLoss(candidate, `max_raw_candidates_cap_${maxCandidates}`);
+  }
+
   return {
-    candidates: kept
-      .sort((first, second) => candidateFitScore(second, input) - candidateFitScore(first, input))
-      .slice(0, maxCandidates),
+    candidates: sortedCandidates.slice(0, maxCandidates),
     rejectedCount: rejected.length,
     rejected,
   };
@@ -2867,11 +3123,31 @@ export function extractSeedProductNames(
 }
 
 function legacyPlan(queries: string[], categoryGroup: string): SearchPlan {
-  const candidates = queries.map((query, index) => ({
-    family: index < 6 ? "canonical_shopping" : "fallback",
-    query,
-    stage: index < 8 ? 1 : index < 14 ? 2 : 3,
-  })) as SearchQueryCandidate[];
+  const candidates = queries.map((query, index) => {
+    const candidate = {
+      family: index < 6 ? "canonical_shopping" : "fallback",
+      query,
+      stage: index < 8 ? 1 : index < 14 ? 2 : 3,
+    } as SearchQueryCandidate;
+    const queryId = registerSearchQuery({
+      origin: "ai_gap_check",
+      phase: "follow_up_plan_assembly",
+      query,
+      family: candidate.family,
+      stage: candidate.stage,
+      sourceDetail: "gap_check_follow_up",
+    });
+    attachSearchQueryId(candidate, queryId);
+
+    if (index >= 6) {
+      recordQueryRecategorized(
+        queryId,
+        "legacy follow-up index >= 6 is categorized as organic fallback",
+      );
+    }
+
+    return candidate;
+  });
 
   return {
     categoryGroup,
@@ -2931,16 +3207,31 @@ export async function searchSerperForProducts(
   const plan = Array.isArray(searchInput)
     ? legacyPlan(searchInput, categoryGroup)
     : searchInput;
+  const discoveryPhase = Array.isArray(searchInput)
+    ? "follow_up_discovery"
+    : "initial_discovery";
   const generatedQueryStrings = plan.queries.map((query) => query.query);
   const fallbackRetailerDomainQueries = generateRetailerDomainQueries(
     input,
     categoryGroup,
     searchConfig,
-  ).map((query) => ({
-    family: "retailer_domain" as const,
-    query,
-    stage: 2 as const,
-  }));
+  ).map((query) => {
+    const candidate = {
+      family: "retailer_domain" as const,
+      query,
+      stage: 2 as const,
+    };
+    const queryId = registerSearchQuery({
+      origin: "retailer_domain",
+      phase: `${discoveryPhase}_fallback_retailer_plan`,
+      query,
+      family: candidate.family,
+      stage: candidate.stage,
+      sourceDetail: "generated_fallback_retailer_domain",
+    });
+
+    return attachSearchQueryId(candidate, queryId);
+  });
   const planRetailerQueries = plan.queries.filter(
     (query) => query.family === "retailer_domain",
   );
@@ -3001,6 +3292,29 @@ export async function searchSerperForProducts(
     retailerDomain: 0,
     shopping: 0,
   };
+
+  function planQueryContext(
+    query: SearchQueryCandidate,
+    purpose: SearchQueryContext["purpose"] = "product_discovery",
+  ): SearchQueryContext {
+    const queryId = searchQueryId(query);
+    const origin =
+      queryOrigin(queryId) ||
+      (query.family === "retailer_domain"
+        ? "retailer_domain"
+        : Array.isArray(searchInput)
+          ? "ai_gap_check"
+          : "deterministic_plan");
+
+    return {
+      queryId,
+      origin,
+      phase: discoveryPhase,
+      purpose,
+      originalQuery: query.query,
+      sourceDetail: query.family,
+    };
+  }
 
   async function runDiscoveryTasks(tasks: DiscoveryTask[]) {
     const taskResults = await runWithConcurrency(
@@ -3066,34 +3380,62 @@ export async function searchSerperForProducts(
     const organicCandidates: SearchQueryCandidate[] = [];
 
     for (const query of stageQueries) {
-      if (
-        shouldRunAsShopping(query) &&
-        used.shopping < searchConfig.maxGoogleShoppingQueries
-      ) {
-        used.shopping += 1;
-        searchedShoppingQueries.push(query.query);
-        tasks.push({
-          run: () => searchSerperShopping(query.query, baseCategoryName),
-          source: "shopping",
-        });
+      if (shouldRunAsShopping(query)) {
+        if (used.shopping < searchConfig.maxGoogleShoppingQueries) {
+          used.shopping += 1;
+          searchedShoppingQueries.push(query.query);
+          tasks.push({
+            run: () =>
+              searchSerperShopping(
+                query.query,
+                baseCategoryName,
+                planQueryContext(query),
+              ),
+            source: "shopping",
+          });
+        } else {
+          recordQueryCull(
+            searchQueryId(query),
+            "shopping_cap_crowd_out",
+            `Google Shopping cap ${searchConfig.maxGoogleShoppingQueries}`,
+          );
+        }
         continue;
       }
 
-      if (
-        query.family === "retailer_domain" &&
-        used.retailerDomain < searchConfig.maxRetailerDomainQueries
-      ) {
-        used.retailerDomain += 1;
-        searchedRetailerDomainQueries.push(query.query);
-        tasks.push({
-          run: () => searchSerperOrganic(query.query, baseCategoryName),
-          source: "retailerDomain",
-        });
+      if (query.family === "retailer_domain") {
+        if (used.retailerDomain < searchConfig.maxRetailerDomainQueries) {
+          used.retailerDomain += 1;
+          searchedRetailerDomainQueries.push(query.query);
+          tasks.push({
+            run: () =>
+              searchSerperOrganic(
+                query.query,
+                baseCategoryName,
+                planQueryContext(query),
+              ),
+            source: "retailerDomain",
+          });
+        } else {
+          recordQueryCull(
+            searchQueryId(query),
+            "retailer_cap_crowd_out",
+            `retailer-domain cap ${searchConfig.maxRetailerDomainQueries}`,
+          );
+        }
         continue;
       }
 
-      if (shouldRunAsOrganic(query) && !isDiscussionPhrasedQuery(query)) {
-        organicCandidates.push(query);
+      if (shouldRunAsOrganic(query)) {
+        if (isDiscussionPhrasedQuery(query)) {
+          recordQueryCull(
+            searchQueryId(query),
+            "discussion_query_not_dispatched",
+            "Reddit/YouTube plan phrases remain available to final OpenAI research",
+          );
+        } else {
+          organicCandidates.push(query);
+        }
       }
     }
 
@@ -3102,8 +3444,15 @@ export async function searchSerperForProducts(
         organicDiscoveryPriority(first) - organicDiscoveryPriority(second),
     );
 
-    for (const query of prioritizedOrganic) {
+    for (const [index, query] of prioritizedOrganic.entries()) {
       if (used.organic >= searchConfig.maxGoogleOrganicQueries) {
+        for (const crowdedOut of prioritizedOrganic.slice(index)) {
+          recordQueryCull(
+            searchQueryId(crowdedOut),
+            "organic_cap_crowd_out",
+            `Google organic cap ${searchConfig.maxGoogleOrganicQueries}`,
+          );
+        }
         break;
       }
 
@@ -3111,7 +3460,11 @@ export async function searchSerperForProducts(
       searchedOrganicQueries.push(query.query);
       tasks.push({
         run: () =>
-          searchSerperOrganic(`${query.query} product page`, baseCategoryName),
+          searchSerperOrganic(
+            `${query.query} product page`,
+            baseCategoryName,
+            planQueryContext(query),
+          ),
         source: "organic",
       });
     }
@@ -3141,14 +3494,39 @@ export async function searchSerperForProducts(
 
   if (editorialQueries.length > 0) {
     const editorialEvidenceBudget = searchConfig.depth === "deep" ? 3 : 2;
+    const observedEditorialQueries = editorialQueries.map((query) => ({
+      query,
+      queryId: registerSearchQuery({
+        origin: "editorial_seed",
+        phase: `${discoveryPhase}_editorial_source_mining`,
+        purpose: "evidence",
+        query,
+        sourceDetail: "best_of_source_query",
+      }),
+    }));
+
+    for (const query of observedEditorialQueries.slice(editorialEvidenceBudget)) {
+      recordQueryCull(
+        query.queryId,
+        "organic_cap_crowd_out",
+        `editorial evidence cap ${editorialEvidenceBudget}`,
+      );
+    }
     const editorialSources = (
       await runWithConcurrency(
-        editorialQueries
+        observedEditorialQueries
           .slice(0, editorialEvidenceBudget)
-          .map((query) => async () => {
+          .map(({ query, queryId }) => async () => {
             stats.organicCalls += 1;
 
-            return searchSerperOrganicEvidence(query);
+            return searchSerperOrganicEvidence(query, 6, {
+              queryId,
+              origin: "editorial_seed",
+              phase: `${discoveryPhase}_editorial_source_mining`,
+              purpose: "evidence",
+              originalQuery: query,
+              sourceDetail: "best_of_source_query",
+            });
           }),
         serperConcurrency(searchConfig.depth),
       )
@@ -3169,11 +3547,26 @@ export async function searchSerperForProducts(
       stats.seedProductNames = seedNames;
 
       const seedTasks: DiscoveryTask[] = seedNames.map((seed) => {
+        const queryId = registerSearchQuery({
+          origin: "editorial_seed",
+          phase: `${discoveryPhase}_seed_shopping`,
+          purpose: "product_discovery",
+          query: seed,
+          sourceDetail: "extracted_product_seed",
+        });
         searchedShoppingQueries.push(seed);
         stats.seedSearchesRun += 1;
 
         return {
-          run: () => searchSerperShopping(seed, baseCategoryName),
+          run: () =>
+            searchSerperShopping(seed, baseCategoryName, {
+              queryId,
+              origin: "editorial_seed",
+              phase: `${discoveryPhase}_seed_shopping`,
+              purpose: "product_discovery",
+              originalQuery: seed,
+              sourceDetail: "extracted_product_seed",
+            }),
           source: "shopping" as const,
         };
       });
@@ -3199,12 +3592,32 @@ export async function searchSerperForProducts(
     const directTasks = directRetailerEngines
       .filter(() => used.directRetailer < searchConfig.maxDirectRetailerQueries)
       .map((engine) => {
+        const finalQuery = `${directRetailerSiteQuery(engine)} ${directBaseQuery}`;
+        const queryId = registerSearchQuery({
+          origin: "direct_retailer",
+          phase: `${discoveryPhase}_direct_retailer`,
+          purpose: "product_discovery",
+          query: directBaseQuery,
+          sourceDetail: engine,
+        });
         used.directRetailer += 1;
         searchedDirectRetailerQueries.push(engine);
 
         return {
           run: () =>
-            searchSerperDirectRetailer(engine, directBaseQuery, baseCategoryName),
+            searchSerperDirectRetailer(
+              engine,
+              directBaseQuery,
+              baseCategoryName,
+              {
+                queryId,
+                origin: "direct_retailer",
+                phase: `${discoveryPhase}_direct_retailer`,
+                purpose: "product_discovery",
+                originalQuery: directBaseQuery,
+                sourceDetail: finalQuery,
+              },
+            ),
           source: "directRetailer" as const,
         };
       });
@@ -3275,11 +3688,26 @@ export async function searchSerperForProducts(
     const rescueTasks: DiscoveryTask[] = rescueQueries
       .slice(0, rescueBrand ? 3 : 2)
       .map((query) => {
+        const queryId = registerSearchQuery({
+          origin: "market_rescue",
+          phase: `${discoveryPhase}_market_rescue`,
+          purpose: "product_discovery",
+          query,
+          sourceDetail: "coverage_threshold_rescue",
+        });
         searchedShoppingQueries.push(query);
         rescueQueriesRun += 1;
 
         return {
-          run: () => searchSerperShopping(query, baseCategoryName),
+          run: () =>
+            searchSerperShopping(query, baseCategoryName, {
+              queryId,
+              origin: "market_rescue",
+              phase: `${discoveryPhase}_market_rescue`,
+              purpose: "product_discovery",
+              originalQuery: query,
+              sourceDetail: "coverage_threshold_rescue",
+            }),
           source: "shopping" as const,
         };
       });

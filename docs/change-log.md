@@ -11,6 +11,28 @@ Update this file after:
 
 Do not update this file for tiny typo fixes, formatting-only edits, or internal cleanup that does not change behavior.
 
+## 2026-07-10
+
+### Codex - Request-scoped search and candidate-lineage ledger (Phase A)
+
+#### Changed
+
+- Added a debug-only, request-scoped `AsyncLocalStorage` ledger inside `debug.stageFunnel`; normal responses do not create or emit it.
+- Recorded query birth/origin, dedupe/cull/recategorization/dispatch, cache lookup outcomes, every sanitized Serper attempt, bounded result digests, candidate provenance and first-loss lineage, per-query/origin contribution, and exact dispatch reconciliation.
+- Retained strict-schema raw discovery-strategy and gap-check JSON while excluding API keys, headers, and prompt bodies.
+- Extended zero-cost fixture replay to preserve and summarize the ledger; added a deterministic ledger overhead benchmark.
+- Filed RR-071 through RR-077 as Needs Investigation without changing search, prompts, ranking, identity, validation, filtering, or trust behavior.
+
+#### Verified
+
+- `npm run typecheck`: pass.
+- `npm run lint`: 0 errors, 3 existing warnings.
+- `npm test`: 802/802 across 118 suites.
+- `npm run build`: pass.
+- `node scripts/eval-pipeline.mjs`: no red-flag issues.
+- `npm run qa:ledger-benchmark`: 0.757 ms measured overhead per representative request, projected 0.0009% of an 84-second request; zero provider calls.
+- Live Serper/OpenAI calls: 0.
+
 ## 2026-07-02
 
 ### Codex - Fresh Phase 6D restart safety stop

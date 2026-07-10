@@ -15,6 +15,7 @@
     "qa:scorecard": "node scripts/qualityScorecard.mjs",
     "qa:plan": "node scripts/qualityScorecard.mjs --dry-run",
     "qa:replay": "node scripts/replay-quality-fixtures.mjs",
+    "qa:ledger-benchmark": "node scripts/benchmark-search-ledger.mjs",
     "qa:save-fixture": "node scripts/save-debug-fixture.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"

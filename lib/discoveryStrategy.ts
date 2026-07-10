@@ -13,6 +13,7 @@ import type {
 } from "@/types/review-radar";
 import { baseProductCategoryFromQuery } from "./productCategory.ts";
 import { parseMaxBudgetAmount } from "./priceParsing.ts";
+import type { SearchPlanObservabilityObserver } from "./searchObservabilityTypes.ts";
 
 const DISCOVERY_STRATEGY_TIMEOUT_MS = 25000;
 const DISCOVERY_GAP_TIMEOUT_MS = 20000;
@@ -391,8 +392,9 @@ export async function buildOpenAIDiscoveryStrategy(options: {
   client: OpenAIResponsesClient;
   input: RecommendationApiRequest;
   model: string;
+  observer?: SearchPlanObservabilityObserver;
 }) {
-  const { client, input, model } = options;
+  const { client, input, model, observer } = options;
 
   try {
     const response = await client.responses.create(
@@ -426,7 +428,12 @@ export async function buildOpenAIDiscoveryStrategy(options: {
     const text = outputText(response);
     const parsed = discoveryStrategySchema.safeParse(JSON.parse(text));
 
-    return parsed.success ? normalizeStrategy(parsed.data) : emptyDiscoveryStrategy();
+    if (parsed.success) {
+      observer?.recordRawAiStrategy(parsed.data);
+      return normalizeStrategy(parsed.data);
+    }
+
+    return emptyDiscoveryStrategy();
   } catch {
     return emptyDiscoveryStrategy();
   }
@@ -545,9 +552,10 @@ export async function buildOpenAIDiscoveryGapCheck(options: {
   client: OpenAIResponsesClient;
   input: RecommendationApiRequest;
   model: string;
+  observer?: SearchPlanObservabilityObserver;
   strategy: ProductDiscoveryStrategy;
 }) {
-  const { candidates, client, input, model, strategy } = options;
+  const { candidates, client, input, model, observer, strategy } = options;
 
   if (strategy.expectedProducts.length === 0) {
     return emptyGapCheck();
@@ -600,6 +608,7 @@ export async function buildOpenAIDiscoveryGapCheck(options: {
     const parsed = discoveryGapCheckSchema.safeParse(JSON.parse(text));
 
     if (parsed.success) {
+      observer?.recordRawAiGapCheck(parsed.data);
       const deterministic = buildDeterministicGapCheck(input, strategy, candidates);
       const normalized = normalizeGapCheck(parsed.data);
 
@@ -628,28 +637,66 @@ export async function buildOpenAIDiscoveryGapCheck(options: {
 function queryCandidate(
   query: string,
   stage: SearchQueryStage,
+  sourceDetail: string,
+  observer: SearchPlanObservabilityObserver | undefined,
 ): SearchQueryCandidate {
-  return {
+  const candidate: SearchQueryCandidate = {
     family: "canonical_shopping",
     query,
     stage,
   };
+  const queryId = observer?.registerSearchQuery({
+    origin: "ai_discovery_strategy",
+    phase: "plan_assembly",
+    query,
+    family: candidate.family,
+    stage,
+    sourceDetail,
+  });
+
+  return observer?.attachSearchQueryId(candidate, queryId) || candidate;
 }
 
-function stageQueries(queries: SearchQueryCandidate[], stage: SearchQueryStage) {
+function stageQueries(
+  queries: SearchQueryCandidate[],
+  stage: SearchQueryStage,
+  protectedPass1Count = 0,
+  observer?: SearchPlanObservabilityObserver,
+) {
   const limits = {
     1: 8,
     2: 6,
     3: 4,
   } as const;
 
-  return queries.filter((query) => query.stage === stage).slice(0, limits[stage]);
+  const candidates = queries.filter((query) => query.stage === stage);
+  const selected = candidates.slice(0, limits[stage]);
+
+  for (const query of candidates.slice(limits[stage])) {
+    const id = observer?.searchQueryId(query);
+    const protectedAllocation =
+      stage === 1 &&
+      protectedPass1Count > 0 &&
+      observer?.queryOrigin(id) === "ai_discovery_strategy";
+    observer?.recordQueryCull(
+      id,
+      protectedAllocation
+        ? "protected_slot_allocation"
+        : "pass_stage_truncation",
+      protectedAllocation
+        ? `${protectedPass1Count} protected deterministic pass-1 slots within pass-1 cap ${limits[stage]}`
+        : `pass-${stage} cap ${limits[stage]}`,
+    );
+  }
+
+  return selected;
 }
 
 export function augmentSearchPlanWithDiscoveryStrategy(
   plan: SearchPlan,
   strategy: ProductDiscoveryStrategy,
   input: RecommendationApiRequest,
+  observer?: SearchPlanObservabilityObserver,
 ): SearchPlan {
   if (
     strategy.discoveryQueries.length === 0 &&
@@ -670,25 +717,35 @@ export function augmentSearchPlanWithDiscoveryStrategy(
   const strategyQueries = [
     ...strategy.discoveryQueries
       .slice(0, 4)
-      .map((query) => queryCandidate(budgetBoundQuery(input, query), 1)),
+      .map((query) =>
+        queryCandidate(budgetBoundQuery(input, query), 1, "discovery_query_pass1", observer),
+      ),
     ...(strategy.buyingRubric?.searchQueries || [])
       .slice(0, 3)
-      .map((query) => queryCandidate(budgetBoundQuery(input, query), 1)),
+      .map((query) =>
+        queryCandidate(budgetBoundQuery(input, query), 1, "buying_rubric_query", observer),
+      ),
     ...targetQueries
       .slice(0, 4)
-      .map((query) => queryCandidate(budgetBoundQuery(input, query), 1)),
+      .map((query) =>
+        queryCandidate(budgetBoundQuery(input, query), 1, "expected_product_target", observer),
+      ),
     ...strategy.discoveryQueries
       .slice(4, 8)
-      .map((query) => queryCandidate(budgetBoundQuery(input, query), 2)),
+      .map((query) =>
+        queryCandidate(budgetBoundQuery(input, query), 2, "discovery_query_pass2", observer),
+      ),
     ...targetQueries
       .slice(4, 8)
-      .map((query) => queryCandidate(budgetBoundQuery(input, query), 2)),
+      .map((query) =>
+        queryCandidate(budgetBoundQuery(input, query), 2, "expected_product_target", observer),
+      ),
   ];
   const protectedBasePass1 = plan.stagedQueries.pass1.slice(0, 4);
   const protectedBaseKeys = new Set(
     protectedBasePass1.map((query) => normalizeText(query.query)),
   );
-  const seen = new Set<string>();
+  const seen = new Map<string, string | undefined>();
   const merged = [
     // Keep the app-generated hard-filter queries first. AI strategy queries are
     // useful expansion, but they must not crowd out brand/budget/category searches.
@@ -700,16 +757,21 @@ export function augmentSearchPlanWithDiscoveryStrategy(
   ].filter((query) => {
     const key = normalizeText(query.query);
 
-    if (!key || seen.has(key)) {
+    if (!key) {
       return false;
     }
 
-    seen.add(key);
+    if (seen.has(key)) {
+      observer?.recordQueryMerge(observer.searchQueryId(query), seen.get(key));
+      return false;
+    }
+
+    seen.set(key, observer?.searchQueryId(query));
     return true;
   });
-  const pass1 = stageQueries(merged, 1);
-  const pass2 = stageQueries(merged, 2);
-  const pass3 = stageQueries(merged, 3);
+  const pass1 = stageQueries(merged, 1, protectedBasePass1.length, observer);
+  const pass2 = stageQueries(merged, 2, 0, observer);
+  const pass3 = stageQueries(merged, 3, 0, observer);
 
   return {
     categoryGroup: plan.categoryGroup,

@@ -2533,6 +2533,10 @@ No new issue ID was opened.
 
 ---
 
+## Phase A implementation note — 2026-07-10
+
+The request-scoped search/candidate ledger is implemented and deterministically verified. This does not resolve RR-071 through RR-077: all seven records remain Needs Investigation because Phase A intentionally made no change to search wording/allocation, requirement semantics, candidate filters, identity, or source-upgrade construction. No additional current defect was proven while implementing the instrumentation.
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)

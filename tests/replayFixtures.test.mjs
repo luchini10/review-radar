@@ -219,4 +219,60 @@ describe("analyzeFixture — synthetic robot vacuum fixture", () => {
     });
     assert.equal(oldAnalysis.fallbackTrace, null);
   });
+
+  it("preserves and summarizes the request-scoped search ledger", () => {
+    const searchLedger = {
+      header: {
+        requestId: "request-replay-1",
+        commitHash: "abc1234",
+      },
+      planAssembly: [
+        { id: "q-0001", status: "dispatched" },
+        { id: "q-0002", status: "culled" },
+      ],
+      dispatch: {
+        attempts: [{ queryId: "q-0001" }, { queryId: "q-0001" }],
+        reconciliation: {
+          logicalSearches: 1,
+          cacheHits: 0,
+          cacheMisses: 1,
+          physicalAttempts: 2,
+          retries: 1,
+          fallbacks: 0,
+          balanced: true,
+        },
+      },
+      candidateLineage: {
+        candidates: [{ candidateId: "candidate-0001" }],
+        discardedCandidateCount: 1,
+        unknownFirstLossCount: 0,
+      },
+    };
+    const fixture = {
+      result: { exactMatches: [], nearMatches: [] },
+      debug: { stageFunnel: { searchLedger, stages: [] } },
+    };
+
+    const fixtureAnalysis = analyzeFixture(fixture);
+
+    assert.deepEqual(fixtureAnalysis.searchLedger, searchLedger);
+    assert.deepEqual(fixtureAnalysis.searchLedgerAnalysis, {
+      requestId: "request-replay-1",
+      commitHash: "abc1234",
+      plannedQueries: 2,
+      dispatchedQueries: 1,
+      culledQueries: 1,
+      physicalAttempts: 2,
+      reconciliation: searchLedger.dispatch.reconciliation,
+      candidates: 1,
+      discardedCandidates: 1,
+      unknownFirstLossCount: 0,
+    });
+
+    const oldFixtureAnalysis = analyzeFixture({
+      result: { exactMatches: [], nearMatches: [] },
+    });
+    assert.equal(oldFixtureAnalysis.searchLedger, null);
+    assert.equal(oldFixtureAnalysis.searchLedgerAnalysis, null);
+  });
 });

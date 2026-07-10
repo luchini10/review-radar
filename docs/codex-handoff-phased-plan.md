@@ -1578,3 +1578,18 @@ Stop. Do not resume Phase 6D or start Phase 6E without explicit instruction.
 - Phase 6D safety-stop commit: `566a7bf`.
 
 Stop. Do not fix RR-061/RR-070, resume Phase 6D, or start Phase 6E without explicit instruction.
+
+### Phase A request-scoped search-observability completion record
+
+- Completed step: Debug-only Serper and candidate-lineage ledger, nested in the existing `debug.stageFunnel` payload.
+- Classification: Observability only. No prompt, query allocation, query wording, provider behavior, rank, filter, requirement, identity, trust, or final-selection behavior changed.
+- Layer 1: Stable logical query IDs/origins with birth, merge, cull/cap, recategorization, dispatch, and planned-but-never-dispatched evidence.
+- Layer 2: Dual hooks at the cache lookup and physical attempt runner, including retries, vertical fallbacks, sanitized request bodies, bounded digests, and balanced totals.
+- Layer 3: Candidate query provenance, merge/identity-collapse targets, citation/requirement/revalidation results, final outcome/score/selection, and exactly one first-loss stage/subreason per discard.
+- Outputs: Raw strict-schema AI strategy/gap JSON, per-query/per-origin contribution, debug header, and zero-cost fixture replay support.
+- Issues filed: RR-071 through RR-077, all Needs Investigation. RR-070 was cross-referenced and not duplicated.
+- Verification: typecheck/build/eval pass; lint 0 errors/3 existing warnings; full suite 802/802 across 118 suites.
+- Performance: 0.757 ms/request measured overhead (0.0009% projected against 84 seconds), zero provider calls.
+- Next step: Separately approved RR-061 wrong-model image fix, then separately approved Phase B live verification. No live search is authorized by this completion record.
+
+Stop. Do not implement RR-061 or begin Phase B live verification without separate explicit approval.

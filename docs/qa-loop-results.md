@@ -6133,3 +6133,27 @@ offline variance harness: ran; no within-query pairs
 - Phase 6D safety-stop commit: `566a7bf`.
 
 Recommended direction: fix RR-061 wrong-model image safety in a separate approved phase; keep RR-070 separately scoped unless explicitly combined.
+
+### 🟧 Codex Change — Request-scoped search and candidate-lineage ledger (Phase A)
+
+**Verdict: COMPLETE. Observability only; zero live Serper/OpenAI calls and no search behavior changes.**
+
+- Added one request-scoped `AsyncLocalStorage` ledger under the existing `debug.stageFunnel` response. It is created only for the debug header and remains absent from normal responses.
+- Plan assembly records stable query IDs/origins and every birth, dedupe/merge, protected/pass truncation, vertical cap crowd-out, recategorization, dispatch, and never-reached cull.
+- Dispatch uses both required hooks: cache lookup for logical hits/misses and the attempt runner for every physical retry/fallback. Attempt records include origin/phase, original/normalized/outbound query, endpoint/type, sanitized JSON body, status/duration/count, and at most 10 compact result digests.
+- Candidate lineage carries multiple query links through merges and records merge/collapse targets, citation/requirement/revalidation outcomes, exact/near/neither, score/selection, and one precise first-loss stage/subreason per discarded candidate.
+- Raw strict-schema AI strategy and gap-check JSON, contribution tables, and exact reconciliation are retained. API keys, request headers, and LLM prompt bodies are excluded.
+- `qa:save-fixture` captures the nested ledger automatically; `qa:replay` now preserves and summarizes it at zero cost.
+- Filed RR-071 through RR-077 as Needs Investigation. RR-070 was cross-referenced, not duplicated. No behavioral fix was implemented.
+
+```text
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm test: 802/802 across 118 suites
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red-flag issues
+npm run qa:ledger-benchmark: 0.757 ms/request overhead; 0.0009% projected; within budget
+live provider calls: 0
+```
+
+Next: separately approved RR-061 wrong-model image fix, then separately approved Phase B live verification. No live search is authorized by this phase.

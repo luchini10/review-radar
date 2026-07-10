@@ -79,6 +79,16 @@ import {
   scoreAndSelectRecommendationsWithTrace,
 } from "../../../lib/recommendationScoring.ts";
 import { candidateSnapshot, resultNames } from "../../../lib/recommendationFunnel.ts";
+import { cacheStats } from "../../../lib/cache.ts";
+import {
+  buildSearchObservabilitySnapshot,
+  createSearchObservabilityLedger,
+  finalizeCandidateLineage,
+  resolveReviewRadarCommitHash,
+  reviewRadarFlagSnapshot,
+  runWithSearchObservabilityLedger,
+  searchPlanObservabilityObserver,
+} from "../../../lib/searchObservabilityLedger.ts";
 import type {
   ProductBuyingRubric,
   ProductRecommendation,
@@ -525,6 +535,18 @@ async function buildServerSearchFallbackResult(options: {
       },
     );
   const prioritizedResult = prioritizeProductPageUrlsInResult(fallbackResult);
+  finalizeCandidateLineage({
+    candidatePool: serperRecommendations,
+    citationValid: serperRecommendations,
+    requirementExact: searchCandidateResult.recommendations,
+    requirementNear: searchCandidateResult.nearMatches,
+    revalidatedExact: fallbackRevalidatedResult.exactMatches,
+    revalidatedNear: fallbackRevalidatedResult.nearMatches,
+    finalExact: prioritizedResult.exactMatches,
+    finalNear: prioritizedResult.nearMatches,
+    finalSelectionTrace,
+  });
+  const searchLedger = buildSearchObservabilitySnapshot();
 
   return {
     result: prioritizedResult,
@@ -575,6 +597,7 @@ async function buildServerSearchFallbackResult(options: {
       sourceUpgradeDecisions: [],
       sourceUpgradeTraces: [],
       finalSelectionTrace,
+      searchLedger,
       stagesBypassed: [
         {
           stage: "citation_verification",
@@ -618,11 +641,11 @@ function shouldRunNoExactSanityFallback(options: {
   return budget === undefined || budget >= 50;
 }
 
-async function handleRecommendationPost(
+async function handleRecommendationPostWithContext(
   request: Request,
   routeDependencies: RecommendationRouteDependencies,
+  includeDebug: boolean,
 ) {
-  const includeDebug = wantsLocalDebug(request);
   const timing = createRequestTiming();
   const withTimingDebug = (debug: Record<string, unknown>) => ({
     ...debug,
@@ -702,15 +725,20 @@ async function handleRecommendationPost(
           client,
           input: requestWithRequirements,
           model: helperResearchModel,
+          observer: includeDebug ? searchPlanObservabilityObserver : undefined,
         }),
     );
     const searchPlan = timing.measureSync(
       "build_search_plan",
       () =>
         augmentSearchPlanWithDiscoveryStrategy(
-          generateSearchPlan(requestWithRequirements),
+          generateSearchPlan(
+            requestWithRequirements,
+            includeDebug ? searchPlanObservabilityObserver : undefined,
+          ),
           discoveryStrategy,
           requestWithRequirements,
+          includeDebug ? searchPlanObservabilityObserver : undefined,
         ),
     );
     const generatedQueries = searchPlan.queries.map((query) => query.query);
@@ -738,6 +766,7 @@ async function handleRecommendationPost(
           client,
           input: requestWithStrategy,
           model: helperResearchModel,
+          observer: includeDebug ? searchPlanObservabilityObserver : undefined,
           strategy: discoveryStrategy,
         }),
     );
@@ -1247,6 +1276,22 @@ async function handleRecommendationPost(
           discoveryCoverage,
         ),
     );
+    if (includeDebug) {
+      finalizeCandidateLineage({
+        candidatePool: candidateResult.recommendations,
+        citationValid: verifiedResult.recommendations,
+        requirementExact: requirementFilteredResult.recommendations,
+        requirementNear: requirementFilteredResult.nearMatches,
+        revalidatedExact: revalidatedAssetResult.exactMatches,
+        revalidatedNear: revalidatedAssetResult.nearMatches,
+        finalExact: enrichedResult.exactMatches,
+        finalNear: enrichedResult.nearMatches,
+        finalSelectionTrace,
+      });
+    }
+    const searchLedger = includeDebug
+      ? buildSearchObservabilitySnapshot()
+      : undefined;
     const discoveryDebug: Record<string, unknown> = {
       generatedQueries,
       // Shadow-mode spec extraction: surfaced for before/after comparison only.
@@ -1317,6 +1362,7 @@ async function handleRecommendationPost(
             sourceUpgradeDecisions,
             sourceUpgradeTraces,
             finalSelectionTrace,
+            searchLedger,
           }
         : undefined,
       serperCandidateCount: serperResult.stats.collectedCandidates,
@@ -1578,6 +1624,30 @@ async function handleRecommendationPost(
       includeDebug,
     );
   }
+}
+
+async function handleRecommendationPost(
+  request: Request,
+  routeDependencies: RecommendationRouteDependencies,
+) {
+  const includeDebug = wantsLocalDebug(request);
+  const ledger = includeDebug
+    ? createSearchObservabilityLedger({
+        commitHash: resolveReviewRadarCommitHash(),
+        flags: reviewRadarFlagSnapshot(),
+        helperModel: helperModel(),
+        finalModel: finalResearchModel(),
+        serperCacheEmptyAtStart: cacheStats().entries === 0,
+      })
+    : null;
+
+  return runWithSearchObservabilityLedger(ledger, () =>
+    handleRecommendationPostWithContext(
+      request,
+      routeDependencies,
+      includeDebug,
+    ),
+  );
 }
 
 export function createRecommendationPostHandler(

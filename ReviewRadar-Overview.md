@@ -347,6 +347,7 @@ the discovery filter, form-factor logic, editorial seeding, schema/contract, and
 node scripts/eval-pipeline.mjs                                   # multi-category exact/near split + red-flag checks
 REVIEW_RADAR_CREDIBILITY_PENALTY=on node scripts/eval-pipeline.mjs
 node scripts/ab-ranking.mjs                                      # one fixed candidate set, flags off vs on
+npm run qa:ledger-benchmark                                     # ledger CPU/serialization overhead, zero provider calls
 ```
 
 **Quality measurement + live replay** (targeted API spend):
@@ -359,7 +360,7 @@ npm run qa:replay -- --all                    # replay all saved live fixtures
 node scripts/citationStrengthDiagnostic.mjs  # citation-type breakdown for one live query
 ```
 
-Saved fixtures (`tests/fixtures/review-radar-live/*.json`) contain the full debug payload and can be replayed for zero additional API cost to inspect stage funnel, source-upgrade traces, final-selection traces, and citation strength. The replay script prints `Source-Quality Upgrade` including `candidatesReturned`, `candidatesEvaluated`, `noMatchReason`, and a candidate sample per attempted upgrade (Phase 3G+).
+Saved fixtures (`tests/fixtures/review-radar-live/*.json`) contain the full debug payload and can be replayed for zero additional API cost to inspect stage funnel, source-upgrade traces, final-selection traces, search-ledger summaries, and citation strength. The replay script prints `Source-Quality Upgrade` including `candidatesReturned`, `candidatesEvaluated`, `noMatchReason`, and a candidate sample per attempted upgrade (Phase 3G+).
 
 **Agent QA loop** (safe local controller/worker/verifier workflow):
 ```bash
@@ -386,6 +387,12 @@ rejected counts, expected/missing products, seed names, model names). Key debug 
 - `debug.stageFunnel.candidatePool` / `.rejectedCheap` / `.postFilter` / `.final7` — per-stage candidate snapshots (`lib/recommendationFunnel.ts`) showing where each candidate was lost.
 - `debug.stageFunnel.sourceUpgradeTraces` — one `SourceUpgradeTrace` per source-upgrade attempt (Phase 3E+): `candidatesReturned`, `candidatesEvaluated`, `noMatchReason`, `candidateSample`, `evidenceAttached`, `attachedFields`. Replay with `scripts/replay-quality-fixtures.mjs`.
 - `debug.stageFunnel.finalSelectionTrace` — per-candidate record of why every candidate that reached `scoreAndSelectRecommendations` was selected, dropped, collapsed, or excluded (`FinalSelectionDecisionReason` enum, 10 values). Replay with `scripts/replay-quality-fixtures.mjs`.
+- `debug.stageFunnel.searchLedger.header` — request ID, commit hash, bounded `REVIEW_RADAR_*` flag snapshot, helper/final model names, and whether the Serper cache was empty at request start.
+- `debug.stageFunnel.searchLedger.rawAi` — strict-schema raw discovery strategy and discovery gap-check JSON. Prompt bodies are intentionally excluded.
+- `debug.stageFunnel.searchLedger.planAssembly` — stable logical query IDs and origins plus born, merge/dedupe, specific cap/cull, recategorization, and dispatch events. Planned queries that never dispatch remain visible.
+- `debug.stageFunnel.searchLedger.dispatch` — cache hit/miss records, one sanitized record per physical Serper attempt (including retry/fallback status and up to 10 result digests), plus an exact reconciliation block.
+- `debug.stageFunnel.searchLedger.candidateLineage` — query provenance, merge/identity-collapse target, citation/requirement/revalidation outcomes, exact/near/neither outcome, score/selection state, and one first-loss stage/subreason for each discarded candidate.
+- `debug.stageFunnel.searchLedger.contributions` — product-discovery contribution counts by query and grouped origin. Zero-contribution labeling is not applied to evidence, image, or rescue searches.
 Example:
 ```powershell
 $body = @{ query = "cordless leaf blower"; priorities = "at least 600 cfm"; budget = "under $300" } | ConvertTo-Json
@@ -827,3 +834,14 @@ No production pipeline or API contract changed in Phase 6A.
 - **RR-070:** ILIFE A12 Pro received unrelated `Bose` metadata brand and source-upgrade query `Bose ILIFE A12 Pro`; no evidence attached. This is a separate Medium Needs Investigation query-identity defect.
 - **Measurement:** One run per query cannot produce pairwise overlap, rank correlation, stage variance, significance, sample-size, or attribution conclusions. RR-014/RR-015/RR-037/RR-045 remain Needs Investigation.
 - **State:** 2/6 searches and 75 Serper queries spent; four calls blocked. No app behavior changed, rubric v1.0 remains unfrozen, and Phase 6E did not start.
+
+## 21. Phase A search-observability ledger status (2026-07-10)
+
+- **State:** Complete. Debug requests now receive one request-scoped ledger nested in the existing stage funnel; ordinary responses remain unchanged and do not create the ledger.
+- **Layer 1 — plan assembly:** Stable query IDs cover deterministic, AI-strategy, AI-gap, editorial, retailer, direct-retailer, rescue, evidence, image, fact-rescue, and source-upgrade origins, including exact merge/cull/recategorization/dispatch events.
+- **Layer 2 — dispatch:** The cache observer records logical hit/miss outcomes and the attempt runner records every physical retry or vertical fallback with sanitized request body and bounded result digests. Reconciliation must balance.
+- **Layer 3 — candidate lineage:** Serper candidates retain multi-query provenance and merge unions. Discarded candidates receive one precise first-loss stage/subreason; final candidates record citation, requirement, revalidation, score, selection, and exact/near outcomes.
+- **Raw planning:** Strict-schema OpenAI discovery strategy and gap-check JSON are retained; prompts, request headers, and API keys are excluded.
+- **Replay/performance:** Saved debug fixtures retain the ledger and `qa:replay` summarizes it at zero cost. The deterministic interleaved benchmark measured 0.757 ms/request, approximately 0.0009% of an 84-second run.
+- **Safety boundary:** No query allocation, query wording, provider request, prompt, rank, filter, identity, eligibility, requirement, trust, or final-selection behavior changed. No live provider call ran.
+- **Issues:** RR-071 through RR-077 are filed as Needs Investigation. Their behavior fixes remain separately scoped.

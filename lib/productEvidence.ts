@@ -576,6 +576,13 @@ async function collectEvidenceSources(
       ...(await searchEvidence(
         query,
         MAX_EVIDENCE_RESULTS_PER_QUERY,
+        {
+          origin: "review_evidence",
+          phase: "review_evidence_enrichment",
+          purpose: "evidence",
+          originalQuery: query,
+          sourceDetail: product.name,
+        },
       )),
     );
   }
@@ -608,6 +615,13 @@ async function collectAdditionalEvidenceSources(
       ...(await searchEvidence(
         query,
         MAX_EVIDENCE_RESULTS_PER_QUERY,
+        {
+          origin: "review_evidence",
+          phase: "review_evidence_enrichment",
+          purpose: "evidence",
+          originalQuery: query,
+          sourceDetail: "additional_evidence",
+        },
       )),
     );
   }

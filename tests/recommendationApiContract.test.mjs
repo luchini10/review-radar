@@ -326,6 +326,8 @@ describe("recommendation API contract", () => {
     assert.equal(Array.isArray(response.body.result.recommendations), true);
     assert.equal(response.body.result.exactMatches[0].name, "Example Countertop Microwave");
     assert.equal("scoreBreakdown" in response.body.result.exactMatches[0], false);
+    assert.equal("debug" in response.body, false);
+    assert.equal(JSON.stringify(response.body).includes("searchLedger"), false);
   });
 
   it("uses GPT-5.4 Mini for helper stages and final synthesis", async () => {
@@ -374,6 +376,19 @@ describe("recommendation API contract", () => {
         (stage) => stage.label === "openai_final_research",
       ),
     );
+    const searchLedger = response.body.debug.stageFunnel.searchLedger;
+    assert.ok(searchLedger);
+    assert.equal(typeof searchLedger.header.commitHash, "string");
+    assert.ok(searchLedger.header.commitHash.length > 0);
+    assert.equal(searchLedger.header.helperModel, "gpt-5.4-mini");
+    assert.equal(searchLedger.header.finalModel, "gpt-5.4-mini");
+    assert.equal(typeof searchLedger.header.flags, "object");
+    assert.equal(
+      typeof searchLedger.header.serperCacheEmptyAtStart,
+      "boolean",
+    );
+    assert.equal(searchLedger.dispatch.reconciliation.balanced, true);
+    assert.equal(searchLedger.candidateLineage.unknownFirstLossCount, 0);
   });
 
   it("includes source-upgrade trigger decisions only in debug responses", async () => {
