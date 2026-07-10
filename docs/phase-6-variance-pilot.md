@@ -1,15 +1,196 @@
 # Phase 6D Variance Pilot
 
-**Date:** 2026-07-02  
+**Date:** 2026-07-02 through 2026-07-10
 **Mode:** M4 repeated live sampling, measurement-only  
 **Rubric:** `v0.1-draft`, not frozen  
-**Verdict:** **FRESH POST-RR-061 RESTART STOPPED AT 2/6 ON WRONG-MODEL IMAGE**
+**Verdict:** **ROADMAP R2 RESTART STOPPED AT 4/6 ON RR-061 WRONG-MODEL IMAGES**
 
 **Post-stop update:** RR-069 was fixed deterministically in a separate narrow
 mini-phase. Taylor approved a new clean six-call post-fix restart on 2026-07-02.
 The four observations below remain RR-069 discovery evidence, are excluded
 from the clean restart sample, and must not be pooled with its measurements.
 Rubric `v1.0` remains unfrozen.
+
+## Roadmap Phase R2 restart — stopped at 4/6 (2026-07-10)
+
+Taylor approved exactly six cache-cold searches. The window is pinned to
+commit `0f44ae7f593e699d2bf7bec5ad3735800ca24d65` with the existing
+`.env.local` flags unchanged. RR-061 was Fixed and 807/807 tests passed before
+the first live request. Earlier partial Phase 6D samples remain excluded.
+
+Three A runs completed. The first B run reproduced RR-061-class wrong-model
+imagery, so B2/B3 were not spent:
+
+| Run | Request | Pool | Exact/Near | Latency | Logical | Hit/Miss | Physical | Retry/Fallback | Balanced |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| A1 | `shop vac` | 16 | 3/1 | 84.064s | 88 | 15/73 | 73 | 0/0 | true |
+| A2 | `shop vac` | 19 | 4/2 | 90.990s | 103 | 20/83 | 83 | 0/0 | true |
+| A3 | `shop vac` | 18 | 3/4 | 87.301s | 100 | 18/82 | 82 | 0/0 | true |
+| B1 | `robot vacuum`, `under $300`, `self-emptying` | 11 | 1/5 | 79.386s | 95 | 16/79 | 79 | 0/0 | true |
+| **Total** | 4/6 searches | — | 11/12 | 341.741s | 386 | 69/317 | 317 | 0/0 | all true |
+
+Every ledger recorded `serperCacheEmptyAtStart: true`. Logical reconciliation
+is exact in all four runs. The ledger's physical-attempt count is materially
+higher than the prior 37–47-call estimate: the four completed searches already
+made 317 attempts. Search-count authority was not exceeded, and the safety stop
+prevented further spend; future budget estimates must use the full ledger.
+
+Untracked Tier A fixtures:
+
+- `tests/fixtures/review-radar-live/shop-vac.ledger-run1.json`
+- `tests/fixtures/review-radar-live/shop-vac.ledger-run2.json`
+- `tests/fixtures/review-radar-live/shop-vac.ledger-run3.json`
+- `tests/fixtures/review-radar-live/robot-vacuum-under-300-self-emptying.ledger-run1.json`
+
+### Safety stop and new defects
+
+B1 rendered `2_QRevo_Curv_QRevo_Edge_140x.jpg` on both Q10 X5+
+(`serper-16k9bd`) and Q10 S5+ (`ai-0002`), and
+`Saros_20_Black_ID.png` on a Q7 Max+ card. R1 requires a mixed letter-digit
+filename token; alphabetic `QRevo`/`Curv`/`Edge`/`Saros` plus numeric `20`
+never arm that guard. RR-061 is reopened and R2 stopped.
+
+Two unrelated defects were filed:
+
+- Critical RR-078: A3 candidate `serper-175v05p`, Shop-Vac
+  `/pages/new-customer-service-2`, became exact #1 with a verified `$50`
+  price; B1 candidate `serper-v8bwd5`, a Pocketables article, rendered near.
+- High RR-079: B1 candidate `serper-1qsgol1`, a standalone compatible
+  self-empty Clean Base station from gap query `q-0067`, passed robot-vacuum
+  category validation and rendered near.
+
+### Plan culls and R4 evidence
+
+All A runs had the same cull distribution: 10 pass-stage truncations, 8
+Shopping-cap crowd-outs, 7 protected-slot allocations, 6 stage-not-reached,
+4 deduplications, and 1 organic-cap crowd-out. B1 had 15 pass-stage
+truncations, 12 stage-not-reached, 10 Shopping-cap crowd-outs, 7 protected-slot
+allocations, and 2 deduplications.
+
+B1's five initial Shopping dispatches were four broad/diluted deterministic
+queries (`robot vacuum under $300`, `vacuum under $300`, `cordless vacuum under
+$300`, `stick vacuum sale under $300`) and only one constraint-bearing AI
+query (`robot vacuum self emptying under $300`). Meanwhile 19 useful AI
+strategy/gap queries were culled, including:
+
+- `q-0025` `self-emptying robot vacuum budget $299 under $300` — Shopping cap;
+- `q-0026` `robot vacuum with auto empty dock under 300 under $300` — Shopping cap and RR-074 duplicate budget;
+- `q-0028` `"self-emptying" robot vacuum under $300` — protected-slot allocation;
+- `q-0029` `"auto-empty" robot vacuum "under $300"` — protected-slot allocation;
+- `q-0030` `robot vacuum with dock included review budget under $300` — protected-slot allocation;
+- `q-0033`/`q-0034` Shark self-empty targets — protected-slot allocation;
+- `q-0035` through `q-0040` retailer/Eufy/iRobot constraint queries — Shopping cap;
+- `q-0041`/`q-0042` Roborock auto-empty targets — pass-stage truncation;
+- `q-0065` Roomba j5+ Clean Base follow-up — Shopping cap.
+
+This is direct R4 evidence: protected generic slots displaced the shopper's
+constraint, and the resulting broad vacuum queries produced five correctly
+rejected stick-vacuum candidates (`wrong_category`).
+
+### Product-discovery contribution
+
+Aggregate contribution across the four runs (evidence/image/rescue-only
+origins intentionally excluded from zero-contribution labeling):
+
+| Origin | Logical queries | Raw | Normalized | Unique | Citation-valid | Requirement-valid | Revalidated | Exact | Near |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| retailer domain | 45 | 60 | 11 | 11 | 10 | 0 | 0 | 0 | 0 |
+| deterministic plan | 68 | 216 | 6 | 6 | 3 | 1 | 1 | 1 | 0 |
+| AI discovery strategy | 76 | 100 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| editorial seed | 64 | 588 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| direct retailer | 2 | 20 | 7 | 5 | 1 | 0 | 0 | 0 | 0 |
+| market rescue | 16 | 160 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| AI gap check | 32 | 217 | 32 | 30 | 18 | 9 | 16 | 8 | 8 |
+
+The ledger labels 24/22/27/27 dispatched product-discovery queries in
+A1/A2/A3/B1 respectively as raw-positive but zero-unique. Recurring zero-value
+queries include generic `shop vac`, `shop vac sale`, `best/top rated`, every
+dispatched AI-strategy A query, all editorial seeds, and every market rescue.
+In B1, all four generic deterministic Shopping queries, the one dispatched
+self-empty strategy query, both Tapo seed dispatches, five gap follow-ups, and
+both market rescues had raw results but zero unique candidates. The gap-check
+origin was nevertheless the only consistently material final contributor.
+
+Editorial seeding is particularly expensive: 588 raw results across 64
+logical queries yielded zero normalized/unique/final candidates. This is the
+required contribution evidence for R6; it supports reducing or repairing seed
+allocation rather than preserving the current budget unchanged.
+
+### Candidate losses
+
+Across the four ledgers the dominant first losses were 835
+`lost_in_normalization:normalizer_rejected_result`, 646
+`lost_in_normalization:search_or_listing_url`, 166 `candidate_merge`, 22
+requirement-filter losses, and 18 citation failures. B1 also recorded five
+correct `wrong_category` stick-vacuum rejections and two raw dedupes.
+
+The `candidate_merge` count is not treated as 166 true product losses. Samples
+include Google-offer variants and near-identical names that later survive under
+canonical URLs (for example Q10 X5+, Q10 S5+, and Q7 Max+); this matches the
+ledger caveat about URL/name mismatch inflation. The actual incorrect
+no-loss survivors are the RR-078/RR-079 candidates above.
+
+### Variance and attribution
+
+Only Group A has pairwise evidence:
+
+| Pair | Strategy-query Jaccard | Expected-product Jaccard | Planned-query Jaccard | Dispatched-query Jaccard | Common-provider result Jaccard | Pool Jaccard | Final Jaccard |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| A1/A2 | 0.0000 | 0.1176 | 0.3846 | 0.3889 | 0.6055 | 0.0938 | 0.0000 |
+| A1/A3 | 0.0000 | 0.1250 | 0.4211 | 0.4286 | 0.5938 | 0.1333 | 0.1000 |
+| A2/A3 | 0.0000 | 0.1875 | 0.3671 | 0.3514 | 0.5466 | 0.0882 | 0.0000 |
+| **Mean** | **0.0000** | **0.1434** | **0.3909** | **0.3896** | **0.5820** | **0.1051** | **0.0333** |
+
+All three raw strategy JSON objects and all three gap-check JSON objects differ.
+Among common dispatched provider queries, 10–14 of 15–18 result sets changed
+per pair. Attribution is therefore mixed: provider variance is material, but
+model/plan variance is worse (zero strategy-query overlap) and downstream
+selection amplifies both to near-zero final overlap.
+
+The strategy and gap-check `responses.create` calls set model, token cap,
+prompt, strict schema, and timeout only. Neither call sets `temperature`,
+`seed`, or an API-supported equivalent. R3 is therefore directly supported
+and should precede R4 as the roadmap specifies.
+
+### RR-037 and RR-045
+
+RIDGID appeared in all three A pools and finals, but with 1/2/2 pool products
+and a different final model in every run. RR-037 remains Needs Investigation:
+family presence improved to 3/3, while model-level stability did not.
+
+B1's two `TP-Link Tapo RV30 Max` seed dispatches each returned ten raw results,
+including RV30 Max Plus listings and an RV30C result. All were lost in
+normalization (`search_or_listing_url` or `normalizer_rejected_result`). RR-045
+therefore shifts from suspected provider emptiness toward normalization/query
+identity, but remains Needs Investigation because exact RV30C Plus was not
+queried.
+
+### North-Star and freeze status
+
+No baseline is frozen because R2 failed the safety gate and Group B has no
+variance sample. Provisional observations only:
+
+- core-leader recall: unavailable; no approved dated leader snapshot exists;
+- wrong-type/non-product final cards: 3/23 observed cards (customer-service
+  page, editorial article, accessory dock), so safety grade F;
+- constraint compliance: B1 exact was 1/1 for encoded category+budget and its
+  title states auto-empty, but `self-emptying` was not encoded as a requirement,
+  so full stated-constraint compliance is not safely scoreable (RR-073);
+- stability: A pool Jaccard mean `0.1051`, final mean `0.0333`; B unavailable.
+
+Rubric remains `v0.1-draft`; no leader method/snapshot was approved, no
+significance rule was frozen, and Phase 6E is not authorized. The deterministic
+ledger benchmark remains 0.757 ms/request (0.0009% of an 84-second run), within
+the 200 ms/2% overhead budget; no extra live no-debug comparison was spent.
+
+### R2 decision
+
+R3 is the single best-supported next roadmap phase: zero strategy-query overlap
+and absent pinning make planner determinism the first controlled variable.
+R4 is independently well supported by the 4-generic/1-constraint Shopping-slot
+allocation, and R6 is supported by zero editorial-seed contribution. No fix is
+implemented here. Any later live validation remains blocked by RR-061 and
+RR-078 safety repairs and requires new approval.
 
 ## Fresh post-RR-061 restart - stopped
 

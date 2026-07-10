@@ -6189,3 +6189,26 @@ live Serper/OpenAI calls: 0
 ```
 
 Register: RR-061 → Fixed (64 Fixed / 12 Needs Investigation / 77 total). Next: Phase R2 live ledger verification + frozen baseline per `docs/forward-roadmap.md` — requires Taylor's explicit six-search approval.
+
+### 🟧 Codex Change — Phase R2 live-ledger restart safety stop
+
+**Verdict: STOPPED at 4/6. The R2/Phase 6D exit gate did not pass; nothing was frozen.**
+
+- Pinned commit `0f44ae7`; precondition suite 807/807 across 119 suites. The approved cache-cold sequence completed A1-A3 `shop vac`, then stopped on constrained B1 (`robot vacuum`, `under $300`, `self-emptying`). B2/B3 were not run.
+- All four request ledgers reconcile exactly: 386 logical lookups = 69 hits + 317 misses; 317 physical Serper attempts; 0 retries; 0 fallbacks. Every cache was empty at request start. The old 37-47-call estimate did not describe full-ledger traffic.
+- RR-061 reopened: Q10 X5+, Q10 S5+, and Q7 Max+ cards rendered QRevo/Saros files. The R1 guard recognizes only mixed letter-digit filename tokens, so alphabetic model-family names bypass it.
+- Critical RR-078 opened for non-product customer-service/editorial pages rendered as buyable product cards. High RR-079 opened for an accessory-only self-empty dock rendered as a robot-vacuum near match.
+- A-run final-card Jaccard mean was 0.0333; pool Jaccard mean was 0.1051. Provider common-result Jaccard mean was 0.5820, while expected-product/planned/dispatched query means were 0.1434/0.3909/0.3896. Attribution is mixed: provider churn is material, model/planner variation is greater, and downstream selection amplifies both.
+- OpenAI planning does not set a temperature or seed. All three strategy raw JSON values and all three gap-check raw JSON values differed. RR-037 remains Needs Investigation: RIDGID appeared in all three pools/finals, but identities varied. RR-045 remains Needs Investigation: two broad Tapo seed queries returned results that normalization discarded; no exact RV30C Plus query ran.
+- Product discovery was dominated by AI-gap queries (30 unique candidates; 8 exact and 8 near contributions). Editorial seeds produced 588 raw results but zero unique/final candidates. The constrained B plan began with four broad/diluted deterministic shopping queries and only one self-emptying query, supporting R4/R6 prioritization.
+- Baseline safety was 3 wrong-type/non-product cards out of 23 final cards. B1 had 1/1 exact card compliant with category and budget, but full hard-constraint compliance is not scoreable because `self-emptying` was not encoded as a requirement. Core-leader recall is unavailable without an approved snapshot.
+- Rubric remains `v0.1-draft`; no leader method, leader snapshot, significance rule, or baseline North-Star value was frozen. Phase 6E remains unauthorized. Four new Tier A fixtures are untracked and must not be committed.
+
+```text
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm test: 807/807 across 119 suites
+live calls after safety stop: 0
+```
+
+Next: roadmap Phase R3 (planner determinism, zero live calls) after review. Repair RR-061/RR-078 before any later live window; do not start Phase 6E.

@@ -1340,3 +1340,23 @@ No live provider calls and no search/ranking/trust behavior changes.
 **Stable test entry points:** `tests/productImageResolver.test.mjs` describe block "RR-061 wrong-model image identity (Phase R1)": two fail-first vetoes (verified-page Saros Z70 on Q5 Max+; cross-product eufy L60 on Roomba j7+) and three preservation cases (same-model filename, Amazon modifier/retina/dimension tokens, model-less product). 19/19 focused; 807/807 full suite across 119 suites.
 
 **Canary note:** the ledger privacy canary requested by roadmap R1 already existed in `tests/searchObservabilityLedger.test.mjs` (snapshot JSON asserted free of `CANARY_SERPER_KEY_MUST_NOT_APPEAR`); it was verified, not duplicated.
+
+---
+
+## 2026-07-10 - Phase R2 live-ledger safety stop
+
+**Sample boundary:** Commit `0f44ae7`; A1-A3 `shop vac` and constrained B1 only. B2/B3 were not run. The four new fixtures are untracked Tier A evidence and must never be pooled with earlier stopped Phase 6D windows.
+
+**Reconciliation invariant:** Across the four runs, 386 logical cache lookups = 69 hits + 317 misses, and the 317 misses = 317 physical attempts because retries/fallbacks were both zero. Each per-run ledger balanced and recorded an empty initial cache. Treat this equation as the primary completeness check for later ledger samples.
+
+**RR-061 regression shape:** The R1 model-conflict guard only extracts 2-8 character tokens containing both letters and digits. Filenames containing alphabetic foreign families (`QRevo`, `Curv`, `Edge`, `Saros`) can therefore survive on Q10 X5+/Q10 S5+/Q7 Max+ products. Verified page context must not outweigh those explicit foreign-family names.
+
+**Eligibility/type failures:** A Shop-Vac customer-service page and a Pocketables day-five article survived as `buyable_product` cards (RR-078). A Walmart self-empty base-station accessory survived as a robot-vacuum near match (RR-079). These candidates were not merely ranking misses; they passed eligibility/type boundaries.
+
+**Planner evidence:** No temperature or seed is configured for either discovery-strategy OpenAI call. All A strategy and gap raw JSON outputs varied. A mean Jaccards were strategy query 0, expected product 0.1434, planned discovery 0.3909, dispatched 0.3896, provider common results 0.5820, pool 0.1051, final 0.0333. Provider variation matters, but model/planner variation is greater and downstream stages amplify it.
+
+**Cull/contribution evidence:** Editorial seed queries returned 588 raw results and zero unique/final candidates. AI-gap queries were the only consistent final contributor (30 unique; 8 exact; 8 near). Constrained B allocated four broad/diluted deterministic shopping queries and only one self-emptying query before later AI-gap recovery. Preserve these facts for R3/R4/R6 fail-first tests.
+
+**Carryovers:** RR-037 stays Needs Investigation because RIDGID was present in all A runs but product identities and counts varied. RR-045 stays Needs Investigation because two broad Tapo editorial queries returned raw results that normalization discarded; an exact RV30C Plus query was never sent.
+
+**Freeze boundary:** The R2/Phase 6D exit gate failed. Rubric remains `v0.1-draft`; no leader snapshot, significance rule, or baseline North-Star value is approved. Phase 6E remains unauthorized.

@@ -1610,3 +1610,16 @@ Stop. Do not implement RR-061 or begin Phase B live verification without separat
 - Fail-first 2/2 from the live B1 fixture evidence, then green; focused resolver 19/19; full suite 807/807 across 119 suites; typecheck/lint/build/eval pass; zero live calls.
 - Preserved hashed CDN assets, Amazon image modifiers, retina/dimension/unit tokens, Google Shopping thumbnails, same-model images, model-less products, and all prior flyout/navigation safeguards.
 - Register: RR-061 → Fixed (64 Fixed / 12 Needs Investigation / 77 total). Live measurement unblocked; Phase R2 requires separate explicit approval per the roadmap.
+
+### Phase R2 safety-stop record (2026-07-10)
+
+- Completed step: Four of six approved cache-cold live-ledger searches at pinned commit `0f44ae7`; A1-A3 `shop vac` completed and constrained B1 triggered the absolute safety stop. B2/B3 were not run.
+- Reconciliation: 386 logical lookups, 69 cache hits, 317 misses, 317 physical Serper attempts, 0 retries, 0 fallbacks; every run balanced and began with an empty cache.
+- Stop defects: RR-061 reopened for QRevo/Saros wrong-model images bypassing the mixed letter-digit filename guard; Critical RR-078 opened for customer-service/editorial pages rendered as products; High RR-079 opened for an accessory-only dock rendered as a robot-vacuum near match.
+- Measurement: A pool/final Jaccard means 0.1051/0.0333; provider common-result mean 0.5820; planned/dispatched query means 0.3909/0.3896. Model/planner and provider variance are both material, with downstream amplification.
+- Baseline/freeze: R2/Phase 6D exit invalid. Rubric stays `v0.1-draft`; leader snapshots, significance rule, and North-Star baseline remain unfrozen. Phase 6E remains unauthorized.
+- Register: 79 total; 11 Critical, 33 High, 30 Medium, 5 Low; 63 Fixed, 15 Needs Investigation, 1 Won't Fix, 0 Open.
+- Artifacts: Four new Tier A fixtures remain untracked and must not be committed. No production behavior, test, prompt, query, ranking, flag, or fixture changed.
+- Next phase: R3 planner determinism (zero live calls), after review. No later live window may proceed until RR-061/RR-078 are repaired and separately approved.
+
+Stop. Do not run B2/B3, freeze the baseline, start Phase 6E, or fix the new findings without separate scope.

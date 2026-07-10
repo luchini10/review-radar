@@ -4,61 +4,83 @@ Generated: 2026-07-10
 
 ## Current state
 
-`docs/forward-roadmap.md` governs all forward sequencing (adopted 2026-07-10,
-Phase R0, commit `62cc007`).
+`docs/forward-roadmap.md` governs forward sequencing. Phase R2 started at
+pinned commit `0f44ae7` but hit the absolute safety stop after four of six
+approved searches. A1-A3 `shop vac` completed; constrained B1 (`robot vacuum`,
+`under $300`, `self-emptying`) triggered the stop. B2/B3 were not run.
 
-**Phase R1 is complete: RR-061 is Fixed.** The shared image resolver now vetoes
-images whose filename model identity conflicts with the product's normalized
-name/brand/model identity, closing the wrong-model failure
-(`Saros_Z70_Silver_ID.png` on a Roborock Q5 Max+ card) that stopped the last
-two live windows. Fail-first 2/2 → green; focused resolver 19/19; full suite
-807/807 across 119 suites; typecheck/lint/build/eval pass; zero live calls.
+All four cache-cold ledgers reconcile: 386 logical lookups, 69 cache hits, 317
+misses, 317 physical Serper attempts, 0 retries, and 0 fallbacks. The four new
+Tier A fixtures are untracked and must not be committed or pooled with earlier
+stopped Phase 6D samples.
 
-The register contains 77 issues: 64 Fixed, 12 Needs Investigation, 1 Won't
-Fix, 0 Open. RR-070 through RR-077 remain Needs Investigation evidence for
-roadmap Phases R4–R6; do not fix them out of order.
+The register contains 79 issues: 63 Fixed, 15 Needs Investigation, 1 Won't
+Fix, and 0 Open; 11 Critical, 33 High, 30 Medium, and 5 Low.
 
-## Required next task — Phase R2 (separate explicit approval required)
+- RR-061 is reopened. Q10 X5+, Q10 S5+, and Q7 Max+ cards rendered QRevo/Saros
+  foreign-model filenames that bypass the R1 mixed letter-digit token guard.
+- RR-078 is Critical/Needs Investigation: customer-service and editorial pages
+  rendered as buyable product cards.
+- RR-079 is High/Needs Investigation: an accessory-only self-empty dock rendered
+  as a robot-vacuum near match.
+- RR-037 and RR-045 remain Needs Investigation.
 
-**Phase R2 — live ledger verification + frozen baseline.** Six live searches
-(~225–280 Serper calls): three broad `shop vac`, three constrained
-`robot vacuum` / `under $300` / `self-emptying`, cache-cold per run,
-commit-pinned, fixtures saved with `ledger-run` names. R2 completes Phase 6D,
-freezes rubric v1.0 and the leader snapshots, records the baseline North-Star
-values, and serves as the "before" sample for R3/R4. Full protocol, safety
-rule, and report requirements: `docs/forward-roadmap.md`.
+R2 did not satisfy the Phase 6D exit gate. Rubric remains `v0.1-draft`; no
+leader snapshot, significance rule, or North-Star baseline is frozen. Phase 6E
+remains unauthorized.
 
-R2 starts ONLY when Taylor fires its kickoff prompt with the live budget.
-Until then:
+## Required next task — Phase R3
 
-- do not run Serper searches, OpenAI searches, `qa:save-fixture`, live QA
-  workers, or baseline/variance searches;
-- do not spend the four calls left from the stopped Phase 6D window;
-- do not pool any of the three stopped Phase 6D samples;
-- do not freeze rubric v1.0, approve leader snapshots, or start Phase 6E
-  outside R2;
-- do not implement RR-070 through RR-077 based only on Phase A
-  instrumentation (they are owned by R4–R6);
-- do not weaken the RR-061 model-conflict guard or any prior image, identity,
-  price, citation, requirement, or product-type safeguard.
+**Phase R3 — planner determinism (zero live calls).** Follow
+`docs/forward-roadmap.md` exactly. Use the R2 ledgers as fail-first evidence to
+make search-plan generation reproducible enough for controlled comparison.
+Focus on the configured OpenAI discovery-strategy and gap-planning calls: they
+currently set no temperature or seed, and every A-run raw strategy/gap output
+varied.
 
-## Verification baseline (post-R1)
+The R3 phase must:
 
-```text
-npm run typecheck: pass
-npm run lint: 0 errors, 3 existing warnings
-npm test: 807/807 across 119 suites
-npm run build: pass
-node scripts/eval-pipeline.mjs: no red-flag issues
-live Serper/OpenAI calls: 0
-```
+- run zero live Serper/OpenAI searches unless Taylor separately approves a new
+  live budget;
+- add deterministic tests before changing behavior;
+- preserve request constraints and the strict output schemas;
+- define and verify the intended temperature/seed behavior against the actual
+  supported model/API contract;
+- avoid fixing R4 query allocation, R5 downstream false negatives, R6 seed
+  precision, RR-061, RR-078, or RR-079 in the same phase;
+- keep all image, identity, price, citation, requirement, product-type, and
+  product-page safety gates at least as strict;
+- update the issue register and the standard nine-document set, then commit the
+  scoped phase separately.
+
+## Evidence to carry into later phases
+
+- A-run Jaccard means: expected products 0.1434, planned queries 0.3909,
+  dispatched queries 0.3896, provider common results 0.5820, candidate pool
+  0.1051, final cards 0.0333. Attribution is mixed; downstream stages amplify
+  planner/model and provider variance.
+- AI-gap queries supplied 30 unique candidates and 8 exact/8 near outcomes.
+  Editorial seeds produced 588 raw results and zero unique/final candidates.
+- Constrained B began with four broad/diluted deterministic shopping queries
+  and only one self-emptying query. That evidence belongs to R4.
+- RR-037: RIDGID appeared in every A run but with variable product identities.
+  RR-045: two broad Tapo queries returned raw results that normalization
+  discarded; no exact RV30C Plus query ran.
+
+## Safety boundary
+
+Do not run the unspent B2/B3 calls, freeze R2 values, approve leader snapshots,
+start Phase 6E, or begin another live window. Any later live sample requires a
+separately approved budget and repairs for RR-061/RR-078 first. Do not commit
+live fixtures or modify `.env.local` / `REVIEW_RADAR_*` flags.
 
 Reference:
 
 - `docs/forward-roadmap.md`
-- `docs/review-radar-search-pipeline-audit.md`
+- `docs/phase-6-variance-pilot.md`
 - `docs/RR-Issues-Report.md`
+- `docs/review-radar-search-pipeline-audit.md`
 - `docs/codex-handoff-phased-plan.md`
 - `docs/review-radar-test-memory.md`
 - `docs/qa-loop-results.md`
-- `ReviewRadar-Overview.md` sections 10, 21, and 22
+- `ReviewRadar-Overview.md` section 23

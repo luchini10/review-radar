@@ -13,6 +13,25 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-10
 
+### Codex - Phase R2 live-ledger restart safety stop
+
+#### Changed
+
+- Ran four of six approved cache-cold searches at commit `0f44ae7`; A1-A3 `shop vac` completed and constrained B1 triggered the mandatory stop. B2/B3 were not spent.
+- Reopened RR-061 after Q10 X5+, Q10 S5+, and Q7 Max+ cards rendered QRevo/Saros foreign-model filenames that bypass the R1 mixed letter-digit token guard.
+- Opened Critical RR-078 for customer-service/editorial pages rendered as product cards and High RR-079 for an accessory-only self-empty dock rendered as a robot-vacuum near match.
+- Added complete ledger reconciliation, cull/contribution, first-loss, variance-attribution, RR-037/RR-045, and provisional North-Star evidence to the Phase 6D record.
+- Kept rubric `v0.1-draft`, leader snapshots, and the baseline unfrozen because the safety-stopped 4/6 window did not satisfy the R2/6D exit gate.
+- No production code, tests, prompts, flags, ranking, search, eligibility, image, or trust behavior changed. Four fixtures remain untracked.
+
+#### Verified
+
+- Precondition `npm test`: 807/807 across 119 suites at pinned commit `0f44ae7`.
+- Final docs-only verification: typecheck passed; lint reported 0 errors and 3 existing warnings; full suite passed 807/807 across 119 suites.
+- All four ledger reconciliation blocks are balanced and all four caches were empty at request start.
+- Live spend: 4/6 searches, 317 physical Serper attempts, 0 retries, 0 fallbacks; the earlier estimate materially understated full-ledger traffic.
+- Deterministic ledger overhead remains 0.757 ms/request (0.0009% of an 84-second run), within budget.
+
 ### Codex - Request-scoped search and candidate-lineage ledger (Phase A)
 
 #### Changed

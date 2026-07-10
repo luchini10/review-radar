@@ -1,8 +1,8 @@
 # ReviewRadar Phase 6 Reliability Gauntlet - Master Plan
 
-**Status:** Canonical merged plan; Phases 6A-6C complete; fresh Phase 6D restart stopped
+**Status:** Canonical merged plan; Phases 6A-6C complete; roadmap Phase R2 / Phase 6D stopped at 4/6
 **Prepared:** 2026-07-01
-**Execution state:** Fresh Phase 6D restart stopped at 2/6 after wrong-model imagery reopened RR-061 and opened RR-070; Phase 6E remains unauthorized. Per `docs/forward-roadmap.md` (adopted 2026-07-10), Phase 6D completion is scheduled as roadmap Phase R2, which also owns the rubric-v1.0/leader-snapshot freeze; the RR-061 fix precedes it as roadmap Phase R1
+**Execution state:** Roadmap Phase R2 started from commit `0f44ae7` and stopped at 4/6 after constrained B1 reproduced RR-061 and exposed RR-078/RR-079. A1-A3 completed; B2/B3 were not run. Rubric v1.0, leader snapshots, and baseline values remain unfrozen; Phase 6E remains unauthorized. R3 is the next roadmap phase, but no later live window may proceed until the safety defects are repaired and separately approved
 **Repository:** `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 **Canonical repository path:** `docs/phase-6-reliability-gauntlet-plan.md`
 
@@ -44,6 +44,15 @@ Intentional Needs Investigation carryovers:
 
 These are measurement and provider-variance questions. They are not unresolved
 Phase 5 behavior blockers.
+
+### Phase R2 / Phase 6D execution update (2026-07-10)
+
+- The fresh R2 window ran A1-A3 `shop vac` and constrained B1 only at pinned commit `0f44ae7`. B1 triggered the absolute safety stop, so B2/B3 were not run.
+- Four ledgers reconcile 386 logical lookups, 69 hits, 317 misses, and 317 physical Serper attempts with zero retries/fallbacks; all initial caches were empty.
+- RR-061 reopened for QRevo/Saros foreign-model imagery. RR-078 (Critical) tracks non-product pages rendered as buyable products; RR-079 (High) tracks an accessory dock rendered as a robot vacuum.
+- A mean pool/final Jaccard is 0.1051/0.0333; provider common-result mean is 0.5820; planned/dispatched query mean is 0.3909/0.3896. The evidence supports mixed provider and model/planner variance with downstream amplification.
+- This stopped 4/6 sample fails the R2/6D exit gate. Rubric remains `v0.1-draft`; no leader snapshot, significance rule, or baseline North-Star value is frozen. Phase 6E remains unauthorized.
+- R3 planner determinism is next in roadmap order and requires zero live calls. Any later live window requires repaired safety defects and separate approval.
 
 Relevant existing measurement tools include:
 

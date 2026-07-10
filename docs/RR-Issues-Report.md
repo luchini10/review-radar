@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through roadmap Phase R1
+## Compiled for AI Agent Consumption — Phase 0 through the stopped roadmap Phase R2 window
 
 **Generated:** 2026-07-10
-**Scope:** All phases from initial measurement harness through the Phase R1 RR-061 wrong-model image fix
+**Scope:** All phases from initial measurement harness through the stopped Phase R2 live-ledger window
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -13,14 +13,14 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 77 |
-| Critical | 10 |
-| High | 32 |
+| Total Issues | 79 |
+| Critical | 11 |
+| High | 33 |
 | Medium | 30 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 12 |
-| Fixed | 64 |
+| Needs Investigation | 15 |
+| Fixed | 63 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -93,6 +93,7 @@
 | RR-069 source-upgrade identity safety mini-phase | 0 |
 | Phase A search-observability audit filing | 7 |
 | Phase R0/R1 — Roadmap adoption + RR-061 model-conflict fix | 0 |
+| Phase R2 — Live ledger verification safety stop | 2 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -1083,6 +1084,8 @@ Deterministic tests cover Oral-B and EGO retention, specific Purina and Hill's p
 
 **Phase 6D partial pilot evidence:** RIDGID entered the merged candidate pool in both completed `shop vac` runs, but exposure varied sharply: one RIDGID candidate in A1 versus five in A2. In A1, the sole RIDGID candidate survived citation verification and was removed by requirement filtering. In A2, three RIDGID candidates survived through the final exact/near slate, including one exact card. Raw provider traces contained zero RIDGID names in A1 and three in A2. This disproves total pool absence for these two runs but confirms the underlying provider/plan variance. The third planned run was not spent after Critical RR-069 triggered the safety stop, so RR-037 remains Needs Investigation.
 
+**Phase R2 evidence (2026-07-10):** All three cache-cold `shop vac` runs contained RIDGID in both the pool and final set, but the product identity varied every time: A1 had one pool/final RIDGID (6 Gallon Stainless Steel), A2 had two pool RIDGIDs and one final (WD4522), and A3 had two pool RIDGIDs and one final (12 Gallon NXT). Presence improved to 3/3 in this window, while pool count and model composition remained unstable. RR-037 remains Needs Investigation because the historical absence mechanism and current model-level variance are not resolved.
+
 ---
 
 ### PHASE 3G — SOURCE-UPGRADE SEARCH-RESULT DIAGNOSTICS (2026-06-26)
@@ -1525,6 +1528,8 @@ No new defect was discovered during deterministic implementation. Phase 3K added
 
 **Phase 3M uncertainty note:** Phase 3M disproved raw-provider emptiness for the tested DEWALT queries, but it did not directly re-probe Tapo RV30C Plus. The original claim that Tapo has limited Serper index coverage is therefore still uncertain. Before changing sources or adding an organic fallback, run the raw/structural/eligible diagnostic for the exact Tapo query and confirm which layer is empty.
 
+**Phase R2 evidence (2026-07-10):** B1 dispatched `TP-Link Tapo RV30 Max` twice through editorial-seed paths. Each physical result digest contained ten raw results, including RV30 Max Plus listings and one `TP Link LiDAR Navigation Robot Vacuum Tapo RV30C` result. Raw provider coverage therefore exists for the adjacent Tapo family. Every Tapo result was lost in normalization (`search_or_listing_url` or `normalizer_rejected_result`), and the exact `RV30C Plus` query was not run. RR-045 remains Needs Investigation, but the evidence now points away from total provider emptiness and toward query identity plus normalization/eligibility loss.
+
 ---
 
 #### RR-046
@@ -1860,7 +1865,7 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 | **Phase** | Phase 4F |
 | **Severity** | Medium |
 | **Title** | Product image metadata can contain page URLs, generic brand assets, or unrelated navigation images |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** All 70 final cards had a non-empty image field, but several were not usable product images. Leaf-blower examples included a truncated Home Depot image directory, Greenworks/BLACK+DECKER product-page URLs, a WORX navigation banner, and an EGO brand logo. Dog-food examples included a Blue Buffalo logo and PetSmart category hero. An LG gaming-monitor image ended in `.html`.
 
@@ -1889,6 +1894,8 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 **Phase R1 resolution (2026-07-10):** Fixed deterministically. The resolver's confidence path allowed verified page context to outweigh an explicit conflicting model identity in the image filename. The shared resolver now extracts model-shaped identity tokens (2–8 characters, containing both letters and digits) from the final image filename and rejects the candidate when the product itself carries model-shaped identity and none of the filename's model tokens are compatible with the product's normalized name/brand/model identity. CDN and image-pipeline artifacts are exempt from the token definition — Amazon `_AC_SL1500_`-class modifiers, retina `@2x`, dimension pairs (`800x600`), `w`/`h` size markers, version markers (`v2`), camera/file counters, and unit measurements — and the guard stays inert for products without model-shaped identity, so opaque hashed CDN assets, Google Shopping thumbnails, verified same-model images, and multi-model comparison shots remain accepted. Any compatible token clears the image; only an all-foreign model claim vetoes it. The exact captured failure — `Saros_Z70_Silver_ID.png` on the Roborock Q5 Max+ card — is rejected with reason `image filename identifies a different model`.
 
 **Phase R1 resolution proof:** Fail-first tests distilled from the live B1 fixture (wrong-model veto on a verified page; cross-product filename from any source) failed 2/2 before the guard and pass after. Preservation tests cover same-model filenames on verified pages, Amazon hashed/modifier assets, retina and dimension tokens, and model-less products. Focused resolver suite 19/19; full suite 807/807 across 119 suites; typecheck, lint (0 errors, 3 existing warnings), production build, and offline eval all pass. Zero live Serper/OpenAI calls. Implemented in the Phase R1 commit (2026-07-10) per `docs/forward-roadmap.md`.
+
+**Phase R2 safety-stop regression (2026-07-10):** Reopened as Needs Investigation. The first constrained R2 run rendered three explicit foreign-model filenames: `2_QRevo_Curv_QRevo_Edge_140x.jpg` on both `Roborock Q10 X5+` (`serper-16k9bd`) and `Roborock Q10 S5+` (`ai-0002`), plus `Saros_20_Black_ID.png` on a Q7 Max+ card. The R1 token guard requires a mixed letter-digit filename token; `QRevo`, `Curv`, `Edge`, and `Saros` are alphabetic while `20` is numeric, so the guard never armed. R2 stopped at 4/6 searches; no fix was attempted. Any next fix must recognize incompatible named model families without rejecting opaque CDN assets or valid same-model images.
 
 **Sweep result:**
 
@@ -2542,16 +2549,71 @@ No new issue ID was opened.
 
 The request-scoped search/candidate ledger is implemented and deterministically verified. This does not resolve RR-071 through RR-077: all seven records remain Needs Investigation because Phase A intentionally made no change to search wording/allocation, requirement semantics, candidate filters, identity, or source-upgrade construction. No additional current defect was proven while implementing the instrumentation.
 
+---
+
+### PHASE R2 — LIVE LEDGER VERIFICATION SAFETY STOP (2026-07-10)
+
+#### RR-078
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-078 |
+| **Phase** | Phase R2 live ledger verification |
+| **Severity** | Critical |
+| **Title** | Support and editorial pages pass product eligibility and render as product cards |
+| **Status** | Needs Investigation |
+
+**Description:** Non-product pages can be classified as `buyable_product`, enriched with unrelated price/evidence, and selected as product cards. In A3, Shop-Vac's customer-service page became the #1 exact result with a verified `$50` price and product claims drawn from unrelated sources. In B1, a Pocketables “day 5” article rendered as a Q7 Max+ near-match product card.
+
+**Where it occurs:** Shared product eligibility, page metadata enrichment, and final candidate validation.
+
+**Steps to reproduce:** Replay untracked Tier A fixtures `shop-vac.ledger-run3.json` and `robot-vacuum-under-300-self-emptying.ledger-run1.json`. A3 candidate `serper-175v05p` uses `https://www.shopvac.com/pages/new-customer-service-2`, passes citation/requirements/revalidation, and ranks exact #1. B1 candidate `serper-v8bwd5` uses `https://pocketables.com/2022/05/roborock-q7-max-vacuum-with-auto-empty-dock-day-5.html` and reaches final near.
+
+**Expected:** Support, customer-service, editorial, review, and article pages remain evidence-only and can never render as product cards or supply verified product prices.
+
+**Actual:** Both page classes receive `buyable_product` eligibility and survive final selection.
+
+**Current status:** Needs Investigation. This is a Critical safety-axis failure discovered in the stopped R2 measurement window. No behavior changed in R2.
+
+**Suggested fix or next action:** Add generalized route/title/page-type controls at the shared eligibility boundary, with fail-first coverage for `/pages/*customer-service*` and dated editorial/article paths. Preserve legitimate product-detail pages using `/pages/` only when source-derived Product identity is explicit.
+
+---
+
+#### RR-079
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-079 |
+| **Phase** | Phase R2 live ledger verification |
+| **Severity** | High |
+| **Title** | Accessory-only self-empty dock renders as a robot-vacuum near match |
+| **Status** | Needs Investigation |
+
+**Description:** A standalone compatible self-empty Clean Base station passed robot-vacuum category validation and rendered as a final near match instead of being rejected as an accessory.
+
+**Where it occurs:** Serper candidate product-type/accessory filtering and requirement validation.
+
+**Steps to reproduce:** Replay untracked Tier A fixture `robot-vacuum-under-300-self-emptying.ledger-run1.json`. Candidate `serper-1qsgol1`, sourced by gap query `q-0067`, is a Walmart “Self-Empty Clean Base Station Compatible With Roborock ...” listing. It has no first-loss record, passes category validation, and is selected final near.
+
+**Expected:** A dock, charging station, dust-disposal base, or replacement accessory without the robot vacuum itself is excluded from exact and near product results.
+
+**Actual:** The accessory is labeled `buyable_product`, passes `Category: robot vacuum`, and reaches final near.
+
+**Current status:** Needs Investigation. No behavior fix was attempted in R2.
+
+**Suggested fix or next action:** Add a generalized exclusive-accessory rule for standalone bases/docks/stations that preserves bundles explicitly including the vacuum.
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (12 issues)
+### Needs Investigation (15 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
+- RR-061: Product image validation misses alphabetic/numeric foreign model-family filenames
 - RR-070: Unrelated provider brand metadata can contaminate source-upgrade queries
 - RR-071: Exact-model identity falsely collapses distinct Vacmaster 12-gallon products
 - RR-072: RIDGID HD0900 Wet Dry Vac is falsely rejected as wrong category
@@ -2560,9 +2622,11 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 - RR-075: Generic vacuum synonyms crowd robot-vacuum discovery with wrong product forms
 - RR-076: Editorial seed extraction emits malformed and non-product Shopping queries
 - RR-077: Source upgrade prefixes an ambiguous DW brand token to an exact DEWALT model
+- RR-078: Support and editorial pages render as product cards
+- RR-079: Accessory-only self-empty dock renders as a robot-vacuum near match
 
-### Fixed (64 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-069
+### Fixed (63 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-060, RR-062 through RR-069
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2571,7 +2635,9 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-014 + RR-015** (High) — Leader recall and run-to-run stability; roadmap Phase R2 establishes the measured baseline and variance attribution, R3/R4 target the causes. (RR-061 was fixed in Phase R1 on 2026-07-10, unblocking live measurement.)
-2. **RR-071 + RR-072 + RR-073** (High) — Current false identity collapse, valid-product rejection, and lost hard-requirement semantics; owned by roadmap Phases R4/R5.
-3. **RR-070 + RR-074 through RR-077** (Medium) — Query construction, seed precision, and provider-metadata reconciliation; owned by roadmap Phases R4/R6, gated on R2 contribution/lineage evidence.
-4. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain; R2's live sample supplies the evidence.
+1. **RR-061 + RR-078** (Critical safety stop) — Wrong-model images and non-product cards must be fixed deterministically before any later live batch.
+2. **RR-014 + RR-015** (High) — R2 measured severe plan and final-set instability; R3 is the evidence-supported next roadmap phase, while the R2 freeze remains blocked.
+3. **RR-073 + RR-074 + RR-075 + RR-079** (High/Medium) — Constraint-bearing queries are crowded out, malformed budget phrases persist, and an accessory reached final near; owned by R4 plus a separately approved eligibility fix.
+4. **RR-071 + RR-072** (High) — Current false identity collapse and valid-product rejection remain owned by R5.
+5. **RR-070 + RR-076 + RR-077** (Medium) — R2 showed 588 editorial raw results with zero unique candidates; source-brand and seed precision remain owned by R6.
+6. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3 but varied by model, while Tapo appeared raw and died in normalization.
