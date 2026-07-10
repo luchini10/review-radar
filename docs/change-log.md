@@ -33,6 +33,15 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 - `npm run qa:ledger-benchmark`: 0.757 ms measured overhead per representative request, projected 0.0009% of an 84-second request; zero provider calls.
 - Live Serper/OpenAI calls: 0.
 
+### Claude - Forward roadmap adoption (Phase R0)
+
+#### Changed
+
+- Adopted `docs/forward-roadmap.md` as the single forward-sequencing document: R1 (RR-061 image fix) → R2 (live ledger verification + frozen baseline, completes Phase 6D) → R3 (planner determinism) → R4 (constraint-preserving query allocation + requirement strength) → R5 (downstream false negatives) → R6 (source-brand trust + seed precision) → R7 (single-candidate-source consolidation).
+- Encoded the North-Star metrics (core-leader recall, zero wrong-type, constraint compliance, stability) and anti-measurement rules, including the two-phases-without-improvement escalation stop.
+- Repointed `docs/agent-next-task.md` to Phase R1 and cross-referenced the roadmap from `docs/codex-handoff-phased-plan.md` and the Phase 6 master plan's execution-state header.
+- Docs only; no code, test, fixture, or behavior change; zero live calls.
+
 ## 2026-07-02
 
 ### Codex - Fresh Phase 6D restart safety stop

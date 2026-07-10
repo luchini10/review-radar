@@ -6157,3 +6157,14 @@ live provider calls: 0
 ```
 
 Next: separately approved RR-061 wrong-model image fix, then separately approved Phase B live verification. No live search is authorized by this phase.
+
+## <span style="color:green">**Claude QA Update — 2026-07-10 (Phase R0: forward roadmap adoption)**</span>
+
+**Verdict: COMPLETE. Docs only; zero live calls; no behavior change.**
+
+- Adopted `docs/forward-roadmap.md` as the sole forward-sequencing document (R1–R7), with North-Star metrics and binding anti-measurement rules so instrumentation serves fixes instead of replacing them.
+- Sequenced the proven audit bottleneck (constraint-aware query allocation + requirement strength) as R4 behind the RR-061 unblock (R1) and the combined live-ledger-verification/baseline batch (R2, which completes Phase 6D and owns the rubric-v1.0 freeze).
+- Declared the single-candidate-source target architecture (R7) so guard-versus-removal decisions have a stated direction.
+- Repointed `docs/agent-next-task.md`; cross-referenced from `docs/codex-handoff-phased-plan.md` and the Phase 6 master plan header. No issue statuses changed.
+
+Next: Phase R1 (RR-061 generalized wrong-model image fix), approved and executing in this session.

@@ -16,6 +16,11 @@ End goal: ReviewRadar should reliably return the 7 best / most popular / most tr
 
 ## Current Status
 
+**Forward sequencing is now governed by `docs/forward-roadmap.md` (R-series,
+adopted 2026-07-10 as Phase R0).** This document remains the historical record
+and receives completion records as R-phases finish; it no longer defines what
+comes next.
+
 Current phase: **Fresh Phase 6D restart stopped at 2/6; RR-061 reopened and RR-070 opened.**
 
 The original four-call Phase 6D attempt remains aborted pre-fix RR-069

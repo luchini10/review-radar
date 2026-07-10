@@ -2,7 +2,7 @@
 
 **Status:** Canonical merged plan; Phases 6A-6C complete; fresh Phase 6D restart stopped
 **Prepared:** 2026-07-01
-**Execution state:** Fresh Phase 6D restart stopped at 2/6 after wrong-model imagery reopened RR-061 and opened RR-070; Phase 6E remains unauthorized
+**Execution state:** Fresh Phase 6D restart stopped at 2/6 after wrong-model imagery reopened RR-061 and opened RR-070; Phase 6E remains unauthorized. Per `docs/forward-roadmap.md` (adopted 2026-07-10), Phase 6D completion is scheduled as roadmap Phase R2, which also owns the rubric-v1.0/leader-snapshot freeze; the RR-061 fix precedes it as roadmap Phase R1
 **Repository:** `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 **Canonical repository path:** `docs/phase-6-reliability-gauntlet-plan.md`
 
