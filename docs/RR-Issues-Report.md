@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
 ## Compiled for AI Agent Consumption — Phase 0 through the post-RR-061 Phase 6D restart stop
 
-**Generated:** 2026-07-02
-**Scope:** All phases from initial measurement harness through the post-RR-061 Phase 6D restart safety stop
+**Generated:** 2026-07-10
+**Scope:** All phases from initial measurement harness through Phase A search-observability implementation
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -13,13 +13,13 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 70 |
+| Total Issues | 77 |
 | Critical | 10 |
-| High | 29 |
-| Medium | 26 |
+| High | 32 |
+| Medium | 30 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 6 |
+| Needs Investigation | 13 |
 | Fixed | 63 |
 | Won't Fix | 1 |
 
@@ -91,6 +91,7 @@
 | Phase 6D post-RR-061 restart | 1 |
 | Reopened RR-061 image-safety mini-phase | 0 |
 | RR-069 source-upgrade identity safety mini-phase | 0 |
+| Phase A search-observability audit filing | 7 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -2348,18 +2349,210 @@ No new issue ID was opened.
 
 ---
 
+### PHASE A - SEARCH-OBSERVABILITY AUDIT FILING (2026-07-10)
+
+#### RR-071
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-071 |
+| **Phase** | Phase A search-observability audit filing |
+| **Severity** | High |
+| **Title** | Exact-model identity falsely collapses distinct Vacmaster 12-gallon products |
+| **Status** | Needs Investigation |
+
+**Description:** The current final-selection trace collapses `Vacmaster Professional Beast Series 12-Gallon 5.5 Peak HP Wet/Dry Vacuum` into `Vacmaster 12-Gallon 5 Peak HP Wet/Dry Vacuum` with `duplicate_identity_collapsed`, despite different titles, power specifications, and product URLs.
+
+**Where it occurs:** `areSameExactModelProduct()` in `lib/productIdentity.ts` and exact-match selection in `lib/recommendationScoring.ts`
+
+**Steps to reproduce:** Replay local Tier A fixture `tests/fixtures/review-radar-live/phase-6d-post-rr061-shop-vac.run1.json`. The distinct Beast product appears at line 2771, its distinct canonical URL at line 2777, and the false `duplicate_identity_collapsed` decision at lines 2781-2782.
+
+**Expected:** Distinct products with conflicting titles/specifications and distinct canonical product URLs remain separate candidates, while retailer listings of the same exact manufacturer model continue to collapse.
+
+**Actual:** A distinct, otherwise exact-eligible product loses its final slot through an exact-model identity collapse.
+
+**Current status:** Needs Investigation. The defect is proven current by `docs/review-radar-search-pipeline-audit.md` sections 11-12 and the cited fixture trace. Phase A records lineage only and does not change identity logic.
+
+**Suggested fix or next action:** After Phase A measurement, add generalized conflicting-identity regression cases and tighten exact-model collapse without weakening same-model retailer dedupe.
+
+---
+
+#### RR-072
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-072 |
+| **Phase** | Phase A search-observability audit filing |
+| **Severity** | High |
+| **Title** | RIDGID HD0900 Wet Dry Vac is falsely rejected as wrong category |
+| **Status** | Needs Investigation |
+
+**Description:** The current cheap prefilter rejects `9 Gallon 4.25 Peak HP NXT Wet Dry Vac HD0900 | RIDGID Tools` as `wrong_category`, even though the source-derived title explicitly identifies a wet/dry vacuum relevant to a `shop vac` request.
+
+**Where it occurs:** Product-type/category relevance inside `cheapCandidateRejectionReason()` and `cheapPreFilterRawCandidates()` in `lib/search/serper.ts`
+
+**Steps to reproduce:** Replay local Tier A fixture `tests/fixtures/review-radar-live/phase-6d-post-rr061-shop-vac.run1.json`. The raw normalized candidate appears at line 1753 and the `wrong_category` rejection appears at lines 1769-1770.
+
+**Expected:** A source-derived wet/dry utility-vac title is eligible for the shop-vac candidate pool unless another precise conflicting subtype is present.
+
+**Actual:** The valid candidate is removed before citation and requirement validation.
+
+**Current status:** Needs Investigation. The current failure is documented in `docs/review-radar-search-pipeline-audit.md` sections 11-12. Phase A adds the missing precise loss trace but does not change product-type rules.
+
+**Suggested fix or next action:** Use Phase A subreason and provenance output to isolate the exact false-negative branch, then add generalized cross-brand utility-vac controls before modifying the shared matcher.
+
+---
+
+#### RR-073
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-073 |
+| **Phase** | Phase A search-observability audit filing |
+| **Severity** | High |
+| **Title** | Standalone Important Details are downgraded and never enforced as hard requirements |
+| **Status** | Needs Investigation |
+
+**Description:** For category `robot vacuum`, budget `under $300`, and Important Details `self-emptying`, the requirement extractor records only budget as required and labels `self-emptying` as `Needs review`. Deterministic hard-query generation and product validation therefore never enforce the requested feature.
+
+**Where it occurs:** `classifyImportantDetails()` in `lib/requirementExtraction.ts`, then every consumer of `extractedRequirements.requiredConstraints`
+
+**Steps to reproduce:** Replay local Tier A fixture `tests/fixtures/review-radar-live/phase-6d-post-rr061-robot-vacuum-under-300-self-emptying.run1.json`. The extracted summary records `Needs review: self-emptying` at line 2498.
+
+**Expected:** Shopper intent has an explicit, reliable hard-versus-preference representation that search and validation consume consistently.
+
+**Actual:** A standalone requested feature is visible to OpenAI as text but absent from deterministic hard-query and final-validation semantics.
+
+**Current status:** Needs Investigation. `docs/review-radar-search-pipeline-audit.md` sections 2, 11, and 12 prove the current semantics. Phase A observes the loss and does not change requirement classification.
+
+**Suggested fix or next action:** Separately decide and test an explicit structured hard/preference contract rather than weakening validation or introducing product-specific phrase handling.
+
+---
+
+#### RR-074
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-074 |
+| **Phase** | Phase A search-observability audit filing |
+| **Severity** | Medium |
+| **Title** | Budget binding produces malformed duplicate budget language |
+| **Status** | Needs Investigation |
+
+**Description:** An AI discovery query containing `under 300` is not recognized as already carrying the `$300` cap, so `budgetBoundQuery()` appends another bound and produces `robot vacuum self emptying under 300 under $300`.
+
+**Where it occurs:** `budgetBoundQuery()` in `lib/discoveryStrategy.ts`
+
+**Steps to reproduce:** Inspect local Tier A fixture `tests/fixtures/review-radar-live/phase-6d-post-rr061-robot-vacuum-under-300-self-emptying.run1.json`; the malformed query appears in the returned/generated plan at line 34 and again in debug plan output at line 2523.
+
+**Expected:** Semantically equivalent budget expressions normalize to one firm bound.
+
+**Actual:** The outbound Shopping query contains duplicated budget wording.
+
+**Current status:** Needs Investigation. The behavior and transformation are documented in `docs/review-radar-search-pipeline-audit.md` sections 4-6. Phase A records original, normalized, and outbound forms without changing them.
+
+**Suggested fix or next action:** After Phase A, add generalized currency/no-currency budget-equivalence tests before changing budget normalization.
+
+---
+
+#### RR-075
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-075 |
+| **Phase** | Phase A search-observability audit filing |
+| **Severity** | Medium |
+| **Title** | Generic vacuum synonyms crowd robot-vacuum discovery with wrong product forms |
+| **Status** | Needs Investigation |
+
+**Description:** Because `robot vacuum` contains the generic synonym key `vacuum`, deterministic expansion protects `vacuum under $300`, `cordless vacuum under $300`, and `stick vacuum sale under $300` ahead of constraint-bearing AI queries. The same run produces five canister/upright/stick-vacuum candidates rejected as `wrong_category`.
+
+**Where it occurs:** `getCategorySynonyms()` and protected pass-1 assembly in `lib/searchQueryExpansion.ts` / `lib/discoveryStrategy.ts`
+
+**Steps to reproduce:** Inspect local Tier A fixture `tests/fixtures/review-radar-live/phase-6d-post-rr061-robot-vacuum-under-300-self-emptying.run1.json`. The broad protected plan queries appear at lines 31-33 and the five wrong-category candidates/reasons appear at lines 2642-2661.
+
+**Expected:** Query allocation preserves the requested product form and shopper constraints before using broader adjacent-form synonyms.
+
+**Actual:** Three scarce initial Shopping slots target different vacuum forms and create avoidable wrong-type work.
+
+**Current status:** Needs Investigation. `docs/review-radar-search-pipeline-audit.md` sections 5, 11, and 12 document the current allocation. Phase A records cull and contribution evidence only.
+
+**Suggested fix or next action:** Use the Phase A contribution table to measure marginal value, then test generalized constraint/form coverage ordering at the same query budget.
+
+---
+
+#### RR-076
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-076 |
+| **Phase** | Phase A search-observability audit filing |
+| **Severity** | Medium |
+| **Title** | Editorial seed extraction emits malformed and non-product Shopping queries |
+| **Status** | Needs Investigation |
+
+**Description:** A conservative audit of 145 saved editorial seeds classified at least 35 (24.1%) as category phrases, article fragments, or merged multi-product names instead of one discrete product. Current examples include `Robotic Vacuums`, `Vacuum Although`, and `Eufy C10 T2292 Eureka NERE10SW`.
+
+**Where it occurs:** `extractSeedProductNames()` and editorial seeding in `lib/search/serper.ts`
+
+**Steps to reproduce:** Inspect local Tier A fixtures. `phase-6d-post-rr061-robot-vacuum-under-300-self-emptying.run1.json` records malformed seeds at lines 3570-3574; `phase-6d-post-rr061-shop-vac.run1.json` records `Vacuum Although` in `seedProductNames` at lines 2975-2980.
+
+**Expected:** A seed Shopping query identifies one plausible product/model or is excluded.
+
+**Actual:** Category headings, prose fragments, and multiple concatenated products consume seed-search slots.
+
+**Current status:** Needs Investigation. Aggregate and representative evidence is recorded in `docs/review-radar-search-pipeline-audit.md` sections 7, 10, and 11. Unique downstream contribution cannot be measured until Phase A lineage exists.
+
+**Suggested fix or next action:** Do not prune yet. First measure raw, unique eligible, and final contribution per seed; then add generalized discrete-model extraction controls with recall tests.
+
+---
+
+#### RR-077
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-077 |
+| **Phase** | Phase A search-observability audit filing |
+| **Severity** | Medium |
+| **Title** | Source upgrade prefixes an ambiguous DW brand token to an exact DEWALT model |
+| **Status** | Needs Investigation |
+
+**Description:** Source upgrade constructs `DW DEWALT DXV09P` and fallback `DW DEWALT DXV09P shop vac` even though the product identity already contains the exact DEWALT model string. The redundant prefix reduces query precision and is a separate title/metadata reconciliation case from RR-070's Bose/ILIFE conflict.
+
+**Where it occurs:** Source-upgrade brand selection and model-identity query construction in `lib/requirementEvidenceRescue.ts`
+
+**Steps to reproduce:** Replay local Tier A fixture `tests/fixtures/review-radar-live/shop-vac.phase6d-run1.json`. The model/selected identity phrase is `DW DEWALT DXV09P` at lines 4464-4465, the primary query at lines 4467-4468, and fallback at line 4574.
+
+**Expected:** When source-derived identity already supplies a clear full brand and exact model, an ambiguous metadata abbreviation does not prefix or distort the query.
+
+**Actual:** The abbreviation and full brand are concatenated into both bounded source-upgrade attempts.
+
+**Current status:** Needs Investigation. The defect is documented in `docs/review-radar-search-pipeline-audit.md` sections 11-12. RR-070 remains the canonical unrelated-brand conflict; Phase A does not change either behavior.
+
+**Suggested fix or next action:** After Phase A, diagnose brand provenance and add generalized abbreviation/full-brand compatibility tests before changing source-upgrade query construction.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (6 issues)
+### Needs Investigation (13 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 - RR-061: Product image metadata can contain page URLs, generic brand assets, or unrelated navigation images
 - RR-070: Unrelated provider brand metadata can contaminate source-upgrade queries
+- RR-071: Exact-model identity falsely collapses distinct Vacmaster 12-gallon products
+- RR-072: RIDGID HD0900 Wet Dry Vac is falsely rejected as wrong category
+- RR-073: Standalone Important Details are downgraded and never enforced as hard requirements
+- RR-074: Budget binding produces malformed duplicate budget language
+- RR-075: Generic vacuum synonyms crowd robot-vacuum discovery with wrong product forms
+- RR-076: Editorial seed extraction emits malformed and non-product Shopping queries
+- RR-077: Source upgrade prefixes an ambiguous DW brand token to an exact DEWALT model
+
 ### Fixed (63 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-060, RR-062 through RR-069
 
@@ -2370,6 +2563,8 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-014** (High) — Leader recall remains `3.0/7`; Phase 5H was neutral on five saved benchmark fixtures.
-2. **RR-015** (High) — Run-to-run stability remains poor in repeated Phase 4 categories.
-3. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain.
+1. **RR-061** (Critical) — Wrong-model image identity is the separately approved next behavior fix and blocks live Phase 6D continuation.
+2. **RR-014 + RR-015** (High) — Leader recall and run-to-run stability remain unresolved aggregate-measurement risks.
+3. **RR-071 + RR-072 + RR-073** (High) — Current false identity collapse, valid-product rejection, and lost hard-requirement semantics require separate generalized fixes after observability.
+4. **RR-070 + RR-074 through RR-077** (Medium) — Query construction, seed precision, and provider-metadata reconciliation require Phase A contribution/lineage evidence before behavior changes.
+5. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain and need approved live/provider evidence.

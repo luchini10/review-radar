@@ -581,6 +581,22 @@ Additional current observations:
   discrete product. Examples include `Robotic Vacuums`, `Vacuum Although`, and
   `Eufy C10 T2292 Eureka NERE10SW`.
 
+### Local fixture evidence index
+
+The live fixtures were intentionally untracked at audit time. These bounded
+line references preserve the evidence locations used to file RR-071 through
+RR-077 without adding the fixtures to version control:
+
+| Finding | Local fixture evidence |
+|---|---|
+| Distinct Vacmaster products falsely collapsed | `tests/fixtures/review-radar-live/phase-6d-post-rr061-shop-vac.run1.json:2771-2782` |
+| RIDGID HD0900 rejected as `wrong_category` | `tests/fixtures/review-radar-live/phase-6d-post-rr061-shop-vac.run1.json:1753,1769-1770` |
+| `self-emptying` downgraded to `Needs review` | `tests/fixtures/review-radar-live/phase-6d-post-rr061-robot-vacuum-under-300-self-emptying.run1.json:2498` |
+| Double-budget query | `tests/fixtures/review-radar-live/phase-6d-post-rr061-robot-vacuum-under-300-self-emptying.run1.json:34,2523` |
+| Generic vacuum queries and five wrong-type candidates | `tests/fixtures/review-radar-live/phase-6d-post-rr061-robot-vacuum-under-300-self-emptying.run1.json:31-33,2642-2661` |
+| Malformed editorial seeds | `tests/fixtures/review-radar-live/phase-6d-post-rr061-robot-vacuum-under-300-self-emptying.run1.json:3570-3574`; `tests/fixtures/review-radar-live/phase-6d-post-rr061-shop-vac.run1.json:2975-2980` |
+| `DW DEWALT DXV09P` source-upgrade query | `tests/fixtures/review-radar-live/shop-vac.phase6d-run1.json:4464-4468,4574` |
+
 ## 12. Ranked explanations
 
 1. **Constraint-aware query routing and requirement semantics — confidence
