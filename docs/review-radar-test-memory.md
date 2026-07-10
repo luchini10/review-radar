@@ -1324,3 +1324,19 @@ No live provider calls and no search/ranking/trust behavior changes.
 **Regression rule:** Client-shared plan modules accept an optional observer and must not import the server-only `AsyncLocalStorage` implementation. `npm run build` protects this boundary.
 
 **Verification:** 802/802 tests across 118 suites; typecheck/build/eval pass; lint 0 errors/3 existing warnings. Live calls: 0.
+
+---
+
+## 2026-07-10 - Phase R1 RR-061 wrong-model image guard
+
+**Scope:** `lib/productImageResolver.ts` only. Deterministic; zero live calls.
+
+**Guard:** `conflictingModelIdentityReason(url, context)` runs inside `validateProductImageCandidate` after the generic-asset checks. It tokenizes the final image filename (extension stripped) into model-shaped tokens — 2–8 chars containing both letters and digits — and rejects with `image filename identifies a different model (...)` when the product identity (name+brand+modelNumber) has at least one model-shaped token and none of the filename tokens appear in the normalized concatenated product identity.
+
+**Exclusion list (`MODEL_TOKEN_EXCLUSIONS`):** version markers (`v2`), dimension pairs (`800x600`), retina (`2x`/`x2`), `w`/`h` size markers, Amazon/CDN image modifiers (`sl1500`, `sx300`, ...), file/frame counters (`img2`, `thumb1`, ...), and digit+unit measurements (`72dpi`, `1080p`, `16gallon`, ...). Tokens longer than 8 chars are treated as opaque hashes (ASINs, CDN ids) and never veto.
+
+**Known fail-safe misses (accepted):** hyphen-split product models ("E-330" tokenizes to `e`+`330`, neither qualifies, guard inert) and `v`-series models (Dyson V15: `v15` excluded as a version marker on both sides, guard inert). Both directions fail safe — the image is kept, never wrongly rejected.
+
+**Stable test entry points:** `tests/productImageResolver.test.mjs` describe block "RR-061 wrong-model image identity (Phase R1)": two fail-first vetoes (verified-page Saros Z70 on Q5 Max+; cross-product eufy L60 on Roomba j7+) and three preservation cases (same-model filename, Amazon modifier/retina/dimension tokens, model-less product). 19/19 focused; 807/807 full suite across 119 suites.
+
+**Canary note:** the ledger privacy canary requested by roadmap R1 already existed in `tests/searchObservabilityLedger.test.mjs` (snapshot JSON asserted free of `CANARY_SERPER_KEY_MUST_NOT_APPEAR`); it was verified, not duplicated.

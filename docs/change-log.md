@@ -42,6 +42,23 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 - Repointed `docs/agent-next-task.md` to Phase R1 and cross-referenced the roadmap from `docs/codex-handoff-phased-plan.md` and the Phase 6 master plan's execution-state header.
 - Docs only; no code, test, fixture, or behavior change; zero live calls.
 
+### Claude - RR-061 wrong-model image guard (Phase R1)
+
+#### Changed
+
+- Fixed the reopened RR-061 failure where verified page context outweighed an explicit conflicting model in the image path (live evidence: `Saros_Z70_Silver_ID.png` rendered on the Roborock Q5 Max+ card).
+- The shared image resolver now extracts model-shaped identity tokens (2–8 chars, letters+digits) from the image filename and rejects the candidate when the product carries model identity and no filename token is compatible with the product's normalized name/brand/model.
+- Exempted CDN/pipeline artifacts from the token definition (Amazon `_AC_SL1500_`-class modifiers, retina `@2x`, dimension pairs, `w`/`h` size markers, version markers, file counters, unit measurements); the guard stays inert for products without model identity, preserving hashed CDN assets, Google Shopping thumbnails, same-model images, and comparison shots.
+- Rejected images leave `product_image_url` empty; the product remains eligible. No search, ranking, requirement, identity, price, or trust behavior changed.
+- Confirmed the Phase A privacy canary (`CANARY_SERPER_KEY_MUST_NOT_APPEAR` asserted absent from the serialized ledger snapshot) already exists in `tests/searchObservabilityLedger.test.mjs`; no duplicate test added.
+
+#### Verified
+
+- Fail-first: the two wrong-model tests failed before the guard (17 pass / 2 fail) and pass after; focused resolver suite 19/19.
+- `npm run typecheck`: pass. `npm run lint`: 0 errors, 3 existing warnings.
+- `npm test`: 807/807 across 119 suites. `npm run build`: pass. `node scripts/eval-pipeline.mjs`: no red-flag issues.
+- Live Serper/OpenAI calls: 0.
+
 ## 2026-07-02
 
 ### Codex - Fresh Phase 6D restart safety stop

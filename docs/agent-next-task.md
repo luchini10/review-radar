@@ -4,48 +4,52 @@ Generated: 2026-07-10
 
 ## Current state
 
-`docs/forward-roadmap.md` is adopted (Phase R0). It governs all forward
-sequencing: R1 (RR-061 wrong-model image fix) → R2 (live ledger verification +
-frozen baseline, completes Phase 6D) → R3 (planner determinism) → R4
-(constraint-preserving query allocation + requirement strength) → R5
-(downstream false negatives) → R6 (source-brand trust + seed precision) → R7
-(single-candidate-source architecture consolidation). Its anti-measurement
-rules and standing guardrails are binding on every phase.
+`docs/forward-roadmap.md` governs all forward sequencing (adopted 2026-07-10,
+Phase R0, commit `62cc007`).
 
-Phase A search observability remains complete and verified
-(`debug.stageFunnel.searchLedger`; commits ef7bbc1, abf924d). RR-071 through
-RR-077 remain Needs Investigation evidence for R4–R6; do not fix them out of
-order.
+**Phase R1 is complete: RR-061 is Fixed.** The shared image resolver now vetoes
+images whose filename model identity conflicts with the product's normalized
+name/brand/model identity, closing the wrong-model failure
+(`Saros_Z70_Silver_ID.png` on a Roborock Q5 Max+ card) that stopped the last
+two live windows. Fail-first 2/2 → green; focused resolver 19/19; full suite
+807/807 across 119 suites; typecheck/lint/build/eval pass; zero live calls.
 
-## Current task
+The register contains 77 issues: 64 Fixed, 12 Needs Investigation, 1 Won't
+Fix, 0 Open. RR-070 through RR-077 remain Needs Investigation evidence for
+roadmap Phases R4–R6; do not fix them out of order.
 
-**Phase R1 — RR-061 generalized wrong-model image fix.** Approved by Taylor
-on 2026-07-10 and being executed by Claude in the same session that adopted
-the roadmap. Scope, acceptance, and non-goals per `docs/forward-roadmap.md`.
-Deterministic only; zero live calls.
+## Required next task — Phase R2 (separate explicit approval required)
 
-## After R1 — Phase R2 requires separate explicit approval
+**Phase R2 — live ledger verification + frozen baseline.** Six live searches
+(~225–280 Serper calls): three broad `shop vac`, three constrained
+`robot vacuum` / `under $300` / `self-emptying`, cache-cold per run,
+commit-pinned, fixtures saved with `ledger-run` names. R2 completes Phase 6D,
+freezes rubric v1.0 and the leader snapshots, records the baseline North-Star
+values, and serves as the "before" sample for R3/R4. Full protocol, safety
+rule, and report requirements: `docs/forward-roadmap.md`.
 
-Until Taylor fires the R2 kickoff prompt with its live budget:
+R2 starts ONLY when Taylor fires its kickoff prompt with the live budget.
+Until then:
 
 - do not run Serper searches, OpenAI searches, `qa:save-fixture`, live QA
   workers, or baseline/variance searches;
 - do not spend the four calls left from the stopped Phase 6D window;
 - do not pool any of the three stopped Phase 6D samples;
 - do not freeze rubric v1.0, approve leader snapshots, or start Phase 6E
-  (R2 owns the freeze);
+  outside R2;
 - do not implement RR-070 through RR-077 based only on Phase A
-  instrumentation (they are owned by R4–R6).
+  instrumentation (they are owned by R4–R6);
+- do not weaken the RR-061 model-conflict guard or any prior image, identity,
+  price, citation, requirement, or product-type safeguard.
 
-## Phase A verification baseline
+## Verification baseline (post-R1)
 
 ```text
 npm run typecheck: pass
 npm run lint: 0 errors, 3 existing warnings
-npm test: 802/802 across 118 suites
+npm test: 807/807 across 119 suites
 npm run build: pass
 node scripts/eval-pipeline.mjs: no red-flag issues
-npm run qa:ledger-benchmark: 0.757 ms/request overhead; 0.0009% projected
 live Serper/OpenAI calls: 0
 ```
 
@@ -57,4 +61,4 @@ Reference:
 - `docs/codex-handoff-phased-plan.md`
 - `docs/review-radar-test-memory.md`
 - `docs/qa-loop-results.md`
-- `ReviewRadar-Overview.md` sections 10 and 21
+- `ReviewRadar-Overview.md` sections 10, 21, and 22

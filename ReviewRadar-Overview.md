@@ -845,3 +845,11 @@ No production pipeline or API contract changed in Phase 6A.
 - **Replay/performance:** Saved debug fixtures retain the ledger and `qa:replay` summarizes it at zero cost. The deterministic interleaved benchmark measured 0.757 ms/request, approximately 0.0009% of an 84-second run.
 - **Safety boundary:** No query allocation, query wording, provider request, prompt, rank, filter, identity, eligibility, requirement, trust, or final-selection behavior changed. No live provider call ran.
 - **Issues:** RR-071 through RR-077 are filed as Needs Investigation. Their behavior fixes remain separately scoped.
+
+## 22. Forward roadmap adoption and Phase R1 RR-061 fix (2026-07-10)
+
+- **Roadmap (Phase R0):** `docs/forward-roadmap.md` now governs forward sequencing (R1–R7), with four North-Star metrics (core-leader recall, zero wrong-type, constraint compliance, stability), binding anti-measurement rules, and the single-candidate-source target architecture. `docs/agent-next-task.md` always points at the current R-phase.
+- **Phase R1 (RR-061, Fixed):** The shared image resolver now vetoes an image whose filename carries model-shaped identity tokens incompatible with the product's normalized name/brand/model. Verified page context no longer outweighs an explicit conflicting model in the image path — the live failure (`Saros_Z70_Silver_ID.png` on a Roborock Q5 Max+ card) is rejected with a precise reason.
+- **Fail-safe boundaries:** The guard arms only when the product itself carries model-shaped identity; any compatible filename token clears it. Opaque hashed CDN assets and ASINs (tokens >8 chars), Amazon image modifiers, retina/dimension/unit/version tokens, Google Shopping thumbnails, and all prior flyout/navigation safeguards are preserved. Rejected images leave `product_image_url` empty; the product stays eligible.
+- **Proof:** Fail-first 2/2 → green; focused resolver 19/19; full suite 807/807 across 119 suites; typecheck, lint (0 errors/3 existing warnings), build, and offline eval pass. Zero live calls.
+- **State:** Register at 77 issues — 64 Fixed, 12 Needs Investigation, 1 Won't Fix, 0 Open. Live measurement is unblocked; Phase R2 (six-search live ledger verification + frozen baseline, completes Phase 6D and owns the rubric-v1.0 freeze) awaits Taylor's explicit approval.

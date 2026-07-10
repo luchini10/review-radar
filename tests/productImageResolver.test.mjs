@@ -335,3 +335,107 @@ describe("product image resolver", () => {
     assert.equal(resolution.rejected.length, 2);
   });
 });
+
+describe("RR-061 wrong-model image identity (Phase R1)", () => {
+  const roborockContext = {
+    brand: "Roborock",
+    category: "Robot vacuum",
+    modelNumber: null,
+    pageUrl: "https://global.roborock.com/pages/roborock-q5-max-plus",
+    productName: "Roborock Q5 Max+",
+  };
+  const roombaContext = {
+    brand: "iRobot",
+    category: "Robot vacuum",
+    pageUrl: "https://www.example.com/roomba-j7-plus",
+    productName: "iRobot Roomba j7+",
+  };
+
+  it("rejects a verified-page image whose filename names a different model", () => {
+    // Live reproduction (fresh Phase 6D restart, B1): Saros Z70 artwork rendered
+    // on the Roborock Q5 Max+ card because verified page context outweighed the
+    // explicit conflicting model identity in the image path.
+    const result = validateProductImageCandidate(
+      {
+        contextVerified: true,
+        evidenceText: "Roborock Q5 Max+ robot vacuum product page",
+        source: "page_image",
+        url: "https://global.roborock.com/cdn/shop/files/Saros_Z70_Silver_ID.png?v=1758784729",
+      },
+      roborockContext,
+    );
+
+    assert.equal(result.accepted, false);
+
+    if (!result.accepted) {
+      assert.match(result.rejection.reason, /different model/);
+    }
+  });
+
+  it("rejects cross-product model filenames from any candidate source", () => {
+    const result = validateProductImageCandidate(
+      {
+        evidenceText: "iRobot Roomba j7+ robot vacuum",
+        source: "serp",
+        url: "https://cdn.example.com/images/eufy_l60_self_empty_station.jpg",
+      },
+      roombaContext,
+    );
+
+    assert.equal(result.accepted, false);
+  });
+
+  it("keeps a same-model filename on the verified page", () => {
+    const result = validateProductImageCandidate(
+      {
+        contextVerified: true,
+        evidenceText: "Roborock Q5 Max+ robot vacuum product page",
+        source: "page_image",
+        url: "https://global.roborock.com/cdn/shop/files/roborock_q5_max_plus_black.png",
+      },
+      roborockContext,
+    );
+
+    assert.equal(result.accepted, true);
+  });
+
+  it("keeps hashed CDN, Amazon-modifier, retina, and dimension tokens", () => {
+    const urls = [
+      "https://m.media-amazon.com/images/I/81ZoWDnHkkL._AC_SL1500_.jpg",
+      "https://cdn.example.com/images/roomba-j7-plus-lifestyle-800x600-v2.jpg",
+      "https://cdn.example.com/images/roomba-front@2x.jpg",
+    ];
+
+    for (const url of urls) {
+      const result = validateProductImageCandidate(
+        {
+          contextVerified: true,
+          evidenceText: "iRobot Roomba j7+ retailer product offer",
+          source: "trusted_metadata",
+          url,
+        },
+        roombaContext,
+      );
+
+      assert.equal(result.accepted, true, url);
+    }
+  });
+
+  it("stays inert when the product itself carries no model identity", () => {
+    const result = validateProductImageCandidate(
+      {
+        evidenceText: "Lodge Cast Iron Skillet 10 inch",
+        source: "serp",
+        url: "https://cdn.example.com/images/lodge-skillet-l8sk3-10in.jpg",
+      },
+      {
+        brand: "Lodge",
+        category: "Skillet",
+        pageUrl: "https://www.example.com/lodge-skillet",
+        productName: "Lodge Cast Iron Skillet",
+      },
+    );
+
+    assert.equal(result.accepted, true);
+  });
+});

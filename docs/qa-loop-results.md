@@ -6168,3 +6168,24 @@ Next: separately approved RR-061 wrong-model image fix, then separately approved
 - Repointed `docs/agent-next-task.md`; cross-referenced from `docs/codex-handoff-phased-plan.md` and the Phase 6 master plan header. No issue statuses changed.
 
 Next: Phase R1 (RR-061 generalized wrong-model image fix), approved and executing in this session.
+
+## <span style="color:green">**Claude QA Update — 2026-07-10 (Phase R1: RR-061 wrong-model image guard)**</span>
+
+**Verdict: COMPLETE. RR-061 → Fixed. Deterministic only; zero live calls; no search/ranking behavior change.**
+
+- Root cause: `candidateConfidence` let verified page context set Medium/High confidence for any image on the page; nothing compared the image filename's model identity against the product. Live B1 evidence: `Saros_Z70_Silver_ID.png` rendered on the Roborock Q5 Max+ card from the correct Q5 Max+ page.
+- Fix: generalized `conflictingModelIdentityReason` guard in `lib/productImageResolver.ts`. Model-shaped filename tokens (2–8 chars, letters+digits, CDN/pipeline artifacts exempt) veto the image when the product carries model identity and no token is compatible with the normalized name/brand/model. Any compatible token clears it; products without model identity are untouched (fail-safe).
+- Preserved: Amazon hashed/modifier assets (`_AC_SL1500_`), retina `@2x`, dimension pairs, Google Shopping thumbnails, same-model filenames, model-less products, and all prior flyout/navigation safeguards.
+- The Phase A canary-secret assertion was verified already present (ledger snapshot serialization asserted free of the injected API key); no duplicate test added.
+
+```text
+fail-first: 2/2 intended failures before the guard; 19/19 focused after
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm test: 807/807 across 119 suites
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red-flag issues
+live Serper/OpenAI calls: 0
+```
+
+Register: RR-061 → Fixed (64 Fixed / 12 Needs Investigation / 77 total). Next: Phase R2 live ledger verification + frozen baseline per `docs/forward-roadmap.md` — requires Taylor's explicit six-search approval.

@@ -87,6 +87,21 @@ const NON_PRODUCT_IDENTITY_WORDS = new Set([
   "www",
 ]);
 
+// RR-061 (wrong-model imagery): tokens that look like model identifiers but are
+// CDN/image-pipeline artifacts. An image filename may only veto a product match
+// when its model-shaped tokens are real identity claims, so size markers,
+// Amazon image modifiers (_AC_SL1500_), retina suffixes (@2x), camera/file
+// counters, version markers, and unit measurements are all exempt.
+const MODEL_TOKEN_EXCLUSIONS = [
+  /^v\d+$/,
+  /^\d+x\d*$/,
+  /^x\d+$/,
+  /^[wh]\d+$/,
+  /^(?:ac|br|cb|cr|fm|pj|pt|ql|qu|ri|sl|sr|ss|sx|sy|ul|ux|uy)\d{2,5}$/,
+  /^(?:alt|angle|banner|dsc|frame|gallery|image|img|item|page|photo|pic|slide|step|thumb|thumbnail|view)\d+$/,
+  /^\d+(?:bit|cc|cm|dpi|ft|g|gal|gallon|gb|hp|hz|in|inch|k|kg|l|lb|lbs|mah|mb|ml|mm|mp|oz|p|pc|pcs|pk|px|qt|tb|v|w|wh)$/,
+];
+
 const HARD_NON_PRODUCT_ASSET_PATTERN =
   /(?:^|[-_/])(?:article|badge|banner|blog|category|collection|departments?|favicon|flyouts?|icon|layouts?|logo|manual|masthead|menus?|navigation|nav|rating|review|social|sprite|stars?|support|top-nav|tracking|wordmark)(?:[-_/.]|$)/i;
 const SOFT_NON_PRODUCT_ASSET_PATTERN =
@@ -347,6 +362,75 @@ function nonProductAssetReason(
   return "";
 }
 
+function modelIdentityTokens(text: string) {
+  const tokens = new Set<string>();
+
+  for (const raw of text.toLowerCase().split(/[^a-z0-9]+/)) {
+    if (
+      raw.length < 2 ||
+      raw.length > 8 ||
+      !/[a-z]/.test(raw) ||
+      !/\d/.test(raw) ||
+      MODEL_TOKEN_EXCLUSIONS.some((pattern) => pattern.test(raw))
+    ) {
+      continue;
+    }
+
+    tokens.add(raw);
+  }
+
+  return Array.from(tokens);
+}
+
+// RR-061 (wrong-model imagery): a filename that explicitly identifies a
+// different model must veto the image even on an identity-verified product
+// page — live evidence showed Saros Z70 artwork rendering on a Roborock
+// Q5 Max+ card because page context outweighed the conflicting model in the
+// image path. The guard only arms when the product itself carries model-shaped
+// identity, and any filename token compatible with the product clears it, so
+// products without model identifiers and multi-model comparison shots stay
+// fail-safe.
+function conflictingModelIdentityReason(
+  url: string,
+  context: ProductImageContext,
+) {
+  const identityText = [context.productName, context.brand, context.modelNumber]
+    .filter(Boolean)
+    .join(" ");
+
+  if (modelIdentityTokens(identityText).length === 0) {
+    return "";
+  }
+
+  let filename = "";
+
+  try {
+    filename =
+      safeDecodeURIComponent(new URL(url).pathname)
+        .split("/")
+        .filter(Boolean)
+        .at(-1) || "";
+  } catch {
+    return "";
+  }
+
+  const imageTokens = modelIdentityTokens(
+    filename.replace(/\.[a-z0-9]{2,5}$/i, ""),
+  );
+
+  if (imageTokens.length === 0) {
+    return "";
+  }
+
+  const identityCompact = identityText.toLowerCase().replace(/[^a-z0-9]+/g, "");
+
+  if (imageTokens.some((token) => identityCompact.includes(token))) {
+    return "";
+  }
+
+  return `image filename identifies a different model (${imageTokens.join(", ")})`;
+}
+
 function dimensionFromUrl(url: string, names: string[]) {
   try {
     const parsed = new URL(url);
@@ -547,6 +631,19 @@ export function validateProductImageCandidate(
       accepted: false,
       rejection: {
         reason: genericAssetReason,
+        source: candidate.source,
+        url,
+      },
+    };
+  }
+
+  const modelConflictReason = conflictingModelIdentityReason(url, context);
+
+  if (modelConflictReason) {
+    return {
+      accepted: false,
+      rejection: {
+        reason: modelConflictReason,
         source: candidate.source,
         url,
       },

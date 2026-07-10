@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through the post-RR-061 Phase 6D restart stop
+## Compiled for AI Agent Consumption — Phase 0 through roadmap Phase R1
 
 **Generated:** 2026-07-10
-**Scope:** All phases from initial measurement harness through Phase A search-observability implementation
+**Scope:** All phases from initial measurement harness through the Phase R1 RR-061 wrong-model image fix
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -19,8 +19,8 @@
 | Medium | 30 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 13 |
-| Fixed | 63 |
+| Needs Investigation | 12 |
+| Fixed | 64 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -92,6 +92,7 @@
 | Reopened RR-061 image-safety mini-phase | 0 |
 | RR-069 source-upgrade identity safety mini-phase | 0 |
 | Phase A search-observability audit filing | 7 |
+| Phase R0/R1 — Roadmap adoption + RR-061 model-conflict fix | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -1859,7 +1860,7 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 | **Phase** | Phase 4F |
 | **Severity** | Medium |
 | **Title** | Product image metadata can contain page URLs, generic brand assets, or unrelated navigation images |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** All 70 final cards had a non-empty image field, but several were not usable product images. Leaf-blower examples included a truncated Home Depot image directory, Greenworks/BLACK+DECKER product-page URLs, a WORX navigation banner, and an EGO brand logo. Dog-food examples included a Blue Buffalo logo and PetSmart category hero. An LG gaming-monitor image ended in `.html`.
 
@@ -1884,6 +1885,10 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 **Resolution proof:** Fail-first image/asset tests passed 31/35 with exactly four intended failures. Focused image, asset, and source-upgrade tests passed 135/135; the broader trust wall passed 376/376; and the full suite passed 791/791 across 117 suites. Typecheck and offline eval passed; lint reported 0 errors and 3 existing warnings. No live search ran. Phase 6D remains stopped and Phase 6E did not start. Implementation commit: `a174551`.
 
 **Post-fix Phase 6D regression (2026-07-02):** Reopened as Needs Investigation. Constrained B1 rendered `https://global.roborock.com/cdn/shop/files/Saros_Z70_Silver_ID.png?v=1758784729` on the `Roborock Q5 Max+` card. The source page and metadata title correctly identified Q5 Max+, but the image path explicitly identified a different Roborock model, Saros Z70. The resolver assigned Medium-confidence `retailer_page` image metadata because verified page context outweighed the conflicting image-model identity. The Phase 6 safety gate stopped the fresh pilot at 2/6. Diagnose a generalized image-path model-conflict guard that preserves generic hashed product images; no fix was attempted in the measurement phase.
+
+**Phase R1 resolution (2026-07-10):** Fixed deterministically. The resolver's confidence path allowed verified page context to outweigh an explicit conflicting model identity in the image filename. The shared resolver now extracts model-shaped identity tokens (2–8 characters, containing both letters and digits) from the final image filename and rejects the candidate when the product itself carries model-shaped identity and none of the filename's model tokens are compatible with the product's normalized name/brand/model identity. CDN and image-pipeline artifacts are exempt from the token definition — Amazon `_AC_SL1500_`-class modifiers, retina `@2x`, dimension pairs (`800x600`), `w`/`h` size markers, version markers (`v2`), camera/file counters, and unit measurements — and the guard stays inert for products without model-shaped identity, so opaque hashed CDN assets, Google Shopping thumbnails, verified same-model images, and multi-model comparison shots remain accepted. Any compatible token clears the image; only an all-foreign model claim vetoes it. The exact captured failure — `Saros_Z70_Silver_ID.png` on the Roborock Q5 Max+ card — is rejected with reason `image filename identifies a different model`.
+
+**Phase R1 resolution proof:** Fail-first tests distilled from the live B1 fixture (wrong-model veto on a verified page; cross-product filename from any source) failed 2/2 before the guard and pass after. Preservation tests cover same-model filenames on verified pages, Amazon hashed/modifier assets, retina and dimension tokens, and model-less products. Focused resolver suite 19/19; full suite 807/807 across 119 suites; typecheck, lint (0 errors, 3 existing warnings), production build, and offline eval all pass. Zero live Serper/OpenAI calls. Implemented in the Phase R1 commit (2026-07-10) per `docs/forward-roadmap.md`.
 
 **Sweep result:**
 
@@ -2542,12 +2547,11 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (13 issues)
+### Needs Investigation (12 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-- RR-061: Product image metadata can contain page URLs, generic brand assets, or unrelated navigation images
 - RR-070: Unrelated provider brand metadata can contaminate source-upgrade queries
 - RR-071: Exact-model identity falsely collapses distinct Vacmaster 12-gallon products
 - RR-072: RIDGID HD0900 Wet Dry Vac is falsely rejected as wrong category
@@ -2557,8 +2561,8 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 - RR-076: Editorial seed extraction emits malformed and non-product Shopping queries
 - RR-077: Source upgrade prefixes an ambiguous DW brand token to an exact DEWALT model
 
-### Fixed (63 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-060, RR-062 through RR-069
+### Fixed (64 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-069
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2567,8 +2571,7 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-061** (Critical) — Wrong-model image identity is the separately approved next behavior fix and blocks live Phase 6D continuation.
-2. **RR-014 + RR-015** (High) — Leader recall and run-to-run stability remain unresolved aggregate-measurement risks.
-3. **RR-071 + RR-072 + RR-073** (High) — Current false identity collapse, valid-product rejection, and lost hard-requirement semantics require separate generalized fixes after observability.
-4. **RR-070 + RR-074 through RR-077** (Medium) — Query construction, seed precision, and provider-metadata reconciliation require Phase A contribution/lineage evidence before behavior changes.
-5. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain and need approved live/provider evidence.
+1. **RR-014 + RR-015** (High) — Leader recall and run-to-run stability; roadmap Phase R2 establishes the measured baseline and variance attribution, R3/R4 target the causes. (RR-061 was fixed in Phase R1 on 2026-07-10, unblocking live measurement.)
+2. **RR-071 + RR-072 + RR-073** (High) — Current false identity collapse, valid-product rejection, and lost hard-requirement semantics; owned by roadmap Phases R4/R5.
+3. **RR-070 + RR-074 through RR-077** (Medium) — Query construction, seed precision, and provider-metadata reconciliation; owned by roadmap Phases R4/R6, gated on R2 contribution/lineage evidence.
+4. **RR-037 + RR-045** (Low/Medium) — Coverage claims remain variable or uncertain; R2's live sample supplies the evidence.

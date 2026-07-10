@@ -1598,3 +1598,15 @@ Stop. Do not fix RR-061/RR-070, resume Phase 6D, or start Phase 6E without expli
 - Next step: Separately approved RR-061 wrong-model image fix, then separately approved Phase B live verification. No live search is authorized by this completion record.
 
 Stop. Do not implement RR-061 or begin Phase B live verification without separate explicit approval.
+
+### Phase R0 completion record (2026-07-10)
+
+- Adopted `docs/forward-roadmap.md` as the sole forward-sequencing document (R-series R1–R7) with North-Star metrics, anti-measurement rules, and the single-candidate-source target architecture.
+- Docs only; zero live calls; no behavior, test, or fixture change. Commit `62cc007`.
+
+### Phase R1 completion record (2026-07-10)
+
+- Fixed reopened RR-061: generalized wrong-model image guard in `lib/productImageResolver.ts`. Filename model-identity tokens now veto an image that conflicts with the product's normalized name/brand/model identity; verified page context no longer outweighs an explicit conflicting model in the image path.
+- Fail-first 2/2 from the live B1 fixture evidence, then green; focused resolver 19/19; full suite 807/807 across 119 suites; typecheck/lint/build/eval pass; zero live calls.
+- Preserved hashed CDN assets, Amazon image modifiers, retina/dimension/unit tokens, Google Shopping thumbnails, same-model images, model-less products, and all prior flyout/navigation safeguards.
+- Register: RR-061 → Fixed (64 Fixed / 12 Needs Investigation / 77 total). Live measurement unblocked; Phase R2 requires separate explicit approval per the roadmap.
