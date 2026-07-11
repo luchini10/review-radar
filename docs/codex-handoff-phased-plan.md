@@ -1648,3 +1648,15 @@ Stop. Do not enable the flag in `.env.local`, run live validation, fix RR-061/RR
 - Next step: separately approved RR-078/RR-079 shared eligibility/type safety repair. No live window, R4, or Phase 6E is authorized.
 
 Stop. Do not fix RR-078/RR-079, start R4, enable R3 in `.env.local`, or run live validation without Taylor's separate approval.
+
+### RR-061 round 4 / RR-080 image micro-phase completion (2026-07-11)
+
+- Taylor authorized one next necessary phase after the Claude/Codex adversarial review. Zero live Serper/OpenAI calls.
+- RR-061 was honestly reopened because `Saros_10_Silver_ID.png` passed for Saros Z70, then re-fixed by treating a target family directly adjacent to a mixed model token as an asserted family. Compatible target-model filenames still clear the veto.
+- RR-080 was filed and Fixed: neutral shot/scene/studio/room/floor/carpet/swatch/style/grid/tile/display vocabulary no longer acts as model identity. Split claims retain 1–4 digit support for real one-digit families.
+- Preservation: all R2 captures, earlier flyout/`Saros_Z70`, matching Product JSON-LD, same-model, opaque CDN, Google, Amazon-modifier, retina/dimension, model-less, and family-adjacent-size controls remain green. No year exclusion shipped.
+- Proof: focused fail-first 24/26 with two intended failures; focused final 27/27; full 818/818 across 120 suites; typecheck/build/eval pass; lint 0 errors/3 existing warnings.
+- Register: 80 total; 65 Fixed, 14 Needs Investigation, 1 Won't Fix. North-Star observations remain R2 and no live improvement is claimed.
+- Next: separately approved RR-078/RR-079 eligibility/type repair. No live window, R4, or Phase 6E is authorized.
+
+Stop. Do not start RR-078/RR-079 or any later phase without Taylor's separate approval.

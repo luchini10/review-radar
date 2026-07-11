@@ -231,6 +231,22 @@ existing warnings. Latest North-Star evidence is unchanged from R2. RR-061 is
 Fixed, but no new live window is permitted until RR-078/RR-079 are separately
 repaired and Taylor approves the spend.
 
+### RR-061 round-4 / RR-080 adversarial follow-up (2026-07-11)
+
+Claude's zero-live adversarial review found a same-family sibling false pass
+(`Saros_10` on Saros Z70) and neutral sequence-counter false vetoes. Taylor
+approved one separate micro-phase. RR-061 was reopened and re-fixed; RR-080
+was filed and Fixed.
+
+Neutral image vocabulary is intentional, split claims retain 1–4 digit
+support for real one-digit product families, and a target family directly
+adjacent to a mixed model asserts that family. The compatible target-model
+escape remains unchanged, and no unproven year exclusion shipped. Focused
+fail-first was 24/26, final 27/27; full suite 818/818 across 120 suites;
+typecheck/build/eval pass; lint 0 errors
+and 3 warnings. Zero live calls. R2 metrics and freeze state remain unchanged;
+RR-078/RR-079 still block any later live window.
+
 ## Fresh post-RR-061 restart - stopped
 
 Taylor approved a new six-call window under commit `baeb6a0`, with both earlier

@@ -1390,3 +1390,17 @@ No live provider calls and no search/ranking/trust behavior changes.
 **Stable tests:** `tests/productImageResolver.test.mjs`, blocks `RR-061 wrong-model image identity (Phase R1)` and `RR-061 page-image provenance and split family identity`. Focused 24/24; full 815/815 across 120 suites. Matching Product JSON-LD, image-level matches, same-model/neutral filenames, opaque assets, Google thumbnails, Amazon modifiers, and navigation guards are positive controls.
 
 **Measurement boundary:** Zero live calls. The repair closes the deterministic captured paths but does not prove retailer markup is unchanged or improve a measured R2 North-Star value. RR-078/RR-079 remain blockers before a later approved live window.
+
+---
+
+## 2026-07-11 - RR-061 round 4 / RR-080 adversarial image filenames
+
+**Do not equate captured-case closure with generalized closure.** After the first post-R3 repair passed all captured controls, adversarial filenames found both directions of error: neutral counters were rejected and a sibling model was accepted.
+
+**RR-080 neutral-counter rule:** Neutral shot/scene/studio/room/floor/carpet/swatch/style/grid/tile/display words are explicit non-model vocabulary. Do not globally discard one-digit split claims: real families such as Nintendo Switch 2 need to reject sibling imagery. `swatch-red-2-swatch-blue.jpg` also proves numeric handling alone is insufficient.
+
+**RR-061 mixed-family rule:** For target identity `family + mixedModel` (for example, Saros Z70), direct adjacency asserts the family. An image `family + differentNumber` is foreign. Preserve the early compatible-token escape so an image naming the target mixed model remains valid.
+
+**Stable tests:** `tests/productImageResolver.test.mjs`, RR-061 page-image/split-family block. Fail-first 24/26; final 27/27. Full suite 818/818 across 120 suites. Do not add a blanket year exclusion without both a neutral campaign-year reproduction and a conflicting model-year preservation control.
+
+**Boundary:** This micro-phase changes only image filename identity. Eligibility/type RR-078/RR-079 remains separate. Zero live calls; latest North Stars remain R2.

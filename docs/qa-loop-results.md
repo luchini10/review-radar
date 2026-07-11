@@ -6255,3 +6255,24 @@ live Serper/OpenAI calls: 0
 ```
 
 Register: 79 total; 64 Fixed, 14 Needs Investigation, 1 Won't Fix. Latest North Stars remain R2: core-leader recall unavailable; wrong-type/non-product final cards 3/23; full constraint compliance unscoreable; A pool/final Jaccard 0.1051/0.0333 and B unavailable. This corrective completion of R1 removes an image-safety abort path but does not claim a measured change to those four metrics. Next: separately approved RR-078/RR-079 eligibility/type safety repair; no live window, R4, or Phase 6E.
+
+### 🟧 Codex Change — RR-061 round 4 + RR-080 image micro-phase
+
+**Verdict: COMPLETE. RR-061 reopened and re-fixed; RR-080 filed and Fixed. Zero live calls.**
+
+- Adversarial proof: `Saros_10_Silver_ID.png` passed for Saros Z70 because the target-family exception recognized plain family+number targets but not family+mixed-model targets. Direct family→mixed-model adjacency now asserts the family, while a filename that names the compatible target model still clears the veto.
+- Quality proof: neutral `shot_2`, `studio_1`, `floor_3`, and repeated `swatch` files were falsely rejected. Neutral image vocabulary is now intentional; split claims retain 1–4 digit support so real one-digit families remain protected. No year exclusion was added.
+- Scope stayed in the shared image resolver. RR-078/RR-079 eligibility/type behavior and every search/ranking/requirement/price/citation/R3 boundary remain untouched.
+
+```text
+fail-first focused resolver: 24/26; exactly 2 intended failures
+focused resolver final: 27/27
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm test: 818/818 across 120 suites
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red-flag issues
+live Serper/OpenAI calls: 0
+```
+
+Register: 80 total; 65 Fixed, 14 Needs Investigation, 1 Won't Fix; 11 Critical, 33 High, 31 Medium, 5 Low. Latest North Stars remain the stopped R2 values: core-leader recall unavailable; wrong-type/non-product final cards 3/23; full constraint compliance unscoreable; A pool/final Jaccard 0.1051/0.0333 and B unavailable. This R1 safety/quality completion does not claim a measured North-Star change. Next remains separately approved RR-078/RR-079; no live window, R4, or Phase 6E.

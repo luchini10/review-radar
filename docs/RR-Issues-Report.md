@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through RR-061 image-provenance repair
+## Compiled for AI Agent Consumption — Phase 0 through RR-061 round 4 / RR-080
 
 **Generated:** 2026-07-11
-**Scope:** All phases from initial measurement harness through the post-R3 RR-061 image-provenance repair
+**Scope:** All phases from initial measurement harness through the RR-061 round-4 and RR-080 image micro-phase
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -13,14 +13,14 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 79 |
+| Total Issues | 80 |
 | Critical | 11 |
 | High | 33 |
-| Medium | 30 |
+| Medium | 31 |
 | Low | 5 |
 | Open | 0 |
 | Needs Investigation | 14 |
-| Fixed | 64 |
+| Fixed | 65 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -96,6 +96,7 @@
 | Phase R2 — Live ledger verification safety stop | 2 |
 | Phase R3 — Strategy-call determinism | 0 |
 | RR-061 image-provenance safety repair | 0 |
+| RR-061 round 4 / RR-080 image micro-phase | 1 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -1907,6 +1908,10 @@ The filename backstop now recognizes adjacent alphabetic-family plus numeric tok
 
 **Post-R3 resolution proof:** Fail-first ran 814 assertions with exactly three intended new failures and 811 passes. Final focused resolver coverage passed 24/24; full suite passed 815/815 across 120 suites; typecheck and production build passed; lint reported 0 errors and 3 existing warnings; offline eval reported no red flags. Zero live Serper/OpenAI calls; `.env.local`, search, ranking, eligibility, requirements, price, and citations were unchanged. RR-078/RR-079 remain separate blockers before any live window.
 
+**Round-4 deterministic regression and resolution (2026-07-11):** Claude's adversarial review found `Saros_10_Silver_ID.png` was accepted for `Roborock Saros Z70`, proving the generalized RR-061 closure incomplete. RR-061 was therefore reopened for the micro-phase and returned to Fixed only after fail-first coverage. A target family directly adjacent to a mixed letter-digit model now asserts that family, so a split sibling is foreign; the existing compatible-token escape still accepts a filename that explicitly carries the target `Z70`. Neutral image words are explicitly excluded from model identity. Split claims retain 1–4 digit support so real one-digit product families remain protected. All earlier R2, `Saros_Z70`, flyout, same-model, JSON-LD, opaque-CDN, Google, Amazon-modifier, retina, dimension, model-less, and cross-category Nintendo Switch 2 controls remain green.
+
+**Round-4 proof:** Focused fail-first passed 24/26 with exactly the RR-061 sibling and RR-080 neutral-counter tests failing. Focused final passed 27/27; full suite passed 818/818 across 120 suites; typecheck/build/eval passed; lint reported 0 errors and 3 existing warnings. Zero live calls and no eligibility/type/search/ranking/requirement/price/citation or `.env.local` change.
+
 **Sweep result:**
 
 | Search | Verdict | Main findings |
@@ -2613,6 +2618,32 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 
 **Suggested fix or next action:** Add a generalized exclusive-accessory rule for standalone bases/docks/stations that preserves bundles explicitly including the vacuum.
 
+---
+
+#### RR-080
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-080 |
+| **Phase** | RR-061 round-4 / RR-080 image micro-phase |
+| **Severity** | Medium |
+| **Title** | Neutral sequence-numbered image filenames are falsely rejected as foreign models |
+| **Status** | Fixed |
+
+**Description:** The split filename guard treated any alphabetic word adjacent to a 1–4 digit number as model identity. Neutral assets such as `lifestyle_shot_2.jpg`, `studio_1.jpg`, and `floor_3.jpg` were rejected as `shot2`, `studio1`, and `floor3`; repeated `swatch` also armed the pure-word family path. `kitchen_2.jpg` survived only because `kitchen` happened to be a source-name token, not because image vocabulary classified it correctly.
+
+**Where it occurs:** `splitModelIdentityClaims()`, `repeatedFamilyIdentityTokens()`, and `GENERIC_IMAGE_FILENAME_WORDS` in `lib/productImageResolver.ts`.
+
+**Steps to reproduce:** Validate the named files as `trusted_metadata` with verified matching product evidence for any model-bearing product such as iRobot Roomba j7+.
+
+**Expected:** Neutral shot, room, floor/carpet, grid/tile, style, and display filenames do not veto an otherwise identity-verified product image.
+
+**Actual:** Single-digit counters and repeated neutral words were classified as foreign product models.
+
+**Resolution:** The shared neutral-image vocabulary explicitly covers shot/scene/studio/room/floor/carpet/swatch/style/grid/tile/display classes. Split claims retain 1–4 digit support; a cross-category Nintendo Switch 2/Switch 1 control prevents neutral-counter handling from disabling real one-digit family protection. The change is dictionary-free with respect to products and brands. The sibling-model guard remains independent, so `Saros_20` and `Saros_10` still act as model claims where appropriate.
+
+**Resolution proof:** Focused fail-first 24/26 with the two intended micro-phase failures; focused final 27/27; full 818/818 across 120 suites; typecheck/build/eval pass; lint 0 errors and 3 existing warnings; zero live calls.
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)
@@ -2634,8 +2665,8 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 - RR-078: Support and editorial pages render as product cards
 - RR-079: Accessory-only self-empty dock renders as a robot-vacuum near match
 
-### Fixed (64 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-069
+### Fixed (65 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-069, RR-080
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)

@@ -600,4 +600,90 @@ describe("RR-061 page-image provenance and split family identity", () => {
     assert.equal(wrongGeneration.accepted, false);
     assert.equal(neutralSize.accepted, true);
   });
+
+  it("keeps sequence-numbered neutral image filenames (RR-080)", () => {
+    const neutralUrls = [
+      "https://cdn.example.com/lifestyle_shot_2.jpg",
+      "https://cdn.example.com/studio_1.jpg",
+      "https://cdn.example.com/floor_3.jpg",
+      "https://cdn.example.com/swatch-red-2-swatch-blue.jpg",
+      "https://cdn.example.com/kitchen_2.jpg",
+    ];
+
+    for (const url of neutralUrls) {
+      const result = validateProductImageCandidate(
+        {
+          contextVerified: true,
+          evidenceText: "iRobot Roomba j7+ product image",
+          source: "trusted_metadata",
+          url,
+        },
+        {
+          brand: "iRobot",
+          category: "Robot vacuum",
+          productName: "iRobot Roomba j7+",
+        },
+      );
+
+      assert.equal(result.accepted, true, url);
+    }
+  });
+
+  it("rejects a split sibling model when the target family has a mixed model", () => {
+    const target = {
+      brand: "Roborock",
+      category: "Robot vacuum",
+      productName: "Roborock Saros Z70",
+    };
+    const sibling = validateProductImageCandidate(
+      {
+        contextVerified: true,
+        evidenceText: "Roborock Saros Z70 product image",
+        source: "trusted_metadata",
+        url: "https://cdn.example.com/Saros_10_Silver_ID.png",
+      },
+      target,
+    );
+    const sameModel = validateProductImageCandidate(
+      {
+        contextVerified: true,
+        evidenceText: "Roborock Saros Z70 product image",
+        source: "trusted_metadata",
+        url: "https://cdn.example.com/Saros_Z70_10_Silver_ID.png",
+      },
+      target,
+    );
+
+    assert.equal(sibling.accepted, false);
+    assert.equal(sameModel.accepted, true);
+  });
+
+  it("preserves one-digit split product families across categories", () => {
+    const target = {
+      brand: "Nintendo",
+      category: "Game console",
+      productName: "Nintendo Switch 2",
+    };
+    const sibling = validateProductImageCandidate(
+      {
+        contextVerified: true,
+        evidenceText: "Nintendo Switch 2 game console product image",
+        source: "trusted_metadata",
+        url: "https://cdn.example.com/Switch_1_Black.png",
+      },
+      target,
+    );
+    const sameModel = validateProductImageCandidate(
+      {
+        contextVerified: true,
+        evidenceText: "Nintendo Switch 2 game console product image",
+        source: "trusted_metadata",
+        url: "https://cdn.example.com/Switch_2_Black.png",
+      },
+      target,
+    );
+
+    assert.equal(sibling.accepted, false);
+    assert.equal(sameModel.accepted, true);
+  });
 });

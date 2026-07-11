@@ -1,8 +1,8 @@
 # ReviewRadar Phase 6 Reliability Gauntlet - Master Plan
 
-**Status:** Canonical merged plan; Phases 6A-6C complete; R2 stopped at 4/6; R3 complete default-off; RR-061 repaired
+**Status:** Canonical merged plan; Phases 6A-6C complete; R2 stopped at 4/6; R3 complete default-off; RR-061 round 4 and RR-080 complete
 **Prepared:** 2026-07-01
-**Execution state:** Roadmap R3 and the separately approved RR-061 image-provenance repair are complete with zero live calls. R3 remains default-off and unpromoted. R2 remains stopped at 4/6; rubric v1.0, leader snapshots, and baseline values remain unfrozen; Phase 6E is unauthorized. RR-078/RR-079 eligibility/type safety repairs are required before any later live window
+**Execution state:** Roadmap R3 and the separately approved RR-061/RR-080 image repairs are complete with zero live calls. R3 remains default-off and unpromoted. R2 remains stopped at 4/6; rubric v1.0, leader snapshots, and baseline values remain unfrozen; Phase 6E is unauthorized. RR-078/RR-079 eligibility/type safety repairs are required before any later live window
 **Repository:** `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 **Canonical repository path:** `docs/phase-6-reliability-gauntlet-plan.md`
 
@@ -68,6 +68,13 @@ Phase 5 behavior blockers.
 - Fail-first 811/814 with three intended failures; focused 24/24; full 815/815 across 120 suites; typecheck/build/eval pass; lint 0 errors/3 warnings. Zero live calls.
 - RR-061 is Fixed. RR-078/RR-079 are the next separately approved safety phase; R4 and any live window remain unauthorized.
 - No later live window is allowed until RR-078/RR-079 safety blockers are repaired and separately approved.
+
+### RR-061 round-4 / RR-080 update (2026-07-11)
+
+- Adversarial review found a Saros sibling false pass and neutral sequence-counter false vetoes. RR-061 was reopened and re-fixed; RR-080 was filed and Fixed.
+- Neutral image vocabulary is explicit; split claims retain 1–4 digit support for real one-digit product families; direct family→mixed-model targets reject split sibling models while compatible target-model files remain valid. No year exclusion shipped.
+- Focused fail-first 24/26; focused final 27/27; full 818/818 across 120 suites; typecheck/build/eval pass; lint 0 errors/3 warnings. Zero live calls.
+- North-Star values remain R2. RR-078/RR-079 remain the next separately approved blockers before R4 or live work.
 
 Relevant existing measurement tools include:
 

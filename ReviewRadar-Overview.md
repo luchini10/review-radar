@@ -882,3 +882,11 @@ No production pipeline or API contract changed in Phase 6A.
 - **Preserved:** Matching Product JSON-LD, image-level page matches, same-model and neutral names, family-adjacent sizes, opaque CDN assets, Google Shopping thumbnails, Amazon modifiers, and all price/citation/eligibility/type gates.
 - **Evidence limit:** The R2 ledger serialized the winners as `retailer_page` but retained neither fetched HTML nor candidate-level image traces. Static control flow establishes `page_image` as the accepting path; it does not establish whether OG/Product JSON-LD candidates existed at runtime. Their priority ordering was therefore not changed.
 - **Proof/state:** Fail-first 811/814 with exactly three intended failures; focused 24/24; full 815/815 across 120 suites; typecheck/lint/build/eval pass; zero live calls. RR-061 is Fixed; RR-078/RR-079 remain the next separately approved safety phase.
+
+## 26. RR-061 round 4 and RR-080 neutral-filename safety (2026-07-11)
+
+- **Adversarial correction:** A deterministic `Saros_10` image on Saros Z70 disproved the prior generalized closure. RR-061 was reopened and returned to Fixed only after the sibling-model case became a regression.
+- **Family rule:** A target family directly adjacent to a mixed letter-digit model now asserts that family. Split sibling numbers are foreign; a filename carrying the compatible target model still clears the veto.
+- **Neutral rule:** Common shot/scene/studio/room/floor/carpet/swatch/style/grid/tile/display words are explicitly non-model imagery vocabulary. Split claims retain 1–4 digit support so real one-digit families such as Nintendo Switch 2 still reject sibling artwork. No unproven year exclusion was added.
+- **RR-080:** Filed and Fixed for neutral sequence-numbered filename false vetoes.
+- **Proof/state:** Focused fail-first 24/26 with two intended failures; focused final 27/27; full 818/818 across 120 suites; typecheck/lint/build/eval pass; zero live calls. Register: 80 total, 65 Fixed, 14 Needs Investigation, 1 Won't Fix. RR-078/RR-079 remain next and separately approval-gated.

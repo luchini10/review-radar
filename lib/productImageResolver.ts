@@ -111,12 +111,15 @@ const GENERIC_IMAGE_FILENAME_WORDS = new Set([
   "back",
   "banner",
   "black",
+  "bedroom",
   "blue",
   "bottom",
   "box",
   "brown",
   "bundle",
+  "carpet",
   "carton",
+  "closeup",
   "color",
   "colour",
   "count",
@@ -124,6 +127,10 @@ const GENERIC_IMAGE_FILENAME_WORDS = new Set([
   "centimeters",
   "dark",
   "detail",
+  "demo",
+  "desktop",
+  "display",
+  "floor",
   "front",
   "foot",
   "feet",
@@ -133,6 +140,7 @@ const GENERIC_IMAGE_FILENAME_WORDS = new Set([
   "gray",
   "green",
   "grey",
+  "grid",
   "hero",
   "image",
   "img",
@@ -142,6 +150,8 @@ const GENERIC_IMAGE_FILENAME_WORDS = new Set([
   "kit",
   "kilogram",
   "kilograms",
+  "kitchen",
+  "landscape",
   "large",
   "left",
   "lifestyle",
@@ -149,11 +159,14 @@ const GENERIC_IMAGE_FILENAME_WORDS = new Set([
   "liters",
   "litre",
   "litres",
+  "living",
   "main",
   "model",
   "millimeter",
   "millimeters",
   "orange",
+  "open",
+  "option",
   "ounce",
   "ounces",
   "pack",
@@ -161,6 +174,8 @@ const GENERIC_IMAGE_FILENAME_WORDS = new Set([
   "photo",
   "pic",
   "product",
+  "portrait",
+  "position",
   "pound",
   "pounds",
   "quart",
@@ -168,20 +183,29 @@ const GENERIC_IMAGE_FILENAME_WORDS = new Set([
   "rear",
   "red",
   "right",
+  "room",
+  "scene",
+  "shot",
   "side",
   "silver",
   "slide",
   "small",
   "step",
   "set",
+  "studio",
+  "style",
+  "swatch",
   "thumb",
   "thumbnail",
   "top",
+  "tile",
   "unit",
   "units",
   "view",
+  "variant",
   "white",
   "yellow",
+  "zoom",
 ]);
 
 const HARD_NON_PRODUCT_ASSET_PATTERN =
@@ -532,6 +556,29 @@ function repeatedFamilyIdentityTokens(
     .map(([token]) => token);
 }
 
+function mixedModelFamilyWords(
+  parts: string[],
+  context: ProductImageContext,
+) {
+  const words = new Set<string>();
+  const excludedWords = nonFamilyFilenameWords(context);
+
+  for (let index = 0; index < parts.length - 1; index += 1) {
+    const family = parts[index] || "";
+    const model = parts[index + 1] || "";
+
+    if (
+      /^[a-z]{3,16}$/.test(family) &&
+      !excludedWords.has(family) &&
+      modelIdentityTokens(model).length > 0
+    ) {
+      words.add(family);
+    }
+  }
+
+  return words;
+}
+
 // RR-061 (wrong-model imagery): a filename that explicitly identifies a
 // different model must veto the image even on an identity-verified product
 // page — live evidence showed Saros Z70 artwork rendering on a Roborock
@@ -552,6 +599,10 @@ function conflictingModelIdentityReason(
     .split(/[^a-z0-9]+/)
     .filter(Boolean);
   const targetSplitClaims = splitModelIdentityClaims(identityParts, context);
+  const targetMixedModelFamilies = mixedModelFamilyWords(
+    identityParts,
+    context,
+  );
 
   if (
     modelIdentityTokens(identityText).length === 0 &&
@@ -602,7 +653,11 @@ function conflictingModelIdentityReason(
       // A family word already present in the target may be followed by a
       // non-model number such as a size. Treat it as conflicting only when the
       // target itself asserts a different word-number family identity.
-      return !identityWords.has(claim.word) || targetClaimsSameFamily;
+      return (
+        !identityWords.has(claim.word) ||
+        targetClaimsSameFamily ||
+        targetMixedModelFamilies.has(claim.word)
+      );
     })
     .map((claim) => claim.token);
 

@@ -4,20 +4,21 @@ Generated: 2026-07-11
 
 ## Current state
 
-`docs/forward-roadmap.md` governs forward sequencing. Phase R3 and the
-separately approved RR-061 image-provenance safety repair are complete. R3's
-`REVIEW_RADAR_PINNED_PLANNING` flag remains default-off and `.env.local` is
-unchanged.
+`docs/forward-roadmap.md` governs forward sequencing. Phase R3, RR-061 round
+4, and RR-080 are complete. R3's `REVIEW_RADAR_PINNED_PLANNING` flag remains
+default-off and `.env.local` is unchanged.
 
-RR-061 used zero live calls. Fail-first was 811/814 with exactly three intended
-failures; focused final was 24/24; the full suite passed 815/815 across 120
-suites. Typecheck, production build, and offline eval pass; lint has 0 errors
-and 3 existing warnings.
+The RR-061/RR-080 micro-phase used zero live calls. Focused fail-first was
+24/26 with exactly two intended failures; focused final was 27/27; the full
+suite passed 818/818 across 120 suites. Typecheck, production build, and
+offline eval pass; lint has 0 errors and 3 existing warnings.
 
-The issue register remains at 79 issues: 64 Fixed, 14 Needs Investigation,
-1 Won't Fix, and 0 Open; 11 Critical, 33 High, 30 Medium, and 5 Low. RR-061 is
-Fixed. RR-015 remains Needs Investigation because no live stability improvement
-was measured.
+The issue register is at 80 issues: 65 Fixed, 14 Needs Investigation, 1 Won't
+Fix, and 0 Open; 11 Critical, 33 High, 31 Medium, and 5 Low. RR-061 was
+reopened by a deterministic Saros sibling counterexample and returned to Fixed;
+RR-080 was filed and Fixed for neutral sequence-numbered filename false vetoes.
+RR-015 remains Needs Investigation because no live stability improvement was
+measured.
 
 R2 remains stopped at 4/6. Latest North-Star evidence is unchanged:
 
@@ -80,4 +81,4 @@ Reference:
 - `docs/codex-handoff-phased-plan.md`
 - `docs/review-radar-test-memory.md`
 - `docs/qa-loop-results.md`
-- `ReviewRadar-Overview.md` section 25
+- `ReviewRadar-Overview.md` section 26

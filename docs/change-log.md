@@ -13,6 +13,20 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-11
 
+### Codex - RR-061 round 4 and RR-080 image filename repair
+
+#### Changed
+
+- Reopened RR-061 after adversarial testing proved a Saros 10 filename could pass for a Saros Z70 target, then returned it to Fixed after adding direct family-to-mixed-model sibling detection.
+- Filed and fixed RR-080: explicit neutral image vocabulary prevents shot counters and repeated neutral words from becoming foreign model claims, while one-digit product-family protection remains intact.
+- Preserved the compatible target-model escape and all earlier image provenance, navigation, same-model, opaque CDN, JSON-LD, Google, Amazon-modifier, retina, dimension, and model-less controls.
+- Left RR-078/RR-079, search, ranking, requirements, price, citations, R3 flags, and `.env.local` unchanged. Zero live calls.
+
+#### Verified
+
+- Fail-first focused resolver: 24/26 with exactly two intended failures; final focused: 27/27.
+- Full suite: 818/818 across 120 suites. Typecheck/build/eval pass; lint: 0 errors, 3 existing warnings.
+
 ### Codex - RR-061 image-provenance safety repair
 
 #### Changed
