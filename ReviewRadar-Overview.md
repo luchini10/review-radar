@@ -863,3 +863,13 @@ No production pipeline or API contract changed in Phase 6A.
 - **Search efficiency:** AI-gap queries contributed 30 unique candidates and 8 exact/8 near outcomes. Editorial seed searches produced 588 raw results but zero unique/final candidates. Constrained B initially spent four broad/diluted shopping queries for one self-emptying query.
 - **Freeze/state:** The incomplete and unsafe sample cannot establish the R2 baseline. Rubric remains `v0.1-draft`; leader snapshots, significance rules, and North-Star values remain unfrozen; Phase 6E remains unauthorized. Register: 79 issues, 63 Fixed, 15 Needs Investigation, 1 Won't Fix.
 - **Next:** Roadmap R3 planner determinism is next and requires zero live calls. No later live sample should run until RR-061/RR-078 are repaired and separately approved.
+
+## 24. Phase R3 pinned discovery planning (2026-07-11)
+
+- **Scope:** The two OpenAI planning calls only: initial discovery strategy and post-Serper gap check. No live provider call ran.
+- **Flag:** `REVIEW_RADAR_PINNED_PLANNING=on` maps the default helper alias to the documented `gpt-5.4-mini-2026-03-17` snapshot and adds `temperature: 0` to both requests. The flag defaults off.
+- **Preserved:** Custom helper models and flag-off request shapes are unchanged. Final synthesis, prompts, strict output schemas, query allocation, search dispatch, candidates, ranking, and all trust gates are unaffected.
+- **Observability:** Debug ledgers record the new flag and the resolved helper snapshot. `.env.example` documents the option; `.env.local` is unchanged.
+- **Proof:** Fail-first 8/9; focused planner/API/ledger tests 38/38; full suite 810/810 across 119 suites; typecheck/build/eval pass; lint 0 errors/3 existing warnings.
+- **North Stars:** No live improvement is claimed. Latest evidence remains core-leader recall unavailable, 3/23 wrong-type/non-product final cards, full constraint compliance unscoreable, A pool/final Jaccard 0.1051/0.0333, and B stability unavailable. RR-015 stays Needs Investigation.
+- **Next:** Repair RR-061 image provenance separately, followed by RR-078/RR-079 eligibility/type safety. No later live window or Phase 6E until the Critical blockers are cleared and separately approved.

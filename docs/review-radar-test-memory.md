@@ -1360,3 +1360,17 @@ No live provider calls and no search/ranking/trust behavior changes.
 **Carryovers:** RR-037 stays Needs Investigation because RIDGID was present in all A runs but product identities and counts varied. RR-045 stays Needs Investigation because two broad Tapo editorial queries returned raw results that normalization discarded; an exact RV30C Plus query was never sent.
 
 **Freeze boundary:** The R2/Phase 6D exit gate failed. Rubric remains `v0.1-draft`; no leader snapshot, significance rule, or baseline North-Star value is approved. Phase 6E remains unauthorized.
+
+---
+
+## 2026-07-11 - Phase R3 pinned discovery planning
+
+**Contract:** OpenAI Responses supports `temperature` in `[0,2]`; lower values are described as more focused/deterministic. The documented GPT-5.4 mini snapshot is `gpt-5.4-mini-2026-03-17`. Responses exposes no `seed` parameter.
+
+**Flag behavior:** `REVIEW_RADAR_PINNED_PLANNING=on` affects only the two calls in `lib/discoveryStrategy.ts`. For the default `gpt-5.4-mini` helper alias, requests use the dated snapshot and `temperature: 0`. The resolver is idempotent for the dated snapshot. Custom helper models receive neither rewriting nor temperature injection. Flag-off requests retain the prior shape. Final synthesis is outside the flag.
+
+**Stable tests:** `tests/discoveryStrategy.test.mjs` captures both request objects and proves on/off behavior plus custom-model preservation. `tests/recommendationApiContract.test.mjs` proves the resolved helper snapshot reaches the ledger while final synthesis stays unchanged. `tests/searchObservabilityLedger.test.mjs` proves the new flag appears in the debug environment snapshot. Fail-first 8/9; focused final 38/38; full 810/810.
+
+**Measurement boundary:** Snapshot pinning prevents alias drift and temperature zero reduces sampling variance, but neither guarantees identical output. R3 ran zero live calls, so RR-015 remains Needs Investigation. Do not claim a Jaccard improvement until a later approved ledger sample separates plan, provider, pool, and final overlap.
+
+**Safety boundary:** `.env.local` remains unchanged and the flag defaults off. No search allocation, prompt, schema, final synthesis, candidate, rank, requirement, eligibility, image, identity, citation, price, or product-type behavior changed.

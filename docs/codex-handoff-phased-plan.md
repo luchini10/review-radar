@@ -1623,3 +1623,16 @@ Stop. Do not implement RR-061 or begin Phase B live verification without separat
 - Next phase: R3 planner determinism (zero live calls), after review. No later live window may proceed until RR-061/RR-078 are repaired and separately approved.
 
 Stop. Do not run B2/B3, freeze the baseline, start Phase 6E, or fix the new findings without separate scope.
+
+### Phase R3 completion record (2026-07-11)
+
+- Completed step: Strategy-call determinism only; zero live Serper/OpenAI calls.
+- Behavior: default-off `REVIEW_RADAR_PINNED_PLANNING=on` maps only the default `gpt-5.4-mini` helper alias to `gpt-5.4-mini-2026-03-17` and sends `temperature: 0` on both discovery-strategy and gap-check requests.
+- API boundary: Responses documents temperature but no seed. No unsupported seed was invented. Custom helper models, flag-off calls, and final synthesis remain unchanged.
+- Observability: debug-ledger flag snapshots include `REVIEW_RADAR_PINNED_PLANNING`; `.env.example` documents it. `.env.local` was not modified.
+- Verification: fail-first 8/9; focused final 38/38; full suite 810/810 across 119 suites; typecheck/build/eval pass; lint 0 errors/3 existing warnings.
+- Measurement: RR-015 remains Needs Investigation. No live North-Star improvement is claimed; R2 values remain latest and R4 owns later measurement.
+- Register: unchanged at 79 total; 63 Fixed, 15 Needs Investigation, 1 Won't Fix, 0 Open.
+- Next step: separately approved RR-061 image-provenance safety repair. RR-078/RR-079 remain separate eligibility/type work. No live window until the Critical safety blockers are fixed.
+
+Stop. Do not enable the flag in `.env.local`, run live validation, fix RR-061/RR-078/RR-079, start R4, or start Phase 6E without separate approval.

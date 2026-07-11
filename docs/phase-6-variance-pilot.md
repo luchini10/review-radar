@@ -192,6 +192,23 @@ allocation, and R6 is supported by zero editorial-seed contribution. No fix is
 implemented here. Any later live validation remains blocked by RR-061 and
 RR-078 safety repairs and requires new approval.
 
+### Phase R3 deterministic follow-up (2026-07-11)
+
+R3 used zero live calls. The default-off `REVIEW_RADAR_PINNED_PLANNING` flag
+now sends `gpt-5.4-mini-2026-03-17` plus `temperature: 0` to both the discovery
+strategy and gap-check calls when the configured helper is the default
+`gpt-5.4-mini`. The Responses API exposes no `seed`; custom helper models and
+flag-off request parameters are unchanged. The final synthesis call is not
+part of this flag.
+
+This is an expected stability improvement, not measured proof. The latest
+North-Star evidence remains R2: core-leader recall unavailable; 3/23
+wrong-type/non-product final cards; full constraint compliance unscoreable;
+A pool/final Jaccard 0.1051/0.0333 and B stability unavailable. RR-015 remains
+Needs Investigation. R4's later approved sample must separately report plan,
+provider, pool, and final overlap with the flag enabled. It must not treat
+future B observations as missing pre-change runs.
+
 ## Fresh post-RR-061 restart - stopped
 
 Taylor approved a new six-call window under commit `baeb6a0`, with both earlier

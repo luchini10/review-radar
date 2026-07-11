@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through the stopped roadmap Phase R2 window
+## Compiled for AI Agent Consumption — Phase 0 through roadmap Phase R3
 
-**Generated:** 2026-07-10
-**Scope:** All phases from initial measurement harness through the stopped Phase R2 live-ledger window
+**Generated:** 2026-07-11
+**Scope:** All phases from initial measurement harness through the Phase R3 pinned-planning implementation
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -94,6 +94,7 @@
 | Phase A search-observability audit filing | 7 |
 | Phase R0/R1 — Roadmap adoption + RR-061 model-conflict fix | 0 |
 | Phase R2 — Live ledger verification safety stop | 2 |
+| Phase R3 — Strategy-call determinism | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -519,6 +520,8 @@
 **Phase 4 run evidence:** Fresh repeated queries varied materially within the same day. The Phase 4B robot-vacuum final seven shared only Shark ION with the Phase 4D exact set; subsequent Phase 4E shifted again toward three Roombas and two Roborocks. Gas-grill and cordless-drill slates likewise changed products and upgrade-trigger counts between phases. This is qualitative confirmation of RR-015, not a replacement for the formal consistency harness.
 
 **Phase 6D partial pilot evidence:** The safety-stopped pilot completed two of three runs for each approved query. Pairwise candidate-pool Jaccard was `0.1429` for `shop vac` and `0.0000` for `robot vacuum under $300 self-emptying`; final-set Jaccard was `0.0000` for both. Raw-provider overlap was `0.2857` and `0.3158`, while generated/search-plan overlap was `0.3636` and `0.3333`. No final product was shared within either query pair, so rank correlation was unscoreable. The evidence confirms material current variance but is below the planned three-run sample and cannot establish a final significance threshold. Status remains Needs Investigation.
+
+**Phase R3 implementation (2026-07-11):** The two OpenAI planning calls are now flag-gated by `REVIEW_RADAR_PINNED_PLANNING=on`. For the documented default helper model only, the flag sends the dated `gpt-5.4-mini-2026-03-17` snapshot with `temperature: 0`; flag-off requests remain byte-for-byte parameter-compatible, custom helper models are not rewritten, and the final synthesis call is untouched. The Responses API exposes no `seed`, so none was invented. Deterministic request-shape tests prove both strategy and gap calls receive the controls only when enabled. RR-015 remains Needs Investigation because R3 used zero live calls and therefore does not prove improved plan, pool, or final-set Jaccard; R4's later approved sample owns that measurement.
 
 ---
 

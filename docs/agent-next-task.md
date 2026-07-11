@@ -1,78 +1,76 @@
 # Agent Next Task
 
-Generated: 2026-07-10
+Generated: 2026-07-11
 
 ## Current state
 
-`docs/forward-roadmap.md` governs forward sequencing. Phase R2 started at
-pinned commit `0f44ae7` but hit the absolute safety stop after four of six
-approved searches. A1-A3 `shop vac` completed; constrained B1 (`robot vacuum`,
-`under $300`, `self-emptying`) triggered the stop. B2/B3 were not run.
+`docs/forward-roadmap.md` governs forward sequencing. Phase R3 is complete:
+the default-off `REVIEW_RADAR_PINNED_PLANNING=on` flag maps the default helper
+alias to `gpt-5.4-mini-2026-03-17` and sends `temperature: 0` on both discovery
+planning calls. The Responses API documents no `seed`, so none is sent.
+Custom helper models, flag-off request shapes, and final synthesis are unchanged.
 
-All four cache-cold ledgers reconcile: 386 logical lookups, 69 cache hits, 317
-misses, 317 physical Serper attempts, 0 retries, and 0 fallbacks. The four new
-Tier A fixtures are untracked and must not be committed or pooled with earlier
-stopped Phase 6D samples.
+R3 used zero live calls. Fail-first was 8/9; focused final was 38/38; the full
+suite passed 810/810 across 119 suites. Typecheck, production build, and offline
+eval pass; lint has 0 errors and 3 existing warnings. `.env.local` is unchanged,
+so the new flag has not been promoted.
 
-The register contains 79 issues: 63 Fixed, 15 Needs Investigation, 1 Won't
-Fix, and 0 Open; 11 Critical, 33 High, 30 Medium, and 5 Low.
+The issue register remains at 79 issues: 63 Fixed, 15 Needs Investigation,
+1 Won't Fix, and 0 Open; 11 Critical, 33 High, 30 Medium, and 5 Low. RR-015
+remains Needs Investigation because no live stability improvement was measured.
 
-- RR-061 is reopened. Q10 X5+, Q10 S5+, and Q7 Max+ cards rendered QRevo/Saros
-  foreign-model filenames that bypass the R1 mixed letter-digit token guard.
-- RR-078 is Critical/Needs Investigation: customer-service and editorial pages
-  rendered as buyable product cards.
-- RR-079 is High/Needs Investigation: an accessory-only self-empty dock rendered
-  as a robot-vacuum near match.
-- RR-037 and RR-045 remain Needs Investigation.
+R2 remains stopped at 4/6. Latest North-Star evidence is unchanged:
 
-R2 did not satisfy the Phase 6D exit gate. Rubric remains `v0.1-draft`; no
-leader snapshot, significance rule, or North-Star baseline is frozen. Phase 6E
-remains unauthorized.
+- core-leader recall: unavailable without an approved snapshot;
+- wrong-type/non-product final cards: 3/23;
+- full stated-constraint compliance: unscoreable because `self-emptying` was
+  not encoded as a requirement;
+- stability: A pool/final Jaccard 0.1051/0.0333; B unavailable.
 
-## Required next task — Phase R3
+Rubric remains `v0.1-draft`; leader snapshots, significance rules, and baseline
+values are unfrozen. Phase 6E remains unauthorized.
 
-**Phase R3 — planner determinism (zero live calls).** Follow
-`docs/forward-roadmap.md` exactly. Use the R2 ledgers as fail-first evidence to
-make search-plan generation reproducible enough for controlled comparison.
-Focus on the configured OpenAI discovery-strategy and gap-planning calls: they
-currently set no temperature or seed, and every A-run raw strategy/gap output
-varied.
+## Required next task — RR-061 image-provenance safety repair
 
-The R3 phase must:
+This is a separate deterministic safety-unblock phase and requires explicit
+approval. Do not start R4 or another live window first.
 
-- run zero live Serper/OpenAI searches unless Taylor separately approves a new
-  live budget;
-- add deterministic tests before changing behavior;
-- preserve request constraints and the strict output schemas;
-- define and verify the intended temperature/seed behavior against the actual
-  supported model/API contract;
-- avoid fixing R4 query allocation, R5 downstream false negatives, R6 seed
-  precision, RR-061, RR-078, or RR-079 in the same phase;
-- keep all image, identity, price, citation, requirement, product-type, and
-  product-page safety gates at least as strict;
-- update the issue register and the standard nine-document set, then commit the
-  scoped phase separately.
+The R1 guard only recognizes single filename tokens containing letters and
+digits. R2 therefore rendered `2_QRevo_Curv_QRevo_Edge_140x.jpg` on Q10 X5+
+and Q10 S5+ cards, and `Saros_20_Black_ID.png` on a Q7 Max+ card. Pure-word
+foreign model families plus a separate number never armed the guard.
 
-## Evidence to carry into later phases
+The phase must:
 
-- A-run Jaccard means: expected products 0.1434, planned queries 0.3909,
-  dispatched queries 0.3896, provider common results 0.5820, candidate pool
-  0.1051, final cards 0.0333. Attribution is mixed; downstream stages amplify
-  planner/model and provider variance.
-- AI-gap queries supplied 30 unique candidates and 8 exact/8 near outcomes.
-  Editorial seeds produced 588 raw results and zero unique/final candidates.
-- Constrained B began with four broad/diluted deterministic shopping queries
-  and only one self-emptying query. That evidence belongs to R4.
-- RR-037: RIDGID appeared in every A run but with variable product identities.
-  RR-045: two broad Tapo queries returned raw results that normalization
-  discarded; no exact RV30C Plus query ran.
+- establish which candidate source won for each captured image (existing,
+  metadata, matching Product JSON-LD, or page image) before changing logic;
+- add fail-first tests for the three R2 cards plus the earlier navigation and
+  `Saros_Z70` generations;
+- prefer product-bound image provenance over page-global metadata when the
+  evidence supports that root cause;
+- reject explicit foreign family/model imagery without a brand dictionary or
+  request-local candidate-pool dependency;
+- preserve neutral filenames, opaque CDN hashes, same-model files, matching
+  Product JSON-LD images, Google Shopping thumbnails, and navigation guards;
+- leave product eligibility (RR-078), accessory typing (RR-079), planner/search
+  allocation, ranking, requirements, price, citations, and `.env.local` out of
+  scope;
+- use zero live Serper/OpenAI calls;
+- update the issue register and standard phase documents, then stop.
+
+## Later sequence
+
+After RR-061, run a separately approved RR-078/RR-079 eligibility/type safety
+phase. Only after those blockers are cleared should R4 deterministic work and
+its separately approved live after-sample proceed. Future B observations are
+after-sample evidence; they must not be described as missing R2 before-runs.
 
 ## Safety boundary
 
-Do not run the unspent B2/B3 calls, freeze R2 values, approve leader snapshots,
-start Phase 6E, or begin another live window. Any later live sample requires a
-separately approved budget and repairs for RR-061/RR-078 first. Do not commit
-live fixtures or modify `.env.local` / `REVIEW_RADAR_*` flags.
+Do not run B2/B3, enable `REVIEW_RADAR_PINNED_PLANNING` in `.env.local`, run a
+new baseline, freeze R2 values, approve leader snapshots, start R4, or start
+Phase 6E without separate approval. Do not commit live fixtures or existing
+untracked local artifacts.
 
 Reference:
 
@@ -83,4 +81,4 @@ Reference:
 - `docs/codex-handoff-phased-plan.md`
 - `docs/review-radar-test-memory.md`
 - `docs/qa-loop-results.md`
-- `ReviewRadar-Overview.md` section 23
+- `ReviewRadar-Overview.md` section 24

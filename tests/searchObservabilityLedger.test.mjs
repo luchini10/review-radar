@@ -11,6 +11,7 @@ import {
   buildSearchObservabilitySnapshot,
   createSearchObservabilityLedger,
   finalizeCandidateLineage,
+  reviewRadarFlagSnapshot,
   runWithSearchObservabilityLedger,
   searchPlanObservabilityObserver,
 } from "../lib/searchObservabilityLedger.ts";
@@ -709,5 +710,23 @@ describe("request-scoped search observability ledger", () => {
       REVIEW_RADAR_SPEC_VALIDATION: "shadow",
     });
     assert.equal("prompt" in snapshot, false);
+  });
+
+  it("includes the pinned-planning flag in the environment snapshot", () => {
+    const previous = process.env.REVIEW_RADAR_PINNED_PLANNING;
+
+    try {
+      process.env.REVIEW_RADAR_PINNED_PLANNING = "on";
+      assert.equal(
+        reviewRadarFlagSnapshot().REVIEW_RADAR_PINNED_PLANNING,
+        "on",
+      );
+    } finally {
+      if (previous === undefined) {
+        delete process.env.REVIEW_RADAR_PINNED_PLANNING;
+      } else {
+        process.env.REVIEW_RADAR_PINNED_PLANNING = previous;
+      }
+    }
   });
 });

@@ -6,10 +6,12 @@ import { USER_ERROR_MESSAGES } from "../lib/errorMessages.ts";
 
 const originalOpenAiKey = process.env.OPENAI_API_KEY;
 const originalOpenAiModel = process.env.OPENAI_MODEL;
+const originalPinnedPlanning = process.env.REVIEW_RADAR_PINNED_PLANNING;
 
 beforeEach(() => {
   process.env.OPENAI_API_KEY = "test-api-key";
   delete process.env.OPENAI_MODEL;
+  delete process.env.REVIEW_RADAR_PINNED_PLANNING;
 });
 
 afterEach(() => {
@@ -23,6 +25,12 @@ afterEach(() => {
     delete process.env.OPENAI_MODEL;
   } else {
     process.env.OPENAI_MODEL = originalOpenAiModel;
+  }
+
+  if (originalPinnedPlanning === undefined) {
+    delete process.env.REVIEW_RADAR_PINNED_PLANNING;
+  } else {
+    process.env.REVIEW_RADAR_PINNED_PLANNING = originalPinnedPlanning;
   }
 });
 
@@ -351,6 +359,37 @@ describe("recommendation API contract", () => {
     assert.equal(models[0], "gpt-5.4-mini");
     assert.equal(models[models.length - 1], "gpt-5.4-mini");
     assert.equal(timeouts[timeouts.length - 1], 180000);
+  });
+
+  it("reports the resolved planning snapshot without changing final synthesis", async () => {
+    process.env.REVIEW_RADAR_PINNED_PLANNING = "on";
+    const requests = [];
+    const handler = buildHandler({
+      onModelCreate: (input) => requests.push(input),
+    });
+    const response = await readJson(
+      await handler(
+        jsonRequest(
+          { query: "microwave" },
+          { "x-reviewradar-debug": "true" },
+        ),
+      ),
+    );
+
+    assert.equal(response.status, 200);
+    assert.equal(requests[0].model, "gpt-5.4-mini-2026-03-17");
+    assert.equal(requests[0].temperature, 0);
+    assert.equal(requests[requests.length - 1].model, "gpt-5.4-mini");
+    assert.equal("temperature" in requests[requests.length - 1], false);
+    assert.equal(
+      response.body.debug.stageFunnel.searchLedger.header.helperModel,
+      "gpt-5.4-mini-2026-03-17",
+    );
+    assert.equal(
+      response.body.debug.stageFunnel.searchLedger.header.flags
+        .REVIEW_RADAR_PINNED_PLANNING,
+      "on",
+    );
   });
 
   it("includes stage timing data in debug responses", async () => {

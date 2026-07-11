@@ -17,6 +17,7 @@ import type { SearchPlanObservabilityObserver } from "./searchObservabilityTypes
 
 const DISCOVERY_STRATEGY_TIMEOUT_MS = 25000;
 const DISCOVERY_GAP_TIMEOUT_MS = 20000;
+const PINNED_PLANNING_MODEL = "gpt-5.4-mini-2026-03-17";
 
 type OpenAIResponsesClient = {
   responses: {
@@ -26,6 +27,29 @@ type OpenAIResponsesClient = {
     ) => Promise<unknown>;
   };
 };
+
+function pinnedPlanningEnabled() {
+  return process.env.REVIEW_RADAR_PINNED_PLANNING === "on";
+}
+
+export function resolvePlanningModel(model: string) {
+  if (!pinnedPlanningEnabled() || model !== "gpt-5.4-mini") {
+    return model;
+  }
+
+  return PINNED_PLANNING_MODEL;
+}
+
+function planningRequestControls(model: string) {
+  const resolvedModel = resolvePlanningModel(model);
+  const usesSupportedPinnedModel =
+    pinnedPlanningEnabled() && resolvedModel === PINNED_PLANNING_MODEL;
+
+  return {
+    model: resolvedModel,
+    ...(usesSupportedPinnedModel ? { temperature: 0 } : {}),
+  };
+}
 
 const discoveryTargetSchema = z
   .object({
@@ -399,7 +423,7 @@ export async function buildOpenAIDiscoveryStrategy(options: {
   try {
     const response = await client.responses.create(
       {
-        model,
+        ...planningRequestControls(model),
         max_output_tokens: 1800,
         input: [
           {
@@ -564,7 +588,7 @@ export async function buildOpenAIDiscoveryGapCheck(options: {
   try {
     const response = await client.responses.create(
       {
-        model,
+        ...planningRequestControls(model),
         max_output_tokens: 1400,
         input: [
           {

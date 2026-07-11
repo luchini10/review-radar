@@ -11,6 +11,25 @@ Update this file after:
 
 Do not update this file for tiny typo fixes, formatting-only edits, or internal cleanup that does not change behavior.
 
+## 2026-07-11
+
+### Codex - Phase R3 pinned discovery planning
+
+#### Changed
+
+- Added default-off `REVIEW_RADAR_PINNED_PLANNING`. When enabled with the default helper model, both discovery-strategy and gap-check calls use `gpt-5.4-mini-2026-03-17` with `temperature: 0`.
+- Preserved flag-off request parameters, custom helper models, final synthesis, prompts, schemas, query allocation, ranking, and all trust gates.
+- Added the flag to debug-ledger environment snapshots and documented it in `.env.example`; `.env.local` was not changed.
+- Kept RR-015 at Needs Investigation because zero-live R3 cannot establish a stability improvement. The next approved live sample must measure it.
+
+#### Verified
+
+- Fail-first focused test: 8/9 passed before implementation; the new pinned-planning assertion failed as intended.
+- Focused planner/API/ledger tests: 38/38 passed.
+- `npm run typecheck`: pass. `npm run lint`: 0 errors, 3 existing warnings.
+- `npm test`: 810/810 across 119 suites. `npm run build`: pass. Offline eval: no red flags.
+- Live Serper/OpenAI calls: 0.
+
 ## 2026-07-10
 
 ### Codex - Phase R2 live-ledger restart safety stop

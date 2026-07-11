@@ -58,6 +58,7 @@ import {
   augmentSearchPlanWithDiscoveryStrategy,
   buildOpenAIDiscoveryGapCheck,
   buildOpenAIDiscoveryStrategy,
+  resolvePlanningModel,
 } from "../../../lib/discoveryStrategy.ts";
 import {
   generateSearchPlan,
@@ -693,7 +694,7 @@ async function handleRecommendationPostWithContext(
     const client = await timing.measure("create_openai_client", () =>
       routeDependencies.createOpenAIClient(apiKey),
     );
-    const helperResearchModel = helperModel();
+    const helperResearchModel = resolvePlanningModel(helperModel());
     const finalSynthesisModel = finalResearchModel();
     const extractedRequirements = timing.measureSync(
       "extract_requirements",
@@ -1635,7 +1636,7 @@ async function handleRecommendationPost(
     ? createSearchObservabilityLedger({
         commitHash: resolveReviewRadarCommitHash(),
         flags: reviewRadarFlagSnapshot(),
-        helperModel: helperModel(),
+        helperModel: resolvePlanningModel(helperModel()),
         finalModel: finalResearchModel(),
         serperCacheEmptyAtStart: cacheStats().entries === 0,
       })

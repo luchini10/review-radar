@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import {
   augmentSearchPlanWithDiscoveryStrategy,
   buildDeterministicGapCheck,
+  buildOpenAIDiscoveryGapCheck,
   buildOpenAIDiscoveryStrategy,
   candidateMatchesDiscoveryTarget,
   discoveryContextForPrompt,
@@ -228,6 +229,99 @@ describe("AI discovery strategy helpers", () => {
     assert.equal(fallback.buyingRubric, undefined);
   });
 
+  it("pins both planning calls only when REVIEW_RADAR_PINNED_PLANNING is on", async () => {
+    const previous = process.env.REVIEW_RADAR_PINNED_PLANNING;
+    const requests = [];
+    const client = {
+      responses: {
+        create: async (options) => {
+          requests.push(options);
+
+          return {
+            output_text: JSON.stringify(
+              options.text.format.name === "review_radar_discovery_strategy"
+                ? strategy
+                : {
+                    followUpQueries: [],
+                    missingExpectedProducts: [],
+                    notes: [],
+                    suspiciousCandidateNames: [],
+                  },
+            ),
+          };
+        },
+      },
+    };
+
+    try {
+      process.env.REVIEW_RADAR_PINNED_PLANNING = "on";
+      await buildOpenAIDiscoveryStrategy({
+        client,
+        input: shoeRequest(),
+        model: "gpt-5.4-mini",
+      });
+      await buildOpenAIDiscoveryGapCheck({
+        candidates: [rawCandidate()],
+        client,
+        input: shoeRequest(),
+        model: "gpt-5.4-mini",
+        strategy,
+      });
+
+      assert.equal(requests.length, 2);
+      assert.equal(
+        requests.every(
+          (request) => request.model === "gpt-5.4-mini-2026-03-17",
+        ),
+        true,
+      );
+      assert.equal(
+        requests.every((request) => request.temperature === 0),
+        true,
+      );
+
+      requests.length = 0;
+      await buildOpenAIDiscoveryStrategy({
+        client,
+        input: shoeRequest(),
+        model: "custom-helper-model",
+      });
+      assert.equal(requests[0].model, "custom-helper-model");
+      assert.equal("temperature" in requests[0], false);
+
+      requests.length = 0;
+      delete process.env.REVIEW_RADAR_PINNED_PLANNING;
+      await buildOpenAIDiscoveryStrategy({
+        client,
+        input: shoeRequest(),
+        model: "gpt-5.4-mini",
+      });
+      await buildOpenAIDiscoveryGapCheck({
+        candidates: [rawCandidate()],
+        client,
+        input: shoeRequest(),
+        model: "gpt-5.4-mini",
+        strategy,
+      });
+
+      assert.equal(requests.length, 2);
+      assert.equal(
+        requests.every((request) => request.model === "gpt-5.4-mini"),
+        true,
+      );
+      assert.equal(
+        requests.every((request) => !("temperature" in request)),
+        true,
+      );
+    } finally {
+      if (previous === undefined) {
+        delete process.env.REVIEW_RADAR_PINNED_PLANNING;
+      } else {
+        process.env.REVIEW_RADAR_PINNED_PLANNING = previous;
+      }
+    }
+  });
+
   it("normalizes AI gap-check follow-up queries to budget-bound wording", async () => {
     const client = {
       responses: {
@@ -241,7 +335,6 @@ describe("AI discovery strategy helpers", () => {
         }),
       },
     };
-    const { buildOpenAIDiscoveryGapCheck } = await import("../lib/discoveryStrategy.ts");
     const gapCheck = await buildOpenAIDiscoveryGapCheck({
       candidates: [rawCandidate()],
       client,

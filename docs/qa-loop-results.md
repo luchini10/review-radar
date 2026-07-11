@@ -6212,3 +6212,24 @@ live calls after safety stop: 0
 ```
 
 Next: roadmap Phase R3 (planner determinism, zero live calls) after review. Repair RR-061/RR-078 before any later live window; do not start Phase 6E.
+
+### 🟧 Codex Change — Phase R3 pinned discovery planning
+
+**Verdict: COMPLETE, DEFAULT-OFF. Zero live calls; stability improvement remains unmeasured.**
+
+- Official API contract check confirmed Responses supports `temperature` from 0 to 2 and publishes `gpt-5.4-mini-2026-03-17` as the fixed GPT-5.4 mini snapshot. No Responses `seed` parameter is documented.
+- Added `REVIEW_RADAR_PINNED_PLANNING=on`. With the default helper alias, both discovery-strategy and gap-check requests send the dated snapshot plus `temperature: 0`.
+- The flag stays off by default. Flag-off requests and custom helper models are unchanged. Final synthesis, prompts, strict schemas, query wording/allocation, candidates, ranking, eligibility, image, identity, citation, requirement, price, and product-type gates are untouched.
+- Debug ledger headers now capture the new flag. `.env.example` documents it; `.env.local` and existing live fixtures were not changed.
+- Fail-first focused result was 8/9 with the new request-control assertion failing. After implementation, the focused planner/API/ledger matrix passed 38/38.
+
+```text
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm test: 810/810 across 119 suites
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red-flag issues
+live Serper/OpenAI calls: 0
+```
+
+North Stars remain the R2 observations: core-leader recall unavailable; wrong-type/non-product final cards 3/23; full constraint compliance unscoreable; A pool/final Jaccard 0.1051/0.0333 and B stability unavailable. RR-015 remains Needs Investigation. Next: a separately approved RR-061 image-provenance safety repair; no live window or Phase 6E.

@@ -1,8 +1,8 @@
 # ReviewRadar Phase 6 Reliability Gauntlet - Master Plan
 
-**Status:** Canonical merged plan; Phases 6A-6C complete; roadmap Phase R2 / Phase 6D stopped at 4/6
+**Status:** Canonical merged plan; Phases 6A-6C complete; R2 stopped at 4/6; R3 complete default-off
 **Prepared:** 2026-07-01
-**Execution state:** Roadmap Phase R2 started from commit `0f44ae7` and stopped at 4/6 after constrained B1 reproduced RR-061 and exposed RR-078/RR-079. A1-A3 completed; B2/B3 were not run. Rubric v1.0, leader snapshots, and baseline values remain unfrozen; Phase 6E remains unauthorized. R3 is the next roadmap phase, but no later live window may proceed until the safety defects are repaired and separately approved
+**Execution state:** Roadmap R3 is complete with zero live calls: default-off pinned planning maps the default helper alias to `gpt-5.4-mini-2026-03-17` and sends `temperature: 0` on both planning calls. No live stability gain is claimed. R2 remains stopped at 4/6; rubric v1.0, leader snapshots, and baseline values remain unfrozen; Phase 6E is unauthorized. RR-061/RR-078 safety repairs are required before any later live window
 **Repository:** `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 **Canonical repository path:** `docs/phase-6-reliability-gauntlet-plan.md`
 
@@ -53,6 +53,14 @@ Phase 5 behavior blockers.
 - A mean pool/final Jaccard is 0.1051/0.0333; provider common-result mean is 0.5820; planned/dispatched query mean is 0.3909/0.3896. The evidence supports mixed provider and model/planner variance with downstream amplification.
 - This stopped 4/6 sample fails the R2/6D exit gate. Rubric remains `v0.1-draft`; no leader snapshot, significance rule, or baseline North-Star value is frozen. Phase 6E remains unauthorized.
 - R3 planner determinism is next in roadmap order and requires zero live calls. Any later live window requires repaired safety defects and separate approval.
+
+### Phase R3 execution update (2026-07-11)
+
+- `REVIEW_RADAR_PINNED_PLANNING=on` now applies the documented `gpt-5.4-mini-2026-03-17` snapshot and `temperature: 0` to both OpenAI planning calls. The Responses API documents no `seed`; none is sent.
+- The flag is default-off. Flag-off request parameters, custom helper models, final synthesis, prompts, output schemas, search allocation, ranking, and trust behavior remain unchanged.
+- Fail-first request-shape proof flipped green; focused tests passed 38/38 and the full suite passed 810/810. Typecheck/build/eval pass; lint has 0 errors and 3 existing warnings.
+- Zero live calls ran. RR-015 remains Needs Investigation, and the R2 North-Star observations remain the latest evidence. R4's approved after-sample must measure the actual stability effect.
+- No later live window is allowed until RR-061/RR-078 safety blockers are repaired and separately approved.
 
 Relevant existing measurement tools include:
 
