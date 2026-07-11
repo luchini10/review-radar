@@ -6276,3 +6276,26 @@ live Serper/OpenAI calls: 0
 ```
 
 Register: 80 total; 65 Fixed, 14 Needs Investigation, 1 Won't Fix; 11 Critical, 33 High, 31 Medium, 5 Low. Latest North Stars remain the stopped R2 values: core-leader recall unavailable; wrong-type/non-product final cards 3/23; full constraint compliance unscoreable; A pool/final Jaccard 0.1051/0.0333 and B unavailable. This R1 safety/quality completion does not claim a measured North-Star change. Next remains separately approved RR-078/RR-079; no live window, R4, or Phase 6E.
+
+### 🟧 Codex Change — RR-078/RR-079 eligibility and product-type safety
+
+**Verdict: COMPLETE. RR-078 and RR-079 Fixed. Deterministic only; zero live calls.**
+
+- RR-078 fail-first proved that `/pages/new-customer-service-2` and a dated `YYYY/MM/*.html` article route were admitted as products. The shared eligibility path now classifies those routes as evidence-only before product-detail shortcuts; a dated commerce-route control remains eligible.
+- RR-079 fail-first proved that a compatible Clean Base could pass robot-vacuum type validation. The shared product-type intent now recognizes standalone dock, docking/charging station, clean/dust-disposal base, and self/auto-empty station identities as exclusive complements while preserving explicit primary-product bundles.
+- A full-suite preservation failure exposed an important boundary: sparse legitimate robot-vacuum names may need `why_recommended` to confirm type. The shared verdict now lets richer prose resolve a complement only after lean evidence has retained priority for confirmed wrong types; exclusive accessory identity still wins.
+- Final source review found that dynamic-regex escaping missed brand-prefixed `dock ... for` titles. A new control failed 12/13 before the escape correction and then passed in the 97/97 focused matrix.
+
+```text
+fail-first focused: 33/35; exactly 2 intended failures
+focused eligibility/type/validation final: 97/97
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm test: 822/822 across 120 suites
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red-flag issues
+npm run qa:plan: dry-run only, no provider calls
+live Serper/OpenAI calls: 0
+```
+
+Register: 80 total; 67 Fixed, 12 Needs Investigation, 1 Won't Fix; severity totals unchanged at 11 Critical, 33 High, 31 Medium, 5 Low. Latest North Stars remain the stopped R2 observations: core-leader recall unavailable; wrong-type/non-product final cards 3/23; full constraint compliance unscoreable; A pool/final Jaccard 0.1051/0.0333 and B unavailable. Expected metric-2 effect is to remove the captured 3/23 non-product/wrong-type cards in a future comparable sample; no live improvement is claimed. Next is separately approved R4 deterministic work; its live after-sample remains separately approval-gated.

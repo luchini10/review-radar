@@ -239,6 +239,53 @@ describe("shared product eligibility classifier", () => {
     }
   });
 
+  it("rejects RR-078 embedded customer-service and dated editorial routes", () => {
+    const customerService = classify({
+      category: "shop vac",
+      name: "New Customer Service | Shop-Vac Store",
+      sourceTitle: "New Customer Service | Shop-Vac Store",
+      snippet: "Contact and support information for customers.",
+      url: "https://www.shopvac.com/pages/new-customer-service-2",
+    });
+    const datedArticle = classify({
+      category: "robot vacuum",
+      name: "Roborock Q7 Max Vacuum with Auto Empty Dock Day 5",
+      sourceTitle: "Roborock Q7 Max Vacuum with Auto Empty Dock Day 5",
+      snippet: "Long-term observations about setup and daily use.",
+      url:
+        "https://pocketables.com/2022/05/roborock-q7-max-vacuum-with-auto-empty-dock-day-5.html",
+    });
+
+    for (const result of [customerService, datedArticle]) {
+      assert.equal(result.canRenderAsProductCard, false);
+      assert.equal(result.canUseAsEvidence, true);
+      assert.equal(result.status, "evidence_only");
+    }
+  });
+
+  it("preserves model-specific product pages that use a /pages/ route", () => {
+    const product = classify({
+      category: "cordless drill",
+      name: "Example X100 Cordless Drill Kit",
+      sourceTitle: "Example X100 Cordless Drill Kit",
+      url: "https://manufacturer.example.com/pages/example-x100-cordless-drill-kit",
+    });
+
+    assert.equal(product.canRenderAsProductCard, true);
+    assert.notEqual(product.status, "evidence_only");
+
+    const datedCommerceRoute = classify({
+      category: "cordless drill",
+      name: "Example X100 Cordless Drill Kit",
+      sourceTitle: "Example X100 Cordless Drill Kit",
+      url:
+        "https://manufacturer.example.com/2025/06/products/example-x100-cordless-drill-kit",
+    });
+
+    assert.equal(datedCommerceRoute.canRenderAsProductCard, true);
+    assert.notEqual(datedCommerceRoute.status, "evidence_only");
+  });
+
   it("rejects documentation mirrors even when the title contains a model", () => {
     const deviceReport = classify({
       category: "air purifier",

@@ -132,6 +132,84 @@ describe("classifyProductTypeMatch (shared wrong-product-type verdict)", () => {
     }
   });
 
+  it("rejects RR-079 standalone robot-vacuum docks while preserving bundles", () => {
+    const standaloneAccessories = [
+      "Self-Empty Clean Base Station Compatible With Roborock Q5 Robot Vacuum",
+      "Replacement Auto Empty Dock for Roomba Robot Vacuum",
+      "Docking Station Works With Eufy Robot Vacuum",
+      "Roborock Auto Empty Dock for Q5 Robot Vacuum",
+      "Replacement Charging Station Compatible With Roomba Robot Vacuum",
+      "Dust Disposal Base for Eufy Robot Vacuum",
+      "Roborock Auto Empty Station for Q5 Robot Vacuum",
+    ];
+
+    for (const evidenceText of standaloneAccessories) {
+      const verdict = classifyProductTypeMatch({
+        evidenceText,
+        identityText: evidenceText,
+        requestedCategory: "robot vacuum",
+      });
+
+      assert.equal(verdict.canBeExactMatch, false, evidenceText);
+      assert.equal(verdict.status, "complement", evidenceText);
+    }
+
+    const bundles = [
+      "Roborock Q7 Max+ Robot Vacuum with Auto-Empty Dock",
+      "Shark Matrix Robot Vacuum and Self-Empty Base Bundle",
+      "iRobot Roomba j9+ Robot Vacuum Includes Clean Base Station",
+      "Base Model Roborock Q5 Robot Vacuum",
+    ];
+
+    for (const evidenceText of bundles) {
+      const verdict = classifyProductTypeMatch({
+        evidenceText,
+        identityText: evidenceText,
+        requestedCategory: "robot vacuum",
+      });
+
+      assert.equal(verdict.canBeExactMatch, true, evidenceText);
+      assert.equal(verdict.status, "ok", evidenceText);
+    }
+  });
+
+  it("uses richer allowed evidence without weakening the standalone-dock identity veto", () => {
+    const legitimateVacuum = classifyProductTypeMatch({
+      allowedCheckText:
+        "Roborock S8 MaxV Ultra flagship robot vacuum and mop with LiDAR navigation",
+      evidenceText: "Roborock S8 MaxV Ultra Self-empty dock",
+      identityText: "Roborock S8 MaxV Ultra",
+      requestedCategory: "robot vacuum",
+    });
+
+    assert.equal(legitimateVacuum.canBeExactMatch, true);
+    assert.equal(legitimateVacuum.status, "ok");
+
+    const standaloneDock = classifyProductTypeMatch({
+      allowedCheckText:
+        "Self-Empty Clean Base Station compatible with a Roborock robot vacuum",
+      evidenceText:
+        "Self-Empty Clean Base Station Compatible With Roborock Q5 Robot Vacuum",
+      identityText:
+        "Self-Empty Clean Base Station Compatible With Roborock Q5 Robot Vacuum",
+      requestedCategory: "robot vacuum",
+    });
+
+    assert.equal(standaloneDock.canBeExactMatch, false);
+    assert.equal(standaloneDock.status, "complement");
+
+    const mislabeledWallOven = classifyProductTypeMatch({
+      allowedCheckText:
+        "A regular wall oven incorrectly labeled as a toaster oven",
+      evidenceText: "GE Built-In Electric Wall Oven with Convection",
+      identityText: "GE Built-In Electric Wall Oven with Convection",
+      requestedCategory: "toaster oven",
+    });
+
+    assert.equal(mislabeledWallOven.canBeExactMatch, false);
+    assert.equal(mislabeledWallOven.status, "wrong_type");
+  });
+
   it("rejects Phase 5E substitution classes through the shared verdict", () => {
     const cases = [
       ["ZEP 64 oz All-In-One Pressure Wash", "pressure washer"],

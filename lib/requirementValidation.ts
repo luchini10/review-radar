@@ -946,6 +946,9 @@ function hasConflictingProductType(product: ProductLike, category: string) {
   // validation call the same helper so they agree.
   if (
     !classifyProductTypeMatch({
+      allowedCheckText: normalizeText(
+        [evidenceText, product.why_recommended || ""].join(" "),
+      ),
       evidenceText,
       identityText: productIdentityTextWithoutAssignedCategory(product),
       requestedCategory,

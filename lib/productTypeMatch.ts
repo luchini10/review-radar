@@ -123,6 +123,7 @@ function hasProductTypeConflict(evidenceText: string, requestedCategory: string)
 }
 
 export function classifyProductTypeMatch(input: {
+  allowedCheckText?: string | undefined;
   evidenceText: string | undefined;
   identityText?: string | undefined;
   requestedCategory: string | undefined;
@@ -130,7 +131,28 @@ export function classifyProductTypeMatch(input: {
   const evidenceText = input.evidenceText || "";
   const requestedCategory = input.requestedCategory || "";
 
+  // Rich recommendation prose may confirm a sparse product name, but it must
+  // never erase a wrong-type signal in the lean evidence. Check that evidence
+  // first; a complement is allowed to continue because the richer text may
+  // prove that the complement is bundled with the requested product.
+  const evidenceOnlyIntent = input.allowedCheckText
+    ? classifyProductTypeIntent({
+        candidateText: evidenceText,
+        candidateIdentityText: input.identityText,
+        requestedText: requestedCategory,
+      })
+    : null;
+
+  if (evidenceOnlyIntent?.status === "irrelevant") {
+    return {
+      canBeExactMatch: false,
+      status: "wrong_type",
+      reason: evidenceOnlyIntent.reason,
+    };
+  }
+
   const intent = classifyProductTypeIntent({
+    allowedCheckText: input.allowedCheckText,
     candidateText: evidenceText,
     candidateIdentityText: input.identityText,
     requestedText: requestedCategory,

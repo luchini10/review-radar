@@ -890,3 +890,11 @@ No production pipeline or API contract changed in Phase 6A.
 - **Neutral rule:** Common shot/scene/studio/room/floor/carpet/swatch/style/grid/tile/display words are explicitly non-model imagery vocabulary. Split claims retain 1–4 digit support so real one-digit families such as Nintendo Switch 2 still reject sibling artwork. No unproven year exclusion was added.
 - **RR-080:** Filed and Fixed for neutral sequence-numbered filename false vetoes.
 - **Proof/state:** Focused fail-first 24/26 with two intended failures; focused final 27/27; full 818/818 across 120 suites; typecheck/lint/build/eval pass; zero live calls. Register: 80 total, 65 Fixed, 14 Needs Investigation, 1 Won't Fix. RR-078/RR-079 remain next and separately approval-gated.
+
+## 27. RR-078/RR-079 eligibility and product-type safety (2026-07-11)
+
+- **Non-product page boundary:** Customer-service/customer-care path segments and dated `YYYY/MM/*.html` article routes are evidence-only before product-detail heuristics run. Specific model pages using `/pages/` and dated commerce routes remain eligible.
+- **Accessory boundary:** Standalone robot-vacuum docks, docking/charging stations, clean or dust-disposal bases, base stations, and self/auto-empty bases or stations are classified as complements. Explicit vacuum-plus-dock bundles remain eligible.
+- **Preservation boundary:** Rich recommendation prose may confirm a sparse legitimate product identity, but lean evidence keeps priority for confirmed wrong types and the title/identity accessory veto remains decisive.
+- **Proof/state:** Fail-first 33/35 with exactly two intended failures; focused final 97/97; full 822/822 across 120 suites; typecheck/build/offline eval pass; lint 0 errors/3 existing warnings; zero live calls. Register: 80 total, 67 Fixed, 12 Needs Investigation, 1 Won't Fix.
+- **North Stars/next:** Latest measured values remain R2; no live improvement is claimed. The expected metric-2 effect is removal of the captured 3/23 wrong-type/non-product cards in a later comparable sample. R4 requires separate approval, and its live after-sample is separately gated.

@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through RR-061 round 4 / RR-080
+## Compiled for AI Agent Consumption — Phase 0 through RR-078/RR-079 eligibility/type safety repair
 
 **Generated:** 2026-07-11
-**Scope:** All phases from initial measurement harness through the RR-061 round-4 and RR-080 image micro-phase
+**Scope:** All phases from initial measurement harness through the RR-078/RR-079 eligibility/type safety repair
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -19,8 +19,8 @@
 | Medium | 31 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 14 |
-| Fixed | 65 |
+| Needs Investigation | 12 |
+| Fixed | 67 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -97,6 +97,7 @@
 | Phase R3 — Strategy-call determinism | 0 |
 | RR-061 image-provenance safety repair | 0 |
 | RR-061 round 4 / RR-080 image micro-phase | 1 |
+| RR-078/RR-079 eligibility/type safety repair | 0 |
 | Cross-phase / Infrastructure | 4 |
 
 ---
@@ -2576,7 +2577,7 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 | **Phase** | Phase R2 live ledger verification |
 | **Severity** | Critical |
 | **Title** | Support and editorial pages pass product eligibility and render as product cards |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** Non-product pages can be classified as `buyable_product`, enriched with unrelated price/evidence, and selected as product cards. In A3, Shop-Vac's customer-service page became the #1 exact result with a verified `$50` price and product claims drawn from unrelated sources. In B1, a Pocketables “day 5” article rendered as a Q7 Max+ near-match product card.
 
@@ -2588,9 +2589,11 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 
 **Actual:** Both page classes receive `buyable_product` eligibility and survive final selection.
 
-**Current status:** Needs Investigation. This is a Critical safety-axis failure discovered in the stopped R2 measurement window. No behavior changed in R2.
+**Current status:** Fixed. The shared eligibility classifier now treats embedded customer-service routes and dated `YYYY/MM/*.html` article routes as evidence-only before product-detail shortcuts can admit them. Editorial sources remain usable as evidence, while model-specific `/pages/` and dated commerce product routes remain card-eligible.
 
 **Suggested fix or next action:** Add generalized route/title/page-type controls at the shared eligibility boundary, with fail-first coverage for `/pages/*customer-service*` and dated editorial/article paths. Preserve legitimate product-detail pages using `/pages/` only when source-derived Product identity is explicit.
+
+**Resolution proof (2026-07-11):** The two captured routes failed before the fix and pass the evidence-only regression afterward. A model-specific `/pages/example-x100-cordless-drill-kit` control remains buyable. Focused eligibility/type/validation tests pass 97/97; full suite passes 822/822 across 120 suites; typecheck/build/offline eval pass; lint reports 0 errors and 3 existing warnings. Zero live calls.
 
 ---
 
@@ -2602,7 +2605,7 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 | **Phase** | Phase R2 live ledger verification |
 | **Severity** | High |
 | **Title** | Accessory-only self-empty dock renders as a robot-vacuum near match |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** A standalone compatible self-empty Clean Base station passed robot-vacuum category validation and rendered as a final near match instead of being rejected as an accessory.
 
@@ -2614,9 +2617,11 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 
 **Actual:** The accessory is labeled `buyable_product`, passes `Category: robot vacuum`, and reaches final near.
 
-**Current status:** Needs Investigation. No behavior fix was attempted in R2.
+**Current status:** Fixed. The shared product-type intent rule now classifies standalone robot-vacuum docks, docking/charging stations, clean bases, dust-disposal bases, and self/auto-empty bases or stations as exclusive complements while preserving explicit robot-vacuum bundles.
 
 **Suggested fix or next action:** Add a generalized exclusive-accessory rule for standalone bases/docks/stations that preserves bundles explicitly including the vacuum.
+
+**Resolution proof (2026-07-11):** The captured compatible Clean Base listing and unrelated standalone dock/docking-station controls are rejected as complements. Robot-vacuum bundles remain valid. Rich `why_recommended` evidence can confirm a sparse legitimate product name, but lean wrong-type evidence and title-based accessory identity retain veto priority. Focused eligibility/type/validation tests pass 97/97; full suite passes 822/822 across 120 suites; typecheck/build/offline eval pass; lint reports 0 errors and 3 existing warnings. Zero live calls.
 
 ---
 
@@ -2649,7 +2654,7 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (14 issues)
+### Needs Investigation (12 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
@@ -2662,11 +2667,9 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 - RR-075: Generic vacuum synonyms crowd robot-vacuum discovery with wrong product forms
 - RR-076: Editorial seed extraction emits malformed and non-product Shopping queries
 - RR-077: Source upgrade prefixes an ambiguous DW brand token to an exact DEWALT model
-- RR-078: Support and editorial pages render as product cards
-- RR-079: Accessory-only self-empty dock renders as a robot-vacuum near match
 
-### Fixed (65 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-069, RR-080
+### Fixed (67 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-069, RR-078 through RR-080
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2675,9 +2678,8 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-078 + RR-079** (Critical/High safety stop) — Non-product pages and an accessory-only dock must be blocked at the shared eligibility/type boundary before any later live batch.
+1. **RR-073 + RR-074 + RR-075** (High/Medium) — Constraint-bearing queries are crowded out and malformed budget phrases persist; owned by R4.
 2. **RR-014 + RR-015** (High) — R2 measured severe plan and final-set instability; R3 is complete default-off, while the R2 freeze remains blocked.
-3. **RR-073 + RR-074 + RR-075** (High/Medium) — Constraint-bearing queries are crowded out and malformed budget phrases persist; owned by R4 after the safety repair.
-4. **RR-071 + RR-072** (High) — Current false identity collapse and valid-product rejection remain owned by R5.
-5. **RR-070 + RR-076 + RR-077** (Medium) — R2 showed 588 editorial raw results with zero unique candidates; source-brand and seed precision remain owned by R6.
-6. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3 but varied by model, while Tapo appeared raw and died in normalization.
+3. **RR-071 + RR-072** (High) — Current false identity collapse and valid-product rejection remain owned by R5.
+4. **RR-070 + RR-076 + RR-077** (Medium) — R2 showed 588 editorial raw results with zero unique candidates; source-brand and seed precision remain owned by R6.
+5. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3 but varied by model, while Tapo appeared raw and died in normalization.

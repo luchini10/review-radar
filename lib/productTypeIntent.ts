@@ -32,6 +32,19 @@ const SHOP_VAC_PATTERN =
 const SHOP_VAC_CONTEXT_PATTERN =
   /\b(?:\d+(?:\.\d+)?\s*(?:gal|gallon)s?\b.{0,80}\b(?:peak\s+)?(?:hp|horsepower)|(?:peak\s+)?(?:hp|horsepower)\b.{0,80}\b\d+(?:\.\d+)?\s*(?:gal|gallon)s?|(?:garage|workshop|jobsite|contractor|debris|sawdust)\b.{0,80}\b(?:vac|vacuum|cleanup)|(?:vac|vacuum)\b.{0,80}\b(?:garage|workshop|jobsite|contractor|debris|sawdust))\b/i;
 
+const ROBOT_VACUUM_DOCK_COMPLEMENT_PATTERN =
+  /\b(?:replacement\s+)?(?:dock(?:ing)?(?:\s+station)?|charging\s+station|clean\s+base(?:\s+station)?|base\s+station|dust\s+disposal\s+base(?:\s+station)?|(?:self\s+empty(?:ing)?|auto\s+empty(?:ing)?)\s+(?:(?:clean\s+)?base(?:\s+station)?|dock(?:ing)?(?:\s+station)?|station))\b/i;
+const ROBOT_VACUUM_EXISTING_COMPLEMENT_PATTERN =
+  /\b(?:replacement\s+(?:filter|brush|mop\s+pad|side\s+brush)|dustbin|boundary\s+strip|virtual\s+wall)\b/i;
+const ROBOT_VACUUM_COMPLEMENT_PATTERN = new RegExp(
+  `${ROBOT_VACUUM_EXISTING_COMPLEMENT_PATTERN.source}|${ROBOT_VACUUM_DOCK_COMPLEMENT_PATTERN.source}`,
+  "i",
+);
+const STANDALONE_ROBOT_VACUUM_DOCK_PATTERN = new RegExp(
+  `^(?:${ROBOT_VACUUM_DOCK_COMPLEMENT_PATTERN.source})|${ROBOT_VACUUM_DOCK_COMPLEMENT_PATTERN.source}\\s+(?:for|compatible\\s+with|works\\s+with)\\b`,
+  "i",
+);
+
 const PRODUCT_TYPE_RULES: ProductTypeRule[] = [
   {
     id: "household_floor_cleaner",
@@ -179,8 +192,8 @@ const PRODUCT_TYPE_RULES: ProductTypeRule[] = [
     // after it) also catches truncated product names like "Wet/Dry ..." from Serper.
     blocked:
       /\b(?:stick\s+(?:vac|vacuum)|canister\s+(?:vac|vacuum)|hand(?:held)?\s+(?:vac|vacuum)|upright\s+(?:vac|vacuum)|wet\s+dry|shop\s+vac|washer dryer|washer and dryer|washing machine|front load washer|top load washer|laundry center|laundry tower)\b/i,
-    complements:
-      /\b(?:replacement\s+(?:filter|brush|mop\s+pad|side\s+brush)|dustbin|boundary\s+strip|virtual\s+wall)\b/i,
+    complements: ROBOT_VACUUM_COMPLEMENT_PATTERN,
+    exclusiveComplements: STANDALONE_ROBOT_VACUUM_DOCK_PATTERN,
   },
 ];
 

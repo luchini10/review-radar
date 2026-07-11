@@ -13,6 +13,23 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-11
 
+### Codex - RR-078/RR-079 eligibility and product-type safety
+
+#### Changed
+
+- Fixed RR-078 at the shared eligibility boundary: embedded customer-service routes and dated `YYYY/MM/*.html` editorial routes are evidence-only and cannot render as product cards; dated commerce routes remain eligible.
+- Fixed RR-079 at the shared type boundary: standalone robot-vacuum docks, docking/charging stations, clean or dust-disposal bases, and self/auto-empty bases or stations are exclusive complements, while explicit vacuum-plus-dock bundles remain eligible.
+- Preserved model-specific product pages using `/pages/`, editorial evidence use, sparse legitimate product names confirmed by recommendation evidence, and lean-evidence wrong-type vetoes.
+- Left search planning/allocation, ranking, requirements, price, citations, images, R3 flags, and `.env.local` unchanged. Zero live calls.
+
+#### Verified
+
+- Fail-first focused run: 33/35 with exactly the RR-078 and RR-079 cases failing.
+- Final adversarial review added a brand-prefixed dock title; it failed 12/13 before correcting dynamic-regex escaping, then passed.
+- Final focused eligibility/type/validation run: 97/97.
+- Full suite: 822/822 across 120 suites. Typecheck/build/offline eval pass; lint: 0 errors, 3 existing warnings.
+- `npm run qa:plan` was dry-run only; it made no live provider calls.
+
 ### Codex - RR-061 round 4 and RR-080 image filename repair
 
 #### Changed

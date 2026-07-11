@@ -1660,3 +1660,15 @@ Stop. Do not fix RR-078/RR-079, start R4, enable R3 in `.env.local`, or run live
 - Next: separately approved RR-078/RR-079 eligibility/type repair. No live window, R4, or Phase 6E is authorized.
 
 Stop. Do not start RR-078/RR-079 or any later phase without Taylor's separate approval.
+
+### RR-078/RR-079 eligibility/type safety completion record (2026-07-11)
+
+- Completed step: deterministic shared-boundary repair for RR-078 and RR-079; zero live Serper/OpenAI calls.
+- RR-078: embedded customer-service routes and dated `YYYY/MM/*.html` article routes are evidence-only, while explicit model-specific `/pages/` and dated commerce product routes remain card-eligible.
+- RR-079: standalone robot-vacuum docks, charging/docking stations, and clean/dust-disposal/self-empty bases or stations are exclusive complements; explicit vacuum-plus-dock bundles remain valid.
+- Preservation: richer recommendation evidence may confirm sparse legitimate product names, but lean wrong-type evidence and exclusive accessory identity retain veto priority.
+- Proof: fail-first 33/35 with exactly two intended failures; focused final 97/97; full 822/822 across 120 suites; typecheck/build/offline eval pass; lint 0 errors/3 existing warnings.
+- Register: 80 total; 67 Fixed, 12 Needs Investigation, 1 Won't Fix. No live North-Star change is claimed; expected future effect is removal of the captured non-product/wrong-type cards.
+- Next: Phase R4 deterministic work only after separate approval. R4's live after-sample, flag promotion, R2 freeze, and Phase 6E remain separately approval-gated.
+
+Stop. Do not start R4, enable flags in `.env.local`, run live validation, freeze R2, or start Phase 6E without Taylor's separate approval.

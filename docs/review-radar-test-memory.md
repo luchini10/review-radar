@@ -1404,3 +1404,13 @@ No live provider calls and no search/ranking/trust behavior changes.
 **Stable tests:** `tests/productImageResolver.test.mjs`, RR-061 page-image/split-family block. Fail-first 24/26; final 27/27. Full suite 818/818 across 120 suites. Do not add a blanket year exclusion without both a neutral campaign-year reproduction and a conflicting model-year preservation control.
 
 **Boundary:** This micro-phase changes only image filename identity. Eligibility/type RR-078/RR-079 remains separate. Zero live calls; latest North Stars remain R2.
+
+## 2026-07-11 - RR-078/RR-079 product-card and accessory safety
+
+**RR-078 stable rule:** Route checks run before product-detail shortcuts. Embedded `customer-service`/`customer-care` path segments and dated `YYYY/MM/*.html` article routes are evidence-only, not buyable cards. Do not reject `/pages/` or all dated paths generically; model-specific and dated commerce product routes remain valid.
+
+**RR-079 stable rule:** A standalone dock, docking/charging station, clean or dust-disposal base, base station, or self/auto-empty base/dock/station is a robot-vacuum complement. An explicit robot vacuum bundled with one remains the primary product. Keep exclusive complement checks on identity text.
+
+**Rich-evidence boundary:** `why_recommended` can confirm the requested type for a sparse legitimate name, but cannot erase a lean-evidence wrong-type verdict. When rich evidence is supplied, `classifyProductTypeMatch` first preserves any evidence-only `irrelevant` verdict, then permits rich allowed evidence to distinguish a bundle from a standalone complement.
+
+**Stable tests:** `tests/productEligibility.test.mjs`, `tests/productTypeMatch.test.mjs`, and the robot/toaster preservation cases in `tests/requirementValidation.test.mjs`. Fail-first 33/35; a later brand-prefixed dock control failed 12/13 before dynamic-regex escaping was corrected; final focused 97/97; full 822/822 across 120 suites. Typecheck/build/offline eval pass; lint 0 errors/3 existing warnings. Zero live calls.

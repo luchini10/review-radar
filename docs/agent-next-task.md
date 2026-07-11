@@ -4,21 +4,21 @@ Generated: 2026-07-11
 
 ## Current state
 
-`docs/forward-roadmap.md` governs forward sequencing. Phase R3, RR-061 round
-4, and RR-080 are complete. R3's `REVIEW_RADAR_PINNED_PLANNING` flag remains
-default-off and `.env.local` is unchanged.
+`docs/forward-roadmap.md` governs forward sequencing. Phase R3, all RR-061
+image repairs, RR-080, and the RR-078/RR-079 eligibility/type safety phase are
+complete. R3's `REVIEW_RADAR_PINNED_PLANNING` flag remains default-off and
+`.env.local` is unchanged.
 
-The RR-061/RR-080 micro-phase used zero live calls. Focused fail-first was
-24/26 with exactly two intended failures; focused final was 27/27; the full
-suite passed 818/818 across 120 suites. Typecheck, production build, and
-offline eval pass; lint has 0 errors and 3 existing warnings.
+The RR-078/RR-079 phase used zero live calls. Fail-first focused validation
+passed 33/35 with exactly the two intended failures; final focused validation
+passed 97/97; the full suite passed 822/822 across 120 suites. Typecheck,
+production build, and offline eval pass; lint has 0 errors and 3 existing
+warnings.
 
-The issue register is at 80 issues: 65 Fixed, 14 Needs Investigation, 1 Won't
-Fix, and 0 Open; 11 Critical, 33 High, 31 Medium, and 5 Low. RR-061 was
-reopened by a deterministic Saros sibling counterexample and returned to Fixed;
-RR-080 was filed and Fixed for neutral sequence-numbered filename false vetoes.
-RR-015 remains Needs Investigation because no live stability improvement was
-measured.
+The issue register remains at 80 issues: 67 Fixed, 12 Needs Investigation,
+1 Won't Fix, and 0 Open; 11 Critical, 33 High, 31 Medium, and 5 Low. RR-078
+and RR-079 are Fixed. RR-015 remains Needs Investigation because no live
+stability improvement has been measured.
 
 R2 remains stopped at 4/6. Latest North-Star evidence is unchanged:
 
@@ -28,57 +28,55 @@ R2 remains stopped at 4/6. Latest North-Star evidence is unchanged:
   not encoded as a requirement;
 - stability: A pool/final Jaccard 0.1051/0.0333; B unavailable.
 
-Rubric remains `v0.1-draft`; leader snapshots, significance rules, and baseline
-values are unfrozen. Phase 6E remains unauthorized.
+The deterministic RR-078/RR-079 repair is expected to remove the three
+captured non-product/wrong-type cards in a later comparable sample, but no live
+improvement is claimed. Rubric remains `v0.1-draft`; leader snapshots,
+significance rules, and baseline values are unfrozen. Phase 6E is unauthorized.
 
-## Required next task — RR-078/RR-079 eligibility/type safety repair
+## Required next task — Phase R4 deterministic implementation
 
-This is a separate deterministic safety-unblock phase and requires Taylor's
-explicit approval. Do not start R4 or another live window first.
+This phase requires Taylor's explicit approval. Approval of the deterministic
+implementation does not authorize R4's six-search live after-sample.
 
-R2 proved two related non-primary-entity failures at the shared product-card
-boundary: customer-service/editorial pages rendered as buyable products
-(RR-078), and a standalone self-empty dock rendered as a robot vacuum near
-match (RR-079).
+Implement Phase R4 from `docs/forward-roadmap.md` behind default-off
+`REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`, snapshot-identical when off:
 
-The phase must:
-
-- add separate fail-first tests for `/pages/new-customer-service-2`, the dated
-  Pocketables article path, and the accessory-only dock captured in R2;
-- generalize customer-service/support/editorial route and page-type rejection
-  at the shared eligibility boundary without hardcoding the captured domains;
-- add an exclusive-accessory product-type rule for standalone docks/bases/
-  stations while preserving bundles that explicitly include the primary
-  product;
-- preserve evidence-only use of legitimate editorial/review pages and valid
-  product-detail pages that use `/pages/`;
-- leave RR-061, planner/search allocation, ranking, requirements, price,
-  citations, R3 flags, and `.env.local` out of scope;
-- use zero live Serper/OpenAI calls;
+- rank initial Shopping slots by shopper-constraint coverage so generic
+  synonym expansion cannot occupy a protected slot ahead of a
+  constraint-bearing query (RR-075);
+- preserve ambiguous Important Details as search-recall phrases and carry an
+  explicit hard-vs-preferred strength from extraction through search,
+  validation, and final selection (RR-073);
+- remove duplicate/malformed budget wording in query construction (RR-074);
+- keep the Serper budget unchanged: reallocate existing slots, do not expand;
+- add fail-first deterministic tests for all three issues and prove at least
+  3 of 5 initial Shopping queries carry the benchmark constraint;
+- prove flag-off snapshots are unchanged;
+- use zero live Serper/OpenAI calls during deterministic implementation;
 - update the issue register and standard phase documents, then stop.
 
 ## Later sequence
 
-Only after RR-078/RR-079 are cleared should R4 deterministic work and its
-separately approved live after-sample proceed. Future B observations are
-after-sample evidence; they must not be described as missing R2 before-runs.
+After deterministic R4 review, Taylor may separately approve the six-search
+live after-sample. That batch also measures R3 planner pinning. Flag promotion
+in `.env.local` requires the before/after evidence and is not implicit in
+implementation approval.
 
 ## Safety boundary
 
-Do not run B2/B3, enable `REVIEW_RADAR_PINNED_PLANNING` in `.env.local`, run a
-new baseline, freeze R2 values, approve leader snapshots, start R4, or start
-Phase 6E without separate approval. Do not commit live fixtures or existing
-untracked local artifacts.
+Do not run B2/B3, execute the R4 live after-sample, enable either R3 or R4 in
+`.env.local`, run a new baseline, freeze R2 values, approve leader snapshots,
+start R5, or start Phase 6E without separate approval. Do not commit live
+fixtures or existing untracked local artifacts.
 
 Reference:
 
 - `docs/forward-roadmap.md`
-- `docs/agent-dialogue.md` — standing Claude↔Codex channel; read and answer at
-  phase start, append questions at phase end (see roadmap standing guardrails)
+- `docs/agent-dialogue.md`
 - `docs/phase-6-variance-pilot.md`
 - `docs/RR-Issues-Report.md`
 - `docs/review-radar-search-pipeline-audit.md`
 - `docs/codex-handoff-phased-plan.md`
 - `docs/review-radar-test-memory.md`
 - `docs/qa-loop-results.md`
-- `ReviewRadar-Overview.md` section 26
+- `ReviewRadar-Overview.md` section 27
