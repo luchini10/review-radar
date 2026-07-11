@@ -1414,3 +1414,20 @@ No live provider calls and no search/ranking/trust behavior changes.
 **Rich-evidence boundary:** `why_recommended` can confirm the requested type for a sparse legitimate name, but cannot erase a lean-evidence wrong-type verdict. When rich evidence is supplied, `classifyProductTypeMatch` first preserves any evidence-only `irrelevant` verdict, then permits rich allowed evidence to distinguish a bundle from a standalone complement.
 
 **Stable tests:** `tests/productEligibility.test.mjs`, `tests/productTypeMatch.test.mjs`, and the robot/toaster preservation cases in `tests/requirementValidation.test.mjs`. Fail-first 33/35; a later brand-prefixed dock control failed 12/13 before dynamic-regex escaping was corrected; final focused 97/97; full 822/822 across 120 suites. Typecheck/build/offline eval pass; lint 0 errors/3 existing warnings. Zero live calls.
+
+---
+
+## 2026-07-11 - Phase R4 deterministic constraint allocation
+
+**Scope:** `lib/requirementExtraction.ts`, `lib/searchQueryExpansion.ts`, `lib/discoveryStrategy.ts`, `lib/requirementValidation.ts`, all behind `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on` (default off, byte-identical off).
+
+**Mechanics to preserve:**
+
+- Extraction: non-negative ambiguous Important Details route to `preferredConstraints` when the flag is on (`requirementExtraction.ts`, the `preferAmbiguousDetails` branch). Negative phrases still route to avoid. Hard wording is untouched.
+- Plan: `getCategorySynonyms()` returns only the category for inclusion-matched groups when on; exact-key groups keep breadth. `preferredFallbacks` fills primary/second feature slots. `constraintBearingPhrases` + `carriesConstraint()` order pass-1 bearing-first BEFORE the pass-1 cap, so culls hit generic tails and `augmentSearchPlanWithDiscoveryStrategy`'s protected `pass1.slice(0, 4)` picks up constraint-bearing queries by construction.
+- Budget: `budgetBoundQuery()` flag branch normalizes dollar-less bounds in place (function-form replace to avoid `$`-group hazards); flag-off path preserved verbatim.
+- Validation: preferred constraints (non-budget/brand) verify via `containsRequiredFeature`/`hasNegativeContextForRequiredFeature`; verified pushes `Preferred: <label>` into matched, unverified into `softUnknownRequirements` (existing x4 confidence penalty) — never missing/unknown, never gating.
+
+**Stable test entry points:** `tests/constraintAllocation.test.mjs` — flag-off pins the exact pre-R4 plan/classification/duplicate-budget/validation defaults. Flag-on covers soft preferred versus hard required strictness, >=3-of-5 Shopping coverage, dilution removal, exact-key breadth plus outside-group inert controls, category-collision handling, word/comma budget normalization and idempotence, mixed hard/preferred ordering, and both validation outcomes. Initial 12/12; Codex adversarial fail-first 12/16; final 16/16; full suite 838/838.
+
+**Known trade-off (accepted):** an AI query whose normalized form equals a deterministic constraint-bearing query now merges into it (one Serper call instead of two); the RR-074 test uses a `best`-prefixed query for that reason.

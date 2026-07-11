@@ -4,79 +4,78 @@ Generated: 2026-07-11
 
 ## Current state
 
-`docs/forward-roadmap.md` governs forward sequencing. Phase R3, all RR-061
-image repairs, RR-080, and the RR-078/RR-079 eligibility/type safety phase are
-complete. R3's `REVIEW_RADAR_PINNED_PLANNING` flag remains default-off and
-`.env.local` is unchanged.
+`docs/forward-roadmap.md` governs forward sequencing. Phase R4's deterministic
+implementation is complete (Claude implementation, Codex adversarial closure):
+RR-073, RR-074, and RR-075 are Fixed
+behind default-off `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`, with flag-off
+output proven byte-identical by an exact plan snapshot test. R3's
+`REVIEW_RADAR_PINNED_PLANNING` also remains default-off. `.env.local` is
+unchanged; neither flag is promoted.
 
-The RR-078/RR-079 phase used zero live calls. Fail-first focused validation
-passed 33/35 with exactly the two intended failures; final focused validation
-passed 97/97; the full suite passed 822/822 across 120 suites. Typecheck,
-production build, and offline eval pass; lint has 0 errors and 3 existing
-warnings.
+R4 deterministic used zero live calls. Claude's fail-first was 6 intended
+flag-on failures, then 12/12. Codex adversarial review added 4 intended
+failures at 12/16, then closed the matrix to 16/16. The full suite passed
+838/838 across 122 suites.
+Typecheck, production build, and offline eval pass (eval clean with the flag
+off AND on); lint has 0 errors and 3 existing warnings.
 
-The issue register remains at 80 issues: 67 Fixed, 12 Needs Investigation,
-1 Won't Fix, and 0 Open; 11 Critical, 33 High, 31 Medium, and 5 Low. RR-078
-and RR-079 are Fixed. RR-015 remains Needs Investigation because no live
-stability improvement has been measured.
+Benchmark proof (robot vacuum / under $300 / self-emptying, flag on): all
+leading Shopping queries carry the subtype and the constraint; the diluted
+`vacuum` / `cordless vacuum` / `stick vacuum sale` slots are gone; retailer
+queries name the full category; the broad query survives at the back of
+pass 1. See `tests/constraintAllocation.test.mjs` and
+`ReviewRadar-Overview.md` section 28.
 
-R2 remains stopped at 4/6. Latest North-Star evidence is unchanged:
+The issue register contains 80 issues: 70 Fixed, 9 Needs Investigation,
+1 Won't Fix, 0 Open. RR-014/RR-015 remain the top open measurement items.
 
-- core-leader recall: unavailable without an approved snapshot;
-- wrong-type/non-product final cards: 3/23;
-- full stated-constraint compliance: unscoreable because `self-emptying` was
-  not encoded as a requirement;
-- stability: A pool/final Jaccard 0.1051/0.0333; B unavailable.
+R2 remains stopped at 4/6; rubric v0.1-draft, leader snapshots, and baseline
+values remain unfrozen; Phase 6E remains unauthorized.
 
-The deterministic RR-078/RR-079 repair is expected to remove the three
-captured non-product/wrong-type cards in a later comparable sample, but no live
-improvement is claimed. Rubric remains `v0.1-draft`; leader snapshots,
-significance rules, and baseline values are unfrozen. Phase 6E is unauthorized.
+## Required next task — Phase R4 live after-sample (separate explicit approval)
 
-## Required next task — Phase R4 deterministic implementation
+Six live searches (~225–280 Serper calls), same shapes and cache-cold protocol
+as R2 (three broad `shop vac`, three constrained `robot vacuum` / `under $300`
+/ `self-emptying`), run with BOTH flags enabled for the runs
+(`REVIEW_RADAR_PINNED_PLANNING=on`, `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`).
+This one batch serves three purposes: R4 before/after evidence vs the R2
+ledgers, R3 pinning measurement (plan Jaccard), and the deferred RR-061-class
+live regression watch.
 
-This phase requires Taylor's explicit approval. Approval of the deterministic
-implementation does not authorize R4's six-search live after-sample.
+The batch must:
 
-Implement Phase R4 from `docs/forward-roadmap.md` behind default-off
-`REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`, snapshot-identical when off:
-
-- rank initial Shopping slots by shopper-constraint coverage so generic
-  synonym expansion cannot occupy a protected slot ahead of a
-  constraint-bearing query (RR-075);
-- preserve ambiguous Important Details as search-recall phrases and carry an
-  explicit hard-vs-preferred strength from extraction through search,
-  validation, and final selection (RR-073);
-- remove duplicate/malformed budget wording in query construction (RR-074);
-- keep the Serper budget unchanged: reallocate existing slots, do not expand;
-- add fail-first deterministic tests for all three issues and prove at least
-  3 of 5 initial Shopping queries carry the benchmark constraint;
-- prove flag-off snapshots are unchanged;
-- use zero live Serper/OpenAI calls during deterministic implementation;
-- update the issue register and standard phase documents, then stop.
-
-## Later sequence
-
-After deterministic R4 review, Taylor may separately approve the six-search
-live after-sample. That batch also measures R3 planner pinning. Flag promotion
-in `.env.local` requires the before/after evidence and is not implicit in
-implementation approval.
+- verify `searchLedger.rawAi.strategy` is non-null on the FIRST run before
+  spending the rest (a rejected pinned `temperature` fails silently to an
+  empty AI strategy);
+- compare per-run process metrics vs R2: constraint-bearing dispatched
+  queries up, wrong-type candidates entering the funnel down, culled
+  constraint queries zero, duplicate-budget queries zero;
+- restrict stability claims to the A group (3 before vs 3 after); B-side
+  claims stay per-run process metrics per the dialogue [7]/[8] agreement;
+- apply the R2 safety rule: stop only on an RR-061-class image regression;
+  file-and-continue for new unrelated defects (next free ID: RR-081);
+- record North-Star values; if constraint compliance, wrong-type count, or
+  stability fail to improve, roadmap rule 5 requires a written stop-and-rethink
+  before any further phase;
+- save fixtures with `r4-after` names; fixtures stay untracked;
+- decide flag promotion in `.env.local` ONLY from the before/after evidence,
+  as its own explicit step.
 
 ## Safety boundary
 
-Do not run B2/B3, execute the R4 live after-sample, enable either R3 or R4 in
-`.env.local`, run a new baseline, freeze R2 values, approve leader snapshots,
-start R5, or start Phase 6E without separate approval. Do not commit live
-fixtures or existing untracked local artifacts.
+Do not run the after-sample, enable either flag in `.env.local`, run B2/B3,
+freeze R2 values, approve leader snapshots, start R5/R6, or start Phase 6E
+without Taylor's separate explicit approval. Do not commit live fixtures or
+existing untracked local artifacts.
 
 Reference:
 
 - `docs/forward-roadmap.md`
-- `docs/agent-dialogue.md`
+- `docs/agent-dialogue.md` — read and answer at phase start; append at phase end
 - `docs/phase-6-variance-pilot.md`
 - `docs/RR-Issues-Report.md`
 - `docs/review-radar-search-pipeline-audit.md`
 - `docs/codex-handoff-phased-plan.md`
 - `docs/review-radar-test-memory.md`
 - `docs/qa-loop-results.md`
-- `ReviewRadar-Overview.md` section 27
+- `ReviewRadar-Overview.md` sections 27–28

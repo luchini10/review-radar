@@ -381,7 +381,23 @@ function budgetBoundQuery(input: RecommendationApiRequest, query: string) {
     "i",
   );
 
-  if (boundedAmountPattern.test(query)) {
+  // R4 (RR-074, flag-gated): recognize an existing bound even when the AI
+  // wrote the amount without a dollar sign ("under 300") and normalize it in
+  // place instead of appending a duplicate "under $300".
+  if (process.env.REVIEW_RADAR_CONSTRAINT_ALLOCATION === "on") {
+    const digits = amount.slice(1).replace(/,/g, "");
+    const commaDigits = digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    const digitsAlternatives =
+      commaDigits === digits ? digits : `(?:${commaDigits}|${digits})`;
+    const boundedLoosePattern = new RegExp(
+      `\\b(?:under|less\\s+than|below|at\\s+most|max(?:imum)?|no\\s+more\\s+than)\\s+\\$?\\s*${digitsAlternatives}\\b`,
+      "i",
+    );
+
+    if (boundedLoosePattern.test(query)) {
+      return query.replace(boundedLoosePattern, () => budget);
+    }
+  } else if (boundedAmountPattern.test(query)) {
     return query;
   }
 

@@ -1365,8 +1365,17 @@ export function extractStructuredRequirements(
     addUnique(avoidConstraints, item);
   }
 
+  // R4 (RR-073, flag-gated): a standalone Important Detail without hard
+  // wording is an explicit PREFERENCE, not an unusable "Needs review" note —
+  // it must shape search recall and be verified non-gatingly downstream.
+  const preferAmbiguousDetails =
+    process.env.REVIEW_RADAR_CONSTRAINT_ALLOCATION === "on";
+
   for (const item of detailClassifications.preferred) {
-    addUnique(preferredConstraints, item);
+    addUnique(
+      preferredConstraints,
+      preferAmbiguousDetails ? { ...item, strictness: "soft" } : item,
+    );
   }
 
   for (const item of detailClassifications.ambiguous) {
@@ -1375,7 +1384,13 @@ export function extractStructuredRequirements(
       normalized.includes(normalizeText(phrase)),
     );
 
-    addUnique(isProbablyNegative ? avoidConstraints : ambiguousConstraints, item);
+    if (isProbablyNegative) {
+      addUnique(avoidConstraints, item);
+    } else if (preferAmbiguousDetails) {
+      addUnique(preferredConstraints, { ...item, strictness: "soft" });
+    } else {
+      addUnique(ambiguousConstraints, item);
+    }
   }
 
   const allConstraints = [

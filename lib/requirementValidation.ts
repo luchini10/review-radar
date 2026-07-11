@@ -2526,6 +2526,36 @@ export function validateProductAgainstRequirements(
     }
   }
 
+  // R4 (RR-073, flag-gated): preferred details are verified but never gate.
+  // A verified preference is recorded as matched; an unverified one routes to
+  // the existing non-gating soft bucket, lowering confidence without ever
+  // eliminating or demoting the product.
+  if (process.env.REVIEW_RADAR_CONSTRAINT_ALLOCATION === "on") {
+    for (const constraint of requirements.extractedRequirements
+      ?.preferredConstraints || []) {
+      if (constraint.type === "budget" || constraint.type === "brand") {
+        continue;
+      }
+
+      const label = `Preferred: ${constraint.label}`;
+
+      if (
+        containsRequiredFeature(text, constraint.value) &&
+        !hasNegativeContextForRequiredFeature(text, constraint.value)
+      ) {
+        matchedRequirements.push(label);
+      } else {
+        softUnknownRequirements.push(label);
+        addRequirementComparison(
+          requirementComparisons,
+          label,
+          "Feature: not verified",
+          "unknown",
+        );
+      }
+    }
+  }
+
   for (const avoidTerm of getAvoidTerms(allAvoidLabels(requirements))) {
     const concreteAvoid = avoidTerm.alternatives.some(
       isConcreteProductAttributeTerm,

@@ -13,6 +13,41 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-11
 
+### Claude - Phase R4 deterministic constraint-preserving query allocation
+
+#### Changed
+
+- Implemented Phase R4 behind default-off `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`; flag-off behavior is byte-identical (pinned by an exact plan snapshot test) and the full regression wall stayed green.
+- RR-073: standalone non-negative Important Details are reclassified from "Needs review" to explicit preferred strength — they now shape search queries via the existing preference lane, fill requirement query slots when no hard requirement exists, and are verified non-gatingly in validation (verified → matched; unverified → the existing softUnknown confidence bucket; never eliminating).
+- RR-075: a subtype category matched to a parent synonym group by inclusion keeps only the shopper's own category (exact-key groups keep full breadth), and pass-1 assembly orders constraint-bearing queries ahead of generic ones, so the protected Shopping slots carry the constraint by construction. Same Serper budget — reallocation only.
+- RR-074: budget binding recognizes bounds written without a dollar sign ("under 300") and normalizes them in place instead of appending a duplicate "under $300"; equivalent queries now merge instead of running twice.
+- Benchmark (robot vacuum / under $300 / self-emptying) flag-on: all leading Shopping queries carry "self-emptying", the three diluted vacuum-form queries are gone, retailer queries name the full category, and the one broad query survives at the back of pass 1 for recall.
+
+#### Verified
+
+- Fail-first: 6 flag-on tests failed before implementation, 12/12 after; flag-off snapshot, classification, duplicate-budget, and validation defaults pinned unchanged.
+- `npm run typecheck`: pass. `npm run lint`: 0 errors, 3 existing warnings.
+- `npm test`: 834/834 across 122 suites. `npm run build`: pass.
+- `node scripts/eval-pipeline.mjs`: no red flags with the flag off AND on.
+- Live Serper/OpenAI calls: 0. `.env.local` unchanged; flag not promoted.
+
+### Codex - Phase R4 adversarial closure
+
+#### Changed
+
+- Corrected preferred constraints to carry `strictness: "soft"` while explicit hard wording remains `strictness: "hard"`.
+- Removed category-colliding preferences from query allocation so they cannot duplicate category text or mask another real preference.
+- Extended budget equivalence to comma-formatted bounds such as `under 1,300`, alongside `less than 300` and `max 300`.
+- Preserved flag-on/off plans for categories outside every synonym group and combined hard/preferred evidence in the leading query.
+- Repaired an accidental mojibake rewrite so the QA-log diff contains only the intended R4 entries.
+
+#### Verified
+
+- Adversarial fail-first: 12/16 with exactly four intended failures; final R4 matrix: 16/16.
+- Focused requirement/search matrix: 111/111. Full suite: 838/838 across 122 suites.
+- Typecheck/build pass; lint 0 errors/3 existing warnings; offline eval has no red flags with the flag off and on.
+- Live Serper/OpenAI calls: 0. `.env.local` unchanged.
+
 ### Codex - RR-078/RR-079 eligibility and product-type safety
 
 #### Changed

@@ -110,6 +110,10 @@ function phrase(values: Array<string | undefined>) {
   return compact(values).join(" ");
 }
 
+function constraintAllocationEnabled() {
+  return process.env.REVIEW_RADAR_CONSTRAINT_ALLOCATION === "on";
+}
+
 function getCategorySynonyms(category: string) {
   const normalizedCategory = normalize(category);
 
@@ -122,6 +126,16 @@ function getCategorySynonyms(category: string) {
     .sort((first, second) => second[0].length - first[0].length)[0];
 
   if (matchingGroup) {
+    // R4 (RR-075, flag-gated): the category matched a parent group by
+    // inclusion, meaning it carries a subtype the parent synonyms drop
+    // ("robot vacuum" -> "cordless vacuum"). Those diluted forms consume
+    // protected Shopping slots with wrong product types, so constraint
+    // allocation keeps only the shopper's own category. Exact-key groups
+    // above keep their full breadth.
+    if (constraintAllocationEnabled()) {
+      return [category];
+    }
+
     const [, synonyms] = matchingGroup;
 
     return unique([category, ...synonyms], (value) => value);
@@ -390,13 +404,25 @@ export function generateSearchPlan(
   const hardPhrases = hardRequirementPhrases(input);
   const searchPhrases = searchRequirementPhrases(input);
   const keyRequirements = keyRequirementPhrases(input);
-  const preferences = preferencePhrases(input);
+  const rawPreferences = preferencePhrases(input);
+  // A preference already contained by the product category is not a distinct
+  // shopper constraint. Keeping it would duplicate the category text and make
+  // every category query look constraint-bearing, masking other preferences.
+  const preferences = constraintAllocationEnabled()
+    ? omitPhrasesAlreadyInBase(rawPreferences, category)
+    : rawPreferences;
   const features = selectedFeatureValues(input.selectedFeatures);
   const budget = budgetPhrase(input);
   const premiumBudget = premiumBudgetPhrase(input);
   const avoid = avoidPhrases(input);
-  const primaryFeature = features[0] || hardPhrases[0] || "";
-  const secondFeature = features[1] || hardPhrases[1] || "";
+  // R4 (RR-073, flag-gated): preferred details fill the requirement slots
+  // when no hard requirement exists, so a standalone Important Detail like
+  // "self-emptying" shapes the constraint-bearing queries.
+  const preferredFallbacks = constraintAllocationEnabled() ? preferences : [];
+  const primaryFeature =
+    features[0] || hardPhrases[0] || preferredFallbacks[0] || "";
+  const secondFeature =
+    features[1] || hardPhrases[1] || preferredFallbacks[1] || "";
   const primaryRequirement = keyRequirements[0] || primaryFeature;
   const secondRequirement = keyRequirements[1] || secondFeature;
   const hardText = hardPhrases.join(" ");
@@ -516,11 +542,35 @@ export function generateSearchPlan(
     uniqueQueries.push(query);
   }
 
+  // R4 (flag-gated): constraint-bearing queries own the front of pass 1 —
+  // and therefore the protected Shopping slots — so generic expansion can
+  // never crowd out the shopper's stated constraints (RR-075).
+  const constraintBearingPhrases = constraintAllocationEnabled()
+    ? unique([...searchPhrases, ...preferences, ...features], (value) => value)
+        .map((value) => normalize(value))
+        .filter(Boolean)
+    : [];
+
+  function carriesConstraint(query: SearchQueryCandidate) {
+    const normalized = normalize(query.query);
+
+    return constraintBearingPhrases.some((phrase) =>
+      normalized.includes(phrase),
+    );
+  }
+
   function observedStage(
     stage: SearchQueryStage,
     limit: number,
   ) {
-    const candidates = uniqueQueries.filter((query) => query.stage === stage);
+    let candidates = uniqueQueries.filter((query) => query.stage === stage);
+
+    if (stage === 1 && constraintBearingPhrases.length > 0) {
+      candidates = [
+        ...candidates.filter(carriesConstraint),
+        ...candidates.filter((query) => !carriesConstraint(query)),
+      ];
+    }
 
     for (const query of candidates.slice(limit)) {
       observer?.recordQueryCull(

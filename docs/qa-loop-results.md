@@ -6299,3 +6299,48 @@ live Serper/OpenAI calls: 0
 ```
 
 Register: 80 total; 67 Fixed, 12 Needs Investigation, 1 Won't Fix; severity totals unchanged at 11 Critical, 33 High, 31 Medium, 5 Low. Latest North Stars remain the stopped R2 observations: core-leader recall unavailable; wrong-type/non-product final cards 3/23; full constraint compliance unscoreable; A pool/final Jaccard 0.1051/0.0333 and B unavailable. Expected metric-2 effect is to remove the captured 3/23 non-product/wrong-type cards in a future comparable sample; no live improvement is claimed. Next is separately approved R4 deterministic work; its live after-sample remains separately approval-gated.
+
+## <span style="color:green">**Claude QA Update — 2026-07-11 (Phase R4 deterministic: constraint-preserving query allocation)**</span>
+
+**Verdict: COMPLETE. RR-073, RR-074, RR-075 → Fixed behind default-off `REVIEW_RADAR_CONSTRAINT_ALLOCATION`. Zero live calls; flag-off byte-identical.**
+
+- RR-073: ambiguous Important Details become explicit preferred strength at extraction; the existing preference lane carries them into search queries, they fill requirement query slots when no hard requirement exists, and validation verifies them non-gatingly (matched or softUnknown — never eliminating).
+- RR-075: inclusion-matched parent synonym groups no longer dilute subtype categories (exact-key groups keep breadth; stick-vacuum control); pass-1 orders constraint-bearing queries first so protected Shopping slots carry the constraint by construction. Same Serper budget.
+- RR-074: budget bounds written without a dollar sign normalize in place; no more `under 300 under $300`; equivalent queries merge instead of running twice.
+- Benchmark flag-on plan: `robot vacuum self-emptying under $300` leads; `vacuum / cordless vacuum / stick vacuum sale` slots are gone; retailer queries carry the full category + constraint; the broad query survives at the back of pass 1. Acceptance (>=3 of 5 leading Shopping queries constraint-bearing) exceeded at 4/4.
+- Phase-start dialogue protocol observed; supplemental image-boundary checks from dialogue [9] ran clean (compatible mixed-model filename accepted; 2-digit neutral counter accepted).
+
+```text
+fail-first: 6 intended flag-on failures before implementation; 12/12 after
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm test: 834/834 across 122 suites
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red flags (flag off AND flag on)
+live Serper/OpenAI calls: 0; .env.local unchanged
+```
+
+Register: 80 issues — 70 Fixed, 9 Needs Investigation, 1 Won't Fix. Next: R4 six-search live after-sample (separate approval; also measures R3 pinning and requires the flag-on smoke check on `searchLedger.rawAi.strategy`).
+
+### 🟧 Codex QA Update — 2026-07-11 (Phase R4 adversarial closure)
+
+**Verdict: COMPLETE after correcting four deterministic boundary failures. Zero live calls.**
+
+- Claude's initial implementation passed 12/12. Codex added the four requested adversarial boundaries: outside-synonym category, category-colliding preference, equivalent word/comma budget bounds, and mixed hard/preferred ordering.
+- Fail-first was 12/16: preferred entries still claimed hard strictness; a category-colliding preference duplicated the category and masked the real preference; comma-formatted AI budget text duplicated the bound; mixed hard/preferred strictness inherited the hard-label defect.
+- Final behavior: preferred constraints carry `strictness: "soft"`; hard wording stays hard; category-contained preferences are excluded from query allocation; `under 1,300`, `less than 300`, and `max 300` normalize once; unrelated categories are unchanged; hard and preferred phrases coexist in the leading query.
+- Repaired the QA file's accidental encoding rewrite before this entry; historical lines are unchanged and only the two intended R4 entries remain added.
+
+```text
+R4 adversarial fail-first: 12/16; exactly 4 intended failures
+R4 focused final: 16/16
+focused requirement/search matrix: 111/111
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm test: 838/838 across 122 suites
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red flags, flag off and on
+live Serper/OpenAI calls: 0; .env.local unchanged
+```
+
+Register remains 80 total: 70 Fixed, 9 Needs Investigation, 1 Won't Fix. Latest measured North Stars remain the stopped R2 observations; deterministic R4 expects constraint compliance and wrong-type funnel entry to improve, but no live claim is made. The separately approved six-search after-sample is next.

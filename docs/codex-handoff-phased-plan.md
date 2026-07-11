@@ -1672,3 +1672,12 @@ Stop. Do not start RR-078/RR-079 or any later phase without Taylor's separate ap
 - Next: Phase R4 deterministic work only after separate approval. R4's live after-sample, flag promotion, R2 freeze, and Phase 6E remain separately approval-gated.
 
 Stop. Do not start R4, enable flags in `.env.local`, run live validation, freeze R2, or start Phase 6E without Taylor's separate approval.
+
+### Phase R4 deterministic completion record (2026-07-11)
+
+- Implemented constraint-preserving query allocation behind default-off `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on` (Claude). RR-073, RR-074, and RR-075 are Fixed.
+- Flag-on: ambiguous Important Details become explicit preferences shaping search and verified non-gatingly in validation; inclusion-matched parent synonyms no longer dilute subtype categories; pass-1 orders constraint-bearing queries into the protected slots; dollar-less budget bounds normalize in place. Same Serper budget.
+- Flag-off proven byte-identical via an exact pass-1 snapshot test; full wall green.
+- Proof: Claude fail-first 6 intended failures then 12/12; Codex adversarial fail-first 12/16 with four intended boundary failures, then 16/16. Focused requirement/search 111/111; full suite 838/838 across 122 suites; typecheck/build pass; lint 0 errors/3 existing warnings; offline eval clean with the flag off and on; zero live calls; `.env.local` unchanged.
+- Adversarial closure: preferred constraints now carry explicit soft strictness; category-colliding preferences cannot mask another preference; comma/word budget variants normalize once; categories outside synonym groups remain inert; hard and preferred constraints coexist in the leading query.
+- Register: 70 Fixed / 9 Needs Investigation / 80 total. Next: the separately approved R4 six-search live after-sample (also measures R3 pinning; requires the flag-on `rawAi.strategy` smoke check).

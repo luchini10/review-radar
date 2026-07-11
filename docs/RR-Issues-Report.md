@@ -19,8 +19,8 @@
 | Medium | 31 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 12 |
-| Fixed | 67 |
+| Needs Investigation | 9 |
+| Fixed | 70 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -95,6 +95,7 @@
 | Phase R0/R1 — Roadmap adoption + RR-061 model-conflict fix | 0 |
 | Phase R2 — Live ledger verification safety stop | 2 |
 | Phase R3 — Strategy-call determinism | 0 |
+| Phase R4 — Constraint-preserving query allocation (deterministic) | 0 |
 | RR-061 image-provenance safety repair | 0 |
 | RR-061 round 4 / RR-080 image micro-phase | 1 |
 | RR-078/RR-079 eligibility/type safety repair | 0 |
@@ -2439,7 +2440,7 @@ No new issue ID was opened.
 | **Phase** | Phase A search-observability audit filing |
 | **Severity** | High |
 | **Title** | Standalone Important Details are downgraded and never enforced as hard requirements |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** For category `robot vacuum`, budget `under $300`, and Important Details `self-emptying`, the requirement extractor records only budget as required and labels `self-emptying` as `Needs review`. Deterministic hard-query generation and product validation therefore never enforce the requested feature.
 
@@ -2455,6 +2456,8 @@ No new issue ID was opened.
 
 **Suggested fix or next action:** Separately decide and test an explicit structured hard/preference contract rather than weakening validation or introducing product-specific phrase handling.
 
+**Phase R4 resolution (2026-07-11):** Fixed behind default-off `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`. Standalone non-negative Important Details become explicit `preferredConstraints` with `strictness: "soft"` at extraction; hard wording remains `strictness: "hard"`. The preference lane injects them into search and validation verifies them non-gatingly: verified → matched, unverified → `softUnknown`, never eliminating. Category-colliding preferences are omitted from query allocation so they cannot duplicate the category or mask another preference. Flag-off output is byte-identical to the pre-R4 snapshot. Tests: `tests/constraintAllocation.test.mjs`.
+
 ---
 
 #### RR-074
@@ -2465,7 +2468,7 @@ No new issue ID was opened.
 | **Phase** | Phase A search-observability audit filing |
 | **Severity** | Medium |
 | **Title** | Budget binding produces malformed duplicate budget language |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** An AI discovery query containing `under 300` is not recognized as already carrying the `$300` cap, so `budgetBoundQuery()` appends another bound and produces `robot vacuum self emptying under 300 under $300`.
 
@@ -2481,6 +2484,8 @@ No new issue ID was opened.
 
 **Suggested fix or next action:** After Phase A, add generalized currency/no-currency budget-equivalence tests before changing budget normalization.
 
+**Phase R4 resolution (2026-07-11):** Fixed behind default-off `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`. `budgetBoundQuery()` recognizes equivalent dollar-less and comma-formatted bounds (`under 300`, `less than 300`, `max 300`, `under 1,300`) and normalizes them in place instead of appending a duplicate. Already-bounded queries stay unchanged; equivalent plan queries merge once. Flag-off behavior is byte-identical. Tests: `tests/constraintAllocation.test.mjs`.
+
 ---
 
 #### RR-075
@@ -2491,7 +2496,7 @@ No new issue ID was opened.
 | **Phase** | Phase A search-observability audit filing |
 | **Severity** | Medium |
 | **Title** | Generic vacuum synonyms crowd robot-vacuum discovery with wrong product forms |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** Because `robot vacuum` contains the generic synonym key `vacuum`, deterministic expansion protects `vacuum under $300`, `cordless vacuum under $300`, and `stick vacuum sale under $300` ahead of constraint-bearing AI queries. The same run produces five canister/upright/stick-vacuum candidates rejected as `wrong_category`.
 
@@ -2506,6 +2511,8 @@ No new issue ID was opened.
 **Current status:** Needs Investigation. `docs/review-radar-search-pipeline-audit.md` sections 5, 11, and 12 document the current allocation. Phase A records cull and contribution evidence only.
 
 **Suggested fix or next action:** Use the Phase A contribution table to measure marginal value, then test generalized constraint/form coverage ordering at the same query budget.
+
+**Phase R4 resolution (2026-07-11):** Fixed behind default-off `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`, generalized (no category literals). Inclusion-matched subtype categories keep only the shopper's category; exact-key groups retain breadth, while categories outside every synonym group are flag-on/off identical. Pass-1 orders constraint-bearing queries ahead of generic ones, preserving the four protected slots. The benchmark loses diluted vacuum forms, keeps every retailer query on `robot vacuum`, exceeds the ≥3/5 constraint target, and retains one broad tail query for recall. Mixed hard/preferred inputs carry both in the leading query. Same Serper budget. Tests: `tests/constraintAllocation.test.mjs`.
 
 ---
 
@@ -2654,7 +2661,7 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (12 issues)
+### Needs Investigation (9 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
@@ -2662,14 +2669,11 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 - RR-070: Unrelated provider brand metadata can contaminate source-upgrade queries
 - RR-071: Exact-model identity falsely collapses distinct Vacmaster 12-gallon products
 - RR-072: RIDGID HD0900 Wet Dry Vac is falsely rejected as wrong category
-- RR-073: Standalone Important Details are downgraded and never enforced as hard requirements
-- RR-074: Budget binding produces malformed duplicate budget language
-- RR-075: Generic vacuum synonyms crowd robot-vacuum discovery with wrong product forms
 - RR-076: Editorial seed extraction emits malformed and non-product Shopping queries
 - RR-077: Source upgrade prefixes an ambiguous DW brand token to an exact DEWALT model
 
-### Fixed (67 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-069, RR-078 through RR-080
+### Fixed (70 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-069, RR-073 through RR-075, RR-078 through RR-080
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2678,8 +2682,7 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-073 + RR-074 + RR-075** (High/Medium) — Constraint-bearing queries are crowded out and malformed budget phrases persist; owned by R4.
-2. **RR-014 + RR-015** (High) — R2 measured severe plan and final-set instability; R3 is complete default-off, while the R2 freeze remains blocked.
-3. **RR-071 + RR-072** (High) — Current false identity collapse and valid-product rejection remain owned by R5.
-4. **RR-070 + RR-076 + RR-077** (Medium) — R2 showed 588 editorial raw results with zero unique candidates; source-brand and seed precision remain owned by R6.
-5. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3 but varied by model, while Tapo appeared raw and died in normalization.
+1. **RR-014 + RR-015** (High) — R2 measured severe plan and final-set instability; R3 and R4 are complete default-off, and the R4 live after-sample is the designated measurement of both. (RR-073/074/075 were fixed deterministically in Phase R4 on 2026-07-11.)
+2. **RR-071 + RR-072** (High) — Current false identity collapse and valid-product rejection remain owned by R5.
+3. **RR-070 + RR-076 + RR-077** (Medium) — R2 showed 588 editorial raw results with zero unique candidates; source-brand and seed precision remain owned by R6.
+4. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3 but varied by model, while Tapo appeared raw and died in normalization.
