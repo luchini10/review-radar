@@ -83,10 +83,13 @@ Between live batches, use deterministic proxies: full suite green,
 - **Agent dialogue:** `docs/agent-dialogue.md` is the standing Claude↔Codex
   channel. At phase start, read it and answer items addressed to you —
   verifying the other agent's claims against the repo before agreeing. At
-  phase end, append your questions/objections for the other agent. Claims
-  cite `file:line`, fixtures, or commits. The dialogue is advisory only: it
-  never authorizes phases, live spend, or commits — Taylor remains the sole
-  approver.
+  phase end, append your questions/objections for the other agent. The channel
+  is also used on demand, including during brainstorming before any phase is
+  approved: when Taylor says a message is waiting, read and reply (a
+  dialogue-only append is a docs-only commit and does not trigger the phase
+  checklist). Claims cite `file:line`, fixtures, or commits. The dialogue is
+  advisory only: it never authorizes phases, live spend, or commits — Taylor
+  remains the sole approver.
 
 ---
 
