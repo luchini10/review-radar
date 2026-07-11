@@ -13,6 +13,21 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-11
 
+### Codex - RR-061 image-provenance safety repair
+
+#### Changed
+
+- Stopped product-page identity from automatically authenticating every `<img>` on the page; page images now need image-level target evidence.
+- Extended the dictionary-free filename guard to split word-number model identities and repeated non-generic family names, closing the R2 QRevo/Saros bypasses.
+- Preserved matching Product JSON-LD, neutral and same-model filenames, opaque CDN assets, Google Shopping thumbnails, Amazon modifiers, and existing navigation safeguards. Metadata/JSON-LD priority was not changed because the saved runtime evidence did not prove that ordering caused the captures.
+- Marked RR-061 Fixed. Search, ranking, product eligibility, requirements, price, citations, `.env.local`, and provider request behavior are unchanged; zero live calls.
+
+#### Verified
+
+- Fail-first: 811/814 passed with exactly three intended RR-061 failures.
+- Focused resolver: 24/24. Full suite: 815/815 across 120 suites.
+- Typecheck and production build: pass. Lint: 0 errors, 3 existing warnings. Offline eval: no red flags.
+
 ### Claude - Standing agent-dialogue channel
 
 #### Changed

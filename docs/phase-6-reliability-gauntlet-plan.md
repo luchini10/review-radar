@@ -1,8 +1,8 @@
 # ReviewRadar Phase 6 Reliability Gauntlet - Master Plan
 
-**Status:** Canonical merged plan; Phases 6A-6C complete; R2 stopped at 4/6; R3 complete default-off
+**Status:** Canonical merged plan; Phases 6A-6C complete; R2 stopped at 4/6; R3 complete default-off; RR-061 repaired
 **Prepared:** 2026-07-01
-**Execution state:** Roadmap R3 is complete with zero live calls: default-off pinned planning maps the default helper alias to `gpt-5.4-mini-2026-03-17` and sends `temperature: 0` on both planning calls. No live stability gain is claimed. R2 remains stopped at 4/6; rubric v1.0, leader snapshots, and baseline values remain unfrozen; Phase 6E is unauthorized. RR-061/RR-078 safety repairs are required before any later live window
+**Execution state:** Roadmap R3 and the separately approved RR-061 image-provenance repair are complete with zero live calls. R3 remains default-off and unpromoted. R2 remains stopped at 4/6; rubric v1.0, leader snapshots, and baseline values remain unfrozen; Phase 6E is unauthorized. RR-078/RR-079 eligibility/type safety repairs are required before any later live window
 **Repository:** `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 **Canonical repository path:** `docs/phase-6-reliability-gauntlet-plan.md`
 
@@ -60,7 +60,14 @@ Phase 5 behavior blockers.
 - The flag is default-off. Flag-off request parameters, custom helper models, final synthesis, prompts, output schemas, search allocation, ranking, and trust behavior remain unchanged.
 - Fail-first request-shape proof flipped green; focused tests passed 38/38 and the full suite passed 810/810. Typecheck/build/eval pass; lint has 0 errors and 3 existing warnings.
 - Zero live calls ran. RR-015 remains Needs Investigation, and the R2 North-Star observations remain the latest evidence. R4's approved after-sample must measure the actual stability effect.
-- No later live window is allowed until RR-061/RR-078 safety blockers are repaired and separately approved.
+
+### RR-061 safety-repair update (2026-07-11)
+
+- Extracted page images no longer inherit page-wide product verification; they require image-level identity evidence.
+- The dictionary-free filename guard now handles split family/number claims and repeated non-generic family tokens, closing the QRevo/Saros R2 captures while preserving same-model, neutral, opaque, Google, Amazon-modifier, navigation, and matching Product JSON-LD controls.
+- Fail-first 811/814 with three intended failures; focused 24/24; full 815/815 across 120 suites; typecheck/build/eval pass; lint 0 errors/3 warnings. Zero live calls.
+- RR-061 is Fixed. RR-078/RR-079 are the next separately approved safety phase; R4 and any live window remain unauthorized.
+- No later live window is allowed until RR-078/RR-079 safety blockers are repaired and separately approved.
 
 Relevant existing measurement tools include:
 

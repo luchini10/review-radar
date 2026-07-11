@@ -439,3 +439,165 @@ describe("RR-061 wrong-model image identity (Phase R1)", () => {
     assert.equal(result.accepted, true);
   });
 });
+
+describe("RR-061 page-image provenance and split family identity", () => {
+  const contexts = [
+    {
+      brand: "Roborock",
+      category: "Robot vacuum",
+      pageUrl: "https://us.roborock.com/products/roborock-q10-x5-plus",
+      productName: "Roborock Q10 X5+ Robot Vacuum and Mop with Auto-Empty Dock",
+      url: "https://us.roborock.com/cdn/shop/files/2_QRevo_Curv_QRevo_Edge_140x.jpg?v=1757937105",
+    },
+    {
+      brand: "Roborock",
+      category: "Robot vacuum",
+      pageUrl: "https://us.roborock.com/products/roborock-q10-s5-plus",
+      productName: "Roborock Q10 S5+ Robot Vacuum and Mop Combo",
+      url: "https://us.roborock.com/cdn/shop/files/2_QRevo_Curv_QRevo_Edge_140x.jpg?v=1757937105",
+    },
+    {
+      brand: "Roborock",
+      category: "Robot vacuum",
+      pageUrl: "https://us.roborock.com/products/roborock-q7-max-plus",
+      productName: "Roborock Q7 Max+ Robot Vacuum with Auto-Empty Dock Pure",
+      url: "https://us.roborock.com/cdn/shop/files/Saros_20_Black_ID.png?v=1765951179",
+    },
+  ];
+
+  it("rejects all three R2 foreign-family filenames despite verified page context", () => {
+    for (const item of contexts) {
+      const result = validateProductImageCandidate(
+        {
+          contextVerified: true,
+          evidenceText: `${item.productName} product image`,
+          source: "page_image",
+          url: item.url,
+        },
+        item,
+      );
+
+      assert.equal(result.accepted, false, item.productName);
+
+      if (!result.accepted) {
+        assert.match(result.rejection.reason, /different model/);
+      }
+    }
+  });
+
+  it("does not let verified page identity authenticate an unrelated page image", () => {
+    const target = contexts[0];
+    const candidates = extractProductImageCandidatesFromHtml(
+      `
+        <html>
+          <head><title>${target.productName}</title></head>
+          <body>
+            <h1>${target.productName}</h1>
+            <img src="/cdn/shop/files/unrelated-floor-cleaner.jpg" alt="Recommended product">
+          </body>
+        </html>
+      `,
+      target.pageUrl,
+      target,
+      { pageIdentityVerified: true },
+    );
+    const pageImage = candidates.find((candidate) => candidate.source === "page_image");
+
+    assert.equal(pageImage?.contextVerified, false);
+    assert.equal(resolveBestProductImage(candidates, target).url, "");
+  });
+
+  it("keeps image-level matches and prefers matching Product JSON-LD over foreign page art", () => {
+    const target = contexts[0];
+    const candidates = extractProductImageCandidatesFromHtml(
+      `
+        <html>
+          <head>
+            <title>${target.productName}</title>
+            <script type="application/ld+json">
+              {
+                "@context": "https://schema.org",
+                "@type": "Product",
+                "name": "${target.productName}",
+                "image": "https://cdn.example.com/q10-x5-plus-main.jpg"
+              }
+            </script>
+          </head>
+          <body>
+            <img src="${target.url}" alt="${target.productName}">
+            <img src="/cdn/shop/files/q10-x5-plus-side.jpg" alt="${target.productName} side view">
+          </body>
+        </html>
+      `,
+      target.pageUrl,
+      target,
+      { pageIdentityVerified: true },
+    );
+    const resolution = resolveBestProductImage(candidates, target);
+
+    assert.equal(resolution.source, "json_ld");
+    assert.equal(resolution.url, "https://cdn.example.com/q10-x5-plus-main.jpg");
+    assert.ok(
+      resolution.rejected.some((item) => item.url.includes("QRevo_Curv")),
+    );
+    assert.ok(
+      candidates.some(
+        (candidate) =>
+          candidate.source === "page_image" &&
+          candidate.url.includes("q10-x5-plus-side"),
+      ),
+    );
+  });
+
+  it("preserves neutral and same-model filenames", () => {
+    const target = contexts[0];
+    const urls = [
+      "https://cdn.example.com/8f93a2b717c4.jpg",
+      "https://cdn.example.com/q10_x5_front_black_140x.jpg",
+      "https://cdn.example.com/product_front_2_black_20.jpg",
+      "https://m.media-amazon.com/images/I/81ZoWDnHkkL._AC_SL1500_.jpg",
+    ];
+
+    for (const url of urls) {
+      const result = validateProductImageCandidate(
+        {
+          contextVerified: true,
+          evidenceText: `${target.productName} product image`,
+          source: "page_image",
+          url,
+        },
+        target,
+      );
+
+      assert.equal(result.accepted, true, url);
+    }
+  });
+
+  it("distinguishes split family models from a family-adjacent size", () => {
+    const wrongGeneration = validateProductImageCandidate(
+      {
+        contextVerified: true,
+        evidenceText: "Roborock Saros 10 robot vacuum product image",
+        source: "page_image",
+        url: "https://cdn.example.com/Saros_20_Black_ID.png",
+      },
+      {
+        brand: "Roborock",
+        category: "Robot vacuum",
+        productName: "Roborock Saros 10 Robot Vacuum",
+      },
+    );
+    const neutralSize = validateProductImageCandidate(
+      {
+        contextVerified: true,
+        evidenceText: "Apple iPad Pro M4 product image",
+        source: "page_image",
+        url: "https://cdn.example.com/ipad_11_front_black.jpg",
+      },
+      context,
+    );
+
+    assert.equal(wrongGeneration.accepted, false);
+    assert.equal(neutralSize.accepted, true);
+  });
+});

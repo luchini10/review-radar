@@ -873,3 +873,12 @@ No production pipeline or API contract changed in Phase 6A.
 - **Proof:** Fail-first 8/9; focused planner/API/ledger tests 38/38; full suite 810/810 across 119 suites; typecheck/build/eval pass; lint 0 errors/3 existing warnings.
 - **North Stars:** No live improvement is claimed. Latest evidence remains core-leader recall unavailable, 3/23 wrong-type/non-product final cards, full constraint compliance unscoreable, A pool/final Jaccard 0.1051/0.0333, and B stability unavailable. RR-015 stays Needs Investigation.
 - **Next:** Repair RR-061 image provenance separately, followed by RR-078/RR-079 eligibility/type safety. No later live window or Phase 6E until the Critical blockers are cleared and separately approved.
+
+## 25. RR-061 image-provenance safety repair (2026-07-11)
+
+- **Provenance boundary:** Product-page identity verifies page-bound metadata, not every image element. Extracted `<img>` candidates now require their own product match through attributes or URL path.
+- **Filename boundary:** The shared resolver recognizes mixed model tokens, adjacent word-number family claims in either order, and repeated non-generic alphabetic family tokens. It uses generalized exclusions, not brand dictionaries or the request's sibling candidate pool.
+- **Captured outcomes:** QRevo artwork is rejected on Q10 X5+/Q10 S5+; `Saros_20` is rejected on Q7 Max+; the earlier `Saros_Z70` and navigation failures remain rejected.
+- **Preserved:** Matching Product JSON-LD, image-level page matches, same-model and neutral names, family-adjacent sizes, opaque CDN assets, Google Shopping thumbnails, Amazon modifiers, and all price/citation/eligibility/type gates.
+- **Evidence limit:** The R2 ledger serialized the winners as `retailer_page` but retained neither fetched HTML nor candidate-level image traces. Static control flow establishes `page_image` as the accepting path; it does not establish whether OG/Product JSON-LD candidates existed at runtime. Their priority ordering was therefore not changed.
+- **Proof/state:** Fail-first 811/814 with exactly three intended failures; focused 24/24; full 815/815 across 120 suites; typecheck/lint/build/eval pass; zero live calls. RR-061 is Fixed; RR-078/RR-079 remain the next separately approved safety phase.

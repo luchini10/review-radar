@@ -102,6 +102,88 @@ const MODEL_TOKEN_EXCLUSIONS = [
   /^\d+(?:bit|cc|cm|dpi|ft|g|gal|gallon|gb|hp|hz|in|inch|k|kg|l|lb|lbs|mah|mb|ml|mm|mp|oz|p|pc|pcs|pk|px|qt|tb|v|w|wh)$/,
 ];
 
+// Words that describe an image rather than a product family. These exclusions
+// keep split filename pairs such as `front_2` and `black_20` from becoming
+// model claims while allowing unfamiliar family names without a brand list.
+const GENERIC_IMAGE_FILENAME_WORDS = new Set([
+  "alt",
+  "angle",
+  "back",
+  "banner",
+  "black",
+  "blue",
+  "bottom",
+  "box",
+  "brown",
+  "bundle",
+  "carton",
+  "color",
+  "colour",
+  "count",
+  "centimeter",
+  "centimeters",
+  "dark",
+  "detail",
+  "front",
+  "foot",
+  "feet",
+  "gallon",
+  "gallons",
+  "gallery",
+  "gray",
+  "green",
+  "grey",
+  "hero",
+  "image",
+  "img",
+  "inch",
+  "inches",
+  "item",
+  "kit",
+  "kilogram",
+  "kilograms",
+  "large",
+  "left",
+  "lifestyle",
+  "liter",
+  "liters",
+  "litre",
+  "litres",
+  "main",
+  "model",
+  "millimeter",
+  "millimeters",
+  "orange",
+  "ounce",
+  "ounces",
+  "pack",
+  "package",
+  "photo",
+  "pic",
+  "product",
+  "pound",
+  "pounds",
+  "quart",
+  "quarts",
+  "rear",
+  "red",
+  "right",
+  "side",
+  "silver",
+  "slide",
+  "small",
+  "step",
+  "set",
+  "thumb",
+  "thumbnail",
+  "top",
+  "unit",
+  "units",
+  "view",
+  "white",
+  "yellow",
+]);
+
 const HARD_NON_PRODUCT_ASSET_PATTERN =
   /(?:^|[-_/])(?:article|badge|banner|blog|category|collection|departments?|favicon|flyouts?|icon|layouts?|logo|manual|masthead|menus?|navigation|nav|rating|review|social|sprite|stars?|support|top-nav|tracking|wordmark)(?:[-_/.]|$)/i;
 const SOFT_NON_PRODUCT_ASSET_PATTERN =
@@ -382,6 +464,74 @@ function modelIdentityTokens(text: string) {
   return Array.from(tokens);
 }
 
+function filenameIdentityParts(filename: string) {
+  return filename
+    .replace(/\.[a-z0-9]{2,5}$/i, "")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+}
+
+function nonFamilyFilenameWords(context: ProductImageContext) {
+  return new Set([
+    ...GENERIC_IMAGE_FILENAME_WORDS,
+    ...NON_PRODUCT_IDENTITY_WORDS,
+    ...SOURCE_NAME_TOKENS,
+    ...productWords(context.brand),
+    ...categoryWords(context),
+  ]);
+}
+
+function splitModelIdentityClaims(
+  parts: string[],
+  context: ProductImageContext,
+) {
+  const claims = new Map<string, { token: string; word: string }>();
+  const excludedWords = nonFamilyFilenameWords(context);
+
+  for (let index = 0; index < parts.length - 1; index += 1) {
+    const left = parts[index] || "";
+    const right = parts[index + 1] || "";
+    const word = /^[a-z]{3,16}$/.test(left)
+      ? left
+      : /^[a-z]{3,16}$/.test(right)
+        ? right
+        : "";
+    const number = /^\d{1,4}$/.test(left)
+      ? left
+      : /^\d{1,4}$/.test(right)
+        ? right
+        : "";
+
+    if (word && number && !excludedWords.has(word)) {
+      const token = `${word}${number}`;
+      claims.set(token, { token, word });
+    }
+  }
+
+  return Array.from(claims.values());
+}
+
+function repeatedFamilyIdentityTokens(
+  parts: string[],
+  context: ProductImageContext,
+) {
+  const counts = new Map<string, number>();
+  const excludedWords = nonFamilyFilenameWords(context);
+
+  for (const part of parts) {
+    if (!/^[a-z]{4,16}$/.test(part) || excludedWords.has(part)) {
+      continue;
+    }
+
+    counts.set(part, (counts.get(part) || 0) + 1);
+  }
+
+  return Array.from(counts.entries())
+    .filter(([, count]) => count >= 2)
+    .map(([token]) => token);
+}
+
 // RR-061 (wrong-model imagery): a filename that explicitly identifies a
 // different model must veto the image even on an identity-verified product
 // page — live evidence showed Saros Z70 artwork rendering on a Roborock
@@ -397,8 +547,16 @@ function conflictingModelIdentityReason(
   const identityText = [context.productName, context.brand, context.modelNumber]
     .filter(Boolean)
     .join(" ");
+  const identityParts = identityText
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+  const targetSplitClaims = splitModelIdentityClaims(identityParts, context);
 
-  if (modelIdentityTokens(identityText).length === 0) {
+  if (
+    modelIdentityTokens(identityText).length === 0 &&
+    targetSplitClaims.length === 0
+  ) {
     return "";
   }
 
@@ -414,21 +572,53 @@ function conflictingModelIdentityReason(
     return "";
   }
 
-  const imageTokens = modelIdentityTokens(
-    filename.replace(/\.[a-z0-9]{2,5}$/i, ""),
+  const filenameParts = filenameIdentityParts(filename);
+  const mixedImageTokens = modelIdentityTokens(filenameParts.join(" "));
+  const splitImageClaims = splitModelIdentityClaims(filenameParts, context);
+  const repeatedFamilyTokens = repeatedFamilyIdentityTokens(
+    filenameParts,
+    context,
   );
 
-  if (imageTokens.length === 0) {
-    return "";
-  }
-
   const identityCompact = identityText.toLowerCase().replace(/[^a-z0-9]+/g, "");
+  const identityWords = new Set(
+    identityParts.filter((part) => /^[a-z]+$/.test(part)),
+  );
+  const imageTokens = [
+    ...mixedImageTokens,
+    ...splitImageClaims.map((claim) => claim.token),
+  ];
 
   if (imageTokens.some((token) => identityCompact.includes(token))) {
     return "";
   }
 
-  return `image filename identifies a different model (${imageTokens.join(", ")})`;
+  const foreignSplitTokens = splitImageClaims
+    .filter((claim) => {
+      const targetClaimsSameFamily = targetSplitClaims.some(
+        (targetClaim) => targetClaim.word === claim.word,
+      );
+
+      // A family word already present in the target may be followed by a
+      // non-model number such as a size. Treat it as conflicting only when the
+      // target itself asserts a different word-number family identity.
+      return !identityWords.has(claim.word) || targetClaimsSameFamily;
+    })
+    .map((claim) => claim.token);
+
+  const foreignTokens = [
+    ...mixedImageTokens,
+    ...foreignSplitTokens,
+    ...repeatedFamilyTokens.filter(
+      (token) => !identityCompact.includes(token),
+    ),
+  ];
+
+  if (foreignTokens.length === 0) {
+    return "";
+  }
+
+  return `image filename identifies a different model (${Array.from(new Set(foreignTokens)).join(", ")})`;
 }
 
 function dimensionFromUrl(url: string, names: string[]) {
@@ -896,7 +1086,9 @@ export function extractProductImageCandidatesFromHtml(
 
     candidates.push({
       baseUrl: pageUrl,
-      contextVerified: pageIdentityVerified,
+      // A matching page establishes the page's identity, not every image's.
+      // Page images must carry their own product evidence in attributes/path.
+      contextVerified: false,
       evidenceText: [
         attrs.alt,
         attrs.title,

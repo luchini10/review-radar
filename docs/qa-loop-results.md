@@ -6233,3 +6233,25 @@ live Serper/OpenAI calls: 0
 ```
 
 North Stars remain the R2 observations: core-leader recall unavailable; wrong-type/non-product final cards 3/23; full constraint compliance unscoreable; A pool/final Jaccard 0.1051/0.0333 and B stability unavailable. RR-015 remains Needs Investigation. Next: a separately approved RR-061 image-provenance safety repair; no live window or Phase 6E.
+
+### 🟧 Codex Change — RR-061 image-provenance safety repair
+
+**Verdict: COMPLETE. RR-061 → Fixed. Deterministic only; zero live calls.**
+
+- Source attribution: the ledger's `retailer_page` label is ambiguous between `existing` and `page_image`, but the R2 execution path is not. Initial existing candidates had empty evidence/unverified context and could not accept these foreign paths; extracted page images inherited verified page identity and could accept them at Medium/High. The fixture does not contain fetched HTML, so runtime OG/JSON-LD presence remains unproven.
+- Provenance fix: verified page identity remains valid for page-bound metadata, but no longer authenticates arbitrary `<img>` elements. A page image must match through its own attributes/path.
+- Identity fix: filename checks now recognize adjacent family/number tokens and repeated non-generic family tokens without brand dictionaries or request-local candidate data. Generic image, color, view, package, source, brand/category, size, unit, version, modifier, and hash tokens are protected from false vetoes.
+- Regression coverage rejects both QRevo captures, `Saros_20` on Q7 Max+, earlier `Saros_Z70`, unrelated verified-page images, and a different split family generation. Controls preserve matching Product JSON-LD, image-level page matches, same-model/neutral files, family-adjacent sizes, opaque assets, Google thumbnails, Amazon modifiers, and navigation guards.
+
+```text
+fail-first: 811/814 passed; exactly 3 intended failures
+focused resolver: 24/24
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm test: 815/815 across 120 suites
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red-flag issues
+live Serper/OpenAI calls: 0
+```
+
+Register: 79 total; 64 Fixed, 14 Needs Investigation, 1 Won't Fix. Latest North Stars remain R2: core-leader recall unavailable; wrong-type/non-product final cards 3/23; full constraint compliance unscoreable; A pool/final Jaccard 0.1051/0.0333 and B unavailable. This corrective completion of R1 removes an image-safety abort path but does not claim a measured change to those four metrics. Next: separately approved RR-078/RR-079 eligibility/type safety repair; no live window, R4, or Phase 6E.

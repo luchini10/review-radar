@@ -1636,3 +1636,15 @@ Stop. Do not run B2/B3, freeze the baseline, start Phase 6E, or fix the new find
 - Next step: separately approved RR-061 image-provenance safety repair. RR-078/RR-079 remain separate eligibility/type work. No live window until the Critical safety blockers are fixed.
 
 Stop. Do not enable the flag in `.env.local`, run live validation, fix RR-061/RR-078/RR-079, start R4, or start Phase 6E without separate approval.
+
+### RR-061 image-provenance safety repair completion record (2026-07-11)
+
+- Completed step: deterministic RR-061 repair only; zero live Serper/OpenAI calls.
+- Root cause: `retailer_page` serialization combines `existing` and `page_image`, but only extracted page images could accept the captured foreign paths under the R2 code path. Every `<img>` inherited page verification, while R1 recognized only single mixed letter-digit filename tokens.
+- Behavior: arbitrary page images no longer inherit verified page identity. The generalized filename guard recognizes split family/number claims and repeated non-generic family tokens without a brand dictionary or request-local candidate pool.
+- Preserved: matching Product JSON-LD, page images with image-level target evidence, neutral/same-model files, family-adjacent sizes, opaque CDN assets, Google Shopping thumbnails, Amazon modifiers, and navigation safeguards. Metadata/JSON-LD priority remains unchanged because runtime presence/rejection was not captured.
+- Verification: fail-first 811/814 with three intended failures; focused 24/24; full 815/815 across 120 suites; typecheck/build/eval pass; lint 0 errors/3 existing warnings.
+- Register: 79 total; 64 Fixed, 14 Needs Investigation, 1 Won't Fix. North-Star observations remain the stopped R2 values; no live improvement is claimed.
+- Next step: separately approved RR-078/RR-079 shared eligibility/type safety repair. No live window, R4, or Phase 6E is authorized.
+
+Stop. Do not fix RR-078/RR-079, start R4, enable R3 in `.env.local`, or run live validation without Taylor's separate approval.

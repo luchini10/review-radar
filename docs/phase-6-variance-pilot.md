@@ -209,6 +209,28 @@ Needs Investigation. R4's later approved sample must separately report plan,
 provider, pool, and final overlap with the flag enabled. It must not treat
 future B observations as missing pre-change runs.
 
+### RR-061 deterministic safety follow-up (2026-07-11)
+
+The separately approved RR-061 repair used zero live calls. Static control-flow
+analysis attributes the accepting R2 path to extracted page images: initial
+existing candidates had no evidence/verified context, while page images
+inherited page-wide identity. The serialized `retailer_page` field and saved
+fixture do not prove whether OG or Product JSON-LD candidates existed at
+runtime, so their priority ordering was not changed.
+
+Page images now require image-level target evidence. The filename guard now
+recognizes split family/number identities and repeated non-generic family
+tokens without a brand dictionary or request-local candidate pool. All three
+R2 captures and the earlier RR-061 generations are covered; matching Product
+JSON-LD, neutral/same-model files, family-adjacent sizes, opaque assets, Google
+thumbnails, Amazon modifiers, and navigation guards remain green.
+
+Fail-first was 811/814 with three intended failures; focused final 24/24; full
+suite 815/815 across 120 suites; typecheck/build/eval pass; lint 0 errors and 3
+existing warnings. Latest North-Star evidence is unchanged from R2. RR-061 is
+Fixed, but no new live window is permitted until RR-078/RR-079 are separately
+repaired and Taylor approves the spend.
+
 ## Fresh post-RR-061 restart - stopped
 
 Taylor approved a new six-call window under commit `baeb6a0`, with both earlier

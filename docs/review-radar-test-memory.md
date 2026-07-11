@@ -1374,3 +1374,19 @@ No live provider calls and no search/ranking/trust behavior changes.
 **Measurement boundary:** Snapshot pinning prevents alias drift and temperature zero reduces sampling variance, but neither guarantees identical output. R3 ran zero live calls, so RR-015 remains Needs Investigation. Do not claim a Jaccard improvement until a later approved ledger sample separates plan, provider, pool, and final overlap.
 
 **Safety boundary:** `.env.local` remains unchanged and the flag defaults off. No search allocation, prompt, schema, final synthesis, candidate, rank, requirement, eligibility, image, identity, citation, price, or product-type behavior changed.
+
+---
+
+## 2026-07-11 - RR-061 page-image provenance and split-family identity
+
+**Runtime attribution rule:** `ProductFieldEvidence.sourceType: retailer_page` does not distinguish `existing` from `page_image`. Establish the winning internal source from the candidate construction and confidence path, or capture `ProductImageResolution.source`; do not infer candidate-level OG/JSON-LD presence from the serialized field.
+
+**Root cause:** `extractProductImageCandidatesFromHtml()` copied page-wide verification to every `<img>`, allowing unrelated artwork to pass at Medium without image identity or High when template attributes echoed the target. R1's filename guard only recognized one token containing both letters and digits, missing split `Saros_20` and repeated pure-word `QRevo` family claims.
+
+**Stable rule:** Metadata may inherit verified page identity because it is page-bound. Page `<img>` candidates may not; their own attributes/path must strongly match the target. Filename identity also includes adjacent alphabetic-family/numeric pairs and repeated non-generic alphabetic family tokens. Exclude generic image/color/view/package words plus source, brand/category, modifier, dimension, unit, version, file-counter, and hash tokens.
+
+**False-positive boundary:** If a filename pairs a target family word with a number but the target does not assert a numbered version of that family, treat the number as potentially a size (`ipad_11`). If the target asserts a different numbered family (`Saros 10` vs `Saros_20`), reject it.
+
+**Stable tests:** `tests/productImageResolver.test.mjs`, blocks `RR-061 wrong-model image identity (Phase R1)` and `RR-061 page-image provenance and split family identity`. Focused 24/24; full 815/815 across 120 suites. Matching Product JSON-LD, image-level matches, same-model/neutral filenames, opaque assets, Google thumbnails, Amazon modifiers, and navigation guards are positive controls.
+
+**Measurement boundary:** Zero live calls. The repair closes the deterministic captured paths but does not prove retailer markup is unchanged or improve a measured R2 North-Star value. RR-078/RR-079 remain blockers before a later approved live window.
