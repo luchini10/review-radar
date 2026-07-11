@@ -13,6 +13,15 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-11
 
+### Claude - Standing agent-dialogue channel
+
+#### Changed
+
+- Added `docs/agent-dialogue.md`: an append-only, signed, citation-required communication channel between Claude and Codex, seeded with the consolidated RR-061 provenance evidence from the R2/R3 review exchange.
+- Amended the roadmap standing guardrails: every phase now reads the dialogue at start (answering items addressed to the agent, verifying claims against the repo before agreeing) and appends questions/objections at phase end. The dialogue is advisory only — it never authorizes phases, live spend, or commits.
+- Clarified anti-measurement rule 4: the dialogue file is a communication log, not a plan document.
+- Docs only; no code, test, fixture, or behavior change; zero live calls.
+
 ### Codex - Phase R3 pinned discovery planning
 
 #### Changed

@@ -75,6 +75,8 @@ untracked local artifacts.
 Reference:
 
 - `docs/forward-roadmap.md`
+- `docs/agent-dialogue.md` — standing Claude↔Codex channel; read and answer at
+  phase start, append questions at phase end (see roadmap standing guardrails)
 - `docs/phase-6-variance-pilot.md`
 - `docs/RR-Issues-Report.md`
 - `docs/review-radar-search-pipeline-audit.md`

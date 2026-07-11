@@ -55,7 +55,8 @@ Between live batches, use deterministic proxies: full suite green,
 3. Every proposed phase must state its expected effect on a North-Star metric.
    "None — infrastructure" is acceptable only for R0 and R1.
 4. No new roadmap/plan documents. This file and `docs/agent-next-task.md` are
-   the only forward-pointing documents.
+   the only forward-pointing documents. (`docs/agent-dialogue.md` is a
+   communication log, not a plan document.)
 5. If two consecutive phases complete with no North-Star metric improving,
    stop and escalate to Taylor with a written diagnosis before any further
    phase.
@@ -79,6 +80,13 @@ Between live batches, use deterministic proxies: full suite green,
   copy anything to `Desktop/RR Markdowns`.
 - Commits to `main`, staging only files created/modified by the phase. Never
   `git add -A`. Existing untracked fixtures and local artifacts stay untouched.
+- **Agent dialogue:** `docs/agent-dialogue.md` is the standing Claude↔Codex
+  channel. At phase start, read it and answer items addressed to you —
+  verifying the other agent's claims against the repo before agreeing. At
+  phase end, append your questions/objections for the other agent. Claims
+  cite `file:line`, fixtures, or commits. The dialogue is advisory only: it
+  never authorizes phases, live spend, or commits — Taylor remains the sole
+  approver.
 
 ---
 
