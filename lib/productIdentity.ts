@@ -189,6 +189,112 @@ function urlKey(value: string | null) {
   }
 }
 
+// RR-060: retailers serve one listing under many URL shapes (a truncated
+// `/p/335012888` and a full slug ending in the same id). A trailing
+// pure-numeric path segment of 6+ digits is a listing id, so host+id is a
+// stronger identity key than the full path. Short numeric segments stay
+// excluded to avoid treating sizes or model numbers as listing ids.
+function retailerListingKey(value: string | null) {
+  if (!value) {
+    return "";
+  }
+
+  try {
+    const parsed = new URL(value);
+    const lastSegment = parsed.pathname.split("/").filter(Boolean).at(-1) || "";
+
+    if (!/^\d{6,}$/.test(lastSegment)) {
+      return "";
+    }
+
+    // Date-shaped segments (20260712) are editorial/archive paths, not
+    // listing ids — two different articles published the same day must not
+    // share an identity key.
+    if (/^(?:19|20)\d{6}$/.test(lastSegment)) {
+      return "";
+    }
+
+    return `${parsed.hostname.replace(/^www\./, "")} listing ${lastSegment}`.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+// RR-071: two products can share brand and a size-shaped token ("12gallon")
+// while their names state DIFFERENT hard numeric specs (5.5 vs 5 peak HP).
+// Conflicting values for the same robust unit prove different machines, so
+// they must never be inferred to be one exact model. Units prone to
+// truncation noise (inches) are deliberately excluded.
+const CONFLICT_SPEC_UNIT_ALIASES: Record<string, string> = {
+  ah: "ah",
+  amp: "amp",
+  amps: "amp",
+  btu: "btu",
+  cfm: "cfm",
+  gal: "gallon",
+  gallon: "gallon",
+  gallons: "gallon",
+  hp: "hp",
+  lb: "lb",
+  lbs: "lb",
+  pound: "lb",
+  pounds: "lb",
+  psi: "psi",
+  qt: "qt",
+  quart: "qt",
+  quarts: "qt",
+  volt: "volt",
+  volts: "volt",
+  watt: "watt",
+  watts: "watt",
+};
+
+function numericSpecValues(text: string) {
+  const values = new Map<string, Set<number>>();
+
+  for (const match of text.matchAll(
+    /(\d+(?:\.\d+)?)[\s-]*(?:peak[\s-]*)?(gallons?|gal|hp|quarts?|qt|psi|cfm|btu|watts?|volts?|amps?|ah|lbs?|pounds?)\b/gi,
+  )) {
+    const unit = CONFLICT_SPEC_UNIT_ALIASES[(match[2] || "").toLowerCase()];
+    const value = Number(match[1]);
+
+    if (!unit || !Number.isFinite(value)) {
+      continue;
+    }
+
+    const existing = values.get(unit) || new Set<number>();
+    existing.add(value);
+    values.set(unit, existing);
+  }
+
+  return values;
+}
+
+function conflictingNumericSpecs(firstText: string, secondText: string) {
+  const firstValues = numericSpecValues(firstText);
+  const secondValues = numericSpecValues(secondText);
+
+  for (const [unit, valuesA] of firstValues) {
+    const valuesB = secondValues.get(unit);
+
+    if (!valuesB) {
+      continue;
+    }
+
+    if (![...valuesA].some((value) => valuesB.has(value))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function identitySpecText(product: ProductRecommendation) {
+  return [product.name, fieldValue(product.metadata?.title)]
+    .filter(Boolean)
+    .join(" ");
+}
+
 function identityConfidence(metadata: ProductMetadata | undefined) {
   if (metadata?.gtin?.value || metadata?.modelNumber?.value) {
     return "High" as const;
@@ -219,7 +325,9 @@ export function getCanonicalIdentity(
     gtin ||
     (brand && modelNumber ? `${brand}-${modelNumber}` : "") ||
     (brand && sku ? `${brand}-${sku}` : "");
-  const mediumConfidenceKey = canonicalUrl ? urlKey(canonicalUrl) : "";
+  const mediumConfidenceKey = canonicalUrl
+    ? retailerListingKey(canonicalUrl) || urlKey(canonicalUrl)
+    : "";
   const fallbackKey = normalizedTitle || normalizeText(product.name);
 
   return {
@@ -282,6 +390,15 @@ export function areSameExactModelProduct(
 
   if (firstIdentity.canonicalId && firstIdentity.canonicalId === secondIdentity.canonicalId) {
     return true;
+  }
+
+  // RR-071: identical canonical ids above prove one listing, but every
+  // remaining path is inference from names — and names stating conflicting
+  // hard numeric specs (5.5 vs 5 peak HP) prove different machines.
+  if (
+    conflictingNumericSpecs(identitySpecText(first), identitySpecText(second))
+  ) {
+    return false;
   }
 
   if (

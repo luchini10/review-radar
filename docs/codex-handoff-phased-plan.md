@@ -1694,3 +1694,14 @@ Stop. Do not start R4, enable flags in `.env.local`, run live validation, freeze
 - Register: 81 total; 69 Fixed, 11 Needs Investigation, 1 Won't Fix. Rule 5 does not mandate a stop, but flag promotion, rubric/leader freeze, R5/R6, and Phase 6E each require separate Taylor approval.
 
 Stop. Do not edit `.env.local`, promote flags, freeze the rubric/baseline, start R5/R6, or start Phase 6E without separate approval.
+
+### R4 promotion + rubric v1.0 freeze record (2026-07-12)
+
+- Taylor promoted `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on` in `.env.local`; `REVIEW_RADAR_PINNED_PLANNING` stays default-off (failed its own stability criterion; rationale recorded in RR-015).
+- Rubric v1.0 frozen in `docs/phase-6-scorecard-template.md`; leader snapshots `leaders-v2026-07`, method, targets, and the first measured recall baseline (broad 1.33/7; constrained 3.0/4) in `docs/phase-6-market-leader-evaluation.md`. All four North-Star metrics are now measurable.
+
+### Phase R5 completion record (2026-07-12)
+
+- Fixed RR-071 (numeric-spec-conflict guard blocks false exact-model collapse), RR-060 (retailer listing-ID canonical key collapses URL variants of one listing), and RR-072 (unreproducible on current code; pinned by regression) in `lib/productIdentity.ts` + `tests/identityCollapse.test.mjs` (Claude).
+- Fail-first: exactly the two live-captured defects failed before the fix; 8/8 after with preservation matrix. Full suite 847/847 across 123 suites; typecheck/lint/build/eval pass; zero live calls.
+- Register: 72 Fixed / 8 Needs Investigation / 81 total. Next: roadmap R6 (RR-070, RR-076, RR-077, RR-081) — separate approval required.

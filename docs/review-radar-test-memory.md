@@ -1468,3 +1468,44 @@ wildcard-domain and repeated-token AI/rescue queries. Fixtures remain untracked.
 by plan-stability evidence. R4 promotion is a separate user decision and the
 shared two-flag sample limits causal attribution. No rubric/leader freeze or
 Phase 6E authorization follows from this sample.
+
+---
+
+## 2026-07-12 - Phase R5 identity collapse + listing-id dedupe (and leader-contract test)
+
+**Scope:** `lib/productIdentity.ts` (always-on trust-boundary fixes, no flag);
+`scripts/goldBenchmark.mjs` gained the exported `coversLeader()` contract that
+`scripts/qualityScorecard.mjs` now imports.
+
+**Mechanics to preserve:**
+
+- `retailerListingKey()`: a URL whose FINAL path segment is a pure-numeric ID
+  of 6+ digits yields `host listing <id>` as the medium-confidence canonical
+  key (ahead of the full-path `urlKey`). Never fires on shorter numerics
+  (sizes/models), lettered segments, or DATE-SHAPED segments
+  (`^(19|20)\d{6}$` — two articles published the same day must not share an
+  identity key).
+- `conflictingNumericSpecs()` + `numericSpecValues()`: unit-aliased extraction
+  (gallon/gal, hp with optional "peak", qt/quart, psi, cfm, btu, watt(s),
+  volt(s), amp(s), ah, lb(s)/pound(s)); inches deliberately EXCLUDED
+  (truncated retailer titles emit "13. 2 in" noise).
+- **Trust boundary (deliberate):** canonical-ID equality outranks conflicting
+  title specs — one listing ID means one page, and retailer titles contain
+  typos; the spec-conflict guard governs the INFERENCE paths only
+  (brand+shared-model, title-equal). Order inside `areSameExactModelProduct`:
+  disjoint-strong-models early false -> canonicalId equality true ->
+  spec-conflict false -> brand+sharedStrongModel true -> identical
+  normalizedTitle.
+- Generalization proof beyond vacuums: CRAFTSMAN 20-Gallon air compressors
+  with 175 vs 150 PSI stay distinct; matching-PSI retailer variants still
+  collapse.
+
+**Stable test entry points:** `tests/identityCollapse.test.mjs` (live-captured
+fail-first pairs, preservation matrix, cross-category PSI cases, date-segment
+boundary, RR-072 prefilter pin); `tests/leaderSnapshot.test.mjs` pins the
+`coversLeader` brand-AND-line contract (broad tokens like self/ai never count
+without their brand; unbranded line-token titles are a recorded undercount).
+
+**Known limits (accepted):** spec conflict only reads names/metadata titles,
+not attached spec objects; the listing key requires the ID as the final path
+segment (query-string IDs unhandled — no captured evidence yet).
