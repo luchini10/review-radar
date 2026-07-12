@@ -11,6 +11,16 @@ Update this file after:
 
 Do not update this file for tiny typo fixes, formatting-only edits, or internal cleanup that does not change behavior.
 
+## 2026-07-12
+
+### Claude - R4 flag promoted; R3 pinning not promoted (Taylor decision)
+
+#### Changed
+
+- Promoted `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on` in `.env.local` (dev config, not committed) on the strength of the six-run live after-sample: pool/final run-to-run overlap 0.1051/0.0333 → 0.2694/0.1429, final wrong-type/non-product cards 3/23 → 0/27, protected queries fully category+preference+budget bearing, duplicate budgets zero, no image regressions.
+- `REVIEW_RADAR_PINNED_PLANNING` stays default-off and unpromoted: planner-output overlap moved only 0.0000 → 0.0196, failing its own acceptance criterion. Live-compatibility was proven (the API accepts the snapshot and temperature 0), and the stability gain is attributed to constraint allocation by elimination. Rationale recorded in RR-015.
+- Docs-only; no code, test, or fixture change; zero live calls.
+
 ## 2026-07-11
 
 ### Codex - Phase R4 live after-sample
