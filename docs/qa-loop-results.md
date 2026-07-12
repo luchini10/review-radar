@@ -6388,3 +6388,37 @@ Next: rubric v1.0 freeze + dated leader snapshots (approved, docs-only), then ro
 - Reading: R4 already carried the constrained shape near target; the broad shape is now the recall problem, and its two visible causes (duplicate collapse misses, leader products dying mid-funnel) are exactly R5 scope.
 
 Next: roadmap R5 (RR-071, RR-072, RR-060) — approved, zero live calls.
+
+## <span style="color:green">**Claude QA Update — 2026-07-12 (Phase R5: identity collapse + listing-id dedupe safety)**</span>
+
+**Verdict: COMPLETE. RR-060, RR-071, RR-072 → Fixed. Zero live calls; always-on trust-boundary fixes (no flag), full wall green.**
+
+- RR-071: conflicting robust numeric specs (5.5 vs 5 peak HP) now veto inference-based exact-model collapse in `lib/productIdentity.ts`; the captured Vacmaster Beast stays a distinct candidate. Canonical-ID-equal listings still collapse; one-sided specs never block; cross-retailer duplicates with matching specs still merge; inches excluded as truncation noise.
+- RR-060: retailer listing key (host + trailing 6+ digit path ID) added to canonical identity; the duplicated Home Depot Roomba 105 pair (ID 335012888, truncated vs slugged URL) now shares one canonical ID and one slot. Same-host different-ID listings stay distinct; short numeric segments never qualify.
+- RR-072: no longer reproducible on current code — the captured HD0900 title passes the prefilter (M2 reassessment); pinned with a permanent regression test instead of a code change. Credit likely belongs to the RR-078/RR-079-era product-type rework.
+- Fail-first honored: exactly the two live-captured defects failed (2/8) before the fix; 8/8 after with a six-case preservation matrix.
+
+```text
+fail-first: RR-071 + RR-060 cases failing, 6 controls green
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm test: 847/847 across 123 suites
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red flags
+live Serper/OpenAI calls: 0
+```
+
+Register: 81 issues — 72 Fixed, 8 Needs Investigation, 1 Won't Fix. Expected North-Star effect: broad-shape leader recall up (duplicate slots freed; falsely collapsed leaders retained) — measured at the next approved live sample. Next: roadmap R6 (RR-070, RR-076, RR-077, RR-081).
+
+## <span style="color:green">**Claude QA Update — 2026-07-12 (CORRECTIVE APPEND: R4 attribution + leader-snapshot re-freeze)**</span>
+
+**Verdict: corrections to two earlier entries in this log, identified by Codex's adversarial review; applied per the append-only law.**
+
+- The R4-promotion entry's claim that "attribution-by-elimination assigns the stability gain to R4" is RETRACTED: both flags shared one sample, provider variance was uncontrolled, and the RR-061/RR-078/RR-079 always-on repairs landed between the compared samples. Supported: R3 failed its own overlap criterion (non-promotion justified); downstream attribution mixed; R4's promotion stands on its directly measured per-run criteria. RR-015 carries the full correction.
+- The rubric-freeze entry's baselines are VOID: they mixed three matching rules (a brand-OR-line doc rule contradicting `goldBenchmark.mjs`'s brand-AND-line contract, and brand-only scoring with one hand adjustment). Re-frozen as `leaders-v2026-07a` with ONE tested contract (`coversLeader` in `scripts/goldBenchmark.mjs`, now imported by `qualityScorecard.mjs`, pinned by `tests/leaderSnapshot.test.mjs`). Recomputed: broad final mean **1.0/7**; constrained **0.33/4**, informational only — no constrained recall target, per the scorecard's constraint-satisfaction contract. Leader lists marked provisional (draft-seeded, presence-cited) pending Taylor's human review.
+- Reading of the corrected constrained number: it reflects stale draft line lists (the runs surfaced 2026 models — Roomba 105, Q10 VFS+, eufy C10 — that the draft predates) at least as much as pipeline recall. That is precisely why frozen measurement contracts matter.
+
+```text
+tests/leaderSnapshot.test.mjs: 4/4
+live Serper/OpenAI calls: 0
+```

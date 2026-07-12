@@ -21,6 +21,22 @@
 // IMPORTANT: benchmark data may be product-specific; the APP LOGIC must stay
 // generalized. This file never feeds the pipeline — it only grades it.
 
+// The ONE matching contract (also used by qualityScorecard.mjs and the frozen
+// leader snapshots in docs/phase-6-market-leader-evaluation.md). A product
+// name covers a leader iff it contains EVERY brand token AND (the leader has
+// no lines, or at least one line/model token). Broad line tokens can never
+// count without their brand.
+export const normalizeLeaderText = (s) =>
+  ` ${(s || "").toLowerCase().replace(/[^a-z0-9+]+/g, " ").replace(/\s+/g, " ").trim()} `;
+
+export function coversLeader(name, item) {
+  const hay = normalizeLeaderText(name);
+  const brandTokens = normalizeLeaderText(item.brand).trim().split(" ");
+  if (!brandTokens.every((t) => hay.includes(` ${t} `))) return false;
+  if (!item.lines || item.lines.length === 0) return true;
+  return item.lines.some((l) => hay.includes(normalizeLeaderText(l).trimEnd()));
+}
+
 export const GOLD = [
   // ======================= BROAD: "find the market leaders" =======================
   {

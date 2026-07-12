@@ -13,6 +13,29 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-12
 
+### Claude - Corrective evidence pass (adversarial review by Codex)
+
+#### Changed
+
+- Retracted three overclaims from the R4-promotion documentation: "attribution by elimination," "planner variance is inherent," and "not fixable at the planner-parameter level." Supported conclusion: R3 pinning was API-compatible but did not materially improve strategy overlap in the shared six-run sample; downstream stability attribution is mixed (both flags shared the sample; the RR-061/RR-078/RR-079 always-on repairs landed between the compared samples). The R4 promotion stands on R4's own directly measured criteria. Visible correction paragraphs added to RR-015 and this log; qa-loop corrected by append.
+- Re-froze the leader snapshot as `leaders-v2026-07a`: the single matching contract (`coversLeader`, brand AND line) now lives in `scripts/goldBenchmark.mjs`, is imported by `scripts/qualityScorecard.mjs`, and is pinned by `tests/leaderSnapshot.test.mjs`. Recomputed baselines: broad final mean **1.0/7** (was misstated 1.33/7 under an unfrozen rule); constrained final mean **0.33/4** (was misstated 3.0/4 under brand-only matching — the draft line lists predate the 2026 models the runs surfaced).
+- Constrained shapes carry no leader-recall target (scorecard contract: constraint satisfaction is primary; constrained recall is informational). Leader lists marked provisional pending Taylor's human review, with per-leader captured-presence citations from the saved ledgers.
+
+### Claude - Phase R5 identity collapse and listing-id dedupe safety
+
+#### Changed
+
+- RR-071 (fixed): `areSameExactModelProduct` now extracts robust numeric spec values (gallon, hp, qt, psi, cfm, btu, watt, volt, amp, ah, lb) from both product names and refuses inference-based collapse when any shared unit conflicts — the captured Vacmaster Beast 5.5 HP no longer collapses into the 5 HP machine. Identical canonical IDs still collapse, one-sided specs never block, true cross-retailer duplicates still merge, and inches are excluded as truncation noise.
+- RR-060 (fixed): canonical identity now derives a retailer listing key when a URL's last path segment is a 6+ digit numeric ID, so truncated and slugged URL variants of the same listing (the duplicated Home Depot Roomba 105, ID 335012888) share one canonical ID and one final slot. Different IDs on the same host stay distinct; short numeric segments never qualify.
+- RR-072 (fixed, no code change): the captured HD0900 wrong-category rejection no longer reproduces on current code (M2 reassessment through the prefilter); pinned with a permanent regression test.
+
+#### Verified
+
+- Fail-first: exactly the RR-071 and RR-060 tests failed before the fix (2/8), 8/8 after, with a six-case preservation matrix.
+- `npm run typecheck`: pass. `npm run lint`: 0 errors, 3 existing warnings.
+- `npm test`: 847/847 across 123 suites. `npm run build`: pass. Offline eval: no red flags.
+- Live Serper/OpenAI calls: 0.
+
 ### Claude - Rubric v1.0 frozen; leader snapshots leaders-v2026-07 compiled
 
 #### Changed
@@ -31,6 +54,7 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 - Promoted `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on` in `.env.local` (dev config, not committed) on the strength of the six-run live after-sample: pool/final run-to-run overlap 0.1051/0.0333 → 0.2694/0.1429, final wrong-type/non-product cards 3/23 → 0/27, protected queries fully category+preference+budget bearing, duplicate budgets zero, no image regressions.
 - `REVIEW_RADAR_PINNED_PLANNING` stays default-off and unpromoted: planner-output overlap moved only 0.0000 → 0.0196, failing its own acceptance criterion. Live-compatibility was proven (the API accepts the snapshot and temperature 0), and the stability gain is attributed to constraint allocation by elimination. Rationale recorded in RR-015.
+- **Correction (2026-07-12):** the "attributed ... by elimination" clause above is retracted — attribution is mixed (see the corrective evidence pass entry and RR-015's correction paragraph). The promotion decision itself is unaffected.
 - Docs-only; no code, test, or fixture change; zero live calls.
 
 ## 2026-07-11

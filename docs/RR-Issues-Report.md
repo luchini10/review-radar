@@ -19,8 +19,8 @@
 | Medium | 32 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 11 |
-| Fixed | 69 |
+| Needs Investigation | 8 |
+| Fixed | 72 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -96,6 +96,7 @@
 | Phase R2 — Live ledger verification safety stop | 2 |
 | Phase R3 — Strategy-call determinism | 0 |
 | Phase R4 — Constraint-preserving query allocation (deterministic) | 0 |
+| Phase R5 — Identity collapse and listing-id dedupe safety | 0 |
 | Phase R4 — Live after-sample | 1 |
 | RR-061 image-provenance safety repair | 0 |
 | RR-061 round 4 / RR-080 image micro-phase | 1 |
@@ -529,6 +530,8 @@
 **Phase R3 implementation (2026-07-11):** The two OpenAI planning calls are now flag-gated by `REVIEW_RADAR_PINNED_PLANNING=on`. For the documented default helper model only, the flag sends the dated `gpt-5.4-mini-2026-03-17` snapshot with `temperature: 0`; flag-off requests remain byte-for-byte parameter-compatible, custom helper models are not rewritten, and the final synthesis call is untouched. The Responses API exposes no `seed`, so none was invented. Deterministic request-shape tests prove both strategy and gap calls receive the controls only when enabled. RR-015 remains Needs Investigation because R3 used zero live calls and therefore does not prove improved plan, pool, or final-set Jaccard; R4's later approved sample owns that measurement.
 
 **R4 after-sample measurement and R3 non-promotion decision (2026-07-12):** The six-usable-run after-sample (both flags on) measured strategy-query overlap at `0.0196` versus `0.0000` before — pinning is live-compatible (the API accepts the snapshot and `temperature: 0`, and `rawAi.strategy` was present on every run) but does NOT materially stabilize planner output; planner variance is inherent at temperature zero. Taylor therefore decided on 2026-07-12 that `REVIEW_RADAR_PINNED_PLANNING` stays default-off and unpromoted: it fails its own acceptance criterion, and promoting an ineffective control would misattribute future stability changes. Downstream stability nonetheless improved (pool/final Jaccard `0.1051/0.0333 → 0.2694/0.1429`) — attributable to `REVIEW_RADAR_CONSTRAINT_ALLOCATION` (promoted the same day) by elimination, since the planner's own output overlap did not move. Conclusion for RR-015: run-to-run variance is not fixable at the planner-parameter level; the remaining reduction path is shrinking planner influence (roadmap R7) plus persistence/caching. Status remains Needs Investigation pending the ≥60% target.
+
+**Correction (2026-07-12, corrective evidence pass):** Three claims in the paragraph above are RETRACTED as overreach beyond the sample: "attributable to REVIEW_RADAR_CONSTRAINT_ALLOCATION by elimination" (invalid — both flags shared one sample, provider variance was uncontrolled, and the always-on RR-061/RR-078/RR-079 repairs landed between the compared samples and themselves alter candidate pools), "planner variance is inherent at temperature zero," and "not fixable at the planner-parameter level" (one six-run sample on one model cannot establish either universal). The supported conclusions are only: R3 pinning was API-compatible but did not materially improve strategy overlap in this sample, so non-promotion is justified by its own acceptance criterion; the downstream pool/final improvement is real but its causal attribution is mixed. The promotion decision for R4 stands on R4's directly measured per-run criteria (constraint-bearing protected queries, zero duplicate budgets), not on the retracted attribution. Identified in adversarial review (agent dialogue, Codex).
 
 ---
 
@@ -1849,7 +1852,7 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 | **Phase** | Phase 4F |
 | **Severity** | Medium |
 | **Title** | True same-model duplicates can occupy multiple final slots |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** `gaming monitor` selected `Gigabyte M27Q Gaming Monitor (Rev. 1.0)` at rank #1 and `Gigabyte M27Q 27" QHD ...` at rank #2. Both source-upgrade traces used `Gigabyte M27Q` and attached the same `$160` offer. They are retailer/manufacturer representations of the same model, yet remained separate cards while other variants were correctly collapsed.
 
@@ -1866,6 +1869,8 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 **Phase 5H resolution:** Final selection now uses a strict exact-model identity predicate rather than URL-only canonical IDs or the broader evidence-family merger. Same canonical IDs, exact normalized titles, and same-brand shared strong model tokens collapse; explicit different model tokens and different sizes remain distinct. The saved gaming-monitor fixture collapses the two M27Q retailer/manufacturer representations into one card while preserving M27Q2, M27Q-P, and unrelated same-brand products. Synthetic coverage proves a distinct eighth candidate fills the freed seventh slot.
 
 **Phase R4 live regression (2026-07-11):** Reopened as Needs Investigation. Constrained run B3 selected the same Home Depot iRobot Roomba 105 Combo product twice. One near card used the short URL `https://www.homedepot.com/p/335012888`; the other used the titled URL ending in the same product ID `/335012888`. Their titles differ only in punctuation/truncation (`13.2` versus `13. 2`), yet both occupied final slots. The saved fixture is `tests/fixtures/review-radar-live/robot-vacuum-under-300-self-emptying.r4-after-run3.json`. Diagnose canonical retailer product-ID normalization without weakening distinct-size/model protection.
+
+**Phase R5 resolution (2026-07-12):** Fixed deterministically. `getCanonicalIdentity()` now derives a retailer listing key when a URL's final path segment is a pure-numeric ID of 6+ digits (`homedepot.com listing 335012888`), so truncated and slugged URL variants of one listing share a canonical ID and collapse in both canonical and exact-model dedupe. Short numeric segments (sizes, model numbers) never qualify, and different listing IDs on the same host stay distinct. The captured B3 pair now collapses; distinct-size/model protection is regression-covered in the same suite. Tests: `tests/identityCollapse.test.mjs` (fail-first: the captured pair did not collapse before the fix).
 
 ---
 
@@ -2393,7 +2398,7 @@ No new issue ID was opened.
 | **Phase** | Phase A search-observability audit filing |
 | **Severity** | High |
 | **Title** | Exact-model identity falsely collapses distinct Vacmaster 12-gallon products |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** The current final-selection trace collapses `Vacmaster Professional Beast Series 12-Gallon 5.5 Peak HP Wet/Dry Vacuum` into `Vacmaster 12-Gallon 5 Peak HP Wet/Dry Vacuum` with `duplicate_identity_collapsed`, despite different titles, power specifications, and product URLs.
 
@@ -2409,6 +2414,8 @@ No new issue ID was opened.
 
 **Suggested fix or next action:** After Phase A measurement, add generalized conflicting-identity regression cases and tighten exact-model collapse without weakening same-model retailer dedupe.
 
+**Phase R5 resolution (2026-07-12):** Fixed deterministically. Root cause: both names share brand `vacmaster` and the size-shaped strong-model token `12gallon`, while the differing peak-HP values (5.5 vs 5) are digit-only tokens the model matcher ignores. `areSameExactModelProduct()` now extracts robust numeric spec values (gallon, hp, qt, psi, cfm, btu, watt, volt, amp, ah, lb — inches deliberately excluded as truncation noise) from both names and refuses the inference collapse paths when any shared unit carries conflicting values; identical canonical IDs still collapse (same listing), one-sided specs never block, and true cross-retailer duplicates with matching specs still collapse. The captured Beast/5-HP pair stays distinct. Tests: `tests/identityCollapse.test.mjs` (fail-first: the pair collapsed before the fix; preservation matrix for retailer duplicates, sparse titles, distinct models, and same-host distinct listings).
+
 ---
 
 #### RR-072
@@ -2419,7 +2426,7 @@ No new issue ID was opened.
 | **Phase** | Phase A search-observability audit filing |
 | **Severity** | High |
 | **Title** | RIDGID HD0900 Wet Dry Vac is falsely rejected as wrong category |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** The current cheap prefilter rejects `9 Gallon 4.25 Peak HP NXT Wet Dry Vac HD0900 | RIDGID Tools` as `wrong_category`, even though the source-derived title explicitly identifies a wet/dry vacuum relevant to a `shop vac` request.
 
@@ -2434,6 +2441,8 @@ No new issue ID was opened.
 **Current status:** Needs Investigation. The current failure is documented in `docs/review-radar-search-pipeline-audit.md` sections 11-12. Phase A adds the missing precise loss trace but does not change product-type rules.
 
 **Suggested fix or next action:** Use Phase A subreason and provenance output to isolate the exact false-negative branch, then add generalized cross-brand utility-vac controls before modifying the shared matcher.
+
+**Phase R5 resolution (2026-07-12):** Fixed — no longer reproducible on current code, pinned by regression. M2 reassessment: the captured title passed through `cheapPreFilterRawCandidates` on current code is KEPT (no rejection), and `classifyProductTypeMatch` returns `canBeExactMatch: true` for it. The intervening RR-078/RR-079-era product-type rework evidently removed the false-negative branch. No behavior change was needed or made; `tests/identityCollapse.test.mjs` pins the captured title's eligibility permanently so a regression reopens this issue with a failing test rather than a live surprise.
 
 ---
 
@@ -2688,21 +2697,18 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (11 issues)
+### Needs Investigation (8 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 - RR-070: Unrelated provider brand metadata can contaminate source-upgrade queries
-- RR-071: Exact-model identity falsely collapses distinct Vacmaster 12-gallon products
-- RR-072: RIDGID HD0900 Wet Dry Vac is falsely rejected as wrong category
 - RR-076: Editorial seed extraction emits malformed and non-product Shopping queries
 - RR-077: Source upgrade prefixes an ambiguous DW brand token to an exact DEWALT model
-- RR-060: True same-model duplicates can occupy multiple final slots
 - RR-081: AI/rescue queries retain wildcard domains and repeated identity/category tokens
 
-### Fixed (69 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-059, RR-061 through RR-069, RR-073 through RR-075, RR-078 through RR-080
+### Fixed (72 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-069, RR-071 through RR-075, RR-078 through RR-080
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2711,8 +2717,6 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-014 + RR-015** (High) — R4 improved A pool/final overlap, but strategy-query overlap stayed near zero and no leader snapshot exists; both remain open measurement questions.
-2. **RR-071 + RR-072** (High) — Current false identity collapse and valid-product rejection remain owned by R5.
-3. **RR-070 + RR-076 + RR-077** (Medium) — R2 showed 588 editorial raw results with zero unique candidates; source-brand and seed precision remain owned by R6.
-4. **RR-060 + RR-081** (Medium) — R4 B3 reopened same-product final duplication; malformed AI/rescue query forms remain provider-bound.
-5. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3 but varied by model, while Tapo appeared raw and died in normalization.
+1. **RR-014 + RR-015** (High) — Leader recall is now measurable (leaders-v2026-07 baseline: broad final mean 1.33/7; constrained 3.0/4) and stability improved to 0.2694/0.1429; both remain open until the frozen targets are met. (RR-060/RR-071/RR-072 were fixed in Phase R5 on 2026-07-12, removing false collapses, duplicate final slots, and the pinned wrong-category rejection.)
+2. **RR-070 + RR-076 + RR-077 + RR-081** (Medium) — R2 showed 588 editorial raw results with zero unique candidates plus malformed AI/rescue query forms; all owned by roadmap R6.
+3. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3 but varied by model, while Tapo appeared raw and died in normalization.

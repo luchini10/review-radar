@@ -1,6 +1,8 @@
 # Market-Leader Evaluation Method and Dated Leader Snapshots
 
-**Snapshot version:** `leaders-v2026-07` (frozen 2026-07-12, Taylor-approved)
+**Snapshot version:** `leaders-v2026-07a` (corrective re-freeze 2026-07-12)
+**Supersedes:** `leaders-v2026-07` (same day) — see section 5. Results are
+never compared across snapshot versions.
 **Owner:** Phase 6 freeze-point deliverable per
 `docs/phase-6-reliability-gauntlet-plan.md` section 7; QA-only data, never
 production logic (core rule 1).
@@ -8,75 +10,101 @@ production logic (core rule 1).
 External editorial refresh research is separate from ReviewRadar live-search
 API spending and must be scoped, cited, and approved.
 
-## 1. Method
+## 1. Matching contract (frozen, single implementation)
 
-1. **Seed source.** Leader sets are seeded from the static benchmark
-   definitions in `scripts/goldBenchmark.mjs` (M1 reference data: brand +
-   line tokens per query shape), cross-checked against editorial evidence
-   already captured in saved fixtures (best-of titles/snippets in the R2 and
-   R4 ledgers). No live calls are required to compile or refresh a snapshot
-   from these sources.
-2. **Matching rule.** A leader counts as PRESENT in a result set when any
-   displayed final card name (exact + near) contains the leader's brand token
-   OR any of its line tokens, case-insensitively. Line tokens exist precisely
-   because retailer titles sometimes omit the brand (e.g. a RIDGID NXT titled
-   only `14 Gallon 6.0 Peak HP NXT Wet Dry Vac HD1400`).
-3. **Scoring.** Per run: `final recall = leaders present in displayed cards /
-   snapshot size`; `pool recall` uses the candidate pool instead. Sample
-   claims use the mean across all usable cache-cold runs of a shape — never
-   the best run (the historical `qualityScorecard.mjs` best-run convention is
-   not the Phase 6 statistic).
-4. **Versioning.** Snapshots are dated and immutable; a revision creates a new
-   version and results are never compared across snapshot versions.
+A product name covers a leader **iff it contains every brand token AND (the
+leader defines no lines, or at least one line/model token)**. This is the
+`coversLeader()` export in `scripts/goldBenchmark.mjs` — the one shared
+implementation now used by `scripts/qualityScorecard.mjs` and by snapshot
+scoring, and pinned by `tests/leaderSnapshot.test.mjs` (broad tokens such as
+`self`/`ai` can never count without their brand; a Roborock Q10 does not
+cover a `q5`-line leader).
 
-## 2. Dated snapshots (leaders-v2026-07)
+**Known undercount (accepted):** retailer titles sometimes omit the brand
+(real capture: `14 Gallon 6.0 Peak HP NXT Wet Dry Vac HD1400`, a RIDGID). The
+contract requires the brand, so such cards score as misses. This biases
+recall DOWN, never up, and is pinned by test.
+
+**Scoring:** per run, `final recall = leaders covered in displayed final
+cards / snapshot size`; sample claims use the mean across all usable
+cache-cold runs of a shape, never the best run.
+
+## 2. Leader lists (provisional, draft-seeded)
+
+The lists are seeded from `scripts/goldBenchmark.mjs`, which is explicitly
+marked **"DRAFT for human review"** and states the lists must reflect the
+owner's judgment of the market. The saved R2/R4 ledgers establish that every
+listed leader **appears in captured provider results** (citations below) —
+that is presence evidence, not proof of July-2026 market leadership.
+Accordingly, the LISTS are **provisional pending Taylor's human review**; the
+matching contract and the recomputed baseline numbers are frozen mechanics.
 
 ### Shape A — broad `shop vac` (7 leaders)
 
-| Leader | Line tokens |
-|---|---|
-| RIDGID | nxt, wd, hd |
-| Vacmaster | — |
-| CRAFTSMAN | — |
-| DeWALT | — |
-| Stanley | — |
-| Shop-Vac (brand) | — |
-| Milwaukee | — |
+| Leader | Line tokens | Captured-presence citation (fixture :: title) |
+|---|---|---|
+| RIDGID | nxt, wd, hd | shop-vac.ledger-run1 :: "14 Gallon 6.0 Peak HP NXT Wet Dry Vac HD1400 \| RIDGID Tools" |
+| Vacmaster | — | shop-vac.ledger-run1 :: "Armor All 2.5-Gallon* 2 Peak HP† Wet/Dry Vac - Vacmaster.com" |
+| CRAFTSMAN | — | shop-vac.ledger-run1 :: "Watch Craftsman Shop Vac UNBOXING! on Amazon Live" |
+| DeWALT | — | shop-vac.ledger-run1 :: "DeWalt Stealthsonic Quiet 6 Gallon Wet/Dry Shop Vacuum DXV06PL-QT" |
+| Stanley | — | shop-vac.ledger-run1 :: "Stanley Wet/Dry Vacuum SL18116P" |
+| Shop-Vac (brand) | — | shop-vac.ledger-run1 :: "Shop vac not working right : r/Tools - Reddit" |
+| Milwaukee | — | shop-vac.ledger-run1 :: "Anyone regret going with the 2.5 gallon Milwaukee Vacuum? - Reddit" |
 
 ### Shape B — constrained `robot vacuum / under $300 / self-emptying` (4 leaders)
 
-| Leader | Line tokens |
-|---|---|
-| Shark | matrix, ai |
-| eufy | clean, x8, self |
-| Roborock | q5 |
-| iRobot Roomba | i3, i4 |
-
-Acceptable alternates and wrong-type terms remain as defined in
-`scripts/goldBenchmark.mjs` (`broad-shop-vac`,
-`con-robot-vac-300-selfempty`).
-
-## 3. Initial baseline recall (M3, scored 2026-07-12 against the six R4 after-sample fixtures)
-
-| Run | Final cards | Final leader recall |
+| Leader | Line tokens | Captured-presence citation |
 |---|---|---|
-| shop-vac r4-after-run1 | 1 | 1/7 (RIDGID) |
-| shop-vac r4-after-run2 | 6 | 2/7 (RIDGID, DeWALT) |
-| shop-vac r4-after-run3 | 4 | 1/7 (RIDGID via NXT/HD1400 line tokens; brand absent from title) |
-| **Shape A mean** | | **1.33/7 (19%)** |
-| robot-vac r4-after-run1 | 5 | 3/4 (Shark, Roborock, Roomba) |
-| robot-vac r4-after-run2 | 5 | 2/4 (Roborock, Roomba) |
-| robot-vac r4-after-run3 | 6 | 4/4 |
-| **Shape B mean** | | **3.0/4 (75%)** |
+| Shark | matrix, ai | rv-...ledger-run1 :: "Shark Matrix Plus 2in1 Robot Vacuum & Mop RV2610WA" |
+| eufy | clean, x8, self | rv-...ledger-run1 :: "eufy RoboVac 11S MAX Self-Charging Robotic Vacuum" |
+| Roborock | q5 | rv-...ledger-run1 :: "To buy Q5 pro with or without auto-empty station? : r/Roborock - Reddit" |
+| iRobot Roomba | i3, i4 | rv-...ledger-run1 :: "iRobot Roomba i3+ EVO Self-Emptying Robot Vacuum" |
 
-Observations recorded with the baseline: shop-vac run1 displayed a single
-final card; shop-vac runs 2-3 are dominated by near-duplicate Bissell Garage
-Pro variants (one of them a brand/collection-style title), which is RR-060/R5
-territory; the constrained shape already performs near target after R4.
+**Staleness note (material):** the constrained line lists predate the models
+the July-2026 runs actually surfaced (Roomba 105, Roborock Q10 VFS+, eufy
+C10, Shark IQ 2-in-1). Under the frozen contract those cards are correctly
+NOT counted as the listed leaders — which is exactly why constrained recall
+below is low and why the lists need human review before constrained recall
+can carry meaning.
 
-## 4. v1.0 leader-quality targets (approved independently of baseline)
+## 3. Baseline recall (recomputed 2026-07-12 under `coversLeader`, M3, six R4 after-sample fixtures)
 
-- Shape A (broad): final recall ≥ 3/7 per-run mean; pool recall ≥ 5/7.
-- Shape B (constrained): final recall ≥ 3/4 per-run mean.
+| Run | Final recall |
+|---|---|
+| shop-vac r4-after-run1 | 1/7 (RIDGID) |
+| shop-vac r4-after-run2 | 2/7 (RIDGID, DeWALT) |
+| shop-vac r4-after-run3 | 0/7 (contains an unbranded RIDGID NXT — recorded undercount) |
+| **Shape A mean** | **1.0/7 (14%)** |
+| robot-vac r4-after-run1 | 0/4 |
+| robot-vac r4-after-run2 | 0/4 |
+| robot-vac r4-after-run3 | 1/4 (eufy) |
+| **Shape B mean** | **0.33/4 — informational only (see section 4 and staleness note)** |
+
+Context recorded with the baseline: shop-vac run1 displayed a single final
+card; runs 2–3 were dominated by near-duplicate Bissell variants (RR-060/R5
+territory, fixed 2026-07-12); the constrained shape's low number reflects
+stale draft line lists at least as much as pipeline recall.
+
+## 4. v1.0 targets (amended)
+
+- Shape A (broad): final recall ≥ 3/7 per-run mean; pool recall ≥ 5/7 —
+  approved floors, binding against a provisional list (re-ratify after human
+  review of the lists).
+- Shape B (constrained): **no leader-recall target.** Per
+  `scripts/qualityScorecard.mjs`, constrained shapes are judged primarily on
+  constraint satisfaction; constrained leader recall is measured and reported
+  as INFORMATIONAL only.
 - Targets are floors for declaring reliability, not grounds to redefine
-  "reliable" downward if missed (master plan section 7).
+  "reliable" downward (master plan section 7).
+
+## 5. Supersession record — what v2026-07 got wrong (corrected same day)
+
+The initial freeze (commit `6fb1eac`) stated a brand-OR-line matching rule
+that contradicted its own seed's contract (`goldBenchmark.mjs`: brand AND
+line), scored the baseline with a third, brand-only implementation, published
+one hand-adjusted value, set a constrained leader-recall target that silently
+changed the scorecard's constrained-shape contract, and presented draft-
+seeded lists as dated market truth. Its published baselines (broad 1.33/7,
+constrained 3.0/4) are void and must not be compared against. Identified in
+adversarial review (agent dialogue; Codex), corrected here as
+`leaders-v2026-07a` via corrective commit rather than history rewrite.

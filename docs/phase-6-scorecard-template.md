@@ -22,6 +22,25 @@
   overlap 0.0196 (unpinned by decision — see RR-015).
 - **Flag state at freeze:** `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`
   (promoted 2026-07-12); `REVIEW_RADAR_PINNED_PLANNING` default-off.
+
+### Amendment (2026-07-12, corrective evidence pass — adversarial review)
+
+- **Snapshot version is now `leaders-v2026-07a`** and the recall baselines
+  above are VOID: they were computed under an unfrozen, inconsistent matching
+  rule. Recomputed under the single tested `coversLeader` contract
+  (`scripts/goldBenchmark.mjs`, pinned by `tests/leaderSnapshot.test.mjs`):
+  **broad final mean 1.0/7; constrained final mean 0.33/4.**
+- **Constrained shapes carry NO leader-recall target.** Per
+  `scripts/qualityScorecard.mjs`, constrained shapes are judged primarily on
+  constraint satisfaction; constrained recall is informational only. Broad
+  targets stand, binding against a provisional leader list pending Taylor's
+  human review (`docs/phase-6-market-leader-evaluation.md` sections 2, 4, 5).
+- **Attribution correction:** the six-run shared sample supports only that R3
+  pinning was API-compatible but did not materially improve strategy overlap;
+  causal attribution for the pool/final stability improvement is MIXED (both
+  flags shared the sample and the RR-061/RR-078/RR-079 always-on repairs
+  landed between the compared samples). Claims of "attribution by
+  elimination" are retracted (see RR-015 correction).
 **Phase 6 source of truth:** `docs/phase-6-reliability-gauntlet-plan.md`. This scorecard implements the master plan and must not override it.
 
 This document is the contract for the existing ReviewRadar measurement tools and any approved extensions to them. It does not create a second scoring system. Where a current tool cannot produce the required evidence, the metric is `NotScored` and the gap is listed for approval; no missing field is inferred. Where a metric does not apply to the query shape, it is `NotApplicable`, not missing evidence.

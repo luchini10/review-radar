@@ -1,8 +1,8 @@
 # ReviewRadar Phase 6 Reliability Gauntlet - Master Plan
 
-**Status:** Canonical merged plan; Phases 6A-6C complete; R4 promoted; rubric v1.0 FROZEN with leader snapshots
+**Status:** Canonical merged plan; Phases 6A-6C complete; R4 promoted; rubric v1.0 frozen; snapshots corrected to leaders-v2026-07a
 **Prepared:** 2026-07-01
-**Execution state:** On 2026-07-12 Taylor promoted `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on` in `.env.local` (after-sample evidence: pool/final Jaccard 0.1051/0.0333 → 0.2694/0.1429; final wrong-type cards 3/23 → 0/27); `REVIEW_RADAR_PINNED_PLANNING` stays default-off per RR-015. The section-7 freeze point executed the same day: rubric `v1.0` frozen in `docs/phase-6-scorecard-template.md`, leader snapshots `leaders-v2026-07` and method in `docs/phase-6-market-leader-evaluation.md`, significance rule defined, and baseline North-Star values recorded (broad final leader recall mean 1.33/7; constrained 3.0/4). Roadmap R5 is approved next; Phase 6E remains separately approval-gated
+**Execution state:** On 2026-07-12 Taylor promoted `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on` in `.env.local`; `REVIEW_RADAR_PINNED_PLANNING` stays default-off per RR-015 (whose "attribution by elimination" wording was later retracted as overreach — attribution is mixed). The section-7 freeze executed the same day and was corrected the same day after adversarial review: snapshot version `leaders-v2026-07a`, single tested `coversLeader` matching contract shared with `qualityScorecard.mjs`, recomputed baselines broad final 1.0/7 and constrained 0.33/4 (informational — constrained shapes carry no recall target per the scorecard contract), leader lists provisional pending Taylor's human review. Roadmap R5 completed the same day (RR-060/071/072); Phase 6E remains separately approval-gated
 **Repository:** `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 **Canonical repository path:** `docs/phase-6-reliability-gauntlet-plan.md`
 

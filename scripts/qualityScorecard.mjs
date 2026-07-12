@@ -28,7 +28,7 @@
 // not just a doc convention.
 
 import { writeFileSync } from "node:fs";
-import { GOLD } from "./goldBenchmark.mjs";
+import { GOLD, coversLeader } from "./goldBenchmark.mjs";
 
 // ── CLI flags (cross-platform; npm passes args after `--`) ───────────────────
 const ARGV = process.argv.slice(2);
@@ -75,13 +75,9 @@ const norm = (s) => ` ${(s || "").toLowerCase().replace(/[^a-z0-9+]+/g, " ").rep
 const priceNum = (s) => { const m = (s || "").replace(/,/g, "").match(/\$?\s*(\d+(?:\.\d+)?)/); return m ? Number(m[1]) : null; };
 const priceVerified = (p) => /\d/.test(p.estimated_price_range || "") && !/not verified|not found/i.test(p.estimated_price_range || "");
 
-function covers(name, item) {
-  const hay = norm(name);
-  const brandTokens = norm(item.brand).trim().split(" ");
-  if (!brandTokens.every((t) => hay.includes(` ${t} `))) return false;
-  if (!item.lines || item.lines.length === 0) return true;
-  return item.lines.some((l) => hay.includes(norm(l).trimEnd()));
-}
+// The single leader-matching contract now lives in goldBenchmark.mjs so the
+// scorecard, tests, and frozen snapshots can never diverge on it.
+const covers = coversLeader;
 const countCovered = (names, list) => (list || []).filter((item) => names.some((n) => covers(n, item))).length;
 const nameHitsWrongType = (name, terms) => (terms || []).some((w) => norm(name).includes(norm(w).trim()));
 
