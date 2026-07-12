@@ -1,8 +1,8 @@
 # ReviewRadar Phase 6 Reliability Gauntlet - Master Plan
 
-**Status:** Canonical merged plan; Phases 6A-6C complete; R2 stopped at 4/6; R3/R4 default-off; R4 live after-sample complete
+**Status:** Canonical merged plan; Phases 6A-6C complete; R2 stopped at 4/6; R4 promoted; R3 not promoted
 **Prepared:** 2026-07-01
-**Execution state:** R3/R4 deterministic work and the six-usable-run R4 after-sample are complete. Both flags remain default-off and `.env.local` is unchanged. R4 improved pool/final overlap and final-card safety, but planner overlap remained near zero and total wrong-category funnel entry did not improve. Rubric v1.0, leader snapshots, flag promotion, and Phase 6E remain separately approval-gated
+**Execution state:** On 2026-07-12 Taylor promoted `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on` in `.env.local` on the after-sample evidence (pool/final Jaccard 0.1051/0.0333 → 0.2694/0.1429; final wrong-type cards 3/23 → 0/27; protected queries fully constraint-bearing). `REVIEW_RADAR_PINNED_PLANNING` stays default-off: strategy overlap moved only 0.0000 → 0.0196, failing its own acceptance criterion (rationale recorded in RR-015). Rubric v1.0 freeze and leader snapshots are approved and executing as a docs-only step; Phase 6E remains separately approval-gated
 **Repository:** `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 **Canonical repository path:** `docs/phase-6-reliability-gauntlet-plan.md`
 

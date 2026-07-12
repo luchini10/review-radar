@@ -6367,3 +6367,13 @@ node scripts/eval-pipeline.mjs: no red flags
 live requests: 7 dispatched; 6 usable cache-cold; 1 warm spent/excluded
 usable Serper attempts: 486; invalid warm attempt count unknown
 ```
+
+## <span style="color:green">**Claude QA Update — 2026-07-12 (R4 flag promotion; R3 non-promotion)**</span>
+
+**Verdict: `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on` promoted in `.env.local` per Taylor; `REVIEW_RADAR_PINNED_PLANNING` stays default-off. Docs-only; zero live calls.**
+
+- Promotion evidence (six-usable-run after-sample, commit 91e1cca): pool/final Jaccard 0.1051/0.0333 → 0.2694/0.1429; final wrong-type cards 3/23 → 0/27; protected queries fully constraint-bearing; duplicate budgets zero; fifth-generation RR-061 guard held live.
+- R3 failed its own acceptance criterion (strategy overlap 0.0000 → 0.0196); promoting an ineffective control would misattribute future stability changes. Attribution-by-elimination assigns the stability gain to R4. RR-015 records the conclusion: planner variance is inherent at temperature zero; remaining reduction path is R7 influence-shrinking plus persistence/caching.
+- Metric-interpretation verification requested in dialogue [14]: I concur on both points — R3 promotion unsupported, and no funnel-entry improvement may be claimed (wrong-category first losses 5 → 6/7/6; the win is at final display, shared with RR-078/RR-079).
+
+Next: rubric v1.0 freeze + dated leader snapshots (approved, docs-only), then roadmap R5 with RR-060 in scope.
