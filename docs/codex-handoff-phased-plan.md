@@ -1705,3 +1705,13 @@ Stop. Do not edit `.env.local`, promote flags, freeze the rubric/baseline, start
 - Fixed RR-071 (numeric-spec-conflict guard blocks false exact-model collapse), RR-060 (retailer listing-ID canonical key collapses URL variants of one listing), and RR-072 (unreproducible on current code; pinned by regression) in `lib/productIdentity.ts` + `tests/identityCollapse.test.mjs` (Claude).
 - Fail-first: exactly the two live-captured defects failed before the fix; 8/8 after with preservation matrix. Full suite 847/847 across 123 suites; typecheck/lint/build/eval pass; zero live calls.
 - Register: 72 Fixed / 8 Needs Investigation / 81 total. Next: roadmap R6 (RR-070, RR-076, RR-077, RR-081) — separate approval required.
+
+### Phase R5 corrective adversarial closure (2026-07-12)
+
+- Corrected the superseded handoff statement above: `leaders-v2026-07a` freezes the shared brand-AND-line matcher, while its draft-seeded lists and broad 1.0/7 / constrained 0.33/4 M3 observations remain provisional pending Taylor's human review. The earlier 1.33/7 and 3.0/4 values are void.
+- Filed and Fixed RR-082: complete normalized line-token boundaries prevent `ai`/`Airtok` and `q5`/`Q50` false leader hits while preserving multiword brands and `ONE+` lines.
+- Re-closed RR-060 and RR-071 adversarial boundaries: compact date-like IDs become listing keys only on explicit product-detail paths; SCFM normalizes to CFM so conflicting flow values block inferred identity while equivalent values still merge.
+- Fail-first focused matrix: 17/20 with exactly three intended failures; final focused 20/20; full suite 859/859 across 124 suites; typecheck/build/eval pass; lint 0 errors/3 existing warnings. Zero live calls; `.env.local` unchanged by this closure.
+- Register: 82 total; 73 Fixed, 8 Needs Investigation, 1 Won't Fix. Next remains separately approved R6; human leader-list review is separately queued.
+
+Stop. Do not start R6, run live searches, revise the leader lists, or start Phase 6E without Taylor's separate approval.

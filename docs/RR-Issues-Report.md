@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through RR-078/RR-079 eligibility/type safety repair
+## Compiled for AI Agent Consumption — Phase 0 through Phase R5 corrective closure
 
-**Generated:** 2026-07-11
-**Scope:** All phases from initial measurement harness through the RR-078/RR-079 eligibility/type safety repair
+**Generated:** 2026-07-12
+**Scope:** All phases from initial measurement harness through the Phase R5 corrective closure
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -13,14 +13,14 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 81 |
+| Total Issues | 82 |
 | Critical | 11 |
 | High | 33 |
-| Medium | 32 |
+| Medium | 33 |
 | Low | 5 |
 | Open | 0 |
 | Needs Investigation | 8 |
-| Fixed | 72 |
+| Fixed | 73 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -97,6 +97,7 @@
 | Phase R3 — Strategy-call determinism | 0 |
 | Phase R4 — Constraint-preserving query allocation (deterministic) | 0 |
 | Phase R5 — Identity collapse and listing-id dedupe safety | 0 |
+| Phase R5 — Corrective adversarial closure | 1 |
 | Phase R4 — Live after-sample | 1 |
 | RR-061 image-provenance safety repair | 0 |
 | RR-061 round 4 / RR-080 image micro-phase | 1 |
@@ -1872,6 +1873,8 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 
 **Phase R5 resolution (2026-07-12):** Fixed deterministically. `getCanonicalIdentity()` now derives a retailer listing key when a URL's final path segment is a pure-numeric ID of 6+ digits (`homedepot.com listing 335012888`), so truncated and slugged URL variants of one listing share a canonical ID and collapse in both canonical and exact-model dedupe. Short numeric segments (sizes, model numbers) never qualify, and different listing IDs on the same host stay distinct. The captured B3 pair now collapses; distinct-size/model protection is regression-covered in the same suite. Tests: `tests/identityCollapse.test.mjs` (fail-first: the captured pair did not collapse before the fix).
 
+**Phase R5 corrective closure (2026-07-12):** A blanket exclusion for eight-digit date-shaped final segments prevented legitimate product-detail URLs such as `/p/20260712` and `/p/product-slug/20260712` from sharing their listing identity. The resolver now treats a compact date as a listing ID only when a generic product-detail marker (`p`, `pd`, `product(s)`, `dp`, or `ip`) appears earlier in the path and no editorial/archive marker is present; article/archive paths remain full-path identities. Both directions are regression-covered.
+
 ---
 
 #### RR-061
@@ -2416,6 +2419,8 @@ No new issue ID was opened.
 
 **Phase R5 resolution (2026-07-12):** Fixed deterministically. Root cause: both names share brand `vacmaster` and the size-shaped strong-model token `12gallon`, while the differing peak-HP values (5.5 vs 5) are digit-only tokens the model matcher ignores. `areSameExactModelProduct()` now extracts robust numeric spec values (gallon, hp, qt, psi, cfm, btu, watt, volt, amp, ah, lb — inches deliberately excluded as truncation noise) from both names and refuses the inference collapse paths when any shared unit carries conflicting values; identical canonical IDs still collapse (same listing), one-sided specs never block, and true cross-retailer duplicates with matching specs still collapse. The captured Beast/5-HP pair stays distinct. Tests: `tests/identityCollapse.test.mjs` (fail-first: the pair collapsed before the fix; preservation matrix for retailer duplicates, sparse titles, distinct models, and same-host distinct listings).
 
+**Phase R5 corrective closure (2026-07-12):** SCFM was missing from the robust-unit parser, allowing two titles with the same inferred model but conflicting air-flow values to collapse. `scfm` now normalizes to the existing `cfm` unit. Cross-category tests prove `5.1 SCFM` versus `4.0 SCFM` stays distinct while equivalent `5.1 SCFM`/`5.1 CFM` retailer forms still collapse.
+
 ---
 
 #### RR-072
@@ -2692,6 +2697,26 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 
 **Suggested fix or next action:** Add origin-independent outbound normalization immediately before dispatch, with fail-first tests for wildcard site operators and adjacent/redundant identity phrases. Preserve quoted phrases, legitimate repeated words inside model names, and exact flag-off snapshots where the malformed pattern is absent. Cross-reference RR-076 rather than broadening its editorial-only scope.
 
+---
+
+#### RR-082
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-082 |
+| **Phase** | Phase R5 corrective adversarial closure |
+| **Severity** | Medium |
+| **Title** | Leader line-token matching accepts longer-token prefixes |
+| **Status** | Fixed |
+
+**Description:** The shared `coversLeader()` contract required a whole-token brand but removed only the trailing boundary from a normalized line token. Consequently, `Shark Airtok` satisfied the line `ai`, and `Roborock Q50` satisfied `q5`, inflating leader recall despite the intended brand-AND-line contract.
+
+**Where it occurs:** `coversLeader()` in `scripts/goldBenchmark.mjs`, consumed by `scripts/qualityScorecard.mjs` and the `leaders-v2026-07a` historical fixture scorer.
+
+**Expected:** Brand and line/model phrases match complete normalized token sequences; multiword brands and plus-bearing lines remain valid.
+
+**Resolution:** The matcher now retains both normalized boundaries for every line phrase. Fail-first produced exactly the three intended corrective failures across the combined leader/identity matrix; final focused passed 20/20. Controls cover `Airtok`/`ai`, `Q50`/`q5`, Herman Miller/Aeron, and RYOBI/`ONE+`. The corrected matcher does not change the six R4 fixtures' provisional M3 recall values. Full suite passed 859/859 across 124 suites; typecheck/build/eval passed; lint remained 0 errors/3 existing warnings; zero live calls.
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)
@@ -2707,8 +2732,8 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 - RR-077: Source upgrade prefixes an ambiguous DW brand token to an exact DEWALT model
 - RR-081: AI/rescue queries retain wildcard domains and repeated identity/category tokens
 
-### Fixed (72 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-069, RR-071 through RR-075, RR-078 through RR-080
+### Fixed (73 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-069, RR-071 through RR-075, RR-078 through RR-080, RR-082
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2717,6 +2742,6 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-014 + RR-015** (High) — Leader recall is now measurable (leaders-v2026-07 baseline: broad final mean 1.33/7; constrained 3.0/4) and stability improved to 0.2694/0.1429; both remain open until the frozen targets are met. (RR-060/RR-071/RR-072 were fixed in Phase R5 on 2026-07-12, removing false collapses, duplicate final slots, and the pinned wrong-category rejection.)
+1. **RR-014 + RR-015** (High) — `leaders-v2026-07a` provisionally observes broad final recall at 1.0/7; the constrained 0.33/4 value is informational only. The list and recall baseline remain non-canonical until Taylor's human leader review. Stability improved to 0.2694/0.1429 but remains below target.
 2. **RR-070 + RR-076 + RR-077 + RR-081** (Medium) — R2 showed 588 editorial raw results with zero unique candidates plus malformed AI/rescue query forms; all owned by roadmap R6.
 3. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3 but varied by model, while Tapo appeared raw and died in normalization.

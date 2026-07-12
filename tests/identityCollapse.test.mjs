@@ -171,13 +171,61 @@ describe("Phase R5 identity collapse safety", () => {
     );
     const second = product(
       "Roborock Q5 Max+ Robot Vacuum",
-      "https://blog.example.com/deals/20260712",
+      "https://blog.example.com/reviews/product/20260712",
       { category: "robot vacuum" },
     );
 
     assert.equal(areSameExactModelProduct(first, second), false);
     assert.equal(areSameCanonicalProduct(first, second), false);
     assert.ok(!getCanonicalIdentity(first).canonicalId.includes("listing"));
+    assert.ok(!getCanonicalIdentity(second).canonicalId.includes("listing"));
+  });
+
+  it("preserves date-like numeric ids on explicit product-detail routes", () => {
+    const truncated = product(
+      "Example Robot Vacuum ...",
+      "https://retailer.example/p/20260712",
+      { category: "robot vacuum" },
+    );
+    const slugged = product(
+      "Example Robot Vacuum with Auto-Empty Dock",
+      "https://retailer.example/p/example-robot-vacuum/20260712",
+      { category: "robot vacuum" },
+    );
+
+    assert.equal(areSameCanonicalProduct(truncated, slugged), true);
+    assert.equal(areSameExactModelProduct(truncated, slugged), true);
+    assert.ok(getCanonicalIdentity(truncated).canonicalId.includes("listing"));
+  });
+
+  it("blocks collapse on conflicting SCFM values", () => {
+    const higherFlow = product(
+      "Acme AC100 5.1 SCFM Air Compressor",
+      "https://acme.example/products/ac100-high-flow",
+      { category: "air compressor" },
+    );
+    const lowerFlow = product(
+      "Acme AC100 4.0 SCFM Air Compressor",
+      "https://acme.example/products/ac100-standard",
+      { category: "air compressor" },
+    );
+
+    assert.equal(areSameExactModelProduct(higherFlow, lowerFlow), false);
+  });
+
+  it("preserves collapse on equivalent CFM and SCFM values", () => {
+    const scfm = product(
+      "Acme AC100 5.1 SCFM Air Compressor",
+      "https://acme.example/products/ac100",
+      { category: "air compressor" },
+    );
+    const cfm = product(
+      "Acme AC100 Air Compressor 5.1 CFM",
+      "https://retailer.example/acme-ac100",
+      { category: "air compressor" },
+    );
+
+    assert.equal(areSameExactModelProduct(scfm, cfm), true);
   });
 
   // RR-072 pin: the captured HD0900 rejection no longer reproduces on current

@@ -201,16 +201,24 @@ function retailerListingKey(value: string | null) {
 
   try {
     const parsed = new URL(value);
-    const lastSegment = parsed.pathname.split("/").filter(Boolean).at(-1) || "";
+    const pathSegments = parsed.pathname.split("/").filter(Boolean);
+    const lastSegment = pathSegments.at(-1) || "";
 
     if (!/^\d{6,}$/.test(lastSegment)) {
       return "";
     }
 
-    // Date-shaped segments (20260712) are editorial/archive paths, not
-    // listing ids — two different articles published the same day must not
-    // share an identity key.
-    if (/^(?:19|20)\d{6}$/.test(lastSegment)) {
+    // Compact dates are ambiguous: editorial/archive paths are not listing
+    // ids, while an explicit product-detail route may legitimately use the
+    // same eight digits as its item id.
+    const isDateShaped = /^(?:19|20)\d{6}$/.test(lastSegment);
+    const hasProductDetailMarker = pathSegments
+      .slice(0, -1)
+      .some((segment) => /^(?:p|pd|product|products|dp|ip)$/i.test(segment));
+    const hasEditorialArchiveMarker = pathSegments
+      .slice(0, -1)
+      .some((segment) => /^(?:review|reviews|article|articles|blog|blogs|news|archive|archives|post|posts|story|stories)$/i.test(segment));
+    if (isDateShaped && (!hasProductDetailMarker || hasEditorialArchiveMarker)) {
       return "";
     }
 
@@ -231,6 +239,7 @@ const CONFLICT_SPEC_UNIT_ALIASES: Record<string, string> = {
   amps: "amp",
   btu: "btu",
   cfm: "cfm",
+  scfm: "cfm",
   gal: "gallon",
   gallon: "gallon",
   gallons: "gallon",
@@ -253,7 +262,7 @@ function numericSpecValues(text: string) {
   const values = new Map<string, Set<number>>();
 
   for (const match of text.matchAll(
-    /(\d+(?:\.\d+)?)[\s-]*(?:peak[\s-]*)?(gallons?|gal|hp|quarts?|qt|psi|cfm|btu|watts?|volts?|amps?|ah|lbs?|pounds?)\b/gi,
+    /(\d+(?:\.\d+)?)[\s-]*(?:peak[\s-]*)?(gallons?|gal|hp|quarts?|qt|psi|scfm|cfm|btu|watts?|volts?|amps?|ah|lbs?|pounds?)\b/gi,
   )) {
     const unit = CONFLICT_SPEC_UNIT_ALIASES[(match[2] || "").toLowerCase()];
     const value = Number(match[1]);

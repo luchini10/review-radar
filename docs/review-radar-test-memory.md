@@ -1482,11 +1482,11 @@ Phase 6E authorization follows from this sample.
 - `retailerListingKey()`: a URL whose FINAL path segment is a pure-numeric ID
   of 6+ digits yields `host listing <id>` as the medium-confidence canonical
   key (ahead of the full-path `urlKey`). Never fires on shorter numerics
-  (sizes/models), lettered segments, or DATE-SHAPED segments
-  (`^(19|20)\d{6}$` — two articles published the same day must not share an
-  identity key).
+  (sizes/models) or lettered segments. A DATE-SHAPED segment
+  (`^(19|20)\d{6}$`) requires a generic product-detail path marker and no
+  editorial/archive marker; article/archive paths retain full-path identity.
 - `conflictingNumericSpecs()` + `numericSpecValues()`: unit-aliased extraction
-  (gallon/gal, hp with optional "peak", qt/quart, psi, cfm, btu, watt(s),
+  (gallon/gal, hp with optional "peak", qt/quart, psi, cfm/scfm, btu, watt(s),
   volt(s), amp(s), ah, lb(s)/pound(s)); inches deliberately EXCLUDED
   (truncated retailer titles emit "13. 2 in" noise).
 - **Trust boundary (deliberate):** canonical-ID equality outranks conflicting
@@ -1504,7 +1504,12 @@ Phase 6E authorization follows from this sample.
 fail-first pairs, preservation matrix, cross-category PSI cases, date-segment
 boundary, RR-072 prefilter pin); `tests/leaderSnapshot.test.mjs` pins the
 `coversLeader` brand-AND-line contract (broad tokens like self/ai never count
-without their brand; unbranded line-token titles are a recorded undercount).
+without their brand; line phrases retain both token boundaries; unbranded
+line-token titles are a recorded undercount).
+
+**Corrective fail-first:** Combined leader/identity focused matrix passed
+17/20 before the closure with exactly the whole-token, date-like product ID,
+and SCFM cases failing; final passed 20/20. RR-082 records the measurement bug.
 
 **Known limits (accepted):** spec conflict only reads names/metadata titles,
 not attached spec objects; the listing key requires the ID as the final path

@@ -924,3 +924,11 @@ No production pipeline or API contract changed in Phase 6A.
 - **Phase R5 (RR-060/RR-071/RR-072, always-on):** exact-model collapse refuses inference merges when names state conflicting robust numeric specs (Vacmaster Beast 5.5 vs 5 HP stays distinct; generalization proven cross-category with PSI); canonical identity gains a retailer listing key (host + trailing 6+ digit ID, date-shaped segments excluded) so URL variants of one listing share one final slot (the duplicated Home Depot Roomba 105 collapses); the HD0900 wrong-category rejection is unreproducible on current code and pinned by regression. Trust boundary documented: canonical-ID equality outranks conflicting title specs; the guard governs inference paths only.
 - **Proof:** fail-first on both live-captured defects, then 11/11 focused; leader-contract tests 4/4; full suite 854/854 across 124 suites; typecheck/lint/build/eval green; zero live calls.
 - **State:** register 81 issues — 72 Fixed, 8 Needs Investigation, 1 Won't Fix. Next: roadmap R6 (query hygiene: RR-070/076/077/081), separately approval-gated; the consumer-readiness arc plan follows R6.
+
+## 31. Phase R5 corrective adversarial closure (2026-07-12)
+
+- **Leader matcher (RR-082):** line/model phrases now retain both normalized token boundaries, so `ai` cannot match `Airtok` and `q5` cannot match `Q50`; multiword brands and `ONE+` remain valid. `leaders-v2026-07a` freezes the matcher only—its draft-seeded lists and 1.0/7 / 0.33/4 M3 observations remain provisional until Taylor's human review.
+- **Listing identity:** compact date-like numeric IDs are no longer rejected solely by their value. They become listing keys on explicit generic product-detail paths only when no editorial/archive marker is present; article/archive routes remain full-path identities.
+- **Spec identity:** SCFM normalizes to CFM. Conflicting flow values block inferred exact-model collapse, while equivalent CFM/SCFM values preserve retailer dedupe.
+- **Proof:** combined fail-first 17/20 with exactly three intended failures; final focused 20/20; full suite 859/859 across 124 suites; typecheck/build/eval pass; lint 0 errors/3 existing warnings. Zero live calls and no `.env.local` change.
+- **State:** register 82 issues—73 Fixed, 8 Needs Investigation, 1 Won't Fix. R6 remains separately approval-gated.

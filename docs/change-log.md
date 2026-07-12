@@ -13,6 +13,21 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-12
 
+### Codex - Phase R5 corrective adversarial closure
+
+#### Changed
+
+- Filed and Fixed RR-082: `coversLeader()` now requires complete normalized line/model phrases, closing `ai`→`Airtok` and `q5`→`Q50` prefix matches while preserving multiword brands and plus-bearing lines.
+- Corrected RR-060's date-shaped boundary: an eight-digit value becomes a listing ID only with generic product-detail path context; unmarked article/archive paths stay distinct.
+- Corrected RR-071's unit coverage: SCFM normalizes to CFM so conflicting flow values block inferred identity and equivalent values still merge.
+- Clarified that `leaders-v2026-07a` freezes matching mechanics; its draft-seeded lists and recall observations remain provisional pending Taylor's human review. Ambiguous Vacmaster-domain and generic Shop-Vac mentions are not presented as product-identity proof.
+
+#### Verified
+
+- Combined fail-first: 17/20, exactly three intended failures; focused final: 20/20.
+- Full suite 859/859 across 124 suites; typecheck/build pass; lint 0 errors/3 existing warnings; offline eval no red flags.
+- Live Serper/OpenAI calls: 0; `.env.local` unchanged.
+
 ### Claude - Corrective evidence pass (adversarial review by Codex)
 
 #### Changed

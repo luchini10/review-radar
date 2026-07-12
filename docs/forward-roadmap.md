@@ -9,8 +9,8 @@ forward-plan documents may be created.
 ## Why this roadmap exists
 
 63 issues have been fixed and the product-level numbers are still failing:
-identical searches share zero final products (final-set Jaccard 0), and the
-broad-query baseline surfaced 0 of 7 core market leaders. The audit
+identical searches shared zero final products (final-set Jaccard 0), and the
+then-current broad-query baseline surfaced 0 of 7 core market leaders. The audit
 (`docs/review-radar-search-pipeline-audit.md`, commit be1d9b5) proved the
 primary bottleneck at 0.98 confidence: constraint-aware query allocation and
 requirement semantics. The Phase A ledger (commits ef7bbc1, abf924d) makes
@@ -34,8 +34,10 @@ removing a reason the untrusted data exists, prefer removal.
 Report these at the end of EVERY phase, from the most recent live sample
 (deterministic phases restate the last known values and the expected effect):
 
-1. **Core-leader recall**: how many frozen market leaders appear in the final
-   displayed set (target from the frozen rubric; currently 0/7 broad).
+1. **Core-leader recall**: how many approved market leaders appear in the final
+   displayed set. The draft-seeded `leaders-v2026-07a` list currently yields a
+   provisional M3 broad observation of 1.0/7; it is not canonical until Taylor
+   completes human list review.
 2. **Wrong-type products in the final set**: must be 0.
 3. **Constraint compliance**: fraction of exact matches that verifiably
    satisfy the user's stated constraints.

@@ -1,8 +1,8 @@
 # ReviewRadar Phase 6 Reliability Gauntlet - Master Plan
 
-**Status:** Canonical merged plan; Phases 6A-6C complete; R4 promoted; rubric v1.0 frozen; snapshots corrected to leaders-v2026-07a
+**Status:** Canonical merged plan; Phases 6A-6C complete; R4 promoted; rubric mechanics frozen; provisional leaders-v2026-07a pending human review; R5 corrective closure complete
 **Prepared:** 2026-07-01
-**Execution state:** On 2026-07-12 Taylor promoted `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on` in `.env.local`; `REVIEW_RADAR_PINNED_PLANNING` stays default-off per RR-015 (whose "attribution by elimination" wording was later retracted as overreach — attribution is mixed). The section-7 freeze executed the same day and was corrected the same day after adversarial review: snapshot version `leaders-v2026-07a`, single tested `coversLeader` matching contract shared with `qualityScorecard.mjs`, recomputed baselines broad final 1.0/7 and constrained 0.33/4 (informational — constrained shapes carry no recall target per the scorecard contract), leader lists provisional pending Taylor's human review. Roadmap R5 completed the same day (RR-060/071/072); Phase 6E remains separately approval-gated
+**Execution state:** On 2026-07-12 Taylor promoted `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on` in `.env.local`; `REVIEW_RADAR_PINNED_PLANNING` stays default-off per RR-015 (whose "attribution by elimination" wording was later retracted as overreach — attribution is mixed). The rubric matcher is frozen as `leaders-v2026-07a`; its draft-seeded lists and resulting broad 1.0/7 / constrained 0.33/4 M3 observations remain provisional pending Taylor's human review. R5 and its adversarial closure fixed RR-060/071/072 plus RR-082, including whole-token leader phrases, product-context date-like listing IDs, and SCFM conflicts. Phase 6E remains separately approval-gated
 **Repository:** `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 **Canonical repository path:** `docs/phase-6-reliability-gauntlet-plan.md`
 

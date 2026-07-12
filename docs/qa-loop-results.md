@@ -6422,3 +6422,25 @@ Register: 81 issues — 72 Fixed, 8 Needs Investigation, 1 Won't Fix. Expected N
 tests/leaderSnapshot.test.mjs: 4/4
 live Serper/OpenAI calls: 0
 ```
+
+### 🟧 Codex QA Update — 2026-07-12 (Phase R5 corrective adversarial closure)
+
+**Verdict: COMPLETE after three fail-first boundary corrections. Zero live calls.**
+
+- RR-082: retained both normalized boundaries in `coversLeader`; `Shark Airtok` no longer satisfies `ai`, and `Roborock Q50` no longer satisfies `q5`. Multiword Herman Miller/Aeron and RYOBI `ONE+` controls remain positive.
+- RR-060: replaced the value-only compact-date exclusion with path-context handling. `/reviews/20260712` and nested `/reviews/product/20260712` paths remain non-listing identities, while `/p/20260712` and `/p/product-slug/20260712` share one legitimate listing key.
+- RR-071: normalized SCFM to CFM. Same inferred model plus `5.1` versus `4.0 SCFM` stays distinct; equivalent `5.1 SCFM`/`5.1 CFM` retailer titles still collapse.
+- Measurement governance: the `leaders-v2026-07a` matcher is frozen, but its draft-seeded lists and resulting 1.0/7 broad / 0.33/4 constrained M3 observations remain provisional pending Taylor's human review. Ambiguous provider mentions are labeled honestly.
+
+```text
+combined fail-first: 17/20; exactly 3 intended failures
+combined focused final: 20/20
+full suite: 859/859 across 124 suites
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red flags
+live Serper/OpenAI calls: 0; .env.local unchanged
+```
+
+Register: 82 issues — 73 Fixed, 8 Needs Investigation, 1 Won't Fix. R6 remains separately approval-gated.

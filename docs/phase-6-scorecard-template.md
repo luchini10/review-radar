@@ -25,11 +25,13 @@
 
 ### Amendment (2026-07-12, corrective evidence pass — adversarial review)
 
-- **Snapshot version is now `leaders-v2026-07a`** and the recall baselines
+- **Matcher/mechanics version is now `leaders-v2026-07a`** and the recall values
   above are VOID: they were computed under an unfrozen, inconsistent matching
   rule. Recomputed under the single tested `coversLeader` contract
   (`scripts/goldBenchmark.mjs`, pinned by `tests/leaderSnapshot.test.mjs`):
-  **broad final mean 1.0/7; constrained final mean 0.33/4.**
+  **broad final mean 1.0/7; constrained final mean 0.33/4.** They are
+  provisional M3 observations, not a canonical North-Star baseline, until
+  Taylor approves the draft-seeded leader lists.
 - **Constrained shapes carry NO leader-recall target.** Per
   `scripts/qualityScorecard.mjs`, constrained shapes are judged primarily on
   constraint satisfaction; constrained recall is informational only. Broad
@@ -41,6 +43,9 @@
   flags shared the sample and the RR-061/RR-078/RR-079 always-on repairs
   landed between the compared samples). Claims of "attribution by
   elimination" are retracted (see RR-015 correction).
+- **RR-082 boundary correction:** `coversLeader()` now preserves both token
+  boundaries for line phrases (`ai` cannot match `Airtok`; `q5` cannot match
+  `Q50`). The six provisional M3 recall observations are unchanged.
 **Phase 6 source of truth:** `docs/phase-6-reliability-gauntlet-plan.md`. This scorecard implements the master plan and must not override it.
 
 This document is the contract for the existing ReviewRadar measurement tools and any approved extensions to them. It does not create a second scoring system. Where a current tool cannot produce the required evidence, the metric is `NotScored` and the gap is listed for approval; no missing field is inferred. Where a metric does not apply to the query shape, it is `NotApplicable`, not missing evidence.

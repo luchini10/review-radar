@@ -15,22 +15,25 @@ Generated: 2026-07-12
 2. **Rubric v1.0 + `leaders-v2026-07a`.** The single tested matching contract
    is `coversLeader()` in `scripts/goldBenchmark.mjs` (brand AND line),
    imported by `scripts/qualityScorecard.mjs`, pinned by
-   `tests/leaderSnapshot.test.mjs`. Corrected baselines: broad final leader
-   recall mean **1.0/7**; constrained **0.33/4 — informational only** (no
+   `tests/leaderSnapshot.test.mjs`; line phrases require complete token
+   boundaries. Provisional M3 observations: broad final leader recall mean
+   **1.0/7**; constrained **0.33/4 — informational only** (no
    constrained recall target; constraint satisfaction is the constrained
-   shape's primary metric). Leader LISTS are provisional pending Taylor's
-   human review; per-leader captured-presence citations are in
+   shape's primary metric). Leader LISTS and recall values are provisional
+   pending Taylor's human review; captured mentions and their limitations are in
    `docs/phase-6-market-leader-evaluation.md`.
-3. **Phase R5 complete.** RR-060, RR-071, RR-072 are Fixed
+3. **Phase R5 corrective closure complete.** RR-060, RR-071, RR-072 are Fixed
    (`lib/productIdentity.ts` + `tests/identityCollapse.test.mjs`):
    spec-conflict guard (generalization proven cross-category with PSI),
-   retailer listing-ID canonical key (date-shaped segments excluded), RR-072
-   pinned as unreproducible. Trust boundary documented in test memory.
+   SCFM/CFM equivalence, retailer listing-ID canonical key (date-shaped ids
+   require product-route context), RR-072 pinned as unreproducible. RR-082 is
+   Fixed for leader line-token prefix false positives. Trust boundaries are
+   documented in test memory.
 
-Verification at completion: focused 11/11 + 4/4; full suite **854/854 across
-124 suites**; typecheck, lint (0 errors, 3 existing warnings), production
-build, and offline eval green. Zero live calls. Register: 81 issues —
-**72 Fixed, 8 Needs Investigation, 1 Won't Fix, 0 Open**.
+Verification at completion: corrective fail-first 17/20, focused final 20/20;
+full suite **859/859 across 124 suites**; typecheck, lint (0 errors, 3 existing warnings), production
+build, and offline eval green. Zero live calls. Register: 82 issues —
+**73 Fixed, 8 Needs Investigation, 1 Won't Fix, 0 Open** (82 total).
 
 ## Required next task — Roadmap R6 (separate explicit approval required)
 

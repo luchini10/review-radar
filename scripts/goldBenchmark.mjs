@@ -34,7 +34,7 @@ export function coversLeader(name, item) {
   const brandTokens = normalizeLeaderText(item.brand).trim().split(" ");
   if (!brandTokens.every((t) => hay.includes(` ${t} `))) return false;
   if (!item.lines || item.lines.length === 0) return true;
-  return item.lines.some((l) => hay.includes(normalizeLeaderText(l).trimEnd()));
+  return item.lines.some((l) => hay.includes(normalizeLeaderText(l)));
 }
 
 export const GOLD = [

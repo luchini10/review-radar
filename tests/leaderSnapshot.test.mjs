@@ -40,6 +40,37 @@ describe("leader snapshot matching contract (leaders-v2026-07a)", () => {
     );
   });
 
+  it("requires complete line-token boundaries", () => {
+    const shark = conRobot.coreLeaders.find((l) => l.brand === "shark");
+    const roborock = conRobot.coreLeaders.find((l) => l.brand === "roborock");
+
+    assert.equal(
+      coversLeader("Shark Airtok Robot Vacuum", shark),
+      false,
+    );
+    assert.equal(
+      coversLeader("Roborock Q50 Robot Vacuum", roborock),
+      false,
+    );
+  });
+
+  it("preserves multiword brands and plus-bearing line tokens", () => {
+    assert.equal(
+      coversLeader(
+        "Herman Miller Aeron Ergonomic Office Chair",
+        { brand: "herman miller", lines: ["aeron"] },
+      ),
+      true,
+    );
+    assert.equal(
+      coversLeader(
+        "RYOBI ONE+ HP 18V Cordless Drill",
+        { brand: "ryobi", lines: ["one+"] },
+      ),
+      true,
+    );
+  });
+
   it("counts brand-only leaders on the brand alone", () => {
     const dewalt = shopVac.coreLeaders.find((l) => l.brand === "dewalt");
     const shopVacBrand = shopVac.coreLeaders.find((l) => l.brand === "shop vac");

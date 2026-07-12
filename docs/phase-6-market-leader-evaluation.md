@@ -1,6 +1,8 @@
 # Market-Leader Evaluation Method and Dated Leader Snapshots
 
-**Snapshot version:** `leaders-v2026-07a` (corrective re-freeze 2026-07-12)
+**Mechanics version:** `leaders-v2026-07a` (corrective re-freeze 2026-07-12)
+**Evidence status:** matching/scoring mechanics frozen; leader lists and recall
+observations provisional pending Taylor's human review
 **Supersedes:** `leaders-v2026-07` (same day) — see section 5. Results are
 never compared across snapshot versions.
 **Owner:** Phase 6 freeze-point deliverable per
@@ -18,7 +20,8 @@ leader defines no lines, or at least one line/model token)**. This is the
 implementation now used by `scripts/qualityScorecard.mjs` and by snapshot
 scoring, and pinned by `tests/leaderSnapshot.test.mjs` (broad tokens such as
 `self`/`ai` can never count without their brand; a Roborock Q10 does not
-cover a `q5`-line leader).
+cover a `q5`-line leader). Both ends of every normalized phrase are retained,
+so `ai` cannot match `Airtok` and `q5` cannot match `Q50`.
 
 **Known undercount (accepted):** retailer titles sometimes omit the brand
 (real capture: `14 Gallon 6.0 Peak HP NXT Wet Dry Vac HD1400`, a RIDGID). The
@@ -33,22 +36,23 @@ cache-cold runs of a shape, never the best run.
 
 The lists are seeded from `scripts/goldBenchmark.mjs`, which is explicitly
 marked **"DRAFT for human review"** and states the lists must reflect the
-owner's judgment of the market. The saved R2/R4 ledgers establish that every
-listed leader **appears in captured provider results** (citations below) —
-that is presence evidence, not proof of July-2026 market leadership.
+owner's judgment of the market. The saved R2/R4 ledgers contain the captured
+mentions below, but some mentions do not establish product identity and none
+prove July-2026 market leadership.
 Accordingly, the LISTS are **provisional pending Taylor's human review**; the
-matching contract and the recomputed baseline numbers are frozen mechanics.
+matching contract is frozen while the recomputed recall values remain
+provisional M3 observations because changing the list changes the denominator.
 
 ### Shape A — broad `shop vac` (7 leaders)
 
-| Leader | Line tokens | Captured-presence citation (fixture :: title) |
+| Leader | Line tokens | Captured mention (fixture :: title) |
 |---|---|---|
 | RIDGID | nxt, wd, hd | shop-vac.ledger-run1 :: "14 Gallon 6.0 Peak HP NXT Wet Dry Vac HD1400 \| RIDGID Tools" |
-| Vacmaster | — | shop-vac.ledger-run1 :: "Armor All 2.5-Gallon* 2 Peak HP† Wet/Dry Vac - Vacmaster.com" |
+| Vacmaster | — | shop-vac.ledger-run1 :: "Armor All 2.5-Gallon* 2 Peak HP† Wet/Dry Vac - Vacmaster.com" — domain mention only; not validated Vacmaster product identity |
 | CRAFTSMAN | — | shop-vac.ledger-run1 :: "Watch Craftsman Shop Vac UNBOXING! on Amazon Live" |
 | DeWALT | — | shop-vac.ledger-run1 :: "DeWalt Stealthsonic Quiet 6 Gallon Wet/Dry Shop Vacuum DXV06PL-QT" |
 | Stanley | — | shop-vac.ledger-run1 :: "Stanley Wet/Dry Vacuum SL18116P" |
-| Shop-Vac (brand) | — | shop-vac.ledger-run1 :: "Shop vac not working right : r/Tools - Reddit" |
+| Shop-Vac (brand) | — | shop-vac.ledger-run1 :: "Shop vac not working right : r/Tools - Reddit" — generic category phrase; not validated Shop-Vac brand identity |
 | Milwaukee | — | shop-vac.ledger-run1 :: "Anyone regret going with the 2.5 gallon Milwaukee Vacuum? - Reddit" |
 
 ### Shape B — constrained `robot vacuum / under $300 / self-emptying` (4 leaders)
@@ -67,7 +71,7 @@ NOT counted as the listed leaders — which is exactly why constrained recall
 below is low and why the lists need human review before constrained recall
 can carry meaning.
 
-## 3. Baseline recall (recomputed 2026-07-12 under `coversLeader`, M3, six R4 after-sample fixtures)
+## 3. Provisional recall observation (recomputed 2026-07-12 under `coversLeader`, M3, six R4 after-sample fixtures)
 
 | Run | Final recall |
 |---|---|
@@ -84,6 +88,10 @@ Context recorded with the baseline: shop-vac run1 displayed a single final
 card; runs 2–3 were dominated by near-duplicate Bissell variants (RR-060/R5
 territory, fixed 2026-07-12); the constrained shape's low number reflects
 stale draft line lists at least as much as pipeline recall.
+
+These values are reproducible under the frozen matcher but are not a canonical
+North-Star baseline until Taylor approves the leader lists. The later
+whole-token correction for RR-082 does not change any of the six values.
 
 ## 4. v1.0 targets (amended)
 
