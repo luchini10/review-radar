@@ -59,6 +59,32 @@ describe("extractSeedProductNames", () => {
     assert.ok(!seeds.some((seed) => /^gas grills?$/i.test(seed)));
   });
 
+  it("rejects category headings and prose fragments captured in live fixtures", () => {
+    const categorySeeds = extractSeedProductNames(
+      [{ title: "Robotic Vacuums" }],
+      6,
+      "robot vacuum",
+    );
+    const proseSeeds = extractSeedProductNames(
+      [{ snippet: "Vacuum Although there are many choices." }],
+      6,
+      "shop vac",
+    );
+
+    assert.deepEqual(categorySeeds, []);
+    assert.deepEqual(proseSeeds, []);
+  });
+
+  it("rejects a run that concatenates multiple discrete products", () => {
+    const seeds = extractSeedProductNames(
+      [{ title: "Top picks", snippet: "Eufy C10 T2292 Eureka NERE10SW" }],
+      6,
+      "robot vacuum",
+    );
+
+    assert.ok(!seeds.includes("Eufy C10 T2292 Eureka NERE10SW"));
+  });
+
   it("accepts brand-led names with no model number (the coverage fix)", () => {
     const seeds = extractSeedProductNames(
       [

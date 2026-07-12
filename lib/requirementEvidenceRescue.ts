@@ -1399,7 +1399,8 @@ function sourceUpgradeBrand(
   if (
     metadataBrand &&
     !isSourceOrRetailerLabel(metadataBrand) &&
-    !brandAppearsOnlyAsMeasurement(productName, metadataBrand)
+    !brandAppearsOnlyAsMeasurement(productName, metadataBrand) &&
+    brandEvidenceMatches(productName, metadataBrand)
   ) {
     return metadataBrand;
   }

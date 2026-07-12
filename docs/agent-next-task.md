@@ -29,32 +29,32 @@ Generated: 2026-07-12
    require product-route context), RR-072 pinned as unreproducible. RR-082 is
    Fixed for leader line-token prefix false positives. Trust boundaries are
    documented in test memory.
+4. **Phase R6 complete.** RR-070/RR-077 source-upgrade metadata brands now
+   require title/alias compatibility; RR-076 editorial-seed spend is reduced
+   to zero after 588 raw results produced zero unique/final candidates, with
+   malformed seed extraction still tightened; RR-081 query hygiene runs at
+   the shared Serper boundary before dispatch/cache/body serialization.
 
-Verification at completion: corrective fail-first 17/20, focused final 20/20;
-full suite **859/859 across 124 suites**; typecheck, lint (0 errors, 3 existing warnings), production
-build, and offline eval green. Zero live calls. Register: 82 issues —
-**73 Fixed, 8 Needs Investigation, 1 Won't Fix, 0 Open** (82 total).
+R6 verification: focused final **148/148**; full suite **868/868 across 125
+suites**; typecheck, lint (0 errors, 3 existing warnings), production build,
+and offline eval green. Zero live calls. Register: 82 issues — **77 Fixed, 4
+Needs Investigation, 1 Won't Fix, 0 Open** (82 total).
 
-## Required next task — Roadmap R6 (separate explicit approval required)
+## Required next decision — no phase is currently approved
 
-**R6 — source-brand trust + query hygiene (zero live calls):**
-RR-070 (metadata brand must be compatible with the product title or a
-recognized alias — no `Bose ILIFE`), RR-077 (no ambiguous abbreviation
-prefixed to an exact model — no `DW DEWALT`), RR-076 (editorial seeds must
-resemble one discrete product/model; request-local logical dedupe before
-dispatch — R2 evidence: 588 seed results, zero unique candidates), RR-081
-(no wildcard `site:*.com` domains or repeated identity/category tokens in
-AI/rescue queries). Fail-first from the saved ledger evidence; preserve all
-trust gates; standard checklist; stop after reporting.
+Taylor must choose and explicitly approve the next scope. The queued decisions
+are:
 
-Separately queued for Taylor (no agent may start them unprompted):
-- Human review of the provisional leader lists (goldBenchmark is explicitly
-  DRAFT; the constrained line lists predate 2026 models).
-- The consumer-readiness arc plan (persistence/speed/cost/ops) after R6.
+1. Human review of the provisional leader lists (`goldBenchmark` is explicitly
+   DRAFT; the constrained line lists predate 2026 models).
+2. The consumer-readiness arc plan (persistence/speed/cost/ops).
+3. A separate detailed R7 architecture-consolidation plan. R7 itself remains
+   unauthorized; its roadmap gate needs an evidence-based North-Star review,
+   and R6 added no new live sample.
 
 ## Safety boundary
 
-Do not start R6, run live searches, modify `.env.local` further, alter the
+Do not start R7 or another phase, run live searches, modify `.env.local` further, alter the
 frozen rubric/snapshot versions (new versions require corrective commits),
 start Phase 6E, or commit live fixtures / pre-existing untracked artifacts
 without Taylor's separate explicit approval.

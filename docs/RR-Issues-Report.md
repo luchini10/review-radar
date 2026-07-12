@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase R5 corrective closure
+## Compiled for AI Agent Consumption — Phase 0 through Phase R6
 
 **Generated:** 2026-07-12
-**Scope:** All phases from initial measurement harness through the Phase R5 corrective closure
+**Scope:** All phases from initial measurement harness through Phase R6
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -19,8 +19,8 @@
 | Medium | 33 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 8 |
-| Fixed | 73 |
+| Needs Investigation | 4 |
+| Fixed | 77 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -98,6 +98,7 @@
 | Phase R4 — Constraint-preserving query allocation (deterministic) | 0 |
 | Phase R5 — Identity collapse and listing-id dedupe safety | 0 |
 | Phase R5 — Corrective adversarial closure | 1 |
+| Phase R6 — Source-brand trust + query hygiene | 0 |
 | Phase R4 — Live after-sample | 1 |
 | RR-061 image-provenance safety repair | 0 |
 | RR-061 round 4 / RR-080 image micro-phase | 1 |
@@ -2375,7 +2376,7 @@ No new issue ID was opened.
 | **Phase** | Phase 6D post-RR-061 restart |
 | **Severity** | Medium |
 | **Title** | Unrelated provider brand metadata can contaminate source-upgrade queries |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** Constrained robot-vacuum B1 produced an `ILIFE A12 Pro` candidate whose Serper-derived metadata brand was `Bose`, sourced from an AliExpress product URL. Source upgrade trusted that metadata brand and constructed `Bose ILIFE A12 Pro` instead of an ILIFE-based query. Both primary and fallback searches returned zero results, so no evidence attached.
 
@@ -2388,6 +2389,8 @@ No new issue ID was opened.
 **Actual:** Unrelated metadata brand `Bose` overrode the title brand and made both bounded source-upgrade searches ineffective.
 
 **Current status:** Needs Investigation. This did not attach unsafe evidence and was not the Phase 6 stop trigger, but it is a generalized query-identity/coverage defect. Diagnose the provenance of the incorrect brand and require metadata/title agreement or an equivalent reliability check before using metadata brand in source-upgrade query construction. Do not fix it inside the stopped measurement phase.
+
+**Phase R6 resolution (2026-07-12):** Fixed deterministically. Source upgrade now accepts metadata brand only when the source-derived product title supports that brand or one of its recognized aliases. Conflicting `Bose` metadata no longer overrides `ILIFE A12 Pro`; the same compatibility rule rejects ambiguous `DW` and falls back to title-derived identity. Exact title agreement, unknown brands explicitly present in the title, recognized aliases such as DeWalt `20V MAX`, and the existing HP measurement/brand boundary remain supported. Tests: `tests/sourceQualityUpgrade.test.mjs`.
 
 ---
 
@@ -2543,7 +2546,7 @@ No new issue ID was opened.
 | **Phase** | Phase A search-observability audit filing |
 | **Severity** | Medium |
 | **Title** | Editorial seed extraction emits malformed and non-product Shopping queries |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** A conservative audit of 145 saved editorial seeds classified at least 35 (24.1%) as category phrases, article fragments, or merged multi-product names instead of one discrete product. Current examples include `Robotic Vacuums`, `Vacuum Although`, and `Eufy C10 T2292 Eureka NERE10SW`.
 
@@ -2559,6 +2562,8 @@ No new issue ID was opened.
 
 **Suggested fix or next action:** Do not prune yet. First measure raw, unique eligible, and final contribution per seed; then add generalized discrete-model extraction controls with recall tests.
 
+**Phase R6 resolution (2026-07-12):** Fixed deterministically and budget-reduced from measured contribution. The extractor rejects category-only morphological variants, prose connectors, and runs that contain a new proper-name boundary between multiple strong model tokens, while preserving genuine brand-led/model identities. More importantly, R2's request-scoped ledger established 588 raw editorial-seed results with zero unique or final candidates, so the editorial evidence/seed call budget is now zero; proposed queries remain registered and explicitly culled for observability. This removes the waste rather than relying only on a more elaborate parser. Tests: `tests/seedProductNames.test.mjs`; no live call ran.
+
 ---
 
 #### RR-077
@@ -2569,7 +2574,7 @@ No new issue ID was opened.
 | **Phase** | Phase A search-observability audit filing |
 | **Severity** | Medium |
 | **Title** | Source upgrade prefixes an ambiguous DW brand token to an exact DEWALT model |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** Source upgrade constructs `DW DEWALT DXV09P` and fallback `DW DEWALT DXV09P shop vac` even though the product identity already contains the exact DEWALT model string. The redundant prefix reduces query precision and is a separate title/metadata reconciliation case from RR-070's Bose/ILIFE conflict.
 
@@ -2584,6 +2589,8 @@ No new issue ID was opened.
 **Current status:** Needs Investigation. The defect is documented in `docs/review-radar-search-pipeline-audit.md` sections 11-12. RR-070 remains the canonical unrelated-brand conflict; Phase A does not change either behavior.
 
 **Suggested fix or next action:** After Phase A, diagnose brand provenance and add generalized abbreviation/full-brand compatibility tests before changing source-upgrade query construction.
+
+**Phase R6 resolution (2026-07-12):** Fixed by the shared metadata/title compatibility rule described in RR-070. `DW` is absent from the full-brand DEWALT title, so it is not trusted; the existing title-derived brand and exact `DXV09P` model produce `DeWalt DXV09P` and its category-qualified fallback. This is not a DeWalt-specific rewrite: incompatible abbreviations and unrelated metadata brands are rejected for every category, while recognized aliases remain valid. Tests: `tests/sourceQualityUpgrade.test.mjs`.
 
 ---
 
@@ -2685,7 +2692,7 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 | **Phase** | Phase R4 live after-sample |
 | **Severity** | Medium |
 | **Title** | AI and rescue query construction preserves wildcard domains and repeated identity/category tokens |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** The six-run R4 after-sample retained malformed or redundant query text after plan assembly. Examples include culled `site:*.com robot vacuum ...` strategy queries, culled and dispatched `eufy eufy RoboVac ...` queries, and dispatched rescue queries ending in `robot vacuum robot vacuum`. These are distinct from RR-076's editorial-seed defect because they originate in `ai_discovery_strategy`, `ai_gap_check`, `requirement_fact_rescue`, and `rubric_fact_rescue`.
 
@@ -2696,6 +2703,8 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 **Expected:** Provider-bound queries contain a valid concrete domain when site-scoped and include each normalized brand/category identity once.
 
 **Suggested fix or next action:** Add origin-independent outbound normalization immediately before dispatch, with fail-first tests for wildcard site operators and adjacent/redundant identity phrases. Preserve quoted phrases, legitimate repeated words inside model names, and exact flag-off snapshots where the malformed pattern is absent. Cross-reference RR-076 rather than broadening its editorial-only scope.
+
+**Phase R6 resolution (2026-07-12):** Fixed at the single provider boundary. `sanitizeSerperQuery()` removes wildcard `site:*` operators and collapses adjacent repeated generated phrases before query registration, cache-key creation, request-body serialization, and every Serper vertical call. Quoted phrases, concrete site operators, and capitalized repeated product/model words remain unchanged. Equivalent raw queries now share the normalized cache key, so only one physical request occurs; the exact body is pinned in `tests/searchObservabilityLedger.test.mjs`.
 
 ---
 
@@ -2722,18 +2731,14 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (8 issues)
+### Needs Investigation (4 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-- RR-070: Unrelated provider brand metadata can contaminate source-upgrade queries
-- RR-076: Editorial seed extraction emits malformed and non-product Shopping queries
-- RR-077: Source upgrade prefixes an ambiguous DW brand token to an exact DEWALT model
-- RR-081: AI/rescue queries retain wildcard domains and repeated identity/category tokens
 
-### Fixed (73 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-069, RR-071 through RR-075, RR-078 through RR-080, RR-082
+### Fixed (77 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-082 except RR-014, RR-015, RR-024, RR-037, and RR-045
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2743,5 +2748,4 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
 1. **RR-014 + RR-015** (High) — `leaders-v2026-07a` provisionally observes broad final recall at 1.0/7; the constrained 0.33/4 value is informational only. The list and recall baseline remain non-canonical until Taylor's human leader review. Stability improved to 0.2694/0.1429 but remains below target.
-2. **RR-070 + RR-076 + RR-077 + RR-081** (Medium) — R2 showed 588 editorial raw results with zero unique candidates plus malformed AI/rescue query forms; all owned by roadmap R6.
-3. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3 but varied by model, while Tapo appeared raw and died in normalization.
+2. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3 but varied by model, while Tapo appeared raw and died in normalization.

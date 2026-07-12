@@ -6444,3 +6444,23 @@ live Serper/OpenAI calls: 0; .env.local unchanged
 ```
 
 Register: 82 issues — 73 Fixed, 8 Needs Investigation, 1 Won't Fix. R6 remains separately approval-gated.
+
+### 🟧 Codex QA Update — 2026-07-12 (Phase R6 source-brand trust + query hygiene)
+
+**Verdict: COMPLETE. RR-070/RR-076/RR-077/RR-081 are Fixed. Zero live calls.**
+
+- Source-upgrade metadata brand is trusted only when the source-derived title carries that brand or a recognized alias. `Bose ILIFE` and `DW DEWALT` fail first; exact title agreement, DeWalt `20V MAX`, and HP controls remain green.
+- Editorial extraction rejects the three saved malformed shapes. R2's contribution ledger (588 raw seed results, zero unique/final candidates) triggers the roadmap's cheaper branch: editorial evidence/seed dispatch budget is zero, while every proposed query remains observable as a cull.
+- Origin-independent sanitation runs immediately inside the shared Serper fetch boundary. Wildcard `site:*` and adjacent duplicated generated phrases are removed before query registration, cache-key creation, and exact JSON body serialization. Concrete site operators, quotes, and `Bora Bora`-style names are preserved; normalization-equivalent calls share one physical request.
+
+```text
+focused R6 tests: 148/148
+npm test: 868/868 across 125 suites
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red flags
+live Serper/OpenAI calls: 0; .env.local unchanged
+```
+
+North Stars are not remeasured without a live batch: provisional M3 broad leader recall remains 1.0/7; latest final wrong-type count remains 0/27; scoreable constrained exact compliance remains 1/1; pool/final pairwise Jaccard remains 0.2694/0.1429. Expected R6 effect is cleaner evidence/constraint paths and lower paid-call waste. Register: 82 total — 77 Fixed, 4 Needs Investigation, 1 Won't Fix. No next phase is authorized.

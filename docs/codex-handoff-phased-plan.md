@@ -1715,3 +1715,13 @@ Stop. Do not edit `.env.local`, promote flags, freeze the rubric/baseline, start
 - Register: 82 total; 73 Fixed, 8 Needs Investigation, 1 Won't Fix. Next remains separately approved R6; human leader-list review is separately queued.
 
 Stop. Do not start R6, run live searches, revise the leader lists, or start Phase 6E without Taylor's separate approval.
+
+### Phase R6 completion record (2026-07-12)
+
+- RR-070/RR-077 Fixed: `sourceUpgradeBrand()` requires metadata/title or recognized-alias compatibility; incompatible provider labels no longer prefix exact models.
+- RR-076 Fixed: seed parsing rejects the saved category/prose/multi-product shapes. R2's 588→0 contribution result reduces the editorial evidence/seed call budget to zero; culls remain ledger-visible.
+- RR-081 Fixed: shared provider-bound sanitation removes wildcard site operators and adjacent repeated generated phrases before dispatch/cache/body creation, with preservation coverage for concrete sites, quotes, and repeated proper names.
+- Verification: focused 148/148; full 868/868 across 125 suites; typecheck/build/eval pass; lint 0 errors/3 existing warnings; zero live calls; `.env.local` unchanged.
+- Register: 82 total; 77 Fixed, 4 Needs Investigation, 1 Won't Fix. Latest live North Stars are unchanged because R6 was deterministic-only.
+
+Stop. No next phase is approved. Human leader-list review, the consumer-readiness arc plan, and a detailed R7 plan each require Taylor's separate decision; R7 execution and all live spend remain unauthorized.

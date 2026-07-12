@@ -137,6 +137,44 @@ describe("buildSourceUpgradeShoppingQuery", () => {
     assert.equal(query, "DEWALT DXV10SB");
   });
 
+  it("rejects a metadata brand that conflicts with the product title", () => {
+    const query = buildSourceUpgradeShoppingQuery(
+      {
+        name: "ILIFE A12 Pro Robot Vacuum and Mop Combo",
+        metadata: { brand: { value: "Bose" } },
+      },
+      "robot vacuum",
+    );
+
+    assert.equal(query, "ILIFE A12 Pro");
+    assert.ok(!query.includes("Bose"));
+  });
+
+  it("uses the title brand instead of prefixing an incompatible abbreviation", () => {
+    const query = buildSourceUpgradeShoppingQuery(
+      {
+        name: "DEWALT 9 Gallon Wet/Dry Vacuum DXV09P",
+        metadata: { brand: { value: "DW" } },
+      },
+      "shop vac",
+    );
+
+    assert.equal(query, "DeWalt DXV09P");
+    assert.ok(!query.startsWith("DW "));
+  });
+
+  it("accepts metadata brands supported by a recognized title alias", () => {
+    const query = buildSourceUpgradeShoppingQuery(
+      {
+        name: "20V MAX XR Cordless Drill DCD800B",
+        metadata: { brand: { value: "DEWALT" } },
+      },
+      "cordless drill",
+    );
+
+    assert.equal(query, "DEWALT DCD800B");
+  });
+
   it("does not trust horsepower HP metadata as the product brand", () => {
     const query = buildSourceUpgradeShoppingQuery(
       {

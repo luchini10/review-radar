@@ -13,6 +13,7 @@ import { extractStructuredRequirements } from "../lib/requirementExtraction.ts";
 import { validateProductImageCandidate } from "../lib/productImageResolver.ts";
 import { generateSearchPlan } from "../lib/searchQueryExpansion.ts";
 import { createRecommendationPostHandler } from "../app/api/recommendations/route.ts";
+import { clearCacheForTests } from "../lib/cache.ts";
 
 function buildRawCandidate(overrides = {}) {
   return {
@@ -278,6 +279,50 @@ describe("Serper coverage improvements", () => {
       } else {
         process.env.SERPER_API_KEY = originalKey;
       }
+    }
+  });
+
+  it("spends zero calls on editorial seeds after their measured zero contribution", async () => {
+    const originalKey = process.env.SERPER_API_KEY;
+    const originalFetch = global.fetch;
+    const outboundQueries = [];
+
+    clearCacheForTests();
+    process.env.SERPER_API_KEY = "test-serper-key";
+    global.fetch = async (_url, init) => {
+      const body = JSON.parse(init.body);
+      outboundQueries.push(body.q);
+      return new Response(
+        JSON.stringify({
+          organic: [
+            {
+              title: "The best air purifiers",
+              link: "https://www.wirecutter.com/reviews/best-air-purifier/",
+              snippet: "Our top pick is the Coway Airmega 250.",
+            },
+          ],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    };
+
+    try {
+      const input = { query: "air purifier for smoke under $900" };
+      const requestWithRequirements = {
+        ...input,
+        extractedRequirements: extractStructuredRequirements(input),
+      };
+      const plan = generateSearchPlan(requestWithRequirements);
+      const result = await searchSerperForProducts(plan, requestWithRequirements);
+
+      assert.equal(result.stats.seedSearchesRun, 0);
+      assert.deepEqual(result.stats.seedProductNames, []);
+      assert.ok(!outboundQueries.includes("Coway Airmega 250"));
+    } finally {
+      clearCacheForTests();
+      global.fetch = originalFetch;
+      if (originalKey === undefined) delete process.env.SERPER_API_KEY;
+      else process.env.SERPER_API_KEY = originalKey;
     }
   });
 });

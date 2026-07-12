@@ -1567,12 +1567,73 @@ function defaultSearchQueryContext(
   };
 }
 
+function normalizedQueryToken(token: string) {
+  return token.toLowerCase();
+}
+
+function collapseRepeatedGeneratedTokens(tokens: string[]) {
+  const collapsed: string[] = [];
+
+  for (const [tokenIndex, token] of tokens.entries()) {
+    collapsed.push(token);
+
+    // Collapse duplicated multi-token phrases such as
+    // "robot vacuum robot vacuum". A quoted phrase is one opaque token, so
+    // wording inside quotes is never rewritten.
+    for (let size = Math.floor(collapsed.length / 2); size >= 2; size -= 1) {
+      const firstStart = collapsed.length - size * 2;
+      const secondStart = collapsed.length - size;
+      const repeatedPhrase = collapsed.slice(firstStart, secondStart);
+      const repeats = collapsed
+        .slice(firstStart, secondStart)
+        .every(
+          (value, index) =>
+            normalizedQueryToken(value) ===
+            normalizedQueryToken(collapsed[secondStart + index]),
+        );
+
+      if (
+        repeats &&
+        repeatedPhrase.every((value) => /^[a-z][a-z0-9+.-]*$/.test(value))
+      ) {
+        collapsed.splice(secondStart, size);
+        break;
+      }
+    }
+
+    // AI-generated duplicate brands in the captured failures are lowercase
+    // ("eufy eufy"). Restrict the one-token rule to lowercase words so valid
+    // repeated proper names/model words such as "Bora Bora" remain intact.
+    if (
+      collapsed.length >= 2 &&
+      /^[a-z][a-z0-9+.-]*$/.test(collapsed.at(-1) || "") &&
+      collapsed.at(-1) === collapsed.at(-2) &&
+      /^[A-Z0-9]/.test(tokens[tokenIndex + 1] || "")
+    ) {
+      collapsed.pop();
+    }
+  }
+
+  return collapsed;
+}
+
+export function sanitizeSerperQuery(query: string) {
+  const withoutWildcardSites = query.replace(
+    /(?:^|\s)site:\*(?:\.[a-z0-9-]+)*(?=\s|$)/gi,
+    " ",
+  );
+  const tokens = withoutWildcardSites.match(/"[^"]*"|\S+/g) || [];
+
+  return collapseRepeatedGeneratedTokens(tokens).join(" ").trim();
+}
+
 async function fetchSerper(
   params: Record<string, string>,
   context?: SearchQueryContext,
 ): Promise<SerperFetchResult | null> {
   const apiKey = process.env.SERPER_API_KEY;
-  const query = params.q || params.query;
+  const originalQuery = params.q || params.query;
+  const query = sanitizeSerperQuery(originalQuery || "");
   const searchType = params.searchType || "search";
   const endpoint = serperEndpointForSearchType(searchType);
   const fallbackEndpoint = serperEndpointForSearchType("search");
@@ -1581,7 +1642,8 @@ async function fetchSerper(
     return null;
   }
 
-  const queryContext = context || defaultSearchQueryContext(searchType, query);
+  const queryContext =
+    context || defaultSearchQueryContext(searchType, originalQuery || query);
   const queryId = ensureDispatchedQuery(
     queryContext,
     query,
@@ -2942,6 +3004,7 @@ const SEED_NAME_STOPWORDS = new Set([
   "sale", "today", "now", "here", "makes", "make", "your", "you", "their", "out",
   "from", "list", "ranked", "rated", "rating", "buying", "good", "great", "love",
   "tried", "use", "used", "than", "but", "all", "some", "which", "these", "those",
+  "although", "however", "while", "because", "whether",
 ]);
 
 function trimSeedToken(token: string) {
@@ -3030,17 +3093,26 @@ function depluralizeWord(word: string) {
 // A run that is just the searched category ("Robot Vacuum" for a robot vacuum
 // search, "Gas Grills" for a gas grill search) is the category, not a product.
 function isCategorySubsetRun(run: string[], category: string) {
-  const catWords = new Set(
-    normalizeSeedWords((category || "").split(/\s+/)).map(depluralizeWord),
-  );
+  const catWords =
+    normalizeSeedWords((category || "").split(/\s+/)).map(depluralizeWord);
 
-  if (catWords.size === 0) {
+  if (catWords.length === 0) {
     return false;
   }
 
   const runWords = normalizeSeedWords(run).map(depluralizeWord);
 
-  return runWords.length > 0 && runWords.every((word) => catWords.has(word));
+  const isCategoryWordForm = (word: string, categoryWord: string) =>
+    word === categoryWord ||
+    (categoryWord.length >= 4 && word === `${categoryWord}ic`) ||
+    (word.length >= 4 && categoryWord === `${word}ic`);
+
+  return (
+    runWords.length > 0 &&
+    runWords.every((word) =>
+      catWords.some((categoryWord) => isCategoryWordForm(word, categoryWord)),
+    )
+  );
 }
 
 // A run containing a SOURCE/retailer name ("Consumer Reports", "RTINGS.com",
@@ -3056,6 +3128,26 @@ function containsSourceName(run: string[]) {
 // fragment, not a product.
 function isYearLedRun(run: string[]) {
   return /^(?:19|20)\d{2}$/.test(run[0] || "");
+}
+
+function containsConcatenatedProductIdentities(run: string[]) {
+  const strongModelIndexes = run
+    .map((token, index) => (/^(?=.*[a-z])(?=.*\d)/i.test(token) ? index : -1))
+    .filter((index) => index >= 0);
+
+  if (strongModelIndexes.length < 2) {
+    return false;
+  }
+
+  const firstModel = strongModelIndexes[0];
+  const lastModel = strongModelIndexes.at(-1) || firstModel;
+
+  // Two adjacent model tokens can be one identity ("Q7 M5"). A new proper
+  // word between strong model tokens signals that two editorial picks were
+  // concatenated into one run ("C10 T2292 Eureka NERE10SW").
+  return run
+    .slice(firstModel + 1, lastModel)
+    .some((token) => isSeedWordToken(token));
 }
 
 export function extractSeedProductNames(
@@ -3103,7 +3195,8 @@ export function extractSeedProductNames(
         (run.some(isSeedModelNumberToken) || isBrandLedSeedRun(run)) &&
         !isCategorySubsetRun(run, category) &&
         !containsSourceName(run) &&
-        !isYearLedRun(run);
+        !isYearLedRun(run) &&
+        !containsConcatenatedProductIdentities(run);
 
       if (accepted) {
         const name = run.join(" ").replace(/\s+/g, " ").trim();
@@ -3493,7 +3586,10 @@ export async function searchSerperForProducts(
   ]);
 
   if (editorialQueries.length > 0) {
-    const editorialEvidenceBudget = searchConfig.depth === "deep" ? 3 : 2;
+    // R2 measured 588 raw editorial-seed results and zero unique/final
+    // candidates. Keep the queries observable and culled, but spend no Serper
+    // calls on this path until contribution evidence justifies restoring it.
+    const editorialEvidenceBudget = 0;
     const observedEditorialQueries = editorialQueries.map((query) => ({
       query,
       queryId: registerSearchQuery({

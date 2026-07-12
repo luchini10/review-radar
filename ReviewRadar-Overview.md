@@ -932,3 +932,11 @@ No production pipeline or API contract changed in Phase 6A.
 - **Spec identity:** SCFM normalizes to CFM. Conflicting flow values block inferred exact-model collapse, while equivalent CFM/SCFM values preserve retailer dedupe.
 - **Proof:** combined fail-first 17/20 with exactly three intended failures; final focused 20/20; full suite 859/859 across 124 suites; typecheck/build/eval pass; lint 0 errors/3 existing warnings. Zero live calls and no `.env.local` change.
 - **State:** register 82 issues—73 Fixed, 8 Needs Investigation, 1 Won't Fix. R6 remains separately approval-gated.
+
+## 32. Phase R6 source-brand trust and query hygiene (2026-07-12)
+
+- **Source-brand trust (RR-070/RR-077):** source-upgrade metadata brand must be evidenced by the product title or a recognized alias. Conflicting/unrelated labels no longer override title-derived brand+model identity; compatible aliases and existing measurement safeguards remain valid.
+- **Editorial seeds (RR-076):** category headings, prose fragments, and concatenated products are rejected. R2 measured 588 raw seed results and zero unique/final candidates, so editorial evidence and seed Shopping calls are reduced to zero while their proposed queries remain ledger-visible as culls.
+- **Provider-bound query hygiene (RR-081):** the shared Serper boundary removes wildcard site operators and adjacent repeated generated phrases before dispatch, cache-key construction, and body serialization. Concrete domains, quoted phrases, and legitimate repeated proper names are preserved; equivalent normalized queries share one physical call.
+- **Proof:** focused 148/148; full suite 868/868 across 125 suites; typecheck/build/eval pass; lint 0 errors/3 existing warnings; zero live calls and no `.env.local` change.
+- **State:** register 82 issues — 77 Fixed, 4 Needs Investigation, 1 Won't Fix. Latest live North Stars are unchanged; no next phase is approved. Human leader-list review, the consumer-readiness arc plan, and detailed R7 planning remain separate decisions.

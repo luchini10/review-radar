@@ -18,6 +18,7 @@ import {
 import { generateSearchPlan } from "../lib/searchQueryExpansion.ts";
 import {
   dedupeRawCandidates,
+  sanitizeSerperQuery,
   searchSerperForProducts,
   searchSerperImageEvidence,
   searchSerperOrganicEvidence,
@@ -25,6 +26,42 @@ import {
   searchSerperShoppingWithDiagnostics,
   serperCandidateToRecommendation,
 } from "../lib/search/serper.ts";
+
+describe("R6 outbound Serper query hygiene", () => {
+  it("removes wildcard site domains and repeated generated phrases", () => {
+    assert.equal(
+      sanitizeSerperQuery('site:*.com robot vacuum robot vacuum "self empty"'),
+      'robot vacuum "self empty"',
+    );
+    assert.equal(sanitizeSerperQuery("eufy eufy RoboVac C10"), "eufy RoboVac C10");
+  });
+
+  it("preserves valid site operators, quoted phrases, and repeated model words", () => {
+    assert.equal(
+      sanitizeSerperQuery('site:bestbuy.com "very very quiet" Bora Bora fan'),
+      'site:bestbuy.com "very very quiet" Bora Bora fan',
+    );
+    assert.equal(
+      sanitizeSerperQuery("New York New York air purifier"),
+      "New York New York air purifier",
+    );
+    assert.equal(sanitizeSerperQuery("very very quiet fan"), "very very quiet fan");
+  });
+
+  it("uses the sanitized query in the exact Serper body and cache key", async () => {
+    const bodies = [];
+    await withMockedSerper(async (_url, init) => {
+      bodies.push(JSON.parse(init.body));
+      return response({ shopping: [] });
+    }, async () => {
+      await searchSerperShopping("site:*.com robot vacuum robot vacuum", "robot vacuum");
+      await searchSerperShopping("robot vacuum", "robot vacuum");
+    });
+
+    assert.equal(bodies.length, 1);
+    assert.deepEqual(bodies[0], { gl: "us", hl: "en", num: 10, q: "robot vacuum" });
+  });
+});
 
 function response(data, status = 200) {
   return new Response(JSON.stringify(data), {

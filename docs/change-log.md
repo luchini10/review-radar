@@ -13,6 +13,20 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-12
 
+### Codex - Phase R6 source-brand trust and query hygiene
+
+#### Changed
+
+- Fixed RR-070/RR-077: source-upgrade metadata brands are used only when the product title supports the brand or a recognized alias. Conflicting `Bose` and ambiguous `DW` metadata no longer contaminate exact model queries; compatible aliases and HP's brand/measurement boundary remain intact.
+- Fixed RR-076: malformed category, prose, and concatenated-product editorial seeds are rejected. Because R2 measured 588 raw seed results and zero unique/final candidates, the editorial evidence/seed call budget is now zero; planned queries remain ledger-visible as culled.
+- Fixed RR-081: every Serper vertical now passes through shared outbound sanitation that removes wildcard site domains and adjacent repeated generated tokens before dispatch, caching, and body serialization while preserving concrete domains, quoted phrases, and legitimate repeated proper names.
+
+#### Verified
+
+- Focused R6 wall 148/148; full suite 868/868 across 125 suites; typecheck/build pass; lint 0 errors/3 existing warnings; offline eval no red flags.
+- Live Serper/OpenAI calls: 0; the scorecard cost guard was previewed but not confirmed; `.env.local` unchanged.
+- Register: 82 total — 77 Fixed, 4 Needs Investigation, 1 Won't Fix.
+
 ### Codex - Phase R5 corrective adversarial closure
 
 #### Changed

@@ -1514,3 +1514,26 @@ and SCFM cases failing; final passed 20/20. RR-082 records the measurement bug.
 **Known limits (accepted):** spec conflict only reads names/metadata titles,
 not attached spec objects; the listing key requires the ID as the final path
 segment (query-string IDs unhandled — no captured evidence yet).
+
+## 2026-07-12 - Phase R6 source-brand trust and query hygiene
+
+**Saved-evidence decisions:** RR-070/RR-077 use title compatibility, not provider
+metadata confidence alone. Metadata brand is eligible only when the title contains
+that brand or a recognized alias; otherwise source upgrade falls back to title
+identity. Preserve explicit unknown brands, DeWalt `20V MAX`-style aliases, and
+the HP measurement boundary when changing brand logic.
+
+RR-076 contribution is settled for this phase: 588 raw editorial-seed results
+produced zero unique/final candidates in R2. The editorial evidence/seed budget is
+therefore zero; proposed queries stay registered as culls. Do not restore spend
+from parser quality alone — require new contribution evidence and approval.
+
+RR-081 is enforced at `fetchSerper()`, the common provider boundary. Sanitation
+must happen before dispatch registration, cache key, and JSON request body so all
+search origins and verticals agree. Preserve concrete `site:` operators, quoted
+phrases, and legitimate repeated proper/model words. Normalization-equivalent
+queries should share the cache and create one physical request.
+
+**Verification:** focused 148/148; full 868/868 across 125 suites; typecheck and
+build pass; lint 0 errors/3 existing warnings; deterministic eval no red flags;
+zero live calls; `.env.local` unchanged.
