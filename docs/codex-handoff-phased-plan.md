@@ -1681,3 +1681,16 @@ Stop. Do not start R4, enable flags in `.env.local`, run live validation, freeze
 - Proof: Claude fail-first 6 intended failures then 12/12; Codex adversarial fail-first 12/16 with four intended boundary failures, then 16/16. Focused requirement/search 111/111; full suite 838/838 across 122 suites; typecheck/build pass; lint 0 errors/3 existing warnings; offline eval clean with the flag off and on; zero live calls; `.env.local` unchanged.
 - Adversarial closure: preferred constraints now carry explicit soft strictness; category-colliding preferences cannot mask another preference; comma/word budget variants normalize once; categories outside synonym groups remain inert; hard and preferred constraints coexist in the leading query.
 - Register: 70 Fixed / 9 Needs Investigation / 80 total. Next: the separately approved R4 six-search live after-sample (also measures R3 pinning; requires the flag-on `rawAi.strategy` smoke check).
+
+### Phase R4 live after-sample completion record (2026-07-11)
+
+- Completed six usable cache-cold searches at pinned commit `cd95deb6d5366cf3140a1d6445e4da771a0cffd2` with both flags enabled only on the server processes. `.env.local` is unchanged.
+- Governance: one inline client accidentally dispatched a second warm-cache request. It produced no fixture, was recorded spent/excluded, and Taylor approved one replacement: seven requests dispatched, six usable. The remaining client was single-request, no-retry, and refused overwrite.
+- Ledger: 604 logical searches, 118 hits, 486 misses/physical attempts, zero retries/fallbacks; every usable run was balanced and cache-cold with non-null strategy JSON.
+- R3: strategy overlap stayed near zero (0.0000→0.0196); planned/dispatched product-query overlap slightly declined. Pool/final overlap improved (0.1051/0.0333→0.2694/0.1429), but planner determinism is not proven and RR-015 remains Needs Investigation.
+- R4: all protected initial constrained queries carried category+preference+budget; duplicate-budget queries were zero; constraint-bearing dispatches rose. Total wrong-category funnel losses did not improve, so do not claim that process result.
+- North Stars: core-leader recall unavailable; wrong-type/non-product final cards 0/27 after versus 3/23 before; B exact compliance 1/1; A pool/final stability improved. B overlap is after-only and not a before/after claim.
+- Safety/issues: no RR-061 image regression. RR-060 reopened for duplicate Roomba 105 cards sharing Home Depot product ID `335012888`; RR-081 filed for malformed AI/rescue query forms.
+- Register: 81 total; 69 Fixed, 11 Needs Investigation, 1 Won't Fix. Rule 5 does not mandate a stop, but flag promotion, rubric/leader freeze, R5/R6, and Phase 6E each require separate Taylor approval.
+
+Stop. Do not edit `.env.local`, promote flags, freeze the rubric/baseline, start R5/R6, or start Phase 6E without separate approval.

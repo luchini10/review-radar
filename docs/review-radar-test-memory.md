@@ -1431,3 +1431,40 @@ No live provider calls and no search/ranking/trust behavior changes.
 **Stable test entry points:** `tests/constraintAllocation.test.mjs` — flag-off pins the exact pre-R4 plan/classification/duplicate-budget/validation defaults. Flag-on covers soft preferred versus hard required strictness, >=3-of-5 Shopping coverage, dilution removal, exact-key breadth plus outside-group inert controls, category-collision handling, word/comma budget normalization and idempotence, mixed hard/preferred ordering, and both validation outcomes. Initial 12/12; Codex adversarial fail-first 12/16; final 16/16; full suite 838/838.
 
 **Known trade-off (accepted):** an AI query whose normalized form equals a deterministic constraint-bearing query now merges into it (one Serper call instead of two); the RR-074 test uses a `best`-prefixed query for that reason.
+
+---
+
+## 2026-07-11 - Phase R4 live after-sample
+
+**Protocol:** Six usable cache-cold runs at `cd95deb6`, both flags enabled on
+server processes only. One accidental warm-cache request was spent/excluded;
+Taylor approved one replacement. Authority is seven dispatched, six usable.
+
+**Ledger proof:** 604 logical searches = 118 hits + 486 misses; 486 physical
+attempts, zero retries/fallbacks, all balanced and cache-cold. Never reuse the
+old 225–280 estimate for this shape; the six usable runs alone cost 486
+physical attempts.
+
+**Stable interpretation:** Pinned planning was accepted by the live API but
+did not materially stabilize strategy output: strategy Jaccard 0.0000→0.0196,
+planned/dispatched product queries 0.3830/0.3722→0.3714/0.3587. Do not equate
+`temperature: 0` with deterministic output. Pool/final overlap did improve to
+0.2694/0.1429 from 0.1051/0.0333, but attribution is mixed.
+
+**R4 boundary:** Judge protected allocation from the leading outbound query
+set, not by counting every later constraint-bearing ledger record marked
+culled. Later AI/rescue duplicates and caps legitimately create culled records.
+The leading B forms all carried robot-vacuum + self-emptying + budget and had
+zero duplicate budgets. Total wrong-category first losses nevertheless rose
+from 5 to 6/7/6 because AJ Madison organic results and a direct-retailer stick
+vacuum tail remained noisy.
+
+**Quality/safety:** 0/27 wrong-type/non-product final cards after versus 3/23
+before; exact B compliance 1/1; no RR-061 image regression. RR-060 reopened
+for the same Home Depot product ID under short/titled URLs. RR-081 tracks
+wildcard-domain and repeated-token AI/rescue queries. Fixtures remain untracked.
+
+**Decision boundary:** `.env.local` is unchanged. R3 promotion is not supported
+by plan-stability evidence. R4 promotion is a separate user decision and the
+shared two-flag sample limits causal attribution. No rubric/leader freeze or
+Phase 6E authorization follows from this sample.

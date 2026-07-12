@@ -907,3 +907,12 @@ No production pipeline or API contract changed in Phase 6A.
 - **RR-074:** `budgetBoundQuery()` normalizes dollar-less and comma-formatted bounds (`under 300`, `less than 300`, `max 300`, `under 1,300`) in place; no duplicated budget suffix, and equivalent queries merge instead of dispatching twice.
 - **Benchmark proof (flag on):** every leading Shopping query for `robot vacuum` / `under $300` / `self-emptying` carries both the subtype and the constraint; the broad query survives at the back of pass 1 for recall. Acceptance (>=3 of 5) exceeded at 4/4.
 - **Verification:** Claude fail-first 6 → 12/12; Codex adversarial fail-first 12/16 with four intended failures, then 16/16. Full suite 838/838 across 122 suites; typecheck/build green; lint 0 errors/3 existing warnings; offline eval clean flag-off and flag-on.
+
+## 29. Phase R4 live after-sample (2026-07-11)
+
+- **Execution:** Six usable cache-cold searches completed at `cd95deb6` with R3/R4 flags on only for the server processes. One accidental warm request was spent/excluded and explicitly replaced: seven dispatched, six usable. Usable ledgers reconcile 604 logical, 118 hits, 486 misses/physical attempts, zero retries/fallbacks.
+- **Stability:** A pool/final Jaccard improved from 0.1051/0.0333 to 0.2694/0.1429. Strategy-query overlap remained nearly absent (0.0000→0.0196), while planned/dispatched product-query overlap slightly declined; R3 pinning is compatible but not proven effective.
+- **Constraint allocation:** Every protected initial B query carried robot-vacuum + self-emptying + budget, duplicate budgets were zero, and constraint-bearing dispatches rose from 7 to 17/15/17. Total wrong-category first losses did not fall (5 before versus 6/7/6 after) because retailer organic noise and a later direct-retailer stick-vacuum tail remained.
+- **North Stars:** Core-leader recall unavailable; final wrong-type/non-product cards improved 3/23→0/27; B exact compliance was 1/1; A pool/final stability improved. B overlap is after-only and cannot be called a delta.
+- **Defects:** No RR-061 image regression. RR-060 reopened for duplicate Roomba 105 cards sharing Home Depot product ID `335012888`. RR-081 filed for wildcard-domain and repeated-token AI/rescue queries.
+- **State:** Register 81 total, 69 Fixed, 11 Needs Investigation, 1 Won't Fix. `.env.local` remains unchanged. Flag promotion, rubric/leader freeze, R5/R6, and Phase 6E require separate approval.

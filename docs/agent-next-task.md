@@ -4,78 +4,61 @@ Generated: 2026-07-11
 
 ## Current state
 
-`docs/forward-roadmap.md` governs forward sequencing. Phase R4's deterministic
-implementation is complete (Claude implementation, Codex adversarial closure):
-RR-073, RR-074, and RR-075 are Fixed
-behind default-off `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`, with flag-off
-output proven byte-identical by an exact plan snapshot test. R3's
-`REVIEW_RADAR_PINNED_PLANNING` also remains default-off. `.env.local` is
-unchanged; neither flag is promoted.
+`docs/forward-roadmap.md` governs forward sequencing. Phase R4 deterministic
+and its approved live after-sample are complete. Both
+`REVIEW_RADAR_PINNED_PLANNING` and `REVIEW_RADAR_CONSTRAINT_ALLOCATION` remain
+default-off; `.env.local` is unchanged.
 
-R4 deterministic used zero live calls. Claude's fail-first was 6 intended
-flag-on failures, then 12/12. Codex adversarial review added 4 intended
-failures at 12/16, then closed the matrix to 16/16. The full suite passed
-838/838 across 122 suites.
-Typecheck, production build, and offline eval pass (eval clean with the flag
-off AND on); lint has 0 errors and 3 existing warnings.
+The live window dispatched seven requests: six usable cache-cold samples and
+one accidental warm-cache request that was spent, excluded, and explicitly
+replaced. The six usable ledgers reconcile 604 logical searches, 118 hits, 486
+misses/physical attempts, zero retries/fallbacks, and empty starting caches.
+Fixtures remain untracked.
 
-Benchmark proof (robot vacuum / under $300 / self-emptying, flag on): all
-leading Shopping queries carry the subtype and the constraint; the diluted
-`vacuum` / `cordless vacuum` / `stick vacuum sale` slots are gone; retailer
-queries name the full category; the broad query survives at the back of
-pass 1. See `tests/constraintAllocation.test.mjs` and
-`ReviewRadar-Overview.md` section 28.
+R4's protected initial B queries all carry `robot vacuum`, `self-emptying`,
+and `under $300`; duplicate-budget queries are zero. A pool/final Jaccard
+improved from 0.1051/0.0333 to 0.2694/0.1429 and wrong-type/non-product final
+cards improved from 3/23 to 0/27. However, strategy-query Jaccard remained
+near zero (0.0196), planned/dispatched product-query overlap slightly declined,
+and total wrong-category first losses did not improve (5 before versus 6/7/6
+after). Do not claim R3 planner determinism or reduced funnel contamination.
 
-The issue register contains 80 issues: 70 Fixed, 9 Needs Investigation,
-1 Won't Fix, 0 Open. RR-014/RR-015 remain the top open measurement items.
+No RR-061-class image regression occurred. RR-060 is reopened for duplicate
+Roomba 105 cards sharing Home Depot product ID `335012888`. RR-081 tracks
+wildcard-domain and repeated-token AI/rescue queries. The register contains 81
+issues: 69 Fixed, 11 Needs Investigation, 1 Won't Fix, 0 Open.
 
-R2 remains stopped at 4/6; rubric v0.1-draft, leader snapshots, and baseline
-values remain unfrozen; Phase 6E remains unauthorized.
+## Required next task — Taylor decision, no implementation authorized
 
-## Required next task — Phase R4 live after-sample (separate explicit approval)
+Present the R4 before/after evidence and obtain Taylor's separate decision on:
 
-Six live searches (~225–280 Serper calls), same shapes and cache-cold protocol
-as R2 (three broad `shop vac`, three constrained `robot vacuum` / `under $300`
-/ `self-emptying`), run with BOTH flags enabled for the runs
-(`REVIEW_RADAR_PINNED_PLANNING=on`, `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`).
-This one batch serves three purposes: R4 before/after evidence vs the R2
-ledgers, R3 pinning measurement (plan Jaccard), and the deferred RR-061-class
-live regression watch.
+1. Flag promotion. Evidence does not support promoting R3 pinning. R4's
+   protected allocation passed, but the shared two-flag sample limits causal
+   attribution and total wrong-category entry did not improve.
+2. Sequencing: proceed to roadmap R5 (RR-071/RR-072, zero live) or first
+   authorize a narrow deterministic RR-060/RR-081 repair.
+3. Whether the current R2+R4 evidence is sufficient for any rubric/leader
+   freeze. No freeze is currently approved; core-leader recall remains
+   unavailable.
 
-The batch must:
-
-- verify `searchLedger.rawAi.strategy` is non-null on the FIRST run before
-  spending the rest (a rejected pinned `temperature` fails silently to an
-  empty AI strategy);
-- compare per-run process metrics vs R2: constraint-bearing dispatched
-  queries up, wrong-type candidates entering the funnel down, culled
-  constraint queries zero, duplicate-budget queries zero;
-- restrict stability claims to the A group (3 before vs 3 after); B-side
-  claims stay per-run process metrics per the dialogue [7]/[8] agreement;
-- apply the R2 safety rule: stop only on an RR-061-class image regression;
-  file-and-continue for new unrelated defects (next free ID: RR-081);
-- record North-Star values; if constraint compliance, wrong-type count, or
-  stability fail to improve, roadmap rule 5 requires a written stop-and-rethink
-  before any further phase;
-- save fixtures with `r4-after` names; fixtures stay untracked;
-- decide flag promotion in `.env.local` ONLY from the before/after evidence,
-  as its own explicit step.
+Roadmap rule 5 does not automatically stop the program because final-card
+safety, scoreable constraint compliance, and A pool/final stability improved.
+That does not itself authorize the next phase.
 
 ## Safety boundary
 
-Do not run the after-sample, enable either flag in `.env.local`, run B2/B3,
-freeze R2 values, approve leader snapshots, start R5/R6, or start Phase 6E
-without Taylor's separate explicit approval. Do not commit live fixtures or
-existing untracked local artifacts.
+Do not edit `.env.local`, promote flags, start RR-060/RR-081 repairs, start
+R5/R6, run more live searches, freeze the rubric/leader snapshots, or start
+Phase 6E without Taylor's separate explicit approval. Do not commit live
+fixtures or existing untracked local artifacts.
 
 Reference:
 
 - `docs/forward-roadmap.md`
-- `docs/agent-dialogue.md` — read and answer at phase start; append at phase end
+- `docs/agent-dialogue.md`
 - `docs/phase-6-variance-pilot.md`
 - `docs/RR-Issues-Report.md`
-- `docs/review-radar-search-pipeline-audit.md`
 - `docs/codex-handoff-phased-plan.md`
 - `docs/review-radar-test-memory.md`
 - `docs/qa-loop-results.md`
-- `ReviewRadar-Overview.md` sections 27–28
+- `ReviewRadar-Overview.md` sections 28–29

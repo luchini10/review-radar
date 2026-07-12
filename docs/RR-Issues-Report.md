@@ -13,14 +13,14 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 80 |
+| Total Issues | 81 |
 | Critical | 11 |
 | High | 33 |
-| Medium | 31 |
+| Medium | 32 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 9 |
-| Fixed | 70 |
+| Needs Investigation | 11 |
+| Fixed | 69 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -96,6 +96,7 @@
 | Phase R2 — Live ledger verification safety stop | 2 |
 | Phase R3 — Strategy-call determinism | 0 |
 | Phase R4 — Constraint-preserving query allocation (deterministic) | 0 |
+| Phase R4 — Live after-sample | 1 |
 | RR-061 image-provenance safety repair | 0 |
 | RR-061 round 4 / RR-080 image micro-phase | 1 |
 | RR-078/RR-079 eligibility/type safety repair | 0 |
@@ -1846,7 +1847,7 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 | **Phase** | Phase 4F |
 | **Severity** | Medium |
 | **Title** | True same-model duplicates can occupy multiple final slots |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** `gaming monitor` selected `Gigabyte M27Q Gaming Monitor (Rev. 1.0)` at rank #1 and `Gigabyte M27Q 27" QHD ...` at rank #2. Both source-upgrade traces used `Gigabyte M27Q` and attached the same `$160` offer. They are retailer/manufacturer representations of the same model, yet remained separate cards while other variants were correctly collapsed.
 
@@ -1861,6 +1862,8 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 **Suggested fix or next action:** Diagnose why canonical IDs/variant keys diverged for the two M27Q representations. Add cross-retailer same-model tests while preserving RR-010's distinct-size behavior.
 
 **Phase 5H resolution:** Final selection now uses a strict exact-model identity predicate rather than URL-only canonical IDs or the broader evidence-family merger. Same canonical IDs, exact normalized titles, and same-brand shared strong model tokens collapse; explicit different model tokens and different sizes remain distinct. The saved gaming-monitor fixture collapses the two M27Q retailer/manufacturer representations into one card while preserving M27Q2, M27Q-P, and unrelated same-brand products. Synthetic coverage proves a distinct eighth candidate fills the freed seventh slot.
+
+**Phase R4 live regression (2026-07-11):** Reopened as Needs Investigation. Constrained run B3 selected the same Home Depot iRobot Roomba 105 Combo product twice. One near card used the short URL `https://www.homedepot.com/p/335012888`; the other used the titled URL ending in the same product ID `/335012888`. Their titles differ only in punctuation/truncation (`13.2` versus `13. 2`), yet both occupied final slots. The saved fixture is `tests/fixtures/review-radar-live/robot-vacuum-under-300-self-emptying.r4-after-run3.json`. Diagnose canonical retailer product-ID normalization without weakening distinct-size/model protection.
 
 ---
 
@@ -2656,12 +2659,34 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 
 **Resolution proof:** Focused fail-first 24/26 with the two intended micro-phase failures; focused final 27/27; full 818/818 across 120 suites; typecheck/build/eval pass; lint 0 errors and 3 existing warnings; zero live calls.
 
+---
+
+#### RR-081
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-081 |
+| **Phase** | Phase R4 live after-sample |
+| **Severity** | Medium |
+| **Title** | AI and rescue query construction preserves wildcard domains and repeated identity/category tokens |
+| **Status** | Needs Investigation |
+
+**Description:** The six-run R4 after-sample retained malformed or redundant query text after plan assembly. Examples include culled `site:*.com robot vacuum ...` strategy queries, culled and dispatched `eufy eufy RoboVac ...` queries, and dispatched rescue queries ending in `robot vacuum robot vacuum`. These are distinct from RR-076's editorial-seed defect because they originate in `ai_discovery_strategy`, `ai_gap_check`, `requirement_fact_rescue`, and `rubric_fact_rescue`.
+
+**Where it occurs:** AI strategy/gap query normalization and requirement/rubric fact-rescue query construction before Serper dispatch.
+
+**Evidence:** `robot-vacuum-under-300-self-emptying.r4-after-run2.json` records repeated category text in dispatched q-0134/q-0137/q-0169. Run 3 records wildcard-domain q-0035/q-0036 (culled), repeated-brand q-0067 (dispatched), and repeated-category q-0140 (dispatched). Run 1 records the repeated-brand form at q-0040 (culled).
+
+**Expected:** Provider-bound queries contain a valid concrete domain when site-scoped and include each normalized brand/category identity once.
+
+**Suggested fix or next action:** Add origin-independent outbound normalization immediately before dispatch, with fail-first tests for wildcard site operators and adjacent/redundant identity phrases. Preserve quoted phrases, legitimate repeated words inside model names, and exact flag-off snapshots where the malformed pattern is absent. Cross-reference RR-076 rather than broadening its editorial-only scope.
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (9 issues)
+### Needs Investigation (11 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
@@ -2671,9 +2696,11 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 - RR-072: RIDGID HD0900 Wet Dry Vac is falsely rejected as wrong category
 - RR-076: Editorial seed extraction emits malformed and non-product Shopping queries
 - RR-077: Source upgrade prefixes an ambiguous DW brand token to an exact DEWALT model
+- RR-060: True same-model duplicates can occupy multiple final slots
+- RR-081: AI/rescue queries retain wildcard domains and repeated identity/category tokens
 
-### Fixed (70 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-069, RR-073 through RR-075, RR-078 through RR-080
+### Fixed (69 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-059, RR-061 through RR-069, RR-073 through RR-075, RR-078 through RR-080
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2682,7 +2709,8 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-014 + RR-015** (High) — R2 measured severe plan and final-set instability; R3 and R4 are complete default-off, and the R4 live after-sample is the designated measurement of both. (RR-073/074/075 were fixed deterministically in Phase R4 on 2026-07-11.)
+1. **RR-014 + RR-015** (High) — R4 improved A pool/final overlap, but strategy-query overlap stayed near zero and no leader snapshot exists; both remain open measurement questions.
 2. **RR-071 + RR-072** (High) — Current false identity collapse and valid-product rejection remain owned by R5.
 3. **RR-070 + RR-076 + RR-077** (Medium) — R2 showed 588 editorial raw results with zero unique candidates; source-brand and seed precision remain owned by R6.
-4. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3 but varied by model, while Tapo appeared raw and died in normalization.
+4. **RR-060 + RR-081** (Medium) — R4 B3 reopened same-product final duplication; malformed AI/rescue query forms remain provider-bound.
+5. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3 but varied by model, while Tapo appeared raw and died in normalization.

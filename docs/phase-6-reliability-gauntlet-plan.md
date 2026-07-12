@@ -1,8 +1,8 @@
 # ReviewRadar Phase 6 Reliability Gauntlet - Master Plan
 
-**Status:** Canonical merged plan; Phases 6A-6C complete; R2 stopped at 4/6; R3 complete default-off; RR-061 round 4 and RR-080 complete
+**Status:** Canonical merged plan; Phases 6A-6C complete; R2 stopped at 4/6; R3/R4 default-off; R4 live after-sample complete
 **Prepared:** 2026-07-01
-**Execution state:** Roadmap R3 and the separately approved RR-061/RR-080 image repairs are complete with zero live calls. R3 remains default-off and unpromoted. R2 remains stopped at 4/6; rubric v1.0, leader snapshots, and baseline values remain unfrozen; Phase 6E is unauthorized. RR-078/RR-079 eligibility/type safety repairs are required before any later live window
+**Execution state:** R3/R4 deterministic work and the six-usable-run R4 after-sample are complete. Both flags remain default-off and `.env.local` is unchanged. R4 improved pool/final overlap and final-card safety, but planner overlap remained near zero and total wrong-category funnel entry did not improve. Rubric v1.0, leader snapshots, flag promotion, and Phase 6E remain separately approval-gated
 **Repository:** `C:\Users\tluch\Documents\GitHub\review-radar-fixed`
 **Canonical repository path:** `docs/phase-6-reliability-gauntlet-plan.md`
 
@@ -60,6 +60,13 @@ Phase 5 behavior blockers.
 - The flag is default-off. Flag-off request parameters, custom helper models, final synthesis, prompts, output schemas, search allocation, ranking, and trust behavior remain unchanged.
 - Fail-first request-shape proof flipped green; focused tests passed 38/38 and the full suite passed 810/810. Typecheck/build/eval pass; lint has 0 errors and 3 existing warnings.
 - Zero live calls ran. RR-015 remains Needs Investigation, and the R2 North-Star observations remain the latest evidence. R4's approved after-sample must measure the actual stability effect.
+
+### Phase R4 live after-sample update (2026-07-11)
+
+- Six usable cache-cold samples completed with both flags enabled on server processes; one accidental warm request was spent/excluded and explicitly replaced (seven dispatched, six usable). Usable reconciliation: 604 logical, 118 hits, 486 misses/physical attempts, zero retries/fallbacks.
+- A pool/final Jaccard improved from 0.1051/0.0333 to 0.2694/0.1429, but strategy-query Jaccard stayed near zero (0.0196) and planned/dispatched product-query overlap slightly declined. R3 planner determinism is not proven.
+- R4 protected initial queries all retained category+preference+budget and duplicate budgets were zero. Total wrong-category first losses did not improve (5 before; 6/7/6 after), though final wrong-type/non-product cards improved from 3/23 to 0/27.
+- No RR-061 image regression occurred. RR-060 reopened for same-product final duplication and RR-081 was filed for malformed AI/rescue query forms. Both flags remain unpromoted; `.env.local` is unchanged.
 
 ### RR-061 safety-repair update (2026-07-11)
 

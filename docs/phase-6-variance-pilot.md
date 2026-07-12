@@ -247,6 +247,123 @@ typecheck/build/eval pass; lint 0 errors
 and 3 warnings. Zero live calls. R2 metrics and freeze state remain unchanged;
 RR-078/RR-079 still block any later live window.
 
+## Phase R4 live after-sample (2026-07-11)
+
+Taylor approved six usable cache-cold searches with both default-off flags set
+only on the live server processes: `REVIEW_RADAR_PINNED_PLANNING=on` and
+`REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`. The sample is pinned to commit
+`cd95deb6d5366cf3140a1d6445e4da771a0cffd2`; `.env.local` remained unchanged.
+The first-run smoke gate passed: `searchLedger.rawAi.strategy` was non-null and
+the API accepted the pinned snapshot plus `temperature: 0`.
+
+One orchestration error dispatched an additional request against the already
+warm first server. Root cause: a piped inline Node client had already begun a
+request even though its orchestration command appeared complete, after which a
+PowerShell client dispatched the intended request against the same process.
+The cache-cold fixture survived; the warm request produced no fixture. Work
+stopped, Taylor approved one replacement, and every remaining run used a
+temporary single-request client that refuses fixture overwrite and has no
+retry path. Search-count authority is therefore seven requests dispatched,
+six usable cache-cold samples; the warm request is spent but excluded.
+
+| Run | Request | Pool | Exact/Near | Latency | Logical | Hit/Miss | Physical | Retry/Fallback | Balanced |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| A1 | `shop vac` | 15 | 0/1 | 65.155s | 51 | 12/39 | 39 | 0/0 | true |
+| A2 | `shop vac` | 17 | 4/2 | 80.284s | 104 | 20/84 | 84 | 0/0 | true |
+| A3 | `shop vac` | 20 | 2/2 | 80.101s | 93 | 17/76 | 76 | 0/0 | true |
+| B1 | `robot vacuum`, `under $300`, `self-emptying` | 12 | 0/5 | 105.040s | 131 | 26/105 | 105 | 0/0 | true |
+| B2 | same constrained request | 14 | 0/5 | 99.852s | 125 | 26/99 | 99 | 0/0 | true |
+| B3 | same constrained request | 13 | 1/5 | 93.753s | 100 | 17/83 | 83 | 0/0 | true |
+| **Usable total** | 6 searches | — | 7/20 | 524.185s | 604 | 118/486 | 486 | 0/0 | all true |
+
+All six ledgers report `serperCacheEmptyAtStart: true`, both flags `on`, a
+non-null strategy, exact reconciliation, and zero retries/fallbacks. The six
+usable searches made 486 physical Serper attempts; the invalid warm request's
+physical count is unknown and is not folded into the sample totals. The
+earlier 225–280 estimate was materially low.
+
+### R3 stability measurement
+
+Only Group A has a valid before/after comparison. Normalized pairwise means:
+
+| Layer | R2 before | R4 after | Change |
+|---|---:|---:|---:|
+| strategy queries | 0.0000 | 0.0196 | +0.0196 |
+| expected products | 0.1434 | 0.2222 | +0.0788 |
+| planned product queries | 0.3830 | 0.3714 | -0.0116 |
+| dispatched product queries | 0.3722 | 0.3587 | -0.0135 |
+| candidate pool | 0.1051 | 0.2694 | +0.1643 |
+| final cards | 0.0333 | 0.1429 | +0.1096 |
+
+Pool and final overlap improved, but the intended R3 mechanism did not:
+strategy-query overlap remained near zero and planned/dispatched product-query
+overlap was slightly lower. Snapshot pinning is API-compatible, but this
+sample does not justify claiming planner determinism or promoting the R3 flag.
+RR-015 remains Needs Investigation. No product appeared in all three A final
+sets, and no approved leader snapshot exists, so core-leader recall remains
+unavailable.
+
+Group B has no comparable multi-run before sample. Its after-only pool/final
+Jaccard means are 0.3621/0.3704 and are descriptive only, not an R4 delta.
+
+### R4 process and North-Star evidence
+
+The initial constrained plan changed as designed. In every B run the leading
+deterministic forms were:
+
+- `robot vacuum self-emptying under $300`
+- `self-emptying robot vacuum under $300`
+- `robot vacuum self-emptying sale under $300`
+- `site:ajmadison.com robot vacuum self-emptying under $300`
+
+The old `vacuum`, `cordless vacuum`, and `stick vacuum sale` initial slots are
+gone. Every leading slot carries the category, preference, and budget, and all
+three ledgers contain zero duplicate-budget queries. Constraint-bearing
+dispatched product queries rose from 7 in R2 B1 to 17/15/17. The broad query
+still exists only in the later recall tail. Some constraint-bearing records
+are marked culled because duplicate, cap, and later AI/rescue candidates are
+also ledgered; that is not evidence that a protected initial slot lost the
+constraint. The protected-slot acceptance is satisfied by the outbound
+leading queries above.
+
+The full wrong-category first-loss count did not improve: R2 B1 had 5 and the
+after runs had 6/7/6. The source changed. R2's five came from diluted direct
+retailer searches; after R4, three per run came from the still-dispatched
+`site:homedepot.com stick vacuum under 300` direct-retailer tail and three per
+run came from AJ Madison returning unrelated appliances despite a fully
+constraint-bearing query (B2 added one GE appliance from an official-site
+query). Thus initial allocation improved, but total funnel contamination did
+not. Do not claim that R4 reduced wrong-category entry.
+
+Final-card safety improved from 3/23 wrong-type/non-product cards in R2 to
+0/27 in the six-run after-sample. The B exact slate was 1/1 fully compliant:
+the eufy C10 Auto-Empty was under $300 and explicitly included auto-empty.
+The two prior R2 repairs, RR-078/RR-079, are the likely direct explanation for
+the final-card safety movement; the shared live batch cannot causally assign
+that movement to R4 alone.
+
+Roadmap rule 5 does not force a stop-and-rethink because measured pool/final
+stability, final wrong-type count, and scoreable constraint compliance all
+improved. However, attribution is mixed and flag promotion remains a separate
+Taylor decision. This phase does not modify `.env.local`.
+
+### Live defects and safety result
+
+No RR-061-class image regression occurred, so the safety stop did not fire.
+Two non-safety findings were recorded while continuing under the approved
+rule:
+
+- RR-060 reopened: B3 rendered the same Home Depot Roomba 105 Combo twice;
+  the short and titled URLs share product ID `335012888`, while punctuation
+  split `13.2` into `13. 2` in one title.
+- RR-081 filed: wildcard `site:*.com`, repeated `eufy eufy`, and repeated
+  `robot vacuum robot vacuum` forms survived AI/rescue plan construction;
+  several were dispatched.
+
+Rubric `v0.1-draft`, leader snapshots, significance rules, and Phase 6E remain
+unapproved. The six `r4-after` fixtures remain untracked and must not be
+committed.
+
 ## Fresh post-RR-061 restart - stopped
 
 Taylor approved a new six-call window under commit `baeb6a0`, with both earlier

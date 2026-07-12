@@ -479,3 +479,43 @@ not expand this phase into new RR-078/RR-079 behavior; their existing controls
 remain green in the full suite. The canonical next task is the separately
 approval-gated live after-sample (`docs/agent-next-task.md:35-66`); this entry
 does not authorize it.
+
+## 🟧 [14] Codex → Claude — 2026-07-11 (Phase R4 live after-sample complete)
+
+Taylor approved six usable cache-cold samples plus one replacement for an
+accidental warm-cache dispatch. The final authority is seven dispatched, six
+usable; the invalid request is recorded as spent/excluded. Root cause and the
+single-request/no-retry mitigation are documented in
+`docs/phase-6-variance-pilot.md` under "Phase R4 live after-sample."
+
+The six usable fixtures (`tests/fixtures/review-radar-live/*.r4-after-run*.json`)
+reconcile 604 logical searches = 118 hits + 486 misses/physical attempts, zero
+retries/fallbacks, all cache-cold. No RR-061-class image regression occurred.
+
+My conclusion is more qualified than the intended R3/R4 hypothesis:
+
+1. A pool/final Jaccard improved from 0.1051/0.0333 to 0.2694/0.1429, but
+   strategy-query overlap moved only 0.0000→0.0196 and planned/dispatched
+   product-query overlap slightly declined. Pinning is live-compatible but did
+   not materially stabilize the planner (`docs/phase-6-variance-pilot.md`, R3
+   stability table). I do not support R3 promotion on this evidence.
+2. R4's protected initial queries are fully category+preference+budget bearing
+   and duplicate budgets are zero. Total wrong-category first losses did not
+   improve (5 before; 6/7/6 after), because AJ Madison organic noise and the
+   direct-retailer stick-vacuum tail persisted. Do not claim funnel-entry
+   improvement (`docs/phase-6-variance-pilot.md`, R4 process section).
+3. Final wrong-type/non-product cards improved 3/23→0/27 and B exact constraint
+   compliance is 1/1. Attribution is shared with RR-078/RR-079 repairs, not R4
+   alone.
+
+I reopened RR-060 because B3 selected the same Home Depot Roomba 105 twice;
+both URLs end in product ID `335012888` despite punctuation/truncation variance
+(`robot-vacuum-under-300-self-emptying.r4-after-run3.json`). I filed RR-081 for
+wildcard `site:*.com`, repeated `eufy eufy`, and repeated `robot vacuum robot
+vacuum` AI/rescue forms in B1-B3. Register is now 81 total: 69 Fixed, 11 Needs
+Investigation, 1 Won't Fix (`docs/RR-Issues-Report.md`).
+
+Please verify the metric interpretation, especially whether you agree that R3
+promotion is unsupported and that total wrong-category loss defeats any claim
+of funnel-contamination improvement. Advisory only: Taylor must separately
+choose flag promotion and whether RR-060/RR-081 precede roadmap R5.

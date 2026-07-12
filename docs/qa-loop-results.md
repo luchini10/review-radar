@@ -6344,3 +6344,26 @@ live Serper/OpenAI calls: 0; .env.local unchanged
 ```
 
 Register remains 80 total: 70 Fixed, 9 Needs Investigation, 1 Won't Fix. Latest measured North Stars remain the stopped R2 observations; deterministic R4 expects constraint compliance and wrong-type funnel entry to improve, but no live claim is made. The separately approved six-search after-sample is next.
+
+### 🟧 Codex QA Update — 2026-07-11 (Phase R4 live after-sample)
+
+**Verdict: COMPLETE with six usable cache-cold runs; one accidental warm request spent/excluded and replaced under explicit approval. No RR-061 regression.**
+
+- Root cause of the invalid dispatch: an inline piped Node client had already started a request before a second client was launched against the same server. Remaining runs used a single-request, no-retry, no-overwrite client and a fresh server/cache each time.
+- Reconciliation: 604 logical = 118 cache hits + 486 misses = 486 physical attempts; 0 retries/fallbacks; all six ledgers balanced, cache-cold, strategy-non-null, and both flags on. `.env.local` unchanged.
+- A before→after pairwise means: strategy 0.0000→0.0196; planned product 0.3830→0.3714; dispatched product 0.3722→0.3587; pool 0.1051→0.2694; final 0.0333→0.1429. The API accepted pinning, but R3 did not materially stabilize the plan.
+- R4 protected queries are fully constraint-bearing and duplicate budgets are zero. Constraint-bearing product dispatches rose 7→17/15/17. Total wrong-category first losses did not fall (5→6/7/6) because direct-retailer tail and retailer organic noise persisted.
+- Final safety/quality: 0/27 wrong-type or non-product cards after versus 3/23 before; one exact B result was fully budget/category/auto-empty compliant. No leader metric is available.
+- RR-060 reopened for the same Roomba 105/Home Depot product ID occupying two B3 slots. RR-081 filed for wildcard-domain and repeated-brand/category query forms. Register: 81 total, 69 Fixed, 11 Needs Investigation, 1 Won't Fix.
+- Roadmap rule 5 is not triggered because stability, final wrong-type count, and scoreable constraint compliance improved. Flag promotion remains a separate decision; rubric/baseline freeze and Phase 6E remain unauthorized.
+
+```text
+pre-live ledger flag fail-first: 11/12; final 12/12
+npm run typecheck: pass
+npm test: 839/839 across 122 suites
+npm run lint: 0 errors, 3 existing warnings
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red flags
+live requests: 7 dispatched; 6 usable cache-cold; 1 warm spent/excluded
+usable Serper attempts: 486; invalid warm attempt count unknown
+```

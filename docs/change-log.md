@@ -13,6 +13,18 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-11
 
+### Codex - Phase R4 live after-sample
+
+#### Measured
+
+- Completed six usable cache-cold live samples with both R3/R4 flags enabled on the server processes only; `.env.local` remains unchanged. One accidental warm-cache request was spent but excluded, then replaced under Taylor's explicit one-search approval (seven dispatched, six usable).
+- Six usable ledgers reconcile 604 logical lookups, 118 hits, 486 misses/physical attempts, zero retries/fallbacks, and empty starting caches.
+- Group A pool/final Jaccard improved from 0.1051/0.0333 to 0.2694/0.1429, but strategy-query Jaccard moved only from 0.0000 to 0.0196 and planned/dispatched product-query overlap declined slightly. R3 API compatibility passed; planner determinism remains unproven.
+- R4's protected initial queries carry `robot vacuum`, `self-emptying`, and `under $300`; diluted initial vacuum forms and duplicate-budget wording are gone. Total wrong-category first losses did not improve (5 before versus 6/7/6 after), while wrong-type/non-product final cards improved from 3/23 to 0/27.
+- Reopened RR-060 for duplicate Roomba 105 cards sharing Home Depot product ID `335012888`; filed RR-081 for wildcard-domain and repeated-token AI/rescue query forms. No RR-061-class image regression occurred.
+- Post-run verification: 839/839 tests across 122 suites; typecheck/build pass; lint 0 errors/3 existing warnings; offline eval no red flags.
+- Register: 81 total; 69 Fixed, 11 Needs Investigation, 1 Won't Fix. Flag promotion, rubric/leader freeze, R5/R6, and Phase 6E remain separately approval-gated.
+
 ### Claude - Phase R4 deterministic constraint-preserving query allocation
 
 #### Changed
