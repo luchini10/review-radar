@@ -2726,6 +2726,17 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 
 **Resolution:** The matcher now retains both normalized boundaries for every line phrase. Fail-first produced exactly the three intended corrective failures across the combined leader/identity matrix; final focused passed 20/20. Controls cover `Airtok`/`ai`, `Q50`/`q5`, Herman Miller/Aeron, and RYOBI/`ONE+`. The corrected matcher does not change the six R4 fixtures' provisional M3 recall values. Full suite passed 859/859 across 124 suites; typecheck/build/eval passed; lint remained 0 errors/3 existing warnings; zero live calls.
 
+## R7 readiness planning note — 2026-07-12
+
+No issue status changed. A zero-cost M3 provenance audit of the six R4-after
+fixtures found 22/27 displayed cards directly linked to normalized Serper
+candidate IDs, 1/27 directly linked only to `final_openai_research`, and four
+without a directly matching finalized lineage record at the candidate cap.
+Manual evidence narrows likely LLM-stream dependency to 2–3/27, but the exact
+count is NotScored. This does not resolve RR-014/RR-015 or satisfy R7's gate:
+the broad leader list remains provisional and no post-R6 live sample exists.
+The detailed readiness/R7A/R7B/R7C plan is in `docs/forward-roadmap.md`.
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)

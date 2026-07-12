@@ -940,3 +940,10 @@ No production pipeline or API contract changed in Phase 6A.
 - **Provider-bound query hygiene (RR-081):** the shared Serper boundary removes wildcard site operators and adjacent repeated generated phrases before dispatch, cache-key construction, and body serialization. Concrete domains, quoted phrases, and legitimate repeated proper names are preserved; equivalent normalized queries share one physical call.
 - **Proof:** focused 148/148; full suite 868/868 across 125 suites; typecheck/build/eval pass; lint 0 errors/3 existing warnings; zero live calls and no `.env.local` change.
 - **State:** register 82 issues — 77 Fixed, 4 Needs Investigation, 1 Won't Fix. Latest live North Stars are unchanged; no next phase is approved. Human leader-list review, the consumer-readiness arc plan, and detailed R7 planning remain separate decisions.
+
+## 33. R7 readiness design and zero-cost provenance audit (2026-07-12)
+
+- **Plan:** the existing roadmap now defines a Taylor-ratified leader denominator, an attributive six-run current flag-off gate, two-commit/default-off R7A, separately approved live R7B, and promotion-before-deletion R7C. No new plan file was created.
+- **Free evidence:** across 27 displayed cards in the six R4-after fixtures, 22 directly carry normalized Serper lineage and one directly carries final-OpenAI-only lineage. Four are direct-lineage-indeterminate at the candidate cap; manual evidence narrows the likely LLM-dependent total to 2–3/27.
+- **Interpretation:** the LLM stream is not proven deadweight. The exact dependency count is NotScored, and the historical fixtures cannot satisfy a post-R6 gate. The live gate must distinguish raw provider absence from parser/prefilter loss.
+- **State:** no application/test/flag/issue change, no `.env.local` edit, and zero live calls. Taylor must ratify/revise the seven broad shop-vac leaders before separately approving the six-search readiness window (~222–282 conservative Serper estimate).

@@ -13,6 +13,19 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-12
 
+### Codex - R7 readiness plan and zero-cost provenance audit
+
+#### Changed
+
+- Expanded the existing roadmap R7 section into the governing readiness gate plus R7A/R7B/R7C plan; no new plan file. The gate is ratified-list Serper-only normalized-pool recall, with raw→normalization→prefilter first-loss attribution and the six-run window serving as the R5/R6 checkpoint and contemporary flag-off control.
+- Split R7A into a pure shared-pipeline refactor commit followed by a default-off single-source behavior commit. R7B owns live flag-on evidence; R7C owns promotion and only then deletion of proven-unreachable LLM-candidate plumbing.
+- Audited the six saved R4-after fixtures: 22/27 displayed cards directly map to normalized Serper candidate IDs, 1/27 directly maps only to final OpenAI research, and four are not directly attributable at the ledger candidate cap. Manual inspection indicates 2–3/27 likely depend on the LLM candidate stream, so the live gate remains necessary.
+
+#### Verified
+
+- Read-only fixture analysis and register/doc consistency only; application code, tests, flags, `.env.local`, and issue statuses unchanged.
+- Live Serper/OpenAI calls: 0. No R7 implementation or leader-list ratification was performed.
+
 ### Codex - Phase R6 source-brand trust and query hygiene
 
 #### Changed

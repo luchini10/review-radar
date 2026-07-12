@@ -203,18 +203,114 @@ justifies their cost, otherwise reduce their budget instead.
 **North-Star effect:** metrics 2–3 via cleaner rescue/upgrade evidence; frees
 wasted Serper spend.
 
-## Phase R7 — Architecture consolidation (the endgame; separate detailed plan)
+## Phase R7 — Architecture consolidation (the endgame; detailed plan)
 
-Retire the second candidate stream: the final research call consumes the
-verified candidate set and writes prose/explanations only; discovery gaps are
-served by executing the strategist's queries through Serper (which R4 makes
-constraint-faithful), not by LLM-introduced products. Then delete or simplify
-the policing layers that become unreachable, with regression coverage proving
-each removal safe. Requires its own plan and approval; do not start from this
-document. Gate: North-Star trend from R2→R6 confirms the deterministic
-pipeline finds leaders on its own.
-**North-Star effect:** stability and wrong-type structurally; large
-maintenance reduction.
+**Objective:** retire the second candidate stream without trading away leader
+recall, constraint truthfulness, or any product trust boundary. OpenAI remains
+the query strategist and optional explanation writer; only normalized Serper
+candidates may enter deterministic verification, enrichment, and selection.
+
+### R7 readiness gate — before implementation
+
+The gate is **Serper-only normalized pool recall**, not final recall. It asks
+whether deterministic discovery can find the leaders before R7 removes the
+LLM candidate stream. Final deterministic recall is measured later for
+promotion. The gate is attributive:
+
+1. Taylor ratifies the provisional broad `shop vac` leader list and its line
+   tokens. `coversLeader()` remains the frozen matcher; the list is the human
+   denominator and cannot be silently revised to improve a score.
+2. Run three cache-cold current-behavior `shop vac` searches and three
+   cache-cold current-behavior constrained robot-vacuum searches. This is one
+   separately approved six-search window, conservatively ~222–282 Serper calls
+   before any observed R6 savings.
+3. The window serves three decisions: (a) R5/R6 North-Star checkpoint and
+   roadmap rule-5 audit, (b) R7 Serper-only discovery gate, and (c) the
+   contemporary flag-off control for R7B. R4-after remains historical context,
+   not the primary control.
+4. Broad normalized-pool recall must meet the existing ≥5/7 mean floor. A miss
+   is classified by first loss: absent from raw provider results means discovery
+   is not ready; present raw but lost in normalization/prefilter means repair
+   that generalized boundary before R7A. Because the matcher conservatively
+   undercounts unbranded titles, borderline misses receive manual ledger review,
+   never an automatic pass.
+5. Safety remains absolute: zero wrong-type/non-product final cards, zero hard
+   constraint violations among exact matches, no RR-061 image regression, six
+   balanced ledgers, and no excluded/warm run. Any safety failure stops the
+   window. Constrained leader recall remains informational only.
+
+**Zero-cost pre-gate result (2026-07-12, M3):** across the six saved R4-after
+fixtures, 22/27 displayed cards directly map to normalized Serper candidate
+IDs and 1/27 maps only to `final_openai_research`. Four cards cannot be directly
+attributed because lineage finalization did not retain a matching record at the
+candidate cap. Manual inspection finds clear same-model normalized Serper
+candidates for two, a nearby-variant-only DEWALT case for one, and raw-only
+RIDGID evidence with no normalized candidate for one. The evidence therefore
+suggests **2–3 of 27 displayed cards may depend on the LLM candidate stream**;
+it does not justify deleting that stream without the gate.
+
+### R7A — default-off single-source implementation (zero live calls)
+
+R7A lands as two commits inside one separately approved zero-live phase:
+
+1. **Pure refactor commit.** Extract one shared downstream candidate pipeline
+   from the current main route. It owns citation trust, requirement filtering,
+   buying-rubric attachment, review-evidence enrichment, asset enrichment,
+   missing-requirement rescue, revalidation, source-quality upgrade, and
+   dedupe/scoring/final selection. Route the existing main and error-fallback
+   behavior through it without changing outputs. Do not promote the current
+   `buildServerSearchFallbackResult()` unchanged: it does not have full main-
+   path parity. Prove flag-off route shape and saved-fixture replay parity.
+2. **Behavior branch commit.** Add
+   `REVIEW_RADAR_SINGLE_CANDIDATE_SOURCE=on`, default-off. Flag-on keeps the
+   OpenAI strategy and gap-check calls, executes their queries through Serper,
+   skips candidate-generating `openai_final_research`, and sends only normalized
+   Serper recommendations into the shared pipeline. Every displayed product
+   must retain a Serper candidate ID. The existing guarded narration pass may
+   rewrite explanation prose only after final selection; it can never add,
+   remove, reorder, or mutate product facts.
+
+R7A fail-first coverage must prove: an LLM-invented product cannot enter the
+flag-on pool; flag-on makes no candidate-generating final-research/web-search
+call; strategy and gap-check still run; every displayed product has Serper
+lineage; hostile narration cannot alter product set/order/prices/citations/
+specs/scores/pros/cons; planner/gap/narration failures degrade safely; flag-off
+behavior is unchanged; and every existing price, citation, requirement,
+product-type, identity, image, eligibility, and dedupe wall remains green.
+Delete no policing layer in R7A.
+
+### R7B — live flag-on validation and promotion decision
+
+R7B requires separate approval for the same six-search, three-per-shape
+cache-cold window (~222–282 conservative Serper estimate). Compare it primarily
+with the readiness window, under the same rubric/snapshot and three-run
+significance rule.
+
+Acceptance: AI-introduced displayed products = 0; wrong-type/non-product final
+cards = 0; exact hard-constraint violations = 0; broad normalized pool recall
+≥5/7 mean; broad final recall ≥3/7 mean; constrained recall informational;
+all ledgers balanced. Report pool/final Jaccard against the contemporary
+control and the corrected historical 0.2694/0.1429 context. RR-015's ≥60%
+target is never weakened: improvement below it is reported, not called Fixed.
+Also report total latency, the removed final-research stage duration, OpenAI
+calls, Serper calls, and cache behavior as the first consumer-readiness cost/
+speed evidence. Any safety or significant recall regression leaves the flag
+default-off and triggers rollback/diagnosis.
+
+### R7C — promotion, then deletion (separate approval)
+
+Only Taylor may promote the flag after R7B. In a later separately approved
+cleanup, remove the candidate-producing final-research request, AI-plus-Serper
+candidate merge, duplicated fallback plumbing, and schemas/prompts that exist
+only to accept LLM products. Remove a policing branch only after a fail-first
+reachability test proves it is exclusive to the retired stream. General price,
+citation, requirement, product-type, identity, image, eligibility, and dedupe
+trust gates remain regardless of provenance. Keep OpenAI strategy/gap planning
+and the post-selection guarded explainer.
+
+**North-Star effect:** stability and wrong-type structurally; broad/final
+recall and constraint compliance are explicit non-regression gates; large
+latency/cost and maintenance reduction if promoted.
 
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 
@@ -231,3 +327,7 @@ while results are unstable — revisit after R4); provider alternatives
 - R4: `Execute Phase R4 per docs/forward-roadmap.md. Deterministic portion first; then this message is my explicit approval for the six-search after-sample (~225–280 Serper calls). Stop after reporting.`
 - R5: `Execute Phase R5 per docs/forward-roadmap.md. Zero live calls; stop after reporting.`
 - R6: `Execute Phase R6 per docs/forward-roadmap.md. Zero live calls; stop after reporting.`
+- R7 readiness: `I ratify the broad shop-vac leader list recorded in docs/agent-next-task.md. Execute the R7 readiness gate per docs/forward-roadmap.md. This is my explicit approval for six live searches (~222–282 Serper calls). Stop after reporting.`
+- R7A: `Execute R7A per docs/forward-roadmap.md. Zero live calls; land the pure refactor and default-off behavior branch as separate commits; stop after reporting.`
+- R7B: `Execute R7B per docs/forward-roadmap.md. This is my explicit approval for six live flag-on searches (~222–282 Serper calls). Stop after reporting; do not promote.`
+- R7C promotion/deletion requires a new prompt written only after Taylor reviews R7B; no standing kickoff is pre-authorized.

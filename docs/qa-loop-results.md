@@ -6464,3 +6464,21 @@ live Serper/OpenAI calls: 0; .env.local unchanged
 ```
 
 North Stars are not remeasured without a live batch: provisional M3 broad leader recall remains 1.0/7; latest final wrong-type count remains 0/27; scoreable constrained exact compliance remains 1/1; pool/final pairwise Jaccard remains 0.2694/0.1429. Expected R6 effect is cleaner evidence/constraint paths and lower paid-call waste. Register: 82 total — 77 Fixed, 4 Needs Investigation, 1 Won't Fix. No next phase is authorized.
+
+### 🟧 Codex QA Update — 2026-07-12 (R7 readiness plan + zero-cost provenance audit)
+
+**Verdict: READINESS PLAN COMPLETE; R7 NOT STARTED. Zero live calls and zero behavior change.**
+
+- Combined Codex/Claude design is now the detailed R7 section of `docs/forward-roadmap.md`: human list ratification; attributive six-run Serper-only pool gate; two-commit default-off R7A; separate R7B live promotion evidence; promotion-before-deletion R7C.
+- The readiness batch is explicitly triple-duty: R5/R6 North-Star and rule-5 checkpoint, R7 deterministic discovery gate, and contemporary flag-off control. R4-after remains historical context.
+- Six saved R4-after fixtures contain 27 displayed cards. Direct finalized lineage proves 22 normalized-Serper-backed cards and one `final_openai_research`-only card. Four lack a directly matching finalized record at the ledger candidate cap. Manual inspection finds two clear same-model normalized Serper candidates, one nearby-variant-only DEWALT case, and one raw-only RIDGID case with no normalized candidate. Likely LLM-dependent share: 2–3/27; exact count is NotScored from these fixtures.
+- This audit does not establish the R7 gate. The leader list remains DRAFT, the evidence is M3 historical, and no post-R6 current sample exists.
+
+```text
+application/test files changed: 0
+live Serper/OpenAI calls: 0
+.env.local: unchanged
+issue statuses/counts: unchanged (82 total; 77 Fixed; 4 NI; 1 Won't Fix)
+```
+
+Next decisions, in order: Taylor ratifies/revises the seven broad shop-vac leaders; Taylor separately approves six live gate searches (~222–282 conservative Serper estimate); only a passing gate can unlock separately approved zero-live R7A.

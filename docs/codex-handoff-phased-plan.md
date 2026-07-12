@@ -1725,3 +1725,12 @@ Stop. Do not start R6, run live searches, revise the leader lists, or start Phas
 - Register: 82 total; 77 Fixed, 4 Needs Investigation, 1 Won't Fix. Latest live North Stars are unchanged because R6 was deterministic-only.
 
 Stop. No next phase is approved. Human leader-list review, the consumer-readiness arc plan, and a detailed R7 plan each require Taylor's separate decision; R7 execution and all live spend remain unauthorized.
+
+### R7 readiness planning and provenance-audit record (2026-07-12)
+
+- The existing `docs/forward-roadmap.md` R7 section now contains the detailed gate/R7A/R7B/R7C plan. No competing plan document was created.
+- Gate: Taylor-ratified broad leader list, then six separately approved cache-cold current-behavior searches (~222–282 conservative Serper estimate). Measure Serper-only normalized-pool recall and attribute misses across raw provider, normalization, and prefilter. The same sample is the R5/R6 checkpoint and R7B flag-off control.
+- M3 pre-gate audit: 22/27 final cards have direct normalized Serper lineage; 1/27 is directly final-OpenAI-only; four are lineage-indeterminate at the cap. Manual evidence suggests 2–3/27 likely depend on the LLM candidate stream. This sharpens but does not pass the gate.
+- R7A is two commits: pure downstream-pipeline extraction/parity, then default-off single-source behavior. R7B live evidence precedes any promotion; R7C promotion precedes deletion. General trust gates are never removed merely because provenance changes.
+
+Stop. No leader list was ratified, no live window was approved/run, and R7A remains unauthorized.

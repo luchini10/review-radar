@@ -1537,3 +1537,24 @@ queries should share the cache and create one physical request.
 **Verification:** focused 148/148; full 868/868 across 125 suites; typecheck and
 build pass; lint 0 errors/3 existing warnings; deterministic eval no red flags;
 zero live calls; `.env.local` unchanged.
+
+## 2026-07-12 - R7 pre-gate provenance audit
+
+**Evidence mode:** M3 historical fixture inspection only. Six R4-after fixtures,
+27 displayed cards. Finalized lineage directly attributes 22 cards to normalized
+Serper candidate IDs and one to `final_openai_research` only. Four displayed
+cards have no direct finalized record because attribution did not retain a
+matching record at the candidate cap; never turn that missingness into Serper
+or AI credit.
+
+Manual boundary review of the four: eufy C10 and Roomba 105 have clear same-model
+normalized Serper candidates; DEWALT DXV12P has normalized nearby QT/QTA variants
+but exact identity is ambiguous; RIDGID HD1200 appears in raw provider results
+but has no normalized candidate ID. Supported conclusion: 2–3/27 likely rely on
+the LLM candidate stream, while the exact count is NotScored.
+
+This audit cannot replace the R7 readiness gate: the broad leader list is still
+DRAFT, fixtures predate R5/R6, and no current post-R6 sample exists. For the live
+gate, report raw-provider absence separately from normalization/prefilter loss;
+manually inspect borderline `coversLeader()` misses because unbranded titles are
+a known conservative undercount.
