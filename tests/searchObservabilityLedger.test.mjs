@@ -729,4 +729,22 @@ describe("request-scoped search observability ledger", () => {
       }
     }
   });
+
+  it("includes the constraint-allocation flag in the environment snapshot", () => {
+    const previous = process.env.REVIEW_RADAR_CONSTRAINT_ALLOCATION;
+
+    try {
+      process.env.REVIEW_RADAR_CONSTRAINT_ALLOCATION = "on";
+      assert.equal(
+        reviewRadarFlagSnapshot().REVIEW_RADAR_CONSTRAINT_ALLOCATION,
+        "on",
+      );
+    } finally {
+      if (previous === undefined) {
+        delete process.env.REVIEW_RADAR_CONSTRAINT_ALLOCATION;
+      } else {
+        process.env.REVIEW_RADAR_CONSTRAINT_ALLOCATION = previous;
+      }
+    }
+  });
 });
