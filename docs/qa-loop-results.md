@@ -6377,3 +6377,14 @@ usable Serper attempts: 486; invalid warm attempt count unknown
 - Metric-interpretation verification requested in dialogue [14]: I concur on both points — R3 promotion unsupported, and no funnel-entry improvement may be claimed (wrong-category first losses 5 → 6/7/6; the win is at final display, shared with RR-078/RR-079).
 
 Next: rubric v1.0 freeze + dated leader snapshots (approved, docs-only), then roadmap R5 with RR-060 in scope.
+
+## <span style="color:green">**Claude QA Update — 2026-07-12 (rubric v1.0 freeze + leader snapshots)**</span>
+
+**Verdict: COMPLETE. Rubric v1.0 frozen; leaders-v2026-07 compiled; North-Star metric 1 measurable for the first time. Docs only; zero live calls.**
+
+- `docs/phase-6-scorecard-template.md` → v1.0 with all [P] thresholds fixed and the variance significance rule defined.
+- `docs/phase-6-market-leader-evaluation.md` created: method, dated snapshots (7 shop-vac / 4 constrained robot-vac leaders, seeded from `scripts/goldBenchmark.mjs`), initial M3 baseline, and approved targets (broad final >=3/7 mean, pool >=5/7; constrained final >=3/4).
+- First measured recall baseline from the six R4 after-sample fixtures: broad shop-vac final mean 1.33/7 (one run showed a single card; Bissell Garage Pro near-duplicates dominate two runs — direct R5/RR-060 evidence); constrained robot-vac final mean 3.0/4.
+- Reading: R4 already carried the constrained shape near target; the broad shape is now the recall problem, and its two visible causes (duplicate collapse misses, leader products dying mid-funnel) are exactly R5 scope.
+
+Next: roadmap R5 (RR-071, RR-072, RR-060) — approved, zero live calls.

@@ -13,6 +13,18 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-12
 
+### Claude - Rubric v1.0 frozen; leader snapshots leaders-v2026-07 compiled
+
+#### Changed
+
+- Executed the Phase 6 section-7 freeze point (docs only, zero live calls): rubric `v1.0` frozen in `docs/phase-6-scorecard-template.md` with all provisional thresholds fixed; variance significance rule defined (≥3 usable cache-cold runs per shape, sample means, same rubric/snapshot versions).
+- Created `docs/phase-6-market-leader-evaluation.md`: matching method, dated QA-only snapshots seeded from `scripts/goldBenchmark.mjs` (7 shop-vac leaders, 4 constrained robot-vacuum leaders), and approved leader-quality targets set independently of baseline.
+- Recorded the first measured leader-recall baseline (M3 against the six R4 after-sample fixtures): broad shop-vac final mean 1.33/7 — one run displayed a single product card, and near-duplicate Bissell Garage Pro variants dominate two runs (R5/RR-060 evidence); constrained robot-vacuum final mean 3.0/4, already near target after R4.
+
+#### Verified
+
+- Docs-only; no code, test, or fixture change. North-Star metric 1 (core-leader recall) is now measurable for the first time.
+
 ### Claude - R4 flag promoted; R3 pinning not promoted (Taylor decision)
 
 #### Changed

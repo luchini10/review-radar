@@ -1,8 +1,27 @@
 # Phase 6 Reliability Scorecard Template
 
-**Rubric version:** `v0.1-draft`  
-**Status:** Phase 6A instrument only; not frozen and not a release claim  
-**Threshold marker:** Quality deductions, grade bands, review floors, and staleness cutoffs marked **[P]** are provisional until the v1.0 freeze after Phase 6D. Product-safety tolerance is absolute at zero failures and is not provisional.
+**Rubric version:** `v1.0` (frozen 2026-07-12, Taylor-approved)  
+**Status:** Frozen measurement contract; not a release claim  
+**Threshold marker:** All values previously marked **[P]** are frozen at their stated values as of v1.0. Product-safety tolerance remains absolute at zero failures. Changes now require a new rubric version; results are never compared across rubric versions.
+
+## v1.0 freeze record (2026-07-12)
+
+- **Leader snapshots:** `leaders-v2026-07` in
+  `docs/phase-6-market-leader-evaluation.md` (method, dated data, initial M3
+  baseline recall, and approved leader-quality targets).
+- **Variance significance rule:** an improvement or regression claim for
+  stability or recall requires at least three usable cache-cold runs per
+  query shape in each compared sample, scored as sample means under the same
+  rubric and snapshot versions; a single fresh run is an observation, not
+  proof, unless it exposes a Critical safety failure (measurement ladder
+  rungs 4-5).
+- **Baseline North-Star values (R4 after-sample, commit `91e1cca`):**
+  final leader recall mean 1.33/7 broad / 3.0/4 constrained; wrong-type or
+  non-product final cards 0/27; scoreable constraint compliance 1/1 (B
+  exacts); A-group pool/final run-overlap 0.2694/0.1429; planner-output
+  overlap 0.0196 (unpinned by decision — see RR-015).
+- **Flag state at freeze:** `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`
+  (promoted 2026-07-12); `REVIEW_RADAR_PINNED_PLANNING` default-off.
 **Phase 6 source of truth:** `docs/phase-6-reliability-gauntlet-plan.md`. This scorecard implements the master plan and must not override it.
 
 This document is the contract for the existing ReviewRadar measurement tools and any approved extensions to them. It does not create a second scoring system. Where a current tool cannot produce the required evidence, the metric is `NotScored` and the gap is listed for approval; no missing field is inferred. Where a metric does not apply to the query shape, it is `NotApplicable`, not missing evidence.
