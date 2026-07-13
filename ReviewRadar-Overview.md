@@ -1009,3 +1009,25 @@ No production pipeline or API contract changed in Phase 6A.
   until C4: broad final recall 1/7 mean, one wrong-type card in the incomplete
   readiness sample, zero exact hard-constraint failures, stability NotScored.
   C3 is separately approval-gated; R7A remains blocked.
+
+## 37. Corrective C3 normalization recovery (2026-07-13)
+
+- **Purpose:** preserve specific products that Serper already returned when its
+  first URL field is a rejected wrapper/listing URL but another field contains
+  a safe merchant product page. This is recovery inside normalization, not a
+  new search strategy or another paid lookup.
+- **Safety:** the source title must already identify a model/SKU. URL slugs only
+  corroborate; they never originate identity. Google/tracking wrappers,
+  conflicting models, wrong product types, generic/evidence/support pages, and
+  all existing product-card eligibility failures remain blocked.
+- **Rollout:** `REVIEW_RADAR_NORMALIZATION_RECOVERY` is default-off and was not
+  promoted in `.env.local`. Off/unset preserves normalized candidates and normal
+  API responses. Debug ledgers record exact shadow recovery/block decisions.
+- **Measurement:** the readiness analyzer now counts unique leader/run recovery
+  opportunities. The old four usable fixtures contain no C3 trace, so recovery
+  is NotScored; their current/prospective broad pool recall remains 1/7.
+- **Proof:** focused 71/71; identity/type/source-upgrade wall 207/207; full
+  891/891 across 127 suites; typecheck/build/eval pass; lint 0 errors/3 existing
+  warnings. Zero live calls.
+- **State:** C3 is complete. C4 requires a separate peer checkpoint, benchmark
+  decision, and six-search approval. R7A remains blocked and separately gated.

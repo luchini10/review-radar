@@ -1,6 +1,6 @@
 # Agent Next Task
 
-Generated: 2026-07-12
+Generated: 2026-07-13
 
 ## Current state
 
@@ -59,32 +59,44 @@ Generated: 2026-07-12
    type titles are rejected without letting URLs positively admit products.
    RR-060 and RR-083 are Fixed deterministically. Taylor explicitly authorized
    Codex to proceed while Claude usage was unavailable; peer review is deferred.
+8. **Corrective C3 normalization recovery complete, default-off.** The shared
+   Serper normalizer can select a safe merchant product URL already present in
+   a shopping, organic, or direct-retailer response. Recovery requires title-
+   carried model/SKU identity, rejects Google/tracking wrappers, model conflicts,
+   wrong product types, and every existing product-eligibility failure, and
+   never follows redirects or dispatches another lookup. With
+   `REVIEW_RADAR_NORMALIZATION_RECOVERY` unset/off, candidates and normal API
+   responses are unchanged; debug ledgers record exact shadow decisions. Old
+   readiness fixtures predate these traces, so recovery opportunity is
+   NotScored until a separately approved current window.
 
-Current verification: C2 focused identity/type/source-upgrade tests **184/184**;
-full suite **881/881 across 127 suites**; typecheck/build/offline eval pass;
+Current verification: C3 focused normalization/ledger/analyzer tests **71/71**;
+identity/type/source-upgrade safety wall **207/207**; full suite **891/891
+across 127 suites**; typecheck/build/offline eval pass;
 lint 0 errors/3 existing warnings. Register: 83 issues — **78 Fixed, 4 Needs
 Investigation, 1 Won't Fix, 0 Open**.
 
 ## Required next decisions — no phase is currently approved
 
-R7A cannot start. C1 and C2 are complete; Taylor's decisions are, in order:
+R7A cannot start. C1 through C3 are complete; Taylor's decisions are, in order:
 
-1. **Approve C3 only:** default-off/shadow-first normalization recovery, zero
-   live calls. C2's safety pressure is closed deterministically first as
-   required. C3 must finish and report before any live request.
-2. Obtain the deferred Claude review of C1+C2 when usage returns, and the
-   planned C2+C3 checkpoint before asking Taylor for C4 spend. If Claude remains
-   unavailable, Taylor must explicitly decide whether to waive that checkpoint.
-3. Ratify or revise the proposed `leaders-v2026-07c` constrained list and
+1. Obtain the deferred Claude review of C1+C2 and the planned C2+C3 checkpoint
+   when usage returns. If Claude remains unavailable, Taylor must explicitly
+   decide whether to waive that checkpoint before C4.
+2. Ratify or revise the proposed `leaders-v2026-07c` constrained list and
    matcher, then separately decide whether to fund C4's six-search window.
-4. R7A remains approval-gated even after a future readiness pass.
+3. If C4 is approved, choose its exact flag-off/shadow versus enabled sampling
+   design before dispatch. Six searches are a separate live-spend authorization;
+   no approval from the failed readiness window carries forward.
+4. R7A remains separately approval-gated even after a future readiness pass.
 
 The consumer-readiness arc remains queued. R7B will supply its first current
 latency/cost evidence by measuring the removed final-research stage.
 
 ## Safety boundary
 
-Do not start R7A or another phase, run replacement/readiness searches, modify `.env.local` further, alter the
+Do not start C4, R7A, or another phase, run replacement/readiness searches,
+promote `REVIEW_RADAR_NORMALIZATION_RECOVERY`, modify `.env.local` further, alter the
 frozen rubric/snapshot versions (new versions require corrective commits),
 start Phase 6E, or commit live fixtures / pre-existing untracked artifacts
 without Taylor's separate explicit approval.

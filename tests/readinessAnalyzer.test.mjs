@@ -17,6 +17,7 @@ function candidate(overrides) {
     prefilterAccepted: overrides.prefilterAccepted ?? null,
     mergedIntoCandidateId: overrides.mergedIntoCandidateId || null,
     firstLoss: overrides.firstLoss || null,
+    normalizationRecovery: overrides.normalizationRecovery || null,
     selected: false,
   };
 }
@@ -71,6 +72,14 @@ function fixture() {
                 firstLoss: {
                   stage: "lost_in_normalization",
                   subreason: "search_or_listing_url",
+                },
+                normalizationRecovery: {
+                  mode: "shadow",
+                  outcome: "would_recover",
+                  originalRejectionReason: "search_or_listing_url",
+                  originalUrl: "https://www.google.com/search?q=ridgid+wd4070",
+                  proposedUrl: "https://shop.example.com/products/ridgid-wd4070",
+                  blocker: null,
                 },
               }),
               candidate({
@@ -135,6 +144,11 @@ describe("R7 readiness fixture analyzer", () => {
         count: 1,
       },
     ]);
+    assert.equal(currentRidgid.normalizationRecoveryOpportunity, false);
+    assert.equal(prospectiveRidgid.normalizationRecoveryOpportunity, true);
+    assert.deepEqual(prospectiveRidgid.normalizationRecoveryNames, [
+      "RIDGID WD4070 Wet/Dry Vacuum",
+    ]);
   });
 
   it("states the candidate-merge inflation caveat in aggregate output", () => {
@@ -143,5 +157,10 @@ describe("R7 readiness fixture analyzer", () => {
 
     assert.match(aggregate.contract.preAiPool, /candidate_merge still counts/);
     assert.match(aggregate.contract.caveat, /inflated by URL\/name lineage/);
+    assert.equal(aggregate.normalizationRecovery.observedRuns, 1);
+    assert.equal(
+      aggregate.normalizationRecovery.prospective07cUniqueLeaderRunOpportunities,
+      1,
+    );
   });
 });

@@ -6546,3 +6546,41 @@ Register unchanged: 83 total / 76 Fixed / 6 Needs Investigation / 1 Won't Fix.
   wrong-type final count 1 in the incomplete readiness sample; exact hard-
   constraint failures 0; stability NotScored. Register: 83 total / 78 Fixed /
   4 Needs Investigation / 1 Won't Fix.
+
+## 🟧 Codex QA Update — 2026-07-13 (Corrective C3 normalization recovery)
+
+**Verdict: DEFAULT-OFF/SHADOW-FIRST RECOVERY COMPLETE; C4 NOT STARTED.**
+
+- Fail-first produced five intended failures: merchant URL recovery, a field-
+  order tracking trap, full normalization decisions, shadow lineage, and flag
+  inventory. Existing controls remained green.
+- One shared path handles shopping, organic fallback, and direct-retailer
+  normalization. It only reuses URLs already present in the Serper response;
+  it neither follows redirects nor dispatches a direct-product search.
+- A source title must already carry model/SKU identity. The alternate URL may
+  corroborate that identity but cannot originate it. Google and tracking
+  wrappers, title/path model conflicts, wrong-type paths, evidence/collection
+  pages, and existing product-eligibility failures remain blocked.
+- With `REVIEW_RADAR_NORMALIZATION_RECOVERY` unset/off, normalized candidates
+  and normal API responses are unchanged. Debug ledgers gain exact per-result
+  shadow decisions. The analyzer counts unique leader/run opportunities rather
+  than repeated rejected rows.
+- Replaying the four usable readiness fixtures leaves current/prospective broad
+  recall at 1/7 and reports zero observed recovery runs, because those captures
+  predate C3 traces. Recovery impact is therefore NotScored, not zero.
+
+```text
+focused C3 tests: 71/71
+identity/type/source-upgrade safety wall: 207/207
+npm test: 891/891 across 127 suites
+npm run typecheck: pass
+npm run lint: 0 errors, 3 existing warnings
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red flags
+live Serper/OpenAI calls: 0; .env.local unchanged; flag default-off
+```
+
+Latest live North Stars are unchanged: broad final/pool recall remains 1/7 in
+the two usable broad readiness runs, exact hard-constraint failures remain zero,
+and stability remains NotScored from the incomplete window. C4 and R7A remain
+separately approval-gated.

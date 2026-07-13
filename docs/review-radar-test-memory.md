@@ -1611,3 +1611,29 @@ a known conservative undercount.
   collection, existing PSI/SCFM conflicts, and valid sparse robot vacuums.
 - Verification: focused 184/184, full 881/881 across 127 suites, typecheck/
   build/eval pass, lint 0 errors/3 existing warnings. Zero live calls.
+
+## Corrective C3 normalization recovery — 2026-07-13
+
+- Environment gate: `REVIEW_RADAR_NORMALIZATION_RECOVERY=on`. Default/unset is
+  behavior-off; `.env.local` was not changed.
+- Reuse rule: inspect only the Serper result's existing `productLink`,
+  `product_link`, and `link`. Do not follow a redirect, decode a wrapper into an
+  arbitrary URL, or dispatch a direct-product lookup.
+- Identity rule: title-carried model/SKU is mandatory. URL-path model evidence
+  may corroborate and conflicting title/path models veto; the slug cannot create
+  an otherwise absent identity.
+- Safety order: valid HTTP → title identity → non-Google/non-tracking host → no
+  model conflict → shared product-type verdict → existing specific-product and
+  product-eligibility verdict. Preserve evidence/listing/support/root rejection.
+- Field-order trap: when the provider exposes a tracker, a collection, and a
+  clean product URL, select the clean URL only with the flag on. With the flag
+  off, output stays identical and the ledger records a shadow opportunity.
+- Shopping, organic fallback, and direct-retailer paths must emit exact
+  normalization decisions. Never collapse all new losses back to
+  `normalizer_rejected_result` when a specific reason is available.
+- Analyzer contract: recovery counts are unique leader/run opportunities. Old
+  fixtures with no trace are NotScored even when their current/prospective broad
+  recall remains 1/7.
+- Verification: fail-first 59/64 (five intended failures); focused final 71/71;
+  safety wall 207/207; full 891/891 across 127 suites; typecheck/build/eval pass;
+  lint 0 errors/3 existing warnings. Zero live calls.

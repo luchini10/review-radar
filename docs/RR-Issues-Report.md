@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through corrective C1
+## Compiled for AI Agent Consumption — Phase 0 through corrective C3
 
-**Generated:** 2026-07-12
-**Scope:** All phases from initial measurement harness through corrective C1
+**Generated:** 2026-07-13
+**Scope:** All phases from initial measurement harness through corrective C3
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -2850,6 +2850,28 @@ type final card; exact hard-constraint failures are zero; stability is
 NotScored. C2 expects zero wrong-type output and recovered distinct final slots,
 but only a later approved live window can establish those effects.
 
+## Corrective C3 normalization-recovery note — 2026-07-13
+
+No issue status or summary count changed. C3 extends the existing Serper
+normalization boundary behind default-off
+`REVIEW_RADAR_NORMALIZATION_RECOVERY`. When enabled, it may select a safe
+merchant product URL already supplied in the same shopping, organic, or direct-
+retailer result. It dispatches no lookup, follows no redirect, and adds no
+direct-product fallback.
+
+Recovery is intentionally stricter than ordinary normalization: the source
+title must already carry a model/SKU; a URL slug is corroborating-only. Google
+and tracking wrappers, conflicting title/path models, wrong product types,
+search/listing/evidence/support pages, and every existing product-eligibility
+failure remain blocked. Flag-off output is unchanged while debug ledgers record
+exact `would_recover` or `blocked` decisions and subreasons for future evidence.
+
+Historical fixtures contain no C3 trace. Their broad normalized-pool recall
+remains 1/7 under both `07b` and the prospective `07c` matcher, and recovery
+opportunity is NotScored rather than zero. Focused tests are 71/71; the full
+suite is 891/891 across 127 suites; typecheck/build/offline eval pass; lint has
+0 errors/3 existing warnings. Zero live calls; `.env.local` is unchanged.
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)
@@ -2871,7 +2893,7 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-014 + RR-015** — R7 readiness remains blocked on normalization,
-   recall, and stability after C2 closed the deterministic identity/type safety
-   defects. C3 is the next separately approved recovery phase.
+1. **RR-014 + RR-015** — R7 readiness remains blocked on recall and stability.
+   C3 now provides default-off recovery and shadow telemetry, but only a
+   separately approved C4 window can measure whether it clears the gate.
 2. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3 but varied by model, while Tapo appeared raw and died in normalization.

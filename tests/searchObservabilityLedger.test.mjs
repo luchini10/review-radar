@@ -22,7 +22,9 @@ import {
   dedupeRawCandidates,
   sanitizeSerperQuery,
   searchSerperForProducts,
+  searchSerperDirectRetailer,
   searchSerperImageEvidence,
+  searchSerperOrganic,
   searchSerperOrganicEvidence,
   searchSerperShopping,
   searchSerperShoppingWithDiagnostics,
@@ -475,6 +477,147 @@ describe("request-scoped search observability ledger", () => {
     });
   });
 
+  it("records flag-off merchant recovery as shadow-only lineage evidence", async () => {
+    await withMockedSerper(async () =>
+      response({
+        shopping: [
+          {
+            title: "Example RV200 Robot Vacuum",
+            productLink:
+              "https://www.google.com/search?ibp=oshop&udm=28&prds=pid%3A123456789",
+            link: "https://shop.example.com/products/example-rv200-robot-vacuum",
+            source: "Example Store",
+            price: "$249",
+          },
+        ],
+      }), async () => {
+      const state = ledger();
+      const snapshot = await runWithSearchObservabilityLedger(state, async () => {
+        const result = await searchSerperShoppingWithDiagnostics(
+          "Example RV200 robot vacuum",
+          "robot vacuum",
+          { enableNormalizationRecovery: false },
+          {
+            origin: "deterministic_plan",
+            phase: "initial_discovery",
+            purpose: "product_discovery",
+            originalQuery: "Example RV200 robot vacuum",
+          },
+        );
+        assert.deepEqual(result.candidates, []);
+        return buildSearchObservabilitySnapshot();
+      });
+
+      const [rawResult] = snapshot.candidateLineage.candidates;
+      assert.equal(rawResult.normalized, false);
+      assert.equal(rawResult.firstLoss.subreason, "search_or_listing_url");
+      assert.deepEqual(rawResult.normalizationRecovery, {
+        mode: "shadow",
+        outcome: "would_recover",
+        originalRejectionReason: "search_or_listing_url",
+        originalUrl:
+          "https://www.google.com/search?ibp=oshop&udm=28&prds=pid%3A123456789",
+        proposedUrl:
+          "https://shop.example.com/products/example-rv200-robot-vacuum",
+        blocker: null,
+      });
+    });
+  });
+
+  it("records enabled merchant recovery on the normalized Serper candidate", async () => {
+    await withMockedSerper(async () =>
+      response({
+        shopping: [
+          {
+            title: "Example RV200 Robot Vacuum",
+            productLink:
+              "https://www.google.com/search?ibp=oshop&udm=28&prds=pid%3A123456789",
+            link: "https://shop.example.com/products/example-rv200-robot-vacuum",
+            source: "Example Store",
+            price: "$249",
+          },
+        ],
+      }), async () => {
+      const state = ledger();
+      const snapshot = await runWithSearchObservabilityLedger(state, async () => {
+        const result = await searchSerperShoppingWithDiagnostics(
+          "Example RV200 robot vacuum",
+          "robot vacuum",
+          { enableNormalizationRecovery: true },
+          {
+            origin: "deterministic_plan",
+            phase: "initial_discovery",
+            purpose: "product_discovery",
+            originalQuery: "Example RV200 robot vacuum",
+          },
+        );
+        assert.equal(result.candidates.length, 1);
+        return buildSearchObservabilitySnapshot();
+      });
+
+      const [candidate] = snapshot.candidateLineage.candidates;
+      assert.equal(candidate.normalized, true);
+      assert.equal(candidate.productUrl, "https://shop.example.com/products/example-rv200-robot-vacuum");
+      assert.equal(candidate.normalizationRecovery.mode, "enabled");
+      assert.equal(candidate.normalizationRecovery.outcome, "recovered");
+    });
+  });
+
+  it("subclassifies organic and direct-retailer normalization losses", async () => {
+    let callCount = 0;
+    await withMockedSerper(async () => {
+      callCount += 1;
+      return callCount === 1
+        ? response({
+            organic: [
+              {
+                title: "Best Robot Vacuums Buying Guide",
+                link: "https://editorial.example.com/reviews/best-robot-vacuums",
+                snippet: "Editorial roundup.",
+              },
+            ],
+          })
+        : response({
+            organic: [
+              {
+                title: "Robot Vacuums - Home Depot",
+                link: "https://www.homedepot.com/b/Appliances-Vacuum-Cleaners/N-5yc1vZbv1z",
+                snippet: "Retailer category page.",
+              },
+            ],
+          });
+    }, async () => {
+      const state = ledger();
+      const snapshot = await runWithSearchObservabilityLedger(state, async () => {
+        await searchSerperOrganic("best robot vacuums", "robot vacuum", {
+          origin: "deterministic_plan",
+          phase: "initial_discovery",
+          purpose: "product_discovery",
+          originalQuery: "best robot vacuums",
+        });
+        await searchSerperDirectRetailer(
+          "home_depot",
+          "robot vacuum",
+          "robot vacuum",
+          {
+            origin: "deterministic_plan",
+            phase: "initial_discovery",
+            purpose: "product_discovery",
+            originalQuery: "robot vacuum",
+          },
+        );
+        return buildSearchObservabilitySnapshot();
+      });
+
+      const subreasons = snapshot.candidateLineage.candidates.map(
+        (candidate) => candidate.firstLoss?.subreason,
+      );
+      assert.equal(subreasons.length, 2);
+      assert.ok(subreasons.every(Boolean));
+      assert.equal(subreasons.includes("normalizer_rejected_result"), false);
+    });
+  });
+
   it("records requirement, revalidation, and final-selection lineage including identity collapse", () => {
     const requirementFailed = recommendation("Requirement Failed", {
       exactMatch: false,
@@ -801,6 +944,24 @@ describe("request-scoped search observability ledger", () => {
         delete process.env.REVIEW_RADAR_PINNED_PLANNING;
       } else {
         process.env.REVIEW_RADAR_PINNED_PLANNING = previous;
+      }
+    }
+  });
+
+  it("includes the normalization-recovery flag in the environment snapshot", () => {
+    const previous = process.env.REVIEW_RADAR_NORMALIZATION_RECOVERY;
+
+    try {
+      process.env.REVIEW_RADAR_NORMALIZATION_RECOVERY = "on";
+      assert.equal(
+        reviewRadarFlagSnapshot().REVIEW_RADAR_NORMALIZATION_RECOVERY,
+        "on",
+      );
+    } finally {
+      if (previous === undefined) {
+        delete process.env.REVIEW_RADAR_NORMALIZATION_RECOVERY;
+      } else {
+        process.env.REVIEW_RADAR_NORMALIZATION_RECOVERY = previous;
       }
     }
   });

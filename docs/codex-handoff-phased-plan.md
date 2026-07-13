@@ -1786,3 +1786,27 @@ Stop. Await Claude's C1 review and Taylor's separate C2 approval.
   live calls; flags, `.env.local`, frozen benchmark, and live fixtures unchanged.
 
 Stop. C3 is the next separately approval-gated phase; R7A remains blocked.
+
+### Corrective C3 normalization recovery record (2026-07-13)
+
+- Flag: `REVIEW_RADAR_NORMALIZATION_RECOVERY`, default-off and not added to
+  `.env.local`. Off/unset preserves normalized candidates and non-debug API
+  responses; debug ledgers intentionally gain shadow-only annotations.
+- Scope: one shared guarded path for Shopping, organic fallback, and direct-
+  retailer results. It examines only Serper-supplied URL fields and never
+  follows redirects or makes a direct-product lookup.
+- Trust contract: the source title must already carry model/SKU identity. A
+  merchant slug may corroborate but cannot originate identity. Google/tracking
+  wrappers, model conflicts, wrong-type paths, and the existing generic-page,
+  evidence-domain, support-path, and eligibility vetoes remain authoritative.
+- Observability: every considered result carries an exact normalization
+  decision in the debug ledger. The analyzer aggregates unique leader/run
+  recovery opportunities, not repeated result rows. Pre-C3 fixtures have no
+  trace and are explicitly NotScored for recovery opportunity.
+- Verification: fail-first 59/64 with exactly five intended failures; focused
+  final 71/71; safety wall 207/207; full 891/891 across 127 suites; typecheck,
+  build, and offline eval pass; lint 0 errors/3 existing warnings. Zero live
+  calls.
+
+Stop. C4 requires a separate six-search approval and the deferred C2+C3 peer
+checkpoint. R7A remains blocked and separately approval-gated.

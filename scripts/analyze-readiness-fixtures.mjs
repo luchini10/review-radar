@@ -65,6 +65,14 @@ function analyzeWithMatcher({
   const postMergeRecords = prefilterRecords.filter(
     (candidate) => candidate.firstLoss?.stage !== "candidate_merge",
   );
+  const recoveryRecords = discoveryRecords.filter((candidate) =>
+    ["would_recover", "recovered"].includes(
+      candidate.normalizationRecovery?.outcome,
+    ),
+  );
+  const recoveryObserved = discoveryRecords.some(
+    (candidate) => candidate.normalizationRecovery,
+  );
   const finalNames = finalProducts.map((product) => product.name);
 
   const leaders = benchmark.coreLeaders.map((leader) => {
@@ -86,6 +94,9 @@ function analyzeWithMatcher({
       matcher(candidate.name, leader),
     );
     const displayedMatches = finalNames.filter((name) => matcher(name, leader));
+    const recoveryMatches = recoveryRecords.filter((candidate) =>
+      matcher(candidate.name, leader),
+    );
 
     let terminalStage = "displayed";
     let terminalReasons = [];
@@ -120,6 +131,10 @@ function analyzeWithMatcher({
       postMergePresence: postMergeMatches.length > 0,
       displayedPresence: displayedMatches.length > 0,
       displayedNames: displayedMatches,
+      normalizationRecoveryOpportunity: recoveryMatches.length > 0,
+      normalizationRecoveryNames: Array.from(
+        new Set(recoveryMatches.map((candidate) => candidate.name)),
+      ),
       terminalStage,
       terminalReasons,
     };
@@ -147,6 +162,17 @@ function analyzeWithMatcher({
     finalRecall: {
       covered: leaders.filter((leader) => leader.displayedPresence).length,
       total: benchmark.coreLeaders.length,
+    },
+    normalizationRecovery: {
+      observed: recoveryObserved,
+      uniqueLeaderRunOpportunities: leaders.filter(
+        (leader) => leader.normalizationRecoveryOpportunity,
+      ).length,
+      productNames: Array.from(
+        new Set(
+          leaders.flatMap((leader) => leader.normalizationRecoveryNames),
+        ),
+      ),
     },
     leaders,
     recordedLeaderResultLossFrequency: frequencyRows(recordedResultLossFrequency),
@@ -267,6 +293,24 @@ export function aggregateReadinessAnalyses(analyses) {
     broadProspective07cMean: mean(
       broad.map((analysis) => analysis.prospective07c.preAiPoolRecall.covered),
     ),
+    normalizationRecovery: {
+      observedRuns: analyses.filter(
+        (analysis) => analysis.current07b.normalizationRecovery.observed,
+      ).length,
+      current07bUniqueLeaderRunOpportunities: analyses.reduce(
+        (total, analysis) =>
+          total +
+          analysis.current07b.normalizationRecovery.uniqueLeaderRunOpportunities,
+        0,
+      ),
+      prospective07cUniqueLeaderRunOpportunities: analyses.reduce(
+        (total, analysis) =>
+          total +
+          analysis.prospective07c.normalizationRecovery
+            .uniqueLeaderRunOpportunities,
+        0,
+      ),
+    },
     recordedLeaderResultLossFrequency: frequencyRows(frequency),
     leaderRunTerminalFrequency: frequencyRows(terminalFrequency),
   };

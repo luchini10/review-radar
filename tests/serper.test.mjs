@@ -277,6 +277,186 @@ describe("Serper product discovery", () => {
     );
   });
 
+  it("recovers a Serper-supplied merchant URL only when normalization recovery is enabled", () => {
+    const response = {
+      shopping: [
+        {
+          title: "DEWALT DXV10SB 10 Gal. Wet/Dry Vacuum",
+          productLink:
+            "https://www.google.com/search?ibp=oshop&udm=28&prds=pid%3A123456789",
+          link: "https://hardware.example.com/products/dewalt-dxv10sb",
+          source: "Acme Hardware",
+          price: "$199",
+          imageUrl: "https://hardware.example.com/images/dxv10sb.jpg",
+        },
+      ],
+    };
+
+    const flagOff = normalizeSerperShoppingResults(
+      response,
+      "DEWALT DXV10SB shop vac",
+      "shop vac",
+      { enableNormalizationRecovery: false },
+    );
+    const flagOn = normalizeSerperShoppingResults(
+      response,
+      "DEWALT DXV10SB shop vac",
+      "shop vac",
+      { enableNormalizationRecovery: true },
+    );
+
+    assert.deepEqual(flagOff, []);
+    assert.equal(flagOn.length, 1);
+    assert.equal(
+      flagOn[0].productUrl,
+      "https://hardware.example.com/products/dewalt-dxv10sb",
+    );
+  });
+
+  it("wires the default-off normalization branch to its environment flag", () => {
+    const previous = process.env.REVIEW_RADAR_NORMALIZATION_RECOVERY;
+    const response = {
+      shopping: [
+        {
+          title: "DEWALT DXV10SB 10 Gal. Wet/Dry Vacuum",
+          productLink: "https://www.google.com/search?q=DEWALT+DXV10SB&udm=28",
+          link: "https://hardware.example.com/products/dewalt-dxv10sb",
+          source: "Acme Hardware",
+          price: "$199",
+        },
+      ],
+    };
+
+    try {
+      delete process.env.REVIEW_RADAR_NORMALIZATION_RECOVERY;
+      const defaultOff = normalizeSerperShoppingResults(
+        response,
+        "DEWALT DXV10SB shop vac",
+        "shop vac",
+      );
+      const explicitOff = normalizeSerperShoppingResults(
+        response,
+        "DEWALT DXV10SB shop vac",
+        "shop vac",
+        { enableNormalizationRecovery: false },
+      );
+      process.env.REVIEW_RADAR_NORMALIZATION_RECOVERY = "on";
+      const enabled = normalizeSerperShoppingResults(
+        response,
+        "DEWALT DXV10SB shop vac",
+        "shop vac",
+      );
+
+      assert.equal(JSON.stringify(defaultOff), JSON.stringify(explicitOff));
+      assert.deepEqual(defaultOff, []);
+      assert.equal(enabled.length, 1);
+    } finally {
+      if (previous === undefined) {
+        delete process.env.REVIEW_RADAR_NORMALIZATION_RECOVERY;
+      } else {
+        process.env.REVIEW_RADAR_NORMALIZATION_RECOVERY = previous;
+      }
+    }
+  });
+
+  it("evaluates every alternate URL instead of trusting the first non-Google field", () => {
+    const candidates = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title: "Example RV200 Robot Vacuum",
+            productLink: "https://click.example.net/redirect?offer=rv200",
+            product_link: "https://shop.example.com/collections/robot-vacuums",
+            link: "https://shop.example.com/products/example-rv200-robot-vacuum",
+            source: "Example Store",
+            price: "$249",
+          },
+        ],
+      },
+      "Example RV200 robot vacuum",
+      "robot vacuum",
+      { enableNormalizationRecovery: true },
+    );
+
+    assert.equal(candidates.length, 1);
+    assert.equal(
+      candidates[0].productUrl,
+      "https://shop.example.com/products/example-rv200-robot-vacuum",
+    );
+  });
+
+  it("does not let recovery originate identity or override source-model conflicts", () => {
+    const candidates = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title: "Robot Vacuums - Example Store",
+            productLink: "https://www.google.com/search?ibp=oshop&udm=28",
+            link: "https://shop.example.com/products/example-rv200-robot-vacuum",
+            source: "Example Store",
+            price: "$249",
+          },
+          {
+            title: "Example RV200 Robot Vacuum",
+            productLink: "https://www.google.com/search?ibp=oshop&udm=28",
+            link: "https://shop.example.com/products/example-rv300-robot-vacuum",
+            source: "Example Store",
+            price: "$249",
+          },
+          {
+            title: "Example RV200 Robot Vacuum",
+            productLink: "https://www.google.com/search?ibp=oshop&udm=28",
+            product_link: "https://www.google.com/search?q=example+rv200",
+            link: "https://shopping.google.com/search?q=example+rv200",
+            source: "Example Store",
+            price: "$249",
+          },
+          {
+            title: "Example RV200 Robot Vacuum",
+            productLink: "https://www.google.com/search?ibp=oshop&udm=28",
+            link: "https://reddit.com/products/example-rv200-robot-vacuum",
+            source: "Example Store",
+            price: "$249",
+          },
+          {
+            title: "Example RV200 Robot Vacuum",
+            productLink: "https://track.example.net/products/example-rv200-robot-vacuum",
+            source: "Example Store",
+            price: "$249",
+          },
+        ],
+      },
+      "Example RV200 robot vacuum",
+      "robot vacuum",
+      { enableNormalizationRecovery: true },
+    );
+
+    assert.deepEqual(candidates, []);
+  });
+
+  it("reports an exact normalization subreason for every considered shopping result", () => {
+    const result = diagnoseSerperShoppingResponse(
+      {
+        shopping: Array.from({ length: 8 }, (_, index) => ({
+          title: `Example RV${200 + index} Robot Vacuum`,
+          link: `https://www.google.com/search?q=example+rv${200 + index}`,
+          source: "Example Store",
+          price: "$249",
+        })),
+      },
+      "robot vacuum",
+      "robot vacuum",
+      { enableNormalizationRecovery: false },
+    );
+
+    assert.equal(result.normalizationDecisions.length, 8);
+    assert.ok(
+      result.normalizationDecisions.every(
+        (decision) => decision.rejectionReason === "search_or_listing_url",
+      ),
+    );
+  });
+
   it("distinguishes specific Shop-Vac products from generic shop pages", () => {
     const specific = normalizeSerperShoppingResults(
       {
@@ -983,6 +1163,33 @@ describe("Serper product discovery", () => {
     assert.equal(candidates.length, 1);
     assert.equal(candidates[0].retailer, "Home Depot");
     assert.equal(candidates[0].price, 129);
+  });
+
+  it("uses the same guarded merchant recovery for direct-retailer results", () => {
+    const candidates = normalizeSerperDirectResults(
+      {
+        organic: [
+          {
+            title: "Example HD200 20V Drill Kit",
+            productLink: "https://click.example.net/redirect?offer=hd200",
+            link: "https://www.homedepot.com/p/example-hd200-drill/123456789",
+            source: "Home Depot",
+            price: "$129",
+            snippet: "Example HD200 20V drill kit with battery and charger.",
+          },
+        ],
+      },
+      "Example HD200 20V drill",
+      "drill",
+      "home_depot",
+      { enableNormalizationRecovery: true },
+    );
+
+    assert.equal(candidates.length, 1);
+    assert.equal(
+      candidates[0].productUrl,
+      "https://www.homedepot.com/p/example-hd200-drill/123456789",
+    );
   });
 
   it("normalizes Serper image and video vertical results into evidence sources", () => {

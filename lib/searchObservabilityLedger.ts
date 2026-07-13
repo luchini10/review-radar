@@ -129,6 +129,24 @@ type CandidateFirstLoss = {
   subreason: string;
 };
 
+export type NormalizationRecoveryTrace = {
+  mode: "shadow" | "enabled";
+  outcome: "blocked" | "recovered" | "would_recover";
+  originalRejectionReason: string;
+  originalUrl: string;
+  proposedUrl: string | null;
+  blocker: string | null;
+};
+
+export type SearchNormalizationDecision = {
+  title: string;
+  host: string;
+  url: string;
+  rejectionReason: string | null;
+  normalizedCandidateId: string | null;
+  normalizationRecovery: NormalizationRecoveryTrace | null;
+};
+
 type CandidateLineageRecord = {
   candidateId: string;
   name: string;
@@ -152,6 +170,7 @@ type CandidateLineageRecord = {
   selected: boolean;
   finalSelectionReason: string | null;
   firstLoss: CandidateFirstLoss | null;
+  normalizationRecovery: NormalizationRecoveryTrace | null;
 };
 
 export type SearchLedgerHeader = {
@@ -583,6 +602,7 @@ function serperCandidateRecord(
     selected: false,
     finalSelectionReason: null,
     firstLoss: null,
+    normalizationRecovery: null,
   };
 
   retainPriorityCandidate(ledger, candidate.id, record);
@@ -605,11 +625,7 @@ function setFirstLoss(
 export function recordNormalizedCandidates(
   queryId: string | undefined,
   candidates: RawProductCandidate[],
-  rejectionReasons: Array<{
-    title: string;
-    host: string;
-    rejectionReason: string | null;
-  }> = [],
+  normalizationDecisions: SearchNormalizationDecision[] = [],
 ) {
   const ledger = currentLedger();
 
@@ -623,13 +639,17 @@ export function recordNormalizedCandidates(
 
   for (const candidate of candidates) {
     const record = serperCandidateRecord(ledger, candidate);
+    const decision = normalizationDecisions.find(
+      (item) => item.normalizedCandidateId === candidate.id,
+    );
+    record.normalizationRecovery = decision?.normalizationRecovery || null;
     addProvenance(record, queryId);
   }
 
-  const rejectionByKey = new Map(
-    rejectionReasons.map((item) => [
+  const decisionByKey = new Map(
+    normalizationDecisions.map((item) => [
       `${normalizeObservedQuery(item.title)}|${item.host.toLowerCase()}`,
-      item.rejectionReason,
+      item,
     ]),
   );
 
@@ -668,14 +688,16 @@ export function recordNormalizedCandidates(
       selected: false,
       finalSelectionReason: null,
       firstLoss: null,
+      normalizationRecovery: null,
     };
-    const specificReason = rejectionByKey.get(
+    const decision = decisionByKey.get(
       `${normalizedTitle}|${digest.host.toLowerCase()}`,
     );
+    record.normalizationRecovery = decision?.normalizationRecovery || null;
     setFirstLoss(
       record,
       "lost_in_normalization",
-      specificReason || "normalizer_rejected_result",
+      decision?.rejectionReason || "normalizer_rejected_result",
     );
     ledger.candidates.set(candidateId, record);
   }
@@ -803,6 +825,7 @@ function ensureRecommendationRecord(
     selected: false,
     finalSelectionReason: null,
     firstLoss: null,
+    normalizationRecovery: null,
   };
 
   retainPriorityCandidate(ledger, candidateId, record);
@@ -1153,6 +1176,7 @@ const REVIEW_RADAR_FLAG_NAMES = [
   "REVIEW_RADAR_FAST_FINAL_CONTEXT",
   "REVIEW_RADAR_LLM_NARRATION",
   "REVIEW_RADAR_MAX_MAIN_VERIFICATION_PRODUCTS",
+  "REVIEW_RADAR_NORMALIZATION_RECOVERY",
   "REVIEW_RADAR_PINNED_PLANNING",
   "REVIEW_RADAR_SPEC_SEARCH",
   "REVIEW_RADAR_SPEC_VALIDATION",

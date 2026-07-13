@@ -332,8 +332,30 @@ card, exact hard-constraint failures were 0, and stability is NotScored from
 the incomplete window. Expected C2 effect is zero wrong-type cards and more
 distinct final slots; only a future approved C4 window can prove it live.
 
-C3 remains separately approval-gated. Claude's C1/C2 review is deferred, not
-silently treated as passed, because Taylor reported no remaining Claude usage.
+**C3 completion (2026-07-13, zero live):** Taylor approved C3 after supplying
+Claude's design review. Fail-first produced five intended failures while all
+existing controls stayed green. The existing shopping-result URL selector now
+feeds one guarded recovery path shared by shopping, organic fallback, and
+direct-retailer normalization. It may reuse only a merchant URL already present
+in the Serper response. The source title must already carry model/SKU identity;
+the slug is corroborating-only. Google/tracking wrappers, title/path model
+conflicts, wrong-type paths, evidence/search/listing pages, and all existing
+product-eligibility failures remain blocked. No redirect is followed and no
+direct-product lookup was added.
+
+`REVIEW_RADAR_NORMALIZATION_RECOVERY` is default-off. With it unset/off,
+normalized candidates and normal API responses remain unchanged; debug ledgers
+record exact per-result `would_recover`/`blocked` shadow annotations. The
+readiness analyzer counts unique leader/run recovery opportunities instead of
+repeated rejected rows. The four old readiness fixtures predate this trace:
+their broad pool recall remains 1/7 under `07b` and prospective `07c`, while
+recovery opportunity is NotScored. Focused C3 tests 71/71; identity/type/source-
+upgrade wall 207/207; full suite 891/891 across 127 suites; typecheck/build/eval
+pass; lint 0 errors/3 existing warnings. `.env.local` is unchanged.
+
+Claude's C1/C2 review remains deferred, and the requested C2+C3 checkpoint is
+not silently treated as passed. C4, flag promotion, and R7A remain separately
+approval-gated.
 
 **C1 result (M3, four usable readiness fixtures):** the tested pre-AI pool is a
 Serper `product_discovery` candidate that normalized, survived raw dedupe and

@@ -65,7 +65,7 @@ function modelLikeTokens(tokens: string[]) {
   return tokens.filter((token) => /\d/.test(token));
 }
 
-function strongModelTokens(value: string) {
+export function strongModelTokens(value: string) {
   const rawTokens = value.match(/[A-Za-z0-9]+(?:[-/.][A-Za-z0-9]+)*/g) || [];
   const tokens = new Set<string>();
 

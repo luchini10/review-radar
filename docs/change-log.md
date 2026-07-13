@@ -1173,3 +1173,28 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
   all misses existed raw and were lost before the pool. The best possible
   three-run mean is now 3/7, below the 5/7 gate, so R7A is blocked.
 - Reopened RR-060 and filed RR-083. No `.env.local` or product behavior changed.
+
+## 2026-07-13 — 🟧 Codex — Corrective C3 normalization recovery
+
+- Added default-off `REVIEW_RADAR_NORMALIZATION_RECOVERY`. When enabled, the
+  existing Serper normalization path may choose a safe merchant product URL
+  already present in the same shopping, organic, or direct-retailer result.
+- Kept URL slugs corroborating-only: a source title must already carry a model
+  or SKU. Google/tracking wrappers, conflicting models, wrong product types,
+  generic/listing/evidence pages, and all existing eligibility failures remain
+  rejected. Recovery follows no redirect and makes no additional search.
+- Added exact debug-ledger decisions for every considered result. Flag-off
+  records `would_recover`/`blocked` shadow evidence while leaving normalized
+  candidates and non-debug responses unchanged.
+- Extended the offline readiness analyzer to count unique leader/run recovery
+  opportunities. Historical readiness fixtures have no C3 trace and remain
+  NotScored for this metric.
+
+### Verified
+
+- C3 focused tests: 71/71.
+- Identity/type/source-upgrade safety wall: 207/207.
+- Full suite: 891/891 across 127 suites.
+- Typecheck, production build, and offline evaluation pass.
+- Lint: 0 errors and 3 pre-existing warnings.
+- Zero live Serper/OpenAI calls; `.env.local` unchanged; recovery remains off.
