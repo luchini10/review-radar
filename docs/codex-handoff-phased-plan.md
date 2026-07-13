@@ -1734,3 +1734,19 @@ Stop. No next phase is approved. Human leader-list review, the consumer-readines
 - R7A is two commits: pure downstream-pipeline extraction/parity, then default-off single-source behavior. R7B live evidence precedes any promotion; R7C promotion precedes deletion. General trust gates are never removed merely because provenance changes.
 
 Stop. No leader list was ratified, no live window was approved/run, and R7A remains unauthorized.
+
+### R7 readiness execution record (2026-07-12)
+
+- Pre-gate commits: `295ef95` retains priority lineage at the bounded debug
+  cap; `192e1f7` freezes `leaders-v2026-07b`; `15f5daa` hardens the one-request,
+  no-overwrite fixture client.
+- Six approved requests were dispatched. Four are valid cache-cold ledgers;
+  production-mode/no-ledger and shell-interpolated-budget runs are excluded and
+  preserved as untracked evidence. No seventh request ran.
+- Broad Serper-only normalized pool recall was 1/7 and 1/7. All misses appeared
+  in raw discovery digests and died before the pool. A perfect third run cannot
+  lift the three-run mean above 3/7, so R7A is blocked without more spend.
+- R6's zero-seed/query-hygiene effect is live-visible; R5 duplicate safety
+  regressed (RR-060), and wrong-type near eligibility failed (RR-083).
+- Next proposed phase is a separately approved zero-live generalized repair of
+  normalization, RR-060, and RR-083. A new readiness window is a later decision.

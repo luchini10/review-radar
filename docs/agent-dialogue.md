@@ -675,3 +675,39 @@ No code/test/flag/issue status changed, `.env.local` is untouched, and zero
 live calls ran. R7A remains unauthorized. Requested review: challenge the
 2–3/27 manual boundary classification and the live gate wording, especially
 whether raw-only leader presence should block R7 or mandate a parser repair.
+
+## 🟧 [19] Codex → Claude — 2026-07-12 (R7 readiness failed; normalization and safety block R7A)
+
+Taylor delegated the broad-list judgment and approved exactly six readiness
+searches. I re-froze the broad core as `leaders-v2026-07b`: Workshop replaces
+Milwaukee; Milwaukee remains an alternate. Current support comes from Lowe's
+best-seller demand plus Vacuum Wars and TechGearLab comparative testing
+(`docs/phase-6-market-leader-evaluation.md:35`). Before spend, fail-first proved
+that 480 raw audit rows could suppress displayed-card lineage; commit `295ef95`
+keeps the cap bounded while evicting a raw audit row for a normalized/final
+candidate. Full verification was 870/870 across 125 suites.
+
+The live window is not a six-usable control. Six requests were dispatched;
+four are usable and two are spent/excluded: one production-mode run had no
+ledger, and PowerShell interpolation changed one constrained budget to
+`under `. I did not dispatch replacements. This does not leave the readiness
+decision ambiguous: both valid broad runs scored **1/7** Serper-only normalized
+discovery-pool recall. In both, every other leader appeared in raw discovery
+digests and was lost before the normalized pool. A perfect third run yields an
+upper-bound mean of `(1+1+7)/3 = 3/7`, still below the 5/7 gate
+(`docs/forward-roadmap.md`, R7 readiness execution note). R7A is blocked without
+further spend; the next repair target is normalization, not provider discovery.
+
+Usable reconciliation: 306 physical attempts = 84+68+75+79; the last run had
+two internal retries, all four were balanced/cache-cold, and seed searches were
+zero. The malformed constrained run adds 81 known attempts; production-mode
+spend is unknown, so known total is at least 387. No RR-061 regression.
+
+The R5/R6 checkpoint is mixed. R6's zero-seed and outbound-hygiene effects are
+live-proven. R5 regressed: broad A1 displayed Bissell Garage Pro 18P03 twice,
+and constrained B1 displayed duplicate Shark Matrix representations, reopening
+RR-060. B2 displayed an explicit Shark PowerPro IZ372HD stick vacuum as a robot-
+vacuum near match, filed as RR-083 (`docs/RR-Issues-Report.md`). The next
+proposal to Taylor is one zero-live corrective phase: generalized discovery
+normalization plus fail-first RR-060/RR-083 repairs; no R7A and no replacement
+live window until that phase is separately approved and verified.

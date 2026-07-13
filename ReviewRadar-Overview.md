@@ -947,3 +947,21 @@ No production pipeline or API contract changed in Phase 6A.
 - **Free evidence:** across 27 displayed cards in the six R4-after fixtures, 22 directly carry normalized Serper lineage and one directly carries final-OpenAI-only lineage. Four are direct-lineage-indeterminate at the candidate cap; manual evidence narrows the likely LLM-dependent total to 2–3/27.
 - **Interpretation:** the LLM stream is not proven deadweight. The exact dependency count is NotScored, and the historical fixtures cannot satisfy a post-R6 gate. The live gate must distinguish raw provider absence from parser/prefilter loss.
 - **State:** no application/test/flag/issue change, no `.env.local` edit, and zero live calls. Taylor must ratify/revise the seven broad shop-vac leaders before separately approving the six-search readiness window (~222–282 conservative Serper estimate).
+
+## 34. R7 readiness gate outcome (2026-07-12)
+
+- **Benchmark:** Taylor delegated the broad-list judgment; `leaders-v2026-07b`
+  uses RIDGID, Vacmaster, CRAFTSMAN, DeWALT, Stanley, Shop-Vac, and Workshop,
+  with Armor All and Milwaukee as alternates.
+- **Outcome:** six requests were dispatched; four produced usable cache-cold
+  ledgers and two were transparently excluded for harness errors. Both usable
+  broad runs scored 1/7 Serper-only normalized discovery recall. All six misses
+  were present raw but lost before the pool. The gate cannot mathematically
+  reach its 5/7 three-run mean even if the missing run were perfect.
+- **Safety/cost:** usable ledgers made 306 physical attempts; known total is at
+  least 387. No RR-061 image regression occurred. RR-060 reopened for duplicate
+  same-model cards and RR-083 records a stick vacuum shown as a robot-vacuum
+  near match.
+- **State:** R7A is blocked. The next decision is a zero-live generalized
+  normalization/dedupe/type-safety repair; no replacement or new live window is
+  authorized.

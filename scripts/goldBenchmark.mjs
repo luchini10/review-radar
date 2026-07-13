@@ -1,7 +1,8 @@
 // GOLD BENCHMARK — the independent yardstick for "are the picks actually good?"
 //
-// DRAFT for human review. These lists are the ground truth the scorecard grades
-// against; they must reflect YOUR judgment of the market, not the app's. Edit freely.
+// FROZEN as leaders-v2026-07b. These lists are the ground truth the scorecard
+// grades against; revisions require a new dated version and cannot be made to
+// improve an observed score retroactively.
 //
 // Structure per BROAD query (the key change):
 //   coreLeaders         - brands ReviewRadar should USUALLY discover. The main

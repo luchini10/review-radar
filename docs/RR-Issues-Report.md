@@ -13,14 +13,14 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 82 |
+| Total Issues | 83 |
 | Critical | 11 |
-| High | 33 |
+| High | 34 |
 | Medium | 33 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 4 |
-| Fixed | 77 |
+| Needs Investigation | 6 |
+| Fixed | 76 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -99,6 +99,7 @@
 | Phase R5 — Identity collapse and listing-id dedupe safety | 0 |
 | Phase R5 — Corrective adversarial closure | 1 |
 | Phase R6 — Source-brand trust + query hygiene | 0 |
+| Phase R7 — Readiness gate | 1 |
 | Phase R4 — Live after-sample | 1 |
 | RR-061 image-provenance safety repair | 0 |
 | RR-061 round 4 / RR-080 image micro-phase | 1 |
@@ -1854,7 +1855,7 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 | **Phase** | Phase 4F |
 | **Severity** | Medium |
 | **Title** | True same-model duplicates can occupy multiple final slots |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** `gaming monitor` selected `Gigabyte M27Q Gaming Monitor (Rev. 1.0)` at rank #1 and `Gigabyte M27Q 27" QHD ...` at rank #2. Both source-upgrade traces used `Gigabyte M27Q` and attached the same `$160` offer. They are retailer/manufacturer representations of the same model, yet remained separate cards while other variants were correctly collapsed.
 
@@ -1875,6 +1876,8 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 **Phase R5 resolution (2026-07-12):** Fixed deterministically. `getCanonicalIdentity()` now derives a retailer listing key when a URL's final path segment is a pure-numeric ID of 6+ digits (`homedepot.com listing 335012888`), so truncated and slugged URL variants of one listing share a canonical ID and collapse in both canonical and exact-model dedupe. Short numeric segments (sizes, model numbers) never qualify, and different listing IDs on the same host stay distinct. The captured B3 pair now collapses; distinct-size/model protection is regression-covered in the same suite. Tests: `tests/identityCollapse.test.mjs` (fail-first: the captured pair did not collapse before the fix).
 
 **Phase R5 corrective closure (2026-07-12):** A blanket exclusion for eight-digit date-shaped final segments prevented legitimate product-detail URLs such as `/p/20260712` and `/p/product-slug/20260712` from sharing their listing identity. The resolver now treats a compact date as a listing ID only when a generic product-detail marker (`p`, `pd`, `product(s)`, `dp`, or `ip`) appears earlier in the path and no editorial/archive marker is present; article/archive paths remain full-path identities. Both directions are regression-covered.
+
+**R7 readiness regression (2026-07-12):** Reopened as Needs Investigation. Broad usable run A1 selected two representations of Bissell Garage Pro model `18P03`: an Ace Vacuums listing named `Bissell Garage Pro Wet/Dry Vacuum -18P03` and Bissell's own `Garage Pro` page whose URL identifies `18P03`. The same run therefore spent two of seven final slots on one cross-retailer model. Constrained usable run B1 also displayed two Shark Matrix RV2310AE representations. Evidence: untracked `shop-vac.r7-readiness-gate-run1.json` and `robot-vacuum-under-300-self-emptying.r7-readiness-gate-run1.json`. Diagnose shared cross-retailer identity when one title omits the model but the product URL carries it; preserve distinct variants and packages.
 
 ---
 
@@ -2726,6 +2729,30 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 
 **Resolution:** The matcher now retains both normalized boundaries for every line phrase. Fail-first produced exactly the three intended corrective failures across the combined leader/identity matrix; final focused passed 20/20. Controls cover `Airtok`/`ai`, `Q50`/`q5`, Herman Miller/Aeron, and RYOBI/`ONE+`. The corrected matcher does not change the six R4 fixtures' provisional M3 recall values. Full suite passed 859/859 across 124 suites; typecheck/build/eval passed; lint remained 0 errors/3 existing warnings; zero live calls.
 
+#### RR-083
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-083 |
+| **Phase** | Phase R7 readiness gate |
+| **Severity** | High |
+| **Title** | Wrong-type stick vacuum can render as a robot-vacuum near match |
+| **Status** | Needs Investigation |
+
+**Description:** A current constrained `robot vacuum / under $300 / self-emptying` run displayed `Shark PowerPro Bagless Cordless HEPA Filter Portable Stick Vacuum Cleaner ... IZ372HD` as a final near match. The listing and image both clearly identify a cordless stick vacuum, not a robot vacuum.
+
+**Where it occurs:** Shared product-type classification, requirement validation/revalidation, and final near-match eligibility.
+
+**Evidence:** Untracked fixture `tests/fixtures/review-radar-live/robot-vacuum-under-300-self-emptying.r7-readiness-gate-run2.json`, commit `15f5daaed516`. The candidate entered the pool, survived requirement filtering, disappeared from the enrichment view, reappeared after revalidation, and was selected final near. Its Home Depot URL ends in Shark model `IZ372HD`; the image path also identifies `shark-stick-vacuums-iz372hd`.
+
+**Expected:** An explicit stick-vacuum identity is a hard product-type conflict for a robot-vacuum request and cannot render as exact or near.
+
+**Actual:** The candidate reached the displayed near slate despite explicit wrong-type title, URL, and image evidence.
+
+**Suggested fix or next action:** Add fail-first cross-category controls at the shared type boundary, then diagnose why revalidation/near selection did not preserve the explicit type conflict. Keep generalized robot-versus-stick/upright/handheld semantics; do not add a Shark-specific rule.
+
+---
+
 ## R7 readiness planning note — 2026-07-12
 
 No issue status changed. A zero-cost M3 provenance audit of the six R4-after
@@ -2737,19 +2764,42 @@ count is NotScored. This does not resolve RR-014/RR-015 or satisfy R7's gate:
 the broad leader list remains provisional and no post-R6 live sample exists.
 The detailed readiness/R7A/R7B/R7C plan is in `docs/forward-roadmap.md`.
 
+## R7 readiness execution note — 2026-07-12
+
+Six requests were dispatched under Taylor's six-search approval. Four are
+usable cache-cold debug fixtures; two are spent/excluded (one production-mode
+request had no debug ledger, and one constrained request lost `$300` through
+shell interpolation). No replacement was dispatched. The two usable broad
+runs each covered only **1/7** leaders in the Serper-only normalized discovery
+pool; all six misses were present in raw product-discovery digests and lost
+before the pool, principally at normalization. Even a perfect third broad run
+would cap the required three-run mean at **3/7**, below the **5/7** gate, so
+R7A is conclusively blocked without further spend.
+
+The four usable ledgers are balanced and cache-cold, with 306 physical Serper
+attempts (84 + 68 + 75 + 79), two internal retries, zero fallbacks, and zero
+editorial seed searches. The malformed constrained run adds 81 known physical
+attempts; the production-mode run's physical count is unknown, so total known
+spend is at least 387. No RR-061 image regression occurred. RR-060 reopened
+for same-model duplicates and RR-083 was filed for a stick vacuum displayed as
+a robot-vacuum near match. The live window is therefore not a valid R7B control
+and R7A must not start.
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (4 issues)
+### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
+- RR-060: True same-model duplicates can occupy multiple final slots
+- RR-083: Wrong-type stick vacuum can render as a robot-vacuum near match
 
-### Fixed (77 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-082 except RR-014, RR-015, RR-024, RR-037, and RR-045
+### Fixed (76 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-082 except RR-014, RR-015, RR-024, RR-037, RR-045, and RR-060
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2758,5 +2808,5 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-014 + RR-015** (High) — `leaders-v2026-07a` provisionally observes broad final recall at 1.0/7; the constrained 0.33/4 value is informational only. The list and recall baseline remain non-canonical until Taylor's human leader review. Stability improved to 0.2694/0.1429 but remains below target.
+1. **RR-014 + RR-015 + RR-060 + RR-083** — R7 readiness is blocked: broad Serper-only normalized discovery covered 1/7 in each usable broad run, same-model duplicates recurred, and an explicit stick vacuum rendered as a robot-vacuum near match.
 2. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3 but varied by model, while Tapo appeared raw and died in normalization.

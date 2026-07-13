@@ -1112,3 +1112,16 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ### Verified
 - Markdown documentation committed in `8986f63`.
+
+## 2026-07-12 — 🟧 Codex — R7 readiness gate failed
+
+- Hardened the debug ledger so normalized/displayed candidates displace raw
+  audit rows at the 480-record cap instead of becoming lineage-indeterminate.
+- Re-froze the broad shop-vac benchmark as `leaders-v2026-07b`: Workshop is a
+  core leader; Milwaukee remains an acceptable alternate.
+- Dispatched exactly six approved searches. Four cache-cold debug fixtures are
+  usable; two are spent/excluded harness errors. No replacement was sent.
+- Both usable broad runs scored 1/7 Serper-only normalized discovery recall;
+  all misses existed raw and were lost before the pool. The best possible
+  three-run mean is now 3/7, below the 5/7 gate, so R7A is blocked.
+- Reopened RR-060 and filed RR-083. No `.env.local` or product behavior changed.

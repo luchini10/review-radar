@@ -6482,3 +6482,20 @@ issue statuses/counts: unchanged (82 total; 77 Fixed; 4 NI; 1 Won't Fix)
 ```
 
 Next decisions, in order: Taylor ratifies/revises the seven broad shop-vac leaders; Taylor separately approves six live gate searches (~222–282 conservative Serper estimate); only a passing gate can unlock separately approved zero-live R7A.
+
+## 🟧 Codex QA Update — 2026-07-12 (R7 readiness gate)
+
+**Verdict: FAILED; R7A BLOCKED.** Six requests were dispatched, four usable
+and two spent/excluded. The two valid broad runs each covered 1/7 leaders in
+the Serper-only normalized discovery pool. Every miss was present in raw
+discovery results but lost before the pool; even a perfect third run yields a
+3/7 mean, below the 5/7 gate. No replacement spend is warranted for the gate
+decision.
+
+Usable ledgers: 306 physical attempts, two retries, zero fallbacks, balanced,
+cache-cold, zero seed searches. Known spend including the malformed run is at
+least 387 physical attempts; the production-mode run is uncounted. RR-060
+reopened for same-model duplicates; RR-083 records a stick vacuum displayed as
+a robot-vacuum near match. No RR-061 image regression. Pre-live verification:
+870/870 tests, typecheck/build/offline scorecard green, lint 0 errors/3 existing
+warnings.

@@ -3,7 +3,7 @@
 **Mechanics version:** `leaders-v2026-07b` (owner-delegated re-freeze 2026-07-12)
 **Evidence status:** matching/scoring mechanics frozen; broad shop-vac list
 reviewed against current independent tests and retailer demand signals
-**Supersedes:** `leaders-v2026-07` (same day) — see section 5. Results are
+**Supersedes:** `leaders-v2026-07a` (same day) — see section 5. Results are
 never compared across snapshot versions.
 **Owner:** Phase 6 freeze-point deliverable per
 `docs/phase-6-reliability-gauntlet-plan.md` section 7; QA-only data, never

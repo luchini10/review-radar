@@ -12,17 +12,19 @@ Generated: 2026-07-12
    (0.0000 → 0.0196). An initial "attribution by elimination" claim was
    retracted after Codex's adversarial review — downstream stability
    attribution is mixed; RR-015 carries the correction (commit `563baf9`).
-2. **Rubric v1.0 + `leaders-v2026-07a`.** The single tested matching contract
+2. **Rubric v1.0 + `leaders-v2026-07b`.** The single tested matching contract
    is `coversLeader()` in `scripts/goldBenchmark.mjs` (brand AND line),
    imported by `scripts/qualityScorecard.mjs`, pinned by
    `tests/leaderSnapshot.test.mjs`; line phrases require complete token
-   boundaries. Provisional M3 observations: broad final leader recall mean
+   boundaries. Historical `07a` M3 observations: broad final leader recall mean
    **1.0/7**; constrained **0.33/4 — informational only** (no
    constrained recall target; constraint satisfaction is the constrained
-   shape's primary metric). Leader LISTS and recall values are provisional
-   pending Taylor's human review; captured mentions and their limitations are in
-   `docs/phase-6-market-leader-evaluation.md`.
-3. **Phase R5 corrective closure complete.** RR-060, RR-071, RR-072 are Fixed
+   shape's primary metric). Taylor delegated broad-list judgment verbatim on
+   2026-07-12; current market review replaced Milwaukee with Workshop in the
+   seven core leaders and retained Milwaukee as an alternate. Historical `07a`
+   observations are not comparable to the `07b` readiness sample.
+3. **Phase R5 corrective closure landed.** RR-071 and RR-072 remain Fixed;
+   RR-060 was initially closed but the R7 readiness sample reopened it
    (`lib/productIdentity.ts` + `tests/identityCollapse.test.mjs`):
    spec-conflict guard (generalization proven cross-category with PSI),
    SCFM/CFM equivalence, retailer listing-ID canonical key (date-shaped ids
@@ -34,43 +36,41 @@ Generated: 2026-07-12
    to zero after 588 raw results produced zero unique/final candidates, with
    malformed seed extraction still tightened; RR-081 query hygiene runs at
    the shared Serper boundary before dispatch/cache/body serialization.
-5. **R7 readiness plan adopted; zero-cost provenance audit complete.** The
+5. **R7 readiness gate attempted and conclusively failed.** The
    detailed gate/R7A/R7B/R7C plan now lives in the existing R7 roadmap section
    (no new plan file). Six R4-after fixtures show 22/27 displayed cards directly
    linked to normalized Serper candidate IDs, 1/27 directly AI-only, and four
-   lineage-indeterminate at the candidate cap. Manual evidence narrows the
-   likely AI-dependent total to 2–3/27. No behavior changed and no live call ran.
+   lineage-indeterminate at the candidate cap. The cap was hardened before
+   live work. Six requests were dispatched: four usable cache-cold ledgers and
+   two spent/excluded harness mistakes. The usable broad runs each scored 1/7
+   Serper-only normalized pool recall; even a perfect third run could only
+   produce a 3/7 mean, below the 5/7 gate. R7A is blocked. RR-060 reopened and
+   RR-083 was filed from the usable fixtures.
 
-R6 verification: focused final **148/148**; full suite **868/868 across 125
+Current verification: full suite **870/870 across 125
 suites**; typecheck, lint (0 errors, 3 existing warnings), production build,
-and offline eval green. Zero live calls. Register: 82 issues — **77 Fixed, 4
-Needs Investigation, 1 Won't Fix, 0 Open** (82 total).
+and offline eval green before the window. Register: 83 issues — **76 Fixed, 6
+Needs Investigation, 1 Won't Fix, 0 Open**.
 
 ## Required next decisions — no phase is currently approved
 
-R7 cannot start until its readiness gate is satisfied. Taylor's decisions are,
-in order:
+R7A cannot start. Taylor's decisions are, in order:
 
-1. **Ratify or revise the seven broad `shop vac` leaders:** RIDGID (NXT/WD/HD),
-   Vacmaster, CRAFTSMAN, DeWALT, Stanley, Shop-Vac, and Milwaukee. Armor All is
-   the acceptable alternate. The benchmark remains DRAFT until Taylor states
-   his judgment; agents may not ratify it for him.
-2. **Separately approve the six-search R7 readiness window:** three cache-cold
-   current-behavior `shop vac` runs plus three constrained robot-vacuum runs,
-   conservatively ~222–282 Serper calls. This is the R5/R6 rule-5 checkpoint,
-   the attributive Serper-only pool gate, and R7B's contemporary flag-off
-   control. Any safety failure stops the window.
-3. Only if the gate passes, separately approve **R7A** (two commits, zero live):
-   pure shared-pipeline refactor first; default-off single-candidate-source
-   branch second. R7B live validation and R7C promotion/deletion each require
-   later separate approvals.
+1. **Approve a zero-live corrective phase** for the generalized discovery
+   normalization boundary plus fail-first repairs for reopened RR-060 and new
+   RR-083. The live evidence says provider discovery is present: all six broad
+   misses appeared in raw digests but were lost before the normalized pool.
+2. After those repairs and a fresh full wall, decide whether to approve a new
+   six-search readiness window. The four usable fixtures are diagnostic evidence
+   only, not a complete R7B control, and no replacement spend is pre-approved.
+3. R7A remains approval-gated even after a future readiness pass.
 
 The consumer-readiness arc remains queued. R7B will supply its first current
 latency/cost evidence by measuring the removed final-research stage.
 
 ## Safety boundary
 
-Do not start R7A or another phase, run the readiness searches, modify `.env.local` further, alter the
+Do not start R7A or another phase, run replacement/readiness searches, modify `.env.local` further, alter the
 frozen rubric/snapshot versions (new versions require corrective commits),
 start Phase 6E, or commit live fixtures / pre-existing untracked artifacts
 without Taylor's separate explicit approval.

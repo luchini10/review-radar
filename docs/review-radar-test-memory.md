@@ -1558,3 +1558,19 @@ DRAFT, fixtures predate R5/R6, and no current post-R6 sample exists. For the liv
 gate, report raw-provider absence separately from normalization/prefilter loss;
 manually inspect borderline `coversLeader()` misses because unbranded titles are
 a known conservative undercount.
+
+## R7 readiness gate — 2026-07-12
+
+- Use `npm run dev`, not `npm start`, for local debug fixtures: production mode
+  intentionally suppresses the ledger even when the debug header is present.
+- Quote PowerShell dollar-bearing values with literal single quotes. A command
+  containing `--budget "under $300"` became `under ` before Node received it.
+- The hardened capture script accepts `--out`, `--budget`, and `--priorities`,
+  refuses overwrite before dispatch, and makes exactly one client request.
+- Four usable fixtures reconcile to 306 physical attempts; two excluded runs
+  make known total spend at least 387. The last complete six-run window's 486
+  physical attempts remains the conservative future planning basis.
+- Broad Serper-only normalized discovery recall was 1/7 twice. Every missed
+  leader existed in raw product-discovery digests but failed before the pool.
+  Even a perfect third run caps the mean at 3/7; do not buy replacement runs to
+  re-prove this failure. Repair normalization and safety before another window.

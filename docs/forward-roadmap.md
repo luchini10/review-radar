@@ -222,8 +222,9 @@ promotion. The gate is attributive:
    denominator and cannot be silently revised to improve a score.
 2. Run three cache-cold current-behavior `shop vac` searches and three
    cache-cold current-behavior constrained robot-vacuum searches. This is one
-   separately approved six-search window, conservatively ~222–282 Serper calls
-   before any observed R6 savings.
+   separately approved six-search window. The last real six-usable-run window
+   cost 486 physical Serper attempts; R6's zero seed budget should reduce that,
+   but search count—not the estimate—is the approval unit.
 3. The window serves three decisions: (a) R5/R6 North-Star checkpoint and
    roadmap rule-5 audit, (b) R7 Serper-only discovery gate, and (c) the
    contemporary flag-off control for R7B. R4-after remains historical context,
@@ -248,6 +249,23 @@ candidates for two, a nearby-variant-only DEWALT case for one, and raw-only
 RIDGID evidence with no normalized candidate for one. The evidence therefore
 suggests **2–3 of 27 displayed cards may depend on the LLM candidate stream**;
 it does not justify deleting that stream without the gate.
+
+**Readiness execution (2026-07-12): FAILED / R7A BLOCKED.** Six requests were
+dispatched; four are usable cache-cold ledgers and two are transparently
+spent/excluded harness errors (production mode suppressed the ledger; shell
+interpolation removed `$300` from one constrained request). The two valid
+broad runs each scored **1/7** Serper-only normalized discovery-pool recall.
+Every missed leader was present in raw product-discovery digests but lost
+before the normalized pool. Even a perfect third broad run would cap the
+three-run mean at **3/7**, below the **5/7** gate, so no replacement spend is
+needed to decide readiness. The four usable runs made 306 physical attempts;
+the malformed constrained run made 81; the production run is uncounted, so
+known spend is at least 387. All usable ledgers were balanced/cache-cold, seed
+spend was zero, and no RR-061 image regression occurred. Safety still failed:
+RR-060 reopened for same-model duplicates and RR-083 records a stick vacuum
+displayed as a robot-vacuum near match. These fixtures are diagnostic evidence,
+not a valid R7B control. Repair the generalized normalization/type/dedupe
+boundaries and pass a newly approved readiness window before R7A.
 
 ### R7A — default-off single-source implementation (zero live calls)
 
@@ -282,7 +300,8 @@ Delete no policing layer in R7A.
 ### R7B — live flag-on validation and promotion decision
 
 R7B requires separate approval for the same six-search, three-per-shape
-cache-cold window (~222–282 conservative Serper estimate). Compare it primarily
+cache-cold window (use 486 physical attempts from the last complete window as
+the conservative planning basis until a newer complete sample exists). Compare it primarily
 with the readiness window, under the same rubric/snapshot and three-run
 significance rule.
 
@@ -327,7 +346,7 @@ while results are unstable — revisit after R4); provider alternatives
 - R4: `Execute Phase R4 per docs/forward-roadmap.md. Deterministic portion first; then this message is my explicit approval for the six-search after-sample (~225–280 Serper calls). Stop after reporting.`
 - R5: `Execute Phase R5 per docs/forward-roadmap.md. Zero live calls; stop after reporting.`
 - R6: `Execute Phase R6 per docs/forward-roadmap.md. Zero live calls; stop after reporting.`
-- R7 readiness: `I ratify the broad shop-vac leader list recorded in docs/agent-next-task.md. Execute the R7 readiness gate per docs/forward-roadmap.md. This is my explicit approval for six live searches (~222–282 Serper calls). Stop after reporting.`
+- R7 readiness: `I ratify the broad shop-vac leader list recorded in docs/agent-next-task.md. Execute the R7 readiness gate per docs/forward-roadmap.md. This is my explicit approval for six live searches (486 physical attempts is the current conservative planning basis; report actuals). Stop after reporting.`
 - R7A: `Execute R7A per docs/forward-roadmap.md. Zero live calls; land the pure refactor and default-off behavior branch as separate commits; stop after reporting.`
-- R7B: `Execute R7B per docs/forward-roadmap.md. This is my explicit approval for six live flag-on searches (~222–282 Serper calls). Stop after reporting; do not promote.`
+- R7B: `Execute R7B per docs/forward-roadmap.md. This is my explicit approval for six live flag-on searches (486 physical attempts is the current conservative planning basis; report actuals). Stop after reporting; do not promote.`
 - R7C promotion/deletion requires a new prompt written only after Taylor reviews R7B; no standing kickoff is pre-authorized.
