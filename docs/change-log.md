@@ -13,6 +13,32 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-12
 
+### 🟧 Codex - Corrective C1 rule-5 diagnosis
+
+#### Changed
+
+- Added a deterministic readiness-fixture analyzer that distinguishes raw
+  leader presence, normalization, raw dedupe, cheap prefilter, pre-AI pool,
+  post-merge, and displayed outcomes. Its tested contract treats a later merge
+  loss as pre-AI pool-present and discloses the merge bucket's conservative
+  URL/name-lineage inflation.
+- Added an analysis-only prospective leader matcher for letters-plus-digits
+  model schemes (`wd`/`WD4070`) while preserving strict digit-ending and word
+  boundaries (`q5`/`Q50`, `ai`/`Airtok`). Frozen `07b` scoring is unchanged.
+- Recorded the C1-C5 corrective arc as the formal roadmap rule-5 rethink and
+  proposed a sourced, owner-approval-pending constrained `07c` leader refresh.
+
+#### Verified
+
+- Four usable readiness fixtures: broad pre-AI pool recall remains 1/7 in both
+  runs under current `07b` and prospective `07c`; 15/22 leader/run outcomes
+  terminate at normalization. Recorded leader-result rows show 205 normalizer
+  rejection and 159 search/listing-URL losses; neither is an 80% single cause.
+- Focused analyzer/benchmark tests 12/12; full suite 875/875 across 127 suites;
+  typecheck/build/offline eval pass; lint 0 errors/3 existing warnings. No live
+  Serper/OpenAI calls. No recommendation
+  behavior, flag, `.env.local`, fixture, or issue status changed.
+
 ### Codex - R7 readiness plan and zero-cost provenance audit
 
 #### Changed

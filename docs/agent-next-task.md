@@ -46,24 +46,30 @@ Generated: 2026-07-12
    Serper-only normalized pool recall; even a perfect third run could only
    produce a 3/7 mean, below the 5/7 gate. R7A is blocked. RR-060 reopened and
    RR-083 was filed from the usable fixtures.
+6. **Corrective C1 rule-5 diagnosis complete.** A tested offline analyzer now
+   separates raw presence, normalization, dedupe, prefilter, merge, and final
+   display. Both broad runs remain 1/7 under current `07b` and the prospective
+   `07c` line matcher, so benchmark matching did not cause the gate failure.
+   Fifteen of 22 leader/run outcomes terminate at normalization. The captured
+   RR-060 and RR-083 predicate gaps are specified for fail-first C2 tests.
 
-Current verification: full suite **870/870 across 125
-suites**; typecheck, lint (0 errors, 3 existing warnings), production build,
-and offline eval green before the window. Register: 83 issues — **76 Fixed, 6
-Needs Investigation, 1 Won't Fix, 0 Open**.
+Current verification: C1 focused analyzer/benchmark tests **12/12**; full suite
+**875/875 across 127 suites**; typecheck/build/offline eval pass; lint 0
+errors/3 existing warnings. Register remains 83 issues —
+**76 Fixed, 6 Needs Investigation, 1 Won't Fix, 0 Open**.
 
 ## Required next decisions — no phase is currently approved
 
-R7A cannot start. Taylor's decisions are, in order:
+R7A cannot start. C1 is complete; Taylor's decisions are, in order:
 
-1. **Approve a zero-live corrective phase** for the generalized discovery
-   normalization boundary plus fail-first repairs for reopened RR-060 and new
-   RR-083. The live evidence says provider discovery is present: all six broad
-   misses appeared in raw digests but were lost before the normalized pool.
-2. After those repairs and a fresh full wall, decide whether to approve a new
-   six-search readiness window. The four usable fixtures are diagnostic evidence
-   only, not a complete R7B control, and no replacement spend is pre-approved.
-3. R7A remains approval-gated even after a future readiness pass.
+1. Have Claude review C1's contract, counts, and predicate-gap specifications.
+2. **Approve C2 only:** zero-live fail-first generalized RR-060/RR-083 safety
+   repairs. C2 must finish and report before C3 can be approved.
+3. Approve C3 only after C2: default-off/shadow-first normalization recovery,
+   zero live calls. A second Claude checkpoint follows C2+C3.
+4. Ratify or revise the proposed `leaders-v2026-07c` constrained list and
+   matcher, then separately decide whether to fund C4's six-search window.
+5. R7A remains approval-gated even after a future readiness pass.
 
 The consumer-readiness arc remains queued. R7B will supply its first current
 latency/cost evidence by measuring the removed final-research stage.

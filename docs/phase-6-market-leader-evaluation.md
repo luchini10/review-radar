@@ -80,6 +80,30 @@ NOT counted as the listed leaders — which is exactly why constrained recall
 below is low and why the lists need human review before constrained recall
 can carry meaning.
 
+### Prospective `leaders-v2026-07c` proposal — not frozen
+
+C1 tested a prospective matcher without changing current `coversLeader()` or
+retro-scoring `07b`: a letters-only line may also match exactly that prefix
+followed by digits (`hd` → `HD1400`, `wd` → `WD4070`); a digit-ending line
+remains whole-token strict (`q5` does not match `Q50`), and unrelated word
+prefixes stay strict (`ai` does not match `Airtok`). The two valid broad gate
+runs remain **1/7 and 1/7** under that prospective rule, so it does not explain
+or cure the failed normalization gate.
+
+Current July-2026 manufacturer pages and independent testing support this
+proposed constrained refresh: Shark `matrix`/`ai`/`iq`; eufy `c10`/`clean`/
+`x8`; Roborock `q5`/`q10`; Roomba `105`/`i3`/`i4`/`i5`. Remove eufy's generic
+feature token `self`, which is not a stable product family. Evidence reviewed:
+[Shark Matrix RV2310AE](https://www.sharkclean.com/products/shark-matrix-self-empty-robot-vacuum-zidRV2310AE),
+[eufy C10](https://www.eufy.com/products/t2292111),
+[Roborock Q10 series](https://us.roborock.com/pages/roborock-q10-series),
+[Roomba 105 series](https://www.irobot.com/en_US/roomba-105-combo-series-robots/Roomba-105-Combo-Series-Robots.html),
+[Roomba i5+](https://www.irobot.com/en_US/roomba-i5plus-self-emptying-robot-vacuum/I555020.html),
+[Vacuum Wars budget ranking](https://vacuumwars.com/best-budget-robot-vacuum/),
+and [RTINGS budget testing](https://www.rtings.com/robot-vacuum/reviews/best/budget).
+This is a proposal only. Taylor must accept or revise it before a corrective
+`07c` freeze; any revision starts a new incomparable baseline.
+
 ## 3. Provisional recall observation (recomputed 2026-07-12 under `coversLeader`, M3, six R4 after-sample fixtures)
 
 | Run | Final recall |

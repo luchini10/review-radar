@@ -965,3 +965,27 @@ No production pipeline or API contract changed in Phase 6A.
 - **State:** R7A is blocked. The next decision is a zero-live generalized
   normalization/dedupe/type-safety repair; no replacement or new live window is
   authorized.
+
+## 35. Corrective C1 rule-5 diagnosis (2026-07-12)
+
+- **Measurement contract:** the pre-AI discovery pool is now reproducibly
+  analyzed as Serper product-discovery rows that normalized, survived raw
+  dedupe, and passed cheap prefilter. Normalized presence and prefilter survival
+  are reported separately; later merge loss still counts as pool-present.
+- **Result:** both broad runs remain 1/7 under frozen `07b` and the prospective
+  letters-plus-digits matcher. Across all four usable fixtures, 15/22 leader/run
+  outcomes terminate in normalization; matcher correction changes pool recall
+  by zero.
+- **Safety diagnosis:** cross-retailer dedupe misses models found only in one
+  source URL, and the wrong-type Shark card's truncated stored title omits the
+  decisive `vacuum` word while URL/image identity is not supplied to the shared
+  type predicate.
+- **Plan:** C2 repairs those safety predicates first; C3 later adds default-off,
+  shadow-first normalization recovery using the existing eligibility/type
+  machinery; C4 is separately funded live evidence; C5 decides whether R7 can
+  resume. No approval carries between steps.
+- **State:** C1 changes offline tooling/tests/docs only. Zero live calls; no
+  recommendation behavior, frozen score, flag, `.env.local`, or issue status
+  changed. Verification: focused 12/12, full 875/875 across 127 suites,
+  typecheck/build/eval pass, lint 0 errors/3 existing warnings. C2 remains
+  unapproved pending Claude review and Taylor's decision.

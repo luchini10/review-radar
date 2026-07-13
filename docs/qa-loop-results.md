@@ -6499,3 +6499,29 @@ reopened for same-model duplicates; RR-083 records a stick vacuum displayed as
 a robot-vacuum near match. No RR-061 image regression. Pre-live verification:
 870/870 tests, typecheck/build/offline scorecard green, lint 0 errors/3 existing
 warnings.
+
+## 🟧 Codex QA Update — 2026-07-12 (Corrective C1 rule-5 diagnosis)
+
+**Verdict: NORMALIZATION DIAGNOSIS CONFIRMED; C2 IS NEXT AND UNAPPROVED.**
+Zero live calls and zero recommendation behavior change.
+
+- The tested pre-AI pool contract requires Serper product-discovery provenance,
+  normalization, raw-dedupe survival, and cheap-prefilter acceptance. A later
+  `candidate_merge` loss still counts pool-present; known URL/name lineage
+  inflation can only overstate pool presence.
+- Both broad fixtures remain 1/7 under frozen `07b` and the analysis-only
+  prospective `07c` matcher. Matcher sensitivity changes pool coverage by 0.
+- Across four usable fixtures, leader/run terminal outcomes are 15 lost in
+  normalization, four after merge, and three displayed. Repeated ledger result
+  rows: 205 normalizer rejection, 159 search/listing URL, nine requirement
+  filter, three merge, four prefilter, two cutoff, one generic-title.
+- RR-060's missing predicate is source-URL model evidence when cross-host IDs
+  and titles differ. RR-083's truncated name omits `vacuum`; the decisive full
+  source path/image identity is absent from the shared type predicate.
+- Rejected-result ledger rows do not retain URLs, so merchant-URL recovery rate
+  remains NotScored. C3 must start from deterministic provider fixtures and
+  flag-off shadow telemetry, after C2 closes safety pressure.
+
+Verification: focused 12/12; full suite 875/875 across 127 suites; typecheck,
+production build, and offline eval pass; lint 0 errors/3 existing warnings.
+Register unchanged: 83 total / 76 Fixed / 6 Needs Investigation / 1 Won't Fix.

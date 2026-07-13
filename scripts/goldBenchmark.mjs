@@ -38,6 +38,26 @@ export function coversLeader(name, item) {
   return item.lines.some((l) => hay.includes(normalizeLeaderText(l)));
 }
 
+// Prospective leaders-v2026-07c sensitivity matcher. This is intentionally
+// NOT used by the scorecard or frozen 07b observations. It tests a proposed
+// distinction for human review: a letters-only model-family prefix may match
+// the same letters followed immediately by digits (HD -> HD1400), while a
+// token that already ends in a digit remains a strict whole token (Q5 != Q50).
+export function coversLeaderProspective07c(name, item) {
+  const hay = normalizeLeaderText(name);
+  const brandTokens = normalizeLeaderText(item.brand).trim().split(" ");
+  if (!brandTokens.every((token) => hay.includes(` ${token} `))) return false;
+  if (!item.lines || item.lines.length === 0) return true;
+
+  return item.lines.some((line) => {
+    const normalizedLine = normalizeLeaderText(line).trim();
+    if (hay.includes(` ${normalizedLine} `)) return true;
+    if (!/^[a-z]+$/.test(normalizedLine)) return false;
+
+    return new RegExp(` ${normalizedLine}\\d+ `).test(hay);
+  });
+}
+
 export const GOLD = [
   // ======================= BROAD: "find the market leaders" =======================
   {

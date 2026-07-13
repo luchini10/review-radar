@@ -1750,3 +1750,22 @@ Stop. No leader list was ratified, no live window was approved/run, and R7A rema
   regressed (RR-060), and wrong-type near eligibility failed (RR-083).
 - Next proposed phase is a separately approved zero-live generalized repair of
   normalization, RR-060, and RR-083. A new readiness window is a later decision.
+
+### Corrective C1 rule-5 diagnosis record (2026-07-12)
+
+- C1 is the written stop-and-rethink required after R5 regressed live and the
+  North-Star gate remained 1/7. It changes measurement tooling and plans only.
+- A tested analyzer defines the true pre-AI Serper pool and emits separate raw,
+  normalization, dedupe, prefilter, merge, and displayed leader outcomes.
+- The prospective `wd`/`WD4070` matcher changes broad pool recall by zero;
+  normalization remains the blocker. Repeated loss rows split mainly between
+  normalizer rejection (205) and search/listing URL rejection (159).
+- RR-060 and RR-083 now have exact fail-first predicate specifications. C2 is
+  safety-only and must precede default-off C3 normalization recovery. C4 is a
+  separately approved six-search window; C5 is the later R7 decision.
+- Zero live calls. Current `coversLeader()`, `leaders-v2026-07b`, flags,
+  `.env.local`, issue statuses, and recommendation behavior remain unchanged.
+- Verification: focused 12/12; full 875/875 across 127 suites; typecheck,
+  build, and offline eval pass; lint 0 errors/3 existing warnings.
+
+Stop. Await Claude's C1 review and Taylor's separate C2 approval.

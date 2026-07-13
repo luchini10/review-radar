@@ -1574,3 +1574,23 @@ a known conservative undercount.
   leader existed in raw product-discovery digests but failed before the pool.
   Even a perfect third run caps the mean at 3/7; do not buy replacement runs to
   re-prove this failure. Repair normalization and safety before another window.
+
+## Corrective C1 offline attribution — 2026-07-12
+
+- Analyzer contract: pre-AI pool means Serper `product_discovery`, normalized,
+  raw-dedupe survivor, and cheap-prefilter accepted. A later merge loss remains
+  pool-present. Candidate-merge lineage can overstate presence; never use it to
+  manufacture a miss.
+- Current `07b` broad pool results are 1/7 and 1/7. The prospective matcher in
+  which letters-only `wd`/`hd` cover letters-plus-digits changes pool coverage
+  by zero. Do not attribute the failure to benchmark token boundaries.
+- Four-fixture terminal outcomes: 15/22 leader/runs lost in normalization,
+  4/22 after merge, 3/22 displayed. Repeated recorded result-row losses: 205
+  normalizer rejection, 159 search/listing URL, 9 requirement filter, 3 merge,
+  4 cheap prefilter, 2 cutoff, 1 generic-title. These are not unique products.
+- Current rejected-row telemetry omits product URLs. Merchant-URL recovery rate
+  is NotScored; do not promise zero-call recovery from these fixtures alone.
+- RR-060: trusted product URL model evidence is absent from strong-model tokens.
+  RR-083: truncated title loses `vacuum`, while URL/image wrong-type evidence is
+  absent from shared type text. These are C2 fail-first specifications, not C1
+  behavior changes.

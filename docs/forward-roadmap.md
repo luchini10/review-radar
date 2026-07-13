@@ -267,6 +267,82 @@ displayed as a robot-vacuum near match. These fixtures are diagnostic evidence,
 not a valid R7B control. Repair the generalized normalization/type/dedupe
 boundaries and pass a newly approved readiness window before R7A.
 
+### Corrective arc C1-C5 — rule-5 stop-and-rethink
+
+The readiness window is the formal roadmap rule-5 checkpoint. R6's zero-seed
+and outbound-query-hygiene claims passed live, but R5's dedupe claim regressed,
+the broad North-Star gate remained 1/7, and RR-083 exposed a type-safety hole.
+The response is this corrective arc, not immediate R7 implementation:
+
+1. **C1 — offline diagnosis and measurement contract (complete 2026-07-12).**
+   Define and test the pre-AI pool analyzer, attribute every leader across raw,
+   normalized, raw-dedupe, cheap-prefilter, post-merge, and displayed stages;
+   measure loss-reason frequency; specify RR-060/RR-083 predicate gaps; and run
+   the prospective `07c` matcher sensitivity. Zero live calls and no product
+   behavior change.
+2. **C2 — safety repairs (separate approval, zero live calls).** Fail first on
+   the captured Bissell/Shark duplicate pairs and IZ372HD wrong-type card, then
+   repair shared identity/type predicates. URL-derived model evidence must use
+   existing normalized model equivalence, same-brand/type compatibility, and
+   the R5 numeric-spec veto. Type evidence may use source-derived title/path/
+   structured facts, never query-derived identity. Prove unrelated-category
+   preservation and run the full wall before C3.
+3. **C3 — normalization recovery (separate approval, default-off/shadow-first,
+   zero live calls).** Reuse the existing product-eligibility and product-type
+   verdict machinery; do not create a second classifier. First recover a real
+   merchant product URL already supplied by Serper. A recovered identity may
+   enter discovery only from source-derived title, slug, or structured data;
+   generic collection/search/wrapper pages remain evidence-only and can never
+   render as cards. Direct-product lookup is last, bounded, and permitted only
+   if deterministic merchant-URL recovery still leaves measured misses. Under
+   flag-off, ledger-only shadow annotations record would-have-recovered rows;
+   responses remain byte-identical.
+4. **C4 — renewed readiness evidence (separate six-search approval).** Before
+   spend, pin exact broad/constrained request bytes (including literal `$300`)
+   and refuse to count any run without a non-null debug ledger. Re-freeze the
+   benchmark as `leaders-v2026-07c` only after Taylor accepts/revises the dated
+   constrained list and prospective matcher. Then run three cache-cold broad
+   and three cache-cold constrained searches, compare flag-off control with the
+   default-off recovery branch as the approved design specifies, and report
+   safety, pool/final recall, stability, recovery opportunity, and actual cost.
+5. **C5 — R7 decision.** Only a passing C4 gate can unblock separately approved
+   R7A. Failure produces another written diagnosis; it never lowers the frozen
+   thresholds or silently promotes recovery.
+
+**C1 result (M3, four usable readiness fixtures):** the tested pre-AI pool is a
+Serper `product_discovery` candidate that normalized, survived raw dedupe and
+cheap prefilter; a later `candidate_merge` loss still counts as pool-present.
+The merge bucket can be inflated by URL/name lineage mismatches, which may
+overstate presence but cannot create false misses. Both broad runs remain
+**1/7** under current `07b` and the prospective letters-plus-digits matcher;
+the matcher changes broad pool recall by **0**, so the normalization diagnosis
+survives the kill condition. Across all four fixtures, 15 of 22 leader/run
+outcomes terminate in normalization, four after merge, and three displayed.
+Recorded leader-result loss rows are 205 `normalizer_rejected_result`, 159
+`search_or_listing_url`, nine requirement-filter, three merge, four cheap-
+prefilter, two rank-cutoff, and one generic-title loss. These are repeated
+ledger result rows, not unique products; neither normalization reason reaches
+80%, so C3 must address both evidence paths unless later deterministic fixtures
+prove one is derivative.
+
+RR-060's exact gap is that strong model tokens come from metadata/title/name,
+not the trusted product URL: one card carries `18P03`/`RV2310AE`, the other has
+that model only in its source URL, their cross-host canonical IDs differ, and
+their titles are not exact. RR-083's exact gap is likewise evidence loss: the
+stored Shark name ends at `Portable Stick ...`, while the Home Depot path and
+image state `Stick Vacuum`/`IZ372HD`; neither URL/image identity enters the
+shared type predicate. Current ledgers intentionally discard rejected-result
+URLs, so C1 cannot prove merchant-URL recoverability rates. C3 must begin with
+deterministic provider-response fixtures plus flag-off shadow telemetry rather
+than claiming that every wrapper rejection already contains a merchant URL.
+
+The prospective matcher is analysis-only: letters-only line `hd`/`wd` may
+match exactly letters followed by digits, while digit-ending `q5` remains
+strict and `ai` cannot match `Airtok`. Current `coversLeader()` and
+`leaders-v2026-07b` scoring remain unchanged pending Taylor's `07c` decision.
+Claude review is required after C1 and again after C2+C3 before any C4 budget
+request. No phase approval carries forward.
+
 ### R7A — default-off single-source implementation (zero live calls)
 
 R7A lands as two commits inside one separately approved zero-live phase:

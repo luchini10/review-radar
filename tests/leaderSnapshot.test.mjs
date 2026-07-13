@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { GOLD, coversLeader } from "../scripts/goldBenchmark.mjs";
+import {
+  GOLD,
+  coversLeader,
+  coversLeaderProspective07c,
+} from "../scripts/goldBenchmark.mjs";
 
 const shopVac = GOLD.find((g) => g.id === "broad-shop-vac");
 const conRobot = GOLD.find((g) => g.id === "con-robot-vac-300-selfempty");
@@ -104,6 +108,42 @@ describe("leader snapshot matching contract (leaders-v2026-07b)", () => {
     );
     assert.equal(
       coversLeader("RIDGID 12 Gallon 5.0 Peak HP NXT Wet/Dry Vac", ridgid),
+      true,
+    );
+  });
+});
+
+describe("prospective leaders-v2026-07c sensitivity contract", () => {
+  it("matches letters-only model families followed by digits", () => {
+    const ridgid = shopVac.coreLeaders.find((leader) => leader.brand === "ridgid");
+
+    assert.equal(coversLeader("RIDGID WD4070 Wet/Dry Vacuum", ridgid), false);
+    assert.equal(
+      coversLeaderProspective07c("RIDGID WD4070 Wet/Dry Vacuum", ridgid),
+      true,
+    );
+    assert.equal(
+      coversLeaderProspective07c("RIDGID HD1400 NXT Wet/Dry Vacuum", ridgid),
+      true,
+    );
+  });
+
+  it("keeps digit-ending lines and unrelated word prefixes strict", () => {
+    const roborock = conRobot.coreLeaders.find(
+      (leader) => leader.brand === "roborock",
+    );
+    const shark = conRobot.coreLeaders.find((leader) => leader.brand === "shark");
+
+    assert.equal(
+      coversLeaderProspective07c("Roborock Q50 Robot Vacuum", roborock),
+      false,
+    );
+    assert.equal(
+      coversLeaderProspective07c("Shark Airtok Robot Vacuum", shark),
+      false,
+    );
+    assert.equal(
+      coversLeaderProspective07c("Shark AI2501 Robot Vacuum", shark),
       true,
     );
   });

@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Phase R6
+## Compiled for AI Agent Consumption — Phase 0 through corrective C1
 
 **Generated:** 2026-07-12
-**Scope:** All phases from initial measurement harness through Phase R6
+**Scope:** All phases from initial measurement harness through corrective C1
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
@@ -1879,6 +1879,15 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 
 **R7 readiness regression (2026-07-12):** Reopened as Needs Investigation. Broad usable run A1 selected two representations of Bissell Garage Pro model `18P03`: an Ace Vacuums listing named `Bissell Garage Pro Wet/Dry Vacuum -18P03` and Bissell's own `Garage Pro` page whose URL identifies `18P03`. The same run therefore spent two of seven final slots on one cross-retailer model. Constrained usable run B1 also displayed two Shark Matrix RV2310AE representations. Evidence: untracked `shop-vac.r7-readiness-gate-run1.json` and `robot-vacuum-under-300-self-emptying.r7-readiness-gate-run1.json`. Diagnose shared cross-retailer identity when one title omits the model but the product URL carries it; preserve distinct variants and packages.
 
+**Corrective C1 diagnosis (2026-07-12):** The R5 listing-key repair does not
+apply across hosts, and the spec-conflict guard only vetoes a proposed inferred
+merge. `productStrongModelTokens()` reads model evidence from metadata,
+canonical identity, name, and metadata title—not a trusted product-detail URL.
+Thus one Bissell/Shark representation has `18P03`/`RV2310AE`, the other has the
+same model only in its source URL, canonical IDs differ, and exact normalized
+titles differ. C2 fail-first must reuse existing model-token equivalence plus
+same-brand/type compatibility and retain the numeric-spec conflict veto.
+
 ---
 
 #### RR-061
@@ -2751,6 +2760,16 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 
 **Suggested fix or next action:** Add fail-first cross-category controls at the shared type boundary, then diagnose why revalidation/near selection did not preserve the explicit type conflict. Keep generalized robot-versus-stick/upright/handheld semantics; do not add a Shark-specific rule.
 
+**Corrective C1 diagnosis (2026-07-12):** The shared robot-vacuum rule already
+blocks `stick vacuum`, but the candidate name and metadata title were truncated
+as `Shark PowerPro ... Portable Stick ...`; neither includes the second word.
+The full source URL and image path explicitly contain `Stick-Vacuum` and model
+`IZ372HD`, but `candidateProductTypeEvidenceText()` and the later validation
+identity/evidence builders do not include URL/image identity text. The rule
+therefore never sees the decisive wrong-type evidence. C2 must add trusted,
+source-derived identity evidence at the shared boundary and prove that query-
+derived text cannot manufacture either an allowed or blocked type.
+
 ---
 
 ## R7 readiness planning note — 2026-07-12
@@ -2775,6 +2794,18 @@ pool; all six misses were present in raw product-discovery digests and lost
 before the pool, principally at normalization. Even a perfect third broad run
 would cap the required three-run mean at **3/7**, below the **5/7** gate, so
 R7A is conclusively blocked without further spend.
+
+## Corrective C1 rule-5 diagnosis note — 2026-07-12
+
+No issue status or summary count changed. A deterministic analyzer separated
+raw, normalized, deduped, prefiltered, merged, and displayed leader presence in
+the four usable readiness fixtures. Both broad runs remain 1/7 under current
+`07b` and the prospective letters-plus-digits matcher, so matcher sensitivity
+does not alter the failed-gate diagnosis. Fifteen of 22 leader/run outcomes end
+at normalization. Across repeated recorded leader-result rows, 205 losses are
+`normalizer_rejected_result` and 159 are `search_or_listing_url`; neither alone
+accounts for 80%, so later recovery design must cover both evidence paths or
+prove one derivative. C1 used zero live calls and changed no product behavior.
 
 The four usable ledgers are balanced and cache-cold, with 306 physical Serper
 attempts (84 + 68 + 75 + 79), two internal retries, zero fallbacks, and zero
