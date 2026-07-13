@@ -7,8 +7,8 @@
 //   node scripts/save-debug-fixture.mjs "best robot vacuum"
 //   node scripts/save-debug-fixture.mjs "best robot vacuum" --gold "Roborock S8 Pro Ultra" --gold "iRobot Roomba j7+"
 
-import { writeFileSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, writeFileSync, mkdirSync } from "node:fs";
+import { basename, join } from "node:path";
 
 const BASE = process.env.RR_BASE || "http://localhost:3000";
 const FIXTURE_DIR = "tests/fixtures/review-radar-live";
@@ -16,18 +16,49 @@ const TIMEOUT_MS = 270000;
 
 const args = process.argv.slice(2);
 let query = "";
+let budget;
+let priorities;
+let requestedOutput;
 const goldLeaders = [];
 
 for (let i = 0; i < args.length; i++) {
   if (args[i] === "--gold") {
     if (args[i + 1]) goldLeaders.push(args[++i]);
+  } else if (args[i] === "--budget") {
+    if (args[i + 1]) budget = args[++i];
+  } else if (args[i] === "--priorities") {
+    if (args[i + 1]) priorities = args[++i];
+  } else if (args[i] === "--out") {
+    if (args[i + 1]) requestedOutput = args[++i];
   } else if (!args[i].startsWith("--")) {
     query = args[i];
   }
 }
 
 if (!query) {
-  console.error("Usage: node scripts/save-debug-fixture.mjs <query> [--gold <leader>...]");
+  console.error("Usage: node scripts/save-debug-fixture.mjs <query> [--budget <budget>] [--priorities <details>] [--gold <leader>...] [--out <filename>]");
+  process.exit(1);
+}
+
+const request = {
+  query,
+  ...(budget ? { budget } : {}),
+  ...(priorities ? { priorities } : {}),
+};
+
+const slug = query
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, "-")
+  .replace(/^-+|-+$/g, "")
+  .slice(0, 60);
+mkdirSync(FIXTURE_DIR, { recursive: true });
+if (requestedOutput && basename(requestedOutput) !== requestedOutput) {
+  console.error("--out must be a filename within the live-fixture directory");
+  process.exit(1);
+}
+const outPath = join(FIXTURE_DIR, requestedOutput || `${slug}.json`);
+if (existsSync(outPath)) {
+  console.error(`Refusing to overwrite existing fixture: ${outPath}`);
   process.exit(1);
 }
 
@@ -40,7 +71,7 @@ try {
   rawResponse = await fetch(`${BASE}/api/recommendations`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-reviewradar-debug": "true" },
-    body: JSON.stringify({ query }),
+    body: JSON.stringify(request),
     signal: ctrl.signal,
   });
 } finally {
@@ -53,22 +84,15 @@ if (json.error) {
   process.exit(1);
 }
 
-const slug = query
-  .toLowerCase()
-  .replace(/[^a-z0-9]+/g, "-")
-  .replace(/^-+|-+$/g, "")
-  .slice(0, 60);
-
 const fixture = {
   _query: query,
+  _request: request,
   _savedAt: new Date().toISOString(),
   _version: "1",
   _goldLeaders: goldLeaders,
   ...json,
 };
 
-mkdirSync(FIXTURE_DIR, { recursive: true });
-const outPath = join(FIXTURE_DIR, `${slug}.json`);
 writeFileSync(outPath, JSON.stringify(fixture, null, 2));
 
 console.log(`Saved fixture → ${outPath}`);
