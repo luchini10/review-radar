@@ -1173,6 +1173,14 @@ function recoveredUrlBlocker(
     return "tracking_or_redirect_host";
   }
 
+  // Recovery is intentionally stricter than ordinary normalization: the
+  // alternate must positively look like a merchant product-detail page. This
+  // rejects affiliate deeplinks and other redirect wrappers without trying to
+  // maintain an incomplete host denylist.
+  if (!pathLooksLikeProductDetail(parsedUrl)) {
+    return "not_product_detail_url";
+  }
+
   if (sourceModelConflict(input.title, url)) {
     return "source_model_conflict";
   }

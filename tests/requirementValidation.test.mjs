@@ -1631,6 +1631,26 @@ describe("requirement validation", () => {
     assert.match(result.disqualifiedReason || "", /Misses required filter: Category:/);
   });
 
+  it("RR-083: keeps a legitimate robot-and-stick combination eligible", () => {
+    const result = validateProductAgainstRequirements(
+      buildProduct({
+        name: "Example DuoBot X200 Robot Vacuum with Detachable Stick Vacuum",
+        category: "robot vacuum",
+        product_page_url:
+          "https://retailer.example/products/example-duobot-x200-robot-and-stick-vacuum",
+        why_recommended:
+          "A 2-in-1 robot vacuum with a detachable stick vacuum for manual cleaning.",
+        pros: ["Automated floor cleaning plus a detachable handheld unit."],
+      }),
+      { category: "robot vacuum" },
+    );
+
+    assert.equal(result.isMatch, true);
+    assert.ok(
+      result.matchedRequirements.some((item) => /Category: robot vacuum/i.test(item)),
+    );
+  });
+
   it("ignores URL query text and image paths when classifying product type", () => {
     const result = validateProductAgainstRequirements(
       buildProduct({

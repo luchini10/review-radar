@@ -31,6 +31,19 @@ function product(name, url, overrides = {}) {
   };
 }
 
+function cardEligibleIdentity(brand) {
+  return {
+    metadata: { brand: { value: brand } },
+    productEligibility: {
+      status: "buyable_product",
+      confidence: "high",
+      canRenderAsProductCard: true,
+      canUseAsEvidence: true,
+      reasons: ["Product detail page."],
+    },
+  };
+}
+
 describe("Phase R5 identity collapse safety", () => {
   // RR-071 live capture (phase-6d-post-rr061-shop-vac.run1.json ~line 2771):
   // the Beast 5.5 HP collapsed into a different 5 HP machine because brand +
@@ -107,6 +120,59 @@ describe("Phase R5 identity collapse safety", () => {
 
     assert.equal(areSameExactModelProduct(ace, bissell), true);
     assert.equal(areSameExactModelProduct(bissell, ace), true);
+  });
+
+  it("RR-060: URL model evidence cannot collapse a vacuum into its replacement filter", () => {
+    const vacuum = product(
+      "RIDGID HD1400 14 Gallon Wet Dry Vacuum",
+      "https://shop.example/products/ridgid-hd1400-wet-dry-vacuum",
+      cardEligibleIdentity("RIDGID"),
+    );
+    const filter = product(
+      "RIDGID Replacement Filter for Wet Dry Vacuums",
+      "https://shop.example/products/ridgid-hd1400-filter",
+      cardEligibleIdentity("RIDGID"),
+    );
+
+    assert.equal(areSameExactModelProduct(vacuum, filter), false);
+    assert.equal(areSameExactModelProduct(filter, vacuum), false);
+  });
+
+  it("RR-060: URL model evidence cannot collapse a vacuum into its hose", () => {
+    const vacuum = product(
+      "DEWALT DXV12P Wet Dry Vacuum",
+      "https://shop.example/products/dewalt-dxv12p-wet-dry-vacuum",
+      cardEligibleIdentity("DEWALT"),
+    );
+    const hose = product(
+      "DEWALT Replacement Hose for Wet Dry Vacuums",
+      "https://shop.example/products/dewalt-dxv12p-hose",
+      cardEligibleIdentity("DEWALT"),
+    );
+
+    assert.equal(areSameExactModelProduct(vacuum, hose), false);
+    assert.equal(areSameExactModelProduct(hose, vacuum), false);
+  });
+
+  it("RR-060: inferred-model controls preserve true duplicates and distinct models", () => {
+    const original = product(
+      "RIDGID HD1400 14 Gallon Wet Dry Vacuum",
+      "https://first.example/products/ridgid-hd1400-wet-dry-vacuum",
+      cardEligibleIdentity("RIDGID"),
+    );
+    const duplicate = product(
+      "RIDGID 14 Gallon Wet Dry Vacuum",
+      "https://second.example/products/ridgid-hd1400-vac",
+      cardEligibleIdentity("RIDGID"),
+    );
+    const differentModel = product(
+      "RIDGID HD1600 16 Gallon Wet Dry Vacuum",
+      "https://third.example/products/ridgid-hd1600-wet-dry-vacuum",
+      cardEligibleIdentity("RIDGID"),
+    );
+
+    assert.equal(areSameExactModelProduct(original, duplicate), true);
+    assert.equal(areSameExactModelProduct(original, differentModel), false);
   });
 
   it("does not borrow URL models from evidence-only collection pages", () => {

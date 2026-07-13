@@ -5,6 +5,7 @@ import type {
 } from "@/types/review-radar";
 import { canonicalBrand, detectKnownBrands } from "./brandMatching.ts";
 import { sourceUrlPathIdentityText } from "./sourceUrlIdentity.ts";
+import { classifyProductTypeMatch } from "./productTypeMatch.ts";
 
 const genericWords = new Set([
   "and",
@@ -316,6 +317,32 @@ function identitySpecText(product: ProductRecommendation) {
     .join(" ");
 }
 
+function productTypeAllowsInferredIdentity(product: ProductRecommendation) {
+  const requestedCategory = product.category || "";
+
+  if (!requestedCategory) {
+    return true;
+  }
+
+  const allowedCheckText = [product.name, fieldValue(product.metadata?.title)]
+    .filter(Boolean)
+    .join(" ");
+  const vetoEvidenceText = [
+    allowedCheckText,
+    sourceUrlPathIdentityText(product.product_page_url),
+    sourceUrlPathIdentityText(product.metadata?.canonicalUrl?.value),
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return classifyProductTypeMatch({
+    allowedCheckText,
+    evidenceText: vetoEvidenceText,
+    identityText: product.name,
+    requestedCategory,
+  }).canBeExactMatch;
+}
+
 function identityConfidence(metadata: ProductMetadata | undefined) {
   if (metadata?.gtin?.value || metadata?.modelNumber?.value) {
     return "High" as const;
@@ -418,6 +445,19 @@ export function areSameExactModelProduct(
   // hard numeric specs (5.5 vs 5 peak HP) prove different machines.
   if (
     conflictingNumericSpecs(identitySpecText(first), identitySpecText(second))
+  ) {
+    return false;
+  }
+
+  // URL-carried model tokens are inference evidence, not proof that two pages
+  // describe the same kind of product. A replacement filter or hose may name
+  // its parent model in the slug; the shared product-type verdict must still
+  // allow both cards before that token can collapse them. Canonical listing-id
+  // equality above remains stronger than this inference-only veto.
+  if (
+    sharedStrongModel &&
+    (!productTypeAllowsInferredIdentity(first) ||
+      !productTypeAllowsInferredIdentity(second))
   ) {
     return false;
   }

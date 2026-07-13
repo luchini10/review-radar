@@ -385,6 +385,28 @@ describe("Serper product discovery", () => {
     );
   });
 
+  it("rejects affiliate deeplinks as recovered merchant URLs", () => {
+    const candidates = normalizeSerperShoppingResults(
+      {
+        shopping: [
+          {
+            title: "Example RV200 Robot Vacuum",
+            productLink: "https://www.google.com/search?ibp=oshop&udm=28",
+            link:
+              "https://linksynergy.com/deeplink?murl=https%3A%2F%2Fshop.example%2Fproducts%2Fexample-rv200",
+            source: "Example Store",
+            price: "$249",
+          },
+        ],
+      },
+      "Example RV200 robot vacuum",
+      "robot vacuum",
+      { enableNormalizationRecovery: true },
+    );
+
+    assert.deepEqual(candidates, []);
+  });
+
   it("does not let recovery originate identity or override source-model conflicts", () => {
     const candidates = normalizeSerperShoppingResults(
       {
