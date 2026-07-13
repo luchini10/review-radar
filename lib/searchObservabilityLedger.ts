@@ -524,6 +524,29 @@ function addProvenance(candidate: CandidateLineageRecord, queryId: string) {
   }
 }
 
+function retainPriorityCandidate(
+  ledger: SearchLedgerState,
+  candidateId: string,
+  record: CandidateLineageRecord,
+) {
+  if (ledger.candidates.has(candidateId)) {
+    return true;
+  }
+
+  if (ledger.candidates.size >= MAX_CANDIDATES) {
+    const rawAuditCandidate = [...ledger.candidates.values()].find(
+      (candidate) => candidate.source === "raw_serper_result",
+    );
+    if (!rawAuditCandidate) {
+      return false;
+    }
+    ledger.candidates.delete(rawAuditCandidate.candidateId);
+  }
+
+  ledger.candidates.set(candidateId, record);
+  return true;
+}
+
 function serperCandidateRecord(
   ledger: SearchLedgerState,
   candidate: RawProductCandidate,
@@ -562,9 +585,7 @@ function serperCandidateRecord(
     firstLoss: null,
   };
 
-  if (ledger.candidates.size < MAX_CANDIDATES) {
-    ledger.candidates.set(candidate.id, record);
-  }
+  retainPriorityCandidate(ledger, candidate.id, record);
   return record;
 }
 
@@ -784,9 +805,7 @@ function ensureRecommendationRecord(
     firstLoss: null,
   };
 
-  if (ledger.candidates.size < MAX_CANDIDATES) {
-    ledger.candidates.set(candidateId, record);
-  }
+  retainPriorityCandidate(ledger, candidateId, record);
   return record;
 }
 

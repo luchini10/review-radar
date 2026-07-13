@@ -11,6 +11,8 @@ import {
   buildSearchObservabilitySnapshot,
   createSearchObservabilityLedger,
   finalizeCandidateLineage,
+  recordLogicalSearchResults,
+  recordNormalizedCandidates,
   reviewRadarFlagSnapshot,
   runWithSearchObservabilityLedger,
   searchPlanObservabilityObserver,
@@ -180,6 +182,42 @@ const rawGapCheck = {
 };
 
 describe("request-scoped search observability ledger", () => {
+  it("retains displayed recommendation lineage when raw-result audit rows fill the cap", () => {
+    const displayed = recommendation("Displayed Leader", {
+      exactMatch: true,
+      passed: ["category"],
+      failed: [],
+      unknown: [],
+    });
+    const state = ledger({ requestId: "candidate-cap-priority-test" });
+    const snapshot = runWithSearchObservabilityLedger(state, () => {
+      for (let queryIndex = 0; queryIndex < 48; queryIndex += 1) {
+        const queryId = `query-${queryIndex + 1}`;
+        recordLogicalSearchResults(
+          queryId,
+          Array.from({ length: 10 }, (_, resultIndex) => ({
+            position: resultIndex + 1,
+            title: `Rejected raw result ${queryIndex + 1}-${resultIndex + 1}`,
+            host: "editorial.example.com",
+            price: null,
+          })),
+        );
+        recordNormalizedCandidates(queryId, []);
+      }
+
+      finalizeCandidateLineage(finalizationInput([displayed]));
+      return buildSearchObservabilitySnapshot();
+    });
+
+    assert.equal(snapshot.candidateLineage.candidates.length, 480);
+    const retained = snapshot.candidateLineage.candidates.find(
+      (candidate) => candidate.name === displayed.name,
+    );
+    assert.ok(retained);
+    assert.equal(retained.finalOutcome, "exact");
+    assert.equal(retained.selected, true);
+  });
+
   it("records retries and vertical fallback as physical attempts on one logical query", async () => {
     let callCount = 0;
 
