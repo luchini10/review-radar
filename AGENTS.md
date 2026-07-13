@@ -9,6 +9,12 @@ Then read the relevant guardrails and approved phase section in
 `docs/forward-roadmap.md`. If an older `PROJECT_PLAN.md` conflicts with either
 file, the current handoff and forward roadmap win.
 
+`docs/agent-next-task.md` must be regenerated—not incrementally patched—at the
+end of each executed phase. It must state the current approved phase/commit,
+flag state, hard boundaries, outstanding review debts, and current verification
+result. If any of those fields is missing or ambiguous, retrieve the relevant
+roadmap/QA/issue evidence before acting.
+
 ## Progressive context protocol
 
 Do not load historical Markdown files in full by default. Preserve every record
@@ -45,7 +51,8 @@ claim depends on earlier evidence, retrieve and cite the relevant record.
 
 - Before continuing implementation, confirm Codex is looking at the intended local repository.
 - If the local repository does not contain the expected app files, stop and ask for sync or location clarification.
-- Treat `PROJECT_PLAN.md` as the source of truth for the current build order.
+- `PROJECT_PLAN.md` is a historical MVP/product reference. It is not the source
+  of truth for current build order, phase authorization, or live spending.
 - If a ChatGPT project and local repo differ, reconcile the repo state before making app changes.
 
 ## Safety Rules
@@ -107,11 +114,13 @@ Update the smallest authoritative record that fits the change:
 - `docs/change-log.md`: meaningful user-facing/product changes only.
 - `docs/codex-handoff-phased-plan.md`: major milestones or explicit handoffs only.
 
-## Step 11 Rule
+## Conditional trust-audit checklist
 
-Step 11 is `Testing and Trust Audit`, not just normal testing.
+This is a legacy initial-build checklist. Apply it when a task explicitly calls
+for a broad testing/trust audit; it does not define R-series phase order or
+override `docs/agent-next-task.md` and `docs/forward-roadmap.md`.
 
-At Step 11, verify:
+For that audit, verify:
 
 - Form validation works.
 - Backend validation works.

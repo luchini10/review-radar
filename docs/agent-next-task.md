@@ -7,6 +7,11 @@ Generated: 2026-07-13
 This file is the complete session-start handoff. Do **not** bulk-load the
 historical Markdown archive.
 
+At each phase closeout, regenerate this file rather than patching a running
+history. It must always state: current phase/commit, flag state, hard boundaries,
+outstanding peer-review debts, and current verification. Retrieve source records
+before acting if any of those five fields is absent or ambiguous.
+
 1. Read all of this file.
 2. Use `rg` to locate the applicable guardrails and phase section in
    `docs/forward-roadmap.md`, then read only that bounded section.

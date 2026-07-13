@@ -80,6 +80,10 @@ Between live batches, use deterministic proxies: full suite green,
   sections. `docs/agent-next-task.md` is the only always-read current-state
   handoff. The issue report summary plus active/referenced IDs is sufficient
   unless maintaining the register itself.
+- Handoff invariant: regenerate `docs/agent-next-task.md` at each phase closeout
+  with the current phase/commit, flag state, hard boundaries, outstanding
+  peer-review debts, and current verification. Never rely on incremental prose
+  patches to carry forward these safety-critical fields.
 - End-of-phase minimum record: update `docs/agent-next-task.md`; append the
   canonical evidence to `docs/qa-loop-results.md` with the executing-agent
   header (Claude: green bold HTML; Codex: 🟧); update the issue report only for
