@@ -5,7 +5,13 @@
 **Scope:** All phases from initial measurement harness through corrective C3
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
-**Standing maintenance rule:** At the end of every ReviewRadar phase, append newly discovered issues to this file, update existing issue statuses in place when appropriate, and refresh every summary count. This file is the single issue-tracking source of truth.
+**Standing maintenance rule:** When a phase discovers, fixes, reopens, or
+reclassifies an issue, update the relevant entry and refresh summary counts.
+This file is the single issue-tracking source of truth.
+
+**Efficient retrieval rule:** At normal session start, read the Summary and only
+the active or referenced RR IDs. Use `rg` to find them. Read the entire register
+only when maintaining this register or auditing its full history.
 
 ---
 

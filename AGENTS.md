@@ -2,9 +2,32 @@
 
 Instructions for Codex and any future coding agents working on ReviewRadar.
 
-## Primary Rule
+## Current operating authority
 
-Always follow `PROJECT_PLAN.md`.
+Read `docs/agent-next-task.md` first. It is the compact current-state handoff.
+Then read the relevant guardrails and approved phase section in
+`docs/forward-roadmap.md`. If an older `PROJECT_PLAN.md` conflicts with either
+file, the current handoff and forward roadmap win.
+
+## Progressive context protocol
+
+Do not load historical Markdown files in full by default. Preserve every record
+on disk, but retrieve it by topic:
+
+- Read all of `docs/agent-next-task.md` at session start.
+- Read only the standing guardrails and the relevant phase section of
+  `docs/forward-roadmap.md`.
+- For `docs/agent-dialogue.md`, read the protocol plus entries after your last
+  entry, or the latest entry Taylor identifies as waiting.
+- For `docs/RR-Issues-Report.md`, read the summary and only active/referenced
+  RR IDs. Read the full register only when maintaining the register itself.
+- Use `rg` to locate exact sections in `docs/qa-loop-results.md`,
+  `docs/codex-handoff-phased-plan.md`, `docs/review-radar-test-memory.md`,
+  `ReviewRadar-Overview.md`, and `docs/change-log.md`; then read bounded
+  excerpts. They are historical/reference records, not session-start payloads.
+
+This is a context-efficiency rule, not permission to skip verification. When a
+claim depends on earlier evidence, retrieve and cite the relevant record.
 
 ## Workflow Rules
 
@@ -52,7 +75,8 @@ Always follow `PROJECT_PLAN.md`.
 
 ## Markdown Documentation Rules
 
-The repo markdown files are the source of truth. Desktop copies are convenience snapshots only.
+The repo markdown files are the source of truth. Do not copy them to Desktop
+locations.
 
 Important markdown files:
 
@@ -72,11 +96,16 @@ Do not update `docs/change-log.md` for typo fixes, formatting-only edits, tiny i
 
 Change-log entries should be dated and use short sections such as `Changed` and `Verified`. Only list verification commands that were actually run.
 
-Whenever any of these markdown files are updated in the repo, also copy the updated repo version to `C:\Users\tluch\Desktop\RR Markdowns`:
+Update the smallest authoritative record that fits the change:
 
-- `ReviewRadar-Overview.md` -> `C:\Users\tluch\Desktop\RR Markdowns\ReviewRadar-Overview.md`
-- `docs/qa-loop-results.md` -> `C:\Users\tluch\Desktop\RR Markdowns\qa-loop-results.md`
-- `docs/change-log.md` -> `C:\Users\tluch\Desktop\RR Markdowns\change-log.md`
+- `docs/agent-next-task.md`: current state and next approved decision.
+- `docs/RR-Issues-Report.md`: issue status or count changes only.
+- `docs/qa-loop-results.md`: canonical verification result for an executed phase.
+- `docs/agent-dialogue.md`: peer-agent conclusions/questions only.
+- `docs/review-radar-test-memory.md`: durable test or trust contracts only.
+- `ReviewRadar-Overview.md`: architecture changes only.
+- `docs/change-log.md`: meaningful user-facing/product changes only.
+- `docs/codex-handoff-phased-plan.md`: major milestones or explicit handoffs only.
 
 ## Step 11 Rule
 

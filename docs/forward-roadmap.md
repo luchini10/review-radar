@@ -73,25 +73,33 @@ Between live batches, use deterministic proxies: full suite green,
   searches, with the derived Serper estimate stated (~37–47 calls per search).
   Never pool samples across windows. Stop and report after each phase.
 - Zero live Serper/OpenAI calls in any phase not explicitly approved as live.
-- Docs checklist per phase: `docs/change-log.md`, `docs/qa-loop-results.md`
-  (attribution header for the executing agent — Claude: green bold HTML;
-  Codex: 🟧), `docs/RR-Issues-Report.md` (full maintenance protocol),
-  `docs/codex-handoff-phased-plan.md` (completion record),
-  `docs/review-radar-test-memory.md`, `ReviewRadar-Overview.md`,
-  `docs/agent-next-task.md` (repoint to next phase). Repo files only — never
-  copy anything to `Desktop/RR Markdowns`.
+- Context and documentation discipline: preserve every historical record, but
+  do not make every agent reread or update every record. At session start, read
+  all of `docs/agent-next-task.md`; then use `rg` and bounded excerpts for the
+  relevant roadmap, dialogue, issue, test-memory, QA, handoff, and overview
+  sections. `docs/agent-next-task.md` is the only always-read current-state
+  handoff. The issue report summary plus active/referenced IDs is sufficient
+  unless maintaining the register itself.
+- End-of-phase minimum record: update `docs/agent-next-task.md`; append the
+  canonical evidence to `docs/qa-loop-results.md` with the executing-agent
+  header (Claude: green bold HTML; Codex: 🟧); update the issue report only for
+  issue/status/count changes; and append a dialogue entry when the peer agent
+  needs a conclusion or review. Update test memory only for durable contracts,
+  the overview only for architecture changes, the change log only for meaningful
+  product changes, and the phased handoff only for major milestones/explicit
+  handoffs. Repo files only — never copy anything to `Desktop/RR Markdowns`.
 - Commits to `main`, staging only files created/modified by the phase. Never
   `git add -A`. Existing untracked fixtures and local artifacts stay untouched.
 - **Agent dialogue:** `docs/agent-dialogue.md` is the standing Claude↔Codex
-  channel. At phase start, read it and answer items addressed to you —
-  verifying the other agent's claims against the repo before agreeing. At
-  phase end, append your questions/objections for the other agent. The channel
-  is also used on demand, including during brainstorming before any phase is
-  approved: when Taylor says a message is waiting, read and reply (a
-  dialogue-only append is a docs-only commit and does not trigger the phase
-  checklist). Claims cite `file:line`, fixtures, or commits. The dialogue is
-  advisory only: it never authorizes phases, live spend, or commits — Taylor
-  remains the sole approver.
+  channel. At phase start, read its protocol and only entries after your last
+  entry (or the entry Taylor says is waiting), then answer items addressed to
+  you — verifying claims against the repo before agreeing. At phase end, append
+  questions/objections only when the peer agent needs a conclusion or review.
+  The channel is also used on demand during brainstorming before any phase is
+  approved. A dialogue-only append is a docs-only commit and does not trigger
+  the end-of-phase minimum record. Claims cite `file:line`, fixtures, or commits.
+  The dialogue is advisory only: it never authorizes phases, live spend, or
+  commits — Taylor remains the sole approver.
 
 ---
 
