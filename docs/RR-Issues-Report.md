@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through corrective C3
+## Compiled for AI Agent Consumption — Phase 0 through corrective C2/C3 safety closure
 
 **Generated:** 2026-07-13
-**Scope:** All phases from initial measurement harness through corrective C3
+**Scope:** All phases from initial measurement harness through corrective C2/C3 safety closure
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -1904,6 +1904,16 @@ both directions; an unrelated AC100 air-compressor pair proves generalization.
 An evidence-only collection page cannot lend its URL model. Focused C2 tests
 184/184; full 881/881 across 127 suites; typecheck/build/eval pass; lint 0
 errors/3 existing warnings; zero live calls.
+
+**Corrective C2/C3 peer-review closure (2026-07-13):** Claude's deferred
+adversarial review reproduced a defense-in-depth over-collapse: an accessory
+slug carrying its parent product's model could satisfy URL-derived exact-model
+inference. Exact-model inference now also requires each product's existing
+shared product-type verdict to permit exact matching. Replacement-filter and
+hose cases remain distinct; a true cross-retailer duplicate still collapses,
+and canonical listing-ID equality remains authoritative. This is a generalized
+inference guard, not a product/brand exception. Focused closure tests 134/134;
+full suite 896/896 across 127 suites; zero live calls.
 
 ---
 

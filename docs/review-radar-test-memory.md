@@ -1637,3 +1637,19 @@ a known conservative undercount.
 - Verification: fail-first 59/64 (five intended failures); focused final 71/71;
   safety wall 207/207; full 891/891 across 127 suites; typecheck/build/eval pass;
   lint 0 errors/3 existing warnings. Zero live calls.
+
+## C2/C3 peer-review safety closure — 2026-07-13
+
+- A URL-lent model token is inference, not identity proof. In inferred
+  exact-model collapse, both products must pass the shared product-type verdict;
+  an accessory slug may name its parent model without becoming that product.
+  Canonical listing-ID equality remains stronger and bypasses this inference
+  veto by design.
+- Recovery must positively satisfy `pathLooksLikeProductDetail`; merely missing
+  the Google/tracking/search denylist is insufficient. Test this through public
+  shopping/organic/retailer normalizers rather than exporting private policy.
+- Preservation controls must include a true same-model cross-retailer pair, a
+  distinct model, and a legitimate multi-function requested-type product.
+- Verification: fail-first 131/134 with exactly three intended failures;
+  focused 134/134; ledger/analyzer 23/23; full 896/896 across 127 suites;
+  typecheck/build/eval pass; lint 0 errors/3 existing warnings. Zero live calls.

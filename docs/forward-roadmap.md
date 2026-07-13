@@ -365,9 +365,18 @@ recovery opportunity is NotScored. Focused C3 tests 71/71; identity/type/source-
 upgrade wall 207/207; full suite 891/891 across 127 suites; typecheck/build/eval
 pass; lint 0 errors/3 existing warnings. `.env.local` is unchanged.
 
-Claude's C1/C2 review remains deferred, and the requested C2+C3 checkpoint is
-not silently treated as passed. C4, flag promotion, and R7A remain separately
-approval-gated.
+**C2/C3 peer-review closure (2026-07-13, zero live):** Claude's deferred review
+reproduced two blockers. URL-inferred model evidence could collapse a product
+with an accessory whose slug named the parent model; inferred exact-model
+identity now also requires the existing product-type verdict on both products.
+Recovery's tracking-host denylist could miss affiliate wrappers; a recovered
+URL must now positively satisfy the existing product-detail-path predicate.
+Public normalization tests cover the recovery boundary, and a legitimate
+robot-plus-stick combination remains eligible. Focused 134/134; full 896/896.
+The checkpoint debt is paid. Before C4 spend, its design must attribute recovery
+opportunity and survival on the same provider response (shadow counterfactual
+or replay); separate live responses are only end-to-end confirmation. C4, flag
+promotion, and R7A remain separately approval-gated.
 
 **C1 result (M3, four usable readiness fixtures):** the tested pre-AI pool is a
 Serper `product_discovery` candidate that normalized, survived raw dedupe and

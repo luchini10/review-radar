@@ -1198,3 +1198,20 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 - Typecheck, production build, and offline evaluation pass.
 - Lint: 0 errors and 3 pre-existing warnings.
 - Zero live Serper/OpenAI calls; `.env.local` unchanged; recovery remains off.
+
+## 2026-07-13 — 🟧 Codex — C2/C3 peer-review safety closure
+
+- Prevented URL-derived model evidence from merging a product with replacement
+  parts or accessories that merely name the parent model in their URL.
+- Required default-off normalization recovery URLs to positively resemble a
+  merchant product-detail page, rejecting affiliate redirect wrappers without
+  maintaining an ever-growing host denylist.
+- Preserved canonical listing identity, true cross-retailer dedupe, distinct
+  models, and legitimate multi-function products.
+
+### Verified
+
+- Focused closure: 134/134; full suite: 896/896 across 127 suites.
+- Ledger/analyzer: 23/23; typecheck, build, and offline eval pass.
+- Lint: 0 errors and 3 pre-existing warnings.
+- Zero live calls; `.env.local` unchanged; recovery remains default-off.

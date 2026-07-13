@@ -6584,3 +6584,34 @@ Latest live North Stars are unchanged: broad final/pool recall remains 1/7 in
 the two usable broad readiness runs, exact hard-constraint failures remain zero,
 and stability remains NotScored from the incomplete window. C4 and R7A remain
 separately approval-gated.
+
+## 🟧 Codex QA Update — 2026-07-13 (C2/C3 peer-review safety closure)
+
+**Verdict: BOTH REPRODUCED SAFETY GAPS CLOSED; C4 NOT STARTED.**
+
+- Fail-first focused testing passed 131/134 with exactly three intended
+  failures: vacuum/filter collapse, vacuum/hose collapse, and affiliate
+  deeplink recovery. The legitimate robot-plus-stick preservation control
+  passed before the fix.
+- URL-carried model evidence remains corroborating inference. Before it can
+  collapse two products, both must pass the existing shared product-type
+  verdict for their own category. Canonical listing-ID equality remains the
+  stronger identity signal.
+- Recovered URLs must positively resemble product-detail paths. This closes
+  affiliate/redirect wrappers as a class instead of extending a host denylist.
+  The regression is exercised through public Serper normalizers; no private
+  helper was exported.
+- C4 causality remains a design obligation: opportunity and enabled survival
+  must be evaluated against the same provider response through shadow
+  counterfactual/replay, not inferred across separate live responses.
+
+```text
+focused closure: 134/134
+ledger/analyzer preservation: 23/23
+npm test: 896/896 across 127 suites
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red flags
+live Serper/OpenAI calls: 0; .env.local unchanged; recovery default-off
+```
