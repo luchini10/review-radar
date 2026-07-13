@@ -1,8 +1,8 @@
 # Market-Leader Evaluation Method and Dated Leader Snapshots
 
-**Mechanics version:** `leaders-v2026-07a` (corrective re-freeze 2026-07-12)
-**Evidence status:** matching/scoring mechanics frozen; leader lists and recall
-observations provisional pending Taylor's human review
+**Mechanics version:** `leaders-v2026-07b` (owner-delegated re-freeze 2026-07-12)
+**Evidence status:** matching/scoring mechanics frozen; broad shop-vac list
+reviewed against current independent tests and retailer demand signals
 **Supersedes:** `leaders-v2026-07` (same day) — see section 5. Results are
 never compared across snapshot versions.
 **Owner:** Phase 6 freeze-point deliverable per
@@ -32,16 +32,23 @@ recall DOWN, never up, and is pinned by test.
 cards / snapshot size`; sample claims use the mean across all usable
 cache-cold runs of a shape, never the best run.
 
-## 2. Leader lists (provisional, draft-seeded)
+## 2. Leader lists
 
-The lists are seeded from `scripts/goldBenchmark.mjs`, which is explicitly
-marked **"DRAFT for human review"** and states the lists must reflect the
-owner's judgment of the market. The saved R2/R4 ledgers contain the captured
-mentions below, but some mentions do not establish product identity and none
-prove July-2026 market leadership.
-Accordingly, the LISTS are **provisional pending Taylor's human review**; the
-matching contract is frozen while the recomputed recall values remain
-provisional M3 observations because changing the list changes the denominator.
+Taylor's authorization is recorded verbatim: **"do whatever you think is best
+with the broad shop vac leaders."** Codex used that delegated judgment to
+review the broad list against current independent comparative tests and retailer
+demand signals. The resulting `leaders-v2026-07b` snapshot replaces Milwaukee
+with Workshop in the seven core leaders and retains Milwaukee as an acceptable
+alternate. The first live readiness-gate sample under this list is the first
+canonical North-Star baseline; observations under `leaders-v2026-07a` remain
+historical and are not comparable.
+
+Current review sources (accessed 2026-07-12): [Lowe's best sellers](https://www.lowes.com/best-sellers/tools/shop-vacuums-accessories/shop-vacuums/4294857472),
+[Vacuum Wars' 6.5 HP comparison](https://vacuumwars.com/best-shop-vac-6-5-hp/),
+and [TechGearLab's tested shop vacs](https://www.techgearlab.com/topics/floor-cleaning/best-shop-vac).
+These sources collectively support the first six brands and give Workshop
+stronger evidence as a mainstream corded shop-vac competitor than Milwaukee,
+whose strongest position is the cordless/niche segment.
 
 ### Shape A — broad `shop vac` (7 leaders)
 
@@ -53,7 +60,9 @@ provisional M3 observations because changing the list changes the denominator.
 | DeWALT | — | shop-vac.ledger-run1 :: "DeWalt Stealthsonic Quiet 6 Gallon Wet/Dry Shop Vacuum DXV06PL-QT" |
 | Stanley | — | shop-vac.ledger-run1 :: "Stanley Wet/Dry Vacuum SL18116P" |
 | Shop-Vac (brand) | — | shop-vac.ledger-run1 :: "Shop vac not working right : r/Tools - Reddit" — generic category phrase; not validated Shop-Vac brand identity |
-| Milwaukee | — | shop-vac.ledger-run1 :: "Anyone regret going with the 2.5 gallon Milwaukee Vacuum? - Reddit" |
+| Workshop | — | Current independent 6.5 HP comparative testing; first canonical live presence measurement occurs in the readiness gate |
+
+**Acceptable alternates:** Armor All; Milwaukee.
 
 ### Shape B — constrained `robot vacuum / under $300 / self-emptying` (4 leaders)
 
@@ -89,15 +98,15 @@ card; runs 2–3 were dominated by near-duplicate Bissell variants (RR-060/R5
 territory, fixed 2026-07-12); the constrained shape's low number reflects
 stale draft line lists at least as much as pipeline recall.
 
-These values are reproducible under the frozen matcher but are not a canonical
-North-Star baseline until Taylor approves the leader lists. The later
-whole-token correction for RR-082 does not change any of the six values.
+These values are reproducible under the frozen matcher but are historical,
+non-canonical observations under `leaders-v2026-07a`. Taylor delegated the
+broad-list judgment for the `leaders-v2026-07b` re-freeze; the later whole-token
+correction for RR-082 does not change the historical six values.
 
 ## 4. v1.0 targets (amended)
 
 - Shape A (broad): final recall ≥ 3/7 per-run mean; pool recall ≥ 5/7 —
-  approved floors, binding against a provisional list (re-ratify after human
-  review of the lists).
+  approved floors, binding against `leaders-v2026-07b`.
 - Shape B (constrained): **no leader-recall target.** Per
   `scripts/qualityScorecard.mjs`, constrained shapes are judged primarily on
   constraint satisfaction; constrained leader recall is measured and reported

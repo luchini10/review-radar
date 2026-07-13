@@ -6,7 +6,7 @@ import { GOLD, coversLeader } from "../scripts/goldBenchmark.mjs";
 const shopVac = GOLD.find((g) => g.id === "broad-shop-vac");
 const conRobot = GOLD.find((g) => g.id === "con-robot-vac-300-selfempty");
 
-describe("leader snapshot matching contract (leaders-v2026-07a)", () => {
+describe("leader snapshot matching contract (leaders-v2026-07b)", () => {
   it("requires every brand token", () => {
     // "self" alone can never establish eufy; "ai" alone can never establish
     // Shark. Brand-OR-line matching was the v2026-07 defect.
@@ -82,6 +82,13 @@ describe("leader snapshot matching contract (leaders-v2026-07a)", () => {
     assert.equal(
       coversLeader("Shop-Vac 5 Gallon 4.5 Peak HP Wet/Dry Vacuum", shopVacBrand),
       true,
+    );
+  });
+
+  it("uses Workshop as the seventh broad shop-vac leader", () => {
+    assert.ok(shopVac.coreLeaders.some((leader) => leader.brand === "workshop"));
+    assert.ok(
+      shopVac.acceptableAlternates.some((leader) => leader.brand === "milwaukee"),
     );
   });
 

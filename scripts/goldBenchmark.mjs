@@ -168,10 +168,11 @@ export const GOLD = [
       { brand: "dewalt", lines: [] },
       { brand: "stanley", lines: [] },
       { brand: "shop vac", lines: [] },
-      { brand: "milwaukee", lines: [] },
+      { brand: "workshop", lines: [] },
     ],
     acceptableAlternates: [
       { brand: "armor all", lines: [] },
+      { brand: "milwaukee", lines: [] },
     ],
     wrongTypeTerms: ["robot vacuum", "upright vacuum", "stick vacuum", "dustbuster", "handheld", "filter only", "hose only", "accessory kit"],
   },
