@@ -1610,6 +1610,46 @@ describe("requirement validation", () => {
     }
   });
 
+  it("RR-083: source paths preserve a wrong-type veto when the stored title is truncated", () => {
+    const result = validateProductAgainstRequirements(
+      buildProduct({
+        name: "Example PowerPro Bagless Cordless Portable Stick ...",
+        category: "robot vacuum",
+        product_page_url:
+          "https://retailer.example/p/example-powerpro-portable-stick-vacuum-x100/333915143",
+        product_image_url:
+          "https://cdn.example.com/product-images/example-stick-vacuums-x100.jpg",
+        why_recommended:
+          "Found as a broader product candidate during the robot vacuum search.",
+        pros: ["Lightweight cordless cleaning with a HEPA filter."],
+      }),
+      { category: "robot vacuum" },
+    );
+
+    assert.equal(result.isMatch, false);
+    assert.ok(result.missingRequirements.some((item) => /Category:/i.test(item)));
+    assert.match(result.disqualifiedReason || "", /Misses required filter: Category:/);
+  });
+
+  it("ignores URL query text and image paths when classifying product type", () => {
+    const result = validateProductAgainstRequirements(
+      buildProduct({
+        name: "Example X100 Robot Vacuum",
+        category: "robot vacuum",
+        product_page_url:
+          "https://retailer.example/products/example-x100?q=stick+vacuum",
+        // Images have a separate identity resolver and are not trusted as a
+        // hard product-type veto. Only the card's product-page path is used.
+        product_image_url: "https://cdn.example.com/unrelated-stick-vacuum.jpg",
+        why_recommended: "This is a robot vacuum with automated navigation.",
+        pros: ["Robot vacuum with obstacle avoidance."],
+      }),
+      { category: "robot vacuum" },
+    );
+
+    assert.equal(result.isMatch, true);
+  });
+
   it("confirms robot vacuum category when why_recommended identifies the product as a robot vacuum", () => {
     const result = validateProductAgainstRequirements(
       buildProduct({

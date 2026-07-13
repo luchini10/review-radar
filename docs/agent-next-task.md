@@ -52,24 +52,32 @@ Generated: 2026-07-12
    `07c` line matcher, so benchmark matching did not cause the gate failure.
    Fifteen of 22 leader/run outcomes terminate at normalization. The captured
    RR-060 and RR-083 predicate gaps are specified for fail-first C2 tests.
+7. **Corrective C2 safety repair complete.** Trusted product-page URL paths may
+   now supply model evidence to exact-model inference only for card-eligible
+   products, with same-brand/model and numeric-spec protections unchanged.
+   Product-page paths are veto-only product-type evidence, so truncated wrong-
+   type titles are rejected without letting URLs positively admit products.
+   RR-060 and RR-083 are Fixed deterministically. Taylor explicitly authorized
+   Codex to proceed while Claude usage was unavailable; peer review is deferred.
 
-Current verification: C1 focused analyzer/benchmark tests **12/12**; full suite
-**875/875 across 127 suites**; typecheck/build/offline eval pass; lint 0
-errors/3 existing warnings. Register remains 83 issues —
-**76 Fixed, 6 Needs Investigation, 1 Won't Fix, 0 Open**.
+Current verification: C2 focused identity/type/source-upgrade tests **184/184**;
+full suite **881/881 across 127 suites**; typecheck/build/offline eval pass;
+lint 0 errors/3 existing warnings. Register: 83 issues — **78 Fixed, 4 Needs
+Investigation, 1 Won't Fix, 0 Open**.
 
 ## Required next decisions — no phase is currently approved
 
-R7A cannot start. C1 is complete; Taylor's decisions are, in order:
+R7A cannot start. C1 and C2 are complete; Taylor's decisions are, in order:
 
-1. Have Claude review C1's contract, counts, and predicate-gap specifications.
-2. **Approve C2 only:** zero-live fail-first generalized RR-060/RR-083 safety
-   repairs. C2 must finish and report before C3 can be approved.
-3. Approve C3 only after C2: default-off/shadow-first normalization recovery,
-   zero live calls. A second Claude checkpoint follows C2+C3.
-4. Ratify or revise the proposed `leaders-v2026-07c` constrained list and
+1. **Approve C3 only:** default-off/shadow-first normalization recovery, zero
+   live calls. C2's safety pressure is closed deterministically first as
+   required. C3 must finish and report before any live request.
+2. Obtain the deferred Claude review of C1+C2 when usage returns, and the
+   planned C2+C3 checkpoint before asking Taylor for C4 spend. If Claude remains
+   unavailable, Taylor must explicitly decide whether to waive that checkpoint.
+3. Ratify or revise the proposed `leaders-v2026-07c` constrained list and
    matcher, then separately decide whether to fund C4's six-search window.
-5. R7A remains approval-gated even after a future readiness pass.
+4. R7A remains approval-gated even after a future readiness pass.
 
 The consumer-readiness arc remains queued. R7B will supply its first current
 latency/cost evidence by measuring the removed final-research stage.

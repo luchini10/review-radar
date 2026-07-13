@@ -1594,3 +1594,20 @@ a known conservative undercount.
   RR-083: truncated title loses `vacuum`, while URL/image wrong-type evidence is
   absent from shared type text. These are C2 fail-first specifications, not C1
   behavior changes.
+
+## Corrective C2 identity/type safety — 2026-07-12
+
+- URL identity trust is path-only: never use hostname, query, or fragment text.
+- Exact-model inference may read URL model tokens only when the existing
+  `productEligibility.canRenderAsProductCard` is true. It still requires same
+  brand/shared strong model and runs after the R5 numeric-spec conflict veto.
+  Evidence-only collections cannot lend identity.
+- Product-page path type evidence is veto-only. It may prove `stick vacuum` for a
+  truncated candidate, but it cannot positively prove `robot vacuum`; title,
+  metadata, and source text retain that responsibility. Image paths remain
+  governed by the separate image-identity resolver and cannot hard-veto type.
+- Query-string type words are ignored. Generalization/preservation controls:
+  cross-retailer Bissell 18P03, unrelated AC100 compressor, evidence-only
+  collection, existing PSI/SCFM conflicts, and valid sparse robot vacuums.
+- Verification: focused 184/184, full 881/881 across 127 suites, typecheck/
+  build/eval pass, lint 0 errors/3 existing warnings. Zero live calls.

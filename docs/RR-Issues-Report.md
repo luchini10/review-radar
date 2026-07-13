@@ -19,8 +19,8 @@
 | Medium | 33 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 6 |
-| Fixed | 76 |
+| Needs Investigation | 4 |
+| Fixed | 78 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -1855,7 +1855,7 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 | **Phase** | Phase 4F |
 | **Severity** | Medium |
 | **Title** | True same-model duplicates can occupy multiple final slots |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** `gaming monitor` selected `Gigabyte M27Q Gaming Monitor (Rev. 1.0)` at rank #1 and `Gigabyte M27Q 27" QHD ...` at rank #2. Both source-upgrade traces used `Gigabyte M27Q` and attached the same `$160` offer. They are retailer/manufacturer representations of the same model, yet remained separate cards while other variants were correctly collapsed.
 
@@ -1887,6 +1887,17 @@ Thus one Bissell/Shark representation has `18P03`/`RV2310AE`, the other has the
 same model only in its source URL, canonical IDs differ, and exact normalized
 titles differ. C2 fail-first must reuse existing model-token equivalence plus
 same-brand/type compatibility and retain the numeric-spec conflict veto.
+
+**Corrective C2 resolution (2026-07-12):** Fixed deterministically. A shared
+path-only extractor excludes hostnames, query strings, and fragments. Strong
+model inference can consume a product URL model only when the existing
+eligibility verdict says the page may render as a product card. The unchanged
+inference path then requires a shared strong model and same brand after the R5
+numeric-spec conflict veto. The captured Bissell `18P03` shapes now collapse in
+both directions; an unrelated AC100 air-compressor pair proves generalization.
+An evidence-only collection page cannot lend its URL model. Focused C2 tests
+184/184; full 881/881 across 127 suites; typecheck/build/eval pass; lint 0
+errors/3 existing warnings; zero live calls.
 
 ---
 
@@ -2746,7 +2757,7 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 | **Phase** | Phase R7 readiness gate |
 | **Severity** | High |
 | **Title** | Wrong-type stick vacuum can render as a robot-vacuum near match |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** A current constrained `robot vacuum / under $300 / self-emptying` run displayed `Shark PowerPro Bagless Cordless HEPA Filter Portable Stick Vacuum Cleaner ... IZ372HD` as a final near match. The listing and image both clearly identify a cordless stick vacuum, not a robot vacuum.
 
@@ -2769,6 +2780,18 @@ identity/evidence builders do not include URL/image identity text. The rule
 therefore never sees the decisive wrong-type evidence. C2 must add trusted,
 source-derived identity evidence at the shared boundary and prove that query-
 derived text cannot manufacture either an allowed or blocked type.
+
+**Corrective C2 resolution (2026-07-12):** Fixed at the shared discovery and
+validation boundaries. Decoded product-page paths are added only to
+the product-type **veto** evidence; the unchanged title/metadata/source text is
+the positive allowed-type evidence. Host, query, and fragment text is excluded.
+The generalized truncated `Portable Stick ...` reproduction is rejected as
+`wrong_category` during discovery and as a hard Category miss during validation,
+while URL query text cannot create a type and valid sparse robot vacuums remain
+eligible. Image paths remain under the separate image-identity resolver and do
+not hard-veto product type. No brand/model-specific type rule was added. Focused C2 tests 184/184;
+full 881/881 across 127 suites; typecheck/build/eval pass; lint 0 errors/3
+existing warnings; zero live calls.
 
 ---
 
@@ -2816,21 +2839,30 @@ for same-model duplicates and RR-083 was filed for a stick vacuum displayed as
 a robot-vacuum near match. The live window is therefore not a valid R7B control
 and R7A must not start.
 
+## Corrective C2 safety resolution note — 2026-07-12
+
+RR-060 and RR-083 are Fixed deterministically with shared path-only identity
+evidence and veto-only URL product-type evidence. No new issue was filed. The
+register is 83 total / 78 Fixed / 4 Needs Investigation / 1 Won't Fix. Latest
+live North Stars are not remeasured: broad final recall remains 1/7 mean across
+the two usable readiness broad runs; that incomplete sample contains one wrong-
+type final card; exact hard-constraint failures are zero; stability is
+NotScored. C2 expects zero wrong-type output and recovered distinct final slots,
+but only a later approved live window can establish those effects.
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (6 issues)
+### Needs Investigation (4 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-- RR-060: True same-model duplicates can occupy multiple final slots
-- RR-083: Wrong-type stick vacuum can render as a robot-vacuum near match
 
-### Fixed (76 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-082 except RR-014, RR-015, RR-024, RR-037, RR-045, and RR-060
+### Fixed (78 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-083 except RR-014, RR-015, RR-024, RR-037, and RR-045
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2839,5 +2871,7 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-014 + RR-015 + RR-060 + RR-083** — R7 readiness is blocked: broad Serper-only normalized discovery covered 1/7 in each usable broad run, same-model duplicates recurred, and an explicit stick vacuum rendered as a robot-vacuum near match.
+1. **RR-014 + RR-015** — R7 readiness remains blocked on normalization,
+   recall, and stability after C2 closed the deterministic identity/type safety
+   defects. C3 is the next separately approved recovery phase.
 2. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3 but varied by model, while Tapo appeared raw and died in normalization.

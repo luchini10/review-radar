@@ -27,6 +27,7 @@ import { assessProductPriceTrust } from "../productPriceTrust.ts";
 import { parseBestMoneyAmount } from "../priceParsing.ts";
 import { getPremiumCap } from "../requirementExtraction.ts";
 import { selectedSmartFeatureSearchText } from "../smartFeatureSelection.ts";
+import { sourceUrlPathIdentityText } from "../sourceUrlIdentity.ts";
 import {
   attachSearchQueryId,
   ensureDispatchedQuery,
@@ -2442,6 +2443,15 @@ function candidateProductTypeEvidenceText(candidate: RawProductCandidate) {
   );
 }
 
+function candidateProductTypeVetoEvidenceText(candidate: RawProductCandidate) {
+  return normalizeText(
+    [
+      candidateProductTypeEvidenceText(candidate),
+      sourceUrlPathIdentityText(candidate.productUrl),
+    ].join(" "),
+  );
+}
+
 function categoryLooksRelevant(candidate: RawProductCandidate, input: RecommendationApiRequest) {
   const text = candidateText(candidate);
   const baseCategory = baseProductCategoryFromQuery(input.query);
@@ -2639,7 +2649,11 @@ function cheapCandidateRejectionReason(
 ) {
   if (
     !classifyProductTypeMatch({
-      evidenceText: candidateProductTypeEvidenceText(candidate),
+      // Source product paths may veto an explicit wrong type, but they do not
+      // positively prove the requested type. This keeps collection/wrapper
+      // paths from manufacturing eligibility.
+      allowedCheckText: candidateProductTypeEvidenceText(candidate),
+      evidenceText: candidateProductTypeVetoEvidenceText(candidate),
       identityText: candidate.name,
       requestedCategory: baseProductCategoryFromQuery(input.query),
     }).canBeExactMatch

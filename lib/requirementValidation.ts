@@ -27,6 +27,7 @@ import {
   selectedSmartFeatureLabel,
   selectedSmartFeatureSearchText,
 } from "./smartFeatureSelection.ts";
+import { sourceUrlPathIdentityText } from "./sourceUrlIdentity.ts";
 import {
   buildDirectPositiveProductFactText,
   buildNegativeProductFactText,
@@ -916,6 +917,15 @@ function productIdentityTextWithoutAssignedCategory(product: ProductLike) {
   );
 }
 
+function productTypeVetoEvidenceTextWithoutAssignedCategory(product: ProductLike) {
+  return normalizeText(
+    [
+      productEvidenceTextWithoutAssignedCategory(product),
+      sourceUrlPathIdentityText(product.product_page_url),
+    ].join(" "),
+  );
+}
+
 const actualMattressIdentityPattern =
   /\bmattress\b(?!\s+(?:base|foundation|frame|pad|platform|protector|support|topper)\b)/;
 const mattressFurnitureIdentityPattern =
@@ -939,6 +949,7 @@ function hasMattressFurnitureConflict(product: ProductLike, category: string) {
 function hasConflictingProductType(product: ProductLike, category: string) {
   const requestedCategory = normalizeText(category);
   const evidenceText = productEvidenceTextWithoutAssignedCategory(product);
+  const vetoEvidenceText = productTypeVetoEvidenceTextWithoutAssignedCategory(product);
 
   // Shared product-type verdict: product-type intent (wrong type / accessory),
   // the component-substitution model (a cooktop for an oven, an ice-maker for a
@@ -949,7 +960,7 @@ function hasConflictingProductType(product: ProductLike, category: string) {
       allowedCheckText: normalizeText(
         [evidenceText, product.why_recommended || ""].join(" "),
       ),
-      evidenceText,
+      evidenceText: vetoEvidenceText,
       identityText: productIdentityTextWithoutAssignedCategory(product),
       requestedCategory,
     }).canBeExactMatch

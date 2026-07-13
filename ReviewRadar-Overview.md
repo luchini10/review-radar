@@ -989,3 +989,23 @@ No production pipeline or API contract changed in Phase 6A.
   changed. Verification: focused 12/12, full 875/875 across 127 suites,
   typecheck/build/eval pass, lint 0 errors/3 existing warnings. C2 remains
   unapproved pending Claude review and Taylor's decision.
+
+## 36. Corrective C2 identity and product-type safety (2026-07-12)
+
+- **RR-060:** cross-retailer exact-model inference now sees strong model tokens
+  carried only in a trusted product-page path, but solely when the existing
+  eligibility verdict permits a product card. Same-brand/shared-model and
+  numeric-spec conflict rules remain mandatory; evidence-only collections
+  cannot donate identity.
+- **RR-083:** discovery and validation pass decoded product-page URL paths to
+  the existing product-type classifier as veto-only evidence. Host/query/
+  fragment text is excluded, and path words cannot positively prove the
+  requested type. A truncated `Portable Stick ...` candidate whose path says
+  `stick-vacuum` is therefore a hard wrong-type result, never a near card.
+- **Proof:** fail-first exactly three failures; focused 184/184; full 881/881
+  across 127 suites; typecheck/build/eval pass; lint 0 errors/3 warnings. Zero
+  live calls and no flag, `.env.local`, fixture, or benchmark change.
+- **State:** RR-060 and RR-083 are Fixed. Latest live metrics remain unchanged
+  until C4: broad final recall 1/7 mean, one wrong-type card in the incomplete
+  readiness sample, zero exact hard-constraint failures, stability NotScored.
+  C3 is separately approval-gated; R7A remains blocked.

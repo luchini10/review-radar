@@ -1769,3 +1769,20 @@ Stop. No leader list was ratified, no live window was approved/run, and R7A rema
   build, and offline eval pass; lint 0 errors/3 existing warnings.
 
 Stop. Await Claude's C1 review and Taylor's separate C2 approval.
+
+### Corrective C2 safety repair record (2026-07-12)
+
+- Taylor authorized Codex to proceed while Claude usage was exhausted; the
+  peer-review checkpoint is recorded as deferred rather than passed.
+- RR-060 Fixed: exact-model inference can use path-only URL model evidence only
+  from an already card-eligible product. Same-brand/shared-model requirements
+  and the R5 numeric-spec conflict veto remain unchanged; collections cannot
+  lend identity. Captured Bissell form plus unrelated AC100 proof pass.
+- RR-083 Fixed: product-page URL paths are veto-only input to the existing
+  shared product-type classifier at discovery and validation. Query strings,
+  hosts, and fragments are excluded; URL paths never positively admit a type.
+- Fail-first exactly 3 failures; focused 184/184; full 881/881 across 127
+  suites; typecheck/build/eval pass; lint 0 errors/3 existing warnings. Zero
+  live calls; flags, `.env.local`, frozen benchmark, and live fixtures unchanged.
+
+Stop. C3 is the next separately approval-gated phase; R7A remains blocked.

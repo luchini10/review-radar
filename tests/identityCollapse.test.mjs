@@ -68,6 +68,110 @@ describe("Phase R5 identity collapse safety", () => {
     assert.equal(areSameCanonicalProduct(truncated, slugged), true);
   });
 
+  it("RR-060: collapses a cross-retailer model carried by one trusted product URL", () => {
+    const ace = product(
+      "Bissell Garage Pro Wet/Dry Vacuum -18P03",
+      "https://acevacuums.com/products/bissell-garage-pro-wet-dry-vac-18p03",
+      {
+        metadata: {
+          brand: { value: "Bissell" },
+          modelNumber: { value: "18P03" },
+          title: { value: "Bissell Garage Pro Wet/Dry Vacuum -18P03" },
+        },
+        productEligibility: {
+          status: "buyable_product",
+          confidence: "high",
+          canRenderAsProductCard: true,
+          canUseAsEvidence: true,
+          reasons: ["Product detail page."],
+        },
+      },
+    );
+    const bissell = product(
+      "Garage Pro Wet/Dry Vac | BISSELL Vacuums",
+      "https://www.bissell.com/s/bissell_ca/product/garage-pro-wet%2Fdry-vac-18P03.html",
+      {
+        metadata: {
+          brand: { value: "Bissell" },
+          title: { value: "Powerful Pickup" },
+        },
+        productEligibility: {
+          status: "buyable_product",
+          confidence: "high",
+          canRenderAsProductCard: true,
+          canUseAsEvidence: true,
+          reasons: ["Product detail page."],
+        },
+      },
+    );
+
+    assert.equal(areSameExactModelProduct(ace, bissell), true);
+    assert.equal(areSameExactModelProduct(bissell, ace), true);
+  });
+
+  it("does not borrow URL models from evidence-only collection pages", () => {
+    const specific = product(
+      "Acme AC100 5.1 SCFM Air Compressor",
+      "https://retailer.example/products/acme-ac100",
+      {
+        category: "air compressor",
+        metadata: { brand: { value: "Acme" }, modelNumber: { value: "AC100" } },
+      },
+    );
+    const collection = product(
+      "Acme Air Compressor Collection",
+      "https://acme.example/collections/ac100-air-compressors",
+      {
+        category: "air compressor",
+        metadata: { brand: { value: "Acme" } },
+        productEligibility: {
+          status: "evidence_only",
+          confidence: "high",
+          canRenderAsProductCard: false,
+          canUseAsEvidence: true,
+          reasons: ["Collection page."],
+        },
+      },
+    );
+
+    assert.equal(areSameExactModelProduct(specific, collection), false);
+  });
+
+  it("generalizes trusted URL-model collapse to an unrelated category", () => {
+    const detailed = product(
+      "Acme AC100 5.1 SCFM Air Compressor",
+      "https://retailer.example/products/acme-ac100",
+      {
+        category: "air compressor",
+        metadata: { brand: { value: "Acme" }, modelNumber: { value: "AC100" } },
+        productEligibility: {
+          status: "buyable_product",
+          confidence: "high",
+          canRenderAsProductCard: true,
+          canUseAsEvidence: true,
+          reasons: ["Product detail page."],
+        },
+      },
+    );
+    const sparse = product(
+      "Acme Portable Air Compressor",
+      "https://acme.example/store/portable-air-compressor-ac100",
+      {
+        category: "air compressor",
+        metadata: { brand: { value: "Acme" } },
+        productEligibility: {
+          status: "buyable_product",
+          confidence: "high",
+          canRenderAsProductCard: true,
+          canUseAsEvidence: true,
+          reasons: ["Product detail page."],
+        },
+      },
+    );
+
+    assert.equal(areSameExactModelProduct(detailed, sparse), true);
+  });
+
   it("preserves collapse of true retailer duplicates with matching specs", () => {
     const amazon = product(
       "DEWALT DXV09P 9 Gallon 5.0 Peak HP Wet/Dry Vacuum",
@@ -267,5 +371,46 @@ describe("Phase R5 identity collapse safety", () => {
 
     assert.deepEqual(out.rejected, []);
     assert.equal(out.candidates.length, 1);
+  });
+
+  it("RR-083: rejects truncated wrong-type names when the source path is explicit", () => {
+    const name = "Example PowerPro Bagless Cordless Portable Stick ...";
+    const productUrl =
+      "https://retailer.example/p/example-powerpro-portable-stick-vacuum-x100/333915143";
+    const input = { query: "robot vacuum" };
+    input.extractedRequirements = extractStructuredRequirements(input);
+    const out = cheapPreFilterRawCandidates(
+      [
+        {
+          id: "rr083",
+          name,
+          brand: "Example",
+          category: "robot vacuum",
+          productUrl,
+          imageUrl: "https://cdn.example.com/example-stick-vacuums-x100.jpg",
+          retailer: "retailer.example",
+          price: null,
+          rating: null,
+          reviewCount: null,
+          availableColors: [],
+          dimensions: { width: null, depth: null, height: null, unit: null },
+          keySpecs: [],
+          evidenceSources: [
+            {
+              title: name,
+              url: productUrl,
+              snippet: "Lightweight cordless cleaning with a HEPA filter.",
+              snippetProvenance: "source-derived",
+            },
+          ],
+          requirementCheck: { exactMatch: false, passed: [], failed: [], unknown: [] },
+        },
+      ],
+      input,
+      50,
+    );
+
+    assert.deepEqual(out.candidates, []);
+    assert.deepEqual(out.rejected, [{ name, reason: "wrong_category" }]);
   });
 });

@@ -6525,3 +6525,24 @@ Zero live calls and zero recommendation behavior change.
 Verification: focused 12/12; full suite 875/875 across 127 suites; typecheck,
 production build, and offline eval pass; lint 0 errors/3 existing warnings.
 Register unchanged: 83 total / 76 Fixed / 6 Needs Investigation / 1 Won't Fix.
+
+## 🟧 Codex QA Update — 2026-07-12 (Corrective C2 safety repair)
+
+**Verdict: RR-060 AND RR-083 FIXED DETERMINISTICALLY; C3 NOT STARTED.**
+
+- Fail-first produced exactly three failures: Bissell-style cross-retailer
+  URL-model identity, discovery-time truncated wrong type, and validation-time
+  truncated wrong type.
+- URL identity is path-only and source-derived. Exact-model dedupe accepts it
+  only for an existing card-eligible product and still requires shared model,
+  same brand, and no conflicting numeric spec. Evidence-only collection pages
+  remain unable to lend models; an unrelated air-compressor case generalizes.
+- Product-page paths feed the existing shared type classifier as veto-only
+  evidence. They cannot prove an allowed type; URL query text is ignored. The
+  generic truncated stick-vacuum case is rejected both before and after merge.
+- Focused 184/184; full 881/881 across 127 suites; typecheck/build/eval pass;
+  lint 0 errors/3 existing warnings. Zero live calls; `.env.local` unchanged.
+- Latest live North Stars unchanged/not remeasured: broad final recall 1/7 mean;
+  wrong-type final count 1 in the incomplete readiness sample; exact hard-
+  constraint failures 0; stability NotScored. Register: 83 total / 78 Fixed /
+  4 Needs Investigation / 1 Won't Fix.

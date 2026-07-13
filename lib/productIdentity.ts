@@ -4,6 +4,7 @@ import type {
   ProductRecommendation,
 } from "@/types/review-radar";
 import { canonicalBrand, detectKnownBrands } from "./brandMatching.ts";
+import { sourceUrlPathIdentityText } from "./sourceUrlIdentity.ts";
 
 const genericWords = new Set([
   "and",
@@ -113,12 +114,23 @@ function identityBrand(product: ProductRecommendation) {
 }
 
 function productStrongModelTokens(product: ProductRecommendation) {
+  // URL models are inference evidence only when the existing eligibility
+  // verdict says this is a renderable product page. Collection/editorial pages
+  // must never lend a model to a product identity.
+  const trustedUrlIdentity = product.productEligibility?.canRenderAsProductCard
+    ? [
+        sourceUrlPathIdentityText(product.product_page_url),
+        sourceUrlPathIdentityText(product.metadata?.canonicalUrl?.value),
+      ].join(" ")
+    : "";
+
   return strongModelTokens(
     [
       product.metadata?.modelNumber?.value,
       product.canonicalIdentity?.modelNumber,
       product.name,
       product.metadata?.title?.value,
+      trustedUrlIdentity,
     ]
       .filter(Boolean)
       .join(" "),

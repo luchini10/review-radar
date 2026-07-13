@@ -13,6 +13,28 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 
 ## 2026-07-12
 
+### 🟧 Codex - Corrective C2 identity and type safety
+
+#### Changed
+
+- Fixed RR-060 across retailers: an existing card-eligible product-page URL may
+  contribute a strong model token to exact-model inference. Existing same-brand,
+  explicit-model-conflict, and numeric-spec vetoes remain authoritative;
+  evidence-only/collection pages cannot lend identity.
+- Fixed RR-083 at discovery and validation: decoded product-page path text is
+  supplied to the shared product-type verdict as veto-only evidence. Hostnames,
+  query strings, and fragments are excluded, and URL text cannot positively
+  prove the requested product type.
+
+#### Verified
+
+- Fail-first: exactly three intended failures; focused final 184/184; full suite
+  881/881 across 127 suites; typecheck/build/offline eval pass; lint 0 errors/3
+  existing warnings. Zero live Serper/OpenAI calls; `.env.local` unchanged.
+- Latest live metrics were not remeasured: broad final recall 1/7 mean, one
+  wrong-type card in the incomplete readiness sample, zero exact hard-constraint
+  failures, stability NotScored. C2 expects safety/slot recovery; C4 must prove it.
+
 ### 🟧 Codex - Corrective C1 rule-5 diagnosis
 
 #### Changed

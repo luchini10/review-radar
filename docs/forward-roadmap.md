@@ -309,6 +309,32 @@ The response is this corrective arc, not immediate R7 implementation:
    R7A. Failure produces another written diagnosis; it never lowers the frozen
    thresholds or silently promotes recovery.
 
+**C2 completion (2026-07-12, zero live):** Taylor authorized Codex to continue
+without the unavailable Claude checkpoint. Fail-first reproduced exactly three
+intended failures: the captured cross-retailer URL-model dedupe gap, discovery-
+time truncated wrong-type acceptance, and validation-time truncated wrong-type
+acceptance. The shared path-only source identity extractor excludes hostnames,
+query strings, and fragments. Exact-model inference may consume a URL model
+only when the existing eligibility verdict permits a product card, and still
+requires the existing same-brand/shared-model rule after the numeric-spec veto.
+Product-type classification receives product-page path text as **veto-only**
+evidence; positive requested-type proof remains title/metadata/source-text
+based. Thus collection/evidence pages cannot lend models, query text cannot
+manufacture a type, and URL paths cannot positively admit a card. The Bissell
+`18P03` reproduction and an unrelated AC100 air-compressor control collapse;
+an evidence-only collection stays distinct. The truncated generic stick-vacuum
+reproduction is rejected at discovery and validation. RR-060 and RR-083 are
+Fixed deterministically. Focused tests 184/184; full suite 881/881 across 127
+suites; typecheck/build/eval pass; lint 0 errors/3 existing warnings. Latest
+live North Stars are not remeasured: broad final recall remains 1/7 mean across
+the two usable readiness broad runs, that sample contained one wrong-type final
+card, exact hard-constraint failures were 0, and stability is NotScored from
+the incomplete window. Expected C2 effect is zero wrong-type cards and more
+distinct final slots; only a future approved C4 window can prove it live.
+
+C3 remains separately approval-gated. Claude's C1/C2 review is deferred, not
+silently treated as passed, because Taylor reported no remaining Claude usage.
+
 **C1 result (M3, four usable readiness fixtures):** the tested pre-AI pool is a
 Serper `product_discovery` candidate that normalized, survived raw dedupe and
 cheap prefilter; a later `candidate_merge` loss still counts as pool-present.
