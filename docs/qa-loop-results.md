@@ -6982,3 +6982,62 @@ node scripts/eval-pipeline.mjs: no red flags
 M3 C4 broad replay: recurrent real models outrank spec-only rows in 3/3 digests
 live Serper/OpenAI calls: 0
 ```
+
+## 🟧 Codex QA Update — 2026-07-14 (C5 flag-on live validation)
+
+**Verdict: PROMOTION FAILED; C5 REMAINS DEFAULT-OFF AND R7A REMAINS
+BLOCKED.**
+
+- Instrument commit `793eb4e` adds a C5-specific exact request/flag/sample
+  contract to the existing single-request capture wrapper and contribution
+  reporting to the existing readiness analyzer. The wrapper still has no
+  retry loop and refuses fixture overwrite.
+- Six approved API requests were dispatched. The first broad request is
+  spent/excluded because it was started with `npm start`; production mode
+  disables the local debug ledger (`app/api/recommendations/route.ts:291-295`).
+  The request produced recommendations but no auditable cache, commit, flag, or
+  physical-attempt record. No replacement was dispatched.
+- The five usable fixtures are cache-cold, ledger-balanced, commit-pinned, and
+  below the 120-attempt ceiling. They reconcile 398 known physical attempts
+  (83 + 71 + 76 + 81 + 87), two retries, zero fallbacks, and mean end-to-end
+  duration 95.6 seconds. The excluded request's physical spend is unknown.
+- Broad normalized-pool recall is `4/7`, `5/7` (mean `4.5/7`) and final recall
+  is `1/7`, `3/7` (mean `2.0/7`), below the frozen `5/7`/`3/7` floors. Broad
+  pool/final Jaccard is `0.3889`/`0.0000`, with only two usable broad runs.
+- Constrained pool recall is `3/4`, `2/4`, `3/4`; final recall is `3/4` in all
+  three runs. Pool/final mean pairwise Jaccard is `0.2566`/`0.0513`. Exact
+  hard-constraint failures are zero.
+- C5 formed 243 plans, dispatched 20 organic lookups under the unchanged
+  four-per-request cap, and culled 223. Ledger contribution is 79 normalized
+  rows, 67 unique candidates, and five final selections. All five selections
+  are constrained; both usable broad runs record zero C5 final selections.
+  Merchant recovery contributes zero candidates.
+- RR-078 reopens: query `TP-Link Tapo Robot Vacuum Cleaner RV30 Max product
+  page` selected a Matter Alpha `Information, Specification, News & More` page
+  as an exact `buyable_product`, with `$193.42` and one weak citation. Candidate
+  `serper-zo1bsm` passed normalization, prefilter, citation verification, and
+  revalidation in constrained run1.
+- RR-090 is Critical: the same response displays a Q7 M5+ card whose primary
+  and canonical URL identify Q10 X5+, while its image identifies Q7 M5 and its
+  citations mix Q7, Q10, and Q8 pages. The Q7 source-upgrade trace selects a
+  Q7-compatible page, so the earliest cross-model metadata mutation remains to
+  be diagnosed downstream rather than attributed to C5 by assumption.
+- No RR-061-class image regression, duplicate exact-model final pair, false
+  accessory collapse, seed search, malformed outbound query, guard trip, flag
+  promotion, `.env.local` edit, R7A work, or deployment occurred.
+
+```text
+instrument commit: 793eb4e
+focused analyzer: 13/13
+npm test: 938/938 across 129 suites
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red flags
+usable requests: 5/6 (one spent/excluded; no replacement)
+known physical attempts: 398; retries: 2; fallbacks: 0
+broad pool/final mean: 4.5/7 / 2.0/7 (two usable runs)
+constrained pool/final mean: 2.67/4 / 3.0/4
+C5 contribution: 20 dispatched / 223 cap-culled / 5 final selections
+promotion: failed
+```

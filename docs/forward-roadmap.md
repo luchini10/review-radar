@@ -586,6 +586,45 @@ next eligible decision is a separately approved C5 flag-on live validation; it
 must measure merchant-first versus organic contribution, safety, recall,
 stability, cost, and latency before any promotion decision.
 
+**C5 flag-on live validation (2026-07-14): FAILED; DO NOT PROMOTE.** Taylor
+approved six requests using 510 physical attempts as the planning basis and a
+120-attempt per-request ceiling. Instrument commit `793eb4e` pins C5-specific
+capture/analyzer contracts. Six requests were dispatched; five are usable,
+cache-cold, balanced, and commit-pinned. The first broad request is transparently
+spent/excluded: it ran with `npm start`, but local debug ledgers are disabled in
+production mode, so its quality and physical-attempt data are unavailable. No
+replacement was dispatched. The five usable ledgers record 398 known physical
+attempts (83 + 71 + 76 + 81 + 87), two retries, zero fallbacks, and no ceiling
+trip; mean end-to-end capture time was 95.6 seconds.
+
+The two usable broad runs measured normalized-pool recall `4/7` and `5/7`
+(mean `4.5/7`) and final recall `1/7` and `3/7` (mean `2.0/7`). The intended
+three-run broad sample is incomplete, but the observed means already miss both
+frozen floors (`5/7` pool and `3/7` final). Broad pool/final pairwise Jaccard
+was `0.3889`/`0.0000`. Constrained pool recall was `3/4`, `2/4`, `3/4`; final
+recall was `3/4` in every run and exact hard-constraint failures were zero.
+Constrained pool/final mean pairwise Jaccard was `0.2566`/`0.0513`.
+
+The resolver formed 243 plans, dispatched 20 organic lookups under the unchanged
+four-per-request cap, and culled 223. Its ledger contribution is 79 normalized
+rows, 67 unique candidates, and five final selections. All five selections
+occurred in constrained runs; the two usable broad runs received zero C5 final
+cards. The composed merchant-recovery tier contributed zero candidates. Thus
+the mechanism does recover useful pages, but broad final utility and allocation
+efficiency remain unproven.
+
+Safety independently fails promotion. Constrained run B1 selected a Matter
+Alpha `Information, Specification, News & More` page as an exact buyable Tapo
+RV30 Max card with a `$193.42` price, reopening RR-078. The same run displayed a
+Q7 M5+ card whose canonical/product URL identifies Q10 X5+, filed as RR-090.
+No RR-061-class image regression, exact hard-constraint failure, duplicate
+exact-model final pair, false accessory collapse, seed search, or malformed
+outbound query was recorded. Because both a frozen quality floor and the
+unsafe-page gate fail, no further live sample is decision-useful now. Both
+recovery flags remain default-off, R7A remains blocked, and the next eligible
+phase is a separately approved zero-live shared eligibility/metadata-identity
+diagnosis and repair—not another live window or a threshold change.
+
 **C1 result (M3, four usable readiness fixtures):** the tested pre-AI pool is a
 Serper `product_discovery` candidate that normalized, survived raw dedupe and
 cheap prefilter; a later `candidate_merge` loss still counts as pool-present.

@@ -1,9 +1,9 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through C5 corrective hardening
+## Compiled for AI Agent Consumption — Phase 0 through C5 flag-on validation
 
 **Generated:** 2026-07-14
-**Scope:** All phases from initial measurement harness through the C5 zero-live
-corrective hardening
+**Scope:** All phases from initial measurement harness through the C5 flag-on
+live-validation window
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -20,14 +20,14 @@ only when maintaining this register or auditing its full history.
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 89 |
-| Critical | 12 |
+| Total Issues | 90 |
+| Critical | 13 |
 | High | 39 |
 | Medium | 33 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 4 |
-| Fixed | 84 |
+| Needs Investigation | 6 |
+| Fixed | 83 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -110,6 +110,7 @@ only when maintaining this register or auditing its full history.
 | Corrective C4 — renewed readiness evidence | 1 |
 | Corrective C5 — normalization feasibility audit | 3 |
 | C5 live-validation preflight | 2 |
+| C5 flag-on live validation | 1 |
 | Phase R4 — Live after-sample | 1 |
 | RR-061 image-provenance safety repair | 0 |
 | RR-061 round 4 / RR-080 image micro-phase | 1 |
@@ -2723,7 +2724,7 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 | **Phase** | Phase R2 live ledger verification |
 | **Severity** | Critical |
 | **Title** | Support and editorial pages pass product eligibility and render as product cards |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** Non-product pages can be classified as `buyable_product`, enriched with unrelated price/evidence, and selected as product cards. In A3, Shop-Vac's customer-service page became the #1 exact result with a verified `$50` price and product claims drawn from unrelated sources. In B1, a Pocketables “day 5” article rendered as a Q7 Max+ near-match product card.
 
@@ -2740,6 +2741,19 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 **Suggested fix or next action:** Add generalized route/title/page-type controls at the shared eligibility boundary, with fail-first coverage for `/pages/*customer-service*` and dated editorial/article paths. Preserve legitimate product-detail pages using `/pages/` only when source-derived Product identity is explicit.
 
 **Resolution proof (2026-07-11):** The two captured routes failed before the fix and pass the evidence-only regression afterward. A model-specific `/pages/example-x100-cordless-drill-kit` control remains buyable. Focused eligibility/type/validation tests pass 97/97; full suite passes 822/822 across 120 suites; typecheck/build/offline eval pass; lint reports 0 errors and 3 existing warnings. Zero live calls.
+
+**C5 live regression (2026-07-14):** Reopened as Needs Investigation. C5
+organic query `TP-Link Tapo Robot Vacuum Cleaner RV30 Max product page`
+returned `Tapo RV30 Max Information, Specification, News & More` at
+`matteralpha.com/tapo/rv30-max-p2371`. Candidate `serper-zo1bsm` passed
+normalization, prefilter, citation verification, and revalidation; it rendered
+as an exact `buyable_product` with a `$193.42` price despite being an
+information/news page with one weak citation. Evidence: untracked fixture
+`tests/fixtures/review-radar-live/robot-vacuum-under-300-self-emptying.c5-flag-on-run1.json`.
+The earlier route-specific repair does not cover editorial title/page semantics
+on product-shaped URLs. Repair the shared eligibility boundary with generalized
+editorial/information-page evidence and commerce-preservation controls; do not
+add a Matter Alpha or Tapo exception.
 
 ---
 
@@ -3194,6 +3208,53 @@ passes.
 
 ---
 
+#### RR-090
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-090 |
+| **Phase** | C5 flag-on live validation |
+| **Severity** | Critical |
+| **Title** | Final product card can inherit another model's canonical product URL |
+| **Status** | Needs Investigation |
+
+**Description:** A final near-match card named `Roborock Q7 M5+ Robot Vacuum
+and Mop with Auto-Empty Dock` carries canonical/product-page identity for the
+different `Roborock Q10 X5+`. The displayed image identifies Q7 M5, while the
+primary URL and canonical ID identify Q10 X5+, and the citations mix correct Q7
+M5 evidence with Q10 X5+ and Q8 Max+ pages. A shopper following the card can
+therefore land on the wrong model.
+
+**Where it occurs:** Downstream candidate enrichment/metadata attachment or
+AI/Serper merge before final selection. The exact first mutation is not yet
+proven. The source-upgrade trace for the Q7 target selected a Q7 M5 candidate,
+while the separate normalized Q10 X5+ candidate was not selected and records a
+candidate-merge loss, so the evidence does not support blaming the bounded C5
+query itself.
+
+**Evidence:** Untracked fixture
+`tests/fixtures/review-radar-live/robot-vacuum-under-300-self-emptying.c5-flag-on-run1.json`.
+The final card uses
+`https://us.roborock.com/products/roborock-q10-x5-plus`, canonical ID
+`us roborock com products roborock q10 x5 plus`, and image filename
+`2_Q7_M5_Q7_M5_Plus_140x.jpg`. Its correct Q7 citation is
+`/products/roborock-q7-m5-plus`; the independent Q10 candidate
+`serper-t9ztpz` is not selected.
+
+**Expected:** Enrichment may attach a canonical URL, identity, image, price, or
+citation only when source-derived model identity is compatible with the target
+card. A Q7 M5 card must never adopt Q10 X5 or Q8 Max product metadata.
+
+**Suggested fix or next action:** Build a fixture-derived fail-first trace that
+locates the earliest stage where the Q10 canonical URL enters the Q7 candidate.
+Apply the existing exact-model conflict predicate at that shared attachment
+boundary and preserve same-model sparse-title/retailer enrichment. Do not add a
+Roborock-specific rule. This is distinct from RR-069: that repair governs
+source-upgrade attachment of generic/adjacent series evidence, while the C5
+trace's source-upgrade selection itself is Q7-compatible.
+
+---
+
 ## R7 readiness planning note — 2026-07-12
 
 No issue status changed. A zero-cost M3 provenance audit of the six R4-after
@@ -3376,20 +3437,47 @@ suites; typecheck/build/eval pass; lint is 0 errors/3 pre-existing warnings.
 The register is 89 total / 84 Fixed / 4 Needs Investigation / 1 Won't Fix.
 Live quality, recall, stability, cost, and latency remain unproven.
 
+## C5 flag-on live-validation note — 2026-07-14
+
+Six approved requests were dispatched. Five are usable, exact-contract,
+cache-cold fixtures at instrument commit `793eb4e`; the first broad request is
+spent/excluded because it ran under `npm start`, where production mode
+intentionally suppresses the local debug ledger. No replacement was dispatched.
+The five usable ledgers reconcile 398 known physical attempts, two retries, and
+zero fallbacks; the excluded request's physical spend is unknown.
+
+The two usable broad runs measured normalized-pool recall `4/7` and `5/7`
+(mean `4.5/7`) and final recall `1/7` and `3/7` (mean `2.0/7`). Both miss the
+frozen `5/7` pool and `3/7` final floors, and the broad three-run sample is
+incomplete. The three constrained runs measured pool recall `3/4`, `2/4`,
+`3/4` and final recall `3/4` each; hard-constraint failures were zero.
+
+C5 planned 243 identity-resolution queries, dispatched 20 under the unchanged
+four-per-request cap, and culled 223. Their ledgers record 79 normalized rows,
+67 unique candidates, and five final selections—all in constrained runs;
+merchant recovery contributed zero candidates. RR-078 reopened when a
+Matter Alpha information/news page rendered as an exact buyable Tapo card, and
+RR-090 records a Q7 M5 card carrying a Q10 X5+ canonical URL. No RR-061-class
+image regression occurred. The promotion gate fails; both recovery flags
+remain default-off, R7A remains blocked, and the next eligible phase is a
+separately approved zero-live trust-boundary diagnosis/repair.
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (4 issues)
+### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
+- RR-078: Support/editorial pages can render as product cards
+- RR-090: Final card can inherit another model's canonical product URL
 
-### Fixed (84 issues)
+### Fixed (83 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
-RR-038 through RR-044, and RR-046 through RR-089
+RR-038 through RR-044, RR-046 through RR-077, and RR-079 through RR-089
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)

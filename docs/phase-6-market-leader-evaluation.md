@@ -240,6 +240,70 @@ itself satisfy R7A/R7B acceptance. The live fixture remains untracked at
 `tests/fixtures/review-radar-live/shop-vac.c5-resolution-probe.json` (SHA-256
 `0089CE6F1F2150D84933AC28C441AAC7EBA421719905433C7F2C047AEE588CBF`).
 
+### C5 flag-on live validation (M2, 2026-07-14)
+
+Taylor approved six requests with 510 physical attempts as the planning basis
+and a hard 120-attempt per-request ceiling. Instrument commit `793eb4e` pins
+the exact broad/constrained request bytes and C5 flag contract. The first broad
+request is spent/excluded because it ran under `npm start`; production mode
+intentionally suppresses the local debug ledger, so it cannot enter quality
+means and its physical spend is unknown. The remaining five requests are
+usable, cache-cold, balanced, and commit-pinned. No replacement was dispatched.
+
+| Run | Pool recall | Final recall | Physical attempts | C5 final selections | Duration |
+|---|---:|---:|---:|---:|---:|
+| shop-vac c5 run1 | Excluded | Excluded | Unknown | NotScored | 99.0 s |
+| shop-vac c5 run2 | 4/7 | 1/7 | 83 (1 retry) | 0 | 107.3 s |
+| shop-vac c5 run3 | 5/7 | 3/7 | 71 | 0 | 77.9 s |
+| constrained c5 run1 | 3/4 | 3/4 | 76 | 2 | 88.2 s |
+| constrained c5 run2 | 2/4 | 3/4 | 81 (1 retry) | 2 | 111.9 s |
+| constrained c5 run3 | 3/4 | 3/4 | 87 | 1 | 92.8 s |
+| **Usable mean/total** | **broad 4.5/7; constrained 2.67/4** | **broad 2.0/7; constrained 3.0/4** | **398 known** | **5** | **95.6 s mean** |
+
+Broad pool/final pairwise Jaccard is `0.3889`/`0.0000` from only two usable
+runs. Constrained pool/final mean pairwise Jaccard is `0.2566`/`0.0513` across
+three runs. Historical C4 broad pool/final means were `1.33/7`/`1.33/7`, but
+that flag-off sample is context rather than a same-provider causal control.
+C5's own ledger lineage is the causal contribution measure: 243 identity plans
+became 20 dispatched and 223 cap-culled queries, producing 79 normalized rows,
+67 unique candidates, and five displayed selections. All five displayed
+selections occurred in constrained runs; merchant recovery contributed zero
+candidates.
+
+The exact C5 organic outbound queries were:
+
+| Run | Queries sent |
+|---|---|
+| shop-vac run2 | `Ridgid 12 Gallon NXT Wet/Dry Shop Vacuum HD1200 product page`<br>`DeWalt Stealthsonic Quiet 6 Gallon Wet/Dry Shop Vacuum DXV06PL-QT product page`<br>`Shop-Vac 12-Gallon 5.5 HP Corded Wet/Dry Shop Vacuum SV5430188 product page`<br>`Shop-Vac 4 Gallon 5.5 HP SVX2 Wet Dry Vacuum ESLSQ550 5914411 product page` |
+| shop-vac run3 | `Ridgid 12 Gallon NXT Wet/Dry Shop Vacuum HD1200 product page`<br>`Craftsman 6 Gallon 3.5 Peak HP Wet/Dry Shop Vacuum CMXEVBE17584 product page`<br>`Ridgid 6 Gallon NXT Wet/Dry Shop Vacuum HD06001 product page`<br>`DeWalt Stealthsonic Quiet 6 Gallon Wet/Dry Shop Vacuum DXV06PL-QT product page` |
+| constrained run1 | `Shark Navigator Robot Vacuum RV2100 product page`<br>`Shark Navigator Robot Vacuum RV2100ae product page`<br>`Onson BR151 Robot Vacuum Mop Combo product page`<br>`TP-Link Tapo Robot Vacuum Cleaner RV30 Max product page` |
+| constrained run2 | `Shark Matrix Self-Emptying Robot Vacuum RV2310AE product page`<br>`Shark Navigator Robot Vacuum RV2100 product page`<br>`TP-Link Tapo RV30 Max Plus Self-Emptying Robot Vacuum and Mop product page`<br>`Shark Navigator Robot Vacuum RV2100ae product page` |
+| constrained run3 | `Shark Navigator Robot Vacuum RV2100 product page`<br>`Shark Navigator Robot Vacuum RV2100ae product page`<br>`TP-Link Tapo RV30 Max Plus Self-Emptying Robot Vacuum and Mop product page`<br>`Onson BR151 Robot Vacuum Mop Combo product page` |
+
+Safety fails independently of recall. Constrained run1 admitted the C5-sourced
+Matter Alpha page `Tapo RV30 Max Information, Specification, News & More` as an
+exact `buyable_product` with a `$193.42` price and only one weak citation,
+reopening RR-078. The same response displayed a `Roborock Q7 M5+` card whose
+primary/canonical URL identifies `Q10 X5+`, while its image identifies Q7 M5;
+RR-090 records that distinct downstream metadata-attachment defect. Exact hard-
+constraint failures, duplicate exact-model final pairs, false accessory
+collapses, malformed queries, and RR-061-class image regressions were zero.
+
+Fixture SHA-256 values:
+
+- excluded shop-vac run1: `efc79e27547f2e46f479dcf0ca45d2e41a57d2767e2653a673694b0a37f136db`
+- usable shop-vac run2: `200cde6cce47e2bfe9e01318070992b96c363e2dd50fa3ccea917634d9d3e2bd`
+- usable shop-vac run3: `abc9b75b99d84a726f51aa94196f09570af36c53338c53882e50682a70dd7a99`
+- usable constrained run1: `6774d5f8b7c26ac4e9c160003beb131c826bf2bb460adb9276ef517e56a4e297`
+- usable constrained run2: `a53de94963a1ecdd4b1aafbbf5581bac8e42f59ca0a45bc35dede143117d6ce6`
+- usable constrained run3: `58b0d846693ec17028d5d9b3d74d1d471c171a790f73e194f17e41dfa569345e`
+
+**Decision:** do not promote. The broad sample misses both frozen floors and is
+incomplete, while one C5 resolution page directly violates the product-card
+eligibility trust boundary. Both recovery flags remain default-off and R7A
+remains blocked. The next useful evidence is zero-live fail-first diagnosis and
+generalized repair of RR-078/RR-090; another live window is premature.
+
 ## 4. v1.0 targets (amended)
 
 - Shape A (broad): final recall ≥ 3/7 per-run mean; pool recall ≥ 5/7 —

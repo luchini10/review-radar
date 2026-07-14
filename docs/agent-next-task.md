@@ -1,130 +1,132 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-14 by 🟧 Codex after the zero-live C5 corrective hardening.
+Updated: 2026-07-14 by 🟧 Codex after the C5 flag-on live-validation window.
 
 ## Efficient session start
 
 1. Read repository `AGENTS.md` in full.
 2. Read this handoff in full.
-3. Read the C5 corrective/live-validation section of
-   `docs/forward-roadmap.md`.
-4. Read `docs/agent-dialogue.md` from entry [35] onward unless an earlier claim
+3. Read the C5 flag-on result in `docs/forward-roadmap.md`.
+4. Read `docs/agent-dialogue.md` from entry [36] onward unless an earlier claim
    needs verification.
-5. Retrieve RR-014/RR-015 or other history by exact ID/metric only.
+5. Retrieve RR-078/RR-090 or older metrics by exact ID only.
 
 ## Current state
 
-- Commit `4bba870` completes the approved zero-live C5 corrective phase and
-  closes RR-088/RR-089. The resolver remains default-off and unpromoted.
-- Resolver lead qualification now excludes compacted hard specifications,
-  preserves real cross-category model codes, and derives brand from
-  source-leading identity so horsepower `HP` cannot replace the product brand.
-- Duplicate leads retain distinct parent-query and total recurrence. Allocation
-  sorts by those signals, then stable first-seen/key order, suppresses already-
-  materialized candidates, and applies the unchanged request-wide cap of four.
-- The C5 flag now forms a complete merchant-first path: guarded merchant-URL
-  recovery is its zero-cost first tier, followed by bounded organic resolution.
-  The normalization-only flag remains independently operable; both flags off
-  retain the original behavior.
-- Ambiguous short model codes such as `Q5` remain unresolved. A deterministic
-  probe shows the shared selector can accept a `Q7` page for a `Q5` target, so
-  widening that boundary would currently weaken wrong-product safety.
-- M3 recurrence ranking over all three capped C4 broad Shopping digests moves
-  recurrent real models ahead of spec-only rows. It cannot fully replay
-  existing-page suppression, so this is directional evidence rather than an
-  exact live slate, recall, or stability result.
-- Register: 89 total / 84 Fixed / 4 Needs Investigation / 1 Won't Fix.
+- Instrument commit `793eb4e` pins the C5 live request/flag/sample contract and
+  extends the existing readiness analyzer with C5 contribution attribution.
+- Taylor approved six C5 flag-on requests. Six were dispatched; five are usable
+  cache-cold, balanced, commit-pinned fixtures. The first broad request is
+  spent/excluded because `npm start` suppresses the local debug ledger in
+  production mode. No replacement was dispatched.
+- Five usable ledgers reconcile 398 known physical attempts, two retries, zero
+  fallbacks, and no 120-attempt ceiling trip. The excluded request's physical
+  attempt count is unknown. Mean usable request duration was 95.6 seconds.
+- The two usable broad runs measured normalized-pool recall `4/7`, `5/7`
+  (mean `4.5/7`) and final recall `1/7`, `3/7` (mean `2.0/7`). Both means miss
+  the frozen `5/7` pool and `3/7` final floors; the broad sample also lacks its
+  intended third usable run.
+- The three constrained runs measured pool recall `3/4`, `2/4`, `3/4` and
+  final recall `3/4` each. Exact hard-constraint failures were zero.
+- C5 formed 243 identity-resolution plans, dispatched 20 under the unchanged
+  four-per-request cap, and culled 223. The ledgers record 79 normalized rows,
+  67 unique candidates, and five final selections. Every selection occurred in
+  constrained runs; merchant recovery contributed zero candidates.
+- The safety gate failed. RR-078 reopened after a Matter Alpha information/news
+  page rendered as an exact buyable Tapo card. RR-090 is new and Critical: a Q7
+  M5+ card carries a Q10 X5+ canonical/product URL while its image identifies
+  Q7 M5. No RR-061-class image regression occurred.
+- Promotion is rejected. Both recovery flags remain default-off and R7A remains
+  blocked. Register: 90 total / 83 Fixed / 6 Needs Investigation / 1 Won't Fix.
 
 ## Flag state
 
 - Local development: `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`.
-- `REVIEW_RADAR_PINNED_PLANNING`: off.
-- `REVIEW_RADAR_NORMALIZATION_RECOVERY`: unpromoted/default-off.
-- `REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION`: unpromoted/default-off.
-- `.env.local` was not modified during C5 corrective hardening.
+- `REVIEW_RADAR_PINNED_PLANNING`: unset/default-off.
+- `REVIEW_RADAR_NORMALIZATION_RECOVERY`: unset/default-off.
+- `REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION`: unset/default-off.
+- `.env.local` was not modified during C5 validation.
 
 ## Latest verification and evidence
 
-- Fail-first focused run: 7 pass / exactly 3 intended failures.
-- Focused final: 131/131 across eight resolver/Serper/ledger/identity/type
-  suites.
-- Full wall: 937/937 tests across 129 suites.
-- Typecheck, production build, and offline evaluation pass. Lint is 0 errors / 3
-  pre-existing warnings.
-- No live Serper/OpenAI call, fixture write, promotion, deployment, R7A work, or
-  `.env.local` edit occurred.
-- Latest live North Stars remain C4: broad normalized-pool/final recall means
-  `1.33/7` / `1.33/7`; pool/final Jaccard `0.1778` / `0.0000`.
-- C5's historical feasibility projection remains `5/7` with no safety margin.
-  The corrected runtime has not yet been measured flag-on end to end.
+- Instrument focused analyzer: 13/13.
+- Full wall at instrument commit: 938/938 tests across 129 suites.
+- Typecheck and production build pass. Offline evaluation reports no red flags;
+  lint is 0 errors / 3 pre-existing warnings.
+- Six C5 fixtures remain untracked; hashes and exact outbound C5 queries are in
+  `docs/phase-6-market-leader-evaluation.md`.
+- Broad pool/final pairwise Jaccard is `0.3889`/`0.0000` from two usable runs.
+  Constrained pool/final mean pairwise Jaccard is `0.2566`/`0.0513`.
+- No duplicate exact-model final pair, false accessory collapse, malformed
+  query, seed search, hard-constraint failure, or RR-061 image regression was
+  recorded in the five usable runs.
 
 ## Next task — approval pending
 
-The recommended next phase is one **C5 flag-on live validation window**, not
-promotion and not R7A:
+The recommended next phase is one **zero-live C5 trust-boundary corrective
+phase** for RR-078 and RR-090. It is not another live window, flag promotion,
+or R7A:
 
-1. Begin with a zero-network preflight at commit `4bba870`: verify the request
-   harness dispatches exactly once, cache starts cold per run, the attempt guard
-   is active, current promoted flags are unchanged, and only the C5 resolver is
-   temporarily enabled for the test process. Do not edit `.env.local`.
-2. Run six cache-cold requests under ratified `leaders-v2026-07c`: three broad
-   shop-vac requests and three frozen constrained requests. Use the C4 window as
-   the historical flag-off control; do not buy a second simultaneous control
-   stream unless attribution proves impossible.
-3. Attribute every recovered product within each response: ordinary
-   normalization, zero-cost merchant recovery, or organic identity resolution.
-   Record selected/cap-culled lead priority, exact queries, logical and physical
-   attempts, cache state, retries/fallbacks, accepted/rejected pages, cost, and
-   latency.
-4. Score broad normalized-pool and final leader recall, constrained recall and
-   hard-constraint compliance, final-set stability, duplicate exact models,
-   wrong product types, unsafe/editorial product pages, and RR-061-class image
-   regressions. Name each newly materialized leader and whether it came from the
-   merchant or organic tier.
-5. Treat broad mean pool recall below `5/7`, any wrong-product/unsafe-page/image
-   regression, any hard-constraint violation, or unbalanced ledger accounting
-   as a failed promotion gate. Report honestly and stop; do not weaken the
-   frozen target or add short-code support during the window.
-6. Save untracked, commit-pinned fixtures and produce the full before/after and
-   contribution report. Stop without promoting a flag or editing `.env.local`.
+1. Add fixture-derived fail-first tests for the Matter Alpha page and the Q7
+   card carrying Q10 canonical identity. Preserve the saved fixtures untracked;
+   extract only the minimal deterministic objects needed by existing tests.
+2. Trace RR-090 to the earliest mutation: compare the AI candidate before
+   source upgrade, the selected Q7 upgrade evidence, merge/enrichment output,
+   canonical identity assignment, and final selection. Do not claim the C5
+   resolver caused it unless the trace proves that.
+3. Repair RR-078 at the shared product-eligibility boundary using generalized
+   editorial/information-page semantics. Keep editorial pages usable as
+   evidence and preserve legitimate commerce product-detail pages; add no host,
+   brand, model, or fixture-specific production rule.
+4. If RR-090 has a narrow shared attachment boundary, require existing exact-
+   model compatibility before canonical URL/identity/commerce metadata can
+   replace a target's fields. Preserve same-model sparse-title and cross-
+   retailer enrichment. If the earliest mutation instead requires an
+   architectural merge refactor, stop after diagnosis and present that scope
+   before editing it.
+5. Replay both captured failures, run focused trust/identity/eligibility tests,
+   then the full wall, typecheck, lint, build, and offline evaluation. Keep both
+   C5 flags default-off. Report expected effects only; no live claim.
 
-Planning basis if Taylor approves: **six logical searches and 510 physical
-attempts** (the prior six-run C4 planning basis of 486 plus at most four new
-resolver lookups per request), with the existing **120-attempt per-request hard
-ceiling**. Exceeding the estimate is a reporting fact; an accidental extra
-request is spent/excluded and requires separate approval for replacement.
+**Recommended reasoning level: Highest.** The phase crosses shared product-card
+eligibility and cross-model metadata trust boundaries; a shallow patch could
+hide editorial pages or corrupt legitimate same-model enrichment.
 
 ## Hard boundaries
 
-- No live Serper/OpenAI calls without Taylor's explicit per-phase search
-  approval naming search count, physical-attempt planning basis, and hard
-  ceiling. No prior approval remains available.
+- No live Serper/OpenAI calls without Taylor's explicit new per-phase approval.
+  No previous search approval remains available.
 - No flag promotion, `.env.local` edit, R7A work, deployment, replacement
-  search, or ambiguous short-code expansion without separate approval.
+  request, cap increase, threshold change, or ambiguous short-code expansion
+  without separate approval.
 - Preserve every price, citation, requirement, product-type, identity, image,
-  eligibility, dedupe, URL, and hard-constraint trust gate.
-- Generalized fixes only; no product, brand, retailer, model, or fixture-
-  specific production exceptions.
-- RR-061-class image regression stops a live window. File unrelated new defects
-  at the next free RR ID and continue only under the approved window rules.
+  eligibility, dedupe, URL, source-quality, and hard-constraint trust gate.
+- Generalized fixes only; no product, brand, host, retailer, model, query, or
+  fixture-specific production exception.
+- RR-061-class image regression stops any later live window. New unrelated
+  defects are filed and handled under that future window's approved rules.
 - Live fixtures and all pre-existing untracked artifacts remain untracked.
   Stage only approved-phase files; never use `git add -A`.
 - One phase per approval. Stop and report after it.
 
-## Outstanding peer-review debt
+## Outstanding review debt
 
-- Dialogue entry [35] asks Claude to challenge the hard-spec unit family,
-  recurrence priority, explicit-option semantics, and the deliberate short-code
-  boundary. That review is advisory and authorizes no spend or behavior change.
+- Dialogue entry [36] asks Claude to challenge the C5 attribution, RR-078
+  reopening, RR-090 distinction from RR-069, and the proposed zero-live repair.
+  That review is advisory and authorizes no behavior change or spend.
+- Entry [35]'s earlier hard-spec/recurrence questions remain useful background,
+  but the live safety failures now take priority over allocation tuning.
 
 ## Retrieval map
 
 | Need | Retrieve |
 |---|---|
 | Current next decision | this file and latest C5 roadmap block |
-| Corrective implementation | commit `4bba870`, `lib/search/serper.ts` |
-| Canonical verification | latest entry in `docs/qa-loop-results.md` |
-| Current open quality issues | RR-014/RR-015/RR-037/RR-045 |
-| Peer review | `docs/agent-dialogue.md` entry [35] onward |
-| Historical live control | C4 section of `docs/phase-6-market-leader-evaluation.md` |
-| Historical feasibility evidence | untracked `shop-vac.c5-resolution-probe.json` |
+| Canonical live result | latest entry in `docs/qa-loop-results.md` |
+| Full recall/contribution/query table | `docs/phase-6-market-leader-evaluation.md` C5 flag-on section |
+| Editorial-page regression | RR-078 |
+| Cross-model canonical metadata defect | RR-090 |
+| Runtime evidence | six untracked `*.c5-flag-on-run*.json` fixtures |
+| C5 implementation seam | `lib/search/serper.ts:4632-4835` |
+| Local-debug production restriction | `app/api/recommendations/route.ts:291-295` |
+| Peer review | `docs/agent-dialogue.md` entry [36] onward |
