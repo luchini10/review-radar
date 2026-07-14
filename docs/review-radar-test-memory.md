@@ -1847,3 +1847,28 @@ a known conservative undercount.
   typecheck/build/eval pass, lint 0 errors/3 existing warnings. No live calls,
   flag promotion, or `.env.local` edit. End-to-end recall/safety/stability/cost
   remain unproven until a separately approved live validation.
+
+## C5 corrective resolver-hardening contract — 2026-07-14
+
+- Resolver identity is narrower than shared product identity. A compacted hard
+  specification such as `12gallon`, `175psi`, `20volt`, or `120hz` cannot by
+  itself authorize a paid identity-resolution lookup. Keep that exclusion local
+  so numeric-spec conflicts can still protect dedupe and page selection.
+- Brand identity must be source-leading. Do not let a unit alias such as
+  horsepower `HP` override a leading Craftsman-style brand; preserve genuine HP
+  computer titles and punctuation-bearing leading brands such as Shop-Vac.
+- Aggregate duplicate leads before allocation. Rank by distinct parent-query
+  recurrence, then total occurrences, then stable first-seen/key order; suppress
+  already-materialized identities before the unchanged request cap of four.
+  Selected and cap-culled ledger rows must retain recurrence and parent lineage.
+- The C5 flag composes the existing guarded merchant recovery first, then the
+  bounded organic resolver. The normalization-only flag remains valid and both
+  flags off remain behaviorally unchanged.
+- Do not broaden to ambiguous short model codes yet. A deterministic `Q5`
+  target can still accept a `Q7` page under the shared selector, so short-code
+  resolution remains unsupported until that boundary has an evidence-backed
+  safe discriminator.
+- Commit `4bba870`; fail-first produced exactly three intended failures;
+  focused 131/131 and full 937/937 across 129 suites pass. Typecheck/build/eval
+  pass; lint is 0 errors/3 pre-existing warnings. M3 C4 replay is directional;
+  live recall, safety, stability, cost, and latency remain unproven.

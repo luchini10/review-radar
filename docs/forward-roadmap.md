@@ -563,6 +563,29 @@ off, each flag independently, real model codes across categories, spec-only
 negatives, deterministic cap order, and every existing identity/type/page
 gate. No live call, flag promotion, `.env.local` edit, or R7A work is authorized.
 
+**C5 corrective hardening (2026-07-14; zero live): COMPLETE, LIVE VALIDATION
+STILL GATED.** Commit `4bba870` closes RR-088/RR-089. Resolver-local model
+qualification excludes compacted hard specifications without weakening shared
+identity evidence; source-leading brand inference keeps horsepower `HP` from
+becoming a brand while preserving real HP computers. Duplicate leads now retain
+distinct parent-query and total recurrence, and the resolver prioritizes those
+signals before stable first-seen order and the unchanged four-query cap.
+Enabling the C5 flag also composes the existing guarded merchant-URL recovery
+as its zero-cost first tier; normalization-only operation and exact both-off
+behavior remain supported.
+
+M3 recurrence ranking over the three capped C4 broad Shopping digests moves
+recurrent real models ahead of spec-only rows in every run. It cannot fully
+replay existing-page suppression, so this is directional saved-evidence replay,
+not an exact live slate or North-Star result. Ambiguous short codes such as `Q5` remain
+unresolved because the shared product-page selector cannot yet distinguish a
+`Q5` target from a `Q7` page safely. Full verification is 937/937 across 129
+suites with typecheck/build/eval passing and lint at 0 errors/3 pre-existing
+warnings. No live call, promotion, `.env.local` edit, or R7A work occurred. The
+next eligible decision is a separately approved C5 flag-on live validation; it
+must measure merchant-first versus organic contribution, safety, recall,
+stability, cost, and latency before any promotion decision.
+
 **C1 result (M3, four usable readiness fixtures):** the tested pre-AI pool is a
 Serper `product_discovery` candidate that normalized, survived raw dedupe and
 cheap prefilter; a later `candidate_merge` loss still counts as pool-present.

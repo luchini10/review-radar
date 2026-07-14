@@ -11,7 +11,7 @@ Update this file after:
 
 ## 2026-07-14
 
-### 🟧 Codex - Bounded organic identity resolution
+### 🟧 Codex - Bounded organic identity resolution and corrective hardening
 
 #### Changed
 
@@ -26,12 +26,22 @@ Update this file after:
 - Kept generic or ambiguous identities unresolved. The new behavior remains
   behind `REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION=off`; normal responses and
   Serper dispatch are unchanged while it is off.
+- Prevented capacities, power ratings, voltage, screen sizes, and other compacted
+  hard specifications from consuming resolver slots as if they were model
+  numbers. Real model codes and genuine HP computer-brand titles remain valid.
+- Aggregated duplicate identity leads and prioritized cross-query recurrence
+  before the unchanged four-lookup cap. The debug ledger records recurrence on
+  selected and capped-out plans.
+- Made the C5 flag a complete merchant-first path: it reuses a safe merchant URL
+  without another request when available, and uses organic resolution only when
+  that free tier cannot produce a candidate. The older merchant-recovery flag
+  remains independently usable.
 
 #### Verified
 
-- Focused resolution/trust tests pass 104/104; the full suite passes 934/934
-  across 129 suites. Typecheck, production build, and offline evaluation pass;
-  lint reports 0 errors/3 pre-existing warnings.
+- Focused resolution/Serper/ledger/identity/type tests pass 131/131; the full
+  suite passes 937/937 across 129 suites. Typecheck, production build, and
+  offline evaluation pass; lint reports 0 errors/3 pre-existing warnings.
 - Zero live Serper/OpenAI calls occurred. No flag was promoted and
   `.env.local` was not changed.
 

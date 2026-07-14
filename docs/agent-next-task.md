@@ -1,38 +1,39 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-14 by 🟧 Codex after the zero-live C5 validation preflight.
+Updated: 2026-07-14 by 🟧 Codex after the zero-live C5 corrective hardening.
 
 ## Efficient session start
 
 1. Read repository `AGENTS.md` in full.
 2. Read this handoff in full.
-3. Read only the corrective C5 section of `docs/forward-roadmap.md`.
-4. Read `docs/agent-dialogue.md` from entry [34] onward unless an earlier
-   claim needs verification.
-5. Retrieve RR-088/RR-089 and other history by exact ID or metric only.
+3. Read the C5 corrective/live-validation section of
+   `docs/forward-roadmap.md`.
+4. Read `docs/agent-dialogue.md` from entry [35] onward unless an earlier claim
+   needs verification.
+5. Retrieve RR-014/RR-015 or other history by exact ID/metric only.
 
 ## Current state
 
-- The C5 live-validation preflight is complete with zero live calls and blocks
-  the live window before spend. Commit `eaeb577` remains default-off and
-  unpromoted; no source behavior changed during the preflight.
-- RR-088 is reproducible: `strongModelTokens()` treats a hyphenated capacity
-  such as `12-Gallon` as model token `12gallon`. A structured generic product
-  row therefore qualifies as a C5 lead, and the current first-seen four-query
-  slice can spend a slot on it ahead of a genuine repeated model.
-- Bounded M3 reconstruction of all three saved C4 broad ledgers found this
-  ordering shape. The ledgers contain capped result digests, so they cannot
-  prove the exact next live slate; the single-row qualification and first-four
-  slicing behavior are exact current-code facts.
-- RR-089 is reproducible: lead construction suppresses a row when the enabled
-  merchant-recovery counterfactual could materialize it, even if that separate
-  runtime flag is off. Enabling only the new C5 flag can therefore yield
-  neither the safe merchant candidate nor an organic lookup.
-- The correct response is not to broaden identity. Model-less/generic lines
-  should remain unresolved, and the request cap should stay four. Qualification,
-  deterministic allocation, and flag composition need correction first.
-- Register: 89 total / 82 Fixed / 6 Needs Investigation / 1 Won't Fix.
-  RR-088 and RR-089 are the new C5 blockers.
+- Commit `4bba870` completes the approved zero-live C5 corrective phase and
+  closes RR-088/RR-089. The resolver remains default-off and unpromoted.
+- Resolver lead qualification now excludes compacted hard specifications,
+  preserves real cross-category model codes, and derives brand from
+  source-leading identity so horsepower `HP` cannot replace the product brand.
+- Duplicate leads retain distinct parent-query and total recurrence. Allocation
+  sorts by those signals, then stable first-seen/key order, suppresses already-
+  materialized candidates, and applies the unchanged request-wide cap of four.
+- The C5 flag now forms a complete merchant-first path: guarded merchant-URL
+  recovery is its zero-cost first tier, followed by bounded organic resolution.
+  The normalization-only flag remains independently operable; both flags off
+  retain the original behavior.
+- Ambiguous short model codes such as `Q5` remain unresolved. A deterministic
+  probe shows the shared selector can accept a `Q7` page for a `Q5` target, so
+  widening that boundary would currently weaken wrong-product safety.
+- M3 recurrence ranking over all three capped C4 broad Shopping digests moves
+  recurrent real models ahead of spec-only rows. It cannot fully replay
+  existing-page suppression, so this is directional evidence rather than an
+  exact live slate, recall, or stability result.
+- Register: 89 total / 84 Fixed / 4 Needs Investigation / 1 Won't Fix.
 
 ## Flag state
 
@@ -40,82 +41,90 @@ Updated: 2026-07-14 by 🟧 Codex after the zero-live C5 validation preflight.
 - `REVIEW_RADAR_PINNED_PLANNING`: off.
 - `REVIEW_RADAR_NORMALIZATION_RECOVERY`: unpromoted/default-off.
 - `REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION`: unpromoted/default-off.
-- `.env.local` was not modified during the preflight.
+- `.env.local` was not modified during C5 corrective hardening.
 
-## Latest verification and live evidence
+## Latest verification and evidence
 
-- Latest full wall for implementation commit `eaeb577`: 934/934 tests across
-  129 suites; focused 104/104; typecheck/build/eval pass; lint 0 errors/3
-  pre-existing warnings. The preflight did not rerun or relabel that wall.
-- Preflight deterministic probes:
-  - `Shop-Vac 12-Gallon ...` → model token `12gallon` → one false C5 lead.
-  - Safe DXV10SB merchant row with normalization recovery off → 0 candidates,
-    0 leads; with recovery on → 1 candidate, 0 leads.
-- No Serper/OpenAI call, live fixture, North-Star metric, promotion,
-  deployment, or `.env.local` edit occurred.
+- Fail-first focused run: 7 pass / exactly 3 intended failures.
+- Focused final: 131/131 across eight resolver/Serper/ledger/identity/type
+  suites.
+- Full wall: 937/937 tests across 129 suites.
+- Typecheck, production build, and offline evaluation pass. Lint is 0 errors / 3
+  pre-existing warnings.
+- No live Serper/OpenAI call, fixture write, promotion, deployment, R7A work, or
+  `.env.local` edit occurred.
 - Latest live North Stars remain C4: broad normalized-pool/final recall means
   `1.33/7` / `1.33/7`; pool/final Jaccard `0.1778` / `0.0000`.
-- The C5 feasibility probe's `5/7` projection remains historical and has no
-  safety margin. The current runtime selection does not yet faithfully
-  reproduce its four-target lookup premise.
+- C5's historical feasibility projection remains `5/7` with no safety margin.
+  The corrected runtime has not yet been measured flag-on end to end.
 
 ## Next task — approval pending
 
-The recommended next phase is a **zero-live C5 corrective phase** that closes
-RR-088 and RR-089 before any flag-on window:
+The recommended next phase is one **C5 flag-on live validation window**, not
+promotion and not R7A:
 
-1. Add fail-first tests proving that hyphenated hard specifications—capacity,
-   power, voltage, screen size, refresh rate, and similar units—cannot alone
-   qualify as a model code, while real mixed model codes remain eligible across
-   unrelated categories. Do not weaken `strongModelTokens()` globally unless
-   the full identity wall proves that safe; prefer a resolver-local predicate.
-2. Build the lead identity brand from source-leading identity evidence. A unit
-   token such as horsepower `HP` cannot become the brand of a Craftsman-style
-   title, while genuine HP computer titles must remain valid.
-3. Aggregate duplicate eligible leads before allocation. Rank by recurrence
-   across distinct parent discovery queries, then total recurrence, then stable
-   first-seen/key tie-breakers. Suppress already-materialized pages before the
-   unchanged request cap of four, and record every cap cull with lineage.
-4. Make `REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION=on` explicitly compose the
-   existing safe merchant recovery as its zero-cost first tier, followed by one
-   organic lookup only when no safe merchant page exists. Preserve independent
-   normalization-only operation and exact both-flags-off behavior.
-5. Replay the captured C4 ledgers as M3 directional evidence, run focused and
-   full trust walls, and stop. Do not call live APIs or promote either flag.
+1. Begin with a zero-network preflight at commit `4bba870`: verify the request
+   harness dispatches exactly once, cache starts cold per run, the attempt guard
+   is active, current promoted flags are unchanged, and only the C5 resolver is
+   temporarily enabled for the test process. Do not edit `.env.local`.
+2. Run six cache-cold requests under ratified `leaders-v2026-07c`: three broad
+   shop-vac requests and three frozen constrained requests. Use the C4 window as
+   the historical flag-off control; do not buy a second simultaneous control
+   stream unless attribution proves impossible.
+3. Attribute every recovered product within each response: ordinary
+   normalization, zero-cost merchant recovery, or organic identity resolution.
+   Record selected/cap-culled lead priority, exact queries, logical and physical
+   attempts, cache state, retries/fallbacks, accepted/rejected pages, cost, and
+   latency.
+4. Score broad normalized-pool and final leader recall, constrained recall and
+   hard-constraint compliance, final-set stability, duplicate exact models,
+   wrong product types, unsafe/editorial product pages, and RR-061-class image
+   regressions. Name each newly materialized leader and whether it came from the
+   merchant or organic tier.
+5. Treat broad mean pool recall below `5/7`, any wrong-product/unsafe-page/image
+   regression, any hard-constraint violation, or unbalanced ledger accounting
+   as a failed promotion gate. Report honestly and stop; do not weaken the
+   frozen target or add short-code support during the window.
+6. Save untracked, commit-pinned fixtures and produce the full before/after and
+   contribution report. Stop without promoting a flag or editing `.env.local`.
 
-Only after that correction passes should Taylor receive a new live C5 budget
-proposal. A live approval must name search count, physical-attempt planning
-basis, and hard ceiling; it does not authorize promotion.
+Planning basis if Taylor approves: **six logical searches and 510 physical
+attempts** (the prior six-run C4 planning basis of 486 plus at most four new
+resolver lookups per request), with the existing **120-attempt per-request hard
+ceiling**. Exceeding the estimate is a reporting fact; an accidental extra
+request is spent/excluded and requires separate approval for replacement.
 
 ## Hard boundaries
 
-- Zero live Serper/OpenAI calls without Taylor's explicit per-phase search
-  approval plus a physical-attempt planning basis and hard ceiling. No prior
-  approval remains available.
-- No corrective behavior change until Taylor approves the zero-live phase.
-- No flag promotion, `.env.local` edit, R7A work, deployment, or replacement
-  search without separate explicit approval.
-- Preserve price, citation, requirement, product-type, identity, image,
-  eligibility, dedupe, and hard-constraint trust gates.
+- No live Serper/OpenAI calls without Taylor's explicit per-phase search
+  approval naming search count, physical-attempt planning basis, and hard
+  ceiling. No prior approval remains available.
+- No flag promotion, `.env.local` edit, R7A work, deployment, replacement
+  search, or ambiguous short-code expansion without separate approval.
+- Preserve every price, citation, requirement, product-type, identity, image,
+  eligibility, dedupe, URL, and hard-constraint trust gate.
 - Generalized fixes only; no product, brand, retailer, model, or fixture-
-  specific production exception.
+  specific production exceptions.
+- RR-061-class image regression stops a live window. File unrelated new defects
+  at the next free RR ID and continue only under the approved window rules.
 - Live fixtures and all pre-existing untracked artifacts remain untracked.
   Stage only approved-phase files; never use `git add -A`.
 - One phase per approval. Stop and report after it.
 
 ## Outstanding peer-review debt
 
-- Dialogue entry [34] records the reproduced blockers and asks Claude to
-  challenge the proposed resolver-local spec filter, recurrence ordering, and
-  composed flag semantics. That review is advisory and authorizes no action.
+- Dialogue entry [35] asks Claude to challenge the hard-spec unit family,
+  recurrence priority, explicit-option semantics, and the deliberate short-code
+  boundary. That review is advisory and authorizes no spend or behavior change.
 
 ## Retrieval map
 
 | Need | Retrieve |
 |---|---|
-| Current blockers / next approval | RR-088/RR-089 in `docs/RR-Issues-Report.md` |
-| C5 forward state | latest corrective C5 block in `docs/forward-roadmap.md` |
-| Peer review | `docs/agent-dialogue.md` entry [34] onward |
-| Canonical preflight evidence | latest entry in `docs/qa-loop-results.md` |
-| Implementation under review | commit `eaeb577`, especially `lib/search/serper.ts` |
-| Historical feasibility evidence | untracked `tests/fixtures/review-radar-live/shop-vac.c5-resolution-probe.json` |
+| Current next decision | this file and latest C5 roadmap block |
+| Corrective implementation | commit `4bba870`, `lib/search/serper.ts` |
+| Canonical verification | latest entry in `docs/qa-loop-results.md` |
+| Current open quality issues | RR-014/RR-015/RR-037/RR-045 |
+| Peer review | `docs/agent-dialogue.md` entry [35] onward |
+| Historical live control | C4 section of `docs/phase-6-market-leader-evaluation.md` |
+| Historical feasibility evidence | untracked `shop-vac.c5-resolution-probe.json` |

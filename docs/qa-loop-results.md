@@ -6936,3 +6936,49 @@ deterministic normalization probe, recovery on:
 live Serper/OpenAI calls: 0
 behavior changes: 0
 ```
+
+## 🟧 Codex QA Update — 2026-07-14 (C5 corrective resolver hardening)
+
+**Verdict: RR-088/RR-089 FIXED OFFLINE; DEFAULT-OFF C5 IS READY FOR A
+SEPARATELY APPROVED LIVE VALIDATION, NOT PROMOTION.**
+
+- Fail-first added three regressions and produced exactly three intended
+  failures: spec-only Shopping rows qualified as models, the C5 flag alone did
+  not materialize a safe merchant row, and merged leads lost recurrence.
+- Commit `4bba870` filters compacted hard-spec tokens only at resolver lead
+  admission; preserves real model codes across shop vac, computer, and TV
+  controls; and uses source-leading brand evidence so horsepower `HP` cannot
+  replace a leading product brand.
+- Duplicate leads now retain distinct parent-query and total occurrence counts.
+  Allocation ranks those signals before stable first-seen/key order, suppresses
+  already-materialized candidates, and then applies the unchanged request cap
+  of four. Ledger source detail records the recurrence basis for selected and
+  cap-culled plans.
+- Enabling `REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION` now composes the existing
+  guarded merchant-URL recovery as a zero-cost first tier. The older
+  normalization-only flag remains independent; both flags off preserve the
+  original path.
+- M3 recurrence ranking of eligible raw lead rows in the three capped C4 broad
+  Shopping digests moves real models ahead of spec-only rows in every run. Run
+  1 begins RIDGID HD1200, Shop-Vac SV5430188, Craftsman CMXEVBE17584, Stanley
+  SL18116P; run 2 substitutes DeWalt DXV06PL-QT for Stanley; run 3 begins
+  Shop-Vac, Craftsman, Bissell 18P03, RIDGID. The reconstruction does not fully
+  replay already-materialized suppression, so it is directional evidence—not
+  live recall or an exact future slate.
+- Ambiguous short-code resolution remains deliberately unsupported. The shared
+  selector accepts a `Q7` page for a `Q5` target in a deterministic probe, so
+  broadening that boundary would weaken wrong-product safety.
+- No live Serper/OpenAI call, flag promotion, `.env.local` edit, fixture write,
+  R7A work, or change to the four-query cap occurred.
+
+```text
+fail-first focused: 7 passed / 3 intended failures
+focused final: 131/131 across 8 suites
+npm test: 937/937 across 129 suites
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red flags
+M3 C4 broad replay: recurrent real models outrank spec-only rows in 3/3 digests
+live Serper/OpenAI calls: 0
+```

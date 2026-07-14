@@ -1,9 +1,9 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through C5 validation preflight
+## Compiled for AI Agent Consumption — Phase 0 through C5 corrective hardening
 
 **Generated:** 2026-07-14
-**Scope:** All phases from initial measurement harness through the C5 live-
-validation preflight
+**Scope:** All phases from initial measurement harness through the C5 zero-live
+corrective hardening
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -26,8 +26,8 @@ only when maintaining this register or auditing its full history.
 | Medium | 33 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 6 |
-| Fixed | 82 |
+| Needs Investigation | 4 |
+| Fixed | 84 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -3090,7 +3090,7 @@ second production classifier.
 | **Phase** | C5 live-validation preflight |
 | **Severity** | High |
 | **Title** | Spec-shaped tokens and first-in ordering can consume the bounded resolver cap |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** The C5 resolver accepts some mixed letter/digit tokens as
 strong models even when they are compacted hard specifications. Hyphenated
@@ -3132,6 +3132,18 @@ before applying the unchanged cap of four. Correct the leading-brand key so
 horsepower `HP` cannot become the brand in a Craftsman-style title while real
 HP computers remain valid.
 
+**Resolution (2026-07-14, commit `4bba870`):** The resolver now removes
+compacted hard-spec tokens only at lead qualification, preserving shared model
+evidence elsewhere. Cross-category tests cover capacity, power, voltage, screen
+size, refresh rate, real long model codes, genuine HP computers, and
+source-leading Shop-Vac-style brands. Duplicate leads are aggregated and ranked
+by distinct parent-query recurrence, total recurrence, then stable first-seen
+order before the unchanged cap of four; cap-cull lineage records those counts.
+M3 recurrence ranking over the three saved C4 broad Shopping digests moves
+recurrent real models ahead of spec-only rows in every run. Because those
+digests are capped and do not fully replay existing-page suppression, this is
+directional evidence and does not claim an exact live slate or recall.
+
 ---
 
 #### RR-089
@@ -3142,7 +3154,7 @@ HP computers remain valid.
 | **Phase** | C5 live-validation preflight |
 | **Severity** | High |
 | **Title** | Resolver flag silently depends on the separate normalization-recovery flag |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** Lead construction suppresses a row whenever the *enabled
 counterfactual* merchant-URL recovery could materialize it, regardless of the
@@ -3171,6 +3183,14 @@ the old normalization-only flag for independent operation. Add fail-first
 tests for both flags off, C5-only with a safe merchant URL, C5-only without a
 merchant URL, and normalization-only. Preserve the shared URL blocker,
 identity/type/eligibility gates, call cap, and per-stage lineage.
+
+**Resolution (2026-07-14, commit `4bba870`):** Enabling
+`REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION` now also enables the existing guarded
+merchant-URL recovery as its zero-cost first tier unless an internal caller
+explicitly supplies a normalization option. The older normalization-only flag
+still works independently, and both flags off retain the original behavior.
+Fail-first covered the four required flag combinations and the full trust wall
+passes.
 
 ---
 
@@ -3343,22 +3363,33 @@ metric changed. The register is 89 total / 82 Fixed / 6 Needs Investigation /
 1 Won't Fix. A separately approved zero-live corrective phase must close both
 issues before any C5 flag-on window.
 
+## C5 corrective hardening note — 2026-07-14
+
+Commit `4bba870` closes RR-088 and RR-089 with zero live calls. Resolver-local
+hard-spec rejection, source-leading brand identity, recurrence-aware allocation,
+and merchant-first flag composition now satisfy the fail-first cases while the
+request cap remains four and every existing identity/type/URL/eligibility gate
+stays binding. Ambiguous short codes such as `Q5` remain intentionally
+unsupported: the shared page selector can accept a `Q7` page for a `Q5` target,
+so broadening that boundary would be unsafe. Verification is 937/937 across 129
+suites; typecheck/build/eval pass; lint is 0 errors/3 pre-existing warnings.
+The register is 89 total / 84 Fixed / 4 Needs Investigation / 1 Won't Fix.
+Live quality, recall, stability, cost, and latency remain unproven.
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (6 issues)
+### Needs Investigation (4 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-- RR-088: Spec-shaped leads and first-in ordering can consume resolver cap
-- RR-089: Resolver flag silently depends on normalization recovery
 
-### Fixed (82 issues)
+### Fixed (84 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
-RR-038 through RR-044, and RR-046 through RR-087
+RR-038 through RR-044, and RR-046 through RR-089
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -3367,9 +3398,7 @@ RR-038 through RR-044, and RR-046 through RR-087
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-088 + RR-089** — repair the default-off C5 lead contract, cap
-   prioritization, and flag composition before any live resolver validation.
-2. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
+1. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
    final overlap. Recovery stays default-off and R7A stays blocked.
-3. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
+2. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
    but varied by model, while Tapo appeared raw and died in normalization.
