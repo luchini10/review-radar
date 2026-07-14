@@ -584,9 +584,10 @@ function mixedModelFamilyWords(
 // page — live evidence showed Saros Z70 artwork rendering on a Roborock
 // Q5 Max+ card because page context outweighed the conflicting model in the
 // image path. The guard only arms when the product itself carries model-shaped
-// identity, and any filename token compatible with the product clears it, so
-// products without model identifiers and multi-model comparison shots stay
-// fail-safe.
+// identity. Every model claim carried by the filename must be compatible with
+// that identity: one shared family token must not authenticate a foreign
+// sibling token in the same filename. Products without model identifiers stay
+// fail-safe, as do neutral filename words, dimensions, and pipeline markers.
 function conflictingModelIdentityReason(
   url: string,
   context: ProductImageContext,
@@ -635,17 +636,12 @@ function conflictingModelIdentityReason(
   const identityWords = new Set(
     identityParts.filter((part) => /^[a-z]+$/.test(part)),
   );
-  const imageTokens = [
-    ...mixedImageTokens,
-    ...splitImageClaims.map((claim) => claim.token),
-  ];
-
-  if (imageTokens.some((token) => identityCompact.includes(token))) {
-    return "";
-  }
-
   const foreignSplitTokens = splitImageClaims
     .filter((claim) => {
+      if (identityCompact.includes(claim.token)) {
+        return false;
+      }
+
       const targetClaimsSameFamily = targetSplitClaims.some(
         (targetClaim) => targetClaim.word === claim.word,
       );
@@ -662,7 +658,9 @@ function conflictingModelIdentityReason(
     .map((claim) => claim.token);
 
   const foreignTokens = [
-    ...mixedImageTokens,
+    ...mixedImageTokens.filter(
+      (token) => !identityCompact.includes(token),
+    ),
     ...foreignSplitTokens,
     ...repeatedFamilyTokens.filter(
       (token) => !identityCompact.includes(token),

@@ -278,6 +278,59 @@ describe("final-selection trace", () => {
     assert.equal(nearEntry.stream, "nearScored");
   });
 
+  it("RR-060 collapses the same enriched model across exact and near streams", () => {
+    const manufacturer = exactProduct("Garage Pro® Wet Dry Vac", {
+      category: "shop vac",
+      product_page_url:
+        "https://www.bissell.com/en-us/product/garage-pro-wet-dry-vac-18P03.html",
+      metadata: {
+        ...exactProduct("Garage Pro® Wet Dry Vac").metadata,
+        brand: field("Bissell"),
+        canonicalUrl: field(
+          "https://www.bissell.com/en-us/product/garage-pro-wet-dry-vac-18P03.html",
+        ),
+        modelNumber: field("18P03"),
+        sku: field("18P03"),
+        title: field("Garage Pro® Wet Dry Vac"),
+      },
+    });
+    const amazon = nearProduct(
+      "BISSELL Garage Pro Wall-Mounted Wet Dry Car Vacuum ...",
+      {
+        category: "shop vac",
+        product_page_url:
+          "https://www.amazon.com/Bissell-Garage-Wall-Mounted-Vacuum-18P03/dp/B003R3JFJO",
+        metadata: {
+          ...nearProduct(
+            "BISSELL Garage Pro Wall-Mounted Wet Dry Car Vacuum ...",
+          ).metadata,
+          brand: field("Bissell"),
+          canonicalUrl: field(
+            "https://www.amazon.com/Bissell-Garage-Wall-Mounted-Vacuum-18P03/dp/B003R3JFJO",
+          ),
+          title: field(
+            "BISSELL Garage Pro Wall-Mounted Wet Dry Car Vacuum/Blower With Auto Tool Kit, 18P03, Gray",
+          ),
+        },
+      },
+    );
+    const { result, finalSelectionTrace } =
+      scoreAndSelectRecommendationsWithTrace(
+        baseResult([manufacturer], [amazon]),
+        baseInput("shop vac"),
+      );
+    const displayed = [...result.exactMatches, ...result.nearMatches];
+    const amazonTrace = finalSelectionTrace.find(
+      (entry) => entry.name === amazon.name,
+    );
+
+    assert.equal(displayed.length, 1);
+    assert.equal(displayed[0]?.name, manufacturer.name);
+    assert.equal(amazonTrace?.selected, false);
+    assert.equal(amazonTrace?.decisionReason, "duplicate_identity_collapsed");
+    assert.equal(amazonTrace?.collapsedBy, manufacturer.name);
+  });
+
   it("disqualified candidate (Category: fail) gets disqualified_category reason", () => {
     // A stick vacuum submitted in a robot vacuum search is blocked by the robot_vacuum rule.
     // The stick vacuum's name appears in robot_vacuum blocked list → checkCategory returns "fail".

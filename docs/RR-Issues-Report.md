@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through corrective C4 safety stop
+## Compiled for AI Agent Consumption — Phase 0 through post-C4 safety repair
 
 **Generated:** 2026-07-14
-**Scope:** All phases from initial measurement harness through corrective C4 safety stop
+**Scope:** All phases from initial measurement harness through post-C4 safety repair
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -25,8 +25,8 @@ only when maintaining this register or auditing its full history.
 | Medium | 33 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 7 |
-| Fixed | 76 |
+| Needs Investigation | 4 |
+| Fixed | 79 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -1877,7 +1877,7 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 | **Phase** | Phase 4F |
 | **Severity** | Medium |
 | **Title** | True same-model duplicates can occupy multiple final slots |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** `gaming monitor` selected `Gigabyte M27Q Gaming Monitor (Rev. 1.0)` at rank #1 and `Gigabyte M27Q 27" QHD ...` at rank #2. Both source-upgrade traces used `Gigabyte M27Q` and attached the same `$160` offer. They are retailer/manufacturer representations of the same model, yet remained separate cards while other variants were correctly collapsed.
 
@@ -1955,6 +1955,18 @@ enrichment. The Lowes Garage Pro representation is not claimed as the same
 model because its captured evidence lacks `18P03`. Evidence: untracked
 `tests/fixtures/review-radar-live/shop-vac.c4-07c-run3.json`.
 
+**Post-C4 deterministic resolution (2026-07-14):** Fixed at the proven bypass
+point. Exact and near candidates were selected as separate presentation
+streams, so the exact-only identity collapse never compared an enriched near
+candidate with an already-selected exact card. Final selection now treats the
+streams as one identity domain: the selected exact products and the ordered
+near pool compete under the unchanged `areSameExactModelProduct()` predicate.
+The captured manufacturer/Amazon `18P03` pair collapses to the manufacturer
+winner and the trace records `duplicate_identity_collapsed`; the unproven Lowes
+representation remains distinct. Near-vs-near duplicates also collapse in
+their existing ranked order. Identity inference, numeric-spec conflicts,
+product-type safeguards, ranking, and slot limits are unchanged.
+
 ---
 
 #### RR-061
@@ -1965,7 +1977,7 @@ model because its captured evidence lacks `18P03`. Evidence: untracked
 | **Phase** | Phase 4F |
 | **Severity** | Medium |
 | **Title** | Product image metadata can contain page URLs, generic brand assets, or unrelated navigation images |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** All 70 final cards had a non-empty image field, but several were not usable product images. Leaf-blower examples included a truncated Home Depot image directory, Greenworks/BLACK+DECKER product-page URLs, a WORX navigation banner, and an EGO brand logo. Dog-food examples included a Blue Buffalo logo and PetSmart category hero. An LG gaming-monitor image ended in `.html`.
 
@@ -2016,6 +2028,15 @@ shared `Q10` image token returns success before the resolver evaluates the
 foreign sibling token `S5` against target `X5+`. The mandated RR-061 stop fired
 after four usable requests; constrained runs B2/B3 were not dispatched.
 Evidence: untracked `tests/fixtures/review-radar-live/robot-vacuum-under-300-self-emptying.c4-07c-run1.json`.
+
+**Post-C4 deterministic resolution (2026-07-14):** Fixed by evaluating the
+entire filename claim set. A compatible token no longer returns before the
+remaining model claims are checked; compatible mixed and split claims are
+removed, then any remaining foreign claim vetoes the image. The captured
+`Q10-S5_140x.jpg` is rejected for target `Q10 X5+` with `s5` in the reason.
+Opaque CDN hashes, Amazon modifiers, dimensions, neutral counters, model-less
+products, same-model compound filenames, split families, and all earlier
+RR-061 regressions remain covered and green.
 
 **Sweep result:**
 
@@ -2869,7 +2890,7 @@ existing warnings; zero live calls.
 | **Phase** | Corrective C4 renewed readiness evidence |
 | **Severity** | High |
 | **Title** | Explicit non-vacuum product can render as a robot-vacuum near match |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** The first constrained C4 run displayed `KitchenAid
 KUIX515SPA 15 Inch Built-In Undercounter ...` as a robot-vacuum near match.
@@ -2905,6 +2926,17 @@ evidence a hard final-card veto. Reuse the existing product-type verdict and
 preserve sparse valid robot-vacuum controls; do not add a KitchenAid, retailer,
 or model exception. RR-083 remains Fixed because its truncated path-evidence
 gap is distinct from this post-enrichment explicit-class gap.
+
+**Post-C4 deterministic resolution (2026-07-14):** Fixed at the shared
+post-enrichment type boundary. When the requested category has a registered
+type rule and source-derived identity does not prove that requested type, a
+different registered product-class identity is now positive conflict evidence
+and hard-fails Category. The registry includes an identity-only ice-maker
+class so feature queries such as `refrigerator with ice maker` retain their
+existing request behavior. The captured enriched KitchenAid title is excluded
+from exact and near results; toaster-oven and office-chair controls prove the
+mechanism is not brand/category-instance specific, while sparse `Roborock S7
+MaxV Ultra Long Range` remains unverified/near-eligible rather than rejected.
 
 ---
 
@@ -3012,23 +3044,39 @@ AI-stream cards were DEWALT `DXV12P`; that exact model was already present in
 the raw Serper results of each corresponding run, so none proves unique AI
 discovery value.
 
+## Post-C4 deterministic safety-repair note — 2026-07-14
+
+RR-060, RR-061, and RR-084 are Fixed with zero live calls. Fail-first produced
+exactly the three captured failures at the image resolver, post-enrichment
+cross-stream final selection, and post-enrichment category validator. The
+repairs evaluate complete filename model claims, deduplicate across exact and
+near presentation streams under the unchanged exact-model predicate, and use
+positive registered product-class identity as a category veto. The saved C4
+cards replay with the Amazon `18P03` duplicate removed, the KitchenAid ice
+maker hard-failing Category, and `Q10-S5` rejected for foreign `s5`.
+
+Preservation coverage retains opaque/neutral/same-model images, distinct
+models and numeric-spec identity vetoes, existing ranking/slot behavior, and
+sparse valid requested-type identities. Focused final tests pass 132/132; the
+full suite passes 911/911 across 127 suites; typecheck/build/eval pass; lint has
+0 errors/3 pre-existing warnings. The register is 84 total / 79 Fixed / 4
+Needs Investigation / 1 Won't Fix. C4's recall failure is unchanged, recovery
+remains default-off, and R7A remains blocked.
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (7 issues)
+### Needs Investigation (4 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-- RR-060: True same-model duplicates can occupy multiple final slots
-- RR-061: Product image metadata can resolve to a different product model
-- RR-084: Explicit non-vacuum product can render as a robot-vacuum near match
 
-### Fixed (76 issues)
+### Fixed (79 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
-RR-038 through RR-044, and RR-046 through RR-083 except RR-060 and RR-061
+RR-038 through RR-044, and RR-046 through RR-084
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -3037,10 +3085,7 @@ RR-038 through RR-044, and RR-046 through RR-083 except RR-060 and RR-061
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-061 + RR-060 + RR-084** — C4 exposed image identity, final dedupe,
-   and explicit wrong-type safety failures. Diagnose and repair them
-   deterministically before any further live window.
-2. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
+1. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
    final overlap. Recovery stays default-off and R7A stays blocked.
-3. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
+2. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
    but varied by model, while Tapo appeared raw and died in normalization.

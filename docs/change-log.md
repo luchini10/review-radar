@@ -11,6 +11,28 @@ Update this file after:
 
 ## 2026-07-14
 
+### 🟧 Codex - Post-C4 deterministic safety repair
+
+#### Changed
+
+- Fixed RR-061 by validating the complete image-filename model claim set, so a
+  shared family token cannot hide a foreign sibling model.
+- Fixed RR-060 at the proven final-selection bypass: exact and near streams now
+  share one unchanged exact-model identity boundary, and duplicate trace rows
+  identify the winning displayed representation.
+- Fixed RR-084 by treating source-derived identity for a registered different
+  product class as a hard category conflict after enrichment. Sparse valid
+  requested-type identities remain eligible for near-match verification.
+
+#### Verified
+
+- Fail-first: 102/105 with exactly three intended failures; focused final:
+  132/132; full suite: 911/911 across 127 suites.
+- Typecheck and production build pass; lint has 0 errors/3 pre-existing
+  warnings; offline evaluation reports no red flags.
+- Saved C4 card replay confirms the `18P03`, `Q10-S5`, and KitchenAid outcomes.
+  Zero live Serper/OpenAI calls; `.env.local` and all flags are unchanged.
+
 ### 🟧 Codex - Corrective C4 live evidence
 
 #### Measured

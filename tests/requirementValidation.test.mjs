@@ -1651,6 +1651,46 @@ describe("requirement validation", () => {
     );
   });
 
+  it("RR-084: rejects an enriched explicit non-requested product class", () => {
+    const result = validateProductAgainstRequirements(
+      buildProduct({
+        category: "robot vacuum",
+        estimated_price_range: "$3,222",
+        name: "KitchenAid KUIX515SPA 15 Inch Built-In Undercounter ...",
+        product_page_url:
+          "https://www.ajmadison.com/cgi-bin/ajmadison/KUIX515SPA.html",
+        pros: [
+          "15 Inch Built-In Undercounter Clear Ice Maker with 25 lbs. Ice Storage Capacity.",
+        ],
+        why_recommended:
+          "Found as a broader product candidate from Google search results.",
+        metadata: {
+          title: {
+            confidence: "Medium",
+            sourceType: "open_graph",
+            sourceUrl:
+              "https://www.ajmadison.com/cgi-bin/ajmadison/KUIX515SPA.html",
+            value:
+              "KitchenAid KUIX515SPA 15 Inch Built-In Undercounter Clear Ice Maker with 25 lbs. Ice Storage Capacity",
+            verifiedAt: "2026-07-14T04:38:37.495Z",
+          },
+        },
+      }),
+      { category: "robot vacuum" },
+    );
+
+    assert.equal(result.isMatch, false);
+    assert.ok(
+      result.missingRequirements.some((item) => /Category: robot vacuum/i.test(item)),
+      "an explicit conflicting product class must hard-fail Category",
+    );
+    assert.ok(
+      !result.unknownRequirements.some((item) => /Category: robot vacuum/i.test(item)),
+      "an enriched explicit class is not merely unverified",
+    );
+    assert.match(result.disqualifiedReason || "", /Misses required filter: Category:/);
+  });
+
   it("ignores URL query text and image paths when classifying product type", () => {
     const result = validateProductAgainstRequirements(
       buildProduct({

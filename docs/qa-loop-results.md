@@ -6708,3 +6708,41 @@ live requests: 4 dispatched / 4 usable / 2 intentionally unspent
 physical Serper attempts: 227 (42 + 54 + 66 + 65)
 retries/fallbacks/guard trips: 0 / 0 / 0
 ```
+
+## 🟧 Codex QA Update — 2026-07-14 (Post-C4 deterministic safety repair)
+
+**Verdict: RR-060, RR-061, AND RR-084 FIXED OFFLINE; C4 RECALL FAILURE
+UNCHANGED.**
+
+- Fail-first ran the actual trust seams before implementation: the captured
+  `Q10-S5` image was accepted, the enriched manufacturer/Amazon `18P03` pair
+  occupied exact and near slots together, and the enriched KitchenAid ice
+  maker produced Category unknown. The focused run passed 102/105 with exactly
+  those three failures.
+- RR-061 now removes compatible mixed/split filename model claims and rejects
+  any claim left foreign. The captured image is rejected for `s5`; neutral,
+  opaque, dimensioned, same-model, family, and prior regression controls pass.
+- RR-060 now deduplicates the ordered near pool against selected exact cards
+  and itself under the unchanged `areSameExactModelProduct()` predicate. The
+  captured Amazon `18P03` card is traced as `duplicate_identity_collapsed` by
+  the manufacturer card; the Lowes card without `18P03` proof is untouched.
+- RR-084 now treats source-derived identity matching a registered different
+  product class as positive category-conflict evidence. The KitchenAid card
+  hard-fails Category; explicit toaster-oven/office-chair controls generalize
+  the rule, while a sparse valid robot model containing `Long Range` remains
+  non-rejected.
+- An offline replay of the saved C4 cards confirmed all three outcomes. No
+  fixture was modified or staged. No live Serper/OpenAI call ran; `.env.local`,
+  constraint allocation, pinned planning, and normalization recovery states
+  are unchanged.
+
+```text
+fail-first focused: 102/105 (exactly 3 intended failures)
+focused final: 132/132 across 11 suites
+npm test: 911/911 across 127 suites
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red flags
+live Serper/OpenAI calls: 0
+```

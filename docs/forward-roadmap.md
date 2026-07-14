@@ -424,6 +424,22 @@ fails both recall and safety gates; recovery remains default-off, C5 cannot
 unblock R7A, and no threshold is weakened. The next action requires separate
 approval for deterministic diagnosis/repair, not another live window.
 
+**Post-C4 deterministic safety repair (2026-07-14; zero live):** Taylor
+approved the three-defect repair after the failed gate. Fail-first reproduced
+exactly RR-061's shared-token image escape, RR-060's exact/near presentation-
+stream dedupe bypass, and RR-084's enriched explicit-class near-card escape.
+The image resolver now evaluates every filename model claim; final selection
+deduplicates the ordered near pool against selected exact cards and itself
+under the unchanged exact-model predicate; and the shared type classifier
+hard-vetoes a positively recognized different product class while leaving
+sparse requested-type identities unverified rather than wrong. Saved C4 cards
+replay with `Q10-S5` rejected for foreign `s5`, the Amazon `18P03` near card
+collapsed, and the KitchenAid ice maker hard-failing Category. Focused final
+tests 132/132; full suite 911/911 across 127 suites; typecheck/build/eval pass;
+lint 0 errors/3 pre-existing warnings. RR-060/RR-061/RR-084 are Fixed. This
+does not change C4's failed recall result: normalization recovery remains
+default-off, C5 cannot unblock R7A, and another live window is not authorized.
+
 **C1 result (M3, four usable readiness fixtures):** the tested pre-AI pool is a
 Serper `product_discovery` candidate that normalized, survived raw dedupe and
 cheap prefilter; a later `candidate_merge` loss still counts as pool-present.

@@ -232,4 +232,32 @@ describe("classifyProductTypeMatch (shared wrong-product-type verdict)", () => {
       );
     }
   });
+
+  it("rejects any positively recognized different product class while preserving sparse identities", () => {
+    const explicitConflicts = [
+      "KitchenAid KUIX515SPA Built-In Undercounter Clear Ice Maker",
+      "Breville Smart Oven Air Fryer Toaster Oven",
+      "HON Ignition 2.0 Ergonomic Mesh Office Chair",
+    ];
+
+    for (const evidenceText of explicitConflicts) {
+      const verdict = classifyProductTypeMatch({
+        evidenceText,
+        identityText: evidenceText,
+        requestedCategory: "robot vacuum",
+      });
+
+      assert.equal(verdict.canBeExactMatch, false, evidenceText);
+      assert.equal(verdict.status, "wrong_type", evidenceText);
+    }
+
+    const sparse = classifyProductTypeMatch({
+      evidenceText: "Roborock S7 MaxV Ultra Long Range",
+      identityText: "Roborock S7 MaxV Ultra Long Range",
+      requestedCategory: "robot vacuum",
+    });
+
+    assert.equal(sparse.canBeExactMatch, true);
+    assert.equal(sparse.status, "ok");
+  });
 });

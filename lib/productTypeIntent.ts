@@ -17,6 +17,7 @@ type ProductTypeRule = {
   allowed: RegExp;
   blocked: RegExp;
   complements?: RegExp;
+  conflictingIdentity?: RegExp;
   exclusiveBlocked?: RegExp;
   exclusiveComplements?: RegExp;
   id: string;
@@ -50,7 +51,20 @@ const STANDALONE_ROBOT_VACUUM_DOCK_PATTERN = new RegExp(
   "i",
 );
 
+const NEVER_REQUESTED_PRODUCT_TYPE = /\b\B/;
+
 const PRODUCT_TYPE_RULES: ProductTypeRule[] = [
+  {
+    // Identity-only class used by the cross-rule conflict check below. Keeping
+    // it out of request matching preserves existing "refrigerator with ice
+    // maker" and feature-query behavior while still recognizing a standalone
+    // enriched ice-maker title as positive non-requested product-type evidence.
+    id: "ice_maker",
+    requested: NEVER_REQUESTED_PRODUCT_TYPE,
+    allowed: /\b(?:ice maker|ice machine)\b/i,
+    blocked: NEVER_REQUESTED_PRODUCT_TYPE,
+    conflictingIdentity: /\b(?:ice maker|ice machine)\b/i,
+  },
   {
     id: "household_floor_cleaner",
     requested: HOUSEHOLD_FLOOR_CLEANER_PATTERN,
@@ -312,6 +326,23 @@ export function classifyProductTypeIntent(input: {
       reason: `Candidate matches requested product type ${rule.id}.`,
       requestedType: rule.id,
       status: "exact",
+    };
+  }
+
+  const conflictingRegisteredType = PRODUCT_TYPE_RULES.find(
+    (candidateRule) =>
+      candidateRule.id !== rule.id &&
+      (candidateRule.conflictingIdentity || candidateRule.requested).test(
+        candidateIdentityText,
+      ),
+  );
+
+  if (conflictingRegisteredType) {
+    return {
+      canBeExactMatch: false,
+      reason: `Candidate explicitly identifies product type ${conflictingRegisteredType.id}, not requested ${rule.id}.`,
+      requestedType: rule.id,
+      status: "irrelevant",
     };
   }
 

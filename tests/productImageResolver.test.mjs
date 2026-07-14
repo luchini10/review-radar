@@ -573,6 +573,34 @@ describe("RR-061 page-image provenance and split family identity", () => {
     }
   });
 
+  it("rejects a compound filename when one shared model token masks a foreign sibling token", () => {
+    // C4 constrained run B1: Q10 matched the target, but the foreign S5 suffix
+    // was never evaluated, so S5 artwork rendered on the Q10 X5+ card.
+    const result = validateProductImageCandidate(
+      {
+        contextVerified: true,
+        evidenceText:
+          "Roborock Q10 X5+ Robot Vacuum and Mop with Auto-Empty Dock product image",
+        source: "page_image",
+        url: "https://us.roborock.com/cdn/shop/files/Q10-S5_140x.jpg?v=1757936383",
+      },
+      {
+        brand: "Roborock",
+        category: "Robot vacuum",
+        pageUrl: "https://us.roborock.com/products/roborock-q10-x5-plus",
+        productName:
+          "Roborock Q10 X5+ Robot Vacuum and Mop with Auto-Empty Dock",
+      },
+    );
+
+    assert.equal(result.accepted, false);
+
+    if (!result.accepted) {
+      assert.match(result.rejection.reason, /different model/);
+      assert.match(result.rejection.reason, /s5/i);
+    }
+  });
+
   it("distinguishes split family models from a family-adjacent size", () => {
     const wrongGeneration = validateProductImageCandidate(
       {

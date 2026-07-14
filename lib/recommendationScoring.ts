@@ -1051,6 +1051,10 @@ type ExactSelectionResult = {
   diagnostics: Map<string, ExactSelectionDiagnostic>;
 };
 
+type CrossStreamDuplicateDiagnostic = {
+  collapsedBy: string;
+};
+
 function selectionRequestText(input: RecommendationApiRequest) {
   return [
     input.query,
@@ -1234,6 +1238,33 @@ function selectRankedExactMatches(
   };
 }
 
+function dedupeNearCandidatesAgainstDisplayedExact(
+  products: ProductRecommendation[],
+  selectedExact: ProductRecommendation[],
+) {
+  const unique: ProductRecommendation[] = [];
+  const diagnostics = new Map<string, CrossStreamDuplicateDiagnostic>();
+
+  // RR-060: exact and near candidates are separate presentation streams, not
+  // separate identity domains. Once an exact representation wins, the same
+  // enriched manufacturer model cannot consume a near slot; near-vs-near
+  // duplicates likewise compete for one slot in their existing ranked order.
+  for (const product of products) {
+    const duplicateWinner = [...selectedExact, ...unique].find((candidate) =>
+      areSameExactModelProduct(candidate, product),
+    );
+
+    if (duplicateWinner) {
+      diagnostics.set(product.name, { collapsedBy: duplicateWinner.name });
+      continue;
+    }
+
+    unique.push(product);
+  }
+
+  return { diagnostics, products: unique };
+}
+
 function canonicalCount(products: ProductRecommendation[]) {
   return new Set(products.map(canonicalId)).size;
 }
@@ -1307,6 +1338,10 @@ function buildFinalSelectionTrace(
   selectedNear: ProductRecommendation[],
   input: RecommendationApiRequest,
   exactSelectionDiagnostics: Map<string, ExactSelectionDiagnostic>,
+  crossStreamDuplicateDiagnostics: Map<
+    string,
+    CrossStreamDuplicateDiagnostic
+  >,
 ): FinalSelectionTraceEntry[] {
   const exactScoredNames = new Set(exactScored.map((p) => p.name));
   const nearCandidatesAllNames = new Set(nearCandidatesAll.map((p) => p.name));
@@ -1348,8 +1383,12 @@ function buildFinalSelectionTrace(
 
     // Determine why the candidate was or was not selected.
     let decisionReason: FinalSelectionDecisionReason;
+    const crossStreamDuplicate = crossStreamDuplicateDiagnostics.get(name);
+
     if (selected) {
       decisionReason = "selected";
+    } else if (crossStreamDuplicate) {
+      decisionReason = "duplicate_identity_collapsed";
     } else if (stream === "exactScored") {
       const selectionDiagnostic = exactSelectionDiagnostics.get(name);
       decisionReason = selectionDiagnostic?.reason ?? "missing_trace_reason";
@@ -1375,7 +1414,10 @@ function buildFinalSelectionTrace(
     }
 
     const selectionDiagnostic = exactSelectionDiagnostics.get(name);
-    const collapsedBy = selectionDiagnostic?.collapsedBy ?? null;
+    const collapsedBy =
+      selectionDiagnostic?.collapsedBy ??
+      crossStreamDuplicate?.collapsedBy ??
+      null;
 
     // Citation type breakdown.
     const citTypes = (product.citations ?? []).map(
@@ -1488,9 +1530,13 @@ function scoreAndSelectImpl(
     .map(withCloseMatch);
   const exactSelection = selectRankedExactMatches(reliableExact, input);
   const selectedExact = exactSelection.products;
+  const nearSelection = dedupeNearCandidatesAgainstDisplayedExact(
+    [...reliabilityNear, ...nearScored],
+    selectedExact,
+  );
   const selectedNear =
     selectedExact.length < MAX_EXACT_MATCHES
-      ? [...reliabilityNear, ...nearScored].slice(0, MAX_NEAR_MATCHES)
+      ? nearSelection.products.slice(0, MAX_NEAR_MATCHES)
       : [];
   const knownNames = [...exactScored, ...nearScored].map((product) => product.name);
   const selectedResult = ensureFinalAdviceUsesDisplayedProducts(
@@ -1540,6 +1586,7 @@ function scoreAndSelectImpl(
     selectedNear,
     input,
     exactSelection.diagnostics,
+    nearSelection.diagnostics,
   );
 
   return { result: selectedResult, finalSelectionTrace };

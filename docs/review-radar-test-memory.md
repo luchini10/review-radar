@@ -1719,3 +1719,27 @@ a known conservative undercount.
   against structured title/pros/cons/citation titles, not only truncated display
   names. Do not expand a ratified benchmark post hoc to catch an observed class;
   record non-enumerated manual safety findings separately.
+
+## Post-C4 deterministic safety-repair memory — 2026-07-14
+
+- Image identity is claim-set based. Never let one compatible filename token
+  return before foreign mixed/split claims are evaluated. Remove compatible
+  claims, then veto if any genuine foreign claim remains; keep the artifact,
+  neutral, dimension, model-less, and same-model preservation wall.
+- Exact and near are presentation streams, not identity domains. Final dedupe
+  must compare an ordered near candidate with selected exact winners and prior
+  near winners under `areSameExactModelProduct()`. Do not widen identity to fix
+  a selection bypass; trace the loser and winning representation.
+- `needs_verification` is safe only while source identity is sparse. If enriched
+  identity positively matches a different registered product class and does
+  not prove the requested class, Category is a hard fail. Use identity/title
+  evidence, not assigned category or query echo. Keep identity-only classes out
+  of request matching when they can also be requested features.
+- C4 fixture replay: Amazon `18P03` duplicate removed; `Q10-S5` rejected for
+  foreign `s5`; KitchenAid ice maker hard-fails robot-vacuum Category. The
+  unproven Lowes Garage Pro card remains distinct, and sparse `Roborock S7 MaxV
+  Ultra Long Range` remains non-rejected.
+- Verification: fail-first 102/105 with exactly three intended failures;
+  focused final 132/132; full 911/911 across 127 suites; typecheck/build/eval
+  pass; lint 0 errors/3 pre-existing warnings. Zero live calls; flags and
+  `.env.local` unchanged.
