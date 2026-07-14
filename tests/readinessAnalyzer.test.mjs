@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   aggregateReadinessAnalyses,
+  analyzeProductPageResolutionCandidate,
   analyzeReadinessFixture,
 } from "../scripts/analyze-readiness-fixtures.mjs";
 
@@ -285,5 +286,146 @@ describe("R7 readiness fixture analyzer", () => {
     assert.deepEqual(analysis.wrongTypeFinalCards, [
       "Shark PowerPro Bagless Cordless HEPA Filter Portable ...",
     ]);
+  });
+
+  it("keeps provider identity leads non-renderable until a strict matching product page is captured", () => {
+    const input = fixture();
+    const rawRidgid =
+      input.debug.stageFunnel.searchLedger.candidateLineage.candidates[0];
+    rawRidgid.name = "RIDGID 12 Gallon NXT Wet/Dry Shop Vacuum";
+    rawRidgid.normalizationRecovery.originalUrl =
+      "https://www.google.com/search?ibp=oshop&udm=28&prds=catalogid:12345,localAnnotatedOfferId:67890";
+    input.debug.stageFunnel.searchLedger.candidateLineage.candidates.push(
+      candidate({
+        candidateId: "raw-q-1-04",
+        name: "Shop-Vac 8 Gallon Wet/Dry Vacuum SV5430116",
+        source: "raw_serper_result",
+        normalized: false,
+        firstLoss: {
+          stage: "lost_in_normalization",
+          subreason: "search_or_listing_url",
+        },
+        normalizationRecovery: {
+          mode: "enabled",
+          outcome: "blocked",
+          originalRejectionReason: "search_or_listing_url",
+          originalUrl:
+            "https://www.google.com/search?ibp=oshop&udm=28&prds=localAnnotatedOfferId:67890,catalogid:54321",
+          proposedUrl: null,
+          blocker: "no_serper_supplied_merchant_url",
+        },
+      }),
+    );
+    input.debug.stageFunnel.searchLedger.dispatch.attempts[1].results = [
+      {
+        title: "Karcher 12 Gallon NXT Wet Dry Shop Vacuum",
+        host: "homedepot.com",
+        urlPaths: ["/p/Karcher-12-Gallon-NXT-Wet-Dry-Shop-Vacuum/111111"],
+      },
+      {
+        title: "RIDGID 12 Gallon NXT Wet/Dry Shop Vacuum",
+        host: "homedepot.com",
+        urlPaths: ["/p/RIDGID-12-Gallon-NXT-Wet-Dry-Shop-Vacuum/222222"],
+      },
+    ];
+
+    const analysis = analyzeReadinessFixture(input);
+    const ridgid = analysis.identityResolution.leaders.find((leader) =>
+      leader.leader.startsWith("ridgid"),
+    );
+
+    assert.equal(ridgid.qualifiedIdentityLeadPresence, true);
+    assert.equal(analysis.identityResolution.qualifiedProviderIdentityCount, 2);
+    assert.equal(ridgid.capturedDiscoveryResolutionPresence, false);
+    assert.equal(
+      ridgid.capturedAnyStageResolutionPresence,
+      true,
+      JSON.stringify(ridgid, null, 2),
+    );
+    assert.equal(ridgid.capturedMaterializedPresence, true);
+    assert.deepEqual(ridgid.capturedSafePageUrls, [
+      "https://homedepot.com/p/RIDGID-12-Gallon-NXT-Wet-Dry-Shop-Vacuum/222222",
+    ]);
+    assert.equal(
+      analysis.identityResolution
+        .existingSelectorPotentialIdentityGapLeadCount > 0,
+      true,
+    );
+  });
+
+  it("flags a structured shopping accessory identity instead of counting it as a safe product lead", () => {
+    const input = fixture();
+    input.debug.stageFunnel.searchLedger.dispatch.attempts[0].results.push({
+      title: "WORKSHOP Wet/Dry Vacs Blower Nozzle Vacuum Attachment WS25006A",
+      host: "google.com",
+      urlPaths: ["/search", "/shopping"],
+    });
+    input.debug.stageFunnel.searchLedger.candidateLineage.candidates.push(
+      candidate({
+        candidateId: "raw-q-1-03",
+        name: "WORKSHOP Wet/Dry Vacs Blower Nozzle Vacuum Attachment WS25006A",
+        source: "raw_serper_result",
+        normalized: false,
+        firstLoss: {
+          stage: "lost_in_normalization",
+          subreason: "search_or_listing_url",
+        },
+        normalizationRecovery: {
+          mode: "enabled",
+          outcome: "blocked",
+          originalRejectionReason: "search_or_listing_url",
+          originalUrl:
+            "https://www.google.com/search?ibp=oshop&udm=28&prds=catalogid:98765,localAnnotatedOfferId:43210",
+          proposedUrl: null,
+          blocker: "no_serper_supplied_merchant_url",
+        },
+      }),
+    );
+
+    const analysis = analyzeReadinessFixture(input);
+    const workshop = analysis.identityResolution.leaders.find(
+      (leader) => leader.leader === "workshop",
+    );
+
+    assert.equal(workshop.qualifiedIdentityLeadPresence, false);
+    assert.equal(workshop.riskyIdentityLeadPresence, true);
+    assert.deepEqual(workshop.riskyIdentityLeadNames, [
+      "WORKSHOP Wet/Dry Vacs Blower Nozzle Vacuum Attachment WS25006A",
+    ]);
+  });
+
+  it("records when the current page selector accepts a wrong-brand page that strict identity rejects", () => {
+    const result = analyzeProductPageResolutionCandidate({
+      category: "shop vac",
+      leadName: "RIDGID 12 Gallon Wet/Dry Shop Vacuum",
+      pageTitle: "Karcher 12 Gallon Wet Dry Shop Vacuum",
+      pageUrl:
+        "https://homedepot.com/p/Karcher-12-Gallon-Wet-Dry-Shop-Vacuum/111111",
+    });
+
+    assert.equal(result.existingSelectorAccepted, true);
+    assert.equal(result.strictResolutionAccepted, false);
+    assert.equal(result.rejectionReason, "exact_identity_mismatch");
+  });
+
+  it("keeps C5 blocked when the identity ceiling passes but captured safe resolution and selector safety do not", () => {
+    const analysis = analyzeReadinessFixture(fixture());
+    analysis.identityResolution.recall.identityLeadUpperBound.covered = 6;
+    analysis.identityResolution.recall.capturedMaterialized.covered = 2;
+    analysis.identityResolution.existingSelectorPotentialIdentityGapLeadCount = 1;
+
+    const aggregate = aggregateReadinessAnalyses([
+      structuredClone(analysis),
+      structuredClone(analysis),
+      structuredClone(analysis),
+    ]);
+
+    assert.equal(aggregate.c5Decision.identityLeadUpperBoundMean, 6);
+    assert.equal(aggregate.c5Decision.capturedMaterializedMean, 2);
+    assert.equal(aggregate.c5Decision.target, 5);
+    assert.equal(
+      aggregate.c5Decision.verdict,
+      "repair_product_page_identity_before_resolution_probe",
+    );
   });
 });

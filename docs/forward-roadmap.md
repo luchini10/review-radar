@@ -440,6 +440,37 @@ lint 0 errors/3 pre-existing warnings. RR-060/RR-061/RR-084 are Fixed. This
 does not change C4's failed recall result: normalization recovery remains
 default-off, C5 cannot unblock R7A, and another live window is not authorized.
 
+**C5 feasibility result (2026-07-14; zero live):** The audit rejected an
+immediate resolver build. C4's `7/7` path-supplemented raw-presence claim was
+not type-safe: runs A1/A3 credited `Workshop` from another product's URL path,
+and A2 credited a standalone WORKSHOP blower-nozzle attachment. Under the C5
+contract—a structured provider product identity, a specific source title, and
+the shared product-type gate—the conservative identity-lead upper bound is
+`6/7` in all three broad runs. That still exceeds the `5/7` discovery
+prerequisite, so Serper discovery remains viable, but it is not a renderable
+pool.
+
+Safe pages already present elsewhere in the saved request data materialize
+only `2/7`, `2/7`, and `4/7` leaders (mean `2.67/7`). The ledgers omit full raw
+provider fields and contain no targeted resolution lookup for identities lost
+at normalization, so the missing materialization rate is NotScored rather than
+assumed failure. More importantly, the existing product-page selector accepts
+a deterministic wrong-brand page when category/spec words overlap, and the
+shared type gate admits three standalone filter/nozzle identities. Across the
+three saved fixtures, 143 qualified lead rows have at least one captured page
+that demonstrates the selector's potential identity mismatch; this is a
+diagnostic pairing count, not 143 observed displayed links. RR-085/RR-086/
+RR-087 record the measurement, page-identity, and complement-type gaps.
+
+Therefore C5's verdict is
+`repair_product_page_identity_before_resolution_probe`. R7A remains blocked,
+normalization recovery remains default-off, and no new live window is
+authorized. The next separately approved phase should repair the shared page
+identity and product-type trust boundaries and canonicalize the corrected raw
+metric with fail-first preservation tests. Only then is a narrowly budgeted
+resolution-feasibility probe decision-useful; only a passing probe can justify
+a later default-off implementation.
+
 **C1 result (M3, four usable readiness fixtures):** the tested pre-AI pool is a
 Serper `product_discovery` candidate that normalized, survived raw dedupe and
 cheap prefilter; a later `candidate_merge` loss still counts as pool-present.

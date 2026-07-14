@@ -1743,3 +1743,30 @@ a known conservative undercount.
   focused final 132/132; full 911/911 across 127 suites; typecheck/build/eval
   pass; lint 0 errors/3 pre-existing warnings. Zero live calls; flags and
   `.env.local` unchanged.
+
+## Corrective C5 identity-resolution feasibility memory — 2026-07-14
+
+- Raw path words are corroboration, not product identity. A leader is not
+  provider-present merely because another product's URL contains the leader
+  word, and an accessory bearing the brand does not satisfy the requested
+  product type. Preserve superseded measurements visibly when correcting them.
+- A structured provider product ID plus source title is an **identity lead**,
+  never a product card. Materialization requires a safe product page, positive
+  exact identity, requested-type compatibility, product eligibility, and
+  cheap-prefilter survival. Never render or cite the Google wrapper itself.
+- C4 broad correction: type-safe identity-lead upper bound `6/7, 6/7, 6/7`;
+  safe pages already captured anywhere in-request materialize `2/7, 2/7,
+  4/7`. Missing targeted resolution is NotScored because the saved digests
+  omit full raw fields and no lookup ran.
+- `getProductPageLink()` is not a safe resolver trust boundary by itself.
+  Shared category/spec words can admit a wrong-brand page. Repair positive page
+  identity before measuring resolution. Keep diagnostic combinatorial pairings
+  distinct from observed attached links.
+- Standalone complements must be handled in the existing shared product-type
+  machinery, not a second classifier. Preserve complete products mentioning
+  included accessories and legitimate bundles.
+- C5 verdict: repair page identity and complement type gates, then request a
+  small live resolution-feasibility probe; build a default-off resolver only
+  if that probe clears the frozen gate. Zero live calls and behavior changes in
+  C5. Focused 11/11; full 915/915; typecheck/build/eval pass; lint 0 errors/3
+  pre-existing warnings.

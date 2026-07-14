@@ -129,7 +129,13 @@ non-canonical observations under `leaders-v2026-07a`. Taylor delegated the
 broad-list judgment for the `leaders-v2026-07b` re-freeze; the later whole-token
 correction for RR-082 does not change the historical six values.
 
-### C4 canonical observation (M2, 2026-07-14, incomplete by safety rule)
+### C4 observation (M2, 2026-07-14, incomplete by safety rule)
+
+For the broad runs, the `Raw presence` column below is preserved as the value
+reported at C4 closeout, but C5 found that its path-supplemented matcher was not
+product-type safe. The broad values are superseded by the C5 correction
+immediately below and must not be used as the canonical provider-identity
+baseline. C5 did not re-score the single constrained run's raw identities.
 
 | Run | Raw presence | Normalized pool | Flag-on final |
 |---|---:|---:|---:|
@@ -143,12 +149,45 @@ correction for RR-082 does not change the historical six values.
 All four fixtures are exact-contract, cache-cold, commit-pinned, balanced, and
 below the 120-attempt ceiling. The first constrained run rendered a foreign-
 model image and triggered the mandatory RR-061 stop, so B2/B3 were never
-dispatched and constrained stability is NotScored. The complete broad shape is
-the first canonical `07c` observation: it fails both frozen floors without any
-rounding or threshold revision. Same-response flag-off/flag-on normalized
-coverage was identical and normalization recovery added no leader coverage.
-Raw presence shows that Serper found every leader in every run; normalization
-and later selection discarded them.
+dispatched and constrained stability is NotScored. The complete broad shape
+still fails both frozen floors without any rounding or threshold revision.
+Same-response flag-off/flag-on normalized coverage was identical and
+normalization recovery added no leader coverage. C5 later proved that the
+`7/7` raw-presence interpretation overstated what Serper found as type-safe
+product identities.
+
+### C5 correction and feasibility bound (M3 over C4 fixtures, 2026-07-14)
+
+C4's path-supplemented raw matcher credited `Workshop` from another product's
+Amazon path in A1/A3 and credited `WORKSHOP Wet/Dry Vacs Blower Nozzle Vacuum
+Attachment WS25006A` in A2. Neither is a safe WORKSHOP shop-vac identity. The
+corrected measure requires a structured Google Shopping product identifier, a
+specific source title, and product-type eligibility. It remains an upper bound:
+an identity lead is non-renderable until it resolves to a product page with
+exact-model/type compatibility and survives the existing cheap prefilter.
+
+| Run | Type-safe identity-lead upper bound | Safe materialization captured anywhere in request |
+|---|---:|---:|
+| shop-vac c4-07c-run1 | 6/7 | 2/7 |
+| shop-vac c4-07c-run2 | 6/7 | 2/7 |
+| shop-vac c4-07c-run3 | 6/7 | 4/7 |
+| **Shape A mean** | **6.0/7** | **2.67/7** |
+
+The `6/7` ceiling clears the `5/7` discovery prerequisite, so the provider
+identity stream remains worth investigating. The `2.67/7` captured result does
+not prove a resolver would fail: the saved digests omit full raw provider
+fields and did not dispatch targeted resolution lookups for discarded
+identities. It instead proves that a new lookup is necessary to answer the
+question.
+
+That lookup is not yet safe to run. The current product-page selector accepts
+a deterministic wrong-brand page when same-category/spec words overlap, and
+the current type gate accepts three standalone complement identities. C5 found
+143 qualified lead rows with at least one captured page demonstrating the
+selector's potential mismatch; those are diagnostic possible pairings, not
+143 observed attachments. RR-085/RR-086/RR-087 must be repaired before a live
+resolution-feasibility probe. The frozen `5/7` pool and `3/7` final floors are
+unchanged.
 
 ## 4. v1.0 targets (amended)
 

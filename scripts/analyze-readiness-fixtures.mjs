@@ -7,7 +7,11 @@ import {
   coversLeaderHistorical07b,
 } from "./goldBenchmark.mjs";
 import { areSameExactModelProduct } from "../lib/productIdentity.ts";
+import { classifyProductEligibility } from "../lib/productEligibility.ts";
+import { getProductPageLink } from "../lib/productPageUrl.ts";
 import { classifyProductTypeMatch } from "../lib/productTypeMatch.ts";
+import { stripLeadingSourceOrRetailerLabel } from "../lib/brandMatching.ts";
+import { cheapPreFilterRawCandidates } from "../lib/search/serper.ts";
 
 const leaderLabel = (leader) =>
   [leader.brand, ...(leader.lines || [])].filter(Boolean).join(" / ");
@@ -69,6 +73,280 @@ function sourceEvidenceText(name, urlsOrPaths) {
 
 function normalizedWords(value) {
   return (value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function firstIdentityWord(value) {
+  return (
+    normalizedWords(stripLeadingSourceOrRetailerLabel(value || ""))
+      .split(" ")
+      .find(Boolean) || ""
+  );
+}
+
+function sharedWordCount(first, second) {
+  const firstWords = new Set(
+    normalizedWords(first)
+      .split(" ")
+      .filter(
+        (word) =>
+          word.length > 2 && !["and", "for", "the", "with"].includes(word),
+      ),
+  );
+  const secondWords = new Set(
+    normalizedWords(second)
+      .split(" ")
+      .filter(
+        (word) =>
+          word.length > 2 && !["and", "for", "the", "with"].includes(word),
+      ),
+  );
+
+  return [...firstWords].filter((word) => secondWords.has(word)).length;
+}
+
+function structuredShoppingIdentity(value) {
+  if (!value) return null;
+
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase().replace(/^www\./, "");
+    const identifiers = url.searchParams.get("prds") || "";
+    const match =
+      identifiers.match(/(?:catalogid|productid|pid):([a-z0-9_-]+)/i) ||
+      identifiers.match(/localannotatedofferid:([a-z0-9_-]+)/i);
+
+    if (
+      !(host === "google.com" || host.endsWith(".google.com")) ||
+      url.pathname.toLowerCase() !== "/search" ||
+      url.searchParams.get("ibp") !== "oshop" ||
+      url.searchParams.get("udm") !== "28" ||
+      !match
+    ) {
+      return null;
+    }
+
+    return {
+      id: match[1],
+      provider: "google_shopping",
+    };
+  } catch {
+    return null;
+  }
+}
+
+const complementHeadPattern =
+  /\b(?:accessor(?:y|ies)|adapter|attachment|bag|battery|blade|brush|cable|case|charger|cover|filter|hose|liner|mount|nozzle|pad|part|protector|replacement|sleeve|stand)\b/i;
+const includedComplementPattern =
+  /\b(?:with|includes?|including|comes\s+with|plus)\b.{0,80}\b(?:accessor(?:y|ies)|adapter|attachment|bag|battery|blade|brush|cable|case|charger|cover|filter|hose|liner|mount|nozzle|pad|part|protector|sleeve|stand)\b/i;
+
+function standaloneComplementRisk(name) {
+  return (
+    complementHeadPattern.test(name) && !includedComplementPattern.test(name)
+  );
+}
+
+function identityLeadDecision(record, category) {
+  const providerIdentity = structuredShoppingIdentity(
+    record.normalizationRecovery?.originalUrl,
+  );
+  if (!providerIdentity) {
+    return { qualified: false, reason: "no_structured_provider_identity" };
+  }
+
+  const eligibility = classifyProductEligibility({
+    category,
+    name: record.name,
+    productName: record.name,
+    sourceTitle: record.name,
+    sourceType: "serper",
+  });
+  if (
+    ["evidence_only", "listing_or_search", "non_product", "unknown"].includes(
+      eligibility.status,
+    )
+  ) {
+    return { qualified: false, reason: `identity_${eligibility.status}` };
+  }
+
+  const typeVerdict = classifyProductTypeMatch({
+    allowedCheckText: record.name,
+    evidenceText: sourceEvidenceText(
+      record.name,
+      record.sourceIdentityPaths || record.productUrl,
+    ),
+    identityText: record.name,
+    requestedCategory: category,
+  });
+  if (!typeVerdict.canBeExactMatch) {
+    return { qualified: false, reason: `identity_type_${typeVerdict.status}` };
+  }
+
+  if (standaloneComplementRisk(record.name)) {
+    return {
+      qualified: false,
+      reason: "standalone_complement_risk",
+      trustGateGap: typeVerdict.canBeExactMatch,
+    };
+  }
+
+  return {
+    providerIdentity,
+    qualified: true,
+    reason: null,
+  };
+}
+
+function productForIdentity(name, category, url = "") {
+  const productEligibility = classifyProductEligibility({
+    category,
+    name,
+    productName: name,
+    sourceTitle: name,
+    sourceType: "serper",
+    url,
+  });
+
+  return {
+    name,
+    category,
+    product_page_url: url,
+    productEligibility,
+    metadata: {
+      title: { value: name },
+    },
+  };
+}
+
+export function analyzeProductPageResolutionCandidate({
+  category,
+  leadName,
+  pageTitle,
+  pageUrl,
+}) {
+  const pageProduct = productForIdentity(pageTitle, category, pageUrl);
+  const typeVerdict = classifyProductTypeMatch({
+    allowedCheckText: pageTitle,
+    evidenceText: sourceEvidenceText(pageTitle, pageUrl),
+    identityText: pageTitle,
+    requestedCategory: category,
+  });
+  const existingSelectorAccepted = Boolean(
+    getProductPageLink({
+      name: leadName,
+      category,
+      product_page_url: "",
+      citations: [
+        {
+          title: pageTitle,
+          url: pageUrl,
+          what_it_supports: "Captured provider result.",
+        },
+      ],
+    }),
+  );
+  const exactIdentity = areSameExactModelProduct(
+    productForIdentity(leadName, category),
+    pageProduct,
+  );
+
+  let rejectionReason = null;
+  if (!pageProduct.productEligibility.canRenderAsProductCard) {
+    rejectionReason = `page_${pageProduct.productEligibility.status}`;
+  } else if (!typeVerdict.canBeExactMatch) {
+    rejectionReason = `page_type_${typeVerdict.status}`;
+  } else if (!existingSelectorAccepted) {
+    rejectionReason = "product_page_selector_rejected";
+  } else if (!exactIdentity) {
+    rejectionReason = "exact_identity_mismatch";
+  }
+
+  return {
+    existingSelectorAccepted,
+    exactIdentity,
+    pageEligibility: pageProduct.productEligibility.status,
+    pageTypeStatus: typeVerdict.status,
+    rejectionReason,
+    strictResolutionAccepted: rejectionReason === null,
+  };
+}
+
+function pageUrl(host, path) {
+  if (!host || !path) return null;
+  if (/^https?:\/\//i.test(path)) return path;
+  if (!path.startsWith("/")) return null;
+
+  const normalizedHost = host.toLowerCase().replace(/^www\./, "");
+  if (!normalizedHost || normalizedHost.endsWith("google.com")) return null;
+  return `https://${normalizedHost}${path}`;
+}
+
+function capturedPageObservations(attempts, productDiscoveryQueryIds) {
+  const unique = new Map();
+
+  for (const attempt of attempts) {
+    for (const result of attempt.results || []) {
+      for (const path of result.urlPaths || []) {
+        const url = pageUrl(result.host, path);
+        if (!url) continue;
+        const key = `${normalizedWords(result.title)}|${url}`;
+        if (unique.has(key)) continue;
+        unique.set(key, {
+          discovery: productDiscoveryQueryIds.has(attempt.queryId),
+          price: result.price ?? null,
+          title: result.title || "",
+          url,
+        });
+      }
+    }
+  }
+
+  return [...unique.values()];
+}
+
+function resolvedCandidateSurvivesPrefilter({
+  category,
+  leadName,
+  page,
+  request,
+}) {
+  const candidate = {
+    id: `c5-${normalizedWords(leadName)}-${normalizedWords(page.url)}`,
+    name: leadName,
+    brand: null,
+    category,
+    productUrl: page.url,
+    imageUrl: null,
+    retailer: new URL(page.url).hostname,
+    price: page.price,
+    rating: null,
+    reviewCount: null,
+    availableColors: [],
+    dimensions: {
+      width: null,
+      depth: null,
+      height: null,
+      unit: null,
+    },
+    keySpecs: [],
+    evidenceSources: [
+      {
+        title: page.title,
+        url: page.url,
+        snippet: "",
+        snippetProvenance: "source-derived",
+      },
+    ],
+    requirementCheck: {
+      exactMatch: false,
+      passed: [],
+      failed: [],
+      unknown: [],
+    },
+  };
+
+  return (
+    cheapPreFilterRawCandidates([candidate], request, 1).candidates.length === 1
+  );
 }
 
 function finalProductEvidenceText(product) {
@@ -373,6 +651,198 @@ function analyzeWithMatcher({
   };
 }
 
+function analyzeIdentityResolution({
+  attempts,
+  benchmark,
+  candidateRecords,
+  currentLeaders,
+  matcher,
+  productDiscoveryQueryIds,
+  request,
+}) {
+  const discoveryRecords = candidateRecords.filter(
+    (candidate) =>
+      candidate.source === "raw_serper_result" &&
+      candidate.queryIds.some((queryId) =>
+        productDiscoveryQueryIds.has(queryId),
+      ),
+  );
+  const decisions = discoveryRecords.map((record) => ({
+    decision: identityLeadDecision(record, benchmark.category),
+    record,
+  }));
+  const uniqueLeads = (rows) => {
+    const unique = new Map();
+    for (const row of rows) {
+      const providerId = row.decision.providerIdentity?.id || "none";
+      const key = `${providerId}|${normalizedWords(row.record.name)}`;
+      if (!unique.has(key)) unique.set(key, row);
+    }
+    return [...unique.values()];
+  };
+  const qualifiedLeads = uniqueLeads(
+    decisions.filter((row) => row.decision.qualified),
+  );
+  const riskyLeads = uniqueLeads(
+    decisions.filter(
+      (row) =>
+        !row.decision.qualified &&
+        row.decision.reason === "standalone_complement_risk",
+    ),
+  );
+  const trustGateGapNames = riskyLeads
+    .filter((row) => row.decision.trustGateGap)
+    .map((row) => row.record.name);
+  const pages = capturedPageObservations(attempts, productDiscoveryQueryIds);
+  const pagesByIdentityWord = new Map();
+  for (const page of pages) {
+    const word = firstIdentityWord(page.title);
+    if (!word) continue;
+    const bucket = pagesByIdentityWord.get(word) || [];
+    bucket.push(page);
+    pagesByIdentityWord.set(word, bucket);
+  }
+
+  const strictMatchesByLead = new Map();
+  for (const lead of qualifiedLeads) {
+    const matches = [];
+    for (const page of pagesByIdentityWord.get(
+      firstIdentityWord(lead.record.name),
+    ) || []) {
+      const result = analyzeProductPageResolutionCandidate({
+        category: benchmark.category,
+        leadName: lead.record.name,
+        pageTitle: page.title,
+        pageUrl: page.url,
+      });
+      if (
+        result.strictResolutionAccepted &&
+        resolvedCandidateSurvivesPrefilter({
+          category: benchmark.category,
+          leadName: lead.record.name,
+          page,
+          request,
+        })
+      ) {
+        matches.push(page);
+      }
+    }
+    strictMatchesByLead.set(lead, matches);
+  }
+
+  const selectorPotentialIdentityGapSamples = [];
+  let selectorPotentialIdentityGapLeadCount = 0;
+  for (const lead of qualifiedLeads) {
+    const leadWord = firstIdentityWord(lead.record.name);
+    const gap = pages.find((page) => {
+      if (
+        firstIdentityWord(page.title) === leadWord ||
+        sharedWordCount(lead.record.name, page.title) < 3
+      ) {
+        return false;
+      }
+      const result = analyzeProductPageResolutionCandidate({
+        category: benchmark.category,
+        leadName: lead.record.name,
+        pageTitle: page.title,
+        pageUrl: page.url,
+      });
+      return (
+        result.existingSelectorAccepted &&
+        result.rejectionReason === "exact_identity_mismatch"
+      );
+    });
+    if (!gap) continue;
+    selectorPotentialIdentityGapLeadCount += 1;
+    if (selectorPotentialIdentityGapSamples.length < 12) {
+      selectorPotentialIdentityGapSamples.push({
+        leadName: lead.record.name,
+        pageTitle: gap.title,
+        pageUrl: gap.url,
+      });
+    }
+  }
+
+  const leaders = benchmark.coreLeaders.map((leader) => {
+    const current = currentLeaders.find(
+      (row) => row.leader === leaderLabel(leader),
+    );
+    const leaderQualifiedLeads = qualifiedLeads.filter((row) =>
+      matcher(row.record.name, leader),
+    );
+    const leaderRiskyLeads = riskyLeads.filter((row) =>
+      matcher(row.record.name, leader),
+    );
+    const safePages = leaderQualifiedLeads.flatMap(
+      (lead) => strictMatchesByLead.get(lead) || [],
+    );
+    const uniqueSafePages = Array.from(
+      new Map(safePages.map((page) => [page.url, page])).values(),
+    );
+    const normalizedPoolPresence = current?.preAiPoolPresence === true;
+    const qualifiedIdentityLeadPresence = leaderQualifiedLeads.length > 0;
+    const capturedAnyStageResolutionPresence = uniqueSafePages.length > 0;
+    const capturedDiscoveryResolutionPresence = uniqueSafePages.some(
+      (page) => page.discovery,
+    );
+
+    return {
+      leader: leaderLabel(leader),
+      normalizedPoolPresence,
+      qualifiedIdentityLeadPresence,
+      qualifiedIdentityLeadNames: Array.from(
+        new Set(leaderQualifiedLeads.map((row) => row.record.name)),
+      ),
+      riskyIdentityLeadPresence: leaderRiskyLeads.length > 0,
+      riskyIdentityLeadNames: Array.from(
+        new Set(leaderRiskyLeads.map((row) => row.record.name)),
+      ),
+      capturedDiscoveryResolutionPresence,
+      capturedAnyStageResolutionPresence,
+      capturedSafePageUrls: uniqueSafePages.map((page) => page.url),
+      identityLeadUpperBoundPresence:
+        normalizedPoolPresence || qualifiedIdentityLeadPresence,
+      capturedMaterializedPresence:
+        normalizedPoolPresence || capturedAnyStageResolutionPresence,
+      requiresNewLookup:
+        qualifiedIdentityLeadPresence && !capturedAnyStageResolutionPresence,
+    };
+  });
+  const recall = (field) => ({
+    covered: leaders.filter((leader) => leader[field]).length,
+    total: benchmark.coreLeaders.length,
+  });
+
+  return {
+    contract: {
+      identityLead:
+        "structured provider product ID plus specific source title and existing type gate; never renderable",
+      safeResolution:
+        "existing product-page selector plus exact-model identity, requested type, and cheap-prefilter survival",
+      limitation:
+        "saved ledger digests omit full Serper result fields and did not run targeted resolution for discarded identities",
+    },
+    qualifiedIdentityLeadCount: qualifiedLeads.length,
+    qualifiedProviderIdentityCount: new Set(
+      qualifiedLeads.map((row) => row.decision.providerIdentity.id),
+    ).size,
+    riskyIdentityLeadNames: Array.from(
+      new Set(riskyLeads.map((row) => row.record.name)),
+    ),
+    existingTypeGateComplementGapNames: Array.from(new Set(trustGateGapNames)),
+    existingSelectorPotentialIdentityGapLeadCount:
+      selectorPotentialIdentityGapLeadCount,
+    existingSelectorPotentialIdentityGapSamples:
+      selectorPotentialIdentityGapSamples,
+    recall: {
+      currentNormalizedPool: recall("normalizedPoolPresence"),
+      identityLeadUpperBound: recall("identityLeadUpperBoundPresence"),
+      capturedMaterialized: recall("capturedMaterializedPresence"),
+    },
+    leaders,
+  };
+}
+
 export function analyzeReadinessFixture(fixture, path = "<memory>") {
   const request = fixture._request || { query: fixture._query };
   const benchmark = benchmarkForRequest(request);
@@ -411,6 +881,15 @@ export function analyzeReadinessFixture(fixture, path = "<memory>") {
     ...analysisInput,
     matcher: coversLeader,
     sourceEvidence: true,
+  });
+  const identityResolution = analyzeIdentityResolution({
+    attempts: ledger.dispatch.attempts,
+    benchmark,
+    candidateRecords: ledger.candidateLineage.candidates,
+    currentLeaders: current07c.leaders,
+    matcher: coversLeader,
+    productDiscoveryQueryIds,
+    request,
   });
   const finalNames = finalProducts.map((product) => product.name);
   const aiDisplayed = ledger.candidateLineage.candidates
@@ -510,6 +989,7 @@ export function analyzeReadinessFixture(fixture, path = "<memory>") {
       finalCovered:
         current07c.finalRecall.covered - historical07b.finalRecall.covered,
     },
+    identityResolution,
     aiDisplayed,
     exactHardConstraintFailures,
     wrongTypeFinalCards,
@@ -543,6 +1023,43 @@ export function aggregateReadinessAnalyses(analyses) {
     values.length === 0
       ? null
       : values.reduce((total, value) => total + value, 0) / values.length;
+  const identityLeadUpperBoundMean = mean(
+    broad.map(
+      (analysis) =>
+        analysis.identityResolution.recall.identityLeadUpperBound.covered,
+    ),
+  );
+  const capturedMaterializedMean = mean(
+    broad.map(
+      (analysis) =>
+        analysis.identityResolution.recall.capturedMaterialized.covered,
+    ),
+  );
+  const existingSelectorPotentialIdentityGapLeadCount = broad.reduce(
+    (total, analysis) =>
+      total +
+      analysis.identityResolution.existingSelectorPotentialIdentityGapLeadCount,
+    0,
+  );
+  const existingTypeGateComplementGapCount = broad.reduce(
+    (total, analysis) =>
+      total +
+      analysis.identityResolution.existingTypeGateComplementGapNames.length,
+    0,
+  );
+  const c5Target = 5;
+  const c5Verdict =
+    existingSelectorPotentialIdentityGapLeadCount > 0
+      ? "repair_product_page_identity_before_resolution_probe"
+      : existingTypeGateComplementGapCount > 0
+        ? "repair_identity_lead_type_gate_before_resolution_probe"
+        : identityLeadUpperBoundMean === null ||
+            identityLeadUpperBoundMean < c5Target
+          ? "no_build_identity_ceiling_below_target"
+          : capturedMaterializedMean === null ||
+              capturedMaterializedMean < c5Target
+            ? "needs_live_resolution_probe"
+            : "eligible_for_default_off_implementation";
 
   return {
     contract: {
@@ -656,6 +1173,14 @@ export function aggregateReadinessAnalyses(analyses) {
             .uniqueLeaderRunOpportunities,
         0,
       ),
+    },
+    c5Decision: {
+      target: c5Target,
+      identityLeadUpperBoundMean,
+      capturedMaterializedMean,
+      existingSelectorPotentialIdentityGapLeadCount,
+      existingTypeGateComplementGapCount,
+      verdict: c5Verdict,
     },
     recordedLeaderResultLossFrequency: frequencyRows(frequency),
     leaderRunTerminalFrequency: frequencyRows(terminalFrequency),

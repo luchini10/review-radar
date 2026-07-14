@@ -6746,3 +6746,39 @@ npm run build: pass
 node scripts/eval-pipeline.mjs: no red flags
 live Serper/OpenAI calls: 0
 ```
+
+## 🟧 Codex QA Update — 2026-07-14 (Corrective C5 feasibility audit)
+
+**Verdict: DO NOT BUILD OR PROBE THE RESOLVER YET; REPAIR THE SHARED PAGE/TYPE
+TRUST BOUNDARY FIRST.**
+
+- C5 added an offline identity-to-page feasibility analysis over the three
+  saved C4 broad fixtures. A provider identity lead requires a structured
+  Google Shopping product ID, a specific source title, and current product-type
+  eligibility; it remains non-renderable until a safe page has exact identity,
+  requested type, product-card eligibility, and cheap-prefilter survival.
+- C4's path-supplemented `7/7` raw claim is superseded. A1/A3 credited
+  `Workshop` from another product's URL, and A2 credited a standalone WORKSHOP
+  nozzle attachment. The corrected identity-lead upper bound is `6/7` in all
+  three runs, still above the frozen `5/7` discovery prerequisite.
+- Pages already captured anywhere in each request safely materialize only
+  `2/7`, `2/7`, and `4/7` leaders (mean `2.67/7`). This is not a resolver-fail
+  result: saved digests omit full raw fields and no targeted lookup ran.
+- The existing product-page selector accepts a deterministic RIDGID-to-Karcher
+  wrong-brand page. Across the saved data, 143 qualified lead rows have at
+  least one captured page demonstrating that possible mismatch; this is a
+  diagnostic pairing count, not 143 observed final links. The current type
+  gate also accepts three standalone filter/nozzle identities.
+- RR-085/RR-086/RR-087 are filed. No product code, flag, `.env.local`, live
+  fixture, or API state changed. C5's machine verdict is
+  `repair_product_page_identity_before_resolution_probe`.
+
+```text
+focused analyzer: 11/11
+npm test: 915/915 across 127 suites
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red flags
+live Serper/OpenAI calls: 0
+```
