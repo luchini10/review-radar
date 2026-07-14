@@ -71,6 +71,18 @@ function normalizedWords(value) {
   return (value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
+function finalProductEvidenceText(product) {
+  return [
+    product.name,
+    product.metadata?.title?.value,
+    ...(product.pros || []),
+    ...(product.cons || []),
+    ...(product.citations || []).map((citation) => citation.title),
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
 function duplicateFinalPairs(products) {
   const duplicates = [];
   for (let first = 0; first < products.length; first += 1) {
@@ -426,7 +438,9 @@ export function analyzeReadinessFixture(fixture, path = "<memory>") {
   const wrongTypeFinalCards = finalProducts
     .filter((product) =>
       benchmark.wrongTypeTerms.some((term) =>
-        normalizedWords(product.name).includes(normalizedWords(term)),
+        normalizedWords(finalProductEvidenceText(product)).includes(
+          normalizedWords(term),
+        ),
       ),
     )
     .map((product) => product.name);

@@ -258,4 +258,32 @@ describe("R7 readiness fixture analyzer", () => {
     assert.equal(aggregate.cost.physicalAttempts, 2);
     assert.equal(aggregate.cost.includesSpentExcludedRuns, true);
   });
+
+  it("detects wrong-type evidence in a final card's full metadata when its display title is truncated", () => {
+    const input = fixture();
+    input._request = {
+      query: "robot vacuum",
+      budget: "under $300",
+      priorities: "self-emptying",
+    };
+    input._c4Shape = "constrained";
+    input.result.nearMatches = [
+      {
+        name: "Shark PowerPro Bagless Cordless HEPA Filter Portable ...",
+        metadata: {
+          title: {
+            value:
+              "Shark PowerPro Bagless Cordless HEPA Filter Portable Stick Vacuum Cleaner IZ372HD",
+          },
+        },
+        pros: ["Listing details: lightweight cordless floor cleaning."],
+      },
+    ];
+
+    const analysis = analyzeReadinessFixture(input);
+
+    assert.deepEqual(analysis.wrongTypeFinalCards, [
+      "Shark PowerPro Bagless Cordless HEPA Filter Portable ...",
+    ]);
+  });
 });
