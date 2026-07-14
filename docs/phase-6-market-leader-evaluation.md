@@ -189,6 +189,27 @@ selector's potential mismatch; those are diagnostic possible pairings, not
 resolution-feasibility probe. The frozen `5/7` pool and `3/7` final floors are
 unchanged.
 
+### Post-C5 trust-boundary repair (M3 over C4 fixtures, 2026-07-14)
+
+Commit `1131101` repairs the page-identity and complement gates. The analyzer's
+canonical provider-discovery field is now
+`identityResolution.recall.identityLeadUpperBound`; the old path-supplemented
+raw field remains visible only as superseded funnel history. Current-code
+replay produces the following decision inputs:
+
+| Measure | Current result |
+|---|---:|
+| Canonical type-safe identity ceiling | 6/7 mean |
+| Captured safe materialization | 2.67/7 mean |
+| Product-page selector identity gaps | 0 |
+| Shared complement-type gaps | 0 |
+
+The materialization values remain `2/7`, `2/7`, and `4/7`; no targeted lookup
+was present in the saved requests, so unresolved identity leads remain
+NotScored. The machine verdict is now `needs_live_resolution_probe`. The frozen
+`5/7` pool and `3/7` final floors are unchanged, and no probe or implementation
+is authorized by this offline replay.
+
 ## 4. v1.0 targets (amended)
 
 - Shape A (broad): final recall ≥ 3/7 per-run mean; pool recall ≥ 5/7 —

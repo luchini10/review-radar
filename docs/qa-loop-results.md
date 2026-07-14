@@ -6782,3 +6782,38 @@ npm run build: pass
 node scripts/eval-pipeline.mjs: no red flags
 live Serper/OpenAI calls: 0
 ```
+
+## 🟧 Codex QA Update — 2026-07-14 (Corrective C5 trust-boundary repair)
+
+**Verdict: THE SAVED EVIDENCE NOW SUPPORTS A SEPARATELY APPROVED LIVE
+RESOLUTION-FEASIBILITY PROBE; IT DOES NOT YET SUPPORT BUILDING A RESOLVER.**
+
+- Fail-first behavior coverage reproduced RR-086 at the shared page selector
+  and RR-087 at both the direct and shared type seams. RR-085 was a measurement
+  contract repair, not a product-behavior failure, and is pinned separately.
+- RR-086 now rejects foreign leading identity corroborated by title/URL,
+  foreign strong or split model evidence, and conflicting numeric specs. The
+  full C4 combinatorial replay exposed two false-positive diagnostics during
+  implementation; both were legitimate sparse same-product manufacturer
+  pages and are preserved under the hardened positive selector.
+- RR-087 now rejects the three captured standalone filter/nozzle identities.
+  Included-accessory controls and the pressure-washer regression wall prove the
+  rule does not globally turn hoses/nozzles into product rejection signals.
+- RR-085's canonical aggregate field is
+  `identityResolution.recall.identityLeadUpperBound`. The C4 `7/7` path values
+  stay visible as superseded history. Current replay is `6/7` canonical ceiling,
+  `2/7, 2/7, 4/7` captured materialization, zero selector gaps, zero complement
+  gaps, and verdict `needs_live_resolution_probe`.
+- Commit `1131101`; no live call, fixture write, flag promotion, `.env.local`
+  edit, resolver implementation, or R7A work occurred.
+
+```text
+focused page/type/analyzer/requirement wall: 119/119 across 9 suites
+npm test: 920/920 across 127 suites
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red flags
+current-code C4 broad replay: 6/7 canonical; selector gaps 0; complement gaps 0
+live Serper/OpenAI calls: 0
+```

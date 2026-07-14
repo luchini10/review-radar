@@ -1,8 +1,9 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Corrective C5
+## Compiled for AI Agent Consumption — Phase 0 through Corrective C5 trust-boundary repair
 
 **Generated:** 2026-07-14
 **Scope:** All phases from initial measurement harness through Corrective C5
+trust-boundary repair
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -25,8 +26,8 @@ only when maintaining this register or auditing its full history.
 | Medium | 33 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 7 |
-| Fixed | 79 |
+| Needs Investigation | 4 |
+| Fixed | 82 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -2949,7 +2950,7 @@ MaxV Ultra Long Range` remains unverified/near-eligible rather than rejected.
 | **Phase** | Corrective C5 normalization feasibility audit |
 | **Severity** | High |
 | **Title** | Path-supplemented raw-leader scoring can credit another product or accessory |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** C4 reported every broad leader raw-present in every run, but
 the source-path matcher was not product-type safe. Runs A1/A3 credited the
@@ -2975,6 +2976,16 @@ measure canonical, pin both WORKSHOP false-credit forms, and retain C4's old
 `7/7` values as visibly superseded history. Do not change the frozen leader
 list or thresholds to absorb the error.
 
+**Corrective C5 trust-boundary resolution (2026-07-14):** Fixed in the
+readiness analyzer. Aggregate output now identifies
+`identityResolution.recall.identityLeadUpperBound` as the canonical provider-
+discovery metric and explicitly marks path-supplemented raw presence as
+superseded funnel history. Deterministic coverage pins both false-credit forms:
+a DEWALT product path containing `Workshop` cannot create WORKSHOP identity,
+and the captured blower-nozzle attachment fails the repaired shared type gate.
+The canonical C4 broad identity ceiling remains `6/7` in all three runs; the
+historical `7/7` observations remain visible and are not rewritten.
+
 ---
 
 #### RR-086
@@ -2985,7 +2996,7 @@ list or thresholds to absorb the error.
 | **Phase** | Corrective C5 normalization feasibility audit |
 | **Severity** | Critical |
 | **Title** | Product-page selector can accept a wrong-brand same-category page |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** `getProductPageLink()` can select a retailer page for a
 different brand when the candidate and source title share enough generic
@@ -3014,6 +3025,17 @@ valid same-model cross-retailer pages, official product pages, sparse titles
 with strong canonical identity, and all existing listing/editorial rejections.
 Do not run a resolution feasibility probe until this boundary is repaired.
 
+**Corrective C5 trust-boundary resolution (2026-07-14):** Fixed at
+`classifyCandidate()`. Page evidence now vetoes a corroborated foreign leading
+identity, a foreign strong or split model claim, and conflicting hard numeric
+product specs before generic title/path overlap can make the page eligible.
+Retailer suffixes on complete product titles no longer exempt the whole title
+as a retailer label. The deterministic RIDGID-to-Karcher reproduction, a
+different-capacity Shop-Vac page, and split `WD 3` evidence are rejected.
+Same-brand cross-retailer pages and safely sparse Apple, Armor All, and Shop-
+Vac manufacturer titles remain eligible. Replaying all three C4 broad fixtures
+reduces the selector identity-gap diagnostic from 143 possible pairings to 0.
+
 ---
 
 #### RR-087
@@ -3024,7 +3046,7 @@ Do not run a resolution feasibility probe until this boundary is repaired.
 | **Phase** | Corrective C5 normalization feasibility audit |
 | **Severity** | High |
 | **Title** | Standalone shop-vac complements can pass product identity type gates |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** Three structured provider identities in C4 A2 pass the
 current product eligibility and product-type gates even though their titles
@@ -3039,6 +3061,14 @@ Cartridge Filter for Wet/Dry Vacuum`, and `WORKSHOP Wet/Dry Vacs Blower Nozzle
 Vacuum Attachment WS25006A` in
 `shop-vac.c4-07c-run2.json`. The C5 diagnostic excludes all three while
 recording that the current shared type verdict would admit them.
+
+**Corrective C5 trust-boundary resolution (2026-07-14):** Fixed in the shared
+shop-vac product-type rule. Cartridge filters, blower nozzles, and vacuum
+attachments now classify as complements. An included-accessory context keeps
+complete vacuums exact-eligible when their titles state that a filter or nozzle
+is included. Direct intent tests, the shared type seam, and current-code C4
+replay all reject the three captured standalone identities; the replay's
+complement-gate gap count is 0.
 
 **Expected:** A standalone complement cannot serve as the requested product's
 identity lead or card. A complete product that mentions included accessories
@@ -3176,8 +3206,9 @@ remains default-off, and R7A remains blocked.
 
 ## Corrective C5 feasibility-audit note — 2026-07-14
 
-RR-085, RR-086, and RR-087 are filed as Needs Investigation. C5 used no live
-calls and made no behavior change. It corrects C4's path-supplemented broad raw
+At the C5 audit close, RR-085, RR-086, and RR-087 were filed as Needs
+Investigation. C5 used no live calls and made no behavior change. It corrects
+C4's path-supplemented broad raw
 presence from `7/7` to a conservative structured-product identity ceiling of
 `6/7` in each run. Safe pages already captured elsewhere in each request
 materialize `2/7`, `2/7`, and `4/7` leaders, but the saved ledger digests omit
@@ -3193,23 +3224,33 @@ user-facing attachments. The required next order is shared page-identity/type
 repair, then a separately approved small resolution-feasibility probe, then a
 default-off implementation only if the probe clears the frozen gate.
 
+## Post-C5 trust-boundary repair note — 2026-07-14
+
+RR-085, RR-086, and RR-087 are now Fixed by code commit `1131101`. The
+canonical provider-discovery metric no longer credits identity from a URL path;
+the product-page selector rejects foreign identity/spec evidence; and the
+shared product-type gate rejects the captured standalone complements while
+preserving complete products that include those accessories. Reanalysis of the
+three C4 broad fixtures holds the canonical identity ceiling at `6/7`, finds
+captured materialization of `2/7`, `2/7`, and `4/7`, and reduces both selector
+identity gaps and complement-type gaps to zero. The next decision remains a
+separately scoped live resolution-feasibility probe; no such probe is authorized
+by this repair.
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (7 issues)
+### Needs Investigation (4 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-- RR-085: Path-supplemented raw-leader scoring credits unsafe identities
-- RR-086: Product-page selector can accept a wrong-brand page
-- RR-087: Standalone complements can pass product identity type gates
 
-### Fixed (79 issues)
+### Fixed (82 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
-RR-038 through RR-044, and RR-046 through RR-084
+RR-038 through RR-044, and RR-046 through RR-087
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -3220,9 +3261,5 @@ RR-038 through RR-044, and RR-046 through RR-084
 
 1. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
    final overlap. Recovery stays default-off and R7A stays blocked.
-2. **RR-086 + RR-087** — repair page identity and standalone-complement type
-   safety before any resolution feasibility probe.
-3. **RR-085** — canonicalize the corrected raw-discovery measure alongside
-   those trust-boundary repairs.
-4. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
+2. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
    but varied by model, while Tapo appeared raw and died in normalization.

@@ -1770,3 +1770,32 @@ a known conservative undercount.
   if that probe clears the frozen gate. Zero live calls and behavior changes in
   C5. Focused 11/11; full 915/915; typecheck/build/eval pass; lint 0 errors/3
   pre-existing warnings.
+
+## Corrective C5 trust-boundary repair memory — 2026-07-14
+
+- A product-page title that ends with a retailer label is still product
+  evidence; do not exempt the whole title merely because it contains `.com`.
+  Strip only a true leading source label or an offer whose entire title is a
+  retailer label.
+- Page identity conflict is veto-first: reject corroborated foreign leading
+  identity, foreign strong or split model claims, and conflicting hard numeric
+  specs before generic category/title overlap. URL query and hostname text do
+  not manufacture product identity.
+- Positive page identity does not require byte-identical or brand-complete
+  titles. Safely sparse manufacturer titles remain valid when the hardened
+  selector finds no foreign identity/model/spec conflict and the existing
+  eligibility/type/path gates pass. Keep exact-model equality as a diagnostic,
+  not a mandatory condition for every sparse title.
+- Complement handling stays in the shared product-type classifier. Cartridge
+  filters and blower-nozzle/vacuum attachments are standalone complements;
+  explicit `with`/`includes` context preserves complete products that ship with
+  those accessories. Do not make `hose` or `nozzle` globally accessory-like;
+  that falsely rejects complete pressure washers.
+- Canonical provider discovery is
+  `identityResolution.recall.identityLeadUpperBound`. Path-supplemented raw
+  presence is historical funnel evidence only. Current C4 replay: ceiling
+  `6/7`, captured materialization `2/7, 2/7, 4/7`, selector gaps 0, complement
+  gaps 0, verdict `needs_live_resolution_probe`.
+- Verification: focused 119/119; full 920/920 across 127 suites; typecheck,
+  build, and offline eval pass; lint 0 errors/3 existing warnings. Commit
+  `1131101`; zero live calls and no flag or `.env.local` change.

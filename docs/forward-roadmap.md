@@ -471,6 +471,25 @@ metric with fail-first preservation tests. Only then is a narrowly budgeted
 resolution-feasibility probe decision-useful; only a passing probe can justify
 a later default-off implementation.
 
+**Post-C5 trust-boundary repair (2026-07-14; zero live):** Commit `1131101`
+closes RR-085/RR-086/RR-087 before any lookup spend. The shared page selector
+now vetoes corroborated foreign leading identity, foreign strong or split
+models, and conflicting hard numeric specs before generic category overlap can
+admit a destination. Complete product titles ending in retailer labels are no
+longer mistaken for retailer-label-only evidence. The shared shop-vac type rule
+now rejects standalone cartridge filters and blower-nozzle attachments while
+preserving complete products that include those accessories.
+
+The readiness analyzer now names the type-safe structured identity ceiling as
+the canonical provider-discovery metric; C4's path-supplemented `7/7` remains
+superseded history. Current-code replay keeps the ceiling at `6/7`, the captured
+materialization observation at `2/7`, `2/7`, `4/7`, and reduces both selector-
+identity and complement-gate gaps to zero. Its machine verdict advances to
+`needs_live_resolution_probe`. This does not authorize that probe, a resolver,
+flag promotion, or R7A. The next decision is a separately scoped and approved
+bounded live resolution-feasibility probe; only a passing probe can justify a
+later default-off resolver implementation.
+
 **C1 result (M3, four usable readiness fixtures):** the tested pre-AI pool is a
 Serper `product_discovery` candidate that normalized, survived raw dedupe and
 cheap prefilter; a later `candidate_merge` loss still counts as pool-present.

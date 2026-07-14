@@ -11,6 +11,31 @@ Update this file after:
 
 ## 2026-07-14
 
+### 🟧 Codex - Corrective C5 trust-boundary repair
+
+#### Changed
+
+- Fixed RR-086 by rejecting product-page destinations whose source title and
+  URL corroborate another identity, whose source carries a foreign model, or
+  whose hard numeric product specs conflict. Valid same-product retailer and
+  safely sparse manufacturer pages remain eligible.
+- Fixed RR-087 in the shared type classifier: standalone shop-vac cartridge
+  filters and blower-nozzle attachments are complements, while complete
+  vacuums that include those accessories remain valid products.
+- Fixed RR-085 by making type-safe structured identity coverage the canonical
+  provider-discovery measure while retaining C4's path-supplemented values as
+  visibly superseded history.
+
+#### Verified
+
+- Current-code replay retains the `6/7` type-safe identity ceiling, reports
+  zero selector/complement gaps, and advances the machine decision to
+  `needs_live_resolution_probe`; captured materialization remains 2.67/7.
+- Focused wall 119/119; full suite 920/920 across 127 suites; typecheck and
+  production build pass; lint has 0 errors/3 pre-existing warnings; offline
+  evaluation reports no red flags. Zero live Serper/OpenAI calls; flags and
+  `.env.local` are unchanged.
+
 ### 🟧 Codex - Post-C4 deterministic safety repair
 
 #### Changed
