@@ -263,6 +263,27 @@ describe("shared product eligibility classifier", () => {
     }
   });
 
+  it("rejects RR-078 editorial index titles on product-looking routes", () => {
+    const editorialIndex = classify({
+      category: "robot vacuum",
+      name: "Tapo RV30 Max Information, Specification, News & More",
+      sourceTitle: "Tapo RV30 Max Information, Specification, News & More",
+      snippet: "Product news, specifications, and related coverage.",
+      url: "https://www.matteralpha.com/tapo/rv30-max-p2371",
+    });
+    const legitimateProductInformation = classify({
+      category: "robot vacuum",
+      name: "Tapo RV30 Max Robot Vacuum and Mop",
+      sourceTitle: "Tapo RV30 Max Product Information and Specifications",
+      snippet: "Manufacturer product page with current price and availability.",
+      url: "https://manufacturer.example.com/products/tapo-rv30-max",
+    });
+
+    assert.equal(editorialIndex.canRenderAsProductCard, false);
+    assert.equal(editorialIndex.canUseAsEvidence, true);
+    assert.equal(legitimateProductInformation.canRenderAsProductCard, true);
+  });
+
   it("preserves model-specific product pages that use a /pages/ route", () => {
     const product = classify({
       category: "cordless drill",

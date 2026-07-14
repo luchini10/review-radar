@@ -92,6 +92,62 @@ export function strongModelTokens(value: string) {
   return tokens;
 }
 
+function looksLikeCompoundModelComponent(token: string) {
+  return (
+    token.length >= 2 &&
+    token.length <= 24 &&
+    /[a-z]/i.test(token) &&
+    /\d/.test(token) &&
+    /^[a-z0-9]+$/i.test(token) &&
+    !/^\d+(?:p|hz|gb|tb|mah|w|v|in|inch|psi|hp)$/i.test(token) &&
+    !/^(?:ddr|gen|hdmi|hdr|ips|oled|qled|series|uhd|usb|wifi)\d+[a-z]*$/i.test(
+      token,
+    )
+  );
+}
+
+// A model can be expressed as a run of individually weak tokens ("Q7 M5",
+// "X100 A1"). A single short token is too ambiguous to trust globally, but
+// two or more adjacent mixed letter/digit tokens form useful identity evidence.
+export function compoundModelSequences(value: string) {
+  const tokens = normalizeText(value).split(" ").filter(Boolean);
+  const sequences = new Set<string>();
+  let run: string[] = [];
+
+  const flush = () => {
+    if (run.length >= 2) {
+      sequences.add(run.join(":"));
+    }
+
+    run = [];
+  };
+
+  for (const token of tokens) {
+    if (looksLikeCompoundModelComponent(token)) {
+      run.push(token);
+    } else {
+      flush();
+    }
+  }
+
+  flush();
+  return sequences;
+}
+
+export function haveConflictingCompoundModelSequences(
+  first: string,
+  second: string,
+) {
+  const firstModels = compoundModelSequences(first);
+  const secondModels = compoundModelSequences(second);
+
+  return (
+    firstModels.size > 0 &&
+    secondModels.size > 0 &&
+    ![...firstModels].some((model) => secondModels.has(model))
+  );
+}
+
 function identityBrand(product: ProductRecommendation) {
   const explicit =
     product.metadata?.brand?.value ||

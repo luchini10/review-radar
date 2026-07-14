@@ -20,7 +20,10 @@ import { offFormFactorModifiers } from "../formFactor.ts";
 import { baseProductCategoryFromQuery, detectBedSize } from "../productCategory.ts";
 import { sanitizeProductPros } from "../productCopySanitizer.ts";
 import { productPageMatchesIdentity } from "../productPageUrl.ts";
-import { strongModelTokens } from "../productIdentity.ts";
+import {
+  compoundModelSequences,
+  strongModelTokens,
+} from "../productIdentity.ts";
 import {
   candidateEligibility,
   classifyProductEligibility,
@@ -5267,6 +5270,26 @@ function areDuplicateProducts(
 
   if (firstName && firstName === secondName) {
     return true;
+  }
+
+  // Some manufacturers express one model identity as adjacent short tokens
+  // (for example, "Q7 M5" or "X100 A1"). Treat the whole run as the model:
+  // its individual tokens are too short to be safe global identifiers, but
+  // dropping both lets otherwise identical category wording merge distinct
+  // products and graft one product's URL/evidence onto another card.
+  const firstCompoundModels = compoundModelSequences(firstName);
+  const secondCompoundModels = compoundModelSequences(secondName);
+
+  if (firstCompoundModels.size > 0 && secondCompoundModels.size > 0) {
+    const sharedCompoundModel = Array.from(firstCompoundModels).some((token) =>
+      secondCompoundModels.has(token),
+    );
+
+    if (!sharedCompoundModel) {
+      return false;
+    }
+
+    return titleSimilarity(first, second) >= 0.5;
   }
 
   const firstModels = productModelTokens(first);

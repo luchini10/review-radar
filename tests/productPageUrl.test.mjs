@@ -176,6 +176,50 @@ describe("product page URL selection", () => {
     assert.equal(splitModelConflict, null);
   });
 
+  it("RR-090 rejects a different compound short-model URL and keeps the matching page", () => {
+    const wrongUrl =
+      "https://us.roborock.com/products/roborock-q10-x5-plus";
+    const correctUrl =
+      "https://us.roborock.com/products/roborock-q7-m5-plus";
+    const product = buildProduct({
+      category: "robot vacuum",
+      citations: [
+        {
+          title:
+            "Roborock Q7 M5+ Robot Vacuum and Mop with Auto-Empty Dock (Upgraded from Q5 Max+)",
+          url: correctUrl,
+          what_it_supports: "Official page for the displayed product.",
+        },
+      ],
+      metadata: {
+        brand: field("Roborock", wrongUrl, "manufacturer_page"),
+        canonicalUrl: field(wrongUrl, wrongUrl, "manufacturer_page"),
+        offers: [offer(wrongUrl)],
+        title: field(
+          "Roborock Q10 X5+ Robot Vacuum and Mop with Auto-Empty Dock",
+          wrongUrl,
+          "manufacturer_page",
+        ),
+      },
+      name: "Roborock Q7 M5+ Robot Vacuum and Mop with Auto-Empty Dock",
+      product_page_url: wrongUrl,
+    });
+    const link = getProductPageLink(product);
+    const result = prioritizeProductPageUrlsInResult(buildResult(product));
+
+    assert.equal(link?.url, correctUrl);
+    assert.equal(result.recommendations[0].product_page_url, correctUrl);
+
+    const wrongOnly = {
+      ...product,
+      citations: [],
+    };
+    const cleared = prioritizeProductPageUrlsInResult(buildResult(wrongOnly));
+
+    assert.equal(getProductPageLink(wrongOnly), null);
+    assert.equal(cleared.recommendations[0].product_page_url, "");
+  });
+
   it("preserves same-brand cross-retailer pages and source titles that safely omit the brand", () => {
     const ridgidUrl =
       "https://www.homedepot.com/p/RIDGID-12-Gallon-Wet-Dry-Shop-Vacuum/222222";

@@ -564,6 +564,7 @@ function textLooksLikeEditorialTitle(value: string) {
     /\b(?:comparison|comparison chart|comparison guide)\b/i,
     /\b[a-z0-9-]+\s+(?:vs\.?|versus)\s+[a-z0-9-]+\b/i,
     /\b(?:press release|standards? article)\b/i,
+    /(?:\bnews\b.{0,100}\b(?:information|specifications?)\b|\b(?:information|specifications?)\b.{0,100}\bnews\b)/i,
     /^\s*(?:ansi|astm|iec|ieee|iso|ul)\s+\d{3,}(?::\d{4})?\b/i,
     /^\s*[^|]{2,100}\b(?:announces?|debuts?|introduces?|launches?|unveils?)\b/i,
     /\b(?:twin|multi)[ -]?packs?\s+(?:and|&)\s+bundles?\b/i,

@@ -605,4 +605,50 @@ describe("product asset metadata extraction", () => {
     assert.equal(result.recommendations[0].product_image_url, "");
     assert.equal(result.recommendations[0].metadata?.image, undefined);
   });
+
+  it("RR-090 refuses to enrich a card from a different compound short-model page", async () => {
+    const originalFetch = global.fetch;
+    let fetchCalls = 0;
+
+    global.fetch = async () => {
+      fetchCalls += 1;
+      return new Response(
+        `
+          <html>
+            <head>
+              <link rel="canonical" href="https://us.roborock.com/products/roborock-q10-x5-plus">
+              <meta property="og:title" content="Roborock Q10 X5+ Robot Vacuum and Mop with Auto-Empty Dock">
+            </head>
+            <body>Roborock robot vacuum and mop with auto-empty dock.</body>
+          </html>
+        `,
+        { status: 200, headers: { "content-type": "text/html" } },
+      );
+    };
+
+    try {
+      const result = await enrichProductAssets({
+        recommendations: [
+          {
+            category: "robot vacuum",
+            citations: [],
+            metadata: { offers: [] },
+            name: "Roborock Q7 M5+ Robot Vacuum and Mop with Auto-Empty Dock",
+            product_image_url:
+              "https://cdn.example.com/roborock-q7-m5-plus-product.jpg",
+            product_page_url:
+              "https://us.roborock.com/products/roborock-q10-x5-plus",
+          },
+        ],
+      });
+      const product = result.recommendations[0];
+
+      assert.equal(fetchCalls, 0);
+      assert.equal(product.product_page_url, "");
+      assert.equal(product.metadata?.canonicalUrl, undefined);
+      assert.equal(product.metadata?.title, undefined);
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
 });

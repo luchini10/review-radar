@@ -13,6 +13,8 @@ import {
   stripLeadingSourceOrRetailerLabel,
 } from "./brandMatching.ts";
 import {
+  compoundModelSequences,
+  haveConflictingCompoundModelSequences,
   haveConflictingNumericProductSpecs,
   strongModelTokens,
 } from "./productIdentity.ts";
@@ -279,7 +281,11 @@ function splitModelTokens(value: string) {
 }
 
 function pageIdentityModelTokens(value: string) {
-  return new Set([...strongModelTokens(value), ...splitModelTokens(value)]);
+  return new Set([
+    ...strongModelTokens(value),
+    ...splitModelTokens(value),
+    ...compoundModelSequences(value),
+  ]);
 }
 
 function hasCorroboratedLeadingIdentityConflict(input: {
@@ -289,6 +295,17 @@ function hasCorroboratedLeadingIdentityConflict(input: {
   sourceType: ProductPageCandidate["sourceType"];
   url: string;
 }) {
+  // The URL path is independent identity evidence even for a primary URL or
+  // an offer whose title is only a retailer label. If both sides state a
+  // compound short model and those identities conflict, the page cannot be
+  // used for this card.
+  if (haveConflictingCompoundModelSequences(
+    input.productName,
+    sourceUrlPathIdentityText(input.url),
+  )) {
+    return true;
+  }
+
   if (
     input.sourceType === "primary" ||
     !input.sourceTitle ||

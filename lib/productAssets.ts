@@ -21,6 +21,8 @@ import type {
   ProductOffer,
   ProductPriceTrust,
 } from "@/types/review-radar";
+import { haveConflictingCompoundModelSequences } from "./productIdentity.ts";
+import { sourceUrlPathIdentityText } from "./sourceUrlIdentity.ts";
 
 type ProductAssetRecommendation = {
   category?: string;
@@ -1272,11 +1274,18 @@ function withVerifiedOfferPriceFields<T extends ProductAssetRecommendation>(
 }
 
 async function getVerifiedProductAssets(product: ProductAssetRecommendation) {
-  const citationProductPageUrl = product.product_page_url
+  const proposedProductPageUrl = normalizeUrl(product.product_page_url);
+  const primaryProductPageUrl = haveConflictingCompoundModelSequences(
+    product.name,
+    sourceUrlPathIdentityText(proposedProductPageUrl),
+  )
+    ? ""
+    : proposedProductPageUrl;
+  const citationProductPageUrl = primaryProductPageUrl
     ? ""
     : await getProductPageFromCitationPages(product);
   const productPageUrl =
-    normalizeUrl(product.product_page_url) || citationProductPageUrl;
+    primaryProductPageUrl || citationProductPageUrl;
   const initialImageCandidates: ProductImageCandidate[] = [];
 
   if (product.product_image_url) {

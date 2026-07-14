@@ -363,6 +363,37 @@ describe("duplicate handling with model awareness", () => {
     assert.equal(merged.products.length, 2);
     assert.equal(merged.duplicateCount, 0);
   });
+
+  it("does not merge different compound short-model identities", () => {
+    const firstModel = buildRecommendation({
+      name: "Roborock Q7 M5+ Robot Vacuum and Mop with Auto-Empty Dock",
+      product_page_url: "",
+    });
+    const secondModel = buildRecommendation({
+      name: "Roborock Q10 X5+ Robot Vacuum and Mop with Auto-Empty Dock",
+      product_page_url: "https://manufacturer.example.com/products/q10-x5-plus",
+    });
+    const merged = mergeProductRecommendations([firstModel], [secondModel]);
+
+    assert.equal(merged.products.length, 2);
+    assert.equal(merged.duplicateCount, 0);
+    assert.equal(merged.products[0].product_page_url, "");
+  });
+
+  it("still merges the same compound short-model identity across retailers", () => {
+    const firstListing = buildRecommendation({
+      name: "Roborock Q7 M5+ Robot Vacuum and Mop with Auto-Empty Dock",
+      product_page_url: "https://manufacturer.example.com/products/q7-m5-plus",
+    });
+    const secondListing = buildRecommendation({
+      name: "Roborock Q7 M5+ Robot Vacuum and Mop with Auto-Empty Dock - Example Store",
+      product_page_url: "https://retailer.example.com/p/q7-m5-plus/123",
+    });
+    const merged = mergeProductRecommendations([firstListing], [secondListing]);
+
+    assert.equal(merged.products.length, 1);
+    assert.equal(merged.duplicateCount, 1);
+  });
 });
 
 describe("product image candidates", () => {
