@@ -11,6 +11,7 @@ import type { SelectedSmartFeature } from "@/types/smart-features";
 import {
   brandEvidenceMatches,
   canonicalBrand,
+  detectKnownBrands,
   inferKnownBrand,
 } from "../brandMatching.ts";
 import { getCachedOrLoad, normalizeCacheKey } from "../cache.ts";
@@ -144,7 +145,9 @@ export type SerperSearchResult = {
 
 export type OrganicIdentityResolutionLead = {
   identityKey: string;
+  occurrenceCount?: number;
   parentQueryId?: string;
+  parentQueryIds?: string[];
   provider: "google_shopping";
   providerId: string;
   title: string;
@@ -1142,7 +1145,8 @@ function normalizationRecoveryEnabled(
 ) {
   return (
     options.enableNormalizationRecovery ??
-    process.env.REVIEW_RADAR_NORMALIZATION_RECOVERY === "on"
+    (process.env.REVIEW_RADAR_NORMALIZATION_RECOVERY === "on" ||
+      process.env.REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION === "on")
   );
 }
 
@@ -1619,6 +1623,36 @@ function structuredShoppingProviderIdentity(urls: string[]) {
   return null;
 }
 
+// Identity-resolution queries need a product model, not merely a formatted
+// hard specification. Keep this filter local to the resolver: strong model
+// tokens remain valid evidence elsewhere when comparing already-materialized
+// products, where a differing capacity or power rating can prevent a merge.
+const RESOLUTION_HARD_SPEC_TOKEN =
+  /^\d+(?:ah|amp(?:s)?|bit|btu|cc|cfm|cm|dpi|feet|ft|g|gal|gallon(?:s)?|gb|hp|hz|in|inch(?:es)?|kg|l|lb|lbs|liter(?:s)?|mah|mb|ml|mm|mph|ounce(?:s)?|oz|p|peak|pixel(?:s)?|pound(?:s)?|psi|px|qt|quart(?:s)?|rpm|scfm|tb|v|volt(?:s)?|w|watt(?:s)?|wh)$/i;
+
+function identityResolutionModelTokens(title: string) {
+  return [...strongModelTokens(title)]
+    .filter((token) => !RESOLUTION_HARD_SPEC_TOKEN.test(token))
+    .sort();
+}
+
+function identityResolutionBrand(title: string) {
+  const normalizedTitle = normalizeText(title);
+  const leadingKnownBrand = detectKnownBrands(title).find((brand) => {
+    const normalizedBrand = normalizeText(canonicalBrand(brand));
+    return (
+      normalizedTitle === normalizedBrand ||
+      normalizedTitle.startsWith(`${normalizedBrand} `)
+    );
+  });
+  // Preserve punctuation that separates a source-leading brand (for example,
+  // Shop-Vac) until canonicalization; normalized first-word fallback would
+  // otherwise collapse it to the generic key "shop".
+  const fallbackBrand = title.trim().split(/\s+/).find(Boolean) || "";
+
+  return canonicalBrand(leadingKnownBrand || fallbackBrand);
+}
+
 function identityResolutionLeadForShoppingResult(
   result: SerperShoppingResult,
   query: string,
@@ -1647,7 +1681,7 @@ function identityResolutionLeadForShoppingResult(
   }
 
   const title = asString(result.title);
-  const modelTokens = [...strongModelTokens(title)].sort();
+  const modelTokens = identityResolutionModelTokens(title);
   if (!titleLooksLikeSpecificProduct(title) || modelTokens.length === 0) {
     return null;
   }
@@ -1673,8 +1707,7 @@ function identityResolutionLeadForShoppingResult(
     return null;
   }
 
-  const fallbackBrand = normalizeText(title).split(" ").find(Boolean) || "";
-  const brand = canonicalBrand(inferKnownBrand(title) || fallbackBrand);
+  const brand = identityResolutionBrand(title);
 
   return {
     identityKey: `${normalizeText(brand)}|${modelTokens.join("|")}`,
@@ -4532,28 +4565,49 @@ function coverageForCandidates(
   };
 }
 
-function uniqueIdentityResolutionLeads(
+function aggregateIdentityResolutionLeads(
   leads: OrganicIdentityResolutionLead[],
 ) {
-  const seenIdentityKeys = new Set<string>();
-  const seenProviderIds = new Set<string>();
-  const unique: OrganicIdentityResolutionLead[] = [];
+  const aggregated: OrganicIdentityResolutionLead[] = [];
+  const identityIndexes = new Map<string, number>();
+  const providerIndexes = new Map<string, number>();
 
   for (const lead of leads) {
     const providerKey = `${lead.provider}|${lead.providerId}`;
-    if (
-      seenIdentityKeys.has(lead.identityKey) ||
-      seenProviderIds.has(providerKey)
-    ) {
+    const existingIndex =
+      identityIndexes.get(lead.identityKey) ?? providerIndexes.get(providerKey);
+    const parentQueryIds = uniqueStatStrings([
+      ...(lead.parentQueryIds || []),
+      lead.parentQueryId || "",
+    ]);
+
+    if (existingIndex !== undefined) {
+      const existing = aggregated[existingIndex];
+      existing.occurrenceCount =
+        (existing.occurrenceCount || 1) + (lead.occurrenceCount || 1);
+      existing.parentQueryIds = uniqueStatStrings([
+        ...(existing.parentQueryIds || []),
+        existing.parentQueryId || "",
+        ...parentQueryIds,
+      ]);
+      existing.parentQueryId ||= parentQueryIds[0];
+      identityIndexes.set(lead.identityKey, existingIndex);
+      providerIndexes.set(providerKey, existingIndex);
       continue;
     }
 
-    seenIdentityKeys.add(lead.identityKey);
-    seenProviderIds.add(providerKey);
-    unique.push(lead);
+    const nextIndex = aggregated.length;
+    identityIndexes.set(lead.identityKey, nextIndex);
+    providerIndexes.set(providerKey, nextIndex);
+    aggregated.push({
+      ...lead,
+      occurrenceCount: lead.occurrenceCount || 1,
+      parentQueryId: lead.parentQueryId || parentQueryIds[0],
+      parentQueryIds,
+    });
   }
 
-  return unique;
+  return aggregated;
 }
 
 function candidateMaterializesIdentityLead(
@@ -4565,6 +4619,14 @@ function candidateMaterializesIdentityLead(
     pageUrl: candidate.productUrl,
     productName: lead.title,
   });
+}
+
+function identityResolutionSourceDetail(lead: OrganicIdentityResolutionLead) {
+  return [
+    lead.provider,
+    `parent_queries=${lead.parentQueryIds?.length || 0}`,
+    `occurrences=${lead.occurrenceCount || 1}`,
+  ].join(";");
 }
 
 export async function resolveSerperIdentityLeads(
@@ -4585,7 +4647,7 @@ export async function resolveSerperIdentityLeads(
       normalizeText(sanitizeSerperQuery(`${query} product page`)),
     ]),
   );
-  const missingLeads = uniqueIdentityResolutionLeads(
+  const missingLeads = aggregateIdentityResolutionLeads(
     identityResolutionLeads,
   ).filter(
     (lead) =>
@@ -4594,6 +4656,25 @@ export async function resolveSerperIdentityLeads(
       ),
   );
   const planned = missingLeads
+    .map((lead, firstSeenIndex) => ({ lead, firstSeenIndex }))
+    .sort((left, right) => {
+      const distinctQueryDelta =
+        (right.lead.parentQueryIds?.length || 0) -
+        (left.lead.parentQueryIds?.length || 0);
+      if (distinctQueryDelta !== 0) return distinctQueryDelta;
+
+      const occurrenceDelta =
+        (right.lead.occurrenceCount || 1) -
+        (left.lead.occurrenceCount || 1);
+      if (occurrenceDelta !== 0) return occurrenceDelta;
+
+      const firstSeenDelta = left.firstSeenIndex - right.firstSeenIndex;
+      return (
+        firstSeenDelta ||
+        left.lead.identityKey.localeCompare(right.lead.identityKey)
+      );
+    })
+    .map(({ lead }) => lead)
     .map((lead) => ({
       lead,
       query: sanitizeSerperQuery(`${lead.title} product page`),
@@ -4613,7 +4694,7 @@ export async function resolveSerperIdentityLeads(
       purpose: "product_discovery",
       query,
       parentQueryId: lead.parentQueryId,
-      sourceDetail: lead.provider,
+      sourceDetail: identityResolutionSourceDetail(lead),
     }),
   }));
 
@@ -4624,7 +4705,7 @@ export async function resolveSerperIdentityLeads(
       purpose: "product_discovery",
       query,
       parentQueryId: lead.parentQueryId,
-      sourceDetail: lead.provider,
+      sourceDetail: identityResolutionSourceDetail(lead),
     });
     recordQueryCull(
       queryId,
@@ -4660,7 +4741,7 @@ export async function resolveSerperIdentityLeads(
           purpose: "product_discovery",
           originalQuery: query,
           parentQueryId: lead.parentQueryId,
-          sourceDetail: lead.provider,
+          sourceDetail: identityResolutionSourceDetail(lead),
         },
       ),
       lead,
@@ -4767,7 +4848,7 @@ export function mergeSerperSearchResults(
 
   return {
     candidates: deduped.candidates,
-    identityResolutionLeads: uniqueIdentityResolutionLeads([
+    identityResolutionLeads: aggregateIdentityResolutionLeads([
       ...(primary.identityResolutionLeads || []),
       ...(followUp.identityResolutionLeads || []),
     ]),

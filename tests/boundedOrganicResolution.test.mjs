@@ -11,6 +11,7 @@ import {
 import {
   MAX_ORGANIC_IDENTITY_RESOLUTION_QUERIES,
   diagnoseSerperShoppingResponse,
+  mergeSerperSearchResults,
   resolveSerperIdentityLeads,
 } from "../lib/search/serper.ts";
 
@@ -227,6 +228,232 @@ describe("bounded organic identity resolution", () => {
         "Stanley Wet/Dry Vacuum SL18115",
       ],
     );
+  });
+
+  it("RR-088 rejects hard-spec-only identities while preserving real cross-category model codes and leading brands", () => {
+    const specOnlyCases = [
+      {
+        category: "shop vac",
+        title: "Shop-Vac 12-Gallon 6-HP Corded Wet/Dry Shop Vacuum",
+      },
+      {
+        category: "air compressor",
+        title: "Craftsman 20-Gallon 175-PSI Air Compressor",
+      },
+      {
+        category: "television",
+        title: "Example 65-Inch 120-Hz OLED Television",
+      },
+      {
+        category: "cordless drill",
+        title: "Example 20-Volt 2-Ah Cordless Drill",
+      },
+    ];
+
+    for (const { category, title } of specOnlyCases) {
+      const result = diagnoseSerperShoppingResponse(
+        { shopping: [structuredOffer(title, `spec-${category}`)] },
+        category,
+        category,
+      );
+
+      assert.deepEqual(
+        result.identityResolutionLeads,
+        [],
+        `${title} must not qualify from a hard specification alone`,
+      );
+    }
+
+    const positiveCases = [
+      {
+        category: "shop vac",
+        expectedKey: "craftsman|cmxevbe12345",
+        title:
+          "Craftsman 5-Gallons 4-HP Corded Wet/Dry Shop Vacuum CMXEVBE12345",
+      },
+      {
+        category: "shop vac",
+        expectedKey: "wen|vc4710",
+        title:
+          "WEN VC4710 10-Amp 5-Gallon Portable HEPA Wet/Dry Shop Vacuum",
+      },
+      {
+        category: "shop vac",
+        expectedKey: "shop vac|sv5430188",
+        title:
+          "Shop-Vac 12-Gallon 5.5-HP Corded Wet/Dry Shop Vacuum SV5430188",
+      },
+      {
+        category: "laptop",
+        expectedKey: "hp|15fd0127wm",
+        title: "HP 15.6-Inch Laptop 15-fd0127wm",
+      },
+      {
+        category: "television",
+        expectedKey: "samsung|qn90d",
+        title: "Samsung QN90D 65-Inch Neo QLED Television",
+      },
+    ];
+
+    for (const { category, expectedKey, title } of positiveCases) {
+      const result = diagnoseSerperShoppingResponse(
+        { shopping: [structuredOffer(title, `model-${category}`)] },
+        category,
+        category,
+      );
+
+      assert.deepEqual(
+        result.identityResolutionLeads.map((item) => item.identityKey),
+        [expectedKey],
+        `${title} must retain its real model and source-leading brand`,
+      );
+    }
+  });
+
+  it("RR-089 makes the C5 flag compose safe merchant recovery before organic resolution", () => {
+    const previousNormalization =
+      process.env.REVIEW_RADAR_NORMALIZATION_RECOVERY;
+    const previousResolution =
+      process.env.REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION;
+    const merchantResponse = {
+      shopping: [
+        structuredOffer("DEWALT DXV10SB 10 Gal. Wet/Dry Vacuum", "dxv10sb", {
+          link: "https://hardware.example.com/products/dewalt-dxv10sb",
+        }),
+      ],
+    };
+
+    try {
+      delete process.env.REVIEW_RADAR_NORMALIZATION_RECOVERY;
+      delete process.env.REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION;
+      const bothOff = diagnoseSerperShoppingResponse(
+        merchantResponse,
+        "DEWALT DXV10SB shop vac",
+        "shop vac",
+      );
+      assert.deepEqual(bothOff.candidates, []);
+
+      process.env.REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION = "on";
+      const c5Only = diagnoseSerperShoppingResponse(
+        merchantResponse,
+        "DEWALT DXV10SB shop vac",
+        "shop vac",
+      );
+      assert.deepEqual(
+        c5Only.candidates.map((candidate) => candidate.productUrl),
+        ["https://hardware.example.com/products/dewalt-dxv10sb"],
+      );
+      assert.deepEqual(c5Only.identityResolutionLeads, []);
+
+      delete process.env.REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION;
+      process.env.REVIEW_RADAR_NORMALIZATION_RECOVERY = "on";
+      const normalizationOnly = diagnoseSerperShoppingResponse(
+        merchantResponse,
+        "DEWALT DXV10SB shop vac",
+        "shop vac",
+      );
+      assert.deepEqual(
+        normalizationOnly.candidates.map((candidate) => candidate.productUrl),
+        ["https://hardware.example.com/products/dewalt-dxv10sb"],
+      );
+
+      delete process.env.REVIEW_RADAR_NORMALIZATION_RECOVERY;
+      process.env.REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION = "on";
+      const noMerchant = diagnoseSerperShoppingResponse(
+        {
+          shopping: [
+            structuredOffer("DEWALT DXV10SB 10 Gal. Wet/Dry Vacuum", "dxv10sb"),
+          ],
+        },
+        "DEWALT DXV10SB shop vac",
+        "shop vac",
+      );
+      assert.deepEqual(noMerchant.candidates, []);
+      assert.deepEqual(
+        noMerchant.identityResolutionLeads.map((item) => item.title),
+        ["DEWALT DXV10SB 10 Gal. Wet/Dry Vacuum"],
+      );
+    } finally {
+      if (previousNormalization === undefined) {
+        delete process.env.REVIEW_RADAR_NORMALIZATION_RECOVERY;
+      } else {
+        process.env.REVIEW_RADAR_NORMALIZATION_RECOVERY = previousNormalization;
+      }
+      if (previousResolution === undefined) {
+        delete process.env.REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION;
+      } else {
+        process.env.REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION = previousResolution;
+      }
+    }
+  });
+
+  it("aggregates recurrence across merged discovery passes before applying the stable cap", async () => {
+    const repeated = (model, parentQueryId) =>
+      lead({
+        identityKey: `example|${model.toLowerCase()}`,
+        parentQueryId,
+        providerId: `provider-${model.toLowerCase()}`,
+        title: `Example ${model} Robot Vacuum`,
+      });
+    const primary = searchResult({
+      leads: [
+        repeated("RV300", "q-noise-a"),
+        repeated("RV400", "q-noise-b"),
+        repeated("RV900", "q-priority-1"),
+        repeated("RV800", "q-secondary-1"),
+      ],
+    });
+    const followUp = searchResult({
+      leads: [
+        repeated("RV900", "q-priority-2"),
+        repeated("RV900", "q-priority-3"),
+        repeated("RV800", "q-secondary-2"),
+        repeated("RV500", "q-noise-c"),
+        repeated("RV600", "q-noise-d"),
+      ],
+    });
+    const merged = mergeSerperSearchResults(primary, followUp);
+    const priority = merged.identityResolutionLeads.find(
+      (item) => item.identityKey === "example|rv900",
+    );
+
+    assert.equal(priority.occurrenceCount, 3);
+    assert.deepEqual(priority.parentQueryIds, [
+      "q-priority-1",
+      "q-priority-2",
+      "q-priority-3",
+    ]);
+
+    const outboundQueries = [];
+    await withMockedSerper(
+      async (_url, init) => {
+        const query = JSON.parse(init.body).q;
+        const model = query.match(/RV\d+/)?.[0] || "RV000";
+        outboundQueries.push(query);
+        return new Response(
+          JSON.stringify({
+            organic: [
+              {
+                title: `Example ${model} Robot Vacuum`,
+                link: `https://shop.example.com/products/example-${model.toLowerCase()}-robot-vacuum`,
+                snippet: `Example ${model} robot vacuum product page.`,
+              },
+            ],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      },
+      async () => {
+        await resolveSerperIdentityLeads(merged, request(), { enabled: true });
+      },
+    );
+
+    assert.deepEqual(outboundQueries, [
+      "Example RV900 Robot Vacuum product page",
+      "Example RV800 Robot Vacuum product page",
+      "Example RV300 Robot Vacuum product page",
+      "Example RV400 Robot Vacuum product page",
+    ]);
   });
 
   it("keeps the default-off branch call-free and byte-identical", async () => {
