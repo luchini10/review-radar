@@ -8,6 +8,15 @@ import {
   classifyProductEvidenceIdentity,
   isGenericProductEvidenceUrl,
 } from "./productEvidenceIdentity.ts";
+import {
+  isSourceOrRetailerLabel,
+  stripLeadingSourceOrRetailerLabel,
+} from "./brandMatching.ts";
+import {
+  haveConflictingNumericProductSpecs,
+  strongModelTokens,
+} from "./productIdentity.ts";
+import { sourceUrlPathIdentityText } from "./sourceUrlIdentity.ts";
 
 export type ProductPageUrlType = "official" | "retailer" | "source" | "unknown";
 
@@ -116,6 +125,36 @@ const OFFICIAL_BRAND_DOMAINS: Record<string, string[]> = {
   winix: ["winixamerica.com", "winix.com"],
 };
 
+const GENERIC_LEADING_IDENTITY_WORDS = new Set([
+  "best",
+  "buy",
+  "cleaner",
+  "commercial",
+  "cordless",
+  "countertop",
+  "dry",
+  "electric",
+  "gallon",
+  "gallons",
+  "inch",
+  "inches",
+  "item",
+  "latest",
+  "new",
+  "official",
+  "page",
+  "portable",
+  "product",
+  "products",
+  "professional",
+  "shop",
+  "site",
+  "smart",
+  "vac",
+  "vacuum",
+  "wet",
+]);
+
 function normalizeUrl(value: string | null | undefined) {
   if (!value) {
     return "";
@@ -203,6 +242,92 @@ function productBrands(product: ProductRecommendation) {
   ].filter(Boolean);
 
   return Array.from(new Set(brands));
+}
+
+function identityWords(value: string | undefined) {
+  return normalizeBrand(value).split(" ").filter(Boolean);
+}
+
+function firstSpecificIdentityWord(value: string | undefined) {
+  return identityWords(value).find(
+    (word) =>
+      word.length >= 3 &&
+      /[a-z]/.test(word) &&
+      !GENERIC_LEADING_IDENTITY_WORDS.has(word),
+  );
+}
+
+function urlPathText(url: string) {
+  try {
+    return decodeURIComponent(new URL(url).pathname);
+  } catch {
+    return "";
+  }
+}
+
+function splitModelTokens(value: string) {
+  const tokens = new Set<string>();
+
+  for (const match of value.matchAll(/\b([a-z]{1,4})[\s/-]+(\d{1,6}[a-z]?)\b/gi)) {
+    const token = `${match[1]}${match[2]}`.toLowerCase();
+    if (!/^(?:dp|gb|ghz|hp|hz|ip|mah|pd|psi|sku|tb|uhd|usb|v|w)\d/.test(token)) {
+      tokens.add(token);
+    }
+  }
+
+  return tokens;
+}
+
+function pageIdentityModelTokens(value: string) {
+  return new Set([...strongModelTokens(value), ...splitModelTokens(value)]);
+}
+
+function hasCorroboratedLeadingIdentityConflict(input: {
+  brands: string[];
+  productName: string;
+  sourceTitle?: string;
+  sourceType: ProductPageCandidate["sourceType"];
+  url: string;
+}) {
+  if (
+    input.sourceType === "primary" ||
+    !input.sourceTitle ||
+    (input.sourceType === "offer" &&
+      isSourceOrRetailerLabel(input.sourceTitle))
+  ) {
+    return false;
+  }
+
+  const sourceTitle = stripLeadingSourceOrRetailerLabel(input.sourceTitle);
+  const pathText = urlPathText(input.url);
+  const targetModels = pageIdentityModelTokens(input.productName);
+  const sourceModels = pageIdentityModelTokens(
+    `${sourceTitle} ${sourceUrlPathIdentityText(input.url)}`,
+  );
+
+  if (haveConflictingNumericProductSpecs(input.productName, sourceTitle)) {
+    return true;
+  }
+
+  if (
+    sourceModels.size > 0 &&
+    ![...sourceModels].some((model) => targetModels.has(model))
+  ) {
+    return true;
+  }
+
+  const sourceIdentity = firstSpecificIdentityWord(sourceTitle);
+  const productIdentityWords = new Set([
+    ...identityWords(input.productName),
+    ...input.brands.flatMap((brand) => identityWords(brand)),
+  ]);
+  const pathIdentityWords = new Set(identityWords(pathText));
+
+  return Boolean(
+    sourceIdentity &&
+      !productIdentityWords.has(sourceIdentity) &&
+      pathIdentityWords.has(sourceIdentity),
+  );
 }
 
 function pathLooksProductLike(url: string) {
@@ -421,6 +546,10 @@ function classifyCandidate(input: {
   const url = normalizeUrl(input.url);
 
   if (!url) {
+    return null;
+  }
+
+  if (hasCorroboratedLeadingIdentityConflict({ ...input, url })) {
     return null;
   }
 

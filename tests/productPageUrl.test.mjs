@@ -103,6 +103,159 @@ describe("product page URL selection", () => {
     assert.equal(link?.label, "View Retailer Page");
   });
 
+  it("RR-086 rejects a wrong-brand retailer page that overlaps only on category and capacity", () => {
+    const wrongUrl =
+      "https://www.homedepot.com/p/Karcher-12-Gallon-Wet-Dry-Shop-Vacuum/111111";
+    const link = getProductPageLink(
+      buildProduct({
+        category: "shop vac",
+        citations: [
+          {
+            title: "Karcher 12 Gallon Wet Dry Shop Vacuum",
+            url: wrongUrl,
+            what_it_supports: "Captured retailer result.",
+          },
+        ],
+        metadata: {
+          brand: field("RIDGID", wrongUrl),
+          offers: [],
+        },
+        name: "RIDGID 12 Gallon Wet/Dry Shop Vacuum",
+        product_page_url: "",
+      }),
+    );
+    const noMetadataBrand = getProductPageLink(
+      buildProduct({
+        category: "shop vac",
+        citations: [
+          {
+            title: "Karcher 12 Gallon Wet Dry Shop Vacuum",
+            url: wrongUrl,
+            what_it_supports: "Captured retailer result.",
+          },
+        ],
+        metadata: { offers: [] },
+        name: "RIDGID 12 Gallon Wet/Dry Shop Vacuum",
+        product_page_url: "",
+      }),
+    );
+    const wrongSpec = getProductPageLink(
+      buildProduct({
+        category: "shop vac",
+        citations: [
+          {
+            title: "5 Gallon 5.5 PHP HangUp Wet Dry Vac",
+            url: "https://shopvac.com/products/5-gallon-5-5-php-wall-mount-wet-dry-vac",
+            what_it_supports: "A different capacity product.",
+          },
+        ],
+        metadata: { offers: [] },
+        name: "Shop Vac 10 Gallon 6.0 PHP Wet Dry Vac",
+        product_page_url: "",
+      }),
+    );
+    const splitModelConflict = getProductPageLink(
+      buildProduct({
+        category: "shop vac",
+        citations: [
+          {
+            title: "Karcher WD 3 Corded Wet/Dry Vacuum",
+            url: "https://target.com/p/k-rcher-wet-and-dry-vacuum-cleaner-wd-3/-/A-93812988",
+            what_it_supports: "A different split-token model.",
+          },
+        ],
+        metadata: { offers: [] },
+        name: "CRAFTSMAN 12 Gallon Wet/Dry Corded Vacuum",
+        product_page_url: "",
+      }),
+    );
+
+    assert.equal(link, null);
+    assert.equal(noMetadataBrand, null);
+    assert.equal(wrongSpec, null);
+    assert.equal(splitModelConflict, null);
+  });
+
+  it("preserves same-brand cross-retailer pages and source titles that safely omit the brand", () => {
+    const ridgidUrl =
+      "https://www.homedepot.com/p/RIDGID-12-Gallon-Wet-Dry-Shop-Vacuum/222222";
+    const ridgid = getProductPageLink(
+      buildProduct({
+        category: "shop vac",
+        citations: [
+          {
+            title: "RIDGID 12 Gallon Wet Dry Shop Vacuum",
+            url: ridgidUrl,
+            what_it_supports: "Captured retailer result.",
+          },
+        ],
+        metadata: {
+          brand: field("RIDGID", ridgidUrl),
+          offers: [],
+        },
+        name: "RIDGID 12 Gallon Wet/Dry Shop Vacuum",
+        product_page_url: "",
+      }),
+    );
+    const ipadUrl = "https://www.bestbuy.com/site/ipad-pro-13-inch-m4/999.p";
+    const ipad = getProductPageLink(
+      buildProduct({
+        citations: [
+          {
+            title: "iPad Pro 13-inch M4",
+            url: ipadUrl,
+            what_it_supports: "Captured retailer result.",
+          },
+        ],
+        metadata: {
+          brand: field("Apple", ipadUrl),
+          offers: [],
+        },
+        name: "Apple iPad Pro 13-inch M4",
+        product_page_url: "",
+      }),
+    );
+    const armorAllUrl =
+      "https://vacmaster.com/armor-all/2-5-gallon-2-peak-hp-wet-dry-vac/";
+    const armorAll = getProductPageLink(
+      buildProduct({
+        category: "shop vac",
+        citations: [
+          {
+            title: "2.5-Gallon 2 Peak HP Wet/Dry Vac - Vacmaster",
+            url: armorAllUrl,
+            what_it_supports: "Manufacturer product page with a sparse title.",
+          },
+        ],
+        metadata: { offers: [] },
+        name: "Armor All 2.5 Gallon 2 Peak HP Wet Dry Vacuum VOM205P 0901",
+        product_page_url: "",
+      }),
+    );
+    const shopVacUrl =
+      "https://shopvac.com/products/5-gallon-5-5-php-wall-mount-wet-dry-vac";
+    const shopVac = getProductPageLink(
+      buildProduct({
+        category: "shop vac",
+        citations: [
+          {
+            title: "5 Gallon 5.5 PHP HangUp Wet Dry Vac",
+            url: shopVacUrl,
+            what_it_supports: "Official product page with a sparse title.",
+          },
+        ],
+        metadata: { offers: [] },
+        name: "Shop Vac 5 Gallon 5.5 PHP HangUp Wet/Dry Vacuum",
+        product_page_url: "",
+      }),
+    );
+
+    assert.equal(ridgid?.url, ridgidUrl);
+    assert.equal(ipad?.url, ipadUrl);
+    assert.equal(armorAll?.url, armorAllUrl);
+    assert.equal(shopVac?.url, shopVacUrl);
+  });
+
   it("does not choose trusted retailer category pages as product pages", () => {
     const productUrl = "https://www.silonn.com/products/countertop-nugget-ice-maker";
     const categoryUrl =

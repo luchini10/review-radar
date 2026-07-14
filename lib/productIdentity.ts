@@ -311,6 +311,13 @@ function conflictingNumericSpecs(firstText: string, secondText: string) {
   return false;
 }
 
+export function haveConflictingNumericProductSpecs(
+  firstText: string,
+  secondText: string,
+) {
+  return conflictingNumericSpecs(firstText, secondText);
+}
+
 function identitySpecText(product: ProductRecommendation) {
   return [product.name, fieldValue(product.metadata?.title)]
     .filter(Boolean)

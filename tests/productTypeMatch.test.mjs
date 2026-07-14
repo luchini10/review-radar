@@ -132,6 +132,25 @@ describe("classifyProductTypeMatch (shared wrong-product-type verdict)", () => {
     }
   });
 
+  it("RR-087 rejects captured standalone shop-vac complements at the shared type seam", () => {
+    const standaloneComplements = [
+      "Global Industrial Cartridge Filter 641197",
+      "Universal Cartridge Filter for Wet/Dry Vacuum",
+      "WORKSHOP Wet/Dry Vacs Blower Nozzle Vacuum Attachment WS25006A",
+    ];
+
+    for (const evidenceText of standaloneComplements) {
+      const verdict = classifyProductTypeMatch({
+        evidenceText,
+        identityText: evidenceText,
+        requestedCategory: "shop vac",
+      });
+
+      assert.equal(verdict.canBeExactMatch, false, evidenceText);
+      assert.equal(verdict.status, "complement", evidenceText);
+    }
+  });
+
   it("rejects RR-079 standalone robot-vacuum docks while preserving bundles", () => {
     const standaloneAccessories = [
       "Self-Empty Clean Base Station Compatible With Roborock Q5 Robot Vacuum",

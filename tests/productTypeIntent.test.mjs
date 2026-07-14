@@ -158,17 +158,42 @@ describe("product type intent classifier", () => {
     }
   });
 
-  it("shop_vac: preserves a complete vacuum that lists included accessories", () => {
-    const candidateText =
-      "DEWALT DXV12P 12 Gallon Wet Dry Vacuum with Hose and Utility Nozzle";
-    const verdict = classifyProductTypeIntent({
-      requestedText: "shop vac",
-      candidateText,
-      candidateIdentityText: candidateText,
-    });
+  it("RR-087: rejects standalone cartridge filters and blower-nozzle attachments", () => {
+    const standaloneComplements = [
+      "Global Industrial Cartridge Filter 641197",
+      "Universal Cartridge Filter for Wet/Dry Vacuum",
+      "WORKSHOP Wet/Dry Vacs Blower Nozzle Vacuum Attachment WS25006A",
+    ];
 
-    assert.equal(verdict.status, "exact");
-    assert.equal(verdict.canBeExactMatch, true);
+    for (const candidateText of standaloneComplements) {
+      const verdict = classifyProductTypeIntent({
+        requestedText: "shop vac",
+        candidateText,
+        candidateIdentityText: candidateText,
+      });
+
+      assert.equal(verdict.status, "complement", candidateText);
+      assert.equal(verdict.canBeExactMatch, false, candidateText);
+    }
+  });
+
+  it("shop_vac: preserves a complete vacuum that lists included accessories", () => {
+    const completeProducts = [
+      "DEWALT DXV12P 12 Gallon Wet Dry Vacuum with Hose and Utility Nozzle",
+      "RIDGID 12 Gallon Wet Dry Vacuum with Cartridge Filter",
+      "CRAFTSMAN Wet Dry Shop Vacuum Includes Blower Nozzle",
+    ];
+
+    for (const candidateText of completeProducts) {
+      const verdict = classifyProductTypeIntent({
+        requestedText: "shop vac",
+        candidateText,
+        candidateIdentityText: candidateText,
+      });
+
+      assert.equal(verdict.status, "exact", candidateText);
+      assert.equal(verdict.canBeExactMatch, true, candidateText);
+    }
   });
 
   it("floor-cleaner intent keeps household wet floor cleaners valid", () => {

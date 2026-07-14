@@ -184,6 +184,15 @@ describe("R7 readiness fixture analyzer", () => {
     assert.equal(aggregate.normalizationCounterfactual.parityViolations, 0);
     assert.equal(aggregate.broadFlagOnNormalizedMean, 2);
     assert.equal(aggregate.broadFlagOffNormalizedMean, 1);
+    assert.equal(
+      aggregate.canonicalProviderDiscovery.metric,
+      "identityResolution.recall.identityLeadUpperBound",
+    );
+    assert.match(
+      aggregate.canonicalProviderDiscovery.supersedes,
+      /path-supplemented raw presence/i,
+    );
+    assert.equal(aggregate.canonicalProviderDiscovery.broadMean, 1);
   });
 
   it("credits brand evidence from source paths without changing title-only reporting", () => {
@@ -348,12 +357,16 @@ describe("R7 readiness fixture analyzer", () => {
     ]);
     assert.equal(
       analysis.identityResolution
-        .existingSelectorPotentialIdentityGapLeadCount > 0,
-      true,
+        .existingSelectorPotentialIdentityGapLeadCount,
+      0,
+    );
+    assert.match(
+      analysis.identityResolution.contract.safeResolution,
+      /exact-model equality remains diagnostic/i,
     );
   });
 
-  it("flags a structured shopping accessory identity instead of counting it as a safe product lead", () => {
+  it("RR-087 rejects a structured shopping accessory at the canonical type gate", () => {
     const input = fixture();
     input.debug.stageFunnel.searchLedger.dispatch.attempts[0].results.push({
       title: "WORKSHOP Wet/Dry Vacs Blower Nozzle Vacuum Attachment WS25006A",
@@ -388,13 +401,61 @@ describe("R7 readiness fixture analyzer", () => {
     );
 
     assert.equal(workshop.qualifiedIdentityLeadPresence, false);
-    assert.equal(workshop.riskyIdentityLeadPresence, true);
-    assert.deepEqual(workshop.riskyIdentityLeadNames, [
-      "WORKSHOP Wet/Dry Vacs Blower Nozzle Vacuum Attachment WS25006A",
-    ]);
+    assert.equal(workshop.riskyIdentityLeadPresence, false);
+    assert.deepEqual(workshop.riskyIdentityLeadNames, []);
+    assert.deepEqual(
+      analysis.identityResolution.existingTypeGateComplementGapNames,
+      [],
+    );
   });
 
-  it("records when the current page selector accepts a wrong-brand page that strict identity rejects", () => {
+  it("RR-085 keeps another product's Workshop path out of canonical provider identity coverage", () => {
+    const input = fixture();
+    input.debug.stageFunnel.searchLedger.dispatch.attempts[0].results.push({
+      title: "DEWALT 12 Gallon Poly Wet/Dry Vac DXV12P",
+      urlPaths: [
+        "/DEWALT-Workshop-Commercial-Capacity-DXV12P/dp/B07BYGDFKB",
+      ],
+    });
+    input.debug.stageFunnel.searchLedger.candidateLineage.candidates.push(
+      candidate({
+        candidateId: "raw-q-1-05",
+        name: "DEWALT 12 Gallon Poly Wet/Dry Vac DXV12P",
+        source: "raw_serper_result",
+        normalized: false,
+        sourceIdentityPaths: [
+          "/DEWALT-Workshop-Commercial-Capacity-DXV12P/dp/B07BYGDFKB",
+        ],
+        firstLoss: {
+          stage: "lost_in_normalization",
+          subreason: "search_or_listing_url",
+        },
+        normalizationRecovery: {
+          mode: "enabled",
+          outcome: "blocked",
+          originalRejectionReason: "search_or_listing_url",
+          originalUrl:
+            "https://www.google.com/search?ibp=oshop&udm=28&prds=catalogid:24680,localAnnotatedOfferId:13579",
+          proposedUrl: null,
+          blocker: "no_serper_supplied_merchant_url",
+        },
+      }),
+    );
+
+    const analysis = analyzeReadinessFixture(input);
+    const historicalWorkshop = analysis.current07c.leaders.find(
+      (leader) => leader.leader === "workshop",
+    );
+    const canonicalWorkshop = analysis.identityResolution.leaders.find(
+      (leader) => leader.leader === "workshop",
+    );
+
+    assert.equal(historicalWorkshop.rawPresence, true);
+    assert.equal(canonicalWorkshop.qualifiedIdentityLeadPresence, false);
+    assert.equal(canonicalWorkshop.identityLeadUpperBoundPresence, false);
+  });
+
+  it("RR-086 rejects a wrong-brand page at the current selector seam", () => {
     const result = analyzeProductPageResolutionCandidate({
       category: "shop vac",
       leadName: "RIDGID 12 Gallon Wet/Dry Shop Vacuum",
@@ -403,9 +464,9 @@ describe("R7 readiness fixture analyzer", () => {
         "https://homedepot.com/p/Karcher-12-Gallon-Wet-Dry-Shop-Vacuum/111111",
     });
 
-    assert.equal(result.existingSelectorAccepted, true);
+    assert.equal(result.existingSelectorAccepted, false);
     assert.equal(result.strictResolutionAccepted, false);
-    assert.equal(result.rejectionReason, "exact_identity_mismatch");
+    assert.equal(result.rejectionReason, "product_page_selector_rejected");
   });
 
   it("keeps C5 blocked when the identity ceiling passes but captured safe resolution and selector safety do not", () => {

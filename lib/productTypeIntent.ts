@@ -34,7 +34,7 @@ const SHOP_VAC_CONTEXT_PATTERN =
   /\b(?:\d+(?:\.\d+)?\s*(?:gal|gallon)s?\b.{0,80}\b(?:peak\s+)?(?:hp|horsepower)|(?:peak\s+)?(?:hp|horsepower)\b.{0,80}\b\d+(?:\.\d+)?\s*(?:gal|gallon)s?|(?:garage|workshop|jobsite|contractor|debris|sawdust)\b.{0,80}\b(?:vac|vacuum|cleanup)|(?:vac|vacuum)\b.{0,80}\b(?:garage|workshop|jobsite|contractor|debris|sawdust))\b/i;
 
 const SHOP_VAC_COMPLEMENT_PATTERN =
-  /\b(?:replacement\s+(?:filter|hose|bag|nozzle)|vac(?:uum)?\s+(?:filter|hose|bag|nozzle)|dust\s+bag|filter\s+bag|(?:utility\s+)?nozzle(?:\s+attachment)?|accessory\s+kit)\b/i;
+  /\b(?:replacement\s+(?:filter|hose|bag|nozzle)|vac(?:uum)?\s+(?:filter|hose|bag|nozzle|attachment)|cartridge\s+filter|blower\s+nozzle(?:\s+vacuum)?(?:\s+attachment)?|dust\s+bag|filter\s+bag|(?:utility\s+)?nozzle(?:\s+attachment)?|accessory\s+kit)\b/i;
 const STANDALONE_SHOP_VAC_COMPLEMENT_PATTERN =
   /\b(?:wet\s+dry\s+(?:shop\s+)?vac(?:uum)?|shop\s+vac(?:uum)?|vacuum)\s+(?:replacement\s+)?(?:hose|filter\s+bags?|bags?|(?:utility\s+)?nozzles?(?:\s+attachments?)?|accessory\s+kit)\b|^(?:[a-z0-9-]+\s+){0,3}(?:utility\s+)?nozzles?(?:\s+attachments?)?$/i;
 
@@ -217,7 +217,9 @@ const PRODUCT_TYPE_RULES: ProductTypeRule[] = [
 ];
 
 const ACCESSORY_CONTEXT =
-  /\b(?:accessory|replacement|universal|plate|tray|cover|filter|mount|bracket|liner|trim kit|mounting kit|parts?)\b/i;
+  /\b(?:accessory|attachment|replacement|universal|plate|tray|cover|filter|mount|bracket|liner|trim kit|mounting kit|parts?)\b/i;
+const INCLUDED_COMPLEMENT_CONTEXT =
+  /\b(?:with|includes?|including|comes\s+with|supplied\s+with|bundled\s+with)\b.{0,80}\b(?:accessor(?:y|ies)|attachments?|filters?|hoses?|nozzles?|bags?|docks?|stations?)\b/i;
 
 function normalize(value: string | undefined) {
   return (value || "")
@@ -287,6 +289,7 @@ export function classifyProductTypeIntent(input: {
   const isComplement = rule.complements?.test(candidateText) || false;
   const isExclusiveComplement =
     rule.exclusiveComplements?.test(candidateIdentityText) || false;
+  const isIncludedComplement = INCLUDED_COMPLEMENT_CONTEXT.test(candidateText);
 
   if (isExclusiveBlocked) {
     return {
@@ -301,7 +304,7 @@ export function classifyProductTypeIntent(input: {
     isComplement &&
     (!isAllowed ||
       isExclusiveComplement ||
-      ACCESSORY_CONTEXT.test(candidateText))
+      (ACCESSORY_CONTEXT.test(candidateText) && !isIncludedComplement))
   ) {
     return {
       canBeExactMatch: false,

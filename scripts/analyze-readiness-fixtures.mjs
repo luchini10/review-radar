@@ -256,8 +256,6 @@ export function analyzeProductPageResolutionCandidate({
     rejectionReason = `page_type_${typeVerdict.status}`;
   } else if (!existingSelectorAccepted) {
     rejectionReason = "product_page_selector_rejected";
-  } else if (!exactIdentity) {
-    rejectionReason = "exact_identity_mismatch";
   }
 
   return {
@@ -818,7 +816,7 @@ function analyzeIdentityResolution({
       identityLead:
         "structured provider product ID plus specific source title and existing type gate; never renderable",
       safeResolution:
-        "existing product-page selector plus exact-model identity, requested type, and cheap-prefilter survival",
+        "hardened positive product-page identity selector, requested type, product eligibility, and cheap-prefilter survival; exact-model equality remains diagnostic rather than mandatory for safely sparse page titles",
       limitation:
         "saved ledger digests omit full Serper result fields and did not run targeted resolution for discarded identities",
     },
@@ -1173,6 +1171,14 @@ export function aggregateReadinessAnalyses(analyses) {
             .uniqueLeaderRunOpportunities,
         0,
       ),
+    },
+    canonicalProviderDiscovery: {
+      metric: "identityResolution.recall.identityLeadUpperBound",
+      contract:
+        "structured provider product identity plus requested-type-safe lead title, with normalized survivors added only after the same type gate",
+      supersedes:
+        "current07c path-supplemented raw presence for provider-discovery recall decisions; current07c remains historical funnel evidence",
+      broadMean: identityLeadUpperBoundMean,
     },
     c5Decision: {
       target: c5Target,
