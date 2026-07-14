@@ -1016,6 +1016,24 @@ describe("request-scoped search observability ledger", () => {
     }
   });
 
+  it("includes the organic identity-resolution flag in the environment snapshot", () => {
+    const previous = process.env.REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION;
+
+    try {
+      process.env.REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION = "on";
+      assert.equal(
+        reviewRadarFlagSnapshot().REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION,
+        "on",
+      );
+    } finally {
+      if (previous === undefined) {
+        delete process.env.REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION;
+      } else {
+        process.env.REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION = previous;
+      }
+    }
+  });
+
   it("includes the constraint-allocation flag in the environment snapshot", () => {
     const previous = process.env.REVIEW_RADAR_CONSTRAINT_ALLOCATION;
 

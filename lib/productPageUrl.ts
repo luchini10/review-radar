@@ -707,6 +707,31 @@ function citationCandidates(
   });
 }
 
+export function productPageMatchesIdentity(input: {
+  pageTitle: string;
+  pageUrl: string;
+  productName: string;
+}) {
+  const normalizedProductName = input.productName.toLowerCase();
+  const brands = Object.keys(OFFICIAL_BRAND_DOMAINS)
+    .sort((left, right) => right.length - left.length)
+    .filter(
+      (brand) =>
+        normalizedProductName === brand ||
+        normalizedProductName.startsWith(`${brand} `),
+    )
+    .slice(0, 1);
+  const candidate = classifyCandidate({
+    brands,
+    productName: input.productName,
+    sourceTitle: input.pageTitle,
+    sourceType: "citation",
+    url: input.pageUrl,
+  });
+
+  return candidate?.isProductPage === true;
+}
+
 function getProductPageCandidates(product: ProductRecommendation) {
   const brands = productBrands(product);
   const candidates = [

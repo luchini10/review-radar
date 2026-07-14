@@ -8,7 +8,7 @@ import {
 } from "./goldBenchmark.mjs";
 import { areSameExactModelProduct } from "../lib/productIdentity.ts";
 import { classifyProductEligibility } from "../lib/productEligibility.ts";
-import { getProductPageLink } from "../lib/productPageUrl.ts";
+import { productPageMatchesIdentity } from "../lib/productPageUrl.ts";
 import { classifyProductTypeMatch } from "../lib/productTypeMatch.ts";
 import { stripLeadingSourceOrRetailerLabel } from "../lib/brandMatching.ts";
 import { cheapPreFilterRawCandidates } from "../lib/search/serper.ts";
@@ -230,20 +230,11 @@ export function analyzeProductPageResolutionCandidate({
     identityText: pageTitle,
     requestedCategory: category,
   });
-  const existingSelectorAccepted = Boolean(
-    getProductPageLink({
-      name: leadName,
-      category,
-      product_page_url: "",
-      citations: [
-        {
-          title: pageTitle,
-          url: pageUrl,
-          what_it_supports: "Captured provider result.",
-        },
-      ],
-    }),
-  );
+  const existingSelectorAccepted = productPageMatchesIdentity({
+    pageTitle,
+    pageUrl,
+    productName: leadName,
+  });
   const exactIdentity = areSameExactModelProduct(
     productForIdentity(leadName, category),
     pageProduct,

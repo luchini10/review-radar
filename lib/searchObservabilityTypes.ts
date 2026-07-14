@@ -14,6 +14,7 @@ export type SearchQueryOrigin =
   | "retailer_domain"
   | "direct_retailer"
   | "market_rescue"
+  | "identity_resolution"
   | "review_evidence"
   | "image"
   | "requirement_fact_rescue"
@@ -37,6 +38,8 @@ export type SearchQueryCullReason =
   | "direct_retailer_cap_crowd_out"
   | "recategorized_to_organic"
   | "discussion_query_not_dispatched"
+  | "identity_resolution_flag_off"
+  | "identity_resolution_cap_crowd_out"
   | "stage_not_reached"
   | "never_dispatched";
 

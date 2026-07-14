@@ -73,6 +73,7 @@ import { buildSearchCandidateFallbackResult } from "../../../lib/searchCandidate
 import {
   mergeSerperSearchResults,
   mergeProductRecommendations,
+  resolveSerperIdentityLeads,
   searchSerperForProducts,
   serperCandidateToRecommendation,
 } from "../../../lib/search/serper.ts";
@@ -127,6 +128,7 @@ type RecommendationRouteDependencies = {
   createOpenAIClient: typeof createOpenAIClient;
   enrichProductAssets: typeof enrichProductAssets;
   enrichResultWithReviewEvidence: typeof enrichResultWithReviewEvidence;
+  resolveSerperIdentityLeads: typeof resolveSerperIdentityLeads;
   searchSerperForProducts: typeof searchSerperForProducts;
   upgradeWeakSourceEvidence: typeof upgradeWeakSourceEvidence;
   verifyMissingRequirementEvidence: typeof verifyMissingRequirementEvidence;
@@ -137,6 +139,7 @@ const defaultRecommendationRouteDependencies: RecommendationRouteDependencies = 
   createOpenAIClient,
   enrichProductAssets,
   enrichResultWithReviewEvidence,
+  resolveSerperIdentityLeads,
   searchSerperForProducts,
   upgradeWeakSourceEvidence,
   verifyMissingRequirementEvidence,
@@ -803,6 +806,16 @@ async function handleRecommendationPostWithContext(
         () => mergeSerperSearchResults(serperResult, followUpSerperResult),
       );
     }
+
+    debugStage = "bounded_organic_identity_resolution";
+    serperResult = await timing.measure(
+      "bounded_organic_identity_resolution",
+      () =>
+        routeDependencies.resolveSerperIdentityLeads(
+          serperResult,
+          requestWithStrategy,
+        ),
+    );
 
     const requestWithDiscovery = {
       ...requestWithStrategy,

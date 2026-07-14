@@ -36,6 +36,7 @@ export type CandidateFirstLossStage =
   | "raw_dedupe"
   | "cheap_prefilter"
   | "candidate_merge"
+  | "identity_resolution"
   | "citation_verification"
   | "requirement_validation"
   | "revalidation"
@@ -801,6 +802,23 @@ export function recordCandidatePrefilter(
   }
 }
 
+export function recordCandidateIdentityResolutionLoss(
+  candidate: RawProductCandidate,
+  reason: string,
+) {
+  const ledger = currentLedger();
+
+  if (!ledger) {
+    return;
+  }
+
+  setFirstLoss(
+    serperCandidateRecord(ledger, candidate),
+    "identity_resolution",
+    reason,
+  );
+}
+
 export function recordRawCandidateCapLoss(
   candidate: RawProductCandidate,
   reason: string,
@@ -1235,6 +1253,7 @@ const REVIEW_RADAR_FLAG_NAMES = [
   "REVIEW_RADAR_MAX_MAIN_VERIFICATION_PRODUCTS",
   "REVIEW_RADAR_MAX_SERPER_ATTEMPTS",
   "REVIEW_RADAR_NORMALIZATION_RECOVERY",
+  "REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION",
   "REVIEW_RADAR_PINNED_PLANNING",
   "REVIEW_RADAR_SPEC_SEARCH",
   "REVIEW_RADAR_SPEC_VALIDATION",

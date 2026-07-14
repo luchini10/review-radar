@@ -18,6 +18,7 @@ import { candidateMatchesDiscoveryTarget } from "../discoveryStrategy.ts";
 import { offFormFactorModifiers } from "../formFactor.ts";
 import { baseProductCategoryFromQuery, detectBedSize } from "../productCategory.ts";
 import { sanitizeProductPros } from "../productCopySanitizer.ts";
+import { productPageMatchesIdentity } from "../productPageUrl.ts";
 import { strongModelTokens } from "../productIdentity.ts";
 import {
   candidateEligibility,
@@ -36,6 +37,7 @@ import {
   normalizeObservedQuery,
   queryOrigin,
   recordCandidateDedupeCapLoss,
+  recordCandidateIdentityResolutionLoss,
   recordCandidateMerge,
   recordCandidatePrefilter,
   recordLogicalSearchResults,
@@ -72,6 +74,7 @@ export const MAX_RESULTS_PER_QUERY = 10;
 // results are not discarded before dedupe and pre-filtering.
 export const MAX_NORMALIZED_RESULTS_PER_QUERY = 20;
 export const DEFAULT_MAX_RAW_CANDIDATES = 75;
+export const MAX_ORGANIC_IDENTITY_RESOLUTION_QUERIES = 4;
 
 const SERPER_BASE_URL = "https://google.serper.dev";
 const SERPER_ENDPOINT_PATHS = {
@@ -135,7 +138,16 @@ export type MarketCoverageSnapshot = {
 
 export type SerperSearchResult = {
   candidates: RawProductCandidate[];
+  identityResolutionLeads: OrganicIdentityResolutionLead[];
   stats: SerperSearchStats;
+};
+
+export type OrganicIdentityResolutionLead = {
+  identityKey: string;
+  parentQueryId?: string;
+  provider: "google_shopping";
+  providerId: string;
+  title: string;
 };
 
 type DiscoveryTask = {
@@ -238,6 +250,7 @@ export type SerperShoppingSearchDiagnostics = {
 export type SerperShoppingSearchResult = {
   candidates: RawProductCandidate[];
   diagnostics: SerperShoppingSearchDiagnostics;
+  identityResolutionLeads: OrganicIdentityResolutionLead[];
   normalizationDecisions: SearchNormalizationDecision[];
 };
 
@@ -1578,6 +1591,99 @@ function normalizeShoppingResult(
   };
 }
 
+function structuredShoppingProviderIdentity(urls: string[]) {
+  for (const value of urls) {
+    const parsed = parseUrl(value);
+    const host = parsed ? normalizedHost(parsed) : "";
+    const identifiers = parsed?.searchParams.get("prds") || "";
+    const identifier =
+      identifiers.match(/(?:catalogid|productid|pid):([a-z0-9_-]+)/i)?.[1] ||
+      identifiers.match(/localannotatedofferid:([a-z0-9_-]+)/i)?.[1] ||
+      "";
+
+    if (
+      parsed &&
+      (host === "google.com" || host.endsWith(".google.com")) &&
+      parsed.pathname.toLowerCase() === "/search" &&
+      parsed.searchParams.get("ibp") === "oshop" &&
+      parsed.searchParams.get("udm") === "28" &&
+      identifier
+    ) {
+      return {
+        id: identifier.slice(0, 120),
+        provider: "google_shopping" as const,
+      };
+    }
+  }
+
+  return null;
+}
+
+function identityResolutionLeadForShoppingResult(
+  result: SerperShoppingResult,
+  query: string,
+  category: string,
+  options: SerperShoppingNormalizationOptions,
+): OrganicIdentityResolutionLead | null {
+  const urls = shoppingResultUrls(result);
+  const providerIdentity = structuredShoppingProviderIdentity(urls);
+
+  if (!providerIdentity) {
+    return null;
+  }
+
+  // Merchant-URL recovery remains the first choice. A targeted lookup is
+  // eligible only when even the enabled recovery branch cannot materialize a
+  // safe candidate from URLs already present in this provider row.
+  const recovered = normalizeShoppingResultForMode(
+    result,
+    query,
+    category,
+    options,
+    true,
+  ).candidate;
+  if (recovered) {
+    return null;
+  }
+
+  const title = asString(result.title);
+  const modelTokens = [...strongModelTokens(title)].sort();
+  if (!titleLooksLikeSpecificProduct(title) || modelTokens.length === 0) {
+    return null;
+  }
+
+  const eligibility = classifyProductEligibility({
+    category,
+    name: title,
+    productName: title,
+    sourceTitle: title,
+    sourceType: "serper",
+  });
+  if (!eligibility.canRenderAsProductCard) {
+    return null;
+  }
+
+  const typeVerdict = classifyProductTypeMatch({
+    allowedCheckText: title,
+    evidenceText: title,
+    identityText: title,
+    requestedCategory: category,
+  });
+  if (!typeVerdict.canBeExactMatch) {
+    return null;
+  }
+
+  const fallbackBrand = normalizeText(title).split(" ").find(Boolean) || "";
+  const brand = canonicalBrand(inferKnownBrand(title) || fallbackBrand);
+
+  return {
+    identityKey: `${normalizeText(brand)}|${modelTokens.join("|")}`,
+    provider: providerIdentity.provider,
+    providerId: providerIdentity.id,
+    title,
+  };
+}
+
 function normalizeSerperShoppingResponse(
   response: SerperResponse,
   query: string,
@@ -1586,11 +1692,22 @@ function normalizeSerperShoppingResponse(
 ) {
   const results = (response.shopping || [])
     .slice(0, MAX_NORMALIZED_RESULTS_PER_QUERY)
-    .map((result) => normalizeShoppingResult(result, query, category, options));
+    .map((result) => ({
+      ...normalizeShoppingResult(result, query, category, options),
+      identityResolutionLead: identityResolutionLeadForShoppingResult(
+        result,
+        query,
+        category,
+        options,
+      ),
+    }));
 
   return {
     candidates: results.flatMap(({ candidate }) => (candidate ? [candidate] : [])),
     decisions: results.map(({ decision }) => decision),
+    identityResolutionLeads: results.flatMap(({ identityResolutionLead }) =>
+      identityResolutionLead ? [identityResolutionLead] : [],
+    ),
   };
 }
 
@@ -1654,6 +1771,7 @@ export function diagnoseSerperShoppingResponse(
 
   return {
     candidates,
+    identityResolutionLeads: shoppingNormalization.identityResolutionLeads,
     normalizationDecisions: [
       ...shoppingNormalization.decisions,
       ...organicNormalization.decisions,
@@ -2339,6 +2457,7 @@ export async function searchSerperShoppingWithDiagnostics(
     if (!response) {
       return {
         candidates: [],
+        identityResolutionLeads: [],
         normalizationDecisions: [],
         diagnostics: {
           responseReceived: false,
@@ -2370,7 +2489,13 @@ export async function searchSerperShoppingWithDiagnostics(
       result.candidates,
       result.normalizationDecisions,
     );
-    return result;
+    return {
+      ...result,
+      identityResolutionLeads: result.identityResolutionLeads.map((lead) => ({
+        ...lead,
+        parentQueryId: response.queryId,
+      })),
+    };
   } catch (error) {
     logSerperWarning("Shopping search skipped after an API error.", {
       query,
@@ -2378,6 +2503,7 @@ export async function searchSerperShoppingWithDiagnostics(
     });
     return {
       candidates: [],
+      identityResolutionLeads: [],
       normalizationDecisions: [],
       diagnostics: {
         responseReceived: false,
@@ -3888,6 +4014,7 @@ export async function searchSerperForProducts(
     logSerperWarning("SERPER_API_KEY is missing. Skipping Serper discovery.");
     return {
       candidates: [],
+      identityResolutionLeads: [],
       stats: {
         ...stats,
         skippedReason: "missing_api_key",
@@ -3900,6 +4027,7 @@ export async function searchSerperForProducts(
     generatedQueryStrings[0] ||
     baseCategoryName;
   const collected: RawProductCandidate[] = [];
+  const identityResolutionLeads: OrganicIdentityResolutionLead[] = [];
   const used = {
     directRetailer: 0,
     organic: 0,
@@ -3954,6 +4082,20 @@ export async function searchSerperForProducts(
     }
   }
 
+  async function searchShoppingForDiscovery(
+    query: string,
+    context: SearchQueryContext,
+  ) {
+    const result = await searchSerperShoppingWithDiagnostics(
+      query,
+      baseCategoryName,
+      {},
+      context,
+    );
+    identityResolutionLeads.push(...result.identityResolutionLeads);
+    return result.candidates;
+  }
+
   function usefulCandidateCount() {
     const dedupedCandidates = dedupeRawCandidates(collected);
     const preFilteredCandidates = cheapPreFilterRawCandidates(
@@ -4000,9 +4142,8 @@ export async function searchSerperForProducts(
           searchedShoppingQueries.push(query.query);
           tasks.push({
             run: () =>
-              searchSerperShopping(
+              searchShoppingForDiscovery(
                 query.query,
-                baseCategoryName,
                 planQueryContext(query),
               ),
             source: "shopping",
@@ -4176,7 +4317,7 @@ export async function searchSerperForProducts(
 
         return {
           run: () =>
-            searchSerperShopping(seed, baseCategoryName, {
+            searchShoppingForDiscovery(seed, {
               queryId,
               origin: "editorial_seed",
               phase: `${discoveryPhase}_seed_shopping`,
@@ -4317,7 +4458,7 @@ export async function searchSerperForProducts(
 
         return {
           run: () =>
-            searchSerperShopping(query, baseCategoryName, {
+            searchShoppingForDiscovery(query, {
               queryId,
               origin: "market_rescue",
               phase: `${discoveryPhase}_market_rescue`,
@@ -4343,6 +4484,7 @@ export async function searchSerperForProducts(
 
   return {
     candidates: preFiltered.candidates,
+    identityResolutionLeads,
     stats: {
       ...stats,
       collectedCandidates: collected.length,
@@ -4390,6 +4532,228 @@ function coverageForCandidates(
   };
 }
 
+function uniqueIdentityResolutionLeads(
+  leads: OrganicIdentityResolutionLead[],
+) {
+  const seenIdentityKeys = new Set<string>();
+  const seenProviderIds = new Set<string>();
+  const unique: OrganicIdentityResolutionLead[] = [];
+
+  for (const lead of leads) {
+    const providerKey = `${lead.provider}|${lead.providerId}`;
+    if (
+      seenIdentityKeys.has(lead.identityKey) ||
+      seenProviderIds.has(providerKey)
+    ) {
+      continue;
+    }
+
+    seenIdentityKeys.add(lead.identityKey);
+    seenProviderIds.add(providerKey);
+    unique.push(lead);
+  }
+
+  return unique;
+}
+
+function candidateMaterializesIdentityLead(
+  candidate: RawProductCandidate,
+  lead: OrganicIdentityResolutionLead,
+) {
+  return productPageMatchesIdentity({
+    pageTitle: candidate.name,
+    pageUrl: candidate.productUrl,
+    productName: lead.title,
+  });
+}
+
+export async function resolveSerperIdentityLeads(
+  result: SerperSearchResult,
+  input: RecommendationApiRequest,
+  options: { enabled?: boolean } = {},
+): Promise<SerperSearchResult> {
+  const enabled =
+    options.enabled ??
+    process.env.REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION === "on";
+  const identityResolutionLeads = result.identityResolutionLeads || [];
+  if (identityResolutionLeads.length === 0) {
+    return result;
+  }
+  const existingQueryKeys = new Set(
+    (result.stats.searchedOrganicQueries || []).flatMap((query) => [
+      normalizeText(sanitizeSerperQuery(query)),
+      normalizeText(sanitizeSerperQuery(`${query} product page`)),
+    ]),
+  );
+  const missingLeads = uniqueIdentityResolutionLeads(
+    identityResolutionLeads,
+  ).filter(
+    (lead) =>
+      !(result.candidates || []).some((candidate) =>
+        candidateMaterializesIdentityLead(candidate, lead),
+      ),
+  );
+  const planned = missingLeads
+    .map((lead) => ({
+      lead,
+      query: sanitizeSerperQuery(`${lead.title} product page`),
+    }))
+    .filter(({ query }) => query && !existingQueryKeys.has(normalizeText(query)));
+  const withinCap = planned.slice(
+    0,
+    MAX_ORGANIC_IDENTITY_RESOLUTION_QUERIES,
+  );
+  const overCap = planned.slice(MAX_ORGANIC_IDENTITY_RESOLUTION_QUERIES);
+  const observedWithinCap = withinCap.map(({ lead, query }) => ({
+    lead,
+    query,
+    queryId: registerSearchQuery({
+      origin: "identity_resolution",
+      phase: "bounded_organic_identity_resolution",
+      purpose: "product_discovery",
+      query,
+      parentQueryId: lead.parentQueryId,
+      sourceDetail: lead.provider,
+    }),
+  }));
+
+  for (const { lead, query } of overCap) {
+    const queryId = registerSearchQuery({
+      origin: "identity_resolution",
+      phase: "bounded_organic_identity_resolution",
+      purpose: "product_discovery",
+      query,
+      parentQueryId: lead.parentQueryId,
+      sourceDetail: lead.provider,
+    });
+    recordQueryCull(
+      queryId,
+      "identity_resolution_cap_crowd_out",
+      `organic identity-resolution cap ${MAX_ORGANIC_IDENTITY_RESOLUTION_QUERIES}`,
+    );
+  }
+
+  if (!enabled) {
+    for (const { queryId } of observedWithinCap) {
+      recordQueryCull(
+        queryId,
+        "identity_resolution_flag_off",
+        "REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION is not on",
+      );
+    }
+    return result;
+  }
+
+  if (observedWithinCap.length === 0) {
+    return result;
+  }
+
+  const queryResults = await runWithConcurrency(
+    observedWithinCap.map(({ lead, query, queryId }) => async () => ({
+      candidates: await searchSerperOrganic(
+        query,
+        baseProductCategoryFromQuery(input.query),
+        {
+          queryId,
+          origin: "identity_resolution",
+          phase: "bounded_organic_identity_resolution",
+          purpose: "product_discovery",
+          originalQuery: query,
+          parentQueryId: lead.parentQueryId,
+          sourceDetail: lead.provider,
+        },
+      ),
+      lead,
+      query,
+    })),
+    Math.min(2, observedWithinCap.length),
+  );
+  const normalizedResolutionCandidates = queryResults.flatMap(
+    ({ candidates }) => candidates,
+  );
+  const acceptedResolutionCandidates: RawProductCandidate[] = [];
+  const resolutionRejected: Array<{ name: string; reason: string }> = [];
+  let prefilterRejectedCount = 0;
+  let resolutionDuplicateCount = 0;
+
+  for (const { candidates, lead } of queryResults) {
+    const dedupedForLeadResult = dedupeRawCandidates(candidates);
+    resolutionDuplicateCount += dedupedForLeadResult.duplicateCount;
+    const dedupedForLead = dedupedForLeadResult.candidates;
+    const prefilteredForLead = cheapPreFilterRawCandidates(
+      dedupedForLead,
+      input,
+      MAX_RESULTS_PER_QUERY,
+    );
+    prefilterRejectedCount += prefilteredForLead.rejectedCount;
+    resolutionRejected.push(...prefilteredForLead.rejected);
+
+    for (const candidate of prefilteredForLead.candidates) {
+      if (candidateMaterializesIdentityLead(candidate, lead)) {
+        acceptedResolutionCandidates.push(candidate);
+      } else {
+        const reason = "product_page_identity_selector_rejected";
+        recordCandidateIdentityResolutionLoss(candidate, reason);
+        resolutionRejected.push({ name: candidate.name, reason });
+      }
+    }
+  }
+
+  const deduped = dedupeRawCandidates([
+    ...result.candidates,
+    ...acceptedResolutionCandidates,
+  ]);
+  const searchConfig = getSearchDepthConfig();
+  const prefiltered = cheapPreFilterRawCandidates(
+    deduped.candidates,
+    input,
+    searchConfig.maxRawCandidates,
+  );
+  const rescueQueriesRun = result.stats.marketCoverage?.rescueQueriesRun || 0;
+
+  return {
+    candidates: prefiltered.candidates,
+    identityResolutionLeads: result.identityResolutionLeads,
+    stats: {
+      ...result.stats,
+      searchedOrganicQueries: uniqueStatStrings([
+        ...result.stats.searchedOrganicQueries,
+        ...observedWithinCap.map(({ query }) => query),
+      ]),
+      organicCalls: result.stats.organicCalls + observedWithinCap.length,
+      collectedCandidates:
+        result.stats.collectedCandidates + normalizedResolutionCandidates.length,
+      duplicateCandidatesRemoved:
+        result.stats.duplicateCandidatesRemoved +
+        resolutionDuplicateCount +
+        deduped.duplicateCount,
+      preFilteredCandidates: prefiltered.candidates.length,
+      rejectedCandidates:
+        result.stats.rejectedCandidates +
+        prefilterRejectedCount +
+        resolutionRejected.filter(
+          (row) => row.reason === "product_page_identity_selector_rejected",
+        ).length,
+      marketCoverage: coverageForCandidates(
+        prefiltered.candidates,
+        rescueQueriesRun,
+      ),
+      funnel: {
+        rawNames: [
+          ...(result.stats.funnel?.rawNames || []),
+          ...normalizedResolutionCandidates.map((candidate) => candidate.name),
+        ],
+        dedupedNames: deduped.candidates.map((candidate) => candidate.name),
+        keptNames: prefiltered.candidates.map((candidate) => candidate.name),
+        rejected: [
+          ...(result.stats.funnel?.rejected || []),
+          ...resolutionRejected,
+        ],
+      },
+    },
+  };
+}
+
 export function mergeSerperSearchResults(
   primary: SerperSearchResult,
   followUp: SerperSearchResult,
@@ -4403,6 +4767,10 @@ export function mergeSerperSearchResults(
 
   return {
     candidates: deduped.candidates,
+    identityResolutionLeads: uniqueIdentityResolutionLeads([
+      ...(primary.identityResolutionLeads || []),
+      ...(followUp.identityResolutionLeads || []),
+    ]),
     stats: {
       ...primary.stats,
       generatedQueries: uniqueStatStrings([
