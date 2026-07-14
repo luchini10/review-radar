@@ -1,7 +1,7 @@
 # Market-Leader Evaluation Method and Dated Leader Snapshots
 
 **Mechanics version:** `leaders-v2026-07c` (Taylor ratified 2026-07-14)
-**Evidence status:** matching/scoring mechanics and both C4 lists frozen
+**Evidence status:** frozen mechanics/lists; C4 safety-stopped after 4/6 runs
 **Supersedes:** `leaders-v2026-07b` — see sections 3 and 5. Results are
 never compared across snapshot versions.
 **Owner:** Phase 6 freeze-point deliverable per
@@ -128,6 +128,27 @@ These values are reproducible under the frozen matcher but are historical,
 non-canonical observations under `leaders-v2026-07a`. Taylor delegated the
 broad-list judgment for the `leaders-v2026-07b` re-freeze; the later whole-token
 correction for RR-082 does not change the historical six values.
+
+### C4 canonical observation (M2, 2026-07-14, incomplete by safety rule)
+
+| Run | Raw presence | Normalized pool | Flag-on final |
+|---|---:|---:|---:|
+| shop-vac c4-07c-run1 | 7/7 | 1/7 | 2/7 |
+| shop-vac c4-07c-run2 | 7/7 | 1/7 | 1/7 |
+| shop-vac c4-07c-run3 | 7/7 | 2/7 | 1/7 |
+| **Shape A mean** | **7.0/7** | **1.33/7** | **1.33/7** |
+| robot-vac c4-07c-run1 | 4/4 | 1/4 | 1/4 |
+| **Shape B mean** | **4.0/4** | **1.0/4** | **1.0/4 — informational only** |
+
+All four fixtures are exact-contract, cache-cold, commit-pinned, balanced, and
+below the 120-attempt ceiling. The first constrained run rendered a foreign-
+model image and triggered the mandatory RR-061 stop, so B2/B3 were never
+dispatched and constrained stability is NotScored. The complete broad shape is
+the first canonical `07c` observation: it fails both frozen floors without any
+rounding or threshold revision. Same-response flag-off/flag-on normalized
+coverage was identical and normalization recovery added no leader coverage.
+Raw presence shows that Serper found every leader in every run; normalization
+and later selection discarded them.
 
 ## 4. v1.0 targets (amended)
 

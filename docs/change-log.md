@@ -9,6 +9,35 @@ Update this file after:
 - important bug fixes
 - live QA fixes worth remembering
 
+## 2026-07-14
+
+### 🟧 Codex - Corrective C4 live evidence
+
+#### Measured
+
+- Ran three cache-cold broad and one cache-cold constrained C4 searches before
+  the mandatory RR-061 stop. The four usable fixtures consumed 227 physical
+  Serper attempts with zero retries, fallbacks, or guard trips; two constrained
+  searches were intentionally not dispatched.
+- Broad raw leader presence was 7/7 in every run, but normalized-pool and final
+  means were both 1.33/7. Same-response recovery changed no leader coverage.
+  The frozen recall gates failed and R7A remains blocked.
+- Reopened RR-060 and RR-061, and filed RR-084 for a KitchenAid ice maker
+  rendered as a robot-vacuum near match. Recovery remains default-off and
+  `.env.local` is unchanged.
+
+#### Changed
+
+- Hardened only the offline C4 analyzer so an already-enumerated wrong-type
+  term in structured title/evidence cannot be hidden by a truncated display
+  name (`97f783f`). Product behavior and the ratified benchmark are unchanged.
+
+#### Verified
+
+- Focused analyzer/leader tests 17/17; full suite 907/907 across 127 suites;
+  typecheck and build pass; lint has 0 errors/3 pre-existing warnings; offline
+  eval reports no red flags.
+
 Do not update this file for tiny typo fixes, formatting-only edits, or internal cleanup that does not change behavior.
 
 ## 2026-07-13

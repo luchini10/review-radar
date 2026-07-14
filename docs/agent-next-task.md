@@ -1,6 +1,6 @@
 # Agent Next Task
 
-Generated: 2026-07-13
+Generated: 2026-07-14
 
 ## Read this first — progressive retrieval protocol
 
@@ -17,83 +17,95 @@ peer-review debts, and current verification.
 
 ## Current state
 
-- Dev flag: `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`.
-  `REVIEW_RADAR_PINNED_PLANNING` remains off. Default-off
-  `REVIEW_RADAR_NORMALIZATION_RECOVERY` is not promoted; `.env.local` is
-  unchanged.
-- The failed R7 readiness result remains 1/7 Serper-only normalized-pool recall
-  in each of two usable broad runs. R7A remains blocked.
-- C4 deterministic preflight is complete in two commits. `c80543d` closes the
-  residual RR-060 defense-in-depth gap for concise shop-vac hose/nozzle/filter-
-  bag titles while preserving complete vacuum listings. `0f9f0e8` adds the
-  same-provider-response flag-off/flag-on normalization counterfactual, source-
-  path attribution, exact C4 request capture, invalid-sample exclusion, and a
-  debug-only 120-physical-attempt per-request circuit breaker.
-- The counterfactual runs the same normalization functions as live runtime and
-  records runtime parity for each result. It reconstructs normalized-pool
-  opportunity only; flag-on final recall is an absolute result, not a claimed
-  improvement over a separate flag-off final run.
-- Taylor ratified `leaders-v2026-07c` exactly as documented. Commit `7141894`
-  freezes the seven broad shop-vac leaders, the constrained families, and the
-  letters-plus-digits matcher. The instrument supplements title-only reporting
-  with bounded path-only source evidence. Constrained families are
-  Shark Matrix/AI/IQ; eufy C10/Clean/X8; Roborock Q5/Q10; and Roomba
-  105/i3/i4/i5.
-- Verification after the freeze: focused 16/16; full suite 906/906 across 127
-  suites; typecheck passes. The prior C4 preflight build/lint/offline-eval
-  result remains green. No C4 live request has run yet.
-- Register unchanged: 83 total — 78 Fixed, 4 Needs Investigation, 1 Won't Fix.
+- Corrective C4 is closed as a failed, safety-stopped live phase. Taylor
+  ratified `leaders-v2026-07c` and approved six searches. Three broad and one
+  constrained request completed; the first constrained run triggered the
+  mandatory RR-061 stop, so B2/B3 were not dispatched.
+- All four fixtures are exact-contract, cache-cold, balanced, commit-pinned to
+  `2d83cab0711e`, and below the 120-attempt ceiling. They spent 227 physical
+  Serper attempts (42 + 54 + 66 + 65), with zero retries/fallbacks. Live
+  fixtures remain untracked and must not be committed.
+- Broad raw provider presence was 7/7 in all three runs. Ratified `07c`
+  normalized-pool recall was `1/7`, `1/7`, `2/7` (mean `1.33/7`); absolute
+  final recall was `2/7`, `1/7`, `1/7` (mean `1.33/7`). Both the ≥5/7 pool
+  and ≥3/7 final gates failed. Broad pool/final Jaccard was
+  `0.1778`/`0.0000`; constrained stability is NotScored.
+- Same-response flag-off and flag-on normalized coverage were identical in all
+  four runs: zero parity violations and zero leader recovery opportunities.
+  Normalization recovery does not clear the measured bottleneck and remains
+  default-off.
+- Safety: RR-060 is reopened for a displayed Bissell `18P03` duplicate;
+  RR-061 is reopened because `Q10-S5_140x.jpg` rendered on Roborock `Q10 X5+`;
+  RR-084 is newly filed because a KitchenAid ice maker rendered as a robot-
+  vacuum near match. Exact hard-constraint failures and false-accessory
+  collapses were zero.
+- Query hygiene stayed green: zero editorial seed searches and no recorded
+  wildcard/repeated-token malformed outbound query. Three displayed AI-stream
+  cards were DEWALT `DXV12P`, but the exact model was already present in the
+  raw Serper results of each corresponding run.
+- Commit `97f783f` makes the offline analyzer inspect full structured card
+  evidence for already-frozen wrong-type terms, so a truncated display name
+  cannot hide an enumerated wrong-type class. It does not alter the ratified
+  leader benchmark or product behavior.
+- Dev flag state is unchanged: `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`;
+  `REVIEW_RADAR_PINNED_PLANNING` off; `REVIEW_RADAR_NORMALIZATION_RECOVERY`
+  unpromoted/default-off. `.env.local` was not modified.
+- Register: 84 total — 76 Fixed, 7 Needs Investigation, 1 Won't Fix.
 
-## Active approved phase — C4 live window
+## Next task — approval pending
 
-Taylor explicitly approved the C4 live window as **six searches**: three
-cache-cold `shop vac` and three cache-cold `robot vacuum` / `under $300` /
-`self-emptying` requests. Use 486 physical Serper attempts as the planning
-basis. Actual attempts may differ and must be reported; each request stops at
-120 attempts. A tripped request is spent/excluded, and any replacement search
-needs fresh approval.
+No implementation or live phase is approved. The recommended next phase is a
+zero-live deterministic safety repair for RR-061, RR-060, and RR-084, in that
+order:
 
-After a complete usable window, decide C5. A pass may only unblock a
-separately approved R7A; it does not promote recovery. A failure produces a
-diagnosis without weakening thresholds.
+1. Fail first on the captured `Q10 X5+`/`Q10-S5` image case, then require the
+   complete set of filename model claims to be compatible rather than allowing
+   one shared family token to clear a foreign sibling token. Preserve all prior
+   opaque-CDN, neutral-size, same-model, family, and mixed-model controls.
+2. Fail first on the displayed Bissell `18P03` pair at the actual post-
+   enrichment/final-selection seam. Diagnose why a pair for which
+   `areSameExactModelProduct()` is true survives final dedupe; do not widen the
+   identity predicate until the bypass point is proven.
+3. Fail first on an explicitly identified non-requested product class after
+   enrichment. Reuse the shared product-type verdict as a final-card veto while
+   preserving sparse valid requested-type products; do not add KitchenAid,
+   retailer, or model exceptions.
 
-## C4 live contract
-
-- Run all six requests with normalization recovery enabled and current promoted
-  flags otherwise unchanged. The same-response trace supplies the flag-off
-  normalized-pool counterfactual; do not buy separate flag-off provider runs.
-- Count only fixtures with the exact frozen request, commit hash, cache-cold
-  ledger, required flags, balanced reconciliation, intact attempt guard, and
-  no exclusion reason. Spent/excluded fixtures remain in actual cost totals but
-  never enter quality averages.
-- Report raw-provider presence first. A leader absent in all three raw runs is
-  a benchmark-validity signal; a title-only miss rescued by bounded source-path
-  evidence is reported explicitly, never hand-adjusted.
-- Broad runs own the ≥5/7 normalized-pool and ≥3/7 absolute flag-on final gates.
-  Constrained runs primarily test hard constraints, wrong type, duplicate and
-  accessory-collapse safety; constrained recall is informational.
-- An RR-061-class image regression stops the window. Any other acceptance
-  failure marks the sample diagnostic-only; unrelated defects are filed and
-  evidence collection may continue under the already approved six-search cap.
+The phase must be behavior-changing, default-safe, generalized, and fully
+deterministic. It requires Taylor's explicit approval. Do not buy replacement
+C4 runs: the gate already failed conclusively and the remaining two approved
+requests were intentionally not spent under the RR-061 stop rule.
 
 ## Hard boundaries
 
-Run only the six approved C4 searches under the contract above. Do not modify
-`.env.local`; promote normalization recovery; alter the frozen benchmark;
-start C5/R7A; commit live fixtures; replace a spent/excluded request; or stage
-pre-existing untracked artifacts without Taylor's separate explicit approval.
-Dialogue entry [27] asks Claude to verify the preflight commits when available,
-but no peer-review debt blocks this approved window.
+Do not run live Serper/OpenAI calls; modify `.env.local`; promote any flag;
+start C5/R7A; weaken `leaders-v2026-07c` or its thresholds; commit live
+fixtures; or implement the recommended repair without Taylor's separate
+approval. Preserve every price, citation, requirement, product-type, identity,
+image, eligibility, and dedupe trust gate.
+
+## Verification
+
+- Focused analyzer/leader tests: 17/17.
+- Full unit suite: 907/907 across 127 suites.
+- Typecheck: pass.
+- C4 analyzer regression after benchmark-preserving correction: 7/7.
+- Production build: pass. Lint: 0 errors / 3 pre-existing warnings. Offline
+  evaluation: no red flags.
+
+## Outstanding peer-review debt
+
+Dialogue entry [28] asks Claude to verify the C4 evidence and proposed repair
+ordering when available. That review is advisory and does not authorize work.
 
 ## Retrieval map
 
 | Need | Retrieve |
 |---|---|
-| Phase acceptance | `docs/forward-roadmap.md` corrective C4 section |
-| Peer review | `docs/agent-dialogue.md` protocol + entry [27] onward |
-| Defect | `docs/RR-Issues-Report.md` RR-060 and current summary |
-| Trust rationale | `docs/review-radar-test-memory.md` C4 preflight contract |
-| Verification | `docs/qa-loop-results.md` latest C4 preflight entry |
-| Historical handoff | `docs/codex-handoff-phased-plan.md` named record |
-| Architecture | `ReviewRadar-Overview.md` named subsystem |
-| Change history | `docs/change-log.md` 2026-07-13 entry |
+| C4 result / next gate | `docs/forward-roadmap.md` corrective C4/C5 section |
+| Peer review | `docs/agent-dialogue.md` protocol + entry [28] onward |
+| Active defects | `docs/RR-Issues-Report.md` RR-014, RR-015, RR-060, RR-061, RR-084 |
+| Frozen recall evidence | `docs/phase-6-market-leader-evaluation.md` C4 section |
+| Trust rationale | `docs/review-radar-test-memory.md` latest C4 entry |
+| Verification | `docs/qa-loop-results.md` latest C4 entry |
+| Change history | `docs/change-log.md` 2026-07-14 entry |

@@ -1,8 +1,8 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through corrective C2/C3 safety closure
+## Compiled for AI Agent Consumption — Phase 0 through corrective C4 safety stop
 
-**Generated:** 2026-07-13
-**Scope:** All phases from initial measurement harness through corrective C2/C3 safety closure
+**Generated:** 2026-07-14
+**Scope:** All phases from initial measurement harness through corrective C4 safety stop
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -19,14 +19,14 @@ only when maintaining this register or auditing its full history.
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 83 |
+| Total Issues | 84 |
 | Critical | 11 |
-| High | 34 |
+| High | 35 |
 | Medium | 33 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 4 |
-| Fixed | 78 |
+| Needs Investigation | 7 |
+| Fixed | 76 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -106,6 +106,7 @@ only when maintaining this register or auditing its full history.
 | Phase R5 — Corrective adversarial closure | 1 |
 | Phase R6 — Source-brand trust + query hygiene | 0 |
 | Phase R7 — Readiness gate | 1 |
+| Corrective C4 — renewed readiness evidence | 1 |
 | Phase R4 — Live after-sample | 1 |
 | RR-061 image-provenance safety repair | 0 |
 | RR-061 round 4 / RR-080 image micro-phase | 1 |
@@ -508,6 +509,14 @@ only when maintaining this register or auditing its full history.
 
 **Phase 5H outcome metric:** Status remains Needs Investigation. Offline reassessment of five available broad benchmark fixtures kept core-leader coverage neutral: robot vacuum `5/7`, gas grill `3/7`, cordless drill `4/7`, air purifier `3/7`, and shop vac `0/7` before and after Phase 5H (mean `3.0/7`). Exact duplicates and niche winners improved where relevant, but no full baseline or discovery change ran, so Phase 5H does not claim a leader-recall gain.
 
+**Corrective C4 live evidence (2026-07-14):** Three usable cache-cold broad
+`shop vac` runs under ratified `leaders-v2026-07c` scored normalized-pool recall
+`1/7`, `1/7`, and `2/7` (mean `1.33/7`) and absolute final recall `2/7`,
+`1/7`, and `1/7` (mean `1.33/7`). All seven leaders were present in the raw
+provider results in every broad run, so the live bottleneck is downstream of
+provider discovery. The ≥5/7 pool and ≥3/7 final gates both failed; the
+thresholds remain unchanged and RR-014 remains Needs Investigation.
+
 ---
 
 #### RR-015
@@ -541,6 +550,13 @@ only when maintaining this register or auditing its full history.
 **R4 after-sample measurement and R3 non-promotion decision (2026-07-12):** The six-usable-run after-sample (both flags on) measured strategy-query overlap at `0.0196` versus `0.0000` before — pinning is live-compatible (the API accepts the snapshot and `temperature: 0`, and `rawAi.strategy` was present on every run) but does NOT materially stabilize planner output; planner variance is inherent at temperature zero. Taylor therefore decided on 2026-07-12 that `REVIEW_RADAR_PINNED_PLANNING` stays default-off and unpromoted: it fails its own acceptance criterion, and promoting an ineffective control would misattribute future stability changes. Downstream stability nonetheless improved (pool/final Jaccard `0.1051/0.0333 → 0.2694/0.1429`) — attributable to `REVIEW_RADAR_CONSTRAINT_ALLOCATION` (promoted the same day) by elimination, since the planner's own output overlap did not move. Conclusion for RR-015: run-to-run variance is not fixable at the planner-parameter level; the remaining reduction path is shrinking planner influence (roadmap R7) plus persistence/caching. Status remains Needs Investigation pending the ≥60% target.
 
 **Correction (2026-07-12, corrective evidence pass):** Three claims in the paragraph above are RETRACTED as overreach beyond the sample: "attributable to REVIEW_RADAR_CONSTRAINT_ALLOCATION by elimination" (invalid — both flags shared one sample, provider variance was uncontrolled, and the always-on RR-061/RR-078/RR-079 repairs landed between the compared samples and themselves alter candidate pools), "planner variance is inherent at temperature zero," and "not fixable at the planner-parameter level" (one six-run sample on one model cannot establish either universal). The supported conclusions are only: R3 pinning was API-compatible but did not materially improve strategy overlap in this sample, so non-promotion is justified by its own acceptance criterion; the downstream pool/final improvement is real but its causal attribution is mixed. The promotion decision for R4 stands on R4's directly measured per-run criteria (constraint-bearing protected queries, zero duplicate budgets), not on the retracted attribution. Identified in adversarial review (agent dialogue, Codex).
+
+**Corrective C4 partial stability evidence (2026-07-14):** The three usable
+broad runs produced pool pairwise Jaccard `0.1778` and final pairwise Jaccard
+`0.0000`. The RR-061 safety stop left only one usable constrained run, so
+constrained stability is NotScored. This incomplete two-shape window cannot
+close RR-015; status remains Needs Investigation and the ≥60% target is not
+weakened.
 
 ---
 
@@ -1861,7 +1877,7 @@ Ten approved fresh searches were saved and replayed: `coffee maker`, `office cha
 | **Phase** | Phase 4F |
 | **Severity** | Medium |
 | **Title** | True same-model duplicates can occupy multiple final slots |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** `gaming monitor` selected `Gigabyte M27Q Gaming Monitor (Rev. 1.0)` at rank #1 and `Gigabyte M27Q 27" QHD ...` at rank #2. Both source-upgrade traces used `Gigabyte M27Q` and attached the same `$160` offer. They are retailer/manufacturer representations of the same model, yet remained separate cards while other variants were correctly collapsed.
 
@@ -1928,6 +1944,17 @@ control are pinned in `tests/identityCollapse.test.mjs` and
 `tests/productTypeIntent.test.mjs`; commit `c80543d`. Register counts and
 RR-060's Fixed status are unchanged. Zero live calls.
 
+**Corrective C4 live regression (2026-07-14):** Reopened as Needs
+Investigation. Broad run A3 rendered Bissell Garage Pro model `18P03` twice:
+the verified manufacturer card `Garage Pro® Wet Dry Vac` and the Amazon card
+`BISSELL Garage Pro Wall-Mounted Wet Dry Car Vacuum ...`. The first carries
+model/SKU `18P03`; the second's enriched metadata title and URL carry `18P03`.
+`areSameExactModelProduct()` returns true for the displayed pair, yet both were
+selected, proving that final-selection dedupe can be bypassed after independent
+enrichment. The Lowes Garage Pro representation is not claimed as the same
+model because its captured evidence lacks `18P03`. Evidence: untracked
+`tests/fixtures/review-radar-live/shop-vac.c4-07c-run3.json`.
+
 ---
 
 #### RR-061
@@ -1938,7 +1965,7 @@ RR-060's Fixed status are unchanged. Zero live calls.
 | **Phase** | Phase 4F |
 | **Severity** | Medium |
 | **Title** | Product image metadata can contain page URLs, generic brand assets, or unrelated navigation images |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** All 70 final cards had a non-empty image field, but several were not usable product images. Leaf-blower examples included a truncated Home Depot image directory, Greenworks/BLACK+DECKER product-page URLs, a WORX navigation banner, and an EGO brand logo. Dog-food examples included a Blue Buffalo logo and PetSmart category hero. An LG gaming-monitor image ended in `.html`.
 
@@ -1979,6 +2006,16 @@ The filename backstop now recognizes adjacent alphabetic-family plus numeric tok
 **Round-4 deterministic regression and resolution (2026-07-11):** Claude's adversarial review found `Saros_10_Silver_ID.png` was accepted for `Roborock Saros Z70`, proving the generalized RR-061 closure incomplete. RR-061 was therefore reopened for the micro-phase and returned to Fixed only after fail-first coverage. A target family directly adjacent to a mixed letter-digit model now asserts that family, so a split sibling is foreign; the existing compatible-token escape still accepts a filename that explicitly carries the target `Z70`. Neutral image words are explicitly excluded from model identity. Split claims retain 1–4 digit support so real one-digit product families remain protected. All earlier R2, `Saros_Z70`, flyout, same-model, JSON-LD, opaque-CDN, Google, Amazon-modifier, retina, dimension, model-less, and cross-category Nintendo Switch 2 controls remain green.
 
 **Round-4 proof:** Focused fail-first passed 24/26 with exactly the RR-061 sibling and RR-080 neutral-counter tests failing. Focused final passed 27/27; full suite passed 818/818 across 120 suites; typecheck/build/eval passed; lint reported 0 errors and 3 existing warnings. Zero live calls and no eligibility/type/search/ranking/requirement/price/citation or `.env.local` change.
+
+**Corrective C4 safety-stop regression (2026-07-14):** Reopened as Needs
+Investigation. The first constrained run rendered image
+`Q10-S5_140x.jpg` on a verified `Roborock Q10 X5+` card. A deterministic call
+to `validateProductImageCandidate()` with the captured product/image context
+accepts it at High confidence. Static trace identifies the gap: the compatible
+shared `Q10` image token returns success before the resolver evaluates the
+foreign sibling token `S5` against target `X5+`. The mandated RR-061 stop fired
+after four usable requests; constrained runs B2/B3 were not dispatched.
+Evidence: untracked `tests/fixtures/review-radar-live/robot-vacuum-under-300-self-emptying.c4-07c-run1.json`.
 
 **Sweep result:**
 
@@ -2824,6 +2861,53 @@ existing warnings; zero live calls.
 
 ---
 
+#### RR-084
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-084 |
+| **Phase** | Corrective C4 renewed readiness evidence |
+| **Severity** | High |
+| **Title** | Explicit non-vacuum product can render as a robot-vacuum near match |
+| **Status** | Needs Investigation |
+
+**Description:** The first constrained C4 run displayed `KitchenAid
+KUIX515SPA 15 Inch Built-In Undercounter ...` as a robot-vacuum near match.
+The verified Open Graph title, product URL, image, and listing facts all
+identify a built-in clear ice maker. It is also `$3,222`, far outside the
+`under $300` request.
+
+**Where it occurs:** Discovery product-type classification, requirement
+revalidation, and final near-match eligibility.
+
+**Evidence:** Untracked fixture
+`tests/fixtures/review-radar-live/robot-vacuum-under-300-self-emptying.c4-07c-run1.json`.
+Serper query q-0001 (`site:ajmadison.com robot vacuum self-emptying under
+$300`) returned the truncated listing. It normalized, passed the prefilter,
+and reached final near selection. Later product-page enrichment made `ice
+maker` explicit, but category remained unknown rather than becoming a hard
+type conflict. The frozen wrong-type vocabulary did not enumerate arbitrary
+appliance classes, so the automated term list alone did not flag it. Manual
+structured-metadata audit records the card as wrong type. Separately, C4
+hardened the analyzer so an already-enumerated wrong-type term present in full
+metadata is not hidden by a truncated display name; it did not add `ice maker`
+to the ratified benchmark after observing the result.
+
+**Expected:** Once source-derived product identity explicitly proves a
+different product class, the candidate cannot render as either exact or near
+for the requested category. A missing requested-category phrase alone must not
+reject genuinely sparse products; the veto requires positive conflicting
+evidence.
+
+**Suggested fix or next action:** Reproduce fail-first at the shared
+post-enrichment type boundary, then make positive non-requested product-type
+evidence a hard final-card veto. Reuse the existing product-type verdict and
+preserve sparse valid robot-vacuum controls; do not add a KitchenAid, retailer,
+or model exception. RR-083 remains Fixed because its truncated path-evidence
+gap is distinct from this post-enrichment explicit-class gap.
+
+---
+
 ## R7 readiness planning note — 2026-07-12
 
 No issue status changed. A zero-cost M3 provenance audit of the six R4-after
@@ -2901,19 +2985,50 @@ opportunity is NotScored rather than zero. Focused tests are 71/71; the full
 suite is 891/891 across 127 suites; typecheck/build/offline eval pass; lint has
 0 errors/3 existing warnings. Zero live calls; `.env.local` is unchanged.
 
+## Corrective C4 safety-stop note — 2026-07-14
+
+Taylor ratified `leaders-v2026-07c` and approved six requests with 486 physical
+attempts as the planning basis and a 120-attempt request ceiling. Three broad
+and one constrained request completed as usable cache-cold fixtures. They used
+227 physical attempts (42 + 54 + 66 + 65), with zero retries/fallbacks and no
+guard trip. The first constrained run reproduced RR-061, so the standing stop
+rule prevented B2/B3 from dispatching; no replacement is authorized or needed
+for this failed gate.
+
+All seven broad leaders appeared in raw provider results in all three broad
+runs. Normalized-pool recall was `1/7`, `1/7`, `2/7`; absolute final recall was
+`2/7`, `1/7`, `1/7`. Same-response flag-off and flag-on normalized coverage
+were identical, parity violations were zero, and recovery added no leader/run
+opportunity. Broad pool/final Jaccard was `0.1778`/`0.0000`; constrained
+stability is NotScored. The broad gates fail without threshold changes, C5
+cannot unblock R7A, and normalization recovery remains default-off.
+
+Safety findings reopen RR-060 (Bissell `18P03` duplicate) and RR-061
+(`Q10-S5` image on `Q10 X5+`), and file RR-084 (KitchenAid ice maker rendered
+as robot-vacuum near). Exact hard-constraint failures were zero,
+false-accessory collapses were zero, editorial seed searches were zero, and no
+wildcard/repeated-token malformed outbound query was recorded. Three displayed
+AI-stream cards were DEWALT `DXV12P`; that exact model was already present in
+the raw Serper results of each corresponding run, so none proves unique AI
+discovery value.
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (4 issues)
+### Needs Investigation (7 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
+- RR-060: True same-model duplicates can occupy multiple final slots
+- RR-061: Product image metadata can resolve to a different product model
+- RR-084: Explicit non-vacuum product can render as a robot-vacuum near match
 
-### Fixed (78 issues)
-RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 through RR-044, RR-046 through RR-083 except RR-014, RR-015, RR-024, RR-037, and RR-045
+### Fixed (76 issues)
+RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
+RR-038 through RR-044, and RR-046 through RR-083 except RR-060 and RR-061
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -2922,7 +3037,10 @@ RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036, RR-038 thro
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-014 + RR-015** — R7 readiness remains blocked on recall and stability.
-   C3 now provides default-off recovery and shadow telemetry, but only a
-   separately approved C4 window can measure whether it clears the gate.
-2. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3 but varied by model, while Tapo appeared raw and died in normalization.
+1. **RR-061 + RR-060 + RR-084** — C4 exposed image identity, final dedupe,
+   and explicit wrong-type safety failures. Diagnose and repair them
+   deterministically before any further live window.
+2. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
+   final overlap. Recovery stays default-off and R7A stays blocked.
+3. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
+   but varied by model, while Tapo appeared raw and died in normalization.

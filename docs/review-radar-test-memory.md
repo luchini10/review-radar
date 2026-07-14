@@ -1681,3 +1681,41 @@ a known conservative undercount.
 - Verification: focused C4 instrumentation/ledger 77/77; full 905/905 across
   127 suites; typecheck/build/eval pass; lint 0 errors/3 pre-existing warnings.
   Commits `c80543d` and `0f9f0e8`; zero live calls; `.env.local` unchanged.
+
+## Corrective C4 live evidence and stop — 2026-07-14
+
+- Approval was six searches, not an attempt pool. Four usable cache-cold
+  requests consumed 227 physical attempts: broad `42/54/66`, constrained `65`.
+  All had zero retries/fallbacks, balanced ledgers, exact 120-attempt guards,
+  and commit `2d83cab0711e`. RR-061 stopped the window before B2/B3; never use
+  those two unspent approvals after phase closeout without a new explicit
+  authorization.
+- Under ratified `leaders-v2026-07c`, all broad leaders were raw-present 3/3.
+  Pool recall `1/7, 1/7, 2/7`; final recall `2/7, 1/7, 1/7`; means `1.33/7`.
+  The provider is not the observed leader-presence bottleneck. Most leader
+  outcomes terminate at `search_or_listing_url` normalization loss.
+- Same-response recovery result: flag-off and flag-on normalized coverage were
+  identical, parity violations zero, unique leader/run recovery opportunities
+  zero. The enabled recovery only helps when the same provider result supplies
+  a safe alternate merchant URL; these misses generally did not. Keep recovery
+  default-off.
+- RR-061 new fail-first specification: target `Roborock Q10 X5+`, captured
+  verified-page image `Q10-S5_140x.jpg`. Current resolver accepts High because
+  any compatible token (`Q10`) returns before foreign sibling token (`S5`) is
+  evaluated. The repair must evaluate claim-set compatibility while preserving
+  same-model, neutral size, opaque CDN, and multi-model controls.
+- RR-060 new fail-first specification: displayed Bissell manufacturer
+  `Garage Pro® Wet Dry Vac` (`18P03`) and Amazon `Garage Pro ... 18P03` survive
+  together even though `areSameExactModelProduct()` returns true after
+  enrichment. Find the post-enrichment/final-selection bypass; do not widen
+  identity inference without proving the seam.
+- RR-084 specification: a truncated AJ Madison result normalized from
+  `site:ajmadison.com robot vacuum self-emptying under $300`; enrichment later
+  proved KitchenAid `KUIX515SPA` is an ice maker, but Category remained unknown
+  and near selection still rendered it. Positive conflicting product identity
+  must veto final cards without treating every sparse requested-type title as
+  wrong.
+- Analyzer invariant from `97f783f`: frozen wrong-type terms are checked
+  against structured title/pros/cons/citation titles, not only truncated display
+  names. Do not expand a ratified benchmark post hoc to catch an observed class;
+  record non-enumerated manual safety findings separately.

@@ -6658,3 +6658,53 @@ families and path-evidence matching contract still require Taylor's explicit
 ratification. The six-search live window also requires separate explicit
 approval using 486 physical attempts as the planning basis; each request is
 bounded at 120 and a replacement for any spent/excluded run is not preapproved.
+
+## 🟧 Codex QA Update — 2026-07-14 (Corrective C4 live safety stop)
+
+**Verdict: C4 FAILED RECALL AND SAFETY; STOPPED AT 4/6; R7A BLOCKED.**
+
+- Taylor ratified `leaders-v2026-07c` and approved three broad plus three
+  constrained searches, using 486 physical attempts as the planning basis and
+  120 as the per-request ceiling. Three broad and one constrained request are
+  usable. The first constrained request reproduced RR-061, so B2/B3 were not
+  dispatched under the standing mandatory stop rule.
+- The four cache-cold fixtures reconcile 251 logical lookups = 24 cache hits +
+  227 misses/physical attempts. Retries and fallbacks are zero; each attempt
+  guard reserved exactly its physical count and none tripped. `.env.local` was
+  unchanged; fixtures remain untracked.
+- Every one of the seven broad leaders appeared in raw provider evidence in
+  every broad run. Normalized-pool recall was `1/7`, `1/7`, `2/7` (mean
+  `1.33/7`); flag-on final recall was `2/7`, `1/7`, `1/7` (mean `1.33/7`).
+  Both frozen gates fail. Broad pool/final pairwise Jaccard was
+  `0.1778`/`0.0000`; constrained stability is NotScored.
+- The same-response normalization counterfactual observed all four runs with
+  zero parity violations. Flag-off and flag-on normalized leader coverage were
+  identical, and there were zero unique leader/run recovery opportunities.
+  Recovery remains default-off and unpromoted.
+- Safety findings: broad A3 selected two Bissell `18P03` representations
+  (`areSameExactModelProduct()` is true), reopening RR-060. Constrained B1
+  rendered `Q10-S5_140x.jpg` on Roborock `Q10 X5+`; the captured deterministic
+  resolver call accepts it at High confidence because shared `Q10` clears the
+  foreign `S5` token, reopening RR-061. The same run displayed a verified
+  KitchenAid built-in ice maker as a robot-vacuum near match, filing RR-084.
+- Exact hard-constraint failures and false-accessory collapses were zero. Seed
+  searches were zero and no wildcard/repeated-token malformed outbound query
+  was recorded. Each broad run displayed one AI-stream DEWALT `DXV12P`, but
+  that exact model already existed in the same run's raw Serper results.
+- The analyzer initially inspected only display names for its frozen wrong-
+  type term list. Commit `97f783f` makes it inspect structured title, pros,
+  cons, and citation titles as well, with a truncated-title regression. The
+  observed ice-maker class remains a manual structured-metadata finding; the
+  ratified benchmark was not post-hoc expanded.
+
+```text
+focused analyzer + leader snapshot: 17/17
+npm test: 907/907 across 127 suites
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red flags
+live requests: 4 dispatched / 4 usable / 2 intentionally unspent
+physical Serper attempts: 227 (42 + 54 + 66 + 65)
+retries/fallbacks/guard trips: 0 / 0 / 0
+```

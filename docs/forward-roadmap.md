@@ -409,6 +409,21 @@ normalized-pool mean and ≥3/7 absolute flag-on final mean; the counterfactual
 does not prove a flag-off final outcome. Constrained runs primarily validate
 hard constraints and safety; constrained recall stays informational.
 
+**C4 live result (2026-07-14; safety-stopped at 4/6):** Three broad and one
+constrained request are usable, cache-cold, balanced, and commit-pinned. They
+spent 227 physical attempts with zero retries/fallbacks and no ceiling trip.
+The first constrained run rendered `Q10-S5_140x.jpg` on Roborock `Q10 X5+`,
+reopening RR-061 and triggering the standing stop before B2/B3. Broad raw
+provider presence was 7/7 in every run, but normalized-pool recall was
+`1/7`, `1/7`, `2/7` (mean `1.33/7`) and final recall was `2/7`, `1/7`,
+`1/7` (mean `1.33/7`). Flag-off and flag-on normalized coverage were equal,
+with zero parity violations and zero leader recovery opportunities. Broad
+pool/final Jaccard was `0.1778`/`0.0000`. RR-060 also regressed and RR-084 was
+filed for an ice maker displayed as a robot-vacuum near match. Therefore C4
+fails both recall and safety gates; recovery remains default-off, C5 cannot
+unblock R7A, and no threshold is weakened. The next action requires separate
+approval for deterministic diagnosis/repair, not another live window.
+
 **C1 result (M3, four usable readiness fixtures):** the tested pre-AI pool is a
 Serper `product_discovery` candidate that normalized, survived raw dedupe and
 cheap prefilter; a later `candidate_merge` loss still counts as pool-present.
