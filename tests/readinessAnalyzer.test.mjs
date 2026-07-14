@@ -11,6 +11,7 @@ function candidate(overrides) {
     candidateId: overrides.candidateId,
     name: overrides.name,
     productUrl: overrides.productUrl || "",
+    sourceIdentityPaths: overrides.sourceIdentityPaths || [],
     source: overrides.source,
     queryIds: overrides.queryIds || ["q-1"],
     normalized: overrides.normalized,
@@ -18,6 +19,7 @@ function candidate(overrides) {
     mergedIntoCandidateId: overrides.mergedIntoCandidateId || null,
     firstLoss: overrides.firstLoss || null,
     normalizationRecovery: overrides.normalizationRecovery || null,
+    normalizationCounterfactual: overrides.normalizationCounterfactual || null,
     selected: false,
   };
 }
@@ -80,6 +82,21 @@ function fixture() {
                   originalUrl: "https://www.google.com/search?q=ridgid+wd4070",
                   proposedUrl: "https://shop.example.com/products/ridgid-wd4070",
                   blocker: null,
+                },
+                normalizationCounterfactual: {
+                  runtimeMode: "flag_off",
+                  runtimeMatchesSelected: true,
+                  delta: "added",
+                  flagOff: {
+                    normalizedCandidateId: null,
+                    productUrl: "",
+                    rejectionReason: "search_or_listing_url",
+                  },
+                  flagOn: {
+                    normalizedCandidateId: "serper-ridgid-wd4070",
+                    productUrl: "https://shop.example.com/products/ridgid-wd4070",
+                    rejectionReason: null,
+                  },
                 },
               }),
               candidate({
@@ -162,5 +179,83 @@ describe("R7 readiness fixture analyzer", () => {
       aggregate.normalizationRecovery.prospective07cUniqueLeaderRunOpportunities,
       1,
     );
+    assert.equal(aggregate.normalizationCounterfactual.observedRuns, 1);
+    assert.equal(aggregate.normalizationCounterfactual.parityViolations, 0);
+    assert.equal(aggregate.broadFlagOnNormalizedMean, 2);
+    assert.equal(aggregate.broadFlagOffNormalizedMean, 1);
+  });
+
+  it("credits brand evidence from source paths without changing title-only reporting", () => {
+    const input = fixture();
+    const rawRidgid =
+      input.debug.stageFunnel.searchLedger.candidateLineage.candidates[0];
+    rawRidgid.name = "14 Gallon 6 Peak HP NXT Wet Dry Vacuum HD1400";
+    rawRidgid.sourceIdentityPaths = [
+      "/search",
+      "/p/RIDGID-14-Gallon-NXT-Wet-Dry-Vacuum-HD1400/123456789",
+    ];
+    rawRidgid.normalizationCounterfactual.flagOn.productUrl =
+      "https://merchant.example/p/RIDGID-14-Gallon-NXT-Wet-Dry-Vacuum-HD1400/123456789";
+    input.debug.stageFunnel.searchLedger.dispatch.attempts[0].results =
+      input.debug.stageFunnel.searchLedger.dispatch.attempts[0].results.filter(
+        (result) => !result.title.startsWith("RIDGID"),
+      );
+    input.debug.stageFunnel.searchLedger.dispatch.attempts[0].results.push({
+      title: "14 Gallon 6 Peak HP NXT Wet Dry Vacuum HD1400",
+      urlPaths: [
+        "/search",
+        "/p/RIDGID-14-Gallon-NXT-Wet-Dry-Vacuum-HD1400/123456789",
+      ],
+    });
+
+    const analysis = analyzeReadinessFixture(input);
+    const currentRidgid = analysis.current07b.leaders.find((leader) =>
+      leader.leader.startsWith("ridgid"),
+    );
+    const prospectiveRidgid = analysis.prospective07c.leaders.find((leader) =>
+      leader.leader.startsWith("ridgid"),
+    );
+
+    assert.equal(currentRidgid.rawPresence, false);
+    assert.equal(prospectiveRidgid.rawTitlePresence, false);
+    assert.equal(prospectiveRidgid.rawPresence, true);
+    assert.equal(currentRidgid.flagOnNormalizedPresence, false);
+    assert.equal(prospectiveRidgid.flagOnNormalizedPresence, true);
+    assert.deepEqual(prospectiveRidgid.sourceEvidenceOnlyRawNames, [
+      "14 Gallon 6 Peak HP NXT Wet Dry Vacuum HD1400",
+    ]);
+  });
+
+  it("pins the exact C4 request bytes including the literal dollar budget", () => {
+    const input = fixture();
+    input._request = {
+      query: "robot vacuum",
+      budget: "under $300",
+      priorities: "self-emptying",
+    };
+    assert.equal(analyzeReadinessFixture(input).requestContract.valid, true);
+
+    input._request.budget = "under ";
+    assert.equal(analyzeReadinessFixture(input).requestContract.valid, false);
+
+    input._request = { query: "shop vac" };
+    input._c4Shape = "constrained";
+    assert.equal(analyzeReadinessFixture(input).requestContract.valid, false);
+  });
+
+  it("excludes spent-invalid runs from quality metrics while retaining their cost", () => {
+    const analysis = analyzeReadinessFixture(fixture());
+    analysis.sampleValidity = { usable: false, reasons: ["warm_serper_cache"] };
+
+    const aggregate = aggregateReadinessAnalyses([analysis]);
+    assert.deepEqual(aggregate.sampleCounts, {
+      dispatched: 1,
+      usable: 0,
+      broadUsable: 0,
+      constrainedUsable: 0,
+    });
+    assert.equal(aggregate.broadProspective07cMean, null);
+    assert.equal(aggregate.cost.physicalAttempts, 2);
+    assert.equal(aggregate.cost.includesSpentExcludedRuns, true);
   });
 });

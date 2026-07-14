@@ -184,6 +184,41 @@ const rawGapCheck = {
 };
 
 describe("request-scoped search observability ledger", () => {
+  it("stops additional debug Serper dispatches at the configured per-request ceiling", async () => {
+    const previousCeiling = process.env.REVIEW_RADAR_MAX_SERPER_ATTEMPTS;
+    let physicalCalls = 0;
+
+    try {
+      process.env.REVIEW_RADAR_MAX_SERPER_ATTEMPTS = "1";
+      await withMockedSerper(async () => {
+        physicalCalls += 1;
+        return response({ shopping: [] });
+      }, async () => {
+        const snapshot = await runWithSearchObservabilityLedger(
+          ledger(),
+          async () => {
+            await searchSerperShopping("first robot vacuum", "robot vacuum");
+            await searchSerperShopping("second robot vacuum", "robot vacuum");
+            return buildSearchObservabilitySnapshot();
+          },
+        );
+
+        assert.equal(physicalCalls, 1);
+        assert.deepEqual(snapshot.dispatch.attemptGuard, {
+          maxAttempts: 1,
+          reservedAttempts: 1,
+          tripped: true,
+        });
+      });
+    } finally {
+      if (previousCeiling === undefined) {
+        delete process.env.REVIEW_RADAR_MAX_SERPER_ATTEMPTS;
+      } else {
+        process.env.REVIEW_RADAR_MAX_SERPER_ATTEMPTS = previousCeiling;
+      }
+    }
+  });
+
   it("retains displayed recommendation lineage when raw-result audit rows fill the cap", () => {
     const displayed = recommendation("Displayed Leader", {
       exactMatch: true,
@@ -510,6 +545,10 @@ describe("request-scoped search observability ledger", () => {
 
       const [rawResult] = snapshot.candidateLineage.candidates;
       assert.equal(rawResult.normalized, false);
+      assert.deepEqual(rawResult.sourceIdentityPaths, [
+        "/search",
+        "/products/example-rv200-robot-vacuum",
+      ]);
       assert.equal(rawResult.firstLoss.subreason, "search_or_listing_url");
       assert.deepEqual(rawResult.normalizationRecovery, {
         mode: "shadow",
@@ -560,6 +599,17 @@ describe("request-scoped search observability ledger", () => {
       assert.equal(candidate.productUrl, "https://shop.example.com/products/example-rv200-robot-vacuum");
       assert.equal(candidate.normalizationRecovery.mode, "enabled");
       assert.equal(candidate.normalizationRecovery.outcome, "recovered");
+      assert.equal(candidate.normalizationCounterfactual.runtimeMode, "flag_on");
+      assert.equal(candidate.normalizationCounterfactual.runtimeMatchesSelected, true);
+      assert.equal(candidate.normalizationCounterfactual.delta, "added");
+      assert.equal(
+        candidate.normalizationCounterfactual.flagOn.normalizedCandidateId,
+        candidate.candidateId,
+      );
+      assert.equal(
+        candidate.normalizationCounterfactual.flagOff.normalizedCandidateId,
+        null,
+      );
     });
   });
 

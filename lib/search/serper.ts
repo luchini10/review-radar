@@ -32,6 +32,7 @@ import { sourceUrlPathIdentityText } from "../sourceUrlIdentity.ts";
 import {
   attachSearchQueryId,
   ensureDispatchedQuery,
+  isSearchObservabilityEnabled,
   normalizeObservedQuery,
   queryOrigin,
   recordCandidateDedupeCapLoss,
@@ -45,7 +46,10 @@ import {
   recordSearchAttempt,
   recordSearchCacheLookup,
   registerSearchQuery,
+  reserveSearchAttempt,
   searchQueryId,
+  type NormalizationCounterfactual,
+  type NormalizationModeOutcome,
   type SearchNormalizationDecision,
   type SearchQueryContext,
   type SearchResultDigest,
@@ -78,6 +82,11 @@ const SERPER_ENDPOINT_PATHS = {
 } as const;
 const SERPER_REQUEST_TIMEOUT_MS = 8000;
 const SERPER_CACHE_TTL_MS = 1000 * 60 * 20;
+
+function configuredSerperAttemptCeiling() {
+  const parsed = Number(process.env.REVIEW_RADAR_MAX_SERPER_ATTEMPTS || "0");
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 0;
+}
 
 type SerperVertical = keyof typeof SERPER_ENDPOINT_PATHS;
 
@@ -1019,6 +1028,7 @@ type SpecificProductCandidateInput = {
 
 export type SerperShoppingNormalizationOptions = {
   allowGoogleShoppingOfferEvidence?: boolean;
+  captureNormalizationCounterfactual?: boolean;
   enableNormalizationRecovery?: boolean;
 };
 
@@ -1412,21 +1422,87 @@ function shoppingResultInput(
   };
 }
 
-function normalizeShoppingResult(
+type NormalizedCandidateResult = {
+  candidate: RawProductCandidate | null;
+  decision: SearchNormalizationDecision;
+};
+
+function normalizationModeOutcome(
+  candidate: RawProductCandidate | null,
+  decision: SearchNormalizationDecision,
+): NormalizationModeOutcome {
+  return {
+    normalizedCandidateId: candidate?.id || null,
+    productUrl: candidate?.productUrl || "",
+    rejectionReason: decision.rejectionReason,
+  };
+}
+
+function normalizationCounterfactual(
+  flagOffResult: NormalizedCandidateResult,
+  flagOnResult: NormalizedCandidateResult,
+  runtimeMode: "flag_off" | "flag_on",
+): NormalizationCounterfactual {
+  const flagOff = normalizationModeOutcome(
+    flagOffResult.candidate,
+    flagOffResult.decision,
+  );
+  const flagOn = normalizationModeOutcome(
+    flagOnResult.candidate,
+    flagOnResult.decision,
+  );
+  const offAccepted = flagOff.normalizedCandidateId !== null;
+  const onAccepted = flagOn.normalizedCandidateId !== null;
+  const selected = runtimeMode === "flag_on" ? flagOn : flagOff;
+  const runtimeResult =
+    runtimeMode === "flag_on" ? flagOnResult : flagOffResult;
+  const runtimeMatchesSelected =
+    (runtimeResult.candidate?.id || null) === selected.normalizedCandidateId &&
+    (runtimeResult.candidate?.productUrl || "") === selected.productUrl;
+
+  if (!runtimeMatchesSelected) {
+    throw new Error("Normalization counterfactual diverged from runtime selection.");
+  }
+
+  return {
+    runtimeMode,
+    runtimeMatchesSelected,
+    delta:
+      !offAccepted && onAccepted
+        ? "added"
+        : offAccepted && !onAccepted
+          ? "removed_for_safety"
+          : offAccepted && onAccepted &&
+              (flagOff.normalizedCandidateId !== flagOn.normalizedCandidateId ||
+                flagOff.productUrl !== flagOn.productUrl)
+            ? "rewritten"
+            : offAccepted && onAccepted
+              ? "unchanged"
+              : "still_rejected",
+    flagOff,
+    flagOn,
+  };
+}
+
+function normalizeShoppingResultForMode(
   result: SerperShoppingResult,
   query: string,
   category: string,
   options: SerperShoppingNormalizationOptions,
+  recoveryEnabled: boolean,
 ) {
+  const modeOptions = {
+    ...options,
+    enableNormalizationRecovery: recoveryEnabled,
+  };
   const urls = shoppingResultUrls(result);
   const firstUrl = urls[0] || "";
   const firstInput = shoppingResultInput(result, query, category, firstUrl);
-  const guardedMerchantSelection = normalizationRecoveryEnabled(options);
   const originalUrl = preferredShoppingResultUrl(
     result,
-    options.allowGoogleShoppingOfferEvidence,
-    guardedMerchantSelection
-      ? (value) => recoveredUrlBlocker(firstInput, value, options) === null
+    modeOptions.allowGoogleShoppingOfferEvidence,
+    recoveryEnabled
+      ? (value) => recoveredUrlBlocker(firstInput, value, modeOptions) === null
       : undefined,
   );
   const originalInput = shoppingResultInput(
@@ -1435,15 +1511,15 @@ function normalizeShoppingResult(
     category,
     originalUrl,
   );
-  const recovery = resultNormalizationDecision(originalInput, urls, options);
+  const recovery = resultNormalizationDecision(originalInput, urls, modeOptions);
   const selectedInput = {
     ...originalInput,
     url: recovery.selectedUrl,
   };
-  const candidate = buildCandidateFromResult(selectedInput, options);
+  const candidate = buildCandidateFromResult(selectedInput, modeOptions);
   const rejectionReason = specificProductCandidateRejectionReason(
     selectedInput,
-    options,
+    modeOptions,
   );
 
   return {
@@ -1455,6 +1531,49 @@ function normalizeShoppingResult(
       rejectionReason,
       normalizedCandidateId: candidate?.id || null,
       normalizationRecovery: recovery.trace,
+    } satisfies SearchNormalizationDecision,
+  };
+}
+
+function normalizeShoppingResult(
+  result: SerperShoppingResult,
+  query: string,
+  category: string,
+  options: SerperShoppingNormalizationOptions,
+) {
+  const runtimeEnabled = normalizationRecoveryEnabled(options);
+  const runtimeMode = runtimeEnabled ? "flag_on" : "flag_off";
+  const runtimeResult = normalizeShoppingResultForMode(
+    result,
+    query,
+    category,
+    options,
+    runtimeEnabled,
+  );
+
+  if (!options.captureNormalizationCounterfactual) {
+    return runtimeResult;
+  }
+
+  const alternateResult = normalizeShoppingResultForMode(
+    result,
+    query,
+    category,
+    options,
+    !runtimeEnabled,
+  );
+  const flagOffResult = runtimeEnabled ? alternateResult : runtimeResult;
+  const flagOnResult = runtimeEnabled ? runtimeResult : alternateResult;
+
+  return {
+    candidate: runtimeResult.candidate,
+    decision: {
+      ...runtimeResult.decision,
+      normalizationCounterfactual: normalizationCounterfactual(
+        flagOffResult,
+        flagOnResult,
+        runtimeMode,
+      ),
     } satisfies SearchNormalizationDecision,
   };
 }
@@ -1627,6 +1746,118 @@ function directResults(response: SerperResponse): Array<Record<string, unknown>>
   ].filter(isRecord);
 }
 
+function normalizeDirectResultForMode(
+  result: Record<string, unknown>,
+  query: string,
+  category: string,
+  engine: DirectRetailerEngine,
+  options: SerperShoppingNormalizationOptions,
+  recoveryEnabled: boolean,
+): NormalizedCandidateResult {
+  const modeOptions = {
+    ...options,
+    enableNormalizationRecovery: recoveryEnabled,
+  };
+  const title = asString(result.title);
+  const urls = shoppingResultUrls(result);
+  const productUrl = urls[0] || "";
+  const snippet = compact([
+    asString(result.snippet),
+    Array.isArray(result.extensions) ? result.extensions.join(" ") : "",
+    `Source: ${engine}`,
+  ]).join(" ");
+  const originalInput = {
+    category,
+    imageUrl: firstString(
+      result.imageUrl,
+      result.image,
+      result.thumbnailUrl,
+      result.thumbnail,
+    ),
+    price: parsePrice(
+      result.extractedPrice ?? result.extracted_price ?? result.price,
+      result.priceRaw ?? result.price_raw,
+    ),
+    query,
+    rating: asNumber(result.rating),
+    retailer: asString(result.source) || engine,
+    reviewCount:
+      parseReviewCount(result.ratingCount) ??
+      parseReviewCount(result.rating_count) ??
+      parseReviewCount(result.reviews),
+    snippet,
+    title,
+    url: productUrl,
+  };
+  const recovery = resultNormalizationDecision(originalInput, urls, modeOptions);
+  const selectedInput = {
+    ...originalInput,
+    url: recovery.selectedUrl,
+  };
+  const candidate = buildCandidateFromResult(selectedInput, modeOptions);
+
+  return {
+    candidate,
+    decision: {
+      title: title.slice(0, 120),
+      host: parseUrl(productUrl)?.hostname.replace(/^www\./, "") || "",
+      url: productUrl.slice(0, 300),
+      rejectionReason: specificProductCandidateRejectionReason(
+        selectedInput,
+        modeOptions,
+      ),
+      normalizedCandidateId: candidate?.id || null,
+      normalizationRecovery: recovery.trace,
+    },
+  };
+}
+
+function normalizeDirectResult(
+  result: Record<string, unknown>,
+  query: string,
+  category: string,
+  engine: DirectRetailerEngine,
+  options: SerperShoppingNormalizationOptions,
+): NormalizedCandidateResult {
+  const runtimeEnabled = normalizationRecoveryEnabled(options);
+  const runtimeMode = runtimeEnabled ? "flag_on" : "flag_off";
+  const runtimeResult = normalizeDirectResultForMode(
+    result,
+    query,
+    category,
+    engine,
+    options,
+    runtimeEnabled,
+  );
+
+  if (!options.captureNormalizationCounterfactual) {
+    return runtimeResult;
+  }
+
+  const alternateResult = normalizeDirectResultForMode(
+    result,
+    query,
+    category,
+    engine,
+    options,
+    !runtimeEnabled,
+  );
+  const flagOffResult = runtimeEnabled ? alternateResult : runtimeResult;
+  const flagOnResult = runtimeEnabled ? runtimeResult : alternateResult;
+
+  return {
+    candidate: runtimeResult.candidate,
+    decision: {
+      ...runtimeResult.decision,
+      normalizationCounterfactual: normalizationCounterfactual(
+        flagOffResult,
+        flagOnResult,
+        runtimeMode,
+      ),
+    },
+  };
+}
+
 export function normalizeSerperDirectResults(
   response: SerperResponse,
   query: string,
@@ -1652,60 +1883,9 @@ function normalizeSerperDirectResponse(
 ) {
   const results = directResults(response)
     .slice(0, MAX_NORMALIZED_RESULTS_PER_QUERY)
-    .map((result) => {
-      const title = asString(result.title);
-      const urls = shoppingResultUrls(result);
-      const productUrl = urls[0] || "";
-      const snippet = compact([
-        asString(result.snippet),
-        Array.isArray(result.extensions) ? result.extensions.join(" ") : "",
-        `Source: ${engine}`,
-      ]).join(" ");
-      const originalInput = {
-        category,
-        imageUrl: firstString(
-          result.imageUrl,
-          result.image,
-          result.thumbnailUrl,
-          result.thumbnail,
-        ),
-        price: parsePrice(
-          result.extractedPrice ?? result.extracted_price ?? result.price,
-          result.priceRaw ?? result.price_raw,
-        ),
-        query,
-        rating: asNumber(result.rating),
-        retailer: asString(result.source) || engine,
-        reviewCount:
-          parseReviewCount(result.ratingCount) ??
-          parseReviewCount(result.rating_count) ??
-          parseReviewCount(result.reviews),
-        snippet,
-        title,
-        url: productUrl,
-      };
-      const recovery = resultNormalizationDecision(originalInput, urls, options);
-      const selectedInput = {
-        ...originalInput,
-        url: recovery.selectedUrl,
-      };
-      const candidate = buildCandidateFromResult(selectedInput, options);
-
-      return {
-        candidate,
-        decision: {
-          title: title.slice(0, 120),
-          host: parseUrl(productUrl)?.hostname.replace(/^www\./, "") || "",
-          url: productUrl.slice(0, 300),
-          rejectionReason: specificProductCandidateRejectionReason(
-            selectedInput,
-            options,
-          ),
-          normalizedCandidateId: candidate?.id || null,
-          normalizationRecovery: recovery.trace,
-        } satisfies SearchNormalizationDecision,
-      };
-    });
+    .map((result) =>
+      normalizeDirectResult(result, query, category, engine, options),
+    );
 
   return {
     candidates: results.flatMap(({ candidate }) => (candidate ? [candidate] : [])),
@@ -1797,17 +1977,29 @@ function serperResultDigests(response: SerperResponse): SearchResultDigest[] {
   ] as Array<Record<string, unknown>>;
 
   return results.slice(0, MAX_RESULTS_PER_QUERY).map((result, index) => {
-    const url = firstString(
+    const urls = [
       result.productLink,
       result.product_link,
       result.link,
       result.imageUrl,
-    );
+    ].filter((value): value is string => typeof value === "string" && value.length > 0);
+    const url = firstString(...urls);
+
+    const parsedUrl = parseUrl(url);
+    const urlPaths = Array.from(
+      new Set(
+        urls
+          .map((value) => parseUrl(value)?.pathname || "")
+          .filter(Boolean)
+          .map((value) => value.slice(0, 240)),
+      ),
+    ).slice(0, 4);
 
     return {
       position: asNumber(result.position) ?? index + 1,
       title: asString(result.title).replace(/\s+/g, " ").trim().slice(0, 180),
-      host: parseUrl(url)?.hostname.replace(/^www\./, "") || "",
+      host: parsedUrl?.hostname.replace(/^www\./, "") || "",
+      urlPaths,
       price: parsePrice(
         result.extractedPrice ?? result.extracted_price ?? result.price,
         result.priceRaw ?? result.price_raw,
@@ -1966,6 +2158,7 @@ async function fetchSerper(
       retryStatus: "initial" | "retry",
       verticalFallbackStatus: "none" | "fallback_initial" | "fallback_retry",
     ) => {
+      reserveSearchAttempt(configuredSerperAttemptCeiling());
       attemptNumber += 1;
       const controller = new AbortController();
       const timeout = setTimeout(
@@ -2069,6 +2262,9 @@ async function fetchSerper(
     try {
       return await runRequestWithRetry(endpoint, false);
     } catch (error) {
+      if (isSerperAttemptCeilingError(error)) {
+        throw error;
+      }
       if (endpoint === fallbackEndpoint) {
         throw error;
       }
@@ -2092,9 +2288,20 @@ async function fetchSerper(
   };
 }
 
+function isSerperAttemptCeilingError(error: unknown) {
+  return (
+    error instanceof Error &&
+    /Serper attempt ceiling \d+ reached/.test(error.message)
+  );
+}
+
 function isTransientSerperError(error: unknown) {
   if (!(error instanceof Error)) {
     return true;
+  }
+
+  if (isSerperAttemptCeilingError(error)) {
+    return false;
   }
 
   // Client errors (4xx) will not succeed on retry; everything else
@@ -2154,7 +2361,9 @@ export async function searchSerperShoppingWithDiagnostics(
       response.response,
       query,
       category,
-      options,
+      isSearchObservabilityEnabled()
+        ? { ...options, captureNormalizationCounterfactual: true }
+        : options,
     );
     recordNormalizedCandidates(
       response.queryId,
@@ -2265,6 +2474,9 @@ export async function searchSerperDirectRetailer(
       query,
       category,
       engine,
+      isSearchObservabilityEnabled()
+        ? { captureNormalizationCounterfactual: true }
+        : {},
     );
     recordNormalizedCandidates(
       response.queryId,

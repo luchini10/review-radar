@@ -19,6 +19,7 @@ let query = "";
 let budget;
 let priorities;
 let requestedOutput;
+let c4Shape;
 const goldLeaders = [];
 
 for (let i = 0; i < args.length; i++) {
@@ -30,21 +31,45 @@ for (let i = 0; i < args.length; i++) {
     if (args[i + 1]) priorities = args[++i];
   } else if (args[i] === "--out") {
     if (args[i + 1]) requestedOutput = args[++i];
+  } else if (args[i] === "--c4-shape") {
+    if (args[i + 1]) c4Shape = args[++i];
   } else if (!args[i].startsWith("--")) {
     query = args[i];
   }
 }
 
-if (!query) {
-  console.error("Usage: node scripts/save-debug-fixture.mjs <query> [--budget <budget>] [--priorities <details>] [--gold <leader>...] [--out <filename>]");
+if (!query && !c4Shape) {
+  console.error("Usage: node scripts/save-debug-fixture.mjs <query> [--budget <budget>] [--priorities <details>] [--gold <leader>...] [--out <filename>] [--c4-shape broad|constrained]");
   process.exit(1);
 }
 
-const request = {
-  query,
-  ...(budget ? { budget } : {}),
-  ...(priorities ? { priorities } : {}),
-};
+if (c4Shape && !["broad", "constrained"].includes(c4Shape)) {
+  console.error("--c4-shape must be broad or constrained");
+  process.exit(1);
+}
+if (c4Shape && (query || budget || priorities)) {
+  console.error("--c4-shape supplies the frozen request; do not also pass query, budget, or priorities");
+  process.exit(1);
+}
+if (c4Shape && !requestedOutput) {
+  console.error("--c4-shape requires an explicit --out filename");
+  process.exit(1);
+}
+
+const request = c4Shape === "broad"
+  ? { query: "shop vac" }
+  : c4Shape === "constrained"
+    ? {
+        query: "robot vacuum",
+        budget: "under $300",
+        priorities: "self-emptying",
+      }
+    : {
+        query,
+        ...(budget ? { budget } : {}),
+        ...(priorities ? { priorities } : {}),
+      };
+query = request.query;
 
 const slug = query
   .toLowerCase()
@@ -84,19 +109,61 @@ if (json.error) {
   process.exit(1);
 }
 
+const c4ExclusionReasons = [];
+if (c4Shape) {
+  const ledger = json.debug?.stageFunnel?.searchLedger;
+  const flags = ledger?.header?.flags || {};
+  const reconciliation = ledger?.dispatch?.reconciliation;
+  const attemptGuard = ledger?.dispatch?.attemptGuard;
+
+  if (!ledger) c4ExclusionReasons.push("missing_debug_ledger");
+  if (ledger?.header?.serperCacheEmptyAtStart !== true) {
+    c4ExclusionReasons.push("warm_serper_cache");
+  }
+  if (!ledger?.header?.commitHash) c4ExclusionReasons.push("missing_commit_hash");
+  if (flags.REVIEW_RADAR_NORMALIZATION_RECOVERY !== "on") {
+    c4ExclusionReasons.push("normalization_recovery_not_on");
+  }
+  if (flags.REVIEW_RADAR_CONSTRAINT_ALLOCATION !== "on") {
+    c4ExclusionReasons.push("constraint_allocation_not_on");
+  }
+  if (!["unset", "off"].includes(flags.REVIEW_RADAR_PINNED_PLANNING)) {
+    c4ExclusionReasons.push("pinned_planning_not_off");
+  }
+  if (flags.REVIEW_RADAR_MAX_SERPER_ATTEMPTS !== "120") {
+    c4ExclusionReasons.push("attempt_ceiling_not_120");
+  }
+  if (!reconciliation?.balanced) c4ExclusionReasons.push("ledger_unbalanced");
+  if (attemptGuard?.tripped) c4ExclusionReasons.push("attempt_ceiling_tripped");
+  if ((reconciliation?.physicalAttempts || 0) > 120) {
+    c4ExclusionReasons.push("physical_attempts_over_120");
+  }
+}
+
 const fixture = {
   _query: query,
   _request: request,
   _savedAt: new Date().toISOString(),
   _version: "1",
   _goldLeaders: goldLeaders,
+  ...(c4Shape
+    ? {
+        _c4Shape: c4Shape,
+        _sampleStatus: c4ExclusionReasons.length === 0 ? "usable" : "spent_excluded",
+        _exclusionReasons: c4ExclusionReasons,
+      }
+    : {}),
   ...json,
 };
 
 writeFileSync(outPath, JSON.stringify(fixture, null, 2));
 
 console.log(`Saved fixture → ${outPath}`);
-if (goldLeaders.length === 0) {
+if (c4ExclusionReasons.length > 0) {
+  console.error(`C4 request spent but excluded: ${c4ExclusionReasons.join(", ")}`);
+  process.exitCode = 2;
+}
+if (goldLeaders.length === 0 && !c4Shape) {
   console.log(`\nTip: add expected leaders with --gold "Brand Model" flags so the replay`);
   console.log(`     script can report which ones were lost and where they dropped.`);
 }

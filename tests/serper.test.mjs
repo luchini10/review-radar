@@ -359,6 +359,59 @@ describe("Serper product discovery", () => {
     }
   });
 
+  it("records an honest same-response normalization counterfactual from the runtime path", () => {
+    const response = {
+      shopping: [
+        {
+          title: "Example RV200 Robot Vacuum",
+          productLink: "https://www.google.com/search?q=RV200&udm=28",
+          link: "https://shop.example.com/products/example-rv200-robot-vacuum",
+          source: "Example Store",
+          price: "$249",
+        },
+        {
+          title: "Example RV300 Robot Vacuum",
+          productLink: "https://click.example.net/products/example-rv300-robot-vacuum",
+          source: "Example Store",
+          price: "$279",
+        },
+        {
+          title: "Example RV400 Robot Vacuum",
+          productLink: "https://shop.example.com/products/example-rv400-robot-vacuum",
+          source: "Example Store",
+          price: "$299",
+        },
+      ],
+    };
+    const enabled = diagnoseSerperShoppingResponse(
+      response,
+      "Example robot vacuum",
+      "robot vacuum",
+      {
+        captureNormalizationCounterfactual: true,
+        enableNormalizationRecovery: true,
+      },
+    );
+    const [added, removed, unchanged] = enabled.normalizationDecisions.map(
+      (decision) => decision.normalizationCounterfactual,
+    );
+
+    assert.equal(enabled.candidates.length, 2);
+    assert.equal(added.runtimeMode, "flag_on");
+    assert.equal(added.runtimeMatchesSelected, true);
+    assert.equal(added.delta, "added");
+    assert.equal(added.flagOff.normalizedCandidateId, null);
+    assert.ok(added.flagOn.normalizedCandidateId);
+    assert.equal(removed.delta, "removed_for_safety");
+    assert.ok(removed.flagOff.normalizedCandidateId);
+    assert.equal(removed.flagOn.normalizedCandidateId, null);
+    assert.equal(unchanged.delta, "unchanged");
+    assert.equal(
+      unchanged.flagOn.normalizedCandidateId,
+      unchanged.flagOff.normalizedCandidateId,
+    );
+  });
+
   it("evaluates every alternate URL instead of trusting the first non-Google field", () => {
     const candidates = normalizeSerperShoppingResults(
       {

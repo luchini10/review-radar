@@ -89,6 +89,7 @@ export type SearchResultDigest = {
   position: number;
   title: string;
   host: string;
+  urlPaths: string[];
   price: number | null;
 };
 
@@ -138,6 +139,25 @@ export type NormalizationRecoveryTrace = {
   blocker: string | null;
 };
 
+export type NormalizationModeOutcome = {
+  normalizedCandidateId: string | null;
+  productUrl: string;
+  rejectionReason: string | null;
+};
+
+export type NormalizationCounterfactual = {
+  runtimeMode: "flag_off" | "flag_on";
+  runtimeMatchesSelected: boolean;
+  delta:
+    | "added"
+    | "removed_for_safety"
+    | "rewritten"
+    | "unchanged"
+    | "still_rejected";
+  flagOff: NormalizationModeOutcome;
+  flagOn: NormalizationModeOutcome;
+};
+
 export type SearchNormalizationDecision = {
   title: string;
   host: string;
@@ -145,12 +165,14 @@ export type SearchNormalizationDecision = {
   rejectionReason: string | null;
   normalizedCandidateId: string | null;
   normalizationRecovery: NormalizationRecoveryTrace | null;
+  normalizationCounterfactual?: NormalizationCounterfactual | null;
 };
 
 type CandidateLineageRecord = {
   candidateId: string;
   name: string;
   productUrl: string;
+  sourceIdentityPaths?: string[];
   source: "serper" | "final_openai_research" | "raw_serper_result";
   queryIds: string[];
   normalized: boolean;
@@ -171,6 +193,7 @@ type CandidateLineageRecord = {
   finalSelectionReason: string | null;
   firstLoss: CandidateFirstLoss | null;
   normalizationRecovery: NormalizationRecoveryTrace | null;
+  normalizationCounterfactual?: NormalizationCounterfactual | null;
 };
 
 export type SearchLedgerHeader = {
@@ -190,6 +213,11 @@ type SearchLedgerState = {
   queryById: Map<string, SearchQueryRecord>;
   cacheLookups: SearchCacheLookup[];
   attempts: SearchAttemptRecord[];
+  attemptGuard: {
+    maxAttempts: number | null;
+    reservedAttempts: number;
+    tripped: boolean;
+  };
   rawResultsByQuery: Map<string, SearchResultDigest[]>;
   candidates: Map<string, CandidateLineageRecord>;
   rawAi: {
@@ -278,6 +306,11 @@ export function createSearchObservabilityLedger(
     queryById: new Map(),
     cacheLookups: [],
     attempts: [],
+    attemptGuard: {
+      maxAttempts: null,
+      reservedAttempts: 0,
+      tripped: false,
+    },
     rawResultsByQuery: new Map(),
     candidates: new Map(),
     rawAi: {
@@ -296,6 +329,22 @@ export function runWithSearchObservabilityLedger<T>(
 
 export function isSearchObservabilityEnabled() {
   return Boolean(currentLedger());
+}
+
+export function reserveSearchAttempt(maxAttempts: number) {
+  const ledger = currentLedger();
+
+  if (!ledger || !Number.isInteger(maxAttempts) || maxAttempts <= 0) {
+    return;
+  }
+
+  ledger.attemptGuard.maxAttempts = maxAttempts;
+  if (ledger.attemptGuard.reservedAttempts >= maxAttempts) {
+    ledger.attemptGuard.tripped = true;
+    throw new Error(`Serper attempt ceiling ${maxAttempts} reached for this request.`);
+  }
+
+  ledger.attemptGuard.reservedAttempts += 1;
 }
 
 export function registerSearchQuery(input: {
@@ -583,6 +632,7 @@ function serperCandidateRecord(
     candidateId: candidate.id,
     name: boundedText(candidate.name, 180),
     productUrl: boundedText(candidate.productUrl),
+    sourceIdentityPaths: [],
     source: "serper",
     queryIds: [],
     normalized: true,
@@ -643,6 +693,8 @@ export function recordNormalizedCandidates(
       (item) => item.normalizedCandidateId === candidate.id,
     );
     record.normalizationRecovery = decision?.normalizationRecovery || null;
+    record.normalizationCounterfactual =
+      decision?.normalizationCounterfactual || null;
     addProvenance(record, queryId);
   }
 
@@ -669,6 +721,7 @@ export function recordNormalizedCandidates(
       candidateId,
       name: boundedText(digest.title, 180),
       productUrl: "",
+      sourceIdentityPaths: digest.urlPaths,
       source: "raw_serper_result",
       queryIds: [queryId],
       normalized: false,
@@ -694,6 +747,8 @@ export function recordNormalizedCandidates(
       `${normalizedTitle}|${digest.host.toLowerCase()}`,
     );
     record.normalizationRecovery = decision?.normalizationRecovery || null;
+    record.normalizationCounterfactual =
+      decision?.normalizationCounterfactual || null;
     setFirstLoss(
       record,
       "lost_in_normalization",
@@ -806,6 +861,7 @@ function ensureRecommendationRecord(
     candidateId,
     name: boundedText(product.name, 180),
     productUrl: boundedText(product.product_page_url),
+    sourceIdentityPaths: [],
     source: "final_openai_research",
     queryIds: [],
     normalized: true,
@@ -1148,6 +1204,7 @@ export function buildSearchObservabilitySnapshot() {
     dispatch: {
       cacheLookups: ledger.cacheLookups,
       attempts: ledger.attempts,
+      attemptGuard: ledger.attemptGuard,
       reconciliation,
     },
     candidateLineage: {
@@ -1176,6 +1233,7 @@ const REVIEW_RADAR_FLAG_NAMES = [
   "REVIEW_RADAR_FAST_FINAL_CONTEXT",
   "REVIEW_RADAR_LLM_NARRATION",
   "REVIEW_RADAR_MAX_MAIN_VERIFICATION_PRODUCTS",
+  "REVIEW_RADAR_MAX_SERPER_ATTEMPTS",
   "REVIEW_RADAR_NORMALIZATION_RECOVERY",
   "REVIEW_RADAR_PINNED_PLANNING",
   "REVIEW_RADAR_SPEC_SEARCH",
