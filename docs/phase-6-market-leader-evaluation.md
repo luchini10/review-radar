@@ -1,9 +1,8 @@
 # Market-Leader Evaluation Method and Dated Leader Snapshots
 
-**Mechanics version:** `leaders-v2026-07b` (owner-delegated re-freeze 2026-07-12)
-**Evidence status:** matching/scoring mechanics frozen; broad shop-vac list
-reviewed against current independent tests and retailer demand signals
-**Supersedes:** `leaders-v2026-07a` (same day) — see section 5. Results are
+**Mechanics version:** `leaders-v2026-07c` (Taylor ratified 2026-07-14)
+**Evidence status:** matching/scoring mechanics and both C4 lists frozen
+**Supersedes:** `leaders-v2026-07b` — see sections 3 and 5. Results are
 never compared across snapshot versions.
 **Owner:** Phase 6 freeze-point deliverable per
 `docs/phase-6-reliability-gauntlet-plan.md` section 7; QA-only data, never
@@ -21,12 +20,16 @@ implementation now used by `scripts/qualityScorecard.mjs` and by snapshot
 scoring, and pinned by `tests/leaderSnapshot.test.mjs` (broad tokens such as
 `self`/`ai` can never count without their brand; a Roborock Q10 does not
 cover a `q5`-line leader). Both ends of every normalized phrase are retained,
-so `ai` cannot match `Airtok` and `q5` cannot match `Q50`.
+so `ai` cannot match `Airtok` and `q5` cannot match `Q50`. Under `07c`, a
+letters-only model-family token may match the same letters immediately followed
+by digits (`hd` → `HD1400`); digit-ending lines remain whole-token strict.
 
 **Known undercount (accepted):** retailer titles sometimes omit the brand
 (real capture: `14 Gallon 6.0 Peak HP NXT Wet Dry Vac HD1400`, a RIDGID). The
-contract requires the brand, so such cards score as misses. This biases
-recall DOWN, never up, and is pinned by test.
+title-only contract requires the brand, so such cards score as misses. C4 also
+reports a separate deterministic count using bounded provider URL paths; it
+never uses hostnames/query strings and never silently hand-adjusts title-only
+coverage.
 
 **Scoring:** per run, `final recall = leaders covered in displayed final
 cards / snapshot size`; sample claims use the mean across all usable
@@ -37,7 +40,7 @@ cache-cold runs of a shape, never the best run.
 Taylor's authorization is recorded verbatim: **"do whatever you think is best
 with the broad shop vac leaders."** Codex used that delegated judgment to
 review the broad list against current independent comparative tests and retailer
-demand signals. The resulting `leaders-v2026-07b` snapshot replaces Milwaukee
+demand signals. The resulting broad list replaces Milwaukee
 with Workshop in the seven core leaders and retains Milwaukee as an acceptable
 alternate. The first live readiness-gate sample under this list is the first
 canonical North-Star baseline; observations under `leaders-v2026-07a` remain
@@ -68,26 +71,24 @@ whose strongest position is the cordless/niche segment.
 
 | Leader | Line tokens | Captured-presence citation |
 |---|---|---|
-| Shark | matrix, ai | rv-...ledger-run1 :: "Shark Matrix Plus 2in1 Robot Vacuum & Mop RV2610WA" |
-| eufy | clean, x8, self | rv-...ledger-run1 :: "eufy RoboVac 11S MAX Self-Charging Robotic Vacuum" |
-| Roborock | q5 | rv-...ledger-run1 :: "To buy Q5 pro with or without auto-empty station? : r/Roborock - Reddit" |
-| iRobot Roomba | i3, i4 | rv-...ledger-run1 :: "iRobot Roomba i3+ EVO Self-Emptying Robot Vacuum" |
+| Shark | matrix, ai, iq | rv-...ledger-run1 :: "Shark Matrix Plus 2in1 Robot Vacuum & Mop RV2610WA" |
+| eufy | c10, clean, x8 | current manufacturer C10 page plus captured eufy mentions |
+| Roborock | q5, q10 | captured Q5 mention plus current Q10 manufacturer series |
+| iRobot Roomba | 105, i3, i4, i5 | captured i3+ plus current 105/i5 manufacturer pages |
 
-**Staleness note (material):** the constrained line lists predate the models
-the July-2026 runs actually surfaced (Roomba 105, Roborock Q10 VFS+, eufy
-C10, Shark IQ 2-in-1). Under the frozen contract those cards are correctly
-NOT counted as the listed leaders — which is exactly why constrained recall
-below is low and why the lists need human review before constrained recall
-can carry meaning.
+The generic eufy feature token `self` is removed because it is not a stable
+product family. Constrained recall remains informational; these families are
+frozen so the C4 safety sample has a stable denominator, not as a claim that
+every listed model is currently available below the request budget.
 
-### Prospective `leaders-v2026-07c` proposal — not frozen
+### `leaders-v2026-07c` ratification
 
-C1 tested a prospective matcher without changing current `coversLeader()` or
-retro-scoring `07b`: a letters-only line may also match exactly that prefix
+C1 first tested the matcher without retro-scoring `07b`: a letters-only line
+may also match exactly that prefix
 followed by digits (`hd` → `HD1400`, `wd` → `WD4070`); a digit-ending line
 remains whole-token strict (`q5` does not match `Q50`), and unrelated word
 prefixes stay strict (`ai` does not match `Airtok`). The two valid broad gate
-runs remain **1/7 and 1/7** under that prospective rule, so it does not explain
+runs remain **1/7 and 1/7** under that rule, so it does not explain
 or cure the failed normalization gate.
 
 Current July-2026 manufacturer pages and independent testing support this
@@ -101,8 +102,9 @@ feature token `self`, which is not a stable product family. Evidence reviewed:
 [Roomba i5+](https://www.irobot.com/en_US/roomba-i5plus-self-emptying-robot-vacuum/I555020.html),
 [Vacuum Wars budget ranking](https://vacuumwars.com/best-budget-robot-vacuum/),
 and [RTINGS budget testing](https://www.rtings.com/robot-vacuum/reviews/best/budget).
-This is a proposal only. Taylor must accept or revise it before a corrective
-`07c` freeze; any revision starts a new incomparable baseline.
+Taylor ratified this list and matching contract exactly as documented on
+2026-07-14, before any C4 live request. Any later revision requires a new
+snapshot and starts a new incomparable baseline.
 
 ## 3. Provisional recall observation (recomputed 2026-07-12 under `coversLeader`, M3, six R4 after-sample fixtures)
 
@@ -130,7 +132,7 @@ correction for RR-082 does not change the historical six values.
 ## 4. v1.0 targets (amended)
 
 - Shape A (broad): final recall ≥ 3/7 per-run mean; pool recall ≥ 5/7 —
-  approved floors, binding against `leaders-v2026-07b`.
+  approved floors, binding against `leaders-v2026-07c`.
 - Shape B (constrained): **no leader-recall target.** Per
   `scripts/qualityScorecard.mjs`, constrained shapes are judged primarily on
   constraint satisfaction; constrained leader recall is measured and reported

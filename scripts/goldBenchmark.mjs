@@ -1,6 +1,6 @@
 // GOLD BENCHMARK — the independent yardstick for "are the picks actually good?"
 //
-// FROZEN as leaders-v2026-07b. These lists are the ground truth the scorecard
+// FROZEN as leaders-v2026-07c. These lists are the ground truth the scorecard
 // grades against; revisions require a new dated version and cannot be made to
 // improve an observed score retroactively.
 //
@@ -30,7 +30,7 @@
 export const normalizeLeaderText = (s) =>
   ` ${(s || "").toLowerCase().replace(/[^a-z0-9+]+/g, " ").replace(/\s+/g, " ").trim()} `;
 
-export function coversLeader(name, item) {
+export function coversLeaderHistorical07b(name, item) {
   const hay = normalizeLeaderText(name);
   const brandTokens = normalizeLeaderText(item.brand).trim().split(" ");
   if (!brandTokens.every((t) => hay.includes(` ${t} `))) return false;
@@ -38,12 +38,12 @@ export function coversLeader(name, item) {
   return item.lines.some((l) => hay.includes(normalizeLeaderText(l)));
 }
 
-// Prospective leaders-v2026-07c sensitivity matcher. This is intentionally
-// NOT used by the scorecard or frozen 07b observations. It tests a proposed
-// distinction for human review: a letters-only model-family prefix may match
-// the same letters followed immediately by digits (HD -> HD1400), while a
-// token that already ends in a digit remains a strict whole token (Q5 != Q50).
-export function coversLeaderProspective07c(name, item) {
+// Frozen leaders-v2026-07c matcher. A letters-only model-family prefix may
+// match the same letters followed immediately by digits (HD -> HD1400), while
+// a token that already ends in a digit remains strict (Q5 != Q50). Brand tokens
+// are always required; C4 separately reports bounded source-path evidence when
+// the provider title omits the brand.
+export function coversLeader(name, item) {
   const hay = normalizeLeaderText(name);
   const brandTokens = normalizeLeaderText(item.brand).trim().split(" ");
   if (!brandTokens.every((token) => hay.includes(` ${token} `))) return false;
@@ -57,6 +57,10 @@ export function coversLeaderProspective07c(name, item) {
     return new RegExp(` ${normalizedLine}\\d+ `).test(hay);
   });
 }
+
+// Compatibility export for historical scripts. It is the frozen 07c matcher,
+// no longer a prospective rule.
+export const coversLeaderProspective07c = coversLeader;
 
 export const GOLD = [
   // ======================= BROAD: "find the market leaders" =======================
@@ -226,13 +230,13 @@ export const GOLD = [
     type: "constraint",
     query: "robot vacuum",
     budget: "under $300",
-    priorities: "self-emptying, good for pet hair",
+    priorities: "self-emptying",
     category: "robot vacuum",
     coreLeaders: [
-      { brand: "shark", lines: ["matrix", "ai"] },
-      { brand: "eufy", lines: ["clean", "x8", "self"] },
-      { brand: "roborock", lines: ["q5"] },
-      { brand: "roomba", lines: ["i3", "i4"] },
+      { brand: "shark", lines: ["matrix", "ai", "iq"] },
+      { brand: "eufy", lines: ["c10", "clean", "x8"] },
+      { brand: "roborock", lines: ["q5", "q10"] },
+      { brand: "roomba", lines: ["105", "i3", "i4", "i5"] },
     ],
     wrongTypeTerms: ["handheld", "stick vacuum", "upright", "shop vac"],
     constraints: [

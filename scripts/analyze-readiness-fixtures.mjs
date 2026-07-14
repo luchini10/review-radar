@@ -4,7 +4,7 @@ import { pathToFileURL } from "node:url";
 import {
   GOLD,
   coversLeader,
-  coversLeaderProspective07c,
+  coversLeaderHistorical07b,
 } from "./goldBenchmark.mjs";
 import { areSameExactModelProduct } from "../lib/productIdentity.ts";
 import { classifyProductTypeMatch } from "../lib/productTypeMatch.ts";
@@ -27,11 +27,11 @@ const C4_REQUESTS = {
   },
 };
 
-const PROSPECTIVE_07C_CONSTRAINED_LEADERS = [
-  { brand: "shark", lines: ["matrix", "ai", "iq"] },
-  { brand: "eufy", lines: ["c10", "clean", "x8"] },
-  { brand: "roborock", lines: ["q5", "q10"] },
-  { brand: "roomba", lines: ["105", "i3", "i4", "i5"] },
+const HISTORICAL_07B_CONSTRAINED_LEADERS = [
+  { brand: "shark", lines: ["matrix", "ai"] },
+  { brand: "eufy", lines: ["clean", "x8", "self"] },
+  { brand: "roborock", lines: ["q5"] },
+  { brand: "roomba", lines: ["i3", "i4"] },
 ];
 
 function requestContract(request, c4Shape) {
@@ -111,9 +111,9 @@ function benchmarkForRequest(request) {
   );
 }
 
-function prospective07cBenchmark(benchmark) {
+function historical07bBenchmark(benchmark) {
   return benchmark.id === "con-robot-vac-300-selfempty"
-    ? { ...benchmark, coreLeaders: PROSPECTIVE_07C_CONSTRAINED_LEADERS }
+    ? { ...benchmark, coreLeaders: HISTORICAL_07B_CONSTRAINED_LEADERS }
     : benchmark;
 }
 
@@ -390,14 +390,14 @@ export function analyzeReadinessFixture(fixture, path = "<memory>") {
     productDiscoveryAttempts,
     productDiscoveryQueryIds,
   };
-  const current07b = analyzeWithMatcher({
+  const historical07b = analyzeWithMatcher({
+    ...analysisInput,
+    benchmark: historical07bBenchmark(benchmark),
+    matcher: coversLeaderHistorical07b,
+  });
+  const current07c = analyzeWithMatcher({
     ...analysisInput,
     matcher: coversLeader,
-  });
-  const prospective07c = analyzeWithMatcher({
-    ...analysisInput,
-    benchmark: prospective07cBenchmark(benchmark),
-    matcher: coversLeaderProspective07c,
     sourceEvidence: true,
   });
   const finalNames = finalProducts.map((product) => product.name);
@@ -488,13 +488,13 @@ export function analyzeReadinessFixture(fixture, path = "<memory>") {
     reconciliation: ledger.dispatch.reconciliation,
     cacheCold: ledger.header.serperCacheEmptyAtStart,
     seedSearchesRun: fixture.debug.seedSearchesRun,
-    current07b,
-    prospective07c,
+    historical07b,
+    current07c,
     sensitivityDelta: {
       preAiPoolCovered:
-        prospective07c.preAiPoolRecall.covered - current07b.preAiPoolRecall.covered,
+        current07c.preAiPoolRecall.covered - historical07b.preAiPoolRecall.covered,
       finalCovered:
-        prospective07c.finalRecall.covered - current07b.finalRecall.covered,
+        current07c.finalRecall.covered - historical07b.finalRecall.covered,
     },
     aiDisplayed,
     exactHardConstraintFailures,
@@ -502,7 +502,7 @@ export function analyzeReadinessFixture(fixture, path = "<memory>") {
     duplicateFinalPairs: duplicateFinalPairs(finalProducts),
     falseAccessoryCollapses,
     malformedQueries,
-    preAiPoolNames: prospective07c.preAiPoolNames,
+    preAiPoolNames: current07c.preAiPoolNames,
     finalNames,
   };
 }
@@ -517,10 +517,10 @@ export function aggregateReadinessAnalyses(analyses) {
   const terminalFrequency = new Map();
 
   for (const analysis of usableAnalyses) {
-    for (const row of analysis.current07b.recordedLeaderResultLossFrequency) {
+    for (const row of analysis.current07c.recordedLeaderResultLossFrequency) {
       increment(frequency, row.reason, row.count);
     }
-    for (const leader of analysis.current07b.leaders) {
+    for (const leader of analysis.current07c.leaders) {
       increment(terminalFrequency, leader.terminalStage);
     }
   }
@@ -554,35 +554,35 @@ export function aggregateReadinessAnalyses(analyses) {
       broadUsable: broad.length,
       constrainedUsable: constrained.length,
     },
-    broadCurrent07bMean: mean(
-      broad.map((analysis) => analysis.current07b.preAiPoolRecall.covered),
+    broadHistorical07bMean: mean(
+      broad.map((analysis) => analysis.historical07b.preAiPoolRecall.covered),
     ),
-    broadProspective07cMean: mean(
-      broad.map((analysis) => analysis.prospective07c.preAiPoolRecall.covered),
+    broadCurrent07cMean: mean(
+      broad.map((analysis) => analysis.current07c.preAiPoolRecall.covered),
     ),
     broadFlagOffNormalizedMean: mean(
       broad.map(
         (analysis) =>
-          analysis.prospective07c.normalizationCounterfactual
+          analysis.current07c.normalizationCounterfactual
             .flagOffNormalizedRecall.covered,
       ),
     ),
     broadFlagOnNormalizedMean: mean(
       broad.map(
         (analysis) =>
-          analysis.prospective07c.normalizationCounterfactual
+          analysis.current07c.normalizationCounterfactual
             .flagOnNormalizedRecall.covered,
       ),
     ),
     normalizationCounterfactual: {
       observedRuns: usableAnalyses.filter(
         (analysis) =>
-          analysis.prospective07c.normalizationCounterfactual.observed,
+          analysis.current07c.normalizationCounterfactual.observed,
       ).length,
       parityViolations: usableAnalyses.reduce(
         (total, analysis) =>
           total +
-          analysis.prospective07c.normalizationCounterfactual.parityViolations,
+          analysis.current07c.normalizationCounterfactual.parityViolations,
         0,
       ),
     },
@@ -627,18 +627,18 @@ export function aggregateReadinessAnalyses(analyses) {
     },
     normalizationRecovery: {
       observedRuns: usableAnalyses.filter(
-        (analysis) => analysis.current07b.normalizationRecovery.observed,
+        (analysis) => analysis.current07c.normalizationRecovery.observed,
       ).length,
-      current07bUniqueLeaderRunOpportunities: usableAnalyses.reduce(
+      historical07bUniqueLeaderRunOpportunities: usableAnalyses.reduce(
         (total, analysis) =>
           total +
-          analysis.current07b.normalizationRecovery.uniqueLeaderRunOpportunities,
+          analysis.historical07b.normalizationRecovery.uniqueLeaderRunOpportunities,
         0,
       ),
-      prospective07cUniqueLeaderRunOpportunities: usableAnalyses.reduce(
+      current07cUniqueLeaderRunOpportunities: usableAnalyses.reduce(
         (total, analysis) =>
           total +
-          analysis.prospective07c.normalizationRecovery
+          analysis.current07c.normalizationRecovery
             .uniqueLeaderRunOpportunities,
         0,
       ),

@@ -4,13 +4,13 @@ import { describe, it } from "node:test";
 import {
   GOLD,
   coversLeader,
-  coversLeaderProspective07c,
+  coversLeaderHistorical07b,
 } from "../scripts/goldBenchmark.mjs";
 
 const shopVac = GOLD.find((g) => g.id === "broad-shop-vac");
 const conRobot = GOLD.find((g) => g.id === "con-robot-vac-300-selfempty");
 
-describe("leader snapshot matching contract (leaders-v2026-07b)", () => {
+describe("leader snapshot matching contract (leaders-v2026-07c)", () => {
   it("requires every brand token", () => {
     // "self" alone can never establish eufy; "ai" alone can never establish
     // Shark. Brand-OR-line matching was the v2026-07 defect.
@@ -30,13 +30,13 @@ describe("leader snapshot matching contract (leaders-v2026-07b)", () => {
   it("requires a line token when the leader defines lines", () => {
     const roborock = conRobot.coreLeaders.find((l) => l.brand === "roborock");
 
-    // The constrained line list is ["q5"]; a Q10 is NOT a frozen leader hit.
+    // The ratified list includes both Q5 and Q10, but not Q50.
     assert.equal(
       coversLeader(
         "Roborock Q10 VFS+ 13.9 in. Robotic Vacuum and Mop with Smart Dock",
         roborock,
       ),
-      false,
+      true,
     );
     assert.equal(
       coversLeader("Roborock Q5 Max+ Robot Vacuum and Mop", roborock),
@@ -113,17 +113,20 @@ describe("leader snapshot matching contract (leaders-v2026-07b)", () => {
   });
 });
 
-describe("prospective leaders-v2026-07c sensitivity contract", () => {
+describe("frozen leaders-v2026-07c model-family contract", () => {
   it("matches letters-only model families followed by digits", () => {
     const ridgid = shopVac.coreLeaders.find((leader) => leader.brand === "ridgid");
 
-    assert.equal(coversLeader("RIDGID WD4070 Wet/Dry Vacuum", ridgid), false);
     assert.equal(
-      coversLeaderProspective07c("RIDGID WD4070 Wet/Dry Vacuum", ridgid),
+      coversLeaderHistorical07b("RIDGID WD4070 Wet/Dry Vacuum", ridgid),
+      false,
+    );
+    assert.equal(
+      coversLeader("RIDGID WD4070 Wet/Dry Vacuum", ridgid),
       true,
     );
     assert.equal(
-      coversLeaderProspective07c("RIDGID HD1400 NXT Wet/Dry Vacuum", ridgid),
+      coversLeader("RIDGID HD1400 NXT Wet/Dry Vacuum", ridgid),
       true,
     );
   });
@@ -135,16 +138,26 @@ describe("prospective leaders-v2026-07c sensitivity contract", () => {
     const shark = conRobot.coreLeaders.find((leader) => leader.brand === "shark");
 
     assert.equal(
-      coversLeaderProspective07c("Roborock Q50 Robot Vacuum", roborock),
+      coversLeader("Roborock Q50 Robot Vacuum", roborock),
       false,
     );
     assert.equal(
-      coversLeaderProspective07c("Shark Airtok Robot Vacuum", shark),
+      coversLeader("Shark Airtok Robot Vacuum", shark),
       false,
     );
     assert.equal(
-      coversLeaderProspective07c("Shark AI2501 Robot Vacuum", shark),
+      coversLeader("Shark AI2501 Robot Vacuum", shark),
       true,
     );
+  });
+
+  it("freezes the ratified C4 constrained request and leader families", () => {
+    assert.equal(conRobot.priorities, "self-emptying");
+    assert.deepEqual(conRobot.coreLeaders, [
+      { brand: "shark", lines: ["matrix", "ai", "iq"] },
+      { brand: "eufy", lines: ["c10", "clean", "x8"] },
+      { brand: "roborock", lines: ["q5", "q10"] },
+      { brand: "roomba", lines: ["105", "i3", "i4", "i5"] },
+    ]);
   });
 });

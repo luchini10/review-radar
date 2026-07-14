@@ -129,7 +129,7 @@ function fixture() {
 describe("R7 readiness fixture analyzer", () => {
   it("separates raw, normalized, prefilter, and post-merge presence", () => {
     const analysis = analyzeReadinessFixture(fixture());
-    const shopVac = analysis.current07b.leaders.find(
+    const shopVac = analysis.current07c.leaders.find(
       (leader) => leader.leader === "shop vac",
     );
 
@@ -144,26 +144,26 @@ describe("R7 readiness fixture analyzer", () => {
 
   it("excludes later source-upgrade candidates from the discovery pool", () => {
     const analysis = analyzeReadinessFixture(fixture());
-    const currentRidgid = analysis.current07b.leaders.find((leader) =>
+    const historicalRidgid = analysis.historical07b.leaders.find((leader) =>
       leader.leader.startsWith("ridgid"),
     );
-    const prospectiveRidgid = analysis.prospective07c.leaders.find((leader) =>
+    const currentRidgid = analysis.current07c.leaders.find((leader) =>
       leader.leader.startsWith("ridgid"),
     );
 
-    assert.equal(currentRidgid.rawPresence, false);
-    assert.equal(prospectiveRidgid.rawPresence, true);
-    assert.equal(prospectiveRidgid.normalizedPresence, false);
-    assert.equal(prospectiveRidgid.preAiPoolPresence, false);
-    assert.deepEqual(prospectiveRidgid.terminalReasons, [
+    assert.equal(historicalRidgid.rawPresence, false);
+    assert.equal(currentRidgid.rawPresence, true);
+    assert.equal(currentRidgid.normalizedPresence, false);
+    assert.equal(currentRidgid.preAiPoolPresence, false);
+    assert.deepEqual(currentRidgid.terminalReasons, [
       {
         reason: "lost_in_normalization:search_or_listing_url",
         count: 1,
       },
     ]);
-    assert.equal(currentRidgid.normalizationRecoveryOpportunity, false);
-    assert.equal(prospectiveRidgid.normalizationRecoveryOpportunity, true);
-    assert.deepEqual(prospectiveRidgid.normalizationRecoveryNames, [
+    assert.equal(historicalRidgid.normalizationRecoveryOpportunity, false);
+    assert.equal(currentRidgid.normalizationRecoveryOpportunity, true);
+    assert.deepEqual(currentRidgid.normalizationRecoveryNames, [
       "RIDGID WD4070 Wet/Dry Vacuum",
     ]);
   });
@@ -176,7 +176,7 @@ describe("R7 readiness fixture analyzer", () => {
     assert.match(aggregate.contract.caveat, /inflated by URL\/name lineage/);
     assert.equal(aggregate.normalizationRecovery.observedRuns, 1);
     assert.equal(
-      aggregate.normalizationRecovery.prospective07cUniqueLeaderRunOpportunities,
+      aggregate.normalizationRecovery.current07cUniqueLeaderRunOpportunities,
       1,
     );
     assert.equal(aggregate.normalizationCounterfactual.observedRuns, 1);
@@ -209,19 +209,19 @@ describe("R7 readiness fixture analyzer", () => {
     });
 
     const analysis = analyzeReadinessFixture(input);
-    const currentRidgid = analysis.current07b.leaders.find((leader) =>
+    const historicalRidgid = analysis.historical07b.leaders.find((leader) =>
       leader.leader.startsWith("ridgid"),
     );
-    const prospectiveRidgid = analysis.prospective07c.leaders.find((leader) =>
+    const currentRidgid = analysis.current07c.leaders.find((leader) =>
       leader.leader.startsWith("ridgid"),
     );
 
-    assert.equal(currentRidgid.rawPresence, false);
-    assert.equal(prospectiveRidgid.rawTitlePresence, false);
-    assert.equal(prospectiveRidgid.rawPresence, true);
-    assert.equal(currentRidgid.flagOnNormalizedPresence, false);
-    assert.equal(prospectiveRidgid.flagOnNormalizedPresence, true);
-    assert.deepEqual(prospectiveRidgid.sourceEvidenceOnlyRawNames, [
+    assert.equal(historicalRidgid.rawPresence, false);
+    assert.equal(currentRidgid.rawTitlePresence, false);
+    assert.equal(currentRidgid.rawPresence, true);
+    assert.equal(historicalRidgid.flagOnNormalizedPresence, false);
+    assert.equal(currentRidgid.flagOnNormalizedPresence, true);
+    assert.deepEqual(currentRidgid.sourceEvidenceOnlyRawNames, [
       "14 Gallon 6 Peak HP NXT Wet Dry Vacuum HD1400",
     ]);
   });
@@ -254,7 +254,7 @@ describe("R7 readiness fixture analyzer", () => {
       broadUsable: 0,
       constrainedUsable: 0,
     });
-    assert.equal(aggregate.broadProspective07cMean, null);
+    assert.equal(aggregate.broadCurrent07cMean, null);
     assert.equal(aggregate.cost.physicalAttempts, 2);
     assert.equal(aggregate.cost.includesSpentExcludedRuns, true);
   });
