@@ -32,6 +32,11 @@ const SHOP_VAC_PATTERN =
 const SHOP_VAC_CONTEXT_PATTERN =
   /\b(?:\d+(?:\.\d+)?\s*(?:gal|gallon)s?\b.{0,80}\b(?:peak\s+)?(?:hp|horsepower)|(?:peak\s+)?(?:hp|horsepower)\b.{0,80}\b\d+(?:\.\d+)?\s*(?:gal|gallon)s?|(?:garage|workshop|jobsite|contractor|debris|sawdust)\b.{0,80}\b(?:vac|vacuum|cleanup)|(?:vac|vacuum)\b.{0,80}\b(?:garage|workshop|jobsite|contractor|debris|sawdust))\b/i;
 
+const SHOP_VAC_COMPLEMENT_PATTERN =
+  /\b(?:replacement\s+(?:filter|hose|bag|nozzle)|vac(?:uum)?\s+(?:filter|hose|bag|nozzle)|dust\s+bag|filter\s+bag|(?:utility\s+)?nozzle(?:\s+attachment)?|accessory\s+kit)\b/i;
+const STANDALONE_SHOP_VAC_COMPLEMENT_PATTERN =
+  /\b(?:wet\s+dry\s+(?:shop\s+)?vac(?:uum)?|shop\s+vac(?:uum)?|vacuum)\s+(?:replacement\s+)?(?:hose|filter\s+bags?|bags?|(?:utility\s+)?nozzles?(?:\s+attachments?)?|accessory\s+kit)\b|^(?:[a-z0-9-]+\s+){0,3}(?:utility\s+)?nozzles?(?:\s+attachments?)?$/i;
+
 const ROBOT_VACUUM_DOCK_COMPLEMENT_PATTERN =
   /\b(?:replacement\s+)?(?:dock(?:ing)?(?:\s+station)?|charging\s+station|clean\s+base(?:\s+station)?|base\s+station|dust\s+disposal\s+base(?:\s+station)?|(?:self\s+empty(?:ing)?|auto\s+empty(?:ing)?)\s+(?:(?:clean\s+)?base(?:\s+station)?|dock(?:ing)?(?:\s+station)?|station))\b/i;
 const ROBOT_VACUUM_EXISTING_COMPLEMENT_PATTERN =
@@ -63,8 +68,8 @@ const PRODUCT_TYPE_RULES: ProductTypeRule[] = [
     ),
     blocked: HOUSEHOLD_FLOOR_CLEANER_PATTERN,
     exclusiveBlocked: HOUSEHOLD_FLOOR_CLEANER_PATTERN,
-    complements:
-      /\b(?:replacement\s+(?:filter|hose|bag|nozzle)|vacuum\s+(?:filter|hose|bag|nozzle)|dust\s+bag|accessory\s+kit)\b/i,
+    complements: SHOP_VAC_COMPLEMENT_PATTERN,
+    exclusiveComplements: STANDALONE_SHOP_VAC_COMPLEMENT_PATTERN,
   },
   {
     id: "toaster_oven",

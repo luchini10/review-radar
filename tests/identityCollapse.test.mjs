@@ -154,6 +154,52 @@ describe("Phase R5 identity collapse safety", () => {
     assert.equal(areSameExactModelProduct(hose, vacuum), false);
   });
 
+  it("RR-060: concise accessory titles cannot borrow their parent vacuum model from the URL", () => {
+    const vacuum = product(
+      "DEWALT DXV12P 12 Gallon Wet Dry Vacuum",
+      "https://shop.example/products/dewalt-dxv12p-wet-dry-vacuum",
+      cardEligibleIdentity("DEWALT"),
+    );
+    const accessories = [
+      product(
+        "DEWALT Wet/Dry Vac Hose",
+        "https://shop.example/products/dewalt-dxv12p-hose",
+        cardEligibleIdentity("DEWALT"),
+      ),
+      product(
+        "DEWALT Utility Nozzle Attachment",
+        "https://shop.example/products/dewalt-dxv12p-utility-nozzle",
+        cardEligibleIdentity("DEWALT"),
+      ),
+      product(
+        "DEWALT Wet Dry Vac Filter Bag",
+        "https://shop.example/products/dewalt-dxv12p-filter-bag",
+        cardEligibleIdentity("DEWALT"),
+      ),
+    ];
+
+    for (const accessory of accessories) {
+      assert.equal(areSameExactModelProduct(vacuum, accessory), false);
+      assert.equal(areSameExactModelProduct(accessory, vacuum), false);
+    }
+  });
+
+  it("RR-060: a complete vacuum listing may mention included hose and nozzle accessories", () => {
+    const modelTitle = product(
+      "DEWALT DXV12P 12 Gallon Wet Dry Vacuum",
+      "https://first.example/products/dewalt-dxv12p-wet-dry-vacuum",
+      cardEligibleIdentity("DEWALT"),
+    );
+    const packageTitle = product(
+      "DEWALT 12 Gallon Wet Dry Vacuum with Hose and Utility Nozzle",
+      "https://second.example/products/dewalt-dxv12p-complete-vacuum",
+      cardEligibleIdentity("DEWALT"),
+    );
+
+    assert.equal(areSameExactModelProduct(modelTitle, packageTitle), true);
+    assert.equal(areSameExactModelProduct(packageTitle, modelTitle), true);
+  });
+
   it("RR-060: inferred-model controls preserve true duplicates and distinct models", () => {
     const original = product(
       "RIDGID HD1400 14 Gallon Wet Dry Vacuum",

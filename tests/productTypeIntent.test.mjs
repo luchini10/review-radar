@@ -139,6 +139,38 @@ describe("product type intent classifier", () => {
     }
   });
 
+  it("shop_vac: rejects concise hose, nozzle, and filter-bag accessory identities", () => {
+    const accessories = [
+      "DEWALT Wet/Dry Vac Hose",
+      "DEWALT Utility Nozzle Attachment",
+      "DEWALT Wet Dry Vac Filter Bag",
+    ];
+
+    for (const candidateText of accessories) {
+      const verdict = classifyProductTypeIntent({
+        requestedText: "shop vac",
+        candidateText,
+        candidateIdentityText: candidateText,
+      });
+
+      assert.equal(verdict.status, "complement", candidateText);
+      assert.equal(verdict.canBeExactMatch, false, candidateText);
+    }
+  });
+
+  it("shop_vac: preserves a complete vacuum that lists included accessories", () => {
+    const candidateText =
+      "DEWALT DXV12P 12 Gallon Wet Dry Vacuum with Hose and Utility Nozzle";
+    const verdict = classifyProductTypeIntent({
+      requestedText: "shop vac",
+      candidateText,
+      candidateIdentityText: candidateText,
+    });
+
+    assert.equal(verdict.status, "exact");
+    assert.equal(verdict.canBeExactMatch, true);
+  });
+
   it("floor-cleaner intent keeps household wet floor cleaners valid", () => {
     const cases = [
       ["hard floor cleaner", "Hoover FloorMate Deluxe Hard Floor Cleaner"],
