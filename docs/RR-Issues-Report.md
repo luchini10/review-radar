@@ -1,9 +1,9 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through Corrective C5 trust-boundary repair
+## Compiled for AI Agent Consumption — Phase 0 through C5 validation preflight
 
 **Generated:** 2026-07-14
-**Scope:** All phases from initial measurement harness through Corrective C5
-trust-boundary repair
+**Scope:** All phases from initial measurement harness through the C5 live-
+validation preflight
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -20,13 +20,13 @@ only when maintaining this register or auditing its full history.
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 87 |
+| Total Issues | 89 |
 | Critical | 12 |
-| High | 37 |
+| High | 39 |
 | Medium | 33 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 4 |
+| Needs Investigation | 6 |
 | Fixed | 82 |
 | Won't Fix | 1 |
 
@@ -109,6 +109,7 @@ only when maintaining this register or auditing its full history.
 | Phase R7 — Readiness gate | 1 |
 | Corrective C4 — renewed readiness evidence | 1 |
 | Corrective C5 — normalization feasibility audit | 3 |
+| C5 live-validation preflight | 2 |
 | Phase R4 — Live after-sample | 1 |
 | RR-061 image-provenance safety repair | 0 |
 | RR-061 round 4 / RR-080 image micro-phase | 1 |
@@ -3081,6 +3082,98 @@ second production classifier.
 
 ---
 
+#### RR-088
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-088 |
+| **Phase** | C5 live-validation preflight |
+| **Severity** | High |
+| **Title** | Spec-shaped tokens and first-in ordering can consume the bounded resolver cap |
+| **Status** | Needs Investigation |
+
+**Description:** The C5 resolver accepts some mixed letter/digit tokens as
+strong models even when they are compacted hard specifications. Hyphenated
+numeric specifications therefore qualify as model identity: `Shop-Vac
+12-Gallon 6 HP Corded Wet/Dry Shop Vacuum` produces
+`12gallon` and becomes identity key `shop|12gallon` despite having no model
+code. The resolver then preserves provider arrival order and slices the first
+four leads, so spec-only or low-value rows can crowd out genuine repeated model
+identities before any lookup runs.
+
+**Where it occurs:** `strongModelTokens()` in `lib/productIdentity.ts` as
+consumed by `identityResolutionLeadForShoppingResult()`, followed by
+`uniqueIdentityResolutionLeads()` and the four-query slice in
+`lib/search/serper.ts`.
+
+**Evidence:** A zero-network deterministic call to
+`diagnoseSerperShoppingResponse()` with the title above and a valid structured
+Google Shopping product ID returns no candidate but one resolution lead with
+`identityKey: "shop|12gallon"`. Bounded reconstruction from each of the three
+C4 broad ledgers places spec-only `12gallon`, `5gallons`, or `4gallon` rows in
+the first four under current ordering, while genuine recurring models such as
+`CMXEVBE17584` or `SL18115` can fall after the cap. The saved ledgers contain
+capped result digests rather than full provider responses, so that ordering
+reconstruction is M3 directional evidence; the single-row qualification and
+first-four slicing behavior are deterministic current-code facts.
+
+**Expected:** A hard numeric specification alone cannot establish model
+identity. Eligible genuine models should be prioritized deterministically
+before the request cap, using generalized evidence such as recurrence across
+distinct discovery queries, with stable tie-breakers and existing-page
+suppression ahead of cap allocation.
+
+**Suggested fix or next action:** Add fail-first cross-category controls for
+hyphenated capacity/power/size/refresh-rate tokens versus real model codes.
+Filter spec-only tokens in the resolver's lead contract without weakening the
+shared identity safety wall globally. Aggregate duplicate leads and sort by
+distinct-query recurrence, then total recurrence and stable first-seen order,
+before applying the unchanged cap of four. Correct the leading-brand key so
+horsepower `HP` cannot become the brand in a Craftsman-style title while real
+HP computers remain valid.
+
+---
+
+#### RR-089
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-089 |
+| **Phase** | C5 live-validation preflight |
+| **Severity** | High |
+| **Title** | Resolver flag silently depends on the separate normalization-recovery flag |
+| **Status** | Needs Investigation |
+
+**Description:** Lead construction suppresses a row whenever the *enabled
+counterfactual* merchant-URL recovery could materialize it, regardless of the
+actual normalization-recovery flag. With normalization recovery off—the
+current default state—turning on only the new C5 resolver can therefore
+produce neither the free merchant candidate nor an organic-resolution lead.
+
+**Where it occurs:** `identityResolutionLeadForShoppingResult()` calls
+`normalizeShoppingResultForMode(..., true)` before the independently flagged
+`resolveSerperIdentityLeads()` stage in `lib/search/serper.ts`.
+
+**Evidence:** A deterministic DEWALT DXV10SB structured Shopping row with a
+safe merchant product URL yields `{ candidates: [], identityResolutionLeads:
+[] }` when `enableNormalizationRecovery: false`; the same row yields the safe
+merchant candidate when normalization recovery is true. No network call is
+needed to reproduce the silent dependency.
+
+**Expected:** Enabling the C5 resolver alone must form a complete, attributable
+path: use an already-supplied safe merchant page first without spend, then use
+one bounded organic lookup only if no safe merchant page exists. Both flags
+off must preserve exact existing behavior.
+
+**Suggested fix or next action:** Make the new C5 flag explicitly compose the
+existing safe merchant recovery as its zero-cost first tier, while retaining
+the old normalization-only flag for independent operation. Add fail-first
+tests for both flags off, C5-only with a safe merchant URL, C5-only without a
+merchant URL, and normalization-only. Preserve the shared URL blocker,
+identity/type/eligibility gates, call cap, and per-stage lineage.
+
+---
+
 ## R7 readiness planning note — 2026-07-12
 
 No issue status changed. A zero-cost M3 provenance audit of the six R4-after
@@ -3237,16 +3330,31 @@ identity gaps and complement-type gaps to zero. The next decision remains a
 separately scoped live resolution-feasibility probe; no such probe is authorized
 by this repair.
 
+## C5 live-validation preflight note — 2026-07-14
+
+The zero-live adversarial preflight filed RR-088 and RR-089 and stopped the
+live path before spend. RR-088 proves that the resolver's model qualification
+accepts hyphenated hard specs such as `12-Gallon`, while its first-in four-lead
+cap can crowd out genuine recurrent model identities. RR-089 proves that the
+new resolver flag silently suppresses merchant-recoverable leads while the
+separate merchant-recovery flag remains off. Commit `eaeb577` stays default-
+off; no production behavior, flag, `.env.local`, live fixture, or North-Star
+metric changed. The register is 89 total / 82 Fixed / 6 Needs Investigation /
+1 Won't Fix. A separately approved zero-live corrective phase must close both
+issues before any C5 flag-on window.
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (4 issues)
+### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
+- RR-088: Spec-shaped leads and first-in ordering can consume resolver cap
+- RR-089: Resolver flag silently depends on normalization recovery
 
 ### Fixed (82 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
@@ -3259,7 +3367,9 @@ RR-038 through RR-044, and RR-046 through RR-087
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
+1. **RR-088 + RR-089** — repair the default-off C5 lead contract, cap
+   prioritization, and flag composition before any live resolver validation.
+2. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
    final overlap. Recovery stays default-off and R7A stays blocked.
-2. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
+3. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
    but varied by model, while Tapo appeared raw and died in normalization.

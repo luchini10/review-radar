@@ -6897,3 +6897,42 @@ npm run build: pass
 node scripts/eval-pipeline.mjs: no red flags
 live Serper/OpenAI calls: 0
 ```
+
+## 🟧 Codex QA Update — 2026-07-14 (C5 live-validation preflight)
+
+**Verdict: LIVE VALIDATION BLOCKED BEFORE SPEND; DEFAULT-OFF CODE REMAINS
+INERT.**
+
+- RR-088 reproduced exactly: a structured Shopping row titled `Shop-Vac
+  12-Gallon 6 HP Corded Wet/Dry Shop Vacuum` produces a resolution lead with
+  `identityKey: "shop|12gallon"`. The hyphenated capacity is being treated as
+  the required strong model code. The resolver then applies its cap by first-
+  seen order rather than deterministic relevance/recurrence.
+- Bounded M3 reconstruction of the three saved C4 broad ledgers found captured
+  spec-only leads in the first-four ordering and genuine recurring model leads
+  after the cap. Because ledger result digests are capped, this is directional
+  preflight evidence rather than an exact replay of a new runtime response; the
+  single-row qualification and first-four slice are exact current-code facts.
+- RR-089 reproduced exactly: a structured DEWALT DXV10SB row with a safe
+  merchant product URL yields zero candidates and zero resolution leads when
+  normalization recovery is off. Turning that separate flag on yields the safe
+  candidate. The new C5 flag alone therefore cannot resolve that row.
+- Strong-model strictness remains the correct safety direction; the correction
+  should remove spec-shaped false positives rather than admit generic lines.
+  The four-query cap should also remain, but allocation must occur after
+  existing-page suppression and deterministic recurrence ranking.
+- No source file, flag, `.env.local`, fixture, or runtime behavior changed. No
+  Serper/OpenAI call ran, and the existing 934/934 verification result for
+  commit `eaeb577` remains the latest full wall rather than being re-claimed as
+  a new test run.
+
+```text
+deterministic model-token probe:
+  "Shop-Vac 12-Gallon ..." -> strongModelTokens ["12gallon"]
+deterministic normalization probe, recovery off:
+  candidates 0 / identityResolutionLeads 0
+deterministic normalization probe, recovery on:
+  candidates 1 / identityResolutionLeads 0
+live Serper/OpenAI calls: 0
+behavior changes: 0
+```

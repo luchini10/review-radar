@@ -541,6 +541,28 @@ pool improvement is the C5 probe's no-margin `5/7` projection and is not yet an
 end-to-end result. A separately approved live flag-on validation is required
 before any promotion or R7 reconsideration.
 
+**C5 live-validation preflight (2026-07-14; zero live): BLOCKED BEFORE
+SPEND.** Adversarial inspection reproduced two defects in the default-off
+implementation. RR-088: `strongModelTokens()` treats hyphenated hard specs as
+model codes (`12-Gallon` → `12gallon`), and the resolver allocates its four
+queries in first-seen order, so spec-only or low-value rows can crowd out
+recurrent genuine models. The three saved broad ledgers contain this ordering
+shape, although their capped digests remain M3 rather than exact new-runtime
+replay. RR-089: lead construction suppresses any row that the enabled merchant-
+URL counterfactual could recover even when that separate recovery flag is
+actually off, so enabling only the C5 flag can yield neither the free merchant
+candidate nor an organic lookup.
+
+The live validation is therefore postponed, not failed. The next proposed
+phase is a separately approved zero-live correction: exclude hard-spec-only
+tokens from this resolver's model contract; build a stable leading-brand key;
+aggregate duplicate leads and prioritize distinct-query recurrence before the
+unchanged four-query cap; and make the C5 flag explicitly compose safe merchant
+recovery first, organic lookup second. Fail-first tests must cover both flags
+off, each flag independently, real model codes across categories, spec-only
+negatives, deterministic cap order, and every existing identity/type/page
+gate. No live call, flag promotion, `.env.local` edit, or R7A work is authorized.
+
 **C1 result (M3, four usable readiness fixtures):** the tested pre-AI pool is a
 Serper `product_discovery` candidate that normalized, survived raw dedupe and
 cheap prefilter; a later `candidate_merge` loss still counts as pool-present.
