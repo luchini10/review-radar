@@ -6615,3 +6615,46 @@ npm run build: pass
 node scripts/eval-pipeline.mjs: no red flags
 live Serper/OpenAI calls: 0; .env.local unchanged; recovery default-off
 ```
+
+## 🟧 Codex QA Update — 2026-07-13 (C4 deterministic preflight)
+
+**Verdict: PREFLIGHT COMPLETE; LIVE C4 WINDOW NOT STARTED.**
+
+- Claude's follow-up residual probe was reproduced fail-first: concise wet/dry-
+  vac hose, utility-nozzle, and filter-bag titles could still borrow their
+  parent model from a URL. Commit `c80543d` closes the shared type-intent gap;
+  a complete vacuum listing that mentions included accessories still collapses
+  with its same-model representation.
+- Commit `0f9f0e8` runs flag-off and flag-on normalization through the same
+  runtime functions on each provider result. The selected runtime outcome is
+  asserted equal and recorded alongside added, safety-removed, rewritten,
+  unchanged, and still-rejected outcomes. This is a normalized-pool
+  counterfactual only; final recall remains an absolute flag-on measurement.
+- Raw-result attribution retains every bounded URL path from provider fields,
+  but not hostnames or query strings. Title-only coverage remains visible; the
+  supplemental source-evidence count is never a manual adjustment.
+- The capture wrapper owns exact frozen request bytes and rejects ambiguous C4
+  arguments before dispatch. A C4 fixture is usable only with the exact request,
+  commit hash, cache-cold ledger, current required flags, balanced
+  reconciliation, and an intact 120-attempt guard. Spent/excluded fixtures are
+  omitted from quality averages but included in actual cost totals.
+- Adversarial review caught an initial analyzer defect in which invalid runs
+  still entered quality means; the final regression proves they are excluded
+  while their physical attempts remain counted.
+
+```text
+C4 instrumentation + ledger focused: 77/77
+npm test: 905/905 across 127 suites
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red flags
+historical four-fixture analyzer replay: pass (306 attempts, 2 retries)
+live Serper/OpenAI calls: 0; .env.local unchanged; recovery default-off
+```
+
+Frozen `leaders-v2026-07b` remains unchanged. The proposed `07c` constrained
+families and path-evidence matching contract still require Taylor's explicit
+ratification. The six-search live window also requires separate explicit
+approval using 486 physical attempts as the planning basis; each request is
+bounded at 120 and a replacement for any spent/excluded run is not preapproved.

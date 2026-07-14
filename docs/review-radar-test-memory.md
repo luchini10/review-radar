@@ -1653,3 +1653,31 @@ a known conservative undercount.
 - Verification: fail-first 131/134 with exactly three intended failures;
   focused 134/134; ledger/analyzer 23/23; full 896/896 across 127 suites;
   typecheck/build/eval pass; lint 0 errors/3 existing warnings. Zero live calls.
+
+## C4 deterministic preflight contract — 2026-07-13
+
+- Residual identity control: `Wet/Dry Vac Hose`, `Utility Nozzle Attachment`,
+  and `Wet Dry Vac Filter Bag` are standalone shop-vac complements even when a
+  product slug carries the parent model. A complete vacuum title may mention an
+  included hose/nozzle and remain exact. Keep both directions pinned at the
+  exact-model collapse seam.
+- Counterfactual honesty: flag-off and flag-on outcomes must call the same
+  shopping/direct-retailer normalization functions used by runtime. The runtime
+  mode's selected candidate ID and URL must match its recorded outcome for
+  every result. This reconstructs normalized-pool opportunity only; never
+  claim a flag-off final set from it.
+- Source matching: retain bounded paths from all provider URL fields. Do not
+  use URL query strings or hostnames as brand/model evidence. Report title-only
+  and path-supplemented raw presence separately; path evidence is deterministic
+  instrument input, not a hand adjustment.
+- Sample honesty: exact request bytes, non-null debug ledger, commit hash,
+  cache-cold start, required flag values, balanced reconciliation, and a
+  120-attempt guard are mandatory. Invalid/spent runs never enter quality
+  averages, but their physical attempts stay in total cost.
+- Budget discipline: 486 physical attempts is the conservative six-search
+  planning basis. The approval unit remains six searches, not calls. A request
+  that trips the 120-attempt ceiling is spent/excluded and pauses before any
+  replacement.
+- Verification: focused C4 instrumentation/ledger 77/77; full 905/905 across
+  127 suites; typecheck/build/eval pass; lint 0 errors/3 pre-existing warnings.
+  Commits `c80543d` and `0f9f0e8`; zero live calls; `.env.local` unchanged.

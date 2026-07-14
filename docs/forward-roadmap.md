@@ -314,9 +314,16 @@ The response is this corrective arc, not immediate R7 implementation:
    and refuse to count any run without a non-null debug ledger. Re-freeze the
    benchmark as `leaders-v2026-07c` only after Taylor accepts/revises the dated
    constrained list and prospective matcher. Then run three cache-cold broad
-   and three cache-cold constrained searches, compare flag-off control with the
-   default-off recovery branch as the approved design specifies, and report
-   safety, pool/final recall, stability, recovery opportunity, and actual cost.
+   and three cache-cold constrained searches with recovery enabled. Every raw
+   provider result is normalized through the same runtime function in flag-off
+   and flag-on modes, so one response supplies the pool counterfactual while
+   the flag-on request supplies end-to-end final evidence. Do not compare
+   separate provider responses as causal controls. Report raw-provider presence
+   first, safety, pool/final recall, stability, recovery opportunity, and actual
+   cost. Spent/excluded requests remain in cost totals but not quality metrics.
+   Use 486 physical attempts as the planning basis and a hard 120-attempt
+   per-request debug circuit breaker; any replacement remains separately
+   approval-gated.
 5. **C5 — R7 decision.** Only a passing C4 gate can unblock separately approved
    R7A. Failure produces another written diagnosis; it never lowers the frozen
    thresholds or silently promotes recovery.
@@ -377,6 +384,29 @@ The checkpoint debt is paid. Before C4 spend, its design must attribute recovery
 opportunity and survival on the same provider response (shadow counterfactual
 or replay); separate live responses are only end-to-end confirmation. C4, flag
 promotion, and R7A remain separately approval-gated.
+
+**C4 deterministic preflight (2026-07-13, zero live):** Claude's follow-up
+adversarial probe found that concise `Vac Hose`, `Utility Nozzle Attachment`,
+and `Wet Dry Vac Filter Bag` titles could still borrow a parent vacuum model
+from their URL. The shared shop-vac type intent now classifies those standalone
+complements without rejecting a complete vacuum listing that mentions included
+accessories (`c80543d`). The remaining C4 instrument uses the exact runtime
+normalizers twice on each captured result and asserts runtime-mode parity. It
+records all bounded URL paths but no query text/hostname as supplemental source
+identity evidence, preserving title-only results beside the supplemental count.
+Exact C4 request shapes, required flag/cache/commit/ledger state, and the 120-
+attempt guard are validated by both capture and analysis. Invalid runs are
+excluded from quality means while their spend remains counted (`0f9f0e8`).
+
+Frozen `leaders-v2026-07b` remains unchanged. Proposed `07c` keeps the broad
+seven and refreshes constrained families to Shark Matrix/AI/IQ, eufy
+C10/Clean/X8, Roborock Q5/Q10, and Roomba 105/i3/i4/i5, with path-only source
+evidence reported separately from title-only coverage. Taylor must still
+ratify/revise that instrument and explicitly approve six live searches using
+486 physical attempts as the planning basis. Broad acceptance remains ≥5/7
+normalized-pool mean and ≥3/7 absolute flag-on final mean; the counterfactual
+does not prove a flag-off final outcome. Constrained runs primarily validate
+hard constraints and safety; constrained recall stays informational.
 
 **C1 result (M3, four usable readiness fixtures):** the tested pre-AI pool is a
 Serper `product_discovery` candidate that normalized, survived raw dedupe and

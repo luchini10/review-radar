@@ -1915,6 +1915,19 @@ and canonical listing-ID equality remains authoritative. This is a generalized
 inference guard, not a product/brand exception. Focused closure tests 134/134;
 full suite 896/896 across 127 suites; zero live calls.
 
+**C4 preflight residual closure (2026-07-13):** A second adversarial probe
+showed that the first type-conflict guard still depended on recognizing the
+accessory wording. Concise titles `Wet/Dry Vac Hose`, `Utility Nozzle
+Attachment`, and `Wet Dry Vac Filter Bag` were not classified as complements,
+so their product-detail slugs could still lend the parent vacuum model. The
+shared shop-vac intent rule now recognizes those standalone complement shapes.
+A complete wet/dry vacuum listing that mentions an included hose and utility
+nozzle remains an exact product, so the fix is type-structural rather than a
+DEWALT/model exception. The bidirectional fail-first cases and preservation
+control are pinned in `tests/identityCollapse.test.mjs` and
+`tests/productTypeIntent.test.mjs`; commit `c80543d`. Register counts and
+RR-060's Fixed status are unchanged. Zero live calls.
+
 ---
 
 #### RR-061

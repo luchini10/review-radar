@@ -11,6 +11,29 @@ Update this file after:
 
 Do not update this file for tiny typo fixes, formatting-only edits, or internal cleanup that does not change behavior.
 
+## 2026-07-13
+
+### 🟧 Codex - C4 safety and measurement preflight
+
+#### Changed
+
+- Closed a remaining RR-060 identity edge: concise shop-vac hose, nozzle, and
+  filter-bag titles can no longer borrow a parent product model from their URL.
+  Complete wet/dry vacuums that merely list included accessories remain valid.
+- Added an observability-only, same-response comparison of normalization
+  recovery off versus on. It uses the live normalization functions, records
+  per-result parity and safety outcomes, and does not alter non-debug responses.
+- Hardened the future C4 capture/evaluation path with exact request bytes,
+  path-only source evidence beside title-only reporting, a 120-attempt per-run
+  debug circuit breaker, and strict exclusion of invalid runs from quality
+  averages while retaining their cost.
+
+#### Verified
+
+- C4-focused tests 77/77; full suite 905/905 across 127 suites; typecheck and
+  build pass; lint 0 errors/3 pre-existing warnings; offline eval no red flags.
+  Zero live Serper/OpenAI calls; `.env.local` and frozen benchmark unchanged.
+
 ## 2026-07-12
 
 ### 🟧 Codex - Corrective C2 identity and type safety
