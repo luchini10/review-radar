@@ -625,6 +625,28 @@ recovery flags remain default-off, R7A remains blocked, and the next eligible
 phase is a separately approved zero-live shared eligibility/metadata-identity
 diagnosis and repair—not another live window or a threshold change.
 
+**Post-C5 safety boundary (2026-07-14; zero live): COMPLETE, QUALITY GATE STILL
+FAILED.** Commit `25bc313` fixes RR-078 and RR-090 deterministically. The shared
+eligibility classifier now rejects information/specification/news index titles as editorial
+while preserving ordinary manufacturer product-information pages. The RR-090
+trace locates the first proven Q10 loss at `candidate_merge`: short adjacent
+model components (`Q7 M5` versus `Q10 X5`) were discarded before generic title
+similarity, allowing cross-model evidence grafting. A shared compound-model
+identity primitive now vetoes that conflict in candidate merge, product-asset
+enrichment, and final product-page selection while preserving matching-model
+cross-retailer merge.
+
+Full verification is 943/943 across 129 suites; typecheck/build/eval pass and
+lint remains 0 errors/3 pre-existing warnings. No live call, flag promotion,
+`.env.local` edit, R7A work, or threshold change occurred. This closes the two
+safety blockers but does not repair C5's missed broad floors (`4.5/7` pool,
+`2.0/7` final) or justify another identical live window. Both recovery flags
+remain default-off and R7A remains blocked. The next decision should be a
+separately approved zero-live architecture checkpoint that compares the current
+Serper-only endgame with a safer model-guided-candidate-hypothesis design; it
+must choose which architecture best improves verified recall without letting
+the model author product facts, URLs, or card eligibility.
+
 **C1 result (M3, four usable readiness fixtures):** the tested pre-AI pool is a
 Serper `product_discovery` candidate that normalized, survived raw dedupe and
 cheap prefilter; a later `candidate_merge` loss still counts as pool-present.

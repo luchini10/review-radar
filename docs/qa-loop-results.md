@@ -7041,3 +7041,42 @@ constrained pool/final mean: 2.67/4 / 3.0/4
 C5 contribution: 20 dispatched / 223 cap-culled / 5 final selections
 promotion: failed
 ```
+
+## 🟧 Codex QA Update — 2026-07-14 (Post-C5 safety-boundary repair)
+
+**Verdict: RR-078/RR-090 FIXED OFFLINE; C5 STILL FAILS QUALITY AND REMAINS
+DEFAULT-OFF.**
+
+- RR-078 fail-first reproduced the Matter Alpha
+  `Information, Specification, News & More` card on a product-looking slug.
+  The shared title classifier now treats news plus information/specification
+  framing as editorial. The page remains usable as evidence, while an ordinary
+  manufacturer product-information/specification control remains card-eligible.
+- RR-090's earliest fixture-proven mutation is `candidate_merge`: independent
+  Q10 candidate `serper-t9ztpz` records that first loss, and the merger discarded
+  short components `Q7`, `M5`, `Q10`, and `X5` before generic title similarity.
+  The deterministic reproduction merged Q10 into Q7 and copied the Q10 URL.
+- Commit `25bc313` adds one shared compound-model primitive. Conflicting adjacent
+  mixed letter/digit identities cannot merge, cannot drive asset-page enrichment,
+  and cannot win final product-page selection. A matching compound identity still
+  merges across retailers; the captured Q7-shaped control selects its Q7 citation,
+  while a wrong-only Q10 destination is cleared.
+- Scope remained the shared eligibility/identity/URL boundaries. No C5 flag
+  promotion, `.env.local` edit, R7A work, threshold change, fixture write, or
+  live Serper/OpenAI call occurred.
+- Register: 90 total / 85 Fixed / 4 Needs Investigation / 1 Won't Fix. Latest
+  live North Stars remain C5's two-usable-broad pool/final means `4.5/7` and
+  `2.0/7`; constrained final recall `3/4` in all three runs; exact hard-
+  constraint failures 0; broad pool/final Jaccard `0.3889`/`0.0000`; constrained
+  `0.2566`/`0.0513`. This phase fixes safety but claims no recall improvement.
+
+```text
+fail-first: 4 intended safety failures reproduced
+focused final: 77/77
+npm test: 943/943 across 129 suites
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red flags
+live Serper/OpenAI calls: 0
+```

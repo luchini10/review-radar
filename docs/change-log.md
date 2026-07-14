@@ -11,6 +11,25 @@ Update this file after:
 
 ## 2026-07-14
 
+### 🟧 Codex - Post-C5 product-card safety boundary
+
+#### Changed
+
+- Rejected information/specification/news index pages as editorial evidence
+  rather than buyable product cards, even when the page uses a product-looking
+  URL. Ordinary manufacturer product-information pages remain eligible.
+- Added shared compound-model identity for adjacent short codes such as
+  `Q7 M5`. Different compound models can no longer merge candidates, supply
+  asset metadata, or become the card's final product page; matching models
+  still merge across retailers.
+
+#### Verified
+
+- Commit `25bc313`; focused safety wall 77/77 and full suite 943/943 across 129
+  suites. Typecheck, production build, and offline evaluation pass; lint has 0
+  errors/3 pre-existing warnings. Zero live calls and no flag or `.env.local`
+  change.
+
 ### 🟧 Codex - Bounded organic identity resolution and corrective hardening
 
 #### Changed

@@ -26,8 +26,8 @@ only when maintaining this register or auditing its full history.
 | Medium | 33 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 6 |
-| Fixed | 83 |
+| Needs Investigation | 4 |
+| Fixed | 85 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -2724,7 +2724,7 @@ The request-scoped search/candidate ledger is implemented and deterministically 
 | **Phase** | Phase R2 live ledger verification |
 | **Severity** | Critical |
 | **Title** | Support and editorial pages pass product eligibility and render as product cards |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** Non-product pages can be classified as `buyable_product`, enriched with unrelated price/evidence, and selected as product cards. In A3, Shop-Vac's customer-service page became the #1 exact result with a verified `$50` price and product claims drawn from unrelated sources. In B1, a Pocketables “day 5” article rendered as a Q7 Max+ near-match product card.
 
@@ -2754,6 +2754,15 @@ The earlier route-specific repair does not cover editorial title/page semantics
 on product-shaped URLs. Repair the shared eligibility boundary with generalized
 editorial/information-page evidence and commerce-preservation controls; do not
 add a Matter Alpha or Tapo exception.
+
+**C5 safety-boundary resolution (2026-07-14, commit `25bc313`):** Fixed
+deterministically. The shared title classifier now treats a page title that combines news with
+information/specification framing as editorial even when its URL slug looks
+product-specific. Such a page remains usable as evidence but cannot render as
+a product card or donate a verified product price. A manufacturer product page
+whose title contains ordinary product-information/specification wording remains
+eligible. The captured Matter Alpha shape fails card eligibility without any
+host, brand, model, or category exception.
 
 ---
 
@@ -3216,7 +3225,7 @@ passes.
 | **Phase** | C5 flag-on live validation |
 | **Severity** | Critical |
 | **Title** | Final product card can inherit another model's canonical product URL |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** A final near-match card named `Roborock Q7 M5+ Robot Vacuum
 and Mop with Auto-Empty Dock` carries canonical/product-page identity for the
@@ -3252,6 +3261,26 @@ boundary and preserve same-model sparse-title/retailer enrichment. Do not add a
 Roborock-specific rule. This is distinct from RR-069: that repair governs
 source-upgrade attachment of generic/adjacent series evidence, while the C5
 trace's source-upgrade selection itself is Q7-compatible.
+
+**C5 safety-boundary resolution (2026-07-14, commit `25bc313`):** Fixed
+deterministically. The fixture records the independent Q10 candidate's first loss as
+`candidate_merge`. The merge used generic title similarity because `Q7`, `M5`,
+`Q10`, and `X5` were each shorter than the existing strong-model threshold; it
+therefore treated the Q7 and Q10 category wording as one product and could
+graft the Q10 URL/evidence onto the Q7 card. A shared generalized identity
+primitive now recognizes adjacent mixed letter/digit model runs such as
+`Q7 M5` as one compound identity. Conflicting compound identities cannot merge,
+cannot supply asset metadata, and cannot win final product-page selection;
+matching compound identities still merge across retailers. The captured Q7
+shape now prefers its matching Q7 citation, while a wrong-only Q10 destination
+is cleared. No Roborock-specific rule was added.
+
+**Verification:** Fail-first reproduced the Matter Alpha admission, Q7/Q10
+candidate merge, wrong-page enrichment, and wrong final URL. Focused final
+tests pass 77/77; the full suite passes 943/943 across 129 suites. Typecheck,
+production build, and offline evaluation pass; lint reports 0 errors and 3
+pre-existing warnings. Zero live Serper/OpenAI calls, flag promotions, or
+`.env.local` changes occurred.
 
 ---
 
