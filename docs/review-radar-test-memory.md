@@ -1823,3 +1823,27 @@ a known conservative undercount.
 - Evidence: commit `53c193b`; fixture SHA-256
   `0089CE6F1F2150D84933AC28C441AAC7EBA421719905433C7F2C047AEE588CBF`;
   8 logical/8 physical, 0 hits/retries/fallbacks/errors, ledger balanced.
+
+## C5 bounded organic identity-resolution contract — 2026-07-14
+
+- Resolution is a post-discovery fallback, never a new source of identity.
+  Admit only structured Google Shopping product IDs whose provider title is
+  specific, contains a strong model token, is product-eligible without a page,
+  and positively satisfies the requested-type classifier. A provider ID by
+  itself cannot make a model-less title safe.
+- Existing evidence wins before new spend: do not resolve an identity already
+  materialized by ordinary normalization, the enabled merchant-URL recovery
+  counterfactual, or another page accepted by the shared product-page selector.
+- Deduplicate by provider identity and normalized brand/model identity. The
+  request-wide maximum is four organic `"<identity> product page"` lookups;
+  never add a Shopping-resolution fallback. The default-off branch must return
+  the original Serper result object and dispatch zero lookup calls.
+- A lookup result enters the pool only after the unchanged organic normalizer,
+  requested-type verdict, product eligibility, cheap prefilter, and hardened
+  product-page identity selector all accept it. Preserve parent-query lineage
+  and a concrete normalization, prefilter, or `identity_resolution` first-loss
+  reason for every rejected result.
+- Commit `eaeb577`; focused 104/104, full 934/934 across 129 suites,
+  typecheck/build/eval pass, lint 0 errors/3 existing warnings. No live calls,
+  flag promotion, or `.env.local` edit. End-to-end recall/safety/stability/cost
+  remain unproven until a separately approved live validation.

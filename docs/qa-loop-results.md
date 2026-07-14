@@ -6856,3 +6856,44 @@ node scripts/eval-pipeline.mjs: no red flags
 live Serper calls: 8 logical / 8 physical
 live OpenAI calls: 0
 ```
+
+## 🟧 Codex QA Update — 2026-07-14 (C5 bounded organic identity resolution)
+
+**Verdict: DEFAULT-OFF IMPLEMENTATION COMPLETE; LIVE END-TO-END QUALITY AND
+PROMOTION REMAIN UNPROVEN.**
+
+- Fail-first was the absence of the new resolver API. Commit `eaeb577` adds a
+  post-discovery stage that consumes only structured Google Shopping identity
+  leads that remain unmaterialized after the existing normalizer and merchant-
+  URL recovery boundary.
+- Lead admission is deliberately narrower than the C5 probe: a title must be
+  specific, carry a strong model token, pass product eligibility, and positively
+  match the requested type. The captured RIDGID HD1200, Craftsman
+  CMXEVBE17584, and Stanley SL18115 identities qualify; model-less Vacmaster
+  stays unresolved. Recoverable merchant URLs and already-materialized safe
+  pages suppress redundant lookup.
+- `REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION` is off by default. Flag-off returns
+  the original Serper result object and makes zero resolution calls; the debug
+  ledger records only culled shadow plans. Flag-on deduplicates identities,
+  dispatches at most four organic `"<identity> product page"` queries across
+  the entire request, and adds no Shopping-resolution requests.
+- Every returned page uses the existing organic normalizer, shared requested-
+  type/eligibility/cheap-prefilter wall, and the same hardened product-page
+  identity selector used by the readiness analyzer. Wrong models and
+  accessories are rejected; the request ledger retains parent-query lineage
+  and exact normalization, prefilter, or identity-resolution first loss.
+- No live Serper/OpenAI call ran. `.env.local`, normalization recovery,
+  constraint allocation, pinned planning, and every promoted flag remain
+  unchanged. The C5 `5/7` result is still a same-provider feasibility
+  projection, not a new North-Star observation.
+
+```text
+fail-first focused: failed import (resolver absent)
+focused final: 104/104 across 6 suites
+npm test: 934/934 across 129 suites
+npm run typecheck: pass (rerun after build regeneration)
+npm run lint: 0 errors, 3 pre-existing warnings
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red flags
+live Serper/OpenAI calls: 0
+```

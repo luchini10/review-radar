@@ -515,6 +515,32 @@ ambiguous leads unresolved and reuse every shared trust gate. This result does
 not promote a flag, authorize more calls, or unblock R7A without later
 end-to-end validation.
 
+**C5 bounded organic resolution implementation (2026-07-14; zero live):**
+Commit `eaeb577` adds the separately approved implementation behind
+`REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION=on`, default-off. After initial and
+gap-check discovery are merged, the new stage considers only a structured
+Google Shopping identity whose source title is model-specific, product-like,
+and positively compatible with the requested type. A result already
+materialized by ordinary normalization, enabled merchant-URL recovery, or any
+other selector-safe page does not trigger a lookup. Remaining identities are
+deduplicated and capped at four request-wide organic
+`"<identity> product page"` queries; model-less/generic identities stay
+unresolved and no Shopping-resolution branch exists.
+
+Returned pages run through the existing organic normalizer, shared cheap
+prefilter, and hardened product-page identity selector before entering the
+candidate pool. Wrong model/brand/type/accessory pages remain rejected, and
+the existing request ledger records the parent query plus exact normalization,
+prefilter, or identity-resolution first loss. Flag-off returns the original
+Serper result object and dispatches no lookup; debug mode records only culled
+shadow plans. The implementation does not promote either recovery flag, edit
+`.env.local`, authorize spend, or unblock R7A. Full verification is 934/934
+across 129 suites; typecheck/build/eval pass; lint remains 0 errors/3 existing
+warnings. The latest live North Stars remain C4's failed observations; expected
+pool improvement is the C5 probe's no-margin `5/7` projection and is not yet an
+end-to-end result. A separately approved live flag-on validation is required
+before any promotion or R7 reconsideration.
+
 **C1 result (M3, four usable readiness fixtures):** the tested pre-AI pool is a
 Serper `product_discovery` candidate that normalized, survived raw dedupe and
 cheap prefilter; a later `candidate_merge` loss still counts as pool-present.

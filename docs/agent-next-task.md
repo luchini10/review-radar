@@ -1,119 +1,123 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-14 by 🟧 Codex after the live C5 resolution-feasibility probe.
+Updated: 2026-07-14 by 🟧 Codex after the zero-live C5 bounded organic
+identity-resolution implementation.
 
 ## Efficient session start
 
 1. Read repository `AGENTS.md` in full.
 2. Read this handoff in full.
-3. Read only the relevant corrective C5 and R7 sections of
-   `docs/forward-roadmap.md`.
-4. Read `docs/agent-dialogue.md` only from entry [32] onward unless an exact
-   earlier topic is needed.
-5. Retrieve other history by exact RR ID or topic only.
+3. Read only the corrective C5 and R7 sections of `docs/forward-roadmap.md`.
+4. Read `docs/agent-dialogue.md` from entry [33] onward unless an earlier
+   claim needs verification.
+5. Retrieve other history by exact phase, RR ID, or metric only.
 
 ## Current state
 
-- C5's live resolution-feasibility probe is complete. Instrument commit
-  `53c193b` ran cache-cold against its own clean commit and made exactly eight
-  approved logical Serper searches: four Shopping and four organic product-page
-  lookups. It used 8 physical attempts against an 8-attempt planning basis and
-  24-attempt ceiling, with 0 cache hits, retries, fallbacks, or guard trips.
-- The probe passes the frozen broad pool floor exactly: projected safe
-  materialization is `5/7`, `5/7`, and `5/7` (mean `5.0/7`), up from the saved
-  `2/7`, `2/7`, and `4/7`. RIDGID HD1200, Craftsman CMXEVBE17584, and Stanley
-  SL18115 resolved; each family has exact-model accepted evidence. The generic
-  `Vacmaster 5 Gallon Wet Dry Vacuum` lead remained unresolved because all
-  returned pages asserted more specific identities and the repaired selector
-  rejected them.
-- Vertical attribution is decisive: Shopping returned 132 raw rows across its
-  four requests but zero normalized candidates. Organic returned 40 raw rows,
-  22 normalized candidates, and every accepted page. A resolver based on this
-  evidence should dispatch bounded organic `"<identity> product page"` lookups,
-  not repeat the zero-yield Shopping half of the probe.
-- The untracked evidence fixture is
-  `tests/fixtures/review-radar-live/shop-vac.c5-resolution-probe.json`, SHA-256
-  `0089CE6F1F2150D84933AC28C441AAC7EBA421719905433C7F2C047AEE588CBF`.
-  Its ledger is balanced, all eight responses are HTTP 200, actual outbound
-  queries equal the frozen plan byte-for-byte, and no secret-like field is
-  present.
-- This is feasibility evidence, not an end-to-end result. No production
-  resolver exists; no app response, final recall, stability, image, price,
-  citation, or constraint outcome was measured. The result clears a zero-live
-  default-off implementation decision only; it does not promote a flag or
-  unblock R7A by itself.
+- Commit `eaeb577` implements the approved C5 resolver behind
+  `REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION=off`. It adds one bounded stage
+  after initial plus gap-check Serper discovery and before final OpenAI
+  research. No live call, promotion, `.env.local` edit, deployment, or R7A
+  work occurred.
+- Only a model-specific, type-exact, product-eligible structured Shopping
+  identity can become an internal resolution lead. A lead is removed when the
+  pool already contains a safe page or enabled merchant-URL recovery can
+  materialize one. Generic and ambiguous identities remain unresolved.
+- When enabled, the resolver deduplicates eligible identities, dispatches at
+  most four organic `"<identity> product page"` queries request-wide, and does
+  not issue Shopping resolution queries. Results pass the existing organic
+  normalizer, cheap prefilter, requested-type classifier, product-eligibility
+  gate, and shared product-page identity selector before entering the pool.
+- Flag-off behavior dispatches no resolution lookup and returns the original
+  Serper result object. Debug ledgers can show would-run queries as culled,
+  including exact cap and flag-off reasons.
+- The full offline wall passes: 934/934 tests across 129 suites. Focused
+  resolution/trust tests pass 104/104; typecheck, production build, and offline
+  evaluation pass; lint reports 0 errors/3 pre-existing warnings.
+- This is implemented behavior, not live proof. The prior C5 probe projected
+  `5/7` safe broad-pool materialization in each saved C4 run, exactly at the
+  frozen floor. It did not measure final recall, constraints, stability,
+  images, price, citations, cost, or latency.
 - RR-085/RR-086/RR-087 remain Fixed. Register: 87 total / 82 Fixed / 4 Needs
-  Investigation / 1 Won't Fix.
-- Dev flag state is unchanged: `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`;
-  `REVIEW_RADAR_PINNED_PLANNING` off; `REVIEW_RADAR_NORMALIZATION_RECOVERY`
-  unpromoted/default-off. `.env.local` was not modified.
+  Investigation / 1 Won't Fix. This implementation did not change issue
+  status or counts.
+
+## Flag state
+
+- Local development: `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`.
+- `REVIEW_RADAR_PINNED_PLANNING`: off.
+- `REVIEW_RADAR_NORMALIZATION_RECOVERY`: unpromoted/default-off.
+- `REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION`: unpromoted/default-off.
+- `.env.local` was not modified during C5 implementation.
+
+## Latest live evidence
+
+- C4 broad normalized-pool recall: `1/7`, `1/7`, `2/7` (mean `1.33/7`).
+- C4 broad final recall: `2/7`, `1/7`, `1/7` (mean `1.33/7`).
+- C4 pool/final Jaccard: `0.1778` / `0.0000`.
+- The C5 feasibility probe used 8 logical = 8 physical Serper attempts and
+  projected `5/7` safe pool materialization in all three broad fixtures.
+  Organic found all accepted pages; the four Shopping resolution probes
+  normalized zero candidates.
+- These numbers are historical control plus feasibility projection. The new
+  runtime resolver has not been called live.
 
 ## Next task — approval pending
 
-The recommended next phase is a separately approved **zero-live, default-off
-bounded organic resolution implementation**. It should:
+The recommended next phase is a separately approved **live, flag-on C5
+end-to-end validation**, not R7A and not automatic promotion. Before proposing
+spend, use dialogue entry [33] to resolve any peer-review objection that changes
+the test contract. The validation should:
 
-1. Trigger only for a type-safe structured provider identity lead that is still
-   absent after existing merchant-URL recovery and has no safe materialized
-   product page. Generic or ambiguous identity leads remain unresolved.
-2. Dispatch at most one organic query per unique eligible identity using the
-   proven shape `"<identity> product page"`; dedupe identities and impose a
-   small request-level cap. Do not add Shopping resolution: it produced zero
-   normalized candidates in the live probe.
-3. Normalize through the existing organic runtime path, then require the shared
-   product-page identity selector, requested-type verdict, product eligibility,
-   and cheap prefilter. Preserve provider and query lineage and an exact first-
-   loss reason for every rejected lookup result.
-4. Land behind a new default-off flag with flag-off responses byte-identical.
-   Shadow/debug mode may report would-resolve outcomes but cannot add candidates.
-   Add fail-first tests for exact-model success, ambiguous generic non-resolution,
-   wrong-brand/model/type/accessory rejection, query/cap/dedupe behavior, and
-   every existing trust wall.
-
-This phase authorizes neither live calls nor flag promotion. After it passes
-offline, a later separately approved live validation must prove end-to-end pool
-and final recall, safety, stability, cost, and latency before R7A is reconsidered.
+1. Run the new flag on with the current promoted flag state, cache-cold and
+   commit-pinned, using an explicitly approved search count, Serper planning
+   basis, and per-request hard ceiling.
+2. Attribute each resolution lookup and accepted/rejected page within its own
+   request. Record provider identity, parent query, first-loss stage, physical
+   attempts, retries/fallbacks, and whether merchant recovery would have
+   handled a skipped lead.
+3. Score broad and constrained normalized-pool recall, final recall, hard-
+   constraint compliance, wrong-type/non-product count, identity/image safety,
+   duplicate cards, stability, latency, and physical-call cost. Compare with
+   the commit-pinned C4 control while labeling cross-window provider variance.
+4. Treat the frozen `5/7` broad-pool floor as a real gate with no rounding and
+   no weakened denominator. Because the feasibility result had no margin, a
+   miss requires first-loss diagnosis rather than automatic promotion.
+5. Stop and report after the evidence window. Promotion, `.env.local` changes,
+   R7A, deployment, and any replacement search require separate approval.
 
 ## Hard boundaries
 
 - Zero live Serper/OpenAI calls without Taylor's explicit per-phase search
-  approval and physical-attempt planning basis. The completed 8/8/24 approval
-  is exhausted; no replacement or follow-on spend is authorized.
-- No flag promotion, `.env.local` edit, R7A work, deployment, or new live window
-  without separate explicit approval.
+  approval plus a physical-attempt planning basis and hard ceiling. The prior
+  8/8/24 probe approval is exhausted.
+- No flag promotion, `.env.local` edit, R7A work, deployment, or new live
+  window without separate explicit approval.
 - Preserve price, citation, requirement, product-type, identity, image,
   eligibility, dedupe, and hard-constraint trust gates.
-- Generalized fail-first fixes only; no product, brand, retailer, model, or
-  fixture-specific production exception.
-- Live C4/C5 fixtures and all pre-existing untracked artifacts remain untracked.
-  Stage only files owned by an approved phase; never use `git add -A`.
+- Generalized fixes only; no product, brand, retailer, model, or fixture-
+  specific production exception.
+- Live fixtures and all pre-existing untracked artifacts remain untracked.
+  Stage only approved-phase files; never use `git add -A`.
 - One phase per approval. Stop and report after it.
-
-## Latest verification
-
-- Probe-focused trust wall: 60/60 across 5 suites.
-- Full unit suite: 926/926 across 128 suites.
-- Typecheck: pass.
-- Production build: pass.
-- Lint: 0 errors / 3 pre-existing warnings.
-- Offline evaluation: no red flags.
-- Live C5 probe: 8 logical = 8 cache misses = 8 physical attempts; 0 cache
-  hits/retries/fallbacks; ledger balanced; projected mean `5.0/7`; verdict
-  `probe_pass`.
 
 ## Outstanding peer-review debt
 
-Dialogue entry [32] asks Claude to challenge the probe's causal interpretation,
-the organic-only implementation direction, and the no-margin `5/7` gate. That
-review is advisory and authorizes neither implementation nor spend.
+- Dialogue entry [33] asks Claude to challenge the strong-model qualification,
+  the dormant merchant-recovery interaction, and cap/dedupe starvation before
+  any live spend. The review is advisory and authorizes no change or call.
+- The merchant-recovery interaction is the clearest known uncertainty: the
+  resolver deliberately skips a lead that the enabled recovery path could
+  materialize, even though that separate flag is currently default-off. Live
+  validation must expose those skips rather than silently count them.
 
 ## Retrieval map
 
 | Need | Retrieve |
 |---|---|
-| Probe result / next gate | `docs/forward-roadmap.md` corrective C1-C5 section |
-| Peer review | `docs/agent-dialogue.md` entry [32] onward |
-| Canonical recall evidence | `docs/phase-6-market-leader-evaluation.md` latest C5 section |
-| Durable resolution contract | `docs/review-radar-test-memory.md` latest entry |
-| Verification | `docs/qa-loop-results.md` latest entry |
-| Raw live evidence | untracked `tests/fixtures/review-radar-live/shop-vac.c5-resolution-probe.json` |
+| C5 implementation / next gate | `docs/forward-roadmap.md` corrective C5 section |
+| Peer review | `docs/agent-dialogue.md` entry [33] onward |
+| Canonical verification | `docs/qa-loop-results.md` latest C5 entry |
+| Durable resolver contract | `docs/review-radar-test-memory.md` latest entry |
+| Architecture | `ReviewRadar-Overview.md` pipeline stage 8 |
+| Historical live evidence | untracked `tests/fixtures/review-radar-live/shop-vac.c5-resolution-probe.json` |

@@ -11,6 +11,30 @@ Update this file after:
 
 ## 2026-07-14
 
+### 🟧 Codex - Bounded organic identity resolution
+
+#### Changed
+
+- Added a default-off discovery step that can recover a safe product page for
+  a model-specific structured Shopping identity that the normal discovery
+  path could not materialize. It uses the proven organic `"<identity> product
+  page"` query shape and never repeats the probe's zero-yield Shopping lookup.
+- Limited resolution to four deduplicated identities per request. Recovered
+  pages must pass the existing organic normalization, product-type,
+  eligibility, cheap-prefilter, and product-page identity gates, with provider
+  and parent-query lineage retained for debugging.
+- Kept generic or ambiguous identities unresolved. The new behavior remains
+  behind `REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION=off`; normal responses and
+  Serper dispatch are unchanged while it is off.
+
+#### Verified
+
+- Focused resolution/trust tests pass 104/104; the full suite passes 934/934
+  across 129 suites. Typecheck, production build, and offline evaluation pass;
+  lint reports 0 errors/3 pre-existing warnings.
+- Zero live Serper/OpenAI calls occurred. No flag was promoted and
+  `.env.local` was not changed.
+
 ### 🟧 Codex - C5 live resolution-feasibility probe
 
 #### Measured

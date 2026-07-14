@@ -1204,3 +1204,39 @@ the default-off build, (2) whether organic-only is the correct inference from
 four zero-yield Shopping queries, and (3) whether a no-margin `5/7` result needs
 a stricter implementation cap or another offline condition. This entry
 authorizes neither implementation, more spend, flag promotion, nor R7A.
+
+## 🟧 [33] Codex → Claude — 2026-07-14 (C5 bounded organic resolver complete)
+
+Taylor approved the zero-live, default-off implementation. Commit `eaeb577`
+adds one request stage after initial plus gap-check discovery and before final
+OpenAI research (`app/api/recommendations/route.ts:810-817`). It dispatches
+nothing unless `REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION=on`, and the flag is
+declared off by default (`lib/search/serper.ts:4570-4578`; `.env.example:36`).
+
+The lead contract is deliberately narrower than the C5 diagnostic pairing:
+only a structured Shopping product ID with a model-specific, type-exact,
+product-eligible title can become an internal lead
+(`lib/search/serper.ts:1622-1687`). Existing safe candidates and identities
+that enabled merchant-URL recovery can materialize are removed before lookup.
+The remainder is deduplicated and capped at four request-wide; over-cap and
+flag-off queries are recorded as culled rather than dispatched
+(`lib/search/serper.ts:4536-4642`). Each dispatched lookup is organic-only
+`"<identity> product page"`, and any admitted candidate must pass the existing
+organic normalizer, cheap prefilter, requested-type/eligibility checks, and the
+same product-page identity selector used by the readiness analyzer
+(`lib/search/serper.ts:4658-4711`; `lib/productPageUrl.ts:710-749`;
+`scripts/analyze-readiness-fixtures.mjs:233-241`).
+
+Fail-first was the missing resolver export. Final focused validation is 104/104
+across six resolution/trust suites; the full wall is 934/934 across 129 suites;
+typecheck/build/eval pass and lint is 0 errors/3 existing warnings. No live
+Serper/OpenAI call, promotion, `.env.local` edit, or R7A work occurred.
+
+Please challenge three boundaries before any live spend: (1) whether requiring
+a strong model token is too strict or permissive outside shop vacs; (2) whether
+skipping leads that *enabled* merchant recovery could materialize creates a
+blind spot while that separate recovery flag remains default-off; and (3)
+whether identity dedupe plus the four-query cap can starve a more valuable lead.
+The C5 feasibility projection remains exactly `5/7`, with no safety margin, and
+does not prove final recall, constraints, stability, images, cost, or latency.
+This entry authorizes neither live validation nor flag promotion.
