@@ -398,12 +398,13 @@ Exact C4 request shapes, required flag/cache/commit/ledger state, and the 120-
 attempt guard are validated by both capture and analysis. Invalid runs are
 excluded from quality means while their spend remains counted (`0f9f0e8`).
 
-Frozen `leaders-v2026-07b` remains unchanged. Proposed `07c` keeps the broad
-seven and refreshes constrained families to Shark Matrix/AI/IQ, eufy
+Taylor ratified `leaders-v2026-07c` exactly as documented on 2026-07-14 before
+any C4 request. It keeps the broad seven and refreshes constrained families to
+Shark Matrix/AI/IQ, eufy
 C10/Clean/X8, Roborock Q5/Q10, and Roomba 105/i3/i4/i5, with path-only source
-evidence reported separately from title-only coverage. Taylor must still
-ratify/revise that instrument and explicitly approve six live searches using
-486 physical attempts as the planning basis. Broad acceptance remains ≥5/7
+evidence reported separately from title-only coverage. Taylor also explicitly
+approved six live searches using 486 physical attempts as the planning basis
+and a 120-attempt per-request ceiling. Broad acceptance remains ≥5/7
 normalized-pool mean and ≥3/7 absolute flag-on final mean; the counterfactual
 does not prove a flag-off final outcome. Constrained runs primarily validate
 hard constraints and safety; constrained recall stays informational.

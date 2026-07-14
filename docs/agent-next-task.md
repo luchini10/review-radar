@@ -33,32 +33,31 @@ peer-review debts, and current verification.
   records runtime parity for each result. It reconstructs normalized-pool
   opportunity only; flag-on final recall is an absolute result, not a claimed
   improvement over a separate flag-off final run.
-- Frozen `leaders-v2026-07b` is unchanged. The proposed `07c` instrument keeps
-  the seven broad shop-vac leaders, supplements title-only reporting with
-  bounded path-only source evidence, and proposes constrained families:
+- Taylor ratified `leaders-v2026-07c` exactly as documented. Commit `7141894`
+  freezes the seven broad shop-vac leaders, the constrained families, and the
+  letters-plus-digits matcher. The instrument supplements title-only reporting
+  with bounded path-only source evidence. Constrained families are
   Shark Matrix/AI/IQ; eufy C10/Clean/X8; Roborock Q5/Q10; and Roomba
-  105/i3/i4/i5. It remains analysis-only pending Taylor's explicit ratification.
-- Verification: C4-focused 77/77; full suite 905/905 across 127 suites;
-  typecheck and production build pass; lint 0 errors/3 pre-existing warnings;
-  offline eval reports no red flags. Zero live Serper/OpenAI calls.
+  105/i3/i4/i5.
+- Verification after the freeze: focused 16/16; full suite 906/906 across 127
+  suites; typecheck passes. The prior C4 preflight build/lint/offline-eval
+  result remains green. No C4 live request has run yet.
 - Register unchanged: 83 total — 78 Fixed, 4 Needs Investigation, 1 Won't Fix.
 
-## Required next decisions — no live window is approved
+## Active approved phase — C4 live window
 
-1. Ratify or revise the exact `leaders-v2026-07c` list and source-evidence
-   matching contract above. A revision creates a new snapshot; prior recall is
-   historical context, not a comparable canonical baseline.
-2. Separately approve the C4 live window as **six searches**: three cache-cold
-   `shop vac` and three cache-cold `robot vacuum` / `under $300` /
-   `self-emptying` requests. Use 486 physical Serper attempts as the planning
-   basis. Actual attempts may differ and must be reported; each request stops
-   at 120 attempts. A tripped request is spent/excluded, and any replacement
-   search needs fresh approval.
-3. After a complete usable window, decide C5. A pass may only unblock a
-   separately approved R7A; it does not promote recovery. A failure produces a
-   diagnosis without weakening thresholds.
+Taylor explicitly approved the C4 live window as **six searches**: three
+cache-cold `shop vac` and three cache-cold `robot vacuum` / `under $300` /
+`self-emptying` requests. Use 486 physical Serper attempts as the planning
+basis. Actual attempts may differ and must be reported; each request stops at
+120 attempts. A tripped request is spent/excluded, and any replacement search
+needs fresh approval.
 
-## C4 live contract if approved
+After a complete usable window, decide C5. A pass may only unblock a
+separately approved R7A; it does not promote recovery. A failure produces a
+diagnosis without weakening thresholds.
+
+## C4 live contract
 
 - Run all six requests with normalization recovery enabled and current promoted
   flags otherwise unchanged. The same-response trace supplies the flag-off
@@ -79,11 +78,12 @@ peer-review debts, and current verification.
 
 ## Hard boundaries
 
-Do not run C4 live searches; modify `.env.local`; promote normalization
-recovery; alter the frozen benchmark; start C5/R7A; commit live fixtures; or
-stage pre-existing untracked artifacts without Taylor's separate explicit
-approval. No peer-review debt blocks the budget request, but dialogue entry
-[27] asks Claude to verify the two preflight commits when available.
+Run only the six approved C4 searches under the contract above. Do not modify
+`.env.local`; promote normalization recovery; alter the frozen benchmark;
+start C5/R7A; commit live fixtures; replace a spent/excluded request; or stage
+pre-existing untracked artifacts without Taylor's separate explicit approval.
+Dialogue entry [27] asks Claude to verify the preflight commits when available,
+but no peer-review debt blocks this approved window.
 
 ## Retrieval map
 
