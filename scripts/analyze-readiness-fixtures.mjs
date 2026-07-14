@@ -12,6 +12,11 @@ import { productPageMatchesIdentity } from "../lib/productPageUrl.ts";
 import { classifyProductTypeMatch } from "../lib/productTypeMatch.ts";
 import { stripLeadingSourceOrRetailerLabel } from "../lib/brandMatching.ts";
 import { cheapPreFilterRawCandidates } from "../lib/search/serper.ts";
+import {
+  readinessRequestContract,
+  readinessSampleExclusionReasons,
+  readinessValidationPhase,
+} from "./readiness-sample-contract.mjs";
 
 const leaderLabel = (leader) =>
   [leader.brand, ...(leader.lines || [])].filter(Boolean).join(" / ");
@@ -22,38 +27,12 @@ const frequencyRows = (map) =>
     .map(([reason, count]) => ({ reason, count }))
     .sort((first, second) => second.count - first.count || first.reason.localeCompare(second.reason));
 
-const C4_REQUESTS = {
-  broad: { query: "shop vac" },
-  constrained: {
-    query: "robot vacuum",
-    budget: "under $300",
-    priorities: "self-emptying",
-  },
-};
-
 const HISTORICAL_07B_CONSTRAINED_LEADERS = [
   { brand: "shark", lines: ["matrix", "ai"] },
   { brand: "eufy", lines: ["clean", "x8", "self"] },
   { brand: "roborock", lines: ["q5"] },
   { brand: "roomba", lines: ["i3", "i4"] },
 ];
-
-function requestContract(request, c4Shape) {
-  const knownShape = c4Shape && Object.hasOwn(C4_REQUESTS, c4Shape);
-  const expected = knownShape
-    ? C4_REQUESTS[c4Shape]
-    : request?.budget
-      ? C4_REQUESTS.constrained
-      : C4_REQUESTS.broad;
-  const keys = Object.keys(request || {}).sort();
-  const expectedKeys = Object.keys(expected).sort();
-  const valid =
-    (!c4Shape || knownShape) &&
-    JSON.stringify(keys) === JSON.stringify(expectedKeys) &&
-    expectedKeys.every((key) => request?.[key] === expected[key]);
-
-  return { valid, expected, actual: request };
-}
 
 function sourcePath(value) {
   if (!value) return "";
@@ -360,6 +339,74 @@ function duplicateFinalPairs(products) {
     }
   }
   return duplicates;
+}
+
+function candidateContributionSummary(records) {
+  const normalized = records.filter((candidate) => candidate.normalized);
+  const final = normalized.filter((candidate) =>
+    ["exact", "near"].includes(candidate.finalOutcome),
+  );
+
+  return {
+    normalizedCandidates: normalized.length,
+    normalizedNames: Array.from(new Set(normalized.map((candidate) => candidate.name))),
+    prefilterAccepted: normalized.filter(
+      (candidate) => candidate.prefilterAccepted === true,
+    ).length,
+    finalSelections: final.length,
+    finalNames: Array.from(new Set(final.map((candidate) => candidate.name))),
+  };
+}
+
+function analyzeC5RuntimeContribution(ledger) {
+  const identityQueries = ledger.planAssembly.filter(
+    (query) => query.origin === "identity_resolution",
+  );
+  const identityQueryIds = new Set(identityQueries.map((query) => query.id));
+  const identityAttempts = ledger.dispatch.attempts.filter((attempt) =>
+    identityQueryIds.has(attempt.queryId),
+  );
+  const identityCandidates = ledger.candidateLineage.candidates.filter(
+    (candidate) =>
+      candidate.source === "serper" &&
+      candidate.queryIds.some((queryId) => identityQueryIds.has(queryId)),
+  );
+  const recoveredCandidates = ledger.candidateLineage.candidates.filter(
+    (candidate) =>
+      candidate.source === "serper" &&
+      candidate.normalizationRecovery?.outcome === "recovered",
+  );
+  const originContribution = ledger.contributions?.byOrigin?.find(
+    (row) => row.origin === "identity_resolution",
+  ) || null;
+
+  return {
+    identityResolution: {
+      plannedQueries: identityQueries.length,
+      dispatchedQueries: identityQueries.filter(
+        (query) => query.status === "dispatched",
+      ).length,
+      culledQueries: identityQueries.filter((query) => query.status === "culled")
+        .length,
+      culls: identityQueries
+        .filter((query) => query.status === "culled")
+        .map((query) => ({
+          query: query.originalQuery,
+          reason: query.cullReason,
+        })),
+      outboundQueries: identityAttempts.map((attempt) => attempt.finalOutboundQuery),
+      physicalAttempts: identityAttempts.length,
+      providerDurationMs: identityAttempts.reduce(
+        (total, attempt) => total + (attempt.durationMs || 0),
+        0,
+      ),
+      contribution: candidateContributionSummary(identityCandidates),
+      ledgerContribution: originContribution,
+    },
+    merchantNormalizationRecovery: candidateContributionSummary(
+      recoveredCandidates,
+    ),
+  };
 }
 
 function jaccard(first, second) {
@@ -926,48 +973,37 @@ export function analyzeReadinessFixture(fixture, path = "<memory>") {
       name: candidate.name,
       collapsedInto: candidate.identityCollapsedInto,
     }));
-  const contract = requestContract(request, fixture._c4Shape);
-  const flags = ledger.header.flags || {};
-  const attemptGuard = ledger.dispatch.attemptGuard;
-  const validityReasons = fixture._c4Shape
-    ? [
-        ...(fixture._exclusionReasons || []),
-        ...(fixture._sampleStatus === "usable" ? [] : ["fixture_not_marked_usable"]),
-        ...(contract.valid ? [] : ["request_contract_mismatch"]),
-        ...(ledger.header.serperCacheEmptyAtStart ? [] : ["warm_serper_cache"]),
-        ...(ledger.header.commitHash ? [] : ["missing_commit_hash"]),
-        ...(flags.REVIEW_RADAR_NORMALIZATION_RECOVERY === "on"
-          ? []
-          : ["normalization_recovery_not_on"]),
-        ...(flags.REVIEW_RADAR_CONSTRAINT_ALLOCATION === "on"
-          ? []
-          : ["constraint_allocation_not_on"]),
-        ...(["unset", "off"].includes(flags.REVIEW_RADAR_PINNED_PLANNING)
-          ? []
-          : ["pinned_planning_not_off"]),
-        ...(flags.REVIEW_RADAR_MAX_SERPER_ATTEMPTS === "120"
-          ? []
-          : ["attempt_ceiling_not_120"]),
-        ...(ledger.dispatch.reconciliation.balanced ? [] : ["ledger_unbalanced"]),
-        ...(attemptGuard ? [] : ["missing_attempt_guard"]),
-        ...(attemptGuard?.maxAttempts === 120 ? [] : ["attempt_guard_not_120"]),
-        ...(attemptGuard?.reservedAttempts ===
-        ledger.dispatch.reconciliation.physicalAttempts
-          ? []
-          : ["attempt_guard_reconciliation_mismatch"]),
-        ...(attemptGuard?.tripped ? ["attempt_ceiling_tripped"] : []),
-      ]
-    : [];
+  const validationPhase = readinessValidationPhase(fixture);
+  const contract = readinessRequestContract(request, fixture._c4Shape);
+  const validityReasons = readinessSampleExclusionReasons({
+    ledger,
+    phase: validationPhase,
+    request,
+    shape: fixture._c4Shape,
+    storedExclusionReasons: fixture._exclusionReasons || [],
+    sampleStatus: fixture._sampleStatus,
+    validateStoredStatus: true,
+  });
+  const providerAttemptDurationMs = ledger.dispatch.attempts.reduce(
+    (total, attempt) => total + (attempt.durationMs || 0),
+    0,
+  );
 
   return {
     path,
     request,
+    validationPhase,
+    commitHash: ledger.header.commitHash || null,
     requestContract: contract,
     sampleValidity: {
       usable: validityReasons.length === 0,
       reasons: Array.from(new Set(validityReasons)),
     },
     reconciliation: ledger.dispatch.reconciliation,
+    latency: {
+      requestDurationMs: fixture._captureDurationMs ?? null,
+      providerAttemptDurationMs,
+    },
     cacheCold: ledger.header.serperCacheEmptyAtStart,
     seedSearchesRun: fixture.debug.seedSearchesRun,
     historical07b,
@@ -979,6 +1015,7 @@ export function analyzeReadinessFixture(fixture, path = "<memory>") {
         current07c.finalRecall.covered - historical07b.finalRecall.covered,
     },
     identityResolution,
+    c5RuntimeContribution: analyzeC5RuntimeContribution(ledger),
     aiDisplayed,
     exactHardConstraintFailures,
     wrongTypeFinalCards,
@@ -1050,6 +1087,13 @@ export function aggregateReadinessAnalyses(analyses) {
             ? "needs_live_resolution_probe"
             : "eligible_for_default_off_implementation";
 
+  const c5Analyses = usableAnalyses.filter(
+    (analysis) => analysis.validationPhase === "c5",
+  );
+  const commitHashes = Array.from(
+    new Set(usableAnalyses.map((analysis) => analysis.commitHash).filter(Boolean)),
+  );
+
   return {
     contract: {
       preAiPool:
@@ -1073,6 +1117,14 @@ export function aggregateReadinessAnalyses(analyses) {
       usable: usableAnalyses.length,
       broadUsable: broad.length,
       constrainedUsable: constrained.length,
+    },
+    sampleContract: {
+      validationPhases: Array.from(
+        new Set(analyses.map((analysis) => analysis.validationPhase).filter(Boolean)),
+      ),
+      commitHashes,
+      allUsableRunsShareCommit:
+        usableAnalyses.length > 0 && commitHashes.length === 1,
     },
     broadHistorical07bMean: mean(
       broad.map((analysis) => analysis.historical07b.preAiPoolRecall.covered),
@@ -1144,6 +1196,92 @@ export function aggregateReadinessAnalyses(analyses) {
         (total, analysis) => total + analysis.reconciliation.fallbacks,
         0,
       ),
+      providerAttemptDurationMs: analyses.reduce(
+        (total, analysis) => total + analysis.latency.providerAttemptDurationMs,
+        0,
+      ),
+      meanRequestDurationMs: mean(
+        analyses
+          .map((analysis) => analysis.latency.requestDurationMs)
+          .filter((value) => value !== null),
+      ),
+    },
+    c5RuntimeContribution: {
+      observedRuns: c5Analyses.length,
+      identityResolution: {
+        plannedQueries: c5Analyses.reduce(
+          (total, analysis) =>
+            total + analysis.c5RuntimeContribution.identityResolution.plannedQueries,
+          0,
+        ),
+        dispatchedQueries: c5Analyses.reduce(
+          (total, analysis) =>
+            total + analysis.c5RuntimeContribution.identityResolution.dispatchedQueries,
+          0,
+        ),
+        culledQueries: c5Analyses.reduce(
+          (total, analysis) =>
+            total + analysis.c5RuntimeContribution.identityResolution.culledQueries,
+          0,
+        ),
+        physicalAttempts: c5Analyses.reduce(
+          (total, analysis) =>
+            total + analysis.c5RuntimeContribution.identityResolution.physicalAttempts,
+          0,
+        ),
+        normalizedCandidates: c5Analyses.reduce(
+          (total, analysis) =>
+            total +
+            analysis.c5RuntimeContribution.identityResolution.contribution
+              .normalizedCandidates,
+          0,
+        ),
+        prefilterAccepted: c5Analyses.reduce(
+          (total, analysis) =>
+            total +
+            analysis.c5RuntimeContribution.identityResolution.contribution
+              .prefilterAccepted,
+          0,
+        ),
+        finalSelections: c5Analyses.reduce(
+          (total, analysis) =>
+            total +
+            analysis.c5RuntimeContribution.identityResolution.contribution
+              .finalSelections,
+          0,
+        ),
+        finalNames: c5Analyses.flatMap(
+          (analysis) =>
+            analysis.c5RuntimeContribution.identityResolution.contribution.finalNames,
+        ),
+      },
+      merchantNormalizationRecovery: {
+        normalizedCandidates: c5Analyses.reduce(
+          (total, analysis) =>
+            total +
+            analysis.c5RuntimeContribution.merchantNormalizationRecovery
+              .normalizedCandidates,
+          0,
+        ),
+        prefilterAccepted: c5Analyses.reduce(
+          (total, analysis) =>
+            total +
+            analysis.c5RuntimeContribution.merchantNormalizationRecovery
+              .prefilterAccepted,
+          0,
+        ),
+        finalSelections: c5Analyses.reduce(
+          (total, analysis) =>
+            total +
+            analysis.c5RuntimeContribution.merchantNormalizationRecovery
+              .finalSelections,
+          0,
+        ),
+        finalNames: c5Analyses.flatMap(
+          (analysis) =>
+            analysis.c5RuntimeContribution.merchantNormalizationRecovery.finalNames,
+        ),
+      },
     },
     normalizationRecovery: {
       observedRuns: usableAnalyses.filter(

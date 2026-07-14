@@ -21,7 +21,8 @@ function candidate(overrides) {
     firstLoss: overrides.firstLoss || null,
     normalizationRecovery: overrides.normalizationRecovery || null,
     normalizationCounterfactual: overrides.normalizationCounterfactual || null,
-    selected: false,
+    finalOutcome: overrides.finalOutcome || "neither",
+    selected: overrides.selected || false,
   };
 }
 
@@ -487,6 +488,109 @@ describe("R7 readiness fixture analyzer", () => {
     assert.equal(
       aggregate.c5Decision.verdict,
       "repair_product_page_identity_before_resolution_probe",
+    );
+  });
+
+  it("pins the C5 live contract and attributes identity-resolution contribution", () => {
+    const input = fixture();
+    const ledger = input.debug.stageFunnel.searchLedger;
+    input._c4Shape = "broad";
+    input._validationPhase = "c5";
+    input._sampleStatus = "usable";
+    input._exclusionReasons = [];
+    input._captureDurationMs = 81234;
+    ledger.header = {
+      commitHash: "abc1234",
+      flags: {
+        REVIEW_RADAR_CONSTRAINT_ALLOCATION: "on",
+        REVIEW_RADAR_MAX_SERPER_ATTEMPTS: "120",
+        REVIEW_RADAR_NORMALIZATION_RECOVERY: "off",
+        REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION: "on",
+        REVIEW_RADAR_PINNED_PLANNING: "unset",
+      },
+      serperCacheEmptyAtStart: true,
+    };
+    ledger.planAssembly.push({
+      id: "q-3",
+      origin: "identity_resolution",
+      phase: "bounded_organic_identity_resolution",
+      purpose: "product_discovery",
+      originalQuery: "RIDGID HD1200 product page",
+      status: "dispatched",
+    });
+    ledger.dispatch.attempts.push({
+      queryId: "q-3",
+      durationMs: 250,
+      finalOutboundQuery: "RIDGID HD1200 product page",
+      results: [],
+    });
+    ledger.dispatch.reconciliation = {
+      logicalSearches: 3,
+      cacheHits: 0,
+      cacheMisses: 3,
+      physicalAttempts: 3,
+      retries: 0,
+      fallbacks: 0,
+      balanced: true,
+    };
+    ledger.dispatch.attemptGuard = {
+      maxAttempts: 120,
+      reservedAttempts: 3,
+      tripped: false,
+    };
+    ledger.candidateLineage.candidates.push(
+      candidate({
+        candidateId: "serper-ridgid-hd1200",
+        finalOutcome: "exact",
+        name: "RIDGID HD1200 Wet Dry Shop Vacuum",
+        normalized: true,
+        prefilterAccepted: true,
+        productUrl: "https://example.com/p/ridgid-hd1200",
+        queryIds: ["q-3"],
+        selected: true,
+        source: "serper",
+      }),
+    );
+    ledger.contributions = {
+      byOrigin: [
+        {
+          origin: "identity_resolution",
+          queries: 1,
+          rawResults: 1,
+          normalizedCandidates: 1,
+          uniqueCandidates: 1,
+          citationValid: 1,
+          requirementValid: 1,
+          revalidated: 1,
+          exactSelections: 1,
+          nearSelections: 0,
+        },
+      ],
+    };
+
+    const analysis = analyzeReadinessFixture(input);
+    const aggregate = aggregateReadinessAnalyses([analysis]);
+
+    assert.equal(analysis.sampleValidity.usable, true);
+    assert.equal(analysis.validationPhase, "c5");
+    assert.deepEqual(
+      analysis.c5RuntimeContribution.identityResolution.outboundQueries,
+      ["RIDGID HD1200 product page"],
+    );
+    assert.equal(
+      analysis.c5RuntimeContribution.identityResolution.contribution.finalSelections,
+      1,
+    );
+    assert.equal(aggregate.sampleContract.allUsableRunsShareCommit, true);
+    assert.equal(aggregate.cost.meanRequestDurationMs, 81234);
+    assert.equal(aggregate.c5RuntimeContribution.identityResolution.dispatchedQueries, 1);
+
+    input.debug.stageFunnel.searchLedger.header.flags.REVIEW_RADAR_NORMALIZATION_RECOVERY =
+      "on";
+    const invalid = analyzeReadinessFixture(input);
+    assert.equal(invalid.sampleValidity.usable, false);
+    assert.ok(
+      invalid.sampleValidity.reasons.includes("normalization_recovery_not_off"),
     );
   });
 });

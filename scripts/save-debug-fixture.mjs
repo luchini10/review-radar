@@ -10,6 +10,11 @@
 import { existsSync, writeFileSync, mkdirSync } from "node:fs";
 import { basename, join } from "node:path";
 
+import {
+  readinessRequestForShape,
+  readinessSampleExclusionReasons,
+} from "./readiness-sample-contract.mjs";
+
 const BASE = process.env.RR_BASE || "http://localhost:3000";
 const FIXTURE_DIR = "tests/fixtures/review-radar-live";
 const TIMEOUT_MS = 270000;
@@ -20,6 +25,8 @@ let budget;
 let priorities;
 let requestedOutput;
 let c4Shape;
+let validationPhase;
+let dryRun = false;
 const goldLeaders = [];
 
 for (let i = 0; i < args.length; i++) {
@@ -33,13 +40,17 @@ for (let i = 0; i < args.length; i++) {
     if (args[i + 1]) requestedOutput = args[++i];
   } else if (args[i] === "--c4-shape") {
     if (args[i + 1]) c4Shape = args[++i];
+  } else if (args[i] === "--validation-phase") {
+    if (args[i + 1]) validationPhase = args[++i];
+  } else if (args[i] === "--dry-run") {
+    dryRun = true;
   } else if (!args[i].startsWith("--")) {
     query = args[i];
   }
 }
 
 if (!query && !c4Shape) {
-  console.error("Usage: node scripts/save-debug-fixture.mjs <query> [--budget <budget>] [--priorities <details>] [--gold <leader>...] [--out <filename>] [--c4-shape broad|constrained]");
+  console.error("Usage: node scripts/save-debug-fixture.mjs <query> [--budget <budget>] [--priorities <details>] [--gold <leader>...] [--out <filename>] [--c4-shape broad|constrained] [--validation-phase c4|c5] [--dry-run]");
   process.exit(1);
 }
 
@@ -55,21 +66,50 @@ if (c4Shape && !requestedOutput) {
   console.error("--c4-shape requires an explicit --out filename");
   process.exit(1);
 }
+if (validationPhase && !c4Shape) {
+  console.error("--validation-phase requires --c4-shape");
+  process.exit(1);
+}
+validationPhase ||= c4Shape ? "c4" : undefined;
+if (validationPhase && !["c4", "c5"].includes(validationPhase)) {
+  console.error("--validation-phase must be c4 or c5");
+  process.exit(1);
+}
 
-const request = c4Shape === "broad"
-  ? { query: "shop vac" }
-  : c4Shape === "constrained"
-    ? {
-        query: "robot vacuum",
-        budget: "under $300",
-        priorities: "self-emptying",
-      }
-    : {
+const request = c4Shape
+  ? readinessRequestForShape(c4Shape)
+  : {
         query,
         ...(budget ? { budget } : {}),
         ...(priorities ? { priorities } : {}),
       };
 query = request.query;
+
+if (dryRun) {
+  console.log(JSON.stringify({
+    dryRun: true,
+    request,
+    shape: c4Shape || null,
+    validationPhase: validationPhase || null,
+    expectedFlagContract: validationPhase === "c5"
+      ? {
+          REVIEW_RADAR_CONSTRAINT_ALLOCATION: "on",
+          REVIEW_RADAR_MAX_SERPER_ATTEMPTS: "120",
+          REVIEW_RADAR_NORMALIZATION_RECOVERY: "off_or_unset",
+          REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION: "on",
+          REVIEW_RADAR_PINNED_PLANNING: "off_or_unset",
+        }
+      : validationPhase === "c4"
+        ? {
+            REVIEW_RADAR_CONSTRAINT_ALLOCATION: "on",
+            REVIEW_RADAR_MAX_SERPER_ATTEMPTS: "120",
+            REVIEW_RADAR_NORMALIZATION_RECOVERY: "on",
+            REVIEW_RADAR_PINNED_PLANNING: "off_or_unset",
+          }
+        : null,
+  }, null, 2));
+  process.exit(0);
+}
 
 const slug = query
   .toLowerCase()
@@ -91,6 +131,7 @@ console.log(`[live] Running query: "${query}"\n`);
 
 const ctrl = new AbortController();
 const t = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+const requestStartedAt = performance.now();
 let rawResponse;
 try {
   rawResponse = await fetch(`${BASE}/api/recommendations`, {
@@ -104,53 +145,36 @@ try {
 }
 
 const json = await rawResponse.json();
+const captureDurationMs = Math.round((performance.now() - requestStartedAt) * 1000) / 1000;
 if (json.error) {
   console.error("API error:", json.error);
   process.exit(1);
 }
 
-const c4ExclusionReasons = [];
+let exclusionReasons = [];
 if (c4Shape) {
   const ledger = json.debug?.stageFunnel?.searchLedger;
-  const flags = ledger?.header?.flags || {};
-  const reconciliation = ledger?.dispatch?.reconciliation;
-  const attemptGuard = ledger?.dispatch?.attemptGuard;
-
-  if (!ledger) c4ExclusionReasons.push("missing_debug_ledger");
-  if (ledger?.header?.serperCacheEmptyAtStart !== true) {
-    c4ExclusionReasons.push("warm_serper_cache");
-  }
-  if (!ledger?.header?.commitHash) c4ExclusionReasons.push("missing_commit_hash");
-  if (flags.REVIEW_RADAR_NORMALIZATION_RECOVERY !== "on") {
-    c4ExclusionReasons.push("normalization_recovery_not_on");
-  }
-  if (flags.REVIEW_RADAR_CONSTRAINT_ALLOCATION !== "on") {
-    c4ExclusionReasons.push("constraint_allocation_not_on");
-  }
-  if (!["unset", "off"].includes(flags.REVIEW_RADAR_PINNED_PLANNING)) {
-    c4ExclusionReasons.push("pinned_planning_not_off");
-  }
-  if (flags.REVIEW_RADAR_MAX_SERPER_ATTEMPTS !== "120") {
-    c4ExclusionReasons.push("attempt_ceiling_not_120");
-  }
-  if (!reconciliation?.balanced) c4ExclusionReasons.push("ledger_unbalanced");
-  if (attemptGuard?.tripped) c4ExclusionReasons.push("attempt_ceiling_tripped");
-  if ((reconciliation?.physicalAttempts || 0) > 120) {
-    c4ExclusionReasons.push("physical_attempts_over_120");
-  }
+  exclusionReasons = readinessSampleExclusionReasons({
+    ledger,
+    phase: validationPhase,
+    request,
+    shape: c4Shape,
+  });
 }
 
 const fixture = {
   _query: query,
   _request: request,
   _savedAt: new Date().toISOString(),
+  _captureDurationMs: captureDurationMs,
   _version: "1",
   _goldLeaders: goldLeaders,
   ...(c4Shape
     ? {
         _c4Shape: c4Shape,
-        _sampleStatus: c4ExclusionReasons.length === 0 ? "usable" : "spent_excluded",
-        _exclusionReasons: c4ExclusionReasons,
+        _validationPhase: validationPhase,
+        _sampleStatus: exclusionReasons.length === 0 ? "usable" : "spent_excluded",
+        _exclusionReasons: exclusionReasons,
       }
     : {}),
   ...json,
@@ -159,8 +183,8 @@ const fixture = {
 writeFileSync(outPath, JSON.stringify(fixture, null, 2));
 
 console.log(`Saved fixture → ${outPath}`);
-if (c4ExclusionReasons.length > 0) {
-  console.error(`C4 request spent but excluded: ${c4ExclusionReasons.join(", ")}`);
+if (exclusionReasons.length > 0) {
+  console.error(`${validationPhase?.toUpperCase()} request spent but excluded: ${exclusionReasons.join(", ")}`);
   process.exitCode = 2;
 }
 if (goldLeaders.length === 0 && !c4Shape) {
