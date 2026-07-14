@@ -6817,3 +6817,42 @@ node scripts/eval-pipeline.mjs: no red flags
 current-code C4 broad replay: 6/7 canonical; selector gaps 0; complement gaps 0
 live Serper/OpenAI calls: 0
 ```
+
+## 🟧 Codex QA Update — 2026-07-14 (C5 live resolution-feasibility probe)
+
+**Verdict: PASS AT THE FROZEN 5/7 FLOOR; ORGANIC-ONLY DEFAULT-OFF BUILD IS
+JUSTIFIED, BUT PRODUCTION READINESS IS NOT PROVEN.**
+
+- Taylor approved 8 logical Serper searches, an 8-physical-attempt planning
+  basis, and a hard 24-attempt ceiling with no replacement spend. Commit
+  `53c193b` froze four recurring identity targets, exact request bodies, three
+  C4 fixture hashes, a dry-run confirmation guard, and checkpointed evidence.
+- Actual cost reconciles: 8 logical = 0 hits + 8 misses = 8 physical attempts;
+  0 retries, 0 fallbacks, 0 errors, no guard trip, and all responses HTTP 200.
+  Actual outbound queries equal the plan exactly and the fixture contains no
+  secret-like field.
+- Safe resolutions: RIDGID HD1200 (2 accepted exact-model pages), Craftsman
+  CMXEVBE17584 (1), and Stanley SL18115 (3 exact plus 1 selector-safe sparse
+  page). The generic Vacmaster lead returned three more-specific pages, all
+  rejected by the product-page selector; it remains unresolved.
+- Projected materialization is `5/7`, `5/7`, `5/7`, exactly the frozen broad
+  pool floor. This is a same-provider-run feasibility counterfactual, not a
+  claim about final cards or repeated-run stability.
+- Shopping: 132 raw rows, 0 normalized candidates. Organic: 40 raw rows, 22
+  normalized candidates, every accepted page. Do not build Shopping resolution.
+  The next eligible phase is zero-live, default-off bounded organic resolution;
+  later end-to-end live validation remains separately approval-gated.
+- Fixture (untracked):
+  `tests/fixtures/review-radar-live/shop-vac.c5-resolution-probe.json`, SHA-256
+  `0089CE6F1F2150D84933AC28C441AAC7EBA421719905433C7F2C047AEE588CBF`.
+
+```text
+probe-focused page/type/analyzer wall: 60/60 across 5 suites
+npm test: 926/926 across 128 suites
+npm run typecheck: pass
+npm run lint: 0 errors, 3 pre-existing warnings
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red flags
+live Serper calls: 8 logical / 8 physical
+live OpenAI calls: 0
+```

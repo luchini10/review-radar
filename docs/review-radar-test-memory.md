@@ -1799,3 +1799,27 @@ a known conservative undercount.
 - Verification: focused 119/119; full 920/920 across 127 suites; typecheck,
   build, and offline eval pass; lint 0 errors/3 existing warnings. Commit
   `1131101`; zero live calls and no flag or `.env.local` change.
+
+## C5 live resolution-feasibility memory — 2026-07-14
+
+- A resolution probe must pin the source fixture hashes, exact identity targets,
+  query bodies, cache-cold state, commit, logical/physical budget, and ledger
+  reconciliation before spend. Default to dry-run and checkpoint after every
+  dispatched query; never replace an inconclusive request without new approval.
+- For the frozen shop-vac C4 sample, four recurring targets cover all ten
+  unresolved leader/run gaps. Three specific identities resolved safely:
+  RIDGID HD1200, Craftsman CMXEVBE17584, and Stanley SL18115. The generic
+  Vacmaster 5-gallon lead correctly stayed unresolved instead of borrowing a
+  more-specific variant page.
+- Projected safe materialization is `5/7` in every run, exactly at the frozen
+  floor. Treat this as feasibility only: it does not prove end-to-end pool/final
+  recall, stability, image/price/citation/constraint safety, latency, or cost.
+- Vertical attribution is load-bearing. Shopping returned 132 raw rows and zero
+  normalized candidates; organic `"<identity> product page"` searches returned
+  all accepted pages. A future resolver should be organic-only, one query per
+  deduped eligible identity, bounded and default-off, after existing merchant
+  recovery. Reuse the shared normalizer, page selector, type, eligibility, and
+  prefilter gates; generic identity remains unresolved.
+- Evidence: commit `53c193b`; fixture SHA-256
+  `0089CE6F1F2150D84933AC28C441AAC7EBA421719905433C7F2C047AEE588CBF`;
+  8 logical/8 physical, 0 hits/retries/fallbacks/errors, ledger balanced.

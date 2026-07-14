@@ -490,6 +490,31 @@ flag promotion, or R7A. The next decision is a separately scoped and approved
 bounded live resolution-feasibility probe; only a passing probe can justify a
 later default-off resolver implementation.
 
+**C5 live resolution-feasibility result (2026-07-14): PASSED AT THE FLOOR.**
+Taylor approved one cache-cold probe containing eight logical Serper searches,
+using eight physical attempts as the planning basis and a hard ceiling of 24;
+no replacement was authorized. Instrument commit `53c193b` dispatched four
+exact-identity Shopping requests and four matching organic `product page`
+requests. The balanced ledger records 8 cache misses, 8 physical attempts, 0
+cache hits, 0 retries, 0 fallbacks, no guard trip, and eight HTTP 200 responses.
+
+RIDGID HD1200, Craftsman CMXEVBE17584, and Stanley SL18115 resolved through the
+repaired page/type/eligibility/prefilter boundary. The generic Vacmaster lead
+correctly remained unresolved rather than being attached to a more specific
+variant. Projected safe materialization is `5/7`, `5/7`, and `5/7` (mean
+`5.0/7`), exactly clearing the frozen pool floor. This is a feasibility
+counterfactual over the three saved C4 provider runs, not end-to-end final or
+stability evidence.
+
+The vertical result materially narrows the implementation: Shopping returned
+132 raw rows and zero normalized candidates; organic returned 40 raw rows, 22
+normalized candidates, and every accepted page. A separately approved
+zero-live implementation may therefore add only a bounded default-off organic
+identity-to-product-page lookup after existing merchant recovery. It must keep
+ambiguous leads unresolved and reuse every shared trust gate. This result does
+not promote a flag, authorize more calls, or unblock R7A without later
+end-to-end validation.
+
 **C1 result (M3, four usable readiness fixtures):** the tested pre-AI pool is a
 Serper `product_discovery` candidate that normalized, survived raw dedupe and
 cheap prefilter; a later `candidate_merge` loss still counts as pool-present.

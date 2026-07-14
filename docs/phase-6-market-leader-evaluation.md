@@ -210,6 +210,36 @@ NotScored. The machine verdict is now `needs_live_resolution_probe`. The frozen
 `5/7` pool and `3/7` final floors are unchanged, and no probe or implementation
 is authorized by this offline replay.
 
+### C5 live resolution-feasibility probe (M2, 2026-07-14)
+
+Taylor approved eight logical searches with an eight-physical-attempt planning
+basis and a hard 24-attempt ceiling. Commit `53c193b` ran one cache-cold probe
+against the three hash-pinned C4 broad fixtures. The ledger reconciles exactly:
+8 logical searches = 0 cache hits + 8 cache misses = 8 physical attempts, with
+0 retries/fallbacks and no guard trip.
+
+| Run | Captured baseline | Safely resolved leaders | Projected materialization |
+|---|---:|---|---:|
+| shop-vac c4-07c-run1 | 2/7 | RIDGID, Craftsman, Stanley | 5/7 |
+| shop-vac c4-07c-run2 | 2/7 | RIDGID, Craftsman, Stanley | 5/7 |
+| shop-vac c4-07c-run3 | 4/7 | Craftsman | 5/7 |
+| **Shape A mean** | **2.67/7** | — | **5.0/7** |
+
+RIDGID HD1200, Craftsman CMXEVBE17584, and Stanley SL18115 each have accepted
+exact-model pages. The generic Vacmaster lead did not resolve: the returned
+pages asserted more specific variants and the repaired selector rejected them.
+Shopping produced 132 raw results but zero normalized candidates. Organic
+product-page searches produced 40 raw results, 22 normalized candidates, and
+all accepted pages.
+
+**Decision:** the probe passes the frozen `5/7` pool feasibility floor exactly,
+with no margin. It supports a later default-off, organic-only bounded resolver
+implementation. It does not measure final recall, stability, images, prices,
+citations, constraints, or full-request cost/latency and therefore does not by
+itself satisfy R7A/R7B acceptance. The live fixture remains untracked at
+`tests/fixtures/review-radar-live/shop-vac.c5-resolution-probe.json` (SHA-256
+`0089CE6F1F2150D84933AC28C441AAC7EBA421719905433C7F2C047AEE588CBF`).
+
 ## 4. v1.0 targets (amended)
 
 - Shape A (broad): final recall ≥ 3/7 per-run mean; pool recall ≥ 5/7 —

@@ -11,6 +11,29 @@ Update this file after:
 
 ## 2026-07-14
 
+### 🟧 Codex - C5 live resolution-feasibility probe
+
+#### Measured
+
+- Added a guarded, dry-run-first diagnostic that hash-pins the three C4 broad
+  fixtures, freezes four recurring unresolved identities and their eight Serper
+  payloads, enforces the approved 24-attempt ceiling, and checkpoints a complete
+  request-scoped ledger. It does not change production search behavior.
+- The cache-cold live probe used exactly 8 physical attempts with no retries or
+  fallbacks. Safe projected materialization reached `5/7` in all three runs,
+  exactly meeting the frozen pool floor. RIDGID, Craftsman, and Stanley resolved;
+  the ambiguous Vacmaster identity stayed unresolved.
+- All accepted pages came from organic product-page queries. Four Shopping
+  requests returned 132 raw rows but zero normalized candidates, so the proposed
+  implementation direction is bounded organic-only resolution.
+
+#### Verified
+
+- Probe-focused wall 60/60; full suite 926/926 across 128 suites; typecheck and
+  production build pass; lint has 0 errors/3 pre-existing warnings; offline
+  evaluation reports no red flags. No OpenAI call, production flag change, or
+  `.env.local` edit occurred.
+
 ### 🟧 Codex - Corrective C5 trust-boundary repair
 
 #### Changed
