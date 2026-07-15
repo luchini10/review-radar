@@ -7309,3 +7309,56 @@ external verification fetches: 0
 official API documentation lookups: read-only; no product/source verification
 next: OAI-2A only, after separate explicit approval
 ```
+
+## 🟧 Codex — OAI-2A Terra feasibility attempt blocked at API boundary (2026-07-15)
+
+**Scope and authorization.** Taylor approved committing OAI-1 and executing
+OAI-2A with three autonomous research creates plus one no-web interpreter
+create, at most 60 hosted web searches, a $20 Terra planning ceiling, bounded
+inspection of returned sources, and zero Serper/retry/replacement/substitution.
+OAI-1 was committed first as `883cfac`.
+
+**Preflight corrections before spend.** Official OpenAI documentation confirmed
+`gpt-5.6-terra` supports Responses, structured outputs, hosted web search, and
+`high` reasoning. The harness was pinned to Terra and current standard/long-
+context rates. It disables SDK retries (`scripts/run-oai-2a.mjs:141-145`), caps
+create calls and hosted searches (`scripts/run-oai-2a.mjs:146-155,250-258`),
+refuses evidence replacement (`scripts/run-oai-2a.mjs:129-138`), and bridges
+only meaning-preserving Call 1 output into Call 2
+(`lib/autonomousResearchContract.ts:536-594`). Call 1 routing now derives from
+raw shopper ambiguity rather than a legacy flag-dependent extraction bucket
+(`lib/autonomousResearchContract.ts:427-433`). Two preflight stops occurred
+before client creation and dispatched zero requests.
+
+**Live outcome.** One real `primary-01` create was dispatched with requested
+model `gpt-5.6-terra`, `high`, request hash
+`09a446a3daa43f2650f92567253715e49bff0543247ce88bc33141b2ac676d62`.
+It returned `request_error` after 1,280 ms with no response ID, returned model,
+tokens, hosted-search calls, retrieval polls, sources, or structured output.
+The runner stopped immediately. `primary-04`, Call 1, and `primary-12` were not
+sent; no Serper call or source-page open occurred. Evidence is retained
+untracked at
+`tests/fixtures/review-radar-live/oai-2a-terra-2026-07-15/primary-01.json`
+and `summary.json`. The fixture reports zero usage, but provider billing for a
+failed create is unknown and is not claimed as zero spend.
+
+**Postmortem and bounded offline correction.** The original adapter discarded
+the API status/message, so the exact rejection cannot be proven. Static review
+found one definite strict-schema incompatibility: `format: "uri"` is outside
+OpenAI's supported Structured Outputs format list. The API schema now omits
+that keyword while Zod still enforces URLs locally
+(`lib/autonomousResearchContract.ts:39,75,81,211-215,321`). Future failures
+retain sanitized status/code/param/type/message details without keys or headers
+(`lib/autonomousResearchAdapter.ts:186-208`). No replacement call was made.
+
+**Decision.** OAI-2A is blocked, not passed. It also is not an architecture-
+quality failure because no slate was produced. OAI-2B remains forbidden. The
+smallest next experiment is one separately approved corrected `primary-01`
+technical smoke; do not resume the remaining cases until that passes.
+
+**Verification.** Before the live dispatch: 963/963 tests across 132 suites,
+typecheck, lint (0 errors / 3 pre-existing warnings), and build passed. After
+the offline schema/diagnostic correction: 966/966 tests across 132 suites,
+typecheck, lint (0 errors / 3 pre-existing warnings), build, and
+`git diff --check` passed. Production behavior remains unchanged. Harness code
+and tests are committed as `9fc4eda`.
