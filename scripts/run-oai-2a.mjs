@@ -15,10 +15,29 @@ import {
 import { AUTONOMOUS_EVALUATION_CATALOG } from "../lib/autonomousResearchEvaluation.ts";
 import { createOpenAIClient } from "../lib/openaiClient.ts";
 
-const OUTPUT_DIRECTORY = path.resolve(
-  "tests/fixtures/review-radar-live/oai-2a-terra-2026-07-15",
-);
-const CASE_IDS = ["primary-01", "primary-04", "primary-12"];
+const SMOKE_MODE = process.argv.includes("--primary-01-smoke");
+const RUN_MODE = SMOKE_MODE
+  ? {
+      name: "primary-01-smoke",
+      version: "oai-2a-terra-primary-01-smoke-v1",
+      outputDirectory: path.resolve(
+        "tests/fixtures/review-radar-live/oai-2a-terra-2026-07-15-primary-01-smoke",
+      ),
+      caseIds: ["primary-01"],
+      maxCreateCalls: 1,
+      maxWebSearchCalls: 20,
+    }
+  : {
+      name: "full-oai-2a",
+      version: "oai-2a-terra-evidence-v1",
+      outputDirectory: path.resolve(
+        "tests/fixtures/review-radar-live/oai-2a-terra-2026-07-15",
+      ),
+      caseIds: ["primary-01", "primary-04", "primary-12"],
+      maxCreateCalls: OAI_2A_PROPOSED_CONFIG.approvalUnits.apiCalls,
+      maxWebSearchCalls:
+        OAI_2A_PROPOSED_CONFIG.approvalUnits.webSearchToolCalls,
+    };
 const EXPECTED_INTERPRETER_ROUTING = new Map([
   ["primary-01", false],
   ["primary-04", false],
@@ -71,7 +90,7 @@ function sanitizeResponseForEvidence(response) {
 
 async function writeJson(fileName, value) {
   await fs.writeFile(
-    path.join(OUTPUT_DIRECTORY, fileName),
+    path.join(RUN_MODE.outputDirectory, fileName),
     `${JSON.stringify(value, null, 2)}\n`,
     "utf8",
   );
@@ -92,7 +111,7 @@ function ratesForUsage(usage) {
 }
 
 async function main() {
-  const cases = CASE_IDS.map((id) => {
+  const cases = RUN_MODE.caseIds.map((id) => {
     const evaluationCase = AUTONOMOUS_EVALUATION_CATALOG.find(
       (candidate) => candidate.id === id,
     );
@@ -114,6 +133,12 @@ async function main() {
     process.stdout.write(
       `${JSON.stringify({
         status: "preflight_passed",
+        runMode: RUN_MODE.name,
+        outputDirectory: RUN_MODE.outputDirectory,
+        ceilings: {
+          createCalls: RUN_MODE.maxCreateCalls,
+          webSearchCalls: RUN_MODE.maxWebSearchCalls,
+        },
         cases: cases.map(({ evaluationCase, routing }) => ({
           id: evaluationCase.id,
           interpreter: routing.needed,
@@ -126,16 +151,16 @@ async function main() {
     throw new Error("OPENAI_API_KEY is not configured");
   }
   try {
-    const existingFiles = await fs.readdir(OUTPUT_DIRECTORY);
+    const existingFiles = await fs.readdir(RUN_MODE.outputDirectory);
     if (existingFiles.length > 0) {
       throw new Error(
-        `OAI-2A evidence already exists; refusing an accidental replacement run: ${OUTPUT_DIRECTORY}`,
+        `OAI-2A evidence already exists; refusing an accidental replacement run: ${RUN_MODE.outputDirectory}`,
       );
     }
   } catch (error) {
     if (error instanceof Error && !error.message.includes("ENOENT")) throw error;
   }
-  await fs.mkdir(OUTPUT_DIRECTORY, { recursive: true });
+  await fs.mkdir(RUN_MODE.outputDirectory, { recursive: true });
 
   const sdkClient = await createOpenAIClient(process.env.OPENAI_API_KEY, {
     maxRetries: 0,
@@ -148,7 +173,7 @@ async function main() {
     responses: {
       create: async (...args) => {
         createCalls += 1;
-        if (createCalls > OAI_2A_PROPOSED_CONFIG.approvalUnits.apiCalls) {
+        if (createCalls > RUN_MODE.maxCreateCalls) {
           throw new Error("Approved OpenAI create-call ceiling exceeded");
         }
         return sdkClient.responses.create(...args);
@@ -158,7 +183,8 @@ async function main() {
   };
 
   const summary = {
-    version: "oai-2a-terra-evidence-v1",
+    version: RUN_MODE.version,
+    run_mode: RUN_MODE.name,
     started_at: new Date().toISOString(),
     completed_at: null,
     model: OAI_2A_PROPOSED_CONFIG.research.model,
@@ -209,7 +235,8 @@ async function main() {
         config: OAI_2A_PROPOSED_CONFIG.research,
       });
       const evidence = {
-        version: "oai-2a-terra-evidence-v1",
+        version: RUN_MODE.version,
+        run_mode: RUN_MODE.name,
         captured_at: new Date().toISOString(),
         evaluation_case: evaluationCase,
         deterministic_normalized_request: normalized,
@@ -253,7 +280,7 @@ async function main() {
       });
       if (
         summary.web_search_calls >
-        OAI_2A_PROPOSED_CONFIG.approvalUnits.webSearchToolCalls
+        RUN_MODE.maxWebSearchCalls
       ) {
         throw new Error("Approved hosted web-search ceiling exceeded");
       }
