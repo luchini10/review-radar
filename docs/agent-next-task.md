@@ -1,7 +1,7 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-15 by 🟧 Codex after the blocked OAI-2A Terra feasibility
-attempt. No live work is currently approved.
+Updated: 2026-07-15 by 🟧 Codex after the corrected OAI-2A Terra
+`primary-01` smoke. No live work is currently approved.
 
 ## Efficient session start
 
@@ -9,102 +9,117 @@ attempt. No live work is currently approved.
 2. Read this handoff in full.
 3. Read the standing guardrails and active OAI section of
    `docs/forward-roadmap.md`.
-4. Read `docs/agent-dialogue.md` from entry [42] onward.
-5. Before any new live approval, re-check the current OpenAI model/tool prices
+4. Read `docs/agent-dialogue.md` from entry [43] onward.
+5. Before any future live approval, re-check current OpenAI model/tool prices
    and account availability.
 
 ## Current state
 
-- OAI-0 is `3dc1131`; OAI-1 is committed as `883cfac`; the OAI-2A harness and
-  offline corrections are committed as `9fc4eda`.
-- Production behavior is unchanged. The OAI modules and runner are isolated;
-  the production recommendation route, UI, flags, `.env.local`, deployment,
-  and user-visible output did not change.
-- OAI-1 remains the frozen prompt/schema/evidence foundation. Its historical
-  audit is M3 supplemental evidence only and does not prove autonomous quality.
-- The approved OAI-2A target changed from Sol to `gpt-5.6-terra` at `high`
-  reasoning. Published 2026-07-15 rates used for planning are $2.50/M standard
-  input, $0.25/M cached input, $15/M output, and $0.01 hosted-search call; over
-  272k input tokens the request uses 2x input and 1.5x output rates. The
-  four-create-call planning ceiling was $20.
-- Preflight found and closed three experiment-integrity holes before spend:
-  SDK retries are explicitly disabled for the runner
-  (`scripts/run-oai-2a.mjs:141-145`); legacy constraint-allocation flags no
-  longer change Call 1 routing (`lib/autonomousResearchContract.ts:427-433`);
-  and meaning-preserving Call 1 output now has a deterministic bridge into Call
-  2 (`lib/autonomousResearchContract.ts:536-594`).
-- Two preflight invocations stopped before client creation because the original
-  runner compared flag-off test routing with flag-on `.env.local` routing.
-  They dispatched zero OpenAI or Serper requests and created no evidence files.
-- The first real Terra research create was dispatched for `primary-01` broad
-  vacuum. It failed at the API boundary after 1,280 ms with no response ID,
-  returned model, token usage, hosted-search call, source, output, or retrieval
-  poll. The runner stopped; `primary-04`, Call 1, and `primary-12` were never
-  sent. No returned-source page was opened.
-- Exact untracked evidence is in
-  `tests/fixtures/review-radar-live/oai-2a-terra-2026-07-15/primary-01.json`
-  and `summary.json`. It records one create call, request hash
-  `09a446a3daa43f2650f92567253715e49bff0543247ce88bc33141b2ac676d62`,
-  normalized-request hash
-  `d6bb5bf35e22e16b9bedf821bd4142fe1dabbf3913404cb778c80f60fb3498c8`,
-  zero hosted searches, and zero reported usage. Actual provider billing cannot
-  be proven from the failed response and is not represented as known zero.
-- The original adapter retained only `Error`, so the exact API status/message
-  cannot be recovered. Static postmortem found a concrete incompatibility:
-  strict schema used unsupported `format: "uri"`. The API schema now omits that
-  keyword while local Zod URL validation remains (`lib/autonomousResearchContract.ts:39,75,81,211-215,321`).
-  Future request errors retain only sanitized status/code/param/type/message
-  diagnostics (`lib/autonomousResearchAdapter.ts:186-208`). This correction is
-  offline-verified but has not been confirmed by another live call.
-- OAI-2A is **blocked, not passed and not an architecture-quality failure**.
-  No autonomous slate or evidence exists to score. OAI-2B must not start.
-- Final verification after the offline correction: 966/966 tests across 132
-  suites, typecheck, build, and `git diff --check` pass; lint has 0 errors and
-  3 pre-existing warnings.
+- OAI-0 is `3dc1131`; OAI-1 is `883cfac`; the initial OAI-2A harness and
+  offline schema correction are `9fc4eda`; the one-case smoke harness is
+  `8502df8`.
+- Production behavior is unchanged. The OAI modules and runner remain isolated;
+  the production route, UI, flags, `.env.local`, deployment, and user-visible
+  output did not change.
+- The first OAI-2A attempt failed at the API boundary because the strict schema
+  contained unsupported `format: "uri"`. That API keyword was removed while
+  local Zod URL validation remained. Exact historical server diagnostics were
+  unavailable; the attribution remains the strongest static explanation, not
+  a proven recovered error.
+- Taylor separately approved one corrected `primary-01` technical smoke:
+  one `gpt-5.6-terra` research create at `high`, at most 20 hosted searches,
+  a $7 planning ceiling, no Serper/retry/replacement/fallback/substitution, and
+  bounded inspection only if a contract-valid response returned.
+- Official 2026-07-15 pricing was rechecked immediately before the smoke:
+  Terra standard rates were $2.50/M input, $0.25/M cached input, $15/M output,
+  and hosted web search was $0.01/call. The one-call ceiling remained
+  conservative.
+- The smoke harness added a distinct evidence directory and mechanically
+  enforced one create and 20 searches. Before spend, preflight, 966/966 tests
+  across 132 suites, typecheck, lint (0 errors / 3 pre-existing warnings), and
+  `git diff --check` passed.
+- The corrected request passed the API/schema boundary. Terra returned a
+  completed response using the requested model after 139,171 ms and 26
+  background retrieval polls. It used 77,521 input tokens, 21,644 output
+  tokens, 99,165 total tokens, and eight hosted searches. Estimated cost from
+  returned usage is $0.5984625.
+- The response registered three source hosts: `bestbuy.com`, `dyson.com`,
+  and `vacuumwars.com`. It then failed the local request/evidence contract,
+  so no source page was opened and no card was accepted or displayed.
+- Four returned cards used an invented requirement ID, `market_US`, although
+  the normalized request authorized no requirement IDs. One SEBO FELIX card
+  also returned a price and product URL that were not bound to a
+  `purchase_page` source. The validator correctly rejected all six errors.
+- Root cause is a v1 contract gap, not evidence that the validator is too
+  strict. The prompt requires United States availability but neither market nor
+  budget has a deterministic requirement ID, while the validator accepts only
+  IDs from the request's hard/preference/avoid/ambiguity arrays
+  (`lib/autonomousResearchAdapter.ts:328-357`). The model filled that ambiguity
+  by inventing `market_US`.
+- The failed-result summary incorrectly reports zero usage/searches/cost because
+  it only aggregates contract-valid results. The per-case ledger contains the
+  authoritative actuals. The harness also omitted the parsed failed slate and
+  sanitized response evidence, preventing card-level/source-level inspection.
+  These observability gaps must be repaired before more spend.
+- Exact untracked smoke evidence is
+  `tests/fixtures/review-radar-live/oai-2a-terra-2026-07-15-primary-01-smoke/primary-01.json`
+  and `summary.json`. The earlier failed attempt remains separately preserved
+  under `oai-2a-terra-2026-07-15/`.
+- One create, eight hosted searches, and zero Serper calls were dispatched. No
+  retry, replacement, model substitution, source-page open, `primary-04`,
+  Call 1, `primary-12`, or OAI-2B work occurred.
+- OAI-2A remains **blocked**. The technical transport/schema question passed,
+  but the v1 request/evidence contract did not. This is not yet an autonomous
+  quality pass or an architecture kill because no complete slate was retained
+  for evidence review.
 - Issue register remains unchanged at 90 total / 85 Fixed / 4 Needs
   Investigation / 1 Won't Fix.
 
 ## Next task — explicit approval required
 
-Run one replacement **technical smoke only** for frozen case `primary-01` using
-the corrected strict schema and the same Terra/high configuration. This is the
-smallest decision-useful next step: it distinguishes the fixed payload from an
-account/model-access problem before spending on the other two cases.
+Execute one **offline OAI-2A v2 contract and observability repair** with zero
+live OpenAI/Serper calls and zero external page fetches:
 
-Proposed approval boundary:
+1. Add fail-first tests reproducing `market_US` rejection, active-budget
+   ambiguity, unbound purchase price/URL, and lost failed-response usage.
+2. Generate an explicit deterministic evaluation-requirement list for every
+   request. It must include a reserved market-availability check, an active
+   budget check when applicable, and the existing user requirement IDs. The
+   model may use only those exact IDs; it may not invent checks.
+3. Make the request-specific output schema and prompt constrain
+   `requirement_id` to that exact list. A broad request still receives the
+   system market check; an inactive budget creates no budget check.
+4. Keep the purchase safety boundary fail-closed. Clarify that a non-null price
+   or product URL must bind to the exact same registered `purchase_page`;
+   otherwise the model must return null/unavailable.
+5. Preserve sanitized response evidence, parsed slate, returned usage, searches,
+   sources, latency, and estimated cost even when local contract validation
+   rejects the slate. Do not log secrets, headers, prompts, or raw reasoning.
+6. Version the prompt/schema/fixture contract, run focused tests plus the full
+   validation wall, update the smallest authoritative records, commit, and
+   stop. Do not run another smoke or begin OAI-2B.
 
-- one OpenAI research create call;
-- `gpt-5.6-terra`, `high`, 24,000 output-token ceiling;
-- at most 20 hosted web-search calls;
-- $7 conservative planning ceiling (one maximum long-context Terra response,
-  maximum output, and all 20 search calls);
-- zero Serper calls, retries, replacements, fallback, or model substitution;
-- bounded human opening of only source pages returned by that response;
-- stop and report after this one case whether it succeeds or fails;
-- do not send `primary-04`, Call 1, `primary-12`, or begin OAI-2B.
+Do not solve this by allowing arbitrary requirement IDs or by deleting the
+purchase-source checks. Those shortcuts would convert an observable model error
+into unsafe displayable output.
 
-If the smoke request succeeds technically, inspect and report its source
-binding and card safety, then ask separately whether to complete the remaining
-OAI-2A cases. If it fails, use the newly captured sanitized API diagnostics and
-stop; do not spend around the failure.
-
-**Recommended reasoning level: High.** The next action is a tightly bounded
-technical confirmation with predeclared stopping rules. Use Highest only if a
-successful response produces disputed semantic source support.
+**Recommended reasoning level: Highest.** This is an offline but
+safety-critical prompt/schema/validator redesign. The difficult part is making
+market, budget, and user constraints line up exactly without weakening the
+evidence boundary; no live spend is involved.
 
 ## Hard boundaries
 
 - No live OpenAI/Serper call, source-page opening, external product fetch,
-  replacement, retry, or model substitution without Taylor's new explicit
-  approval.
-- The prior four-call approval is exhausted by its stop condition; three
-  undispatched calls do not carry forward.
-- No OAI-2B, permanent verifier, route integration, flag promotion,
-  `.env.local` edit, production behavior, deployment, or threshold change.
+  retry, replacement, or model substitution without new explicit approval.
+- The corrected smoke approval is exhausted. No undispatched work carries
+  forward.
+- No OAI-2B, permanent network verifier, production route integration, flag
+  promotion, `.env.local` edit, deployment, or user-visible behavior change.
 - The selected OAI path sends no Serper request or app-authored search plan or
-  candidate list. The model controls hosted search inside its one response.
+  candidate list. The model controls hosted search inside its response.
 - Every displayable fact must bind to same-response source metadata; URL
-  membership does not prove semantic support.
+  membership alone does not prove semantic support.
 - The verifier may reject, downgrade, normalize, exact-dedupe, or clear unsafe
   optional fields. It may not discover, invent, rescue, score, add, or reorder
   products.
@@ -119,9 +134,10 @@ successful response produces disputed semantic source support.
 ## Outstanding review debt
 
 - Dialogue entry [37] still asks Claude to verify the post-C5 safety repair.
-- Entry [42] asks Claude to challenge the OAI-2A failure attribution, the
-  strict-schema correction, and the one-call replacement recommendation.
-- Taylor remains the sole approver for commits, live spend, source-page opens,
+- Entry [42] asks Claude to review the first OAI-2A failure attribution.
+- Entry [43] asks Claude to challenge the v2 requirement-ID and failed-evidence
+  repair before any additional spend.
+- Taylor remains the sole approver for live spend, source-page opens,
   model/config changes, promotion, rollout, or deletion.
 
 ## Retrieval map
@@ -129,9 +145,10 @@ successful response produces disputed semantic source support.
 | Need | Retrieve |
 |---|---|
 | Active architecture and gates | `docs/forward-roadmap.md` active OAI section |
-| OAI-2A failure evidence | untracked `tests/fixtures/review-radar-live/oai-2a-terra-2026-07-15/` |
-| Request/response harness | `scripts/run-oai-2a.mjs` and `lib/autonomousResearchAdapter.ts` |
-| Prompt/schema/interpreter contract | `lib/autonomousResearchContract.ts` |
-| Frozen cases | `lib/autonomousResearchEvaluation.ts` |
+| Corrected smoke evidence | untracked `tests/fixtures/review-radar-live/oai-2a-terra-2026-07-15-primary-01-smoke/` |
+| Earlier API-boundary evidence | untracked `tests/fixtures/review-radar-live/oai-2a-terra-2026-07-15/` |
+| Runner | `scripts/run-oai-2a.mjs` |
+| Prompt/schema/request contract | `lib/autonomousResearchContract.ts` |
+| Adapter/validator/evidence handling | `lib/autonomousResearchAdapter.ts` |
 | Canonical phase evidence | latest `docs/qa-loop-results.md` entry |
-| Peer review | `docs/agent-dialogue.md` entry [42] onward |
+| Peer review | `docs/agent-dialogue.md` entry [43] onward |

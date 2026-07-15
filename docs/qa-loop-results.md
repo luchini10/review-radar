@@ -7362,3 +7362,53 @@ the offline schema/diagnostic correction: 966/966 tests across 132 suites,
 typecheck, lint (0 errors / 3 pre-existing warnings), build, and
 `git diff --check` passed. Production behavior remains unchanged. Harness code
 and tests are committed as `9fc4eda`.
+
+## 🟧 Codex — corrected OAI-2A Terra smoke reaches contract gate (2026-07-15)
+
+**Scope and authorization.** Taylor approved exactly one corrected
+`primary-01` Terra research create at `high`, at most 20 hosted searches, a $7
+planning ceiling, no Serper/retry/replacement/fallback/substitution, and source
+inspection only for a contract-valid response. The dedicated smoke harness is
+commit `8502df8`; it preserves the earlier failed evidence and enforces one
+create and 20 searches in a separate directory.
+
+**Pre-spend verification.** Official OpenAI documentation was rechecked for
+the Terra model and pricing. Smoke preflight, 966/966 tests across 132 suites,
+typecheck, lint (0 errors / 3 pre-existing warnings), and `git diff --check`
+passed. Production behavior remained unchanged.
+
+**Live actuals.** One `gpt-5.6-terra` response completed at `high` after
+139,171 ms and 26 background polls. Returned usage was 77,521 input tokens,
+21,644 output tokens, 99,165 total tokens, and eight hosted searches. The
+returned model matched the requested model. The response registered three
+source hosts (`bestbuy.com`, `dyson.com`, `vacuumwars.com`). Estimated cost from
+returned usage and the rechecked rates is $0.5984625. No Serper request, retry,
+replacement, model substitution, or additional case was dispatched.
+
+**Contract result.** The local request/evidence validator rejected the slate.
+Four cards supplied unknown requirement ID `market_US`; the broad normalized
+request authorized no requirement IDs. A SEBO FELIX card also supplied a price
+and URL without binding them to a registered `purchase_page`. Exact errors are
+preserved in the untracked case ledger at
+`tests/fixtures/review-radar-live/oai-2a-terra-2026-07-15-primary-01-smoke/primary-01.json`.
+No source page was opened and no card was accepted or displayed.
+
+**Diagnosis.** The purchase-source rejection is a correct safety result. The
+unknown-ID failures expose a v1 contract gap: the prompt requires United States
+availability, but market and active budget have no deterministic evaluation
+IDs, while the validator accepts only IDs carried by the request
+(`lib/autonomousResearchAdapter.ts:328-357`). The next correction must encode
+system and shopper constraints explicitly; it must not permit arbitrary IDs.
+
+**Observability defect.** `summary.json` reports zero searches/usage/cost for
+this rejected response because aggregation occurs only after contract success.
+The per-case ledger is authoritative. The failure path also omitted the parsed
+slate and sanitized completed response, so the returned cards and source
+bindings cannot be inspected further without another external retrieval. No
+such retrieval was made.
+
+**Decision.** The corrected schema passed the OpenAI API boundary, but OAI-2A
+remains blocked at the local contract gate. This is neither a quality pass nor
+an architecture kill because a complete slate was not retained for evidence
+review. The next phase should be an offline versioned contract/observability
+repair with fail-first tests and zero live calls. OAI-2B remains forbidden.
