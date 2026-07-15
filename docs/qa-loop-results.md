@@ -7080,3 +7080,161 @@ npm run build: pass
 node scripts/eval-pipeline.mjs: no red flags
 live Serper/OpenAI calls: 0
 ```
+
+## 🟧 Codex QA Update — 2026-07-14 (V2 architecture decision and master plan)
+
+**Verdict: PROVIDER-AUTHORITATIVE HYBRID SELECTED; OLD R7A/R7B/R7C HELD;
+V2-1 AWAITS SEPARATE APPROVAL.**
+
+- The architecture checkpoint compared current dual candidate sourcing, the
+  old Serper-only R7 endgame, and verified model-guided discovery. The selected
+  boundary lets the model propose specific product identities but requires
+  Serper plus deterministic trust gates to materialize every product and every
+  displayed fact.
+- This is a migration of the existing middle pipeline, not a rewrite. The
+  current strategy already emits `expectedProducts` and generates Serper target
+  queries (`lib/discoveryStrategy.ts:54-85,431-480,735-824`). V2 will add a
+  separate strict hypothesis field because legacy `expectedProducts` is broad
+  and coupled to ranking/shortlisting.
+- C5 fixture evidence makes the change attributable. Broad hypotheses were
+  mostly generic family labels, one used malformed brand `M18`, and target
+  queries were culled before dispatch
+  (`tests/fixtures/review-radar-live/shop-vac.c5-flag-on-run2.json:5018-5108,
+  5944-6284`). A matching legacy target also receives a five-point credibility
+  bonus (`lib/productCredibility.ts:283-303,343-348`), which V2 forbids.
+- The master plan inserts two early kill gates before the risky route refactor:
+  a three-case bounded live materialization probe and then a zero-live replay
+  proving that any pool gain can survive final selection. Pool improvement
+  without final improvement redirects work to the first selection loss rather
+  than more discovery machinery.
+- The full sequence is V2-1 contract/materializer seam; V2-2 small live
+  feasibility; V2-3 selection checkpoint; V2-4 pure shared-pipeline refactor;
+  V2-5 default-off branch; V2-6 paired primary live gate; V2-7 holdout gate;
+  V2-8 reversible promotion; V2-9 optional cleanup. Live calls exist only in
+  V2-2, V2-6, and V2-7, each separately approved.
+- The old `~37–47 calls/search` standing estimate was removed. Future approvals
+  must state logical searches and use the exact phase query formula or latest
+  comparable actual as the physical-attempt planning basis; replacements still
+  require separate approval.
+- No application code, app test, executable script, fixture, issue status,
+  flag, `.env.local`, threshold, deployment, Serper/OpenAI call, or product
+  behavior changed. Latest North Stars and 943/943 code verification are
+  unchanged from the post-C5 safety repair.
+
+```text
+phase: V2-0 architecture decision / master plan
+tracked behavior files changed: 0
+live Serper/OpenAI calls: 0
+flag changes: 0
+issue-status changes: 0
+latest code wall (carried forward): 943/943 across 129 suites
+next: V2-1 only, after separate approval
+```
+
+## 🟧 Codex QA Update — 2026-07-14 (OpenAI-only OAI master plan)
+
+**Verdict: OPENAI-ONLY AUTONOMOUS RESEARCH SELECTED; PRIOR VERIFIED-HYPOTHESIS
+DRAFT SUPERSEDED BEFORE IMPLEMENTATION; OAI-1 AWAITS SEPARATE APPROVAL.**
+
+- Taylor selected the OpenAI-only pipeline: deterministic request assembly,
+  optional ambiguity-only requirement interpretation, one autonomous OpenAI
+  Responses API call with hosted web search returning the final ranked slate,
+  a non-researching deterministic validator, and direct order-preserving UI
+  display. The OAI path sends zero Serper requests.
+- This is not a ground-up rewrite. The present route already uses required
+  hosted web search, complete consulted-source inclusion, and strict structured
+  output (`app/api/recommendations/route.ts:852-889`). The existing prompt asks
+  for a broad candidate pool that app code later re-ranks
+  (`lib/researchPrompt.ts:188-292`); OAI changes the authority and evidence
+  contract around that seam.
+- Official API documentation was checked before freezing the plan. Responses
+  API supports required hosted web search and complete
+  `web_search_call.action.sources`, strict `text.format` JSON schemas, and
+  background execution with polling. Those capabilities make the plan viable
+  but do not prove field-level evidence binding, so OAI-2 is an early three-call
+  kill gate before route integration.
+- The supplied plan's fresh 30–50 live baseline was rejected as premature.
+  OAI-1 freezes a 30–50-scenario catalog from existing requests/fixtures and
+  partitions development, primary, and sealed holdout cases without live
+  spend. OAI-2 buys only broad, constrained, and ambiguity/injection probes.
+- The supplied “thin validator” was strengthened without turning it into a
+  second recommender. It may bind sources, normalize, reject, exact-dedupe,
+  downgrade, or clear unsafe optional fields; it cannot search, invent, fill,
+  rescue, score, add, or reorder. Existing generalized safety primitives remain
+  applicable because a strict JSON schema alone cannot stop RR-078/RR-090/
+  RR-061-class semantic failures.
+- The normal path retains deterministic requirement extraction. An optional
+  OpenAI interpreter is permitted only for a reproduced ambiguity class and
+  only after tests prove benefit, keeping the normal request at one OpenAI call
+  and the exceptional maximum at two.
+- The active sequence is OAI-1 offline prompt/schema/evidence contract; OAI-2
+  three-call source-binding gate; OAI-3 deterministic trust validator; OAI-4
+  default-off route integration; OAI-5 paired primary shadow evaluation;
+  conditional OAI-6 hardening; OAI-7 sealed holdout; OAI-8 reversible rollout;
+  optional OAI-9 legacy/Serper retirement; OAI-10 post-proof optimization.
+- No application code, test, executable script, fixture, issue status, flag,
+  `.env.local`, threshold, deployment, Serper/OpenAI call, or product behavior
+  changed. Latest code verification and live North Stars are carried forward,
+  not rerun or remeasured.
+
+```text
+phase: OAI-0 architecture decision / improved master plan
+tracked behavior files changed: 0
+live Serper/OpenAI calls: 0
+flag changes: 0
+issue-status changes: 0
+latest code wall (carried forward): 943/943 across 129 suites
+next: OAI-1 only, after separate approval
+```
+
+## 🟧 Codex QA Update — 2026-07-15 (OAI independent-review amendment)
+
+**Verdict: EARLY QUALITY GATE AND NETWORK VERIFICATION ADOPTED; LARGE UP-FRONT
+WINDOW AND DEFAULT SERPER ORACLE REJECTED; OAI-1 STILL AWAITS APPROVAL.**
+
+- Taylor asked Codex to merge Claude's independent critique into the active
+  plan. No implementation or live work was authorized.
+- OAI-1 now begins with the zero-spend fixture analysis. There are 56 saved live
+  JSON fixtures, but only 20 contain explicit `final_openai_research` lineage.
+  The result is expressly supplemental because the historical model received
+  an app-generated query plan and Serper candidates
+  (`lib/researchPrompt.ts:167-171,188`); it is not evidence for a fully
+  autonomous call.
+- The old single OAI-2 gate is now OAI-2A technical/source binding followed by
+  OAI-2B uncached quality/repeatability before the permanent verifier or route
+  is built. OAI-2B reuses unchanged OAI-2A results and buys nine—not ~45—new
+  research calls to obtain 12 outputs across four shapes.
+- Absolute early bars are now explicit: zero safety/hard-requirement failures,
+  100% field/source binding and strict-output success, broad top-five recall
+  mean at least 4/7 with no run below 3/7, Jaccard at least 60%, and blinded
+  quality win/tie on at least three of four shapes. Cost/latency ceilings are
+  frozen from OAI-2A actuals instead of guessed in advance.
+- OAI-3 is now a bounded direct-network verifier rather than a schema linter.
+  It may fetch only same-response source URLs and must fail closed under SSRF,
+  redirect, timeout, byte, content-type, credential, and logging limits. The
+  plan explicitly distinguishes mechanical verification from semantic proof.
+- Existing helpers are not treated as ready-made guarantees:
+  `lib/citationUrlVerification.ts:51-58` accepts bot-wall statuses and timeouts
+  as reachable, while `lib/productPriceTrust.ts:231-241` may accept plausible
+  model text as budget-usable. OAI-3 requires fail-first tests before reuse.
+- The selected OAI path remains zero-Serper. If direct verification alone later
+  fails because retailer blocking makes coverage inadequate, OAI-5 stops for a
+  separate owner decision between fewer verified cards and a Serper Shopping
+  verification-only experiment. No contingency is pre-approved.
+- Stability is measured uncached. A freshness-bounded cache is post-proof
+  optimization and cache hits can never count as independent stability runs.
+- No application code, test, executable script, fixture, issue status, flag,
+  `.env.local`, threshold, deployment, external fetch, Serper/OpenAI call, or
+  product behavior changed. Latest code verification and live North Stars are
+  carried forward, not rerun or remeasured.
+
+```text
+phase: OAI-0 independent-review plan amendment
+tracked behavior files changed: 0
+live Serper/OpenAI calls: 0
+external verification fetches: 0
+flag changes: 0
+issue-status changes: 0
+latest code wall (carried forward): 943/943 across 129 suites
+next: OAI-1 only, after separate approval
+```

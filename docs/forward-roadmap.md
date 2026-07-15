@@ -1,9 +1,9 @@
-# ReviewRadar Forward Roadmap (R-series)
+# ReviewRadar Forward Roadmap (R/C-series history + OAI migration)
 
 Adopted 2026-07-10. This document governs all forward sequencing. Completed
 history stays in `docs/codex-handoff-phased-plan.md`; the Phase 6 measurement
 method remains owned by `docs/phase-6-reliability-gauntlet-plan.md`;
-`docs/agent-next-task.md` always points at the current R-phase. No other
+`docs/agent-next-task.md` always points at the current active phase. No other
 forward-plan documents may be created.
 
 ## Why this roadmap exists
@@ -19,15 +19,20 @@ the fixes, never replace them.
 
 ## The endgame (target architecture)
 
-**One candidate source of truth.** Serper + deterministic code discover,
-verify, and select every product. The LLM is strategist (query planning) and
-explainer (prose) only — it never introduces candidates that deterministic
-code did not discover and verify. A large fraction of the issue register
-(wrong images, identity collapses, metadata-brand pollution, citation rescue)
-is downstream policing of the second, LLM-sourced candidate stream. Every
-R-phase should move toward this endgame or at least not away from it; R7
-completes it. When a defect can be fixed either by adding a guard or by
-removing a reason the untrusted data exists, prefer removal.
+**OpenAI-only autonomous research with a deterministic trust boundary.** One
+Responses API call with hosted web search discovers, researches, selects, and
+ranks the finished slate. The new path sends no Serper request and receives no
+application-generated query or benchmark answer. Every displayed fact must
+bind to source metadata returned by that same response.
+
+Deterministic code remains a safety boundary, not a second recommender: it may
+normalize, bind sources, reject, exact-dedupe, downgrade, or clear an unsafe
+optional field, but may not search, invent, rescue, score, add, or reorder
+products. The current pipeline remains behind an explicit rollback mode until
+the active OAI arc proves source integrity, product safety, recall, constraint
+truth, stability, and human usefulness in primary and sealed-holdout evidence.
+The earlier provider-authoritative verified-hypothesis draft is preserved below
+as superseded history and must not be executed.
 
 ## North-Star metrics
 
@@ -70,8 +75,11 @@ Between live batches, use deterministic proxies: full suite green,
   and eligibility trust gates. Behavior changes ship flag-gated or
   shadow-first, default-off, promoted only with before/after evidence.
 - One phase per explicit approval from Taylor. Live spend is approved in
-  searches, with the derived Serper estimate stated (~37–47 calls per search).
-  Never pool samples across windows. Stop and report after each phase.
+  logical searches, with a physical-attempt planning basis derived from the
+  latest comparable run or the phase's exact bounded query formula. An estimate
+  is a reporting fact, not permission to dispatch extra requests; replacements
+  always require new approval. Never pool samples across windows. Stop and
+  report after each phase.
 - Zero live Serper/OpenAI calls in any phase not explicitly approved as live.
 - Context and documentation discipline: preserve every historical record, but
   do not make every agent reread or update every record. At session start, read
@@ -683,6 +691,13 @@ request. No phase approval carries forward.
 
 ### R7A — default-off single-source implementation (zero live calls)
 
+**Status after the OAI-0 architecture decision (2026-07-14): HELD AND
+SUPERSEDED BEFORE IMPLEMENTATION.** R7's pure-refactor, provider-lineage, and
+promotion-before-deletion discipline remain valid. Its assumption that the
+current broad Serper plan is sufficient without a more specific model-guided
+materialization path does not survive C5. Do not execute the old R7A/R7B/R7C
+kickoffs; use the active OAI sequence below.
+
 R7A lands as two commits inside one separately approved zero-live phase:
 
 1. **Pure refactor commit.** Extract one shared downstream candidate pipeline
@@ -745,6 +760,803 @@ and the post-selection guarded explainer.
 recall and constraint compliance are explicit non-regression gates; large
 latency/cost and maintenance reduction if promoted.
 
+## Superseded V2 draft — verified-hypothesis pipeline (historical)
+
+**Superseded 2026-07-14 before implementation.** Taylor selected the
+OpenAI-only autonomous-research architecture recorded in the active OAI plan
+below. No V2 phase in this historical section is authorized or should be
+executed. It is retained only to preserve the architectural decision trail.
+
+### V2-0 architecture decision — complete 2026-07-14 (docs only)
+
+**Decision:** migrate the middle of the existing pipeline; do not rewrite the
+app and do not add a second complete pipeline or a fourth model call.
+ReviewRadar already asks OpenAI for `expectedProducts`
+(`lib/discoveryStrategy.ts:54-85,431-480`) and turns some of them into Serper
+queries (`lib/discoveryStrategy.ts:735-824`). The C5 evidence proves why that
+primitive is not enough:
+
+- the strategy mostly proposed generic brand-wide families rather than
+  materializable products, and even emitted `brand: "M18"`
+  (`tests/fixtures/review-radar-live/shop-vac.c5-flag-on-run2.json:5018-5108`);
+- the useful `expected_product_target` queries were then removed by protected-
+  slot, shopping-cap, or stage-truncation allocation
+  (`tests/fixtures/review-radar-live/shop-vac.c5-flag-on-run2.json:5944-6284`);
+- a target match currently receives a five-point credibility bonus
+  (`lib/productCredibility.ts:283-303,343-348`), so model nomination is not yet
+  merely a discovery hypothesis;
+- after that planner/Serper path, the final OpenAI web-research call authors a
+  second candidate pool and the route merges it with Serper candidates
+  (`app/api/recommendations/route.ts:832-970`). C5's broad pool-to-final fall
+  (`4.5/7` to `2.0/7`) proves both discovery and final selection require a gate.
+
+The chosen target is therefore **verified model-guided discovery with
+provider-authoritative products**:
+
+1. Parse the request and hard constraints with the existing deterministic code.
+2. Extend the existing strategy response with a separate, strict list of
+   specific product/model hypotheses. Do not overload legacy
+   `expectedProducts`, whose broad-target semantics are coupled to current
+   ranking and shortlist behavior.
+3. Preserve the ordinary deterministic Serper plan and its protected hard-
+   constraint slots.
+4. Spend a separate bounded lookup budget only on missing, specific
+   hypotheses. Serper, not the model, supplies every candidate URL and fact.
+5. Admit only candidates that pass the existing normalizer, product-card
+   eligibility, requested-type, identity, URL, citation, price, image,
+   requirement, dedupe, and revalidation gates.
+6. Rank all candidates by source-derived evidence. Hypothesis origin grants no
+   score, credibility, retention, or ordering advantage.
+7. The model may optionally narrate the already selected slate through the
+   existing mutation guard; it may never change products or factual fields.
+
+The frozen benchmark is evaluation-only. No leader name, brand, line, or
+expected answer may enter a production prompt, query, filter, score, or test
+fixture that exercises app behavior (`scripts/goldBenchmark.mjs:18-23`).
+
+### V2 invariants and rollback contract
+
+These conditions bind every V2 phase:
+
+- A hypothesis is an internal search lead, not a product. It cannot enter a
+  candidate pool until a provider result independently materializes it.
+- Model output may contain a bounded identity (`brand`, specific
+  `modelOrLine`, `canonicalName`, aliases, priority, and internal search
+  rationale). It may not contain or control card URLs, prices, ratings,
+  reviews, specifications, citations, eligibility, requirement truth, winner
+  claims, or scores.
+- Final-card lineage is mandatory and fail-closed:
+  `hypothesis ID (when applicable) → query ID → Serper attempt → raw result →
+  normalized candidate → trust decisions → final outcome`.
+- Ordinary Serper candidates keep their own lineage and priority. Hypothesis
+  queries are additive and bounded; they cannot displace base or hard-filter
+  queries. Model nomination never breaks a ranking tie.
+- Provider position and distinct-query recurrence may be retained as
+  observability-only fields. They become a small post-safety tiebreaker only if
+  V2-3 proves that selection is discarding strong SERP finds and Taylor
+  separately approves that behavior change.
+- The current route remains the rollback path until V2-8. One default-off V2
+  flag disables all new behavior; flag-off remains byte-identical.
+- Any wrong-type, editorial/non-product, accessory-only, cross-model, price,
+  citation, image, URL, dedupe, or hard-constraint regression stops the phase.
+- A failed gate keeps V2 off. It triggers attribution or abandonment, never a
+  weaker threshold or automatic replacement window.
+
+### V2-1 — hypothesis contract, neutral scoring, and bounded probe seam
+
+**Approval/cost:** separate approval; zero live Serper/OpenAI calls; no
+user-visible behavior change.
+
+Add a versioned `candidateHypotheses` field to the existing discovery-strategy
+schema rather than repurposing `expectedProducts`. Deterministic code assigns
+hypothesis IDs, validates identity specificity, dedupes aliases, rejects
+generic category-only, accessory/complement, wrong-type, and explicitly
+constraint-incompatible leads, and builds outbound identity queries from the
+validated identity plus the request. Family-only suggestions may remain
+ordinary low-priority expansion but receive no protected materialization slot.
+
+Extract the safe inner materialization seam from
+`resolveSerperIdentityLeads()`—bounded `product page` lookup, organic
+normalization, cheap prefilter, eligibility/type checks, and
+`productPageMatchesIdentity()`—without inheriting its Google-Shopping-provider
+ID requirement or failed C5 flag coupling (`lib/search/serper.ts:4635-4839`).
+The production strategy call remains single; do not add another model request.
+
+Fail-first tests must cover: malformed brand/model identity, generic families,
+duplicate aliases, planner injection text, accessories, editorial pages,
+cross-category products, cross-model pages, explicit constraint conflicts,
+planner failure, empty results, query sanitization, query-cap enforcement, and
+flag-off parity. The current five-point target bonus remains unchanged for the
+legacy path but must be zero/unreachable for V2 hypotheses. Extend the existing
+ledger/analyzer rather than create a parallel measurement system, recording
+proposed, invalid, already represented, dispatched, materialized, rejected,
+and cap-culled hypotheses.
+
+**Exit gate:** exact hypothesis/query caps and their physical-attempt formula
+are frozen; hostile-output tests fail closed; all existing trust walls and the
+full suite pass; tracked behavior is unchanged. This phase must also freeze one
+broad and one constrained holdout benchmark ID before any V2 result is known.
+
+**Expected North-Star effect:** no immediate output change; it establishes the
+bounded mechanism expected to raise broad pool recall without adding a new
+candidate trust source.
+
+**Recommended reasoning level:** Highest — the schema, ranking neutrality, and
+materialization boundary are load-bearing.
+
+### V2-2 — small live hypothesis/materialization feasibility gate
+
+**Approval/cost:** separate approval after V2-1 reports the exact formula. Run
+three logical probe cases: two identical broad `shop vac` cases to expose
+planner variance and one constrained robot-vacuum case. This is not a full app
+run and is not promotion evidence. It uses the frozen request bytes and saved
+C5 base pools, invokes only the existing strategy plus the bounded incremental
+materializer, and writes untracked probe fixtures. No replacement is allowed
+without new approval.
+
+The benchmark remains absent from prompts. For each case record every sanitized
+hypothesis, cull, query, provider result, normalization/safety verdict,
+materialized candidate, incremental leader, latency, OpenAI call, physical
+Serper attempt, retry, and reconciliation total.
+
+**Pass only if:** both broad probes add at least one safely materialized leader
+that was absent from their matched saved base pool; the resulting broad
+materialized-pool mean reaches at least `5/7`; the constrained probe
+materializes at least one specific requested-type product without any explicit
+budget/feature contradiction; every admitted row has a specific product-detail
+identity and complete provider lineage; all ledgers balance; and the approved
+hard ceiling is not crossed. Constrained leader recall is reported but remains
+informational.
+
+**Kill/attribution:** if the model emits generic or stale identities, stop
+before refactoring. A later separately approved experiment may repurpose—not
+add to—the existing final-research web-search slot as an identity-only scout.
+If useful hypotheses do not materialize through Serper, diagnose provider/query
+or normalization loss. If materialization succeeds, continue to V2-3. Never
+feed benchmark answers to the model or purchase an automatic retry.
+
+**Expected North-Star effect:** broad materialized-pool recall reaches the
+existing `5/7` floor in a bounded feasibility sample.
+
+**Recommended reasoning level:** High — the architecture is fixed, but the
+result needs careful causal attribution.
+
+### V2-3 — zero-live final-selection feasibility checkpoint
+
+**Approval/cost:** separate approval; zero live calls; no behavior change.
+
+Replay V2-2's safely materialized provider rows through the current exported
+requirement, trust, dedupe, scoring, and portfolio-selection functions. Do not
+copy those rules into a probe. Use the existing first-loss/final-selection
+trace to distinguish missing evidence from ranking cutoff, false collapse,
+redundancy, or portfolio allocation. Record provider position and distinct
+query recurrence as observations only.
+
+**Pass only if:** the projected broad final mean reaches at least `3/7`, is at
+least `+1.0/7` better than the matched control mean, no control-
+covered leader is lost in aggregate, and every safety/constraint invariant
+holds. If pool recall passes while final recall does not, stop adding discovery
+machinery. Propose a separately approved generalized selection fix only for a
+reproduced first-loss cause; do not smuggle ranking changes into V2-4.
+
+**Expected North-Star effect:** prove that the new discovery signal can improve
+final core-leader recall, not merely inflate the pool.
+
+**Recommended reasoning level:** Highest — this decides whether discovery or
+selection is now the real bottleneck.
+
+### V2-4 — shared downstream trust-pipeline extraction
+
+**Approval/cost:** separate approval; zero live calls; one pure-refactor commit
+only; no flag or output change.
+
+Extract one shared downstream pipeline from the main route covering citation
+verification, requirement filtering, buying-rubric attachment, review evidence,
+asset enrichment, missing-fact rescue, revalidation, source-quality upgrade,
+dedupe/scoring/final selection, and product-page prioritization. Route current
+main behavior through it with byte-identical responses. Do not promote
+`buildServerSearchFallbackResult()` as the implementation: it currently
+bypasses citation verification and source-quality upgrade
+(`app/api/recommendations/route.ts:487-617`).
+
+**Exit gate:** exact route-contract and saved-fixture parity, full suite,
+typecheck, lint, build, and offline evaluation pass. The isolated refactor
+commit is the rollback unit.
+
+**Expected North-Star effect:** exact non-regression; it prevents the V2 branch
+from receiving a weaker safety/selection path than current behavior.
+
+**Recommended reasoning level:** Highest — this is the riskiest structural
+change in the arc.
+
+### V2-5 — default-off verified-hypothesis behavior branch
+
+**Approval/cost:** separate approval; zero live calls; separate behavior commit.
+
+Add `REVIEW_RADAR_VERIFIED_HYPOTHESIS_DISCOVERY=on`, default-off. Flag-on runs
+the ordinary base Serper plan, materializes only missing validated hypotheses
+inside the V2-1 cap, unions only accepted `RawProductCandidate` provider rows,
+and sends the unified provider-authoritative pool through the V2-4 pipeline. It
+skips candidate-producing `openai_final_research` and the AI-plus-Serper product
+merge. Deterministic copy supplies safe result scaffolding; the existing
+guarded narration pass may rewrite prose only after selection.
+
+Required tests prove: no model-authored product or field can enter; every final
+card has provider lineage; hypotheses cannot affect score/credibility/order;
+planner/materializer failure degrades to ordinary deterministic Serper
+discovery; hostile narration cannot mutate the slate or facts; flag-off is
+unchanged; and every existing trust wall remains green. Delete nothing in this
+phase. Turning one flag off is the immediate rollback.
+
+**Expected North-Star effect:** raise broad pool and final recall while making
+AI-only displayed products structurally zero; reduce instability and remove the
+candidate-authoring final-research latency from the V2 branch.
+
+**Recommended reasoning level:** Highest — this is the first complete behavior
+implementation.
+
+### V2-6 — primary paired live validation
+
+**Approval/cost:** separate approval for six cache-cold searches, three broad
+and three constrained. Derive the planning basis from V2-2 actuals plus V2-5's
+exact full-request cap; do not reuse `486` by habit. Pin request bytes, commit,
+flags, cache state, OpenAI-call count, and a per-request physical circuit
+breaker. Spent/excluded requests count toward cost but not quality; replacements
+require new approval.
+
+Each request produces a same-response counterfactual. The control uses the base
+provider pool without hypothesis-only rows; treatment adds safely materialized
+hypothesis rows. Both traverse the same shared downstream code. C5 is historical
+context, not the causal control.
+
+**Promotion-quality gates:** AI-only displayed products `0`; unsafe/non-product/
+wrong-type/accessory/cross-model cards `0`; exact hard-constraint failures `0`;
+final provider lineage `100%`; hypothesis-origin score/credibility advantage
+`0`; broad pool mean at least `5/7`; broad final mean at least `3/7` and at
+least `+1.0/7` above the paired control mean; at least one incremental
+hypothesis-materialized leader reaches the final set in two of three broad
+runs; no aggregate loss of control-covered leaders; final-set Jaccard meets
+RR-015's standing `≥60%` target; all ledgers balance; and no circuit breaker
+trips. Constrained leader recall remains informational; exact constraint truth
+is the gate. Report cost and latency without trading safety/quality for speed.
+
+A failed gate leaves the flag off and triggers first-loss diagnosis, not an
+automatic repeat or threshold change.
+
+**Expected North-Star effect:** broad pool/final recall and stability improve
+against a contemporary paired control; wrong-type and hard-constraint metrics
+remain perfect.
+
+**Recommended reasoning level:** High — execution is protocol-driven, but the
+paired result still needs careful interpretation.
+
+### V2-7 — holdout-category generalization gate
+
+**Approval/cost:** only after V2-6 passes; separate approval for three
+cache-cold runs of the broad holdout and three of the constrained holdout frozen
+in V2-1. Use V2-6 actuals as the planning basis. No code, prompt, query, or app
+test may consume holdout answers.
+
+Use the same paired control/treatment and absolute safety, lineage, constraint,
+stability, and ledger gates. Require positive hypothesis contribution with no
+baseline recall regression. Constrained leader recall remains informational.
+Failure is evidence of benchmark/category overfit; keep the flag off and stop.
+
+**Expected North-Star effect:** demonstrate that gains generalize beyond the
+two categories used to design and debug V2.
+
+**Recommended reasoning level:** High.
+
+### V2-8 — explicit promotion and reversible canary
+
+**Approval/cost:** separate explicit approval; no legacy deletion. Enable the
+single V2 flag first in local/development or a deliberately bounded canary and
+record the exact promoted configuration. Do not implicitly promote pinned
+planning or the C3/C5 recovery flags. Keep the legacy route intact behind
+immediate flag-off rollback. Define the observation window and rollback events
+before starting it; any safety incident disables V2 immediately.
+
+**Expected North-Star effect:** make the verified quality gains available to
+users while retaining one-step rollback.
+
+**Recommended reasoning level:** High.
+
+### V2-9 — optional legacy retirement
+
+**Approval/cost:** separate approval only after V2-6, V2-7, promotion, and the
+predeclared observation window all pass. Remove candidate-producing
+`openai_final_research`, the AI-plus-Serper product merge, schemas/prompts that
+exist only for model-authored cards, and duplicated fallback plumbing made
+unreachable by the shared pipeline. Preserve request/constraint parsing,
+deterministic search planning, the verified hypothesis planner/materializer,
+Serper/cache/ledger machinery, all trust gates, and guarded narration.
+
+Remove a policing branch only after a reachability test proves it exclusive to
+the retired stream. Cleanup is optional; keeping rollback longer is preferable
+to premature deletion.
+
+**Expected North-Star effect:** preserve measured quality while reducing
+candidate-source variance, latency, cost, and maintenance surface.
+
+**Recommended reasoning level:** Highest.
+
+### V2 dependency and stop map
+
+```text
+V2-0 plan
+  → V2-1 offline contract/materializer seam
+    → V2-2 small live feasibility kill gate
+      → V2-3 offline final-selection gate
+        → V2-4 pure shared-pipeline refactor
+          → V2-5 default-off end-to-end branch
+            → V2-6 six-search paired validation
+              → V2-7 holdout generalization
+                → V2-8 reversible promotion
+                  → V2-9 optional cleanup
+```
+
+No phase approval carries forward. Live calls occur only in V2-2, V2-6, and
+V2-7. A failed V2-2 ends the architecture experiment before the route refactor;
+a V2-3 failure redirects work to the reproduced selection loss instead of more
+discovery; any later failure leaves the V2 flag off. The two-no-improvement
+rule remains binding.
+
+## OAI — OpenAI-led autonomous research migration (active master plan)
+
+### OAI-0 — architecture decision and amended plan (complete 2026-07-15; docs only)
+
+**Assessment:** the strongest architecture is not “the model owns everything”
+and not a return to Serper-owned discovery. One autonomous OpenAI Responses API
+research call owns discovery, evidence synthesis, product selection, and
+ranking. ReviewRadar then verifies the model-authored facts and destinations
+without discovering, adding, rescuing, scoring, or reordering products. The new
+path sends no Serper request unless a later, separately approved experiment
+proves that safe direct verification is inadequate.
+
+This remains a migration, not a greenfield rewrite. The current route already
+has the critical API seam: `app/api/recommendations/route.ts:852-889` makes a
+Responses API call with hosted `web_search`, required tool use, complete source
+inclusion, and a strict JSON schema. The current prompt asks that call for a
+broad candidate pool and then lets a long deterministic pipeline reselect it
+(`lib/researchPrompt.ts:85-292`). OAI changes that contract so the same class of
+call returns the finished ranked slate, followed by a narrow verification and
+presentation boundary.
+
+The active target flow is:
+
+```text
+shopper request
+  -> if needed, OpenAI Call 1 organizes messy or ambiguous requirements
+  -> otherwise, use ReviewRadar's already structured request fields
+  -> ReviewRadar validates the requirements and inserts them into the master prompt
+  -> OpenAI Call 2: one autonomous Responses API request with hosted web_search
+  -> strict structured final-slate response plus returned source metadata
+  -> deterministic local checks plus bounded safe verification fetches
+  -> UI adapter preserving the surviving model order
+```
+
+Call 1 is conditional. It does no web research and makes no product
+recommendations; it exists only to translate messy or materially ambiguous
+wording into a strict organized contract covering product category, market,
+budget, hard requirements, preferences, avoidances, assumptions, and unresolved
+ambiguity. When ReviewRadar already has reliable structured fields, it skips
+Call 1 and inserts those fields directly into the versioned master prompt. Call
+2 is always the one autonomous research request. It alone decides what web
+searches to run, how many are useful, which sources and products to investigate,
+which products to reject, and how to rank the final slate. A normal structured
+request therefore uses one OpenAI call; a request that genuinely needs cleanup
+uses at most two. Bounded server-side URL verification may make ordinary HTTP
+requests after Call 2, but it is not another model call, search planner, or
+candidate source. No post-hoc model judge, citation-repair call, narration call,
+or Serper request is hidden behind either path.
+
+### OAI invariants
+
+These are permanent architecture rules, not evaluation conveniences:
+
+- The selected OAI path sends zero Serper requests. The model chooses its own
+  web-search queries inside the single research response. ReviewRadar does not
+  supply a generated search plan, candidate list, benchmark leader, or expected
+  answer. Serper may be reconsidered only as a verification-only contingency
+  after measured direct-fetch failure and a separate architecture amendment;
+  it never silently returns as the discovery or ranking authority.
+- Call 1 is optional, structured, and non-researching. A deterministic routing
+  rule may invoke it only when required fields are missing, conflicting, or
+  materially ambiguous. It may organize and label only meaning present in the
+  shopper's request; it may not silently add, weaken, or remove a hard
+  requirement, choose products, or manufacture a preference. Its output is
+  untrusted until schema and meaning-preservation checks pass.
+- The research request uses hosted `web_search` with tool use required,
+  `include: ["web_search_call.action.sources"]`, strict `text.format` JSON
+  schema output, explicit model/reasoning configuration, bounded output, and a
+  server-owned timeout. Long requests use background execution plus polling
+  rather than an unbounded synchronous connection.
+- Every product, price, URL, requirement decision, pro, con, complaint, and
+  material recommendation claim carries source-reference IDs. Each ID must
+  resolve to URL metadata actually returned by the same OpenAI response. A
+  consulted-source list alone is not claim proof; unsupported or mechanically
+  unbound facts cannot display.
+- A displayed Best Match needs both an exact product-detail source for identity
+  and buying fields and independent evidence for quality claims. Manufacturer
+  pages may establish specifications; editorial/owner sources may establish
+  performance; editorial pages can never be the buy link or the product card.
+- Verification has two explicitly different meanings. Local checks prove
+  schema, source-ID membership, type/identity consistency, and hard-requirement
+  logic. Bounded server-side fetches confirm that a referenced destination is a
+  reachable exact-product page and, when mechanically checkable, that the
+  claimed price/image/identity is present. Neither check is falsely described
+  as proof that an arbitrary prose claim is semantically true; field-level
+  source binding and sampled human semantic review remain mandatory gates.
+- The verifier may parse, normalize, bind sources, fetch only already-returned
+  URLs, reject, exact-dedupe, downgrade Best Match to Close Match, clear an
+  unsafe optional image/URL, or fail the response. It may not issue a discovery
+  search, follow an unbounded redirect chain, invent or fill a fact, merge
+  uncertain identities, calculate a new product score, add or rescue a product,
+  or reorder surviving products.
+- All verification fetches are server-side and hostile-input safe: only HTTP(S)
+  destinations, no credentials or user cookies, DNS/IP checks that block local,
+  private, link-local, and metadata ranges, bounded redirects/time/bytes/content
+  types, and no logging of sensitive response bodies. A blocked or inconclusive
+  check fails closed or downgrades the affected field/card; it never triggers an
+  automatic search or model retry.
+- Model order is authoritative only after validation. If ranks 2 and 5 survive,
+  they display in that relative order; deterministic code may renumber them for
+  presentation but never substitute its own preference. Fewer trustworthy
+  products are preferable to unsafe backfill.
+- Product name, model tokens, product URL, image URL, citations, and evidence
+  must describe the same identity. Editorial pages, support pages, category
+  pages, accessories, incompatible variants, cross-model metadata, financing
+  prices, and unknown hard requirements fail closed under the existing shared
+  trust primitives wherever applicable.
+- User text and web-page content are untrusted data. Prompt instructions must
+  delimit user fields and tell the model to ignore instructions found in web
+  sources. Production logs store prompt/schema versions, hashes, counts,
+  timings, model configuration, tool actions, and source hosts—not full raw
+  user prompts, model reasoning, or source text by default.
+- The frozen benchmark is evaluation-only. No benchmark answer enters the
+  production prompt, model input, verifier, filter, or app-behavior test.
+- All repeatability gates use uncached autonomous research results. Caching may
+  be evaluated later for cost/freshness, but it may not manufacture a passing
+  stability score. Until then, the UI must present a server-owned research time
+  and accept that fresh web research can vary.
+- `legacy`, `shadow`, and `openai` modes have one explicit owner-controlled
+  switch. The default remains `legacy` until promotion. Shadow output never
+  reaches users. The OpenAI mode fails honestly on an unusable response; it
+  does not silently spend on or fall back to Serper. Switching the global mode
+  back to `legacy` is the rollback.
+- No phase approval, live budget, model choice, threshold, or promotion carries
+  into the next phase. No automatic retry or replacement request is permitted.
+
+### OAI-1 — historical evidence audit, master prompt, and isolated adapter
+
+**Approval/cost:** separate approval; zero live OpenAI/Serper calls and zero
+external verification fetches; no route or user-visible behavior change.
+
+Start with the cheapest available evidence. Analyze the 56 saved live JSON
+fixtures using the existing measurement stack and score the model-authored
+`final_openai_research` rows wherever explicit lineage exists (currently 20
+fixtures). Report leader coverage, selected-card contribution, identity/URL/
+price safety signals, and first loss. This is supplemental evidence, not a
+go/no-go result: the old research prompt received app-generated queries and a
+Serper candidate list, so it did not exercise the proposed autonomous
+architecture. Do not infer autonomous quality from rows whose lineage is absent
+or indeterminate, and do not perform fresh URL or price checks in this step.
+
+Then create versioned contracts for the normalized shopper request, optional
+Call 1 requirement-interpreter output, master prompt, strict final-slate JSON
+schema, source registry, per-claim source references, verification decisions,
+and UI adapter. The final response must separate identity, purchase offer,
+requirement checks, quality evidence, owner/expert complaints, tradeoffs, and
+presentation copy so evidence can be bound field by field. Server time—not
+model text—records when price/availability was observed. An image is optional
+and displays only when its exact-product identity can be established; otherwise
+use the existing placeholder.
+
+Build an isolated mocked adapter around the existing OpenAI client seam. Freeze
+the exact request payload shape, output/token ceilings, timeout/polling policy,
+safe logging, refusal/incomplete/error behavior, cost ledger, and the boundary
+between source binding, mechanical verification, and semantic review. Begin
+with a current web-search-capable production model at `high` reasoning; do not
+assume `xhigh` is better. OAI-2A measures the returned model ID and actual
+usage. A later one-variable comparison may promote `xhigh` only if quality
+evidence justifies its added latency/cost.
+
+Freeze a 30–50-scenario evaluation catalog from existing request shapes and
+fixtures without running it live. Partition it before results into prompt-
+development, primary, and sealed holdout sets covering broad and constrained
+requests, sparse and common categories, ambiguous input, incompatible
+requirements, accessories, editorial traps, cross-model pages, financing
+prices, duplicate variants, missing sources, and prompt injection. Existing
+C4/C5 outputs are historical baseline evidence; do not buy a fresh legacy
+baseline or Claude's proposed ~45-call research window before the core bet is
+proven.
+
+**Exit:** the historical analysis is reported with its contamination limits;
+mocked strict-schema responses parse; every displayable field has a source-
+binding and verification disposition; hostile and incomplete examples fail
+closed; request hashes and versions are reproducible; the exact OAI-2A call
+count and hard ceiling are stated; all current tests stay green; production
+behavior is unchanged.
+
+**Recommended reasoning level:** Highest. This phase defines the master prompt,
+evidence semantics, and boundary that determine whether every later quality
+number is trustworthy.
+
+### OAI-2A — three-case technical and evidence-feasibility kill gate
+
+**Approval/cost:** separate approval only after OAI-1 reports the model
+configuration, token budgets, hosted-search expectations, and dollar/tool-call
+ceiling. Use three complete shopper cases from three categories: one broad
+structured request, one hard-constrained structured request, and one messy
+ambiguity/injection request. The first two must skip Call 1; the third uses Call
+1 plus Call 2. The planned total is four OpenAI API calls: one non-researching
+interpreter and three autonomous research calls. Call 1 has no web tool; each
+Call 2 autonomously controls its hosted searches. Zero Serper calls, zero
+retries, and no replacement without new approval. Results are untracked
+research fixtures and never display.
+
+Record the exact redacted request hash, model and reasoning configuration,
+tool actions and queries when returned, complete consulted-source list,
+annotations, structured output, field-to-source bindings, refusals/incomplete
+status, tokens, hosted-search calls, latency, and cost. Manually inspect every
+proposed card and a stratified set of claims against its referenced pages;
+mechanical URL membership is necessary but does not establish semantic support.
+The phase approval must explicitly include those bounded human source-page
+opens; the application itself does not dispatch the OAI-3 verifier yet.
+
+**Pass only if:** all three Call 2 requests invoke web search and return valid
+strict output without a repair call; every displayable-field candidate binds to
+same-response source metadata; product-detail and independent-evidence roles
+are distinguishable; the constrained case has zero requirement contradiction;
+the adversarial case follows the application prompt rather than user/source
+instructions; and there are zero editorial, accessory-only, cross-model,
+invented-URL, financing-price, or unsupported-image cards.
+
+**Kill condition:** if one autonomous call cannot return mechanically bindable
+and manually supportable evidence, stop this architecture before permanent
+verifier or route work. Do not weaken source requirements or add a hidden
+second judge call merely to make the experiment pass.
+
+**Recommended reasoning level:** High for execution; Highest for a disputed
+source-support or go/no-go judgment.
+
+### OAI-2B — early uncached quality and repeatability gate
+
+**Approval/cost:** separate approval only after OAI-2A passes. Use four frozen
+primary shopper shapes across four categories—two broad and two constrained,
+with the ambiguity/injection shape included—and obtain three uncached Call 2
+responses per shape. If prompt/schema/model/configuration is unchanged after
+OAI-2A, its three research responses count as repeat one for their shapes;
+OAI-2B then buys two additional repeats for those three shapes plus three runs
+of the fourth shape: nine new research calls and 12 total evaluated Call 2
+outputs. If any material input changes, no OAI-2A output is pooled and the
+OAI-2B budget must be re-approved from zero. Freeze the cleaned request for the
+ambiguity case so this gate isolates Call 2 repeatability. Zero Serper calls,
+zero automatic retries, and no replacements without new approval.
+
+This is the make-or-break quality experiment before building the permanent
+network verifier or route integration. Score the raw model-authored slates,
+with only schema/source-binding checks, against the frozen rubric and most
+recent comparable legacy evidence. Require all of the following:
+
+- zero hard-requirement contradictions and zero wrong-type, editorial,
+  accessory-only, cross-model, invented-URL, financing-price, or unsupported-
+  image cards;
+- 100% same-response source binding for every displayable field, and all 12
+  authorized Call 2 outputs complete successfully under the strict schema; a
+  model refusal, incomplete response, or schema failure is a gate failure, not
+  an excluded run;
+- broad shop-vac top-five leader recall mean at least `4/7`, with no run below
+  `3/7`; do not loosen the denominator or insert leaders into the prompt;
+- final-set Jaccard at least RR-015's `60%` within each repeated shape;
+- no loss of a verified hard-constrained Best Match; and
+- a blind quality win or tie against the comparable legacy result on at least
+  three of the four request shapes (`75%`).
+
+OAI-2A actual token, hosted-search, cost, and latency data define a predeclared
+per-request ceiling before approval; do not invent an arbitrary `<60s` or dollar
+bar before the technical probe. Exceeding the ceiling blocks progression but
+does not erase otherwise useful quality evidence.
+
+The OAI-2B approval also states the bounded manual source-page inspection
+allowance needed to judge semantic support. These are human audit opens, not
+application verifier traffic or an additional research provider.
+
+**Failure:** attribute each miss to prompt/evidence, unsupported product facts,
+model/configuration, instability, or architecture. One generalized and clearly
+fixable cause may justify a separately approved zero-live prompt/schema revision
+and a completely fresh OAI-2B sample. An architecture-level failure, safety
+failure, or second failed sample kills the migration before scaffolding grows.
+
+**Recommended reasoning level:** High for execution; Highest for the
+architecture decision.
+
+### OAI-3 — bounded network verifier and presentation adapter
+
+**Approval/cost:** separate approval only after OAI-2B passes; zero live
+OpenAI/Serper calls and no external fetches during implementation tests; no
+route behavior.
+
+Implement a narrow verifier and adapter against the proven OAI contract. Reuse
+existing generalized requirement, product eligibility, identity, product-page,
+image, price, URL, citation, and dedupe primitives, but do not assume their
+current names imply the new guarantee. Existing citation reachability treats
+some error/time-out states as reachable, and existing price trust can accept
+plausible model text; add fail-first coverage before relying on either path.
+
+Add a bounded direct-fetch seam that is fully mocked in this phase. It may
+request only source URLs already returned by Call 2 and must apply the SSRF,
+redirect, byte, type, credential, timeout, and logging restrictions in the OAI
+invariants. Verify exact product-page identity and the displayed purchase
+price/URL/image when mechanically possible; source binding—not a claimed
+semantic oracle—continues to govern prose evidence. Add fail-first tests for
+every historic trust class, source-reference spoofing, consulted-but-uncited
+pages, duplicate source IDs, malformed/hostile URLs, redirects to private
+networks, mixed variants, unsupported rankings, unknown mandatory features,
+missing prices, blocked/inconclusive fetches, and fewer-than-five valid cards.
+The adapter preserves surviving order and clearly labels Close Match/unknowns.
+
+**Exit:** zero unsafe mocked cards survive; no verifier branch discovers,
+scores, rescues, invents, or reorders; direct-fetch decisions are reason-coded
+and observable; all outbound requests are bounded and target only allowlisted
+same-response URLs; full test/typecheck/lint/build/offline-eval wall passes.
+
+**Recommended reasoning level:** Highest. This is the permanent safety
+boundary, not temporary test scaffolding.
+
+### OAI-4 — default-off legacy/shadow/openai route integration
+
+**Approval/cost:** separate approval; zero live calls or external verification
+fetches during implementation; no promotion and no deletion.
+
+Integrate the OAI adapter and verifier behind one default-`legacy` mode.
+`shadow` executes and records the new result only during a separately approved
+live phase; `openai` displays only the verified OAI result and sends no Serper
+request. Use background Responses API execution and bounded polling when
+needed, handle terminal error/incomplete/refusal states, and prevent retries
+after ambiguous timeouts. Keep the current route byte-identical in legacy
+mode. Do not silently fall back per request: an OAI failure is observable,
+while owner rollback is a mode change.
+
+**Exit:** flag-off/legacy response parity, shadow non-interference, proven zero
+Serper dispatch in OAI mode, exactly one autonomous research Call 2 per
+completed shopper request, Call 1 absent for complete structured inputs and
+present only for deterministically identified cleanup cases, outbound verifier
+requests bounded and attributable, and full verification green.
+
+**Recommended reasoning level:** Highest. The risk is network trust, wiring,
+and rollback—not prompt prose.
+
+### OAI-5 — production-path verification gate
+
+**Approval/cost:** separate approval after OAI-4. First replay all 12 OAI-2B
+raw responses through the final local verifier using frozen page evidence or
+fully controlled mocks; this portion is offline. Then run one cache-cold full
+OAI-path request for each of the four frozen primary shapes (four autonomous
+research calls total) with live direct verification enabled. No legacy Serper
+path runs in parallel; compare blindly against the frozen comparable legacy
+evidence so this phase measures the new path instead of buying hundreds of
+provider calls. Report all OpenAI tokens/tool calls and every verification
+fetch; impose ceilings derived from OAI-2A/2B actuals. Spent/excluded requests
+are reported and replacements need approval.
+
+The final displayed slates must preserve all OAI-2B absolute gates after the
+verifier. Additionally, every displayed Best Match must have a successfully
+verified exact-product destination and mechanically supported purchase price;
+blocked or inconclusive checks must produce an honest downgrade/removal, not a
+search or guess. Report raw-to-verified product loss and classify every loss as
+correct safety rejection, verifier false rejection, transient fetch failure, or
+unsupported model claim. The validator may not improve a score by reordering or
+backfilling.
+
+**Serper contingency checkpoint:** if direct verification is the only failing
+component and retailer blocking makes safe coverage materially inadequate,
+stop. Taylor then chooses between fewer verified cards and a separately planned
+Serper Shopping verification-only experiment. That experiment is not approved
+by this roadmap amendment, cannot discover/rank products, and cannot begin
+without an explicit architecture and spend approval.
+
+**Failure:** any safety/source-integrity failure keeps OAI off. A quality miss
+receives one first-loss attribution: model/prompt evidence, verifier false
+rejection, integration, or architecture. Do not tune against the sealed
+holdout or lower a gate.
+
+**Recommended reasoning level:** High for execution; Highest for the final
+promotion-quality or Serper-contingency decision.
+
+### OAI-6 — conditional evidence hardening
+
+**Approval/cost:** only if OAI-5 finds one generalized, fixable cause; zero live
+calls. Skip this phase when OAI-5 passes without a fix or when the architecture
+kill condition is met.
+
+Fix only reproduced generalized causes in the master prompt, schema, adapter,
+or verifier. Add fail-first tests and a new prompt/schema version. Do not add
+benchmark answers, product/category exceptions, a second research call, model
+re-ranking code, automatic retries, or Serper without the contingency decision.
+Any material prompt/model change invalidates the OAI-2B/OAI-5 quality evidence
+and requires a new explicitly approved primary sample before holdout.
+
+**Recommended reasoning level:** Highest.
+
+### OAI-7 — sealed holdout and human acceptance gate
+
+**Approval/cost:** separate approval only after the final primary path passes.
+Run three sealed holdout request shapes from unseen categories three times each
+(nine shopper requests) with the exact pinned prompt, schema, model, reasoning,
+and verifier. Do not change code or prompt after viewing holdout answers.
+
+Apply all OAI-2B and OAI-5 absolute safety, evidence, constraint, verification,
+stability, reliability, and quality gates. Require no primary-quality regression
+and a blinded Taylor review of product usefulness, explanations, tradeoffs, and
+citation relevance. Holdout failure is generalization evidence: keep OAI off
+and stop rather than train on the holdout.
+
+**Recommended reasoning level:** High for the run; Highest for the go/no-go
+decision.
+
+### OAI-8 — reversible controlled rollout
+
+**Approval/cost:** separate explicit approval. Start with local/development or
+an explicitly addressable opt-in cohort; percentage canary language is used
+only if deployment actually supports it. Record the exact mode, prompt/schema
+versions, model configuration, start/end time, and rollback owner. Observe
+schema success, source binding, verification coverage/rejects, empty/partial
+responses, latency, cost, and user-visible quality. Any trust-boundary incident
+rolls the global mode back to `legacy` immediately. No legacy code is deleted.
+
+**Recommended reasoning level:** High.
+
+### OAI-9 — legacy and Serper retirement
+
+**Approval/cost:** optional and separately approved only after the early quality
+gate, production-path gate, holdout, controlled rollout, and a predeclared
+stable observation window all pass. Preserve the dated backup and commit-level
+rollback first. Remove Serper, deterministic query planning, AI-plus-Serper
+candidate merging, and legacy-only rescue/scoring/orchestration only when
+reachability tests prove they are unused by the promoted path. Retain request
+parsing, the OAI verifier, identity/eligibility/price/image/URL/dedupe
+protections, evaluation fixtures, and safe error handling.
+
+**Recommended reasoning level:** Highest. Deletion is optional; extended
+rollback is safer than premature cleanup.
+
+### OAI-10 — post-proof optimization
+
+Only after quality is stable, tune one variable at a time: reasoning effort,
+model snapshot, freshness-bounded normalized-request caching, returned search-
+token budget, output size, background polling cadence, or UI progress feedback.
+Every optimization must hold the frozen safety/evidence/quality gates. Cache
+hits must report source age and may not be counted as independent stability
+runs. Cost or latency savings cannot justify a weaker answer.
+
+**Recommended reasoning level:** High, with Highest reserved for model,
+evidence-contract, or cache-freshness changes.
+
+### OAI dependency and stop map
+
+```text
+OAI-0 active amended plan
+  -> OAI-1 offline historical audit + prompt/schema/evidence contract
+    -> OAI-2A three-case technical/source-binding kill gate
+      -> OAI-2B early uncached quality/repeatability kill gate
+        -> OAI-3 bounded network verifier
+          -> OAI-4 default-off route integration
+            -> OAI-5 production-path verification gate
+              -> OAI-6 conditional hardening (only if justified)
+                -> OAI-7 sealed holdout
+                  -> OAI-8 reversible rollout
+                    -> OAI-9 optional legacy/Serper retirement
+                      -> OAI-10 optimization
+```
+
+Live OpenAI calls occur only in OAI-2A, OAI-2B, OAI-5, OAI-7, and the explicitly
+bounded rollout. External direct-verification fetches first occur in OAI-5.
+The source-binding and core-quality assumptions are both tested before the
+permanent verifier and route integration. A failed early gate ends the
+experiment; any later failure leaves the current application available through
+`legacy` mode.
+
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 
 Phase 3P/3Q source-upgrade items; RR-014/RR-015 aggregate measurement beyond
@@ -764,3 +1576,12 @@ while results are unstable — revisit after R4); provider alternatives
 - R7A: `Execute R7A per docs/forward-roadmap.md. Zero live calls; land the pure refactor and default-off behavior branch as separate commits; stop after reporting.`
 - R7B: `Execute R7B per docs/forward-roadmap.md. This is my explicit approval for six live flag-on searches (486 physical attempts is the current conservative planning basis; report actuals). Stop after reporting; do not promote.`
 - R7C promotion/deletion requires a new prompt written only after Taylor reviews R7B; no standing kickoff is pre-authorized.
+
+The R7 kickoffs and the historical verified-hypothesis V2 draft are superseded;
+do not execute them. The active next kickoff is:
+
+- OAI-1: `Execute OAI-1 per docs/forward-roadmap.md. Zero live calls and zero external verification fetches; run the historical AI-row audit, then implement only the versioned master-prompt/schema/evidence/verification contract and isolated mocked adapter; keep production behavior unchanged; stop after reporting. Do not start OAI-2A.`
+
+OAI-2A and later kickoff text must be written only after the prior phase
+reports its exact gate and, for live work, its measured OpenAI/Serper/hosted-
+search/direct-fetch and token-cost planning basis.
