@@ -4,6 +4,11 @@ type OpenAIClient = {
       options: Record<string, unknown>,
       requestOptions?: Record<string, unknown>,
     ) => Promise<unknown>;
+    retrieve: (
+      responseId: string,
+      query?: Record<string, unknown>,
+      requestOptions?: Record<string, unknown>,
+    ) => Promise<unknown>;
   };
 };
 

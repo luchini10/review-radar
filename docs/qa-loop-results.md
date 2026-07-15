@@ -7238,3 +7238,74 @@ issue-status changes: 0
 latest code wall (carried forward): 943/943 across 129 suites
 next: OAI-1 only, after separate approval
 ```
+
+## 🟧 Codex QA Update — 2026-07-15 (OAI-1 offline contract and evidence audit)
+
+**Verdict: OAI-1 COMPLETE OFFLINE; HISTORICAL HANDOFF LOSS CONFIRMED BUT
+AUTONOMOUS QUALITY STILL UNPROVEN; OAI-2A REQUIRES SEPARATE APPROVAL.**
+
+- The existing readiness analyzer now scores only explicit
+  `final_openai_research` lineage (`scripts/analyze-readiness-fixtures.mjs:1094-
+  1259`). All 56 saved JSON fixtures were inventoried; 20 contain explicit AI
+  lineage, 19 are usable as historical evidence, and the malformed-budget
+  spent fixture remains recorded but excluded from coverage means.
+- The 20 instrumented fixtures contain 119 AI-origin rows / 99 unique normalized
+  names, 20 displayed-card contributions, and 10 selected cards with an
+  observed saved final price. Across the 19 usable runs, raw AI-row leader
+  coverage averaged `3.6316`; selected AI-row coverage averaged `0.7895`.
+- First loss across all rows: 65 `no_verified_citation`, 28 requirement-filter
+  exclusions, 20 selected, and six other recorded outcomes. Stored title/URL
+  signals were 1 missing URL, 0 invalid URL, 39 non-renderable eligibility, 7
+  wrong-type, and 74 page-selector rejections. These are static signals only;
+  no URL, price, page-content, or current-market verification was performed.
+- This evidence cannot pass or fail the autonomous architecture. The old prompt
+  supplied app-generated queries and Serper candidates
+  (`lib/researchPrompt.ts:167-171,188`), so the analysis is M3 historical and
+  contaminated by the legacy discovery path.
+- The versioned inactive contract now preserves every user field,
+  deterministically normalizes requirements, routes Call 1 only for missing/
+  conflicting/material ambiguity, rejects interpreter meaning changes, and
+  supplies a universal autonomous prompt
+  (`lib/autonomousResearchContract.ts:354-563`).
+- The strict final slate separates product identity, purchase offer,
+  requirement checks, specifications/quality, owner feedback, tradeoffs,
+  source registry, and per-field source refs. Verification policy and the
+  explicitly unverified UI draft adapter are frozen at
+  `lib/autonomousResearchContract.ts:564-615`.
+- The isolated adapter requires hosted web search, includes complete source
+  metadata, uses strict output and background polling, caps each research
+  response at 24k output tokens and 20 tool calls, performs no retries, stores
+  hashes/aggregate metadata instead of prompt or response bodies, and fails
+  closed on refusal, incomplete/error status, missing web search, schema or
+  source-reference errors, invented URLs, and unmet Best Match hard requirements
+  (`lib/autonomousResearchAdapter.ts:533-753`). Production code does not import
+  it.
+- The 36-case catalog is frozen at 12 prompt-development / 12 primary / 12
+  sealed holdout cases and contains generalized request/failure shapes but no
+  leaders or expected products (`lib/autonomousResearchEvaluation.ts:53`).
+- OAI-2A's proposed approval unit is four API calls: three autonomous research
+  calls plus one ambiguity-only interpreter call, at most 60 hosted-search tool
+  calls, zero Serper calls/retries/replacements, and a conservative `$40` hard
+  planning ceiling. Exact model/config/rate basis is frozen at
+  `lib/autonomousResearchAdapter.ts:562-594` and must be rechecked immediately
+  before any spend.
+- Production route, UI, flags, `.env.local`, issue state, and behavior are
+  unchanged. No live OpenAI/Serper call or external source/product verification
+  fetch occurred.
+
+```text
+phase: OAI-1 historical audit + inactive prompt/schema/adapter contract
+historical fixtures: 56 total / 20 explicit AI lineage / 19 usable
+historical AI rows: 119 / selected contributions: 20
+focused OAI-1 tests: 17/17
+npm test: 960/960 across 132 suites
+npm run typecheck: pass
+npm run lint: 0 errors / 3 pre-existing warnings
+npm run build: pass
+node scripts/eval-pipeline.mjs: no red flags
+live OpenAI calls: 0
+live Serper calls: 0
+external verification fetches: 0
+official API documentation lookups: read-only; no product/source verification
+next: OAI-2A only, after separate explicit approval
+```

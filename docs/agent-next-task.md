@@ -1,199 +1,160 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-15 by 🟧 Codex after Taylor approved the independent-review
-amendments to the OpenAI-led migration plan.
+Updated: 2026-07-15 by 🟧 Codex after completing OAI-1 offline. OAI-2A has
+not started and has no approval.
 
 ## Efficient session start
 
 1. Read repository `AGENTS.md` in full.
 2. Read this handoff in full.
 3. Read the active `OAI — OpenAI-only autonomous research migration` section
-   and standing guardrails in `docs/forward-roadmap.md`. The earlier
-   verified-hypothesis V2 section is historical and must not be executed.
-4. Read `docs/agent-dialogue.md` from entry [39] onward unless an earlier claim
-   needs verification.
-5. Before live work, retrieve the prior phase's actual OpenAI tokens, hosted-
-   search/tool calls, latency, and any legacy Serper attempts. Never reuse an
-   old estimate by habit.
+   and standing guardrails in `docs/forward-roadmap.md`. The V2 and earlier
+   R/C plans are historical unless this handoff says otherwise.
+4. Read `docs/agent-dialogue.md` from entry [39] onward.
+5. Before live work, re-check the current OpenAI model/tool prices and account
+   availability. No estimate or approval carries forward automatically.
 
 ## Current state
 
-- Tracked code remains at commit `25bc313`; documentation HEAD is `3b5a4f8`.
-  The OAI-0 master-plan records are local docs-only working-tree changes and
-  are not committed because Taylor requested a plan, not a commit.
-- C5 live validation remains failed: five usable runs missed the frozen broad
-  normalized-pool/final floors (`4.5/7` and `2.0/7` means), while constrained
-  runs reached `3/4` final recall with zero exact hard-constraint failures.
-- Post-C5 RR-078/RR-090 safety repairs remain green at 943/943. They close the
-  editorial-card and cross-model metadata/URL defects but do not repair broad
-  product quality.
-- Taylor explicitly chose the attached OpenAI-only pipeline as the direction:
-  one autonomous Responses API call with hosted web search returns the finished
-  ranked slate; the new path sends no Serper request and application code does
-  not generate search queries.
-- The supplied plan was strengthened rather than copied. OAI-1 now starts with
-  a zero-spend analysis of the 56 saved live fixtures; OAI-2A tests technical
-  source binding; OAI-2B tests uncached quality and repeatability before the
-  permanent verifier or route is built.
-- The permanent boundary is now a narrow verifier, not a schema linter. It
-  retains the generalized product-type, editorial/accessory, identity, URL,
-  image, price, requirement, citation, and dedupe protections and adds bounded
-  hostile-input-safe fetches only for URLs already returned by Call 2.
-- This is not a ground-up rewrite. The current route already calls Responses
-  API `web_search` with required tool use, complete source inclusion, and a
-  strict schema (`app/api/recommendations/route.ts:852-889`). OAI changes that
-  call from broad candidate authoring plus deterministic re-ranking to a
-  source-bound final-slate contract plus order-preserving validation.
-- The normal OAI request uses one OpenAI call. ReviewRadar's existing structured
-  fields and deterministic requirement extraction feed the master prompt
-  directly. Optional Call 1 is used only when deterministic routing identifies
-  missing, conflicting, or materially ambiguous input; it cleans the wording
-  without researching products, and the hard maximum is then two calls.
-- The selected OAI path still sends zero Serper requests. Serper is not the
-  default verifier; it can be reconsidered only after measured direct-fetch
-  inadequacy and a separately approved verification-only architecture change.
-- No application code, app test, fixture, issue status, `.env.local`, flag,
-  deployment, external verification fetch, Serper/OpenAI call, threshold, or
-  product behavior changed in OAI-0.
+- Code baseline is `25bc313`; OAI-0 plan commit is `3dc1131`. OAI-1 is a local,
+  uncommitted working-tree change because Taylor approved execution but did not
+  separately authorize an OAI-1 commit.
+- OAI-1 created an isolated, inactive contract around the Responses API. The
+  production recommendation route, UI, flags, `.env.local`, and user-visible
+  behavior are unchanged.
+- The deterministic normal path now has versioned definitions for the shopper
+  request, optional ambiguity-only interpreter, universal research prompt,
+  strict final slate, source registry, per-field references, verification
+  policy, and UI draft adapter in `lib/autonomousResearchContract.ts`.
+- `lib/autonomousResearchAdapter.ts` freezes one autonomous research request:
+  required hosted web search, full source inclusion, strict structured output,
+  background polling, explicit model/reasoning/limits, no retry, safe hashes
+  and aggregate metadata only, and fail-closed source/request contracts.
+- `lib/autonomousResearchEvaluation.ts` freezes 36 cases before live results:
+  12 prompt-development, 12 primary, and 12 sealed holdout. It contains no
+  benchmark leaders or expected products.
+- The historical audit extends `scripts/analyze-readiness-fixtures.mjs` rather
+  than creating a parallel measurement stack. It examined all 56 saved JSON
+  fixtures; 20 had explicit `final_openai_research` lineage and one malformed-
+  budget spent fixture was retained but excluded from quality means.
+- Historical explicit lineage contained 119 candidate rows / 99 normalized
+  names across the inventory, 20 displayed-card contributions, and 10 selected
+  cards with an observed saved final price. Across 19 usable historical runs,
+  raw AI-row leader coverage averaged `3.6316`, while selected AI-row coverage
+  averaged `0.7895`.
+- First losses across all 119 rows were 65 no-verified-citation, 28 requirement-
+  filter exclusions, 20 selected, and six other recorded outcomes. Static saved
+  title/URL signals were 1 missing URL, 0 malformed URLs, 39 non-renderable
+  eligibility results, 7 wrong-type results, and 74 page-selector rejections.
+  These are signals only, not current page/price/identity verification.
+- The audit cannot prove autonomous quality: the historical prompt received an
+  app-generated query plan and Serper candidates (`lib/researchPrompt.ts:167-
+  171,188`). It is M3 supplemental evidence only.
+- OAI-1 verification: 960/960 tests across 132 suites, typecheck, build, and
+  offline eval pass; lint has 0 errors and 3 pre-existing warnings. Zero live
+  OpenAI/Serper calls and zero external product/source verification fetches.
+  Read-only official OpenAI API documentation was consulted for current model,
+  Responses API, tool, background, structured-output, and pricing contracts.
+- Register is unchanged at 90 total / 85 Fixed / 4 Needs Investigation / 1
+  Won't Fix. The legacy C5 quality failure remains historical context.
 
-## Active OAI sequence
+## Frozen OAI-2A proposal — approval pending
 
-1. `OAI-1` — zero-live historical AI-row audit, master prompt, strict final-
-   slate schema, evidence/verification contracts, isolated mocked adapter, safe
-   logging, evaluation split, and exact OAI-2A budget formula.
-2. `OAI-2A` — separately approved three-case/four-call technical and source-
-   binding gate: two structured cases skip Call 1 and one ambiguity/injection
-   case uses Call 1 plus Call 2; zero Serper calls.
-3. `OAI-2B` — separately approved early uncached quality/repeatability gate:
-   four primary shapes across four categories, three Call 2 outputs per shape;
-   nine new research calls if OAI-2A inputs remain byte-identical.
-4. `OAI-3` — zero-live bounded direct-network verifier and order-preserving UI
-   adapter, tested only with controlled mocks.
-5. `OAI-4` — zero-live default-legacy `legacy`/`shadow`/`openai` route
-   integration, background polling, no promotion or deletion.
-6. `OAI-5` — separately approved production-path gate: offline replay of all
-   OAI-2B responses plus four live OAI requests with bounded direct verification.
-7. `OAI-6` — conditional zero-live hardening only for one reproduced fixable
-   failure; skip on pass or architecture kill.
-8. `OAI-7` — separately approved sealed holdout and blinded human acceptance.
-9. `OAI-8` — separately approved reversible controlled rollout.
-10. `OAI-9` — optional later legacy/Serper retirement after the gates and a
-    stable observation window.
-11. `OAI-10` — post-proof model/cost/latency/cache optimization.
+Use three primary catalog cases from three categories:
 
-The full gates, invariants, rollback rules, and reasoning recommendations are
-canonical in `docs/forward-roadmap.md` under the active OAI heading.
+1. `primary-01` broad vacuum — deterministic request, skips Call 1.
+2. `primary-04` constrained gas grill — structured budget/burner requirement,
+   skips Call 1.
+3. `primary-12` ambiguous/injection leaf blower — one non-web Call 1 followed
+   by Call 2.
 
-## Flag state
+Proposed exact configuration:
 
-- Local development: `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`.
-- `REVIEW_RADAR_PINNED_PLANNING`: unset/default-off.
-- `REVIEW_RADAR_NORMALIZATION_RECOVERY`: unset/default-off.
-- `REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION`: unset/default-off.
-- `REVIEW_RADAR_VERIFIED_HYPOTHESIS_DISCOVERY`: never implemented; historical
-  plan only.
-- OAI pipeline mode: planned only; it does not exist. Its eventual default is
-  `legacy`.
-- `.env.local` was not modified in OAI-0.
+- Call 2: three `gpt-5.6-sol` Responses API requests at `high` reasoning,
+  `max_output_tokens=24000`, required `web_search`, `max_tool_calls=20`, full
+  `web_search_call.action.sources`, strict `oai-final-slate-v1`, background
+  mode, two-minute HTTP timeout, 20-minute overall timeout, five-second
+  polling, at most 180 polls.
+- Call 1: one `gpt-5.6-sol` request at `high`, no tools, strict interpreter
+  schema, 50,000-character input ceiling, `max_output_tokens=4000`, two-minute
+  timeout.
+- Approval units: four API calls total, at most 60 hosted web-search tool calls,
+  zero Serper calls, zero retries, zero replacements.
+- Planning basis as of 2026-07-15: GPT-5.6 Sol standard short-context rates
+  `$5/M` input, `$0.50/M` cached input, `$30/M` output; long context `$10/M`
+  input and `$45/M` output; hosted web search `$0.01/call` plus search-content
+  tokens. The usage formula subtracts cached tokens from uncached input before
+  applying both rates.
+- Conservative planning hard ceiling: `$40` for the proposed four-call window.
+  This uses the three research calls at the model's maximum long context,
+  maximum output, and all 20 tool calls plus the bounded interpreter. Actual
+  spend should be much lower, but the approval must use the conservative cap.
+- If the model is unavailable, the request fails, the schema is rejected, or a
+  call is accidentally duplicated, stop. No fallback, retry, replacement, or
+  model substitution is pre-approved.
 
-## Latest verification and evidence
+The phase approval must also authorize bounded human opening of the returned
+source pages for semantic support inspection. Those opens are evidence review,
+not application verifier fetches.
 
-- Latest code verification remains the post-C5 wall: focused 77/77; full
-  943/943 across 129 suites; typecheck/build/eval pass; lint 0 errors / 3
-  pre-existing warnings.
-- OAI-0 is documentation/architecture only. The independent-review amendment
-  adds early historical and quality gates, bounded network verification, fixed
-  absolute bars, uncached stability measurement, and a Serper contingency stop.
-  Validation is the scoped docs diff and confirmation that tracked non-Markdown
-  code did not change; no code test is claimed for this phase.
-- Latest live North Stars remain: broad normalized pool/final means `4.5/7`
-  and `2.0/7`; constrained final recall `3/4`; exact hard-constraint failures
-  0; broad pool/final Jaccard `0.3889`/`0.0000`; constrained `0.2566`/`0.0513`.
-- C5 used 398 known physical Serper attempts across five usable requests and
-  averaged 95.6 seconds. That is historical legacy context, not an OAI budget.
-- Register remains 90 total / 85 Fixed / 4 Needs Investigation / 1 Won't Fix.
+## Next task — explicit approval required
 
-## Next task — approval pending
+Execute **OAI-2A only** per `docs/forward-roadmap.md` using the frozen proposal
+above. Capture the exact redacted request hash, returned model ID, usage, tool
+actions/queries, complete consulted-source list, field/source bindings,
+latency, and cost. Manually inspect every proposed card and a stratified set of
+claims against only the response-returned sources. Stop after the three cases
+and make the architecture pass/kill decision; do not begin OAI-2B.
 
-Execute **OAI-1 only** after Taylor's explicit approval:
-
-1. Analyze the 56 saved live fixtures with the existing measurement stack,
-   scoring explicit `final_openai_research` lineage where it exists and stating
-   that the old model saw Serper candidates/app-generated queries. This is
-   supplemental evidence, not an autonomous-pipeline go/no-go result.
-2. Define and version the normalized request, conditional Call 1 interpreter,
-   master prompt, strict final-slate schema, source registry, per-field source
-   refs, verification decisions, and UI adapter contracts.
-3. Build an isolated mocked adapter around the current Responses API seam.
-   Freeze required hosted web search, complete source inclusion, structured
-   output, background/timeout behavior, terminal failures, safe observability,
-   token/output ceilings, and the exact OAI-2A cost formula.
-4. Keep existing structured fields and `extractStructuredRequirements()` as
-   the normal path. Route to Call 1 only for a deterministic missing,
-   conflicting, or materially ambiguous case; its output remains untrusted and
-   must preserve the user's meaning.
-5. Freeze the 30–50-scenario evaluation catalog from existing requests/fixtures
-   and split prompt-development, primary, and sealed holdout cases before live
-   results. Add hostile mocked contract tests, keep production behavior
-   unchanged, run the full wall, and stop before OAI-2A.
-
-**Expected result:** an honest historical read plus a production-reusable but
-inactive OpenAI request/evidence/verification contract that can be tested with
-three autonomous research calls before permanent verifier or route work. It
-does not alter recommendations.
-
-**Recommended reasoning level: Highest.** OAI-1 defines the master prompt,
-claim-to-source semantics, model-call boundary, and failure behavior. A mistake
-here would make every later quality number untrustworthy.
+**Recommended reasoning level: High for execution, Highest for the final
+source-support and architecture go/no-go judgment.** The request machinery is
+already frozen and tested; the decisive work is careful evidence inspection,
+where the highest setting is worth using if support is disputed.
 
 ## Hard boundaries
 
-- No live OpenAI/Serper call or external verification fetch without Taylor's
-  explicit new per-phase approval. No prior approval remains available.
-- No commit, flag promotion, `.env.local` edit, production route behavior,
-  deployment, replacement request, threshold change, or OAI-2A work without
-  separate approval.
-- The selected OAI path sends no Serper request and receives no app-generated
-  query list or benchmark answer. The model controls hosted web search inside
-  one research response. Serper verification is only a future contingency
-  decision, not standing authorization.
+- No live OpenAI/Serper call, returned-source page opening, or other external
+  verification fetch without Taylor's explicit new OAI-2A approval naming the
+  four calls, 60-tool-call ceiling, `$40` ceiling, and source-page inspection.
+- No OAI-1 commit, flag promotion, `.env.local` edit, production behavior,
+  deployment, replacement, retry, model substitution, threshold change, or
+  OAI-2B work without separate approval.
+- The OAI path sends no Serper request and receives no app-generated query list
+  or candidate list. The model controls hosted search within Call 2.
 - Every displayable fact must bind to source metadata returned by that same
-  response. The verifier may fetch only those returned URLs and may reject/
-  downgrade/normalize, but may not discover, invent, rescue, score, add, or
+  response. Mechanical URL membership is necessary but does not prove semantic
+  support.
+- The future verifier may reject, downgrade, normalize, exact-dedupe, or clear
+  unsafe optional fields. It may not discover, invent, rescue, score, add, or
   reorder products.
 - Preserve generalized price, citation, requirement, product-type, identity,
-  image, eligibility, dedupe, URL, source-quality, and hard-constraint trust
-  protections.
-- No benchmark leader may enter production prompts, queries, code paths,
-  ranking, validation, or app-behavior tests. Generalized logic only.
-- RR-061-class image regression or any wrong-type/editorial/accessory/cross-
-  model/source-integrity failure stops later live work under that phase's rule.
+  image, eligibility, dedupe, URL, source-quality, and hard-constraint gates.
+- No benchmark leader may enter production prompts, requests, code paths,
+  ranking, validation, or behavior tests.
 - Live fixtures and pre-existing untracked artifacts stay untracked. Stage only
-  approved files; never use `git add -A`.
+  explicitly authorized files; never use `git add -A`.
 - One phase per explicit approval. Stop and report after it.
 
 ## Outstanding review debt
 
 - Dialogue entry [37] still asks Claude to verify the post-C5 safety repair.
-- Dialogue entry [38] describes the superseded provider-authoritative draft and
-  is historical only.
-- Dialogue entry [39] asks Claude to challenge the original active OAI plan;
-  entry [40] records which independent-review changes were accepted and which
-  were rejected. Peer review is advisory, not authorization.
-- Taylor remains the sole approver for OAI-1, commits, live spend, model/config
-  promotion, rollout, or deletion.
+- Entries [38]–[40] are architecture history and independent-review context.
+- The new OAI-1 completion entry asks Claude to challenge source-binding,
+  interpreter routing, and the `$40` OAI-2A ceiling. Peer review is advisory.
+- Taylor remains the sole approver for commits, live spend, source-page opens,
+  model/config changes, promotion, rollout, or deletion.
 
 ## Retrieval map
 
 | Need | Retrieve |
 |---|---|
-| Current next action and boundaries | this file |
 | Active phases and gates | `docs/forward-roadmap.md` OAI section |
-| Existing autonomous research API seam | `app/api/recommendations/route.ts:852-889` |
-| Current broad-candidate prompt contract | `lib/researchPrompt.ts:85-292` |
-| Existing deterministic request extraction | `lib/requirementExtraction.ts:1292` |
-| Existing same-response source collection | `lib/responseSources.ts` |
-| Existing result trust boundary | `lib/recommendationResultValidation.ts` |
-| C5 current-quality evidence | `docs/phase-6-market-leader-evaluation.md:243-305` |
-| Current amended-plan QA record | latest entry in `docs/qa-loop-results.md` |
+| Versioned request/prompt/schema/UI contract | `lib/autonomousResearchContract.ts` |
+| Mocked Responses adapters and OAI-2A config | `lib/autonomousResearchAdapter.ts` |
+| Frozen 36-case catalog | `lib/autonomousResearchEvaluation.ts` |
+| Historical AI-row audit | `scripts/analyze-readiness-fixtures.mjs` |
+| Contract tests | `tests/autonomousResearch*.test.mjs` |
+| Historical audit tests | `tests/historicalOpenAiAudit.test.mjs` |
+| Existing source collector | `lib/responseSources.ts` |
+| Latest QA evidence | latest entry in `docs/qa-loop-results.md` |
 | Peer review | `docs/agent-dialogue.md` entry [39] onward |

@@ -1027,6 +1027,255 @@ export function analyzeReadinessFixture(fixture, path = "<memory>") {
   };
 }
 
+function sameNormalizedName(first, second) {
+  return normalizedWords(first) === normalizedWords(second);
+}
+
+function historicalOpenAiDisposition(fixture, path) {
+  const reasons = [];
+  const budget = fixture._request?.budget;
+  if (typeof budget === "string" && budget.trim() && !/\d/.test(budget)) {
+    reasons.push("malformed_budget");
+  }
+  if (
+    typeof fixture._sampleStatus === "string" &&
+    /excluded|invalid/i.test(fixture._sampleStatus)
+  ) {
+    reasons.push(`stored_status:${fixture._sampleStatus}`);
+  }
+  if (/spent-excluded/i.test(path)) reasons.push("spent_excluded_fixture");
+  return {
+    usableAsHistoricalEvidence: reasons.length === 0,
+    reasons: Array.from(new Set(reasons)),
+  };
+}
+
+function historicalSafetySignals(candidate, category) {
+  const url = candidate.productUrl || "";
+  let invalidUrl = false;
+  if (url) {
+    try {
+      new URL(url);
+    } catch {
+      invalidUrl = true;
+    }
+  }
+  const eligibility = classifyProductEligibility({
+    category,
+    name: candidate.name,
+    productName: candidate.name,
+    sourceTitle: candidate.name,
+    sourceType: "final_openai_research",
+    url,
+  });
+  const typeVerdict = classifyProductTypeMatch({
+    allowedCheckText: candidate.name,
+    evidenceText: sourceEvidenceText(candidate.name, url),
+    identityText: candidate.name,
+    requestedCategory: category,
+  });
+  const pageSelectorAccepted = url
+    ? productPageMatchesIdentity({
+        pageTitle: candidate.name,
+        pageUrl: url,
+        productName: candidate.name,
+      })
+    : false;
+
+  return {
+    missingUrl: !url,
+    invalidUrl,
+    nonRenderableEligibility: !eligibility.canRenderAsProductCard,
+    wrongType: !typeVerdict.canBeExactMatch,
+    productPageSelectorRejected: !pageSelectorAccepted,
+  };
+}
+
+export function analyzeHistoricalOpenAiContributionFixture(
+  fixture,
+  path = "<memory>",
+) {
+  const request = fixture._request || { query: fixture._query };
+  const ledger = fixture.debug?.stageFunnel?.searchLedger;
+  const candidates = ledger?.candidateLineage?.candidates || [];
+  const aiCandidates = candidates.filter(
+    (candidate) => candidate.source === "final_openai_research",
+  );
+  if (aiCandidates.length === 0) return null;
+
+  const benchmark = benchmarkForRequest(request);
+  if (!benchmark) {
+    throw new Error(`${path}: explicit OpenAI lineage has no frozen benchmark`);
+  }
+  const finalProducts = [
+    ...(fixture.result?.exactMatches || []),
+    ...(fixture.result?.nearMatches || []),
+  ];
+  const selectedCandidates = aiCandidates.filter(
+    (candidate) =>
+      candidate.selected &&
+      finalProducts.some((product) =>
+        sameNormalizedName(product.name, candidate.name),
+      ),
+  );
+  const rawLeaderCoverage = benchmark.coreLeaders.filter((leader) =>
+    aiCandidates.some((candidate) => coversLeader(candidate.name, leader)),
+  );
+  const selectedLeaderCoverage = benchmark.coreLeaders.filter((leader) =>
+    selectedCandidates.some((candidate) => coversLeader(candidate.name, leader)),
+  );
+  const firstLoss = new Map();
+  for (const candidate of aiCandidates) {
+    const key = candidate.firstLoss
+      ? `${candidate.firstLoss.stage}:${candidate.firstLoss.subreason}`
+      : candidate.selected
+        ? "selected"
+        : "unattributed_no_first_loss";
+    increment(firstLoss, key);
+  }
+  const safetySignals = aiCandidates.map((candidate) => ({
+    name: candidate.name,
+    ...historicalSafetySignals(candidate, benchmark.category),
+  }));
+  const selectedWithObservedPrice = selectedCandidates.filter((candidate) => {
+    const product = finalProducts.find((item) =>
+      sameNormalizedName(item.name, candidate.name),
+    );
+    return typeof product?.priceTrust?.price === "number";
+  });
+
+  return {
+    path,
+    request,
+    benchmarkId: benchmark.id,
+    disposition: historicalOpenAiDisposition(fixture, path),
+    contamination: {
+      autonomousArchitectureTested: false,
+      modelReceivedAppGeneratedQueries: true,
+      modelReceivedSerperCandidates: true,
+      evidenceMode: "M3_historical_contaminated",
+    },
+    aiCandidateCount: aiCandidates.length,
+    aiCandidateNamesNormalized: aiCandidates.map((candidate) =>
+      normalizedWords(candidate.name),
+    ),
+    uniqueAiCandidateNames: Array.from(
+      new Set(aiCandidates.map((candidate) => normalizedWords(candidate.name))),
+    ).length,
+    selectedCount: selectedCandidates.length,
+    selectedWithObservedPriceCount: selectedWithObservedPrice.length,
+    rawLeaderCoverage: {
+      covered: rawLeaderCoverage.length,
+      total: benchmark.coreLeaders.length,
+      leaders: rawLeaderCoverage.map(leaderLabel),
+    },
+    selectedLeaderCoverage: {
+      covered: selectedLeaderCoverage.length,
+      total: benchmark.coreLeaders.length,
+      leaders: selectedLeaderCoverage.map(leaderLabel),
+    },
+    firstLoss: frequencyRows(firstLoss),
+    safetySignals: {
+      contract:
+        "static signals from stored title and URL only; they are not fresh page, price, or exact-identity verification and must not be counted as proven incidents",
+      missingUrl: safetySignals.filter((item) => item.missingUrl).length,
+      invalidUrl: safetySignals.filter((item) => item.invalidUrl).length,
+      nonRenderableEligibility: safetySignals.filter(
+        (item) => item.nonRenderableEligibility,
+      ).length,
+      wrongType: safetySignals.filter((item) => item.wrongType).length,
+      productPageSelectorRejected: safetySignals.filter(
+        (item) => item.productPageSelectorRejected,
+      ).length,
+    },
+  };
+}
+
+export function aggregateHistoricalOpenAiContributions(analyses) {
+  const explicit = analyses.filter(Boolean);
+  const usable = explicit.filter(
+    (analysis) => analysis.disposition.usableAsHistoricalEvidence,
+  );
+  const firstLoss = new Map();
+  for (const analysis of explicit) {
+    for (const row of analysis.firstLoss) increment(firstLoss, row.reason, row.count);
+  }
+  const mean = (values) =>
+    values.length
+      ? values.reduce((total, value) => total + value, 0) / values.length
+      : null;
+  const safetyTotal = (key) =>
+    explicit.reduce(
+      (total, analysis) => total + analysis.safetySignals[key],
+      0,
+    );
+
+  return {
+    contract: {
+      evidenceMode: "M3 historical supplemental evidence",
+      limitation:
+        "the old model saw app-generated queries and Serper candidates; these rows cannot pass or fail the autonomous OpenAI architecture",
+      selection:
+        "selected contribution requires explicit final_openai_research lineage, selected=true, and normalized-name presence in the saved final slate",
+      safety:
+        "stored-title/URL gate outputs are signals only; no network or current-market verification occurred",
+    },
+    fixtureCounts: {
+      inventory: analyses.length,
+      explicitOpenAiLineage: explicit.length,
+      usableHistorical: usable.length,
+      excludedHistorical: explicit.length - usable.length,
+    },
+    candidateCounts: {
+      rows: explicit.reduce((total, analysis) => total + analysis.aiCandidateCount, 0),
+      uniqueAcrossInventory: new Set(
+        explicit.flatMap((analysis) => analysis.aiCandidateNamesNormalized),
+      ).size,
+      uniqueWithinRuns: explicit.reduce(
+        (total, analysis) => total + analysis.uniqueAiCandidateNames,
+        0,
+      ),
+      selected: explicit.reduce((total, analysis) => total + analysis.selectedCount, 0),
+      selectedWithObservedPrice: explicit.reduce(
+        (total, analysis) => total + analysis.selectedWithObservedPriceCount,
+        0,
+      ),
+    },
+    leaderCoverage: {
+      rawMean: mean(usable.map((analysis) => analysis.rawLeaderCoverage.covered)),
+      selectedMean: mean(
+        usable.map((analysis) => analysis.selectedLeaderCoverage.covered),
+      ),
+      rawDistribution: frequencyRows(
+        usable.reduce((map, analysis) => {
+          increment(map, String(analysis.rawLeaderCoverage.covered));
+          return map;
+        }, new Map()),
+      ),
+      selectedDistribution: frequencyRows(
+        usable.reduce((map, analysis) => {
+          increment(map, String(analysis.selectedLeaderCoverage.covered));
+          return map;
+        }, new Map()),
+      ),
+    },
+    firstLoss: frequencyRows(firstLoss),
+    safetySignals: {
+      missingUrl: safetyTotal("missingUrl"),
+      invalidUrl: safetyTotal("invalidUrl"),
+      nonRenderableEligibility: safetyTotal("nonRenderableEligibility"),
+      wrongType: safetyTotal("wrongType"),
+      productPageSelectorRejected: safetyTotal("productPageSelectorRejected"),
+    },
+    exclusions: explicit
+      .filter((analysis) => !analysis.disposition.usableAsHistoricalEvidence)
+      .map((analysis) => ({
+        path: analysis.path,
+        reasons: analysis.disposition.reasons,
+      })),
+  };
+}
+
 export function aggregateReadinessAnalyses(analyses) {
   const usableAnalyses = analyses.filter(
     (analysis) => analysis.sampleValidity.usable,
@@ -1332,8 +1581,15 @@ function runCli(paths) {
   const analyses = paths.map((path) =>
     analyzeReadinessFixture(JSON.parse(readFileSync(path, "utf8")), path),
   );
+  const historicalOpenAi = paths.map((path) =>
+    analyzeHistoricalOpenAiContributionFixture(
+      JSON.parse(readFileSync(path, "utf8")),
+      path,
+    ),
+  );
   console.log(JSON.stringify({
     aggregate: aggregateReadinessAnalyses(analyses),
+    historicalOpenAi: aggregateHistoricalOpenAiContributions(historicalOpenAi),
     runs: analyses,
   }, null, 2));
 }
