@@ -208,11 +208,11 @@ const productCardJsonSchema = strictObject({
     currency: { type: "string", pattern: "^[A-Z]{3}$" },
     price_text: { type: "string" },
     seller: { type: "string" },
-    product_url: { type: ["string", "null"], format: "uri" },
+    product_url: { type: ["string", "null"] },
     source_ids: sourceIdArrayJsonSchema,
   }),
   image: strictObject({
-    url: { type: ["string", "null"], format: "uri" },
+    url: { type: ["string", "null"] },
     source_ids: {
       type: "array",
       items: { type: "string", pattern: "^s[1-9][0-9]*$" },
@@ -318,7 +318,7 @@ export const autonomousResearchSlateJsonSchema = strictObject({
       },
       title: { type: "string", minLength: 1 },
       publisher: { type: "string", minLength: 1 },
-      url: { type: "string", format: "uri" },
+      url: { type: "string" },
     }),
   },
 });
@@ -423,11 +423,11 @@ export function assessRequirementInterpreterNeed(
     .filter(Boolean)
     .join(" ");
   const materiallyAmbiguousText =
-    /\b(?:comfortable|good|nice|not\s+too|not\s+very|reasonable|somewhat|something)\b|\bignore\b.{0,40}\b(?:instruction|prompt|prior|previous)\b/i;
-  if (
-    normalized.unresolved_ambiguities.length &&
-    materiallyAmbiguousText.test(freeText)
-  ) {
+    /\b(?:comfortable|nice|not\s+too|not\s+very|reasonable|somewhat|something)\b|\bignore\b.{0,40}\b(?:instruction|prompt|prior|previous)\b/i;
+  // Route from the shopper's raw wording, not a legacy extraction bucket.
+  // Legacy feature flags may reclassify the same phrase as preferred vs.
+  // ambiguous, but they must not decide whether the OAI path needs Call 1.
+  if (materiallyAmbiguousText.test(freeText)) {
     reasons.push("material_ambiguity");
   }
   return { needed: reasons.length > 0, reasons };
@@ -480,35 +480,114 @@ export function validateInterpreterMeaningPreservation(
   normalized: NormalizedShopperRequest,
   interpreted: RequirementInterpreterOutput,
 ) {
-  const originalHard = [
-    ...normalized.hard_requirements.map((item) => item.text),
-    ...normalized.avoid.map((item) => item.text),
-  ];
-  const interpretedHard = [
-    ...interpreted.hard_requirements,
-    ...interpreted.avoid,
-  ];
-  const originalMeanings = new Set(originalHard.map(normalizedHardMeaning));
-  const interpretedMeanings = new Set(
-    interpretedHard.map(normalizedHardMeaning),
-  );
   const errors: string[] = [];
-
-  for (const requirement of originalHard) {
-    const expected = normalizedHardMeaning(requirement);
-    if (expected && !interpretedMeanings.has(expected)) {
-      errors.push(`interpreter_removed_hard_meaning:${requirement}`);
+  const compareExactMeaningSet = (
+    label: string,
+    original: string[],
+    candidate: string[],
+  ) => {
+    const originalMeanings = new Set(original.map(normalizedHardMeaning));
+    const candidateMeanings = new Set(candidate.map(normalizedHardMeaning));
+    for (const value of original) {
+      const meaning = normalizedHardMeaning(value);
+      if (meaning && !candidateMeanings.has(meaning)) {
+        errors.push(`interpreter_removed_${label}_meaning:${value}`);
+      }
     }
-  }
-
-  for (const requirement of interpretedHard) {
-    const meaning = normalizedHardMeaning(requirement);
-    if (meaning && !originalMeanings.has(meaning)) {
-      errors.push(`interpreter_added_unsupported_hard_meaning:${requirement}`);
+    for (const value of candidate) {
+      const meaning = normalizedHardMeaning(value);
+      if (meaning && !originalMeanings.has(meaning)) {
+        errors.push(`interpreter_added_unsupported_${label}_meaning:${value}`);
+      }
     }
+  };
+
+  if (
+    normalizedHardMeaning(interpreted.product_category) !==
+    normalizedHardMeaning(normalized.product_category)
+  ) {
+    errors.push("interpreter_changed_product_category");
   }
+  if (
+    normalizedHardMeaning(interpreted.budget_text || "") !==
+    normalizedHardMeaning(normalized.budget.original || "")
+  ) {
+    errors.push("interpreter_changed_budget");
+  }
+  compareExactMeaningSet(
+    "hard",
+    normalized.hard_requirements.map((item) => item.text),
+    interpreted.hard_requirements,
+  );
+  compareExactMeaningSet(
+    "preference",
+    normalized.preferences.map((item) => item.text),
+    interpreted.preferences,
+  );
+  compareExactMeaningSet(
+    "avoid",
+    normalized.avoid.map((item) => item.text),
+    interpreted.avoid,
+  );
 
   return { valid: errors.length === 0, errors };
+}
+
+export function applyRequirementInterpretation(
+  normalized: NormalizedShopperRequest,
+  interpreted: RequirementInterpreterOutput,
+): NormalizedShopperRequest {
+  const preservation = validateInterpreterMeaningPreservation(
+    normalized,
+    interpreted,
+  );
+  if (!preservation.valid) {
+    throw new Error(
+      `Unsafe requirement interpretation: ${preservation.errors.join(",")}`,
+    );
+  }
+
+  const reorderExactItems = <T extends { id: string; text: string }>(
+    original: T[],
+    orderedText: string[],
+  ) => {
+    const byMeaning = new Map(
+      original.map((item) => [normalizedHardMeaning(item.text), item]),
+    );
+    return orderedText.map((text) => {
+      const item = byMeaning.get(normalizedHardMeaning(text));
+      if (!item) throw new Error("Interpreter output did not match input");
+      return item;
+    });
+  };
+  const interpreterUncertainty = [
+    ...interpreted.assumptions.map((text, index) => ({
+      id: `interpreter-assumption-${index + 1}`,
+      text: `Unverified interpreter assumption: ${text}`,
+    })),
+    ...interpreted.unresolved_questions.map((text, index) => ({
+      id: `interpreter-question-${index + 1}`,
+      text,
+    })),
+  ];
+
+  return {
+    ...normalized,
+    product_category: interpreted.product_category.trim(),
+    hard_requirements: reorderExactItems(
+      normalized.hard_requirements,
+      interpreted.hard_requirements,
+    ),
+    preferences: reorderExactItems(
+      normalized.preferences,
+      interpreted.preferences,
+    ),
+    avoid: reorderExactItems(normalized.avoid, interpreted.avoid),
+    unresolved_ambiguities: [
+      ...normalized.unresolved_ambiguities,
+      ...interpreterUncertainty,
+    ],
+  };
 }
 
 export function canonicalJson(value: unknown): string {

@@ -10,6 +10,7 @@ import {
   buildAutonomousResearchRequest,
   buildRequirementInterpreterRequest,
   estimateAutonomousResearchCost,
+  OAI_2A_PROPOSED_CONFIG,
   runAutonomousResearch,
   runRequirementInterpreter,
   validateAutonomousSlateContract,
@@ -290,6 +291,37 @@ describe("OAI-1 isolated Responses adapter", () => {
     }
   });
 
+  it("retains safe API diagnostics without leaking an API key", async () => {
+    const error = Object.assign(
+      new Error("400 Invalid schema format uri for sk-test-secret-value"),
+      {
+        status: 400,
+        code: "invalid_json_schema",
+        param: "text.format.schema",
+        type: "invalid_request_error",
+      },
+    );
+    const result = await runAutonomousResearch({
+      client: {
+        responses: {
+          create: async () => {
+            throw error;
+          },
+          retrieve: async () => {
+            throw new Error("unexpected retrieve");
+          },
+        },
+      },
+      normalizedRequest: buildNormalizedShopperRequest({ query: "vacuum" }),
+      config,
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, "request_error");
+    assert.ok(result.details.includes("status:400"));
+    assert.ok(result.details.includes("code:invalid_json_schema"));
+    assert.equal(result.details.join(" ").includes("sk-test-secret-value"), false);
+  });
+
   it("rejects duplicate cards, rank gaps, and dangling source references", () => {
     const invalid = slate({
       products: [card(), card({ rank: 3 })],
@@ -362,5 +394,20 @@ describe("OAI-1 isolated Responses adapter", () => {
       },
     );
     assert.equal(cost, 3.14);
+  });
+
+  it("pins the approved OAI-2A window to Terra with no replacement budget", () => {
+    assert.equal(OAI_2A_PROPOSED_CONFIG.research.model, "gpt-5.6-terra");
+    assert.equal(OAI_2A_PROPOSED_CONFIG.interpreter.model, "gpt-5.6-terra");
+    assert.equal(OAI_2A_PROPOSED_CONFIG.approvalUnits.apiCalls, 4);
+    assert.equal(OAI_2A_PROPOSED_CONFIG.approvalUnits.webSearchToolCalls, 60);
+    assert.equal(OAI_2A_PROPOSED_CONFIG.approvalUnits.retries, 0);
+    assert.equal(OAI_2A_PROPOSED_CONFIG.approvalUnits.replacements, 0);
+    assert.equal(OAI_2A_PROPOSED_CONFIG.planningHardCeilingUsd, 20);
+    assert.equal(OAI_2A_PROPOSED_CONFIG.longContextThresholdTokens, 272_000);
+    assert.equal(
+      OAI_2A_PROPOSED_CONFIG.longContextRatesAsOf2026_07_15.outputPerMillionUsd,
+      22.5,
+    );
   });
 });

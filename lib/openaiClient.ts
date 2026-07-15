@@ -12,7 +12,10 @@ type OpenAIClient = {
   };
 };
 
-type OpenAIConstructor = new (options: { apiKey: string }) => OpenAIClient;
+type OpenAIConstructor = new (options: {
+  apiKey: string;
+  maxRetries?: number;
+}) => OpenAIClient;
 
 export class MissingOpenAISdkError extends Error {
   constructor() {
@@ -21,7 +24,10 @@ export class MissingOpenAISdkError extends Error {
   }
 }
 
-export async function createOpenAIClient(apiKey: string) {
+export async function createOpenAIClient(
+  apiKey: string,
+  options: { maxRetries?: number } = {},
+) {
   try {
     const loadSdk = new Function(
       "specifier",
@@ -29,7 +35,7 @@ export async function createOpenAIClient(apiKey: string) {
     ) as (specifier: string) => Promise<{ default: OpenAIConstructor }>;
 
     const { default: OpenAI } = await loadSdk("openai");
-    return new OpenAI({ apiKey });
+    return new OpenAI({ apiKey, ...options });
   } catch (error) {
     if (error instanceof Error && error.message.includes("openai")) {
       throw new MissingOpenAISdkError();
