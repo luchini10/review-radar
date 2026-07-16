@@ -7504,3 +7504,68 @@ Its repaired summary honestly records usage, searches, latency, cards, cost,
 and failure. OAI-2A remains blocked by the adapter. The next step is a separately
 approved offline fail-first fix that repeats `include` on every retrieve poll;
 no replacement live request is approved or implied.
+
+## 🟧 Codex — OAI-2A offline Responses boundary flight simulator (2026-07-16)
+
+**Scope.** Taylor approved one continuous offline hardening pass before any
+further paid smoke. Commit `1d7a300` changes only the isolated autonomous
+adapter and its tests. It made zero OpenAI/Serper calls, response retrievals,
+external page fetches, production-route changes, flag changes, or user-visible
+behavior changes.
+
+**Compact execution checklist and result.** The phase used these predeclared
+pass/fail conditions:
+
+- PASS: create and every queued/in-progress retrieve request use the same
+  `web_search_call.action.sources` inclusion contract; FAIL: any poll omits it.
+- PASS: queued, in-progress, completed, incomplete, failed, cancelled, refusal,
+  malformed-output, missing-source, timeout, poll-ceiling, and request-error
+  paths are deterministic, fail closed, and never retry; FAIL: an unsafe slate
+  is accepted or an extra create/retrieve is dispatched.
+- PASS: search-result sources, opened pages, find-in-page targets, and URL
+  citations are recognized only from supported same-response locations; FAIL:
+  prompt or model prose can register an invented URL.
+- PASS: rejected evidence retains status, usage, source actions, annotations,
+  and URLs while excluding raw output, reasoning, prompt payloads, headers, and
+  secrets; FAIL: diagnosis is dishonest or sensitive content is retained.
+- PASS: the real v2 runner preflights without an API key or evidence write, and
+  the focused plus full offline wall pass; FAIL: the harness requires spend to
+  expose an integration defect.
+
+All five conditions passed.
+
+**Fail-first findings and repairs.** The simulator initially failed three
+assertions: the existing poll test and a multi-poll replay both received `{}`
+instead of the required retrieve `include`, and a poll beginning before the
+deadline could sleep through it and still dispatch. The adapter now owns one
+shared include constant for create and every retrieve
+(`lib/autonomousResearchAdapter.ts:57-59,667,837-841`) and checks the overall
+deadline after sleep and after retrieval
+(`lib/autonomousResearchAdapter.ts:826-848`). Response snapshots now update
+status, model, usage, and source counts before any terminal rejection, so a
+late completed response is recorded honestly
+(`lib/autonomousResearchAdapter.ts:758-773,821-851`). Diagnostic text also
+redacts bearer tokens and delimited JSON request bodies in addition to API keys
+(`lib/autonomousResearchAdapter.ts:216-229`).
+
+**Offline simulator coverage.** The lifecycle suite exercises Call 1 and Call
+2, multi-poll completion, every documented terminal response status, create and
+retrieve failures, poll/overall ceilings, same-response source recovery, and
+safe evidence (`tests/autonomousResearchLifecycle.test.mjs:50-308`). Source-
+shape tests reproduce the search/open-page/find-in-page/annotation forms seen
+in the saved Terra evidence (`tests/responseSources.test.mjs:10-68`). The real
+runner's v2 case routing and zero-key preflight are exercised separately
+(`tests/oai2aRunner.test.mjs:9-22`).
+
+**Verification.** Fail-first focused result: 18/21 passed, with the three exact
+failures above. Final focused result: 24/24. Full suite: 982/982 across 135
+suites. Typecheck passed. Lint passed with zero errors and the same three
+pre-existing warnings. Production build, offline evaluation, v2 preflight, and
+`git diff --check` passed.
+
+**Decision.** The adapter blocker is repaired offline. OAI-2A has not passed
+quality or source-support gates because no replacement response was run. The
+next decision is whether to approve exactly one final corrected v2
+`primary-01` Terra/high smoke under newly rechecked current pricing and the
+same one-create/no-retry/no-replacement safety boundary. OAI-2B remains
+forbidden.
