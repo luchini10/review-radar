@@ -7624,3 +7624,50 @@ OAI-2B remains forbidden.
 
 **Evidence.** Sanitized evidence remains untracked at
 `tests/fixtures/review-radar-live/oai-2a-terra-2026-07-16-primary-01-v3-smoke-1d7a300/`.
+
+## 🟧 Codex — OAI-2A bounded source-truth audit (2026-07-16)
+
+**Verdict: FAIL — the direct-to-display OAI-2A architecture hits its
+predeclared kill condition.** No OpenAI or Serper call, response retrieval,
+replacement case, product rescue, code behavior change, or OAI-2B work
+occurred. The audit opened only the 10 unique pages already cited by the
+accepted `primary-01` response. The first batch extraction returned no usable
+content, so the same URLs were retrieved again; no eleventh source or search
+was introduced.
+
+### Source-by-source result
+
+| ID | Source | Result | Decisive finding |
+|---|---|---|---|
+| `s1` | Miele Guard L1 product page | Partial | Exact identity, $899 price, specifications, 4.8/32 reviews, and contiguous-US shipping banner are present; the product action shown is `Find a dealer`, not a direct product `Add to cart`, so direct availability is weaker than the card implies. |
+| `s2` | Homes & Gardens Miele review | Partial | Hands-on pet-hair and mixed-surface performance is supported. A motorized attachment is described as potentially better for upholstery, but the stronger card advice about an electric powerhead for thick wall-to-wall carpet is synthesis rather than direct source support. |
+| `s3` | Consumer Reports 2026 guide | Pass | The PDF lists Shark PowerDetect HZ4002 with overall score 85. |
+| `s4` | Best Buy Shark AZ4002 | Pass | Exact SKU/model, $599.99, add-to-cart/pickup/shipping, 4.7/411, and product features are present. |
+| `s5` | TechGearLab Shark PowerDetect review | Unsafe / unverified | The page title says AZ4002, but its specification table identifies the tested model as AZ405KT1. The 17.1-lb, 1.9-L, filtration, sand, and hair-wrap observations therefore are not safely proven for the exact AZ4002 card. |
+| `s6` | Best Buy Shark HZ4002 | **Fail** | The exact HZ4002 block lists **$329.99**. The card's **$319.99** appears on the same page for a different related Shark cordless product. URL membership allowed a neighboring product's price to bind to HZ4002. Identity, availability, features, and 4.8/102 are otherwise supported. |
+| `s7` | Dyson V16 product page | Partial | Exact V16 identity, $979.99, in-stock/add-to-basket, 70 minutes, 315 AW, 0.35 gallon, filtration, and weight are supported. The page currently says reviews are temporarily unavailable and exposes no support for the card's 4.0/1,944 owner-rating breakdown. |
+| `s8` | Vacuum Wars Dyson V16 review | Pass | The page explicitly reports both V16 Piston Animal and Submarine results, including 100% carpet, 4/4 crevice, 70-minute low, and 15.3-minute maximum-power runtime. |
+| `s9` | Tom's Guide Dyson V16 review | Pass | The exact review supports the on/off button, reduced trigger fatigue, cleaning ability, anti-tangle design, and premium-price tradeoff. |
+| `s10` | Miele Complete C3 transition page | Pass | Miele explicitly says Complete C3 is discontinued and introduces Guard L1 as its successor. |
+
+Five sources fully support their assigned use, four are partial or exact-model
+unverified, and one directly contradicts the card's price association. This is
+not a numeric claim-support score; it is a conservative source disposition.
+
+### Root cause and decision
+
+The v2 boundary proves schema, source-ID/URL membership, source role, and
+request logic. It cannot prove that a specific fact belongs to the exact
+product section of a multi-product page because the returned source metadata
+contains URLs, not independently checked page semantics. RR-091 records this
+generalized gap. Prompt wording or a model-authored evidence excerpt can reduce
+the error but cannot make that proof deterministic.
+
+The roadmap requires every OAI-2A card to be manually supportable and says one
+failure stops the architecture before more calls or permanent verifier work.
+Accordingly, no `primary-04`, `primary-12`, OAI-2B, or OAI-3 work is eligible
+under the current plan. The next possible phase is a separately approved
+architecture reset: compare a purchase-fact-only direct verifier, structured
+commerce metadata, and an independent verification provider/call, then amend
+the roadmap only if Taylor chooses to keep OpenAI-led discovery. The one-call
+direct-to-UI design is not safe enough as currently specified.

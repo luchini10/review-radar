@@ -1,9 +1,9 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through C5 flag-on validation
+## Compiled for AI Agent Consumption — Phase 0 through OAI-2A source audit
 
-**Generated:** 2026-07-14
-**Scope:** All phases from initial measurement harness through the C5 flag-on
-live-validation window
+**Generated:** 2026-07-16
+**Scope:** All phases from initial measurement harness through the OAI-2A
+source-truth audit
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -20,13 +20,13 @@ only when maintaining this register or auditing its full history.
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 90 |
+| Total Issues | 91 |
 | Critical | 13 |
-| High | 39 |
+| High | 40 |
 | Medium | 33 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 4 |
+| Needs Investigation | 5 |
 | Fixed | 85 |
 | Won't Fix | 1 |
 
@@ -111,6 +111,7 @@ only when maintaining this register or auditing its full history.
 | Corrective C5 — normalization feasibility audit | 3 |
 | C5 live-validation preflight | 2 |
 | C5 flag-on live validation | 1 |
+| OAI-2A source-truth audit | 1 |
 | Phase R4 — Live after-sample | 1 |
 | RR-061 image-provenance safety repair | 0 |
 | RR-061 round 4 / RR-080 image micro-phase | 1 |
@@ -3284,6 +3285,52 @@ pre-existing warnings. Zero live Serper/OpenAI calls, flag promotions, or
 
 ---
 
+#### RR-091
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-091 |
+| **Phase** | OAI-2A source-truth audit |
+| **Severity** | High |
+| **Title** | Same-page related-product price can satisfy autonomous card binding |
+| **Status** | Needs Investigation |
+
+**Description:** The accepted OAI-2A `primary-01` slate reported the exact
+Shark HZ4002 at `$319.99`, citing its Best Buy product page. The audited page's
+exact HZ4002 product section lists `$329.99`; `$319.99` appears elsewhere on
+that same page for a different related Shark cordless vacuum. The v2 local
+validator accepted the card because the source URL was registered and the
+source role was `purchase_page`, even though the cited page did not
+semantically bind the lower price to HZ4002.
+
+**Where it occurs:** The isolated autonomous path's price/source contract in
+`lib/autonomousResearchAdapter.ts`. It proves same-response URL membership and
+source role, but it has no page-content evidence with which to verify that the
+specific price belongs to the card's exact product identity.
+
+**Evidence:** Untracked accepted response
+`tests/fixtures/review-radar-live/oai-2a-terra-2026-07-16-primary-01-v3-smoke-1d7a300/primary-01.json`,
+source `s6`, audited on 2026-07-16 at Best Buy SKU `6599393`. The exact product
+block identifies `HZ4002`, 4.8/5 from 102 reviews, and `$329.99`; the page's
+related-products block carries the `$319.99` price for a different product.
+
+**Expected:** A non-null displayed price must be supported by exact-product
+content, not merely by a page that contains the product and an unrelated price
+elsewhere. Unverified or conflicting prices must be cleared or the card must
+be rejected before display.
+
+**Suggested fix or next action:** Stop additional OAI-2A research spend. First
+design the smallest generalized semantic-verification boundary and reproduce
+this failure offline. Prompt wording or a model-authored evidence excerpt may
+reduce the error but cannot deterministically prove source semantics by itself.
+Compare a bounded direct-page verifier, structured commerce metadata, and a
+separate verification response; select the least complex option that can
+prove exact product/price association without reintroducing candidate ranking
+or rescue. Preserve one-call autonomous discovery as the hypothesis under
+test, not as a constraint that can weaken price truth.
+
+---
+
 ## R7 readiness planning note — 2026-07-12
 
 No issue status changed. A zero-cost M3 provenance audit of the six R4-after
@@ -3496,17 +3543,16 @@ separately approved zero-live trust-boundary diagnosis/repair.
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (6 issues)
+### Needs Investigation (5 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
-- RR-078: Support/editorial pages can render as product cards
-- RR-090: Final card can inherit another model's canonical product URL
+- RR-091: Same-page related-product price can satisfy autonomous card binding
 
-### Fixed (83 issues)
+### Fixed (85 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
-RR-038 through RR-044, RR-046 through RR-077, and RR-079 through RR-089
+RR-038 through RR-044, and RR-046 through RR-090
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)

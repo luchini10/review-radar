@@ -1320,6 +1320,28 @@ second judge call merely to make the experiment pass.
 **Recommended reasoning level:** High for execution; Highest for a disputed
 source-support or go/no-go judgment.
 
+**Actual result — FAILED / architecture stop (2026-07-16).** The first locally
+accepted and source-audited OAI-2A case, broad `primary-01`, passed the strict
+schema and same-response URL-membership validator after the background-
+retrieval repair.
+The bounded human audit then found a material semantic failure: the accepted
+Shark HZ4002 card claimed `$319.99` from its exact Best Buy page, while that
+page's exact HZ4002 product block listed `$329.99`; `$319.99` belonged to a
+different related Shark product on the same page. The audit also found that
+the professional source titled for Shark AZ4002 identifies the tested model
+internally as AZ405KT1, leaving exact-model performance attribution unsafe,
+and that the Dyson page no longer exposed the claimed 4.0/1,944 owner-rating
+data. RR-091 records the generalized price-binding defect.
+
+This meets the predeclared OAI-2A kill condition: a mechanically registered
+URL did not make the accepted purchase fact manually supportable. Remaining
+`primary-04`/`primary-12` calls, OAI-2B, and OAI-3 must not proceed under this
+plan. The gate is not weakened and the spent result is not relabeled as a
+pass. Any future OpenAI-led architecture requires a new owner-approved roadmap
+amendment that places independent semantic verification before display; it
+cannot silently continue as OAI-2A or bring forward OAI-3 without revisiting
+the dependency and cost model.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen
