@@ -1342,6 +1342,151 @@ amendment that places independent semantic verification before display; it
 cannot silently continue as OAI-2A or bring forward OAI-3 without revisiting
 the dependency and cost model.
 
+### OAI-H0 — verified-hybrid architecture reset (complete 2026-07-16; docs only)
+
+**Owner decision:** Taylor rejected the unsafe direct-to-display version of
+OAI-2A and approved a new hybrid experiment through H2. This is a different
+architecture, not a weakened OAI-2A result and not permission to resume
+OAI-2B/OAI-3. OAI-2B through OAI-10 below remain historical, unreachable plan
+text unless a later amendment explicitly reuses a rule.
+
+**Objective:** preserve the autonomous research call's strongest behavior—web
+discovery, evidence synthesis, product selection, ranking, and explanation—
+while putting an independent, bounded server-side fact boundary between its
+draft and the UI. OpenAI chooses *what to recommend*. The verifier decides
+*which identity and transactional facts are safe to display*.
+
+The replacement target flow is:
+
+```text
+structured shopper request
+  -> ReviewRadar validates and inserts the fields into the master prompt
+  -> one Terra/high autonomous Responses API call with hosted web_search
+  -> provisional ranked slate, narrative, field-level source IDs, and source URLs
+  -> bounded exact-identity / exact-offer verifier over already-returned URLs
+  -> verified display facts plus source-bound narrative
+  -> UI in the surviving OpenAI relative order
+```
+
+Call 1 remains conditional and is absent for ReviewRadar's complete structured
+form. It may later organize genuinely messy or ambiguous input, but it is not
+part of H1/H2 and cannot research or recommend products.
+
+#### H0 authority and trust contract
+
+- The autonomous response is authoritative for candidate identity proposals,
+  product selection, rank, comparison, and narrative only after the existing
+  schema, requirement, source-membership, and hostile-input checks pass.
+- Model-authored price, currency, seller, purchase URL, availability, image,
+  and owner-rating/count are **provisional hints**. They never become trusted
+  merely because a registered source URL contains the same value somewhere.
+- The verifier is authoritative for displayed identity and transactional facts.
+  It may emit an independently observed value from a source entity that proves
+  the same exact product—for example, replacing a provisional `$319.99` with an
+  exact HZ4002 offer of `$329.99`. This is bounded fact materialization, not
+  recommendation repair: it may not introduce a product, change rank, generate
+  a query, choose a substitute, or infer a missing identity.
+- Exact-model corroboration prefers stable identifiers (`model`, `sku`, `mpn`,
+  or `gtin`) and otherwise requires non-conflicting brand plus strong model
+  tokens within the same product entity. Page titles, URL membership, related-
+  product carousels, and family-name similarity are insufficient alone.
+- A price/availability/image/rating is trusted only when it is attached to the
+  same verified product entity. Values found elsewhere on a multi-product page
+  are contradictions or unrelated evidence, not fallback candidates.
+- Editorial evidence may support narrative performance claims only for the
+  exact tested model. It can never become a purchase destination or establish
+  a current offer. Cross-model test evidence is removed from the affected
+  claims without automatically removing an independently verified product.
+- Arbitrary prose truth is not claimed to be mechanically solved. Displayable
+  narrative retains field-level source binding; primary and holdout gates use
+  sampled human semantic review. Exact identity and transactional fields use
+  the machine-verification boundary.
+- Verification decisions are reason-coded as `verified`, `contradicted`,
+  `inconclusive`, `unavailable`, or `cleared`. Every observed value records the
+  source URL and server observation time. Blocked or ambiguous evidence fails
+  closed; it never causes a model retry or product rescue.
+- The verifier may fetch only source URLs returned by the same autonomous
+  response. It may not discover, add, rescue, score, merge uncertain identities,
+  create narrative, or reorder products. Surviving products keep OpenAI's
+  relative order; fewer trustworthy cards are preferable to backfill.
+- Fetches are server-side and credential-free with HTTP(S)-only URLs, DNS/IP
+  blocking for local/private/link-local/metadata ranges, bounded redirect hops,
+  time, bytes, and content types, and no sensitive body logging.
+- `legacy` remains the default and rollback. H1/H2 are isolated evidence work;
+  they do not wire a route, edit `.env.local`, promote a flag, or affect users.
+
+#### H1 — offline verifier contract and mocked boundary
+
+**Approval/cost:** approved with H0; zero OpenAI, Serper, response retrieval,
+external page fetches, route changes, or user-visible behavior.
+
+Implement the smallest generalized verifier seam that can express the H0
+contract. Begin with fail-first adversarial evidence for: HZ4002's neighboring
+product price, AZ4002/AZ405KT1 cross-model editorial evidence, Miele's
+dealer-only action, and Dyson's absent current review breakdown. Separate page
+observation from policy so controlled fixtures can exercise both without
+network access. Add a mocked fetch seam with the H0 URL/redirect/size/type/
+timeout/SSRF contract, but do not dispatch it.
+
+**Pass only if:** the known unsafe fields are contradicted or cleared; safe
+identity/offer evidence remains usable; unrelated failures do not erase a whole
+card; no branch discovers, ranks, rescues, or narrates; no product/retailer/
+category exception is added; and the focused plus full verification wall is
+green. If the policy requires page-specific exceptions, stop instead of
+encoding them.
+
+**Recommended reasoning level:** Highest. This is the permanent transactional
+trust model even though its first execution is isolated.
+
+#### H2 — bounded ten-source direct-verification feasibility gate
+
+**Approval/cost:** approved after H1; zero OpenAI, Serper, response retrieval,
+search, retry, replacement, route, flag, or user-visible change. Inspect only
+the ten unique URLs already registered by the accepted `primary-01` response.
+Use at most ten top-level fetches, one per URL, no retry, at most two redirects
+per fetch, and a hard ceiling of 30 physical HTTP attempts including redirects.
+
+Run the H1 verifier against fresh, server-timestamped observations and compare
+its decisions with the frozen human audit. Record URL host, final URL, status,
+content type, bytes, redirects, extraction disposition, verification receipts,
+and a content hash; never record credentials, headers, cookies, or complete
+page bodies. Page drift is reported rather than silently treated as verifier
+error.
+
+**Pass only if:** there are zero false `verified` decisions; the HZ4002
+same-page price, AZ4002/AZ405KT1 mismatch, Miele dealer-only availability, and
+Dyson unavailable rating are caught when the current page still exposes the
+relevant evidence; at least three of four products retain independently
+verified identity and a usable destination; at least three retain a verified
+current offer or an honest unavailable/inconclusive disposition; and no
+retailer-specific rule is required.
+
+**Failure attribution:** distinguish hostile/blocked fetch, absent structured
+commerce data, page drift, extraction failure, and unsafe ambiguity. If direct
+fetching is unsafe or materially inadequate, stop before integration. Taylor
+then chooses between fewer verified cards, one separately approved
+verification-only exact-model provider experiment, or ending the hybrid. No
+provider contingency is authorized by H0-H2.
+
+**Recommended reasoning level:** High for collection; Highest for the
+feasibility judgment.
+
+#### Post-H2 dependency (not yet approved)
+
+```text
+OAI-H0 architecture freeze
+  -> H1 offline verifier contract and mocked boundary
+    -> H2 ten-source direct-verification feasibility
+      -> if direct verification passes: H3 default-off hybrid integration
+      -> if access/format alone blocks it: optional H2B exact-model verification oracle
+      -> if safe bounded verification is not viable: retain legacy and stop
+```
+
+H3 and later quality, holdout, rollout, or retirement work require new detailed
+gates and separate approval after the H2 evidence. The existing OAI-2B through
+OAI-10 sequence below is retained only as historical context and is not an
+active dependency map.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen
