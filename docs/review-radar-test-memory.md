@@ -1900,3 +1900,25 @@ a known conservative undercount.
   Typecheck/build/offline evaluation/diff checks pass; lint is 0 errors with
   the same 3 pre-existing warnings. H1 made zero external fetches and zero
   OpenAI/Serper calls; production remains unchanged.
+
+## OAI-H2 direct-verification feasibility memory — 2026-07-16
+
+- A direct verifier must treat access/format coverage as part of feasibility,
+  not merely parser quality. Ten registered URLs produced six bounded HTML
+  observations, two over-envelope responses, and two transport failures. Only
+  2/4 products retained independently verified identity plus destination.
+- Purchase-page structured entities worked safely for the accessible Miele and
+  Dyson cases: exact prices survived, dealer-only availability was unavailable,
+  and explicitly unavailable ratings were cleared.
+- Professional-test Product JSON-LD often describes the page topic, not the
+  exact tested specimen. It cannot by itself verify model-specific narrative or
+  imagery. Require a positive non-conflicting tested-model receipt; inconclusive
+  editorial identity must fail closed. RR-092 records the live AZ4002/AZ405KT1
+  gap.
+- A blocked purchase source must clear provisional price/URL rather than retain
+  model output. That is safe but may leave too few useful cards; safety and
+  consumer usefulness are independent gates.
+- H2 used 10 top-level/10 physical attempts, zero redirects/retries/OpenAI/
+  Serper. Runner `858ad9a`; evidence hash
+  `643b2e6b4f0028036a081c193554871db0e6974ad45d09bf9fb90a79eb769f46`.
+  H3 is blocked; production and flags remain unchanged.

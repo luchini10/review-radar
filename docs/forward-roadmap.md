@@ -1438,7 +1438,7 @@ encoding them.
 **Recommended reasoning level:** Highest. This is the permanent transactional
 trust model even though its first execution is isolated.
 
-#### H2 — bounded ten-source direct-verification feasibility gate
+#### H2 — bounded ten-source direct-verification feasibility gate (complete: FAIL 2026-07-16)
 
 **Approval/cost:** approved after H1; zero OpenAI, Serper, response retrieval,
 search, retry, replacement, route, flag, or user-visible change. Inspect only
@@ -1470,6 +1470,22 @@ provider contingency is authorized by H0-H2.
 
 **Recommended reasoning level:** High for collection; Highest for the
 feasibility judgment.
+
+**Actual result:** The commit-pinned runner `858ad9a` dispatched exactly ten
+registered top-level URL fetches and ten physical HTTP attempts, with no
+redirect, retry, OpenAI call, or Serper call. Six bounded HTML pages were
+available. Two responses exceeded the two-megabyte limit and both Best Buy
+pages failed at the transport layer. Only Miele and Dyson retained independently
+verified identity plus a usable destination (`2/4`, below the `3/4` floor).
+
+The verifier safely retained Miele's and Dyson's exact offers, marked Miele's
+dealer-only action unavailable, and cleared Dyson's unavailable owner-rating
+data. It did not preserve HZ4002's unsafe provisional price because the exact
+Best Buy source was inaccessible. However, the TechGearLab observation marked
+AZ4002 page identity and image verified from Product JSON-LD while failing to
+extract the frozen AZ405KT1 tested-model conflict. RR-092 therefore prevents a
+zero-false-verified finding. H2 fails on both coverage and unresolved editorial
+ambiguity. H3 is blocked; the direct-fetch verifier must not be integrated.
 
 #### Post-H2 dependency (not yet approved)
 

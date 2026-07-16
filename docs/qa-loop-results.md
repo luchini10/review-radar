@@ -7733,3 +7733,45 @@ across 137 suites; typecheck, production build, offline evaluation, and diff
 checks passed. Lint reported zero errors and the same three pre-existing
 warnings. H2 may now exercise this boundary only against the ten already
 registered source URLs under Taylor's existing bounded approval.
+
+## 🟧 Codex — OAI-H2 direct-verification feasibility (2026-07-16)
+
+**Verdict: FAIL — direct-fetch coverage and exact-model ambiguity block H3.**
+The commit-pinned runner `858ad9a` read the accepted `primary-01` fixture and
+fetched each of its ten unique registered URLs exactly once. Actuals were ten
+top-level fetches, ten physical HTTP attempts, zero redirects, zero retries,
+zero OpenAI/Serper calls, and zero replacement or newly discovered sources.
+
+| Source | Fetch/extraction | Frozen-audit comparison |
+|---|---|---|
+| Miele product | HTML / structured Product | Exact identity, `$899`, rating/count verified; `Find a dealer` correctly makes direct availability unavailable. |
+| Homes & Gardens | HTML / structured page-topic Product | No tested model exposed; source remains inconclusive for exact-model editorial proof. |
+| Consumer Reports PDF | `response_too_large` | Unsupported within the frozen HTML/2 MB envelope; no fact verified. |
+| Best Buy AZ4002 | `request_failed` | No retry; purchase identity/offer/destination unavailable. |
+| TechGearLab AZ4002 | HTML / structured Product | Product topic says AZ4002, but the extractor missed the frozen AZ405KT1 tested-model conflict; identity/image were marked verified while editorial model stayed inconclusive (RR-092). |
+| Best Buy HZ4002 | `request_failed` | No retry; provisional `$319.99` was not retained, but exact `$329.99` correction could not be demonstrated live. |
+| Dyson V16 | HTML / structured Product | Exact identity, `$979.99`, in-stock destination, and image verified; unavailable rating/count correctly cleared. |
+| Vacuum Wars | HTML / no structured Product | Exact tested model remained inconclusive; no transactional fact verified. |
+| Tom's Guide | `response_too_large` | No fact verified. |
+| Miele C3 transition | HTML / no structured Product | No transactional fact verified; source was not used to rescue any card. |
+
+Miele and Dyson were the only products retaining both independently verified
+identity and a usable destination: `2/4`, below the predeclared `3/4` floor.
+All four product offers were either independently verified or honestly removed/
+marked unavailable, but that safety result does not compensate for inadequate
+card coverage. The zero-false-verified gate cannot be certified because the
+TechGearLab page-topic Product record verified identity/image without positive
+tested-model proof, despite the frozen audit's cross-model conflict.
+
+The evidence is sanitized and untracked at
+`tests/fixtures/review-radar-live/oai-h2-verifier-2026-07-16/h2-result.json`.
+Input SHA-256 is
+`9d29d3dc991f09c696e32d813c8be8224af21ae0eb7fcdae29d8b87d4feb1867`;
+evidence SHA-256 is
+`643b2e6b4f0028036a081c193554871db0e6974ad45d09bf9fb90a79eb769f46`.
+Inspection found no persisted body, header, cookie, or credential fields.
+
+H3 is blocked. No route, mode flag, `.env.local`, deployment, production
+behavior, or user-facing result changed. The next possible decision is a
+separately approved, verification-only H2B exact-product oracle experiment,
+two-card degradation, or ending the hybrid; none is authorized by H2.

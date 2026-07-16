@@ -1,9 +1,9 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through OAI-2A source audit
+## Compiled for AI Agent Consumption — Phase 0 through OAI-H2 feasibility
 
 **Generated:** 2026-07-16
-**Scope:** All phases from initial measurement harness through the OAI-2A
-source-truth audit
+**Scope:** All phases from initial measurement harness through the OAI-H2
+direct-verification feasibility gate
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -20,13 +20,13 @@ only when maintaining this register or auditing its full history.
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 91 |
+| Total Issues | 92 |
 | Critical | 13 |
-| High | 40 |
+| High | 41 |
 | Medium | 33 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 5 |
+| Needs Investigation | 6 |
 | Fixed | 85 |
 | Won't Fix | 1 |
 
@@ -112,6 +112,7 @@ only when maintaining this register or auditing its full history.
 | C5 live-validation preflight | 2 |
 | C5 flag-on live validation | 1 |
 | OAI-2A source-truth audit | 1 |
+| OAI-H2 direct-verification feasibility | 1 |
 | Phase R4 — Live after-sample | 1 |
 | RR-061 image-provenance safety repair | 0 |
 | RR-061 round 4 / RR-080 image micro-phase | 1 |
@@ -3331,6 +3332,52 @@ test, not as a constraint that can weaken price truth.
 
 ---
 
+#### RR-092
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-092 |
+| **Phase** | OAI-H2 direct-verification feasibility |
+| **Severity** | High |
+| **Title** | Editorial Product markup can verify identity/image without proving the tested model |
+| **Status** | Needs Investigation |
+
+**Description:** The bounded H2 fetch of TechGearLab's Shark PowerDetect
+AZ4002 review extracted a structured Product entity named `Shark PowerDetect
+AZ4002` and therefore marked the page identity and its image `verified`. The
+separate editorial-model receipt was only `inconclusive`; the extractor did not
+recover the page's tested-model evidence. The frozen human audit found that the
+same review's specification table identifies the tested unit as `AZ405KT1`.
+Structured page-topic markup is therefore insufficient proof that the tested
+specimen, performance claims, or imagery belong to the proposed exact model.
+
+**Where it occurs:** `observeHybridSourceHtml()` and
+`verifyHybridProductSource()` in `lib/autonomousFactVerifier.ts`. Product JSON-
+LD identity and editorial tested-model identity are separate receipts, but the
+former can still verify identity/image when the latter is inconclusive.
+
+**Evidence:** Untracked H2 evidence
+`tests/fixtures/review-radar-live/oai-h2-verifier-2026-07-16/h2-result.json`,
+source `s5`, content hash
+`45ff49a7b4db846889f6496b733b889f46bbb0caf2f1827086c40bedd38c4dcd`.
+The observation recorded Product name `Shark PowerDetect AZ4002`, no extracted
+tested model, `identity=verified`, `imageUrl=verified`, and
+`editorialModel=inconclusive`. The same-day frozen source audit records the
+page's AZ405KT1 tested-model table.
+
+**Expected:** A professional-test source may support exact-model performance
+claims or model-specific imagery only when tested-model evidence is positively
+verified and non-conflicting. Page-topic Product markup alone must not upgrade
+an inconclusive tested-model result.
+
+**Suggested fix or next action:** Do not integrate the H1 verifier. First make
+professional-test evidence fail closed unless a generalized tested-model
+extractor or a separately verified exact-model oracle positively binds the
+tested unit. Preserve purchase-page exact-entity verification and avoid
+retailer-, publisher-, product-, or fixture-specific rules.
+
+---
+
 ## R7 readiness planning note — 2026-07-12
 
 No issue status changed. A zero-cost M3 provenance audit of the six R4-after
@@ -3538,17 +3585,40 @@ image regression occurred. The promotion gate fails; both recovery flags
 remain default-off, R7A remains blocked, and the next eligible phase is a
 separately approved zero-live trust-boundary diagnosis/repair.
 
+## OAI-H2 direct-verification feasibility note — 2026-07-16
+
+The H2 run used exactly ten registered top-level URLs and ten physical HTTP
+attempts, with zero redirects, retries, OpenAI calls, or Serper calls. Six
+pages returned bounded HTML; the Consumer Reports PDF and Tom's Guide page
+exceeded the two-megabyte envelope, while both Best Buy pages ended in a
+generic transport failure. No body, header, cookie, or credential was persisted.
+
+Miele and Dyson retained independently verified identity and destinations;
+their exact prices survived, Miele's dealer-only action was marked unavailable,
+and Dyson's unavailable owner-rating data was cleared. AZ4002 lost its purchase
+destination because Best Buy was inaccessible, while its TechGearLab source
+exposed RR-092. HZ4002 had no accessible exact-product observation, so its
+unsafe `$319.99` was not preserved but the same-page correction could not be
+demonstrated live.
+
+Only 2/4 products retained verified identity plus a usable destination, below
+the frozen 3/4 floor. The zero-false-verified gate also cannot be certified
+because of RR-092. H2 therefore fails before integration. RR-091 remains Needs
+Investigation because the exact HZ4002 page was inaccessible; no production
+path, flag, `.env.local`, or user-visible behavior changed.
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (5 issues)
+### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 - RR-091: Same-page related-product price can satisfy autonomous card binding
+- RR-092: Editorial Product markup can verify identity/image without proving the tested model
 
 ### Fixed (85 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
@@ -3565,3 +3635,6 @@ RR-038 through RR-044, and RR-046 through RR-090
    final overlap. Recovery stays default-off and R7A stays blocked.
 2. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
    but varied by model, while Tapo appeared raw and died in normalization.
+3. **RR-091 + RR-092** — the autonomous hybrid remains isolated and cannot be
+   integrated until exact transactional binding and exact tested-model
+   attribution pass an independently verified boundary.
