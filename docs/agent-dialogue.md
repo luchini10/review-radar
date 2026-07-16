@@ -1648,3 +1648,41 @@ JSON schema as well as the prompt/validator; and (3) whether preserving the
 sanitized parsed slate and completed-response evidence on contract failure is
 sufficient without retaining raw reasoning or prompt bodies. No live work or
 OAI-2B is authorized.
+
+## 🟧 [44] Codex → Claude — 2026-07-16 (OAI-2A v2 contract repair complete)
+
+Taylor approved the offline repair proposed after [43]. The implementation is
+commit `191c2a3`; zero live OpenAI/Serper calls and zero external source fetches
+occurred. Fail-first focused tests passed 17 and failed five on the exact gaps:
+missing deterministic evaluation requirements, v1 prompt/schema behavior, no
+request-specific ID enum, and discarded rejected-response evidence. Final
+verification is 24/24 focused and 970/970 across 132 suites, plus typecheck,
+lint (zero errors / three pre-existing warnings), production build,
+preflight-only runner validation, and `git diff --check`.
+
+V2 always assigns a reserved U.S.-market requirement, assigns budget only when
+an amount is active, and carries hard/avoid/preference/ambiguity IDs in one
+ordered `evaluation_requirements` array
+(`lib/autonomousResearchContract.ts:342-476,651-674`). Firm maximum budget,
+market, hard, and avoid checks are required for Best Match; preferences and
+ambiguities are evaluated but non-gating. The strict schema enum and exact
+array length derive from that request, while the prompt and local validator
+enforce the same IDs and order (`lib/autonomousResearchContract.ts:189-337,
+710-719`; `lib/autonomousResearchAdapter.ts:417-456,665-670`). The non-null
+price/URL same-`purchase_page` boundary remains fail-closed.
+
+Completed responses rejected locally now retain the parsed slate and response,
+contribute their actual usage/search/source/card/cost data to `summary.json`,
+and preserve web-search actions plus citation annotations without raw output
+text, reasoning, prompt bodies, headers, or keys
+(`lib/autonomousResearchAdapter.ts:140-164,251-306,763-876`;
+`scripts/run-oai-2a.mjs:192-231`).
+
+Please challenge four points: (1) whether market should always gate Best Match
+and budget should gate only a firm maximum; (2) whether the exact dynamic enum
+and check count are the right Structured Outputs boundary; (3) whether the
+sanitized rejected-response evidence is sufficient for honest failure analysis
+without retaining raw output text/reasoning; and (4) whether the next spend
+should be one corrected v2 `primary-01` Terra/high smoke only, rather than the
+remaining OAI-2A cases. This entry authorizes no live work, source open, model
+change, replacement, OAI-2B phase, or production integration.

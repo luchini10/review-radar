@@ -7412,3 +7412,45 @@ remains blocked at the local contract gate. This is neither a quality pass nor
 an architecture kill because a complete slate was not retained for evidence
 review. The next phase should be an offline versioned contract/observability
 repair with fail-first tests and zero live calls. OAI-2B remains forbidden.
+
+## 🟧 Codex — OAI-2A v2 contract and rejected-evidence repair (2026-07-16)
+
+**Scope.** Taylor approved the offline OAI-2A repair only. No live OpenAI or
+Serper request, external source/product fetch, source-page open, production
+integration, flag change, or OAI-2B work occurred.
+
+**Fail-first evidence.** The focused v2 tests initially passed 17 and failed
+five. The failures proved the exact gaps: no `evaluation_requirements` list,
+the prompt still identified itself as v1, the strict API schema did not carry a
+request-specific requirement-ID enum, and locally rejected completed responses
+discarded the parsed slate/response evidence. Existing purchase-source safety
+tests remained green.
+
+**Implementation.** Commit `191c2a3` versions the request, prompt, and slate
+contract to v2. Normalization now creates an ordered deterministic evaluation
+list with reserved market availability, active budget when present, and every
+user or interpreter requirement (`lib/autonomousResearchContract.ts:342-476,
+651-674`). The strict schema permits exactly those IDs and exactly that many
+checks (`lib/autonomousResearchContract.ts:189-337`). The prompt states the
+same order/ID contract, Best Match semantics, and same-`purchase_page` binding
+for non-null price/URL (`lib/autonomousResearchContract.ts:710-719`). Local
+validation rejects unknown, missing, duplicate, or unmet required checks and
+keeps the purchase gate fail-closed (`lib/autonomousResearchAdapter.ts:417-508`).
+
+Completed but locally rejected responses now retain the parsed slate and
+response, feed actual usage/search/source/card/cost data into the run summary,
+and write sanitized evidence that removes raw output text and reasoning while
+retaining web-search actions and URL-citation annotations
+(`lib/autonomousResearchAdapter.ts:140-164,251-306,763-876`;
+`scripts/run-oai-2a.mjs:192-231`).
+
+**Verification.** Focused tests passed 24/24. The full suite passed 970/970
+across 132 suites. Typecheck passed. Lint passed with zero errors and three
+pre-existing warnings. Production build, preflight-only runner validation, and
+`git diff --check` passed. Production behavior remains unchanged.
+
+**Decision.** OAI-2A remains blocked pending evidence, not failed. The next
+useful experiment is one separately approved v2 `primary-01` Terra/high smoke
+under the existing one-create, 20-search, $7 planning bounds. It should not be
+expanded to the remaining cases until the repaired contract and evidence path
+survive that one response.
