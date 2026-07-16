@@ -1,131 +1,114 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-16 by 🟧 Codex after the bounded OAI-2A source-truth audit.
-No live work or external page opening is currently approved.
+Updated: 2026-07-16 by 🟧 Codex after OAI-H0 architecture freeze.
+Architecture commit: `5edfb3d`.
 
 ## Efficient session start
 
 1. Read repository `AGENTS.md` in full.
 2. Read this handoff in full.
-3. Read the standing guardrails and active OAI section of
-   `docs/forward-roadmap.md`, including the OAI-2A actual-result stop note.
-4. Read `docs/agent-dialogue.md` from entry [47] onward.
-5. Before proposing more spend, treat OAI-2A as failed under its frozen gate;
-   do not continue to OAI-2B/OAI-3 without an owner-approved architecture
-   amendment.
+3. Read `docs/forward-roadmap.md` from OAI-2A's actual failure through the
+   active OAI-H0/H1/H2 replacement plan.
+4. Read `docs/agent-dialogue.md` from entry [48] onward.
+5. Treat OAI-2B through OAI-10 as historical/unreachable. Do not resume them.
 
 ## Current state
 
-- Production remains unchanged. The autonomous adapter, runner, and evidence
-  are isolated; the route, UI, flags, `.env.local`, deployment, and current
-  user-visible behavior did not change.
-- The final corrected `primary-01` Terra/high response used exactly one create,
-  10 hosted searches, 25 same-response polls, 118,706 total tokens, 134,580 ms,
-  and estimated $0.6818275. No Serper, retry, replacement, fallback, model
-  substitution, additional case, or OAI-2B action occurred.
-- The strict local v2 contract accepted three Best Matches and one Close Match
-  because all requirement IDs, source IDs, URLs, source roles, and
-  same-response membership checks passed.
-- Taylor then approved the bounded source-truth audit. It opened only the 10
-  unique pages already cited by that response, with zero OpenAI/Serper calls,
-  searches, replacement products, or code behavior changes.
-- The audit failed the architecture gate. Shark HZ4002 was shown at $319.99,
-  but the exact Best Buy HZ4002 block listed $329.99; $319.99 belonged to a
-  different related Shark product on the same page. Same-page URL membership
-  therefore allowed a neighboring product's price to bind to the card.
-- RR-091 records the generalized defect as High / Needs Investigation. URL
-  registration and `purchase_page` role do not prove that a price belongs to
-  the exact product section of a multi-product page.
-- A second exact-identity risk remains: the TechGearLab page titled for Shark
-  AZ4002 identifies its tested model in the specification table as AZ405KT1.
-  Exact-model performance claims are therefore unsafe/unverified for AZ4002.
-- Dyson's product page supports identity, $979.99, availability, and core
-  specifications, but currently exposes no support for the slate's 4.0/1,944
-  owner-rating breakdown because reviews are unavailable.
-- Five of the 10 sources fully supported their assigned use, four were partial
-  or exact-model unverified, and one directly contradicted the product/price
-  association. This conservative disposition is not a claim-support score.
-- Per the predeclared OAI-2A kill condition, the one-call direct-to-display
-  architecture is stopped. Do not run `primary-04`, `primary-12`, OAI-2B, or
-  OAI-3 under the current plan. The gate was not weakened after seeing the
-  result.
-- Sanitized live evidence remains untracked at
-  `tests/fixtures/review-radar-live/oai-2a-terra-2026-07-16-primary-01-v3-smoke-1d7a300/`.
-  Source-audit evidence and the decision are recorded in the latest
-  `docs/qa-loop-results.md` entry.
-- Issue register is 91 total / 85 Fixed / 5 Needs Investigation / 1 Won't Fix.
+- Production and the current route remain unchanged. OAI-H0 was docs only and
+  made no API call, external fetch, flag, `.env.local`, deployment, or
+  user-visible change.
+- The direct-to-display OAI-2A architecture remains failed. Its HZ4002
+  cross-product price, AZ4002/AZ405KT1 cross-model evidence, Miele dealer-only
+  action, and unavailable Dyson review data remain the frozen adversarial set.
+- Taylor approved a different hybrid experiment through H2. OpenAI owns
+  discovery, product selection, ranking, and source-bound narrative. A bounded
+  verifier is authoritative for displayed identity, price, seller, purchase
+  destination, availability, image, and owner-rating/count facts.
+- The verifier may materialize an independently observed transactional value
+  only from evidence attached to the same exact product entity. It may not
+  discover, add, rescue, rank, reorder, narrate, or infer an uncertain identity.
+- H1 is offline. H2 may fetch only the ten already-returned `primary-01` source
+  URLs, once each, with at most two redirects and 30 total HTTP attempts. H2
+  permits zero OpenAI, Serper, response retrieval, search, retry, or replacement.
+- No H2B provider contingency, H3 integration, quality sample, holdout,
+  promotion, or cleanup is approved.
+- Issue register remains 91 total / 85 Fixed / 5 Needs Investigation / 1 Won't
+  Fix. RR-091 remains High / Needs Investigation until evidence proves the new
+  boundary prevents same-page cross-product fact binding.
 
-## Recommended next task — explicit approval required
+## Current flag state
 
-Run a zero-live architecture reset before any more implementation or spend.
-Amend the active OAI roadmap in place; do not create another plan document.
+- `.env.local` remains unmodified.
+- `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`.
+- `REVIEW_RADAR_LLM_NARRATION=off`.
+- The autonomous/hybrid path is isolated and has no production mode flag yet.
+- Legacy remains the only user-visible path and rollback baseline.
 
-1. Mark one-call OpenAI research followed by direct UI display as rejected.
-2. Compare three honest alternatives against RR-091 and the product objective:
-   - OpenAI discovery/ranking plus a bounded server-side verifier for exact
-     identity, purchase URL, price, availability, image, and owner-rating
-     facts (**recommended starting hypothesis**).
-   - OpenAI discovery plus a separate verification-only provider or model call
-     when direct page verification is inconclusive.
-   - Stop the OAI migration and retain the legacy pipeline.
-3. Keep verification non-recommending: it may verify, clear, downgrade, or
-   reject; it may not search, rescue, add, score, or reorder products.
-4. Define two trust tiers. Purchase/identity facts must be independently
-   machine-verifiable before display. Prose performance claims retain explicit
-   source binding plus sampled human semantic audit; do not falsely claim a
-   deterministic semantic oracle.
-5. Use the already-audited HZ4002 related-price page, AZ4002/AZ405KT1 mismatch,
-   Miele dealer-only purchase shape, and unavailable Dyson reviews as the
-   frozen adversarial examples. Do not buy new evidence for the decision.
-6. State the new dependency order, request/fetch/cost ceilings, fail-closed
-   behavior, and promotion gate. Taylor chooses whether the stronger hybrid is
-   acceptable before any mocked verifier implementation begins.
-7. Stop and report the amended recommendation. No code or live activity is
-   implied by architecture approval.
+## Next approved task — H1
 
-This is better than repairing the prompt and rerunning OAI-2A. The failure is
-not missing wording: the model cited the correct page but selected a price from
-the wrong product section. A model-authored quote can make the mistake easier
-to inspect, but only independent verification can enforce purchase-fact truth.
+Implement the offline verifier contract and mocked boundary exactly as frozen
+in OAI-H0:
 
-**Recommended reasoning level: Highest.** This decision changes the core
-one-call architecture, cost model, and safety boundary. Lower reasoning is
-appropriate again after the architecture and acceptance rules are frozen.
+1. Add generalized observation and reason-coded verification contracts.
+2. Separate page extraction from verification policy.
+3. Reproduce HZ4002 neighboring-price, AZ4002/AZ405KT1 cross-model,
+   Miele dealer-only, and Dyson missing-rating behavior in fail-first fixtures.
+4. Add the mocked safe-fetch seam and its HTTP(S), redirect, timeout, byte,
+   content-type, DNS/IP, credential, and logging boundaries without dispatching
+   any external request.
+5. Prove safe facts survive while unsafe fields are contradicted, cleared, or
+   honestly marked inconclusive; no branch may discover, rank, rescue, or
+   narrate.
+6. Run focused tests, the complete test wall, typecheck, lint, build, offline
+   evaluation, and diff checks. Commit H1 separately before H2.
+
+After H1 passes, proceed to the separately scoped H2 ten-source fetch gate that
+Taylor approved in the same kickoff. Stop before any H2B/H3 decision.
+
+**Recommended reasoning level: Highest for H1.** The implementation defines
+the exact-product and exact-offer trust boundary. H2 collection can use High,
+but its feasibility judgment returns to Highest.
 
 ## Hard boundaries
 
-- No OpenAI/Serper call, response retrieval, external page open, retry,
-  replacement, fallback, model substitution, or additional case without new
-  explicit approval.
-- OAI-2A is failed. No OAI-2B, OAI-3, production integration, flag promotion,
-  `.env.local` edit, deployment, or user-visible change under the current plan.
-- Do not weaken the OAI-2A gate, relabel the response as a quality pass, or
-  treat same-page URL membership as semantic support.
-- Any future verifier may inspect only already-returned source URLs and may not
-  become a discovery, rescue, ranking, or narration system.
-- Preserve generalized price, citation, requirement, product-type, identity,
-  image, eligibility, dedupe, URL, source-quality, and hard-constraint gates.
-- No benchmark answer may enter prompts, requests, verification, ranking, or
-  app-behavior tests.
-- Live fixtures and pre-existing untracked artifacts stay untracked. Stage
-  explicit files only; never use `git add -A`.
-- Taylor is the sole approver. One phase per explicit approval; stop and report
-  after it.
+- H1: zero OpenAI, Serper, response retrieval, external fetch, route, flag,
+  `.env.local`, deployment, or user-visible change.
+- H2: only the ten registered source URLs; ten top-level fetches, no retry, at
+  most two redirects each, and no more than 30 physical HTTP attempts.
+- Never log or persist credentials, cookies, headers, full page bodies, model
+  reasoning, or raw OpenAI responses.
+- No product-, retailer-, brand-, category-, or fixture-specific production
+  rule. A need for such a rule is an H1/H2 failure signal.
+- Model output cannot establish transactional truth merely by citing a URL.
+  Values must bind to the independently verified exact product entity.
+- No benchmark answer enters prompts, verification, ranking, or app behavior.
+- Live fixtures and all pre-existing untracked artifacts remain untracked.
+  Stage explicit phase files only; never use `git add -A`.
+- H3 and all later behavior work require a new owner decision after H2.
 
 ## Outstanding review debt
 
-- Entries [42]–[47] ask Claude to review the OAI lifecycle and accepted-smoke
-  reasoning.
-- Entry [48] asks Claude to challenge the bounded audit, RR-091 diagnosis, and
-  architecture-stop decision.
+- Entries [42]–[48] still await Claude's review of the OAI lifecycle, accepted
+  smoke, failed source audit, and architecture stop.
+- Entry [49] asks Claude to challenge the new authoritative-facts boundary and
+  H1/H2 gates. This review does not block Taylor's explicit H1/H2 approval, but
+  any evidence-backed objection must be resolved before H3.
+
+## Verification at H0
+
+- `git diff --check` passed for the architecture amendment.
+- Architecture commit `5edfb3d` modified only `docs/forward-roadmap.md`.
+- No test wall was necessary for the behaviorless docs-only amendment; H1 must
+  run the complete wall before H2.
 
 ## Retrieval map
 
 | Need | Retrieve |
 |---|---|
-| OAI invariants, OAI-2A gate, and actual stop | `docs/forward-roadmap.md` active OAI section |
-| Audit result | latest `docs/qa-loop-results.md` entry |
-| New defect | `docs/RR-Issues-Report.md` RR-091 |
-| Accepted response | untracked `tests/fixtures/review-radar-live/oai-2a-terra-2026-07-16-primary-01-v3-smoke-1d7a300/primary-01.json` |
-| Local source membership boundary | `lib/autonomousResearchAdapter.ts` |
-| Peer review | `docs/agent-dialogue.md` entry [47] onward |
+| Active hybrid contract and H1/H2 gates | `docs/forward-roadmap.md` OAI-H0 section |
+| Failed direct-display evidence | latest `docs/qa-loop-results.md` OAI-2A audit |
+| Same-page price defect | `docs/RR-Issues-Report.md` RR-091 |
+| Accepted slate/source URLs | untracked `tests/fixtures/review-radar-live/oai-2a-terra-2026-07-16-primary-01-v3-smoke-1d7a300/primary-01.json` |
+| Current mechanical validator | `lib/autonomousResearchAdapter.ts` |
+| Current output/trust contract | `lib/autonomousResearchContract.ts` |
+| Peer review | `docs/agent-dialogue.md` entry [48] onward |

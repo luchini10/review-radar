@@ -7671,3 +7671,29 @@ architecture reset: compare a purchase-fact-only direct verifier, structured
 commerce metadata, and an independent verification provider/call, then amend
 the roadmap only if Taylor chooses to keep OpenAI-led discovery. The one-call
 direct-to-UI design is not safe enough as currently specified.
+
+## 🟧 Codex — OAI-H0 verified-hybrid architecture freeze (2026-07-16)
+
+**Verdict: COMPLETE — docs-only architecture replacement, zero live work.**
+Taylor explicitly approved H0 followed by H1 and H2. Commit `5edfb3d` amends
+the active roadmap without weakening or relabeling the failed OAI-2A result.
+No OpenAI/Serper call, response retrieval, external page fetch, route change,
+flag edit, `.env.local` edit, deployment, or user-visible behavior occurred.
+
+The replacement assigns autonomous OpenAI research responsibility for product
+selection, rank, narrative, and source proposals. Independently observed
+exact-product evidence is authoritative for display identity and transactional
+facts. A verifier may materialize a corrected value only from the same exact
+product entity; it cannot discover, add, rescue, score, reorder, or narrate.
+Arbitrary prose remains source-bound and subject to sampled human semantic
+review rather than a false claim of deterministic truth.
+
+H1 is an offline contract and mocked-boundary phase over the four frozen
+adversarial cases. H2 is limited to the ten already-returned source URLs, one
+top-level fetch per URL, no retry, at most two redirects, and 30 total HTTP
+attempts. Both send zero OpenAI and zero Serper requests. H2B, H3, later live
+quality work, promotion, and cleanup remain unapproved.
+
+`git diff --check` passed before the architecture commit. A behavior test wall
+was not run for the single-file docs-only decision; H1 must run focused and
+full verification before any H2 fetch.
