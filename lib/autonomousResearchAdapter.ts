@@ -764,10 +764,10 @@ export async function runAutonomousResearch({
   const ledger = blankLedger(normalizedRequest, config, request);
   const startedAt = now();
   let response: unknown;
-  let parsedSlate: AutonomousResearchSlate | undefined;
   const fail = (
     reason: AutonomousFailureReason,
     details: string[],
+    slate?: AutonomousResearchSlate,
   ): AutonomousResearchResult => {
     ledger.failureReason = reason;
     ledger.durationMs = Math.max(0, now() - startedAt);
@@ -776,7 +776,7 @@ export async function runAutonomousResearch({
       reason,
       details,
       ledger,
-      ...(parsedSlate ? { slate: parsedSlate } : {}),
+      ...(slate ? { slate } : {}),
       ...(response !== undefined ? { response } : {}),
     };
   };
@@ -854,22 +854,24 @@ export async function runAutonomousResearch({
       parsed.error.issues.map((issue) => `${issue.path.join(".")}:${issue.code}`),
     );
   }
-  parsedSlate = parsed.data;
+  const parsedSlate = parsed.data;
   const contract = validateAutonomousSlateContract(parsedSlate);
-  if (!contract.valid) return fail("contract_invalid", contract.errors);
+  if (!contract.valid) {
+    return fail("contract_invalid", contract.errors, parsedSlate);
+  }
   const requestContract = validateAutonomousSlateForRequest(
     parsedSlate,
     normalizedRequest,
   );
   if (!requestContract.valid) {
-    return fail("contract_invalid", requestContract.errors);
+    return fail("contract_invalid", requestContract.errors, parsedSlate);
   }
 
   const unverifiedSourceUrls = parsedSlate.sources
     .filter((source) => !citationUrlIsVerified(source.url, verifiedUrls))
     .map((source) => source.url);
   if (unverifiedSourceUrls.length) {
-    return fail("source_not_in_response", unverifiedSourceUrls);
+    return fail("source_not_in_response", unverifiedSourceUrls, parsedSlate);
   }
 
   ledger.durationMs = Math.max(0, now() - startedAt);

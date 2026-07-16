@@ -17,11 +17,25 @@ import {
 import { AUTONOMOUS_EVALUATION_CATALOG } from "../lib/autonomousResearchEvaluation.ts";
 import { createOpenAIClient } from "../lib/openaiClient.ts";
 
+const V2_SMOKE_MODE = process.argv.includes("--primary-01-v2-smoke");
 const SMOKE_MODE = process.argv.includes("--primary-01-smoke");
-const RUN_MODE = SMOKE_MODE
+const RUN_MODE = V2_SMOKE_MODE
+  ? {
+      name: "primary-01-v2-smoke",
+      version: "oai-2a-terra-primary-01-smoke-v2",
+      contractCommit: "191c2a3",
+      outputDirectory: path.resolve(
+        "tests/fixtures/review-radar-live/oai-2a-terra-2026-07-16-primary-01-v2-smoke-191c2a3",
+      ),
+      caseIds: ["primary-01"],
+      maxCreateCalls: 1,
+      maxWebSearchCalls: 20,
+    }
+  : SMOKE_MODE
   ? {
       name: "primary-01-smoke",
       version: "oai-2a-terra-primary-01-smoke-v1",
+      contractCommit: "8502df8",
       outputDirectory: path.resolve(
         "tests/fixtures/review-radar-live/oai-2a-terra-2026-07-15-primary-01-smoke",
       ),
@@ -32,6 +46,7 @@ const RUN_MODE = SMOKE_MODE
   : {
       name: "full-oai-2a",
       version: "oai-2a-terra-evidence-v1",
+      contractCommit: "9fc4eda",
       outputDirectory: path.resolve(
         "tests/fixtures/review-radar-live/oai-2a-terra-2026-07-15",
       ),
@@ -92,6 +107,7 @@ async function main() {
       `${JSON.stringify({
         status: "preflight_passed",
         runMode: RUN_MODE.name,
+        contractCommit: RUN_MODE.contractCommit,
         outputDirectory: RUN_MODE.outputDirectory,
         ceilings: {
           createCalls: RUN_MODE.maxCreateCalls,
@@ -143,6 +159,7 @@ async function main() {
   const summary = {
     version: RUN_MODE.version,
     run_mode: RUN_MODE.name,
+    contract_commit: RUN_MODE.contractCommit,
     started_at: new Date().toISOString(),
     completed_at: null,
     model: OAI_2A_PROPOSED_CONFIG.research.model,
@@ -207,6 +224,7 @@ async function main() {
       const evidence = {
         version: RUN_MODE.version,
         run_mode: RUN_MODE.name,
+        contract_commit: RUN_MODE.contractCommit,
         captured_at: new Date().toISOString(),
         evaluation_case: evaluationCase,
         deterministic_normalized_request: normalized,
