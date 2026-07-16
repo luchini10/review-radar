@@ -1872,3 +1872,31 @@ a known conservative undercount.
   focused 131/131 and full 937/937 across 129 suites pass. Typecheck/build/eval
   pass; lint is 0 errors/3 pre-existing warnings. M3 C4 replay is directional;
   live recall, safety, stability, cost, and latency remain unproven.
+
+## OAI-H1 autonomous fact-verifier boundary — 2026-07-16
+
+- A registered citation URL, page title, heading, product family, or related
+  product section is discovery evidence only. It cannot independently verify
+  exact product identity or authorize a displayed transactional fact.
+- Exact identity requires normalized brand plus a stable model token observed
+  on the same structured Product entity through model, SKU, MPN, GTIN, or the
+  entity name. Transactional facts bind only to offers on that exact entity.
+- The verifier is authoritative for identity, price, currency, seller,
+  purchase destination, availability, image, and owner-rating/count. It may
+  replace a provisional value with an independently observed exact-entity
+  value, but cannot discover, add, rescue, rank, reorder, or narrate products.
+- Editorial sources may support source-bound professional claims only after
+  exact-model verification. They cannot establish purchase facts or owner
+  ratings. A page whose tested-model evidence conflicts with the proposed card
+  is contradicted even when its title or URL names the proposed product.
+- Dealer-only action is not direct purchase availability. Absent or explicitly
+  unavailable review data clears provisional owner rating/count instead of
+  preserving model-authored values.
+- The fetch boundary is HTTP(S)-only, rejects credentials and non-default
+  ports, resolves and pins a public address, revalidates every redirect, blocks
+  private/reserved/link-local/metadata destinations, and enforces redirect,
+  timeout, byte, content-type, and final-status limits without retries.
+- Commit `a9a46c6`; focused 11/11 and full 993/993 across 137 suites pass.
+  Typecheck/build/offline evaluation/diff checks pass; lint is 0 errors with
+  the same 3 pre-existing warnings. H1 made zero external fetches and zero
+  OpenAI/Serper calls; production remains unchanged.

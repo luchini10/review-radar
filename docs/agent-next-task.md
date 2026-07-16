@@ -1,7 +1,7 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-16 by 🟧 Codex after OAI-H0 architecture freeze.
-Architecture commit: `5edfb3d`.
+Updated: 2026-07-16 by 🟧 Codex after OAI-H1 verifier implementation.
+Architecture commit: `5edfb3d`. H1 code commit: `a9a46c6`.
 
 ## Efficient session start
 
@@ -14,9 +14,9 @@ Architecture commit: `5edfb3d`.
 
 ## Current state
 
-- Production and the current route remain unchanged. OAI-H0 was docs only and
-  made no API call, external fetch, flag, `.env.local`, deployment, or
-  user-visible change.
+- Production and the current route remain unchanged. OAI-H1 added an isolated
+  verifier and mocked fetch boundary only; it made no API call, external fetch,
+  flag, `.env.local`, deployment, or user-visible change.
 - The direct-to-display OAI-2A architecture remains failed. Its HZ4002
   cross-product price, AZ4002/AZ405KT1 cross-model evidence, Miele dealer-only
   action, and unavailable Dyson review data remain the frozen adversarial set.
@@ -27,9 +27,10 @@ Architecture commit: `5edfb3d`.
 - The verifier may materialize an independently observed transactional value
   only from evidence attached to the same exact product entity. It may not
   discover, add, rescue, rank, reorder, narrate, or infer an uncertain identity.
-- H1 is offline. H2 may fetch only the ten already-returned `primary-01` source
-  URLs, once each, with at most two redirects and 30 total HTTP attempts. H2
-  permits zero OpenAI, Serper, response retrieval, search, retry, or replacement.
+- H1 is complete. H2 may fetch only the ten already-returned `primary-01`
+  source URLs, once each, with at most two redirects and 30 total HTTP attempts.
+  H2 permits zero OpenAI, Serper, response retrieval, search, retry, or
+  replacement.
 - No H2B provider contingency, H3 integration, quality sample, holdout,
   promotion, or cleanup is approved.
 - Issue register remains 91 total / 85 Fixed / 5 Needs Investigation / 1 Won't
@@ -44,35 +45,37 @@ Architecture commit: `5edfb3d`.
 - The autonomous/hybrid path is isolated and has no production mode flag yet.
 - Legacy remains the only user-visible path and rollback baseline.
 
-## Next approved task — H1
+## Next approved task — H2
 
-Implement the offline verifier contract and mocked boundary exactly as frozen
-in OAI-H0:
+Run the frozen ten-source feasibility gate through the H1 boundary:
 
-1. Add generalized observation and reason-coded verification contracts.
-2. Separate page extraction from verification policy.
-3. Reproduce HZ4002 neighboring-price, AZ4002/AZ405KT1 cross-model,
-   Miele dealer-only, and Dyson missing-rating behavior in fail-first fixtures.
-4. Add the mocked safe-fetch seam and its HTTP(S), redirect, timeout, byte,
-   content-type, DNS/IP, credential, and logging boundaries without dispatching
-   any external request.
-5. Prove safe facts survive while unsafe fields are contradicted, cleared, or
-   honestly marked inconclusive; no branch may discover, rank, rescue, or
-   narrate.
-6. Run focused tests, the complete test wall, typecheck, lint, build, offline
-   evaluation, and diff checks. Commit H1 separately before H2.
+1. Read the accepted `primary-01` slate and its ten registered source URLs.
+2. Fetch each registered URL once with no retry, at most two redirects per
+   source, and no more than 30 total HTTP attempts.
+3. Revalidate DNS/IP safety at every redirect and enforce the H1 timeout,
+   content-type, byte, credential, and non-default-port limits.
+4. Persist only sanitized fetch metadata, observations, reason-coded receipts,
+   and verified card projections. Never persist bodies, headers, cookies, or
+   credentials.
+5. Evaluate the four frozen cases: HZ4002 neighboring price,
+   AZ4002/AZ405KT1 cross-model evidence, Miele dealer-only purchase action, and
+   unavailable Dyson owner-review data.
+6. Apply the frozen feasibility gates: zero false verified results; known
+   unsafe fields contradicted, cleared, or honestly inconclusive; at least 3/4
+   product identities and usable destinations; at least 3/4 verified offers or
+   honest unavailable/inconclusive outcomes.
+7. Stop and report. H2B, H3, production integration, flag creation, promotion,
+   and another provider remain unapproved.
 
-After H1 passes, proceed to the separately scoped H2 ten-source fetch gate that
-Taylor approved in the same kickoff. Stop before any H2B/H3 decision.
-
-**Recommended reasoning level: Highest for H1.** The implementation defines
-the exact-product and exact-offer trust boundary. H2 collection can use High,
-but its feasibility judgment returns to Highest.
+**Recommended reasoning level: High for bounded H2 collection; Highest for the
+final feasibility judgment.** The fetch runner is tightly specified, while the
+architecture decision requires adversarial interpretation of incomplete live
+evidence.
 
 ## Hard boundaries
 
-- H1: zero OpenAI, Serper, response retrieval, external fetch, route, flag,
-  `.env.local`, deployment, or user-visible change.
+- H1 is frozen at `a9a46c6`: zero OpenAI, Serper, response retrieval, external
+  fetch, route, flag, `.env.local`, deployment, or user-visible change.
 - H2: only the ten registered source URLs; ten top-level fetches, no retry, at
   most two redirects each, and no more than 30 physical HTTP attempts.
 - Never log or persist credentials, cookies, headers, full page bodies, model
@@ -90,16 +93,19 @@ but its feasibility judgment returns to Highest.
 
 - Entries [42]–[48] still await Claude's review of the OAI lifecycle, accepted
   smoke, failed source audit, and architecture stop.
-- Entry [49] asks Claude to challenge the new authoritative-facts boundary and
-  H1/H2 gates. This review does not block Taylor's explicit H1/H2 approval, but
-  any evidence-backed objection must be resolved before H3.
+- Entries [49]–[50] ask Claude to challenge the authoritative-facts boundary,
+  H1 implementation, and H2 gates. This review does not block Taylor's explicit
+  H2 approval, but any evidence-backed objection must be resolved before H3.
 
-## Verification at H0
+## Verification at H1
 
-- `git diff --check` passed for the architecture amendment.
-- Architecture commit `5edfb3d` modified only `docs/forward-roadmap.md`.
-- No test wall was necessary for the behaviorless docs-only amendment; H1 must
-  run the complete wall before H2.
+- Focused verifier suite passed 11/11.
+- Full suite passed 993/993 across 137 suites.
+- Typecheck, production build, offline evaluation, and diff checks passed.
+- Lint reported zero errors and the same three pre-existing warnings.
+- H1 code commit `a9a46c6` contains only
+  `lib/autonomousFactVerifier.ts` and
+  `tests/autonomousFactVerifier.test.mjs`.
 
 ## Retrieval map
 
@@ -109,6 +115,6 @@ but its feasibility judgment returns to Highest.
 | Failed direct-display evidence | latest `docs/qa-loop-results.md` OAI-2A audit |
 | Same-page price defect | `docs/RR-Issues-Report.md` RR-091 |
 | Accepted slate/source URLs | untracked `tests/fixtures/review-radar-live/oai-2a-terra-2026-07-16-primary-01-v3-smoke-1d7a300/primary-01.json` |
-| Current mechanical validator | `lib/autonomousResearchAdapter.ts` |
-| Current output/trust contract | `lib/autonomousResearchContract.ts` |
+| H1 verifier and safe fetch boundary | `lib/autonomousFactVerifier.ts` |
+| H1 regression wall | `tests/autonomousFactVerifier.test.mjs` |
 | Peer review | `docs/agent-dialogue.md` entry [48] onward |

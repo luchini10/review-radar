@@ -7697,3 +7697,39 @@ quality work, promotion, and cleanup remain unapproved.
 `git diff --check` passed before the architecture commit. A behavior test wall
 was not run for the single-file docs-only decision; H1 must run focused and
 full verification before any H2 fetch.
+
+## 🟧 Codex — OAI-H1 bounded autonomous fact verifier (2026-07-16)
+
+**Verdict: PASS — offline verifier contract complete; production remains
+unchanged.** Commit `a9a46c6` adds the isolated verifier and its adversarial
+tests. No external source was fetched, and no OpenAI, Serper, response
+retrieval, route, flag, `.env.local`, deployment, or user-visible change
+occurred.
+
+The fail-first cases reproduce all four frozen trust failures. HZ4002 binds to
+its own `$329.99` structured offer and rejects the neighboring `$319.99`
+product. An AZ4002-titled editorial page whose tested-model table identifies
+AZ405KT1 is contradicted. Miele's exact `$899` identity survives while `Find a
+dealer` is marked unavailable as direct purchase evidence. Dyson's exact
+`$979.99` offer survives while explicitly unavailable review data clears the
+provisional rating and count.
+
+The boundary separates HTML observation from verification policy. Exact
+identity requires normalized brand plus a stable model token on the same
+structured Product entity; URL or title membership alone is insufficient.
+Reason-coded receipts record every verified, contradicted, inconclusive,
+unavailable, cleared, or corrected field. Editorial sources cannot establish
+purchase facts or owner ratings. No verifier branch discovers, adds, rescues,
+ranks, reorders, or narrates.
+
+The mocked safe-fetch seam rejects credentials, non-default ports, private or
+reserved DNS targets, and redirects to private addresses before transport. It
+pins a validated public address and enforces redirect, timeout, byte,
+content-type, and final-status boundaries without retries or response-body
+logging.
+
+**Verification.** Focused tests passed 11/11. The complete wall passed 993/993
+across 137 suites; typecheck, production build, offline evaluation, and diff
+checks passed. Lint reported zero errors and the same three pre-existing
+warnings. H2 may now exercise this boundary only against the ten already
+registered source URLs under Taylor's existing bounded approval.
