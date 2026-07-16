@@ -17,9 +17,22 @@ import {
 import { AUTONOMOUS_EVALUATION_CATALOG } from "../lib/autonomousResearchEvaluation.ts";
 import { createOpenAIClient } from "../lib/openaiClient.ts";
 
+const V3_SMOKE_MODE = process.argv.includes("--primary-01-v3-smoke");
 const V2_SMOKE_MODE = process.argv.includes("--primary-01-v2-smoke");
 const SMOKE_MODE = process.argv.includes("--primary-01-smoke");
-const RUN_MODE = V2_SMOKE_MODE
+const RUN_MODE = V3_SMOKE_MODE
+  ? {
+      name: "primary-01-v3-smoke",
+      version: "oai-2a-terra-primary-01-smoke-v3",
+      contractCommit: "1d7a300",
+      outputDirectory: path.resolve(
+        "tests/fixtures/review-radar-live/oai-2a-terra-2026-07-16-primary-01-v3-smoke-1d7a300",
+      ),
+      caseIds: ["primary-01"],
+      maxCreateCalls: 1,
+      maxWebSearchCalls: 20,
+    }
+  : V2_SMOKE_MODE
   ? {
       name: "primary-01-v2-smoke",
       version: "oai-2a-terra-primary-01-smoke-v2",
