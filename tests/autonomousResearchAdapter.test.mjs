@@ -339,7 +339,9 @@ describe("OAI-1 isolated Responses adapter", () => {
 
     assert.equal(result.ok, true, JSON.stringify(result));
     assert.deepEqual(calls.map((call) => call.method), ["create", "retrieve"]);
-    assert.deepEqual(calls[1].query, {});
+    assert.deepEqual(calls[1].query, {
+      include: ["web_search_call.action.sources"],
+    });
     assert.equal(calls[1].options.timeout, 120_000);
     assert.equal(result.ledger.polls, 1);
     assert.equal(result.ledger.durationMs, 500);

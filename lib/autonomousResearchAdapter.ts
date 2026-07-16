@@ -54,6 +54,10 @@ export const AUTONOMOUS_RESEARCH_LIMITS = {
   maxPolls: 180,
 } as const;
 
+export const AUTONOMOUS_RESEARCH_RESPONSE_INCLUDE = [
+  "web_search_call.action.sources",
+] as const;
+
 export type AutonomousUsage = {
   inputTokens: number;
   cachedInputTokens: number;
@@ -212,6 +216,11 @@ function numberAt(record: Record<string, unknown>, key: string) {
 function sanitizeDiagnosticText(value: string, maxLength: number) {
   return value
     .replace(/\bsk-[A-Za-z0-9_-]{8,}\b/g, "[redacted-api-key]")
+    .replace(/\bBearer\s+[A-Za-z0-9._~+/=-]{8,}/gi, "Bearer [redacted]")
+    .replace(
+      /\b([A-Z][A-Z0-9_]*_JSON_START)\b[\s\S]*?\b[A-Z][A-Z0-9_]*_JSON_END\b/g,
+      "$1 [redacted-json-payload]",
+    )
     .replace(/\s+/g, " ")
     .slice(0, maxLength);
 }
@@ -655,7 +664,7 @@ export function buildAutonomousResearchRequest(
     max_tool_calls: config.maxToolCalls,
     tools: [{ type: "web_search" }],
     tool_choice: "required",
-    include: ["web_search_call.action.sources"],
+    include: [...AUTONOMOUS_RESEARCH_RESPONSE_INCLUDE],
     input: [
       { role: "system", content: prompt.system },
       { role: "user", content: prompt.user },
@@ -746,6 +755,22 @@ function blankLedger(
   };
 }
 
+function recordResponseSnapshot(
+  ledger: AutonomousResearchLedger,
+  response: unknown,
+) {
+  ledger.status = responseStatus(response);
+  ledger.modelReturned =
+    isRecord(response) && typeof response.model === "string"
+      ? response.model
+      : ledger.modelReturned;
+  ledger.usage = responseUsage(response);
+  const verifiedUrls = collectVerifiedSourceUrls(response);
+  ledger.sourceCount = verifiedUrls.size;
+  ledger.sourceHosts = sourceHosts(verifiedUrls);
+  return verifiedUrls;
+}
+
 export async function runAutonomousResearch({
   client,
   normalizedRequest,
@@ -793,7 +818,7 @@ export async function runAutonomousResearch({
   }
 
   ledger.responseId = responseId(response);
-  ledger.status = responseStatus(response);
+  recordResponseSnapshot(ledger, response);
   if (!ledger.responseId) return fail("missing_response_id", []);
 
   while (["queued", "in_progress"].includes(responseStatus(response))) {
@@ -804,28 +829,26 @@ export async function runAutonomousResearch({
       return fail("poll_limit_exceeded", []);
     }
     await sleep(config.pollIntervalMs);
+    if (now() - startedAt >= config.overallTimeoutMs) {
+      return fail("overall_timeout", []);
+    }
     ledger.polls += 1;
     try {
       response = await client.responses.retrieve(
         ledger.responseId,
-        {},
+        { include: [...AUTONOMOUS_RESEARCH_RESPONSE_INCLUDE] },
         { timeout: config.requestTimeoutMs },
       );
     } catch (error) {
       return fail("request_error", safeRequestErrorDetails(error));
     }
-    ledger.status = responseStatus(response);
+    recordResponseSnapshot(ledger, response);
+    if (now() - startedAt >= config.overallTimeoutMs) {
+      return fail("overall_timeout", []);
+    }
   }
 
-  ledger.status = responseStatus(response);
-  ledger.modelReturned =
-    isRecord(response) && typeof response.model === "string"
-      ? response.model
-      : null;
-  ledger.usage = responseUsage(response);
-  const verifiedUrls = collectVerifiedSourceUrls(response);
-  ledger.sourceCount = verifiedUrls.size;
-  ledger.sourceHosts = sourceHosts(verifiedUrls);
+  const verifiedUrls = recordResponseSnapshot(ledger, response);
 
   if (["failed", "cancelled"].includes(ledger.status)) {
     return fail("terminal_failure", [ledger.status]);
