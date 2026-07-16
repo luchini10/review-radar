@@ -7811,3 +7811,38 @@ errors and the same three pre-existing warnings. Runner syntax/targeted lint and
 dry-run pass. The runner requires `--approved-searches=4`, checkpoints before
 and after each request, and refuses to repeat when evidence already exists.
 H3 remains blocked regardless of H2B outcome until a separate owner decision.
+
+## 🟧 Codex — OAI-H2B verification-oracle live result (2026-07-16)
+
+**Verdict: FAIL — safe rejection, zero usable merchant destinations.** Taylor
+approved exactly four Serper Shopping searches and four physical attempts as
+both planning basis and hard ceiling. The commit-pinned runner executed once.
+Actuals were four logical searches, four physical attempts, four HTTP 200
+responses, zero retries, zero fallbacks, zero replacements, zero cache reuse,
+zero additional queries, zero direct page fetches, zero OpenAI calls, and zero
+H3 work.
+
+| Target | Rows | Exact-title evidence | Verification result |
+|---|---:|---|---|
+| Shark AZ4002 | 40 | Best Buy listed exact AZ4002 at `$449.99`; three other AZ4002-bearing rows were parts/accessory-shaped. | Inconclusive: all exact-bearing rows exposed only Google wrapper links, not merchant product URLs. |
+| Miele 12704570 / SUZE0 | 40 | Generic Guard L1 Cat & Dog offers appeared, including `$899`, but no returned title carried `12704570` or `SUZE0`. | Inconclusive: exact stable identifier absent. |
+| Shark HZ4002 | 25 | Generic PowerDetect stick-vac offers appeared, but no returned title carried `HZ4002`. | Inconclusive: exact stable identifier absent. |
+| Dyson V16 Piston Animal | 16 | Eight V16-bearing offers appeared; the first was Dyson Official at `$979.99`, matching the frozen audit price. | Inconclusive: all exact-bearing rows exposed only Google wrapper links, not merchant product URLs. |
+
+Across all 121 sanitized rows, every URL exposed through `productLink`,
+`product_link`, or `link` had host `www.google.com`. The verifier rejected 107
+rows because the stable identifier was absent from the title, 12 exact-bearing
+rows because no non-Google merchant product URL existed, and two rows because
+the brand was absent. It accepted zero offers. The frozen human comparison
+therefore found zero false or unsafe accepted bindings, but mechanical coverage
+was `0/4`, below the required `3/4`.
+
+The result is an architecture failure, not a reason to weaken the boundary.
+Accepting Google wrappers would discard the exact merchant-destination proof
+H2B was created to supply. H3 remains blocked; no route, flag, `.env.local`,
+deployment, production behavior, or user-facing result changed. Sanitized
+evidence remains untracked at
+`tests/fixtures/review-radar-live/oai-h2b-commerce-2026-07-16/h2b-result.json`,
+SHA-256
+`224d15f154ffeb3aef5c065ccc0b4f4ac93048d42a18dc471a2c939327d551c`.
+Inspection found no persisted API key, headers, cookies, or credentials.

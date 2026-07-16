@@ -1503,12 +1503,13 @@ gates and separate approval after the H2 evidence. The existing OAI-2B through
 OAI-10 sequence below is retained only as historical context and is not an
 active dependency map.
 
-#### H2B — four-product verification-only commerce oracle
+#### H2B — four-product verification-only commerce oracle (failed 2026-07-16)
 
-**Owner direction:** Taylor said to proceed with the tiny H2B experiment on
-2026-07-16. This authorizes the zero-spend preflight and architecture contract.
-The required live-search budget is still a separate explicit approval because
-the direction did not state a numeric Serper search/attempt ceiling.
+**Owner direction:** Taylor first authorized the zero-spend preflight, then
+explicitly approved four Serper Shopping searches with four physical attempts
+as both the planning basis and hard ceiling. Retries, fallbacks, replacements,
+cache reuse, additional queries, direct page fetches, OpenAI calls, and H3 work
+were forbidden.
 
 **Objective:** test whether Serper Shopping can fill only the transactional
 verification gap that defeated direct fetch, without restoring Serper as a
@@ -1558,7 +1559,21 @@ isolated generalized accessory-offer veto now rejects it while preserving a
 complete product that includes an accessory. The complete wall passes
 1004/1004 across 138 suites; typecheck, build, offline evaluation, and diff
 checks pass; lint has zero errors and three pre-existing warnings. No provider
-request has been sent and production is unchanged.
+request had been sent at preflight close and production was unchanged.
+
+**Live actual and verdict:** FAIL. The runner made exactly four Shopping
+requests and four physical attempts, all HTTP 200, with no retry, fallback,
+replacement, cache reuse, additional query, page fetch, or OpenAI call. The
+responses contained 121 Shopping rows (40, 40, 25, and 16), but every URL
+exposed through `productLink`, `product_link`, or `link` was a `google.com`
+Shopping/search wrapper. Twelve rows carried a target stable identifier; all
+were rejected for lacking a usable merchant product URL. Miele and HZ4002 had
+no stable model/SKU in any returned title. The frozen audit found zero unsafe
+accepted bindings because the verifier accepted no offer. Coverage was `0/4`,
+below the `3/4` gate, so Serper Shopping in this response shape is not a viable
+standalone transactional verifier. Sanitized untracked evidence SHA-256:
+`224d15f154ffeb3aef5c065ccc0b4f4ac93048d42a18dc471a2c939327d551c`.
+H3 remains blocked and production remains unchanged.
 
 **Recommended reasoning level:** High for the four mechanical requests;
 Highest for the frozen-audit and architecture verdict.

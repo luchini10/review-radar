@@ -1944,3 +1944,12 @@ a known conservative undercount.
 - Preflight `deac842`: focused 11/11, full 1004/1004 across 138 suites;
   typecheck/build/offline evaluation/diff checks pass, lint 0 errors/3 existing
   warnings. No live request or production change occurred.
+- Live H2B used exactly four logical/four physical Serper Shopping attempts,
+  all HTTP 200, and returned 121 rows. Every URL exposed through
+  `productLink`, `product_link`, or `link` was a Google wrapper. Twelve rows
+  carried a target stable identifier but none supplied a usable merchant
+  destination; Miele and HZ4002 had no stable identifier in returned titles.
+  Coverage was `0/4` with zero unsafe accepted bindings. Do not treat a Google
+  Shopping wrapper as merchant-destination proof or weaken this boundary to
+  make a provider pass. Evidence hash
+  `224d15f154ffeb3aef5c065ccc0b4f4ac93048d42a18dc471a2c939327d551c`.
