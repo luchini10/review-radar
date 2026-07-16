@@ -7569,3 +7569,58 @@ next decision is whether to approve exactly one final corrected v2
 `primary-01` Terra/high smoke under newly rechecked current pricing and the
 same one-create/no-retry/no-replacement safety boundary. OAI-2B remains
 forbidden.
+
+## 🟧 Codex — final corrected OAI-2A v2 Terra smoke (2026-07-16)
+
+**Scope and approval.** Taylor approved one final corrected v2 `primary-01`
+Terra/high create, at most 20 hosted web searches, and a $7 ceiling. The
+approval prohibited Serper, retries, replacements, fallbacks, model
+substitutions, additional cases, external source-page opens, and OAI-2B. The
+fresh evidence-only harness is commit `a0c9a35`; the lifecycle/source repair
+under test is `1d7a300`.
+
+**Pre-spend wall.** Official Terra capability, current standard/long-context
+pricing, web-search pricing, Retrieve Response `include`, and background
+status behavior were rechecked. The isolated runner test and v3 preflight
+passed. The full suite passed 982/982 across 135 suites; typecheck, production
+build, offline evaluation, and diff checks passed; lint reported zero errors
+and the same three unrelated warnings. The evidence directory was absent and
+the API key was present before client creation without exposing it.
+
+**Live actuals.** Exactly one `gpt-5.6-terra` response ran at `high`. It
+completed in 134,580 ms after 25 retrieval polls on the same response, using
+95,901 input tokens, zero cached input tokens, 22,805 output tokens, and
+118,706 total tokens. It made 10 hosted web searches. Estimated cost from
+returned usage was $0.6818275. The returned model matched. Call 1 was skipped;
+no Serper, retry, replacement, fallback, model substitution, additional case,
+external source-page open, or OAI-2B action occurred.
+
+**Contract result: ACCEPTED.** The final response carried 187 source
+occurrences / 173 distinct URLs. All 10 URLs registered by the slate were
+present in the same response; all 10 IDs were used and none was missing from
+the registry. The strict v2 validator accepted all four cards. Every card
+passed the only active requirement, `rr-system-market-us`; every non-null
+price and product URL bound to a registered `purchase_page`; card identities
+were distinct; and no non-vacuum product entered the slate. The corrected
+retrieve inclusion therefore closes the reproduced `source_not_in_response`
+failure without weakening the fail-closed membership gate
+(`lib/autonomousResearchAdapter.ts:57-59,837-841,897`).
+
+**Slate result.** Best Matches were Shark AZ4002 at $599.99, Miele Guard L1
+Cat & Dog 12704570/SUZE0 at $899, and Shark HZ4002 at $319.99. Dyson V16
+Piston Animal at $979.99 was the single Close Match. The 10 cited sources span
+eight hosts. No card returned an image URL.
+
+**Limitations and decision.** This is a one-case transport, schema, contract,
+and same-response source-membership pass. It is not an overall migration,
+semantic-source-truth, usefulness, recall, or stability pass. The explicit
+approval forbade opening source pages, so exact price/availability and claim
+support were not independently verified. The catalog intentionally contains
+no benchmark answers, and no frozen generic-vacuum leader denominator exists,
+so no recall score is claimed. Before purchasing the remaining OAI-2A cases,
+the recommended next phase is a separately approved, zero-model-call audit of
+at most these 10 already-cited pages plus a shopper-usefulness assessment.
+OAI-2B remains forbidden.
+
+**Evidence.** Sanitized evidence remains untracked at
+`tests/fixtures/review-radar-live/oai-2a-terra-2026-07-16-primary-01-v3-smoke-1d7a300/`.

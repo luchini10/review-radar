@@ -1,7 +1,7 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-16 by 🟧 Codex after the offline OAI-2A Responses boundary
-flight-simulator phase. No live work is currently approved.
+Updated: 2026-07-16 by 🟧 Codex after the final corrected OAI-2A v2
+`primary-01` Terra/high smoke. No live work is currently approved.
 
 ## Efficient session start
 
@@ -10,113 +10,96 @@ flight-simulator phase. No live work is currently approved.
 3. Read the standing guardrails and active OAI section of
    `docs/forward-roadmap.md`.
 4. Read `docs/agent-dialogue.md` from entry [44] onward.
-5. Before any future live approval, re-check current OpenAI model/tool prices,
-   capability documentation, account availability, and the exact approved
-   request/tool-call ceilings.
+5. Before any future OpenAI call or external source-page open, re-check the
+   exact approval boundary and current official model/tool prices.
 
 ## Current state
 
-- Active OAI milestones are OAI-0 `3dc1131`, OAI-1 `883cfac`, initial OAI-2A
-  harness/correction `9fc4eda`, v1 smoke harness `8502df8`, v2 contract repair
-  `191c2a3`, isolated v2 smoke harness `ca33e32`, and offline lifecycle repair
-  `1d7a300`.
-- Production behavior remains unchanged. The OAI modules and runner are
-  isolated; the production route, UI, flags, `.env.local`, deployment, and
-  user-visible output did not change.
-- The last approved live unit was exactly one v2 `primary-01` Terra/high create.
-  It is exhausted. No retry, replacement, response retrieval, source open, or
-  additional case is approved.
-- That response completed in 108,458 ms after 20 polls, using 80,616 input,
-  19,688 output, and 100,304 total tokens plus eight hosted searches. Estimated
-  cost from returned usage was $0.57686. It is preserved but excluded from
-  quality scoring because the adapter did not retrieve complete source
-  metadata.
-- The v2 requirement and purchase contracts passed: all four Best Matches used
-  only reserved `rr-system-market-us`, passed it, invented no IDs, and bound
-  each non-null price/URL to a registered `purchase_page`.
-- The response then failed `source_not_in_response`. Static code, saved
-  evidence, the installed SDK types, and the official Retrieve Response
-  reference agreed on the root cause: create requested
-  `web_search_call.action.sources`, but background retrieval passed `{}`.
-- Commit `1d7a300` closes that adapter defect offline. One shared inclusion
-  constant now drives create and every retrieve poll
-  (`lib/autonomousResearchAdapter.ts:57-59,667,837-841`). The fail-closed
-  `source_not_in_response` contract was not weakened.
-- The same phase found and fixed a second lifecycle defect: a request could
-  sleep through its overall deadline and still poll. Deadline checks now run
-  after sleep and after retrieval (`lib/autonomousResearchAdapter.ts:826-848`).
-- Response snapshots now capture the latest status, returned model, usage, and
-  source counts before terminal rejection, including a completion that arrives
-  too late (`lib/autonomousResearchAdapter.ts:758-773,821-851`). Diagnostic
-  evidence also redacts bearer tokens and delimited JSON request payloads.
-- The offline simulator exercises Call 1 and Call 2, all documented response
-  statuses, multi-poll completion, create/retrieve errors, refusal, malformed/
-  schema/contract/source failures, deadlines, poll ceilings, no retry, source
-  shapes from the saved Terra response, sanitizer exclusions, and real-runner
-  v2 preflight.
-- Fail-first focused result was 18/21 with exactly the missing-include assertions
-  and post-sleep timeout failing. Final focused verification is 24/24. The full
-  suite is 982/982 across 135 suites; typecheck, lint (zero errors / three
-  pre-existing warnings), production build, offline evaluation, v2 preflight,
-  and diff checks pass.
-- No live OpenAI/Serper call, response retrieval, direct source fetch, or source
-  page open occurred during the offline phase. Existing untracked live fixtures
-  remain unchanged.
-- OAI-2A is no longer blocked by a reproduced local adapter defect, but it has
-  not passed the technical/source-support gate. One final corrected smoke is
-  the smallest next evidence; OAI-2B remains forbidden.
+- Active OAI milestones are OAI-0 `3dc1131`, OAI-1 `883cfac`, initial
+  OAI-2A harness/correction `9fc4eda`, v1 smoke harness `8502df8`, v2
+  contract repair `191c2a3`, isolated v2 harness `ca33e32`, lifecycle
+  repair `1d7a300`, and final isolated smoke harness `a0c9a35`.
+- Production behavior remains unchanged. The autonomous modules and runner
+  remain isolated; the production route, UI, flags, `.env.local`, deployment,
+  and user-visible output did not change.
+- Taylor's final corrected live approval is exhausted. Exactly one
+  `gpt-5.6-terra` create ran at `high`; Call 1 was deterministically skipped.
+  It completed in 134,580 ms after 25 retrieval polls on the same response.
+- Returned usage was 95,901 input tokens, zero cached input tokens, 22,805
+  output tokens, and 118,706 total tokens. The response used 10 hosted web
+  searches. Estimated cost from returned usage was $0.6818275.
+- No Serper request, SDK retry, replacement, fallback, model substitution,
+  additional case, external source-page open, or OAI-2B action occurred.
+- The returned model matched Terra. The strict local v2 boundary accepted the
+  response. All four cards passed the only active requirement,
+  `rr-system-market-us`; all identities were distinct and were vacuum
+  products; every non-null price and product URL bound to a same-response
+  `purchase_page`.
+- The slate contained three Best Matches and one Close Match: Shark AZ4002
+  ($599.99), Miele Guard L1 Cat & Dog 12704570/SUZE0 ($899), Shark HZ4002
+  ($319.99), and Dyson V16 Piston Animal ($979.99).
+- The response exposed 187 source occurrences / 173 distinct registered URLs.
+  All 10 slate source URLs were present in that same response, all 10 source
+  IDs were used, and none was missing from the slate registry. The 10 sources
+  span eight hosts. No image URL was returned for any card.
+- This is a technical/source-membership pass for one broad case, not a
+  migration or quality pass. No external page was opened, so exact prices,
+  availability, and semantic claim support remain independently unverified.
+  One run cannot establish stability, and no frozen generic-vacuum leader
+  denominator exists, so no leader-recall claim is valid.
+- Pre-spend verification passed: focused runner test and v3 preflight; 982/982
+  tests across 135 suites; typecheck; lint with zero errors and the same three
+  unrelated warnings; production build; offline evaluation; and diff checks.
+- The sanitized evidence is preserved untracked at
+  `tests/fixtures/review-radar-live/oai-2a-terra-2026-07-16-primary-01-v3-smoke-1d7a300/`.
+  Earlier spent evidence remains untouched.
 - Issue register remains 90 total / 85 Fixed / 4 Needs Investigation / 1 Won't
-  Fix. This isolated harness repair did not open, close, or reclassify an RR
-  issue.
+  Fix. This isolated experiment did not prove a generalized production defect
+  and did not change issue status.
 
-## Next task — explicit approval required
+## Recommended next task — explicit approval required
 
-The smallest useful next step is exactly one final corrected v2 `primary-01`
-Terra/high smoke. Before dispatch, re-check the official Terra capability,
-Retrieve Response contract, prices, account availability, clean tracked tree,
-commit pin, preflight, focused simulator, full tests, typecheck, lint, build,
-offline evaluation, and diff checks.
+Run one bounded OAI-2A source-truth and usefulness audit before purchasing more
+research responses:
 
-Proposed live boundary, subject to Taylor's exact approval after the recheck:
+1. Zero OpenAI creates and zero Serper calls.
+2. Open at most the 10 source pages already cited by this accepted response;
+   do not search for, rescue, or substitute products.
+3. Verify exact product identity, current purchase-page shape, displayed
+   price/availability, and whether each cited source semantically supports the
+   claims bound to it.
+4. Separately judge the slate's shopper usefulness and market breadth,
+   explicitly accounting for only three Best Matches, two Shark entries, one
+   expensive Close Match, and no images. Do not invent a leader-recall score.
+5. Classify the result: pass to the remaining OAI-2A cases, repair a
+   demonstrated generalized prompt/validator defect offline, or stop the
+   migration bet. Record unsupported claims rather than silently correcting
+   them.
+6. Stop and report. Any later `primary-04` or `primary-12` create needs a
+   new explicit approval.
 
-1. One OpenAI research create for frozen case `primary-01`; Call 1 is skipped.
-2. Terra at `high`, strict v2 schema, background polling, and
-   `include: ["web_search_call.action.sources"]` on create and every retrieve.
-3. At most 20 hosted web-search calls; use the newly rechecked pricing to state
-   a conservative dollar ceiling before client creation.
-4. Zero Serper calls, retries, replacements, fallbacks, model substitutions,
-   additional cases, or OAI-2B work.
-5. Preserve sanitized request/response evidence and report every token, tool
-   call, poll, source, latency, cost, and local rejection. Do not hide or replace
-   a spent failure.
-6. Open external source pages only if the response first passes all local v2
-   schema, requirement, purchase, identity, and same-response source-binding
-   contracts and the approval explicitly permits those bounded human checks.
-7. Stop after this one response and report. A pass allows a separate decision
-   about the remaining OAI-2A cases; a new local integration failure receives
-   first-loss attribution and no automatic rerun.
+This is stronger than immediately running more cases because the corrected
+adapter has already answered the transport and source-completeness question.
+The largest remaining uncertainty is whether the accepted citations actually
+support the card facts and whether the result is useful enough to justify more
+evidence spend.
 
-This is better than starting the remaining cases because the final live smoke
-tests the exact boundary that failed twice while limiting time and evidence
-ambiguity to one response. It is also better than more offline scaffolding: the
-complete lifecycle wall is now green, and the remaining unknown is provider
-behavior and source completeness, which local simulation cannot prove.
-
-**Recommended reasoning level: High.** Execution is tightly bounded and fully
-preflighted. Use Highest only if the returned evidence creates a disputed
-source-support or architecture go/no-go judgment.
+**Recommended reasoning level: High.** This is a bounded evidence audit with
+an architecture go/no-go consequence. Highest is unnecessary unless the
+source evidence is contradictory enough to require a disputed policy change.
 
 ## Hard boundaries
 
-- No live OpenAI/Serper call, response retrieval, source-page opening, external
-  product fetch, retry, replacement, or model substitution without new explicit
-  approval. The prior one-create approval is exhausted.
-- No OAI-2B, permanent network verifier, production route integration, flag
+- No OpenAI or Serper call, response retrieval, external source-page open,
+  retry, replacement, fallback, model substitution, or additional case
+  without new explicit approval.
+- No OAI-2B, permanent network verifier, production integration, flag
   promotion, `.env.local` edit, deployment, or user-visible behavior change.
-- The selected OAI path sends no Serper request, app-authored search plan, or
+- The OpenAI path sends no Serper request, app-authored search plan, or
   candidate list. The model controls hosted search inside its response.
-- Every displayable fact must bind to same-response source metadata; URL
-  membership alone does not prove semantic support.
+- Same-response URL membership is necessary but does not prove semantic
+  support. Every displayed fact must bind to evidence that actually supports
+  it before promotion.
 - The verifier may reject, downgrade, normalize, exact-dedupe, or clear unsafe
   optional fields. It may not discover, invent, rescue, score, add, or reorder
   products.
@@ -131,11 +114,10 @@ source-support or architecture go/no-go judgment.
 ## Outstanding review debt
 
 - Dialogue entry [37] asks Claude to verify the post-C5 safety repair.
-- Entry [42] asks Claude to review the first OAI-2A failure attribution.
-- Entry [44] asks Claude to review the v2 requirement/evidence contract.
-- Entry [45] asks Claude to challenge the retrieve-include diagnosis.
-- Entry [46] asks Claude to challenge the completed offline lifecycle repair
-  and the recommendation for one final corrected smoke.
+- Entries [42]–[46] ask Claude to review the OAI-2A failure diagnoses and
+  lifecycle repair.
+- Entry [47] asks Claude to challenge this accepted smoke and the recommended
+  source-truth audit before further spend.
 - Taylor remains the sole approver for live spend, response/source retrieval,
   source-page opens, model/config changes, promotion, rollout, or deletion.
 
@@ -146,9 +128,7 @@ source-support or architecture go/no-go judgment.
 | Active architecture and gates | `docs/forward-roadmap.md` active OAI section |
 | V2 request/prompt/schema contract | `lib/autonomousResearchContract.ts` |
 | Background polling and source validation | `lib/autonomousResearchAdapter.ts` |
-| Lifecycle simulator | `tests/autonomousResearchLifecycle.test.mjs` and `tests/helpers/autonomousResearchSimulator.mjs` |
-| Source-shape boundary | `tests/responseSources.test.mjs` |
-| V2 runner/preflight | `scripts/run-oai-2a.mjs` and `tests/oai2aRunner.test.mjs` |
-| Latest smoke evidence | untracked `tests/fixtures/review-radar-live/oai-2a-terra-2026-07-16-primary-01-v2-smoke-191c2a3/` |
+| Final smoke runner/preflight | `scripts/run-oai-2a.mjs` and `tests/oai2aRunner.test.mjs` |
+| Latest smoke evidence | untracked `tests/fixtures/review-radar-live/oai-2a-terra-2026-07-16-primary-01-v3-smoke-1d7a300/` |
 | Canonical phase evidence | latest `docs/qa-loop-results.md` entry |
 | Peer review | `docs/agent-dialogue.md` entry [44] onward |
