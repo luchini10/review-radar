@@ -7775,3 +7775,39 @@ H3 is blocked. No route, mode flag, `.env.local`, deployment, production
 behavior, or user-facing result changed. The next possible decision is a
 separately approved, verification-only H2B exact-product oracle experiment,
 two-card degradation, or ending the hybrid; none is authorized by H2.
+
+## 🟧 Codex — OAI-H2B verification-oracle preflight (2026-07-16)
+
+**Verdict: READY OFFLINE — live four-search budget still required.** Taylor
+directed Codex to proceed with the tiny H2B experiment. Commit `deac842`
+implements only the zero-spend preflight: an isolated pure Serper Shopping
+offer verifier, a default-dry one-request-per-product runner, and adversarial
+tests. No Serper, OpenAI, page-fetch, route, flag, `.env.local`, deployment, or
+user-visible change occurred.
+
+The frozen queries are `Shark AZ4002 vacuum cleaner`, `Miele 12704570 SUZE0
+vacuum cleaner`, `Shark HZ4002 vacuum cleaner`, and `Dyson V16 Piston Animal
+vacuum cleaner`. Each proposed request is `/shopping` with `gl=us`, `hl=en`,
+and `num=20`. The pending live ceiling is exactly four logical/four physical
+attempts with zero retry, fallback, replacement, cache, additional query,
+direct page fetch, or OpenAI call.
+
+An offer survives only when one row carries the target brand and a stable exact
+model/SKU in its title, a named seller, positive price, and a usable non-Google
+merchant product URL. Existing eligibility remains binding. Wrong/missing
+models, wrappers, search/listing pages, accessories, used/refurbished/open-box
+offers, and missing transactional facts fail closed. The first provider-ranked
+qualifying exact row wins; the verifier never minimizes price across rows and
+never falls back to model-authored values.
+
+Fail-first found that the shared eligibility/type boundaries alone admitted a
+`Replacement Filter Compatible with Shark AZ4002` row. The isolated H2B veto
+now rejects explicit accessory offers while preserving a complete vacuum that
+includes a replacement filter. Production/shared classifiers were not changed.
+
+Focused tests pass 11/11. The complete suite passes 1004/1004 across 138 suites;
+typecheck, build, offline evaluation, and diff checks pass. Lint reports zero
+errors and the same three pre-existing warnings. Runner syntax/targeted lint and
+dry-run pass. The runner requires `--approved-searches=4`, checkpoints before
+and after each request, and refuses to repeat when evidence already exists.
+H3 remains blocked regardless of H2B outcome until a separate owner decision.

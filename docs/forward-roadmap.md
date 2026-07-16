@@ -1487,7 +1487,7 @@ extract the frozen AZ405KT1 tested-model conflict. RR-092 therefore prevents a
 zero-false-verified finding. H2 fails on both coverage and unresolved editorial
 ambiguity. H3 is blocked; the direct-fetch verifier must not be integrated.
 
-#### Post-H2 dependency (not yet approved)
+#### Post-H2 dependency
 
 ```text
 OAI-H0 architecture freeze
@@ -1502,6 +1502,66 @@ H3 and later quality, holdout, rollout, or retirement work require new detailed
 gates and separate approval after the H2 evidence. The existing OAI-2B through
 OAI-10 sequence below is retained only as historical context and is not an
 active dependency map.
+
+#### H2B — four-product verification-only commerce oracle
+
+**Owner direction:** Taylor said to proceed with the tiny H2B experiment on
+2026-07-16. This authorizes the zero-spend preflight and architecture contract.
+The required live-search budget is still a separate explicit approval because
+the direction did not state a numeric Serper search/attempt ceiling.
+
+**Objective:** test whether Serper Shopping can fill only the transactional
+verification gap that defeated direct fetch, without restoring Serper as a
+discovery/ranking pipeline. The accepted OpenAI `primary-01` slate, four product
+identities, and relative order remain frozen. H2B may verify or leave a product
+inconclusive; it cannot add, replace, rescue, merge, score, or reorder one.
+
+**Frozen requests:** one uncached `/shopping` request per product, in this order,
+with body `{ "gl": "us", "hl": "en", "num": 20, "q": QUERY }`:
+
+1. `Shark AZ4002 vacuum cleaner`
+2. `Miele 12704570 SUZE0 vacuum cleaner`
+3. `Shark HZ4002 vacuum cleaner`
+4. `Dyson V16 Piston Animal vacuum cleaner`
+
+The proposed live budget is exactly four logical searches and four physical
+attempts, with zero retry, endpoint fallback, replacement, cache reuse, direct
+page fetch, OpenAI call, or additional query. A checkpoint is written before
+the first request and after each result; existing evidence makes the runner
+refuse accidental repetition.
+
+**Trust boundary:** an offer verifies only when one Shopping row contains the
+target brand and at least one stable exact model/SKU token in its title, a named
+seller, a positive current price, and a non-Google merchant product URL that
+passes the existing eligibility boundary. Google wrappers, search/listing
+pages, wrong/missing models, accessories, used/refurbished/open-box products,
+missing sellers/prices, and ineligible pages fail closed. Provider order chooses
+the first qualifying exact offer; price is never minimized across unrelated
+rows. Model-authored provisional facts are never fallback values.
+
+H2B verifies identity, price, seller, destination, and optional image/rating
+metadata only. It does not validate editorial prose. RR-092 remains binding:
+professional claims and model-specific editorial imagery stay hidden unless a
+separate positive exact-tested-model receipt exists.
+
+**Pass only if:** at least three of four frozen products receive an exact new-
+product offer with a usable merchant destination; the frozen human audit finds
+zero wrong product/model/variant/accessory, price bleed, Google wrapper, used
+offer, or unsafe field binding; all four requests reconcile exactly; and no
+product-specific or retailer-specific rule is required. One unsafe `verified`
+decision fails H2B. Inconclusive products remain absent rather than rescued.
+
+**Preflight actual:** commit `deac842` adds the isolated pure verifier, 11
+adversarial tests, and a default-dry runner. Fail-first caught a replacement-
+filter offer that the shared eligibility/type checks alone admitted; an
+isolated generalized accessory-offer veto now rejects it while preserving a
+complete product that includes an accessory. The complete wall passes
+1004/1004 across 138 suites; typecheck, build, offline evaluation, and diff
+checks pass; lint has zero errors and three pre-existing warnings. No provider
+request has been sent and production is unchanged.
+
+**Recommended reasoning level:** High for the four mechanical requests;
+Highest for the frozen-audit and architecture verdict.
 
 ### OAI-2B — early uncached quality and repeatability gate
 

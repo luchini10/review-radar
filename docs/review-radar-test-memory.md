@@ -1922,3 +1922,25 @@ a known conservative undercount.
   Serper. Runner `858ad9a`; evidence hash
   `643b2e6b4f0028036a081c193554871db0e6974ad45d09bf9fb90a79eb769f46`.
   H3 is blocked; production and flags remain unchanged.
+
+## OAI-H2B verification-only commerce contract — 2026-07-16
+
+- A verification oracle receives only frozen model-proposed identities. It may
+  verify or return inconclusive; it never adds, replaces, rescues, merges,
+  scores, or reorders products.
+- Query minimally with brand + exact model/SKU + requested category. Avoid full
+  marketing names and discovery language that dilute exact Shopping results.
+- Verify one Shopping row only when its title contains target brand and stable
+  model/SKU, and it supplies a named seller, positive price, and non-Google
+  merchant product URL that passes product eligibility.
+- Reject wrong/missing model, Google wrappers, listings/search pages, explicit
+  accessory offers, used/refurbished/open-box offers, and missing seller/price/
+  destination. Never use a URL-only model or provisional model-authored value.
+- Provider ordering may choose the first qualifying exact row; do not minimize
+  price across unrelated rows. A current exact offer is verification, not
+  discovery or product ranking.
+- Editorial evidence is outside H2B. RR-092 remains fail-closed unless a
+  positive exact-tested-model receipt independently supports the claim.
+- Preflight `deac842`: focused 11/11, full 1004/1004 across 138 suites;
+  typecheck/build/offline evaluation/diff checks pass, lint 0 errors/3 existing
+  warnings. No live request or production change occurred.
