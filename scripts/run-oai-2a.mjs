@@ -11,6 +11,8 @@ import {
   estimateAutonomousResearchCost,
   runAutonomousResearch,
   runRequirementInterpreter,
+  sanitizeAutonomousResponseForEvidence,
+  summarizeAutonomousResearchResult,
 } from "../lib/autonomousResearchAdapter.ts";
 import { AUTONOMOUS_EVALUATION_CATALOG } from "../lib/autonomousResearchEvaluation.ts";
 import { createOpenAIClient } from "../lib/openaiClient.ts";
@@ -43,50 +45,6 @@ const EXPECTED_INTERPRETER_ROUTING = new Map([
   ["primary-04", false],
   ["primary-12", true],
 ]);
-
-function isRecord(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function sanitizeResponseForEvidence(response) {
-  if (!isRecord(response)) return null;
-  const output = Array.isArray(response.output)
-    ? response.output.flatMap((item) => {
-        if (!isRecord(item) || item.type === "reasoning") return [];
-        if (item.type === "web_search_call") {
-          return [
-            {
-              id: item.id ?? null,
-              type: item.type,
-              status: item.status ?? null,
-              action: item.action ?? null,
-            },
-          ];
-        }
-        if (item.type === "message") {
-          return [
-            {
-              id: item.id ?? null,
-              type: item.type,
-              status: item.status ?? null,
-              role: item.role ?? null,
-              content: item.content ?? [],
-            },
-          ];
-        }
-        return [];
-      })
-    : [];
-  return {
-    id: response.id ?? null,
-    model: response.model ?? null,
-    status: response.status ?? null,
-    incomplete_details: response.incomplete_details ?? null,
-    error: response.error ?? null,
-    usage: response.usage ?? null,
-    output,
-  };
-}
 
 async function writeJson(fileName, value) {
   await fs.writeFile(
@@ -234,6 +192,18 @@ async function main() {
         normalizedRequest: researchRequest,
         config: OAI_2A_PROPOSED_CONFIG.research,
       });
+      const resultSummary = summarizeAutonomousResearchResult(
+        research,
+        ratesForUsage(research.ledger.usage),
+      );
+      summary.retrieval_polls += resultSummary.retrieval_polls;
+      summary.web_search_calls += resultSummary.web_search_calls;
+      summary.estimated_cost_usd += resultSummary.estimated_cost_usd;
+      summary.cases.push({
+        id: evaluationCase.id,
+        interpreter_used: routing.needed,
+        ...resultSummary,
+      });
       const evidence = {
         version: RUN_MODE.version,
         run_mode: RUN_MODE.name,
@@ -243,47 +213,28 @@ async function main() {
         interpreter_routing: routing,
         interpreter: interpreterEvidence,
         research_request: researchRequest,
-        research: research.ok
-          ? {
-              ok: true,
-              ledger: research.ledger,
-              slate: research.slate,
-              response_evidence: sanitizeResponseForEvidence(research.response),
-            }
-          : research,
+        research: {
+          ok: research.ok,
+          ...(!research.ok
+            ? { reason: research.reason, details: research.details }
+            : {}),
+          ledger: research.ledger,
+          ...(research.slate ? { slate: research.slate } : {}),
+          response_evidence: sanitizeAutonomousResponseForEvidence(
+            research.response,
+          ),
+        },
       };
       await writeJson(`${evaluationCase.id}.json`, evidence);
+      if (summary.web_search_calls > RUN_MODE.maxWebSearchCalls) {
+        throw new Error("Approved hosted web-search ceiling exceeded");
+      }
       if (!research.ok) {
         throw new Error(
           `Research failed for ${evaluationCase.id}: ${research.reason}`,
         );
       }
       assertReturnedModel(research.ledger);
-      const cost = estimateAutonomousResearchCost(
-        research.ledger.usage,
-        ratesForUsage(research.ledger.usage),
-      );
-      summary.retrieval_polls += research.ledger.polls;
-      summary.web_search_calls += research.ledger.usage.webSearchCalls;
-      summary.estimated_cost_usd += cost;
-      summary.cases.push({
-        id: evaluationCase.id,
-        interpreter_used: routing.needed,
-        request_hash: research.ledger.requestHash,
-        returned_model: research.ledger.modelReturned,
-        duration_ms: research.ledger.durationMs,
-        retrieval_polls: research.ledger.polls,
-        web_search_calls: research.ledger.usage.webSearchCalls,
-        source_count: research.ledger.sourceCount,
-        card_count: research.slate.products.length + research.slate.close_matches.length,
-        estimated_cost_usd: cost,
-      });
-      if (
-        summary.web_search_calls >
-        RUN_MODE.maxWebSearchCalls
-      ) {
-        throw new Error("Approved hosted web-search ceiling exceeded");
-      }
     }
     summary.create_calls = createCalls;
     summary.completed_at = new Date().toISOString();

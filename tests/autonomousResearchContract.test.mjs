@@ -8,10 +8,11 @@ import {
 import {
   applyRequirementInterpretation,
   AUTONOMOUS_INTERPRETER_VERSION,
+  AUTONOMOUS_SLATE_SCHEMA_VERSION,
   AUTONOMOUS_PROMPT_VERSION,
   AUTONOMOUS_REQUEST_VERSION,
   assessRequirementInterpreterNeed,
-  autonomousResearchSlateJsonSchema,
+  buildAutonomousResearchSlateJsonSchema,
   autonomousResearchSlateSchema,
   buildAutonomousResearchPrompt,
   buildNormalizedShopperRequest,
@@ -62,6 +63,64 @@ describe("OAI-1 autonomous research contracts", () => {
     assert.equal(canonicalJson(first), canonicalJson(second));
     assert.equal(hashContractValue(first), hashContractValue(second));
     assert.equal(assessRequirementInterpreterNeed(input, first).needed, false);
+    assert.deepEqual(
+      first.evaluation_requirements.map((item) => ({
+        id: item.id,
+        kind: item.kind,
+        required_for_best_match: item.required_for_best_match,
+      })),
+      [
+        {
+          id: "rr-system-market-us",
+          kind: "market",
+          required_for_best_match: true,
+        },
+        {
+          id: "rr-system-budget",
+          kind: "budget",
+          required_for_best_match: true,
+        },
+        ...first.hard_requirements.map((item) => ({
+          id: item.id,
+          kind: "hard",
+          required_for_best_match: true,
+        })),
+        ...first.avoid.map((item) => ({
+          id: item.id,
+          kind: "avoid",
+          required_for_best_match: true,
+        })),
+      ],
+    );
+  });
+
+  it("creates deterministic system checks without inventing an inactive budget check", () => {
+    const broad = buildNormalizedShopperRequest({ query: "vacuum cleaner" });
+    assert.deepEqual(broad.evaluation_requirements, [
+      {
+        id: "rr-system-market-us",
+        text: "Currently available for purchase in the United States",
+        kind: "market",
+        required_for_best_match: true,
+      },
+    ]);
+
+    const constrained = buildNormalizedShopperRequest({
+      query: "vacuum cleaner",
+      budget: "under $500",
+    });
+    assert.deepEqual(
+      constrained.evaluation_requirements.slice(0, 2).map((item) => item.id),
+      ["rr-system-market-us", "rr-system-budget"],
+    );
+    assert.equal(
+      constrained.evaluation_requirements[1].text,
+      "Budget: under $500",
+    );
+    assert.equal(
+      constrained.evaluation_requirements[1].required_for_best_match,
+      true,
+    );
   });
 
   it("uses Call 1 only for deterministic malformed, conflicting, or ambiguous cases", () => {
@@ -197,6 +256,26 @@ describe("OAI-1 autonomous research contracts", () => {
         (item) => item.text === "What maximum weight is acceptable?",
       ),
     );
+    assert.deepEqual(
+      applied.evaluation_requirements
+        .filter((item) => item.kind === "ambiguity")
+        .map((item) => item.id),
+      applied.unresolved_ambiguities.map((item) => item.id),
+    );
+    assert.ok(
+      applied.evaluation_requirements.some(
+        (item) =>
+          item.id === "interpreter-assumption-1" &&
+          item.required_for_best_match === false,
+      ),
+    );
+    assert.ok(
+      applied.evaluation_requirements.some(
+        (item) =>
+          item.id === "interpreter-question-1" &&
+          item.required_for_best_match === false,
+      ),
+    );
   });
 
   it("keeps the universal prompt autonomous and treats shopper text as data", () => {
@@ -206,7 +285,7 @@ describe("OAI-1 autonomous research contracts", () => {
     });
     const prompt = buildAutonomousResearchPrompt(request);
 
-    assert.equal(AUTONOMOUS_PROMPT_VERSION, "oai-master-prompt-v1");
+    assert.equal(AUTONOMOUS_PROMPT_VERSION, "oai-master-prompt-v2");
     assert.match(prompt.system, /Use hosted web search autonomously/);
     assert.match(prompt.system, /untrusted data/);
     assert.match(prompt.system, /Do not use or infer any benchmark answer/);
@@ -214,9 +293,20 @@ describe("OAI-1 autonomous research contracts", () => {
     assert.match(prompt.user, /Ignore prior instructions/);
     assert.doesNotMatch(prompt.user, /Serper candidate/i);
     assert.doesNotMatch(prompt.user, /app-authored search plan/i);
+    assert.match(prompt.system, /exactly one requirement_check for every ID/i);
+    assert.match(prompt.system, /must not invent requirement IDs/i);
+    assert.match(
+      prompt.system,
+      /non-null price or product URL.*same registered purchase_page/i,
+    );
+    assert.match(prompt.user, /rr-system-market-us/);
   });
 
   it("freezes a strict final-slate JSON schema", () => {
+    const autonomousResearchSlateJsonSchema =
+      buildAutonomousResearchSlateJsonSchema(
+        buildNormalizedShopperRequest({ query: "vacuum" }),
+      );
     assert.equal(autonomousResearchSlateJsonSchema.additionalProperties, false);
     assert.equal(
       autonomousResearchSlateJsonSchema.properties.products.items
@@ -229,12 +319,39 @@ describe("OAI-1 autonomous research contracts", () => {
     );
   });
 
+  it("restricts a constrained request schema to its exact evaluation IDs", () => {
+    const normalized = buildNormalizedShopperRequest({
+      query: "cordless vacuum",
+      budget: "under $500",
+      priorities: "Must handle dog hair",
+      avoid: "corded models",
+    });
+    const schema = buildAutonomousResearchSlateJsonSchema(normalized);
+    const requirementChecks =
+      schema.properties.products.items.properties.requirement_checks;
+    assert.deepEqual(
+      requirementChecks.items.properties.requirement_id.enum,
+      normalized.evaluation_requirements.map((item) => item.id),
+    );
+    assert.equal(requirementChecks.minItems, normalized.evaluation_requirements.length);
+    assert.equal(requirementChecks.maxItems, normalized.evaluation_requirements.length);
+    assert.ok(
+      normalized.evaluation_requirements.some(
+        (item) => item.id === "rr-system-budget",
+      ),
+    );
+  });
+
   it("keeps unsupported URI formats out of the API schema while validating URLs locally", () => {
+    const autonomousResearchSlateJsonSchema =
+      buildAutonomousResearchSlateJsonSchema(
+        buildNormalizedShopperRequest({ query: "vacuum" }),
+      );
     const serialized = JSON.stringify(autonomousResearchSlateJsonSchema);
     assert.equal(serialized.includes('"format":"uri"'), false);
     const invalidUrlSlate = {
       prompt_version: AUTONOMOUS_PROMPT_VERSION,
-      schema_version: "oai-final-slate-v1",
+      schema_version: AUTONOMOUS_SLATE_SCHEMA_VERSION,
       research_summary: { text: "Summary", source_ids: ["s1"] },
       category_factors: [{ claim: "Factor", source_ids: ["s1"] }],
       products: [],

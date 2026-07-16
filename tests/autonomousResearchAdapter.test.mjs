@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   AUTONOMOUS_PROMPT_VERSION,
+  AUTONOMOUS_MARKET_REQUIREMENT_ID,
   AUTONOMOUS_SLATE_SCHEMA_VERSION,
   buildNormalizedShopperRequest,
 } from "../lib/autonomousResearchContract.ts";
@@ -13,6 +14,8 @@ import {
   OAI_2A_PROPOSED_CONFIG,
   runAutonomousResearch,
   runRequirementInterpreter,
+  sanitizeAutonomousResponseForEvidence,
+  summarizeAutonomousResearchResult,
   validateAutonomousSlateContract,
   validateAutonomousSlateForRequest,
 } from "../lib/autonomousResearchAdapter.ts";
@@ -55,7 +58,14 @@ function card(overrides = {}) {
       source_ids: ["s1"],
     },
     specifications: [{ name: "Weight", value: "5 lb", source_ids: ["s1"] }],
-    requirement_checks: [],
+    requirement_checks: [
+      {
+        requirement_id: AUTONOMOUS_MARKET_REQUIREMENT_ID,
+        status: "Pass",
+        explanation: "The product is currently available in the United States.",
+        source_ids: ["s1"],
+      },
+    ],
     quality_signals: [{ claim: "Documented build", source_ids: ["s1"] }],
     owner_review: {
       sentiment: "Limited owner evidence",
@@ -148,6 +158,105 @@ describe("OAI-1 isolated Responses adapter", () => {
     assert.equal(request.text.format.strict, true);
     assert.equal(request.max_output_tokens, 12_000);
     assert.equal(request.max_tool_calls, 20);
+    const requirementChecks =
+      request.text.format.schema.properties.products.items.properties
+        .requirement_checks;
+    assert.deepEqual(
+      requirementChecks.items.properties.requirement_id.enum,
+      normalized.evaluation_requirements.map((item) => item.id),
+    );
+    assert.equal(
+      requirementChecks.minItems,
+      normalized.evaluation_requirements.length,
+    );
+    assert.equal(
+      requirementChecks.maxItems,
+      normalized.evaluation_requirements.length,
+    );
+  });
+
+  it("retains a completed rejected slate and response for sanitized evidence", async () => {
+    const rejectedSlate = slate({
+      products: [
+        card({
+          requirement_checks: [
+            {
+              requirement_id: "market_US",
+              status: "Pass",
+              explanation: "Available in the requested market.",
+              source_ids: ["s1"],
+            },
+          ],
+        }),
+      ],
+    });
+    const response = completedResponse(rejectedSlate);
+    const result = await runAutonomousResearch({
+      client: {
+        responses: {
+          create: async () => response,
+          retrieve: async () => {
+            throw new Error("retrieve must not be called");
+          },
+        },
+      },
+      normalizedRequest: buildNormalizedShopperRequest({ query: "vacuum" }),
+      config,
+    });
+
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, "contract_invalid");
+    assert.deepEqual(result.slate, rejectedSlate);
+    assert.equal(result.response.id, "resp_123");
+    assert.equal(result.ledger.usage.totalTokens, 3_000);
+    assert.equal(result.ledger.usage.webSearchCalls, 1);
+    const summary = summarizeAutonomousResearchResult(result, {
+      inputPerMillionUsd: 1,
+      cachedInputPerMillionUsd: 1,
+      outputPerMillionUsd: 1,
+      webSearchCallUsd: 0.01,
+    });
+    assert.equal(summary.status, "rejected");
+    assert.equal(summary.failure_reason, "contract_invalid");
+    assert.equal(summary.web_search_calls, 1);
+    assert.equal(summary.usage.totalTokens, 3_000);
+    assert.equal(summary.card_count, 1);
+    assert.ok(summary.estimated_cost_usd > 0);
+
+    const sanitized = sanitizeAutonomousResponseForEvidence({
+      ...response,
+      error: {
+        code: "invalid_test",
+        message: "Do not retain sk-test-secret-value in evidence",
+      },
+      output: [
+        ...response.output,
+        { type: "reasoning", summary: "private reasoning" },
+        {
+          id: "message_1",
+          type: "message",
+          status: "completed",
+          role: "assistant",
+          content: [
+            {
+              type: "output_text",
+              text: "full raw model output",
+              annotations: [
+                {
+                  type: "url_citation",
+                  url: "https://example.com/products/m1",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const serialized = JSON.stringify(sanitized);
+    assert.equal(serialized.includes("private reasoning"), false);
+    assert.equal(serialized.includes("full raw model output"), false);
+    assert.equal(serialized.includes("sk-test-secret-value"), false);
+    assert.match(serialized, /url_citation/);
   });
 
   it("keeps the conditional interpreter non-researching and meaning-preserving", async () => {
@@ -345,6 +454,12 @@ describe("OAI-1 isolated Responses adapter", () => {
     const validCard = card({
       requirement_checks: [
         {
+          requirement_id: AUTONOMOUS_MARKET_REQUIREMENT_ID,
+          status: "Pass",
+          explanation: "The cited purchase page is in the requested market.",
+          source_ids: ["s1"],
+        },
+        {
           requirement_id: requiredId,
           status: "Pass",
           explanation: "The cited product page states this feature.",
@@ -373,6 +488,67 @@ describe("OAI-1 isolated Responses adapter", () => {
     assert.ok(
       invalid.errors.some((error) =>
         error.startsWith("purchase_url_not_bound_to_purchase_source:"),
+      ),
+    );
+  });
+
+  it("requires the deterministic market and active-budget checks and rejects invented IDs", () => {
+    const broad = buildNormalizedShopperRequest({ query: "vacuum" });
+    assert.equal(validateAutonomousSlateForRequest(slate(), broad).valid, true);
+
+    const missingMarket = card({ requirement_checks: [] });
+    const missing = validateAutonomousSlateForRequest(
+      slate({ products: [missingMarket] }),
+      broad,
+    );
+    assert.equal(missing.valid, false);
+    assert.ok(
+      missing.errors.some((error) =>
+        error.includes(`missing_hard_requirement_check:Example Model One:${AUTONOMOUS_MARKET_REQUIREMENT_ID}`),
+      ),
+    );
+
+    const invented = card({
+      requirement_checks: [
+        {
+          requirement_id: "market_US",
+          status: "Pass",
+          explanation: "Invented alias",
+          source_ids: ["s1"],
+        },
+      ],
+    });
+    const inventedResult = validateAutonomousSlateForRequest(
+      slate({ products: [invented] }),
+      broad,
+    );
+    assert.equal(inventedResult.valid, false);
+    assert.ok(
+      inventedResult.errors.some((error) =>
+        error.includes("unknown_requirement_id:Example Model One:market_US"),
+      ),
+    );
+
+    const constrained = buildNormalizedShopperRequest({
+      query: "vacuum",
+      budget: "under $500",
+    });
+    const budgetNeedsVerification = card({
+      requirement_checks: constrained.evaluation_requirements.map((item) => ({
+        requirement_id: item.id,
+        status: item.kind === "budget" ? "Needs verification" : "Pass",
+        explanation: "Bounded test evidence",
+        source_ids: ["s1"],
+      })),
+    });
+    const constrainedResult = validateAutonomousSlateForRequest(
+      slate({ products: [budgetNeedsVerification] }),
+      constrained,
+    );
+    assert.equal(constrainedResult.valid, false);
+    assert.ok(
+      constrainedResult.errors.some((error) =>
+        error.startsWith("best_match_has_unmet_hard_requirement:"),
       ),
     );
   });

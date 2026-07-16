@@ -6,11 +6,13 @@ import type { RecommendationApiRequest } from "@/types/review-radar";
 import { detectRequirementConflicts } from "./requirementConflicts.ts";
 import { extractStructuredRequirements } from "./requirementExtraction.ts";
 
-export const AUTONOMOUS_REQUEST_VERSION = "oai-request-v1";
+export const AUTONOMOUS_REQUEST_VERSION = "oai-request-v2";
 export const AUTONOMOUS_INTERPRETER_VERSION = "oai-interpreter-v1";
-export const AUTONOMOUS_PROMPT_VERSION = "oai-master-prompt-v1";
-export const AUTONOMOUS_SLATE_SCHEMA_VERSION = "oai-final-slate-v1";
+export const AUTONOMOUS_PROMPT_VERSION = "oai-master-prompt-v2";
+export const AUTONOMOUS_SLATE_SCHEMA_VERSION = "oai-final-slate-v2";
 export const AUTONOMOUS_UI_ADAPTER_VERSION = "oai-ui-adapter-v1";
+export const AUTONOMOUS_MARKET_REQUIREMENT_ID = "rr-system-market-us";
+export const AUTONOMOUS_BUDGET_REQUIREMENT_ID = "rr-system-budget";
 
 const nonEmptyText = z.string().trim().min(1);
 const sourceIds = z.array(z.string().regex(/^s[1-9][0-9]*$/)).min(1);
@@ -187,7 +189,8 @@ const sourcedClaimJsonSchema = strictObject({
   source_ids: sourceIdArrayJsonSchema,
 });
 
-const productCardJsonSchema = strictObject({
+const buildProductCardJsonSchema = (evaluationRequirementIds: string[]) =>
+  strictObject({
   rank: { type: "integer", minimum: 1, maximum: 5 },
   recommendation_status: {
     type: "string",
@@ -235,8 +238,13 @@ const productCardJsonSchema = strictObject({
   },
   requirement_checks: {
     type: "array",
+    minItems: evaluationRequirementIds.length,
+    maxItems: evaluationRequirementIds.length,
     items: strictObject({
-      requirement_id: { type: "string", minLength: 1 },
+      requirement_id: {
+        type: "string",
+        enum: evaluationRequirementIds,
+      },
       status: {
         type: "string",
         enum: ["Pass", "Fail", "Needs verification"],
@@ -262,9 +270,15 @@ const productCardJsonSchema = strictObject({
     useful_source_ids: sourceIdArrayJsonSchema,
     missing_or_conflicting: { type: "array", items: { type: "string" } },
   }),
-});
+  });
 
-export const autonomousResearchSlateJsonSchema = strictObject({
+export function buildAutonomousResearchSlateJsonSchema(
+  request: NormalizedShopperRequest,
+) {
+  const productCardJsonSchema = buildProductCardJsonSchema(
+    request.evaluation_requirements.map((item) => item.id),
+  );
+  return strictObject({
   prompt_version: { type: "string", const: AUTONOMOUS_PROMPT_VERSION },
   schema_version: { type: "string", const: AUTONOMOUS_SLATE_SCHEMA_VERSION },
   research_summary: strictObject({
@@ -321,7 +335,8 @@ export const autonomousResearchSlateJsonSchema = strictObject({
       url: { type: "string" },
     }),
   },
-});
+  });
+}
 
 export type NormalizedShopperRequest = {
   version: typeof AUTONOMOUS_REQUEST_VERSION;
@@ -337,6 +352,7 @@ export type NormalizedShopperRequest = {
   preferences: Array<{ id: string; text: string; source: string }>;
   avoid: Array<{ id: string; text: string; source: string }>;
   unresolved_ambiguities: Array<{ id: string; text: string }>;
+  evaluation_requirements: EvaluationRequirement[];
   original_fields: {
     product_category: string;
     budget: string | null;
@@ -345,6 +361,66 @@ export type NormalizedShopperRequest = {
     hard_constraints_or_dealbreakers: string | null;
   };
 };
+
+export type EvaluationRequirement = {
+  id: string;
+  text: string;
+  kind: "market" | "budget" | "hard" | "avoid" | "preference" | "ambiguity";
+  required_for_best_match: boolean;
+};
+
+function buildEvaluationRequirements(
+  request: Omit<NormalizedShopperRequest, "evaluation_requirements">,
+): EvaluationRequirement[] {
+  const requirements: EvaluationRequirement[] = [
+    {
+      id: AUTONOMOUS_MARKET_REQUIREMENT_ID,
+      text: "Currently available for purchase in the United States",
+      kind: "market",
+      required_for_best_match: true,
+    },
+  ];
+  if (request.budget.amount !== null) {
+    requirements.push({
+      id: AUTONOMOUS_BUDGET_REQUIREMENT_ID,
+      text: `Budget: ${request.budget.original || `$${request.budget.amount}`}`,
+      kind: "budget",
+      required_for_best_match:
+        request.budget.operator === "max" && !request.budget.flexible,
+    });
+  }
+  requirements.push(
+    ...request.hard_requirements.map((item) => ({
+      id: item.id,
+      text: item.text,
+      kind: "hard" as const,
+      required_for_best_match: true,
+    })),
+    ...request.avoid.map((item) => ({
+      id: item.id,
+      text: item.text,
+      kind: "avoid" as const,
+      required_for_best_match: true,
+    })),
+    ...request.preferences.map((item) => ({
+      id: item.id,
+      text: item.text,
+      kind: "preference" as const,
+      required_for_best_match: false,
+    })),
+    ...request.unresolved_ambiguities.map((item) => ({
+      id: item.id,
+      text: item.text,
+      kind: "ambiguity" as const,
+      required_for_best_match: false,
+    })),
+  );
+  const ids = requirements.map((item) => item.id);
+  if (new Set(ids).size !== ids.length) {
+    throw new Error("Autonomous evaluation requirement IDs must be unique");
+  }
+  return requirements;
+}
 
 function clean(value: string | undefined) {
   const result = value?.trim() || "";
@@ -358,7 +434,7 @@ export function buildNormalizedShopperRequest(
     input.extractedRequirements || extractStructuredRequirements(input);
   const budget = requirements.budgetRules[0];
 
-  return {
+  const normalized = {
     version: AUTONOMOUS_REQUEST_VERSION,
     product_category: input.query.trim(),
     market: "United States",
@@ -394,6 +470,10 @@ export function buildNormalizedShopperRequest(
       smart_features: input.selectedFeatures || [],
       hard_constraints_or_dealbreakers: clean(input.avoid),
     },
+  } satisfies Omit<NormalizedShopperRequest, "evaluation_requirements">;
+  return {
+    ...normalized,
+    evaluation_requirements: buildEvaluationRequirements(normalized),
   };
 }
 
@@ -571,7 +651,7 @@ export function applyRequirementInterpretation(
     })),
   ];
 
-  return {
+  const updated = {
     ...normalized,
     product_category: interpreted.product_category.trim(),
     hard_requirements: reorderExactItems(
@@ -587,6 +667,10 @@ export function applyRequirementInterpretation(
       ...normalized.unresolved_ambiguities,
       ...interpreterUncertainty,
     ],
+  } satisfies NormalizedShopperRequest;
+  return {
+    ...updated,
+    evaluation_requirements: buildEvaluationRequirements(updated),
   };
 }
 
@@ -623,10 +707,16 @@ Research standards:
 - Rank by the shopper's requirements and the category-specific quality factors found during research.
 - Do not invent URLs, sources, prices, images, ratings, review counts, specifications, or claims.
 
+Requirement-check contract:
+- The shopper JSON contains evaluation_requirements. Return exactly one requirement_check for every ID in that array on every product card, in the same order.
+- You must not invent requirement IDs, rename them, omit them, or add market, budget, category, or inferred checks outside that exact list.
+- Pass means the product satisfies the requirement; for an avoid requirement, Pass means the product does not have the avoided trait. A Best Match must Pass every item whose required_for_best_match is true. Otherwise use Close Match.
+
 Evidence contract:
 - Put every consulted source in the source registry with a unique sN ID.
 - Attach source_ids to every displayable factual or evaluative field.
-- A purchase URL must identify the exact product. An image URL is optional and may be null.
+- A non-null price or product URL must bind through purchase_offer.source_ids to the same registered purchase_page; otherwise return a null price and URL with Needs verification or Unavailable status. A purchase URL must identify the exact product.
+- An image URL is optional and may be null.
 - Return exactly the required strict JSON schema and no prose outside it.`;
 
 export function buildAutonomousResearchPrompt(

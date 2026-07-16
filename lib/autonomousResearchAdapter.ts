@@ -1,7 +1,7 @@
 import {
   AUTONOMOUS_PROMPT_VERSION,
   AUTONOMOUS_SLATE_SCHEMA_VERSION,
-  autonomousResearchSlateJsonSchema,
+  buildAutonomousResearchSlateJsonSchema,
   autonomousResearchSlateSchema,
   buildAutonomousResearchPrompt,
   canonicalJson,
@@ -133,7 +133,33 @@ export type AutonomousResearchResult =
       reason: AutonomousFailureReason;
       details: string[];
       ledger: AutonomousResearchLedger;
+      slate?: AutonomousResearchSlate;
+      response?: unknown;
     };
+
+export function summarizeAutonomousResearchResult(
+  result: AutonomousResearchResult,
+  rates: AutonomousCostRates,
+) {
+  const slate = result.slate;
+  return {
+    status: result.ok ? "accepted" : "rejected",
+    failure_reason: result.ok ? null : result.reason,
+    request_hash: result.ledger.requestHash,
+    returned_model: result.ledger.modelReturned,
+    duration_ms: result.ledger.durationMs,
+    retrieval_polls: result.ledger.polls,
+    usage: result.ledger.usage,
+    web_search_calls: result.ledger.usage.webSearchCalls,
+    source_count: result.ledger.sourceCount,
+    source_hosts: result.ledger.sourceHosts,
+    card_count: slate ? slate.products.length + slate.close_matches.length : 0,
+    estimated_cost_usd: estimateAutonomousResearchCost(
+      result.ledger.usage,
+      rates,
+    ),
+  };
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -183,6 +209,13 @@ function numberAt(record: Record<string, unknown>, key: string) {
   return typeof record[key] === "number" ? (record[key] as number) : 0;
 }
 
+function sanitizeDiagnosticText(value: string, maxLength: number) {
+  return value
+    .replace(/\bsk-[A-Za-z0-9_-]{8,}\b/g, "[redacted-api-key]")
+    .replace(/\s+/g, " ")
+    .slice(0, maxLength);
+}
+
 function safeRequestErrorDetails(error: unknown) {
   const record = isRecord(error) ? error : {};
   const details = [
@@ -195,10 +228,7 @@ function safeRequestErrorDetails(error: unknown) {
     }
   }
   if (error instanceof Error && error.message) {
-    const message = error.message
-      .replace(/\bsk-[A-Za-z0-9_-]{8,}\b/g, "[redacted-api-key]")
-      .replace(/\s+/g, " ")
-      .slice(0, 500);
+    const message = sanitizeDiagnosticText(error.message, 500);
     details.push(`message:${message}`);
   }
   return details;
@@ -215,6 +245,62 @@ function responseUsage(response: unknown): AutonomousUsage {
     outputTokens: numberAt(usage, "output_tokens"),
     totalTokens: numberAt(usage, "total_tokens"),
     webSearchCalls: responseWebSearchCalls(response),
+  };
+}
+
+export function sanitizeAutonomousResponseForEvidence(response: unknown) {
+  if (!isRecord(response)) return null;
+  const output: unknown[] = [];
+  for (const item of asArray(response.output)) {
+    if (!isRecord(item) || item.type === "reasoning") continue;
+    if (item.type === "web_search_call") {
+      output.push({
+        id: item.id ?? null,
+        type: item.type,
+        status: item.status ?? null,
+        action: item.action ?? null,
+      });
+      continue;
+    }
+    if (item.type === "message") {
+      const content = asArray(item.content).flatMap((entry) =>
+        isRecord(entry)
+          ? [
+              {
+                type: entry.type ?? null,
+                annotations: asArray(entry.annotations),
+              },
+            ]
+          : [],
+      );
+      output.push({
+        id: item.id ?? null,
+        type: item.type,
+        status: item.status ?? null,
+        role: item.role ?? null,
+        content,
+      });
+    }
+  }
+  const responseErrorRecord = isRecord(response.error) ? response.error : null;
+  const responseError = responseErrorRecord
+    ? Object.fromEntries(
+        ["code", "type", "param", "message"].flatMap((key) => {
+          const value = responseErrorRecord[key];
+          return typeof value === "string" || typeof value === "number"
+            ? [[key, sanitizeDiagnosticText(String(value), 500)]]
+            : [];
+        }),
+      )
+    : null;
+  return {
+    id: response.id ?? null,
+    model: response.model ?? null,
+    status: response.status ?? null,
+    incomplete_details: response.incomplete_details ?? null,
+    error: responseError,
+    usage: response.usage ?? null,
+    output,
   };
 }
 
@@ -331,15 +417,14 @@ export function validateAutonomousSlateForRequest(
 ) {
   const errors: string[] = [];
   const sourceById = new Map(slate.sources.map((source) => [source.id, source]));
-  const requiredIds = new Set([
-    ...request.hard_requirements.map((item) => item.id),
-    ...request.avoid.map((item) => item.id),
-  ]);
-  const knownIds = new Set([
-    ...requiredIds,
-    ...request.preferences.map((item) => item.id),
-    ...request.unresolved_ambiguities.map((item) => item.id),
-  ]);
+  const requiredIds = new Set(
+    request.evaluation_requirements
+      .filter((item) => item.required_for_best_match)
+      .map((item) => item.id),
+  );
+  const knownIds = new Set(
+    request.evaluation_requirements.map((item) => item.id),
+  );
 
   for (const card of [...slate.products, ...slate.close_matches]) {
     const cardLabel = card.identity.product_name;
@@ -349,8 +434,14 @@ export function validateAutonomousSlateForRequest(
     if (checks.size !== card.requirement_checks.length) {
       errors.push(`duplicate_requirement_check:${cardLabel}`);
     }
-    for (const id of requiredIds) {
-      if (!checks.has(id)) errors.push(`missing_hard_requirement_check:${cardLabel}:${id}`);
+    for (const requirement of request.evaluation_requirements) {
+      if (!checks.has(requirement.id)) {
+        errors.push(
+          requirement.required_for_best_match
+            ? `missing_hard_requirement_check:${cardLabel}:${requirement.id}`
+            : `missing_requirement_check:${cardLabel}:${requirement.id}`,
+        );
+      }
     }
     for (const id of checks.keys()) {
       if (!knownIds.has(id)) errors.push(`unknown_requirement_id:${cardLabel}:${id}`);
@@ -574,7 +665,7 @@ export function buildAutonomousResearchRequest(
         type: "json_schema",
         name: "review_radar_autonomous_research",
         strict: true,
-        schema: autonomousResearchSlateJsonSchema,
+        schema: buildAutonomousResearchSlateJsonSchema(normalizedRequest),
       },
     },
   };
@@ -672,19 +763,27 @@ export async function runAutonomousResearch({
   const request = buildAutonomousResearchRequest(normalizedRequest, config);
   const ledger = blankLedger(normalizedRequest, config, request);
   const startedAt = now();
+  let response: unknown;
+  let parsedSlate: AutonomousResearchSlate | undefined;
   const fail = (
     reason: AutonomousFailureReason,
     details: string[],
   ): AutonomousResearchResult => {
     ledger.failureReason = reason;
     ledger.durationMs = Math.max(0, now() - startedAt);
-    return { ok: false, reason, details, ledger };
+    return {
+      ok: false,
+      reason,
+      details,
+      ledger,
+      ...(parsedSlate ? { slate: parsedSlate } : {}),
+      ...(response !== undefined ? { response } : {}),
+    };
   };
 
   const errors = configErrors(config);
   if (errors.length) return fail("invalid_config", errors);
 
-  let response: unknown;
   try {
     response = await client.responses.create(request, {
       timeout: config.requestTimeoutMs,
@@ -755,17 +854,18 @@ export async function runAutonomousResearch({
       parsed.error.issues.map((issue) => `${issue.path.join(".")}:${issue.code}`),
     );
   }
-  const contract = validateAutonomousSlateContract(parsed.data);
+  parsedSlate = parsed.data;
+  const contract = validateAutonomousSlateContract(parsedSlate);
   if (!contract.valid) return fail("contract_invalid", contract.errors);
   const requestContract = validateAutonomousSlateForRequest(
-    parsed.data,
+    parsedSlate,
     normalizedRequest,
   );
   if (!requestContract.valid) {
     return fail("contract_invalid", requestContract.errors);
   }
 
-  const unverifiedSourceUrls = parsed.data.sources
+  const unverifiedSourceUrls = parsedSlate.sources
     .filter((source) => !citationUrlIsVerified(source.url, verifiedUrls))
     .map((source) => source.url);
   if (unverifiedSourceUrls.length) {
@@ -773,5 +873,5 @@ export async function runAutonomousResearch({
   }
 
   ledger.durationMs = Math.max(0, now() - startedAt);
-  return { ok: true, slate: parsed.data, ledger, response };
+  return { ok: true, slate: parsedSlate, ledger, response };
 }
