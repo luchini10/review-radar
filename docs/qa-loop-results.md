@@ -7454,3 +7454,53 @@ useful experiment is one separately approved v2 `primary-01` Terra/high smoke
 under the existing one-create, 20-search, $7 planning bounds. It should not be
 expanded to the remaining cases until the repaired contract and evidence path
 survive that one response.
+
+## 🟧 Codex — OAI-2A v2 Terra smoke blocked by background retrieval (2026-07-16)
+
+**Scope and approval.** Taylor approved exactly one v2 `primary-01` Terra/high
+research create, at most 20 hosted searches, a $7 planning ceiling, no Serper,
+retry, replacement, fallback, model substitution, or additional case, and
+bounded external source inspection only after local contract validity. The
+distinct evidence harness is `ca33e32`; contract implementation is `191c2a3`.
+
+**Pre-spend checks.** Official OpenAI documentation confirmed Terra still
+supports Responses, Structured Outputs, web search, and `high` reasoning.
+Rates remained $2.50/M input, $0.25/M cached input, $15/M output, and $0.01 per
+hosted web-search call. V2 preflight, 970/970 tests across 132 suites,
+typecheck, lint (zero errors / three pre-existing warnings), production build,
+and `git diff --check` passed. One lint-only declaration correction landed
+before client creation and dispatched zero requests.
+
+**Live actuals.** One `gpt-5.6-terra` response completed at `high` in 108,458
+ms after 20 background polls. It used 80,616 input, 19,688 output, and 100,304
+total tokens plus eight hosted web-search calls. Estimated cost from returned
+usage is $0.57686. The returned model matched. No other create, Call 1, Serper
+request, replacement, retry, external source fetch, or OAI-2B action occurred.
+
+**Contract result.** V2 fixed the prior defects: all four Best Matches used only
+`rr-system-market-us`, passed it, and invented no IDs; all non-null prices and
+product URLs bound to registered `purchase_page` sources. The four cards were
+Shark AZ3002, Miele Guard L1 Electro/12704580, Dyson V15 Detect, and Kenmore
+BC4026. The slate then failed `source_not_in_response`: nine URLs were
+registered, the final retrieved response exposed three distinct URLs, only two
+overlapped the registry, and seven registry URLs were absent. No card was
+accepted or displayed, and the invalid slate triggered no manual page opens.
+
+**Root cause.** This is a background retrieval adapter defect, not yet an
+architecture-quality result. Create correctly requests
+`web_search_call.action.sources` (`lib/autonomousResearchAdapter.ts:649-659`),
+but each final-response poll calls `responses.retrieve` with an empty query
+(`lib/autonomousResearchAdapter.ts:804-815`). The current mock freezes that
+incorrect behavior (`tests/autonomousResearchAdapter.test.mjs:315-345`). The
+official Retrieve Response reference defines `include` as a retrieval query
+parameter and explicitly supports `web_search_call.action.sources`; therefore
+the final background poll omitted the very complete source list that local
+validation required.
+
+**Evidence and decision.** The spent-but-quality-excluded response is preserved
+untracked at
+`tests/fixtures/review-radar-live/oai-2a-terra-2026-07-16-primary-01-v2-smoke-191c2a3/`.
+Its repaired summary honestly records usage, searches, latency, cards, cost,
+and failure. OAI-2A remains blocked by the adapter. The next step is a separately
+approved offline fail-first fix that repeats `include` on every retrieve poll;
+no replacement live request is approved or implied.
