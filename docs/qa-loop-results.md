@@ -8117,3 +8117,97 @@ suites; `npm run typecheck`; targeted ESLint; `npm run build`; and
 Only local Next development requests occurred. No provider call, external page
 fetch, production route connection, flag, secret, deployment, or existing
 user-visible behavior changed.
+
+## 🟧 Codex - OAI-T4 default-off route architecture plan (2026-07-17)
+
+**Verdict: PASS PLANNING - the next implementation is bounded and the unsafe
+synchronous route design is rejected.** Taylor approved planning only. Static
+inspection confirmed that the successful natural Terra diagnostic took
+`235.903` seconds while `app/page.tsx` aborts the current browser request after
+`180000` ms. The existing production route is also a large legacy orchestration
+that performs helper OpenAI calls, Serper discovery, reconstruction, filtering,
+and fallback. Feeding the new natural answer through that handler would revive
+the stage-loss architecture instead of integrating T1-T3.
+
+The frozen T4 plan uses one background Terra/high Responses API create, then
+retrieves or cancels that same response through signed, expiring app job tokens.
+The default and explicit `legacy` modes preserve the current response exactly;
+only exact `two_layer` mode starts the new path. Invalid mode or missing secret
+fails before a provider call. The new branch has no Serper, SearchAPI, legacy
+helper, second model call, automatic retry, or automatic fallback.
+
+The natural master prompt must first become versioned reviewed source code. A
+deterministic builder inserts every original shopper field once in a delimited
+data block and includes the existing normalized requirements without an OpenAI
+interpreter. A dedicated natural-text adapter collects only response-owned
+source metadata, then OAI-T2 formats the answer and OAI-T1 constructs cards.
+Initial route integration supplies no receipts, so price, retailer,
+availability, purchase link, image, and independently verified exact identity
+remain absent rather than being inferred.
+
+Implementation is divided into separately approved OAI-T4A (isolated prompt,
+background adapter, token, sources, ledger, mocked wall), OAI-T4B (default-off
+route and UI seam), and OAI-T4C (one separately budgeted live lifecycle smoke).
+No code, runtime, provider, flag, `.env.local`, deployment, or user-visible
+behavior changed during planning. The tracked planning diff is limited to the
+roadmap, regenerated handoff, this canonical result, and append-only dialogue.
+`git diff --check` passed; the committed 1042/1042 OAI-T3 implementation wall
+was not rerun because this phase changed documentation only. OAI-T4A remains
+unapproved.
+
+## 🟧 Codex - OAI-T4A isolated prompt and background-adapter result (2026-07-17)
+
+Taylor approved the zero-live OAI-T4A foundation and no later T4 work. The
+fail-first command
+`node --no-warnings --test tests/twoLayerMasterPrompt.test.mjs tests/twoLayerJobToken.test.mjs tests/twoLayerResearchAdapter.test.mjs`
+failed in all three suites with `ERR_MODULE_NOT_FOUND`, establishing that none
+of the approved contracts existed before this phase.
+
+`lib/twoLayerMasterPrompt.ts` now owns
+`oai-two-layer-master-prompt-v1`: stable natural-language research and numbered
+Markdown instructions plus one canonical, delimited normalized-shopper JSON
+block. The prompt treats shopper/web text as untrusted data, contains no
+benchmark/candidate/product seed or example URL, preserves the original category,
+budget, Important Details, Smart Features, and dealbreakers, and hashes the
+complete deterministic prompt contract.
+
+`lib/twoLayerResearchAdapter.ts` freezes the approved request as one
+`gpt-5.6-terra`/high background Responses create with `store: false`, required
+hosted web search, `max_tool_calls: 20`, `max_output_tokens: 24000`, and full
+web-search source inclusion. Start, poll, and cancel are single-shot operations:
+they do not sleep, retry, create a replacement, call Serper/SearchAPI, invoke a
+second model, or fall back to legacy. Polling accepts only the requested
+response ID, merges titled response-owned action sources and URL annotations,
+and passes the natural answer plus source registry to the existing T2
+formatter. Terminal failure, cancellation, incomplete response, refusal,
+missing web search, missing output text, missing source title, malformed T2
+shape, and mismatched provider job identity fail closed.
+
+`lib/twoLayerJobToken.ts` defines a stateless HMAC-SHA-256 token containing only
+the response ID, prompt version, issued time, and expiry. It requires at least a
+32-byte server secret, caps lifetime at 30 minutes, compares signatures in
+constant time, and rejects malformed, tampered, wrong-secret, future-issued,
+and expired tokens without throwing. The token and adapter ledger contain no
+shopper data. Diagnostics retain only prompt/version hashes, model/status,
+duration, bounded usage, source count/hosts, hashed response ID, and failure
+code; provider exception messages are deliberately omitted.
+
+Verification completed with zero provider calls:
+
+- focused OAI-T4A wall: 20/20 across three suites;
+- combined T1-T4 compatibility wall: 45/45 across five suites;
+- complete `npm test`: 1062/1062 across 144 suites;
+- `npm run typecheck`: pass;
+- targeted ESLint: pass;
+- full `npm run lint`: zero errors and three pre-existing unused-variable
+  warnings;
+- `npm run build`: pass;
+- `node scripts/eval-pipeline.mjs`: no red flags; and
+- `git diff --check`: pass (line-ending notices only), with no trailing
+  whitespace, secret pattern, raw response, or tracked live fixture in the
+  intended phase files.
+
+Browser QA was not applicable: T4A added server-side isolated modules and tests
+only and deliberately did not touch a route, page, component, or public shape.
+No live call, route integration, mode flag, job secret, `.env.local` edit,
+deployment, commit, or user-visible behavior occurred. T4B remains unapproved.

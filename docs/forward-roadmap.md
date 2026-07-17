@@ -1843,6 +1843,209 @@ first step that could connect the new trust contract to the application route;
 that decision affects architecture, fallback behavior, and customer-visible
 failure semantics.
 
+### OAI-T4 - default-off two-layer route architecture (T4A complete locally 2026-07-17; zero live; T4B unapproved)
+
+**Assessment:** the two-layer path is still the strongest route to the product
+objective, but a direct synchronous splice into the legacy handler would be the
+wrong implementation. The July 17 Terra diagnostic took `235.903` seconds,
+while `app/page.tsx` aborts the current request after `180000` ms. Keeping one
+browser request open would therefore make a known-good research response look
+like an application failure and would depend on undeclared hosting timeouts.
+OAI-T4 must use the Responses API's background create/retrieve lifecycle and a
+short-lived app job contract. Retrieval polls are not additional research
+creates and do not change the one-main-OpenAI-call architecture.
+
+Route integration is necessary but not sufficient: it removes the translation
+gap between the successful natural Terra answer and the T1-T3 presentation. It
+does not prove repeatability, factual support, transactional coverage, or
+production readiness. T4 therefore remains default-off and zero-live until its
+offline gates pass. The old OAI-2B through OAI-10 sequence remains historical;
+it is not silently revived by this plan.
+
+**Alternatives rejected:**
+
+- Do not add a second prototype endpoint that must later be migrated into the
+  real route. The real `/api/recommendations` boundary should dispatch by an
+  exact server-only mode while leaving the legacy response byte-compatible.
+- Do not insert the natural answer into the 1,679-line legacy reconstruction,
+  normalization, scoring, enrichment, or Serper pipeline. That recreates the
+  stage-loss problem the two-layer design is meant to remove.
+- Do not coerce T1 cards into the legacy `RecommendationResult` shape. That
+  would erase the explicit trust classes and invite unsafe price/image/URL
+  placeholders.
+- Do not automatically retry, run Serper, or fall back to legacy after an OAI
+  failure. A fallback would hide which architecture answered, could double
+  spend, and would make failures and quality measurements uninterpretable.
+- Do not add an OpenAI requirement-interpreter call. The existing deterministic
+  request normalizer already preserves category, budget, Important Details,
+  Smart Features, and hard constraints/dealbreakers. Code will insert both the
+  normalized requirements and verbatim original fields as delimited data.
+
+**Frozen target flow:**
+
+```text
+POST /api/recommendations
+  -> existing request validation
+  -> exact server mode dispatch
+     -> legacy: unchanged legacy handler and response
+     -> two_layer: deterministic request normalization and versioned prompt
+        -> one Responses API create, Terra/high, background + hosted web search
+        -> return 202 with a signed, expiring job token
+
+GET /api/recommendations?job=...
+  -> verify token, retrieve the same OpenAI response
+  -> pending: return 202 and poll guidance
+  -> completed: collect response-owned source metadata
+     -> deterministic OAI-T2 formatting
+     -> OAI-T1 validation and card construction, initially with zero receipts
+     -> return the versioned two-layer response
+
+DELETE /api/recommendations?job=...
+  -> verify token and request OpenAI cancellation
+  -> never start a replacement or legacy fallback
+```
+
+The job token contains only an opaque response ID, contract version, expiry,
+and signature. It contains no shopper request, prompt, answer, source URL, API
+key, or other credential. It is signed with a new server-only
+`REVIEW_RADAR_JOB_TOKEN_SECRET`; two-layer mode fails before provider creation
+when that secret or `OPENAI_API_KEY` is absent. Legacy mode does not require the
+new secret.
+
+**Mode and public response contract:**
+
+- `REVIEW_RADAR_PIPELINE_MODE` is server-only. Missing or exact `legacy` means
+  legacy. Exact `two_layer` enables the new branch. Any other non-empty value is
+  a configuration error before any provider call; it does not silently choose
+  a path.
+- The legacy success body remains exactly `{ result: RecommendationResult }`.
+  Do not add a discriminator or new fields to that body.
+- A two-layer start returns HTTP `202` with `pipeline: "two_layer"`, a contract
+  version, `state: "pending"`, an opaque job token, and bounded poll guidance.
+  Pending polls retain that shape. Completion returns `pipeline: "two_layer"`,
+  `state: "completed"`, the OAI-T1 presentation version, cards, and only the
+  source catalog required by the UI. Raw prompt and raw answer are never sent to
+  the browser or written to logs.
+- The frontend branches on the new response shape and reuses the T3 trust-card
+  presentation after separating its development-only wrapper copy. It does not
+  translate the cards into legacy products.
+- Initial T4 completion supplies `receiptInputs: []`. Every recommendation can
+  remain visible, but exact identity and commerce stay unverified: no price,
+  purchase link, retailer, availability, or image is fabricated merely to make
+  the card look complete.
+
+**Versioned prompt and provider contract:** the natural-language master prompt
+from the successful unguarded diagnostic must become reviewed source code; it
+must not be loaded from the untracked fixture. The prompt builder has its own
+version and hash, places the deterministic normalized request plus original
+fields inside explicit data delimiters, states that shopper and web text are
+untrusted data, and requests the numbered headings OAI-T2 already validates.
+No benchmark answer, candidate list, app-authored search plan, or hidden product
+seed enters the prompt.
+
+The provider adapter is a natural-text adapter, not a reuse of the rejected
+strict-slate parser. Freeze `gpt-5.6-terra`, reasoning `high`, `background:
+true`, `max_output_tokens: 24000`, hosted `web_search` required, and
+`max_tool_calls: 20`. OpenAI documents `max_tool_calls` as the total built-in
+tool-call ceiling for the response, not a per-search retry allowance. Every
+retrieve includes `web_search_call.action.sources`. The final source registry
+merges response-owned web-search sources and URL-citation annotations by
+normalized URL, but it never invents a missing title or URL. Missing registered
+source metadata fails closed before card construction.
+
+**Failure semantics:**
+
+| Failure | Public behavior | Forbidden behavior |
+|---|---|---|
+| Invalid shopper request | Existing safe HTTP 400 message | No provider call |
+| Missing/invalid two-layer config | Safe HTTP 500 configuration message | No provider call; no legacy fallback |
+| Create error | Safe HTTP 502 research-start failure | No retry or replacement |
+| Pending response | HTTP 202 with poll guidance | No second create |
+| Poll token invalid/expired | Safe HTTP 400/410 message | No response-ID guessing |
+| Background timeout | Cancel when possible; safe HTTP 504 | No partial cards or fallback |
+| Failed/cancelled/incomplete/refusal/no web search/no text | Safe typed 502/409 result | No partial cards or fallback |
+| Prompt-shape, formatter, hash, order, or source-registry failure | Safe HTTP 502 verification message | No guessed fields, parser repair, or legacy conversion |
+| Valid cards with no receipts | Show cards with T3 unverified states | No price, link, seller, availability, or image |
+
+Server diagnostics may record contract/prompt hashes, model, status, duration,
+poll count, token/tool usage, source count/hosts, and a bounded failure code.
+They may not record shopper prose, the complete prompt, raw answer, source-path
+URLs, headers, cookies, keys, or complete provider responses.
+
+**Implementation sequence - each item needs separate Taylor approval:**
+
+1. **OAI-T4A - versioned prompt and background adapter, zero live.** Add the
+   deterministic prompt builder, natural-text start/retrieve/cancel adapter,
+   signed job-token contract, source-metadata extractor, sanitized ledger, and
+   mocked lifecycle/adversarial tests. Keep all modules isolated from the route.
+2. **OAI-T4B - default-off route and UI seam, zero live.** Add the exact mode
+   dispatcher while leaving the legacy branch unchanged; add POST/GET/DELETE
+   job states, the versioned response union, and the real T3 card renderer.
+   Land the legacy dispatch refactor separately from the two-layer branch within
+   the phase so any behavior drift has one attributable commit boundary.
+3. **OAI-T4C - one bounded live route smoke, separately budgeted.** Only after
+   T4A/T4B and peer review pass, approve one Terra create with a stated hosted-
+   search ceiling. Exercise the real start/poll/UI path and stop. This is a
+   lifecycle smoke, not a quality or promotion gate.
+4. **Later quality/repeatability gate.** Define a new two-layer gate from T4C
+   actual cost, latency, and output. It must measure recommendation usefulness,
+   hard-requirement fidelity, source binding, formatter success, and stability
+   before any flag promotion or transactional verifier work.
+
+**OAI-T4A implementation result (2026-07-17; zero live; committed in current history):** the
+isolated foundation is complete in `lib/twoLayerMasterPrompt.ts`,
+`lib/twoLayerJobToken.ts`, and `lib/twoLayerResearchAdapter.ts`. It versions and
+hashes the natural Markdown prompt, inserts the existing normalized request as
+one canonical delimited data block, freezes one Terra/high background create
+with `store: false` and required hosted search, exposes single-shot retrieve and
+cancel operations, accepts only response-owned titled source metadata, and
+keeps shopper prose, full prompts/answers, source paths, credentials, and raw
+responses out of its operational ledger. The HMAC-SHA-256 job token contains
+only the response ID, prompt version, issue/expiry times, and signature; it
+requires a 32-byte secret and cannot live longer than 30 minutes. Tampering,
+expiry, mismatched provider response IDs, terminal/incomplete/refusal states,
+missing web search/text/source title, and provider errors fail closed without
+retry or fallback. The new 20-test wall and the combined T1-T4 wall pass;
+complete verification is recorded in `docs/qa-loop-results.md`. No route, UI,
+flag, secret, `.env.local`, provider, or user-visible behavior changed. T4B
+remains separately approval-gated.
+
+**Offline acceptance wall for T4A/T4B:**
+
+- default/explicit legacy requests have the same status, body, provider call
+  order, and fallback behavior as today, and never touch the two-layer adapter;
+- each original user field appears exactly once in the original-fields data
+  block, while derived normalized requirements have no omissions or unsupported
+  additions; delimiter/instruction-injection cases cannot change system policy;
+- exact two-layer mode performs one create, no Serper/SearchAPI/legacy helper
+  call, no second model call, and only retrieves that response while polling;
+- queued, in-progress, completed, failed, cancelled, incomplete, refused,
+  missing-search, missing-text, missing-source-title, malformed-heading,
+  unregistered-source, token-tamper, expiry, and cancellation cases are tested;
+- cards preserve Terra count/order and T1/T2 source/text/hash rules;
+- no-receipt cards expose none of the transactional fields;
+- focused tests, the complete wall, typecheck, lint, build, offline evaluation,
+  `git diff --check`, and mocked desktop/mobile browser QA pass; and
+- tracked changes contain no secret, raw live response, or live fixture.
+
+**Stop conditions:** stop before implementation if the signed background job
+contract cannot be supported without durable user data or a deployment-specific
+service not already approved. Stop before live work if legacy equivalence or any
+fail-closed case is not proven. Stop after any unsafe field is displayed from
+the model layer, any fallback starts a second research path, or any mode is
+indistinguishable in evidence.
+
+**Tradeoffs:** background polling adds route states, token signing, client
+polling, and cancellation code. That is more machinery than extending the
+browser timeout, but it directly removes the observed timeout mismatch and does
+not assume a hosting platform can hold a multi-minute request. T4 intentionally
+ships initially sparse cards; transactional completeness remains future work.
+
+**Recommended reasoning level:** Highest for OAI-T4A and OAI-T4B because they
+define authentication-like job tokens, provider lifecycle, route compatibility,
+and failure semantics. High is sufficient for the later bounded mechanical
+OAI-T4C smoke after the offline wall is green.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen
