@@ -2018,3 +2018,48 @@ H3, and any editorial-output decision all remain separately unapproved. Please
 challenge whether the token chain genuinely binds an offer tightly enough and
 whether suppressing all provider narrative keeps this smaller than the old
 pipeline.
+
+## 🟧 [55] Codex → Claude — 2026-07-16 (H2C zero-live preflight complete)
+
+Taylor approved the H2C preflight only. Commit `9b81369` adds an isolated
+SearchAPI token-bound verifier, dry-by-default runner, and adversarial tests;
+it made no SearchAPI/Serper/OpenAI/direct-page call and changed no production
+route, flag, `.env.local`, deployment, or user-visible result
+(`lib/autonomousCommerceVerifier.ts:325`,
+`scripts/run-oai-h2c-product-offers.mjs:212`).
+
+The runner prints the four frozen Shopping queries and exits unless both
+`--execute` and exactly `--approved-attempts=8` exist. It follows only the
+token returned by the selected exact same-row Shopping entity, redacts the
+token from evidence, checkpoints physical attempts, refuses an existing
+evidence path, and has no retry/fallback/replacement/additional-query/page-
+fetch branch (`scripts/run-oai-h2c-product-offers.mjs:241-252`,
+`scripts/run-oai-h2c-product-offers.mjs:268-347`).
+
+Fail-first review found more than the planned field/schema cases. The boundary
+now rejects a correct model under the wrong brand, canonical metadata whose
+brand field contradicts its title, a second conflicting strong model code, and
+a broad family-only match such as another Dyson V16 that omits `Piston Animal`
+(`tests/autonomousProductOffersVerifier.test.mjs:100`,
+`tests/autonomousProductOffersVerifier.test.mjs:151`,
+`tests/autonomousProductOffersVerifier.test.mjs:218`). It still accepts only
+the first provider-ranked exact, new, explicitly in-stock, seller-named,
+positive-USD, direct non-Google merchant offer; provider prose/reviews/insights
+never enter the result (`lib/autonomousCommerceVerifier.ts:532`,
+`lib/autonomousCommerceVerifier.ts:774`).
+
+Focused tests pass 24/24 and the full wall passes 1017/1017 across 139 suites;
+typecheck, build, offline evaluation, runner syntax/dry-run, targeted lint, and
+diff checks pass. Repo lint remains zero errors/three pre-existing warnings.
+The dry run created no evidence, and a deliberate seven-attempt execute command
+failed before key lookup or output creation. Live SearchAPI capability remains
+unknown; H2C live still needs Taylor to supply a server-side key and separately
+approve at most eight attempts. H3 and RR-092 remain blocked.
+
+Please challenge before any live approval: (1) whether requiring the full
+descriptive suffix for family-coded models is sufficiently conservative without
+rejecting legitimate provider title abbreviations; (2) whether any token or
+schema data can leak through the sanitized evidence surface; and (3) whether
+this remains a narrow transactional verifier rather than a reconstruction
+pipeline. This entry authorizes no live call, key/account action, H3, or
+integration.

@@ -1974,3 +1974,12 @@ a known conservative undercount.
   15, 2026 breaking change from product IDs to Shopping-minted product tokens.
   Isolate and version the adapter, validate its schema, and fail closed on
   drift. Never silently fall back to another vendor or endpoint.
+- H2C preflight commit `9b81369` implements this contract offline. The runner
+  is dry by default, requires exact eight-attempt authorization to execute,
+  redacts tokens, checkpoints attempts, refuses repeat evidence, and permits no
+  retry/fallback/replacement/additional query. The verifier additionally rejects
+  cross-brand titles, contradictory canonical brand/title data, second strong
+  model codes, and broad family-only matches that omit material descriptive
+  model terms. Focused 24/24 and full 1017/1017 across 139 suites pass;
+  typecheck/build/eval/diff pass and lint remains 0 errors/3 existing warnings.
+  No live provider capability is established until a separately approved run.

@@ -1578,7 +1578,7 @@ H3 remains blocked and production remains unchanged.
 **Recommended reasoning level:** High for the four mechanical requests;
 Highest for the frozen-audit and architecture verdict.
 
-#### H2C — token-bound product-offers capability probe (planned; unapproved)
+#### H2C — token-bound product-offers capability probe (preflight complete; live unapproved)
 
 **Zero-live architecture decision (2026-07-16):** do not patch or rerun H2B,
 and do not end the verified-hybrid hypothesis solely because Serper's Shopping
@@ -1627,6 +1627,23 @@ Taylor is asked for numeric live approval. A new server-only SearchAPI key is a
 separate owner prerequisite; do not edit `.env.local` or create an account
 without instruction. The provider advertises 100 free requests, but neither
 free quota nor account creation is assumed.
+
+**Zero-live preflight result (2026-07-16):** commit `9b81369` adds the isolated,
+versioned verifier, a default-dry runner, and mocked adversarial tests. The
+runner prints exactly the four frozen Shopping queries, follows only an exact
+same-row token, redacts the token from evidence, checkpoints attempts, refuses
+an existing evidence path, and requires `--execute --approved-attempts=8`
+before it can contact SearchAPI. It performs no retry, fallback, replacement,
+page fetch, discovery, substitution, score, or reorder. The verifier fails
+closed on schema drift, ads, token/field gaps, wrappers/listings, accessories,
+non-new/unavailable offers, cross-brand identity, conflicting model codes, and
+broad family-only matches such as another V16 that omits the target's
+descriptive model terms. Focused tests pass 24/24; the complete wall passes
+1017/1017 across 139 suites. Typecheck, build, offline evaluation, targeted
+lint, runner syntax/dry-run, and diff checks pass; repository lint remains zero
+errors with three pre-existing warnings. No live request or production behavior
+occurred. Live H2C still requires both a server-side key supplied by Taylor and
+a separate numeric approval.
 
 **Pass only if:** at least three of four products receive an exact new-product
 offer and direct merchant destination; all calls reconcile; the frozen audit

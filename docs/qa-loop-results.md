@@ -7892,3 +7892,43 @@ architecture decision.
 This is still only a transactional answer. RR-092 remains unresolved, so even
 a passing offer probe cannot authorize professional performance claims,
 model-specific editorial imagery, arbitrary prose, or H3 integration.
+
+## 🟧 Codex — OAI-H2C token-bound verifier preflight (2026-07-16)
+
+**Verdict: READY OFFLINE — SearchAPI capability remains unproven live.** Commit
+`9b81369` implements the approved zero-live H2C preflight only. It adds an
+isolated versioned SearchAPI Shopping→Product Offers verifier, a default-dry
+runner for the same four frozen identities, and mocked adversarial tests. It
+made zero SearchAPI, Serper, OpenAI, or direct-page requests and changed no
+route, flag, `.env.local`, deployment, production behavior, or user-visible
+result.
+
+The runner emits only these four Shopping queries: `Shark AZ4002 vacuum
+cleaner`, `Miele 12704570 SUZE0 vacuum cleaner`, `Shark HZ4002 vacuum cleaner`,
+and `Dyson V16 Piston Animal vacuum cleaner`. A later Offers call can exist only
+when the first provider-ranked exact same-row Shopping entity supplies a valid
+`product_token`; the persisted plan/evidence redacts that token and retains
+only its SHA-256. The runner is inert unless both `--execute` and
+`--approved-attempts=8` are present, refuses existing evidence, increments and
+checkpoints attempts before each request, and has no retry, fallback,
+replacement, second page, additional query, direct fetch, or OpenAI branch.
+
+The verifier accepts only the first provider-ranked direct merchant offer that
+is exact-brand, exact-model, new, explicitly in stock, positively priced in
+USD, seller-named, non-Google, and product-page eligible. Fail-first controls
+closed four identity classes beyond the basic schema cases: a correct model
+code under the wrong brand, contradictory canonical brand/title metadata, a
+broad family-only match (`V16` without `Piston Animal`), and a title carrying a
+second conflicting strong model. Ads, wrappers/listings, accessories,
+used/refurbished/open-box or unavailable offers, missing fields, wrong/missing
+tokens, schema drift, provider prose/reviews/insights, and model-authored
+fallback values all remain rejected or ignored.
+
+Focused tests pass 24/24. The complete suite passes 1017/1017 across 139
+suites; typecheck, build, offline evaluation, runner syntax/dry-run, targeted
+lint, and diff checks pass. Repository lint reports zero errors and the same
+three pre-existing warnings. The dry run wrote no evidence fixture, and a
+deliberately wrong seven-attempt approval failed before key lookup or output
+creation. Live H2C still requires a server-side SearchAPI key supplied by
+Taylor plus a separate explicit approval of at most eight attempts. H3 remains
+blocked, and RR-092 remains unresolved regardless of any later commerce result.
