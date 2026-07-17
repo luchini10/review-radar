@@ -7846,3 +7846,49 @@ evidence remains untracked at
 SHA-256
 `224d15f154ffeb3aef5c065ccc0b4f4ac93048d42a18dc471a2c939327d551c`.
 Inspection found no persisted API key, headers, cookies, or credentials.
+
+## 🟧 Codex — post-H2B provider-capability architecture decision (2026-07-16)
+
+**Verdict: CONTINUE ONLY TO ONE SMALLER PROVIDER CAPABILITY GATE; H3 remains
+blocked.** This was a documentation-only investigation. It made zero provider
+or OpenAI calls, zero direct product-page fetches, and no code, route, flag,
+`.env.local`, deployment, or user-visible change.
+
+The failed H2B result does not prove every independent commerce verifier is
+impossible. It proves that Serper's one-stage Shopping response cannot satisfy
+the merchant-destination boundary: all 121 returned links were Google wrappers.
+Official current documentation shows two providers with a materially different
+two-stage product-entity contract:
+
+| Provider | Documented chain | Relevant output | Decision |
+|---|---|---|---|
+| SearchAPI | exact Google Shopping result → `product_token` → Google Product Offers | canonical product title/brand plus offer merchant, direct retailer `link`, price, stock/delivery details | Selected for one proposed H2C capability probe because the second endpoint is narrowly offer-focused. |
+| SerpApi | exact Google Shopping result → immersive product page token → Immersive Product | product identity plus stores with merchant links/prices, but also broad reviews/insights | Viable documented class, but not a fallback or parallel test; broader than H2C needs. |
+| Existing Serper | one Shopping response | title/source/price plus Google wrapper | Rejected by measured H2B evidence; do not retune or rerun. |
+
+Primary documentation inspected:
+
+- SearchAPI Google Shopping: <https://www.searchapi.io/docs/google-shopping>
+- SearchAPI Google Product Offers: <https://www.searchapi.io/docs/google-product-offers>
+- SearchAPI pricing/free-request statement: <https://www.searchapi.io/pricing>
+- SerpApi Google Shopping: <https://serpapi.com/google-shopping-api>
+- SerpApi Immersive Product: <https://serpapi.com/google-immersive-product-api>
+
+SearchAPI's documented Offers example includes direct Walmart and Dell links,
+merchant names, prices, and in-stock/delivery details. The Offers endpoint now
+requires a token minted by the preceding Shopping call; that May 15, 2026
+breaking change is explicit evidence that the adapter must be isolated,
+versioned, and fail closed rather than treated as a permanent schema.
+
+The proposed H2C probe is therefore at most two requests per frozen product:
+four exact Shopping calls and up to four token-bound Offers calls. It cannot
+use ads, substitutions, query expansion, extra pages, retries, fallbacks,
+merchant-page fetches, provider reviews/insights, or model-authored fallback
+facts. The same `3/4` coverage and zero-unsafe-binding gates remain. H2C needs a
+zero-live code preflight, a separate server-side key supplied by Taylor, and a
+later explicit eight-attempt live approval. None is authorized by this
+architecture decision.
+
+This is still only a transactional answer. RR-092 remains unresolved, so even
+a passing offer probe cannot authorize professional performance claims,
+model-specific editorial imagery, arbitrary prose, or H3 integration.

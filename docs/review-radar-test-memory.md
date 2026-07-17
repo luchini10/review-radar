@@ -1953,3 +1953,24 @@ a known conservative undercount.
   Shopping wrapper as merchant-destination proof or weaken this boundary to
   make a provider pass. Evidence hash
   `224d15f154ffeb3aef5c065ccc0b4f4ac93048d42a18dc471a2c939327d551c`.
+
+## OAI-H2C two-stage commerce-provider contract — 2026-07-16
+
+- A one-stage Shopping row with a Google wrapper is not a merchant destination.
+  Do not rewrite queries or weaken URL trust to compensate for a provider that
+  omits offer-level links.
+- A materially different narrow verifier may use one exact Shopping lookup to
+  obtain a product-entity token and one token-bound Offers lookup to obtain
+  merchant, direct retailer URL, current price, and availability. The token
+  chain is evidence binding, not permission to discover or substitute.
+- Exact brand and stable model/SKU must survive in the selected Shopping entity
+  and the chosen offer without conflict. Missing token, identifier, seller,
+  positive price, new/in-stock state, or non-Google merchant URL is
+  inconclusive; model-authored values never backfill it.
+- Ignore shopping ads, reviews, critic insights, arbitrary specifications, and
+  prose. A commerce provider solves transactional verification only; it does
+  not solve exact-tested-model editorial truth or RR-092.
+- Provider adapters are volatile trust boundaries. SearchAPI documented a May
+  15, 2026 breaking change from product IDs to Shopping-minted product tokens.
+  Isolate and version the adapter, validate its schema, and fail closed on
+  drift. Never silently fall back to another vendor or endpoint.

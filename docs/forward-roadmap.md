@@ -1578,6 +1578,72 @@ H3 remains blocked and production remains unchanged.
 **Recommended reasoning level:** High for the four mechanical requests;
 Highest for the frozen-audit and architecture verdict.
 
+#### H2C — token-bound product-offers capability probe (planned; unapproved)
+
+**Zero-live architecture decision (2026-07-16):** do not patch or rerun H2B,
+and do not end the verified-hybrid hypothesis solely because Serper's Shopping
+response omitted merchant destinations. Official provider documentation shows
+that a materially different two-stage commerce contract exists: SearchAPI's
+[Google Shopping API](https://www.searchapi.io/docs/google-shopping) returns a
+`product_token` for a Shopping entity, and its
+[Google Product Offers API](https://www.searchapi.io/docs/google-product-offers)
+accepts that token and documents offer-level merchant names, prices, stock
+details, and direct retailer links. This is the missing capability, not a query
+rewrite. The docs review made zero provider/API calls and changed no code.
+
+SearchAPI is the first candidate because its Product Offers response is narrower
+than a general product-research payload and explicitly exposes the fields H2B
+lacked. SerpApi's current Immersive Product API documents a similar token-to-
+stores flow, but it returns a broader product/review/insight payload that H2C
+does not need. There is no runtime fallback between vendors. SearchAPI's May 15,
+2026 token-contract change is a durability warning: any implementation must
+version the adapter and fail closed when the token or offer schema changes.
+
+**Proposed scope:** H2C is still a feasibility probe, not integration. It may
+receive only the same four frozen OpenAI-proposed identities and preserve their
+relative order. For each identity it may:
+
+1. issue one exact `google_shopping` query using frozen `gl=us`, `hl=en`, and
+   brand + stable model/SKU + category;
+2. select the first provider-ranked `shopping_results` entity whose title has
+   the target brand and stable model/SKU and that supplies a `product_token`;
+3. issue one `google_product_offers` request with only that token; and
+4. verify the first new, in-stock offer whose canonical product and offer title
+   do not conflict, whose offer title carries the stable model/SKU, and that
+   supplies seller, positive USD price, and a non-Google HTTP(S) merchant URL.
+
+No exact Shopping entity means inconclusive and no offers call. H2C cannot use
+shopping ads, choose a substitute, expand a query, rescue a product, minimize
+price across offers, fetch a merchant page, add/reorder a card, or use provider
+reviews, critic insights, specifications, or prose. Model-authored values never
+fill a missing provider field.
+
+**Proposed live bound:** at most four Shopping calls plus four token-bound
+Offers calls: eight logical/eight physical attempts as both planning basis and
+hard ceiling. No retry, fallback, replacement, cache reuse, second page,
+additional query, direct page fetch, OpenAI call, or H3 work. A dry-by-default
+runner and mocked adversarial verifier must be completed and committed before
+Taylor is asked for numeric live approval. A new server-only SearchAPI key is a
+separate owner prerequisite; do not edit `.env.local` or create an account
+without instruction. The provider advertises 100 free requests, but neither
+free quota nor account creation is assumed.
+
+**Pass only if:** at least three of four products receive an exact new-product
+offer and direct merchant destination; all calls reconcile; the frozen audit
+finds zero wrong model/variant/accessory, price bleed, wrapper, used offer, or
+unsafe binding; and no product/retailer/category exception is required. One
+unsafe accepted offer fails H2C. Failure ends this provider experiment and
+returns the architecture to an owner decision rather than trying another
+vendor or query in the same phase.
+
+An H2C pass would establish transactional feasibility only. It would not fix
+RR-092 or authorize H3: professional claims, exact-tested-model imagery, and
+arbitrary editorial prose remain hidden until a separately approved trust
+decision defines evidence that can safely support them.
+
+**Recommended reasoning level:** Highest for the offline verifier and verdict;
+High for the bounded mechanical requests if they are later approved.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen

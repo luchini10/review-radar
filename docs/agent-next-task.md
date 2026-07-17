@@ -1,14 +1,14 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-16 by 🟧 Codex after the failed H2B live oracle gate.
+Updated: 2026-07-16 by 🟧 Codex after the post-H2B provider-capability decision.
 Architecture: `5edfb3d`. H1: `a9a46c6`. H2: `858ad9a`.
-H2B preflight: `deac842`. H2B live evidence: untracked, hash below.
+H2B preflight: `deac842`. H2B result docs: `7e703dc`.
 
 ## Efficient session start
 
 1. Read repository `AGENTS.md` in full.
 2. Read this handoff in full.
-3. Read `docs/forward-roadmap.md` from OAI-H0 through failed H2B.
+3. Read `docs/forward-roadmap.md` from OAI-H0 through planned H2C.
 4. Read `docs/agent-dialogue.md` from entry [48] onward.
 5. Treat old OAI-2B through OAI-10 as historical/unreachable and H3 as blocked.
 
@@ -17,24 +17,29 @@ H2B preflight: `deac842`. H2B live evidence: untracked, hash below.
 - Production and the current route remain unchanged. Legacy is the only user-
   visible path. No autonomous/hybrid route, flag, `.env.local`, or deployment
   change exists.
-- OAI-2A direct-to-display failed semantic source truth. H2 direct fetch then
-  failed at `2/4` independently verified identities/destinations and exposed
-  RR-092.
-- Taylor approved H2B as exactly four Serper Shopping searches/four physical
-  attempts. The runner executed once and reconciled exactly: four HTTP 200
-  attempts, zero retries/fallbacks/replacements/cache/additional queries/direct
-  page fetches/OpenAI calls/H3 work.
-- The responses contained 121 Shopping rows (40, 40, 25, 16). Every URL exposed
-  through `productLink`, `product_link`, or `link` was a Google wrapper. Twelve
-  rows carried a target stable identifier, but none supplied a usable merchant
-  destination. Miele and HZ4002 had no stable identifier in any returned title.
-- The verifier accepted zero offers. Frozen-audit false accepts were therefore
-  zero, but coverage was `0/4`, below the required `3/4`. H2B failed safely.
-- Do not weaken the verifier to accept Google wrappers. They do not prove a
-  merchant destination and would erase the trust boundary H2B was testing.
-- RR-091 and RR-092 remain Needs Investigation. H2B cannot verify editorial
-  prose and does not resolve the exact-tested-model defect.
-- Register remains 92 total / 85 Fixed / 6 Needs Investigation / 1 Won't Fix.
+- OAI-2A direct-to-display failed semantic source truth. H2 direct fetch failed
+  at `2/4`. H2B's one-stage Serper Shopping oracle failed safely at `0/4`
+  because all 121 exposed URLs were Google wrappers.
+- Taylor then approved a zero-live architecture decision. Official provider
+  documentation—not live calls—shows that a materially different two-stage
+  commerce contract exists: exact Shopping result → product token → offer-level
+  merchant, direct retailer URL, price, and stock data.
+- SearchAPI is the selected candidate for one proposed capability gate because
+  its `google_product_offers` endpoint is narrowly offer-focused. SerpApi
+  documents a similar but broader Immersive Product response; it is not a
+  fallback or parallel test.
+- H2C is planned but unapproved. It keeps the same four frozen identities and
+  relative order and permits at most one exact Shopping lookup plus one token-
+  bound Offers lookup per identity. It cannot discover, substitute, rescue,
+  rank, reorder, fetch merchant pages, or use provider prose/reviews/insights.
+- SearchAPI's documented May 15, 2026 token-contract change is a durability
+  warning. Any adapter must be isolated, versioned, schema-validated, and fail
+  closed on drift.
+- H2C can test transactional facts only. RR-092 remains unresolved; even an
+  H2C pass cannot authorize professional claims, exact-tested-model editorial
+  imagery/prose, or H3.
+- RR-091 and RR-092 remain Needs Investigation. Register remains 92 total /
+  85 Fixed / 6 Needs Investigation / 1 Won't Fix.
 
 ## Current flag state
 
@@ -44,37 +49,50 @@ H2B preflight: `deac842`. H2B live evidence: untracked, hash below.
 - No autonomous/hybrid production flag exists.
 - Legacy remains the only user-visible path.
 
-## Next task — owner architecture decision; no phase approved
+## Next task — H2C zero-live preflight requires explicit approval
 
-Do not patch H2B, rerun Serper, or start H3. The same Serper Shopping response
-shape cannot pass the merchant-destination gate. The next useful zero-live step,
-if Taylor approves it, is a short architecture decision comparing:
+If Taylor approves H2C preflight, implement only an isolated, default-dry
+SearchAPI adapter/verifier and mocked adversarial tests. Do not call SearchAPI,
+create an account, request a key, edit `.env.local`, or start H3.
 
-1. stop the verified-hybrid branch and retain legacy;
-2. evaluate documentation for one commerce provider class that explicitly
-   exposes exact model identifiers and merchant product URLs before spending;
-3. accept fewer verified cards from direct fetch, acknowledging H2's `2/4`
-   usefulness failure.
+The preflight must demonstrate offline that:
 
-The recommended direction is option 2 only if a provider can prove those fields
-without rebuilding discovery, ranking, rescue, and synthesis. Otherwise end the
-branch. Another Serper query variation is not evidence-backed.
+- only the four frozen brand + stable model/SKU + category queries exist;
+- a Shopping result is followed only when its same-row title contains the exact
+  brand/model and supplies a `product_token`;
+- only that token can form the corresponding Product Offers request;
+- the accepted offer is new/in-stock, model-consistent, and supplies seller,
+  positive USD price, and direct non-Google HTTP(S) merchant URL;
+- wrappers, missing/wrong tokens, cross-model offers, accessories, used/refurb/
+  open-box offers, missing fields, schema drift, ads, and provider prose all
+  fail closed;
+- no branch adds, substitutes, rescues, scores, reorders, minimizes price,
+  fetches a page, retries, falls back, or uses model-authored values; and
+- the runner is dry by default, refuses an existing evidence path, checkpoints
+  attempts, and can later enforce an exact eight-attempt approval ceiling.
 
-**Recommended reasoning level: Highest.** This is no longer mechanical coding;
-it is a make-or-break architecture choice about whether independent verification
-can remain smaller than the old pipeline.
+Only after focused/full offline verification and a committed preflight may
+Taylor be asked to supply a server-side SearchAPI key and separately approve a
+live budget of at most four Shopping plus four Offers attempts. The provider's
+advertised free quota is not authorization and is not assumed.
+
+**Recommended reasoning level: Highest.** This preflight defines the final
+transactional trust boundary and must resist provider schema drift and cross-
+model offer binding without recreating the old pipeline.
 
 ## Hard boundaries
 
-- No live provider call is currently approved. The four-search H2B approval is
-  fully spent and cannot be reused.
-- The H2B evidence path now exists; the runner must continue refusing a rerun.
-- No OpenAI call, direct page fetch, endpoint fallback, retry, cache, additional
-  query, product substitution, discovery, rescue, scoring, or reordering.
+- No live provider call is currently approved. H2B's four-search approval is
+  spent and cannot be reused.
+- H2C preflight, account/key creation, environment edits, and live requests are
+  not yet approved merely because the architecture decision is documented.
+- No H2B rerun/query rewrite and no SearchAPI/SerpApi fallback or parallel test.
+- No OpenAI call, direct page fetch, retry, cache, additional query, product
+  substitution, discovery, rescue, scoring, reordering, or provider prose.
 - H3, integration, route/mode flag, `.env.local`, deployment, quality window,
   holdout, promotion, and cleanup remain unapproved.
 - Never persist API keys, credentials, request headers, cookies, or raw provider
-  responses. The H2B artifact is sanitized and remains untracked.
+  responses. Future evidence must be sanitized and untracked.
 - No product-, retailer-, brand-, category-, publisher-, or fixture-specific
   production rule.
 - No benchmark answer enters queries, verification, ranking, or app behavior.
@@ -84,32 +102,30 @@ can remain smaller than the old pipeline.
 ## Outstanding review debt
 
 - Entries [42]–[48] still await Claude's review of the OAI lifecycle.
-- Entries [49]–[53] ask Claude to challenge H0/H1/H2/H2B and whether any smaller
-  independent verifier remains. Evidence-backed objections must be resolved
-  before any H3 or replacement-provider decision.
+- Entries [49]–[54] ask Claude to challenge H0/H1/H2/H2B and the proposed H2C
+  token-bound offer verifier. Evidence-backed objections must be resolved
+  before H2C live approval, H3, or a replacement-provider decision.
 
 ## Verification
 
-- H2B live actual: 4 logical searches / 4 physical attempts / 4 HTTP 200;
-  121 sanitized rows; 0 verified offers; mechanical gate `0/4` versus `3/4`.
-- Evidence SHA-256:
+- This architecture decision used official provider documentation only and
+  made zero provider/OpenAI calls and zero direct product-page fetches.
+- No code, route, flag, `.env.local`, deployment, or user-visible behavior
+  changed; no behavior test wall was required.
+- H2B evidence remains untracked at SHA-256
   `224d15f154ffeb3aef5c065ccc0b4f4ac93048d42a18dc471a2c939327d551c`.
-- Evidence inspection found no API key, header, cookie, or credential fields.
-- Preflight focused verifier tests passed 11/11; full suite passed 1004/1004
-  across 138 suites; typecheck, build, offline evaluation, and diff checks
-  passed; lint had zero errors and the same three pre-existing warnings.
-- Production behavior was not changed by H2B; no post-live behavior wall was
-  required for this evidence/docs closeout.
+- The last code wall remains H2B preflight: focused 11/11 and full 1004/1004
+  across 138 suites; typecheck/build/eval/diff passed; lint had zero errors and
+  three pre-existing warnings.
 
 ## Retrieval map
 
 | Need | Retrieve |
 |---|---|
-| H2B contract and failed live actual | `docs/forward-roadmap.md` H2B section |
-| Canonical live result | latest `docs/qa-loop-results.md` H2B entry |
-| Sanitized evidence | untracked H2B fixture path in the QA entry |
-| Commerce verifier | `lib/autonomousCommerceVerifier.ts` |
-| No-retry runner | `scripts/run-oai-h2b-commerce-oracle.mjs` |
-| Adversarial tests | `tests/autonomousCommerceVerifier.test.mjs` |
+| H2C rationale, contract, and proposed gates | `docs/forward-roadmap.md` H2C section |
+| Provider-doc comparison | latest `docs/qa-loop-results.md` architecture-decision entry |
+| H2B measured failure | preceding H2B QA entry and untracked fixture |
+| Existing commerce verifier | `lib/autonomousCommerceVerifier.ts` |
+| H2B no-retry runner | `scripts/run-oai-h2b-commerce-oracle.mjs` |
 | Transactional/source defects | `docs/RR-Issues-Report.md` RR-091/RR-092 |
 | Peer review | `docs/agent-dialogue.md` entry [48] onward |
