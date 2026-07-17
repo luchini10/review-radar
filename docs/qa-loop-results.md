@@ -8058,3 +8058,33 @@ suites; `npm run typecheck`; targeted ESLint; `npm run build`; and
 `node scripts/eval-pipeline.mjs` with no red flags. `git diff --check` passed.
 No provider call, external page fetch, production route, feature flag, secret,
 or user-visible behavior changed.
+
+## 🟧 Codex — OAI-T2 deterministic formatter result (2026-07-17)
+
+**Verdict: PASS OFFLINE — the saved Terra answer can become structured cards
+without a second model call.** Taylor approved the isolated OAI-T2 formatter
+phase. The implementation parses the universal master prompt's numbered
+Markdown product sections, preserves explicit rank/status, and copies only
+verbatim identity, assessment, pro/con, and claim text. It accepts only source
+URLs and titles from the same saved Responses API registry, then sends the
+result through the OAI-T1 validator before card construction.
+
+The formatter deliberately ignores `Current price` sections. Specifications,
+professional-test statements, and owner-review statements remain
+`Source-reported` with `unresolved` evidence scope. Missing required headings,
+rank gaps, unregistered URLs, missing source metadata, formatter-added text, or
+schema drift fail closed. There is no OpenAI client or tool path in the module;
+OAI-T2 keeps the one-main-call architecture.
+
+The real untracked July 17 Terra evidence formatted offline into five cards in
+the original order: SEBO D4, SEBO E3, Shark AZ4002, Dyson Gen5detect Absolute,
+and Kenmore BC4030. Dyson remained a `Close Match`. Twenty-one product-section
+sources were registered, all five transactional sections were ignored, and all
+five cards retained `not_verified` commerce and identity states. No raw or
+derived live evidence was added to the tracked tree.
+
+Verification passed: 9/9 OAI-T2 focused tests; 20/20 combined T1+T2 tests;
+1037/1037 complete tests across 141 suites; `npm run typecheck`; targeted
+ESLint; `npm run build`; and `node scripts/eval-pipeline.mjs` with no red flags.
+No API call, web search, external fetch, route, feature flag, secret, or
+user-visible behavior changed.

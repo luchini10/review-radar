@@ -1741,6 +1741,61 @@ construction and remains isolated from the production route.
 the next work is a bounded formatter-provenance implementation and adversarial
 review, not a new product-strategy decision.
 
+### OAI-T2 — deterministic master-prompt formatter (complete locally 2026-07-17; zero live)
+
+**Owner decision:** Taylor approved OAI-T2 directly after OAI-T1. This is an
+isolated formatter-provenance phase. It authorizes no OpenAI call, web search,
+external fetch, route integration, flag, `.env.local` change, deployment, or
+user-visible behavior.
+
+**Architecture decision:** the saved Terra answer already follows the universal
+master prompt's repeated numbered Markdown sections. OAI-T2 therefore uses a
+deterministic parser rather than a second formatting-model call. This preserves
+the one-main-OpenAI-call design, removes formatter hallucination and added-cost
+risk, and makes every transformation auditable. The tradeoff is fail-closed
+format sensitivity: a missing required heading or non-contiguous rank rejects
+the formatted result instead of guessing.
+
+**Formatter contract:** `lib/twoLayerFormatter.ts` recognizes only numbered
+`Best Match`/`Close Match` blocks and requires `Why it ranks`, `Overall
+assessment`, `Pros`, `Cons`, and `Sources` sections. It:
+
+- preserves the numbered order and uses the explicit recommendation-status
+  line when it differs from the heading;
+- copies identity, assessment sentences, pros, cons, and source-reported claims
+  as verbatim substrings of the raw answer;
+- accepts only URLs and titles present in the same Responses API source
+  registry, assigning stable local source IDs;
+- omits every `Current price` section from the structured research layer;
+- converts specification, professional-test, and owner prose only to
+  `source_reported` claims with `unresolved` evidence scope; and
+- passes the result through OAI-T1's hash, source, text, order, and strict-schema
+  validator before any card construction.
+
+**Saved-evidence result:** the untracked July 17 Terra diagnostic formatted
+offline into the same five recommendations and order: SEBO D4, SEBO E3, Shark
+AZ4002, Dyson Gen5detect Absolute, and Kenmore BC4030. It retained Dyson's
+explicit `Close Match` status, registered 21 recommendation-section sources,
+ignored all five transactional sections, and produced five cards with
+unverified commerce and unverified exact identity. Every extracted claim kept
+`unresolved` scope. No raw response or derivative live fixture was committed.
+
+**Verification:** OAI-T2 focused 9/9 and combined T1+T2 20/20; complete
+1037/1037 across 141 suites; typecheck, targeted lint, build, offline
+evaluation, and diff checks pass. The implementation is isolated and remains
+committed as an isolated OAI-T2 phase.
+
+**Next decision:** before route work, review the five-card saved-evidence output
+as a presentation contract. The strongest next candidate is a zero-live OAI-T3
+UI/presentation prototype that renders these trust labels and missing-commerce
+states from sanitized controlled data without calling Terra or connecting the
+production recommendation route. A live formatter test is unnecessary because
+OAI-T2 has no model formatter.
+
+**Recommended reasoning level:** High. The remaining judgment is whether the
+unverified-field presentation is useful and honest enough for shoppers; the
+mechanical parser itself no longer needs Highest reasoning.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen

@@ -2048,3 +2048,28 @@ a known conservative undercount.
 - OAI-T1 is isolated. Passing its offline wall does not prove formatter quality,
   commerce coverage, editorial semantic truth, or production readiness, and it
   authorizes no API call or route integration.
+
+## OAI-T2 deterministic formatter contract — 2026-07-17
+
+- Prefer deterministic extraction over a second formatting-model call while
+  the universal master prompt supplies stable numbered Markdown sections. This
+  preserves the one-main-call architecture and removes a second hallucination,
+  latency, and cost surface.
+- Require contiguous numbered product headings plus `Why it ranks`, `Overall
+  assessment`, `Pros`, `Cons`, and `Sources`. Missing structure fails closed;
+  never guess a product boundary, rank, or missing field.
+- Copy every identity, assessment, pro, con, and source-reported claim verbatim
+  from the raw answer. Preserve the explicit recommendation-status line when it
+  differs from the heading.
+- Drop `Current price` sections from structured research. A price or retailer
+  mention in natural prose never becomes a transactional field without the
+  separate OAI-T1 receipt.
+- Accept only source URLs and titles in the same API response registry. Missing
+  registry membership or source metadata fails closed rather than creating a
+  URL, title, or citation.
+- Treat extracted specification, professional-test, and owner-review text as
+  `source_reported` with `unresolved` scope. Deterministic parsing proves
+  provenance and exact copying, not semantic truth or exact-model applicability.
+- Saved-evidence proof: five recommendations preserved, 21 sources registered,
+  five transactional sections ignored, five commerce-unverified cards, five
+  identity-unverified cards, and no tracked derivative fixture.
