@@ -2003,3 +2003,23 @@ a known conservative undercount.
   provider retuning/substitution, and production integration need a new owner
   architecture decision. Transactional verification still does not solve
   RR-092's editorial source-truth boundary.
+
+## Unguarded Terra master-prompt diagnostic — 2026-07-17
+
+- One Terra/high response used the exact natural-language master prompt with
+  web search and no ReviewRadar schema, verifier, post-processing, Serper,
+  SearchAPI, or direct fetch. It used 14 hosted searches, completed in 235.903
+  seconds, and cost an estimated `$0.782088`.
+- The natural answer was materially better as recommendation UX: five coherent,
+  mostly exact products, detailed tradeoffs, 25 cited URLs, and every cited URL
+  present in the response source registry.
+- Source membership did not equal fact verification. An AZ4002 price was labeled
+  verified from a Best Buy review URL rather than a direct offer, and Dyson
+  owner evidence crossed from the named Prussian Blue/Copper product to a
+  different purple listing without resolving the variant boundary.
+- Durable architecture lesson: keep model-authored product selection/rationale,
+  then attach deterministic verified commerce and exact-variant facts by field.
+  Do not make missing commerce proof erase a supported recommendation, and do
+  not let natural-language confidence promote unverified transactional facts.
+- Sanitized untracked evidence SHA-256:
+  `203ced3a53472d69909f096f9a36b331b3045002324dc8b02affeec2369b56c4`.

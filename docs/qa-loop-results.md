@@ -7965,3 +7965,63 @@ only by SHA-256 where needed. Evidence SHA-256:
 The SearchAPI experiment is complete and failed the coverage gate without a
 safety failure. H3 and all production integration remain blocked pending a new
 owner architecture decision. RR-092 is unaffected.
+
+## 🟧 Codex — unguarded Terra master-prompt diagnostic (2026-07-17)
+
+**Verdict: STRONG RECOMMENDATION UX, UNSAFE AS DIRECT-TO-DISPLAY FACTS.** Taylor
+approved one isolated GPT-5.6 Terra/high response using the exact user-supplied
+natural-language master prompt, filled for `vacuum cleaner`, no budget or
+feature constraints, and the United States. Hosted web search was required and
+bounded at 20 calls. The request had no ReviewRadar JSON schema, verifier,
+Serper, SearchAPI, direct page fetch, post-processing, retry, replacement, model
+substitution, second case, or production path.
+
+The single response completed after 235.903 seconds using 14 hosted web-search
+calls, 114,875 input tokens, and 23,660 output tokens. It cited 25 unique URLs;
+all 25 were present in the API response's web-search source registry. Estimated
+cost was `$0.782088` using the frozen Terra token rates plus `$0.01` per hosted
+search, well below the `$7` ceiling. The natural answer ranked:
+
+1. SEBO AIRBELT D4 Premium `90941AM`;
+2. SEBO AIRBELT E3 Premium `91646AM`;
+3. Shark POWERDETECT `AZ4002`;
+4. Dyson Gen5detect Absolute; and
+5. Kenmore POP-N-GO `BC4030`.
+
+The answer was substantially more readable and complete than the guarded
+direct-to-display slate. It distinguished performance, durability, owner
+signals, tradeoffs, evidence strength, and close matches, and it did not invent
+citation URLs outside the response source registry. Product identities were
+mostly specific and plausible.
+
+However, the answer still crossed trust boundaries that make it unsafe for
+automatic display as verified data:
+
+- Shark AZ4002's `$399.99` price was called verified, but its cited Best Buy URL
+  was a customer-review page, not a purchase page. The same-day H2C commerce
+  evidence found exact AZ4002 offers at `$449.99` from other retailers. That
+  does not prove the Best Buy price false, but it proves the answer did not bind
+  “verified current price” to a direct offer destination.
+- The Dyson recommendation named the Prussian Blue/Copper Gen5detect on the
+  official page while using owner-review evidence from a different purple Best
+  Buy listing (`447930-01`). This may be a closely related color/accessory
+  variant, but the master prompt explicitly forbids combining variants and the
+  natural answer did not disclose or resolve the distinction.
+- Evidence-quality paragraphs described source types but did not consistently
+  provide the requested number of useful sources, and paragraph-level citations
+  supported clusters of claims rather than proving every exact specification.
+
+No external source page was opened during the audit because the approved window
+forbade direct page fetches. Exact real-world accuracy therefore remains
+unproven beyond response-source membership and comparison with already captured
+commerce evidence. The diagnostic supports a two-layer architecture: preserve
+the model's recommendation/ranking output, but display price, retailer,
+availability, exact-variant imagery, and strong factual labels only when a
+separate verifier binds those fields. Missing commerce verification must not
+delete an otherwise well-supported recommendation.
+
+Sanitized untracked evidence contains the filled prompt, natural answer, source
+metadata, and ledger—not the API key, headers, cookies, or complete raw API
+response. Evidence SHA-256:
+`203ced3a53472d69909f096f9a36b331b3045002324dc8b02affeec2369b56c4`.
+No production behavior changed, and the one-response approval is spent.
