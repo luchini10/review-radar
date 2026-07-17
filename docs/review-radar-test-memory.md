@@ -2073,3 +2073,21 @@ a known conservative undercount.
 - Saved-evidence proof: five recommendations preserved, 21 sources registered,
   five transactional sections ignored, five commerce-unverified cards, five
   identity-unverified cards, and no tracked derivative fixture.
+
+## OAI-T3 trust-state presentation contract - 2026-07-17
+
+- A recommendation may remain visible when exact identity or commerce is not
+  independently verified. Uncertainty must be field-local and explicit: show
+  the exact-identity warning and `Check current price`; omit the purchase link
+  and image instead of filling them from research prose.
+- Keep the three shopper-facing trust labels distinct: `AI research synthesis`
+  means model-authored selection/explanation, `Source-reported` means a cited
+  source made the claim, and `Independently verified` requires the deterministic
+  exact-product receipt. Citation presence never earns the verified label.
+- Product cards must remain usable on narrow screens. Long identity, evidence-
+  scope, and source labels must wrap inside a zero-minimum card grid; hidden
+  horizontal clipping is a trust defect because it can conceal warnings.
+- Presentation prototypes use generic controlled data, are unlinked, and are
+  development-only. A production request for the preview route must return 404.
+  A prototype passing visual QA does not authorize route integration, live
+  research, provider verification, feature-flag promotion, or deployment.

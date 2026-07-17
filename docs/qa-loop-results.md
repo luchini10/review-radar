@@ -8088,3 +8088,32 @@ Verification passed: 9/9 OAI-T2 focused tests; 20/20 combined T1+T2 tests;
 ESLint; `npm run build`; and `node scripts/eval-pipeline.mjs` with no red flags.
 No API call, web search, external fetch, route, feature flag, secret, or
 user-visible behavior changed.
+
+## 🟧 Codex - OAI-T3 trust-state UI prototype result (2026-07-17)
+
+**Verdict: PASS OFFLINE - the two-layer evidence boundary can be communicated
+without hiding recommendations or filling unsafe fields.** Taylor approved a
+zero-live, development-only presentation prototype after committing OAI-T2.
+The isolated `/oai-t3-preview` page renders three generic controlled cards:
+unverified identity and commerce, verified identity and commerce, and a `Close
+Match` with family-or-variant source scope.
+
+The cards distinguish `AI research synthesis`, `Source-reported`, and
+`Independently verified`. Missing receipts produce `Check current price`, no
+purchase link, no image, and an exact-model/variant warning while preserving
+the recommendation and rank. The controlled verified card demonstrates the
+positive UI state without making a real-world product claim.
+
+Browser QA covered desktop and a 390px mobile viewport. The initial mobile pass
+found content clipped by a long non-wrapping identity badge. The card grid now
+uses a zero-minimum track and controlled badges wrap; the second pass reported
+zero overflow offenders, document width equal to viewport width, three desktop
+cards, and no console errors. A production build served the preview route as
+HTTP 404.
+
+Verification passed: 5/5 focused tests; 1042/1042 complete tests across 141
+suites; `npm run typecheck`; targeted ESLint; `npm run build`; and
+`node scripts/eval-pipeline.mjs` with no red flags. `git diff --check` passed.
+Only local Next development requests occurred. No provider call, external page
+fetch, production route connection, flag, secret, deployment, or existing
+user-visible behavior changed.

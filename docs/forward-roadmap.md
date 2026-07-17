@@ -1796,6 +1796,53 @@ OAI-T2 has no model formatter.
 unverified-field presentation is useful and honest enough for shoppers; the
 mechanical parser itself no longer needs Highest reasoning.
 
+### OAI-T3 - development-only trust-state UI prototype (complete locally 2026-07-17; zero live)
+
+**Owner decision:** Taylor approved OAI-T3 immediately after authorizing the
+OAI-T2 commit. This phase is presentation proof only. It authorizes no OpenAI,
+Serper, SearchAPI, or direct-page call; no production recommendation-route
+connection; no feature flag; no `.env.local` change; and no deployment.
+
+**Presentation decision:** ReviewRadar can keep a useful recommendation visible
+without pretending every field has the same evidence strength. The isolated
+preview renders three controlled states:
+
+- `AI research synthesis` for Terra-owned selection, order, and explanation;
+- `Source-reported` plus evidence scope for factual prose that a cited source
+  reports but ReviewRadar has not independently proved; and
+- `Independently verified` only for exact identity or commerce fields attached
+  by the deterministic OAI-T1 receipt boundary.
+
+When exact identity, price, purchase URL, availability, or image lacks a valid
+receipt, the product remains visible while the interface shows an exact-
+identity warning, `Check current price`, no purchase link, and a withheld-image
+state. A controlled verified-offer card proves the positive state without
+asserting a real product fact.
+
+**Isolation:** `/oai-t3-preview` exists only when `NODE_ENV=development`; a
+production build returns HTTP 404 for the same route. The page uses three
+generic `Example` products and a controlled source registry. It is not linked
+from the app and never consumes the saved live response or production route.
+
+**Verification:** five focused tests and the complete 1042/1042 wall pass
+across 141 suites; typecheck, targeted lint, production build, offline
+evaluation, and diff checks pass. In-app browser inspection covered the normal
+desktop viewport and a 390px mobile viewport. The first mobile pass exposed a
+long-badge min-content overflow; the generalized `minmax(0,1fr)`/wrapping fix
+removed all overflow offenders and horizontal scroll. Desktop showed three
+cards and no console errors. The production server returned 404 for the route.
+
+**Next decision:** Taylor should judge whether this trust presentation is clear
+enough before any route work. If accepted, a separately approved OAI-T4 should
+first define the smallest default-off integration seam and its failure states;
+it must not add a live call or transactional fallback merely to make the cards
+look complete.
+
+**Recommended reasoning level:** Highest for OAI-T4 planning because it is the
+first step that could connect the new trust contract to the application route;
+that decision affects architecture, fallback behavior, and customer-visible
+failure semantics.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen
