@@ -7932,3 +7932,36 @@ deliberately wrong seven-attempt approval failed before key lookup or output
 creation. Live H2C still requires a server-side SearchAPI key supplied by
 Taylor plus a separate explicit approval of at most eight attempts. H3 remains
 blocked, and RR-092 remains unresolved regardless of any later commerce result.
+
+## 🟧 Codex — OAI-H2C live token-bound capability result (2026-07-17)
+
+**Verdict: FAIL SAFE — `2/4` exact verified offers, below the frozen `3/4`
+gate.** Taylor approved one run containing four SearchAPI Shopping requests
+plus up to four token-bound Offers requests, with eight physical attempts as
+the hard ceiling. The commit-pinned runner used six attempts total: four
+Shopping and two Offers. All six returned HTTP 200 and reconciled exactly as
+attempts 1–6. There were no retries, fallbacks, replacements, additional
+queries, second pages, direct product-page fetches, OpenAI calls, or Serper
+calls.
+
+| Target | Shopping result | Offers result | Frozen verdict |
+|---|---|---|---|
+| Shark AZ4002 | Position 1 title carried `Shark` + `AZ4002`; token selected | Lowe's offer carried `AZ4002`, `$449.99`, in-stock evidence, and a direct product URL | Verified |
+| Miele 12704570 / SUZE0 | Guard L1 Cat & Dog appeared at positions 1 and 4, but neither title carried `12704570` or `SUZE0` | Not called | Inconclusive; stable identifier absent from title |
+| Shark HZ4002 | Correct-looking POWERDETECT corded-stick titles appeared at positions 1–3, but none carried `HZ4002` | Not called | Inconclusive; stable identifier absent from title |
+| Dyson V16 Piston Animal | Position 1 title carried the exact family/descriptive identity; token selected | Abt offer carried `V16`, `$979.00`, in-stock evidence, and a direct product URL | Verified |
+
+The frozen human comparison found no unsafe accepted binding. The Shark offer
+was explicitly AZ4002; the Dyson Shopping entity, canonical product, and offer
+all agreed on V16 Piston Animal. Conflicting or identifier-free offers remained
+rejected. The two misses are conservative undercoverage: provider titles looked
+plausible but omitted the stable IDs required to prove exact identity. They were
+not rounded up and did not trigger speculative Offers requests.
+
+Evidence is sanitized and remains untracked. It contains no API key, request
+header, cookie, or raw product token; token values are redacted and represented
+only by SHA-256 where needed. Evidence SHA-256:
+`fb8b6cc813b3398fca45818d5f80fd90649f12cd9dfda47f8a333816da526ef4`.
+The SearchAPI experiment is complete and failed the coverage gate without a
+safety failure. H3 and all production integration remain blocked pending a new
+owner architecture decision. RR-092 is unaffected.

@@ -1578,7 +1578,7 @@ H3 remains blocked and production remains unchanged.
 **Recommended reasoning level:** High for the four mechanical requests;
 Highest for the frozen-audit and architecture verdict.
 
-#### H2C — token-bound product-offers capability probe (preflight complete; live unapproved)
+#### H2C — token-bound product-offers capability probe (complete; failed safely)
 
 **Zero-live architecture decision (2026-07-16):** do not patch or rerun H2B,
 and do not end the verified-hybrid hypothesis solely because Serper's Shopping
@@ -1644,6 +1644,24 @@ lint, runner syntax/dry-run, and diff checks pass; repository lint remains zero
 errors with three pre-existing warnings. No live request or production behavior
 occurred. Live H2C still requires both a server-side key supplied by Taylor and
 a separate numeric approval.
+
+**Live result (2026-07-17): FAILED SAFELY.** Taylor supplied the server-side
+key and approved the frozen one-run ceiling of eight physical attempts. The
+commit-pinned runner completed all four Shopping targets in six physical
+requests: four `google_shopping` requests and two token-bound
+`google_product_offers` requests, all HTTP 200, with no retry, fallback,
+replacement, extra query, page fetch, OpenAI call, or Serper call. Shark
+AZ4002 and Dyson V16 Piston Animal each produced an exact, new, in-stock offer
+with a direct retailer URL. Miele Guard L1 Cat & Dog and Shark HZ4002 did not
+advance because SearchAPI's otherwise plausible Shopping titles omitted the
+frozen stable identifiers `12704570`/`SUZE0` and `HZ4002`; weakening that
+identity boundary was not allowed. The frozen human audit found zero unsafe
+accepted bindings, but coverage was only `2/4`, below the required `3/4`.
+Sanitized untracked evidence SHA-256:
+`fb8b6cc813b3398fca45818d5f80fd90649f12cd9dfda47f8a333816da526ef4`.
+This ends the SearchAPI provider experiment under the frozen contract. Do not
+retune it, try another provider, or begin H3 without a new owner architecture
+decision. Production remains unchanged, and RR-092 remains unresolved.
 
 **Pass only if:** at least three of four products receive an exact new-product
 offer and direct merchant destination; all calls reconcile; the frozen audit

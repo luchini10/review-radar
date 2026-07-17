@@ -1983,3 +1983,23 @@ a known conservative undercount.
   model terms. Focused 24/24 and full 1017/1017 across 139 suites pass;
   typecheck/build/eval/diff pass and lint remains 0 errors/3 existing warnings.
   No live provider capability is established until a separately approved run.
+
+## OAI-H2C live result — 2026-07-17
+
+- The frozen SearchAPI Shopping→Offers probe used six of eight approved
+  physical attempts: four Shopping and two Offers, all HTTP 200, with exact
+  attempt reconciliation and no retry/fallback/replacement/additional query.
+- Exact verified coverage was `2/4`, below the frozen `3/4` gate. Shark AZ4002
+  and Dyson V16 Piston Animal verified safely. Miele Guard L1 Cat & Dog and
+  Shark HZ4002 appeared under plausible product-family titles, but the titles
+  omitted their stable identifiers, so the verifier correctly stopped before
+  Offers lookup rather than guessing.
+- The frozen human audit found zero unsafe accepted bindings. This is a safe
+  coverage failure, not evidence that the identity boundary should be weakened.
+- Sanitized untracked evidence SHA-256:
+  `fb8b6cc813b3398fca45818d5f80fd90649f12cd9dfda47f8a333816da526ef4`.
+  The fixture contains no API key, headers, cookies, or raw product tokens.
+- SearchAPI's provider experiment ends here under the frozen contract. H3,
+  provider retuning/substitution, and production integration need a new owner
+  architecture decision. Transactional verification still does not solve
+  RR-092's editorial source-truth boundary.
