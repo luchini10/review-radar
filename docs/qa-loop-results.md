@@ -8025,3 +8025,36 @@ metadata, and ledger—not the API key, headers, cookies, or complete raw API
 response. Evidence SHA-256:
 `203ced3a53472d69909f096f9a36b331b3045002324dc8b02affeec2369b56c4`.
 No production behavior changed, and the one-response approval is spent.
+
+## 🟧 Codex — OAI-T1 two-layer trust-boundary result (2026-07-17)
+
+**Verdict: PASS OFFLINE — the recommendation layer and transactional layer are
+now mechanically separate.** Taylor approved a zero-live contract phase after
+the unguarded Terra diagnostic. The new isolated module accepts a formatted
+research slate only when its raw-answer hash matches, every recommendation
+field is copied verbatim from the natural answer, relative order is preserved,
+every source ID resolves, and every source URL exists in the same API response
+registry. The model-owned schema has no price, seller, availability, retailer
+URL, or image fields.
+
+The presentation adapter preserves every recommendation in Terra's order.
+Without an exact receipt, it shows `Check current price`, no image, and an
+explicit exact-model/variant-not-verified label. A receipt can attach commerce,
+image, and exact-identity verification only when its target fingerprint and
+observed identity fingerprint agree and the destination passes the existing
+direct-product-page eligibility boundary. Unknown, malformed, competing,
+review-page, and cross-variant receipts cannot add, remove, replace, or reorder
+cards.
+
+The 11 focused controls include the two diagnostic failure classes: a Best Buy
+customer-review URL cannot establish an AZ4002 offer, and purple-listing
+evidence cannot verify a Prussian Blue/Copper Dyson variant. In both cases the
+recommendation survives while the unsafe fields remain absent. Professional
+and owner claims remain labeled `Source-reported`; the contract does not claim
+that citation presence proves their semantic truth.
+
+Verification passed: 11/11 focused tests; 1028/1028 complete tests across 140
+suites; `npm run typecheck`; targeted ESLint; `npm run build`; and
+`node scripts/eval-pipeline.mjs` with no red flags. `git diff --check` passed.
+No provider call, external page fetch, production route, feature flag, secret,
+or user-visible behavior changed.

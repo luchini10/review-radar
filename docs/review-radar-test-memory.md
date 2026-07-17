@@ -2023,3 +2023,28 @@ a known conservative undercount.
   not let natural-language confidence promote unverified transactional facts.
 - Sanitized untracked evidence SHA-256:
   `203ced3a53472d69909f096f9a36b331b3045002324dc8b02affeec2369b56c4`.
+
+## OAI-T1 two-layer field-trust contract — 2026-07-17
+
+- Preserve Terra's product choices and relative order. Formatting is
+  extraction only: every displayed identity/prose string must occur verbatim in
+  the raw natural answer, its SHA-256 must match, and every cited URL must be in
+  the same API response source registry.
+- Never place price, seller, availability, retailer URL, or image in the
+  model-owned research schema. Exact model/variant remains visibly labeled as
+  not independently verified until a deterministic receipt proves it.
+- Recommendation rationale, best-for, tradeoffs, pros, and cons are labeled
+  `AI research synthesis`. Specifications, professional test claims, owner
+  feedback, and warranty/support claims are labeled `Source-reported` with an
+  explicit evidence scope; citation presence alone never means verified.
+- A transactional receipt attaches fields only when its target and observed
+  identity fingerprints match and its URL is a direct buyable product page.
+  Review/listing pages, cross-variant identities, malformed/unknown receipts,
+  and multiple competing receipts fail closed.
+- Verification failure is field-local: retain the product and order, show
+  `Check current price`, omit an unverified image, and retain the exact-identity
+  warning. The receipt layer never adds, deletes, substitutes, rescues, scores,
+  or reorders a recommendation.
+- OAI-T1 is isolated. Passing its offline wall does not prove formatter quality,
+  commerce coverage, editorial semantic truth, or production readiness, and it
+  authorizes no API call or route integration.

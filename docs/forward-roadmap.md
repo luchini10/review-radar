@@ -1679,6 +1679,68 @@ decision defines evidence that can safely support them.
 **Recommended reasoning level:** Highest for the offline verifier and verdict;
 High for the bounded mechanical requests if they are later approved.
 
+### OAI-T1 — two-layer recommendation and field-trust contract (complete locally 2026-07-17; zero live)
+
+**Owner decision:** Taylor approved the first zero-live step of the two-layer
+architecture after the unguarded Terra diagnostic. OAI-T1 does not revive H3
+or authorize a route, provider call, formatting call, feature flag, UI change,
+or deployment. It freezes the boundary those later steps must obey.
+
+**Target flow:** Terra remains authoritative for product selection, relative
+order, and recommendation reasoning. A later formatting step may only extract
+verbatim identity and prose from Terra's natural answer and bind it to URLs in
+the same Responses API source registry. It cannot research, add a product,
+rewrite a claim, change order, or introduce transactional fields. A separate
+receipt may attach exact identity, current price, seller, availability, direct
+product URL, and exact-variant image only after deterministic verification.
+
+**Field trust classes:**
+
+1. `research_synthesis` — rank, rationale, best-for, tradeoffs, pros, and cons.
+   Display label: `AI research synthesis`.
+2. `source_reported` — specifications, professional-performance statements,
+   owner feedback, and warranty/support claims. Each claim retains source IDs
+   and an evidence-scope label (`exact_model`, `family_or_variant`,
+   `category_or_general`, or `unresolved`). Citation presence does not promote
+   these claims to independently verified truth.
+3. `verified_transactional` — exact identity/model/variant, current price,
+   seller, availability, direct product URL, and exact-variant image. These
+   fields require an exact receipt whose target and observed identity
+   fingerprints agree and whose URL passes the existing product-detail
+   eligibility boundary.
+4. `unresolved` — any risky field without a valid receipt. The recommendation
+   remains visible, but commerce shows `Check current price`, the image is
+   omitted, and exact model/variant is labeled not independently verified.
+
+**Immutable recommendation rule:** the receipt layer cannot introduce, delete,
+replace, rescue, score, or reorder a recommendation. Unknown receipts are
+ignored. Invalid, review/listing-page, cross-variant, fingerprint-mismatched, or
+competing receipts fail closed at the field level and leave the card intact.
+Receipt arrival order cannot select among competing offers.
+
+**Offline implementation:** `lib/twoLayerRecommendation.ts` defines strict
+Zod schemas, response-source membership checks, raw-answer SHA-256 binding,
+verbatim text checks, recommendation-order preservation, identity fingerprints,
+trust labels, field-level receipt decisions, and the presentation contract.
+`tests/twoLayerRecommendation.test.mjs` provides 11 adversarial controls,
+including the captured Best Buy review-page price class and the Dyson
+cross-variant evidence class. The module is isolated and has no production
+caller.
+
+**Verification:** focused 11/11; full 1028/1028 across 140 suites; typecheck,
+targeted lint, build, offline evaluation, and diff checks pass. No OpenAI,
+Serper, SearchAPI, external-page fetch, route, flag, secret, or user-visible
+change occurred. The implementation is committed as an isolated OAI-T1 phase.
+
+**Next decision:** a later OAI-T2 may prototype an extraction-only formatter
+against saved Terra evidence, with no web tool and no authority to add facts.
+That phase needs separate approval. It must use this validator before any card
+construction and remains isolated from the production route.
+
+**Recommended reasoning level:** High. The trust architecture is now frozen;
+the next work is a bounded formatter-provenance implementation and adversarial
+review, not a new product-strategy decision.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen
