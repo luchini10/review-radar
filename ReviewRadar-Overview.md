@@ -48,19 +48,37 @@ live "What ReviewRadar will match" preview (`requirements.summary`).
 **On submit** (`app/page.tsx` `handleSubmit`):
 1. `cleanSearchFormInput` + `getSearchValidationError` validate the category.
 2. `buildRecommendationApiPayload(form, { includeExtractedRequirements: true })` (`lib/searchRequestPayload.ts`) maps `category→query`, plus `budget`, `priorities`, optional `avoid`, `selectedFeatures`, and attaches `extractedRequirements`.
-3. `fetch("/api/recommendations", { method: "POST", … })` with a client-side **180s** `AbortController` timeout; the user can **Cancel**.
-4. Response is `{ result }` or `{ error }`. State drives loading skeletons / results / error alert.
+3. `runRecommendationRequest` (`lib/recommendationClient.ts`) sends one POST to
+   `/api/recommendations` with an `AbortController`; the user can **Cancel**.
+4. In the default legacy mode, the response remains exactly `{ result }` or
+   `{ error }` and retains the existing 180-second client deadline. In
+   `two_layer` mode, HTTP 202 returns a signed job token; the same helper polls
+   only that token until completion and extends the deadline to the signed job
+   expiry.
 
 **Results display:** `components/ResultsSummary.tsx`:
 - A **Search coverage** summary (queries run, candidates evaluated, exact/near counts).
 - A **Dealbreaker strength** slider — `strict` / `balanced` / `flexible` (`lib/dealbreakerVisibility.ts`). **Display-only**: it filters what's visible, it does **not** re-run the search.
 - Ranked **exact matches** as `ProductCard`s; **near matches** grouped by `classifyNearMatch` (`lib/nearMatchClassification.ts`); a **What to avoid** panel; a **Final buying advice** `VerdictCard`.
 
+**Default-off two-layer display:** when the exact server-only mode is
+`two_layer`, the page renders `TwoLayerResults` instead of translating the new
+cards into `RecommendationResult`. These cards visibly separate AI research
+synthesis, source-reported claims, and independently verified fields. T4B
+currently supplies no transactional receipts, so recommendations remain visible
+while price, seller, availability, purchase link, image, and exact-identity
+verification are withheld.
+
 ---
 
 ## 3. Search & recommendation pipeline
 
-Orchestrated in `app/api/recommendations/route.ts` → `handleRecommendationPost`. Stages
+The route first applies an exact server-only mode dispatcher. Missing, empty,
+or exact `legacy` uses the pipeline below; exact `two_layer` uses the separate
+background flow documented after it. Any other non-empty value fails closed.
+
+The default legacy path is orchestrated in `app/api/recommendations/route.ts`
+→ `handleRecommendationPost`. Stages
 (each sets `debugStage` for error reporting):
 
 1. **Validate request** (`validateRequest`): `query` required; `budget`/`priorities`/`avoid` must be strings; `selectedFeatures` ≤ 12.
@@ -161,7 +179,13 @@ each requirement resolves to **pass / fail / unknown**:
 ## 5. Important files & modules
 
 **Entry points / routing**
-- `app/api/recommendations/route.ts` — main pipeline orchestrator (the file to read first).
+- `app/api/recommendations/route.ts` — exact pipeline-mode dispatcher plus the
+  unchanged legacy pipeline orchestrator (the file to read first).
+- `lib/twoLayerRecommendationRoute.ts` — default-off two-layer
+  POST/GET/DELETE lifecycle, deterministic T2 formatting, and T1 card
+  construction.
+- `lib/recommendationClient.ts` — browser legacy-result handling plus signed
+  two-layer polling and cancellation.
 - `app/api/features/route.ts` — Smart-Feature generation (catalog → cache → LLM → fallback).
 - `app/page.tsx` — home page, search state, submit/cancel, results rendering.
 - `app/layout.tsx`, `app/globals.css` — shell and styling.
@@ -194,9 +218,17 @@ each requirement resolves to **pass / fail / unknown**:
 - `lib/recommendationSchema.ts` — Zod + JSON schema for the strict LLM output.
 - `lib/normalizeResearchResult.ts`, `lib/recommendationResultValidation.ts`, `lib/citationUrlVerification.ts`, `lib/responseSources.ts`, `lib/productPageUrl.ts`, `lib/productCopySanitizer.ts`.
 - `lib/finalSynthesis.ts` — narration prompt, schema, parser, and the guard (`applyNarrationToResult`).
+- `lib/twoLayerMasterPrompt.ts`, `lib/twoLayerResearchAdapter.ts`,
+  `lib/twoLayerFormatter.ts`, and `lib/twoLayerRecommendation.ts` — versioned
+  natural research prompt, one-response background adapter, deterministic
+  formatter, and recommendation-versus-transactional trust boundary.
+- `lib/twoLayerJobToken.ts`, `lib/twoLayerApiContract.ts` — signed stateless job
+  authorization and the versioned public state union.
 
 **UI**
 - `components/SearchForm.tsx`, `components/SmartFeatures.tsx`, `components/ResultsSummary.tsx`, `components/ProductCard.tsx`, `components/VerdictCard.tsx`, `components/SourceList.tsx`, `components/ui/*` (shadcn primitives).
+- `components/TwoLayerResultPreview.tsx` — shared production two-layer trust
+  cards plus a development-only preview wrapper.
 - `lib/productCardViewModel.ts` — `buildProductRecommendationCardData` (maps a `ProductRecommendation` to everything the card renders).
 - `lib/dealbreakerVisibility.ts`, `lib/nearMatchClassification.ts` — client-side result shaping.
 
@@ -219,6 +251,10 @@ Requires `SERPER_API_KEY`. **If missing**, discovery is skipped (`stats.skippedR
 - **Helper model** (`OPENAI_HELPER_MODEL` || `gpt-5.4-mini`): discovery strategy, discovery gap check, and the optional narration pass.
 - **Final model** (`OPENAI_FINAL_MODEL` || `gpt-5.4-mini`): the main research call with the built-in `web_search` tool (`tool_choice:"required"`) and strict JSON-schema output — produces the structured recommendations + prose.
 - **Features model** (`OPENAI_MODEL` || `gpt-5.4-mini`): generates Smart-Feature filters in `/api/features`.
+- **Default-off two-layer model:** exact `two_layer` mode freezes one
+  `gpt-5.6-terra`/high background response with required hosted web search,
+  at most 20 tool calls, no SDK retry, and no second model or legacy fallback.
+  GET polls only that response; DELETE cancels only that response.
 - The SDK is loaded dynamically; if `openai` isn't installed the route returns the missing-key user message.
 
 **What each contributes:** Serper = breadth + real prices/retailers; OpenAI = query strategy, web-search synthesis, requirement-aware structuring, and buyer-facing prose. Deterministic TS code does the filtering, validation, scoring, and selection.
@@ -228,14 +264,25 @@ Requires `SERPER_API_KEY`. **If missing**, discovery is skipped (`stats.skippedR
 - `SERPER_API_KEY` — optional; enables Serper discovery.
 - `SEARCH_DEPTH` — `dev` | `standard` | `deep` (invalid → `standard`).
 - `OPENAI_MODEL`, `OPENAI_HELPER_MODEL`, `OPENAI_FINAL_MODEL` — model overrides.
+- `REVIEW_RADAR_PIPELINE_MODE` — server-only; missing/empty/`legacy` preserves
+  the existing pipeline, while exact `two_layer` enables the new background
+  branch. Other non-empty values are configuration errors.
+- `REVIEW_RADAR_JOB_TOKEN_SECRET` — server-only HMAC secret of at least 32
+  bytes, required only in `two_layer` mode.
 - Feature flags: `REVIEW_RADAR_SPEC_VALIDATION`, `REVIEW_RADAR_CATEGORY_SCORING`, `REVIEW_RADAR_CREDIBILITY_PENALTY`, `REVIEW_RADAR_SPEC_SEARCH`, `REVIEW_RADAR_LLM_NARRATION` (set to `on`). `REVIEW_RADAR_DEBUG_LOGS=true` enables server-side discovery logs (non-prod).
 - `NODE_ENV` — gates debug output and dev-only `scoreDebug`.
 
-> The `REVIEW_RADAR_*` flags are **not** in `.env.example`; they live in the developer's `.env.local`. Intended production defaults are **Needs verification**.
+> The two T4 variables are documented in `.env.example`. Other historical
+> `REVIEW_RADAR_*` flags may exist only in the developer's `.env.local`.
 
 ---
 
 ## 7. Data flow
+
+The route mode is selected before either provider architecture runs. The
+existing data flow remains the default:
+
+**Legacy (missing/empty/`legacy`):**
 
 ```
 User input (SearchForm)
@@ -277,11 +324,44 @@ prioritizeProductPageUrls + removeUserHiddenResultFields → { result } (JSON)
 ResultsSummary + ProductCard render
 ```
 
-**Main shapes** (`types/review-radar.ts`): `RecommendationApiRequest`, `StructuredRequirements`
+**Two-layer (exact `two_layer`, default-off):**
+
+```text
+RecommendationApiRequest
+   ↓
+deterministic normalization + versioned natural master prompt
+   ↓
+one Terra/high background Responses API create with required web search
+   ↓
+202 signed app job token
+   ↓
+browser GET polling of only that token / optional one-job DELETE cancellation
+   ↓
+response-owned titled source registry + natural research answer (server-only)
+   ↓
+deterministic OAI-T2 formatter
+   ↓
+OAI-T1 trust validation + cards (receiptInputs: [])
+   ↓
+versioned cards/source catalog only
+   ↓
+TwoLayerResults trust-state renderer
+```
+
+The two-layer browser never receives the complete prompt, raw answer, raw
+provider response ID, or raw response envelope. Without receipts, no model-
+authored transactional field is promoted to verified display data.
+
+**Main legacy shapes** (`types/review-radar.ts`): `RecommendationApiRequest`, `StructuredRequirements`
 (+ `StructuredConstraint`, `SizeConstraint`, `BudgetRule`, `SpecConstraint`), `SearchPlan` /
 `SearchQueryCandidate`, `ProductDiscoveryStrategy` / `ProductDiscoveryGapCheck`,
 `RawProductCandidate`, `ProductRecommendation` (+ `ScoreBreakdown`, `RequirementCheck`,
 `ProductCredibility`, `Citation`, `ProductEvidenceBucket`), `RecommendationResult`, `SearchCoverage`.
+
+**Two-layer shapes:** `TwoLayerApiResponse` and `TwoLayerDisplaySource`
+(`lib/twoLayerApiContract.ts`), `TwoLayerProductCard`
+(`lib/twoLayerRecommendation.ts`), and the signed token payload
+(`lib/twoLayerJobToken.ts`).
 
 > **Stale comments:** `SpecConstraint`/`ProductSpecValue` in `types/review-radar.ts` say they are
 > "shadow mode … not yet consumed by search, validation, or scoring." That is **out of date** —
@@ -291,11 +371,18 @@ ResultsSummary + ProductCard render
 
 ## 8. UI structure
 
-- **`app/page.tsx`** — hero/marketing (hidden once results show), `SearchForm`, `ResultsSummary`. Owns request lifecycle (abort, request-id guarding against stale responses, 180s timeout).
+- **`app/page.tsx`** — hero/marketing (hidden once results show), `SearchForm`,
+  and either `ResultsSummary` or `TwoLayerResults`. Owns abort and stale-request
+  guards, keeps the legacy 180-second timeout, and adopts signed two-layer job
+  expiry only after the server returns a valid pending state.
 - **`components/SearchForm.tsx`** — the four inputs + live requirement preview + submit/cancel.
 - **`components/SmartFeatures.tsx`** — fetches and renders category-specific feature chips from `/api/features`.
 - **`components/ResultsSummary.tsx`** — coverage summary, dealbreaker-strength slider (display-only), exact-match list, grouped near matches, what-to-avoid, final advice. Shows skeletons while loading and an "No exact matches" alert (with most-restrictive filters) when empty.
 - **`components/ProductCard.tsx`** + **`lib/productCardViewModel.ts`** — each card shows: product **image** (with graceful "image unavailable" fallback), **rank badge** (`#N Best Match`), **title/category**, **summary** + why-recommended reasons, **pros/cons**, **price** + "View best offer" CTA, **citations** (host + what each supports), an **evidence quality** signal (sources checked, warnings), **owner opinion** (praises/concerns/sentiment), **specs** (universal + category-specific), **quick signals**, and **requirement comparisons**. The view model is the single place that decides what's shown and why — a good target when changing card content.
+- **`components/TwoLayerResultPreview.tsx`** — production two-layer card renderer
+  plus the development preview shell. It shows explicit synthesis,
+  source-reported, and independently verified trust states and withholds
+  unverified transactional fields.
 - **`components/VerdictCard.tsx`**, **`components/SourceList.tsx`** — final advice and source listing.
 
 ---
@@ -303,6 +390,15 @@ ResultsSummary + ProductCard render
 ## 9. Error handling & fallback behavior
 
 All in `route.ts` unless noted; user-facing strings in `lib/errorMessages.ts` (`USER_ERROR_MESSAGES`).
+
+**Two-layer mode never falls back to the legacy list below.** Invalid mode or
+missing two-layer configuration fails before provider creation; create failure,
+bad/expired token, terminal provider state, missing research/source metadata,
+or deterministic formatting/trust failure returns a safe typed error. There is
+no retry, replacement response, partial-card repair, Serper/SearchAPI branch, or
+legacy fallback. Cancellation is one DELETE when the browser already knows the
+signed token; cancelling before POST returns that token cannot identify a
+possibly created provider response in the stateless design.
 
 - **Missing `OPENAI_API_KEY`** → HTTP 500 `missingApiKey`. **Missing OpenAI SDK** → same message.
 - **Conflicting requirements** → HTTP 400 with the conflict list.
@@ -318,7 +414,10 @@ All in `route.ts` unless noted; user-facing strings in `lib/errorMessages.ts` (`
 - **Missing/implausible prices** → `plausibleProductPrice` returns `null` ("Price not verified"); such products drop out of in-budget exact matches rather than posing as cheap picks. Price extraction also ignores monthly/installment/financing payment amounts such as "$35/mo" so those do not masquerade as full product prices. High-ticket full-product contexts, such as travel systems, major appliances, large TVs, grills, laptops, mattresses, and in-ground/outdoor basketball hoops, use a reusable plausibility floor. Common full-product categories such as air purifiers, printers, vacuums, office chairs, and cordless drills also have lower sanity floors. Tiny promo/payment/accessory/variant amounts like `$35` or `$10` are marked unverified or `suspicious` instead of exact-match prices.
 - **Missing reviews/specs** → treated as `unknown` (3-state), lowering confidence, not eliminating (unless a hard requirement).
 - **Rescue/retry logic**: discovery staged passes + market-coverage rescue + editorial seeding (§3); `verifyMissingRequirementEvidence` re-checks unknown facts; citation reachability re-check only when no verified URLs exist.
-- **Frontend**: 180s abort → `slowResponse`; fetch failure → `networkError`; cancel is silent. Stale responses are ignored via `requestId` guarding.
+- **Frontend**: legacy retains the 180s abort; a signed two-layer pending state
+  supplies its bounded expiry. Abort expiry → `slowResponse`; fetch failure →
+  `networkError`; cancel is silent. Stale responses are ignored via `requestId`
+  guarding.
 
 ---
 

@@ -1,158 +1,184 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-17 by Codex after the zero-live OAI-T4A isolated
-implementation. OAI-T1 is committed at `3b85e4c`, OAI-T2 at `2238f28`, and
-OAI-T3 at `6a96690`. OAI-T4 planning plus T4A implementation are complete in
-the current history. OAI-T4B is not approved.
+Updated: 2026-07-17 by Codex after the zero-live OAI-T4B default-off route and
+UI integration. OAI-T1 is committed at `3b85e4c`, OAI-T2 at `2238f28`, OAI-T3
+at `6a96690`, and OAI-T4A at `304d7ee`. OAI-T4B is complete and committed at
+the current `main` HEAD; no later phase is approved.
 
 ## Efficient session start
 
 1. Read repository `AGENTS.md` in full.
 2. Read this handoff in full.
-3. Read `docs/forward-roadmap.md` from OAI-T1 through OAI-T4.
-4. Read `docs/agent-dialogue.md` from entry [61] onward.
+3. Read the OAI-T1 through OAI-T4 sections of `docs/forward-roadmap.md`.
+4. Read `docs/agent-dialogue.md` from entry [61] onward, especially [63].
 5. Treat old OAI-2B through OAI-10 as historical/unreachable and H3 as blocked.
-6. Do not start T4B from this handoff; Taylor must authorize it separately.
+6. Do not start T4C without Taylor's separate approval.
 
 ## Current state
 
-- Production and `/api/recommendations` remain unchanged. Legacy is the only
-  user-visible path. No two-layer dispatcher, job route, mode flag, job secret,
-  or frontend integration exists.
-- OAI-T1 freezes the recommendation-versus-transactional trust boundary. OAI-T2
-  deterministically formats the natural Terra answer. OAI-T3 presents the
-  resulting trust states on an unlinked development-only page.
-- OAI-T4A adds only isolated server-side foundations:
-  `lib/twoLayerMasterPrompt.ts`, `lib/twoLayerJobToken.ts`, and
-  `lib/twoLayerResearchAdapter.ts`. Nothing imports them from the production
-  route or browser bundle.
-- `oai-two-layer-master-prompt-v1` is now reviewed source code, not a fixture
-  dependency. It contains stable natural Markdown instructions and one
-  canonical delimited `NormalizedShopperRequest` data block, including all
-  original shopper fields. It contains no benchmark answer, candidate slate,
-  hidden product seed, or fake example URL.
-- The adapter freezes one `gpt-5.6-terra`/high background create with
-  `store: false`, required hosted web search, 20 tool calls maximum, 24,000
-  output tokens maximum, and full web-search source inclusion. Start, retrieve,
-  and cancel are each single-shot; there is no sleep loop, retry, replacement,
-  Serper, SearchAPI, second model call, or legacy fallback.
-- Poll completion returns natural research text plus response-owned titled
-  source metadata to the authorized server caller. Its ledger contains only
-  prompt/version hashes, model/status, duration, bounded usage, source
-  count/hosts, hashed response ID, and failure code—not shopper prose, prompt,
-  answer, source path, credentials, raw response, or provider exception text.
-- `oai-two-layer-job-v1` is an HMAC-SHA-256 token with response ID, prompt
-  version, issue time, and expiry only. It requires a secret of at least 32
-  bytes, has a 30-minute maximum lifetime, verifies signatures in constant time,
-  and fails closed on tampering, expiry, or malformed content.
-- Missing receipts still keep a recommendation while exposing no price, seller,
-  availability, purchase URL, or image. Exact model/variant identity remains
-  visibly unverified until independent receipts exist.
-- RR-091 and RR-092 remain Needs Investigation. The register remains 92 total /
-  85 Fixed / 6 Needs Investigation / 1 Won't Fix.
+- The production recommendation route now has a server-only mode dispatcher.
+  Missing, empty, or exact `legacy` delegates to the unchanged legacy POST
+  handler. Exact `two_layer` selects the new branch. Any other non-empty value
+  fails closed before provider creation.
+- The default user-visible path remains legacy. T4B did not edit `.env.local`,
+  promote a mode, deploy, or call a provider.
+- The two-layer branch validates the existing shopper request, deterministically
+  builds the versioned natural master prompt, starts one Terra/high background
+  response with hosted search, and returns HTTP 202 with a signed app job token.
+- GET verifies the token and retrieves only that response. Pending remains 202;
+  completion runs the deterministic OAI-T2 formatter and OAI-T1 card builder
+  with `receiptInputs: []`. DELETE verifies the same token and cancels only that
+  response.
+- Every OpenAI SDK instance in the branch uses `maxRetries: 0`. There is no
+  Serper, SearchAPI, helper-model, second-response, retry, replacement, legacy
+  helper, or legacy fallback path.
+- The browser accepts the unchanged `{ result: RecommendationResult }` legacy
+  body or the versioned two-layer state union. It polls only the returned token,
+  adopts the signed job expiry only after a valid pending state, and sends one
+  independent DELETE when cancelling a known job.
+- The real results page reuses `TwoLayerResults`; it does not coerce two-layer
+  cards into the legacy schema. Model research is visibly synthesis or source-
+  reported. With no receipts, price, seller, availability, purchase URL, image,
+  and exact-identity verification remain absent while the recommendation stays.
+- The public two-layer response contains state, cards, and the display-source
+  catalog only. It does not contain the complete prompt, raw answer, raw source
+  envelope, provider response ID, credentials, headers, or cookies.
+- RR-091 and RR-092 remain Needs Investigation. The issue register was not
+  changed by T4B.
+
+## Signed job and failure contract
+
+- `oai-two-layer-job-v2` HMAC-signs the response ID, prompt version,
+  request-specific prompt hash, issue time, and expiry. It contains no shopper
+  prose, prompt text, answer text, source URL, or credential.
+- The secret must be at least 32 bytes; lifetime cannot exceed 30 minutes. T4B
+  currently issues a 10-minute token. Tampered, malformed, future-issued, and
+  expired tokens fail closed before provider creation.
+- Invalid shopper input, invalid mode/configuration, create/retrieve/cancel
+  failure, terminal or incomplete provider states, missing web search/text/title,
+  malformed headings, unregistered sources, T2 failure, and T1 failure expose
+  safe bounded errors. No raw provider exception is returned or logged.
+- Stateless cancellation has one explicit residual race: if the user cancels
+  before POST returns a signed token, the browser cannot name and cancel a
+  provider response the server may already have created. Do not hide this in
+  T4C evidence.
 
 ## Current local secret and flag state
 
-- `OPENAI_API_KEY`, `SERPER_API_KEY`, and `SEARCHAPI_API_KEY` remain server-side
-  in ignored `.env.local`. Never print, log, copy into evidence, or commit them.
-- `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on`.
-- `REVIEW_RADAR_LLM_NARRATION=off`.
-- `REVIEW_RADAR_PIPELINE_MODE` and `REVIEW_RADAR_JOB_TOKEN_SECRET` do not exist.
-- Legacy remains the only user-visible path.
+- T4B did not read or modify ignored `.env.local`.
+- The last recorded local state is
+  `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on` and
+  `REVIEW_RADAR_LLM_NARRATION=off`.
+- The last recorded state has no `REVIEW_RADAR_PIPELINE_MODE` or
+  `REVIEW_RADAR_JOB_TOKEN_SECRET`; therefore legacy remains the only visible
+  path unless Taylor independently changes local configuration.
+- `.env.example` now documents `REVIEW_RADAR_PIPELINE_MODE=legacy` and the blank
+  server-only job-token secret. Never reuse an API key as that secret and never
+  prefix it with `NEXT_PUBLIC_`.
+- `OPENAI_API_KEY`, `SERPER_API_KEY`, and `SEARCHAPI_API_KEY` remain server-only
+  ignored secrets. Never print, log, copy into evidence, or commit them.
 
-## Completed OAI-T4A decision and implementation
+## OAI-T4B implementation result
 
-T4A deliberately implements the smallest testable foundation before route
-work:
+The phase added these production seams without changing the default path:
 
-1. Deterministic code—not another OpenAI call—inserts category, budget,
-   Important Details, Smart Features, hard constraints/dealbreakers, normalized
-   requirements, and original fields into the versioned prompt.
-2. The provider contract is natural text, not the rejected strict final-slate
-   schema. It starts exactly one background research response.
-3. Caller-owned polling retrieves only the same response. Mismatched provider
-   response IDs, failed/cancelled/incomplete/refused states, no search, and no
-   text fail closed.
-4. The source registry uses only response-owned source URLs and titles. Missing
-   metadata is not inferred; the T2 formatter rejects a cited unregistered or
-   untitled source.
-5. Signed tokens are stateless and contain no user or research content. T4B may
-   later use this contract without adding a database.
-6. No operational diagnostic can serialize the shopper request, complete
-   prompt, complete answer, source paths, response ID, or exception message.
+1. `app/api/recommendations/route.ts` — exact legacy/two-layer dispatcher plus
+   POST/GET/DELETE exports; the original legacy factory remains intact.
+2. `lib/twoLayerRecommendationRoute.ts` — safe start/poll/cancel route handlers,
+   T2 formatting, and T1 card construction.
+3. `lib/twoLayerApiContract.ts` — versioned pending/completed/cancelled/failed
+   public states and browser guards.
+4. `lib/recommendationClient.ts` — one-POST legacy/two-layer client, same-token
+   polling, bounded expiry, and one-DELETE cancellation.
+5. `app/page.tsx` and `components/TwoLayerResultPreview.tsx` — production state
+   handling and reuse of the T3 trust renderer.
+6. `.env.example` — server-only mode and secret documentation.
 
-## Next decision - OAI-T4B remains unapproved
+Fail-first evidence was three expected failures: the route and browser modules
+did not exist, and the old token did not authenticate the prompt hash needed by
+a stateless GET. The new tests prove exact mode selection, legacy delegation,
+configuration-before-provider failure, one create, same-response polls,
+same-response cancel, no SDK retry, safe public bodies, malformed/expired token
+failure, browser polling, and one-DELETE cancellation.
 
-After adversarial review, the strongest next implementation candidate is
-**OAI-T4B**, a separately approved zero-live phase. It would add an exact
-default-off route dispatcher, signed POST/GET/DELETE job states, a versioned
-two-layer response union, and the real T3 renderer while proving the legacy path
-byte- and call-order-equivalent. T4C remains a still-later, separately budgeted
-one-response live lifecycle smoke, not a quality or promotion gate.
+## Next decision — peer review before OAI-T4C
 
-**Recommended reasoning level:** Use Highest for T4B because it touches the real
-route, authentication-like token handling, legacy compatibility, browser
-polling/cancellation, and public failure states.
+Taylor authorized the T4B commit. The immediate next step is the roadmap's
+required adversarial peer review of T4A/T4B before any live work. Dialogue
+entry [63] asks Claude to challenge the
+signed prompt-hash token, background terminal-state union, and pre-token cancel
+race, while the older T1-T3 trust-label/source-title questions also remain open.
+
+Only after that review passes should Taylor consider **OAI-T4C**, one separately
+budgeted Terra background lifecycle smoke through the real route and UI. T4C is
+not a quality, repeatability, promotion, or transactional-verifier phase.
+
+**Recommended reasoning level:** use **Highest** for the T4B adversarial peer
+review because authentication-like tokens, lifecycle states, privacy, and
+legacy equivalence are load-bearing. Once that review is closed, **High** is
+sufficient for the bounded mechanical T4C smoke.
 
 ## Hard boundaries
 
-- No live provider call is approved. All earlier OpenAI, Serper, SearchAPI, and
-  direct-fetch approvals are spent.
-- Do not rerun or retune the unguarded diagnostic, H2, H2B, or H2C; do not try a
-  replacement provider or weaken exact identity.
-- Do not start T4B, add a route or UI integration, create a mode flag/job secret,
-  edit `.env.local`, deploy, run a quality window/holdout, promote, or clean up
-  without separate explicit approval.
-- Never persist or log API keys, credentials, request headers, cookies, shopper
-  prose, complete prompts, complete answers, source-path URLs, raw response IDs,
-  provider exception messages, or complete raw provider responses.
-- No product-, retailer-, brand-, category-, publisher-, or fixture-specific
-  production rule.
-- No benchmark answer enters prompts, queries, verification, ranking, or app
-  behavior.
-- Live fixtures and all pre-existing untracked artifacts remain untracked. Stage
-  explicit phase files only; never use `git add -A`.
+- No live OpenAI, Serper, SearchAPI, or direct-fetch call is approved. Every
+  earlier live approval is spent.
+- Do not start T4C, edit `.env.local`, create a real job secret,
+  promote the mode, deploy, run a quality window, or build transactional
+  verification without separate explicit approval.
+- Do not rerun/retune the old unguarded diagnostic, H2, H2B, H2C, or rejected
+  strict-slate pipeline; do not weaken exact identity or trust labels.
+- Never persist or log keys, credentials, headers, cookies, shopper prose,
+  complete prompts, complete answers, source-path URLs, raw provider response
+  IDs, provider exception messages, or complete raw provider responses.
+- No product-, brand-, retailer-, category-, publisher-, benchmark-, or
+  fixture-specific production rule.
+- Live fixtures and all pre-existing untracked artifacts remain untracked.
+  Stage explicit phase files only; never use `git add -A`.
 
 ## Outstanding review debt
 
-- Entries [42]-[57] still await Claude's review of the OAI lifecycle and
+- Entries [42]-[57] still await Claude's review of the older OAI lifecycle and
   unguarded diagnostic conclusions.
 - Entries [58]-[60] ask Claude to challenge the T1 boundary, T2 parser, and T3
   trust presentation.
-- Entry [61] asks Claude to challenge the T4 job/token architecture and
-  no-receipt state. Entry [62] adds the concrete T4A prompt, token, lifecycle,
-  source-normalization, and failure contracts for adversarial review.
-- Peer dialogue is advisory and authorizes no commit, phase, live call, or
-  behavior change. Taylor remains the sole approver.
+- Entries [61]-[62] ask Claude to challenge the T4 architecture and T4A
+  foundation. Entry [63] adds the concrete T4B route, token-v2, browser, and
+  cancellation questions.
+- Peer dialogue is advisory and authorizes no commit, phase, live call, flag, or
+  deployment. Taylor remains the sole approver.
 
 ## Verification
 
-- Fail-first: all three new suites failed with `ERR_MODULE_NOT_FOUND` before
-  implementation.
-- OAI-T4A focused wall: 20/20 across three suites.
-- Combined T1-T4 compatibility wall: 45/45 across five suites.
-- Complete `npm test`: 1062/1062 across 144 suites.
+- Fail-first: three expected failures before implementation.
+- Focused T1-T4 wall: 56/56 across eight suites.
+- Route/client/token lifecycle: 16/16.
+- Complete `npm test`: 1073/1073 across 147 suites.
 - `npm run typecheck`, targeted ESLint, `npm run build`,
   `node scripts/eval-pipeline.mjs`, and `git diff --check`: pass.
-- Full `npm run lint`: zero errors and three pre-existing unused-variable
-  warnings.
-- Browser QA was not applicable because T4A touched no route, page, component,
-  or public response. T4B must perform the mocked desktop/mobile lifecycle QA.
-- The intended phase diff contains no secret, raw live response, tracked live
-  fixture, route/UI change, flag, or `.env.local` edit.
+- Full `npm run lint`: zero errors and three pre-existing warnings.
+- `npm run test:e2e -- --project=chromium --workers=1`: 15/15, including
+  desktop and 390px mobile polling, no horizontal overflow, one-DELETE
+  cancellation, and the legacy UI.
+- The default parallel Playwright run was locally unstable because the Next
+  development server reset under six workers; the complete sequential run is
+  the canonical T4B browser evidence.
+- Targeted privacy scanning found no secret, raw answer, raw response body,
+  provider response ID, debug logging, `.env.local` edit, or tracked live
+  fixture in the intended T4B files.
 
 ## Retrieval map
 
 | Need | Retrieve |
 |---|---|
-| Detailed T4 architecture and gates | OAI-T4 section in `docs/forward-roadmap.md` |
-| Canonical T4A result | latest entry in `docs/qa-loop-results.md` |
-| Versioned natural master prompt | `lib/twoLayerMasterPrompt.ts` |
-| Signed stateless job token | `lib/twoLayerJobToken.ts` |
-| Background create/retrieve/cancel adapter | `lib/twoLayerResearchAdapter.ts` |
-| Deterministic shopper normalization | `lib/autonomousResearchContract.ts` |
-| OAI-T2 formatter | `lib/twoLayerFormatter.ts` |
-| OAI-T1 trust boundary | `lib/twoLayerRecommendation.ts` |
-| OAI-T3 trust renderer | `components/TwoLayerResultPreview.tsx` |
-| Current production route | `app/api/recommendations/route.ts` |
-| Peer challenge | `docs/agent-dialogue.md` entries [61]-[62] |
+| Detailed T4 architecture and gates | OAI-T4 in `docs/forward-roadmap.md` |
+| Canonical T4B evidence | latest entry in `docs/qa-loop-results.md` |
+| Mode dispatcher and unchanged legacy factory | `app/api/recommendations/route.ts` |
+| Two-layer route lifecycle | `lib/twoLayerRecommendationRoute.ts` |
+| Versioned public union | `lib/twoLayerApiContract.ts` |
+| Browser polling/cancel | `lib/recommendationClient.ts`, `app/page.tsx` |
+| Signed stateless token | `lib/twoLayerJobToken.ts` |
+| Prompt and provider adapter | `lib/twoLayerMasterPrompt.ts`, `lib/twoLayerResearchAdapter.ts` |
+| Formatter and trust boundary | `lib/twoLayerFormatter.ts`, `lib/twoLayerRecommendation.ts` |
+| Shared trust renderer | `components/TwoLayerResultPreview.tsx` |
+| Mocked route/browser proof | `tests/twoLayerRoute.test.mjs`, `tests/twoLayerClient.test.mjs`, `e2e/home.spec.ts` |
+| Peer challenge | `docs/agent-dialogue.md` entries [61]-[63] |

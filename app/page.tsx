@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { ResultsSummary } from "@/components/ResultsSummary";
 import { SearchForm } from "@/components/SearchForm";
+import { TwoLayerResults } from "@/components/TwoLayerResultPreview";
 import {
   getSearchValidationError,
   USER_ERROR_MESSAGES,
@@ -18,10 +19,15 @@ import {
   buildRecommendationApiPayload,
   cleanSearchFormInput,
 } from "@/lib/searchRequestPayload";
+import {
+  cancelTwoLayerRecommendationJob,
+  RecommendationClientError,
+  runRecommendationRequest,
+} from "@/lib/recommendationClient";
 import { smartFeatureCategoryKey } from "@/lib/smartFeatureSelection";
 import type { DealbreakerStrength } from "@/lib/dealbreakerVisibility";
+import type { TwoLayerCompletedResponse } from "@/lib/twoLayerApiContract";
 import type {
-  RecommendationApiResponse,
   RecommendationResult,
   SearchRequest,
 } from "@/types/review-radar";
@@ -105,10 +111,13 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [result, setResult] = useState<RecommendationResult | null>(null);
+  const [twoLayerResult, setTwoLayerResult] =
+    useState<TwoLayerCompletedResponse | null>(null);
   const resultsRef = useRef<HTMLDivElement | null>(null);
   const activeRequest = useRef<{
     controller: AbortController;
     id: number;
+    jobToken: string | null;
   } | null>(null);
   const requestId = useRef(0);
   const cancelRequested = useRef(false);
@@ -154,6 +163,7 @@ export default function Home() {
       setError("");
       setHasSearched(false);
       setResult(null);
+      setTwoLayerResult(null);
       setIsLoading(false);
       return;
     }
@@ -164,6 +174,7 @@ export default function Home() {
     setDealbreakerStrength("balanced");
     setHasSearched(false);
     setResult(null);
+    setTwoLayerResult(null);
     setIsLoading(true);
     requestId.current += 1;
     cancelRequested.current = false;
@@ -173,8 +184,9 @@ export default function Home() {
     activeRequest.current = {
       controller,
       id: currentRequestId,
+      jobToken: null,
     };
-    const timeout = window.setTimeout(() => {
+    let timeout = window.setTimeout(() => {
       controller.abort();
     }, FRONTEND_RESEARCH_TIMEOUT_MS);
 
@@ -182,32 +194,36 @@ export default function Home() {
       const payload = buildRecommendationApiPayload(cleanedForm, {
         includeExtractedRequirements: true,
       });
-      const response = await fetch("/api/recommendations", {
-        body: JSON.stringify(payload),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "POST",
+      const outcome = await runRecommendationRequest({
+        payload,
         signal: controller.signal,
+        onTwoLayerPending: (pending) => {
+          if (
+            currentRequestId !== requestId.current ||
+            activeRequest.current?.id !== currentRequestId
+          ) {
+            return;
+          }
+          activeRequest.current.jobToken = pending.jobToken;
+          window.clearTimeout(timeout);
+          timeout = window.setTimeout(
+            () => controller.abort(),
+            Math.max(1_000, pending.expiresAtMs - Date.now() + 1_000),
+          );
+        },
       });
-
-      const data = (await response.json()) as RecommendationApiResponse;
 
       if (currentRequestId !== requestId.current) {
         return;
       }
 
-      if (!response.ok || "error" in data) {
-        setError(
-          "error" in data
-            ? data.error
-            : "Something went wrong while researching recommendations.",
-        );
-        setHasSearched(false);
-        return;
+      if (outcome.pipeline === "legacy") {
+        setResult(outcome.result);
+        setTwoLayerResult(null);
+      } else {
+        setResult(null);
+        setTwoLayerResult(outcome);
       }
-
-      setResult(data.result);
       setHasSearched(true);
     } catch (requestError) {
       if (currentRequestId !== requestId.current) {
@@ -222,15 +238,20 @@ export default function Home() {
         setError("");
         setHasSearched(false);
         setResult(null);
+        setTwoLayerResult(null);
         return;
       }
 
       setError(
         requestError instanceof DOMException && requestError.name === "AbortError"
           ? USER_ERROR_MESSAGES.slowResponse
+          : requestError instanceof RecommendationClientError
+            ? requestError.message
           : USER_ERROR_MESSAGES.networkError,
       );
       setHasSearched(false);
+      setResult(null);
+      setTwoLayerResult(null);
     } finally {
       window.clearTimeout(timeout);
       if (currentRequestId === requestId.current) {
@@ -243,15 +264,21 @@ export default function Home() {
 
   function handleCancelSearch() {
     cancelRequested.current = true;
-    activeRequest.current?.controller.abort();
+    const request = activeRequest.current;
+    request?.controller.abort();
+    if (request?.jobToken) {
+      void cancelTwoLayerRecommendationJob({ jobToken: request.jobToken });
+    }
     setIsLoading(false);
     setHasSearched(false);
     setFieldErrors({});
     setError("");
     setResult(null);
+    setTwoLayerResult(null);
   }
 
-  const showResults = isLoading || (hasSearched && result !== null);
+  const showResults =
+    isLoading || (hasSearched && (result !== null || twoLayerResult !== null));
   const showMarketing = !showResults;
 
   return (
@@ -345,13 +372,20 @@ export default function Home() {
               id="results"
               ref={resultsRef}
             >
-              <ResultsSummary
-                dealbreakerStrength={dealbreakerStrength}
-                hasSearched={hasSearched}
-                isLoading={isLoading}
-                onDealbreakerStrengthChange={setDealbreakerStrength}
-                result={result}
-              />
+              {!isLoading && twoLayerResult ? (
+                <TwoLayerResults
+                  cards={twoLayerResult.cards}
+                  sources={twoLayerResult.sources}
+                />
+              ) : (
+                <ResultsSummary
+                  dealbreakerStrength={dealbreakerStrength}
+                  hasSearched={hasSearched}
+                  isLoading={isLoading}
+                  onDealbreakerStrengthChange={setDealbreakerStrength}
+                  result={result}
+                />
+              )}
             </section>
           ) : null}
 

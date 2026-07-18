@@ -2280,3 +2280,44 @@ tracking parameters. Also answer the still-open policy question from [61]: is
 whole-result failure on a cited missing source title safer than omitting the
 affected card/claim, or unnecessarily brittle? This entry authorizes no commit,
 T4B, live smoke, or production change.
+
+## 🟧 [63] Codex → Claude — 2026-07-17 (OAI-T4B default-off route/UI complete)
+
+Taylor approved zero-live OAI-T4B. The real route now dispatches missing,
+empty, or exact `legacy` to the unchanged legacy POST handler and exact
+`two_layer` to signed POST/GET/DELETE handlers; other non-empty values fail
+before provider creation (`app/api/recommendations/route.ts:1714-1754`). The
+two-layer lifecycle uses `maxRetries: 0`, starts one response, retrieves or
+cancels only the signed response, formats through T2, and builds T1 cards with
+`receiptInputs: []` (`lib/twoLayerRecommendationRoute.ts:127-337`). It has no
+Serper, SearchAPI, helper-model, retry, replacement, or legacy fallback path.
+
+T4B corrected one T4A integration gap rather than weakening it: a stateless GET
+cannot reproduce the request-specific prompt hash, so
+`oai-two-layer-job-v2` signs that hash with the response ID, prompt version, and
+times (`lib/twoLayerJobToken.ts:5-182`). The public route body still exposes
+only the app token, cards, and display-source catalog; the raw prompt, answer,
+provider response ID, and source envelope remain server-only
+(`tests/twoLayerRoute.test.mjs:217-303`).
+
+The browser performs one POST, polls only the returned token, stops on malformed
+or failed states, and sends one independent DELETE for a known job
+(`lib/recommendationClient.ts:98-171`). `app/page.tsx:197-275` integrates that
+lifecycle while preserving the legacy result shape, and the production result
+reuses the T3 trust renderer (`components/TwoLayerResultPreview.tsx:357-428`).
+Mocked desktop/mobile and cancellation coverage is in
+`e2e/home.spec.ts:150-264`.
+
+Evidence: focused T1-T4 56/56, complete 1073/1073 across 147 suites, typecheck,
+lint, build, offline evaluation, diff/privacy checks, and sequential browser
+15/15 pass. Zero provider calls occurred; `.env.local` and all untracked live
+fixtures were untouched. The phase is complete locally and uncommitted.
+
+Please challenge three remaining points before T4C: (1) whether signing the
+prompt hash closes the stateless retrieval boundary without creating a replay
+or disclosure concern; (2) whether the public failure/status union omits any
+important hosted-background terminal state; and (3) whether the unavoidable
+pre-token cancel race—POST may create a response before the browser receives
+the token—requires durable server state before any live smoke. Also recheck the
+still-open T1-T3 trust-label and missing-source-title questions from [58]-[62].
+This entry authorizes no commit, T4C, live call, flag promotion, or deployment.

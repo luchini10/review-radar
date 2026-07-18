@@ -13,12 +13,12 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import type { TwoLayerDisplaySource } from "@/lib/twoLayerApiContract";
 import type { TwoLayerProductCard } from "@/lib/twoLayerRecommendation";
-import type { TwoLayerPreviewSource } from "@/lib/twoLayerPreviewData";
 
-type TwoLayerResultPreviewProps = {
+type TwoLayerResultsProps = {
   cards: TwoLayerProductCard[];
-  sources: TwoLayerPreviewSource[];
+  sources: TwoLayerDisplaySource[];
 };
 
 function TrustLegend() {
@@ -247,7 +247,7 @@ function SourceReportedFacts({
   sources,
 }: {
   card: TwoLayerProductCard;
-  sources: Map<string, TwoLayerPreviewSource>;
+  sources: Map<string, TwoLayerDisplaySource>;
 }) {
   if (card.claims.length === 0) return null;
 
@@ -276,7 +276,19 @@ function SourceReportedFacts({
               </Badge>
               {claim.sourceIds.map((id) => {
                 const source = sources.get(id);
-                return source ? (
+                if (!source) return null;
+                return source.url ? (
+                  <a
+                    className="inline-flex h-auto max-w-full items-center gap-1.5 whitespace-normal rounded-md border border-slate-200 bg-white px-2.5 py-1 text-left text-xs leading-4 text-slate-600 hover:border-slate-300 hover:text-slate-950"
+                    href={source.url}
+                    key={id}
+                    rel="noreferrer noopener"
+                    target="_blank"
+                  >
+                    {source.label}: {source.title}
+                    <ExternalLink aria-hidden="true" className="h-3 w-3 shrink-0" />
+                  </a>
+                ) : (
                   <Badge
                     className="h-auto max-w-full whitespace-normal rounded-md bg-white text-left leading-4 text-slate-600"
                     key={id}
@@ -284,7 +296,7 @@ function SourceReportedFacts({
                   >
                     {source.label}: {source.title}
                   </Badge>
-                ) : null;
+                );
               })}
             </div>
           </div>
@@ -299,7 +311,7 @@ function PreviewCard({
   sources,
 }: {
   card: TwoLayerProductCard;
-  sources: Map<string, TwoLayerPreviewSource>;
+  sources: Map<string, TwoLayerDisplaySource>;
 }) {
   return (
     <article className="min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
@@ -342,12 +354,39 @@ function PreviewCard({
   );
 }
 
+export function TwoLayerResults({
+  cards,
+  sources,
+}: TwoLayerResultsProps) {
+  const sourcesById = new Map(sources.map((source) => [source.id, source]));
+
+  return (
+    <div className="grid min-w-0 gap-8">
+      <TrustLegend />
+      <section aria-labelledby="two-layer-results" className="grid min-w-0 gap-5">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Research results
+          </p>
+          <h2
+            className="mt-1 font-display text-3xl font-semibold text-slate-950"
+            id="two-layer-results"
+          >
+            Ranked recommendations with visible trust states
+          </h2>
+        </div>
+        {cards.map((card) => (
+          <PreviewCard card={card} key={card.key} sources={sourcesById} />
+        ))}
+      </section>
+    </div>
+  );
+}
+
 export function TwoLayerResultPreview({
   cards,
   sources,
-}: TwoLayerResultPreviewProps) {
-  const sourcesById = new Map(sources.map((source) => [source.id, source]));
-
+}: TwoLayerResultsProps) {
   return (
     <main className="min-h-screen bg-slate-50">
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
@@ -381,21 +420,7 @@ export function TwoLayerResultPreview({
           </div>
         </header>
 
-        <TrustLegend />
-
-        <section aria-labelledby="prototype-results" className="grid gap-5">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-              Prototype results
-            </p>
-            <h2 className="mt-1 font-display text-3xl font-semibold text-slate-950" id="prototype-results">
-              Three controlled trust states
-            </h2>
-          </div>
-          {cards.map((card) => (
-            <PreviewCard card={card} key={card.key} sources={sourcesById} />
-          ))}
-        </section>
+        <TwoLayerResults cards={cards} sources={sources} />
       </div>
     </main>
   );

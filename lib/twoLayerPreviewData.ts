@@ -1,10 +1,7 @@
 import type { TwoLayerProductCard } from "./twoLayerRecommendation.ts";
+import type { TwoLayerDisplaySource } from "./twoLayerApiContract.ts";
 
-export type TwoLayerPreviewSource = {
-  id: string;
-  label: string;
-  title: string;
-};
+export type TwoLayerPreviewSource = TwoLayerDisplaySource;
 
 export const TWO_LAYER_PREVIEW_PATH = "/oai-t3-preview";
 
@@ -17,21 +14,25 @@ export const twoLayerPreviewSources: TwoLayerPreviewSource[] = [
     id: "s1",
     label: "Manufacturer source",
     title: "Controlled manufacturer specification example",
+    url: null,
   },
   {
     id: "s2",
     label: "Professional test",
     title: "Controlled independent test example",
+    url: null,
   },
   {
     id: "s3",
     label: "Owner feedback",
     title: "Controlled owner-feedback example",
+    url: null,
   },
   {
     id: "s4",
     label: "Commerce receipt",
     title: "Controlled exact-offer verification example",
+    url: null,
   },
 ];
 

@@ -4,6 +4,10 @@ import {
   MissingOpenAISdkError,
 } from "../../../lib/openaiClient.ts";
 import {
+  createTwoLayerRecommendationHandlers,
+  type TwoLayerRecommendationHandlers,
+} from "../../../lib/twoLayerRecommendationRoute.ts";
+import {
   getSafeOpenAIErrorMessage,
   getSearchValidationError,
   USER_ERROR_MESSAGES,
@@ -1676,4 +1680,75 @@ export function createRecommendationPostHandler(
     handleRecommendationPost(request, routeDependencies);
 }
 
-export const POST = createRecommendationPostHandler();
+type RecommendationRouteHandler = (request: Request) => Promise<Response>;
+
+type RecommendationRouteHandlerOptions = {
+  getPipelineMode?: () => string | undefined;
+  legacyPost?: RecommendationRouteHandler;
+  twoLayerHandlers?: TwoLayerRecommendationHandlers;
+};
+
+function routeConfigurationError() {
+  return Response.json(
+    { error: "ReviewRadar is not configured correctly." },
+    {
+      headers: { "Cache-Control": "no-store" },
+      status: 500,
+    },
+  );
+}
+
+function methodNotAllowed() {
+  return Response.json(
+    { error: "Method not allowed." },
+    {
+      headers: {
+        Allow: "POST",
+        "Cache-Control": "no-store",
+      },
+      status: 405,
+    },
+  );
+}
+
+export function createRecommendationRouteHandlers({
+  getPipelineMode = () => process.env.REVIEW_RADAR_PIPELINE_MODE,
+  legacyPost = createRecommendationPostHandler(),
+  twoLayerHandlers = createTwoLayerRecommendationHandlers({ validateRequest }),
+}: RecommendationRouteHandlerOptions = {}) {
+  function selectedMode() {
+    const mode = getPipelineMode();
+    if (mode === undefined || mode === "" || mode === "legacy") return "legacy";
+    if (mode === "two_layer") return "two_layer";
+    return "invalid";
+  }
+
+  const POST: RecommendationRouteHandler = (request) => {
+    const mode = selectedMode();
+    if (mode === "legacy") return legacyPost(request);
+    if (mode === "two_layer") return twoLayerHandlers.POST(request);
+    return Promise.resolve(routeConfigurationError());
+  };
+
+  const GET: RecommendationRouteHandler = (request) => {
+    const mode = selectedMode();
+    if (mode === "legacy") return Promise.resolve(methodNotAllowed());
+    if (mode === "two_layer") return twoLayerHandlers.GET(request);
+    return Promise.resolve(routeConfigurationError());
+  };
+
+  const DELETE: RecommendationRouteHandler = (request) => {
+    const mode = selectedMode();
+    if (mode === "legacy") return Promise.resolve(methodNotAllowed());
+    if (mode === "two_layer") return twoLayerHandlers.DELETE(request);
+    return Promise.resolve(routeConfigurationError());
+  };
+
+  return { POST, GET, DELETE };
+}
+
+const recommendationRouteHandlers = createRecommendationRouteHandlers();
+
+export const POST = recommendationRouteHandlers.POST;
+export const GET = recommendationRouteHandlers.GET;
+export const DELETE = recommendationRouteHandlers.DELETE;

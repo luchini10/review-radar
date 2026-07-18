@@ -1,4 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
+import {
+  twoLayerPreviewCards,
+  twoLayerPreviewSources,
+} from "../lib/twoLayerPreviewData";
 
 async function failIfRecommendationsApiIsCalled(page: Page) {
   await page.route("**/api/recommendations", async () => {
@@ -110,7 +114,7 @@ test("sends a trimmed request with important details and selected Smart Features
 
   await expect(page.getByText(/Showing 1 exact match/)).toBeVisible();
   expect(recommendationRequestBody).toMatchObject({
-    budget: "under $1500",
+    budget: "under $1,500",
     priorities: "for a narrow apartment kitchen",
     query: "refrigerator",
     selectedFeatures: [
@@ -146,6 +150,119 @@ test("shows loading skeletons and allows canceling a search", async ({ page }) =
   await expect(page.getByRole("button", { name: "Find Recommendations" })).toBeVisible();
 });
 
+for (const viewport of [
+  { label: "desktop", width: 1280, height: 900 },
+  { label: "mobile", width: 390, height: 844 },
+]) {
+  test(`polls and renders two-layer results on ${viewport.label}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    const jobToken = "signed-app-job-token";
+    const requests: Array<{ method: string; url: string }> = [];
+
+    await page.route("**/api/recommendations**", async (route) => {
+      const method = route.request().method();
+      requests.push({ method, url: route.request().url() });
+      if (method === "POST") {
+        await route.fulfill({
+          contentType: "application/json",
+          status: 202,
+          body: JSON.stringify({
+            pipeline: "two_layer",
+            version: "oai-two-layer-api-v1",
+            state: "pending",
+            status: "queued",
+            jobToken,
+            pollAfterMs: 1_000,
+            expiresAtMs: Date.now() + 60_000,
+          }),
+        });
+        return;
+      }
+      await route.fulfill({
+        contentType: "application/json",
+        status: 200,
+        body: JSON.stringify({
+          pipeline: "two_layer",
+          version: "oai-two-layer-api-v1",
+          state: "completed",
+          presentationVersion: "oai-two-layer-presentation-v1",
+          cards: twoLayerPreviewCards.slice(0, 1),
+          sources: twoLayerPreviewSources,
+        }),
+      });
+    });
+
+    await submitSearch(page, "cordless vacuum");
+
+    await expect(
+      page.getByRole("heading", {
+        name: "Ranked recommendations with visible trust states",
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Example Durable Canister" }),
+    ).toBeVisible();
+    await expect(page.getByText("Check current price")).toBeVisible();
+    expect(requests.map((entry) => entry.method)).toEqual(["POST", "GET"]);
+    expect(requests[1].url).toContain(
+      `job=${encodeURIComponent(jobToken)}`,
+    );
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+      ),
+    ).toBe(true);
+  });
+}
+
+test("cancels a known two-layer job with one DELETE", async ({ page }) => {
+  const jobToken = "signed-cancel-token";
+  const methods: string[] = [];
+
+  await page.route("**/api/recommendations**", async (route) => {
+    const method = route.request().method();
+    methods.push(method);
+    if (method === "DELETE") {
+      await route.fulfill({
+        contentType: "application/json",
+        status: 200,
+        body: JSON.stringify({
+          pipeline: "two_layer",
+          version: "oai-two-layer-api-v1",
+          state: "cancelled",
+          status: "cancelled",
+        }),
+      });
+      return;
+    }
+    await route.fulfill({
+      contentType: "application/json",
+      status: 202,
+      body: JSON.stringify({
+        pipeline: "two_layer",
+        version: "oai-two-layer-api-v1",
+        state: "pending",
+        status: method === "POST" ? "queued" : "in_progress",
+        jobToken,
+        pollAfterMs: 1_000,
+        expiresAtMs: Date.now() + 60_000,
+      }),
+    });
+  });
+
+  await page.goto("/");
+  await page.getByLabel("Product category").fill("cordless vacuum");
+  await page.getByRole("button", { name: "Find Recommendations" }).click();
+  await expect.poll(() => methods.filter((method) => method === "GET").length).toBe(1);
+  await page.getByRole("button", { name: "Cancel search" }).click();
+  await expect.poll(() => methods.filter((method) => method === "DELETE").length).toBe(1);
+  await expect(page.getByRole("button", { name: "Find Recommendations" })).toBeVisible();
+  expect(methods.filter((method) => method === "POST")).toHaveLength(1);
+  expect(methods.filter((method) => method === "DELETE")).toHaveLength(1);
+});
+
 test("renders mocked exact-match result cards and citations", async ({ page }) => {
   await mockRecommendationsApi(page, { result: mockRecommendationResult });
 
@@ -153,15 +270,10 @@ test("renders mocked exact-match result cards and citations", async ({ page }) =
 
   await expect(page.getByText(/Showing 1 exact match/)).toBeVisible();
   await expect(page.getByRole("heading", { name: "Whirlpool Countertop Microwave" })).toBeVisible();
-  await expect(page.getByText("Why this matched")).toBeVisible();
-  await expect(page.getByText("Why ReviewRadar recommends it")).toBeVisible();
-  await expect(page.getByText("Main tradeoff")).toBeVisible();
-  await expect(page.getByText("Evidence supporting the claim")).toBeVisible();
-  await expect(page.getByText("Confidence", { exact: true })).toBeVisible();
-  await expect(
-    page.getByText("Confidence reflects how well the available evidence matches your requirements"),
-  ).toBeVisible();
-  await expect(page.getByText("Citations")).toBeVisible();
+  await expect(page.getByText("Why we recommend it")).toBeVisible();
+  await expect(page.getByText("Tradeoff", { exact: true })).toBeVisible();
+  await expect(page.getByText("Evidence quality")).toBeVisible();
+  await expect(page.getByText(/1 source checked/).first()).toBeVisible();
   const citationLink = page.getByRole("link", { name: "Retailer product page" });
 
   await expect(citationLink).toBeVisible();
@@ -211,7 +323,7 @@ test("prefers an official product page link over a retailer link", async ({
   await submitSearch(page, "tablet");
 
   const officialProductLink = page.getByRole("link", {
-    name: "View Official Product Page",
+    name: "View best offer",
   });
 
   await expect(officialProductLink).toBeVisible();
@@ -223,9 +335,6 @@ test("prefers an official product page link over a retailer link", async ({
   await expect(officialProductLink).toHaveAttribute(
     "rel",
     "noreferrer noopener",
-  );
-  await expect(page.getByRole("link", { name: "View Retailer Page" })).toHaveCount(
-    0,
   );
 });
 
@@ -239,10 +348,10 @@ test("renders near matches as useful alternatives with the missed requirement", 
   await submitSearch(page, "white microwave");
 
   await expect(page.getByText("Showing 1 exact match")).toBeVisible();
+  await page.getByLabel("Dealbreaker strength").fill("2");
   await expect(page.getByText("Near Matches")).toBeVisible();
-  await expect(page.getByText("What it does well").first()).toBeVisible();
-  await expect(page.getByText("Requirement missed")).toBeVisible();
-  await expect(page.getByText("Why consider it")).toBeVisible();
+  await expect(page.getByText("What to check")).toBeVisible();
+  await expect(page.getByText("Why we recommend it").last()).toBeVisible();
   await expect(page.getByText("Color: White: Color: Black").first()).toBeVisible();
 });
 

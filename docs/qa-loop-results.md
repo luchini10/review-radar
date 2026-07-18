@@ -8211,3 +8211,63 @@ Browser QA was not applicable: T4A added server-side isolated modules and tests
 only and deliberately did not touch a route, page, component, or public shape.
 No live call, route integration, mode flag, job secret, `.env.local` edit,
 deployment, commit, or user-visible behavior occurred. T4B remains unapproved.
+
+## 🟧 Codex — OAI-T4B default-off route and UI integration (2026-07-17)
+
+**Verdict: PASS OFFLINE — the two-layer lifecycle now crosses the real app
+boundary without changing the default legacy path.** Taylor approved T4B as a
+zero-live phase. The fail-first run established three distinct missing seams:
+the production route module and browser lifecycle helper did not exist, and the
+T4A token could not carry the prompt hash required for stateless retrieval.
+
+`app/api/recommendations/route.ts` now dispatches exact server modes. Missing,
+empty, or exact `legacy` delegates to the original handler and returns its
+response unchanged. Exact `two_layer` uses the new lifecycle; any other
+non-empty value returns a safe configuration failure without constructing a
+provider client. `lib/twoLayerRecommendationRoute.ts` validates configuration
+and the signed job before provider access, constructs the SDK with
+`maxRetries: 0`, starts one Terra background response, retrieves or cancels only
+that response, and never invokes Serper, SearchAPI, a helper model, the legacy
+pipeline, a retry, or a fallback.
+
+The signed contract is now `oai-two-layer-job-v2`: it authenticates the prompt
+hash along with response ID, prompt version, issue time, and expiry. Completion
+runs the existing deterministic T2 formatter and T1 card builder with
+`receiptInputs: []`. The public response contains only the versioned state,
+cards, and display-source catalog. No complete prompt, raw answer, raw provider
+response, provider response ID, API key, headers, cookies, or source envelope is
+returned or logged.
+
+`lib/recommendationClient.ts` performs one POST and polls only the returned
+signed token. The browser extends its deadline only after a valid pending
+response, sends one independent DELETE when cancelling a known job, accepts the
+unchanged legacy result shape, and renders the shared T3 trust cards directly.
+Desktop and 390px mobile mocks render without horizontal overflow. A stateless
+limitation remains explicit: cancellation before POST returns a token cannot
+identify a provider response that may already have been created.
+
+Verification completed with zero provider calls:
+
+- fail-first: three expected failures before implementation;
+- focused T1-T4 wall: 56/56 across eight suites;
+- route/client/token lifecycle: 16/16;
+- complete `npm test`: 1073/1073 across 147 suites;
+- `npm run typecheck`: pass;
+- targeted ESLint: pass;
+- full `npm run lint`: zero errors and the same three pre-existing warnings;
+- `npm run build`: pass;
+- `node scripts/eval-pipeline.mjs`: no red flags;
+- `npm run test:e2e -- --project=chromium --workers=1`: 15/15, including
+  desktop/mobile polling, one-DELETE cancellation, and the legacy UI; and
+- `git diff --check` plus targeted secret/raw-response scanning: pass.
+
+The first full browser run also exposed stale assertions for already-committed
+legacy card copy and budget comma formatting. Only those assertions were
+updated; no legacy component or response behavior changed. The default
+Playwright parallel run was locally unstable because its Next development
+server reset under six workers, while the complete one-worker run passed.
+
+`.env.example` documents the two new server-only variables, but `.env.local`
+was not read or changed. No live fixture was added, no mode was promoted, no
+deployment occurred, and this phase remains uncommitted pending Taylor's
+separate commit approval. T4C is not approved.

@@ -15,6 +15,7 @@ function issue(overrides = {}) {
   return issueTwoLayerJobToken({
     responseId: "resp_test_123456789",
     promptVersion: TWO_LAYER_MASTER_PROMPT_VERSION,
+    promptHash: "a".repeat(64),
     secret,
     nowMs,
     ttlMs: 10 * 60_000,
@@ -32,6 +33,7 @@ describe("OAI-T4A signed background-job token", () => {
       version: TWO_LAYER_JOB_TOKEN_VERSION,
       responseId: "resp_test_123456789",
       promptVersion: TWO_LAYER_MASTER_PROMPT_VERSION,
+      promptHash: "a".repeat(64),
       issuedAtMs: nowMs,
       expiresAtMs: nowMs + 10 * 60_000,
     });

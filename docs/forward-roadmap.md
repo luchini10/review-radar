@@ -1843,7 +1843,7 @@ first step that could connect the new trust contract to the application route;
 that decision affects architecture, fallback behavior, and customer-visible
 failure semantics.
 
-### OAI-T4 - default-off two-layer route architecture (T4A complete locally 2026-07-17; zero live; T4B unapproved)
+### OAI-T4 - default-off two-layer route architecture (T4A committed; T4B complete locally 2026-07-17; zero live; T4C unapproved)
 
 **Assessment:** the two-layer path is still the strongest route to the product
 objective, but a direct synchronous splice into the legacy handler would be the
@@ -2001,14 +2001,44 @@ with `store: false` and required hosted search, exposes single-shot retrieve and
 cancel operations, accepts only response-owned titled source metadata, and
 keeps shopper prose, full prompts/answers, source paths, credentials, and raw
 responses out of its operational ledger. The HMAC-SHA-256 job token contains
-only the response ID, prompt version, issue/expiry times, and signature; it
+only the response ID, prompt version, prompt hash, issue/expiry times, and
+signature; it
 requires a 32-byte secret and cannot live longer than 30 minutes. Tampering,
 expiry, mismatched provider response IDs, terminal/incomplete/refusal states,
 missing web search/text/source title, and provider errors fail closed without
 retry or fallback. The new 20-test wall and the combined T1-T4 wall pass;
 complete verification is recorded in `docs/qa-loop-results.md`. No route, UI,
-flag, secret, `.env.local`, provider, or user-visible behavior changed. T4B
-remains separately approval-gated.
+flag, secret, `.env.local`, provider, or user-visible behavior changed.
+
+**OAI-T4B implementation result (2026-07-17; zero live; committed):** the real
+route now has an exact server-only dispatcher. Missing,
+empty, or exact `legacy` delegates to the unchanged legacy POST handler; exact
+`two_layer` delegates to versioned POST/GET/DELETE handlers; every other
+non-empty mode fails before provider creation. The new branch constructs the
+OpenAI SDK with `maxRetries: 0`, starts exactly one background response, returns
+only a signed app token and poll guidance, retrieves or cancels only the token's
+response, and never enters Serper, SearchAPI, a second model, the legacy helper
+stack, or a fallback.
+
+The integration advances the token contract to `oai-two-layer-job-v2` because
+stateless retrieval must authenticate the request-specific prompt hash as well
+as the response ID and prompt version. Completion deterministically runs OAI-T2
+then OAI-T1 with `receiptInputs: []`; the public body contains cards and the UI
+source catalog, not the prompt, raw answer, provider response ID, or raw source
+envelope. The browser accepts the unchanged legacy body or the versioned
+two-layer union, polls one signed job, extends the client deadline only after a
+valid pending state, sends one independent DELETE for a known cancelled job,
+and renders the shared T3 trust cards directly.
+
+The implementation remains default-off: `.env.local` was not changed and no
+provider was called. Focused T1-T4 passes 56/56; the complete wall passes
+1073/1073 across 147 suites; typecheck, lint, production build, offline
+evaluation, diff/privacy checks, and 15/15 mocked browser tests pass. Desktop
+and 390px mobile polling render without horizontal overflow. The stateless
+design has one bounded residual race: if a user cancels before POST returns the
+signed token, the browser cannot identify and cancel a response the server may
+already have created. T4C and all flag promotion remain separately approval-
+gated.
 
 **Offline acceptance wall for T4A/T4B:**
 

@@ -9,6 +9,34 @@ Update this file after:
 - important bug fixes
 - live QA fixes worth remembering
 
+## 2026-07-17
+
+### 🟧 Codex - Default-off two-layer background route and UI
+
+#### Changed
+
+- Connected the new OpenAI-led research pipeline to the real recommendation
+  endpoint behind an exact server-only mode. The existing pipeline remains the
+  default and keeps its original response format.
+- Added short background-job responses so long research no longer depends on
+  keeping one browser request open. The browser starts one job, polls that same
+  signed job, and can cancel it without starting a replacement.
+- Reused the two-layer trust cards in the real results page. Model-authored
+  research stays labeled as synthesis or source-reported; without independent
+  receipts, price, purchase link, seller, availability, image, and exact-
+  identity verification remain withheld.
+- Documented `REVIEW_RADAR_PIPELINE_MODE` and the server-only job-token secret
+  in `.env.example`. The new mode remains off and `.env.local` was not changed.
+
+#### Verified
+
+- Zero live calls. Focused T1-T4 tests pass 56/56; the complete suite passes
+  1073/1073 across 147 suites; typecheck, lint, production build, offline
+  evaluation, and diff/privacy checks pass.
+- All 15 mocked browser tests pass sequentially, including the unchanged legacy
+  UI, desktop and 390px mobile two-layer polling, no horizontal overflow, and
+  exactly one DELETE when cancelling a known job.
+
 ## 2026-07-14
 
 ### 🟧 Codex - Post-C5 product-card safety boundary

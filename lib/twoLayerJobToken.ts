@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { TWO_LAYER_MASTER_PROMPT_VERSION } from "./twoLayerMasterPrompt.ts";
 
-export const TWO_LAYER_JOB_TOKEN_VERSION = "oai-two-layer-job-v1";
+export const TWO_LAYER_JOB_TOKEN_VERSION = "oai-two-layer-job-v2";
 
 const MINIMUM_SECRET_BYTES = 32;
 const MAXIMUM_TOKEN_LIFETIME_MS = 30 * 60_000;
@@ -14,6 +14,7 @@ export type TwoLayerJobTokenPayload = {
   version: typeof TWO_LAYER_JOB_TOKEN_VERSION;
   responseId: string;
   promptVersion: typeof TWO_LAYER_MASTER_PROMPT_VERSION;
+  promptHash: string;
   issuedAtMs: number;
   expiresAtMs: number;
 };
@@ -21,6 +22,7 @@ export type TwoLayerJobTokenPayload = {
 type IssueTokenInput = {
   responseId: string;
   promptVersion: string;
+  promptHash: string;
   secret: string;
   nowMs?: number;
   ttlMs?: number;
@@ -36,8 +38,12 @@ function secretBytes(secret: string) {
   return Buffer.byteLength(secret, "utf8");
 }
 
+export function isValidTwoLayerJobTokenSecret(secret: string) {
+  return secretBytes(secret) >= MINIMUM_SECRET_BYTES;
+}
+
 function assertSecret(secret: string) {
-  if (secretBytes(secret) < MINIMUM_SECRET_BYTES) {
+  if (!isValidTwoLayerJobTokenSecret(secret)) {
     throw new Error("Two-layer job-token secret must be at least 32 bytes");
   }
 }
@@ -60,6 +66,7 @@ function payloadHasExactKeys(value: Record<string, unknown>) {
   const expected = [
     "expiresAtMs",
     "issuedAtMs",
+    "promptHash",
     "promptVersion",
     "responseId",
     "version",
@@ -77,6 +84,7 @@ function parsePayload(encodedPayload: string): TwoLayerJobTokenPayload | null {
     if (record.version !== TWO_LAYER_JOB_TOKEN_VERSION) return null;
     if (!responseIdPattern.test(String(record.responseId ?? ""))) return null;
     if (record.promptVersion !== TWO_LAYER_MASTER_PROMPT_VERSION) return null;
+    if (!isTwoLayerPromptHash(String(record.promptHash ?? ""))) return null;
     if (!isSafeInteger(record.issuedAtMs) || !isSafeInteger(record.expiresAtMs)) {
       return null;
     }
@@ -93,6 +101,7 @@ function parsePayload(encodedPayload: string): TwoLayerJobTokenPayload | null {
 export function issueTwoLayerJobToken({
   responseId,
   promptVersion,
+  promptHash,
   secret,
   nowMs = Date.now(),
   ttlMs = 10 * 60_000,
@@ -103,6 +112,9 @@ export function issueTwoLayerJobToken({
   }
   if (promptVersion !== TWO_LAYER_MASTER_PROMPT_VERSION) {
     throw new Error("Two-layer job token requires the current prompt version");
+  }
+  if (!isTwoLayerPromptHash(promptHash)) {
+    throw new Error("Two-layer job token requires a valid prompt hash");
   }
   if (!isSafeInteger(nowMs) || nowMs < 0) {
     throw new Error("Two-layer job token requires a valid issue time");
@@ -120,6 +132,7 @@ export function issueTwoLayerJobToken({
     version: TWO_LAYER_JOB_TOKEN_VERSION,
     responseId,
     promptVersion: TWO_LAYER_MASTER_PROMPT_VERSION,
+    promptHash,
     issuedAtMs: nowMs,
     expiresAtMs: nowMs + ttlMs,
   };
@@ -138,7 +151,7 @@ export function verifyTwoLayerJobToken({
     typeof token !== "string" ||
     token.length === 0 ||
     token.length > MAXIMUM_TOKEN_LENGTH ||
-    secretBytes(secret) < MINIMUM_SECRET_BYTES ||
+    !isValidTwoLayerJobTokenSecret(secret) ||
     !isSafeInteger(nowMs) ||
     nowMs < 0
   ) {

@@ -9,6 +9,10 @@ type OpenAIClient = {
       query?: Record<string, unknown>,
       requestOptions?: Record<string, unknown>,
     ) => Promise<unknown>;
+    cancel: (
+      responseId: string,
+      requestOptions?: Record<string, unknown>,
+    ) => Promise<unknown>;
   };
 };
 
