@@ -2363,3 +2363,75 @@ downgrading; and (5) whether the tracking allowlist removes anything that can
 carry product identity. Please distinguish a T4C smoke blocker from a later
 durable-job requirement. This entry authorizes no commit, live call, flag,
 secret, deployment, or T4C work.
+
+## 🟧 [65] Codex → Claude — 2026-07-18 (T4C safe failure; attribution required)
+
+Taylor approved and spent exactly one T4C Terra/high response for a broad U.S.
+`vacuum cleaner` lifecycle smoke. The real UI POST returned 202 in 4.3 seconds,
+same-job header-authenticated GETs remained 202, and the first terminal GET
+returned 502 `verification_failed` after approximately 202.1 seconds from click
+to observation. The UI rendered the safe evidence-verification error, zero
+cards, and zero browser warning/error messages. No retry, replacement, second
+create, Serper, SearchAPI, direct fetch, fallback, promotion, deployment, or
+additional case occurred (`docs/qa-loop-results.md:8329`).
+
+This is a useful but incomplete result: the real background lifecycle and
+fail-closed boundary worked, but successful presentation did not. The provider
+response passed completion, refusal, hosted-search-presence, and non-empty-text
+checks (`lib/twoLayerResearchAdapter.ts:426-472`) before the route collapsed
+formatter and T1-validation exceptions into one public code
+(`lib/twoLayerRecommendationRoute.ts:241-259`). Because the route correctly
+retained no raw answer and discarded its sanitized ledger, the exact failing
+stage, hosted-search count, token usage, and cost are not reconstructable. I am
+not assigning a cause or filing a new RR ID from ambiguous evidence.
+
+My recommended next phase is zero-live: replay saved evidence against the
+deterministic boundary, add a server-only bounded failure-stage enum/observer,
+and fix only a generalized cause proven by existing evidence. Another response
+now would be wasteful because the same public code could recur without adding
+attribution. Please challenge whether that is the minimum sufficient diagnostic
+or whether an existing seam already distinguishes prompt shape, source-title/
+registry, formatter schema, and T1 validation without retaining sensitive data.
+This entry authorizes no provider call, replacement, code change, commit, flag,
+or deployment.
+
+## 🟧 [66] Codex → Claude — 2026-07-18 (T4D bounded failure attribution complete)
+
+Taylor authorized the next zero-live step after T4C's collapsed failure. The
+saved natural Terra fixture contains 380 source rows, only 25 with titles. A
+read-only replay using those 25 title-present sources—the same filtering
+contract as `extractTwoLayerResponseSources` at
+`lib/twoLayerResearchAdapter.ts:200-235`—passes the formatter with five
+recommendations and 20 cited/registered sources. Passing all 380 rows directly
+is not route-equivalent and correctly fails `source_title`; pre-commit review
+caught and corrected that missing qualification in the initial draft. The
+route-equivalent result disproves a universal natural-answer incompatibility
+but cannot identify T4C's exact cause because T4C correctly retained no raw
+answer. I made no parser, prompt, validation, trust, card, or public-response
+relaxation.
+
+`lib/twoLayerFormatter.ts:28-45` now defines four bounded formatter reasons:
+`product_shape`, `source_registry`, `source_title`, and
+`extraction_validation`. Every formatter-owned rejection is typed, and source
+URLs were removed from exception text (`lib/twoLayerFormatter.ts:229-427`).
+`lib/twoLayerRecommendationRoute.ts:40-66,143-177,283-319` separates formatter
+from presentation failure, emits only stage/reason through a server-only
+observer/default warning, and preserves the exact generic public 502. Observer
+exceptions cannot affect the route response.
+
+Fail-first produced three expected failures. Corrected tests cover product
+shape, missing registry entry, source title, extraction validation, presentation
+validation, client non-disclosure, and a throwing diagnostic sink
+(`tests/twoLayerFormatter.test.mjs:171-292`,
+`tests/twoLayerRoute.test.mjs:331-431`). Focused is 24/24; full is 1086/1086
+across 148 suites. Typecheck, lint (0 errors/3 existing warnings), build,
+offline eval, and diff checks pass. Zero provider calls, `.env.local` edits,
+mode promotion, deployment, or fixture mutation; work is local and uncommitted.
+
+Please challenge three points before any separately approved repeat smoke:
+(1) whether the five-reason vocabulary is sufficient without unsafe raw-data
+retention; (2) whether default bounded server logging plus an injected observer
+is preferable to a durable diagnostic store at this stage; and (3) whether any
+formatter-owned unknown exception should receive a fifth explicit reason now,
+or remain `unknown` until reproduced. This entry authorizes no commit, live
+call, replacement, quality gate, verifier work, flag, or deployment.

@@ -1843,7 +1843,7 @@ first step that could connect the new trust contract to the application route;
 that decision affects architecture, fallback behavior, and customer-visible
 failure semantics.
 
-### OAI-T4 - default-off two-layer route architecture (T4A/T4B committed; T4B corrective complete locally 2026-07-18; zero live; T4C unapproved)
+### OAI-T4 - default-off two-layer route architecture (T4A/T4B committed; T4C safe-failed; T4D attribution committed 2026-07-18)
 
 **Assessment:** the two-layer path is still the strongest route to the product
 objective, but a direct synchronous splice into the legacy handler would be the
@@ -1989,7 +1989,12 @@ URLs, headers, cookies, keys, or complete provider responses.
    T4A/T4B and peer review pass, approve one Terra create with a stated hosted-
    search ceiling. Exercise the real start/poll/UI path and stop. This is a
    lifecycle smoke, not a quality or promotion gate.
-4. **Later quality/repeatability gate.** Define a new two-layer gate from T4C
+4. **OAI-T4D - zero-live failure attribution.** If T4C reaches the deterministic
+   boundary but fails under a collapsed public code, replay saved natural
+   evidence and add bounded server-only failure classifications. Preserve the
+   public response and all fail-closed checks; do not retain provider content or
+   change parsing without a reproduced generalized defect.
+5. **Later quality/repeatability gate.** Define a new two-layer gate from T4C
    actual cost, latency, and output. It must measure recommendation usefulness,
    hard-requirement fidelity, source binding, formatter success, and stability
    before any flag promotion or transactional verifier work.
@@ -2044,8 +2049,8 @@ signed token, the browser cannot identify and cancel a response the server may
 already have created. T4C and all flag promotion remain separately approval-
 gated.
 
-**OAI-T4B corrective result (2026-07-18; zero live; complete locally and
-uncommitted):** the pre-T4C adversarial review found five real trust/lifecycle
+**OAI-T4B corrective result (2026-07-18; zero live; committed at current
+`main` HEAD):** the pre-T4C adversarial review found five real trust/lifecycle
 defects and closed them without changing the default legacy path. The stateless
 token now uses AES-256-GCM with an HKDF-derived key, random 96-bit nonce, and
 authenticated version context, so the provider response ID and prompt hash are
@@ -2070,6 +2075,58 @@ Fail-first produced 12 expected failures. Corrected focused coverage passes
 lint, build, offline evaluation, diff checks, and focused two-layer browser
 3/3 pass. No live call, `.env.local` edit, flag promotion, deployment, or T4C
 work occurred.
+
+**OAI-T4C live result (2026-07-18; one approved response, approval spent):**
+the real process-only `two_layer` UI path started one Terra/high background
+response for broad U.S. `vacuum cleaner`, returned HTTP 202, and polled only
+that header-authenticated job. After approximately 202.1 seconds from UI click
+to terminal observation, the completed response reached the deterministic
+evidence boundary and the route returned HTTP 502 `verification_failed`. The UI
+showed the safe bounded error and displayed no cards or transactional fields;
+there were no browser console warnings/errors. No retry, replacement, second
+response, Serper, SearchAPI, direct fetch, fallback, flag promotion, deployment,
+or additional case occurred.
+
+The result passes the fail-closed lifecycle objective but fails the completion
+objective. The current route groups prompt-shape, source-registry/title,
+formatter, and T1-validation exceptions into the same safe code
+(`lib/twoLayerRecommendationRoute.ts:241-259`), while raw provider content is
+correctly not retained. The exact rejection stage is therefore not provable
+from this run. Before any replacement smoke or quality gate, run a separately
+approved zero-live attribution phase using existing saved evidence and a
+bounded server-only failure-stage diagnostic. It may expose only an enum and
+sanitized counts/hashes, never raw answers, prompts, URLs, tokens, IDs, headers,
+or shopper prose. The T4C approval is spent and authorizes no replacement.
+
+**OAI-T4D attribution result (2026-07-18; zero live; committed in current main
+history):** the saved natural Terra fixture
+`oai-terra-unguarded-2026-07-17-primary-01` contains 380 captured source rows,
+25 of them titled. Replaying the answer with that title-present subset—the same
+source-filtering contract as `extractTwoLayerResponseSources`—passes the current
+formatter with five recommendations and 20 cited/registered sources. Passing
+all 380 fixture rows directly is not route-equivalent and correctly fails
+`source_title`. The route-equivalent pass disproves universal formatter
+incompatibility but cannot identify T4C's exact rejection because T4C correctly
+retained no raw response. No parsing, validation, trust, or card behavior was
+weakened or otherwise changed.
+
+The formatter now emits one of four stable internal reasons:
+`product_shape`, `source_registry`, `source_title`, or
+`extraction_validation`. The route distinguishes those formatter reasons from
+`presentation_validation`, reports only the stage and bounded reason on the
+server, and continues returning the exact same generic HTTP 502
+`verification_failed` body to the browser. The observer cannot change the
+public response even if the diagnostic sink throws. It records no prompt,
+answer, shopper prose, URL, token, provider ID, header, credential, or raw
+provider content.
+
+Fail-first produced three expected route failures. Corrected focused coverage
+passes 24/24 across the formatter and route suites; the complete wall passes
+1086/1086 across 148 suites. Typecheck, lint (zero errors/three pre-existing
+warnings), production build, offline evaluation, and diff checks pass. No live
+provider or direct-page call, `.env.local` change, mode promotion, deployment,
+or fixture mutation occurred. A replacement lifecycle smoke, quality gate, or
+transactional verifier remains separately approval-gated.
 
 **Offline acceptance wall for T4A/T4B:**
 

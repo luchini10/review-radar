@@ -25,6 +25,26 @@ export type TwoLayerFormatterResult = {
   };
 };
 
+export type TwoLayerFormatterFailureReason =
+  | "product_shape"
+  | "source_registry"
+  | "source_title"
+  | "extraction_validation";
+
+export class TwoLayerFormatterError extends Error {
+  readonly reason: TwoLayerFormatterFailureReason;
+
+  constructor(reason: TwoLayerFormatterFailureReason, message: string) {
+    super(message);
+    this.name = "TwoLayerFormatterError";
+    this.reason = reason;
+  }
+}
+
+export function twoLayerFormatterFailureReason(error: unknown) {
+  return error instanceof TwoLayerFormatterError ? error.reason : "unknown";
+}
+
 type ProductBlock = {
   rank: number;
   headingStatus: "Best Match" | "Close Match";
@@ -54,7 +74,10 @@ function extractMarkdownUrls(value: string) {
 function productBlocks(answer: string): ProductBlock[] {
   const matches = [...answer.matchAll(productHeadingPattern)];
   if (matches.length === 0) {
-    throw new Error("Two-layer formatter found no numbered product headings");
+    throw new TwoLayerFormatterError(
+      "product_shape",
+      "Two-layer formatter found no numbered product headings",
+    );
   }
 
   return matches.map((match, index) => {
@@ -98,7 +121,10 @@ function findSection(
     candidate.heading.toLowerCase().startsWith(headingPrefix.toLowerCase()),
   );
   if (!section && required) {
-    throw new Error(`Two-layer formatter missing section: ${headingPrefix}`);
+    throw new TwoLayerFormatterError(
+      "product_shape",
+      `Two-layer formatter missing section: ${headingPrefix}`,
+    );
   }
   return section || null;
 }
@@ -109,7 +135,10 @@ function firstParagraph(section: ParsedSection) {
     .map((value) => value.trim())
     .find(Boolean);
   if (!paragraph) {
-    throw new Error(`Two-layer formatter found empty section: ${section.heading}`);
+    throw new TwoLayerFormatterError(
+      "product_shape",
+      `Two-layer formatter found empty section: ${section.heading}`,
+    );
   }
   return paragraph;
 }
@@ -163,7 +192,10 @@ function parseIdentity(value: string) {
 
   const brand = productName.split(/\s+/)[0]?.trim() || "";
   if (!brand || !productName) {
-    throw new Error(`Two-layer formatter could not parse identity: ${value}`);
+    throw new TwoLayerFormatterError(
+      "product_shape",
+      "Two-layer formatter could not parse product identity",
+    );
   }
   return { brand, product_name: productName, model, variant };
 }
@@ -193,6 +225,17 @@ function statusFromBlock(block: ProductBlock) {
   return block.headingStatus;
 }
 
+function normalizeRegisteredSourceUrl(value: string) {
+  try {
+    return normalizeTwoLayerSourceUrl(value);
+  } catch {
+    throw new TwoLayerFormatterError(
+      "source_registry",
+      "Two-layer formatter found an invalid registered source URL",
+    );
+  }
+}
+
 export function formatTwoLayerMasterPromptAnswer(input: {
   rawResearchText: string;
   responseSources: readonly TwoLayerResponseSource[];
@@ -200,13 +243,16 @@ export function formatTwoLayerMasterPromptAnswer(input: {
   const blocks = productBlocks(input.rawResearchText);
   const ranks = blocks.map((block) => block.rank);
   if (ranks.some((rank, index) => rank !== index + 1)) {
-    throw new Error("Two-layer formatter requires contiguous product ranks");
+    throw new TwoLayerFormatterError(
+      "product_shape",
+      "Two-layer formatter requires contiguous product ranks",
+    );
   }
 
   const registry = new Map<string, TwoLayerResponseSource>();
   for (const source of input.responseSources) {
     if (!source.url) continue;
-    const normalized = normalizeTwoLayerSourceUrl(source.url);
+    const normalized = normalizeRegisteredSourceUrl(source.url);
     if (!registry.has(normalized)) registry.set(normalized, source);
   }
 
@@ -219,14 +265,15 @@ export function formatTwoLayerMasterPromptAnswer(input: {
         )
         .flatMap((section) => extractMarkdownUrls(section.body)),
     ),
-  ).map(normalizeTwoLayerSourceUrl);
+  ).map(normalizeRegisteredSourceUrl);
   const canonicalCitedUrls = unique(citedUrls);
   const missingUrls = canonicalCitedUrls.filter(
     (url) => !registry.has(url),
   );
   if (missingUrls.length > 0) {
-    throw new Error(
-      `Two-layer formatter source absent from response registry: ${missingUrls[0]}`,
+    throw new TwoLayerFormatterError(
+      "source_registry",
+      "Two-layer formatter source absent from response registry",
     );
   }
 
@@ -235,7 +282,7 @@ export function formatTwoLayerMasterPromptAnswer(input: {
   );
   const sourceIdsForText = (value: string, fallback: readonly string[] = []) => {
     const ids = extractMarkdownUrls(value)
-      .map((url) => urlToId.get(normalizeTwoLayerSourceUrl(url)))
+      .map((url) => urlToId.get(normalizeRegisteredSourceUrl(url)))
       .filter((id): id is string => Boolean(id));
     return unique(ids.length > 0 ? ids : fallback);
   };
@@ -264,12 +311,16 @@ export function formatTwoLayerMasterPromptAnswer(input: {
     );
 
     if (!whySection || !overallSection || !prosSection || !consSection || !sourceSection) {
-      throw new Error(`Two-layer formatter found incomplete product block #${block.rank}`);
+      throw new TwoLayerFormatterError(
+        "product_shape",
+        `Two-layer formatter found incomplete product block #${block.rank}`,
+      );
     }
 
     const blockSourceIds = sourceIdsForText(sourceSection.body);
     if (blockSourceIds.length === 0) {
-      throw new Error(
+      throw new TwoLayerFormatterError(
+        "source_registry",
         `Two-layer formatter product #${block.rank} has no registered source`,
       );
     }
@@ -339,12 +390,16 @@ export function formatTwoLayerMasterPromptAnswer(input: {
     sources: canonicalCitedUrls.map((url) => {
       const registered = registry.get(url);
       if (!registered) {
-        throw new Error(`Two-layer formatter lost source registration: ${url}`);
+        throw new TwoLayerFormatterError(
+          "source_registry",
+          "Two-layer formatter lost source registration",
+        );
       }
       const title = registered.title?.trim();
       if (!title) {
-        throw new Error(
-          `Two-layer formatter source title absent from response registry: ${url}`,
+        throw new TwoLayerFormatterError(
+          "source_title",
+          "Two-layer formatter source title absent from response registry",
         );
       }
       return {
@@ -357,11 +412,20 @@ export function formatTwoLayerMasterPromptAnswer(input: {
     recommendations,
   };
 
-  const accepted = validateTwoLayerResearchExtraction({
-    rawResearchText: input.rawResearchText,
-    responseSourceUrls: input.responseSources.map((source) => source.url),
-    formattedOutput,
-  });
+  let accepted: TwoLayerResearch;
+  try {
+    accepted = validateTwoLayerResearchExtraction({
+      rawResearchText: input.rawResearchText,
+      responseSourceUrls: input.responseSources.map((source) => source.url),
+      formattedOutput,
+    });
+  } catch (error) {
+    if (error instanceof TwoLayerFormatterError) throw error;
+    throw new TwoLayerFormatterError(
+      "extraction_validation",
+      "Two-layer formatter extraction validation failed",
+    );
+  }
 
   return {
     formatterVersion: TWO_LAYER_FORMATTER_VERSION,

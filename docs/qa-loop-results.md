@@ -8325,3 +8325,95 @@ server-side cancellation scheduler would require durable job state and is not
 being smuggled into this corrective phase. `.env.local`, flags, live fixtures,
 deployment state, and T4C were untouched. Changes remain uncommitted pending
 Taylor's separate approval.
+
+## 🟧 Codex — OAI-T4C one-response live lifecycle smoke (2026-07-18)
+
+**Verdict: SAFE FAILURE — the real background lifecycle worked, then the
+deterministic evidence boundary rejected the completed research.** Taylor
+approved exactly one Terra/high Responses create with at most 20 hosted web
+searches and a `$7` hard ceiling. The run used the broad U.S. `vacuum cleaner`
+case with no budget or preferences through a process-only `two_layer` server.
+It made no Serper, SearchAPI, direct-page, retry, replacement, fallback, second
+response, flag-promotion, deployment, or additional-case request.
+
+The real UI submitted one POST. The route returned HTTP 202 in 4.3 seconds and
+the browser polled the same header-authenticated job. Pending polls remained
+HTTP 202; the first terminal poll returned HTTP 502 with the public
+`verification_failed` message after approximately 202.1 seconds from the UI
+click to observation. The UI showed `Research finished, but its evidence could
+not be verified safely.` It displayed no product card or transactional field,
+and the browser recorded zero warning/error console messages.
+
+This terminal code proves the response passed provider completion, refusal,
+hosted-search-presence, and non-empty-text checks before reaching the formatter
+and card builder (`lib/twoLayerResearchAdapter.ts:426-472`,
+`lib/twoLayerRecommendationRoute.ts:241-259`). It does **not** prove whether the
+specific rejection was prompt shape, cited-source registration/title,
+formatter validation, or T1 card validation because the route deliberately
+maps all of those exceptions to one safe public code and retains no raw answer.
+No cause is guessed and no new issue ID is filed from ambiguous evidence.
+
+The hard request ceiling remained 20 hosted searches and the adapter proved at
+least one search occurred, but the real route discards the sanitized completion
+ledger. Exact hosted-search count, token usage, and cost therefore cannot be
+reconstructed from application evidence; the `$7` ceiling is not claimed as an
+actual cost. The approved response is spent and no replacement is authorized.
+
+The process-only mode and random job-token secret ended with the local server;
+`.env.local` was not edited. The generated `next-env.d.ts` development-path
+change was restored. Tracked code remains at `c22de3d`; live fixtures and all
+pre-existing untracked artifacts remain untouched.
+
+## 🟧 Codex — OAI-T4D zero-live failure attribution (2026-07-18)
+
+**Verdict: PASS OFFLINE — the next real deterministic rejection can be
+attributed safely without weakening the evidence boundary.** No OpenAI, Serper,
+SearchAPI, direct-page, or other provider call occurred.
+
+A read-only replay used the saved natural Terra answer in
+`tests/fixtures/review-radar-live/oai-terra-unguarded-2026-07-17-primary-01/result.json`.
+That diagnostic fixture stores 380 captured source rows, including 25 with
+titles. `extractTwoLayerResponseSources` returns only title-present response
+sources (`lib/twoLayerResearchAdapter.ts:200-235`), so the route-equivalent
+replay used those 25 sources and passed with five recommendations and 20
+cited/registered sources. Supplying all 380 fixture rows directly is not
+route-equivalent and correctly fails `source_title`; this distinction was
+confirmed during the pre-commit review. The route-equivalent result proves the
+formatter is not universally incompatible with a natural Terra answer. It does
+not reconstruct T4C's exact failure because that live run correctly retained no
+raw answer or source envelope. Consequently this phase made no parser, prompt,
+source-binding, trust, card, or public-response behavior change.
+
+Fail-first route tests produced three expected failures: no formatter-stage
+diagnostic for malformed product shape, no source-registry diagnostic for an
+unregistered cited source, and no separate presentation diagnostic. The
+corrected boundary gives formatter-owned failures one stable reason:
+`product_shape`, `source_registry`, `source_title`, or
+`extraction_validation`. The route reports only `formatter/<reason>` or
+`presentation/presentation_validation` through a server-only observer/default
+warning. It never reports the exception message or includes raw answer, source
+URL, provider ID, token, header, prompt, shopper prose, or credential. Observer
+failure is swallowed so observability cannot alter the fail-closed behavior.
+
+The browser contract is unchanged: every deterministic rejection still returns
+HTTP 502 `verification_failed` with the same generic message and no cards or
+internal diagnostic. Existing saved failure messages continue to match, and
+source URLs were removed from formatter exception text as an additional
+defense-in-depth measure.
+
+Verification completed with zero live calls:
+
+- fail-first route wall: three expected failures;
+- corrected formatter/route wall: 24/24;
+- complete `npm test`: 1086/1086 across 148 suites;
+- `npm run typecheck`: pass;
+- `npm run lint`: zero errors and the same three pre-existing warnings;
+- `npm run build`: pass;
+- `node scripts/eval-pipeline.mjs`: no red flags; and
+- `git diff --check`: pass (line-ending notices only).
+
+The production build's generated `next-env.d.ts` line-ending drift was restored.
+`.env.local`, flags, live fixtures, untracked artifacts, and deployment state
+remain untouched. Changes are local and uncommitted pending Taylor's explicit
+commit approval. No replacement T4C smoke, quality gate, or verifier work is
+authorized.

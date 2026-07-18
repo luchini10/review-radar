@@ -2,7 +2,11 @@ import {
   createOpenAIClient as createDefaultOpenAIClient,
 } from "./openaiClient.ts";
 import { buildNormalizedShopperRequest } from "./autonomousResearchContract.ts";
-import { formatTwoLayerMasterPromptAnswer } from "./twoLayerFormatter.ts";
+import {
+  formatTwoLayerMasterPromptAnswer,
+  twoLayerFormatterFailureReason,
+  type TwoLayerFormatterFailureReason,
+} from "./twoLayerFormatter.ts";
 import {
   buildTwoLayerProductCards,
   TWO_LAYER_PRESENTATION_VERSION,
@@ -36,6 +40,16 @@ type TwoLayerEnvironment = {
   jobTokenSecret: string | undefined;
 };
 
+export type TwoLayerVerificationFailureDiagnostic =
+  | {
+      stage: "formatter";
+      reason: TwoLayerFormatterFailureReason | "unknown";
+    }
+  | {
+      stage: "presentation";
+      reason: "presentation_validation";
+    };
+
 type TwoLayerRecommendationHandlerOptions = {
   createOpenAIClient?: typeof createDefaultOpenAIClient;
   getEnvironment?: () => TwoLayerEnvironment;
@@ -44,6 +58,11 @@ type TwoLayerRecommendationHandlerOptions = {
   startResearch?: typeof startTwoLayerResearch;
   pollResearch?: typeof pollTwoLayerResearch;
   cancelResearch?: typeof cancelTwoLayerResearch;
+  formatAnswer?: typeof formatTwoLayerMasterPromptAnswer;
+  buildPresentation?: typeof buildTwoLayerProductCards;
+  onVerificationFailure?: (
+    diagnostic: TwoLayerVerificationFailureDiagnostic,
+  ) => void;
 };
 
 type RouteHandler = (request: Request) => Promise<Response>;
@@ -121,6 +140,16 @@ function failureForResearchReason(reason: string) {
   return failure("research_failed", ERROR_MESSAGES.researchFailed, 502);
 }
 
+function defaultVerificationFailureReporter(
+  diagnostic: TwoLayerVerificationFailureDiagnostic,
+) {
+  console.warn(
+    "[ReviewRadar two-layer verification]",
+    diagnostic.stage,
+    diagnostic.reason,
+  );
+}
+
 export function createTwoLayerRecommendationHandlers({
   createOpenAIClient = createDefaultOpenAIClient,
   getEnvironment = () => ({
@@ -132,7 +161,20 @@ export function createTwoLayerRecommendationHandlers({
   startResearch = startTwoLayerResearch,
   pollResearch = pollTwoLayerResearch,
   cancelResearch = cancelTwoLayerResearch,
+  formatAnswer = formatTwoLayerMasterPromptAnswer,
+  buildPresentation = buildTwoLayerProductCards,
+  onVerificationFailure = defaultVerificationFailureReporter,
 }: TwoLayerRecommendationHandlerOptions): TwoLayerRecommendationHandlers {
+  const reportVerificationFailure = (
+    diagnostic: TwoLayerVerificationFailureDiagnostic,
+  ) => {
+    try {
+      onVerificationFailure(diagnostic);
+    } catch {
+      // Observability must never change the fail-closed route response.
+    }
+  };
+
   const POST: RouteHandler = async (request) => {
     let body: unknown;
     try {
@@ -239,19 +281,36 @@ export function createTwoLayerRecommendationHandlers({
       }
 
       let formatted;
-      let presentation;
       try {
-        formatted = formatTwoLayerMasterPromptAnswer({
+        formatted = formatAnswer({
           rawResearchText: result.rawResearchText,
           responseSources: result.responseSources,
         });
-        presentation = buildTwoLayerProductCards({
+      } catch (error) {
+        reportVerificationFailure({
+          stage: "formatter",
+          reason: twoLayerFormatterFailureReason(error),
+        });
+        return failure(
+          "verification_failed",
+          ERROR_MESSAGES.verificationFailed,
+          502,
+        );
+      }
+
+      let presentation;
+      try {
+        presentation = buildPresentation({
           rawResearchText: result.rawResearchText,
           responseSourceUrls: result.responseSources.map((source) => source.url),
           formattedOutput: formatted.formattedOutput,
           receiptInputs: [],
         });
       } catch {
+        reportVerificationFailure({
+          stage: "presentation",
+          reason: "presentation_validation",
+        });
         return failure(
           "verification_failed",
           ERROR_MESSAGES.verificationFailed,

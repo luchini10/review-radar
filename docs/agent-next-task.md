@@ -1,103 +1,112 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-18 by Codex after the zero-live OAI-T4B corrective phase.
+Updated: 2026-07-18 by Codex after committing the zero-live OAI-T4D attribution phase.
 OAI-T1 is committed at `3b85e4c`, OAI-T2 at `2238f28`, OAI-T3 at `6a96690`,
-OAI-T4A at `304d7ee`, and the original T4B at `d943c67`. The reviewed T4B
-correction was first committed at `f45d11a` and is included in the current
-amended `main` HEAD. T4C is not approved.
+OAI-T4A at `304d7ee`, the original T4B at `d943c67`, and the reviewed T4B
+correction at `c22de3d`. T4C safe-failed, and its closeout plus T4D attribution
+are committed together at current `main` HEAD. No provider call, replacement,
+quality gate, verifier work, promotion, deployment, or push is approved.
 
 ## Efficient session start
 
 1. Read repository `AGENTS.md` in full.
 2. Read this handoff in full.
-3. Read the OAI-T1 through OAI-T4 sections of `docs/forward-roadmap.md`.
-4. Read `docs/agent-dialogue.md` from entry [58] onward, especially [64].
-5. Treat old OAI-2B through OAI-10 as historical/unreachable and H3 as blocked.
-6. Do not start T4C without Taylor's separate approval.
+3. Read the OAI-T4 section of `docs/forward-roadmap.md`.
+4. Read `docs/agent-dialogue.md` from entry [65] onward.
+5. Retrieve the latest OAI-T4C and OAI-T4D entries in
+   `docs/qa-loop-results.md` for canonical evidence.
+6. Do not run another provider call without Taylor's separate explicit
+   approval.
 
-## Current state
+## Current architecture and flag state
 
-- Missing, empty, or exact `legacy` mode still delegates to the unchanged legacy
-  POST handler. Exact `two_layer` selects the new branch; any other non-empty
-  mode fails closed before provider creation. Legacy remains the default.
+- Missing, empty, or exact `legacy` mode still delegates to the unchanged
+  legacy handler. Exact `two_layer` selects the background branch; other
+  non-empty modes fail before provider creation. Legacy remains the default.
 - The two-layer branch performs one Terra/high background Responses create with
-  hosted search, no SDK retry, no Serper/SearchAPI/helper model/second response,
-  and no legacy fallback. GET retrieves only that response; DELETE cancels only
-  that response.
-- The browser accepts the unchanged legacy `{ result }` body or the versioned
-  two-layer state union. Two-layer completion runs the deterministic T2
-  formatter and T1 card builder with `receiptInputs: []`, then renders the T3
-  trust cards directly.
-- Without independent receipts, price, seller, availability, purchase URL,
-  image, and exact identity remain unverified or absent. RR-091 and RR-092
-  remain Needs Investigation; this correction did not change the register.
-- The July 18 correction changed only the default-off two-layer boundary. It
-  made no live call, did not read or edit `.env.local`, did not promote a flag,
-  did not create a real secret, and did not deploy.
+  hosted search, no SDK retry, Serper, SearchAPI, helper model, second response,
+  legacy fallback, or transactional receipt.
+- GET and DELETE carry an encrypted, authenticated job capability only in
+  `x-reviewradar-job-token`. Provider IDs and prompt hashes are not
+  client-decodable or placed in URLs.
+- Completed research must pass deterministic T2 formatting and T1 trust-card
+  validation. Without an independent receipt, exact identity and commerce stay
+  unverified and price, seller, availability, purchase URL, and image stay
+  absent.
+- T4C used process-only `REVIEW_RADAR_PIPELINE_MODE=two_layer` and an ephemeral
+  random job-token secret. The server is stopped. `.env.local` was not edited.
+- Last recorded persistent local state remains constraint allocation on,
+  narration off, with no pipeline-mode or job-token-secret entry.
 
-## Corrected job and trust contract
+## OAI-T4C live result
 
-- `oai-two-layer-job-v3` uses AES-256-GCM authenticated encryption. A 32-byte
-  key is derived from the server-only secret with HKDF; each token gets a fresh
-  96-bit nonce and 128-bit authentication tag. The provider response ID, prompt
-  version/hash, and timestamps are not client-decodable.
-- GET and DELETE carry the app token only in `x-reviewradar-job-token`.
-  Query-string tokens are rejected. Tampered, malformed, wrong-secret,
-  future-issued, and expired tokens fail before provider creation.
-- The client shortens its final poll sleep and attempts one DELETE 30 seconds
-  before token expiry. This is best-effort: browser suspension can delay it, and
-  cancellation before POST returns a token still cannot identify a response
-  the server may already have created.
-- A specification, performance, owner, or support claim is `Source-reported`
-  only when that exact claim bullet contains a registered citation. An uncited
-  claim remains visible as `AI research synthesis` with no source IDs.
-- Current response metadata does not establish source semantics, so headings
-  cannot label a source as official, professional, owner, or purchase evidence.
-  Such sources display the neutral `Research source` label.
-- Shared source-URL canonicalization removes only a narrow explicit set of
-  analytics/click parameters. It preserves all other query parameter order and
-  values, plus fragments, including `sku`, `variant`, `pid`, `id`, and
-  ambiguous `ref`.
+Taylor approved and spent one Terra/high create, at most 20 hosted searches,
+and a `$7` ceiling for broad U.S. `vacuum cleaner` with no budget/preferences.
+The real UI received POST 202 in 4.3 seconds, polled only the same signed job,
+and received terminal HTTP 502 `verification_failed` after about 202.1 seconds.
+The UI showed the safe error, no cards or transactional fields, and zero browser
+warnings/errors. No retry, replacement, fallback, Serper, SearchAPI, direct
+fetch, second response, additional case, promotion, or deployment occurred.
 
-## Current local secret and flag state
+The response passed provider completion, refusal, hosted-search-presence, and
+non-empty-text gates. Exact search count, token usage, cost, and deterministic
+failure stage could not be reconstructed because the route retained no raw
+provider response and collapsed downstream exceptions. The approval is spent.
 
-- The correction did not read or modify ignored `.env.local`.
-- Last recorded local state:
-  `REVIEW_RADAR_CONSTRAINT_ALLOCATION=on` and
-  `REVIEW_RADAR_LLM_NARRATION=off`.
-- Last recorded state has no `REVIEW_RADAR_PIPELINE_MODE` or
-  `REVIEW_RADAR_JOB_TOKEN_SECRET`, so the visible path remains legacy unless
-  Taylor independently changes local configuration.
-- Never reuse an API key as the job-token secret or prefix a secret with
-  `NEXT_PUBLIC_`. Never print/log/copy API keys, tokens, request headers,
-  shopper prose, full prompts/answers, source paths, or raw provider responses.
+## OAI-T4D zero-live attribution result
 
-## Next decision — OAI-T4C approval
+- The saved natural Terra fixture contains 380 captured source rows, of which
+  25 have titles. A read-only replay using that 25-source title-present subset
+  (the same filtering contract as `extractTwoLayerResponseSources`) passes the
+  current formatter with five recommendations and 20 cited/registered sources.
+  Feeding all 380 fixture rows directly is not route-equivalent and correctly
+  fails `source_title`. The route-equivalent pass disproves universal formatter
+  incompatibility but does not identify T4C's exact failure.
+- `lib/twoLayerFormatter.ts` now types every formatter-owned rejection as
+  `product_shape`, `source_registry`, `source_title`, or
+  `extraction_validation`. Unknown non-formatter exceptions remain bounded as
+  `unknown` until reproduced.
+- `lib/twoLayerRecommendationRoute.ts` separates formatter reasons from
+  `presentation_validation` and reports only the stage/reason through a
+  server-only observer/default warning.
+- The browser still receives the exact same generic HTTP 502
+  `verification_failed` response. Diagnostics contain no exception text,
+  prompt, answer, shopper prose, URL, token, provider ID, header, credential, or
+  raw provider content. A throwing diagnostic sink cannot alter the response.
+- No parser, prompt, trust, citation, source, card, commerce, or public-response
+  rule was relaxed. No provider or direct-page call occurred.
 
-The T4B correction is committed and its independent review is complete. The
-review found no runtime or security defect in the AEAD format, header-only
-transport, pre-expiry behavior, claim-local citation handling, neutral source
-labels, or conservative URL rules. A focused nine-suite review rerun passed
-64/64. OpenAI's documented temporary background-response retention supports
-the current polling design; no provider call was made during the review.
+## Next decision
 
-Taylor may separately consider OAI-T4C: one explicitly budgeted Terra
-background lifecycle smoke through the real route/UI. T4C remains unapproved,
-and the older Claude peer-review requests remain advisory outstanding debt.
+The strongest evidence-producing next phase is one separately approved
+**OAI-T4E diagnostic lifecycle smoke** with the same frozen Terra/high
+configuration. Its purpose is not quality measurement: it is to capture the
+bounded server stage/reason from one real completed response while verifying
+that the browser still receives only the generic safe result. Use one OpenAI
+create, at most 20 hosted searches, and a stated dollar ceiling derived from
+T4C's prior `$7` ceiling. No retry, replacement, fallback, Serper, SearchAPI,
+direct fetch, second response, extra case, flag promotion, deployment, or
+transactional verifier.
 
-**Recommended reasoning level:** use **High** for the bounded T4C smoke because
-it crosses the real provider lifecycle and must distinguish integration failure
-from expected background timing without reopening the reviewed architecture.
+If T4E completes successfully, stop and report before defining a quality gate.
+If it fails, the new reason determines whether a zero-live generalized repair
+is justified. Do not weaken a rule merely to turn the smoke green.
+
+**Recommended reasoning level:** use **High** for any approved T4E smoke because
+it handles live lifecycle evidence,
+strict spend boundaries, and trust-safe failure attribution.
 
 ## Hard boundaries
 
 - No live OpenAI, Serper, SearchAPI, direct-fetch, or source-page call is
-  approved. Every earlier live approval is spent.
-- Do not start T4C, edit `.env.local`, create a real job secret, promote a mode,
-  deploy, run a quality window, or build transactional verification without
-  separate explicit approval.
-- Do not rerun/retune old diagnostics or rejected architectures; do not weaken
-  exact identity, product eligibility, evidence validation, or trust labels.
+  approved. T4C's approval is spent; every later call needs new approval.
+- Do not edit `.env.local`, create or persist a real job secret, promote a mode,
+  deploy, start a quality/repeatability gate, or build transactional
+  verification without separate approval.
+- Do not expose or persist shopper prose, full prompts/answers, source paths,
+  job tokens, provider IDs, request headers, API keys, or raw provider responses.
+- Do not weaken exact identity, product eligibility, citation binding, source
+  labels, or no-receipt transactional omissions to make a response pass.
 - No product-, brand-, retailer-, category-, publisher-, benchmark-, or
   fixture-specific production rule.
 - Preserve all pre-existing untracked artifacts and live fixtures. Stage only
@@ -107,36 +116,31 @@ from expected background timing without reopening the reviewed architecture.
 
 - Entries [42]-[57] still await Claude's review of older OAI lifecycle and
   unguarded-diagnostic conclusions.
-- Entries [58]-[60] ask Claude to challenge the T1 boundary, T2 parser, and T3
-  presentation. Entries [61]-[63] cover T4 architecture and the original T4B.
-- Entry [64] is the load-bearing current review request. Peer dialogue is
-  advisory and authorizes no commit, phase, live call, flag, or deployment.
+- Entries [58]-[66] contain the T1-T4 peer challenges and the new T4D review
+  request. Dialogue remains advisory and authorizes no work.
 
-## Verification
+## Verification state
 
-- Fail-first: 28/40 passed; 12 expected failures reproduced the five defects.
-- Corrected focused wall: 59/59 across eight suites.
-- Complete `npm test`: 1081/1081 across 148 suites.
-- `npm run typecheck`, `npm run build`, `node scripts/eval-pipeline.mjs`, and
-  `git diff --check`: pass.
-- `npm run lint`: zero errors and three pre-existing warnings.
-- `npm run test:e2e -- --project=chromium --workers=1`: 15/15.
-- Focused two-layer Playwright: 3/3.
-- Post-commit independent review: no runtime/security blocker; focused nine-
-  suite rerun 64/64.
-- Zero live/provider calls; `.env.local`, flags, deployment, and live fixtures
-  were untouched.
+- T4B correction at `c22de3d`: full wall 1081/1081 across 148 suites, plus
+  typecheck, lint, build, offline eval, and browser walls green.
+- T4C: one POST 202, same-job pending GETs 202, terminal GET 502
+  `verification_failed`, safe UI error, zero browser warnings/errors, no cards.
+- T4D fail-first: three expected failures.
+- T4D corrected focused wall: 24/24 across formatter and route suites.
+- Complete current wall: 1086/1086 across 148 suites; typecheck, build, offline
+  eval, and diff checks pass; lint has zero errors/three pre-existing warnings.
+- Generated `next-env.d.ts` drift was restored. T4C closeout and T4D are
+  committed together at current `main` HEAD; the tracked worktree is clean.
 
 ## Retrieval map
 
 | Need | Retrieve |
 |---|---|
-| Detailed architecture and gates | OAI-T4 in `docs/forward-roadmap.md` |
-| Canonical corrective evidence | latest entry in `docs/qa-loop-results.md` |
-| AEAD token | `lib/twoLayerJobToken.ts` |
-| Header and expiry contract | `lib/twoLayerApiContract.ts`, `lib/recommendationClient.ts` |
-| Route lifecycle | `lib/twoLayerRecommendationRoute.ts` |
-| Claim/source trust | `lib/twoLayerFormatter.ts`, `lib/twoLayerRecommendation.ts` |
-| Source URL identity rules | `lib/twoLayerSourceUrl.ts`, `lib/twoLayerResearchAdapter.ts` |
-| Mocked proof | `tests/twoLayer*.test.mjs`, `e2e/home.spec.ts` |
-| Peer challenge | `docs/agent-dialogue.md` entry [64] |
+| T4 architecture/results | OAI-T4 in `docs/forward-roadmap.md` |
+| Canonical T4C/T4D evidence | latest two entries in `docs/qa-loop-results.md` |
+| Failure reasons | `lib/twoLayerFormatter.ts` |
+| Route observer/public failure | `lib/twoLayerRecommendationRoute.ts` |
+| Attribution tests | `tests/twoLayerFormatter.test.mjs`, `tests/twoLayerRoute.test.mjs` |
+| Provider terminal gates | `lib/twoLayerResearchAdapter.ts` |
+| T1 card boundary | `lib/twoLayerRecommendation.ts` |
+| Peer channel | `docs/agent-dialogue.md` entries [65]-[66] |

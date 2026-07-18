@@ -147,6 +147,24 @@ function buildTwoLayerHandlers(simulation, overrides = {}) {
   });
 }
 
+function withRawAnswer(response, answer) {
+  response.output_text = answer;
+  const message = response.output.find((item) => item.type === "message");
+  const outputText = message?.content?.find((item) => item.type === "output_text");
+  if (outputText) outputText.text = answer;
+  return response;
+}
+
+function expectedVerificationFailure() {
+  return {
+    pipeline: "two_layer",
+    version: TWO_LAYER_API_VERSION,
+    state: "failed",
+    code: "verification_failed",
+    error: "Research finished, but its evidence could not be verified safely.",
+  };
+}
+
 describe("OAI-T4B exact server-mode dispatcher", () => {
   it("delegates missing and explicit legacy modes without touching two-layer code", async () => {
     for (const mode of [undefined, "", "legacy"]) {
@@ -308,6 +326,110 @@ describe("OAI-T4B signed background route lifecycle", () => {
       simulation.calls.map((call) => call.method),
       ["client", "create", "client", "retrieve", "client", "retrieve"],
     );
+  });
+
+  it("attributes a malformed master-prompt answer without exposing internals", async () => {
+    const malformedAnswer = rawAnswer.replace("### Pros", "### Advantages");
+    const simulation = lifecycle({
+      retrieveResponses: [
+        withRawAnswer(completedResponse(), malformedAnswer),
+      ],
+    });
+    const diagnostics = [];
+    const handlers = buildTwoLayerHandlers(simulation, {
+      onVerificationFailure: (diagnostic) => diagnostics.push(diagnostic),
+    });
+    const start = await readJson(
+      await handlers.POST(request("POST", { query: "vacuum" })),
+    );
+    const completed = await readJson(
+      await handlers.GET(request("GET", undefined, start.body.jobToken)),
+    );
+
+    assert.equal(completed.status, 502);
+    assert.deepEqual(completed.body, expectedVerificationFailure());
+    assert.deepEqual(diagnostics, [
+      { stage: "formatter", reason: "product_shape" },
+    ]);
+    const serialized = JSON.stringify(completed.body);
+    assert.equal(serialized.includes(malformedAnswer), false);
+    assert.equal(serialized.includes(productUrl), false);
+    assert.equal(serialized.includes(responseId), false);
+  });
+
+  it("attributes an unregistered cited source without exposing its URL", async () => {
+    const response = completedResponse();
+    response.output[0].action.sources = [
+      { url: productUrl, title: "Example Vacuum" },
+    ];
+    response.output[1].content[0].annotations = [
+      { type: "url_citation", url: productUrl, title: "Example Vacuum" },
+    ];
+    const simulation = lifecycle({ retrieveResponses: [response] });
+    const diagnostics = [];
+    const handlers = buildTwoLayerHandlers(simulation, {
+      onVerificationFailure: (diagnostic) => diagnostics.push(diagnostic),
+    });
+    const start = await readJson(
+      await handlers.POST(request("POST", { query: "vacuum" })),
+    );
+    const completed = await readJson(
+      await handlers.GET(request("GET", undefined, start.body.jobToken)),
+    );
+
+    assert.equal(completed.status, 502);
+    assert.deepEqual(completed.body, expectedVerificationFailure());
+    assert.deepEqual(diagnostics, [
+      { stage: "formatter", reason: "source_registry" },
+    ]);
+    assert.equal(JSON.stringify(completed.body).includes(testUrl), false);
+  });
+
+  it("attributes presentation validation separately and fails closed", async () => {
+    const simulation = lifecycle({ retrieveResponses: [completedResponse()] });
+    const diagnostics = [];
+    const handlers = buildTwoLayerHandlers(simulation, {
+      buildPresentation: () => {
+        throw new Error(`sensitive presentation failure ${productUrl}`);
+      },
+      onVerificationFailure: (diagnostic) => diagnostics.push(diagnostic),
+    });
+    const start = await readJson(
+      await handlers.POST(request("POST", { query: "vacuum" })),
+    );
+    const completed = await readJson(
+      await handlers.GET(request("GET", undefined, start.body.jobToken)),
+    );
+
+    assert.equal(completed.status, 502);
+    assert.deepEqual(completed.body, expectedVerificationFailure());
+    assert.deepEqual(diagnostics, [
+      { stage: "presentation", reason: "presentation_validation" },
+    ]);
+    assert.equal(JSON.stringify(completed.body).includes(productUrl), false);
+  });
+
+  it("keeps the fail-closed response stable when diagnostics reporting fails", async () => {
+    const malformedAnswer = rawAnswer.replace("### Pros", "### Advantages");
+    const simulation = lifecycle({
+      retrieveResponses: [
+        withRawAnswer(completedResponse(), malformedAnswer),
+      ],
+    });
+    const handlers = buildTwoLayerHandlers(simulation, {
+      onVerificationFailure: () => {
+        throw new Error("diagnostic sink unavailable");
+      },
+    });
+    const start = await readJson(
+      await handlers.POST(request("POST", { query: "vacuum" })),
+    );
+    const completed = await readJson(
+      await handlers.GET(request("GET", undefined, start.body.jobToken)),
+    );
+
+    assert.equal(completed.status, 502);
+    assert.deepEqual(completed.body, expectedVerificationFailure());
   });
 
   it("rejects invalid and expired tokens before creating a client", async () => {

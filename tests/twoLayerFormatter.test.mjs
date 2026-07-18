@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { formatTwoLayerMasterPromptAnswer } from "../lib/twoLayerFormatter.ts";
+import {
+  formatTwoLayerMasterPromptAnswer,
+  twoLayerFormatterFailureReason,
+} from "../lib/twoLayerFormatter.ts";
 import { buildTwoLayerProductCards } from "../lib/twoLayerRecommendation.ts";
 
 const sharkUrl = "https://www.example.com/products/shark-az4002";
@@ -96,6 +99,15 @@ function format(overrides = {}) {
   });
 }
 
+function captureThrown(callback) {
+  try {
+    callback();
+  } catch (error) {
+    return error;
+  }
+  assert.fail("Expected callback to throw");
+}
+
 describe("OAI-T2 deterministic master-prompt formatter", () => {
   it("extracts Terra's products and relative order without another model call", () => {
     const result = format();
@@ -165,27 +177,27 @@ describe("OAI-T2 deterministic master-prompt formatter", () => {
       ),
     );
 
-    assert.throws(
-      () =>
-        formatTwoLayerMasterPromptAnswer({
-          rawResearchText,
-          responseSources: responseSources().slice(1),
-        }),
-      /source absent from response registry/,
+    const error = captureThrown(() =>
+      formatTwoLayerMasterPromptAnswer({
+        rawResearchText,
+        responseSources: responseSources().slice(1),
+      }),
     );
+    assert.match(error.message, /source absent from response registry/);
+    assert.equal(twoLayerFormatterFailureReason(error), "source_registry");
   });
 
   it("fails closed instead of inventing missing source metadata", () => {
     const sources = responseSources();
     sources[0] = { ...sources[0], title: null };
-    assert.throws(
-      () =>
-        formatTwoLayerMasterPromptAnswer({
-          rawResearchText,
-          responseSources: sources,
-        }),
-      /source title absent from response registry/,
+    const error = captureThrown(() =>
+      formatTwoLayerMasterPromptAnswer({
+        rawResearchText,
+        responseSources: sources,
+      }),
     );
+    assert.match(error.message, /source title absent from response registry/);
+    assert.equal(twoLayerFormatterFailureReason(error), "source_title");
   });
 
   it("does not promote specifications, professional tests, or owner prose to verified", () => {
@@ -244,13 +256,13 @@ describe("OAI-T2 deterministic master-prompt formatter", () => {
   });
 
   it("fails closed when required master-prompt sections are missing", () => {
-    assert.throws(
-      () =>
-        format({
-          rawResearchText: rawResearchText.replace("### Pros", "### Advantages"),
-        }),
-      /missing section: Pros/,
+    const error = captureThrown(() =>
+      format({
+        rawResearchText: rawResearchText.replace("### Pros", "### Advantages"),
+      }),
     );
+    assert.match(error.message, /missing section: Pros/);
+    assert.equal(twoLayerFormatterFailureReason(error), "product_shape");
   });
 
   it("fails closed on rank gaps instead of silently reordering", () => {
@@ -264,5 +276,18 @@ describe("OAI-T2 deterministic master-prompt formatter", () => {
         }),
       /contiguous product ranks/,
     );
+  });
+
+  it("attributes the final extraction wall without exposing its raw error", () => {
+    const error = captureThrown(() =>
+      format({
+        rawResearchText: `Dyson Gen5detect Absolute\n\n${rawResearchText}`,
+      }),
+    );
+    assert.equal(
+      twoLayerFormatterFailureReason(error),
+      "extraction_validation",
+    );
+    assert.equal(error.message, "Two-layer formatter extraction validation failed");
   });
 });
