@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 
 import { classifyProductEligibility } from "./productEligibility.ts";
+import { twoLayerDisplayText } from "./twoLayerDisplayText.ts";
 import { normalizeTwoLayerSourceUrl } from "./twoLayerSourceUrl.ts";
 
 export const TWO_LAYER_RESEARCH_VERSION = "oai-two-layer-research-v1";
@@ -372,7 +373,7 @@ export type TwoLayerReceiptDecision = {
 
 function researchTrustValue(value: string, sourceIds: string[]): TrustValue {
   return {
-    value,
+    value: twoLayerDisplayText(value),
     trust: "research_synthesis",
     label: TWO_LAYER_TRUST_LABELS.research_synthesis,
     sourceIds: [...sourceIds],
@@ -536,11 +537,19 @@ export function buildTwoLayerProductCards(
   }
 
   const cards = research.recommendations.map((recommendation) => {
-    const identity: TwoLayerIdentity = {
+    const rawIdentity: TwoLayerIdentity = {
       brand: recommendation.identity.brand,
       product_name: recommendation.identity.product_name,
       model: recommendation.identity.model,
       variant: recommendation.identity.variant,
+    };
+    const identity: TwoLayerIdentity = {
+      brand: twoLayerDisplayText(rawIdentity.brand),
+      product_name: twoLayerDisplayText(rawIdentity.product_name),
+      model: rawIdentity.model ? twoLayerDisplayText(rawIdentity.model) : null,
+      variant: rawIdentity.variant
+        ? twoLayerDisplayText(rawIdentity.variant)
+        : null,
     };
     const receipt = acceptedReceipts.get(recommendation.key);
     return {
@@ -581,7 +590,7 @@ export function buildTwoLayerProductCards(
       ),
       claims: recommendation.claims.map((claim) => ({
         claimType: claim.claim_type,
-        value: claim.text,
+        value: twoLayerDisplayText(claim.text),
         ...(claim.source_ids.length > 0
           ? {
               trust: "source_reported" as const,

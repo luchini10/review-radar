@@ -384,7 +384,7 @@ describe("OAI-T4B signed background route lifecycle", () => {
     assert.equal(serialized.includes(responseId), false);
   });
 
-  it("attributes an unregistered cited source without exposing its URL", async () => {
+  it("omits an unregistered citation while preserving a registered product source", async () => {
     const response = completedResponse();
     response.output[0].action.sources = [
       { url: productUrl, title: "Example Vacuum" },
@@ -404,16 +404,39 @@ describe("OAI-T4B signed background route lifecycle", () => {
       await handlers.GET(request("GET", undefined, start.body.jobToken)),
     );
 
-    assert.equal(completed.status, 502);
-    assert.deepEqual(completed.body, expectedVerificationFailure());
-    assert.deepEqual(diagnostics, [
-      {
-        stage: "formatter",
-        reason: "source_registry",
-        cause: "cited_source_unregistered",
-      },
-    ]);
-    assert.equal(JSON.stringify(completed.body).includes(testUrl), false);
+    assert.equal(completed.status, 200);
+    assert.equal(completed.body.state, "completed");
+    assert.equal(completed.body.cards.length, 1);
+    assert.deepEqual(completed.body.sources.map((source) => source.url), [productUrl]);
+    assert.deepEqual(diagnostics, []);
+    assert.equal(JSON.stringify(completed.body.cards).includes(testUrl), false);
+    assert.equal(JSON.stringify(completed.body.cards).includes("]("), false);
+  });
+
+  it("sanitizes Markdown destinations from response-owned source titles", async () => {
+    const titleOnlyUrl = "https://title-only.invalid/tracking";
+    const response = completedResponse();
+    response.output[0].action.sources[0].title =
+      `[Example Vacuum](${titleOnlyUrl})`;
+    response.output[1].content[0].annotations[0].title =
+      `[Example Vacuum](${titleOnlyUrl})`;
+    const simulation = lifecycle({ retrieveResponses: [response] });
+    const handlers = buildTwoLayerHandlers(simulation);
+    const start = await readJson(
+      await handlers.POST(request("POST", { query: "vacuum" })),
+    );
+    const completed = await readJson(
+      await handlers.GET(request("GET", undefined, start.body.jobToken)),
+    );
+
+    assert.equal(completed.status, 200);
+    assert.equal(completed.body.sources[0].title, "Example Vacuum");
+    assert.equal(
+      JSON.stringify(completed.body.sources.map((source) => source.title)).includes(
+        titleOnlyUrl,
+      ),
+      false,
+    );
   });
 
   it("attributes presentation validation separately and fails closed", async () => {

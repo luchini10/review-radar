@@ -1843,7 +1843,7 @@ first step that could connect the new trust contract to the application route;
 that decision affects architecture, fallback behavior, and customer-visible
 failure semantics.
 
-### OAI-T4 - default-off two-layer route architecture (T4A/T4B committed; T4C/T4E safe-failed; T4D precise attribution committed 2026-07-18)
+### OAI-T4 - default-off two-layer route architecture (T4A/T4B/T4D/T4F committed; T4C/T4E safe-failed 2026-07-18)
 
 **Assessment:** the two-layer path is still the strongest route to the product
 objective, but a direct synchronous splice into the legacy handler would be the
@@ -2196,22 +2196,43 @@ filtered it, or returned a materially different identity-bearing URL; raw
 content was deliberately not retained, so choosing among those explanations
 would be speculation.
 
-**OAI-T4F proposed decision (not approved):** do not buy another response or
-weaken source ownership. The evidence supports a zero-live correction to the
-failure's blast radius. Convert Markdown links in displayable text to their
-visible labels; expose and bind only title-present same-response sources;
-ignore/count an unregistered citation without exposing it; and downgrade a
-claim supported only by that ignored citation to `AI research synthesis`.
-Continue to fail closed if any recommendation's required Sources section has
-no registered source. Do not drop cards, discover substitute sources, backfill,
-rerank, or repair model prose in this phase.
+**OAI-T4F implementation result (2026-07-18; zero live; committed in current
+main history):** the citation boundary now changes blast radius without
+weakening source ownership. The formatter builds its registry only from
+title-present same-response sources and exposes only cited URLs in that
+registry. An extra unregistered or titleless citation is ignored and counted in
+bounded diagnostics; it is never exposed or bound. A claim containing only an
+ignored citation receives no substituted source ID and therefore remains `AI
+research synthesis`. If a recommendation's required Sources section has no
+registered source, the complete result still fails closed with
+`product_registered_source_missing`.
 
-Fail-first controls must cover mixed registered/unregistered citations, an
-unregistered-only recommendation, URL non-disclosure in every displayed text
-field, claim-local downgrade, unchanged registered binding, bounded omission
-counts, observer failure, public-error stability, and the complete offline
-wall. This materially changes whole-result failure into a narrower safe
-downgrade, so it requires Taylor's explicit approval and Highest reasoning.
+The deterministic extraction remains verbatim for validation. Presentation
+separately converts standard Markdown links to their visible labels in every
+model-authored card field and in source titles, so hidden destinations cannot
+render as prose. Registered source URLs remain available only in the separate
+source catalog. The correction does not drop products, repair prose, discover
+sources, backfill, rerank, alter product order, attach commerce, or promote the
+two-layer mode.
+
+Fail-first produced six expected failures across mixed citations,
+unregistered-only products, titleless metadata, claim-local downgrade, card URL
+non-disclosure, and source-title sanitization. Corrected focused coverage passes
+28/28; the complete wall passes 1090/1090 across 148 suites. Typecheck, lint
+(zero errors/three pre-existing warnings), production build, offline
+evaluation, and diff checks pass. No OpenAI, Serper, SearchAPI, direct-page, or
+other provider call occurred; `.env.local`, flags, secrets, fixtures,
+deployment, and production state remain unchanged.
+
+**Next decision:** do not run another one-off lifecycle smoke. The stronger next
+step is a separately approved zero-live quality-gate design that uses T4E's
+actual `$0.6990575` estimate, 12 hosted searches, and approximately 272.6-second
+observed latency to freeze a small primary sample, usefulness and hard-
+requirement metrics, citation/formatter safety bars, repeatability treatment,
+and a total live budget. Only then should one approved live window both confirm
+T4F on the real route and answer whether the two-layer architecture is worth
+continuing. This avoids another test-fix-test cycle that proves lifecycle but
+not product quality.
 
 **Offline acceptance wall for T4A/T4B:**
 

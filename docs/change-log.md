@@ -11,6 +11,31 @@ Update this file after:
 
 ## 2026-07-18
 
+### 🟧 Codex - Citation-granular two-layer safety correction
+
+#### Changed
+
+- A two-layer result no longer loses every product merely because one Markdown
+  citation is absent from the same-response source registry. Unsupported URLs
+  are ignored, never exposed or bound, and counted only in bounded formatter
+  diagnostics.
+- A claim supported only by an ignored citation now remains explicitly labeled
+  `AI research synthesis`; the formatter does not substitute a different
+  product-level source.
+- Every recommendation still needs at least one title-present, same-response
+  source or the complete result fails closed. Product count and order are not
+  repaired, backfilled, or reranked.
+- Model-authored Markdown destinations are removed from all displayed card text
+  and response-owned source titles. Registered source links remain available
+  only through the separate source catalog.
+
+#### Verified
+
+- Zero live calls. Fail-first produced 6 expected failures; corrected focused
+  tests pass 28/28 and the complete suite passes 1090/1090 across 148 suites.
+- Typecheck, production build, offline evaluation, and diff checks pass. Lint
+  has zero errors and the same three pre-existing warnings.
+
 ### 🟧 Codex - T4B pre-live trust and lifecycle correction
 
 #### Changed

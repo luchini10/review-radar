@@ -8547,3 +8547,54 @@ unregistered citation with non-exposure/non-binding plus claim-level synthesis
 downgrade, while still requiring at least one registered source per product.
 That is a material trust/public-behavior decision and remains unapproved. T4E's
 one-response approval is spent.
+
+## 🟧 Codex — OAI-T4F citation-granular safety correction (2026-07-18)
+
+**Verdict: PASS OFFLINE — the formatter can preserve a source-supported slate
+without exposing or trusting an extra unsupported citation.** No OpenAI,
+Serper, SearchAPI, direct-page, or other provider call occurred.
+
+T4E proved that one unregistered Markdown citation caused whole-slate
+rejection. T4F narrows only that blast radius. The formatter now constructs its
+registry from title-present same-response sources and partitions cited URLs
+into registered and ignored sets. Only registered cited URLs receive source IDs
+or enter the client source catalog. Ignored URLs are counted in the new bounded
+`ignoredUnregisteredCitationUrlCount`; they are never included in exception
+text, displayed cards, or sources.
+
+The important non-substitution rule is explicit: when text contains a citation
+but none of its URLs are registered, `sourceIdsForText` returns no IDs instead
+of applying a product-level fallback. A claim supported only by such a citation
+therefore displays as `AI research synthesis`. Truly uncited assessment/pros/
+cons keep their existing synthesis treatment. Each recommendation's required
+Sources section must still resolve to at least one registered source or the
+complete result fails `product_registered_source_missing`.
+
+Extraction fidelity remains unchanged: the formatter retains the exact model
+text for hashing and T1 validation. A separate presentation-only helper removes
+standard Markdown destinations while preserving their visible labels across
+identity, assessment, pros, cons, claims, and response-owned source titles.
+Registered hrefs remain only in the source catalog. Product count/order,
+registered citation binding, T1 trust states, no-receipt identity/commerce
+omissions, the generic public failure body, and legacy-default mode are
+unchanged.
+
+Fail-first produced six expected failures: the old whole-slate rejection for a
+mixed registry, imprecise failure for an unregistered-only product, titleless
+metadata rejection despite alternate support, card URL leakage, route rejection
+for one extra citation, and Markdown leakage in a source title. Corrected
+verification:
+
+- focused formatter/route wall: 28/28;
+- complete `npm test`: 1090/1090 across 148 suites;
+- `npm run typecheck`: pass;
+- `npm run lint`: zero errors and the same three pre-existing warnings;
+- `npm run build`: pass;
+- `node scripts/eval-pipeline.mjs`: no red flags; and
+- `git diff --check`: pass (line-ending notices only).
+
+The production build caused no tracked generated-file drift. `.env.local`,
+flags, secrets, live fixtures, untracked artifacts, deployment, and production
+state were untouched. The next recommended action is not another isolated
+smoke; it is a separately approved zero-live design of one decision-useful
+quality/repeatability gate, followed by one explicitly budgeted live window.

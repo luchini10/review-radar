@@ -12,6 +12,7 @@ import {
   buildTwoLayerProductCards,
   TWO_LAYER_PRESENTATION_VERSION,
 } from "./twoLayerRecommendation.ts";
+import { twoLayerDisplayText } from "./twoLayerDisplayText.ts";
 import {
   cancelTwoLayerResearch,
   pollTwoLayerResearch,
@@ -361,7 +362,7 @@ export function createTwoLayerRecommendationHandlers({
         formatted.formattedOutput.sources.map((source) => ({
           id: source.id,
           label: sourceLabel(source.role),
-          title: source.title,
+          title: twoLayerDisplayText(source.title),
           url: source.url,
         }));
       return json(

@@ -168,38 +168,72 @@ describe("OAI-T2 deterministic master-prompt formatter", () => {
     }
   });
 
-  it("retains citations only when the URL came from the response registry", () => {
+  it("retains only registered citations and safely omits an extra unregistered URL", () => {
     const result = format();
     assert.equal(result.formattedOutput.sources.length, 4);
+    assert.equal(result.diagnostics.ignoredUnregisteredCitationUrlCount, 0);
     assert.ok(
       result.formattedOutput.sources.every((source) =>
         responseSources().some((registered) => registered.url === source.url),
       ),
     );
 
-    const error = captureThrown(() =>
-      formatTwoLayerMasterPromptAnswer({
-        rawResearchText,
-        responseSources: responseSources().slice(1),
-      }),
+    const mixed = formatTwoLayerMasterPromptAnswer({
+      rawResearchText,
+      responseSources: responseSources().slice(1),
+    });
+    assert.equal(mixed.diagnostics.ignoredUnregisteredCitationUrlCount, 1);
+    assert.equal(
+      mixed.formattedOutput.sources.some((source) => source.url === sharkUrl),
+      false,
     );
-    assert.match(error.message, /source absent from response registry/);
-    assert.equal(twoLayerFormatterFailureReason(error), "source_registry");
-    assert.equal(error.failureCause, "cited_source_unregistered");
+    const shark = mixed.formattedOutput.recommendations[0];
+    assert.deepEqual(shark.identity.source_ids, ["s1"]);
+    const ignoredCitationClaim = shark.claims.find((claim) =>
+      claim.text.includes("**Weight:**"),
+    );
+    assert.deepEqual(ignoredCitationClaim.source_ids, []);
+
+    const cards = buildTwoLayerProductCards({
+      rawResearchText,
+      responseSourceUrls: responseSources().slice(1).map((source) => source.url),
+      formattedOutput: mixed.formattedOutput,
+      receiptInputs: [],
+    });
+    assert.equal(JSON.stringify(cards.cards).includes(sharkUrl), false);
+    assert.equal(JSON.stringify(cards.cards).includes("]("), false);
+    const ignoredCardClaim = cards.cards[0].claims.find((claim) =>
+      claim.value.includes("**Weight:**"),
+    );
+    assert.equal(ignoredCardClaim.trust, "research_synthesis");
+    assert.equal(ignoredCardClaim.label, "AI research synthesis");
   });
 
-  it("fails closed instead of inventing missing source metadata", () => {
-    const sources = responseSources();
-    sources[0] = { ...sources[0], title: null };
+  it("fails closed when a recommendation has no registered source", () => {
     const error = captureThrown(() =>
       formatTwoLayerMasterPromptAnswer({
         rawResearchText,
-        responseSources: sources,
+        responseSources: responseSources().slice(2),
       }),
     );
-    assert.match(error.message, /source title absent from response registry/);
-    assert.equal(twoLayerFormatterFailureReason(error), "source_title");
-    assert.equal(error.failureCause, "registered_source_title_missing");
+    assert.match(error.message, /product #1 has no registered source/);
+    assert.equal(twoLayerFormatterFailureReason(error), "source_registry");
+    assert.equal(error.failureCause, "product_registered_source_missing");
+  });
+
+  it("ignores titleless metadata instead of inventing a display title", () => {
+    const sources = responseSources();
+    sources[0] = { ...sources[0], title: null };
+    const result = formatTwoLayerMasterPromptAnswer({
+      rawResearchText,
+      responseSources: sources,
+    });
+    assert.equal(result.diagnostics.ignoredUnregisteredCitationUrlCount, 1);
+    assert.equal(
+      result.formattedOutput.sources.some((source) => source.url === sharkUrl),
+      false,
+    );
+    assert.ok(result.formattedOutput.sources.every((source) => source.title));
   });
 
   it("does not promote specifications, professional tests, or owner prose to verified", () => {
@@ -236,6 +270,21 @@ describe("OAI-T2 deterministic master-prompt formatter", () => {
     assert.equal(uncitedCardClaim.label, "AI research synthesis");
     assert.equal(citedCardClaim.trust, "source_reported");
     assert.equal(citedCardClaim.label, "Source-reported");
+  });
+
+  it("removes Markdown destinations from every model-authored card field", () => {
+    const result = format();
+    const cards = buildTwoLayerProductCards({
+      rawResearchText,
+      responseSourceUrls: responseSources().map((source) => source.url),
+      formattedOutput: result.formattedOutput,
+      receiptInputs: [],
+    });
+    const serializedCards = JSON.stringify(cards.cards);
+    assert.equal(serializedCards.includes("http://"), false);
+    assert.equal(serializedCards.includes("https://"), false);
+    assert.equal(serializedCards.includes("]("), false);
+    assert.ok(cards.cards[0].assessment.why.value.includes("example.com"));
   });
 
   it("uses neutral source roles when semantic source type is not established", () => {

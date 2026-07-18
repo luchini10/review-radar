@@ -22,13 +22,13 @@ export type TwoLayerFormatterResult = {
     recommendationCount: number;
     registeredSourceCount: number;
     ignoredTransactionalSectionCount: number;
+    ignoredUnregisteredCitationUrlCount: number;
   };
 };
 
 export type TwoLayerFormatterFailureReason =
   | "product_shape"
   | "source_registry"
-  | "source_title"
   | "extraction_validation";
 
 export type TwoLayerFormatterFailureCause =
@@ -46,10 +46,8 @@ export type TwoLayerFormatterFailureCause =
   | "product_identity_unparseable"
   | "product_block_incomplete"
   | "source_url_invalid"
-  | "cited_source_unregistered"
   | "product_registered_source_missing"
   | "source_registration_lost"
-  | "registered_source_title_missing"
   | "extraction_schema_invalid"
   | "extraction_hash_mismatch"
   | "extraction_source_integrity"
@@ -324,9 +322,12 @@ export function formatTwoLayerMasterPromptAnswer(input: {
 
   const registry = new Map<string, TwoLayerResponseSource>();
   for (const source of input.responseSources) {
-    if (!source.url) continue;
+    const title = source.title?.trim();
+    if (!source.url || !title) continue;
     const normalized = normalizeRegisteredSourceUrl(source.url);
-    if (!registry.has(normalized)) registry.set(normalized, source);
+    if (!registry.has(normalized)) {
+      registry.set(normalized, { ...source, title });
+    }
   }
 
   const citedUrls = unique(
@@ -340,25 +341,20 @@ export function formatTwoLayerMasterPromptAnswer(input: {
     ),
   ).map(normalizeRegisteredSourceUrl);
   const canonicalCitedUrls = unique(citedUrls);
-  const missingUrls = canonicalCitedUrls.filter(
+  const registeredCitedUrls = canonicalCitedUrls.filter((url) => registry.has(url));
+  const ignoredUnregisteredCitationUrls = canonicalCitedUrls.filter(
     (url) => !registry.has(url),
   );
-  if (missingUrls.length > 0) {
-    throw new TwoLayerFormatterError(
-      "source_registry",
-      "cited_source_unregistered",
-      "Two-layer formatter source absent from response registry",
-    );
-  }
 
   const urlToId = new Map(
-    canonicalCitedUrls.map((url, index) => [url, `s${index + 1}`]),
+    registeredCitedUrls.map((url, index) => [url, `s${index + 1}`]),
   );
   const sourceIdsForText = (value: string, fallback: readonly string[] = []) => {
-    const ids = extractMarkdownUrls(value)
+    const urls = extractMarkdownUrls(value);
+    const ids = urls
       .map((url) => urlToId.get(normalizeRegisteredSourceUrl(url)))
       .filter((id): id is string => Boolean(id));
-    return unique(ids.length > 0 ? ids : fallback);
+    return unique(urls.length > 0 ? ids : fallback);
   };
 
   const recommendations = blocks.map((block) => {
@@ -463,7 +459,7 @@ export function formatTwoLayerMasterPromptAnswer(input: {
   const formattedOutput = {
     version: TWO_LAYER_RESEARCH_VERSION,
     research_text_sha256: hashTwoLayerResearchText(input.rawResearchText),
-    sources: canonicalCitedUrls.map((url) => {
+    sources: registeredCitedUrls.map((url) => {
       const registered = registry.get(url);
       if (!registered) {
         throw new TwoLayerFormatterError(
@@ -472,17 +468,9 @@ export function formatTwoLayerMasterPromptAnswer(input: {
           "Two-layer formatter lost source registration",
         );
       }
-      const title = registered.title?.trim();
-      if (!title) {
-        throw new TwoLayerFormatterError(
-          "source_title",
-          "registered_source_title_missing",
-          "Two-layer formatter source title absent from response registry",
-        );
-      }
       return {
         id: urlToId.get(url) || "",
-        title,
+        title: registered.title || "",
         url,
         role: "other" as const,
       };
@@ -517,6 +505,8 @@ export function formatTwoLayerMasterPromptAnswer(input: {
           section.heading.toLowerCase().startsWith("current price"),
         ),
       ).length,
+      ignoredUnregisteredCitationUrlCount:
+        ignoredUnregisteredCitationUrls.length,
     },
   };
 }

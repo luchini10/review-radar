@@ -238,7 +238,7 @@ describe("OAI-T4A natural-text background adapter", () => {
           rawResearchText: result.rawResearchText,
           responseSources: result.responseSources,
         }),
-      /source absent from response registry/,
+      /product #1 has no registered source/,
     );
   });
 
