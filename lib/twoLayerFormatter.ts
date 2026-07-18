@@ -2,18 +2,13 @@ import {
   hashTwoLayerResearchText,
   TWO_LAYER_RESEARCH_VERSION,
   type TwoLayerResearch,
+  type TwoLayerResponseSource,
   validateTwoLayerResearchExtraction,
 } from "./twoLayerRecommendation.ts";
 import { normalizeTwoLayerSourceUrl } from "./twoLayerSourceUrl.ts";
 
 export const TWO_LAYER_FORMATTER_VERSION =
   "oai-two-layer-deterministic-formatter-v2";
-
-export type TwoLayerResponseSource = {
-  url: string;
-  title?: string | null;
-  type?: string | null;
-};
 
 export type TwoLayerFormatterResult = {
   formatterVersion: typeof TWO_LAYER_FORMATTER_VERSION;

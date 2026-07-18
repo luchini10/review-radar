@@ -73,7 +73,13 @@ requirements in order with AI-authored `Pass`, `Fail`, or `Needs verification`
 verdicts. An encrypted-token hash makes renamed/omitted/reordered requirement
 rows fail closed without exposing shopper text. Model-authored exact currency
 amounts are redacted from public research prose/source titles; only an accepted
-independent commerce receipt may display current transactional facts.
+independent commerce receipt may display current transactional facts. OAI-T5C
+removed the natural-Markdown reconstruction boundary: the same single Terra
+research response now returns a strict JSON-schema product slate. ReviewRadar
+validates that object directly, keeps only source URLs registered by the same
+hosted-search response, supplies source titles from response metadata, and uses
+neutral source labels. The legacy Markdown formatter remains only as historical
+test/reference code and is not imported by the two-layer route.
 
 ---
 
@@ -188,8 +194,8 @@ each requirement resolves to **pass / fail / unknown**:
 - `app/api/recommendations/route.ts` — exact pipeline-mode dispatcher plus the
   unchanged legacy pipeline orchestrator (the file to read first).
 - `lib/twoLayerRecommendationRoute.ts` — default-off two-layer
-  POST/GET/DELETE lifecycle, deterministic T2 formatting, and T1 card
-  construction.
+  POST/GET/DELETE lifecycle, direct structured-contract validation, and T1
+  card construction.
 - `lib/recommendationClient.ts` — browser legacy-result handling plus signed
   two-layer polling and cancellation.
 - `app/api/features/route.ts` — Smart-Feature generation (catalog → cache → LLM → fallback).
@@ -259,7 +265,10 @@ Requires `SERPER_API_KEY`. **If missing**, discovery is skipped (`stats.skippedR
 - **Features model** (`OPENAI_MODEL` || `gpt-5.4-mini`): generates Smart-Feature filters in `/api/features`.
 - **Default-off two-layer model:** exact `two_layer` mode freezes one
   `gpt-5.6-terra`/high background response with required hosted web search,
-  at most 20 tool calls, no SDK retry, and no second model or legacy fallback.
+  at most 20 tool calls, strict JSON-schema output, no SDK retry, and no second
+  model or legacy fallback. Its schema contains research identities,
+  assessments, requirement verdicts, claims, and source IDs but no price,
+  seller, purchase URL, availability, or image field.
   GET polls only that response; DELETE cancels only that response. The app job
   token is AES-256-GCM authenticated encryption and is carried in the
   `x-reviewradar-job-token` header, never the request URL.
@@ -338,27 +347,26 @@ ResultsSummary + ProductCard render
 ```text
 RecommendationApiRequest
    ↓
-deterministic normalization + versioned natural master prompt
+deterministic normalization + versioned structured-output master prompt
    ↓
-one Terra/high background Responses API create with required web search
+one Terra/high background Responses API create with required web search and
+strict JSON-schema output
    ↓
 202 encrypted/authenticated app job token
    ↓
 browser GET polling via a token header / pre-expiry or user-requested DELETE
    ↓
-response-owned titled source registry + natural research answer (server-only)
+schema validation + response-owned titled source registry (server-only)
    ↓
-deterministic OAI-T2 formatter
-   ↓
-OAI-T1 trust validation + cards (receiptInputs: [])
+direct OAI-T1 trust validation + cards (receiptInputs: [])
    ↓
 versioned cards/source catalog only
    ↓
 TwoLayerResults trust-state renderer; claim-local citation labels and neutral
-source labels unless semantic source type is established
+source labels
 ```
 
-The two-layer browser never receives the complete prompt, raw answer, raw
+The two-layer browser never receives the complete prompt, raw structured answer, raw
 provider response ID, or raw response envelope. Without receipts, no model-
 authored transactional field is promoted to verified display data.
 

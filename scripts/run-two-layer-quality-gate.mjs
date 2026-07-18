@@ -22,6 +22,7 @@ import {
 } from "./two-layer-quality-gate.mjs";
 
 export const TWO_LAYER_GATE_LIVE_APPROVAL_ID = "oai-t5b-six-run-v1";
+export const TWO_LAYER_GATE_LIVE_EXECUTION_AVAILABLE = false;
 export const TWO_LAYER_GATE_POLL_INTERVAL_MS = 10_000;
 export const TWO_LAYER_GATE_MAX_RETRIEVES_PER_ATTEMPT = 60;
 
@@ -246,7 +247,8 @@ export function validateTwoLayerGateProcessEnvironment(environment = process.env
 
 export function twoLayerGatePreflightPlan(commit = "<commit-after-T5A>") {
   return {
-    status: "preflight_only_no_provider_calls",
+    status: "retired_after_t5b_stop_no_provider_calls",
+    liveExecutionAvailable: TWO_LAYER_GATE_LIVE_EXECUTION_AVAILABLE,
     approvalId: TWO_LAYER_GATE_LIVE_APPROVAL_ID,
     commit,
     cases: frozenRuns(),
@@ -258,9 +260,9 @@ export function twoLayerGatePreflightPlan(commit = "<commit-after-T5A>") {
       pollIntervalMs: TWO_LAYER_GATE_POLL_INTERVAL_MS,
     },
     rules: [
-      "One invocation advances exactly one frozen run.",
+      "The original T5B approval was spent on its first failed attempt and cannot authorize the structured-output architecture.",
       "No retries, fallbacks, replacements, or persisted provider identifiers.",
-      "A failed or interrupted attempt blocks every later run until new approval.",
+      "A new live runner and exact approval are required after offline structured-output acceptance.",
       "Secrets are read only from the process environment; .env.local is not loaded or changed.",
     ],
   };
@@ -312,7 +314,7 @@ async function executeNextRun({ commit, outputDirectory }) {
     },
   };
   let completion = null;
-  let formatter = null;
+  let structure = null;
   let verificationFailure = null;
   const handlers = createTwoLayerRecommendationHandlers({
     createOpenAIClient: async (_key, options) => {
@@ -326,8 +328,8 @@ async function executeNextRun({ commit, outputDirectory }) {
     onResearchCompleted: (diagnostic) => {
       completion = structuredClone(diagnostic);
     },
-    onResearchFormatted: (diagnostic) => {
-      formatter = structuredClone(diagnostic);
+    onResearchStructured: (diagnostic) => {
+      structure = structuredClone(diagnostic);
     },
     onVerificationFailure: (diagnostic) => {
       verificationFailure = structuredClone(diagnostic);
@@ -366,7 +368,7 @@ async function executeNextRun({ commit, outputDirectory }) {
     if (terminal.status !== 200 || terminal.body?.state !== "completed") {
       throw new Error(`Completion route failed safely with status ${terminal.status}`);
     }
-    if (!completion || !formatter) {
+    if (!completion || !structure) {
       throw new Error("Required bounded completion diagnostics are missing");
     }
 
@@ -378,7 +380,7 @@ async function executeNextRun({ commit, outputDirectory }) {
       wallClockMs: Date.now() - wallStart,
       route: { status: terminal.status, state: terminal.body.state },
       completion,
-      formatter,
+      structure,
       cards: terminal.body.cards,
       sources: terminal.body.sources,
     };
@@ -440,6 +442,8 @@ async function executeNextRun({ commit, outputDirectory }) {
               ? error.message.slice(0, 300)
               : "Unknown live-run failure",
           verification: verificationFailure,
+          completion,
+          structure,
         },
       }),
     );
@@ -454,6 +458,12 @@ async function main() {
   if (approvalArgument !== `--execute-live=${TWO_LAYER_GATE_LIVE_APPROVAL_ID}`) {
     process.stdout.write(json(twoLayerGatePreflightPlan()));
     return;
+  }
+
+  if (!TWO_LAYER_GATE_LIVE_EXECUTION_AVAILABLE) {
+    throw new Error(
+      "The frozen T5B live approval is retired after its first failed attempt; a new architecture-specific gate and approval are required",
+    );
   }
 
   assertTrackedTreeClean();

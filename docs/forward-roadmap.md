@@ -2371,6 +2371,68 @@ exact approval packet.
 The question is no longer routine gate execution; it is whether to change the
 model-output contract, improve bounded diagnostics, or stop the two-layer path.
 
+### OAI-T5C - direct structured research boundary (complete locally 2026-07-18; zero live)
+
+**Decision:** continue the one-call OpenAI-led architecture, but remove the
+brittle prose-to-card reconstruction boundary. The same one Terra/high
+background Responses create still owns search selection, source inspection,
+product rejection, slate selection, and ranking. Its final text is now bound by
+one strict JSON Schema in the same request that enables hosted web search. No
+helper response, formatter response, Serper/SearchAPI call, direct page fetch,
+retry, replacement, fallback, or commerce verifier was added.
+
+**Machine contract:** master prompt v3 requests only the schema object. The
+schema contains one to five ranked research recommendations, exact identity
+parts, assessment, pros/cons, exact ordered requirement rows, typed claims, and
+a compact `{id,url}` source catalog. It deliberately has no price, seller,
+availability, purchase URL, image, rating, publisher, source title, or source
+role field. The deterministic route parses and validates the object directly;
+`lib/twoLayerFormatter.ts` remains historical/reference code and is no longer
+imported by the live two-layer route.
+
+**Source boundary:** every declared URL is conservatively canonicalized and
+matched against title-present source metadata owned by the same retrieved
+Responses object. ReviewRadar supplies the public title from that response
+metadata and assigns the neutral `other` role. Unregistered source IDs are
+removed from claim and requirement citations and therefore display as AI
+synthesis; a product fails closed if identity, assessment, a pro, or a con is
+left without registered evidence. Duplicate IDs/URLs/keys, unknown IDs, rank
+gaps, JSON/schema drift, and exact-requirement drift fail closed without
+exposing raw output.
+
+**Observability and stale-spend closure:** terminal completion usage is now
+reported even when the structured contract fails. The historical gate runner's
+failed-attempt path retains that bounded completion diagnostic plus the safe
+contract/failure diagnostic. Its spent `oai-t5b-six-run-v1` execution switch is
+retired, so it cannot authorize a new-architecture request from a later commit.
+A future live window needs a new runner and an exact new approval.
+
+**Evidence:** fail-first began with a missing structured-contract export. The
+new contract wall then covers request composition, no-commerce schema shape,
+response-owned source metadata, neutral labels, claim-local downgrade,
+required-source failure, malformed JSON, schema drift, rank drift, exact
+requirement hashing, no-raw-output responses, and bounded failure usage. The
+complete suite passes 1111/1111 across 151 suites; typecheck, production build,
+offline evaluation, and diff checks pass. Lint has zero errors and the same
+three pre-existing warnings. Zero provider calls occurred; `.env.local`,
+persistent mode, deployment, production, and all live fixtures are unchanged.
+
+**What is not proven:** no provider has yet executed prompt v3 plus the new
+schema. Offline evidence proves the request/route contract, not that Terra will
+return a useful slate or that a live result meets recall, requirement, source-
+semantic, stability, latency, or cost bars.
+
+**Next decision:** after commit and independent review, the smallest useful
+provider step is one newly approved lifecycle smoke on one frozen broad request.
+It should prove create acceptance, terminal structured completion, source
+ownership, safe cards, and retained usage diagnostics. Do not revive the six-
+run T5B gate until that smoke completes. Do not promote the mode, add commerce,
+or retire legacy behavior.
+
+**Recommended reasoning level:** High for the bounded lifecycle smoke. The
+architecture is now frozen offline; disciplined execution and safety review
+matter more than another open-ended redesign.
+
 **Offline acceptance wall for T4A/T4B:**
 
 - default/explicit legacy requests have the same status, body, provider call

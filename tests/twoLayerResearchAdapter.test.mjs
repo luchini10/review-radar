@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { buildNormalizedShopperRequest } from "../lib/autonomousResearchContract.ts";
-import { formatTwoLayerMasterPromptAnswer } from "../lib/twoLayerFormatter.ts";
 import {
   buildTwoLayerResearchRequest,
   cancelTwoLayerResearch,
@@ -14,33 +13,44 @@ import {
 
 const productUrl = "https://shop.example.com/products/example-vacuum";
 const testUrl = "https://tests.example.org/example-vacuum";
-const rawAnswer = `
-# #1 Best Match - Example Vacuum, model EV100
-
-**Recommendation status:** **Best Match**
-
-### Why it ranks #1
-The Example Vacuum is a balanced choice. ([shop.example.com](${productUrl}))
-
-### Current price
-- Price not verified.
-
-### Overall assessment
-Best for mixed floors. Its main tradeoff is weight. ([tests.example.org](${testUrl}))
-
-### Requirement comparison
-- **Currently available for purchase in the United States:** Pass - The cited product page lists the exact model. ([shop.example.com](${productUrl}))
-
-### Pros
-- Strong pickup
-
-### Cons
-- Heavy for stairs
-
-### Sources
-- **Product source:** Example product page. ([shop.example.com](${productUrl}))
-- **Professional source:** Example test. ([tests.example.org](${testUrl}))
-`.trim();
+const rawAnswer = JSON.stringify({
+  version: "oai-two-layer-structured-output-v1",
+  sources: [
+    { id: "s1", url: productUrl },
+    { id: "s2", url: testUrl },
+  ],
+  recommendations: [
+    {
+      key: "example-vacuum",
+      rank: 1,
+      recommendation_status: "Best Match",
+      identity: {
+        brand: "Example",
+        product_name: "Example Vacuum",
+        model: "EV100",
+        variant: null,
+        source_ids: ["s1"],
+      },
+      assessment: {
+        why: "The Example Vacuum is a balanced choice.",
+        best_for: "Mixed floors",
+        main_tradeoff: "Heavy for stairs",
+        source_ids: ["s1", "s2"],
+      },
+      pros: [{ text: "Strong pickup", source_ids: ["s2"] }],
+      cons: [{ text: "Heavy for stairs", source_ids: ["s2"] }],
+      requirement_checks: [
+        {
+          requirement: "Currently available for purchase in the United States",
+          status: "Pass",
+          explanation: "The exact product page is current.",
+          source_ids: ["s1"],
+        },
+      ],
+      claims: [],
+    },
+  ],
+});
 
 function completedResponse(overrides = {}) {
   return {
@@ -116,7 +126,7 @@ function mockClient({ createResponse, retrieveResponse, cancelResponse, errorAt 
 
 const normalizedRequest = buildNormalizedShopperRequest({ query: "vacuum" });
 
-describe("OAI-T4A natural-text background adapter", () => {
+describe("OAI-T5C structured background adapter", () => {
   it("builds the exact one-create Terra/high hosted-search request", () => {
     const request = buildTwoLayerResearchRequest(normalizedRequest);
 
@@ -129,8 +139,16 @@ describe("OAI-T4A natural-text background adapter", () => {
     assert.deepEqual(request.tools, [{ type: "web_search" }]);
     assert.equal(request.tool_choice, "required");
     assert.deepEqual(request.include, ["web_search_call.action.sources"]);
-    assert.equal("text" in request, false);
-    assert.equal(JSON.stringify(request).includes("json_schema"), false);
+    assert.equal(request.text.format.type, "json_schema");
+    assert.equal(request.text.format.strict, true);
+    assert.equal(
+      request.text.format.schema.properties.recommendations.items.properties
+        .requirement_checks.minItems,
+      1,
+    );
+    const requestText = JSON.stringify(request);
+    assert.equal(requestText.includes("price_amount"), false);
+    assert.equal(requestText.includes("product_url"), false);
   });
 
   it("starts once and returns an opaque response ID without polling", async () => {
@@ -157,7 +175,7 @@ describe("OAI-T4A natural-text background adapter", () => {
       const result = await pollTwoLayerResearch({
         client: simulation.client,
         responseId: "resp_test_123456789",
-        promptVersion: "oai-two-layer-master-prompt-v2",
+        promptVersion: "oai-two-layer-master-prompt-v3",
         promptHash: "a".repeat(64),
       });
 
@@ -181,36 +199,37 @@ describe("OAI-T4A natural-text background adapter", () => {
     const result = await pollTwoLayerResearch({
       client: simulation.client,
       responseId: "resp_test_123456789",
-      promptVersion: "oai-two-layer-master-prompt-v2",
+      promptVersion: "oai-two-layer-master-prompt-v3",
       promptHash: "a".repeat(64),
       now: () => 25,
     });
 
     assert.equal(result.ok, true);
     assert.equal(result.state, "completed");
-    assert.equal(result.rawResearchText, rawAnswer);
+    assert.equal(result.research.recommendations[0].identity.product_name, "Example Vacuum");
+    assert.equal(result.structureDiagnostic.contractVersion, "oai-two-layer-structured-output-v1");
     assert.deepEqual(result.ledger.sourceHosts, ["shop.example.com", "tests.example.org"]);
     const ledgerText = JSON.stringify(result.ledger);
     assert.equal(ledgerText.includes("/products/example-vacuum"), false);
     assert.equal(ledgerText.includes(rawAnswer), false);
   });
 
-  it("produces source metadata accepted by the deterministic formatter", async () => {
+  it("returns a source-bound structured research object without a formatter", async () => {
     const simulation = mockClient();
     const result = await pollTwoLayerResearch({
       client: simulation.client,
       responseId: "resp_test_123456789",
-      promptVersion: "oai-two-layer-master-prompt-v2",
+      promptVersion: "oai-two-layer-master-prompt-v3",
       promptHash: "a".repeat(64),
     });
     assert.equal(result.ok, true);
     assert.equal(result.state, "completed");
 
-    const formatted = formatTwoLayerMasterPromptAnswer({
-      rawResearchText: result.rawResearchText,
-      responseSources: result.responseSources,
-    });
-    assert.equal(formatted.formattedOutput.recommendations.length, 1);
+    assert.equal(result.research.recommendations.length, 1);
+    assert.deepEqual(result.research.sources.map((source) => source.role), [
+      "other",
+      "other",
+    ]);
   });
 
   it("fails closed when a cited source has no response-owned title", async () => {
@@ -230,19 +249,12 @@ describe("OAI-T4A natural-text background adapter", () => {
     const result = await pollTwoLayerResearch({
       client: simulation.client,
       responseId: "resp_test_123456789",
-      promptVersion: "oai-two-layer-master-prompt-v2",
+      promptVersion: "oai-two-layer-master-prompt-v3",
       promptHash: "a".repeat(64),
     });
-    assert.equal(result.ok, true);
-    assert.equal(result.state, "completed");
-    assert.throws(
-      () =>
-        formatTwoLayerMasterPromptAnswer({
-          rawResearchText: result.rawResearchText,
-          responseSources: result.responseSources,
-        }),
-      /product #1 has no registered source/,
-    );
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, "contract_invalid");
+    assert.equal(result.verification.cause, "required_registered_source_missing");
   });
 
   it("rejects every terminal or incomplete research state without fallback", async () => {
@@ -264,7 +276,7 @@ describe("OAI-T4A natural-text background adapter", () => {
       const result = await pollTwoLayerResearch({
         client: simulation.client,
         responseId: "resp_test_123456789",
-        promptVersion: "oai-two-layer-master-prompt-v2",
+        promptVersion: "oai-two-layer-master-prompt-v3",
         promptHash: "a".repeat(64),
       });
       assert.equal(result.ok, false, reason);
@@ -283,13 +295,13 @@ describe("OAI-T4A natural-text background adapter", () => {
             ? await pollTwoLayerResearch({
                 client: simulation.client,
                 responseId: "resp_test_123456789",
-                promptVersion: "oai-two-layer-master-prompt-v2",
+                promptVersion: "oai-two-layer-master-prompt-v3",
                 promptHash: "a".repeat(64),
               })
             : await cancelTwoLayerResearch({
                 client: simulation.client,
                 responseId: "resp_test_123456789",
-                promptVersion: "oai-two-layer-master-prompt-v2",
+                promptVersion: "oai-two-layer-master-prompt-v3",
                 promptHash: "a".repeat(64),
               });
 
@@ -315,13 +327,13 @@ describe("OAI-T4A natural-text background adapter", () => {
           ? await pollTwoLayerResearch({
               client: simulation.client,
               responseId: "resp_test_123456789",
-              promptVersion: "oai-two-layer-master-prompt-v2",
+              promptVersion: "oai-two-layer-master-prompt-v3",
               promptHash: "a".repeat(64),
             })
           : await cancelTwoLayerResearch({
               client: simulation.client,
               responseId: "resp_test_123456789",
-              promptVersion: "oai-two-layer-master-prompt-v2",
+              promptVersion: "oai-two-layer-master-prompt-v3",
               promptHash: "a".repeat(64),
             });
 
@@ -336,7 +348,7 @@ describe("OAI-T4A natural-text background adapter", () => {
     const result = await cancelTwoLayerResearch({
       client: simulation.client,
       responseId: "resp_test_123456789",
-      promptVersion: "oai-two-layer-master-prompt-v2",
+      promptVersion: "oai-two-layer-master-prompt-v3",
       promptHash: "a".repeat(64),
     });
 

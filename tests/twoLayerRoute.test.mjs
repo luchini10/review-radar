@@ -21,33 +21,49 @@ const responseId = "resp_route_123456789";
 
 const productUrl = "https://shop.example.com/products/example-vacuum";
 const testUrl = "https://tests.example.org/example-vacuum";
-const rawAnswer = `
-# #1 Best Match - Example Vacuum, model EV100
+function structuredAnswer(overrides = {}) {
+  return {
+    version: "oai-two-layer-structured-output-v1",
+    sources: [
+      { id: "s1", url: productUrl },
+      { id: "s2", url: testUrl },
+    ],
+    recommendations: [
+      {
+        key: "example-vacuum",
+        rank: 1,
+        recommendation_status: "Best Match",
+        identity: {
+          brand: "Example",
+          product_name: "Example Vacuum",
+          model: "EV100",
+          variant: null,
+          source_ids: ["s1"],
+        },
+        assessment: {
+          why: "The Example Vacuum is a balanced choice.",
+          best_for: "Mixed floors",
+          main_tradeoff: "Heavy for stairs",
+          source_ids: ["s1", "s2"],
+        },
+        pros: [{ text: "Strong pickup", source_ids: ["s2"] }],
+        cons: [{ text: "Heavy for stairs", source_ids: ["s2"] }],
+        requirement_checks: [
+          {
+            requirement: "Currently available for purchase in the United States",
+            status: "Pass",
+            explanation: "The exact product page is current.",
+            source_ids: ["s1"],
+          },
+        ],
+        claims: [],
+      },
+    ],
+    ...overrides,
+  };
+}
 
-**Recommendation status:** **Best Match**
-
-### Why it ranks #1
-The Example Vacuum is a balanced choice. ([shop.example.com](${productUrl}))
-
-### Current price
-- Price not verified.
-
-### Overall assessment
-Best for mixed floors. Its main tradeoff is weight. ([tests.example.org](${testUrl}))
-
-### Requirement comparison
-- **Currently available for purchase in the United States:** Pass - The cited product page lists the exact model. ([shop.example.com](${productUrl}))
-
-### Pros
-- Strong pickup
-
-### Cons
-- Heavy for stairs
-
-### Sources
-- **Product source:** Example product page. ([shop.example.com](${productUrl}))
-- **Professional source:** Example test. ([tests.example.org](${testUrl}))
-`.trim();
+const rawAnswer = JSON.stringify(structuredAnswer());
 
 function request(method, body, token) {
   return new Request("http://localhost/api/recommendations", {
@@ -147,6 +163,7 @@ function buildTwoLayerHandlers(simulation, overrides = {}) {
         ? { data: { query: "vacuum" } }
         : { error: "Invalid shopper request." },
     onResearchCompleted: () => {},
+    onResearchStructured: () => {},
     ...overrides,
   });
 }
@@ -295,10 +312,10 @@ describe("OAI-T4B signed background route lifecycle", () => {
       ],
     });
     const completionDiagnostics = [];
-    const formatterDiagnostics = [];
+    const structureDiagnostics = [];
     const handlers = buildTwoLayerHandlers(simulation, {
       onResearchCompleted: (diagnostic) => completionDiagnostics.push(diagnostic),
-      onResearchFormatted: (diagnostic) => formatterDiagnostics.push(diagnostic),
+      onResearchStructured: (diagnostic) => structureDiagnostics.push(diagnostic),
     });
     const start = await readJson(
       await handlers.POST(request("POST", { query: "vacuum" })),
@@ -355,30 +372,34 @@ describe("OAI-T4B signed background route lifecycle", () => {
     assert.equal(diagnosticText.includes(responseId), false);
     assert.equal(diagnosticText.includes(productUrl), false);
     assert.equal(diagnosticText.includes(rawAnswer), false);
-    assert.deepEqual(formatterDiagnostics, [
+    assert.deepEqual(structureDiagnostics, [
       {
-        formatterVersion: "oai-two-layer-deterministic-formatter-v2",
+        contractVersion: "oai-two-layer-structured-output-v1",
+        jsonParsed: true,
         recommendationCount: 1,
+        declaredSourceCount: 2,
         registeredSourceCount: 2,
-        ignoredTransactionalSectionCount: 1,
-        ignoredUnregisteredCitationUrlCount: 0,
+        ignoredUnregisteredSourceCount: 0,
+        ignoredUnusedRegisteredSourceCount: 0,
       },
     ]);
-    const formatterDiagnosticText = JSON.stringify(formatterDiagnostics);
-    assert.equal(formatterDiagnosticText.includes(responseId), false);
-    assert.equal(formatterDiagnosticText.includes(productUrl), false);
-    assert.equal(formatterDiagnosticText.includes(rawAnswer), false);
+    const structureDiagnosticText = JSON.stringify(structureDiagnostics);
+    assert.equal(structureDiagnosticText.includes(responseId), false);
+    assert.equal(structureDiagnosticText.includes(productUrl), false);
+    assert.equal(structureDiagnosticText.includes(rawAnswer), false);
   });
 
-  it("attributes a malformed master-prompt answer without exposing internals", async () => {
-    const malformedAnswer = rawAnswer.replace("### Pros", "### Advantages");
+  it("attributes invalid structured output and retains bounded completion usage", async () => {
+    const malformedAnswer = "not-json private shopper prose";
     const simulation = lifecycle({
       retrieveResponses: [
         withRawAnswer(completedResponse(), malformedAnswer),
       ],
     });
     const diagnostics = [];
+    const completionDiagnostics = [];
     const handlers = buildTwoLayerHandlers(simulation, {
+      onResearchCompleted: (diagnostic) => completionDiagnostics.push(diagnostic),
       onVerificationFailure: (diagnostic) => diagnostics.push(diagnostic),
     });
     const start = await readJson(
@@ -392,19 +413,35 @@ describe("OAI-T4B signed background route lifecycle", () => {
     assert.deepEqual(completed.body, expectedVerificationFailure());
     assert.deepEqual(diagnostics, [
       {
-        stage: "formatter",
-        reason: "product_shape",
-        cause: "required_pros_section_missing",
+        stage: "research_contract",
+        reason: "invalid_json",
+        cause: "invalid_json",
       },
     ]);
+    assert.equal(completionDiagnostics.length, 1);
+    assert.equal(completionDiagnostics[0].usage.totalTokens, 3_000);
     const serialized = JSON.stringify(completed.body);
     assert.equal(serialized.includes(malformedAnswer), false);
     assert.equal(serialized.includes(productUrl), false);
     assert.equal(serialized.includes(responseId), false);
   });
 
-  it("omits an unregistered citation while preserving a registered product source", async () => {
+  it("omits an unregistered claim source while preserving registered product evidence", async () => {
     const response = completedResponse();
+    const output = structuredAnswer();
+    output.sources.push({ id: "s3", url: "https://tracking.invalid/redirect" });
+    output.recommendations[0].assessment.source_ids = ["s1"];
+    output.recommendations[0].pros = [];
+    output.recommendations[0].cons = [];
+    output.recommendations[0].claims = [
+      {
+        claim_type: "other",
+        text: "Unregistered source claim",
+        source_ids: ["s3"],
+        evidence_scope: "unresolved",
+      },
+    ];
+    withRawAnswer(response, JSON.stringify(output));
     response.output[0].action.sources = [
       { url: productUrl, title: "Example Vacuum" },
     ];
@@ -429,6 +466,8 @@ describe("OAI-T4B signed background route lifecycle", () => {
     assert.deepEqual(completed.body.sources.map((source) => source.url), [productUrl]);
     assert.deepEqual(diagnostics, []);
     assert.equal(JSON.stringify(completed.body.cards).includes(testUrl), false);
+    assert.deepEqual(completed.body.cards[0].claims[0].sourceIds, []);
+    assert.equal(completed.body.cards[0].claims[0].trust, "research_synthesis");
     assert.equal(JSON.stringify(completed.body.cards).includes("]("), false);
   });
 
@@ -504,8 +543,8 @@ describe("OAI-T4B signed background route lifecycle", () => {
     assert.deepEqual(completed.body, expectedVerificationFailure());
     assert.deepEqual(diagnostics, [
       {
-        stage: "formatter",
-        reason: "product_shape",
+        stage: "research_contract",
+        reason: "contract_invalid",
         cause: "requirement_contract_mismatch",
       },
     ]);
@@ -540,7 +579,7 @@ describe("OAI-T4B signed background route lifecycle", () => {
   });
 
   it("keeps the fail-closed response stable when diagnostics reporting fails", async () => {
-    const malformedAnswer = rawAnswer.replace("### Pros", "### Advantages");
+    const malformedAnswer = "not-json private shopper prose";
     const simulation = lifecycle({
       retrieveResponses: [
         withRawAnswer(completedResponse(), malformedAnswer),
@@ -550,8 +589,8 @@ describe("OAI-T4B signed background route lifecycle", () => {
       onResearchCompleted: () => {
         throw new Error("completion diagnostic sink unavailable");
       },
-      onResearchFormatted: () => {
-        throw new Error("formatter diagnostic sink unavailable");
+      onResearchStructured: () => {
+        throw new Error("structured diagnostic sink unavailable");
       },
       onVerificationFailure: () => {
         throw new Error("diagnostic sink unavailable");
@@ -573,7 +612,7 @@ describe("OAI-T4B signed background route lifecycle", () => {
     const handlers = buildTwoLayerHandlers(simulation);
     const expiredToken = issueTwoLayerJobToken({
       responseId,
-      promptVersion: "oai-two-layer-master-prompt-v2",
+      promptVersion: "oai-two-layer-master-prompt-v3",
       promptHash: "a".repeat(64),
       requirementsHash: "b".repeat(64),
       secret,
@@ -596,7 +635,7 @@ describe("OAI-T4B signed background route lifecycle", () => {
     const handlers = buildTwoLayerHandlers(simulation);
     const token = issueTwoLayerJobToken({
       responseId,
-      promptVersion: "oai-two-layer-master-prompt-v2",
+      promptVersion: "oai-two-layer-master-prompt-v3",
       promptHash: "a".repeat(64),
       requirementsHash: "b".repeat(64),
       secret,

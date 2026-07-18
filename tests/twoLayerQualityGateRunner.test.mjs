@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import {
   buildTwoLayerManualReviewTemplate,
   TWO_LAYER_GATE_LIVE_APPROVAL_ID,
+  TWO_LAYER_GATE_LIVE_EXECUTION_AVAILABLE,
   TWO_LAYER_GATE_MAX_RETRIEVES_PER_ATTEMPT,
   TWO_LAYER_GATE_POLL_INTERVAL_MS,
   twoLayerGatePreflightPlan,
@@ -11,9 +12,11 @@ import {
 } from "../scripts/run-two-layer-quality-gate.mjs";
 
 describe("OAI-T5A one-request-at-a-time live gate harness", () => {
-  it("is preflight-only by default and freezes all six approved runs", () => {
+  it("retires the spent T5B approval while retaining its frozen record", () => {
     const plan = twoLayerGatePreflightPlan("a".repeat(40));
-    assert.equal(plan.status, "preflight_only_no_provider_calls");
+    assert.equal(plan.status, "retired_after_t5b_stop_no_provider_calls");
+    assert.equal(plan.liveExecutionAvailable, false);
+    assert.equal(TWO_LAYER_GATE_LIVE_EXECUTION_AVAILABLE, false);
     assert.equal(plan.approvalId, TWO_LAYER_GATE_LIVE_APPROVAL_ID);
     assert.equal(plan.commit, "a".repeat(40));
     assert.deepEqual(

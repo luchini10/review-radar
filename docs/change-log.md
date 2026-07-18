@@ -11,6 +11,33 @@ Update this file after:
 
 ## 2026-07-18
 
+### 🟧 Codex - Direct structured two-layer research
+
+#### Changed
+
+- The default-off two-layer path no longer depends on numbered Markdown
+  headings. Its same single Terra/high web-search response now returns a strict
+  machine-readable research slate that ReviewRadar validates directly.
+- The model can select and rank products, but the response schema has no price,
+  seller, purchase URL, availability, image, rating, or source-label field.
+  Those facts still require a later independent receipt.
+- Public source titles now come from the same response's hosted-search metadata,
+  and their labels are neutral. Unregistered claim citations are withheld;
+  missing required product evidence still fails closed.
+- Structured-output failures retain bounded token/tool/source/duration usage
+  without storing the shopper prompt, raw answer, URLs, provider ID, job token,
+  or credentials.
+- Retired the spent T5B execution switch so its old approval cannot dispatch a
+  request against this new architecture.
+
+#### Verified
+
+- Zero live calls. Fail-first reproduced the missing contract; corrected
+  focused coverage passes 39/39 and the complete suite passes 1111/1111 across
+  151 suites.
+- Typecheck, production build, offline evaluation, and diff checks pass. Lint
+  has zero errors and the same three pre-existing warnings.
+
 ### 🟧 Codex - Two-layer requirement visibility and frozen quality gate
 
 #### Changed

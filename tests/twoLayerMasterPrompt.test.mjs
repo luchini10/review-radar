@@ -33,7 +33,7 @@ function shopperData(prompt) {
   return JSON.parse(match[1]);
 }
 
-describe("OAI-T4A versioned natural master prompt", () => {
+describe("OAI-T5C versioned structured master prompt", () => {
   it("deterministically preserves every original shopper field", () => {
     const normalized = buildNormalizedShopperRequest(shopperInput);
     const first = buildTwoLayerMasterPrompt(normalized);
@@ -72,25 +72,22 @@ describe("OAI-T4A versioned natural master prompt", () => {
     assert.equal(prompt.instructions.includes(malicious.original_fields.important_details), false);
   });
 
-  it("pins the numbered Markdown contract consumed by the deterministic formatter", () => {
+  it("pins the schema-owned product contract without Markdown or commerce", () => {
     const prompt = buildTwoLayerMasterPrompt(
       buildNormalizedShopperRequest({ query: "vacuum" }),
     );
 
     for (const required of [
-      "# #1 Best Match",
-      "### Why it ranks #1",
-      "### Current price",
-      "### Overall assessment",
-      "### Requirement comparison",
-      "### Pros",
-      "### Cons",
-      "### Sources",
+      "Return only the JSON object required by the supplied strict response schema",
+      "recommendations order with contiguous rank values",
+      "source_ids",
+      "requirement_checks",
+      "same-response provider metadata",
+      "ReviewRadar verifies commerce separately",
     ]) {
       assert.ok(prompt.instructions.includes(required), required);
     }
-    assert.match(prompt.instructions, /five products, or fewer/i);
-    assert.match(prompt.instructions, /Use citations directly beside/i);
+    assert.match(prompt.instructions, /one to five supported products/i);
     assert.match(
       prompt.instructions,
       /copy every evaluation_requirements text value exactly once/i,
@@ -99,6 +96,14 @@ describe("OAI-T4A versioned natural master prompt", () => {
       prompt.instructions,
       /Do not rename, combine, omit, or add requirements/i,
     );
+    for (const forbidden of [
+      "# #1 Best Match",
+      "### Current price",
+      "Markdown list",
+      "### Comparison table",
+    ]) {
+      assert.equal(prompt.instructions.includes(forbidden), false, forbidden);
+    }
   });
 
   it("contains no benchmark answer, candidate slate, or product-specific seed", () => {

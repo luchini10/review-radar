@@ -3,15 +3,10 @@ import {
 } from "./openaiClient.ts";
 import { buildNormalizedShopperRequest } from "./autonomousResearchContract.ts";
 import {
-  formatTwoLayerMasterPromptAnswer,
-  twoLayerFormatterFailureDiagnostic,
-  type TwoLayerFormatterResult,
-  type TwoLayerFormatterFailureCause,
-  type TwoLayerFormatterFailureReason,
-} from "./twoLayerFormatter.ts";
-import {
-  buildTwoLayerProductCards,
+  buildTwoLayerStructuredProductCards,
   TWO_LAYER_PRESENTATION_VERSION,
+  type TwoLayerStructuredOutputDiagnostic,
+  type TwoLayerStructuredOutputFailureCause,
 } from "./twoLayerRecommendation.ts";
 import { twoLayerResearchDisplayText } from "./twoLayerDisplayText.ts";
 import {
@@ -49,9 +44,9 @@ type TwoLayerEnvironment = {
 
 export type TwoLayerVerificationFailureDiagnostic =
   | {
-      stage: "formatter";
-      reason: TwoLayerFormatterFailureReason | "unknown";
-      cause: TwoLayerFormatterFailureCause | "unknown";
+      stage: "research_contract";
+      reason: "invalid_json" | "schema_invalid" | "contract_invalid";
+      cause: TwoLayerStructuredOutputFailureCause;
     }
   | {
       stage: "presentation";
@@ -67,9 +62,8 @@ export type TwoLayerCompletionDiagnostic = {
   sourceCount: number;
 };
 
-export type TwoLayerFormatterCompletionDiagnostic = {
-  formatterVersion: TwoLayerFormatterResult["formatterVersion"];
-} & TwoLayerFormatterResult["diagnostics"];
+export type TwoLayerStructuredCompletionDiagnostic =
+  TwoLayerStructuredOutputDiagnostic;
 
 type TwoLayerRecommendationHandlerOptions = {
   createOpenAIClient?: typeof createDefaultOpenAIClient;
@@ -79,14 +73,13 @@ type TwoLayerRecommendationHandlerOptions = {
   startResearch?: typeof startTwoLayerResearch;
   pollResearch?: typeof pollTwoLayerResearch;
   cancelResearch?: typeof cancelTwoLayerResearch;
-  formatAnswer?: typeof formatTwoLayerMasterPromptAnswer;
-  buildPresentation?: typeof buildTwoLayerProductCards;
+  buildPresentation?: typeof buildTwoLayerStructuredProductCards;
   onVerificationFailure?: (
     diagnostic: TwoLayerVerificationFailureDiagnostic,
   ) => void;
   onResearchCompleted?: (diagnostic: TwoLayerCompletionDiagnostic) => void;
-  onResearchFormatted?: (
-    diagnostic: TwoLayerFormatterCompletionDiagnostic,
+  onResearchStructured?: (
+    diagnostic: TwoLayerStructuredCompletionDiagnostic,
   ) => void;
 };
 
@@ -183,11 +176,11 @@ function defaultCompletionReporter(diagnostic: TwoLayerCompletionDiagnostic) {
   );
 }
 
-function defaultFormatterCompletionReporter(
-  diagnostic: TwoLayerFormatterCompletionDiagnostic,
+function defaultStructuredCompletionReporter(
+  diagnostic: TwoLayerStructuredCompletionDiagnostic,
 ) {
   console.info(
-    "[ReviewRadar two-layer formatter]",
+    "[ReviewRadar two-layer structured contract]",
     JSON.stringify(diagnostic),
   );
 }
@@ -203,11 +196,10 @@ export function createTwoLayerRecommendationHandlers({
   startResearch = startTwoLayerResearch,
   pollResearch = pollTwoLayerResearch,
   cancelResearch = cancelTwoLayerResearch,
-  formatAnswer = formatTwoLayerMasterPromptAnswer,
-  buildPresentation = buildTwoLayerProductCards,
+  buildPresentation = buildTwoLayerStructuredProductCards,
   onVerificationFailure = defaultVerificationFailureReporter,
   onResearchCompleted = defaultCompletionReporter,
-  onResearchFormatted = defaultFormatterCompletionReporter,
+  onResearchStructured = defaultStructuredCompletionReporter,
 }: TwoLayerRecommendationHandlerOptions): TwoLayerRecommendationHandlers {
   const reportVerificationFailure = (
     diagnostic: TwoLayerVerificationFailureDiagnostic,
@@ -225,11 +217,11 @@ export function createTwoLayerRecommendationHandlers({
       // Observability must never change the completed route response.
     }
   };
-  const reportFormatterCompletion = (
-    diagnostic: TwoLayerFormatterCompletionDiagnostic,
+  const reportStructuredCompletion = (
+    diagnostic: TwoLayerStructuredCompletionDiagnostic,
   ) => {
     try {
-      onResearchFormatted(diagnostic);
+      onResearchStructured(diagnostic);
     } catch {
       // Observability must never change the completed route response.
     }
@@ -328,7 +320,30 @@ export function createTwoLayerRecommendationHandlers({
         promptHash: verified.payload.promptHash,
         now,
       });
-      if (!result.ok) return failureForResearchReason(result.reason);
+      if (!result.ok) {
+        if (result.ledger.status === "completed") {
+          reportCompletion({
+            modelRequested: result.ledger.modelRequested,
+            modelReturned: result.ledger.modelReturned,
+            durationMs: result.ledger.durationMs,
+            usage: { ...result.ledger.usage },
+            sourceCount: result.ledger.sourceCount,
+          });
+        }
+        if ("verification" in result) {
+          reportVerificationFailure({
+            stage: "research_contract",
+            reason: result.verification.reason,
+            cause: result.verification.cause,
+          });
+          return failure(
+            "verification_failed",
+            ERROR_MESSAGES.verificationFailed,
+            502,
+          );
+        }
+        return failureForResearchReason(result.reason);
+      }
       if (result.state === "pending") {
         return json(
           {
@@ -352,26 +367,8 @@ export function createTwoLayerRecommendationHandlers({
         sourceCount: result.ledger.sourceCount,
       });
 
-      let formatted;
-      try {
-        formatted = formatAnswer({
-          rawResearchText: result.rawResearchText,
-          responseSources: result.responseSources,
-        });
-      } catch (error) {
-        const diagnostic = twoLayerFormatterFailureDiagnostic(error);
-        reportVerificationFailure({
-          stage: "formatter",
-          ...diagnostic,
-        });
-        return failure(
-          "verification_failed",
-          ERROR_MESSAGES.verificationFailed,
-          502,
-        );
-      }
       if (
-        !formatted.formattedOutput.recommendations.every(
+        !result.research.recommendations.every(
           (recommendation) =>
             hashTwoLayerRequirementTexts(
               recommendation.requirement_checks.map(
@@ -381,8 +378,8 @@ export function createTwoLayerRecommendationHandlers({
         )
       ) {
         reportVerificationFailure({
-          stage: "formatter",
-          reason: "product_shape",
+          stage: "research_contract",
+          reason: "contract_invalid",
           cause: "requirement_contract_mismatch",
         });
         return failure(
@@ -391,17 +388,12 @@ export function createTwoLayerRecommendationHandlers({
           502,
         );
       }
-      reportFormatterCompletion({
-        formatterVersion: formatted.formatterVersion,
-        ...formatted.diagnostics,
-      });
+      reportStructuredCompletion(result.structureDiagnostic);
 
       let presentation;
       try {
         presentation = buildPresentation({
-          rawResearchText: result.rawResearchText,
-          responseSourceUrls: result.responseSources.map((source) => source.url),
-          formattedOutput: formatted.formattedOutput,
+          research: result.research,
           receiptInputs: [],
         });
       } catch {
@@ -418,7 +410,7 @@ export function createTwoLayerRecommendationHandlers({
       }
 
       const sources: TwoLayerDisplaySource[] =
-        formatted.formattedOutput.sources.map((source) => ({
+        result.research.sources.map((source) => ({
           id: source.id,
           label: sourceLabel(source.role),
           title: twoLayerResearchDisplayText(source.title),

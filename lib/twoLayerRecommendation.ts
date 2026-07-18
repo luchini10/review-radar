@@ -10,6 +10,8 @@ import {
 import { normalizeTwoLayerSourceUrl } from "./twoLayerSourceUrl.ts";
 
 export const TWO_LAYER_RESEARCH_VERSION = "oai-two-layer-research-v2";
+export const TWO_LAYER_STRUCTURED_OUTPUT_VERSION =
+  "oai-two-layer-structured-output-v1";
 export const TWO_LAYER_COMMERCE_RECEIPT_VERSION =
   "oai-two-layer-commerce-receipt-v1";
 export const TWO_LAYER_PRESENTATION_VERSION = "oai-two-layer-presentation-v2";
@@ -79,7 +81,7 @@ const requirementCheckSchema = z
 const recommendationSchema = z
   .object({
     key: z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/),
-    rank: z.number().int().min(1).max(10),
+    rank: z.number().int().min(1).max(5),
     recommendation_status: z.enum(["Best Match", "Close Match"]),
     identity: identitySchema,
     assessment: z
@@ -127,6 +129,172 @@ export const twoLayerResearchSchema = z
 
 export type TwoLayerResearch = z.infer<typeof twoLayerResearchSchema>;
 export type TwoLayerIdentity = Omit<TwoLayerResearch["recommendations"][number]["identity"], "source_ids">;
+
+const twoLayerStructuredModelOutputSchema = z
+  .object({
+    version: z.literal(TWO_LAYER_STRUCTURED_OUTPUT_VERSION),
+    sources: z
+      .array(
+        z
+          .object({
+            id: sourceId,
+            url: httpUrl,
+          })
+          .strict(),
+      )
+      .min(1),
+    recommendations: z.array(recommendationSchema).min(1).max(5),
+  })
+  .strict();
+
+export type TwoLayerAcceptedResearch = Pick<
+  TwoLayerResearch,
+  "sources" | "recommendations"
+>;
+
+const strictJsonObject = (properties: Record<string, unknown>) => ({
+  type: "object",
+  additionalProperties: false,
+  properties,
+  required: Object.keys(properties),
+});
+
+const structuredSourceId = { type: "string", pattern: "^s[1-9][0-9]*$" };
+const structuredSourceIds = (minimum: number) => ({
+  type: "array",
+  items: structuredSourceId,
+  minItems: minimum,
+});
+
+export function buildTwoLayerStructuredOutputJsonSchema(
+  requirementCount: number,
+) {
+  if (!Number.isSafeInteger(requirementCount) || requirementCount < 1) {
+    throw new Error("Two-layer requirement count must be a positive integer");
+  }
+  const sourcedText = strictJsonObject({
+    text: { type: "string", minLength: 1 },
+    source_ids: structuredSourceIds(1),
+  });
+  const recommendation = strictJsonObject({
+    key: {
+      type: "string",
+      pattern: "^[a-z0-9][a-z0-9-]{0,63}$",
+    },
+    rank: { type: "integer", minimum: 1, maximum: 5 },
+    recommendation_status: {
+      type: "string",
+      enum: ["Best Match", "Close Match"],
+    },
+    identity: strictJsonObject({
+      brand: { type: "string", minLength: 1 },
+      product_name: { type: "string", minLength: 1 },
+      model: { type: ["string", "null"] },
+      variant: { type: ["string", "null"] },
+      source_ids: structuredSourceIds(1),
+    }),
+    assessment: strictJsonObject({
+      why: { type: "string", minLength: 1 },
+      best_for: { type: "string", minLength: 1 },
+      main_tradeoff: { type: "string", minLength: 1 },
+      source_ids: structuredSourceIds(1),
+    }),
+    pros: { type: "array", items: sourcedText },
+    cons: { type: "array", items: sourcedText },
+    requirement_checks: {
+      type: "array",
+      minItems: requirementCount,
+      maxItems: requirementCount,
+      items: strictJsonObject({
+        requirement: { type: "string", minLength: 1 },
+        status: {
+          type: "string",
+          enum: ["Pass", "Fail", "Needs verification"],
+        },
+        explanation: { type: "string", minLength: 1 },
+        source_ids: structuredSourceIds(0),
+      }),
+    },
+    claims: {
+      type: "array",
+      items: strictJsonObject({
+        claim_type: {
+          type: "string",
+          enum: [
+            "specification",
+            "professional_performance",
+            "owner_feedback",
+            "warranty_or_support",
+            "other",
+          ],
+        },
+        text: { type: "string", minLength: 1 },
+        source_ids: structuredSourceIds(0),
+        evidence_scope: {
+          type: "string",
+          enum: [
+            "exact_model",
+            "family_or_variant",
+            "category_or_general",
+            "unresolved",
+          ],
+        },
+      }),
+    },
+  });
+
+  return strictJsonObject({
+    version: { type: "string", const: TWO_LAYER_STRUCTURED_OUTPUT_VERSION },
+    sources: {
+      type: "array",
+      minItems: 1,
+      items: strictJsonObject({
+        id: structuredSourceId,
+        url: { type: "string" },
+      }),
+    },
+    recommendations: {
+      type: "array",
+      minItems: 1,
+      maxItems: 5,
+      items: recommendation,
+    },
+  });
+}
+
+export type TwoLayerStructuredOutputDiagnostic = {
+  contractVersion: typeof TWO_LAYER_STRUCTURED_OUTPUT_VERSION;
+  jsonParsed: boolean;
+  recommendationCount: number;
+  declaredSourceCount: number;
+  registeredSourceCount: number;
+  ignoredUnregisteredSourceCount: number;
+  ignoredUnusedRegisteredSourceCount: number;
+};
+
+export type TwoLayerStructuredOutputFailureCause =
+  | "invalid_json"
+  | "schema_invalid"
+  | "duplicate_source_id"
+  | "duplicate_source_url"
+  | "unknown_source_id"
+  | "duplicate_recommendation_key"
+  | "rank_order_mismatch"
+  | "required_registered_source_missing"
+  | "requirement_contract_mismatch";
+
+export type TwoLayerStructuredOutputResult =
+  | {
+      ok: true;
+      research: TwoLayerAcceptedResearch;
+      diagnostic: TwoLayerStructuredOutputDiagnostic;
+    }
+  | {
+      ok: false;
+      reason: "invalid_json" | "schema_invalid" | "contract_invalid";
+      cause: TwoLayerStructuredOutputFailureCause;
+      diagnostic: TwoLayerStructuredOutputDiagnostic;
+    };
 
 const receiptIdentitySchema = z
   .object({
@@ -207,7 +375,9 @@ function recommendationTextFields(
   ].filter((value): value is string => value !== null);
 }
 
-function referencedSourceIds(research: TwoLayerResearch) {
+function referencedSourceIds(
+  research: Pick<TwoLayerResearch, "recommendations">,
+) {
   return research.recommendations.flatMap((recommendation) => [
     ...recommendation.identity.source_ids,
     ...recommendation.assessment.source_ids,
@@ -216,6 +386,228 @@ function referencedSourceIds(research: TwoLayerResearch) {
     ...recommendation.requirement_checks.flatMap((item) => item.source_ids),
     ...recommendation.claims.flatMap((claim) => claim.source_ids),
   ]);
+}
+
+function structuredDiagnostic(
+  values: Partial<Omit<TwoLayerStructuredOutputDiagnostic, "contractVersion">> = {},
+): TwoLayerStructuredOutputDiagnostic {
+  return {
+    contractVersion: TWO_LAYER_STRUCTURED_OUTPUT_VERSION,
+    jsonParsed: values.jsonParsed ?? false,
+    recommendationCount: values.recommendationCount ?? 0,
+    declaredSourceCount: values.declaredSourceCount ?? 0,
+    registeredSourceCount: values.registeredSourceCount ?? 0,
+    ignoredUnregisteredSourceCount:
+      values.ignoredUnregisteredSourceCount ?? 0,
+    ignoredUnusedRegisteredSourceCount:
+      values.ignoredUnusedRegisteredSourceCount ?? 0,
+  };
+}
+
+function structuredFailure(
+  reason: "invalid_json" | "schema_invalid" | "contract_invalid",
+  cause: TwoLayerStructuredOutputFailureCause,
+  diagnostic: TwoLayerStructuredOutputDiagnostic,
+): TwoLayerStructuredOutputResult {
+  return { ok: false, reason, cause, diagnostic };
+}
+
+function filterRegisteredIds(ids: string[], accepted: ReadonlySet<string>) {
+  return ids.filter((id) => accepted.has(id));
+}
+
+export function parseTwoLayerStructuredOutput(input: {
+  rawOutputText: string;
+  responseSources: readonly {
+    url: string;
+    title: string | null;
+    type: string | null;
+  }[];
+}): TwoLayerStructuredOutputResult {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(input.rawOutputText);
+  } catch {
+    return structuredFailure(
+      "invalid_json",
+      "invalid_json",
+      structuredDiagnostic(),
+    );
+  }
+
+  const parsed = twoLayerStructuredModelOutputSchema.safeParse(raw);
+  if (!parsed.success) {
+    return structuredFailure(
+      "schema_invalid",
+      "schema_invalid",
+      structuredDiagnostic({ jsonParsed: true }),
+    );
+  }
+
+  const modelOutput = parsed.data;
+  const baseDiagnostic = structuredDiagnostic({
+    jsonParsed: true,
+    recommendationCount: modelOutput.recommendations.length,
+    declaredSourceCount: modelOutput.sources.length,
+  });
+  const sourceIds = modelOutput.sources.map((source) => source.id);
+  if (new Set(sourceIds).size !== sourceIds.length) {
+    return structuredFailure(
+      "contract_invalid",
+      "duplicate_source_id",
+      baseDiagnostic,
+    );
+  }
+
+  const sourceUrls = modelOutput.sources.map((source) =>
+    normalizedRegistryUrl(source.url),
+  );
+  if (new Set(sourceUrls).size !== sourceUrls.length) {
+    return structuredFailure(
+      "contract_invalid",
+      "duplicate_source_url",
+      baseDiagnostic,
+    );
+  }
+
+  const declaredSourceIds = new Set(sourceIds);
+  if (
+    referencedSourceIds(modelOutput).some(
+      (sourceIdValue) => !declaredSourceIds.has(sourceIdValue),
+    )
+  ) {
+    return structuredFailure(
+      "contract_invalid",
+      "unknown_source_id",
+      baseDiagnostic,
+    );
+  }
+
+  const keys = modelOutput.recommendations.map(
+    (recommendation) => recommendation.key,
+  );
+  if (new Set(keys).size !== keys.length) {
+    return structuredFailure(
+      "contract_invalid",
+      "duplicate_recommendation_key",
+      baseDiagnostic,
+    );
+  }
+  if (
+    modelOutput.recommendations.some(
+      (recommendation, index) => recommendation.rank !== index + 1,
+    )
+  ) {
+    return structuredFailure(
+      "contract_invalid",
+      "rank_order_mismatch",
+      baseDiagnostic,
+    );
+  }
+
+  const responseRegistry = new Map(
+    input.responseSources.map((source) => [
+      normalizedRegistryUrl(source.url),
+      source,
+    ]),
+  );
+  const acceptedSourceIds = new Set<string>();
+  const acceptedSourceById = new Map<
+    string,
+    TwoLayerAcceptedResearch["sources"][number]
+  >();
+  let ignoredUnregisteredSourceCount = 0;
+  for (const source of modelOutput.sources) {
+    const normalizedUrl = normalizedRegistryUrl(source.url);
+    const responseSource = responseRegistry.get(normalizedUrl);
+    if (!responseSource?.title) {
+      ignoredUnregisteredSourceCount += 1;
+      continue;
+    }
+    acceptedSourceIds.add(source.id);
+    acceptedSourceById.set(source.id, {
+      id: source.id,
+      title: responseSource.title,
+      url: normalizedUrl,
+      role: "other",
+    });
+  }
+
+  const recommendations: TwoLayerAcceptedResearch["recommendations"] =
+    modelOutput.recommendations.map((recommendation) => ({
+      ...recommendation,
+      identity: {
+        ...recommendation.identity,
+        source_ids: filterRegisteredIds(
+          recommendation.identity.source_ids,
+          acceptedSourceIds,
+        ),
+      },
+      assessment: {
+        ...recommendation.assessment,
+        source_ids: filterRegisteredIds(
+          recommendation.assessment.source_ids,
+          acceptedSourceIds,
+        ),
+      },
+      pros: recommendation.pros.map((item) => ({
+        ...item,
+        source_ids: filterRegisteredIds(item.source_ids, acceptedSourceIds),
+      })),
+      cons: recommendation.cons.map((item) => ({
+        ...item,
+        source_ids: filterRegisteredIds(item.source_ids, acceptedSourceIds),
+      })),
+      requirement_checks: recommendation.requirement_checks.map((item) => ({
+        ...item,
+        source_ids: filterRegisteredIds(item.source_ids, acceptedSourceIds),
+      })),
+      claims: recommendation.claims.map((claim) => ({
+        ...claim,
+        source_ids: filterRegisteredIds(claim.source_ids, acceptedSourceIds),
+      })),
+    }));
+
+  const usedSourceIds = new Set(
+    referencedSourceIds({ recommendations }),
+  );
+  const sources = modelOutput.sources.flatMap((source) => {
+    const accepted = acceptedSourceById.get(source.id);
+    return accepted && usedSourceIds.has(source.id) ? [accepted] : [];
+  });
+  const ignoredUnusedRegisteredSourceCount = Array.from(
+    acceptedSourceIds,
+  ).filter((id) => !usedSourceIds.has(id)).length;
+  const diagnostic = structuredDiagnostic({
+    jsonParsed: true,
+    recommendationCount: recommendations.length,
+    declaredSourceCount: modelOutput.sources.length,
+    registeredSourceCount: sources.length,
+    ignoredUnregisteredSourceCount,
+    ignoredUnusedRegisteredSourceCount,
+  });
+
+  if (
+    recommendations.some(
+      (recommendation) =>
+        recommendation.identity.source_ids.length === 0 ||
+        recommendation.assessment.source_ids.length === 0 ||
+        recommendation.pros.some((item) => item.source_ids.length === 0) ||
+        recommendation.cons.some((item) => item.source_ids.length === 0),
+    )
+  ) {
+    return structuredFailure(
+      "contract_invalid",
+      "required_registered_source_missing",
+      diagnostic,
+    );
+  }
+
+  return {
+    ok: true,
+    research: { sources, recommendations },
+    diagnostic,
+  };
 }
 
 export function validateTwoLayerResearchExtraction(input: {
@@ -433,23 +825,42 @@ function productKeyFromUnknown(value: unknown) {
   return typeof key === "string" && key.trim() ? key : null;
 }
 
-export function buildTwoLayerProductCards(
-  input: {
-    rawResearchText: string;
-    responseSourceUrls: readonly string[];
-    formattedOutput: unknown;
-    receiptInputs: readonly unknown[];
-  },
-): {
+type TwoLayerPresentationResult = {
   version: typeof TWO_LAYER_PRESENTATION_VERSION;
   cards: TwoLayerProductCard[];
   receiptDecisions: TwoLayerReceiptDecision[];
-} {
-  const research = validateTwoLayerResearchExtraction({
-    rawResearchText: input.rawResearchText,
-    responseSourceUrls: input.responseSourceUrls,
-    formattedOutput: input.formattedOutput,
-  });
+};
+
+export function buildTwoLayerProductCards(input: {
+  rawResearchText: string;
+  responseSourceUrls: readonly string[];
+  formattedOutput: unknown;
+  receiptInputs: readonly unknown[];
+}): TwoLayerPresentationResult {
+  return buildTwoLayerProductCardsFromAcceptedResearch(
+    validateTwoLayerResearchExtraction({
+      rawResearchText: input.rawResearchText,
+      responseSourceUrls: input.responseSourceUrls,
+      formattedOutput: input.formattedOutput,
+    }),
+    input.receiptInputs,
+  );
+}
+
+export function buildTwoLayerStructuredProductCards(input: {
+  research: TwoLayerAcceptedResearch;
+  receiptInputs: readonly unknown[];
+}): TwoLayerPresentationResult {
+  return buildTwoLayerProductCardsFromAcceptedResearch(
+    input.research,
+    input.receiptInputs,
+  );
+}
+
+function buildTwoLayerProductCardsFromAcceptedResearch(
+  research: TwoLayerAcceptedResearch,
+  receiptInputs: readonly unknown[],
+): TwoLayerPresentationResult {
   const decisions: TwoLayerReceiptDecision[] = [];
   const recommendations = new Map(
     research.recommendations.map((recommendation) => [
@@ -459,7 +870,7 @@ export function buildTwoLayerProductCards(
   );
   const parsedReceipts: TwoLayerCommerceReceipt[] = [];
 
-  for (const receiptInput of input.receiptInputs) {
+  for (const receiptInput of receiptInputs) {
     const result = twoLayerCommerceReceiptSchema.safeParse(receiptInput);
     if (!result.success) {
       decisions.push({
@@ -668,3 +1079,9 @@ export function buildTwoLayerProductCards(
     receiptDecisions: decisions,
   };
 }
+
+export type TwoLayerResponseSource = {
+  url: string;
+  title?: string | null;
+  type?: string | null;
+};

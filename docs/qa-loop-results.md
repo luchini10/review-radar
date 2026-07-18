@@ -8729,3 +8729,47 @@ Markdown boundary is not provider-robust enough to begin quality comparison.
 Per the frozen kill rule, do not enter a parser-fix/retry loop. The next owner
 decision is whether to design privacy-safe structural failure diagnostics and a
 more machine-readable one-call output contract, or stop this architecture.
+
+## 🟧 Codex - OAI-T5C direct structured research boundary (2026-07-18)
+
+**Verdict: PASS OFFLINE / LIVE UNPROVEN.** The approved zero-live architecture
+phase replaced the two-layer runtime's natural-Markdown reconstruction with a
+strict JSON-schema result from the same one Terra/high background Responses
+create that has required hosted web search. Terra still owns research and
+ranking; ReviewRadar validates the returned product object directly. There is
+no second model call, formatter call, Serper/SearchAPI call, direct source-page
+fetch, retry, replacement, fallback, receipt, flag promotion, or deployment.
+
+The direct schema contains research identities, assessment, pros/cons, exact
+ordered requirement rows, typed claims, and `{id,url}` source declarations. It
+contains no price, seller, purchase URL, availability, image, rating, source
+title, publisher, or source role. Source URLs must match title-present metadata
+from the same retrieved response after conservative canonicalization. The
+public title is taken from that response metadata and the public label is
+neutral. Unregistered claim/requirement citations are dropped and display as
+AI synthesis; required product evidence missing after that removal fails the
+whole result closed.
+
+Privacy-safe failure diagnostics expose only contract version, JSON parse
+state, recommendation/source counts, ignored-source counts, and bounded cause
+codes. Terminal token/tool/source/duration usage is reported even if JSON,
+schema, or contract validation fails, and the historical runner now retains it
+in a failed attempt. The spent T5B approval switch is retired so the old
+approval cannot dispatch the new architecture.
+
+Fail-first produced the expected missing-export failure before implementation.
+Corrected verification:
+
+- focused master-prompt/adapter/contract/route/runner tests: 39/39;
+- complete `npm test`: 1111/1111 across 151 suites;
+- `npm run typecheck`: pass;
+- `npm run lint`: zero errors and three pre-existing warnings;
+- `npm run build`: pass;
+- `node scripts/eval-pipeline.mjs`: no red flags; and
+- `git diff --check`: pass (line-ending notices only).
+
+`.env.local`, persistent flags, live fixtures, deployment, and production are
+unchanged. The phase makes no recommendation-quality claim because no provider
+ran the new prompt/schema. The next provider step requires a new exact approval
+for one architecture-specific lifecycle smoke; the old six-run T5B approval is
+not reusable.

@@ -7,7 +7,11 @@ import {
   TWO_LAYER_MASTER_PROMPT_VERSION,
 } from "./twoLayerMasterPrompt.ts";
 import { normalizeTwoLayerSourceUrl } from "./twoLayerSourceUrl.ts";
-import type { TwoLayerResponseSource } from "./twoLayerFormatter.ts";
+import {
+  buildTwoLayerStructuredOutputJsonSchema,
+  parseTwoLayerStructuredOutput,
+  type TwoLayerResponseSource,
+} from "./twoLayerRecommendation.ts";
 
 type ResponsesClient = {
   responses: {
@@ -48,7 +52,10 @@ type FailureReason =
   | "incomplete_response"
   | "refusal"
   | "missing_web_search"
-  | "missing_output_text";
+  | "missing_output_text"
+  | "invalid_json"
+  | "schema_invalid"
+  | "contract_invalid";
 
 type ResearchUsage = {
   inputTokens: number;
@@ -321,6 +328,16 @@ export function buildTwoLayerResearchRequest(
     include: [...RESPONSE_INCLUDE],
     instructions: prompt.instructions,
     input: prompt.input,
+    text: {
+      format: {
+        type: "json_schema",
+        name: "review_radar_two_layer_research",
+        strict: true,
+        schema: buildTwoLayerStructuredOutputJsonSchema(
+          normalizedRequest.evaluation_requirements.length,
+        ),
+      },
+    },
   };
 }
 
@@ -460,14 +477,32 @@ export async function pollTwoLayerResearch({
   if (!rawResearchText) {
     return finishFailure(ledger, "missing_output_text", startedAt, now);
   }
+  const structured = parseTwoLayerStructuredOutput({
+    rawOutputText: rawResearchText,
+    responseSources: sources.map((source) => ({
+      url: source.url,
+      title: source.title ?? null,
+      type: source.type ?? null,
+    })),
+  });
+  if (!structured.ok) {
+    return {
+      ...finishFailure(ledger, structured.reason, startedAt, now),
+      verification: {
+        reason: structured.reason,
+        cause: structured.cause,
+        diagnostic: structured.diagnostic,
+      },
+    };
+  }
 
   ledger.durationMs = Math.max(0, now() - startedAt);
   return {
     ok: true as const,
     state: "completed" as const,
     status: ledger.status,
-    rawResearchText,
-    responseSources: sources,
+    research: structured.research,
+    structureDiagnostic: structured.diagnostic,
     ledger,
   };
 }

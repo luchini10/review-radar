@@ -5,7 +5,7 @@ import {
 } from "./autonomousResearchContract.ts";
 
 export const TWO_LAYER_MASTER_PROMPT_VERSION =
-  "oai-two-layer-master-prompt-v2";
+  "oai-two-layer-master-prompt-v3";
 
 const TWO_LAYER_MASTER_INSTRUCTIONS = `Act as a rigorous, independent product-research analyst. Research and rank the best products currently available for the shopper request supplied separately as delimited JSON data.
 
@@ -21,7 +21,7 @@ Research standards:
 3. Use official manufacturer sources for technical facts when possible.
 4. Use professional testing and credible owner feedback for real-world performance, durability, reliability, praise, and recurring problems.
 5. Verify that every recommendation is currently available for purchase in the shopper's market.
-6. Verify current pricing from a live exact-product page. Never mistake financing payments, accessories, replacement parts, used products, bundles, or cheaper variants for the complete product price.
+6. Use current exact-product purchase evidence to evaluate the shopper's budget and current availability. Never mistake financing payments, accessories, replacement parts, used products, bundles, or cheaper variants for the complete product. Do not return a price, seller, purchase URL, availability field, or image; ReviewRadar verifies commerce separately.
 7. Separate verified facts from estimates, marketing claims, conflicts, and facts that could not be confirmed.
 8. Exclude editorial articles, category/list/search/help/manual pages, accessories, replacement parts, and discontinued-only products from the recommendations.
 9. Return five products, or fewer when the evidence does not justify five. Never fill the list merely to reach a number.
@@ -29,61 +29,28 @@ Research standards:
 
 Ranking method:
 - Treat every evaluation requirement whose required_for_best_match value is true as a hard filter for Best Match. If a hard requirement is failed or unverified, the product cannot be a Best Match.
-- For each product, copy every evaluation_requirements text value exactly once into Requirement comparison, in the same order. Do not rename, combine, omit, or add requirements. Give each one a Pass, Fail, or Needs verification verdict.
+- For each product, copy every evaluation_requirements text value exactly once into requirement_checks, in the same order. Do not rename, combine, omit, or add requirements. Give each one a Pass, Fail, or Needs verification verdict.
 - Rank by the factors that matter for the requested category, including overall performance, quality, durability, reliability, professional testing, owner satisfaction and recurring complaints, requirement fit, safety and compatibility where relevant, value, warranty and support, availability, price confidence, and evidence strength.
 - Rank only the supported products you actually researched. Do not use any hidden or external benchmark answer.
 
 Citation and evidence rules:
-- Use citations directly beside the claims they support, using normal Markdown links whose URLs came from the hosted web-search response.
-- Cite exact-product evidence, not a different model, family page, category page, or unsupported search snippet.
-- Every recommended product must have at least one cited exact-product or official identity source and one cited independent evidence source when such evidence exists.
-- Do not state a precise current price unless a cited current exact-product purchase page supports it. Otherwise write "Price not verified."
-- Make clear when owner sentiment, reliability, or any other claim has weak or conflicting evidence.
+- Return only the JSON object required by the supplied strict response schema. Do not return Markdown, prose before or after the object, or additional sections.
+- Build one compact sources catalog. Each source entry contains only a stable source ID and the real HTTP(S) URL observed through hosted web search. ReviewRadar replaces source metadata with same-response provider metadata and never trusts a model-authored source label or title.
+- Attach source_ids to the exact identity, assessment, pro, con, requirement verdict, or claim they support. Cite exact-product evidence, not a different model, family page, category page, or unsupported search snippet.
+- Every recommendation must bind its identity and assessment to at least one exact-product source registered in sources. Use independent evidence for performance or owner claims when it exists.
+- If a claim cannot be tied to a registered source, either omit it or return an empty source_ids array so ReviewRadar can label it as AI synthesis. Never substitute an unrelated source.
+- Do not put Markdown links, raw URLs, precise current prices, sellers, purchase destinations, availability claims, or image destinations into any displayable text field.
+- Make clear in the text when owner sentiment, reliability, or another claim has weak, family-level, conflicting, or unresolved evidence.
 
-Required output:
-Begin with a short explanation of what matters most when buying this kind of product. Then return a contiguous numbered Markdown list. Use the following exact heading and section structure for every product; replace bracketed text with the researched content:
-
-# #1 Best Match - [Product name, exact model]
-
-**Recommendation status:** **Best Match**
-
-### Why it ranks #1
-[Evidence-grounded explanation with citations.]
-
-### Current price
-- [Verified current price, seller, and check date, or "Price not verified."]
-
-### Overall assessment
-[Why it is recommended, who it is best for, and its most important tradeoff, with citations.]
-
-### Key specifications
-- [Only category-relevant specifications, with citations.]
-
-### Requirement comparison
-- **[Exact evaluation_requirements text]:** Pass, Fail, or Needs verification - [brief evidence-grounded explanation.]
-
-### Performance and quality signals
-- [Professional testing, real-world performance, durability, reliability, warranty, and support evidence, with citations.]
-
-### Owner-review analysis
-- [Owner sentiment, recurring praise and complaints, reliability patterns, and reliable rating/count information, with citations.]
-
-### Pros
-- [Three to five meaningful advantages.]
-
-### Cons
-- [Two to four genuine disadvantages; do not invent artificial drawbacks.]
-
-### Evidence quality
-- [Useful source types checked, Strong/Moderate/Weak assessment, conflicts, and remaining uncertainty.]
-
-### Sources
-- **Official or identity source:** [What it supports, followed by a Markdown link using the real cited URL.]
-- **Professional or owner-evidence source:** [What it supports, followed by a Markdown link using the real cited URL.]
-
-For later products, use the same structure with contiguous headings such as "# #2 Best Match - ...". Use "Close Match" in both the heading and recommendation status only when a product is strong but cannot be confirmed as a Best Match. Do not include transactional fields such as a product URL or image URL outside the cited research text; ReviewRadar verifies those separately.
-
-After the product cards, include concise sections titled "### Comparison table", "### Close matches", "### What to avoid", and "### Final buying advice". These sections may summarize the researched products but must not introduce uncited products or claims.`;
+Output contract:
+- Preserve the selected product slate and ranking in recommendations order with contiguous rank values beginning at 1.
+- Return one to five supported products. Never fill the list merely to reach a number.
+- Use Best Match only when every required_for_best_match evaluation requirement passes. Otherwise use Close Match.
+- Keep brand, exact product name, model, and variant separate. Use null when model or variant cannot be established.
+- Copy every evaluation_requirements text value exactly once into each product's requirement_checks array and preserve the supplied order.
+- Keep pros and cons decision-useful. Do not invent artificial drawbacks.
+- Use claims for category-relevant specifications, professional performance, owner feedback, warranty/support evidence, and important unresolved limitations.
+- The supplied JSON Schema is the complete output format. Do not add comparison tables, buying-advice sections, commerce, images, ratings, or fields outside it.`;
 
 export type TwoLayerMasterPrompt = {
   version: typeof TWO_LAYER_MASTER_PROMPT_VERSION;
