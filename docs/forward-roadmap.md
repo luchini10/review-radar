@@ -2469,6 +2469,52 @@ define authentication-like job tokens, provider lifecycle, route compatibility,
 and failure semantics. High is sufficient for the later bounded mechanical
 OAI-T4C smoke after the offline wall is green.
 
+### OAI-T5D - structured lifecycle-smoke preflight (complete locally 2026-07-18; zero live)
+
+**Purpose:** freeze the smallest provider experiment that can distinguish
+"strict structured output works in the real API" from another application-side
+contract failure. This is a lifecycle/safety smoke, not a recommendation-quality
+gate and not evidence for mode promotion.
+
+**Frozen case:** one broad `{query:"shop vac"}` request through the committed
+OAI-T5C route. The harness accepts only approval ID
+`oai-t5d-structured-lifecycle-smoke-v1` and only that request. The spent
+`oai-t5b-six-run-v1` approval remains rejected.
+
+**Live envelope awaiting separate approval:** one Terra/high Responses create,
+at most 20 hosted web searches, at most 60 retrieves, one safety cancel, zero
+retries, zero replacements, zero Serper/SearchAPI calls, zero direct source-page
+opens, and a proposed `$7` hard ceiling. Process-only credentials are required;
+`.env.local` is neither read for the job secret nor changed.
+
+**Success:** the same response reaches terminal completion; the strict JSON
+contract validates; one to five safe cards are built; source IDs bind only to
+same-response title-present metadata; exact requirement hashing passes; bounded
+token/tool/source/duration and structure diagnostics are retained; and the
+client-visible result contains no model-authored commerce, raw response,
+provider ID, job token, prompt, or request header.
+
+**Stop:** any failed, interrupted, cancelled, incomplete, schema-invalid, or
+contract-invalid attempt is spent and ends the phase. No retry or replacement
+without a new exact approval. One successful smoke also stops; it authorizes no
+second case, quality gate, verifier, promotion, deployment, or production
+change.
+
+**Offline evidence:** fail-first was the missing smoke-contract export. The
+runner now freezes one case and one response, preserves the retired T5B block,
+enforces the call ceilings, refuses dirty tracked code for live use, and writes
+only a sanitized attempt plus bounded completed fixture. Focused tests pass
+36/36; the full wall passes 1114/1114 across 151 suites. Typecheck, build,
+offline evaluation, preflight, and diff checks pass; lint has zero errors and
+the same three pre-existing warnings. Zero provider calls occurred.
+
+**Next decision:** commit this preflight, then request the exact one-smoke live
+approval against that commit. Do not dispatch from an uncommitted tree.
+
+**Recommended reasoning level:** High. The contract is mechanically bounded;
+the important work is disciplined execution and inspecting the first outcome,
+not open-ended architecture invention.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen

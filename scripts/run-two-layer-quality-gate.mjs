@@ -23,8 +23,24 @@ import {
 
 export const TWO_LAYER_GATE_LIVE_APPROVAL_ID = "oai-t5b-six-run-v1";
 export const TWO_LAYER_GATE_LIVE_EXECUTION_AVAILABLE = false;
+export const TWO_LAYER_SMOKE_VERSION = "oai-t5d-structured-lifecycle-smoke-v1";
+export const TWO_LAYER_SMOKE_LIVE_APPROVAL_ID =
+  "oai-t5d-structured-lifecycle-smoke-v1";
+export const TWO_LAYER_SMOKE_LIVE_EXECUTION_AVAILABLE = true;
 export const TWO_LAYER_GATE_POLL_INTERVAL_MS = 10_000;
 export const TWO_LAYER_GATE_MAX_RETRIEVES_PER_ATTEMPT = 60;
+export const TWO_LAYER_SMOKE_PLANNING = Object.freeze({
+  model: "gpt-5.6-terra",
+  reasoning: "high",
+  responsesCreates: 1,
+  maximumHostedSearchCalls: 20,
+  retries: 0,
+  replacements: 0,
+  serperCalls: 0,
+  searchApiCalls: 0,
+  directSourcePageOpens: 0,
+  proposedHardCeilingUsd: 7,
+});
 
 function json(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
@@ -42,6 +58,20 @@ function frozenRuns() {
       run: index + 1,
     })),
   );
+}
+
+function lifecycleSmokeRuns() {
+  const broad = TWO_LAYER_QUALITY_GATE_CASES.find(
+    (testCase) => testCase.id === "broad-shop-vac",
+  );
+  if (!broad) throw new Error("The frozen broad smoke request is missing");
+  return [
+    {
+      caseId: broad.id,
+      request: structuredClone(broad.request),
+      run: 1,
+    },
+  ];
 }
 
 function fixtureName(item) {
@@ -111,10 +141,20 @@ function request(method, body, token) {
   });
 }
 
-function safeAttemptRecord(item, commit, status, counters, extra = {}) {
-  return {
-    version: TWO_LAYER_QUALITY_GATE_VERSION,
+function safeAttemptRecord(
+  item,
+  commit,
+  status,
+  counters,
+  extra = {},
+  profile = {
     approvalId: TWO_LAYER_GATE_LIVE_APPROVAL_ID,
+    version: TWO_LAYER_QUALITY_GATE_VERSION,
+  },
+) {
+  return {
+    version: profile.version,
+    approvalId: profile.approvalId,
     caseId: item.caseId,
     run: item.run,
     commit,
@@ -128,9 +168,9 @@ function safeAttemptRecord(item, commit, status, counters, extra = {}) {
   };
 }
 
-async function completedFixtures(outputDirectory) {
+async function completedFixtures(outputDirectory, items = frozenRuns()) {
   const fixtures = [];
-  for (const item of frozenRuns()) {
+  for (const item of items) {
     const fixture = await readJsonIfPresent(
       path.join(outputDirectory, fixtureName(item)),
     );
@@ -139,8 +179,8 @@ async function completedFixtures(outputDirectory) {
   return fixtures;
 }
 
-async function nextFrozenRun(outputDirectory) {
-  for (const item of frozenRuns()) {
+async function nextFrozenRun(outputDirectory, items = frozenRuns()) {
+  for (const item of items) {
     const attempt = await readJsonIfPresent(
       path.join(outputDirectory, attemptName(item)),
     );
@@ -268,10 +308,66 @@ export function twoLayerGatePreflightPlan(commit = "<commit-after-T5A>") {
   };
 }
 
-async function executeNextRun({ commit, outputDirectory }) {
+export function twoLayerLifecycleSmokePreflightPlan(
+  commit = "<commit-after-T5D-preflight>",
+) {
+  return {
+    status: "awaiting_exact_approval_no_provider_calls",
+    liveExecutionAvailable: TWO_LAYER_SMOKE_LIVE_EXECUTION_AVAILABLE,
+    approvalId: TWO_LAYER_SMOKE_LIVE_APPROVAL_ID,
+    commit,
+    cases: lifecycleSmokeRuns(),
+    planning: TWO_LAYER_SMOKE_PLANNING,
+    perAttemptCeilings: {
+      creates: 1,
+      retrieves: TWO_LAYER_GATE_MAX_RETRIEVES_PER_ATTEMPT,
+      cancels: 1,
+      hostedSearchCalls: 20,
+      pollIntervalMs: TWO_LAYER_GATE_POLL_INTERVAL_MS,
+    },
+    rules: [
+      "The smoke accepts only the frozen broad shop-vac request and one response create.",
+      "No retries, fallbacks, replacements, Serper, SearchAPI, or direct source-page opens.",
+      "A failed, interrupted, or incomplete attempt is spent and cannot be replaced without a new approval.",
+      "Only bounded counters, diagnostics, cards, and response-owned source metadata may be retained; never raw provider output or provider IDs.",
+      "Secrets are read only from the process environment; .env.local is not loaded or changed.",
+    ],
+  };
+}
+
+export function buildTwoLayerLifecycleSmokeFixture({
+  item,
+  commit,
+  wallClockMs,
+  completion,
+  structure,
+  cards,
+  sources,
+}) {
+  return {
+    smokeVersion: TWO_LAYER_SMOKE_VERSION,
+    caseId: item.caseId,
+    run: item.run,
+    commit,
+    wallClockMs,
+    route: { status: 200, state: "completed" },
+    completion: structuredClone(completion),
+    structure: structuredClone(structure),
+    cards: structuredClone(cards),
+    sources: structuredClone(sources),
+  };
+}
+
+async function executeNextRun({ commit, outputDirectory, profile }) {
+  const executionProfile = profile ?? {
+    approvalId: TWO_LAYER_GATE_LIVE_APPROVAL_ID,
+    version: TWO_LAYER_QUALITY_GATE_VERSION,
+    kind: "quality_gate",
+    items: frozenRuns(),
+  };
   const halted = await readJsonIfPresent(path.join(outputDirectory, "HALTED.json"));
   if (halted) throw new Error(`The gate is halted: ${halted.reason}`);
-  const item = await nextFrozenRun(outputDirectory);
+  const item = await nextFrozenRun(outputDirectory, executionProfile.items);
   if (!item) {
     return { status: "all_provider_runs_already_completed" };
   }
@@ -283,9 +379,14 @@ async function executeNextRun({ commit, outputDirectory }) {
   const attemptPath = path.join(outputDirectory, attemptName(item));
   await writeJson(
     attemptPath,
-    safeAttemptRecord(item, commit, "reserved_before_create", counters, {
-      startedAt: new Date().toISOString(),
-    }),
+    safeAttemptRecord(
+      item,
+      commit,
+      "reserved_before_create",
+      counters,
+      { startedAt: new Date().toISOString() },
+      executionProfile,
+    ),
   );
 
   const boundedClient = {
@@ -371,28 +472,61 @@ async function executeNextRun({ commit, outputDirectory }) {
     if (!completion || !structure) {
       throw new Error("Required bounded completion diagnostics are missing");
     }
+    if (
+      completion.usage.webSearchCalls >
+      TWO_LAYER_SMOKE_PLANNING.maximumHostedSearchCalls
+    ) {
+      throw new Error("Hosted web-search ceiling exceeded");
+    }
 
-    const fixture = {
-      gateVersion: TWO_LAYER_QUALITY_GATE_VERSION,
-      caseId: item.caseId,
-      run: item.run,
-      commit,
-      wallClockMs: Date.now() - wallStart,
-      route: { status: terminal.status, state: terminal.body.state },
-      completion,
-      structure,
-      cards: terminal.body.cards,
-      sources: terminal.body.sources,
-    };
+    const fixture =
+      executionProfile.kind === "lifecycle_smoke"
+        ? buildTwoLayerLifecycleSmokeFixture({
+            item,
+            commit,
+            wallClockMs: Date.now() - wallStart,
+            completion,
+            structure,
+            cards: terminal.body.cards,
+            sources: terminal.body.sources,
+          })
+        : {
+            gateVersion: executionProfile.version,
+            caseId: item.caseId,
+            run: item.run,
+            commit,
+            wallClockMs: Date.now() - wallStart,
+            route: { status: terminal.status, state: terminal.body.state },
+            completion,
+            structure,
+            cards: terminal.body.cards,
+            sources: terminal.body.sources,
+          };
     await writeJson(path.join(outputDirectory, fixtureName(item)), fixture);
     await replaceJson(
       attemptPath,
-      safeAttemptRecord(item, commit, "completed", counters, {
-        completedAt: new Date().toISOString(),
-      }),
+      safeAttemptRecord(
+        item,
+        commit,
+        "completed",
+        counters,
+        { completedAt: new Date().toISOString() },
+        executionProfile,
+      ),
     );
 
-    const fixtures = await completedFixtures(outputDirectory);
+    if (executionProfile.kind === "lifecycle_smoke") {
+      return {
+        status: "lifecycle_smoke_completed",
+        item,
+        counters,
+      };
+    }
+
+    const fixtures = await completedFixtures(
+      outputDirectory,
+      executionProfile.items,
+    );
     const partialAnalysis = analyzeTwoLayerQualityGate({ fixtures });
     const stopFailures = immediateStopFailures(partialAnalysis, item);
     if (stopFailures.length > 0) {
@@ -433,19 +567,26 @@ async function executeNextRun({ commit, outputDirectory }) {
   } catch (error) {
     await replaceJson(
       attemptPath,
-      safeAttemptRecord(item, commit, "failed", counters, {
-        completedAt: new Date().toISOString(),
-        failure: {
-          name: error instanceof Error ? error.name : "UnknownError",
-          message:
-            error instanceof Error
-              ? error.message.slice(0, 300)
-              : "Unknown live-run failure",
-          verification: verificationFailure,
-          completion,
-          structure,
+      safeAttemptRecord(
+        item,
+        commit,
+        "failed",
+        counters,
+        {
+          completedAt: new Date().toISOString(),
+          failure: {
+            name: error instanceof Error ? error.name : "UnknownError",
+            message:
+              error instanceof Error
+                ? error.message.slice(0, 300)
+                : "Unknown live-run failure",
+            verification: verificationFailure,
+            completion,
+            structure,
+          },
         },
-      }),
+        executionProfile,
+      ),
     );
     throw error;
   }
@@ -455,24 +596,38 @@ async function main() {
   const approvalArgument = process.argv.find((value) =>
     value.startsWith("--execute-live="),
   );
-  if (approvalArgument !== `--execute-live=${TWO_LAYER_GATE_LIVE_APPROVAL_ID}`) {
-    process.stdout.write(json(twoLayerGatePreflightPlan()));
-    return;
-  }
-
-  if (!TWO_LAYER_GATE_LIVE_EXECUTION_AVAILABLE) {
+  if (approvalArgument === `--execute-live=${TWO_LAYER_GATE_LIVE_APPROVAL_ID}`) {
     throw new Error(
       "The frozen T5B live approval is retired after its first failed attempt; a new architecture-specific gate and approval are required",
     );
+  }
+  if (
+    approvalArgument !==
+    `--execute-live=${TWO_LAYER_SMOKE_LIVE_APPROVAL_ID}`
+  ) {
+    process.stdout.write(json(twoLayerLifecycleSmokePreflightPlan()));
+    return;
+  }
+  if (!TWO_LAYER_SMOKE_LIVE_EXECUTION_AVAILABLE) {
+    throw new Error("The structured lifecycle smoke is not available");
   }
 
   assertTrackedTreeClean();
   const commit = currentCommit();
   const outputDirectory = path.resolve(
-    `tests/fixtures/review-radar-live/oai-t5b-two-layer-${commit.slice(0, 7)}`,
+    `tests/fixtures/review-radar-live/oai-t5d-structured-smoke-${commit.slice(0, 7)}`,
   );
   await fs.mkdir(outputDirectory, { recursive: true });
-  const result = await executeNextRun({ commit, outputDirectory });
+  const result = await executeNextRun({
+    commit,
+    outputDirectory,
+    profile: {
+      approvalId: TWO_LAYER_SMOKE_LIVE_APPROVAL_ID,
+      version: TWO_LAYER_SMOKE_VERSION,
+      kind: "lifecycle_smoke",
+      items: lifecycleSmokeRuns(),
+    },
+  });
   process.stdout.write(
     json({
       ...result,

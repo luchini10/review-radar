@@ -8773,3 +8773,42 @@ unchanged. The phase makes no recommendation-quality claim because no provider
 ran the new prompt/schema. The next provider step requires a new exact approval
 for one architecture-specific lifecycle smoke; the old six-run T5B approval is
 not reusable.
+
+## 🟧 Codex - OAI-T5D structured lifecycle-smoke preflight (2026-07-18)
+
+**Verdict: PASS OFFLINE / LIVE NOT AUTHORIZED.** The existing one-request-at-a-
+time runner now contains a separate OAI-T5D profile for exactly one broad
+`{query:"shop vac"}` request. Its approval ID is
+`oai-t5d-structured-lifecycle-smoke-v1`; the spent T5B ID still fails before any
+provider-capable branch. A missing or different approval argument prints the
+preflight and performs no provider call.
+
+The frozen envelope is one Terra/high Responses create, at most 20 hosted web
+searches, 60 retrieves, one safety cancel, zero retries/replacements,
+Serper/SearchAPI calls, fallbacks, second responses, or direct source-page
+opens, with a proposed `$7` hard ceiling. The live branch additionally requires
+a clean tracked tree, a full commit hash, an exact shopper request, a no-retry
+client, and process-only API key/job-token secret.
+
+The completed fixture builder accepts only the bounded route state, model/token/
+tool/source/duration totals, structured-contract counts, public cards, and
+same-response public source registry. Extra provider ID, raw output, and job
+token inputs are discarded and regression-tested. Failed attempts retain only
+bounded counters, generic failure text, and safe completion/structure/
+verification diagnostics. A failed or interrupted attempt blocks replacement.
+
+Verification performed:
+
+- fail-first: missing `TWO_LAYER_SMOKE_LIVE_APPROVAL_ID` export;
+- focused current route/adapter/contract/runner tests: 36/36;
+- complete `npm test`: 1114/1114 across 151 suites;
+- `npm run typecheck`: pass;
+- `npm run lint`: zero errors and three pre-existing warnings;
+- `npm run build`: pass;
+- `node scripts/eval-pipeline.mjs`: no red flags; and
+- no-argument runner preflight: one case, one create, no provider calls.
+
+No OpenAI, Serper, SearchAPI, direct-fetch, retry, replacement, or other live
+call occurred. `.env.local`, flags, live fixtures, deployment, production, and
+all pre-existing untracked artifacts remain unchanged. This preflight makes no
+product-quality or provider-acceptance claim.
