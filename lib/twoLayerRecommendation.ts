@@ -3,13 +3,16 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 
 import { classifyProductEligibility } from "./productEligibility.ts";
-import { twoLayerDisplayText } from "./twoLayerDisplayText.ts";
+import {
+  twoLayerDisplayText,
+  twoLayerResearchDisplayText,
+} from "./twoLayerDisplayText.ts";
 import { normalizeTwoLayerSourceUrl } from "./twoLayerSourceUrl.ts";
 
-export const TWO_LAYER_RESEARCH_VERSION = "oai-two-layer-research-v1";
+export const TWO_LAYER_RESEARCH_VERSION = "oai-two-layer-research-v2";
 export const TWO_LAYER_COMMERCE_RECEIPT_VERSION =
   "oai-two-layer-commerce-receipt-v1";
-export const TWO_LAYER_PRESENTATION_VERSION = "oai-two-layer-presentation-v1";
+export const TWO_LAYER_PRESENTATION_VERSION = "oai-two-layer-presentation-v2";
 
 export const TWO_LAYER_TRUST_LABELS = {
   research_synthesis: "AI research synthesis",
@@ -64,6 +67,15 @@ const sourcedResearchTextSchema = z
   })
   .strict();
 
+const requirementCheckSchema = z
+  .object({
+    requirement: nonEmptyText,
+    status: z.enum(["Pass", "Fail", "Needs verification"]),
+    explanation: nonEmptyText,
+    source_ids: z.array(sourceId),
+  })
+  .strict();
+
 const recommendationSchema = z
   .object({
     key: z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/),
@@ -80,6 +92,7 @@ const recommendationSchema = z
       .strict(),
     pros: z.array(sourcedResearchTextSchema),
     cons: z.array(sourcedResearchTextSchema),
+    requirement_checks: z.array(requirementCheckSchema).min(1),
     claims: z.array(researchClaimSchema),
   })
   .strict();
@@ -186,6 +199,10 @@ function recommendationTextFields(
     recommendation.assessment.main_tradeoff,
     ...recommendation.pros.map((item) => item.text),
     ...recommendation.cons.map((item) => item.text),
+    ...recommendation.requirement_checks.flatMap((item) => [
+      item.requirement,
+      item.explanation,
+    ]),
     ...recommendation.claims.map((claim) => claim.text),
   ].filter((value): value is string => value !== null);
 }
@@ -196,6 +213,7 @@ function referencedSourceIds(research: TwoLayerResearch) {
     ...recommendation.assessment.source_ids,
     ...recommendation.pros.flatMap((item) => item.source_ids),
     ...recommendation.cons.flatMap((item) => item.source_ids),
+    ...recommendation.requirement_checks.flatMap((item) => item.source_ids),
     ...recommendation.claims.flatMap((claim) => claim.source_ids),
   ]);
 }
@@ -306,6 +324,14 @@ export type TwoLayerProductCard = {
   };
   pros: TrustValue[];
   cons: TrustValue[];
+  requirementChecks: Array<{
+    requirement: string;
+    status: "Pass" | "Fail" | "Needs verification";
+    explanation: string;
+    trust: "research_synthesis";
+    label: (typeof TWO_LAYER_TRUST_LABELS)["research_synthesis"];
+    sourceIds: string[];
+  }>;
   claims: Array<
     {
       claimType: TwoLayerResearch["recommendations"][number]["claims"][number]["claim_type"];
@@ -373,7 +399,7 @@ export type TwoLayerReceiptDecision = {
 
 function researchTrustValue(value: string, sourceIds: string[]): TrustValue {
   return {
-    value: twoLayerDisplayText(value),
+    value: twoLayerResearchDisplayText(value),
     trust: "research_synthesis",
     label: TWO_LAYER_TRUST_LABELS.research_synthesis,
     sourceIds: [...sourceIds],
@@ -544,11 +570,13 @@ export function buildTwoLayerProductCards(
       variant: recommendation.identity.variant,
     };
     const identity: TwoLayerIdentity = {
-      brand: twoLayerDisplayText(rawIdentity.brand),
-      product_name: twoLayerDisplayText(rawIdentity.product_name),
-      model: rawIdentity.model ? twoLayerDisplayText(rawIdentity.model) : null,
+      brand: twoLayerResearchDisplayText(rawIdentity.brand),
+      product_name: twoLayerResearchDisplayText(rawIdentity.product_name),
+      model: rawIdentity.model
+        ? twoLayerResearchDisplayText(rawIdentity.model)
+        : null,
       variant: rawIdentity.variant
-        ? twoLayerDisplayText(rawIdentity.variant)
+        ? twoLayerResearchDisplayText(rawIdentity.variant)
         : null,
     };
     const receipt = acceptedReceipts.get(recommendation.key);
@@ -588,9 +616,17 @@ export function buildTwoLayerProductCards(
       cons: recommendation.cons.map((item) =>
         researchTrustValue(item.text, item.source_ids),
       ),
+      requirementChecks: recommendation.requirement_checks.map((item) => ({
+        requirement: twoLayerDisplayText(item.requirement),
+        status: item.status,
+        explanation: twoLayerResearchDisplayText(item.explanation),
+        trust: "research_synthesis" as const,
+        label: TWO_LAYER_TRUST_LABELS.research_synthesis,
+        sourceIds: [...item.source_ids],
+      })),
       claims: recommendation.claims.map((claim) => ({
         claimType: claim.claim_type,
-        value: twoLayerDisplayText(claim.text),
+        value: twoLayerResearchDisplayText(claim.text),
         ...(claim.source_ids.length > 0
           ? {
               trust: "source_reported" as const,

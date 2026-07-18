@@ -68,7 +68,12 @@ cards into `RecommendationResult`. These cards visibly separate AI research
 synthesis, source-reported claims, and independently verified fields. T4B
 currently supplies no transactional receipts, so recommendations remain visible
 while price, seller, availability, purchase link, image, and exact-identity
-verification are withheld.
+verification are withheld. The card also shows the exact normalized shopper
+requirements in order with AI-authored `Pass`, `Fail`, or `Needs verification`
+verdicts. An encrypted-token hash makes renamed/omitted/reordered requirement
+rows fail closed without exposing shopper text. Model-authored exact currency
+amounts are redacted from public research prose/source titles; only an accepted
+independent commerce receipt may display current transactional facts.
 
 ---
 

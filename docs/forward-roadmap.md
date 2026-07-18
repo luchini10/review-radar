@@ -2224,15 +2224,104 @@ evaluation, and diff checks pass. No OpenAI, Serper, SearchAPI, direct-page, or
 other provider call occurred; `.env.local`, flags, secrets, fixtures,
 deployment, and production state remain unchanged.
 
-**Next decision:** do not run another one-off lifecycle smoke. The stronger next
-step is a separately approved zero-live quality-gate design that uses T4E's
-actual `$0.6990575` estimate, 12 hosted searches, and approximately 272.6-second
-observed latency to freeze a small primary sample, usefulness and hard-
-requirement metrics, citation/formatter safety bars, repeatability treatment,
-and a total live budget. Only then should one approved live window both confirm
-T4F on the real route and answer whether the two-layer architecture is worth
-continuing. This avoids another test-fix-test cycle that proves lifecycle but
-not product quality.
+### OAI-T5A - two-layer quality-gate contract (complete locally 2026-07-18; zero live)
+
+**Decision question:** T5B must answer one question, not trigger another repair
+loop: can the current OpenAI-led two-layer route produce useful, requirement-
+faithful, source-auditable, and repeatable recommendations that are materially
+better than comparable legacy output? Offline evidence cannot answer product
+selection quality or provider repeatability, but it can freeze the experiment
+and remove known measurement blind spots before spend.
+
+**Frozen sample:** three independent broad `shop vac` runs and three independent
+constrained `{ query: "robot vacuum", budget: "under $300", priorities:
+"self-emptying" }` runs. This reuses the owner-ratified `leaders-v2026-07c`
+broad denominator and a contemporary flag-off control without reviving the
+obsolete 12-response OAI-2B design.
+
+**Absolute mechanical bars:** all 6 routes must complete with 3-5 cards; broad
+leader recall must average at least 4/7 with no run below 3/7; every within-
+shape pairwise product-set Jaccard must be at least 0.60; source binding and
+route completion must be 100%; and unsafe product, exact-price, seller,
+availability, purchase-URL, image, editorial/accessory, wrong-type, and cross-
+model leakage must remain zero. Each card must show the exact normalized
+requirement rows in order. Every constrained Best Match must report `Pass` on
+all three rows, including budget and `self-emptying`; every broad Best Match
+must report `Pass` on the mandatory U.S.-availability row.
+
+**Mandatory human bars:** the analyzer cannot return `pass` without a product-
+eligibility audit for every card, a hard-requirement audit for every constrained
+Best Match, a claim/source-semantic audit of the top two products per run, and
+a blind comparison against comparable legacy output. Neither shape may lose
+the blind comparison, and at least one shape must win. Missing human rows yield
+`needs_manual_review`, never a mechanical pass.
+
+**Pre-live corrections selected by adversarial review:**
+
+- normalized budget evidence now appears once in `evaluation_requirements`
+  rather than also being duplicated as a generic hard constraint;
+- master-prompt v2 requires every requirement text exactly once and in order;
+  formatter/research/presentation v2 retains those verdicts as visibly
+  unverified AI synthesis;
+- encrypted job-token v4 carries only a non-reversible hash of the expected
+  requirement text list, so the stateless poll route rejects renaming,
+  reordering, omission, or addition without exposing shopper text;
+- presentation redacts model-authored currency amounts from research prose and
+  source titles as `current price not independently verified`, while preserving
+  the shopper's own budget label and allowing only an independent commerce
+  receipt to display an exact price; and
+- bounded formatter diagnostics expose only counts/version, never prose, URLs,
+  provider IDs, tokens, or secrets.
+
+**Frozen tooling:** `scripts/two-layer-quality-gate.mjs` is the offline analyzer.
+It measures route/source rates, recall, stability, unsafe counts, ignored
+citations, latency, tool calls, and frozen-rate estimated cost. Its companion
+runner is preflight-only unless invoked with the exact approval ID
+`oai-t5b-six-run-v1`; it advances one frozen request per invocation, permits one
+create, at most 60 retrieve polls, and one pre-expiry safety cancel. It validates
+process-only configuration and constructs the no-retry SDK client before it
+writes an attempt marker immediately ahead of the provider-capable route. It
+persists no job token/provider ID/raw answer and blocks later requests after a
+failed or interrupted attempt. A final mechanical failure writes a durable halt
+marker. The generated manual-review template pins two registered source IDs for
+each audited top product, and the analyzer rejects untraceable source-audit
+claims. Blind-comparison rows are closed-world, so unknown/duplicate rows cannot
+hide the required material win. These are generalized controls against earlier
+double dispatch, silent replacement, and unauditable human sign-off.
+
+**Planning basis:** T4E used 12 hosted searches, approximately 272.6 seconds,
+and `$0.6990575` estimated at the frozen 2026-07-15 Terra rates. Six comparable
+responses therefore plan at `$4.194345`, 72 expected hosted searches, and about
+27.26 serial minutes. The approval ceiling is 6 Terra/high creates, at most 20
+hosted searches per response (120 total), at most 60 retrieves and one safety
+cancel per attempt, `$7` cumulative estimated cost, zero retries/replacements/
+fallbacks, and up to 24 direct source-page audit opens. The dollar bound is
+checked after each completed response; provider billing cannot be interrupted
+mid-response and must be reported as returned usage rather than an invoice.
+
+**Kill rule:** stop after the first route/formatter/presentation failure,
+unsafe card or transaction field, per-run recall/card/requirement failure,
+cumulative cost breach, or interrupted/spent attempt. Stop after broad run 3 if
+the broad mean or stability bar is already impossible. Do not buy a replacement
+or enter a correction/retest cycle. A mechanically complete failure returns to
+Taylor for an architecture decision.
+
+**Offline evidence:** fail-first covered requirement loss/format drift, missing
+gate machinery, unverified currency leakage, and requirement renaming. The
+corrected complete wall passes 1106 tests across 150 suites; typecheck, lint
+(zero errors/three pre-existing warnings), production build, offline evaluation,
+gate preflight, and diff checks pass. No provider call, source-page open,
+`.env.local` edit, mode promotion, deployment, or production change occurred.
+
+**Next decision:** T5A is complete. The next step is the one separately approved
+T5B provider-and-human gate defined above. Do not run it without approval of the
+complete create/search/retrieve/cancel/direct-page/cost envelope. Do not start
+transactional verifier work, flag promotion, rollout, or retirement work before
+T5B decides whether the research product itself is worth continuing.
+
+**Recommended reasoning level:** High for T5B. The architecture and evaluator
+are frozen; disciplined protocol execution, safety inspection, and evidence
+scoring matter more than additional open-ended design reasoning.
 
 **Offline acceptance wall for T4A/T4B:**
 

@@ -7,7 +7,7 @@ import {
 import { normalizeTwoLayerSourceUrl } from "./twoLayerSourceUrl.ts";
 
 export const TWO_LAYER_FORMATTER_VERSION =
-  "oai-two-layer-deterministic-formatter-v1";
+  "oai-two-layer-deterministic-formatter-v2";
 
 export type TwoLayerResponseSource = {
   url: string;
@@ -36,6 +36,7 @@ export type TwoLayerFormatterFailureCause =
   | "product_ranks_noncontiguous"
   | "required_why_section_missing"
   | "required_overall_section_missing"
+  | "required_requirement_section_missing"
   | "required_pros_section_missing"
   | "required_cons_section_missing"
   | "required_sources_section_missing"
@@ -45,6 +46,8 @@ export type TwoLayerFormatterFailureCause =
   | "required_section_empty"
   | "product_identity_unparseable"
   | "product_block_incomplete"
+  | "requirement_comparison_unparseable"
+  | "requirement_contract_mismatch"
   | "source_url_invalid"
   | "product_registered_source_missing"
   | "source_registration_lost"
@@ -177,6 +180,9 @@ function missingSectionFailureCause(
   if (normalized.startsWith("overall assessment")) {
     return "required_overall_section_missing";
   }
+  if (normalized.startsWith("requirement comparison")) {
+    return "required_requirement_section_missing";
+  }
   if (normalized.startsWith("pros")) return "required_pros_section_missing";
   if (normalized.startsWith("cons")) return "required_cons_section_missing";
   if (normalized.startsWith("sources")) {
@@ -216,6 +222,45 @@ function bulletItems(section: ParsedSection | null) {
   return [...section.body.matchAll(/^\s*-\s+(.+?)\s*$/gm)].map((match) =>
     match[1].trim(),
   );
+}
+
+function requirementChecks(
+  section: ParsedSection,
+  sourceIdsForText: (value: string, fallback?: readonly string[]) => string[],
+) {
+  const items = bulletItems(section);
+  if (items.length === 0) {
+    throw new TwoLayerFormatterError(
+      "product_shape",
+      "requirement_comparison_unparseable",
+      "Two-layer formatter found no requirement comparisons",
+    );
+  }
+
+  return items.map((text) => {
+    const match = text.match(
+      /^\*\*(.+?):\*\*\s*\*{0,2}(Pass|Fail|Needs verification)\*{0,2}\s*[-:\u2013\u2014]\s*(.+)$/i,
+    );
+    if (!match?.[1] || !match[2] || !match[3]) {
+      throw new TwoLayerFormatterError(
+        "product_shape",
+        "requirement_comparison_unparseable",
+        "Two-layer formatter found an invalid requirement comparison",
+      );
+    }
+    const status = match[2].toLowerCase();
+    return {
+      requirement: match[1].trim(),
+      status:
+        status === "pass"
+          ? ("Pass" as const)
+          : status === "fail"
+            ? ("Fail" as const)
+            : ("Needs verification" as const),
+      explanation: match[3].trim(),
+      source_ids: sourceIdsForText(text),
+    };
+  });
 }
 
 function sentences(value: string) {
@@ -363,6 +408,10 @@ export function formatTwoLayerMasterPromptAnswer(input: {
     const overallSection = findSection(sections, "Overall assessment");
     const prosSection = findSection(sections, "Pros");
     const consSection = findSection(sections, "Cons");
+    const requirementSection = findSection(
+      sections,
+      "Requirement comparison",
+    );
     const sourceSection = findSection(sections, "Sources");
     const specificationsSection = findSection(
       sections,
@@ -380,7 +429,14 @@ export function formatTwoLayerMasterPromptAnswer(input: {
       false,
     );
 
-    if (!whySection || !overallSection || !prosSection || !consSection || !sourceSection) {
+    if (
+      !whySection ||
+      !overallSection ||
+      !prosSection ||
+      !consSection ||
+      !requirementSection ||
+      !sourceSection
+    ) {
       throw new TwoLayerFormatterError(
         "product_shape",
         "product_block_incomplete",
@@ -448,6 +504,10 @@ export function formatTwoLayerMasterPromptAnswer(input: {
         text,
         source_ids: sourceIdsForText(text, blockSourceIds),
       })),
+      requirement_checks: requirementChecks(
+        requirementSection,
+        sourceIdsForText,
+      ),
       claims: [
         ...sourcedItems(specificationsSection, "specification"),
         ...sourcedItems(performanceSection, "professional_performance"),

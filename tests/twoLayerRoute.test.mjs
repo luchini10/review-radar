@@ -35,6 +35,9 @@ The Example Vacuum is a balanced choice. ([shop.example.com](${productUrl}))
 ### Overall assessment
 Best for mixed floors. Its main tradeoff is weight. ([tests.example.org](${testUrl}))
 
+### Requirement comparison
+- **Currently available for purchase in the United States:** Pass - The cited product page lists the exact model. ([shop.example.com](${productUrl}))
+
 ### Pros
 - Strong pickup
 
@@ -261,6 +264,7 @@ describe("OAI-T4B signed background route lifecycle", () => {
     });
     assert.equal(verified.ok, true);
     assert.match(verified.payload.promptHash, /^[a-f0-9]{64}$/);
+    assert.match(verified.payload.requirementsHash, /^[a-f0-9]{64}$/);
   });
 
   it("fails before provider creation when config or shopper input is invalid", async () => {
@@ -291,8 +295,10 @@ describe("OAI-T4B signed background route lifecycle", () => {
       ],
     });
     const completionDiagnostics = [];
+    const formatterDiagnostics = [];
     const handlers = buildTwoLayerHandlers(simulation, {
       onResearchCompleted: (diagnostic) => completionDiagnostics.push(diagnostic),
+      onResearchFormatted: (diagnostic) => formatterDiagnostics.push(diagnostic),
     });
     const start = await readJson(
       await handlers.POST(request("POST", { query: "vacuum" })),
@@ -349,6 +355,19 @@ describe("OAI-T4B signed background route lifecycle", () => {
     assert.equal(diagnosticText.includes(responseId), false);
     assert.equal(diagnosticText.includes(productUrl), false);
     assert.equal(diagnosticText.includes(rawAnswer), false);
+    assert.deepEqual(formatterDiagnostics, [
+      {
+        formatterVersion: "oai-two-layer-deterministic-formatter-v2",
+        recommendationCount: 1,
+        registeredSourceCount: 2,
+        ignoredTransactionalSectionCount: 1,
+        ignoredUnregisteredCitationUrlCount: 0,
+      },
+    ]);
+    const formatterDiagnosticText = JSON.stringify(formatterDiagnostics);
+    assert.equal(formatterDiagnosticText.includes(responseId), false);
+    assert.equal(formatterDiagnosticText.includes(productUrl), false);
+    assert.equal(formatterDiagnosticText.includes(rawAnswer), false);
   });
 
   it("attributes a malformed master-prompt answer without exposing internals", async () => {
@@ -439,6 +458,59 @@ describe("OAI-T4B signed background route lifecycle", () => {
     );
   });
 
+  it("redacts transactional amounts from response-owned source titles", async () => {
+    const response = completedResponse();
+    response.output[0].action.sources[0].title = "Example Vacuum - $399.99";
+    response.output[1].content[0].annotations[0].title =
+      "Example Vacuum - $399.99";
+    const simulation = lifecycle({ retrieveResponses: [response] });
+    const handlers = buildTwoLayerHandlers(simulation);
+    const start = await readJson(
+      await handlers.POST(request("POST", { query: "vacuum" })),
+    );
+    const completed = await readJson(
+      await handlers.GET(request("GET", undefined, start.body.jobToken)),
+    );
+
+    assert.equal(completed.status, 200);
+    assert.equal(JSON.stringify(completed.body).includes("399.99"), false);
+    assert.match(
+      completed.body.sources[0].title,
+      /current price not independently verified/i,
+    );
+  });
+
+  it("fails closed when the model renames the shopper requirement", async () => {
+    const response = withRawAnswer(
+      completedResponse(),
+      rawAnswer.replace(
+        "Currently available for purchase in the United States",
+        "Available in the USA",
+      ),
+    );
+    const diagnostics = [];
+    const simulation = lifecycle({ retrieveResponses: [response] });
+    const handlers = buildTwoLayerHandlers(simulation, {
+      onVerificationFailure: (diagnostic) => diagnostics.push(diagnostic),
+    });
+    const start = await readJson(
+      await handlers.POST(request("POST", { query: "vacuum" })),
+    );
+    const completed = await readJson(
+      await handlers.GET(request("GET", undefined, start.body.jobToken)),
+    );
+
+    assert.equal(completed.status, 502);
+    assert.deepEqual(completed.body, expectedVerificationFailure());
+    assert.deepEqual(diagnostics, [
+      {
+        stage: "formatter",
+        reason: "product_shape",
+        cause: "requirement_contract_mismatch",
+      },
+    ]);
+  });
+
   it("attributes presentation validation separately and fails closed", async () => {
     const simulation = lifecycle({ retrieveResponses: [completedResponse()] });
     const diagnostics = [];
@@ -478,6 +550,9 @@ describe("OAI-T4B signed background route lifecycle", () => {
       onResearchCompleted: () => {
         throw new Error("completion diagnostic sink unavailable");
       },
+      onResearchFormatted: () => {
+        throw new Error("formatter diagnostic sink unavailable");
+      },
       onVerificationFailure: () => {
         throw new Error("diagnostic sink unavailable");
       },
@@ -498,8 +573,9 @@ describe("OAI-T4B signed background route lifecycle", () => {
     const handlers = buildTwoLayerHandlers(simulation);
     const expiredToken = issueTwoLayerJobToken({
       responseId,
-      promptVersion: "oai-two-layer-master-prompt-v1",
+      promptVersion: "oai-two-layer-master-prompt-v2",
       promptHash: "a".repeat(64),
+      requirementsHash: "b".repeat(64),
       secret,
       nowMs: nowMs - 11 * 60_000,
       ttlMs: 10 * 60_000,
@@ -520,8 +596,9 @@ describe("OAI-T4B signed background route lifecycle", () => {
     const handlers = buildTwoLayerHandlers(simulation);
     const token = issueTwoLayerJobToken({
       responseId,
-      promptVersion: "oai-two-layer-master-prompt-v1",
+      promptVersion: "oai-two-layer-master-prompt-v2",
       promptHash: "a".repeat(64),
+      requirementsHash: "b".repeat(64),
       secret,
       nowMs,
       ttlMs: 10 * 60_000,

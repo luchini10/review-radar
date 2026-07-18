@@ -95,6 +95,17 @@ export const twoLayerPreviewCards = [
         sourceIds: ["s2"],
       },
     ],
+    requirementChecks: [
+      {
+        requirement: "Available for purchase in the United States",
+        status: "Pass",
+        explanation:
+          "The controlled manufacturer source shows current U.S. availability.",
+        trust: "research_synthesis",
+        label: "AI research synthesis",
+        sourceIds: ["s1"],
+      },
+    ],
     claims: [
       {
         claimType: "specification",
@@ -187,6 +198,17 @@ export const twoLayerPreviewCards = [
         sourceIds: ["s2"],
       },
     ],
+    requirementChecks: [
+      {
+        requirement: "Available for purchase in the United States",
+        status: "Pass",
+        explanation:
+          "The controlled exact-offer receipt establishes current U.S. availability.",
+        trust: "research_synthesis",
+        label: "AI research synthesis",
+        sourceIds: ["s4"],
+      },
+    ],
     claims: [
       {
         claimType: "owner_feedback",
@@ -263,6 +285,17 @@ export const twoLayerPreviewCards = [
         trust: "research_synthesis",
         label: "AI research synthesis",
         sourceIds: ["s1", "s2"],
+      },
+    ],
+    requirementChecks: [
+      {
+        requirement: "Available for purchase in the United States",
+        status: "Needs verification",
+        explanation:
+          "The controlled research example does not include a verified current offer.",
+        trust: "research_synthesis",
+        label: "AI research synthesis",
+        sourceIds: ["s2"],
       },
     ],
     claims: [

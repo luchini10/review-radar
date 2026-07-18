@@ -7,7 +7,7 @@ import {
 
 import { TWO_LAYER_MASTER_PROMPT_VERSION } from "./twoLayerMasterPrompt.ts";
 
-export const TWO_LAYER_JOB_TOKEN_VERSION = "oai-two-layer-job-v3";
+export const TWO_LAYER_JOB_TOKEN_VERSION = "oai-two-layer-job-v4";
 
 const MINIMUM_SECRET_BYTES = 32;
 const MAXIMUM_TOKEN_LIFETIME_MS = 30 * 60_000;
@@ -20,7 +20,7 @@ const TOKEN_KEY_SALT = Buffer.from(
   "utf8",
 );
 const TOKEN_KEY_INFO = Buffer.from(
-  "ReviewRadar two-layer job token encryption v3",
+  "ReviewRadar two-layer job token encryption v4",
   "utf8",
 );
 const TOKEN_AAD = Buffer.from(TWO_LAYER_JOB_TOKEN_VERSION, "utf8");
@@ -32,6 +32,7 @@ export type TwoLayerJobTokenPayload = {
   responseId: string;
   promptVersion: typeof TWO_LAYER_MASTER_PROMPT_VERSION;
   promptHash: string;
+  requirementsHash: string;
   issuedAtMs: number;
   expiresAtMs: number;
 };
@@ -40,6 +41,7 @@ type IssueTokenInput = {
   responseId: string;
   promptVersion: string;
   promptHash: string;
+  requirementsHash: string;
   secret: string;
   nowMs?: number;
   ttlMs?: number;
@@ -87,6 +89,7 @@ function payloadHasExactKeys(value: Record<string, unknown>) {
     "issuedAtMs",
     "promptHash",
     "promptVersion",
+    "requirementsHash",
     "responseId",
     "version",
   ];
@@ -103,6 +106,7 @@ function parsePayload(decoded: string): TwoLayerJobTokenPayload | null {
     if (!responseIdPattern.test(String(record.responseId ?? ""))) return null;
     if (record.promptVersion !== TWO_LAYER_MASTER_PROMPT_VERSION) return null;
     if (!isTwoLayerPromptHash(String(record.promptHash ?? ""))) return null;
+    if (!isTwoLayerPromptHash(String(record.requirementsHash ?? ""))) return null;
     if (!isSafeInteger(record.issuedAtMs) || !isSafeInteger(record.expiresAtMs)) {
       return null;
     }
@@ -120,6 +124,7 @@ export function issueTwoLayerJobToken({
   responseId,
   promptVersion,
   promptHash,
+  requirementsHash,
   secret,
   nowMs = Date.now(),
   ttlMs = 10 * 60_000,
@@ -133,6 +138,9 @@ export function issueTwoLayerJobToken({
   }
   if (!isTwoLayerPromptHash(promptHash)) {
     throw new Error("Two-layer job token requires a valid prompt hash");
+  }
+  if (!isTwoLayerPromptHash(requirementsHash)) {
+    throw new Error("Two-layer job token requires a valid requirements hash");
   }
   if (!isSafeInteger(nowMs) || nowMs < 0) {
     throw new Error("Two-layer job token requires a valid issue time");
@@ -151,6 +159,7 @@ export function issueTwoLayerJobToken({
     responseId,
     promptVersion: TWO_LAYER_MASTER_PROMPT_VERSION,
     promptHash,
+    requirementsHash,
     issuedAtMs: nowMs,
     expiresAtMs: nowMs + ttlMs,
   };

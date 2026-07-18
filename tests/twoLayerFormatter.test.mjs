@@ -31,6 +31,10 @@ Best for homes with pets and mixed flooring. The main tradeoff is its weight. ([
 - **Type:** Corded bagless upright
 - **Weight:** 17 lb. ([example.com](${sharkUrl}))
 
+### Requirement comparison
+- **Currently available for purchase in the United States:** Pass - The cited product page lists the exact model. ([example.com](${sharkUrl}))
+- **Budget: under $500:** Pass - The cited listing is $399.99 at Example Store, below the shopper's limit. ([example.com](${sharkUrl}))
+
 ### Performance and quality signals
 - Strong pickup on carpet in professional testing. ([example.org](${sharkTestUrl}))
 
@@ -62,6 +66,10 @@ The Dyson is a convenient premium cordless option. ([example.com](${dysonUrl}))
 
 ### Overall assessment
 Best for frequent quick cleaning. Its biggest drawback is limited runtime under high power. ([example.com](${dysonUrl}))
+
+### Requirement comparison
+- **Currently available for purchase in the United States:** Pass - The cited product page lists the exact model. ([example.com](${dysonUrl}))
+- **Budget: under $500:** Fail - The cited listing is above the shopper's limit. ([example.com](${dysonUrl}))
 
 ### Performance and quality signals
 - Professional tests report strong hard-floor pickup. ([example.com](${dysonUrl}))
@@ -135,7 +143,8 @@ describe("OAI-T2 deterministic master-prompt formatter", () => {
   it("drops the natural answer's transactional section from structured research", () => {
     const result = format();
     const serialized = JSON.stringify(result.formattedOutput);
-    assert.equal(serialized.includes("399.99"), false);
+    assert.equal(serialized.includes('"current_price"'), false);
+    assert.equal(serialized.includes('"purchase_offer"'), false);
     assert.equal(serialized.includes("1,049.99"), false);
     assert.equal(result.diagnostics.ignoredTransactionalSectionCount, 2);
 
@@ -147,6 +156,8 @@ describe("OAI-T2 deterministic master-prompt formatter", () => {
     });
     assert.ok(cards.cards.every((card) => card.commerce.state === "not_verified"));
     assert.ok(cards.cards.every((card) => card.commerce.label === "Check current price"));
+    assert.equal(JSON.stringify(cards.cards).includes("399.99"), false);
+    assert.equal(cards.cards[0].requirementChecks[1].requirement, "Budget: under $500");
   });
 
   it("copies identity, assessment, pros, cons, and claims verbatim", () => {
@@ -162,10 +173,69 @@ describe("OAI-T2 deterministic master-prompt formatter", () => {
         recommendation.assessment.main_tradeoff,
         ...recommendation.pros.map((item) => item.text),
         ...recommendation.cons.map((item) => item.text),
+        ...recommendation.requirement_checks.flatMap((item) => [
+          item.requirement,
+          item.explanation,
+        ]),
         ...recommendation.claims.map((claim) => claim.text),
       ].filter((value) => value !== null);
       assert.ok(values.every((value) => rawResearchText.includes(value)));
     }
+  });
+
+  it("preserves requirement verdicts as cited AI synthesis instead of discarding them", () => {
+    const result = format();
+    const shark = result.formattedOutput.recommendations[0];
+    assert.deepEqual(
+      shark.requirement_checks.map((item) => ({
+        requirement: item.requirement,
+        status: item.status,
+      })),
+      [
+        {
+          requirement: "Currently available for purchase in the United States",
+          status: "Pass",
+        },
+        { requirement: "Budget: under $500", status: "Pass" },
+      ],
+    );
+
+    const cards = buildTwoLayerProductCards({
+      rawResearchText,
+      responseSourceUrls: responseSources().map((source) => source.url),
+      formattedOutput: result.formattedOutput,
+      receiptInputs: [],
+    });
+    assert.equal(cards.cards[0].requirementChecks[0].trust, "research_synthesis");
+    assert.equal(
+      cards.cards[0].requirementChecks[0].label,
+      "AI research synthesis",
+    );
+    assert.deepEqual(cards.cards[0].requirementChecks[0].sourceIds, ["s1"]);
+    assert.equal(cards.cards[1].requirementChecks[1].status, "Fail");
+  });
+
+  it("accepts a normal en-dash separator but rejects an invented verdict", () => {
+    const enDash = format({
+      rawResearchText: rawResearchText.replace(
+        ":** Pass - The cited product page",
+        ":** Pass – The cited product page",
+      ),
+    });
+    assert.equal(
+      enDash.formattedOutput.recommendations[0].requirement_checks[0].status,
+      "Pass",
+    );
+
+    const error = captureThrown(() =>
+      format({
+        rawResearchText: rawResearchText.replace(
+          ":** Pass - The cited product page",
+          ":** Probably - The cited product page",
+        ),
+      }),
+    );
+    assert.equal(error.failureCause, "requirement_comparison_unparseable");
   });
 
   it("retains only registered citations and safely omits an extra unregistered URL", () => {
@@ -327,6 +397,10 @@ describe("OAI-T2 deterministic master-prompt formatter", () => {
       [
         rawResearchText.replace("### Overall assessment", "### Summary"),
         "required_overall_section_missing",
+      ],
+      [
+        rawResearchText.replace("### Requirement comparison", "### Fit notes"),
+        "required_requirement_section_missing",
       ],
       [rawResearchText.replace("### Cons", "### Drawbacks"), "required_cons_section_missing"],
       [

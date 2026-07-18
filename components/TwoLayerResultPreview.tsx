@@ -242,6 +242,95 @@ function ProsAndCons({ card }: { card: TwoLayerProductCard }) {
   );
 }
 
+function RequirementComparison({
+  card,
+  sources,
+}: {
+  card: TwoLayerProductCard;
+  sources: Map<string, TwoLayerDisplaySource>;
+}) {
+  return (
+    <section className="grid gap-3 border-t border-slate-100 pt-5">
+      <div className="flex flex-wrap items-center gap-2">
+        <Sparkles aria-hidden="true" className="h-4 w-4 text-blue-700" />
+        <h3 className="text-sm font-semibold text-slate-950">
+          Requirement comparison
+        </h3>
+        <Badge
+          className="h-auto max-w-full whitespace-normal rounded-md border-blue-200 bg-blue-50 text-left leading-4 text-blue-800"
+          variant="outline"
+        >
+          AI research synthesis
+        </Badge>
+      </div>
+      <p className="text-xs leading-5 text-slate-500">
+        Terra evaluated each requirement from the cited research. ReviewRadar
+        has not independently verified these verdicts.
+      </p>
+      <div className="grid gap-3">
+        {card.requirementChecks.map((check) => (
+          <div
+            className="rounded-xl border border-slate-200 bg-slate-50/70 p-4"
+            key={`${check.requirement}-${check.status}`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-slate-900">
+                {check.requirement}
+              </p>
+              <Badge
+                className={
+                  check.status === "Pass"
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                    : check.status === "Fail"
+                      ? "border-rose-200 bg-rose-50 text-rose-800"
+                      : "border-amber-200 bg-amber-50 text-amber-900"
+                }
+                variant="outline"
+              >
+                {check.status}
+              </Badge>
+            </div>
+            <p className="mt-2 text-sm leading-6 text-slate-700">
+              {check.explanation}
+            </p>
+            {check.sourceIds.length > 0 ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {check.sourceIds.map((id) => {
+                  const source = sources.get(id);
+                  if (!source) return null;
+                  return source.url ? (
+                    <a
+                      className="inline-flex h-auto max-w-full items-center gap-1.5 whitespace-normal rounded-md border border-slate-200 bg-white px-2.5 py-1 text-left text-xs leading-4 text-slate-600 hover:border-slate-300 hover:text-slate-950"
+                      href={source.url}
+                      key={id}
+                      rel="noreferrer noopener"
+                      target="_blank"
+                    >
+                      {source.label}: {source.title}
+                      <ExternalLink
+                        aria-hidden="true"
+                        className="h-3 w-3 shrink-0"
+                      />
+                    </a>
+                  ) : (
+                    <Badge
+                      className="h-auto max-w-full whitespace-normal rounded-md bg-white text-left leading-4 text-slate-600"
+                      key={id}
+                      variant="outline"
+                    >
+                      {source.label}: {source.title}
+                    </Badge>
+                  );
+                })}
+              </div>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function SourceReportedFacts({
   card,
   sources,
@@ -346,6 +435,7 @@ function PreviewCard({
           </header>
           <CommerceState card={card} />
           <ResearchSynthesis card={card} />
+          <RequirementComparison card={card} sources={sources} />
           <ProsAndCons card={card} />
           <SourceReportedFacts card={card} sources={sources} />
         </div>

@@ -1,144 +1,197 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-18 by Codex after the zero-live OAI-T4F citation-granular
-safety correction. OAI-T1 through T4E are committed through `f89ac8a`; T4F is
-the current `main` HEAD, `Handle unregistered citations safely`. No
-live quality gate, retry, replacement, verifier work, flag promotion,
-deployment, push, or production change is approved.
+Updated: 2026-07-18 by Codex after the zero-live OAI-T5A quality-gate phase.
+The current `main` HEAD is the focused T5A commit `Freeze two-layer quality
+gate`. No provider call, source-page audit, replacement, verifier phase, mode
+promotion, deployment, push, or production change is approved.
 
 ## Efficient session start
 
 1. Read repository `AGENTS.md` in full.
 2. Read this handoff in full.
-3. Read the OAI-T4 section of `docs/forward-roadmap.md`.
-4. Read `docs/agent-dialogue.md` from entry [68] onward.
-5. Retrieve the latest OAI-T4E/T4F entries in `docs/qa-loop-results.md`.
-6. Do not run a provider call without Taylor's separate explicit approval.
+3. Read OAI-T4 and OAI-T5A in `docs/forward-roadmap.md`.
+4. Read `docs/agent-dialogue.md` from entry [68] through [70].
+5. Retrieve the latest OAI-T4E/T4F/T5A entries in
+   `docs/qa-loop-results.md`.
+6. Do not run the T5B harness or open a source page without Taylor's explicit
+   approval of the complete envelope below.
 
-## Current architecture and flag state
+## Current architecture and persistent state
 
 - Missing, empty, or exact `legacy` mode delegates to the unchanged legacy
-  handler. Exact `two_layer` selects the background branch; other non-empty
-  modes fail before provider creation. Legacy remains the default.
-- The two-layer branch performs one Terra/high background Responses create with
-  hosted search, no SDK retry, Serper, SearchAPI, helper model, second response,
-  legacy fallback, or transactional receipt.
-- GET and DELETE carry an encrypted, authenticated job capability only in
-  `x-reviewradar-job-token`. Provider IDs and prompt hashes are not
-  client-decodable or placed in URLs.
-- Completed research passes deterministic T2 formatting and T1 trust-card
-  validation. Without an independent receipt, exact identity and commerce stay
-  unverified and price, seller, availability, purchase URL, and image stay
-  absent.
-- `.env.local` has no pipeline-mode or job-token-secret entry. Last recorded
+  route. Exact `two_layer` selects the background branch; every other non-empty
+  value fails before provider creation. Legacy remains the default.
+- Two-layer mode performs one Terra/high background Responses create with
+  hosted search and no SDK retry, Serper, SearchAPI, helper model, second
+  response, legacy fallback, or transactional receipt.
+- GET/DELETE use an encrypted authenticated capability only in
+  `x-reviewradar-job-token`. Token v4 contains provider/prompt tracking and a
+  non-reversible expected-requirement hash; none is client-decodable or placed
+  in request URLs.
+- Completed research passes deterministic formatter/research/presentation v2.
+  The route rejects a card set if any product renames, adds, omits, or reorders
+  the normalized requirement rows.
+- Cards show each exact shopper requirement with Terra's `Pass`, `Fail`, or
+  `Needs verification` verdict, explanation, available source links, and an
+  `AI research synthesis` disclosure.
+- Without an independent receipt, exact identity and commerce remain
+  unverified. Price, seller, availability, purchase URL, and image stay absent.
+  Model-authored currency amounts in research prose/source titles are redacted
+  as `current price not independently verified`; the shopper's budget label is
+  preserved.
+- `.env.local` has no two-layer mode or job-token-secret entry. Last recorded
   persistent local state remains constraint allocation on and narration off.
 
-## OAI-T4E evidence that selected T4F
+## Why T5A exists
 
-Taylor approved one Terra/high response for broad U.S. `vacuum cleaner`. The
-real UI submitted once, POST returned 202, every later request retrieved the
-same signed job, and the first terminal result was the generic HTTP 502
-`verification_failed`. The exact server-only cause was
-`formatter/source_registry/cited_source_unregistered`.
+T4E proved the real background lifecycle but safe-failed on one citation. T4F
+fixed that reproduced citation-granularity defect offline. Another single smoke
+would prove only lifecycle again. T5A instead freezes one go/no-go experiment
+that confirms the route and judges product usefulness, requirements, safety,
+sources, repeatability, latency, tool use, and cost together.
 
-The completed response used the requested/returned `gpt-5.6-terra`, 109,661
-input tokens, zero cached input, 20,327 output tokens, 129,988 total tokens, 12
-hosted searches, and 20 titled sources. Observed click-to-terminal time was
-approximately 272.6 seconds. Frozen July 15 rates estimate `$0.6990575`, not an
-asserted invoice. The approval is spent; no retry or replacement occurred.
+The obsolete 12-response OAI-2B design was not adopted. The smallest adequate
+sample is:
 
-## OAI-T4F completed behavior
+1. `shop vac`, three independent runs; and
+2. `robot vacuum`, budget `under $300`, Important Details `self-emptying`,
+   three independent runs.
 
-- The formatter registers only title-present sources owned by the same provider
-  response and exposes only cited URLs in that registry.
-- An extra unregistered or titleless citation is ignored, never exposed or
-  bound, and counted only as `ignoredUnregisteredCitationUrlCount` in bounded
-  server diagnostics.
-- Text containing only an ignored citation receives no substituted fallback
-  source. A claim supported only by it remains `AI research synthesis`.
-- A recommendation whose required Sources section has no registered source
-  still fails the complete result with `product_registered_source_missing`.
-- Deterministic extraction stays verbatim. Presentation separately converts
-  standard Markdown links to visible labels in identity, assessment, pros,
-  cons, claims, and source titles. Registered hrefs remain only in the source
-  catalog.
-- Product count/order, registered citation binding, trust states, no-receipt
-  commerce omissions, the generic public failure, and legacy-default mode are
-  unchanged. No card dropping, parser repair, discovery, source substitution,
-  backfill, rerank, or commerce attachment was added.
+This reuses Taylor's ratified `leaders-v2026-07c` broad benchmark and the most
+comparable legacy evidence.
 
-## Next decision
+## Frozen T5B decision contract
 
-There is no approved-pending implementation or live phase. The strongest next
-step is a separately approved **zero-live OAI-T5A quality-gate design**, not
-another one-off lifecycle smoke.
+Mechanical pass requires all of the following:
 
-T5A should use T4E's actual cost, search count, and latency to freeze one small
-decision-useful sample and its absolute bars before any spend. The later live
-window should do two jobs at once: confirm that T4F completes through the real
-route and decide whether the two-layer output is useful and stable enough to
-continue. At minimum the design must predeclare:
+- 6/6 completed routes and 3-5 cards per run;
+- broad leader recall mean at least 4/7 and no run below 3/7;
+- every within-shape pairwise product-set Jaccard at least 0.60;
+- 100% source binding and zero unsafe product/transactional leakage;
+- exact normalized requirement rows on every card; and
+- every Best Match reports `Pass` for every hard row: U.S. availability for
+  broad results, plus budget and `self-emptying` for constrained results.
 
-1. frozen broad and constrained shopper requests;
-2. recommendation usefulness and hard-requirement scoring;
-3. per-product registered-source presence and ignored-citation reporting;
-4. formatter/card completion, unsafe transactional leakage, and public-failure
-   bars;
-5. repeatability treatment, latency/cost reporting, and a total provider/tool
-   budget; and
-6. a stop rule that prevents another open-ended test/fix/retest loop.
+Human pass additionally requires:
 
-Do not start T5A or a live window without Taylor's next explicit approval.
+- product eligibility review for every displayed card;
+- hard-requirement accuracy review for every constrained Best Match;
+- claim/source-semantic review for the top two cards in each run; and
+- blind comparison with comparable legacy output: neither shape may lose and
+  at least one must win.
 
-**Recommended reasoning level:** Highest for T5A. The task is not difficult
-coding; it is choosing a small experiment that can honestly decide whether the
-architecture advances product quality without creating another measurement
-loop.
+The analyzer returns `needs_manual_review`, never `pass`, while any human row is
+missing. Do not lower a bar after seeing results.
+
+## Bounded harness and evidence policy
+
+- `scripts/two-layer-quality-gate.mjs` is the pure/offline analyzer.
+- `scripts/run-two-layer-quality-gate.mjs` is preflight-only unless the exact
+  argument `--execute-live=oai-t5b-six-run-v1` is supplied.
+- One invocation advances exactly one frozen unspent run. It permits one
+  create, at most 60 retrieve polls at 10-second intervals, and one pre-expiry
+  safety cancel.
+- The runner requires a clean tracked commit and process-only
+  `OPENAI_API_KEY` / `REVIEW_RADAR_JOB_TOKEN_SECRET`; it never loads or edits
+  `.env.local`. It validates both values and constructs the no-retry SDK client
+  before reserving an attempt, so a local configuration failure spends nothing
+  and does not falsely consume a run.
+- An attempt marker is written immediately before the route can create the
+  provider response. A failed/interrupted attempt blocks all later runs; there
+  is no automatic retry or replacement. Any final mechanical failure also
+  writes a durable halt marker.
+- Sanitized fixtures keep commit/case/run, bounded completion/formatter totals,
+  public cards, and their public source catalog. They never keep a job token,
+  provider ID, raw prompt/answer/response, header, or secret.
+- The generated manual-review template names exactly two registered source IDs
+  for each audited top product. The analyzer rejects an audit that omits,
+  duplicates, or substitutes those traceable IDs.
+- Blind-comparison rows are closed-world: unknown or duplicate case rows fail,
+  and extra metadata cannot bypass the required material win.
+
+## Exact next approval packet
+
+**Question:** can the current two-layer route produce materially better,
+requirement-faithful, source-auditable, repeatable product recommendations than
+the comparable legacy path?
+
+**Why live is required:** provider-selected products, current web evidence, and
+repeatability cannot be proved by mocks or saved T4 evidence.
+
+**Requested envelope:**
+
+- six shopper requests / six Terra/high Responses creates: the 3+3 frozen
+  sample above;
+- at most 20 hosted searches per create, 120 total;
+- at most 60 retrieve polls and one safety cancel per attempt;
+- T4E planning basis: `$0.6990575`, 12 hosted searches, and about 272.6 seconds
+  per response; six-response estimate `$4.194345` and 27.26 serial minutes;
+- `$7` cumulative estimated-cost ceiling, checked after each completed
+  response. This is not represented as a provider invoice and cannot interrupt
+  an already-running response mid-completion;
+- zero retries, replacements, fallbacks, cache reuse, Serper, SearchAPI, helper
+  models, second responses, extra cases, verifier work, promotion, or deploy;
+- up to 24 direct source-page opens: top two cards x two sources x six runs;
+- retain only the harness's sanitized untracked fixtures and manual-review
+  rows; and
+- stop after the first route/formatter/presentation failure, unsafe card or
+  transaction field, per-run absolute failure, broad run-3 mean/stability
+  failure, cumulative cost breach, or interrupted/spent attempt. No replacement
+  without new approval.
+
+The result unlocks only an owner decision to continue, redesign, or abandon the
+two-layer path. It does not authorize a verifier, promotion, rollout, or legacy
+retirement.
+
+**Recommended reasoning level:** High. The architecture and evaluator are
+frozen; protocol fidelity, careful product/source inspection, and honest
+scoring matter more than another open-ended architecture pass.
 
 ## Hard boundaries
 
-- No live OpenAI, Serper, SearchAPI, direct-fetch, source-page, retry, or
-  replacement call is approved.
+- No OpenAI, Serper, SearchAPI, direct-fetch/source-page, retry, or replacement
+  call is currently approved.
 - Do not edit `.env.local`, persist a job secret, promote a mode, deploy, push,
   publish, or alter production.
-- Do not expose or persist shopper prose, full prompts/answers, source paths,
-  job tokens, provider IDs, request headers, API keys, or raw provider responses.
-- Do not weaken exact identity, product eligibility, citation ownership, source
-  labels, or no-receipt transactional omissions to make a response pass.
-- No product-, brand-, retailer-, category-, publisher-, benchmark-, or
-  fixture-specific production rule.
-- Preserve all pre-existing untracked artifacts and live fixtures. Stage only
-  explicit phase files; never use `git add -A`.
+- Do not expose/persist shopper prose, full prompts/answers, source paths, job
+  tokens, provider IDs, request headers, API keys, or raw responses.
+- Do not weaken identity, eligibility, citation ownership, source labels,
+  exact-requirement enforcement, or no-receipt transactional omissions to make
+  T5B pass.
+- Preserve all pre-existing untracked artifacts/live fixtures. Stage explicit
+  phase files only; never use `git add -A`.
 
-## Outstanding review debt
+## Verification and remaining unknowns
 
-- Entries [42]-[57] still await Claude's review of older OAI lifecycle and
-  unguarded-diagnostic conclusions.
-- Entries [58]-[69] contain the T1-T4 challenges and T4F review request.
-  Dialogue remains advisory and authorizes no work.
+- Fail-first covered requirement-section/shape drift, absent analyzer code,
+  exact-price leakage in card prose/source titles, and renamed-requirement
+  acceptance.
+- Complete suite: 1106/1106 across 150 suites.
+- Typecheck, production build, offline evaluation, harness preflight, and diff
+  checks pass. Lint has zero errors/three pre-existing warnings.
+- T5A made zero live calls and opened zero source pages.
+- Unknown until T5B: real T4F completion rate, product quality, broad recall,
+  constrained accuracy, source semantics, repeatability, latency, tool use,
+  actual returned usage/cost estimate, and blind preference versus legacy.
 
-## Verification and repository state
+## Outstanding peer-review debt
 
-- T4F fail-first: six expected failures.
-- Focused formatter/route wall: 28/28.
-- Complete suite: 1090/1090 across 148 suites.
-- Typecheck, production build, offline evaluation, and diff checks pass.
-- Lint: zero errors and the same three pre-existing warnings.
-- Zero live calls in T4F. `.env.local`, flags, secrets, tracked fixtures,
-  deployment, and production state are unchanged.
-- Preserve the pre-existing untracked transfer kits, baseline files, and live
-  fixtures; they are outside T4F.
+- Entries [42]-[57] still await Claude's older lifecycle/unguarded-evidence
+  review.
+- Entry [70] asks Claude to challenge sample sufficiency, citation downgrade
+  policy, and the gate's false-pass/wasted-spend risks. Dialogue remains
+  advisory and authorizes no work.
 
 ## Retrieval map
 
 | Need | Retrieve |
 |---|---|
-| T4 architecture/results | OAI-T4 in `docs/forward-roadmap.md` |
-| Canonical T4E/T4F evidence | latest entries in `docs/qa-loop-results.md` |
-| Citation partition and product floor | `lib/twoLayerFormatter.ts` |
-| Display-text URL removal | `lib/twoLayerDisplayText.ts` |
-| Card trust/presentation boundary | `lib/twoLayerRecommendation.ts` |
-| Route source catalog/public behavior | `lib/twoLayerRecommendationRoute.ts` |
-| T4F regression wall | `tests/twoLayerFormatter.test.mjs`, `tests/twoLayerRoute.test.mjs` |
-| Adapter titleless-source control | `tests/twoLayerResearchAdapter.test.mjs` |
-| Peer channel | `docs/agent-dialogue.md` entries [68]-[69] |
+| T4 architecture and T5A gate | OAI-T4/OAI-T5A in `docs/forward-roadmap.md` |
+| Canonical evidence | latest T4E/T4F/T5A entries in `docs/qa-loop-results.md` |
+| Requirement normalization/prompt | `lib/autonomousResearchContract.ts`, `lib/twoLayerMasterPrompt.ts` |
+| Formatter/presentation trust | `lib/twoLayerFormatter.ts`, `lib/twoLayerRecommendation.ts` |
+| Protected requirement hash | `lib/twoLayerJobToken.ts`, `lib/twoLayerRecommendationRoute.ts` |
+| Currency/URL presentation boundary | `lib/twoLayerDisplayText.ts` |
+| Gate analyzer and harness | `scripts/two-layer-quality-gate.mjs`, `scripts/run-two-layer-quality-gate.mjs` |
+| Gate regression wall | `tests/twoLayerQualityGate*.test.mjs`, `tests/twoLayerRoute.test.mjs` |
+| Peer channel | `docs/agent-dialogue.md` entry [70] |

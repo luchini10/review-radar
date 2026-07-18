@@ -28,6 +28,9 @@ The Example Vacuum is a balanced choice. ([shop.example.com](${productUrl}))
 ### Overall assessment
 Best for mixed floors. Its main tradeoff is weight. ([tests.example.org](${testUrl}))
 
+### Requirement comparison
+- **Currently available for purchase in the United States:** Pass - The cited product page lists the exact model. ([shop.example.com](${productUrl}))
+
 ### Pros
 - Strong pickup
 
@@ -154,7 +157,7 @@ describe("OAI-T4A natural-text background adapter", () => {
       const result = await pollTwoLayerResearch({
         client: simulation.client,
         responseId: "resp_test_123456789",
-        promptVersion: "oai-two-layer-master-prompt-v1",
+        promptVersion: "oai-two-layer-master-prompt-v2",
         promptHash: "a".repeat(64),
       });
 
@@ -178,7 +181,7 @@ describe("OAI-T4A natural-text background adapter", () => {
     const result = await pollTwoLayerResearch({
       client: simulation.client,
       responseId: "resp_test_123456789",
-      promptVersion: "oai-two-layer-master-prompt-v1",
+      promptVersion: "oai-two-layer-master-prompt-v2",
       promptHash: "a".repeat(64),
       now: () => 25,
     });
@@ -197,7 +200,7 @@ describe("OAI-T4A natural-text background adapter", () => {
     const result = await pollTwoLayerResearch({
       client: simulation.client,
       responseId: "resp_test_123456789",
-      promptVersion: "oai-two-layer-master-prompt-v1",
+      promptVersion: "oai-two-layer-master-prompt-v2",
       promptHash: "a".repeat(64),
     });
     assert.equal(result.ok, true);
@@ -227,7 +230,7 @@ describe("OAI-T4A natural-text background adapter", () => {
     const result = await pollTwoLayerResearch({
       client: simulation.client,
       responseId: "resp_test_123456789",
-      promptVersion: "oai-two-layer-master-prompt-v1",
+      promptVersion: "oai-two-layer-master-prompt-v2",
       promptHash: "a".repeat(64),
     });
     assert.equal(result.ok, true);
@@ -261,7 +264,7 @@ describe("OAI-T4A natural-text background adapter", () => {
       const result = await pollTwoLayerResearch({
         client: simulation.client,
         responseId: "resp_test_123456789",
-        promptVersion: "oai-two-layer-master-prompt-v1",
+        promptVersion: "oai-two-layer-master-prompt-v2",
         promptHash: "a".repeat(64),
       });
       assert.equal(result.ok, false, reason);
@@ -280,13 +283,13 @@ describe("OAI-T4A natural-text background adapter", () => {
             ? await pollTwoLayerResearch({
                 client: simulation.client,
                 responseId: "resp_test_123456789",
-                promptVersion: "oai-two-layer-master-prompt-v1",
+                promptVersion: "oai-two-layer-master-prompt-v2",
                 promptHash: "a".repeat(64),
               })
             : await cancelTwoLayerResearch({
                 client: simulation.client,
                 responseId: "resp_test_123456789",
-                promptVersion: "oai-two-layer-master-prompt-v1",
+                promptVersion: "oai-two-layer-master-prompt-v2",
                 promptHash: "a".repeat(64),
               });
 
@@ -312,13 +315,13 @@ describe("OAI-T4A natural-text background adapter", () => {
           ? await pollTwoLayerResearch({
               client: simulation.client,
               responseId: "resp_test_123456789",
-              promptVersion: "oai-two-layer-master-prompt-v1",
+              promptVersion: "oai-two-layer-master-prompt-v2",
               promptHash: "a".repeat(64),
             })
           : await cancelTwoLayerResearch({
               client: simulation.client,
               responseId: "resp_test_123456789",
-              promptVersion: "oai-two-layer-master-prompt-v1",
+              promptVersion: "oai-two-layer-master-prompt-v2",
               promptHash: "a".repeat(64),
             });
 
@@ -333,7 +336,7 @@ describe("OAI-T4A natural-text background adapter", () => {
     const result = await cancelTwoLayerResearch({
       client: simulation.client,
       responseId: "resp_test_123456789",
-      promptVersion: "oai-two-layer-master-prompt-v1",
+      promptVersion: "oai-two-layer-master-prompt-v2",
       promptHash: "a".repeat(64),
     });
 

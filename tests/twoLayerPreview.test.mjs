@@ -58,12 +58,27 @@ test("every displayed source reference resolves to the controlled registry", () 
     ...card.assessment.mainTradeoff.sourceIds,
     ...card.pros.flatMap((item) => item.sourceIds),
     ...card.cons.flatMap((item) => item.sourceIds),
+    ...card.requirementChecks.flatMap((item) => item.sourceIds),
     ...card.claims.flatMap((claim) => claim.sourceIds),
   ]);
 
   assert.ok(referencedSourceIds.length > 0);
   for (const sourceId of referencedSourceIds) {
     assert.equal(sourceIds.has(sourceId), true, `missing source ${sourceId}`);
+  }
+});
+
+test("cards expose plain-language requirement verdicts as AI synthesis", () => {
+  assert.ok(twoLayerPreviewCards.every((card) => card.requirementChecks.length > 0));
+  assert.deepEqual(
+    twoLayerPreviewCards.map((card) => card.requirementChecks[0].status),
+    ["Pass", "Pass", "Needs verification"],
+  );
+  for (const check of twoLayerPreviewCards.flatMap(
+    (card) => card.requirementChecks,
+  )) {
+    assert.equal(check.trust, "research_synthesis");
+    assert.equal(check.label, "AI research synthesis");
   }
 });
 

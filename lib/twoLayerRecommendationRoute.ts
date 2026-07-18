@@ -5,6 +5,7 @@ import { buildNormalizedShopperRequest } from "./autonomousResearchContract.ts";
 import {
   formatTwoLayerMasterPromptAnswer,
   twoLayerFormatterFailureDiagnostic,
+  type TwoLayerFormatterResult,
   type TwoLayerFormatterFailureCause,
   type TwoLayerFormatterFailureReason,
 } from "./twoLayerFormatter.ts";
@@ -12,7 +13,10 @@ import {
   buildTwoLayerProductCards,
   TWO_LAYER_PRESENTATION_VERSION,
 } from "./twoLayerRecommendation.ts";
-import { twoLayerDisplayText } from "./twoLayerDisplayText.ts";
+import { twoLayerResearchDisplayText } from "./twoLayerDisplayText.ts";
+import {
+  hashTwoLayerRequirementTexts,
+} from "./twoLayerMasterPrompt.ts";
 import {
   cancelTwoLayerResearch,
   pollTwoLayerResearch,
@@ -63,6 +67,10 @@ export type TwoLayerCompletionDiagnostic = {
   sourceCount: number;
 };
 
+export type TwoLayerFormatterCompletionDiagnostic = {
+  formatterVersion: TwoLayerFormatterResult["formatterVersion"];
+} & TwoLayerFormatterResult["diagnostics"];
+
 type TwoLayerRecommendationHandlerOptions = {
   createOpenAIClient?: typeof createDefaultOpenAIClient;
   getEnvironment?: () => TwoLayerEnvironment;
@@ -77,6 +85,9 @@ type TwoLayerRecommendationHandlerOptions = {
     diagnostic: TwoLayerVerificationFailureDiagnostic,
   ) => void;
   onResearchCompleted?: (diagnostic: TwoLayerCompletionDiagnostic) => void;
+  onResearchFormatted?: (
+    diagnostic: TwoLayerFormatterCompletionDiagnostic,
+  ) => void;
 };
 
 type RouteHandler = (request: Request) => Promise<Response>;
@@ -172,6 +183,15 @@ function defaultCompletionReporter(diagnostic: TwoLayerCompletionDiagnostic) {
   );
 }
 
+function defaultFormatterCompletionReporter(
+  diagnostic: TwoLayerFormatterCompletionDiagnostic,
+) {
+  console.info(
+    "[ReviewRadar two-layer formatter]",
+    JSON.stringify(diagnostic),
+  );
+}
+
 export function createTwoLayerRecommendationHandlers({
   createOpenAIClient = createDefaultOpenAIClient,
   getEnvironment = () => ({
@@ -187,6 +207,7 @@ export function createTwoLayerRecommendationHandlers({
   buildPresentation = buildTwoLayerProductCards,
   onVerificationFailure = defaultVerificationFailureReporter,
   onResearchCompleted = defaultCompletionReporter,
+  onResearchFormatted = defaultFormatterCompletionReporter,
 }: TwoLayerRecommendationHandlerOptions): TwoLayerRecommendationHandlers {
   const reportVerificationFailure = (
     diagnostic: TwoLayerVerificationFailureDiagnostic,
@@ -200,6 +221,15 @@ export function createTwoLayerRecommendationHandlers({
   const reportCompletion = (diagnostic: TwoLayerCompletionDiagnostic) => {
     try {
       onResearchCompleted(diagnostic);
+    } catch {
+      // Observability must never change the completed route response.
+    }
+  };
+  const reportFormatterCompletion = (
+    diagnostic: TwoLayerFormatterCompletionDiagnostic,
+  ) => {
+    try {
+      onResearchFormatted(diagnostic);
     } catch {
       // Observability must never change the completed route response.
     }
@@ -226,9 +256,10 @@ export function createTwoLayerRecommendationHandlers({
       const client = await createOpenAIClient(environment.openAiApiKey!, {
         maxRetries: 0,
       });
+      const normalizedRequest = buildNormalizedShopperRequest(validation.data);
       const result = await startResearch({
         client,
-        normalizedRequest: buildNormalizedShopperRequest(validation.data),
+        normalizedRequest,
         now,
       });
       if (!result.ok) {
@@ -241,6 +272,9 @@ export function createTwoLayerRecommendationHandlers({
         responseId: result.responseId,
         promptVersion: result.promptVersion,
         promptHash: result.promptHash,
+        requirementsHash: hashTwoLayerRequirementTexts(
+          normalizedRequest.evaluation_requirements.map((item) => item.text),
+        ),
         secret: environment.jobTokenSecret!,
         nowMs: issuedAtMs,
         ttlMs: TWO_LAYER_JOB_TTL_MS,
@@ -336,6 +370,31 @@ export function createTwoLayerRecommendationHandlers({
           502,
         );
       }
+      if (
+        !formatted.formattedOutput.recommendations.every(
+          (recommendation) =>
+            hashTwoLayerRequirementTexts(
+              recommendation.requirement_checks.map(
+                (requirement) => requirement.requirement,
+              ),
+            ) === verified.payload.requirementsHash,
+        )
+      ) {
+        reportVerificationFailure({
+          stage: "formatter",
+          reason: "product_shape",
+          cause: "requirement_contract_mismatch",
+        });
+        return failure(
+          "verification_failed",
+          ERROR_MESSAGES.verificationFailed,
+          502,
+        );
+      }
+      reportFormatterCompletion({
+        formatterVersion: formatted.formatterVersion,
+        ...formatted.diagnostics,
+      });
 
       let presentation;
       try {
@@ -362,7 +421,7 @@ export function createTwoLayerRecommendationHandlers({
         formatted.formattedOutput.sources.map((source) => ({
           id: source.id,
           label: sourceLabel(source.role),
-          title: twoLayerDisplayText(source.title),
+          title: twoLayerResearchDisplayText(source.title),
           url: source.url,
         }));
       return json(

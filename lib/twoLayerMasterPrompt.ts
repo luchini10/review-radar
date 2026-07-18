@@ -5,7 +5,7 @@ import {
 } from "./autonomousResearchContract.ts";
 
 export const TWO_LAYER_MASTER_PROMPT_VERSION =
-  "oai-two-layer-master-prompt-v1";
+  "oai-two-layer-master-prompt-v2";
 
 const TWO_LAYER_MASTER_INSTRUCTIONS = `Act as a rigorous, independent product-research analyst. Research and rank the best products currently available for the shopper request supplied separately as delimited JSON data.
 
@@ -29,6 +29,7 @@ Research standards:
 
 Ranking method:
 - Treat every evaluation requirement whose required_for_best_match value is true as a hard filter for Best Match. If a hard requirement is failed or unverified, the product cannot be a Best Match.
+- For each product, copy every evaluation_requirements text value exactly once into Requirement comparison, in the same order. Do not rename, combine, omit, or add requirements. Give each one a Pass, Fail, or Needs verification verdict.
 - Rank by the factors that matter for the requested category, including overall performance, quality, durability, reliability, professional testing, owner satisfaction and recurring complaints, requirement fit, safety and compatibility where relevant, value, warranty and support, availability, price confidence, and evidence strength.
 - Rank only the supported products you actually researched. Do not use any hidden or external benchmark answer.
 
@@ -59,7 +60,7 @@ Begin with a short explanation of what matters most when buying this kind of pro
 - [Only category-relevant specifications, with citations.]
 
 ### Requirement comparison
-- **[Requirement]:** Pass, Fail, or Needs verification - [brief evidence-grounded explanation.]
+- **[Exact evaluation_requirements text]:** Pass, Fail, or Needs verification - [brief evidence-grounded explanation.]
 
 ### Performance and quality signals
 - [Professional testing, real-world performance, durability, reliability, warranty, and support evidence, with citations.]
@@ -90,6 +91,10 @@ export type TwoLayerMasterPrompt = {
   instructions: string;
   input: string;
 };
+
+export function hashTwoLayerRequirementTexts(texts: readonly string[]) {
+  return hashContractValue([...texts]);
+}
 
 export function buildTwoLayerMasterPrompt(
   request: NormalizedShopperRequest,

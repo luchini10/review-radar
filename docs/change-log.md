@@ -11,6 +11,36 @@ Update this file after:
 
 ## 2026-07-18
 
+### 🟧 Codex - Two-layer requirement visibility and frozen quality gate
+
+#### Changed
+
+- The default-off two-layer card now shows every normalized shopper requirement
+  with a `Pass`, `Fail`, or `Needs verification` verdict, explanation, available
+  source links, and an explicit `AI research synthesis` disclosure.
+- Removed the duplicate normalized budget row, and added an encrypted-token
+  requirement hash so the stateless route fails closed if the model renames,
+  reorders, omits, or adds requirement rows.
+- Model-authored research prose and source titles can no longer display an
+  unverified exact currency amount. The shopper's own budget label remains
+  visible; exact current prices still require an independent commerce receipt.
+- Added a frozen six-response quality analyzer and a preflight-default,
+  one-request-at-a-time live harness with no retry/replacement path.
+- Manual source audits now identify exactly two registered sources per top
+  product. Pre-live configuration is validated before an attempt is reserved,
+  and a final mechanical failure leaves a durable halt marker.
+- Blind comparisons reject unknown/duplicate case rows, so an extra row cannot
+  suppress the rule that at least one shopper shape must materially win.
+- A broad card cannot call itself `Best Match` while its mandatory U.S.-market
+  row says `Fail` or `Needs verification`; the same self-consistency rule covers
+  all frozen hard rows in both shapes.
+
+#### Verified
+
+- Zero live calls. The complete suite passes 1106/1106 across 150 suites;
+  typecheck, production build, offline evaluation, gate preflight, and diff
+  checks pass. Lint has zero errors and the same three pre-existing warnings.
+
 ### 🟧 Codex - Citation-granular two-layer safety correction
 
 #### Changed

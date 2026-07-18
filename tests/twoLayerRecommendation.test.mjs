@@ -15,6 +15,7 @@ const rawResearchText = `
 The Shark AZ4002 is the strongest overall match for homes with pets.
 Best for: mixed floors and pet hair.
 Main tradeoff: it is heavier than a cordless model.
+Currently available for purchase in the United States
 Strong pickup on embedded hair.
 Good edge cleaning.
 The powered brush roll performed well on carpet in professional testing.
@@ -93,6 +94,14 @@ function researchFixture() {
             source_ids: ["s1"],
           },
         ],
+        requirement_checks: [
+          {
+            requirement: "Currently available for purchase in the United States",
+            status: "Pass",
+            explanation: "The Shark AZ4002 is the strongest overall match for homes with pets.",
+            source_ids: ["s1"],
+          },
+        ],
         claims: [
           {
             claim_type: "professional_performance",
@@ -129,6 +138,14 @@ function researchFixture() {
           {
             text: "Main tradeoff: the bin is smaller than a full-size upright.",
             source_ids: ["s4"],
+          },
+        ],
+        requirement_checks: [
+          {
+            requirement: "Currently available for purchase in the United States",
+            status: "Pass",
+            explanation: "The Dyson Gen5detect Absolute is a strong premium cordless option.",
+            source_ids: ["s3"],
           },
         ],
         claims: [

@@ -121,6 +121,14 @@ describe("OAI-1 autonomous research contracts", () => {
       constrained.evaluation_requirements[1].required_for_best_match,
       true,
     );
+    assert.equal(
+      constrained.hard_requirements.some((item) => item.source === "budget"),
+      false,
+    );
+    assert.deepEqual(
+      constrained.evaluation_requirements.map((item) => item.id),
+      ["rr-system-market-us", "rr-system-budget"],
+    );
   });
 
   it("uses Call 1 only for deterministic malformed, conflicting, or ambiguous cases", () => {

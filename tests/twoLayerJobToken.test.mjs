@@ -16,6 +16,7 @@ function issue(overrides = {}) {
     responseId: "resp_test_123456789",
     promptVersion: TWO_LAYER_MASTER_PROMPT_VERSION,
     promptHash: "a".repeat(64),
+    requirementsHash: "b".repeat(64),
     secret,
     nowMs,
     ttlMs: 10 * 60_000,
@@ -34,6 +35,7 @@ describe("OAI-T4A signed background-job token", () => {
       responseId: "resp_test_123456789",
       promptVersion: TWO_LAYER_MASTER_PROMPT_VERSION,
       promptHash: "a".repeat(64),
+      requirementsHash: "b".repeat(64),
       issuedAtMs: nowMs,
       expiresAtMs: nowMs + 10 * 60_000,
     });
@@ -50,6 +52,7 @@ describe("OAI-T4A signed background-job token", () => {
     assert.equal(token.includes("resp_test_123456789"), false);
     assert.equal(decodedSegments.some((value) => value.includes("resp_test_123456789")), false);
     assert.equal(decodedSegments.some((value) => value.includes("a".repeat(64))), false);
+    assert.equal(decodedSegments.some((value) => value.includes("b".repeat(64))), false);
   });
 
   it("rejects ciphertext, nonce, and authentication-tag tampering", () => {
@@ -100,6 +103,7 @@ describe("OAI-T4A signed background-job token", () => {
   it("refuses weak secrets, invalid response IDs, and excessive lifetimes", () => {
     assert.throws(() => issue({ secret: "too-short" }), /at least 32 bytes/);
     assert.throws(() => issue({ responseId: "not-a-response-id" }), /response ID/);
+    assert.throws(() => issue({ requirementsHash: "not-a-hash" }), /requirements hash/);
     assert.throws(() => issue({ ttlMs: 31 * 60_000 }), /lifetime/);
   });
 });

@@ -444,11 +444,13 @@ export function buildNormalizedShopperRequest(
       operator: budget?.operator ?? (input.budget ? "unknown" : "none"),
       flexible: budget?.flexible ?? false,
     },
-    hard_requirements: requirements.requiredConstraints.map((item) => ({
-      id: item.id,
-      text: item.label,
-      source: item.source,
-    })),
+    hard_requirements: requirements.requiredConstraints
+      .filter((item) => item.source !== "budget")
+      .map((item) => ({
+        id: item.id,
+        text: item.label,
+        source: item.source,
+      })),
     preferences: requirements.preferredConstraints.map((item) => ({
       id: item.id,
       text: item.label,

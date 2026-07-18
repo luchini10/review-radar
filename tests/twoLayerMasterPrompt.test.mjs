@@ -82,6 +82,7 @@ describe("OAI-T4A versioned natural master prompt", () => {
       "### Why it ranks #1",
       "### Current price",
       "### Overall assessment",
+      "### Requirement comparison",
       "### Pros",
       "### Cons",
       "### Sources",
@@ -90,6 +91,14 @@ describe("OAI-T4A versioned natural master prompt", () => {
     }
     assert.match(prompt.instructions, /five products, or fewer/i);
     assert.match(prompt.instructions, /Use citations directly beside/i);
+    assert.match(
+      prompt.instructions,
+      /copy every evaluation_requirements text value exactly once/i,
+    );
+    assert.match(
+      prompt.instructions,
+      /Do not rename, combine, omit, or add requirements/i,
+    );
   });
 
   it("contains no benchmark answer, candidate slate, or product-specific seed", () => {

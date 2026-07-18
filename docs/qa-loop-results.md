@@ -8598,3 +8598,85 @@ flags, secrets, live fixtures, untracked artifacts, deployment, and production
 state were untouched. The next recommended action is not another isolated
 smoke; it is a separately approved zero-live design of one decision-useful
 quality/repeatability gate, followed by one explicitly budgeted live window.
+
+## 🟧 Codex - OAI-T5A frozen two-layer quality gate (2026-07-18)
+
+**Verdict: PASS OFFLINE - the next provider spend is one decision-useful gate,
+not another diagnostic smoke.** No OpenAI, Serper, SearchAPI, direct-page, or
+other provider call occurred. `.env.local`, persistent flags, live fixtures,
+deployment, and production state were unchanged.
+
+T5A challenged the earlier 12-response OAI-2B design against the current
+product question and rejected it as obsolete. The frozen sample is six Terra/
+high responses: three independent broad `shop vac` runs and three independent
+`robot vacuum`, `under $300`, `self-emptying` runs. It reuses the owner-ratified
+`leaders-v2026-07c` broad denominator and contemporary route behavior. T4E's
+returned usage supplies the planning basis: six responses estimate to
+`$4.194345`, 72 expected hosted searches, and approximately 27.26 serial
+minutes; the proposed approval envelope is `$7`, 120 hosted searches, zero
+retries/replacements/fallbacks, bounded retrieval/cancellation, and 24 direct
+source-page audit opens.
+
+The analyzer freezes 6/6 route completion, 3-5 cards/run, broad recall mean
+`>=4/7` with no run `<3/7`, every within-shape pairwise Jaccard `>=0.60`, 100%
+source binding, exact requirement-row order, all-`Pass` constrained Best
+Matches, an all-`Pass` mandatory U.S.-availability row for broad Best Matches,
+and zero unsafe product/transactional leakage. It reports model/tool/
+token/cost/latency and ignored-citation totals. It cannot return `pass` without
+human eligibility review of every card, constrained Best-Match requirement
+review, top-two-per-run source-semantic review, and blind legacy comparison.
+Missing reviews produce `needs_manual_review`; a loss in either shape or no win
+in both fails.
+
+Adversarial preflight found and corrected three product-facing blind spots:
+
+- budget normalization duplicated one budget as both a system evaluation row
+  and a generic hard row; the generic duplicate is now removed;
+- requirement verdicts existed in Terra's answer but were discarded before the
+  card. Prompt/formatter/research/presentation v2 retain and visibly disclose
+  them, while encrypted job-token v4 carries only their non-reversible expected
+  hash and rejects any renamed, omitted, added, or reordered row; and
+- an exact price could still leak through requirement prose or a response-owned
+  source title without a receipt. Presentation now replaces model-authored
+  currency amounts with `current price not independently verified`; the
+  shopper's budget label is preserved, and independently accepted commerce
+  receipts remain the only exact-price path.
+
+The route also emits one bounded formatter-success diagnostic containing only
+formatter version and aggregate recommendation/source/ignored-section counts.
+It contains no shopper prose, prompt, answer, URL/host, response ID, job token,
+header, credential, or raw provider content.
+
+The live harness is default preflight-only. The exact approval ID enables only
+the next unspent frozen run. Each invocation validates process-only secrets and
+constructs its no-retry SDK client before reserving the attempt, then writes an
+attempt marker immediately before the provider-capable route. It caps itself at
+one create, 60 retrieve polls, and one safety cancel, persists no provider
+identifier or token, and refuses later runs after a failed/interrupted attempt.
+Final mechanical failure also leaves a durable halt marker. This prevents local
+configuration errors from consuming a run, accidental double dispatch, and
+unapproved replacement spend. The mechanical analyzer also stops early on a
+per-run absolute failure, broad run-3 mean/stability failure, or cumulative
+estimated-cost breach. Its generated human-review template names exactly two
+registered source IDs per audited top product; an untraceable source audit
+cannot pass merely by asserting `status: pass`. Blind-comparison rows are also
+closed-world: unknown or duplicate case rows fail and cannot suppress the
+required material win.
+
+Fail-first evidence included requirement-section/shape failures, absent gate
+machinery, exact-price leakage in cards and source titles, and a renamed
+requirement that previously returned HTTP 200. Corrected verification:
+
+- focused formatter/route/gate/token wall: pass;
+- complete `npm test`: 1106/1106 across 150 suites;
+- `npm run typecheck`: pass;
+- `npm run lint`: zero errors and the same three pre-existing warnings;
+- `npm run build`: pass;
+- `node scripts/eval-pipeline.mjs`: no red flags;
+- `node scripts/run-two-layer-quality-gate.mjs`: preflight-only, six frozen
+  runs, zero provider calls; and
+- `git diff --check`: pass (line-ending notices only).
+
+This advances evaluation integrity and visible requirement usefulness, not yet
+provider-proven recommendation quality. T5B remains separately approval-gated;
+no verifier, promotion, rollout, or retirement phase is authorized.

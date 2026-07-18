@@ -66,7 +66,7 @@ describe("OAI-T4B browser recommendation lifecycle", () => {
         pipeline: "two_layer",
         version: "oai-two-layer-api-v1",
         state: "completed",
-        presentationVersion: "oai-two-layer-presentation-v1",
+        presentationVersion: "oai-two-layer-presentation-v2",
         cards: [{ key: "example" }],
         sources: [{ id: "s1", label: "Official product", title: "Example", url: "https://example.com" }],
       }),
