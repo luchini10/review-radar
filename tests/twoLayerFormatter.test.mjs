@@ -185,6 +185,7 @@ describe("OAI-T2 deterministic master-prompt formatter", () => {
     );
     assert.match(error.message, /source absent from response registry/);
     assert.equal(twoLayerFormatterFailureReason(error), "source_registry");
+    assert.equal(error.failureCause, "cited_source_unregistered");
   });
 
   it("fails closed instead of inventing missing source metadata", () => {
@@ -198,6 +199,7 @@ describe("OAI-T2 deterministic master-prompt formatter", () => {
     );
     assert.match(error.message, /source title absent from response registry/);
     assert.equal(twoLayerFormatterFailureReason(error), "source_title");
+    assert.equal(error.failureCause, "registered_source_title_missing");
   });
 
   it("does not promote specifications, professional tests, or owner prose to verified", () => {
@@ -263,19 +265,42 @@ describe("OAI-T2 deterministic master-prompt formatter", () => {
     );
     assert.match(error.message, /missing section: Pros/);
     assert.equal(twoLayerFormatterFailureReason(error), "product_shape");
+    assert.equal(error.failureCause, "required_pros_section_missing");
+  });
+
+  it("distinguishes the other required product-shape failures", () => {
+    for (const [answer, cause] of [
+      [rawResearchText.replaceAll("# #", "##"), "numbered_product_headings_missing"],
+      [
+        rawResearchText.replace("### Why it ranks #1", "### Rationale #1"),
+        "required_why_section_missing",
+      ],
+      [
+        rawResearchText.replace("### Overall assessment", "### Summary"),
+        "required_overall_section_missing",
+      ],
+      [rawResearchText.replace("### Cons", "### Drawbacks"), "required_cons_section_missing"],
+      [
+        rawResearchText.replace("### Sources", "### References"),
+        "required_sources_section_missing",
+      ],
+    ]) {
+      const error = captureThrown(() => format({ rawResearchText: answer }));
+      assert.equal(error.failureCause, cause);
+    }
   });
 
   it("fails closed on rank gaps instead of silently reordering", () => {
-    assert.throws(
-      () =>
-        format({
-          rawResearchText: rawResearchText.replace(
-            "# #2 Best Match",
-            "# #3 Best Match",
-          ),
-        }),
-      /contiguous product ranks/,
+    const error = captureThrown(() =>
+      format({
+        rawResearchText: rawResearchText.replace(
+          "# #2 Best Match",
+          "# #3 Best Match",
+        ),
+      }),
     );
+    assert.match(error.message, /contiguous product ranks/);
+    assert.equal(error.failureCause, "product_ranks_noncontiguous");
   });
 
   it("attributes the final extraction wall without exposing its raw error", () => {
@@ -288,6 +313,7 @@ describe("OAI-T2 deterministic master-prompt formatter", () => {
       twoLayerFormatterFailureReason(error),
       "extraction_validation",
     );
+    assert.equal(error.failureCause, "extraction_order_integrity");
     assert.equal(error.message, "Two-layer formatter extraction validation failed");
   });
 });

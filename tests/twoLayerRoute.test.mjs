@@ -143,6 +143,7 @@ function buildTwoLayerHandlers(simulation, overrides = {}) {
       body && typeof body === "object" && body.query === "vacuum"
         ? { data: { query: "vacuum" } }
         : { error: "Invalid shopper request." },
+    onResearchCompleted: () => {},
     ...overrides,
   });
 }
@@ -289,7 +290,10 @@ describe("OAI-T4B signed background route lifecycle", () => {
         completedResponse(),
       ],
     });
-    const handlers = buildTwoLayerHandlers(simulation);
+    const completionDiagnostics = [];
+    const handlers = buildTwoLayerHandlers(simulation, {
+      onResearchCompleted: (diagnostic) => completionDiagnostics.push(diagnostic),
+    });
     const start = await readJson(
       await handlers.POST(request("POST", { query: "vacuum" })),
     );
@@ -326,6 +330,25 @@ describe("OAI-T4B signed background route lifecycle", () => {
       simulation.calls.map((call) => call.method),
       ["client", "create", "client", "retrieve", "client", "retrieve"],
     );
+    assert.deepEqual(completionDiagnostics, [
+      {
+        modelRequested: "gpt-5.6-terra",
+        modelReturned: "gpt-5.6-terra",
+        durationMs: 0,
+        usage: {
+          inputTokens: 2_000,
+          cachedInputTokens: 0,
+          outputTokens: 1_000,
+          totalTokens: 3_000,
+          webSearchCalls: 1,
+        },
+        sourceCount: 2,
+      },
+    ]);
+    const diagnosticText = JSON.stringify(completionDiagnostics);
+    assert.equal(diagnosticText.includes(responseId), false);
+    assert.equal(diagnosticText.includes(productUrl), false);
+    assert.equal(diagnosticText.includes(rawAnswer), false);
   });
 
   it("attributes a malformed master-prompt answer without exposing internals", async () => {
@@ -349,7 +372,11 @@ describe("OAI-T4B signed background route lifecycle", () => {
     assert.equal(completed.status, 502);
     assert.deepEqual(completed.body, expectedVerificationFailure());
     assert.deepEqual(diagnostics, [
-      { stage: "formatter", reason: "product_shape" },
+      {
+        stage: "formatter",
+        reason: "product_shape",
+        cause: "required_pros_section_missing",
+      },
     ]);
     const serialized = JSON.stringify(completed.body);
     assert.equal(serialized.includes(malformedAnswer), false);
@@ -380,7 +407,11 @@ describe("OAI-T4B signed background route lifecycle", () => {
     assert.equal(completed.status, 502);
     assert.deepEqual(completed.body, expectedVerificationFailure());
     assert.deepEqual(diagnostics, [
-      { stage: "formatter", reason: "source_registry" },
+      {
+        stage: "formatter",
+        reason: "source_registry",
+        cause: "cited_source_unregistered",
+      },
     ]);
     assert.equal(JSON.stringify(completed.body).includes(testUrl), false);
   });
@@ -404,7 +435,11 @@ describe("OAI-T4B signed background route lifecycle", () => {
     assert.equal(completed.status, 502);
     assert.deepEqual(completed.body, expectedVerificationFailure());
     assert.deepEqual(diagnostics, [
-      { stage: "presentation", reason: "presentation_validation" },
+      {
+        stage: "presentation",
+        reason: "presentation_validation",
+        cause: "presentation_unknown",
+      },
     ]);
     assert.equal(JSON.stringify(completed.body).includes(productUrl), false);
   });
@@ -417,6 +452,9 @@ describe("OAI-T4B signed background route lifecycle", () => {
       ],
     });
     const handlers = buildTwoLayerHandlers(simulation, {
+      onResearchCompleted: () => {
+        throw new Error("completion diagnostic sink unavailable");
+      },
       onVerificationFailure: () => {
         throw new Error("diagnostic sink unavailable");
       },

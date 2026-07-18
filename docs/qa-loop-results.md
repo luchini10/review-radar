@@ -8417,3 +8417,56 @@ The production build's generated `next-env.d.ts` line-ending drift was restored.
 remain untouched. Changes are local and uncommitted pending Taylor's explicit
 commit approval. No replacement T4C smoke, quality gate, or verifier work is
 authorized.
+
+## 🟧 Codex — OAI-T4D precision and cost-attribution correction (2026-07-18)
+
+**Verdict: PASS OFFLINE — one later live response can now identify a useful
+cause and retain its safe planning totals without retaining provider content.**
+No OpenAI, Serper, SearchAPI, direct-page, or other provider call occurred.
+
+Pre-live adversarial review found that the first T4D vocabulary was safe but
+not yet sufficiently actionable. `product_shape`, `source_registry`, and
+`extraction_validation` each grouped defects that require different decisions;
+another live failure could therefore have produced a second diagnostic cycle.
+The formatter now preserves those broad reasons while assigning each owned
+rejection a bounded cause for missing headings/sections, rank continuity,
+identity parsing, source registration/title, or extraction integrity. Unknown
+non-formatter exceptions remain `unknown` rather than leaking exception text or
+guessing a cause.
+
+The review also found that the route still discarded the sanitized provider
+ledger. A later success or deterministic rejection would again leave no actual
+token/tool/latency basis for the quality-gate budget. The route now emits one
+server-only completion record after provider completion and before formatting.
+It contains only requested/returned model, duration, aggregate input/cached/
+output/total token counts, hosted-search count, and source count. It contains no
+shopper prose, complete prompt, raw answer, URL or host, source path, provider
+response ID, job token, request header, credential, or raw provider content.
+Both completion and failure observers are fail-passive: an observer exception
+cannot change a completed or fail-closed route response.
+
+A read-only full replay of the saved natural Terra response used the same 25
+title-present sources as the production adapter. It passes deterministic T2
+formatting and the T1 card builder with five recommendations: SEBO AIRBELT D4
+Premium, SEBO AIRBELT E3 Premium, Shark POWERDETECT Powered Lift-Away Upright,
+Dyson Gen5detect Absolute, and Kenmore POP-N-GO 600 Series. All five retain
+`not_verified` identity and commerce states because the replay supplies no
+independent receipts. This proves the complete saved T2-to-T1 boundary can
+succeed without weakening trust, but cannot reconstruct T4C's unretained live
+response or explain its particular runtime variation.
+
+Fail-first produced eight expected failures: seven precise-cause assertions and
+one missing completion-record assertion. Verification after correction:
+
+- focused formatter/route wall: 25/25;
+- complete `npm test`: 1087/1087 across 148 suites;
+- `npm run typecheck`: pass;
+- `npm run lint`: zero errors and the same three pre-existing warnings;
+- `npm run build`: pass;
+- `node scripts/eval-pipeline.mjs`: no red flags; and
+- `git diff --check`: pass (line-ending notices only).
+
+No parser, prompt, product eligibility, citation, source-binding, trust-state,
+card, commerce, mode, or public-response behavior was relaxed. `.env.local`,
+flags, secrets, live fixtures, untracked artifacts, and deployment state were
+untouched. A T4E lifecycle smoke remains separately approval-gated.

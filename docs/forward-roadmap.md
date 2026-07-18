@@ -1843,7 +1843,7 @@ first step that could connect the new trust contract to the application route;
 that decision affects architecture, fallback behavior, and customer-visible
 failure semantics.
 
-### OAI-T4 - default-off two-layer route architecture (T4A/T4B committed; T4C safe-failed; T4D attribution committed 2026-07-18)
+### OAI-T4 - default-off two-layer route architecture (T4A/T4B committed; T4C safe-failed; T4D precise attribution committed 2026-07-18)
 
 **Assessment:** the two-layer path is still the strongest route to the product
 objective, but a direct synchronous splice into the legacy handler would be the
@@ -1994,7 +1994,13 @@ URLs, headers, cookies, keys, or complete provider responses.
    evidence and add bounded server-only failure classifications. Preserve the
    public response and all fail-closed checks; do not retain provider content or
    change parsing without a reproduced generalized defect.
-5. **Later quality/repeatability gate.** Define a new two-layer gate from T4C
+5. **OAI-T4E - one bounded diagnostic lifecycle smoke, separately budgeted.**
+   Exercise the unchanged real route once after the precise T4D instrumentation
+   wall passes. Retain only HTTP lifecycle/timing, bounded completion metrics,
+   bounded `stage/reason/cause`, and UI card/trust-state or generic-error facts.
+   Stop after the first terminal result; do not retry or turn it into a quality
+   sample.
+6. **Later quality/repeatability gate.** Define a new two-layer gate from T4E
    actual cost, latency, and output. It must measure recommendation usefulness,
    hard-requirement fidelity, source binding, formatter success, and stability
    before any flag promotion or transactional verifier work.
@@ -2127,6 +2133,45 @@ warnings), production build, offline evaluation, and diff checks pass. No live
 provider or direct-page call, `.env.local` change, mode promotion, deployment,
 or fixture mutation occurred. A replacement lifecycle smoke, quality gate, or
 transactional verifier remains separately approval-gated.
+
+**OAI-T4D precision correction (2026-07-18; zero live; committed in current
+main history):** pre-live adversarial review found that the broad T4D reasons
+could still collapse materially different failures into another follow-up
+cycle. The formatter now pairs each broad reason with a bounded cause for its
+owned heading, section, rank, identity, registry/title, and extraction-integrity
+rejections (`lib/twoLayerFormatter.ts:34-84,524-552`). The route reports only
+that bounded `stage/reason/cause` server-side and preserves the unchanged
+generic public error (`lib/twoLayerRecommendationRoute.ts:46-56,324-354`).
+
+The same review found that a successful provider completion would otherwise
+discard the actual planning basis again. The route now emits one privacy-safe
+completion record containing only requested/returned model, duration,
+aggregate token counts, hosted-search count, and source count
+(`lib/twoLayerRecommendationRoute.ts:57-64,167-174,309-320`). It excludes raw
+prompt/answer, shopper prose, URLs/hosts, provider response IDs, tokens,
+headers, credentials, and source paths; a throwing observer cannot alter the
+route. A full route-equivalent replay of the saved Terra response passes T2 and
+T1 with five safely sparse cards, all identity and commerce states unverified.
+That exhausts saved evidence but still cannot reconstruct T4C's exact runtime
+variation.
+
+Fail-first produced eight expected failures across cause precision and the
+completion record. Corrected focused coverage passes 25/25; the complete wall
+passes 1087/1087 across 148 suites. Typecheck, lint (zero errors/three
+pre-existing warnings), production build, offline evaluation, and diff checks
+pass. No live provider/direct-page call, `.env.local` change, flag promotion,
+deployment, parser relaxation, trust change, or fixture mutation occurred.
+
+**OAI-T4E pending approval:** the smallest remaining evidence step is one
+unchanged Terra/high lifecycle smoke for broad U.S. `vacuum cleaner`: one
+Responses create, at most 20 hosted searches, and a `$7` planning basis and
+hard ceiling. Use process-only two-layer mode and an ephemeral random job-token
+secret; leave `.env.local` unchanged. No retry, replacement, fallback, Serper,
+SearchAPI, direct fetch, second response, cache reuse, extra case, helper model,
+source-page open, promotion, deployment, or push. Stop on the first terminal
+outcome. Success unlocks design of a separately approved quality gate; an
+attributed failure unlocks only an evidence-supported generalized zero-live
+repair or an architecture decision.
 
 **Offline acceptance wall for T4A/T4B:**
 

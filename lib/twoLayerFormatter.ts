@@ -31,18 +31,56 @@ export type TwoLayerFormatterFailureReason =
   | "source_title"
   | "extraction_validation";
 
+export type TwoLayerFormatterFailureCause =
+  | "numbered_product_headings_missing"
+  | "product_ranks_noncontiguous"
+  | "required_why_section_missing"
+  | "required_overall_section_missing"
+  | "required_pros_section_missing"
+  | "required_cons_section_missing"
+  | "required_sources_section_missing"
+  | "required_section_missing"
+  | "why_section_empty"
+  | "overall_section_empty"
+  | "required_section_empty"
+  | "product_identity_unparseable"
+  | "product_block_incomplete"
+  | "source_url_invalid"
+  | "cited_source_unregistered"
+  | "product_registered_source_missing"
+  | "source_registration_lost"
+  | "registered_source_title_missing"
+  | "extraction_schema_invalid"
+  | "extraction_hash_mismatch"
+  | "extraction_source_integrity"
+  | "extraction_order_integrity"
+  | "extraction_text_integrity"
+  | "extraction_unknown";
+
 export class TwoLayerFormatterError extends Error {
   readonly reason: TwoLayerFormatterFailureReason;
+  readonly failureCause: TwoLayerFormatterFailureCause;
 
-  constructor(reason: TwoLayerFormatterFailureReason, message: string) {
+  constructor(
+    reason: TwoLayerFormatterFailureReason,
+    failureCause: TwoLayerFormatterFailureCause,
+    message: string,
+  ) {
     super(message);
     this.name = "TwoLayerFormatterError";
     this.reason = reason;
+    this.failureCause = failureCause;
   }
 }
 
 export function twoLayerFormatterFailureReason(error: unknown) {
   return error instanceof TwoLayerFormatterError ? error.reason : "unknown";
+}
+
+export function twoLayerFormatterFailureDiagnostic(error: unknown) {
+  return error instanceof TwoLayerFormatterError
+    ? { reason: error.reason, cause: error.failureCause }
+    : { reason: "unknown" as const, cause: "unknown" as const };
 }
 
 type ProductBlock = {
@@ -76,6 +114,7 @@ function productBlocks(answer: string): ProductBlock[] {
   if (matches.length === 0) {
     throw new TwoLayerFormatterError(
       "product_shape",
+      "numbered_product_headings_missing",
       "Two-layer formatter found no numbered product headings",
     );
   }
@@ -123,10 +162,40 @@ function findSection(
   if (!section && required) {
     throw new TwoLayerFormatterError(
       "product_shape",
+      missingSectionFailureCause(headingPrefix),
       `Two-layer formatter missing section: ${headingPrefix}`,
     );
   }
   return section || null;
+}
+
+function missingSectionFailureCause(
+  headingPrefix: string,
+): TwoLayerFormatterFailureCause {
+  const normalized = headingPrefix.toLowerCase();
+  if (normalized.startsWith("why it ranks")) {
+    return "required_why_section_missing";
+  }
+  if (normalized.startsWith("overall assessment")) {
+    return "required_overall_section_missing";
+  }
+  if (normalized.startsWith("pros")) return "required_pros_section_missing";
+  if (normalized.startsWith("cons")) return "required_cons_section_missing";
+  if (normalized.startsWith("sources")) {
+    return "required_sources_section_missing";
+  }
+  return "required_section_missing";
+}
+
+function emptySectionFailureCause(
+  heading: string,
+): TwoLayerFormatterFailureCause {
+  const normalized = heading.toLowerCase();
+  if (normalized.startsWith("why it ranks")) return "why_section_empty";
+  if (normalized.startsWith("overall assessment")) {
+    return "overall_section_empty";
+  }
+  return "required_section_empty";
 }
 
 function firstParagraph(section: ParsedSection) {
@@ -137,6 +206,7 @@ function firstParagraph(section: ParsedSection) {
   if (!paragraph) {
     throw new TwoLayerFormatterError(
       "product_shape",
+      emptySectionFailureCause(section.heading),
       `Two-layer formatter found empty section: ${section.heading}`,
     );
   }
@@ -194,6 +264,7 @@ function parseIdentity(value: string) {
   if (!brand || !productName) {
     throw new TwoLayerFormatterError(
       "product_shape",
+      "product_identity_unparseable",
       "Two-layer formatter could not parse product identity",
     );
   }
@@ -231,6 +302,7 @@ function normalizeRegisteredSourceUrl(value: string) {
   } catch {
     throw new TwoLayerFormatterError(
       "source_registry",
+      "source_url_invalid",
       "Two-layer formatter found an invalid registered source URL",
     );
   }
@@ -245,6 +317,7 @@ export function formatTwoLayerMasterPromptAnswer(input: {
   if (ranks.some((rank, index) => rank !== index + 1)) {
     throw new TwoLayerFormatterError(
       "product_shape",
+      "product_ranks_noncontiguous",
       "Two-layer formatter requires contiguous product ranks",
     );
   }
@@ -273,6 +346,7 @@ export function formatTwoLayerMasterPromptAnswer(input: {
   if (missingUrls.length > 0) {
     throw new TwoLayerFormatterError(
       "source_registry",
+      "cited_source_unregistered",
       "Two-layer formatter source absent from response registry",
     );
   }
@@ -313,6 +387,7 @@ export function formatTwoLayerMasterPromptAnswer(input: {
     if (!whySection || !overallSection || !prosSection || !consSection || !sourceSection) {
       throw new TwoLayerFormatterError(
         "product_shape",
+        "product_block_incomplete",
         `Two-layer formatter found incomplete product block #${block.rank}`,
       );
     }
@@ -321,6 +396,7 @@ export function formatTwoLayerMasterPromptAnswer(input: {
     if (blockSourceIds.length === 0) {
       throw new TwoLayerFormatterError(
         "source_registry",
+        "product_registered_source_missing",
         `Two-layer formatter product #${block.rank} has no registered source`,
       );
     }
@@ -392,6 +468,7 @@ export function formatTwoLayerMasterPromptAnswer(input: {
       if (!registered) {
         throw new TwoLayerFormatterError(
           "source_registry",
+          "source_registration_lost",
           "Two-layer formatter lost source registration",
         );
       }
@@ -399,6 +476,7 @@ export function formatTwoLayerMasterPromptAnswer(input: {
       if (!title) {
         throw new TwoLayerFormatterError(
           "source_title",
+          "registered_source_title_missing",
           "Two-layer formatter source title absent from response registry",
         );
       }
@@ -423,6 +501,7 @@ export function formatTwoLayerMasterPromptAnswer(input: {
     if (error instanceof TwoLayerFormatterError) throw error;
     throw new TwoLayerFormatterError(
       "extraction_validation",
+      extractionFailureCause(error),
       "Two-layer formatter extraction validation failed",
     );
   }
@@ -440,4 +519,34 @@ export function formatTwoLayerMasterPromptAnswer(input: {
       ).length,
     },
   };
+}
+
+function extractionFailureCause(
+  error: unknown,
+): TwoLayerFormatterFailureCause {
+  if (error instanceof Error && error.name === "ZodError") {
+    return "extraction_schema_invalid";
+  }
+  const message = error instanceof Error ? error.message : "";
+  if (message.includes("research_text_hash_mismatch")) {
+    return "extraction_hash_mismatch";
+  }
+  if (
+    /duplicate_source_(?:id|url)|source_url_not_in_response_registry|unknown_source_id/.test(
+      message,
+    )
+  ) {
+    return "extraction_source_integrity";
+  }
+  if (
+    /duplicate_recommendation_key|rank_order_mismatch|recommendation_order_not_preserved/.test(
+      message,
+    )
+  ) {
+    return "extraction_order_integrity";
+  }
+  if (message.includes("formatter_added_text")) {
+    return "extraction_text_integrity";
+  }
+  return "extraction_unknown";
 }

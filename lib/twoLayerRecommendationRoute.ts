@@ -4,7 +4,8 @@ import {
 import { buildNormalizedShopperRequest } from "./autonomousResearchContract.ts";
 import {
   formatTwoLayerMasterPromptAnswer,
-  twoLayerFormatterFailureReason,
+  twoLayerFormatterFailureDiagnostic,
+  type TwoLayerFormatterFailureCause,
   type TwoLayerFormatterFailureReason,
 } from "./twoLayerFormatter.ts";
 import {
@@ -15,6 +16,7 @@ import {
   cancelTwoLayerResearch,
   pollTwoLayerResearch,
   startTwoLayerResearch,
+  type TwoLayerResearchLedger,
 } from "./twoLayerResearchAdapter.ts";
 import {
   isValidTwoLayerJobTokenSecret,
@@ -44,11 +46,21 @@ export type TwoLayerVerificationFailureDiagnostic =
   | {
       stage: "formatter";
       reason: TwoLayerFormatterFailureReason | "unknown";
+      cause: TwoLayerFormatterFailureCause | "unknown";
     }
   | {
       stage: "presentation";
       reason: "presentation_validation";
+      cause: "presentation_unknown";
     };
+
+export type TwoLayerCompletionDiagnostic = {
+  modelRequested: string;
+  modelReturned: string | null;
+  durationMs: number;
+  usage: TwoLayerResearchLedger["usage"];
+  sourceCount: number;
+};
 
 type TwoLayerRecommendationHandlerOptions = {
   createOpenAIClient?: typeof createDefaultOpenAIClient;
@@ -63,6 +75,7 @@ type TwoLayerRecommendationHandlerOptions = {
   onVerificationFailure?: (
     diagnostic: TwoLayerVerificationFailureDiagnostic,
   ) => void;
+  onResearchCompleted?: (diagnostic: TwoLayerCompletionDiagnostic) => void;
 };
 
 type RouteHandler = (request: Request) => Promise<Response>;
@@ -147,6 +160,14 @@ function defaultVerificationFailureReporter(
     "[ReviewRadar two-layer verification]",
     diagnostic.stage,
     diagnostic.reason,
+    diagnostic.cause,
+  );
+}
+
+function defaultCompletionReporter(diagnostic: TwoLayerCompletionDiagnostic) {
+  console.info(
+    "[ReviewRadar two-layer completion]",
+    JSON.stringify(diagnostic),
   );
 }
 
@@ -164,6 +185,7 @@ export function createTwoLayerRecommendationHandlers({
   formatAnswer = formatTwoLayerMasterPromptAnswer,
   buildPresentation = buildTwoLayerProductCards,
   onVerificationFailure = defaultVerificationFailureReporter,
+  onResearchCompleted = defaultCompletionReporter,
 }: TwoLayerRecommendationHandlerOptions): TwoLayerRecommendationHandlers {
   const reportVerificationFailure = (
     diagnostic: TwoLayerVerificationFailureDiagnostic,
@@ -172,6 +194,13 @@ export function createTwoLayerRecommendationHandlers({
       onVerificationFailure(diagnostic);
     } catch {
       // Observability must never change the fail-closed route response.
+    }
+  };
+  const reportCompletion = (diagnostic: TwoLayerCompletionDiagnostic) => {
+    try {
+      onResearchCompleted(diagnostic);
+    } catch {
+      // Observability must never change the completed route response.
     }
   };
 
@@ -280,6 +309,14 @@ export function createTwoLayerRecommendationHandlers({
         );
       }
 
+      reportCompletion({
+        modelRequested: result.ledger.modelRequested,
+        modelReturned: result.ledger.modelReturned,
+        durationMs: result.ledger.durationMs,
+        usage: { ...result.ledger.usage },
+        sourceCount: result.ledger.sourceCount,
+      });
+
       let formatted;
       try {
         formatted = formatAnswer({
@@ -287,9 +324,10 @@ export function createTwoLayerRecommendationHandlers({
           responseSources: result.responseSources,
         });
       } catch (error) {
+        const diagnostic = twoLayerFormatterFailureDiagnostic(error);
         reportVerificationFailure({
           stage: "formatter",
-          reason: twoLayerFormatterFailureReason(error),
+          ...diagnostic,
         });
         return failure(
           "verification_failed",
@@ -310,6 +348,7 @@ export function createTwoLayerRecommendationHandlers({
         reportVerificationFailure({
           stage: "presentation",
           reason: "presentation_validation",
+          cause: "presentation_unknown",
         });
         return failure(
           "verification_failed",
