@@ -87,9 +87,61 @@ describe("OAI-T4B browser recommendation lifecycle", () => {
     assert.equal(result.cards[0].key, "example");
     assert.equal(calls.length, 3);
     assert.deepEqual(calls.map((call) => call.init.method), ["POST", "GET", "GET"]);
-    assert.match(calls[1].url, /job=signed-job-token/);
+    assert.equal(calls[1].url, "/api/recommendations");
     assert.equal(calls[1].url, calls[2].url);
+    assert.equal(
+      new Headers(calls[1].init.headers).get("x-reviewradar-job-token"),
+      "signed-job-token",
+    );
+    assert.equal(calls[1].url.includes("signed-job-token"), false);
     assert.deepEqual(pending.map((state) => state.status), ["queued", "in_progress"]);
+  });
+
+  it("cancels a known job before its token expires instead of polling too late", async () => {
+    const calls = [];
+    const expiresAtMs = 1_789_000_010_000;
+    const responses = [
+      jsonResponse(
+        {
+          pipeline: "two_layer",
+          version: "oai-two-layer-api-v1",
+          state: "pending",
+          status: "queued",
+          jobToken: "expiring-job-token",
+          pollAfterMs: 10_000,
+          expiresAtMs,
+        },
+        202,
+      ),
+      jsonResponse({
+        pipeline: "two_layer",
+        version: "oai-two-layer-api-v1",
+        state: "cancelled",
+        status: "cancelled",
+      }),
+    ];
+
+    await assert.rejects(
+      () =>
+        runRecommendationRequest({
+          fetchImpl: async (url, init) => {
+            calls.push({ url, init });
+            return responses.shift();
+          },
+          now: () => expiresAtMs - 5_000,
+          payload: { query: "vacuum" },
+          signal: new AbortController().signal,
+          sleep: async () => {},
+        }),
+      /expired/i,
+    );
+
+    assert.deepEqual(calls.map((call) => call.init.method), ["POST", "DELETE"]);
+    assert.equal(calls[1].url, "/api/recommendations");
+    assert.equal(
+      new Headers(calls[1].init.headers).get("x-reviewradar-job-token"),
+      "expiring-job-token",
+    );
   });
 
   it("stops on malformed or failed responses without retrying", async () => {
@@ -141,5 +193,10 @@ describe("OAI-T4B browser recommendation lifecycle", () => {
     assert.equal(result, true);
     assert.equal(calls.length, 1);
     assert.equal(calls[0].init.method, "DELETE");
+    assert.equal(calls[0].url, "/api/recommendations");
+    assert.equal(
+      new Headers(calls[0].init.headers).get("x-reviewradar-job-token"),
+      "signed-job-token",
+    );
   });
 });

@@ -52,9 +52,10 @@ live "What ReviewRadar will match" preview (`requirements.summary`).
    `/api/recommendations` with an `AbortController`; the user can **Cancel**.
 4. In the default legacy mode, the response remains exactly `{ result }` or
    `{ error }` and retains the existing 180-second client deadline. In
-   `two_layer` mode, HTTP 202 returns a signed job token; the same helper polls
-   only that token until completion and extends the deadline to the signed job
-   expiry.
+   `two_layer` mode, HTTP 202 returns an encrypted app job token; the same
+   helper polls only that token in a request header, schedules cancellation 30
+   seconds before expiry, and extends the deadline only from the validated job
+   state.
 
 **Results display:** `components/ResultsSummary.tsx`:
 - A **Search coverage** summary (queries run, candidates evaluated, exact/near counts).
@@ -254,7 +255,9 @@ Requires `SERPER_API_KEY`. **If missing**, discovery is skipped (`stats.skippedR
 - **Default-off two-layer model:** exact `two_layer` mode freezes one
   `gpt-5.6-terra`/high background response with required hosted web search,
   at most 20 tool calls, no SDK retry, and no second model or legacy fallback.
-  GET polls only that response; DELETE cancels only that response.
+  GET polls only that response; DELETE cancels only that response. The app job
+  token is AES-256-GCM authenticated encryption and is carried in the
+  `x-reviewradar-job-token` header, never the request URL.
 - The SDK is loaded dynamically; if `openai` isn't installed the route returns the missing-key user message.
 
 **What each contributes:** Serper = breadth + real prices/retailers; OpenAI = query strategy, web-search synthesis, requirement-aware structuring, and buyer-facing prose. Deterministic TS code does the filtering, validation, scoring, and selection.
@@ -267,8 +270,9 @@ Requires `SERPER_API_KEY`. **If missing**, discovery is skipped (`stats.skippedR
 - `REVIEW_RADAR_PIPELINE_MODE` — server-only; missing/empty/`legacy` preserves
   the existing pipeline, while exact `two_layer` enables the new background
   branch. Other non-empty values are configuration errors.
-- `REVIEW_RADAR_JOB_TOKEN_SECRET` — server-only HMAC secret of at least 32
-  bytes, required only in `two_layer` mode.
+- `REVIEW_RADAR_JOB_TOKEN_SECRET` — server-only random secret of at least 32
+  bytes, used to derive the authenticated-encryption key and required only in
+  `two_layer` mode.
 - Feature flags: `REVIEW_RADAR_SPEC_VALIDATION`, `REVIEW_RADAR_CATEGORY_SCORING`, `REVIEW_RADAR_CREDIBILITY_PENALTY`, `REVIEW_RADAR_SPEC_SEARCH`, `REVIEW_RADAR_LLM_NARRATION` (set to `on`). `REVIEW_RADAR_DEBUG_LOGS=true` enables server-side discovery logs (non-prod).
 - `NODE_ENV` — gates debug output and dev-only `scoreDebug`.
 
@@ -333,9 +337,9 @@ deterministic normalization + versioned natural master prompt
    ↓
 one Terra/high background Responses API create with required web search
    ↓
-202 signed app job token
+202 encrypted/authenticated app job token
    ↓
-browser GET polling of only that token / optional one-job DELETE cancellation
+browser GET polling via a token header / pre-expiry or user-requested DELETE
    ↓
 response-owned titled source registry + natural research answer (server-only)
    ↓
@@ -345,7 +349,8 @@ OAI-T1 trust validation + cards (receiptInputs: [])
    ↓
 versioned cards/source catalog only
    ↓
-TwoLayerResults trust-state renderer
+TwoLayerResults trust-state renderer; claim-local citation labels and neutral
+source labels unless semantic source type is established
 ```
 
 The two-layer browser never receives the complete prompt, raw answer, raw

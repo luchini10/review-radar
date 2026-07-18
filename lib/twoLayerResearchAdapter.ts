@@ -6,6 +6,7 @@ import {
   buildTwoLayerMasterPrompt,
   TWO_LAYER_MASTER_PROMPT_VERSION,
 } from "./twoLayerMasterPrompt.ts";
+import { normalizeTwoLayerSourceUrl } from "./twoLayerSourceUrl.ts";
 import type { TwoLayerResponseSource } from "./twoLayerFormatter.ts";
 
 type ResponsesClient = {
@@ -176,10 +177,7 @@ function hashResponseId(value: string) {
 function responseSourceUrl(value: unknown) {
   if (typeof value !== "string") return null;
   try {
-    const parsed = new URL(value);
-    if (!(["http:", "https:"] as string[]).includes(parsed.protocol)) return null;
-    parsed.hash = "";
-    return parsed.toString().replace(/\/$/, "");
+    return normalizeTwoLayerSourceUrl(value);
   } catch {
     return null;
   }

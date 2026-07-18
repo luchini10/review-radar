@@ -1843,7 +1843,7 @@ first step that could connect the new trust contract to the application route;
 that decision affects architecture, fallback behavior, and customer-visible
 failure semantics.
 
-### OAI-T4 - default-off two-layer route architecture (T4A committed; T4B complete locally 2026-07-17; zero live; T4C unapproved)
+### OAI-T4 - default-off two-layer route architecture (T4A/T4B committed; T4B corrective complete locally 2026-07-18; zero live; T4C unapproved)
 
 **Assessment:** the two-layer path is still the strongest route to the product
 objective, but a direct synchronous splice into the legacy handler would be the
@@ -1890,9 +1890,9 @@ POST /api/recommendations
      -> legacy: unchanged legacy handler and response
      -> two_layer: deterministic request normalization and versioned prompt
         -> one Responses API create, Terra/high, background + hosted web search
-        -> return 202 with a signed, expiring job token
+        -> return 202 with an encrypted, authenticated, expiring job token
 
-GET /api/recommendations?job=...
+GET /api/recommendations with the app token in x-reviewradar-job-token
   -> verify token, retrieve the same OpenAI response
   -> pending: return 202 and poll guidance
   -> completed: collect response-owned source metadata
@@ -1900,14 +1900,16 @@ GET /api/recommendations?job=...
      -> OAI-T1 validation and card construction, initially with zero receipts
      -> return the versioned two-layer response
 
-DELETE /api/recommendations?job=...
+DELETE /api/recommendations with the app token in x-reviewradar-job-token
   -> verify token and request OpenAI cancellation
   -> never start a replacement or legacy fallback
 ```
 
-The job token contains only an opaque response ID, contract version, expiry,
-and signature. It contains no shopper request, prompt, answer, source URL, API
-key, or other credential. It is signed with a new server-only
+The job token is authenticated encryption over the response ID, prompt
+version/hash, issue time, and expiry. Those fields are not client-decodable,
+and the token is never placed in a request URL. It contains no shopper request,
+prompt, answer, source URL, API key, or other credential. Its key is derived
+from a new server-only
 `REVIEW_RADAR_JOB_TOKEN_SECRET`; two-layer mode fails before provider creation
 when that secret or `OPENAI_API_KEY` is absent. Legacy mode does not require the
 new secret.
@@ -2020,9 +2022,11 @@ only a signed app token and poll guidance, retrieves or cancels only the token's
 response, and never enters Serper, SearchAPI, a second model, the legacy helper
 stack, or a fallback.
 
-The integration advances the token contract to `oai-two-layer-job-v2` because
-stateless retrieval must authenticate the request-specific prompt hash as well
-as the response ID and prompt version. Completion deterministically runs OAI-T2
+The integration originally advanced the token contract to
+`oai-two-layer-job-v2` because stateless retrieval must authenticate the
+request-specific prompt hash as well as the response ID and prompt version.
+The July 18 corrective pass supersedes that transport with encrypted
+`oai-two-layer-job-v3`. Completion deterministically runs OAI-T2
 then OAI-T1 with `receiptInputs: []`; the public body contains cards and the UI
 source catalog, not the prompt, raw answer, provider response ID, or raw source
 envelope. The browser accepts the unchanged legacy body or the versioned
@@ -2039,6 +2043,33 @@ design has one bounded residual race: if a user cancels before POST returns the
 signed token, the browser cannot identify and cancel a response the server may
 already have created. T4C and all flag promotion remain separately approval-
 gated.
+
+**OAI-T4B corrective result (2026-07-18; zero live; complete locally and
+uncommitted):** the pre-T4C adversarial review found five real trust/lifecycle
+defects and closed them without changing the default legacy path. The stateless
+token now uses AES-256-GCM with an HKDF-derived key, random 96-bit nonce, and
+authenticated version context, so the provider response ID and prompt hash are
+not client-decodable. GET and DELETE carry the app token only in the
+`x-reviewradar-job-token` header; query-string tokens are rejected. The browser
+shortens waits and attempts one DELETE 30 seconds before token expiry. This is
+best-effort in a browser and does not erase the separate pre-token cancellation
+race or guarantee scheduling while a tab is suspended.
+
+Claim trust is now claim-local: a specification, performance, or owner claim
+is `Source-reported` only when that individual bullet contains a registered
+citation; otherwise it is retained as `AI research synthesis`. Source section
+headings no longer invent semantic roles, so current response metadata renders
+the neutral `Research source` label. One shared source-URL canonicalizer removes
+only a narrow list of tracking parameters. All remaining parameter order and
+values, plus fragments, are preserved because they can carry signed or routed
+product identity; this includes `sku`, `variant`, `pid`, `id`, and ambiguous
+`ref`.
+
+Fail-first produced 12 expected failures. Corrected focused coverage passes
+59/59, the complete wall passes 1081/1081 across 148 suites, and typecheck,
+lint, build, offline evaluation, diff checks, and focused two-layer browser
+3/3 pass. No live call, `.env.local` edit, flag promotion, deployment, or T4C
+work occurred.
 
 **Offline acceptance wall for T4A/T4B:**
 

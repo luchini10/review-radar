@@ -41,16 +41,28 @@ describe("OAI-T4A signed background-job token", () => {
     assert.equal(token.includes("shopper"), false);
   });
 
-  it("rejects payload and signature tampering", () => {
+  it("does not expose provider IDs or prompt hashes in client-decodable segments", () => {
     const token = issue();
-    const [payload, signature] = token.split(".");
+    const decodedSegments = token.split(".").map((segment) =>
+      Buffer.from(segment, "base64url").toString("utf8"),
+    );
 
-    for (const tampered of [
-      `${payload.slice(0, -1)}A.${signature}`,
-      `${payload}.${signature.slice(0, -1)}A`,
-    ]) {
+    assert.equal(token.includes("resp_test_123456789"), false);
+    assert.equal(decodedSegments.some((value) => value.includes("resp_test_123456789")), false);
+    assert.equal(decodedSegments.some((value) => value.includes("a".repeat(64))), false);
+  });
+
+  it("rejects ciphertext, nonce, and authentication-tag tampering", () => {
+    const token = issue();
+    const parts = token.split(".");
+    assert.equal(parts.length, 4);
+
+    for (const index of [1, 2, 3]) {
+      const tamperedParts = [...parts];
+      const first = tamperedParts[index][0];
+      tamperedParts[index] = `${first === "A" ? "B" : "A"}${tamperedParts[index].slice(1)}`;
       assert.deepEqual(
-        verifyTwoLayerJobToken({ token: tampered, secret, nowMs }),
+        verifyTwoLayerJobToken({ token: tamperedParts.join("."), secret, nowMs }),
         { ok: false, reason: "invalid_token" },
       );
     }

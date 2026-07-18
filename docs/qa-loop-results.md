@@ -8271,3 +8271,57 @@ server reset under six workers, while the complete one-worker run passed.
 was not read or changed. No live fixture was added, no mode was promoted, no
 deployment occurred, and this phase remains uncommitted pending Taylor's
 separate commit approval. T4C is not approved.
+
+## 🟧 Codex — OAI-T4B pre-T4C corrective phase (2026-07-18)
+
+**Verdict: PASS OFFLINE — five reproduced lifecycle/trust defects are closed;
+the legacy default remains unchanged.** Taylor approved a small zero-live T4B
+correction before T4C. No OpenAI, Serper, SearchAPI, direct source-page, or
+other provider call occurred.
+
+The fail-first wall produced 12 expected failures. It proved that the v2 HMAC
+token exposed the provider response ID and prompt hash when Base64URL-decoded;
+GET/DELETE placed the app capability in the URL; the client could reach expiry
+without cancelling; uncited claim bullets inherited section-level citations;
+answer headings invented semantic source roles; and tracking variants occupied
+separate source-registry rows.
+
+The corrected boundary is:
+
+- `oai-two-layer-job-v3` uses AES-256-GCM with a 32-byte HKDF-derived key, a
+  fresh 96-bit nonce, a 128-bit authentication tag, and the token version as
+  authenticated context. Provider IDs and prompt hashes are no longer
+  client-decodable, and tampering/wrong keys/expiry still fail closed.
+- GET and DELETE use `x-reviewradar-job-token`; query-string tokens are rejected
+  before provider-client creation. The browser shortens its polling sleep and
+  attempts one DELETE 30 seconds before expiry.
+- A structured claim is `Source-reported` only when that exact claim bullet
+  contains a registered citation. An uncited claim remains visible but is
+  downgraded to `AI research synthesis` with no source IDs.
+- Current OpenAI source metadata does not establish manufacturer/editorial/
+  owner roles, so source headings no longer assign them. The route displays
+  `Research source` unless a future trusted contract establishes a role.
+- One shared URL canonicalizer removes only conservative tracking keys
+  (`utm_*` plus an explicit click/analytics list). It preserves remaining
+  parameter order and values, fragments, `sku`, `variant`, `pid`, `id`, `ref`,
+  and all other potentially identity-bearing data.
+
+Verification completed with zero live calls:
+
+- corrected focused wall: 59/59 across eight suites;
+- complete `npm test`: 1081/1081 across 148 suites;
+- `npm run typecheck`: pass;
+- `npm run lint`: zero errors and three pre-existing warnings;
+- `npm run build`: pass;
+- `node scripts/eval-pipeline.mjs`: no red flags;
+- `npm run test:e2e -- --project=chromium --workers=1`: 15/15;
+- focused two-layer Playwright: 3/3; and
+- `git diff --check`: pass (line-ending notices only).
+
+The cancellation improvement is deliberately described as best-effort. Browser
+timer suspension can still cross the 30-second margin, and a response created
+before POST returns a token remains unknowable to the client. A guaranteed
+server-side cancellation scheduler would require durable job state and is not
+being smuggled into this corrective phase. `.env.local`, flags, live fixtures,
+deployment state, and T4C were untouched. Changes remain uncommitted pending
+Taylor's separate approval.

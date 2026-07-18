@@ -197,6 +197,38 @@ describe("OAI-T2 deterministic master-prompt formatter", () => {
     assert.ok(claims.every((claim) => claim.evidence_scope === "unresolved"));
   });
 
+  it("requires a citation on the individual claim before calling it source-reported", () => {
+    const result = format();
+    const shark = result.formattedOutput.recommendations[0];
+    const uncited = shark.claims.find((claim) => claim.text.includes("**Type:**"));
+    const cited = shark.claims.find((claim) => claim.text.includes("**Weight:**"));
+
+    assert.deepEqual(uncited.source_ids, []);
+    assert.deepEqual(cited.source_ids, ["s1"]);
+
+    const cards = buildTwoLayerProductCards({
+      rawResearchText,
+      responseSourceUrls: responseSources().map((source) => source.url),
+      formattedOutput: result.formattedOutput,
+      receiptInputs: [],
+    });
+    const uncitedCardClaim = cards.cards[0].claims.find((claim) =>
+      claim.value.includes("**Type:**"),
+    );
+    const citedCardClaim = cards.cards[0].claims.find((claim) =>
+      claim.value.includes("**Weight:**"),
+    );
+    assert.equal(uncitedCardClaim.trust, "research_synthesis");
+    assert.equal(uncitedCardClaim.label, "AI research synthesis");
+    assert.equal(citedCardClaim.trust, "source_reported");
+    assert.equal(citedCardClaim.label, "Source-reported");
+  });
+
+  it("uses neutral source roles when semantic source type is not established", () => {
+    const result = format();
+    assert.ok(result.formattedOutput.sources.every((source) => source.role === "other"));
+  });
+
   it("preserves a named variant while leaving its exact identity unverified", () => {
     const result = format();
     const dyson = result.formattedOutput.recommendations[1];

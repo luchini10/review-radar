@@ -3,6 +3,8 @@ import type { TwoLayerProductCard } from "./twoLayerRecommendation.ts";
 export const TWO_LAYER_API_VERSION = "oai-two-layer-api-v1";
 export const TWO_LAYER_POLL_AFTER_MS = 2_000;
 export const TWO_LAYER_JOB_TTL_MS = 10 * 60_000;
+export const TWO_LAYER_CANCEL_BEFORE_EXPIRY_MS = 30_000;
+export const TWO_LAYER_JOB_TOKEN_HEADER = "x-reviewradar-job-token";
 
 export type TwoLayerDisplaySource = {
   id: string;

@@ -47,12 +47,12 @@ Best for mixed floors. Its main tradeoff is weight. ([tests.example.org](${testU
 `.trim();
 
 function request(method, body, token) {
-  const url = token
-    ? `http://localhost/api/recommendations?job=${encodeURIComponent(token)}`
-    : "http://localhost/api/recommendations";
-  return new Request(url, {
+  return new Request("http://localhost/api/recommendations", {
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { "x-reviewradar-job-token": token } : {}),
+    },
     method,
   });
 }
@@ -296,6 +296,10 @@ describe("OAI-T4B signed background route lifecycle", () => {
       completed.body.sources.map((source) => source.url),
       [productUrl, testUrl],
     );
+    assert.deepEqual(
+      completed.body.sources.map((source) => source.label),
+      ["Research source", "Research source"],
+    );
     const serialized = JSON.stringify(completed.body);
     assert.equal(serialized.includes(rawAnswer), false);
     assert.equal(serialized.includes("responseSources"), false);
@@ -325,6 +329,27 @@ describe("OAI-T4B signed background route lifecycle", () => {
       const response = await handlers.GET(request("GET", undefined, token));
       assert.equal(response.status, expectedStatus);
     }
+    assert.deepEqual(simulation.calls, []);
+  });
+
+  it("does not accept a job token from the request URL", async () => {
+    const simulation = lifecycle();
+    const handlers = buildTwoLayerHandlers(simulation);
+    const token = issueTwoLayerJobToken({
+      responseId,
+      promptVersion: "oai-two-layer-master-prompt-v1",
+      promptHash: "a".repeat(64),
+      secret,
+      nowMs,
+      ttlMs: 10 * 60_000,
+    });
+    const response = await handlers.GET(
+      new Request(
+        `http://localhost/api/recommendations?job=${encodeURIComponent(token)}`,
+      ),
+    );
+
+    assert.equal(response.status, 400);
     assert.deepEqual(simulation.calls, []);
   });
 

@@ -1,12 +1,29 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import {
+  createCipheriv,
+  createDecipheriv,
+  hkdfSync,
+  randomBytes,
+} from "node:crypto";
 
 import { TWO_LAYER_MASTER_PROMPT_VERSION } from "./twoLayerMasterPrompt.ts";
 
-export const TWO_LAYER_JOB_TOKEN_VERSION = "oai-two-layer-job-v2";
+export const TWO_LAYER_JOB_TOKEN_VERSION = "oai-two-layer-job-v3";
 
 const MINIMUM_SECRET_BYTES = 32;
 const MAXIMUM_TOKEN_LIFETIME_MS = 30 * 60_000;
 const MAXIMUM_TOKEN_LENGTH = 2_048;
+const TOKEN_NONCE_BYTES = 12;
+const TOKEN_AUTH_TAG_BYTES = 16;
+const TOKEN_KEY_BYTES = 32;
+const TOKEN_KEY_SALT = Buffer.from(
+  "ReviewRadar two-layer job token salt v1",
+  "utf8",
+);
+const TOKEN_KEY_INFO = Buffer.from(
+  "ReviewRadar two-layer job token encryption v3",
+  "utf8",
+);
+const TOKEN_AAD = Buffer.from(TWO_LAYER_JOB_TOKEN_VERSION, "utf8");
 const responseIdPattern = /^resp_[A-Za-z0-9_-]{8,}$/;
 const promptHashPattern = /^[a-f0-9]{64}$/;
 
@@ -52,14 +69,16 @@ function isSafeInteger(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value);
 }
 
-function encodePayload(payload: TwoLayerJobTokenPayload) {
-  return Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
-}
-
-function signPayload(encodedPayload: string, secret: string) {
-  return createHmac("sha256", secret)
-    .update(encodedPayload, "utf8")
-    .digest("base64url");
+function tokenKey(secret: string) {
+  return Buffer.from(
+    hkdfSync(
+      "sha256",
+      Buffer.from(secret, "utf8"),
+      TOKEN_KEY_SALT,
+      TOKEN_KEY_INFO,
+      TOKEN_KEY_BYTES,
+    ),
+  );
 }
 
 function payloadHasExactKeys(value: Record<string, unknown>) {
@@ -74,9 +93,8 @@ function payloadHasExactKeys(value: Record<string, unknown>) {
   return JSON.stringify(Object.keys(value).sort()) === JSON.stringify(expected);
 }
 
-function parsePayload(encodedPayload: string): TwoLayerJobTokenPayload | null {
+function parsePayload(decoded: string): TwoLayerJobTokenPayload | null {
   try {
-    const decoded = Buffer.from(encodedPayload, "base64url").toString("utf8");
     const value: unknown = JSON.parse(decoded);
     if (!value || typeof value !== "object" || Array.isArray(value)) return null;
     const record = value as Record<string, unknown>;
@@ -136,8 +154,22 @@ export function issueTwoLayerJobToken({
     issuedAtMs: nowMs,
     expiresAtMs: nowMs + ttlMs,
   };
-  const encodedPayload = encodePayload(payload);
-  return `${encodedPayload}.${signPayload(encodedPayload, secret)}`;
+  const nonce = randomBytes(TOKEN_NONCE_BYTES);
+  const cipher = createCipheriv("aes-256-gcm", tokenKey(secret), nonce, {
+    authTagLength: TOKEN_AUTH_TAG_BYTES,
+  });
+  cipher.setAAD(TOKEN_AAD);
+  const ciphertext = Buffer.concat([
+    cipher.update(JSON.stringify(payload), "utf8"),
+    cipher.final(),
+  ]);
+  const authTag = cipher.getAuthTag();
+  return [
+    TWO_LAYER_JOB_TOKEN_VERSION,
+    nonce.toString("base64url"),
+    ciphertext.toString("base64url"),
+    authTag.toString("base64url"),
+  ].join(".");
 }
 
 export function verifyTwoLayerJobToken({
@@ -158,17 +190,45 @@ export function verifyTwoLayerJobToken({
     return { ok: false, reason: "invalid_token" };
   }
   const parts = token.split(".");
-  if (parts.length !== 2 || !parts[0] || !parts[1]) {
+  if (
+    parts.length !== 4 ||
+    parts[0] !== TWO_LAYER_JOB_TOKEN_VERSION ||
+    !parts[1] ||
+    !parts[2] ||
+    !parts[3]
+  ) {
     return { ok: false, reason: "invalid_token" };
   }
 
-  const expected = Buffer.from(signPayload(parts[0], secret), "utf8");
-  const provided = Buffer.from(parts[1], "utf8");
-  if (expected.length !== provided.length || !timingSafeEqual(expected, provided)) {
+  let payload: TwoLayerJobTokenPayload | null = null;
+  try {
+    const nonce = Buffer.from(parts[1], "base64url");
+    const ciphertext = Buffer.from(parts[2], "base64url");
+    const authTag = Buffer.from(parts[3], "base64url");
+    if (
+      nonce.length !== TOKEN_NONCE_BYTES ||
+      ciphertext.length === 0 ||
+      authTag.length !== TOKEN_AUTH_TAG_BYTES
+    ) {
+      return { ok: false, reason: "invalid_token" };
+    }
+    const decipher = createDecipheriv(
+      "aes-256-gcm",
+      tokenKey(secret),
+      nonce,
+      { authTagLength: TOKEN_AUTH_TAG_BYTES },
+    );
+    decipher.setAAD(TOKEN_AAD);
+    decipher.setAuthTag(authTag);
+    const plaintext = Buffer.concat([
+      decipher.update(ciphertext),
+      decipher.final(),
+    ]).toString("utf8");
+    payload = parsePayload(plaintext);
+  } catch {
     return { ok: false, reason: "invalid_token" };
   }
 
-  const payload = parsePayload(parts[0]);
   if (!payload || payload.issuedAtMs > nowMs) {
     return { ok: false, reason: "invalid_token" };
   }

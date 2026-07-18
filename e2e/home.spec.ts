@@ -159,11 +159,15 @@ for (const viewport of [
   }) => {
     await page.setViewportSize(viewport);
     const jobToken = "signed-app-job-token";
-    const requests: Array<{ method: string; url: string }> = [];
+    const requests: Array<{ method: string; url: string; token: string | null }> = [];
 
     await page.route("**/api/recommendations**", async (route) => {
       const method = route.request().method();
-      requests.push({ method, url: route.request().url() });
+      requests.push({
+        method,
+        url: route.request().url(),
+        token: route.request().headers()["x-reviewradar-job-token"] || null,
+      });
       if (method === "POST") {
         await route.fulfill({
           contentType: "application/json",
@@ -206,9 +210,8 @@ for (const viewport of [
     ).toBeVisible();
     await expect(page.getByText("Check current price")).toBeVisible();
     expect(requests.map((entry) => entry.method)).toEqual(["POST", "GET"]);
-    expect(requests[1].url).toContain(
-      `job=${encodeURIComponent(jobToken)}`,
-    );
+    expect(requests[1].url).not.toContain(jobToken);
+    expect(requests[1].token).toBe(jobToken);
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,

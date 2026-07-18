@@ -19,6 +19,7 @@ import {
 } from "./twoLayerJobToken.ts";
 import {
   TWO_LAYER_API_VERSION,
+  TWO_LAYER_JOB_TOKEN_HEADER,
   TWO_LAYER_JOB_TTL_MS,
   TWO_LAYER_POLL_AFTER_MS,
   type TwoLayerDisplaySource,
@@ -107,11 +108,7 @@ function configuredEnvironment(environment: TwoLayerEnvironment) {
 }
 
 function jobTokenFromRequest(request: Request) {
-  try {
-    return new URL(request.url).searchParams.get("job") || "";
-  } catch {
-    return "";
-  }
+  return request.headers.get(TWO_LAYER_JOB_TOKEN_HEADER)?.trim() || "";
 }
 
 function failureForResearchReason(reason: string) {

@@ -4,6 +4,7 @@ import {
   type TwoLayerResearch,
   validateTwoLayerResearchExtraction,
 } from "./twoLayerRecommendation.ts";
+import { normalizeTwoLayerSourceUrl } from "./twoLayerSourceUrl.ts";
 
 export const TWO_LAYER_FORMATTER_VERSION =
   "oai-two-layer-deterministic-formatter-v1";
@@ -39,12 +40,6 @@ type ParsedSection = {
 const productHeadingPattern =
   /^#\s+#(\d+)\s+(Best Match|Close Match)\s+[—–-]\s+(.+?)\s*$/gim;
 const markdownUrlPattern = /\]\((https?:\/\/[^)\s]+)\)/gi;
-
-function normalizeUrl(value: string) {
-  const parsed = new URL(value);
-  parsed.hash = "";
-  return parsed.toString().replace(/\/$/, "");
-}
 
 function unique<T>(values: readonly T[]) {
   return [...new Set(values)];
@@ -198,21 +193,6 @@ function statusFromBlock(block: ProductBlock) {
   return block.headingStatus;
 }
 
-function sourceRoleFromSection(section: string) {
-  if (/warranty|support/i.test(section)) return "warranty_support" as const;
-  if (/owner/i.test(section)) return "owner_feedback" as const;
-  if (/professional|performance|test/i.test(section)) {
-    return "professional_test" as const;
-  }
-  if (/official|manufacturer|feature|specification/i.test(section)) {
-    return "manufacturer_spec" as const;
-  }
-  if (/purchase|availability|retailer/i.test(section)) {
-    return "purchase_page" as const;
-  }
-  return "other" as const;
-}
-
 export function formatTwoLayerMasterPromptAnswer(input: {
   rawResearchText: string;
   responseSources: readonly TwoLayerResponseSource[];
@@ -226,7 +206,7 @@ export function formatTwoLayerMasterPromptAnswer(input: {
   const registry = new Map<string, TwoLayerResponseSource>();
   for (const source of input.responseSources) {
     if (!source.url) continue;
-    const normalized = normalizeUrl(source.url);
+    const normalized = normalizeTwoLayerSourceUrl(source.url);
     if (!registry.has(normalized)) registry.set(normalized, source);
   }
 
@@ -239,9 +219,10 @@ export function formatTwoLayerMasterPromptAnswer(input: {
         )
         .flatMap((section) => extractMarkdownUrls(section.body)),
     ),
-  );
-  const missingUrls = citedUrls.filter(
-    (url) => !registry.has(normalizeUrl(url)),
+  ).map(normalizeTwoLayerSourceUrl);
+  const canonicalCitedUrls = unique(citedUrls);
+  const missingUrls = canonicalCitedUrls.filter(
+    (url) => !registry.has(url),
   );
   if (missingUrls.length > 0) {
     throw new Error(
@@ -250,11 +231,11 @@ export function formatTwoLayerMasterPromptAnswer(input: {
   }
 
   const urlToId = new Map(
-    citedUrls.map((url, index) => [normalizeUrl(url), `s${index + 1}`]),
+    canonicalCitedUrls.map((url, index) => [url, `s${index + 1}`]),
   );
   const sourceIdsForText = (value: string, fallback: readonly string[] = []) => {
     const ids = extractMarkdownUrls(value)
-      .map((url) => urlToId.get(normalizeUrl(url)))
+      .map((url) => urlToId.get(normalizeTwoLayerSourceUrl(url)))
       .filter((id): id is string => Boolean(id));
     return unique(ids.length > 0 ? ids : fallback);
   };
@@ -303,13 +284,10 @@ export function formatTwoLayerMasterPromptAnswer(input: {
         | "professional_performance"
         | "owner_feedback",
     ) => {
-      const sectionSourceIds = section
-        ? sourceIdsForText(section.body, blockSourceIds)
-        : blockSourceIds;
       return bulletItems(section).map((text) => ({
         claim_type: claimType,
         text,
-        source_ids: sourceIdsForText(text, sectionSourceIds),
+        source_ids: sourceIdsForText(text),
         evidence_scope: "unresolved" as const,
       }));
     };
@@ -355,24 +333,11 @@ export function formatTwoLayerMasterPromptAnswer(input: {
     };
   });
 
-  const roleByUrl = new Map<string, ReturnType<typeof sourceRoleFromSection>>();
-  for (const block of blocks) {
-    for (const section of parseSections(block.text)) {
-      const role = sourceRoleFromSection(section.heading);
-      for (const url of extractMarkdownUrls(section.body)) {
-        const normalized = normalizeUrl(url);
-        if (!roleByUrl.has(normalized) || role !== "other") {
-          roleByUrl.set(normalized, role);
-        }
-      }
-    }
-  }
-
   const formattedOutput = {
     version: TWO_LAYER_RESEARCH_VERSION,
     research_text_sha256: hashTwoLayerResearchText(input.rawResearchText),
-    sources: citedUrls.map((url) => {
-      const registered = registry.get(normalizeUrl(url));
+    sources: canonicalCitedUrls.map((url) => {
+      const registered = registry.get(url);
       if (!registered) {
         throw new Error(`Two-layer formatter lost source registration: ${url}`);
       }
@@ -383,10 +348,10 @@ export function formatTwoLayerMasterPromptAnswer(input: {
         );
       }
       return {
-        id: urlToId.get(normalizeUrl(url)) || "",
+        id: urlToId.get(url) || "",
         title,
         url,
-        role: roleByUrl.get(normalizeUrl(url)) || "other",
+        role: "other" as const,
       };
     }),
     recommendations,

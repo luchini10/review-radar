@@ -9,6 +9,30 @@ Update this file after:
 - important bug fixes
 - live QA fixes worth remembering
 
+## 2026-07-18
+
+### 🟧 Codex - T4B pre-live trust and lifecycle correction
+
+#### Changed
+
+- Replaced readable signed job payloads with encrypted, authenticated app
+  tokens and moved polling/cancellation tokens out of request URLs and into a
+  dedicated header.
+- Added a 30-second pre-expiry cancellation boundary for known background jobs.
+- Required each displayed source-reported claim to carry its own registered
+  citation; uncited claims remain visible as AI research synthesis.
+- Stopped inferring source categories from answer headings. Unknown categories
+  now display the neutral `Research source` label.
+- Deduplicated source URLs after removing only conservative tracking parameters
+  while preserving product-identity parameters.
+
+#### Verified
+
+- Zero live calls. Fail-first produced 12 expected failures; corrected focused
+  tests pass 59/59 and the complete suite passes 1081/1081 across 148 suites.
+- Typecheck, build, offline evaluation, diff checks, and focused two-layer
+  browser tests pass. Lint has zero errors and three pre-existing warnings.
+
 ## 2026-07-17
 
 ### 🟧 Codex - Default-off two-layer background route and UI

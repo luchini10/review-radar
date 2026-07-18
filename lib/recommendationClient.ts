@@ -3,6 +3,8 @@ import {
   isTwoLayerCompletedResponse,
   isTwoLayerFailureResponse,
   isTwoLayerPendingResponse,
+  TWO_LAYER_CANCEL_BEFORE_EXPIRY_MS,
+  TWO_LAYER_JOB_TOKEN_HEADER,
   type TwoLayerCompletedResponse,
   type TwoLayerPendingResponse,
 } from "./twoLayerApiContract.ts";
@@ -125,20 +127,27 @@ export async function runRecommendationRequest({
   onTwoLayerPending?.(body);
 
   while (true) {
-    if (now() >= body.expiresAtMs) {
+    const cancelAtMs = body.expiresAtMs - TWO_LAYER_CANCEL_BEFORE_EXPIRY_MS;
+    const millisecondsUntilCancellation = cancelAtMs - now();
+    if (millisecondsUntilCancellation <= 0) {
+      await cancelTwoLayerRecommendationJob({ jobToken, fetchImpl });
       throw new RecommendationClientError(
         "This research job expired. Please start a new search.",
       );
     }
-    await sleep(body.pollAfterMs, signal);
-    const pollResponse = await fetchImpl(
-      `/api/recommendations?job=${encodeURIComponent(jobToken)}`,
-      {
-        cache: "no-store",
-        method: "GET",
-        signal,
-      },
-    );
+    await sleep(Math.min(body.pollAfterMs, millisecondsUntilCancellation), signal);
+    if (now() >= cancelAtMs) {
+      await cancelTwoLayerRecommendationJob({ jobToken, fetchImpl });
+      throw new RecommendationClientError(
+        "This research job expired. Please start a new search.",
+      );
+    }
+    const pollResponse = await fetchImpl("/api/recommendations", {
+      cache: "no-store",
+      headers: { [TWO_LAYER_JOB_TOKEN_HEADER]: jobToken },
+      method: "GET",
+      signal,
+    });
     body = await parseJson(pollResponse);
     assertSuccessfulResponse(pollResponse, body);
 
@@ -157,14 +166,12 @@ export async function cancelTwoLayerRecommendationJob({
   fetchImpl = fetch,
 }: CancelRecommendationJobOptions) {
   try {
-    const response = await fetchImpl(
-      `/api/recommendations?job=${encodeURIComponent(jobToken)}`,
-      {
-        cache: "no-store",
-        keepalive: true,
-        method: "DELETE",
-      },
-    );
+    const response = await fetchImpl("/api/recommendations", {
+      cache: "no-store",
+      headers: { [TWO_LAYER_JOB_TOKEN_HEADER]: jobToken },
+      keepalive: true,
+      method: "DELETE",
+    });
     const body = await parseJson(response);
     return response.ok && isTwoLayerCancelledResponse(body);
   } catch {

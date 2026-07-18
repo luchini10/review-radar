@@ -170,9 +170,8 @@ describe("OAI-T4A natural-text background adapter", () => {
   it("merges response-owned action and citation metadata without leaking paths to the ledger", async () => {
     const sources = extractTwoLayerResponseSources(completedResponse());
     assert.deepEqual(sources, [
-      { url: `${productUrl}?utm_source=openai`, title: "Example Vacuum", type: null },
+      { url: productUrl, title: "Example Vacuum", type: null },
       { url: testUrl, title: "Example Vacuum test", type: null },
-      { url: productUrl, title: "Example Vacuum", type: "url_citation" },
     ]);
 
     const simulation = mockClient();

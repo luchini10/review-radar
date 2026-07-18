@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 
 import { classifyProductEligibility } from "./productEligibility.ts";
+import { normalizeTwoLayerSourceUrl } from "./twoLayerSourceUrl.ts";
 
 export const TWO_LAYER_RESEARCH_VERSION = "oai-two-layer-research-v1";
 export const TWO_LAYER_COMMERCE_RECEIPT_VERSION =
@@ -45,7 +46,7 @@ const researchClaimSchema = z
       "other",
     ]),
     text: nonEmptyText,
-    source_ids: sourceIds,
+    source_ids: z.array(sourceId),
     evidence_scope: z.enum([
       "exact_model",
       "family_or_variant",
@@ -168,9 +169,7 @@ export function twoLayerIdentityFingerprint(identity: TwoLayerIdentity) {
 }
 
 function normalizedRegistryUrl(value: string) {
-  const parsed = new URL(value);
-  parsed.hash = "";
-  return parsed.toString().replace(/\/$/, "");
+  return normalizeTwoLayerSourceUrl(value);
 }
 
 function recommendationTextFields(
@@ -306,14 +305,24 @@ export type TwoLayerProductCard = {
   };
   pros: TrustValue[];
   cons: TrustValue[];
-  claims: Array<{
-    claimType: TwoLayerResearch["recommendations"][number]["claims"][number]["claim_type"];
-    value: string;
-    trust: "source_reported";
-    label: (typeof TWO_LAYER_TRUST_LABELS)["source_reported"];
-    sourceIds: string[];
-    evidenceScope: TwoLayerResearch["recommendations"][number]["claims"][number]["evidence_scope"];
-  }>;
+  claims: Array<
+    {
+      claimType: TwoLayerResearch["recommendations"][number]["claims"][number]["claim_type"];
+      value: string;
+      sourceIds: string[];
+      evidenceScope: TwoLayerResearch["recommendations"][number]["claims"][number]["evidence_scope"];
+    } &
+      (
+        | {
+            trust: "source_reported";
+            label: (typeof TWO_LAYER_TRUST_LABELS)["source_reported"];
+          }
+        | {
+            trust: "research_synthesis";
+            label: (typeof TWO_LAYER_TRUST_LABELS)["research_synthesis"];
+          }
+      )
+  >;
   commerce:
     | {
         state: "not_verified";
@@ -573,8 +582,15 @@ export function buildTwoLayerProductCards(
       claims: recommendation.claims.map((claim) => ({
         claimType: claim.claim_type,
         value: claim.text,
-        trust: "source_reported" as const,
-        label: TWO_LAYER_TRUST_LABELS.source_reported,
+        ...(claim.source_ids.length > 0
+          ? {
+              trust: "source_reported" as const,
+              label: TWO_LAYER_TRUST_LABELS.source_reported,
+            }
+          : {
+              trust: "research_synthesis" as const,
+              label: TWO_LAYER_TRUST_LABELS.research_synthesis,
+            }),
         sourceIds: [...claim.source_ids],
         evidenceScope: claim.evidence_scope,
       })),
