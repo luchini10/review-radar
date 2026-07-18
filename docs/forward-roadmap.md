@@ -2323,6 +2323,54 @@ T5B decides whether the research product itself is worth continuing.
 are frozen; disciplined protocol execution, safety inspection, and evidence
 scoring matter more than additional open-ended design reasoning.
 
+### OAI-T5B - provider quality gate (stopped safely 2026-07-18; live)
+
+**Decision:** the six-response gate failed its first and strongest prerequisite:
+the real two-layer route did not complete. Taylor approved the complete frozen
+T5B envelope. Broad `shop vac` run 1 spent one Terra/high Responses create,
+performed 13 retrieves, and used zero cancels, retries, replacements, fallbacks,
+Serper calls, SearchAPI calls, or direct source-page opens. The remaining five
+creates were not dispatched.
+
+The provider response reached terminal completion, but the deterministic
+formatter rejected it at `formatter / product_shape /
+numbered_product_headings_missing`. The public route returned HTTP 502, zero
+cards, and no product, price, seller, availability, URL, image, source, provider
+identifier, token, prompt, or raw answer. The attempt is permanently marked
+failed under commit `04dd3a0d087afe4ccfd8a538b7524cc104309cd7`, so the harness
+blocks every later frozen run and no replacement is authorized.
+
+This evidence proves only that the current prompt-plus-natural-Markdown
+formatter boundary is not provider-robust enough to satisfy 6/6 completion. It
+does not prove whether Terra omitted numbering, used a different heading shape,
+returned no recommendations, truncated the answer, or otherwise drifted: raw
+provider content was intentionally not retained. Do not loosen the parser or
+guess at a format based on the bounded cause alone.
+
+The failed-attempt artifact retained the provider-call counters but not the
+bounded completion usage diagnostic that existed before formatting. Therefore
+actual tokens, hosted-search count, and estimated cost cannot be reconstructed.
+The T4E planning basis of `$0.6990575` for one response remains context only,
+not an actual T5B charge. This is a measurement defect to correct before any
+future live experiment.
+
+**Gate result:** fail/incomplete. Recall, stability, source semantics, human
+eligibility, requirement accuracy, blind comparison, and direct-page audits are
+not scored because no card fixture exists. T5B does not justify verifier work,
+promotion, rollout, or legacy retirement.
+
+**Next decision:** stop and choose the smallest zero-live diagnostic redesign
+before considering any new spend. The strongest candidate is to retain a
+privacy-safe structural failure envelope (bounded completion usage plus section
+and heading-shape counts, never raw answer text) and then decide whether the
+one-call contract should become machine-readable rather than expanding a
+brittle Markdown parser. Any new provider run or replacement requires a new
+exact approval packet.
+
+**Recommended reasoning level:** Highest for the next architecture decision.
+The question is no longer routine gate execution; it is whether to change the
+model-output contract, improve bounded diagnostics, or stop the two-layer path.
+
 **Offline acceptance wall for T4A/T4B:**
 
 - default/explicit legacy requests have the same status, body, provider call

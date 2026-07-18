@@ -1,197 +1,159 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-18 by Codex after the zero-live OAI-T5A quality-gate phase.
-The current `main` HEAD is the focused T5A commit `Freeze two-layer quality
-gate`. No provider call, source-page audit, replacement, verifier phase, mode
+Updated: 2026-07-18 by Codex after the live OAI-T5B first-run safe stop.
+The current focused phase record is `Record T5B safe stop`; the provider-tested
+application commit is `04dd3a0d087afe4ccfd8a538b7524cc104309cd7` (`Freeze
+two-layer quality gate`). No replacement, new live run, verifier phase, mode
 promotion, deployment, push, or production change is approved.
 
 ## Efficient session start
 
 1. Read repository `AGENTS.md` in full.
 2. Read this handoff in full.
-3. Read OAI-T4 and OAI-T5A in `docs/forward-roadmap.md`.
-4. Read `docs/agent-dialogue.md` from entry [68] through [70].
-5. Retrieve the latest OAI-T4E/T4F/T5A entries in
-   `docs/qa-loop-results.md`.
-6. Do not run the T5B harness or open a source page without Taylor's explicit
-   approval of the complete envelope below.
+3. Read OAI-T5A and OAI-T5B in `docs/forward-roadmap.md`.
+4. Read `docs/agent-dialogue.md` entries [70]-[71].
+5. Retrieve the latest OAI-T5A/T5B entries in `docs/qa-loop-results.md`.
+6. Do not run the T5B harness again: its first attempt is spent and failed, and
+   the frozen protocol authorizes no retry or replacement.
 
 ## Current architecture and persistent state
 
-- Missing, empty, or exact `legacy` mode delegates to the unchanged legacy
-  route. Exact `two_layer` selects the background branch; every other non-empty
-  value fails before provider creation. Legacy remains the default.
-- Two-layer mode performs one Terra/high background Responses create with
-  hosted search and no SDK retry, Serper, SearchAPI, helper model, second
-  response, legacy fallback, or transactional receipt.
-- GET/DELETE use an encrypted authenticated capability only in
-  `x-reviewradar-job-token`. Token v4 contains provider/prompt tracking and a
-  non-reversible expected-requirement hash; none is client-decodable or placed
-  in request URLs.
-- Completed research passes deterministic formatter/research/presentation v2.
-  The route rejects a card set if any product renames, adds, omits, or reorders
-  the normalized requirement rows.
-- Cards show each exact shopper requirement with Terra's `Pass`, `Fail`, or
-  `Needs verification` verdict, explanation, available source links, and an
-  `AI research synthesis` disclosure.
-- Without an independent receipt, exact identity and commerce remain
-  unverified. Price, seller, availability, purchase URL, and image stay absent.
-  Model-authored currency amounts in research prose/source titles are redacted
-  as `current price not independently verified`; the shopper's budget label is
-  preserved.
-- `.env.local` has no two-layer mode or job-token-secret entry. Last recorded
-  persistent local state remains constraint allocation on and narration off.
+- Missing, empty, or exact `legacy` mode remains the unchanged default. Exact
+  `two_layer` selects the background branch; every other non-empty value fails
+  before provider creation.
+- Two-layer mode makes one Terra/high background Responses create with hosted
+  search and no SDK retry, Serper, SearchAPI, helper model, second response,
+  legacy fallback, or transactional receipt.
+- GET/DELETE use an encrypted authenticated capability only in the
+  `x-reviewradar-job-token` header. Provider/prompt tracking and the expected-
+  requirement hash are not client-decodable or placed in request URLs.
+- Formatter/research/presentation v2 preserves the model's product slate and
+  order, requires exact normalized requirement rows, visibly labels verdicts
+  as AI synthesis, and withholds unverified identity and commerce.
+- Model-authored currency amounts in public research/source titles are redacted;
+  exact price, seller, availability, purchase URL, and image require an
+  independently accepted receipt.
+- `.env.local` still has no two-layer mode or job-token-secret entry. Last
+  recorded persistent state remains constraint allocation on and narration off.
 
-## Why T5A exists
+## T5B result
 
-T4E proved the real background lifecycle but safe-failed on one citation. T4F
-fixed that reproduced citation-granularity defect offline. Another single smoke
-would prove only lifecycle again. T5A instead freezes one go/no-go experiment
-that confirms the route and judges product usefulness, requirements, safety,
-sources, repeatability, latency, tool use, and cost together.
+Taylor approved the frozen six-response gate:
 
-The obsolete 12-response OAI-2B design was not adopted. The smallest adequate
-sample is:
+1. three independent broad `shop vac` runs; and
+2. three independent `robot vacuum`, `under $300`, `self-emptying` runs.
 
-1. `shop vac`, three independent runs; and
-2. `robot vacuum`, budget `under $300`, Important Details `self-emptying`,
-   three independent runs.
+Only broad run 1 was dispatched. The provider response completed, but the route
+safe-failed HTTP 502 at:
 
-This reuses Taylor's ratified `leaders-v2026-07c` broad benchmark and the most
-comparable legacy evidence.
+```text
+formatter / product_shape / numbered_product_headings_missing
+```
 
-## Frozen T5B decision contract
+The untracked sanitized record is:
 
-Mechanical pass requires all of the following:
+`tests/fixtures/review-radar-live/oai-t5b-two-layer-04dd3a0/
+broad-shop-vac.run1.attempt.json`
 
-- 6/6 completed routes and 3-5 cards per run;
-- broad leader recall mean at least 4/7 and no run below 3/7;
-- every within-shape pairwise product-set Jaccard at least 0.60;
-- 100% source binding and zero unsafe product/transactional leakage;
-- exact normalized requirement rows on every card; and
-- every Best Match reports `Pass` for every hard row: U.S. availability for
-  broad results, plus budget and `self-emptying` for constrained results.
+It records one Terra/high create, 13 retrieves, zero cancels, and failed status.
+There were zero retries, replacements, fallbacks, Serper/SearchAPI calls, or
+direct source-page opens. The other five creates were not sent. No completed
+card fixture exists, and zero cards, sources, or transactional fields reached
+the client.
 
-Human pass additionally requires:
+The failed attempt permanently blocks the rest of the frozen window. A later
+run would be replacement spend and requires a new exact approval.
 
-- product eligibility review for every displayed card;
-- hard-requirement accuracy review for every constrained Best Match;
-- claim/source-semantic review for the top two cards in each run; and
-- blind comparison with comparable legacy output: neither shape may lose and
-  at least one must win.
+## What is proven and unknown
 
-The analyzer returns `needs_manual_review`, never `pass`, while any human row is
-missing. Do not lower a bar after seeing results.
+**Proven:**
 
-## Bounded harness and evidence policy
+- the real provider lifecycle reached completion;
+- the deterministic formatter found no recognized numbered product heading;
+- the route failed closed without exposing unsafe content; and
+- the current natural-Markdown boundary failed the mandatory 6/6 completion
+  prerequisite on its first run.
 
-- `scripts/two-layer-quality-gate.mjs` is the pure/offline analyzer.
-- `scripts/run-two-layer-quality-gate.mjs` is preflight-only unless the exact
-  argument `--execute-live=oai-t5b-six-run-v1` is supplied.
-- One invocation advances exactly one frozen unspent run. It permits one
-  create, at most 60 retrieve polls at 10-second intervals, and one pre-expiry
-  safety cancel.
-- The runner requires a clean tracked commit and process-only
-  `OPENAI_API_KEY` / `REVIEW_RADAR_JOB_TOKEN_SECRET`; it never loads or edits
-  `.env.local`. It validates both values and constructs the no-retry SDK client
-  before reserving an attempt, so a local configuration failure spends nothing
-  and does not falsely consume a run.
-- An attempt marker is written immediately before the route can create the
-  provider response. A failed/interrupted attempt blocks all later runs; there
-  is no automatic retry or replacement. Any final mechanical failure also
-  writes a durable halt marker.
-- Sanitized fixtures keep commit/case/run, bounded completion/formatter totals,
-  public cards, and their public source catalog. They never keep a job token,
-  provider ID, raw prompt/answer/response, header, or secret.
-- The generated manual-review template names exactly two registered source IDs
-  for each audited top product. The analyzer rejects an audit that omits,
-  duplicates, or substitutes those traceable IDs.
-- Blind-comparison rows are closed-world: unknown or duplicate case rows fail,
-  and extra metadata cannot bypass the required material win.
+**Not proven:**
 
-## Exact next approval packet
+- whether Terra omitted numbering, used another heading shape, produced no
+  products, truncated, or otherwise drifted;
+- product usefulness, leader recall, stability, constrained accuracy, source
+  semantics, or blind preference versus legacy; and
+- actual T5B tokens, hosted-search count, or estimated cost.
 
-**Question:** can the current two-layer route produce materially better,
-requirement-faithful, source-auditable, repeatable product recommendations than
-the comparable legacy path?
+Raw provider content was intentionally not retained, so do not guess the answer
+shape or loosen the parser based only on the bounded cause. The T4E estimate of
+`$0.6990575` for one response is planning context, not actual T5B cost.
 
-**Why live is required:** provider-selected products, current web evidence, and
-repeatability cannot be proved by mocks or saved T4 evidence.
+## Measurement defect discovered
 
-**Requested envelope:**
+The route produced a bounded completion diagnostic before formatting, including
+model, token, hosted-search, source-count, and duration totals. The live runner's
+failure record retained only the verification cause, so that safe usage record
+was lost when formatting failed. Any future live experiment must preserve this
+bounded diagnostic on the failed-attempt path without retaining provider IDs,
+prompts, answers, URLs, headers, or secrets.
 
-- six shopper requests / six Terra/high Responses creates: the 3+3 frozen
-  sample above;
-- at most 20 hosted searches per create, 120 total;
-- at most 60 retrieve polls and one safety cancel per attempt;
-- T4E planning basis: `$0.6990575`, 12 hosted searches, and about 272.6 seconds
-  per response; six-response estimate `$4.194345` and 27.26 serial minutes;
-- `$7` cumulative estimated-cost ceiling, checked after each completed
-  response. This is not represented as a provider invoice and cannot interrupt
-  an already-running response mid-completion;
-- zero retries, replacements, fallbacks, cache reuse, Serper, SearchAPI, helper
-  models, second responses, extra cases, verifier work, promotion, or deploy;
-- up to 24 direct source-page opens: top two cards x two sources x six runs;
-- retain only the harness's sanitized untracked fixtures and manual-review
-  rows; and
-- stop after the first route/formatter/presentation failure, unsafe card or
-  transaction field, per-run absolute failure, broad run-3 mean/stability
-  failure, cumulative cost breach, or interrupted/spent attempt. No replacement
-  without new approval.
+## Strongest next decision
 
-The result unlocks only an owner decision to continue, redesign, or abandon the
-two-layer path. It does not authorize a verifier, promotion, rollout, or legacy
-retirement.
+Do not start another parser-fix/retry loop. The smallest responsible next step
+is a separately approved zero-live architecture decision with two candidates:
 
-**Recommended reasoning level:** High. The architecture and evaluator are
-frozen; protocol fidelity, careful product/source inspection, and honest
-scoring matter more than another open-ended architecture pass.
+1. add privacy-safe structural failure diagnostics and make the same one-call
+   response include a machine-readable product contract; or
+2. stop the two-layer architecture if a machine-readable contract would defeat
+   the ChatGPT-like research behavior the prototype is meant to preserve.
+
+Do not broaden the existing Markdown regex without captured structural evidence.
+Do not begin a verifier, promotion, rollout, or legacy-retirement phase: T5B
+produced no quality evidence supporting them.
+
+**Recommended reasoning level:** Highest. This is now a material architecture
+decision about the model-output contract and whether the path remains viable,
+not routine implementation or gate execution.
 
 ## Hard boundaries
 
-- No OpenAI, Serper, SearchAPI, direct-fetch/source-page, retry, or replacement
-  call is currently approved.
+- No OpenAI, Serper, SearchAPI, direct-fetch/source-page, retry, replacement, or
+  additional shopper request is approved.
 - Do not edit `.env.local`, persist a job secret, promote a mode, deploy, push,
   publish, or alter production.
-- Do not expose/persist shopper prose, full prompts/answers, source paths, job
+- Do not expose or persist shopper prose, prompts, answers, source paths, job
   tokens, provider IDs, request headers, API keys, or raw responses.
-- Do not weaken identity, eligibility, citation ownership, source labels,
-  exact-requirement enforcement, or no-receipt transactional omissions to make
-  T5B pass.
-- Preserve all pre-existing untracked artifacts/live fixtures. Stage explicit
-  phase files only; never use `git add -A`.
+- Preserve the failed T5B attempt and all pre-existing untracked artifacts/live
+  fixtures. Stage explicit documentation files only; never use `git add -A`.
+- Do not weaken identity, eligibility, citation ownership, exact-requirement
+  enforcement, or no-receipt transactional omissions to obtain a completion.
 
-## Verification and remaining unknowns
+## Verification and repository state
 
-- Fail-first covered requirement-section/shape drift, absent analyzer code,
-  exact-price leakage in card prose/source titles, and renamed-requirement
-  acceptance.
-- Complete suite: 1106/1106 across 150 suites.
-- Typecheck, production build, offline evaluation, harness preflight, and diff
-  checks pass. Lint has zero errors/three pre-existing warnings.
-- T5A made zero live calls and opened zero source pages.
-- Unknown until T5B: real T4F completion rate, product quality, broad recall,
-  constrained accuracy, source semantics, repeatability, latency, tool use,
-  actual returned usage/cost estimate, and blind preference versus legacy.
+- Provider calls: one Terra/high create, 13 retrieves, zero cancels.
+- Other live calls: zero Serper, SearchAPI, retry, replacement, fallback, or
+  direct source-page opens.
+- The gate child process ended; no gate process or process-only secret remains.
+- `.env.local`, flags, deployment, and production remain unchanged.
+- The pre-live wall remains 1106/1106 tests across 150 suites; typecheck, build,
+  offline evaluation, and diff checks passed; lint had zero errors and three
+  pre-existing warnings.
+- T5B made no code change. Phase documentation is the only tracked change.
 
 ## Outstanding peer-review debt
 
 - Entries [42]-[57] still await Claude's older lifecycle/unguarded-evidence
   review.
-- Entry [70] asks Claude to challenge sample sufficiency, citation downgrade
-  policy, and the gate's false-pass/wasted-spend risks. Dialogue remains
-  advisory and authorizes no work.
+- Entry [71] asks Claude to challenge the machine-readable-contract decision
+  and the privacy-safe failure-diagnostic proposal. Dialogue remains advisory
+  and authorizes no work.
 
 ## Retrieval map
 
 | Need | Retrieve |
 |---|---|
-| T4 architecture and T5A gate | OAI-T4/OAI-T5A in `docs/forward-roadmap.md` |
-| Canonical evidence | latest T4E/T4F/T5A entries in `docs/qa-loop-results.md` |
-| Requirement normalization/prompt | `lib/autonomousResearchContract.ts`, `lib/twoLayerMasterPrompt.ts` |
-| Formatter/presentation trust | `lib/twoLayerFormatter.ts`, `lib/twoLayerRecommendation.ts` |
-| Protected requirement hash | `lib/twoLayerJobToken.ts`, `lib/twoLayerRecommendationRoute.ts` |
-| Currency/URL presentation boundary | `lib/twoLayerDisplayText.ts` |
-| Gate analyzer and harness | `scripts/two-layer-quality-gate.mjs`, `scripts/run-two-layer-quality-gate.mjs` |
-| Gate regression wall | `tests/twoLayerQualityGate*.test.mjs`, `tests/twoLayerRoute.test.mjs` |
-| Peer channel | `docs/agent-dialogue.md` entry [70] |
+| Frozen gate and live result | OAI-T5A/T5B in `docs/forward-roadmap.md` |
+| Canonical evidence | latest OAI-T5A/T5B entries in `docs/qa-loop-results.md` |
+| Failed attempt | untracked `oai-t5b-two-layer-04dd3a0` directory |
+| Prompt and formatter | `lib/twoLayerMasterPrompt.ts`, `lib/twoLayerFormatter.ts` |
+| Route diagnostics | `lib/twoLayerRecommendationRoute.ts` |
+| Gate analyzer and runner | `scripts/two-layer-quality-gate.mjs`, `scripts/run-two-layer-quality-gate.mjs` |
+| Peer channel | `docs/agent-dialogue.md` entry [71] |

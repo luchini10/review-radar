@@ -8680,3 +8680,52 @@ requirement that previously returned HTTP 200. Corrected verification:
 This advances evaluation integrity and visible requirement usefulness, not yet
 provider-proven recommendation quality. T5B remains separately approval-gated;
 no verifier, promotion, rollout, or retirement phase is authorized.
+
+## 🟧 Codex - OAI-T5B first-run safe stop (2026-07-18)
+
+**Verdict: FAIL / STOPPED AS DESIGNED.** Taylor approved the frozen six-response
+T5B envelope. Only broad `shop vac` run 1 was dispatched. It used one
+Terra/high Responses create, 13 retrieve calls, zero cancels, zero retries, zero
+replacements, zero fallbacks, zero Serper/SearchAPI calls, and zero direct
+source-page opens. The remaining five creates stayed unspent.
+
+The provider response reached completion, after which the route returned HTTP
+502 with the bounded diagnostic:
+
+```text
+formatter / product_shape / numbered_product_headings_missing
+```
+
+The harness wrote only
+`tests/fixtures/review-radar-live/oai-t5b-two-layer-04dd3a0/
+broad-shop-vac.run1.attempt.json` as an untracked sanitized failure record. It
+contains the full commit, approval ID, case/run, failed status, call counters,
+timestamp, generic route error, and bounded formatter cause. It contains no API
+key, job token, provider response ID, prompt, answer, raw response, request
+header, source URL, or shopper prose. No completed card fixture exists.
+
+The route exposed zero cards and no transactional or source data. The attempt
+marker now blocks all later runs; no retry or replacement was made. The child
+process ended, no gate process remains, the process-only job secret disappeared,
+and `.env.local` still contains neither the two-layer mode nor job-token secret.
+The tracked tree remained clean before phase documentation.
+
+This fails the frozen 6/6 route-completion prerequisite. Product usefulness,
+broad recall, stability, constrained accuracy, source semantics, blind legacy
+preference, and human audits are not scored because there is no product-card
+sample. The exact cause inside the model answer is unknowable from the allowed
+artifact: `numbered_product_headings_missing` proves only that the deterministic
+formatter found no recognized numbered product heading.
+
+One measurement gap also surfaced. `onResearchCompleted` had bounded token,
+tool, source-count, model, and duration data before formatting, but the runner's
+failure record retained only the verification diagnostic. Actual T5B token
+usage, hosted-search count, and estimated cost are therefore unavailable. The
+T4E one-response estimate of `$0.6990575` is planning context, not an actual
+charge, and is not substituted for missing evidence.
+
+The product objective did not move: the route remained safe, but the natural-
+Markdown boundary is not provider-robust enough to begin quality comparison.
+Per the frozen kill rule, do not enter a parser-fix/retry loop. The next owner
+decision is whether to design privacy-safe structural failure diagnostics and a
+more machine-readable one-call output contract, or stop this architecture.
