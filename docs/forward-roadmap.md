@@ -1843,7 +1843,7 @@ first step that could connect the new trust contract to the application route;
 that decision affects architecture, fallback behavior, and customer-visible
 failure semantics.
 
-### OAI-T4 - default-off two-layer route architecture (T4A/T4B committed; T4C safe-failed; T4D precise attribution committed 2026-07-18)
+### OAI-T4 - default-off two-layer route architecture (T4A/T4B committed; T4C/T4E safe-failed; T4D precise attribution committed 2026-07-18)
 
 **Assessment:** the two-layer path is still the strongest route to the product
 objective, but a direct synchronous splice into the legacy handler would be the
@@ -2000,7 +2000,13 @@ URLs, headers, cookies, keys, or complete provider responses.
    bounded `stage/reason/cause`, and UI card/trust-state or generic-error facts.
    Stop after the first terminal result; do not retry or turn it into a quality
    sample.
-6. **Later quality/repeatability gate.** Define a new two-layer gate from T4E
+6. **OAI-T4F - citation-granular safety correction, zero live and separately
+   approved.** Replace whole-slate rejection for an extra unregistered citation
+   with omission/non-binding plus a claim-level synthesis downgrade, but only
+   when every recommendation still has at least one registered source. Strip
+   Markdown URLs from display text, preserve registered citations and order,
+   and retain fail-closed behavior for a product with no registered source.
+7. **Later quality/repeatability gate.** Define a new two-layer gate from T4E
    actual cost, latency, and output. It must measure recommendation usefulness,
    hard-requirement fidelity, source binding, formatter success, and stability
    before any flag promotion or transactional verifier work.
@@ -2162,16 +2168,50 @@ pre-existing warnings), production build, offline evaluation, and diff checks
 pass. No live provider/direct-page call, `.env.local` change, flag promotion,
 deployment, parser relaxation, trust change, or fixture mutation occurred.
 
-**OAI-T4E pending approval:** the smallest remaining evidence step is one
-unchanged Terra/high lifecycle smoke for broad U.S. `vacuum cleaner`: one
-Responses create, at most 20 hosted searches, and a `$7` planning basis and
-hard ceiling. Use process-only two-layer mode and an ephemeral random job-token
-secret; leave `.env.local` unchanged. No retry, replacement, fallback, Serper,
+**OAI-T4E live result (2026-07-18; one approved response, approval spent):** the
+real process-only two-layer UI submitted broad U.S. `vacuum cleaner` with no
+budget or preferences. POST returned HTTP 202 in 4.4 seconds and every later
+request retrieved only the same signed job. The first terminal result was HTTP
+502 `verification_failed`; there was no retry, replacement, fallback, Serper,
 SearchAPI, direct fetch, second response, cache reuse, extra case, helper model,
-source-page open, promotion, deployment, or push. Stop on the first terminal
-outcome. Success unlocks design of a separately approved quality gate; an
-attributed failure unlocks only an evidence-supported generalized zero-live
-repair or an architecture decision.
+source-page open, promotion, deployment, or push.
+
+The response completed on requested/returned `gpt-5.6-terra` and recorded
+109,661 input tokens, zero cached input tokens, 20,327 output tokens, 129,988
+total tokens, 12 hosted searches, and 20 titled response sources. The terminal
+retrieve took 802 ms; UI click-to-terminal capture was approximately 272.6
+seconds. The frozen July 15 rates estimate `$0.6990575` from returned usage;
+that is not claimed as the provider invoice. The browser showed the generic
+safe error, zero cards, no transactional fields, and zero warning/error console
+messages. The server was stopped, `.env.local` remained unchanged, and no raw
+provider content or identifier was retained.
+
+The exact bounded rejection was
+`formatter/source_registry/cited_source_unregistered`: at least one Markdown
+citation URL in the product blocks did not match the title-present
+response-source registry after conservative canonicalization. This proves the
+current whole-slate rejection trigger. It does not prove whether the provider
+never registered that URL, registered it only without a title and the adapter
+filtered it, or returned a materially different identity-bearing URL; raw
+content was deliberately not retained, so choosing among those explanations
+would be speculation.
+
+**OAI-T4F proposed decision (not approved):** do not buy another response or
+weaken source ownership. The evidence supports a zero-live correction to the
+failure's blast radius. Convert Markdown links in displayable text to their
+visible labels; expose and bind only title-present same-response sources;
+ignore/count an unregistered citation without exposing it; and downgrade a
+claim supported only by that ignored citation to `AI research synthesis`.
+Continue to fail closed if any recommendation's required Sources section has
+no registered source. Do not drop cards, discover substitute sources, backfill,
+rerank, or repair model prose in this phase.
+
+Fail-first controls must cover mixed registered/unregistered citations, an
+unregistered-only recommendation, URL non-disclosure in every displayed text
+field, claim-local downgrade, unchanged registered binding, bounded omission
+counts, observer failure, public-error stability, and the complete offline
+wall. This materially changes whole-result failure into a narrower safe
+downgrade, so it requires Taylor's explicit approval and Highest reasoning.
 
 **Offline acceptance wall for T4A/T4B:**
 

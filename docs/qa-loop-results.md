@@ -8470,3 +8470,80 @@ No parser, prompt, product eligibility, citation, source-binding, trust-state,
 card, commerce, mode, or public-response behavior was relaxed. `.env.local`,
 flags, secrets, live fixtures, untracked artifacts, and deployment state were
 untouched. A T4E lifecycle smoke remains separately approval-gated.
+
+## 🟧 Codex — OAI-T4E one-response diagnostic lifecycle result (2026-07-18)
+
+**Verdict: ATTRIBUTED SAFE FAILURE — lifecycle and privacy boundaries passed,
+but at least one unregistered citation still rejected the complete slate.** Taylor
+approved exactly one Terra/high OpenAI Responses create, at most 20 hosted web
+searches, and a `$7` hard ceiling. The approved request was broad U.S. `vacuum
+cleaner` with no budget or preferences through the real process-only two-layer
+UI path.
+
+Preflight found one local-only launch problem before any shopper submission:
+the first PowerShell secret generator used an unavailable static method, so the
+server started without the ephemeral secret. It was stopped before the UI was
+opened or any provider request could occur, then relaunched using a compatible
+cryptographic generator. This consumed zero provider calls and did not create
+an excluded shopper request. `.env.local` was never edited.
+
+The real UI submitted exactly once. POST returned HTTP 202 in 4.4 seconds and
+all subsequent traffic was GET retrieval of that same header-authenticated job.
+The first terminal GET returned HTTP 502 `verification_failed`; there was no
+retry, replacement, fallback, Serper, SearchAPI, direct fetch, second response,
+cache reuse, additional case, helper model, external source-page open, flag
+promotion, deployment, or push.
+
+The privacy-safe completion record was:
+
+```json
+{
+  "modelRequested": "gpt-5.6-terra",
+  "modelReturned": "gpt-5.6-terra",
+  "durationMs": 802,
+  "usage": {
+    "inputTokens": 109661,
+    "cachedInputTokens": 0,
+    "outputTokens": 20327,
+    "totalTokens": 129988,
+    "webSearchCalls": 12
+  },
+  "sourceCount": 20
+}
+```
+
+`durationMs` is the terminal retrieve duration, not total research latency.
+Browser click-to-terminal capture was approximately 272.6 seconds. Using the
+repository's frozen July 15 Terra rates (`$2.50`/million uncached input,
+`$15`/million output, `$0.01`/hosted search), returned usage estimates to
+`$0.6990575`: `0.2741525 + 0.304905 + 0.12`. That estimate is below the `$7`
+ceiling but is not represented as an OpenAI invoice.
+
+The exact server-only rejection was:
+
+```text
+formatter source_registry cited_source_unregistered
+```
+
+This proves that at least one Markdown citation URL in the model-authored
+product blocks was absent from the title-present response-source registry after
+conservative canonicalization. It does not prove why: the bounded record cannot
+distinguish a provider-unregistered URL, a valid but titleless response source
+filtered by the adapter, or a materially different identity-bearing URL. No raw
+answer, source envelope/path, prompt, provider response ID, job token, header,
+secret, or provider response was retained, so the narrower cause must not be
+guessed.
+
+The browser displayed `Research finished, but its evidence could not be
+verified safely.`, zero cards, and no price, seller, availability, purchase URL,
+or image. It recorded zero warning/error console messages. The server was
+stopped, port 3000 had no listener, the process-only secret disappeared, and
+`.env.local` still had no pipeline-mode or job-secret entry. Generated
+`next-env.d.ts` drift was restored with no semantic tracked change.
+
+The result advances attribution but not customer-visible product quality. The
+next proposed phase is zero-live T4F: replace whole-slate rejection for an extra
+unregistered citation with non-exposure/non-binding plus claim-level synthesis
+downgrade, while still requiring at least one registered source per product.
+That is a material trust/public-behavior decision and remains unapproved. T4E's
+one-response approval is spent.
