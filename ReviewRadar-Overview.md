@@ -31,6 +31,18 @@ requirements, ranked by fit and credibility, each explained and cited.
 
 ---
 
+### Default-off direct Terra V2 result
+
+ReviewRadar also has a separate experimental report path that deliberately does
+not produce a `RecommendationResult`. When both direct-Terra flags are enabled,
+one Terra/high Responses job researches and ranks the products and returns one
+strict JSON field, `report_markdown`. ReviewRadar displays that report without
+splitting it into cards, changing its product set, or reranking it. Every
+displayed HTTP citation must belong to the same OpenAI response source registry;
+the ownership check uses the same GFM Markdown grammar as the renderer, remote
+report images are rejected, and all prices and purchase details are labeled
+unverified by ReviewRadar.
+
 ## 2. Full user flow
 
 **Home/search page:** `app/page.tsx` → renders `components/SearchForm.tsx`.
@@ -56,6 +68,16 @@ live "What ReviewRadar will match" preview (`requirements.summary`).
    helper polls only that token in a request header, schedules cancellation 30
    seconds before expiry, and extends the deadline only from the validated job
    state.
+
+When `REVIEW_RADAR_DIRECT_TERRA=on` and
+`NEXT_PUBLIC_REVIEW_RADAR_DIRECT_TERRA=true`, the browser instead sends the
+same cleaned raw shopper fields (without legacy extracted requirements) to
+`/api/recommendations-v2`. The V2 client starts one background response, polls
+and cancels it using an encrypted header-only capability, and renders the one
+returned Markdown report through `DirectTerraReport`. The endpoint and browser
+branch both fail closed unless their separate flags are enabled. Once a V2 job
+token is known, any non-completed exit also attempts cancellation so polling
+errors do not leave a provider job running.
 
 **Results display:** `components/ResultsSummary.tsx`:
 - A **Search coverage** summary (queries run, candidates evaluated, exact/near counts).
@@ -191,6 +213,16 @@ each requirement resolves to **pass / fail / unknown**:
 ## 5. Important files & modules
 
 **Entry points / routing**
+- `app/api/recommendations-v2/route.ts` — standalone default-off direct Terra
+  endpoint; it imports none of the legacy discovery, normalization, rescue,
+  dedupe, scoring, or reconstruction modules.
+- `lib/directTerraPrompt.ts`, `lib/directTerraResearchAdapter.ts`,
+  `lib/directTerraResponse.ts`, `lib/directTerraRecommendationRoute.ts` — the
+  one-call master prompt, hosted-search lifecycle, exact report/citation
+  boundary, and POST/GET/DELETE route handlers.
+- `lib/directTerraJobToken.ts`, `lib/directTerraApiContract.ts`,
+  `lib/directTerraClient.ts` — encrypted V2 job capability, public state union,
+  and browser polling/cancellation.
 - `app/api/recommendations/route.ts` — exact pipeline-mode dispatcher plus the
   unchanged legacy pipeline orchestrator (the file to read first).
 - `lib/twoLayerRecommendationRoute.ts` — default-off two-layer
@@ -238,6 +270,9 @@ each requirement resolves to **pass / fail / unknown**:
   authorization and the versioned public state union.
 
 **UI**
+- `components/DirectTerraReport.tsx` — safe Markdown renderer for Terra's
+  untouched report, with a persistent unverified-commerce notice and raw HTML
+  disabled.
 - `components/SearchForm.tsx`, `components/SmartFeatures.tsx`, `components/ResultsSummary.tsx`, `components/ProductCard.tsx`, `components/VerdictCard.tsx`, `components/SourceList.tsx`, `components/ui/*` (shadcn primitives).
 - `components/TwoLayerResultPreview.tsx` — shared production two-layer trust
   cards plus a development-only preview wrapper.

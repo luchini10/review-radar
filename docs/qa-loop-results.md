@@ -8812,3 +8812,226 @@ No OpenAI, Serper, SearchAPI, direct-fetch, retry, replacement, or other live
 call occurred. `.env.local`, flags, live fixtures, deployment, production, and
 all pre-existing untracked artifacts remain unchanged. This preflight makes no
 product-quality or provider-acceptance claim.
+
+## 🟧 Codex - OAI-T5D live structured lifecycle smoke (2026-07-18)
+
+**Verdict: FAIL / STOPPED AS DESIGNED.** Taylor approved exactly one structured
+lifecycle smoke for broad `{query:"shop vac"}` at commit `63bdef9`, with one
+Terra/high create, at most 20 hosted searches, at most 60 retrieves, one safety
+cancel, and no retry/replacement or other provider path.
+
+The single attempt made:
+
+- OpenAI Responses creates: 1;
+- retrieves: 11;
+- safety cancels: 0;
+- hosted web searches: 11;
+- Serper/SearchAPI/direct source-page calls: 0; and
+- retries, replacements, fallbacks, second responses, and additional cases: 0.
+
+The provider returned completed status. Bounded completion evidence records
+model requested/returned `gpt-5.6-terra`, 95,392 input tokens, zero cached input
+tokens, 17,624 output tokens, 113,016 total tokens, and `sourceCount: 0`. Using
+the frozen standard rates, estimated cost is `$0.61284`, below the `$7` ceiling.
+
+The route failed closed HTTP 502 with:
+
+```text
+research_contract / contract_invalid / required_registered_source_missing
+```
+
+This is not another Markdown-shape failure. The source extractor supplied zero
+provider-owned sources to the strict parser. With no title-present same-response
+registry, required identity/assessment/pro/con citations could not be accepted,
+so the validator rejected the entire slate. Zero cards, sources, commerce,
+provider data, or raw content reached the client.
+
+The sole untracked artifact is
+`tests/fixtures/review-radar-live/oai-t5d-structured-smoke-63bdef9/
+broad-shop-vac.run1.attempt.json`. It contains only the commit/approval/case,
+call counters, bounded completion totals, and safe contract cause. It contains
+no API key, job token, response ID, prompt, answer, raw response, request header,
+source URL, or shopper prose. No completed card fixture exists.
+
+The attempt is spent. No retry, replacement, additional case, direct source
+open, fix, flag change, `.env.local` change, deployment, or production change
+occurred. The process exited, process-only secrets were removed, and the tracked
+tree remained clean.
+
+The artifact cannot distinguish provider metadata omission from an unhandled
+response shape or missing title/URL pair because raw provider content was
+deliberately not retained. It also does not retain end-to-end wall time; the
+recorded 353 ms duration is only terminal route processing. The next responsible
+step is zero-live source-metadata contract diagnosis, not weaker citation rules
+or another provider attempt.
+
+## 🟧 Codex - unguarded Terra refrigerator diagnostic (2026-07-18)
+
+**Verdict: STRONG RAW RESEARCH REPORT / NOT YET SAFE DIRECT-TO-CARD
+EVIDENCE.** Taylor approved one isolated refrigerator test with ReviewRadar's
+schema, verifier, guardrails, ranking code, and post-processing bypassed. The
+request reused the exact natural master prompt from the July 17 unguarded
+vacuum diagnostic, changing only `Product: vacuum cleaner` to
+`Product: refrigerator`; budget/features/preferences remained unset and the
+market remained the United States.
+
+The bounded standalone request made one GPT-5.6 Terra/high Responses create,
+13 hosted web searches, 42 retrieval polls, zero cancels, zero retries, zero
+replacements, zero Serper/SearchAPI/direct-page calls, and zero production
+changes. It completed in 222,436 ms with 114,196 input tokens, zero cached input
+tokens, 21,846 output tokens, and 136,042 total tokens. At current published
+rates used by the harness, estimated cost was `$0.74318`, below the inherited
+`$7` diagnostic ceiling.
+
+Terra returned a readable five-product ranking in this order:
+
+1. Bosch 800 Series `B36CT80SNS`;
+2. LG Counter-Depth MAX `LRFLC2706S`;
+3. GE `GNE27JYMFS`;
+4. Maytag `MRFF4236RZ`; and
+5. GE `GTS22KGNRWW`.
+
+The report included requirement rows, exact models, current-price claims,
+category-specific specifications, professional-test and owner-review signals,
+pros/cons, evidence assessments, comparison table, close matches, buying traps,
+and final advice. It contained 109 inline citation occurrences covering 30
+unique URLs. All 30 cited URLs appeared in the same response's provider source
+registry; none were model-only URLs. Twenty-seven registered sources carried a
+provider title.
+
+This result proves that Terra can autonomously produce a coherent refrigerator
+research report when ReviewRadar does not reconstruct or reject it. It does not
+prove that every exact price, review count, specification, availability claim,
+or variant association is true: the approval included no direct source-page
+inspection, and no independent verifier ran. The answer itself openly noted
+several warranty and long-term-reliability uncertainties.
+
+The untracked evidence is
+`tests/fixtures/review-radar-live/oai-terra-unguarded-refrigerator-2026-07-18/result.json`.
+It retains the filled prompt, natural answer, response-owned public source
+catalog, and bounded ledger. It contains no API key, request header, cookie, or
+complete raw response. SHA-256 of the answer is
+`db989ac30150c3e35a392e7fd75a76d52b0417f2a9d45a2e5d509f0cab090e1b`.
+
+**Decision evidence:** the core model is not the immediate failure point. The
+guarded T5D route failed at ReviewRadar's source-binding/output-contract layer,
+while the natural one-response path produced a strong candidate report and
+same-response source registry. The next work should be zero-live integration-
+contract redesign, not another product-category test. A later product-facing
+path must preserve honest uncertainty and independently verify transactional
+facts before labeling them verified.
+
+## 🟧 Codex - OAI-T6A clean direct Terra V2 foundation (2026-07-18)
+
+**Verdict: PASS OFFLINE / LIVE UNPROVEN.** The approved zero-live phase adds a
+standalone `/api/recommendations-v2` route. Its modules do not import or call
+the old Serper discovery, normalization, requirement rescue, dedupe, scoring,
+fallback, or product-card reconstruction code. One Terra/high background
+Responses job owns product selection, rank, explanations, and citations.
+
+The provider contract is strict JSON with exactly one field:
+`report_markdown`. ReviewRadar parses only that wrapper and otherwise retains
+the report string exactly. Every displayed HTTP Markdown link must resolve to
+the same completed response's `web_search_call.action.sources` or URL-citation
+annotations. Provider titles are not required, which closes the titleless-
+source blind spot that made T5D's source registry empty. An invented or
+unregistered citation rejects the whole response instead of being deleted or
+rewritten. The UI disables raw HTML and unsafe link schemes.
+
+Prices, retailers, purchase URLs, availability, inventory, financing,
+warranties, and similar transactional details remain in Terra's report but are
+explicitly `AI-reported - unverified by ReviewRadar`. The prompt requires that
+label and the UI shows a persistent global warning. There is no independent
+commerce verifier in this phase and no claim that transactional facts are
+accurate.
+
+Both new behavior switches default off. The server endpoint requires
+`REVIEW_RADAR_DIRECT_TERRA=on`; the browser branch requires
+`NEXT_PUBLIC_REVIEW_RADAR_DIRECT_TERRA=true`. Existing legacy and two-layer
+paths remain unchanged for rollback. `.env.local`, deployment, production, and
+all pre-existing untracked evidence are unchanged.
+
+Fail-first produced 0 passing / 6 failing suites because every new V2 module
+was intentionally absent. Corrected verification:
+
+- focused direct-Terra coverage: 15/15 across seven suites;
+- complete `npm test`: 1129/1129 across 158 suites;
+- `npm run typecheck`: pass;
+- `npm run lint -- --max-warnings=10`: zero errors and three pre-existing
+  warnings;
+- `npm run build`: pass, including `/api/recommendations-v2`;
+- `node scripts/eval-pipeline.mjs`: no red flags on the unchanged legacy path;
+- `git diff --check`: pass with line-ending notices only; and
+- `npm run qa:scorecard`: stopped at its live-cost guard without dispatching a
+  search, as expected because no live budget existed.
+
+A zero-live replay wrapped the saved refrigerator answer in the new one-field
+response shape and supplied its saved response registry. The parser returned
+the exact original answer, accepted all 30 unique cited URLs across 16 hosts,
+and accepted registry rows without titles. No OpenAI, Serper, SearchAPI, direct
+source-page, retry, replacement, fallback, or other live call occurred.
+
+Four existing package-audit findings remain: one low and three moderate, with
+no high or critical finding. They were not auto-fixed because the suggested
+Next.js remedy is an unrelated/invalid major downgrade and this phase does not
+authorize dependency-wide remediation.
+
+The next responsible action is an adversarial review and explicit commit
+decision. Only after the boundary is committed should Taylor consider one
+separately approved live V2 lifecycle smoke. Do not build the transactional
+verifier until that smoke proves the one-field wrapper and same-response source
+registry work in the provider's actual structured output.
+
+## 🟧 Codex - OAI-T6A adversarial review and corrections (2026-07-19)
+
+**Verdict: PASS OFFLINE / READY FOR COMMIT / LIVE CONTRACT STILL UNPROVEN.**
+The review treated the new V2 implementation as untrusted and checked official
+OpenAI background, hosted-web-search, Structured Outputs, and Terra capability
+documentation against the installed `openai@6.37.0` definitions. It also
+threat-modeled rendered Markdown, source ownership, URL normalization,
+encrypted lifecycle state, client cancellation, legacy fallback, and saved
+provider evidence. No live or direct-source call occurred.
+
+**Fail-first evidence.** Eleven focused checks initially passed six and
+failed five. Those five failures established three generalized defects:
+
+1. `remark-gfm` rendered bare URL autolinks and reference links that the
+   hand-written server scanner did not discover, allowing a clickable URL to
+   bypass same-response ownership validation.
+2. Markdown images could trigger a remote browser request, while canonical URL
+   matching removed `www`, fragments, and query ordering broadly enough to
+   make distinct source destinations inherit ownership.
+3. After a V2 job token was known, an unexpected polling response ended the
+   browser lifecycle without sending DELETE, leaving the provider job running.
+
+**Corrections.** `lib/directTerraResponse.ts` now parses Markdown with the same
+`remark-parse` + `remark-gfm` grammar as the UI, resolves reference links,
+ignores code literals, rejects every report image, and normalizes only the
+established tracking parameters. The UI independently disallows `img` nodes.
+`lib/directTerraClient.ts` cancels any known job whenever the lifecycle exits
+before a completed result. `lib/directTerraPrompt.ts` now types the create body
+against `ResponseCreateParamsNonStreaming`; the sole extension is the required
+`max_tool_calls` field. The installed SDK documents that field on
+`ResponsesClientEvent` but omits it from the REST create type, so only a live
+API smoke can close that compatibility uncertainty.
+
+**Corrected proof.** Focused direct-Terra coverage passes 26/26 across eight
+suites. The complete wall passes 1140/1140 across 159 suites. Typecheck and the
+production build pass, including `/api/recommendations-v2`; lint reports zero
+errors and three pre-existing warnings; the unchanged legacy evaluation has no
+red flags; `git diff --check` passes with Windows line-ending notices only; and
+a phase-file secret scan found no secret-shaped value. The saved 40,627-
+character refrigerator report still replays byte-for-byte with 30 registered
+citations across 16 hosts.
+
+`npm audit --omit=dev` still reports one low and three moderate findings and no
+high or critical finding. No automatic audit fix was applied because its forced
+Next action is an unrelated breaking downgrade. `.env.local`, persistent flags,
+untracked fixtures, deployment, production, and legacy behavior remain
+unchanged.
+
+The next step is one separately approved OAI-T6B technical smoke at the reviewed
+commit. It must stop after one outcome and prove the real API accepts strict
+one-field JSON plus the explicit 20-tool ceiling and returns enough
+same-response metadata for every rendered citation. The transactional verifier
+remains blocked until that smoke passes.

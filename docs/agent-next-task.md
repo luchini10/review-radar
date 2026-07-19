@@ -1,165 +1,185 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-18 by Codex after the zero-live OAI-T5D structured lifecycle-
-smoke preflight and its approved local commit. OAI-T5D is the current completed
-phase; its parent was `28743e9` (`Adopt structured two-layer research output`).
-No live call, retry, replacement, quality gate, verifier, mode promotion,
-deployment, push, or production change is approved.
+Updated: 2026-07-19 by Codex after the zero-live OAI-T6A adversarial review and
+authorized commit. The reviewed implementation is the current `main` HEAD with
+subject `Add reviewed direct Terra V2 path`. No live call, persistent flag
+change, `.env.local` change, verifier work, deployment, push, or production
+change is approved.
 
 ## Efficient session start
 
 1. Read repository `AGENTS.md` in full.
 2. Read this handoff in full.
-3. Read OAI-T5C and OAI-T5D in `docs/forward-roadmap.md`.
-4. Read `docs/agent-dialogue.md` entries [72]-[73] and any later reply.
-5. Retrieve the latest OAI-T5C/T5D entries in `docs/qa-loop-results.md`.
-6. Confirm the tracked tree is clean and preserve every pre-existing untracked
-   artifact and live fixture.
-7. Never run the old T5B approval. It remains permanently retired.
+3. Read OAI-T6A/OAI-T6B in `docs/forward-roadmap.md` only for architecture or
+   live-gate detail.
+4. Read the latest OAI-T6A review entry in `docs/qa-loop-results.md` for proof.
+5. Read `docs/agent-dialogue.md` entry [76] and any later peer response only if
+   reviewing the boundary.
+6. Preserve every untracked fixture and unrelated user artifact.
+7. Never reuse a spent live approval.
 
-## Current architecture and persistent state
+## Product objective and current architecture
 
-- Missing, empty, or exact `legacy` mode remains the unchanged default. Exact
-  `two_layer` selects the background branch; every other non-empty value fails
-  before provider creation.
-- Two-layer mode makes one Terra/high background Responses create with required
-  hosted web search and strict JSON Schema output. There is no Serper,
-  SearchAPI, helper model, second response, retry, fallback, or receipt.
-- Master prompt v3 leaves search selection, source inspection, product
-  rejection, slate selection, and ranking to Terra. ReviewRadar validates the
-  returned object directly instead of parsing natural Markdown.
-- The schema has no price, seller, purchase URL, availability, image, rating,
-  source title, publisher, or semantic source-role field. Source titles come
-  only from same-response metadata; public roles stay neutral.
-- Unregistered optional citations are removed and display as AI synthesis.
-  Missing registered evidence for identity, assessment, pros, or cons fails the
-  result closed. Exact requirement hash/order remains enforced.
-- GET/DELETE use an encrypted authenticated capability only in the
-  `x-reviewradar-job-token` header. Provider IDs and prompt tracking are not
-  client-decodable or placed in request URLs.
-- `lib/twoLayerFormatter.ts` remains historical and is not called by the current
-  route. Legacy behavior, commerce verification code, and all trust gates remain
-  intact.
-- `.env.local` has no two-layer mode or job-token-secret entry. Last recorded
-  persistent state remains constraint allocation on and narration off.
+The immediate objective is a useful product-research experience that preserves
+Terra's chosen products, order, explanations, and citations instead of feeding
+them through ReviewRadar's old reconstruction pipeline. Transactional facts
+remain explicitly unverified until a later independent verifier accepts them.
 
-## OAI-T5C result
-
-OAI-T5C replaced the failed natural-Markdown boundary with strict structured
-output from the same one research response. Offline evidence proves the request,
-schema, same-response source ownership, exact requirements, bounded diagnostics,
-and no-commerce/client-privacy boundaries. It does not prove that the real API
-accepts this exact current schema or that its recommendations are useful.
-
-Commit: `28743e9` (`Adopt structured two-layer research output`). Verification:
-1111/1111 tests across 151 suites, typecheck/build/evaluation/diff pass, lint
-zero errors and three pre-existing warnings. OAI-T5C made zero provider calls.
-
-## OAI-T5D preflight result
-
-The existing one-request-at-a-time runner now has a separate structured smoke
-profile:
-
-- approval ID: `oai-t5d-structured-lifecycle-smoke-v1`;
-- frozen request: one broad `{query:"shop vac"}` case;
-- one Terra/high create;
-- at most 20 hosted web searches, 60 retrieves, and one safety cancel;
-- zero retries, replacements, Serper/SearchAPI calls, direct source-page opens,
-  second responses, fallbacks, or additional cases; and
-- proposed hard ceiling: `$7`.
-
-The spent `oai-t5b-six-run-v1` branch still rejects execution. The new live
-branch requires the exact approval argument, a clean tracked tree, a full commit
-hash, exact shopper input, no-retry client, and process-only API key/job-token
-secret. It does not load or change `.env.local`.
-
-A failed, interrupted, cancelled, incomplete, schema-invalid, or contract-
-invalid attempt is spent and blocks replacement. A successful attempt also
-stops. The sanitized artifact can contain bounded counters/diagnostics, public
-cards, and same-response public source metadata; it cannot contain provider IDs,
-raw output, job tokens, prompts, headers, or secrets.
-
-Fail-first was the missing new approval-contract export. Corrected verification:
-
-- focused current route/adapter/contract/runner tests: 36/36;
-- complete `npm test`: 1114/1114 across 151 suites;
-- `npm run typecheck`: pass;
-- `npm run lint`: zero errors and three pre-existing warnings;
-- `npm run build`: pass;
-- `node scripts/eval-pipeline.mjs`: no red flags; and
-- no-argument runner preflight: one case, one create, zero provider calls.
-
-OAI-T5D changed no `.env.local`, persistent flag, live fixture, deployment,
-production state, or pre-existing untracked artifact.
-
-## Strongest next decision
-
-After the OAI-T5D commit is clean and peer review is considered, request one
-exact live approval pinned to that commit. Do not treat the earlier “go ahead”
-message or the commit authorization as an exact live budget.
-
-The later approval should authorize exactly one frozen smoke and stop after its
-first outcome. Do not jump to the six-run quality gate, build a verifier,
-promote the mode, deploy, delete historical code, or retire legacy behavior.
-
-**Recommended reasoning level:** High. The next provider phase is mechanically
-bounded but requires careful safety/evidence review. Highest is unnecessary
-unless the provider rejects the strict schema or exposes a new architecture
-conflict.
-
-## Exact live approval template (use only after the preflight commit)
+The separate default-off V2 path is:
 
 ```text
-Approved: one OAI-T5D structured lifecycle smoke for the frozen broad shop-vac
+shopper fields
+  -> POST /api/recommendations-v2
+  -> one Terra/high background Responses job with hosted web search
+  -> strict JSON { report_markdown }
+  -> same-response rendered-link ownership check
+  -> safe Markdown renderer, unchanged report text/order
+```
+
+The V2 route imports none of the old Serper discovery, normalization,
+requirement rescue, dedupe, scoring, fallback, or card-reconstruction modules.
+Legacy and two-layer code remains intact only for rollback.
+
+## OAI-T6A reviewed implementation
+
+### Provider and lifecycle contract
+
+- `lib/directTerraPrompt.ts` sends all cleaned shopper fields as untrusted JSON
+  data and builds one Terra/high, background, required-web-search request with
+  strict one-field JSON output.
+- `lib/directTerraResearchAdapter.ts` creates once with SDK retries disabled by
+  the route, retrieves/cancels the same response ID, requires at least one web
+  search, and exposes only bounded ledger data internally.
+- `lib/directTerraJobToken.ts` carries provider state in an authenticated,
+  encrypted, header-only capability. Provider IDs never enter client-readable
+  tokens or request URLs.
+- `lib/directTerraClient.ts` uses only `/api/recommendations-v2`, cancels before
+  token expiry, and now also cancels a known job whenever polling exits before
+  completion.
+
+The installed `openai@6.37.0` REST create type omits `max_tool_calls`, although
+the SDK's adjacent Responses client-event type documents it. Every other create
+field is now checked against `ResponseCreateParamsNonStreaming`; the one hard
+tool-ceiling field is an explicit compatibility extension. A real API smoke is
+required to prove that exact request rather than hiding the uncertainty behind
+`Record<string, unknown>`.
+
+### Citation and display contract
+
+- `lib/directTerraResponse.ts` accepts response-owned URLs from
+  `web_search_call.action.sources` and direct/nested URL-citation annotations;
+  provider titles are optional.
+- Citation discovery now uses the same `remark-parse` + `remark-gfm` grammar as
+  the renderer. Ordinary links, bare GFM autolinks, and reference links are all
+  checked; link-shaped text in code is not mistaken for a citation.
+- Every rendered HTTP(S) URL must belong to the same completed response.
+  Distinct `www` hosts, fragments, identity-bearing parameters, and parameter
+  order no longer inherit ownership from each other. Only established tracking
+  parameters are ignored.
+- Markdown images fail the response closed and are independently disabled in
+  `components/DirectTerraReport.tsx`; raw HTML and unsafe URL schemes also do
+  not render.
+- The report string is not parsed into products, reranked, rewritten, or
+  rebuilt. The UI shows a persistent warning that price and purchase details
+  are AI-reported and unverified by ReviewRadar.
+
+### Flags
+
+- Server: `REVIEW_RADAR_DIRECT_TERRA=on`.
+- Browser: `NEXT_PUBLIC_REVIEW_RADAR_DIRECT_TERRA=true`.
+- Both remain default-off in `.env.example`; `.env.local` is unchanged.
+- A server/client mismatch fails closed and never falls back to the legacy API.
+
+## Adversarial review evidence
+
+Fail-first tests reproduced five boundary failures spanning three root causes:
+
+1. the hand-written citation scanner missed clickable GFM URL forms;
+2. URL ownership normalization collapsed distinct hosts/fragments/query order,
+   and remote report images could load; and
+3. an already-known provider job survived an unexpected polling failure.
+
+All are corrected generically. Final verification:
+
+- focused direct-Terra wall: 26/26 across eight suites;
+- complete `npm test`: 1140/1140 across 159 suites;
+- `npm run typecheck`: pass;
+- `npm run lint -- --max-warnings=10`: zero errors, three pre-existing warnings;
+- `npm run build`: pass and includes `/api/recommendations-v2`;
+- `node scripts/eval-pipeline.mjs`: no red flags on the unchanged legacy path;
+- `git diff --check`: pass with Windows line-ending notices only;
+- secret-shaped scan of the phase file set: no matches; and
+- saved refrigerator replay: byte-identical 40,627-character report, 30
+  response-owned citations, 16 hosts.
+
+`npm audit --omit=dev` still reports one low and three moderate findings, with
+no high or critical finding. No automatic audit fix was applied because the
+forced Next.js action is an unrelated breaking downgrade.
+
+No OpenAI, Serper, SearchAPI, direct source-page, retry, replacement, fallback,
+or other live call occurred during OAI-T6A or this review.
+
+## Strongest next step: one OAI-T6B live contract smoke
+
+After this reviewed tree is committed, run exactly one broad shop-vac request
+through the V2 contract. Its purpose is narrow: prove the real Responses API
+accepts Terra/high + background + required web search + strict one-field JSON +
+`max_tool_calls: 20`, and prove the completed response supplies enough
+same-response metadata to register every rendered citation. It is not a quality
+gate and must not start the transactional verifier.
+
+Suggested approval text (replace `<COMMIT>` with the reviewed commit):
+
+```text
+Approved: one OAI-T6B live V2 contract smoke for the frozen broad shop-vac
 request at commit <COMMIT>, using one Terra/high OpenAI Responses create, at
 most 20 hosted web searches, at most 60 retrieves, one safety cancel, and a $7
 hard ceiling. No Serper, SearchAPI, retries, replacements, fallbacks, second
 response, direct source-page opens, additional cases, .env.local changes, flag
-promotion, deployment, or production changes. Use process-only secrets, retain
-only the sanitized attempt/fixture, and stop/report after the first outcome.
+promotion, deployment, or production changes. Use process-only configuration,
+retain only a sanitized attempt/fixture, and stop/report after the first outcome.
 ```
 
-Replace `<COMMIT>` with the committed OAI-T5D hash. Do not approve a placeholder.
+**Recommended reasoning level:** High. Execution is mechanically bounded, but
+the first real response needs careful source-shape, lifecycle, privacy, and
+contract inspection. Highest is unnecessary unless the provider rejects the
+contract or returns a genuinely new response shape.
 
 ## Hard boundaries
 
-- No OpenAI, Serper, SearchAPI, direct-fetch/source-page, retry, replacement, or
-  additional shopper request is currently approved.
-- Do not edit `.env.local`, persist a job secret, promote a mode, deploy, push,
-  publish, or alter production without Taylor's separate authorization.
-- Do not expose or persist shopper prose, prompts, answers, source paths, job
-  tokens, provider IDs, request headers, API keys, or raw responses.
-- Preserve the failed T5B attempt and all pre-existing untracked artifacts/live
-  fixtures. Stage exact phase files only; never use `git add -A`.
-- Do not weaken identity, eligibility, citation ownership, exact requirements,
-  or no-receipt transactional omissions to obtain a completion.
+- No live provider or direct source-page call exists without Taylor's exact new
+  approval.
+- Do not build the transactional verifier until OAI-T6B passes.
+- Do not enable persistent flags, edit `.env.local`, deploy, push, publish, or
+  alter production without separate approval.
+- Do not delete legacy code until later live quality and rollback evidence plus
+  an explicit retirement approval exist.
+- Never label price, seller, availability, purchase URL, inventory, financing,
+  or warranty information verified before an independent verifier accepts it.
+- Never retain or expose API keys, request headers, cookies, provider IDs, raw
+  provider responses, or job-token contents.
+- Preserve pre-existing untracked artifacts. Stage explicit files only; never
+  use `git add -A`.
 
-## Current repository state
+## Working-tree state
 
-- Current phase commit: OAI-T5D (`Freeze structured lifecycle smoke`); retrieve
-  its exact hash from local `git log` before filling the live approval template.
-- OAI-T5D runner/tests, roadmap, QA record, dialogue entry [73], and this fully
-  regenerated handoff belong to that phase commit.
-- No provider process or process-only secret is running or persisted.
-- No secret-bearing or live-fixture file belongs to the OAI-T5D tracked diff.
-
-## Outstanding peer-review debt
-
-- Entries [42]-[57] still await Claude's older lifecycle/unguarded-evidence
-  review.
-- Entry [72] asks for an adversarial review of the structured-output boundary.
-- Entry [73] asks whether the one-shot harness can retain provider state or make
-  a second create. Dialogue is advisory and authorizes no work.
+- Pre-review HEAD: `63bdef9` (`Freeze structured lifecycle smoke`).
+- The complete OAI-T6A implementation, review corrections, tests,
+  dependencies, and documentation are committed in the current `main` HEAD.
+- Live fixtures, `.claude/`, baselines, and transfer artifacts remain
+  intentionally untracked and must not be staged.
+- No provider process or process-only secret remains.
 
 ## Retrieval map
 
 | Need | Retrieve |
 |---|---|
-| Current architecture | OAI-T5C in `docs/forward-roadmap.md` |
-| Smoke contract | OAI-T5D in `docs/forward-roadmap.md` |
-| Canonical verification | latest OAI-T5C/T5D entries in `docs/qa-loop-results.md` |
-| Prompt/schema/route | `lib/twoLayerMasterPrompt.ts`, `lib/twoLayerRecommendation.ts`, `lib/twoLayerRecommendationRoute.ts` |
-| Adapter/lifecycle | `lib/twoLayerResearchAdapter.ts` |
-| Smoke runner | `scripts/run-two-layer-quality-gate.mjs` |
-| Runner tests | `tests/twoLayerQualityGateRunner.test.mjs` |
-| Peer channel | `docs/agent-dialogue.md` entries [72]-[73] |
+| V2 plan and next live gate | OAI-T6A/OAI-T6B in `docs/forward-roadmap.md` |
+| Review evidence | latest OAI-T6A entry in `docs/qa-loop-results.md` |
+| Master prompt/request | `lib/directTerraPrompt.ts` |
+| Provider lifecycle | `lib/directTerraResearchAdapter.ts` |
+| Citation/report boundary | `lib/directTerraResponse.ts` |
+| Route and token | `lib/directTerraRecommendationRoute.ts`, `lib/directTerraJobToken.ts` |
+| Browser/UI | `lib/directTerraClient.ts`, `components/DirectTerraReport.tsx`, `app/page.tsx` |
+| Focused proof | `tests/directTerra*.test.mjs` |
+| Saved report replay | untracked refrigerator diagnostic fixture |

@@ -9,7 +9,63 @@ Update this file after:
 - important bug fixes
 - live QA fixes worth remembering
 
+## 2026-07-19
+
+### 🟧 Codex - Direct Terra V2 adversarial hardening
+
+#### Changed
+
+- Replaced the hand-written citation-link scanner with the same GFM Markdown
+  grammar used by the report renderer, closing bare-URL and reference-link
+  ownership bypasses without rewriting Terra's report.
+- Reject remote report images, and keep distinct hosts, fragments, and
+  identity-bearing query details distinct during citation ownership checks.
+- Cancel a known V2 background job whenever browser polling exits before a
+  completed result.
+- Type-check the live request against the installed Responses create contract,
+  isolating the SDK's missing `max_tool_calls` field as the exact compatibility
+  question for the separately approved live smoke.
+
+#### Verified
+
+- Fail-first reproduced five boundary failures across the three root causes.
+- Focused V2 wall: 26/26 across eight suites.
+- Full suite: 1140/1140 across 159 suites.
+- Typecheck, build, legacy evaluation, secret scan, and diff checks pass; lint
+  remains zero errors with three pre-existing warnings.
+- The saved refrigerator report remains byte-identical with all 30 citations
+  registered. Zero live calls.
+
 ## 2026-07-18
+
+### 🟧 Codex - Clean direct Terra V2 foundation
+
+#### Changed
+
+- Added a separate default-off `/api/recommendations-v2` path that sends the
+  cleaned shopper request directly to one Terra/high hosted-web-search job.
+- Terra's complete ranked Markdown report is the only display payload. The V2
+  path does not import or run the old Serper discovery, normalization, rescue,
+  dedupe, scoring, or product-card reconstruction machinery.
+- Added same-response citation ownership checks that accept titleless provider
+  sources while rejecting invented citation URLs without rewriting the report.
+- Added encrypted header-only V2 job polling/cancellation and a safe Markdown
+  renderer that disables raw HTML.
+- Added a prominent V2 notice that all prices, sellers, purchase links,
+  availability, inventory, and warranty details are AI-reported and unverified
+  by ReviewRadar.
+- Kept the legacy and prior two-layer paths unchanged for rollback. The new
+  server and browser flags both default off; `.env.local` is unchanged.
+
+#### Verified
+
+- Fail-first: six expected missing-module failures.
+- Focused V2 boundary: 15/15.
+- Full suite: 1129/1129 across 158 suites.
+- Typecheck, production build, legacy offline evaluation, and diff checks pass;
+  lint has zero errors and three pre-existing warnings.
+- The saved unguarded refrigerator report replays byte-for-byte through the new
+  boundary with all 30 unique citations registered. Zero live calls.
 
 ### 🟧 Codex - Direct structured two-layer research
 

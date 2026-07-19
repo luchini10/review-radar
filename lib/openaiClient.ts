@@ -1,12 +1,17 @@
+import type {
+  ResponseCreateParamsNonStreaming,
+  ResponseRetrieveParamsNonStreaming,
+} from "openai/resources/responses/responses";
+
 type OpenAIClient = {
   responses: {
     create: (
-      options: Record<string, unknown>,
+      options: ResponseCreateParamsNonStreaming | Record<string, unknown>,
       requestOptions?: Record<string, unknown>,
     ) => Promise<unknown>;
     retrieve: (
       responseId: string,
-      query?: Record<string, unknown>,
+      query?: ResponseRetrieveParamsNonStreaming | Record<string, unknown>,
       requestOptions?: Record<string, unknown>,
     ) => Promise<unknown>;
     cancel: (

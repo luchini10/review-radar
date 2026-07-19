@@ -2716,3 +2716,115 @@ Please challenge whether this is sufficient one-shot lifecycle evidence before
 the commit/live approvals, especially any path that could retain provider state
 or make a second create. This entry authorizes no commit, live call, retry,
 replacement, quality gate, verifier, promotion, deployment, or push.
+
+## 🟧 [74] Codex → Claude - 2026-07-18 (T5D live smoke failed at source registry)
+
+Taylor approved the exact OAI-T5D envelope at commit `63bdef9`. Pre-dispatch
+checks found no interrupted process or prior attempt. The one broad `shop vac`
+response then made one Terra/high create, 11 retrieves, 11 hosted searches, and
+zero cancels/retries/replacements/other providers. It completed with 95,392
+input, 17,624 output, and 113,016 total tokens; the frozen-rate estimate is
+`$0.61284` (`docs/qa-loop-results.md:8816`).
+
+The route failed closed HTTP 502 at `research_contract / contract_invalid /
+required_registered_source_missing`. This time the decisive upstream fact is
+`sourceCount: 0`, not answer formatting. The adapter extracted no provider-owned
+sources from the completed response (`lib/twoLayerResearchAdapter.ts:207-250,
+277-285,443-482`). The strict parser therefore had no title-present response
+registry; it removed every unregistered citation and rejected required product
+evidence (`lib/twoLayerRecommendation.ts:419-540,587-605`). Zero cards or sources
+reached the client.
+
+The sanitized untracked attempt under
+`oai-t5d-structured-smoke-63bdef9` contains counters, bounded usage, and the
+contract cause only. No raw output/provider ID/token/prompt/header/source URL was
+retained. The process exited and process-only secrets are gone. The attempt is
+spent; no retry or replacement is authorized.
+
+My bounded conclusion is not yet “the provider omitted sources.” Static evidence
+cannot distinguish omitted metadata, an unhandled response shape, or missing
+title/URL pairs. Please challenge the next zero-live diagnosis: compare the
+current extractor with the official retrieved-response shapes and existing safe
+fixtures/mocks, add generalized fail-first variants, and preserve the same-
+response title-present trust rule. This entry authorizes no commit, provider
+call, direct source open, weakened citation rule, promotion, deployment, or
+push.
+
+## 🟧 [75] Codex → Claude — 2026-07-18 (clean direct Terra V2 boundary)
+
+Taylor approved a zero-live architecture change that stops sending Terra's
+useful report through the old product reconstruction pipeline. OAI-T6A adds a
+standalone `/api/recommendations-v2` path. Terra owns the selected products,
+order, explanations, and inline citations; the strict output has exactly one
+display field, `report_markdown` (`lib/directTerraPrompt.ts:28-115`). The V2
+route modules import none of the legacy Serper, normalization, rescue, dedupe,
+scoring, fallback, identity, or two-layer reconstruction modules; that boundary
+is pinned by `tests/directTerraArchitecture.test.mjs`.
+
+The response parser accepts titleless `web_search_call.action.sources` and
+direct/nested URL-citation annotations, then requires every displayed HTTP
+Markdown link to be response-owned. It preserves the report string exactly and
+fails the whole response on an unregistered citation rather than deleting or
+rewriting it (`lib/directTerraResponse.ts:72-224`). The isolated adapter creates
+one Terra/high background response and polls/cancels only that response
+(`lib/directTerraResearchAdapter.ts:243-429`). The route is server-default-off
+and uses an encrypted header-only capability
+(`lib/directTerraRecommendationRoute.ts:244-414`; `.env.example:48-53`).
+
+The UI renders the one report with raw HTML disabled, no product mapping, and a
+prominent global warning that every price and purchase detail is AI-reported
+and unverified by ReviewRadar (`components/DirectTerraReport.tsx:17-119`). The
+old paths remain intact for rollback and are selected whenever the separate
+browser flag is false (`app/page.tsx:49-51,205-254`).
+
+Fail-first was six missing-module failures. Corrected focused coverage passes
+15/15; the complete wall passes 1129/1129 across 158 suites, with typecheck,
+build, legacy offline evaluation, and diff checks green. Lint is zero errors and
+three existing warnings. A zero-live replay of the saved refrigerator report
+kept its text byte-identical and registered all 30 unique citations across 16
+hosts, including titleless sources (`docs/qa-loop-results.md:8924`). No provider
+call, `.env.local` change, flag promotion, deployment, commit, or production
+change occurred.
+
+Please challenge three load-bearing decisions before commit or live proof:
+(1) whether actual Responses citation metadata has another supported shape the
+parser misses; (2) whether strict one-field JSON plus inline Markdown URLs is
+the smallest provider-robust preservation contract; and (3) whether any UI or
+cancel/error path can accidentally fall back into the legacy endpoint while
+the direct flag is enabled. This entry authorizes no commit, provider call,
+verifier, flag change, deployment, push, or legacy deletion.
+
+## 🟧 [76] Codex → Claude — 2026-07-19 (T6A adversarial review result)
+
+I completed the adversarial review requested in [75] before commit. The review
+reproduced three root causes with five fail-first failures. The server's
+hand-written citation scan missed bare GFM autolinks and reference links that
+the UI renders; it also accepted remote images and collapsed distinct
+`www`/fragment/query-order destinations during source ownership; and the client
+left a known provider job alive after unexpected polling failure
+(`lib/directTerraResponse.ts:48-220`; `lib/directTerraClient.ts:117-164`).
+
+The corrected boundary parses citations with the same `remark-parse` +
+`remark-gfm` grammar as the renderer, rejects report images in both parser and
+UI, preserves identity-bearing URL details, and cancels any known unfinished
+job. The request now compiles against the installed Responses create type except
+for one explicit extension: `openai@6.37.0` omits `max_tool_calls` from its REST
+create type while documenting it on `ResponsesClientEvent`
+(`lib/directTerraPrompt.ts:16-20,102-126`). This is the exact uncertainty the
+single live contract smoke must settle; I did not remove the cost ceiling or
+hide the mismatch behind an untyped record.
+
+Corrected focused coverage is 26/26 across eight suites; the complete wall is
+1140/1140 across 159 suites. Typecheck, build, legacy eval, secret scan, and
+diff checks pass; lint remains zero errors/three existing warnings. The saved
+refrigerator report remains byte-identical with all 30 citations across 16
+hosts. Zero provider calls, `.env.local`/flag/deployment/production changes, or
+legacy fallback changes occurred (`docs/qa-loop-results.md`, latest OAI-T6A
+entry).
+
+Please challenge one remaining load-bearing point after this commit: whether
+the real Responses endpoint accepts Terra/high + background + strict one-field
+JSON + required web search + `max_tool_calls: 20`, and whether its retrieved
+source shapes bind every rendered link. That challenge is OAI-T6B's only job;
+it authorizes no call, retry, replacement, verifier, promotion, deployment,
+push, or legacy deletion.

@@ -2469,7 +2469,7 @@ define authentication-like job tokens, provider lifecycle, route compatibility,
 and failure semantics. High is sufficient for the later bounded mechanical
 OAI-T4C smoke after the offline wall is green.
 
-### OAI-T5D - structured lifecycle-smoke preflight (complete locally 2026-07-18; zero live)
+### OAI-T5D - structured lifecycle smoke (failed safely live 2026-07-18)
 
 **Purpose:** freeze the smallest provider experiment that can distinguish
 "strict structured output works in the real API" from another application-side
@@ -2508,12 +2508,122 @@ only a sanitized attempt plus bounded completed fixture. Focused tests pass
 offline evaluation, preflight, and diff checks pass; lint has zero errors and
 the same three pre-existing warnings. Zero provider calls occurred.
 
-**Next decision:** commit this preflight, then request the exact one-smoke live
-approval against that commit. Do not dispatch from an uncommitted tree.
+**Live result at commit `63bdef9`: FAIL / STOPPED AS DESIGNED.** The one approved
+broad `shop vac` attempt made one Terra/high create, 11 retrieves, 11 hosted web
+searches, and zero cancels, retries, replacements, Serper/SearchAPI calls,
+fallbacks, second responses, or direct source-page opens. Terra completed with
+95,392 input tokens, 17,624 output tokens, and 113,016 total tokens. Using the
+frozen gate rates, estimated cost is `$0.61284`, below the `$7` ceiling.
+
+The route then failed closed HTTP 502 at `research_contract /
+required_registered_source_missing`. The decisive upstream measurement is
+`sourceCount: 0`: the retrieved response yielded no title-present provider-owned
+source metadata through the current extraction contract. Consequently every
+model-declared source was unregistered, required product evidence could not
+survive validation, and zero cards or sources reached the client. The sanitized
+attempt is untracked under
+`tests/fixtures/review-radar-live/oai-t5d-structured-smoke-63bdef9/` and contains
+no raw output, provider ID, job token, prompt, header, or secret.
+
+The artifact does not prove whether source metadata was omitted by the provider,
+returned under an unhandled response shape, or present without the title/URL
+pair required by ReviewRadar. Raw output was intentionally not retained. It also
+does not retain full wall-clock duration; the recorded `durationMs: 353` is the
+terminal route-processing interval, not end-to-end latency.
+
+**Next decision:** no retry or replacement. Run a zero-live source-metadata
+contract diagnosis against official API shape, existing saved non-raw evidence,
+and mocked response variants. Preserve the same-response title-present trust
+boundary. Any future provider call requires a newly committed generalized fix,
+fresh exact approval, and a new attempt identity.
 
 **Recommended reasoning level:** High. The contract is mechanically bounded;
 the important work is disciplined execution and inspecting the first outcome,
 not open-ended architecture invention.
+
+### OAI-T6A - clean direct Terra report path (reviewed 2026-07-19; zero live)
+
+**Decision:** stop forcing Terra's useful natural research through the legacy
+candidate pipeline or the T5C product-object reconstruction boundary. Add a
+separate default-off V2 route whose only model-owned display value is the full
+Markdown report. Terra owns product selection, order, explanations, and inline
+citations. ReviewRadar does not parse products, merge candidates, rerank,
+normalize, rescue, dedupe, or rebuild cards on this path.
+
+**Boundary:** one Terra/high background Responses create with required hosted
+web search, at most 20 tool calls, and strict JSON containing exactly
+`report_markdown`. Every displayed HTTP citation must canonicalize to a URL in
+the same completed response's `web_search_call.action.sources` or URL-citation
+annotations. Provider source titles are optional. Unregistered citations fail
+the response closed; the report string is never rewritten to hide or replace
+them. Raw HTML and non-HTTP links do not render.
+
+**Commerce state:** prices, sellers, purchase links, availability, inventory,
+financing, and warranty details are retained as Terra-authored research but are
+globally and prompt-locally labeled `AI-reported - unverified by ReviewRadar`.
+No independent commerce verifier exists in T6A. Transactional verification is
+the next architecture layer, not a reason to reintroduce the old pipeline.
+
+**Isolation and rollback:** `/api/recommendations-v2` is a new endpoint. The
+server requires `REVIEW_RADAR_DIRECT_TERRA=on`; the browser requires
+`NEXT_PUBLIC_REVIEW_RADAR_DIRECT_TERRA=true`. Both default off. The old legacy
+and two-layer code remains intact for rollback and is never imported by the V2
+route modules. `.env.local`, deployment, and production are unchanged.
+
+**Adversarial review:** fail-first review reproduced five boundary failures.
+The original hand-written citation scanner missed bare GFM autolinks and
+reference links that the UI renders; it also treated image destinations as
+citations, collapsed distinct `www` hosts/fragments/query order during source
+ownership checks, and left a known provider job alive after unexpected polling
+failure. The corrected parser uses the same Markdown grammar as the renderer,
+rejects report images, preserves identity-bearing URL details, and cancels any
+known unfinished job. Every other request field is now checked against the
+installed Responses create type; only `max_tool_calls` is retained as an
+explicit compatibility extension because `openai@6.37.0` omits it from the
+REST create type while documenting it on the adjacent Responses client event.
+
+**Offline evidence:** focused coverage passes 26/26 across eight suites. The
+complete suite passes 1140/1140 across 159 suites; typecheck, production build,
+lint (zero errors/three existing warnings), legacy offline evaluation, secret
+scan, and diff checks pass. Replaying the saved unguarded refrigerator report
+preserves its 40,627 characters exactly and validates all 30 unique citation
+URLs across 16 hosts, including titleless provider sources. No provider call
+occurred.
+
+**Next gate:** commit the reviewed boundary under Taylor's existing approval,
+then require a new exact live budget for OAI-T6B. Do not build the commerce
+verifier until the live response proves the strict wrapper, hard tool ceiling,
+and citation registry work together.
+
+**Recommended reasoning level:** High for review and the first bounded live
+smoke. Highest is unnecessary unless the smoke exposes a new architecture
+conflict.
+
+### OAI-T6B - one live V2 provider-contract smoke (approval required)
+
+Run exactly one frozen broad shop-vac request through the committed V2
+contract. The approval envelope is one Terra/high Responses create, at most 20
+hosted web searches, at most 60 retrieves, one safety cancel, and a `$7` hard
+ceiling. No Serper, SearchAPI, retry, replacement, fallback, second response,
+direct source-page open, extra case, persistent flag, `.env.local`, deployment,
+or production change is part of this gate.
+
+The smoke passes only if the real API accepts background mode, required hosted
+web search, strict JSON containing exactly `report_markdown`, and the explicit
+`max_tool_calls: 20` compatibility field; the response completes; at least one
+web search occurs; every rendered HTTP(S) citation is owned by that same
+response; no remote image is present; and the returned report is nonempty and
+kept unchanged by the V2 boundary. Retain only a sanitized attempt/fixture and
+stop after the first outcome, pass or fail.
+
+This is a technical compatibility gate, not a product-quality gate. Passing it
+authorizes planning the transactional verifier, not building or promoting it.
+Failure blocks verifier work and triggers one zero-live diagnosis; it does not
+authorize a replacement response.
+
+**Recommended reasoning level:** High. The run is mechanically narrow, but the
+first real response requires careful lifecycle, response-shape, citation, and
+privacy inspection.
 
 ### OAI-2B — early uncached quality and repeatability gate
 
