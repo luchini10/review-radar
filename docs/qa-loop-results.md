@@ -9085,3 +9085,40 @@ store is process-local by design for the current single-process deployment; a
 multi-instance deployment needs a shared backend behind the same functions.
 Two-layer and direct-terra pipelines currently show the generic fallback copy;
 wiring their job runners into the same store is a natural follow-up.
+
+## 🟧 Codex - OAI-T6B outcome and zero-live citation-granular correction (2026-07-19)
+
+Taylor's single OAI-T6B smoke ran against the exact approved `d448a5f` tree in
+an isolated worktree because `main` had advanced independently to `f72e767`.
+The real API accepted Terra/high, background mode, required hosted search,
+strict one-field JSON, and `max_tool_calls: 20`. The first and only response
+used one create, 28 retrieves, nine hosted searches, and no retry, replacement,
+fallback, Serper, SearchAPI, or direct page open. It completed with 89,742 input
+tokens, 25,413 output tokens, 115,155 total tokens, and an estimated `$0.69555`.
+One post-completion safety-cancel attempt returned `request_error` because the
+job was already terminal.
+
+The provider response exposed 125 registered sources across 46 hosts, but the
+V2 parser rejected the entire report as `invalid_report / unregistered_citation`.
+The sanitized untracked attempt is under
+`tests/fixtures/review-radar-live/oai-t6b-v2-contract-smoke-d448a5f/`; it retains
+no raw provider response, provider ID, job token, key, or request header. The
+attempt is spent and is not reusable.
+
+Taylor then approved a zero-live citation-granular correction. Fail-first tests
+proved the old whole-report rejection. `parseDirectTerraCompletedResponse` now
+preserves the report byte-for-byte, returns only response-owned URLs in its
+clickable allowlist, and counts unmatched unique URLs. The route and public V2
+contract carry that count. `DirectTerraReport` renders any URL outside the
+allowlist as labeled plain text and warns that nearby claims are AI synthesis.
+Malformed wrappers, reports without citations, remote images, unsafe schemes,
+raw HTML, URL-identity distinctions, encrypted job state, no-retry lifecycle,
+and the unverified-commerce warning remain unchanged.
+
+Verification: focused boundary 24/24 after fail-first; full suite 1162/1162
+across 164 suites; typecheck and production build pass; lint has zero errors and
+three pre-existing warnings; legacy offline evaluation has no red flags. The
+saved refrigerator fixture replays byte-identically with 30 active citations,
+16 hosts, and zero disabled citations. No OpenAI, Serper, SearchAPI, direct page,
+retry, replacement, fallback, flag, `.env.local`, deployment, or production
+change occurred during the correction.

@@ -29,6 +29,7 @@ describe("direct Terra V2 browser lifecycle", () => {
         reportMarkdown: "# Exact Terra report",
         citationUrls: ["https://example.com/a"],
         sourceHosts: ["example.com"],
+        disabledCitationCount: 1,
         transactionalStatus: "unverified",
       });
     };
@@ -42,6 +43,7 @@ describe("direct Terra V2 browser lifecycle", () => {
     });
 
     assert.equal(result.reportMarkdown, "# Exact Terra report");
+    assert.equal(result.disabledCitationCount, 1);
     assert.equal(calls[0].url, "/api/recommendations-v2");
     assert.equal(calls[1].url, "/api/recommendations-v2");
     assert.equal(calls.some((call) => call.url === "/api/recommendations"), false);

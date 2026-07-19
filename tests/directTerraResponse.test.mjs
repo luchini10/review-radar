@@ -55,6 +55,7 @@ describe("direct Terra V2 response boundary", () => {
       "https://example.com/products/model-a?utm_source=openai",
     ]);
     assert.deepEqual(parsed.sourceHosts, ["example.com"]);
+    assert.equal(parsed.disabledCitationCount, 0);
   });
 
   it("extracts both direct and nested URL-citation annotations", () => {
@@ -92,7 +93,7 @@ describe("direct Terra V2 response boundary", () => {
     );
   });
 
-  it("rejects an invented citation without deleting or rewriting it", () => {
+  it("preserves an invented citation in the report but disables its link", () => {
     const invented = report.replace(
       "https://example.com/products/model-a?utm_source=openai",
       "https://invented.example/model-a",
@@ -103,12 +104,33 @@ describe("direct Terra V2 response boundary", () => {
       }),
     );
 
-    assert.deepEqual(parsed, {
-      ok: false,
-      reason: "unregistered_citation",
-      citationCount: 1,
-      unregisteredCitationCount: 1,
+    assert.equal(parsed.ok, true);
+    assert.equal(parsed.reportMarkdown, invented);
+    assert.deepEqual(parsed.citationUrls, []);
+    assert.deepEqual(parsed.sourceHosts, []);
+    assert.equal(parsed.disabledCitationCount, 1);
+  });
+
+  it("keeps response-owned links active while disabling only unmatched links", () => {
+    const registeredUrl = "https://example.com/products/model-a";
+    const inventedUrl = "https://invented.example/model-b";
+    const mixedReport = [
+      "# Result",
+      "",
+      `[Registered](${registeredUrl}) and [unmatched](${inventedUrl}).`,
+    ].join("\n");
+    const response = completedResponse({
+      outputText: JSON.stringify({ report_markdown: mixedReport }),
     });
+    response.output[0].action.sources[0].url = registeredUrl;
+
+    const parsed = parseDirectTerraCompletedResponse(response);
+
+    assert.equal(parsed.ok, true);
+    assert.equal(parsed.reportMarkdown, mixedReport);
+    assert.deepEqual(parsed.citationUrls, [registeredUrl]);
+    assert.deepEqual(parsed.sourceHosts, ["example.com"]);
+    assert.equal(parsed.disabledCitationCount, 1);
   });
 
   it("rejects malformed wrappers, extra fields, and reports without citations", () => {
@@ -155,12 +177,10 @@ describe("direct Terra V2 response boundary", () => {
       report_markdown:
         "# Result\n\nProvider page: https://invented.example/products/model-a",
     });
-    assert.deepEqual(parseDirectTerraCompletedResponse(response), {
-      ok: false,
-      reason: "unregistered_citation",
-      citationCount: 1,
-      unregisteredCitationCount: 1,
-    });
+    const disabled = parseDirectTerraCompletedResponse(response);
+    assert.equal(disabled.ok, true);
+    assert.deepEqual(disabled.citationUrls, []);
+    assert.equal(disabled.disabledCitationCount, 1);
   });
 
   it("resolves reference links and ignores link-shaped text inside code", () => {
@@ -224,9 +244,12 @@ describe("direct Terra V2 response boundary", () => {
         }),
       });
       response.output[0].action.sources[0].url = registeredUrl;
+      const parsed = parseDirectTerraCompletedResponse(response);
+      assert.equal(parsed.ok, true);
+      assert.deepEqual(parsed.citationUrls, []);
       assert.equal(
-        parseDirectTerraCompletedResponse(response).ok,
-        false,
+        parsed.disabledCitationCount,
+        1,
         `${citedUrl} must not inherit ownership from ${registeredUrl}`,
       );
     }

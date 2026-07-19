@@ -391,6 +391,7 @@ export async function pollDirectTerraResearch({
     reportMarkdown: parsed.reportMarkdown,
     citationUrls: parsed.citationUrls,
     sourceHosts: parsed.sourceHosts,
+    disabledCitationCount: parsed.disabledCitationCount,
     ledger,
   };
 }

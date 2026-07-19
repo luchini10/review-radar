@@ -45,6 +45,7 @@ describe("clean direct Terra V2 route", () => {
         reportMarkdown: exactReport,
         citationUrls: ["https://example.com/a"],
         sourceHosts: ["example.com"],
+        disabledCitationCount: 1,
         ledger: {},
       }),
     });
@@ -69,6 +70,7 @@ describe("clean direct Terra V2 route", () => {
     assert.equal(completed.reportMarkdown, exactReport);
     assert.equal(completed.transactionalStatus, "unverified");
     assert.deepEqual(completed.citationUrls, ["https://example.com/a"]);
+    assert.equal(completed.disabledCitationCount, 1);
   });
 
   it("rejects malformed shopper input before creating a provider request", async () => {
@@ -101,5 +103,27 @@ describe("clean direct Terra V2 route", () => {
     );
 
     assert.equal(response.status, 500);
+  });
+
+  it("rejects malformed disabled-citation counters at the client contract", () => {
+    const response = {
+      pipeline: "direct_terra",
+      version: "direct-terra-api-v1",
+      state: "completed",
+      reportMarkdown: exactReport,
+      citationUrls: ["https://example.com/a"],
+      sourceHosts: ["example.com"],
+      transactionalStatus: "unverified",
+    };
+
+    assert.equal(isDirectTerraCompletedResponse(response), true);
+    assert.equal(
+      isDirectTerraCompletedResponse({ ...response, disabledCitationCount: -1 }),
+      false,
+    );
+    assert.equal(
+      isDirectTerraCompletedResponse({ ...response, disabledCitationCount: 1 }),
+      true,
+    );
   });
 });

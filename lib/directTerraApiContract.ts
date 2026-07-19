@@ -22,6 +22,7 @@ export type DirectTerraCompletedResponse = {
   reportMarkdown: string;
   citationUrls: string[];
   sourceHosts: string[];
+  disabledCitationCount?: number;
   transactionalStatus: "unverified";
 };
 
@@ -62,6 +63,13 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
 
+export function isDirectTerraCitationAllowed(
+  citationUrls: readonly string[],
+  href: unknown,
+): href is string {
+  return typeof href === "string" && citationUrls.includes(href);
+}
+
 export function isDirectTerraPendingResponse(
   value: unknown,
 ): value is DirectTerraPendingResponse {
@@ -90,6 +98,10 @@ export function isDirectTerraCompletedResponse(
     value.reportMarkdown.length > 0 &&
     isStringArray(value.citationUrls) &&
     isStringArray(value.sourceHosts) &&
+    (value.disabledCitationCount === undefined ||
+      (typeof value.disabledCitationCount === "number" &&
+        Number.isSafeInteger(value.disabledCitationCount) &&
+        value.disabledCitationCount >= 0)) &&
     value.transactionalStatus === "unverified"
   );
 }

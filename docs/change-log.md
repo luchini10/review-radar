@@ -11,6 +11,29 @@ Update this file after:
 
 ## 2026-07-19
 
+### 🟧 Codex - Preserve Terra reports when one citation cannot be registered
+
+#### Changed
+
+- The direct Terra V2 path no longer discards a complete report because one
+  Markdown link is absent from the response-owned source registry.
+- Response-owned citations remain clickable. Each unmatched citation is
+  rendered as labeled plain text, with a report-level warning that its nearby
+  claim should be treated as AI synthesis.
+- Terra's report text, products, order, and explanations remain byte-identical.
+  Unsafe HTML, remote images, unsafe URL schemes, malformed wrappers, and
+  reports with no citations remain blocked.
+
+#### Verified
+
+- Fail-first coverage reproduced whole-report rejection, then passed mixed
+  registered/unregistered links, GFM autolinks, references, URL-identity
+  controls, and UI/API propagation.
+- Full suite 1162/1162 across 164 suites; typecheck and build pass; lint has zero
+  errors and three pre-existing warnings; legacy offline evaluation has no red
+  flags. The saved refrigerator report remains byte-identical with 30 active
+  citations, 16 hosts, and zero disabled citations. Zero live calls occurred.
+
 ### Claude - Live search-progress narration during the research wait
 
 #### Changed

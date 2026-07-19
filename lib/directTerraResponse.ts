@@ -13,6 +13,7 @@ type ParsedDirectTerraResponse =
       reportMarkdown: string;
       citationUrls: string[];
       sourceHosts: string[];
+      disabledCitationCount: number;
     }
   | {
       ok: false;
@@ -210,23 +211,16 @@ export function parseDirectTerraCompletedResponse(
       .map((source) => canonicalUrl(source.url))
       .filter((url): url is string => Boolean(url)),
   );
-  const unregisteredCitationCount = citationUrls.filter((url) => {
+  const registeredCitationUrls = citationUrls.filter((url) => {
     const canonical = canonicalUrl(url);
-    return !canonical || !registered.has(canonical);
-  }).length;
-
-  if (unregisteredCitationCount > 0) {
-    return {
-      ok: false,
-      reason: "unregistered_citation",
-      citationCount: citationUrls.length,
-      unregisteredCitationCount,
-    };
-  }
+    return Boolean(canonical && registered.has(canonical));
+  });
+  const disabledCitationCount =
+    citationUrls.length - registeredCitationUrls.length;
 
   const sourceHosts = [
     ...new Set(
-      citationUrls.map((url) =>
+      registeredCitationUrls.map((url) =>
         new URL(url).hostname.toLowerCase().replace(/^www\./, ""),
       ),
     ),
@@ -234,7 +228,8 @@ export function parseDirectTerraCompletedResponse(
   return {
     ok: true,
     reportMarkdown,
-    citationUrls,
+    citationUrls: registeredCitationUrls,
     sourceHosts,
+    disabledCitationCount,
   };
 }

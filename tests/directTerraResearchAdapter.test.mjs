@@ -126,6 +126,7 @@ describe("direct Terra V2 provider adapter", () => {
     assert.equal(result.state, "completed");
     assert.equal(result.reportMarkdown, report);
     assert.deepEqual(result.citationUrls, ["https://example.com/a"]);
+    assert.equal(result.disabledCitationCount, 0);
     assert.deepEqual(calls, [
       [
         responseId,

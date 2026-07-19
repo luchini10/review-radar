@@ -38,10 +38,13 @@ not produce a `RecommendationResult`. When both direct-Terra flags are enabled,
 one Terra/high Responses job researches and ranks the products and returns one
 strict JSON field, `report_markdown`. ReviewRadar displays that report without
 splitting it into cards, changing its product set, or reranking it. Every
-displayed HTTP citation must belong to the same OpenAI response source registry;
-the ownership check uses the same GFM Markdown grammar as the renderer, remote
-report images are rejected, and all prices and purchase details are labeled
-unverified by ReviewRadar.
+clickable HTTP citation must belong to the same OpenAI response source registry.
+The ownership check uses the same GFM Markdown grammar as the renderer. A link
+that cannot be registered is rendered as labeled plain text while the rest of
+Terra's report remains unchanged; the UI also warns that the nearby claim is AI
+synthesis. Remote report images are rejected, unsafe URL schemes and raw HTML do
+not render, and all prices and purchase details are labeled unverified by
+ReviewRadar.
 
 ## 2. Full user flow
 

@@ -2,7 +2,10 @@ import { ExternalLink, ShieldAlert } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-import type { DirectTerraCompletedResponse } from "@/lib/directTerraApiContract";
+import {
+  isDirectTerraCitationAllowed,
+  type DirectTerraCompletedResponse,
+} from "@/lib/directTerraApiContract";
 
 function safeExternalUrl(value: string) {
   try {
@@ -18,6 +21,8 @@ export function DirectTerraReport({
 }: {
   result: DirectTerraCompletedResponse;
 }) {
+  const disabledCitationCount = result.disabledCitationCount ?? 0;
+
   return (
     <div className="space-y-5">
       <div
@@ -38,6 +43,22 @@ export function DirectTerraReport({
         </div>
       </div>
 
+      {disabledCitationCount > 0 ? (
+        <div
+          className="rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-slate-800"
+          role="note"
+        >
+          <p className="text-sm font-semibold">Some source links are unavailable</p>
+          <p className="mt-1 text-sm leading-6">
+            ReviewRadar could not confirm {disabledCitationCount}{" "}
+            {disabledCitationCount === 1 ? "source link" : "source links"}{" "}
+            against this research response. The report is preserved, but those
+            links are disabled and the nearby claims should be treated as AI
+            synthesis.
+          </p>
+        </div>
+      ) : null}
+
       <article className="rounded-3xl border border-slate-200/80 bg-white px-5 py-7 shadow-sm sm:px-9 sm:py-9">
         <div className="mb-7 border-b border-slate-200 pb-5">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">
@@ -56,17 +77,25 @@ export function DirectTerraReport({
             skipHtml
             urlTransform={safeExternalUrl}
             components={{
-              a: ({ children, href }) => (
-                <a
-                  className="inline-flex items-center gap-1 font-medium text-blue-700 underline decoration-blue-300 underline-offset-2 hover:text-blue-900"
-                  href={href}
-                  rel="noreferrer noopener"
-                  target="_blank"
-                >
-                  {children}
-                  <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
-                </a>
-              ),
+              a: ({ children, href }) =>
+                isDirectTerraCitationAllowed(result.citationUrls, href) ? (
+                  <a
+                    className="inline-flex items-center gap-1 font-medium text-blue-700 underline decoration-blue-300 underline-offset-2 hover:text-blue-900"
+                    href={href}
+                    rel="noreferrer noopener"
+                    target="_blank"
+                  >
+                    {children}
+                    <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
+                  </a>
+                ) : (
+                  <span className="inline text-slate-700">
+                    {children}{" "}
+                    <span className="text-xs font-medium text-amber-800">
+                      (Source link unavailable)
+                    </span>
+                  </span>
+                ),
               blockquote: ({ children }) => (
                 <blockquote className="my-5 border-l-4 border-slate-300 bg-slate-50 px-4 py-2 text-slate-600">
                   {children}

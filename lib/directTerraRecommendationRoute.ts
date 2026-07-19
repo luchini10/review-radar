@@ -356,6 +356,7 @@ export function createDirectTerraRecommendationHandlers({
           reportMarkdown: result.reportMarkdown,
           citationUrls: result.citationUrls,
           sourceHosts: result.sourceHosts,
+          disabledCitationCount: result.disabledCitationCount,
           transactionalStatus: "unverified",
         },
         200,
