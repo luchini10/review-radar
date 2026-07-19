@@ -2625,6 +2625,51 @@ authorize a replacement response.
 first real response requires careful lifecycle, response-shape, citation, and
 privacy inspection.
 
+### OAI-T7A - saved-slate transactional feasibility preflight (complete locally 2026-07-19; zero live)
+
+**Decision:** test the prospective commerce provider against Terra's actual
+five saved shop-vac recommendations before changing the V2 response schema,
+route, or UI. This is a provider-feasibility harness, not the transactional
+verifier integration.
+
+The frozen targets are DEWALT `DXV12P-QT`, CRAFTSMAN `CMXEVBE17595`, Vacmaster
+`VFB511B 0202`, RIDGID `HD1600`, and Milwaukee `0910-20`. Their source fixture
+and report hashes are pinned. The runner emits one exact `google_shopping`
+request per target and permits a `google_product_offers` request only after the
+existing verifier selects an exact brand/model Shopping entity with a bounded
+product token.
+
+Any later live execution requires a separately approved commit, approval ID,
+and exact ten-attempt ceiling. It permits at most five Shopping plus five Offers
+requests, no retries, replacements, fallbacks, additional queries, OpenAI,
+Serper, or direct page fetches. Provider tokens are retained only as SHA-256
+values; raw responses, secrets, and headers are not persisted. Retained offer
+URLs remove only established tracking parameters while preserving product
+identity parameters. The evidence path is one-use and checkpointed before each
+attempt.
+
+The mechanical usefulness floor is at least three of five exact verified
+offers, but a frozen human audit must also find zero wrong identity, variant,
+accessory, condition, stock, seller, price, or destination bindings. A miss is
+inconclusive and cannot remove, replace, or reorder Terra's recommendation.
+Failure stops provider integration; it does not authorize query tuning or a
+different provider.
+
+Offline verification: 29/29 focused commerce/preflight tests, 1167/1167 full
+tests across 165 suites, typecheck, production build, lint (zero errors and
+three pre-existing warnings), offline evaluation, dry-run, and missing-
+approval refusal all pass. No provider call, output fixture, key read,
+`.env.local` change, route/UI change, flag, deployment, or production change
+occurred.
+
+**Next gate:** commit review, then a separately approved one-run SearchAPI
+feasibility probe pinned to that commit. Do not add the V2 identity sidecar or
+integrate commerce into the route/UI until the provider passes.
+
+**Recommended reasoning level:** High. The harness is narrow and reuses the
+existing verifier, but exact-model offer binding, redaction, and one-shot spend
+controls remain safety-sensitive.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen

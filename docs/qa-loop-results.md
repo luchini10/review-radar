@@ -9122,3 +9122,77 @@ saved refrigerator fixture replays byte-identically with 30 active citations,
 16 hosts, and zero disabled citations. No OpenAI, Serper, SearchAPI, direct page,
 retry, replacement, fallback, flag, `.env.local`, deployment, or production
 change occurred during the correction.
+
+## 🟧 Codex - OAI-T6D saved-report audit and T7A transactional feasibility preflight (2026-07-19)
+
+**Verdict: T6D is a useful AI research report but not a verified checkout
+answer; the smallest next experiment is ready offline.** No OpenAI, SearchAPI,
+Serper, direct-page, retry, replacement, fallback, or other live call occurred
+during this audit/preflight.
+
+The frozen T6D fixture at
+`tests/fixtures/review-radar-live/oai-t6d-v2-citation-granular-smoke-97a2a96/broad-shop-vac.run1.json`
+passed the direct-Terra contract with one response, seven hosted searches, 25
+retrieves, 15 active citations across 11 hosts, zero disabled citations,
+`transactionalStatus: unverified`, 133,071 ms wall time, and an estimated
+`$0.4323525`. The 30,916-character report contained five legitimate wet/dry
+vacuums with exact model identifiers and no recommended accessory or wrong
+product type. Only two products carried current-price prose, both expressly
+labeled AI-reported and unverified; no independently verified seller, price,
+stock, or purchase receipt exists.
+
+The saved report is candid about evidence limitations: DEWALT `DXV12P-QT` has
+the strongest exact-model independent support; the CRAFTSMAN test SKU is not
+confirmed; Vacmaster's independent evidence is family-level; RIDGID lacks an
+exact-model controlled test; and Milwaukee has manufacturer evidence but thin
+independent/owner evidence. The frozen matcher mechanically reports `5/7` core
+leaders, but its `shop vac` brand row matches the generic words in the
+CRAFTSMAN title. The honest semantic coverage is four of seven core brands plus
+the acceptable Milwaukee alternate. This benchmark caveat is audit context,
+not a retroactive benchmark revision.
+
+`scripts/run-oai-t7a-transactional-feasibility.mjs` now freezes those five
+Terra-selected identities, their source/report hashes, and the exact queries:
+
+- `DEWALT DXV12P-QT shop vac`
+- `CRAFTSMAN CMXEVBE17595 shop vac`
+- `Vacmaster VFB511B 0202 shop vac`
+- `RIDGID HD1600 shop vac`
+- `Milwaukee 0910-20 shop vac`
+
+The default mode is dry-run. Live mode requires the exact approval ID, ten
+approved attempts, an approved commit matching HEAD, a clean tracked tree, the
+unchanged frozen fixture, and an unused evidence path before key lookup. The
+runner allows five Shopping requests and at most five token-bound Offers
+requests, with no retry, fallback, replacement, query expansion, OpenAI,
+Serper, or direct source fetch. It checkpoints before each attempt and excludes
+raw provider responses, keys, headers, and raw product tokens from the evidence.
+
+Verification completed zero-live:
+
+- focused commerce and T7A tests: 28/28 across three suites;
+- complete test wall: 1166/1166 across 165 suites;
+- `npm run typecheck`: pass;
+- `npm run lint -- --max-warnings=10`: zero errors, three pre-existing warnings;
+- `npm run build`: pass, including `/api/recommendations-v2`;
+- `node scripts/eval-pipeline.mjs`: no red flags;
+- dry-run: exact five-query/ten-attempt plan, no output fixture; and
+- deliberate `--execute` without approval: refused before key lookup and wrote
+  no evidence.
+
+No route, UI, OpenAI response schema, feature flag, `.env.local`, deployment,
+or production behavior changed. A later live probe needs a new exact approval
+pinned to the eventual commit. Passing requires at least three of five exact
+offers plus a frozen human audit with zero unsafe bindings; failing stops the
+provider experiment before integration.
+
+### Commit-review addendum
+
+Before staging, adversarial review found that sanitized diagnostics and the
+verifier decision object still retained provider offer URLs verbatim. The
+harness now applies the existing conservative T4B canonicalizer to both paths:
+established tracking parameters are removed, while identity-bearing SKU,
+variant, query ordering, and fragment data remain. The added regression brings
+focused coverage to 29/29 and the complete wall to 1167/1167 across 165 suites.
+Typecheck remains green; lint remains zero errors with three pre-existing
+warnings. No live call or evidence output occurred during review.
