@@ -95,6 +95,12 @@ import {
   runWithSearchObservabilityLedger,
   searchPlanObservabilityObserver,
 } from "../../../lib/searchObservabilityLedger.ts";
+import {
+  beginSearchProgress,
+  completeSearchProgress,
+  reportSearchProgressStage,
+  searchProgressIdFromRequest,
+} from "../../../lib/searchProgressStore.ts";
 import type {
   ProductBuyingRubric,
   ProductRecommendation,
@@ -368,7 +374,7 @@ function roundMs(value: number) {
   return Math.round(value);
 }
 
-function createRequestTiming() {
+function createRequestTiming(onStageStart?: (label: string) => void) {
   const startedAt = performance.now();
   const stages: TimingStage[] = [];
 
@@ -379,8 +385,17 @@ function createRequestTiming() {
     });
   }
 
+  function announce(label: string) {
+    try {
+      onStageStart?.(label);
+    } catch {
+      // Stage narration must never break the request itself.
+    }
+  }
+
   return {
     async measure<T>(label: string, fn: () => Promise<T>): Promise<T> {
+      announce(label);
       const started = performance.now();
 
       try {
@@ -390,6 +405,7 @@ function createRequestTiming() {
       }
     },
     measureSync<T>(label: string, fn: () => T): T {
+      announce(label);
       const started = performance.now();
 
       try {
@@ -653,8 +669,13 @@ async function handleRecommendationPostWithContext(
   request: Request,
   routeDependencies: RecommendationRouteDependencies,
   includeDebug: boolean,
+  progressId: string | null = null,
 ) {
-  const timing = createRequestTiming();
+  const timing = createRequestTiming(
+    progressId
+      ? (label) => reportSearchProgressStage(progressId, label)
+      : undefined,
+  );
   const withTimingDebug = (debug: Record<string, unknown>) => ({
     ...debug,
     timing: timing.summary(),
@@ -1649,6 +1670,10 @@ async function handleRecommendationPost(
   routeDependencies: RecommendationRouteDependencies,
 ) {
   const includeDebug = wantsLocalDebug(request);
+  const progressId = searchProgressIdFromRequest(request);
+  if (progressId) {
+    beginSearchProgress(progressId);
+  }
   const ledger = includeDebug
     ? createSearchObservabilityLedger({
         commitHash: resolveReviewRadarCommitHash(),
@@ -1659,13 +1684,25 @@ async function handleRecommendationPost(
       })
     : null;
 
-  return runWithSearchObservabilityLedger(ledger, () =>
-    handleRecommendationPostWithContext(
-      request,
-      routeDependencies,
-      includeDebug,
-    ),
-  );
+  try {
+    const response = await runWithSearchObservabilityLedger(ledger, () =>
+      handleRecommendationPostWithContext(
+        request,
+        routeDependencies,
+        includeDebug,
+        progressId,
+      ),
+    );
+    if (progressId) {
+      completeSearchProgress(progressId, response.ok ? "done" : "error");
+    }
+    return response;
+  } catch (error) {
+    if (progressId) {
+      completeSearchProgress(progressId, "error");
+    }
+    throw error;
+  }
 }
 
 export function createRecommendationPostHandler(

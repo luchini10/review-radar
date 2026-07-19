@@ -11,6 +11,34 @@ Update this file after:
 
 ## 2026-07-19
 
+### Claude - Live search-progress narration during the research wait
+
+#### Changed
+
+- The 1–3 minute research wait now narrates real pipeline progress instead of
+  showing only static skeletons: an eight-milestone roadmap (understanding
+  requirements → planning → searching → coverage check → deep research →
+  source verification → fact checks → ranking) with done/current/pending
+  states, the current step's detail, and a ticking elapsed timer.
+- New `GET /api/recommendations/progress?id=...` polling endpoint backed by a
+  process-local, TTL-bounded, never-throw store (`lib/searchProgressStore.ts`);
+  the legacy recommendations POST reports its existing timing stages under an
+  opaque client-generated `x-reviewradar-progress` header. Without the header,
+  behavior is byte-identical; narration can never alter the pipeline.
+- Until the first event arrives — including the two-layer and direct-terra
+  pipelines, which do not report progress yet — the panel shows the previous
+  generic loading copy, so it never claims work that is not happening.
+
+#### Verified
+
+- New `tests/searchProgress.test.mjs` 19/19, including a real route-handler
+  lifecycle proof with zero network; full suite 1159/1159 across 164 suites;
+  typecheck, build, and eval red-flags pass; lint 0 errors / 3 pre-existing
+  warnings.
+- Browser check on the dev server with all research/features fetches stubbed
+  in-page (zero live Serper/OpenAI spend): correct milestone states, ~1.25 s
+  polling, cancel cleanup, zero console errors.
+
 ### 🟧 Codex - Direct Terra V2 adversarial hardening
 
 #### Changed

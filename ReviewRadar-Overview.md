@@ -62,12 +62,25 @@ live "What ReviewRadar will match" preview (`requirements.summary`).
 2. `buildRecommendationApiPayload(form, { includeExtractedRequirements: true })` (`lib/searchRequestPayload.ts`) maps `category→query`, plus `budget`, `priorities`, optional `avoid`, `selectedFeatures`, and attaches `extractedRequirements`.
 3. `runRecommendationRequest` (`lib/recommendationClient.ts`) sends one POST to
    `/api/recommendations` with an `AbortController`; the user can **Cancel**.
+   The POST also carries an opaque client-generated `x-reviewradar-progress`
+   header id for live progress narration.
 4. In the default legacy mode, the response remains exactly `{ result }` or
    `{ error }` and retains the existing 180-second client deadline. In
    `two_layer` mode, HTTP 202 returns an encrypted app job token; the same
    helper polls only that token in a request header, schedules cancellation 30
    seconds before expiry, and extends the deadline only from the validated job
    state.
+5. **Live progress narration while waiting:** `components/SearchProgressPanel.tsx`
+   polls `GET /api/recommendations/progress?id=…` (~1.25s) and renders the
+   legacy pipeline's real stages as an 8-milestone roadmap (done/current/pending
+   states, current-step detail, elapsed timer) above the loading skeletons.
+   Contract in `lib/searchProgress.ts` (stage→milestone map, id validation);
+   storage in `lib/searchProgressStore.ts` (process-local, TTL-bounded,
+   never-throw store fed by the route's `createRequestTiming` stage-start
+   hook). Narration is best-effort observability only: no header → byte-
+   identical route behavior; unknown ids answer `status: "unknown"`; until the
+   first event arrives (including two-layer/direct-terra, which do not report
+   progress yet) the panel shows only generic loading copy.
 
 When `REVIEW_RADAR_DIRECT_TERRA=on` and
 `NEXT_PUBLIC_REVIEW_RADAR_DIRECT_TERRA=true`, the browser instead sends the

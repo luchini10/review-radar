@@ -8,6 +8,7 @@ import {
   type TwoLayerCompletedResponse,
   type TwoLayerPendingResponse,
 } from "./twoLayerApiContract.ts";
+import { SEARCH_PROGRESS_ID_HEADER } from "./searchProgress.ts";
 import type {
   RecommendationApiRequest,
   RecommendationResult,
@@ -31,6 +32,9 @@ type RunRecommendationRequestOptions = {
   now?: () => number;
   sleep?: (milliseconds: number, signal: AbortSignal) => Promise<void>;
   onTwoLayerPending?: (response: TwoLayerPendingResponse) => void;
+  // Opaque client-generated id for live progress narration. The legacy
+  // pipeline reports its stages under this id; other pipelines ignore it.
+  progressId?: string | null;
 };
 
 type CancelRecommendationJobOptions = {
@@ -104,10 +108,14 @@ export async function runRecommendationRequest({
   now = Date.now,
   sleep = abortableSleep,
   onTwoLayerPending,
+  progressId = null,
 }: RunRecommendationRequestOptions): Promise<RecommendationRequestOutcome> {
   const initialResponse = await fetchImpl("/api/recommendations", {
     body: JSON.stringify(payload),
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(progressId ? { [SEARCH_PROGRESS_ID_HEADER]: progressId } : {}),
+    },
     method: "POST",
     signal,
   });

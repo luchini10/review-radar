@@ -1,7 +1,6 @@
 import type { ProductRecommendation, RecommendationResult } from "@/types/review-radar";
 import {
   ClipboardCheck,
-  LoaderCircle,
   SearchCheck,
   SlidersHorizontal,
   TriangleAlert,
@@ -17,6 +16,7 @@ import {
 } from "@/lib/dealbreakerVisibility";
 import { classifyNearMatch } from "@/lib/nearMatchClassification";
 import { ProductCard } from "./ProductCard";
+import { SearchProgressPanel } from "./SearchProgressPanel";
 import { VerdictCard } from "./VerdictCard";
 
 type ResultsSummaryProps = {
@@ -24,6 +24,7 @@ type ResultsSummaryProps = {
   hasSearched: boolean;
   isLoading: boolean;
   onDealbreakerStrengthChange: (strength: DealbreakerStrength) => void;
+  progressId?: string | null;
   result: RecommendationResult | null;
 };
 
@@ -293,6 +294,7 @@ export function ResultsSummary({
   hasSearched,
   isLoading,
   onDealbreakerStrengthChange,
+  progressId = null,
   result,
 }: ResultsSummaryProps) {
   const visibleSections = result
@@ -326,23 +328,11 @@ export function ResultsSummary({
         </Badge>
       </div>
 
-      {isLoading ? (
-        <div className="mt-6 flex items-start gap-3 rounded-xl border border-slate-200/80 bg-white p-4">
-          <LoaderCircle
-            aria-hidden="true"
-            className="mt-0.5 h-5 w-5 shrink-0 animate-spin text-blue-700"
-          />
-          <div className="text-sm leading-6 text-slate-600">
-            <p className="font-semibold text-slate-950">
-              Researching current public sources. This can take a little while.
-            </p>
-            <p className="mt-0.5">
-              Checking reviews, prices, specs, and owner feedback — usually one
-              to three minutes. You can keep this tab open.
-            </p>
-          </div>
-        </div>
-      ) : null}
+      <SearchProgressPanel
+        active={isLoading}
+        key={progressId ?? "no-progress"}
+        progressId={progressId}
+      />
 
       {isLoading ? <LoadingSkeletonCards /> : null}
 

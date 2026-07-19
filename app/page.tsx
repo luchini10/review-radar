@@ -30,6 +30,7 @@ import {
   DirectTerraClientError,
   runDirectTerraRecommendationRequest,
 } from "@/lib/directTerraClient";
+import { createSearchProgressId } from "@/lib/searchProgress";
 import { smartFeatureCategoryKey } from "@/lib/smartFeatureSelection";
 import type { DealbreakerStrength } from "@/lib/dealbreakerVisibility";
 import type { TwoLayerCompletedResponse } from "@/lib/twoLayerApiContract";
@@ -119,6 +120,7 @@ export default function Home() {
     useState<DealbreakerStrength>("balanced");
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [progressId, setProgressId] = useState<string | null>(null);
   const [result, setResult] = useState<RecommendationResult | null>(null);
   const [twoLayerResult, setTwoLayerResult] =
     useState<TwoLayerCompletedResponse | null>(null);
@@ -190,6 +192,8 @@ export default function Home() {
     setTwoLayerResult(null);
     setDirectTerraResult(null);
     setIsLoading(true);
+    const searchProgressId = createSearchProgressId();
+    setProgressId(searchProgressId);
     requestId.current += 1;
     cancelRequested.current = false;
 
@@ -244,6 +248,7 @@ export default function Home() {
 
       const outcome = await runRecommendationRequest({
         payload,
+        progressId: searchProgressId,
         signal: controller.signal,
         onTwoLayerPending: onPending,
       });
@@ -433,6 +438,7 @@ export default function Home() {
                   hasSearched={hasSearched}
                   isLoading={isLoading}
                   onDealbreakerStrengthChange={setDealbreakerStrength}
+                  progressId={progressId}
                   result={result}
                 />
               )}

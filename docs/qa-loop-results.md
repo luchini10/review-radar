@@ -9035,3 +9035,53 @@ commit. It must stop after one outcome and prove the real API accepts strict
 one-field JSON plus the explicit 20-tool ceiling and returns enough
 same-response metadata for every rendered citation. The transactional verifier
 remains blocked until that smoke passes.
+
+## <span style="color:green">**Claude QA Update — 2026-07-19 (Live search-progress narration)**</span>
+
+**Change:** User-requested UI feature (outside the R/V2 roadmap; no pipeline
+behavior change). The 1–3 minute research wait now shows live milestone
+narration instead of static skeletons.
+
+**Implementation:**
+
+- `lib/searchProgress.ts` — shared contract: 8 ordered user-facing milestones,
+  internal stage→milestone map, progress-id validation, wire types.
+- `lib/searchProgressStore.ts` — process-local never-throw store (TTL 10 min,
+  64-search cap, 60-event cap, oldest-first eviction), mirroring the two-layer
+  job-store pattern.
+- `app/api/recommendations/progress/route.ts` — GET polling endpoint;
+  unknown/expired ids answer `status: "unknown"`; `Cache-Control: no-store`.
+- `app/api/recommendations/route.ts` — `createRequestTiming` gained an
+  optional never-throw `onStageStart` hook; the legacy POST reads the opaque
+  `x-reviewradar-progress` header, begins/completes progress around the
+  request, and narrates every existing measured stage. No header →
+  byte-identical behavior (store untouched, hook absent).
+- `components/SearchProgressPanel.tsx` plus `ResultsSummary`/`page.tsx`
+  wiring — polls every 1.25 s, renders done/current/pending milestones with
+  the current step detail and a ticking elapsed timer; until the first event
+  arrives (or for two-layer/direct-terra, which do not report) it shows only
+  the previous generic loading copy. The panel is keyed by progress id per
+  search.
+
+**Verification (zero live Serper/OpenAI spend):**
+
+- New `tests/searchProgress.test.mjs`: 19/19, including a real
+  `createRecommendationPostHandler` lifecycle proof via the missing-API-key
+  path (begin → `understand_request` event → `error` completion) and a
+  no-header control asserting zero store writes.
+- Full wall: tests 1159/1159 across 164 suites; typecheck, build, and
+  `scripts/eval-pipeline.mjs` red-flags pass; lint 0 errors / 3 pre-existing
+  warnings.
+- Browser (dev server, all outbound research/features fetches stubbed in-page
+  so no request could reach OpenAI/Serper): the real progress endpoint
+  returned `unknown` with `no-store`; on submit the panel showed the ticking
+  timer and correct DONE/CURRENT/PENDING milestone states with exactly one
+  intercepted POST, zero `/api/features` calls, and ~1.25 s polling; cancel
+  unmounted the panel and stopped polling; zero console errors.
+
+**Notes for the next agent:** progress is best-effort observability only — it
+cannot alter the pipeline (never-throw store, unknown stages stay silent). The
+store is process-local by design for the current single-process deployment; a
+multi-instance deployment needs a shared backend behind the same functions.
+Two-layer and direct-terra pipelines currently show the generic fallback copy;
+wiring their job runners into the same store is a natural follow-up.
