@@ -41,7 +41,7 @@ describe("direct Terra V2 prompt", () => {
     assert.match(prompt.input, /Battery powered/);
   });
 
-  it("builds one Terra/high hosted-search request with a one-field schema", () => {
+  it("builds one Terra/high hosted-search request with report and price-observation fields", () => {
     const request = buildDirectTerraResearchRequest(shopper);
 
     assert.equal(request.model, "gpt-5.6-terra");
@@ -53,8 +53,14 @@ describe("direct Terra V2 prompt", () => {
     assert.deepEqual(request.include, ["web_search_call.action.sources"]);
     assert.deepEqual(
       Object.keys(request.text.format.schema.properties),
-      ["report_markdown"],
+      ["report_markdown", "price_observations"],
     );
-    assert.deepEqual(request.text.format.schema.required, ["report_markdown"]);
+    assert.deepEqual(request.text.format.schema.required, [
+      "report_markdown",
+      "price_observations",
+    ]);
+    assert.match(request.instructions, /estimated market price/i);
+    assert.match(request.instructions, /two distinct source hosts/i);
+    assert.match(request.instructions, /new-condition standalone product/i);
   });
 });

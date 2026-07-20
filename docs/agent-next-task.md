@@ -1,149 +1,119 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-19 by Codex after the zero-live T6D report-quality audit and
-reviewed OAI-T7A saved-slate transactional-feasibility preflight. The phase is
-committed under the subject `Prepare transactional offer feasibility probe`.
-No live call, further commit, flag change, `.env.local` change, V2
-schema/route/UI integration, deployment, push, or production change is
-approved.
+Updated: 2026-07-19 by Codex after the zero-live OAI-T7B OpenAI
+estimated-market-price implementation. No live call, commit, flag change,
+`.env.local` change, deployment, push, or production change is approved.
 
 ## Efficient session start
 
 1. Read repository `AGENTS.md` and this handoff in full.
 2. Preserve every untracked fixture and unrelated user artifact.
-3. Inspect only the latest T6D/T7A QA and dialogue entries [78]-[79] unless older
-   evidence is necessary.
-4. Never reuse the spent T6D approval or the earlier H2C approval.
+3. Retrieve the latest OAI-T7B QA entry and dialogue entry [81] only when
+   detailed implementation evidence or peer review is needed.
+4. Do not reuse the spent OAI-T7A SearchAPI approval.
 
-## Product objective and current V2 architecture
+## Product objective and current architecture
 
-The immediate objective is to keep Terra's selected products, order,
-explanations, and citations intact while independently verifying only current
-checkout facts. The working V2 product path remains unchanged:
+Keep Terra's selected products, ranking, explanations, and citations intact.
+Give shoppers a useful multi-source market-price estimate without claiming a
+verified seller, checkout price, stock state, purchase destination, shipping,
+tax, or discount.
+
+The default-off V2 path is now:
 
 ```text
 shopper fields
-  -> /api/recommendations-v2
-  -> one Terra/high response with hosted web search
-  -> strict JSON { report_markdown }
-  -> response-owned citation allowlist
-  -> unchanged report with commerce labeled unverified
+  -> one Terra/high hosted-web-search response
+  -> strict report_markdown + bounded price_observations
+  -> unchanged report with response-owned citations
+  -> deterministic two-host low/high/median estimate when safe
+  -> checkout and all other transactional details remain unverified
 ```
 
-The prospective verifier is not integrated. It may eventually add a separate
-exact offer receipt without selecting, replacing, deleting, merging, or
-reranking a Terra recommendation.
+There is no SearchAPI, Serper, second OpenAI call, direct-page fetch, retry, or
+fallback in this path. SearchAPI's runner and saved T7A evidence remain on disk
+for historical audit only and are not imported by V2.
 
-## T6D live result and zero-live quality audit
+## OAI-T7B implementation result
 
-The exact `97a2a96` T6D smoke passed with one Terra/high create, 25 retrieves,
-seven hosted searches, zero cancel/retry/fallback/other-provider calls, 71,691
-tokens, 133,071 ms wall time, and an estimated `$0.4323525`. The saved fixture
-contains a 30,916-character report, 15 active citations across 11 hosts, zero
-disabled citations, and `transactionalStatus: unverified`.
+`lib/directTerraPrompt.ts` bumps the master prompt to v2 and requires exactly
+`report_markdown` plus `price_observations`. Terra is asked for up to four USD
+observations per ranked product, limited to the exact new standalone product
+and exact response-observed source URLs.
 
-The report recommends five legitimate exact-model shop vacs. It is useful and
-candid, but only two recommendations include price prose and neither is
-independently verified. Evidence is strongest for DEWALT `DXV12P-QT`; the other
-four disclose exact-model testing or owner-evidence limitations. No static
-audit can prove current page contents or price freshness without a later live
-provider check.
+`lib/directTerraPriceEstimate.ts` is the deterministic trust boundary. It:
 
-The frozen 07c matcher mechanically counts `5/7`, but its `shop vac` brand row
-matches generic product-type words in the CRAFTSMAN title. Semantic coverage is
-four of seven core brands plus the acceptable Milwaukee alternate. The
-benchmark was not changed.
+- binds each group to the exact brand/model in the matching ranked report
+  heading;
+- accepts only positive bounded USD values labeled new and standalone;
+- accepts only URLs returned by the same OpenAI response;
+- removes only conservative tracking parameters for ownership comparison;
+- counts at most one observation per normalized host; and
+- returns low/high/median only when at least two distinct hosts survive.
 
-## OAI-T7A zero-live preflight complete
+Unsafe or insufficient observations never reject, rewrite, remove, or rerank
+the report. The API contract is `direct-terra-api-v2` and exposes only aggregate
+estimates plus a rejected-observation count; raw seller strings and observation
+URLs remain server-side. `DirectTerraReport` renders a separate estimated-price
+panel and retains the prominent unverified-purchase warning.
 
-`scripts/run-oai-t7a-transactional-feasibility.mjs` freezes the T6D report and
-these exact Shopping queries:
+## Evidence and repository state
 
-1. `DEWALT DXV12P-QT shop vac`
-2. `CRAFTSMAN CMXEVBE17595 shop vac`
-3. `Vacmaster VFB511B 0202 shop vac`
-4. `RIDGID HD1600 shop vac`
-5. `Milwaukee 0910-20 shop vac`
-
-The runner is dry by default. Any later live execution requires a separately
-approved commit plus the exact approval ID and ten-attempt ceiling. It permits
-five SearchAPI Shopping calls and at most five Product Offers calls, only after
-an exact token selection. It allows zero retry, replacement, fallback,
-additional query, OpenAI, Serper, or direct page fetch. It checkpoints before
-each attempt, hashes product tokens, saves no raw response/key/header, and
-canonicalizes conservative tracking parameters from retained offer URLs. It
-refuses a dirty tracked tree, changed source fixture, commit mismatch, or
-existing evidence path before key lookup.
-
-The pass rule is at least three of five exact verified offers and a frozen
-human audit finding zero wrong product/model/variant/accessory, condition,
-stock, seller, price, or destination bindings. An inconclusive product remains
-in Terra's report with unverified commerce.
-
-## Verification
-
-- focused commerce/T7A coverage: 29/29 across three suites;
-- complete `npm test`: 1167/1167 across 165 suites;
-- `npm run typecheck`: pass;
-- `npm run lint -- --max-warnings=10`: zero errors, three pre-existing warnings;
-- `npm run build`: pass, including `/api/recommendations-v2`;
-- `node scripts/eval-pipeline.mjs`: no red flags;
-- T7A dry-run: exact frozen plan, no evidence output; and
-- missing-approval execution control: refused before key lookup, no output.
-
-Zero live call or direct page open occurred during the audit/preflight.
-
-## Flags and working tree
-
-- Both direct-Terra flags remain default-off in `.env.example` and absent from
+- Current HEAD: `9c51f22` (`Prepare transactional offer feasibility probe`).
+- OAI-T7B code, tests, architecture docs, QA, change log, handoff, and dialogue
+  updates are uncommitted.
+- Earlier OAI-T7A live-result docs are also part of the tracked working diff;
+  preserve them when reviewing/staging.
+- The sanitized T7A fixture remains untracked at
+  `tests/fixtures/review-radar-live/oai-t7a-transactional-feasibility/result.json`.
+- Direct-Terra flags remain default-off in `.env.example` and absent from
   `.env.local`.
-- Pre-phase HEAD was `97a2a96` (`Preserve Terra reports with granular citation
-  safety`). Use `git log -1` for the T7A phase commit hash.
-- The T7A code/tests/docs were reviewed before the explicit-path phase commit.
-- The T6D fixture and older live fixtures remain untracked and must not be
-  staged. Never use `git add -A`.
+- Fail-first: the old one-field prompt contract failed 1/2 focused tests.
+- Focused Direct Terra tests: 30/30 pass across six suites.
+- Full wall: 1171/1171 pass across 165 suites.
+- Typecheck and production build pass.
+- Lint: zero errors and three pre-existing warnings.
+- Offline scorecard invocation produced only its cost-plan preview and made no
+  live request.
 
 ## Strongest next decision
 
-Taylor may separately approve one SearchAPI feasibility run
-pinned to that commit: five Shopping requests plus at most five token-bound
-Offers requests, ten physical attempts as both planning basis and hard ceiling,
-no retry/replacement/fallback/additional query/OpenAI/Serper/direct page open,
-and stop after the first completed evidence set.
+Review and commit the zero-live OAI-T7B implementation and the already-pending
+T7A live-result documentation as one intentional phase commit. After the commit
+exists, request a separate exact approval for one bounded Terra/high V2 smoke
+pinned to that commit. That smoke should prove the real API accepts prompt/API
+v2 and should manually audit every displayed price range against sanitized
+response-owned evidence. It must not enable the flags, call SearchAPI/Serper,
+or make a second response.
 
-Do not add the V2 `commerce_targets` sidecar or integrate a verifier into the
-route/UI until this feasibility probe passes. If fewer than three exact offers
-verify, or one unsafe binding is found, stop and reconsider the provider rather
-than tuning queries during the same phase.
-
-**Recommended reasoning level:** High for diff review and the later mechanical
-probe. Exact-model, price, stock, and destination binding need careful audit;
-maximum reasoning is unnecessary unless live data exposes a new provider shape.
+**Recommended reasoning level:** High. Commit review is a bounded identity and
+data-contract audit; the later one-response smoke needs careful range/source
+inspection. Highest is unnecessary unless the API rejects the schema or a
+range binds to the wrong product.
 
 ## Hard boundaries
 
-- No SearchAPI, OpenAI, Serper, direct-page, or other live call without a new
+- No OpenAI, SearchAPI, Serper, direct-page, or other live call without a new
   exact numeric approval pinned to a commit.
-- No commit, push, sidecar, route/UI integration, flag promotion, `.env.local`
-  edit, deployment, publication, or production change without separate
-  approval.
-- Never let commerce failure delete, replace, reorder, or rewrite Terra's
-  recommendation report.
-- Never label seller, price, stock, currency, or purchase destination verified
-  unless one exact receipt passes the independent boundary.
-- Never retain or expose keys, headers, raw provider responses, product tokens,
-  provider IDs, or job-token contents.
-- Do not delete the legacy or prior two-layer paths without later rollback
-  evidence and explicit retirement approval.
+- No commit, push, flag promotion, `.env.local` edit, deployment, publication,
+  or production change without separate approval.
+- Never let missing or rejected price evidence alter Terra's report.
+- Never label an estimate as a seller quote, verified current price, stock,
+  purchase destination, discount, shipping, tax, or checkout receipt.
+- Never expose raw response output, price-observation URLs, seller strings,
+  provider IDs, keys, headers, or job-token contents to the browser.
+- Do not delete legacy, prior two-layer, SearchAPI-history, or Serper code
+  without rollback evidence and explicit retirement approval.
 
 ## Retrieval map
 
 | Need | Retrieve |
 |---|---|
-| Current state and next approval | this file |
-| T6D audit/T7A verification | latest `docs/qa-loop-results.md` entry |
-| Peer review request | `docs/agent-dialogue.md` entries [78]-[79] |
-| Frozen runner | `scripts/run-oai-t7a-transactional-feasibility.mjs` |
-| New tests | `tests/oaiT7aTransactionalFeasibility.test.mjs` |
-| Existing exact-offer verifier | `lib/autonomousCommerceVerifier.ts` |
-| Saved T6D report | `tests/fixtures/review-radar-live/oai-t6d-v2-citation-granular-smoke-97a2a96/broad-shop-vac.run1.json` |
+| Current result and next decision | this file |
+| Detailed offline evidence | latest `docs/qa-loop-results.md` entry |
+| Peer challenge | `docs/agent-dialogue.md` entry [81] |
+| Prompt and strict schema | `lib/directTerraPrompt.ts` |
+| Deterministic estimator | `lib/directTerraPriceEstimate.ts` |
+| Response ownership and aggregation | `lib/directTerraResponse.ts` |
+| Public API boundary | `lib/directTerraApiContract.ts` |
+| UI disclosure | `components/DirectTerraReport.tsx` |

@@ -3,7 +3,7 @@ import type { ResponseCreateParamsNonStreaming } from "openai/resources/response
 
 import type { SelectedSmartFeature } from "../types/smart-features.ts";
 
-export const DIRECT_TERRA_PROMPT_VERSION = "direct-terra-master-prompt-v1";
+export const DIRECT_TERRA_PROMPT_VERSION = "direct-terra-master-prompt-v2";
 
 export type DirectTerraShopperRequest = {
   query: string;
@@ -29,8 +29,51 @@ const DIRECT_TERRA_OUTPUT_SCHEMA = {
       description:
         "The complete ranked product-research report in readable Markdown, with inline Markdown links for citations.",
     },
+    price_observations: {
+      type: "array",
+      description:
+        "Current price observations for the exact ranked products. This is evidence for an estimated market range, not verified checkout data.",
+      maxItems: 5,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          rank: { type: "integer", minimum: 1, maximum: 5 },
+          brand: { type: "string", minLength: 1 },
+          model: { type: "string", minLength: 1 },
+          observations: {
+            type: "array",
+            maxItems: 4,
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                seller: { type: "string", minLength: 1 },
+                price_amount: { type: "number", minimum: 0 },
+                currency: { type: "string", enum: ["USD"] },
+                condition: { type: "string", enum: ["new"] },
+                offer_type: {
+                  type: "string",
+                  enum: ["standalone_product"],
+                },
+                source_url: { type: "string", minLength: 1 },
+              },
+              required: [
+                "seller",
+                "price_amount",
+                "currency",
+                "condition",
+                "offer_type",
+                "source_url",
+              ],
+            },
+          },
+        },
+        required: ["rank", "brand", "model", "observations"],
+      },
+    },
   },
-  required: ["report_markdown"],
+  required: ["report_markdown", "price_observations"],
 } as const;
 
 export const DIRECT_TERRA_INSTRUCTIONS = `You are ReviewRadar's rigorous, independent product-research analyst.
@@ -64,7 +107,14 @@ Commerce trust boundary:
 - Clearly label every price and purchase detail as "AI-reported - unverified by ReviewRadar." Do not call those details verified even when a webpage appears to support them.
 - The report may still explain what the searched sources said, with an inline citation and an honest checked date.
 
-Return strict JSON matching the supplied schema. The JSON must contain exactly one field named report_markdown. Put the entire reader-facing report in that string. Do not return separate product objects, rankings, source registries, or commentary outside that field.`;
+Estimated market-price evidence:
+- For each ranked product, try to collect two to four current observations for the exact new-condition standalone product from two distinct source hosts. Do not use used, refurbished, open-box, accessory, replacement-part, bundle, financing, trade-in, membership-only, coupon-only, or per-payment amounts.
+- Every observation must use the exact ranked brand and model. Its source_url must be an exact URL observed through this response's hosted web search. Prefer manufacturer or retailer product-detail pages; do not use editorial, review, search, or category pages as price observations. Do not invent or reconstruct URLs.
+- Return only the numeric item price before shipping and tax. If a source does not expose an unambiguous current USD price for the exact product, omit that observation.
+- These observations will be used by deterministic code to calculate an "estimated market price" range. They are not verified checkout receipts, inventory claims, or guaranteed prices.
+- Return a price_observations entry for every ranked product, using an empty observations array when reliable price evidence is unavailable. The report itself must remain complete regardless of price coverage.
+
+Return strict JSON matching the supplied schema. The JSON must contain exactly report_markdown and price_observations. Put the entire reader-facing report in report_markdown. price_observations is evidence metadata only; do not duplicate explanations or rankings there. Do not return source registries or commentary outside those fields.`;
 
 function frozenShopperRequest(request: DirectTerraShopperRequest) {
   return {

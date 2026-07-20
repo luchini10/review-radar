@@ -46,6 +46,19 @@ describe("clean direct Terra V2 route", () => {
         citationUrls: ["https://example.com/a"],
         sourceHosts: ["example.com"],
         disabledCitationCount: 1,
+        priceEstimates: [
+          {
+            rank: 1,
+            brand: "Example",
+            model: "Model A",
+            currency: "USD",
+            low: 399,
+            high: 449,
+            median: 424,
+            sourceCount: 2,
+          },
+        ],
+        rejectedPriceObservationCount: 0,
         ledger: {},
       }),
     });
@@ -71,6 +84,8 @@ describe("clean direct Terra V2 route", () => {
     assert.equal(completed.transactionalStatus, "unverified");
     assert.deepEqual(completed.citationUrls, ["https://example.com/a"]);
     assert.equal(completed.disabledCitationCount, 1);
+    assert.equal(completed.priceEstimates[0].median, 424);
+    assert.equal(completed.rejectedPriceObservationCount, 0);
   });
 
   it("rejects malformed shopper input before creating a provider request", async () => {
@@ -108,11 +123,13 @@ describe("clean direct Terra V2 route", () => {
   it("rejects malformed disabled-citation counters at the client contract", () => {
     const response = {
       pipeline: "direct_terra",
-      version: "direct-terra-api-v1",
+      version: "direct-terra-api-v2",
       state: "completed",
       reportMarkdown: exactReport,
       citationUrls: ["https://example.com/a"],
       sourceHosts: ["example.com"],
+      priceEstimates: [],
+      rejectedPriceObservationCount: 0,
       transactionalStatus: "unverified",
     };
 
@@ -124,6 +141,24 @@ describe("clean direct Terra V2 route", () => {
     assert.equal(
       isDirectTerraCompletedResponse({ ...response, disabledCitationCount: 1 }),
       true,
+    );
+    assert.equal(
+      isDirectTerraCompletedResponse({
+        ...response,
+        priceEstimates: [
+          {
+            rank: 1,
+            brand: "Example",
+            model: "Model A",
+            currency: "USD",
+            low: 500,
+            high: 400,
+            median: 450,
+            sourceCount: 2,
+          },
+        ],
+      }),
+      false,
     );
   });
 });

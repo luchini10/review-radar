@@ -99,7 +99,10 @@ describe("direct Terra V2 provider adapter", () => {
               content: [
                 {
                   type: "output_text",
-                  text: JSON.stringify({ report_markdown: report }),
+                  text: JSON.stringify({
+                    report_markdown: report,
+                    price_observations: [],
+                  }),
                   annotations: [],
                 },
               ],
@@ -127,6 +130,8 @@ describe("direct Terra V2 provider adapter", () => {
     assert.equal(result.reportMarkdown, report);
     assert.deepEqual(result.citationUrls, ["https://example.com/a"]);
     assert.equal(result.disabledCitationCount, 0);
+    assert.deepEqual(result.priceEstimates, []);
+    assert.equal(result.rejectedPriceObservationCount, 0);
     assert.deepEqual(calls, [
       [
         responseId,

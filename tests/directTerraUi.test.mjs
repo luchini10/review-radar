@@ -20,6 +20,10 @@ describe("direct Terra V2 display boundary", () => {
     assert.match(source, /Source link unavailable/);
     assert.match(source, /source link[^]*disabled/i);
     assert.match(source, /without reranking or rebuilding them/);
+    assert.match(source, /Estimated market prices/);
+    assert.match(source, /result\.priceEstimates\.map/);
+    assert.match(source, /at least two distinct source/);
+    assert.match(source, /estimates rather than[^]*checkout quotes/i);
     assert.equal(source.includes("cards.map"), false);
   });
 

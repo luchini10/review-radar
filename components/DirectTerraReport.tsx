@@ -7,6 +7,12 @@ import {
   type DirectTerraCompletedResponse,
 } from "@/lib/directTerraApiContract";
 
+const USD = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  maximumFractionDigits: 2,
+});
+
 function safeExternalUrl(value: string) {
   try {
     const url = new URL(value);
@@ -34,10 +40,11 @@ export function DirectTerraReport({
           <div>
             <p className="text-sm font-semibold">Purchase details are unverified</p>
             <p className="mt-1 text-sm leading-6">
-              Prices, sellers, purchase links, availability, inventory, and
-              warranty details in this report are AI-reported and have not been
-              independently verified by ReviewRadar. Confirm them on the
-              seller&apos;s site before buying.
+              Purchase claims inside Terra&apos;s report are AI-reported and
+              remain unverified. ReviewRadar&apos;s separate market-price ranges
+              use multiple web sources, but they are estimates rather than
+              checkout quotes. Confirm price, seller, stock, and terms before
+              buying.
             </p>
           </div>
         </div>
@@ -58,6 +65,59 @@ export function DirectTerraReport({
           </p>
         </div>
       ) : null}
+
+      <section className="rounded-2xl border border-blue-200 bg-blue-50/70 px-5 py-5 text-slate-900 shadow-sm">
+        <div>
+          <p className="text-sm font-semibold text-blue-950">
+            Estimated market prices
+          </p>
+          <p className="mt-1 text-sm leading-6 text-slate-700">
+            ReviewRadar calculates each range from at least two distinct source
+            hosts returned by this Terra research. The ranges do not verify a
+            seller, checkout price, stock, shipping, tax, or discount eligibility.
+          </p>
+        </div>
+
+        {result.priceEstimates.length > 0 ? (
+          <ol className="mt-4 grid gap-3 sm:grid-cols-2">
+            {result.priceEstimates.map((estimate) => (
+              <li
+                className="rounded-xl border border-blue-100 bg-white px-4 py-3"
+                key={estimate.rank}
+              >
+                <p className="text-sm font-semibold text-slate-950">
+                  #{estimate.rank} {estimate.brand} {estimate.model}
+                </p>
+                <p className="mt-1 text-base font-semibold text-blue-800">
+                  {USD.format(estimate.low)}
+                  {estimate.high === estimate.low
+                    ? ""
+                    : ` - ${USD.format(estimate.high)}`}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-slate-600">
+                  Median {USD.format(estimate.median)} across{" "}
+                  {estimate.sourceCount} distinct source hosts
+                </p>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="mt-4 rounded-xl border border-blue-100 bg-white px-4 py-3 text-sm text-slate-700">
+            Price unavailable: no recommendation had two safe, distinct
+            source observations for the exact new standalone product.
+          </p>
+        )}
+
+        {result.rejectedPriceObservationCount > 0 ? (
+          <p className="mt-3 text-xs leading-5 text-slate-600">
+            ReviewRadar excluded {result.rejectedPriceObservationCount}{" "}
+            {result.rejectedPriceObservationCount === 1
+              ? "price observation"
+              : "price observations"}{" "}
+            that failed its source, identity, condition, or duplication checks.
+          </p>
+        ) : null}
+      </section>
 
       <article className="rounded-3xl border border-slate-200/80 bg-white px-5 py-7 shadow-sm sm:px-9 sm:py-9">
         <div className="mb-7 border-b border-slate-200 pb-5">

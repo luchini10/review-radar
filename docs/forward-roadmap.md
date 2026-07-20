@@ -2625,7 +2625,7 @@ authorize a replacement response.
 first real response requires careful lifecycle, response-shape, citation, and
 privacy inspection.
 
-### OAI-T7A - saved-slate transactional feasibility preflight (complete locally 2026-07-19; zero live)
+### OAI-T7A - saved-slate transactional feasibility probe (live complete 2026-07-19; integration blocked)
 
 **Decision:** test the prospective commerce provider against Terra's actual
 five saved shop-vac recommendations before changing the V2 response schema,
@@ -2666,9 +2666,67 @@ occurred.
 feasibility probe pinned to that commit. Do not add the V2 identity sidecar or
 integrate commerce into the route/UI until the provider passes.
 
+**Live outcome at `9c51f22`:** one approved run used seven physical attempts
+(five Shopping plus two token-bound Offers), all HTTP 200. RIDGID `HD1600` and
+Milwaukee `0910-20` produced exact, in-stock, new-product offer receipts; frozen
+human audit found zero unsafe identity, seller, price, stock, or destination
+bindings. Mechanical coverage was only `2/5`, below the frozen `3/5` floor, so
+integration remains blocked. The misses are attributive: DEWALT returned only
+neighboring `QTA`/`QTE` variants and was correctly rejected, while exact-token
+CRAFTSMAN and Vacmaster Shopping rows were rejected by the descriptive-title
+corroboration gate. The latter two are likely verifier false negatives, not
+provider-discovery failures. No retry, replacement, additional query, OpenAI,
+Serper, or direct page request occurred.
+
+**Revised next gate:** zero-live adversarial review of the descriptive-title
+corroboration rule against the saved evidence. Do not tune queries or buy
+another sample until that review proves whether exact brand/model evidence can
+safely replace the over-strict descriptive-term requirement.
+
 **Recommended reasoning level:** High. The harness is narrow and reuses the
 existing verifier, but exact-model offer binding, redaction, and one-shot spend
 controls remain safety-sensitive.
+
+### OAI-T7B - OpenAI multi-source market-price estimate (zero-live implemented 2026-07-19)
+
+**Decision:** do not integrate SearchAPI. Keep the active V2 architecture to
+one Terra/high hosted-web-search response and ask that same response for bounded
+price observations alongside the unchanged recommendation report. This is an
+estimated market-price feature, not transactional verification.
+
+The strict output contains exactly `report_markdown` and
+`price_observations`. Each observation declares the ranked brand/model, numeric
+USD price, new condition, standalone-product offer type, seller label, and an
+exact response-observed source URL. ReviewRadar independently rejects malformed,
+unowned, duplicate-host, wrong-rank, wrong-identity, non-new, non-standalone, or
+implausible observations. It calculates low/high/median only from at least two
+distinct source hosts. Insufficient evidence displays `Price unavailable` and
+never rejects, rewrites, removes, or reranks Terra's report.
+
+The public V2 contract exposes only aggregate estimates and a rejected-count;
+raw seller strings and price-observation URLs remain server-side. The UI labels
+the result an estimate and continues to call all in-report purchase details,
+sellers, stock, purchase destinations, discounts, shipping, tax, and checkout
+prices unverified. The historical SearchAPI harness and evidence remain on disk
+but are not imported by the V2 route.
+
+Offline verification: one fail-first prompt-schema failure; 30/30 focused
+direct-Terra tests; 1171/1171 complete tests across 165 suites; typecheck and
+production build pass; lint has zero errors and three pre-existing warnings.
+No OpenAI, SearchAPI, Serper, direct-page, retry, fallback, `.env.local`, flag,
+deployment, or production change occurred.
+
+**Next gate:** commit the reviewed zero-live implementation, then require a
+separate exact one-response live approval pinned to that commit. The smoke must
+first prove that the real Responses API accepts prompt/schema v2, then report
+estimate coverage and manually compare every displayed range with its retained
+sanitized source evidence. It must not promote the default-off flags or call a
+second provider.
+
+**Recommended reasoning level:** High. Implementation is mechanically bounded;
+the first live output needs careful identity, source-ownership, and price-range
+inspection. Highest is unnecessary unless the provider rejects the schema or a
+range binds to the wrong model.
 
 ### OAI-2B — early uncached quality and repeatability gate
 

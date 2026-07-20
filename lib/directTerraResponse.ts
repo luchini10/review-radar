@@ -2,6 +2,11 @@ import { unified } from "unified";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 
+import {
+  calculateDirectTerraPriceEstimates,
+  type DirectTerraPriceEstimate,
+} from "./directTerraPriceEstimate.ts";
+
 type DirectTerraSource = {
   url: string;
   title?: string;
@@ -14,6 +19,8 @@ type ParsedDirectTerraResponse =
       citationUrls: string[];
       sourceHosts: string[];
       disabledCitationCount: number;
+      priceEstimates: DirectTerraPriceEstimate[];
+      rejectedPriceObservationCount: number;
     }
   | {
       ok: false;
@@ -127,7 +134,10 @@ function exactReportWrapper(text: string) {
   try {
     const value: unknown = JSON.parse(text);
     if (!isRecord(value)) return null;
-    if (JSON.stringify(Object.keys(value).sort()) !== JSON.stringify(["report_markdown"])) {
+    if (
+      JSON.stringify(Object.keys(value).sort()) !==
+      JSON.stringify(["price_observations", "report_markdown"])
+    ) {
       return null;
     }
     if (
@@ -137,7 +147,11 @@ function exactReportWrapper(text: string) {
     ) {
       return null;
     }
-    return value.report_markdown;
+    if (!Array.isArray(value.price_observations)) return null;
+    return {
+      reportMarkdown: value.report_markdown,
+      priceObservations: value.price_observations,
+    };
   } catch {
     return null;
   }
@@ -193,8 +207,9 @@ export function parseDirectTerraCompletedResponse(
     return { ok: false, reason: "response_not_completed" };
   }
   const text = outputText(response);
-  const reportMarkdown = text ? exactReportWrapper(text) : null;
-  if (!reportMarkdown) return { ok: false, reason: "invalid_report_wrapper" };
+  const wrapper = text ? exactReportWrapper(text) : null;
+  if (!wrapper) return { ok: false, reason: "invalid_report_wrapper" };
+  const { reportMarkdown, priceObservations } = wrapper;
 
   const markdown = markdownLinks(reportMarkdown);
   if (markdown.hasImages) {
@@ -225,11 +240,18 @@ export function parseDirectTerraCompletedResponse(
       ),
     ),
   ];
+  const priceResult = calculateDirectTerraPriceEstimates({
+    reportMarkdown,
+    priceObservations,
+    responseSourceUrls: sources.map((source) => source.url),
+  });
   return {
     ok: true,
     reportMarkdown,
     citationUrls: registeredCitationUrls,
     sourceHosts,
     disabledCitationCount,
+    priceEstimates: priceResult.estimates,
+    rejectedPriceObservationCount: priceResult.rejectedObservationCount,
   };
 }

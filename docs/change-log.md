@@ -11,6 +11,32 @@ Update this file after:
 
 ## 2026-07-19
 
+### Codex - Add OpenAI multi-source market-price estimates
+
+#### Changed
+
+- The default-off direct Terra path now asks the same single OpenAI research
+  response for bounded price observations alongside its unchanged Markdown
+  report. It does not use SearchAPI, Serper, a second model call, or direct page
+  requests.
+- ReviewRadar accepts only new standalone-product observations whose exact
+  ranked brand/model appears in the matching report heading and whose URL came
+  from that same Terra response. Duplicate hosts and unsafe observations do not
+  count.
+- When at least two distinct source hosts survive, ReviewRadar calculates and
+  displays a low/high range, median, and source count as an estimated market
+  price. Otherwise it says price unavailable. Sellers, stock, purchase links,
+  shipping, tax, discounts, and checkout prices remain unverified.
+
+#### Verified
+
+- Fail-first prompt coverage failed on the old one-field contract, then passed
+  the new report-plus-observations schema.
+- Focused direct-Terra coverage passes 30/30; the complete suite passes
+  1171/1171 across 165 suites; typecheck and build pass; lint has zero errors
+  and three pre-existing warnings. The offline scorecard remained a cost-plan
+  preview and made no live request.
+
 ### 🟧 Codex - Preserve Terra reports when one citation cannot be registered
 
 #### Changed

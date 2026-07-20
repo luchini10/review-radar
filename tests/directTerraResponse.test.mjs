@@ -8,13 +8,18 @@ import {
 
 const report = `# Refrigerator recommendations
 
-## #1 Best Match — Example Model A
+## #1 Best Match — Example Deluxe Refrigerator Model A
 
 The exact explanation stays here. [Official source](https://example.com/products/model-a?utm_source=openai)
 
 **Current price:** AI-reported — not independently verified by ReviewRadar.`;
 
-function completedResponse({ outputText = JSON.stringify({ report_markdown: report }) } = {}) {
+function completedResponse({
+  outputText = JSON.stringify({
+    report_markdown: report,
+    price_observations: [],
+  }),
+} = {}) {
   return {
     id: "resp_direct_123456789",
     status: "completed",
@@ -56,6 +61,181 @@ describe("direct Terra V2 response boundary", () => {
     ]);
     assert.deepEqual(parsed.sourceHosts, ["example.com"]);
     assert.equal(parsed.disabledCitationCount, 0);
+    assert.deepEqual(parsed.priceEstimates, []);
+  });
+
+  it("calculates an estimated range from two response-owned source hosts", () => {
+    const priceObservations = [
+      {
+        rank: 1,
+        brand: "Example",
+        model: "Model A",
+        observations: [
+          {
+            seller: "Store One",
+            price_amount: 399.99,
+            currency: "USD",
+            condition: "new",
+            offer_type: "standalone_product",
+            source_url:
+              "https://example.com/products/model-a?utm_source=openai",
+          },
+          {
+            seller: "Store Two",
+            price_amount: 449.99,
+            currency: "USD",
+            condition: "new",
+            offer_type: "standalone_product",
+            source_url: "https://store-two.example/model-a",
+          },
+        ],
+      },
+    ];
+    const response = completedResponse({
+      outputText: JSON.stringify({
+        report_markdown: report,
+        price_observations: priceObservations,
+      }),
+    });
+    response.output[0].action.sources.push({
+      type: "url",
+      url: "https://store-two.example/model-a",
+    });
+
+    const parsed = parseDirectTerraCompletedResponse(response);
+
+    assert.equal(parsed.ok, true);
+    assert.deepEqual(parsed.priceEstimates, [
+      {
+        rank: 1,
+        brand: "Example",
+        model: "Model A",
+        currency: "USD",
+        low: 399.99,
+        high: 449.99,
+        median: 424.99,
+        sourceCount: 2,
+      },
+    ]);
+    assert.equal(parsed.reportMarkdown, report);
+  });
+
+  it("drops unowned and duplicate-host observations without rejecting the report", () => {
+    const response = completedResponse({
+      outputText: JSON.stringify({
+        report_markdown: report,
+        price_observations: [
+          {
+            rank: 1,
+            brand: "Example",
+            model: "Model A",
+            observations: [
+              {
+                seller: "Store One",
+                price_amount: 399,
+                currency: "USD",
+                condition: "new",
+                offer_type: "standalone_product",
+                source_url: "https://example.com/products/model-a",
+              },
+              {
+                seller: "Same host",
+                price_amount: 350,
+                currency: "USD",
+                condition: "new",
+                offer_type: "standalone_product",
+                source_url: "https://www.example.com/other-model-a",
+              },
+              {
+                seller: "Invented source",
+                price_amount: 1,
+                currency: "USD",
+                condition: "new",
+                offer_type: "standalone_product",
+                source_url: "https://invented.example/model-a",
+              },
+            ],
+          },
+        ],
+      }),
+    });
+    response.output[0].action.sources[0].url =
+      "https://example.com/products/model-a";
+    response.output[0].action.sources.push({
+      type: "url",
+      url: "https://www.example.com/other-model-a",
+    });
+
+    const parsed = parseDirectTerraCompletedResponse(response);
+
+    assert.equal(parsed.ok, true);
+    assert.equal(parsed.reportMarkdown, report);
+    assert.deepEqual(parsed.priceEstimates, []);
+    assert.equal(parsed.rejectedPriceObservationCount, 2);
+  });
+
+  it("refuses to bind an estimate to a different ranked model", () => {
+    const response = completedResponse({
+      outputText: JSON.stringify({
+        report_markdown: report,
+        price_observations: [
+          {
+            rank: 1,
+            brand: "Example",
+            model: "Model B",
+            observations: [
+              {
+                seller: "Store One",
+                price_amount: 399,
+                currency: "USD",
+                condition: "new",
+                offer_type: "standalone_product",
+                source_url: "https://example.com/products/model-a",
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    const parsed = parseDirectTerraCompletedResponse(response);
+
+    assert.equal(parsed.ok, true);
+    assert.deepEqual(parsed.priceEstimates, []);
+    assert.equal(parsed.rejectedPriceObservationCount, 1);
+  });
+
+  it("withholds a range when response-owned amounts disagree implausibly", () => {
+    const observations = [100, 500].map((price_amount, index) => ({
+      seller: `Store ${index + 1}`,
+      price_amount,
+      currency: "USD",
+      condition: "new",
+      offer_type: "standalone_product",
+      source_url:
+        index === 0
+          ? "https://example.com/products/model-a"
+          : "https://store-two.example/model-a",
+    }));
+    const response = completedResponse({
+      outputText: JSON.stringify({
+        report_markdown: report,
+        price_observations: [
+          { rank: 1, brand: "Example", model: "Model A", observations },
+        ],
+      }),
+    });
+    response.output[0].action.sources[0].url = observations[0].source_url;
+    response.output[0].action.sources.push({
+      type: "url",
+      url: observations[1].source_url,
+    });
+
+    const parsed = parseDirectTerraCompletedResponse(response);
+
+    assert.equal(parsed.ok, true);
+    assert.deepEqual(parsed.priceEstimates, []);
+    assert.equal(parsed.rejectedPriceObservationCount, 2);
   });
 
   it("extracts both direct and nested URL-citation annotations", () => {
@@ -100,7 +280,10 @@ describe("direct Terra V2 response boundary", () => {
     );
     const parsed = parseDirectTerraCompletedResponse(
       completedResponse({
-        outputText: JSON.stringify({ report_markdown: invented }),
+        outputText: JSON.stringify({
+          report_markdown: invented,
+          price_observations: [],
+        }),
       }),
     );
 
@@ -120,7 +303,10 @@ describe("direct Terra V2 response boundary", () => {
       `[Registered](${registeredUrl}) and [unmatched](${inventedUrl}).`,
     ].join("\n");
     const response = completedResponse({
-      outputText: JSON.stringify({ report_markdown: mixedReport }),
+      outputText: JSON.stringify({
+        report_markdown: mixedReport,
+        price_observations: [],
+      }),
     });
     response.output[0].action.sources[0].url = registeredUrl;
 
@@ -136,8 +322,8 @@ describe("direct Terra V2 response boundary", () => {
   it("rejects malformed wrappers, extra fields, and reports without citations", () => {
     for (const outputText of [
       "not json",
-      JSON.stringify({ report_markdown: report, cards: [] }),
-      JSON.stringify({ report_markdown: "# No citations" }),
+      JSON.stringify({ report_markdown: report, price_observations: [], cards: [] }),
+      JSON.stringify({ report_markdown: "# No citations", price_observations: [] }),
     ]) {
       assert.equal(
         parseDirectTerraCompletedResponse(completedResponse({ outputText })).ok,
@@ -151,7 +337,10 @@ describe("direct Terra V2 response boundary", () => {
       "https://example.com/product/widget_(2026)?variant=large&utm_source=openai";
     const balancedReport = `# Result\n\n[Source](${citationUrl})`;
     const response = completedResponse({
-      outputText: JSON.stringify({ report_markdown: balancedReport }),
+      outputText: JSON.stringify({
+        report_markdown: balancedReport,
+        price_observations: [],
+      }),
     });
     response.output[0].action.sources[0].url = citationUrl;
 
@@ -165,7 +354,10 @@ describe("direct Terra V2 response boundary", () => {
     const registeredUrl = "https://example.com/products/model-a";
     const bareReport = `# Result\n\nProvider page: ${registeredUrl}`;
     const response = completedResponse({
-      outputText: JSON.stringify({ report_markdown: bareReport }),
+      outputText: JSON.stringify({
+        report_markdown: bareReport,
+        price_observations: [],
+      }),
     });
     response.output[0].action.sources[0].url = registeredUrl;
 
@@ -176,6 +368,7 @@ describe("direct Terra V2 response boundary", () => {
     response.output[1].content[0].text = JSON.stringify({
       report_markdown:
         "# Result\n\nProvider page: https://invented.example/products/model-a",
+      price_observations: [],
     });
     const disabled = parseDirectTerraCompletedResponse(response);
     assert.equal(disabled.ok, true);
@@ -197,7 +390,10 @@ describe("direct Terra V2 response boundary", () => {
       `[model-a]: ${registeredUrl} \"Model A\"`,
     ].join("\n");
     const response = completedResponse({
-      outputText: JSON.stringify({ report_markdown: referenceReport }),
+      outputText: JSON.stringify({
+        report_markdown: referenceReport,
+        price_observations: [],
+      }),
     });
     response.output[0].action.sources[0].url = registeredUrl;
 
@@ -211,6 +407,7 @@ describe("direct Terra V2 response boundary", () => {
     const response = completedResponse({
       outputText: JSON.stringify({
         report_markdown: `# Result\n\n![Remote product image](${imageUrl})`,
+        price_observations: [],
       }),
     });
     response.output[0].action.sources[0].url = imageUrl;
@@ -241,6 +438,7 @@ describe("direct Terra V2 response boundary", () => {
       const response = completedResponse({
         outputText: JSON.stringify({
           report_markdown: `# Result\n\n[Provider](${citedUrl})`,
+          price_observations: [],
         }),
       });
       response.output[0].action.sources[0].url = registeredUrl;
@@ -260,6 +458,7 @@ describe("direct Terra V2 response boundary", () => {
       outputText: JSON.stringify({
         report_markdown:
           "# Result\n\n[Provider](https://example.com/products/model-a?variant=blue&utm_campaign=test)",
+        price_observations: [],
       }),
     });
     response.output[0].action.sources[0].url =

@@ -1,4 +1,6 @@
-export const DIRECT_TERRA_API_VERSION = "direct-terra-api-v1";
+import type { DirectTerraPriceEstimate } from "./directTerraPriceEstimate.ts";
+
+export const DIRECT_TERRA_API_VERSION = "direct-terra-api-v2";
 export const DIRECT_TERRA_POLL_AFTER_MS = 2_000;
 export const DIRECT_TERRA_JOB_TTL_MS = 10 * 60_000;
 export const DIRECT_TERRA_CANCEL_BEFORE_EXPIRY_MS = 30_000;
@@ -23,6 +25,8 @@ export type DirectTerraCompletedResponse = {
   citationUrls: string[];
   sourceHosts: string[];
   disabledCitationCount?: number;
+  priceEstimates: DirectTerraPriceEstimate[];
+  rejectedPriceObservationCount: number;
   transactionalStatus: "unverified";
 };
 
@@ -63,6 +67,57 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
 
+function isPriceEstimate(value: unknown): value is DirectTerraPriceEstimate {
+  return (
+    isRecord(value) &&
+    JSON.stringify(Object.keys(value).sort()) ===
+      JSON.stringify(
+        [
+          "rank",
+          "brand",
+          "model",
+          "currency",
+          "low",
+          "high",
+          "median",
+          "sourceCount",
+        ].sort(),
+      ) &&
+    Number.isInteger(value.rank) &&
+    (value.rank as number) >= 1 &&
+    (value.rank as number) <= 5 &&
+    typeof value.brand === "string" &&
+    value.brand.length > 0 &&
+    value.brand.length <= 120 &&
+    typeof value.model === "string" &&
+    value.model.length > 0 &&
+    value.model.length <= 200 &&
+    value.currency === "USD" &&
+    typeof value.low === "number" &&
+    Number.isFinite(value.low) &&
+    value.low > 0 &&
+    typeof value.high === "number" &&
+    Number.isFinite(value.high) &&
+    value.high >= value.low &&
+    typeof value.median === "number" &&
+    Number.isFinite(value.median) &&
+    value.median >= value.low &&
+    value.median <= value.high &&
+    Number.isInteger(value.sourceCount) &&
+    (value.sourceCount as number) >= 2 &&
+    (value.sourceCount as number) <= 4
+  );
+}
+
+function isPriceEstimateArray(
+  value: unknown,
+): value is DirectTerraPriceEstimate[] {
+  if (!Array.isArray(value) || value.length > 5 || !value.every(isPriceEstimate)) {
+    return false;
+  }
+  return new Set(value.map((estimate) => estimate.rank)).size === value.length;
+}
+
 export function isDirectTerraCitationAllowed(
   citationUrls: readonly string[],
   href: unknown,
@@ -98,6 +153,10 @@ export function isDirectTerraCompletedResponse(
     value.reportMarkdown.length > 0 &&
     isStringArray(value.citationUrls) &&
     isStringArray(value.sourceHosts) &&
+    isPriceEstimateArray(value.priceEstimates) &&
+    typeof value.rejectedPriceObservationCount === "number" &&
+    Number.isSafeInteger(value.rejectedPriceObservationCount) &&
+    value.rejectedPriceObservationCount >= 0 &&
     (value.disabledCitationCount === undefined ||
       (typeof value.disabledCitationCount === "number" &&
         Number.isSafeInteger(value.disabledCitationCount) &&

@@ -9196,3 +9196,81 @@ variant, query ordering, and fragment data remain. The added regression brings
 focused coverage to 29/29 and the complete wall to 1167/1167 across 165 suites.
 Typecheck remains green; lint remains zero errors with three pre-existing
 warnings. No live call or evidence output occurred during review.
+
+## 🟧 Codex - OAI-T7A SearchAPI transactional feasibility live result (2026-07-19)
+
+**Verdict: safety passed, usefulness failed (`2/5` versus the frozen `3/5`
+floor), and the failure is partly attributable to an over-strict local
+verifier.** The single approved run was pinned to `9c51f22` with five Shopping
+requests, up to five token-bound Offers requests, and ten physical attempts as
+both planning basis and hard ceiling.
+
+Actual execution used seven attempts: five `google_shopping` and two
+`google_product_offers`, all HTTP 200. There were no retries, replacements,
+fallbacks, extra queries, OpenAI calls, Serper calls, or direct source-page
+requests. The sanitized one-use evidence is
+`tests/fixtures/review-radar-live/oai-t7a-transactional-feasibility/result.json`
+with SHA-256
+`41bc30aae761c16a928a086b1a61e01adf47961dba766849c28ae50263e3361b`.
+
+Frozen human audit:
+
+- RIDGID `HD1600`: exact canonical identity and exact offer title; Home Depot;
+  `$159.00`; explicit in-stock evidence; direct product-detail destination.
+- Milwaukee `0910-20`: exact canonical identity and exact offer title; Acme
+  Tools; `$249.00`; explicit in-stock evidence; direct product-detail
+  destination. A second exact Ace offer existed but was not selected.
+- Zero accepted offer bound a wrong model, variant, accessory, condition,
+  seller, price, stock statement, currency, or destination. Both price strings
+  carried `$` and the provider request was explicitly U.S.-scoped.
+
+First-loss attribution for the three misses:
+
+- DEWALT `DXV12P-QT`: Shopping returned neighboring `DXV12P-QTA` and
+  `DXV12P-QTE`; the model-conflict rejection was correct.
+- CRAFTSMAN `CMXEVBE17595`: the first Shopping row contained brand, exact model,
+  and a product token, but the local descriptive-model-term check rejected it.
+- Vacmaster `VFB511B 0202`: the first Shopping row contained brand, exact model,
+  and a product token, but the same descriptive-term check rejected it.
+
+The mechanical gate therefore remains failed and no V2 schema, route, UI,
+sidecar, flag, `.env.local`, deployment, or production behavior changed. The
+next evidence-efficient step is zero-live review of the descriptive-title gate
+using this saved response; another live sample is premature.
+
+## Codex - OAI-T7B OpenAI estimated-market-price implementation (2026-07-19)
+
+**Verdict: implemented zero-live; SearchAPI is not part of the active V2 path.**
+Taylor chose an OpenAI-only estimate instead of repairing or integrating the
+failed-coverage SearchAPI experiment. The direct Terra request remains one
+Terra/high Responses create with hosted web search. Its strict output now has
+exactly `report_markdown` and bounded `price_observations`; there is no second
+OpenAI request, SearchAPI/Serper call, direct page fetch, retry, fallback, flag
+promotion, `.env.local` edit, deployment, or production change.
+
+ReviewRadar preserves `report_markdown` exactly. Separately, deterministic code
+accepts a price observation only when it is USD, positive and bounded, marked
+new and standalone, points to a URL registered by the same OpenAI response, and
+binds to the exact brand/model named in that ranked report heading. Only one
+observation per normalized source host counts. At least two distinct hosts are
+required; otherwise no estimate is displayed. Accepted amounts produce a
+transparent low/high range, median, and source count. No seller, stock,
+purchase link, shipping, tax, discount, or checkout-price claim is promoted.
+
+Fail-first evidence: the focused prompt test failed `1/2` because the previous
+schema contained only `report_markdown`. After implementation:
+
+- focused direct-Terra wall: 30/30 across six suites;
+- complete test wall: 1171/1171 across 165 suites;
+- `npm run typecheck`: pass;
+- `npm run lint`: zero errors, three pre-existing warnings;
+- `npm run build`: pass, including `/api/recommendations-v2`; and
+- offline scorecard invocation: cost-plan preview only, with no live call.
+
+Adversarial controls prove that a single source cannot create an estimate,
+`www` and bare-host duplicates do not count twice, response-unowned URLs are
+discarded, and a different model cannot acquire the ranked product's estimate.
+The public API sends only aggregate price values and counts, never the model's
+raw observation URLs or seller strings. The Direct Terra prompt/API versions
+are bumped to v2. SearchAPI's historical harness remains on disk for audit and
+rollback context but is neither imported nor executed by V2.

@@ -12,7 +12,7 @@ describe("direct Terra V2 browser lifecycle", () => {
         return Response.json(
           {
             pipeline: "direct_terra",
-            version: "direct-terra-api-v1",
+            version: "direct-terra-api-v2",
             state: "pending",
             status: "in_progress",
             jobToken: "opaque-job-token",
@@ -24,12 +24,25 @@ describe("direct Terra V2 browser lifecycle", () => {
       }
       return Response.json({
         pipeline: "direct_terra",
-        version: "direct-terra-api-v1",
+        version: "direct-terra-api-v2",
         state: "completed",
         reportMarkdown: "# Exact Terra report",
         citationUrls: ["https://example.com/a"],
         sourceHosts: ["example.com"],
         disabledCitationCount: 1,
+        priceEstimates: [
+          {
+            rank: 1,
+            brand: "Example",
+            model: "Model A",
+            currency: "USD",
+            low: 399,
+            high: 449,
+            median: 424,
+            sourceCount: 2,
+          },
+        ],
+        rejectedPriceObservationCount: 0,
         transactionalStatus: "unverified",
       });
     };
@@ -44,6 +57,7 @@ describe("direct Terra V2 browser lifecycle", () => {
 
     assert.equal(result.reportMarkdown, "# Exact Terra report");
     assert.equal(result.disabledCitationCount, 1);
+    assert.equal(result.priceEstimates[0].median, 424);
     assert.equal(calls[0].url, "/api/recommendations-v2");
     assert.equal(calls[1].url, "/api/recommendations-v2");
     assert.equal(calls.some((call) => call.url === "/api/recommendations"), false);
@@ -57,7 +71,7 @@ describe("direct Terra V2 browser lifecycle", () => {
         return Response.json(
           {
             pipeline: "direct_terra",
-            version: "direct-terra-api-v1",
+            version: "direct-terra-api-v2",
             state: "pending",
             status: "in_progress",
             jobToken: "opaque-job-token",
@@ -70,7 +84,7 @@ describe("direct Terra V2 browser lifecycle", () => {
       if (init.method === "DELETE") {
         return Response.json({
           pipeline: "direct_terra",
-          version: "direct-terra-api-v1",
+          version: "direct-terra-api-v2",
           state: "cancelled",
           status: "cancelled",
         });
@@ -103,7 +117,7 @@ describe("direct Terra V2 browser lifecycle", () => {
         return Response.json(
           {
             pipeline: "direct_terra",
-            version: "direct-terra-api-v1",
+            version: "direct-terra-api-v2",
             state: "pending",
             status: "in_progress",
             jobToken: "opaque-job-token",
@@ -115,7 +129,7 @@ describe("direct Terra V2 browser lifecycle", () => {
       }
       return Response.json({
         pipeline: "direct_terra",
-        version: "direct-terra-api-v1",
+        version: "direct-terra-api-v2",
         state: "cancelled",
         status: "cancelled",
       });

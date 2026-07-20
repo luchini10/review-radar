@@ -35,16 +35,21 @@ requirements, ranked by fit and credibility, each explained and cited.
 
 ReviewRadar also has a separate experimental report path that deliberately does
 not produce a `RecommendationResult`. When both direct-Terra flags are enabled,
-one Terra/high Responses job researches and ranks the products and returns one
-strict JSON field, `report_markdown`. ReviewRadar displays that report without
+one Terra/high Responses job researches and ranks the products and returns two
+strict JSON fields: `report_markdown` plus bounded `price_observations`.
+ReviewRadar displays that report without
 splitting it into cards, changing its product set, or reranking it. Every
 clickable HTTP citation must belong to the same OpenAI response source registry.
 The ownership check uses the same GFM Markdown grammar as the renderer. A link
 that cannot be registered is rendered as labeled plain text while the rest of
 Terra's report remains unchanged; the UI also warns that the nearby claim is AI
 synthesis. Remote report images are rejected, unsafe URL schemes and raw HTML do
-not render, and all prices and purchase details are labeled unverified by
-ReviewRadar.
+not render. Price observations must describe the exact ranked model as a new
+standalone product and point to URLs returned by that same response. ReviewRadar
+deduplicates source hosts and calculates a low/high/median estimated market
+range only when at least two distinct hosts survive. The estimate is visibly
+not a checkout quote; sellers, stock, purchase destinations, discounts, tax,
+shipping, and all purchase claims inside the report remain unverified.
 
 ## 2. Full user flow
 
@@ -233,9 +238,11 @@ each requirement resolves to **pass / fail / unknown**:
   endpoint; it imports none of the legacy discovery, normalization, rescue,
   dedupe, scoring, or reconstruction modules.
 - `lib/directTerraPrompt.ts`, `lib/directTerraResearchAdapter.ts`,
-  `lib/directTerraResponse.ts`, `lib/directTerraRecommendationRoute.ts` — the
+  `lib/directTerraResponse.ts`, `lib/directTerraPriceEstimate.ts`,
+  `lib/directTerraRecommendationRoute.ts` — the
   one-call master prompt, hosted-search lifecycle, exact report/citation
-  boundary, and POST/GET/DELETE route handlers.
+  boundary, deterministic multi-source market-price estimator, and
+  POST/GET/DELETE route handlers.
 - `lib/directTerraJobToken.ts`, `lib/directTerraApiContract.ts`,
   `lib/directTerraClient.ts` — encrypted V2 job capability, public state union,
   and browser polling/cancellation.
@@ -452,6 +459,9 @@ authored transactional field is promoted to verified display data.
   plus the development preview shell. It shows explicit synthesis,
   source-reported, and independently verified trust states and withholds
   unverified transactional fields.
+- **`components/DirectTerraReport.tsx`** — safe direct-Terra Markdown renderer
+  plus a separate estimated-market-price panel. It never turns an estimate into
+  a seller, inventory, purchase-link, or checkout-price claim.
 - **`components/VerdictCard.tsx`**, **`components/SourceList.tsx`** — final advice and source listing.
 
 ---
