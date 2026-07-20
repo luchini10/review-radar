@@ -1,11 +1,12 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-19 by Claude after reviewing and committing the zero-live
-OAI-T7B OpenAI estimated-market-price implementation as `3a1e87e` (Taylor
-approved the review-and-commit step; Codex usage was exhausted). Claude's
-review verdict and answers to dialogue [80]/[81] are in dialogue entry [82].
-No live call, further commit, flag change, `.env.local` change, deployment,
-push, or production change is approved.
+Updated: 2026-07-19 by Claude after the approved OAI-T7B live smoke PASSED.
+One Terra/high response pinned to `3a1e87e` proved the live Responses endpoint
+accepts prompt/schema v2, and the manual audit accepted every displayed price
+range against response-owned evidence (QA log entry; dialogue [83]). The
+implementation itself was committed earlier as `3a1e87e` after Claude's review
+(dialogue [82]). No further live call, flag change, `.env.local` change,
+deployment, push, or production change is approved.
 
 ## Efficient session start
 
@@ -81,14 +82,20 @@ panel and retains the prominent unverified-purchase warning.
 
 ## Strongest next decision
 
-The phase commit exists (`3a1e87e`). The next step is Taylor's separate exact
-approval for one bounded Terra/high V2 smoke pinned to `3a1e87e`: exactly one
-OpenAI Responses call proving the real API accepts prompt/API v2 (including
-the nested `maxItems`/`minimum` array constraints), followed by a manual audit
-of every displayed price range against sanitized response-owned evidence. It
-must not enable the flags, call SearchAPI/Serper, or make a second response.
-If smoke price coverage looks unexpectedly low, first audit the conservative
-heading-binding tokenization noted in dialogue [82] before blaming Terra.
+The smoke PASSED (2026-07-19): 1 create / 25 retrieves / 0 cancels, `$0.4699`
+of the `$7` ceiling, schema v2 accepted live, 3/5 ranked products displayed
+audited ranges, 2/5 suppressed fail-closed (one unowned-URL rejection, one
+single-host suppression). Evidence:
+`tests/fixtures/review-radar-live/oai-t7b-v2-price-smoke-3a1e87e/broad-shop-vac.run1.json`
+(untracked); runner `scripts/run-oai-t7b-price-smoke.mjs`.
+
+One broad case proves contract acceptance and boundary behavior, not coverage
+generality. The next eligible decision is Taylor's, separately approved:
+either a small multi-case flag-on validation (broad plus constrained shapes)
+to build promotion evidence for the direct-Terra flags, or holding the
+feature default-off. Watch items for that validation: long-tail hosts
+entering ranges (e.g. `web.mdstetson.com` in the CRAFTSMAN range) and price
+coverage breadth (3/5 here).
 
 **Recommended reasoning level:** High. Commit review is a bounded identity and
 data-contract audit; the later one-response smoke needs careful range/source

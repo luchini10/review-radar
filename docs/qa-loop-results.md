@@ -9274,3 +9274,66 @@ The public API sends only aggregate price values and counts, never the model's
 raw observation URLs or seller strings. The Direct Terra prompt/API versions
 are bumped to v2. SearchAPI's historical harness remains on disk for audit and
 rollback context but is neither imported nor executed by V2.
+
+## <span style="color:green">**Claude QA Update — 2026-07-19 (OAI-T7B live smoke: PASSED; schema v2 accepted; every displayed range audited)**</span>
+
+Taylor approved one bounded Terra/high V2 smoke pinned to `3a1e87e` (code
+parity with HEAD `e819af8` is docs-only, verified by `git diff --stat`).
+Instrument: `scripts/run-oai-t7b-price-smoke.mjs`, mirroring the T6B/T6D
+protocol — exactly one background create, bounded retrieve polling of that
+same response, at most one safety cancel, and a hard `$7` ceiling. Preflight
+(zero network) validated prompt `direct-terra-master-prompt-v2` and a fresh
+evidence path before any spend.
+
+**Execution:** 1 OpenAI create, 25 retrieves, 0 safety cancels, 0 SDK retries,
+0 Serper/SearchAPI/direct-page/fallback/replacement calls, no ceiling trip.
+Wall clock 136.8 s. Returned model `gpt-5.6-terra`, status `completed`,
+6 hosted web searches (≤20), 55,441 input/18,086 output tokens, estimated cost
+`$0.4699` against the `$7` ceiling. The response carried 137 registered
+sources across 58 hosts; the report parsed with 2 disabled citations and no
+unregistered-citation failure. **The live Responses endpoint accepted strict
+schema v2 including the nested `maxItems`/`minimum`/`enum` observation
+constraints — dialogue [81] challenge (3) is settled.**
+
+**Manual audit of every displayed range** (evidence:
+`tests/fixtures/review-radar-live/oai-t7b-v2-price-smoke-3a1e87e/broad-shop-vac.run1.json`,
+untracked; includes raw observations and the response-owned URL registry):
+
+- `#3 Vacmaster Professional VFB511B 0202` — `$109.99–$119.99`, median
+  `$114.99`, 2 hosts (`vacmaster.com` manufacturer + `business.walmart.com`),
+  both URLs in the response's own registry; exact brand/model tokens present
+  in the rank-3 heading; plausible for the 5-gallon Beast series. ACCEPTED.
+- `#4 CRAFTSMAN CMXEVBE17595` — `$173.99–$199.98`, median `$186.99`, 2 hosts
+  (`zoro.com` + `web.mdstetson.com`), both response-owned; exact heading
+  binding; plausible for a 16-gallon 6.5 HP unit. ACCEPTED. (Quality note:
+  `web.mdstetson.com` is a long-tail B2B host — permitted by the contract and
+  honestly labeled an estimate, but long-tail hosts entering ranges is worth
+  watching across future cases.)
+- `#5 Milwaukee 0910-20` — `$249` flat, 2 hosts (`homedepot.com` +
+  `acehardware.com`), both response-owned; exact heading binding; **the value
+  independently corroborates T7A's frozen human-audited `$249` Acme Tools
+  verification of the same model**. ACCEPTED.
+- `#1 RIDGID HD1200` — correctly suppressed: its only observation cited a
+  `homedepot.com` URL **absent from the response's own source registry**; the
+  ownership gate rejected it live (`rejectedPriceObservationCount: 1`, which
+  reconciles exactly: 8 raw observations, 7 owned/valid, 1 rejected). This is
+  the trust boundary catching a real unowned-URL case in production traffic.
+- `#2 DEWALT DXV12P-QT` — correctly suppressed: one owned observation, one
+  host, below the two-host floor. (The single-host accounting behavior noted
+  in dialogue [82] — dropped from both estimates and the rejected count — was
+  observed live and remains cosmetic.)
+
+Coverage: 3/5 ranked products received a displayed range; 2/5 were suppressed
+fail-closed rather than shown on thin or unowned evidence. Notably, the
+Vacmaster and CRAFTSMAN models are the exact two products the retired
+SearchAPI corroboration gate false-negatived in T7A — the OpenAI-only path
+prices both. The dialogue-[82] hyphenation concern did not bite: Terra used
+identical model spellings in headings and observation groups, as predicted
+for same-response self-consistency.
+
+**Verdict: smoke PASSED both halves** — real-API schema acceptance and a
+clean audit of every displayed range against sanitized response-owned
+evidence. No unsafe range was displayed. Flags remain default-off,
+`.env.local` untouched, no additional live call was made, and promotion is
+NOT authorized by this result. The runner and this record are committed; the
+evidence fixture stays untracked.
