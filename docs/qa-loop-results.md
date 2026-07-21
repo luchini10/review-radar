@@ -9457,3 +9457,43 @@ direction and to consider a flag-on canary or a wider eval — NOT to promote
 blind. No flag was promoted, `.env.local` is unchanged, and both direct-Terra
 flags remain default-off. Full wall stayed 1181/1181 (no code changed by the
 live run).
+
+## <span style="color:green">**Claude QA Update — 2026-07-21 (Direct-Terra perceived-speed: live progress + picks-at-a-glance; zero live)**</span>
+
+**Change:** Taylor-approved UX work to make the ~2-3 minute direct-Terra wait
+survivable and the long report scannable — the two "safe regardless of engine
+choice" items from the feature discussion.
+
+**(a) Live progress narration on the direct-Terra path.** Previously only the
+legacy pipeline reported progress; direct-Terra showed generic copy. Added
+`reportSearchProgressMilestone` to the shared store (direct milestone reporting
+for pipelines that do not run through `createRequestTiming`; monotonic,
+idempotent-on-prefix). The direct-Terra route now reports across its background
+start/poll requests: start → understand/plan, pending → search/deep-research
+(advanced once `ledger.usage.webSearchCalls >= 2`, i.e. Terra is actually
+reading pages), completed → verify/rank + `done`, failure → `error`. Client
+sends `x-reviewradar-progress` on start and every poll. No header = byte-
+identical route behavior.
+
+**(b) "Your picks at a glance" band.** `lib/directTerraReportOutline.ts` parses
+Terra's own ranked `## #N Best Match` headings into a shortlist rendered at the
+top of `DirectTerraReport`, each with estimated price (from the existing
+estimates) and a jump link to its report section. The report renderer stamps
+each heading with the same `headingSlug`, so anchors match. It reads Terra's
+ranking and never reranks/rebuilds — the display trust boundary is unchanged.
+
+**Honest scope note:** Terra returns one atomic background response, so
+literally revealing picks mid-wait is not possible without streaming or a fast
+pre-call. This delivers the perceived-speed win via live narration during the
+wait + a picks-first render on completion; true streaming is a separate larger
+change, deliberately not attempted.
+
+**Verification (zero live):** new outline parser tests (incl. the parser↔renderer
+anchor-slug match — the one integration risk), direct-Terra route progress tests
+(start/deep-research/complete sequence, error path, no-header control), extended
+store + UI-wiring tests. Focused files 36/36; full wall 1192/1192 across 172
+suites; typecheck, production build, lint (0 errors/3 pre-existing warnings)
+pass. Default app loads clean with zero console errors. The flagged direct-Terra
+UI is verified by these deterministic tests, not a screenshot (default-off in
+dev; a live visual needs the flag enabled + a Terra response). No live call,
+flag change, or `.env.local` edit.

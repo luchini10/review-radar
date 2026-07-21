@@ -14,11 +14,17 @@ import {
   isValidSearchProgressId,
   milestoneForStage,
   SEARCH_PROGRESS_ID_HEADER,
+  SEARCH_PROGRESS_MILESTONES,
   type SearchProgressEvent,
+  type SearchProgressMilestoneKey,
   type SearchProgressPollResponse,
   type SearchProgressSnapshot,
   type SearchProgressStatus,
 } from "./searchProgress.ts";
+
+const VALID_MILESTONE_KEYS = new Set<SearchProgressMilestoneKey>(
+  SEARCH_PROGRESS_MILESTONES.map((milestone) => milestone.key),
+);
 
 type SearchProgressRecord = {
   events: SearchProgressEvent[];
@@ -97,6 +103,38 @@ export function reportSearchProgressStage(id: string, stageLabel: string) {
     const lastEvent = record.events[record.events.length - 1];
     if (lastEvent && lastEvent.milestone === milestone) {
       lastEvent.atMs = nowMs;
+      return;
+    }
+    if (record.events.length >= MAX_EVENTS_PER_SEARCH) {
+      return;
+    }
+    record.sequence += 1;
+    record.events.push({ atMs: nowMs, milestone, sequence: record.sequence });
+  } catch {
+    // Progress narration is best-effort only.
+  }
+}
+
+// Report a milestone by key directly (as opposed to via a timing stage label).
+// Used by pipelines that do not run through `createRequestTiming` — e.g. the
+// background direct-Terra job, which reports across multiple poll requests.
+// The roadmap is monotonic, so a milestone appears at most once; re-reporting a
+// milestone (or a whole prefix) is idempotent and keeps the roadmap contiguous.
+export function reportSearchProgressMilestone(
+  id: string,
+  milestone: SearchProgressMilestoneKey,
+) {
+  try {
+    const record = records.get(id);
+    if (!record || record.status !== "running") {
+      return;
+    }
+    if (!VALID_MILESTONE_KEYS.has(milestone)) {
+      return;
+    }
+    const nowMs = clock();
+    record.updatedAtMs = nowMs;
+    if (record.events.some((event) => event.milestone === milestone)) {
       return;
     }
     if (record.events.length >= MAX_EVENTS_PER_SEARCH) {

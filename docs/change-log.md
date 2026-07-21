@@ -9,6 +9,41 @@ Update this file after:
 - important bug fixes
 - live QA fixes worth remembering
 
+## 2026-07-21
+
+### Claude - Live progress + picks-at-a-glance for the direct-Terra path
+
+#### Changed
+
+- The direct-Terra (OpenAI-only) research path now narrates real progress
+  during the ~2-3 minute wait instead of generic copy: its start/poll route
+  handlers report milestones into the shared progress store keyed by the
+  `x-reviewradar-progress` header (start → understanding/planning, pending →
+  searching/deep-research once Terra has run ≥2 hosted web searches, completed
+  → verifying/ranking + done). The client sends the header on start and every
+  poll; no header keeps route behavior byte-identical.
+- The direct-Terra report now leads with a "Your picks at a glance" band —
+  a scannable ranked shortlist parsed from Terra's own `## #N Best Match`
+  headings, each with its estimated price (where available) and a jump link to
+  its full section below. It surfaces Terra's ranking first for perceived
+  speed; it never reranks or rebuilds the products.
+
+#### Notes
+
+- True mid-wait streaming of picks is not possible with Terra's single atomic
+  background response; this delivers the perceived-speed win via live narration
+  during the wait plus a picks-first render on completion. Streaming or a fast
+  pre-call would be a separate, larger change.
+
+#### Verified
+
+- New `tests/directTerraReportOutline.test.mjs` (parser + anchor-slug matching)
+  and direct-Terra route progress tests; extended store and UI tests. Full
+  suite 1192/1192 across 172 suites; typecheck, production build, and lint
+  (0 errors / 3 pre-existing warnings) pass. Default app loads clean with no
+  console errors. The flagged direct-Terra UI is covered by these deterministic
+  tests rather than a screenshot (the path is default-off in dev).
+
 ## 2026-07-19
 
 ### Codex - Add OpenAI multi-source market-price estimates

@@ -1,4 +1,4 @@
-import { ExternalLink, ShieldAlert } from "lucide-react";
+import { ArrowDown, ExternalLink, ShieldAlert } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -6,6 +6,11 @@ import {
   isDirectTerraCitationAllowed,
   type DirectTerraCompletedResponse,
 } from "@/lib/directTerraApiContract";
+import {
+  extractDirectTerraPicks,
+  headingSlug,
+  reactChildrenToText,
+} from "@/lib/directTerraReportOutline";
 
 const USD = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -28,6 +33,13 @@ export function DirectTerraReport({
   result: DirectTerraCompletedResponse;
 }) {
   const disabledCitationCount = result.disabledCitationCount ?? 0;
+  // "Your picks at a glance": the ranked shortlist parsed from Terra's own
+  // report, surfaced ahead of the full research so shoppers see the answer
+  // first. It reads Terra's ranking; it never reranks or rebuilds it.
+  const picks = extractDirectTerraPicks(result.reportMarkdown);
+  const priceByRank = new Map(
+    result.priceEstimates.map((estimate) => [estimate.rank, estimate]),
+  );
 
   return (
     <div className="space-y-5">
@@ -64,6 +76,57 @@ export function DirectTerraReport({
             synthesis.
           </p>
         </div>
+      ) : null}
+
+      {picks.length > 0 ? (
+        <section
+          aria-label="Your picks at a glance"
+          className="rounded-2xl border border-slate-200/80 bg-white px-5 py-5 shadow-sm"
+        >
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+            Your picks at a glance
+          </p>
+          <ol className="mt-3 grid gap-2">
+            {picks.map((pick) => {
+              const estimate = priceByRank.get(pick.rank);
+              return (
+                <li key={pick.rank}>
+                  <a
+                    className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 transition-colors hover:border-blue-300 hover:bg-blue-50/60"
+                    href={`#${pick.anchorId}`}
+                  >
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-slate-950 text-xs font-semibold text-white">
+                      {pick.rank}
+                    </span>
+                    <span className="block min-w-0 flex-1 truncate text-sm font-semibold text-slate-950">
+                      {pick.name}
+                    </span>
+                    {estimate ? (
+                      <span className="shrink-0 text-sm font-semibold text-blue-800">
+                        {USD.format(estimate.low)}
+                        {estimate.high === estimate.low
+                          ? ""
+                          : `–${USD.format(estimate.high)}`}
+                      </span>
+                    ) : (
+                      <span className="shrink-0 text-xs text-slate-500">
+                        See report
+                      </span>
+                    )}
+                    <ArrowDown
+                      aria-hidden="true"
+                      className="h-4 w-4 shrink-0 text-slate-400"
+                    />
+                  </a>
+                </li>
+              );
+            })}
+          </ol>
+          <p className="mt-2 text-xs leading-5 text-slate-500">
+            Tap a pick to jump to its full research below. Prices are estimated
+            market ranges, not checkout quotes.
+          </p>
+        </section>
       ) : null}
 
       <section className="rounded-2xl border border-blue-200 bg-blue-50/70 px-5 py-5 text-slate-900 shadow-sm">
@@ -166,11 +229,17 @@ export function DirectTerraReport({
                   {children}
                 </h1>
               ),
-              h2: ({ children }) => (
-                <h2 className="mb-3 mt-9 border-t border-slate-200 pt-7 font-display text-2xl font-semibold tracking-tight text-slate-950 first:mt-0 first:border-0 first:pt-0">
-                  {children}
-                </h2>
-              ),
+              h2: ({ children }) => {
+                const id = headingSlug(reactChildrenToText(children));
+                return (
+                  <h2
+                    className="mb-3 mt-9 scroll-mt-24 border-t border-slate-200 pt-7 font-display text-2xl font-semibold tracking-tight text-slate-950 first:mt-0 first:border-0 first:pt-0"
+                    id={id || undefined}
+                  >
+                    {children}
+                  </h2>
+                );
+              },
               h3: ({ children }) => (
                 <h3 className="mb-2 mt-6 text-lg font-semibold text-slate-950">
                   {children}

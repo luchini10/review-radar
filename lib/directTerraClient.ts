@@ -8,6 +8,7 @@ import {
   type DirectTerraCompletedResponse,
   type DirectTerraPendingResponse,
 } from "./directTerraApiContract.ts";
+import { SEARCH_PROGRESS_ID_HEADER } from "./searchProgress.ts";
 import type { RecommendationApiRequest } from "../types/review-radar.ts";
 
 type FetchImplementation = typeof fetch;
@@ -19,6 +20,9 @@ type RunOptions = {
   now?: () => number;
   sleep?: (milliseconds: number, signal: AbortSignal) => Promise<void>;
   onPending?: (response: DirectTerraPendingResponse) => void;
+  // Opaque client-generated id for live progress narration. The direct-Terra
+  // route reports its milestones under this id across start and poll requests.
+  progressId?: string | null;
 };
 
 type CancelOptions = {
@@ -87,10 +91,14 @@ export async function runDirectTerraRecommendationRequest({
   now = Date.now,
   sleep = abortableSleep,
   onPending,
+  progressId = null,
 }: RunOptions): Promise<DirectTerraCompletedResponse> {
+  const progressHeader: Record<string, string> = progressId
+    ? { [SEARCH_PROGRESS_ID_HEADER]: progressId }
+    : {};
   const initialResponse = await fetchImpl("/api/recommendations-v2", {
     body: JSON.stringify(payload),
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...progressHeader },
     method: "POST",
     signal,
   });
@@ -140,7 +148,7 @@ export async function runDirectTerraRecommendationRequest({
       }
       const pollResponse = await fetchImpl("/api/recommendations-v2", {
         cache: "no-store",
-        headers: { [DIRECT_TERRA_JOB_TOKEN_HEADER]: jobToken },
+        headers: { [DIRECT_TERRA_JOB_TOKEN_HEADER]: jobToken, ...progressHeader },
         method: "GET",
         signal,
       });

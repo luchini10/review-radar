@@ -13,6 +13,7 @@ import {
   completeSearchProgress,
   createSearchProgressGetHandler,
   getSearchProgress,
+  reportSearchProgressMilestone,
   reportSearchProgressStage,
   searchProgressIdFromRequest,
   searchProgressTestExports,
@@ -106,6 +107,30 @@ describe("search progress store", () => {
     beginSearchProgress("bad id");
     assert.equal(getSearchProgress("bad id"), null);
     assert.equal(trackedSearchCount(), 0);
+  });
+
+  it("reports milestones directly and keeps a monotonic roadmap idempotent", () => {
+    beginSearchProgress(validId);
+    // A prefix report is idempotent: re-reporting earlier milestones adds no
+    // duplicates, so a background pipeline can safely report the whole prefix.
+    reportSearchProgressMilestone(validId, "understand_request");
+    reportSearchProgressMilestone(validId, "plan_strategy");
+    reportSearchProgressMilestone(validId, "understand_request");
+    reportSearchProgressMilestone(validId, "plan_strategy");
+    reportSearchProgressMilestone(validId, "search_market");
+    const snapshot = getSearchProgress(validId);
+    assert.deepEqual(
+      snapshot.events.map((event) => event.milestone),
+      ["understand_request", "plan_strategy", "search_market"],
+    );
+  });
+
+  it("ignores unknown milestone keys and unknown ids for direct reporting", () => {
+    reportSearchProgressMilestone("dt-unknown-9999", "rank_results");
+    assert.equal(getSearchProgress("dt-unknown-9999"), null);
+    beginSearchProgress(validId);
+    reportSearchProgressMilestone(validId, "not_a_real_milestone");
+    assert.equal(getSearchProgress(validId).events.length, 0);
   });
 
   it("freezes the record after completion", () => {

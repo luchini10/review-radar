@@ -234,6 +234,7 @@ export default function Home() {
       if (DIRECT_TERRA_ENABLED) {
         const directOutcome = await runDirectTerraRecommendationRequest({
           payload,
+          progressId: searchProgressId,
           signal: controller.signal,
           onPending,
         });

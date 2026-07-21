@@ -80,22 +80,30 @@ live "What ReviewRadar will match" preview (`requirements.summary`).
    state.
 5. **Live progress narration while waiting:** `components/SearchProgressPanel.tsx`
    polls `GET /api/recommendations/progress?id=…` (~1.25s) and renders the
-   legacy pipeline's real stages as an 8-milestone roadmap (done/current/pending
+   pipeline's real stages as an 8-milestone roadmap (done/current/pending
    states, current-step detail, elapsed timer) above the loading skeletons.
    Contract in `lib/searchProgress.ts` (stage→milestone map, id validation);
    storage in `lib/searchProgressStore.ts` (process-local, TTL-bounded,
-   never-throw store fed by the route's `createRequestTiming` stage-start
-   hook). Narration is best-effort observability only: no header → byte-
-   identical route behavior; unknown ids answer `status: "unknown"`; until the
-   first event arrives (including two-layer/direct-terra, which do not report
-   progress yet) the panel shows only generic loading copy.
+   never-throw). The legacy route feeds it via the `createRequestTiming`
+   stage-start hook; the **direct-Terra route** feeds it directly with
+   `reportSearchProgressMilestone` across its start/poll requests — start →
+   understand/plan, pending → search/deep-research (advanced once Terra has run
+   ≥2 hosted web searches), completed → verify/rank + `done`. Both clients send
+   the `x-reviewradar-progress` header. Narration is best-effort observability
+   only: no header → byte-identical route behavior; unknown ids answer
+   `status: "unknown"`; the two-layer pipeline still shows generic copy.
 
 When `REVIEW_RADAR_DIRECT_TERRA=on` and
 `NEXT_PUBLIC_REVIEW_RADAR_DIRECT_TERRA=true`, the browser instead sends the
 same cleaned raw shopper fields (without legacy extracted requirements) to
 `/api/recommendations-v2`. The V2 client starts one background response, polls
 and cancels it using an encrypted header-only capability, and renders the one
-returned Markdown report through `DirectTerraReport`. The endpoint and browser
+returned Markdown report through `DirectTerraReport`. That component now leads
+with a **"Your picks at a glance"** band: `lib/directTerraReportOutline.ts`
+parses Terra's own ranked `## #N Best Match` headings into a scannable
+shortlist (rank, name, estimated price where available, and a jump link to the
+heading anchor, which the renderer stamps with the same `headingSlug`). It
+reads Terra's ranking; it never reranks or rebuilds it. The endpoint and browser
 branch both fail closed unless their separate flags are enabled. Once a V2 job
 token is known, any non-completed exit also attempts cancellation so polling
 errors do not leave a provider job running.

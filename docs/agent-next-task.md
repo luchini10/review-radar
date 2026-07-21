@@ -10,6 +10,13 @@ below. No flag promoted; both direct-Terra flags remain default-off. No further
 live call, flag change, `.env.local` change, deployment, push, or production
 change is approved.
 
+Also landed 2026-07-21 (Taylor-approved UX, zero live): the direct-Terra path
+now narrates live progress during the wait (route reports milestones into the
+shared store via `reportSearchProgressMilestone`) and its report leads with a
+"Your picks at a glance" band (`lib/directTerraReportOutline.ts`) that surfaces
+Terra's own ranked headings first with jump links — no rerank. Default-off path;
+full wall 1192/1192. See the QA log and change-log entries.
+
 ## OAI-T7C result (2026-07-21)
 
 Evidence: untracked `tests/fixtures/review-radar-live/oai-t7c-terra-eval-v1/`

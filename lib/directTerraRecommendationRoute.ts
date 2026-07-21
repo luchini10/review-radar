@@ -17,6 +17,13 @@ import {
   DIRECT_TERRA_POLL_AFTER_MS,
   type DirectTerraFailureResponse,
 } from "./directTerraApiContract.ts";
+import {
+  beginSearchProgress,
+  completeSearchProgress,
+  reportSearchProgressMilestone,
+  searchProgressIdFromRequest,
+} from "./searchProgressStore.ts";
+import type { SearchProgressMilestoneKey } from "./searchProgress.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
 import type {
   SelectedSmartFeature,
@@ -228,6 +235,32 @@ function tokenFromRequest(request: Request) {
   return request.headers.get(DIRECT_TERRA_JOB_TOKEN_HEADER)?.trim() || "";
 }
 
+// The background job reports progress across separate start/poll requests, so
+// the milestones are driven by observed job state rather than timing stages.
+// The roadmap is monotonic; `reportProgressUpTo` fills the contiguous prefix so
+// no earlier milestone is left pending once a later one is reached.
+const DIRECT_TERRA_PROGRESS_SEQUENCE: SearchProgressMilestoneKey[] = [
+  "understand_request",
+  "plan_strategy",
+  "search_market",
+  "expand_coverage",
+  "deep_research",
+  "verify_sources",
+  "verify_facts",
+  "rank_results",
+];
+
+function reportProgressUpTo(
+  progressId: string | null,
+  milestone: SearchProgressMilestoneKey,
+) {
+  if (!progressId) return;
+  const end = DIRECT_TERRA_PROGRESS_SEQUENCE.indexOf(milestone);
+  for (let index = 0; index <= end; index += 1) {
+    reportSearchProgressMilestone(progressId, DIRECT_TERRA_PROGRESS_SEQUENCE[index]);
+  }
+}
+
 function failureForResearchReason(reason: string) {
   if (reason === "cancelled") {
     return failure("research_cancelled", ERROR_MESSAGES.researchCancelled, 409);
@@ -269,12 +302,20 @@ export function createDirectTerraRecommendationHandlers({
       return failure("invalid_request", ERROR_MESSAGES.invalidRequest, 400);
     }
 
+    const progressId = searchProgressIdFromRequest(request);
     try {
       const client = await createOpenAIClient(environment.openAiApiKey!, {
         maxRetries: 0,
       });
       const result = await startResearch({ client, shopperRequest, now });
-      if (!result.ok) return failureForResearchReason(result.reason);
+      if (!result.ok) {
+        if (progressId) completeSearchProgress(progressId, "error");
+        return failureForResearchReason(result.reason);
+      }
+      if (progressId) {
+        beginSearchProgress(progressId);
+        reportProgressUpTo(progressId, "plan_strategy");
+      }
       const issuedAtMs = now();
       const token = issueDirectTerraJobToken({
         responseId: result.responseId,
@@ -297,6 +338,7 @@ export function createDirectTerraRecommendationHandlers({
         202,
       );
     } catch {
+      if (progressId) completeSearchProgress(progressId, "error");
       return failure("research_failed", ERROR_MESSAGES.researchFailed, 502);
     }
   };
@@ -322,6 +364,7 @@ export function createDirectTerraRecommendationHandlers({
       );
     }
 
+    const progressId = searchProgressIdFromRequest(request);
     try {
       const client = await createOpenAIClient(environment.openAiApiKey!, {
         maxRetries: 0,
@@ -333,8 +376,18 @@ export function createDirectTerraRecommendationHandlers({
         promptHash: verified.payload.promptHash,
         now,
       });
-      if (!result.ok) return failureForResearchReason(result.reason);
+      if (!result.ok) {
+        if (progressId) completeSearchProgress(progressId, "error");
+        return failureForResearchReason(result.reason);
+      }
       if (result.state === "pending") {
+        // Advance the roadmap as Terra actually researches: once it has run
+        // hosted web searches it is reading pages (deep research), otherwise it
+        // is still gathering the market.
+        reportProgressUpTo(
+          progressId,
+          result.ledger.usage.webSearchCalls >= 2 ? "deep_research" : "search_market",
+        );
         return json(
           {
             pipeline: "direct_terra",
@@ -348,6 +401,8 @@ export function createDirectTerraRecommendationHandlers({
           202,
         );
       }
+      reportProgressUpTo(progressId, "rank_results");
+      if (progressId) completeSearchProgress(progressId, "done");
       return json(
         {
           pipeline: "direct_terra",
@@ -364,6 +419,7 @@ export function createDirectTerraRecommendationHandlers({
         200,
       );
     } catch {
+      if (progressId) completeSearchProgress(progressId, "error");
       return failure("research_failed", ERROR_MESSAGES.researchFailed, 502);
     }
   };

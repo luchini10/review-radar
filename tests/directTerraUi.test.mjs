@@ -27,6 +27,21 @@ describe("direct Terra V2 display boundary", () => {
     assert.equal(source.includes("cards.map"), false);
   });
 
+  it("renders a picks-at-a-glance band that links to report sections without reranking", () => {
+    const source = fs.readFileSync("components/DirectTerraReport.tsx", "utf8");
+    // Shortlist parsed from Terra's own report, not a rebuilt product set.
+    assert.match(source, /extractDirectTerraPicks\(result\.reportMarkdown\)/);
+    assert.match(source, /Your picks at a glance/);
+    assert.match(source, /picks\.map/);
+    // Jump links target the heading anchors stamped by headingSlug.
+    assert.match(source, /href=\{`#\$\{pick\.anchorId\}`\}/);
+    assert.match(source, /id=\{id \|\| undefined\}/);
+    assert.match(source, /scroll-mt-24/);
+    // Price shown from the existing estimates, labeled as a range not a quote.
+    assert.match(source, /priceByRank\.get\(pick\.rank\)/);
+    assert.match(source, /estimated[^]*ranges, not checkout quotes/i);
+  });
+
   it("allows only an exact response-owned citation destination", () => {
     const allowed = ["https://example.com/model-a?variant=blue"];
 
