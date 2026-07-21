@@ -9337,3 +9337,59 @@ evidence. No unsafe range was displayed. Flags remain default-off,
 `.env.local` untouched, no additional live call was made, and promotion is
 NOT authorized by this result. The runner and this record are committed; the
 evidence fixture stays untracked.
+
+## <span style="color:green">**Claude QA Update — 2026-07-21 (OAI-T7C direct-Terra evaluation FROZEN; zero live; awaiting spend approval)**</span>
+
+**Why:** T7B proved the price sub-feature is safe on one shop-vac case. It did
+not test whether the direct-Terra REPORT the price rides on is good at its core
+job. T7C is the frozen instrument to answer the real question — is the
+OpenAI-only report path good enough (recall, wrong-type, constraints,
+stability) to become ReviewRadar's direction — before any promotion.
+
+**Frozen contract (committed before any live result, so grading criteria
+cannot be moved to flatter a score):**
+
+- `lib/directTerraEvaluation.ts` — 4 frozen cases + a deterministic scorer.
+  Cases are plain shopper requests (no leader name ever reaches Terra); each
+  pairs to a frozen `leaders-v2026-07c` GOLD entry used only for grading. The
+  scorer imports no benchmark itself — `coversLeader` is dependency-injected —
+  so `lib/` never couples to `scripts/` and the frozen matcher stays the single
+  source of truth. Cases: broad `office chair`; constrained `gas grill`/$600/4
+  burner+propane; constrained `cordless drill`/$150/brushless; constrained
+  `robot vacuum`/$300/self-emptying (overlaps the legacy North-Star for a
+  direct legacy-vs-Terra comparison). Deliberately no shop-vac — that overfit
+  anchor already has T7B/T6D data, and its generic "shop vac" GOLD brand row
+  over-counts recall (see below); the four chosen categories have no
+  generic-word brand.
+- `scripts/run-oai-t7c-terra-eval.mjs` — bounded harness (preflight/live),
+  same discipline as the T6B/T6D/T7B smokes: one background create per run,
+  per-run retrieve ceiling 60, ≤1 safety cancel per run, hard global cost
+  ceiling, sanitized untracked evidence, commit-pinned from HEAD at run time.
+- `tests/directTerraEvaluation.test.mjs` — scorer unit tests plus a
+  ground-truth validation against the hand-audited T7B shop-vac fixture.
+
+**Scorer validation (zero live):** grading the saved T7B report reproduces the
+manual audit exactly — 5 ranked products, **0 wrong-type**, **3/5 priced**, and
+the frozen matcher's mechanical **5/7** core-leader count. That 5/7 (not the
+semantic 4/7) is the documented T6D caveat: the generic "shop vac" GOLD brand
+row matches the literal "Shop Vac" descriptor in the CRAFTSMAN title. The
+scorer faithfully reproduces the frozen matcher, quirk and all; the eval's four
+categories avoid this by construction. Full wall 1181/1181 across 170 suites;
+typecheck, build implied by unchanged app code; lint 0 errors / 3 pre-existing
+warnings. Harness preflight passes with zero network.
+
+**Scoring rubric (frozen):** per run — leader recall via `coversLeader` over
+the report's ranked `## #N Best Match` headings; wrong-type hits (target 0);
+constraint budget violations from the deterministic price estimates (a ranked
+product whose estimate's low end exceeds budget; target 0) plus feature-token
+coverage per product section (informational); price coverage. Per case — mean
+recall, and stability as mean pairwise Jaccard of the covered-leader sets
+(primary) and a brand+model identity-key set (secondary churn proxy) across the
+3 runs.
+
+**Pending spend (awaiting Taylor's exact numeric approval):** 12 Terra/high
+create calls (4 cases x 3 runs), per-run hosted-search ceiling 20, hard global
+cost ceiling **$15** (planning basis ~$5.6 at T7B's ~$0.47/run; ~30 min
+sequential). Zero Serper/SearchAPI/second-response/flag/`.env.local` changes.
+Flags remain default-off; this record and the frozen instrument are committed;
+the live evidence fixture will be untracked.

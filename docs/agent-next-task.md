@@ -1,12 +1,35 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-19 by Claude after the approved OAI-T7B live smoke PASSED.
-One Terra/high response pinned to `3a1e87e` proved the live Responses endpoint
-accepts prompt/schema v2, and the manual audit accepted every displayed price
-range against response-owned evidence (QA log entry; dialogue [83]). The
-implementation itself was committed earlier as `3a1e87e` after Claude's review
-(dialogue [82]). No further live call, flag change, `.env.local` change,
-deployment, push, or production change is approved.
+Updated: 2026-07-19 by Claude after freezing the OAI-T7C direct-Terra V2
+holistic evaluation (zero live). The T7B price feature (committed `3a1e87e`)
+and its passed live smoke are complete; the open question is whether the
+direct-Terra REPORT the price feature rides on is good enough at its core job
+(leader recall, wrong-type safety, constraint compliance, run-to-run
+stability) to become ReviewRadar's direction. T7C is the frozen instrument to
+answer that. The frozen scorer + cases + harness are committed and validated
+zero-live; **the live T7C window is awaiting Taylor's explicit numeric
+approval** (exact budget below). No live call, flag change, `.env.local`
+change, deployment, push, or production change is otherwise approved.
+
+## Pending live decision — OAI-T7C direct-Terra evaluation
+
+Frozen contract: `lib/directTerraEvaluation.ts` (4 cases + scorer),
+`scripts/run-oai-t7c-terra-eval.mjs` (bounded harness),
+`tests/directTerraEvaluation.test.mjs` (scorer validated against the
+hand-audited T7B shop-vac fixture). Cases (plain shopper requests; no leader
+name reaches Terra): broad `office chair`; constrained `gas grill`/$600/4
+burner+propane; constrained `cordless drill`/$150/brushless; constrained
+`robot vacuum`/$300/self-emptying (overlaps the legacy North-Star for a direct
+comparison). Deliberately no shop-vac (overfit anchor; T7B/T6D already cover
+it). Each case runs 3x for stability.
+
+Exact live budget to approve: **12 Terra/high `create` calls** (4 cases x 3
+runs), per-run hosted-search ceiling 20 and retrieve ceiling 60, at most 1
+safety cancel per run, **hard global cost ceiling $15** (planning basis ~$5.6
+at the T7B actual of ~$0.47/run; ~30 min wall time sequential). Scored against
+frozen `leaders-v2026-07c`. Pins to the freeze commit (resolved from HEAD at
+run time and recorded in evidence). Preflight passes zero-live; evidence writes
+to untracked `tests/fixtures/review-radar-live/oai-t7c-terra-eval-v1/`.
 
 ## Efficient session start
 
@@ -82,20 +105,22 @@ panel and retains the prominent unverified-purchase warning.
 
 ## Strongest next decision
 
-The smoke PASSED (2026-07-19): 1 create / 25 retrieves / 0 cancels, `$0.4699`
-of the `$7` ceiling, schema v2 accepted live, 3/5 ranked products displayed
-audited ranges, 2/5 suppressed fail-closed (one unowned-URL rejection, one
-single-host suppression). Evidence:
-`tests/fixtures/review-radar-live/oai-t7b-v2-price-smoke-3a1e87e/broad-shop-vac.run1.json`
-(untracked); runner `scripts/run-oai-t7b-price-smoke.mjs`.
+Run the frozen OAI-T7C evaluation once Taylor approves the 12-call budget
+above, then read the four North-Stars per case (recall mean, wrong-type =
+target 0, budget violations = target 0, leader-set stability Jaccard) plus
+secondary price coverage. Decision rule after results:
+- If direct-Terra shows materially better recall than the legacy pipeline's
+  historical 1-2/7 with zero wrong-type and zero hard-constraint violations
+  and non-trivial stability, that is the evidence to consider direct-Terra the
+  product direction (and to sequence a flag-on canary).
+- If recall is thin, wrong-type/constraint violations appear, or stability is
+  near-zero (the historical disease), hold direct-Terra default-off and
+  redirect to the specific first-loss cause.
 
-One broad case proves contract acceptance and boundary behavior, not coverage
-generality. The next eligible decision is Taylor's, separately approved:
-either a small multi-case flag-on validation (broad plus constrained shapes)
-to build promotion evidence for the direct-Terra flags, or holding the
-feature default-off. Watch items for that validation: long-tail hosts
-entering ranges (e.g. `web.mdstetson.com` in the CRAFTSMAN range) and price
-coverage breadth (3/5 here).
+Prior context: the T7B price smoke PASSED (2026-07-19): 1 create / 25
+retrieves, `$0.4699` of `$7`, schema v2 accepted live, 3/5 ranked products
+priced, 2/5 suppressed fail-closed. Watch items carried into T7C: long-tail
+hosts entering ranges (`web.mdstetson.com`) and price coverage breadth.
 
 **Recommended reasoning level:** High. Commit review is a bounded identity and
 data-contract audit; the later one-response smoke needs careful range/source
