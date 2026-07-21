@@ -1,17 +1,18 @@
 # ReviewRadar Agent Handoff
 
 Updated: 2026-07-21 by Codex after the reviewed OAI-T8A Direct-Terra
-product-assets Phase 1 (zero live; scoped commit approved and in progress).
+product-assets Phase 1 was committed as `836deb3` (zero live).
 
 ## Current state
 
 Taylor approved an adversarial review, any necessary generalized corrections,
 and a scoped commit of Phase 1. The review is complete and the corrected phase
-is ready for that commit. No provider adapter, route/UI wiring, flag change,
+is committed. No provider adapter, route/UI wiring, flag change,
 live request, deployment, or production behavior was authorized or performed.
 
-Pre-commit tracked HEAD is `60717bd` (`Add live progress and
-picks-at-a-glance to the direct-Terra path`). Phase files are:
+The Phase 1 implementation/audit commit is `836deb3` (`Add Direct-Terra
+product asset safety boundary`). A docs-only follow-up records that hash and
+the next approval boundary. Phase files are:
 
 - `lib/directTerraAssetVerifier.ts`
 - `tests/directTerraAssetVerifier.test.mjs`
@@ -103,10 +104,10 @@ The saved robot-vac reports still need zero-live classification of strict
 benchmark-denominator misses versus real product-set churn before another
 robot-vac live window. OAI-T8A does not supersede that debt.
 
-## Next decision after the scoped commit
+## Next decision
 
-Nothing beyond the commit is automatically approved. After Phase 1 is
-committed, the strongest next step is Phase 2: a separately approved zero-live,
+Nothing beyond the completed commit is automatically approved. The strongest
+next step is Phase 2: a separately approved zero-live,
 fully mocked Serper Shopping adapter that issues at most one narrow exact-
 identity query per Terra product and feeds provider rows into this verifier.
 Phase 2 must not call Serper live or wire the route/UI.

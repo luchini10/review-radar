@@ -9564,3 +9564,7 @@ or production behavior change occurred. Pre-existing `next-env.d.ts` and all
 untracked historical artifacts were left untouched. Taylor subsequently
 approved the adversarial review, corrections, and scoped Phase 1 commit; the
 resulting hash is recorded in the regenerated handoff after landing.
+
+**Commit:** `836deb3` (`Add Direct-Terra product asset safety boundary`). Only
+the six Phase 1 code/test/documentation files were staged; pre-existing
+`next-env.d.ts`, live fixtures, and unrelated untracked artifacts were excluded.

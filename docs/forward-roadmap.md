@@ -2728,7 +2728,7 @@ the first live output needs careful identity, source-ownership, and price-range
 inspection. Highest is unnecessary unless the provider rejects the schema or a
 range binds to the wrong model.
 
-### OAI-T8A - Direct-Terra product-asset safety contract (Phase 1 reviewed 2026-07-21; zero live)
+### OAI-T8A - Direct-Terra product-asset safety contract (Phase 1 committed 2026-07-21 as `836deb3`; zero live)
 
 **Objective:** add product-page links and product images to Terra's ranked
 products without reviving the legacy Serper discovery/ranking pipeline or
@@ -2770,8 +2770,7 @@ UI, `.env.local`, deployment, or production
 change occurred. Current behavior remains byte-identical because the module is
 not wired to any route.
 
-**Next gate:** the reviewed Phase 1 receives a scoped commit under Taylor's
-approval. Only after that commit may a separate zero-live phase add a mocked,
+**Next gate:** Phase 2 requires separate approval. It may add a zero-live mocked,
 one-query-per-Terra-product Serper Shopping adapter. No live coverage probe or UI wiring
 is authorized by Phase 1.
 
