@@ -9497,3 +9497,70 @@ pass. Default app loads clean with zero console errors. The flagged direct-Terra
 UI is verified by these deterministic tests, not a screenshot (default-off in
 dev; a live visual needs the flag enabled + a Terra response). No live call,
 flag change, or `.env.local` edit.
+
+## 🟧 Codex QA Update — 2026-07-21 (OAI-T8A Direct-Terra asset safety contract, Phase 1)
+
+**Scope:** Taylor approved Phase 1 only: zero-live fail-first safety rules for
+attaching a product-page URL and image to Terra's exact ranked products. No
+provider adapter, route/UI wiring, flag, live request, or commit was authorized.
+
+**Fail-first evidence:** the focused suite initially failed because
+`lib/directTerraAssetVerifier.ts` did not exist. After the first implementation,
+12/13 passed and the adjacent-model control failed: `DXV12P-QTA` was treated as
+matching `DXV12P-QT` because the two-letter model suffix had been discarded.
+The generalized correction retains short suffix tokens when the model also has
+numeric identity. The final suite also rejects a title that contains both the
+target and a sibling compound model.
+
+**Implemented contract:** `lib/directTerraAssetVerifier.ts` is pure and has no
+Serper/OpenAI/SearchAPI client import. It:
+
+- keeps Terra's target key, rank, and product name unchanged;
+- requires candidate-title brand and exact model evidence (never query, snippet,
+  URL, or target echo alone), rejects explicit sibling-model ambiguity, and
+  applies the shared product-type gate;
+- accepts only an eligible direct product page whose title/URL match the locked
+  Terra identity, rejecting Google wrappers, listing/search pages, support,
+  editorial, review, and article pages;
+- removes conservative tracking parameters while retaining identity-bearing
+  parameters;
+- runs the shared RR-061 image validator and accepts imagery only from a row
+  whose product URL already passed the identity/page boundary; and
+- returns reason-coded, bounded decisions without provider identifiers. Missing
+  or rejected assets are `unavailable`; they cannot delete or alter a Terra pick.
+
+**Regression evidence (17 cases):** exact RIDGID/Roborock assets; RR-090 Q7/Q10
+URL graft; RR-061 Q10-S5, QRevo, and Saros imagery; RR-078 support/editorial
+destinations; filter/hose accessories; Google/search/listing wrappers;
+DXV12P-QT/QTA neighbor; dual-model ambiguity; name-only Herman Miller Aeron;
+opaque exact-row thumbnail; query/URL identity echo; placeholder/page images;
+and provider-data non-exposure.
+
+**Adversarial pre-commit review:** three additional fail-first checks exposed
+real boundary gaps. The verifier had duplicated URL normalization and removed
+`ref` plus fragments even though `lib/twoLayerSourceUrl.ts` deliberately
+preserves both as potentially identity-bearing; it now reuses that shared
+normalizer. It also accepted product-shaped literal-IP/private-network URLs and
+lacked a direct rejection for affiliate/deeplink/click/track wrappers; those
+destinations now fail before page identity evaluation. Finally, a mismatched
+internal target (for example, a Q10 display name paired with Q7 model metadata)
+could attach Q7 assets to the Q10 card; target name/brand/model/category/key/rank
+coherence is now mandatory. These are generalized safety corrections, not
+provider-, product-, or fixture-specific patches.
+
+**Verification (zero live):**
+
+- `node --no-warnings --test tests/directTerraAssetVerifier.test.mjs` — 17/17.
+- `npm run typecheck` — pass.
+- `npm test` — 1209/1209 across 173 suites.
+- `npx eslint lib/directTerraAssetVerifier.ts tests/directTerraAssetVerifier.test.mjs` — pass.
+- `npm run lint` — zero errors, three pre-existing warnings.
+- `git diff --check` — pass.
+
+Production build was not run because Phase 1 adds an unreferenced pure module
+and tests only; typecheck, full lint, and the complete Node wall cover the
+changed seam. No network request, `.env.local` edit, flag change, deployment,
+or production behavior change occurred. Pre-existing `next-env.d.ts` and all
+untracked historical artifacts were left untouched. Taylor subsequently
+approved the adversarial review, corrections, and scoped Phase 1 commit; the
+resulting hash is recorded in the regenerated handoff after landing.

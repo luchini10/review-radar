@@ -2728,6 +2728,57 @@ the first live output needs careful identity, source-ownership, and price-range
 inspection. Highest is unnecessary unless the provider rejects the schema or a
 range binds to the wrong model.
 
+### OAI-T8A - Direct-Terra product-asset safety contract (Phase 1 reviewed 2026-07-21; zero live)
+
+**Objective:** add product-page links and product images to Terra's ranked
+products without reviving the legacy Serper discovery/ranking pipeline or
+allowing a provider row to change Terra's product, rank, explanation, or
+citations. Serper Shopping is an optional post-report asset source only. Missing
+or rejected assets remain unavailable and never remove or rewrite a Terra pick.
+
+**Phase 1 boundary:** `lib/directTerraAssetVerifier.ts` is a pure, provider-free
+verifier. It accepts a frozen Terra identity plus candidate rows and returns
+only identity-safe product-page/image URLs and reason-coded server-side
+decisions. It requires brand and exact model evidence in the candidate title,
+rejects ambiguous sibling-model titles and wrong product types, requires an
+eligible direct product page matching Terra's identity, strips only conservative
+tracking parameters, and reuses the existing RR-061 image validator. An image
+is accepted only from a row whose product destination is independently safe;
+an editorial or cross-model row cannot lend imagery to a card.
+
+**Historical regression wall:** fail-first tests cover RR-061 wrong-model and
+family-name imagery, RR-078 support/editorial pages, RR-090 cross-model product
+URLs, RR-092-style editorial image borrowing, accessories whose URL repeats the
+target model, Google/search/listing wrappers, adjacent models, weak/query-echo
+identity, descriptive name-only models, and opaque thumbnails tied to an exact
+safe product row. Terra's rank and product name remain immutable and no provider
+identifier enters the result.
+
+**Adversarial review corrections:** the pre-commit review found three generalized
+holes and closed each fail-first: (1) a duplicate URL normalizer removed `ref`
+and fragments that the shared conservative contract preserves; the verifier now
+reuses `normalizeTwoLayerSourceUrl`; (2) literal-IP/local-network and affiliate/
+redirect-wrapper product destinations could reach the product-page check; both
+are rejected before identity matching; and (3) internally inconsistent target
+name/brand/model/category fields could bind a safe candidate to the wrong Terra
+card; target coherence is now mandatory.
+
+**Verification:** 17/17 focused verifier tests, 1209/1209 full tests across 173
+suites, typecheck, full lint (0 errors/3 pre-existing warnings), and
+`git diff --check` pass. No OpenAI, Serper, SearchAPI, direct-page, retry, flag,
+UI, `.env.local`, deployment, or production
+change occurred. Current behavior remains byte-identical because the module is
+not wired to any route.
+
+**Next gate:** the reviewed Phase 1 receives a scoped commit under Taylor's
+approval. Only after that commit may a separate zero-live phase add a mocked,
+one-query-per-Terra-product Serper Shopping adapter. No live coverage probe or UI wiring
+is authorized by Phase 1.
+
+**Recommended reasoning level:** High. The code is small, but exact model and
+product-type matching sit on the trust boundary; Highest is unnecessary unless
+review finds an architectural conflict in the shared identity primitives.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen
