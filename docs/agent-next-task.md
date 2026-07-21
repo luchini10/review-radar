@@ -1,35 +1,48 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-19 by Claude after freezing the OAI-T7C direct-Terra V2
-holistic evaluation (zero live). The T7B price feature (committed `3a1e87e`)
-and its passed live smoke are complete; the open question is whether the
-direct-Terra REPORT the price feature rides on is good enough at its core job
-(leader recall, wrong-type safety, constraint compliance, run-to-run
-stability) to become ReviewRadar's direction. T7C is the frozen instrument to
-answer that. The frozen scorer + cases + harness are committed and validated
-zero-live; **the live T7C window is awaiting Taylor's explicit numeric
-approval** (exact budget below). No live call, flag change, `.env.local`
-change, deployment, push, or production change is otherwise approved.
+Updated: 2026-07-21 by Claude after the OAI-T7C direct-Terra evaluation ran
+(12 live Terra/high calls pinned to `0cd1257`, `$7.61` of `$15`). Result:
+direct-Terra is SAFE (0 wrong-type, 0 confirmed over-budget, 100% feature
+evidence in all 12 runs) and beats the legacy pipeline's recall and stability
+on 3 of 4 categories; the constrained robot-vacuum case is the weak spot (low
+recall, high run-to-run churn). Full write-up in the QA log; per-case numbers
+below. No flag promoted; both direct-Terra flags remain default-off. No further
+live call, flag change, `.env.local` change, deployment, push, or production
+change is approved.
 
-## Pending live decision — OAI-T7C direct-Terra evaluation
+## OAI-T7C result (2026-07-21)
 
-Frozen contract: `lib/directTerraEvaluation.ts` (4 cases + scorer),
-`scripts/run-oai-t7c-terra-eval.mjs` (bounded harness),
-`tests/directTerraEvaluation.test.mjs` (scorer validated against the
-hand-audited T7B shop-vac fixture). Cases (plain shopper requests; no leader
-name reaches Terra): broad `office chair`; constrained `gas grill`/$600/4
-burner+propane; constrained `cordless drill`/$150/brushless; constrained
-`robot vacuum`/$300/self-emptying (overlaps the legacy North-Star for a direct
-comparison). Deliberately no shop-vac (overfit anchor; T7B/T6D already cover
-it). Each case runs 3x for stability.
+Evidence: untracked `tests/fixtures/review-radar-live/oai-t7c-terra-eval-v1/`
+(per-run + summary.json). Recall vs frozen `leaders-v2026-07c`; stability =
+mean pairwise covered-leader Jaccard across 3 runs.
 
-Exact live budget to approve: **12 Terra/high `create` calls** (4 cases x 3
-runs), per-run hosted-search ceiling 20 and retrieve ceiling 60, at most 1
-safety cancel per run, **hard global cost ceiling $15** (planning basis ~$5.6
-at the T7B actual of ~$0.47/run; ~30 min wall time sequential). Scored against
-frozen `leaders-v2026-07c`. Pins to the freeze commit (resolved from HEAD at
-run time and recorded in evidence). Preflight passes zero-live; evidence writes
-to untracked `tests/fixtures/review-radar-live/oai-t7c-terra-eval-v1/`.
+| Case | Recall mean | Stability | WrongType | BudgetViol |
+|---|---|---|---|---|
+| office chair (broad /7) | 3.33/7 | 0.83 | 0 | 0 |
+| gas grill (con /4) | 2.67/4 | 0.78 | 0 | 0 |
+| cordless drill (con /4) | 2.67/4 | 0.47 | 0 | 0 |
+| robot vacuum (con /4) | 1.33/4 | 0.17 | 0 | 0 |
+
+Key caveat carried forward: "0 budget violations" is PARTIAL verification —
+price coverage was 0.07-0.58, so most picks were unpriced and their budget
+compliance is unverified, not confirmed (Codex challenge [84]-(1)). Robot-vac
+weakness is partly the stricter model-line denominator (Terra picked adjacent
+legitimate budget robots off the Q5/Q10 list) and partly genuine churn.
+
+## Strongest next decision (Taylor's)
+
+Direct-Terra is now the leading candidate direction on evidence. Options, each
+needing separate approval:
+1. **Wider zero-then-live generalization eval** — extend T7C to the sealed
+   holdout categories + a couple more broad cases to confirm the 3/4 pattern
+   holds and diagnose the robot-vac weakness (is it the matcher denominator or
+   real instability? inspect the saved run reports first, zero-live).
+2. **Flag-on canary** of the direct-Terra path (bounded, reversible) to gather
+   real-usage signal, only after (1) and an explicit promotion approval.
+3. **Hold and harden** — if robot-vac-class instability is judged
+   disqualifying, keep default-off and diagnose first.
+Recommended: start with the zero-live inspection of the saved robot-vac reports
+to separate measurement strictness from real churn before spending again.
 
 ## Efficient session start
 
@@ -103,24 +116,15 @@ panel and retains the prominent unverified-purchase warning.
 - Offline scorecard invocation produced only its cost-plan preview and made no
   live request.
 
-## Strongest next decision
+## Prior context
 
-Run the frozen OAI-T7C evaluation once Taylor approves the 12-call budget
-above, then read the four North-Stars per case (recall mean, wrong-type =
-target 0, budget violations = target 0, leader-set stability Jaccard) plus
-secondary price coverage. Decision rule after results:
-- If direct-Terra shows materially better recall than the legacy pipeline's
-  historical 1-2/7 with zero wrong-type and zero hard-constraint violations
-  and non-trivial stability, that is the evidence to consider direct-Terra the
-  product direction (and to sequence a flag-on canary).
-- If recall is thin, wrong-type/constraint violations appear, or stability is
-  near-zero (the historical disease), hold direct-Terra default-off and
-  redirect to the specific first-loss cause.
-
-Prior context: the T7B price smoke PASSED (2026-07-19): 1 create / 25
-retrieves, `$0.4699` of `$7`, schema v2 accepted live, 3/5 ranked products
-priced, 2/5 suppressed fail-closed. Watch items carried into T7C: long-tail
-hosts entering ranges (`web.mdstetson.com`) and price coverage breadth.
+The T7B price smoke PASSED (2026-07-19): 1 create / 25 retrieves, `$0.4699` of
+`$7`, schema v2 accepted live, 3/5 ranked products priced, 2/5 suppressed
+fail-closed. The T7C decision rule was: materially better recall than legacy's
+1-2/7 with zero wrong-type/hard-constraint violations and non-trivial stability
+would favor direct-Terra as the direction. T7C met that on 3 of 4 categories
+(see result above); the robot-vac case did not, and price coverage remained
+sparse.
 
 **Recommended reasoning level:** High. Commit review is a bounded identity and
 data-contract audit; the later one-response smoke needs careful range/source

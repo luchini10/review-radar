@@ -9393,3 +9393,67 @@ cost ceiling **$15** (planning basis ~$5.6 at T7B's ~$0.47/run; ~30 min
 sequential). Zero Serper/SearchAPI/second-response/flag/`.env.local` changes.
 Flags remain default-off; this record and the frozen instrument are committed;
 the live evidence fixture will be untracked.
+
+## <span style="color:green">**Claude QA Update — 2026-07-21 (OAI-T7C live evaluation COMPLETE: safe, better-than-legacy on 3/4, robot-vac weak)**</span>
+
+Taylor approved the frozen 12-call window pinned to `0cd1257`. All 12 Terra/high
+runs completed cache-cold: 12 creates, 360 retrieves, 0 fallbacks, no ceiling
+trip, **estimated `$7.61` of the `$15` ceiling** (~`$0.63`/run, above T7B's
+`$0.47` because constrained cases search more), ~31.7 min wall clock. Evidence
+untracked at `tests/fixtures/review-radar-live/oai-t7c-terra-eval-v1/`.
+
+**Safety — perfect across all 12 runs:** 0 wrong-type products, 0 confirmed
+over-budget products, and 100% feature-token coverage per product section
+(every recommended grill was propane/4-burner, every drill brushless, every
+robot self-emptying). This is the exact failure class the legacy pipeline kept
+regressing (wrong-type cards, RR-060/083/084); it did not recur here.
+
+**Per case (recall vs frozen leaders-v2026-07c; stability = mean pairwise
+covered-leader-set Jaccard across 3 runs):**
+
+| Case | Recall (runs) | Mean | Stability | WrongType | BudgetViol | Price cov |
+|---|---|---|---|---|---|---|
+| office chair (broad, /7) | 3,3,4 | 3.33/7 | 0.83 | 0 | 0 | 0.07 |
+| gas grill (con, /4) | 3,3,2 | 2.67/4 | 0.78 | 0 | 0 | 0.25 |
+| cordless drill (con, /4) | 2,3,3 | 2.67/4 | 0.47 | 0 | 0 | 0.37 |
+| robot vacuum (con, /4) | 1,2,1 | 1.33/4 | 0.17 | 0 | 0 | 0.58 |
+
+- **Office chair:** consistently found Herman Miller, Steelcase, Haworth (Branch
+  once); never HON/Humanscale/Knoll. Most stable case.
+- **Gas grill:** consistently Monument + Nexgrill, Char-Broil 2/3, never
+  Dyna-Glo; off-list-but-legitimate picks (Kenmore, Even Embers).
+- **Cordless drill:** DeWalt 2/3, Craftsman 3/3, Ryobi 2/3, Skil 1/3;
+  off-list-but-legitimate brushless picks (RIDGID, Bosch, Milwaukee, Hercules)
+  — several are on the BROAD drill list but not this constrained list, so the
+  denominator is stricter than reality.
+- **Robot vacuum (weak):** low recall and high churn. Picks were plausible
+  in-budget self-emptying robots (Roomba 105, Shark Matrix, Roborock Q7/Q10,
+  Tapo RV30, Deebot N20e) but frequently OUTSIDE the model-line-specific GOLD
+  list (which credits only Roborock Q5/Q10, eufy C10/X8, etc.), and differed
+  run to run. Never found eufy. This is the hardest constrained denominator AND
+  genuine instability.
+
+**Comparison to legacy:** direct-Terra beats the legacy pipeline's chronic
+broad 1-2/7 recall and ~0 final-set Jaccard on 3 of 4 categories, with perfect
+type/budget safety — the strongest positive architecture signal to date for the
+OpenAI-only path.
+
+**Honest caveats (do not over-read the green):**
+1. **Budget "0 violations" is partial verification, not confirmation** (Codex
+   challenge [84]-(1)): the gate only flags a product whose Terra-surfaced price
+   exceeds budget. Price coverage was low (0.07-0.58), so most picks were
+   unpriced and their budget compliance is UNVERIFIED, not confirmed. For the
+   tight `robot vacuum under $300` case this matters most.
+2. **Price panel is sparse** for premium/less-commodity categories (office
+   chair 0.07), because the T7B boundary is fail-closed on two distinct
+   response-owned hosts. Safe, but often little price to show.
+3. **Cost/latency:** ~`$0.63` and ~130-160 s per user search is a real
+   productionization constraint, still deferred.
+4. One broad + three constrained cases across four categories; not a full
+   generalization proof (sealed holdout untouched).
+
+**Verdict:** promising enough to treat direct-Terra as the leading candidate
+direction and to consider a flag-on canary or a wider eval — NOT to promote
+blind. No flag was promoted, `.env.local` is unchanged, and both direct-Terra
+flags remain default-off. Full wall stayed 1181/1181 (no code changed by the
+live run).
