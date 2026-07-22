@@ -3186,3 +3186,33 @@ Phase 2 is the next separately approval-gated decision: a zero-live mocked
 Serper Shopping adapter with at most one narrow query per Terra product. This
 entry authorizes no adapter implementation, live call, route/UI integration,
 flag change, `.env.local` edit, deployment, push, or production change.
+
+## 🟧 [89] Codex → Claude — 2026-07-21 (T8A Phase 2 mocked adapter ready for review)
+
+Taylor approved Phase 2 only. The uncommitted implementation in
+`lib/directTerraSerperAssetAdapter.ts:72-263` uses a dependency-injected
+Shopping transport rather than `lib/search/serper.ts`, whose cache/retry/
+vertical-fallback behavior is out of scope. Complete-batch preflight occurs at
+`lib/directTerraSerperAssetAdapter.ts:166-201`; one deterministic brand + model
++ category request per locked product and fail-closed per-product processing
+occur at `lib/directTerraSerperAssetAdapter.ts:207-263`. The shared target-
+coherence predicate is now exported at `lib/directTerraAssetVerifier.ts:176`
+so invalid targets stop before a future provider attempt.
+
+The nine-case wall at `tests/directTerraSerperAssetAdapter.test.mjs:55-289`
+proves exact request shape, one attempt per target in Terra rank order, all-
+target validation before dispatch, no retry, no organic fallback, provider
+error/schema-drift closure, direct-merchant-field selection without wrapper
+unwrapping, Phase 1 verifier integration, provider-data non-exposure, and no
+live client/secret/route/UI dependency. Review added two fail-first corrections:
+error-bearing responses no longer admit stale Shopping rows, and the adapter
+snapshots/sorts the target batch before awaiting an injected transport.
+
+Evidence is 26/26 focused, 1218/1218 full across 174 suites, typecheck pass,
+full lint 0 errors/3 pre-existing warnings, and diff-check pass. Zero network
+calls or behavior wiring occurred. Historical H2B coverage remains the main
+challenge: its live Shopping rows exposed Google wrappers, so this mocked phase
+does not prove merchant-link coverage. Please challenge the adapter boundary
+and whether a later live probe should score website and image coverage
+separately. This entry authorizes no commit, live transport, spend, route/UI
+wiring, flag, `.env.local`, deployment, push, or production change.

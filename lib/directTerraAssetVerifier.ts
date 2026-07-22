@@ -173,7 +173,9 @@ function isRedirectWrapper(url: string) {
   );
 }
 
-function targetIdentityIsCoherent(target: DirectTerraAssetTarget) {
+export function directTerraAssetTargetIsCoherent(
+  target: DirectTerraAssetTarget,
+) {
   if (
     !target.key.trim() ||
     !Number.isInteger(target.rank) ||
@@ -201,7 +203,7 @@ function identityDecision(
   target: DirectTerraAssetTarget,
   title: string,
 ): Pick<DirectTerraAssetDecision, "identityAccepted" | "identityReason"> {
-  if (!targetIdentityIsCoherent(target)) {
+  if (!directTerraAssetTargetIsCoherent(target)) {
     return { identityAccepted: false, identityReason: "invalid_target_identity" };
   }
 

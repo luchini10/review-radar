@@ -9568,3 +9568,52 @@ resulting hash is recorded in the regenerated handoff after landing.
 **Commit:** `836deb3` (`Add Direct-Terra product asset safety boundary`). Only
 the six Phase 1 code/test/documentation files were staged; pre-existing
 `next-env.d.ts`, live fixtures, and unrelated untracked artifacts were excluded.
+
+## 🟧 Codex QA Update — 2026-07-21 (OAI-T8A Direct-Terra mocked asset adapter, Phase 2)
+
+**Scope:** Taylor approved Phase 2 only: a zero-live, fully mocked Serper
+Shopping adapter with at most one narrow exact-identity query per frozen Terra
+product. No live transport, route/UI wiring, flag, `.env.local`, commit,
+deployment, or production change was authorized.
+
+**Architecture decision:** the adapter does not reuse `lib/search/serper.ts`.
+That legacy client owns cache, retry, vertical/organic fallback, normalization,
+and discovery behavior that this sidecar must not revive. The new
+`lib/directTerraSerperAssetAdapter.ts` instead takes a dependency-injected
+transport. With no caller supplying a live transport and no adapter import from
+the app, it cannot make a network request.
+
+**Fail-first and adversarial evidence:** the new suite first failed because the
+adapter module did not exist. After the initial implementation, review added
+two generalized fail-first controls: a provider response that includes an
+error plus stale-looking Shopping rows must be rejected, and shuffled target
+input must be snapshotted and restored to locked Terra rank order. Both failed
+before their corrections and now pass. One initial test expectation was also
+corrected: a candidate with a safe product page but wrong-model image should
+keep the safe page while rejecting only the image, matching the Phase 1
+granular contract.
+
+**Implemented boundary:** the adapter preflights all target identities and
+duplicate keys/ranks before any mock dispatch; caps a batch at five targets and
+each response at 20 Shopping rows; constructs only brand + model + category
+queries; makes exactly one sequential transport attempt per valid target; and
+never retries, caches, or reads organic rows. It maps only bounded title,
+direct merchant product URL, image, and snippet fields into the Phase 1
+verifier. Provider IDs, source/seller labels, prices, positions, raw rows, and
+queries do not enter the returned batch. A server-only callback receives the
+query and bounded counts for later request accounting.
+
+**Verification (zero live):**
+
+- `node --no-warnings --test tests/directTerraAssetVerifier.test.mjs tests/directTerraSerperAssetAdapter.test.mjs` — 26/26.
+- `npm test` — 1218/1218 across 174 suites.
+- `npm run typecheck` — pass.
+- `npm run lint` — zero errors and three pre-existing warnings.
+- `git diff --check` — pass.
+
+No production build was run because both asset modules remain unreferenced by
+the application; typecheck, full lint, and the complete Node wall cover this
+isolated seam. Historical H2B evidence still warns that live Serper Shopping
+may return only Google wrappers for merchant destinations. Phase 2 proves
+request discipline and safety under mocked provider shapes, not live website
+or image coverage. The phase remains uncommitted pending Taylor's approval.

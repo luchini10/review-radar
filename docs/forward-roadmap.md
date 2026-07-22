@@ -2728,7 +2728,7 @@ the first live output needs careful identity, source-ownership, and price-range
 inspection. Highest is unnecessary unless the provider rejects the schema or a
 range binds to the wrong model.
 
-### OAI-T8A - Direct-Terra product-asset safety contract (Phase 1 committed 2026-07-21 as `836deb3`; zero live)
+### OAI-T8A - Direct-Terra product-asset safety contract (Phase 1 committed as `836deb3`; Phase 2 complete locally 2026-07-21; zero live)
 
 **Objective:** add product-page links and product images to Terra's ranked
 products without reviving the legacy Serper discovery/ranking pipeline or
@@ -2770,13 +2770,41 @@ UI, `.env.local`, deployment, or production
 change occurred. Current behavior remains byte-identical because the module is
 not wired to any route.
 
-**Next gate:** Phase 2 requires separate approval. It may add a zero-live mocked,
-one-query-per-Terra-product Serper Shopping adapter. No live coverage probe or UI wiring
-is authorized by Phase 1.
+**Phase 2 mocked adapter:** `lib/directTerraSerperAssetAdapter.ts` adds an
+isolated, dependency-injected Shopping adapter with no live transport. It
+preflights the complete locked target batch, processes at most five products in
+Terra rank order, and sends exactly one deterministic brand + model + category
+request per product to the injected mock. The frozen transport request names
+`https://google.serper.dev/shopping` with body
+`{ q, gl: "us", hl: "en", num: 20 }`. It has no retry, cache, organic fallback,
+legacy Serper-client import, environment read, route, or UI dependency.
 
-**Recommended reasoning level:** High. The code is small, but exact model and
-product-type matching sit on the trust boundary; Highest is unnecessary unless
-review finds an architectural conflict in the shared identity primitives.
+Only bounded title, direct product-page, image, and snippet fields enter the
+Phase 1 verifier. Provider errors, missing/oversized Shopping arrays, transport
+failures, Google wrappers without a direct merchant field, and every rejected
+identity fail closed for that product without removing the Terra pick. Organic
+rows, provider IDs, seller/source labels, prices, positions, and queries never
+enter the returned asset batch. A separate server-only diagnostic hook may
+observe the exact query and bounded counts; a future caller must not serialize
+that hook to the browser.
+
+Phase 2 verification is 26/26 focused tests, 1218/1218 full tests across 174
+suites, typecheck, full lint (0 errors/3 pre-existing warnings), and
+`git diff --check`. The module remains unreferenced, made no network request,
+and changed no route, UI, flag, `.env.local`, deployment, or production
+behavior. Earlier H2B live evidence found Google wrappers instead of usable
+merchant URLs, so mocked correctness does not establish live website-link
+coverage.
+
+**Next gate:** Phase 2 remains uncommitted pending Taylor's explicit approval.
+After a scoped commit, a later separately approved zero-live phase may add a
+single-request, no-retry server transport and bounded live-probe harness. No
+live coverage request or route/UI wiring is authorized by Phase 2.
+
+**Recommended reasoning level:** Medium for the scoped Phase 2 commit because
+the adversarial review and full wall are complete. High is appropriate for the
+later real-transport preflight because provider schema, secrets, and attempt
+accounting become active at that boundary.
 
 ### OAI-2B — early uncached quality and repeatability gate
 

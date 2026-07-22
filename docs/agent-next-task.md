@@ -1,78 +1,80 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-21 by Codex after the reviewed OAI-T8A Direct-Terra
-product-assets Phase 1 was committed as `836deb3` (zero live).
+Updated: 2026-07-21 by Codex after OAI-T8A Direct-Terra product-assets Phase 2
+was implemented and adversarially reviewed locally (zero live, uncommitted).
 
 ## Current state
 
-Taylor approved an adversarial review, any necessary generalized corrections,
-and a scoped commit of Phase 1. The review is complete and the corrected phase
-is committed. No provider adapter, route/UI wiring, flag change,
-live request, deployment, or production behavior was authorized or performed.
+Taylor approved Phase 2 only: a fully mocked Serper Shopping adapter that may
+issue at most one narrow exact-identity request per locked Terra product and
+feed normalized asset candidates into the committed Phase 1 verifier. That
+work is complete and verified locally. No live transport, API request, route/UI
+wiring, flag change, `.env.local` edit, commit, deployment, or production
+behavior was authorized or performed.
 
-The Phase 1 implementation/audit commit is `836deb3` (`Add Direct-Terra
-product asset safety boundary`). A docs-only follow-up records that hash and
-the next approval boundary. Phase files are:
+Phase 1 remains committed as `836deb3` (`Add Direct-Terra product asset safety
+boundary`). Phase 2 is uncommitted and consists of:
 
-- `lib/directTerraAssetVerifier.ts`
-- `tests/directTerraAssetVerifier.test.mjs`
-- `docs/forward-roadmap.md`
-- `docs/qa-loop-results.md`
-- `docs/agent-dialogue.md`
-- this regenerated handoff
+- `lib/directTerraSerperAssetAdapter.ts` (new)
+- `tests/directTerraSerperAssetAdapter.test.mjs` (new)
+- a narrow export in `lib/directTerraAssetVerifier.ts`
+- Phase 2 updates in `docs/forward-roadmap.md`, `docs/qa-loop-results.md`,
+  `docs/agent-dialogue.md`, and this regenerated handoff
 
-`next-env.d.ts` was already modified before this phase and must not be staged.
-All historical untracked fixtures and user artifacts remain untracked and
+`next-env.d.ts` was modified before this phase and must not be staged. All
+historical untracked fixtures and user artifacts remain untracked and
 untouched.
 
-## OAI-T8A Phase 1 outcome
+## OAI-T8A Phase 2 outcome
 
-The new pure verifier locks optional website/image assets to a Terra-owned
-target key, rank, product name, brand, model, and category. It:
+The adapter deliberately does not reuse the legacy Serper client. Instead it
+takes a dependency-injected Shopping transport, so the entire phase is fully
+mocked and has no executable network path. It:
 
-- first requires the target fields themselves to be coherent;
-- requires candidate-title brand and exact model evidence;
-- rejects query/URL/snippet identity borrowing, sibling or dual-model titles,
-  accessories, and wrong product types;
-- accepts only a direct eligible product page whose title and URL match Terra's
-  identity;
-- rejects Google/search/listing wrappers, support/editorial/review/article
-  pages, affiliate/deeplink/click/track redirects, local names, and literal-IP
-  destinations;
-- reuses `normalizeTwoLayerSourceUrl`, removing only conservative tracking
-  parameters while preserving identity parameters and fragments;
-- reuses the RR-061 image validator; and
-- accepts an image only from a candidate row whose product URL already passed.
+- validates every target and all duplicate keys/ranks before dispatching;
+- snapshots targets and processes at most five in locked Terra rank order;
+- constructs only `brand + model + category` as the deterministic query;
+- passes exactly one request per target to the injected transport, naming
+  `https://google.serper.dev/shopping` with
+  `{ q, gl: "us", hl: "en", num: 20 }`;
+- has no retry, cache, organic fallback, environment read, legacy client,
+  route, or UI dependency;
+- fails only the affected product closed on transport failure while continuing
+  the other already-approved targets once each;
+- accepts only a bounded Shopping array of at most 20 rows and rejects
+  provider-error, missing-array, and oversized responses;
+- ignores organic rows and maps only title, direct product URL, image, and
+  snippet into the Phase 1 verifier; and
+- excludes provider IDs, prices, source/seller labels, positions, raw rows, and
+  query strings from its returned asset batch.
 
-Rejected or missing assets return `unavailable`. They cannot add, remove,
-replace, rerank, rename, or rewrite a Terra recommendation. The result exposes
-no provider identifier and the module imports no provider client.
+A separate server-only diagnostic callback can receive the exact query plus
+bounded counts and status for future accounting. It must never be serialized
+to the browser.
 
 ## Fail-first and adversarial findings
 
-Phase implementation and review found four real generalized gaps before commit:
+The new suite initially failed because the adapter module did not exist. The
+adversarial pass then added two generalized fail-first checks:
 
-1. `DXV12P-QTA` matched target `DXV12P-QT` because a short suffix was dropped.
-2. A duplicate URL normalizer removed `ref` and fragments despite the existing
-   contract treating them as potentially identity-bearing.
-3. Literal-IP/local and affiliate/redirect-wrapper destinations were not
-   rejected directly at this seam.
-4. Incoherent target fields could bind a safe candidate to the wrong displayed
-   Terra product.
+1. A response carrying a provider error plus stale-looking Shopping rows was
+   initially accepted; it now fails closed.
+2. Shuffled input targets were initially processed in caller order; the adapter
+   now snapshots and sorts by immutable Terra rank before awaiting transport.
 
-All four now have regression coverage. Historical controls also cover RR-061,
-RR-078, RR-090, and RR-092-class failures, name-only models, opaque safe
-thumbnails, accessories, listings, and target/query echo.
+One test expectation was corrected without changing code: a row with a safe
+product page but wrong-model image correctly preserves the safe page and
+rejects only the image under the Phase 1 field-granular contract.
 
 ## Verification
 
-- Focused verifier: 17/17 pass.
+- Focused Phase 1 + Phase 2 wall: 26/26 pass.
+- Complete test wall: 1218/1218 across 174 suites.
 - Typecheck: pass.
-- Complete test wall: 1209/1209 across 173 suites.
 - Full lint: zero errors and three pre-existing warnings.
 - `git diff --check`: pass.
-- Production build: not run; this phase adds an unreferenced pure module and
-  tests only, so typecheck, lint, and the full Node wall cover the changed seam.
+- Production build: not run because both asset modules remain unreferenced by
+  the app; typecheck, full lint, and the complete Node wall cover the seam.
 
 ## Flag state
 
@@ -88,58 +90,63 @@ Current local `.env.local`, classified without exposing secrets:
 - direct-Terra client flag: on
 - constraint allocation: on
 
-This phase did not modify `.env.local`. The asset verifier is not wired and is
-inactive regardless of the local direct-Terra flag.
+This phase did not modify `.env.local`. Both asset modules are unreferenced and
+inactive regardless of the local direct-Terra flags.
 
-## Prior live evidence still in force
+## Evidence and limitation still in force
 
-OAI-T7C ran 12 Terra/high calls across four categories. Direct-Terra had zero
-wrong-type and zero confirmed over-budget results and beat legacy recall and
-stability on office chair, gas grill, and cordless drill. Robot vacuum remained
-weak (1.33/4 recall, 0.17 covered-leader Jaccard), and price coverage was sparse
-(0.07-0.58). An unpriced constrained pick is budget-unverified, not confirmed
-compliant.
+Historical H2B live evidence found zero usable merchant URLs across four
+Serper Shopping products because exposed destinations were Google wrappers.
+Phase 2 proves deterministic request discipline and safety for mocked provider
+shapes; it does not prove that live Serper can supply useful website links or
+images. Do not wire this path into the app until a separately approved bounded
+probe measures website coverage and image coverage independently.
 
-The saved robot-vac reports still need zero-live classification of strict
-benchmark-denominator misses versus real product-set churn before another
-robot-vac live window. OAI-T8A does not supersede that debt.
+The T7C direct-Terra evaluation also remains in force: three categories beat
+legacy quality, robot-vac recall/stability remained weak, and missing safe
+prices are budget-unverified rather than compliant.
 
 ## Next decision
 
-Nothing beyond the completed commit is automatically approved. The strongest
-next step is Phase 2: a separately approved zero-live,
-fully mocked Serper Shopping adapter that issues at most one narrow exact-
-identity query per Terra product and feeds provider rows into this verifier.
-Phase 2 must not call Serper live or wire the route/UI.
+Nothing further is automatically approved. The smallest next step is Taylor's
+explicit approval for a scoped commit of the reviewed Phase 2 code, tests, and
+current-state documents. It would make no behavior change.
 
-**Recommended reasoning level:** High. The adapter is bounded, but query
-construction, one-call enforcement, provider-schema normalization, and
-server-only diagnostics remain trust-sensitive. Highest is unnecessary unless
-the adapter cannot reuse the existing Serper client without reviving legacy
-fallback behavior.
+After that commit, a separately approved zero-live Phase 3 may add a
+single-request, no-retry server transport and a bounded live-probe harness.
+That preflight should freeze separate website/image coverage metrics before
+any spend. A live request, route/UI wiring, or flag promotion remains a later
+separate decision.
+
+**Recommended reasoning level:** Medium for the scoped commit because the
+trust-sensitive review and full wall are complete. Use High for the later
+real-transport preflight because secrets, provider schema, and attempt
+accounting become active at that boundary.
 
 ## Outstanding review debts
 
-- Claude may still independently challenge dialogue entry [87], but Codex's
-  approved adversarial review is complete and no known Phase 1 defect remains.
-- Zero-live T7C robot-vac denominator-versus-churn diagnosis before more spend.
-- Budget-constrained evaluation must classify missing safe price as
-  budget-unverified rather than silently non-violating.
+- Dialogue entry [89] asks Claude to challenge the mocked adapter and the
+  separate website-versus-image coverage gate; Codex's approved adversarial
+  review is complete.
+- Zero-live classification of T7C robot-vac denominator misses versus real
+  product-set churn before more robot-vac evaluation spend.
+- Budget-constrained evaluation must classify a missing safe price as
+  budget-unverified, not silently non-violating.
 
 ## Hard boundaries
 
 - No OpenAI, Serper, SearchAPI, direct-page, or other live call without a new
   exact numeric approval pinned to a commit.
-- No push, flag promotion, `.env.local` edit, deployment, publication, or
-  production change without separate approval.
-- Do not wire Phase 1 into a route or UI during its commit.
-- Serper may later supply optional assets only. It must never discover, score,
-  add, delete, replace, rerank, rename, or rewrite Terra recommendations.
+- No commit, push, flag promotion, `.env.local` edit, deployment, publication,
+  or production change without separate approval.
+- No route or UI wiring during Phase 2 or its commit.
+- Serper may supply optional assets only. It must never discover, score, add,
+  delete, replace, rerank, rename, or rewrite Terra recommendations.
 - Missing/rejected assets stay unavailable and never alter Terra's report.
-- Never expose raw provider rows, provider IDs, query strings, keys, headers, or
-  server-side rejection diagnostics to the browser.
-- Do not delete legacy, prior two-layer, SearchAPI-history, or Serper code
-  without rollback evidence and explicit retirement approval.
+- Never expose raw provider rows, provider IDs, queries, keys, headers, or
+  server-side diagnostics to the browser.
+- Do not delete legacy, two-layer, SearchAPI-history, or Serper code without
+  rollback evidence and explicit retirement approval.
 
 ## Efficient retrieval map
 
@@ -147,10 +154,9 @@ fallback behavior.
 |---|---|
 | Current phase and boundaries | this file |
 | Phase contract | `docs/forward-roadmap.md` OAI-T8A |
-| Verification record | latest `docs/qa-loop-results.md` entry |
-| Review closure | `docs/agent-dialogue.md` entry [87] |
-| Verifier | `lib/directTerraAssetVerifier.ts` |
-| Regression wall | `tests/directTerraAssetVerifier.test.mjs` |
-| Shared URL contract | `lib/twoLayerSourceUrl.ts` |
-| Shared image safety | `lib/productImageResolver.ts` |
-| Shared page safety | `lib/productPageUrl.ts`, `lib/productEligibility.ts` |
+| Phase 2 verification | latest `docs/qa-loop-results.md` entry |
+| Peer-review request | `docs/agent-dialogue.md` entry [89] |
+| Mocked adapter | `lib/directTerraSerperAssetAdapter.ts` |
+| Adapter wall | `tests/directTerraSerperAssetAdapter.test.mjs` |
+| Phase 1 verifier | `lib/directTerraAssetVerifier.ts` |
+| Shared image/page safety | `lib/productImageResolver.ts`, `lib/productPageUrl.ts` |
