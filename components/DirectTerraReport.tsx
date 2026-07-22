@@ -1,4 +1,11 @@
-import { ArrowDown, ExternalLink, ShieldAlert } from "lucide-react";
+import {
+  ArrowDown,
+  CheckCircle2,
+  ExternalLink,
+  Scale,
+  ShieldAlert,
+  Sparkles,
+} from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -42,9 +49,35 @@ export function DirectTerraReport({
   );
 
   return (
-    <div className="space-y-5">
+    <div className="grid gap-6">
+      <section className="relative overflow-hidden rounded-[2rem] bg-ink px-6 py-8 text-white shadow-[0_26px_70px_rgba(12,27,22,0.2)] sm:px-9 sm:py-10">
+        <div aria-hidden="true" className="rr-radar absolute -right-28 -top-28 h-96 w-96 rounded-full opacity-60" />
+        <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <div className="max-w-3xl">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-signal">Your decision brief</p>
+            <h2 className="mt-3 text-balance font-display text-4xl font-semibold leading-[1.02] tracking-[-0.04em] sm:text-5xl">Ranked research, with the uncertainty left in.</h2>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-white/58 sm:text-base">Start with the shortlist, use the price ranges as orientation, then open the full report for reasoning and sources.</p>
+          </div>
+          <div className="grid gap-2 text-xs text-white/68 sm:grid-cols-3 lg:grid-cols-1">
+            {[
+              [Sparkles, "Terra-ranked"],
+              [CheckCircle2, "Response-owned citations"],
+              [Scale, "Estimates, never checkout claims"],
+            ].map(([Icon, label]) => {
+              const SignalIcon = Icon as typeof Sparkles;
+              return (
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-2" key={label as string}>
+                  <SignalIcon aria-hidden="true" className="h-3.5 w-3.5 text-signal" />
+                  {label as string}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       <div
-        className="rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 text-amber-950 shadow-sm"
+        className="rounded-2xl border border-amber-300/70 bg-[#fff8df] px-5 py-4 text-amber-950 shadow-none"
         role="note"
       >
         <div className="flex items-start gap-3">
@@ -64,7 +97,7 @@ export function DirectTerraReport({
 
       {disabledCitationCount > 0 ? (
         <div
-          className="rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-slate-800"
+          className="rounded-2xl border border-ink/10 bg-mist/65 px-5 py-4 text-ink/75"
           role="note"
         >
           <p className="text-sm font-semibold">Some source links are unavailable</p>
@@ -81,9 +114,9 @@ export function DirectTerraReport({
       {picks.length > 0 ? (
         <section
           aria-label="Your picks at a glance"
-          className="rounded-2xl border border-slate-200/80 bg-white px-5 py-5 shadow-sm"
+          className="rounded-[1.75rem] border border-ink/10 bg-paper px-5 py-6 shadow-[0_18px_50px_rgba(12,27,22,0.07)] sm:px-7"
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-forest">
             Your picks at a glance
           </p>
           <ol className="mt-3 grid gap-2">
@@ -92,17 +125,17 @@ export function DirectTerraReport({
               return (
                 <li key={pick.rank}>
                   <a
-                    className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 transition-colors hover:border-blue-300 hover:bg-blue-50/60"
+                    className="group flex items-center gap-3 rounded-2xl border border-ink/10 bg-white px-3 py-3 transition-all hover:-translate-y-0.5 hover:border-forest/25 hover:shadow-md"
                     href={`#${pick.anchorId}`}
                   >
-                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-slate-950 text-xs font-semibold text-white">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-ink text-xs font-semibold text-signal">
                       {pick.rank}
                     </span>
-                    <span className="block min-w-0 flex-1 truncate text-sm font-semibold text-slate-950">
+                    <span className="block min-w-0 flex-1 truncate text-sm font-semibold text-ink">
                       {pick.name}
                     </span>
                     {estimate ? (
-                      <span className="shrink-0 text-sm font-semibold text-blue-800">
+                      <span className="shrink-0 text-sm font-semibold text-forest">
                         {USD.format(estimate.low)}
                         {estimate.high === estimate.low
                           ? ""
@@ -129,9 +162,9 @@ export function DirectTerraReport({
         </section>
       ) : null}
 
-      <section className="rounded-2xl border border-blue-200 bg-blue-50/70 px-5 py-5 text-slate-900 shadow-sm">
+      <section className="rounded-[1.75rem] border border-forest/14 bg-[#eaf1e8] px-5 py-6 text-ink shadow-none sm:px-7">
         <div>
-          <p className="text-sm font-semibold text-blue-950">
+          <p className="text-sm font-semibold text-forest">
             Estimated market prices
           </p>
           <p className="mt-1 text-sm leading-6 text-slate-700">
@@ -145,13 +178,13 @@ export function DirectTerraReport({
           <ol className="mt-4 grid gap-3 sm:grid-cols-2">
             {result.priceEstimates.map((estimate) => (
               <li
-                className="rounded-xl border border-blue-100 bg-white px-4 py-3"
+                className="rounded-2xl border border-forest/10 bg-paper px-4 py-4"
                 key={estimate.rank}
               >
                 <p className="text-sm font-semibold text-slate-950">
                   #{estimate.rank} {estimate.brand} {estimate.model}
                 </p>
-                <p className="mt-1 text-base font-semibold text-blue-800">
+                <p className="mt-2 font-display text-xl font-semibold text-forest">
                   {USD.format(estimate.low)}
                   {estimate.high === estimate.low
                     ? ""
@@ -182,9 +215,9 @@ export function DirectTerraReport({
         ) : null}
       </section>
 
-      <article className="rounded-3xl border border-slate-200/80 bg-white px-5 py-7 shadow-sm sm:px-9 sm:py-9">
-        <div className="mb-7 border-b border-slate-200 pb-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">
+      <article className="rounded-[2rem] border border-ink/10 bg-paper px-5 py-8 shadow-[0_22px_65px_rgba(12,27,22,0.08)] sm:px-10 sm:py-11">
+        <div className="mb-8 border-b border-ink/10 pb-6">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-forest">
             Terra research report
           </p>
           <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -193,7 +226,7 @@ export function DirectTerraReport({
           </p>
         </div>
 
-        <div className="max-w-none text-[15px] leading-7 text-slate-700">
+        <div className="max-w-none text-[15px] leading-7 text-ink/72">
           <ReactMarkdown
             disallowedElements={["img"]}
             remarkPlugins={[remarkGfm]}
@@ -203,7 +236,7 @@ export function DirectTerraReport({
               a: ({ children, href }) =>
                 isDirectTerraCitationAllowed(result.citationUrls, href) ? (
                   <a
-                    className="inline-flex items-center gap-1 font-medium text-blue-700 underline decoration-blue-300 underline-offset-2 hover:text-blue-900"
+                    className="inline-flex items-center gap-1 font-semibold text-forest underline decoration-forest/30 underline-offset-3 hover:text-ink"
                     href={href}
                     rel="noreferrer noopener"
                     target="_blank"
@@ -225,25 +258,25 @@ export function DirectTerraReport({
                 </blockquote>
               ),
               h1: ({ children }) => (
-                <h1 className="mb-5 mt-1 font-display text-3xl font-semibold tracking-tight text-slate-950">
+                <h2 className="mb-5 mt-1 font-display text-4xl font-semibold tracking-[-0.04em] text-ink">
                   {children}
-                </h1>
+                </h2>
               ),
               h2: ({ children }) => {
                 const id = headingSlug(reactChildrenToText(children));
                 return (
-                  <h2
-                    className="mb-3 mt-9 scroll-mt-24 border-t border-slate-200 pt-7 font-display text-2xl font-semibold tracking-tight text-slate-950 first:mt-0 first:border-0 first:pt-0"
+                  <h3
+                    className="mb-3 mt-10 scroll-mt-24 border-t border-ink/10 pt-8 font-display text-2xl font-semibold tracking-[-0.03em] text-ink first:mt-0 first:border-0 first:pt-0 sm:text-3xl"
                     id={id || undefined}
                   >
                     {children}
-                  </h2>
+                  </h3>
                 );
               },
               h3: ({ children }) => (
-                <h3 className="mb-2 mt-6 text-lg font-semibold text-slate-950">
+                <h4 className="mb-2 mt-6 text-lg font-semibold text-slate-950">
                   {children}
-                </h3>
+                </h4>
               ),
               li: ({ children }) => <li className="my-1 pl-1">{children}</li>,
               ol: ({ children }) => (

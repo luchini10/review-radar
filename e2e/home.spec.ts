@@ -22,7 +22,9 @@ async function mockRecommendationsApi(page: Page, body: unknown, status = 200) {
 
 async function submitSearch(page: Page, category = "black microwave") {
   await page.goto("/");
-  await page.getByLabel("Product category").fill(category);
+  const categoryInput = page.getByLabel("Product category");
+  await categoryInput.fill(category);
+  await expect(categoryInput).toHaveValue(category);
   await page.getByRole("button", { name: "Find Recommendations" }).click();
 }
 
@@ -41,6 +43,18 @@ test("home page loads ReviewRadar without calling research APIs", async ({
   await expect(
     page.getByRole("button", { name: "Find Recommendations" }),
   ).toBeVisible();
+});
+
+test("offers a working keyboard skip link", async ({ page }) => {
+  await failIfRecommendationsApiIsCalled(page);
+  await page.goto("/");
+
+  await page.keyboard.press("Tab");
+  const skipLink = page.getByRole("link", { name: "Skip to content" });
+  await expect(skipLink).toBeFocused();
+  await page.keyboard.press("Enter");
+
+  await expect(page.locator("#main")).toBeFocused();
 });
 
 test("shows validation near the form for an empty product category", async ({
@@ -113,6 +127,14 @@ test("sends a trimmed request with important details and selected Smart Features
   await page.getByRole("button", { name: "Find Recommendations" }).click();
 
   await expect(page.getByText(/Showing 1 exact match/)).toBeVisible();
+  await expect(page.getByRole("status")).toHaveText("Research results ready.");
+  await expect(page.getByRole("link", { name: "How it works" })).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "The decision brief" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "Start new research" }),
+  ).toBeVisible();
   expect(recommendationRequestBody).toMatchObject({
     budget: "under $1,500",
     priorities: "for a narrow apartment kitchen",
@@ -143,6 +165,7 @@ test("shows loading skeletons and allows canceling a search", async ({ page }) =
   await page.getByRole("button", { name: "Find Recommendations" }).click();
 
   await expect(page.getByRole("button", { name: "Preparing search..." })).toBeVisible();
+  await expect(page.getByRole("status")).toHaveText("Research in progress.");
   await expect(page.getByTestId("results-loading-skeletons")).toBeVisible();
 
   await page.getByRole("button", { name: "Cancel search" }).click();
@@ -162,6 +185,15 @@ for (const viewport of [
     const requests: Array<{ method: string; url: string; token: string | null }> = [];
 
     await page.route("**/api/recommendations**", async (route) => {
+      const requestUrl = new URL(route.request().url());
+      if (requestUrl.pathname === "/api/recommendations/progress") {
+        await route.fulfill({
+          contentType: "application/json",
+          status: 200,
+          body: JSON.stringify({ events: [], status: "running" }),
+        });
+        return;
+      }
       const method = route.request().method();
       requests.push({
         method,
@@ -225,6 +257,15 @@ test("cancels a known two-layer job with one DELETE", async ({ page }) => {
   const methods: string[] = [];
 
   await page.route("**/api/recommendations**", async (route) => {
+    const requestUrl = new URL(route.request().url());
+    if (requestUrl.pathname === "/api/recommendations/progress") {
+      await route.fulfill({
+        contentType: "application/json",
+        status: 200,
+        body: JSON.stringify({ events: [], status: "running" }),
+      });
+      return;
+    }
     const method = route.request().method();
     methods.push(method);
     if (method === "DELETE") {

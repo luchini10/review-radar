@@ -180,7 +180,7 @@ export default function SmartFeatures({
         type="button"
         onClick={generateFeatures}
         disabled={!canGenerate || isLoading}
-        className="min-h-10 gap-2 rounded-xl border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 shadow-xs hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="min-h-10 gap-2 rounded-full border-forest/18 bg-[#eef3e5] px-4 text-sm font-semibold text-forest shadow-none hover:border-forest/30 hover:bg-signal/35 disabled:cursor-not-allowed disabled:opacity-45"
         variant="outline"
       >
         {isLoading ? (
@@ -202,7 +202,7 @@ export default function SmartFeatures({
               Required filters. These narrow Exact Matches.
             </p>
             <Button
-              className="h-auto px-0 py-0 text-xs font-semibold text-blue-700 hover:bg-transparent hover:text-blue-900"
+              className="h-auto px-0 py-0 text-xs font-semibold text-forest hover:bg-transparent hover:text-ink"
               onClick={() => onChange([])}
               type="button"
               variant="ghost"
@@ -222,7 +222,7 @@ export default function SmartFeatures({
                   key={selectedSmartFeatureKey(feature)}
                   type="button"
                   onClick={() => removeFeature(feature)}
-                  className="min-h-8 max-w-[260px] shrink-0 gap-1 rounded-full bg-slate-900 px-3 text-xs font-semibold text-white shadow-xs hover:bg-slate-700"
+                  className="min-h-8 max-w-[260px] shrink-0 gap-1 rounded-full bg-forest px-3 text-xs font-semibold text-white shadow-none hover:bg-ink"
                   title={`Remove required filter ${label}`}
                 >
                   <span className="truncate">{label}</span>
@@ -235,12 +235,12 @@ export default function SmartFeatures({
       ) : null}
 
       {isOpen ? (
-        <Card className="absolute left-0 top-12 z-50 max-h-[45vh] w-[min(540px,calc(100vw-2rem))] overflow-hidden border-slate-200 bg-white py-0 shadow-xl shadow-blue-950/15">
+        <Card className="absolute left-0 top-12 z-50 max-h-[52vh] w-[min(560px,calc(100vw-2rem))] overflow-hidden rounded-3xl border-ink/10 bg-paper py-0 shadow-[0_28px_80px_rgba(12,27,22,0.2)]">
           <CardContent className="max-h-[45vh] overflow-y-auto p-4">
             <div className="mb-3 flex items-start justify-between gap-3">
             <div>
               <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-950">
-                <Sparkles aria-hidden="true" className="h-4 w-4 text-blue-600" />
+                <Sparkles aria-hidden="true" className="h-4 w-4 text-forest" />
                 Choose features that matter
               </h3>
               <p className="mt-1 text-xs text-slate-500">

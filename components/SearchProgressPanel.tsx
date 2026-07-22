@@ -93,17 +93,18 @@ export function SearchProgressPanel({
 
   return (
     <div
-      className="mt-6 rounded-xl border border-slate-200/80 bg-white p-4"
+      className="relative mt-6 overflow-hidden rounded-[2rem] bg-ink p-5 text-white shadow-[0_22px_60px_rgba(12,27,22,0.17)] sm:p-7"
       data-testid="search-progress-panel"
     >
+      <div aria-hidden="true" className="rr-radar absolute -right-28 -top-32 h-80 w-80 rounded-full opacity-50" />
       <div className="flex items-start gap-3">
         <LoaderCircle
           aria-hidden="true"
-          className="mt-0.5 h-5 w-5 shrink-0 animate-spin text-blue-700"
+          className="relative mt-0.5 h-5 w-5 shrink-0 animate-spin text-signal"
         />
-        <div className="text-sm leading-6 text-slate-600">
-          <p className="font-semibold text-slate-950">
-            Researching current public sources. This can take a little while.
+        <div className="relative text-sm leading-6 text-white/58">
+          <p className="font-semibold text-white">
+            The radar is working through your brief.
           </p>
           <p className="mt-0.5">
             Checking reviews, prices, specs, and owner feedback — usually one
@@ -115,7 +116,7 @@ export function SearchProgressPanel({
       </div>
 
       {events.length > 0 ? (
-        <ol className="mt-4 grid gap-2 border-t border-slate-100 pt-4">
+        <ol className="relative mt-5 grid gap-2 border-t border-white/10 pt-5">
           {SEARCH_PROGRESS_MILESTONES.map((milestone) => {
             const isCurrent = milestone.key === currentKey;
             const isDone = !isCurrent && reached.has(milestone.key);
@@ -130,27 +131,27 @@ export function SearchProgressPanel({
                   className="grid h-6 w-6 shrink-0 place-items-center"
                 >
                   {isCurrent ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin text-blue-700" />
+                    <LoaderCircle className="h-4 w-4 animate-spin text-signal" />
                   ) : isDone ? (
-                    <Check className="h-4 w-4 text-blue-700" />
+                    <Check className="h-4 w-4 text-signal" />
                   ) : (
-                    <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
                   )}
                 </span>
                 <span className="min-w-0">
                   <span
                     className={
                       isCurrent
-                        ? "font-semibold text-slate-950"
+                        ? "font-semibold text-white"
                         : isDone
-                          ? "text-slate-700"
-                          : "text-slate-400"
+                          ? "text-white/65"
+                          : "text-white/52"
                     }
                   >
                     {milestone.label}
                   </span>
                   {isCurrent ? (
-                    <span className="block text-xs leading-5 text-slate-500">
+                    <span className="block text-xs leading-5 text-white/68">
                       {milestone.detail}
                     </span>
                   ) : null}

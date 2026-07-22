@@ -39,9 +39,9 @@ function ProductImage({
 
   if (!image.src || failed) {
     return (
-      <div className="flex aspect-[4/3] items-center justify-center p-5 text-center text-sm leading-6 text-slate-400">
+      <div className="flex aspect-[4/3] items-center justify-center bg-mist/50 p-5 text-center text-sm leading-6 text-ink/65">
         <span className="grid justify-items-center gap-2">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-slate-100">
+          <span className="grid h-10 w-10 place-items-center rounded-2xl bg-paper shadow-sm ring-1 ring-ink/10">
             <ImageOff aria-hidden="true" className="h-5 w-5 text-slate-400" />
           </span>
           Product image unavailable
@@ -114,8 +114,8 @@ function Section({
   title: string;
 }) {
   return (
-    <section className="border-t border-slate-100 pt-5">
-      <h3 className="mb-3 text-sm font-semibold text-slate-950">{title}</h3>
+    <section className="border-t border-ink/10 pt-6">
+      <h3 className="mb-3 text-sm font-semibold text-ink">{title}</h3>
       {children}
     </section>
   );
@@ -147,7 +147,7 @@ function QuickDecisionSignals({
       {signals.map((signal) => (
         <div
           className={[
-            "rounded-xl border p-3",
+            "rounded-2xl border p-3.5",
             signalToneClass(signal.tone),
           ].join(" ")}
           key={`${signal.label}-${signal.value}`}
@@ -305,7 +305,7 @@ function KeySpecsGrid({
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {allSpecs.map((spec) => (
           <div
-            className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3"
+            className="rounded-2xl border border-ink/10 bg-mist/45 p-3.5"
             key={`${spec.label}-${spec.value}`}
           >
             <p className="text-xs font-semibold text-slate-500">
@@ -331,7 +331,7 @@ function EvidenceQualityBlock({
   return (
     <Section title="Evidence quality">
       <div className="grid gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-4">
+        <div className="rounded-2xl border border-ink/10 bg-mist/45 p-4">
           <div className="flex flex-wrap items-center gap-2">
             <Badge
               className="rounded-md border-slate-200 bg-white text-slate-800"
@@ -370,7 +370,7 @@ function CitationList({
 }) {
   if (citations.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-3 text-sm leading-6 text-slate-500">
+      <p className="rounded-2xl border border-dashed border-ink/15 bg-mist/40 p-3 text-sm leading-6 text-ink/65">
         No citation links are available for this item.
       </p>
     );
@@ -380,7 +380,7 @@ function CitationList({
     <ul className="grid gap-2">
       {citations.map((citation) => (
         <li key={`${citation.title}-${citation.url}`}>
-          <div className="rounded-xl border border-slate-200/80 bg-white p-3 transition-colors hover:border-slate-300">
+          <div className="rounded-2xl border border-ink/10 bg-white p-3.5 transition-all hover:-translate-y-0.5 hover:border-forest/25 hover:shadow-sm">
             <div className="flex flex-wrap items-center gap-2">
               <Badge
                 className="rounded-md border-slate-200 bg-slate-50 text-slate-600"
@@ -456,8 +456,8 @@ function ProductCardHeader({
     card.badge.rank === 1 ? Trophy : BadgeCheck;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[250px_minmax(0,1fr)]">
-      <div className="self-start overflow-hidden rounded-xl border border-slate-200/80 bg-white">
+    <div className="grid gap-7 lg:grid-cols-[270px_minmax(0,1fr)]">
+      <div className="self-start overflow-hidden rounded-2xl border border-ink/10 bg-mist/35">
         <ProductImage image={card.image} />
       </div>
       <div className="min-w-0">
@@ -465,8 +465,8 @@ function ProductCardHeader({
           <span
             className={
               card.badge.tone === "blue"
-                ? "grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-700"
-                : "grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-600"
+                ? "grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-signal text-ink"
+                : "grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-mist text-ink/60"
             }
           >
             <RecommendationIcon aria-hidden="true" className="h-4.5 w-4.5" />
@@ -474,8 +474,8 @@ function ProductCardHeader({
           <Badge
             className={
               card.badge.tone === "blue"
-                ? "h-auto rounded-md border-blue-100 bg-blue-50 px-2.5 py-1 text-sm font-semibold text-blue-700"
-                : "h-auto rounded-md border-slate-200 bg-slate-100 px-2.5 py-1 text-sm font-semibold text-slate-700"
+                ? "h-auto rounded-full border-forest/15 bg-[#edf3e7] px-2.5 py-1 text-sm font-semibold text-forest"
+                : "h-auto rounded-full border-ink/10 bg-mist px-2.5 py-1 text-sm font-semibold text-ink/65"
             }
             variant="outline"
           >
@@ -485,7 +485,7 @@ function ProductCardHeader({
             {card.badge.description}
           </span>
         </div>
-        <h2 className="mt-4 break-words font-display text-2xl font-semibold leading-snug text-slate-950 sm:text-[1.65rem]">
+        <h2 className="mt-4 break-words font-display text-3xl font-semibold leading-tight tracking-[-0.035em] text-ink sm:text-4xl">
           {card.title}
         </h2>
         <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
@@ -506,13 +506,13 @@ function ProductCardHeader({
               <p className="text-xs font-semibold text-slate-500">
                 Best offer found
               </p>
-              <p className="mt-1 font-display text-xl font-semibold leading-7 text-slate-950">
+              <p className="mt-1 font-display text-2xl font-semibold leading-7 text-ink">
                 {card.offer.displayText}
               </p>
             </div>
             {card.offer.url ? (
               <a
-                className="inline-flex min-h-11 w-fit items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 shadow-xs transition-colors hover:border-slate-400 hover:bg-slate-50"
+                className="inline-flex min-h-11 w-fit items-center gap-2 rounded-full bg-ink px-4 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-forest"
                 href={card.offer.url}
                 rel="noreferrer noopener"
                 target="_blank"
@@ -541,8 +541,8 @@ export function ProductCard({
     .slice(0, 4);
 
   return (
-    <Card className="overflow-hidden rounded-2xl border-slate-200/80 bg-white py-0 shadow-sm">
-      <CardContent className="grid gap-5 p-5 sm:p-6">
+    <Card className="overflow-hidden rounded-[2rem] border-ink/10 bg-paper py-0 shadow-[0_20px_60px_rgba(12,27,22,0.08)]">
+      <CardContent className="grid gap-6 p-5 sm:p-8">
         <ProductCardHeader card={card} />
         <QuickDecisionSignals signals={card.quickSignals} />
         <NearMatchNotice nearMatch={card.nearMatch} />

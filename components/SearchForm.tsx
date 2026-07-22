@@ -1,6 +1,8 @@
 import type { FormEvent } from "react";
 import {
+  ArrowRight,
   Check,
+  Clock3,
   LoaderCircle,
   Search,
   TriangleAlert,
@@ -34,7 +36,7 @@ type SearchFormProps = {
 
 function FieldHint({ children }: { children: string }) {
   return (
-    <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+    <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink/65">
       {children}
     </span>
   );
@@ -50,9 +52,9 @@ export function SearchForm({
   value,
 }: SearchFormProps) {
   const fieldClass =
-    "min-h-12 rounded-xl border-slate-200 bg-white px-4 text-base text-slate-950 shadow-xs placeholder:text-slate-400 focus-visible:border-slate-400 focus-visible:ring-4 focus-visible:ring-slate-900/5 md:text-base";
+    "min-h-14 rounded-2xl border-ink/12 bg-[#fbfcf7] px-4 text-base text-ink shadow-none transition-all placeholder:text-ink/60 hover:border-ink/20 focus-visible:border-forest/45 focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-forest/8 md:text-base";
   const labelClass =
-    "flex items-baseline justify-between gap-3 text-sm font-semibold text-slate-900";
+    "flex items-baseline justify-between gap-3 text-[13px] font-semibold text-ink";
   const parsedRequirements = extractStructuredRequirements({
     budget: value.budget || undefined,
     priorities: value.priorities || undefined,
@@ -64,16 +66,24 @@ export function SearchForm({
   const categoryError = fieldErrors?.category ?? "";
 
   return (
-    <Card className="overflow-visible rounded-2xl border-slate-200/80 bg-white py-0 shadow-xl shadow-slate-900/[0.06]">
-      <CardContent className="p-5 sm:p-6">
+    <Card className="overflow-visible rounded-[2rem] border-ink/10 bg-paper py-0 shadow-[0_24px_75px_rgba(12,27,22,0.11)]">
+      <CardContent className="p-5 sm:p-7 lg:p-8">
         <form aria-label="Product research" onSubmit={onSubmit}>
-          <div className="grid items-start gap-x-6 gap-y-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+          <div className="mb-7 flex flex-col gap-4 border-b border-ink/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-forest">Research brief</p>
+              <h2 className="mt-2 font-display text-2xl font-semibold leading-tight tracking-[-0.035em] sm:text-3xl">Tell us what a great choice looks like.</h2>
+            </div>
+            <p className="max-w-sm text-xs leading-5 text-ink/65">Specific details help ReviewRadar separate a popular product from the right product.</p>
+          </div>
+
+          <div className="grid items-start gap-x-5 gap-y-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(260px,0.65fr)]">
             <div className="grid min-w-0 content-start gap-2">
               <Label className={labelClass} htmlFor="category">
                 <span className="inline-flex items-center gap-2">
                   <Search
                     aria-hidden="true"
-                    className="h-4 w-4 text-slate-400"
+                    className="h-4 w-4 text-forest/55"
                   />
                   Product category
                 </span>
@@ -105,7 +115,7 @@ export function SearchForm({
                   {categoryError}
                 </p>
               ) : (
-                <p className="text-xs leading-5 text-slate-500" id="category-helper">
+                <p className="text-xs leading-5 text-ink/65" id="category-helper">
                   The product you want researched. Be as specific as you like.
                 </p>
               )}
@@ -135,7 +145,7 @@ export function SearchForm({
                 type="text"
                 value={value.budget}
               />
-              <p className="text-xs leading-5 text-slate-500" id="budget-helper">
+              <p className="text-xs leading-5 text-ink/65" id="budget-helper">
                 Firm limits are enforced. Over-budget upgrades are labeled
                 separately, never mixed in.
               </p>
@@ -148,7 +158,7 @@ export function SearchForm({
               </Label>
               <Textarea
                 aria-describedby="important-details-helper"
-                className={`${fieldClass} min-h-20 resize-none py-3`}
+                className={`${fieldClass} min-h-24 resize-none py-3.5`}
                 id="priorities"
                 name="priorities"
                 onChange={(event) => onChange("priorities", event.target.value)}
@@ -156,7 +166,7 @@ export function SearchForm({
                 value={value.priorities}
               />
               <p
-                className="text-xs leading-5 text-slate-500"
+                className="text-xs leading-5 text-ink/65"
                 id="important-details-helper"
               >
                 Anything else that matters: size limits, must-have features,
@@ -167,19 +177,19 @@ export function SearchForm({
           </div>
 
           {previewItems.length > 0 ? (
-            <div className="mt-5 rounded-xl border border-slate-200/80 bg-slate-50/80 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <div className="mt-6 rounded-2xl border border-forest/12 bg-[#eef3e5] px-4 py-4 sm:px-5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-forest/70">
                 What ReviewRadar will match
               </p>
               <ul className="mt-2 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
                 {previewItems.map((item) => (
                   <li
-                    className="flex items-start gap-2 text-sm leading-5 text-slate-700"
+                    className="flex items-start gap-2 text-sm leading-5 text-ink/70"
                     key={item}
                   >
                     <Check
                       aria-hidden="true"
-                      className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-600"
+                      className="mt-0.5 h-3.5 w-3.5 shrink-0 text-forest"
                     />
                     <span>{item}</span>
                   </li>
@@ -200,17 +210,18 @@ export function SearchForm({
             </Alert>
           ) : null}
 
-          <div className="mt-6 flex flex-col items-stretch gap-4 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1 sm:max-w-xs">
-              <p className="text-xs leading-5 text-slate-500">
-                Research usually takes one to three minutes. Every pick is cited,
-                and unverified details are flagged.
+          <div className="mt-7 flex flex-col items-stretch gap-5 border-t border-ink/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-2.5 sm:max-w-sm">
+              <Clock3 aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-forest/60" />
+              <p className="text-xs leading-5 text-ink/65">
+                Deep research usually takes one to three minutes. Keep this tab
+                open; we will show the work as it progresses.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               {isLoading ? (
                 <Button
-                  className="min-h-12 gap-2 rounded-xl border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 shadow-xs hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900"
+                  className="min-h-12 gap-2 rounded-full border-ink/15 bg-white px-5 text-sm font-semibold text-ink/70 shadow-none hover:border-ink/30 hover:bg-mist hover:text-ink"
                   onClick={onCancelSearch}
                   type="button"
                   variant="outline"
@@ -220,7 +231,7 @@ export function SearchForm({
                 </Button>
               ) : null}
               <Button
-                className="min-h-12 gap-2 rounded-xl bg-slate-950 px-7 text-base font-semibold text-white shadow-lg shadow-slate-950/20 transition-colors hover:bg-slate-800 disabled:cursor-wait disabled:bg-slate-300 disabled:text-slate-600 disabled:shadow-none"
+                className="group min-h-12 gap-2 rounded-full bg-ink px-7 text-base font-semibold text-white shadow-[0_12px_28px_rgba(12,27,22,0.2)] transition-all hover:-translate-y-0.5 hover:bg-forest hover:shadow-[0_16px_32px_rgba(12,27,22,0.24)] disabled:cursor-wait disabled:bg-ink/20 disabled:text-ink/45 disabled:shadow-none"
                 disabled={isLoading}
                 type="submit"
               >
@@ -230,7 +241,7 @@ export function SearchForm({
                     className="h-5 w-5 animate-spin"
                   />
                 ) : (
-                  <Search aria-hidden="true" className="h-5 w-5" />
+                  <ArrowRight aria-hidden="true" className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
                 )}
                 {isLoading ? "Preparing search..." : "Find Recommendations"}
               </Button>

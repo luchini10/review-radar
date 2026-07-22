@@ -458,7 +458,10 @@ authored transactional field is promoted to verified display data.
 - **`app/page.tsx`** — hero/marketing (hidden once results show), `SearchForm`,
   and either `ResultsSummary` or `TwoLayerResults`. Owns abort and stale-request
   guards, keeps the legacy 180-second timeout, and adopts signed two-layer job
-  expiry only after the server returns a valid pending state.
+  expiry only after the server returns a valid pending state. The current
+  presentation is an editorial decision-intelligence experience built from the
+  shared visual tokens in `app/globals.css` and the radar identity in
+  `components/BrandMark.tsx`.
 - **`components/SearchForm.tsx`** — the four inputs + live requirement preview + submit/cancel.
 - **`components/SmartFeatures.tsx`** — fetches and renders category-specific feature chips from `/api/features`.
 - **`components/ResultsSummary.tsx`** — coverage summary, dealbreaker-strength slider (display-only), exact-match list, grouped near matches, what-to-avoid, final advice. Shows skeletons while loading and an "No exact matches" alert (with most-restrictive filters) when empty.
@@ -470,6 +473,10 @@ authored transactional field is promoted to verified display data.
 - **`components/DirectTerraReport.tsx`** — safe direct-Terra Markdown renderer
   plus a separate estimated-market-price panel. It never turns an estimate into
   a seller, inventory, purchase-link, or checkout-price claim.
+- **`app/oai-t8-preview/page.tsx`** +
+  **`lib/directTerraPreviewData.ts`** — development-only visual inspection of
+  the direct-Terra report with explicitly fictional, contract-valid data. The
+  route returns not found outside development and performs no provider call.
 - **`components/VerdictCard.tsx`**, **`components/SourceList.tsx`** — final advice and source listing.
 
 ---

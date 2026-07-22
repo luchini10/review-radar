@@ -9871,3 +9871,103 @@ three pre-existing warnings. `git diff --check` passes.
 phase proves the safety behavior against controlled evidence; it does not prove
 how many live Terra products have an eligible registered product-page citation,
 does not add websites to cards, and does not alter user-visible behavior.
+
+## 🟧 Codex QA Update — 2026-07-22 (front-end product experience transformation)
+
+**Scope:** Taylor authorized a complete front-end transformation while
+preserving ReviewRadar's working behavior, data contracts, and important user
+capabilities. The work stayed zero-live and local. No OpenAI, Serper,
+SearchAPI, direct-page, or other provider request occurred. No backend pipeline,
+API response, recommendation order, trust rule, feature flag, `.env.local`,
+deployment, commit, push, or production state changed.
+
+**Product assessment:** the prior interface exposed the right capabilities but
+presented them as a conventional component-library dashboard. ReviewRadar's
+real differentiation—firm constraint handling, evidence ownership, visible
+uncertainty, and answer-first research—was not legible soon enough. The new
+direction treats the product as a decision instrument: editorial typography,
+a warm high-trust palette, a custom radar identity, clear decision language,
+and a single hierarchy across entry, progress, and results.
+
+**Implementation:** the home page now leads with the outcome and explains the
+research loop without competing with the primary form. Search, Smart Features,
+progress, legacy results, two-layer results, direct-Terra reports, product
+cards, verdicts, navigation, and footer share one responsive visual system.
+Trust-state language, citations, transactional caveats, exact/near separation,
+and all existing controls remain intact. Motion is limited to purposeful radar,
+status, and entrance feedback and is disabled under reduced-motion preference.
+
+A development-only `/oai-t8-preview` route uses explicitly fictional,
+contract-valid data to make the complete direct-Terra surface visually
+inspectable without spending a request. It returns not found outside
+development. Browser validation also exposed a stale controlled-form-state race
+on immediate submission; the handler now derives visible text fields from the
+submit event while preserving state-backed Smart Features. The existing empty-
+result Playwright case is its regression coverage.
+
+**Rendered inspection:** the in-app browser covered the home/search journey,
+two-layer preview, direct-Terra preview, and empty-submit validation at
+1440 x 1000 and 390 x 844. The primary mobile form remains reachable in the
+first viewport, all inspected pages stayed within the viewport width, links and
+controls retained visible focus behavior, and no console-visible application
+failure was observed. No search was submitted to a live route.
+
+**Verification:** the complete unit wall passes 1251/1251 across 178 suites.
+The direct-Terra preview focus passes 5/5. `npm run typecheck` and the production
+build pass. Full lint reports zero errors and the same three pre-existing
+warnings. Playwright passes 15/15 across desktop/mobile two-layer rendering,
+request shape, validation, loading, cancel, exact/near/empty results, images,
+links, citations, and safe errors. `git diff --check` passes.
+
+**Boundary and remaining review:** the transformation is local and uncommitted
+on base `12986654e404d1bbef29ca3fc76a14d6461e9585`. Controlled preview data is
+not evidence of live direct-Terra asset coverage. The app's local classified
+flag state and committed default-off state remain unchanged. An independent
+accessibility/design review is still useful before any separately approved
+commit, but there is no known failing validation wall.
+
+## 🟧 Codex QA Update - 2026-07-22 (independent front-end accessibility and trust review)
+
+**Scope:** Taylor approved the independent review identified in the front-end
+handoff. The work remained local and zero-live. No backend pipeline, API/data
+contract, recommendation identity or order, trust policy, feature flag,
+`.env.local`, provider, deployment, commit, push, or production state changed.
+
+**Adversarial findings:** the redesigned interface had six bounded front-end
+issues: several normal-text opacity combinations missed WCAG contrast; the
+global focus outline was too faint on some surfaces; the skip link's main
+target was not explicitly focusable; two marketing hash links remained visible
+after their target sections disappeared in results state; the entire result
+tree was one oversized polite live region; and direct-Terra Markdown could
+produce a second page-level heading and an incoherent preview outline.
+
+**Corrections:** active normal text and placeholders now use passing contrast
+values; focus uses a visible light/dark double indicator; the main landmark can
+receive skip-link focus; result-state navigation exposes only valid targets;
+research progress/readiness is announced through a small dedicated status; and
+the direct-Terra renderer maps its report title, product headings, and
+subheadings to `h2`, `h3`, and `h4` beneath the owning page `h1`. Terra's words,
+ranking, citations, and shortlist anchor IDs remain unchanged.
+
+**Trust review:** exact/near separation, requirement verdicts, citation
+ownership, disabled-citation language, AI-synthesis labels, purchase warnings,
+and market-price-estimate caveats remain present. No new result-state control
+or link bypasses those boundaries.
+
+**Browser evidence:** desktop/mobile inspection of `/`, `/oai-t3-preview`, and
+`/oai-t8-preview` found no horizontal overflow, broken hash target, duplicate
+ID, missing image alternative text, or unsafe new-window link. The corrected
+direct-Terra preview outline is `h1 -> h2 -> h2 -> h3 -> h4`. The form controls
+retain programmatic accessible names despite a false positive from an initial
+shallow unnamed-control scan.
+
+**Verification:** 1251/1251 unit tests across 178 suites pass. Typecheck and
+production build pass. Full lint reports zero errors and the same three
+pre-existing warnings. Playwright passes 16/16 with both direct-Terra flags
+forced off for the spawned test server, including new skip-link and focused
+status-announcement coverage. `git diff --check` passes.
+
+**Boundary:** this is not a formal third-party WCAG certification. Controlled
+preview data still does not prove live asset coverage or provider quality.
+Taylor separately approved the 19-file scoped local commit, and this record
+lands with that reviewed code. No push or production change is authorized.

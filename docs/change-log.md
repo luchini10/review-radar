@@ -9,6 +9,52 @@ Update this file after:
 - important bug fixes
 - live QA fixes worth remembering
 
+## 2026-07-22
+
+### Codex - Rebuild ReviewRadar as a premium decision-research product
+
+#### Changed
+
+- Replaced the generic dashboard presentation with an editorial decision-
+  intelligence system: a distinctive radar identity, warm neutral canvas,
+  high-contrast forest palette, display typography, disciplined spacing, and
+  reduced-motion-safe transitions.
+- Reframed the home page around ReviewRadar's actual value: preserving hard
+  requirements, cross-checking evidence, and returning a decision brief rather
+  than another chat transcript. The research form, loading state, marketing
+  story, navigation, footer, and mobile first viewport were redesigned as one
+  coherent journey.
+- Rebuilt the legacy, two-layer, and direct-Terra result surfaces around a
+  shared answer-first hierarchy while preserving every trust label, citation,
+  transactional warning, recommendation order, API shape, and backend path.
+- Added a development-only direct-Terra preview using fictional contract-valid
+  data so the full flagged result experience can be inspected without a live
+  provider request. It is unavailable outside development.
+- Made form submission read its visible text fields from the submit event,
+  closing a stale controlled-state race found by the empty-results browser
+  regression. Smart Feature selections remain state-backed.
+- Tightened end-to-end route mocks so background progress polling cannot be
+  mistaken for recommendation-job polling or cancellation requests.
+- Completed an independent accessibility and trust review: raised active text
+  contrast, strengthened focus visibility, made the skip link reliably move
+  focus, removed dead result-state navigation targets, narrowed screen-reader
+  status announcements, and normalized the direct-Terra heading hierarchy.
+  These corrections do not rewrite Terra's report, ranking, citations, or
+  product anchors.
+
+#### Verified
+
+- Browser inspection at 1440 x 1000 and 390 x 844 covered the home/search,
+  two-layer preview, direct-Terra preview, and local validation states with no
+  horizontal overflow.
+- Complete unit wall: 1251/1251 across 178 suites.
+- Playwright: 16/16 across keyboard skip-link, desktop/mobile, loading, status,
+  cancel, error, exact, near, image, citation, and empty-result paths.
+- Typecheck and production build pass. Lint reports zero errors and the same
+  three pre-existing warnings.
+- No provider request, backend/data-contract change, flag edit, `.env.local`
+  edit, deployment, push, or production change occurred.
+
 ## 2026-07-21
 
 ### Claude - Live progress + picks-at-a-glance for the direct-Terra path

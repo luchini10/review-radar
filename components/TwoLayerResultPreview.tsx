@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { BrandMark } from "@/components/BrandMark";
 import type { TwoLayerDisplaySource } from "@/lib/twoLayerApiContract";
 import type { TwoLayerProductCard } from "@/lib/twoLayerRecommendation";
 
@@ -44,21 +45,22 @@ function TrustLegend() {
   ];
 
   return (
-    <section aria-labelledby="trust-key" className="grid gap-3">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+    <section aria-labelledby="trust-key" className="grid gap-5 rounded-[2rem] bg-ink p-6 text-white shadow-[0_22px_60px_rgba(12,27,22,0.16)] sm:p-8">
+      <div className="max-w-2xl">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-signal">
           Trust key
         </p>
-        <h2 className="mt-1 font-display text-2xl font-semibold text-slate-950" id="trust-key">
+        <h2 className="mt-2 font-display text-3xl font-semibold tracking-[-0.035em] text-white" id="trust-key">
           What each label means
         </h2>
+        <p className="mt-2 text-sm leading-6 text-white/58">Trust is a property of each field—not a blanket score applied to the whole recommendation.</p>
       </div>
       <div className="grid gap-3 lg:grid-cols-3">
         {entries.map((entry) => {
           const Icon = entry.icon;
           return (
             <div
-              className={`rounded-2xl border p-4 ${entry.className}`}
+              className={`rounded-2xl border p-4 shadow-none ${entry.className}`}
               key={entry.label}
             >
               <div className="flex items-center gap-2">
@@ -113,9 +115,9 @@ function ProductImageState({ card }: { card: TwoLayerProductCard }) {
   }
 
   return (
-    <div className="grid aspect-[4/3] place-items-center bg-slate-50 p-6 text-center">
+    <div className="grid aspect-[4/3] place-items-center bg-[#edf0e9] p-6 text-center">
       <div className="grid justify-items-center gap-2">
-        <span className="grid h-11 w-11 place-items-center rounded-full bg-white shadow-sm ring-1 ring-slate-200">
+        <span className="grid h-11 w-11 place-items-center rounded-2xl bg-paper shadow-sm ring-1 ring-ink/10">
           <ImageOff aria-hidden="true" className="h-5 w-5 text-slate-400" />
         </span>
         <p className="text-sm font-semibold text-slate-600">
@@ -186,8 +188,8 @@ function CommerceState({ card }: { card: TwoLayerProductCard }) {
 
 function ResearchSynthesis({ card }: { card: TwoLayerProductCard }) {
   return (
-    <section className="grid gap-4 border-t border-slate-100 pt-5">
-      <div className="flex items-center gap-2 text-blue-800">
+    <section className="grid gap-4 border-t border-ink/10 pt-6">
+      <div className="flex items-center gap-2 text-forest">
         <Sparkles aria-hidden="true" className="h-4 w-4" />
         <h3 className="text-sm font-semibold">AI research synthesis</h3>
       </div>
@@ -195,15 +197,15 @@ function ResearchSynthesis({ card }: { card: TwoLayerProductCard }) {
         {card.assessment.why.value}
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">
+        <div className="rounded-2xl border border-forest/12 bg-[#edf3e7] p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-forest">
             Best for
           </p>
           <p className="mt-2 text-sm leading-6 text-slate-700">
             {card.assessment.bestFor.value}
           </p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+        <div className="rounded-2xl border border-ink/10 bg-mist/55 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
             Main tradeoff
           </p>
@@ -218,7 +220,7 @@ function ResearchSynthesis({ card }: { card: TwoLayerProductCard }) {
 
 function ProsAndCons({ card }: { card: TwoLayerProductCard }) {
   return (
-    <section className="grid gap-4 border-t border-slate-100 pt-5">
+    <section className="grid gap-4 border-t border-ink/10 pt-6">
       <h3 className="text-sm font-semibold text-slate-950">Pros and cons</h3>
       <div className="grid gap-5 sm:grid-cols-2">
         <ul className="grid content-start gap-2">
@@ -250,7 +252,7 @@ function RequirementComparison({
   sources: Map<string, TwoLayerDisplaySource>;
 }) {
   return (
-    <section className="grid gap-3 border-t border-slate-100 pt-5">
+    <section className="grid gap-3 border-t border-ink/10 pt-6">
       <div className="flex flex-wrap items-center gap-2">
         <Sparkles aria-hidden="true" className="h-4 w-4 text-blue-700" />
         <h3 className="text-sm font-semibold text-slate-950">
@@ -270,7 +272,7 @@ function RequirementComparison({
       <div className="grid gap-3">
         {card.requirementChecks.map((check) => (
           <div
-            className="rounded-xl border border-slate-200 bg-slate-50/70 p-4"
+            className="rounded-2xl border border-ink/10 bg-mist/45 p-4"
             key={`${check.requirement}-${check.status}`}
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -341,7 +343,7 @@ function SourceReportedFacts({
   if (card.claims.length === 0) return null;
 
   return (
-    <section className="grid gap-3 border-t border-slate-100 pt-5">
+    <section className="grid gap-3 border-t border-ink/10 pt-6">
       <div className="flex flex-wrap items-center gap-2">
         <BookOpenCheck aria-hidden="true" className="h-4 w-4 text-violet-700" />
         <h3 className="text-sm font-semibold text-slate-950">Source-reported facts</h3>
@@ -403,12 +405,12 @@ function PreviewCard({
   sources: Map<string, TwoLayerDisplaySource>;
 }) {
   return (
-    <article className="min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+    <article className="min-w-0 overflow-hidden rounded-[2rem] border border-ink/10 bg-paper shadow-[0_20px_60px_rgba(12,27,22,0.09)]">
       <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] lg:grid-cols-[240px_minmax(0,1fr)]">
-        <div className="min-w-0 border-b border-slate-200 lg:border-b-0 lg:border-r">
+        <div className="min-w-0 border-b border-ink/10 bg-mist/35 lg:border-b-0 lg:border-r">
           <ProductImageState card={card} />
         </div>
-        <div className="grid min-w-0 gap-5 p-5 sm:p-7">
+        <div className="grid min-w-0 gap-6 p-5 sm:p-8">
           <header>
             <div className="flex flex-wrap items-center gap-2">
               <Badge
@@ -424,7 +426,7 @@ function PreviewCard({
               </Badge>
               <IdentityStatus card={card} />
             </div>
-            <h2 className="mt-4 font-display text-2xl font-semibold leading-tight text-slate-950 sm:text-3xl">
+            <h2 className="mt-4 font-display text-3xl font-semibold leading-tight tracking-[-0.035em] text-ink sm:text-4xl">
               {card.identity.product_name}
             </h2>
             <p className="mt-2 text-sm text-slate-500">
@@ -451,15 +453,15 @@ export function TwoLayerResults({
   const sourcesById = new Map(sources.map((source) => [source.id, source]));
 
   return (
-    <div className="grid min-w-0 gap-8">
+    <div className="grid min-w-0 gap-10">
       <TrustLegend />
-      <section aria-labelledby="two-layer-results" className="grid min-w-0 gap-5">
+      <section aria-labelledby="two-layer-results" className="grid min-w-0 gap-6">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-forest">
             Research results
           </p>
           <h2
-            className="mt-1 font-display text-3xl font-semibold text-slate-950"
+            className="mt-2 max-w-3xl font-display text-4xl font-semibold leading-tight tracking-[-0.04em] text-ink sm:text-5xl"
             id="two-layer-results"
           >
             Ranked recommendations with visible trust states
@@ -478,29 +480,37 @@ export function TwoLayerResultPreview({
   sources,
 }: TwoLayerResultsProps) {
   return (
-    <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-        <header className="grid gap-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <main className="min-h-screen bg-canvas text-ink">
+      <div className="mx-auto grid w-full max-w-[1240px] gap-10 px-5 py-8 sm:px-7 lg:py-12">
+        <div className="flex items-center gap-3">
+          <BrandMark className="h-10 w-10" />
+          <div>
+            <p className="text-sm font-semibold tracking-[-0.02em]">ReviewRadar</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-ink/65">Decision intelligence</p>
+          </div>
+        </div>
+        <header className="relative grid gap-6 overflow-hidden rounded-[2rem] bg-ink p-6 text-white shadow-[0_26px_70px_rgba(12,27,22,0.2)] sm:p-9">
+          <div aria-hidden="true" className="rr-radar absolute -right-24 -top-32 h-[430px] w-[430px] rounded-full opacity-65" />
           <div className="flex flex-wrap items-center gap-2">
-            <Badge className="rounded-md border-slate-300 bg-slate-950 text-white" variant="outline">
+            <Badge className="rounded-full border-white/15 bg-white/10 text-white" variant="outline">
               Development-only prototype
             </Badge>
-            <Badge className="rounded-md border-amber-200 bg-amber-50 text-amber-900" variant="outline">
+            <Badge className="rounded-full border-signal/30 bg-signal text-ink" variant="outline">
               Controlled example data
             </Badge>
           </div>
-          <div className="max-w-3xl">
-            <p className="text-sm font-semibold text-blue-700">ReviewRadar OAI-T3</p>
-            <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
+          <div className="max-w-4xl">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-signal">ReviewRadar OAI-T3</p>
+            <h1 className="mt-3 font-display text-4xl font-semibold leading-[1.02] tracking-[-0.04em] text-white sm:text-5xl">
               Recommendations that show what is known—and what is not
             </h1>
-            <p className="mt-4 text-base leading-7 text-slate-600">
+            <p className="mt-5 text-base leading-7 text-white/58">
               This local preview makes the two-layer trust boundary visible. It
               calls no research or shopping provider and is not connected to the
               production recommendation route.
             </p>
           </div>
-          <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-4 text-blue-950">
+          <div className="relative flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.06] p-4 text-white/75">
             <SearchCheck aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0" />
             <p className="text-sm leading-6">
               Product recommendations remain useful even when a price, image, or

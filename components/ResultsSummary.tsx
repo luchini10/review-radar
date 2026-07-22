@@ -147,8 +147,8 @@ function SearchCoverageSummary({ result }: { result: RecommendationResult }) {
   const coverage = result.searchCoverage;
 
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-slate-200/80 bg-white p-4">
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-600">
+    <div className="flex items-start gap-3 rounded-2xl border border-ink/10 bg-paper p-4">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-signal text-ink">
         <SearchCheck aria-hidden="true" className="h-4.5 w-4.5" />
       </span>
       <div className="text-sm leading-6 text-slate-600">
@@ -190,7 +190,7 @@ function DealbreakerStrengthControl({
   const selectedIndex = dealbreakerStrengths.indexOf(strength);
 
   return (
-    <div className="rounded-xl border border-slate-200/80 bg-white p-4">
+    <div className="rounded-2xl border border-ink/10 bg-paper p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-600">
@@ -264,7 +264,7 @@ function LoadingSkeletonCards() {
     <div className="mt-5 grid gap-4" data-testid="results-loading-skeletons">
       {[0, 1, 2].map((item) => (
         <Card
-          className="overflow-hidden rounded-2xl border-slate-200/80 bg-white py-0 shadow-sm"
+          className="overflow-hidden rounded-[2rem] border-ink/10 bg-paper py-0 shadow-[0_16px_45px_rgba(12,27,22,0.06)]"
           key={item}
         >
           <CardContent className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[250px_minmax(0,1fr)]">
@@ -310,18 +310,18 @@ export function ResultsSummary({
     : [];
 
   return (
-    <div aria-busy={isLoading} aria-live="polite">
-      <div className="flex items-end justify-between gap-4">
+    <div aria-busy={isLoading}>
+      <div className="flex items-end justify-between gap-4 rounded-[2rem] bg-ink px-6 py-7 text-white shadow-[0_22px_60px_rgba(12,27,22,0.16)] sm:px-8">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
-            Results
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-signal">
+            Your decision brief
           </p>
-          <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight text-slate-950">
+          <h2 className="mt-2 font-display text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">
             Top Best Matches
           </h2>
         </div>
         <Badge
-          className="hidden rounded-md border-slate-200 bg-white px-3 py-1 text-sm font-medium text-slate-700 sm:inline-flex"
+          className="hidden rounded-full border-white/12 bg-white/10 px-3 py-1 text-sm font-medium text-signal sm:inline-flex"
           variant="outline"
         >
           Evidence backed
@@ -347,12 +347,12 @@ export function ResultsSummary({
 
           {exactMatches.length > 0 ? (
             <div className="grid gap-5">
-              <div className="flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50/70 p-4">
+              <div className="flex items-start gap-3 rounded-2xl border border-forest/12 bg-[#edf3e7] p-4">
                 <ClipboardCheck
                   aria-hidden="true"
-                  className="mt-0.5 h-5 w-5 shrink-0 text-blue-700"
+                  className="mt-0.5 h-5 w-5 shrink-0 text-forest"
                 />
-                <p className="text-sm font-medium leading-6 text-blue-950">
+                <p className="text-sm font-medium leading-6 text-ink/75">
                   {exactMatches.length >= 5
                     ? `Showing the top ${exactMatches.length} Best Matches that met every verified hard requirement.`
                     : `Showing ${exactMatches.length} exact ${
@@ -391,7 +391,7 @@ export function ResultsSummary({
           )}
 
           {nearMatches.length > 0 ? (
-            <section className="grid gap-5 rounded-2xl border border-slate-200/80 bg-slate-50/60 p-4 sm:p-5">
+            <section className="grid gap-5 rounded-[2rem] border border-ink/10 bg-mist/45 p-4 sm:p-6">
               <div>
                 <Badge
                   className="rounded-md border-slate-300 bg-white text-slate-800"
