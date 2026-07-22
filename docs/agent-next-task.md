@@ -1,86 +1,86 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-21 by Codex for the reviewed OAI-T8A Phase 4 split asset
-trust contract and its approved scoped commit. This handoff lands in the same
-revision as the Phase 3 result record and Phase 4 code.
+Updated: 2026-07-22 by Codex for the reviewed OAI-T8A Phase 5
+registered-citation website resolver and its approved seven-file commit. The
+scope lands in the revision containing this record.
 
 ## Current phase and commit boundary
 
 The pre-phase base is full commit
-`44e0e2d70d968780c889801eaa09953f98988bb7` (`Fix Direct-Terra Shopping
-response handling`). Taylor approved the zero-live Phase 4, then separately
-approved adversarial review and commit of exactly these eight tracked files:
+`c8185d32e5572c68769027e3c0bc33786cec968a` (`Split Direct-Terra asset
+verification`). Taylor approved the zero-live Phase 5 implementation, then
+separately approved adversarial review and commit of exactly these seven files:
 
 - `docs/agent-dialogue.md`
 - `docs/agent-next-task.md`
 - `docs/forward-roadmap.md`
 - `docs/qa-loop-results.md`
-- `lib/directTerraAssetVerifier.ts`
-- `lib/directTerraSerperAssetAdapter.ts`
-- `tests/directTerraAssetVerifier.test.mjs`
-- `tests/directTerraSerperAssetAdapter.test.mjs`
+- `lib/directTerraCitationWebsiteResolver.ts`
+- `lib/directTerraResponse.ts`
+- `tests/directTerraCitationWebsiteResolver.test.mjs`
 
-The sanitized Phase 3 fixtures and every unrelated artifact remain untracked
-and excluded. Never use `git add -A`.
+Historical fixtures and every unrelated untracked artifact remain excluded.
+Never use `git add -A`.
 
-## Phase 3 evidence that changed the design
+## Reviewed Phase 5 resolver contract
 
-The corrected replacement probe used exactly five Serper Shopping attempts.
-All five payloads parsed. Across 100 bounded rows, every row supplied an image,
-but every product link was a Google wrapper and none was a direct merchant
-page. The original combined same-row policy therefore accepted 0/5 websites
-and 0/5 images.
+`lib/directTerraCitationWebsiteResolver.ts` is
+`direct-terra-citation-website-resolver-v1`. It is a deterministic,
+provider-free module that:
 
-The result proves that repeating the Shopping-only website design would waste
-calls. It does not justify accepting Google wrappers.
+1. parses Terra's report with GFM;
+2. isolates each `#N Best Match` section;
+3. requires that section heading to match the locked Terra target;
+4. considers only links rendered inside that product's section;
+5. requires each link to be both an active citation and a titled source in the
+   same response-owned source registry; and
+6. reuses `verifyDirectTerraAssetCandidates` before returning a product URL.
 
-## Reviewed Phase 4 contract
+The existing verifier therefore still decides exact brand/model/type identity,
+page eligibility, unsafe host, redirect wrapper, Google wrapper, listing,
+editorial/accessory, and product-page identity. A miss is `unavailable`; there
+is no fallback, search, guess, or cross-product borrowing.
 
-`lib/directTerraAssetVerifier.ts` is now
-`direct-terra-asset-verifier-v2`:
+The resolver output contains only `targetKey`, `rank`, `productName`,
+`productUrl`, and `productUrlStatus`. Terra's identity and order are immutable.
+Source titles, citations, diagnostics, provider metadata, and private inputs do
+not survive.
 
-- a website still requires exact title identity, product eligibility, safe
-  host/path, no redirect wrapper, and page-identity agreement;
-- an image can be verified independently when its title proves exact brand,
-  model, and requested product type;
-- without a safe direct page, the image must carry private
-  `serper_shopping` provenance assigned by the adapter;
-- a supplied unsafe, wrapper, or cross-model URL poisons that row's image; and
-- wrong-model filenames, family-name conflicts, placeholders, accessories,
-  local-network URLs, editorial pages, and output leakage remain rejected.
+`lib/directTerraResponse.ts` exports its source type and established citation
+URL canonicalizer. The response parser and resolver therefore use one ownership
+definition. Only established tracking parameters may be ignored for the join;
+identity-bearing parameters, order, and fragments remain significant.
 
-`lib/directTerraSerperAssetAdapter.ts` is now
-`direct-terra-serper-asset-adapter-v3`. It assigns the fixed private Shopping
-marker after mapping; provider data cannot choose or override it. Neither the
-provider's attempted provenance value nor ReviewRadar's marker appears in the
-verification output.
+## Pre-commit adversarial findings
 
-Terra's key, rank, product name, brand, model, and category remain immutable.
-Assets cannot add, remove, replace, rename, or rerank recommendations.
+Review reproduced and corrected two defects fail-first:
 
-## DEWALT classification
+1. Duplicate Markdown reference labels selected their last definition in the
+   response parser and resolver, while CommonMark renders the first. Both now
+   preserve the first definition, keeping visible citation, response ownership,
+   and website resolution aligned.
+2. Source deduplication kept a titleless first occurrence and discarded a later
+   response-owned title for the same URL. It now upgrades only a missing title;
+   an established title cannot be replaced by conflicting later metadata.
 
-Saved T7B response-owned evidence supports retaining Terra's frozen DEWALT
-`DXV12P-QT` identity. Shopping returned nearby `DXV12P-QTA`/`QTE` variants but
-no exact-title match. This is classified as Shopping coverage uncertainty, not
-an alias. No suffix normalization, sibling asset, or card rewrite is allowed.
+The complete regression wall also covers exact registered pages, stable rank
+order, cross-section borrowing, mismatched/duplicate ranked headings,
+inactive/unregistered/titleless evidence, editorial/documents, listing/search,
+Google wrappers, accessories, sibling models, code blocks, links after a
+section, incoherent targets, and output leakage.
 
-## Adversarial review and verification
+## Verification
 
-Fail-first tests reproduced the original same-row coupling and then proved the
-need for explicit URL-less-image provenance. Final review added a provider-
-override/leakage probe. No identity bypass remained.
+- focused resolver/verifier/response wall: 48/48 pass;
+- complete wall: 1249/1249 across 177 suites;
+- `npm run typecheck`: pass;
+- `npm run lint`: zero errors and three pre-existing warnings;
+- `npm run build`: pass; and
+- `git diff --check`: pass.
 
-- focused verifier/adapter wall: 33/33 pass;
-- complete wall: 1238/1238 across 176 suites;
-- typecheck: pass;
-- production build: pass;
-- lint: zero errors and three pre-existing warnings; and
-- diff check: pass.
-
-No OpenAI, Serper, SearchAPI, direct-page, or other provider request occurred
-in Phase 4. No route/UI/API integration, feature flag, `.env.local` edit,
-deployment, push, or production change occurred.
+No OpenAI, Serper, SearchAPI, direct-page, or other provider request occurred.
+No route/UI/API integration, flag change, `.env.local` edit, deployment, push,
+or production change occurred.
 
 ## Flag state
 
@@ -90,62 +90,55 @@ Committed defaults in `.env.example`:
 - `NEXT_PUBLIC_REVIEW_RADAR_DIRECT_TERRA=false`
 - `REVIEW_RADAR_CONSTRAINT_ALLOCATION=off`
 
-Current local `.env.local`, classified without exposing secrets:
+The prior classified local `.env.local` state remains:
 
 - direct-Terra server flag: on
 - direct-Terra client flag: on
 - constraint allocation: on
 
-Phase 4 did not read or modify `.env.local`. The asset seam remains unwired and
-cannot change user-visible behavior.
+Phase 5 did not read or modify `.env.local`. The resolver is not imported by a
+route or UI and cannot change user-visible behavior.
 
-## Next approved phase
+## Next approval-gated decision
 
-Taylor explicitly approved a **zero-live website resolver using Terra's
-existing response-owned, registered citations before any new search spend**.
-Per the one-step protocol, begin it only after reporting the Phase 4 commit.
+No further phase is approved. The strongest next phase is a zero-live,
+default-off integration contract that combines:
 
-The resolver should:
+- website evidence from the registered-citation resolver; and
+- image evidence from the independent Shopping verifier/adapter v3.
 
-1. associate a registered citation with the correct ranked product section;
-2. preserve Terra's exact identity and order;
-3. reuse existing product-page eligibility, URL safety, and identity gates;
-4. reject editorial, PDF, listing/search, wrapper, accessory, sibling-model,
-   and unregistered links;
-5. leave a website unavailable when exact direct-page proof is absent; and
-6. make zero network calls and no route/UI/flag changes in its first phase.
+That phase must define a minimal server-to-client asset shape, keep legacy and
+flag-off behavior byte-identical, preserve Terra's identity/order, and use only
+mocked transports. It requires Taylor's separate approval.
 
-Use response-owned evidence Terra already paid to collect before considering a
-new Serper Organic request.
+**Recommended reasoning level:** High. Integration crosses the server/client
+trust boundary and must prove that private source metadata and diagnostics
+cannot leak while missing assets remain harmless.
 
-**Recommended reasoning level:** High. Product-section association and exact
-page identity are trust-boundary work; Highest is unnecessary unless the saved
-response contract cannot preserve source titles or section ownership.
+## Outstanding limitations
 
-## Outstanding review debts
-
-- The citation resolver does not exist yet.
-- The old Phase 3 coverage-probe plan must not be reused live because it
-  predates adapter v3 semantics. A future live probe needs a new version,
-  review, commit, numeric approval, and commit pin.
+- Registered-citation website coverage has not been measured on a live Terra
+  response under this resolver.
+- The resolver and split Shopping asset adapter are both unwired.
 - Live image coverage under adapter v3 remains unmeasured.
+- The old Phase 3 probe is frozen and cannot be reused live.
 - Zero-live classification of T7C robot-vac denominator misses remains open.
 - Missing safe prices in constrained evaluation remain budget-unverified, not
   silently compliant.
 
 ## Hard boundaries
 
-- No provider request without a new exact numeric approval pinned to a
-  committed revision.
-- No further commit, push, feature-flag promotion, `.env.local` edit,
-  deployment, publication, route/UI integration, or production change without
+- No provider request without a new exact numeric approval pinned to a reviewed
+  commit.
+- No later commit, push, route/UI/API integration, feature-flag promotion,
+  `.env.local` edit, deployment, publication, or production change without
   separate approval.
 - Assets may decorate only Terra's immutable recommendations.
 - Never display Google wrappers as product websites.
 - Never alias model suffixes without independent exact evidence.
 - Missing or rejected assets remain unavailable.
 - Never expose or persist keys, headers, queries, provider IDs, raw responses,
-  or private provenance/diagnostics in client data.
+  source metadata, or private provenance/diagnostics in client data.
 - Do not delete legacy, two-layer, SearchAPI-history, or Serper code without
   rollback evidence and explicit retirement approval.
 
@@ -154,10 +147,10 @@ response contract cannot preserve source titles or section ownership.
 | Need | Retrieve |
 |---|---|
 | Current state and boundaries | this file |
-| Phase 3/4 architecture | `docs/forward-roadmap.md` OAI-T8A section |
-| Canonical evidence | latest two `docs/qa-loop-results.md` entries |
-| Review/commit boundary | `docs/agent-dialogue.md` entry [97] |
-| Split verifier | `lib/directTerraAssetVerifier.ts` |
-| Shopping adapter | `lib/directTerraSerperAssetAdapter.ts` |
-| Regression walls | `tests/directTerraAssetVerifier.test.mjs`, `tests/directTerraSerperAssetAdapter.test.mjs` |
-| Future citation inputs | `lib/directTerraResponse.ts`, `lib/directTerraReportOutline.ts` |
+| Phase 5 architecture | `docs/forward-roadmap.md` OAI-T8A Phase 5 subsection |
+| Canonical verification | latest `docs/qa-loop-results.md` entry |
+| Review/commit boundary | `docs/agent-dialogue.md` entry [99] |
+| Citation ownership | `lib/directTerraResponse.ts` |
+| Website resolver | `lib/directTerraCitationWebsiteResolver.ts` |
+| Existing trust gate | `lib/directTerraAssetVerifier.ts` |
+| Regression wall | `tests/directTerraCitationWebsiteResolver.test.mjs` |

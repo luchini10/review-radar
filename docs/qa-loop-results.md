@@ -9813,3 +9813,61 @@ request.
 
 Taylor approved the adversarial review and scoped eight-file commit. This
 record lands with that reviewed code; untracked live fixtures remain excluded.
+
+## 🟧 Codex QA Update — 2026-07-22 (OAI-T8A Phase 5 registered-citation website resolver)
+
+**Scope:** Taylor approved a zero-live resolver that tries Terra's existing
+response-owned citations before ReviewRadar spends on another website search.
+No OpenAI, Serper, SearchAPI, direct-page, or other provider request occurred.
+No route/UI/API integration, feature flag, `.env.local` edit, deployment,
+commit, push, or production change was authorized or performed.
+
+**Fail-first evidence:** the new resolver regression suite initially failed
+because `lib/directTerraCitationWebsiteResolver.ts` did not exist. The completed
+module parses Terra's Markdown with the same GFM grammar used at the response
+boundary, isolates every `#N Best Match` section, and considers only links
+rendered inside the matching ranked section. Duplicate rank sections, a ranked
+heading that conflicts with the locked target, an incoherent target batch, or
+missing ownership evidence all fail closed.
+
+**Trust contract:** a website candidate must be (1) an active citation already
+accepted by the Direct-Terra response boundary, (2) present in response-owned
+source metadata with a title, (3) cited in that exact product's ranked section,
+and (4) accepted by the existing asset verifier's exact brand/model/type,
+product eligibility, host, redirect, and product-page identity checks. The
+resolver returns only Terra's immutable key/rank/name plus a normalized website
+or `unavailable`; source titles, diagnostics, provider metadata, and input
+registries never enter its result.
+
+The response parser now exports its existing citation URL canonicalizer and
+source type so ownership comparison cannot drift between parsing and
+resolution. Only established tracking parameters are ignored for that join;
+identity-bearing parameters remain significant. The selected page then passes
+the asset verifier's stricter output normalization.
+
+**Adversarial coverage:** tests reject cross-section borrowing, mismatched and
+duplicate headings, unregistered links, sources without titles, editorial and
+document pages, search/listing pages, Google wrappers, accessories, sibling
+models, code-block pseudo-links, and links after the ranked section. Reference
+links resolve through the Markdown definition table without allowing those
+definitions to create section ownership by themselves.
+
+**Pre-commit review corrections:** adversarial review found that duplicate
+Markdown reference labels were resolved to the last definition even though
+CommonMark renders the first. Fail-first tests reproduced the mismatch in both
+the response parser and resolver; both now preserve the first definition so
+the owned URL, resolved URL, and visible citation agree. Review also reproduced
+a safe coverage loss when a titleless action source appeared before a titled
+response-owned citation for the same URL. Source deduplication now upgrades
+only a titleless first record; an established title cannot be overwritten by
+later conflicting metadata.
+
+**Verification:** 48/48 focused tests pass across the resolver, asset verifier,
+and response boundary. The complete wall is 1249/1249 across 177 suites.
+Typecheck and production build pass. Full lint reports zero errors and the same
+three pre-existing warnings. `git diff --check` passes.
+
+**Boundary:** the resolver is an unwired, deterministic server-side seam. This
+phase proves the safety behavior against controlled evidence; it does not prove
+how many live Terra products have an eligible registered product-page citation,
+does not add websites to cards, and does not alter user-visible behavior.

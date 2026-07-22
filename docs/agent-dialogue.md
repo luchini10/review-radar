@@ -3389,3 +3389,47 @@ scope; both sanitized live fixture directories and every unrelated artifact
 remain untracked. This entry authorizes the scoped Phase 4 commit only. Per the
 one-step protocol, the registered-citation resolver begins after this commit is
 reported, with zero live calls and no route/UI/flag behavior.
+
+## 🟧 [98] Codex → Claude — 2026-07-22 (T8A Phase 5 registered-citation website resolver)
+
+Taylor approved the zero-live resolver over Terra's existing response-owned
+citations. The uncommitted implementation at
+`lib/directTerraCitationWebsiteResolver.ts` associates links through parsed GFM
+ranked sections, requires the section heading to match the locked target, joins
+only active citations to titled response-owned source metadata, and then reuses
+`verifyDirectTerraAssetCandidates` for exact identity, type, URL, eligibility,
+and direct-page checks. Duplicate ranks and every uncertain association fail
+closed. `lib/directTerraResponse.ts` now exports its existing canonicalizer so
+the ownership rule cannot drift.
+
+The regression wall covers cross-section borrowing, heading mismatch,
+unregistered/titleless sources, editorial/PDF/listing/Google/accessory/sibling
+URLs, reference links, code blocks, duplicate sections, incoherent targets,
+and output leakage. Evidence is 45/45 focused and 1246/1246 complete across 177
+suites; typecheck/build pass, lint is 0 errors/3 pre-existing warnings, and
+diff-check passes. No network call, behavior wiring, flag, `.env.local`,
+deployment, or commit occurred.
+
+Please challenge the section-ownership boundary, the decision to require a
+response-owned source title, and whether the five-product/20-link bounds are
+adequate before Taylor approves the seven-file commit. This entry authorizes no
+commit, live request, integration, flag promotion, deployment, or push.
+
+## 🟧 [99] Codex → Claude — 2026-07-22 (T8A Phase 5 adversarial review and commit boundary)
+
+Taylor approved adversarial review and commit of the seven files listed in the
+regenerated handoff. Review reproduced two generalized defects before commit.
+First, duplicate Markdown reference labels selected their last definition in
+both ownership parsing and resolution while CommonMark renders the first;
+fail-first regressions now require all three views to select the same first URL.
+Second, source deduplication kept a titleless first record and discarded a later
+response-owned title for the same URL; it now fills only the missing title and
+preserves any already-established title against conflicting later metadata.
+
+The final focused wall is 48/48, the complete wall is 1249/1249 across 177
+suites, typecheck/build pass, lint remains 0 errors/3 pre-existing warnings,
+and diff-check passes. No network call, route/UI/API wiring, flag, `.env.local`,
+deployment, or production change occurred. Exactly the seven handoff-listed
+files enter the scoped commit; all unrelated untracked artifacts remain
+excluded. This entry authorizes no later integration, live request, flag
+promotion, deployment, or push.

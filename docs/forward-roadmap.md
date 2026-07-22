@@ -2963,6 +2963,49 @@ unavailable. Live image coverage and UI integration remain later gates.
 **Recommended reasoning level:** High for the Phase 4 review and the later
 registered-citation website resolver because both protect product identity.
 
+**Phase 5 registered-citation website resolver (completed uncommitted on
+2026-07-22; zero live):**
+`lib/directTerraCitationWebsiteResolver.ts` resolves a product website only
+from a citation that Terra placed inside that product's own ranked Markdown
+section and that the Direct-Terra response boundary already registered as
+response-owned. It reuses the existing asset verifier for exact title identity,
+product type, page eligibility, redirect/host safety, and URL/product identity.
+Terra's key, rank, and name remain unchanged; a miss returns `unavailable`.
+
+The resolver parses GFM rather than matching raw Markdown text. Duplicate ranks,
+a heading whose product identity conflicts with the locked target, links outside
+the section, unregistered links, titleless source metadata, code-block links,
+editorial/documents, search/listing pages, Google wrappers, accessories, and
+sibling models all fail closed. Only bounded card-safe fields leave the module.
+`lib/directTerraResponse.ts` exports its established citation canonicalizer so
+the parser and resolver use one ownership definition instead of parallel URL
+rules.
+
+The approved pre-commit review found two generalized parser-alignment defects.
+Duplicate reference labels previously selected the last definition even though
+CommonMark renders the first; the response parser and resolver now both retain
+the visible first definition. A titleless first copy of a response-owned source
+also discarded a later titled copy of the same canonical URL; deduplication now
+fills only a missing title and never overwrites an established one.
+
+Evidence is 48/48 focused and 1249/1249 complete across 177 suites, with
+typecheck/build pass, lint at 0 errors/3 pre-existing warnings, and diff-check
+green. No provider call, route/UI/API wiring, flag change, or live behavior
+occurred. The resolver remains unreferenced outside its tests, so this is safety
+proof rather than live website-coverage evidence.
+
+**Commit boundary:** Taylor approved adversarial review and commit of exactly
+the seven Phase 5 files listed in the current handoff. The reviewed scope lands
+in the revision containing this record. A later zero-live integration phase may
+combine this website result with the
+independently verified Shopping image result behind the existing default-off
+Direct-Terra path, but must first define the exact server-to-client asset
+contract and prove flag-off behavior unchanged. No provider request, flag
+promotion, or UI behavior is authorized here.
+
+**Recommended reasoning level:** High for later route/UI integration because it
+crosses the server/client trust boundary.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen

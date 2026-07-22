@@ -7,7 +7,7 @@ import {
   type DirectTerraPriceEstimate,
 } from "./directTerraPriceEstimate.ts";
 
-type DirectTerraSource = {
+export type DirectTerraSource = {
   url: string;
   title?: string;
 };
@@ -53,7 +53,7 @@ function annotationSource(value: unknown): DirectTerraSource | null {
   );
 }
 
-function canonicalUrl(value: string) {
+export function canonicalizeDirectTerraCitationUrl(value: string) {
   try {
     const url = new URL(value);
     if (url.protocol !== "http:" && url.protocol !== "https:") return null;
@@ -69,13 +69,29 @@ function canonicalUrl(value: string) {
 }
 
 function distinctSources(sources: DirectTerraSource[]) {
-  const seen = new Set<string>();
-  return sources.filter((source) => {
-    const canonical = canonicalUrl(source.url);
-    if (!canonical || seen.has(canonical)) return false;
-    seen.add(canonical);
-    return true;
-  });
+  const indexes = new Map<string, number>();
+  const distinct: DirectTerraSource[] = [];
+
+  for (const source of sources) {
+    const canonical = canonicalizeDirectTerraCitationUrl(source.url);
+    if (!canonical) continue;
+
+    const index = indexes.get(canonical);
+    if (index === undefined) {
+      indexes.set(canonical, distinct.length);
+      distinct.push(source);
+      continue;
+    }
+
+    // Preserve the first response-owned record, but do not let a titleless
+    // action source hide a later response-owned citation title. Once a title
+    // exists, conflicting later metadata cannot replace it.
+    if (!distinct[index].title && source.title) {
+      distinct[index] = { ...distinct[index], title: source.title };
+    }
+  }
+
+  return distinct;
 }
 
 export function extractDirectTerraResponseSources(
@@ -170,7 +186,11 @@ function markdownLinks(report: string) {
   function collectDefinitions(node: unknown) {
     if (isRecord(node) && node.type === "definition") {
       if (typeof node.identifier === "string" && typeof node.url === "string") {
-        definitions.set(node.identifier, node.url);
+        // CommonMark renders the first definition for a duplicate reference
+        // label. Citation ownership must resolve the same visible URL.
+        if (!definitions.has(node.identifier)) {
+          definitions.set(node.identifier, node.url);
+        }
       }
     }
     for (const child of childNodes(node)) collectDefinitions(child);
@@ -196,7 +216,13 @@ function markdownLinks(report: string) {
   collectRenderedLinks(tree);
   return {
     hasImages,
-    urls: [...new Set(urls.filter((url) => canonicalUrl(url) !== null))],
+    urls: [
+      ...new Set(
+        urls.filter(
+          (url) => canonicalizeDirectTerraCitationUrl(url) !== null,
+        ),
+      ),
+    ],
   };
 }
 
@@ -223,11 +249,11 @@ export function parseDirectTerraCompletedResponse(
   const sources = extractDirectTerraResponseSources(response);
   const registered = new Set(
     sources
-      .map((source) => canonicalUrl(source.url))
+      .map((source) => canonicalizeDirectTerraCitationUrl(source.url))
       .filter((url): url is string => Boolean(url)),
   );
   const registeredCitationUrls = citationUrls.filter((url) => {
-    const canonical = canonicalUrl(url);
+    const canonical = canonicalizeDirectTerraCitationUrl(url);
     return Boolean(canonical && registered.has(canonical));
   });
   const disabledCitationCount =
