@@ -5,6 +5,7 @@ import { dirname, resolve } from "node:path";
 import {
   FROZEN_DIRECT_TERRA_ASSET_PROBE_TARGETS,
   buildDirectTerraAssetProbePlan,
+  buildSanitizedDirectTerraAssetProbePlan,
   buildSanitizedDirectTerraAssetProbeEvidence,
   runDirectTerraAssetCoverageProbe,
   validateDirectTerraAssetProbeApproval,
@@ -60,16 +61,22 @@ async function main() {
   const repositoryCommit = gitOutput(["rev-parse", "HEAD"]);
   const relativePath = outputPath(repositoryCommit);
   const path = resolve(relativePath);
-  const plan = {
-    mode: EXECUTE ? "execute" : "dry-run",
+  const dryRunPlan = {
+    mode: "dry-run",
     outputPath: relativePath,
     ...buildDirectTerraAssetProbePlan({ repositoryCommit }),
   };
 
   if (!EXECUTE) {
-    process.stdout.write(`${JSON.stringify(plan, null, 2)}\n`);
+    process.stdout.write(`${JSON.stringify(dryRunPlan, null, 2)}\n`);
     return;
   }
+
+  const evidencePlan = {
+    mode: "execute",
+    outputPath: relativePath,
+    ...buildSanitizedDirectTerraAssetProbePlan({ repositoryCommit }),
+  };
 
   const apiKey = process.env.SERPER_API_KEY || "";
   validateDirectTerraAssetProbeApproval({
@@ -83,7 +90,7 @@ async function main() {
 
   let physicalAttempts = 0;
   const running = {
-    ...plan,
+    ...evidencePlan,
     status: "running",
     startedAt: new Date().toISOString(),
     completedAt: null,
@@ -108,7 +115,7 @@ async function main() {
       diagnostics: result.diagnostics,
     });
     atomicWriteJson(path, {
-      ...plan,
+      ...evidencePlan,
       status: "complete",
       startedAt: running.startedAt,
       completedAt: new Date().toISOString(),

@@ -7,6 +7,7 @@ import {
   DIRECT_TERRA_ASSET_PROBE_VERSION,
   FROZEN_DIRECT_TERRA_ASSET_PROBE_TARGETS,
   buildDirectTerraAssetProbePlan,
+  buildSanitizedDirectTerraAssetProbePlan,
   buildSanitizedDirectTerraAssetProbeEvidence,
   runDirectTerraAssetCoverageProbe,
   validateDirectTerraAssetProbeApproval,
@@ -30,6 +31,7 @@ describe("Direct-Terra asset coverage probe preflight", () => {
 
     const plan = buildDirectTerraAssetProbePlan({ repositoryCommit: commit });
     assert.equal(plan.version, DIRECT_TERRA_ASSET_PROBE_VERSION);
+    assert.equal(plan.version, "direct-terra-asset-coverage-probe-v2");
     assert.equal(plan.repositoryCommit, commit);
     assert.deepEqual(plan.bounds, {
       logicalSearches: 5,
@@ -41,6 +43,14 @@ describe("Direct-Terra asset coverage probe preflight", () => {
       resultsPerSearch: 20,
     });
     assert.deepEqual(plan.requiredCoverage, DIRECT_TERRA_ASSET_PROBE_REQUIRED_COVERAGE);
+
+    const sanitizedPlan = buildSanitizedDirectTerraAssetProbePlan({
+      repositoryCommit: commit,
+    });
+    const serialized = JSON.stringify(sanitizedPlan);
+    assert.equal(serialized.includes('"query"'), false);
+    assert.equal(serialized.includes("RIDGID HD1200 shop vacuum"), false);
+    assert.equal(sanitizedPlan.targets.length, 5);
   });
 
   it("runs exactly once per target and scores website and image coverage separately", async () => {
@@ -107,6 +117,11 @@ describe("Direct-Terra asset coverage probe preflight", () => {
     assert.equal(serialized.includes("X-API-KEY"), false);
     assert.equal(serialized.includes("rawResponse"), false);
     assert.equal(serialized.includes("RIDGID HD1200 shop vacuum"), false);
+    assert.ok(
+      evidence.diagnostics.every(
+        (diagnostic) => diagnostic.providerPayloadShape === "shopping_array",
+      ),
+    );
   });
 
   it("requires four safe websites and four safe images, not only one combined metric", async () => {
@@ -197,6 +212,8 @@ describe("Direct-Terra asset coverage probe preflight", () => {
     );
     assert.match(source, /--execute/);
     assert.match(source, /process\.env\.SERPER_API_KEY/);
+    assert.match(source, /buildSanitizedDirectTerraAssetProbePlan/);
+    assert.doesNotMatch(source, /\.\.\.plan\b/);
     assert.doesNotMatch(source, /\.env\.local|OPENAI|SEARCHAPI/i);
     assert.doesNotMatch(source, /search\/serper|app\/api|components\//);
     assert.doesNotMatch(source, /retry|fallback/i);

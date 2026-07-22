@@ -63,6 +63,10 @@ describe("Direct-Terra mocked Serper Shopping asset adapter", () => {
     });
 
     assert.equal(buildDirectTerraAssetQuery(q7), "Roborock Q7 M5+ robot vacuum");
+    assert.equal(
+      DIRECT_TERRA_SERPER_ASSET_ADAPTER_VERSION,
+      "direct-terra-serper-asset-adapter-v2",
+    );
     assert.deepEqual(requests, [
       {
         endpoint: DIRECT_TERRA_SERPER_SHOPPING_ENDPOINT,
@@ -154,12 +158,12 @@ describe("Direct-Terra mocked Serper Shopping asset adapter", () => {
     assert.equal(calls, 0);
   });
 
-  it("fails closed on malformed or oversized Shopping responses without reading organic fallback rows", async () => {
+  it("fails closed on malformed Shopping responses without reading organic fallback rows", async () => {
     const responses = [
       { organic: [shoppingRow()] },
       { error: "provider error", shopping: [shoppingRow()] },
-      { shopping: Array.from({ length: MAX_DIRECT_TERRA_SHOPPING_RESULTS + 1 }, () => shoppingRow()) },
     ];
+    const diagnostics = [];
     let callIndex = 0;
 
     for (const response of responses) {
@@ -169,6 +173,7 @@ describe("Direct-Terra mocked Serper Shopping asset adapter", () => {
           callIndex += 1;
           return response;
         },
+        recordDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
       });
 
       assert.equal(result.items[0].providerStatus, "invalid_response");
@@ -176,11 +181,42 @@ describe("Direct-Terra mocked Serper Shopping asset adapter", () => {
       assert.equal(result.items[0].verification.imageUrl, null);
       assert.equal(result.items[0].mappedCandidateCount, 0);
     }
-    assert.equal(callIndex, 3);
+    assert.equal(callIndex, 2);
+    assert.deepEqual(
+      diagnostics.map((diagnostic) => diagnostic.providerPayloadShape),
+      ["missing_shopping_array", "provider_error"],
+    );
+  });
+
+  it("considers only the first 20 rows when live Serper returns more than requested", async () => {
+    let diagnostic;
+    const result = await resolveDirectTerraAssetsWithSerperShopping({
+      targets: [q7],
+      transport: async () => ({
+        shopping: Array.from({ length: 40 }, (_, index) =>
+          shoppingRow({
+            position: index + 1,
+            productLink: `https://merchant.example/products/roborock-q7-m5-plus-${index + 1}`,
+          }),
+        ),
+      }),
+      recordDiagnostic: (value) => {
+        diagnostic = value;
+      },
+    });
+
+    assert.equal(result.items[0].providerStatus, "completed");
+    assert.equal(result.items[0].rawShoppingResultCount, 40);
+    assert.equal(result.items[0].mappedCandidateCount, 20);
+    assert.equal(result.items[0].verification.decisions.length, 20);
+    assert.equal(diagnostic.providerPayloadShape, "shopping_array");
+    assert.equal(diagnostic.consideredShoppingResultCount, 20);
+    assert.equal(diagnostic.discardedShoppingResultCount, 20);
   });
 
   it("does not retry a failed transport and can fail only that product closed", async () => {
     const queries = [];
+    const diagnostics = [];
     const result = await resolveDirectTerraAssetsWithSerperShopping({
       targets: [q7, ridgid],
       transport: async ({ body }) => {
@@ -188,6 +224,7 @@ describe("Direct-Terra mocked Serper Shopping asset adapter", () => {
         if (queries.length === 1) throw new Error("mock timeout");
         return { shopping: [] };
       },
+      recordDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
     });
 
     assert.deepEqual(queries, [
@@ -197,6 +234,8 @@ describe("Direct-Terra mocked Serper Shopping asset adapter", () => {
     assert.equal(result.transportCallCount, 2);
     assert.equal(result.items[0].providerStatus, "transport_error");
     assert.equal(result.items[1].providerStatus, "completed");
+    assert.equal(diagnostics[0].providerPayloadShape, "transport_unavailable");
+    assert.equal(diagnostics[1].providerPayloadShape, "shopping_array");
   });
 
   it("selects a direct merchant field without unwrapping a Google Shopping URL", async () => {
@@ -264,7 +303,10 @@ describe("Direct-Terra mocked Serper Shopping asset adapter", () => {
       rank: q7.rank,
       query: "Roborock Q7 M5+ robot vacuum",
       providerStatus: "completed",
+      providerPayloadShape: "shopping_array",
       rawShoppingResultCount: 1,
+      consideredShoppingResultCount: 1,
+      discardedShoppingResultCount: 0,
       mappedCandidateCount: 1,
       directProductUrlCandidateCount: 1,
       imageCandidateCount: 1,

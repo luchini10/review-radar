@@ -10,7 +10,7 @@ import type { DirectTerraAssetTarget } from "./directTerraAssetVerifier.ts";
 import { directTerraSerperApiKeyIsValid } from "./directTerraSerperTransport.ts";
 
 export const DIRECT_TERRA_ASSET_PROBE_VERSION =
-  "direct-terra-asset-coverage-probe-v1";
+  "direct-terra-asset-coverage-probe-v2";
 
 export const FROZEN_DIRECT_TERRA_ASSET_PROBE_TARGETS = Object.freeze(
   [
@@ -68,6 +68,8 @@ export type DirectTerraAssetCoverageSummary = {
   transportCallCount: number;
   providerCompletedCount: number;
   providerRawShoppingResultCount: number;
+  providerConsideredShoppingResultCount: number;
+  providerDiscardedShoppingResultCount: number;
   providerDirectProductUrlCandidateCount: number;
   providerImageCandidateCount: number;
   googleWrapperOnlyRowCount: number;
@@ -104,6 +106,26 @@ export function buildDirectTerraAssetProbePlan(input: {
   };
 }
 
+export function buildSanitizedDirectTerraAssetProbePlan(input: {
+  repositoryCommit: string;
+}) {
+  const plan = buildDirectTerraAssetProbePlan(input);
+  return {
+    version: plan.version,
+    repositoryCommit: plan.repositoryCommit,
+    bounds: plan.bounds,
+    requiredCoverage: plan.requiredCoverage,
+    targets: FROZEN_DIRECT_TERRA_ASSET_PROBE_TARGETS.map((target) => ({
+      key: target.key,
+      rank: target.rank,
+      productName: target.productName,
+      brand: target.brand,
+      model: target.model,
+      category: target.category,
+    })),
+  };
+}
+
 export function summarizeDirectTerraAssetCoverage(input: {
   batch: DirectTerraSerperAssetBatch;
   diagnostics: DirectTerraSerperAssetDiagnostic[];
@@ -132,6 +154,14 @@ export function summarizeDirectTerraAssetCoverage(input: {
     ).length,
     providerRawShoppingResultCount: input.diagnostics.reduce(
       (sum, diagnostic) => sum + diagnostic.rawShoppingResultCount,
+      0,
+    ),
+    providerConsideredShoppingResultCount: input.diagnostics.reduce(
+      (sum, diagnostic) => sum + diagnostic.consideredShoppingResultCount,
+      0,
+    ),
+    providerDiscardedShoppingResultCount: input.diagnostics.reduce(
+      (sum, diagnostic) => sum + diagnostic.discardedShoppingResultCount,
       0,
     ),
     providerDirectProductUrlCandidateCount: input.diagnostics.reduce(
@@ -206,7 +236,10 @@ export function buildSanitizedDirectTerraAssetProbeEvidence(input: {
       targetKey: diagnostic.targetKey,
       rank: diagnostic.rank,
       providerStatus: diagnostic.providerStatus,
+      providerPayloadShape: diagnostic.providerPayloadShape,
       rawShoppingResultCount: diagnostic.rawShoppingResultCount,
+      consideredShoppingResultCount: diagnostic.consideredShoppingResultCount,
+      discardedShoppingResultCount: diagnostic.discardedShoppingResultCount,
       mappedCandidateCount: diagnostic.mappedCandidateCount,
       directProductUrlCandidateCount: diagnostic.directProductUrlCandidateCount,
       imageCandidateCount: diagnostic.imageCandidateCount,

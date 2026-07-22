@@ -9674,3 +9674,47 @@ query does not survive serialization.
 No live fixture was created. Taylor separately approved the scoped Phase 3
 commit, and the implementation plus this verification record land together in
 that revision. The commit authorizes no live request.
+
+## 🟧 Codex QA Update — 2026-07-21 (OAI-T8A Phase 3 live failure and v2 correction)
+
+**Approved live scope:** one probe pinned to full commit
+`c3096cd88dc776d3c859d6d25db6569280ac0005`, exactly five Serper Shopping
+requests and five physical attempts, with no retries, replacements, OpenAI,
+SearchAPI, direct-page opens, route/UI work, flags, `.env.local`, deployment,
+or additional cases.
+
+**Measured outcome:** the ledger reconciles exactly at five attempts, five
+diagnostics, and five items. All five provider statuses were
+`invalid_response`; raw/mapped counts were therefore zero under the v1 parser,
+website coverage was 0/5, image coverage was 0/5, and the mechanical verdict
+was `probe_fail_website_coverage`. The result is a parser-contract failure, not
+evidence that live Serper lacks the assets. The v1 evidence cannot attribute
+the exact invalid shape because it did not retain safe schema metadata.
+
+**Offline root evidence:** `lib/search/serper.ts:76-79` already states that
+Serper Shopping often returns more rows than requested. The prior H2B live
+fixture records raw counts of 40, 40, 25, and 16. Phase 3 v1 instead rejected
+the entire payload when `shopping.length > 20`. This is a concrete generalized
+incompatibility and the earliest evidence-supported cause of the v1 failure,
+although the per-request cause remains unprovable from the sanitized fixture.
+
+**Fail-first correction:** the new regression reproduced v1 rejecting a
+40-row payload. Adapter v2 now considers only the first 20 rows and reports the
+returned/considered/discarded counts. Safe payload-shape enums distinguish a
+Shopping array, missing array, provider error, non-object, and transport
+failure without retaining raw values. Malformed/error payloads remain closed,
+and no row after 20 reaches the verifier.
+
+**Evidence-boundary correction:** final inspection found that the CLI spread
+its dry-run plan, including queries, into running/final evidence. The saved v1
+fixture was scrubbed in place and verified to contain no query fields, exact
+queries, secret markers, or provider IDs. Probe v2 now builds a distinct
+sanitized persistence plan; dry-run output remains transparent, while persisted
+live evidence cannot inherit query fields.
+
+**Verification (zero live correction):** 41/41 focused, 1233/1233 full across
+176 suites, typecheck, build, full lint 0 errors/3 pre-existing warnings,
+dry-run, and diff-check pass. No additional API call occurred. Taylor
+separately approved the scoped corrective commit; the nine reviewed files and
+this evidence record land together. That commit authorizes no replacement
+request.

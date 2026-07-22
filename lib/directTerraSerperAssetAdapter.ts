@@ -7,7 +7,7 @@ import {
 } from "./directTerraAssetVerifier.ts";
 
 export const DIRECT_TERRA_SERPER_ASSET_ADAPTER_VERSION =
-  "direct-terra-serper-asset-adapter-v1";
+  "direct-terra-serper-asset-adapter-v2";
 export const DIRECT_TERRA_SERPER_SHOPPING_ENDPOINT =
   "https://google.serper.dev/shopping";
 export const MAX_DIRECT_TERRA_ASSET_TARGETS = 5;
@@ -29,12 +29,22 @@ export type DirectTerraSerperShoppingTransport = (
   request: DirectTerraSerperShoppingRequest,
 ) => Promise<unknown>;
 
+export type DirectTerraSerperProviderPayloadShape =
+  | "shopping_array"
+  | "missing_shopping_array"
+  | "provider_error"
+  | "non_object"
+  | "transport_unavailable";
+
 export type DirectTerraSerperAssetDiagnostic = {
   targetKey: string;
   rank: number;
   query: string;
   providerStatus: "completed" | "invalid_response" | "transport_error";
+  providerPayloadShape: DirectTerraSerperProviderPayloadShape;
   rawShoppingResultCount: number;
+  consideredShoppingResultCount: number;
+  discardedShoppingResultCount: number;
   mappedCandidateCount: number;
   directProductUrlCandidateCount: number;
   imageCandidateCount: number;
@@ -172,18 +182,51 @@ function rowImageUrl(row: Record<string, unknown>) {
   );
 }
 
-function parseShoppingResponse(response: unknown) {
-  if (!isRecord(response) || !Array.isArray(response.shopping)) return null;
-  if (boundedText(response.error, 1_000)) return null;
-  if (response.shopping.length > MAX_DIRECT_TERRA_SHOPPING_RESULTS) return null;
+function invalidShoppingResponse(
+  providerPayloadShape: Exclude<
+    DirectTerraSerperProviderPayloadShape,
+    "shopping_array" | "transport_unavailable"
+  >,
+) {
+  return {
+    accepted: false as const,
+    providerPayloadShape,
+    rawShoppingResultCount: 0,
+    consideredShoppingResultCount: 0,
+    discardedShoppingResultCount: 0,
+    candidates: [] as DirectTerraAssetCandidate[],
+    directProductUrlCandidateCount: 0,
+    imageCandidateCount: 0,
+    googleWrapperOnlyRowCount: 0,
+  };
+}
 
-  const rows = response.shopping.filter(isRecord);
+function parseShoppingResponse(response: unknown) {
+  if (!isRecord(response)) return invalidShoppingResponse("non_object");
+  if (boundedText(response.error, 1_000)) {
+    return invalidShoppingResponse("provider_error");
+  }
+  if (!Array.isArray(response.shopping)) {
+    return invalidShoppingResponse("missing_shopping_array");
+  }
+
+  const rawShoppingResultCount = response.shopping.length;
+  const consideredValues = response.shopping.slice(
+    0,
+    MAX_DIRECT_TERRA_SHOPPING_RESULTS,
+  );
+  const rows = consideredValues.filter(isRecord);
   const candidates = rows
     .map(mapShoppingRow)
     .filter((candidate): candidate is DirectTerraAssetCandidate => Boolean(candidate));
 
   return {
-    rawShoppingResultCount: response.shopping.length,
+    accepted: true as const,
+    providerPayloadShape: "shopping_array" as const,
+    rawShoppingResultCount,
+    consideredShoppingResultCount: consideredValues.length,
+    discardedShoppingResultCount:
+      rawShoppingResultCount - consideredValues.length,
     candidates,
     directProductUrlCandidateCount: rows.filter((row) => directProductUrl(row)).length,
     imageCandidateCount: rows.filter((row) => rowImageUrl(row)).length,
@@ -237,7 +280,11 @@ export async function resolveDirectTerraAssetsWithSerperShopping(
   for (const target of targets) {
     const query = buildDirectTerraAssetQuery(target);
     let providerStatus: DirectTerraSerperAssetItem["providerStatus"];
+    let providerPayloadShape: DirectTerraSerperProviderPayloadShape =
+      "transport_unavailable";
     let rawShoppingResultCount = 0;
+    let consideredShoppingResultCount = 0;
+    let discardedShoppingResultCount = 0;
     let candidates: DirectTerraAssetCandidate[] = [];
     let directProductUrlCandidateCount = 0;
     let imageCandidateCount = 0;
@@ -255,9 +302,12 @@ export async function resolveDirectTerraAssetsWithSerperShopping(
         },
       });
       const parsed = parseShoppingResponse(response);
-      if (parsed) {
+      providerPayloadShape = parsed.providerPayloadShape;
+      rawShoppingResultCount = parsed.rawShoppingResultCount;
+      consideredShoppingResultCount = parsed.consideredShoppingResultCount;
+      discardedShoppingResultCount = parsed.discardedShoppingResultCount;
+      if (parsed.accepted) {
         providerStatus = "completed";
-        rawShoppingResultCount = parsed.rawShoppingResultCount;
         candidates = parsed.candidates;
         directProductUrlCandidateCount = parsed.directProductUrlCandidateCount;
         imageCandidateCount = parsed.imageCandidateCount;
@@ -277,7 +327,10 @@ export async function resolveDirectTerraAssetsWithSerperShopping(
       rank: target.rank,
       query,
       providerStatus,
+      providerPayloadShape,
       rawShoppingResultCount,
+      consideredShoppingResultCount,
+      discardedShoppingResultCount,
       mappedCandidateCount: candidates.length,
       directProductUrlCandidateCount,
       imageCandidateCount,

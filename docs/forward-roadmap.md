@@ -2863,6 +2863,45 @@ is authorized by Phase 3 or its commit.
 adversarial and complete verification walls are green. High is appropriate for
 the later mechanical live probe and manual identity audit.
 
+**Phase 3 live outcome and corrective preflight (2026-07-21):** Taylor approved
+exactly five Shopping attempts pinned to `c3096cd`. All five attempts completed,
+but every adapter item was `invalid_response`, yielding 0/5 safe websites and
+0/5 safe images. Because the sanitized v1 fixture did not retain payload-shape
+or returned-row-count metadata, it cannot prove the exact rejection reason for
+each request.
+
+Offline evidence identifies one concrete contract mismatch: the Phase 3 v1
+adapter rejected any Shopping array over 20 rows, while the saved H2B live
+fixture records Serper returning 40, 40, 25, and 16 rows and the established
+client explicitly documents that Shopping often exceeds the requested count.
+The v2 adapter therefore accepts a valid Shopping array of any size within the
+transport's existing 512,000-byte response ceiling, but slices before mapping
+and identity verification so at most the first 20 rows are considered. It
+records only safe enum/count diagnostics: payload shape, returned rows,
+considered rows, and discarded rows. Malformed, error-bearing, missing-array,
+and transport-failure cases still fail closed.
+
+Final fixture review also found that the CLI copied dry-run target queries into
+its running/final evidence envelope even though the diagnostic serializer had
+removed them. The v2 CLI now uses a separate sanitized execution plan with no
+query fields; dry-run output may still show the exact approved queries, but no
+persisted live state can inherit them. The already-saved v1 fixture was scrubbed
+in place and remains untracked; it now contains no query, key, provider ID, or
+raw response.
+
+The zero-live correction is 41/41 focused, 1233/1233 full across 176 suites,
+typecheck/build pass, full lint 0 errors/3 pre-existing warnings, dry-run pass,
+and diff-check pass. No additional provider request or app behavior change
+occurred.
+
+**Next gate:** the v2 corrective files land in the reviewed revision containing
+this record. Any replacement coverage probe requires a new exact five-attempt
+approval pinned to that commit. Do not reuse `c3096cd`, and do not count the
+failed v1 run as coverage evidence.
+
+**Recommended reasoning level:** Medium for the scoped corrective commit; High
+for any separately approved replacement probe and identity audit.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen

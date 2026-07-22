@@ -1,58 +1,43 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-21 by Codex for the reviewed OAI-T8A Direct-Terra
-product-assets Phase 3 scoped commit (zero live). This handoff lands in the
-same revision as the implementation.
+Updated: 2026-07-21 by Codex for the reviewed OAI-T8A Phase 3 v2 corrective
+commit after the five-attempt v1 probe failed at the parser boundary. This
+handoff lands in the same revision as the correction.
 
 ## Current state
 
-Taylor approved the scoped Phase 3 commit after the zero-live implementation,
-adversarial review, and complete verification wall passed. The revision
-containing this handoff adds a server-only Serper Shopping transport and a
-commit-pinned bounded-probe harness for the five frozen T7B broad shop-vac
-products. No live API request, route/UI wiring, flag change, `.env.local` edit,
-deployment, push, or production behavior was authorized or performed.
+Committed Phase 3 is `c3096cd` (`Add bounded Direct-Terra asset coverage
+probe`). Taylor then approved one live probe pinned to its full hash, exactly
+five Serper Shopping requests and five physical attempts. The attempt ledger
+reconciled, but all five items were `invalid_response`; website and image
+coverage were both 0/5. No retry, replacement, OpenAI, SearchAPI, direct-page
+request, app integration, flag change, `.env.local` edit, deployment, push, or
+production change occurred.
 
-Prior committed foundations remain:
+Taylor subsequently approved the zero-live corrective phase and then separately
+approved its review and scoped commit. The revision containing this handoff
+includes:
 
-- Phase 1: `836deb3` (`Add Direct-Terra product asset safety boundary`)
-- Phase 2: `309857a` (`Add mocked Direct-Terra Serper asset adapter`)
-- Phase 2 documentation follow-up: `0393cf7`
+- `lib/directTerraSerperAssetAdapter.ts`
+- `lib/directTerraAssetCoverageProbe.ts`
+- `scripts/run-oai-t8a-asset-coverage-probe.mjs`
+- `tests/directTerraSerperAssetAdapter.test.mjs`
+- `tests/directTerraAssetCoverageProbe.test.mjs`
+- `docs/forward-roadmap.md`
+- `docs/qa-loop-results.md`
+- `docs/agent-dialogue.md`
+- this regenerated handoff
 
-The Phase 3 commit consists of:
+The sanitized v1 result remains untracked at
+`tests/fixtures/review-radar-live/oai-t8a-asset-coverage-probe-c3096cd/result.json`.
+It was scrubbed after final inspection found query leakage in the CLI envelope.
+It now contains no query fields, exact queries, secret markers, provider IDs,
+or raw response. Historical fixtures and unrelated artifacts remain untracked
+and untouched. Do not use `git add -A`.
 
-- `lib/directTerraSerperTransport.ts` (new)
-- `lib/directTerraAssetCoverageProbe.ts` (new)
-- `scripts/run-oai-t8a-asset-coverage-probe.mjs` (new)
-- `tests/directTerraSerperTransport.test.mjs` (new)
-- `tests/directTerraAssetCoverageProbe.test.mjs` (new)
-- diagnostics and safer direct-field selection in
-  `lib/directTerraSerperAssetAdapter.ts`
-- a Direct-Terra-only explicit identity fallback in
-  `lib/productPageUrl.ts` and `lib/directTerraAssetVerifier.ts`
-- regression updates in `tests/directTerraSerperAssetAdapter.test.mjs` and
-  `tests/directTerraAssetVerifier.test.mjs`
-- current-state updates in `docs/forward-roadmap.md`,
-  `docs/qa-loop-results.md`, `docs/agent-dialogue.md`, and this handoff
+## Phase 3 live outcome
 
-Historical untracked fixtures and user artifacts remain untracked and
-untouched. Do not use `git add -A` in later work.
-
-## OAI-T8A Phase 3 outcome
-
-The new transport is intentionally isolated from the legacy Serper client. It:
-
-- accepts an explicit caller-supplied API key and does not read environment
-  variables itself;
-- permits only the fixed `https://google.serper.dev/shopping` endpoint;
-- sends exactly `{ q, gl: "us", hl: "en", num: 20 }` as JSON;
-- makes one `fetch` invocation with `cache: "no-store"` and
-  `redirect: "error"`;
-- enforces a 12-second timeout and 512,000-byte response-body ceiling;
-- requires a JSON response and converts failures to generic reason codes; and
-- contains no retry, alternate provider, legacy client, route, or UI path.
-
-The probe freezes exactly five products and deterministic queries:
+The committed harness dispatched exactly these five requests once each:
 
 1. `RIDGID HD1200 shop vacuum`
 2. `DEWALT DXV12P-QT shop vacuum`
@@ -60,73 +45,86 @@ The probe freezes exactly five products and deterministic queries:
 4. `CRAFTSMAN CMXEVBE17595 shop vacuum`
 5. `Milwaukee 0910-20 shop vacuum`
 
-Its future live contract is exactly five logical and five physical attempts,
-one per target, with no retry or replacement. It scores two independent gates:
+Measured v1 result:
 
-- at least 4/5 products receive a safe, identity-matched merchant website;
-- at least 4/5 products receive a safe, identity-matched image.
+- physical attempts: 5
+- diagnostics/items: 5/5
+- provider statuses: `invalid_response` for all five
+- safe websites: 0/5
+- safe images: 0/5
+- verdict: `probe_fail_website_coverage`
 
-Provider image presence cannot conceal missing safe merchant URLs. Mechanical
-gate passage remains `pending_manual_identity_audit`; it is not permission to
-wire the adapter into the app.
+This is a parser-contract failure, not evidence that Serper lacks suitable
+websites or images. V1 did not save safe payload-shape metadata, so the exact
+invalid condition for each response cannot be proven from its fixture.
 
-The sanitized evidence contract retains only target identity, safe selected
-assets, reason codes, bounded counts, gate results, and the reconciled attempt
-ledger. It excludes raw provider rows, provider IDs, source/seller labels,
-prices, headers, queries, and secrets.
+## Earliest evidence-supported root cause
 
-The CLI is dry-run by default. Live mode requires all of the following:
+The Phase 3 v1 adapter rejected the entire payload whenever Serper returned
+more than 20 Shopping rows. Existing repository evidence shows that assumption
+was false:
 
-- `--execute`
-- `--approved-searches=5`
-- a full 40-character `--approved-commit` matching `HEAD`
-- a process-only valid `SERPER_API_KEY`
-- no existing output fixture
-- no tracked changes in app, components, docs, lib, scripts, or tests
+- `lib/search/serper.ts` already documents that Shopping often returns more
+  rows than requested; and
+- the saved H2B live fixture records returned counts of 40, 40, 25, and 16.
 
-The attempt ledger is written before each dispatch and must reconcile with all
-five adapter results and diagnostics before evidence can be serialized.
+This proves a generalized incompatibility capable of producing the observed
+failure. It does not prove that all five v1 responses exceeded 20, because v1
+discarded the schema/count evidence needed for per-request attribution.
 
-## Fail-first and adversarial findings
+## V2 corrective boundary
 
-The initial exact Milwaukee `0910-20` case failed even though both the product
-title and merchant path contained the exact brand/model. The shared product-
-page matcher previously required an additional non-model path word for brands
-outside its official-domain map.
+Adapter and probe contracts are bumped to v2. A valid `shopping` array is now
+accepted within the existing transport's 512,000-byte body ceiling, regardless
+of its returned row count, but the adapter slices before any mapping or
+identity work. At most the first 20 rows can reach the Phase 1 verifier; later
+rows are counted and discarded.
 
-The generalized correction adds optional explicit brand/model evidence to the
-shared matcher. Only the dormant Direct-Terra verifier supplies those fields;
-all existing callers omit them and preserve current behavior. The fallback
-requires:
+Per-target server-only diagnostics now record only bounded safe metadata:
 
-- explicit brand evidence in the result title;
-- every model token in the title;
-- every model token in the URL path;
-- no compound-model conflict in the title or URL; and
-- all existing eligibility, editorial, listing, and host checks to pass.
+- payload shape: `shopping_array`, `missing_shopping_array`, `provider_error`,
+  `non_object`, or `transport_unavailable`;
+- returned Shopping row count;
+- considered row count, capped at 20; and
+- discarded row count.
 
-The regression proves exact `0910-20` is accepted while sibling title and
-sibling URL `0910-21` are rejected.
+Missing-array, provider-error, malformed, and transport-failure cases still
+fail closed. No raw row, top-level key list, provider value, key, header, query,
+price, seller/source label, or provider ID is retained.
 
-The review also closed four accounting/safety gaps:
+The CLI now separates two plans:
 
-1. a provider payload containing an error cannot be rescued by Shopping rows;
-2. live API-key approval validation uses the same validator as transport;
-3. evidence serialization fails unless physical attempts, batch calls,
-   products, and diagnostics reconcile exactly; and
-4. the sanitized serializer selects bounded diagnostic fields explicitly, so
-   its server-only exact query cannot enter the saved fixture.
+- dry-run plan: contains exact queries for preflight transparency;
+- persisted execution plan: contains only target identity and bounded approval
+  metadata, with no query fields.
+
+Running, complete, and failed fixtures all use only the sanitized plan.
+
+## Fail-first and adversarial evidence
+
+The new tests first failed because:
+
+1. v1 rejected a 40-row Shopping array as `invalid_response`;
+2. v1 diagnostics could not distinguish missing arrays, provider errors, or
+   transport failure with a safe enum;
+3. no query-free execution-plan builder existed; and
+4. the CLI spread its query-bearing `plan` into persisted evidence.
+
+V2 now considers exactly 20 of 40 mocked rows, reports 20 discarded, and never
+lets rows after 20 reach verification. Malformed/error responses remain closed,
+transport failure remains distinct, and serialized execution plans exclude
+both query fields and exact query strings.
 
 ## Verification
 
-- Focused Phase 1-3 wall: 40/40 pass.
-- Complete test wall: 1232/1232 across 176 suites.
+- Focused Phase 1-3 wall: 41/41 pass.
+- Complete test wall: 1233/1233 across 176 suites.
 - Typecheck: pass.
 - Full lint: zero errors and three pre-existing warnings.
 - Production build: pass.
-- Dry-run probe: pass; printed only the exact five-query plan and bounds.
-- `git diff --check`: pass.
-- Live network calls: zero.
+- Dry-run probe: pass; exact five-query plan only, zero network.
+- `git diff --check`: pass after final documentation regeneration.
+- Additional live calls during the corrective phase: zero.
 
 ## Flag state
 
@@ -142,37 +140,36 @@ Current local `.env.local`, classified without exposing secrets:
 - direct-Terra client flag: on
 - constraint allocation: on
 
-Phase 3 did not modify `.env.local`. The transport/probe remain unreferenced by
-the app and inactive regardless of local flags.
+The live probe and corrective phase did not modify `.env.local`. The asset path
+remains unreferenced by the app and inactive regardless of local flags.
 
 ## Evidence and limitations still in force
 
-Historical H2B live evidence found zero usable merchant URLs across four
-Serper Shopping products because exposed destinations were Google wrappers.
-Phase 3 proves bounded transport, accounting, and evidence hygiene; it does
-not yet prove that live Serper supplies useful safe merchant pages or images.
+The v2 correction removes one proven parser incompatibility and makes another
+failure attributable. It does not prove Serper will pass the 4/5 website and
+4/5 image gates. Historical H2B still warns that Shopping merchant destinations
+may be Google wrappers. Only a separately approved replacement probe can answer
+the coverage question.
 
-The T7C Direct-Terra evaluation remains in force: three categories beat legacy
-quality, robot-vac recall/stability remained weak, and missing safe prices are
-budget-unverified rather than compliant.
+The T7C Direct-Terra evaluation also remains in force: three categories beat
+legacy quality, robot-vac recall/stability remained weak, and missing safe
+prices are budget-unverified rather than compliant.
 
 ## Next decision
 
-Nothing further is automatically approved. The strongest next step is one
-commit-pinned live coverage probe of exactly five Serper Shopping attempts. It
-requires a new explicit numeric approval naming the Phase 3 commit. The result
-must pass both 4/5 gates and manual identity review before any route/UI
-integration is considered.
+Nothing further is automatically approved. The strongest next step is a
+replacement live probe, but it requires a new explicit approval for exactly
+five Serper Shopping attempts pinned to this corrective commit's full hash. The
+failed v1 run is spent and excluded; it is not reusable coverage evidence.
 
-**Recommended reasoning level:** High for the live probe and manual asset audit
-because real provider schema, exact product identity, spend accounting, and
-sanitized evidence all become active. Highest is unnecessary unless the live
-response contradicts the frozen adapter contract.
+**Recommended reasoning level:** High for a replacement live probe and manual
+identity audit because real provider coverage and schema evidence become active
+again.
 
 ## Outstanding review debts
 
-- Dialogue entry [91] asks Claude to challenge the 4/5 + 4/5 gate,
-  Direct-Terra-only explicit-identity fallback, and sanitized-fixture boundary.
+- Dialogue entry [93] asks Claude to challenge the bounded first-20 strategy
+  and value-free schema diagnostics before any replacement approval.
 - Zero-live classification of T7C robot-vac denominator misses versus real
   product-set churn before more robot-vac evaluation spend.
 - Budget-constrained evaluation must classify a missing safe price as
@@ -180,16 +177,16 @@ response contradicts the frozen adapter contract.
 
 ## Hard boundaries
 
-- No OpenAI, Serper, SearchAPI, direct-page, or other live call without a new
-  exact numeric approval pinned to the committed Phase 3 revision.
+- No replacement OpenAI, Serper, SearchAPI, direct-page, or other live request
+  without a new exact numeric approval pinned to a committed v2 revision.
 - No further commit, push, flag promotion, `.env.local` edit, deployment,
-  publication, or production change without separate approval.
-- No route or UI wiring during the coverage probe.
+  publication, route/UI integration, or production change without separate
+  approval.
 - Serper may supply optional assets only. It must never discover, score, add,
   delete, replace, rerank, rename, or rewrite Terra recommendations.
 - Missing or rejected assets remain unavailable and never alter Terra's report.
-- Never expose raw provider rows, provider IDs, queries, keys, headers, or
-  server-side diagnostics to the browser.
+- Never expose or persist raw provider rows, provider IDs, queries, keys,
+  headers, or server-only diagnostics outside the sanitized fixture contract.
 - Do not delete legacy, two-layer, SearchAPI-history, or Serper code without
   rollback evidence and explicit retirement approval.
 
@@ -197,13 +194,12 @@ response contradicts the frozen adapter contract.
 
 | Need | Retrieve |
 |---|---|
-| Current phase and boundaries | this file |
-| Phase contract | `docs/forward-roadmap.md` OAI-T8A Phase 3 |
-| Phase 3 verification | latest `docs/qa-loop-results.md` entry |
-| Peer-review request and commit boundary | `docs/agent-dialogue.md` entries [91]-[92] |
-| Bounded Shopping transport | `lib/directTerraSerperTransport.ts` |
-| Frozen coverage probe | `lib/directTerraAssetCoverageProbe.ts` |
+| Current state and boundaries | this file |
+| Phase 3 and v2 contract | `docs/forward-roadmap.md` OAI-T8A Phase 3 |
+| Live result and corrective verification | latest `docs/qa-loop-results.md` entry |
+| Peer-review request | `docs/agent-dialogue.md` entry [93] |
+| Saved sanitized v1 result | `tests/fixtures/review-radar-live/oai-t8a-asset-coverage-probe-c3096cd/result.json` |
+| V2 adapter | `lib/directTerraSerperAssetAdapter.ts` |
+| V2 probe/evidence contract | `lib/directTerraAssetCoverageProbe.ts` |
 | Commit-pinned CLI | `scripts/run-oai-t8a-asset-coverage-probe.mjs` |
-| Mocked adapter | `lib/directTerraSerperAssetAdapter.ts` |
-| Phase 1 verifier | `lib/directTerraAssetVerifier.ts` |
-| Shared image/page safety | `lib/productImageResolver.ts`, `lib/productPageUrl.ts` |
+| Phase 1 asset verifier | `lib/directTerraAssetVerifier.ts` |
