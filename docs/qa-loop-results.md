@@ -9718,3 +9718,98 @@ dry-run, and diff-check pass. No additional API call occurred. Taylor
 separately approved the scoped corrective commit; the nine reviewed files and
 this evidence record land together. That commit authorizes no replacement
 request.
+
+## 🟧 Codex QA Update — 2026-07-21 (OAI-T8A Phase 3 v2 replacement probe)
+
+**Approved live scope:** Taylor approved the next phase after it was stated as
+the corrected five-request Phase 3 asset-coverage probe pinned to full commit
+`44e0e2d70d968780c889801eaa09953f98988bb7`. Execution used exactly five
+Serper Shopping requests and five physical attempts, with no retry, fallback,
+replacement, OpenAI, SearchAPI, direct-page request, route/UI work, flag,
+`.env.local`, deployment, or additional case.
+
+**Measured outcome:** all five provider calls completed and returned valid
+Shopping arrays. The ledger reconciles at 5 calls, 5 diagnostics, and 5 items.
+Serper returned 178 Shopping rows; the bounded adapter considered exactly 100
+and discarded 78. All 100 considered rows had images, but none had a direct
+merchant product URL: every considered link was a Google wrapper. Consequently
+safe website coverage was 0/5, safe image coverage was 0/5, fully decorated
+coverage was 0/5, and the verdict was `probe_fail_website_coverage`.
+
+**Attribution:** this result proves the v2 parser correction worked and
+isolates the remaining failure to the provider contract, not transport or
+schema parsing. The Phase 1 rule deliberately refuses to attach an image from
+a row without an identity-safe direct product page; therefore 0/5 image
+coverage does not mean Serper lacked images. Exact-identity rows existed for
+RIDGID (1), Vacmaster (1), CRAFTSMAN (3), and Milwaukee (7). No considered row
+exactly matched the frozen DEWALT `DXV12P-QT` identity; returned near identities
+included `DXV12P-QTA`, so that target remains an identity discrepancy rather
+than an asset-coverage success.
+
+**Evidence safety:** the untracked sanitized fixture is
+`tests/fixtures/review-radar-live/oai-t8a-asset-coverage-probe-44e0e2d/result.json`.
+Post-run inspection found no query field, exact query, API-key marker, request
+header, provider ID, or raw response. The key was loaded process-only and
+removed after execution.
+
+**Decision:** do not repeat this Shopping-only probe and do not accept Google
+wrapper links. The smallest useful next phase is zero-live: design and
+adversarially test a split asset policy in which direct product websites and
+images have independent evidence contracts, while investigating the frozen
+DEWALT identity discrepancy. Any new provider call or behavior wiring remains
+separately approval-gated.
+
+## 🟧 Codex QA Update — 2026-07-21 (OAI-T8A Phase 4 split asset trust contract)
+
+**Scope:** Taylor approved the recommended zero-live Phase 4. No provider call,
+route/UI integration, feature-flag change, `.env.local` edit, deployment,
+commit, push, or production change was authorized or performed.
+
+**Identity classification:** saved T7B evidence contains a registered Lowe's
+listing and other report evidence explicitly supporting Terra's frozen DEWALT
+`DXV12P-QT` identity. Shopping returned nearby `DXV12P-QTA`/`QTE` variants but
+no exact-title row. Phase 4 therefore classifies the probe result as Shopping
+coverage uncertainty; it does not rewrite Terra's model, accept a sibling, or
+claim current availability from the saved evidence.
+
+**Fail-first contract:** two new tests failed under verifier v1 because an
+exact-identity image could not survive without a direct product URL and a safe
+website plus safe image could not be selected from separate candidates. A
+third adversarial test then failed because the first correction would have
+accepted a URL-less exact-title image without proving Shopping provenance.
+
+**Implementation:** `direct-terra-asset-verifier-v2` now evaluates image and
+website evidence independently. An exact-identity image without a direct page
+is eligible only when the server-side adapter marks it `serper_shopping`; that
+marker is not exposed in the verification result. A direct URL supplied by the
+same row must still pass every host, redirect, eligibility, and identity check
+or it poisons the image. `direct-terra-serper-asset-adapter-v3` is the only
+module that assigns the trusted Shopping provenance. Google wrappers remain
+discarded and can never become displayed websites.
+
+The existing brand, exact-model, conflicting-model, product-type, accessory,
+RR-061 image, RR-078 page, RR-090 cross-model URL, local-network, redirect,
+placeholder, and output-minimization gates remain active. Terra's target key,
+rank, product name, brand, model, and category remain immutable.
+
+**Verification:** 33/33 focused tests pass. The complete wall is 1238/1238
+across 176 suites. Typecheck and production build pass. Full lint reports zero
+errors and the same three pre-existing warnings. `git diff --check` passes.
+
+The separately approved adversarial review added a provider-override probe:
+a raw Shopping row's fake provenance value is ignored, the adapter assigns its
+own fixed marker, and neither value survives into the verification output. The
+focused and complete walls remained green. Review also records that the old
+Phase 3 coverage-probe version must not be reused for another live run because
+adapter semantics are now v3; any future live probe needs a new reviewed
+version and approval.
+
+**Boundary:** this phase changes only an unwired server-side seam. It does not
+prove live image coverage, choose a website source, alter the API response, or
+display an asset. The strongest next implementation after review/commit is a
+zero-live exact-product website resolver over Terra's already registered
+response citations; that path should be tested before buying another provider
+request.
+
+Taylor approved the adversarial review and scoped eight-file commit. This
+record lands with that reviewed code; untracked live fixtures remain excluded.

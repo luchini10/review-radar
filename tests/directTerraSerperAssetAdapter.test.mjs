@@ -65,7 +65,7 @@ describe("Direct-Terra mocked Serper Shopping asset adapter", () => {
     assert.equal(buildDirectTerraAssetQuery(q7), "Roborock Q7 M5+ robot vacuum");
     assert.equal(
       DIRECT_TERRA_SERPER_ASSET_ADAPTER_VERSION,
-      "direct-terra-serper-asset-adapter-v2",
+      "direct-terra-serper-asset-adapter-v3",
     );
     assert.deepEqual(requests, [
       {
@@ -257,6 +257,37 @@ describe("Direct-Terra mocked Serper Shopping asset adapter", () => {
       "https://merchant.example/products/roborock-q7-m5-plus?variant=q7m5",
     );
     assert.equal(JSON.stringify(result).includes("evil.example"), false);
+  });
+
+  it("uses an exact-identity Shopping image while leaving a Google-wrapper website unavailable", async () => {
+    const result = await resolveDirectTerraAssetsWithSerperShopping({
+      targets: [q7],
+      transport: async () => ({
+        shopping: [
+          shoppingRow({
+            productLink: "https://www.google.com/shopping/product/123",
+            link: undefined,
+            imageSource: "provider-controlled-editorial-value",
+            imageUrl:
+              "https://encrypted-tbn0.gstatic.com/images/roborock-q7-m5-plus.jpg?q=tbn",
+          }),
+        ],
+      }),
+    });
+
+    assert.equal(result.items[0].verification.productUrl, null);
+    assert.equal(result.items[0].verification.productUrlStatus, "unavailable");
+    assert.equal(
+      result.items[0].verification.imageUrl,
+      "https://encrypted-tbn0.gstatic.com/images/roborock-q7-m5-plus.jpg?q=tbn",
+    );
+    assert.equal(
+      result.items[0].verification.imageUrlStatus,
+      "accepted_identity_safe",
+    );
+    const serialized = JSON.stringify(result);
+    assert.equal(serialized.includes("provider-controlled-editorial-value"), false);
+    assert.equal(serialized.includes("serper_shopping"), false);
   });
 
   it("feeds normalized rows through the Phase 1 identity, page, type, and image boundary", async () => {

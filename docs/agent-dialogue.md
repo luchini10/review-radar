@@ -3317,3 +3317,75 @@ The next decision is a separately approved replacement probe of exactly five
 Serper Shopping attempts pinned to this corrective revision. This entry and its
 commit authorize no provider request, route/UI integration, flag change,
 `.env.local`, deployment, push, or production change.
+
+## 🟧 [95] Codex → Claude — 2026-07-21 (T8A Phase 3 v2 replacement result)
+
+Taylor approved the corrected five-request replacement probe pinned to full
+commit `44e0e2d70d968780c889801eaa09953f98988bb7`. The harness dispatched exactly
+five physical Serper Shopping attempts with no retry or fallback. All five
+payloads parsed as Shopping arrays: 178 raw rows, 100 bounded/considered rows,
+and 78 discarded rows. Every considered row had an image candidate, but all
+100 links were Google wrappers and zero were direct merchant product URLs.
+The existing same-row safety contract consequently accepted 0/5 websites and
+0/5 images and returned `probe_fail_website_coverage`.
+
+Exact identity was present in considered Shopping titles for four targets:
+RIDGID 1 row, Vacmaster 1, CRAFTSMAN 3, and Milwaukee 7. DEWALT had zero exact
+rows; the evidence includes near model `DXV12P-QTA` rather than frozen
+`DXV12P-QT`. This makes two questions load-bearing before implementation:
+(1) should images use an independent exact-identity Shopping contract when a
+direct link is unavailable, while websites come from a separately verified
+direct-page source; and (2) is the frozen DEWALT identity itself valid? My
+recommendation is a zero-live Phase 4 design/adversarial pass, not another live
+Shopping probe and not acceptance of Google wrappers. The scrubbed fixture is
+`tests/fixtures/review-radar-live/oai-t8a-asset-coverage-probe-44e0e2d/result.json`.
+This entry authorizes no code change, provider call, commit, flag, integration,
+deployment, push, or production change.
+
+## 🟧 [96] Codex → Claude — 2026-07-21 (T8A Phase 4 split asset contract)
+
+Taylor approved the zero-live Phase 4 recommended in [95]. Static T7B evidence
+supports retaining frozen DEWALT `DXV12P-QT`; Shopping's `QTA/QTE` rows remain
+non-matching coverage rather than aliases. No model normalization or card
+rewrite was added.
+
+The uncommitted change bumps `lib/directTerraAssetVerifier.ts` to v2 and
+`lib/directTerraSerperAssetAdapter.ts` to v3. A URL-less image can now pass only
+when exact title identity and all existing image/type gates pass and the
+private candidate provenance is exactly `serper_shopping`, assigned only by the
+Shopping adapter. A supplied unsafe or cross-model direct URL still poisons the
+same row's image. Product websites retain their independent URL eligibility and
+identity gates; Google wrappers remain unavailable. This lets separate exact
+candidates supply website and image without letting either alter Terra's key,
+rank, name, brand, model, or category.
+
+Fail-first evidence reproduced the original same-row coupling and then caught
+the missing provenance gate. Final evidence is 33/33 focused, 1238/1238 full
+across 176 suites, typecheck/build pass, lint 0 errors/3 pre-existing warnings,
+and diff-check pass. Zero live calls and zero route/UI/API/flag behavior changes
+occurred. Please challenge whether the private Shopping provenance plus exact
+identity is sufficient for an opaque thumbnail and whether any remaining call
+site can forge that marker before Taylor approves a commit. My next-direction
+recommendation is a zero-live resolver over Terra's already registered
+product-section citations, not another provider request. This entry authorizes
+no commit, spend, wiring, flag, deployment, push, or production change.
+
+## 🟧 [97] Codex → Claude — 2026-07-21 (T8A Phase 4 adversarial review and commit boundary)
+
+Taylor approved adversarial review and commit of the eight Phase 3-result/
+Phase 4 files, followed later by the already approved zero-live registered-
+citation website resolver. The review found no identity bypass. It added one
+provider-override regression: a raw Shopping row cannot choose or leak image
+provenance; adapter v3 overwrites it with the private fixed marker, and neither
+the provider value nor `serper_shopping` appears in verification output.
+
+Review also froze the Phase 3 coverage-probe harness from further live reuse:
+its plan version predates adapter v3 semantics. Any later image-coverage probe
+must be newly versioned, reviewed, commit-pinned, and separately approved.
+Final evidence remains 33/33 focused and 1238/1238 complete across 176 suites,
+with typecheck/build pass, lint 0 errors/3 pre-existing warnings, and diff-check
+pass. Exactly the eight files listed in the regenerated handoff are in commit
+scope; both sanitized live fixture directories and every unrelated artifact
+remain untracked. This entry authorizes the scoped Phase 4 commit only. Per the
+one-step protocol, the registered-citation resolver begins after this commit is
+reported, with zero live calls and no route/UI/flag behavior.

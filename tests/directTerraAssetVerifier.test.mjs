@@ -55,6 +55,94 @@ describe("Direct-Terra asset safety boundary", () => {
     assert.equal(result.imageUrlStatus, "accepted_identity_safe");
   });
 
+  it("accepts an exact-identity Shopping image without inventing a product website", () => {
+    const result = verifyDirectTerraAssetCandidates({
+      target: q7,
+      candidates: [
+        shoppingResult({
+          productUrl: undefined,
+          imageSource: "serper_shopping",
+          imageUrl: "https://encrypted-tbn0.gstatic.com/images/q7-m5-plus.jpg?q=tbn",
+        }),
+      ],
+    });
+
+    assert.equal(result.productUrl, null);
+    assert.equal(result.productUrlStatus, "unavailable");
+    assert.equal(
+      result.imageUrl,
+      "https://encrypted-tbn0.gstatic.com/images/q7-m5-plus.jpg?q=tbn",
+    );
+    assert.equal(result.imageUrlStatus, "accepted_identity_safe");
+    assert.equal(result.decisions[0].productUrlAccepted, false);
+    assert.equal(result.decisions[0].imageUrlAccepted, true);
+  });
+
+  it("rejects a URL-less image when its Shopping provenance is not established", () => {
+    const result = verifyDirectTerraAssetCandidates({
+      target: q7,
+      candidates: [
+        shoppingResult({
+          productUrl: undefined,
+          imageUrl: "https://images.example.com/products/roborock-q7-m5-plus.jpg",
+        }),
+      ],
+    });
+
+    assert.equal(result.productUrl, null);
+    assert.equal(result.imageUrl, null);
+    assert.equal(result.imageUrlStatus, "unavailable");
+    assert.equal(result.decisions[0].imageUrlReason, "image_source_not_trusted");
+  });
+
+  it("selects a website and image independently from two exact-identity candidates", () => {
+    const result = verifyDirectTerraAssetCandidates({
+      target: q7,
+      candidates: [
+        shoppingResult({
+          imageUrl: undefined,
+        }),
+        shoppingResult({
+          productUrl: undefined,
+          imageSource: "serper_shopping",
+          imageUrl: "https://images.example.com/products/roborock-q7-m5-plus-angle.jpg",
+        }),
+      ],
+    });
+
+    assert.equal(
+      result.productUrl,
+      "https://merchant.example/products/roborock-q7-m5-plus?variant=q7m5",
+    );
+    assert.equal(
+      result.imageUrl,
+      "https://images.example.com/products/roborock-q7-m5-plus-angle.jpg",
+    );
+    assert.equal(result.productUrlStatus, "accepted_identity_safe");
+    assert.equal(result.imageUrlStatus, "accepted_identity_safe");
+  });
+
+  it("rejects image-only sibling and accessory rows despite target-model text", () => {
+    const result = verifyDirectTerraAssetCandidates({
+      target: ridgid,
+      candidates: [
+        {
+          title: "RIDGID HD1200 Wet/Dry Shop Vacuum",
+          imageUrl: "https://images.example.com/products/ridgid-hd1200.jpg",
+        },
+        {
+          title: "Replacement Filter Compatible with RIDGID HD1600 Vacuum",
+          imageUrl: "https://images.example.com/products/ridgid-hd1600-filter.jpg",
+        },
+      ],
+    });
+
+    assert.equal(result.productUrl, null);
+    assert.equal(result.imageUrl, null);
+    assert.equal(result.decisions[0].identityReason, "model_not_in_title");
+    assert.equal(result.decisions[1].identityReason, "wrong_product_type");
+  });
+
   it("removes only conservative tracking and preserves identity parameters and fragments", () => {
     const result = verifyDirectTerraAssetCandidates({
       target: q7,
@@ -192,6 +280,8 @@ describe("Direct-Terra asset safety boundary", () => {
 
     assert.equal(result.productUrl, null);
     assert.ok(result.decisions.every((decision) => decision.productUrlAccepted === false));
+    assert.equal(result.imageUrl, null);
+    assert.ok(result.decisions.every((decision) => decision.imageUrlAccepted === false));
   });
 
   it("rejects affiliate, deeplink, click, tracking, and redirect wrappers", () => {

@@ -2902,6 +2902,67 @@ failed v1 run as coverage evidence.
 **Recommended reasoning level:** Medium for the scoped corrective commit; High
 for any separately approved replacement probe and identity audit.
 
+**Phase 3 v2 replacement result (2026-07-21):** the approved replacement was
+run once at full commit `44e0e2d70d968780c889801eaa09953f98988bb7`.
+The five-attempt ledger reconciled exactly. All five payloads were valid
+Shopping arrays, proving the parser correction, and supplied 178 raw rows. The
+bounded adapter considered 100 and discarded 78. All 100 considered rows had
+an image, but all 100 exposed only Google wrapper links and zero direct merchant
+product URLs. The frozen safety contract therefore accepted 0/5 websites and
+0/5 images and correctly failed the website gate.
+
+This is now an architectural result rather than a reason to repeat the probe:
+Serper Shopping, through the tested response contract, cannot provide the
+direct product website required by the combined same-row website-plus-image
+policy. Four targets had at least one exact-identity Shopping row, while the
+frozen DEWALT `DXV12P-QT` target had none and must be investigated separately
+from asset transport. Do not weaken the wrapper rejection or silently treat the
+image URLs as verified.
+
+**Next gate:** a separately approved zero-live Phase 4 design correction should
+split the website and image evidence contracts, reuse existing verification
+gates, and prove through adversarial tests that neither channel can alter Terra
+identity or admit a sibling model, accessory, editorial page, or wrapper. It
+must also classify the DEWALT identity discrepancy before any further provider
+spend. Do not build another Shopping-only coverage probe.
+
+**Recommended reasoning level:** High for Phase 4 because it changes the trust
+boundary between Terra identity, product-page links, and product images.
+
+**Phase 4 split asset trust contract (completed uncommitted on 2026-07-21;
+zero live):** verifier v2 no longer requires one provider row to supply both
+asset classes. A direct product website still needs exact title identity,
+product eligibility, a safe non-wrapper host/path, and page-identity agreement.
+An image may be selected independently when its row proves exact brand, model,
+and product type and either has a verified direct page or carries the private
+`serper_shopping` provenance assigned only by adapter v3. A present unsafe or
+cross-model direct URL still poisons that row's image. Unknown/editorial
+URL-less image provenance remains rejected.
+
+Saved evidence supports retaining Terra's `DXV12P-QT` identity while treating
+Shopping's `QTA/QTE` results as non-matching coverage, not aliases. Phase 4
+does not normalize suffixes, rewrite the card, or borrow a sibling asset.
+
+Evidence is 33/33 focused, 1238/1238 complete across 176 suites, typecheck,
+build, lint at 0 errors/3 pre-existing warnings, and diff-check green. No route,
+UI, API contract, flag, or live behavior is wired.
+
+The approved adversarial review proved that a provider-controlled provenance
+field cannot override the adapter's fixed Shopping marker and that neither
+value reaches verifier output. It also freezes the old Phase 3 probe as spent:
+adapter v3 semantics require a newly versioned harness before any future live
+coverage request.
+
+**Next gate:** review and commit Phase 4 separately. The strongest subsequent
+zero-live step is to resolve product websites from Terra's response-owned,
+registered citations before considering a new organic provider query. The
+resolver must preserve per-product section association and require existing
+product-page identity/eligibility gates; otherwise it must leave the website
+unavailable. Live image coverage and UI integration remain later gates.
+
+**Recommended reasoning level:** High for the Phase 4 review and the later
+registered-citation website resolver because both protect product identity.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen

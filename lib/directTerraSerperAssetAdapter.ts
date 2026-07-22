@@ -7,7 +7,7 @@ import {
 } from "./directTerraAssetVerifier.ts";
 
 export const DIRECT_TERRA_SERPER_ASSET_ADAPTER_VERSION =
-  "direct-terra-serper-asset-adapter-v2";
+  "direct-terra-serper-asset-adapter-v3";
 export const DIRECT_TERRA_SERPER_SHOPPING_ENDPOINT =
   "https://google.serper.dev/shopping";
 export const MAX_DIRECT_TERRA_ASSET_TARGETS = 5;
@@ -171,6 +171,7 @@ function mapShoppingRow(value: unknown): DirectTerraAssetCandidate | null {
       [value.imageUrl, value.image, value.thumbnailUrl, value.thumbnail],
       4_096,
     ),
+    imageSource: "serper_shopping",
     snippet: boundedText(value.snippet, 800),
   };
 }

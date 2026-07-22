@@ -10,7 +10,7 @@ import { classifyProductTypeMatch } from "./productTypeMatch.ts";
 import { normalizeTwoLayerSourceUrl } from "./twoLayerSourceUrl.ts";
 
 export const DIRECT_TERRA_ASSET_VERIFIER_VERSION =
-  "direct-terra-asset-verifier-v1";
+  "direct-terra-asset-verifier-v2";
 
 export type DirectTerraAssetTarget = {
   key: string;
@@ -25,6 +25,7 @@ export type DirectTerraAssetCandidate = {
   title?: unknown;
   productUrl?: unknown;
   imageUrl?: unknown;
+  imageSource?: unknown;
   snippet?: unknown;
 };
 
@@ -304,7 +305,27 @@ function evaluateCandidate(
     }
   }
 
-  if (!safeProductUrl) {
+  const rawImageUrl = asText(candidate.imageUrl, 4_096);
+  if (!rawImageUrl) {
+    return {
+      ...base,
+      productUrlAccepted: Boolean(safeProductUrl),
+      productUrlReason,
+      imageUrlAccepted: false,
+      imageUrlReason: "missing_image_url",
+      productUrl: safeProductUrl,
+      imageUrl: null,
+    };
+  }
+
+  // A Shopping image may be useful even when that provider row exposes no
+  // direct merchant URL (for example, when Serper returns only a Google
+  // wrapper that the adapter deliberately discards). A present-but-unsafe
+  // direct URL is different: it is conflicting evidence from the same row and
+  // must continue to poison the image rather than letting a wrong-model page
+  // lend its thumbnail to the locked Terra product.
+  const productUrlWasSupplied = Boolean(asText(candidate.productUrl, 4_096));
+  if (productUrlWasSupplied && !safeProductUrl) {
     return {
       ...base,
       productUrlAccepted: false,
@@ -316,15 +337,14 @@ function evaluateCandidate(
     };
   }
 
-  const rawImageUrl = asText(candidate.imageUrl, 4_096);
-  if (!rawImageUrl) {
+  if (!safeProductUrl && candidate.imageSource !== "serper_shopping") {
     return {
       ...base,
-      productUrlAccepted: true,
+      productUrlAccepted: false,
       productUrlReason,
       imageUrlAccepted: false,
-      imageUrlReason: "missing_image_url",
-      productUrl: safeProductUrl,
+      imageUrlReason: "image_source_not_trusted",
+      productUrl: null,
       imageUrl: null,
     };
   }
@@ -339,7 +359,7 @@ function evaluateCandidate(
       brand: target.brand,
       category: target.category,
       modelNumber: target.model,
-      pageUrl: safeProductUrl,
+      pageUrl: safeProductUrl || undefined,
       productName: target.productName,
     },
   );
@@ -347,7 +367,7 @@ function evaluateCandidate(
   if (!image.accepted) {
     return {
       ...base,
-      productUrlAccepted: true,
+      productUrlAccepted: Boolean(safeProductUrl),
       productUrlReason,
       imageUrlAccepted: false,
       imageUrlReason: image.rejection.reason,
@@ -358,7 +378,7 @@ function evaluateCandidate(
 
   return {
     ...base,
-    productUrlAccepted: true,
+    productUrlAccepted: Boolean(safeProductUrl),
     productUrlReason,
     imageUrlAccepted: true,
     imageUrlReason: "accepted_identity_safe",
