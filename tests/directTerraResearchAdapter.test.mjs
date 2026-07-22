@@ -131,6 +131,10 @@ describe("direct Terra V2 provider adapter", () => {
     assert.deepEqual(result.citationUrls, ["https://example.com/a"]);
     assert.equal(result.disabledCitationCount, 0);
     assert.deepEqual(result.priceEstimates, []);
+    assert.deepEqual(result.assetTargets, []);
+    assert.deepEqual(result.responseSources, [
+      { url: "https://example.com/a" },
+    ]);
     assert.equal(result.rejectedPriceObservationCount, 0);
     assert.deepEqual(calls, [
       [

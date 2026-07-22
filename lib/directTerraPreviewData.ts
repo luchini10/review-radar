@@ -101,6 +101,26 @@ Start with Atlas One when the overall balance matters most. Choose Meridian Two 
       sourceCount: 2,
     },
   ],
+  productAssets: [
+    {
+      rank: 1,
+      productName: "Example Atlas One",
+      productUrl: sourceOne,
+      imageUrl: null,
+    },
+    {
+      rank: 2,
+      productName: "Example Meridian Two",
+      productUrl: sourceTwo,
+      imageUrl: null,
+    },
+    {
+      rank: 3,
+      productName: "Example Field Three",
+      productUrl: null,
+      imageUrl: null,
+    },
+  ],
   rejectedPriceObservationCount: 2,
   transactionalStatus: "unverified",
 };

@@ -31,14 +31,16 @@ requirements, ranked by fit and credibility, each explained and cited.
 
 ---
 
-### Default-off direct Terra V2 result
+### Default-off direct Terra result
 
 ReviewRadar also has a separate experimental report path that deliberately does
 not produce a `RecommendationResult`. When both direct-Terra flags are enabled,
 one Terra/high Responses job researches and ranks the products and returns two
 strict JSON fields: `report_markdown` plus bounded `price_observations`.
-ReviewRadar displays that report without
-splitting it into cards, changing its product set, or reranking it. Every
+ReviewRadar displays that report without changing its product set, names,
+order, explanations, or ranking. A compact product-card band is derived only
+from Terra's own ranked headings; it decorates those same picks with optional
+exact-product websites and images. Every
 clickable HTTP citation must belong to the same OpenAI response source registry.
 The ownership check uses the same GFM Markdown grammar as the renderer. A link
 that cannot be registered is rendered as labeled plain text while the rest of
@@ -50,6 +52,17 @@ deduplicates source hosts and calculates a low/high/median estimated market
 range only when at least two distinct hosts survive. The estimate is visibly
 not a checkout quote; sellers, stock, purchase destinations, discounts, tax,
 shipping, and all purchase claims inside the report remain unverified.
+
+Product websites are resolved first from response-owned citations that Terra
+placed inside that product's own ranked section. Serper Shopping then receives
+at most one exact brand/model/product query per coherent Terra pick, up to five,
+to find an exact-model image and a fallback direct product page. Existing
+identity, eligibility, wrong-model image, redirect, wrapper, and local-network
+guards apply before any asset crosses the server/client boundary. A failed or
+missing lookup leaves that asset unavailable; it can never delete, rename,
+add, or reorder a Terra recommendation. Completed-job asset resolution is
+process-local, TTL-bounded, and idempotent so a repeated completed poll does
+not spend another Shopping batch.
 
 ## 2. Full user flow
 
@@ -102,8 +115,12 @@ returned Markdown report through `DirectTerraReport`. That component now leads
 with a **"Your picks at a glance"** band: `lib/directTerraReportOutline.ts`
 parses Terra's own ranked `## #N Best Match` headings into a scannable
 shortlist (rank, name, estimated price where available, and a jump link to the
-heading anchor, which the renderer stamps with the same `headingSlug`). It
-reads Terra's ranking; it never reranks or rebuilds it. The endpoint and browser
+heading anchor, which the renderer stamps with the same `headingSlug`). The
+same cards may show an identity-checked image and product-website link from the
+server's `productAssets` response field. They retain explicit purchase and
+price-verification caveats and degrade to an image-unavailable state. The
+renderer joins assets only when rank and Terra product name both match. It reads
+Terra's ranking; it never reranks or rebuilds it. The endpoint and browser
 branch both fail closed unless their separate flags are enabled. Once a V2 job
 token is known, any non-completed exit also attempts cancellation so polling
 errors do not leave a provider job running.
@@ -251,6 +268,12 @@ each requirement resolves to **pass / fail / unknown**:
   one-call master prompt, hosted-search lifecycle, exact report/citation
   boundary, deterministic multi-source market-price estimator, and
   POST/GET/DELETE route handlers.
+- `lib/directTerraCitationWebsiteResolver.ts`,
+  `lib/directTerraSerperAssetAdapter.ts`,
+  `lib/directTerraSerperTransport.ts`, `lib/directTerraAssetVerifier.ts`, and
+  `lib/directTerraProductAssets.ts` — response-owned website resolution,
+  bounded Serper Shopping transport, exact identity/image safety, and the
+  citation-first product-asset orchestration used by the direct-Terra route.
 - `lib/directTerraJobToken.ts`, `lib/directTerraApiContract.ts`,
   `lib/directTerraClient.ts` — encrypted V2 job capability, public state union,
   and browser polling/cancellation.

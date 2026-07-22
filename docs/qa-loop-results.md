@@ -9971,3 +9971,62 @@ status-announcement coverage. `git diff --check` passes.
 preview data still does not prove live asset coverage or provider quality.
 Taylor separately approved the 19-file scoped local commit, and this record
 lands with that reviewed code. No push or production change is authorized.
+
+## 🟧 Codex QA Update — 2026-07-22 (OAI-T8A integrated websites and images)
+
+**Scope:** Taylor approved the zero-live integration of the already reviewed
+registered-citation website resolver and Serper Shopping asset adapter into the
+default-off direct-Terra route and UI, followed by adversarial review and a
+scoped commit. No OpenAI, Serper, SearchAPI, direct-page, or other provider
+request occurred. No flag, `.env.local`, deployment, push, or production state
+changed.
+
+**Implemented boundary:** the response parser derives at most five coherent
+asset targets from Terra's ranked headings plus its schema-owned brand/model
+price groups. Citation websites are resolved first from active response-owned
+links inside the matching ranked section. One exact Serper Shopping request per
+target may then supply an exact-model image and a fallback direct product page.
+The public API v3 exposes only rank, Terra product name, nullable product URL,
+and nullable image URL. It exposes no query, source title, provider ID, raw
+row, diagnostic, key, header, or response body.
+
+Terra's report, products, names, and order are immutable. Missing, rejected, or
+failed asset evidence becomes `null` and cannot fail or shrink the report. The
+UI joins an asset only when both rank and Terra product name match, shows a
+neutral image-unavailable state, and retains the unverified-purchase and
+estimated-price caveats. A registered Terra product page outranks a Shopping
+fallback website.
+
+**Adversarial findings and corrections:** review reproduced two integration
+defects before commit. First, a repeated GET of the same completed job would
+repeat the entire Serper batch; a TTL- and size-bounded in-flight/completed
+promise store now coalesces and reuses one sanitized resolution per response
+ID. Second, an exact-looking Shopping row could provide a localhost or private-
+network image URL, causing the shopper's browser to request it. A fail-first
+test reproduced the localhost acceptance. The shared direct-Terra asset
+verifier now rejects local, internal, literal-IP, and IPv6 image destinations
+before the URL enters the public response. Existing Google Shopping thumbnails
+and public exact-product images remain supported.
+
+**Live preparation:** `scripts/run-oai-t8a-integrated-asset-smoke.mjs` is
+dry-run by default. It refuses a dirty tracked tree, existing evidence, missing
+process-only secrets, mismatched full commit, or any numeric approval that is
+not exactly one Terra create, 20 hosted searches maximum, 60 retrieves, one
+safety cancel, five Serper Shopping attempts, and a $7 ceiling. It disables SDK
+retries and permits no replacement, fallback, direct-page request, or second
+case. Only a sanitized completed response, counters, usage, and coverage can be
+retained.
+
+**Verification:** 1256/1256 unit tests pass across 179 suites. Typecheck and
+production build pass. Full lint reports zero errors and the same three
+pre-existing warnings. Playwright passes 17/17 with direct-Terra flags forced
+off for the test server, including the controlled direct-Terra product-asset
+cards. Desktop and 390 x 844 browser inspection found no warning/error console
+entry and confirmed the image fallback, website buttons, trust copy, and card
+layout. The integrated smoke dry-run prints the frozen contract without a
+network request. `git diff --check` passes.
+
+**Next gate:** after this reviewed code is committed, one separately executed
+commit-pinned live smoke may measure real website/image coverage. Passing that
+smoke is evidence for a later flag/deployment decision, not automatic authority
+to edit flags or deploy.

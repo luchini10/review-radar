@@ -15,8 +15,16 @@ import {
   DIRECT_TERRA_JOB_TOKEN_HEADER,
   DIRECT_TERRA_JOB_TTL_MS,
   DIRECT_TERRA_POLL_AFTER_MS,
+  isDirectTerraProductAssetArray,
   type DirectTerraFailureResponse,
+  type DirectTerraProductAsset,
 } from "./directTerraApiContract.ts";
+import { resolveDirectTerraProductAssets as resolveDefaultProductAssets } from "./directTerraProductAssets.ts";
+import type { DirectTerraAssetTarget } from "./directTerraAssetVerifier.ts";
+import {
+  createDirectTerraSerperShoppingTransport as createDefaultSerperTransport,
+  directTerraSerperApiKeyIsValid,
+} from "./directTerraSerperTransport.ts";
 import {
   beginSearchProgress,
   completeSearchProgress,
@@ -35,6 +43,7 @@ import type {
 type DirectTerraEnvironment = {
   openAiApiKey: string | undefined;
   jobTokenSecret: string | undefined;
+  serperApiKey?: string | undefined;
   enabled?: boolean;
 };
 
@@ -53,6 +62,8 @@ type HandlerOptions = {
   startResearch?: typeof startDirectTerraResearch;
   pollResearch?: typeof pollDirectTerraResearch;
   cancelResearch?: typeof cancelDirectTerraResearch;
+  createSerperTransport?: typeof createDefaultSerperTransport;
+  resolveProductAssets?: typeof resolveDefaultProductAssets;
 };
 
 const ERROR_MESSAGES = {
@@ -279,13 +290,73 @@ export function createDirectTerraRecommendationHandlers({
   getEnvironment = () => ({
     openAiApiKey: process.env.OPENAI_API_KEY,
     jobTokenSecret: process.env.REVIEW_RADAR_JOB_TOKEN_SECRET,
+    serperApiKey: process.env.SERPER_API_KEY,
     enabled: process.env.REVIEW_RADAR_DIRECT_TERRA === "on",
   }),
   now = Date.now,
   startResearch = startDirectTerraResearch,
   pollResearch = pollDirectTerraResearch,
   cancelResearch = cancelDirectTerraResearch,
+  createSerperTransport = createDefaultSerperTransport,
+  resolveProductAssets = resolveDefaultProductAssets,
 }: HandlerOptions = {}): DirectTerraRecommendationHandlers {
+  const assetResolutions = new Map<
+    string,
+    { expiresAtMs: number; promise: Promise<DirectTerraProductAsset[]> }
+  >();
+
+  function resolveProductAssetsOnce({
+    responseId,
+    expiresAtMs,
+    load,
+  }: {
+    responseId: string;
+    expiresAtMs: number;
+    load: () => Promise<DirectTerraProductAsset[]>;
+  }) {
+    const currentTime = now();
+    for (const [key, entry] of assetResolutions) {
+      if (entry.expiresAtMs <= currentTime) assetResolutions.delete(key);
+    }
+    const existing = assetResolutions.get(responseId);
+    if (existing) return existing.promise;
+
+    // The token TTL already bounds each record. The hard entry ceiling also
+    // prevents an unusually busy process from retaining an unbounded map.
+    if (assetResolutions.size >= 100) {
+      const oldestKey = assetResolutions.keys().next().value;
+      if (oldestKey) assetResolutions.delete(oldestKey);
+    }
+    const promise = load().catch((error) => {
+      assetResolutions.delete(responseId);
+      throw error;
+    });
+    assetResolutions.set(responseId, { expiresAtMs, promise });
+    return promise;
+  }
+
+  function safeAssetsForTargets(
+    targets: DirectTerraAssetTarget[],
+    value: unknown,
+  ): DirectTerraProductAsset[] {
+    const resolvedByRank = new Map(
+      isDirectTerraProductAssetArray(value)
+        ? value.map((asset) => [asset.rank, asset] as const)
+        : [],
+    );
+    return targets.map((target) => {
+      const asset = resolvedByRank.get(target.rank);
+      return asset?.productName === target.productName
+        ? asset
+        : {
+            rank: target.rank,
+            productName: target.productName,
+            productUrl: null,
+            imageUrl: null,
+          };
+    });
+  }
+
   const POST: RouteHandler = async (request) => {
     const environment = getEnvironment();
     if (!configuredEnvironment(environment)) {
@@ -402,6 +473,37 @@ export function createDirectTerraRecommendationHandlers({
         );
       }
       reportProgressUpTo(progressId, "rank_results");
+      let productAssets: DirectTerraProductAsset[] = result.assetTargets.map(
+        (target) => ({
+          rank: target.rank,
+          productName: target.productName,
+          productUrl: null,
+          imageUrl: null,
+        }),
+      );
+      try {
+        const serperTransport =
+          environment.serperApiKey &&
+          directTerraSerperApiKeyIsValid(environment.serperApiKey)
+            ? createSerperTransport({ apiKey: environment.serperApiKey })
+            : undefined;
+        const resolved = await resolveProductAssetsOnce({
+          responseId: verified.payload.responseId,
+          expiresAtMs: verified.payload.expiresAtMs,
+          load: () =>
+            resolveProductAssets({
+              targets: result.assetTargets,
+              reportMarkdown: result.reportMarkdown,
+              activeCitationUrls: result.citationUrls,
+              responseSources: result.responseSources,
+              serperTransport,
+            }),
+        });
+        productAssets = safeAssetsForTargets(result.assetTargets, resolved);
+      } catch {
+        // Decoration is optional. A failed image or website lookup must never
+        // delete, rewrite, reorder, or fail Terra's completed report.
+      }
       if (progressId) completeSearchProgress(progressId, "done");
       return json(
         {
@@ -413,6 +515,7 @@ export function createDirectTerraRecommendationHandlers({
           sourceHosts: result.sourceHosts,
           disabledCitationCount: result.disabledCitationCount,
           priceEstimates: result.priceEstimates,
+          productAssets,
           rejectedPriceObservationCount: result.rejectedPriceObservationCount,
           transactionalStatus: "unverified",
         },

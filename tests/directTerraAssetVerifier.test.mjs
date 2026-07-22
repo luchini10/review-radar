@@ -324,6 +324,30 @@ describe("Direct-Terra asset safety boundary", () => {
     }
   });
 
+  it("does not let an exact Shopping row make the browser request a local-network image", () => {
+    const imageUrls = [
+      "http://localhost/q7-m5-plus.jpg",
+      "http://192.168.1.25/q7-m5-plus.jpg",
+      "http://[::1]/q7-m5-plus.jpg",
+      "https://images.internal/q7-m5-plus.jpg",
+    ];
+
+    for (const imageUrl of imageUrls) {
+      const result = verifyDirectTerraAssetCandidates({
+        target: q7,
+        candidates: [
+          shoppingResult({
+            productUrl: undefined,
+            imageSource: "serper_shopping",
+            imageUrl,
+          }),
+        ],
+      });
+      assert.equal(result.imageUrl, null, imageUrl);
+      assert.equal(result.decisions[0].imageUrlReason, "unsafe_image_url_host");
+    }
+  });
+
   it("rejects neighboring models even when the brand and product type match", () => {
     const result = verifyDirectTerraAssetCandidates({
       target: {

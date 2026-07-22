@@ -6,6 +6,14 @@ import {
   calculateDirectTerraPriceEstimates,
   type DirectTerraPriceEstimate,
 } from "./directTerraPriceEstimate.ts";
+import {
+  directTerraAssetTargetIsCoherent,
+  type DirectTerraAssetTarget,
+} from "./directTerraAssetVerifier.ts";
+import {
+  extractDirectTerraPicks,
+  headingSlug,
+} from "./directTerraReportOutline.ts";
 
 export type DirectTerraSource = {
   url: string;
@@ -20,6 +28,8 @@ type ParsedDirectTerraResponse =
       sourceHosts: string[];
       disabledCitationCount: number;
       priceEstimates: DirectTerraPriceEstimate[];
+      assetTargets: DirectTerraAssetTarget[];
+      responseSources: DirectTerraSource[];
       rejectedPriceObservationCount: number;
     }
   | {
@@ -173,6 +183,71 @@ function exactReportWrapper(text: string) {
   }
 }
 
+export function extractDirectTerraAssetTargets({
+  reportMarkdown,
+  priceObservations,
+}: {
+  reportMarkdown: string;
+  priceObservations: unknown;
+}): DirectTerraAssetTarget[] {
+  if (!Array.isArray(priceObservations) || priceObservations.length > 5) {
+    return [];
+  }
+
+  const picksByRank = new Map(
+    extractDirectTerraPicks(reportMarkdown).map((pick) => [pick.rank, pick]),
+  );
+  const seenRanks = new Set<number>();
+  const targets: DirectTerraAssetTarget[] = [];
+
+  for (const value of priceObservations) {
+    if (
+      !isRecord(value) ||
+      JSON.stringify(Object.keys(value).sort()) !==
+        JSON.stringify(["rank", "brand", "model", "observations"].sort()) ||
+      !Number.isInteger(value.rank) ||
+      (value.rank as number) < 1 ||
+      (value.rank as number) > 5 ||
+      seenRanks.has(value.rank as number) ||
+      typeof value.brand !== "string" ||
+      value.brand.trim().length === 0 ||
+      value.brand.length > 120 ||
+      typeof value.model !== "string" ||
+      value.model.trim().length === 0 ||
+      value.model.length > 200 ||
+      !Array.isArray(value.observations) ||
+      value.observations.length > 4
+    ) {
+      continue;
+    }
+
+    const rank = value.rank as number;
+    const pick = picksByRank.get(rank);
+    if (!pick || pick.name.length > 300) continue;
+    const brand = value.brand.trim();
+    const model = value.model.trim();
+    const identitySlug = headingSlug(`${brand}-${model}`);
+    if (!identitySlug) continue;
+
+    const target: DirectTerraAssetTarget = {
+      key: `rank-${rank}-${identitySlug}`,
+      rank,
+      productName: pick.name,
+      brand,
+      model,
+      // The completed background job intentionally retains no shopper text.
+      // Terra's exact ranked product name is the narrowest available type
+      // context and keeps resolution tied to the recommendation itself.
+      category: pick.name,
+    };
+    if (!directTerraAssetTargetIsCoherent(target)) continue;
+    seenRanks.add(rank);
+    targets.push(target);
+  }
+
+  return targets.sort((left, right) => left.rank - right.rank);
+}
+
 function childNodes(value: unknown): unknown[] {
   return isRecord(value) && Array.isArray(value.children) ? value.children : [];
 }
@@ -271,6 +346,10 @@ export function parseDirectTerraCompletedResponse(
     priceObservations,
     responseSourceUrls: sources.map((source) => source.url),
   });
+  const assetTargets = extractDirectTerraAssetTargets({
+    reportMarkdown,
+    priceObservations,
+  });
   return {
     ok: true,
     reportMarkdown,
@@ -278,6 +357,8 @@ export function parseDirectTerraCompletedResponse(
     sourceHosts,
     disabledCitationCount,
     priceEstimates: priceResult.estimates,
+    assetTargets,
+    responseSources: sources,
     rejectedPriceObservationCount: priceResult.rejectedObservationCount,
   };
 }

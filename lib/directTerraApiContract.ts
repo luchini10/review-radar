@@ -1,6 +1,6 @@
 import type { DirectTerraPriceEstimate } from "./directTerraPriceEstimate.ts";
 
-export const DIRECT_TERRA_API_VERSION = "direct-terra-api-v2";
+export const DIRECT_TERRA_API_VERSION = "direct-terra-api-v3";
 export const DIRECT_TERRA_POLL_AFTER_MS = 2_000;
 export const DIRECT_TERRA_JOB_TTL_MS = 10 * 60_000;
 export const DIRECT_TERRA_CANCEL_BEFORE_EXPIRY_MS = 30_000;
@@ -17,6 +17,13 @@ export type DirectTerraPendingResponse = {
   expiresAtMs: number;
 };
 
+export type DirectTerraProductAsset = {
+  rank: number;
+  productName: string;
+  productUrl: string | null;
+  imageUrl: string | null;
+};
+
 export type DirectTerraCompletedResponse = {
   pipeline: "direct_terra";
   version: typeof DIRECT_TERRA_API_VERSION;
@@ -26,6 +33,7 @@ export type DirectTerraCompletedResponse = {
   sourceHosts: string[];
   disabledCitationCount?: number;
   priceEstimates: DirectTerraPriceEstimate[];
+  productAssets: DirectTerraProductAsset[];
   rejectedPriceObservationCount: number;
   transactionalStatus: "unverified";
 };
@@ -118,6 +126,44 @@ function isPriceEstimateArray(
   return new Set(value.map((estimate) => estimate.rank)).size === value.length;
 }
 
+function isNullableHttpUrl(value: unknown): value is string | null {
+  if (value === null) return true;
+  if (typeof value !== "string" || value.length === 0 || value.length > 4_096) {
+    return false;
+  }
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" || parsed.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
+function isProductAsset(value: unknown): value is DirectTerraProductAsset {
+  return (
+    isRecord(value) &&
+    JSON.stringify(Object.keys(value).sort()) ===
+      JSON.stringify(["rank", "productName", "productUrl", "imageUrl"].sort()) &&
+    Number.isInteger(value.rank) &&
+    (value.rank as number) >= 1 &&
+    (value.rank as number) <= 5 &&
+    typeof value.productName === "string" &&
+    value.productName.trim().length > 0 &&
+    value.productName.length <= 300 &&
+    isNullableHttpUrl(value.productUrl) &&
+    isNullableHttpUrl(value.imageUrl)
+  );
+}
+
+export function isDirectTerraProductAssetArray(
+  value: unknown,
+): value is DirectTerraProductAsset[] {
+  if (!Array.isArray(value) || value.length > 5 || !value.every(isProductAsset)) {
+    return false;
+  }
+  return new Set(value.map((asset) => asset.rank)).size === value.length;
+}
+
 export function isDirectTerraCitationAllowed(
   citationUrls: readonly string[],
   href: unknown,
@@ -154,6 +200,7 @@ export function isDirectTerraCompletedResponse(
     isStringArray(value.citationUrls) &&
     isStringArray(value.sourceHosts) &&
     isPriceEstimateArray(value.priceEstimates) &&
+    isDirectTerraProductAssetArray(value.productAssets) &&
     typeof value.rejectedPriceObservationCount === "number" &&
     Number.isSafeInteger(value.rejectedPriceObservationCount) &&
     value.rejectedPriceObservationCount >= 0 &&

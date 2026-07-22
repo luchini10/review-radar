@@ -22,6 +22,11 @@ describe("direct Terra V2 display boundary", () => {
     assert.match(source, /without reranking or rebuilding them/);
     assert.match(source, /Estimated market prices/);
     assert.match(source, /result\.priceEstimates\.map/);
+    assert.match(source, /result\.productAssets\.map/);
+    assert.match(source, /Product website/);
+    assert.match(source, /Product image unavailable/);
+    assert.match(source, /exact product-identity[^]*check/i);
+    assert.match(source, /confirm the product, seller, stock, and price/i);
     assert.match(source, /at least two distinct source/);
     assert.match(source, /estimates rather than[^]*checkout quotes/i);
     assert.equal(source.includes("cards.map"), false);
@@ -39,6 +44,7 @@ describe("direct Terra V2 display boundary", () => {
     assert.match(source, /scroll-mt-24/);
     // Price shown from the existing estimates, labeled as a range not a quote.
     assert.match(source, /priceByRank\.get\(pick\.rank\)/);
+    assert.match(source, /assetByRank\.get\(pick\.rank\)/);
     assert.match(source, /estimated[^]*ranges, not checkout quotes/i);
   });
 

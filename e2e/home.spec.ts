@@ -57,6 +57,23 @@ test("offers a working keyboard skip link", async ({ page }) => {
   await expect(page.locator("#main")).toBeFocused();
 });
 
+test("renders Direct-Terra product assets as optional exact-product decoration", async ({
+  page,
+}) => {
+  await page.goto("/oai-t8-preview");
+
+  await expect(
+    page.getByRole("region", { name: "Your picks at a glance" }),
+  ).toBeVisible();
+  await expect(page.getByText("Example Atlas One", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Full research" })).toHaveCount(3);
+  await expect(page.getByRole("link", { name: "Product website" })).toHaveCount(2);
+  await expect(page.getByText("Product image unavailable")).toHaveCount(3);
+  await expect(
+    page.getByText(/exact product-identity check/i),
+  ).toBeVisible();
+});
+
 test("shows validation near the form for an empty product category", async ({
   page,
 }) => {

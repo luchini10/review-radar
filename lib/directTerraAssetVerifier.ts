@@ -124,7 +124,7 @@ function canonicalHttpUrl(value: unknown) {
   }
 }
 
-function unsafeProductHost(url: string) {
+function unsafeNetworkHost(url: string) {
   const host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
   const unbracketedHost = host.replace(/^\[|\]$/g, "");
   return (
@@ -133,7 +133,14 @@ function unsafeProductHost(url: string) {
     host.endsWith(".local") ||
     host.endsWith(".internal") ||
     /^\d{1,3}(?:\.\d{1,3}){3}$/.test(host) ||
-    unbracketedHost.includes(":") ||
+    unbracketedHost.includes(":")
+  );
+}
+
+function unsafeProductHost(url: string) {
+  const host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+  return (
+    unsafeNetworkHost(url) ||
     host === "google.com" ||
     host.endsWith(".google.com") ||
     host === "googleusercontent.com" ||
@@ -318,6 +325,19 @@ function evaluateCandidate(
     };
   }
 
+  const parsedImageUrl = canonicalHttpUrl(rawImageUrl);
+  if (!parsedImageUrl || unsafeNetworkHost(parsedImageUrl)) {
+    return {
+      ...base,
+      productUrlAccepted: Boolean(safeProductUrl),
+      productUrlReason,
+      imageUrlAccepted: false,
+      imageUrlReason: "unsafe_image_url_host",
+      productUrl: safeProductUrl,
+      imageUrl: null,
+    };
+  }
+
   // A Shopping image may be useful even when that provider row exposes no
   // direct merchant URL (for example, when Serper returns only a Google
   // wrapper that the adapter deliberately discards). A present-but-unsafe
@@ -353,7 +373,7 @@ function evaluateCandidate(
     {
       evidenceText: title,
       source: "serp",
-      url: rawImageUrl,
+      url: parsedImageUrl,
     },
     {
       brand: target.brand,

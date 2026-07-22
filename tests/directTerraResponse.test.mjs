@@ -117,6 +117,17 @@ describe("direct Terra V2 response boundary", () => {
         sourceCount: 2,
       },
     ]);
+    assert.deepEqual(parsed.assetTargets, [
+      {
+        key: "rank-1-example-model-a",
+        rank: 1,
+        productName: "Example Deluxe Refrigerator Model A",
+        brand: "Example",
+        model: "Model A",
+        category: "Example Deluxe Refrigerator Model A",
+      },
+    ]);
+    assert.equal(parsed.responseSources.length, 2);
     assert.equal(parsed.reportMarkdown, report);
   });
 

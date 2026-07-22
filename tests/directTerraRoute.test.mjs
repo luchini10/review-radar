@@ -50,6 +50,8 @@ describe("clean direct Terra V2 route", () => {
         reportMarkdown: exactReport,
         citationUrls: ["https://example.com/a"],
         sourceHosts: ["example.com"],
+        assetTargets: [],
+        responseSources: [],
         disabledCitationCount: 1,
         priceEstimates: [
           {
@@ -90,7 +92,103 @@ describe("clean direct Terra V2 route", () => {
     assert.deepEqual(completed.citationUrls, ["https://example.com/a"]);
     assert.equal(completed.disabledCitationCount, 1);
     assert.equal(completed.priceEstimates[0].median, 424);
+    assert.deepEqual(completed.productAssets, []);
     assert.equal(completed.rejectedPriceObservationCount, 0);
+  });
+
+  it("adds exact product assets without changing Terra's report or rank", async () => {
+    const createdTransports = [];
+    const resolvedInputs = [];
+    const handlers = createDirectTerraRecommendationHandlers({
+      createOpenAIClient: async () => ({ responses: {} }),
+      getEnvironment: () => ({
+        openAiApiKey: "test-key",
+        jobTokenSecret: secret,
+        serperApiKey: "test-only-serper-key",
+      }),
+      now: () => nowMs,
+      startResearch: async () => ({
+        ok: true,
+        responseId: "resp_direct_123456789",
+        status: "in_progress",
+        promptVersion: DIRECT_TERRA_PROMPT_VERSION,
+        promptHash: "a".repeat(64),
+        ledger: {},
+      }),
+      pollResearch: async () => ({
+        ok: true,
+        state: "completed",
+        status: "completed",
+        reportMarkdown: exactReport,
+        citationUrls: ["https://example.com/a"],
+        sourceHosts: ["example.com"],
+        assetTargets: [
+          {
+            key: "rank-1-example-model-a",
+            rank: 1,
+            productName: "Model A",
+            brand: "Example",
+            model: "Model A",
+            category: "Model A",
+          },
+        ],
+        responseSources: [
+          { url: "https://example.com/a", title: "Example Model A" },
+        ],
+        disabledCitationCount: 0,
+        priceEstimates: [],
+        rejectedPriceObservationCount: 0,
+        ledger: {},
+      }),
+      createSerperTransport: (config) => {
+        createdTransports.push(config);
+        return async () => ({ shopping: [] });
+      },
+      resolveProductAssets: async (input) => {
+        resolvedInputs.push(input);
+        return [
+          {
+            rank: 1,
+            productName: "Model A",
+            productUrl: "https://example.com/a",
+            imageUrl: "https://images.example/model-a.jpg",
+          },
+        ];
+      },
+    });
+
+    const started = await handlers.POST(
+      request("POST", { query: "refrigerator" }),
+    );
+    const pending = await started.json();
+    const completedResponse = await handlers.GET(
+      request("GET", null, pending.jobToken),
+    );
+    const completed = await completedResponse.json();
+
+    assert.equal(completed.reportMarkdown, exactReport);
+    assert.deepEqual(completed.productAssets, [
+      {
+        rank: 1,
+        productName: "Model A",
+        productUrl: "https://example.com/a",
+        imageUrl: "https://images.example/model-a.jpg",
+      },
+    ]);
+    assert.equal(createdTransports.length, 1);
+    assert.equal(resolvedInputs.length, 1);
+    assert.equal(typeof resolvedInputs[0].serperTransport, "function");
+
+    const repeatedResponse = await handlers.GET(
+      request("GET", null, pending.jobToken),
+    );
+    const repeated = await repeatedResponse.json();
+    assert.deepEqual(repeated.productAssets, completed.productAssets);
+    assert.equal(
+      resolvedInputs.length,
+      1,
+      "a repeated completed poll must not spend another Shopping batch",
+    );
   });
 
   it("rejects malformed shopper input before creating a provider request", async () => {
@@ -128,11 +226,12 @@ describe("clean direct Terra V2 route", () => {
   it("rejects malformed disabled-citation counters at the client contract", () => {
     const response = {
       pipeline: "direct_terra",
-      version: "direct-terra-api-v2",
+      version: "direct-terra-api-v3",
       state: "completed",
       reportMarkdown: exactReport,
       citationUrls: ["https://example.com/a"],
       sourceHosts: ["example.com"],
+      productAssets: [],
       priceEstimates: [],
       rejectedPriceObservationCount: 0,
       transactionalStatus: "unverified",
@@ -146,6 +245,35 @@ describe("clean direct Terra V2 route", () => {
     assert.equal(
       isDirectTerraCompletedResponse({ ...response, disabledCitationCount: 1 }),
       true,
+    );
+    assert.equal(
+      isDirectTerraCompletedResponse({
+        ...response,
+        productAssets: [
+          {
+            rank: 1,
+            productName: "Model A",
+            productUrl: "javascript:alert(1)",
+            imageUrl: null,
+          },
+        ],
+      }),
+      false,
+    );
+    assert.equal(
+      isDirectTerraCompletedResponse({
+        ...response,
+        productAssets: [
+          {
+            rank: 1,
+            productName: "Model A",
+            productUrl: null,
+            imageUrl: null,
+            providerId: "must-not-cross-client-boundary",
+          },
+        ],
+      }),
+      false,
     );
     assert.equal(
       isDirectTerraCompletedResponse({
@@ -220,6 +348,8 @@ describe("direct Terra V2 live progress narration", () => {
         reportMarkdown: exactReport,
         citationUrls: ["https://example.com/a"],
         sourceHosts: ["example.com"],
+        assetTargets: [],
+        responseSources: [],
         disabledCitationCount: 0,
         priceEstimates: [],
         rejectedPriceObservationCount: 0,
@@ -288,6 +418,8 @@ describe("direct Terra V2 live progress narration", () => {
       reportMarkdown: exactReport,
       citationUrls: ["https://example.com/a"],
       sourceHosts: ["example.com"],
+      assetTargets: [],
+      responseSources: [],
       disabledCitationCount: 0,
       priceEstimates: [],
       rejectedPriceObservationCount: 0,

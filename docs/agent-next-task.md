@@ -1,124 +1,123 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-22 by Codex after the independent accessibility and trust
-review of the local front-end product-experience transformation. The reviewed
-phase is verified and lands with the scoped commit Taylor authorized.
+Updated: 2026-07-22 by Codex after the zero-live Direct-Terra product-asset
+integration and adversarial review. This file describes the reviewed tree that
+Taylor authorized for a scoped local commit.
 
 ## Current phase and commit boundary
 
-The unchanged base is full commit
-`12986654e404d1bbef29ca3fc76a14d6461e9585` (`Resolve Direct-Terra product
-websites`). Taylor approved the independent review that the prior handoff
-identified as the strongest next step. The review found and corrected bounded
-front-end accessibility defects; it did not alter any backend pipeline, data
-contract, recommendation, product ordering, or trust policy.
+The committed base is full commit
+`24c6474d8bc6e236ed8057657de1934f12df63ef` (`Redesign ReviewRadar decision
+research experience`). Taylor approved integrating the already reviewed
+registered-citation website resolver and Serper Shopping image adapter into the
+default-off direct-Terra route/UI, adversarially reviewing the result, running
+the complete validation wall, updating authoritative docs, and making a scoped
+local commit.
 
-Taylor authorized one scoped local commit containing only the 19 phase files
-listed below. No push, deployment, publication, flag change, `.env.local` edit,
-provider request, or production change was authorized or performed. Unrelated
-untracked fixtures, `.claude/`, baseline files, and `fable-transfer-kit/`
-predated this phase and remain excluded. Never use `git add -A`.
+The reviewed integration is complete and lands with the scoped local commit
+containing this record. No provider
+request, push, deployment, publication, feature-flag promotion, `.env.local`
+edit, or production change occurred. Unrelated untracked fixtures, `.claude/`,
+baseline files, and `fable-transfer-kit/` predate the phase and remain excluded.
+Never use `git add -A`.
 
 ## Product outcome
 
-The local redesign positions ReviewRadar as a decision instrument rather than
-a generic chat or dashboard. It provides an editorial, high-trust visual
-identity; a value-first search journey; purposeful progress feedback; and one
-answer-first hierarchy across legacy, two-layer, and direct-Terra results.
+The direct-Terra path still displays Terra's products, names, ranking,
+explanations, and report unchanged. Its picks-at-a-glance cards may now add:
 
-The independent review confirmed that the redesign preserves:
+- an exact product website, preferring a registered Terra citation from that
+  product's own ranked section;
+- an exact-model image from one bounded Serper Shopping query for that locked
+  product; and
+- a direct Shopping product page only when no safe Terra citation exists.
 
-- recommendation identity and order;
-- exact/near separation and requirement verdicts;
-- source ownership, citation behavior, and transactional warnings;
-- request and response shapes, abort/stale/timeout behavior, and feature-flag
-  boundaries; and
-- every backend research, verification, ranking, and asset pipeline.
+Missing or rejected assets remain unavailable. They cannot add, remove, rename,
+reorder, or fail a Terra recommendation. The UI keeps the unverified-purchase
+and estimated-price caveats and shows a neutral image fallback.
 
-## Independent review findings and corrections
+## Trust and spend boundary
 
-The review inspected keyboard navigation, focus, contrast, responsive layout,
-screen-reader structure, links, images, and trust-language fidelity on the home
-page and both development preview routes.
+- At most five coherent targets are derived from Terra's own ranked headings
+  and schema-owned brand/model price groups.
+- Every website/image candidate passes the existing exact brand/model, product-
+  type, page eligibility, accessory, sibling-model, redirect, wrapper, and
+  wrong-model-image gates.
+- Localhost, internal/local names, literal IPv4/IPv6 destinations, and private-
+  network-shaped image hosts are rejected before a URL reaches the browser.
+- The API v3 asset shape contains only rank, Terra product name, nullable
+  product URL, and nullable image URL. Queries, source titles, raw provider
+  rows, provider IDs, diagnostics, keys, headers, and raw responses stay server-
+  only.
+- A process-local TTL- and size-bounded promise store coalesces one asset
+  resolution per OpenAI response ID. Repeating the completed GET reuses that
+  sanitized result instead of spending another Shopping batch.
+- Provider failure degrades only the optional assets; Terra's completed report
+  remains available.
 
-Corrections made:
+## Adversarial review findings
 
-- Raised low-opacity normal text and placeholder colors to passing contrast
-  levels on the actual canvas and dark hero surfaces. Decorative text was also
-  made easier to perceive; disabled-control styling remains intentionally
-  exempt.
-- Replaced the faint global focus outline with a high-contrast double focus
-  indicator that remains visible on light and dark surfaces.
-- Made the main landmark programmatically focusable so the keyboard skip link
-  moves both focus and reading position.
-- Removed result-state header links whose marketing-section targets no longer
-  exist, and changed the remaining action to `Start new research`.
-- Replaced an oversized results-tree live region with one small status message
-  for research-in-progress and research-ready announcements.
-- Normalized the direct-Terra heading outline without rewriting Terra's words:
-  the page owns the `h1`, the report surfaces are `h2`, ranked products are
-  `h3`, and their subsections are `h4`. Existing shortlist anchor IDs remain
-  unchanged.
-- Added Playwright coverage for the working skip link and result/loading status
-  announcements, including the absence of dead result-state hash links.
+The pre-commit review found and corrected two generalized defects:
 
-No review finding required weakening, renaming, or removing a trust label.
+1. A repeated completed-job GET would repeat every Serper Shopping request.
+   Regression coverage now proves two completed polls invoke the resolver once.
+2. An exact Shopping row could previously attach a localhost/private-network
+   image URL and make the shopper's browser request it. A fail-first test
+   reproduced the defect; the shared Direct-Terra verifier now rejects those
+   image hosts while preserving public exact-product images and Google Shopping
+   thumbnails.
 
-## Phase file boundary
+The review also confirmed that the client renderer requires both rank and exact
+Terra product name before joining an asset, remote-image failure becomes the
+neutral fallback, external links use safe new-window attributes, and no asset
+result can rewrite the report.
 
-Application and test files in the complete local front-end phase:
+## Reviewed phase files
 
-- `app/globals.css`
-- `app/page.tsx`
-- `app/oai-t8-preview/page.tsx`
-- `components/BrandMark.tsx`
+Application and server files:
+
 - `components/DirectTerraReport.tsx`
-- `components/ProductCard.tsx`
-- `components/ResultsSummary.tsx`
-- `components/SearchForm.tsx`
-- `components/SearchProgressPanel.tsx`
-- `components/SmartFeatures.tsx`
-- `components/TwoLayerResultPreview.tsx`
-- `components/VerdictCard.tsx`
-- `e2e/home.spec.ts`
+- `lib/directTerraApiContract.ts`
+- `lib/directTerraAssetVerifier.ts`
 - `lib/directTerraPreviewData.ts`
-- `tests/directTerraPreview.test.mjs`
+- `lib/directTerraProductAssets.ts`
+- `lib/directTerraRecommendationRoute.ts`
+- `lib/directTerraResearchAdapter.ts`
+- `lib/directTerraResponse.ts`
 
-Required documentation surfaces updated with the phase:
+Harness and tests:
+
+- `scripts/run-oai-t8a-integrated-asset-smoke.mjs`
+- `tests/directTerraAssetVerifier.test.mjs`
+- `tests/directTerraClient.test.mjs`
+- `tests/directTerraPreview.test.mjs`
+- `tests/directTerraProductAssets.test.mjs`
+- `tests/directTerraResearchAdapter.test.mjs`
+- `tests/directTerraResponse.test.mjs`
+- `tests/directTerraRoute.test.mjs`
+- `tests/directTerraUi.test.mjs`
+- `e2e/home.spec.ts`
+
+Authoritative documentation:
 
 - `ReviewRadar-Overview.md`
 - `docs/agent-next-task.md`
 - `docs/change-log.md`
 - `docs/qa-loop-results.md`
 
-## Browser evidence
-
-The in-app browser inspected the home/search page, `/oai-t3-preview`, and
-`/oai-t8-preview` at desktop and mobile widths. The review found no horizontal
-document overflow, broken hash target, missing image alternative text, duplicate
-ID, or unsafe new-window link. The direct-Terra preview now exposes the verified
-heading sequence `h1 -> h2 -> h2 -> h3 -> h4`; the real app supplies its own
-page `h1` above the same report hierarchy.
-
-The skip link and form controls were exercised through the browser and through
-Playwright. A simplistic unnamed-control scan was disproven by inspecting the
-actual accessible names: the category, budget, and priorities controls retain
-their associated labels.
-
 ## Verification
 
-- complete unit wall: 1251/1251 across 178 suites;
+- focused Direct-Terra integration wall: 38/38 before adversarial additions;
+- complete unit wall: 1256/1256 across 179 suites;
 - `npm run typecheck`: pass;
 - `npm run lint`: zero errors and three pre-existing warnings;
 - `npm run build`: pass;
 - `npm run test:e2e` with both direct-Terra flags forced off for the spawned
-  test process: 16/16 pass; and
-- `git diff --check`: pass.
-
-The Playwright wall covers the keyboard skip link, field validation, request
-trimming and Smart Features, loading/status/cancel behavior, signed two-layer
-polling on desktop and mobile, exact and near results, safe images, official
-links, citations, safe errors, and empty results.
+  process: 17/17 pass, including the development-only asset-card preview;
+- integrated live-smoke runner default dry-run: pass and zero network;
+- desktop and 390 x 844 in-app browser inspection: usable card/fallback/link
+  layouts and zero captured warning/error console entries; and
+- `git diff --check`: pass before final staging.
 
 ## Flag state
 
@@ -134,47 +133,60 @@ The prior classified local `.env.local` state remains:
 - direct-Terra client flag: on
 - constraint allocation: on
 
-This phase did not read or modify `.env.local`. Playwright started its own test
-server with both direct-Terra flags disabled through process-only overrides.
+This phase did not read or modify `.env.local`. Playwright used process-only
+flag overrides.
 
 ## Next approval-gated decision
 
-No further implementation phase is approved. The front-end transformation has
-passed both the original product review and the independent accessibility and
-trust review, and its scoped local commit is the new review baseline. The next
-decision is whether Taylor accepts this product experience as the UI baseline
-before separately choosing between deployment work and the remaining live
-asset-coverage roadmap. Do not begin either path without explicit approval.
+After the reviewed tree is committed, the next gate is one live integrated
+smoke pinned to that new full commit. The frozen runner requires exactly these
+approval ceilings:
 
-**Recommended reasoning level:** Medium. The remaining action is mostly
-mechanical scope control, but the dirty worktree makes careful staging and a
-final staged-diff audit important. Higher reasoning would add little unless the
-scope or trust behavior changes.
+- one Terra/high OpenAI Responses create;
+- at most 20 hosted web searches;
+- at most 60 retrieves;
+- at most one safety cancel;
+- at most five Serper Shopping requests / five physical attempts; and
+- a $7 OpenAI hard ceiling.
+
+It permits no retries, replacements, fallbacks, second response, direct source-
+page requests, additional cases, `.env.local` changes, flag promotion,
+deployment, or production change. It retains only the sanitized completed
+response, counters, usage, and website/image coverage. Repository policy still
+requires Taylor's numeric approval to name the reviewed full commit before
+execution.
+
+**Recommended reasoning level:** High. The run itself is mechanical, but the
+first live integrated response must be audited for exact product identity,
+website/image correctness, contract acceptance, attempt reconciliation, and
+whether real coverage justifies a later deployment decision.
 
 ## Remaining limitations and honest uncertainty
 
-- This was a careful manual and automated accessibility review, not a formal
-  third-party WCAG certification or assistive-technology lab audit.
-- Controlled direct-Terra preview data proves renderer behavior, not live asset
-  coverage or provider quality.
-- No live flagged result was generated because that requires a separately
-  approved provider call.
-- Existing roadmap debts remain: registered-citation website coverage and
-  adapter-v3 image coverage are unmeasured live; the old Phase 3 probe remains
-  frozen; T7C denominator classification and constrained-price uncertainty
-  remain open.
+- Mocked and controlled browser evidence proves safety and rendering behavior,
+  not live provider coverage.
+- Process-local idempotency prevents normal repeated-poll spend in one running
+  app instance; it cannot coordinate two different server instances without a
+  durable shared store.
+- Serper Shopping may provide an exact image but no direct merchant website.
+  Terra citation coverage therefore remains important.
+- External image rendering discloses the shopper's network request to the
+  public image host; `no-referrer` is set, and unsafe/local hosts are blocked,
+  but ReviewRadar does not proxy images in this phase.
+- Passing the live smoke is evidence for, not authorization of, later flag
+  promotion or deployment.
 
 ## Hard boundaries
 
-- No provider request without new exact numeric approval pinned to a reviewed
-  commit.
-- No commit, push, deployment, publication, feature-flag promotion,
-  `.env.local` edit, or production change without separate approval.
-- Preserve Terra's immutable recommendation identity and order.
-- Preserve source ownership, trust-state language, transactional caveats, and
-  the separation between exact, near, and unverified results.
+- No provider request without new exact numeric approval pinned to the reviewed
+  full commit.
+- No push, deployment, publication, feature-flag promotion, `.env.local` edit,
+  or production change without separate approval.
+- Preserve Terra's immutable recommendation identity, name, and order.
+- Preserve citation ownership, disabled-source behavior, purchase caveats,
+  market-price-estimate language, and every existing asset trust gate.
 - Never expose or persist keys, headers, private queries, provider IDs, raw
-  responses, private source metadata, or provenance diagnostics.
+  provider rows/responses, or server-only diagnostics.
 - Do not delete legacy, two-layer, SearchAPI-history, or Serper code without
   rollback evidence and explicit retirement approval.
 
@@ -184,9 +196,11 @@ scope or trust behavior changes.
 |---|---|
 | Current phase, boundaries, and next decision | this file |
 | Product and architecture map | `ReviewRadar-Overview.md` |
-| Canonical phase evidence | latest `docs/qa-loop-results.md` entry |
-| Plain-English product changes | latest `docs/change-log.md` entry |
-| Home journey and accessibility status | `app/page.tsx`, `app/globals.css` |
-| Direct-Terra heading/render contract | `components/DirectTerraReport.tsx` |
-| Development-only direct-Terra inspection | `app/oai-t8-preview/page.tsx` |
-| End-to-end regression wall | `e2e/home.spec.ts` |
+| Canonical integration evidence | latest `docs/qa-loop-results.md` entry |
+| Plain-English change | latest `docs/change-log.md` entry |
+| Public API contract | `lib/directTerraApiContract.ts` |
+| Target derivation and citation ownership | `lib/directTerraResponse.ts` |
+| Website/image orchestration | `lib/directTerraProductAssets.ts` |
+| Route lifecycle and idempotency | `lib/directTerraRecommendationRoute.ts` |
+| Card rendering | `components/DirectTerraReport.tsx` |
+| Commit-pinned live runner | `scripts/run-oai-t8a-integrated-asset-smoke.mjs` |

@@ -25,5 +25,7 @@ describe("direct Terra development preview", () => {
     assert.match(directTerraPreviewResult.reportMarkdown, /development-only/i);
     assert.match(directTerraPreviewResult.reportMarkdown, /fictional/i);
     assert.deepEqual(directTerraPreviewResult.sourceHosts, ["example.com"]);
+    assert.equal(directTerraPreviewResult.productAssets.length, 3);
+    assert.equal(directTerraPreviewResult.productAssets[0].rank, 1);
   });
 });

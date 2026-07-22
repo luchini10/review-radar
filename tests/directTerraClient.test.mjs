@@ -12,7 +12,7 @@ describe("direct Terra V2 browser lifecycle", () => {
         return Response.json(
           {
             pipeline: "direct_terra",
-            version: "direct-terra-api-v2",
+            version: "direct-terra-api-v3",
             state: "pending",
             status: "in_progress",
             jobToken: "opaque-job-token",
@@ -24,11 +24,12 @@ describe("direct Terra V2 browser lifecycle", () => {
       }
       return Response.json({
         pipeline: "direct_terra",
-        version: "direct-terra-api-v2",
+        version: "direct-terra-api-v3",
         state: "completed",
         reportMarkdown: "# Exact Terra report",
         citationUrls: ["https://example.com/a"],
         sourceHosts: ["example.com"],
+        productAssets: [],
         disabledCitationCount: 1,
         priceEstimates: [
           {
@@ -71,7 +72,7 @@ describe("direct Terra V2 browser lifecycle", () => {
         return Response.json(
           {
             pipeline: "direct_terra",
-            version: "direct-terra-api-v2",
+            version: "direct-terra-api-v3",
             state: "pending",
             status: "in_progress",
             jobToken: "opaque-job-token",
@@ -84,7 +85,7 @@ describe("direct Terra V2 browser lifecycle", () => {
       if (init.method === "DELETE") {
         return Response.json({
           pipeline: "direct_terra",
-          version: "direct-terra-api-v2",
+          version: "direct-terra-api-v3",
           state: "cancelled",
           status: "cancelled",
         });
@@ -117,7 +118,7 @@ describe("direct Terra V2 browser lifecycle", () => {
         return Response.json(
           {
             pipeline: "direct_terra",
-            version: "direct-terra-api-v2",
+            version: "direct-terra-api-v3",
             state: "pending",
             status: "in_progress",
             jobToken: "opaque-job-token",
@@ -129,7 +130,7 @@ describe("direct Terra V2 browser lifecycle", () => {
       }
       return Response.json({
         pipeline: "direct_terra",
-        version: "direct-terra-api-v2",
+        version: "direct-terra-api-v3",
         state: "cancelled",
         status: "cancelled",
       });

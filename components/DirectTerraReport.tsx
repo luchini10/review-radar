@@ -1,7 +1,11 @@
+"use client";
+
+import { useState } from "react";
 import {
   ArrowDown,
   CheckCircle2,
   ExternalLink,
+  ImageOff,
   Scale,
   ShieldAlert,
   Sparkles,
@@ -34,6 +38,42 @@ function safeExternalUrl(value: string) {
   }
 }
 
+function DirectTerraProductImage({
+  imageUrl,
+  productName,
+}: {
+  imageUrl: string | null;
+  productName: string;
+}) {
+  const [failed, setFailed] = useState(false);
+
+  if (!imageUrl || failed) {
+    return (
+      <div className="grid aspect-[4/3] w-full place-items-center rounded-2xl bg-mist text-center text-slate-500">
+        <div className="px-4">
+          <ImageOff aria-hidden="true" className="mx-auto h-6 w-6" />
+          <span className="mt-2 block text-xs font-medium">
+            Product image unavailable
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    // Provider image URLs are runtime values and cannot use a fixed Next/Image
+    // host allowlist. A failed remote image degrades to the neutral state above.
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      alt={`${productName} product image`}
+      className="aspect-[4/3] w-full rounded-2xl bg-white object-contain p-3"
+      onError={() => setFailed(true)}
+      referrerPolicy="no-referrer"
+      src={imageUrl}
+    />
+  );
+}
+
 export function DirectTerraReport({
   result,
 }: {
@@ -46,6 +86,9 @@ export function DirectTerraReport({
   const picks = extractDirectTerraPicks(result.reportMarkdown);
   const priceByRank = new Map(
     result.priceEstimates.map((estimate) => [estimate.rank, estimate]),
+  );
+  const assetByRank = new Map(
+    result.productAssets.map((asset) => [asset.rank, asset]),
   );
 
   return (
@@ -119,45 +162,71 @@ export function DirectTerraReport({
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-forest">
             Your picks at a glance
           </p>
-          <ol className="mt-3 grid gap-2">
+          <ol className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {picks.map((pick) => {
               const estimate = priceByRank.get(pick.rank);
+              const rankedAsset = assetByRank.get(pick.rank);
+              const asset =
+                rankedAsset?.productName === pick.name ? rankedAsset : undefined;
               return (
-                <li key={pick.rank}>
-                  <a
-                    className="group flex items-center gap-3 rounded-2xl border border-ink/10 bg-white px-3 py-3 transition-all hover:-translate-y-0.5 hover:border-forest/25 hover:shadow-md"
-                    href={`#${pick.anchorId}`}
-                  >
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-ink text-xs font-semibold text-signal">
-                      {pick.rank}
-                    </span>
-                    <span className="block min-w-0 flex-1 truncate text-sm font-semibold text-ink">
-                      {pick.name}
-                    </span>
+                <li
+                  className="flex min-w-0 flex-col rounded-3xl border border-ink/10 bg-white p-3 shadow-sm"
+                  key={pick.rank}
+                >
+                  <DirectTerraProductImage
+                    imageUrl={asset?.imageUrl ?? null}
+                    productName={pick.name}
+                  />
+                  <div className="flex flex-1 flex-col px-1 pb-1 pt-4">
+                    <div className="flex items-start gap-3">
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-ink text-xs font-semibold text-signal">
+                        {pick.rank}
+                      </span>
+                      <span className="min-w-0 text-sm font-semibold leading-5 text-ink">
+                        {pick.name}
+                      </span>
+                    </div>
                     {estimate ? (
-                      <span className="shrink-0 text-sm font-semibold text-forest">
+                      <span className="mt-3 text-sm font-semibold text-forest">
                         {USD.format(estimate.low)}
                         {estimate.high === estimate.low
                           ? ""
                           : `–${USD.format(estimate.high)}`}
                       </span>
                     ) : (
-                      <span className="shrink-0 text-xs text-slate-500">
-                        See report
+                      <span className="mt-3 text-xs text-slate-500">
+                        Price estimate unavailable
                       </span>
                     )}
-                    <ArrowDown
-                      aria-hidden="true"
-                      className="h-4 w-4 shrink-0 text-slate-400"
-                    />
-                  </a>
+                    <div className="mt-auto flex flex-wrap gap-2 pt-4">
+                      <a
+                        className="inline-flex items-center gap-1.5 rounded-full border border-ink/10 px-3 py-2 text-xs font-semibold text-ink transition-colors hover:border-forest/30 hover:text-forest"
+                        href={`#${pick.anchorId}`}
+                      >
+                        Full research
+                        <ArrowDown aria-hidden="true" className="h-3.5 w-3.5" />
+                      </a>
+                      {asset?.productUrl ? (
+                        <a
+                          className="inline-flex items-center gap-1.5 rounded-full bg-forest px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-ink"
+                          href={asset.productUrl}
+                          rel="noreferrer noopener"
+                          target="_blank"
+                        >
+                          Product website
+                          <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
+                        </a>
+                      ) : null}
+                    </div>
+                  </div>
                 </li>
               );
             })}
           </ol>
           <p className="mt-2 text-xs leading-5 text-slate-500">
-            Tap a pick to jump to its full research below. Prices are estimated
-            market ranges, not checkout quotes.
+            Images and websites are attached only after an exact product-identity
+            check. Prices remain estimated market ranges, not checkout quotes;
+            confirm the product, seller, stock, and price before buying.
           </p>
         </section>
       ) : null}

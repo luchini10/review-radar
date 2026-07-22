@@ -11,6 +11,39 @@ Update this file after:
 
 ## 2026-07-22
 
+### Codex - Add exact-product websites and images to Terra results
+
+#### Changed
+
+- The default-off direct-Terra result now shows optional product images and
+  product-website links on Terra's existing ranked picks. Terra still owns the
+  products, names, explanations, and order; ReviewRadar only decorates them.
+- Product websites prefer a response-owned Terra citation from that product's
+  own report section. Serper Shopping supplies exact-model images and is used
+  as a product-page fallback only after the existing identity, eligibility,
+  wrong-model, accessory, redirect, and wrapper checks pass.
+- Missing or failed lookups leave a clear image-unavailable state and never
+  remove a recommendation or fail the completed report. Repeated completed-job
+  polls reuse the same bounded sanitized resolution instead of repeating the
+  Shopping batch.
+- Closed a review-discovered browser safety gap: local, private-network,
+  literal-IP, and internal image destinations are now rejected before an image
+  URL can enter the public response.
+- Added a dry-run-by-default, commit-pinned integrated smoke runner for one
+  Terra response plus no more than five Serper Shopping requests. Live use
+  still requires the exact reviewed commit and numeric approval.
+
+#### Verified
+
+- Complete unit wall: 1256/1256 across 179 suites.
+- Playwright: 17/17, including the development-only direct-Terra asset cards.
+- Typecheck, production build, and dry-run smoke preflight pass. Lint reports
+  zero errors and the same three pre-existing warnings.
+- Desktop and 390 x 844 mobile browser inspection found no console warning or
+  error and confirmed usable card, fallback, link, and trust-language layouts.
+- No provider call, flag edit, `.env.local` edit, deployment, push, or
+  production change occurred.
+
 ### Codex - Rebuild ReviewRadar as a premium decision-research product
 
 #### Changed
