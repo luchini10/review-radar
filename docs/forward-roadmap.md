@@ -2728,7 +2728,7 @@ the first live output needs careful identity, source-ownership, and price-range
 inspection. Highest is unnecessary unless the provider rejects the schema or a
 range binds to the wrong model.
 
-### OAI-T8A - Direct-Terra product-asset safety contract (Phase 1 committed as `836deb3`; Phase 2 complete locally 2026-07-21; zero live)
+### OAI-T8A - Direct-Terra product-asset safety contract (Phase 1 `836deb3`; Phase 2 `309857a`; zero live)
 
 **Objective:** add product-page links and product images to Terra's ranked
 products without reviving the legacy Serper discovery/ranking pipeline or
@@ -2796,15 +2796,17 @@ behavior. Earlier H2B live evidence found Google wrappers instead of usable
 merchant URLs, so mocked correctness does not establish live website-link
 coverage.
 
-**Next gate:** Phase 2 remains uncommitted pending Taylor's explicit approval.
-After a scoped commit, a later separately approved zero-live phase may add a
-single-request, no-retry server transport and bounded live-probe harness. No
-live coverage request or route/UI wiring is authorized by Phase 2.
+**Commit:** the reviewed Phase 2 adapter and regression wall are committed as
+`309857a` (`Add mocked Direct-Terra Serper asset adapter`).
 
-**Recommended reasoning level:** Medium for the scoped Phase 2 commit because
-the adversarial review and full wall are complete. High is appropriate for the
-later real-transport preflight because provider schema, secrets, and attempt
-accounting become active at that boundary.
+**Next gate:** a later separately approved zero-live Phase 3 may add a single-
+request, no-retry server transport and bounded live-probe harness. No live
+coverage request or route/UI wiring is authorized by Phase 2.
+
+**Recommended reasoning level:** High for the real-transport preflight because
+provider schema, secrets, and attempt accounting become active at that
+boundary. Highest is unnecessary unless the live response conflicts with the
+frozen adapter contract.
 
 ### OAI-2B — early uncached quality and repeatability gate
 

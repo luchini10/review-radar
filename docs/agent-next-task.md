@@ -1,7 +1,7 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-21 by Codex after OAI-T8A Direct-Terra product-assets Phase 2
-was implemented and adversarially reviewed locally (zero live, uncommitted).
+Updated: 2026-07-21 by Codex after the reviewed OAI-T8A Direct-Terra
+product-assets Phase 2 was committed as `309857a` (zero live).
 
 ## Current state
 
@@ -13,7 +13,8 @@ wiring, flag change, `.env.local` edit, commit, deployment, or production
 behavior was authorized or performed.
 
 Phase 1 remains committed as `836deb3` (`Add Direct-Terra product asset safety
-boundary`). Phase 2 is uncommitted and consists of:
+boundary`). Phase 2 is committed as `309857a` (`Add mocked Direct-Terra Serper
+asset adapter`) and consists of:
 
 - `lib/directTerraSerperAssetAdapter.ts` (new)
 - `tests/directTerraSerperAssetAdapter.test.mjs` (new)
@@ -108,20 +109,17 @@ prices are budget-unverified rather than compliant.
 
 ## Next decision
 
-Nothing further is automatically approved. The smallest next step is Taylor's
-explicit approval for a scoped commit of the reviewed Phase 2 code, tests, and
-current-state documents. It would make no behavior change.
-
-After that commit, a separately approved zero-live Phase 3 may add a
+Nothing further is automatically approved. The strongest next step is a
+separately approved zero-live Phase 3 that may add a
 single-request, no-retry server transport and a bounded live-probe harness.
 That preflight should freeze separate website/image coverage metrics before
 any spend. A live request, route/UI wiring, or flag promotion remains a later
 separate decision.
 
-**Recommended reasoning level:** Medium for the scoped commit because the
-trust-sensitive review and full wall are complete. Use High for the later
-real-transport preflight because secrets, provider schema, and attempt
-accounting become active at that boundary.
+**Recommended reasoning level:** High for Phase 3 because secrets, provider
+schema, exact attempt accounting, and sanitized fixture boundaries become
+active. Highest is unnecessary unless the real response shape conflicts with
+the frozen adapter contract.
 
 ## Outstanding review debts
 

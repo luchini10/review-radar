@@ -9616,4 +9616,8 @@ the application; typecheck, full lint, and the complete Node wall cover this
 isolated seam. Historical H2B evidence still warns that live Serper Shopping
 may return only Google wrappers for merchant destinations. Phase 2 proves
 request discipline and safety under mocked provider shapes, not live website
-or image coverage. The phase remains uncommitted pending Taylor's approval.
+or image coverage.
+
+**Commit:** `309857a` (`Add mocked Direct-Terra Serper asset adapter`). Only the
+seven Phase 2 code/test/documentation files were staged; pre-existing
+`next-env.d.ts`, live fixtures, and unrelated artifacts were excluded.
