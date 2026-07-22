@@ -36,6 +36,9 @@ export type DirectTerraSerperAssetDiagnostic = {
   providerStatus: "completed" | "invalid_response" | "transport_error";
   rawShoppingResultCount: number;
   mappedCandidateCount: number;
+  directProductUrlCandidateCount: number;
+  imageCandidateCount: number;
+  googleWrapperOnlyRowCount: number;
 };
 
 export type DirectTerraSerperAssetItem = {
@@ -103,20 +106,32 @@ function boundedText(value: unknown, maxLength: number) {
   return text.slice(0, maxLength);
 }
 
-function isGoogleWrapper(value: string) {
+function parsedHttpUrl(value: string) {
   try {
-    const host = new URL(value).hostname.toLowerCase().replace(/^www\./, "");
-    return host === "google.com" || host.endsWith(".google.com");
+    const parsed = new URL(value);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null;
+    return parsed;
   } catch {
-    return true;
+    return null;
   }
 }
 
+function isGoogleWrapper(value: string) {
+  const parsed = parsedHttpUrl(value);
+  if (!parsed) return false;
+  const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+  return host === "google.com" || host.endsWith(".google.com");
+}
+
+function rowProductUrls(row: Record<string, unknown>) {
+  return [row.productLink, row.product_link, row.link]
+    .map((value) => boundedText(value, 4_096))
+    .filter((value): value is string => Boolean(value && parsedHttpUrl(value)));
+}
+
 function directProductUrl(row: Record<string, unknown>) {
-  const values = [row.productLink, row.product_link, row.link];
-  for (const value of values) {
-    const url = boundedText(value, 4_096);
-    if (!url || isGoogleWrapper(url)) continue;
+  for (const url of rowProductUrls(row)) {
+    if (isGoogleWrapper(url)) continue;
     return url;
   }
   return undefined;
@@ -150,16 +165,32 @@ function mapShoppingRow(value: unknown): DirectTerraAssetCandidate | null {
   };
 }
 
+function rowImageUrl(row: Record<string, unknown>) {
+  return firstBoundedText(
+    [row.imageUrl, row.image, row.thumbnailUrl, row.thumbnail],
+    4_096,
+  );
+}
+
 function parseShoppingResponse(response: unknown) {
   if (!isRecord(response) || !Array.isArray(response.shopping)) return null;
   if (boundedText(response.error, 1_000)) return null;
   if (response.shopping.length > MAX_DIRECT_TERRA_SHOPPING_RESULTS) return null;
 
+  const rows = response.shopping.filter(isRecord);
+  const candidates = rows
+    .map(mapShoppingRow)
+    .filter((candidate): candidate is DirectTerraAssetCandidate => Boolean(candidate));
+
   return {
     rawShoppingResultCount: response.shopping.length,
-    candidates: response.shopping
-      .map(mapShoppingRow)
-      .filter((candidate): candidate is DirectTerraAssetCandidate => Boolean(candidate)),
+    candidates,
+    directProductUrlCandidateCount: rows.filter((row) => directProductUrl(row)).length,
+    imageCandidateCount: rows.filter((row) => rowImageUrl(row)).length,
+    googleWrapperOnlyRowCount: rows.filter((row) => {
+      const urls = rowProductUrls(row);
+      return urls.length > 0 && urls.every(isGoogleWrapper);
+    }).length,
   };
 }
 
@@ -208,6 +239,9 @@ export async function resolveDirectTerraAssetsWithSerperShopping(
     let providerStatus: DirectTerraSerperAssetItem["providerStatus"];
     let rawShoppingResultCount = 0;
     let candidates: DirectTerraAssetCandidate[] = [];
+    let directProductUrlCandidateCount = 0;
+    let imageCandidateCount = 0;
+    let googleWrapperOnlyRowCount = 0;
 
     try {
       transportCallCount += 1;
@@ -225,6 +259,9 @@ export async function resolveDirectTerraAssetsWithSerperShopping(
         providerStatus = "completed";
         rawShoppingResultCount = parsed.rawShoppingResultCount;
         candidates = parsed.candidates;
+        directProductUrlCandidateCount = parsed.directProductUrlCandidateCount;
+        imageCandidateCount = parsed.imageCandidateCount;
+        googleWrapperOnlyRowCount = parsed.googleWrapperOnlyRowCount;
       } else {
         providerStatus = "invalid_response";
       }
@@ -242,6 +279,9 @@ export async function resolveDirectTerraAssetsWithSerperShopping(
       providerStatus,
       rawShoppingResultCount,
       mappedCandidateCount: candidates.length,
+      directProductUrlCandidateCount,
+      imageCandidateCount,
+      googleWrapperOnlyRowCount,
     } satisfies DirectTerraSerperAssetDiagnostic;
 
     input.recordDiagnostic?.(diagnostic);

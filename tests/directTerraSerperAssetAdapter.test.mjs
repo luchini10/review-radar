@@ -266,6 +266,9 @@ describe("Direct-Terra mocked Serper Shopping asset adapter", () => {
       providerStatus: "completed",
       rawShoppingResultCount: 1,
       mappedCandidateCount: 1,
+      directProductUrlCandidateCount: 1,
+      imageCandidateCount: 1,
+      googleWrapperOnlyRowCount: 0,
     });
     const serialized = JSON.stringify(result);
     assert.equal(serialized.includes("provider-secret-id"), false);

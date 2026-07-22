@@ -2808,6 +2808,61 @@ provider schema, secrets, and attempt accounting become active at that
 boundary. Highest is unnecessary unless the live response conflicts with the
 frozen adapter contract.
 
+**Phase 3 real-transport preflight (committed in the revision containing this
+record on 2026-07-21; zero live):**
+`lib/directTerraSerperTransport.ts` adds a fixed-endpoint server transport that
+accepts its API key explicitly from a caller and never reads an environment
+file or imports the legacy Serper client. Each invocation performs one POST to
+the frozen Shopping endpoint with the Phase 2 body, uses no-store and redirect-
+error semantics, has a 12-second deadline and 512,000-byte response ceiling,
+requires JSON, and emits only bounded reason codes on failure. It has no
+automatic second attempt or alternate provider/vertical.
+
+`scripts/run-oai-t8a-asset-coverage-probe.mjs` is dry-run by default and freezes
+the five products from the accepted T7B broad shop-vac report. The exact future
+queries are:
+
+1. `RIDGID HD1200 shop vacuum`
+2. `DEWALT DXV12P-QT shop vacuum`
+3. `Vacmaster VFB511B 0202 shop vacuum`
+4. `CRAFTSMAN CMXEVBE17595 shop vacuum`
+5. `Milwaukee 0910-20 shop vacuum`
+
+Live mode remains unapproved. It will require an exact five-search approval,
+the full approved commit hash matching HEAD, a process-only `SERPER_API_KEY`, no
+existing output, and no tracked changes in app/code/test/docs surfaces. It
+records the attempt count before every dispatch, caps at five physical
+attempts, and writes only sanitized, reconciled evidence. Raw responses,
+headers, keys, provider IDs, source/seller labels, and prices are excluded.
+
+The probe deliberately scores two independent gates: at least 4/5 safe merchant
+websites and at least 4/5 safe images. Provider image presence cannot mask zero
+safe merchant URLs. Passing the mechanical bars yields only
+`pending_manual_identity_audit`; every accepted URL and image must still be
+reviewed before any route/UI work.
+
+The fail-first phase found one real false negative: exact Milwaukee `0910-20`
+title and URL evidence was rejected because the shared page selector required
+another non-model path word for an unmapped brand. The Direct-Terra caller now
+supplies explicit brand/model identity to an optional exact-path fallback in
+`productPageMatchesIdentity`; exact `0910-20` passes while sibling title or URL
+`0910-21` remains rejected. Existing callers that omit those new optional
+fields are behavior-identical.
+
+Phase 3 verification is 40/40 focused tests, 1232/1232 full tests across 176
+suites, typecheck, production build, full lint (0 errors/3 pre-existing
+warnings), dry-run plan inspection, and `git diff --check`. No OpenAI, Serper,
+SearchAPI, direct-page, route, UI, flag, `.env.local`, deployment, or production
+change occurred.
+
+**Next gate:** the five-attempt live coverage probe requires a new numeric
+approval pinned to the reviewed Phase 3 commit. No live request or integration
+is authorized by Phase 3 or its commit.
+
+**Recommended reasoning level:** Medium for the scoped commit because the
+adversarial and complete verification walls are green. High is appropriate for
+the later mechanical live probe and manual identity audit.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen

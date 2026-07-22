@@ -296,6 +296,54 @@ describe("Direct-Terra asset safety boundary", () => {
     assert.equal(result.imageUrlStatus, "accepted_identity_safe");
   });
 
+  it("accepts an exact numeric-dash model page without accepting its sibling", () => {
+    const target = {
+      key: "rank-5-milwaukee-0910-20",
+      rank: 5,
+      productName: "Milwaukee 0910-20 M18 FUEL Wet/Dry Shop Vacuum",
+      brand: "Milwaukee",
+      model: "0910-20",
+      category: "shop vacuum",
+    };
+    const exact = verifyDirectTerraAssetCandidates({
+      target,
+      candidates: [
+        {
+          title: target.productName,
+          productUrl: "https://merchant.example/products/milwaukee-0910-20",
+          imageUrl: "https://images.example.com/products/milwaukee-0910-20.jpg",
+        },
+      ],
+    });
+    const sibling = verifyDirectTerraAssetCandidates({
+      target,
+      candidates: [
+        {
+          title: "Milwaukee 0910-21 M18 FUEL Wet/Dry Shop Vacuum",
+          productUrl: "https://merchant.example/products/milwaukee-0910-21",
+          imageUrl: "https://images.example.com/products/milwaukee-0910-21.jpg",
+        },
+      ],
+    });
+    const siblingUrl = verifyDirectTerraAssetCandidates({
+      target,
+      candidates: [
+        {
+          title: target.productName,
+          productUrl: "https://merchant.example/products/milwaukee-0910-21",
+          imageUrl: "https://images.example.com/products/milwaukee-0910-21.jpg",
+        },
+      ],
+    });
+
+    assert.equal(exact.productUrlStatus, "accepted_identity_safe");
+    assert.equal(exact.imageUrlStatus, "accepted_identity_safe");
+    assert.equal(sibling.productUrl, null);
+    assert.equal(sibling.imageUrl, null);
+    assert.equal(siblingUrl.productUrl, null);
+    assert.equal(siblingUrl.imageUrl, null);
+  });
+
   it("accepts an opaque shopping thumbnail only when its result title proves exact identity", () => {
     const result = verifyDirectTerraAssetCandidates({
       target: ridgid,

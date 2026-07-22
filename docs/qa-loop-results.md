@@ -9621,3 +9621,56 @@ or image coverage.
 **Commit:** `309857a` (`Add mocked Direct-Terra Serper asset adapter`). Only the
 seven Phase 2 code/test/documentation files were staged; pre-existing
 `next-env.d.ts`, live fixtures, and unrelated artifacts were excluded.
+
+## 🟧 Codex QA Update — 2026-07-21 (OAI-T8A asset transport and coverage preflight, Phase 3)
+
+**Scope:** Taylor approved the zero-live Phase 3 transport and probe preflight.
+No Serper/OpenAI/SearchAPI/direct-page call, route/UI wiring, flag,
+`.env.local`, commit, deployment, or production change was authorized.
+
+**Transport:** `lib/directTerraSerperTransport.ts` accepts a process-supplied
+key and an injectable fetch implementation. Runtime validation freezes the
+Shopping endpoint/body before transport. A call is one POST, no-store, redirect
+error, 12-second deadline, JSON-only, and capped at 512,000 response bytes.
+Provider/network/payload failures return generic reason codes without a key,
+response body, query, header, or provider detail. There is no legacy client,
+environment read, cache layer, alternate vertical/provider, or automatic
+second attempt.
+
+**Probe:** `lib/directTerraAssetCoverageProbe.ts` freezes the five products from
+the accepted T7B broad shop-vac report and
+`scripts/run-oai-t8a-asset-coverage-probe.mjs` is dry-run by default. Live mode
+requires exactly five approved searches, the full HEAD hash, a process-only
+key, no prior output, and no tracked phase changes. Attempt count is persisted
+before dispatch and must reconcile with all five adapter items and diagnostics
+before sanitized evidence can be written. The mechanical gate is separately
+at least 4/5 safe websites and 4/5 safe images; even a mechanical pass remains
+pending manual audit.
+
+**Fail-first/adversarial findings:** new modules were absent as expected. The
+review then found that an exact Milwaukee `0910-20` title and `/0910-20` page
+failed the shared product-page matcher. The root cause was the unmapped brand
+plus a path rule that also expected another non-model identity word. An
+optional explicit brand/model path check now applies only when a caller supplies
+those fields; exact `0910-20` passes, while sibling title and URL `0910-21`
+remain rejected. Review also made API-key approval validation identical to the
+transport, requires physical-attempt reconciliation before fixture output, and
+keeps the output path relative rather than storing a local Windows username.
+Final diff review also caught that the first evidence serializer copied the
+server-only diagnostic query into the sanitized fixture. The serializer now
+selects only bounded counts/status fields, and a regression proves the exact
+query does not survive serialization.
+
+**Verification (zero live):**
+
+- Four focused suites — 40/40.
+- `npm test` — 1232/1232 across 176 suites.
+- `npm run typecheck` — pass.
+- `npm run lint` — zero errors and three pre-existing warnings.
+- `npm run build` — pass.
+- `node --no-warnings scripts/run-oai-t8a-asset-coverage-probe.mjs` — dry-run plan only; five exact queries, five-attempt ceiling, separate 4/5 gates.
+- `git diff --check` — pass.
+
+No live fixture was created. Taylor separately approved the scoped Phase 3
+commit, and the implementation plus this verification record land together in
+that revision. The commit authorizes no live request.

@@ -290,6 +290,8 @@ function evaluateCandidate(
       productUrlReason = "product_url_ineligible";
     } else if (
       !productPageMatchesIdentity({
+        brand: target.brand,
+        model: target.model,
         pageTitle: title,
         pageUrl: productUrl,
         productName: target.productName,

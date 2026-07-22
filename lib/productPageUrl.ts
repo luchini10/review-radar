@@ -9,6 +9,7 @@ import {
   isGenericProductEvidenceUrl,
 } from "./productEvidenceIdentity.ts";
 import {
+  brandEvidenceMatches,
   isSourceOrRetailerLabel,
   stripLeadingSourceOrRetailerLabel,
 } from "./brandMatching.ts";
@@ -728,6 +729,8 @@ export function productPageMatchesIdentity(input: {
   pageTitle: string;
   pageUrl: string;
   productName: string;
+  brand?: string;
+  model?: string;
 }) {
   const normalizedProductName = input.productName.toLowerCase();
   const brands = Object.keys(OFFICIAL_BRAND_DOMAINS)
@@ -746,7 +749,24 @@ export function productPageMatchesIdentity(input: {
     url: input.pageUrl,
   });
 
-  return candidate?.isProductPage === true;
+  if (candidate?.isProductPage === true) return true;
+  if (!candidate || !input.brand || !input.model) return false;
+
+  const modelTokens = identityWords(input.model).filter((token) => token.length >= 2);
+  const titleTokens = new Set(identityWords(input.pageTitle));
+  const pathTokens = new Set(identityWords(sourceUrlPathIdentityText(input.pageUrl)));
+
+  return (
+    modelTokens.length > 0 &&
+    brandEvidenceMatches(input.pageTitle, input.brand) &&
+    modelTokens.every((token) => titleTokens.has(token)) &&
+    modelTokens.every((token) => pathTokens.has(token)) &&
+    !haveConflictingCompoundModelSequences(input.model, input.pageTitle) &&
+    !haveConflictingCompoundModelSequences(
+      input.model,
+      sourceUrlPathIdentityText(input.pageUrl),
+    )
+  );
 }
 
 function getProductPageCandidates(product: ProductRecommendation) {
