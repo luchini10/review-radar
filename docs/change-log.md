@@ -11,6 +11,32 @@ Update this file after:
 
 ## 2026-07-22
 
+### Claude - Fix the root causes of undecorated Direct-Terra cards and obscure links (T8C)
+
+#### Changed
+
+- Many products got no photo or buy link because a valid, coherent target was
+  being discarded, not because resolution failed. Root cause: Terra names one
+  product two compatible ways (the ranked heading uses the SKU, e.g. iRobot
+  "Q352020"; the price observation uses the marketing name "Roomba 105"), and a
+  strict byte-level agreement check threw the whole target away on any mismatch.
+  The ranked heading is now authoritative — the structured price identity is
+  only a fallback when the heading has no model — which recovers targets across
+  drills, grills, robot vacuums, and any product named two ways.
+- A model written with a leading series/line code ("Monument Grills Mesa II
+  415BZ (M2-415BZ)") no longer rejects itself: an added alphabetic prefix
+  (M2- before 415BZ) counts as the same product, while a trailing trim
+  (DXV12P-QTA) or a different number (Q7 vs Q70) still conflicts.
+- Buy links are now shown only on a manufacturer or popular-retailer host; an
+  identity-verified link on an obscure store is dropped rather than displayed.
+
+#### Verified
+
+- Root cause traced through the T8C validation reports; fixes replayed on those
+  real reports recover the previously-missing targets. New/updated tests cover
+  all three roots (incl. sibling/digit-boundary rejection). Full suite
+  1307/1307; typecheck, build, lint clean. Live re-validation pending.
+
 ### Claude - Direct-Terra photos and links now come from the brand site or a popular retailer (T8B)
 
 #### Changed
