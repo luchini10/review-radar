@@ -294,7 +294,10 @@ export async function resolveDirectTerraWebsitesWithSerperOrganic(
       rawResultCount: rawOrganicResultCount,
       consideredResultCount: consideredOrganicResultCount,
       mappedCandidateCount: candidates.length,
-      verification: summarizeDirectTerraAssetVerification(verification),
+      verification: summarizeDirectTerraAssetVerification(verification, {
+        target,
+        candidates,
+      }),
     });
     items.push({
       targetKey: target.key,

@@ -368,7 +368,10 @@ export async function resolveDirectTerraAssetsWithSerperShopping(
       rawResultCount: rawShoppingResultCount,
       consideredResultCount: consideredShoppingResultCount,
       mappedCandidateCount: candidates.length,
-      verification: summarizeDirectTerraAssetVerification(verification),
+      verification: summarizeDirectTerraAssetVerification(verification, {
+        target,
+        candidates,
+      }),
     });
     items.push({
       targetKey: target.key,

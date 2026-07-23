@@ -318,7 +318,10 @@ export function resolveDirectTerraCitationWebsites(input: {
         rawResultCount: section.urls.length,
         consideredResultCount: section.urls.length,
         mappedCandidateCount: 0,
-        verification: summarizeDirectTerraAssetVerification(headingIdentity),
+        verification: summarizeDirectTerraAssetVerification(headingIdentity, {
+          target,
+          candidates: [{ title: section.heading }],
+        }),
       });
       return unavailable(target);
     }
@@ -347,7 +350,10 @@ export function resolveDirectTerraCitationWebsites(input: {
       rawResultCount: section.urls.length,
       consideredResultCount: section.urls.length,
       mappedCandidateCount: candidates.length,
-      verification: summarizeDirectTerraAssetVerification(verification),
+      verification: summarizeDirectTerraAssetVerification(verification, {
+        target,
+        candidates,
+      }),
     });
     return {
       targetKey: target.key,

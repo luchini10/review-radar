@@ -358,6 +358,7 @@ async function main() {
               responseSourceTitles: completion.responseSources
                 .map((source) => source.title)
                 .filter((title) => typeof title === "string"),
+              reportMarkdown: completion.reportMarkdown,
               leaders: goldEntry.coreLeaders,
               rankedProducts: runScore.rankedProducts,
               coversLeader,

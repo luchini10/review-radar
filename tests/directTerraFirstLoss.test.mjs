@@ -103,7 +103,7 @@ describe("Direct-Terra first-loss observability", () => {
     assert.equal(audit.products[0].displayedLinkUnderCurrentPolicy, false);
   });
 
-  it("reduces verifier decisions to bounded reason counts", () => {
+  it("retains bounded normalized candidate identity without provider URLs or raw titles", () => {
     const target = {
       key: "rank-1-acme-a-100",
       rank: 1,
@@ -112,27 +112,55 @@ describe("Direct-Terra first-loss observability", () => {
       model: "A-100",
       category: "widget",
     };
+    const candidates = [
+      {
+        title: "Acme Alpha A-100 Widget",
+        productUrl:
+          "https://acme.example/products/alpha-a-100-widget?provider_id=secret",
+      },
+      {
+        title: "Acme Alpha A-101 Replacement Filter",
+        productUrl:
+          "https://acme.example/accessories/alpha-a-101-filter?provider_id=secret",
+      },
+    ];
     const verification = verifyDirectTerraAssetCandidates({
       target,
-      candidates: [
-        {
-          title: "Acme Alpha A-100 Widget",
-          productUrl: "https://acme.example/products/a-100",
-        },
-        {
-          title: "Acme Alpha A-101 Widget",
-          productUrl: "https://acme.example/products/a-101",
-        },
-      ],
+      candidates,
     });
-
-    const summary = summarizeDirectTerraAssetVerification(verification);
+    const summary = summarizeDirectTerraAssetVerification(verification, {
+      target,
+      candidates,
+    });
     assert.equal(summary.candidateCount, 2);
     assert.equal(summary.acceptedWebsiteCount, 1);
     assert.equal(summary.identityReasons.accepted_exact_identity, 1);
     assert.equal(summary.identityReasons.model_not_in_title, 1);
-    assert.equal(JSON.stringify(summary).includes("Acme Alpha"), false);
-    assert.equal(JSON.stringify(summary).includes("https://"), false);
+    assert.deepEqual(summary.candidateIdentitySamples[0], {
+      candidateIndex: 0,
+      titleIdentity: ["acme", "alpha", "a", "100", "widget"],
+      brandEvidence: ["acme"],
+      strongModelEvidence: ["a100"],
+      typeStatus: "ok",
+      hostClass: "manufacturer",
+      pathIdentity: ["products", "alpha", "a", "100", "widget"],
+      identityAccepted: true,
+      identityReason: "accepted_exact_identity",
+      productUrlAccepted: true,
+      productUrlReason: "accepted_identity_safe",
+      imageUrlAccepted: false,
+      imageUrlReason: "missing_image_url",
+    });
+    assert.equal(summary.candidateIdentitySamples[1].identityAccepted, false);
+    assert.equal(
+      summary.candidateIdentitySamples[1].identityReason,
+      "model_not_in_title",
+    );
+    const serialized = JSON.stringify(summary);
+    assert.equal(serialized.includes("Acme Alpha"), false);
+    assert.equal(serialized.includes("https://"), false);
+    assert.equal(serialized.includes("provider_id"), false);
+    assert.equal(serialized.includes("secret"), false);
   });
 
   it("distinguishes leaders absent from sources from leaders found but not ranked", () => {
@@ -191,6 +219,14 @@ describe("Direct-Terra first-loss observability", () => {
       responseSourceTitles: [
         "Acme Alpha official page with private provider wording",
       ],
+      reportMarkdown: `# Product Research Report
+
+## #1 Best Match — Beta Comfort Chair
+
+## Close matches, but not ranked
+
+- **Acme Alpha A-100:** Strong evidence, but it missed the final slate.
+`,
       leaders,
       rankedProducts: [{ rank: 1, name: "Beta Comfort Chair" }],
       coversLeader,
@@ -204,7 +240,7 @@ describe("Direct-Terra first-loss observability", () => {
     assert.deepEqual(diagnostic.leaders, [
       {
         leaderKey: "acme",
-        outcome: "terra_source_evidence_present_not_ranked",
+        outcome: "terra_report_named_not_ranked",
       },
       { leaderKey: "beta", outcome: "ranked" },
     ]);
@@ -215,8 +251,8 @@ describe("Direct-Terra first-loss observability", () => {
     );
     assert.equal(diagnostic.sourceHostCount, 2);
     assert.deepEqual(diagnostic.candidateSlate, {
-      status: "not_exposed_by_current_contract",
-      identities: [],
+      status: "partially_exposed_by_report",
+      identities: ["acme 100"],
     });
     assert.deepEqual(diagnostic.rankedProducts, [
       { rank: 1, identityKey: "beta comfort" },

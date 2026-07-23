@@ -1,8 +1,16 @@
 import {
+  type DirectTerraAssetCandidate,
   type DirectTerraAssetTarget,
   type DirectTerraAssetVerification,
 } from "./directTerraAssetVerifier.ts";
+import {
+  brandEvidenceMatches,
+  canonicalBrand,
+  detectKnownBrands,
+} from "./brandMatching.ts";
 import { classifyDirectTerraLinkHost } from "./directTerraLinkPreference.ts";
+import { strongModelTokens } from "./productIdentity.ts";
+import { classifyProductTypeMatch } from "./productTypeMatch.ts";
 import {
   identityKey,
   parseRankedProducts,
@@ -13,7 +21,7 @@ import {
 } from "./directTerraResponse.ts";
 
 export const DIRECT_TERRA_FIRST_LOSS_VERSION =
-  "direct-terra-first-loss-v1";
+  "direct-terra-first-loss-v2";
 
 export type DirectTerraProductAssetLike = {
   rank: number;
@@ -32,6 +40,7 @@ export type DirectTerraProductFirstLoss =
 
 export type DirectTerraLeaderOutcome =
   | "ranked"
+  | "terra_report_named_not_ranked"
   | "terra_source_evidence_absent"
   | "terra_source_evidence_present_not_ranked"
   | "terra_source_evidence_not_retained";
@@ -71,8 +80,65 @@ function reasonCounts<T extends string>(values: T[]) {
 
 export function summarizeDirectTerraAssetVerification(
   verification: DirectTerraAssetVerification,
+  context?: {
+    target: DirectTerraAssetTarget;
+    candidates: DirectTerraAssetCandidate[];
+  },
 ) {
   const decisions = verification.decisions;
+  const candidateIdentitySamples = context
+    ? decisions.slice(0, 20).map((decision) => {
+        const candidate = context.candidates[decision.candidateIndex] ?? {};
+        const title =
+          typeof candidate.title === "string" ? candidate.title : "";
+        const productUrl =
+          typeof candidate.productUrl === "string"
+            ? candidate.productUrl
+            : "";
+        const knownBrands = detectKnownBrands(title).map((brand) =>
+          canonicalBrand(brand).toLowerCase(),
+        );
+        if (
+          brandEvidenceMatches(title, context.target.brand) &&
+          !knownBrands.includes(
+            canonicalBrand(context.target.brand).toLowerCase(),
+          )
+        ) {
+          knownBrands.push(canonicalBrand(context.target.brand).toLowerCase());
+        }
+        let pathIdentity: string[] = [];
+        if (productUrl) {
+          try {
+            pathIdentity = normalizedDiagnosticTokens(
+              decodeURIComponent(new URL(productUrl).pathname),
+            );
+          } catch {
+            pathIdentity = [];
+          }
+        }
+        return {
+          candidateIndex: decision.candidateIndex,
+          titleIdentity: normalizedDiagnosticTokens(title),
+          brandEvidence: [...new Set(knownBrands)].slice(0, 4),
+          strongModelEvidence: [...strongModelTokens(title)].slice(0, 8),
+          typeStatus: classifyProductTypeMatch({
+            evidenceText: title,
+            identityText: title,
+            requestedCategory: context.target.category,
+          }).status,
+          hostClass: productUrl
+            ? classifyDirectTerraLinkHost(productUrl, context.target.brand)
+            : "other",
+          pathIdentity,
+          identityAccepted: decision.identityAccepted,
+          identityReason: decision.identityReason,
+          productUrlAccepted: decision.productUrlAccepted,
+          productUrlReason: decision.productUrlReason,
+          imageUrlAccepted: decision.imageUrlAccepted,
+          imageUrlReason: decision.imageUrlReason,
+        };
+      })
+    : [];
   return {
     candidateCount: decisions.length,
     identityAcceptedCount: decisions.filter(
@@ -93,7 +159,12 @@ export function summarizeDirectTerraAssetVerification(
     imageUrlReasons: reasonCounts(
       decisions.map((decision) => decision.imageUrlReason),
     ),
+    candidateIdentitySamples,
   };
+}
+
+function normalizedDiagnosticTokens(value: string) {
+  return (value.toLowerCase().match(/[a-z0-9]+/g) ?? []).slice(0, 20);
 }
 
 export type DirectTerraVerificationSummary = ReturnType<
@@ -256,11 +327,13 @@ export function buildDirectTerraAssetFirstLossDiagnostic({
 export function classifyDirectTerraLeaderLosses({
   leaders,
   rankedProductNames,
+  reportNamedNonRankedProducts = [],
   responseSourceTitles,
   coversLeader,
 }: {
   leaders: LeaderLike[];
   rankedProductNames: string[];
+  reportNamedNonRankedProducts?: string[];
   responseSourceTitles: string[] | null;
   coversLeader: (name: string, leader: LeaderLike) => boolean;
 }): LeaderOutcome[] {
@@ -268,6 +341,16 @@ export function classifyDirectTerraLeaderLosses({
     const leaderKey = leader.brand.toLowerCase();
     if (rankedProductNames.some((name) => coversLeader(name, leader))) {
       return { leaderKey, outcome: "ranked" as const };
+    }
+    if (
+      reportNamedNonRankedProducts.some((name) =>
+        coversLeader(name, leader),
+      )
+    ) {
+      return {
+        leaderKey,
+        outcome: "terra_report_named_not_ranked" as const,
+      };
     }
     if (responseSourceTitles === null) {
       return {
@@ -288,11 +371,35 @@ export function classifyDirectTerraLeaderLosses({
   });
 }
 
+export function extractDirectTerraNamedNonRankedProducts(
+  reportMarkdown: string,
+) {
+  const products: string[] = [];
+  let inNonRankedSection = false;
+  for (const line of (reportMarkdown || "").split(/\r?\n/)) {
+    const heading = line.match(/^##\s+(.+?)\s*$/);
+    if (heading) {
+      inNonRankedSection =
+        /\b(?:close matches?|not ranked|other candidates?|rejected candidates?)\b/i.test(
+          heading[1],
+        );
+      continue;
+    }
+    if (!inNonRankedSection) continue;
+    const named = line.match(
+      /^\s*(?:[-*]|\d+[.)])\s+\*\*([^*]{2,200}?)(?::)?\*\*\s*(?::|[—–-])?/,
+    );
+    if (named?.[1]) products.push(named[1].trim());
+  }
+  return [...new Set(products)].slice(0, 50);
+}
+
 export function buildDirectTerraRecommendationFirstLossDiagnostic({
   searchCallCount,
   searchActions,
   sourceHosts,
   responseSourceTitles,
+  reportMarkdown,
   leaders,
   rankedProducts,
   coversLeader,
@@ -302,6 +409,7 @@ export function buildDirectTerraRecommendationFirstLossDiagnostic({
   searchActions: DirectTerraSearchAction[];
   sourceHosts: string[];
   responseSourceTitles: string[] | null;
+  reportMarkdown: string;
   leaders: LeaderLike[];
   rankedProducts: { rank: number; name: string }[];
   coversLeader: (name: string, leader: LeaderLike) => boolean;
@@ -311,6 +419,8 @@ export function buildDirectTerraRecommendationFirstLossDiagnostic({
     featureCoverage: { label: string; coverageRate: number }[];
   };
 }) {
+  const namedNonRankedProducts =
+    extractDirectTerraNamedNonRankedProducts(reportMarkdown);
   const distinctHosts = [
     ...new Set(
       sourceHosts
@@ -330,8 +440,11 @@ export function buildDirectTerraRecommendationFirstLossDiagnostic({
     sourceHostCount: distinctHosts.length,
     sourceHosts: distinctHosts,
     candidateSlate: {
-      status: "not_exposed_by_current_contract" as const,
-      identities: [] as string[],
+      status:
+        namedNonRankedProducts.length > 0
+          ? ("partially_exposed_by_report" as const)
+          : ("not_exposed_by_current_contract" as const),
+      identities: namedNonRankedProducts.map(identityKey),
     },
     rankedProducts: [...rankedProducts]
       .sort((left, right) => left.rank - right.rank)
@@ -342,6 +455,7 @@ export function buildDirectTerraRecommendationFirstLossDiagnostic({
     leaders: classifyDirectTerraLeaderLosses({
       leaders,
       rankedProductNames: rankedProducts.map((product) => product.name),
+      reportNamedNonRankedProducts: namedNonRankedProducts,
       responseSourceTitles,
       coversLeader,
     }),
@@ -635,5 +749,6 @@ export function emptyDirectTerraVerificationSummary(): DirectTerraVerificationSu
     identityReasons: {},
     productUrlReasons: {},
     imageUrlReasons: {},
+    candidateIdentitySamples: [],
   };
 }
