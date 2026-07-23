@@ -54,15 +54,26 @@ not a checkout quote; sellers, stock, purchase destinations, discounts, tax,
 shipping, and all purchase claims inside the report remain unverified.
 
 Product websites are resolved first from response-owned citations that Terra
-placed inside that product's own ranked section. Serper Shopping then receives
-at most one exact brand/model/product query per coherent Terra pick, up to five,
-to find an exact-model image and a fallback direct product page. Existing
+placed inside that product's own ranked section. Strong brand/model identities
+are derived directly from all five ranked headings; price observations are only
+a fallback for a descriptive model and a conflict check, so missing price
+evidence cannot hide a ranked product from asset resolution and conflicting
+metadata cannot rewrite it. A registered citation needs an exact response-owned
+source title; neither its URL nor a manufacturer-looking host can invent the
+missing identity. Citation-missing products then receive at most one bounded
+Serper organic `"<identity> product page"` query each, up to five, for a direct
+website. In parallel, Serper Shopping receives at most one exact identity query
+per coherent pick, up to five, for an image only. Existing
 identity, eligibility, wrong-model image, redirect, wrapper, and local-network
 guards apply before any asset crosses the server/client boundary. A failed or
 missing lookup leaves that asset unavailable; it can never delete, rename,
 add, or reorder a Terra recommendation. Completed-job asset resolution is
 process-local, TTL-bounded, and idempotent so a repeated completed poll does
-not spend another Shopping batch.
+not spend another provider batch. Organic and Shopping use a shared standalone
+server transport with fixed endpoints, one attempt per target, no retry, no
+cache, no fallback, bounded response sizes, and no client-visible provider
+details. Their independent lanes run concurrently, but each lane remains
+sequential and fail-closed.
 
 ## 2. Full user flow
 

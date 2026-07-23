@@ -24,6 +24,7 @@ import {
 } from "../lib/autonomousResearchAdapter.ts";
 import { createOpenAIClient } from "../lib/openaiClient.ts";
 import {
+  createDirectTerraSerperOrganicTransport,
   createDirectTerraSerperShoppingTransport,
   directTerraSerperApiKeyIsValid,
 } from "../lib/directTerraSerperTransport.ts";
@@ -35,7 +36,8 @@ const EXPECTED = Object.freeze({
   hostedSearches: DIRECT_TERRA_RESEARCH_CONFIG.maxToolCalls,
   retrieves: 60,
   safetyCancels: 1,
-  serperSearches: 5,
+  serperShoppingSearches: 5,
+  serperOrganicSearches: 5,
   costUsd: 7,
 });
 const POLL_INTERVAL_MS = 5_000;
@@ -102,7 +104,7 @@ async function directoryHasEvidence(directory) {
 
 function plan(commit) {
   return {
-    schemaVersion: "oai-t8a-integrated-asset-smoke-plan-v1",
+    schemaVersion: "oai-t8a-integrated-asset-smoke-plan-v2",
     mode: EXECUTE ? "execute" : "dry-run",
     commit,
     promptVersion: DIRECT_TERRA_PROMPT_VERSION,
@@ -115,6 +117,7 @@ function plan(commit) {
       openAiResponses: true,
       openAiHostedWebSearch: true,
       serperShopping: true,
+      serperOrganicProductPages: true,
       retries: false,
       replacements: false,
       fallbacks: false,
@@ -132,7 +135,12 @@ function validateApproval(commit, outputExists) {
     hostedSearches: numericArgument("approved-hosted-searches"),
     retrieves: numericArgument("approved-retrieves"),
     safetyCancels: numericArgument("approved-safety-cancels"),
-    serperSearches: numericArgument("approved-serper-searches"),
+    serperShoppingSearches: numericArgument(
+      "approved-serper-shopping-searches",
+    ),
+    serperOrganicSearches: numericArgument(
+      "approved-serper-organic-searches",
+    ),
     costUsd: numericArgument("approved-cost-usd"),
   };
   if (approved.commit !== commit) {
@@ -175,6 +183,7 @@ async function main() {
     openAiRetrieves: 0,
     safetyCancels: 0,
     serperShoppingAttempts: 0,
+    serperOrganicAttempts: 0,
     retries: 0,
     replacements: 0,
     fallbacks: 0,
@@ -182,7 +191,7 @@ async function main() {
   };
   const startedAtMs = Date.now();
   const evidence = {
-    schemaVersion: "oai-t8a-integrated-asset-smoke-v1",
+    schemaVersion: "oai-t8a-integrated-asset-smoke-v2",
     commit,
     capturedAt: new Date().toISOString(),
     request: FROZEN_REQUEST,
@@ -198,6 +207,11 @@ async function main() {
     completedResponse: null,
   };
   await writeJson(attemptFile, evidence);
+  let evidenceWrite = Promise.resolve();
+  const persistAttempt = () => {
+    evidenceWrite = evidenceWrite.then(() => writeJson(attemptFile, evidence));
+    return evidenceWrite;
+  };
 
   const sdkClient = await createOpenAIClient(process.env.OPENAI_API_KEY, {
     maxRetries: 0,
@@ -278,12 +292,25 @@ async function main() {
       apiKey: process.env.SERPER_API_KEY,
     });
     const serperTransport = async (request) => {
-      if (counters.serperShoppingAttempts >= EXPECTED.serperSearches) {
+      if (
+        counters.serperShoppingAttempts >= EXPECTED.serperShoppingSearches
+      ) {
         throw new Error("Serper Shopping ceiling exceeded.");
       }
       counters.serperShoppingAttempts += 1;
-      await writeJson(attemptFile, evidence);
+      await persistAttempt();
       return baseTransport(request);
+    };
+    const baseOrganicTransport = createDirectTerraSerperOrganicTransport({
+      apiKey: process.env.SERPER_API_KEY,
+    });
+    const serperOrganicTransport = async (request) => {
+      if (counters.serperOrganicAttempts >= EXPECTED.serperOrganicSearches) {
+        throw new Error("Serper organic ceiling exceeded.");
+      }
+      counters.serperOrganicAttempts += 1;
+      await persistAttempt();
+      return baseOrganicTransport(request);
     };
     const productAssets = await resolveDirectTerraProductAssets({
       targets: research.assetTargets,
@@ -291,6 +318,7 @@ async function main() {
       activeCitationUrls: research.citationUrls,
       responseSources: research.responseSources,
       serperTransport,
+      serperOrganicTransport,
     });
     const completedResponse = {
       pipeline: "direct_terra",

@@ -32,8 +32,9 @@ const reportMarkdown = [
 ].join("\n\n");
 
 describe("Direct-Terra product asset orchestration", () => {
-  it("prefers a registered Terra product website and adds exact Serper images", async () => {
-    const requests = [];
+  it("uses strict citations first, organic fallback websites, and Shopping only for images", async () => {
+    const shoppingRequests = [];
+    const organicRequests = [];
     const result = await resolveDirectTerraProductAssets({
       targets,
       reportMarkdown,
@@ -45,7 +46,7 @@ describe("Direct-Terra product asset orchestration", () => {
         },
       ],
       serperTransport: async (request) => {
-        requests.push(request);
+        shoppingRequests.push(request);
         const isRidgid = request.body.q.includes("HD1200");
         return {
           shopping: [
@@ -58,15 +59,28 @@ describe("Direct-Terra product asset orchestration", () => {
               : {
                   title:
                     "DEWALT DXV12P-QT Stealthsonic Wet/Dry Shop Vacuum",
-                  productLink: "https://store.example/dewalt-dxv12p-qt",
+                  productLink: "https://shopping.example/dewalt-dxv12p-qt",
                   imageUrl: "https://images.example/dewalt-dxv12p-qt.jpg",
                 },
           ],
         };
       },
+      serperOrganicTransport: async (request) => {
+        organicRequests.push(request);
+        return {
+          organic: [
+            {
+              title: "DEWALT DXV12P-QT Stealthsonic Wet/Dry Shop Vacuum",
+              link: "https://organic.example/dewalt-dxv12p-qt",
+            },
+          ],
+        };
+      },
     });
 
-    assert.equal(requests.length, 2);
+    assert.equal(shoppingRequests.length, 2);
+    assert.equal(organicRequests.length, 1, "citation-covered products spend no organic call");
+    assert.match(organicRequests[0].body.q, /DXV12P-QT.*product page/);
     assert.deepEqual(
       result.map((asset) => [asset.rank, asset.productName]),
       targets.map((target) => [target.rank, target.productName]),
@@ -79,7 +93,8 @@ describe("Direct-Terra product asset orchestration", () => {
     assert.equal(result[0].imageUrl, "https://images.example/ridgid-hd1200.jpg");
     assert.equal(
       result[1].productUrl,
-      "https://store.example/dewalt-dxv12p-qt",
+      "https://organic.example/dewalt-dxv12p-qt",
+      "Shopping destinations are not a website source",
     );
     assert.equal(
       result[1].imageUrl,
@@ -113,6 +128,9 @@ describe("Direct-Terra product asset orchestration", () => {
       serperTransport: async () => {
         throw new Error("provider unavailable");
       },
+      serperOrganicTransport: async () => {
+        throw new Error("provider unavailable");
+      },
     });
 
     assert.equal(result.length, 2);
@@ -121,5 +139,32 @@ describe("Direct-Terra product asset orchestration", () => {
         (asset) => asset.productUrl === null && asset.imageUrl === null,
       ),
     );
+  });
+
+  it("starts the independent website and image lanes concurrently", async () => {
+    let releaseOrganic;
+    const organicStarted = new Promise((resolve) => {
+      releaseOrganic = resolve;
+    });
+    let shoppingStarted = false;
+
+    const resultPromise = resolveDirectTerraProductAssets({
+      targets: [targets[1]],
+      reportMarkdown,
+      activeCitationUrls: [],
+      responseSources: [],
+      serperTransport: async () => {
+        shoppingStarted = true;
+        releaseOrganic();
+        return { shopping: [] };
+      },
+      serperOrganicTransport: async () => {
+        await organicStarted;
+        return { organic: [] };
+      },
+    });
+
+    await resultPromise;
+    assert.equal(shoppingStarted, true);
   });
 });

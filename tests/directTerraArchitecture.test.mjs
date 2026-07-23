@@ -10,6 +10,9 @@ const directFiles = [
   "lib/directTerraResponse.ts",
   "lib/directTerraResearchAdapter.ts",
   "lib/directTerraRecommendationRoute.ts",
+  "lib/directTerraProductAssets.ts",
+  "lib/directTerraSerperOrganicAdapter.ts",
+  "lib/directTerraSerperTransport.ts",
 ];
 
 const forbidden = [

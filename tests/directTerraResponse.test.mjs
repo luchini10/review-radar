@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  extractDirectTerraAssetTargets,
   extractDirectTerraResponseSources,
   parseDirectTerraCompletedResponse,
 } from "../lib/directTerraResponse.ts";
@@ -50,6 +51,101 @@ function completedResponse({
 }
 
 describe("direct Terra V2 response boundary", () => {
+  it("derives every strong ranked identity without requiring price observations", () => {
+    const reportMarkdown = [
+      "## Ranked recommendations",
+      "### #1 Best Match — CRAFTSMAN CMXEVBE17595 16-Gallon Wet/Dry Shop Vac",
+      "### #2 Best Match — RIDGID HD1400 14-Gallon NXT Wet/Dry Vac",
+      "### #3 Best Match — DEWALT DXV12P-QT Stealthsonic Wet/Dry Shop Vacuum",
+      "### #4 Best Match — STANLEY SL18116P 6-Gallon Wet/Dry Vacuum",
+      "### #5 Best Match — Milwaukee 0910-20 M18 FUEL Wet/Dry Vacuum",
+    ].join("\n\n");
+
+    assert.deepEqual(
+      extractDirectTerraAssetTargets({
+        reportMarkdown,
+        priceObservations: [],
+      }).map(({ rank, brand, model }) => ({ rank, brand, model })),
+      [
+        { rank: 1, brand: "CRAFTSMAN", model: "CMXEVBE17595" },
+        { rank: 2, brand: "RIDGID", model: "HD1400" },
+        { rank: 3, brand: "DeWalt", model: "DXV12P-QT" },
+        { rank: 4, brand: "STANLEY", model: "SL18116P" },
+        { rank: 5, brand: "Milwaukee", model: "0910-20" },
+      ],
+    );
+  });
+
+  it("does not mistake size or power specifications for heading identity", () => {
+    for (const productName of [
+      "Acme 16-Gallon 6.5-HP Wet/Dry Shop Vacuum",
+      "Acme 4-Burner Propane Gas Grill",
+      "Acme 12-Cup Programmable Coffee Maker",
+      "Acme 3-Stage Air Purifier",
+      "Acme 20-Volt Cordless Drill",
+    ]) {
+      assert.deepEqual(
+        extractDirectTerraAssetTargets({
+          reportMarkdown: `## #1 Best Match — ${productName}`,
+          priceObservations: [],
+        }),
+        [],
+        productName,
+      );
+    }
+  });
+
+  it("keeps a real model when the same heading also contains feature counts", () => {
+    for (const productName of [
+      "Acme X100 4-Burner Propane Gas Grill",
+      "Acme X100 12-Cup Programmable Coffee Maker",
+      "Acme X100 3-Stage Air Purifier",
+      "Acme X100 2-Door Refrigerator",
+    ]) {
+      assert.deepEqual(
+        extractDirectTerraAssetTargets({
+          reportMarkdown: `## #1 Best Match — ${productName}`,
+          priceObservations: [],
+        }).map(({ brand, model }) => ({ brand, model })),
+        [{ brand: "Acme", model: "X100" }],
+        productName,
+      );
+    }
+  });
+
+  it("rejects date-shaped heading identity and conflicting structured identity", () => {
+    assert.deepEqual(
+      extractDirectTerraAssetTargets({
+        reportMarkdown:
+          "## #1 Best Match — Acme 2026-07-22 Wet/Dry Shop Vacuum",
+        priceObservations: [],
+      }),
+      [],
+    );
+
+    assert.deepEqual(
+      extractDirectTerraAssetTargets({
+        reportMarkdown:
+          "## #1 Best Match — Acme X100 Wet/Dry Shop Vacuum",
+        priceObservations: [
+          { rank: 1, brand: "Acme", model: "X200", observations: [] },
+        ],
+      }),
+      [],
+    );
+  });
+
+  it("derives safe heading targets even when optional price metadata is unusable", () => {
+    assert.deepEqual(
+      extractDirectTerraAssetTargets({
+        reportMarkdown:
+          "## #1 Best Match — Acme X100 Wet/Dry Shop Vacuum",
+        priceObservations: "not-an-array",
+      }).map(({ brand, model }) => ({ brand, model })),
+      [{ brand: "Acme", model: "X100" }],
+    );
+  });
+
   it("accepts titleless response-owned sources and preserves Terra's report exactly", () => {
     const response = completedResponse();
     const parsed = parseDirectTerraCompletedResponse(response);

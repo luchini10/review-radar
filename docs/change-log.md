@@ -11,6 +11,47 @@ Update this file after:
 
 ## 2026-07-22
 
+### Codex - Split Terra website and image lookup by the source each does well
+
+#### Changed
+
+- Direct-Terra asset lookup now starts from every safely identifiable ranked
+  product heading instead of depending on optional price-observation data.
+  The saved shop-vac report now produces five identity-locked targets instead
+  of only one, without changing Terra's products, names, or order.
+- Size, power, burner, cup, door, speed, stage, and similar specification
+  tokens are excluded from model inference. A heading with only product specs
+  still receives no asset lookup.
+- A response-owned citation in the product's own report section remains the
+  first website choice, but its title must prove the exact product. The earlier
+  abbreviated-title manufacturer-URL exception was removed after adversarial
+  review showed that URL/host guessing could bless fake brand subdomains,
+  accessory paths, and sibling models.
+- When no strict citation website exists, ReviewRadar makes one bounded Serper
+  organic product-page search for that exact identity. It accepts only a direct
+  page that passes the existing title, product-type, eligibility, wrapper,
+  accessory, wrong-model, and URL-identity checks.
+- Serper Shopping now supplies images only. Its Google wrapper or merchant URL
+  cannot become the card website. The organic website and Shopping image lanes
+  run concurrently, fail independently, and never change Terra's picks.
+- Both provider adapters reject malformed and error-bearing payloads, expose no
+  provider details to the browser, make one attempt per target, and have no
+  retry, cache, or fallback behavior.
+
+#### Verified
+
+- Saved live-report replay: five ranked targets from the same report that
+  previously produced one target, with zero network use.
+- Saved C5 provider-evidence replay: the new organic adapter recovered all
+  three previously proven exact pages (RIDGID HD1200, CRAFTSMAN CMXEVBE17584,
+  and STANLEY SL18115) without a network request.
+- Focused Direct-Terra wall: 92/92 across 10 suites. Complete unit wall:
+  1270/1270 across 180 suites.
+- Typecheck and production build pass. Lint reports zero errors and the same
+  three pre-existing warnings.
+- No provider call, flag edit, `.env.local` edit, deployment, push, commit, or
+  production change occurred.
+
 ### Codex - Add exact-product websites and images to Terra results
 
 #### Changed

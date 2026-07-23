@@ -3006,6 +3006,49 @@ promotion, or UI behavior is authorized here.
 **Recommended reasoning level:** High for later route/UI integration because it
 crosses the server/client trust boundary.
 
+**T8A source-split correction (completed uncommitted on 2026-07-22; zero
+live):** the first integrated smoke and C5 evidence resolve the provider roles.
+Serper Shopping remains the exact-image source; its Google-wrapper or merchant
+destination is never a card website. A strict response-owned citation in the
+matching ranked section remains the first website source. Only targets without
+that strict citation receive one bounded Serper organic
+`"<identity> product page"` request, up to five. Organic rows must pass the
+existing exact title, requested-type, product eligibility, wrapper, direct-page
+and URL/product-identity gates. A miss stays nullable.
+
+This correction also removes the abbreviated-title manufacturer-URL exception.
+Static adversarial cases proved that URL/host inference could bless a fake
+brand subdomain, accessory route, or compound sibling-model path. A citation
+source title must now prove the exact identity just like provider evidence.
+Ranked headings independently produce safe asset targets; price observations
+are fallback/conflict evidence and cannot hide or rewrite a Terra pick.
+
+The organic adapter is standalone rather than a direct call into legacy
+`resolveSerperIdentityLeads()`. It imports no legacy search client, cache,
+retries, fallback plan, feature flag, materializer, or ledger. Shopping and
+organic share a bounded server transport but fixed endpoint/request contracts;
+each lane is sequential, the two lanes run concurrently, and both fail closed
+without changing Terra's result. Complete output remains query- and provider-
+free.
+
+Evidence is 92/92 focused Direct-Terra tests and 1270/1270 complete tests
+across 180 suites, with typecheck/build pass and lint at zero errors/three
+pre-existing warnings. A zero-network replay of the saved C5 organic evidence
+recovered 3/3 previously proven exact pages through the new adapter: RIDGID
+HD1200, CRAFTSMAN CMXEVBE17584, and STANLEY SL18115. This supports the source
+choice but does not establish coverage for the five different models in the
+next integrated smoke. No provider call, flag, `.env.local`, deployment, push,
+or production change occurred.
+
+**Next gate:** a separately approved scoped commit. After that full hash
+exists, one replacement integrated smoke may be proposed with ceilings of one
+Terra create, 20 hosted searches, 60 retrieves, one safety cancel, five
+Shopping attempts, five organic attempts, and $7. No live request, flag
+promotion, or deployment is authorized by this plan entry.
+
+**Recommended reasoning level:** Medium for the mechanical reviewed commit;
+High for the later identity-by-identity live coverage audit.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen

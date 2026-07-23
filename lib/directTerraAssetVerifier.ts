@@ -1,4 +1,8 @@
-import { brandEvidenceMatches } from "./brandMatching.ts";
+import {
+  brandEvidenceMatches,
+  canonicalBrand,
+  detectKnownBrands,
+} from "./brandMatching.ts";
 import { classifyProductEligibility } from "./productEligibility.ts";
 import { validateProductImageCandidate } from "./productImageResolver.ts";
 import { productPageMatchesIdentity } from "./productPageUrl.ts";
@@ -102,8 +106,14 @@ function titleContainsEveryModelToken(title: string, model: string) {
 function titleHasConflictingModel(targetModel: string, title: string) {
   if (haveConflictingCompoundModelSequences(targetModel, title)) return true;
 
-  const targetModels = strongModelTokens(targetModel);
-  const titleModels = strongModelTokens(title);
+  const identityModels = (value: string) =>
+    new Set(
+      [...strongModelTokens(value)].filter(
+        (model) => !DIRECT_TERRA_MEASUREMENT_MODEL.test(model),
+      ),
+    );
+  const targetModels = identityModels(targetModel);
+  const titleModels = identityModels(title);
   return (
     targetModels.size > 0 &&
     [...titleModels].some((model) => !targetModels.has(model))
@@ -178,6 +188,77 @@ function isRedirectWrapper(url: string) {
 
   return /(?:^|\/)(?:click|deeplink|out|redirect|redirector|track|tracking)(?:\/|$)/i.test(
     parsed.pathname,
+  );
+}
+
+function compactIdentity(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+const DIRECT_TERRA_MEASUREMENT_MODEL = /^\d+(?:amp|amps|bit|btu|burner|burners|cc|cfm|cm|cup|cups|db|door|doors|dpi|drawer|drawers|ft|gal|gallon|gallons|gb|hp|hz|in|inch|inches|k|kg|l|lb|lbs|mah|mb|ml|mm|mp|oz|p|pc|pcs|piece|pieces|pk|psi|px|qt|speed|speeds|stage|stages|tb|tier|tiers|v|volt|volts|w|watt|watts|wh|zone|zones)$/i;
+const DIRECT_TERRA_DATE_MODEL = /^(?:19|20)\d{2}[-/.](?:0?[1-9]|1[0-2])(?:[-/.](?:0?[1-9]|[12]\d|3[01]))?$/;
+const DIRECT_TERRA_NUMERIC_COMPOUND_MODEL = /^\d{2,}(?:[-/]\d{2,})+$/;
+const DIRECT_TERRA_NON_MODEL_TECHNOLOGY = /^(?:ddr|gen|hdmi|hdr|ips|oled|qled|series|uhd|usb|wifi)\d+[a-z]*$/i;
+const DIRECT_TERRA_GENERIC_LEADING_WORDS = new Set([
+  "best",
+  "latest",
+  "new",
+  "official",
+  "our",
+  "recommended",
+  "top",
+]);
+
+export function directTerraStrongModelToken(value: string) {
+  const compact = compactIdentity(value);
+  if (
+    !compact ||
+    compact.length > 24 ||
+    /^\d{4}$/.test(compact) ||
+    DIRECT_TERRA_DATE_MODEL.test(value) ||
+    DIRECT_TERRA_MEASUREMENT_MODEL.test(compact)
+  ) {
+    return false;
+  }
+  return (
+    (compact.length >= 4 &&
+      /[a-z]/.test(compact) &&
+      /\d/.test(compact) &&
+      !DIRECT_TERRA_NON_MODEL_TECHNOLOGY.test(compact)) ||
+    DIRECT_TERRA_NUMERIC_COMPOUND_MODEL.test(value)
+  );
+}
+
+export function extractDirectTerraHeadingIdentity(productName: string) {
+  const tokens =
+    productName.match(/[A-Za-z0-9]+(?:[-/.][A-Za-z0-9]+)*/g) || [];
+  const modelIndex = tokens.findIndex(
+    (token, index) => index > 0 && directTerraStrongModelToken(token),
+  );
+  if (modelIndex < 1) return null;
+
+  const prefixTokens = tokens.slice(0, modelIndex);
+  while (
+    prefixTokens.length > 1 &&
+    DIRECT_TERRA_GENERIC_LEADING_WORDS.has(prefixTokens[0].toLowerCase())
+  ) {
+    prefixTokens.shift();
+  }
+  const detectedBrands = detectKnownBrands(prefixTokens.join(" "));
+  const fallbackBrand = prefixTokens[0];
+  const brand = detectedBrands.length === 1 ? detectedBrands[0] : fallbackBrand;
+  if (!brand || /\d/.test(brand)) return null;
+  return { brand, model: tokens[modelIndex] };
+}
+
+export function directTerraAssetIdentitiesAgree(
+  left: { brand: string; model: string },
+  right: { brand: string; model: string },
+) {
+  return (
+    compactIdentity(canonicalBrand(left.brand)) ===
+      compactIdentity(canonicalBrand(right.brand)) &&
+    compactIdentity(left.model) === compactIdentity(right.model)
   );
 }
 

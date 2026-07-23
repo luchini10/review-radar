@@ -4,6 +4,12 @@ import {
   type DirectTerraSerperShoppingRequest,
   type DirectTerraSerperShoppingTransport,
 } from "./directTerraSerperAssetAdapter.ts";
+import {
+  DIRECT_TERRA_SERPER_ORGANIC_ENDPOINT,
+  MAX_DIRECT_TERRA_ORGANIC_RESULTS,
+  type DirectTerraSerperOrganicRequest,
+  type DirectTerraSerperOrganicTransport,
+} from "./directTerraSerperOrganicAdapter.ts";
 
 export const DIRECT_TERRA_SERPER_TIMEOUT_MS = 12_000;
 export const DIRECT_TERRA_SERPER_RESPONSE_BYTE_CEILING = 512_000;
@@ -44,10 +50,12 @@ export function directTerraSerperApiKeyIsValid(apiKey: string) {
   );
 }
 
-function validRequest(request: DirectTerraSerperShoppingRequest) {
-  if (!request || request.endpoint !== DIRECT_TERRA_SERPER_SHOPPING_ENDPOINT) {
-    return false;
-  }
+type DirectTerraSerperRequest =
+  | DirectTerraSerperShoppingRequest
+  | DirectTerraSerperOrganicRequest;
+
+function validRequest(request: DirectTerraSerperRequest) {
+  if (!request) return false;
 
   const body = request.body;
   if (!body || typeof body !== "object") return false;
@@ -61,7 +69,10 @@ function validRequest(request: DirectTerraSerperShoppingRequest) {
     !/[\u0000-\u001f\u007f]/.test(body.q) &&
     body.gl === "us" &&
     body.hl === "en" &&
-    body.num === MAX_DIRECT_TERRA_SHOPPING_RESULTS
+    ((request.endpoint === DIRECT_TERRA_SERPER_SHOPPING_ENDPOINT &&
+      body.num === MAX_DIRECT_TERRA_SHOPPING_RESULTS) ||
+      (request.endpoint === DIRECT_TERRA_SERPER_ORGANIC_ENDPOINT &&
+        body.num === MAX_DIRECT_TERRA_ORGANIC_RESULTS))
   );
 }
 
@@ -90,9 +101,9 @@ function parsedProviderPayload(text: string) {
   return payload;
 }
 
-export function createDirectTerraSerperShoppingTransport(
+function createBoundedDirectTerraSerperTransport(
   config: DirectTerraSerperTransportConfig,
-): DirectTerraSerperShoppingTransport {
+) {
   const timeoutMs = config.timeoutMs ?? DIRECT_TERRA_SERPER_TIMEOUT_MS;
   if (
     !directTerraSerperApiKeyIsValid(config.apiKey) ||
@@ -104,7 +115,7 @@ export function createDirectTerraSerperShoppingTransport(
   }
   const fetchImpl = config.fetchImpl ?? fetch;
 
-  return async (request) => {
+  return async (request: DirectTerraSerperRequest) => {
     if (!validRequest(request)) {
       throw new DirectTerraSerperTransportError("invalid_request");
     }
@@ -112,7 +123,7 @@ export function createDirectTerraSerperShoppingTransport(
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetchImpl(DIRECT_TERRA_SERPER_SHOPPING_ENDPOINT, {
+      const response = await fetchImpl(request.endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -122,7 +133,7 @@ export function createDirectTerraSerperShoppingTransport(
           q: request.body.q,
           gl: "us",
           hl: "en",
-          num: MAX_DIRECT_TERRA_SHOPPING_RESULTS,
+          num: request.body.num,
         }),
         signal: controller.signal,
         redirect: "error",
@@ -160,4 +171,18 @@ export function createDirectTerraSerperShoppingTransport(
       clearTimeout(timeout);
     }
   };
+}
+
+export function createDirectTerraSerperShoppingTransport(
+  config: DirectTerraSerperTransportConfig,
+): DirectTerraSerperShoppingTransport {
+  const transport = createBoundedDirectTerraSerperTransport(config);
+  return (request) => transport(request);
+}
+
+export function createDirectTerraSerperOrganicTransport(
+  config: DirectTerraSerperTransportConfig,
+): DirectTerraSerperOrganicTransport {
+  const transport = createBoundedDirectTerraSerperTransport(config);
+  return (request) => transport(request);
 }

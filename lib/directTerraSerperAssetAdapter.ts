@@ -204,7 +204,7 @@ function invalidShoppingResponse(
 
 function parseShoppingResponse(response: unknown) {
   if (!isRecord(response)) return invalidShoppingResponse("non_object");
-  if (boundedText(response.error, 1_000)) {
+  if (Object.hasOwn(response, "error") && response.error != null) {
     return invalidShoppingResponse("provider_error");
   }
   if (!Array.isArray(response.shopping)) {

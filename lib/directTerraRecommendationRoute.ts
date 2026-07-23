@@ -22,6 +22,7 @@ import {
 import { resolveDirectTerraProductAssets as resolveDefaultProductAssets } from "./directTerraProductAssets.ts";
 import type { DirectTerraAssetTarget } from "./directTerraAssetVerifier.ts";
 import {
+  createDirectTerraSerperOrganicTransport as createDefaultSerperOrganicTransport,
   createDirectTerraSerperShoppingTransport as createDefaultSerperTransport,
   directTerraSerperApiKeyIsValid,
 } from "./directTerraSerperTransport.ts";
@@ -63,6 +64,7 @@ type HandlerOptions = {
   pollResearch?: typeof pollDirectTerraResearch;
   cancelResearch?: typeof cancelDirectTerraResearch;
   createSerperTransport?: typeof createDefaultSerperTransport;
+  createSerperOrganicTransport?: typeof createDefaultSerperOrganicTransport;
   resolveProductAssets?: typeof resolveDefaultProductAssets;
 };
 
@@ -298,6 +300,7 @@ export function createDirectTerraRecommendationHandlers({
   pollResearch = pollDirectTerraResearch,
   cancelResearch = cancelDirectTerraResearch,
   createSerperTransport = createDefaultSerperTransport,
+  createSerperOrganicTransport = createDefaultSerperOrganicTransport,
   resolveProductAssets = resolveDefaultProductAssets,
 }: HandlerOptions = {}): DirectTerraRecommendationHandlers {
   const assetResolutions = new Map<
@@ -487,6 +490,11 @@ export function createDirectTerraRecommendationHandlers({
           directTerraSerperApiKeyIsValid(environment.serperApiKey)
             ? createSerperTransport({ apiKey: environment.serperApiKey })
             : undefined;
+        const serperOrganicTransport =
+          environment.serperApiKey &&
+          directTerraSerperApiKeyIsValid(environment.serperApiKey)
+            ? createSerperOrganicTransport({ apiKey: environment.serperApiKey })
+            : undefined;
         const resolved = await resolveProductAssetsOnce({
           responseId: verified.payload.responseId,
           expiresAtMs: verified.payload.expiresAtMs,
@@ -497,6 +505,7 @@ export function createDirectTerraRecommendationHandlers({
               activeCitationUrls: result.citationUrls,
               responseSources: result.responseSources,
               serperTransport,
+              serperOrganicTransport,
             }),
         });
         productAssets = safeAssetsForTargets(result.assetTargets, resolved);

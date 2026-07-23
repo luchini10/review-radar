@@ -1,123 +1,118 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-22 by Codex after the zero-live Direct-Terra product-asset
-integration and adversarial review. This file describes the reviewed tree that
-Taylor authorized for a scoped local commit.
+Updated: 2026-07-22 by Codex after the zero-live Direct-Terra website/image
+source correction and complete local validation.
 
 ## Current phase and commit boundary
 
-The committed base is full commit
-`24c6474d8bc6e236ed8057657de1934f12df63ef` (`Redesign ReviewRadar decision
-research experience`). Taylor approved integrating the already reviewed
-registered-citation website resolver and Serper Shopping image adapter into the
-default-off direct-Terra route/UI, adversarially reviewing the result, running
-the complete validation wall, updating authoritative docs, and making a scoped
-local commit.
+The committed base remains full commit
+`5136346ca44df932086017ee22cca759f6b665ac` (`Integrate Direct-Terra product
+assets`). Taylor asked Codex to combine Claude's organic-link diagnosis with
+the prior adversarial findings and solve the asset path offline. The resulting
+correction is complete and reviewed locally but remains uncommitted.
 
-The reviewed integration is complete and lands with the scoped local commit
-containing this record. No provider
-request, push, deployment, publication, feature-flag promotion, `.env.local`
-edit, or production change occurred. Unrelated untracked fixtures, `.claude/`,
-baseline files, and `fable-transfer-kit/` predate the phase and remain excluded.
-Never use `git add -A`.
+The scoped working set is:
 
-## Product outcome
-
-The direct-Terra path still displays Terra's products, names, ranking,
-explanations, and report unchanged. Its picks-at-a-glance cards may now add:
-
-- an exact product website, preferring a registered Terra citation from that
-  product's own ranked section;
-- an exact-model image from one bounded Serper Shopping query for that locked
-  product; and
-- a direct Shopping product page only when no safe Terra citation exists.
-
-Missing or rejected assets remain unavailable. They cannot add, remove, rename,
-reorder, or fail a Terra recommendation. The UI keeps the unverified-purchase
-and estimated-price caveats and shows a neutral image fallback.
-
-## Trust and spend boundary
-
-- At most five coherent targets are derived from Terra's own ranked headings
-  and schema-owned brand/model price groups.
-- Every website/image candidate passes the existing exact brand/model, product-
-  type, page eligibility, accessory, sibling-model, redirect, wrapper, and
-  wrong-model-image gates.
-- Localhost, internal/local names, literal IPv4/IPv6 destinations, and private-
-  network-shaped image hosts are rejected before a URL reaches the browser.
-- The API v3 asset shape contains only rank, Terra product name, nullable
-  product URL, and nullable image URL. Queries, source titles, raw provider
-  rows, provider IDs, diagnostics, keys, headers, and raw responses stay server-
-  only.
-- A process-local TTL- and size-bounded promise store coalesces one asset
-  resolution per OpenAI response ID. Repeating the completed GET reuses that
-  sanitized result instead of spending another Shopping batch.
-- Provider failure degrades only the optional assets; Terra's completed report
-  remains available.
-
-## Adversarial review findings
-
-The pre-commit review found and corrected two generalized defects:
-
-1. A repeated completed-job GET would repeat every Serper Shopping request.
-   Regression coverage now proves two completed polls invoke the resolver once.
-2. An exact Shopping row could previously attach a localhost/private-network
-   image URL and make the shopper's browser request it. A fail-first test
-   reproduced the defect; the shared Direct-Terra verifier now rejects those
-   image hosts while preserving public exact-product images and Google Shopping
-   thumbnails.
-
-The review also confirmed that the client renderer requires both rank and exact
-Terra product name before joining an asset, remote-image failure becomes the
-neutral fallback, external links use safe new-window attributes, and no asset
-result can rewrite the report.
-
-## Reviewed phase files
-
-Application and server files:
-
-- `components/DirectTerraReport.tsx`
-- `lib/directTerraApiContract.ts`
+- `lib/directTerraResponse.ts`
 - `lib/directTerraAssetVerifier.ts`
-- `lib/directTerraPreviewData.ts`
+- `lib/directTerraSerperAssetAdapter.ts`
+- `lib/directTerraSerperOrganicAdapter.ts`
+- `lib/directTerraSerperTransport.ts`
 - `lib/directTerraProductAssets.ts`
 - `lib/directTerraRecommendationRoute.ts`
-- `lib/directTerraResearchAdapter.ts`
-- `lib/directTerraResponse.ts`
-
-Harness and tests:
-
 - `scripts/run-oai-t8a-integrated-asset-smoke.mjs`
-- `tests/directTerraAssetVerifier.test.mjs`
-- `tests/directTerraClient.test.mjs`
-- `tests/directTerraPreview.test.mjs`
-- `tests/directTerraProductAssets.test.mjs`
-- `tests/directTerraResearchAdapter.test.mjs`
 - `tests/directTerraResponse.test.mjs`
+- `tests/directTerraCitationWebsiteResolver.test.mjs`
+- `tests/directTerraSerperAssetAdapter.test.mjs`
+- `tests/directTerraSerperOrganicAdapter.test.mjs`
+- `tests/directTerraSerperTransport.test.mjs`
+- `tests/directTerraProductAssets.test.mjs`
 - `tests/directTerraRoute.test.mjs`
-- `tests/directTerraUi.test.mjs`
-- `e2e/home.spec.ts`
-
-Authoritative documentation:
-
+- `tests/directTerraArchitecture.test.mjs`
 - `ReviewRadar-Overview.md`
-- `docs/agent-next-task.md`
+- `docs/forward-roadmap.md`
 - `docs/change-log.md`
 - `docs/qa-loop-results.md`
+- `docs/agent-dialogue.md`
+- `docs/agent-next-task.md`
+
+The sanitized integrated-smoke fixture remains untracked at
+`tests/fixtures/review-radar-live/oai-t8a-integrated-asset-smoke-5136346/` and
+must not be staged. Unrelated `.claude/`, baseline files, historical fixtures,
+and `fable-transfer-kit/` also remain untracked. Never use `git add -A`.
+
+## Decisive evidence
+
+The first integrated smoke at `5136346` returned five ranked shop vacs but
+created one asset target, accepted one image, and produced zero product
+websites. Static replay proved the first loss: optional price observations,
+rather than Terra's ranked headings, controlled asset targeting.
+
+Claude correctly connected the zero-website result to C5: Serper Shopping
+returns useful thumbnails but commonly exposes Google wrapper destinations,
+whereas bounded organic `"<exact identity> product page"` searches can return
+direct merchant/manufacturer pages. The implementation adopts that source
+split without importing the legacy C5 pipeline.
+
+## Corrected architecture
+
+1. Terra's ranked heading is the primary immutable product identity. A heading
+   can produce a target only when it has a coherent brand, strong model, and
+   product type. Price-observation identity is a fallback and a conflict veto,
+   never a prerequisite.
+2. A strict same-response citation in that product's own ranked section is the
+   first website source. Its response-owned title must itself prove exact
+   brand/model/type identity; URL or manufacturer-host guessing cannot replace
+   missing title identity.
+3. Only citation-missing targets receive one bounded Serper organic
+   `"<brand> <model> <product> product page"` request, at most five. Organic
+   rows pass the shared title, type, eligibility, wrapper, URL, and
+   `productPageMatchesIdentity` gates before a direct website is exposed.
+4. Serper Shopping remains image-only in orchestration. Exact Shopping rows
+   may supply a provenance-gated image, but their wrapper or merchant link is
+   never used as the card website.
+5. Organic websites and Shopping images run as two independent sequential
+   lanes, concurrently with one another. Failure in either lane returns a
+   nullable asset and cannot alter, remove, add, rename, or reorder Terra's
+   recommendations.
+
+The new organic adapter and shared transport are standalone, one-attempt,
+no-cache, no-retry, no-fallback boundaries. Requests are fixed to the Serper
+organic or Shopping endpoint, use process-supplied server secrets, cap queries
+at 180 characters, cap results, and reject malformed/error-bearing responses.
+No query, provider row, title, ID, secret, header, raw payload, or diagnostic
+enters the public product-asset result.
+
+## Adversarial findings closed
+
+- Headings containing real models plus `4-Burner`, `12-Cup`, `3-Stage`, and
+  similar specifications no longer lose their targets; spec-only and
+  date-shaped headings still produce no target.
+- A price-observation identity that conflicts with the heading suppresses the
+  target instead of silently rewriting the ranked product.
+- The earlier abbreviated-title manufacturer-URL exception was removed. It
+  admitted fake brand-looking hosts, accessory paths, and compound sibling
+  model URLs under plausible abbreviated titles.
+- Organic results reject accessories, editorial/listing/search pages, Google
+  and affiliate wrappers, local/private destinations, sibling models, and
+  title/URL identity disagreement.
+- Any non-null provider `error`, including an object-shaped error, fails both
+  Shopping and organic payloads closed.
+- Organic query generation now shares the transport's exact 180-character
+  ceiling; the two independent provider lanes start concurrently to avoid
+  unnecessary serial latency.
 
 ## Verification
 
-- focused Direct-Terra integration wall: 38/38 before adversarial additions;
-- complete unit wall: 1256/1256 across 179 suites;
+- focused Direct-Terra wall: 92/92 across 10 suites;
+- complete unit wall: 1270/1270 across 180 suites;
 - `npm run typecheck`: pass;
 - `npm run lint`: zero errors and three pre-existing warnings;
 - `npm run build`: pass;
-- `npm run test:e2e` with both direct-Terra flags forced off for the spawned
-  process: 17/17 pass, including the development-only asset-card preview;
-- integrated live-smoke runner default dry-run: pass and zero network;
-- desktop and 390 x 844 in-app browser inspection: usable card/fallback/link
-  layouts and zero captured warning/error console entries; and
-- `git diff --check`: pass before final staging.
+- integrated smoke dry-run v2: pass, zero network; and
+- saved C5 organic replay: 3/3 previously proven exact product pages recovered
+  by the new standalone adapter, zero network; and
+- `git diff --check`: pass before the final documentation refresh.
 
 ## Flag state
 
@@ -133,60 +128,40 @@ The prior classified local `.env.local` state remains:
 - direct-Terra client flag: on
 - constraint allocation: on
 
-This phase did not read or modify `.env.local`. Playwright used process-only
-flag overrides.
+This phase neither read nor changed `.env.local`. No provider call, push,
+deployment, publication, flag promotion, or production change occurred.
 
 ## Next approval-gated decision
 
-After the reviewed tree is committed, the next gate is one live integrated
-smoke pinned to that new full commit. The frozen runner requires exactly these
-approval ceilings:
+The next step is one scoped local commit of the reviewed files above, only if
+Taylor explicitly approves it. Do not stage the untracked smoke fixture or any
+unrelated artifact.
 
-- one Terra/high OpenAI Responses create;
-- at most 20 hosted web searches;
-- at most 60 retrieves;
-- at most one safety cancel;
-- at most five Serper Shopping requests / five physical attempts; and
-- a $7 OpenAI hard ceiling.
+Only after that commit exists should a replacement integrated smoke be
+proposed with exact numeric approval pinned to the new full hash. Its planning
+ceiling is one Terra/high OpenAI Responses create, at most 20 hosted searches,
+at most 60 retrieves, one safety cancel, at most five Serper Shopping requests,
+at most five Serper organic requests, and a $7 hard ceiling. That proposal is
+not approved by this handoff. A pass would be evidence for a later deployment
+decision, not authority to promote flags or deploy.
 
-It permits no retries, replacements, fallbacks, second response, direct source-
-page requests, additional cases, `.env.local` changes, flag promotion,
-deployment, or production change. It retains only the sanitized completed
-response, counters, usage, and website/image coverage. Repository policy still
-requires Taylor's numeric approval to name the reviewed full commit before
-execution.
-
-**Recommended reasoning level:** High. The run itself is mechanical, but the
-first live integrated response must be audited for exact product identity,
-website/image correctness, contract acceptance, attempt reconciliation, and
-whether real coverage justifies a later deployment decision.
-
-## Remaining limitations and honest uncertainty
-
-- Mocked and controlled browser evidence proves safety and rendering behavior,
-  not live provider coverage.
-- Process-local idempotency prevents normal repeated-poll spend in one running
-  app instance; it cannot coordinate two different server instances without a
-  durable shared store.
-- Serper Shopping may provide an exact image but no direct merchant website.
-  Terra citation coverage therefore remains important.
-- External image rendering discloses the shopper's network request to the
-  public image host; `no-referrer` is set, and unsafe/local hosts are blocked,
-  but ReviewRadar does not proxy images in this phase.
-- Passing the live smoke is evidence for, not authorization of, later flag
-  promotion or deployment.
+**Recommended reasoning level:** Medium for the mechanical scoped commit
+because the high-reasoning adversarial review and full wall are complete. High
+for the later live smoke because it requires identity-by-identity coverage and
+ledger auditing.
 
 ## Hard boundaries
 
-- No provider request without new exact numeric approval pinned to the reviewed
-  full commit.
-- No push, deployment, publication, feature-flag promotion, `.env.local` edit,
-  or production change without separate approval.
-- Preserve Terra's immutable recommendation identity, name, and order.
+- No provider request without new exact numeric approval pinned to the new
+  reviewed full commit.
+- No commit, push, deployment, publication, feature-flag promotion,
+  `.env.local` edit, or production change without separate approval.
+- Preserve Terra's immutable recommendation identity, name, rank, report, and
+  order.
 - Preserve citation ownership, disabled-source behavior, purchase caveats,
   market-price-estimate language, and every existing asset trust gate.
 - Never expose or persist keys, headers, private queries, provider IDs, raw
-  provider rows/responses, or server-only diagnostics.
+  provider rows/responses, source titles, or server-only diagnostics.
 - Do not delete legacy, two-layer, SearchAPI-history, or Serper code without
   rollback evidence and explicit retirement approval.
 
@@ -195,12 +170,9 @@ whether real coverage justifies a later deployment decision.
 | Need | Retrieve |
 |---|---|
 | Current phase, boundaries, and next decision | this file |
-| Product and architecture map | `ReviewRadar-Overview.md` |
-| Canonical integration evidence | latest `docs/qa-loop-results.md` entry |
-| Plain-English change | latest `docs/change-log.md` entry |
-| Public API contract | `lib/directTerraApiContract.ts` |
-| Target derivation and citation ownership | `lib/directTerraResponse.ts` |
-| Website/image orchestration | `lib/directTerraProductAssets.ts` |
-| Route lifecycle and idempotency | `lib/directTerraRecommendationRoute.ts` |
-| Card rendering | `components/DirectTerraReport.tsx` |
-| Commit-pinned live runner | `scripts/run-oai-t8a-integrated-asset-smoke.mjs` |
+| Current asset architecture | `ReviewRadar-Overview.md` |
+| Canonical verification evidence | latest `docs/qa-loop-results.md` entry |
+| Plain-English behavior change | latest `docs/change-log.md` entry |
+| Phase rationale and source split | T8A section in `docs/forward-roadmap.md` |
+| Peer-agent conclusion | latest `docs/agent-dialogue.md` entry |
+| Saved first-smoke evidence | untracked `oai-t8a-integrated-asset-smoke-5136346/` |

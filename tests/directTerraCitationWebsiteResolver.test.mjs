@@ -93,6 +93,83 @@ describe("Direct-Terra registered-citation website resolver", () => {
     );
   });
 
+  it("keeps abbreviated citation titles unavailable instead of inferring identity from a URL", () => {
+    const milwaukee = {
+      key: "rank-5-milwaukee-0910-20",
+      rank: 5,
+      productName: "Milwaukee 0910-20 M18 FUEL 6-Gallon Wet/Dry Vacuum",
+      brand: "Milwaukee",
+      model: "0910-20",
+      category: "shop vacuum",
+    };
+    const exactUrl = "https://www.milwaukeetool.com/0910-20";
+    const result = resolve({
+      targets: [milwaukee],
+      reportMarkdown: [
+        `## #5 Best Match — ${milwaukee.productName}`,
+        `[Official product page](${exactUrl})`,
+      ].join("\n\n"),
+      activeCitationUrls: [exactUrl],
+      responseSources: [
+        source(exactUrl, "Milwaukee M18 FUEL 6 Gallon Wet/Dry Vacuum"),
+      ],
+    });
+
+    assert.equal(result.items[0].productUrl, null);
+    assert.equal(result.items[0].productUrlStatus, "unavailable");
+  });
+
+  it("does not let abbreviated titles bless sibling-model or non-brand URLs", () => {
+    const milwaukee = {
+      key: "rank-5-milwaukee-0910-20",
+      rank: 5,
+      productName: "Milwaukee 0910-20 M18 FUEL 6-Gallon Wet/Dry Vacuum",
+      brand: "Milwaukee",
+      model: "0910-20",
+      category: "shop vacuum",
+    };
+    const rejected = [
+      source(
+        "https://www.milwaukeetool.com/0910-21",
+        "Milwaukee M18 FUEL 6 Gallon Wet/Dry Vacuum",
+      ),
+      source(
+        "https://merchant.example/products/0910-20",
+        "Milwaukee M18 FUEL 6 Gallon Wet/Dry Vacuum",
+      ),
+      source(
+        "https://www.milwaukeetool.com/0910-20",
+        "DEWALT 6 Gallon Wet/Dry Vacuum",
+      ),
+      source(
+        "https://www.milwaukeetool.com/reviews/0910-20",
+        "Milwaukee M18 FUEL 6 Gallon Wet/Dry Vacuum Review",
+      ),
+      source(
+        "https://milwaukeetool.evil.example/0910-20",
+        "Milwaukee M18 FUEL 6 Gallon Wet/Dry Vacuum",
+      ),
+      source(
+        "https://www.milwaukeetool.com/accessories/0910-20-filter",
+        "Milwaukee M18 FUEL 6 Gallon Wet/Dry Vacuum",
+      ),
+    ];
+    const result = resolve({
+      targets: [milwaukee],
+      reportMarkdown: [
+        `## #5 Best Match — ${milwaukee.productName}`,
+        ...rejected.map(
+          ({ url }, index) => `[Rejected ${index + 1}](${url})`,
+        ),
+      ].join("\n\n"),
+      activeCitationUrls: rejected.map(({ url }) => url),
+      responseSources: rejected,
+    });
+
+    assert.equal(result.items[0].productUrl, null);
+    assert.equal(result.items[0].productUrlStatus, "unavailable");
+  });
+
   it("does not borrow an exact citation from another ranked product section", () => {
     const result = resolve({
       targets: [ridgid],

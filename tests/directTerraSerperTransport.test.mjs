@@ -6,12 +6,17 @@ import {
   DIRECT_TERRA_SERPER_RESPONSE_BYTE_CEILING,
   DIRECT_TERRA_SERPER_TIMEOUT_MS,
   DirectTerraSerperTransportError,
+  createDirectTerraSerperOrganicTransport,
   createDirectTerraSerperShoppingTransport,
 } from "../lib/directTerraSerperTransport.ts";
 import {
   DIRECT_TERRA_SERPER_SHOPPING_ENDPOINT,
   MAX_DIRECT_TERRA_SHOPPING_RESULTS,
 } from "../lib/directTerraSerperAssetAdapter.ts";
+import {
+  DIRECT_TERRA_SERPER_ORGANIC_ENDPOINT,
+  MAX_DIRECT_TERRA_ORGANIC_RESULTS,
+} from "../lib/directTerraSerperOrganicAdapter.ts";
 
 const apiKey = "test-serper-key-with-enough-length";
 const request = {
@@ -21,6 +26,15 @@ const request = {
     gl: "us",
     hl: "en",
     num: MAX_DIRECT_TERRA_SHOPPING_RESULTS,
+  },
+};
+const organicRequest = {
+  endpoint: DIRECT_TERRA_SERPER_ORGANIC_ENDPOINT,
+  body: {
+    q: "RIDGID HD1200 shop vacuum product page",
+    gl: "us",
+    hl: "en",
+    num: MAX_DIRECT_TERRA_ORGANIC_RESULTS,
   },
 };
 
@@ -56,6 +70,24 @@ describe("Direct-Terra Serper Shopping server transport", () => {
     assert.deepEqual(JSON.parse(calls[0].init.body), request.body);
     assert.ok(calls[0].init.signal instanceof AbortSignal);
     assert.equal(JSON.stringify(payload).includes(apiKey), false);
+  });
+
+  it("uses the same one-attempt boundary for a fixed organic product-page request", async () => {
+    const calls = [];
+    const transport = createDirectTerraSerperOrganicTransport({
+      apiKey,
+      fetchImpl: async (url, init) => {
+        calls.push({ url, init });
+        return jsonResponse({ organic: [] });
+      },
+    });
+
+    assert.deepEqual(await transport(organicRequest), { organic: [] });
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].url, DIRECT_TERRA_SERPER_ORGANIC_ENDPOINT);
+    assert.deepEqual(JSON.parse(calls[0].init.body), organicRequest.body);
+    assert.equal(calls[0].init.redirect, "error");
+    assert.equal(calls[0].init.cache, "no-store");
   });
 
   it("rejects malformed requests and secrets before any HTTP attempt", async () => {

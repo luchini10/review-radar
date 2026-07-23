@@ -7,7 +7,9 @@ import {
   type DirectTerraPriceEstimate,
 } from "./directTerraPriceEstimate.ts";
 import {
+  directTerraAssetIdentitiesAgree,
   directTerraAssetTargetIsCoherent,
+  extractDirectTerraHeadingIdentity,
   type DirectTerraAssetTarget,
 } from "./directTerraAssetVerifier.ts";
 import {
@@ -190,17 +192,16 @@ export function extractDirectTerraAssetTargets({
   reportMarkdown: string;
   priceObservations: unknown;
 }): DirectTerraAssetTarget[] {
-  if (!Array.isArray(priceObservations) || priceObservations.length > 5) {
-    return [];
-  }
+  const structuredIdentities = new Map<
+    number,
+    { brand: string; model: string }
+  >();
 
-  const picksByRank = new Map(
-    extractDirectTerraPicks(reportMarkdown).map((pick) => [pick.rank, pick]),
-  );
-  const seenRanks = new Set<number>();
-  const targets: DirectTerraAssetTarget[] = [];
-
-  for (const value of priceObservations) {
+  const boundedPriceObservations =
+    Array.isArray(priceObservations) && priceObservations.length <= 5
+      ? priceObservations
+      : [];
+  for (const value of boundedPriceObservations) {
     if (
       !isRecord(value) ||
       JSON.stringify(Object.keys(value).sort()) !==
@@ -208,7 +209,7 @@ export function extractDirectTerraAssetTargets({
       !Number.isInteger(value.rank) ||
       (value.rank as number) < 1 ||
       (value.rank as number) > 5 ||
-      seenRanks.has(value.rank as number) ||
+      structuredIdentities.has(value.rank as number) ||
       typeof value.brand !== "string" ||
       value.brand.trim().length === 0 ||
       value.brand.length > 120 ||
@@ -221,11 +222,33 @@ export function extractDirectTerraAssetTargets({
       continue;
     }
 
-    const rank = value.rank as number;
-    const pick = picksByRank.get(rank);
-    if (!pick || pick.name.length > 300) continue;
-    const brand = value.brand.trim();
-    const model = value.model.trim();
+    structuredIdentities.set(value.rank as number, {
+      brand: value.brand.trim(),
+      model: value.model.trim(),
+    });
+  }
+
+  const targets: DirectTerraAssetTarget[] = [];
+  for (const pick of extractDirectTerraPicks(reportMarkdown)) {
+    if (pick.rank < 1 || pick.rank > 5 || pick.name.length > 300) continue;
+    // The ranked heading is Terra's recommendation identity and must be enough
+    // to decorate a card. Structured price observations are only a safe
+    // fallback for descriptive models that do not expose a strong model token;
+    // missing price evidence must never hide an otherwise exact ranked pick.
+    const headingIdentity = extractDirectTerraHeadingIdentity(pick.name);
+    const structuredIdentity = structuredIdentities.get(pick.rank);
+    if (
+      headingIdentity &&
+      structuredIdentity &&
+      !directTerraAssetIdentitiesAgree(headingIdentity, structuredIdentity)
+    ) {
+      continue;
+    }
+    const identity = headingIdentity ?? structuredIdentity;
+    if (!identity) continue;
+
+    const rank = pick.rank;
+    const { brand, model } = identity;
     const identitySlug = headingSlug(`${brand}-${model}`);
     if (!identitySlug) continue;
 
@@ -241,7 +264,6 @@ export function extractDirectTerraAssetTargets({
       category: pick.name,
     };
     if (!directTerraAssetTargetIsCoherent(target)) continue;
-    seenRanks.add(rank);
     targets.push(target);
   }
 

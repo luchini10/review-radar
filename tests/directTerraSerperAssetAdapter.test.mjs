@@ -162,6 +162,7 @@ describe("Direct-Terra mocked Serper Shopping asset adapter", () => {
     const responses = [
       { organic: [shoppingRow()] },
       { error: "provider error", shopping: [shoppingRow()] },
+      { error: { message: "provider error" }, shopping: [shoppingRow()] },
     ];
     const diagnostics = [];
     let callIndex = 0;
@@ -181,10 +182,10 @@ describe("Direct-Terra mocked Serper Shopping asset adapter", () => {
       assert.equal(result.items[0].verification.imageUrl, null);
       assert.equal(result.items[0].mappedCandidateCount, 0);
     }
-    assert.equal(callIndex, 2);
+    assert.equal(callIndex, 3);
     assert.deepEqual(
       diagnostics.map((diagnostic) => diagnostic.providerPayloadShape),
-      ["missing_shopping_array", "provider_error"],
+      ["missing_shopping_array", "provider_error", "provider_error"],
     );
   });
 

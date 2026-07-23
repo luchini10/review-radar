@@ -10030,3 +10030,111 @@ network request. `git diff --check` passes.
 commit-pinned live smoke may measure real website/image coverage. Passing that
 smoke is evidence for a later flag/deployment decision, not automatic authority
 to edit flags or deploy.
+
+## ðŸŸ§ Codex QA Update â€” 2026-07-22 (Direct-Terra asset-coverage correction)
+
+**Live evidence and diagnosis:** the first integrated smoke at full commit
+`5136346ca44df932086017ee22cca759f6b665ac` passed its lifecycle and public
+contract, but decorated only rank #5: one verifier-accepted image, zero product
+websites, and zero fully decorated cards. It used one OpenAI create, nine hosted
+web searches, 22 retrieves, one Serper Shopping attempt, no retry/fallback/
+replacement/cancel, about $0.601687 estimated OpenAI cost, and 140,979 ms. Terra
+had returned five ranked shop vacs. Static tracing proved the coverage loss was
+inside ReviewRadar: asset targets were created only for ranks represented by
+optional `price_observations`. Strong model tokens in the other headings were
+also falsely treated as conflicting with size tokens such as `16-Gallon`.
+
+**Zero-live correction:** `extractDirectTerraAssetTargets` now derives a
+bounded coherent identity from each ranked heading when it contains a strong
+mixed model code or numeric-dash model. It excludes measurement and feature
+tokens such as gallons, horsepower, voltage, burner count, cup count, doors,
+speeds, stages, and tiers. Schema-owned price identity remains only a fallback
+for descriptive models. Replaying the saved report with no price observations
+now yields five rank-ordered targets and five bounded exact-product queries.
+
+The registered-citation resolver may now corroborate an abbreviated response-
+owned source title with an exact-model manufacturer URL, but only inside that
+same product's ranked section. The title must retain brand and product type;
+the registrable host must be brand-owned; the path must carry every model token;
+and sibling-model, fake-subdomain, accessory, editorial, wrapper, local/private,
+and other ineligible destinations still fail closed. This exception is enabled
+only for registered Terra citations. Shopping candidates retain exact title
+identity and cannot use a URL to establish identity.
+
+**Adversarial review:** fail-first coverage reproduced both live-smoke gaps.
+The first implementation also exposed and then closed three generalized edge
+cases before the broad wall: product measurements were mistaken for foreign
+models; a brand-looking subdomain could resemble a manufacturer host; and an
+official-host accessory path could inherit the product title. Architecture
+coverage also rejected a legacy `productIdentity` import; the final response
+path keeps its standalone boundary and uses a small local heading rule instead.
+
+**Verification:** 56/56 focused Direct-Terra tests and 1260/1260 complete unit
+tests across 179 suites pass. Typecheck and production build pass. Full lint
+reports zero errors and the same three pre-existing warnings. The saved live
+fixture replay yields exactly five coherent targets and queries with no network
+request. `git diff --check` passes on the final scoped diff.
+
+**Boundary:** this phase made zero OpenAI, Serper, SearchAPI, or direct-page
+requests. It changed no flag, `.env.local`, deployment, push, or production
+state and did not commit. Live website/image coverage remains unproven until a
+new smoke is separately approved against the eventual reviewed commit.
+
+## 🟧 Codex QA Update — 2026-07-22 (Direct-Terra source-split asset correction)
+
+**Verdict: ZERO-LIVE PASS / LIVE COVERAGE UNPROVEN.** Claude's diagnosis was
+partly correct: C5 proves Serper organic is the useful source for direct product
+pages while Shopping's wrapper-heavy results are useful for images. The source
+choice was not the only root cause; target extraction and an unsafe citation-
+title exception also needed correction.
+
+**Final architecture:** Terra's ranked heading is the primary immutable asset
+identity. Structured price identity is a fallback plus conflict veto, not a
+target prerequisite. A strict same-response, same-ranked-section citation is
+the first website source. Only citation-missing targets receive one bounded
+organic `"<identity> product page"` request, up to five. Shopping independently
+receives up to five exact-identity requests for images only. Organic websites
+and Shopping images run concurrently, fail independently, and can return only
+nullable decoration for Terra's unchanged picks.
+
+The implementation deliberately does not call legacy
+`resolveSerperIdentityLeads()`: that function owns legacy normalization,
+materialization, flags, cache, and ledger behavior. A standalone adapter reuses
+only the shared final identity/page/type/eligibility gates and a shared bounded
+server transport. It makes one attempt per target with no retry, cache,
+fallback, query expansion, wrapper unwrapping, or direct-page fetch.
+
+**Safety corrections from review:** the abbreviated-title manufacturer-URL
+exception was removed because adversarial cases showed that fake brand-looking
+hosts, accessory paths, and compound sibling-model paths could satisfy it.
+Provider titles must prove exact identity. Measurement tokens no longer look
+like foreign models, date-shaped tokens cannot become models, and conflicting
+heading/price identities suppress the target. Organic results reject
+editorial/listing/search/accessory pages, affiliate/Google wrappers, sibling
+models, local/private destinations, and title/URL disagreement. Both provider
+parsers reject any non-null `error`, including object-shaped errors. Query
+generation and transport share the same 180-character maximum.
+
+**Data boundary:** the public asset output remains only rank, Terra product
+name, nullable website URL, and nullable image URL. Queries, provider rows,
+source titles, provider IDs, diagnostics, secrets, headers, and raw payloads
+stay server-only. Shopping URLs are ignored by orchestration even if a row
+offers one; only its independently verified image may survive.
+
+**Verification:** the focused Direct-Terra wall passes 92/92 across 10 suites.
+The full wall passes 1270/1270 across 180 suites. Typecheck and production build
+pass. Full lint reports zero errors and the same three pre-existing warnings.
+The integrated-smoke v2 dry-run prints separate five-request Shopping and
+organic ceilings without network access. A zero-network replay mapped the
+saved C5 organic candidate rows into the new standalone adapter and recovered
+3/3 exact pages previously proven by that fixture: RIDGID HD1200, CRAFTSMAN
+CMXEVBE17584, and STANLEY SL18115. That is direct compatibility evidence for
+the source split, not coverage evidence for the five different live-smoke
+models. No provider call, flag change, `.env.local` edit, deployment, push, or
+production change occurred.
+
+**Next gate:** commit only after separate approval. A later live integrated
+smoke requires a fresh full-commit pin and exact approval for one Terra create,
+at most 20 hosted searches, at most 60 retrieves, one safety cancel, at most
+five Shopping attempts, at most five organic attempts, and a $7 hard ceiling.
+It is a coverage measurement, not authorization to promote or deploy.

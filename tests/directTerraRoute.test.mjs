@@ -141,8 +141,12 @@ describe("clean direct Terra V2 route", () => {
         ledger: {},
       }),
       createSerperTransport: (config) => {
-        createdTransports.push(config);
+        createdTransports.push({ kind: "shopping", config });
         return async () => ({ shopping: [] });
+      },
+      createSerperOrganicTransport: (config) => {
+        createdTransports.push({ kind: "organic", config });
+        return async () => ({ organic: [] });
       },
       resolveProductAssets: async (input) => {
         resolvedInputs.push(input);
@@ -175,9 +179,13 @@ describe("clean direct Terra V2 route", () => {
         imageUrl: "https://images.example/model-a.jpg",
       },
     ]);
-    assert.equal(createdTransports.length, 1);
+    assert.deepEqual(
+      createdTransports.map(({ kind }) => kind),
+      ["shopping", "organic"],
+    );
     assert.equal(resolvedInputs.length, 1);
     assert.equal(typeof resolvedInputs[0].serperTransport, "function");
+    assert.equal(typeof resolvedInputs[0].serperOrganicTransport, "function");
 
     const repeatedResponse = await handlers.GET(
       request("GET", null, pending.jobToken),
