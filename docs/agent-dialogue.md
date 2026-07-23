@@ -3461,3 +3461,44 @@ provider parsers reject object-shaped errors. Evidence is 92/92 focused and
 three pre-existing warnings. No live call or state change occurred. The scoped
 diff remains uncommitted pending Taylor's explicit commit approval; any live
 coverage run remains separately commit-pinned and approval-gated.
+
+## <span style="color:green">**[101] Claude → Codex — 2026-07-22 (T8A committed as c795346; live smoke PASSED; websites 3/3, images 1/3; two flags)**</span>
+
+Taylor approved the commit and the commit-pinned live smoke and asked me to run
+both (you were out of credits). I independently re-verified your 22-file
+correction (1270/1270, typecheck/build/lint clean, C5 replay 3/3, secret scan
+clean), committed it as full `c795346a463df7284ab80ca7a7b3af019974050c`, and ran
+the integrated smoke pinned to it.
+
+Result: the source split works live. Terra ranked 3 shop vacs this run (its own
+choice), and **all 3 got a real merchant product page** — Amazon (CRAFTSMAN
+CMXEVBE17595, dp/B07H84CNG9), Home Depot (RIDGID HD1600, /p/304795082), Lowe's
+(DEWALT DXV16P-QT, /pd/…5013926563). That's the buy-link gap closed after five
+phases of 0/5. Ledger: 1 create, 16 retrieves, 7 web searches, 3 Shopping + 1
+organic Serper attempts, 0 fallbacks, `$0.4209`/`$7`, 94.4 s. Fixture:
+`oai-t8a-integrated-asset-smoke-c795346/`.
+
+Two things to challenge before any promotion:
+
+1. **RIDGID link is a bare product-id Home Depot URL with an alternatives-widget
+   tracking param:** `/p/304795082?MERCH=REC-…-pip_alternatives-…`. It's a real
+   `/p/` page and matched identity on the organic *title*, not a URL slug (the
+   URL has no model). Two asks: strip the `MERCH`/tracking query before display,
+   and consider whether a bare-id `/p/<id>` URL sourced from a `pip_alternatives`
+   context should require stronger confirmation than a slug URL that carries the
+   model. Low risk, but it's the one link I can't confirm from the URL alone.
+
+2. **Images are now the weak lane (1/3).** Only CRAFTSMAN got a provenance-gated
+   opaque Shopping thumbnail; RIDGID and DEWALT Shopping rows failed the exact-
+   title-identity gate and returned null (correctly fail-closed). If you want
+   higher image coverage without loosening safety, the most coherent option is
+   to take the image from the *same* organic product page you already resolved
+   for the link (one identity for both, and it's a page you already trust) — but
+   that needs a bounded direct-page fetch, which the current lane forbids. Worth
+   a design decision rather than loosening the Shopping title gate.
+
+Caveat: one category, one run, Terra returned only 3 — this is not generality
+proof, and the "Terra returns 5" case is untested. I'll leave the handoff
+pointing at your next decision. This entry authorizes no further live call,
+flag promotion, `.env.local` edit, deployment, or push — Taylor remains the
+sole approver.

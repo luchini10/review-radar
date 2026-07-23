@@ -10138,3 +10138,57 @@ smoke requires a fresh full-commit pin and exact approval for one Terra create,
 at most 20 hosted searches, at most 60 retrieves, one safety cancel, at most
 five Shopping attempts, at most five organic attempts, and a $7 hard ceiling.
 It is a coverage measurement, not authorization to promote or deploy.
+
+## <span style="color:green">**Claude QA Update — 2026-07-22 (T8A live integrated asset smoke: PASSED; buy-links solved 3/3, images 1/3)**</span>
+
+Taylor approved the commit + the commit-pinned live smoke; Codex was out of
+credits, so Claude performed both. First committed the reviewed 22-file organic-
+resolver asset correction as full commit `c795346a463df7284ab80ca7a7b3af019974050c`
+(independently re-verified pre-commit: 1270/1270 across 180 suites, typecheck,
+build, lint 0 errors/3 pre-existing warnings, secret scan clean, saved C5 organic
+replay 3/3, exactly the 22 handoff files). Then ran
+`scripts/run-oai-t8a-integrated-asset-smoke.mjs --execute` pinned to that hash.
+
+**Ledger (balanced, within the approved envelope):** 1 OpenAI create, 16
+retrieves, 0 safety cancels, 7 hosted web searches, **3 Serper Shopping** (image
+lane) + **1 Serper organic** (website lane) attempts, 0 retries/replacements/
+fallbacks/direct-page requests, `$0.4209` of the `$7` ceiling, 94.4 s. Evidence
+untracked at `tests/fixtures/review-radar-live/oai-t8a-integrated-asset-smoke-c795346/broad-shop-vac.run1.json`.
+
+**Coverage:** Terra ranked **3** shop vacs this run (its own choice; the prompt
+allows fewer than five), so this is 3/3 of Terra's picks, not 3/5. Results:
+- **Buy links (websites): 3/3** — all real merchant product pages, a decisive
+  improvement over the prior Shopping-only 0/5 wrapper result:
+  - #1 CRAFTSMAN CMXEVBE17595 → `amazon.com/.../dp/B07H84CNG9` (slug carries
+    `CRAFTSMAN 17595`; exact-model match) ✔
+  - #2 RIDGID HD1600 → `homedepot.com/p/304795082?MERCH=REC-…pip_alternatives…`
+    — real Home Depot `/p/` product page, identity matched on the organic
+    result title, BUT a bare product-id URL carrying an "alternatives" widget
+    tracking param. Flagged: strip the `MERCH` param and confirm the bare id
+    resolves to HD1600 (title-matched, not URL-slug-matched).
+  - #3 DEWALT DXV16P-QT → `lowes.com/pd/DEWALT-Stealthsonic-Quiet-16-Gallon-6-5-HP-…/5013926563`
+    (slug matches; exact product) ✔
+- **Images: 1/3** — only CRAFTSMAN got a provenance-gated opaque Google Shopping
+  thumbnail (`encrypted-tbn1.gstatic.com/shopping?...`); RIDGID and DEWALT
+  Shopping rows failed the exact-title-identity gate and returned null (safe,
+  fail-closed).
+- **Fully decorated (image + link): 1/3.**
+
+**Safety verdict:** the trust boundary held — no wrong-model or wrong-type asset
+was displayed; two of three links are URL-slug-confirmed to the exact model and
+the third is a real product page matched on title (with the noted param caveat);
+the one image is opaque and provenance-gated. Terra's product set, names, ranks,
+report, and order are unchanged; every asset miss is nullable.
+
+**Assessment:** the organic + in-section-citation website split (Claude's C5
+diagnosis, Codex's implementation) **works live** and closes the buy-link gap
+that blocked T8A for five phases. Two open items: (1) image coverage is now the
+weak lane (1/3) because the Shopping title-identity gate is strict — a coherent
+next step is pulling the image from the *same* resolved organic product page
+(one identity for image+link), which needs a bounded page fetch the path
+currently forbids; (2) the RIDGID bare-id/alternatives-param link warrants a
+param strip + identity confirmation. This is one category, one run, Terra
+returning only 3 — coverage generality and the "Terra returns 5" case are
+unproven. This is coverage evidence for a later deployment decision, not
+authorization to promote flags or deploy. Flags unchanged; `.env.local`
+untouched by the run.

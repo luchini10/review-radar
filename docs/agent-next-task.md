@@ -1,15 +1,19 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-22 by Codex after the zero-live Direct-Terra website/image
-source correction and complete local validation.
+Updated: 2026-07-22 by Claude after committing the asset source-split correction
+and running the approved commit-pinned live integrated smoke (Codex was out of
+credits; Taylor approved both the commit and the live smoke).
 
 ## Current phase and commit boundary
 
-The committed base remains full commit
+The asset source-split correction is now COMMITTED as full commit
+`c795346a463df7284ab80ca7a7b3af019974050c` (`Correct Direct-Terra product-asset
+source split (organic website + Shopping image)`), on top of base
 `5136346ca44df932086017ee22cca759f6b665ac` (`Integrate Direct-Terra product
-assets`). Taylor asked Codex to combine Claude's organic-link diagnosis with
-the prior adversarial findings and solve the asset path offline. The resulting
-correction is complete and reviewed locally but remains uncommitted.
+assets`). Claude independently re-verified before committing (1270/1270 across
+180 suites, typecheck/build/lint clean, saved C5 organic replay 3/3, secret scan
+clean) and staged exactly the 22 reviewed files; the smoke fixture and all
+unrelated artifacts remain untracked.
 
 The scoped working set is:
 
@@ -133,17 +137,31 @@ deployment, publication, flag promotion, or production change occurred.
 
 ## Next approval-gated decision
 
-The next step is one scoped local commit of the reviewed files above, only if
-Taylor explicitly approves it. Do not stage the untracked smoke fixture or any
-unrelated artifact.
+The scoped commit (`c795346`) and the approved commit-pinned live integrated
+smoke are both DONE. The smoke PASSED its lifecycle/contract/ceilings ($0.4209
+of $7, 1 create / 16 retrieves / 3 Shopping / 1 organic, 0 fallbacks). Terra
+ranked 3 shop vacs; coverage was **buy-links 3/3** (all real merchant product
+pages — Amazon/Home Depot/Lowe's, the 0/5 wrapper gap now closed), **images
+1/3** (opaque provenance-gated Shopping thumbnail; the other two fail-closed),
+fully decorated 1/3. Full audit in the latest `docs/qa-loop-results.md` entry
+and dialogue `[101]`. Evidence untracked at
+`oai-t8a-integrated-asset-smoke-c795346/`.
 
-Only after that commit exists should a replacement integrated smoke be
-proposed with exact numeric approval pinned to the new full hash. Its planning
-ceiling is one Terra/high OpenAI Responses create, at most 20 hosted searches,
-at most 60 retrieves, one safety cancel, at most five Serper Shopping requests,
-at most five Serper organic requests, and a $7 hard ceiling. That proposal is
-not approved by this handoff. A pass would be evidence for a later deployment
-decision, not authority to promote flags or deploy.
+Two open items surfaced (both are Codex's next zero-live decision, per
+dialogue `[101]`):
+1. Strip the tracking query and confirm identity on the RIDGID Home Depot link
+   `/p/304795082?MERCH=…pip_alternatives…` — real product page, matched on the
+   organic title, but a bare product-id URL from an alternatives widget.
+2. Raise image coverage without loosening the Shopping title-identity gate —
+   the coherent option is taking the image from the already-resolved organic
+   product page (one identity for image+link), which needs a bounded direct-page
+   fetch the current image lane forbids; this is a design decision, not a tweak.
+
+This was one category / one run with only 3 ranked products; generality and the
+"Terra returns 5" case are unproven. Any further live run (e.g. a small multi-
+category coverage sample) remains separately commit-pinned and approval-gated.
+A pass is evidence for a later deployment decision, not authority to promote
+flags or deploy.
 
 **Recommended reasoning level:** Medium for the mechanical scoped commit
 because the high-reasoning adversarial review and full wall are complete. High
