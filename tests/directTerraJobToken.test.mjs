@@ -17,6 +17,7 @@ describe("direct Terra V2 job capability", () => {
       responseId: "resp_direct_123456789",
       promptVersion: DIRECT_TERRA_PROMPT_VERSION,
       promptHash: "a".repeat(64),
+      productCategory: "refrigerator",
       secret,
       nowMs,
     });
@@ -29,8 +30,10 @@ describe("direct Terra V2 job capability", () => {
     assert.equal(verified.ok, true);
     assert.equal(verified.payload.version, DIRECT_TERRA_JOB_TOKEN_VERSION);
     assert.equal(verified.payload.responseId, "resp_direct_123456789");
+    assert.equal(verified.payload.productCategory, "refrigerator");
     assert.equal(token.includes("resp_direct_123456789"), false);
     assert.equal(token.includes("a".repeat(64)), false);
+    assert.equal(token.includes("refrigerator"), false);
   });
 
   it("rejects tampering, wrong secrets, and expiration", () => {
@@ -38,6 +41,7 @@ describe("direct Terra V2 job capability", () => {
       responseId: "resp_direct_123456789",
       promptVersion: DIRECT_TERRA_PROMPT_VERSION,
       promptHash: "a".repeat(64),
+      productCategory: "refrigerator",
       secret,
       nowMs,
       ttlMs: 1_000,

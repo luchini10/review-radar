@@ -15,7 +15,7 @@ import { normalizeTwoLayerSourceUrl } from "./twoLayerSourceUrl.ts";
 import { classifyDirectTerraLinkHost } from "./directTerraLinkPreference.ts";
 
 export const DIRECT_TERRA_ASSET_VERIFIER_VERSION =
-  "direct-terra-asset-verifier-v2";
+  "direct-terra-asset-verifier-v3";
 
 export type DirectTerraAssetTarget = {
   key: string;
@@ -56,6 +56,7 @@ export type DirectTerraAssetDecision = {
     | "unsafe_product_url_host"
     | "product_url_redirect_wrapper"
     | "product_url_ineligible"
+    | "product_url_type_conflict"
     | "product_url_identity_mismatch";
   imageUrlAccepted: boolean;
   imageUrlReason: string;
@@ -431,6 +432,29 @@ function coreModelInUrlPath(url: string, model: string) {
   }
 }
 
+// A title can correctly name the locked product while its destination path
+// names a different descriptive variant (for example, a standard office chair
+// title pointing at a gaming-chair page). Treat positive wrong-type evidence
+// in the path as a veto. Sparse or neutral paths continue; this rule admits
+// nothing and reuses the shared category-independent type contract.
+function productUrlPathHasTypeConflict(
+  target: DirectTerraAssetTarget,
+  productUrl: string,
+) {
+  try {
+    const pathText = decodeURIComponent(new URL(productUrl).pathname)
+      .replace(/[-_/.+]+/g, " ")
+      .trim();
+    return !classifyProductTypeMatch({
+      evidenceText: pathText,
+      identityText: pathText,
+      requestedCategory: target.category,
+    }).canBeExactMatch;
+  } catch {
+    return true;
+  }
+}
+
 // Retailer and manufacturer product pages routinely omit the SKU from the page
 // TITLE while carrying it exactly in the URL slug (homedepot.com/p/DEWALT-…-
 // DXV12P/305323712 is titled "DEWALT 12 Gal. Wet/Dry Vacuum"; retailers list
@@ -542,6 +566,8 @@ function evaluateCandidate(
     productUrlReason = "product_url_redirect_wrapper";
   } else if (productUrl && unsafeProductHost(productUrl)) {
     productUrlReason = "unsafe_product_url_host";
+  } else if (productUrl && productUrlPathHasTypeConflict(target, productUrl)) {
+    productUrlReason = "product_url_type_conflict";
   } else if (productUrl) {
     const eligibility = classifyProductEligibility({
       brand: target.brand,

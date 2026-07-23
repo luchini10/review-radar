@@ -398,6 +398,7 @@ export function createDirectTerraRecommendationHandlers({
         responseId: result.responseId,
         promptVersion: result.promptVersion,
         promptHash: result.promptHash,
+        productCategory: shopperRequest.query,
         secret: environment.jobTokenSecret!,
         nowMs: issuedAtMs,
         ttlMs: DIRECT_TERRA_JOB_TTL_MS,
@@ -479,7 +480,15 @@ export function createDirectTerraRecommendationHandlers({
         );
       }
       reportProgressUpTo(progressId, "rank_results");
-      let productAssets: DirectTerraProductAsset[] = result.assetTargets.map(
+      const assetTargets = result.assetTargets.map((target) => ({
+        ...target,
+        // The encrypted job capability carries only the shopper's product
+        // category across the start/poll boundary. Restore it server-side so
+        // descriptive product names receive the same type-conflict protection
+        // as coded model names.
+        category: verified.payload.productCategory,
+      }));
+      let productAssets: DirectTerraProductAsset[] = assetTargets.map(
         (target) => ({
           rank: target.rank,
           productName: target.productName,
@@ -507,7 +516,7 @@ export function createDirectTerraRecommendationHandlers({
           expiresAtMs: verified.payload.expiresAtMs,
           load: () =>
             resolveProductAssets({
-              targets: result.assetTargets,
+              targets: assetTargets,
               reportMarkdown: result.reportMarkdown,
               activeCitationUrls: result.citationUrls,
               responseSources: result.responseSources,
@@ -516,7 +525,7 @@ export function createDirectTerraRecommendationHandlers({
               productPageTransport,
             }),
         });
-        productAssets = safeAssetsForTargets(result.assetTargets, resolved);
+        productAssets = safeAssetsForTargets(assetTargets, resolved);
       } catch {
         // Decoration is optional. A failed image or website lookup must never
         // delete, rewrite, reorder, or fail Terra's completed report.

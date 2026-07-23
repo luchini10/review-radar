@@ -7,7 +7,7 @@ import {
 
 import { DIRECT_TERRA_PROMPT_VERSION } from "./directTerraPrompt.ts";
 
-export const DIRECT_TERRA_JOB_TOKEN_VERSION = "direct-terra-job-v1";
+export const DIRECT_TERRA_JOB_TOKEN_VERSION = "direct-terra-job-v2";
 
 const MINIMUM_SECRET_BYTES = 32;
 const MAXIMUM_TOKEN_LIFETIME_MS = 30 * 60_000;
@@ -15,8 +15,8 @@ const MAXIMUM_TOKEN_LENGTH = 2_048;
 const NONCE_BYTES = 12;
 const AUTH_TAG_BYTES = 16;
 const KEY_BYTES = 32;
-const KEY_SALT = Buffer.from("ReviewRadar direct Terra token salt v1", "utf8");
-const KEY_INFO = Buffer.from("ReviewRadar direct Terra token key v1", "utf8");
+const KEY_SALT = Buffer.from("ReviewRadar direct Terra token salt v2", "utf8");
+const KEY_INFO = Buffer.from("ReviewRadar direct Terra token key v2", "utf8");
 const TOKEN_AAD = Buffer.from(DIRECT_TERRA_JOB_TOKEN_VERSION, "utf8");
 const responseIdPattern = /^resp_[A-Za-z0-9_-]{8,}$/;
 const hashPattern = /^[a-f0-9]{64}$/;
@@ -26,6 +26,7 @@ export type DirectTerraJobTokenPayload = {
   responseId: string;
   promptVersion: typeof DIRECT_TERRA_PROMPT_VERSION;
   promptHash: string;
+  productCategory: string;
   issuedAtMs: number;
   expiresAtMs: number;
 };
@@ -34,6 +35,7 @@ type IssueInput = {
   responseId: string;
   promptVersion: string;
   promptHash: string;
+  productCategory: string;
   secret: string;
   nowMs?: number;
   ttlMs?: number;
@@ -80,6 +82,7 @@ function parsePayload(text: string): DirectTerraJobTokenPayload | null {
     const expectedKeys = [
       "expiresAtMs",
       "issuedAtMs",
+      "productCategory",
       "promptHash",
       "promptVersion",
       "responseId",
@@ -94,6 +97,13 @@ function parsePayload(text: string): DirectTerraJobTokenPayload | null {
     if (!responseIdPattern.test(String(record.responseId ?? ""))) return null;
     if (record.promptVersion !== DIRECT_TERRA_PROMPT_VERSION) return null;
     if (!isDirectTerraPromptHash(String(record.promptHash ?? ""))) return null;
+    if (
+      typeof record.productCategory !== "string" ||
+      record.productCategory.trim().length === 0 ||
+      record.productCategory.length > 200
+    ) {
+      return null;
+    }
     if (!isSafeInteger(record.issuedAtMs) || !isSafeInteger(record.expiresAtMs)) {
       return null;
     }
@@ -114,6 +124,7 @@ export function issueDirectTerraJobToken({
   responseId,
   promptVersion,
   promptHash,
+  productCategory,
   secret,
   nowMs = Date.now(),
   ttlMs = 10 * 60_000,
@@ -127,6 +138,13 @@ export function issueDirectTerraJobToken({
   }
   if (!isDirectTerraPromptHash(promptHash)) {
     throw new Error("Direct Terra job token requires a valid prompt hash");
+  }
+  if (
+    typeof productCategory !== "string" ||
+    productCategory.trim().length === 0 ||
+    productCategory.length > 200
+  ) {
+    throw new Error("Direct Terra job token requires a valid product category");
   }
   if (!isSafeInteger(nowMs) || nowMs < 0) {
     throw new Error("Direct Terra job token requires a valid issue time");
@@ -145,6 +163,7 @@ export function issueDirectTerraJobToken({
     responseId,
     promptVersion: DIRECT_TERRA_PROMPT_VERSION,
     promptHash,
+    productCategory: productCategory.trim(),
     issuedAtMs: nowMs,
     expiresAtMs: nowMs + ttlMs,
   };

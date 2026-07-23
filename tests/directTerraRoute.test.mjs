@@ -184,6 +184,7 @@ describe("clean direct Terra V2 route", () => {
       ["shopping", "organic"],
     );
     assert.equal(resolvedInputs.length, 1);
+    assert.equal(resolvedInputs[0].targets[0].category, "refrigerator");
     assert.equal(typeof resolvedInputs[0].serperTransport, "function");
     assert.equal(typeof resolvedInputs[0].serperOrganicTransport, "function");
 

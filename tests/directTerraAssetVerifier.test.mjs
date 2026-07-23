@@ -414,6 +414,66 @@ describe("Direct-Terra asset safety boundary", () => {
     assert.equal(result.imageUrlStatus, "accepted_identity_safe");
   });
 
+  it("RR-093 rejects a candidate-only descriptive variant in the product path", () => {
+    const target = {
+      key: "rank-5-herman-miller-embody-chair",
+      rank: 5,
+      productName: "Herman Miller Embody Chair",
+      brand: "Herman Miller",
+      model: "Embody Chair",
+      category: "office chair",
+    };
+    const result = verifyDirectTerraAssetCandidates({
+      target,
+      candidates: [
+        {
+          title: "Herman Miller Embody Chair",
+          productUrl:
+            "https://eustore.hermanmiller.com/products/embody-gaming-chair",
+          imageUrl:
+            "https://eustore.hermanmiller.com/cdn/shop/files/embody-gaming-chair.png",
+        },
+      ],
+    });
+
+    assert.equal(result.productUrl, null);
+    assert.equal(result.imageUrl, null);
+    assert.equal(
+      result.decisions[0].productUrlReason,
+      "product_url_type_conflict",
+    );
+  });
+
+  it("applies the same path-type veto outside chairs", () => {
+    const target = {
+      key: "rank-1-acme-cleanforce",
+      rank: 1,
+      productName: "Acme CleanForce Pressure Washer",
+      brand: "Acme",
+      model: "CleanForce",
+      category: "pressure washer",
+    };
+    const result = verifyDirectTerraAssetCandidates({
+      target,
+      candidates: [
+        {
+          title: "Acme CleanForce Pressure Washer",
+          productUrl:
+            "https://acme.example/products/cleanforce-laundry-washing-machine",
+          imageUrl:
+            "https://acme.example/images/cleanforce-laundry-washing-machine.jpg",
+        },
+      ],
+    });
+
+    assert.equal(result.productUrl, null);
+    assert.equal(result.imageUrl, null);
+    assert.equal(
+      result.decisions[0].productUrlReason,
+      "product_url_type_conflict",
+    );
+  });
+
   it("accepts an exact numeric-dash model page without accepting its sibling", () => {
     const target = {
       key: "rank-5-milwaukee-0910-20",
