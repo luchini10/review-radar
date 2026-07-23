@@ -10250,3 +10250,52 @@ asset miss remains nullable. This is one category / one run per iteration; the
 `shop vac` slate varied run to run. Coverage evidence for a later deployment
 decision, not authorization to promote flags or deploy. Flags unchanged;
 `.env.local` untouched by the runs.
+
+## <span style="color:green">**Claude QA Update — 2026-07-22 (T8C multi-category validation: safe everywhere, better-than-legacy on 3/4, uneven assets/stability)**</span>
+
+Taylor asked for the multi-category validation that gates promoting direct-Terra
+to the default pipeline. Ran `scripts/run-oai-t8c-multi-category-validation.mjs`
+(committed `d7a2ec2`), the four frozen non-shop-vac cases x3 runs = 12 Terra/high
+calls, scoring BOTH report quality (recall/wrong-type/budget/stability via the
+T7C scorer, GOLD `leaders-v2026-07c`) and T8B asset coverage (photos + links from
+a manufacturer/popular retailer) on the current commit. `$6.91` of `$15`, 12
+creates / 356 retrieves, 0 fallbacks, ~33.5 min. Evidence untracked at
+`oai-t8c-multi-category-validation-d7a2ec2/`.
+
+| Case (denominator) | Recall (runs) | Mean | Stability | WrongType | BudgetViol | Assets: decorated / preferred-host links / page photos |
+|---|---|---|---|---|---|---|
+| office chair (/7) | 3,4,4 | 3.67 | 0.83 | 0 | 0 | 12/15, 12 pref-host, 8 page |
+| gas grill (/4) | 3,2,2 | 2.33 | 0.78 | 0 | 0 | 1/6, 2 pref-host, 0 page |
+| cordless drill (/4) | 3,3,1 | 2.33 | 0.28 | 0 | 0 | 5/8, 6 pref-host, 2 page |
+| robot vacuum (/4) | 1,1,2 | 1.33 | 0.33 | 0 | 0 | 4/4, 4 pref-host, 3 page |
+
+Aggregate assets (33 asset slots across all runs): 28 links, **24/28 links on a
+manufacturer/popular-retailer host, 28/28 clean (no tracking)**, 24 images of
+which **13 from the product's own page** (vs Google thumbnail), 22 fully
+decorated.
+
+**Safety — perfect and consistent:** 0 wrong-type and 0 confirmed over-budget in
+all 12 runs across all four categories. This is the non-negotiable promotion
+gate and it passes everywhere.
+
+**Report quality:** beats the legacy pipeline's chronic 1-2/7 on office chair,
+gas grill, and cordless drill; robot vacuum stays weak (1.33/4, as in T7C).
+Stability is good on office chair/gas grill (0.78-0.83) but shaky on cordless
+drill/robot vacuum (0.28-0.33) — products churn run to run.
+
+**Assets are category-dependent:** excellent for office chairs (12/15 decorated,
+8 manufacturer/retailer page photos) and robot vacuums (4/4, 3 page photos);
+decent for drills (5/8); poor for gas grills (1/6, 0 page photos). Gas grills
+produced few asset targets (naming like "Monument Grills Mesa II 415BZ" does not
+always extract a clean model) and one link resolved to an obscure store
+(`martdiscover.com`, correctly scored lowest but displayed as the only accepted
+link) rather than a preferred retailer.
+
+**Verdict:** direct-Terra clears the safety bar for promotion in every category
+tested and beats legacy on 3 of 4, with high-quality links where products get
+decorated. It is NOT uniformly strong: robot-vacuum recall, cordless-drill /
+robot-vacuum stability, and gas-grill asset coverage (incl. an occasional
+non-preferred-host link) are real soft spots. Promotion is defensible on safety
++ net-better recall; fixing the soft spots first is the more conservative path.
+This is a decision for Taylor. No flag was promoted, `.env.local` is unchanged,
+and no code changed by the run (validation instrument only).

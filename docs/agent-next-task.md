@@ -4,6 +4,28 @@ Updated: 2026-07-22 by Claude after the T8B asset-source work (photos + links
 from the brand site or a popular retailer), implemented and live-validated to
 the goal over three commits with Taylor's standing approval to iterate.
 
+## T8C multi-category validation (2026-07-22) — promotion gate
+
+Ran the promotion-gating validation (`scripts/run-oai-t8c-multi-category-validation.mjs`,
+committed `d7a2ec2`): 4 frozen non-shop-vac cases x3 runs = 12 Terra calls,
+`$6.91`/`$15`, scoring report quality + T8B asset coverage. Evidence untracked at
+`oai-t8c-multi-category-validation-d7a2ec2/`; full table in the latest QA entry.
+
+- **Safety: perfect** — 0 wrong-type, 0 over-budget in all 12 runs, all 4
+  categories (the non-negotiable promotion gate passes everywhere).
+- Recall beats legacy on office chair (3.67/7), gas grill (2.33/4), drill
+  (2.33/4); robot vacuum weak (1.33/4). Stability good on chair/grill
+  (0.78-0.83), shaky on drill/robot-vac (0.28-0.33).
+- Assets: 24/28 links on manufacturer/popular-retailer hosts, all clean; 13/24
+  images from the product's own page. Excellent for chairs/robot-vacs, poor for
+  gas grills (few targets; one obscure-host link).
+
+**Promotion decision is Taylor's and open.** Defensible to promote (safe
+everywhere, net-better than legacy); the conservative path is to fix the soft
+spots first (robot-vac recall, drill/robot-vac stability, gas-grill asset
+targeting + suppress non-preferred-host links). Both direct-Terra flags remain
+default-off in the repo (on in Taylor's local `.env.local`).
+
 ## T8B result (2026-07-22) — goal met
 
 Committed, on top of the T8B base `c795346`: `9820b02` (source split),
