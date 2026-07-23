@@ -10483,3 +10483,47 @@ Investigation, and 1 Won't Fix.
 If the diff is accepted, one separately approved four-case instrumented live
 validation can test the new trace and safety boundary. This entry authorizes no
 live request, flag promotion, deployment, push, or production change.
+
+## 🟧 Codex QA Update — 2026-07-23 (T8D adversarial review fails RR-093)
+
+Taylor approved an adversarial review followed by four live category tests only
+if the correction passed. The review did not pass, so zero OpenAI, Serper,
+SearchAPI, or direct-page requests were dispatched.
+
+**What passed:**
+
+- compact-token leader equivalence preserved the tested punctuation, word, and
+  numeric boundaries;
+- contextual wrong-type scoring preserved genuine wrong-primary-product
+  controls while correcting the two captured hybrid/bundle false positives;
+- first-loss schema v2 retained bounded normalized evidence without client or
+  secret leakage; and
+- the encrypted v2 token carries the requested category through start/poll,
+  rejects tampering and expiry, and exposes no plaintext provider/category
+  state.
+
+**Material safety failure:** an inline zero-network verifier probe reused the
+captured locked target (`Herman Miller Embody Chair`, category `office chair`)
+and an exact standard candidate title. The captured
+`/products/embody-gaming-chair` path is rejected, but these paths are accepted
+with both link and image:
+
+- `/products/embody-gaming-office-chair`;
+- `/products/embody-chair-gaming-edition`; and
+- `/products/embody-chair-xl`.
+
+The implementation asks only whether the path positively conflicts with the
+requested product type. A path can therefore preserve or omit the requested
+type while still adding an identity-changing descriptive variant absent from
+the candidate title. This is the same RR-093 trust-boundary class, not a new
+category-specific defect. RR-093 is reopened.
+
+**Verification:** 84/84 focused tests passed across the six changed-contract
+suites, and the complete unit wall passed 1326/1326 across 191 suites. Those
+passes demonstrate a missing adversarial case, not safety closure. No files
+outside the phase records were changed.
+
+**Decision:** withhold all four approved live tests. The next step must be a
+zero-live, category-independent descriptive title/path coherence repair with
+fail-first reordered/suffix-variant cases and safe retailer/configuration
+controls. Do not add a `gaming`, `XL`, brand, or chair denylist.

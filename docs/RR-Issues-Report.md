@@ -26,8 +26,8 @@ only when maintaining this register or auditing its full history.
 | Medium | 33 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 6 |
-| Fixed | 89 |
+| Needs Investigation | 7 |
+| Fixed | 88 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -3616,7 +3616,7 @@ path, flag, `.env.local`, or user-visible behavior changed.
 | **Phase** | OAI-T8D cross-category first-loss diagnostic |
 | **Severity** | Critical |
 | **Title** | Descriptive product identity can accept a different named variant's buy link |
-| **Status** | Fixed |
+| **Status** | Needs Investigation |
 
 **Description:** The office-chair diagnostic ranked the standard `Herman
 Miller Embody Chair`, but the asset resolver displayed
@@ -3655,6 +3655,25 @@ carry the shopper's product category only inside its encrypted server payload;
 the polling route restores that category before resolution, so the production
 path no longer substitutes the product name for the requested type. No new
 client-readable field or default-on behavior was added.
+
+**Adversarial review correction (2026-07-23):** Reopened. The repair blocks the
+captured `/embody-gaming-chair` path but does not cover the whole
+candidate-only descriptive-variant class. With the same locked standard
+`Herman Miller Embody Chair` target and exact standard candidate title,
+`/products/embody-gaming-office-chair`,
+`/products/embody-chair-gaming-edition`, and
+`/products/embody-chair-xl` all remain accepted with their images. The shared
+type classifier sees a requested-type token or no positive conflicting type;
+it does not establish title/path identity coherence for descriptive variants.
+This is a deterministic safety bypass, so the four-case live window did not
+start.
+
+**Revised next action:** Add fail-first tests for reordered and suffix-form
+candidate-only variants, then implement one conservative title/path coherence
+rule for descriptive identities. The rule must preserve harmless retailer
+slug words, configurations, and exact coded-model behavior and must generalize
+outside chairs. Do not solve this with a `gaming`, `XL`, brand, or category
+denylist.
 
 ---
 
@@ -3804,17 +3823,18 @@ instrumented runs can make that distinction.
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (6 issues)
+### Needs Investigation (7 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 - RR-091: Same-page related-product price can satisfy autonomous card binding
 - RR-092: Editorial Product markup can verify identity/image without proving the tested model
+- RR-093: Descriptive product identity can accept a different named variant's buy link
 
-### Fixed (89 issues)
+### Fixed (88 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
-RR-038 through RR-044, RR-046 through RR-090, and RR-093 through RR-096
+RR-038 through RR-044, RR-046 through RR-090, and RR-094 through RR-096
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -3830,3 +3850,5 @@ RR-038 through RR-044, RR-046 through RR-090, and RR-093 through RR-096
 3. **RR-091 + RR-092** — the autonomous hybrid remains isolated and cannot be
    integrated until exact transactional binding and exact tested-model
    attribution pass an independently verified boundary.
+4. **RR-093** — close the generalized descriptive title/path identity gap
+   before another Direct-Terra live asset window.

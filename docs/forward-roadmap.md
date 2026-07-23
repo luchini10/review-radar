@@ -3152,6 +3152,25 @@ run can make that attribution; no further live work is authorized by this
 record. Final verification is 1326/1326 tests across 191 suites, typecheck and
 build pass, and lint has zero errors with three pre-existing warnings.
 
+**Adversarial review result (completed 2026-07-23; live window withheld):**
+The diagnostic v2, prospective `07d` evaluator, and encrypted request-category
+lifecycle passed code inspection and focused probes. The RR-093 safety closure
+did not. With the locked standard `Herman Miller Embody Chair` target and an
+exact standard candidate title, paths such as
+`/products/embody-gaming-office-chair`,
+`/products/embody-chair-gaming-edition`, and
+`/products/embody-chair-xl` still cross with both link and image. The type veto
+detects one ordering of the captured conflict but does not prove descriptive
+title/path identity coherence. RR-093 is reopened.
+
+The review reran 84 focused tests and the complete 1326-test wall successfully;
+passing tests did not override the new deterministic bypass. Because the
+review's pass condition failed, none of Taylor's four approved research
+requests or any provider/page request was dispatched. The next eligible step
+is a separately approved zero-live generalized descriptive title/path
+coherence repair, followed by another adversarial review. No live validation
+is justified before that repair passes.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen

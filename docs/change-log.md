@@ -41,6 +41,14 @@ Update this file after:
   zero errors and the same three pre-existing warnings. Zero live calls,
   deployments, flag changes, or `.env.local` changes.
 
+#### Post-review correction
+
+- The first URL-type veto was narrower than its original closure claim. It
+  blocks `embody-gaming-chair`, but reordered/suffixed forms such as
+  `embody-chair-gaming-edition` still pass when the provider title names the
+  standard chair. RR-093 is reopened and no live validation was purchased.
+  The diagnostic and evaluator corrections remain valid.
+
 ## 2026-07-22
 
 ### Claude - Fix the root causes of undecorated Direct-Terra cards and obscure links (T8C)
