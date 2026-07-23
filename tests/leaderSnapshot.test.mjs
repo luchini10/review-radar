@@ -5,6 +5,7 @@ import {
   GOLD,
   coversLeader,
   coversLeaderHistorical07b,
+  coversLeaderProspective07d,
 } from "../scripts/goldBenchmark.mjs";
 
 const shopVac = GOLD.find((g) => g.id === "broad-shop-vac");
@@ -159,5 +160,48 @@ describe("frozen leaders-v2026-07c model-family contract", () => {
       { brand: "roborock", lines: ["q5", "q10"] },
       { brand: "roomba", lines: ["105", "i3", "i4", "i5"] },
     ]);
+  });
+});
+
+describe("prospective leaders-v2026-07d matcher", () => {
+  it("treats harmless brand punctuation and spacing as equivalent", () => {
+    assert.equal(
+      coversLeaderProspective07d(
+        "Charbroil Performance Series 4-Burner Gas Grill",
+        { brand: "char-broil", lines: ["performance"] },
+      ),
+      true,
+    );
+    assert.equal(
+      coversLeaderProspective07d(
+        "ShopVac 5 Gallon Wet Dry Vacuum",
+        { brand: "shop-vac", lines: [] },
+      ),
+      true,
+    );
+  });
+
+  it("preserves exact numeric and unrelated-word boundaries", () => {
+    assert.equal(
+      coversLeaderProspective07d(
+        "Roborock Q70 Robot Vacuum",
+        { brand: "roborock", lines: ["q7"] },
+      ),
+      false,
+    );
+    assert.equal(
+      coversLeaderProspective07d(
+        "Shark Airtok Robot Vacuum",
+        { brand: "shark", lines: ["ai"] },
+      ),
+      false,
+    );
+    assert.equal(
+      coversLeaderProspective07d(
+        "Charcoal Broiler Performance Grill",
+        { brand: "char-broil", lines: ["performance"] },
+      ),
+      false,
+    );
   });
 });

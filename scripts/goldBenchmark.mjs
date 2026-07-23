@@ -62,6 +62,45 @@ export function coversLeader(name, item) {
 // no longer a prospective rule.
 export const coversLeaderProspective07c = coversLeader;
 
+function alphanumericTokens(value) {
+  return ((value || "").toLowerCase().match(/[a-z0-9]+/g) || []);
+}
+
+// Prospective leaders-v2026-07d matcher. The leader lists and denominators
+// remain the ratified 07c data; only the matching contract is versioned.
+// Contiguous tokens may be compacted on either side, so harmless typography
+// such as "char-broil" / "Charbroil" and "shop vac" / "ShopVac" compares
+// equally. Equality is still exact after compaction, so Q7 never matches Q70
+// and AI never matches Airtok.
+function containsCompactedTokenSequence(haystack, needle) {
+  const hayTokens = alphanumericTokens(haystack);
+  const needleCompact = alphanumericTokens(needle).join("");
+  if (!needleCompact) return false;
+
+  for (let start = 0; start < hayTokens.length; start += 1) {
+    let compact = "";
+    for (let end = start; end < hayTokens.length; end += 1) {
+      compact += hayTokens[end];
+      if (compact === needleCompact) return true;
+      if (compact.length >= needleCompact.length) break;
+    }
+  }
+  return false;
+}
+
+export function coversLeaderProspective07d(name, item) {
+  if (!containsCompactedTokenSequence(name, item.brand)) return false;
+  if (!item.lines || item.lines.length === 0) return true;
+
+  const hay = normalizeLeaderText(name);
+  return item.lines.some((line) => {
+    if (containsCompactedTokenSequence(name, line)) return true;
+    const normalizedLine = normalizeLeaderText(line).trim();
+    if (!/^[a-z]+$/.test(normalizedLine)) return false;
+    return new RegExp(` ${normalizedLine}\\d+ `).test(hay);
+  });
+}
+
 export const GOLD = [
   // ======================= BROAD: "find the market leaders" =======================
   {

@@ -18,6 +18,8 @@
 //     this library never imports the scripts/ benchmark and the frozen matcher
 //     stays the single source of truth.
 
+import { classifyProductTypeMatch } from "./productTypeMatch.ts";
+
 export type DirectTerraEvalCaseKind = "broad" | "constrained";
 
 export type DirectTerraEvalShopperRequest = {
@@ -86,6 +88,7 @@ export type GoldConstraint =
 export type GoldEntry = {
   id: string;
   type: "broad" | "constraint";
+  category?: string;
   coreLeaders: GoldLeader[];
   acceptableAlternates?: GoldLeader[];
   wrongTypeTerms: string[];
@@ -110,6 +113,20 @@ function normalize(text: string) {
     .replace(/[^a-z0-9+]+/g, " ")
     .replace(/\s+/g, " ")
     .trim()} `;
+}
+
+function wrongTypeAppearsInSecondaryClause(
+  productName: string,
+  wrongTypeTerm: string,
+) {
+  const hay = normalize(productName).trim();
+  const needle = normalize(wrongTypeTerm).trim();
+  const index = hay.indexOf(needle);
+  if (index <= 0) return false;
+  const prefix = hay.slice(0, index);
+  return /\b(?:and|bundle|combo|includes?|including|plus|with)\b[^|]{0,100}$/.test(
+    prefix,
+  );
 }
 
 const RANKED_HEADING = /^#{2,4}\s+#?(\d+)\s+Best Match\b\s*[—\-:]*\s*(.*)$/i;
@@ -181,12 +198,17 @@ export function identityKey(name: string): string {
   return tokens.slice(0, 2).join(" ");
 }
 
-export function scoreDirectTerraRun(input: {
+type DirectTerraRunScoreInput = {
   reportMarkdown: string;
   priceEstimates: DirectTerraPriceEstimateLike[];
   goldEntry: GoldEntry;
   coversLeader: CoversLeaderFn;
-}): DirectTerraRunScore {
+};
+
+function scoreDirectTerraRunWithMode(
+  input: DirectTerraRunScoreInput,
+  contextualWrongType: boolean,
+): DirectTerraRunScore {
   const { reportMarkdown, priceEstimates, goldEntry, coversLeader } = input;
   const ranked = parseRankedProducts(reportMarkdown);
   const alternates = goldEntry.acceptableAlternates ?? [];
@@ -215,8 +237,22 @@ export function scoreDirectTerraRun(input: {
   const wrongTypeHits: DirectTerraRunScore["wrongTypeHits"] = [];
   for (const product of ranked) {
     const hay = normalize(product.name);
+    const primaryTypeStillMatches =
+      contextualWrongType && goldEntry.category
+        ? classifyProductTypeMatch({
+            evidenceText: product.name,
+            identityText: product.name,
+            requestedCategory: goldEntry.category,
+          }).canBeExactMatch
+        : false;
     for (const term of goldEntry.wrongTypeTerms) {
-      if (hay.includes(normalize(term).trim())) {
+      if (
+        hay.includes(normalize(term).trim()) &&
+        !(
+          primaryTypeStillMatches &&
+          wrongTypeAppearsInSecondaryClause(product.name, term)
+        )
+      ) {
         wrongTypeHits.push({ rank: product.rank, name: product.name, term });
       }
     }
@@ -284,6 +320,24 @@ export function scoreDirectTerraRun(input: {
     ),
     leaderKeys: [...new Set(covered)],
   };
+}
+
+// Historical leaders-v2026-07c scorer. This intentionally preserves the old
+// lexical wrong-type behavior so recorded results remain reproducible.
+export function scoreDirectTerraRun(
+  input: DirectTerraRunScoreInput,
+): DirectTerraRunScore {
+  return scoreDirectTerraRunWithMode(input, false);
+}
+
+// Prospective corrected scorer. Wrong-type terms still identify candidates to
+// inspect, but a term is not a failure when the shared product-type contract
+// positively confirms that the named primary product remains the requested
+// kind (for example, a gas grill with a charcoal tray or a drill combo).
+export function scoreDirectTerraRunProspective(
+  input: DirectTerraRunScoreInput,
+): DirectTerraRunScore {
+  return scoreDirectTerraRunWithMode(input, true);
 }
 
 function jaccard(a: string[], b: string[]): number {

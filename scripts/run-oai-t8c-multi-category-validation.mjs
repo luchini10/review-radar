@@ -28,6 +28,7 @@ import {
   DIRECT_TERRA_EVAL_VERSION,
   scoreDirectTerraCaseStability,
   scoreDirectTerraRun,
+  scoreDirectTerraRunProspective,
 } from "../lib/directTerraEvaluation.ts";
 import { resolveDirectTerraProductAssets } from "../lib/directTerraProductAssets.ts";
 import {
@@ -52,7 +53,11 @@ import {
   OAI_2A_PROPOSED_CONFIG,
   estimateAutonomousResearchCost,
 } from "../lib/autonomousResearchAdapter.ts";
-import { GOLD, coversLeader } from "./goldBenchmark.mjs";
+import {
+  GOLD,
+  coversLeader,
+  coversLeaderProspective07d,
+} from "./goldBenchmark.mjs";
 import { createOpenAIClient } from "../lib/openaiClient.ts";
 
 const EXECUTE = process.argv.includes("--execute");
@@ -276,6 +281,7 @@ async function main() {
     for (const evalCase of DIRECT_TERRA_EVAL_CASES) {
       const goldEntry = goldById(evalCase.goldId);
       const runScores = [];
+      const prospectiveRunScores = [];
       const assetCoverages = [];
       const caseRecord = { id: evalCase.id, goldId: evalCase.goldId, runs: [] };
 
@@ -333,6 +339,13 @@ async function main() {
           coversLeader,
         });
         runScores.push(runScore);
+        const prospectiveRunScore = scoreDirectTerraRunProspective({
+          reportMarkdown: completion.reportMarkdown,
+          priceEstimates: completion.priceEstimates,
+          goldEntry,
+          coversLeader: coversLeaderProspective07d,
+        });
+        prospectiveRunScores.push(prospectiveRunScore);
 
         // Resolve + score the product assets exactly as the app route does.
         const assetFirstLoss = [];
@@ -360,14 +373,14 @@ async function main() {
                 .filter((title) => typeof title === "string"),
               reportMarkdown: completion.reportMarkdown,
               leaders: goldEntry.coreLeaders,
-              rankedProducts: runScore.rankedProducts,
-              coversLeader,
+              rankedProducts: prospectiveRunScore.rankedProducts,
+              coversLeader: coversLeaderProspective07d,
               requirementVerdicts: {
-                wrongTypeCount: runScore.wrongTypeHits.length,
+                wrongTypeCount: prospectiveRunScore.wrongTypeHits.length,
                 budgetViolationCount:
-                  runScore.constraint?.budgetViolations.length ?? 0,
+                  prospectiveRunScore.constraint?.budgetViolations.length ?? 0,
                 featureCoverage:
-                  runScore.constraint?.features.map((feature) => ({
+                  prospectiveRunScore.constraint?.features.map((feature) => ({
                     label: feature.label,
                     coverageRate: feature.coverageRate,
                   })) ?? [],
@@ -395,6 +408,7 @@ async function main() {
           priceEstimates: completion.priceEstimates,
           productAssets,
           score: runScore,
+          scoreProspective07d: prospectiveRunScore,
           assetCoverage,
           firstLoss:
             FIRST_LOSS_DIAGNOSTIC
@@ -410,7 +424,9 @@ async function main() {
         caseRecord.runs.push({
           run: runIndex,
           recall: `${runScore.leaderRecall.count}/${runScore.leaderRecall.total}`,
+          recallProspective07d: `${prospectiveRunScore.leaderRecall.count}/${prospectiveRunScore.leaderRecall.total}`,
           wrongType: runScore.wrongTypeHits.length,
+          wrongTypeProspective07d: prospectiveRunScore.wrongTypeHits.length,
           budgetViolations: runScore.constraint?.budgetViolations.length ?? 0,
           rankedCount: runScore.rankedCount,
           assets: `${assetCoverage.fullyDecorated}/${assetCoverage.total} decorated, ${assetCoverage.preferredHostLinks} preferred-host links, ${assetCoverage.pageImages} page images`,
@@ -420,6 +436,8 @@ async function main() {
 
       const sum = (list, key) => list.reduce((a, c) => a + c[key], 0);
       caseRecord.stability = scoreDirectTerraCaseStability(runScores);
+      caseRecord.stabilityProspective07d =
+        scoreDirectTerraCaseStability(prospectiveRunScores);
       caseRecord.assetTotals = {
         totalAssets: sum(assetCoverages, "total"),
         links: sum(assetCoverages, "links"),

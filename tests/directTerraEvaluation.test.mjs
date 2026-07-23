@@ -9,8 +9,13 @@ import {
   parseRankedProducts,
   scoreDirectTerraCaseStability,
   scoreDirectTerraRun,
+  scoreDirectTerraRunProspective,
 } from "../lib/directTerraEvaluation.ts";
-import { GOLD, coversLeader } from "../scripts/goldBenchmark.mjs";
+import {
+  GOLD,
+  coversLeader,
+  coversLeaderProspective07d,
+} from "../scripts/goldBenchmark.mjs";
 
 function goldById(id) {
   const entry = GOLD.find((g) => g.id === id);
@@ -172,6 +177,62 @@ describe("constraint scoring", () => {
       coversLeader,
     });
     assert.ok(score.wrongTypeHits.some((hit) => hit.term === "stick vacuum"));
+  });
+});
+
+describe("prospective contextual wrong-type scoring", () => {
+  it("does not call an additional mode or bundled tool the primary product", () => {
+    const grillScore = scoreDirectTerraRunProspective({
+      reportMarkdown:
+        "## #1 Best Match — Acme Propane Gas Grill with Charcoal Tray\n",
+      priceEstimates: [],
+      goldEntry: goldById("con-gas-grill-600-4burner"),
+      coversLeader: coversLeaderProspective07d,
+    });
+    const drillScore = scoreDirectTerraRunProspective({
+      reportMarkdown:
+        "## #1 Best Match — Acme Brushless Drill/Driver and Impact Driver Combo Kit\n",
+      priceEstimates: [],
+      goldEntry: goldById("con-cordless-drill-150-brushless"),
+      coversLeader: coversLeaderProspective07d,
+    });
+
+    assert.equal(grillScore.wrongTypeHits.length, 0);
+    assert.equal(drillScore.wrongTypeHits.length, 0);
+  });
+
+  it("still rejects products whose primary type conflicts with the request", () => {
+    const grillScore = scoreDirectTerraRunProspective({
+      reportMarkdown:
+        "## #1 Best Match — Acme Charcoal Kettle Grill\n",
+      priceEstimates: [],
+      goldEntry: goldById("con-gas-grill-600-4burner"),
+      coversLeader: coversLeaderProspective07d,
+    });
+    const drillScore = scoreDirectTerraRunProspective({
+      reportMarkdown:
+        "## #1 Best Match — Acme Impact Driver Kit\n",
+      priceEstimates: [],
+      goldEntry: goldById("con-cordless-drill-150-brushless"),
+      coversLeader: coversLeaderProspective07d,
+    });
+
+    assert.ok(grillScore.wrongTypeHits.some((hit) => hit.term === "charcoal"));
+    assert.ok(
+      drillScore.wrongTypeHits.some((hit) => hit.term === "impact driver"),
+    );
+  });
+
+  it("keeps the frozen historical scorer unchanged", () => {
+    const score = scoreDirectTerraRun({
+      reportMarkdown:
+        "## #1 Best Match — Acme Propane Gas Grill with Charcoal Tray\n",
+      priceEstimates: [],
+      goldEntry: goldById("con-gas-grill-600-4burner"),
+      coversLeader,
+    });
+
+    assert.ok(score.wrongTypeHits.some((hit) => hit.term === "charcoal"));
   });
 });
 
