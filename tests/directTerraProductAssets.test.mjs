@@ -263,6 +263,73 @@ describe("Direct-Terra product asset orchestration", () => {
     );
   });
 
+  it("runs a retailer-scoped second-chance query only for link-less products (T8B iteration 2)", async () => {
+    const organicQueries = [];
+    const result = await resolveDirectTerraProductAssets({
+      targets: [targets[0]],
+      reportMarkdown: "# Report\n\n## #1 Best Match - RIDGID HD1200 Wet/Dry Shop Vacuum\n\nNo citation.",
+      activeCitationUrls: [],
+      responseSources: [],
+      serperOrganicTransport: async (request) => {
+        organicQueries.push(request.body.q);
+        // The open product-page query finds nothing acceptable; the
+        // retailer-scoped retry finds the Home Depot page.
+        if (request.body.q.includes("site:")) {
+          return {
+            organic: [
+              {
+                title: "RIDGID HD1200 12 Gallon Wet/Dry Shop Vacuum - The Home Depot",
+                link: "https://www.homedepot.com/p/RIDGID-HD1200-Wet-Dry-Vac/304123456",
+              },
+            ],
+          };
+        }
+        return { organic: [] };
+      },
+    });
+
+    assert.equal(organicQueries.length, 2);
+    assert.match(organicQueries[0], /product page$/);
+    assert.match(
+      organicQueries[1],
+      /site:homedepot\.com OR site:lowes\.com/,
+      "the second pass is scoped to popular retailers",
+    );
+    assert.equal(
+      result[0].productUrl,
+      "https://www.homedepot.com/p/RIDGID-HD1200-Wet-Dry-Vac/304123456",
+    );
+  });
+
+  it("skips page fetches for bot-walled hosts without consuming the budget (T8B iteration 2)", async () => {
+    const fetchedPages = [];
+    const result = await resolveDirectTerraProductAssets({
+      targets: [targets[0]],
+      reportMarkdown: "# Report\n\n## #1 Best Match - RIDGID HD1200 Wet/Dry Shop Vacuum\n\nNo citation.",
+      activeCitationUrls: [],
+      responseSources: [],
+      serperOrganicTransport: async () => ({
+        organic: [
+          {
+            title: "RIDGID HD1200 12 Gallon Wet/Dry Shop Vacuum",
+            link: "https://www.amazon.com/RIDGID-HD1200-Wet-Dry-Vac/dp/B00TEST123",
+          },
+        ],
+      }),
+      productPageTransport: async (url) => {
+        fetchedPages.push(url);
+        return null;
+      },
+    });
+
+    assert.deepEqual(fetchedPages, [], "amazon.com is never fetched");
+    assert.equal(
+      result[0].productUrl,
+      "https://www.amazon.com/RIDGID-HD1200-Wet-Dry-Vac/dp/B00TEST123",
+      "the verified Amazon link itself is still displayed",
+    );
+  });
+
   it("keeps the verified link and thumbnail when the page fetch fails (T8B)", async () => {
     const organicUrl =
       "https://www.homedepot.com/p/RIDGID-HD1200-Wet-Dry-Vac/304123456";

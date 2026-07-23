@@ -12,6 +12,10 @@ import {
 } from "./productIdentity.ts";
 import { classifyProductTypeMatch } from "./productTypeMatch.ts";
 import { normalizeTwoLayerSourceUrl } from "./twoLayerSourceUrl.ts";
+import {
+  directTerraModelInUrlPath,
+  isDirectTerraManufacturerHost,
+} from "./directTerraLinkPreference.ts";
 
 export const DIRECT_TERRA_ASSET_VERIFIER_VERSION =
   "direct-terra-asset-verifier-v2";
@@ -39,6 +43,7 @@ export type DirectTerraAssetDecision = {
   identityAccepted: boolean;
   identityReason:
     | "accepted_exact_identity"
+    | "accepted_manufacturer_slug_identity"
     | "missing_title"
     | "brand_not_in_title"
     | "invalid_target_identity"
@@ -248,7 +253,24 @@ export function extractDirectTerraHeadingIdentity(productName: string) {
   const fallbackBrand = prefixTokens[0];
   const brand = detectedBrands.length === 1 ? detectedBrands[0] : fallbackBrand;
   if (!brand || /\d/.test(brand)) return null;
-  return { brand, model: tokens[modelIndex] };
+
+  // Compound model capture: a mixed alphanumeric model followed by a bare
+  // 3-6 digit block is one identity ("VFB511B 0202"), not a foreign sibling.
+  // Years and measurement-shaped suffixes never join, so "HD1640, 16-Gallon"
+  // and "… 2024" keep their single-token model.
+  let model = tokens[modelIndex];
+  const suffix = tokens[modelIndex + 1];
+  if (
+    suffix &&
+    /[a-z]/i.test(model) &&
+    /\d/.test(model) &&
+    /^\d{3,6}$/.test(suffix) &&
+    !/^(?:19|20)\d{2}$/.test(suffix) &&
+    !DIRECT_TERRA_MEASUREMENT_MODEL.test(compactIdentity(suffix))
+  ) {
+    model = `${model} ${suffix}`;
+  }
+  return { brand, model };
 }
 
 export function directTerraAssetIdentitiesAgree(
@@ -329,13 +351,64 @@ function identityDecision(
   return { identityAccepted: true, identityReason: "accepted_exact_identity" };
 }
 
+// Manufacturer product pages routinely omit the SKU from the page TITLE while
+// carrying it exactly in the URL slug (milwaukeetool.com/products/0910-20 is
+// titled "M18 FUEL NEXUS 6 Gallon Wet/Dry Vacuum"). When — and only when —
+// the title's sole identity failure is the missing model, a strictly
+// brand-owned host whose path carries the exact model (and no conflicting
+// one) may stand in for title-model evidence. The title must still prove the
+// brand, carry no conflicting model, and pass the product-type gate, and the
+// candidate still faces the eligibility and page-identity gates afterward —
+// so accessory titles, foreign-brand hosts, and sibling-model paths all
+// remain rejected. This deliberately does NOT apply to retailers, whose
+// catalogs host every sibling model on look-alike paths.
+function manufacturerSlugIdentity(
+  target: DirectTerraAssetTarget,
+  title: string,
+  candidateUrl: string | null,
+) {
+  if (!candidateUrl) return false;
+  try {
+    const pathText = decodeURIComponent(new URL(candidateUrl).pathname)
+      .replace(/[-_/.+]+/g, " ")
+      .trim();
+    return (
+      isDirectTerraManufacturerHost(candidateUrl, target.brand) &&
+      directTerraModelInUrlPath(candidateUrl, target.model) &&
+      !titleHasConflictingModel(target.model, pathText) &&
+      brandEvidenceMatches(title, target.brand) &&
+      !titleHasConflictingModel(target.model, title) &&
+      classifyProductTypeMatch({
+        evidenceText: title,
+        identityText: title,
+        requestedCategory: target.category,
+      }).canBeExactMatch
+    );
+  } catch {
+    return false;
+  }
+}
+
 function evaluateCandidate(
   target: DirectTerraAssetTarget,
   candidate: DirectTerraAssetCandidate,
   candidateIndex: number,
 ): DirectTerraAssetDecision {
   const title = asText(candidate.title, 300);
-  const identity = identityDecision(target, title);
+  let identity: Pick<
+    DirectTerraAssetDecision,
+    "identityAccepted" | "identityReason"
+  > = identityDecision(target, title);
+  if (
+    !identity.identityAccepted &&
+    identity.identityReason === "model_not_in_title" &&
+    manufacturerSlugIdentity(target, title, canonicalHttpUrl(candidate.productUrl))
+  ) {
+    identity = {
+      identityAccepted: true,
+      identityReason: "accepted_manufacturer_slug_identity",
+    };
+  }
   const base = {
     candidateIndex,
     title,

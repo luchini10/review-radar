@@ -9,6 +9,7 @@ import {
 import type { DirectTerraAssetTarget } from "./directTerraAssetVerifier.ts";
 import type { DirectTerraSource } from "./directTerraResponse.ts";
 import {
+  buildDirectTerraRetailerScopedQuery,
   resolveDirectTerraWebsitesWithSerperOrganic,
   type DirectTerraSerperOrganicTransport,
 } from "./directTerraSerperOrganicAdapter.ts";
@@ -20,9 +21,14 @@ import {
 import {
   extractDirectTerraPageAssets,
   MAX_DIRECT_TERRA_PAGE_FETCHES,
+  shouldSkipDirectTerraPageFetch,
   verifyDirectTerraPageAssets,
   type DirectTerraProductPageTransport,
 } from "./directTerraProductPageFetcher.ts";
+
+// Total organic lookups per request across both passes (open product-page
+// queries plus retailer-scoped second chances).
+export const MAX_DIRECT_TERRA_TOTAL_ORGANIC_QUERIES = 8;
 
 type ResolveDirectTerraProductAssetsInput = {
   targets: DirectTerraAssetTarget[];
@@ -126,6 +132,34 @@ export async function resolveDirectTerraProductAssets({
     );
   }
 
+  // Second-chance pass: products still without any link get one
+  // retailer-scoped query (site:homedepot.com OR site:lowes.com …) inside the
+  // shared total-organic ceiling. Same transport, same gates, same fail-open.
+  if (serperOrganicTransport) {
+    const firstPassQueries = organicBatch?.transportCallCount ?? 0;
+    const remainingBudget =
+      MAX_DIRECT_TERRA_TOTAL_ORGANIC_QUERIES - firstPassQueries;
+    const missingTargets = orderedTargets
+      .filter((target) => !chosenWebsiteByKey.get(target.key))
+      .slice(0, Math.max(0, remainingBudget));
+    if (missingTargets.length > 0) {
+      try {
+        const secondPass = await resolveDirectTerraWebsitesWithSerperOrganic({
+          targets: missingTargets,
+          transport: serperOrganicTransport,
+          buildQuery: buildDirectTerraRetailerScopedQuery,
+        });
+        for (const item of secondPass.items) {
+          if (item.productUrl && !chosenWebsiteByKey.get(item.targetKey)) {
+            chosenWebsiteByKey.set(item.targetKey, item.productUrl);
+          }
+        }
+      } catch {
+        // The retry is optional decoration like the first pass.
+      }
+    }
+  }
+
   // T8B page stage: one bounded fetch of the already-verified page per
   // product, harvesting the retailer's/manufacturer's own product photo and
   // rel=canonical clean URL. Every failure keeps the existing assets.
@@ -136,6 +170,9 @@ export async function resolveDirectTerraProductAssets({
       if (fetches >= MAX_DIRECT_TERRA_PAGE_FETCHES) break;
       const websiteUrl = chosenWebsiteByKey.get(target.key);
       if (!websiteUrl) continue;
+      // Bot-walled hosts (Amazon) never serve plain fetches; keep the budget
+      // for pages that can actually yield a first-party photo/canonical.
+      if (shouldSkipDirectTerraPageFetch(websiteUrl)) continue;
       fetches += 1;
       try {
         const fetched = await productPageTransport(websiteUrl);

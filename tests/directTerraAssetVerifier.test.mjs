@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   DIRECT_TERRA_ASSET_VERIFIER_VERSION,
+  extractDirectTerraHeadingIdentity,
   verifyDirectTerraAssetCandidates,
 } from "../lib/directTerraAssetVerifier.ts";
 
@@ -518,5 +519,111 @@ describe("Direct-Terra asset safety boundary", () => {
     assert.ok(result.decisions.every((decision) => decision.imageUrlAccepted === false));
     assert.equal(JSON.stringify(result).includes("provider"), false);
     assert.equal(JSON.stringify(result).includes("serper"), false);
+  });
+
+  describe("manufacturer slug identity (T8B iteration 2)", () => {
+    const milwaukee = {
+      key: "rank-5-0910-20",
+      rank: 5,
+      productName: "Milwaukee 0910-20 M18 FUEL NEXUS 6-Gallon Wet/Dry Vacuum",
+      brand: "Milwaukee",
+      model: "0910-20",
+      category: "wet/dry shop vacuum",
+    };
+
+    it("accepts the brand's own product page whose title omits the SKU but whose slug carries it", () => {
+      const result = verifyDirectTerraAssetCandidates({
+        target: milwaukee,
+        candidates: [
+          {
+            title: "M18 FUEL NEXUS 6 Gallon Wet/Dry Vacuum | Milwaukee Tool",
+            productUrl: "https://www.milwaukeetool.com/products/0910-20",
+          },
+        ],
+      });
+      assert.equal(
+        result.decisions[0].identityReason,
+        "accepted_manufacturer_slug_identity",
+      );
+      assert.equal(
+        result.productUrl,
+        "https://www.milwaukeetool.com/products/0910-20",
+      );
+    });
+
+    it("never extends slug identity to retailers, whose catalogs hold every sibling", () => {
+      const result = verifyDirectTerraAssetCandidates({
+        target: milwaukee,
+        candidates: [
+          {
+            title: "M18 FUEL NEXUS 6 Gallon Wet/Dry Vacuum",
+            productUrl: "https://www.homedepot.com/p/milwaukee-0910-20/328491023",
+          },
+        ],
+      });
+      assert.equal(result.productUrl, null);
+      assert.equal(result.decisions[0].identityReason, "model_not_in_title");
+    });
+
+    it("rejects accessory titles and conflicting sibling models on the brand host", () => {
+      const accessory = verifyDirectTerraAssetCandidates({
+        target: milwaukee,
+        candidates: [
+          {
+            title: "Wet/Dry Vacuum HEPA Filter | Milwaukee Tool",
+            productUrl: "https://www.milwaukeetool.com/accessories/0910-20-filter",
+          },
+        ],
+      });
+      assert.equal(accessory.productUrl, null);
+
+      const sibling = verifyDirectTerraAssetCandidates({
+        target: milwaukee,
+        candidates: [
+          {
+            title: "M18 FUEL NEXUS 6 Gallon Wet/Dry Vacuum | Milwaukee Tool",
+            productUrl:
+              "https://www.milwaukeetool.com/products/0910-20-vs-0920-22",
+          },
+        ],
+      });
+      assert.equal(sibling.productUrl, null);
+    });
+
+    it("requires the title to still prove the brand", () => {
+      const result = verifyDirectTerraAssetCandidates({
+        target: milwaukee,
+        candidates: [
+          {
+            title: "6 Gallon Wet/Dry Vacuum - Best Price",
+            productUrl: "https://www.milwaukeetool.com/products/0910-20",
+          },
+        ],
+      });
+      assert.equal(result.productUrl, null);
+    });
+  });
+
+  describe("compound heading models (T8B iteration 2)", () => {
+    it("captures a trailing bare digit block as part of one model identity", () => {
+      const identity = extractDirectTerraHeadingIdentity(
+        "Vacmaster Professional Beast Series VFB511B 0202, 5-Gallon 6 Peak HP Wet/Dry Vacuum",
+      );
+      assert.ok(identity);
+      assert.equal(identity.model, "VFB511B 0202");
+    });
+
+    it("never absorbs measurements or years into the model", () => {
+      assert.equal(
+        extractDirectTerraHeadingIdentity(
+          "RIDGID HD1640, 16-Gallon 5.0 Peak HP NXT Wet/Dry Vac",
+        )?.model,
+        "HD1640",
+      );
+      assert.equal(
+        extractDirectTerraHeadingIdentity("Sony WH1000XM5 2024 Headphones")?.model,
+        "WH1000XM5",
+      );
+    });
   });
 });

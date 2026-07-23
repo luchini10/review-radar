@@ -46,7 +46,9 @@ const EXPECTED = Object.freeze({
   retrieves: 60,
   safetyCancels: 1,
   serperShoppingSearches: 5,
-  serperOrganicSearches: 5,
+  // Two bounded passes: open product-page queries plus retailer-scoped
+  // second chances share this total.
+  serperOrganicSearches: 8,
   productPageFetches: MAX_DIRECT_TERRA_PAGE_FETCHES,
   costUsd: 7,
 });

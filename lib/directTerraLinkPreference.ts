@@ -47,6 +47,18 @@ const POPULAR_RETAILERS = new Map<string, string>([
   ["grainger.com", "Grainger"],
 ]);
 
+// The site:-scoped retry query targets these core stores directly when the
+// open "product page" query finds nothing acceptable — the goal is a link on
+// the manufacturer's site or a store the shopper recognizes.
+export const DIRECT_TERRA_RETAILER_SITE_QUERY_DOMAINS = Object.freeze([
+  "homedepot.com",
+  "lowes.com",
+  "amazon.com",
+  "walmart.com",
+  "bestbuy.com",
+  "acehardware.com",
+]);
+
 // Minimal multi-part public suffixes so registrableDomain() does not truncate
 // common non-US retail domains into nonsense. US-focused; extend as needed.
 const MULTI_PART_SUFFIXES = new Set([

@@ -4,7 +4,10 @@ import {
   type DirectTerraAssetCandidate,
   type DirectTerraAssetTarget,
 } from "./directTerraAssetVerifier.ts";
-import { scoreDirectTerraProductLink } from "./directTerraLinkPreference.ts";
+import {
+  DIRECT_TERRA_RETAILER_SITE_QUERY_DOMAINS,
+  scoreDirectTerraProductLink,
+} from "./directTerraLinkPreference.ts";
 import { buildDirectTerraAssetQuery } from "./directTerraSerperAssetAdapter.ts";
 
 export const DIRECT_TERRA_SERPER_ORGANIC_ADAPTER_VERSION =
@@ -64,6 +67,11 @@ export type DirectTerraSerperOrganicBatch = {
 type AdapterInput = {
   targets: DirectTerraAssetTarget[];
   transport: DirectTerraSerperOrganicTransport;
+  /**
+   * Query variant for this pass. Defaults to the open "<identity> product
+   * page" query; the second-chance pass supplies the retailer-scoped builder.
+   */
+  buildQuery?: (target: DirectTerraAssetTarget) => string;
   /** Server-only hook. The query and counts must never enter the client result. */
   recordDiagnostic?: (diagnostic: DirectTerraSerperOrganicDiagnostic) => void;
 };
@@ -131,7 +139,10 @@ function parseOrganicResponse(value: unknown) {
   };
 }
 
-function validateTargets(targets: DirectTerraAssetTarget[]) {
+function validateTargets(
+  targets: DirectTerraAssetTarget[],
+  buildQuery: (target: DirectTerraAssetTarget) => string,
+) {
   if (targets.length > MAX_DIRECT_TERRA_ORGANIC_TARGETS) {
     throw new Error(
       `Direct-Terra organic target ceiling is ${MAX_DIRECT_TERRA_ORGANIC_TARGETS}.`,
@@ -148,7 +159,7 @@ function validateTargets(targets: DirectTerraAssetTarget[]) {
     }
     keys.add(target.key);
     ranks.add(target.rank);
-    buildDirectTerraOrganicProductPageQuery(target);
+    buildQuery(target);
   }
 }
 
@@ -162,18 +173,37 @@ export function buildDirectTerraOrganicProductPageQuery(
   return query;
 }
 
+// Second-chance query, scoped to the stores the goal cares about. Runs only
+// for products whose open product-page query produced no acceptable link.
+export function buildDirectTerraRetailerScopedQuery(
+  target: DirectTerraAssetTarget,
+) {
+  if (!directTerraAssetTargetIsCoherent(target)) {
+    throw new Error(`Incoherent target identity for ${target.key || "unknown"}.`);
+  }
+  const sites = DIRECT_TERRA_RETAILER_SITE_QUERY_DOMAINS.map(
+    (domain) => `site:${domain}`,
+  ).join(" OR ");
+  const query = `${target.brand} ${target.model} (${sites})`;
+  if (query.length > 180) {
+    throw new Error(`Invalid retailer-scoped query for ${target.key}.`);
+  }
+  return query;
+}
+
 export async function resolveDirectTerraWebsitesWithSerperOrganic(
   input: AdapterInput,
 ): Promise<DirectTerraSerperOrganicBatch> {
+  const buildQuery = input.buildQuery ?? buildDirectTerraOrganicProductPageQuery;
   const targets = input.targets
     .map((target) => ({ ...target }))
     .sort((left, right) => left.rank - right.rank);
-  validateTargets(targets);
+  validateTargets(targets, buildQuery);
 
   const items: DirectTerraSerperOrganicWebsite[] = [];
   let transportCallCount = 0;
   for (const target of targets) {
-    const query = buildDirectTerraOrganicProductPageQuery(target);
+    const query = buildQuery(target);
     let status: DirectTerraSerperOrganicDiagnostic["status"] = "transport_error";
     let payloadShape: DirectTerraSerperOrganicDiagnostic["payloadShape"] =
       "transport_unavailable";

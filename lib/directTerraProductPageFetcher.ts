@@ -61,6 +61,18 @@ const RETAILER_IMAGE_CDNS = new Map<string, readonly string[]>([
   ["costco.com", ["costco-static.com"]],
 ]);
 
+// Hosts that bot-wall plain HTML fetches; requesting them wastes the bounded
+// page budget on a guaranteed miss, so those links keep their thumbnail tier.
+const FETCH_SKIP_HOSTS = new Set(["amazon.com"]);
+
+export function shouldSkipDirectTerraPageFetch(url: string) {
+  try {
+    return FETCH_SKIP_HOSTS.has(registrableDomain(new URL(url).hostname));
+  } catch {
+    return true;
+  }
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
