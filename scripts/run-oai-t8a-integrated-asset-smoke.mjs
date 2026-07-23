@@ -153,6 +153,7 @@ function validateApproval(commit, outputExists) {
     serperOrganicSearches: numericArgument(
       "approved-serper-organic-searches",
     ),
+    productPageFetches: numericArgument("approved-product-page-fetches"),
     costUsd: numericArgument("approved-cost-usd"),
   };
   if (approved.commit !== commit) {
