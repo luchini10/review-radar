@@ -10376,3 +10376,57 @@ build were rerun after this correction.
 The report also marks Terra's internal candidate slate
 `not_exposed_by_current_contract`; it does not relabel final rankings as
 candidates or expand the production schema merely for measurement.
+
+## 🟧 Codex QA Update — 2026-07-23 (OAI-T8D eight-run live diagnostic)
+
+Taylor approved eight product-research requests after doubling the prepared
+four-case diagnostic to two runs per category. Commit `437a682` pinned the
+exact harness. No retry, replacement, fallback, additional case, flag change,
+`.env.local` change, deployment, or production change occurred.
+
+**Spend and reconciliation:** all eight Terra creates completed. The window
+used 232 retrieves, 75 hosted search actions, 31 Serper Shopping requests, 38
+Serper organic requests, and 20 bounded product-page fetches. Estimated OpenAI
+cost was `$4.529444`, below the `$10` ceiling; wall time was 1,317,802 ms.
+Untracked sanitized evidence is under
+`tests/fixtures/review-radar-live/oai-t8d-root-cause-diagnostic-437a682/`.
+
+**Recommendation results:**
+
+- office chairs: recall `4/7`, `3/7`; leader stability `0.75`;
+- gas grills: frozen score `2/4`, `2/4`; stability `1.0`;
+- cordless drills: recall `3/4`, `1/4`; stability `0.3333`;
+- robot vacuums: recall `0/4`, `3/4`; stability `0.0`;
+- zero price-estimate budget violations; and
+- ranked product counts varied by run: `5/5`, `4/4`, `5/3`, `2/3`.
+
+The frozen score is not decision-safe without correction. RR-095 proves a
+ranked `Charbroil Performance Series` is missed as the frozen
+`char-broil / performance` leader. RR-094 proves the two apparent wrong-type
+hits are lexical false positives: a propane grill with a secondary charcoal
+tray and a brushless drill bundled with an impact driver. Historical scores
+remain recorded unchanged; any corrected evaluator must be versioned and show
+both results.
+
+**Asset results:** 31 ranked products received complete accounting. The final
+cards had 24 clean preferred-host links, 19 images, 14 page-derived images, and
+18 fully decorated cards. Seven links were missing and eleven additional
+images were missing because the trace classified their candidates as identity
+rejections; one more image ended at page-fetch unavailability. However, RR-096
+blocks a verifier behavior conclusion: aggregate verdict counts do not retain
+enough candidate identity to distinguish an absent correct result from a safe
+equivalent rejected by ReviewRadar.
+
+**Safety finding:** office-chair run 2 ranked the standard `Herman Miller
+Embody Chair` but displayed
+`https://eustore.hermanmiller.com/products/embody-gaming-chair`. RR-093 records
+this Critical wrong-variant destination. No other wrong link is claimed from
+static fixture inspection.
+
+**Decision:** stop before a behavior repair or another live sample. The next
+eligible phase is zero-live and must separately (1) retain bounded sanitized
+provider-candidate identities and parse explicitly named Close Matches, (2)
+version and correct the generalized evaluator identity/type rules, and (3)
+add a category-independent descriptive-variant/type veto reproducing RR-093.
+Replay the eight fixtures and review the complete diff before any further
+spend.

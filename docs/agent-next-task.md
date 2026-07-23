@@ -1,84 +1,103 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-23 by Codex after the zero-live OAI-T8D first-loss
-observability and saved-evidence audit. This handoff is part of the scoped T8D
-commit whose parent is `70fca4a`; use `git log -1` for the current full hash.
+Updated: 2026-07-23 by Codex after the OAI-T8D eight-run live first-loss
+diagnostic. The live harness is pinned to `437a682`; use `git log -1` for the
+current documentation commit.
 
 ## Current state
 
-The Direct-Terra one-main-call architecture remains default-off in the repo.
-T8C previously showed perfect tested type/budget safety but uneven recall,
-stability, and asset coverage. The generalized T8C repairs in `beefd34` remain
-the newest product-behavior changes. OAI-T8D added observability and audit code
-only: no recommendation, asset, route, UI, flag, or production behavior changed.
+The Direct-Terra one-main-call architecture remains default-off. No production
+behavior, prompt, UI, flag, `.env.local`, deployment, or production setting
+changed in OAI-T8D. The phase added observability, ran an approved diagnostic,
+and stopped because the live evidence exposed both a real wrong-variant link
+and gaps in the diagnostic/evaluation instruments.
 
-## OAI-T8D completed — zero live
+## OAI-T8D live window — completed
 
-The optional server-only first-loss trace follows:
+Taylor approved eight research requests: two runs in each frozen category.
+Commit `437a682` pins the exact harness and ceilings.
 
-`Terra research/ranking → asset target → citation → primary organic → Shopping
-→ retailer organic → page fetch → final selection`
+- Terra creates: 8/8 completed;
+- retrieves: 232;
+- hosted search actions: 75;
+- Serper Shopping requests: 31;
+- Serper organic requests: 38;
+- bounded product-page fetches: 20;
+- estimated OpenAI cost: `$4.529444` under the `$10` ceiling;
+- wall time: 1,317,802 ms; and
+- retries, replacements, fallback runs, and extra cases: zero.
 
-It records only sanitized bounded search actions, normalized recommendation
-identities, source hosts, bounded counts, and rejection-reason counts. Search
-actions retain bounded query text, action type, and an opened-page host—not a
-full destination URL. It never records raw provider rows, source titles,
-provider IDs, headers, secrets, or full responses. A missing or throwing
-diagnostic sink cannot change returned assets. Client/API response shapes
-remain unchanged.
+Sanitized untracked evidence:
+`tests/fixtures/review-radar-live/oai-t8d-root-cause-diagnostic-437a682/`.
+Never stage that directory.
 
-The current Terra contract does not expose an internal candidate slate. The
-trace records that limitation explicitly as
-`candidateSlate.status=not_exposed_by_current_contract` rather than inventing
-candidate identities or silently treating the final ranking as the slate.
+## Results
 
-New offline command:
+Recommendation scores as originally frozen:
 
-```text
-npm run qa:direct-terra-first-loss -- --write
-```
+| Case | Recall runs | Leader stability | Ranked counts |
+|---|---:|---:|---:|
+| Office chair | `4/7`, `3/7` | `0.75` | `5`, `5` |
+| Gas grill | `2/4`, `2/4` | `1.0` | `4`, `4` |
+| Cordless drill | `3/4`, `1/4` | `0.3333` | `5`, `3` |
+| Robot vacuum | `0/4`, `3/4` | `0.0` | `2`, `3` |
 
-It reads usable saved T8A/T8B/T8C fixtures and writes a sanitized report into
-the already-untracked T8C fixture directory. The generated evidence and all
-historical live fixtures remain untracked and must not be staged.
+No price-estimate budget violation was recorded. The raw scorer reported two
+wrong-type hits, but RR-094 proves both are lexical false positives caused by
+secondary/bundled terms rather than clearly wrong primary products.
 
-## Decisive offline findings
+Across 31 ranked products, the asset path produced:
 
-The audit analyzed 17 saved integrated fixtures and accounted for 69/69 ranked
-products with zero incomplete runs.
+- 24 clean manufacturer/popular-retailer links;
+- 19 images;
+- 14 page-derived images; and
+- 18 cards with both a link and an image.
 
-T8C-specific findings:
+Every ranked product was accounted for. Seven missing links were labeled
+`identity_verification_rejected`, but RR-096 means that label is not yet
+decision-grade: aggregate reason counts do not retain enough candidate identity
+to distinguish a correct result rejected by ReviewRadar from a provider result
+set containing only wrong products.
 
-- 46 total ranked products;
-- 13 historical target-extraction misses across three unrelated categories:
-  cordless drills 3, gas grills 4, robot vacuums 6;
-- heading-only replay under `beefd34` recovers all 13;
-- four historical non-preferred-host links across drills/grills are suppressed
-  by the generalized manufacturer/popular-retailer policy;
-- nine downstream asset losses remain unattributed because old fixtures omit
-  raw candidate/verifier and page-fetch decisions; and
-- 28 missed-leader observations remain unattributed because old fixtures omit
-  response source-title identity.
+## Issues filed
 
-Therefore the saved evidence confirms the existing T8C repairs are generalized,
-but it does not support another behavior repair. The next diagnostic must
-distinguish provider absence from normalization/identity/selection/page failure,
-and absent-from-Terra-research from found-but-not-ranked.
+- **RR-093 Critical:** the standard `Herman Miller Embody Chair` card linked to
+  the different `/products/embody-gaming-chair` manufacturer variant.
+- **RR-094 High:** wrong-type evaluation treats hybrid functionality or bundled
+  products as the primary product type.
+- **RR-095 High:** `Charbroil` fails to match punctuation-equivalent benchmark
+  brand `char-broil`, corrupting recall and first-loss attribution.
+- **RR-096 High:** first-loss diagnostics omit bounded candidate identity and
+  ignore explicitly named non-ranked/Close Match products.
 
-Sanitized evidence:
-`tests/fixtures/review-radar-live/oai-t8c-multi-category-validation-d7a2ec2/first-loss-audit.json`
-(untracked).
+The register is 96 total: 14 Critical, 44 High, 33 Medium, 5 Low; 85 Fixed,
+10 Needs Investigation, 1 Won't Fix, and 0 Open.
 
-## Verification
+## Next approval-gated step
 
-- fail-first observability tests: passed;
-- focused resolver/observability wall: 54/54;
-- complete suite: 1319/1319 across 189 suites;
-- `npm run typecheck`: pass;
-- `npm run build`: pass;
-- `npm run lint`: zero errors, three pre-existing warnings;
-- diagnostic harness dry-run: pass with no keys and no network; and
-- `git diff --check`: required again immediately before commit.
+Run one zero-live corrective phase, in separate reviewable commits:
+
+1. **Diagnostic contract:** retain bounded normalized provider-candidate
+   identity evidence and parse explicitly named non-ranked products from
+   Terra's report. Keep provider IDs, secrets, full URLs, raw rows, and all
+   diagnostics out of client responses.
+2. **Evaluation contract:** version a generalized punctuation/spacing
+   equivalence matcher and contextual wrong-type evaluation. Preserve the
+   historical scores and report both old and corrected results.
+3. **Safety boundary:** add fail-first cross-category tests for RR-093 and apply
+   a generalized candidate-only descriptive variant/type conflict veto without
+   weakening coded-model, sibling, accessory, editorial, redirect, or image
+   protections.
+4. Replay all eight saved T8D fixtures, run the complete verification wall,
+   adversarially inspect the diff, and automatically commit the completed
+   zero-live phase.
+
+Stop and report after that zero-live phase. No new live validation is justified
+until replay gives honest first-loss attribution and zero wrong-variant links.
+
+**Recommended reasoning level:** High. The work crosses evaluation integrity
+and the product-identity safety boundary, but it is bounded and does not require
+maximum reasoning.
 
 ## Flag state
 
@@ -88,52 +107,29 @@ Committed defaults remain:
 - `NEXT_PUBLIC_REVIEW_RADAR_DIRECT_TERRA=false`
 - `REVIEW_RADAR_CONSTRAINT_ALLOCATION=off`
 
-The prior handoff reported the three corresponding local `.env.local` flags
-enabled. OAI-T8D did not read or change `.env.local`.
-
-## Next approval-gated decision
-
-The prepared `--first-loss-diagnostic` mode runs each of the four frozen T8C
-cases once. It is attribution evidence, not promotion evidence.
-
-Planning ceilings:
-
-- four Terra creates total;
-- per run: at most 20 hosted searches, 60 retrieves, one safety cancel, five
-  Serper Shopping requests, eight Serper organic requests, and five bounded
-  product-page fetches;
-- $5 hard ceiling for the complete four-case window;
-- no retry, replacement, fallback, second run, or additional case.
-
-The run must be pinned to the reviewed T8D commit and requires Taylor's separate
-numeric approval. Stop and report after the fourth case or the first safety/
-contract failure. Do not implement a repair unless the diagnostic proves the
-same first-loss mechanism in at least two unrelated categories or establishes a
-category-independent trust invariant.
-
-**Recommended reasoning level:** High. The result must distinguish identity
-equivalence from sibling-model risk and provider absence from deterministic
-rejection.
+The prior handoff reported the corresponding local `.env.local` flags enabled.
+OAI-T8D loaded only OpenAI and Serper secrets into the live harness process and
+did not modify `.env.local`.
 
 ## Hard boundaries
 
-- No live provider or source-page request without a new exact numeric approval
-  pinned to the reviewed T8D commit.
-- No behavior repair, threshold change, flag promotion, `.env.local` edit,
-  deployment, publication, push, or production change in the diagnostic phase.
-- Preserve Terra's product set, names, order, report, citations, price-estimate
-  caveats, and every identity/type/image/eligibility trust gate.
-- No product-, brand-, or category-specific code.
-- Never stage untracked live fixtures or unrelated `.claude/`, baseline, or
+- No further OpenAI, Serper, SearchAPI, or direct-page request without a new
+  exact numeric approval.
+- No deployment, publication, push, flag promotion, `.env.local` edit, or
+  production change.
+- Preserve Terra's product set, names, order, report, citations, and
+  price-estimate caveats during asset/evaluator repairs.
+- No product-, brand-, or category-specific production rule.
+- Never stage live fixtures or unrelated `.claude/`, baseline, or
   `fable-transfer-kit/` artifacts. Never use `git add -A`.
 
 ## Efficient retrieval map
 
 | Need | Retrieve |
 |---|---|
-| Current state and next approval | this file |
-| Root-cause phase record and ceilings | OAI-T8D in `docs/forward-roadmap.md` |
-| Canonical audit evidence | latest entry in `docs/qa-loop-results.md` |
-| Peer-review question | dialogue entry `[102]` |
-| Architecture contract | Direct-Terra section in `ReviewRadar-Overview.md` |
-| Sanitized offline report | untracked `first-loss-audit.json` above |
+| Current state and next step | this file |
+| Canonical live result | latest OAI-T8D entry in `docs/qa-loop-results.md` |
+| Issue details | RR-093 through RR-096 in `docs/RR-Issues-Report.md` |
+| Peer-review request | dialogue entry `[104]` |
+| Phase plan/history | OAI-T8D in `docs/forward-roadmap.md` |
+| Live fixtures | untracked OAI-T8D directory above |

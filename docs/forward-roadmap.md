@@ -3092,6 +3092,38 @@ or behavior repair. A generalized repair may begin only when the same
 first-loss mechanism is demonstrated in two unrelated categories or represents
 a category-independent trust invariant.
 
+**Eight-run diagnostic result (completed 2026-07-23, commit `437a682`):**
+Taylor doubled the sample to two runs per frozen category. All eight Terra
+creates completed with 232 retrieves, 75 hosted search actions, 31 Shopping
+requests, 38 organic requests, 20 bounded page fetches, approximately `$4.53`
+estimated OpenAI cost, and no runtime/ceiling failure. The window took about
+21 minutes 58 seconds. It produced 31 ranked products: 24 clean
+manufacturer/popular-retailer links, 19 images, and 18 fully decorated cards.
+
+Recommendation quality remained unstable: office-chair recall was `4/7` and
+`3/7`; gas-grill was scored `2/4` and `2/4`; drill was `3/4` and `1/4`; robot
+vacuum was `0/4` and `3/4`. Product counts also varied (`5/5`, `4/4`, `5/3`,
+and `2/3`). No measured budget violation occurred.
+
+The evidence invalidates a behavior-repair decision from this trace alone.
+RR-095 proves the matcher misses `Charbroil` as the punctuation-equivalent
+`char-broil` leader. RR-094 proves both reported wrong-type hits are evaluator
+false positives caused by a secondary mode/bundled product (`charcoal tray`,
+`impact driver combo`), not clearly wrong primary products. RR-096 proves the
+first-loss trace is not yet decision-grade: all seven missing links collapse
+to `identity_verification_rejected` without bounded candidate identity, and
+the recommendation trace calls every missed leader absent even when Terra's
+Close Matches section explicitly names it.
+
+One real safety defect is independently visible and does not depend on those
+measurement errors: RR-093 records a standard Herman Miller Embody card linked
+to the manufacturer's different Embody Gaming Chair variant. The next eligible
+work is a zero-live corrective phase: repair the diagnostic/evaluation
+contracts and the descriptive-variant veto in separate commits, replay these
+eight fixtures, and stop for review. No further live sample is justified until
+that replay can produce honest first-loss attribution and zero wrong-variant
+links.
+
 **Recommended reasoning level:** High because interpreting equivalent product
 identity and separating provider absence from verifier rejection crosses the
 accuracy and safety boundaries.
