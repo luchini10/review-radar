@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   DIRECT_TERRA_ASSET_VERIFIER_VERSION,
+  directTerraAssetTargetIsCoherent,
   extractDirectTerraHeadingIdentity,
   verifyDirectTerraAssetCandidates,
 } from "../lib/directTerraAssetVerifier.ts";
@@ -679,6 +680,57 @@ describe("Direct-Terra asset safety boundary", () => {
           {
             title: "Roborock Q70 Robot Vacuum and Mop",
             productUrl: "https://store.example/p/roborock-q70",
+          },
+        ],
+      });
+      assert.equal(result.productUrl, null);
+    });
+
+    it("treats a leading alpha series/line code as the same product (T8C)", () => {
+      // "Monument Grills Mesa II 415BZ (M2-415BZ)": the fuller "M2-415BZ" is a
+      // series code (M2 = Mesa II) plus the same 415BZ base — one product, not a
+      // conflict, so the heading stays a coherent target.
+      const monument = {
+        key: "monument",
+        rank: 1,
+        productName: "Monument Grills Mesa II 415BZ (M2-415BZ)",
+        brand: "Monument",
+        model: "415BZ",
+        category: "gas grill",
+      };
+      assert.equal(directTerraAssetTargetIsCoherent(monument), true);
+    });
+
+    it("still rejects a trailing alpha trim as a distinct sibling SKU (T8C)", () => {
+      const result = verifyDirectTerraAssetCandidates({
+        target: dewalt,
+        candidates: [
+          {
+            title: "DEWALT DXV12P-QTA 12 Gallon Wet/Dry Vacuum",
+            productUrl: "https://store.example/p/dewalt-dxv12p-qta",
+          },
+        ],
+      });
+      assert.equal(result.productUrl, null);
+    });
+
+    it("does not let a leading digit masquerade as a series prefix (T8C)", () => {
+      // "415bz" must not match a shorter "15bz" target: the extra "4" is a
+      // number, not an alphabetic series code.
+      const shortModel = {
+        key: "short",
+        rank: 1,
+        productName: "Acme 15BZ Widget",
+        brand: "Acme",
+        model: "15BZ",
+        category: "widget",
+      };
+      const result = verifyDirectTerraAssetCandidates({
+        target: shortModel,
+        candidates: [
+          {
+            title: "Acme 415BZ Widget",
+            productUrl: "https://store.example/p/acme-415bz",
           },
         ],
       });

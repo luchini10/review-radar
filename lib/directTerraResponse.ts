@@ -7,7 +7,6 @@ import {
   type DirectTerraPriceEstimate,
 } from "./directTerraPriceEstimate.ts";
 import {
-  directTerraAssetIdentitiesAgree,
   directTerraAssetTargetIsCoherent,
   extractDirectTerraHeadingIdentity,
   type DirectTerraAssetTarget,
@@ -231,19 +230,17 @@ export function extractDirectTerraAssetTargets({
   const targets: DirectTerraAssetTarget[] = [];
   for (const pick of extractDirectTerraPicks(reportMarkdown)) {
     if (pick.rank < 1 || pick.rank > 5 || pick.name.length > 300) continue;
-    // The ranked heading is Terra's recommendation identity and must be enough
-    // to decorate a card. Structured price observations are only a safe
-    // fallback for descriptive models that do not expose a strong model token;
-    // missing price evidence must never hide an otherwise exact ranked pick.
+    // The ranked heading is Terra's AUTHORITATIVE recommendation identity and is
+    // enough to decorate a card. The structured price-observation identity is
+    // only a fallback for descriptive headings that expose no strong model
+    // token. When both exist the heading wins outright: Terra routinely names
+    // one product two compatible ways (SKU in the heading, marketing name in
+    // the price observation — "Q352020" vs "Roomba 105"), and a byte-level
+    // disagreement must not discard an otherwise exact ranked pick. Linking to
+    // a wrong product is still prevented downstream, where every retailer/
+    // manufacturer page must match this heading identity before it is shown.
     const headingIdentity = extractDirectTerraHeadingIdentity(pick.name);
     const structuredIdentity = structuredIdentities.get(pick.rank);
-    if (
-      headingIdentity &&
-      structuredIdentity &&
-      !directTerraAssetIdentitiesAgree(headingIdentity, structuredIdentity)
-    ) {
-      continue;
-    }
     const identity = headingIdentity ?? structuredIdentity;
     if (!identity) continue;
 

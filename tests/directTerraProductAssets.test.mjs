@@ -71,7 +71,7 @@ describe("Direct-Terra product asset orchestration", () => {
           organic: [
             {
               title: "DEWALT DXV12P-QT Stealthsonic Wet/Dry Shop Vacuum",
-              link: "https://organic.example/dewalt-dxv12p-qt",
+              link: "https://www.lowes.com/pd/DEWALT-DXV12P-QT-Wet-Dry-Vac/5013026391",
             },
           ],
         };
@@ -93,8 +93,8 @@ describe("Direct-Terra product asset orchestration", () => {
     assert.equal(result[0].imageUrl, "https://images.example/ridgid-hd1200.jpg");
     assert.equal(
       result[1].productUrl,
-      "https://organic.example/dewalt-dxv12p-qt",
-      "Shopping destinations are not a website source",
+      "https://www.lowes.com/pd/DEWALT-DXV12P-QT-Wet-Dry-Vac/5013026391",
+      "Shopping destinations are not a website source; a popular-retailer organic page is",
     );
     assert.equal(
       result[1].imageUrl,
@@ -329,6 +329,41 @@ describe("Direct-Terra product asset orchestration", () => {
       result[0].productUrl,
       "https://www.amazon.com/RIDGID-HD1200-Wet-Dry-Vac/dp/B00TEST123",
       "the verified Amazon link itself is still displayed",
+    );
+  });
+
+  it("never displays an identity-verified link on an obscure (other) host (T8C)", async () => {
+    // The only accepted website is on an obscure store. The goal is a link on
+    // the brand site or a popular retailer, so the card shows no link (and
+    // keeps its thumbnail) rather than an unrecognized store.
+    const result = await resolveDirectTerraProductAssets({
+      targets: [targets[0]],
+      reportMarkdown: "# Report\n\n## #1 Best Match - RIDGID HD1200 Wet/Dry Shop Vacuum\n\nNo citation.",
+      activeCitationUrls: [],
+      responseSources: [],
+      serperTransport: async () => ({
+        shopping: [
+          {
+            title: "RIDGID HD1200 12 Gallon Wet/Dry Shop Vacuum",
+            imageUrl: "https://images.example/ridgid-hd1200-thumb.jpg",
+          },
+        ],
+      }),
+      serperOrganicTransport: async () => ({
+        organic: [
+          {
+            title: "RIDGID HD1200 12 Gallon Wet/Dry Shop Vacuum",
+            link: "https://martdiscover.example/product/rigid-hd1200-vac",
+          },
+        ],
+      }),
+    });
+
+    assert.equal(result[0].productUrl, null, "obscure-host link is not displayed");
+    assert.equal(
+      result[0].imageUrl,
+      "https://images.example/ridgid-hd1200-thumb.jpg",
+      "the thumbnail still shows",
     );
   });
 

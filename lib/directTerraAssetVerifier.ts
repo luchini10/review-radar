@@ -117,18 +117,34 @@ function titleContainsEveryModelToken(title: string, model: string) {
   return required.every((token) => titleTokens.has(token));
 }
 
-// A title model is compatible with the target only in ONE direction: the title
-// may carry the BASE model the target extends with an alpha trim suffix
-// (retailer lists "dxv12p" for target "dxv12pqt"). The reverse — the title
-// adding its OWN suffix (dxv12pqta) — is a different, more-specific sibling
-// SKU and stays conflicting, as does any numeric extension (q7 vs q70), which
-// preserves the frozen digit-strictness.
+// Two compact model strings describe the same product when they share the same
+// numeric core and differ only by an ALPHABETIC affix — the way one product is
+// written several ways:
+//   (a) a dropped alpha trim SUFFIX: retailers list "dxv12p" for "dxv12pqt";
+//   (b) an added alpha series/line PREFIX: "m2415bz" (Mesa II) for "415bz".
+// A different number is never compatible — "q7" vs "q70" and "hd1200" vs
+// "hd1400" stay conflicting — and a different trim suffix ("dxv12pqta" adding
+// its own "a") stays a distinct sibling SKU. Prefix/suffix boundaries are
+// required to be a letter so a numeric extension can never masquerade as an
+// affix.
 function titleModelCompatibleWithTarget(titleModel: string, targetModel: string) {
   if (titleModel === targetModel) return true;
-  return (
+  // (a) title is the base; target appends an alpha trim suffix.
+  if (
     targetModel.startsWith(titleModel) &&
     /[a-z]/i.test(targetModel.charAt(titleModel.length))
-  );
+  ) {
+    return true;
+  }
+  // (b) title prepends an alpha series/line code to the target's base model.
+  if (
+    titleModel.length > targetModel.length &&
+    titleModel.endsWith(targetModel) &&
+    /^[a-z]/i.test(titleModel)
+  ) {
+    return true;
+  }
+  return false;
 }
 
 function titleHasConflictingModel(targetModel: string, title: string) {

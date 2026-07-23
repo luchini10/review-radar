@@ -113,7 +113,8 @@ describe("direct Terra V2 response boundary", () => {
     }
   });
 
-  it("rejects date-shaped heading identity and conflicting structured identity", () => {
+  it("drops date-shaped headings but keeps the heading identity over a disagreeing price identity", () => {
+    // A date-shaped heading exposes no model token, so it produces no target.
     assert.deepEqual(
       extractDirectTerraAssetTargets({
         reportMarkdown:
@@ -123,6 +124,11 @@ describe("direct Terra V2 response boundary", () => {
       [],
     );
 
+    // The ranked heading (Acme X100) is Terra's authoritative identity. A
+    // price-observation naming a different model (X200) no longer suppresses
+    // the target and never overwrites the heading: the card decorates the
+    // product the user actually sees ranked, and downstream page gates keep
+    // any link matched to X100.
     assert.deepEqual(
       extractDirectTerraAssetTargets({
         reportMarkdown:
@@ -130,8 +136,8 @@ describe("direct Terra V2 response boundary", () => {
         priceObservations: [
           { rank: 1, brand: "Acme", model: "X200", observations: [] },
         ],
-      }),
-      [],
+      }).map(({ brand, model }) => ({ brand, model })),
+      [{ brand: "Acme", model: "X100" }],
     );
   });
 

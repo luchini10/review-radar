@@ -89,9 +89,6 @@ const OUT_DIR = path.resolve(
   `tests/fixtures/review-radar-live/oai-t8c-multi-category-validation-${COMMIT}`,
 );
 
-function isRecord(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

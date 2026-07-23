@@ -14,6 +14,7 @@ import {
   type DirectTerraSerperOrganicTransport,
 } from "./directTerraSerperOrganicAdapter.ts";
 import {
+  classifyDirectTerraLinkHost,
   cleanDirectTerraDisplayUrl,
   DIRECT_TERRA_ORGANIC_SKIP_SCORE,
   scoreDirectTerraProductLink,
@@ -201,11 +202,19 @@ export async function resolveDirectTerraProductAssets({
   return orderedTargets.map((target): DirectTerraProductAsset => {
     const website = chosenWebsiteByKey.get(target.key) ?? null;
     const shopping = shoppingByKey.get(target.key)?.verification;
+    // The displayed buy link must be the product's own manufacturer site or a
+    // popular retailer the shopper recognizes. An identity-verified link on an
+    // obscure "other" host is dropped rather than shown, so a card shows a
+    // recognized store or no link at all.
+    const displayWebsite =
+      website && classifyDirectTerraLinkHost(website, target.brand) !== "other"
+        ? website
+        : null;
     return {
       rank: target.rank,
       productName: target.productName,
-      productUrl: website
-        ? cleanDirectTerraDisplayUrl(website, target.brand)
+      productUrl: displayWebsite
+        ? cleanDirectTerraDisplayUrl(displayWebsite, target.brand)
         : null,
       // Image ladder: the product page's own photo (same verified identity as
       // the link) beats the opaque Shopping thumbnail; both beat nothing.
