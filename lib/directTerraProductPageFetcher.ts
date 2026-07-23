@@ -61,9 +61,10 @@ const RETAILER_IMAGE_CDNS = new Map<string, readonly string[]>([
   ["costco.com", ["costco-static.com"]],
 ]);
 
-// Hosts that bot-wall plain HTML fetches; requesting them wastes the bounded
-// page budget on a guaranteed miss, so those links keep their thumbnail tier.
-const FETCH_SKIP_HOSTS = new Set(["amazon.com"]);
+// Hosts that bot-wall plain HTML fetches (confirmed empirically); requesting
+// them wastes the bounded page budget on a guaranteed miss, so those links
+// keep their exact-identity thumbnail tier rather than a page-hosted photo.
+const FETCH_SKIP_HOSTS = new Set(["amazon.com", "homedepot.com"]);
 
 export function shouldSkipDirectTerraPageFetch(url: string) {
   try {

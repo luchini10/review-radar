@@ -369,7 +369,9 @@ describe("Direct-Terra asset safety boundary", () => {
 
     assert.equal(result.productUrl, null);
     assert.equal(result.imageUrl, null);
-    assert.equal(result.decisions[0].identityReason, "model_not_in_title");
+    // DXV12P-QTA extends the target's model with its own suffix: a different
+    // sibling SKU, rejected as a model conflict (not a base-model match).
+    assert.equal(result.decisions[0].identityReason, "model_conflict_in_title");
   });
 
   it("rejects an ambiguous title that names the target and a sibling model", () => {
@@ -521,23 +523,26 @@ describe("Direct-Terra asset safety boundary", () => {
     assert.equal(JSON.stringify(result).includes("serper"), false);
   });
 
-  describe("manufacturer slug identity (T8B iteration 2)", () => {
-    const milwaukee = {
-      key: "rank-5-0910-20",
-      rank: 5,
-      productName: "Milwaukee 0910-20 M18 FUEL NEXUS 6-Gallon Wet/Dry Vacuum",
-      brand: "Milwaukee",
-      model: "0910-20",
-      category: "wet/dry shop vacuum",
+  describe("url slug identity (T8B iteration 3)", () => {
+    const dewalt = {
+      key: "rank-4-dxv12p-qt",
+      rank: 4,
+      productName:
+        "DEWALT DXV12P-QT Stealthsonic Quiet 12-Gallon 5.5 PHP Wet/Dry Vacuum",
+      brand: "DEWALT",
+      model: "DXV12P-QT",
+      category:
+        "DEWALT DXV12P-QT Stealthsonic Quiet 12-Gallon 5.5 PHP Wet/Dry Vacuum",
     };
 
-    it("accepts the brand's own product page whose title omits the SKU but whose slug carries it", () => {
+    it("accepts the manufacturer's own page even when the scraped title omits the brand and SKU", () => {
       const result = verifyDirectTerraAssetCandidates({
-        target: milwaukee,
+        target: dewalt,
         candidates: [
           {
-            title: "M18 FUEL NEXUS 6 Gallon Wet/Dry Vacuum | Milwaukee Tool",
-            productUrl: "https://www.milwaukeetool.com/products/0910-20",
+            title: "12-Gallon 5.5 PHP Stealthsonic Quiet Wet/Dry Vacuum",
+            productUrl:
+              "https://www.dewalt.com/en-us/product/dxv12p-qt/12-gallon-55-php-stealthsonic-quiet-vacuum",
           },
         ],
       });
@@ -547,56 +552,133 @@ describe("Direct-Terra asset safety boundary", () => {
       );
       assert.equal(
         result.productUrl,
-        "https://www.milwaukeetool.com/products/0910-20",
+        "https://www.dewalt.com/en-us/product/dxv12p-qt/12-gallon-55-php-stealthsonic-quiet-vacuum",
       );
     });
 
-    it("never extends slug identity to retailers, whose catalogs hold every sibling", () => {
+    it("accepts a popular-retailer page whose slug carries the base model the title dropped", () => {
       const result = verifyDirectTerraAssetCandidates({
-        target: milwaukee,
+        target: dewalt,
         candidates: [
           {
-            title: "M18 FUEL NEXUS 6 Gallon Wet/Dry Vacuum",
-            productUrl: "https://www.homedepot.com/p/milwaukee-0910-20/328491023",
+            // Retailer title has the brand + type but not the SKU; the model
+            // (base "DXV12P", trim "-QT" dropped) lives in the URL slug.
+            title: "DEWALT 12 Gal. 5.5 HP Poly Wet/Dry Vacuum - The Home Depot",
+            productUrl:
+              "https://www.homedepot.com/p/DEWALT-12-Gal-5-5-HP-Poly-Wet-Dry-Vacuum-with-Hose-and-Accessories-DXV12P/305323712",
+          },
+        ],
+      });
+      assert.equal(
+        result.productUrl,
+        "https://www.homedepot.com/p/DEWALT-12-Gal-5-5-HP-Poly-Wet-Dry-Vacuum-with-Hose-and-Accessories-DXV12P/305323712",
+      );
+    });
+
+    it("rejects a retailer page whose slug carries a different (sibling) model", () => {
+      const result = verifyDirectTerraAssetCandidates({
+        target: dewalt,
+        candidates: [
+          {
+            title: "DEWALT 10 Gal. Wet/Dry Vacuum - The Home Depot",
+            productUrl: "https://www.homedepot.com/p/DEWALT-10-Gal-Vacuum-DXV10P/305300000",
           },
         ],
       });
       assert.equal(result.productUrl, null);
-      assert.equal(result.decisions[0].identityReason, "model_not_in_title");
     });
 
-    it("rejects accessory titles and conflicting sibling models on the brand host", () => {
-      const accessory = verifyDirectTerraAssetCandidates({
-        target: milwaukee,
-        candidates: [
-          {
-            title: "Wet/Dry Vacuum HEPA Filter | Milwaukee Tool",
-            productUrl: "https://www.milwaukeetool.com/accessories/0910-20-filter",
-          },
-        ],
-      });
-      assert.equal(accessory.productUrl, null);
-
-      const sibling = verifyDirectTerraAssetCandidates({
-        target: milwaukee,
-        candidates: [
-          {
-            title: "M18 FUEL NEXUS 6 Gallon Wet/Dry Vacuum | Milwaukee Tool",
-            productUrl:
-              "https://www.milwaukeetool.com/products/0910-20-vs-0920-22",
-          },
-        ],
-      });
-      assert.equal(sibling.productUrl, null);
-    });
-
-    it("requires the title to still prove the brand", () => {
+    it("rejects a bare-id retailer URL with no model in the path", () => {
       const result = verifyDirectTerraAssetCandidates({
-        target: milwaukee,
+        target: dewalt,
         candidates: [
           {
-            title: "6 Gallon Wet/Dry Vacuum - Best Price",
-            productUrl: "https://www.milwaukeetool.com/products/0910-20",
+            title: "DEWALT 12 Gal. Wet/Dry Vacuum - The Home Depot",
+            productUrl: "https://www.homedepot.com/p/305323712",
+          },
+        ],
+      });
+      assert.equal(result.productUrl, null);
+    });
+
+    it("rejects an accessory even when the brand host slug names the parent model", () => {
+      const result = verifyDirectTerraAssetCandidates({
+        target: dewalt,
+        candidates: [
+          {
+            title: "Wet/Dry Vacuum HEPA Replacement Filter",
+            productUrl: "https://www.dewalt.com/en-us/product/dxv12p-qt-filter/filter",
+          },
+        ],
+      });
+      assert.equal(result.productUrl, null);
+    });
+
+    it("does not extend slug identity to unknown non-retailer hosts", () => {
+      const result = verifyDirectTerraAssetCandidates({
+        target: dewalt,
+        candidates: [
+          {
+            title: "DEWALT 12 Gallon Wet/Dry Vacuum",
+            productUrl: "https://random-store.example/item/dxv12p",
+          },
+        ],
+      });
+      assert.equal(result.productUrl, null);
+    });
+  });
+
+  describe("core-model / trim-variant matching (T8B iteration 3)", () => {
+    const dewalt = {
+      key: "rank-4-dxv12p-qt",
+      rank: 4,
+      productName: "DEWALT DXV12P-QT 12-Gallon Wet/Dry Vacuum",
+      brand: "DEWALT",
+      model: "DXV12P-QT",
+      category: "DEWALT DXV12P-QT 12-Gallon Wet/Dry Vacuum",
+    };
+
+    it("accepts a title carrying the base model without the trim suffix", () => {
+      const result = verifyDirectTerraAssetCandidates({
+        target: dewalt,
+        candidates: [
+          {
+            title: "DEWALT DXV12P 12 Gallon Wet/Dry Vacuum",
+            productUrl: "https://store.example/p/dewalt-dxv12p-vacuum",
+          },
+        ],
+      });
+      assert.equal(result.decisions[0].identityAccepted, true);
+    });
+
+    it("still rejects a different core model number as a conflict", () => {
+      const result = verifyDirectTerraAssetCandidates({
+        target: dewalt,
+        candidates: [
+          {
+            title: "DEWALT DXV10P 10 Gallon Wet/Dry Vacuum",
+            productUrl: "https://store.example/p/dewalt-dxv10p-vacuum",
+          },
+        ],
+      });
+      assert.equal(result.productUrl, null);
+    });
+
+    it("keeps digit-ending models strict so Q7 never matches Q70", () => {
+      const q7 = {
+        key: "q7",
+        rank: 1,
+        productName: "Roborock Q7 Robot Vacuum",
+        brand: "Roborock",
+        model: "Q7",
+        category: "robot vacuum",
+      };
+      const result = verifyDirectTerraAssetCandidates({
+        target: q7,
+        candidates: [
+          {
+            title: "Roborock Q70 Robot Vacuum and Mop",
+            productUrl: "https://store.example/p/roborock-q70",
           },
         ],
       });

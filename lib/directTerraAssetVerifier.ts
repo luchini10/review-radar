@@ -12,10 +12,7 @@ import {
 } from "./productIdentity.ts";
 import { classifyProductTypeMatch } from "./productTypeMatch.ts";
 import { normalizeTwoLayerSourceUrl } from "./twoLayerSourceUrl.ts";
-import {
-  directTerraModelInUrlPath,
-  isDirectTerraManufacturerHost,
-} from "./directTerraLinkPreference.ts";
+import { classifyDirectTerraLinkHost } from "./directTerraLinkPreference.ts";
 
 export const DIRECT_TERRA_ASSET_VERIFIER_VERSION =
   "direct-terra-asset-verifier-v2";
@@ -101,11 +98,37 @@ function targetModelTokens(model: string) {
   );
 }
 
+// The identifying core of a model is its digit-bearing tokens; a trailing
+// pure-alpha trim suffix (DXV12P-"QT", the "quiet" trim) is how one core
+// vacuum is bundled/branded, and retailers routinely drop it (they list
+// "DXV12P"). For a BUY LINK to the right product we require the digit-bearing
+// core and treat the alpha trim as optional. Alpha-only models keep every
+// token; this only relaxes models that actually have a numeric core.
+function modelCoreTokens(model: string) {
+  const tokens = targetModelTokens(model);
+  const digitTokens = tokens.filter((token) => /\d/.test(token));
+  return digitTokens.length > 0 ? digitTokens : tokens;
+}
+
 function titleContainsEveryModelToken(title: string, model: string) {
-  const required = targetModelTokens(model);
+  const required = modelCoreTokens(model);
   if (required.length === 0) return false;
   const titleTokens = new Set(normalizedIdentityTokens(title));
   return required.every((token) => titleTokens.has(token));
+}
+
+// A title model is compatible with the target only in ONE direction: the title
+// may carry the BASE model the target extends with an alpha trim suffix
+// (retailer lists "dxv12p" for target "dxv12pqt"). The reverse — the title
+// adding its OWN suffix (dxv12pqta) — is a different, more-specific sibling
+// SKU and stays conflicting, as does any numeric extension (q7 vs q70), which
+// preserves the frozen digit-strictness.
+function titleModelCompatibleWithTarget(titleModel: string, targetModel: string) {
+  if (titleModel === targetModel) return true;
+  return (
+    targetModel.startsWith(titleModel) &&
+    /[a-z]/i.test(targetModel.charAt(titleModel.length))
+  );
 }
 
 function titleHasConflictingModel(targetModel: string, title: string) {
@@ -117,11 +140,17 @@ function titleHasConflictingModel(targetModel: string, title: string) {
         (model) => !DIRECT_TERRA_MEASUREMENT_MODEL.test(model),
       ),
     );
-  const targetModels = identityModels(targetModel);
+  const targetModels = [...identityModels(targetModel)];
   const titleModels = identityModels(title);
-  return (
-    targetModels.size > 0 &&
-    [...titleModels].some((model) => !targetModels.has(model))
+  if (targetModels.length === 0) return false;
+  // A title carries a conflicting model only when one of its strong models is
+  // compatible with NO target model (so a base-model retailer listing is
+  // compatible, while a sibling suffix or a different number is not).
+  return [...titleModels].some(
+    (titleModel) =>
+      !targetModels.some((target) =>
+        titleModelCompatibleWithTarget(titleModel, target),
+      ),
   );
 }
 
@@ -351,33 +380,88 @@ function identityDecision(
   return { identityAccepted: true, identityReason: "accepted_exact_identity" };
 }
 
-// Manufacturer product pages routinely omit the SKU from the page TITLE while
-// carrying it exactly in the URL slug (milwaukeetool.com/products/0910-20 is
-// titled "M18 FUEL NEXUS 6 Gallon Wet/Dry Vacuum"). When — and only when —
-// the title's sole identity failure is the missing model, a strictly
-// brand-owned host whose path carries the exact model (and no conflicting
-// one) may stand in for title-model evidence. The title must still prove the
-// brand, carry no conflicting model, and pass the product-type gate, and the
-// candidate still faces the eligibility and page-identity gates afterward —
-// so accessory titles, foreign-brand hosts, and sibling-model paths all
-// remain rejected. This deliberately does NOT apply to retailers, whose
-// catalogs host every sibling model on look-alike paths.
-function manufacturerSlugIdentity(
+// The core model appears in the URL path (every digit-bearing token present in
+// the compacted pathname). A trailing alpha trim suffix that retailers drop is
+// tolerated, while a different number is not.
+// A URL path DIRECTORY segment that equals an accessory/part section marks a
+// part page ("/accessories/0910-20-filter"). Segment equality (not a substring
+// of the flattened path) keeps a complete product sold "…-with-Hose-and-
+// Accessories-DXV12P" — where the word only appears inside the slug — eligible.
+function urlHasAccessoryPathSegment(url: string) {
+  try {
+    return new URL(url).pathname
+      .toLowerCase()
+      .split("/")
+      .filter(Boolean)
+      .some((segment) =>
+        /^(?:accessor(?:y|ies)|parts|replacement-parts|spare-parts)$/.test(
+          segment,
+        ),
+      );
+  } catch {
+    return false;
+  }
+}
+
+function coreModelInUrlPath(url: string, model: string) {
+  try {
+    const pathCompact = compactIdentity(
+      decodeURIComponent(new URL(url).pathname),
+    );
+    const core = modelCoreTokens(model);
+    return core.length > 0 && core.every((token) => pathCompact.includes(token));
+  } catch {
+    return false;
+  }
+}
+
+// Retailer and manufacturer product pages routinely omit the SKU from the page
+// TITLE while carrying it exactly in the URL slug (homedepot.com/p/DEWALT-…-
+// DXV12P/305323712 is titled "DEWALT 12 Gal. Wet/Dry Vacuum"; retailers list
+// the base model without the "-QT" trim). When the title's only identity gap
+// is the missing model, a manufacturer or popular-retailer product page whose
+// path carries the core model (and no conflicting sibling) may stand in for
+// title-model evidence. The title must still prove the brand, carry no
+// conflicting model, and pass the product-type gate; the URL still faces the
+// eligibility gate afterward. So accessory titles ("… filter"), category
+// pages, foreign brands, and sibling-model paths (DXV10P) all remain rejected.
+function urlSlugIdentity(
   target: DirectTerraAssetTarget,
   title: string,
   candidateUrl: string | null,
 ) {
   if (!candidateUrl) return false;
   try {
+    const hostClass = classifyDirectTerraLinkHost(candidateUrl, target.brand);
+    if (hostClass !== "manufacturer" && hostClass !== "popular_retailer") {
+      return false;
+    }
     const pathText = decodeURIComponent(new URL(candidateUrl).pathname)
       .replace(/[-_/.+]+/g, " ")
       .trim();
+    // A brand-owned manufacturer host proves the brand on its own; a retailer
+    // hosts every brand, so its title must still carry the brand. Either way,
+    // a title that names a DIFFERENT known brand (a milwaukeetool.com page
+    // titled "DEWALT …") is conflicting and can never be blessed by the host.
+    const titleBrands = detectKnownBrands(title);
+    const targetBrandKey = compactIdentity(canonicalBrand(target.brand));
+    const titleNamesConflictingBrand =
+      titleBrands.length > 0 &&
+      !titleBrands.some(
+        (brand) => compactIdentity(canonicalBrand(brand)) === targetBrandKey,
+      );
+    const brandProven =
+      !titleNamesConflictingBrand &&
+      (hostClass === "manufacturer" || brandEvidenceMatches(title, target.brand));
     return (
-      isDirectTerraManufacturerHost(candidateUrl, target.brand) &&
-      directTerraModelInUrlPath(candidateUrl, target.model) &&
+      coreModelInUrlPath(candidateUrl, target.model) &&
       !titleHasConflictingModel(target.model, pathText) &&
-      brandEvidenceMatches(title, target.brand) &&
+      brandProven &&
       !titleHasConflictingModel(target.model, title) &&
+      // An accessories/parts path segment ("…/accessories/0910-20-filter")
+      // is a part page even when the scraped title describes the parent
+      // product; reject it before trusting the slug.
+      !urlHasAccessoryPathSegment(candidateUrl) &&
       classifyProductTypeMatch({
         evidenceText: title,
         identityText: title,
@@ -399,15 +483,21 @@ function evaluateCandidate(
     DirectTerraAssetDecision,
     "identityAccepted" | "identityReason"
   > = identityDecision(target, title);
+  // The URL slug proved identity; the path carries the core model, so the
+  // later productPageMatchesIdentity title/URL re-check is redundant and would
+  // re-impose the exact-trim strictness this path deliberately relaxes.
+  let slugProvenIdentity = false;
   if (
     !identity.identityAccepted &&
-    identity.identityReason === "model_not_in_title" &&
-    manufacturerSlugIdentity(target, title, canonicalHttpUrl(candidate.productUrl))
+    (identity.identityReason === "model_not_in_title" ||
+      identity.identityReason === "brand_not_in_title") &&
+    urlSlugIdentity(target, title, canonicalHttpUrl(candidate.productUrl))
   ) {
     identity = {
       identityAccepted: true,
       identityReason: "accepted_manufacturer_slug_identity",
     };
+    slugProvenIdentity = true;
   }
   const base = {
     candidateIndex,
@@ -451,6 +541,11 @@ function evaluateCandidate(
     if (!eligibility.canRenderAsProductCard) {
       productUrlReason = "product_url_ineligible";
     } else if (
+      // For slug-proven identity the URL path already carried the core model
+      // (and no conflicting sibling); re-running the exact-trim page matcher
+      // here would defeat that. Eligibility above still blocks category and
+      // accessory pages. Title-proven candidates keep the full page matcher.
+      !slugProvenIdentity &&
       !productPageMatchesIdentity({
         brand: target.brand,
         model: target.model,

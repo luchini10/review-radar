@@ -209,10 +209,12 @@ describe("Direct-Terra product asset orchestration", () => {
   });
 
   it("prefers the verified page's own photo and canonical URL over the Shopping thumbnail (T8B)", async () => {
+    // Lowe's is not bot-walled, so the page fetch proceeds (Home Depot/Amazon
+    // are skipped). The slug carries the model so identity resolves.
     const organicUrl =
-      "https://www.homedepot.com/p/RIDGID-HD1200-Wet-Dry-Vac/304123456";
+      "https://www.lowes.com/pd/RIDGID-HD1200-Wet-Dry-Vac/304123456";
     const canonicalUrl =
-      "https://www.homedepot.com/p/RIDGID-HD1200-Wet-Dry-Shop-Vacuum/304123456";
+      "https://www.lowes.com/pd/RIDGID-HD1200-Wet-Dry-Shop-Vacuum/304123456";
     const fetchedPages = [];
     const result = await resolveDirectTerraProductAssets({
       targets: [targets[0]],
@@ -241,9 +243,9 @@ describe("Direct-Terra product asset orchestration", () => {
           finalUrl: organicUrl,
           html: [
             "<html><head>",
-            "<title>RIDGID HD1200 12 Gallon Wet/Dry Shop Vacuum - The Home Depot</title>",
+            "<title>RIDGID HD1200 12 Gallon Wet/Dry Shop Vacuum - Lowe's</title>",
             `<link rel="canonical" href="${canonicalUrl}">`,
-            '<meta property="og:image" content="https://images.thdstatic.com/productImages/ridgid-hd1200-main.jpg">',
+            '<meta property="og:image" content="https://mobileimages.lowes.com/productimages/ridgid-hd1200-main.jpg">',
             "</head><body></body></html>",
           ].join(""),
         };
@@ -253,7 +255,7 @@ describe("Direct-Terra product asset orchestration", () => {
     assert.deepEqual(fetchedPages, [organicUrl], "exactly one bounded fetch of the verified page");
     assert.equal(
       result[0].imageUrl,
-      "https://images.thdstatic.com/productImages/ridgid-hd1200-main.jpg",
+      "https://mobileimages.lowes.com/productimages/ridgid-hd1200-main.jpg",
       "the retailer page's own photo outranks the Shopping thumbnail",
     );
     assert.equal(
