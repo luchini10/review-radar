@@ -1,12 +1,33 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-22 by Claude after committing the asset source-split correction
-and running the approved commit-pinned live integrated smoke (Codex was out of
-credits; Taylor approved both the commit and the live smoke).
+Updated: 2026-07-22 by Claude after the T8B asset-source work (photos + links
+from the brand site or a popular retailer), implemented and live-validated to
+the goal over three commits with Taylor's standing approval to iterate.
 
-## Current phase and commit boundary
+## T8B result (2026-07-22) — goal met
 
-The asset source-split correction is now COMMITTED as full commit
+Committed, on top of the T8B base `c795346`: `9820b02` (source split),
+`58b3419` (approval-parse fix), `1753a0b` (coverage iteration 2),
+`ac09903` (iteration 3 — HEAD). Three commit-pinned live integrated smokes;
+final `ac09903` scored **4/4 links on manufacturer/popular-retailer hosts,
+clean URLs, 4/4 images, 4/4 fully decorated** (DEWALT + Milwaukee took both
+link and photo from the brand's own site). Full detail + iteration table in the
+latest `docs/qa-loop-results.md` entry; behavior summary in `docs/change-log.md`.
+
+New standalone asset modules: `lib/directTerraLinkPreference.ts`,
+`lib/directTerraProductPageFetcher.ts` (both covered by the architecture
+boundary test). Known open items (not blockers): (1) pure-numeric SKUs (BAUER
+`56579`) and some compound models (Vacmaster `VFB511B 0202`) do not always
+become asset targets; (2) Amazon/Home Depot bot-wall page fetches, so those
+cards use the exact-product Google thumbnail rather than a page-hosted photo;
+(3) run-to-run product variability makes single-run coverage noisy.
+
+Full suite 1303/1303 across 183 suites; typecheck/build/lint clean. Flags
+remain default-off; `.env.local` untouched by the code.
+
+## Earlier commit boundary (superseded)
+
+The asset source-split correction was COMMITTED as full commit
 `c795346a463df7284ab80ca7a7b3af019974050c` (`Correct Direct-Terra product-asset
 source split (organic website + Shopping image)`), on top of base
 `5136346ca44df932086017ee22cca759f6b665ac` (`Integrate Direct-Terra product

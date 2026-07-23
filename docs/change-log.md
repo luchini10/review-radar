@@ -11,7 +11,38 @@ Update this file after:
 
 ## 2026-07-22
 
-### Codex - Split Terra website and image lookup by the source each does well
+### Claude - Direct-Terra photos and links now come from the brand site or a popular retailer (T8B)
+
+#### Changed
+
+- Product-card buy links are ranked by where they come from: the product's own
+  manufacturer website first, then a popular retailer (Amazon, Home Depot,
+  Lowe's, Walmart, Best Buy, etc.), preferring URLs whose path carries the
+  model. Tracking junk (like Home Depot's `MERCH=...` parameters) is stripped,
+  and the button now names the store ("View at Home Depot").
+- Links resolve even when a retailer's page title omits the SKU: a
+  manufacturer or popular-retailer product URL whose path carries the model is
+  trusted, with the exact-trim strictness relaxed to the model's core (so
+  DXV12P matches Terra's DXV12P-QT) — while a different sibling model
+  (DXV12P-QTA, Q7 vs Q70), a wrong brand, a bare-id URL, an accessory/parts
+  path, or a category page are all still rejected. Products still without a
+  link get one retailer-scoped `site:` retry.
+- Photos now prefer the manufacturer's/retailer's own product page image
+  (og:image / JSON-LD), fetched once per verified page and checked against the
+  RR-061 image-identity guard, over the Google Shopping thumbnail. Bot-walled
+  hosts (Amazon, Home Depot) are not fetched and keep the exact-identity
+  thumbnail.
+
+#### Verified
+
+- Live integrated smoke (commit `ac09903`, `$0.63`): **4/4 links** on
+  manufacturer/popular-retailer hosts with clean URLs, **4/4 images**, **4/4
+  fully decorated** — DEWALT and Milwaukee cards took both the link AND the
+  photo from the brand's own site (dewalt.com, milwaukeetool.com); CRAFTSMAN
+  and RIDGID linked to Amazon/Home Depot with the exact-product thumbnail. No
+  wrong-model link or image. Three iterations were needed; the first two hit
+  1/4 and were diagnosed with Serper-only probes before re-spending.
+- Full suite 1303/1303 across 183 suites; typecheck, build, lint clean.
 
 #### Changed
 

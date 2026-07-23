@@ -10192,3 +10192,61 @@ returning only 3 — coverage generality and the "Terra returns 5" case are
 unproven. This is coverage evidence for a later deployment decision, not
 authorization to promote flags or deploy. Flags unchanged; `.env.local`
 untouched by the run.
+
+## <span style="color:green">**Claude QA Update — 2026-07-22 (T8B: photos + links from the brand site or a popular retailer; goal met at iteration 3)**</span>
+
+Taylor's goal: the card photo and buy link should come from the product's
+actual website or a popular retailer. Implemented over three commits on top of
+the committed T8B base, each with a commit-pinned live integrated smoke (`shop
+vac`, same frozen ceilings: 1 Terra create, <=20 hosted searches, <=5 Shopping,
+<=8 organic, <=5 page fetches, $7). Evidence dirs are untracked
+`oai-t8a-integrated-asset-smoke-<commit7>/`.
+
+**Architecture (all in the standalone Direct-Terra asset modules; the
+architecture-boundary test still passes):**
+- Link host preference (`lib/directTerraLinkPreference.ts`): manufacturer site
+  > popular-retailer allowlist > other, model-in-path preferred; query/hash
+  stripped from manufacturer/retailer display URLs; retailer display labels.
+- One bounded page fetch of the already-verified page
+  (`lib/directTerraProductPageFetcher.ts`) for og:image/JSON-LD photo +
+  rel=canonical, first-party-domain/CDN images only, through the RR-061 guard;
+  bot-walled hosts (amazon.com, homedepot.com) skipped.
+- Core-model + directional trim matching and manufacturer/popular-retailer
+  URL-slug identity in `lib/directTerraAssetVerifier.ts`, so a retailer page
+  that lists the base model (DXV12P) resolves for Terra's DXV12P-QT while
+  sibling suffixes (DXV12P-QTA), different numbers (Q7 vs Q70), wrong brands,
+  bare-id URLs, `/accessories|parts/` paths, and category pages stay rejected.
+- Retailer-scoped `site:` second-chance organic query for still-link-less
+  products, inside a shared 8-query organic ceiling.
+
+**Iteration results (goal metrics = links on brand/retailer hosts, clean URLs,
+page-hosted vs thumbnail photos):**
+
+| Commit | Links | On preferred host | Clean URL | Images | Page-hosted photos | Fully decorated |
+|---|---|---|---|---|---|---|
+| `58b3419` (it.1) | 1/4 | 1 | 1 | 3 (thumbnails) | 0 | 1 |
+| `1753a0b` (it.2) | 1/4 | 1 | 1 | 2 (thumbnails) | 0 | 1 |
+| `ac09903` (it.3) | **4/4** | **4** | **4** | **4** | **2** | **4** |
+
+Iterations 1-2 were diagnosed with zero-OpenAI Serper-only probes rather than
+re-spending blindly: the blockers were (a) retailer titles omit the SKU (model
+only in the URL slug), (b) retailers drop Terra's trailing model trim
+(DXV12P vs DXV12P-QT), and (c) Amazon + Home Depot bot-wall plain page fetches.
+
+**Final (it.3, `ac09903`, `$0.626`, 1 create / 27 retrieves / 4 Shopping / 4
+organic / 2 page fetches, 0 fallbacks):** Terra ranked 5 shop vacs, 4 became
+targets (Vacmaster VFB511B 0202 did not). All 4 cards fully decorated:
+- CRAFTSMAN CMXEVBE17595 -> amazon.com/dp/... (retailer) + exact thumbnail
+- RIDGID HD1200 -> homedepot.com/p/...HD1200/... (retailer) + exact thumbnail
+- DEWALT DXV12P-QT -> **dewalt.com** product page + **dewalt.com** product photo
+- Milwaukee 0910-20 -> **milwaukeetool.com** product page + **milwaukeetool.com**
+  product photo
+
+Every link is on a manufacturer or popular-retailer host with tracking stripped;
+two photos come from the manufacturer's own page and two from the exact-product
+Google thumbnail (Amazon/Home Depot bot-wall their pages). No wrong-model link
+or image; Terra's product set, names, ranks, report, and order unchanged; every
+asset miss remains nullable. This is one category / one run per iteration; the
+`shop vac` slate varied run to run. Coverage evidence for a later deployment
+decision, not authorization to promote flags or deploy. Flags unchanged;
+`.env.local` untouched by the runs.
