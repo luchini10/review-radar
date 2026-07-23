@@ -12,6 +12,11 @@ import {
   canonicalizeDirectTerraCitationUrl,
   type DirectTerraSource,
 } from "./directTerraResponse.ts";
+import {
+  emptyDirectTerraVerificationSummary,
+  summarizeDirectTerraAssetVerification,
+  type DirectTerraProviderLaneDiagnostic,
+} from "./directTerraFirstLoss.ts";
 
 export const DIRECT_TERRA_CITATION_WEBSITE_RESOLVER_VERSION =
   "direct-terra-citation-website-resolver-v1";
@@ -43,6 +48,19 @@ export type DirectTerraCitationWebsiteResolution = {
   resolverVersion: typeof DIRECT_TERRA_CITATION_WEBSITE_RESOLVER_VERSION;
   items: DirectTerraCitationWebsite[];
 };
+
+function emitFirstLossDiagnostic(
+  callback:
+    | ((diagnostic: DirectTerraProviderLaneDiagnostic) => void)
+    | undefined,
+  diagnostic: DirectTerraProviderLaneDiagnostic,
+) {
+  try {
+    callback?.(diagnostic);
+  } catch {
+    // Optional diagnostics must never change card resolution.
+  }
+}
 
 type RankedSection = {
   depth: number;
@@ -246,6 +264,9 @@ export function resolveDirectTerraCitationWebsites(input: {
   reportMarkdown: string;
   activeCitationUrls: string[];
   responseSources: DirectTerraSource[];
+  recordFirstLossDiagnostic?: (
+    diagnostic: DirectTerraProviderLaneDiagnostic,
+  ) => void;
 }): DirectTerraCitationWebsiteResolution {
   assertInput(input);
 
@@ -270,13 +291,35 @@ export function resolveDirectTerraCitationWebsites(input: {
   const targets = [...input.targets].sort((a, b) => a.rank - b.rank);
   const items = targets.map((target): DirectTerraCitationWebsite => {
     const section = sections.get(target.rank);
-    if (!section) return unavailable(target);
+    if (!section) {
+      emitFirstLossDiagnostic(input.recordFirstLossDiagnostic, {
+        targetKey: target.key,
+        rank: target.rank,
+        lane: "citation",
+        status: "completed",
+        rawResultCount: 0,
+        consideredResultCount: 0,
+        mappedCandidateCount: 0,
+        verification: emptyDirectTerraVerificationSummary(),
+      });
+      return unavailable(target);
+    }
 
     const headingIdentity = verifyDirectTerraAssetCandidates({
       target,
       candidates: [{ title: section.heading }],
     });
     if (!headingIdentity.decisions[0]?.identityAccepted) {
+      emitFirstLossDiagnostic(input.recordFirstLossDiagnostic, {
+        targetKey: target.key,
+        rank: target.rank,
+        lane: "citation",
+        status: "completed",
+        rawResultCount: section.urls.length,
+        consideredResultCount: section.urls.length,
+        mappedCandidateCount: 0,
+        verification: summarizeDirectTerraAssetVerification(headingIdentity),
+      });
       return unavailable(target);
     }
 
@@ -296,6 +339,16 @@ export function resolveDirectTerraCitationWebsites(input: {
     }
 
     const verification = verifyDirectTerraAssetCandidates({ target, candidates });
+    emitFirstLossDiagnostic(input.recordFirstLossDiagnostic, {
+      targetKey: target.key,
+      rank: target.rank,
+      lane: "citation",
+      status: "completed",
+      rawResultCount: section.urls.length,
+      consideredResultCount: section.urls.length,
+      mappedCandidateCount: candidates.length,
+      verification: summarizeDirectTerraAssetVerification(verification),
+    });
     return {
       targetKey: target.key,
       rank: target.rank,

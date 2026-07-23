@@ -45,6 +45,10 @@ import {
 } from "../lib/directTerraLinkPreference.ts";
 import { extractDirectTerraHeadingIdentity } from "../lib/directTerraAssetVerifier.ts";
 import {
+  buildDirectTerraRankedProductAccounting,
+  buildDirectTerraRecommendationFirstLossDiagnostic,
+} from "../lib/directTerraFirstLoss.ts";
+import {
   OAI_2A_PROPOSED_CONFIG,
   estimateAutonomousResearchCost,
 } from "../lib/autonomousResearchAdapter.ts";
@@ -52,7 +56,8 @@ import { GOLD, coversLeader } from "./goldBenchmark.mjs";
 import { createOpenAIClient } from "../lib/openaiClient.ts";
 
 const EXECUTE = process.argv.includes("--execute");
-const RUNS_PER_CASE = 3;
+const FIRST_LOSS_DIAGNOSTIC = process.argv.includes("--first-loss-diagnostic");
+const RUNS_PER_CASE = FIRST_LOSS_DIAGNOSTIC ? 1 : 3;
 const CEILINGS = Object.freeze({
   hostedSearchesPerRun: DIRECT_TERRA_RESEARCH_CONFIG.maxToolCalls,
   retrievesPerRun: 60,
@@ -60,7 +65,7 @@ const CEILINGS = Object.freeze({
   serperShoppingPerRun: 5,
   serperOrganicPerRun: 8,
   pageFetchesPerRun: MAX_DIRECT_TERRA_PAGE_FETCHES,
-  hardCeilingUsd: 15,
+  hardCeilingUsd: FIRST_LOSS_DIAGNOSTIC ? 5 : 15,
 });
 const POLL_INTERVAL_MS = 5_000;
 
@@ -74,7 +79,9 @@ function resolveCommit() {
 
 const COMMIT = resolveCommit();
 const APPROVAL = {
-  id: "oai-t8c-multi-category-validation-v1",
+  id: FIRST_LOSS_DIAGNOSTIC
+    ? "oai-t8d-root-cause-diagnostic-v1"
+    : "oai-t8c-multi-category-validation-v1",
   commit: COMMIT,
   evalVersion: DIRECT_TERRA_EVAL_VERSION,
   model: DIRECT_TERRA_RESEARCH_CONFIG.model,
@@ -86,7 +93,9 @@ const APPROVAL = {
   expectedPromptVersion: "direct-terra-master-prompt-v2",
 };
 const OUT_DIR = path.resolve(
-  `tests/fixtures/review-radar-live/oai-t8c-multi-category-validation-${COMMIT}`,
+  FIRST_LOSS_DIAGNOSTIC
+    ? `tests/fixtures/review-radar-live/oai-t8d-root-cause-diagnostic-${COMMIT}`
+    : `tests/fixtures/review-radar-live/oai-t8c-multi-category-validation-${COMMIT}`,
 );
 
 function sleep(ms) {
@@ -155,7 +164,9 @@ function scoreAssetCoverage(productAssets, assetTargets) {
 
 function plan() {
   return {
-    schemaVersion: "oai-t8c-multi-category-validation-plan-v1",
+    schemaVersion: FIRST_LOSS_DIAGNOSTIC
+      ? "oai-t8d-root-cause-diagnostic-plan-v1"
+      : "oai-t8c-multi-category-validation-plan-v1",
     mode: EXECUTE ? "execute" : "dry-run",
     commit: COMMIT,
     promptVersion: DIRECT_TERRA_PROMPT_VERSION,
@@ -249,7 +260,9 @@ async function main() {
 
   const startedAtMs = Date.now();
   const summary = {
-    schemaVersion: "oai-t8c-multi-category-validation-summary-v1",
+    schemaVersion: FIRST_LOSS_DIAGNOSTIC
+      ? "oai-t8d-root-cause-diagnostic-summary-v1"
+      : "oai-t8c-multi-category-validation-summary-v1",
     approval: APPROVAL,
     startedAt: new Date().toISOString(),
     completedAt: null,
@@ -322,6 +335,7 @@ async function main() {
         runScores.push(runScore);
 
         // Resolve + score the product assets exactly as the app route does.
+        const assetFirstLoss = [];
         const productAssets = await resolveDirectTerraProductAssets({
           targets: completion.assetTargets,
           reportMarkdown: completion.reportMarkdown,
@@ -330,9 +344,43 @@ async function main() {
           serperTransport: shoppingTransport,
           serperOrganicTransport: organicTransport,
           productPageTransport: pageTransport,
+          recordFirstLossDiagnostic: FIRST_LOSS_DIAGNOSTIC
+            ? (diagnostic) => assetFirstLoss.push(diagnostic)
+            : undefined,
         });
         const assetCoverage = scoreAssetCoverage(productAssets, completion.assetTargets);
         assetCoverages.push(assetCoverage);
+        const recommendationFirstLoss = FIRST_LOSS_DIAGNOSTIC
+          ? buildDirectTerraRecommendationFirstLossDiagnostic({
+              searchCallCount: completion.ledger.usage.webSearchCalls,
+              searchActions: completion.searchActions,
+              sourceHosts: completion.sourceHosts,
+              responseSourceTitles: completion.responseSources
+                .map((source) => source.title)
+                .filter((title) => typeof title === "string"),
+              leaders: goldEntry.coreLeaders,
+              rankedProducts: runScore.rankedProducts,
+              coversLeader,
+              requirementVerdicts: {
+                wrongTypeCount: runScore.wrongTypeHits.length,
+                budgetViolationCount:
+                  runScore.constraint?.budgetViolations.length ?? 0,
+                featureCoverage:
+                  runScore.constraint?.features.map((feature) => ({
+                    label: feature.label,
+                    coverageRate: feature.coverageRate,
+                  })) ?? [],
+              },
+            })
+          : null;
+        const rankedProductAccounting = FIRST_LOSS_DIAGNOSTIC
+          ? buildDirectTerraRankedProductAccounting({
+              reportMarkdown: completion.reportMarkdown,
+              targets: completion.assetTargets,
+              productAssets,
+              assetDiagnostics: assetFirstLoss,
+            })
+          : null;
 
         await writeJson(path.join(OUT_DIR, `${evalCase.id}.run${runIndex}.json`), {
           approval: APPROVAL,
@@ -347,6 +395,16 @@ async function main() {
           productAssets,
           score: runScore,
           assetCoverage,
+          firstLoss:
+            FIRST_LOSS_DIAGNOSTIC
+              ? {
+                  recommendation: recommendationFirstLoss,
+                  assets: assetFirstLoss,
+                  rankedProducts: rankedProductAccounting,
+                  accountingComplete:
+                    rankedProductAccounting?.accountingComplete === true,
+                }
+              : undefined,
         });
         caseRecord.runs.push({
           run: runIndex,

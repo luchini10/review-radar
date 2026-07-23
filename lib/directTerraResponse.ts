@@ -21,6 +21,13 @@ export type DirectTerraSource = {
   title?: string;
 };
 
+export type DirectTerraSearchAction = {
+  type: "search" | "open_page" | "find_in_page" | "unknown";
+  queries: string[];
+  host: string | null;
+  pattern: string | null;
+};
+
 type ParsedDirectTerraResponse =
   | {
       ok: true;
@@ -31,6 +38,7 @@ type ParsedDirectTerraResponse =
       priceEstimates: DirectTerraPriceEstimate[];
       assetTargets: DirectTerraAssetTarget[];
       responseSources: DirectTerraSource[];
+      searchActions: DirectTerraSearchAction[];
       rejectedPriceObservationCount: number;
     }
   | {
@@ -103,6 +111,66 @@ function distinctSources(sources: DirectTerraSource[]) {
   }
 
   return distinct;
+}
+
+function boundedDiagnosticText(value: unknown, maxLength: number) {
+  if (typeof value !== "string") return null;
+  const text = value
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return text ? text.slice(0, maxLength) : null;
+}
+
+function diagnosticHost(value: unknown) {
+  if (typeof value !== "string") return null;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return url.hostname.toLowerCase().replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+}
+
+export function extractDirectTerraSearchActions(
+  response: unknown,
+): DirectTerraSearchAction[] {
+  if (!isRecord(response) || !Array.isArray(response.output)) return [];
+  const actions: DirectTerraSearchAction[] = [];
+  for (const item of response.output) {
+    if (
+      !isRecord(item) ||
+      item.type !== "web_search_call" ||
+      !isRecord(item.action)
+    ) {
+      continue;
+    }
+    const rawType = item.action.type;
+    const type =
+      rawType === "search" ||
+      rawType === "open_page" ||
+      rawType === "find_in_page"
+        ? rawType
+        : "unknown";
+    const rawQueries = Array.isArray(item.action.queries)
+      ? item.action.queries
+      : [item.action.query];
+    const queries = [
+      ...new Set(
+        rawQueries
+          .map((query) => boundedDiagnosticText(query, 500))
+          .filter((query): query is string => Boolean(query)),
+      ),
+    ].slice(0, 20);
+    actions.push({
+      type,
+      queries,
+      host: diagnosticHost(item.action.url),
+      pattern: boundedDiagnosticText(item.action.pattern, 200),
+    });
+  }
+  return actions.slice(0, 100);
 }
 
 export function extractDirectTerraResponseSources(
@@ -378,6 +446,7 @@ export function parseDirectTerraCompletedResponse(
     priceEstimates: priceResult.estimates,
     assetTargets,
     responseSources: sources,
+    searchActions: extractDirectTerraSearchActions(response),
     rejectedPriceObservationCount: priceResult.rejectedObservationCount,
   };
 }

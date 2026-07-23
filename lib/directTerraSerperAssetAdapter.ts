@@ -5,6 +5,10 @@ import {
   type DirectTerraAssetTarget,
   type DirectTerraAssetVerification,
 } from "./directTerraAssetVerifier.ts";
+import {
+  summarizeDirectTerraAssetVerification,
+  type DirectTerraProviderLaneDiagnostic,
+} from "./directTerraFirstLoss.ts";
 
 export const DIRECT_TERRA_SERPER_ASSET_ADAPTER_VERSION =
   "direct-terra-serper-asset-adapter-v3";
@@ -72,7 +76,24 @@ type DirectTerraSerperAssetAdapterInput = {
   transport: DirectTerraSerperShoppingTransport;
   /** Server-only observability hook. Never serialize its query to a client. */
   recordDiagnostic?: (diagnostic: DirectTerraSerperAssetDiagnostic) => void;
+  /** Sanitized server-only first-loss hook; never contains query or row text. */
+  recordFirstLossDiagnostic?: (
+    diagnostic: DirectTerraProviderLaneDiagnostic,
+  ) => void;
 };
+
+function emitFirstLossDiagnostic(
+  callback:
+    | ((diagnostic: DirectTerraProviderLaneDiagnostic) => void)
+    | undefined,
+  diagnostic: DirectTerraProviderLaneDiagnostic,
+) {
+  try {
+    callback?.(diagnostic);
+  } catch {
+    // Optional diagnostics must never change asset resolution.
+  }
+}
 
 function queryTokens(value: string) {
   return value.normalize("NFKC").match(/[A-Za-z0-9][A-Za-z0-9+./-]*/g) || [];
@@ -339,6 +360,16 @@ export async function resolveDirectTerraAssetsWithSerperShopping(
     } satisfies DirectTerraSerperAssetDiagnostic;
 
     input.recordDiagnostic?.(diagnostic);
+    emitFirstLossDiagnostic(input.recordFirstLossDiagnostic, {
+      targetKey: target.key,
+      rank: target.rank,
+      lane: "shopping",
+      status: providerStatus,
+      rawResultCount: rawShoppingResultCount,
+      consideredResultCount: consideredShoppingResultCount,
+      mappedCandidateCount: candidates.length,
+      verification: summarizeDirectTerraAssetVerification(verification),
+    });
     items.push({
       targetKey: target.key,
       rank: target.rank,

@@ -9,6 +9,10 @@ import {
   scoreDirectTerraProductLink,
 } from "./directTerraLinkPreference.ts";
 import { buildDirectTerraAssetQuery } from "./directTerraSerperAssetAdapter.ts";
+import {
+  summarizeDirectTerraAssetVerification,
+  type DirectTerraProviderLaneDiagnostic,
+} from "./directTerraFirstLoss.ts";
 
 export const DIRECT_TERRA_SERPER_ORGANIC_ADAPTER_VERSION =
   "direct-terra-serper-organic-adapter-v1";
@@ -74,7 +78,25 @@ type AdapterInput = {
   buildQuery?: (target: DirectTerraAssetTarget) => string;
   /** Server-only hook. The query and counts must never enter the client result. */
   recordDiagnostic?: (diagnostic: DirectTerraSerperOrganicDiagnostic) => void;
+  /** Sanitized server-only first-loss hook; never contains query or row text. */
+  recordFirstLossDiagnostic?: (
+    diagnostic: DirectTerraProviderLaneDiagnostic,
+  ) => void;
+  diagnosticLane?: "organic_primary" | "organic_retailer";
 };
+
+function emitFirstLossDiagnostic(
+  callback:
+    | ((diagnostic: DirectTerraProviderLaneDiagnostic) => void)
+    | undefined,
+  diagnostic: DirectTerraProviderLaneDiagnostic,
+) {
+  try {
+    callback?.(diagnostic);
+  } catch {
+    // Optional diagnostics must never change website resolution.
+  }
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -263,6 +285,16 @@ export async function resolveDirectTerraWebsitesWithSerperOrganic(
       consideredOrganicResultCount,
       mappedCandidateCount: candidates.length,
       acceptedWebsiteCount: acceptedUrls.length,
+    });
+    emitFirstLossDiagnostic(input.recordFirstLossDiagnostic, {
+      targetKey: target.key,
+      rank: target.rank,
+      lane: input.diagnosticLane ?? "organic_primary",
+      status,
+      rawResultCount: rawOrganicResultCount,
+      consideredResultCount: consideredOrganicResultCount,
+      mappedCandidateCount: candidates.length,
+      verification: summarizeDirectTerraAssetVerification(verification),
     });
     items.push({
       targetKey: target.key,

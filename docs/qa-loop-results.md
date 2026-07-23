@@ -10299,3 +10299,80 @@ non-preferred-host link) are real soft spots. Promotion is defensible on safety
 + net-better recall; fixing the soft spots first is the more conservative path.
 This is a decision for Taylor. No flag was promoted, `.env.local` is unchanged,
 and no code changed by the run (validation instrument only).
+
+## 🟧 Codex QA Update — 2026-07-23 (OAI-T8D zero-live first-loss observability and root audit)
+
+Taylor approved a root-cause recovery plan that separates recommendation
+quality from product-asset resolution and forbids category-specific repairs.
+This phase made zero provider calls and changed no default flag or client
+response.
+
+**Fail-first contract:** the new tests initially failed because no first-loss
+module or end-to-end diagnostic callback existed. The completed contract:
+
+- accounts for every Terra-ranked product, including products that never become
+  asset targets;
+- distinguishes Terra source evidence absent vs present-but-not-ranked when
+  sanitized response source titles are available transiently;
+- records citation, primary organic, Shopping, retailer-scoped organic,
+  page-fetch, and final-selection outcomes with reason counts;
+- persists no query, raw row, provider/source title, provider ID, header, or
+  secret;
+- cannot change returned product assets, even when the diagnostic sink throws;
+  and
+- leaves the Direct-Terra flags and UI/API response unchanged.
+
+**Saved-evidence audit:** `npm run qa:direct-terra-first-loss -- --write`
+analyzed 17 usable integrated fixtures: 12 T8C multi-category runs plus five
+T8A/T8B integrated smokes. The sanitized untracked report is
+`oai-t8c-multi-category-validation-d7a2ec2/first-loss-audit.json`.
+
+- 69/69 ranked products received exactly one first-loss outcome; zero runs had
+  incomplete accounting.
+- T8C alone contained 46 ranked products. The historical code created 33 asset
+  targets and silently omitted 13. Those 13 omissions recurred across three
+  unrelated categories: cordless drills (3), gas grills (4), and robot vacuums
+  (6). Heading-only replay under the existing generalized T8C repair recovers
+  all 13.
+- Four historical links—two drills and two grills—used non-preferred stores.
+  The existing category-independent manufacturer/popular-retailer selection
+  rule suppresses all four.
+- Nine other T8C asset losses remain intentionally unattributed from saved
+  evidence: two website-only losses, four image-only losses, and three losses
+  of both. Old fixtures retain final assets but not raw candidate/verifier or
+  page-fetch decisions, so claiming provider absence, normalization rejection,
+  identity rejection, selection loss, or page-fetch loss would be guesswork.
+- The frozen scorer records 29 covered-leader and 28 missed-leader observations.
+  Old T8C fixtures retain source hosts but not source-title identity, so the 28
+  misses cannot be honestly split between absent from Terra research and found
+  but omitted from ranking.
+
+**Root conclusion:** two generalized historical causes are already proven and
+repaired by `beefd34`: target extraction discarded coherent ranked identities,
+and selection exposed otherwise-safe links from obscure hosts. The remaining
+recommendation and downstream-asset questions require one instrumented live
+sample; there is no evidence-supported additional behavior repair yet.
+
+**Verification:** 50/50 focused resolver/observability tests passed before the
+full wall. Final full suite: 1318/1318 across 189 suites; typecheck and build
+passed; lint returned zero errors and the same three pre-existing warnings.
+The diagnostic live mode dry-run passed for four frozen cases, one run each,
+with no keys and no network.
+
+**Next gate:** separately approve the four-case `--first-loss-diagnostic`
+window. Planning ceilings are four Terra creates total; per run at most 20
+hosted searches, 60 retrieves, one safety cancel, five Shopping requests,
+eight organic requests, and five page fetches; $5 hard ceiling for the window.
+No retry, replacement, repair, promotion, `.env.local` change, deployment, or
+production change is authorized.
+
+**Post-review correction (same zero-live phase):** final diff review found that
+the plan required sanitized Terra search actions while the initial trace stored
+only their count. The response boundary now retains bounded action types and
+query text plus opened-page hosts (never full opened URLs, provider IDs, raw
+rows, source titles, headers, or secrets). The focused wall is 54/54 and the
+final full suite is 1319/1319 across the same 189 suites. Typecheck, lint, and
+build were rerun after this correction.
+The report also marks Terra's internal candidate slate
+`not_exposed_by_current_contract`; it does not relabel final rankings as
+candidates or expand the production schema merely for measurement.

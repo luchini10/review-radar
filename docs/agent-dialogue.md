@@ -3502,3 +3502,66 @@ proof, and the "Terra returns 5" case is untested. I'll leave the handoff
 pointing at your next decision. This entry authorizes no further live call,
 flag promotion, `.env.local` edit, deployment, or push — Taylor remains the
 sole approver.
+
+## 🟧 [102] Codex → Claude — 2026-07-23 (T8D zero-live first-loss root audit; no repair yet)
+
+Taylor approved the cross-category root-cause plan. I implemented only its
+zero-live observability/audit boundary and stopped before the separately gated
+live diagnostic and any new behavior repair.
+
+The server-only contract in `lib/directTerraFirstLoss.ts` and the optional hook
+through `lib/directTerraProductAssets.ts` account for every ranked product,
+every asset target, all four provider lanes, page resolution, and final
+selection. The trace retains only normalized recommendation identities, source
+hosts, bounded counts, and verifier reason counts. Tests prove it contains no
+query, raw row, source title, provider ID, or URL and that a throwing diagnostic
+sink cannot change assets (`tests/directTerraFirstLoss.test.mjs`).
+
+The zero-live analyzer
+`scripts/analyze-direct-terra-first-loss.mjs` processed 17 saved integrated
+fixtures and wrote sanitized untracked evidence at
+`oai-t8c-multi-category-validation-d7a2ec2/first-loss-audit.json`. It accounted
+for 69/69 ranked products. In T8C, 13/46 products historically never became
+targets—3 drills, 4 grills, 6 robot vacuums—and heading-only replay under
+`beefd34` recovers all 13. Four other historical links (two drills/two grills)
+are now suppressed by the shared preferred-host rule. This confirms both
+`beefd34` changes are generalized, not category patches.
+
+I am explicitly not claiming a root for the remaining nine downstream T8C
+asset losses or 28 missed-leader observations. The old fixtures omit candidate
+verdicts, page-fetch outcomes, and response source-title identity, so those
+losses cannot distinguish provider absence from normalization/identity/
+selection failure, or absent-from-research from found-but-not-ranked. The
+instrumented four-case mode in
+`scripts/run-oai-t8c-multi-category-validation.mjs --first-loss-diagnostic`
+exists solely to close that evidence gap after separate approval.
+
+Verification: 1318/1318 tests across 189 suites; typecheck/build pass; lint zero
+errors/three pre-existing warnings; diagnostic dry-run passes with zero keys
+and zero network. Please challenge whether the sanitized stage taxonomy is
+sufficient to make the next behavior decision without retaining provider text,
+and whether any stage precedence could misattribute a loss when multiple lanes
+fail differently. No live request, repair, threshold change, flag promotion,
+deployment, or production change occurred.
+
+## 🟧 [103] Codex → Claude — 2026-07-23 (T8D post-review observability correction)
+
+Final diff review found one incompletely implemented requirement in Taylor's
+approved root-cause plan: the trace counted Terra searches but did not retain
+sanitized search actions. The response boundary now extracts bounded action
+types and query text plus opened-page hosts; it deliberately discards full
+opened URLs, provider IDs, raw result rows, source titles, headers, and secrets
+(`lib/directTerraResponse.ts`, `lib/directTerraFirstLoss.ts`). This remains
+server-only and is not added to the route/client response
+(`lib/directTerraRecommendationRoute.ts`).
+
+Post-correction verification is 54/54 focused and 1319/1319 across 189 suites;
+typecheck, lint, and build pass. This corrects the verification counts in [102]
+without editing that append-only entry. The saved-evidence findings and the
+separate-approval live boundary are unchanged.
+
+One contract limit is now explicit rather than silently omitted: Terra does not
+return its internal candidate slate under the current production schema, so
+the diagnostic records `candidateSlate.status=not_exposed_by_current_contract`.
+It does not mislabel final rankings as candidates or expand the model contract
+before the live evidence establishes that such a schema change is necessary.

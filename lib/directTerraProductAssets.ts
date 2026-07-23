@@ -26,6 +26,13 @@ import {
   verifyDirectTerraPageAssets,
   type DirectTerraProductPageTransport,
 } from "./directTerraProductPageFetcher.ts";
+import {
+  buildDirectTerraAssetFirstLossDiagnostic,
+  emptyDirectTerraVerificationSummary,
+  type DirectTerraAssetFirstLossDiagnostic,
+  type DirectTerraPageLaneDiagnostic,
+  type DirectTerraProviderLaneDiagnostic,
+} from "./directTerraFirstLoss.ts";
 
 // Total organic lookups per request across both passes (open product-page
 // queries plus retailer-scoped second chances).
@@ -39,6 +46,9 @@ type ResolveDirectTerraProductAssetsInput = {
   serperTransport?: DirectTerraSerperShoppingTransport;
   serperOrganicTransport?: DirectTerraSerperOrganicTransport;
   productPageTransport?: DirectTerraProductPageTransport;
+  recordFirstLossDiagnostic?: (
+    diagnostic: DirectTerraAssetFirstLossDiagnostic,
+  ) => void;
 };
 
 export async function resolveDirectTerraProductAssets({
@@ -49,14 +59,42 @@ export async function resolveDirectTerraProductAssets({
   serperTransport,
   serperOrganicTransport,
   productPageTransport,
+  recordFirstLossDiagnostic,
 }: ResolveDirectTerraProductAssetsInput): Promise<DirectTerraProductAsset[]> {
   if (targets.length === 0) return [];
+
+  const laneDiagnosticsByKey = new Map<
+    string,
+    DirectTerraProviderLaneDiagnostic[]
+  >();
+  const recordLane = (diagnostic: DirectTerraProviderLaneDiagnostic) => {
+    const existing = laneDiagnosticsByKey.get(diagnostic.targetKey) ?? [];
+    existing.push(diagnostic);
+    laneDiagnosticsByKey.set(diagnostic.targetKey, existing);
+  };
+  const emptyLane = (
+    target: DirectTerraAssetTarget,
+    lane: DirectTerraProviderLaneDiagnostic["lane"],
+    status: DirectTerraProviderLaneDiagnostic["status"],
+  ): DirectTerraProviderLaneDiagnostic => ({
+    targetKey: target.key,
+    rank: target.rank,
+    lane,
+    status,
+    rawResultCount: 0,
+    consideredResultCount: 0,
+    mappedCandidateCount: 0,
+    verification: emptyDirectTerraVerificationSummary(),
+  });
 
   const citationWebsites = resolveDirectTerraCitationWebsites({
     targets,
     reportMarkdown,
     activeCitationUrls,
     responseSources,
+    recordFirstLossDiagnostic: recordFirstLossDiagnostic
+      ? recordLane
+      : undefined,
   });
   const citationByKey = new Map(
     citationWebsites.items.map((item) => [item.targetKey, item]),
@@ -81,8 +119,19 @@ export async function resolveDirectTerraProductAssets({
       return await resolveDirectTerraWebsitesWithSerperOrganic({
         targets: organicCandidateTargets,
         transport: serperOrganicTransport,
+        recordFirstLossDiagnostic: recordFirstLossDiagnostic
+          ? recordLane
+          : undefined,
       });
     } catch {
+      if (recordFirstLossDiagnostic) {
+        for (const target of organicCandidateTargets) {
+          const lanes = laneDiagnosticsByKey.get(target.key) ?? [];
+          if (!lanes.some((lane) => lane.lane === "organic_primary")) {
+            recordLane(emptyLane(target, "organic_primary", "transport_error"));
+          }
+        }
+      }
       // Website decoration is optional. Organic failure cannot affect Terra's
       // recommendation set or the independent Shopping image channel.
       return null;
@@ -95,8 +144,19 @@ export async function resolveDirectTerraProductAssets({
       return await resolveDirectTerraAssetsWithSerperShopping({
         targets,
         transport: serperTransport,
+        recordFirstLossDiagnostic: recordFirstLossDiagnostic
+          ? recordLane
+          : undefined,
       });
     } catch {
+      if (recordFirstLossDiagnostic) {
+        for (const target of targets) {
+          const lanes = laneDiagnosticsByKey.get(target.key) ?? [];
+          if (!lanes.some((lane) => lane.lane === "shopping")) {
+            recordLane(emptyLane(target, "shopping", "transport_error"));
+          }
+        }
+      }
       // Shopping is optional decoration. Preserve every ranked product when
       // the provider fails.
       return null;
@@ -149,6 +209,10 @@ export async function resolveDirectTerraProductAssets({
           targets: missingTargets,
           transport: serperOrganicTransport,
           buildQuery: buildDirectTerraRetailerScopedQuery,
+          diagnosticLane: "organic_retailer",
+          recordFirstLossDiagnostic: recordFirstLossDiagnostic
+            ? recordLane
+            : undefined,
         });
         for (const item of secondPass.items) {
           if (item.productUrl && !chosenWebsiteByKey.get(item.targetKey)) {
@@ -156,6 +220,16 @@ export async function resolveDirectTerraProductAssets({
           }
         }
       } catch {
+        if (recordFirstLossDiagnostic) {
+          for (const target of missingTargets) {
+            const lanes = laneDiagnosticsByKey.get(target.key) ?? [];
+            if (!lanes.some((lane) => lane.lane === "organic_retailer")) {
+              recordLane(
+                emptyLane(target, "organic_retailer", "transport_error"),
+              );
+            }
+          }
+        }
         // The retry is optional decoration like the first pass.
       }
     }
@@ -165,23 +239,44 @@ export async function resolveDirectTerraProductAssets({
   // product, harvesting the retailer's/manufacturer's own product photo and
   // rel=canonical clean URL. Every failure keeps the existing assets.
   const pageImageByKey = new Map<string, string>();
+  const pageStatusByKey = new Map<
+    string,
+    DirectTerraPageLaneDiagnostic["status"]
+  >(
+    targets.map((target) => [
+      target.key,
+      productPageTransport ? "not_selected" : "not_configured",
+    ]),
+  );
   if (productPageTransport) {
     let fetches = 0;
     for (const target of orderedTargets) {
-      if (fetches >= MAX_DIRECT_TERRA_PAGE_FETCHES) break;
       const websiteUrl = chosenWebsiteByKey.get(target.key);
       if (!websiteUrl) continue;
+      if (fetches >= MAX_DIRECT_TERRA_PAGE_FETCHES) {
+        pageStatusByKey.set(target.key, "budget_exhausted");
+        continue;
+      }
       // Bot-walled hosts (Amazon) never serve plain fetches; keep the budget
       // for pages that can actually yield a first-party photo/canonical.
-      if (shouldSkipDirectTerraPageFetch(websiteUrl)) continue;
+      if (shouldSkipDirectTerraPageFetch(websiteUrl)) {
+        pageStatusByKey.set(target.key, "skipped_known_bot_wall");
+        continue;
+      }
       fetches += 1;
       try {
         const fetched = await productPageTransport(websiteUrl);
-        if (!fetched) continue;
+        if (!fetched) {
+          pageStatusByKey.set(target.key, "page_unavailable");
+          continue;
+        }
         const extracted = extractDirectTerraPageAssets(
           fetched.html,
           fetched.finalUrl,
         );
+        if (extracted.imageCandidates.length === 0) {
+          pageStatusByKey.set(target.key, "page_assets_unavailable");
+        }
         const verified = verifyDirectTerraPageAssets({
           target,
           pageUrl: fetched.finalUrl,
@@ -189,17 +284,21 @@ export async function resolveDirectTerraProductAssets({
         });
         if (verified.imageUrl) {
           pageImageByKey.set(target.key, verified.imageUrl);
+          pageStatusByKey.set(target.key, "accepted_page_image");
+        } else if (extracted.imageCandidates.length > 0) {
+          pageStatusByKey.set(target.key, "verified_without_image");
         }
         if (verified.canonicalUrl) {
           chosenWebsiteByKey.set(target.key, verified.canonicalUrl);
         }
       } catch {
+        pageStatusByKey.set(target.key, "transport_error");
         // Page decoration is optional; the verified link stands on its own.
       }
     }
   }
 
-  return orderedTargets.map((target): DirectTerraProductAsset => {
+  const assets = orderedTargets.map((target): DirectTerraProductAsset => {
     const website = chosenWebsiteByKey.get(target.key) ?? null;
     const shopping = shoppingByKey.get(target.key)?.verification;
     // The displayed buy link must be the product's own manufacturer site or a
@@ -221,4 +320,41 @@ export async function resolveDirectTerraProductAssets({
       imageUrl: pageImageByKey.get(target.key) ?? shopping?.imageUrl ?? null,
     };
   });
+  if (recordFirstLossDiagnostic) {
+    for (const target of orderedTargets) {
+      const existingLanes = laneDiagnosticsByKey.get(target.key) ?? [];
+      for (const lane of [
+        "citation",
+        "organic_primary",
+        "shopping",
+        "organic_retailer",
+      ] as const) {
+        if (!existingLanes.some((diagnostic) => diagnostic.lane === lane)) {
+          recordLane(emptyLane(target, lane, "not_attempted"));
+        }
+      }
+      const asset = assets.find((candidate) => candidate.rank === target.rank);
+      const chosenWebsite = chosenWebsiteByKey.get(target.key) ?? null;
+      try {
+        recordFirstLossDiagnostic(
+          buildDirectTerraAssetFirstLossDiagnostic({
+            targetKey: target.key,
+            rank: target.rank,
+            lanes: laneDiagnosticsByKey.get(target.key) ?? [],
+            page: pageStatusByKey.get(target.key) ?? "not_configured",
+            displayedLink: Boolean(asset?.productUrl),
+            displayedImage: Boolean(asset?.imageUrl),
+            selectedWebsiteWasNonPreferred: Boolean(
+              chosenWebsite &&
+                classifyDirectTerraLinkHost(chosenWebsite, target.brand) ===
+                  "other",
+            ),
+          }),
+        );
+      } catch {
+        // Optional diagnostics must never change the product assets.
+      }
+    }
+  }
+  return assets;
 }

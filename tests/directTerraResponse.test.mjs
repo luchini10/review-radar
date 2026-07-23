@@ -230,7 +230,65 @@ describe("direct Terra V2 response boundary", () => {
       },
     ]);
     assert.equal(parsed.responseSources.length, 2);
+    assert.deepEqual(parsed.searchActions, [
+      {
+        type: "unknown",
+        queries: [],
+        host: null,
+        pattern: null,
+      },
+    ]);
     assert.equal(parsed.reportMarkdown, report);
+  });
+
+  it("extracts bounded search actions without retaining opened URLs", () => {
+    const response = completedResponse();
+    response.output.unshift(
+      {
+        type: "web_search_call",
+        action: {
+          type: "search",
+          queries: ["  best\u0000 Example Model A   reviews  "],
+          sources: [],
+        },
+      },
+      {
+        type: "web_search_call",
+        action: {
+          type: "open_page",
+          url: "https://store.example/products/model-a?provider_id=secret",
+          sources: [],
+        },
+      },
+    );
+
+    const parsed = parseDirectTerraCompletedResponse(response);
+
+    assert.equal(parsed.ok, true);
+    assert.deepEqual(parsed.searchActions, [
+      {
+        type: "search",
+        queries: ["best Example Model A reviews"],
+        host: null,
+        pattern: null,
+      },
+      {
+        type: "open_page",
+        queries: [],
+        host: "store.example",
+        pattern: null,
+      },
+      {
+        type: "unknown",
+        queries: [],
+        host: null,
+        pattern: null,
+      },
+    ]);
+    assert.equal(
+      JSON.stringify(parsed.searchActions).includes("provider_id"),
+      false,
+    );
   });
 
   it("drops unowned and duplicate-host observations without rejecting the report", () => {

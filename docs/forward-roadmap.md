@@ -3049,6 +3049,53 @@ promotion, or deployment is authorized by this plan entry.
 **Recommended reasoning level:** Medium for the mechanical reviewed commit;
 High for the later identity-by-identity live coverage audit.
 
+### OAI-T8D — cross-category first-loss root diagnosis
+
+**Zero-live observability and saved-evidence audit (completed 2026-07-23):**
+ReviewRadar now has an optional server-only trace for recommendation research,
+asset-target creation, citation/organic/Shopping normalization and identity
+verdicts, page-photo resolution, and final selection. The trace stores bounded
+sanitized search actions, counts, host classes, normalized recommendation
+identities, and reason codes. Search actions retain bounded query text and
+opened-page hosts but never a full opened URL. The trace stores no provider
+IDs, raw rows, source titles, secrets, or headers, and a missing or failing
+diagnostic sink cannot change a card.
+
+Terra's current response contract does not expose its internal candidate slate.
+The diagnostic therefore records that field as explicitly unavailable instead
+of conflating final rankings with researched candidates. Adding a structured
+candidate slate remains a behavior/schema change and is permitted only if the
+diagnostic proves leaders were present in research evidence but omitted from
+the final ranking.
+
+The offline analyzer accounted for all 69 ranked products in 17 usable saved
+integrated fixtures (12 T8C plus five T8A/T8B). In T8C alone, the historical
+path failed to create asset targets for 13/46 ranked products across drills,
+gas grills, and robot vacuums. Heading-only replay under the generalized T8C
+identity repair recovers all 13. Four more historical links across drills and
+gas grills came from non-preferred hosts and are now suppressed by the shared
+manufacturer/popular-retailer policy. The remaining nine T8C downstream asset
+losses cannot be split between provider absence, normalization, identity,
+selection, and page-fetch stages because the old fixtures deliberately omitted
+raw candidate verdicts. Likewise, 28 missed-leader observations cannot be
+split between absent-from-Terra-research and found-but-not-ranked because old
+fixtures retained source hosts but not source-title identity.
+
+**Next gate:** one separately approved diagnostic run for each of the four
+frozen T8C cases, using `--first-loss-diagnostic`. Planning ceilings are four
+Terra creates total; per run at most 20 hosted searches, 60 retrieves, one
+safety cancel, five Shopping requests, eight organic requests, and five bounded
+page fetches; the full window has a $5 hard ceiling. The run is attribution
+evidence, not promotion evidence. It must stop after four cases, retain only
+sanitized traces, and authorize no retry, replacement, flag change, deployment,
+or behavior repair. A generalized repair may begin only when the same
+first-loss mechanism is demonstrated in two unrelated categories or represents
+a category-independent trust invariant.
+
+**Recommended reasoning level:** High because interpreting equivalent product
+identity and separating provider absence from verifier rejection crosses the
+accuracy and safety boundaries.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen
