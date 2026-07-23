@@ -26,8 +26,8 @@ only when maintaining this register or auditing its full history.
 | Medium | 33 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 10 |
-| Fixed | 85 |
+| Needs Investigation | 6 |
+| Fixed | 89 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -3616,7 +3616,7 @@ path, flag, `.env.local`, or user-visible behavior changed.
 | **Phase** | OAI-T8D cross-category first-loss diagnostic |
 | **Severity** | Critical |
 | **Title** | Descriptive product identity can accept a different named variant's buy link |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** The office-chair diagnostic ranked the standard `Herman
 Miller Embody Chair`, but the asset resolver displayed
@@ -3645,6 +3645,17 @@ descriptive-name identities. Prove the same primitive on at least one unrelated
 category and preserve exact base-model retailer/manufacturer pages. Do not add
 Herman Miller- or chair-specific code.
 
+**Resolution (2026-07-23, `71fab76`):** The verifier now treats a positive
+requested-product-type conflict in the candidate product URL path as a
+category-independent link veto and also rejects that candidate's image.
+Cross-category tests cover the captured standard-versus-gaming chair variant
+and a pressure-washer-versus-laundry-washer conflict while preserving exact
+manufacturer and retailer pages. The completed-job token was versioned to
+carry the shopper's product category only inside its encrypted server payload;
+the polling route restores that category before resolution, so the production
+path no longer substitutes the product name for the requested type. No new
+client-readable field or default-on behavior was added.
+
 ---
 
 #### RR-094
@@ -3655,7 +3666,7 @@ Herman Miller- or chair-specific code.
 | **Phase** | OAI-T8D cross-category first-loss diagnostic |
 | **Severity** | High |
 | **Title** | Wrong-type scorer treats secondary functionality or bundled products as the primary product type |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** The frozen evaluator reported two wrong-type recommendations,
 but both names still identify the requested primary product: a propane gas
@@ -3683,6 +3694,15 @@ frozen evaluator. Add cross-category controls for genuine wrong products,
 hybrid products, kits, and accessories, then report both historical and
 corrected scores. Do not weaken the production product-type gate.
 
+**Resolution (2026-07-23, `192c276`, corrected replay `0ccac73`):** The
+historical scorer remains unchanged and reproducible. A separately named
+prospective scorer uses the shared primary-product-type classifier and
+suppresses a prohibited secondary term only when the requested primary type
+still matches and the term appears in a secondary or bundle clause. Tests cover
+the captured charcoal-tray and impact-driver bundle cases plus genuine
+wrong-product controls. The eight-run replay changes historical wrong-type
+observations from 2 to 0 without changing production product-type gates.
+
 ---
 
 #### RR-095
@@ -3693,7 +3713,7 @@ corrected scores. Do not weaken the production product-type gate.
 | **Phase** | OAI-T8D cross-category first-loss diagnostic |
 | **Severity** | High |
 | **Title** | Leader matcher misses punctuation-compacted brand equivalents |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** A ranked `Charbroil Performance Series` grill does not cover
 the frozen `char-broil / performance` leader because normalization turns the
@@ -3718,6 +3738,14 @@ matches such as `Q7` versus `Q70`.
 path with adversarial boundary tests, version the leader snapshot/matcher, and
 recompute the saved diagnostic without altering the production pipeline.
 
+**Resolution (2026-07-23, `192c276`, replay `0ccac73`):** The historical leader
+matcher remains frozen. A prospective `07d` matcher accepts an exact compacted
+token sequence for harmless punctuation and spacing differences while
+preserving numeric and word boundaries such as `Q7` versus `Q70` and `AI`
+versus `Airtok`. The eight-run replay raises total leader hits from 18 to 19:
+gas-grill run 2 changes from 2/4 to 3/4 because `Charbroil Performance Series`
+now covers `char-broil / performance`.
+
 ---
 
 #### RR-096
@@ -3728,7 +3756,7 @@ recompute the saved diagnostic without altering the production pipeline.
 | **Phase** | OAI-T8D cross-category first-loss diagnostic |
 | **Severity** | High |
 | **Title** | First-loss trace cannot distinguish provider absence from false identity rejection |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** All seven missing websites in the eight-run diagnostic are
 classified `identity_verification_rejected`, but the trace retains only
@@ -3759,6 +3787,16 @@ brand/model/type evidence, host class, path identity evidence, and verdict
 reason) and parse explicitly named non-ranked candidates from the Terra report.
 Prove that the diagnostic output remains absent from client responses.
 
+**Resolution (2026-07-23, `5b3b3cc`):** First-loss schema v2 retains at most 20
+server-only normalized candidate identity samples with brand/model/type
+evidence, host class, and verdict reason codes. It also parses explicitly named
+Close Match, not-ranked, other-candidate, and rejected-candidate sections.
+Tests prove that provider IDs, full URLs, raw titles, and secrets are absent and
+that diagnostics never enter the client response. Historical schema-v1
+fixtures cannot retroactively distinguish provider absence from false
+rejection because the missing candidate evidence was never saved; future
+instrumented runs can make that distinction.
+
 ---
 
 ## Appendix: Issue Cross-Reference by Status
@@ -3766,21 +3804,17 @@ Prove that the diagnostic output remains absent from client responses.
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (10 issues)
+### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 - RR-091: Same-page related-product price can satisfy autonomous card binding
 - RR-092: Editorial Product markup can verify identity/image without proving the tested model
-- RR-093: Descriptive product identity can accept a different named variant's buy link
-- RR-094: Wrong-type scorer treats secondary functionality/bundles as the primary type
-- RR-095: Leader matcher misses punctuation-compacted brand equivalents
-- RR-096: First-loss trace cannot distinguish provider absence from false identity rejection
 
-### Fixed (85 issues)
+### Fixed (89 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
-RR-038 through RR-044, and RR-046 through RR-090
+RR-038 through RR-044, RR-046 through RR-090, and RR-093 through RR-096
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -3796,7 +3830,3 @@ RR-038 through RR-044, and RR-046 through RR-090
 3. **RR-091 + RR-092** — the autonomous hybrid remains isolated and cannot be
    integrated until exact transactional binding and exact tested-model
    attribution pass an independently verified boundary.
-4. **RR-093 + RR-096** — repair the Direct-Terra identity/diagnostic boundary
-   before another live asset or root-cause window.
-5. **RR-094 + RR-095** — correct and version the evaluation contract before
-   using the observed wrong-type or recall numbers for a product decision.

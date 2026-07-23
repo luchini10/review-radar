@@ -10430,3 +10430,56 @@ version and correct the generalized evaluator identity/type rules, and (3)
 add a category-independent descriptive-variant/type veto reproducing RR-093.
 Replay the eight fixtures and review the complete diff before any further
 spend.
+
+## 🟧 Codex QA Update — 2026-07-23 (OAI-T8D zero-live corrective replay)
+
+Taylor approved the zero-live correction after the eight-run T8D diagnostic.
+No OpenAI, Serper, SearchAPI, or direct-page request was made; no prompt, flag,
+`.env.local`, deployment, or production setting changed.
+
+**Decision-grade trace (`5b3b3cc`):** first-loss schema v2 keeps a bounded
+server-only sample of normalized candidate identity, brand/model/type evidence,
+host class, and verifier reasons. It recognizes explicitly named Close Match,
+not-ranked, other-candidate, and rejected-candidate sections in Terra's report.
+Tests prove that provider IDs, full URLs, raw titles, headers, and secrets are
+not retained and that diagnostics remain absent from client responses.
+
+**Versioned evaluator (`192c276`, replay correction `0ccac73`):** the historical
+matcher and scorer remain unchanged. The prospective `07d` contract treats
+harmless punctuation/spacing forms as equivalent without weakening token or
+numeric boundaries, and uses the shared primary-product-type classifier before
+discounting a prohibited term in a secondary/bundle clause.
+
+**Wrong-variant safety (`71fab76`):** fail-first tests reproduced the captured
+standard Herman Miller Embody card accepting `/products/embody-gaming-chair`.
+The generalized fix rejects candidate link/image paths that positively prove a
+conflicting product type. A pressure-washer-versus-laundry-washer control proves
+the rule across an unrelated category. The actual completed-job route was also
+corrected: the shopper's category now travels only inside the authenticated
+encrypted v2 token and is restored server-side before asset resolution.
+
+**Corrective replay:** `npm run qa:direct-terra-t8d-replay` processed exactly
+the eight saved T8D fixtures and wrote the sanitized untracked report at
+`tests/fixtures/review-radar-live/oai-t8d-root-cause-diagnostic-437a682/corrective-replay.json`.
+
+- 31/31 ranked products have an explicit outcome.
+- Historical versus prospective leader hits: 18 versus 19.
+- Gas-grill run 2 changes from 2/4 to 3/4 because `Charbroil Performance
+  Series` now covers `char-broil / performance`.
+- Historical versus prospective wrong-type observations: 2 versus 0.
+- Seven missed leaders were explicitly named by Terra but not ranked.
+- All 24 retained links were revalidated; one definitive wrong-variant link,
+  the captured Embody Gaming destination, is blocked.
+- Six link replays remain indeterminate because schema-v1 fixtures did not save
+  original provider titles/candidate identities. They are not counted as new
+  defects or as proof of provider absence.
+
+**Verification:** 1326/1326 tests pass across 191 suites. Typecheck and build
+pass. Lint has zero errors and the same three pre-existing warnings. RR-093
+through RR-096 are Fixed; the register is 96 total, 89 Fixed, 6 Needs
+Investigation, and 1 Won't Fix.
+
+**Next boundary:** independent adversarial review should precede any new spend.
+If the diff is accepted, one separately approved four-case instrumented live
+validation can test the new trace and safety boundary. This entry authorizes no
+live request, flag promotion, deployment, push, or production change.

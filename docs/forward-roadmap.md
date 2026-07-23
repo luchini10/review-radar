@@ -3128,6 +3128,30 @@ links.
 identity and separating provider absence from verifier rejection crosses the
 accuracy and safety boundaries.
 
+**Zero-live corrective result (completed 2026-07-23, commits `5b3b3cc`,
+`192c276`, `71fab76`, and `0ccac73`):** First-loss schema v2 now retains
+bounded normalized provider-candidate identity evidence and recognizes products
+Terra explicitly named but did not rank. The historical evaluator remains
+frozen; a prospective `07d` matcher/scorer corrects punctuation-equivalent
+identity and secondary/bundle type context. Asset resolution restores the
+shopper's requested category from the encrypted server token and rejects a
+candidate link/image when its product URL path positively proves a conflicting
+product type.
+
+The eight-run replay accounts for all 31 ranked products. Historical versus
+prospective results are 18 versus 19 leader hits and 2 versus 0 wrong-type
+hits. Gas-grill run 2 changes from 2/4 to 3/4 because `Charbroil` correctly
+covers `char-broil`; seven leaders were explicitly named by Terra but not
+ranked. All 24 retained links were revalidated, and the captured standard
+Embody-to-Embody-Gaming wrong-variant destination is now blocked.
+
+The replay cannot retroactively reconstruct the provider candidate identities
+that schema v1 never saved. Its six indeterminate link warnings therefore do
+not prove either provider absence or a verifier defect. A future instrumented
+run can make that attribution; no further live work is authorized by this
+record. Final verification is 1326/1326 tests across 191 suites, typecheck and
+build pass, and lint has zero errors with three pre-existing warnings.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen

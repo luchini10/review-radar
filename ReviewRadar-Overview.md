@@ -75,6 +75,13 @@ cache, no fallback, bounded response sizes, and no client-visible provider
 details. Their independent lanes run concurrently, but each lane remains
 sequential and fail-closed.
 
+The completed-job token carries the shopper's requested product category only
+inside its authenticated encrypted server payload. The polling route restores
+that category before asset verification so type checks use the actual request,
+not a ranked product name substituted as the category. A product URL path that
+positively identifies a conflicting product type is rejected together with its
+image; exact manufacturer and recognized-retailer product pages still pass.
+
 The Direct-Terra resolver also supports an optional server-only first-loss
 trace. It accounts for every ranked product and records whether loss first
 occurred at target extraction, provider response/normalization, identity
@@ -82,10 +89,13 @@ verification, preferred-host selection, or page-image resolution. Recommendation
 diagnostics separately distinguish leaders present in inspected source evidence
 but omitted from ranking from leaders absent from that evidence. Only bounded
 sanitized search actions, counts, normalized identities, source hosts, and
-reason codes may be retained. Search actions keep bounded query text and
-opened-page hosts, not full opened URLs. Raw provider rows, source titles, IDs,
-headers, and secrets never enter the trace or the client response. Diagnostic
-sink failures are ignored so observability cannot change product cards.
+reason codes may be retained. Schema v2 keeps at most 20 normalized provider
+candidate identity samples per lane and recognizes explicitly named
+not-ranked/Close Match products in Terra's report. Search actions keep bounded
+query text and opened-page hosts, not full opened URLs. Raw provider rows, raw
+titles, source titles, IDs, headers, and secrets never enter the trace or the
+client response. Diagnostic sink failures are ignored so observability cannot
+change product cards.
 
 ## 2. Full user flow
 

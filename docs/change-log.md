@@ -9,6 +9,38 @@ Update this file after:
 - important bug fixes
 - live QA fixes worth remembering
 
+## 2026-07-23
+
+### Codex - Make the T8D root-cause evidence honest and block wrong-variant links
+
+#### Changed
+
+- First-loss diagnostics now retain a small, normalized, server-only sample of
+  provider identity evidence and recognize products Terra explicitly named but
+  chose not to rank. Provider IDs, full URLs, raw titles, secrets, and the
+  diagnostics themselves remain outside client responses.
+- The original frozen evaluator remains reproducible. A separately versioned
+  prospective evaluator now recognizes punctuation-equivalent identities such
+  as `Charbroil` / `char-broil` and does not call a valid primary product the
+  wrong type merely because its name mentions a secondary mode or bundled
+  tool.
+- Direct-Terra asset verification now receives the shopper's true requested
+  category from the encrypted job token and rejects a product URL whose path
+  positively identifies a conflicting product type. The captured standard
+  Herman Miller Embody card can therefore no longer receive the Embody Gaming
+  product page.
+
+#### Verified
+
+- The corrective replay accounted for all 31 products in the eight saved T8D
+  runs. Historical versus prospective results were 18 versus 19 leader hits
+  and 2 versus 0 wrong-type hits; seven missed leaders were explicitly named
+  by Terra but not ranked. Twenty-four retained links were revalidated, and the
+  captured wrong-variant Embody Gaming link was blocked.
+- Full suite: 1326/1326 across 191 suites; typecheck and build pass; lint has
+  zero errors and the same three pre-existing warnings. Zero live calls,
+  deployments, flag changes, or `.env.local` changes.
+
 ## 2026-07-22
 
 ### Claude - Fix the root causes of undecorated Direct-Terra cards and obscure links (T8C)
