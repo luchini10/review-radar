@@ -23,7 +23,10 @@ describe("direct Terra V2 display boundary", () => {
     assert.match(source, /Estimated market prices/);
     assert.match(source, /result\.priceEstimates\.map/);
     assert.match(source, /result\.productAssets\.map/);
-    assert.match(source, /Product website/);
+    // T8B: the buy button names the store or brand host so shoppers see where
+    // the link goes before clicking; unknown hosts fall back to a generic label.
+    assert.match(source, /View at \$\{directTerraRetailerDisplayLabel\(asset\.productUrl\)/);
+    assert.match(source, /\?\? "product website"/);
     assert.match(source, /Product image unavailable/);
     assert.match(source, /exact product-identity[^]*check/i);
     assert.match(source, /confirm the product, seller, stock, and price/i);

@@ -12,6 +12,17 @@ import {
   resolveDirectTerraWebsitesWithSerperOrganic,
   type DirectTerraSerperOrganicTransport,
 } from "./directTerraSerperOrganicAdapter.ts";
+import {
+  cleanDirectTerraDisplayUrl,
+  DIRECT_TERRA_ORGANIC_SKIP_SCORE,
+  scoreDirectTerraProductLink,
+} from "./directTerraLinkPreference.ts";
+import {
+  extractDirectTerraPageAssets,
+  MAX_DIRECT_TERRA_PAGE_FETCHES,
+  verifyDirectTerraPageAssets,
+  type DirectTerraProductPageTransport,
+} from "./directTerraProductPageFetcher.ts";
 
 type ResolveDirectTerraProductAssetsInput = {
   targets: DirectTerraAssetTarget[];
@@ -20,6 +31,7 @@ type ResolveDirectTerraProductAssetsInput = {
   responseSources: DirectTerraSource[];
   serperTransport?: DirectTerraSerperShoppingTransport;
   serperOrganicTransport?: DirectTerraSerperOrganicTransport;
+  productPageTransport?: DirectTerraProductPageTransport;
 };
 
 export async function resolveDirectTerraProductAssets({
@@ -29,6 +41,7 @@ export async function resolveDirectTerraProductAssets({
   responseSources,
   serperTransport,
   serperOrganicTransport,
+  productPageTransport,
 }: ResolveDirectTerraProductAssetsInput): Promise<DirectTerraProductAsset[]> {
   if (targets.length === 0) return [];
 
@@ -42,16 +55,24 @@ export async function resolveDirectTerraProductAssets({
     citationWebsites.items.map((item) => [item.targetKey, item]),
   );
 
-  const missingWebsiteTargets = targets.filter(
-    (target) => !citationByKey.get(target.key)?.productUrl,
-  );
+  // T8B: the organic lane no longer serves only citation-missing targets. A
+  // citation link that is not yet a manufacturer/popular-retailer page with
+  // the model in its path can still be beaten by a better organic page, so
+  // those targets get an organic lookup too (same <=5 request ceiling).
+  const organicCandidateTargets = targets.filter((target) => {
+    const citationUrl = citationByKey.get(target.key)?.productUrl ?? null;
+    return (
+      scoreDirectTerraProductLink(citationUrl, target) <
+      DIRECT_TERRA_ORGANIC_SKIP_SCORE
+    );
+  });
   const organicPromise = (async () => {
-    if (!serperOrganicTransport || missingWebsiteTargets.length === 0) {
+    if (!serperOrganicTransport || organicCandidateTargets.length === 0) {
       return null;
     }
     try {
       return await resolveDirectTerraWebsitesWithSerperOrganic({
-        targets: missingWebsiteTargets,
+        targets: organicCandidateTargets,
         transport: serperOrganicTransport,
       });
     } catch {
@@ -89,17 +110,69 @@ export async function resolveDirectTerraProductAssets({
     (shoppingBatch?.items ?? []).map((item) => [item.targetKey, item]),
   );
 
-  return [...targets]
-    .sort((left, right) => left.rank - right.rank)
-    .map((target): DirectTerraProductAsset => {
-      const citation = citationByKey.get(target.key);
-      const shopping = shoppingByKey.get(target.key)?.verification;
-      return {
-        rank: target.rank,
-        productName: target.productName,
-        productUrl:
-          citation?.productUrl ?? organicByKey.get(target.key)?.productUrl ?? null,
-        imageUrl: shopping?.imageUrl ?? null,
-      };
-    });
+  const orderedTargets = [...targets].sort((left, right) => left.rank - right.rank);
+
+  // Choose each product's website by host preference. Both candidates already
+  // passed the full identity gate; on a tie the same-response citation wins.
+  const chosenWebsiteByKey = new Map<string, string | null>();
+  for (const target of orderedTargets) {
+    const citationUrl = citationByKey.get(target.key)?.productUrl ?? null;
+    const organicUrl = organicByKey.get(target.key)?.productUrl ?? null;
+    const citationScore = scoreDirectTerraProductLink(citationUrl, target);
+    const organicScore = scoreDirectTerraProductLink(organicUrl, target);
+    chosenWebsiteByKey.set(
+      target.key,
+      organicScore > citationScore ? organicUrl : citationUrl,
+    );
+  }
+
+  // T8B page stage: one bounded fetch of the already-verified page per
+  // product, harvesting the retailer's/manufacturer's own product photo and
+  // rel=canonical clean URL. Every failure keeps the existing assets.
+  const pageImageByKey = new Map<string, string>();
+  if (productPageTransport) {
+    let fetches = 0;
+    for (const target of orderedTargets) {
+      if (fetches >= MAX_DIRECT_TERRA_PAGE_FETCHES) break;
+      const websiteUrl = chosenWebsiteByKey.get(target.key);
+      if (!websiteUrl) continue;
+      fetches += 1;
+      try {
+        const fetched = await productPageTransport(websiteUrl);
+        if (!fetched) continue;
+        const extracted = extractDirectTerraPageAssets(
+          fetched.html,
+          fetched.finalUrl,
+        );
+        const verified = verifyDirectTerraPageAssets({
+          target,
+          pageUrl: fetched.finalUrl,
+          page: extracted,
+        });
+        if (verified.imageUrl) {
+          pageImageByKey.set(target.key, verified.imageUrl);
+        }
+        if (verified.canonicalUrl) {
+          chosenWebsiteByKey.set(target.key, verified.canonicalUrl);
+        }
+      } catch {
+        // Page decoration is optional; the verified link stands on its own.
+      }
+    }
+  }
+
+  return orderedTargets.map((target): DirectTerraProductAsset => {
+    const website = chosenWebsiteByKey.get(target.key) ?? null;
+    const shopping = shoppingByKey.get(target.key)?.verification;
+    return {
+      rank: target.rank,
+      productName: target.productName,
+      productUrl: website
+        ? cleanDirectTerraDisplayUrl(website, target.brand)
+        : null,
+      // Image ladder: the product page's own photo (same verified identity as
+      // the link) beats the opaque Shopping thumbnail; both beat nothing.
+      imageUrl: pageImageByKey.get(target.key) ?? shopping?.imageUrl ?? null,
+    };
+  });
 }

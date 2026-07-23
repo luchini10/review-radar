@@ -4,6 +4,7 @@ import {
   type DirectTerraAssetCandidate,
   type DirectTerraAssetTarget,
 } from "./directTerraAssetVerifier.ts";
+import { scoreDirectTerraProductLink } from "./directTerraLinkPreference.ts";
 import { buildDirectTerraAssetQuery } from "./directTerraSerperAssetAdapter.ts";
 
 export const DIRECT_TERRA_SERPER_ORGANIC_ADAPTER_VERSION =
@@ -207,6 +208,21 @@ export async function resolveDirectTerraWebsitesWithSerperOrganic(
     }
 
     const verification = verifyDirectTerraAssetCandidates({ target, candidates });
+    // T8B host preference: among ALL identity-accepted pages in this response,
+    // prefer the manufacturer's own site or a popular retailer (and a URL
+    // whose path carries the model) over whichever page merely appeared first.
+    // Preference only reorders already-verified links; it admits nothing new.
+    const acceptedUrls = verification.decisions
+      .filter((decision) => decision.productUrlAccepted && decision.productUrl)
+      .map((decision) => decision.productUrl as string);
+    const preferredProductUrl = acceptedUrls.reduce<string | null>(
+      (best, candidateUrl) =>
+        scoreDirectTerraProductLink(candidateUrl, target) >
+        scoreDirectTerraProductLink(best, target)
+          ? candidateUrl
+          : best,
+      null,
+    );
     input.recordDiagnostic?.({
       targetKey: target.key,
       rank: target.rank,
@@ -216,7 +232,7 @@ export async function resolveDirectTerraWebsitesWithSerperOrganic(
       rawOrganicResultCount,
       consideredOrganicResultCount,
       mappedCandidateCount: candidates.length,
-      acceptedWebsiteCount: verification.productUrl ? 1 : 0,
+      acceptedWebsiteCount: acceptedUrls.length,
     });
     items.push({
       targetKey: target.key,
@@ -225,7 +241,7 @@ export async function resolveDirectTerraWebsitesWithSerperOrganic(
       status,
       rawOrganicResultCount,
       mappedCandidateCount: candidates.length,
-      productUrl: verification.productUrl,
+      productUrl: preferredProductUrl ?? verification.productUrl,
     });
   }
 

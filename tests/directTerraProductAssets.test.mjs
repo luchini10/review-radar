@@ -167,4 +167,130 @@ describe("Direct-Terra product asset orchestration", () => {
     await resultPromise;
     assert.equal(shoppingStarted, true);
   });
+
+  it("upgrades a weak-host citation to a popular-retailer organic page and cleans the query (T8B)", async () => {
+    const weakCitation = "https://portal.randomshop.example/item/hd1200";
+    const upgradeReport = [
+      "# Shop vacuum report",
+      "## #1 Best Match - RIDGID HD1200 Wet/Dry Shop Vacuum",
+      `Research [product page](${weakCitation}).`,
+    ].join("\n\n");
+    const organicRequests = [];
+    const result = await resolveDirectTerraProductAssets({
+      targets: [targets[0]],
+      reportMarkdown: upgradeReport,
+      activeCitationUrls: [weakCitation],
+      responseSources: [
+        { url: weakCitation, title: "RIDGID HD1200 12 Gallon Wet/Dry Shop Vacuum" },
+      ],
+      serperOrganicTransport: async (request) => {
+        organicRequests.push(request);
+        return {
+          organic: [
+            {
+              title: "RIDGID HD1200 12 Gallon Wet/Dry Shop Vacuum - The Home Depot",
+              link: "https://www.homedepot.com/p/RIDGID-HD1200-Wet-Dry-Vac/304123456?MERCH=REC-_-pip_alternatives-_-x",
+            },
+          ],
+        };
+      },
+    });
+
+    assert.equal(
+      organicRequests.length,
+      1,
+      "a weak-host citation still gets an organic upgrade attempt",
+    );
+    assert.equal(
+      result[0].productUrl,
+      "https://www.homedepot.com/p/RIDGID-HD1200-Wet-Dry-Vac/304123456",
+      "popular-retailer model-slug page outranks the weak citation, with the query stripped",
+    );
+  });
+
+  it("prefers the verified page's own photo and canonical URL over the Shopping thumbnail (T8B)", async () => {
+    const organicUrl =
+      "https://www.homedepot.com/p/RIDGID-HD1200-Wet-Dry-Vac/304123456";
+    const canonicalUrl =
+      "https://www.homedepot.com/p/RIDGID-HD1200-Wet-Dry-Shop-Vacuum/304123456";
+    const fetchedPages = [];
+    const result = await resolveDirectTerraProductAssets({
+      targets: [targets[0]],
+      reportMarkdown: "# Report\n\n## #1 Best Match - RIDGID HD1200 Wet/Dry Shop Vacuum\n\nNo citation.",
+      activeCitationUrls: [],
+      responseSources: [],
+      serperTransport: async () => ({
+        shopping: [
+          {
+            title: "RIDGID HD1200 12 Gallon Wet/Dry Shop Vacuum",
+            imageUrl: "https://images.example/ridgid-hd1200-thumb.jpg",
+          },
+        ],
+      }),
+      serperOrganicTransport: async () => ({
+        organic: [
+          {
+            title: "RIDGID HD1200 12 Gallon Wet/Dry Shop Vacuum - The Home Depot",
+            link: organicUrl,
+          },
+        ],
+      }),
+      productPageTransport: async (url) => {
+        fetchedPages.push(url);
+        return {
+          finalUrl: organicUrl,
+          html: [
+            "<html><head>",
+            "<title>RIDGID HD1200 12 Gallon Wet/Dry Shop Vacuum - The Home Depot</title>",
+            `<link rel="canonical" href="${canonicalUrl}">`,
+            '<meta property="og:image" content="https://images.thdstatic.com/productImages/ridgid-hd1200-main.jpg">',
+            "</head><body></body></html>",
+          ].join(""),
+        };
+      },
+    });
+
+    assert.deepEqual(fetchedPages, [organicUrl], "exactly one bounded fetch of the verified page");
+    assert.equal(
+      result[0].imageUrl,
+      "https://images.thdstatic.com/productImages/ridgid-hd1200-main.jpg",
+      "the retailer page's own photo outranks the Shopping thumbnail",
+    );
+    assert.equal(
+      result[0].productUrl,
+      canonicalUrl,
+      "the page's identity-proven canonical becomes the displayed link",
+    );
+  });
+
+  it("keeps the verified link and thumbnail when the page fetch fails (T8B)", async () => {
+    const organicUrl =
+      "https://www.homedepot.com/p/RIDGID-HD1200-Wet-Dry-Vac/304123456";
+    const result = await resolveDirectTerraProductAssets({
+      targets: [targets[0]],
+      reportMarkdown: "# Report\n\n## #1 Best Match - RIDGID HD1200 Wet/Dry Shop Vacuum\n\nNo citation.",
+      activeCitationUrls: [],
+      responseSources: [],
+      serperTransport: async () => ({
+        shopping: [
+          {
+            title: "RIDGID HD1200 12 Gallon Wet/Dry Shop Vacuum",
+            imageUrl: "https://images.example/ridgid-hd1200-thumb.jpg",
+          },
+        ],
+      }),
+      serperOrganicTransport: async () => ({
+        organic: [
+          {
+            title: "RIDGID HD1200 12 Gallon Wet/Dry Shop Vacuum - The Home Depot",
+            link: organicUrl,
+          },
+        ],
+      }),
+      productPageTransport: async () => null,
+    });
+
+    assert.equal(result[0].productUrl, organicUrl);
+    assert.equal(result[0].imageUrl, "https://images.example/ridgid-hd1200-thumb.jpg");
+  });
 });

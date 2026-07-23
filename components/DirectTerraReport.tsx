@@ -17,6 +17,7 @@ import {
   isDirectTerraCitationAllowed,
   type DirectTerraCompletedResponse,
 } from "@/lib/directTerraApiContract";
+import { directTerraRetailerDisplayLabel } from "@/lib/directTerraLinkPreference";
 import {
   extractDirectTerraPicks,
   headingSlug,
@@ -213,7 +214,7 @@ export function DirectTerraReport({
                           rel="noreferrer noopener"
                           target="_blank"
                         >
-                          Product website
+                          {`View at ${directTerraRetailerDisplayLabel(asset.productUrl) ?? "product website"}`}
                           <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
                         </a>
                       ) : null}

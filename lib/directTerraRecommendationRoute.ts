@@ -26,6 +26,7 @@ import {
   createDirectTerraSerperShoppingTransport as createDefaultSerperTransport,
   directTerraSerperApiKeyIsValid,
 } from "./directTerraSerperTransport.ts";
+import { createDirectTerraProductPageTransport as createDefaultProductPageTransport } from "./directTerraProductPageFetcher.ts";
 import {
   beginSearchProgress,
   completeSearchProgress,
@@ -65,6 +66,7 @@ type HandlerOptions = {
   cancelResearch?: typeof cancelDirectTerraResearch;
   createSerperTransport?: typeof createDefaultSerperTransport;
   createSerperOrganicTransport?: typeof createDefaultSerperOrganicTransport;
+  createProductPageTransport?: typeof createDefaultProductPageTransport;
   resolveProductAssets?: typeof resolveDefaultProductAssets;
 };
 
@@ -301,6 +303,7 @@ export function createDirectTerraRecommendationHandlers({
   cancelResearch = cancelDirectTerraResearch,
   createSerperTransport = createDefaultSerperTransport,
   createSerperOrganicTransport = createDefaultSerperOrganicTransport,
+  createProductPageTransport = createDefaultProductPageTransport,
   resolveProductAssets = resolveDefaultProductAssets,
 }: HandlerOptions = {}): DirectTerraRecommendationHandlers {
   const assetResolutions = new Map<
@@ -495,6 +498,10 @@ export function createDirectTerraRecommendationHandlers({
           directTerraSerperApiKeyIsValid(environment.serperApiKey)
             ? createSerperOrganicTransport({ apiKey: environment.serperApiKey })
             : undefined;
+        // T8B: one bounded fetch per verified product page so the photo and
+        // canonical clean URL come from the manufacturer's or retailer's own
+        // page. Needs no provider key; it only touches already-verified URLs.
+        const productPageTransport = createProductPageTransport({});
         const resolved = await resolveProductAssetsOnce({
           responseId: verified.payload.responseId,
           expiresAtMs: verified.payload.expiresAtMs,
@@ -506,6 +513,7 @@ export function createDirectTerraRecommendationHandlers({
               responseSources: result.responseSources,
               serperTransport,
               serperOrganicTransport,
+              productPageTransport,
             }),
         });
         productAssets = safeAssetsForTargets(result.assetTargets, resolved);

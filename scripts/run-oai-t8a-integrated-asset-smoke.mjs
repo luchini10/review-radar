@@ -28,6 +28,15 @@ import {
   createDirectTerraSerperShoppingTransport,
   directTerraSerperApiKeyIsValid,
 } from "../lib/directTerraSerperTransport.ts";
+import {
+  createDirectTerraProductPageTransport,
+  MAX_DIRECT_TERRA_PAGE_FETCHES,
+} from "../lib/directTerraProductPageFetcher.ts";
+import {
+  classifyDirectTerraLinkHost,
+  registrableDomain,
+} from "../lib/directTerraLinkPreference.ts";
+import { extractDirectTerraHeadingIdentity } from "../lib/directTerraAssetVerifier.ts";
 
 const EXECUTE = process.argv.includes("--execute");
 const FROZEN_REQUEST = Object.freeze({ query: "shop vac" });
@@ -38,6 +47,7 @@ const EXPECTED = Object.freeze({
   safetyCancels: 1,
   serperShoppingSearches: 5,
   serperOrganicSearches: 5,
+  productPageFetches: MAX_DIRECT_TERRA_PAGE_FETCHES,
   costUsd: 7,
 });
 const POLL_INTERVAL_MS = 5_000;
@@ -104,7 +114,7 @@ async function directoryHasEvidence(directory) {
 
 function plan(commit) {
   return {
-    schemaVersion: "oai-t8a-integrated-asset-smoke-plan-v2",
+    schemaVersion: "oai-t8a-integrated-asset-smoke-plan-v3",
     mode: EXECUTE ? "execute" : "dry-run",
     commit,
     promptVersion: DIRECT_TERRA_PROMPT_VERSION,
@@ -121,7 +131,9 @@ function plan(commit) {
       retries: false,
       replacements: false,
       fallbacks: false,
-      directPageRequests: false,
+      // T8B: bounded GETs of already identity-verified product pages only,
+      // for same-identity photos and rel=canonical clean URLs.
+      verifiedProductPageFetches: true,
       additionalCases: false,
     },
     outputDirectory: evidenceDirectory(commit),
@@ -184,6 +196,7 @@ async function main() {
     safetyCancels: 0,
     serperShoppingAttempts: 0,
     serperOrganicAttempts: 0,
+    productPageFetchAttempts: 0,
     retries: 0,
     replacements: 0,
     fallbacks: 0,
@@ -191,7 +204,7 @@ async function main() {
   };
   const startedAtMs = Date.now();
   const evidence = {
-    schemaVersion: "oai-t8a-integrated-asset-smoke-v2",
+    schemaVersion: "oai-t8a-integrated-asset-smoke-v3",
     commit,
     capturedAt: new Date().toISOString(),
     request: FROZEN_REQUEST,
@@ -312,6 +325,15 @@ async function main() {
       await persistAttempt();
       return baseOrganicTransport(request);
     };
+    const basePageTransport = createDirectTerraProductPageTransport({});
+    const productPageTransport = async (url) => {
+      if (counters.productPageFetchAttempts >= EXPECTED.productPageFetches) {
+        throw new Error("Product-page fetch ceiling exceeded.");
+      }
+      counters.productPageFetchAttempts += 1;
+      await persistAttempt();
+      return basePageTransport(url);
+    };
     const productAssets = await resolveDirectTerraProductAssets({
       targets: research.assetTargets,
       reportMarkdown: research.reportMarkdown,
@@ -319,6 +341,7 @@ async function main() {
       responseSources: research.responseSources,
       serperTransport,
       serperOrganicTransport,
+      productPageTransport,
     });
     const completedResponse = {
       pipeline: "direct_terra",
@@ -338,6 +361,40 @@ async function main() {
     }
 
     evidence.usage = { ...usage, estimatedCostUsd };
+    // T8B goal metrics: every displayed link should sit on a manufacturer or
+    // popular-retailer host with a clean query, and images should come from
+    // those same pages rather than Google thumbnail CDNs.
+    const targetByRank = new Map(
+      research.assetTargets.map((target) => [target.rank, target]),
+    );
+    const assetAudit = productAssets.map((asset) => {
+      const target = targetByRank.get(asset.rank);
+      const heading = target
+        ? { brand: target.brand, model: target.model }
+        : extractDirectTerraHeadingIdentity(asset.productName) || {
+            brand: "",
+            model: "",
+          };
+      const linkHostClass = asset.productUrl
+        ? classifyDirectTerraLinkHost(asset.productUrl, heading.brand)
+        : null;
+      const imageRegistrable = asset.imageUrl
+        ? registrableDomain(new URL(asset.imageUrl).hostname)
+        : null;
+      return {
+        rank: asset.rank,
+        linkHostClass,
+        linkHasQuery: asset.productUrl
+          ? new URL(asset.productUrl).search.length > 0
+          : null,
+        imageSource: !asset.imageUrl
+          ? null
+          : imageRegistrable === "gstatic.com"
+            ? "shopping_thumbnail"
+            : "retailer_or_manufacturer_page",
+        imageRegistrable,
+      };
+    });
     evidence.coverage = {
       rankedTargetCount: research.assetTargets.length,
       productWebsiteCount: productAssets.filter((asset) => asset.productUrl).length,
@@ -345,6 +402,20 @@ async function main() {
       fullyDecoratedCount: productAssets.filter(
         (asset) => asset.productUrl && asset.imageUrl,
       ).length,
+      preferredHostLinkCount: assetAudit.filter(
+        (audit) =>
+          audit.linkHostClass === "manufacturer" ||
+          audit.linkHostClass === "popular_retailer",
+      ).length,
+      cleanLinkCount: assetAudit.filter((audit) => audit.linkHasQuery === false)
+        .length,
+      pageImageCount: assetAudit.filter(
+        (audit) => audit.imageSource === "retailer_or_manufacturer_page",
+      ).length,
+      thumbnailImageCount: assetAudit.filter(
+        (audit) => audit.imageSource === "shopping_thumbnail",
+      ).length,
+      assetAudit,
     };
     evidence.completedResponse = completedResponse;
     evidence.outcome = {
