@@ -57,7 +57,7 @@ import { createOpenAIClient } from "../lib/openaiClient.ts";
 
 const EXECUTE = process.argv.includes("--execute");
 const FIRST_LOSS_DIAGNOSTIC = process.argv.includes("--first-loss-diagnostic");
-const RUNS_PER_CASE = FIRST_LOSS_DIAGNOSTIC ? 1 : 3;
+const RUNS_PER_CASE = FIRST_LOSS_DIAGNOSTIC ? 2 : 3;
 const CEILINGS = Object.freeze({
   hostedSearchesPerRun: DIRECT_TERRA_RESEARCH_CONFIG.maxToolCalls,
   retrievesPerRun: 60,
@@ -65,7 +65,7 @@ const CEILINGS = Object.freeze({
   serperShoppingPerRun: 5,
   serperOrganicPerRun: 8,
   pageFetchesPerRun: MAX_DIRECT_TERRA_PAGE_FETCHES,
-  hardCeilingUsd: FIRST_LOSS_DIAGNOSTIC ? 5 : 15,
+  hardCeilingUsd: FIRST_LOSS_DIAGNOSTIC ? 10 : 15,
 });
 const POLL_INTERVAL_MS = 5_000;
 
@@ -80,7 +80,7 @@ function resolveCommit() {
 const COMMIT = resolveCommit();
 const APPROVAL = {
   id: FIRST_LOSS_DIAGNOSTIC
-    ? "oai-t8d-root-cause-diagnostic-v1"
+    ? "oai-t8d-root-cause-diagnostic-v2"
     : "oai-t8c-multi-category-validation-v1",
   commit: COMMIT,
   evalVersion: DIRECT_TERRA_EVAL_VERSION,
