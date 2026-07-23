@@ -124,8 +124,15 @@ function wrongTypeAppearsInSecondaryClause(
   const index = hay.indexOf(needle);
   if (index <= 0) return false;
   const prefix = hay.slice(0, index);
-  return /\b(?:and|bundle|combo|includes?|including|plus|with)\b[^|]{0,100}$/.test(
-    prefix,
+  const rawIndex = productName
+    .toLowerCase()
+    .indexOf(wrongTypeTerm.toLowerCase());
+  const rawPrefix = rawIndex > 0 ? productName.slice(0, rawIndex) : "";
+  return (
+    /\b(?:and|bundle|combo|includes?|including|plus|with)\b[^|]{0,100}$/.test(
+      prefix,
+    ) ||
+    /(?:&|\+)\s*[^&+|]{0,100}$/.test(rawPrefix)
   );
 }
 

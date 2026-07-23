@@ -16,6 +16,7 @@
     "qa:plan": "node scripts/qualityScorecard.mjs --dry-run",
     "qa:replay": "node scripts/replay-quality-fixtures.mjs",
     "qa:direct-terra-first-loss": "node --no-warnings scripts/analyze-direct-terra-first-loss.mjs",
+    "qa:direct-terra-t8d-replay": "node --no-warnings scripts/replay-oai-t8d-corrective.mjs",
     "qa:ledger-benchmark": "node scripts/benchmark-search-ledger.mjs",
     "qa:save-fixture": "node scripts/save-debug-fixture.mjs",
     "test:e2e": "playwright test",

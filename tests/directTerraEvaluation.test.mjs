@@ -191,7 +191,7 @@ describe("prospective contextual wrong-type scoring", () => {
     });
     const drillScore = scoreDirectTerraRunProspective({
       reportMarkdown:
-        "## #1 Best Match — Acme Brushless Drill/Driver and Impact Driver Combo Kit\n",
+        "## #1 Best Match — Acme Brushless Drill/Driver & Impact Driver Combo Kit\n",
       priceEstimates: [],
       goldEntry: goldById("con-cordless-drill-150-brushless"),
       coversLeader: coversLeaderProspective07d,
