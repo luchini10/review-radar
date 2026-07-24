@@ -1,97 +1,108 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-23 by Codex after the adversarial review of OAI-T8D commits
-`5b3b3cc`, `192c276`, `71fab76`, and `0ccac73`. Use `git log -1` for the
-current documentation commit.
+Updated: 2026-07-23 by Codex after the zero-live RR-093 descriptive identity
+closure at `ae5c904`. Use `git log -1` for the current documentation commit.
 
 ## Current state
 
-The Direct-Terra one-main-call architecture remains default-off. The
-diagnostic and versioned-evaluator corrections passed adversarial review. The
-wrong-variant safety correction did not, so RR-093 is reopened and the
-condition for four live category tests was not met.
+The Direct-Terra one-main-call architecture remains default-off. First-loss
+schema v2, the prospective `07d` evaluator, authenticated request-category
+restoration, and Direct-Terra asset verifier v4 have passed the current
+zero-live review. RR-093 is Fixed again.
 
 No OpenAI, Serper, SearchAPI, direct-page, deployment, flag, `.env.local`, or
-production action occurred during the review.
+production action occurred in this phase.
 
-## Review outcome
+## What changed
 
-### Accepted seams
+Commit `ae5c904` replaces RR-093's incomplete type-only closure with one
+descriptive title/URL coherence veto:
 
-- First-loss schema v2 retains bounded normalized provider candidate identity,
-  named non-ranked products, host class, and reason codes without exposing
-  provider IDs, full URLs, raw titles, headers, secrets, or diagnostics to the
-  client.
-- Prospective `07d` matching recognizes harmless punctuation/spacing while
-  preserving meaningful word and numeric boundaries such as `AI/Airtok` and
-  `Q7/Q70`.
-- Contextual wrong-type scoring corrects the captured secondary-mode and bundle
-  false positives while preserving genuine wrong-primary-product controls.
-- The encrypted v2 job token authenticates the shopper's requested category,
-  binds it to the provider response capability, rejects tampering and expiry,
-  and restores it server-side on completed polling.
+- after a candidate title proves the locked brand/model/type, product and image
+  URL paths may repeat title, brand, requested-category, ordinary commerce,
+  color/configuration, and opaque numeric/hash vocabulary;
+- any other path word is unexplained sibling/edition evidence, so that asset
+  fails closed;
+- the rule only vetoes; it never admits a candidate or changes Terra's product
+  set, names, order, explanations, citations, or ranking; and
+- numeric/alphanumeric models retain their existing exact boundary contract.
 
-### Failed seam — RR-093
+There is no product, brand, category, `gaming`, or `XL` production exception.
 
-The captured `/products/embody-gaming-chair` path is blocked. However, with the
-same locked standard `Herman Miller Embody Chair` target and an exact standard
-candidate title, the verifier still accepts these paths and their images:
+## Adversarial result
 
-- `/products/embody-gaming-office-chair`;
-- `/products/embody-chair-gaming-edition`; and
-- `/products/embody-chair-xl`.
+Fail-first coverage now includes:
 
-Root cause: the new predicate asks whether the path positively conflicts with
-the requested product type. It does not prove that a descriptive URL identity
-is coherent with the candidate title. Reordering the requested-type words or
-adding a candidate-only descriptive variant therefore bypasses the veto.
+- `/embody-gaming-office-chair`;
+- `/embody-chair-gaming-edition`;
+- `/embody-chair-xl`;
+- a safe standard product page with `/embody-chair-xl.png`; and
+- an unrelated `/horizon-refrigerator-outdoor-edition` product.
 
-This is the same generalized wrong-variant trust-boundary class, not a new
-chair-specific defect. Do not fix it with a `gaming`, `XL`, brand, or category
-denylist.
+All are rejected. A brand/category/color/opaque-ID retailer path remains
+accepted, and the image-only sibling case preserves its safe buy link while
+omitting only the bad image.
+
+Known scope boundary: candidate-title-visible descriptive variants are still
+governed by existing title/type identity checks. Dialogue entry `[107]` asks
+Claude to challenge whether that needs a separately evidenced target/title
+contract; do not expand this phase without a reproduced cross-category defect.
 
 ## Verification
 
-- Adversarial zero-network verifier probe: reproduced the three bypasses above.
-- Focused changed-contract suites: 84/84 passed.
-- Complete unit wall: 1326/1326 across 191 suites.
-- Live calls: zero.
+- Fail-first: 40/42 focused before implementation; the two new contract tests
+  failed for the expected accepted-unsafe behavior.
+- Image-only adversarial fail-first: 0/1 before the image-path correction.
+- Final focused verifier: 43/43.
+- Complete unit wall: 1330/1330 across 191 suites.
+- Typecheck: pass.
+- Lint: zero errors; three pre-existing warnings.
+- Production build: pass.
+- Eight-fixture T8D replay: pass; 31/31 ranked products accounted, with the
+  historical schema-v1 evidence limits retained honestly.
+- Live/external calls: zero.
 
-The passing suite proves that the adversarial title/path cases are missing; it
-does not close RR-093.
-
-The register is 96 total: 14 Critical, 44 High, 33 Medium, 5 Low; 88 Fixed,
-7 Needs Investigation, 1 Won't Fix, and 0 Open.
+The register is 96 total: 14 Critical, 44 High, 33 Medium, 5 Low; 89 Fixed,
+6 Needs Investigation, 1 Won't Fix, and 0 Open.
 
 ## Next approval-gated step
 
-Run one zero-live RR-093 corrective phase:
+Run one diagnostic validation request in each frozen T8D category: broad office
+chairs, constrained gas grills, constrained cordless drills, and constrained
+robot vacuums. Use first-loss schema v2 and verifier v4.
 
-1. Add fail-first cases for reordered and suffixed candidate-only descriptive
-   variants, plus an unrelated product category.
-2. Define one conservative descriptive title/path coherence contract. It must
-   reject unexplained identity-changing path evidence absent from the candidate
-   title while preserving harmless retailer slug words, color/configuration
-   language, exact base products, and all coded-model behavior.
-3. Apply the rule at the shared verifier boundary to both links and images.
-4. Re-run the focused and complete walls, adversarially inspect the diff, update
-   the phase records, and commit automatically.
-5. Stop. A new live window requires a fresh exact approval after this repair
-   passes review.
+Exact proposed ceilings for the four-request window:
 
-**Recommended reasoning level:** High. The difficult part is distinguishing
-identity-changing descriptive variants from harmless commerce wording without
-weakening existing exact-model protections. Maximum reasoning is unnecessary
-for this bounded seam.
+- 4 Terra/high OpenAI Responses creates;
+- at most 80 hosted web-search actions;
+- at most 240 retrieves;
+- at most 4 safety cancels;
+- at most 20 Serper Shopping requests/physical attempts;
+- at most 32 Serper organic requests/physical attempts;
+- at most 20 bounded direct-page fetches; and
+- a $5 OpenAI hard ceiling.
 
-## Prior four-test approval
+No retries, replacements, additional cases, SearchAPI, fallback architecture,
+flag promotion, `.env.local` change, deployment, or production change. Retain
+only sanitized evidence and stop/report after four outcomes. The sample is
+diagnostic validation, not promotion evidence. If it contradicts the offline
+diagnosis or exposes a wrong asset, stop the window and report.
 
-Taylor approved an adversarial review followed by four live category tests only
-if the review passed. It did not pass, so all four tests remain unspent and the
-conditional live phase did not start. The approval does not authorize the
-intervening behavior repair or a later live window. Any later live approval must
-state exact Terra-create, hosted-search, retrieve, Serper, page-fetch, and
-dollar ceilings.
+**Recommended reasoning level:** High. Execution is bounded, but the result
+audit must distinguish provider absence, conservative false rejection, and a
+real identity-safety failure across unrelated categories. Maximum reasoning is
+unnecessary unless the evidence forces an architecture decision.
+
+## Approval status
+
+The earlier approval for four live tests was conditional on the prior
+adversarial review passing. That review failed, so the approval was withheld
+and is not reusable. Taylor must approve the exact new ceilings above before
+any request is dispatched.
+
+Scoped local phase files may be committed automatically. Live/external calls,
+deployment, production changes, flag promotion, `.env.local`, and push still
+require Taylor's explicit authorization.
 
 ## Flag state
 
@@ -102,13 +113,13 @@ Committed defaults remain:
 - `REVIEW_RADAR_CONSTRAINT_ALLOCATION=off`
 
 The prior handoff reported the corresponding local `.env.local` Direct-Terra
-flags enabled. This review did not read, print, or modify secret values and did
+flags enabled. This phase did not read, print, or modify secret values and did
 not modify `.env.local`.
 
 ## Hard boundaries
 
-- No OpenAI, Serper, SearchAPI, or direct-page request without a new exact
-  numeric approval.
+- No OpenAI, Serper, SearchAPI, or direct-page request without the new exact
+  numeric approval above.
 - No deployment, publication, push, flag promotion, `.env.local` edit, or
   production change.
 - Preserve Terra's product set, names, order, report, citations, and
@@ -116,16 +127,14 @@ not modify `.env.local`.
 - No product-, brand-, variant-word-, or category-specific production rule.
 - Never stage live fixtures or unrelated `.claude/`, baseline, or
   `fable-transfer-kit/` artifacts. Never use `git add -A`.
-- Scoped phase files may be committed automatically; external writes still
-  require Taylor's explicit authorization.
 
 ## Efficient retrieval map
 
 | Need | Retrieve |
 |---|---|
-| Current state and next step | this file |
-| Failed review evidence | latest T8D entry in `docs/qa-loop-results.md` |
-| Reopened defect | RR-093 in `docs/RR-Issues-Report.md` |
-| Peer-review request | dialogue entry `[106]` |
+| Current state and next approval | this file |
+| RR-093 closure evidence | latest entry in `docs/qa-loop-results.md` |
+| Canonical defect record | RR-093 in `docs/RR-Issues-Report.md` |
+| Peer-review request | dialogue entry `[107]` |
 | Phase history | OAI-T8D in `docs/forward-roadmap.md` |
-| Corrective code commits | `5b3b3cc`, `192c276`, `71fab76`, `0ccac73` |
+| Final code repair | commit `ae5c904` |

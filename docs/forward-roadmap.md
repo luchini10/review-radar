@@ -3171,6 +3171,31 @@ is a separately approved zero-live generalized descriptive title/path
 coherence repair, followed by another adversarial review. No live validation
 is justified before that repair passes.
 
+**RR-093 final zero-live closure (completed 2026-07-23, commit `ae5c904`):**
+Verifier v4 replaces the incomplete type-only closure with a conservative,
+category-independent descriptive title/URL coherence veto. A title-proven
+descriptive identity may appear in a product or image path with its brand,
+requested-category words, ordinary commerce structure, color/configuration
+language, and opaque numeric/hash tokens. Any other path word is unexplained
+sibling/edition evidence and rejects that asset. The rule never admits a
+candidate, contains no product/category/variant denylist, and does not change
+numeric or alphanumeric model behavior.
+
+Fail-first cases cover all three adversarial reordered/suffix bypasses, an
+image-only sibling path, and an unrelated refrigerator variant. Safe
+retailer/manufacturer paths with brand/category/color/opaque-ID wording remain
+accepted. The final adversarial diff review found no material bypass within
+the approved path-identity scope. Verification is 43/43 focused and 1330/1330
+complete across 191 suites; typecheck/build pass, lint has zero errors and
+three pre-existing warnings, and the eight-fixture replay remains fully
+accounted with zero live calls.
+
+The next evidence step is not automatic. It requires a new exact approval for
+one frozen run in each of the four T8D categories with the v2 trace enabled.
+That sample is diagnostic validation of the repaired boundary, not promotion
+evidence, and may not change flags, deploy, retry, or reuse the withheld
+conditional approval.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen

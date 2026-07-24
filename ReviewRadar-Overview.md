@@ -81,6 +81,14 @@ that category before asset verification so type checks use the actual request,
 not a ranked product name substituted as the category. A product URL path that
 positively identifies a conflicting product type is rejected together with its
 image; exact manufacturer and recognized-retailer product pages still pass.
+For descriptive, non-coded models, verifier v4 also requires product and image
+URL path identity to remain coherent with the already-verified candidate
+title. Brand/category words, ordinary commerce path structure,
+colors/configuration labels, and opaque numeric/hash IDs are permitted; any
+other unexplained path word is treated as possible sibling/edition evidence
+and that asset is omitted. This veto cannot admit, rename, add, or reorder a
+Terra recommendation, and it does not alter numeric/alphanumeric model
+matching.
 
 The Direct-Terra resolver also supports an optional server-only first-loss
 trace. It accounts for every ranked product and records whether loss first

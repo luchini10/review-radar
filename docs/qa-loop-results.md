@@ -10527,3 +10527,42 @@ outside the phase records were changed.
 zero-live, category-independent descriptive title/path coherence repair with
 fail-first reordered/suffix-variant cases and safe retailer/configuration
 controls. Do not add a `gaming`, `XL`, brand, or chair denylist.
+
+## 🟧 Codex QA Update — 2026-07-23 (RR-093 descriptive identity closure)
+
+Taylor approved the zero-live RR-093 correction. No OpenAI, Serper, SearchAPI,
+direct-page, deployment, flag, `.env.local`, or production action occurred.
+
+**Fail-first evidence:** with the locked standard `Herman Miller Embody Chair`
+target and exact standard candidate title, the focused suite first reproduced
+acceptance of `/embody-gaming-office-chair`, an unrelated-category
+`/horizon-refrigerator-outdoor-edition` page, and an
+`/embody-chair-xl.png` image attached to a safe base-product URL.
+
+**Generalized correction (`ae5c904`):** verifier v4 applies one veto-only
+descriptive identity contract to product and image URLs. Once the title proves
+the locked identity, path words must be explained by the title, brand,
+requested category, ordinary URL/commerce structure, color/configuration
+language, or an opaque numeric/hash token. Unexplained additions are treated
+as possible sibling/edition identity and fail closed. The rule contains no
+product, brand, category, `gaming`, or `XL` exception and does not alter
+numeric/alphanumeric model matching.
+
+**Adversarial controls:** all three reordered/suffixed bypasses now fail;
+image-only sibling evidence fails without discarding a safe buy link; a
+refrigerator case proves the same primitive outside chairs; and a
+brand/category/color/opaque-ID retailer path remains accepted. Existing
+accessory, editorial, redirect, private-network, wrong-type, wrong-model-image,
+`Q7/Q70`, leading-series-prefix, trim-suffix, and coded-model tests remain
+green.
+
+**Verification:** focused verifier 43/43; complete wall 1330/1330 across 191
+suites; typecheck and production build pass; lint has zero errors and the same
+three pre-existing warnings. The eight-run zero-live T8D replay accounts for
+31/31 ranked products and retains its honest v1 evidence limits. RR-093 is
+Fixed; the register is 96 total, 89 Fixed, 6 Needs Investigation, and 1 Won't
+Fix.
+
+**Decision:** the zero-live repair passes this review. A fresh, exact live
+approval is still required; the prior conditional four-test approval was
+withheld and is not reusable. No promotion or deployment is authorized.

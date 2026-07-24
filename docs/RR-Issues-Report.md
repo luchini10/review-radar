@@ -3616,7 +3616,7 @@ path, flag, `.env.local`, or user-visible behavior changed.
 | **Phase** | OAI-T8D cross-category first-loss diagnostic |
 | **Severity** | Critical |
 | **Title** | Descriptive product identity can accept a different named variant's buy link |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** The office-chair diagnostic ranked the standard `Herman
 Miller Embody Chair`, but the asset resolver displayed
@@ -3674,6 +3674,22 @@ rule for descriptive identities. The rule must preserve harmless retailer
 slug words, configurations, and exact coded-model behavior and must generalize
 outside chairs. Do not solve this with a `gaming`, `XL`, brand, or category
 denylist.
+
+**Final resolution (2026-07-23, `ae5c904`):** Direct-Terra asset verifier v4
+adds a category-independent, veto-only descriptive identity contract. After
+the candidate title proves the locked brand/model/type, a product or image URL
+may repeat the title, brand, requested category, ordinary commerce structure,
+color/configuration labels, and opaque numeric/hash IDs. Any other path word is
+unexplained sibling/edition evidence and rejects that asset. The rule does not
+admit a candidate, does not alter numeric/alphanumeric model behavior, and does
+not change Terra's product name or ranking.
+
+Fail-first tests reproduced all three adversarial path forms and a separate
+image-only sibling. Cross-category refrigerator cases prove the same primitive
+outside chairs; safe brand/category/color/opaque-ID retailer paths and the
+entire coded-model wall remain accepted. The complete suite passes 1330/1330
+across 191 suites, with typecheck, build, lint, and the eight-fixture zero-live
+replay green. No live or external request was made.
 
 ---
 
@@ -3823,18 +3839,16 @@ instrumented runs can make that distinction.
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (7 issues)
+### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 - RR-091: Same-page related-product price can satisfy autonomous card binding
 - RR-092: Editorial Product markup can verify identity/image without proving the tested model
-- RR-093: Descriptive product identity can accept a different named variant's buy link
-
-### Fixed (88 issues)
+### Fixed (89 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
-RR-038 through RR-044, RR-046 through RR-090, and RR-094 through RR-096
+RR-038 through RR-044, RR-046 through RR-090, and RR-093 through RR-096
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -3850,5 +3864,3 @@ RR-038 through RR-044, RR-046 through RR-090, and RR-094 through RR-096
 3. **RR-091 + RR-092** — the autonomous hybrid remains isolated and cannot be
    integrated until exact transactional binding and exact tested-model
    attribution pass an independently verified boundary.
-4. **RR-093** — close the generalized descriptive title/path identity gap
-   before another Direct-Terra live asset window.

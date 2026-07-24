@@ -49,6 +49,19 @@ Update this file after:
   standard chair. RR-093 is reopened and no live validation was purchased.
   The diagnostic and evaluator corrections remain valid.
 
+#### Final RR-093 correction
+
+- Direct-Terra verifier v4 now rejects unexplained descriptive variant words
+  independently in product and image URL paths. The rule is generalized across
+  categories and preserves title/brand/category words, normal commerce URL
+  structure, colors/configuration labels, opaque IDs, and every existing
+  coded-model rule.
+- Adversarial tests cover reordered and suffix variants, a separate
+  wrong-variant image, an unrelated refrigerator edition, and safe retailer
+  controls. Full verification passes 1330/1330 across 191 suites; typecheck and
+  build pass, and lint retains only three pre-existing warnings. RR-093 is
+  Fixed. No live call, flag, deployment, or `.env.local` change occurred.
+
 ## 2026-07-22
 
 ### Claude - Fix the root causes of undecorated Direct-Terra cards and obscure links (T8C)
