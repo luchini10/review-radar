@@ -93,7 +93,7 @@ describe("Direct-Terra registered-citation website resolver", () => {
     );
   });
 
-  it("accepts an abbreviated title only when its registered manufacturer URL proves the exact model", () => {
+  it("hands an abbreviated exact-model manufacturer page to bounded page verification", () => {
     const milwaukee = {
       key: "rank-5-milwaukee-0910-20",
       rank: 5,
@@ -103,6 +103,7 @@ describe("Direct-Terra registered-citation website resolver", () => {
       category: "shop vacuum",
     };
     const exactUrl = "https://www.milwaukeetool.com/0910-20";
+    const pageCandidates = [];
     const result = resolve({
       targets: [milwaukee],
       reportMarkdown: [
@@ -113,10 +114,20 @@ describe("Direct-Terra registered-citation website resolver", () => {
       responseSources: [
         source(exactUrl, "Milwaukee M18 FUEL 6 Gallon Wet/Dry Vacuum"),
       ],
+      recordPageFetchCandidate: (candidate) => {
+        pageCandidates.push(candidate);
+      },
     });
 
-    assert.equal(result.items[0].productUrl, exactUrl);
-    assert.equal(result.items[0].productUrlStatus, "accepted_identity_safe");
+    assert.equal(result.items[0].productUrl, null);
+    assert.equal(result.items[0].productUrlStatus, "unavailable");
+    assert.deepEqual(pageCandidates, [
+      {
+        targetKey: milwaukee.key,
+        rank: milwaukee.rank,
+        productUrl: exactUrl,
+      },
+    ]);
   });
 
   it("does not let abbreviated titles bless sibling-model or non-brand URLs", () => {

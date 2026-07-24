@@ -506,7 +506,7 @@ describe("Direct-Terra asset safety boundary", () => {
     }
   });
 
-  it("RR-098 accepts an exact manufacturer slug after it proves a sparse descriptive title", () => {
+  it("requires page evidence before a sparse exact manufacturer slug can supply an asset", () => {
     const target = {
       key: "rank-5-branch-verve-chair",
       rank: 5,
@@ -526,10 +526,15 @@ describe("Direct-Terra asset safety boundary", () => {
       ],
     });
 
-    assert.equal(result.productUrlStatus, "accepted_identity_safe");
+    assert.equal(result.productUrlStatus, "unavailable");
     assert.equal(
       result.decisions[0].identityReason,
       "accepted_manufacturer_slug_identity",
+    );
+    assert.equal(result.decisions[0].relationship, "unknown");
+    assert.equal(
+      result.decisions[0].pageFetchCandidateUrl,
+      "https://www.branchfurniture.com/products/verve-chair",
     );
   });
 
@@ -640,7 +645,7 @@ describe("Direct-Terra asset safety boundary", () => {
       target,
       candidates: [
         {
-          title: target.productName,
+          title: "Herman Miller Embody Office Chair",
           productUrl:
             "https://store.hermanmiller.com/products/herman-miller-embody-office-chair-black/100147386.html?configuration=standard",
           imageUrl:
@@ -666,7 +671,7 @@ describe("Direct-Terra asset safety boundary", () => {
       target,
       candidates: [
         {
-          title: target.productName,
+          title: "Herman Miller Embody Office Chair",
           productUrl:
             "https://eustore.hermanmiller.com/products/embody-chair",
           imageUrl:
@@ -865,6 +870,139 @@ describe("Direct-Terra asset safety boundary", () => {
     assert.ok(result.decisions.every((decision) => decision.imageUrlAccepted === false));
     assert.equal(JSON.stringify(result).includes("provider"), false);
     assert.equal(JSON.stringify(result).includes("serper"), false);
+  });
+
+  describe("complete-product relationship boundary (OAI-T9)", () => {
+    const cases = [
+      {
+        label: "RR-099 replacement water tank",
+        target: {
+          key: "rank-2-tapo-rv30-max-plus",
+          rank: 2,
+          productName: "TP-Link Tapo RV30 Max Plus Robot Vacuum",
+          brand: "TP-Link Tapo",
+          model: "RV30 Max Plus",
+          category: "robot vacuum",
+        },
+        candidate: {
+          title:
+            "for TP-Link Tapo RV30 Plus Water Storage Tank Replacement Robotic Accessories",
+          productUrl:
+            "https://www.amazon.com/XvuaTeIw-TP-link-Storage-Robotic-Accessories/dp/B0DLH5B3SN",
+          imageUrl:
+            "https://images.example.com/products/tapo-rv30-plus-water-tank.jpg",
+          imageSource: "serper_shopping",
+        },
+      },
+      {
+        label: "water tank named before a parent-product for-clause",
+        target: {
+          key: "rank-2-tapo-rv30-max-plus",
+          rank: 2,
+          productName: "TP-Link Tapo RV30 Max Plus Robot Vacuum",
+          brand: "TP-Link Tapo",
+          model: "RV30 Max Plus",
+          category: "robot vacuum",
+        },
+        candidate: {
+          title:
+            "Water Tank for TP-Link Tapo RV30 Max Plus Robot Vacuum",
+          productUrl:
+            "https://www.amazon.com/Water-Tank-TP-Link-RV30/dp/B0EXAMPLE1",
+          imageUrl:
+            "https://images.example.com/products/tapo-rv30-water-tank.jpg",
+          imageSource: "serper_shopping",
+        },
+      },
+      {
+        label: "replacement battery for a cordless drill",
+        target: {
+          key: "rank-1-dewalt-dcd800",
+          rank: 1,
+          productName: "DEWALT DCD800 20V MAX XR Cordless Drill",
+          brand: "DEWALT",
+          model: "DCD800",
+          category: "cordless drill",
+        },
+        candidate: {
+          title: "Replacement Battery Compatible with DEWALT DCD800 Cordless Drill",
+          productUrl:
+            "https://www.lowes.com/pd/Replacement-Battery-for-DEWALT-DCD800/5015000001",
+          imageUrl:
+            "https://images.example.com/products/dewalt-dcd800-replacement-battery.jpg",
+          imageSource: "serper_shopping",
+        },
+      },
+      {
+        label: "replacement refrigerator water filter",
+        target: {
+          key: "rank-3-ge-gne27jymfs",
+          rank: 3,
+          productName: "GE GNE27JYMFS French-Door Refrigerator",
+          brand: "GE",
+          model: "GNE27JYMFS",
+          category: "refrigerator",
+        },
+        candidate: {
+          title: "Water Filter Replacement Fits GE GNE27JYMFS Refrigerator",
+          productUrl:
+            "https://www.homedepot.com/p/Water-Filter-for-GE-GNE27JYMFS/325000001",
+          imageUrl:
+            "https://images.example.com/products/ge-gne27jymfs-water-filter.jpg",
+          imageSource: "serper_shopping",
+        },
+      },
+    ];
+
+    for (const testCase of cases) {
+      it(`rejects ${testCase.label} even when the parent model matches`, () => {
+        const result = verifyDirectTerraAssetCandidates({
+          target: testCase.target,
+          candidates: [testCase.candidate],
+        });
+
+        assert.equal(result.productUrl, null);
+        assert.equal(result.imageUrl, null);
+      });
+    }
+
+    it("preserves a complete cordless-drill kit that includes a battery and charger", () => {
+      const target = {
+        key: "rank-1-dewalt-dcd800",
+        rank: 1,
+        productName: "DEWALT DCD800 20V MAX XR Cordless Drill",
+        brand: "DEWALT",
+        model: "DCD800",
+        category: "cordless drill",
+      };
+      const result = verifyDirectTerraAssetCandidates({
+        target,
+        candidates: [
+          {
+            title:
+              "DEWALT DCD800 20V MAX XR Cordless Drill Kit with Battery and Charger",
+            productUrl:
+              "https://www.lowes.com/pd/DEWALT-DCD800-Cordless-Drill-Kit/5015000002",
+            imageUrl:
+              "https://images.example.com/products/dewalt-dcd800-drill-kit.jpg",
+            imageSource: "serper_shopping",
+          },
+        ],
+      });
+
+      assert.ok(result.productUrl);
+      assert.ok(result.imageUrl);
+    });
+
+    it("preserves the complete robot vacuum when its auto-empty dock is included", () => {
+      const result = verifyDirectTerraAssetCandidates({
+        target: q7,
+        candidates: [shoppingResult()],
+      });
+
+      assert.ok(result.productUrl);
+      assert.ok(result.imageUrl);
+    });
   });
 
   describe("url slug identity (T8B iteration 3)", () => {

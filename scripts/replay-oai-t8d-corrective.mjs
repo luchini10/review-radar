@@ -196,6 +196,11 @@ export async function buildOaiT8dCorrectiveReplay(
           rank: asset.rank,
           identityKey: target.key,
           accepted: verification.productUrl !== null,
+          relationship:
+            verification.decisions[0]?.relationship ?? "unknown",
+          relationshipReason:
+            verification.decisions[0]?.relationshipReason ??
+            "verification_missing",
           reason:
             verification.decisions[0]?.productUrlReason ??
             "verification_missing",
@@ -233,10 +238,17 @@ export async function buildOaiT8dCorrectiveReplay(
       .map((link) => ({ run: run.id, ...link })),
   );
   const definitiveBlockedLinks = replayWarnings.filter(
-    (link) => link.reason === "product_url_type_conflict",
+    (link) =>
+      link.reason === "product_url_type_conflict" ||
+      (link.reason === "product_relationship_not_safe" &&
+        [
+          "accessory_or_replacement",
+          "different_product",
+          "non_product_page",
+        ].includes(link.relationship)),
   );
   const indeterminateLinkReplayWarnings = replayWarnings.filter(
-    (link) => link.reason !== "product_url_type_conflict",
+    (link) => !definitiveBlockedLinks.includes(link),
   );
   const namedNotRanked = runs.reduce(
     (sum, run) =>
@@ -272,6 +284,7 @@ export async function buildOaiT8dCorrectiveReplay(
       reportNamedNotRankedLeaders: namedNotRanked,
       retainedLinksRevalidated: total((run) => run.retainedLinkCount),
       definitiveWrongVariantLinksBlocked: definitiveBlockedLinks.length,
+      definitiveUnsafeLinksBlocked: definitiveBlockedLinks.length,
       indeterminateLinkReplayWarnings:
         indeterminateLinkReplayWarnings.length,
     },
@@ -281,7 +294,7 @@ export async function buildOaiT8dCorrectiveReplay(
       "This replay performs zero provider or source-page requests.",
       "The v1 saved traces cannot distinguish provider absence from a false identity rejection because they did not retain candidate identity samples.",
       "Final-link revalidation uses the ranked product name as title evidence; it is a conservative final safety replay, not a reconstruction of the original provider row.",
-      "Only a positive product_url_type_conflict is decision-grade in the final-link replay. Other rejections remain indeterminate because original provider titles were not retained.",
+      "A positive product_url_type_conflict or complete-product relationship rejection is decision-grade in the final-link replay. Other rejections remain indeterminate because original provider titles were not retained.",
     ],
     runs,
   };

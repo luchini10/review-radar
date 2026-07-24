@@ -6,7 +6,11 @@ import {
   resolveDirectTerraAssetsWithSerperShopping,
   type DirectTerraSerperShoppingTransport,
 } from "./directTerraSerperAssetAdapter.ts";
-import type { DirectTerraAssetTarget } from "./directTerraAssetVerifier.ts";
+import {
+  verifyDirectTerraAssetCandidates,
+  type DirectTerraAssetTarget,
+  type DirectTerraPageFetchCandidate,
+} from "./directTerraAssetVerifier.ts";
 import type { DirectTerraSource } from "./directTerraResponse.ts";
 import {
   buildDirectTerraRetailerScopedQuery,
@@ -72,6 +76,24 @@ export async function resolveDirectTerraProductAssets({
     existing.push(diagnostic);
     laneDiagnosticsByKey.set(diagnostic.targetKey, existing);
   };
+  const ambiguousPageCandidatesByKey = new Map<
+    string,
+    DirectTerraPageFetchCandidate[]
+  >();
+  const recordPageFetchCandidate = (
+    candidate: DirectTerraPageFetchCandidate,
+  ) => {
+    const existing =
+      ambiguousPageCandidatesByKey.get(candidate.targetKey) ?? [];
+    if (
+      !existing.some(
+        (current) => current.productUrl === candidate.productUrl,
+      )
+    ) {
+      existing.push(candidate);
+      ambiguousPageCandidatesByKey.set(candidate.targetKey, existing);
+    }
+  };
   const emptyLane = (
     target: DirectTerraAssetTarget,
     lane: DirectTerraProviderLaneDiagnostic["lane"],
@@ -95,6 +117,7 @@ export async function resolveDirectTerraProductAssets({
     recordFirstLossDiagnostic: recordFirstLossDiagnostic
       ? recordLane
       : undefined,
+    recordPageFetchCandidate,
   });
   const citationByKey = new Map(
     citationWebsites.items.map((item) => [item.targetKey, item]),
@@ -122,6 +145,7 @@ export async function resolveDirectTerraProductAssets({
         recordFirstLossDiagnostic: recordFirstLossDiagnostic
           ? recordLane
           : undefined,
+        recordPageFetchCandidate,
       });
     } catch {
       if (recordFirstLossDiagnostic) {
@@ -147,6 +171,7 @@ export async function resolveDirectTerraProductAssets({
         recordFirstLossDiagnostic: recordFirstLossDiagnostic
           ? recordLane
           : undefined,
+        recordPageFetchCandidate,
       });
     } catch {
       if (recordFirstLossDiagnostic) {
@@ -213,6 +238,7 @@ export async function resolveDirectTerraProductAssets({
           recordFirstLossDiagnostic: recordFirstLossDiagnostic
             ? recordLane
             : undefined,
+          recordPageFetchCandidate,
         });
         for (const item of secondPass.items) {
           if (item.productUrl && !chosenWebsiteByKey.get(item.targetKey)) {
@@ -251,7 +277,20 @@ export async function resolveDirectTerraProductAssets({
   if (productPageTransport) {
     let fetches = 0;
     for (const target of orderedTargets) {
-      const websiteUrl = chosenWebsiteByKey.get(target.key);
+      const acceptedWebsiteUrl = chosenWebsiteByKey.get(target.key) ?? null;
+      const ambiguousWebsiteUrl = (
+        ambiguousPageCandidatesByKey.get(target.key) ?? []
+      ).reduce<string | null>(
+        (best, candidate) =>
+          scoreDirectTerraProductLink(candidate.productUrl, target) >
+          scoreDirectTerraProductLink(best, target)
+            ? candidate.productUrl
+            : best,
+        null,
+      );
+      const websiteUrl = acceptedWebsiteUrl ?? ambiguousWebsiteUrl;
+      const requiresCompleteProductProof =
+        !acceptedWebsiteUrl && Boolean(ambiguousWebsiteUrl);
       if (!websiteUrl) continue;
       if (fetches >= MAX_DIRECT_TERRA_PAGE_FETCHES) {
         pageStatusByKey.set(target.key, "budget_exhausted");
@@ -274,6 +313,37 @@ export async function resolveDirectTerraProductAssets({
           fetched.html,
           fetched.finalUrl,
         );
+        const pageVerification = verifyDirectTerraAssetCandidates({
+          target,
+          candidates: [
+            {
+              title: extracted.title,
+              structuredProductNames: extracted.productNames,
+              productUrl: fetched.finalUrl,
+            },
+          ],
+        });
+        const pageDecision = pageVerification.decisions[0];
+        if (!pageVerification.productUrl) {
+          if (
+            requiresCompleteProductProof ||
+            (pageDecision &&
+              pageDecision.relationship !== "unknown" &&
+              pageDecision.relationship !== "complete_product" &&
+              pageDecision.relationship !== "bundle_including_product")
+          ) {
+            chosenWebsiteByKey.set(target.key, null);
+            pageImageByKey.delete(target.key);
+          }
+          pageStatusByKey.set(
+            target.key,
+            pageDecision?.relationship === "unknown"
+              ? "verified_without_image"
+              : "page_assets_unavailable",
+          );
+          continue;
+        }
+        chosenWebsiteByKey.set(target.key, pageVerification.productUrl);
         if (extracted.imageCandidates.length === 0) {
           pageStatusByKey.set(target.key, "page_assets_unavailable");
         }
@@ -289,11 +359,30 @@ export async function resolveDirectTerraProductAssets({
           pageStatusByKey.set(target.key, "verified_without_image");
         }
         if (verified.canonicalUrl) {
-          chosenWebsiteByKey.set(target.key, verified.canonicalUrl);
+          const canonicalVerification = verifyDirectTerraAssetCandidates({
+            target,
+            candidates: [
+              {
+                title: extracted.title,
+                structuredProductNames: extracted.productNames,
+                productUrl: verified.canonicalUrl,
+              },
+            ],
+          });
+          if (canonicalVerification.productUrl) {
+            chosenWebsiteByKey.set(
+              target.key,
+              canonicalVerification.productUrl,
+            );
+          }
         }
       } catch {
         pageStatusByKey.set(target.key, "transport_error");
-        // Page decoration is optional; the verified link stands on its own.
+        if (requiresCompleteProductProof) {
+          chosenWebsiteByKey.set(target.key, null);
+        }
+        // A provider-proven complete product link stands on its own. An
+        // ambiguous candidate cannot survive a failed page fetch.
       }
     }
   }

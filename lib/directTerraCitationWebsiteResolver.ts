@@ -3,9 +3,11 @@ import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 
 import {
+  directTerraPageFetchCandidates,
   directTerraAssetTargetIsCoherent,
   type DirectTerraAssetCandidate,
   type DirectTerraAssetTarget,
+  type DirectTerraPageFetchCandidate,
   verifyDirectTerraAssetCandidates,
 } from "./directTerraAssetVerifier.ts";
 import {
@@ -267,6 +269,10 @@ export function resolveDirectTerraCitationWebsites(input: {
   recordFirstLossDiagnostic?: (
     diagnostic: DirectTerraProviderLaneDiagnostic,
   ) => void;
+  /** Server-only ambiguity handoff; never enters resolver output. */
+  recordPageFetchCandidate?: (
+    candidate: DirectTerraPageFetchCandidate,
+  ) => void;
 }): DirectTerraCitationWebsiteResolution {
   assertInput(input);
 
@@ -342,6 +348,9 @@ export function resolveDirectTerraCitationWebsites(input: {
     }
 
     const verification = verifyDirectTerraAssetCandidates({ target, candidates });
+    for (const candidate of directTerraPageFetchCandidates(verification)) {
+      input.recordPageFetchCandidate?.(candidate);
+    }
     emitFirstLossDiagnostic(input.recordFirstLossDiagnostic, {
       targetKey: target.key,
       rank: target.rank,

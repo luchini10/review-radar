@@ -4,6 +4,30 @@
 
 ---
 
+## Direct-Terra complete-product asset contract (OAI-T9, 2026-07-24)
+
+- Product identity is necessary but not sufficient for a link or image.
+- Every candidate must receive one server-only relationship:
+  `complete_product`, `bundle_including_product`,
+  `accessory_or_replacement`, `different_product`, `non_product_page`, or
+  `unknown`.
+- Only complete products and complete-product bundles may supply assets.
+  Unknown stays unavailable.
+- Parent-model words inside an accessory title/path do not prove the accessory
+  is the complete product. Directed forms such as `tank for <product>` are
+  complements even without the word `replacement`.
+- Ambiguous candidates may use one bounded page fetch per ranked product
+  (five per request); title or JSON-LD Product name must then prove the
+  complete product. A failed or still-ambiguous fetch leaves the asset `null`.
+- Preserve sibling, wrong-type, editorial, redirect, private-host,
+  wrong-image, numeric-boundary, and descriptive-variant vetoes. Do not add
+  category/product/retailer exceptions to recover coverage.
+- Historical final-link replay without original provider titles can prove a
+  positive unsafe relationship, but other rejections remain indeterminate.
+  Never reinterpret those as reconstructed live provider failures.
+
+---
+
 ## Phase 6B Regression Wall (2026-07-01)
 
 - Canonical index: `docs/phase-6-regression-wall.md`.

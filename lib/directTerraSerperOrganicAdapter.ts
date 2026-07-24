@@ -1,7 +1,9 @@
 import {
+  directTerraPageFetchCandidates,
   directTerraAssetTargetIsCoherent,
   verifyDirectTerraAssetCandidates,
   type DirectTerraAssetCandidate,
+  type DirectTerraPageFetchCandidate,
   type DirectTerraAssetTarget,
 } from "./directTerraAssetVerifier.ts";
 import {
@@ -81,6 +83,10 @@ type AdapterInput = {
   /** Sanitized server-only first-loss hook; never contains query or row text. */
   recordFirstLossDiagnostic?: (
     diagnostic: DirectTerraProviderLaneDiagnostic,
+  ) => void;
+  /** Server-only ambiguity handoff; never serialized into adapter results. */
+  recordPageFetchCandidate?: (
+    candidate: DirectTerraPageFetchCandidate,
   ) => void;
   diagnosticLane?: "organic_primary" | "organic_retailer";
 };
@@ -260,6 +266,9 @@ export async function resolveDirectTerraWebsitesWithSerperOrganic(
     }
 
     const verification = verifyDirectTerraAssetCandidates({ target, candidates });
+    for (const candidate of directTerraPageFetchCandidates(verification)) {
+      input.recordPageFetchCandidate?.(candidate);
+    }
     // T8B host preference: among ALL identity-accepted pages in this response,
     // prefer the manufacturer's own site or a popular retailer (and a URL
     // whose path carries the model) over whichever page merely appeared first.

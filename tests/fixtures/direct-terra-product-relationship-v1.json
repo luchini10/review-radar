@@ -1,0 +1,433 @@
+{
+  "schemaVersion": "direct-terra-product-relationship-corpus-v1",
+  "sanitized": true,
+  "cases": [
+    {
+      "id": "complete-manufacturer-robot-vacuum",
+      "target": {
+        "key": "robot-q7",
+        "rank": 1,
+        "productName": "Roborock Q7 M5+ Robot Vacuum",
+        "brand": "Roborock",
+        "model": "Q7 M5+",
+        "category": "robot vacuum"
+      },
+      "candidate": {
+        "title": "Roborock Q7 M5+ Robot Vacuum and Mop",
+        "productUrl": "https://us.roborock.com/products/roborock-q7-m5-plus",
+        "imageUrl": "https://us.roborock.com/images/roborock-q7-m5-plus.jpg"
+      },
+      "expectedRelationship": "complete_product",
+      "productUrlAccepted": true,
+      "imageUrlAccepted": true
+    },
+    {
+      "id": "complete-retailer-cordless-drill",
+      "target": {
+        "key": "drill-dcd800",
+        "rank": 1,
+        "productName": "DEWALT DCD800 20V MAX XR Cordless Drill",
+        "brand": "DEWALT",
+        "model": "DCD800",
+        "category": "cordless drill"
+      },
+      "candidate": {
+        "title": "DEWALT DCD800 20V MAX XR Cordless Drill",
+        "productUrl": "https://www.lowes.com/pd/DEWALT-DCD800-Cordless-Drill/5015000000",
+        "imageUrl": "https://images.example.com/dewalt-dcd800-drill.jpg",
+        "imageSource": "serper_shopping"
+      },
+      "expectedRelationship": "complete_product",
+      "productUrlAccepted": true,
+      "imageUrlAccepted": true
+    },
+    {
+      "id": "bundle-drill-battery-charger",
+      "target": {
+        "key": "drill-dcd800",
+        "rank": 1,
+        "productName": "DEWALT DCD800 20V MAX XR Cordless Drill",
+        "brand": "DEWALT",
+        "model": "DCD800",
+        "category": "cordless drill"
+      },
+      "candidate": {
+        "title": "DEWALT DCD800 Cordless Drill Kit with Battery and Charger",
+        "productUrl": "https://www.lowes.com/pd/DEWALT-DCD800-Drill-Kit-with-Battery-and-Charger/5015000002",
+        "imageUrl": "https://images.example.com/dewalt-dcd800-kit.jpg",
+        "imageSource": "serper_shopping"
+      },
+      "expectedRelationship": "bundle_including_product",
+      "productUrlAccepted": true,
+      "imageUrlAccepted": true
+    },
+    {
+      "id": "bundle-shop-vac-hose-accessories",
+      "target": {
+        "key": "vac-dxv12p",
+        "rank": 1,
+        "productName": "DEWALT DXV12P-QT Wet/Dry Shop Vacuum",
+        "brand": "DEWALT",
+        "model": "DXV12P-QT",
+        "category": "shop vacuum"
+      },
+      "candidate": {
+        "title": "DEWALT DXV12P Wet/Dry Vacuum with Hose and Accessories",
+        "productUrl": "https://www.homedepot.com/p/DEWALT-Wet-Dry-Vacuum-with-Hose-and-Accessories-DXV12P/305323712"
+      },
+      "expectedRelationship": "bundle_including_product",
+      "productUrlAccepted": true,
+      "imageUrlAccepted": false
+    },
+    {
+      "id": "rr099-replacement-water-tank",
+      "target": {
+        "key": "robot-tapo-rv30",
+        "rank": 1,
+        "productName": "TP-Link Tapo RV30 Max Plus Robot Vacuum",
+        "brand": "TP-Link Tapo",
+        "model": "RV30 Max Plus",
+        "category": "robot vacuum"
+      },
+      "candidate": {
+        "title": "for TP-Link Tapo RV30 Plus Water Storage Tank Replacement Robotic Accessories",
+        "productUrl": "https://www.amazon.com/XvuaTeIw-TP-link-Storage-Robotic-Accessories/dp/B0DLH5B3SN",
+        "imageUrl": "https://images.example.com/tapo-rv30-water-tank.jpg",
+        "imageSource": "serper_shopping"
+      },
+      "expectedRelationship": "accessory_or_replacement",
+      "productUrlAccepted": false,
+      "imageUrlAccepted": false
+    },
+    {
+      "id": "complement-before-for-without-replacement-word",
+      "target": {
+        "key": "robot-tapo-rv30",
+        "rank": 1,
+        "productName": "TP-Link Tapo RV30 Max Plus Robot Vacuum",
+        "brand": "TP-Link Tapo",
+        "model": "RV30 Max Plus",
+        "category": "robot vacuum"
+      },
+      "candidate": {
+        "title": "Water Tank for TP-Link Tapo RV30 Max Plus Robot Vacuum",
+        "productUrl": "https://www.amazon.com/Water-Tank-TP-Link-RV30/dp/B0EXAMPLE1",
+        "imageUrl": "https://images.example.com/tapo-rv30-water-tank.jpg",
+        "imageSource": "serper_shopping"
+      },
+      "expectedRelationship": "accessory_or_replacement",
+      "productUrlAccepted": false,
+      "imageUrlAccepted": false
+    },
+    {
+      "id": "replacement-drill-battery",
+      "target": {
+        "key": "drill-dcd800",
+        "rank": 1,
+        "productName": "DEWALT DCD800 Cordless Drill",
+        "brand": "DEWALT",
+        "model": "DCD800",
+        "category": "cordless drill"
+      },
+      "candidate": {
+        "title": "Replacement Battery Compatible with DEWALT DCD800 Cordless Drill",
+        "productUrl": "https://www.lowes.com/pd/Replacement-Battery-for-DEWALT-DCD800/5015000001"
+      },
+      "expectedRelationship": "accessory_or_replacement",
+      "productUrlAccepted": false,
+      "imageUrlAccepted": false
+    },
+    {
+      "id": "replacement-shop-vac-filter",
+      "target": {
+        "key": "vac-hd1600",
+        "rank": 1,
+        "productName": "RIDGID HD1600 Wet/Dry Shop Vacuum",
+        "brand": "RIDGID",
+        "model": "HD1600",
+        "category": "shop vacuum"
+      },
+      "candidate": {
+        "title": "RIDGID HD1600 Replacement Cartridge Filter for Wet/Dry Vacuum",
+        "productUrl": "https://www.homedepot.com/p/RIDGID-HD1600-Replacement-Filter/300000001"
+      },
+      "expectedRelationship": "accessory_or_replacement",
+      "productUrlAccepted": false,
+      "imageUrlAccepted": false
+    },
+    {
+      "id": "replacement-shop-vac-hose",
+      "target": {
+        "key": "vac-hd1600",
+        "rank": 1,
+        "productName": "RIDGID HD1600 Wet/Dry Shop Vacuum",
+        "brand": "RIDGID",
+        "model": "HD1600",
+        "category": "shop vacuum"
+      },
+      "candidate": {
+        "title": "Replacement Hose Fits RIDGID HD1600 Wet/Dry Shop Vacuum",
+        "productUrl": "https://www.lowes.com/pd/RIDGID-HD1600-Replacement-Hose/500000001"
+      },
+      "expectedRelationship": "accessory_or_replacement",
+      "productUrlAccepted": false,
+      "imageUrlAccepted": false
+    },
+    {
+      "id": "replacement-robot-brush",
+      "target": {
+        "key": "robot-q7",
+        "rank": 1,
+        "productName": "Roborock Q7 M5+ Robot Vacuum",
+        "brand": "Roborock",
+        "model": "Q7 M5+",
+        "category": "robot vacuum"
+      },
+      "candidate": {
+        "title": "Replacement Side Brush Compatible with Roborock Q7 M5+ Robot Vacuum",
+        "productUrl": "https://www.amazon.com/Replacement-Brush-Roborock-Q7-M5/dp/B000000001"
+      },
+      "expectedRelationship": "accessory_or_replacement",
+      "productUrlAccepted": false,
+      "imageUrlAccepted": false
+    },
+    {
+      "id": "standalone-robot-dock",
+      "target": {
+        "key": "robot-q7",
+        "rank": 1,
+        "productName": "Roborock Q7 M5+ Robot Vacuum",
+        "brand": "Roborock",
+        "model": "Q7 M5+",
+        "category": "robot vacuum"
+      },
+      "candidate": {
+        "title": "Replacement Auto-Empty Dock Compatible with Roborock Q7 M5+",
+        "productUrl": "https://www.amazon.com/Replacement-Dock-Roborock-Q7-M5/dp/B000000002"
+      },
+      "expectedRelationship": "accessory_or_replacement",
+      "productUrlAccepted": false,
+      "imageUrlAccepted": false
+    },
+    {
+      "id": "punctuation-spacing-equivalent-model",
+      "target": {
+        "key": "vac-0910-20",
+        "rank": 1,
+        "productName": "Milwaukee 0910-20 M18 FUEL Wet/Dry Vacuum",
+        "brand": "Milwaukee",
+        "model": "0910-20",
+        "category": "shop vacuum"
+      },
+      "candidate": {
+        "title": "Milwaukee 0910 20 M18 FUEL Wet Dry Shop Vacuum",
+        "productUrl": "https://www.milwaukeetool.com/products/0910-20-wet-dry-vacuum"
+      },
+      "expectedRelationship": "complete_product",
+      "productUrlAccepted": true,
+      "imageUrlAccepted": false
+    },
+    {
+      "id": "numeric-boundary-q7-q70",
+      "target": {
+        "key": "robot-q7",
+        "rank": 1,
+        "productName": "Roborock Q7 Robot Vacuum",
+        "brand": "Roborock",
+        "model": "Q7",
+        "category": "robot vacuum"
+      },
+      "candidate": {
+        "title": "Roborock Q70 Robot Vacuum",
+        "productUrl": "https://us.roborock.com/products/roborock-q70"
+      },
+      "expectedRelationship": "different_product",
+      "productUrlAccepted": false,
+      "imageUrlAccepted": false
+    },
+    {
+      "id": "descriptive-model-complete-product",
+      "target": {
+        "key": "chair-aeron",
+        "rank": 1,
+        "productName": "Herman Miller Aeron Chair",
+        "brand": "Herman Miller",
+        "model": "Aeron Chair",
+        "category": "office chair"
+      },
+      "candidate": {
+        "title": "Herman Miller Aeron Ergonomic Office Chair",
+        "productUrl": "https://store.hermanmiller.com/office-chairs-aeron/aeron-chair/2195348.html"
+      },
+      "expectedRelationship": "complete_product",
+      "productUrlAccepted": true,
+      "imageUrlAccepted": false
+    },
+    {
+      "id": "brand-conflict",
+      "target": {
+        "key": "drill-dcd800",
+        "rank": 1,
+        "productName": "DEWALT DCD800 Cordless Drill",
+        "brand": "DEWALT",
+        "model": "DCD800",
+        "category": "cordless drill"
+      },
+      "candidate": {
+        "title": "Makita DCD800 Cordless Drill",
+        "productUrl": "https://www.lowes.com/pd/Makita-DCD800-Cordless-Drill/5015000003"
+      },
+      "expectedRelationship": "different_product",
+      "productUrlAccepted": false,
+      "imageUrlAccepted": false
+    },
+    {
+      "id": "editorial-review-page",
+      "target": {
+        "key": "chair-aeron",
+        "rank": 1,
+        "productName": "Herman Miller Aeron Chair",
+        "brand": "Herman Miller",
+        "model": "Aeron Chair",
+        "category": "office chair"
+      },
+      "candidate": {
+        "title": "Herman Miller Aeron Chair Review - Is It Worth Buying?",
+        "productUrl": "https://www.example.com/reviews/herman-miller-aeron-chair"
+      },
+      "expectedRelationship": "non_product_page",
+      "productUrlAccepted": false,
+      "imageUrlAccepted": false
+    },
+    {
+      "id": "support-page",
+      "target": {
+        "key": "robot-q7",
+        "rank": 1,
+        "productName": "Roborock Q7 M5+ Robot Vacuum",
+        "brand": "Roborock",
+        "model": "Q7 M5+",
+        "category": "robot vacuum"
+      },
+      "candidate": {
+        "title": "Roborock Q7 M5+ User Manual and Troubleshooting",
+        "productUrl": "https://support.roborock.com/q7-m5-plus"
+      },
+      "expectedRelationship": "non_product_page",
+      "productUrlAccepted": false,
+      "imageUrlAccepted": false
+    },
+    {
+      "id": "category-page",
+      "target": {
+        "key": "robot-q7",
+        "rank": 1,
+        "productName": "Roborock Q7 M5+ Robot Vacuum",
+        "brand": "Roborock",
+        "model": "Q7 M5+",
+        "category": "robot vacuum"
+      },
+      "candidate": {
+        "title": "Roborock Q7 M5+ Robot Vacuum",
+        "productUrl": "https://www.example.com/category/robot-vacuums/q7-m5-plus"
+      },
+      "expectedRelationship": "non_product_page",
+      "productUrlAccepted": false,
+      "imageUrlAccepted": false
+    },
+    {
+      "id": "redirect-wrapper",
+      "target": {
+        "key": "robot-q7",
+        "rank": 1,
+        "productName": "Roborock Q7 M5+ Robot Vacuum",
+        "brand": "Roborock",
+        "model": "Q7 M5+",
+        "category": "robot vacuum"
+      },
+      "candidate": {
+        "title": "Roborock Q7 M5+ Robot Vacuum",
+        "productUrl": "https://click.linksynergy.com/deeplink?murl=https%3A%2F%2Fstore.example%2Fq7"
+      },
+      "expectedRelationship": "complete_product",
+      "productUrlAccepted": false,
+      "imageUrlAccepted": false
+    },
+    {
+      "id": "private-network-page",
+      "target": {
+        "key": "robot-q7",
+        "rank": 1,
+        "productName": "Roborock Q7 M5+ Robot Vacuum",
+        "brand": "Roborock",
+        "model": "Q7 M5+",
+        "category": "robot vacuum"
+      },
+      "candidate": {
+        "title": "Roborock Q7 M5+ Robot Vacuum",
+        "productUrl": "http://192.168.1.25/products/roborock-q7-m5-plus"
+      },
+      "expectedRelationship": "complete_product",
+      "productUrlAccepted": false,
+      "imageUrlAccepted": false
+    },
+    {
+      "id": "wrong-sibling-image",
+      "target": {
+        "key": "robot-q7",
+        "rank": 1,
+        "productName": "Roborock Q7 M5+ Robot Vacuum",
+        "brand": "Roborock",
+        "model": "Q7 M5+",
+        "category": "robot vacuum"
+      },
+      "candidate": {
+        "title": "Roborock Q7 M5+ Robot Vacuum",
+        "productUrl": "https://us.roborock.com/products/roborock-q7-m5-plus",
+        "imageUrl": "https://us.roborock.com/images/roborock-q10-s5-plus.jpg"
+      },
+      "expectedRelationship": "complete_product",
+      "productUrlAccepted": true,
+      "imageUrlAccepted": false
+    },
+    {
+      "id": "sparse-title-with-product-metadata",
+      "target": {
+        "key": "chair-verve",
+        "rank": 1,
+        "productName": "Branch Verve Chair",
+        "brand": "Branch",
+        "model": "Verve Chair",
+        "category": "office chair"
+      },
+      "candidate": {
+        "title": "Verve Chair",
+        "structuredProductNames": [
+          "Branch Verve Ergonomic Office Chair"
+        ],
+        "productUrl": "https://www.branchfurniture.com/products/verve-chair"
+      },
+      "expectedRelationship": "complete_product",
+      "productUrlAccepted": true,
+      "imageUrlAccepted": false
+    },
+    {
+      "id": "sparse-title-remains-ambiguous",
+      "target": {
+        "key": "chair-verve",
+        "rank": 1,
+        "productName": "Branch Verve Chair",
+        "brand": "Branch",
+        "model": "Verve Chair",
+        "category": "office chair"
+      },
+      "candidate": {
+        "title": "Verve Chair",
+        "productUrl": "https://www.branchfurniture.com/products/verve-chair"
+      },
+      "expectedRelationship": "unknown",
+      "productUrlAccepted": false,
+      "imageUrlAccepted": false
+    }
+  ]
+}

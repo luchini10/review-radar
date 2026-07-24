@@ -3322,6 +3322,49 @@ a promising recommendation-quality lever, not an asset-safety repair or a
 promotion decision. Terra remains the production default and Direct-Terra
 remains default-off.
 
+### OAI-T9 — final convergence
+
+**Phases 1–2 complete-product safety result (completed 2026-07-24):**
+Direct-Terra verifier v5 now assigns one server-only relationship to every
+citation, organic, Shopping, and fetched-page candidate:
+`complete_product`, `bundle_including_product`,
+`accessory_or_replacement`, `different_product`, `non_product_page`, or
+`unknown`. Only the first two may supply a website or image. Exact identity is
+therefore necessary but no longer sufficient.
+
+The generalized boundary rejects standalone complements even when their title
+and URL repeat the complete product's brand/model. It preserves explicit
+complete-product bundles and all existing sibling, wrong-type, editorial,
+redirect, private-network, descriptive-variant, numeric-boundary, and
+wrong-image vetoes. Ambiguous candidates may receive one bounded product-page
+fetch per ranked product, capped at five per request; page title or JSON-LD
+Product metadata must then prove the complete product. Failure or continued
+ambiguity leaves the asset unavailable.
+
+The tracked sanitized relationship corpus and generated mutations cover
+manufacturer/retailer products, bundles, batteries, tanks, filters, hoses,
+brushes, docks, chargers, parts, parent-model text embedded in complements,
+sibling suffixes, punctuation/spacing, `Q7` versus `Q70`, descriptive models,
+brand conflicts, editorial/support/category/search/redirect/private pages,
+wrong images, sparse Product metadata, and unresolved evidence. No
+product/brand/category/retailer exception was added.
+
+Offline replay accounts for all 31 ranked products in the eight-run T8D set
+and revalidates its 24 retained links. The later T8D and T8E fixtures now
+definitively reject RR-099's replacement-water-tank ASIN. Historical fixtures
+that omitted original provider title evidence remain explicitly
+indeterminate rather than being silently counted as failures. The complete
+wall passes 1,354/1,354 tests across 195 suites; typecheck/build pass and lint
+has zero errors with three pre-existing warnings. RR-099 is Fixed. No external
+request, flag, deployment, or production change occurred.
+
+**Next in the same approved goal:** Phase 3 upgrades the internal same-call
+contract to `direct-terra-master-prompt-v3` with a server-only 8–15 product
+candidate slate and complete, request-derived requirement verdicts. The
+client-facing completed response, Terra-authored product order, and
+default-off flags remain unchanged. Phase 4 live Sol acceptance is not
+authorized by this record.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen

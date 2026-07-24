@@ -1,9 +1,9 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through OAI-T8D diagnosis
+## Compiled for AI Agent Consumption — Phase 0 through OAI-T9 safety closure
 
 **Generated:** 2026-07-24
-**Scope:** All phases from initial measurement harness through the OAI-T8D
-cross-category root-cause diagnostic
+**Scope:** All phases from initial measurement harness through the OAI-T9
+complete-product safety boundary
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -25,9 +25,9 @@ only when maintaining this register or auditing its full history.
 | High | 47 |
 | Medium | 33 |
 | Low | 5 |
-| Open | 1 |
+| Open | 0 |
 | Needs Investigation | 6 |
-| Fixed | 91 |
+| Fixed | 92 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -3984,7 +3984,7 @@ RR-098 remains Fixed.
 | **Phase** | OAI-T8D root-cause revalidation |
 | **Severity** | High |
 | **Title** | Direct-Terra asset verifier accepts a replacement accessory as a product buy link |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** The robot-vacuum revalidation attached an Amazon replacement
 water-storage-tank listing to the ranked `TP-Link Tapo RV30 MAX Plus` product
@@ -4027,12 +4027,37 @@ Shopping row and visually showed the complete vacuum and dock, but the buy
 link remained unsafe. RR-099 remains Open and still requires the generalized
 zero-live complement veto.
 
+**OAI-T9 generalized closure (2026-07-24):** Verifier v5 now requires a
+server-only product-relationship verdict after identity matching and before
+any link or image selection. Only `complete_product` and
+`bundle_including_product` may supply an asset; standalone complements,
+different products, non-product pages, and unresolved relationships cannot.
+The rule uses product type, relationship grammar, structured Product metadata,
+and existing identity/eligibility gates. It contains no TP-Link,
+robot-vacuum, retailer, ASIN, or captured-path exception.
+
+Fail-first and adversarial coverage blocks the captured water tank plus
+unrelated batteries, filters, hoses, brushes, docks, chargers, parts, and a
+`Water Tank for <complete product>` form that does not say "replacement."
+Explicit complete-product bundles remain eligible. Ambiguous provider evidence
+may receive one bounded page fetch per ranked product (five per request), but
+the page title or JSON-LD Product name must then prove the complete product;
+fetch failure or continued ambiguity leaves the asset `null`.
+
+The saved T8D replay accounts for 31/31 ranked products and revalidates 24
+retained links. The three-case T8D and one-case T8E replays both now
+definitively block Amazon ASIN `B0DLH5B3SN` as
+`accessory_or_replacement`. Six old T8D links remain honestly indeterminate
+because the v1 fixtures did not retain original provider titles. Verification
+passes 1,354/1,354 tests across 195 suites, typecheck, production build, and
+lint with zero errors and three pre-existing warnings. No live request ran.
+
 ---
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (1 issue)
-- RR-099: Direct-Terra asset verifier accepts a replacement accessory as a product buy link
+### Open (0 issues)
+- None
 
 ### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
@@ -4043,7 +4068,7 @@ zero-live complement veto.
 - RR-092: Editorial Product markup can verify identity/image without proving the tested model
 ### Fixed (91 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
-RR-038 through RR-044, RR-046 through RR-090, and RR-093 through RR-098
+RR-038 through RR-044, RR-046 through RR-090, and RR-093 through RR-099
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)

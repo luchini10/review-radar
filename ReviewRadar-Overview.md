@@ -75,13 +75,32 @@ cache, no fallback, bounded response sizes, and no client-visible provider
 details. Their independent lanes run concurrently, but each lane remains
 sequential and fail-closed.
 
+Verifier v5 adds one shared server-only complete-product boundary after
+identity matching and before any asset selection. Every citation, organic,
+Shopping, and fetched-page candidate is classified as a complete product, a
+bundle containing the complete product, an accessory/replacement, a different
+product, a non-product page, or unknown. Only a complete product or valid
+bundle may supply a link or image. Exact brand/model text cannot make a tank,
+battery, filter, hose, brush, dock, charger, or other standalone complement
+eligible. Relationship wording and product-type evidence are evaluated
+generically; explicit product-plus-accessory bundles remain valid.
+
+When provider evidence proves identity but not the primary item, the resolver
+may fetch that candidate page before final selection, still within the
+existing one-fetch-per-ranked-product and five-fetch-per-request bounds.
+The fetched title or JSON-LD Product name must prove the complete requested
+product. Fetch failure or continued ambiguity returns `null`; a page-shaped
+manufacturer/retailer URL cannot upgrade an unknown or unsafe relationship.
+Relationship decisions and reasons are retained only in server diagnostics
+and do not change the public nullable `productUrl`/`imageUrl` contract.
+
 The completed-job token carries the shopper's requested product category only
 inside its authenticated encrypted server payload. The polling route restores
 that category before asset verification so type checks use the actual request,
 not a ranked product name substituted as the category. A product URL path that
 positively identifies a conflicting product type is rejected together with its
 image; exact manufacturer and recognized-retailer product pages still pass.
-For descriptive, non-coded models, verifier v4 also requires product and image
+For descriptive, non-coded models, the verifier also requires product and image
 URL path identity to remain coherent with the already-verified candidate
 title. Brand/category words, ordinary commerce path structure,
 colors/configuration labels, and opaque numeric/hash IDs are permitted; any

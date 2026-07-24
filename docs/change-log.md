@@ -9,6 +9,35 @@ Update this file after:
 - important bug fixes
 - live QA fixes worth remembering
 
+## 2026-07-24
+
+### Codex - Require a complete product before displaying its link or image
+
+#### Changed
+
+- Direct-Terra now assigns one product-relationship verdict to every proposed
+  website and image. Exact brand/model text alone can no longer turn a
+  replacement tank, battery, filter, hose, brush, dock, charger, or other
+  standalone complement into the complete recommended product.
+- Only complete products and bundles that visibly include the complete product
+  may supply an asset. Ambiguous manufacturer or retailer pages receive one
+  bounded page check; they remain unavailable unless page title or Product
+  metadata proves the complete item.
+- Relationship reasons stay server-only. Terra's recommendations, wording,
+  order, citations, and the public nullable link/image contract are unchanged.
+
+#### Verified
+
+- RR-099's captured replacement-water-tank link is blocked in both saved Terra
+  and Sol replays. The eight-run T8D replay accounts for 31/31 ranked products
+  and revalidates 24 retained links.
+- A tracked cross-category corpus and generated mutations preserve real
+  bundles while rejecting complements, sibling models, non-product pages,
+  wrong images, and ambiguous evidence.
+- Complete suite: 1,354/1,354 across 195 suites; typecheck and production build
+  pass; lint has zero errors and three pre-existing warnings. No live request,
+  flag change, deployment, `.env.local` change, or production change occurred.
+
 ## 2026-07-23
 
 ### Codex - Restore ranked cards and safe descriptive product links

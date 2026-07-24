@@ -146,6 +146,8 @@ describe("Direct-Terra first-loss observability", () => {
       pathIdentity: ["products", "alpha", "a", "100", "widget"],
       identityAccepted: true,
       identityReason: "accepted_exact_identity",
+      relationship: "complete_product",
+      relationshipReason: "complete_product_type_proven",
       productUrlAccepted: true,
       productUrlReason: "accepted_identity_safe",
       imageUrlAccepted: false,

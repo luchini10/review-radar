@@ -1,91 +1,94 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-24 by Codex after the one-case Sol versus Terra comparison.
-Use `git log -1` for the current documentation commit.
+Updated: 2026-07-24 by Codex after OAI-T9 Phases 1–2.
+Use `git log -1` for the current scoped safety commit.
 
 ## Current state
 
-The Direct-Terra one-main-call architecture remains default-off and undeployed.
-Terra remains the application default. Comparison commit `05c1d20` adds an
-explicit Sol-only harness override without changing normal request behavior.
+OAI-T9 Phases 1–2 are complete. Direct-Terra verifier v5 now requires one
+server-only complete-product relationship for every citation, organic,
+Shopping, and fetched-page asset candidate. Only `complete_product` and
+`bundle_including_product` may provide a website or image.
 
-The frozen constrained robot-vacuum comparison completed once:
+RR-099 is Fixed. The captured Tapo replacement-water-tank link and unrelated
+complement forms are blocked without a product, brand, category, retailer,
+ASIN, or observed-path production exception. Valid complete-product bundles
+remain eligible. Ambiguous pages require bounded title/JSON-LD Product proof;
+failure or unresolved evidence leaves the asset unavailable.
 
-- Sol ranked four products and covered `2/4` leader families versus the saved
-  Terra run's two products and `0/4`;
-- zero wrong-type or scored budget violations were recorded and all four cards
-  carried self-emptying evidence;
-- deterministic price coverage was only `1/4`, so three under-$300 claims
-  remain AI-reported and unverified;
-- all four downloaded images showed the corresponding complete robot and dock;
-- three links were exact manufacturer product pages; and
-- RR-099 repeated unchanged: the Tapo RV30 Max Plus card received an Amazon
-  replacement-water-tank/accessory URL.
+Direct-Terra remains default-off and undeployed. Terra remains the application
+default. No live request, flag change, `.env.local` edit, deployment,
+production change, or push occurred.
 
-RR-014 remains Needs Investigation, RR-099 remains Open, and stability is
-NotScored. No default, flag, deployment, or production state changed.
+## Verification and evidence
 
-## Live evidence and verification
-
-Sanitized untracked evidence is under
-`tests/fixtures/review-radar-live/oai-t8e-sol-terra-robot-comparison-05c1d20/`.
-Never stage that directory.
-
-Actual live usage:
-
-- 1 Sol/high OpenAI Responses create;
-- 15 hosted web-search actions and 56 retrieves;
-- 4 Serper Shopping requests and 5 Serper organic requests;
-- 3 bounded product-page fetches and 4 selected-image retrievals;
-- 0 safety cancels;
-- `$1.448205` estimated OpenAI cost; and
-- approximately 5 minutes 3 seconds wall time.
-
-There were no retries, replacements, fallbacks, second responses, additional
-cases, SearchAPI calls, flag changes, `.env.local` changes, deployments,
-production changes, or pushes.
-
-Preparation verification:
-
-- focused prompt/adapter tests: 8/8;
-- complete wall: 1340/1340 across 192 suites;
+- focused complete-product/asset/page wall: 78/78 before final adversarial
+  expansion; final relationship/verifier wall: 57/57;
+- complete suite: 1,354/1,354 across 195 suites;
 - typecheck and production build: pass;
-- lint: zero errors, three pre-existing warnings;
-- Sol dry-run preflight and `git diff --check`: pass.
+- lint: zero errors and three pre-existing warnings;
+- `git diff --check`: pass;
+- eight-run T8D replay: 31/31 ranked products accounted, 24 retained links
+  revalidated, one definitive older wrong-variant block, six honestly
+  indeterminate historical warnings;
+- later T8D and T8E replays: RR-099 ASIN `B0DLH5B3SN` definitively blocked as
+  `accessory_or_replacement`; and
+- tracked sanitized relationship corpus plus generated cross-category
+  mutations: pass.
 
-## Next approval-gated step
+No provider request was used for this evidence. Historical final-only fixtures
+that omitted original provider titles cannot reconstruct live candidate
+coverage and must remain labeled indeterminate.
 
-The next eligible behavior phase remains the zero-live RR-099 safety repair:
+## Current approved goal: OAI-T9 Phase 3
 
-1. Reproduce the saved Tapo replacement-tank link and unrelated
-   product/complement pairs with fail-first tests.
-2. Add one generalized product-versus-complement veto after model matching and
-   before link or image selection.
-3. Preserve explicit product-plus-accessory bundles and all sibling,
-   editorial, redirect, private-host, wrong-type, wrong-image, and numeric
-   boundary protections.
-4. Replay every accepted link in the saved T8D and T8E fixtures.
-5. Run focused and complete tests, typecheck, lint, build, inspect the diff,
-   regenerate this handoff, and commit scoped files automatically.
+Continue without pausing through a zero-live upgrade to
+`direct-terra-master-prompt-v3`.
 
-Do not combine the safety repair with a Sol-default decision or RR-014 prompt
-change. Any later Sol decision requires repeated multi-category evidence after
-RR-099 is closed.
+The same OpenAI response must contain a server-only `candidate_slate` of 8–15
+distinct products. Each candidate carries identity, disposition, nullable
+rank, evidence quality, concise reason, exact hosted-search URLs, and one
+`pass` / `fail` / `needs_verification` verdict for every applicable
+request-derived requirement ID.
 
-**Recommended reasoning level:** High. The next change is a product-identity
-trust boundary where an over-broad complement rule could suppress legitimate
-bundles or an under-broad rule could preserve unsafe buy links. Maximum
-reasoning is unnecessary for the bounded zero-live repair.
+Required server invariants:
+
+1. Requirement IDs are generated from the submitted request, with stable
+   feature IDs, deterministic order, uniqueness, and complete coverage.
+2. Every ranked heading maps to exactly one slate entry with the same rank and
+   identity; ReviewRadar never adds, substitutes, or reorders products.
+3. Ranked products cannot fail a hard requirement; Best Match must pass all
+   hard requirements. Other ranked products may use `needs_verification` only
+   when the visible report says so.
+4. Price observations bind to the same ranked identity.
+5. All slate and requirement evidence URLs belong to the same response-owned
+   hosted-search source registry.
+6. Invalid slate/rank/requirement consistency fails closed. Citation failures
+   remain granular, except losing all evidence for a Best Match hard
+   requirement fails the response.
+7. Candidate-slate diagnostics are sanitized and server-only. Client-facing
+   completed response shape, report, recommendations, and asset behavior stay
+   unchanged.
+
+Finish with adversarial prompt/schema tests, full offline validation, diff
+review, documentation, and an automatic scoped commit. Keep all flags off.
+
+**Expected North-Star effect:** improve recommendation recall and hard-
+requirement truth by forcing same-call broad consideration before ranking.
+No live improvement is claimed until the separately approved Phase 4 window.
+
+**Recommended reasoning level:** High. Dynamic requirement completeness,
+identity/rank binding, and source ownership are fail-closed trust contracts;
+maximum reasoning is unnecessary once the schema is frozen.
 
 ## Approval and flag state
 
-The one-case Sol live approval is exhausted. No provider request, image
-request, page request, deployment, production change, flag promotion,
-`.env.local` edit, or push is currently authorized.
+Taylor explicitly resumed the OAI-T9 goal and requested uninterrupted work
+through Phase 3. Scoped Phase 3 files may be committed automatically.
 
-Scoped local phase files may be committed automatically under Taylor's
-standing instruction, but behavior work still stops at the phase boundary and
-is reported before the next phase.
+No OpenAI, Serper, SearchAPI, page, image, or other external request is
+authorized. Phase 4's 12-run Sol/high window still requires a separately
+approved exact numeric envelope and current-price dollar ceiling.
 
 Committed defaults remain:
 
@@ -96,32 +99,32 @@ Committed defaults remain:
 
 ## Hard boundaries
 
-- No OpenAI, Serper, SearchAPI, direct-page, image, or other external request
-  without a new exact numeric approval.
-- No deployment, publication, push, flag promotion, `.env.local` edit, or
-  production change.
-- Preserve model-authored product names, order, report, citations, and price
-  caveats.
-- No product-, brand-, category-, retailer-, phrase-, or observed-path
-  production exception.
-- Missing an uncertain asset is preferable to displaying an accessory or
-  wrong product.
+- No external request, deployment, publication, push, flag promotion,
+  `.env.local` edit, or production change.
+- Preserve Terra-authored product names, order, report prose, citations, and
+  price caveats.
+- No benchmark leaders, category queries, or product/category-specific rules
+  in the prompt or code.
+- Do not weaken product identity, relationship, price, citation, requirement,
+  product-type, wrong-image, redirect, or private-network gates.
+- Never send raw model responses, provider IDs, secrets, or server diagnostics
+  to the client.
 - Never stage live fixtures or unrelated `.claude/`, baseline, or
   `fable-transfer-kit/` artifacts. Never use `git add -A`.
 
 ## Review debt and retrieval map
 
-Dialogue entry `[112]` asks Claude to challenge whether the one-case Sol gain
-is meaningful and confirms that RR-099 is model-independent. The immediate
-safety repair does not depend on that reply.
+Dialogue entry `[113]` asks Claude to challenge the complete-product grammar
+and bounded ambiguity handoff. That advisory review is not required before
+Phase 3 implementation, but Phase 3 must receive its own adversarial review
+before closeout.
 
 | Need | Retrieve |
 |---|---|
-| Current state and next approval | this file |
-| Canonical defects | RR-014 and RR-099 in `docs/RR-Issues-Report.md` |
-| Live phase result | latest entry in `docs/qa-loop-results.md` |
-| Peer-review request | dialogue entry `[112]` |
-| Phase history | OAI-T8E note in `docs/forward-roadmap.md` |
-| Sol evidence | untracked `oai-t8e-sol-terra-robot-comparison-05c1d20/` |
-| Terra comparison evidence | untracked `oai-t8d-root-cause-revalidation-56b6df0/` |
-| Comparison implementation | commit `05c1d20` |
+| Current state and Phase 3 contract | this file |
+| Standing gates and OAI-T9 record | `docs/forward-roadmap.md`, OAI-T9 |
+| Closed safety defect | RR-099 in `docs/RR-Issues-Report.md` |
+| Canonical zero-live evidence | latest OAI-T9 entry in `docs/qa-loop-results.md` |
+| Durable asset contract | OAI-T9 section in `docs/review-radar-test-memory.md` |
+| Peer challenge | dialogue entry `[113]` |
+| Historical live evidence | untracked T8D/T8E fixture directories |

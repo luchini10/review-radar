@@ -47,6 +47,7 @@ export type DirectTerraExtractedPageAssets = {
   title: string;
   canonicalUrl: string | null;
   imageCandidates: DirectTerraPageImageCandidate[];
+  productNames: string[];
 };
 
 // First-party image CDNs for major retailers whose product photos live off
@@ -165,14 +166,20 @@ function tagAttributes(tag: string) {
   return attributes;
 }
 
-function jsonLdImageUrls(node: unknown, collected: string[]) {
+function jsonLdProductData(
+  node: unknown,
+  collectedImages: string[],
+  collectedNames: string[],
+) {
   if (Array.isArray(node)) {
-    for (const item of node) jsonLdImageUrls(item, collected);
+    for (const item of node) {
+      jsonLdProductData(item, collectedImages, collectedNames);
+    }
     return;
   }
   if (!isRecord(node)) return;
   if (Array.isArray(node["@graph"])) {
-    jsonLdImageUrls(node["@graph"], collected);
+    jsonLdProductData(node["@graph"], collectedImages, collectedNames);
   }
   const type = node["@type"];
   const types = Array.isArray(type) ? type : [type];
@@ -180,12 +187,21 @@ function jsonLdImageUrls(node: unknown, collected: string[]) {
     (value) => typeof value === "string" && value.toLowerCase() === "product",
   );
   if (!isProduct) return;
+  if (
+    typeof node.name === "string" &&
+    node.name.trim() &&
+    collectedNames.length < MAX_JSON_LD_BLOCKS
+  ) {
+    collectedNames.push(
+      node.name.replace(/\s+/g, " ").trim().slice(0, 300),
+    );
+  }
   const image = node.image;
   const imageEntries = Array.isArray(image) ? image : [image];
   for (const entry of imageEntries) {
-    if (typeof entry === "string") collected.push(entry);
+    if (typeof entry === "string") collectedImages.push(entry);
     else if (isRecord(entry) && typeof entry.url === "string") {
-      collected.push(entry.url);
+      collectedImages.push(entry.url);
     }
   }
 }
@@ -195,6 +211,7 @@ export function extractDirectTerraPageAssets(
   pageUrl: string,
 ): DirectTerraExtractedPageAssets {
   const imageCandidates: DirectTerraPageImageCandidate[] = [];
+  const productNames: string[] = [];
   const seenImageUrls = new Set<string>();
   const addImage = (
     value: string | null | undefined,
@@ -255,14 +272,20 @@ export function extractDirectTerraPageAssets(
     try {
       const parsed: unknown = JSON.parse(raw);
       const urls: string[] = [];
-      jsonLdImageUrls(parsed, urls);
+      const names: string[] = [];
+      jsonLdProductData(parsed, urls, names);
       for (const value of urls) addImage(value, "json_ld");
+      for (const name of names) {
+        if (!productNames.includes(name) && productNames.length < MAX_JSON_LD_BLOCKS) {
+          productNames.push(name);
+        }
+      }
     } catch {
       // Malformed JSON-LD is ignored; page metadata stays best-effort.
     }
   }
 
-  return { title, canonicalUrl, imageCandidates };
+  return { title, canonicalUrl, imageCandidates, productNames };
 }
 
 function imageHostAllowed(imageUrl: string, pageUrl: string) {
@@ -294,7 +317,11 @@ export function verifyDirectTerraPageAssets(input: {
     if (!imageHostAllowed(candidate.url, pageUrl)) continue;
     const verified = validateProductImageCandidate(
       {
-        evidenceText: page.title || target.productName,
+        evidenceText:
+          [page.title, ...(page.productNames ?? [])]
+            .filter(Boolean)
+            .join(" ") ||
+          target.productName,
         source: candidate.source,
         url: candidate.url,
       },

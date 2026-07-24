@@ -13,9 +13,15 @@ import {
 import { classifyProductTypeMatch } from "./productTypeMatch.ts";
 import { normalizeTwoLayerSourceUrl } from "./twoLayerSourceUrl.ts";
 import { classifyDirectTerraLinkHost } from "./directTerraLinkPreference.ts";
+import {
+  classifyDirectTerraProductRelationship,
+  directTerraRelationshipCanSupplyAsset,
+  type DirectTerraProductRelationship,
+  type DirectTerraProductRelationshipVerdict,
+} from "./directTerraProductRelationship.ts";
 
 export const DIRECT_TERRA_ASSET_VERIFIER_VERSION =
-  "direct-terra-asset-verifier-v4";
+  "direct-terra-asset-verifier-v5";
 
 export type DirectTerraAssetTarget = {
   key: string;
@@ -32,11 +38,14 @@ export type DirectTerraAssetCandidate = {
   imageUrl?: unknown;
   imageSource?: unknown;
   snippet?: unknown;
+  structuredProductNames?: unknown;
 };
 
 export type DirectTerraAssetDecision = {
   candidateIndex: number;
   title: string;
+  relationship: DirectTerraProductRelationship;
+  relationshipReason: DirectTerraProductRelationshipVerdict["reason"];
   identityAccepted: boolean;
   identityReason:
     | "accepted_exact_identity"
@@ -58,11 +67,13 @@ export type DirectTerraAssetDecision = {
     | "product_url_ineligible"
     | "product_url_type_conflict"
     | "product_url_descriptive_identity_conflict"
-    | "product_url_identity_mismatch";
+    | "product_url_identity_mismatch"
+    | "product_relationship_not_safe";
   imageUrlAccepted: boolean;
   imageUrlReason: string;
   productUrl: string | null;
   imageUrl: string | null;
+  pageFetchCandidateUrl: string | null;
 };
 
 export type DirectTerraAssetVerification = {
@@ -75,6 +86,12 @@ export type DirectTerraAssetVerification = {
   productUrlStatus: "accepted_identity_safe" | "unavailable";
   imageUrlStatus: "accepted_identity_safe" | "unavailable";
   decisions: DirectTerraAssetDecision[];
+};
+
+export type DirectTerraPageFetchCandidate = {
+  targetKey: string;
+  rank: number;
+  productUrl: string;
 };
 
 function asText(value: unknown, maxLength = 500) {
@@ -423,11 +440,13 @@ function urlHasAccessoryPathSegment(url: string) {
 
 function coreModelInUrlPath(url: string, model: string) {
   try {
-    const pathCompact = compactIdentity(
-      decodeURIComponent(new URL(url).pathname),
+    const pathTokens = new Set(
+      normalizedIdentityTokens(
+        decodeURIComponent(new URL(url).pathname),
+      ),
     );
     const core = modelCoreTokens(model);
-    return core.length > 0 && core.every((token) => pathCompact.includes(token));
+    return core.length > 0 && core.every((token) => pathTokens.has(token));
   } catch {
     return false;
   }
@@ -747,10 +766,19 @@ function evaluateCandidate(
   candidateIndex: number,
 ): DirectTerraAssetDecision {
   const title = asText(candidate.title, 300);
+  const structuredProductNames = Array.isArray(candidate.structuredProductNames)
+    ? candidate.structuredProductNames
+        .map((value) => asText(value, 300))
+        .filter(Boolean)
+        .slice(0, 5)
+    : [];
+  const identityEvidence = [title, ...structuredProductNames]
+    .filter(Boolean)
+    .join(" ");
   let identity: Pick<
     DirectTerraAssetDecision,
     "identityAccepted" | "identityReason"
-  > = identityDecision(target, title);
+  > = identityDecision(target, identityEvidence);
   // The URL slug proved identity; the path carries the core model, so the
   // later productPageMatchesIdentity title/URL re-check is redundant and would
   // re-impose the exact-trim strictness this path deliberately relaxes.
@@ -759,7 +787,11 @@ function evaluateCandidate(
     !identity.identityAccepted &&
     (identity.identityReason === "model_not_in_title" ||
       identity.identityReason === "brand_not_in_title") &&
-    urlSlugIdentity(target, title, canonicalHttpUrl(candidate.productUrl))
+    urlSlugIdentity(
+      target,
+      identityEvidence,
+      canonicalHttpUrl(candidate.productUrl),
+    )
   ) {
     identity = {
       identityAccepted: true,
@@ -767,9 +799,21 @@ function evaluateCandidate(
     };
     slugProvenIdentity = true;
   }
+  const relationship = classifyDirectTerraProductRelationship({
+    target,
+    title,
+    snippet: candidate.snippet,
+    productUrl: candidate.productUrl,
+    structuredProductNames,
+    identityAccepted: identity.identityAccepted,
+    identityReason: identity.identityReason,
+  });
   const base = {
     candidateIndex,
     title,
+    relationship: relationship.relationship,
+    relationshipReason: relationship.reason,
+    pageFetchCandidateUrl: null as string | null,
     ...identity,
   };
 
@@ -786,6 +830,9 @@ function evaluateCandidate(
   }
 
   const productUrl = canonicalHttpUrl(candidate.productUrl);
+  const relationshipCanSupplyAsset = directTerraRelationshipCanSupplyAsset(
+    relationship.relationship,
+  );
   let safeProductUrl: string | null = null;
   let productUrlReason: DirectTerraAssetDecision["productUrlReason"] =
     "missing_or_invalid_product_url";
@@ -798,37 +845,40 @@ function evaluateCandidate(
     productUrlReason = "product_url_type_conflict";
   } else if (
     productUrl &&
-    productUrlPathHasDescriptiveIdentityConflict(target, title, productUrl)
+    productUrlPathHasDescriptiveIdentityConflict(
+      target,
+      identityEvidence,
+      productUrl,
+    )
   ) {
     productUrlReason = "product_url_descriptive_identity_conflict";
+  } else if (productUrl && !relationshipCanSupplyAsset) {
+    productUrlReason = "product_relationship_not_safe";
+    if (relationship.relationship === "unknown") {
+      base.pageFetchCandidateUrl = productUrl;
+    }
   } else if (productUrl) {
     const eligibility = classifyProductEligibility({
       brand: target.brand,
       category: target.category,
-      name: title,
+      name: identityEvidence,
       productName: target.productName,
       snippet: asText(candidate.snippet, 800),
-      sourceTitle: title,
+      sourceTitle: identityEvidence,
       sourceType: "serper",
       url: productUrl,
     });
 
-    // A brand-owned/popular-retailer product slug can prove a sparse title's
-    // missing model. When the generic eligibility classifier is merely
-    // "unknown", that positive slug proof is sufficient; explicit negatives
-    // (evidence-only, listing/search, accessory, and other blocked states)
-    // remain vetoes.
-    const slugProofResolvesUnknownEligibility =
-      slugProvenIdentity && eligibility.status === "unknown";
-    const descriptivePathProvenIdentity =
-      modelCoreTokens(target.model).every((token) => !/\d/.test(token)) &&
-      coreModelInUrlPath(productUrl, target.model);
+    const pathProvenIdentity = coreModelInUrlPath(
+      productUrl,
+      target.model,
+    );
 
-    if (
-      !eligibility.canRenderAsProductCard &&
-      !slugProofResolvesUnknownEligibility
-    ) {
+    if (!eligibility.canRenderAsProductCard) {
       productUrlReason = "product_url_ineligible";
+      if (eligibility.status === "unknown") {
+        base.pageFetchCandidateUrl = productUrl;
+      }
     } else if (
       // For slug-proven identity the URL path already carried the core model
       // (and no conflicting sibling); re-running the exact-trim page matcher
@@ -838,7 +888,7 @@ function evaluateCandidate(
       // has accepted its model-bearing path. This avoids misreading a
       // retailer's opaque product ID as a competing coded model.
       !slugProvenIdentity &&
-      !descriptivePathProvenIdentity &&
+      !pathProvenIdentity &&
       !productPageMatchesIdentity({
         brand: target.brand,
         model: target.model,
@@ -852,6 +902,18 @@ function evaluateCandidate(
       safeProductUrl = productUrl;
       productUrlReason = "accepted_identity_safe";
     }
+  }
+
+  if (!relationshipCanSupplyAsset) {
+    return {
+      ...base,
+      productUrlAccepted: false,
+      productUrlReason,
+      imageUrlAccepted: false,
+      imageUrlReason: "product_relationship_not_safe",
+      productUrl: null,
+      imageUrl: null,
+    };
   }
 
   const rawImageUrl = asText(candidate.imageUrl, 4_096);
@@ -990,4 +1052,22 @@ export function verifyDirectTerraAssetCandidates(input: {
     imageUrlStatus: imageUrl ? "accepted_identity_safe" : "unavailable",
     decisions,
   };
+}
+
+export function directTerraPageFetchCandidates(
+  verification: DirectTerraAssetVerification,
+): DirectTerraPageFetchCandidate[] {
+  const seen = new Set<string>();
+  return verification.decisions.flatMap((decision) => {
+    const productUrl = decision.pageFetchCandidateUrl;
+    if (!productUrl || seen.has(productUrl)) return [];
+    seen.add(productUrl);
+    return [
+      {
+        targetKey: verification.targetKey,
+        rank: verification.rank,
+        productUrl,
+      },
+    ];
+  });
 }

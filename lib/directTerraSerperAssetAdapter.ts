@@ -1,9 +1,11 @@
 import {
+  directTerraPageFetchCandidates,
   directTerraAssetTargetIsCoherent,
   verifyDirectTerraAssetCandidates,
   type DirectTerraAssetCandidate,
   type DirectTerraAssetTarget,
   type DirectTerraAssetVerification,
+  type DirectTerraPageFetchCandidate,
 } from "./directTerraAssetVerifier.ts";
 import {
   summarizeDirectTerraAssetVerification,
@@ -79,6 +81,10 @@ type DirectTerraSerperAssetAdapterInput = {
   /** Sanitized server-only first-loss hook; never contains query or row text. */
   recordFirstLossDiagnostic?: (
     diagnostic: DirectTerraProviderLaneDiagnostic,
+  ) => void;
+  /** Server-only ambiguity handoff; never serialized into adapter results. */
+  recordPageFetchCandidate?: (
+    candidate: DirectTerraPageFetchCandidate,
   ) => void;
 };
 
@@ -344,6 +350,9 @@ export async function resolveDirectTerraAssetsWithSerperShopping(
     const verification = candidates.length
       ? verifyDirectTerraAssetCandidates({ target, candidates })
       : unavailableVerification(target);
+    for (const candidate of directTerraPageFetchCandidates(verification)) {
+      input.recordPageFetchCandidate?.(candidate);
+    }
     const diagnostic = {
       targetKey: target.key,
       rank: target.rank,

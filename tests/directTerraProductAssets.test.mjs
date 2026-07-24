@@ -397,4 +397,118 @@ describe("Direct-Terra product asset orchestration", () => {
     assert.equal(result[0].productUrl, organicUrl);
     assert.equal(result[0].imageUrl, "https://images.example/ridgid-hd1200-thumb.jpg");
   });
+
+  it("fetches one ambiguous manufacturer page and accepts it only after Product metadata proves the complete product", async () => {
+    const target = {
+      key: "rank-1-branch-verve",
+      rank: 1,
+      productName: "Branch Verve Chair",
+      brand: "Branch",
+      model: "Verve Chair",
+      category: "office chair",
+    };
+    const productUrl = "https://www.branchfurniture.com/products/verve-chair";
+    const fetchedPages = [];
+    const result = await resolveDirectTerraProductAssets({
+      targets: [target],
+      reportMarkdown: [
+        `## #1 Best Match - ${target.productName}`,
+        `[Official product page](${productUrl})`,
+      ].join("\n\n"),
+      activeCitationUrls: [productUrl],
+      responseSources: [{ url: productUrl, title: "Verve Chair" }],
+      productPageTransport: async (url) => {
+        fetchedPages.push(url);
+        return {
+          finalUrl: productUrl,
+          html: [
+            "<html><head><title>Verve Chair</title>",
+            `<link rel="canonical" href="${productUrl}">`,
+            '<meta property="og:image" content="https://www.branchfurniture.com/images/verve-chair.jpg">',
+            '<script type="application/ld+json">',
+            JSON.stringify({
+              "@type": "Product",
+              name: "Branch Verve Ergonomic Office Chair",
+              image:
+                "https://www.branchfurniture.com/images/verve-chair.jpg",
+            }),
+            "</script></head><body></body></html>",
+          ].join(""),
+        };
+      },
+    });
+
+    assert.deepEqual(fetchedPages, [productUrl]);
+    assert.equal(result[0].productUrl, productUrl);
+    assert.equal(
+      result[0].imageUrl,
+      "https://www.branchfurniture.com/images/verve-chair.jpg",
+    );
+  });
+
+  it("omits an ambiguous page when its fetched title and Product metadata still do not prove the requested type", async () => {
+    const target = {
+      key: "rank-1-branch-verve",
+      rank: 1,
+      productName: "Branch Verve Chair",
+      brand: "Branch",
+      model: "Verve Chair",
+      category: "office chair",
+    };
+    const productUrl = "https://www.branchfurniture.com/products/verve-chair";
+    const result = await resolveDirectTerraProductAssets({
+      targets: [target],
+      reportMarkdown: [
+        `## #1 Best Match - ${target.productName}`,
+        `[Official product page](${productUrl})`,
+      ].join("\n\n"),
+      activeCitationUrls: [productUrl],
+      responseSources: [{ url: productUrl, title: "Verve Chair" }],
+      productPageTransport: async () => ({
+        finalUrl: productUrl,
+        html:
+          "<html><head><title>Verve Chair</title></head><body></body></html>",
+      }),
+    });
+
+    assert.equal(result[0].productUrl, null);
+    assert.equal(result[0].imageUrl, null);
+  });
+
+  it("never fetches or displays an exact-model replacement part", async () => {
+    const target = {
+      key: "rank-1-tapo-rv30",
+      rank: 1,
+      productName: "TP-Link Tapo RV30 Max Plus Robot Vacuum",
+      brand: "TP-Link Tapo",
+      model: "RV30 Max Plus",
+      category: "robot vacuum",
+    };
+    const accessoryUrl =
+      "https://www.amazon.com/XvuaTeIw-TP-link-Storage-Robotic-Accessories/dp/B0DLH5B3SN";
+    let fetches = 0;
+    const result = await resolveDirectTerraProductAssets({
+      targets: [target],
+      reportMarkdown: [
+        `## #1 Best Match - ${target.productName}`,
+        `[Candidate page](${accessoryUrl})`,
+      ].join("\n\n"),
+      activeCitationUrls: [accessoryUrl],
+      responseSources: [
+        {
+          url: accessoryUrl,
+          title:
+            "for TP-Link Tapo RV30 Plus Water Storage Tank Replacement Robotic Accessories",
+        },
+      ],
+      productPageTransport: async () => {
+        fetches += 1;
+        return null;
+      },
+    });
+
+    assert.equal(fetches, 0);
+    assert.equal(result[0].productUrl, null);
+    assert.equal(result[0].imageUrl, null);
+  });
 });

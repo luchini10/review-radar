@@ -132,6 +132,8 @@ export function summarizeDirectTerraAssetVerification(
           pathIdentity,
           identityAccepted: decision.identityAccepted,
           identityReason: decision.identityReason,
+          relationship: decision.relationship,
+          relationshipReason: decision.relationshipReason,
           productUrlAccepted: decision.productUrlAccepted,
           productUrlReason: decision.productUrlReason,
           imageUrlAccepted: decision.imageUrlAccepted,
@@ -152,6 +154,12 @@ export function summarizeDirectTerraAssetVerification(
     ).length,
     identityReasons: reasonCounts(
       decisions.map((decision) => decision.identityReason),
+    ),
+    relationships: reasonCounts(
+      decisions.map((decision) => decision.relationship),
+    ),
+    relationshipReasons: reasonCounts(
+      decisions.map((decision) => decision.relationshipReason),
     ),
     productUrlReasons: reasonCounts(
       decisions.map((decision) => decision.productUrlReason),
@@ -747,6 +755,8 @@ export function emptyDirectTerraVerificationSummary(): DirectTerraVerificationSu
     acceptedWebsiteCount: 0,
     acceptedImageCount: 0,
     identityReasons: {},
+    relationships: {},
+    relationshipReasons: {},
     productUrlReasons: {},
     imageUrlReasons: {},
     candidateIdentitySamples: [],

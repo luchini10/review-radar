@@ -10811,3 +10811,56 @@ meet the planned `3/4` recall floor and cannot repair deterministic asset
 verification. No model default, flag, deployment, or production state changed.
 RR-014 remains Needs Investigation, RR-099 remains Open, and the next eligible
 behavior phase remains the generalized zero-live RR-099 complement veto.
+
+---
+
+## 🟧 Codex — 2026-07-24 — OAI-T9 Phases 1–2 complete-product safety wall
+
+**Decision unblocked:** close the model-independent RR-099 asset-safety defect
+before changing the recommendation prompt or purchasing another sample.
+
+**Fail-first evidence and generalized repair:** The saved Tapo replacement
+water tank was accepted because exact parent-model identity could outrank the
+fact that the listing's primary item was a complement. Verifier v5 now assigns
+one server-only relationship to every citation, organic, Shopping, and fetched
+page candidate. Only `complete_product` and `bundle_including_product` may
+supply a link or image. Exact identity, a product-shaped URL, or a recognized
+host cannot override accessory/replacement, different-product,
+non-product-page, or unknown.
+
+Adversarial review found a second form after the initial fix:
+`Water Tank for <exact complete product>` passed when the word `replacement`
+was absent. The final rule examines the item that leads a directed
+relationship, so that form is a complement while a complete product with
+included accessories remains a valid bundle. No product, brand, category,
+retailer, ASIN, or captured-path exception was added.
+
+**Bounded ambiguity handling:** Identity-safe but relationship-unknown pages
+may be fetched once per ranked product, within the existing five-fetch request
+cap. The fetched title or JSON-LD Product name must prove the complete
+requested product. Fetch failure or continued ambiguity leaves the asset
+`null`. Unsafe relationships are never fetched for rescue.
+
+**Offline evidence:**
+
+- tracked sanitized corpus plus generated mutations: 23+ cross-category
+  cases covering complete products, bundles, complements, siblings,
+  punctuation/spacing, numeric boundaries, descriptive identities,
+  non-product/private/redirect pages, wrong images, Product metadata, and
+  unresolved evidence;
+- focused safety/asset/page wall: 78/78 before the final directed-relationship
+  addition; final relationship/verifier wall: 57/57;
+- complete suite: 1,354/1,354 across 195 suites;
+- typecheck and production build: pass;
+- lint: zero errors, three pre-existing warnings;
+- eight-run T8D replay: 31/31 ranked products accounted, 24 retained links
+  revalidated, one definitive old wrong-variant block, six indeterminate
+  historical warnings because original provider titles were not retained;
+- three-case T8D and one-case T8E replay: RR-099 ASIN `B0DLH5B3SN`
+  definitively blocked as `accessory_or_replacement`; and
+- `git diff --check`: pass.
+
+**State:** RR-099 is Fixed. Direct-Terra remains default-off, Terra remains
+the application default, and no external request, flag change, deployment,
+production change, `.env.local` edit, or push occurred. The same approved goal
+continues to Phase 3's server-only candidate-slate and ranking contract.
