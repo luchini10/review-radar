@@ -13,6 +13,7 @@
 // evidence is sanitized and untracked. Flags are not read and not changed.
 
 import { execSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -22,7 +23,10 @@ import {
   pollDirectTerraResearch,
   startDirectTerraResearch,
 } from "../lib/directTerraResearchAdapter.ts";
-import { DIRECT_TERRA_PROMPT_VERSION } from "../lib/directTerraPrompt.ts";
+import {
+  DIRECT_TERRA_COMPARISON_MODEL,
+  DIRECT_TERRA_PROMPT_VERSION,
+} from "../lib/directTerraPrompt.ts";
 import {
   DIRECT_TERRA_EVAL_CASES,
   DIRECT_TERRA_EVAL_VERSION,
@@ -61,23 +65,33 @@ import {
 import { createOpenAIClient } from "../lib/openaiClient.ts";
 
 const EXECUTE = process.argv.includes("--execute");
+const SOL_COMPARISON = process.argv.includes("--sol-comparison");
 const ROOT_CAUSE_REVALIDATION = process.argv.includes(
   "--root-cause-revalidation",
 );
 const FIRST_LOSS_DIAGNOSTIC =
   process.argv.includes("--first-loss-diagnostic") ||
-  ROOT_CAUSE_REVALIDATION;
+  ROOT_CAUSE_REVALIDATION ||
+  SOL_COMPARISON;
+const SOL_COMPARISON_CASE_ID = "eval-con-robot-vac-300-selfempty";
 const ROOT_CAUSE_REVALIDATION_CASE_IDS = new Set([
   "eval-broad-office-chair",
   "eval-con-gas-grill-600-4burner",
   "eval-con-robot-vac-300-selfempty",
 ]);
-const RUN_CASES = ROOT_CAUSE_REVALIDATION
-  ? DIRECT_TERRA_EVAL_CASES.filter((entry) =>
+const RUN_CASES = SOL_COMPARISON
+  ? DIRECT_TERRA_EVAL_CASES.filter(
+      (entry) => entry.id === SOL_COMPARISON_CASE_ID,
+    )
+  : ROOT_CAUSE_REVALIDATION
+    ? DIRECT_TERRA_EVAL_CASES.filter((entry) =>
       ROOT_CAUSE_REVALIDATION_CASE_IDS.has(entry.id),
     )
-  : DIRECT_TERRA_EVAL_CASES;
+    : DIRECT_TERRA_EVAL_CASES;
 const RUNS_PER_CASE = FIRST_LOSS_DIAGNOSTIC ? 1 : 3;
+const RESEARCH_MODEL = SOL_COMPARISON
+  ? DIRECT_TERRA_COMPARISON_MODEL
+  : DIRECT_TERRA_RESEARCH_CONFIG.model;
 const CEILINGS = Object.freeze({
   hostedSearchesPerRun: DIRECT_TERRA_RESEARCH_CONFIG.maxToolCalls,
   retrievesPerRun: 60,
@@ -85,7 +99,10 @@ const CEILINGS = Object.freeze({
   serperShoppingPerRun: 5,
   serperOrganicPerRun: 8,
   pageFetchesPerRun: MAX_DIRECT_TERRA_PAGE_FETCHES,
-  hardCeilingUsd: ROOT_CAUSE_REVALIDATION
+  selectedImageRetrievalsPerRun: SOL_COMPARISON ? 5 : 0,
+  hardCeilingUsd: SOL_COMPARISON
+    ? 4
+    : ROOT_CAUSE_REVALIDATION
     ? 4
     : FIRST_LOSS_DIAGNOSTIC
       ? 5
@@ -103,14 +120,16 @@ function resolveCommit() {
 
 const COMMIT = resolveCommit();
 const APPROVAL = {
-  id: ROOT_CAUSE_REVALIDATION
+  id: SOL_COMPARISON
+    ? "oai-t8e-sol-terra-robot-comparison-v1"
+    : ROOT_CAUSE_REVALIDATION
     ? "oai-t8d-root-cause-revalidation-v1"
     : FIRST_LOSS_DIAGNOSTIC
       ? "oai-t8d-root-cause-diagnostic-v2"
       : "oai-t8c-multi-category-validation-v1",
   commit: COMMIT,
   evalVersion: DIRECT_TERRA_EVAL_VERSION,
-  model: DIRECT_TERRA_RESEARCH_CONFIG.model,
+  model: RESEARCH_MODEL,
   reasoning: DIRECT_TERRA_RESEARCH_CONFIG.reasoning,
   caseCount: RUN_CASES.length,
   runsPerCase: RUNS_PER_CASE,
@@ -119,7 +138,9 @@ const APPROVAL = {
   expectedPromptVersion: "direct-terra-master-prompt-v2",
 };
 const OUT_DIR = path.resolve(
-  ROOT_CAUSE_REVALIDATION
+  SOL_COMPARISON
+    ? `tests/fixtures/review-radar-live/oai-t8e-sol-terra-robot-comparison-${COMMIT}`
+    : ROOT_CAUSE_REVALIDATION
     ? `tests/fixtures/review-radar-live/oai-t8d-root-cause-revalidation-${COMMIT}`
     : FIRST_LOSS_DIAGNOSTIC
       ? `tests/fixtures/review-radar-live/oai-t8d-root-cause-diagnostic-${COMMIT}`
@@ -135,6 +156,21 @@ function goldById(id) {
   return entry;
 }
 function ratesForUsage(usage) {
+  if (SOL_COMPARISON) {
+    return usage.inputTokens > OAI_2A_PROPOSED_CONFIG.longContextThresholdTokens
+      ? {
+          inputPerMillionUsd: 10,
+          cachedInputPerMillionUsd: 1,
+          outputPerMillionUsd: 45,
+          webSearchCallUsd: 0.01,
+        }
+      : {
+          inputPerMillionUsd: 5,
+          cachedInputPerMillionUsd: 0.5,
+          outputPerMillionUsd: 30,
+          webSearchCallUsd: 0.01,
+        };
+  }
   return usage.inputTokens > OAI_2A_PROPOSED_CONFIG.longContextThresholdTokens
     ? OAI_2A_PROPOSED_CONFIG.longContextRatesAsOf2026_07_15
     : OAI_2A_PROPOSED_CONFIG.standardRatesAsOf2026_07_15;
@@ -142,6 +178,84 @@ function ratesForUsage(usage) {
 async function writeJson(file, value) {
   await fs.mkdir(path.dirname(file), { recursive: true });
   await fs.writeFile(file, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+}
+
+async function readBoundedImageBody(response, maximumBytes = 8 * 1024 * 1024) {
+  if (!response.body) throw new Error("missing_image_body");
+  const chunks = [];
+  let totalBytes = 0;
+  for await (const chunk of response.body) {
+    totalBytes += chunk.byteLength;
+    if (totalBytes > maximumBytes) {
+      throw new Error("image_body_too_large");
+    }
+    chunks.push(Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks);
+}
+
+async function retrieveSelectedImages({
+  productAssets,
+  runLabel,
+  perRun,
+}) {
+  const checks = [];
+  for (const asset of productAssets) {
+    if (!asset.imageUrl) continue;
+    if (
+      perRun.imageRetrievals >= CEILINGS.selectedImageRetrievalsPerRun
+    ) {
+      throw new Error("Selected-image retrieval ceiling exceeded");
+    }
+    perRun.imageRetrievals += 1;
+    const urlHash = createHash("sha256")
+      .update(asset.imageUrl, "utf8")
+      .digest("hex");
+    try {
+      const parsed = new URL(asset.imageUrl);
+      if (parsed.protocol !== "https:") throw new Error("non_https_image");
+      const response = await fetch(parsed, {
+        redirect: "error",
+        signal: AbortSignal.timeout(30_000),
+      });
+      if (!response.ok) throw new Error(`image_http_${response.status}`);
+      const contentType = response.headers
+        .get("content-type")
+        ?.split(";")[0]
+        ?.trim()
+        ?.toLowerCase();
+      if (!contentType?.startsWith("image/")) {
+        throw new Error("non_image_content_type");
+      }
+      const body = await readBoundedImageBody(response);
+      const extension =
+        contentType === "image/png"
+          ? "png"
+          : contentType === "image/webp"
+            ? "webp"
+            : contentType === "image/gif"
+              ? "gif"
+              : "jpg";
+      const fileName = `${runLabel}.rank${asset.rank}.${extension}`;
+      await fs.writeFile(path.join(OUT_DIR, fileName), body);
+      checks.push({
+        rank: asset.rank,
+        status: "retrieved",
+        contentType,
+        byteLength: body.byteLength,
+        urlHash,
+        fileName,
+      });
+    } catch (error) {
+      checks.push({
+        rank: asset.rank,
+        status: "failed",
+        reason: error instanceof Error ? error.message : "unknown_error",
+        urlHash,
+      });
+    }
+  }
+  return checks;
 }
 
 // Goal metric: is each displayed link on a manufacturer/popular-retailer host
@@ -192,7 +306,9 @@ function scoreAssetCoverage(productAssets, assetTargets) {
 
 function plan() {
   return {
-    schemaVersion: ROOT_CAUSE_REVALIDATION
+    schemaVersion: SOL_COMPARISON
+      ? "oai-t8e-sol-terra-robot-comparison-plan-v1"
+      : ROOT_CAUSE_REVALIDATION
       ? "oai-t8d-root-cause-revalidation-plan-v1"
       : FIRST_LOSS_DIAGNOSTIC
         ? "oai-t8d-root-cause-diagnostic-plan-v1"
@@ -200,6 +316,7 @@ function plan() {
     mode: EXECUTE ? "execute" : "dry-run",
     commit: COMMIT,
     promptVersion: DIRECT_TERRA_PROMPT_VERSION,
+    model: RESEARCH_MODEL,
     cases: RUN_CASES.map((c) => ({
       id: c.id,
       goldId: c.goldId,
@@ -213,6 +330,14 @@ function plan() {
 }
 
 async function main() {
+  const selectedModes = [
+    SOL_COMPARISON,
+    ROOT_CAUSE_REVALIDATION,
+    process.argv.includes("--first-loss-diagnostic"),
+  ].filter(Boolean).length;
+  if (selectedModes > 1) {
+    throw new Error("Choose exactly one validation mode.");
+  }
   if (
     ROOT_CAUSE_REVALIDATION &&
     process.argv.includes("--first-loss-diagnostic")
@@ -220,6 +345,12 @@ async function main() {
     throw new Error(
       "Choose either --root-cause-revalidation or --first-loss-diagnostic.",
     );
+  }
+  if (
+    SOL_COMPARISON &&
+    (RUN_CASES.length !== 1 || RUN_CASES[0]?.id !== SOL_COMPARISON_CASE_ID)
+  ) {
+    throw new Error("Sol comparison case contract is incomplete.");
   }
   if (
     ROOT_CAUSE_REVALIDATION &&
@@ -260,7 +391,15 @@ async function main() {
   let totalCreates = 0;
   let totalRetrieves = 0;
   let totalCostUsd = 0;
-  const perRun = { creates: 0, retrieves: 0, cancels: 0, shopping: 0, organic: 0, pageFetches: 0 };
+  const perRun = {
+    creates: 0,
+    retrieves: 0,
+    cancels: 0,
+    shopping: 0,
+    organic: 0,
+    pageFetches: 0,
+    imageRetrievals: 0,
+  };
   const client = {
     responses: {
       create: async (...args) => {
@@ -304,7 +443,9 @@ async function main() {
 
   const startedAtMs = Date.now();
   const summary = {
-    schemaVersion: ROOT_CAUSE_REVALIDATION
+    schemaVersion: SOL_COMPARISON
+      ? "oai-t8e-sol-terra-robot-comparison-summary-v1"
+      : ROOT_CAUSE_REVALIDATION
       ? "oai-t8d-root-cause-revalidation-summary-v1"
       : FIRST_LOSS_DIAGNOSTIC
         ? "oai-t8d-root-cause-diagnostic-summary-v1"
@@ -333,9 +474,14 @@ async function main() {
         perRun.shopping = 0;
         perRun.organic = 0;
         perRun.pageFetches = 0;
+        perRun.imageRetrievals = 0;
         const runStartMs = Date.now();
 
-        const start = await startDirectTerraResearch({ client, shopperRequest: evalCase.request });
+        const start = await startDirectTerraResearch({
+          client,
+          shopperRequest: evalCase.request,
+          model: RESEARCH_MODEL,
+        });
         if (!start.ok) throw new Error(`start failed ${evalCase.id} run ${runIndex}: ${start.reason}`);
 
         let completion = null;
@@ -347,6 +493,7 @@ async function main() {
                 responseId: start.responseId,
                 promptVersion: start.promptVersion,
                 promptHash: start.promptHash,
+                model: RESEARCH_MODEL,
               });
             } catch {
               // best-effort
@@ -359,6 +506,7 @@ async function main() {
             responseId: start.responseId,
             promptVersion: start.promptVersion,
             promptHash: start.promptHash,
+            model: RESEARCH_MODEL,
           });
           if (poll.ok && poll.state === "pending") continue;
           if (!poll.ok) throw new Error(`poll failed ${evalCase.id} run ${runIndex}: ${poll.reason}`);
@@ -404,6 +552,13 @@ async function main() {
         });
         const assetCoverage = scoreAssetCoverage(productAssets, completion.assetTargets);
         assetCoverages.push(assetCoverage);
+        const selectedImageChecks = SOL_COMPARISON
+          ? await retrieveSelectedImages({
+              productAssets,
+              runLabel: `${evalCase.id}.run${runIndex}`,
+              perRun,
+            })
+          : [];
         const recommendationFirstLoss = FIRST_LOSS_DIAGNOSTIC
           ? buildDirectTerraRecommendationFirstLossDiagnostic({
               searchCallCount: completion.ledger.usage.webSearchCalls,
@@ -448,6 +603,7 @@ async function main() {
           reportMarkdown: completion.reportMarkdown,
           priceEstimates: completion.priceEstimates,
           productAssets,
+          selectedImageChecks,
           score: runScore,
           scoreProspective07d: prospectiveRunScore,
           assetCoverage,
@@ -471,6 +627,7 @@ async function main() {
           budgetViolations: runScore.constraint?.budgetViolations.length ?? 0,
           rankedCount: runScore.rankedCount,
           assets: `${assetCoverage.fullyDecorated}/${assetCoverage.total} decorated, ${assetCoverage.preferredHostLinks} preferred-host links, ${assetCoverage.pageImages} page images`,
+          selectedImageRetrievals: perRun.imageRetrievals,
           costUsd: runCostUsd,
         });
       }

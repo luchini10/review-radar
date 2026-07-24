@@ -76,6 +76,33 @@ describe("direct Terra V2 provider adapter", () => {
     assert.deepEqual(calls[0].options, { timeout: 120_000 });
   });
 
+  it("records and dispatches an explicit Sol comparison model without changing defaults", async () => {
+    const calls = [];
+    const client = clientWith({
+      create: async (body) => {
+        calls.push(body);
+        return {
+          id: responseId,
+          model: "gpt-5.6-sol",
+          output: [],
+          status: "in_progress",
+        };
+      },
+    });
+
+    const result = await startDirectTerraResearch({
+      client,
+      shopperRequest: { query: "robot vacuum", budget: "under $300" },
+      model: "gpt-5.6-sol",
+      now: () => 100,
+    });
+
+    assert.equal(result.ok, true);
+    assert.equal(calls[0].model, "gpt-5.6-sol");
+    assert.equal(result.ledger.modelRequested, "gpt-5.6-sol");
+    assert.equal(result.ledger.modelReturned, "gpt-5.6-sol");
+  });
+
   it("retrieves response-owned sources and returns Terra's report unchanged", async () => {
     const calls = [];
     const client = clientWith({

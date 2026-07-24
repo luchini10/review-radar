@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import {
   buildDirectTerraPrompt,
   buildDirectTerraResearchRequest,
+  DIRECT_TERRA_COMPARISON_MODEL,
   DIRECT_TERRA_PROMPT_VERSION,
 } from "../lib/directTerraPrompt.ts";
 
@@ -62,5 +63,20 @@ describe("direct Terra V2 prompt", () => {
     assert.match(request.instructions, /estimated market price/i);
     assert.match(request.instructions, /two distinct source hosts/i);
     assert.match(request.instructions, /new-condition standalone product/i);
+  });
+
+  it("allows an explicit Sol comparison without changing the Terra default", () => {
+    const comparison = buildDirectTerraResearchRequest(shopper, {
+      model: DIRECT_TERRA_COMPARISON_MODEL,
+    });
+    const defaultRequest = buildDirectTerraResearchRequest(shopper);
+
+    assert.equal(comparison.model, "gpt-5.6-sol");
+    assert.equal(defaultRequest.model, "gpt-5.6-terra");
+    assert.deepEqual(comparison.reasoning, defaultRequest.reasoning);
+    assert.deepEqual(comparison.tools, defaultRequest.tools);
+    assert.deepEqual(comparison.text, defaultRequest.text);
+    assert.equal(comparison.instructions, defaultRequest.instructions);
+    assert.equal(comparison.input, defaultRequest.input);
   });
 });

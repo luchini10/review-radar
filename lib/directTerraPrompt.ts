@@ -4,6 +4,11 @@ import type { ResponseCreateParamsNonStreaming } from "openai/resources/response
 import type { SelectedSmartFeature } from "../types/smart-features.ts";
 
 export const DIRECT_TERRA_PROMPT_VERSION = "direct-terra-master-prompt-v2";
+export const DIRECT_TERRA_DEFAULT_MODEL = "gpt-5.6-terra" as const;
+export const DIRECT_TERRA_COMPARISON_MODEL = "gpt-5.6-sol" as const;
+export type DirectTerraResearchModel =
+  | typeof DIRECT_TERRA_DEFAULT_MODEL
+  | typeof DIRECT_TERRA_COMPARISON_MODEL;
 
 export type DirectTerraShopperRequest = {
   query: string;
@@ -151,11 +156,16 @@ export function buildDirectTerraPrompt(request: DirectTerraShopperRequest) {
 
 export function buildDirectTerraResearchRequest(
   request: DirectTerraShopperRequest,
+  {
+    model = DIRECT_TERRA_DEFAULT_MODEL,
+  }: {
+    model?: DirectTerraResearchModel;
+  } = {},
 ): DirectTerraResearchRequest {
   const prompt = buildDirectTerraPrompt(request);
 
   return {
-    model: "gpt-5.6-terra",
+    model,
     reasoning: { effort: "high" },
     instructions: prompt.instructions,
     input: prompt.input,

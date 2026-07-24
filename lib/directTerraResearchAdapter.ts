@@ -7,7 +7,9 @@ import type {
 import {
   buildDirectTerraPrompt,
   buildDirectTerraResearchRequest,
+  DIRECT_TERRA_DEFAULT_MODEL,
   DIRECT_TERRA_PROMPT_VERSION,
+  type DirectTerraResearchModel,
   type DirectTerraShopperRequest,
 } from "./directTerraPrompt.ts";
 import {
@@ -35,7 +37,7 @@ export type DirectTerraResponsesClient = {
 };
 
 export const DIRECT_TERRA_RESEARCH_CONFIG = Object.freeze({
-  model: "gpt-5.6-terra",
+  model: DIRECT_TERRA_DEFAULT_MODEL,
   reasoning: "high" as const,
   maxOutputTokens: 24_000,
   maxToolCalls: 20,
@@ -168,17 +170,19 @@ function blankLedger({
   promptVersion,
   promptHash,
   responseId: trackedResponseId,
+  model = DIRECT_TERRA_RESEARCH_CONFIG.model,
 }: {
   operation: DirectTerraResearchLedger["operation"];
   promptVersion: string;
   promptHash: string;
   responseId?: string;
+  model?: DirectTerraResearchModel;
 }): DirectTerraResearchLedger {
   return {
     operation,
     promptVersion,
     promptHash,
-    modelRequested: DIRECT_TERRA_RESEARCH_CONFIG.model,
+    modelRequested: model,
     modelReturned: null,
     status: "not_started",
     responseIdHash: trackedResponseId
@@ -247,10 +251,12 @@ function validTrackingInput(
 export async function startDirectTerraResearch({
   client,
   shopperRequest,
+  model = DIRECT_TERRA_RESEARCH_CONFIG.model,
   now = Date.now,
 }: {
   client: DirectTerraResponsesClient;
   shopperRequest: DirectTerraShopperRequest;
+  model?: DirectTerraResearchModel;
   now?: () => number;
 }) {
   const prompt = buildDirectTerraPrompt(shopperRequest);
@@ -258,12 +264,13 @@ export async function startDirectTerraResearch({
     operation: "start",
     promptVersion: prompt.version,
     promptHash: prompt.promptHash,
+    model,
   });
   const startedAt = now();
   let response: unknown;
   try {
     response = await client.responses.create(
-      buildDirectTerraResearchRequest(shopperRequest),
+      buildDirectTerraResearchRequest(shopperRequest, { model }),
       { timeout: DIRECT_TERRA_RESEARCH_CONFIG.requestTimeoutMs },
     );
   } catch (error) {
@@ -307,12 +314,14 @@ export async function pollDirectTerraResearch({
   responseId: trackedResponseId,
   promptVersion,
   promptHash,
+  model = DIRECT_TERRA_RESEARCH_CONFIG.model,
   now = Date.now,
 }: {
   client: DirectTerraResponsesClient;
   responseId: string;
   promptVersion: string;
   promptHash: string;
+  model?: DirectTerraResearchModel;
   now?: () => number;
 }) {
   const ledger = blankLedger({
@@ -320,6 +329,7 @@ export async function pollDirectTerraResearch({
     promptVersion,
     promptHash,
     responseId: trackedResponseId,
+    model,
   });
   const startedAt = now();
   if (!validTrackingInput(trackedResponseId, promptVersion, promptHash)) {
@@ -406,12 +416,14 @@ export async function cancelDirectTerraResearch({
   responseId: trackedResponseId,
   promptVersion,
   promptHash,
+  model = DIRECT_TERRA_RESEARCH_CONFIG.model,
   now = Date.now,
 }: {
   client: DirectTerraResponsesClient;
   responseId: string;
   promptVersion: string;
   promptHash: string;
+  model?: DirectTerraResearchModel;
   now?: () => number;
 }) {
   const ledger = blankLedger({
@@ -419,6 +431,7 @@ export async function cancelDirectTerraResearch({
     promptVersion,
     promptHash,
     responseId: trackedResponseId,
+    model,
   });
   const startedAt = now();
   if (!validTrackingInput(trackedResponseId, promptVersion, promptHash)) {
