@@ -15,7 +15,7 @@ import { normalizeTwoLayerSourceUrl } from "./twoLayerSourceUrl.ts";
 import { classifyDirectTerraLinkHost } from "./directTerraLinkPreference.ts";
 
 export const DIRECT_TERRA_ASSET_VERIFIER_VERSION =
-  "direct-terra-asset-verifier-v3";
+  "direct-terra-asset-verifier-v4";
 
 export type DirectTerraAssetTarget = {
   key: string;
@@ -57,6 +57,7 @@ export type DirectTerraAssetDecision = {
     | "product_url_redirect_wrapper"
     | "product_url_ineligible"
     | "product_url_type_conflict"
+    | "product_url_descriptive_identity_conflict"
     | "product_url_identity_mismatch";
   imageUrlAccepted: boolean;
   imageUrlReason: string;
@@ -455,6 +456,165 @@ function productUrlPathHasTypeConflict(
   }
 }
 
+const DIRECT_TERRA_URL_STRUCTURE_WORDS = new Set([
+  "asset",
+  "assets",
+  "buy",
+  "catalog",
+  "cdn",
+  "detail",
+  "details",
+  "en",
+  "eu",
+  "file",
+  "files",
+  "image",
+  "images",
+  "img",
+  "item",
+  "items",
+  "media",
+  "official",
+  "online",
+  "p",
+  "pd",
+  "pdp",
+  "product",
+  "products",
+  "shop",
+  "static",
+  "store",
+  "uk",
+  "us",
+]);
+
+const DIRECT_TERRA_CONFIGURATION_WORDS = new Set([
+  "color",
+  "colour",
+  "configurable",
+  "configuration",
+  "finish",
+  "material",
+  "option",
+  "options",
+  "select",
+  "selection",
+  "style",
+  "styles",
+]);
+
+const DIRECT_TERRA_COLOR_FINISH_WORDS = new Set([
+  "beige",
+  "black",
+  "blue",
+  "brown",
+  "charcoal",
+  "chrome",
+  "gold",
+  "graphite",
+  "gray",
+  "green",
+  "grey",
+  "natural",
+  "oak",
+  "orange",
+  "pink",
+  "purple",
+  "red",
+  "silver",
+  "stainless",
+  "steel",
+  "tan",
+  "walnut",
+  "white",
+  "yellow",
+]);
+
+function addInflectionVariants(tokens: Set<string>) {
+  for (const token of [...tokens]) {
+    if (token.length < 3) continue;
+    if (token.endsWith("ies") && token.length > 4) {
+      tokens.add(`${token.slice(0, -3)}y`);
+    } else if (token.endsWith("s") && token.length > 3) {
+      tokens.add(token.slice(0, -1));
+    } else if (token.endsWith("y")) {
+      tokens.add(`${token.slice(0, -1)}ies`);
+    } else {
+      tokens.add(`${token}s`);
+    }
+  }
+}
+
+function opaquePathToken(token: string) {
+  return (
+    /^\d{5,}$/.test(token) ||
+    /^[a-f0-9]{12,}$/i.test(token) ||
+    /^\d{2,5}x\d{2,5}$/i.test(token)
+  );
+}
+
+// Descriptive product identities lack the numeric boundary that makes coded
+// siblings easy to distinguish. Once a candidate title has proved the locked
+// identity, its destination path may repeat that identity plus ordinary
+// commerce scaffolding, category words, colors/configuration labels, or an
+// opaque retailer ID. Any other path word is unexplained identity evidence:
+// it may name a sibling/edition the title did not disclose, so fail closed.
+//
+// This is intentionally a veto, never an admission rule. Numeric/alphanumeric
+// models keep the established exact-model contract unchanged.
+function productUrlPathHasDescriptiveIdentityConflict(
+  target: DirectTerraAssetTarget,
+  title: string,
+  productUrl: string,
+) {
+  const modelTokens = modelCoreTokens(target.model);
+  if (
+    modelTokens.length === 0 ||
+    modelTokens.some((token) => /\d/.test(token))
+  ) {
+    return false;
+  }
+
+  try {
+    const pathTokens = new URL(productUrl).pathname
+      .split("/")
+      .filter(Boolean)
+      .flatMap((segment) => {
+        const decoded = decodeURIComponent(segment).replace(
+          /\.[a-z0-9]{1,5}$/i,
+          "",
+        );
+        return normalizedIdentityTokens(decoded);
+      });
+    const pathTokenSet = new Set(pathTokens);
+    if (!modelTokens.every((token) => pathTokenSet.has(token))) {
+      return false;
+    }
+
+    const explainedTokens = new Set(
+      normalizedIdentityTokens(
+        `${title} ${target.brand} ${target.category} ${target.model}`,
+      ),
+    );
+    addInflectionVariants(explainedTokens);
+    for (const token of DIRECT_TERRA_URL_STRUCTURE_WORDS) {
+      explainedTokens.add(token);
+    }
+    for (const token of DIRECT_TERRA_CONFIGURATION_WORDS) {
+      explainedTokens.add(token);
+    }
+    for (const token of DIRECT_TERRA_COLOR_FINISH_WORDS) {
+      explainedTokens.add(token);
+    }
+
+    return pathTokens.some(
+      (token) => !explainedTokens.has(token) && !opaquePathToken(token),
+    );
+  } catch {
+    return true;
+  }
+}
+
 // Retailer and manufacturer product pages routinely omit the SKU from the page
 // TITLE while carrying it exactly in the URL slug (homedepot.com/p/DEWALT-…-
 // DXV12P/305323712 is titled "DEWALT 12 Gal. Wet/Dry Vacuum"; retailers list
@@ -568,6 +728,11 @@ function evaluateCandidate(
     productUrlReason = "unsafe_product_url_host";
   } else if (productUrl && productUrlPathHasTypeConflict(target, productUrl)) {
     productUrlReason = "product_url_type_conflict";
+  } else if (
+    productUrl &&
+    productUrlPathHasDescriptiveIdentityConflict(target, title, productUrl)
+  ) {
+    productUrlReason = "product_url_descriptive_identity_conflict";
   } else if (productUrl) {
     const eligibility = classifyProductEligibility({
       brand: target.brand,
@@ -656,6 +821,24 @@ function evaluateCandidate(
       imageUrlAccepted: false,
       imageUrlReason: "image_source_not_trusted",
       productUrl: null,
+      imageUrl: null,
+    };
+  }
+
+  if (
+    productUrlPathHasDescriptiveIdentityConflict(
+      target,
+      title,
+      parsedImageUrl,
+    )
+  ) {
+    return {
+      ...base,
+      productUrlAccepted: Boolean(safeProductUrl),
+      productUrlReason,
+      imageUrlAccepted: false,
+      imageUrlReason: "image_url_descriptive_identity_conflict",
+      productUrl: safeProductUrl,
       imageUrl: null,
     };
   }

@@ -444,6 +444,143 @@ describe("Direct-Terra asset safety boundary", () => {
     );
   });
 
+  it("RR-093 rejects reordered and suffixed descriptive path variants", () => {
+    const target = {
+      key: "rank-5-herman-miller-embody-chair",
+      rank: 5,
+      productName: "Herman Miller Embody Chair",
+      brand: "Herman Miller",
+      model: "Embody Chair",
+      category: "office chair",
+    };
+    const unsafePaths = [
+      "embody-gaming-office-chair",
+      "embody-chair-gaming-edition",
+      "embody-chair-xl",
+    ];
+
+    for (const path of unsafePaths) {
+      const result = verifyDirectTerraAssetCandidates({
+        target,
+        candidates: [
+          {
+            title: target.productName,
+            productUrl: `https://eustore.hermanmiller.com/products/${path}`,
+            imageUrl: `https://eustore.hermanmiller.com/cdn/shop/files/${path}.png`,
+          },
+        ],
+      });
+
+      assert.equal(result.productUrl, null, path);
+      assert.equal(result.imageUrl, null, path);
+      assert.equal(
+        result.decisions[0].productUrlReason,
+        "product_url_descriptive_identity_conflict",
+        path,
+      );
+    }
+  });
+
+  it("RR-093 preserves harmless retailer words, color, and opaque IDs", () => {
+    const target = {
+      key: "rank-5-herman-miller-embody-chair",
+      rank: 5,
+      productName: "Herman Miller Embody Chair",
+      brand: "Herman Miller",
+      model: "Embody Chair",
+      category: "office chair",
+    };
+    const result = verifyDirectTerraAssetCandidates({
+      target,
+      candidates: [
+        {
+          title: target.productName,
+          productUrl:
+            "https://store.hermanmiller.com/products/herman-miller-embody-office-chair-black/100147386.html?configuration=standard",
+          imageUrl:
+            "https://images.hermanmiller.group/products/embody-chair-black.png",
+        },
+      ],
+    });
+
+    assert.equal(result.productUrlStatus, "accepted_identity_safe");
+    assert.equal(result.imageUrlStatus, "accepted_identity_safe");
+  });
+
+  it("RR-093 rejects a descriptive sibling image without discarding a safe product page", () => {
+    const target = {
+      key: "rank-5-herman-miller-embody-chair",
+      rank: 5,
+      productName: "Herman Miller Embody Chair",
+      brand: "Herman Miller",
+      model: "Embody Chair",
+      category: "office chair",
+    };
+    const result = verifyDirectTerraAssetCandidates({
+      target,
+      candidates: [
+        {
+          title: target.productName,
+          productUrl:
+            "https://eustore.hermanmiller.com/products/embody-chair",
+          imageUrl:
+            "https://eustore.hermanmiller.com/cdn/shop/files/embody-chair-xl.png",
+        },
+      ],
+    });
+
+    assert.equal(result.productUrlStatus, "accepted_identity_safe");
+    assert.equal(result.imageUrl, null);
+    assert.equal(
+      result.decisions[0].imageUrlReason,
+      "image_url_descriptive_identity_conflict",
+    );
+  });
+
+  it("applies descriptive title-path coherence outside chairs", () => {
+    const target = {
+      key: "rank-2-acme-horizon-refrigerator",
+      rank: 2,
+      productName: "Acme Horizon Refrigerator",
+      brand: "Acme",
+      model: "Horizon Refrigerator",
+      category: "refrigerator",
+    };
+    const rejected = verifyDirectTerraAssetCandidates({
+      target,
+      candidates: [
+        {
+          title: target.productName,
+          productUrl:
+            "https://acme.example/products/horizon-refrigerator-outdoor-edition",
+          imageUrl:
+            "https://acme.example/images/horizon-refrigerator-outdoor-edition.jpg",
+        },
+      ],
+    });
+    const accepted = verifyDirectTerraAssetCandidates({
+      target,
+      candidates: [
+        {
+          title: target.productName,
+          productUrl:
+            "https://acme.example/products/acme-horizon-refrigerator-black/847201.html?configuration=standard",
+          imageUrl:
+            "https://acme.example/images/horizon-refrigerator-black.jpg",
+        },
+      ],
+    });
+
+    assert.equal(rejected.productUrl, null);
+    assert.equal(rejected.imageUrl, null);
+    assert.equal(
+      rejected.decisions[0].productUrlReason,
+      "product_url_descriptive_identity_conflict",
+    );
+    assert.equal(accepted.productUrlStatus, "accepted_identity_safe");
+    assert.equal(accepted.imageUrlStatus, "accepted_identity_safe");
+  });
+
   it("applies the same path-type veto outside chairs", () => {
     const target = {
       key: "rank-1-acme-cleanforce",
