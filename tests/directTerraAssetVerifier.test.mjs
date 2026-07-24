@@ -414,6 +414,125 @@ describe("Direct-Terra asset safety boundary", () => {
     assert.equal(result.imageUrlStatus, "accepted_identity_safe");
   });
 
+  it("RR-098 accepts descriptive product paths with taxonomy or title-corroborated detail", () => {
+    const cases = [
+      {
+        target: {
+          key: "rank-1-steelcase-leap",
+          rank: 1,
+          productName: "Steelcase Leap",
+          brand: "Steelcase",
+          model: "Leap",
+          category: "office chair",
+        },
+        candidate: {
+          title: "Steelcase Leap Adjustable Task Chair",
+          productUrl:
+            "https://www.steelcase.com/products/seating/ergonomic/chairs/leap",
+        },
+      },
+      {
+        target: {
+          key: "rank-2-herman-miller-aeron-chair",
+          rank: 2,
+          productName: "Herman Miller Aeron Chair",
+          brand: "Herman Miller",
+          model: "Aeron Chair",
+          category: "office chair",
+        },
+        candidate: {
+          title: "Aeron Chair - Office Chairs",
+          productUrl:
+            "https://www.hermanmiller.com/products/seating/office-chairs/aeron-chair",
+        },
+      },
+      {
+        target: {
+          key: "rank-3-haworth-fern-office-chair",
+          rank: 3,
+          productName: "Haworth Fern Office Chair",
+          brand: "Haworth",
+          model: "Fern Office Chair",
+          category: "office chair",
+        },
+        candidate: {
+          title: "Fern Office Chair",
+          productUrl:
+            "https://www.haworth.com/na/en/products/seating/office/chairs/fern/office/chair.html",
+        },
+      },
+      {
+        target: {
+          key: "rank-4-branch-verve-chair",
+          rank: 4,
+          productName: "Branch Verve Chair",
+          brand: "Branch",
+          model: "Verve Chair",
+          category: "office chair",
+        },
+        candidate: {
+          title: "Branch Verve Chair High Performance Executive Office",
+          productUrl:
+            "https://www.amazon.com/Branch-Verve-Chair-Performance-Adjustable/dp/B0C15BD9XV",
+        },
+      },
+      {
+        target: {
+          key: "rank-5-acme-horizon-refrigerator",
+          rank: 5,
+          productName: "Acme Horizon Refrigerator",
+          brand: "Acme",
+          model: "Horizon Refrigerator",
+          category: "refrigerator",
+        },
+        candidate: {
+          title: "Acme Horizon Refrigerator Energy Efficient",
+          productUrl:
+            "https://www.bestbuy.com/site/acme-horizon-refrigerator-energy-efficient/1234567.p",
+        },
+      },
+    ];
+
+    for (const { target, candidate } of cases) {
+      const result = verifyDirectTerraAssetCandidates({
+        target,
+        candidates: [candidate],
+      });
+      assert.equal(
+        result.productUrlStatus,
+        "accepted_identity_safe",
+        target.key,
+      );
+    }
+  });
+
+  it("RR-098 accepts an exact manufacturer slug after it proves a sparse descriptive title", () => {
+    const target = {
+      key: "rank-5-branch-verve-chair",
+      rank: 5,
+      productName: "Branch Verve Chair",
+      brand: "Branch",
+      model: "Verve Chair",
+      category: "office chair",
+    };
+    const result = verifyDirectTerraAssetCandidates({
+      target,
+      candidates: [
+        {
+          title: "Verve Chair",
+          productUrl:
+            "https://www.branchfurniture.com/products/verve-chair",
+        },
+      ],
+    });
+
+    assert.equal(result.productUrlStatus, "accepted_identity_safe");
+    assert.equal(
+      result.decisions[0].identityReason,
+      "accepted_manufacturer_slug_identity",
+    );
+  });
+
   it("RR-093 rejects a candidate-only descriptive variant in the product path", () => {
     const target = {
       key: "rank-5-herman-miller-embody-chair",
@@ -479,6 +598,33 @@ describe("Direct-Terra asset safety boundary", () => {
         path,
       );
     }
+  });
+
+  it("RR-098 does not let one corroborated path detail hide an undisclosed suffix", () => {
+    const target = {
+      key: "rank-5-herman-miller-embody-chair",
+      rank: 5,
+      productName: "Herman Miller Embody Chair",
+      brand: "Herman Miller",
+      model: "Embody Chair",
+      category: "office chair",
+    };
+    const result = verifyDirectTerraAssetCandidates({
+      target,
+      candidates: [
+        {
+          title: "Herman Miller Embody Chair Performance",
+          productUrl:
+            "https://eustore.hermanmiller.com/products/embody-chair-performance-xl-edition",
+        },
+      ],
+    });
+
+    assert.equal(result.productUrl, null);
+    assert.equal(
+      result.decisions[0].productUrlReason,
+      "product_url_descriptive_identity_conflict",
+    );
   });
 
   it("RR-093 preserves harmless retailer words, color, and opaque IDs", () => {

@@ -82,7 +82,7 @@ function asText(value: unknown, maxLength = 500) {
   return value.replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
 
-function normalizedIdentityTokens(value: string) {
+function normalizedIdentityTokens(value: string): string[] {
   return value
     .toLowerCase()
     .replace(/&/g, " and ")
@@ -464,6 +464,7 @@ const DIRECT_TERRA_URL_STRUCTURE_WORDS = new Set([
   "cdn",
   "detail",
   "details",
+  "dp",
   "en",
   "eu",
   "file",
@@ -489,6 +490,7 @@ const DIRECT_TERRA_URL_STRUCTURE_WORDS = new Set([
 ]);
 
 const DIRECT_TERRA_CONFIGURATION_WORDS = new Set([
+  "adjustable",
   "color",
   "colour",
   "configurable",
@@ -553,12 +555,49 @@ function opaquePathToken(token: string) {
   );
 }
 
+function addDirectTerraUrlNeutralTokens(tokens: Set<string>) {
+  addInflectionVariants(tokens);
+  for (const token of DIRECT_TERRA_URL_STRUCTURE_WORDS) {
+    tokens.add(token);
+  }
+  for (const token of DIRECT_TERRA_CONFIGURATION_WORDS) {
+    tokens.add(token);
+  }
+  for (const token of DIRECT_TERRA_COLOR_FINISH_WORDS) {
+    tokens.add(token);
+  }
+}
+
+function opaqueCommerceIdentifierSegment(
+  segmentTokens: string[],
+  previousSegmentTokens: string[] | undefined,
+) {
+  if (
+    segmentTokens.length !== 1 ||
+    previousSegmentTokens?.length !== 1 ||
+    !new Set(["dp", "item", "sku"]).has(previousSegmentTokens[0])
+  ) {
+    return false;
+  }
+  const token = segmentTokens[0];
+  return (
+    token.length >= 8 &&
+    /[a-z]/i.test(token) &&
+    /\d/.test(token) &&
+    /^[a-z0-9]+$/i.test(token)
+  );
+}
+
 // Descriptive product identities lack the numeric boundary that makes coded
 // siblings easy to distinguish. Once a candidate title has proved the locked
-// identity, its destination path may repeat that identity plus ordinary
-// commerce scaffolding, category words, colors/configuration labels, or an
-// opaque retailer ID. Any other path word is unexplained identity evidence:
-// it may name a sibling/edition the title did not disclose, so fail closed.
+// identity, inspect only the identity-bearing portion of the path: ancestor
+// taxonomy before the model is navigation, not model evidence. Words after
+// the model remain fail-closed unless the locked target/category explains
+// them or the candidate title independently corroborates the path detail.
+//
+// That positive-corroboration rule admits ordinary descriptive product slugs
+// without teaching the verifier product-, category-, brand-, or retailer-
+// specific vocabulary. An undisclosed sibling/edition suffix remains a veto.
 //
 // This is intentionally a veto, never an admission rule. Numeric/alphanumeric
 // models keep the established exact-model contract unchanged.
@@ -576,39 +615,68 @@ function productUrlPathHasDescriptiveIdentityConflict(
   }
 
   try {
-    const pathTokens = new URL(productUrl).pathname
+    const pathSegments = new URL(productUrl).pathname
       .split("/")
       .filter(Boolean)
-      .flatMap((segment) => {
+      .map((segment) => {
         const decoded = decodeURIComponent(segment).replace(
           /\.[a-z0-9]{1,5}$/i,
           "",
         );
         return normalizedIdentityTokens(decoded);
       });
+    const pathTokens = pathSegments.flat();
     const pathTokenSet = new Set(pathTokens);
     if (!modelTokens.every((token) => pathTokenSet.has(token))) {
       return false;
     }
 
-    const explainedTokens = new Set(
+    const firstModelToken = modelTokens[0];
+    if (!firstModelToken) return false;
+    const firstModelSegment = pathSegments.findIndex((segmentTokens) =>
+      segmentTokens.includes(firstModelToken),
+    );
+    if (firstModelSegment < 0) return false;
+
+    const targetExplainedTokens = new Set(
       normalizedIdentityTokens(
-        `${title} ${target.brand} ${target.category} ${target.model}`,
+        `${target.productName} ${target.brand} ${target.category} ${target.model}`,
       ),
     );
-    addInflectionVariants(explainedTokens);
-    for (const token of DIRECT_TERRA_URL_STRUCTURE_WORDS) {
-      explainedTokens.add(token);
-    }
-    for (const token of DIRECT_TERRA_CONFIGURATION_WORDS) {
-      explainedTokens.add(token);
-    }
-    for (const token of DIRECT_TERRA_COLOR_FINISH_WORDS) {
-      explainedTokens.add(token);
-    }
+    addDirectTerraUrlNeutralTokens(targetExplainedTokens);
 
-    return pathTokens.some(
-      (token) => !explainedTokens.has(token) && !opaquePathToken(token),
+    const titleDetailTokens = new Set(
+      normalizedIdentityTokens(title).filter(
+        (token) => !targetExplainedTokens.has(token),
+      ),
+    );
+    const unexplainedPathTokens = pathSegments
+      .slice(firstModelSegment)
+      .flatMap((segmentTokens, relativeIndex) => {
+        const segmentIndex = firstModelSegment + relativeIndex;
+        if (
+          opaqueCommerceIdentifierSegment(
+            segmentTokens,
+            pathSegments[segmentIndex - 1],
+          )
+        ) {
+          return [];
+        }
+        return segmentTokens;
+      })
+      .filter(
+        (token) =>
+          !targetExplainedTokens.has(token) && !opaquePathToken(token),
+      );
+
+    if (unexplainedPathTokens.length === 0) return false;
+
+    // The path may be more descriptive than the locked target, but it cannot
+    // introduce any identity detail silently. Every non-neutral extra token
+    // must be independently visible in the title; partial corroboration must
+    // not hide an undisclosed sibling or edition suffix.
+    return unexplainedPathTokens.some(
+      (token) => !titleDetailTokens.has(token),
     );
   } catch {
     return true;
@@ -745,14 +813,32 @@ function evaluateCandidate(
       url: productUrl,
     });
 
-    if (!eligibility.canRenderAsProductCard) {
+    // A brand-owned/popular-retailer product slug can prove a sparse title's
+    // missing model. When the generic eligibility classifier is merely
+    // "unknown", that positive slug proof is sufficient; explicit negatives
+    // (evidence-only, listing/search, accessory, and other blocked states)
+    // remain vetoes.
+    const slugProofResolvesUnknownEligibility =
+      slugProvenIdentity && eligibility.status === "unknown";
+    const descriptivePathProvenIdentity =
+      modelCoreTokens(target.model).every((token) => !/\d/.test(token)) &&
+      coreModelInUrlPath(productUrl, target.model);
+
+    if (
+      !eligibility.canRenderAsProductCard &&
+      !slugProofResolvesUnknownEligibility
+    ) {
       productUrlReason = "product_url_ineligible";
     } else if (
       // For slug-proven identity the URL path already carried the core model
       // (and no conflicting sibling); re-running the exact-trim page matcher
       // here would defeat that. Eligibility above still blocks category and
-      // accessory pages. Title-proven candidates keep the full page matcher.
+      // accessory pages. A title-proven descriptive identity receives the
+      // same treatment only after the dedicated descriptive-path veto above
+      // has accepted its model-bearing path. This avoids misreading a
+      // retailer's opaque product ID as a competing coded model.
       !slugProvenIdentity &&
+      !descriptivePathProvenIdentity &&
       !productPageMatchesIdentity({
         brand: target.brand,
         model: target.model,

@@ -93,7 +93,7 @@ describe("Direct-Terra registered-citation website resolver", () => {
     );
   });
 
-  it("keeps abbreviated citation titles unavailable instead of inferring identity from a URL", () => {
+  it("accepts an abbreviated title only when its registered manufacturer URL proves the exact model", () => {
     const milwaukee = {
       key: "rank-5-milwaukee-0910-20",
       rank: 5,
@@ -115,8 +115,8 @@ describe("Direct-Terra registered-citation website resolver", () => {
       ],
     });
 
-    assert.equal(result.items[0].productUrl, null);
-    assert.equal(result.items[0].productUrlStatus, "unavailable");
+    assert.equal(result.items[0].productUrl, exactUrl);
+    assert.equal(result.items[0].productUrlStatus, "accepted_identity_safe");
   });
 
   it("does not let abbreviated titles bless sibling-model or non-brand URLs", () => {
