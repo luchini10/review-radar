@@ -61,7 +61,22 @@ import {
 import { createOpenAIClient } from "../lib/openaiClient.ts";
 
 const EXECUTE = process.argv.includes("--execute");
-const FIRST_LOSS_DIAGNOSTIC = process.argv.includes("--first-loss-diagnostic");
+const ROOT_CAUSE_REVALIDATION = process.argv.includes(
+  "--root-cause-revalidation",
+);
+const FIRST_LOSS_DIAGNOSTIC =
+  process.argv.includes("--first-loss-diagnostic") ||
+  ROOT_CAUSE_REVALIDATION;
+const ROOT_CAUSE_REVALIDATION_CASE_IDS = new Set([
+  "eval-broad-office-chair",
+  "eval-con-gas-grill-600-4burner",
+  "eval-con-robot-vac-300-selfempty",
+]);
+const RUN_CASES = ROOT_CAUSE_REVALIDATION
+  ? DIRECT_TERRA_EVAL_CASES.filter((entry) =>
+      ROOT_CAUSE_REVALIDATION_CASE_IDS.has(entry.id),
+    )
+  : DIRECT_TERRA_EVAL_CASES;
 const RUNS_PER_CASE = FIRST_LOSS_DIAGNOSTIC ? 1 : 3;
 const CEILINGS = Object.freeze({
   hostedSearchesPerRun: DIRECT_TERRA_RESEARCH_CONFIG.maxToolCalls,
@@ -70,7 +85,11 @@ const CEILINGS = Object.freeze({
   serperShoppingPerRun: 5,
   serperOrganicPerRun: 8,
   pageFetchesPerRun: MAX_DIRECT_TERRA_PAGE_FETCHES,
-  hardCeilingUsd: FIRST_LOSS_DIAGNOSTIC ? 5 : 15,
+  hardCeilingUsd: ROOT_CAUSE_REVALIDATION
+    ? 4
+    : FIRST_LOSS_DIAGNOSTIC
+      ? 5
+      : 15,
 });
 const POLL_INTERVAL_MS = 5_000;
 
@@ -84,23 +103,27 @@ function resolveCommit() {
 
 const COMMIT = resolveCommit();
 const APPROVAL = {
-  id: FIRST_LOSS_DIAGNOSTIC
-    ? "oai-t8d-root-cause-diagnostic-v2"
-    : "oai-t8c-multi-category-validation-v1",
+  id: ROOT_CAUSE_REVALIDATION
+    ? "oai-t8d-root-cause-revalidation-v1"
+    : FIRST_LOSS_DIAGNOSTIC
+      ? "oai-t8d-root-cause-diagnostic-v2"
+      : "oai-t8c-multi-category-validation-v1",
   commit: COMMIT,
   evalVersion: DIRECT_TERRA_EVAL_VERSION,
   model: DIRECT_TERRA_RESEARCH_CONFIG.model,
   reasoning: DIRECT_TERRA_RESEARCH_CONFIG.reasoning,
-  caseCount: DIRECT_TERRA_EVAL_CASES.length,
+  caseCount: RUN_CASES.length,
   runsPerCase: RUNS_PER_CASE,
-  maxCreates: DIRECT_TERRA_EVAL_CASES.length * RUNS_PER_CASE,
+  maxCreates: RUN_CASES.length * RUNS_PER_CASE,
   ceilings: CEILINGS,
   expectedPromptVersion: "direct-terra-master-prompt-v2",
 };
 const OUT_DIR = path.resolve(
-  FIRST_LOSS_DIAGNOSTIC
-    ? `tests/fixtures/review-radar-live/oai-t8d-root-cause-diagnostic-${COMMIT}`
-    : `tests/fixtures/review-radar-live/oai-t8c-multi-category-validation-${COMMIT}`,
+  ROOT_CAUSE_REVALIDATION
+    ? `tests/fixtures/review-radar-live/oai-t8d-root-cause-revalidation-${COMMIT}`
+    : FIRST_LOSS_DIAGNOSTIC
+      ? `tests/fixtures/review-radar-live/oai-t8d-root-cause-diagnostic-${COMMIT}`
+      : `tests/fixtures/review-radar-live/oai-t8c-multi-category-validation-${COMMIT}`,
 );
 
 function sleep(ms) {
@@ -169,13 +192,15 @@ function scoreAssetCoverage(productAssets, assetTargets) {
 
 function plan() {
   return {
-    schemaVersion: FIRST_LOSS_DIAGNOSTIC
-      ? "oai-t8d-root-cause-diagnostic-plan-v1"
-      : "oai-t8c-multi-category-validation-plan-v1",
+    schemaVersion: ROOT_CAUSE_REVALIDATION
+      ? "oai-t8d-root-cause-revalidation-plan-v1"
+      : FIRST_LOSS_DIAGNOSTIC
+        ? "oai-t8d-root-cause-diagnostic-plan-v1"
+        : "oai-t8c-multi-category-validation-plan-v1",
     mode: EXECUTE ? "execute" : "dry-run",
     commit: COMMIT,
     promptVersion: DIRECT_TERRA_PROMPT_VERSION,
-    cases: DIRECT_TERRA_EVAL_CASES.map((c) => ({
+    cases: RUN_CASES.map((c) => ({
       id: c.id,
       goldId: c.goldId,
       request: c.request,
@@ -188,12 +213,26 @@ function plan() {
 }
 
 async function main() {
+  if (
+    ROOT_CAUSE_REVALIDATION &&
+    process.argv.includes("--first-loss-diagnostic")
+  ) {
+    throw new Error(
+      "Choose either --root-cause-revalidation or --first-loss-diagnostic.",
+    );
+  }
+  if (
+    ROOT_CAUSE_REVALIDATION &&
+    RUN_CASES.length !== ROOT_CAUSE_REVALIDATION_CASE_IDS.size
+  ) {
+    throw new Error("Root-cause revalidation case contract is incomplete.");
+  }
   if (APPROVAL.expectedPromptVersion !== DIRECT_TERRA_PROMPT_VERSION) {
     throw new Error(
       `Prompt version mismatch: pins ${APPROVAL.expectedPromptVersion}, code exports ${DIRECT_TERRA_PROMPT_VERSION}`,
     );
   }
-  for (const evalCase of DIRECT_TERRA_EVAL_CASES) goldById(evalCase.goldId);
+  for (const evalCase of RUN_CASES) goldById(evalCase.goldId);
 
   if (!EXECUTE) {
     process.stdout.write(`${JSON.stringify({ status: "preflight_passed", plan: plan() }, null, 2)}\n`);
@@ -265,9 +304,11 @@ async function main() {
 
   const startedAtMs = Date.now();
   const summary = {
-    schemaVersion: FIRST_LOSS_DIAGNOSTIC
-      ? "oai-t8d-root-cause-diagnostic-summary-v1"
-      : "oai-t8c-multi-category-validation-summary-v1",
+    schemaVersion: ROOT_CAUSE_REVALIDATION
+      ? "oai-t8d-root-cause-revalidation-summary-v1"
+      : FIRST_LOSS_DIAGNOSTIC
+        ? "oai-t8d-root-cause-diagnostic-summary-v1"
+        : "oai-t8c-multi-category-validation-summary-v1",
     approval: APPROVAL,
     startedAt: new Date().toISOString(),
     completedAt: null,
@@ -278,7 +319,7 @@ async function main() {
   await writeJson(path.join(OUT_DIR, "summary.json"), summary);
 
   try {
-    for (const evalCase of DIRECT_TERRA_EVAL_CASES) {
+    for (const evalCase of RUN_CASES) {
       const goldEntry = goldById(evalCase.goldId);
       const runScores = [];
       const prospectiveRunScores = [];
