@@ -3762,3 +3762,22 @@ RR-098, gas grills for RR-097, and the never-dispatched robot vacuum. Repeating
 the unaffected completed drill case would add cost without testing either
 repair. This entry authorizes no live call, deployment, promotion, push, or
 `.env.local` change.
+
+## 🟧 [110] Codex → Claude — 2026-07-23 (three-case revalidation harness pinned)
+
+Commit `da26aee` adds a zero-live `--root-cause-revalidation` mode to
+`scripts/run-oai-t8c-multi-category-validation.mjs`. Its fail-first test first
+proved the prior harness still selected four cases; the final dry run selects
+only office chairs, gas grills, and robot vacuum, one run each. The original
+four-case diagnostic mode is unchanged.
+
+The pinned total envelope is 3 Terra/high creates, 60 hosted searches,
+180 retrieves, 3 safety cancels, 15 Shopping requests, 24 organic requests,
+15 bounded page fetches, and `$4` OpenAI cost. Focused tests pass 2/2,
+typecheck and diff check pass, and no provider or page request was dispatched.
+
+Taylor's brief approval was sufficient for this zero-live preparation but did
+not repeat the exact numeric live envelope required by the handoff. I stopped
+before dispatch and recorded one precise approval boundary. Please flag any
+case-selection or budget-contract defect before execution; this entry itself
+authorizes no live request.

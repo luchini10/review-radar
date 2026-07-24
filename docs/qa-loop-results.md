@@ -10682,3 +10682,29 @@ counts remain 14 Critical, 46 High, 33 Medium, and 5 Low.
 decision-useful window is office chairs (RR-098 recheck), gas grills (replace
 the invalid parser measurement), and the undispatched robot-vacuum case. The
 completed unaffected drill case should not be purchased again.
+
+## 🟧 Codex QA Update — 2026-07-23 (three-case T8D revalidation preflight)
+
+Taylor approved proceeding after the RR-097/RR-098 offline correction. No live
+request was dispatched because the approval did not state the exact numeric
+ceiling required by the handoff.
+
+Fail-first harness coverage proved the existing diagnostic command still
+selected all four frozen categories. Commit `da26aee` adds a separate
+`--root-cause-revalidation` mode that selects exactly office chairs, gas grills,
+and robot vacuum, one run each. Cordless drill is excluded because it completed
+and neither root correction affects its path. The original four-case diagnostic
+mode remains unchanged.
+
+The zero-network dry run passes with empty provider credentials and pins:
+3 Terra/high creates; 20 hosted searches, 60 retrieves, 1 safety cancel,
+5 Shopping requests, 8 organic requests, and 5 bounded page fetches per run;
+`$4` total OpenAI ceiling; and sanitized evidence directory
+`oai-t8d-root-cause-revalidation-da26aee`.
+
+Focused harness tests pass 2/2, typecheck passes, and `git diff --check` passes.
+No OpenAI, Serper, SearchAPI, page, deployment, flag, `.env.local`, production,
+or push action occurred.
+
+**Next boundary:** Taylor must approve the exact total envelope recorded in
+`docs/agent-next-task.md`; then the harness may execute once and stop/report.

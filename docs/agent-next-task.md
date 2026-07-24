@@ -51,7 +51,9 @@ but it does not prove post-fix live website/image coverage.
 
 ## Next approval-gated step
 
-Run a three-case diagnostic revalidation, not another four-case window:
+Run the three-case diagnostic revalidation using the harness introduced by
+`da26aee`, not another four-case window. The live approval must pin the final
+current HEAD reported by `git log -1`:
 
 1. **Office chairs** — prove the RR-098 verifier repair improves safe
    manufacturer/retailer website coverage without a wrong link or image.
@@ -61,10 +63,26 @@ Run a three-case diagnostic revalidation, not another four-case window:
    stopped window.
 
 Do not repeat cordless drill: it completed and neither correction targets its
-path. Pin the new window to the current reviewed documentation commit, retain
-only sanitized evidence, use the established no-retry/one-run-per-case harness,
-and stop after the three outcomes. Exact OpenAI/hosted-search/Serper/page-fetch
-and dollar ceilings require Taylor's separate approval before execution.
+path. The new `--root-cause-revalidation` mode passed its zero-network dry run
+and selects exactly these three cases, one run each. It writes to a distinct
+`oai-t8d-root-cause-revalidation-<current-HEAD>/` directory so evidence cannot
+replace an earlier window.
+
+Live execution still requires Taylor to approve this exact envelope:
+
+- 3 Terra/high OpenAI Responses creates;
+- at most 60 hosted web-search actions total (20 per run);
+- at most 180 retrieves total (60 per run);
+- at most 3 safety cancels total (1 per run);
+- at most 15 Serper Shopping requests total (5 per run);
+- at most 24 Serper organic requests total (8 per run);
+- at most 15 bounded product-page fetches total (5 per run); and
+- a `$4` hard OpenAI cost ceiling.
+
+No retries, replacements, second runs, additional cases, SearchAPI requests,
+unbounded/direct page requests, flag changes, `.env.local` changes,
+deployments, production changes, or push. Retain only sanitized evidence and
+stop/report after the three outcomes.
 
 **Recommended reasoning level:** High. Execution is bounded, but interpreting
 product identity and deciding whether the repaired verifier preserved the
@@ -73,9 +91,11 @@ reasoning is unnecessary unless the new trace contradicts the offline model.
 
 ## Approval and flag state
 
-Scoped local phase files may be committed automatically under Taylor's standing
-instruction. No live/external call, deployment, production change, flag
-promotion, `.env.local` edit, or push is authorized.
+Taylor's conversational approval was used only for the zero-live pin/preflight
+commit `da26aee`; no provider request was dispatched. Scoped local phase files
+may be committed automatically under Taylor's standing instruction. No
+live/external call, deployment, production change, flag promotion, `.env.local`
+edit, or push is authorized until the exact numeric envelope above is approved.
 
 Committed defaults remain:
 
@@ -110,3 +130,4 @@ does not authorize work.
 | Peer-review request | dialogue entry `[109]` |
 | Phase history | OAI-T8D in `docs/forward-roadmap.md` |
 | Behavior commits | `59ae9bc`, `95fddb5` |
+| Revalidation harness | `da26aee` |
