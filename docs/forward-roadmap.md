@@ -3457,10 +3457,40 @@ commit-pinned baseline dry run passes; and no provider/page/image request,
 flag change, `.env.local` edit, deployment, production change, or push
 occurred.
 
-**Next approval boundary:** Phase 4 is the separately approved live Sol/high
-acceptance window. It must measure whether V3 improves recall and
-hard-requirement truth before any prompt, model-default, flag, or deployment
-decision. This record does not authorize that spend.
+**Phase 4 live acceptance and Phase 5 terminal decision (completed
+2026-07-24):** The commit-pinned window ran exactly once against
+`5b99014e4b2b73d7aac0f89999eceb5d8da2e806`. All 12 fixed creates were
+dispatched without retry, replacement, fallback, or extra case. Only one
+route completed. Five remained pending at the 60-retrieve ceiling and six
+returned route-poll HTTP 502 after 51-60 retrieves. The full window used 13
+hosted searches, 704 retrieves, 11 safety cancels, five Shopping requests,
+six organic requests, five candidate-page fetches, and four selected-image
+retrieval attempts.
+
+The one completed response was constrained cordless-drill run 2. It returned
+five legitimate drills, met the automated hard constraints, and covered
+`2/4` frozen leaders. Manual review nevertheless found one unsupported
+top-product claim, one wrong image, one displayed destination that could not
+be verified as an exact product page, and one selected image that could not
+be audited. The saved T8C result won all four blinded case comparisons; Sol
+had zero clear wins. Because eleven runs produced no completed report, every
+within-case product-set Jaccard was `0`.
+
+The evaluator recorded no measurement defect and no pending human review.
+It returned `single_call_architecture_no_go`, with route, recommendation,
+evidence, and asset-safety failures. The runner measured `$1.452307` standard
+and `$1.586910` conservative cost only from usage returned by the completed
+response; provider billing for the 11 incomplete/failed creates is unknown.
+The measured number is not a total-cost claim for the window.
+
+Phase 5 therefore applies the predeclared non-asset-failure branch. Direct-
+Terra remains off and undeployed, Terra remains the application default, and
+no model, flag, `.env.local`, deployment, production, or push state changed.
+OAI-T9 is terminally complete. No prompt patch, category-specific repair,
+replacement run, or live retest follows. Taylor subsequently selected a
+separate Terra-only staged direction: compact research, deterministic
+verification, then evidence-bounded presentation. That is a new architecture,
+not an OAI-T9 continuation, and it remains default-off until separately proven.
 
 ### OAI-2B — early uncached quality and repeatability gate
 

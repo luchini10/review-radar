@@ -11013,3 +11013,58 @@ Focused OAI-T9 acceptance wall passes 12/12. Complete suite passes
 1,384/1,384 across 199 suites; typecheck/build pass; lint has zero errors and
 three pre-existing warnings; diff check passes. No external request, behavior
 flag, `.env.local`, deployment, production state, or push changed.
+
+---
+
+## 🟧 Codex — 2026-07-24 — OAI-T9 Phase 4 live acceptance and Phase 5 terminal decision
+
+**Scope and pin:** The final window ran once through the actual Direct-Terra
+POST/poll route at
+`5b99014e4b2b73d7aac0f89999eceb5d8da2e806`, using prompt V3, verifier v5,
+Sol/high, the fixed four cases times three runs, and the content-hash-pinned
+T8C blind baseline. No retry, replacement, fallback, extra case, SearchAPI
+request, flag change, `.env.local` edit, deployment, production change, or
+push occurred.
+
+**Route result:** All 12 approved creates were dispatched. Only constrained
+cordless-drill run 2 completed. Five attempts were still pending at the
+60-retrieve ceiling and six returned route-poll HTTP 502 after 51-60
+retrieves. Totals were 13 hosted searches, 704 retrieves, 11 safety cancels,
+five Serper Shopping requests, six organic requests, five candidate-page
+fetches, and four selected-image retrieval attempts. Evaluator wall time was
+3,857,573 ms (about 64 minutes 18 seconds).
+
+**Cost boundary:** Usage returned by the completed response measured
+`$1.452307` at the standard rate and `$1.586910` under the conservative
+cache-write assumption. The 11 incomplete/failed responses returned no usage.
+Their actual provider billing is unknown; the usage-based number is not the
+total actual cost of all 12 creates.
+
+**Completed-report quality:** Drill run 2 returned five legitimate drills,
+`2/4` frozen leader recall, and zero automated wrong-type, budget, or hard-
+requirement failures. Ranked-product/asset first-loss accounting was complete.
+Manual audit failed:
+
+- claim support for the rank-1 product;
+- exact-image identity for rank 1;
+- exact destination verification for rank 2; and
+- image auditability for rank 5.
+
+The remaining inspected drill assets included two exact product images and
+one exact retailer destination.
+
+**Blind comparison:** The saved T8C side won office chair, gas grill,
+cordless drill, and robot vacuum. Sol had zero clear wins. Because eleven
+runs had no completed report, every within-case product-set Jaccard was `0`.
+Broad office-chair recall was `0/7` in all three fixed-denominator rows.
+
+**Frozen evaluator:** no measurement failure and no pending manual review.
+The evaluator recorded 39 route findings, 11 recommendation findings, 23
+evidence findings, and three asset-safety findings. Its terminal result is:
+
+`single_call_architecture_no_go`
+
+This is the predeclared non-asset failure branch. Direct-Terra remains off and
+undeployed. No category-specific repair, prompt patch, replacement run, or
+live retest follows under OAI-T9. Sanitized evidence remains untracked at
+`tests/fixtures/review-radar-live/oai-t9-sol-acceptance-5b99014/`.

@@ -4,6 +4,32 @@
 
 ---
 
+## OAI-T9 terminal outcome (2026-07-24)
+
+- The fixed Sol/high window at
+  `5b99014e4b2b73d7aac0f89999eceb5d8da2e806` completed only 1/12 actual
+  Direct-Terra routes. Five attempts reached the 60-retrieve ceiling while
+  pending; six returned route-poll HTTP 502. Failed attempts remain in the
+  denominator.
+- The evaluator found no measurement defect and no pending manual review.
+  Its result is `single_call_architecture_no_go`.
+- The sole completed constrained-drill response returned five legitimate
+  products and `2/4` frozen leader recall, but manual audit still found an
+  unsupported top-product claim, a wrong image, an unverifiable displayed
+  destination, and an unauditable selected image.
+- The T8C baseline won every blinded case comparison. Sol had zero clear
+  wins, and every within-case product-set Jaccard was `0` because eleven runs
+  had no completed report.
+- Usage-based cost (`$1.452307` standard; `$1.586910` conservative) covers
+  only the completed response. Never treat a missing usage record on an
+  incomplete provider response as proof of zero billing.
+- This result closes the OAI-T9 experiment, not the product-quality problem.
+  Direct-Terra remains off. Do not purchase a replacement sample or start a
+  prompt/category patch cycle under this plan. Taylor's later Terra-only
+  staged direction is a new architecture with a new acceptance contract.
+
+---
+
 ## OAI-T9 terminal Sol acceptance contract (2026-07-24)
 
 - The only eligible final sample is four frozen cases × three runs through the

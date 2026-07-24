@@ -1,128 +1,124 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-24 by Codex after the OAI-T9 Phase 4 final runner audit.
-Use `git log -1` for the current scoped acceptance-harness commit.
+Updated: 2026-07-24 by Codex after the OAI-T9 Phase 4 live window and
+Phase 5 terminal decision. Use `git log -1` for the current scoped closeout
+commit.
 
 ## Current state
 
-OAI-T9 Phases 1–3 and the Phase 4 zero-live preflight are complete.
-Direct-Terra now has:
+OAI-T9 Phases 1-5 are complete. The fixed 12-run Sol/high acceptance window
+ran once against commit `5b99014e4b2b73d7aac0f89999eceb5d8da2e806`.
+The frozen evaluator found no measurement defect and no pending manual review.
+Its terminal decision is:
 
-- one shared complete-product relationship boundary for every link/image
-  candidate;
-- prompt V3's server-only 8–15-product candidate slate and request-derived
-  requirement verdicts; and
-- one frozen, commit-pinned Sol/high terminal acceptance harness.
+`single_call_architecture_no_go`
 
-The post-freeze audit also closed RR-100. Server-side product-page and
-audit-image requests now resolve and pin a public DNS address before network
-I/O; product-page redirects repeat the check and cannot leave the originally
-verified registrable domain, while image audits follow no redirect.
+Direct-Terra remains default-off and undeployed. Terra remains the application
+default. No model default, flag, `.env.local`, deployment, production state,
+or push changed.
 
-The final runner audit closed RR-101 and RR-102. Retrieved audit images must
-be one of five supported raster types and match the advertised file
-signature. Before every create, the runner also reserves the conservative
-observed per-run maximum inside the `$22` operational ceiling, then reconciles
-actual conservative usage after the response.
+The OAI-T9 complete-product relationship boundary, candidate-slate contract,
+DNS-pinned fetch boundary, and acceptance harness remain committed as
+default-off safety and evaluation work. They are not evidence that the
+single-call Sol architecture is release-ready.
 
-The client completed response is unchanged. OpenAI retains product selection,
-order, report prose, citations, and explanations. Assets remain nullable and
-can never remove or rewrite recommendations. Direct-Terra remains default-off
-and undeployed; Terra remains the application default.
+## Phase 4 live result
 
-No live request, model-default change, flag change, `.env.local` edit,
-deployment, production change, or push occurred during the preflight.
+The runner dispatched exactly the frozen 12 creates with no retries,
+replacements, fallbacks, or additional cases:
 
-## Frozen Phase 4 contract
+- 1/12 routes completed;
+- five runs reached the 60-retrieve ceiling while still pending;
+- six runs returned route-poll HTTP 502 after 51-60 retrieves;
+- 13 hosted searches, 704 retrieves, and 11 safety cancels;
+- five Serper Shopping requests, six Serper organic requests, five candidate
+  page fetches, and four selected-image retrieval attempts; and
+- 3,857,573 ms evaluator wall time (about 64 minutes 18 seconds).
 
-The only eligible sample uses the actual Direct-Terra POST/poll route:
+The runner measured `$1.452307` standard and `$1.586910` conservative cost
+from usage returned by the one completed response. The 11 incomplete/failed
+responses returned no usage, so their actual provider billing is unknown.
+The measured value must not be represented as the total actual cost of all
+12 creates.
 
-- `gpt-5.6-sol`, high reasoning, prompt
-  `direct-terra-master-prompt-v3`;
-- four existing frozen cases—office chairs, gas grills, cordless drills, and
-  robot vacuums—three runs each;
-- exactly 12 creates, at most 240 hosted searches, 720 retrieves, 12 safety
-  cancels, 60 Serper Shopping requests, 96 Serper organic requests, and 60
-  candidate-page fetches;
-- no retries, replacements, fallbacks, extra cases, SearchAPI, flag changes,
-  deployment, production changes, or push;
-- process-only keys, a clean tracked tree, and no `.env.local` change; and
-- a `$22` hard ceiling based on current official Sol pricing and the maximum
-  saved T8D token/search observation.
+The sole completed run was constrained cordless drill run 2:
 
-Mandatory human review requires a bounded audit-only supplement:
+- five legitimate ranked drills;
+- frozen leader recall `2/4`;
+- zero automated wrong-type, budget, or hard-requirement failures;
+- two displayed links and four displayed images; and
+- complete first-loss accounting for all five cards.
 
-- at most 60 selected-image retrievals;
-- at most 60 displayed-destination opens; and
-- exactly the needed claim checks within at most 48 source-page opens.
+Manual audit still failed one top-product claim-support check, one exact-image
+check, one displayed-destination check, and one image-auditability check.
+The saved T8C baseline won all four blinded case comparisons; Sol recorded
+zero clear wins. All within-case product-set Jaccards were `0` because eleven
+runs produced no completed report.
 
-These audit requests cannot discover, rank, replace, reorder, or decorate a
-product. Every displayed destination/image is audited. Two active
-same-response sources are inspected for each of the top two products per run.
+Sanitized live evidence remains untracked at:
 
-## Frozen decisions
+`tests/fixtures/review-radar-live/oai-t9-sol-acceptance-5b99014/`
 
-The sample cannot silently exclude or replace a failed run. Every product and
-asset needs a first-loss outcome. Every within-case product-set pair must have
-Jaccard at least `0.60`; a mean cannot hide one unstable pair. Broad
-office-chair recall must average at least `4/7` with no run below `3/7`.
-Every constrained #1 Best Match must pass all hard requirements. Lower ranks
-may retain visibly disclosed `needs_verification` under the V3 contract but
-may never contain a hard failure.
+Never stage that directory.
 
-The blind review compares each three-run Sol set with the content-hash-pinned
-T8C set. All four cases must win or tie and at least two must clearly win.
+## Phase 5 terminal decision
 
-Phase 5 is terminal:
+The frozen rule is binding: route completion, schema, recommendation,
+stability, or evidence failure makes the single-call architecture a no-go.
+This sample has failures in every one of those non-asset categories, in
+addition to asset-safety failures. It is therefore not the asset-only branch
+and cannot be rescued by hiding links/images.
 
-- all gates pass → promotion is eligible only through separate approval;
-- recommendation/stability/schema/route/evidence failure → single-call
-  architecture no-go;
-- asset-only safety failure → disable external assets and keep recommendation
-  cards;
-- low but safe asset coverage → pass with graceful omissions; and
-- measurement defect → invalidate the sample and stop for an architecture
-  decision.
-
-No category-specific fix or prompt-patch/retest cycle follows this window.
+Do not start another Sol prompt patch, category-specific repair, replacement
+run, or live retest under OAI-T9. Any future work must begin as a separately
+approved architecture decision with a new hypothesis and acceptance contract.
+RR-014 remains Needs Investigation.
 
 ## Verification
 
-- focused OAI-T9 acceptance tests: 12/12;
-- complete suite: 1,384/1,384 across 199 suites;
-- typecheck and production build: pass;
-- lint: zero errors and three pre-existing warnings;
-- script syntax and content-hash-pinned T8C dry run: pass; and
-- `git diff --check`: pass.
+- frozen evaluator: `single_call_architecture_no_go`;
+- fixed denominator: 12/12 attempt fixtures present;
+- pending manual review: 0;
+- measurement failures: 0;
+- route failures: 39 evaluator findings across 11 non-completed routes;
+- recommendation failures: 11;
+- evidence failures: 23;
+- asset-safety failures: 3;
+- pre-live complete suite: 1,384/1,384 across 199 suites;
+- pre-live typecheck and production build: pass;
+- pre-live lint: zero errors and three pre-existing warnings; and
+- tracked diff/closeout checks: see the current closeout commit.
 
-This is offline harness evidence only. It does not prove that Sol/V3 passes the
-quality gates. RR-014 remains Needs Investigation.
+## Next direction and approval boundary
 
-## Next approval boundary: OAI-T9 Phase 4 live acceptance
+OAI-T9 is finished. No implementation or live request is approved.
 
-Do not start from this handoff without Taylor's exact live approval. The
-approval must pin the full current commit and authorize the frozen 12-run
-provider envelope, `$22` ceiling, and audit-only image/destination/source
-allowance above.
+Taylor selected the replacement direction after the terminal result: remove
+Sol and build a Terra-only staged pipeline with:
 
-After approval, run the window once, complete the blinded/manual review, score
-the frozen evaluator, and execute the corresponding Phase 5 terminal
-decision. A pass does not itself authorize a model-default change, flag
-promotion, deployment, or production change.
+1. one compact research/candidate-slate call;
+2. deterministic server-side identity, requirement, price, source, link, and
+   image verification; and
+3. one short evidence-bounded presentation call with no autonomous web search.
 
-**Recommended reasoning level:** Highest for the acceptance and terminal
-architecture decision because the result determines whether the single-call
-architecture survives. High is sufficient for mechanical live execution, but
-not for interpreting borderline identity, evidence, or blind-quality results.
+This direction attacks the proven bottleneck by replacing the oversized
+single response rather than swapping Terra into it. It is not yet implemented,
+live-tested, flag-enabled, or approved for deployment. The next step is a
+zero-live architecture/contract phase behind a new default-off flag. Live
+feasibility, flag promotion, and deployment remain later separate boundaries.
+
+**Recommended reasoning level:** Highest for freezing the staged contracts,
+because the boundary between model judgment and deterministic fact
+verification determines whether the same failure cycle returns. High is
+sufficient for mechanical implementation after those contracts are frozen.
 
 ## Approval and flag state
 
-Taylor authorized uninterrupted zero-live work and automatic scoped commits.
-The current zero-live preflight commit is authorized under that standing
-instruction.
+Taylor authorized uninterrupted OAI-T9 work and automatic scoped commits.
+That authorization is exhausted by this terminal closeout.
 
 No OpenAI, Serper, SearchAPI, page, destination, image, or other external
-request is currently authorized. Phase 4 requires new explicit approval.
+request is currently authorized.
 
 Committed defaults remain:
 
@@ -135,10 +131,12 @@ Committed defaults remain:
 
 - No external request, deployment, publication, push, flag promotion,
   `.env.local` edit, or production change without explicit approval.
+- Do not reinterpret the OAI-T9 no-go as permission for another prompt patch,
+  replacement run, or category-specific repair.
 - Preserve OpenAI-authored product names, order, report prose, citations,
-  explanations, and price caveats.
-- Do not leak benchmark leaders into requests or add product/category-specific
-  rules.
+  explanations, and price caveats in any retained Direct-Terra work.
+- Do not leak benchmark leaders into requests or add
+  product/category-specific rules.
 - Do not weaken identity, complete-product relationship, requirement, price,
   citation, product-type, wrong-image, redirect, or private-network gates.
 - Never send raw model responses, provider IDs, secrets, or server diagnostics
@@ -148,21 +146,18 @@ Committed defaults remain:
 
 ## Review debt and retrieval map
 
-Dialogue entries `[113]` and `[114]` ask Claude to challenge the complete-
-product and V3 candidate-slate contracts. Entry `[115]` asks Claude to
-challenge the final acceptance baseline, human source audit, cost cap, and
-terminal-decision seams. These are advisory and authorize no work.
+Dialogue entries `[113]`-`[117]` contain the pre-live peer-review requests.
+Entry `[118]` records the terminal result for Claude to challenge when
+available. That review is advisory and cannot reopen OAI-T9 or authorize work.
 
 | Need | Retrieve |
 |---|---|
 | Current state and next boundary | this file |
 | Standing OAI-T9 record | `docs/forward-roadmap.md`, OAI-T9 |
-| Canonical preflight verification | latest OAI-T9 entry in `docs/qa-loop-results.md` |
-| Durable acceptance contract | top of `docs/review-radar-test-memory.md` |
-| Acceptance logic | `scripts/oai-t9-final-acceptance.mjs` |
-| Commit-gated route runner | `scripts/run-oai-t9-final-acceptance.mjs` |
+| Canonical live result | latest OAI-T9 entry in `docs/qa-loop-results.md` |
+| Durable terminal contract/outcome | top of `docs/review-radar-test-memory.md` |
+| Acceptance result | untracked OAI-T9 fixture `acceptance-result.json` |
+| Runner counters | untracked OAI-T9 fixture `summary.json` |
+| Human/blind review | untracked OAI-T9 fixture `manual-review.json` |
 | Recommendation-quality issue | RR-014 in `docs/RR-Issues-Report.md` |
-| Closed fetch-safety issue | RR-100 in `docs/RR-Issues-Report.md` |
-| Closed runner-audit issues | RR-101 and RR-102 in `docs/RR-Issues-Report.md` |
-| Peer challenges | dialogue entries `[113]`–`[117]` |
-| Frozen comparison evidence | untracked T8C fixture directory |
+| Peer challenge | dialogue entry `[118]` |

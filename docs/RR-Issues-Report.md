@@ -1,9 +1,9 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through OAI-T9 acceptance preflight
+## Compiled for AI Agent Consumption — Phase 0 through OAI-T9 terminal decision
 
 **Generated:** 2026-07-24
 **Scope:** All phases from initial measurement harness through the OAI-T9
-complete-product safety boundary
+terminal Sol acceptance decision
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -549,6 +549,19 @@ scored budget violations, but deterministic price evidence covered only one
 of four products. This is a meaningful one-run recall improvement, not a
 promotion result: the `3/4` minimum was not reached, three price claims remained
 unverified, and stability is NotScored. RR-014 remains Needs Investigation.
+
+**OAI-T9 terminal Sol acceptance (2026-07-24):** The frozen four-case,
+three-run window completed only one of twelve actual Direct-Terra routes.
+Five attempts remained pending at the 60-retrieve ceiling and six returned
+route-poll HTTP 502. The only completed report was constrained cordless drill:
+five legitimate products, zero automated hard-constraint failures, and
+`2/4` frozen leader recall. The saved T8C baseline won all four blinded
+comparisons, Sol recorded zero clear wins, and the evaluator found route,
+recommendation, evidence, and asset-safety failures without a measurement
+defect. The predeclared terminal result is
+`single_call_architecture_no_go`. This does not resolve the underlying
+leader-coverage problem, so RR-014 remains Needs Investigation; it does end
+the OAI-T9 prompt-patch/retest path.
 
 ---
 
