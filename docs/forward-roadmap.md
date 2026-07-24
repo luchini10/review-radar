@@ -3492,6 +3492,80 @@ separate Terra-only staged direction: compact research, deterministic
 verification, then evidence-bounded presentation. That is a new architecture,
 not an OAI-T9 continuation, and it remains default-off until separately proven.
 
+### OAI-T10 — Terra-only staged pipeline
+
+**Architecture decision:** replace the oversized single autonomous response
+with three explicit ownership boundaries:
+
+1. a compact Terra/high research call with hosted web search produces an
+   8–15-product evidence-lead slate but no ranking, cards, or shopper advice;
+2. deterministic server code owns identity, requirement, price, source,
+   eligibility, product-page, and image verification; and
+3. a separate Terra/medium presentation call receives only the verified
+   evidence package, has no web-search tool, and may rank or explain only
+   eligible candidates using server-issued fact IDs.
+
+This preserves Terra's comparative judgment while moving safety-critical facts
+out of model ownership. It attacks OAI-T9's proven route-size and evidence
+failures rather than changing models or adding another category-specific
+prompt patch.
+
+**Phase A — architecture and contracts (completed zero-live 2026-07-24):**
+The default-off `staged-terra-contract-v1` boundary now freezes the research
+schema, the server-owned verified-evidence package, and the presentation
+schema. Both model calls are pinned to `gpt-5.6-terra`. Research is bounded to
+10 hosted searches and 8,000 output tokens; presentation is bounded to 8,000
+output tokens and has no tools, prior-response coupling, or autonomous source
+access.
+
+Research candidates must be ordered `candidate_1` through `candidate_15`,
+retain exact brand/model/product identity, cite response-owned HTTPS source
+URLs, and carry every request requirement in its exact server-issued order.
+Duplicate normalized identities, invented sources, and requirement drift fail
+closed.
+
+The evidence package is the permanent trust boundary. An eligible product must
+pass every hard requirement. Subjective performance and owner-sentiment claims
+may be `source_reported`, never deterministically `verified`. Product and image
+assets must bind to exact server evidence. Presentation may use only eligible
+candidates and candidate-owned fact IDs; it cannot rename products, borrow
+evidence, emit URLs, or rank close matches.
+
+The new server/client flags are both default-off, and the current route does not
+import or execute this path. No provider, page, image, destination, or other
+external request ran. Focused tests pass 14/14; the complete wall passes
+1,398/1,398 across 203 suites; typecheck and build pass; lint has zero errors
+and three pre-existing warnings.
+
+**Phase B — deterministic verifier materialization (next zero-live
+boundary):** implement the conversion from validated research leads to the
+verified evidence package by reusing and testing the existing generalized
+identity, product-type, requirement, price, citation, product-page, image,
+redirect, and private-network primitives. It must not rank, backfill, browse,
+or silently promote subjective claims. Network behavior stays mocked and
+default-off.
+
+**Phase C — adapters and route integration:** add the two bounded Responses
+adapters, presentation renderer, lifecycle/cancellation handling, and a
+default-off route branch. The legacy path remains byte-equivalent when the
+flags are off. Research and presentation jobs are independent; the second
+request receives the validated server package rather than a provider response
+ID.
+
+**Phase D — separately approved live feasibility:** one small frozen case
+proves that the real API accepts both strict schemas, that the compact research
+job completes within its bounds, and that a verified package can reach the
+no-web presentation call. Live limits and cost must be approved from zero.
+
+**Phase E — quality/stability and promotion decision:** only after feasibility
+passes, compare multiple frozen categories against the existing baseline. A
+flag promotion, deployment, or retirement of the old path remains a separate
+decision.
+
+**Recommended reasoning level:** Highest for Phase B's trust-boundary mapping
+and Phase C's lifecycle review; High for mechanical tests and the bounded live
+execution.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen

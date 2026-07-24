@@ -11068,3 +11068,31 @@ This is the predeclared non-asset failure branch. Direct-Terra remains off and
 undeployed. No category-specific repair, prompt patch, replacement run, or
 live retest follows under OAI-T9. Sanitized evidence remains untracked at
 `tests/fixtures/review-radar-live/oai-t9-sol-acceptance-5b99014/`.
+
+---
+
+## 🟧 Codex — 2026-07-24 — OAI-T10 Phase A staged Terra contracts
+
+**Objective:** freeze the smallest Terra-only staged architecture that directly
+addresses OAI-T9's oversized-response and mixed-trust failures, without wiring
+it into the application or purchasing another live sample.
+
+**Result:** added `staged-terra-contract-v1` with three ownership boundaries.
+The research request uses Terra/high plus hosted web search to return only an
+8–15-candidate evidence-lead slate. Deterministic server code must construct
+the verified evidence package. A separate Terra/medium request has no tools and
+may rank or explain only eligible candidates using server-issued fact IDs.
+
+The validators fail closed on candidate/source/requirement drift, duplicate
+identity, unverified hard requirements, identity or asset mismatch, unsupported
+subjective verification, cross-candidate evidence, renamed products, URLs in
+presentation, non-contiguous ranks, and close matches presented as ranked
+recommendations. Both staged flags default off, and the live route remains
+disconnected.
+
+**Verification:** focused staged-contract tests 14/14 across four suites;
+complete suite 1,398/1,398 across 203 suites; typecheck pass; production build
+pass; lint zero errors with three pre-existing warnings; diff check pass. No
+OpenAI, Serper, SearchAPI, page, destination, image, or other external request
+ran. No `.env.local`, flag promotion, deployment, production state, or push
+changed.

@@ -4,6 +4,34 @@
 
 ---
 
+## OAI-T10 staged Terra contract (2026-07-24)
+
+- The replacement architecture is not another single-call prompt. It is:
+  compact Terra research with web search, deterministic server verification,
+  then a separate Terra presentation call with no web search.
+- Both calls remain `gpt-5.6-terra`. The research call may discover 8–15
+  candidates but cannot rank or write cards. The presentation call may use
+  only eligible candidates and server-issued fact/evidence IDs.
+- The deterministic evidence package owns identity, hard-requirement, price,
+  source, product-page, and image truth. Subjective performance and owner
+  sentiment remain `source_reported`; do not mislabel them as mechanically
+  verified.
+- Research sources must be exact response-owned HTTPS URLs. Presentation may
+  not emit URLs, rename products, borrow another product's evidence, rank a
+  close match, or use outside knowledge.
+- Research is currently bounded to 10 hosted searches and 8,000 output tokens.
+  Presentation has no tools, no prior-response coupling, and an 8,000-token
+  output ceiling. These are contract values, not live proof that the provider
+  accepts or completes both requests.
+- `REVIEW_RADAR_STAGED_TERRA` and
+  `NEXT_PUBLIC_REVIEW_RADAR_STAGED_TERRA` default off, and the live route is
+  deliberately disconnected. Do not infer product behavior from Phase A.
+- Phase A made zero external requests. Before any live spend, finish the
+  zero-live verifier and route/lifecycle phases, review the complete diff, and
+  obtain a new explicit live envelope.
+
+---
+
 ## OAI-T9 terminal outcome (2026-07-24)
 
 - The fixed Sol/high window at
