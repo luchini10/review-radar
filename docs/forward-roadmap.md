@@ -3230,6 +3230,37 @@ require a new exact live approval after those repairs pass.
 the descriptive-identity correction must recover legitimate pages without
 reopening the wrong-sibling trust boundary.
 
+**RR-097/RR-098 zero-live corrective result (completed 2026-07-23, commits
+`59ae9bc` and `95fddb5`):** Static inspection corrected the live diagnosis:
+Terra's gas labels were bare `#1 Best Match` paragraphs, not Markdown H1.
+ReviewRadar now uses one ranked-section contract for bare labels and H1-H4
+across shortlist extraction, evaluation, price binding, and rendered anchors.
+The current replay restores all three gas products and accounts for every
+ranked product in the older eight-run set (31/31) and the three completed
+verifier-v4 runs (12/12).
+
+Verifier v4 no longer treats ancestor URL taxonomy as model identity. For
+descriptive models, later non-neutral URL detail must be explained by the
+locked target/category or corroborated in full by the candidate title; partial
+corroboration cannot hide a sibling suffix. Exact manufacturer/popular-retailer
+slugs may resolve only an `unknown` generic eligibility result after model,
+brand, type, host, path, and conflict checks succeed. Explicit negative
+eligibility, accessory, editorial, redirect, private-host, wrong-type,
+wrong-model, Q7/Q70, and wrong-image vetoes remain binding.
+
+Verification passes 1337/1337 tests across 192 suites, typecheck, production
+build, and the zero-live T8D replay. Lint has zero errors and the same three
+pre-existing warnings. The sanitized v2 fixtures do not retain enough raw
+provider detail to reconstruct post-fix live link coverage, so no live coverage
+improvement is claimed.
+
+The smallest next evidence window is separately approved and diagnostic only:
+rerun office chairs to measure the repaired verifier, replace the invalid gas
+measurement, and execute the previously unused robot-vacuum case. Cordless
+drill need not be repeated because neither correction targets its completed
+path. No approval, flag promotion, deployment, or production change is implied
+by this record.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen

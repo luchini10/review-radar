@@ -10627,3 +10627,58 @@ is zero-live: fix RR-097's shared ranked-heading parser first, then repair
 RR-098 without growing a word allowlist and preserve the complete RR-093 safety
 wall. Only after offline replay and adversarial review may Taylor separately
 approve one replacement gas run and the unused robot-vacuum case.
+
+## 🟧 Codex QA Update — 2026-07-23 (RR-097/RR-098 root corrections)
+
+**Verdict: PASS offline. RR-097 and RR-098 are Fixed deterministically; no live
+coverage improvement is claimed.**
+
+The saved gas report first proved that the prior diagnosis itself was slightly
+wrong: Terra emitted bare `#1 Best Match` labels, not Markdown H1. Five
+fail-first cases then reproduced the shared loss across shortlist extraction,
+evaluation, asset-target creation, price binding, and the rendered anchor.
+Commit `59ae9bc` replaces the duplicated parsers with one ranked-section
+contract for bare labels and H1-H4, including duplicate-rank and safe
+non-product-section boundaries. The focused parser/response/price/UI wall
+passes 46/46.
+
+RR-098 fail-first tests reproduced false rejection of exact product pages
+across Steelcase, Herman Miller, Haworth, Branch, and a refrigerator control.
+Commit `95fddb5` repairs the generalized decision boundary:
+
+- path taxonomy before the first descriptive model token is navigation, not
+  sibling identity;
+- later non-neutral detail must be target/category-explained or fully
+  corroborated by the candidate title;
+- partial corroboration cannot hide an undisclosed suffix;
+- opaque alphanumeric commerce IDs are ignored only in explicit ID segments;
+  and
+- an exact manufacturer/popular-retailer slug may resolve generic eligibility
+  `unknown`, but never an explicit negative.
+
+The complete verifier wall preserves wrong-sibling suffixes, accessories,
+editorial/support pages, redirect wrappers, private hosts, wrong types,
+wrong-model images, coded models, leading series prefixes, trim suffixes, and
+Q7/Q70 boundaries. The citation resolver independently proves that an
+abbreviated title is accepted only when a registered manufacturer URL carries
+the exact model; sibling, non-brand, editorial, hostile-subdomain, and
+accessory controls remain rejected.
+
+**Verification:** 59/59 focused asset/citation tests; 1337/1337 complete tests
+across 192 suites; typecheck and production build pass; lint has zero errors
+and three pre-existing warnings; `git diff --check` passes. The zero-live
+replay accounts for 31/31 products in the older eight runs and 12/12 across all
+three completed verifier-v4 runs, including 3/3 gas products.
+
+**Evidence limit:** the sanitized gas fixture omitted raw price observations,
+and the provider traces do not retain enough raw rows to reconstruct post-fix
+link/image selection. The replay proves the parser root correction and complete
+first-loss accounting, not live asset coverage.
+
+**Register:** 98 total; 91 Fixed, 6 Needs Investigation, 1 Won't Fix; severity
+counts remain 14 Critical, 46 High, 33 Medium, and 5 Low.
+
+**Next boundary:** a new explicit live approval is required. The smallest
+decision-useful window is office chairs (RR-098 recheck), gas grills (replace
+the invalid parser measurement), and the undispatched robot-vacuum case. The
+completed unaffected drill case should not be purchased again.

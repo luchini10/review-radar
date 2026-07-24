@@ -11,6 +11,33 @@ Update this file after:
 
 ## 2026-07-23
 
+### Codex - Restore ranked cards and safe descriptive product links
+
+#### Changed
+
+- Direct-Terra reports now use one ranked-section parser for the observed bare
+  `#1 Best Match` labels and Markdown H1-H4. Shortlist extraction, evaluation,
+  price binding, asset targets, and UI anchors no longer disagree about which
+  products exist.
+- Descriptive product-link verification now separates ancestor URL taxonomy
+  from identity-bearing path text. Extra post-model detail must be explained by
+  the locked target/category or fully corroborated in the candidate title.
+- Exact manufacturer/popular-retailer model slugs may resolve only a generic
+  eligibility `unknown`; explicit accessory, editorial, listing, redirect,
+  private-host, wrong-type, wrong-model, or sibling evidence still blocks the
+  page.
+
+#### Verified
+
+- The saved gas report now replays as three ranked products instead of zero.
+  Offline replay accounts for 31/31 older T8D products and 12/12 products in the
+  three completed verifier-v4 runs.
+- Focused asset/citation tests pass 59/59. The complete suite passes 1337/1337
+  across 192 suites; typecheck and production build pass; lint has zero errors
+  and three pre-existing warnings.
+- RR-097 and RR-098 are Fixed. No live call, flag change, deployment,
+  `.env.local` change, production change, or push occurred.
+
 ### Codex - Make the T8D root-cause evidence honest and block wrong-variant links
 
 #### Changed

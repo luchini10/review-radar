@@ -26,8 +26,8 @@ only when maintaining this register or auditing its full history.
 | Medium | 33 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 8 |
-| Fixed | 89 |
+| Needs Investigation | 6 |
+| Fixed | 91 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -3841,40 +3841,47 @@ instrumented runs can make that distinction.
 | **ID** | RR-097 |
 | **Phase** | OAI-T8D cross-category first-loss diagnostic |
 | **Severity** | High |
-| **Title** | Direct-Terra H1 ranked headings silently erase all parsed product cards |
-| **Status** | Needs Investigation |
+| **Title** | Bare Direct-Terra ranked labels silently erase parsed product cards and prices |
+| **Status** | Fixed |
 
 **Description:** The verifier-v4 gas-grill diagnostic returned a complete Terra
-report with three ranked products, but Terra used Markdown H1 headings such as
-`# #1 Best Match — Monument Grills Mesa M415BZ`. ReviewRadar's two independent
-ranked-product parsers accept only H2 through H4. They therefore returned zero
-ranked products, created zero asset targets, dispatched zero asset-provider
-requests, rendered no shortlist cards, and incorrectly scored recall as `0/4`.
+report with three ranked products, but Terra used bare labels such as
+`#1 Best Match — Monument Grills Mesa M415BZ` (no space after `#`). Markdown
+renders those lines as paragraphs, not H1 headings. ReviewRadar's independent
+ranked-product and price parsers accepted only Markdown H2 through H4. They
+therefore returned zero ranked products and prices, created zero asset targets,
+dispatched zero asset-provider requests, rendered no shortlist cards, and
+incorrectly scored recall as `0/4`.
 
 **Where it occurs:** `lib/directTerraReportOutline.ts` in
 `extractDirectTerraPicks`, `lib/directTerraEvaluation.ts` in
-`parseRankedProducts`, and the H1/H2 anchor handling in
-`components/DirectTerraReport.tsx`.
+`parseRankedProducts`, `lib/directTerraPriceEstimate.ts` in ranked-section
+binding, and anchor handling in `components/DirectTerraReport.tsx`.
 
 **Evidence:** Untracked fixture
 `tests/fixtures/review-radar-live/oai-t8d-root-cause-diagnostic-9e041e0/eval-con-gas-grill-600-4burner.run1.json`.
-The saved report contains three valid U+2014 ranked H1 headings and complete
+The saved report contains three valid U+2014 bare ranked labels and complete
 research beneath each. The saved score and first-loss trace contain zero ranked
-products and zero asset targets. Encoding was ruled out; the heading-depth
-restriction is the first loss.
+products and zero asset targets. Encoding was ruled out; the missing bare-label
+contract is the first loss.
 
 **Expected:** A semantically exact `#N Best Match` heading should be parsed
-consistently at safe Markdown depths H1 through H4. A ranked section must end at
-the next heading of equal or higher structural depth so a later `What to avoid`
-or comparison section cannot bleed into the last product. Shortlist anchors and
-rendered heading IDs must use the same contract.
+consistently for the observed bare-label form and Markdown H1 through H4. A
+ranked section must end at the next heading of equal or higher structural depth
+or a required non-product report section so comparison/advice text cannot bleed
+into the last product. Shortlist, evaluation, price binding, anchors, and
+rendering must use the same contract.
 
-**Suggested fix or next action:** Introduce one shared ranked-heading/section
-parser rather than widening two regexes independently. Add fail-first H1
-coverage from the saved gas report, H2/H3/H4 controls, same-or-higher heading
-boundaries, duplicate-rank handling, and renderer-anchor agreement. Replay the
-saved gas report locally and prove three ranked products/targets before any
-replacement live request.
+**Resolution (2026-07-23, commit `59ae9bc`):** One shared ranked-section parser
+now recognizes bare labels and H1-H4, preserves the first duplicate rank, and
+closes sections at structurally safe headings and required report boundaries.
+Shortlist extraction, evaluation, price binding, and UI anchors consume that
+contract. Fail-first coverage reproduced the saved gas form; focused parser,
+evaluation, response, price, and UI tests pass 46/46. The current zero-live
+replay extracts all three gas products and accounts for 12/12 ranked products
+across the three completed live fixtures. The sanitized gas fixture did not
+retain raw price observations, so provider calls and final asset coverage
+cannot be reconstructed offline.
 
 ---
 
@@ -3886,7 +3893,7 @@ replacement live request.
 | **Phase** | OAI-T8D cross-category first-loss diagnostic |
 | **Severity** | High |
 | **Title** | Verifier v4 treats ordinary descriptive URL words as sibling-model conflicts |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** Verifier v4's descriptive-identity safety rule correctly
 prevented any observed wrong-variant asset, but it also rejected exact product
@@ -3917,12 +3924,17 @@ Exact manufacturer or recognized-retailer product pages should survive when
 brand, descriptive model, and product type agree and no positive sibling,
 edition, accessory, or conflicting-model evidence exists.
 
-**Suggested fix or next action:** Do not grow the allowlist one word at a time.
-Use the saved bounded candidate samples to design a generalized positive-
-conflict rule, preserve fail-closed behavior for actual RR-093 sibling evidence,
-and prove it on unrelated descriptive product families before another live
-window. Keep numeric/alphanumeric model, accessory, editorial, redirect,
-private-network, and wrong-image gates unchanged.
+**Resolution (2026-07-23, commit `95fddb5`):** The verifier now ignores ancestor
+taxonomy before the first descriptive model token and accepts later descriptive
+detail only when the locked target/category explains it or every non-neutral
+detail is independently present in the candidate title. Opaque commerce IDs
+are recognized only in explicit ID path positions. Exact manufacturer or
+popular-retailer model slugs may resolve a generic eligibility `unknown`, but
+never an explicit negative. Cross-category tests cover Steelcase, Herman
+Miller, Haworth, Branch, and a refrigerator retailer page. Partial
+corroboration cannot hide an undisclosed suffix. The complete RR-093 sibling,
+accessory, editorial, redirect, private-host, coded-model, Q7/Q70, and
+wrong-image wall remains green.
 
 ---
 
@@ -3931,18 +3943,16 @@ private-network, and wrong-image gates unchanged.
 ### Open (0 issues)
 - None.
 
-### Needs Investigation (8 issues)
+### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 - RR-091: Same-page related-product price can satisfy autonomous card binding
 - RR-092: Editorial Product markup can verify identity/image without proving the tested model
-- RR-097: Direct-Terra H1 ranked headings silently erase all parsed product cards
-- RR-098: Verifier v4 treats ordinary descriptive URL words as sibling-model conflicts
-### Fixed (89 issues)
+### Fixed (91 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
-RR-038 through RR-044, RR-046 through RR-090, and RR-093 through RR-096
+RR-038 through RR-044, RR-046 through RR-090, and RR-093 through RR-098
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -3951,16 +3961,10 @@ RR-038 through RR-044, RR-046 through RR-090, and RR-093 through RR-096
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-097** — a contract-conforming H1 ranked report currently produces no
-   cards, no asset targets, and a false zero-recall score. Correct the shared
-   parser/section/anchor contract before another live diagnostic.
-2. **RR-098** — verifier v4 preserved safety in the completed live cases but
-   falsely rejected exact descriptive product pages. Repair only from positive
-   conflicting identity evidence; do not expand a vocabulary allowlist.
-3. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
+1. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
    final overlap. Recovery stays default-off and R7A stays blocked.
-4. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
+2. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
    but varied by model, while Tapo appeared raw and died in normalization.
-5. **RR-091 + RR-092** — the autonomous hybrid remains isolated and cannot be
+3. **RR-091 + RR-092** — the autonomous hybrid remains isolated and cannot be
    integrated until exact transactional binding and exact tested-model
    attribution pass an independently verified boundary.
