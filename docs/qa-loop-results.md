@@ -10993,3 +10993,23 @@ RR-100 is Fixed. No provider, page, image, destination, source, or other
 external request ran. Product selection/order and client output did not
 change. The Phase 4 live approval remains the next boundary and must pin the
 new current commit.
+
+---
+
+## 🟧 Codex — 2026-07-24 — OAI-T9 Phase 4 final runner audit
+
+**RR-101:** the visual-audit downloader trusted arbitrary `image/*` labels.
+It now accepts only JPEG, PNG, GIF, WebP, and AVIF and verifies the file
+signature before retaining bytes. HTML labeled as JPEG is rejected without
+creating a file.
+
+**RR-102:** the runner previously checked conservative cost only after a
+response. It now reserves the frozen `$1.633816` conservative observed
+per-run maximum before every create and reconciles actual conservative usage
+afterward. An already-dispatched provider response cannot be interrupted at
+an exact dollar amount, so that request-level limitation is explicit.
+
+Focused OAI-T9 acceptance wall passes 12/12. Complete suite passes
+1,384/1,384 across 199 suites; typecheck/build pass; lint has zero errors and
+three pre-existing warnings; diff check passes. No external request, behavior
+flag, `.env.local`, deployment, production state, or push changed.

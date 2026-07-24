@@ -20,14 +20,14 @@ only when maintaining this register or auditing its full history.
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 100 |
+| Total Issues | 102 |
 | Critical | 15 |
-| High | 47 |
-| Medium | 33 |
+| High | 48 |
+| Medium | 34 |
 | Low | 5 |
 | Open | 0 |
 | Needs Investigation | 6 |
-| Fixed | 93 |
+| Fixed | 95 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -114,7 +114,7 @@ only when maintaining this register or auditing its full history.
 | OAI-2A source-truth audit | 1 |
 | OAI-H2 direct-verification feasibility | 1 |
 | OAI-T8D cross-category first-loss diagnostic | 7 |
-| OAI-T9 acceptance preflight | 1 |
+| OAI-T9 acceptance preflight | 3 |
 | Phase R4 — Live after-sample | 1 |
 | RR-061 image-provenance safety repair | 0 |
 | RR-061 round 4 / RR-080 image micro-phase | 1 |
@@ -4096,6 +4096,55 @@ request ran.
 
 ---
 
+#### RR-101
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-101 |
+| **Phase** | OAI-T9 acceptance preflight |
+| **Severity** | High |
+| **Title** | Acceptance image audit trusted an unverified `image/*` response label |
+| **Status** | Fixed |
+
+**Description:** The mandatory visual-audit downloader bounded DNS, redirects,
+time, and bytes, but accepted every `image/*` content type and wrote the body
+to disk without checking its signature. A source could therefore label SVG,
+HTML, or another unsupported body as a raster image. That weakened the safety
+and reliability of the final manual image-identity review.
+
+**Resolution (2026-07-24):** Audit retrieval now accepts only JPEG, PNG, GIF,
+WebP, and AVIF and verifies the corresponding file signature before retaining
+the body. A regression test proves that HTML labeled `image/jpeg` is rejected
+and no file is written. This is audit-only hardening; it changes no product,
+rank, link, image selection, or client response.
+
+---
+
+#### RR-102
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-102 |
+| **Phase** | OAI-T9 acceptance preflight |
+| **Severity** | Medium |
+| **Title** | Final acceptance runner checked the dollar ceiling only after dispatch |
+| **Status** | Fixed |
+
+**Description:** The runner calculated conservative observed cost after each
+response and stopped after an overage, but did not reserve the planning-basis
+maximum before starting the next response. The `$22` operational ceiling was
+therefore weaker than the frozen cost rationale.
+
+**Resolution (2026-07-24):** Before every create, the runner now requires the
+remaining allowance to cover the same `$1.633816` conservative per-run reserve
+used to justify the twelve-run plan. It still checks actual conservative
+usage after every response. Because the provider exposes no per-request
+dollar cutoff, an already-dispatched response can only be measured after it
+finishes; the pre-dispatch reserve is the strongest enforceable local bound
+without changing the frozen request contract.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)
@@ -4108,9 +4157,9 @@ request ran.
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 - RR-091: Same-page related-product price can satisfy autonomous card binding
 - RR-092: Editorial Product markup can verify identity/image without proving the tested model
-### Fixed (93 issues)
+### Fixed (95 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
-RR-038 through RR-044, RR-046 through RR-090, and RR-093 through RR-100
+RR-038 through RR-044, RR-046 through RR-090, and RR-093 through RR-102
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)

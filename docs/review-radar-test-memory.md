@@ -29,6 +29,14 @@
   the connection to a validated public address. Product-page redirects repeat
   validation and stay on the original registrable domain; audit images follow
   no redirect. Textual private-host checks alone are insufficient (RR-100).
+- Visual-audit downloads retain only JPEG, PNG, GIF, WebP, or AVIF bodies with
+  matching file signatures. A response header alone is not image evidence
+  (RR-101).
+- Before each Sol create, reserve the frozen `$1.633816` conservative
+  planning-basis maximum inside the `$22` operational ceiling, then reconcile
+  actual conservative usage afterward. Provider billing has request
+  granularity; no local runner can interrupt an already-dispatched response at
+  an exact dollar boundary (RR-102).
 - The 12 comparable T8C reports are content-hash pinned before spend. The
   blinded review requires all four cases to win/tie and at least two to win.
 - Current 2026-07-24 official Sol pricing plus the maximum saved T8D usage

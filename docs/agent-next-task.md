@@ -1,6 +1,6 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-24 by Codex after the OAI-T9 Phase 4 zero-live preflight.
+Updated: 2026-07-24 by Codex after the OAI-T9 Phase 4 final runner audit.
 Use `git log -1` for the current scoped acceptance-harness commit.
 
 ## Current state
@@ -18,6 +18,12 @@ The post-freeze audit also closed RR-100. Server-side product-page and
 audit-image requests now resolve and pin a public DNS address before network
 I/O; product-page redirects repeat the check and cannot leave the originally
 verified registrable domain, while image audits follow no redirect.
+
+The final runner audit closed RR-101 and RR-102. Retrieved audit images must
+be one of five supported raster types and match the advertised file
+signature. Before every create, the runner also reserves the conservative
+observed per-run maximum inside the `$22` operational ceiling, then reconciles
+actual conservative usage after the response.
 
 The client completed response is unchanged. OpenAI retains product selection,
 order, report prose, citations, and explanations. Assets remain nullable and
@@ -82,8 +88,8 @@ No category-specific fix or prompt-patch/retest cycle follows this window.
 
 ## Verification
 
-- focused OAI-T9 acceptance tests: 9/9;
-- complete suite: 1,382/1,382 across 199 suites;
+- focused OAI-T9 acceptance tests: 12/12;
+- complete suite: 1,384/1,384 across 199 suites;
 - typecheck and production build: pass;
 - lint: zero errors and three pre-existing warnings;
 - script syntax and content-hash-pinned T8C dry run: pass; and
@@ -157,5 +163,6 @@ terminal-decision seams. These are advisory and authorize no work.
 | Commit-gated route runner | `scripts/run-oai-t9-final-acceptance.mjs` |
 | Recommendation-quality issue | RR-014 in `docs/RR-Issues-Report.md` |
 | Closed fetch-safety issue | RR-100 in `docs/RR-Issues-Report.md` |
-| Peer challenges | dialogue entries `[113]`–`[115]` |
+| Closed runner-audit issues | RR-101 and RR-102 in `docs/RR-Issues-Report.md` |
+| Peer challenges | dialogue entries `[113]`–`[117]` |
 | Frozen comparison evidence | untracked T8C fixture directory |

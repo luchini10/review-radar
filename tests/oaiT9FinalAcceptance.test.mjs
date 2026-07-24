@@ -13,6 +13,7 @@ import {
   buildOaiT9AcceptancePlan,
   buildOaiT9BlindPacket,
   buildOaiT9ManualReviewTemplate,
+  canDispatchNextOaiT9Run,
   estimateOaiT9SolCost,
 } from "../scripts/oai-t9-final-acceptance.mjs";
 import {
@@ -255,6 +256,16 @@ describe("OAI-T9 final acceptance preflight", () => {
     );
   });
 
+  it("reserves the frozen conservative run estimate before dispatch", () => {
+    const reserve = canDispatchNextOaiT9Run(20);
+    assert.equal(Number(reserve.planningReserveUsd.toFixed(6)), 1.633816);
+    assert.equal(reserve.allowed, true);
+
+    const blocked = canDispatchNextOaiT9Run(20.5);
+    assert.equal(blocked.allowed, false);
+    assert.equal(Number(blocked.remainingUsd.toFixed(6)), 1.5);
+  });
+
   it("builds a blinded packet without exposing which side is current", () => {
     const fixtures = completeSample();
     const baselineReports = fixtures.map((fixture) => ({
@@ -311,6 +322,44 @@ describe("OAI-T9 final acceptance preflight", () => {
       assert.match(result[0].urlHash, /^[a-f0-9]{64}$/);
       assert.equal(counters.selectedImageRetrievals, 1);
       assert.equal(globalCounters.selectedImageRetrievals, 1);
+    } finally {
+      await fs.rm(outputDirectory, { recursive: true, force: true });
+    }
+  });
+
+  it("does not retain content that only claims to be an image", async () => {
+    const outputDirectory = await fs.mkdtemp(
+      path.join(os.tmpdir(), "oai-t9-image-signature-"),
+    );
+    const counters = { selectedImageRetrievals: 0 };
+    const globalCounters = { selectedImageRetrievals: 0 };
+    try {
+      const result = await retrieveOaiT9SelectedImages({
+        outputDirectory,
+        caseId: "eval-broad-office-chair",
+        run: 1,
+        productAssets: [
+          {
+            rank: 1,
+            productName: "Example Chair",
+            productUrl: null,
+            imageUrl: "https://images.example.test/example.jpg",
+          },
+        ],
+        counters,
+        globalCounters,
+        resolveHost: async () => ["93.184.216.34"],
+        transport: async () => ({
+          status: 200,
+          headers: { "content-type": "image/jpeg" },
+          body: Buffer.from("<html>not an image</html>"),
+        }),
+      });
+
+      assert.equal(result.length, 1);
+      assert.equal(result[0].status, "failed");
+      assert.equal(result[0].reason, "image_signature_mismatch");
+      assert.deepEqual(await fs.readdir(outputDirectory), []);
     } finally {
       await fs.rm(outputDirectory, { recursive: true, force: true });
     }

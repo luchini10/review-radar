@@ -63,11 +63,19 @@ import {
   buildOaiT9AcceptancePlan,
   buildOaiT9BlindPacket,
   buildOaiT9ManualReviewTemplate,
+  canDispatchNextOaiT9Run,
   estimateOaiT9SolCost,
   loadAndVerifyOaiT9Baseline,
 } from "./oai-t9-final-acceptance.mjs";
 
 const POLL_INTERVAL_MS = 5_000;
+const SAFE_AUDIT_IMAGE_CONTENT_TYPES = new Set([
+  "image/avif",
+  "image/gif",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
 
 function argumentValue(name) {
   const prefix = `${name}=`;
@@ -117,12 +125,43 @@ function contentTypeExtension(contentType) {
   if (contentType === "image/png") return "png";
   if (contentType === "image/webp") return "webp";
   if (contentType === "image/gif") return "gif";
+  if (contentType === "image/avif") return "avif";
   return "jpg";
 }
 
 function headerValue(headers, name) {
   const value = headers[name] ?? headers[name.toLowerCase()];
   return Array.isArray(value) ? value[0] ?? "" : value ?? "";
+}
+
+function bodyStartsWith(body, signature) {
+  return body.length >= signature.length &&
+    signature.every((byte, index) => body[index] === byte);
+}
+
+function auditImageSignatureMatches(contentType, body) {
+  if (contentType === "image/jpeg") {
+    return bodyStartsWith(body, [0xff, 0xd8, 0xff]);
+  }
+  if (contentType === "image/png") {
+    return bodyStartsWith(body, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  }
+  if (contentType === "image/gif") {
+    const signature = body.subarray(0, 6).toString("ascii");
+    return signature === "GIF87a" || signature === "GIF89a";
+  }
+  if (contentType === "image/webp") {
+    return (
+      body.subarray(0, 4).toString("ascii") === "RIFF" &&
+      body.subarray(8, 12).toString("ascii") === "WEBP"
+    );
+  }
+  if (contentType === "image/avif") {
+    if (body.subarray(4, 8).toString("ascii") !== "ftyp") return false;
+    const brands = body.subarray(8, Math.min(body.length, 64)).toString("ascii");
+    return brands.includes("avif") || brands.includes("avis");
+  }
+  return false;
 }
 
 export async function retrieveOaiT9SelectedImages({
@@ -186,12 +225,15 @@ export async function retrieveOaiT9SelectedImages({
         .split(";")[0]
         .trim()
         .toLowerCase();
-      if (!contentType?.startsWith("image/")) {
+      if (!SAFE_AUDIT_IMAGE_CONTENT_TYPES.has(contentType)) {
         throw new Error("non_image_content_type");
       }
       const body = Buffer.from(response.body);
       if (body.byteLength > 8 * 1024 * 1024) {
         throw new Error("image_body_too_large");
+      }
+      if (!auditImageSignatureMatches(contentType, body)) {
+        throw new Error("image_signature_mismatch");
       }
       const fileName = `${caseId}.run${run}.rank${asset.rank}.${contentTypeExtension(
         contentType,
@@ -699,6 +741,17 @@ async function execute(repositoryRoot) {
   const fixtures = [];
   outer: for (const testCase of OAI_T9_ACCEPTANCE_CASES) {
     for (let run = 1; run <= testCase.runs; run += 1) {
+      const conservativeCostBeforeDispatch = fixtures.reduce(
+        (sum, item) => sum + item.conservativeCostUpperBoundUsd,
+        0,
+      );
+      const dispatchBudget = canDispatchNextOaiT9Run(
+        conservativeCostBeforeDispatch,
+      );
+      if (!dispatchBudget.allowed) {
+        summary.stoppedForCeiling = "pre_dispatch_dollar_reserve";
+        break outer;
+      }
       const fixture = await runOne({
         sdkClient,
         apiKey,

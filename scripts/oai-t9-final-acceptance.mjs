@@ -242,6 +242,28 @@ export function estimateOaiT9SolCost(usage, { conservative = false } = {}) {
   );
 }
 
+export function canDispatchNextOaiT9Run(conservativeCostSoFar) {
+  const spent = Math.max(0, Number(conservativeCostSoFar) || 0);
+  const planningReserve = estimateOaiT9SolCost(
+    {
+      ...OAI_T9_SOL_PRICING.observedT8dMaximum,
+      cachedInputTokens: 0,
+    },
+    { conservative: true },
+  );
+  return {
+    allowed:
+      spent + planningReserve <=
+      OAI_T9_SOL_PRICING.hardCeilingUsd + Number.EPSILON,
+    planningReserveUsd: planningReserve,
+    projectedUsd: spent + planningReserve,
+    remainingUsd: Math.max(
+      0,
+      OAI_T9_SOL_PRICING.hardCeilingUsd - spent,
+    ),
+  };
+}
+
 export function buildOaiT9AcceptancePlan(commit = "<commit-after-preflight>") {
   const cases = OAI_T9_ACCEPTANCE_CASES.map((testCase) => {
     const request = buildDirectTerraResearchRequest(testCase.request, {

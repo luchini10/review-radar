@@ -3435,6 +3435,14 @@ repeat that check and remain on the original registrable domain; audit images
 follow no redirect. This strengthens the existing generalized private-network
 boundary and changes no recommendation, rank, or asset acceptance rule.
 
+The final runner audit also closed RR-101 and RR-102. Visual-audit downloads
+now retain only supported raster formats whose bytes match their declared
+type; misleading `image/*` labels cannot create an audit file. The runner now
+reserves `$1.633816`—the frozen conservative observed per-run maximum—before
+each create and checks observed conservative cost afterward. This is an
+operational provider-spend boundary, not a claim that an already-dispatched
+API response can be stopped at an exact dollar amount.
+
 Terminal analysis is predeclared. A recommendation, stability, schema, route,
 or evidence failure makes the single-call architecture a no-go. An asset-only
 safety failure disables assets while retaining recommendation cards. Low safe
@@ -3443,7 +3451,7 @@ for an architecture decision. Passing every gate makes promotion eligible
 only through a later separate approval. No category-specific repair follows
 this window.
 
-Zero-live verification passes 1,382/1,382 tests across 199 suites; typecheck
+Zero-live verification passes 1,384/1,384 tests across 199 suites; typecheck
 and build pass; lint has zero errors and three pre-existing warnings; the
 commit-pinned baseline dry run passes; and no provider/page/image request,
 flag change, `.env.local` edit, deployment, production change, or push
