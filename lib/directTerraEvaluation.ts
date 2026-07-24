@@ -19,6 +19,7 @@
 //     stays the single source of truth.
 
 import { classifyProductTypeMatch } from "./productTypeMatch.ts";
+import { parseDirectTerraRankedSections } from "./directTerraReportOutline.ts";
 
 export type DirectTerraEvalCaseKind = "broad" | "constrained";
 
@@ -136,44 +137,12 @@ function wrongTypeAppearsInSecondaryClause(
   );
 }
 
-const RANKED_HEADING = /^#{2,4}\s+#?(\d+)\s+Best Match\b\s*[—\-:]*\s*(.*)$/i;
-const DEPTH_TWO_HEADING = /^##\s/;
-
-// Parse the report's ranked "## #N Best Match — Name" products. A product
-// section runs from its heading to the next depth-2 (`##`) heading, so a
-// product's own `###` sub-sections (specs, pros, sources) stay inside it.
+// Keep evaluation on the same ranked-label and section-boundary contract used
+// by product cards, asset targets, price binding, and report anchors.
 export function parseRankedProducts(reportMarkdown: string): RankedProduct[] {
-  const products: RankedProduct[] = [];
-  let current: RankedProduct | null = null;
-  const flush = () => {
-    if (current) {
-      current.section = current.section.trim();
-      products.push(current);
-      current = null;
-    }
-  };
-  for (const line of (reportMarkdown || "").split(/\r?\n/)) {
-    const rankedMatch = line.match(RANKED_HEADING);
-    if (rankedMatch) {
-      flush();
-      const rank = Number(rankedMatch[1]);
-      current = {
-        rank: Number.isInteger(rank) ? rank : products.length + 1,
-        name: rankedMatch[2].trim(),
-        section: "",
-      };
-      continue;
-    }
-    if (DEPTH_TWO_HEADING.test(line)) {
-      // A non-product depth-2 heading (Close matches, Comparison, ...) closes
-      // the current product section.
-      flush();
-      continue;
-    }
-    if (current) current.section += `${line}\n`;
-  }
-  flush();
-  return products.sort((a, b) => a.rank - b.rank);
+  return parseDirectTerraRankedSections(reportMarkdown).map(
+    ({ rank, name, section }) => ({ rank, name, section }),
+  );
 }
 
 export type DirectTerraRunScore = {

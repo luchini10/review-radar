@@ -76,6 +76,31 @@ describe("direct Terra V2 response boundary", () => {
     );
   });
 
+  it("derives targets from bare ranked labels required by the prompt contract", () => {
+    assert.deepEqual(
+      extractDirectTerraAssetTargets({
+        reportMarkdown: [
+          "#1 Best Match — Monument Grills M415BZ Propane Gas Grill",
+          "#2 Best Match — Nexgrill 720-0830XF Gas Grill",
+          "#3 Best Match — Char-Broil 463366022 Performance Gas Grill",
+        ].join("\n\n"),
+        priceObservations: [
+          { rank: 1, brand: "Monument Grills", model: "M415BZ", observations: [] },
+          { rank: 2, brand: "Nexgrill", model: "720-0830XF", observations: [] },
+          { rank: 3, brand: "Char-Broil", model: "463366022", observations: [] },
+        ],
+      }).map(({ rank, brand, model }) => ({ rank, brand, model })),
+      [
+        // Strong heading identity remains authoritative when available.
+        { rank: 1, brand: "Monument", model: "M415BZ" },
+        { rank: 2, brand: "Nexgrill", model: "720-0830XF" },
+        // A numeric-only model is not inferred from prose; the structured
+        // same-rank identity supplies the existing safe fallback.
+        { rank: 3, brand: "Char-Broil", model: "463366022" },
+      ],
+    );
+  });
+
   it("does not mistake size or power specifications for heading identity", () => {
     for (const productName of [
       "Acme 16-Gallon 6.5-HP Wet/Dry Shop Vacuum",

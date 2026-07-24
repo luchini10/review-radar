@@ -21,6 +21,7 @@ import { directTerraRetailerDisplayLabel } from "@/lib/directTerraLinkPreference
 import {
   extractDirectTerraPicks,
   headingSlug,
+  parseDirectTerraRankedHeading,
   reactChildrenToText,
 } from "@/lib/directTerraReportOutline";
 
@@ -37,6 +38,12 @@ function safeExternalUrl(value: string) {
   } catch {
     return "";
   }
+}
+
+function directTerraReportHeadingId(children: unknown) {
+  const text = reactChildrenToText(children).replace(/\s+/g, " ").trim();
+  const ranked = parseDirectTerraRankedHeading(text);
+  return headingSlug(ranked?.headingText ?? text);
 }
 
 function DirectTerraProductImage({
@@ -327,13 +334,19 @@ export function DirectTerraReport({
                   {children}
                 </blockquote>
               ),
-              h1: ({ children }) => (
-                <h2 className="mb-5 mt-1 font-display text-4xl font-semibold tracking-[-0.04em] text-ink">
-                  {children}
-                </h2>
-              ),
+              h1: ({ children }) => {
+                const id = directTerraReportHeadingId(children);
+                return (
+                  <h2
+                    className="mb-5 mt-1 scroll-mt-24 font-display text-4xl font-semibold tracking-[-0.04em] text-ink"
+                    id={id || undefined}
+                  >
+                    {children}
+                  </h2>
+                );
+              },
               h2: ({ children }) => {
-                const id = headingSlug(reactChildrenToText(children));
+                const id = directTerraReportHeadingId(children);
                 return (
                   <h3
                     className="mb-3 mt-10 scroll-mt-24 border-t border-ink/10 pt-8 font-display text-2xl font-semibold tracking-[-0.03em] text-ink first:mt-0 first:border-0 first:pt-0 sm:text-3xl"
@@ -343,16 +356,49 @@ export function DirectTerraReport({
                   </h3>
                 );
               },
-              h3: ({ children }) => (
-                <h4 className="mb-2 mt-6 text-lg font-semibold text-slate-950">
-                  {children}
-                </h4>
-              ),
+              h3: ({ children }) => {
+                const id = directTerraReportHeadingId(children);
+                return (
+                  <h4
+                    className="mb-2 mt-6 scroll-mt-24 text-lg font-semibold text-slate-950"
+                    id={id || undefined}
+                  >
+                    {children}
+                  </h4>
+                );
+              },
+              h4: ({ children }) => {
+                const id = directTerraReportHeadingId(children);
+                return (
+                  <h5
+                    className="mb-2 mt-5 scroll-mt-24 text-base font-semibold text-slate-950"
+                    id={id || undefined}
+                  >
+                    {children}
+                  </h5>
+                );
+              },
               li: ({ children }) => <li className="my-1 pl-1">{children}</li>,
               ol: ({ children }) => (
                 <ol className="my-4 list-decimal space-y-1 pl-6">{children}</ol>
               ),
-              p: ({ children }) => <p className="my-3">{children}</p>,
+              p: ({ children }) => {
+                const text = reactChildrenToText(children)
+                  .replace(/\s+/g, " ")
+                  .trim();
+                const ranked = parseDirectTerraRankedHeading(text);
+                if (ranked?.depth === 0) {
+                  return (
+                    <h3
+                      className="mb-3 mt-10 scroll-mt-24 border-t border-ink/10 pt-8 font-display text-2xl font-semibold tracking-[-0.03em] text-ink first:mt-0 first:border-0 first:pt-0 sm:text-3xl"
+                      id={headingSlug(ranked.headingText) || undefined}
+                    >
+                      {children}
+                    </h3>
+                  );
+                }
+                return <p className="my-3">{children}</p>;
+              },
               table: ({ children }) => (
                 <div className="my-6 overflow-x-auto rounded-xl border border-slate-200">
                   <table className="w-full border-collapse text-left text-sm">

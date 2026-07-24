@@ -1,16 +1,34 @@
-// Parses the direct-Terra report's ranked "## #N Best Match — Name" headings
-// into a scannable shortlist for the "your picks at a glance" band, and derives
-// stable heading anchor ids so a pick can link to its section in the full
-// report. This only reads Terra's own report text — it never reranks, rewrites,
-// or invents products.
+// Parses the direct-Terra report's required "#N Best Match — Name" labels
+// into one shared contract for shortlist cards, evaluation, price binding, and
+// report anchors. Terra may emit the label as an ordinary Markdown paragraph
+// (`#1 Best Match`, with no space after `#`) or inside an H1-H4 heading. This
+// only reads Terra's report — it never reranks, rewrites, or invents products.
 
-const RANKED_HEADING = /^#{2,4}\s+#?(\d+)\s+Best Match\b\s*[—\-:]*\s*(.*)$/i;
-const HEADING_MARKER = /^#{1,6}\s+/;
+const MARKDOWN_RANKED_HEADING =
+  /^(#{1,4})\s+#?(\d+)\s+Best Match\b\s*[—\-:]*\s*(.*)$/i;
+const BARE_RANKED_LABEL =
+  /^#(\d+)\s+Best Match\b\s*[—\-:]*\s*(.*)$/i;
+const MARKDOWN_HEADING = /^(#{1,6})\s+(.+)$/;
+const REQUIRED_REPORT_SECTION =
+  /^(?:comparison(?:\s+(?:at\s+a\s+glance|table))?|close\s+matches|what\s+to\s+avoid|final\s+buying\s+advice)\b/i;
 
 export type DirectTerraPick = {
   rank: number;
   name: string;
   anchorId: string;
+};
+
+export type DirectTerraRankedHeading = {
+  rank: number;
+  name: string;
+  // Zero means a bare "#N Best Match" paragraph label. One through four are
+  // actual Markdown heading depths.
+  depth: 0 | 1 | 2 | 3 | 4;
+  headingText: string;
+};
+
+export type DirectTerraRankedSection = DirectTerraRankedHeading & {
+  section: string;
 };
 
 // A stable slug for a heading's full text. The report renderer stamps the same
@@ -41,20 +59,94 @@ export function reactChildrenToText(children: unknown): string {
   return "";
 }
 
-export function extractDirectTerraPicks(reportMarkdown: string): DirectTerraPick[] {
-  const picks: DirectTerraPick[] = [];
+export function parseDirectTerraRankedHeading(
+  value: string,
+): DirectTerraRankedHeading | null {
+  const line = (value || "").trim();
+  const markdownMatch = line.match(MARKDOWN_RANKED_HEADING);
+  const bareMatch = markdownMatch ? null : line.match(BARE_RANKED_LABEL);
+  const match = markdownMatch ?? bareMatch;
+  if (!match) return null;
+
+  const rankIndex = markdownMatch ? 2 : 1;
+  const nameIndex = markdownMatch ? 3 : 2;
+  const rank = Number(match[rankIndex]);
+  if (!Number.isSafeInteger(rank) || rank <= 0) return null;
+
+  const depth = markdownMatch
+    ? (markdownMatch[1].length as 1 | 2 | 3 | 4)
+    : 0;
+  const headingText = markdownMatch
+    ? line.slice(markdownMatch[1].length).trim()
+    : line;
+  return {
+    rank,
+    name: match[nameIndex].trim() || `Pick ${rank}`,
+    depth,
+    headingText,
+  };
+}
+
+function markdownHeading(value: string) {
+  const match = (value || "").trim().match(MARKDOWN_HEADING);
+  if (!match) return null;
+  return {
+    depth: match[1].length,
+    text: match[2].trim(),
+  };
+}
+
+function isRequiredReportSection(value: string) {
+  const heading = markdownHeading(value);
+  return Boolean(heading && REQUIRED_REPORT_SECTION.test(heading.text));
+}
+
+export function parseDirectTerraRankedSections(
+  reportMarkdown: string,
+): DirectTerraRankedSection[] {
+  const sections: DirectTerraRankedSection[] = [];
   const seenRanks = new Set<number>();
+  let current: DirectTerraRankedSection | null = null;
+  const flush = () => {
+    if (!current) return;
+    current.section = current.section.trim();
+    sections.push(current);
+    current = null;
+  };
+
   for (const line of (reportMarkdown || "").split(/\r?\n/)) {
-    const match = line.match(RANKED_HEADING);
-    if (!match) continue;
-    const rank = Number(match[1]);
-    if (!Number.isInteger(rank) || seenRanks.has(rank)) continue;
-    // Slug the heading's content (everything after the leading `## `), matching
-    // what the report renderer produces for its heading id.
-    const headingText = line.replace(HEADING_MARKER, "").trim();
-    const name = match[2].trim() || `Pick ${rank}`;
-    seenRanks.add(rank);
-    picks.push({ rank, name, anchorId: headingSlug(headingText) });
+    const ranked = parseDirectTerraRankedHeading(line);
+    if (ranked) {
+      flush();
+      if (seenRanks.has(ranked.rank)) continue;
+      seenRanks.add(ranked.rank);
+      current = { ...ranked, section: "" };
+      continue;
+    }
+
+    if (current) {
+      const heading = markdownHeading(line);
+      const closesByDepth =
+        heading !== null && current.depth > 0 && heading.depth <= current.depth;
+      if (closesByDepth || isRequiredReportSection(line)) {
+        flush();
+        continue;
+      }
+      current.section += `${line}\n`;
+    }
   }
-  return picks.sort((a, b) => a.rank - b.rank);
+  flush();
+  return sections.sort((left, right) => left.rank - right.rank);
+}
+
+export function extractDirectTerraPicks(
+  reportMarkdown: string,
+): DirectTerraPick[] {
+  return parseDirectTerraRankedSections(reportMarkdown).map(
+    ({ rank, name, headingText }) => ({
+      rank,
+      name,
+      anchorId: headingSlug(headingText),
+    }),
+  );
 }

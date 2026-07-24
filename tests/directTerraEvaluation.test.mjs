@@ -84,6 +84,36 @@ describe("ranked-product parsing", () => {
     assert.ok(!products.some((p) => /avoid/i.test(p.name)));
   });
 
+  it("parses bare ranked labels and stops before later report sections", () => {
+    const products = parseRankedProducts(
+      [
+        "## Buying criteria",
+        "#1 Best Match — Acme Grill A100",
+        "Passes four burners and propane.",
+        "### Sources",
+        "Product evidence.",
+        "#2 Best Match — Beta Grill B200",
+        "Passes budget.",
+        "## Comparison at a glance",
+        "This comparison mentions charcoal and impact driver controls.",
+        "## What to avoid",
+        "Avoid accessories.",
+      ].join("\n"),
+    );
+
+    assert.deepEqual(
+      products.map(({ rank, name }) => ({ rank, name })),
+      [
+        { rank: 1, name: "Acme Grill A100" },
+        { rank: 2, name: "Beta Grill B200" },
+      ],
+    );
+    assert.match(products[0].section, /Sources/);
+    assert.ok(!products[0].section.includes("Passes budget"));
+    assert.ok(!products[1].section.includes("charcoal"));
+    assert.ok(!products[1].section.includes("accessories"));
+  });
+
   it("builds a brand+model identity key", () => {
     assert.equal(identityKey("RIDGID HD1200, 12-Gallon NXT"), "ridgid hd1200");
     assert.equal(identityKey("Herman Miller Aeron"), "herman miller");

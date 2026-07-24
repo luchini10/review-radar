@@ -1,4 +1,5 @@
 import { normalizeTwoLayerSourceUrl } from "./twoLayerSourceUrl.ts";
+import { parseDirectTerraRankedHeading } from "./directTerraReportOutline.ts";
 
 export type DirectTerraPriceEstimate = {
   rank: number;
@@ -62,12 +63,16 @@ function identityText(value: string) {
 function rankedHeadings(reportMarkdown: string) {
   const headings = new Map<number, string>();
   for (const line of reportMarkdown.split(/\r?\n/)) {
-    const match = line.match(/^#{2,3}\s+#?(\d+)\s+Best Match\b(.*)$/i);
-    if (!match) continue;
-    const rank = Number(match[1]);
-    if (Number.isInteger(rank) && rank >= 1 && rank <= 5) {
-      headings.set(rank, identityText(match[2]));
+    const ranked = parseDirectTerraRankedHeading(line);
+    if (
+      !ranked ||
+      ranked.rank < 1 ||
+      ranked.rank > 5 ||
+      headings.has(ranked.rank)
+    ) {
+      continue;
     }
+    headings.set(ranked.rank, identityText(ranked.name));
   }
   return headings;
 }

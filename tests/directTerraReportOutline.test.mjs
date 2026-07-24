@@ -52,6 +52,27 @@ describe("direct Terra report outline", () => {
     assert.deepEqual(extractDirectTerraPicks("no headings here"), []);
   });
 
+  it("accepts the required bare rank labels plus H1 through H4 headings", () => {
+    const variants = [
+      "#1 Best Match — Bare Contract Label",
+      "# #2 Best Match — H1 Product",
+      "## #3 Best Match — H2 Product",
+      "### #4 Best Match — H3 Product",
+      "#### #5 Best Match — H4 Product",
+    ].join("\n");
+
+    assert.deepEqual(
+      extractDirectTerraPicks(variants).map(({ rank, name }) => ({ rank, name })),
+      [
+        { rank: 1, name: "Bare Contract Label" },
+        { rank: 2, name: "H1 Product" },
+        { rank: 3, name: "H2 Product" },
+        { rank: 4, name: "H3 Product" },
+        { rank: 5, name: "H4 Product" },
+      ],
+    );
+  });
+
   it("produces url-safe, stable slugs", () => {
     assert.equal(headingSlug("#1 Best Match — RIDGID HD1200"), "1-best-match-ridgid-hd1200");
     assert.equal(headingSlug("  Weird   Spacing!! "), "weird-spacing");

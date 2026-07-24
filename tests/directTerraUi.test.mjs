@@ -45,6 +45,10 @@ describe("direct Terra V2 display boundary", () => {
     assert.match(source, /href=\{`#\$\{pick\.anchorId\}`\}/);
     assert.match(source, /id=\{id \|\| undefined\}/);
     assert.match(source, /scroll-mt-24/);
+    // A prompt-conforming bare "#1 Best Match" line is a Markdown paragraph,
+    // so the paragraph renderer must promote that exact label to an anchored
+    // visual heading instead of leaving the shortlist jump target missing.
+    assert.match(source, /p:[^]*parseDirectTerraRankedHeading/);
     // Price shown from the existing estimates, labeled as a range not a quote.
     assert.match(source, /priceByRank\.get\(pick\.rank\)/);
     assert.match(source, /assetByRank\.get\(pick\.rank\)/);
