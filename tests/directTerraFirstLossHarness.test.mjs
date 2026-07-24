@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { describe, it } from "node:test";
 
 describe("Direct-Terra first-loss diagnostic harness", () => {
-  it("preflights four frozen cases with two runs each and zero network", () => {
+  it("preflights exactly one run for each of four frozen cases with zero network", () => {
     const result = spawnSync(
       process.execPath,
       [
@@ -31,9 +31,9 @@ describe("Direct-Terra first-loss diagnostic harness", () => {
     );
     assert.equal(parsed.plan.mode, "dry-run");
     assert.equal(parsed.plan.cases.length, 4);
-    assert.equal(parsed.plan.runsPerCase, 2);
-    assert.equal(parsed.plan.totalCreates, 8);
-    assert.equal(parsed.plan.ceilings.hardCeilingUsd, 10);
+    assert.equal(parsed.plan.runsPerCase, 1);
+    assert.equal(parsed.plan.totalCreates, 4);
+    assert.equal(parsed.plan.ceilings.hardCeilingUsd, 5);
     assert.equal(parsed.plan.ceilings.hostedSearchesPerRun, 20);
     assert.equal(parsed.plan.ceilings.serperShoppingPerRun, 5);
     assert.equal(parsed.plan.ceilings.serperOrganicPerRun, 8);
