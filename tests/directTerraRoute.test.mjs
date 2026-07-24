@@ -216,6 +216,47 @@ describe("clean direct Terra V2 route", () => {
     assert.equal(starts, 0);
   });
 
+  it("rejects unsafe or duplicate Smart Feature IDs before provider work", async () => {
+    let starts = 0;
+    const handlers = createDirectTerraRecommendationHandlers({
+      createOpenAIClient: async () => ({ responses: {} }),
+      getEnvironment: () => ({
+        openAiApiKey: "test-key",
+        jobTokenSecret: secret,
+      }),
+      startResearch: async () => {
+        starts += 1;
+        throw new Error("should not run");
+      },
+    });
+    const feature = {
+      id: "self-emptying",
+      name: "Self-emptying",
+      type: "boolean",
+      operator: "required",
+      value: true,
+      required: true,
+      source: "smart_features",
+    };
+
+    const unsafe = await handlers.POST(
+      request("POST", {
+        query: "robot vacuum",
+        selectedFeatures: [{ ...feature, id: "unsafe\u0000id" }],
+      }),
+    );
+    const duplicate = await handlers.POST(
+      request("POST", {
+        query: "robot vacuum",
+        selectedFeatures: [feature, feature],
+      }),
+    );
+
+    assert.equal(unsafe.status, 400);
+    assert.equal(duplicate.status, 400);
+    assert.equal(starts, 0);
+  });
+
   it("fails closed when the server-side V2 flag is off", async () => {
     const handlers = createDirectTerraRecommendationHandlers({
       getEnvironment: () => ({

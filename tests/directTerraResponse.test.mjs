@@ -6,6 +6,7 @@ import {
   extractDirectTerraResponseSources,
   parseDirectTerraCompletedResponse,
 } from "../lib/directTerraResponse.ts";
+import { buildDirectTerraRequirementContract } from "../lib/directTerraCandidateSlate.ts";
 
 const report = `# Refrigerator recommendations
 
@@ -15,9 +16,50 @@ The exact explanation stays here. [Official source](https://example.com/products
 
 **Current price:** AI-reported — not independently verified by ReviewRadar.`;
 
+const candidateSlate = Array.from({ length: 8 }, (_, index) => ({
+  product_name:
+    index === 0
+      ? "Example Deluxe Refrigerator Model A"
+      : `Example Refrigerator Model X${index + 1}`,
+  brand: "Example",
+  model: index === 0 ? "Model A" : `X${index + 1}`,
+  disposition: index === 0 ? "ranked" : "rejected",
+  final_rank: index === 0 ? 1 : null,
+  evidence_quality: index === 0 ? "high" : "medium",
+  decision_reason: index === 0 ? "Best fit." : "Not selected.",
+  source_urls: ["https://example.com/products/model-a?utm_source=openai"],
+  requirement_verdicts: [
+    {
+      requirement_id: "market_us",
+      verdict: "pass",
+      source_urls: [
+        "https://example.com/products/model-a?utm_source=openai",
+      ],
+    },
+  ],
+}));
+
+function withCandidateSlate(outputText) {
+  try {
+    const parsed = JSON.parse(outputText);
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      !Array.isArray(parsed) &&
+      !("candidate_slate" in parsed)
+    ) {
+      return JSON.stringify({ ...parsed, candidate_slate: candidateSlate });
+    }
+  } catch {
+    // Preserve intentionally malformed JSON.
+  }
+  return outputText;
+}
+
 function completedResponse({
   outputText = JSON.stringify({
     report_markdown: report,
+    candidate_slate: candidateSlate,
     price_observations: [],
   }),
 } = {}) {
@@ -39,7 +81,9 @@ function completedResponse({
       },
       {
         type: "message",
-        content: [{ type: "output_text", text: outputText }],
+        content: [
+          { type: "output_text", text: withCandidateSlate(outputText) },
+        ],
       },
     ],
     usage: {
@@ -189,6 +233,46 @@ describe("direct Terra V2 response boundary", () => {
     assert.deepEqual(parsed.sourceHosts, ["example.com"]);
     assert.equal(parsed.disabledCitationCount, 0);
     assert.deepEqual(parsed.priceEstimates, []);
+  });
+
+  it("accepts any exact response-owned URL even when public sources canonicalize it away", () => {
+    const laterExactUrl =
+      "https://example.com/products/model-a?utm_campaign=later";
+    const exactSlate = structuredClone(candidateSlate);
+    for (const candidate of exactSlate) {
+      candidate.source_urls = [laterExactUrl];
+      candidate.requirement_verdicts[0].source_urls = [laterExactUrl];
+    }
+    const response = completedResponse({
+      outputText: JSON.stringify({
+        report_markdown: report,
+        candidate_slate: exactSlate,
+        price_observations: [
+          {
+            rank: 1,
+            brand: "Example",
+            model: "Model A",
+            observations: [],
+          },
+        ],
+      }),
+    });
+    response.output[0].action.sources.push({
+      type: "url",
+      url: laterExactUrl,
+    });
+
+    const parsed = parseDirectTerraCompletedResponse(response, {
+      requirementContract: buildDirectTerraRequirementContract({}),
+    });
+
+    assert.equal(parsed.ok, true);
+    assert.equal(parsed.candidateSlateDiagnostic.candidateCount, 8);
+    assert.equal(
+      extractDirectTerraResponseSources(response).length,
+      1,
+      "the client-facing source collection remains canonically deduplicated",
+    );
   });
 
   it("calculates an estimated range from two response-owned source hosts", () => {
@@ -561,11 +645,13 @@ describe("direct Terra V2 response boundary", () => {
     assert.equal(accepted.ok, true);
     assert.deepEqual(accepted.citationUrls, [registeredUrl]);
 
-    response.output[1].content[0].text = JSON.stringify({
-      report_markdown:
-        "# Result\n\nProvider page: https://invented.example/products/model-a",
-      price_observations: [],
-    });
+    response.output[1].content[0].text = withCandidateSlate(
+      JSON.stringify({
+        report_markdown:
+          "# Result\n\nProvider page: https://invented.example/products/model-a",
+        price_observations: [],
+      }),
+    );
     const disabled = parseDirectTerraCompletedResponse(response);
     assert.equal(disabled.ok, true);
     assert.deepEqual(disabled.citationUrls, []);

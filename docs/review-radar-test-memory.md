@@ -4,6 +4,36 @@
 
 ---
 
+## Direct-Terra candidate-slate contract (OAI-T9 Phase 3, 2026-07-24)
+
+- Prompt `direct-terra-master-prompt-v3` must return exactly
+  `report_markdown`, `candidate_slate`, and `price_observations`.
+- The server derives ordered requirement IDs from the actual request:
+  `market_us`; optional `budget`; optional `important_details`; one
+  `smart_feature:<stable-id>` per selected feature; and optional
+  `dealbreakers`. Missing, duplicate, reordered, unsafe, or invented IDs fail
+  closed.
+- Terra must research 8â€“15 distinct products before ranking. Every candidate
+  has one disposition, exact identity, evidence quality, concise reason,
+  response-owned source URLs, and one verdict for every requirement ID.
+- Ranked headings, slate rank/name, and price-observation identity must agree.
+  A ranked hard failure is invalid. Rank 1 may not use
+  `needs_verification`; a lower rank may use it only when its report section
+  says so visibly.
+- Evidence URLs must be exact URLs from the same response, including a later
+  response-owned tracking variant that the public source list canonically
+  deduplicates. One candidate may not borrow another candidate's source.
+- Punctuation/spacing-equivalent models are duplicate identities, while exact
+  numeric boundaries remain distinct (`Q7` is not `Q70`).
+- The encrypted job token carries only category plus ordered requirement IDs,
+  not shopper prose. Candidate diagnostics are server-only and retain no URLs,
+  decision prose, source titles, provider IDs, or raw response.
+- Invalid V3 output rejects the completed research response. Valid output
+  leaves Terra's report, product order, public API shape, and asset behavior
+  unchanged.
+
+---
+
 ## Direct-Terra complete-product asset contract (OAI-T9, 2026-07-24)
 
 - Product identity is necessary but not sufficient for a link or image.

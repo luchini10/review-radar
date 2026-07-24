@@ -11,6 +11,35 @@ Update this file after:
 
 ## 2026-07-24
 
+### Codex - Require Terra to show its candidate slate before ranking
+
+#### Changed
+
+- Direct-Terra prompt V3 now asks Terra to research 8â€“15 products and return
+  a server-only candidate slate before choosing the final recommendations.
+- ReviewRadar derives the exact requirement checklist from the submitted
+  request and validates every candidate's availability, budget, Important
+  Details, Smart Features, and dealbreakers against same-response evidence.
+- Ranked headings, slate identities, requirement verdicts, and price identities
+  must agree. Hard failures, an unverified Best Match, invented or borrowed
+  source URLs, duplicate model-format variants, and hidden uncertainty fail
+  closed.
+- The encrypted polling token preserves the ordered requirement IDs without
+  exposing them or shopper prose. Sanitized diagnostics retain only identities,
+  dispositions, ranks, evidence-quality labels, and verdict statuses. The
+  client API and Terra-authored report remain unchanged.
+
+#### Verified
+
+- Adversarial tests cover requirement completeness/order, unsafe and duplicate
+  feature IDs, source ownership, punctuation/spacing duplicates, numeric
+  boundaries, rank/heading/price consistency, hard failures, visible
+  uncertainty, encrypted maximum-size tokens, and diagnostic minimization.
+- Complete suite: 1,370/1,370 across 197 suites; typecheck and production build
+  pass; lint has zero errors and three pre-existing warnings. No live request,
+  flag change, deployment, `.env.local` change, production change, or push
+  occurred.
+
 ### Codex - Require a complete product before displaying its link or image
 
 #### Changed

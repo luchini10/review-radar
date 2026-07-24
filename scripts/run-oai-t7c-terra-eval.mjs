@@ -25,6 +25,7 @@ import {
   startDirectTerraResearch,
 } from "../lib/directTerraResearchAdapter.ts";
 import { DIRECT_TERRA_PROMPT_VERSION } from "../lib/directTerraPrompt.ts";
+import { buildDirectTerraRequirementContract } from "../lib/directTerraCandidateSlate.ts";
 import { extractDirectTerraResponseSources } from "../lib/directTerraResponse.ts";
 import {
   DIRECT_TERRA_EVAL_CASES,
@@ -227,6 +228,9 @@ async function main() {
       const caseRecord = { id: evalCase.id, kind: evalCase.kind, goldId: evalCase.goldId, runs: [] };
 
       for (let runIndex = 1; runIndex <= RUNS_PER_CASE; runIndex += 1) {
+        const requirementContract = buildDirectTerraRequirementContract(
+          evalCase.request,
+        );
         perRunCounters.creates = 0;
         perRunCounters.retrieves = 0;
         perRunCounters.cancels = 0;
@@ -262,6 +266,7 @@ async function main() {
             responseId: start.responseId,
             promptVersion: start.promptVersion,
             promptHash: start.promptHash,
+            requirementContract,
           });
           if (poll.ok && poll.state === "pending") continue;
           if (!poll.ok) {

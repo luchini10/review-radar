@@ -17,6 +17,7 @@ import {
   startDirectTerraResearch,
 } from "../lib/directTerraResearchAdapter.ts";
 import { DIRECT_TERRA_PROMPT_VERSION } from "../lib/directTerraPrompt.ts";
+import { buildDirectTerraRequirementContract } from "../lib/directTerraCandidateSlate.ts";
 import { extractDirectTerraResponseSources } from "../lib/directTerraResponse.ts";
 import {
   OAI_2A_PROPOSED_CONFIG,
@@ -38,6 +39,9 @@ const APPROVAL = {
   hardCeilingUsd: 7,
   expectedPromptVersion: "direct-terra-master-prompt-v2",
 };
+const REQUIREMENT_CONTRACT = buildDirectTerraRequirementContract(
+  APPROVAL.shopperRequest,
+);
 
 const OUT_DIR = path.resolve(
   `tests/fixtures/review-radar-live/oai-t7b-v2-price-smoke-${APPROVAL.commit}`,
@@ -255,6 +259,7 @@ async function main() {
       responseId: start.responseId,
       promptVersion: start.promptVersion,
       promptHash: start.promptHash,
+      requirementContract: REQUIREMENT_CONTRACT,
     });
     if (poll.ok && poll.state === "pending") continue;
     if (!poll.ok) {

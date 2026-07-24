@@ -353,7 +353,24 @@ describe("Direct-Terra registered-citation website resolver", () => {
           content: [
             {
               type: "output_text",
-              text: JSON.stringify({ report_markdown: reportMarkdown, price_observations: [] }),
+              text: JSON.stringify({
+                report_markdown: reportMarkdown,
+                candidate_slate: Array.from({ length: 8 }, (_, index) => ({
+                  product_name:
+                    index === 0
+                      ? ridgid.productName
+                      : `Example X${index} Wet/Dry Shop Vacuum`,
+                  brand: index === 0 ? ridgid.brand : "Example",
+                  model: index === 0 ? ridgid.model : `X${index}`,
+                  disposition: index === 0 ? "ranked" : "rejected",
+                  final_rank: index === 0 ? 1 : null,
+                  evidence_quality: "high",
+                  decision_reason: "Test-only candidate.",
+                  source_urls: [ridgidUrl],
+                  requirement_verdicts: [],
+                })),
+                price_observations: [],
+              }),
             },
           ],
         },

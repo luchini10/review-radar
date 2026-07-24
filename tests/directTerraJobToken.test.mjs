@@ -7,17 +7,22 @@ import {
   verifyDirectTerraJobToken,
 } from "../lib/directTerraJobToken.ts";
 import { DIRECT_TERRA_PROMPT_VERSION } from "../lib/directTerraPrompt.ts";
+import { buildDirectTerraRequirementContract } from "../lib/directTerraCandidateSlate.ts";
 
 const secret = "test-only-direct-terra-secret-32-bytes";
 const nowMs = 1_789_000_000_000;
+const requirementContract = buildDirectTerraRequirementContract({
+  budget: "under $2,000",
+});
 
-describe("direct Terra V2 job capability", () => {
+describe("direct Terra V3 job capability", () => {
   it("encrypts provider state and round-trips the frozen payload", () => {
     const token = issueDirectTerraJobToken({
       responseId: "resp_direct_123456789",
       promptVersion: DIRECT_TERRA_PROMPT_VERSION,
       promptHash: "a".repeat(64),
       productCategory: "refrigerator",
+      requirementContract,
       secret,
       nowMs,
     });
@@ -31,9 +36,14 @@ describe("direct Terra V2 job capability", () => {
     assert.equal(verified.payload.version, DIRECT_TERRA_JOB_TOKEN_VERSION);
     assert.equal(verified.payload.responseId, "resp_direct_123456789");
     assert.equal(verified.payload.productCategory, "refrigerator");
+    assert.deepEqual(verified.payload.requirementIds, [
+      "market_us",
+      "budget",
+    ]);
     assert.equal(token.includes("resp_direct_123456789"), false);
     assert.equal(token.includes("a".repeat(64)), false);
     assert.equal(token.includes("refrigerator"), false);
+    assert.equal(token.includes("market_us"), false);
   });
 
   it("rejects tampering, wrong secrets, and expiration", () => {
@@ -42,6 +52,7 @@ describe("direct Terra V2 job capability", () => {
       promptVersion: DIRECT_TERRA_PROMPT_VERSION,
       promptHash: "a".repeat(64),
       productCategory: "refrigerator",
+      requirementContract,
       secret,
       nowMs,
       ttlMs: 1_000,
@@ -64,6 +75,42 @@ describe("direct Terra V2 job capability", () => {
     assert.deepEqual(
       verifyDirectTerraJobToken({ token, secret, nowMs: nowMs + 1_000 }),
       { ok: false, reason: "expired_token" },
+    );
+  });
+
+  it("keeps the maximum supported requirement contract bounded and encrypted", () => {
+    const maximumContract = buildDirectTerraRequirementContract({
+      budget: "under $2,000",
+      priorities: "quiet and reliable",
+      avoid: "replacement parts",
+      selectedFeatures: Array.from({ length: 25 }, (_, index) => ({
+        id: `feature-${index}-${"x".repeat(80)}`,
+        name: `Feature ${index}`,
+        type: "boolean",
+        operator: "required",
+        value: true,
+        required: true,
+        source: "smart_features",
+      })),
+    });
+    const token = issueDirectTerraJobToken({
+      responseId: "resp_direct_123456789",
+      promptVersion: DIRECT_TERRA_PROMPT_VERSION,
+      promptHash: "b".repeat(64),
+      productCategory: "refrigerator",
+      requirementContract: maximumContract,
+      secret,
+      nowMs,
+    });
+    const verified = verifyDirectTerraJobToken({ token, secret, nowMs });
+
+    assert.equal(maximumContract.length, 29);
+    assert.equal(token.length <= 8_192, true);
+    assert.equal(token.includes("feature-0"), false);
+    assert.equal(verified.ok, true);
+    assert.deepEqual(
+      verified.payload.requirementIds,
+      maximumContract.map((entry) => entry.id),
     );
   });
 });

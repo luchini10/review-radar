@@ -3358,12 +3358,36 @@ wall passes 1,354/1,354 tests across 195 suites; typecheck/build pass and lint
 has zero errors with three pre-existing warnings. RR-099 is Fixed. No external
 request, flag, deployment, or production change occurred.
 
-**Next in the same approved goal:** Phase 3 upgrades the internal same-call
-contract to `direct-terra-master-prompt-v3` with a server-only 8–15 product
-candidate slate and complete, request-derived requirement verdicts. The
-client-facing completed response, Terra-authored product order, and
-default-off flags remain unchanged. Phase 4 live Sol acceptance is not
-authorized by this record.
+**Phase 3 same-call candidate-slate result (completed 2026-07-24):**
+`direct-terra-master-prompt-v3` now requires one server-only 8–15 product
+candidate slate before final ranking. Deterministic request-derived IDs cover
+U.S. availability, active budget, Important Details, every selected Smart
+Feature, and dealbreakers in stable order. Every candidate carries an exact
+identity, disposition, nullable rank, evidence quality, concise reason, exact
+same-response hosted-search URLs, and one source-backed verdict per applicable
+requirement.
+
+The polling boundary fails closed on missing/reordered/duplicate verdicts,
+invented or cross-candidate evidence URLs, punctuation/spacing-equivalent
+duplicate models, rank/heading/price identity drift, ranked hard failures, an
+unverified Best Match, or unreported lower-rank uncertainty. The encrypted
+job token preserves only category plus ordered requirement IDs. Validated
+diagnostics contain normalized identities, dispositions, ranks,
+evidence-quality labels, and verdict statuses only. The client completed
+response, Terra report and order, nullable asset behavior, and default-off
+flags are unchanged.
+
+Adversarial review also separated exact response-owned URL validation from the
+canonically deduplicated public source list, rejected unsafe Smart Feature IDs
+before provider work, and bounded the maximum 29-requirement encrypted token.
+The complete wall passes 1,370/1,370 tests across 197 suites; typecheck/build
+pass and lint has zero errors with three pre-existing warnings. No external
+request occurred.
+
+**Next approval boundary:** Phase 4 is the separately approved live Sol/high
+acceptance window. It must measure whether V3 improves recall and
+hard-requirement truth before any prompt, model-default, flag, or deployment
+decision. This record does not authorize that spend.
 
 ### OAI-2B — early uncached quality and repeatability gate
 

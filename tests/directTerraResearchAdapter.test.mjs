@@ -10,8 +10,31 @@ import { DIRECT_TERRA_PROMPT_VERSION } from "../lib/directTerraPrompt.ts";
 
 const responseId = "resp_direct_123456789";
 const promptHash = "a".repeat(64);
+const requirementContract = [
+  { id: "market_us", kind: "us_availability", hard: true },
+];
 const report =
-  "# Ranked products\n\n## #1 Best Match - Model A\n\n[Source](https://example.com/a)";
+  "# Ranked products\n\n## #1 Best Match - Example X100 Refrigerator\n\n[Source](https://example.com/a)";
+const candidateSlate = Array.from({ length: 8 }, (_, index) => ({
+  product_name:
+    index === 0
+      ? "Example X100 Refrigerator"
+      : `Example X${index + 100} Refrigerator`,
+  brand: "Example",
+  model: `X${index + 100}`,
+  disposition: index === 0 ? "ranked" : "rejected",
+  final_rank: index === 0 ? 1 : null,
+  evidence_quality: index === 0 ? "high" : "medium",
+  decision_reason: index === 0 ? "Best fit." : "Not selected.",
+  source_urls: ["https://example.com/a"],
+  requirement_verdicts: [
+    {
+      requirement_id: "market_us",
+      verdict: "pass",
+      source_urls: ["https://example.com/a"],
+    },
+  ],
+}));
 
 function clientWith(overrides = {}) {
   return {
@@ -128,7 +151,15 @@ describe("direct Terra V2 provider adapter", () => {
                   type: "output_text",
                   text: JSON.stringify({
                     report_markdown: report,
-                    price_observations: [],
+                    candidate_slate: candidateSlate,
+                    price_observations: [
+                      {
+                        rank: 1,
+                        brand: "Example",
+                        model: "X100",
+                        observations: [],
+                      },
+                    ],
                   }),
                   annotations: [],
                 },
@@ -149,6 +180,7 @@ describe("direct Terra V2 provider adapter", () => {
       responseId,
       promptVersion: DIRECT_TERRA_PROMPT_VERSION,
       promptHash,
+      requirementContract,
       now: () => 100,
     });
 
@@ -158,7 +190,23 @@ describe("direct Terra V2 provider adapter", () => {
     assert.deepEqual(result.citationUrls, ["https://example.com/a"]);
     assert.equal(result.disabledCitationCount, 0);
     assert.deepEqual(result.priceEstimates, []);
-    assert.deepEqual(result.assetTargets, []);
+    assert.deepEqual(
+      result.assetTargets.map(({ rank, productName, brand, model }) => ({
+        rank,
+        productName,
+        brand,
+        model,
+      })),
+      [
+        {
+          rank: 1,
+          productName: "Example X100 Refrigerator",
+          brand: "Example",
+          model: "X100",
+        },
+      ],
+    );
+    assert.equal(result.candidateSlateDiagnostic.candidateCount, 8);
     assert.deepEqual(result.responseSources, [
       { url: "https://example.com/a" },
     ]);
@@ -170,6 +218,69 @@ describe("direct Terra V2 provider adapter", () => {
         { timeout: 120_000 },
       ],
     ]);
+  });
+
+  it("fails the completed response closed when its ranked slate violates a hard requirement", async () => {
+    const invalidSlate = structuredClone(candidateSlate);
+    invalidSlate[0].requirement_verdicts[0].verdict = "fail";
+    const result = await pollDirectTerraResearch({
+      client: clientWith({
+        retrieve: async () => ({
+          id: responseId,
+          model: "gpt-5.6-terra",
+          status: "completed",
+          output: [
+            {
+              type: "web_search_call",
+              action: {
+                type: "search",
+                query: "model a",
+                sources: [{ type: "url", url: "https://example.com/a" }],
+              },
+            },
+            {
+              type: "message",
+              content: [
+                {
+                  type: "output_text",
+                  text: JSON.stringify({
+                    report_markdown: report,
+                    candidate_slate: invalidSlate,
+                    price_observations: [
+                      {
+                        rank: 1,
+                        brand: "Example",
+                        model: "X100",
+                        observations: [],
+                      },
+                    ],
+                  }),
+                  annotations: [],
+                },
+              ],
+            },
+          ],
+          usage: {
+            input_tokens: 100,
+            output_tokens: 50,
+            total_tokens: 150,
+          },
+        }),
+      }),
+      responseId,
+      promptVersion: DIRECT_TERRA_PROMPT_VERSION,
+      promptHash,
+      requirementContract,
+      now: () => 100,
+    });
+
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, "invalid_report");
+    assert.equal(result.verification.reason, "invalid_candidate_slate");
+    assert.equal(
+      result.verification.candidateSlateReason,
+      "ranked_hard_requirement_failed",
+    );
   });
 
   it("fails closed on a mismatched provider response ID", async () => {
@@ -185,6 +296,7 @@ describe("direct Terra V2 provider adapter", () => {
       responseId,
       promptVersion: DIRECT_TERRA_PROMPT_VERSION,
       promptHash,
+      requirementContract,
       now: () => 100,
     });
 

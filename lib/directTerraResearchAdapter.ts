@@ -17,6 +17,7 @@ import {
   parseDirectTerraCompletedResponse,
 } from "./directTerraResponse.ts";
 import { isDirectTerraPromptHash } from "./directTerraJobToken.ts";
+import type { DirectTerraRequirementContractEntry } from "./directTerraCandidateSlate.ts";
 
 export type DirectTerraResponsesClient = {
   responses: {
@@ -314,6 +315,7 @@ export async function pollDirectTerraResearch({
   responseId: trackedResponseId,
   promptVersion,
   promptHash,
+  requirementContract,
   model = DIRECT_TERRA_RESEARCH_CONFIG.model,
   now = Date.now,
 }: {
@@ -321,6 +323,7 @@ export async function pollDirectTerraResearch({
   responseId: string;
   promptVersion: string;
   promptHash: string;
+  requirementContract: DirectTerraRequirementContractEntry[];
   model?: DirectTerraResearchModel;
   now?: () => number;
 }) {
@@ -385,7 +388,9 @@ export async function pollDirectTerraResearch({
   if (ledger.usage.webSearchCalls < 1) {
     return finishFailure(ledger, "missing_web_search", startedAt, now);
   }
-  const parsed = parseDirectTerraCompletedResponse(response);
+  const parsed = parseDirectTerraCompletedResponse(response, {
+    requirementContract,
+  });
   if (!parsed.ok) {
     return {
       ...finishFailure(ledger, "invalid_report", startedAt, now),
@@ -407,6 +412,7 @@ export async function pollDirectTerraResearch({
     responseSources: parsed.responseSources,
     searchActions: parsed.searchActions,
     rejectedPriceObservationCount: parsed.rejectedPriceObservationCount,
+    candidateSlateDiagnostic: parsed.candidateSlateDiagnostic,
     ledger,
   };
 }

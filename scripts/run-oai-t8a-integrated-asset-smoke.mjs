@@ -18,6 +18,7 @@ import {
   startDirectTerraResearch,
 } from "../lib/directTerraResearchAdapter.ts";
 import { DIRECT_TERRA_PROMPT_VERSION } from "../lib/directTerraPrompt.ts";
+import { buildDirectTerraRequirementContract } from "../lib/directTerraCandidateSlate.ts";
 import {
   OAI_2A_PROPOSED_CONFIG,
   estimateAutonomousResearchCost,
@@ -40,6 +41,7 @@ import { extractDirectTerraHeadingIdentity } from "../lib/directTerraAssetVerifi
 
 const EXECUTE = process.argv.includes("--execute");
 const FROZEN_REQUEST = Object.freeze({ query: "shop vac" });
+const REQUIREMENT_CONTRACT = buildDirectTerraRequirementContract(FROZEN_REQUEST);
 const EXPECTED = Object.freeze({
   openAiCreates: 1,
   hostedSearches: DIRECT_TERRA_RESEARCH_CONFIG.maxToolCalls,
@@ -282,6 +284,7 @@ async function main() {
         responseId: started.responseId,
         promptVersion: started.promptVersion,
         promptHash: started.promptHash,
+        requirementContract: REQUIREMENT_CONTRACT,
       });
       if (polled.ok && polled.state === "pending") continue;
       if (!polled.ok) throw new Error(`OpenAI poll failed: ${polled.reason}`);

@@ -15,6 +15,11 @@ import {
   extractDirectTerraPicks,
   headingSlug,
 } from "./directTerraReportOutline.ts";
+import {
+  validateDirectTerraCandidateSlate,
+  type DirectTerraCandidateSlateDiagnostic,
+  type DirectTerraRequirementContractEntry,
+} from "./directTerraCandidateSlate.ts";
 
 export type DirectTerraSource = {
   url: string;
@@ -40,12 +45,14 @@ type ParsedDirectTerraResponse =
       responseSources: DirectTerraSource[];
       searchActions: DirectTerraSearchAction[];
       rejectedPriceObservationCount: number;
+      candidateSlateDiagnostic: DirectTerraCandidateSlateDiagnostic | null;
     }
   | {
       ok: false;
       reason: string;
       citationCount?: number;
       unregisteredCitationCount?: number;
+      candidateSlateReason?: string;
     };
 
 const MAX_REPORT_CHARACTERS = 160_000;
@@ -173,7 +180,7 @@ export function extractDirectTerraSearchActions(
   return actions.slice(0, 100);
 }
 
-export function extractDirectTerraResponseSources(
+function collectDirectTerraResponseSources(
   response: unknown,
 ): DirectTerraSource[] {
   if (!isRecord(response) || !Array.isArray(response.output)) return [];
@@ -201,7 +208,13 @@ export function extractDirectTerraResponseSources(
     }
   }
 
-  return distinctSources(sources);
+  return sources;
+}
+
+export function extractDirectTerraResponseSources(
+  response: unknown,
+): DirectTerraSource[] {
+  return distinctSources(collectDirectTerraResponseSources(response));
 }
 
 function outputText(response: Record<string, unknown>) {
@@ -231,7 +244,11 @@ function exactReportWrapper(text: string) {
     if (!isRecord(value)) return null;
     if (
       JSON.stringify(Object.keys(value).sort()) !==
-      JSON.stringify(["price_observations", "report_markdown"])
+      JSON.stringify([
+        "candidate_slate",
+        "price_observations",
+        "report_markdown",
+      ])
     ) {
       return null;
     }
@@ -243,8 +260,16 @@ function exactReportWrapper(text: string) {
       return null;
     }
     if (!Array.isArray(value.price_observations)) return null;
+    if (
+      !Array.isArray(value.candidate_slate) ||
+      value.candidate_slate.length < 8 ||
+      value.candidate_slate.length > 15
+    ) {
+      return null;
+    }
     return {
       reportMarkdown: value.report_markdown,
+      candidateSlate: value.candidate_slate,
       priceObservations: value.price_observations,
     };
   } catch {
@@ -390,6 +415,9 @@ function markdownLinks(report: string) {
 
 export function parseDirectTerraCompletedResponse(
   response: unknown,
+  options?: {
+    requirementContract: DirectTerraRequirementContractEntry[];
+  },
 ): ParsedDirectTerraResponse {
   if (!isRecord(response) || response.status !== "completed") {
     return { ok: false, reason: "response_not_completed" };
@@ -397,7 +425,7 @@ export function parseDirectTerraCompletedResponse(
   const text = outputText(response);
   const wrapper = text ? exactReportWrapper(text) : null;
   if (!wrapper) return { ok: false, reason: "invalid_report_wrapper" };
-  const { reportMarkdown, priceObservations } = wrapper;
+  const { reportMarkdown, candidateSlate, priceObservations } = wrapper;
 
   const markdown = markdownLinks(reportMarkdown);
   if (markdown.hasImages) {
@@ -408,7 +436,8 @@ export function parseDirectTerraCompletedResponse(
     return { ok: false, reason: "missing_citations", citationCount: 0 };
   }
 
-  const sources = extractDirectTerraResponseSources(response);
+  const exactResponseSources = collectDirectTerraResponseSources(response);
+  const sources = distinctSources(exactResponseSources);
   const registered = new Set(
     sources
       .map((source) => canonicalizeDirectTerraCitationUrl(source.url))
@@ -420,6 +449,26 @@ export function parseDirectTerraCompletedResponse(
   });
   const disabledCitationCount =
     citationUrls.length - registeredCitationUrls.length;
+
+  let candidateSlateDiagnostic: DirectTerraCandidateSlateDiagnostic | null =
+    null;
+  if (options?.requirementContract) {
+    const slate = validateDirectTerraCandidateSlate({
+      candidateSlate,
+      reportMarkdown,
+      priceObservations,
+      requirementContract: options.requirementContract,
+      responseSourceUrls: exactResponseSources.map((source) => source.url),
+    });
+    if (!slate.ok) {
+      return {
+        ok: false,
+        reason: "invalid_candidate_slate",
+        candidateSlateReason: slate.reason,
+      };
+    }
+    candidateSlateDiagnostic = slate.diagnostic;
+  }
 
   const sourceHosts = [
     ...new Set(
@@ -448,5 +497,6 @@ export function parseDirectTerraCompletedResponse(
     responseSources: sources,
     searchActions: extractDirectTerraSearchActions(response),
     rejectedPriceObservationCount: priceResult.rejectedObservationCount,
+    candidateSlateDiagnostic,
   };
 }

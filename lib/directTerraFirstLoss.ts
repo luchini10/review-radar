@@ -19,6 +19,7 @@ import {
   extractDirectTerraAssetTargets,
   type DirectTerraSearchAction,
 } from "./directTerraResponse.ts";
+import type { DirectTerraCandidateSlateDiagnostic } from "./directTerraCandidateSlate.ts";
 
 export const DIRECT_TERRA_FIRST_LOSS_VERSION =
   "direct-terra-first-loss-v2";
@@ -412,6 +413,7 @@ export function buildDirectTerraRecommendationFirstLossDiagnostic({
   rankedProducts,
   coversLeader,
   requirementVerdicts,
+  candidateSlateDiagnostic,
 }: {
   searchCallCount: number;
   searchActions: DirectTerraSearchAction[];
@@ -426,6 +428,7 @@ export function buildDirectTerraRecommendationFirstLossDiagnostic({
     budgetViolationCount: number;
     featureCoverage: { label: string; coverageRate: number }[];
   };
+  candidateSlateDiagnostic?: DirectTerraCandidateSlateDiagnostic | null;
 }) {
   const namedNonRankedProducts =
     extractDirectTerraNamedNonRankedProducts(reportMarkdown);
@@ -447,13 +450,18 @@ export function buildDirectTerraRecommendationFirstLossDiagnostic({
     })),
     sourceHostCount: distinctHosts.length,
     sourceHosts: distinctHosts,
-    candidateSlate: {
-      status:
-        namedNonRankedProducts.length > 0
-          ? ("partially_exposed_by_report" as const)
-          : ("not_exposed_by_current_contract" as const),
-      identities: namedNonRankedProducts.map(identityKey),
-    },
+    candidateSlate: candidateSlateDiagnostic
+      ? {
+          status: "structured_v1" as const,
+          entries: candidateSlateDiagnostic.entries,
+        }
+      : {
+          status:
+            namedNonRankedProducts.length > 0
+              ? ("partially_exposed_by_report" as const)
+              : ("not_exposed_by_current_contract" as const),
+          identities: namedNonRankedProducts.map(identityKey),
+        },
     rankedProducts: [...rankedProducts]
       .sort((left, right) => left.rank - right.rank)
       .map((product) => ({

@@ -27,6 +27,7 @@ import {
   DIRECT_TERRA_COMPARISON_MODEL,
   DIRECT_TERRA_PROMPT_VERSION,
 } from "../lib/directTerraPrompt.ts";
+import { buildDirectTerraRequirementContract } from "../lib/directTerraCandidateSlate.ts";
 import {
   DIRECT_TERRA_EVAL_CASES,
   DIRECT_TERRA_EVAL_VERSION,
@@ -135,7 +136,7 @@ const APPROVAL = {
   runsPerCase: RUNS_PER_CASE,
   maxCreates: RUN_CASES.length * RUNS_PER_CASE,
   ceilings: CEILINGS,
-  expectedPromptVersion: "direct-terra-master-prompt-v2",
+  expectedPromptVersion: "direct-terra-master-prompt-v3",
 };
 const OUT_DIR = path.resolve(
   SOL_COMPARISON
@@ -468,6 +469,9 @@ async function main() {
       const caseRecord = { id: evalCase.id, goldId: evalCase.goldId, runs: [] };
 
       for (let runIndex = 1; runIndex <= RUNS_PER_CASE; runIndex += 1) {
+        const requirementContract = buildDirectTerraRequirementContract(
+          evalCase.request,
+        );
         perRun.creates = 0;
         perRun.retrieves = 0;
         perRun.cancels = 0;
@@ -507,6 +511,7 @@ async function main() {
             promptVersion: start.promptVersion,
             promptHash: start.promptHash,
             model: RESEARCH_MODEL,
+            requirementContract,
           });
           if (poll.ok && poll.state === "pending") continue;
           if (!poll.ok) throw new Error(`poll failed ${evalCase.id} run ${runIndex}: ${poll.reason}`);
@@ -581,6 +586,7 @@ async function main() {
                     coverageRate: feature.coverageRate,
                   })) ?? [],
               },
+              candidateSlateDiagnostic: completion.candidateSlateDiagnostic,
             })
           : null;
         const rankedProductAccounting = FIRST_LOSS_DIAGNOSTIC

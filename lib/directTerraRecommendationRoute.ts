@@ -35,6 +35,11 @@ import {
 } from "./searchProgressStore.ts";
 import type { SearchProgressMilestoneKey } from "./searchProgress.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
+import {
+  buildDirectTerraRequirementContract,
+  directTerraRequirementContractFromIds,
+  isDirectTerraRequirementId,
+} from "./directTerraCandidateSlate.ts";
 import type {
   SelectedSmartFeature,
   SmartFeatureOperator,
@@ -181,6 +186,7 @@ function cleanFeature(value: unknown): SelectedSmartFeature | null {
     typeof value.id !== "string" ||
     value.id.trim().length === 0 ||
     value.id.length > 100 ||
+    !isDirectTerraRequirementId(`smart_feature:${value.id.trim()}`) ||
     typeof value.name !== "string" ||
     value.name.trim().length === 0 ||
     value.name.length > 200 ||
@@ -230,7 +236,9 @@ function validateRequest(body: unknown): DirectTerraShopperRequest | null {
     if (
       !parsedFeatures.every(
         (feature): feature is SelectedSmartFeature => feature !== null,
-      )
+      ) ||
+      new Set(parsedFeatures.map((feature) => feature?.id)).size !==
+        parsedFeatures.length
     ) {
       return null;
     }
@@ -394,11 +402,14 @@ export function createDirectTerraRecommendationHandlers({
         reportProgressUpTo(progressId, "plan_strategy");
       }
       const issuedAtMs = now();
+      const requirementContract =
+        buildDirectTerraRequirementContract(shopperRequest);
       const token = issueDirectTerraJobToken({
         responseId: result.responseId,
         promptVersion: result.promptVersion,
         promptHash: result.promptHash,
         productCategory: shopperRequest.query,
+        requirementContract,
         secret: environment.jobTokenSecret!,
         nowMs: issuedAtMs,
         ttlMs: DIRECT_TERRA_JOB_TTL_MS,
@@ -443,6 +454,12 @@ export function createDirectTerraRecommendationHandlers({
     }
 
     const progressId = searchProgressIdFromRequest(request);
+    const requirementContract = directTerraRequirementContractFromIds(
+      verified.payload.requirementIds,
+    );
+    if (!requirementContract) {
+      return failure("invalid_job", ERROR_MESSAGES.invalidJob, 400);
+    }
     try {
       const client = await createOpenAIClient(environment.openAiApiKey!, {
         maxRetries: 0,
@@ -452,6 +469,7 @@ export function createDirectTerraRecommendationHandlers({
         responseId: verified.payload.responseId,
         promptVersion: verified.payload.promptVersion,
         promptHash: verified.payload.promptHash,
+        requirementContract,
         now,
       });
       if (!result.ok) {

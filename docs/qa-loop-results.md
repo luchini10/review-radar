@@ -10864,3 +10864,54 @@ requested product. Fetch failure or continued ambiguity leaves the asset
 the application default, and no external request, flag change, deployment,
 production change, `.env.local` edit, or push occurred. The same approved goal
 continues to Phase 3's server-only candidate-slate and ranking contract.
+
+---
+
+## 🟧 Codex — 2026-07-24 — OAI-T9 Phase 3 same-call candidate slate
+
+**Objective:** repair the recommendation-stage loss shown by T8D without
+hardcoding leaders or adding another research call. Direct-Terra prompt V3 now
+requires Terra to research 8–15 distinct products, evaluate all of them
+against the submitted request, and expose that server-only slate before
+choosing the final ranking.
+
+**Deterministic contract:** ReviewRadar derives stable ordered IDs for U.S.
+availability, active budget, Important Details, every selected Smart Feature,
+and dealbreakers. Each candidate has an exact identity, one disposition,
+nullable rank, evidence quality, concise reason, exact hosted-search source
+URLs, and one `pass` / `fail` / `needs_verification` verdict per ID.
+
+The response fails closed when:
+
+- the slate is outside 8–15 candidates or contains a punctuation/spacing-
+  equivalent duplicate model;
+- a requirement ID/verdict is missing, duplicated, reordered, invented, or
+  supported by an unregistered/cross-candidate URL;
+- a ranked heading, slate rank/name, or price identity disagrees;
+- a ranked product fails a hard requirement;
+- Best Match needs verification; or
+- another ranked product's unknown requirement is not visibly disclosed.
+
+**Adversarial corrections:** the review added model-format duplicate detection
+without collapsing `Q7` into `Q70`; rejects unsafe and duplicate Smart Feature
+IDs before provider work; preserves every exact response-owned URL for
+evidence validation even when the public source list canonicalizes variants;
+and proves the maximum 29-requirement encrypted job token remains within its
+8,192-character limit. The structured first-loss trace retains only normalized
+identity, disposition, rank, evidence quality, requirement ID, and verdict.
+It retains no URL, decision prose, source title, provider ID, or raw output.
+
+**Verification (zero live):**
+
+- candidate/prompt/token/response/adapter/route/diagnostic focused walls: pass;
+- `npm test`: 1,370/1,370 across 197 suites;
+- `npm run typecheck`: pass;
+- `npm run lint`: zero errors, three pre-existing warnings;
+- `npm run build`: pass;
+- both Direct-Terra first-loss harness dry-run modes: pass; and
+- `git diff --check`: pass.
+
+No OpenAI, Serper, SearchAPI, page, image, or other external request occurred.
+No flag, `.env.local`, deployment, production state, or public client response
+changed. RR-014 remains Needs Investigation because live quality improvement
+has not yet been measured. Phase 4 requires separate exact live approval.

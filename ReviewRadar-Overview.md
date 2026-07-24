@@ -36,7 +36,8 @@ requirements, ranked by fit and credibility, each explained and cited.
 ReviewRadar also has a separate experimental report path that deliberately does
 not produce a `RecommendationResult`. When both direct-Terra flags are enabled,
 one Terra/high Responses job researches and ranks the products and returns two
-strict JSON fields: `report_markdown` plus bounded `price_observations`.
+reader/commerce fields plus one server-only research field in strict JSON:
+`report_markdown`, `candidate_slate`, and bounded `price_observations`.
 ReviewRadar displays that report without changing its product set, names,
 order, explanations, or ranking. A compact product-card band is derived only
 from Terra's own ranked headings; it decorates those same picks with optional
@@ -52,6 +53,24 @@ deduplicates source hosts and calculates a low/high/median estimated market
 range only when at least two distinct hosts survive. The estimate is visibly
 not a checkout quote; sellers, stock, purchase destinations, discounts, tax,
 shipping, and all purchase claims inside the report remain unverified.
+
+Prompt V3 requires Terra to research 8â€“15 distinct products before choosing
+up to five ranked recommendations. The request deterministically supplies
+ordered requirement IDs for U.S. availability, an active budget, Important
+Details, every selected Smart Feature by its stable ID, and dealbreakers.
+Every slate product must carry a disposition, nullable final rank, evidence
+quality, concise decision reason, exact same-response hosted-search URLs, and
+one source-backed `pass` / `fail` / `needs_verification` verdict per applicable
+requirement. The slate remains server-only.
+
+The polling boundary rejects the entire response when the slate is incomplete,
+duplicates a punctuation/spacing-equivalent model, invents or borrows an
+evidence URL, disagrees with a ranked heading or price identity, ranks a hard
+failure, leaves Best Match unverified, or hides another ranked product's
+unknown requirement from the visible report. Validated diagnostics retain only
+normalized identities, dispositions, ranks, evidence-quality labels, and
+requirement statuses; they contain no URLs, reasons, source text, provider IDs,
+or raw model output. The client response shape is unchanged.
 
 Product websites are resolved first from response-owned citations that Terra
 placed inside that product's own ranked section. Strong brand/model identities
@@ -94,10 +113,12 @@ manufacturer/retailer URL cannot upgrade an unknown or unsafe relationship.
 Relationship decisions and reasons are retained only in server diagnostics
 and do not change the public nullable `productUrl`/`imageUrl` contract.
 
-The completed-job token carries the shopper's requested product category only
-inside its authenticated encrypted server payload. The polling route restores
-that category before asset verification so type checks use the actual request,
-not a ranked product name substituted as the category. A product URL path that
+The completed-job token carries the shopper's requested product category and
+ordered requirement IDs only inside its authenticated encrypted server
+payload. The polling route restores the requirement contract for same-response
+slate validation and the category for asset verification, so type checks use
+the actual request, not a ranked product name substituted as the category. A
+product URL path that
 positively identifies a conflicting product type is rejected together with its
 image; exact manufacturer and recognized-retailer product pages still pass.
 For descriptive, non-coded models, the verifier also requires product and image
@@ -116,7 +137,9 @@ verification, preferred-host selection, or page-image resolution. Recommendation
 diagnostics separately distinguish leaders present in inspected source evidence
 but omitted from ranking from leaders absent from that evidence. Only bounded
 sanitized search actions, counts, normalized identities, source hosts, and
-reason codes may be retained. Schema v2 keeps at most 20 normalized provider
+reason codes may be retained. Prompt V3 supplies the validated structured
+candidate dispositions and requirement statuses directly; older reports still
+use the bounded report-derived fallback. Schema v2 keeps at most 20 normalized provider
 candidate identity samples per lane and recognizes explicitly named
 not-ranked/Close Match products in Terra's report. Search actions keep bounded
 query text and opened-page hosts, not full opened URLs. Raw provider rows, raw

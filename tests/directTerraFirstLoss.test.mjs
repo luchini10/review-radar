@@ -265,6 +265,59 @@ describe("Direct-Terra first-loss observability", () => {
     );
   });
 
+  it("uses the validated structured slate without exposing sources or prose", () => {
+    const diagnostic = buildDirectTerraRecommendationFirstLossDiagnostic({
+      searchCallCount: 1,
+      searchActions: [],
+      sourceHosts: ["example.com"],
+      responseSourceTitles: [],
+      reportMarkdown:
+        "# Report\n\n## #1 Best Match â€” Example X100 Refrigerator\n",
+      leaders: [],
+      rankedProducts: [
+        { rank: 1, name: "Example X100 Refrigerator" },
+      ],
+      coversLeader: () => false,
+      requirementVerdicts: {
+        wrongTypeCount: 0,
+        budgetViolationCount: 0,
+        featureCoverage: [],
+      },
+      candidateSlateDiagnostic: {
+        schemaVersion: "direct-terra-candidate-slate-diagnostic-v1",
+        candidateCount: 1,
+        entries: [
+          {
+            identityKey: "example x100",
+            disposition: "ranked",
+            finalRank: 1,
+            evidenceQuality: "high",
+            requirementVerdicts: [
+              { requirementId: "market_us", verdict: "pass" },
+            ],
+          },
+        ],
+      },
+    });
+
+    assert.deepEqual(diagnostic.candidateSlate, {
+      status: "structured_v1",
+      entries: [
+        {
+          identityKey: "example x100",
+          disposition: "ranked",
+          finalRank: 1,
+          evidenceQuality: "high",
+          requirementVerdicts: [
+            { requirementId: "market_us", verdict: "pass" },
+          ],
+        },
+      ],
+    });
+    assert.equal(JSON.stringify(diagnostic).includes("https://"), false);
+    assert.equal(JSON.stringify(diagnostic).includes("decision"), false);
+  });
+
   it("summarizes multiple categories without hiding incomplete accounting", () => {
     const complete = analyzeDirectTerraSavedRun({
       id: "complete",

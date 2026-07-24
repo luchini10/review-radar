@@ -1,94 +1,103 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-24 by Codex after OAI-T9 Phases 1–2.
-Use `git log -1` for the current scoped safety commit.
+Updated: 2026-07-24 by Codex after OAI-T9 Phase 3.
+Use `git log -1` for the current scoped candidate-slate commit.
 
 ## Current state
 
-OAI-T9 Phases 1–2 are complete. Direct-Terra verifier v5 now requires one
-server-only complete-product relationship for every citation, organic,
-Shopping, and fetched-page asset candidate. Only `complete_product` and
-`bundle_including_product` may provide a website or image.
+OAI-T9 Phases 1–3 are complete. Phases 1–2 closed RR-099 with one shared
+complete-product relationship boundary for every Direct-Terra asset candidate.
+Only a complete product or a bundle containing it may supply a website or
+image.
 
-RR-099 is Fixed. The captured Tapo replacement-water-tank link and unrelated
-complement forms are blocked without a product, brand, category, retailer,
-ASIN, or observed-path production exception. Valid complete-product bundles
-remain eligible. Ambiguous pages require bounded title/JSON-LD Product proof;
-failure or unresolved evidence leaves the asset unavailable.
+Phase 3 upgrades the same-call research contract to
+`direct-terra-master-prompt-v3`. Terra must research 8–15 distinct products,
+return one server-only candidate slate, and evaluate every candidate against
+the request-derived requirement IDs before selecting up to five ranked
+recommendations.
 
-Direct-Terra remains default-off and undeployed. Terra remains the application
-default. No live request, flag change, `.env.local` edit, deployment,
-production change, or push occurred.
+The client completed response is unchanged. Terra's report, product names,
+selection, order, explanations, citations, and nullable asset behavior remain
+unchanged after a valid response. Direct-Terra remains default-off and
+undeployed. Terra remains the application default. No live request, flag
+change, `.env.local` edit, deployment, production change, or push occurred.
 
-## Verification and evidence
+## Phase 3 trust contract
 
-- focused complete-product/asset/page wall: 78/78 before final adversarial
-  expansion; final relationship/verifier wall: 57/57;
-- complete suite: 1,354/1,354 across 195 suites;
+The server derives IDs in deterministic order:
+
+1. `market_us`;
+2. optional `budget`;
+3. optional `important_details`;
+4. one `smart_feature:<stable-id>` per selected Smart Feature; and
+5. optional `dealbreakers`.
+
+Every slate entry carries product name, brand, model, one disposition, nullable
+rank, evidence quality, concise decision reason, exact same-response
+hosted-search URLs, and one `pass` / `fail` / `needs_verification` verdict per
+applicable ID.
+
+The response fails closed when the slate is incomplete; requirement verdicts
+are missing, duplicated, reordered, or invented; evidence URLs are not exact
+response-owned URLs or are borrowed across candidates; equivalent
+punctuation/spacing model forms duplicate a product; ranked headings, slate
+ranks/names, or price identities disagree; a ranked product fails a hard
+requirement; Best Match needs verification; or another ranked product's
+unknown requirement is not visible in its report section.
+
+The encrypted polling token carries category plus the ordered requirement IDs,
+not shopper prose. Validated first-loss diagnostics retain only normalized
+identity, disposition, rank, evidence quality, requirement ID, and verdict.
+They retain no URL, decision prose, source title, provider ID, secret, or raw
+response.
+
+## Verification
+
+- candidate/prompt/token/response/adapter/route/diagnostic focused walls: pass;
+- complete suite: 1,370/1,370 across 197 suites;
 - typecheck and production build: pass;
 - lint: zero errors and three pre-existing warnings;
-- `git diff --check`: pass;
-- eight-run T8D replay: 31/31 ranked products accounted, 24 retained links
-  revalidated, one definitive older wrong-variant block, six honestly
-  indeterminate historical warnings;
-- later T8D and T8E replays: RR-099 ASIN `B0DLH5B3SN` definitively blocked as
-  `accessory_or_replacement`; and
-- tracked sanitized relationship corpus plus generated cross-category
-  mutations: pass.
+- both Direct-Terra first-loss harness dry-run modes: pass; and
+- `git diff --check`: pass.
 
-No provider request was used for this evidence. Historical final-only fixtures
-that omitted original provider titles cannot reconstruct live candidate
-coverage and must remain labeled indeterminate.
+Adversarial review additionally proved that:
 
-## Current approved goal: OAI-T9 Phase 3
+- unsafe or duplicate Smart Feature IDs are rejected before provider work;
+- `0910-20` and `0910 20` are duplicate slate identities while `Q7` and `Q70`
+  remain distinct;
+- exact response-owned source variants remain valid even when the public
+  source list canonically deduplicates them; and
+- the maximum 29-requirement encrypted token remains below its 8,192-character
+  bound.
 
-Continue without pausing through a zero-live upgrade to
-`direct-terra-master-prompt-v3`.
+This is offline contract evidence only. RR-014 remains Needs Investigation;
+no recommendation-recall or hard-requirement improvement is claimed yet.
 
-The same OpenAI response must contain a server-only `candidate_slate` of 8–15
-distinct products. Each candidate carries identity, disposition, nullable
-rank, evidence quality, concise reason, exact hosted-search URLs, and one
-`pass` / `fail` / `needs_verification` verdict for every applicable
-request-derived requirement ID.
+## Next approval boundary: OAI-T9 Phase 4
 
-Required server invariants:
+Phase 4 is the separately approved live Sol/high acceptance window against the
+frozen four-category sample. It must determine whether prompt V3 improves
+leader recall and hard-requirement truth while preserving the Phase 1–2 asset
+safety wall. The live plan, exact request count, hosted-search/retrieve/Serper/
+page ceilings, and current-price dollar cap must be reviewed immediately before
+approval.
 
-1. Requirement IDs are generated from the submitted request, with stable
-   feature IDs, deterministic order, uniqueness, and complete coverage.
-2. Every ranked heading maps to exactly one slate entry with the same rank and
-   identity; ReviewRadar never adds, substitutes, or reorders products.
-3. Ranked products cannot fail a hard requirement; Best Match must pass all
-   hard requirements. Other ranked products may use `needs_verification` only
-   when the visible report says so.
-4. Price observations bind to the same ranked identity.
-5. All slate and requirement evidence URLs belong to the same response-owned
-   hosted-search source registry.
-6. Invalid slate/rank/requirement consistency fails closed. Citation failures
-   remain granular, except losing all evidence for a Best Match hard
-   requirement fails the response.
-7. Candidate-slate diagnostics are sanitized and server-only. Client-facing
-   completed response shape, report, recommendations, and asset behavior stay
-   unchanged.
+Do not start Phase 4 from this handoff. A live result may justify keeping,
+revising, or rejecting V3; it does not automatically change the model default,
+promote a flag, deploy, or close RR-014.
 
-Finish with adversarial prompt/schema tests, full offline validation, diff
-review, documentation, and an automatic scoped commit. Keep all flags off.
-
-**Expected North-Star effect:** improve recommendation recall and hard-
-requirement truth by forcing same-call broad consideration before ranking.
-No live improvement is claimed until the separately approved Phase 4 window.
-
-**Recommended reasoning level:** High. Dynamic requirement completeness,
-identity/rank binding, and source ownership are fail-closed trust contracts;
-maximum reasoning is unnecessary once the schema is frozen.
+**Recommended reasoning level:** Highest for Phase 4's acceptance decision.
+The work is not routine execution: it must separate model-quality improvement
+from provider variance and determine whether the architecture is worth
+continuing. High is sufficient for a zero-live preflight or harness review.
 
 ## Approval and flag state
 
-Taylor explicitly resumed the OAI-T9 goal and requested uninterrupted work
-through Phase 3. Scoped Phase 3 files may be committed automatically.
+Taylor explicitly authorized uninterrupted zero-live work through OAI-T9
+Phase 3 and automatic scoped commits. That authorization is now consumed.
 
 No OpenAI, Serper, SearchAPI, page, image, or other external request is
-authorized. Phase 4's 12-run Sol/high window still requires a separately
-approved exact numeric envelope and current-price dollar ceiling.
+authorized. Phase 4 requires new explicit approval.
 
 Committed defaults remain:
 
@@ -100,7 +109,7 @@ Committed defaults remain:
 ## Hard boundaries
 
 - No external request, deployment, publication, push, flag promotion,
-  `.env.local` edit, or production change.
+  `.env.local` edit, or production change without explicit approval.
 - Preserve Terra-authored product names, order, report prose, citations, and
   price caveats.
 - No benchmark leaders, category queries, or product/category-specific rules
@@ -114,17 +123,19 @@ Committed defaults remain:
 
 ## Review debt and retrieval map
 
-Dialogue entry `[113]` asks Claude to challenge the complete-product grammar
-and bounded ambiguity handoff. That advisory review is not required before
-Phase 3 implementation, but Phase 3 must receive its own adversarial review
-before closeout.
+Dialogue entry `[113]` asks Claude to challenge the Phase 1–2 relationship
+grammar. Entry `[114]` asks for an adversarial review of the Phase 3 dynamic
+requirements, exact-source ownership, duplicate identity, rank/visibility, and
+output-budget seams. Both are advisory before live approval; neither authorizes
+work.
 
 | Need | Retrieve |
 |---|---|
-| Current state and Phase 3 contract | this file |
+| Current state and next boundary | this file |
 | Standing gates and OAI-T9 record | `docs/forward-roadmap.md`, OAI-T9 |
-| Closed safety defect | RR-099 in `docs/RR-Issues-Report.md` |
-| Canonical zero-live evidence | latest OAI-T9 entry in `docs/qa-loop-results.md` |
-| Durable asset contract | OAI-T9 section in `docs/review-radar-test-memory.md` |
-| Peer challenge | dialogue entry `[113]` |
+| Canonical Phase 3 verification | latest OAI-T9 entry in `docs/qa-loop-results.md` |
+| Durable V3 contract | top OAI-T9 section in `docs/review-radar-test-memory.md` |
+| Recommendation-quality issue | RR-014 in `docs/RR-Issues-Report.md` |
+| Closed asset-safety issue | RR-099 in `docs/RR-Issues-Report.md` |
+| Peer challenges | dialogue entries `[113]` and `[114]` |
 | Historical live evidence | untracked T8D/T8E fixture directories |
