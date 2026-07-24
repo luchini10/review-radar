@@ -3261,6 +3261,38 @@ drill need not be repeated because neither correction targets its completed
 path. No approval, flag promotion, deployment, or production change is implied
 by this record.
 
+**Three-case root-cause revalidation (completed 2026-07-23, pinned commit
+`56b6df0`):** The exact approved office-chair, gas-grill, and robot-vacuum
+window completed once and stopped. Actuals were 3 Terra/high creates, 89
+retrieves, 29 hosted searches, 11 Shopping requests, 14 organic requests, 8
+bounded page fetches, 0 safety cancels, `$1.779518` estimated OpenAI cost, and
+approximately 8 minutes 18 seconds. All 11 ranked products were accounted;
+sanitized evidence remains untracked under
+`oai-t8d-root-cause-revalidation-56b6df0/`.
+
+RR-097 and RR-098 passed their targeted live checks. Gas produced four parsed
+cards and four asset targets rather than zero. Office produced five clean
+manufacturer links and five images without a retained wrong sibling. However,
+the overall safety gate failed: a Tapo RV30 MAX Plus card received an Amazon
+replacement-water-tank/accessory URL. RR-099 records the generalized missing
+product-versus-complement veto. The provider trace proves this was not a
+provider-absence problem: the accessory candidate was present, normalized,
+and incorrectly accepted.
+
+Recommendation quality also remains inadequate but is a separate root. Recall
+was office `3/7`, gas `1/4`, and robot `0/4`. Four leaders across gas and robot
+were explicitly named in Terra's report but omitted from the ranked cards,
+while 14 leader observations were absent from retained Terra research
+evidence. RR-014 therefore contains both research-coverage and ranking-stage
+loss. The future recommendation repair should introduce a generalized
+structured candidate slate and requirement/rubric verdict inside the same
+Terra call before final ranking; it must not hardcode leaders or deterministic
+category queries.
+
+The next eligible work is zero-live RR-099 closure and replay. No further live
+sample, promotion, deployment, flag change, or production action is justified
+until the wrong-destination trust boundary passes.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen

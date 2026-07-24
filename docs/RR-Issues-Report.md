@@ -20,12 +20,12 @@ only when maintaining this register or auditing its full history.
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 98 |
+| Total Issues | 99 |
 | Critical | 14 |
-| High | 46 |
+| High | 47 |
 | Medium | 33 |
 | Low | 5 |
-| Open | 0 |
+| Open | 1 |
 | Needs Investigation | 6 |
 | Fixed | 91 |
 | Won't Fix | 1 |
@@ -113,7 +113,7 @@ only when maintaining this register or auditing its full history.
 | C5 flag-on live validation | 1 |
 | OAI-2A source-truth audit | 1 |
 | OAI-H2 direct-verification feasibility | 1 |
-| OAI-T8D cross-category first-loss diagnostic | 6 |
+| OAI-T8D cross-category first-loss diagnostic | 7 |
 | Phase R4 — Live after-sample | 1 |
 | RR-061 image-provenance safety repair | 0 |
 | RR-061 round 4 / RR-080 image micro-phase | 1 |
@@ -523,6 +523,20 @@ only when maintaining this register or auditing its full history.
 provider results in every broad run, so the live bottleneck is downstream of
 provider discovery. The ≥5/7 pool and ≥3/7 final gates both failed; the
 thresholds remain unchanged and RR-014 remains Needs Investigation.
+
+**OAI-T8D root-cause revalidation (2026-07-23):** The current Direct-Terra
+path scored office chairs `3/7`, constrained gas grills `1/4`, and constrained
+robot vacuums `0/4`. The first-loss trace distinguishes two recommendation
+failures. Fourteen leader observations were absent from Terra's retained
+research evidence, while four leaders across two unrelated categories were
+explicitly named by Terra but omitted from the ranked cards: Char-Broil in gas
+grills and Shark, eufy, and Roborock in robot vacuums. This is direct evidence
+of both research-coverage loss and ranking-stage loss; ReviewRadar's asset
+pipeline did not remove those four leaders. RR-014 remains Needs
+Investigation. The next recommendation-quality behavior change should be
+zero-live and generalized: require the same Terra call to form a structured
+candidate slate with explicit requirement/rubric verdicts before it chooses
+the final ranking. It must not hardcode benchmark leaders or category queries.
 
 ---
 
@@ -3883,6 +3897,12 @@ across the three completed live fixtures. The sanitized gas fixture did not
 retain raw price observations, so provider calls and final asset coverage
 cannot be reconstructed offline.
 
+**Live confirmation (2026-07-23, pinned commit `56b6df0`):** The replacement
+gas run parsed and accounted for all four Terra-ranked products, created four
+asset targets, and retained three preferred-host links plus two images. No
+wrong-type or budget violation was scored. This confirms the shared parser
+repair on a fresh real response; RR-097 remains Fixed.
+
 ---
 
 #### RR-098
@@ -3936,12 +3956,63 @@ corroboration cannot hide an undisclosed suffix. The complete RR-093 sibling,
 accessory, editorial, redirect, private-host, coded-model, Q7/Q70, and
 wrong-image wall remains green.
 
+**Live confirmation (2026-07-23, pinned commit `56b6df0`):** All five
+office-chair cards received a clean manufacturer link and an image; three
+images came from the verified product page. The exact Steelcase Leap/Gesture,
+Herman Miller Aeron/Embody, and Haworth Fern pages survived the repaired
+contract. No retained office-chair link or image showed a wrong sibling.
+RR-098 remains Fixed.
+
+---
+
+#### RR-099
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-099 |
+| **Phase** | OAI-T8D root-cause revalidation |
+| **Severity** | High |
+| **Title** | Direct-Terra asset verifier accepts a replacement accessory as a product buy link |
+| **Status** | Open |
+
+**Description:** The robot-vacuum revalidation attached an Amazon replacement
+water-storage-tank listing to the ranked `TP-Link Tapo RV30 MAX Plus` product
+card. The retained candidate title identifies a compatible water tank and the
+URL slug identifies `Storage-Robotic-Accessories`, but verifier v4 accepted it
+as `accepted_exact_identity` / `accepted_identity_safe`. The public summary
+therefore counted the URL as a clean preferred-host link even though "clean"
+only meant canonical/tracking-safe, not product-eligible.
+
+**Where it occurs:** `lib/directTerraAssetVerifier.ts` in candidate identity
+acceptance and the shared product-type/accessory veto used by Direct-Terra
+organic retailer resolution.
+
+**Evidence:** Untracked sanitized fixture
+`tests/fixtures/review-radar-live/oai-t8d-root-cause-revalidation-56b6df0/eval-con-robot-vac-300-selfempty.run1.json`.
+Rank 1 resolves to Amazon ASIN `B0DLH5B3SN`; the bounded normalized candidate
+title is `for tp link for tapo rv30 plus water storage tank ...` and its path
+contains `storage robotic accessories`. No direct page was opened during the
+audit.
+
+**Expected:** A replacement part, tank, filter, hose, battery, dock, base, or
+other standalone complement must never become the buy link or image for the
+complete ranked product, even when it repeats the product's brand/model.
+Explicit product-plus-accessory bundles remain eligible.
+
+**Required generalized repair:** Add fail-first tests across unrelated product
+types and make accessory/complement evidence a veto after model matching but
+before URL selection. The rule must use product-versus-complement semantics,
+not TP-Link, robot-vacuum, water-tank, retailer, or ASIN exceptions. Preserve
+valid bundles and all existing sibling, editorial, redirect, private-host,
+wrong-type, and wrong-image protections. Revalidate all accepted URLs in the
+saved three-case fixture offline before any further live or promotion step.
+
 ---
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (0 issues)
-- None.
+### Open (1 issue)
+- RR-099: Direct-Terra asset verifier accepts a replacement accessory as a product buy link
 
 ### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low

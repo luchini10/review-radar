@@ -1,101 +1,102 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-23 by Codex after the zero-live RR-097/RR-098 corrective
-phase. Use `git log -1` for the current documentation commit.
+Updated: 2026-07-23 by Codex after the three-case T8D root-cause
+revalidation. Use `git log -1` for the current documentation commit.
 
 ## Current state
 
 The Direct-Terra one-main-call architecture remains default-off and
-undeployed. RR-097 and RR-098 are Fixed locally in commits `59ae9bc` and
-`95fddb5`.
+undeployed. The exact three-case revalidation pinned to `56b6df0` completed
+once and stopped.
 
-- RR-097 was a shared report-contract failure. Terra's gas report used bare
-  `#1 Best Match` labels (not Markdown H1); separate shortlist, evaluation,
-  price, and UI parsers erased all three products. One shared parser now
-  supports bare labels and H1-H4 with safe section boundaries.
-- RR-098 was a verifier false rejection. Ancestor URL taxonomy and ordinary
-  title-corroborated product detail were treated as sibling identity. The
-  verifier now inspects the identity-bearing path region and requires every
-  non-neutral post-model detail to be target/category-explained or visible in
-  the candidate title. Partial corroboration still fails closed.
-- Exact manufacturer/popular-retailer model slugs can resolve only generic
-  eligibility `unknown`. Explicit negative eligibility and every existing
-  sibling, accessory, editorial, redirect, private-host, type, coded-model,
-  Q7/Q70, and wrong-image veto remain binding.
+- RR-097 is live-confirmed Fixed: the gas response produced four parsed cards,
+  four asset targets, three preferred-host links, and two images instead of
+  being erased by the ranked-heading parser.
+- RR-098 is live-confirmed Fixed for its target outcome: all five office-chair
+  cards received a manufacturer link and image, including the exact Leap,
+  Gesture, Aeron, Embody, and Fern pages.
+- RR-099 is Open: a Tapo RV30 MAX Plus card received an Amazon replacement
+  water-storage-tank/accessory link. The candidate was present and normalized;
+  the Direct-Terra verifier incorrectly accepted it after model matching.
+- RR-014 remains Needs Investigation: recommendation recall was office `3/7`,
+  gas `1/4`, and robot `0/4`. Terra explicitly named four leaders across gas
+  and robot but omitted them from the ranked cards; 14 other leader
+  observations were absent from retained research evidence.
 
-Register totals: 98 issues; 14 Critical, 46 High, 33 Medium, 5 Low; 91 Fixed,
-6 Needs Investigation, 1 Won't Fix, 0 Open.
+Register totals: 99 issues; 14 Critical, 47 High, 33 Medium, 5 Low; 91 Fixed,
+6 Needs Investigation, 1 Open, and 1 Won't Fix.
 
-## Evidence and verification
+## Live evidence and verification
 
-The verifier-v4 live window at harness commit `9e041e0` spent three requests
-(office chair, gas grill, cordless drill) and stopped before robot vacuum.
 Sanitized untracked evidence is under
-`tests/fixtures/review-radar-live/oai-t8d-root-cause-diagnostic-9e041e0/`.
+`tests/fixtures/review-radar-live/oai-t8d-root-cause-revalidation-56b6df0/`.
 Never stage that directory.
 
-Current zero-live evidence:
+Actual live usage:
+
+- 3 Terra/high OpenAI Responses creates;
+- 29 hosted web-search actions and 89 retrieves;
+- 11 Serper Shopping requests and 14 Serper organic requests;
+- 8 bounded product-page fetches and 0 safety cancels;
+- `$1.779518` estimated OpenAI cost; and
+- approximately 8 minutes 18 seconds wall time.
+
+There were no retries, replacements, second runs, additional cases, SearchAPI
+calls, flag changes, `.env.local` changes, deployments, production changes, or
+pushes. All 11 ranked products are explicitly accounted.
+
+Current code verification inherited from the pinned pre-live state:
 
 - focused parser/evaluation/response/price/UI tests: 46/46;
 - focused asset/citation tests: 59/59;
 - complete wall: 1337/1337 across 192 suites;
 - typecheck and production build: pass;
 - lint: zero errors, three pre-existing warnings;
-- older eight-run T8D replay: 31/31 ranked products accounted; and
-- latest three completed runs: 12/12 accounted, including 3/3 gas products.
+- older eight-run replay: 31/31 products accounted; and
+- prior three-run corrective replay: 12/12 products accounted.
 
-Evidence limit: the sanitized gas fixture omitted raw price observations, and
-the saved provider trace cannot reconstruct every original raw result. Offline
-replay proves the parser root correction and complete first-loss accounting,
-but it does not prove post-fix live website/image coverage.
+The current docs-only closeout must pass `git diff --check`. No post-live
+behavior change has been made.
 
 ## Next approval-gated step
 
-Run the three-case diagnostic revalidation using the harness introduced by
-`da26aee`, not another four-case window. The live approval must pin the final
-current HEAD reported by `git log -1`:
+Run one zero-live RR-099 safety phase before any further live, promotion, or
+deployment work:
 
-1. **Office chairs** — prove the RR-098 verifier repair improves safe
-   manufacturer/retailer website coverage without a wrong link or image.
-2. **Gas grills** — replace the invalid parser measurement and prove ranked
-   products, price sections, targets, and assets survive the real response.
-3. **Robot vacuum** — execute the category that was never dispatched in the
-   stopped window.
+1. Add fail-first tests reproducing the saved Tapo replacement-tank link and
+   unrelated product/accessory pairs such as a power-tool replacement battery
+   and an appliance replacement filter or hose.
+2. Trace the shared Direct-Terra verifier path from accepted model identity to
+   final URL selection.
+3. Add one product-versus-complement veto after model matching and before
+   asset selection. It must use generalized complement semantics, not product,
+   brand, category, retailer, phrase, or ASIN exceptions.
+4. Preserve explicit product-plus-accessory bundles and all sibling,
+   editorial, redirect, private-host, wrong-type, wrong-image, and numeric
+   boundary protections.
+5. Replay every accepted link in the three saved fixtures, run focused and
+   complete tests, typecheck, lint, build, inspect the full diff, and commit the
+   scoped code/docs automatically.
 
-Do not repeat cordless drill: it completed and neither correction targets its
-path. The new `--root-cause-revalidation` mode passed its zero-network dry run
-and selects exactly these three cases, one run each. It writes to a distinct
-`oai-t8d-root-cause-revalidation-<current-HEAD>/` directory so evidence cannot
-replace an earlier window.
+Stop and report after this safety phase. Do not combine it with RR-014
+recommendation changes. After RR-099 closes, the next separately approved
+zero-live architecture phase should add a structured candidate slate plus
+requirement/rubric verdict inside the same Terra call before final ranking.
 
-Live execution still requires Taylor to approve this exact envelope:
-
-- 3 Terra/high OpenAI Responses creates;
-- at most 60 hosted web-search actions total (20 per run);
-- at most 180 retrieves total (60 per run);
-- at most 3 safety cancels total (1 per run);
-- at most 15 Serper Shopping requests total (5 per run);
-- at most 24 Serper organic requests total (8 per run);
-- at most 15 bounded product-page fetches total (5 per run); and
-- a `$4` hard OpenAI cost ceiling.
-
-No retries, replacements, second runs, additional cases, SearchAPI requests,
-unbounded/direct page requests, flag changes, `.env.local` changes,
-deployments, production changes, or push. Retain only sanitized evidence and
-stop/report after the three outcomes.
-
-**Recommended reasoning level:** High. Execution is bounded, but interpreting
-product identity and deciding whether the repaired verifier preserved the
-wrong-sibling safety boundary requires careful evidence review. Maximum
-reasoning is unnecessary unless the new trace contradicts the offline model.
+**Recommended reasoning level:** High. The next change is bounded and
+zero-live, but accessory/product equivalence is a trust boundary where an
+over-broad rule can either preserve unsafe links or wrongly suppress complete
+product bundles. Maximum reasoning is unnecessary.
 
 ## Approval and flag state
 
-Taylor's conversational approval was used only for the zero-live pin/preflight
-commit `da26aee`; no provider request was dispatched. Scoped local phase files
-may be committed automatically under Taylor's standing instruction. No
-live/external call, deployment, production change, flag promotion, `.env.local`
-edit, or push is authorized until the exact numeric envelope above is approved.
+The three-case live approval is exhausted. No provider request, page request,
+deployment, production change, flag promotion, `.env.local` edit, or push is
+currently authorized.
+
+Scoped local phase files may be committed automatically under Taylor's
+standing instruction, but behavior work still stops at the phase boundary and
+is reported before the next phase.
 
 Committed defaults remain:
 
@@ -109,25 +110,28 @@ Committed defaults remain:
   a new exact numeric approval.
 - No deployment, publication, push, flag promotion, `.env.local` edit, or
   production change.
-- Preserve Terra's products, names, order, report, citations, and price
-  caveats.
-- No product-, brand-, category-, retailer-, or observed-path production
-  exception.
+- Preserve Terra's product names, order, report, citations, and price caveats.
+- No product-, brand-, category-, retailer-, phrase-, or observed-path
+  production exception.
+- Missing an uncertain asset is preferable to displaying an accessory or
+  wrong product.
 - Never stage live fixtures or unrelated `.claude/`, baseline, or
   `fable-transfer-kit/` artifacts. Never use `git add -A`.
 
 ## Review debt and retrieval map
 
-Dialogue entry `[109]` asks Claude to challenge full title corroboration and
-the bounded exact-slug/unknown-eligibility proof. That review is advisory and
-does not authorize work.
+Dialogue entry `[109]` still asks Claude to challenge the RR-098 boundary.
+The live result now supplies additional evidence: final office coverage passed,
+but a distinct accessory class escaped in robot vacuum. Any later peer review
+should treat RR-099 as the immediate safety priority.
 
 | Need | Retrieve |
 |---|---|
 | Current state and next approval | this file |
-| Canonical defects | RR-097/RR-098 in `docs/RR-Issues-Report.md` |
-| Phase result | latest entry in `docs/qa-loop-results.md` |
+| Canonical defects | RR-014/RR-097/RR-098/RR-099 in `docs/RR-Issues-Report.md` |
+| Live phase result | latest entry in `docs/qa-loop-results.md` |
 | Peer-review request | dialogue entry `[109]` |
 | Phase history | OAI-T8D in `docs/forward-roadmap.md` |
+| Live evidence | untracked `oai-t8d-root-cause-revalidation-56b6df0/` |
 | Behavior commits | `59ae9bc`, `95fddb5` |
-| Revalidation harness | `da26aee` |
+| Live harness and pin | `da26aee`, `56b6df0` |

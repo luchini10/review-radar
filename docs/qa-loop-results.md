@@ -10708,3 +10708,58 @@ or push action occurred.
 
 **Next boundary:** Taylor must approve the exact total envelope recorded in
 `docs/agent-next-task.md`; then the harness may execute once and stop/report.
+
+## 🟧 Codex QA Update — 2026-07-23 (T8D three-case root-cause revalidation)
+
+Taylor approved the exact three-case window pinned to `56b6df0`. The harness
+ran office chairs, constrained gas grills, and constrained robot vacuums once
+each and stopped. Actuals were 3 Terra/high creates, 89 retrieves, 29 hosted
+search actions, 11 Serper Shopping requests, 14 Serper organic requests, 8
+bounded page fetches, 0 safety cancels, approximately `$1.779518` estimated
+OpenAI cost, and 8 minutes 18 seconds wall time. There were no retries,
+replacements, second runs, additional cases, SearchAPI calls, flag or
+`.env.local` changes, deployments, production changes, or pushes.
+
+Sanitized evidence is untracked under
+`tests/fixtures/review-radar-live/oai-t8d-root-cause-revalidation-56b6df0/`.
+All 11 ranked products and asset targets are explicitly accounted. The live
+fixtures remain excluded from git.
+
+**RR-097/RR-098 confirmation:**
+
+- Office chairs parsed five cards and produced five manufacturer links plus
+  five images (three page-derived), with no visible wrong sibling. The prior
+  descriptive-path false-rejection no longer prevents complete final asset
+  coverage in this case.
+- Gas grills parsed all four ranked products, produced four targets, three
+  preferred-host links, and two images. The earlier zero-card parser result is
+  not repeated. Both repairs remain Fixed.
+
+**Recommendation result:** quality remains below the frozen bars. Office-chair
+recall was `3/7`, gas-grill recall `1/4`, and robot-vacuum recall `0/4`.
+Office returned five cards, gas four, and robot only two. There were zero
+scored wrong-type or hard-budget violations. First-loss attribution proves two
+different recommendation failures: 14 leader observations were absent from
+Terra's retained research evidence, while Char-Broil, Shark, eufy, and
+Roborock were explicitly named in Terra's report but not ranked. The asset
+pipeline did not remove those four leaders. This updates RR-014 and supports a
+future generalized same-call candidate-slate/rubric stage; it does not justify
+hardcoded leaders or category queries.
+
+**Safety failure — RR-099:** the robot-vacuum card for `TP-Link Tapo RV30 MAX
+Plus` received an Amazon link whose normalized candidate title identifies a
+compatible water-storage tank and whose path identifies robotic accessories.
+The verifier nevertheless recorded `accepted_exact_identity` and
+`accepted_identity_safe`. The summary's `cleanLinks` count only proves URL
+canonicalization/tracking cleanliness; it does not prove product eligibility.
+This is a confirmed wrong-destination trust failure. No direct page was opened
+during the audit.
+
+**Decision:** the revalidation does not pass the zero-wrong-link gate and is
+not promotion or deployment evidence. No more live work is justified yet. The
+next eligible phase is zero-live: reproduce RR-099 across unrelated
+product/accessory pairs, implement one product-versus-complement veto after
+model matching and before asset selection, replay all accepted links in the
+three saved fixtures, run the full wall, and commit. Recommendation-quality
+architecture remains a separate RR-014 phase after the safety boundary is
+closed.
