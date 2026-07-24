@@ -3293,6 +3293,35 @@ The next eligible work is zero-live RR-099 closure and replay. No further live
 sample, promotion, deployment, flag change, or production action is justified
 until the wrong-destination trust boundary passes.
 
+**One-case Sol comparison (completed 2026-07-24, pinned commit `05c1d20`):**
+Taylor approved one frozen constrained robot-vacuum comparison with only the
+OpenAI research model changed from Terra/high to Sol/high. The unchanged
+prompt, schema, evaluator, Serper asset resolver, and safety rules were used.
+
+The run completed with 1 create, 15 hosted searches, 56 retrieves, 4 Shopping
+requests, 5 organic requests, 3 bounded page fetches, 4 selected-image
+retrievals, 0 safety cancels, `$1.448205` estimated OpenAI cost, and about
+5 minutes 3 seconds wall time. It stayed within every approved ceiling and
+performed no retry, replacement, fallback, second response, additional case,
+flag change, `.env.local` change, deployment, production change, or push.
+
+Sol improved recommendation recall from the saved Terra run's `0/4` to `2/4`
+and ranked four products instead of two. It had zero scored wrong-type or
+budget violations and all four cards carried self-emptying evidence. The
+improvement did not pass the planned bar: Shark remained absent, eufy was
+researched but not ranked, deterministic price coverage was only `1/4`, and
+one run cannot score stability.
+
+Asset availability was 4/4 links and 4/4 images mechanically. Manual semantic
+review changed the trustworthy result to 3/4 product links: the exact same
+Tapo replacement-water-tank Amazon URL from RR-099 was selected again. All
+four downloaded images showed a complete robot vacuum with its dock and were
+supported by exact-product Shopping or verified-page identity, but two were
+Google Shopping thumbnails rather than page-derived assets. Therefore Sol is
+a promising recommendation-quality lever, not an asset-safety repair or a
+promotion decision. Terra remains the production default and Direct-Terra
+remains default-off.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen

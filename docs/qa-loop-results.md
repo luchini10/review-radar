@@ -10763,3 +10763,51 @@ model matching and before asset selection, replay all accepted links in the
 three saved fixtures, run the full wall, and commit. Recommendation-quality
 architecture remains a separate RR-014 phase after the safety boundary is
 closed.
+
+## 🟧 Codex QA Update — 2026-07-24 (one-case Sol versus Terra comparison)
+
+**Verdict: MIXED. Sol materially improved recommendation recall, but the run
+failed the zero-wrong-link gate and does not justify promotion.**
+
+Preparation commit `05c1d20` added an explicit comparison-only model override
+and one-case `--sol-comparison` harness mode. Terra remains the default in the
+request builder, provider adapter, and application route. The frozen request,
+prompt `direct-terra-master-prompt-v2`, strict schema, high reasoning, scorer,
+Serper asset resolver, and safety rules were unchanged.
+
+The single run used 1 Sol/high create, 15 hosted searches, 56 retrieves,
+4 Shopping requests, 5 organic requests, 3 bounded page fetches, 4 selected
+image retrievals, 0 cancels, `$1.448205` estimated OpenAI cost, and 302,644 ms.
+It performed no retry, replacement, fallback, second response, additional
+case, SearchAPI request, flag change, `.env.local` change, deployment,
+production change, or push. Sanitized untracked evidence is under
+`tests/fixtures/review-radar-live/oai-t8e-sol-terra-robot-comparison-05c1d20/`.
+
+**Recommendation comparison:** Sol ranked Roborock Q10 S5+, Tapo RV30 Max
+Plus, Roborock Q7 M5+, and iRobot Roomba 105 Vac Q352020. Prospective recall
+was `2/4` versus the saved Terra run's `0/4`; ranked count was four versus two.
+There were zero scored wrong-type or budget violations and self-emptying
+coverage was 4/4. Sol researched eufy but did not rank it and retained no Shark
+leader evidence. Only the Roomba price produced deterministic multi-source
+price evidence, so price coverage was `1/4`; the other three under-$300
+claims remain AI-reported and unverified. Stability is NotScored.
+
+**Asset audit:** all four downloaded images visually showed the corresponding
+complete robot and dock. Ranks 3 and 4 came from exact verified product pages;
+ranks 1 and 2 came from exact-product Shopping rows. Three links were exact
+manufacturer pages. Rank 2 repeated RR-099 exactly: the Tapo card received
+Amazon ASIN `B0DLH5B3SN`, whose retained candidate title says replacement
+water-storage tank and whose path says robotic accessories. The automated
+`cleanLinks=4` result therefore overstates semantic safety; the manually
+audited link result is `3/4`.
+
+**Offline verification before live:** 1340/1340 tests across 192 suites,
+typecheck, production build, and dry-run preflight passed. Lint had zero errors
+and the same three pre-existing warnings. The live evidence is excluded from
+git.
+
+**Decision:** Sol is better on this one recommendation case, but it did not
+meet the planned `3/4` recall floor and cannot repair deterministic asset
+verification. No model default, flag, deployment, or production state changed.
+RR-014 remains Needs Investigation, RR-099 remains Open, and the next eligible
+behavior phase remains the generalized zero-live RR-099 complement veto.

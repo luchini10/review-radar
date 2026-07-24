@@ -538,6 +538,17 @@ zero-live and generalized: require the same Terra call to form a structured
 candidate slate with explicit requirement/rubric verdicts before it chooses
 the final ranking. It must not hardcode benchmark leaders or category queries.
 
+**OAI-T8E Sol comparison (2026-07-24):** One frozen constrained robot-vacuum
+request changed only the research model from Terra/high to Sol/high. Sol ranked
+four products and covered `2/4` frozen leader families versus Terra's `0/4`
+and two ranked products on the saved comparison run. It explicitly researched
+eufy but left it unranked and retained no Shark leader evidence. All four
+ranked products satisfied the self-emptying scorer with zero wrong-type or
+scored budget violations, but deterministic price evidence covered only one
+of four products. This is a meaningful one-run recall improvement, not a
+promotion result: the `3/4` minimum was not reached, three price claims remained
+unverified, and stability is NotScored. RR-014 remains Needs Investigation.
+
 ---
 
 #### RR-015
@@ -4006,6 +4017,15 @@ not TP-Link, robot-vacuum, water-tank, retailer, or ASIN exceptions. Preserve
 valid bundles and all existing sibling, editorial, redirect, private-host,
 wrong-type, and wrong-image protections. Revalidate all accepted URLs in the
 saved three-case fixture offline before any further live or promotion step.
+
+**OAI-T8E Sol recurrence (2026-07-24):** Changing only the research model did
+not change this verifier failure. The Sol run ranked the same Tapo RV30 Max
+Plus identity and the unchanged asset resolver again selected Amazon ASIN
+`B0DLH5B3SN`, whose retained title and path identify the replacement water
+tank/accessory. The image was independently sourced from an exact-product
+Shopping row and visually showed the complete vacuum and dock, but the buy
+link remained unsafe. RR-099 remains Open and still requires the generalized
+zero-live complement veto.
 
 ---
 
