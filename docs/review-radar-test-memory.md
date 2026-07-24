@@ -4,6 +4,38 @@
 
 ---
 
+## OAI-T9 terminal Sol acceptance contract (2026-07-24)
+
+- The only eligible final sample is four frozen cases × three runs through the
+  actual Direct-Terra route at one full commit, prompt V3, Sol/high, verifier
+  v5, the unchanged `leaders-v2026-07c` denominator, and the prospective
+  `leaders-v2026-07d-matcher`.
+- Dry-run is the default. Live mode requires exact full-commit and dollar-cap
+  arguments, process-only secrets, a clean tracked tree, no retries, and
+  explicit audit-allowance acknowledgment. Failed routes remain in the
+  12-run denominator; known unfinished jobs are cancelled.
+- Every within-case pairwise product-set Jaccard must be at least `0.60`; do
+  not replace that with a mean. Broad office-chair recall must average at
+  least `4/7`, with no run below `3/7`.
+- Rank 1 in every constrained run must pass all hard requirements. Lower ranks
+  may retain visible `needs_verification` under the V3 contract; a hard
+  failure is never allowed.
+- Human audit covers every recommendation, every displayed destination/image,
+  and two active sources for each top-two product. The audit-only supplement
+  is at most 60 image retrievals, 60 destination opens, and 48 source opens.
+  Those requests cannot change products, order, links, or images.
+- The 12 comparable T8C reports are content-hash pinned before spend. The
+  blinded review requires all four cases to win/tie and at least two to win.
+- Current 2026-07-24 official Sol pricing plus the maximum saved T8D usage
+  yields a conservative 12-run planning value of `$19.605795`; the hard
+  ceiling is `$22`.
+- The decision is terminal: non-asset quality failure rejects the single-call
+  architecture; asset-only safety failure disables assets; low safe coverage
+  passes; measurement defects invalidate the sample; a full pass only makes
+  promotion eligible for separate approval.
+
+---
+
 ## Direct-Terra candidate-slate contract (OAI-T9 Phase 3, 2026-07-24)
 
 - Prompt `direct-terra-master-prompt-v3` must return exactly

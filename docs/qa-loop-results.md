@@ -10915,3 +10915,55 @@ No OpenAI, Serper, SearchAPI, page, image, or other external request occurred.
 No flag, `.env.local`, deployment, production state, or public client response
 changed. RR-014 remains Needs Investigation because live quality improvement
 has not yet been measured. Phase 4 requires separate exact live approval.
+
+---
+
+## 🟧 Codex — 2026-07-24 — OAI-T9 Phase 4 frozen Sol acceptance preflight
+
+**Objective:** replace another open-ended test/fix loop with one commit-pinned,
+terminal 12-run acceptance window whose failures cannot be silently excluded,
+averaged away, or followed by category-specific patches.
+
+**Frozen harness:** `scripts/run-oai-t9-final-acceptance.mjs` uses the actual
+Direct-Terra POST/poll route, one Sol/high response per run, the four existing
+cases three times each, prompt V3, verifier v5, prospective matcher 07d,
+content-hash-pinned T8C comparison reports, zero SDK retries, process-only
+secrets, and exact per-run/global ceilings. Dry-run is the default. Live mode
+requires an exact full commit, `$22` ceiling, clean tracked tree, and explicit
+audit-allowance acknowledgment. Known unfinished jobs are cancelled and failed
+routes stay in the denominator.
+
+**Acceptance evaluator:** every pairwise within-case product-set Jaccard—not
+the average—must reach `0.60`. The evaluator also enforces 12/12 completed
+routes, 3–5 cards, complete and consistent 8–15-product slates, zero hard
+failures, fully passing constrained Best Matches, complete first-loss
+accounting, office-chair recall mean/run floors, and the frozen blind-review
+rule. Lower constrained ranks preserve the already-approved visibly disclosed
+`needs_verification` behavior.
+
+**Adversarial corrections:** the preflight added unfinished-job cancellation,
+full 40-character commit binding, exact manual-review row/key binding, image
+retrievability before a visual pass, and a blind-key-to-sample binding. It also
+identified a defect in the written live envelope: human review cannot inspect
+assets or claims without network access. The exact live approval must add
+audit-only ceilings of 60 selected-image retrievals, 60 displayed-destination
+opens, and 48 claim-source opens. Those operations cannot affect discovery,
+ranking, replacement, or decoration.
+
+**Cost:** official 2026-07-24 Sol pricing is frozen in the harness. Applying
+the conservative cache-write rate to every uncached input token, 12 times the
+largest saved T8D observation is `$19.605795`; the hard ceiling is `$22`.
+
+**Verification (zero live):**
+
+- focused OAI-T9 wall: 9/9;
+- complete suite: 1,379/1,379 across 199 suites;
+- typecheck and production build: pass;
+- lint: zero errors and three pre-existing warnings;
+- content-hash baseline dry run and script syntax checks: pass; and
+- `git diff --check`: pass.
+
+No OpenAI, Serper, SearchAPI, destination, source, image, or other external
+request occurred. No model default, flag, `.env.local`, deployment, production
+state, or push changed. Phase 4 live execution remains separately approval
+gated.

@@ -3384,6 +3384,62 @@ The complete wall passes 1,370/1,370 tests across 197 suites; typecheck/build
 pass and lint has zero errors with three pre-existing warnings. No external
 request occurred.
 
+**Phase 4 frozen-acceptance preflight (completed zero-live 2026-07-24):**
+The final sample is now executable only through
+`scripts/run-oai-t9-final-acceptance.mjs`. Dry-run is the default. Live mode
+requires the exact full current commit, the frozen `$22` ceiling, explicit
+acknowledgment of the audit-only network allowance, a clean tracked tree, and
+process-only secrets. It exercises the actual Direct-Terra POST/poll route,
+forces `gpt-5.6-sol` with high reasoning, disables SDK retries, retains failed
+routes in the fixed denominator, and cancels any known unfinished job.
+
+The frozen sample is exactly the existing office-chair, gas-grill,
+cordless-drill, and robot-vacuum cases, three times each. Prompt/schema hashes,
+the V3 prompt, the prospective `leaders-v2026-07d-matcher` against the unchanged
+`leaders-v2026-07c` denominator, complete-product verifier v5, first-loss
+contract, all provider ceilings, and the 12 comparable T8C report hashes are
+pinned before spend.
+
+The evaluator does not average away a bad repeat: every one of the three
+within-case product-set pairs must reach `0.60`. It also requires 12/12
+completed routes, 3–5 ranked products, consistent 8–15-product slates, no hard
+failure, a fully passing constrained Best Match, complete ranked-product/asset
+accounting, office-chair recall mean at least `4/7` with no run below `3/7`,
+and a blinded win/tie in all four cases with at least two clear wins. A lower
+constrained rank may remain `needs_verification` only under the already-frozen
+V3 disclosure contract.
+
+Human review remains load-bearing. Every recommendation is checked for exact
+identity/type and applicable hard requirements; every displayed destination
+and retrieved image is checked for exact identity; and two active
+same-response sources are inspected for each of the top two products in every
+run. The original live envelope did not include the network operations needed
+to perform those checks. The exact approval must therefore also allow, for
+audit only, at most 60 selected-image retrievals, 60 displayed-destination
+opens, and 48 claim-source opens. These requests cannot discover, rank,
+replace, or decorate products.
+
+Current official Sol short-context pricing is `$5/M` input, `$0.50/M` cached
+input, `$6.25/M` cache write, `$30/M` output, plus `$0.01` per hosted search.
+Using the more conservative cache-write rate for every uncached input token,
+12 times the largest of 14 saved T8D observations is `$19.605795`; the frozen
+`$22` ceiling provides a 12.2% V3-overhead buffer. The runner also reports
+standard and conservative observed cost plus latency.
+
+Terminal analysis is predeclared. A recommendation, stability, schema, route,
+or evidence failure makes the single-call architecture a no-go. An asset-only
+safety failure disables assets while retaining recommendation cards. Low safe
+asset coverage passes. A measurement defect invalidates the sample and stops
+for an architecture decision. Passing every gate makes promotion eligible
+only through a later separate approval. No category-specific repair follows
+this window.
+
+Zero-live verification passes 1,379/1,379 tests across 199 suites; typecheck
+and build pass; lint has zero errors and three pre-existing warnings; the
+commit-pinned baseline dry run passes; and no provider/page/image request,
+flag change, `.env.local` edit, deployment, production change, or push
+occurred.
+
 **Next approval boundary:** Phase 4 is the separately approved live Sol/high
 acceptance window. It must measure whether V3 improves recall and
 hard-requirement truth before any prompt, model-default, flag, or deployment
