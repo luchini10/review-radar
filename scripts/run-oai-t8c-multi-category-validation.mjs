@@ -195,6 +195,11 @@ async function main() {
   }
   for (const evalCase of DIRECT_TERRA_EVAL_CASES) goldById(evalCase.goldId);
 
+  if (!EXECUTE) {
+    process.stdout.write(`${JSON.stringify({ status: "preflight_passed", plan: plan() }, null, 2)}\n`);
+    return;
+  }
+
   let existing = [];
   try {
     existing = await fs.readdir(OUT_DIR);
@@ -203,11 +208,6 @@ async function main() {
   }
   if (existing.length > 0) {
     throw new Error(`Evidence already exists at ${OUT_DIR}; refusing replacement.`);
-  }
-
-  if (!EXECUTE) {
-    process.stdout.write(`${JSON.stringify({ status: "preflight_passed", plan: plan() }, null, 2)}\n`);
-    return;
   }
 
   if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");

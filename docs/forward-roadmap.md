@@ -3196,6 +3196,40 @@ That sample is diagnostic validation of the repaired boundary, not promotion
 evidence, and may not change flags, deploy, retry, or reuse the withheld
 conditional approval.
 
+**Verifier-v4 live diagnostic stop (2026-07-24, harness commit `9e041e0`):**
+The approved one-run-per-category window completed office chairs, gas grills,
+and cordless drills, then stopped before dispatching robot vacuum. Actuals were
+3 Terra/high creates, 78 retrieves, 24 hosted search actions, 9 Shopping
+requests, 10 organic requests, 6 bounded page fetches, 0 safety cancels, and
+`$1.594070` estimated OpenAI cost. No retry, replacement, SearchAPI request,
+flag change, `.env.local` change, deployment, or production change occurred.
+
+The stop was caused by an upstream report-contract failure, not a verifier-v4
+wrong asset. Terra's gas-grill report contained three complete ranked products
+under H1 `#N Best Match` headings. ReviewRadar's two separate ranked-product
+parsers accept only H2 through H4, so they produced zero cards, zero asset
+targets, zero asset-provider calls, and an invalid `0/4` recall score. RR-097
+owns the generalized shared-parser/section-boundary/renderer-anchor repair.
+
+The two parsed cases produced nine cards with six clean preferred-host links
+and seven images. No retained wrong-model link or image was found. However,
+first-loss schema v2 also proved verifier v4 is materially over-conservative:
+the office-chair run recorded 23 descriptive URL-conflict verdicts, including
+ten exact manufacturer-page rejections across three brands. Later page
+extraction recovered four of five safe chair links, but Branch Verve remained
+without a website. RR-098 owns this coverage defect; the repair must rely on
+positive conflicting identity evidence rather than a growing vocabulary
+allowlist, while preserving RR-093 and every existing safety veto.
+
+The sample is incomplete and is not promotion evidence. The next step is
+zero-live RR-097 and RR-098 correction plus saved-fixture replay and
+adversarial review. The unused robot-vacuum case and any replacement gas run
+require a new exact live approval after those repairs pass.
+
+**Recommended reasoning level:** High. The parser repair is mechanical, but
+the descriptive-identity correction must recover legitimate pages without
+reopening the wrong-sibling trust boundary.
+
 ### OAI-2B — early uncached quality and repeatability gate
 
 **Approval/cost:** separate approval only after OAI-2A passes. Use four frozen

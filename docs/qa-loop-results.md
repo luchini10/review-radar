@@ -10566,3 +10566,64 @@ Fix.
 **Decision:** the zero-live repair passes this review. A fresh, exact live
 approval is still required; the prior conditional four-test approval was
 withheld and is not reusable. No promotion or deployment is authorized.
+
+## 🟧 Codex QA Update — 2026-07-24 (T8D verifier-v4 live diagnostic safety stop)
+
+Taylor approved one frozen request in each of the four T8D categories at
+verifier v4. Before dispatch, fail-first inspection found that the diagnostic
+harness still scheduled two runs per category and retained the prior `$10`
+ceiling. Commit `9e041e0` pins diagnostic mode to one run per category, four
+creates total, and the approved `$5` ceiling. The focused harness test and
+zero-network dry run passed before live execution.
+
+Post-live rerun exposed one testability defect: dry-run preflight checked the
+commit-pinned evidence directory before its no-network return and therefore
+failed once valid live evidence existed. The final correction performs that
+replacement check only in `--execute` mode. Dry run is now repeatable and
+write-free; execute mode still refuses to replace any existing evidence. The
+focused harness test passes after the correction.
+
+The live process completed office chairs, gas grills, and cordless drills, then
+was stopped before the robot-vacuum create. Actuals were 3 Terra/high creates,
+78 retrieves, 24 hosted search actions, 9 Serper Shopping requests, 10 Serper
+organic requests, 6 bounded page fetches, 0 safety cancels, and `$1.594070`
+estimated OpenAI cost. There were no retries, replacements, SearchAPI calls,
+flag changes, `.env.local` changes, deployments, or production changes.
+Sanitized untracked evidence is under
+`tests/fixtures/review-radar-live/oai-t8d-root-cause-diagnostic-9e041e0/`;
+`manual-stop.json` records the unused fourth case and exact actuals.
+
+**Completed recommendation results:**
+
+- office chairs: prospective `07d` recall `4/7`, zero wrong-type or budget
+  failures, five ranked products;
+- cordless drills: recall `2/4`, zero wrong-type or budget failures, four
+  ranked products; and
+- gas grills: Terra returned three complete ranked products, but ReviewRadar
+  parsed zero, so the saved `0/4` is invalid measurement rather than a Terra
+  result.
+
+RR-097 records the gas first loss. Terra used valid H1 `#N Best Match`
+headings, while both ReviewRadar ranked-product parsers accept only H2 through
+H4. That silently erased all three cards and all asset targets; no gas-grill
+Shopping, organic, or page request was dispatched. The em dash was valid U+2014
+and was not an encoding failure. The shared parser, section boundary, and
+renderer-anchor contract must be corrected offline before replacement spend.
+
+**Asset result:** the nine parsed products had six clean
+manufacturer/popular-retailer links, seven images, four page-derived images,
+and five fully decorated cards. Static identity review found no wrong link or
+wrong-model image in the retained office-chair and drill assets. Verifier v4
+was safe in these completed cases but materially over-conservative: the
+office-chair trace recorded 23
+`product_url_descriptive_identity_conflict` verdicts, including ten exact
+manufacturer-page rejections across Steelcase, Herman Miller, and Haworth.
+Later page extraction recovered four safe chair links; Branch Verve still lost
+its website. RR-098 records this generalized false-rejection mechanism.
+
+**Decision:** the diagnostic sample is incomplete and cannot be used as
+promotion evidence. Robot vacuum was never dispatched. The next eligible work
+is zero-live: fix RR-097's shared ranked-heading parser first, then repair
+RR-098 without growing a word allowlist and preserve the complete RR-093 safety
+wall. Only after offline replay and adversarial review may Taylor separately
+approve one replacement gas run and the unused robot-vacuum case.
