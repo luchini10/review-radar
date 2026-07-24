@@ -64,6 +64,44 @@ describe("direct Terra product-page transport (T8B)", () => {
     });
     assert.equal(await thrown(pageUrl), null);
   });
+
+  it("resolves and pins a public address before the default server fetch", async () => {
+    const requestedAddresses = [];
+    const transport = createDirectTerraProductPageTransport({
+      fetchDependencies: {
+        resolveHost: async () => ["93.184.216.34"],
+        transport: async ({ address }) => {
+          requestedAddresses.push(address);
+          return {
+            status: 200,
+            headers: { "content-type": "text/html; charset=utf-8" },
+            body: Buffer.from("<html><title>safe</title></html>"),
+          };
+        },
+      },
+    });
+
+    const page = await transport(pageUrl);
+    assert.ok(page);
+    assert.deepEqual(requestedAddresses, ["93.184.216.34"]);
+    assert.match(page.html, /<title>safe<\/title>/);
+  });
+
+  it("blocks a public-looking hostname that resolves to a private address", async () => {
+    let transportCalled = false;
+    const transport = createDirectTerraProductPageTransport({
+      fetchDependencies: {
+        resolveHost: async () => ["127.0.0.1"],
+        transport: async () => {
+          transportCalled = true;
+          throw new Error("must not run");
+        },
+      },
+    });
+
+    assert.equal(await transport(pageUrl), null);
+    assert.equal(transportCalled, false);
+  });
 });
 
 describe("direct Terra page asset extraction (T8B)", () => {

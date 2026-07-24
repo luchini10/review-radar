@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { describe, it } from "node:test";
 
 import {
@@ -12,6 +15,9 @@ import {
   buildOaiT9ManualReviewTemplate,
   estimateOaiT9SolCost,
 } from "../scripts/oai-t9-final-acceptance.mjs";
+import {
+  retrieveOaiT9SelectedImages,
+} from "../scripts/run-oai-t9-final-acceptance.mjs";
 
 const MODEL = "gpt-5.6-sol";
 const PROMPT_VERSION = "direct-terra-master-prompt-v3";
@@ -266,6 +272,48 @@ describe("OAI-T9 final acceptance preflight", () => {
     assert.equal(key.cases.length, 4);
     assert.equal(JSON.stringify(packet).includes("currentSide"), false);
     assert.equal(JSON.stringify(packet).includes("baselineSide"), false);
+  });
+
+  it("never retrieves an audit image through a private DNS answer", async () => {
+    const outputDirectory = await fs.mkdtemp(
+      path.join(os.tmpdir(), "oai-t9-image-audit-"),
+    );
+    let transportCalled = false;
+    const counters = { selectedImageRetrievals: 0 };
+    const globalCounters = { selectedImageRetrievals: 0 };
+    try {
+      const result = await retrieveOaiT9SelectedImages({
+        outputDirectory,
+        caseId: "eval-broad-office-chair",
+        run: 1,
+        productAssets: [
+          {
+            rank: 1,
+            productName: "Example Chair",
+            productUrl: null,
+            imageUrl: "https://images.example.test/example.jpg",
+          },
+        ],
+        counters,
+        globalCounters,
+        resolveHost: async () => ["10.0.0.2"],
+        transport: async () => {
+          transportCalled = true;
+          throw new Error("must not run");
+        },
+      });
+
+      assert.equal(transportCalled, false);
+      assert.equal(result.length, 1);
+      assert.equal(result[0].rank, 1);
+      assert.equal(result[0].status, "failed");
+      assert.equal(result[0].reason, "non_public_image_host");
+      assert.match(result[0].urlHash, /^[a-f0-9]{64}$/);
+      assert.equal(counters.selectedImageRetrievals, 1);
+      assert.equal(globalCounters.selectedImageRetrievals, 1);
+    } finally {
+      await fs.rm(outputDirectory, { recursive: true, force: true });
+    }
   });
 });
 

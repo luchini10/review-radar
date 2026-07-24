@@ -10967,3 +10967,29 @@ No OpenAI, Serper, SearchAPI, destination, source, image, or other external
 request occurred. No model default, flag, `.env.local`, deployment, production
 state, or push changed. Phase 4 live execution remains separately approval
 gated.
+
+---
+
+## 🟧 Codex — 2026-07-24 — OAI-T9 Phase 4 RR-100 fetch-safety correction
+
+**Completion-audit finding:** the private-network asset veto checked URL text,
+but the server-side product-page fetch and newly added image-audit retrieval
+did not pin DNS. A public-looking hostname could resolve to a private address
+after passing the textual check. This contradicted the frozen Phase 1 safety
+contract and had to be closed before live acceptance.
+
+**Generalized correction:** both paths now resolve the hostname, reject the
+request when any answer is non-public, and pin the connection to a validated
+public address. Product-page redirects repeat the validation and remain on the
+original registrable domain. Image audits require HTTPS/default port, follow
+no redirect, and retain bounded time, byte, and image-content checks.
+
+**Fail-first/verification:** injected DNS answers `127.0.0.1` and `10.0.0.2`
+never reach the mocked network transports. Focused page/acceptance wall passes
+21/21. Complete suite passes 1,382/1,382 across 199 suites; typecheck/build
+pass; lint has zero errors and three pre-existing warnings; diff check passes.
+
+RR-100 is Fixed. No provider, page, image, destination, source, or other
+external request ran. Product selection/order and client output did not
+change. The Phase 4 live approval remains the next boundary and must pin the
+new current commit.

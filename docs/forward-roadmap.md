@@ -3426,6 +3426,15 @@ Using the more conservative cache-write rate for every uncached input token,
 `$22` ceiling provides a 12.2% V3-overhead buffer. The runner also reports
 standard and conservative observed cost plus latency.
 
+The post-freeze completion audit found and closed RR-100 before spend.
+Textual private-host rejection was not enough for the server-side bounded page
+and image-audit requests: a public-looking hostname could resolve to a private
+address. Both transports now resolve every host, reject any non-public answer,
+and pin the connection to a validated public address. Product-page redirects
+repeat that check and remain on the original registrable domain; audit images
+follow no redirect. This strengthens the existing generalized private-network
+boundary and changes no recommendation, rank, or asset acceptance rule.
+
 Terminal analysis is predeclared. A recommendation, stability, schema, route,
 or evidence failure makes the single-call architecture a no-go. An asset-only
 safety failure disables assets while retaining recommendation cards. Low safe
@@ -3434,7 +3443,7 @@ for an architecture decision. Passing every gate makes promotion eligible
 only through a later separate approval. No category-specific repair follows
 this window.
 
-Zero-live verification passes 1,379/1,379 tests across 199 suites; typecheck
+Zero-live verification passes 1,382/1,382 tests across 199 suites; typecheck
 and build pass; lint has zero errors and three pre-existing warnings; the
 commit-pinned baseline dry run passes; and no provider/page/image request,
 flag change, `.env.local` edit, deployment, production change, or push

@@ -24,6 +24,11 @@
   and two active sources for each top-two product. The audit-only supplement
   is at most 60 image retrievals, 60 destination opens, and 48 source opens.
   Those requests cannot change products, order, links, or images.
+- All server-side product-page and audit-image retrievals must resolve the
+  hostname first, reject the request if any DNS answer is non-public, and pin
+  the connection to a validated public address. Product-page redirects repeat
+  validation and stay on the original registrable domain; audit images follow
+  no redirect. Textual private-host checks alone are insufficient (RR-100).
 - The 12 comparable T8C reports are content-hash pinned before spend. The
   blinded review requires all four cases to win/tie and at least two to win.
 - Current 2026-07-24 official Sol pricing plus the maximum saved T8D usage

@@ -36,6 +36,11 @@ import {
   createDirectTerraProductPageTransport,
 } from "../lib/directTerraProductPageFetcher.ts";
 import {
+  isPublicHybridFetchAddress,
+  nodeHybridTransport,
+  resolveHybridHost,
+} from "../lib/autonomousFactVerifier.ts";
+import {
   createDirectTerraSerperOrganicTransport,
   createDirectTerraSerperShoppingTransport,
   directTerraSerperApiKeyIsValid,
@@ -108,18 +113,6 @@ async function directoryEntries(directory) {
   }
 }
 
-async function readBoundedBody(response, maximumBytes = 8 * 1024 * 1024) {
-  if (!response.body) throw new Error("missing_image_body");
-  const chunks = [];
-  let totalBytes = 0;
-  for await (const chunk of response.body) {
-    totalBytes += chunk.byteLength;
-    if (totalBytes > maximumBytes) throw new Error("image_body_too_large");
-    chunks.push(Buffer.from(chunk));
-  }
-  return Buffer.concat(chunks);
-}
-
 function contentTypeExtension(contentType) {
   if (contentType === "image/png") return "png";
   if (contentType === "image/webp") return "webp";
@@ -127,13 +120,20 @@ function contentTypeExtension(contentType) {
   return "jpg";
 }
 
-async function retrieveSelectedImages({
+function headerValue(headers, name) {
+  const value = headers[name] ?? headers[name.toLowerCase()];
+  return Array.isArray(value) ? value[0] ?? "" : value ?? "";
+}
+
+export async function retrieveOaiT9SelectedImages({
   outputDirectory,
   caseId,
   run,
   productAssets,
   counters,
   globalCounters,
+  resolveHost = resolveHybridHost,
+  transport = nodeHybridTransport,
 }) {
   const checks = [];
   for (const asset of productAssets) {
@@ -153,21 +153,46 @@ async function retrieveSelectedImages({
       .digest("hex");
     try {
       const url = new URL(asset.imageUrl);
-      if (url.protocol !== "https:") throw new Error("non_https_image");
-      const response = await fetch(url, {
-        redirect: "error",
-        signal: AbortSignal.timeout(30_000),
+      if (
+        url.protocol !== "https:" ||
+        url.username ||
+        url.password ||
+        (url.port && url.port !== "443")
+      ) {
+        throw new Error("unsafe_image_url");
+      }
+      const addresses = await resolveHost(url.hostname);
+      if (
+        addresses.length === 0 ||
+        addresses.some((address) => !isPublicHybridFetchAddress(address))
+      ) {
+        throw new Error("non_public_image_host");
+      }
+      const response = await transport({
+        url,
+        address: addresses[0],
+        timeoutMs: 30_000,
+        maxBytes: 8 * 1024 * 1024,
+        accept:
+          "image/avif,image/webp,image/png,image/jpeg,image/gif,*/*;q=0.1",
       });
-      if (!response.ok) throw new Error(`image_http_${response.status}`);
-      const contentType = response.headers
-        .get("content-type")
-        ?.split(";")[0]
-        ?.trim()
-        ?.toLowerCase();
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error(`image_http_${response.status}`);
+      }
+      const contentType = headerValue(
+        response.headers,
+        "content-type",
+      )
+        .split(";")[0]
+        .trim()
+        .toLowerCase();
       if (!contentType?.startsWith("image/")) {
         throw new Error("non_image_content_type");
       }
-      const body = await readBoundedBody(response);
+      const body = Buffer.from(response.body);
+      if (body.byteLength > 8 * 1024 * 1024) {
+        throw new Error("image_body_too_large");
+      }
       const fileName = `${caseId}.run${run}.rank${asset.rank}.${contentTypeExtension(
         contentType,
       )}`;
@@ -512,7 +537,7 @@ async function runOne({
   let selectedImageChecks = [];
   if (!failureReason && routeStatus === 200) {
     try {
-      selectedImageChecks = await retrieveSelectedImages({
+      selectedImageChecks = await retrieveOaiT9SelectedImages({
         outputDirectory,
         caseId: testCase.id,
         run,

@@ -1,5 +1,5 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through OAI-T9 safety closure
+## Compiled for AI Agent Consumption — Phase 0 through OAI-T9 acceptance preflight
 
 **Generated:** 2026-07-24
 **Scope:** All phases from initial measurement harness through the OAI-T9
@@ -20,14 +20,14 @@ only when maintaining this register or auditing its full history.
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 99 |
-| Critical | 14 |
+| Total Issues | 100 |
+| Critical | 15 |
 | High | 47 |
 | Medium | 33 |
 | Low | 5 |
 | Open | 0 |
 | Needs Investigation | 6 |
-| Fixed | 92 |
+| Fixed | 93 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -114,6 +114,7 @@ only when maintaining this register or auditing its full history.
 | OAI-2A source-truth audit | 1 |
 | OAI-H2 direct-verification feasibility | 1 |
 | OAI-T8D cross-category first-loss diagnostic | 7 |
+| OAI-T9 acceptance preflight | 1 |
 | Phase R4 — Live after-sample | 1 |
 | RR-061 image-provenance safety repair | 0 |
 | RR-061 round 4 / RR-080 image micro-phase | 1 |
@@ -4054,6 +4055,47 @@ lint with zero errors and three pre-existing warnings. No live request ran.
 
 ---
 
+#### RR-100
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-100 |
+| **Phase** | OAI-T9 acceptance preflight |
+| **Severity** | Critical |
+| **Title** | Direct-Terra server fetches did not pin public DNS before product-page and audit-image requests |
+| **Status** | Fixed |
+
+**Description:** Direct-Terra rejected literal private-network, loopback, and
+local hostnames before asset selection, but its later server-side bounded
+product-page fetch used ordinary `fetch`. The Phase 4 audit-image retriever
+initially used the same pattern. A public-looking attacker-controlled hostname
+could therefore pass textual URL checks and resolve to a private address at
+request time. This contradicted the complete-product boundary's private-network
+guarantee and created a server-side request-forgery seam.
+
+**Where it occurred:** `lib/directTerraProductPageFetcher.ts` in the default
+product-page transport and `scripts/run-oai-t9-final-acceptance.mjs` in
+selected-image audit retrieval.
+
+**Expected:** Every server-side page or image request must parse a safe URL,
+resolve the hostname, reject the request if any answer is non-public, and pin
+the actual connection to the validated public address. Redirected product
+pages must repeat that validation and remain on the originally verified
+registrable domain. Audit-image retrievals must not follow redirects.
+
+**Resolution (2026-07-24):** The product-page transport now uses the shared
+bounded hybrid fetch boundary, which resolves every hop, rejects mixed/private
+answers, pins the socket to the validated address, limits redirects, bytes,
+content type, and time, and then reapplies the same-registrable-domain rule.
+The Phase 4 image audit independently resolves and pins a public address,
+requires HTTPS/default port, follows no redirect, accepts image content only,
+and retains the existing eight-megabyte/time ceilings. Injected regression
+tests prove that a public-looking hostname resolving to `127.0.0.1` or
+`10.0.0.2` never reaches either transport. No provider or external page/image
+request ran.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
 ### Open (0 issues)
@@ -4066,9 +4108,9 @@ lint with zero errors and three pre-existing warnings. No live request ran.
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 - RR-091: Same-page related-product price can satisfy autonomous card binding
 - RR-092: Editorial Product markup can verify identity/image without proving the tested model
-### Fixed (91 issues)
+### Fixed (93 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
-RR-038 through RR-044, RR-046 through RR-090, and RR-093 through RR-099
+RR-038 through RR-044, RR-046 through RR-090, and RR-093 through RR-100
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)

@@ -19,6 +19,11 @@
 import { validateProductImageCandidate } from "./productImageResolver.ts";
 import { productPageMatchesIdentity } from "./productPageUrl.ts";
 import { registrableDomain } from "./directTerraLinkPreference.ts";
+import {
+  fetchHybridSource,
+  LIVE_HYBRID_FETCH_DEPENDENCIES,
+  type HybridFetchDependencies,
+} from "./autonomousFactVerifier.ts";
 
 export const DIRECT_TERRA_PAGE_FETCHER_VERSION =
   "direct-terra-product-page-fetcher-v1";
@@ -91,15 +96,46 @@ function httpUrl(value: string, baseUrl: string) {
 }
 
 export function createDirectTerraProductPageTransport({
-  fetchImpl = fetch,
+  fetchImpl,
+  fetchDependencies = LIVE_HYBRID_FETCH_DEPENDENCIES,
   timeoutMs = DIRECT_TERRA_PAGE_TIMEOUT_MS,
   maxBytes = DIRECT_TERRA_PAGE_MAX_BYTES,
 }: {
   fetchImpl?: typeof fetch;
+  fetchDependencies?: HybridFetchDependencies;
   timeoutMs?: number;
   maxBytes?: number;
 } = {}): DirectTerraProductPageTransport {
   return async (url) => {
+    if (!fetchImpl) {
+      const requestedRegistrable = (() => {
+        try {
+          return registrableDomain(new URL(url).hostname);
+        } catch {
+          return "";
+        }
+      })();
+      if (!requestedRegistrable) return null;
+      const result = await fetchHybridSource(url, fetchDependencies, {
+        maxRedirects: 2,
+        maxBytes,
+        timeoutMs,
+        allowedContentTypes: ["text/html", "application/xhtml+xml"],
+      });
+      if (!result.ok) return null;
+      try {
+        if (
+          registrableDomain(new URL(result.finalUrl).hostname) !==
+          requestedRegistrable
+        ) {
+          return null;
+        }
+      } catch {
+        return null;
+      }
+      return { finalUrl: result.finalUrl, html: result.body };
+    }
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {

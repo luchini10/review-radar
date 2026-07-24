@@ -14,6 +14,11 @@ Direct-Terra now has:
   requirement verdicts; and
 - one frozen, commit-pinned Sol/high terminal acceptance harness.
 
+The post-freeze audit also closed RR-100. Server-side product-page and
+audit-image requests now resolve and pin a public DNS address before network
+I/O; product-page redirects repeat the check and cannot leave the originally
+verified registrable domain, while image audits follow no redirect.
+
 The client completed response is unchanged. OpenAI retains product selection,
 order, report prose, citations, and explanations. Assets remain nullable and
 can never remove or rewrite recommendations. Direct-Terra remains default-off
@@ -78,7 +83,7 @@ No category-specific fix or prompt-patch/retest cycle follows this window.
 ## Verification
 
 - focused OAI-T9 acceptance tests: 9/9;
-- complete suite: 1,379/1,379 across 199 suites;
+- complete suite: 1,382/1,382 across 199 suites;
 - typecheck and production build: pass;
 - lint: zero errors and three pre-existing warnings;
 - script syntax and content-hash-pinned T8C dry run: pass; and
@@ -151,5 +156,6 @@ terminal-decision seams. These are advisory and authorize no work.
 | Acceptance logic | `scripts/oai-t9-final-acceptance.mjs` |
 | Commit-gated route runner | `scripts/run-oai-t9-final-acceptance.mjs` |
 | Recommendation-quality issue | RR-014 in `docs/RR-Issues-Report.md` |
+| Closed fetch-safety issue | RR-100 in `docs/RR-Issues-Report.md` |
 | Peer challenges | dialogue entries `[113]`–`[115]` |
 | Frozen comparison evidence | untracked T8C fixture directory |

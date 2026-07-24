@@ -11,6 +11,27 @@ Update this file after:
 
 ## 2026-07-24
 
+### Codex - Pin public DNS before server-side product and image fetches
+
+#### Changed
+
+- Direct-Terra's bounded product-page reader now rejects any hostname with a
+  private DNS answer and connects only to the validated public address.
+- Redirected product pages repeat the DNS safety check and still cannot leave
+  the originally verified merchant/manufacturer domain.
+- The final Sol acceptance window applies the same public-address pinning to
+  audit-image retrievals and follows no image redirect.
+
+#### Verified
+
+- Regression tests prove that public-looking hostnames resolving to loopback
+  or private-network addresses never reach the network transport.
+- The change is generalized and does not alter product selection, ranking,
+  link/image identity rules, provider budgets, or public response fields.
+- Complete suite: 1,382/1,382 across 199 suites; typecheck and production build
+  pass; lint has zero errors and three pre-existing warnings. No external
+  request occurred.
+
 ### Codex - Require Terra to show its candidate slate before ranking
 
 #### Changed

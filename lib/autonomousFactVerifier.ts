@@ -191,6 +191,7 @@ export type HybridFetchDependencies = {
     address: string;
     timeoutMs: number;
     maxBytes: number;
+    accept?: string;
   }) => Promise<HybridTransportResponse>;
 };
 
@@ -1113,6 +1114,7 @@ export function nodeHybridTransport(input: {
   address: string;
   timeoutMs: number;
   maxBytes: number;
+  accept?: string;
 }): Promise<HybridTransportResponse> {
   return new Promise((resolve, reject) => {
     const request = (input.url.protocol === "https:" ? httpsRequest : httpRequest)(
@@ -1125,7 +1127,9 @@ export function nodeHybridTransport(input: {
         servername: input.url.hostname,
         headers: {
           Host: input.url.host,
-          Accept: "text/html,application/xhtml+xml;q=0.9",
+          Accept:
+            input.accept ??
+            "text/html,application/xhtml+xml;q=0.9",
           "Accept-Encoding": "identity",
           "User-Agent": "ReviewRadar/0.1 exact-product verifier",
         },
