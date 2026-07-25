@@ -3603,17 +3603,19 @@ wall passes 1,425/1,425 across 208 suites; typecheck/build/diff check pass and
 lint has zero errors with three pre-existing warnings. No external request,
 `.env.local`, flag promotion, deployment, production state, or push changed.
 
-**Phase D — zero-live preflight complete; live attempt separately approved:**
-the dry-run-first harness freezes the broad `shop vac` request and exercises
-the real staged application route. It requires an exact commit and command-line
-approval for two OpenAI creates, ten hosted searches, sixty retrieves, one
-safety cancel, fifteen Shopping attempts, thirty DNS-pinned source-page
-fetches with ninety physical page HTTP attempts including redirects, and a $3
-OpenAI estimated-cost ceiling. It accepts only when research,
-verification, and presentation complete, both model calls are usage-accounted,
-and at least one verified card and source reach the public response without
-private state. The first live outcome must stop the phase; it is feasibility,
-not quality or promotion evidence.
+**Phase D — first live feasibility outcome failed, 2026-07-25:** the frozen
+broad `shop vac` attempt at `ec528d7` used one Terra create, thirteen retrieves,
+and two hosted searches. The provider completed 21,932 input tokens, 5,318
+output tokens, and 36 response-owned sources, but the result failed the strict
+research boundary as `invalid_research_contract`. Verification, presentation,
+Serper, page fetching, and public rendering never ran. The recorded usage
+prices to approximately `$0.154600` standard or `$0.168307` conservatively,
+although the harness incorrectly reported zero by excluding terminal failed
+validation from cost accounting. The sanitized diagnostic also omitted the
+runtime's bounded validation-reason enum, so this evidence cannot distinguish
+shape, source-registry, candidate, or duplicate-identity failure. Before any
+replacement spend, correct those two zero-live observability defects and
+identify the exact failed invariant. Do not weaken the contract by guess.
 
 **Phase E — quality/stability and promotion decision:** only after feasibility
 passes, compare multiple frozen categories against the existing baseline. A

@@ -4,6 +4,28 @@
 
 ---
 
+## OAI-T10 Phase D first live outcome (2026-07-25)
+
+- The one approved attempt at `ec528d7` is spent and terminal. Never retry or
+  call it a provider outage: Terra completed with 21,932 input tokens, 5,318
+  output tokens, two hosted searches, and 36 response-owned sources.
+- ReviewRadar rejected the completed research output as
+  `invalid_research_contract` before verification, presentation, Serper, page
+  fetching, or rendering. The single safety cancel was used after rejection.
+- The runtime computes a bounded research `validationReason`, but the route
+  diagnostic currently discards it. The retained evidence therefore cannot
+  distinguish top-level shape, source registry, candidate validity, or
+  duplicate identity. Do not guess or weaken the contract.
+- The attempt's `$0` cost is an observability defect. Failed terminal
+  validation still consumed provider usage. The recorded tokens price to
+  approximately `$0.154600` standard or `$0.168307` conservatively.
+- Before new spend, retain only the safe validation-reason enum and make cost
+  accounting include terminal provider usage regardless of later schema
+  acceptance. Raw output, response IDs, prompts, source URLs, and secrets must
+  remain absent.
+
+---
+
 ## OAI-T10 Phase D live-feasibility preflight (2026-07-25)
 
 - The only frozen case is broad `shop vac`; Phase D must not add another case,

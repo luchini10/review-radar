@@ -11238,3 +11238,50 @@ commit-pinned, and single-attempt.
 No OpenAI, Serper, SearchAPI, source-page, or other external request ran. No
 `.env.local`, flag, deployment, production state, issue status, live fixture,
 or push changed. The exact live envelope remains a separate approval boundary.
+
+---
+
+## 🟧 Codex — 2026-07-25 — OAI-T10 Phase D first live feasibility outcome
+
+**Objective:** prove whether the real staged Terra route can carry one frozen
+`shop vac` request through research, deterministic verification, independent
+presentation, and public rendering.
+
+**Outcome: failed at the research contract.** The single approved attempt was
+pinned to `ec528d758030388c44912e25ff0c57d464fb46e1` and stopped after its
+first terminal result. Terra completed its research response, but ReviewRadar
+rejected the structured output as `invalid_research_contract` and returned
+HTTP 502 `research_failed`.
+
+| Counter | Actual | Approved ceiling |
+|---|---:|---:|
+| OpenAI creates | 1 | 2 |
+| retrieves | 13 | 60 |
+| safety cancels | 1 | 1 |
+| hosted searches | 2 | 10 |
+| Serper Shopping | 0 | 15 |
+| source-page fetches | 0 | 30 |
+| physical page HTTP attempts | 0 | 90 |
+| retries / replacements / fallbacks | 0 / 0 / 0 | 0 / 0 / 0 |
+
+The terminal research ledger recorded 21,932 input tokens, 5,318 output
+tokens, and 36 response-owned sources. At the frozen Terra rates, the attempt
+cost is approximately `$0.154600` standard or `$0.168307` conservatively,
+below the `$3` ceiling.
+
+**First loss:** research schema validation. Deterministic verification,
+presentation, Serper, page retrieval, and client rendering did not run.
+
+**Observability findings:** the runtime returned a bounded validation-reason
+enum, but the route diagnostic dropped it. The sanitized evidence therefore
+cannot prove whether the exact failure was research shape, source registry,
+candidate validity, or duplicate identity. Separately, the harness cost
+estimator reported `$0` because it ignored terminal provider usage when the
+route outcome was failed. Both require zero-live correction before any
+replacement attempt.
+
+**Evidence:** sanitized, untracked
+`tests/fixtures/review-radar-live/oai-t10-phase-d-ec528d7/attempt.json`.
+No raw model output, provider ID, prompt, source URL, fetched page body, header,
+or secret was retained. No retry, replacement, additional case, flag change,
+`.env.local` edit, deployment, production change, or push occurred.
