@@ -8,6 +8,17 @@ import {
   type TwoLayerCompletedResponse,
   type TwoLayerPendingResponse,
 } from "./twoLayerApiContract.ts";
+import {
+  isStagedTerraCancelledResponse,
+  isStagedTerraCompletedResponse,
+  isStagedTerraFailureResponse,
+  isStagedTerraPendingResponse,
+  STAGED_TERRA_CANCEL_BEFORE_EXPIRY_MS,
+  STAGED_TERRA_CLIENT_REQUEST_HEADER,
+  STAGED_TERRA_JOB_TOKEN_HEADER,
+  type StagedTerraCompletedResponse,
+  type StagedTerraPendingResponse,
+} from "./stagedTerraApiContract.ts";
 import { SEARCH_PROGRESS_ID_HEADER } from "./searchProgress.ts";
 import type {
   RecommendationApiRequest,
@@ -23,7 +34,8 @@ type LegacyRecommendationOutcome = {
 
 export type RecommendationRequestOutcome =
   | LegacyRecommendationOutcome
-  | TwoLayerCompletedResponse;
+  | TwoLayerCompletedResponse
+  | StagedTerraCompletedResponse;
 
 type RunRecommendationRequestOptions = {
   payload: RecommendationApiRequest;
@@ -32,6 +44,8 @@ type RunRecommendationRequestOptions = {
   now?: () => number;
   sleep?: (milliseconds: number, signal: AbortSignal) => Promise<void>;
   onTwoLayerPending?: (response: TwoLayerPendingResponse) => void;
+  onStagedTerraPending?: (response: StagedTerraPendingResponse) => void;
+  stagedTerra?: boolean;
   // Opaque client-generated id for live progress narration. The legacy
   // pipeline reports its stages under this id; other pipelines ignore it.
   progressId?: string | null;
@@ -59,6 +73,7 @@ function legacyResult(value: unknown): RecommendationResult | null {
 }
 
 function responseError(value: unknown) {
+  if (isStagedTerraFailureResponse(value)) return value.error;
   if (isTwoLayerFailureResponse(value)) return value.error;
   if (isRecord(value) && typeof value.error === "string") return value.error;
   return null;
@@ -108,6 +123,8 @@ export async function runRecommendationRequest({
   now = Date.now,
   sleep = abortableSleep,
   onTwoLayerPending,
+  onStagedTerraPending,
+  stagedTerra = false,
   progressId = null,
 }: RunRecommendationRequestOptions): Promise<RecommendationRequestOutcome> {
   const initialResponse = await fetchImpl("/api/recommendations", {
@@ -115,6 +132,7 @@ export async function runRecommendationRequest({
     headers: {
       "Content-Type": "application/json",
       ...(progressId ? { [SEARCH_PROGRESS_ID_HEADER]: progressId } : {}),
+      ...(stagedTerra ? { [STAGED_TERRA_CLIENT_REQUEST_HEADER]: "1" } : {}),
     },
     method: "POST",
     signal,
@@ -124,65 +142,131 @@ export async function runRecommendationRequest({
 
   const legacy = legacyResult(body);
   if (legacy) return { pipeline: "legacy", result: legacy };
+  if (isStagedTerraCompletedResponse(body)) return body;
   if (isTwoLayerCompletedResponse(body)) return body;
-  if (!isTwoLayerPendingResponse(body)) {
+  const stagedPending = isStagedTerraPendingResponse(body);
+  const twoLayerPending = isTwoLayerPendingResponse(body);
+  if (!stagedPending && !twoLayerPending) {
     throw new RecommendationClientError(
       "ReviewRadar received an unexpected response.",
     );
   }
 
   const jobToken = body.jobToken;
-  onTwoLayerPending?.(body);
+  if (stagedPending) onStagedTerraPending?.(body);
+  else onTwoLayerPending?.(body);
 
-  while (true) {
-    const cancelAtMs = body.expiresAtMs - TWO_LAYER_CANCEL_BEFORE_EXPIRY_MS;
-    const millisecondsUntilCancellation = cancelAtMs - now();
-    if (millisecondsUntilCancellation <= 0) {
-      await cancelTwoLayerRecommendationJob({ jobToken, fetchImpl });
-      throw new RecommendationClientError(
-        "This research job expired. Please start a new search.",
-      );
-    }
-    await sleep(Math.min(body.pollAfterMs, millisecondsUntilCancellation), signal);
-    if (now() >= cancelAtMs) {
-      await cancelTwoLayerRecommendationJob({ jobToken, fetchImpl });
-      throw new RecommendationClientError(
-        "This research job expired. Please start a new search.",
-      );
-    }
-    const pollResponse = await fetchImpl("/api/recommendations", {
-      cache: "no-store",
-      headers: { [TWO_LAYER_JOB_TOKEN_HEADER]: jobToken },
-      method: "GET",
-      signal,
+  let completed = false;
+  let cancellationAttempted = false;
+  const cancelKnownStagedJob = async () => {
+    cancellationAttempted = true;
+    return cancelRecommendationJob({
+      jobToken,
+      fetchImpl,
+      stagedTerra: true,
     });
-    body = await parseJson(pollResponse);
-    assertSuccessfulResponse(pollResponse, body);
+  };
 
-    if (isTwoLayerCompletedResponse(body)) return body;
-    if (!isTwoLayerPendingResponse(body) || body.jobToken !== jobToken) {
-      throw new RecommendationClientError(
-        "ReviewRadar received an unexpected response.",
+  try {
+    while (true) {
+      const cancelBeforeExpiryMs = stagedPending
+        ? STAGED_TERRA_CANCEL_BEFORE_EXPIRY_MS
+        : TWO_LAYER_CANCEL_BEFORE_EXPIRY_MS;
+      const cancelAtMs = body.expiresAtMs - cancelBeforeExpiryMs;
+      const millisecondsUntilCancellation = cancelAtMs - now();
+      if (millisecondsUntilCancellation <= 0) {
+        if (stagedPending) {
+          await cancelKnownStagedJob();
+        } else {
+          await cancelRecommendationJob({ jobToken, fetchImpl });
+        }
+        throw new RecommendationClientError(
+          "This research job expired. Please start a new search.",
+        );
+      }
+      await sleep(
+        Math.min(body.pollAfterMs, millisecondsUntilCancellation),
+        signal,
       );
+      if (now() >= cancelAtMs) {
+        if (stagedPending) {
+          await cancelKnownStagedJob();
+        } else {
+          await cancelRecommendationJob({ jobToken, fetchImpl });
+        }
+        throw new RecommendationClientError(
+          "This research job expired. Please start a new search.",
+        );
+      }
+      const pollResponse = await fetchImpl("/api/recommendations", {
+        cache: "no-store",
+        headers: {
+          [stagedPending
+            ? STAGED_TERRA_JOB_TOKEN_HEADER
+            : TWO_LAYER_JOB_TOKEN_HEADER]: jobToken,
+        },
+        method: "GET",
+        signal,
+      });
+      body = await parseJson(pollResponse);
+      assertSuccessfulResponse(pollResponse, body);
+
+      if (isStagedTerraCompletedResponse(body)) {
+        completed = true;
+        return body;
+      }
+      if (isTwoLayerCompletedResponse(body)) return body;
+      const nextPending = stagedPending
+        ? isStagedTerraPendingResponse(body)
+        : isTwoLayerPendingResponse(body);
+      if (!nextPending || body.jobToken !== jobToken) {
+        throw new RecommendationClientError(
+          "ReviewRadar received an unexpected response.",
+        );
+      }
+      if (stagedPending) {
+        onStagedTerraPending?.(body as StagedTerraPendingResponse);
+      } else {
+        onTwoLayerPending?.(body as TwoLayerPendingResponse);
+      }
     }
-    onTwoLayerPending?.(body);
+  } finally {
+    if (stagedPending && !completed && !cancellationAttempted) {
+      await cancelKnownStagedJob();
+    }
   }
 }
 
-export async function cancelTwoLayerRecommendationJob({
+export async function cancelRecommendationJob({
   jobToken,
   fetchImpl = fetch,
-}: CancelRecommendationJobOptions) {
+  stagedTerra = false,
+}: CancelRecommendationJobOptions & { stagedTerra?: boolean }) {
   try {
     const response = await fetchImpl("/api/recommendations", {
       cache: "no-store",
-      headers: { [TWO_LAYER_JOB_TOKEN_HEADER]: jobToken },
+      headers: {
+        [stagedTerra
+          ? STAGED_TERRA_JOB_TOKEN_HEADER
+          : TWO_LAYER_JOB_TOKEN_HEADER]: jobToken,
+      },
       keepalive: true,
       method: "DELETE",
     });
     const body = await parseJson(response);
-    return response.ok && isTwoLayerCancelledResponse(body);
+    return (
+      response.ok &&
+      (stagedTerra
+        ? isStagedTerraCancelledResponse(body)
+        : isTwoLayerCancelledResponse(body))
+    );
   } catch {
     return false;
   }
+}
+
+export function cancelTwoLayerRecommendationJob(
+  options: CancelRecommendationJobOptions,
+) {
+  return cancelRecommendationJob(options);
 }

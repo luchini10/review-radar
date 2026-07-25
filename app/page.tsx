@@ -18,6 +18,7 @@ import { ResultsSummary } from "@/components/ResultsSummary";
 import { SearchForm } from "@/components/SearchForm";
 import { DirectTerraReport } from "@/components/DirectTerraReport";
 import { TwoLayerResults } from "@/components/TwoLayerResultPreview";
+import { StagedTerraResults } from "@/components/StagedTerraResults";
 import {
   getSearchValidationError,
   USER_ERROR_MESSAGES,
@@ -27,7 +28,7 @@ import {
   cleanSearchFormInput,
 } from "@/lib/searchRequestPayload";
 import {
-  cancelTwoLayerRecommendationJob,
+  cancelRecommendationJob,
   RecommendationClientError,
   runRecommendationRequest,
 } from "@/lib/recommendationClient";
@@ -40,6 +41,7 @@ import { createSearchProgressId } from "@/lib/searchProgress";
 import { smartFeatureCategoryKey } from "@/lib/smartFeatureSelection";
 import type { DealbreakerStrength } from "@/lib/dealbreakerVisibility";
 import type { TwoLayerCompletedResponse } from "@/lib/twoLayerApiContract";
+import type { StagedTerraCompletedResponse } from "@/lib/stagedTerraApiContract";
 import type { DirectTerraCompletedResponse } from "@/lib/directTerraApiContract";
 import type {
   RecommendationResult,
@@ -56,6 +58,9 @@ const initialForm: SearchRequest = {
 const FRONTEND_RESEARCH_TIMEOUT_MS = 180000;
 const DIRECT_TERRA_ENABLED =
   process.env.NEXT_PUBLIC_REVIEW_RADAR_DIRECT_TERRA === "true";
+const STAGED_TERRA_ENABLED =
+  !DIRECT_TERRA_ENABLED &&
+  process.env.NEXT_PUBLIC_REVIEW_RADAR_STAGED_TERRA === "true";
 
 type SearchFieldErrors = {
   category?: string;
@@ -128,8 +133,9 @@ export default function Home() {
   const [hasSearched, setHasSearched] = useState(false);
   const [progressId, setProgressId] = useState<string | null>(null);
   const [result, setResult] = useState<RecommendationResult | null>(null);
-  const [twoLayerResult, setTwoLayerResult] =
-    useState<TwoLayerCompletedResponse | null>(null);
+  const [twoLayerResult, setTwoLayerResult] = useState<
+    TwoLayerCompletedResponse | StagedTerraCompletedResponse | null
+  >(null);
   const [directTerraResult, setDirectTerraResult] =
     useState<DirectTerraCompletedResponse | null>(null);
   const resultsRef = useRef<HTMLDivElement | null>(null);
@@ -137,7 +143,7 @@ export default function Home() {
     controller: AbortController;
     id: number;
     jobToken: string | null;
-    pipeline: "current" | "direct_terra";
+    pipeline: "current" | "direct_terra" | "staged_terra";
   } | null>(null);
   const requestId = useRef(0);
   const cancelRequested = useRef(false);
@@ -215,7 +221,11 @@ export default function Home() {
       controller,
       id: currentRequestId,
       jobToken: null,
-      pipeline: DIRECT_TERRA_ENABLED ? "direct_terra" : "current",
+      pipeline: DIRECT_TERRA_ENABLED
+        ? "direct_terra"
+        : STAGED_TERRA_ENABLED
+          ? "staged_terra"
+          : "current",
     };
     let timeout = window.setTimeout(() => {
       controller.abort();
@@ -223,7 +233,8 @@ export default function Home() {
 
     try {
       const payload = buildRecommendationApiPayload(cleanedForm, {
-        includeExtractedRequirements: !DIRECT_TERRA_ENABLED,
+        includeExtractedRequirements:
+          !DIRECT_TERRA_ENABLED && !STAGED_TERRA_ENABLED,
       });
       const onPending = (pending: {
         jobToken: string;
@@ -264,6 +275,8 @@ export default function Home() {
         progressId: searchProgressId,
         signal: controller.signal,
         onTwoLayerPending: onPending,
+        onStagedTerraPending: onPending,
+        stagedTerra: STAGED_TERRA_ENABLED,
       });
 
       if (currentRequestId !== requestId.current) {
@@ -328,8 +341,10 @@ export default function Home() {
     if (request?.jobToken) {
       if (request.pipeline === "direct_terra") {
         void cancelDirectTerraRecommendationJob({ jobToken: request.jobToken });
-      } else {
-        void cancelTwoLayerRecommendationJob({ jobToken: request.jobToken });
+      } else if (request.pipeline !== "staged_terra") {
+        void cancelRecommendationJob({
+          jobToken: request.jobToken,
+        });
       }
     }
     setIsLoading(false);
@@ -493,6 +508,8 @@ export default function Home() {
               </p>
               {!isLoading && directTerraResult ? (
                 <DirectTerraReport result={directTerraResult} />
+              ) : !isLoading && twoLayerResult?.pipeline === "staged_terra" ? (
+                <StagedTerraResults result={twoLayerResult} />
               ) : !isLoading && twoLayerResult ? (
                 <TwoLayerResults
                   cards={twoLayerResult.cards}

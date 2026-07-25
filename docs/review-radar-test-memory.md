@@ -4,6 +4,37 @@
 
 ---
 
+## OAI-T10 staged route and lifecycle contract (2026-07-25)
+
+- The staged path is application-integrated but remains inaccessible by
+  default. The server must have `REVIEW_RADAR_STAGED_TERRA=on`, and the
+  browser must explicitly select it with the staged client header. Flag-off
+  requests stay on the current route.
+- Research and presentation are independent Responses requests. Research is
+  background Terra/high with at most ten hosted searches. Presentation is
+  synchronous Terra/medium, has no tools or prior-response ID, and receives
+  only the server-validated evidence package.
+- Response-owned source pages may enter Phase B only through the DNS-pinned
+  bounded-fetch receipt. Runtime collection is capped at two pages per
+  candidate, thirty total, one Shopping request per candidate, fifteen total,
+  and four concurrent candidate workers.
+- Do not infer `purchase_page` merely from Product JSON-LD. The observed
+  entity must also contain an offer. Unknown pages stay `other`; arbitrary
+  hosts must not be labeled official or manufacturer.
+- The browser sees only an encrypted app job token and the bounded public
+  briefing. Known unfinished jobs receive one safety cancel on abort, expiry,
+  unusable tracking state, or unexpected non-terminal presentation.
+  Oversized token payloads fail before research starts.
+- Presentation cannot rename products or own facts/assets. The renderer takes
+  identity, link, image, and evidence from the verified package. A buy link is
+  displayed only when its exact URL also owns the verified price receipt;
+  otherwise commerce remains `not_verified`.
+- Phase C's offline integration wall proves the composition and failure
+  boundaries, not real provider feasibility. A Phase D live request needs a
+  new explicit cost and request envelope.
+
+---
+
 ## OAI-T10 deterministic verifier contract (2026-07-24)
 
 - `staged-terra-verifier-v1` is the only Phase B materializer. It preserves

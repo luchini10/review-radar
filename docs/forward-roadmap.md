@@ -3571,16 +3571,39 @@ suites; typecheck and build pass; lint has zero errors and three pre-existing
 warnings. No external request, route, flag, `.env.local`, deployment,
 production, or push state changed.
 
-**Phase C — adapters and route integration (next boundary):** add the two
-bounded Responses adapters, presentation renderer, lifecycle/cancellation
-handling, and a default-off route branch. The legacy path remains
-byte-equivalent when the flags are off. Research and presentation jobs are
-independent; the second request receives the validated server package rather
-than a provider response ID. Every source-page request must go through the
-bounded DNS-pinned fetch seam whose successful receipt is now required by
-Phase B.
+**Phase C — adapters and route integration (completed zero-live
+2026-07-25):** the staged branch now composes the Phase A contracts and Phase B
+materializer into an end-to-end, default-off application path. One
+Terra/high background research response is polled with an authenticated,
+encrypted app token; server code then gathers at most two response-owned pages
+per candidate through the DNS-pinned bounded-fetch seam and at most one
+exact-identity Shopping batch per candidate. The verified package—not the
+research response ID or raw model output—enters one independent synchronous
+Terra/medium presentation response with no tools or prior-response coupling.
 
-**Phase D — separately approved live feasibility:** one small frozen case
+The renderer preserves evidence-package identity and assets and accepts only
+fact/evidence-bound presentation prose. A purchase URL is displayed only when
+an exact verified price receipt uses that same URL; otherwise the card says to
+check the current price. Subjective source claims remain source-reported.
+Provider IDs, raw responses, page bodies, request headers, and server
+diagnostics never enter the client envelope.
+
+Lifecycle safeguards cancel known unfinished jobs on browser abort, expiry,
+invalid provider identifiers, unusable app-token state, and unexpected
+non-terminal presentation responses. Completion work is de-duplicated per
+research response, oversized token payloads fail before paid research, and
+completion exceptions become sanitized API failures. Source classification is
+conservative: structured product identity without an offer is not called a
+purchase page, and no arbitrary host is labeled official.
+
+The application selects this path only when the committed-default-off server
+flag and client selection header agree. With the server flag off, the legacy
+route remains byte-equivalent. Focused Phase C tests pass 29/29; the complete
+wall passes 1,425/1,425 across 208 suites; typecheck/build/diff check pass and
+lint has zero errors with three pre-existing warnings. No external request,
+`.env.local`, flag promotion, deployment, production state, or push changed.
+
+**Phase D — next, separately approved live feasibility:** one small frozen case
 proves that the real API accepts both strict schemas, that the compact research
 job completes within its bounds, and that a verified package can reach the
 no-web presentation call. Live limits and cost must be approved from zero.

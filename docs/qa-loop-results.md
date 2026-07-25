@@ -11146,3 +11146,59 @@ cross-candidate evidence, and tampered fetch receipts.
 No external request, route integration, behavior flag, `.env.local`,
 deployment, production state, push, or issue status changed. Phase C remains a
 separate approval boundary.
+
+---
+
+## 🟧 Codex — 2026-07-25 — OAI-T10 Phase C adapters and route integration
+
+**Objective:** connect the staged Terra research, deterministic verifier, and
+no-web presentation boundaries through the real application lifecycle while
+keeping the new branch default-off and making zero external requests.
+
+**Result:** added a distinct staged route and browser lifecycle. The route
+starts one bounded Terra/high background research job, returns an encrypted
+app token, polls only the token-bound response, collects response-owned page
+receipts through the DNS-pinned fetch seam plus bounded exact-identity Shopping
+rows, materializes the Phase B evidence package, and sends only that package to
+one independent synchronous Terra/medium presentation request. Presentation
+has no tools and no prior-response coupling.
+
+The deterministic renderer owns the final identity/assets join. Model prose
+must cite candidate-owned fact/evidence IDs. A verified price and purchase
+link are displayed only when their exact evidence URL is the same; otherwise
+commerce is visibly withheld. Structured Product markup without an offer is
+not called a purchase page, and the adapter does not infer official or
+manufacturer status from an arbitrary host.
+
+**Lifecycle and privacy:** provider IDs stay inside AES-GCM app tokens;
+diagnostics contain only hashes, counts, statuses, usage, and reason codes.
+Raw model output, source URLs, page bodies, headers, and provider IDs are not
+returned to the client. Known unfinished jobs are cancelled on browser abort,
+expiry, invalid/unusable provider tracking, token-issuance failure, and
+unexpected non-terminal presentation. Completion work is TTL-bounded and
+de-duplicated per research response. A request whose job token cannot fit is
+rejected before starting research, and internal completion exceptions become
+sanitized failures.
+
+**Flag behavior:** the server branch requires
+`REVIEW_RADAR_STAGED_TERRA=on` plus the staged request header emitted by the
+default-off client flag. With the server flag off, the existing route remains
+byte-equivalent. Direct Terra remains separate.
+
+**Adversarial corrections:** the review closed silent source truncation,
+arbitrary official-source labeling, unbound price/link rendering, brittle
+token tamper coverage, post-spend oversized-token failure, unsafe provider-ID
+tracking, and an escaped completion exception.
+
+**Verification (zero live):**
+
+- focused staged wall: 29/29 across eight suites;
+- complete suite: 1,425/1,425 across 208 suites;
+- typecheck and production build: pass;
+- lint: zero errors and three pre-existing warnings; and
+- diff check: pass.
+
+No OpenAI, Serper, SearchAPI, source-page, image, destination, or other
+external request ran. No `.env.local`, flag promotion, deployment, production
+state, push, issue status, or live fixture changed. Phase D feasibility
+remains a separate approval and spending boundary.

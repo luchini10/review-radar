@@ -147,6 +147,44 @@ titles, source titles, IDs, headers, and secrets never enter the trace or the
 client response. Diagnostic sink failures are ignored so observability cannot
 change product cards.
 
+### Default-off staged Terra pipeline
+
+ReviewRadar also contains a replacement experimental path that splits research,
+verification, and presentation instead of asking one oversized response to own
+all three. It is selected only when the server flag
+`REVIEW_RADAR_STAGED_TERRA=on` and the browser's compiled
+`NEXT_PUBLIC_REVIEW_RADAR_STAGED_TERRA=true` setting cause the staged request
+header to be sent. Both committed defaults are off.
+
+The first request is one background Terra/high Responses job with hosted web
+search. It returns 8–15 ordered product identities, response-owned source
+URLs, and evidence leads; it cannot rank products or write shopper-facing
+cards. The browser receives only an encrypted, authenticated app job token and
+polls that token in a header. Provider response IDs and diagnostics remain
+server-only.
+
+After research completes, the server fetches at most two candidate-owned source
+pages per product through the existing DNS-pinned bounded-fetch seam and may
+run one exact-identity Shopping verification per product. Those receipts enter
+`staged-terra-verifier-v1`, which accounts for every candidate as eligible,
+close match, or excluded and owns all identity, hard-requirement, fact, price,
+product-page, and image trust decisions.
+
+One separate synchronous Terra/medium response receives only that verified
+package. It has no web-search tools and no previous-response ID. It may rank
+eligible candidate IDs and write evidence-bound explanations, but it cannot
+rename products, create facts or URLs, borrow evidence, or rank a close match.
+The deterministic renderer reattaches verified identity and assets. It shows a
+purchase link only when the same exact URL also supplies the verified price;
+otherwise the card says to check the current price.
+
+Known unfinished research jobs are cancelled on browser abort or expiry.
+Unexpected non-terminal presentation jobs and unusable provider/token state
+also receive a bounded safety cancel. Completed verification/presentation is
+de-duplicated per research response so repeat polling cannot repeat provider
+work. The entire branch is still offline-unproven and undeployed; its next
+boundary is a separately approved Phase D feasibility smoke.
+
 ## 2. Full user flow
 
 **Home/search page:** `app/page.tsx` → renders `components/SearchForm.tsx`.

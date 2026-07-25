@@ -385,7 +385,7 @@ describe("staged Terra request boundaries", () => {
     });
   });
 
-  it("keeps the new path default-off and disconnected from the live route", () => {
+  it("keeps the integrated path default-off and isolated from Direct Terra", () => {
     assert.equal(stagedTerraServerEnabled({}), false);
     assert.equal(
       stagedTerraServerEnabled({ REVIEW_RADAR_STAGED_TERRA: "off" }),

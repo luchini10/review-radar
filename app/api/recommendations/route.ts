@@ -8,6 +8,15 @@ import {
   type TwoLayerRecommendationHandlers,
 } from "../../../lib/twoLayerRecommendationRoute.ts";
 import {
+  createStagedTerraRecommendationHandlers,
+  type StagedTerraRecommendationHandlers,
+} from "../../../lib/stagedTerraRecommendationRoute.ts";
+import {
+  STAGED_TERRA_CLIENT_REQUEST_HEADER,
+  STAGED_TERRA_JOB_TOKEN_HEADER,
+} from "../../../lib/stagedTerraApiContract.ts";
+import { stagedTerraServerEnabled } from "../../../lib/stagedTerraConfig.ts";
+import {
   getSafeOpenAIErrorMessage,
   getSearchValidationError,
   USER_ERROR_MESSAGES,
@@ -1721,8 +1730,10 @@ type RecommendationRouteHandler = (request: Request) => Promise<Response>;
 
 type RecommendationRouteHandlerOptions = {
   getPipelineMode?: () => string | undefined;
+  getStagedTerraEnabled?: () => boolean;
   legacyPost?: RecommendationRouteHandler;
   twoLayerHandlers?: TwoLayerRecommendationHandlers;
+  stagedTerraHandlers?: StagedTerraRecommendationHandlers;
 };
 
 function routeConfigurationError() {
@@ -1750,8 +1761,12 @@ function methodNotAllowed() {
 
 export function createRecommendationRouteHandlers({
   getPipelineMode = () => process.env.REVIEW_RADAR_PIPELINE_MODE,
+  getStagedTerraEnabled = () => stagedTerraServerEnabled(),
   legacyPost = createRecommendationPostHandler(),
   twoLayerHandlers = createTwoLayerRecommendationHandlers({ validateRequest }),
+  stagedTerraHandlers = createStagedTerraRecommendationHandlers({
+    validateRequest,
+  }),
 }: RecommendationRouteHandlerOptions = {}) {
   function selectedMode() {
     const mode = getPipelineMode();
@@ -1761,6 +1776,12 @@ export function createRecommendationRouteHandlers({
   }
 
   const POST: RecommendationRouteHandler = (request) => {
+    if (
+      getStagedTerraEnabled() &&
+      request.headers.get(STAGED_TERRA_CLIENT_REQUEST_HEADER) === "1"
+    ) {
+      return stagedTerraHandlers.POST(request);
+    }
     const mode = selectedMode();
     if (mode === "legacy") return legacyPost(request);
     if (mode === "two_layer") return twoLayerHandlers.POST(request);
@@ -1768,6 +1789,12 @@ export function createRecommendationRouteHandlers({
   };
 
   const GET: RecommendationRouteHandler = (request) => {
+    if (
+      getStagedTerraEnabled() &&
+      request.headers.has(STAGED_TERRA_JOB_TOKEN_HEADER)
+    ) {
+      return stagedTerraHandlers.GET(request);
+    }
     const mode = selectedMode();
     if (mode === "legacy") return Promise.resolve(methodNotAllowed());
     if (mode === "two_layer") return twoLayerHandlers.GET(request);
@@ -1775,6 +1802,12 @@ export function createRecommendationRouteHandlers({
   };
 
   const DELETE: RecommendationRouteHandler = (request) => {
+    if (
+      getStagedTerraEnabled() &&
+      request.headers.has(STAGED_TERRA_JOB_TOKEN_HEADER)
+    ) {
+      return stagedTerraHandlers.DELETE(request);
+    }
     const mode = selectedMode();
     if (mode === "legacy") return Promise.resolve(methodNotAllowed());
     if (mode === "two_layer") return twoLayerHandlers.DELETE(request);
