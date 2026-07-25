@@ -1,0 +1,195 @@
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { describe, it } from "node:test";
+
+import {
+  estimatePhaseDCost,
+  OAI_T10_PHASE_D_CASE,
+  OAI_T10_PHASE_D_CEILINGS,
+  phaseDPlan,
+  validatePhaseDCreateRequest,
+  validatePhaseDLiveApproval,
+} from "../scripts/oai-t10-phase-d.mjs";
+
+const commit = "f".repeat(40);
+const approvalArgs = [
+  `--approved-commit=${commit}`,
+  "--approved-openai-creates=2",
+  "--approved-hosted-searches=10",
+  "--approved-openai-retrieves=60",
+  "--approved-safety-cancels=1",
+  "--approved-serper-shopping-attempts=15",
+  "--approved-source-page-fetches=30",
+  "--approved-source-page-http-attempts=90",
+  "--approved-dollar-ceiling=3",
+];
+
+describe("OAI-T10 Phase D live-feasibility harness", () => {
+  it("freezes one broad case and the complete network envelope", () => {
+    const plan = phaseDPlan(commit);
+    assert.deepEqual(OAI_T10_PHASE_D_CASE.shopperRequest, {
+      query: "shop vac",
+    });
+    assert.deepEqual(plan.ceilings, OAI_T10_PHASE_D_CEILINGS);
+    assert.equal(plan.model, "gpt-5.6-terra");
+    assert.equal(plan.researchReasoning, "high");
+    assert.equal(plan.presentationReasoning, "medium");
+    assert.equal(plan.networkPolicy.retries, false);
+    assert.equal(plan.networkPolicy.replacements, false);
+    assert.equal(plan.networkPolicy.fallbacks, false);
+    assert.equal(plan.networkPolicy.serperOrganic, false);
+    assert.equal(plan.networkPolicy.searchApi, false);
+    assert.equal(plan.networkPolicy.additionalCases, false);
+    assert.equal(plan.networkPolicy.deployment, false);
+  });
+
+  it("defaults the executable runner to a zero-network dry run", () => {
+    const output = execFileSync(
+      process.execPath,
+      ["scripts/run-oai-t10-phase-d.mjs"],
+      { cwd: process.cwd(), encoding: "utf8" },
+    );
+    const plan = JSON.parse(output);
+    assert.equal(plan.mode, "dry-run");
+    assert.equal(plan.case.id, "broad-shop-vac");
+    assert.equal(plan.ceilings.openAiCreates, 2);
+    assert.equal(plan.ceilings.sourcePageHttpAttempts, 90);
+  });
+
+  it("allows only the frozen research and no-web presentation creates", () => {
+    assert.doesNotThrow(() =>
+      validatePhaseDCreateRequest(
+        {
+          model: "gpt-5.6-terra",
+          background: true,
+          reasoning: { effort: "high" },
+          max_tool_calls: 10,
+          tools: [{ type: "web_search" }],
+        },
+        1,
+      ),
+    );
+    assert.doesNotThrow(() =>
+      validatePhaseDCreateRequest(
+        {
+          model: "gpt-5.6-terra",
+          background: false,
+          reasoning: { effort: "medium" },
+        },
+        2,
+      ),
+    );
+    for (const [body, number] of [
+      [
+        {
+          model: "gpt-5.6-terra",
+          background: true,
+          reasoning: { effort: "medium" },
+          max_tool_calls: 10,
+        },
+        1,
+      ],
+      [
+        {
+          model: "gpt-5.6-terra",
+          background: false,
+          reasoning: { effort: "medium" },
+          tools: [{ type: "web_search" }],
+        },
+        2,
+      ],
+      [{ model: "gpt-5.6-terra" }, 3],
+    ]) {
+      assert.throws(() => validatePhaseDCreateRequest(body, number));
+    }
+  });
+
+  it("requires the exact commit, every ceiling, clean tracked state, and process keys", () => {
+    assert.equal(
+      validatePhaseDLiveApproval({
+        args: approvalArgs,
+        commit,
+        trackedChanges: [],
+        outputExists: false,
+        environment: {
+          OPENAI_API_KEY: "present",
+          SERPER_API_KEY: "present",
+        },
+      }).hardCeilingUsd,
+      3,
+    );
+
+    for (const change of [
+      { args: approvalArgs.slice(1) },
+      {
+        args: approvalArgs.map((value) =>
+          value.startsWith("--approved-source-page-fetches=")
+            ? "--approved-source-page-fetches=31"
+            : value,
+        ),
+      },
+      { trackedChanges: [" M lib/example.ts"] },
+      { outputExists: true },
+      { environment: { OPENAI_API_KEY: "", SERPER_API_KEY: "present" } },
+      { environment: { OPENAI_API_KEY: "present", SERPER_API_KEY: "" } },
+    ]) {
+      assert.throws(() =>
+        validatePhaseDLiveApproval({
+          args: approvalArgs,
+          commit,
+          trackedChanges: [],
+          outputExists: false,
+          environment: {
+            OPENAI_API_KEY: "present",
+            SERPER_API_KEY: "present",
+          },
+          ...change,
+        }),
+      );
+    }
+  });
+
+  it("prices research and presentation separately with a conservative cache-write view", () => {
+    const cost = estimatePhaseDCost([
+      {
+        stage: "research_poll",
+        outcome: "completed",
+        ledger: {
+          usage: {
+            inputTokens: 10_000,
+            cachedInputTokens: 2_000,
+            outputTokens: 4_000,
+            webSearchCalls: 7,
+          },
+        },
+      },
+      {
+        stage: "presentation",
+        outcome: "completed",
+        ledger: {
+          usage: {
+            inputTokens: 20_000,
+            cachedInputTokens: 0,
+            outputTokens: 2_000,
+            webSearchCalls: 0,
+          },
+        },
+      },
+      {
+        stage: "research_start",
+        outcome: "pending",
+        ledger: { usage: { inputTokens: 999_999 } },
+      },
+    ]);
+    assert.equal(cost.completedLedgerCount, 2);
+    assert.deepEqual(cost.usage, {
+      inputTokens: 30_000,
+      cachedInputTokens: 2_000,
+      outputTokens: 6_000,
+      webSearchCalls: 7,
+    });
+    assert.ok(cost.standardUsd > 0);
+    assert.ok(cost.conservativeUsd >= cost.standardUsd);
+    assert.ok(cost.conservativeUsd < OAI_T10_PHASE_D_CEILINGS.hardCeilingUsd);
+  });
+});

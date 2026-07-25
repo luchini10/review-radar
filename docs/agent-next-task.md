@@ -1,7 +1,7 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-25 by Codex after OAI-T10 Phase C. Use `git log -1` for the
-current scoped closeout commit.
+Updated: 2026-07-25 by Codex after the OAI-T10 Phase D zero-live preflight.
+Use `git log -1` for the current scoped closeout commit.
 
 ## Current state
 
@@ -20,7 +20,7 @@ zero-live phases are complete:
 4. the application now has a complete default-off start/poll/cancel/render
    path joining those boundaries.
 
-The staged implementation is in:
+The staged implementation and live-feasibility harness are in:
 
 - `lib/stagedTerraConfig.ts`
 - `lib/stagedTerraContract.ts`
@@ -35,6 +35,8 @@ The staged implementation is in:
 - `lib/recommendationClient.ts`
 - `app/api/recommendations/route.ts`
 - `app/page.tsx`
+- `scripts/oai-t10-phase-d.mjs`
+- `scripts/run-oai-t10-phase-d.mjs`
 
 ## Phase C completed boundary
 
@@ -81,20 +83,34 @@ issue status, live fixture, or push changed.
 
 ## Next step and approval boundary
 
-The next unit is **OAI-T10 Phase D: live feasibility**. It is not authorized by
-Phase C approval.
+The **OAI-T10 Phase D live-feasibility preflight is complete, but no live
+request is authorized yet**. Taylor's general Phase D approval authorized this
+zero-live preparation; the repository's spending boundary still requires the
+exact numerical envelope pinned to the resulting commit.
 
-Before any live call:
+The harness freezes:
 
-1. review Phase C and any reply to dialogue entry `[121]`;
-2. freeze one small representative shopper request and the exact commit;
-3. price the envelope from zero for one Terra/high research create, bounded
-   retrieves and one safety cancel, one Terra/medium presentation create,
-   bounded response-owned page fetches, and bounded Serper Shopping requests;
-4. define terminal acceptance for both strict schemas, research completion,
-   candidate accounting, verified-package materialization, presentation, and
-   public-card rendering; and
-5. obtain Taylor's explicit approval for the exact live limits and dollar cap.
+- one request: `{ "query": "shop vac" }`;
+- two OpenAI creates: Terra/high background research and independent
+  Terra/medium no-web presentation;
+- at most ten hosted web searches, sixty retrieves, and one safety cancel;
+- at most fifteen Serper Shopping attempts;
+- at most thirty DNS-pinned response-owned source-page fetches and ninety
+  physical page HTTP attempts including redirects; and
+- a $3 OpenAI estimated-cost ceiling.
+
+It refuses execution unless the full current commit and every ceiling are
+supplied on the command line, the tracked worktree is clean, both process-only
+API keys are present, and no prior evidence exists for that commit. Dry run is
+the default. No retries, replacements, fallbacks, Serper organic, SearchAPI,
+additional cases, flag changes, deployment, production changes, or push are
+permitted.
+
+Terminal acceptance requires both OpenAI usage ledgers, a completed research,
+verification, and presentation stage, at least one verified renderable card
+and source in the actual public response, bounded hosted-search use, no private
+state in that response, and conservative estimated cost at or below $3.
+Failure is still a valid Phase D outcome; stop after the first attempt.
 
 Phase D is a feasibility smoke, not quality, stability, promotion, or
 deployment evidence. Stop after its first outcome. Phase E multi-category
@@ -108,9 +124,9 @@ audit, and honest interpretation of one sample.
 
 ## Approval and flag state
 
-Taylor approved OAI-T10 Phase C and requested automatic scoped local commits.
-No Phase D live request, flag promotion, deployment, production change, or
-push is currently approved.
+Taylor approved the OAI-T10 Phase D zero-live preflight and requested automatic
+scoped local commits. No Phase D live request, flag promotion, deployment,
+production change, or push is currently approved.
 
 Committed defaults:
 
@@ -146,8 +162,9 @@ Committed defaults:
 
 Dialogue entry `[121]` asks Claude to challenge lifecycle cancellation,
 source-role and verifier composition, completion de-duplication, and renderer
-ownership before Phase D. That review is advisory and cannot authorize live
-work.
+ownership. Entry `[122]` records the frozen Phase D harness and asks for a
+final pre-spend challenge. Dialogue review is advisory and cannot authorize
+live work.
 
 | Need | Retrieve |
 |---|---|
@@ -159,5 +176,7 @@ work.
 | Runtime and route | `lib/stagedTerraRuntime.ts`, `lib/stagedTerraRecommendationRoute.ts` |
 | Public rendering | `lib/stagedTerraRenderer.ts`, `components/StagedTerraResults.tsx` |
 | Phase C tests | `tests/stagedTerraClient.test.mjs`, `tests/stagedTerraIntegration.test.mjs`, `tests/stagedTerraRoute.test.mjs`, `tests/stagedTerraRuntime.test.mjs` |
-| Peer challenge | dialogue entry `[121]` |
+| Peer challenge | dialogue entries `[121]` and `[122]` |
+| Phase D live harness | `scripts/oai-t10-phase-d.mjs`, `scripts/run-oai-t10-phase-d.mjs` |
+| Phase D harness tests | `tests/stagedTerraPhaseDRunner.test.mjs` |
 | Terminal predecessor result | `docs/forward-roadmap.md`, OAI-T9 |

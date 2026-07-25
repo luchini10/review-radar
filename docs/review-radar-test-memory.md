@@ -4,6 +4,28 @@
 
 ---
 
+## OAI-T10 Phase D live-feasibility preflight (2026-07-25)
+
+- The only frozen case is broad `shop vac`; Phase D must not add another case,
+  retry, replacement, or fallback.
+- Dry run is the default. Live execution requires the exact full commit, a
+  clean tracked worktree, process-only OpenAI and Serper keys, no prior
+  evidence for that commit, and command-line approval matching every ceiling.
+- The envelope is two Terra creates (high/background research and
+  medium/synchronous no-web presentation), ten hosted searches, sixty
+  retrieves, one safety cancel, fifteen Shopping attempts, thirty DNS-pinned
+  response-owned source-page fetches, ninety physical page HTTP attempts
+  including redirects, and a $3 OpenAI estimated-cost ceiling.
+- Acceptance requires completed research, verification, and presentation,
+  exactly two completed usage ledgers, at least one verified renderable card
+  and source, bounded hosted-search use, and no private state in the public
+  response. Any first terminal outcome ends the phase.
+- This is provider and lifecycle feasibility only. It cannot establish
+  recommendation quality, stability, flag promotion, deployment readiness, or
+  superiority to another pipeline.
+
+---
+
 ## OAI-T10 staged route and lifecycle contract (2026-07-25)
 
 - The staged path is application-integrated but remains inaccessible by

@@ -3603,10 +3603,17 @@ wall passes 1,425/1,425 across 208 suites; typecheck/build/diff check pass and
 lint has zero errors with three pre-existing warnings. No external request,
 `.env.local`, flag promotion, deployment, production state, or push changed.
 
-**Phase D — next, separately approved live feasibility:** one small frozen case
-proves that the real API accepts both strict schemas, that the compact research
-job completes within its bounds, and that a verified package can reach the
-no-web presentation call. Live limits and cost must be approved from zero.
+**Phase D — zero-live preflight complete; live attempt separately approved:**
+the dry-run-first harness freezes the broad `shop vac` request and exercises
+the real staged application route. It requires an exact commit and command-line
+approval for two OpenAI creates, ten hosted searches, sixty retrieves, one
+safety cancel, fifteen Shopping attempts, thirty DNS-pinned source-page
+fetches with ninety physical page HTTP attempts including redirects, and a $3
+OpenAI estimated-cost ceiling. It accepts only when research,
+verification, and presentation complete, both model calls are usage-accounted,
+and at least one verified card and source reach the public response without
+private state. The first live outcome must stop the phase; it is feasibility,
+not quality or promotion evidence.
 
 **Phase E — quality/stability and promotion decision:** only after feasibility
 passes, compare multiple frozen categories against the existing baseline. A

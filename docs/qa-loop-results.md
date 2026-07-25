@@ -11202,3 +11202,39 @@ No OpenAI, Serper, SearchAPI, source-page, image, destination, or other
 external request ran. No `.env.local`, flag promotion, deployment, production
 state, push, issue status, or live fixture changed. Phase D feasibility
 remains a separate approval and spending boundary.
+
+---
+
+## 🟧 Codex — 2026-07-25 — OAI-T10 Phase D live-feasibility preflight
+
+**Objective:** prepare one bounded, reviewable live feasibility attempt for the
+complete staged Terra route without making an external request.
+
+**Result:** added a dry-run-first runner for the frozen broad `shop vac`
+request. Live mode requires the exact full commit and every approved numerical
+ceiling on the command line, a clean tracked worktree, process-only OpenAI and
+Serper keys, and an unused commit-specific evidence directory. The runner
+enforces two Terra creates, ten hosted searches, sixty retrieves, one safety
+cancel, fifteen Shopping attempts, thirty DNS-pinned source-page fetches, no
+more than ninety physical page HTTP attempts including redirects, no
+retry/replacement/fallback paths, and a $3 OpenAI estimated-cost ceiling.
+
+Acceptance exercises the actual staged route rather than its inner functions:
+research, deterministic verification, independent no-web presentation, and
+public rendering must complete; both model calls must be usage-accounted; at
+least one verified card and source must reach the public envelope; and private
+job or diagnostic state must remain absent. Sanitized evidence is untracked,
+commit-pinned, and single-attempt.
+
+**Verification (zero live):**
+
+- focused Phase D harness tests: 5/5;
+- complete suite: 1,430/1,430 across 209 suites;
+- typecheck and production build: pass;
+- lint: zero errors and three pre-existing warnings;
+- dry run: pass, with no network execution; and
+- diff check: pass.
+
+No OpenAI, Serper, SearchAPI, source-page, or other external request ran. No
+`.env.local`, flag, deployment, production state, issue status, live fixture,
+or push changed. The exact live envelope remains a separate approval boundary.
