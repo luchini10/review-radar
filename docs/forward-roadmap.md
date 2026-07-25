@@ -3537,20 +3537,48 @@ external request ran. Focused tests pass 14/14; the complete wall passes
 1,398/1,398 across 203 suites; typecheck and build pass; lint has zero errors
 and three pre-existing warnings.
 
-**Phase B — deterministic verifier materialization (next zero-live
-boundary):** implement the conversion from validated research leads to the
-verified evidence package by reusing and testing the existing generalized
-identity, product-type, requirement, price, citation, product-page, image,
-redirect, and private-network primitives. It must not rank, backfill, browse,
-or silently promote subjective claims. Network behavior stays mocked and
-default-off.
+**Phase B — deterministic verifier materialization (completed zero-live
+2026-07-24):** `staged-terra-verifier-v1` converts every validated research
+candidate, in unchanged `candidate_N` order, into exactly one `eligible`,
+`close_match`, or `excluded` evidence-package result. It composes the existing
+hybrid exact-entity verifier, exact-commerce verifier, complete-product
+relationship and asset verifier, budget parser, and semantic requirement
+validator rather than creating a parallel trust system.
 
-**Phase C — adapters and route integration:** add the two bounded Responses
-adapters, presentation renderer, lifecycle/cancellation handling, and a
-default-off route branch. The legacy path remains byte-equivalent when the
-flags are off. Research and presentation jobs are independent; the second
-request receives the validated server package rather than a provider response
-ID.
+The materializer accepts only candidate-owned source URLs and successful
+bounded-fetch receipts. It derives each immutable page observation from the
+receipt body and rejects a byte-count or content-hash mismatch. Research
+requirement/fact leads never become facts directly. A source-reported claim
+must appear in the observed visible page text, come from an identity-safe
+source role, and pass the existing semantic requirement validator before it
+can satisfy a hard requirement. Performance and owner evidence remain
+`source_reported`; they are never mechanically upgraded to `verified`.
+
+Exact structured product pages or exact Shopping offers may establish
+identity, complete-product type, U.S. availability, price, product URL, and
+image only through the pre-existing sibling, accessory, wrong-type,
+non-product, redirect, private-network, and wrong-image gates. A hard failure
+excludes the candidate; missing hard evidence produces a close match. Assets
+are emitted only for fully eligible candidates. The module cannot browse,
+rank, backfill, call a provider, or alter the current route.
+
+Adversarial tests cover candidate/source ownership, immutable body binding,
+over-budget and out-of-stock products, missing requirements, misleading model
+support labels, explicit dealbreakers, sibling numeric models, accessories,
+wrong product types across categories, and unsafe manufacturer-spec evidence.
+Focused tests pass 12/12. The complete wall passes 1,410/1,410 across 204
+suites; typecheck and build pass; lint has zero errors and three pre-existing
+warnings. No external request, route, flag, `.env.local`, deployment,
+production, or push state changed.
+
+**Phase C — adapters and route integration (next boundary):** add the two
+bounded Responses adapters, presentation renderer, lifecycle/cancellation
+handling, and a default-off route branch. The legacy path remains
+byte-equivalent when the flags are off. Research and presentation jobs are
+independent; the second request receives the validated server package rather
+than a provider response ID. Every source-page request must go through the
+bounded DNS-pinned fetch seam whose successful receipt is now required by
+Phase B.
 
 **Phase D — separately approved live feasibility:** one small frozen case
 proves that the real API accepts both strict schemas, that the compact research

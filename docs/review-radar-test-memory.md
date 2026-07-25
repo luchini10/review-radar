@@ -4,6 +4,36 @@
 
 ---
 
+## OAI-T10 deterministic verifier contract (2026-07-24)
+
+- `staged-terra-verifier-v1` is the only Phase B materializer. It preserves
+  the validated research slate's exact candidate identity and order; it never
+  ranks, backfills, browses, or calls a provider.
+- Every research candidate must receive an explicit `eligible`,
+  `close_match`, or `excluded` outcome. Missing input is an accounted
+  exclusion, never a silently dropped candidate.
+- Source pages enter only as successful bounded-fetch receipts for a
+  candidate-owned research URL. The verifier derives the page observation
+  itself and rejects byte-count or content-hash drift. Phase C must not
+  substitute ordinary `fetch` or a caller-authored observation.
+- Research-authored requirement and fact leads are discovery hints only.
+  They never become facts. A source-reported claim must be present in the
+  observed visible page text, use an identity-safe source role, and pass the
+  existing semantic requirement validator before it can satisfy a hard
+  requirement.
+- Subjective performance and owner feedback always remain
+  `source_reported`. Exact identity, complete-product type, price,
+  availability, product URL, and image may be `verified` only through the
+  existing exact-entity, exact-commerce, relationship, and asset gates.
+- A verified hard failure excludes. Missing hard evidence is
+  `not_verified` and produces a close match. Product and image assets are
+  withheld from every non-eligible candidate.
+- Phase B is disconnected and default-off. Its 12 focused tests and the
+  1,410-test complete wall are offline proof of the materializer contract,
+  not proof that Terra completes either real staged request.
+
+---
+
 ## OAI-T10 staged Terra contract (2026-07-24)
 
 - The replacement architecture is not another single-call prompt. It is:

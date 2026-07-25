@@ -11096,3 +11096,53 @@ pass; lint zero errors with three pre-existing warnings; diff check pass. No
 OpenAI, Serper, SearchAPI, page, destination, image, or other external request
 ran. No `.env.local`, flag promotion, deployment, production state, or push
 changed.
+
+---
+
+## 🟧 Codex — 2026-07-24 — OAI-T10 Phase B deterministic verifier
+
+**Objective:** materialize the permanent server-owned evidence package from a
+validated Terra research slate without letting research prose, provider rows,
+or presentation logic establish trusted facts.
+
+**Result:** `staged-terra-verifier-v1` accounts for every research candidate
+in the original order and assigns exactly one eligible, close-match, or
+excluded outcome. It composes the existing exact page-entity, exact Shopping,
+complete-product relationship, asset, price, and semantic-requirement
+primitives. It does not rank, backfill, browse, dispatch a provider request,
+or touch the current route.
+
+**Trust boundary:** source pages must be candidate-owned successful
+bounded-fetch receipts. The verifier derives the immutable page observation
+and rejects byte-count/content-hash drift. Research leads are never promoted
+directly. Source-reported claims must occur in the observed visible page text;
+a model- or adapter-supplied support label also needs the existing semantic
+validator to agree. Performance and owner evidence remain
+`source_reported`. Verified identity/type, price, availability, product URL,
+and image still require the existing exact-identity, complete-product,
+sibling/accessory, wrong-type, non-product, redirect/private-network, and
+wrong-image gates.
+
+**Eligibility:** verified hard failures exclude; missing hard proof produces a
+close match; only candidates passing every hard requirement retain product or
+image assets. Missing verifier input is an explicit accounted outcome, never a
+silent drop.
+
+**Adversarial review:** fail-first work exposed and corrected legacy
+Important-Details non-enforcement, over-escaped availability matching, and
+manufacturer-spec claim eligibility that was too broad. Added coverage binds
+claims to immutable source bodies and tests misleading support labels,
+dealbreakers, budget, availability, siblings, accessories, wrong types,
+cross-candidate evidence, and tampered fetch receipts.
+
+**Verification (zero live):**
+
+- focused Phase B wall: 12/12;
+- complete suite: 1,410/1,410 across 204 suites;
+- typecheck and production build: pass;
+- lint: zero errors and three pre-existing warnings; and
+- diff check: pass.
+
+No external request, route integration, behavior flag, `.env.local`,
+deployment, production state, push, or issue status changed. Phase C remains a
+separate approval boundary.
