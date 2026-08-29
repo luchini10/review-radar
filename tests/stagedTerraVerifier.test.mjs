@@ -34,7 +34,7 @@ function researchOutput({
   candidateOverrides = {},
 } = {}) {
   return {
-    schemaVersion: "staged-terra-research-v2",
+    schemaVersion: "staged-terra-research-v3",
     candidates: Array.from({ length: 8 }, (_, index) => {
       const number = index + 1;
       return {

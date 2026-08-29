@@ -30,13 +30,17 @@ Usage was 30,215 input and 7,537 output tokens. Frozen-conservative cost was
 `VERIFIED`; the spent fixture retained no raw/private provider or candidate
 material and neither configured key value.
 
-A separate zero-network matrix proves a generalized producer/parser mismatch.
-The strict schema and prompt allow a fact or requirement URL that is registered
-to the response but absent from its enclosing candidate's `source_urls`; they
-also do not express lead-reference uniqueness or the supporting/not-found URL
-cardinality enforced by the validator. A schema-conforming cross-candidate fact
-URL fails exactly as `candidate_facts`. This can produce PR-2I's bounded class,
-but the private live response cannot prove that it did.
+A separate zero-network matrix proved a generalized producer/parser mismatch.
+The old strict schema and prompt allowed a fact or requirement URL that was
+registered to the response but absent from its enclosing candidate's
+`source_urls`; they also did not express lead-reference uniqueness or the
+supporting/not-found URL cardinality enforced by the validator. A schema-
+conforming cross-candidate fact URL failed exactly as `candidate_facts`. This
+could produce PR-2I's bounded class, but the private live response cannot prove
+that it did. PR-2J now closes the reproduced mismatch deterministically with
+candidate-local indexes, schema-level status cardinality, runtime range/
+uniqueness revalidation, and complete job-identity rollover. It made no live
+request and therefore proves no provider adherence or lifecycle success.
 
 Stronger alternatives considered:
 
@@ -48,13 +52,15 @@ Stronger alternatives considered:
 - **Add prompt prose only:** rejected as incomplete. It can reduce mistakes but
   cannot structurally prevent cross-candidate URL references or repeated long
   exact strings.
-- **Use candidate-local integer source references:** preferred. It preserves
-  the exact candidate source-ownership wall while making cross-candidate URL
-  attribution unrepresentable and reducing repeated URL output. Official
-  OpenAI [Structured Outputs documentation](https://developers.openai.com/api/docs/guides/structured-outputs)
-  supports integer arrays and numeric/array bounds, while cross-field
-  conditionals are unsupported; the runtime must retain range/cardinality
-  checks that the schema cannot express.
+- **Use candidate-local integer source references:** selected and verified in
+  PR-2J. It preserves the exact candidate-declared source boundary, makes a
+  lead unable to directly cite a response URL absent from its enclosing source
+  list, and reduces repeated URL output. Official OpenAI
+  [Structured Outputs documentation](https://developers.openai.com/api/docs/guides/structured-outputs)
+  supports integer arrays, nested `anyOf`, and numeric/array bounds. The schema
+  now enforces status cardinality; runtime independently rechecks it and retains
+  candidate-length-dependent range and uniqueness rules that the schema cannot
+  express.
 - **Tune legacy discovery or ranking first:** deferred. Historical evidence
   shows serious recall and stability weakness, but the current strategic path
   now stops before verification and presentation.
@@ -64,14 +70,15 @@ Stronger alternatives considered:
   necessary, but no staged result exists yet; it would measure an architecture
   whose active lifecycle still has not crossed research validation reliably.
 
-The strongest next step is PR-2J: a zero-live, fail-first conversion from
-repeated lead URLs to candidate-local source indexes, with exact parser mapping,
-schema/prompt/runtime/contract rollover, adversarial ownership/range/cardinality
-tests, and no source-gate relaxation. Only after independent approval may a new
-measurement be considered.
+The strongest next step is PR-3: repair the deterministic QA harness so named
+batches execute distinct tracked benchmark cases and invariants rather than the
+same synthetic evaluator with different metadata. A new paid staged attempt
+would test lifecycle feasibility, but it would not repair the current ground-
+truth gap; broad accuracy measurement should not rely on a harness that
+misstates what it executed.
 
-Recommended reasoning level: **High** for source-ownership and wire-contract
-design; **Medium** for localized implementation and deterministic verification.
+Recommended reasoning level: **High** for benchmark validity, case partitioning,
+and mutation design; **Medium** for localized harness and fixture plumbing.
 
 ## Evidence labels
 
@@ -403,7 +410,7 @@ shopper-facing recommendation quality.
 | PR-002 | P1 | verified | The consumed Phase D request was billed but recorded as `$0`, weakening cost control and readiness evidence. | The estimator equated route success with billable provider completion. | Terminal provider usage is now accounted regardless of later local outcome. Only a matching nonempty response hash deduplicates; distinct or unknown responses sum conservatively, and any duplicate terminal anomaly blocks acceptance. | Historical exact-usage replay; successful research+presentation control; pending/start exclusion; same-response and distinct/unknown adversarial tests; exact expected costs. | Closed locally. Roll back if independent billing evidence ever shows over- or under-counting. No network dependency. |
 | PR-003 | P1 | verified | Required E2E checks produced 11 false failures whenever a developer enabled Direct Terra locally, hiding real regressions and encouraging ignored checks. | Playwright's dev server inherited `.env.local`; tests intercepted `/api/recommendations` while the browser called `/api/recommendations-v2`. | The E2E server owns a dedicated port, forces committed default-off/legacy routing, disables server reuse, and explicitly neutralizes all provider/job credentials. The developer's `.env.local` is untouched. | Full 17/17 E2E under the existing local config; independent inspection of Playwright's environment merge; no production code change. | Closed locally. Experimental-path E2E must opt into its own isolated fixture and credentials boundary. |
 | PR-004 | P2 | verified | One valid Direct-Terra preview failed its test even though the two safe links rendered. | UI copy changed from generic `Product website` to the more informative `View at <host>` accessible name; the test stayed exact-string brittle. | The test now asserts the user-visible role/name pattern and both links' safe target/rel attributes. | Full E2E passes and still requires both safe links. | Closed; test-only rollback. |
-| PR-005 | P1 | investigating | Five named deterministic QA batches report different search pools but all execute the same five synthetic eval cases. A green batch can falsely imply that its listed categories, fake-price traps, or non-product pages were exercised. | `runDeterministicBatch()` delegates every batch to `eval-pipeline.mjs` and records the batch searches only as metadata. | Build a reusable offline benchmark matrix whose fixtures/invariants are actually selected by batch. Preserve category diversity without exact-name brittleness. | Fail-first test showing two batches currently execute identical cases; per-batch executed-case IDs; cross-category positive/negative invariants; controller reconciliation. | Medium harness-design risk and fixture work. Do not claim quality improvement from harness changes alone. Depends on trustworthy fixtures. |
+| PR-005 | P1 | verified defect; next correction | Five named deterministic QA batches report different search pools but all execute the same five synthetic eval cases. A green batch can falsely imply that its listed categories, fake-price traps, or non-product pages were exercised. | `runDeterministicBatch()` delegates every batch to `eval-pipeline.mjs` and records the batch searches only as metadata. | Build a reusable offline benchmark matrix whose fixtures/invariants are actually selected by batch. Preserve category diversity without exact-name brittleness. | Fail-first test showing two batches currently execute identical cases; per-batch executed-case IDs; cross-category positive/negative invariants; controller reconciliation. | Medium harness-design risk and fixture work. Do not claim quality improvement from harness changes alone. Depends on trustworthy fixtures. |
 | PR-006 | P1 | investigating | Current market-leader recall, final-set stability, exact/near truth, price coverage, and first-loss distribution are not established for today's commit. Historical evidence found zero final overlap and severe leader loss. | Provider variance, planning variance, discovery loss, strict evidence gates, and/or ranking may contribute; attribution remains unmeasured on the active path. | After feasibility, run a bounded benchmark matrix with repeated broad and constrained cases, record candidate and final Jaccard, hard-requirement truth, first-loss stage, latency, calls, and cost. Fix only the earliest repeated generalized loss. | Commit-pinned fixtures, market-coverage sets reviewed for recency, repeated samples, invariant-based scoring, before/after controls across unrelated categories. | High cost/variance risk. Stop on any safety failure. Requires PR-001/002 and a passing staged feasibility result. |
 | PR-007 | P1 | investigating | RR-091 says same-page related-product price can satisfy autonomous card binding. A wrong variant price is release-blocking if the affected path is promoted. | Product entity selection may not bind offer identity tightly enough when multiple products share a page. | Reproduce with tracked synthetic multi-entity pages, then require exact entity/offer binding using shared identity rules. | Original and cross-category reproductions; exact-product positive controls; no unsafe price/product URL; full price and identity wall. | High false-negative/false-positive risk. The affected experimental path remains default-off; no promotion before closure. |
 | PR-008 | P1 | investigating | RR-092 says editorial Product markup can verify identity/image without proving the tested model. A wrong model image/link is release-blocking if promoted. | Structured markup establishes a product entity without sufficient tested-model attribution or page role. | Require exact tested-model attribution from eligible page evidence; editorial markup remains evidence-only unless the commerce/page boundary independently passes. | Editorial review negatives, manufacturer/retailer positives, sibling-model and accessory mutations, asset-wall regression. | High asset-recall tradeoff. Default-off path must stay off until resolved. |
@@ -411,9 +418,9 @@ shopper-facing recommendation quality.
 | PR-010 | P2 | verified | The Phase D estimator's field named `standardUsd` used its frozen 2026-07-25 rates, while official current Terra prices are lower. Readiness reporting could confuse a conservative approval rate with current estimated spend. | The rate object was intentionally frozen for approval reproducibility but the output label did not distinguish frozen-envelope and current-market estimates. | Plan/evidence schema v2 names the dated frozen approval envelope and dated `standard_non_regional` current estimate separately. Only the frozen conservative value controls the unchanged hard ceiling. | Fail-first 5 pass / 5 intended fail; exact short/long/cache-write/search rates and totals; focused 10/10; staged 56/56; full 1,440/1,440; E2E/build/static/eval/ranking/dry-run walls; independent review. | Closed locally without live spend. Re-check and date the informational card when official prices change; never silently reprice an existing approval envelope. |
 | PR-011 | P1 | verified | Contract-v2 research completed with 69 response-owned sources but failed before verification as `research_candidate_invalid / candidate_sources`. | The exact historical cause is privacy-hidden. A generalized deterministic cause was proven: canonical display dedupe discarded later exact response-owned variants before exact-membership validation. | A dedicated staged registry preserves every parseable exact response-owned variant once; canonical display/count behavior is unchanged. Closed source subreasons distinguish shape, duplicate, unsafe, and unregistered without retaining URLs. | Fail-first 27/3; focused 55/55; staged 59/59; full 1,444/1,444; E2E/static/build/dry-run walls; independent approval; a new live response crossed research validation. | Closed. Never canonical-match a model-authored URL or infer the spent response's branch. PR-012 closed the successor observability blocker; PR-013 owns lifecycle feasibility. |
 | PR-012 | P1 | verified | The first research-valid staged run verified zero of 12 candidates, while the route retained only totals and made its first-loss distribution unknowable. | `materializeStagedTerraEvidencePackage()` computed real server-owned decisions, but the route discarded them before its sanitized verification diagnostic. | Verifier v2 derives six mutually exclusive candidate first-loss counts plus three separate affected-candidate rejection counts. The route accepts only fixed bounded integers, conservation, and eligible/close/excluded reconciliation; all malformed, unknown, and private values are dropped. Evidence v3 can retain the aggregate only for its own attempt. | Initial fail-first 23/6; corrected focused 30/30; staged 62/62; full 1,447/1,447; E2E 17/17; typecheck/build/static/dry-run/privacy/public-body walls; independent approval after correction of an unreachable proposed bucket. | Closed as observability only. PR-2E remains permanently unattributable. No eligibility/evidence rule changed, and the counts cannot authorize looser verification. |
-| PR-013 | P1 | verified blocker; first losses isolated | The staged lifecycle still has no user-visible result. PR-2G stopped at verification asset identity; after PR-014's correction, PR-2I stopped earlier at research `candidate_facts`. Presentation/rendering has never run. | Privacy-safe evidence isolates only bounded field groups or aggregate first losses. It intentionally cannot retain the private candidate detail needed to identify either exact live cause. | Correct only independently reproduced generalized contract defects offline; preserve privacy and never loosen asset/evidence gates to manufacture a result. | Exact commit/case/schema; counters/usage/cost/privacy; first-terminal stop; conserved verification aggregate when reached; no retry/downstream work; independent `VERIFIED`. | Lifecycle feasibility remains unresolved. Neither isolated attempt is category-wide evidence or benchmark authorization. PR-015 owns the current proven research-contract mismatch. |
+| PR-013 | P1 | verified blocker; first losses isolated | The staged lifecycle still has no user-visible result. PR-2G stopped at verification asset identity; after PR-014's correction, PR-2I stopped earlier at research `candidate_facts`. Presentation/rendering has never run. | Privacy-safe evidence isolates only bounded field groups or aggregate first losses. It intentionally cannot retain the private candidate detail needed to identify either exact live cause. | Correct only independently reproduced generalized contract defects offline; preserve privacy and never loosen asset/evidence gates to manufacture a result. | Exact commit/case/schema; counters/usage/cost/privacy; first-terminal stop; conserved verification aggregate when reached; no retry/downstream work; independent `VERIFIED`. | Lifecycle feasibility remains unresolved. Neither isolated attempt is category-wide evidence or benchmark authorization. PR-015 is closed deterministically, but no post-PR-2J provider result exists. |
 | PR-014 | P1 | verified correction | Research validation accepted bounded nonempty `product_name`, `brand`, `model`, and `product_type` independently, while the asset verifier rejected every candidate when those same fields did not form a coherent target. Exact downstream assets could not overcome `invalid_target_identity`, wasting Shopping/page work and guaranteeing exclusion. | Provider schema/runtime established field shape but not the relational brand/model/type invariant already required by `directTerraAssetTargetIsCoherent()`; the prompt asked for separate identities without requiring `product_name` to agree. | Research now reuses the unchanged shared predicate before source work, prompt v3 states the relation, contract v4 rolls the fingerprint, and runtime v3 records the boundary. No name synthesis or asset-verifier change. | Fail-first 18/8; corrected contract 26/26; focused 57/57; staged 70/70; full 1,455/1,455; E2E 17/17; typecheck/build/eval/ranking/dry-run/lint/diff walls; independent `APPROVED`; zero live. | Closed deterministically. The stricter early wall can reduce accepted candidate count, which is preferable to guaranteed downstream exclusion. It can prevent PR-2G's class but is not proven to explain that attempt. PR-2I crossed the identity group but stopped at facts; that does not prove every candidate passed identity. |
-| PR-015 | P1 | verified blocker; correction planned | The only post-PR-2H attempt completed research generation but local validation stopped as `candidate_facts`, so no verification or user result exists. Offline, a strict-schema-conforming fact can cite a response-owned URL that belongs to another candidate and then fail the parser; sibling requirement/cardinality/duplicate mismatches also reproduce. | The provider-facing contract repeats raw URLs in each lead and states only response-level ownership. The parser correctly requires each lead URL to be an exact unique member of its enclosing candidate sources and requires status-dependent cardinality that the schema/prompt do not fully express. | Replace lead URL repetition with candidate-local integer source references, map them to already validated exact candidate URLs, state the remaining range/uniqueness/cardinality rules, and roll every job/contract identity. Preserve fail-closed candidate ownership and all downstream gates. | Fail-first cross-candidate fact/requirement, duplicate, out-of-range, status-cardinality, schema/prompt, and rollover tests; focused/staged/full/E2E/static/dry-run walls; independent review; zero live. | Do not accept another candidate's evidence, expose private facts, or infer the live private branch. Structured Outputs cannot express every cross-field rule, so runtime validation remains authoritative. |
+| PR-015 | P1 | verified correction | The only post-PR-2H attempt completed research generation but local validation stopped as `candidate_facts`, so no verification or user result exists. Offline, the old strict schema could accept a response-owned URL absent from its enclosing candidate and status/cardinality combinations later rejected by runtime. | Raw URLs were repeated in every lead while producer instructions stated only response-level ownership. Parser rules were correctly candidate-local but stricter than the paid producer boundary. | Candidate URLs remain exact response-owned registries; leads use zero-based local indexes. Closed schema variants enforce requirement status cardinality, runtime enforces integer/actual-range/uniqueness and maps exact URLs, and contract v5/schema v3/prompt v4/runtime v4 roll old jobs closed. | Fail-first 23/7; corrected contract 31/31; staged 75/75; full 1,460/1,460; E2E 17/17; typecheck/build/eval/ranking/dry-run/lint/diff walls; token mutation 50/50; independent `APPROVED`; zero live. | Closed deterministically. It does not identify PR-2I's private cause or prove provider adherence/lifecycle feasibility. Never accept another candidate's evidence, expose private facts, or remove runtime authority for dynamic range and uniqueness. |
 
 ## Suspected weaknesses requiring measurement
 
@@ -718,32 +725,33 @@ directory is spent.
 
 ### Phase PR-2J — Candidate-local research source references
 
-- Status: **next; zero-live generalized correction**
+- Status: **verified zero-live generalized correction**
 - Severity addressed: PR-015 P1.
-- Scope: fail-first prove every producer/parser mismatch in lead source
-  ownership, reference range/uniqueness, and requirement status cardinality;
-  replace repeated requirement/fact URLs with candidate-local integer source
-  references; map only to already validated exact candidate URLs; update prompt
-  wording; and roll research schema, contract fingerprint, prompt, runtime, and
-  job-token identity as required.
-- Stop condition: no candidate source, exact ownership, HTTPS/private-host,
-  requirement, fact, verification, evidence, price, asset, eligibility, public
-  response, diagnostic privacy, network ceiling, or default flag may be
-  weakened. Do not infer PR-2I's private field, add a live request, or retry any
-  spent directory.
-- Proof: fail-first and corrected cross-candidate fact/requirement, duplicate,
-  out-of-range, empty/supporting/not-found, coherent positive, schema/prompt,
-  fingerprint/token/runtime tests; focused and full staged walls; complete
-  deterministic, typecheck, lint, build, credential-neutral E2E, eval, ranking,
-  zero-network dry-run, and diff checks; independent read-only review and clean
-  self-contained commit.
+- Outcome: candidate URLs remain exact response-owned lists; requirement/fact
+  leads now use zero-based enclosing-candidate indexes. Closed nested schema
+  variants enforce requirement status cardinality; runtime rechecks it,
+  enforces integer/actual-range/uniqueness, and maps only to exact validated
+  candidate URLs. Contract v5, schema v3, prompt v4, and runtime v4 roll the
+  entire job boundary, while current token checks reject older work.
+- Preserved boundaries: no candidate source, exact ownership, HTTPS/private-
+  host, requirement, fact, verification, evidence, price, asset, eligibility,
+  public response, diagnostic privacy, network ceiling, or default flag was
+  weakened. No live request ran and no spent directory was read or changed.
+- Proof: fail-first 23 pass / 7 intended fail; corrected contract 31/31; staged
+  75/75; complete 1,460/1,460; E2E 17/17; typecheck/build/eval/ranking/dry-run/
+  lint/diff walls; 50/50 randomized token mutation; independent final
+  `APPROVED` after schema-cardinality, non-first mapping, and tamper-test
+  corrections.
+- Limitation: this closes the reproduced mismatch, not PR-2I's unknowable
+  private cause. No provider adherence, lifecycle, accuracy, latency, cost, or
+  user-result improvement is established.
 - Reasoning: **High** for source-ownership/wire-contract design; **Medium** for
   localized parser/schema/prompt/test implementation. Candidate-local indexes
   are preferred over prompt-only prose or accepting cross-candidate evidence.
 
 ### Phase PR-3 — Build a real offline benchmark matrix
 
-- Status: **planned**
+- Status: **next; zero-live evaluation-integrity correction**
 - Severity addressed: PR-005 P1.
 - Scope: make each deterministic QA batch execute relevant tracked cases and
   invariant checks, including broad, constrained, over-constrained,
@@ -829,10 +837,10 @@ Current verdict: **NOT READY** (confidence 0.98).
 
 Release blockers today:
 
-- staged lifecycle feasibility has not passed. PR-2H closed one generalized
-  identity mismatch, but the single post-correction PR-2I attempt stopped at
-  research `candidate_facts`; its exact private field is unknowable and PR-015's
-  independently reproduced lead-source contract mismatch remains uncorrected;
+- staged lifecycle feasibility has not passed. PR-2H and PR-2J close two
+  independently reproduced contract mismatches, but the latest live attempt
+  remains PR-2I's `candidate_facts` stop and no post-PR-2J provider result has
+  reached verification or presentation;
 - deterministic QA batch names overstate the distinct cases actually run;
 - current live accuracy, stability, latency, and cost have not been measured;
 - RR-091 and RR-092 remain unresolved for an experimental path that cannot be

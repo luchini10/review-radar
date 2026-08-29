@@ -11,6 +11,47 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Make staged research lead sources candidate-local
+
+#### Changed
+
+- Staged research candidates still list exact response-owned URLs once, but
+  requirement and fact leads now cite those URLs by zero-based indexes within
+  their own candidate. The server maps accepted indexes back to the already
+  validated exact URLs; it does not canonicalize, repair, or borrow a URL from
+  another candidate.
+- The strict research schema uses closed status variants: supporting and
+  conflicting requirements require one to six indexes, while `not_found`
+  requires none. Runtime independently enforces actual candidate-length bounds,
+  integer values, uniqueness, and the same status cardinality; every fact still
+  requires one to six references.
+- Research schema v3, contract v5, prompt v4, and runtime v4 roll the entire
+  research job identity. Existing token verification requires the current
+  prompt and recomputed current fingerprint, so older in-flight jobs fail
+  closed. No downstream evidence, eligibility, price, asset, public-response,
+  network, or default-flag rule changed.
+- A randomized token-tamper test now always changes the selected character,
+  removing a real one-in-several-dozen flaky false-failure path.
+
+#### Verified
+
+- Fail-first contract evidence passed 23 checks and failed exactly seven new
+  source-reference/rollover checks. The corrected contract passed 31/31, the
+  staged subsystem 75/75, and the complete deterministic suite 1,460/1,460
+  across 209 suites. The randomized token test passed 50/50 repeated runs.
+- Typecheck, production build, credential-neutral E2E 17/17, deterministic
+  evaluation, fixed ranking comparison, zero-network Phase D dry run, and diff
+  checks passed. Lint reported zero errors and the same three pre-existing
+  warnings. Generated `next-env.d.ts` was restored to its tracked production
+  form.
+- Independent review initially required schema-level requirement cardinality
+  and a non-first/permuted-registry mapping control. After both corrections it
+  returned `APPROVED` and personally passed 72/72 focused tests.
+- No provider, hosted-search, Shopping, page, or other product-data request ran.
+  This closes PR-015's deterministic producer/parser mismatch, but it does not
+  prove live model adherence, staged lifecycle feasibility, recommendation
+  quality, latency, or cost. The staged path remains default-off and not ready.
+
 ### Codex - Stop post-correction staged research at fact validation
 
 #### Observed

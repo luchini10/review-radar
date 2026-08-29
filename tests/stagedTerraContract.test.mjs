@@ -75,18 +75,18 @@ function researchFixture() {
         requirement_id: requirementId,
         status: "supporting_evidence",
         summary: `Source evidence for ${requirementId}`,
-        source_urls: [sourceUrls[0]],
+        source_indexes: [0],
       })),
       fact_leads: [
         {
           kind: "identity",
           statement: "The manufacturer identifies the exact model.",
-          source_urls: [sourceUrls[0]],
+          source_indexes: [0],
         },
         {
           kind: "performance",
           statement: "The testing source reported strong pickup.",
-          source_urls: [sourceUrls[1]],
+          source_indexes: [1],
         },
       ],
     };
@@ -98,6 +98,27 @@ function researchFixture() {
     },
     responseSourceUrls,
   };
+}
+
+function localReferenceResearchFixture() {
+  return researchFixture();
+}
+
+function legacyLeadUrlResearchFixture(group) {
+  const fixture = localReferenceResearchFixture();
+  for (const candidate of fixture.value.candidates) {
+    const leads =
+      group === "requirements"
+        ? candidate.requirement_leads
+        : candidate.fact_leads;
+    for (const lead of leads) {
+      lead.source_urls = lead.source_indexes.map(
+        (index) => candidate.source_urls[index],
+      );
+      delete lead.source_indexes;
+    }
+  }
+  return fixture;
 }
 
 function parsedResearch() {
@@ -384,11 +405,38 @@ describe("staged Terra request boundaries", () => {
     for (const property of ["product_name", "brand", "model", "product_type"]) {
       assert.equal(researchCandidateSchema.properties[property].pattern, "\\S");
     }
-    assert.equal(
-      researchCandidateSchema.properties.requirement_leads.items.properties
-        .summary.pattern,
-      "\\S",
+    const requirementLeadVariants =
+      researchCandidateSchema.properties.requirement_leads.items.anyOf;
+    assert.equal(requirementLeadVariants.length, 3);
+    assert.deepEqual(
+      requirementLeadVariants.map((variant) => ({
+        status: variant.properties.status.const,
+        minItems: variant.properties.source_indexes.minItems,
+        maxItems: variant.properties.source_indexes.maxItems,
+      })),
+      [
+        { status: "supporting_evidence", minItems: 1, maxItems: 6 },
+        { status: "conflicting_evidence", minItems: 1, maxItems: 6 },
+        { status: "not_found", minItems: 0, maxItems: 0 },
+      ],
     );
+    for (const variant of requirementLeadVariants) {
+      assert.equal(variant.type, "object");
+      assert.equal(variant.additionalProperties, false);
+      assert.equal(variant.properties.summary.pattern, "\\S");
+      assert.equal("source_urls" in variant.properties, false);
+      assert.deepEqual(variant.properties.source_indexes.items, {
+        type: "integer",
+        minimum: 0,
+        maximum: 11,
+      });
+      assert.deepEqual(variant.required, [
+        "requirement_id",
+        "status",
+        "summary",
+        "source_indexes",
+      ]);
+    }
     assert.equal(
       "fact_id" in
         researchCandidateSchema.properties.fact_leads.items.properties,
@@ -405,11 +453,30 @@ describe("staged Terra request boundaries", () => {
         .pattern,
       "\\S",
     );
+    const factSourceIndexes =
+      researchCandidateSchema.properties.fact_leads.items.properties
+        .source_indexes;
+    assert.equal(
+      "source_urls" in
+        researchCandidateSchema.properties.fact_leads.items.properties,
+      false,
+    );
+    assert.equal(factSourceIndexes.minItems, 1);
+    assert.equal(factSourceIndexes.maxItems, 6);
     assert.match(research.instructions, /assigns internal candidate and fact IDs/i);
     assert.match(research.instructions, /do not emit synthetic identifiers/i);
     assert.match(
       research.instructions,
       /product_name.{0,240}(?:agree|match).{0,160}brand.{0,120}model.{0,160}product[_ -]?type/is,
+    );
+    assert.match(
+      research.instructions,
+      /zero-based.{0,160}source_indexes.{0,200}enclosing candidate/is,
+    );
+    assert.match(research.instructions, /do not repeat.{0,120}(?:index|reference)/is);
+    assert.match(
+      research.instructions,
+      /supporting.{0,160}conflicting.{0,160}at least one.{0,160}not_found.{0,160}(?:empty|no source)/is,
     );
 
     assert.equal(presentation.model, "gpt-5.6-terra");
@@ -424,25 +491,25 @@ describe("staged Terra request boundaries", () => {
     assert.doesNotMatch(presentation.input, /image_url/i);
     assert.doesNotMatch(presentation.input, /https:\/\//i);
     assert.deepEqual(STAGED_TERRA_SCHEMA_VERSIONS, {
-      research: "staged-terra-research-v2",
+      research: "staged-terra-research-v3",
       evidence: "staged-terra-evidence-v1",
       presentation: "staged-terra-presentation-v1",
     });
   });
 
   it("rolls the research acceptance contract identity", () => {
-    assert.equal(STAGED_TERRA_CONTRACT_VERSION, "staged-terra-contract-v4");
+    assert.equal(STAGED_TERRA_CONTRACT_VERSION, "staged-terra-contract-v5");
   });
 
   it("rolls the research prompt identity", () => {
     assert.equal(
       STAGED_TERRA_RESEARCH_PROMPT_VERSION,
-      "staged-terra-research-prompt-v3",
+      "staged-terra-research-prompt-v4",
     );
   });
 
   it("rolls the staged runtime identity", () => {
-    assert.equal(STAGED_TERRA_RUNTIME_VERSION, "staged-terra-runtime-v3");
+    assert.equal(STAGED_TERRA_RUNTIME_VERSION, "staged-terra-runtime-v4");
   });
 
   it("keeps the integrated path default-off and isolated from Direct Terra", () => {
@@ -488,6 +555,176 @@ describe("staged Terra request boundaries", () => {
 });
 
 describe("staged Terra research contract", () => {
+  it("accepts candidate-local source references and maps them to exact owned URLs", () => {
+    const fixture = localReferenceResearchFixture();
+    fixture.responseSourceUrls.reverse();
+    const result = validateStagedTerraResearchOutput({
+      value: fixture.value,
+      shopperRequest: shopper,
+      responseSourceUrls: fixture.responseSourceUrls,
+    });
+
+    assert.equal(result.ok, true);
+    assert.deepEqual(
+      result.ok && result.value.candidates[0].requirementLeads[0].sourceUrls,
+      [fixture.value.candidates[0].source_urls[0]],
+    );
+    assert.deepEqual(
+      result.ok && result.value.candidates[0].factLeads[1].sourceUrls,
+      [fixture.value.candidates[0].source_urls[1]],
+    );
+    assert.deepEqual(
+      result.ok && result.value.candidates[3].requirementLeads[0].sourceUrls,
+      [fixture.value.candidates[3].source_urls[0]],
+    );
+    assert.deepEqual(
+      result.ok && result.value.candidates[3].factLeads[1].sourceUrls,
+      [fixture.value.candidates[3].source_urls[1]],
+    );
+  });
+
+  it("accepts an empty candidate-local reference list only for not-found requirements", () => {
+    const fixture = localReferenceResearchFixture();
+    const lead = fixture.value.candidates[0].requirement_leads[0];
+    lead.status = "not_found";
+    lead.summary = "No candidate-local source established this requirement.";
+    lead.source_indexes = [];
+
+    const result = validateStagedTerraResearchOutput({
+      value: fixture.value,
+      shopperRequest: shopper,
+      responseSourceUrls: fixture.responseSourceUrls,
+    });
+
+    assert.equal(result.ok, true);
+    assert.deepEqual(
+      result.ok && result.value.candidates[0].requirementLeads[0].sourceUrls,
+      [],
+    );
+  });
+
+  it("rejects both legacy repeated lead-URL wire shapes", () => {
+    for (const [group, candidateValidationReason] of [
+      ["requirements", "candidate_requirements"],
+      ["facts", "candidate_facts"],
+    ]) {
+      const fixture = legacyLeadUrlResearchFixture(group);
+      assert.deepEqual(
+        validateStagedTerraResearchOutput({
+          value: fixture.value,
+          shopperRequest: shopper,
+          responseSourceUrls: fixture.responseSourceUrls,
+        }),
+        {
+          ok: false,
+          reason: "research_candidate_invalid",
+          candidateValidationReason,
+        },
+        group,
+      );
+    }
+  });
+
+  it("rejects invalid candidate-local requirement references", () => {
+    const cases = [
+      {
+        name: "out of range",
+        mutate: (candidate) => {
+          candidate.requirement_leads[0].source_indexes = [2];
+        },
+      },
+      {
+        name: "duplicate",
+        mutate: (candidate) => {
+          candidate.requirement_leads[0].source_indexes = [0, 0];
+        },
+      },
+      {
+        name: "non-integer",
+        mutate: (candidate) => {
+          candidate.requirement_leads[0].source_indexes = [0.5];
+        },
+      },
+      {
+        name: "empty supporting",
+        mutate: (candidate) => {
+          candidate.requirement_leads[0].source_indexes = [];
+        },
+      },
+      {
+        name: "empty conflicting",
+        mutate: (candidate) => {
+          candidate.requirement_leads[0].status = "conflicting_evidence";
+          candidate.requirement_leads[0].source_indexes = [];
+        },
+      },
+      {
+        name: "nonempty not-found",
+        mutate: (candidate) => {
+          candidate.requirement_leads[0].status = "not_found";
+        },
+      },
+    ];
+
+    for (const testCase of cases) {
+      const fixture = localReferenceResearchFixture();
+      testCase.mutate(fixture.value.candidates[0]);
+      assert.deepEqual(
+        validateStagedTerraResearchOutput({
+          value: fixture.value,
+          shopperRequest: shopper,
+          responseSourceUrls: fixture.responseSourceUrls,
+        }),
+        {
+          ok: false,
+          reason: "research_candidate_invalid",
+          candidateValidationReason: "candidate_requirements",
+        },
+        testCase.name,
+      );
+    }
+  });
+
+  it("rejects invalid candidate-local fact references", () => {
+    const cases = [
+      {
+        name: "out of range",
+        sourceIndexes: [2],
+      },
+      {
+        name: "duplicate",
+        sourceIndexes: [0, 0],
+      },
+      {
+        name: "non-integer",
+        sourceIndexes: [0.5],
+      },
+      {
+        name: "empty",
+        sourceIndexes: [],
+      },
+    ];
+
+    for (const testCase of cases) {
+      const fixture = localReferenceResearchFixture();
+      fixture.value.candidates[0].fact_leads[0].source_indexes =
+        testCase.sourceIndexes;
+      assert.deepEqual(
+        validateStagedTerraResearchOutput({
+          value: fixture.value,
+          shopperRequest: shopper,
+          responseSourceUrls: fixture.responseSourceUrls,
+        }),
+        {
+          ok: false,
+          reason: "research_candidate_invalid",
+          candidateValidationReason: "candidate_facts",
+        },
+        testCase.name,
+      );
+    }
+  });
+
   it("accepts an exact, source-owned, requirement-complete lead set", () => {
     const fixture = researchFixture();
     const result = validateStagedTerraResearchOutput({

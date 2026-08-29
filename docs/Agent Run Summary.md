@@ -2004,3 +2004,79 @@ candidate-local integer source references, retain exact ownership/range/
 uniqueness/cardinality validation, and roll schema/contract/prompt/runtime job
 identity. Do not retry PR-2I or loosen evidence ownership. Reasoning level:
 High for contract design and Medium for localized implementation.
+
+## Codex Run - 2026-08-29 Production readiness PR-2J candidate-local source references
+
+**Goal:** close the independently reproduced PR-015 research producer/parser
+mismatch without another paid request or any relaxation of evidence ownership.
+
+**What was checked:** the research JSON schema, provider instructions, candidate
+source validation, requirement/fact parsing, response-source registry order,
+runtime diagnostics, request fingerprint, encrypted job-token verification,
+route fixtures, downstream evidence materialization, default flags, public
+responses, generated-file drift, and every required deterministic/browser wall.
+Official OpenAI Structured Outputs documentation was checked for integer/array
+bounds, nested `anyOf`, and unsupported cross-field keywords.
+
+**What was found:** the old wire shape repeated exact URLs in every lead while
+the parser required each URL to be unique and present in its enclosing
+candidate. The producer schema could therefore accept response-owned but
+cross-candidate URLs, duplicates, and status/cardinality combinations that the
+runtime correctly rejected after paid generation. A separate existing token
+tamper test could randomly replace a character with itself and fail without a
+real integrity defect.
+
+**What changed:** candidate `source_urls` remains unchanged as the exact
+response-owned registry. Requirement and fact leads now carry zero-based
+candidate-local indexes. Research schema v3 uses three closed requirement
+variants: supporting/conflicting require one to six indexes and `not_found`
+requires none; every fact requires one to six. Runtime independently requires
+integer, unique, actual candidate-range references and maps them only to the
+already validated exact candidate URLs. Contract v5, prompt v4, and runtime v4
+roll the job identity; the unchanged token verifier requires both current prompt
+and recomputed current fingerprint. The tamper test now makes a guaranteed-
+different mutation.
+
+**Why it matters:** the model no longer has to reproduce long exact URLs inside
+each lead, and a lead cannot directly name a response URL outside its candidate
+array. Schema-level status cardinality prevents another known post-generation
+rejection class, while runtime remains authoritative for dynamic range and
+uniqueness. No downstream trust gate, ranking, product acceptance, price, asset,
+diagnostic privacy, public response, network ceiling, or default flag changed.
+
+**Tests and before/after proof:** fail-first ran 30 contract tests: 23 passed
+and exactly seven new contract/rollover checks failed. The corrected contract
+passed 31/31; all staged tests passed 75/75; the complete suite passed
+1,460/1,460 across 209 suites; and credential-neutral E2E passed 17/17.
+Typecheck, production build, deterministic eval, fixed ranking comparison,
+zero-network Phase D dry run, and diff checks passed. Lint reported zero errors
+and the same three pre-existing warnings. The corrected randomized token test
+passed 50/50 repeated executions, and `next-env.d.ts` was restored.
+
+**Independent review:** the initial review identified blocking findings because
+requirement status/cardinality remained runtime-only and the mapping positive
+could not distinguish candidate-local from response-global index lookup. After
+adding nested schema variants and a reversed-registry non-first-candidate
+control, review exposed and prompted correction of the token-test flake. The
+only terminal verdict was final `APPROVED`, with no findings after personally
+passing 72/72 focused tests, typecheck, Phase D preflight, and diff checks.
+
+**Live checks:** none. No OpenAI, hosted search, Serper, SearchAPI, Shopping,
+source-page, or other product-data request ran.
+
+**Before/after limit:** before, strict-schema-conforming synthetic payloads
+could cross the producer boundary and fail as `candidate_requirements` or
+`candidate_facts`; after, the reproduced raw-lead and status-cardinality shapes
+are structurally unavailable and all remaining dynamic rules fail closed. This
+does not identify PR-2I's private fact defect or prove any live accuracy,
+reliability, latency, cost, presentation, or shopper-result improvement.
+
+**Remaining issues:** PR-013 still blocks lifecycle feasibility; no staged live
+attempt has reached presentation/rendering. PR-005 through PR-008 remain open,
+and the required benchmark, active-path measurement, UX/operations work, and
+final readiness report are incomplete.
+
+**Next recommended step:** PR-3, zero-live. Make named deterministic QA batches
+execute distinct tracked benchmark cases and invariants rather than sharing one
+synthetic evaluator while reporting different metadata. Reasoning level: High
+for benchmark validity and mutation design; Medium for harness plumbing.

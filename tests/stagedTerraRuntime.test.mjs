@@ -36,26 +36,26 @@ function researchValue() {
             requirement_id: "market_us",
             status: "supporting_evidence",
             summary: "In stock",
-            source_urls: [url],
+            source_indexes: [0],
           },
           {
             requirement_id: "budget",
             status: "supporting_evidence",
             summary: "Price is $399",
-            source_urls: [url],
+            source_indexes: [0],
           },
           {
             requirement_id: "important_details",
             status: "supporting_evidence",
             summary: "Battery powered",
-            source_urls: [url],
+            source_indexes: [0],
           },
         ],
         fact_leads: [
           {
             kind: "specification",
             statement: "Battery powered",
-            source_urls: [url],
+            source_indexes: [0],
           },
         ],
       };

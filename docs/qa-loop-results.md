@@ -12018,3 +12018,79 @@ candidate-local source references, retaining parser authority for range,
 uniqueness, and cardinality, and rolling schema/contract/prompt/runtime identity.
 Do not accept cross-candidate evidence, widen private diagnostics, or make
 another request before deterministic and independent approval.
+
+---
+
+## 🟧 Codex — 2026-08-29 — Production readiness PR-2J candidate-local source references
+
+**Objective:** remove the reproduced staged research producer/parser mismatch
+without weakening exact source ownership or spending on another live attempt.
+The intended outcome was deterministic contract alignment, not an inference
+about PR-2I's private response.
+
+**Fail-first evidence:** with only the new source-reference/rollover tests
+present, `tests/stagedTerraContract.test.mjs` ran 30 checks: 23 passed and
+exactly seven intended checks failed. The failures showed that the provider
+schema still exposed raw lead `source_urls`, contract/prompt/runtime versions
+had not rolled, candidate-local index payloads were rejected, and legacy fact
+or requirement URL payloads remained accepted under the old shape. Separate
+synthetic controls already reproduced cross-candidate, duplicate, out-of-range,
+empty, and status-cardinality mismatches without using private live data.
+
+**Correction:** candidate `source_urls` remains a bounded, unique, exact
+response-owned list that must be HTTPS, public-host shaped, credential-free,
+and free of a non-default port. Requirement and fact leads now emit only
+zero-based `source_indexes` into the enclosing candidate list. The parser
+accepts only integer, unique references within that candidate's actual length
+and maps them back to the unchanged exact strings.
+
+Research schema v3 uses supported nested `anyOf` branches: supporting and
+conflicting requirements require one to six indexes, while `not_found` requires
+zero. Facts require one to six. Runtime repeats status/cardinality checks and
+remains authoritative for actual candidate-length bounds and uniqueness, which
+the strict provider schema cannot fully express. Prompt v4 states the same
+candidate-local, zero-based, no-repeat, status, and fact rules. Contract v5
+changes the request fingerprint, and runtime v4 identifies the new semantics.
+The unchanged job-token verifier requires the current prompt version and
+recomputes the current fingerprint, so older in-flight work fails closed.
+
+No evidence/package, verification, relationship, requirement, page, source,
+commerce, price, asset, eligibility, ranking, presentation, diagnostic,
+public-response, timeout, cost, network, or committed flag rule changed. The
+client and default-off routes remain unchanged.
+
+**Independent corrections:** the initial review found two material gaps. First,
+the draft schema left requirement status/cardinality runtime-only even though a
+nested union could close it before paid generation. Second, the positive test
+used only the first candidate and could not disprove a response-global indexer.
+The final schema uses three closed variants, and the mapping test reverses the
+response registry while checking a non-first candidate. The reviewer then
+reproduced a pre-existing randomized tamper-test flake: replacing the midpoint
+with `x` sometimes left the token unchanged. The test now selects `y` when the
+current character is `x`, otherwise `x`; 50/50 repeated executions passed.
+
+**Verification (zero live):**
+
+- corrected contract: 31/31;
+- full staged subsystem: 75/75 across ten suites;
+- complete deterministic suite: 1,460/1,460 across 209 suites;
+- credential-neutral E2E: 17/17 on the dedicated default-off server;
+- typecheck, production build, deterministic evaluation, fixed ranking
+  comparison, zero-network Phase D dry run, and `git diff --check`: pass;
+- lint: zero errors and the same three pre-existing warnings; and
+- generated `next-env.d.ts`: restored to its tracked production form.
+
+**Independent review:** final verdict `APPROVED`, no actionable findings. The
+reviewer personally passed 72/72 focused staged/Phase-D tests, typecheck, and
+diff checks; rebound exact response/candidate ownership, schema/runtime
+cardinality, current prompt/fingerprint rollover, privacy, route invariance,
+and default-off behavior.
+
+**Limit and next decision:** PR-015's reproduced deterministic mismatch is
+closed. No provider roundtrip ran, so actual Terra adherence, staged lifecycle
+feasibility, recommendation quality, latency, and cost remain unmeasured. The
+latest live result remains PR-2I's bounded `candidate_facts` stop, whose exact
+private cause is unknowable. PR-013 remains a P1 blocker. Before broader active-
+path measurement, PR-3 should make the named deterministic QA batches execute
+real distinct cases rather than one shared synthetic evaluator. No spent live
+fixture was read, edited, retried, staged, or reused.

@@ -7,9 +7,9 @@ import {
 import { directTerraAssetTargetIsCoherent } from "./directTerraAssetVerifier.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
 
-export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v4";
+export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v5";
 export const STAGED_TERRA_RESEARCH_SCHEMA_VERSION =
-  "staged-terra-research-v2";
+  "staged-terra-research-v3";
 export const STAGED_TERRA_EVIDENCE_PACKAGE_VERSION =
   "staged-terra-evidence-v1";
 export const STAGED_TERRA_PRESENTATION_SCHEMA_VERSION =
@@ -297,27 +297,6 @@ function parseStringArray(
   return new Set(items).size === items.length ? items : null;
 }
 
-function parseExactSourceUrls(
-  value: unknown,
-  registered: Set<string>,
-  { minimum = 0, maximum = 12 }: { minimum?: number; maximum?: number } = {},
-) {
-  const items = parseStringArray(value, {
-    minimum,
-    maximum,
-    itemMaximum: 4_096,
-  });
-  if (!items) return null;
-  const urls = items.map(exactHttpsUrl);
-  if (
-    urls.some((url) => url === null) ||
-    urls.some((url) => !registered.has(url!))
-  ) {
-    return null;
-  }
-  return urls as string[];
-}
-
 function parseCandidateSourceUrls(
   value: unknown,
   registered: Set<string>,
@@ -344,6 +323,29 @@ function parseCandidateSourceUrls(
     return { ok: false, reason: "candidate_source_unregistered" };
   }
   return { ok: true, value: urls as string[] };
+}
+
+function parseCandidateSourceIndexes(
+  value: unknown,
+  sourceUrls: readonly string[],
+  { minimum = 0, maximum = 6 }: { minimum?: number; maximum?: number } = {},
+) {
+  if (
+    !Array.isArray(value) ||
+    value.length < minimum ||
+    value.length > maximum ||
+    value.some(
+      (item) =>
+        !Number.isInteger(item) ||
+        (item as number) < 0 ||
+        (item as number) >= sourceUrls.length,
+    )
+  ) {
+    return null;
+  }
+  const indexes = value as number[];
+  if (new Set(indexes).size !== indexes.length) return null;
+  return indexes.map((index) => sourceUrls[index]);
 }
 
 function identityKey(brand: string, model: string) {
@@ -389,6 +391,44 @@ export function stagedTerraResearchJsonSchema(
   requirements: DirectTerraRequirementContractEntry[],
 ) {
   const requirementIds = requirements.map((entry) => entry.id);
+  const requirementLeadVariant = (
+    status:
+      | "supporting_evidence"
+      | "conflicting_evidence"
+      | "not_found",
+    minItems: 0 | 1,
+    maxItems: 0 | 6,
+  ) =>
+    ({
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        requirement_id: { type: "string", enum: requirementIds },
+        status: { type: "string", const: status },
+        summary: {
+          type: "string",
+          minLength: 1,
+          maxLength: 400,
+          pattern: "\\S",
+        },
+        source_indexes: {
+          type: "array",
+          minItems,
+          maxItems,
+          items: {
+            type: "integer",
+            minimum: 0,
+            maximum: 11,
+          },
+        },
+      },
+      required: [
+        "requirement_id",
+        "status",
+        "summary",
+        "source_indexes",
+      ],
+    }) as const;
   return {
     type: "object",
     additionalProperties: false,
@@ -440,35 +480,10 @@ export function stagedTerraResearchJsonSchema(
               minItems: requirementIds.length,
               maxItems: requirementIds.length,
               items: {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                  requirement_id: { type: "string", enum: requirementIds },
-                  status: {
-                    type: "string",
-                    enum: [
-                      "supporting_evidence",
-                      "conflicting_evidence",
-                      "not_found",
-                    ],
-                  },
-                  summary: {
-                    type: "string",
-                    minLength: 1,
-                    maxLength: 400,
-                    pattern: "\\S",
-                  },
-                  source_urls: {
-                    type: "array",
-                    maxItems: 6,
-                    items: { type: "string", minLength: 1, maxLength: 4_096 },
-                  },
-                },
-                required: [
-                  "requirement_id",
-                  "status",
-                  "summary",
-                  "source_urls",
+                anyOf: [
+                  requirementLeadVariant("supporting_evidence", 1, 6),
+                  requirementLeadVariant("conflicting_evidence", 1, 6),
+                  requirementLeadVariant("not_found", 0, 0),
                 ],
               },
             },
@@ -487,14 +502,18 @@ export function stagedTerraResearchJsonSchema(
                     maxLength: 500,
                     pattern: "\\S",
                   },
-                  source_urls: {
+                  source_indexes: {
                     type: "array",
                     minItems: 1,
                     maxItems: 6,
-                    items: { type: "string", minLength: 1, maxLength: 4_096 },
+                    items: {
+                      type: "integer",
+                      minimum: 0,
+                      maximum: 11,
+                    },
                   },
                 },
-                required: ["kind", "statement", "source_urls"],
+                required: ["kind", "statement", "source_indexes"],
               },
             },
           },
@@ -567,7 +586,6 @@ function parseResearchCandidate(
     };
   }
   const sourceUrls = parsedSourceUrls.value;
-  const candidateSources = new Set(sourceUrls);
 
   if (
     !Array.isArray(value.requirement_leads) ||
@@ -586,7 +604,7 @@ function parseResearchCandidate(
         "requirement_id",
         "status",
         "summary",
-        "source_urls",
+        "source_indexes",
       ]) ||
       typeof lead.requirement_id !== "string" ||
       !expectedRequirementIds.has(lead.requirement_id) ||
@@ -609,7 +627,7 @@ function parseResearchCandidate(
     ) {
       return { ok: false, reason: "candidate_requirements" };
     }
-    const urls = parseExactSourceUrls(lead.source_urls, candidateSources, {
+    const urls = parseCandidateSourceIndexes(lead.source_indexes, sourceUrls, {
       minimum: lead.status === "not_found" ? 0 : 1,
       maximum: 6,
     });
@@ -636,13 +654,13 @@ function parseResearchCandidate(
     const fact = value.fact_leads[factIndex];
     if (
       !isRecord(fact) ||
-      !exactKeys(fact, ["kind", "statement", "source_urls"]) ||
+      !exactKeys(fact, ["kind", "statement", "source_indexes"]) ||
       !enumContains(RESEARCH_FACT_KINDS, fact.kind) ||
       !boundedString(fact.statement, 500)
     ) {
       return { ok: false, reason: "candidate_facts" };
     }
-    const urls = parseExactSourceUrls(fact.source_urls, candidateSources, {
+    const urls = parseCandidateSourceIndexes(fact.source_indexes, sourceUrls, {
       minimum: 1,
       maximum: 6,
     });

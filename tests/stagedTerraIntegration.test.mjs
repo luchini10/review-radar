@@ -50,11 +50,12 @@ describe("OAI-T10 staged Terra integration contracts", () => {
       verified.ok && verified.payload.requestFingerprint,
       buildStagedTerraRequestFingerprint(shopper),
     );
+    const tamperIndex = Math.floor(token.length / 2);
+    const tamperCharacter = token[tamperIndex] === "x" ? "y" : "x";
+    const tamperedToken = `${token.slice(0, tamperIndex)}${tamperCharacter}${token.slice(tamperIndex + 1)}`;
     assert.equal(
       verifyStagedTerraJobToken({
-        token: `${token.slice(0, Math.floor(token.length / 2))}x${token.slice(
-          Math.floor(token.length / 2) + 1,
-        )}`,
+        token: tamperedToken,
         secret,
         nowMs: 2_000,
       }).ok,

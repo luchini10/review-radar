@@ -221,8 +221,9 @@ terminal provider usage even when local validation later fails; repeated
 snapshots deduplicate only by the same safe response hash, while distinct or
 unidentifiable responses sum conservatively and block successful acceptance as
 an anomaly. The entire branch remains default-off, undeployed, and without a
-successful live feasibility result. The latest PR-2I response completed Terra
-research with 47 canonical sources, then failed local contract validation as
+successful live feasibility result. The latest live evidence is still PR-2I:
+Terra completed research with 47 canonical sources, then failed local contract
+validation as
 `research_candidate_invalid / candidate_facts` before Shopping, verification,
 presentation, or rendering. This bounded class identifies only the first
 reported invalid candidate's fact group; it cannot reveal the candidate or
@@ -248,13 +249,25 @@ remains accepted. This does not explain PR-2G or change asset eligibility.
 PR-2I crossed far enough to report the fact field group, but that does not prove
 every candidate cleared identity or establish staged feasibility.
 
-A separate zero-network reproduction shows that the current producer contract
-states response-level URL ownership while the parser correctly requires every
-requirement/fact lead URL to belong to its enclosing candidate, be unique, and
-obey status-dependent cardinality. A strict-schema-conforming cross-candidate
-fact URL therefore fails as `candidate_facts`. The planned correction uses
-candidate-local source references instead of repeated raw URLs; it must preserve
-the exact candidate ownership wall and roll the research job contract.
+PR-2J closes a separately reproduced producer/parser mismatch without a live
+request. Candidate `source_urls` remains the exact response-owned URL registry
+for that candidate. Requirement and fact leads no longer repeat raw URLs; they
+carry zero-based `source_indexes` into their enclosing candidate list. The
+server first validates each candidate URL for exact response ownership,
+uniqueness, HTTPS/public-host safety, credential absence, and default port, then
+maps only integer, unique, in-range indexes back to those exact strings.
+
+Research schema v3 uses nested closed variants so supporting/conflicting
+requirements require one to six references and `not_found` requires an empty
+array; every fact requires one to six. Runtime independently retains those
+checks and enforces the candidate-length-dependent upper bound and uniqueness
+that the provider schema cannot fully express. Contract v5, prompt v4, and
+runtime v4 roll the request/job identity; existing token verification rejects
+old prompt versions and recomputes the current contract fingerprint. The
+correction changes no downstream requirement, evidence, page, commerce, price,
+asset, eligibility, diagnostic, public-response, network-ceiling, or default-
+flag rule. It deterministically prevents the reproduced wire mismatch but does
+not prove the private PR-2I cause, live model adherence, or lifecycle success.
 
 The route reconstructs only bounded integer values from the fixed verifier-v2
 keys, requires first-loss conservation and reconciliation with eligible/close/

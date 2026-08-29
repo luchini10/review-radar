@@ -4,6 +4,42 @@
 
 ---
 
+## OAI-T10 PR-2J candidate-local source-reference contract (2026-08-29)
+
+- Candidate `source_urls` is still the exact response-owned registry boundary
+  for each candidate. Requirement and fact leads use zero-based
+  `source_indexes`; never restore repeated raw lead URLs or interpret an index
+  against the response-global source registry.
+- Validate candidate URLs first: bounded unique strings, exact response
+  membership, HTTPS, public-host shape, no credentials, and no non-default
+  port. Then require each lead index to be an integer, unique in its lead, and
+  within that enclosing candidate's actual URL array before mapping back to the
+  unchanged exact string. Do not canonical-match, normalize, repair, or borrow
+  a reference.
+- Research schema v3 uses nested closed requirement variants. Supporting and
+  conflicting evidence require one to six indexes; `not_found` requires zero;
+  every fact requires one to six. Runtime must independently retain these
+  checks plus candidate-length-dependent range and uniqueness because the
+  provider schema cannot express every relation.
+- Contract v5, research prompt v4, and runtime v4 are one job-identity boundary.
+  Token verification must continue requiring the current prompt version and
+  recomputing the current request fingerprint so older in-flight work fails
+  closed.
+- Preserve the reversed response-registry/non-first-candidate regression: a
+  local index maps through its candidate array, never response source order.
+  Preserve separate legacy requirement/fact URL-shape rejections and duplicate,
+  fractional, out-of-range, empty, and status-cardinality negatives.
+- The randomized encrypted-token tamper test must always choose a replacement
+  different from the current character; a fixed replacement can leave a random
+  token unchanged and create a false failure.
+- PR-2J was zero-live. Fail-first was 23 pass / 7 intended fail; corrected
+  contract 31/31, staged 75/75, full 1,460/1,460, E2E 17/17, and independent
+  corrected-snapshot review `APPROVED`. This closes PR-015's reproduced
+  producer/parser mismatch only. It does not prove PR-2I's private cause, model
+  adherence, lifecycle feasibility, recommendation quality, latency, or cost.
+
+---
+
 ## OAI-T10 PR-2I research-fact live stop (2026-08-29)
 
 - The one attempt at `06fa55fb38f6675a897053eb21328ac8845d4e14` is spent.
