@@ -11,6 +11,35 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Add privacy-safe staged verification attribution
+
+#### Changed
+
+- Verifier v2 derives six mutually exclusive first-loss counts from existing
+  asset identity, complete-product relationship, identity-safe product URL, and
+  hard-requirement decisions. The counts must conserve to the candidate total.
+- Separate aggregate counters report only how many candidates had an unowned or
+  invalid source or an invalid observed claim. No candidate row or identifying
+  evidence is retained.
+- The route reconstructs fixed numeric keys, bounds and reconciles every count,
+  drops malformed/unknown/private values, and emits attribution only for
+  verification failed/completed diagnostics. The generic public 502 is
+  unchanged. Sanitized Phase D evidence is now v3.
+
+#### Verified
+
+- The initial proposal failed independent review because one derived product-
+  type bucket was unreachable. The corrected implementation uses real existing
+  asset decisions and includes materializer-origin relationship and URL cases.
+- Corrected focused tests passed 30/30, the staged subsystem passed 62/62, the
+  complete suite passed 1,447/1,447, and credential-neutral E2E passed 17/17.
+- Typecheck, production build, deterministic evaluation, fixed ranking
+  comparison, zero-network dry run, lint (zero errors and three existing
+  warnings), and diff checks passed. Independent re-review returned `APPROVED`.
+- No provider, search, Shopping, source-page, or other product-data request ran.
+  PR-2E remains permanently unattributable; this change applies only to future
+  attempts and does not change eligibility or prove staged feasibility.
+
 ### Codex - Stop staged feasibility at deterministic verification
 
 #### Observed

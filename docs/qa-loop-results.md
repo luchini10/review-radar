@@ -11692,3 +11692,81 @@ uncertainty.
 preserving verification first-loss counts offline. Do not change eligibility or
 evidence gates and do not spend again until that boundary is independently
 green.
+
+---
+
+## 🟧 Codex — 2026-08-29 — Production readiness PR-2F attribution closeout
+
+**Objective:** recover enough privacy-safe observability to diagnose only a
+future staged verification outcome, without changing verifier eligibility,
+evidence acceptance, network behavior, prompts, provider-facing research or
+presentation schemas, the verified evidence-package schema, flags, or public
+responses.
+
+**Fail-first evidence:** the focused verifier/route/Phase D wall passed 23
+existing checks and failed six new assertions. The verifier returned no closed
+aggregate, the route could not sanitize or reconcile it, the Phase D contract
+still expected sanitized evidence v2, and the new conservation/privacy controls
+were absent.
+
+**Independent-review correction:** the first implementation's
+`completeProductTypeUnproven` bucket was unreachable because
+`completeProductTypeProven` was assigned exactly the same fact as
+`identityProven`. The reviewer blocked approval. The corrected design derives
+three distinct facts from existing `DirectTerraAssetDecision` objects: any
+identity-accepted decision, any complete/bundle relationship, and any
+identity-safe accepted product URL/evidence. Materializer-origin tests now prove
+both a genuine identity-accepted/relationship-unknown candidate and a genuine
+complete-relationship/no-product-URL candidate.
+
+**Correction:** `staged-terra-verifier-v2` assigns exactly one first loss per
+candidate in deterministic order:
+
+1. `assetIdentityUnproven`
+2. `completeProductRelationshipUnproven`
+3. `identitySafeProductUrlUnavailable`
+4. `hardRequirementFailed`
+5. `hardRequirementNotVerified`
+6. `noLossEligible`
+
+The six counts conserve exactly to candidate total. `noLossEligible` reconciles
+with eligible, `hardRequirementNotVerified` with close match, and the first four
+with excluded. Three separate candidate-affected counters retain only
+`sourceNotOwnedByCandidate`, `sourceInputInvalid`, and
+`observedClaimInvalid`; they are not first-loss buckets.
+
+The route reconstructs only the fixed numeric keys, validates each as a bounded
+non-negative safe integer, requires conservation and outcome reconciliation,
+and omits the aggregate on any malformed or private input. It can appear only in
+server verification diagnostics with `outcome=failed|completed`. The public 502
+body remains byte-for-byte unchanged. Phase D sanitized evidence is now
+`oai-t10-phase-d-sanitized-v3`; the plan schema and every call/network/cost
+ceiling remain unchanged.
+
+**Verification (zero live):**
+
+- initial fail-first: 23 pass / 6 intended fail;
+- corrected focused verifier/route/Phase D: 30/30;
+- full staged subsystem: 62/62 across ten suites;
+- complete deterministic suite: 1,447/1,447 across 209 suites;
+- credential-neutral E2E: 17/17;
+- typecheck, production build, deterministic eval, fixed ranking comparison,
+  zero-network Phase D dry run, and `git diff --check`: pass;
+- lint: zero errors and three pre-existing warnings at
+  `tests/finalSelectionTrace.test.mjs:102` and
+  `tests/sourceQualityUpgrade.test.mjs:2417`; and
+- independent re-review: `APPROVED` with no actionable findings after a
+  personal 30/30 focused run, 1,447/1,447 full run, typecheck, diff check, and
+  exact-scope/clean-state authentication.
+
+No OpenAI API, Serper, SearchAPI, Shopping, source-page, or other product-data
+request ran. No `.env.local` edit, flag promotion, deployment, production
+change, push, spent-fixture mutation, or user-owned artifact cleanup occurred.
+
+**Limitation and decision:** PR-2F makes only a future attempt's own verifier
+distribution attributable. PR-2E remains permanently unknowable. The strongest
+next test is exactly one clean, commit-pinned, new-directory broad `shop vac`
+attempt under the unchanged Phase D envelope, stopping at its first terminal
+outcome with no retry/replacement/fallback. That one attempt can establish only
+lifecycle evidence and its own first loss, not quality, stability, or benchmark
+readiness.

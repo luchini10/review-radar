@@ -4,6 +4,42 @@
 
 ---
 
+## OAI-T10 PR-2F safe verification attribution (2026-08-29)
+
+- `staged-terra-verifier-v2` derives one mutually exclusive first loss per
+  candidate in this order: `assetIdentityUnproven`,
+  `completeProductRelationshipUnproven`,
+  `identitySafeProductUrlUnavailable`, `hardRequirementFailed`,
+  `hardRequirementNotVerified`, then `noLossEligible`. The six counts must
+  conserve exactly to the candidate total and reconcile with eligible, close-
+  match, and excluded totals.
+- Separate affected-candidate counters are
+  `sourceNotOwnedByCandidate`, `sourceInputInvalid`, and
+  `observedClaimInvalid`. They are not mutually exclusive first-loss buckets and
+  must never be interpreted as candidate identities or exact rejection causes.
+- The route accepts only bounded non-negative safe integers at fixed keys. A
+  malformed, non-conserving, non-reconciling, unknown, or private aggregate is
+  omitted. Attribution is server-side and appears only on verification failed
+  or completed diagnostics; the public response is unchanged.
+- Sanitized Phase D evidence v3 may retain only this aggregate for the exact
+  attempt that produced it. Never retain candidate IDs, names, brands, models,
+  types, URLs, hosts, titles, requirement IDs/text, claims, prices, page content,
+  provider IDs, prompts, credentials, secrets, or per-candidate records.
+- Independent review initially rejected an unreachable proposed
+  `completeProductTypeUnproven` bucket. The approved correction derives
+  identity, complete/bundle relationship, and identity-safe accepted product
+  evidence from real `DirectTerraAssetDecision` facts. Preserve the materializer-
+  origin tests that prove the relationship and safe-URL buckets are reachable.
+- Corrected focused tests passed 30/30, staged tests 62/62, full tests
+  1,447/1,447, E2E 17/17, and all typecheck/build/eval/ranking/dry-run/diff walls.
+  Independent re-review returned `APPROVED` with no findings.
+- PR-2F made no external request and does not explain PR-2E. A future live run is
+  permitted only from the final clean committed PR-2F tree, in a new commit-
+  specific directory, under the unchanged Phase D ceilings, exactly once, with
+  no retry/replacement/fallback and a stop at the first terminal outcome.
+
+---
+
 ## OAI-T10 PR-2E verification live stop (2026-08-29)
 
 - The one attempt at `56a513784e195ee255410e6f49d29763d87af5c7` is

@@ -148,6 +148,7 @@ describe("OAI-T10 deterministic evidence materializer", () => {
     });
 
     assert.equal(result.verifierVersion, STAGED_TERRA_VERIFIER_VERSION);
+    assert.equal(STAGED_TERRA_VERIFIER_VERSION, "staged-terra-verifier-v2");
     assert.equal(
       result.evidencePackage.schemaVersion,
       STAGED_TERRA_EVIDENCE_PACKAGE_VERSION,
@@ -195,6 +196,98 @@ describe("OAI-T10 deterministic evidence materializer", () => {
       result.diagnostics.candidates.map((candidate) => candidate.candidateId),
       researchOutput().candidates.map((candidate) => candidate.candidateId),
     );
+    assert.deepEqual(result.diagnostics.aggregate, {
+      candidateFirstLossCounts: {
+        assetIdentityUnproven: 7,
+        completeProductRelationshipUnproven: 0,
+        identitySafeProductUrlUnavailable: 0,
+        hardRequirementFailed: 0,
+        hardRequirementNotVerified: 0,
+        noLossEligible: 1,
+      },
+      sourceRejectionCandidateCounts: {
+        sourceNotOwnedByCandidate: 0,
+        sourceInputInvalid: 0,
+      },
+      claimRejectionCandidateCounts: {
+        observedClaimInvalid: 0,
+      },
+    });
+    assert.equal(
+      Object.values(result.diagnostics.aggregate.candidateFirstLossCounts).reduce(
+        (sum, count) => sum + count,
+        0,
+      ),
+      result.diagnostics.candidateCount,
+    );
+  });
+
+  it("separates identity, complete-product relationship, and identity-safe URL loss from real asset decisions", () => {
+    const source = exactCandidateInput().sources[0];
+    const relationshipUnknown = materializeStagedTerraEvidencePackage({
+      shopperRequest: shopper,
+      researchOutput: researchOutput(),
+      market: "US",
+      candidates: [
+        exactCandidateInput({
+          sources: [
+            {
+              ...source,
+              ...productPageSource({ name: "Example Brand V100" }),
+            },
+          ],
+        }),
+      ],
+    });
+    assert.equal(
+      relationshipUnknown.diagnostics.candidates[0].assetIdentityAccepted,
+      true,
+    );
+    assert.equal(
+      relationshipUnknown.diagnostics.candidates[0]
+        .completeProductRelationshipProven,
+      false,
+    );
+    assert.equal(
+      relationshipUnknown.diagnostics.candidates[0]
+        .identitySafeProductUrlProven,
+      false,
+    );
+    assert.equal(
+      relationshipUnknown.diagnostics.aggregate.candidateFirstLossCounts
+        .completeProductRelationshipUnproven,
+      1,
+    );
+
+    const productUrlUnavailable = materializeStagedTerraEvidencePackage({
+      shopperRequest: shopper,
+      researchOutput: researchOutput(),
+      market: "US",
+      candidates: [
+        exactCandidateInput({
+          sources: [{ ...source, sourceRole: "manufacturer_spec" }],
+        }),
+      ],
+    });
+    assert.equal(
+      productUrlUnavailable.diagnostics.candidates[0].assetIdentityAccepted,
+      true,
+    );
+    assert.equal(
+      productUrlUnavailable.diagnostics.candidates[0]
+        .completeProductRelationshipProven,
+      true,
+    );
+    assert.equal(
+      productUrlUnavailable.diagnostics.candidates[0]
+        .identitySafeProductUrlProven,
+      false,
+    );
+    assert.equal(
+      productUrlUnavailable.diagnostics.aggregate.candidateFirstLossCounts
+        .identitySafeProductUrlUnavailable,
+      1,
+    );
   });
 
   it("excludes an over-budget product and withholds its otherwise safe assets", () => {
@@ -220,6 +313,11 @@ describe("OAI-T10 deterministic evidence materializer", () => {
         (verdict) => verdict.requirementId === "budget",
       )?.verdict,
       "fail",
+    );
+    assert.equal(
+      result.diagnostics.aggregate.candidateFirstLossCounts
+        .hardRequirementFailed,
+      1,
     );
     assert.deepEqual(candidate.assets, {
       productUrl: null,
@@ -322,6 +420,11 @@ describe("OAI-T10 deterministic evidence materializer", () => {
       ),
       true,
     );
+    assert.equal(
+      result.diagnostics.aggregate.candidateFirstLossCounts
+        .hardRequirementNotVerified,
+      1,
+    );
   });
 
   it("does not promote cross-candidate, unregistered, or subjective evidence", () => {
@@ -364,6 +467,11 @@ describe("OAI-T10 deterministic evidence materializer", () => {
       ),
       true,
     );
+    assert.equal(
+      result.diagnostics.aggregate.sourceRejectionCandidateCounts
+        .sourceNotOwnedByCandidate,
+      1,
+    );
   });
 
   it("requires every source-reported claim to appear in the observed page", () => {
@@ -399,6 +507,11 @@ describe("OAI-T10 deterministic evidence materializer", () => {
       ),
       true,
     );
+    assert.equal(
+      result.diagnostics.aggregate.claimRejectionCandidateCounts
+        .observedClaimInvalid,
+      1,
+    );
   });
 
   it("rejects source HTML that does not match its immutable observation hash", () => {
@@ -431,6 +544,11 @@ describe("OAI-T10 deterministic evidence materializer", () => {
         "source_input_invalid",
       ),
       true,
+    );
+    assert.equal(
+      result.diagnostics.aggregate.sourceRejectionCandidateCounts
+        .sourceInputInvalid,
+      1,
     );
   });
 

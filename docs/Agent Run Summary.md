@@ -1806,3 +1806,52 @@ debts remain open.
 **Next recommended step:** zero-live closed aggregate verifier first-loss
 diagnostics, with no eligibility change and no candidate/request/private fields.
 Reasoning level: High for privacy semantics, then Medium for aggregate plumbing.
+
+## Codex Run - 2026-08-29 Production readiness PR-2F verification attribution
+
+**Goal:** make a future staged verification outcome attributable with closed
+aggregate counts, without changing eligibility, exposing candidate evidence, or
+making a live request.
+
+**What was checked:** the verifier's real materialized asset decisions,
+requirement verdicts, source/claim rejection enums, route diagnostic boundary,
+Phase D evidence contract, generic browser response, and conservation/privacy
+mutations.
+
+**Initial review blocker:** the first implementation proposed a complete-product-
+type bucket that could never be reached because its derived predicate was
+identical to identity acceptance. Independent review correctly rejected it.
+
+**What changed:** verifier v2 now assigns exactly one real first-loss bucket per
+candidate: asset identity unproven, complete-product relationship unproven,
+identity-safe product URL unavailable, hard requirement failed, hard requirement
+not verified, or no-loss eligible. Three separate counters record only candidate
+counts affected by unowned sources, invalid source input, or invalid observed
+claims. The route accepts only fixed bounded integers whose first-loss total
+conserves and whose outcome counts reconcile, dropping every malformed,
+unknown, or private value. Evidence schema v3 may retain this aggregate only for
+its own verification outcome; the public error is unchanged.
+
+**Why it matters:** another verification stop can now show the dominant
+aggregate loss for that attempt without retaining candidate identities, URLs,
+requirements, claims, pages, provider material, prompts, credentials, or
+secrets. PR-2E is not retroactively explained.
+
+**Proof:** fail-first was 23 pass / 6 intended fail. After correcting the review
+blocker, focused tests passed 30/30, staged tests 62/62, full tests 1,447/1,447,
+and E2E 17/17. Typecheck, build, eval, ranking, zero-network dry run, lint (zero
+errors, three existing warnings), and diff checks passed. Independent re-review
+returned `APPROVED` with no actionable findings after personally rerunning the
+focused/full walls, typecheck, and diff checks.
+
+**Live checks:** none. No OpenAI, search, Shopping, source-page, or other
+product-data request ran.
+
+**Remaining issues:** staged lifecycle feasibility, presentation/rendering, and
+shopper-result quality remain unproven; PR-005 through PR-008 and PR-013 remain
+open.
+
+**Next recommended step:** exactly one clean, commit-pinned, new-directory
+`shop vac` attempt under the unchanged Phase D envelope, with no retry,
+replacement, fallback, second case, or gate change. Reasoning level: routine for
+execution and High for evidence adjudication.

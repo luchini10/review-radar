@@ -172,9 +172,15 @@ remains v2 because PR-2D changes ownership validation, not its JSON shape.
 After research completes, the server fetches at most two candidate-owned source
 pages per product through the existing DNS-pinned bounded-fetch seam and may
 run one exact-identity Shopping verification per product. Those receipts enter
-`staged-terra-verifier-v1`, which accounts for every candidate as eligible,
+`staged-terra-verifier-v2`, which accounts for every candidate as eligible,
 close match, or excluded and owns all identity, hard-requirement, fact, price,
-product-page, and image trust decisions.
+product-page, and image trust decisions. It also derives a closed aggregate
+first-loss distribution from those existing decisions. The mutually exclusive
+buckets are asset identity unproven, complete-product relationship unproven,
+identity-safe product URL unavailable, hard requirement failed, hard
+requirement not verified, and no-loss eligible; their counts must conserve to
+the candidate total. Separate counters record only how many candidates had a
+source rejected as unowned/invalid or an invalid observed claim.
 
 One separate synchronous Terra/medium response receives only that verified
 package. It has no web-search tools and no previous-response ID. It may rank
@@ -213,11 +219,16 @@ unidentifiable responses sum conservatively and block successful acceptance as
 an anomaly. The entire branch remains default-off, undeployed, and without a
 successful live feasibility result. Its latest live response passed research
 validation with 12 candidates, then deterministic verification excluded all 12
-before presentation. The route currently retains only aggregate eligible/close/
-excluded, fetch, and commerce counts, so the identity, product-type,
-requirement, or evidence first loss is not attributable. Earlier spent private
-branches remain permanently unknowable; new evidence applies only to the exact
-attempt that produced it.
+before presentation. That PR-2E evidence predates aggregate attribution, so its
+identity, relationship, safe-product-URL, requirement, source, or claim first
+loss remains permanently unknowable. For future verification outcomes, the
+route reconstructs only bounded integer values from the fixed verifier-v2 keys,
+requires first-loss conservation and reconciliation with eligible/close/excluded
+totals, drops malformed or unknown/private values, and retains the aggregate
+only for server-side verification diagnostics. Sanitized Phase D evidence v3
+may preserve those counts for its own attempt. The public 502 body is unchanged,
+and no candidate identity, URL, requirement, claim, page content, provider
+material, prompt, credential, or secret crosses the route boundary.
 
 ## 2. Full user flow
 

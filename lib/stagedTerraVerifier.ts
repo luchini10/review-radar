@@ -39,7 +39,7 @@ import {
 } from "./stagedTerraContract.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
 
-export const STAGED_TERRA_VERIFIER_VERSION = "staged-terra-verifier-v1";
+export const STAGED_TERRA_VERIFIER_VERSION = "staged-terra-verifier-v2";
 
 const SOURCE_ROLES = new Set<HybridSourceRole>([
   "official_product",
@@ -89,14 +89,46 @@ export type StagedTerraVerifierInput = {
   candidates: StagedTerraCandidateVerificationInput[];
 };
 
+export type StagedTerraCandidateFirstLoss =
+  | "asset_identity_unproven"
+  | "complete_product_relationship_unproven"
+  | "identity_safe_product_url_unavailable"
+  | "hard_requirement_failed"
+  | "hard_requirement_not_verified"
+  | "no_loss_eligible";
+
+export type StagedTerraVerifierRejectionReason =
+  | "source_not_owned_by_candidate"
+  | "source_input_invalid"
+  | "observed_claim_invalid";
+
+export type StagedTerraVerifierAggregateDiagnostic = {
+  candidateFirstLossCounts: {
+    assetIdentityUnproven: number;
+    completeProductRelationshipUnproven: number;
+    identitySafeProductUrlUnavailable: number;
+    hardRequirementFailed: number;
+    hardRequirementNotVerified: number;
+    noLossEligible: number;
+  };
+  sourceRejectionCandidateCounts: {
+    sourceNotOwnedByCandidate: number;
+    sourceInputInvalid: number;
+  };
+  claimRejectionCandidateCounts: {
+    observedClaimInvalid: number;
+  };
+};
+
 export type StagedTerraCandidateDiagnostic = {
   candidateId: string;
   outcome: StagedTerraVerifiedCandidate["eligibility"];
   acceptedSourceCount: number;
   rejectedSourceCount: number;
-  rejectionReasons: string[];
-  identityProven: boolean;
-  completeProductTypeProven: boolean;
+  rejectionReasons: StagedTerraVerifierRejectionReason[];
+  assetIdentityAccepted: boolean;
+  completeProductRelationshipProven: boolean;
+  identitySafeProductUrlProven: boolean;
   verifiedPriceCount: number;
   productUrlAvailable: boolean;
   imageUrlAvailable: boolean;
@@ -109,6 +141,7 @@ export type StagedTerraVerifierResult = {
     verifierVersion: typeof STAGED_TERRA_VERIFIER_VERSION;
     candidateCount: number;
     candidates: StagedTerraCandidateDiagnostic[];
+    aggregate: StagedTerraVerifierAggregateDiagnostic;
   };
 };
 
@@ -536,13 +569,11 @@ function verdictFromValidation(
 }
 
 function exclusionReason(input: {
-  identityProven: boolean;
-  completeProductTypeProven: boolean;
+  identitySafeProductUrlProven: boolean;
   verdicts: StagedTerraVerifiedRequirement[];
 }) {
-  if (!input.identityProven) return "Exact product identity was not proven.";
-  if (!input.completeProductTypeProven) {
-    return "The source did not prove the requested complete product type.";
+  if (!input.identitySafeProductUrlProven) {
+    return "Exact product identity was not proven.";
   }
   const failed = input.verdicts.find((verdict) => verdict.verdict === "fail");
   if (failed) return `Hard requirement failed: ${failed.requirementId}.`;
@@ -551,6 +582,28 @@ function exclusionReason(input: {
   );
   if (unknown) return `Hard requirement not verified: ${unknown.requirementId}.`;
   return null;
+}
+
+function candidateFirstLoss(input: {
+  assetIdentityAccepted: boolean;
+  completeProductRelationshipProven: boolean;
+  identitySafeProductUrlProven: boolean;
+  verdicts: StagedTerraVerifiedRequirement[];
+}): StagedTerraCandidateFirstLoss {
+  if (!input.assetIdentityAccepted) return "asset_identity_unproven";
+  if (!input.completeProductRelationshipProven) {
+    return "complete_product_relationship_unproven";
+  }
+  if (!input.identitySafeProductUrlProven) {
+    return "identity_safe_product_url_unavailable";
+  }
+  if (input.verdicts.some((verdict) => verdict.verdict === "fail")) {
+    return "hard_requirement_failed";
+  }
+  if (input.verdicts.some((verdict) => verdict.verdict === "not_verified")) {
+    return "hard_requirement_not_verified";
+  }
+  return "no_loss_eligible";
 }
 
 function snakeEvidence(evidence: StagedTerraEvidence[]) {
@@ -628,6 +681,23 @@ export function materializeStagedTerraEvidencePackage(
   const evidence = new EvidenceAccumulator();
   const verifiedCandidates: StagedTerraVerifiedCandidate[] = [];
   const diagnostics: StagedTerraCandidateDiagnostic[] = [];
+  const aggregate: StagedTerraVerifierAggregateDiagnostic = {
+    candidateFirstLossCounts: {
+      assetIdentityUnproven: 0,
+      completeProductRelationshipUnproven: 0,
+      identitySafeProductUrlUnavailable: 0,
+      hardRequirementFailed: 0,
+      hardRequirementNotVerified: 0,
+      noLossEligible: 0,
+    },
+    sourceRejectionCandidateCounts: {
+      sourceNotOwnedByCandidate: 0,
+      sourceInputInvalid: 0,
+    },
+    claimRejectionCandidateCounts: {
+      observedClaimInvalid: 0,
+    },
+  };
 
   for (
     let candidateIndex = 0;
@@ -640,7 +710,7 @@ export function materializeStagedTerraEvidencePackage(
       sources: [],
       shoppingResults: [],
     };
-    const rejectionReasons: string[] = [];
+    const rejectionReasons: StagedTerraVerifierRejectionReason[] = [];
     const acceptedSources: AcceptedSource[] = [];
     const assetCandidates: DirectTerraAssetCandidate[] = [];
     const assetProvenance: AssetProvenance[] = [];
@@ -742,6 +812,11 @@ export function materializeStagedTerraEvidencePackage(
       target: targetForCandidate(candidate, candidateIndex + 1),
       candidates: assetCandidates,
     });
+    const assetIdentityAccepted = assetVerification.decisions.some(
+      (decision) => decision.identityAccepted,
+    );
+    const completeProductRelationshipProven =
+      assetVerification.decisions.some(relationshipIsComplete);
 
     for (const source of acceptedSources) {
       const decision = assetVerification.decisions[source.assetCandidateIndex];
@@ -794,8 +869,7 @@ export function materializeStagedTerraEvidencePackage(
         .filter((id): id is string => Boolean(id)),
       ...(commerceClaimEvidenceId ? [commerceClaimEvidenceId] : []),
     ];
-    const identityProven = identityEvidenceIds.length > 0;
-    const completeProductTypeProven = identityProven;
+    const identitySafeProductUrlProven = identityEvidenceIds.length > 0;
 
     const acceptedClaims: Array<{
       kind: StagedTerraObservedClaim["kind"];
@@ -946,7 +1020,7 @@ export function materializeStagedTerraEvidencePackage(
         evidenceIds: uniqueEvidence,
       });
     };
-    if (identityProven) {
+    if (identitySafeProductUrlProven) {
       addFact(
         "identity",
         `Exact product identity was verified for ${candidate.productName}.`,
@@ -1085,12 +1159,11 @@ export function materializeStagedTerraEvidencePackage(
     }
 
     const reason = exclusionReason({
-      identityProven,
-      completeProductTypeProven,
+      identitySafeProductUrlProven,
       verdicts: requirementVerdicts,
     });
     const eligibility: StagedTerraVerifiedCandidate["eligibility"] =
-      !identityProven || !completeProductTypeProven
+      !identitySafeProductUrlProven
         ? "excluded"
         : requirementVerdicts.some((item) => item.verdict === "fail")
           ? "excluded"
@@ -1099,6 +1172,35 @@ export function materializeStagedTerraEvidencePackage(
               )
             ? "close_match"
             : "eligible";
+    const firstLoss = candidateFirstLoss({
+      assetIdentityAccepted,
+      completeProductRelationshipProven,
+      identitySafeProductUrlProven,
+      verdicts: requirementVerdicts,
+    });
+    const expectedEligibility =
+      firstLoss === "no_loss_eligible"
+        ? "eligible"
+        : firstLoss === "hard_requirement_not_verified"
+          ? "close_match"
+          : "excluded";
+    if (eligibility !== expectedEligibility) {
+      throw new Error("staged_terra_verifier_first_loss_inconsistent");
+    }
+    if (firstLoss === "asset_identity_unproven") {
+      aggregate.candidateFirstLossCounts.assetIdentityUnproven += 1;
+    } else if (firstLoss === "complete_product_relationship_unproven") {
+      aggregate.candidateFirstLossCounts.completeProductRelationshipUnproven +=
+        1;
+    } else if (firstLoss === "identity_safe_product_url_unavailable") {
+      aggregate.candidateFirstLossCounts.identitySafeProductUrlUnavailable += 1;
+    } else if (firstLoss === "hard_requirement_failed") {
+      aggregate.candidateFirstLossCounts.hardRequirementFailed += 1;
+    } else if (firstLoss === "hard_requirement_not_verified") {
+      aggregate.candidateFirstLossCounts.hardRequirementNotVerified += 1;
+    } else {
+      aggregate.candidateFirstLossCounts.noLossEligible += 1;
+    }
     if (eligibility !== "eligible") {
       productUrl = null;
       productUrlEvidenceId = null;
@@ -1123,6 +1225,16 @@ export function materializeStagedTerraEvidencePackage(
         imageUrlEvidenceId,
       },
     });
+    const uniqueRejectionReasons = [...new Set(rejectionReasons)];
+    if (uniqueRejectionReasons.includes("source_not_owned_by_candidate")) {
+      aggregate.sourceRejectionCandidateCounts.sourceNotOwnedByCandidate += 1;
+    }
+    if (uniqueRejectionReasons.includes("source_input_invalid")) {
+      aggregate.sourceRejectionCandidateCounts.sourceInputInvalid += 1;
+    }
+    if (uniqueRejectionReasons.includes("observed_claim_invalid")) {
+      aggregate.claimRejectionCandidateCounts.observedClaimInvalid += 1;
+    }
     diagnostics.push({
       candidateId: candidate.candidateId,
       outcome: eligibility,
@@ -1132,9 +1244,10 @@ export function materializeStagedTerraEvidencePackage(
       rejectedSourceCount:
         candidateInput.sources.length -
         acceptedSources.filter((source) => source.claimEligible).length,
-      rejectionReasons: [...new Set(rejectionReasons)],
-      identityProven,
-      completeProductTypeProven,
+      rejectionReasons: uniqueRejectionReasons,
+      assetIdentityAccepted,
+      completeProductRelationshipProven,
+      identitySafeProductUrlProven,
       verifiedPriceCount: priceObservations.length,
       productUrlAvailable: Boolean(productUrl),
       imageUrlAvailable: Boolean(imageUrl),
@@ -1170,6 +1283,7 @@ export function materializeStagedTerraEvidencePackage(
       verifierVersion: STAGED_TERRA_VERIFIER_VERSION,
       candidateCount: verifiedCandidates.length,
       candidates: diagnostics,
+      aggregate,
     },
   };
 }

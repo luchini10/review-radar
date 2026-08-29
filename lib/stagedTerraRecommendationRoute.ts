@@ -25,7 +25,10 @@ import {
   startStagedTerraResearch,
   type StagedTerraRuntimeLedger,
 } from "./stagedTerraRuntime.ts";
-import { materializeStagedTerraEvidencePackage } from "./stagedTerraVerifier.ts";
+import {
+  materializeStagedTerraEvidencePackage,
+  type StagedTerraVerifierAggregateDiagnostic,
+} from "./stagedTerraVerifier.ts";
 import {
   isStagedTerraResearchCandidateSourceValidationReason,
   isStagedTerraResearchCandidateValidationReason,
@@ -69,6 +72,7 @@ export type StagedTerraServerDiagnostic = {
     closeMatchCandidates: number;
     excludedCandidates: number;
   };
+  verificationAttribution?: StagedTerraVerifierAggregateDiagnostic;
 };
 
 type HandlerOptions = {
@@ -134,6 +138,119 @@ function configured(environment: Environment) {
       environment.jobTokenSecret &&
       isValidStagedTerraJobTokenSecret(environment.jobTokenSecret),
   );
+}
+
+function record(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function boundedCount(value: unknown, maximum: number) {
+  return typeof value === "number" &&
+    Number.isSafeInteger(value) &&
+    value >= 0 &&
+    value <= maximum
+    ? value
+    : null;
+}
+
+function sanitizeVerificationAttribution(
+  value: unknown,
+  expected: {
+    candidates: number;
+    eligible: number;
+    closeMatch: number;
+    excluded: number;
+  },
+): StagedTerraVerifierAggregateDiagnostic | undefined {
+  const aggregate = record(value);
+  const firstLoss = record(aggregate?.candidateFirstLossCounts);
+  const sourceRejections = record(
+    aggregate?.sourceRejectionCandidateCounts,
+  );
+  const claimRejections = record(aggregate?.claimRejectionCandidateCounts);
+  if (!aggregate || !firstLoss || !sourceRejections || !claimRejections) {
+    return undefined;
+  }
+  const assetIdentityUnproven = boundedCount(
+    firstLoss.assetIdentityUnproven,
+    expected.candidates,
+  );
+  const completeProductRelationshipUnproven = boundedCount(
+    firstLoss.completeProductRelationshipUnproven,
+    expected.candidates,
+  );
+  const identitySafeProductUrlUnavailable = boundedCount(
+    firstLoss.identitySafeProductUrlUnavailable,
+    expected.candidates,
+  );
+  const hardRequirementFailed = boundedCount(
+    firstLoss.hardRequirementFailed,
+    expected.candidates,
+  );
+  const hardRequirementNotVerified = boundedCount(
+    firstLoss.hardRequirementNotVerified,
+    expected.candidates,
+  );
+  const noLossEligible = boundedCount(
+    firstLoss.noLossEligible,
+    expected.candidates,
+  );
+  const sourceNotOwnedByCandidate = boundedCount(
+    sourceRejections.sourceNotOwnedByCandidate,
+    expected.candidates,
+  );
+  const sourceInputInvalid = boundedCount(
+    sourceRejections.sourceInputInvalid,
+    expected.candidates,
+  );
+  const observedClaimInvalid = boundedCount(
+    claimRejections.observedClaimInvalid,
+    expected.candidates,
+  );
+  if (
+    assetIdentityUnproven === null ||
+    completeProductRelationshipUnproven === null ||
+    identitySafeProductUrlUnavailable === null ||
+    hardRequirementFailed === null ||
+    hardRequirementNotVerified === null ||
+    noLossEligible === null ||
+    sourceNotOwnedByCandidate === null ||
+    sourceInputInvalid === null ||
+    observedClaimInvalid === null ||
+    assetIdentityUnproven +
+      completeProductRelationshipUnproven +
+      identitySafeProductUrlUnavailable +
+      hardRequirementFailed +
+      hardRequirementNotVerified +
+      noLossEligible !==
+      expected.candidates ||
+    noLossEligible !== expected.eligible ||
+    hardRequirementNotVerified !== expected.closeMatch ||
+    assetIdentityUnproven +
+      completeProductRelationshipUnproven +
+      identitySafeProductUrlUnavailable +
+      hardRequirementFailed !==
+      expected.excluded
+  ) {
+    return undefined;
+  }
+  return {
+    candidateFirstLossCounts: {
+      assetIdentityUnproven,
+      completeProductRelationshipUnproven,
+      identitySafeProductUrlUnavailable,
+      hardRequirementFailed,
+      hardRequirementNotVerified,
+      noLossEligible,
+    },
+    sourceRejectionCandidateCounts: {
+      sourceNotOwnedByCandidate,
+      sourceInputInvalid,
+    },
+    claimRejectionCandidateCounts: { observedClaimInvalid },
+  };
 }
 
 function shopperRequest(
@@ -449,15 +566,34 @@ export function createStagedTerraRecommendationHandlers({
             closeMatchCandidates: eligibilityCounts.close_match,
             excludedCandidates: eligibilityCounts.excluded,
           };
+          const verificationAttribution = sanitizeVerificationAttribution(
+            verifiedEvidence.diagnostics.aggregate,
+            {
+              candidates: counts.candidates,
+              eligible: counts.eligibleCandidates,
+              closeMatch: counts.closeMatchCandidates,
+              excluded: counts.excludedCandidates,
+            },
+          );
           if (eligibilityCounts.eligible === 0) {
-            report({ stage: "verification", outcome: "failed", counts });
+            report({
+              stage: "verification",
+              outcome: "failed",
+              counts,
+              ...(verificationAttribution ? { verificationAttribution } : {}),
+            });
             return failure(
               "verification_failed",
               ERROR_MESSAGES.verificationFailed,
               502,
             );
           }
-          report({ stage: "verification", outcome: "completed", counts });
+          report({
+            stage: "verification",
+            outcome: "completed",
+            counts,
+            ...(verificationAttribution ? { verificationAttribution } : {}),
+          });
           const presented = await runPresentation({
             client,
             evidencePackage: verifiedEvidence.evidencePackage,
