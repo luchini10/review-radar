@@ -12293,3 +12293,101 @@ The controller left advisory output in the ignored worker artifact `agent-loop-2
 ### Report
 
 See `docs/agent-loop-report.md`.
+
+## 🟧 Codex — 2026-08-29 — PR-3A live stop and PR-3B verification subreason attribution
+
+**Objective:** determine whether the trusted staged path can complete one
+shopper lifecycle after PR-3, then make any reproduced first loss actionable
+without weakening verification or retaining private product detail.
+
+**PR-3A live ground truth:** exactly one frozen `shop vac` Phase D invocation
+ran at clean commit `43857e072da54ee8f988887d3813722ed6fd005b`.
+Terra research completed with ten candidates and 79 canonical sources.
+Collection selected 15 source pages, seven fetched successfully, and ten
+Shopping requests returned 192 rows. Verification classified 0 eligible, 0
+close match, and 10 excluded: nine first losses at
+`assetIdentityUnproven`, one at `identitySafeProductUrlUnavailable`, and zero in
+every later first-loss bucket. Presentation and rendering did not run.
+
+The first-terminal/no-retry envelope held: one OpenAI create, 19 retrieves,
+three hosted searches, one safety cancel, ten Shopping attempts, 15 source-page
+selections, and 17 physical page attempts; all retry, replacement, fallback,
+organic, SearchAPI, second-case, presentation, and deployment counters stayed
+zero. Usage was 30,372 input, zero cached input, 4,591 output, and three web
+search calls. Estimated costs were `$0.174795` frozen nominal, `$0.193777`
+frozen conservative, and `$0.145836` current; the conservative value remained
+below the `$3` gate.
+
+The spent directory contains only untracked 18,328-byte `attempt.json`,
+SHA-256 `39dd07087313339bf0b8b0cad1abd6c3ab1890a2daed73800989b63d6bad4894`.
+Independent strict read-only audit returned exact verdict `VERIFIED`: commit,
+case, schema, counters, cost, ledger, conservation, and privacy allowlist all
+passed. The only URLs were the two approved OpenAI pricing sources; no raw
+output, provider ID, candidate/product/source identity, prompt, header/body,
+credential, key, secret, or token was retained. The artifact is immutable and
+was not reread or modified during the correction.
+
+**Evidence limit:** the v3 aggregate cannot identify which candidates occupied
+the two loss buckets or distinguish absent asset candidates from brand, model,
+conflict, type, Shopping, relationship, or product-URL rejection reasons. Zero
+source/claim rejection counts do not prove those later gates passed for
+candidates that stopped earlier. No exact live cause was inferred.
+
+**Fail-first:** the focused verifier/route suite passed 15 checks and failed
+seven intended new expectations. The failures proved that verifier v2 had no
+subreason groups, the route projected only the old aggregate, and an unknown
+aggregate key could be silently ignored instead of invalidating attribution.
+The Phase D evidence-version test separately failed until the new diagnostic
+shape advanced from sanitized evidence v3 to v4.
+
+**PR-3B correction:** `staged-terra-verifier-v3` derives fixed candidate-level
+counts from the already existing closed decisions. Asset-identity first losses
+receive direct-asset failure and Shopping outcome groups; complete-product
+relationship and identity-safe URL first losses receive their matching reason
+groups. Each field counts affected candidates once per reason, is bounded by
+its own first-loss branch, and each nonzero branch must have aggregate
+subreason coverage. First-loss counts remain mutually exclusive and conserving.
+
+The route now requires exact top-level and nested keys, safe nonnegative
+integers, first-loss/outcome reconciliation, branch bounds, and subreason
+coverage. Missing, unknown, private, fractional, negative, overbound,
+undercovered, or otherwise malformed attribution is omitted in full. Public
+success and failure bodies are unchanged. Sanitized Phase D evidence advances
+to v4; historical v3 artifacts retain their original meaning.
+
+**Independent correction loop:** the reviewer identified three proposed fields
+that were unreachable after their branch predicates: `weak_target_identity`,
+`identity_not_safe`, and `product_relationship_not_safe`. They were removed
+from the aggregate and now produce invariant failures if encountered. The
+reviewer then showed that deleting all four subreason-coverage checks would
+leave the tests green; conserving-but-undercovered asset, commerce,
+relationship, and URL mutations plus a branch-local overbound were added. The
+corrected terminal verdict was `APPROVED`, no actionable findings, confidence
+0.97. The reviewer personally passed 32/32 focused tests and typecheck.
+
+**Final verification:**
+
+- focused verifier/route/Phase D: 32/32;
+- complete deterministic suite: 1,479/1,479 across 214 suites;
+- credential-neutral Playwright E2E: 17/17;
+- typecheck and production build: pass;
+- legacy `scripts/eval-pipeline.mjs`: no red flags;
+- fixed ranking baseline: 2/2;
+- zero-network Phase D dry run and `git diff --check`: pass;
+- lint: zero errors and the same three pre-existing warnings; and
+- generated `next-env.d.ts`: unchanged/clean.
+
+**Scope and limits:** no eligibility, evidence, identity, relationship,
+product-URL, Shopping, price, ranking, provider request, network ceiling, public
+API, flag, UI, or deployment behavior changed. PR-3B proves observability and
+privacy contracts only; it does not improve product quality or establish the
+live frequency of any subreason. PR-013 remains blocking and PR-4 is not yet
+authorized.
+
+**Next decision:** after the self-contained PR-3B commit leaves a clean tracked
+tree, PR-3C may run the unchanged frozen `shop vac` case once in a new commit-
+derived directory under every existing ceiling and first-terminal/no-retry
+rule. Treat it as a new evidence-v4 measurement, not a retry of PR-3A. If it
+fails, use the overlapping branch-specific counts only to select an evidence-
+supported offline reproduction target, and establish a generalized cause there
+before changing behavior; if it succeeds, proceed to PR-4.

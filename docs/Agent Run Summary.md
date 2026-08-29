@@ -2151,3 +2151,70 @@ existing ceilings and first-terminal/no-retry policy. This is stronger than a
 broad live matrix now because PR-4 depends on proving one complete staged
 lifecycle first. Reasoning level: High for boundary/evidence adjudication and
 Medium for the bounded mechanical run.
+
+## Codex Run - 2026-08-29 PR-3A live stop and PR-3B verification attribution
+
+**Goal:** test one complete staged lifecycle after PR-3, preserve the terminal
+result as bounded evidence, and make its earliest verification failure
+actionable without exposing products or weakening trust gates.
+
+**Live outcome:** one frozen `shop vac` Phase D invocation ran at clean commit
+`43857e072da54ee8f988887d3813722ed6fd005b`. Research completed with ten
+candidates and 79 canonical sources. Seven of 15 selected source pages fetched
+successfully and ten Shopping requests returned 192 rows. Verification excluded
+all ten candidates before presentation: nine at asset identity and one at the
+identity-safe product URL gate. There was no retry, replacement, fallback,
+second case, organic/SearchAPI request, presentation, rendering, promotion, or
+deployment.
+
+The attempt used one create, 19 retrieves, three hosted searches, one safety
+cancel, ten Shopping attempts, 15 source selections, and 17 physical page
+attempts. Frozen-conservative cost was `$0.193777`, below `$3`. Its only file is
+untracked 18,328-byte `attempt.json`, SHA-256
+`39dd07087313339bf0b8b0cad1abd6c3ab1890a2daed73800989b63d6bad4894`.
+Independent strict read-only audit returned `VERIFIED` for snapshot binding,
+counters, usage, cost, conservation, schema, and privacy. The artifact is spent
+and was not retried, edited, staged, or reused.
+
+**Why another behavior change was rejected:** the aggregate showed only nine
+identity and one URL first loss. It could not identify a candidate, distinguish
+direct-asset/Shopping reasons, or explain the URL rejection. Loosening gates,
+guessing from deterministic alpha-model examples, or retaining private product
+detail would not be evidence-supported. A fixed bounded aggregate from existing
+server-owned decisions was the smallest complete next step.
+
+**What changed:** verifier v3 retains affected-candidate subreason counts scoped
+to each first-loss branch: direct-asset identity plus Shopping outcomes,
+complete-product relationship, and identity-safe product URL. The route accepts
+only exact aggregate/nested keys, safe nonnegative integers, first-loss and
+outcome conservation, branch-local bounds, and subreason coverage. Invalid or
+private aggregates are omitted in full. Unreachable decision states throw as
+invariants. Future sanitized Phase D evidence is v4; historical v3 evidence is
+unchanged. Public API and all verification/ranking/network behavior remain the
+same.
+
+**Tests and proof:** verifier/route fail-first passed 15 checks and failed seven
+intended new expectations; the separate Phase D evidence-version expectation
+also failed until v4. Corrected focused verifier/route/Phase D tests passed
+32/32; full tests passed 1,479/1,479 across 214 suites; E2E passed 17/17;
+typecheck, production build, legacy eval, fixed ranking baseline, zero-network
+dry run, and diff checks passed. Lint had zero errors and the same three pre-
+existing warnings; `next-env.d.ts` stayed clean.
+
+**Independent review:** the reviewer found two classes of unreachable proposed
+buckets (`weak_target_identity` and two URL reasons) and a missing direct test
+for all four subreason-coverage checks. After removal/invariant conversion and
+new undercoverage/overbound mutations, the terminal verdict was `APPROVED` with
+no findings. The reviewer personally passed 32/32 focused tests and typecheck.
+
+**Limits:** PR-3B is zero-live observability only. It does not explain PR-3A,
+improve recommendation quality, prove lifecycle feasibility, or authorize PR-4.
+RR-091/RR-092 and the wider security, accessibility, operations, latency, cost,
+and active-path accuracy debts remain open.
+
+**Next recommended step:** after this phase is self-contained in a clean commit,
+run one separately documented PR-3C `shop vac` measurement in a new commit-
+derived directory under the unchanged first-terminal/no-retry envelope. Use the
+evidence-v4 subreason distribution to select an offline reproduction; do not
+change behavior from aggregate inference alone. Reasoning level: High for
+evidence adjudication and Medium for the bounded mechanical run.

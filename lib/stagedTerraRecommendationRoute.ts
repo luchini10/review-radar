@@ -155,6 +155,109 @@ function boundedCount(value: unknown, maximum: number) {
     : null;
 }
 
+function hasExactKeys(
+  value: Record<string, unknown>,
+  expectedKeys: readonly string[],
+) {
+  const actualKeys = Object.keys(value);
+  return (
+    actualKeys.length === expectedKeys.length &&
+    expectedKeys.every((key) =>
+      Object.prototype.hasOwnProperty.call(value, key),
+    )
+  );
+}
+
+function boundedCountRecord<const Keys extends readonly string[]>(
+  value: unknown,
+  expectedKeys: Keys,
+  maximum: number,
+): { [Key in Keys[number]]: number } | null {
+  const candidate = record(value);
+  if (!candidate || !hasExactKeys(candidate, expectedKeys)) return null;
+  const result = {} as { [Key in Keys[number]]: number };
+  for (const key of expectedKeys) {
+    const typedKey = key as Keys[number];
+    const count = boundedCount(candidate[typedKey], maximum);
+    if (count === null) return null;
+    result[typedKey] = count;
+  }
+  return result;
+}
+
+function countTotal(value: Record<string, number>) {
+  return Object.values(value).reduce((sum, count) => sum + count, 0);
+}
+
+const VERIFICATION_ATTRIBUTION_KEYS = [
+  "candidateFirstLossCounts",
+  "assetIdentityFailureCandidateCounts",
+  "commerceOutcomeCandidateCounts",
+  "completeProductRelationshipFailureCandidateCounts",
+  "identitySafeProductUrlFailureCandidateCounts",
+  "sourceRejectionCandidateCounts",
+  "claimRejectionCandidateCounts",
+] as const;
+
+const CANDIDATE_FIRST_LOSS_KEYS = [
+  "assetIdentityUnproven",
+  "completeProductRelationshipUnproven",
+  "identitySafeProductUrlUnavailable",
+  "hardRequirementFailed",
+  "hardRequirementNotVerified",
+  "noLossEligible",
+] as const;
+
+const ASSET_IDENTITY_FAILURE_KEYS = [
+  "noAssetCandidates",
+  "invalidTargetIdentity",
+  "missingTitle",
+  "brandNotInTitle",
+  "modelNotInTitle",
+  "modelConflictInTitle",
+  "wrongProductType",
+] as const;
+
+const COMMERCE_OUTCOME_KEYS = [
+  "noShoppingRows",
+  "targetStableIdentifierUnavailable",
+  "acceptedExactOffer",
+  "missingTitle",
+  "brandNotInTitle",
+  "stableIdentifierNotInTitle",
+  "missingMerchantProductUrl",
+  "missingPrice",
+  "missingSeller",
+  "nonNewOffer",
+  "explicitAccessoryOffer",
+  "productIneligible",
+] as const;
+
+const COMPLETE_PRODUCT_RELATIONSHIP_FAILURE_KEYS = [
+  "nonProductPage",
+  "complementPrimaryItem",
+  "productTypeConflict",
+  "complementRelationshipWording",
+  "insufficientCompleteProductEvidence",
+] as const;
+
+const IDENTITY_SAFE_PRODUCT_URL_FAILURE_KEYS = [
+  "missingOrInvalidProductUrl",
+  "unsafeProductUrlHost",
+  "productUrlRedirectWrapper",
+  "productUrlIneligible",
+  "productUrlTypeConflict",
+  "productUrlDescriptiveIdentityConflict",
+  "productUrlIdentityMismatch",
+] as const;
+
+const SOURCE_REJECTION_KEYS = [
+  "sourceNotOwnedByCandidate",
+  "sourceInputInvalid",
+] as const;
+
+const CLAIM_REJECTION_KEYS = ["observedClaimInvalid"] as const;
+
 function sanitizeVerificationAttribution(
   value: unknown,
   expected: {
@@ -165,91 +268,84 @@ function sanitizeVerificationAttribution(
   },
 ): StagedTerraVerifierAggregateDiagnostic | undefined {
   const aggregate = record(value);
-  const firstLoss = record(aggregate?.candidateFirstLossCounts);
-  const sourceRejections = record(
-    aggregate?.sourceRejectionCandidateCounts,
-  );
-  const claimRejections = record(aggregate?.claimRejectionCandidateCounts);
-  if (!aggregate || !firstLoss || !sourceRejections || !claimRejections) {
+  if (
+    !aggregate ||
+    !hasExactKeys(aggregate, VERIFICATION_ATTRIBUTION_KEYS)
+  ) {
     return undefined;
   }
-  const assetIdentityUnproven = boundedCount(
+  const firstLoss = boundedCountRecord(
+    aggregate.candidateFirstLossCounts,
+    CANDIDATE_FIRST_LOSS_KEYS,
+    expected.candidates,
+  );
+  if (!firstLoss) return undefined;
+  const assetIdentityFailures = boundedCountRecord(
+    aggregate.assetIdentityFailureCandidateCounts,
+    ASSET_IDENTITY_FAILURE_KEYS,
     firstLoss.assetIdentityUnproven,
-    expected.candidates,
   );
-  const completeProductRelationshipUnproven = boundedCount(
+  const commerceOutcomes = boundedCountRecord(
+    aggregate.commerceOutcomeCandidateCounts,
+    COMMERCE_OUTCOME_KEYS,
+    firstLoss.assetIdentityUnproven,
+  );
+  const relationshipFailures = boundedCountRecord(
+    aggregate.completeProductRelationshipFailureCandidateCounts,
+    COMPLETE_PRODUCT_RELATIONSHIP_FAILURE_KEYS,
     firstLoss.completeProductRelationshipUnproven,
-    expected.candidates,
   );
-  const identitySafeProductUrlUnavailable = boundedCount(
+  const productUrlFailures = boundedCountRecord(
+    aggregate.identitySafeProductUrlFailureCandidateCounts,
+    IDENTITY_SAFE_PRODUCT_URL_FAILURE_KEYS,
     firstLoss.identitySafeProductUrlUnavailable,
+  );
+  const sourceRejections = boundedCountRecord(
+    aggregate.sourceRejectionCandidateCounts,
+    SOURCE_REJECTION_KEYS,
     expected.candidates,
   );
-  const hardRequirementFailed = boundedCount(
-    firstLoss.hardRequirementFailed,
-    expected.candidates,
-  );
-  const hardRequirementNotVerified = boundedCount(
-    firstLoss.hardRequirementNotVerified,
-    expected.candidates,
-  );
-  const noLossEligible = boundedCount(
-    firstLoss.noLossEligible,
-    expected.candidates,
-  );
-  const sourceNotOwnedByCandidate = boundedCount(
-    sourceRejections.sourceNotOwnedByCandidate,
-    expected.candidates,
-  );
-  const sourceInputInvalid = boundedCount(
-    sourceRejections.sourceInputInvalid,
-    expected.candidates,
-  );
-  const observedClaimInvalid = boundedCount(
-    claimRejections.observedClaimInvalid,
+  const claimRejections = boundedCountRecord(
+    aggregate.claimRejectionCandidateCounts,
+    CLAIM_REJECTION_KEYS,
     expected.candidates,
   );
   if (
-    assetIdentityUnproven === null ||
-    completeProductRelationshipUnproven === null ||
-    identitySafeProductUrlUnavailable === null ||
-    hardRequirementFailed === null ||
-    hardRequirementNotVerified === null ||
-    noLossEligible === null ||
-    sourceNotOwnedByCandidate === null ||
-    sourceInputInvalid === null ||
-    observedClaimInvalid === null ||
-    assetIdentityUnproven +
-      completeProductRelationshipUnproven +
-      identitySafeProductUrlUnavailable +
-      hardRequirementFailed +
-      hardRequirementNotVerified +
-      noLossEligible !==
-      expected.candidates ||
-    noLossEligible !== expected.eligible ||
-    hardRequirementNotVerified !== expected.closeMatch ||
-    assetIdentityUnproven +
-      completeProductRelationshipUnproven +
-      identitySafeProductUrlUnavailable +
-      hardRequirementFailed !==
-      expected.excluded
+    !assetIdentityFailures ||
+    !commerceOutcomes ||
+    !relationshipFailures ||
+    !productUrlFailures ||
+    !sourceRejections ||
+    !claimRejections
+  ) {
+    return undefined;
+  }
+  if (
+    countTotal(firstLoss) !== expected.candidates ||
+    firstLoss.noLossEligible !== expected.eligible ||
+    firstLoss.hardRequirementNotVerified !== expected.closeMatch ||
+    firstLoss.assetIdentityUnproven +
+      firstLoss.completeProductRelationshipUnproven +
+      firstLoss.identitySafeProductUrlUnavailable +
+      firstLoss.hardRequirementFailed !==
+      expected.excluded ||
+    countTotal(assetIdentityFailures) < firstLoss.assetIdentityUnproven ||
+    countTotal(commerceOutcomes) < firstLoss.assetIdentityUnproven ||
+    countTotal(relationshipFailures) <
+      firstLoss.completeProductRelationshipUnproven ||
+    countTotal(productUrlFailures) <
+      firstLoss.identitySafeProductUrlUnavailable
   ) {
     return undefined;
   }
   return {
-    candidateFirstLossCounts: {
-      assetIdentityUnproven,
-      completeProductRelationshipUnproven,
-      identitySafeProductUrlUnavailable,
-      hardRequirementFailed,
-      hardRequirementNotVerified,
-      noLossEligible,
-    },
-    sourceRejectionCandidateCounts: {
-      sourceNotOwnedByCandidate,
-      sourceInputInvalid,
-    },
-    claimRejectionCandidateCounts: { observedClaimInvalid },
+    candidateFirstLossCounts: firstLoss,
+    assetIdentityFailureCandidateCounts: assetIdentityFailures,
+    commerceOutcomeCandidateCounts: commerceOutcomes,
+    completeProductRelationshipFailureCandidateCounts: relationshipFailures,
+    identitySafeProductUrlFailureCandidateCounts: productUrlFailures,
+    sourceRejectionCandidateCounts: sourceRejections,
+    claimRejectionCandidateCounts: claimRejections,
   };
 }
 

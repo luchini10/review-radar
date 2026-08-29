@@ -148,7 +148,7 @@ describe("OAI-T10 deterministic evidence materializer", () => {
     });
 
     assert.equal(result.verifierVersion, STAGED_TERRA_VERIFIER_VERSION);
-    assert.equal(STAGED_TERRA_VERIFIER_VERSION, "staged-terra-verifier-v2");
+    assert.equal(STAGED_TERRA_VERIFIER_VERSION, "staged-terra-verifier-v3");
     assert.equal(
       result.evidencePackage.schemaVersion,
       STAGED_TERRA_EVIDENCE_PACKAGE_VERSION,
@@ -205,6 +205,45 @@ describe("OAI-T10 deterministic evidence materializer", () => {
         hardRequirementNotVerified: 0,
         noLossEligible: 1,
       },
+      assetIdentityFailureCandidateCounts: {
+        noAssetCandidates: 7,
+        invalidTargetIdentity: 0,
+        missingTitle: 0,
+        brandNotInTitle: 0,
+        modelNotInTitle: 0,
+        modelConflictInTitle: 0,
+        wrongProductType: 0,
+      },
+      commerceOutcomeCandidateCounts: {
+        noShoppingRows: 7,
+        targetStableIdentifierUnavailable: 0,
+        acceptedExactOffer: 0,
+        missingTitle: 0,
+        brandNotInTitle: 0,
+        stableIdentifierNotInTitle: 0,
+        missingMerchantProductUrl: 0,
+        missingPrice: 0,
+        missingSeller: 0,
+        nonNewOffer: 0,
+        explicitAccessoryOffer: 0,
+        productIneligible: 0,
+      },
+      completeProductRelationshipFailureCandidateCounts: {
+        nonProductPage: 0,
+        complementPrimaryItem: 0,
+        productTypeConflict: 0,
+        complementRelationshipWording: 0,
+        insufficientCompleteProductEvidence: 0,
+      },
+      identitySafeProductUrlFailureCandidateCounts: {
+        missingOrInvalidProductUrl: 0,
+        unsafeProductUrlHost: 0,
+        productUrlRedirectWrapper: 0,
+        productUrlIneligible: 0,
+        productUrlTypeConflict: 0,
+        productUrlDescriptiveIdentityConflict: 0,
+        productUrlIdentityMismatch: 0,
+      },
       sourceRejectionCandidateCounts: {
         sourceNotOwnedByCandidate: 0,
         sourceInputInvalid: 0,
@@ -258,6 +297,12 @@ describe("OAI-T10 deterministic evidence materializer", () => {
         .completeProductRelationshipUnproven,
       1,
     );
+    assert.equal(
+      relationshipUnknown.diagnostics.aggregate
+        .completeProductRelationshipFailureCandidateCounts
+        .complementPrimaryItem,
+      1,
+    );
 
     const productUrlUnavailable = materializeStagedTerraEvidencePackage({
       shopperRequest: shopper,
@@ -286,6 +331,120 @@ describe("OAI-T10 deterministic evidence materializer", () => {
     assert.equal(
       productUrlUnavailable.diagnostics.aggregate.candidateFirstLossCounts
         .identitySafeProductUrlUnavailable,
+      1,
+    );
+    assert.equal(
+      productUrlUnavailable.diagnostics.aggregate
+        .identitySafeProductUrlFailureCandidateCounts
+        .missingOrInvalidProductUrl,
+      1,
+    );
+  });
+
+  it("attributes identity failures to both asset and commerce decision families", () => {
+    const sourceUrl = "https://manufacturer1.example/products/q7";
+    const research = researchOutput({
+      category: "robot vacuum",
+      candidateOverrides: {
+        candidate_1: {
+          productName: "Example Brand Q7 robot vacuum",
+          model: "Q7",
+          productType: "robot vacuum",
+          sourceUrls: [sourceUrl],
+        },
+      },
+    });
+    const result = materializeStagedTerraEvidencePackage({
+      shopperRequest: { query: "robot vacuum" },
+      researchOutput: research,
+      market: "US",
+      candidates: [
+        {
+          candidateId: "candidate_1",
+          sources: [
+            {
+              sourceUrl,
+              sourceRole: "official_product",
+              ...productPageSource({
+                model: "Q70",
+                name: "Example Brand Q70 robot vacuum",
+                url: sourceUrl,
+                visibleClaim: "",
+              }),
+              claims: [],
+            },
+          ],
+          shoppingResults: [
+            {
+              title: "Example Brand Q70 robot vacuum",
+              productLink: "https://merchant.example/products/q70",
+              source: "Merchant",
+              price: "$299.00",
+            },
+          ],
+        },
+      ],
+    });
+
+    assert.equal(
+      result.diagnostics.aggregate.assetIdentityFailureCandidateCounts
+        .modelNotInTitle,
+      1,
+    );
+    assert.equal(
+      result.diagnostics.aggregate.commerceOutcomeCandidateCounts
+        .stableIdentifierNotInTitle,
+      1,
+    );
+    assert.equal(
+      result.diagnostics.aggregate.assetIdentityFailureCandidateCounts
+        .noAssetCandidates,
+      7,
+    );
+    assert.equal(
+      result.diagnostics.aggregate.commerceOutcomeCandidateCounts
+        .noShoppingRows,
+      7,
+    );
+  });
+
+  it("distinguishes an unusable target model from ordinary commerce misses", () => {
+    const research = researchOutput({
+      candidateOverrides: {
+        candidate_1: {
+          productName: "Example Brand Classic cordless vacuum",
+          model: "Classic",
+        },
+      },
+    });
+    const result = materializeStagedTerraEvidencePackage({
+      shopperRequest: { query: "cordless vacuum" },
+      researchOutput: research,
+      market: "US",
+      candidates: [
+        {
+          candidateId: "candidate_1",
+          sources: [],
+          shoppingResults: [
+            {
+              title: "Example Brand Classic cordless vacuum",
+              productLink: "https://merchant.example/products/classic",
+              source: "Merchant",
+              price: "$199.00",
+            },
+          ],
+        },
+      ],
+    });
+
+    assert.equal(
+      result.diagnostics.aggregate.commerceOutcomeCandidateCounts
+        .targetStableIdentifierUnavailable,
+      1,
+    );
+    assert.equal(
+      result.diagnostics.aggregate.commerceOutcomeCandidateCounts
+        .stableIdentifierNotInTitle,
       1,
     );
   });

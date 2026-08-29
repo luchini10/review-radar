@@ -176,15 +176,22 @@ the JSON shape is unchanged.
 After research completes, the server fetches at most two candidate-owned source
 pages per product through the existing DNS-pinned bounded-fetch seam and may
 run one exact-identity Shopping verification per product. Those receipts enter
-`staged-terra-verifier-v2`, which accounts for every candidate as eligible,
+`staged-terra-verifier-v3`, which accounts for every candidate as eligible,
 close match, or excluded and owns all identity, hard-requirement, fact, price,
 product-page, and image trust decisions. It also derives a closed aggregate
 first-loss distribution from those existing decisions. The mutually exclusive
 buckets are asset identity unproven, complete-product relationship unproven,
 identity-safe product URL unavailable, hard requirement failed, hard
 requirement not verified, and no-loss eligible; their counts must conserve to
-the candidate total. Separate counters record only how many candidates had a
-source rejected as unowned/invalid or an invalid observed claim.
+the candidate total. For the three pre-requirement failure branches, verifier
+v3 additionally counts fixed candidate-level reasons already produced by the
+closed direct-asset and Shopping verifiers: direct-asset identity reasons and
+Shopping outcomes for identity first losses, direct-asset relationship reasons
+for relationship first losses, and direct-asset product-URL reasons for URL
+first losses. These affected-candidate groups may overlap but are branch-bounded
+and must cover every candidate in the matching branch. Separate counters record
+only how many candidates had a source rejected as unowned/invalid or an invalid
+observed claim.
 
 One separate synchronous Terra/medium response receives only that verified
 package. It has no web-search tools and no previous-response ID. It may rank
@@ -221,23 +228,20 @@ terminal provider usage even when local validation later fails; repeated
 snapshots deduplicate only by the same safe response hash, while distinct or
 unidentifiable responses sum conservatively and block successful acceptance as
 an anomaly. The entire branch remains default-off, undeployed, and without a
-successful live feasibility result. The latest live evidence is still PR-2I:
-Terra completed research with 47 canonical sources, then failed local contract
-validation as
-`research_candidate_invalid / candidate_facts` before Shopping, verification,
-presentation, or rendering. This bounded class identifies only the first
-reported invalid candidate's fact group; it cannot reveal the candidate or
-exact field, retain raw output, or prove that later candidates passed identity.
-
-The preceding PR-2G response passed research with 12 candidates, then
-deterministic verification excluded all 12 before presentation. Sanitized Phase
-D evidence v3 conserved all 12 first losses as `assetIdentityUnproven`; every
-later first-loss bucket and separate source/claim rejection counter was zero.
-That identifies only PR-2G's earliest aggregate loss. It does not say whether a
-research identity tuple was internally incoherent or whether available page/
-Shopping identities failed brand, model, conflict, or product-type checks. The
-earlier PR-2E evidence predates aggregate attribution and remains permanently
-unknowable.
+successful live feasibility result. The latest live evidence is PR-3A at commit
+`43857e072da54ee8f988887d3813722ed6fd005b`: Terra completed research with ten
+candidates and 79 canonical sources; seven of 15 selected source pages fetched
+successfully; and ten Shopping requests returned 192 rows. Deterministic
+verification then excluded all ten candidates before presentation, with nine
+first losses at `assetIdentityUnproven` and one at
+`identitySafeProductUrlUnavailable`. The spent sanitized-evidence-v3 artifact
+cannot distinguish the exact direct-asset, Shopping, or URL reason and retains
+no candidate identity or private decision detail. Zero source/claim rejection
+counts do not prove those later gates passed for candidates that stopped
+earlier. Verifier v3 and sanitized evidence v4 make a future separate attempt's
+closed subreason distribution observable; they do not retroactively explain
+PR-3A or change verification behavior. Earlier spent evidence remains immutable
+and keeps its original schema meaning.
 
 The zero-live PR-2H correction closes one independently reproduced generalized
 self-mismatch: bounded identity strings can no longer pass research when their
@@ -269,12 +273,15 @@ asset, eligibility, diagnostic, public-response, network-ceiling, or default-
 flag rule. It deterministically prevents the reproduced wire mismatch but does
 not prove the private PR-2I cause, live model adherence, or lifecycle success.
 
-The route reconstructs only bounded integer values from the fixed verifier-v2
-keys, requires first-loss conservation and reconciliation with eligible/close/
-excluded totals, drops malformed or unknown/private values, and retains the
-aggregate only for server-side verification diagnostics. The public 502 body is
-unchanged, and no candidate identity, URL, requirement, claim, page content,
-provider material, prompt, credential, or secret crosses the route boundary.
+The route reconstructs only bounded integer values from the exact verifier-v3
+aggregate and nested key allowlists. It requires first-loss conservation,
+reconciliation with eligible/close/excluded totals, branch-local subreason
+bounds, and subreason coverage. Missing, unknown, private, fractional,
+negative, undercovered, overbound, or otherwise malformed values cause the
+whole attribution aggregate to be omitted. The public success and 502 bodies
+are unchanged, and no candidate identity, URL, requirement, claim, page
+content, provider material, prompt, credential, or secret crosses the route
+boundary. Sanitized Phase D evidence that can carry these groups is version 4.
 
 ## 2. Full user flow
 

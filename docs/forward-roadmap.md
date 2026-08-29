@@ -3617,6 +3617,29 @@ shape, source-registry, candidate, or duplicate-identity failure. Before any
 replacement spend, correct those two zero-live observability defects and
 identify the exact failed invariant. Do not weaken the contract by guess.
 
+**Phase D continuation — PR-3A/PR-3B, 2026-08-29:** successive bounded,
+commit-pinned corrections eventually let one frozen `shop vac` measurement at
+`43857e0` cross research and verification-input collection. It still failed
+before presentation: deterministic verification excluded all ten candidates,
+with nine coarse first losses at asset identity and one at the identity-safe
+product URL gate. The first-terminal/no-retry envelope, cost ceiling, privacy
+allowlist, and artifact hash independently returned `VERIFIED`; the artifact is
+spent and cannot identify the exact candidate or decision reason.
+
+The zero-live PR-3B correction advances the materializer diagnostic to
+`staged-terra-verifier-v3` and future sanitized evidence to v4. It derives only
+fixed affected-candidate counts from existing direct-asset, Shopping,
+relationship, and URL decisions. The route independently enforces exact keys,
+integer and branch bounds, first-loss/outcome conservation, and subreason
+coverage; invalid/private aggregates are omitted, and the public API is
+unchanged. Eligibility and trust rules did not change. After the self-contained
+PR-3B commit, one separately bounded PR-3C measurement may use a new commit-
+derived directory under the same first-terminal/no-retry/no-fallback ceilings.
+If it fails, use the overlapping branch-specific counts only to select an
+evidence-supported offline reproduction target; establish a generalized cause
+there before changing behavior. Phase E remains blocked until a shopper
+lifecycle succeeds.
+
 **Phase E — quality/stability and promotion decision:** only after feasibility
 passes, compare multiple frozen categories against the existing baseline. A
 flag promotion, deployment, or retirement of the old path remains a separate

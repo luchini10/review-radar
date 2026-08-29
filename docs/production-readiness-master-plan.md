@@ -13,62 +13,61 @@ exclude unsafe or misleading cards, preserve uncertainty, and give shoppers a
 reliable decision brief at acceptable latency and cost.
 
 The newest staged Terra path has not yet produced a user-visible live result.
-PR-2H deterministically closed one research/asset identity self-mismatch, but
-the single post-correction PR-2I measurement stopped earlier: Terra completed
-research with 47 canonical sources, and local contract validation returned
-`research_candidate_invalid / candidate_facts` before verification. The fixed
-sanitized evidence can establish only that the first reported invalid candidate
-reached its fact group; it cannot identify the candidate or field, show raw
-output, or prove that later candidates passed identity.
+PR-3A spent exactly one frozen `shop vac` lifecycle measurement at clean commit
+`43857e072da54ee8f988887d3813722ed6fd005b`. Research completed with ten
+candidates and 79 canonical sources. Verification selected 15 source pages,
+seven fetched successfully, and ten Shopping requests returned 192 rows. All
+ten candidates were excluded before presentation: nine first stopped at
+`assetIdentityUnproven` and one at
+`identitySafeProductUrlUnavailable`. Source- and claim-rejection candidate
+counts were zero, but those later-gate counters do not prove that the candidates
+that stopped earlier would have passed them.
 
-PR-2I was bound to clean commit
-`06fa55fb38f6675a897053eb21328ac8845d4e14` and stopped once after 54.485
-seconds. It used one create, 24 retrieves, three hosted searches, and one safety
-cancel, with zero Shopping/page/presentation/retry/replacement/fallback work.
-Usage was 30,215 input and 7,537 output tokens. Frozen-conservative cost was
-`$0.237477`, below the unchanged `$3` gate. Independent read-only audit returned
-`VERIFIED`; the spent fixture retained no raw/private provider or candidate
-material and neither configured key value.
+The first-terminal stop held after 54.662 seconds: one create, 19 retrieves,
+three hosted searches, one safety cancel, ten Shopping attempts, 15 source-page
+selections, and 17 physical page attempts, with zero retry, replacement,
+fallback, organic, SearchAPI, second-case, presentation, or rendering work.
+Frozen-conservative estimated cost was `$0.193777`, below the unchanged `$3`
+gate. The only artifact is the untracked 18,328-byte sanitized-evidence-v3
+`attempt.json`, SHA-256
+`39dd07087313339bf0b8b0cad1abd6c3ab1890a2daed73800989b63d6bad4894`.
+Independent strict read-only audit returned `VERIFIED` and found no private,
+credential, provider-ID, candidate, product, prompt, header/body, or source
+identity material.
 
-A separate zero-network matrix proved a generalized producer/parser mismatch.
-The old strict schema and prompt allowed a fact or requirement URL that was
-registered to the response but absent from its enclosing candidate's
-`source_urls`; they also did not express lead-reference uniqueness or the
-supporting/not-found URL cardinality enforced by the validator. A schema-
-conforming cross-candidate fact URL failed exactly as `candidate_facts`. This
-could produce PR-2I's bounded class, but the private live response cannot prove
-that it did. PR-2J now closes the reproduced mismatch deterministically with
-candidate-local indexes, schema-level status cardinality, runtime range/
-uniqueness revalidation, and complete job-identity rollover. It made no live
-request and therefore proves no provider adherence or lifecycle success.
+That evidence localizes the blocker but cannot distinguish an absent asset
+candidate from brand/model/conflict/type rejection, explain why 192 Shopping
+rows produced no accepted identity, or identify the product-URL rejection.
+PR-3B therefore adds observability only: verifier v3 derives fixed candidate-
+level counts from the existing closed asset, Shopping, relationship, and URL
+decision reasons, scoped to the corresponding first-loss branch. The route
+requires exact keys, safe integers, branch bounds, first-loss conservation,
+outcome reconciliation, and nonempty subreason coverage; malformed, unknown,
+undercovered, overbound, or private aggregates are omitted. Unreachable reason
+states fail as invariants instead of appearing as misleading zero buckets.
+Sanitized Phase D evidence advances to v4. Eligibility, evidence, ranking,
+network, price, public-response, flag, and UI behavior are unchanged.
 
 Stronger alternatives considered:
 
-- **Retry PR-2I:** rejected. The first terminal result answered the authorized
-  measurement, and its directory is permanently spent. A retry would spend
-  against an already-proven model-facing contract mismatch.
-- **Accept any response-owned lead URL:** rejected. That would let one
-  candidate borrow another candidate's evidence and weaken product attribution.
-- **Add prompt prose only:** rejected as incomplete. It can reduce mistakes but
-  cannot structurally prevent cross-candidate URL references or repeated long
-  exact strings.
-- **Use candidate-local integer source references:** selected and verified in
-  PR-2J. It preserves the exact candidate-declared source boundary, makes a
-  lead unable to directly cite a response URL absent from its enclosing source
-  list, and reduces repeated URL output. Official OpenAI
-  [Structured Outputs documentation](https://developers.openai.com/api/docs/guides/structured-outputs)
-  supports integer arrays, nested `anyOf`, and numeric/array bounds. The schema
-  now enforces status cardinality; runtime independently rechecks it and retains
-  candidate-length-dependent range and uniqueness rules that the schema cannot
-  express.
-- **Tune legacy discovery or ranking first:** deferred. Historical evidence
-  shows serious recall and stability weakness, but the current strategic path
-  now stops before verification and presentation.
-- **Add candidate/private fact diagnostics:** rejected. The generalized defect
-  is reproducible without widening the fixed privacy surface.
-- **Expand immediately into a broad benchmark:** deferred. The benchmark is
-  necessary, but no staged result exists yet; it would measure an architecture
-  whose active lifecycle still has not crossed research validation reliably.
+- **Retry or edit the PR-3A artifact:** rejected. Its one terminal result spent
+  that phase's authority; the exact directory and hash are immutable evidence.
+- **Loosen identity or URL gates:** rejected. That would manufacture cards
+  without proving exact product identity and attack the safety wall rather than
+  the unknown cause.
+- **Infer the exact cause from aggregate counts or alpha-only model examples:**
+  rejected. The spent evidence contains no candidate-level identities or closed
+  subreasons, and deterministic hypotheses are not live attribution.
+- **Retain candidate names, URLs, titles, or raw decision detail:** rejected.
+  Fixed aggregate counts narrow the diagnostic hypothesis space without
+  widening the privacy surface; they do not establish causation.
+- **Add fixed bounded subreason counts:** selected for PR-3B. It reuses existing
+  server-owned decisions, preserves every gate, and makes the next separately
+  authorized measurement actionable.
+- **Expand immediately into a broad live benchmark:** deferred. PR-4 still
+  depends on one complete staged lifecycle, and a single diagnostic measurement
+  is cheaper and more useful for selecting an offline reproduction target while
+  verification remains the blocker.
 
 PR-3 now closes that evaluation-integrity defect without changing production
 behavior. Five named batches uniquely partition ten tracked cases and 29
@@ -79,13 +78,15 @@ truth registry. Missing, duplicate, unknown, mismatched, fabricated, or
 incomparable work fails closed while authentic historical failing evidence
 remains comparable after a fix.
 
-The strongest next step is one bounded post-PR-2J staged lifecycle feasibility
-revalidation. The benchmark is now trustworthy, but PR-4 accuracy measurement
-still cannot start because the active staged path has never produced a shopper
-result. The existing frozen `shop vac` Phase D runner provides a stricter and
-cheaper answer than a broad live matrix: one exact commit, one case, no retry,
-replacement, fallback, or second case, and a first-terminal stop. If it fails,
-fix only a newly reproduced generalized cause or retain the blocker.
+After PR-3B is committed and the tracked tree is clean, the strongest next step
+is one separately authorized PR-3C measurement of the unchanged frozen `shop
+vac` case at that new exact commit. This is not a retry of PR-3A: it uses a new
+commit-derived directory and evidence-v4 contract to record branch-specific
+diagnostic evidence unavailable in v3. It retains the same ceilings and first-
+terminal/no-retry/no-replacement/no-fallback/no-second-case policy. If it
+fails, inspect the observed counts, select an evidence-supported offline
+reproduction target, and prove a generalized cause there before changing
+behavior. If it succeeds, PR-4 can begin the bounded active-path matrix.
 
 Recommended reasoning level: **High** for the live trust/cost boundary and
 terminal-evidence adjudication; **Medium** for the bounded mechanical run.
@@ -428,9 +429,10 @@ shopper-facing recommendation quality.
 | PR-010 | P2 | verified | The Phase D estimator's field named `standardUsd` used its frozen 2026-07-25 rates, while official current Terra prices are lower. Readiness reporting could confuse a conservative approval rate with current estimated spend. | The rate object was intentionally frozen for approval reproducibility but the output label did not distinguish frozen-envelope and current-market estimates. | Plan/evidence schema v2 names the dated frozen approval envelope and dated `standard_non_regional` current estimate separately. Only the frozen conservative value controls the unchanged hard ceiling. | Fail-first 5 pass / 5 intended fail; exact short/long/cache-write/search rates and totals; focused 10/10; staged 56/56; full 1,440/1,440; E2E/build/static/eval/ranking/dry-run walls; independent review. | Closed locally without live spend. Re-check and date the informational card when official prices change; never silently reprice an existing approval envelope. |
 | PR-011 | P1 | verified | Contract-v2 research completed with 69 response-owned sources but failed before verification as `research_candidate_invalid / candidate_sources`. | The exact historical cause is privacy-hidden. A generalized deterministic cause was proven: canonical display dedupe discarded later exact response-owned variants before exact-membership validation. | A dedicated staged registry preserves every parseable exact response-owned variant once; canonical display/count behavior is unchanged. Closed source subreasons distinguish shape, duplicate, unsafe, and unregistered without retaining URLs. | Fail-first 27/3; focused 55/55; staged 59/59; full 1,444/1,444; E2E/static/build/dry-run walls; independent approval; a new live response crossed research validation. | Closed. Never canonical-match a model-authored URL or infer the spent response's branch. PR-012 closed the successor observability blocker; PR-013 owns lifecycle feasibility. |
 | PR-012 | P1 | verified | The first research-valid staged run verified zero of 12 candidates, while the route retained only totals and made its first-loss distribution unknowable. | `materializeStagedTerraEvidencePackage()` computed real server-owned decisions, but the route discarded them before its sanitized verification diagnostic. | Verifier v2 derives six mutually exclusive candidate first-loss counts plus three separate affected-candidate rejection counts. The route accepts only fixed bounded integers, conservation, and eligible/close/excluded reconciliation; all malformed, unknown, and private values are dropped. Evidence v3 can retain the aggregate only for its own attempt. | Initial fail-first 23/6; corrected focused 30/30; staged 62/62; full 1,447/1,447; E2E 17/17; typecheck/build/static/dry-run/privacy/public-body walls; independent approval after correction of an unreachable proposed bucket. | Closed as observability only. PR-2E remains permanently unattributable. No eligibility/evidence rule changed, and the counts cannot authorize looser verification. |
-| PR-013 | P1 | verified blocker; first losses isolated | The staged lifecycle still has no user-visible result. PR-2G stopped at verification asset identity; after PR-014's correction, PR-2I stopped earlier at research `candidate_facts`. Presentation/rendering has never run. | Privacy-safe evidence isolates only bounded field groups or aggregate first losses. It intentionally cannot retain the private candidate detail needed to identify either exact live cause. | Correct only independently reproduced generalized contract defects offline; preserve privacy and never loosen asset/evidence gates to manufacture a result. | Exact commit/case/schema; counters/usage/cost/privacy; first-terminal stop; conserved verification aggregate when reached; no retry/downstream work; independent `VERIFIED`. | Lifecycle feasibility remains unresolved. Neither isolated attempt is category-wide evidence or benchmark authorization. PR-015 is closed deterministically, but no post-PR-2J provider result exists. |
+| PR-013 | P1 | verified blocker; current first losses isolated | The staged lifecycle still has no user-visible result. PR-3A crossed research and collection, then verification excluded all ten candidates: nine at asset identity and one at identity-safe product URL. Presentation/rendering has never run. | Sanitized evidence v3 conserves coarse first losses but intentionally retains no candidate identities or direct/Shopping/URL decision reasons. PR-3A's exact cause is permanently unknowable; the generalized cause of current behavior remains unknown. | Preserve every trust gate. Use verifier-v3/evidence-v4 fixed branch-specific counts in one separate commit-pinned measurement, select an evidence-supported offline reproduction target from the observed pattern, and name a cause only after generalized reproduction. | Exact commit/case/schema/hash; counters/usage/cost/privacy; first-terminal stop; conserved verification aggregate and bounded subreason coverage; no retry/downstream work; independent `VERIFIED`. | Lifecycle feasibility remains unresolved. PR-3A is immutable evidence, not category-wide accuracy evidence or retry authority. PR-016 closes observability only; PR-4 remains blocked. |
 | PR-014 | P1 | verified correction | Research validation accepted bounded nonempty `product_name`, `brand`, `model`, and `product_type` independently, while the asset verifier rejected every candidate when those same fields did not form a coherent target. Exact downstream assets could not overcome `invalid_target_identity`, wasting Shopping/page work and guaranteeing exclusion. | Provider schema/runtime established field shape but not the relational brand/model/type invariant already required by `directTerraAssetTargetIsCoherent()`; the prompt asked for separate identities without requiring `product_name` to agree. | Research now reuses the unchanged shared predicate before source work, prompt v3 states the relation, contract v4 rolls the fingerprint, and runtime v3 records the boundary. No name synthesis or asset-verifier change. | Fail-first 18/8; corrected contract 26/26; focused 57/57; staged 70/70; full 1,455/1,455; E2E 17/17; typecheck/build/eval/ranking/dry-run/lint/diff walls; independent `APPROVED`; zero live. | Closed deterministically. The stricter early wall can reduce accepted candidate count, which is preferable to guaranteed downstream exclusion. It can prevent PR-2G's class but is not proven to explain that attempt. PR-2I crossed the identity group but stopped at facts; that does not prove every candidate passed identity. |
 | PR-015 | P1 | verified correction | The only post-PR-2H attempt completed research generation but local validation stopped as `candidate_facts`, so no verification or user result exists. Offline, the old strict schema could accept a response-owned URL absent from its enclosing candidate and status/cardinality combinations later rejected by runtime. | Raw URLs were repeated in every lead while producer instructions stated only response-level ownership. Parser rules were correctly candidate-local but stricter than the paid producer boundary. | Candidate URLs remain exact response-owned registries; leads use zero-based local indexes. Closed schema variants enforce requirement status cardinality, runtime enforces integer/actual-range/uniqueness and maps exact URLs, and contract v5/schema v3/prompt v4/runtime v4 roll old jobs closed. | Fail-first 23/7; corrected contract 31/31; staged 75/75; full 1,460/1,460; E2E 17/17; typecheck/build/eval/ranking/dry-run/lint/diff walls; token mutation 50/50; independent `APPROVED`; zero live. | Closed deterministically. It does not identify PR-2I's private cause or prove provider adherence/lifecycle feasibility. Never accept another candidate's evidence, expose private facts, or remove runtime authority for dynamic range and uniqueness. |
+| PR-016 | P1 | verified observability correction | PR-3A proved nine asset-identity first losses, one product-URL first loss, 192 Shopping rows, and seven successful page fetches, but evidence v3 could not say why those inputs produced no eligible candidate. | Verifier v2 discarded the closed direct-asset and commerce decisions after computing only coarse first losses; the route had no fixed schema for subreason families. | Verifier v3 adds candidate-level asset-identity and commerce outcome counts for identity first losses plus relationship and URL reason counts for their own branches. The route requires exact allowlists, safe integers, branch bounds, conservation, outcome reconciliation, and subreason coverage; unreachable states throw. Evidence advances to v4. | Verifier/route fail-first 15 pass / 7 intended fail plus a separate intended Phase D evidence-version failure; corrected focused 32/32; full 1,479/1,479; E2E 17/17; typecheck/build/eval/ranking/dry-run/lint/diff walls; independent review removed three unreachable buckets and added direct coverage mutations; final `APPROVED`. | Closed as zero-live observability only. No eligibility, ranking, evidence, price, network, public response, flag, or UI behavior changed. Live frequency remains unknown, and PR-3A's exact cause is permanently unknowable from its v3 evidence. |
 
 ## Suspected weaknesses requiring measurement
 
@@ -788,23 +790,69 @@ directory is spent.
 
 ### Phase PR-3A — Revalidate staged lifecycle feasibility once
 
-- Status: **next; bounded live measurement**
+- Status: **closed — failed safely at first terminal outcome on 2026-08-29**
 - Severity addressed: PR-013 P1 and dependency for PR-006/PR-4.
-- Scope: after the PR-3 closeout commit leaves a clean tracked tree, run the
-  existing frozen broad `shop vac` Phase D case exactly once at that full
-  commit. Keep the existing ceilings: two OpenAI creates, ten hosted searches,
-  60 retrieves, one safety cancel, 15 Shopping attempts, 30 source-page
-  selections, 90 physical page attempts, and `$3` frozen-conservative maximum.
+- Scope: the existing frozen broad `shop vac` Phase D case ran exactly once at
+  PR-3 commit `43857e072da54ee8f988887d3813722ed6fd005b` under the existing
+  ceilings.
 - Stop policy: first terminal result ends the phase. No retry, replacement,
   fallback, second case, organic/SearchAPI request, promotion, or deployment.
-- Proof: commit/case/schema binding; counters, usage, cost, privacy, hashes, and
-  clean-state evidence; conserved verification aggregate if reached; exact
-  first loss or complete shopper result; independent read-only audit.
+- Result: research completed; verification excluded all ten candidates before
+  presentation, with nine `assetIdentityUnproven` and one
+  `identitySafeProductUrlUnavailable`. The exact counters, usage, cost, SHA-256,
+  privacy allowlist, conservation, and clean tracked state independently
+  returned `VERIFIED`. The artifact is immutable/spent and no retry ran.
 - Alternatives: a broad live matrix is premature until one staged lifecycle
   succeeds; another offline contract edit is speculative without a reproduced
   failure; weakening gates to manufacture a result is prohibited.
 - Reasoning: **High** for boundary/evidence adjudication; **Medium** for the
   bounded mechanical execution.
+
+### Phase PR-3B — Make the verification first loss actionable
+
+- Status: **verified locally 2026-08-29; zero live**
+- Severity addressed: PR-016 P1; PR-013 remains blocked.
+- Scope: derive only fixed candidate-level subreason counts from existing
+  server-owned direct-asset, Shopping, relationship, and product-URL decisions.
+  Do not retain candidate identities or change any verification rule.
+- Proof: verifier/route fail-first 15/7 plus a separate intended Phase D
+  evidence-version failure; corrected focused 32/32; complete 1,479/1,479;
+  E2E 17/17; typecheck, build, lint, legacy eval, ranking, dry-run, and diff
+  walls; independent reachability and privacy review with final `APPROVED`.
+- Review corrections: remove unreachable identity/relationship-safe URL and
+  weak-target buckets; make those states invariant failures; directly test all
+  four subreason-coverage checks and branch-local overbounds.
+- Rollback: revert verifier-v3 aggregate, exact route sanitizer, evidence-v4
+  label, and their tests together. The default-off app and public API remain
+  unchanged.
+- Reasoning: **High** for attribution truth and privacy; **Medium** for fixed-
+  schema plumbing.
+
+### Phase PR-3C — Measure once with verification subreason evidence
+
+- Status: **next; separately bounded live measurement after PR-3B commit**
+- Severity addressed: PR-013 P1 and dependency for PR-006/PR-4.
+- Live purposes: test one clean staged lifecycle for feasibility and, if
+  verification stops it, measure the evidence-v4 branch/subreason distribution
+  needed to select a generalized offline reproduction.
+- Expected North-Star effect: if a shopper result completes, create the first
+  measurable staged final-set sample, with expected wrong-type count 0 and
+  verifiable hard-constraint compliance for every displayed exact match. One
+  case cannot establish core-leader recall or stability improvement. If the
+  lifecycle stops first, no North-Star value changes and only the bounded
+  blocker localization is claimed.
+- Scope: use a new commit-derived directory to run the unchanged frozen `shop
+  vac` case exactly once at the clean PR-3B commit. Keep every PR-3A ceiling and
+  the first-terminal/no-retry/no-replacement/no-fallback/no-second-case policy.
+- Proof: evidence-v4 exact allowlist, commit/case/schema/hash, all counters and
+  cost, first-loss and subreason bounds/coverage, privacy exclusions, clean
+  state, and independent read-only audit.
+- Decision rule: if it fails, inspect the overlapping branch-specific counts,
+  select an evidence-supported offline reproduction target, and establish a
+  generalized cause independently before changing behavior. Do not treat the
+  most frequent count as causal, infer a product/candidate, or loosen gates. If
+  it succeeds, authorize PR-4.
+- Reasoning: **High** for evidence adjudication; **Medium** for the bounded run.
 
 ### Phase PR-4 — Measure active-path accuracy, stability, latency, and cost
 
@@ -882,10 +930,11 @@ Current verdict: **NOT READY** (confidence 0.98).
 
 Release blockers today:
 
-- staged lifecycle feasibility has not passed. PR-2H and PR-2J close two
-  independently reproduced contract mismatches, but the latest live attempt
-  remains PR-2I's `candidate_facts` stop and no post-PR-2J provider result has
-  reached verification or presentation;
+- staged lifecycle feasibility has not passed. PR-3A crossed research and
+  collection but verification excluded all ten candidates—nine at asset
+  identity and one at the product-URL gate—before presentation. PR-3B makes a
+  future subreason distribution observable but does not explain that spent
+  attempt or change behavior;
 - current live accuracy, stability, latency, and cost have not been measured;
 - RR-091 and RR-092 remain unresolved for an experimental path that cannot be
   promoted safely.

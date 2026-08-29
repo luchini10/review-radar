@@ -4,6 +4,66 @@
 
 ---
 
+## OAI-T10 PR-3A live stop and PR-3B subreason contract (2026-08-29)
+
+- PR-3A spent exactly one frozen `shop vac` Phase D invocation at clean commit
+  `43857e072da54ee8f988887d3813722ed6fd005b`. It completed research, then
+  verification classified 0 eligible, 0 close match, and 10 excluded: nine
+  `assetIdentityUnproven` and one `identitySafeProductUrlUnavailable`.
+  Presentation/rendering did not run and there was no retry, replacement,
+  fallback, second case, organic request, SearchAPI request, promotion, or
+  deployment.
+- The attempt used one create, 19 retrieves, three hosted searches, one safety
+  cancel, ten Shopping requests, 15 source-page selections, and 17 physical
+  HTTP attempts. Seven source fetches succeeded and Shopping returned 192 rows.
+  Usage was 30,372 input, zero cached input, 4,591 output, and three web-search
+  calls; frozen-conservative estimated cost was `$0.193777`, below `$3`.
+- The spent directory contains only untracked 18,328-byte `attempt.json`,
+  SHA-256
+  `39dd07087313339bf0b8b0cad1abd6c3ab1890a2daed73800989b63d6bad4894`.
+  Strict independent audit returned `VERIFIED`. Never read, edit, retry, stage,
+  reuse, or add files to this directory.
+- Evidence v3 proves the coarse first-loss distribution only. It cannot reveal
+  candidates, distinguish direct-asset identity reasons, explain why 192
+  Shopping rows yielded no accepted identity, or identify the product-URL
+  reason. Zero source/claim rejection counts do not prove later gates passed for
+  candidates that stopped earlier.
+- `staged-terra-verifier-v3` keeps the six conserving first-loss counts and adds
+  affected-candidate subreason groups scoped to the matching branch:
+  `assetIdentityFailureCandidateCounts` and
+  `commerceOutcomeCandidateCounts` only for asset-identity first losses;
+  `completeProductRelationshipFailureCandidateCounts` only for relationship
+  first losses; and `identitySafeProductUrlFailureCandidateCounts` only for URL
+  first losses. A candidate can affect more than one subreason, so subreason
+  groups do not conserve, but each count is bounded by its first-loss branch and
+  each nonzero branch must have at least one subreason per affected candidate.
+- The route accepts only the exact fixed aggregate and nested keys, nonnegative
+  safe integers, first-loss conservation, eligible/close/excluded
+  reconciliation, branch-local bounds, and subreason coverage. Missing,
+  unknown, private, fractional, negative, overbound, undercovered, or otherwise
+  malformed attribution is omitted in full. Public success/failure bodies are
+  unchanged and never contain diagnostics.
+- `weak_target_identity`, `identity_not_safe`, and
+  `product_relationship_not_safe` are unreachable after the branch predicates
+  used by this aggregate. They are invariant errors, not reported buckets.
+  Sanitized Phase D artifacts carrying the new subreason groups use
+  `oai-t10-phase-d-sanitized-v4`; historical v3 artifacts remain immutable.
+- Verifier/route fail-first was 15 pass / 7 intended fail; the separate Phase D
+  evidence-version expectation also failed until v4. Final focused verifier/
+  route/Phase D tests passed 32/32; the complete suite passed 1,479/1,479 across
+  214 suites; E2E passed 17/17; typecheck, build, lint, eval, ranking, dry-run,
+  and diff checks passed. Independent review found the three unreachable
+  buckets and a missing subreason-coverage mutation wall; after correction the
+  terminal verdict was `APPROVED`.
+- PR-3B changes observability only. It does not change eligibility, evidence,
+  identity, relationship, URL, commerce, price, ranking, network, public API,
+  flag, or UI behavior and proves no live cause. Any next measurement must be a
+  separately documented PR-3C invocation at the clean committed PR-3B snapshot,
+  in a new commit-derived directory, exactly once under the unchanged Phase D
+  ceilings and first-terminal/no-retry policy.
+
+---
+
 ## PR-3 tracked offline benchmark contract (2026-08-29)
 
 - `tests/fixtures/qa-benchmark-matrix-v1.json` is the deterministic named-batch

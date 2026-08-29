@@ -1,6 +1,7 @@
 import type { ProductRecommendation } from "../types/review-radar.ts";
 import type { SelectedSmartFeature } from "../types/smart-features.ts";
 import {
+  stableCommerceIdentifiers,
   type CommerceShoppingResult,
   verifyCommerceShoppingResults,
 } from "./autonomousCommerceVerifier.ts";
@@ -39,7 +40,7 @@ import {
 } from "./stagedTerraContract.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
 
-export const STAGED_TERRA_VERIFIER_VERSION = "staged-terra-verifier-v2";
+export const STAGED_TERRA_VERIFIER_VERSION = "staged-terra-verifier-v3";
 
 const SOURCE_ROLES = new Set<HybridSourceRole>([
   "official_product",
@@ -110,6 +111,45 @@ export type StagedTerraVerifierAggregateDiagnostic = {
     hardRequirementFailed: number;
     hardRequirementNotVerified: number;
     noLossEligible: number;
+  };
+  assetIdentityFailureCandidateCounts: {
+    noAssetCandidates: number;
+    invalidTargetIdentity: number;
+    missingTitle: number;
+    brandNotInTitle: number;
+    modelNotInTitle: number;
+    modelConflictInTitle: number;
+    wrongProductType: number;
+  };
+  commerceOutcomeCandidateCounts: {
+    noShoppingRows: number;
+    targetStableIdentifierUnavailable: number;
+    acceptedExactOffer: number;
+    missingTitle: number;
+    brandNotInTitle: number;
+    stableIdentifierNotInTitle: number;
+    missingMerchantProductUrl: number;
+    missingPrice: number;
+    missingSeller: number;
+    nonNewOffer: number;
+    explicitAccessoryOffer: number;
+    productIneligible: number;
+  };
+  completeProductRelationshipFailureCandidateCounts: {
+    nonProductPage: number;
+    complementPrimaryItem: number;
+    productTypeConflict: number;
+    complementRelationshipWording: number;
+    insufficientCompleteProductEvidence: number;
+  };
+  identitySafeProductUrlFailureCandidateCounts: {
+    missingOrInvalidProductUrl: number;
+    unsafeProductUrlHost: number;
+    productUrlRedirectWrapper: number;
+    productUrlIneligible: number;
+    productUrlTypeConflict: number;
+    productUrlDescriptiveIdentityConflict: number;
+    productUrlIdentityMismatch: number;
   };
   sourceRejectionCandidateCounts: {
     sourceNotOwnedByCandidate: number;
@@ -606,6 +646,169 @@ function candidateFirstLoss(input: {
   return "no_loss_eligible";
 }
 
+function attributeAssetIdentityFailure(input: {
+  counts: StagedTerraVerifierAggregateDiagnostic["assetIdentityFailureCandidateCounts"];
+  decisions: DirectTerraAssetDecision[];
+}) {
+  if (input.decisions.length === 0) {
+    input.counts.noAssetCandidates += 1;
+    return;
+  }
+  for (const reason of new Set(
+    input.decisions.map((decision) => decision.identityReason),
+  )) {
+    if (
+      reason === "accepted_exact_identity" ||
+      reason === "accepted_manufacturer_slug_identity"
+    ) {
+      throw new Error("staged_terra_verifier_identity_attribution_inconsistent");
+    }
+    if (reason === "invalid_target_identity") {
+      input.counts.invalidTargetIdentity += 1;
+    } else if (reason === "missing_title") {
+      input.counts.missingTitle += 1;
+    } else if (reason === "brand_not_in_title") {
+      input.counts.brandNotInTitle += 1;
+    } else if (reason === "model_not_in_title") {
+      input.counts.modelNotInTitle += 1;
+    } else if (reason === "model_conflict_in_title") {
+      input.counts.modelConflictInTitle += 1;
+    } else if (reason === "weak_target_identity") {
+      throw new Error("staged_terra_verifier_identity_attribution_inconsistent");
+    } else if (reason === "wrong_product_type") {
+      input.counts.wrongProductType += 1;
+    } else {
+      throw new Error("staged_terra_verifier_identity_reason_unknown");
+    }
+  }
+}
+
+function attributeCommerceOutcome(input: {
+  counts: StagedTerraVerifierAggregateDiagnostic["commerceOutcomeCandidateCounts"];
+  model: string;
+  shoppingResultCount: number;
+  commerce: ReturnType<typeof verifyCommerceShoppingResults>;
+}) {
+  if (input.shoppingResultCount === 0) {
+    input.counts.noShoppingRows += 1;
+  }
+  if (stableCommerceIdentifiers(input.model).length === 0) {
+    input.counts.targetStableIdentifierUnavailable += 1;
+  }
+  for (const reason of new Set(
+    input.commerce.decisions.map((decision) => decision.reason),
+  )) {
+    if (reason === "accepted_exact_offer") {
+      input.counts.acceptedExactOffer += 1;
+    } else if (reason === "missing_title") {
+      input.counts.missingTitle += 1;
+    } else if (reason === "brand_not_in_title") {
+      input.counts.brandNotInTitle += 1;
+    } else if (reason === "stable_identifier_not_in_title") {
+      input.counts.stableIdentifierNotInTitle += 1;
+    } else if (reason === "missing_merchant_product_url") {
+      input.counts.missingMerchantProductUrl += 1;
+    } else if (reason === "missing_price") {
+      input.counts.missingPrice += 1;
+    } else if (reason === "missing_seller") {
+      input.counts.missingSeller += 1;
+    } else if (reason === "non_new_offer") {
+      input.counts.nonNewOffer += 1;
+    } else if (reason === "explicit_accessory_offer") {
+      input.counts.explicitAccessoryOffer += 1;
+    } else if (reason === "product_ineligible") {
+      input.counts.productIneligible += 1;
+    } else {
+      throw new Error("staged_terra_verifier_commerce_reason_unknown");
+    }
+  }
+}
+
+function attributeCompleteProductRelationshipFailure(input: {
+  counts: StagedTerraVerifierAggregateDiagnostic["completeProductRelationshipFailureCandidateCounts"];
+  decisions: DirectTerraAssetDecision[];
+}) {
+  const identityAcceptedDecisions = input.decisions.filter(
+    (decision) => decision.identityAccepted,
+  );
+  if (identityAcceptedDecisions.length === 0) {
+    throw new Error(
+      "staged_terra_verifier_relationship_attribution_inconsistent",
+    );
+  }
+  for (const reason of new Set(
+    identityAcceptedDecisions.map((decision) => decision.relationshipReason),
+  )) {
+    if (
+      reason === "complete_product_type_proven" ||
+      reason === "bundle_complete_product_included"
+    ) {
+      throw new Error(
+        "staged_terra_verifier_relationship_attribution_inconsistent",
+      );
+    }
+    if (reason === "non_product_page") {
+      input.counts.nonProductPage += 1;
+    } else if (reason === "complement_primary_item") {
+      input.counts.complementPrimaryItem += 1;
+    } else if (reason === "product_type_conflict") {
+      input.counts.productTypeConflict += 1;
+    } else if (reason === "complement_relationship_wording") {
+      input.counts.complementRelationshipWording += 1;
+    } else if (reason === "insufficient_complete_product_evidence") {
+      input.counts.insufficientCompleteProductEvidence += 1;
+    } else if (reason === "identity_not_proven") {
+      throw new Error(
+        "staged_terra_verifier_relationship_attribution_inconsistent",
+      );
+    } else {
+      throw new Error("staged_terra_verifier_relationship_reason_unknown");
+    }
+  }
+}
+
+function attributeIdentitySafeProductUrlFailure(input: {
+  counts: StagedTerraVerifierAggregateDiagnostic["identitySafeProductUrlFailureCandidateCounts"];
+  decisions: DirectTerraAssetDecision[];
+}) {
+  const completeProductDecisions = input.decisions.filter(
+    relationshipIsComplete,
+  );
+  if (completeProductDecisions.length === 0) {
+    throw new Error("staged_terra_verifier_url_attribution_inconsistent");
+  }
+  for (const reason of new Set(
+    completeProductDecisions.map((decision) => decision.productUrlReason),
+  )) {
+    if (reason === "accepted_identity_safe") {
+      throw new Error("staged_terra_verifier_url_attribution_inconsistent");
+    }
+    if (
+      reason === "identity_not_safe" ||
+      reason === "product_relationship_not_safe"
+    ) {
+      throw new Error("staged_terra_verifier_url_attribution_inconsistent");
+    }
+    if (reason === "missing_or_invalid_product_url") {
+      input.counts.missingOrInvalidProductUrl += 1;
+    } else if (reason === "unsafe_product_url_host") {
+      input.counts.unsafeProductUrlHost += 1;
+    } else if (reason === "product_url_redirect_wrapper") {
+      input.counts.productUrlRedirectWrapper += 1;
+    } else if (reason === "product_url_ineligible") {
+      input.counts.productUrlIneligible += 1;
+    } else if (reason === "product_url_type_conflict") {
+      input.counts.productUrlTypeConflict += 1;
+    } else if (reason === "product_url_descriptive_identity_conflict") {
+      input.counts.productUrlDescriptiveIdentityConflict += 1;
+    } else if (reason === "product_url_identity_mismatch") {
+      input.counts.productUrlIdentityMismatch += 1;
+    } else {
+      throw new Error("staged_terra_verifier_url_reason_unknown");
+    }
+  }
+}
+
 function snakeEvidence(evidence: StagedTerraEvidence[]) {
   return evidence.map((item) => ({
     evidence_id: item.evidenceId,
@@ -689,6 +892,45 @@ export function materializeStagedTerraEvidencePackage(
       hardRequirementFailed: 0,
       hardRequirementNotVerified: 0,
       noLossEligible: 0,
+    },
+    assetIdentityFailureCandidateCounts: {
+      noAssetCandidates: 0,
+      invalidTargetIdentity: 0,
+      missingTitle: 0,
+      brandNotInTitle: 0,
+      modelNotInTitle: 0,
+      modelConflictInTitle: 0,
+      wrongProductType: 0,
+    },
+    commerceOutcomeCandidateCounts: {
+      noShoppingRows: 0,
+      targetStableIdentifierUnavailable: 0,
+      acceptedExactOffer: 0,
+      missingTitle: 0,
+      brandNotInTitle: 0,
+      stableIdentifierNotInTitle: 0,
+      missingMerchantProductUrl: 0,
+      missingPrice: 0,
+      missingSeller: 0,
+      nonNewOffer: 0,
+      explicitAccessoryOffer: 0,
+      productIneligible: 0,
+    },
+    completeProductRelationshipFailureCandidateCounts: {
+      nonProductPage: 0,
+      complementPrimaryItem: 0,
+      productTypeConflict: 0,
+      complementRelationshipWording: 0,
+      insufficientCompleteProductEvidence: 0,
+    },
+    identitySafeProductUrlFailureCandidateCounts: {
+      missingOrInvalidProductUrl: 0,
+      unsafeProductUrlHost: 0,
+      productUrlRedirectWrapper: 0,
+      productUrlIneligible: 0,
+      productUrlTypeConflict: 0,
+      productUrlDescriptiveIdentityConflict: 0,
+      productUrlIdentityMismatch: 0,
     },
     sourceRejectionCandidateCounts: {
       sourceNotOwnedByCandidate: 0,
@@ -1189,11 +1431,29 @@ export function materializeStagedTerraEvidencePackage(
     }
     if (firstLoss === "asset_identity_unproven") {
       aggregate.candidateFirstLossCounts.assetIdentityUnproven += 1;
+      attributeAssetIdentityFailure({
+        counts: aggregate.assetIdentityFailureCandidateCounts,
+        decisions: assetVerification.decisions,
+      });
+      attributeCommerceOutcome({
+        counts: aggregate.commerceOutcomeCandidateCounts,
+        model: candidate.model,
+        shoppingResultCount: candidateInput.shoppingResults.length,
+        commerce,
+      });
     } else if (firstLoss === "complete_product_relationship_unproven") {
       aggregate.candidateFirstLossCounts.completeProductRelationshipUnproven +=
         1;
+      attributeCompleteProductRelationshipFailure({
+        counts: aggregate.completeProductRelationshipFailureCandidateCounts,
+        decisions: assetVerification.decisions,
+      });
     } else if (firstLoss === "identity_safe_product_url_unavailable") {
       aggregate.candidateFirstLossCounts.identitySafeProductUrlUnavailable += 1;
+      attributeIdentitySafeProductUrlFailure({
+        counts: aggregate.identitySafeProductUrlFailureCandidateCounts,
+        decisions: assetVerification.decisions,
+      });
     } else if (firstLoss === "hard_requirement_failed") {
       aggregate.candidateFirstLossCounts.hardRequirementFailed += 1;
     } else if (firstLoss === "hard_requirement_not_verified") {

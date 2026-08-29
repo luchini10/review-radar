@@ -11,6 +11,47 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Attribute staged verification failures without exposing products
+
+#### Changed
+
+- Preserved the spent PR-3A `shop vac` result as immutable evidence: research
+  completed, but deterministic verification excluded all ten candidates before
+  presentation—nine at asset identity and one at the identity-safe product URL
+  gate. The attempt did not retry or change production behavior.
+- Advanced the deterministic verifier to v3. Identity first losses now retain
+  only fixed affected-candidate counts for direct-asset reasons and Shopping
+  outcomes; relationship and product-URL first losses retain their own closed
+  reason counts. Candidate names, URLs, titles, raw decisions, and provider
+  material remain absent.
+- Made the server diagnostic boundary exact and fail closed: every aggregate
+  and nested key must match the allowlist, counts must be safe integers within
+  the matching first-loss branch, first losses must conserve and reconcile with
+  outcomes, and every nonzero diagnostic branch must have subreason coverage.
+  Malformed or private attribution is omitted in full. Public API bodies and all
+  eligibility/evidence rules are unchanged.
+- Advanced future sanitized Phase D evidence to v4. Historical v3 evidence
+  remains unchanged and cannot be reinterpreted with the new subreason schema.
+
+#### Verified
+
+- Verifier/route fail-first passed 15 checks and failed seven new expectations
+  because the v2 verifier and route had no subreason contract; the separate
+  Phase D evidence-version expectation also failed until v4. Corrected focused
+  verifier, route, and Phase D tests passed 32/32; full tests passed
+  1,479/1,479 across 214 suites; credential-neutral E2E passed 17/17.
+- Typecheck, production build, legacy deterministic evaluation, fixed ranking
+  baseline, zero-network Phase D dry run, and diff checks passed. Lint reported
+  zero errors and the same three pre-existing warnings.
+- Independent read-only review removed three unreachable proposed buckets and
+  required direct mutation coverage for every subreason-coverage wall. The
+  corrected terminal verdict was `APPROVED`, with no remaining findings.
+
+This is an observability correction, not a recommendation-quality fix. PR-3A's
+exact cause is permanently unknowable from its spent v3 evidence; live
+branch-specific frequency, lifecycle feasibility, and active-path accuracy
+remain unproven.
+
 ### Codex - Make deterministic QA batches prove the cases they run
 
 #### Changed

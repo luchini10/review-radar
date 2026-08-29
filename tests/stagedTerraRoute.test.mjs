@@ -39,6 +39,80 @@ function researchOutput() {
   };
 }
 
+function verificationAttribution({
+  candidateFirstLossCounts = {},
+  assetIdentityFailureCandidateCounts = {},
+  commerceOutcomeCandidateCounts = {},
+  completeProductRelationshipFailureCandidateCounts = {},
+  identitySafeProductUrlFailureCandidateCounts = {},
+  sourceRejectionCandidateCounts = {},
+  claimRejectionCandidateCounts = {},
+} = {}) {
+  return {
+    candidateFirstLossCounts: {
+      assetIdentityUnproven: 0,
+      completeProductRelationshipUnproven: 0,
+      identitySafeProductUrlUnavailable: 0,
+      hardRequirementFailed: 0,
+      hardRequirementNotVerified: 0,
+      noLossEligible: 0,
+      ...candidateFirstLossCounts,
+    },
+    assetIdentityFailureCandidateCounts: {
+      noAssetCandidates: 0,
+      invalidTargetIdentity: 0,
+      missingTitle: 0,
+      brandNotInTitle: 0,
+      modelNotInTitle: 0,
+      modelConflictInTitle: 0,
+      wrongProductType: 0,
+      ...assetIdentityFailureCandidateCounts,
+    },
+    commerceOutcomeCandidateCounts: {
+      noShoppingRows: 0,
+      targetStableIdentifierUnavailable: 0,
+      acceptedExactOffer: 0,
+      missingTitle: 0,
+      brandNotInTitle: 0,
+      stableIdentifierNotInTitle: 0,
+      missingMerchantProductUrl: 0,
+      missingPrice: 0,
+      missingSeller: 0,
+      nonNewOffer: 0,
+      explicitAccessoryOffer: 0,
+      productIneligible: 0,
+      ...commerceOutcomeCandidateCounts,
+    },
+    completeProductRelationshipFailureCandidateCounts: {
+      nonProductPage: 0,
+      complementPrimaryItem: 0,
+      productTypeConflict: 0,
+      complementRelationshipWording: 0,
+      insufficientCompleteProductEvidence: 0,
+      ...completeProductRelationshipFailureCandidateCounts,
+    },
+    identitySafeProductUrlFailureCandidateCounts: {
+      missingOrInvalidProductUrl: 0,
+      unsafeProductUrlHost: 0,
+      productUrlRedirectWrapper: 0,
+      productUrlIneligible: 0,
+      productUrlTypeConflict: 0,
+      productUrlDescriptiveIdentityConflict: 0,
+      productUrlIdentityMismatch: 0,
+      ...identitySafeProductUrlFailureCandidateCounts,
+    },
+    sourceRejectionCandidateCounts: {
+      sourceNotOwnedByCandidate: 0,
+      sourceInputInvalid: 0,
+      ...sourceRejectionCandidateCounts,
+    },
+    claimRejectionCandidateCounts: {
+      observedClaimInvalid: 0,
+      ...claimRejectionCandidateCounts,
+    },
+  };
+}
+
 describe("OAI-T10 staged Terra route", () => {
   it("runs start, poll, deterministic verification, and independent presentation without exposing ids or diagnostics", async () => {
     const diagnostics = [];
@@ -74,6 +148,14 @@ describe("OAI-T10 staged Terra route", () => {
         })),
       ],
     };
+    const aggregate = verificationAttribution({
+      candidateFirstLossCounts: {
+        assetIdentityUnproven: 7,
+        noLossEligible: 1,
+      },
+      assetIdentityFailureCandidateCounts: { noAssetCandidates: 7 },
+      commerceOutcomeCandidateCounts: { noShoppingRows: 7 },
+    });
     const handlers = createStagedTerraRecommendationHandlers({
       validateRequest: (body) => ({ data: body }),
       getEnvironment: () => ({
@@ -123,23 +205,7 @@ describe("OAI-T10 staged Terra route", () => {
         diagnostics: {
           candidateCount: 8,
           candidates: [],
-          aggregate: {
-            candidateFirstLossCounts: {
-              assetIdentityUnproven: 7,
-              completeProductRelationshipUnproven: 0,
-              identitySafeProductUrlUnavailable: 0,
-              hardRequirementFailed: 0,
-              hardRequirementNotVerified: 0,
-              noLossEligible: 1,
-            },
-            sourceRejectionCandidateCounts: {
-              sourceNotOwnedByCandidate: 0,
-              sourceInputInvalid: 0,
-            },
-            claimRejectionCandidateCounts: {
-              observedClaimInvalid: 0,
-            },
-          },
+          aggregate,
         },
       }),
       runPresentation: async () => {
@@ -189,23 +255,7 @@ describe("OAI-T10 staged Terra route", () => {
           diagnostic.stage === "verification" &&
           diagnostic.outcome === "completed",
       )?.verificationAttribution,
-      {
-        candidateFirstLossCounts: {
-          assetIdentityUnproven: 7,
-          completeProductRelationshipUnproven: 0,
-          identitySafeProductUrlUnavailable: 0,
-          hardRequirementFailed: 0,
-          hardRequirementNotVerified: 0,
-          noLossEligible: 1,
-        },
-        sourceRejectionCandidateCounts: {
-          sourceNotOwnedByCandidate: 0,
-          sourceInputInvalid: 0,
-        },
-        claimRejectionCandidateCounts: {
-          observedClaimInvalid: 0,
-        },
-      },
+      aggregate,
     );
     assert.equal(
       diagnostics
@@ -270,27 +320,33 @@ describe("OAI-T10 staged Terra route", () => {
       "private_requirement_id",
       "private claim text",
     ];
-    const aggregate = {
+    const aggregate = verificationAttribution({
       candidateFirstLossCounts: {
         assetIdentityUnproven: 2,
         completeProductRelationshipUnproven: 1,
         identitySafeProductUrlUnavailable: 1,
         hardRequirementFailed: 4,
-        hardRequirementNotVerified: 0,
-        noLossEligible: 0,
-        privateCandidateName: privateCanaries[1],
+      },
+      assetIdentityFailureCandidateCounts: {
+        noAssetCandidates: 1,
+        modelNotInTitle: 1,
+      },
+      commerceOutcomeCandidateCounts: {
+        noShoppingRows: 1,
+        stableIdentifierNotInTitle: 1,
+      },
+      completeProductRelationshipFailureCandidateCounts: {
+        insufficientCompleteProductEvidence: 1,
+      },
+      identitySafeProductUrlFailureCandidateCounts: {
+        missingOrInvalidProductUrl: 1,
       },
       sourceRejectionCandidateCounts: {
         sourceNotOwnedByCandidate: 2,
         sourceInputInvalid: 1,
-        privateSourceUrl: privateCanaries[2],
       },
-      claimRejectionCandidateCounts: {
-        observedClaimInvalid: 3,
-        privateRequirementId: privateCanaries[3],
-      },
-      privateClaim: privateCanaries[4],
-    };
+      claimRejectionCandidateCounts: { observedClaimInvalid: 3 },
+    });
     const research = researchOutput();
     const fingerprint = (
       await import("../lib/stagedTerraContract.ts")
@@ -340,7 +396,9 @@ describe("OAI-T10 staged Terra route", () => {
           candidates: [
             {
               candidateId: privateCanaries[0],
+              productName: privateCanaries[1],
               rejectionReasons: [privateCanaries[4]],
+              privateRequirementId: privateCanaries[3],
             },
           ],
           aggregate,
@@ -374,67 +432,98 @@ describe("OAI-T10 staged Terra route", () => {
     const verification = diagnostics.find(
       (diagnostic) => diagnostic.stage === "verification",
     );
-    assert.deepEqual(verification?.verificationAttribution, {
-      candidateFirstLossCounts: {
-        assetIdentityUnproven: 2,
-        completeProductRelationshipUnproven: 1,
-        identitySafeProductUrlUnavailable: 1,
-        hardRequirementFailed: 4,
-        hardRequirementNotVerified: 0,
-        noLossEligible: 0,
-      },
-      sourceRejectionCandidateCounts: {
-        sourceNotOwnedByCandidate: 2,
-        sourceInputInvalid: 1,
-      },
-      claimRejectionCandidateCounts: {
-        observedClaimInvalid: 3,
-      },
-    });
+    assert.deepEqual(verification?.verificationAttribution, aggregate);
     const serializedDiagnostics = JSON.stringify(diagnostics);
     for (const privateCanary of privateCanaries) {
       assert.equal(serializedDiagnostics.includes(privateCanary), false);
     }
   });
 
-  it("omits non-conserving or non-integer aggregate verifier attribution", async () => {
+  it("omits malformed or non-allowlisted aggregate verifier attribution", async () => {
     const privateCountCanary = "private_count_canary";
-    const validFirstLossCounts = {
-      assetIdentityUnproven: 8,
-      completeProductRelationshipUnproven: 0,
-      identitySafeProductUrlUnavailable: 0,
-      hardRequirementFailed: 0,
-      hardRequirementNotVerified: 0,
-      noLossEligible: 0,
-    };
+    const validAggregate = verificationAttribution({
+      candidateFirstLossCounts: { assetIdentityUnproven: 8 },
+      assetIdentityFailureCandidateCounts: { noAssetCandidates: 8 },
+      commerceOutcomeCandidateCounts: { noShoppingRows: 8 },
+    });
+    const emptyAggregate = verificationAttribution();
+    const validRelationshipAggregate = verificationAttribution({
+      candidateFirstLossCounts: {
+        completeProductRelationshipUnproven: 8,
+      },
+      completeProductRelationshipFailureCandidateCounts: {
+        insufficientCompleteProductEvidence: 8,
+      },
+    });
+    const validProductUrlAggregate = verificationAttribution({
+      candidateFirstLossCounts: {
+        identitySafeProductUrlUnavailable: 8,
+      },
+      identitySafeProductUrlFailureCandidateCounts: {
+        missingOrInvalidProductUrl: 8,
+      },
+    });
     for (const aggregate of [
       {
+        ...validAggregate,
         candidateFirstLossCounts: {
-          ...validFirstLossCounts,
+          ...validAggregate.candidateFirstLossCounts,
           assetIdentityUnproven: 9,
         },
-        sourceRejectionCandidateCounts: {
-          sourceNotOwnedByCandidate: 0,
-          sourceInputInvalid: 0,
-        },
-        claimRejectionCandidateCounts: { observedClaimInvalid: 0 },
       },
       {
-        candidateFirstLossCounts: validFirstLossCounts,
+        ...validAggregate,
         sourceRejectionCandidateCounts: {
-          sourceNotOwnedByCandidate: 0,
+          ...validAggregate.sourceRejectionCandidateCounts,
           sourceInputInvalid: 8.5,
         },
-        claimRejectionCandidateCounts: { observedClaimInvalid: 0 },
       },
       {
-        candidateFirstLossCounts: validFirstLossCounts,
+        ...validAggregate,
         sourceRejectionCandidateCounts: {
-          sourceNotOwnedByCandidate: 0,
+          ...validAggregate.sourceRejectionCandidateCounts,
           sourceInputInvalid: privateCountCanary,
         },
-        claimRejectionCandidateCounts: { observedClaimInvalid: 0 },
       },
+      {
+        ...validAggregate,
+        privateClaim: privateCountCanary,
+      },
+      {
+        ...validAggregate,
+        assetIdentityFailureCandidateCounts: {
+          ...validAggregate.assetIdentityFailureCandidateCounts,
+          privateCandidateName: privateCountCanary,
+        },
+      },
+      {
+        ...validAggregate,
+        assetIdentityFailureCandidateCounts:
+          emptyAggregate.assetIdentityFailureCandidateCounts,
+      },
+      {
+        ...validAggregate,
+        commerceOutcomeCandidateCounts:
+          emptyAggregate.commerceOutcomeCandidateCounts,
+      },
+      {
+        ...validRelationshipAggregate,
+        completeProductRelationshipFailureCandidateCounts:
+          emptyAggregate.completeProductRelationshipFailureCandidateCounts,
+      },
+      {
+        ...validProductUrlAggregate,
+        identitySafeProductUrlFailureCandidateCounts:
+          emptyAggregate.identitySafeProductUrlFailureCandidateCounts,
+      },
+      verificationAttribution({
+        candidateFirstLossCounts: {
+          assetIdentityUnproven: 1,
+          hardRequirementFailed: 7,
+        },
+        assetIdentityFailureCandidateCounts: { noAssetCandidates: 2 },
+        commerceOutcomeCandidateCounts: { noShoppingRows: 1 },
+      }),
     ]) {
       const diagnostics = [];
       const fingerprint = (
