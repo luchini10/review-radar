@@ -6,7 +6,7 @@ import {
 } from "./directTerraCandidateSlate.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
 
-export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v2";
+export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v3";
 export const STAGED_TERRA_RESEARCH_SCHEMA_VERSION =
   "staged-terra-research-v2";
 export const STAGED_TERRA_EVIDENCE_PACKAGE_VERSION =
@@ -25,11 +25,19 @@ export const STAGED_TERRA_RESEARCH_CANDIDATE_VALIDATION_REASONS = [
   "candidate_requirements",
   "candidate_facts",
 ] as const;
+export const STAGED_TERRA_RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS = [
+  "candidate_source_shape",
+  "candidate_source_duplicate",
+  "candidate_source_unsafe",
+  "candidate_source_unregistered",
+] as const;
 
 export type StagedTerraResearchValidationReason =
   (typeof STAGED_TERRA_RESEARCH_VALIDATION_REASONS)[number];
 export type StagedTerraResearchCandidateValidationReason =
   (typeof STAGED_TERRA_RESEARCH_CANDIDATE_VALIDATION_REASONS)[number];
+export type StagedTerraResearchCandidateSourceValidationReason =
+  (typeof STAGED_TERRA_RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS)[number];
 
 const RESEARCH_FACT_KINDS = [
   "identity",
@@ -184,7 +192,9 @@ type ValidationFailure<Reason extends string = string> = {
 type ValidationSuccess<T> = { ok: true; value: T };
 
 type ResearchCandidateParseResult =
-  | ValidationFailure<StagedTerraResearchCandidateValidationReason>
+  | (ValidationFailure<StagedTerraResearchCandidateValidationReason> & {
+      candidateSourceValidationReason?: StagedTerraResearchCandidateSourceValidationReason;
+    })
   | ValidationSuccess<StagedTerraResearchCandidate>;
 
 type StagedTerraResearchValidationFailure =
@@ -194,6 +204,7 @@ type StagedTerraResearchValidationFailure =
     >>
   | (ValidationFailure<"research_candidate_invalid"> & {
       candidateValidationReason: StagedTerraResearchCandidateValidationReason;
+      candidateSourceValidationReason?: StagedTerraResearchCandidateSourceValidationReason;
     });
 
 export function isStagedTerraResearchValidationReason(
@@ -209,6 +220,14 @@ export function isStagedTerraResearchCandidateValidationReason(
 ): value is StagedTerraResearchCandidateValidationReason {
   return STAGED_TERRA_RESEARCH_CANDIDATE_VALIDATION_REASONS.includes(
     value as StagedTerraResearchCandidateValidationReason,
+  );
+}
+
+export function isStagedTerraResearchCandidateSourceValidationReason(
+  value: unknown,
+): value is StagedTerraResearchCandidateSourceValidationReason {
+  return STAGED_TERRA_RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS.includes(
+    value as StagedTerraResearchCandidateSourceValidationReason,
   );
 }
 
@@ -296,6 +315,34 @@ function parseExactSourceUrls(
     return null;
   }
   return urls as string[];
+}
+
+function parseCandidateSourceUrls(
+  value: unknown,
+  registered: Set<string>,
+):
+  | ValidationFailure<StagedTerraResearchCandidateSourceValidationReason>
+  | ValidationSuccess<string[]> {
+  if (
+    !Array.isArray(value) ||
+    value.length < 1 ||
+    value.length > 12 ||
+    value.some((item) => !boundedString(item, 4_096))
+  ) {
+    return { ok: false, reason: "candidate_source_shape" };
+  }
+  const items = value as string[];
+  if (new Set(items).size !== items.length) {
+    return { ok: false, reason: "candidate_source_duplicate" };
+  }
+  const urls = items.map(exactHttpsUrl);
+  if (urls.some((url) => url === null)) {
+    return { ok: false, reason: "candidate_source_unsafe" };
+  }
+  if (urls.some((url) => !registered.has(url!))) {
+    return { ok: false, reason: "candidate_source_unregistered" };
+  }
+  return { ok: true, value: urls as string[] };
 }
 
 function identityKey(brand: string, model: string) {
@@ -491,10 +538,18 @@ function parseResearchCandidate(
     return { ok: false, reason: "candidate_identity" };
   }
   const candidateId = `candidate_${index + 1}`;
-  const sourceUrls = parseExactSourceUrls(value.source_urls, registered, {
-    minimum: 1,
-  });
-  if (!sourceUrls) return { ok: false, reason: "candidate_sources" };
+  const parsedSourceUrls = parseCandidateSourceUrls(
+    value.source_urls,
+    registered,
+  );
+  if (!parsedSourceUrls.ok) {
+    return {
+      ok: false,
+      reason: "candidate_sources",
+      candidateSourceValidationReason: parsedSourceUrls.reason,
+    };
+  }
+  const sourceUrls = parsedSourceUrls.value;
   const candidateSources = new Set(sourceUrls);
 
   if (
@@ -636,6 +691,12 @@ export function validateStagedTerraResearchOutput({
       ok: false,
       reason: "research_candidate_invalid",
       candidateValidationReason: invalidCandidate.reason,
+      ...("candidateSourceValidationReason" in invalidCandidate
+        ? {
+            candidateSourceValidationReason:
+              invalidCandidate.candidateSourceValidationReason,
+          }
+        : {}),
     };
   }
   const parsed = candidateResults

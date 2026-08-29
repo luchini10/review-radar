@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   extractDirectTerraAssetTargets,
+  extractDirectTerraExactResponseSourceUrls,
   extractDirectTerraResponseSources,
   parseDirectTerraCompletedResponse,
 } from "../lib/directTerraResponse.ts";
@@ -551,6 +552,46 @@ describe("direct Terra V2 response boundary", () => {
       sources.map((source) => source.url),
       ["https://one.example/product", "https://two.example/product"],
     );
+  });
+
+  it("keeps canonical display dedupe separate from exact ownership variants", () => {
+    const tracked = "https://one.example/product?utm_source=hosted-search";
+    const exact = "https://one.example/product";
+    const response = {
+      output: [
+        {
+          type: "web_search_call",
+          action: {
+            sources: [{ type: "url", url: tracked, title: "Tracked" }],
+          },
+        },
+        {
+          type: "message",
+          content: [
+            {
+              type: "output_text",
+              text: "{}",
+              annotations: [
+                { type: "url_citation", url: exact, title: "Exact" },
+                {
+                  type: "url_citation",
+                  url_citation: { url: exact, title: "Exact duplicate" },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    assert.deepEqual(
+      extractDirectTerraResponseSources(response).map((source) => source.url),
+      [tracked],
+    );
+    assert.deepEqual(extractDirectTerraExactResponseSourceUrls(response), [
+      tracked,
+      exact,
+    ]);
   });
 
   it("preserves an invented citation in the report but disables its link", () => {

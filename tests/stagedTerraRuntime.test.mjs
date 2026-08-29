@@ -153,6 +153,55 @@ describe("OAI-T10 staged Terra runtime", () => {
     assert.equal(JSON.stringify(polled.ledger).includes("resp_research123"), false);
   });
 
+  it("accepts a later exact response-owned URL variant without canonical matching", async () => {
+    const value = researchValue();
+    const exactCandidateUrl = value.candidates[0].source_urls[0];
+    const earlierResponseVariant = `${exactCandidateUrl}?utm_source=hosted-search`;
+    const response = completedResearchResponse("resp_research123", value);
+    response.output[0].action.sources.unshift({
+      type: "url",
+      url: earlierResponseVariant,
+    });
+
+    const polled = await pollStagedTerraResearch({
+      client: { responses: { retrieve: async () => response } },
+      responseId: "resp_research123",
+      requestFingerprint: buildStagedTerraRequestFingerprint(shopper),
+      shopperRequest: shopper,
+    });
+
+    assert.equal(polled.ok, true);
+    assert.equal(polled.state, "completed");
+    assert.equal(
+      polled.researchOutput.candidates[0].sourceUrls[0],
+      exactCandidateUrl,
+    );
+  });
+
+  it("rejects a canonical lookalike that is not itself response-owned", async () => {
+    const value = researchValue();
+    const exactCandidateUrl = value.candidates[0].source_urls[0];
+    const response = completedResearchResponse("resp_research123", value);
+    response.output[0].action.sources[0].url =
+      `${exactCandidateUrl}?utm_source=hosted-search`;
+
+    const polled = await pollStagedTerraResearch({
+      client: { responses: { retrieve: async () => response } },
+      responseId: "resp_research123",
+      requestFingerprint: buildStagedTerraRequestFingerprint(shopper),
+      shopperRequest: shopper,
+    });
+
+    assert.equal(polled.ok, false);
+    assert.equal(polled.validationReason, "research_candidate_invalid");
+    assert.equal(polled.candidateValidationReason, "candidate_sources");
+    assert.equal(
+      polled.candidateSourceValidationReason,
+      "candidate_source_unregistered",
+    );
+    assert.equal(JSON.stringify(polled).includes(exactCandidateUrl), false);
+  });
+
   it("propagates only the bounded candidate field group for invalid research", async () => {
     const value = researchValue();
     value.candidates[0].fact_leads[0].statement = " ";

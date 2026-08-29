@@ -21,6 +21,7 @@ import {
   type DirectTerraSerperShoppingTransport,
 } from "./directTerraSerperAssetAdapter.ts";
 import {
+  extractDirectTerraExactResponseSourceUrls,
   extractDirectTerraResponseSources,
 } from "./directTerraResponse.ts";
 import {
@@ -44,7 +45,7 @@ import type {
 } from "./stagedTerraVerifier.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
 
-export const STAGED_TERRA_RUNTIME_VERSION = "staged-terra-runtime-v1";
+export const STAGED_TERRA_RUNTIME_VERSION = "staged-terra-runtime-v2";
 export const STAGED_TERRA_RUNTIME_LIMITS = Object.freeze({
   researchTimeoutMs: 120_000,
   presentationTimeoutMs: 120_000,
@@ -337,9 +338,8 @@ export async function pollStagedTerraResearch({
   } catch {
     return failed(ledger, "invalid_json", startedAt, now);
   }
-  const responseSourceUrls = extractDirectTerraResponseSources(response).map(
-    (source) => source.url,
-  );
+  const responseSourceUrls =
+    extractDirectTerraExactResponseSourceUrls(response);
   const parsed = validateStagedTerraResearchOutput({
     value,
     shopperRequest,
@@ -351,6 +351,12 @@ export async function pollStagedTerraResearch({
       validationReason: parsed.reason,
       ...("candidateValidationReason" in parsed
         ? { candidateValidationReason: parsed.candidateValidationReason }
+        : {}),
+      ...("candidateSourceValidationReason" in parsed
+        ? {
+            candidateSourceValidationReason:
+              parsed.candidateSourceValidationReason,
+          }
         : {}),
     };
   }

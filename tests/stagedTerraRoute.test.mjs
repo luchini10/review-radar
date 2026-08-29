@@ -257,18 +257,40 @@ describe("OAI-T10 staged Terra route", () => {
         expectedReason: "research_candidate_invalid",
         candidateValidationReason: "candidate_facts",
         expectedCandidateReason: "candidate_facts",
+        candidateSourceValidationReason: undefined,
+        expectedCandidateSourceReason: undefined,
+      },
+      {
+        validationReason: "research_candidate_invalid",
+        expectedReason: "research_candidate_invalid",
+        candidateValidationReason: "candidate_sources",
+        expectedCandidateReason: "candidate_sources",
+        candidateSourceValidationReason: "candidate_source_unregistered",
+        expectedCandidateSourceReason: "candidate_source_unregistered",
       },
       {
         validationReason: "research_candidate_invalid",
         expectedReason: "research_candidate_invalid",
         candidateValidationReason: "private_candidate_field",
         expectedCandidateReason: undefined,
+        candidateSourceValidationReason: "candidate_source_unregistered",
+        expectedCandidateSourceReason: undefined,
+      },
+      {
+        validationReason: "research_candidate_invalid",
+        expectedReason: "research_candidate_invalid",
+        candidateValidationReason: "candidate_sources",
+        expectedCandidateReason: "candidate_sources",
+        candidateSourceValidationReason: "private_source_reason",
+        expectedCandidateSourceReason: undefined,
       },
       {
         validationReason: "unbounded_private_reason",
         expectedReason: undefined,
         candidateValidationReason: "candidate_sources",
         expectedCandidateReason: undefined,
+        candidateSourceValidationReason: "candidate_source_unregistered",
+        expectedCandidateSourceReason: undefined,
       },
     ]) {
       const diagnostics = [];
@@ -292,6 +314,8 @@ describe("OAI-T10 staged Terra route", () => {
           ok: false,
           validationReason: testCase.validationReason,
           candidateValidationReason: testCase.candidateValidationReason,
+          candidateSourceValidationReason:
+            testCase.candidateSourceValidationReason,
           rawOutput: "private raw model output",
           providerResponseId: "resp_private-provider-id",
           sourceUrl: "https://private.example/product",
@@ -333,6 +357,10 @@ describe("OAI-T10 staged Terra route", () => {
         testCase.expectedCandidateReason,
       );
       assert.equal(
+        failedPoll?.candidateSourceValidationReason,
+        testCase.expectedCandidateSourceReason,
+      );
+      assert.equal(
         JSON.stringify(publicBody).includes(testCase.validationReason),
         false,
       );
@@ -345,6 +373,7 @@ describe("OAI-T10 staged Terra route", () => {
         "private secret canary",
         "unbounded_private_reason",
         "private_candidate_field",
+        "private_source_reason",
       ]) {
         assert.equal(serializedDiagnostics.includes(privateValue), false);
       }

@@ -11571,3 +11571,59 @@ uniqueness, or spend again until that boundary is independently green.
 **Independent audit:** `VERIFIED`. The auditor independently confirmed the
 counters, cost math, privacy boundary, first terminal stop, no downstream call,
 exact-cause uncertainty, clean tracked state, and untracked spent fixture.
+
+---
+
+## 🟩 Codex — 2026-08-29 — Production readiness PR-2D source-ownership closeout
+
+**Objective:** correct only the proven generalized candidate-source registry
+self-mismatch and make future source failures attributable without weakening
+exact ownership or retaining private provider material.
+
+**Fail-first evidence:** the focused response/contract/runtime/route wall passed
+27 existing checks and failed exactly three new assertions. The contract had no
+closed source-branch reason, the route could not retain one, and runtime rejected
+a candidate URL that was the later of two exact response-owned variants sharing
+one canonical display identity.
+
+**Correction:** `extractDirectTerraExactResponseSourceUrls()` preserves every
+parseable exact action/citation URL string once for staged ownership validation.
+`extractDirectTerraResponseSources()` remains the canonical display/count view.
+Candidate URLs still require exact string ownership, uniqueness, HTTPS,
+public-host shape, no credentials, and no non-default port. A canonical
+lookalike that was not itself response-owned fails as unregistered.
+
+Contract v3 changes the request fingerprint so older jobs fail closed. Runtime
+v2 records the corrected semantics. Research schema and prompt stay v2 because
+their wire shape is unchanged. Candidate-source failures may retain only
+`candidate_source_shape`, `candidate_source_duplicate`,
+`candidate_source_unsafe`, or `candidate_source_unregistered` beneath
+`research_candidate_invalid / candidate_sources`. No URL, candidate object,
+source title, raw output, provider ID, prompt, header, credential, or secret is
+retained, and the public body remains the same generic failure.
+
+**Verification (zero live):**
+
+- fail-first: 27 pass / 3 intended fail;
+- corrected focused response/contract/runtime/route wall: 55/55;
+- full staged subsystem: 59/59 across ten suites;
+- complete suite: 1,444/1,444 across 209 suites;
+- credential-neutral E2E: 17/17;
+- typecheck, production build, deterministic eval, fixed ranking comparison,
+  Phase D zero-network dry run, lint, and `git diff --check`: pass;
+- lint: zero errors and three pre-existing warnings; and
+- independent read-only review: `APPROVED` with no findings after personally
+  running 55/55 focused tests, 1,444/1,444 full tests, typecheck, and diff
+  checks, then reauthenticating the exact eight-file patch at parent
+  `b4bbec5ad2cb19e11989814fee69290c8e0a969f`.
+
+No OpenAI, Serper, SearchAPI, Shopping, source-page, or other product-data
+request ran. No `.env.local` edit, flag promotion, deployment, production
+change, push, historical-fixture mutation, or user-owned artifact cleanup
+occurred.
+
+**Limitation and decision:** this proves and fixes the deterministic exact-
+variant loss. It does not prove that branch caused the spent PR-2C response or
+that staged verification/presentation/rendering is feasible. The next useful
+question is one new-commit, new-directory attempt under the unchanged frozen
+envelope, stopping at its first terminal outcome.

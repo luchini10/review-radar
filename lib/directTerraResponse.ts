@@ -217,6 +217,24 @@ export function extractDirectTerraResponseSources(
   return distinctSources(collectDirectTerraResponseSources(response));
 }
 
+export function extractDirectTerraExactResponseSourceUrls(
+  response: unknown,
+): string[] {
+  const exactUrls: string[] = [];
+  const seen = new Set<string>();
+  for (const source of collectDirectTerraResponseSources(response)) {
+    if (
+      canonicalizeDirectTerraCitationUrl(source.url) === null ||
+      seen.has(source.url)
+    ) {
+      continue;
+    }
+    seen.add(source.url);
+    exactUrls.push(source.url);
+  }
+  return exactUrls;
+}
+
 function outputText(response: Record<string, unknown>) {
   if (typeof response.output_text === "string") return response.output_text;
   if (!Array.isArray(response.output)) return null;

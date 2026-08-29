@@ -4,6 +4,36 @@
 
 ---
 
+## OAI-T10 PR-2D exact source-ownership correction (2026-08-29)
+
+- Keep two source views separate. `extractDirectTerraResponseSources()` is the
+  canonicalized display/count view and must keep its existing behavior.
+  `extractDirectTerraExactResponseSourceUrls()` is the staged-validation
+  ownership registry and preserves each parseable exact response-owned action
+  or citation URL string once.
+- Never canonical-match a model-authored candidate URL. Candidate ownership
+  still requires exact string membership. Candidate URLs must also remain
+  unique, HTTPS, credential-free, free of non-default ports, and public-host
+  shaped. A merely canonical-equivalent lookalike is unregistered.
+- Contract v3 changes the request fingerprint so v1/v2 jobs cannot continue
+  under the new acceptance semantics. Research schema/prompt stay v2 because
+  the wire shape did not change. Runtime v2 records the new semantics.
+- Under `research_candidate_invalid / candidate_sources`, diagnostics may retain
+  only `candidate_source_shape`, `candidate_source_duplicate`,
+  `candidate_source_unsafe`, or `candidate_source_unregistered`. Retain no URL,
+  candidate object, source title, prompt, provider ID, raw output, or secret.
+  The browser continues to receive only the generic `research_failed` response.
+- Fail-first was 27 pass / 3 intended fail. Corrected focused tests passed
+  55/55, staged tests 59/59, and the complete suite 1,444/1,444. Hermetic E2E
+  passed 17/17; typecheck, build, eval, ranking, dry run, lint, and diff checks
+  passed. Independent read-only review returned `APPROVED` after personally
+  rerunning the focused and complete suites plus typecheck and diff checks.
+- No live request ran in PR-2D. This proves the generalized exact-variant defect
+  is corrected; it does not prove that defect caused PR-2C, reveal the spent
+  response's private source branch, or establish staged lifecycle feasibility.
+
+---
+
 ## OAI-T10 PR-2C candidate-source live stop (2026-08-29)
 
 - The one attempt at `140d465a0ac835efb73713e988c140b7e35be6e9` is

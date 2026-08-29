@@ -164,9 +164,10 @@ assigns `candidate_<n>` and `candidate_<n>_fact_<m>` from array order. It
 requires the exact unique normalized-requirement set, then canonicalizes those
 leads into request order for every downstream consumer. The browser receives
 only an encrypted, authenticated app job token and polls that token in a header.
-Provider response IDs and diagnostics remain server-only. Contract v2 is part
-of the request fingerprint, so tokens from the previous research contract fail
-closed across a deployment rollover.
+Provider response IDs and diagnostics remain server-only. Contract v3 is part
+of the request fingerprint, so tokens from either previous research contract
+fail closed across a deployment rollover. The provider-facing research schema
+remains v2 because PR-2D changes ownership validation, not its JSON shape.
 
 After research completes, the server fetches at most two candidate-owned source
 pages per product through the existing DNS-pinned bounded-fetch seam and may
@@ -190,16 +191,31 @@ de-duplicated per research response so repeat polling cannot repeat provider
 work. A failed research poll may retain only one closed server-side validation
 class: shape, source registry, candidate validity, or duplicate identity. A
 candidate-validity failure may additionally retain only identity, sources,
-requirements, or facts as a server-side field group. The route validates both
-enums independently; unknown reasons and raw provider material are discarded,
-and no validation class enters the client response. Cost accounting uses
+requirements, or facts as a server-side field group. The route validates all
+three enums and their hierarchy independently. When the field group is sources,
+it may additionally retain only shape, duplicate, unsafe, or unregistered as a
+URL-free source
+subreason. Unknown reasons and raw provider material are discarded, and no
+validation class enters the client response.
+
+Staged source ownership uses a dedicated exact registry that keeps every
+parseable exact URL string found in response-owned search actions or citations
+once. The existing canonicalized source view remains unchanged for display and
+source counts. A model-authored candidate URL must still be the exact
+response-owned string, unique within its candidate, HTTPS, public-host shaped,
+credential-free, and free of a non-default port; canonical equivalence alone
+never establishes ownership.
+
+Cost accounting uses
 terminal provider usage even when local validation later fails; repeated
 snapshots deduplicate only by the same safe response hash, while distinct or
 unidentifiable responses sum conservatively and block successful acceptance as
 an anomaly. The entire branch remains default-off, undeployed, and without a
 successful live feasibility result. Its latest live response failed candidate
-validation; the generalized v1 schema/runtime mismatch is corrected locally in
-v2, but the exact private field from that spent response remains unknowable.
+source validation. The generalized ID/order mismatch and exact-registry loss are
+corrected locally, but the exact private branch from that spent response is
+permanently unknowable. A new bounded attempt is required for fresh,
+independently attributable evidence.
 
 ## 2. Full user flow
 

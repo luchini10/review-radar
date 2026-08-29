@@ -1,27 +1,69 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-08-29 by Codex after the PR-2C candidate-source live stop.
-Use `git log -1` after phase closeout for the exact documentation commit.
+Updated: 2026-08-29 by Codex after the PR-2D source-ownership closeout.
+Use `git log -1` for the exact self-contained PR-2D commit containing this
+handoff.
 
 ## Current state
 
 ReviewRadar is **not production-ready**.
 
-The latest completed code commit is PR-2B at
-`140d465a0ac835efb73713e988c140b7e35be6e9`. Its plan/evidence schema v2
-separates the frozen July approval envelope from the dated August current
-estimate. Only `approvalEnvelopeConservativeUsd` controls the unchanged `$3`
-hard gate. PR-2B passed 1,440/1,440 deterministic tests, 17/17 hermetic E2E,
-all static/build gates, and independent review.
+PR-2D corrects the proven candidate-source registry self-mismatch. The shared
+canonical display/count extractor previously retained only the first exact
+string for canonically equivalent response-owned URLs. Staged validation reused
+that lossy view while requiring exact string membership, so a later exact
+response-owned variant could fail as unregistered.
 
-PR-2C then ran exactly one new-commit, new-directory broad `shop vac` attempt at
-that commit. Terra completed research, but ReviewRadar failed closed as
-`research_candidate_invalid / candidate_sources` before deterministic
+The corrected staged runtime uses a dedicated exact ownership registry that
+keeps every parseable exact URL string from response-owned search actions or
+citations once. The canonical display/count extractor remains unchanged. A
+model-authored candidate URL must still be the exact response-owned string,
+unique within its candidate, HTTPS, public-host shaped, credential-free, and
+free of a non-default port. Canonical equivalence alone never grants ownership.
+
+Candidate-source diagnostics may retain only one of:
+
+- `candidate_source_shape`
+- `candidate_source_duplicate`
+- `candidate_source_unsafe`
+- `candidate_source_unregistered`
+
+That subreason is accepted only beneath
+`research_candidate_invalid / candidate_sources`. Runtime and route validate
+the hierarchy independently. No URL, raw output, candidate object, source title,
+provider ID, prompt, body, header, key, credential, or secret enters diagnostics
+or the client response. The browser still receives only generic
+`research_failed`.
+
+Contract v3 changes the request fingerprint so v1/v2 jobs fail closed. Runtime
+v2 records the corrected semantics. Research schema and prompt remain v2 because
+the provider-facing JSON shape did not change.
+
+PR-2D verification:
+
+- fail-first: 27 pass / 3 intended fail;
+- corrected focused response/contract/runtime/route tests: 55/55;
+- full staged subsystem: 59/59 across ten suites;
+- complete deterministic suite: 1,444/1,444 across 209 suites;
+- credential-neutral E2E: 17/17;
+- typecheck, production build, synthetic eval, fixed ranking comparison, and
+  Phase D zero-network dry run: pass;
+- lint: zero errors and three pre-existing warnings;
+- `git diff --check`: pass; and
+- independent read-only review: `APPROVED` with no actionable findings after
+  the reviewer personally ran focused/full tests, typecheck, and diff checks.
+
+PR-2D made no OpenAI, Serper, SearchAPI, Shopping, source-page, or other external
+product-data request. It does not prove that the fixed branch caused PR-2C or
+that staged verification, presentation, and rendering are feasible.
+
+## Preserved live evidence
+
+PR-2C ran exactly one broad `shop vac` attempt at
+`140d465a0ac835efb73713e988c140b7e35be6e9`. It completed Terra research but
+failed closed as `research_candidate_invalid / candidate_sources` before
 verification, presentation, Shopping, page fetching, cards, sources, or
-rendering. The first terminal route outcome ended the live phase after 64.959
-seconds.
-
-PR-2C counters and usage:
+rendering. The attempt stopped after 64.959 seconds.
 
 | Measure | Actual | Ceiling |
 | --- | ---: | ---: |
@@ -34,99 +76,84 @@ PR-2C counters and usage:
 | physical page HTTP attempts | 0 | 90 |
 | retries / replacements / fallbacks | 0 / 0 / 0 | 0 / 0 / 0 |
 
-There was no second case, SearchAPI call, Serper organic call, or second model
-create. The completed provider ledger recorded 57,041 input tokens, zero cached
-input, 6,744 output tokens, six hosted searches, and 69 response-owned sources.
-Cost is `$0.303762` frozen nominal, `$0.339413` frozen conservative, and
-`$0.255010` at the dated current card, below the frozen `$3` ceiling.
+Usage was 57,041 input tokens, zero cached input, 6,744 output tokens, six
+hosted searches, and 69 response-owned sources. Cost was `$0.303762` frozen
+nominal, `$0.339413` frozen conservative, and `$0.255010` under the dated current
+card, below the unchanged frozen `$3` ceiling.
 
 The untracked sanitized evidence is
-`tests/fixtures/review-radar-live/oai-t10-phase-d-140d465/attempt.json`.
-It is spent. Never retry it, edit or stage it, or reuse its directory.
-
-Privacy verification found no raw output, provider ID, prompt, product-source
-URL, header, key, secret, body, request, or candidate object. Its only URL
-values are the three approved OpenAI pricing-source entries; both local key
-values are absent; the longest values are 64-character response hashes. The
-tracked tree remained clean immediately after execution.
-
-An independent read-only content audit supports the counters, cost, privacy,
-first-loss, and no-downstream-call claims. It agrees that `candidate_sources`
-cannot distinguish duplicate, unsafe/malformed, unregistered, or exact-variant
-failure. Post-closeout tracked-state authentication returned `VERIFIED`; the
-spent PR-2C fixture was untracked and no tracked change remained.
+`tests/fixtures/review-radar-live/oai-t10-phase-d-140d465/attempt.json`. It is
+spent. Never retry it, edit or stage it, or reuse its directory. Its privacy and
+counter audit returned `VERIFIED`; the exact private source branch remains
+unknowable.
 
 ## Objective and decision frame for the next phase
 
-The proven bottleneck is now candidate source ownership, not ranking, discovery,
-presentation, or live variance. Those downstream stages still did not run.
+The next information bottleneck is real staged lifecycle feasibility, not
+another offline source-rule change. PR-2D has corrected the only proven source-
+registry self-mismatch and made any successor source branch safely attributable.
+Ranking, discovery tuning, broad benchmarking, and UI changes still cannot be
+evaluated because no staged result has traversed verification and presentation.
 
-Do not loosen source ownership by accepting any model-authored URL merely because
-it canonicalizes to a response source. That would permit invented tracking,
-path, query, or signed-URL variants and weaken citation trust. Do not make
-another live request: the current evidence already narrows the boundary enough
-for deterministic investigation.
+Stronger alternatives considered:
 
-A verified synthetic reproduction shows one generalized self-mismatch:
-`extractDirectTerraResponseSources()` canonically deduplicates response-owned URL
-variants and retains only the first exact string. The staged validator then
-requires exact string membership. Given two response-owned variants with the
-same canonical identity, the later exact response-owned string is lost and can
-be rejected as unregistered.
+- Broad paid benchmarking now is premature. One route-complete result is still
+  required before spending across categories or repeated samples.
+- More prompt/contract edits are speculative without a fresh closed branch.
+- Canonical matching would be weaker than the exact ownership design and is
+  prohibited.
 
 Verified facts:
 
-- The live first loss is the bounded `candidate_sources` group.
-- The evidence does not reveal the exact private source string or failing branch.
-- The shared extractor drops later exact response-owned canonical variants in a
-  local two-variant reproduction.
-- Shared canonical dedupe has existing display and Direct-Terra consumers, so a
-  global semantic change would carry unrelated regression risk.
+- The deterministic exact-variant loss is fixed and independently approved.
+- The spent PR-2C response cannot reveal whether its source failure was source
+  shape/malformed data, a duplicate, an unsafe URL, the exact-variant loss, or a
+  genuinely unregistered URL.
+- The Phase D runner already enforces a one-case, no-retry, commit-pinned,
+  sanitized, bounded network and cost envelope.
 
 Engineering judgment:
 
-- The strongest correction is a staged-validation registry that preserves each
-  safe exact response-owned URL variant once while leaving canonical display
-  dedupe unchanged.
-- Closed URL-free source-branch reasons are justified because they distinguish
-  source shape/duplicate, unsafe URL, and unregistered exact ownership without
-  retaining private source data.
+- One new-commit, new-directory feasibility attempt now has high information
+  value. A failure identifies a safe branch for offline work; a success proves
+  only lifecycle feasibility and permits the offline benchmark phase.
 
 Uncertainty:
 
-- The deterministic registry loss may or may not be the exact PR-2C branch.
-- The provider may instead have duplicated a candidate URL, emitted an unsafe or
-  malformed URL, or emitted a URL never present in response-owned metadata.
-- Even after correction, live feasibility and recommendation quality remain
-  unproven; no new spend is authorized in PR-2D.
+- Provider output may still fail a different trust gate.
+- Even a successful attempt would not establish recommendation quality,
+  stability, production configuration, or release readiness.
 
-**Recommended reasoning level:** High for defining source-ownership semantics;
-Medium for the localized extractor, diagnostic, and test implementation after
-the invariant is fixed.
+**Recommended reasoning level:** High for preflight and outcome adjudication;
+routine for the single bounded execution.
 
-## Current approved phase: PR-2D zero-live source alignment
+## Current approved phase: PR-2E one post-correction feasibility attempt
 
-1. Add fail-first tests proving that a later exact response-owned URL variant is
-   currently lost before staged validation.
-2. Add a closed server-only candidate-source subreason that distinguishes
-   shape/duplicate, unsafe URL, and unregistered exact ownership without
-   retaining a URL or candidate object.
-3. Add a dedicated exact response-owned registry extractor that preserves every
-   accepted exact variant once. Use it only for staged ownership validation;
-   keep existing canonical display/source-count behavior unchanged.
-4. Prove that an exact later response-owned variant passes, while duplicate,
-   unsafe, invented, and merely canonical-equivalent-but-not-response-owned URLs
-   fail closed.
-5. Propagate only the closed subreason through runtime and route diagnostics.
-   The browser must keep the same generic failure.
-6. Run focused source/contract/runtime/route tests, the staged subsystem, full
-   deterministic suite, E2E/build/static gates as relevant, privacy mutations,
-   diff checks, and independent read-only review.
-7. Update authoritative records, regenerate this handoff, stage only tracked
+1. Confirm the intended repository, branch, exact full PR-2D commit, and clean
+   tracked state. Preserve every untracked user artifact.
+2. Derive the new output directory only from the exact commit and prove it does
+   not exist. Never reuse any earlier Phase D directory.
+3. Confirm required process keys by presence/nonempty only. Do not print values
+   or read them into evidence.
+4. Run the zero-network dry run and verify plan schema v2, both dated rate cards,
+   the frozen `$3` gate, and every network/call ceiling.
+5. Run exactly one frozen broad `shop vac` staged-route attempt. Use no retry,
+   replacement, fallback, second case, SearchAPI, or Serper organic call.
+6. Stop at the first terminal route outcome. Use only closed diagnostics. Never
+   inspect or retain raw provider output, source URLs, candidate objects, prompts,
+   IDs, bodies, headers, credentials, or secrets.
+7. On success, require the existing acceptance checks: completed research,
+   deterministic verification, no-web presentation, exactly two completed
+   usage ledgers, at least one verified renderable card/source, and no private
+   state in the public response.
+8. Audit counters, usage, frozen/current cost, privacy, and spent-fixture state.
+   Obtain independent read-only content verification and final clean tracked-
+   state authentication.
+9. Update authoritative records, regenerate this handoff, stage only tracked
    phase-owned paths, and create one self-contained local commit.
 
-PR-2D makes no OpenAI, Serper, SearchAPI, Shopping, page, or other external
-product-data request. It does not authorize another feasibility attempt.
+The first terminal outcome ends PR-2E. Do not continue into a benchmark or an
+offline correction inside the same phase.
 
 ## Approval and flag state
 
@@ -158,9 +185,8 @@ Direct Terra. Never edit or stage it.
   proof.
 - PR-008 / RR-092: editorial Product markup can overstate tested-model
   identity/image authority.
-- PR-011: contract-v2 research fails at candidate source ownership; the exact
-  live branch is unknown and the exact-variant registry mismatch is proven
-  offline.
+- PR-011: the deterministic exact-registry defect is fixed, but post-correction
+  live feasibility has not been measured and the historical branch is unknown.
 - Broader lifecycle, cache/concurrency, security, accessibility, mobile UX,
   production configuration, rollback, and observability gates remain planned
   in `docs/production-readiness-master-plan.md`.
@@ -169,7 +195,7 @@ Direct Terra. Never edit or stage it.
 
 - Never retry, edit, stage, or reuse any spent Phase D attempt or evidence
   directory, including `oai-t10-phase-d-140d465`.
-- Do not make any external product/provider request during PR-2D.
+- PR-2E authorizes exactly one new frozen attempt and no replacement.
 - Do not canonical-match model-authored URLs. Exact ownership requires that the
   exact string occur in response-owned action/citation metadata.
 - Do not weaken HTTPS, credential/port/private-host, uniqueness, source count,
@@ -191,14 +217,14 @@ Direct Terra. Never edit or stage it.
 | Need | Retrieve |
 | --- | --- |
 | Living defects, sequence, and exit criteria | `docs/production-readiness-master-plan.md` |
-| PR-2C canonical result | latest 2026-08-29 entry in `docs/qa-loop-results.md` |
+| PR-2D canonical result | latest 2026-08-29 entry in `docs/qa-loop-results.md` |
 | Durable source/live boundaries | top of `docs/review-radar-test-memory.md` |
-| Shared response-source extraction | `lib/directTerraResponse.ts` |
-| Research schema and candidate validator | `lib/stagedTerraContract.ts` |
-| Research request and exact-URL instruction | `lib/stagedTerraPrompt.ts` |
+| Exact and canonical response-source extraction | `lib/directTerraResponse.ts` |
+| Research contract and candidate validator | `lib/stagedTerraContract.ts` |
+| Research prompt/schema | `lib/stagedTerraPrompt.ts`; `lib/stagedTerraContract.ts` |
 | Runtime registry and source reason | `lib/stagedTerraRuntime.ts` |
 | Route diagnostic privacy boundary | `lib/stagedTerraRecommendationRoute.ts` |
 | Phase D plan/rates/accounting | `scripts/oai-t10-phase-d.mjs` |
 | Phase D runner/evidence gate | `scripts/run-oai-t10-phase-d.mjs` |
-| Phase D and staged tests | `tests/stagedTerraPhaseDRunner.test.mjs`; `tests/stagedTerraContract.test.mjs`; `tests/stagedTerraRuntime.test.mjs`; `tests/stagedTerraRecommendationRoute.test.mjs` |
+| Relevant focused tests | `tests/directTerraResponse.test.mjs`; `tests/stagedTerraContract.test.mjs`; `tests/stagedTerraRuntime.test.mjs`; `tests/stagedTerraRoute.test.mjs`; `tests/stagedTerraPhaseDRunner.test.mjs` |
 | Spent sanitized PR-2C evidence | `tests/fixtures/review-radar-live/oai-t10-phase-d-140d465/attempt.json` |

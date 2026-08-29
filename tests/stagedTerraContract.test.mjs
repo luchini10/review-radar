@@ -4,12 +4,14 @@ import { describe, it } from "node:test";
 
 import {
   buildStagedTerraRequestFingerprint,
+  isStagedTerraResearchCandidateSourceValidationReason,
   isStagedTerraResearchCandidateValidationReason,
   isStagedTerraResearchValidationReason,
   STAGED_TERRA_CONTRACT_VERSION,
   STAGED_TERRA_EVIDENCE_PACKAGE_VERSION,
   STAGED_TERRA_PRESENTATION_SCHEMA_VERSION,
   STAGED_TERRA_RESEARCH_CANDIDATE_VALIDATION_REASONS,
+  STAGED_TERRA_RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS,
   STAGED_TERRA_RESEARCH_SCHEMA_VERSION,
   STAGED_TERRA_RESEARCH_VALIDATION_REASONS,
   validateStagedTerraEvidencePackage,
@@ -420,7 +422,7 @@ describe("staged Terra request boundaries", () => {
       evidence: "staged-terra-evidence-v1",
       presentation: "staged-terra-presentation-v1",
     });
-    assert.equal(STAGED_TERRA_CONTRACT_VERSION, "staged-terra-contract-v2");
+    assert.equal(STAGED_TERRA_CONTRACT_VERSION, "staged-terra-contract-v3");
   });
 
   it("keeps the integrated path default-off and isolated from Direct Terra", () => {
@@ -515,6 +517,7 @@ describe("staged Terra research contract", () => {
       },
       {
         candidateValidationReason: "candidate_sources",
+        candidateSourceValidationReason: "candidate_source_unregistered",
         mutate: (fixture) => {
           fixture.value.candidates[0].source_urls[0] =
             "https://invented.example/product";
@@ -547,6 +550,12 @@ describe("staged Terra research contract", () => {
           ok: false,
           reason: "research_candidate_invalid",
           candidateValidationReason: testCase.candidateValidationReason,
+          ...(testCase.candidateSourceValidationReason
+            ? {
+                candidateSourceValidationReason:
+                  testCase.candidateSourceValidationReason,
+              }
+            : {}),
         },
       );
     }
@@ -556,13 +565,15 @@ describe("staged Terra research contract", () => {
     for (const testCase of [
       {
         candidateValidationReason: "candidate_sources",
+        candidateSourceValidationReason: "candidate_source_unregistered",
         mutate: (fixture) => {
-        fixture.value.candidates[0].source_urls[0] =
-          "https://invented.example/product";
+          fixture.value.candidates[0].source_urls[0] =
+            "https://invented.example/product";
         },
       },
       {
         candidateValidationReason: "candidate_sources",
+        candidateSourceValidationReason: "candidate_source_unregistered",
         mutate: (fixture) => {
           fixture.responseSourceUrls[0] = "https://manufacturer1.example";
           fixture.value.candidates[0].source_urls[0] =
@@ -589,8 +600,64 @@ describe("staged Terra research contract", () => {
           ok: false,
           reason: "research_candidate_invalid",
           candidateValidationReason: testCase.candidateValidationReason,
+          ...(testCase.candidateSourceValidationReason
+            ? {
+                candidateSourceValidationReason:
+                  testCase.candidateSourceValidationReason,
+              }
+            : {}),
         },
       );
+    }
+  });
+
+  it("attributes candidate source failures without retaining a URL", () => {
+    const cases = [
+      {
+        expected: "candidate_source_shape",
+        mutate: (fixture) => {
+          fixture.value.candidates[0].source_urls = [];
+        },
+      },
+      {
+        expected: "candidate_source_duplicate",
+        mutate: (fixture) => {
+          fixture.value.candidates[0].source_urls.push(
+            fixture.value.candidates[0].source_urls[0],
+          );
+        },
+      },
+      {
+        expected: "candidate_source_unsafe",
+        mutate: (fixture) => {
+          fixture.value.candidates[0].source_urls[0] =
+            "http://manufacturer1.example/product";
+        },
+      },
+      {
+        expected: "candidate_source_unregistered",
+        mutate: (fixture) => {
+          fixture.value.candidates[0].source_urls[0] =
+            "https://invented.example/product";
+        },
+      },
+    ];
+
+    for (const testCase of cases) {
+      const fixture = researchFixture();
+      testCase.mutate(fixture);
+      const result = validateStagedTerraResearchOutput({
+        value: fixture.value,
+        shopperRequest: shopper,
+        responseSourceUrls: fixture.responseSourceUrls,
+      });
+      assert.deepEqual(result, {
+        ok: false,
+        reason: "research_candidate_invalid",
+        candidateValidationReason: "candidate_sources",
+        candidateSourceValidationReason: testCase.expected,
+      });
+      assert.equal(JSON.stringify(result).includes("https://"), false);
     }
   });
 
@@ -656,9 +723,30 @@ describe("staged Terra research contract", () => {
       "candidate_requirements",
       "candidate_facts",
     ]);
+    assert.deepEqual(
+      STAGED_TERRA_RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS,
+      [
+        "candidate_source_shape",
+        "candidate_source_duplicate",
+        "candidate_source_unsafe",
+        "candidate_source_unregistered",
+      ],
+    );
     assert.equal(
       isStagedTerraResearchCandidateValidationReason("candidate_sources"),
       true,
+    );
+    assert.equal(
+      isStagedTerraResearchCandidateSourceValidationReason(
+        "candidate_source_unregistered",
+      ),
+      true,
+    );
+    assert.equal(
+      isStagedTerraResearchCandidateSourceValidationReason(
+        "private_source_reason",
+      ),
+      false,
     );
     assert.equal(
       isStagedTerraResearchCandidateValidationReason("private_candidate_field"),

@@ -11,6 +11,39 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Preserve exact staged source ownership without weakening URL trust
+
+#### Changed
+
+- Staged research validation now receives every parseable exact URL variant
+  actually present in response-owned search actions or citations, while the
+  existing canonicalized display/source-count view remains unchanged.
+- Candidate URLs still require exact response ownership, uniqueness, HTTPS,
+  public-host shape, no credentials, and no non-default port. Canonical
+  equivalence alone cannot make a model-authored URL trusted.
+- Candidate-source failures now retain only one closed, URL-free server reason:
+  shape, duplicate, unsafe, or unregistered. Invalid reasons and private fields
+  are discarded, and the browser still receives the same generic failure.
+- Contract v3 invalidates older in-flight job fingerprints. Runtime v2 records
+  the corrected ownership semantics; the provider-facing research schema stays
+  v2 because its JSON shape is unchanged.
+
+#### Verified
+
+- Fail-first passed 27 checks and produced exactly three intended failures: the
+  missing source subreason, its route propagation, and rejection of a later
+  exact response-owned canonical variant.
+- Corrected focused tests passed 55/55, the staged subsystem passed 59/59, the
+  complete suite passed 1,444/1,444, and credential-neutral E2E passed 17/17.
+- Typecheck, production build, synthetic evaluation, fixed ranking comparison,
+  zero-network Phase D dry run, lint (zero errors and three existing warnings),
+  and diff checks passed.
+- Independent read-only review returned `APPROVED` after rerunning 55/55
+  focused tests, 1,444/1,444 complete tests, typecheck, and diff checks.
+- No provider/search/Shopping/page request, `.env.local` edit, flag promotion,
+  deployment, production change, push, or user-artifact cleanup occurred. The
+  exact private PR-2C branch and staged feasibility remain unproven.
+
 ### Codex - Stop contract-v2 feasibility at candidate source ownership
 
 #### Observed

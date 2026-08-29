@@ -1716,3 +1716,51 @@ real, but it is not proven to be the live cause.
 alignment, preserving exact ownership, HTTPS, uniqueness, privacy, and shared
 display dedupe. Reasoning level: High for source-ownership semantics, then
 Medium for localized implementation.
+
+## Codex Run - 2026-08-29 Production readiness PR-2D source ownership
+
+**Goal:** fix the proven exact-source registry self-mismatch and make the next
+candidate-source failure independently attributable without weakening citation
+ownership or crossing the private-response boundary.
+
+**What was checked:** the shared action/citation extractor, canonical display
+dedupe, staged runtime registry, candidate URL parser, contract fingerprint,
+route diagnostics, public response, Phase D evidence path, and every relevant
+positive/negative source mutation.
+
+**What was found:** canonical display dedupe correctly served its existing UI
+purpose but retained only the first exact string for canonically equivalent
+response-owned URLs. Staged validation reused that lossy view while requiring
+exact membership, so a later exact response-owned variant could be rejected as
+unregistered. The sanitized PR-2C evidence cannot prove this was its private
+branch.
+
+**What changed:** a staged-only exact registry keeps every parseable exact
+response-owned action/citation URL once; canonical display and counts remain
+unchanged. Source failures now have four closed URL-free subreasons. Contract v3
+invalidates older fingerprints and runtime v2 records the new semantics. Exact
+ownership, duplicate, HTTPS, credential, port, private-host, count, and public-
+response gates remain fail closed.
+
+**Why it matters:** ReviewRadar no longer rejects a URL merely because its exact
+response-owned variant was hidden by presentation dedupe, while invented or
+canonical-lookalike URLs gain no authority. Future failures identify the safe
+branch without exposing the URL or raw candidate.
+
+**Tests and before/after proof:** fail-first was 27 pass / 3 intended fail;
+corrected focused 55/55; staged 59/59; full 1,444/1,444; E2E 17/17; typecheck,
+build, eval, ranking, Phase D dry run, lint, and diff checks passed. Independent
+read-only review returned `APPROVED` after rerunning focused/full tests,
+typecheck, and diff checks.
+
+**Live checks:** none. PR-2D was intentionally zero-live and made no provider,
+search, Shopping, or page request.
+
+**Remaining issues:** the exact spent PR-2C source branch is unknowable; staged
+lifecycle feasibility and shopper quality remain unproven; PR-005 through
+PR-008 and the broader readiness debts remain open.
+
+**Next recommended step:** one commit-pinned, new-directory `shop vac` staged
+feasibility attempt under the unchanged Phase D envelope, with no retry or
+replacement and a stop at the first terminal outcome. Reasoning level: High for
+evidence adjudication; execution is routine.
