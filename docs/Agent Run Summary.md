@@ -1582,3 +1582,36 @@ Staged Terra remains default-off and live-feasibility-unproven.
 attempt inside the frozen request/network/$3 envelope, stopping at its first
 terminal outcome. Reasoning level: High for outcome adjudication; execution is
 routine.
+
+## Codex Run - 2026-08-29 Production readiness PR-2 live stop
+
+**Goal:** exercise the complete staged route once at the verified PR-0/PR-1
+commit, using only the frozen broad `shop vac` case and existing ceilings.
+
+**Preflight:** tracked state was clean, the commit-specific output directory was
+unused, process-only OpenAI/Serper keys were present, the dry run passed, and
+official OpenAI documentation confirmed Terra still supports Responses/web
+search. Current rates are lower than the frozen July approval rates, so the
+`$3` hard gate remained conservative.
+
+**Outcome:** Terra completed one research response after sixteen retrieves,
+with 21,478 input tokens, 5,450 output tokens, two hosted searches, and 36
+response-owned sources. ReviewRadar returned HTTP 502 `research_failed` with
+the closed class `research_candidate_invalid`. Verification, presentation,
+Shopping, page fetches, and rendering did not run.
+
+**Budget and safety:** one create and one safety cancel; no retry, replacement,
+fallback, SearchAPI, Serper organic/Shopping, or page request. Frozen cost was
+`$0.155445` standard / `$0.168869` conservative; current documented standard
+rates imply about `$0.128356`. The untracked sanitized fixture contains no raw
+output, provider ID, prompt, source URL, header, secret, API key, or body.
+
+**Scope:** measurement and documentation only. No `.env.local` edit, flag
+promotion, deployment, production change, push, issue-status mutation, or
+tracked product behavior change. The first terminal outcome ended PR-2 and the
+evidence directory is spent.
+
+**Next recommended step:** zero-live candidate-contract alignment across the
+prompt, strict schema, provider adapter, and validator, followed by fail-first
+candidate-field mutations and the smallest generalized correction. Reasoning
+level: High.

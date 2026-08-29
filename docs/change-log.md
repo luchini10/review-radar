@@ -42,6 +42,31 @@ Update this file after:
 - No live request, `.env.local` edit, flag promotion, deployment, production
   change, or push occurred.
 
+### Codex - Stop staged feasibility at candidate validation
+
+#### Observed
+
+- One commit-pinned broad `shop vac` request completed Terra research but
+  failed closed as `research_candidate_invalid` before verification,
+  presentation, Shopping, page fetching, or public results.
+- The bounded run used one create, sixteen retrieves, two hosted searches, and
+  one safety cancel. It made no retry, replacement, fallback, SearchAPI, Serper
+  organic/Shopping, or page request.
+- Terminal accounting retained 21,478 input tokens and 5,450 output tokens,
+  pricing the frozen envelope at `$0.155445` standard / `$0.168869`
+  conservative instead of losing failed usage.
+
+#### Verified
+
+- The sanitized evidence contains the closed validation class but no raw
+  output, provider ID, prompt, source URL, header, API key, or secret.
+- Official current Terra rates are lower than the frozen July approval rates;
+  the frozen estimate therefore remains safe for the `$3` cap, while its
+  standard/current labeling is tracked for correction.
+- The first terminal result ended the live phase. No retry, `.env.local` edit,
+  flag promotion, deployment, production change, or push occurred. Staged Terra
+  remains default-off and not feasible.
+
 ## 2026-07-24
 
 ### Codex - Harden final acceptance fetch and spend boundaries

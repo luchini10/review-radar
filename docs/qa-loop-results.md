@@ -11336,3 +11336,57 @@ No OpenAI, Serper, SearchAPI, source-page, or other external request ran. No
 `.env.local` edit, behavior flag promotion, deployment, production change,
 push, issue-status change, or user-owned fixture/baseline cleanup occurred.
 Staged Terra remains default-off, undeployed, and live-feasibility-unproven.
+
+---
+
+## 🟧 Codex — 2026-08-29 — Production readiness PR-2 live feasibility stop
+
+**Objective:** test only whether the corrected, commit-pinned staged route can
+carry the frozen broad `shop vac` case through real research, deterministic
+verification, no-web presentation, and public rendering.
+
+**Outcome: failed safely at candidate validation.** The one attempt was pinned
+to `a15d935747313f9a87a3b145caa34ad6d2f6c8b6`. Terra completed research, but
+ReviewRadar rejected the output as `research_candidate_invalid` and returned
+HTTP 502 `research_failed`. The run stopped at this first terminal outcome.
+
+| Counter | Actual | Approved ceiling |
+| --- | ---: | ---: |
+| OpenAI creates | 1 | 2 |
+| retrieves | 16 | 60 |
+| safety cancels | 1 | 1 |
+| hosted searches | 2 | 10 |
+| Serper Shopping | 0 | 15 |
+| source-page fetches | 0 | 30 |
+| physical page HTTP attempts | 0 | 90 |
+| retries / replacements / fallbacks | 0 / 0 / 0 | 0 / 0 / 0 |
+
+**Usage and cost:** the terminal failed ledger retained 21,478 input tokens,
+5,450 output tokens, and two web searches. The committed frozen rate card
+reports `$0.155445` standard and `$0.168869` conservative, below the `$3` cap.
+The official OpenAI
+[Terra model page](https://developers.openai.com/api/docs/models/gpt-5.6-terra)
+and [pricing page](https://developers.openai.com/api/docs/pricing), checked
+immediately before the run, list current standard rates of `$2.00` input,
+`$0.20` cached input, and `$12.00` output per million tokens plus `$0.01` per
+web search, implying approximately `$0.128356` for this usage. The old rates
+are safe for approval but their `standardUsd` label is not current and is
+tracked as PR-010.
+
+**First loss:** strict research candidate validation. Deterministic
+verification, presentation, Shopping, page retrieval, and client rendering did
+not run. The closed class rules out top-level shape, source-registry, and
+cross-candidate duplicate-identity failures; it does not identify the exact
+candidate field without crossing the raw-output privacy boundary.
+
+**Privacy and stop proof:** the untracked sanitized fixture is
+`tests/fixtures/review-radar-live/oai-t10-phase-d-a15d935/attempt.json`. A
+key/path scan found no raw output, provider ID, prompt, source URL, header,
+secret, API key, or fetched body; direct checks confirmed both process keys are
+absent. One safety cancel ran. There was no second request, retry, replacement,
+fallback, new case, `.env.local` edit, flag change, deployment, production
+change, or push.
+
+**Next:** zero-live prompt/schema/adapter/validator alignment with deterministic
+candidate-field mutations. Do not loosen trust gates or spend again until the
+exact generalized mismatch is proven and corrected.

@@ -140,13 +140,31 @@ shopper-facing recommendation quality.
 
 ### Live baseline
 
-- **Not run in this session yet.** Valid local key declarations exist, but a
-  replacement staged request would be wasteful until the safe validation class
-  and terminal usage accounting are fixed.
-- The first paid request after the correction must remain commit-pinned,
-  single-case, low-parallelism, and inside the existing Phase D network and
-  dollar ceilings. No new query, retry, replacement, fallback, deployment, or
-  flag promotion is implied.
+- **Verified:** one commit-pinned PR-2 attempt ran at
+  `a15d935747313f9a87a3b145caa34ad6d2f6c8b6` using only the frozen broad
+  `shop vac` case. It stopped at the first terminal response after 36.886
+  seconds with HTTP 502 `research_failed` and the newly retained class
+  `research_candidate_invalid`.
+- The provider completed one Terra/high research response with 21,478 input
+  tokens, 5,450 output tokens, two hosted searches, and 36 response-owned
+  sources. ReviewRadar failed before deterministic verification, presentation,
+  Serper Shopping, page fetching, public cards, or sources.
+- Counters stayed inside the envelope: one create, sixteen retrieves, one
+  safety cancel, zero retries/replacements/fallbacks, and no SearchAPI, Serper
+  organic, Shopping, or page requests. The sanitized untracked evidence contains
+  no raw output, provider ID, prompt, source URL, header, secret, or API key.
+- The committed July rate card estimates `$0.155445` standard and `$0.168869`
+  conservatively. The official OpenAI
+  [Terra model page](https://developers.openai.com/api/docs/models/gpt-5.6-terra)
+  and [pricing page](https://developers.openai.com/api/docs/pricing), checked on
+  2026-08-29, list lower current standard rates of `$2.00` input, `$0.20`
+  cached input, and `$12.00` output per million tokens plus `$0.01` per web
+  search, which implies approximately `$0.128356` for this usage. The frozen
+  estimator remains safe for its `$3` ceiling but its `standardUsd` label is no
+  longer current.
+- No retry or replacement is permitted. The next phase is zero-live alignment
+  of the candidate schema, prompt, adapter, and validator to identify the exact
+  generalized invalid-candidate invariant before any correction.
 
 ## Confirmed defects and weaknesses
 
@@ -160,6 +178,8 @@ shopper-facing recommendation quality.
 | PR-006 | P1 | investigating | Current market-leader recall, final-set stability, exact/near truth, price coverage, and first-loss distribution are not established for today's commit. Historical evidence found zero final overlap and severe leader loss. | Provider variance, planning variance, discovery loss, strict evidence gates, and/or ranking may contribute; attribution remains unmeasured on the active path. | After feasibility, run a bounded benchmark matrix with repeated broad and constrained cases, record candidate and final Jaccard, hard-requirement truth, first-loss stage, latency, calls, and cost. Fix only the earliest repeated generalized loss. | Commit-pinned fixtures, market-coverage sets reviewed for recency, repeated samples, invariant-based scoring, before/after controls across unrelated categories. | High cost/variance risk. Stop on any safety failure. Requires PR-001/002 and a passing staged feasibility result. |
 | PR-007 | P1 | investigating | RR-091 says same-page related-product price can satisfy autonomous card binding. A wrong variant price is release-blocking if the affected path is promoted. | Product entity selection may not bind offer identity tightly enough when multiple products share a page. | Reproduce with tracked synthetic multi-entity pages, then require exact entity/offer binding using shared identity rules. | Original and cross-category reproductions; exact-product positive controls; no unsafe price/product URL; full price and identity wall. | High false-negative/false-positive risk. The affected experimental path remains default-off; no promotion before closure. |
 | PR-008 | P1 | investigating | RR-092 says editorial Product markup can verify identity/image without proving the tested model. A wrong model image/link is release-blocking if promoted. | Structured markup establishes a product entity without sufficient tested-model attribution or page role. | Require exact tested-model attribution from eligible page evidence; editorial markup remains evidence-only unless the commerce/page boundary independently passes. | Editorial review negatives, manufacturer/retailer positives, sibling-model and accessory mutations, asset-wall regression. | High asset-recall tradeoff. Default-off path must stay off until resolved. |
+| PR-009 | P1 | investigating | The commit-pinned PR-2 request again completed provider research but failed before verification, now attributable as `research_candidate_invalid`. No staged result can reach users. | One or more candidate fields, requirement mappings, source references, or exact-key constraints violate `staged-terra-research-v1`; the retained class intentionally does not expose the raw candidate or exact field. | Cross-compare the strict API schema, prompt, adapter, validator, and every candidate-field branch. Add deterministic contract-generation/mutation coverage and correct only a proven mismatch; do not loosen product-trust requirements merely to pass. | Fail-first reproduction of any schema/validator mismatch; complete candidate-field matrix; unrelated-category controls; focused/full walls; independent review. | High trust-boundary risk. Zero live until corrected and committed. Depends on sanitized evidence only. |
+| PR-010 | P2 | planned | The Phase D estimator's field named `standardUsd` still uses its frozen 2026-07-25 rates, while official current Terra prices are lower. Readiness reporting can confuse a conservative approval rate with current estimated spend. | The rate object is intentionally frozen for approval reproducibility but the output label does not distinguish frozen-envelope and current-market estimates. | Preserve the immutable approval-rate calculation and add a separately named current-rate estimate sourced and dated from official documentation, or rename the frozen result so it cannot be mistaken for current billing. | Exact historical and current-rate tests; long-context/cache-write/web-search cases; no weakening of the `$3` fail-closed gate. | Low spend risk because the frozen rate currently overestimates, but medium evidence-integrity risk. No live dependency. |
 
 ## Suspected weaknesses requiring measurement
 
@@ -224,7 +244,7 @@ shopper-facing recommendation quality.
 
 ### Phase PR-2 — One commit-pinned staged feasibility recheck
 
-- Status: **planned**
+- Status: **closed — failed safely at first terminal outcome on 2026-08-29**
 - Severity addressed: PR-006 prerequisite.
 - Dependency: PR-1 green and committed; exact unused evidence directory;
   process-only keys; clean tracked tree.
@@ -235,6 +255,26 @@ shopper-facing recommendation quality.
   use the retained enum to choose prompt, schema, adapter, or duplicate-identity
   work; do not guess.
 - Reasoning: **High** for outcome adjudication; execution itself is routine.
+
+Result: one provider-complete response failed as
+`research_candidate_invalid`; all network and cost ceilings held, no private
+material was retained, and no retry ran. This proves real Responses lifecycle
+reachability but not staged feasibility.
+
+### Phase PR-2A — Diagnose and correct candidate-contract alignment
+
+- Status: **investigating**
+- Severity addressed: PR-009 P1; PR-010 P2 may be closed separately if the
+  rate-label correction stays independent of the candidate contract.
+- Scope: zero-live comparison of the research prompt, strict JSON schema,
+  provider adapter, and every validator branch; fail-first deterministic proof
+  for any actual mismatch; smallest generalized correction only.
+- Proof: candidate-field and mutation matrix, full staged wall, complete suite,
+  E2E/build, independent review, and a clean committed default-off state.
+- Stop condition: if static evidence cannot identify the exact invariant, add a
+  safe field-level reason enum only if it can be proven privacy-preserving; do
+  not retain raw candidate data and do not spend again.
+- Reasoning: **High**.
 
 ### Phase PR-3 — Build a real offline benchmark matrix
 
@@ -324,8 +364,8 @@ Current verdict: **NOT READY** (confidence 0.98).
 
 Release blockers today:
 
-- staged research feasibility has not passed; the historical contract failure
-  cannot be attributed retroactively, although the next failure now can be;
+- staged research feasibility has not passed; the current failure is narrowed
+  to candidate validation, but its exact field/invariant is not yet proven;
 - deterministic QA batch names overstate the distinct cases actually run;
 - current live accuracy, stability, latency, and cost have not been measured;
 - RR-091 and RR-092 remain unresolved for an experimental path that cannot be

@@ -4,6 +4,30 @@
 
 ---
 
+## OAI-T10 PR-2 candidate-invalid live stop (2026-08-29)
+
+- The one commit-pinned attempt at
+  `a15d935747313f9a87a3b145caa34ad6d2f6c8b6` is spent and terminal. Never retry
+  it or reuse its evidence directory.
+- Terra research completed after sixteen retrieves with 21,478 input tokens,
+  5,450 output tokens, two hosted searches, and 36 response-owned sources.
+  ReviewRadar stopped with `research_candidate_invalid` before deterministic
+  verification, presentation, Shopping, page fetching, or rendering.
+- One safety cancel ran. There were no retries, replacements, fallbacks,
+  SearchAPI calls, Serper organic/Shopping calls, or source-page requests.
+- The sanitized evidence contains no raw output, provider ID, prompt, source
+  URL, header, secret, or API key. Do not add any of those to diagnose the next
+  layer.
+- The frozen July estimator records `$0.155445` standard and `$0.168869`
+  conservative. Official current 2026-08-29 rates imply about `$0.128356` for
+  the same measured tokens/searches. Preserve the frozen ceiling calculation,
+  but distinguish it from current-rate reporting.
+- The next useful step is zero-live prompt/schema/adapter/validator alignment
+  plus deterministic candidate-field mutations. Do not spend again until an
+  exact generalized mismatch is proven and corrected.
+
+---
+
 ## OAI-T10 Phase D diagnostic and accounting correction (2026-08-29)
 
 - Failed research diagnostics may retain only `research_shape`,
