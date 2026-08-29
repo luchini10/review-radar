@@ -13327,3 +13327,113 @@ independent reviewer stayed clean. PR-4A proves only a deterministic and
 reviewed measurement contract. It does not prove any live recommendation,
 stability, latency, cost, or readiness result and does not authorize PR-4B,
 flag promotion, deployment, or release.
+
+## 🟧 Codex — 2026-08-29 — PR-4B zero-live serial runner source gate
+
+**Objective and bottleneck:** PR-4A made staged readiness measurable, but no
+commit-bound capture seam existed for the first exact attempt. The proven next
+bottleneck was therefore a source-authenticated, one-attempt runner that could
+build the PR-4A artifact from the in-memory staged route result without reading
+or adapting a spent fixture. It was not yet the provider result itself.
+
+**Fail-first evidence:** `tests/stagedTerraReadinessRunner.test.mjs` was added
+before the implementation. The first focused command failed as expected with
+`ERR_MODULE_NOT_FOUND` for `scripts/staged-terra-readiness-runner.mjs` (one
+failed test file, zero executed suites). Initial implementation then exposed a
+raw-file versus canonical-matrix hash mismatch; the correction now binds both
+separately.
+
+**Implemented boundary:** the dry-run-first executable freezes attempt 1
+`broad-shop-vac:1` and binds the exact commit, raw and canonical matrix seals,
+request/run ID/nonce, previous artifact, prospective absent output, per-run and
+aggregate ceilings, clean tracked state, default-off flags, and safe
+credential presence/shape. It allows only Terra/high research and Terra/medium
+no-web presentation, never retries or replaces, permits only one best-effort
+cancel after infrastructure failure, and never advances to another attempt.
+
+The IO layer discovers the complete local import closure with the TypeScript
+AST, rejects nonliteral dynamic import/require, authenticates every discovered
+local file plus fixed package/matrix inputs to an exact Git `100644` blob,
+working-file Git hash, and raw-byte SHA-256 manifest, and reauthenticates before
+provider work. Output-parent and leaf realpaths reject link/reparse-point
+indirection; append-only, exclusive, fsynced checkpoints preserve earlier
+evidence; hard-link publication refuses replacement. The canonical producer
+receives only the closed public route result and allowlisted diagnostics.
+
+**Independent correction loop:** four frozen-snapshot reviews were completed.
+The first returned `CHANGES REQUIRED` for an untracked source appearing bound
+to HEAD, indirect output parents, and replace-in-place checkpoint loss. The
+second required transitive import-closure authentication. The third
+independently reproduced omission of a valid two-argument
+`import("./dynamic.json", { with: { type: "json" } })`. Corrections added
+Git/raw manifest binding, fixed-parent and post-create authentication,
+append-only publication, recursive AST closure, exact import-options handling,
+and fail-closed nonliteral loading. The fourth returned exact `VERIFIED`, no
+actionable finding, confidence 0.99.
+
+Frozen source SHA-256 values are:
+
+- IO: `6272e99e5fdc74c5fb8b97c750f8f3d49f1b2fc80e913dc2c784b8b5d0410ed8`;
+- runner: `0dcb6e2b6b7cd546484036f53d38fdb1415a88342e4ab4eb30564c4309251b49`;
+- executable: `5c066a6b4f0f504a68d18377e39a2c93397f488fabfdce28f08f8cfb2ec9a3f2`;
+  and
+- tests: `85c681e35ed20e4cf070966b47ae196b314c25686577ce0d73bd2e67f0c4ebc1`.
+
+**Deterministic evidence:** focused runner tests pass 15/15; combined PR-4A/
+PR-4B tests pass 49/49; closure discovery returns 57 local paths, `ok=true`,
+and zero failures; complete tests pass 1,547/1,547 across 216 suites; typecheck,
+production build, E2E 17/17, syntax, scoped and complete lint pass, with zero
+lint errors and the same three pre-existing warnings. Deterministic controller
+`agent-loop-2026-08-29T23-03-39-286Z` reconciles all five named partitions,
+10/10 tracked cases, 29/29 invariants, deterministic eval with no red flags,
+typecheck, lint, and the complete unit wall. The build automatically loaded
+ignored user-owned `.env.local`; no value was inspected, printed, copied,
+hashed, or staged. Playwright regenerated `next-env.d.ts`; its production
+import was restored and the file is clean.
+
+**Evidence limit and next gate:** no OpenAI, hosted-search, Serper, product-
+data, route, replay, credential, or live-fixture call ran. The source review did
+not measure provider adherence, accuracy, latency, or cost and did not authorize
+a paid request. The runner correctly refused precommit trust because its new
+files were not in HEAD. The self-contained commit, clean state, exact trust
+manifest, attempt-1 dry plan, prospective output, and approval arguments must
+receive a separate independent verdict before exactly one provider invocation.
+
+## Agent Loop Run - 2026-08-29T23:04:28.029Z
+
+- **run id:** agent-loop-2026-08-29T23-03-39-286Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3354ms |
+| lint | Passed | 10992ms |
+| unit tests | Passed | 29756ms |
+| deterministic eval pipeline | Passed | 485ms |
+| tracked offline benchmark | Passed | 595ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-29T23-03-39-286Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.

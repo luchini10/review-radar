@@ -11,6 +11,39 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Add a commit-bound serial readiness runner
+
+#### Changed
+
+- Added a dry-run-first runner for exactly one precommitted staged readiness
+  attempt. It binds the commit, complete matrix identity, request/run/nonce,
+  prior artifact, output location, ceilings, clean state, and default-off flags
+  and cannot automatically advance to another paid attempt.
+- Added transitive local-import authentication against Git blobs and raw bytes,
+  fail-closed dynamic loading, fixed output-parent checks, append-only durable
+  checkpoints, and no-replace artifact publication.
+- Connected only the current in-memory public staged result and allowlisted
+  diagnostics to the canonical PR-4A artifact producer. Existing live fixtures
+  are not replay inputs.
+
+#### Verified
+
+- Fail-first missing-module behavior was observed; focused tests pass 15/15,
+  combined PR-4A/PR-4B tests pass 49/49, and complete tests pass 1,547/1,547
+  across 216 suites.
+- Typecheck, production build, Playwright 17/17, syntax, and lint passed; lint
+  retained the same three pre-existing warnings and no errors.
+- The deterministic five-batch controller reconciled all partitions, 10/10
+  tracked cases, 29/29 invariants, deterministic eval, and the complete unit
+  wall.
+- Four independent review cycles corrected trust-closure and durable-output
+  gaps. The final frozen source received `VERIFIED`, no actionable finding,
+  confidence 0.99.
+
+This phase made no live call and does not measure recommendation quality. The
+self-contained commit and exact attempt-1 dry plan still require separate
+independent authorization before any provider request.
+
 ### Codex - Freeze the staged readiness measurement boundary
 
 #### Changed

@@ -4,6 +4,54 @@
 
 ---
 
+## PR-4B commit-bound serial runner contract (2026-08-29)
+
+- The runner is dry-run-first and may execute only one exact PR-4A attempt. It
+  binds commit, raw/canonical matrix hashes, attempt index/key/request/run ID/
+  nonce, previous artifact, absent prospective output, all ceilings, clean
+  tracked state, default-off flags, and safe in-memory credential shape. It
+  cannot select or start a later attempt automatically.
+- Trust extends through every local import discovered with the TypeScript AST,
+  plus fixed package/lock/matrix files. Every member must be a direct regular
+  file matching an exact Git `100644` blob, working-file Git hash, and raw-byte
+  SHA-256 manifest. Literal dynamic imports with options are included;
+  nonliteral dynamic import/require fails closed. External installed package
+  bytes remain lockfile-bound rather than locally byte-authenticated.
+- Authenticate output-parent realpaths before approval and creation; reject
+  links/reparse-point indirection; reauthenticate the created leaf. Write only
+  append-only, exclusive, fsynced checkpoints and publish the final artifact
+  with a no-replace hard link. Never overwrite an existing checkpoint or
+  artifact.
+- The canonical PR-4A producer receives only the current in-memory closed public
+  route outcome and allowlisted diagnostics. Never open, enumerate, adapt,
+  retry, replace, hash, or reuse a spent live fixture.
+- Frozen source SHA-256 values are IO
+  `6272e99e5fdc74c5fb8b97c750f8f3d49f1b2fc80e913dc2c784b8b5d0410ed8`,
+  runner
+  `0dcb6e2b6b7cd546484036f53d38fdb1415a88342e4ab4eb30564c4309251b49`,
+  executable
+  `5c066a6b4f0f504a68d18377e39a2c93397f488fabfdce28f08f8cfb2ec9a3f2`,
+  and test
+  `85c681e35ed20e4cf070966b47ae196b314c25686577ce0d73bd2e67f0c4ebc1`.
+- Four independent source reviews drove corrections for untracked-source trust,
+  indirect output parents, replace-in-place checkpoint loss, incomplete
+  transitive closure, and dynamic imports with options. The final exact verdict
+  is `VERIFIED`, no actionable finding, confidence 0.99. No provider, network,
+  environment, credential, or live-fixture access occurred in that review.
+- Proof is zero-live: fail-first missing-module failure; focused 15/15;
+  combined PR-4A/PR-4B 49/49; closure 57 paths/zero failures; full 1,547/1,547
+  across 216 suites; typecheck, build, E2E 17/17, syntax, and lint passed.
+  Controller `agent-loop-2026-08-29T23-03-39-286Z` reconciled all five worker
+  partitions plus 10/10 benchmark cases and 29/29 invariants. This proves
+  source behavior only.
+- Before any paid request, independently authenticate the self-contained commit,
+  clean state, complete trust-manifest digest, unexpired matrix, exact
+  `broad-shop-vac:1` dry plan, prospective absent output, and complete approval
+  arguments. The source verdict does not authorize live execution, retry,
+  replacement, later attempts, flags, deployment, or release.
+
+---
+
 ## PR-4A staged Terra readiness measurement contract (2026-08-29)
 
 - `tests/fixtures/staged-terra-readiness-matrix-v1.json` freezes four distinct

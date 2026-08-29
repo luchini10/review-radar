@@ -2548,3 +2548,51 @@ independent, origin-bound review of the first exact PR-4B attempt and capture
 path. Execute at most one precommitted run, analyze its canonical artifact and
 manual audits, then stop. Recommended reasoning: High for each live/evidence
 gate; Medium for mechanical capture and deterministic checks.
+
+## Codex Run - 2026-08-29 PR-4B zero-live serial runner source gate
+
+**Goal:** create the smallest commit-authenticating capture seam needed for one
+exact PR-4A attempt, without reading a spent fixture or making a provider call.
+
+**Assessment:** this was the proven next prerequisite. PR-4A already froze the
+truth and score contract; another analyzer would not create origin evidence,
+while immediate live execution lacked a reviewed commit/capture boundary. The
+strongest in-scope alternative was therefore one dry-run-first serial runner
+with independent source adjudication before any spend.
+
+**What changed:** added a runner, IO/authentication layer, executable, and 15
+regression tests. The runner binds commit, raw and canonical matrix hashes,
+attempt/request/run/nonce, prior artifact, output, all ceilings, clean state,
+default-off flags, and safe credential shape. It authenticates a recursive
+local import closure to Git `100644` blobs plus raw bytes, fails closed on
+nonliteral loading, rejects indirect output paths, uses append-only fsynced
+checkpoints and no-replace publication, and passes only the current closed
+public route result plus allowlisted diagnostics to the PR-4A producer.
+
+**Fail-first and independent evidence:** the first focused run failed with the
+expected missing-runner `ERR_MODULE_NOT_FOUND`. Three successive independent
+reviews then required correction of untracked-source trust, indirect output
+parents, replace-in-place checkpoint loss, incomplete transitive closure, and
+dynamic imports with options. The fourth frozen-snapshot review returned exact
+`VERIFIED`, no actionable finding, confidence 0.99.
+
+**Verification:** focused 15/15; combined PR-4A/PR-4B 49/49; local closure 57
+paths with zero failures; complete tests 1,547/1,547 across 216 suites;
+typecheck, production build, E2E 17/17, syntax, and lint with zero errors/three
+old warnings passed. Deterministic controller
+`agent-loop-2026-08-29T23-03-39-286Z` reconciled all five worker partitions,
+10/10 benchmark cases, 29/29 invariants, deterministic eval, typecheck, lint,
+and the complete unit wall. The build automatically loaded ignored
+`.env.local`, but no value was inspected or exposed. Playwright's generated
+`next-env.d.ts` change was restored and the file is clean. No provider,
+product-data, replay, credential, or live-fixture call ran.
+
+**Residuals and next decision:** external installed package bytes remain
+lockfile-bound rather than locally byte-authenticated, and path-based Node APIs
+cannot eliminate every adversarial concurrent swap. More importantly, no live
+behavior, recommendation quality, latency, or cost was measured. Authenticate
+the self-contained commit, clean state, trust-manifest digest, exact
+`broad-shop-vac:1` dry plan, prospective absent output, and complete approval
+arguments in a separate independent review. Only then may exactly one bounded
+invocation be considered. Recommended reasoning: High for commit/live/artifact
+authority; Medium for deterministic execution.
