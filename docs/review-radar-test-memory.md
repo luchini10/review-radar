@@ -4,6 +4,40 @@
 
 ---
 
+## OAI-T10 PR-2E verification live stop (2026-08-29)
+
+- The one attempt at `56a513784e195ee255410e6f49d29763d87af5c7` is
+  spent and terminal. Never retry it, edit or stage its evidence, or reuse
+  `tests/fixtures/review-radar-live/oai-t10-phase-d-56a5137`.
+- Research passed contract v3 after 23 retrieves with 38,274 input tokens, 6,884
+  output tokens, four hosted searches, and 73 canonical response sources. This
+  is the first staged live attempt to cross research validation.
+- Deterministic verification processed 12 candidates, made 12 Shopping requests
+  returning 212 rows, and attempted 13 bounded source fetches/HTTP calls with
+  three successes. It produced zero eligible, zero close-match, and 12 excluded
+  candidates, so the route stopped at HTTP 502 `verification_failed` before
+  presentation or rendering. Wall time was 59.154 seconds.
+- One safety cancel ran. There was no second create, retry, replacement,
+  fallback, second case, Serper organic, SearchAPI, presentation diagnostic,
+  public response, render, or result file.
+- Cost was `$0.238945` frozen nominal, `$0.262866` frozen conservative, and
+  `$0.199156` at the dated current card. One completed terminal ledger was
+  accounted; there was no duplicate ledger and the frozen gate remained `$3`.
+- Sanitized evidence v2 contains only the three approved pricing URLs and one
+  hashed response identity. Both local key values are absent. No raw output,
+  provider ID, prompt content, product-source URL, body, header, credential,
+  secret, or candidate object is retained.
+- The evidence cannot identify why all 12 candidates were excluded. Do not guess
+  identity, product-type, hard-requirement, availability, commerce, fetch, or
+  claim failure. Before any new spend, retain only closed aggregate verifier
+  first-loss counts; never retain candidate identities, URLs, requirement text
+  or IDs, page content, or per-candidate private evidence.
+- Independent read-only fixture audit returned `VERIFIED` after recomputing every
+  counter and cost, checking privacy and clean state, and confirming the
+  attribution limit.
+
+---
+
 ## OAI-T10 PR-2D exact source-ownership correction (2026-08-29)
 
 - Keep two source views separate. `extractDirectTerraResponseSources()` is the

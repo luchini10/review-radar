@@ -11627,3 +11627,68 @@ variant loss. It does not prove that branch caused the spent PR-2C response or
 that staged verification/presentation/rendering is feasible. The next useful
 question is one new-commit, new-directory attempt under the unchanged frozen
 envelope, stopping at its first terminal outcome.
+
+---
+
+## 🟧 Codex — 2026-08-29 — Production readiness PR-2E verification stop
+
+**Objective:** answer only whether the independently approved contract-v3 route
+could cross research, deterministic verification, no-web presentation, and
+rendering with one new-commit, new-directory frozen `shop vac` attempt.
+
+**Preflight:** tracked state was clean at
+`56a513784e195ee255410e6f49d29763d87af5c7`; the commit-specific directory was
+absent; required child-process keys were confirmed by boolean presence only;
+and the zero-network dry run reproduced plan schema v2, both dated rate cards,
+and every call/network/`$3` ceiling.
+
+**Outcome: failed safely at deterministic verification.** Research completed
+and passed contract v3 with 12 candidates and 73 canonical response sources.
+Verification then made 12 Shopping requests returning 212 rows and attempted 13
+bounded source fetches/HTTP calls with three successes. It classified zero
+candidates eligible, zero close match, and all 12 excluded. The route returned
+HTTP 502 `verification_failed` after 59.154 seconds. Presentation and rendering
+did not run, and no public result, card, or source list was produced.
+
+| Counter | Actual | Approved ceiling |
+| --- | ---: | ---: |
+| OpenAI creates | 1 | 2 |
+| retrieves | 23 | 60 |
+| safety cancels | 1 | 1 |
+| hosted searches | 4 | 10 |
+| Serper Shopping | 12 | 15 |
+| source-page fetches | 13 | 30 |
+| physical page HTTP attempts | 13 | 90 |
+| retries / replacements / fallbacks | 0 / 0 / 0 | 0 / 0 / 0 |
+
+There was no second create/case, SearchAPI call, Serper organic call,
+presentation diagnostic, public response, or result file.
+
+**Usage and cost:** the completed research ledger recorded 38,274 input tokens,
+zero cached input, 6,884 output tokens, and four hosted searches. One ledger was
+accounted, none duplicated. Cost is `$0.238945` frozen nominal, `$0.262866`
+frozen conservative, and `$0.199156` at the dated current card, below `$3`.
+
+**Privacy and state:** the spent untracked evidence is
+`tests/fixtures/review-radar-live/oai-t10-phase-d-56a5137/attempt.json`. Its only
+URL values are the three approved OpenAI pricing sources; both local key values
+are absent; the longest strings are 64-character hashes. It retains no raw
+output, provider ID, prompt content, product-source URL, body, header,
+credential, secret, or candidate object. The tracked tree remained clean.
+
+**Attribution limit:** the verifier computes structured identity, product-type,
+requirement, source, claim, price, asset, and exclusion diagnostics, but the
+route retained only aggregate network and eligible/close/excluded totals. The
+saved evidence cannot identify why all 12 were excluded. No identity,
+product-type, requirement, availability, commerce, fetch, or claim cause is
+inferred.
+
+**Independent audit:** `VERIFIED`. The auditor re-bound the fixture to the exact
+commit/case/schema, recomputed every counter and cost, confirmed the first stop,
+no downstream work, privacy boundary, clean tracked state, and cause
+uncertainty.
+
+**Decision:** no retry or replacement. First add closed, aggregate, privacy-
+preserving verification first-loss counts offline. Do not change eligibility or
+evidence gates and do not spend again until that boundary is independently
+green.

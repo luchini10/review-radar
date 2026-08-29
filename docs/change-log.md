@@ -11,6 +11,37 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Stop staged feasibility at deterministic verification
+
+#### Observed
+
+- One commit-pinned `shop vac` attempt passed research validation with 12
+  candidates and 73 canonical response sources, then stopped at HTTP 502
+  `verification_failed` because deterministic verification excluded all 12.
+- Verification made 12 Shopping requests returning 212 rows and 13 bounded
+  source-page fetch/HTTP attempts with three successes. It produced no eligible
+  or close-match candidate or presentation call, and no public response, card,
+  source list, or result file.
+- The run used one create, 23 retrieves, four hosted searches, and one safety
+  cancel. It made no retry, replacement, fallback, second case, Serper organic,
+  or SearchAPI call.
+
+#### Verified
+
+- Usage was 38,274 input and 6,884 output tokens with no cached input. One
+  terminal ledger was accounted with no duplicate; costs independently
+  recompute to `$0.238945` frozen nominal, `$0.262866` frozen conservative, and
+  `$0.199156` current, below the frozen `$3` gate.
+- Sanitized evidence contains only approved pricing URLs and a hashed response
+  identity, with no raw output, provider ID, prompt content, product-source URL,
+  body, header, credential, secret, candidate object, or local key value.
+- The retained aggregate counts cannot identify whether identity, product type,
+  a hard requirement, availability, or evidence rejected the candidates. No
+  cause is inferred. Independent read-only audit returned `VERIFIED`.
+- The first terminal result ended the 59.154-second phase. No `.env.local` edit,
+  flag promotion, deployment, production change, push, tracked-code change, or
+  user-artifact cleanup occurred.
+
 ### Codex - Preserve exact staged source ownership without weakening URL trust
 
 #### Changed

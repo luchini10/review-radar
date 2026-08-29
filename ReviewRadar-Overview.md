@@ -211,11 +211,13 @@ terminal provider usage even when local validation later fails; repeated
 snapshots deduplicate only by the same safe response hash, while distinct or
 unidentifiable responses sum conservatively and block successful acceptance as
 an anomaly. The entire branch remains default-off, undeployed, and without a
-successful live feasibility result. Its latest live response failed candidate
-source validation. The generalized ID/order mismatch and exact-registry loss are
-corrected locally, but the exact private branch from that spent response is
-permanently unknowable. A new bounded attempt is required for fresh,
-independently attributable evidence.
+successful live feasibility result. Its latest live response passed research
+validation with 12 candidates, then deterministic verification excluded all 12
+before presentation. The route currently retains only aggregate eligible/close/
+excluded, fetch, and commerce counts, so the identity, product-type,
+requirement, or evidence first loss is not attributable. Earlier spent private
+branches remain permanently unknowable; new evidence applies only to the exact
+attempt that produced it.
 
 ## 2. Full user flow
 

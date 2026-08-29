@@ -13,39 +13,42 @@ exclude unsafe or misleading cards, preserve uncertainty, and give shoppers a
 reliable decision brief at acceptable latency and cost.
 
 The newest staged Terra path has not yet produced a user-visible live result.
-Its latest contract-v2 provider-complete response failed at candidate source
-validation before product verification or ranking. Static fail-first work has
-now corrected two generalized self-mismatches without weakening trust gates:
+Its latest contract-v3 response passed research validation with 12 candidates,
+then deterministic verification excluded all 12 before presentation. Static
+fail-first work has corrected two generalized self-mismatches without weakening
+trust gates:
 model ownership of under-specified internal IDs/order, and canonical response-
 source dedupe dropping a later exact response-owned URL variant before exact
 membership validation. Contract v3 keeps the provider-facing research schema
 at v2, separates canonical display/count sources from an exact staged ownership
 registry, and adds closed URL-free source-branch attribution. The exact private
-branch in the already-spent response remains unknowable, so this is still not
+branches in already-spent responses remain unknowable, so this is still not
 live feasibility proof. Separately, Phase D cost evidence names its frozen July
 approval envelope and dated August current estimate explicitly; only the
 conservative frozen envelope controls the hard spending gate.
 
 Stronger alternatives considered:
 
-- **Edit the research prompt or loosen the contract now:** rejected. The saved
-  evidence cannot distinguish top-level shape, source ownership, candidate
-  validity, or duplicate identity. A speculative edit could hide a trust
-  failure or weaken a gate.
+- **Loosen research or verifier gates now:** rejected. PR-2E proves that research
+  shape, exact source ownership, and candidate validation passed; it does not
+  reveal the verifier first-loss distribution. A speculative eligibility or
+  evidence change could hide a trust failure or weaken a gate.
 - **Tune legacy discovery or ranking first:** deferred. Historical evidence
   shows serious recall and stability weakness, but the current strategic path
   is the staged architecture and its first loss occurs before those downstream
   stages. Legacy fixes remain appropriate only when fresh first-loss evidence
   shows they materially improve the active user path.
-- **Run a broad paid benchmark immediately:** rejected for now. One zero-live
-  correction can make the already-consumed failure informative and prevent a
-  replacement request from repeating an unattributable outcome.
+- **Run another paid attempt immediately:** rejected for now. PR-2E is
+  permanently unattributable from its saved evidence. A zero-live correction
+  can make only a future attempt's own verifier distribution attributable and
+  prevent that attempt from repeating the same observability failure.
 
-Recommended reasoning level: **High** for the first trust-boundary correction.
-It is a small implementation, but it must separate provider completion,
-contract failure, safe diagnostic attribution, and billable usage without
-retaining private response material. Routine test isolation and documentation
-work require **Medium**, not the most expensive level.
+Recommended reasoning level: **High** for the aggregate verifier attribution
+contract. It is a small implementation, but its mutually exclusive first-loss
+buckets must conserve to the candidate total and reveal no candidate, source,
+requirement, claim, page, provider, prompt, or credential detail. Routine
+localized aggregation, tests, and documentation require **Medium**, not the
+most expensive level.
 
 ## Evidence labels
 
@@ -285,6 +288,31 @@ shopper-facing recommendation quality.
 - **Limitation:** no external request ran. This closes the deterministic
   registry defect, not the unknown historical branch or live feasibility.
 
+### PR-2E post-correction verification stop
+
+- **Verified outcome:** the one new-commit, new-directory `shop vac` attempt at
+  `56a513784e195ee255410e6f49d29763d87af5c7` passed research validation, then
+  failed closed as `verification_failed` after 59.154 seconds. Presentation and
+  rendering did not run.
+- **Envelope:** one create, 23 retrieves, four hosted searches, one safety
+  cancel, 12 Shopping requests, 13 source fetch/HTTP attempts, and zero retries,
+  replacements, fallbacks, second cases, Serper organic, or SearchAPI calls.
+- **Verification evidence:** research returned 12 candidates and recorded 73
+  canonical response sources. Verification then made 12 Shopping requests that
+  returned 212 rows; 13 bounded page fetches produced three successes. The
+  verifier returned zero eligible, zero close match, and 12 excluded candidates.
+- **Usage/cost:** 38,274 input, zero cached input, 6,884 output, and four hosted
+  searches; `$0.238945` frozen nominal, `$0.262866` frozen conservative, and
+  `$0.199156` current. One completed ledger was accounted without duplication.
+- **Privacy/stop:** the fixture has only approved pricing URLs and a hashed
+  response identity, no prohibited private fields or local key value, no public
+  response/result file, and remains untracked/spent. Independent audit returned
+  `VERIFIED`.
+- **Attribution limit:** the route discards the verifier's safe structured
+  per-candidate diagnostics and retains only aggregate outcome/network counts.
+  The evidence therefore cannot identify identity, complete-product type,
+  requirement failure/unknown, or source/claim rejection. Do not guess.
+
 ## Confirmed defects and weaknesses
 
 | ID | Severity | Status | User impact and evidence | Likely root cause | Generalized solution | Required proof | Risk, rollback, dependencies |
@@ -299,7 +327,8 @@ shopper-facing recommendation quality.
 | PR-008 | P1 | investigating | RR-092 says editorial Product markup can verify identity/image without proving the tested model. A wrong model image/link is release-blocking if promoted. | Structured markup establishes a product entity without sufficient tested-model attribution or page role. | Require exact tested-model attribution from eligible page evidence; editorial markup remains evidence-only unless the commerce/page boundary independently passes. | Editorial review negatives, manufacturer/retailer positives, sibling-model and accessory mutations, asset-wall regression. | High asset-recall tradeoff. Default-off path must stay off until resolved. |
 | PR-009 | P1 | verified correction; successor blocker isolated | The commit-pinned PR-2 request completed provider research but failed before verification as an unattributed `research_candidate_invalid`. | The v1 schema made the model author internal candidate/fact IDs while runtime required stricter array-relative values not fully specified by schema/prompt; it also rejected requirement ordering the schema could not constrain. The exact old failing field remains private and unknown. | Research contract/schema/prompt v2 make IDs server-owned, validate the exact unique requirement set before canonical ordering, align non-whitespace constraints, and retain only a guarded candidate field-group reason. Trust gates remain unchanged. | Fail-first 18 pass / 4 intended fail; candidate group matrix; staged 54/54; full 1,438/1,438; E2E/build/static/eval/ranking/dry-run walls; independent review. | Contract-v2 revalidation produced the narrower `candidate_sources` first loss. PR-011 now owns that successor blocker. Never reuse any spent attempt. |
 | PR-010 | P2 | verified | The Phase D estimator's field named `standardUsd` used its frozen 2026-07-25 rates, while official current Terra prices are lower. Readiness reporting could confuse a conservative approval rate with current estimated spend. | The rate object was intentionally frozen for approval reproducibility but the output label did not distinguish frozen-envelope and current-market estimates. | Plan/evidence schema v2 names the dated frozen approval envelope and dated `standard_non_regional` current estimate separately. Only the frozen conservative value controls the unchanged hard ceiling. | Fail-first 5 pass / 5 intended fail; exact short/long/cache-write/search rates and totals; focused 10/10; staged 56/56; full 1,440/1,440; E2E/build/static/eval/ranking/dry-run walls; independent review. | Closed locally without live spend. Re-check and date the informational card when official prices change; never silently reprice an existing approval envelope. |
-| PR-011 | P1 | verified correction; live successor unresolved | Contract-v2 research completed with 69 response-owned sources but still failed before verification as `research_candidate_invalid / candidate_sources`. No staged result reached users. | The exact live cause is privacy-hidden. A generalized deterministic cause was proven: canonical display dedupe discarded later exact response-owned variants before exact-membership validation. | A dedicated staged registry now preserves every parseable exact response-owned variant once; canonical display/count behavior is unchanged. Closed source subreasons distinguish shape, duplicate, unsafe, and unregistered without retaining URLs. | Fail-first 27/3; exact/canonical positive and negative matrix; focused 55/55; staged 59/59; full 1,444/1,444; E2E/static/build/dry-run walls; independent approval; zero live. | Offline defect closed. A new bounded attempt may still expose duplicate, unsafe, or genuinely unregistered provider output. Never canonical-match a model-authored URL or infer the spent response's branch. |
+| PR-011 | P1 | verified | Contract-v2 research completed with 69 response-owned sources but failed before verification as `research_candidate_invalid / candidate_sources`. | The exact historical cause is privacy-hidden. A generalized deterministic cause was proven: canonical display dedupe discarded later exact response-owned variants before exact-membership validation. | A dedicated staged registry preserves every parseable exact response-owned variant once; canonical display/count behavior is unchanged. Closed source subreasons distinguish shape, duplicate, unsafe, and unregistered without retaining URLs. | Fail-first 27/3; focused 55/55; staged 59/59; full 1,444/1,444; E2E/static/build/dry-run walls; independent approval; a new live response crossed research validation. | Closed. Never canonical-match a model-authored URL or infer the spent response's branch. PR-012 owns the successor verification blocker. |
+| PR-012 | P1 | investigating | The first research-valid staged run verified zero of 12 candidates, so no result reached presentation or users. The route retained only totals and cannot identify this attempt's verifier first-loss distribution. | `materializeStagedTerraEvidencePackage()` computes identity, complete-product, requirement, accepted/rejected source, price, asset, and exclusion diagnostics, but the route collapses them to eligible/close/excluded and network counts before failing. | Add a closed aggregate verifier first-loss contract derived only from server-owned booleans/enums. Retain no candidate ID/name/model, URL/host/title, requirement ID/text, claim/page content, price, or raw evidence. Do not change eligibility. | Fail-first route/evidence test; closed enum/count conservation; unknown/private-field mutations; exact public-response invariance; focused/full/E2E/build walls; independent review; zero live. | Observability-only prerequisite. Counts must not become a side channel or authorize looser verification. No new spend until independently approved. |
 
 ## Suspected weaknesses requiring measurement
 
@@ -466,7 +495,7 @@ approval are complete. The historical live branch remains unknowable.
 
 ### Phase PR-2E — One post-correction staged feasibility attempt
 
-- Status: **next; bounded live**
+- Status: **stopped safely 2026-08-29; spent**
 - Dependency: PR-2D is committed and independently approved; tracked state is
   clean; the exact commit-specific output directory is new; process-only keys
   and the zero-network dry run pass without exposing values.
@@ -482,6 +511,30 @@ approval are complete. The historical live branch remains unknowable.
   scan, acceptance gates on success, independent content audit, and final clean
   tracked-state authentication.
 - Reasoning: **High** for evidence adjudication; execution is routine.
+
+Result: research passed, but deterministic verification excluded all 12
+candidates. Every ceiling, privacy boundary, and first-terminal stop held. The
+aggregate evidence cannot identify the verifier first loss, so the attempt and
+directory are spent and no replacement is permitted.
+
+### Phase PR-2F — Recover safe aggregate verification attribution
+
+- Status: **next; zero live**
+- Severity addressed: PR-012 P1.
+- Scope: derive bounded aggregate first-loss counts from existing deterministic
+  verifier output. Distinguish identity unproven, complete product type
+  unproven, hard requirement failed, hard requirement not verified, and closed
+  source/claim rejection classes without retaining candidate- or request-
+  identifying content.
+- Stop condition: do not alter eligibility, evidence acceptance, source/page/
+  commerce rules, prompt/schema, or public errors. Do not retain candidate IDs,
+  names, models, URLs, hosts, titles, requirement IDs/text, claims, prices,
+  fetched content, provider IDs, prompts, credentials, or secrets. No live call.
+- Proof: fail-first conservation/privacy mutations, focused verifier/route/Phase
+  D tests, full deterministic and hermetic E2E/build/static gates, independent
+  review, and a clean default-off commit.
+- Reasoning: **High** for the privacy/observability boundary; **Medium** for
+  aggregate plumbing.
 
 ### Phase PR-3 — Build a real offline benchmark matrix
 
@@ -571,9 +624,9 @@ Current verdict: **NOT READY** (confidence 0.98).
 
 Release blockers today:
 
-- staged research feasibility has not passed; two offline acceptance defects
-  are corrected, but no post-correction provider response has traversed
-  verification, presentation, Shopping/page evidence, and rendering;
+- staged lifecycle feasibility has not passed; research validation now passes,
+  but verification excluded all 12 candidates and the first-loss reason is not
+  safely attributable;
 - deterministic QA batch names overstate the distinct cases actually run;
 - current live accuracy, stability, latency, and cost have not been measured;
 - RR-091 and RR-092 remain unresolved for an experimental path that cannot be

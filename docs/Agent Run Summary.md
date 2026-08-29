@@ -1764,3 +1764,45 @@ PR-008 and the broader readiness debts remain open.
 feasibility attempt under the unchanged Phase D envelope, with no retry or
 replacement and a stop at the first terminal outcome. Reasoning level: High for
 evidence adjudication; execution is routine.
+
+## Codex Run - 2026-08-29 Production readiness PR-2E verification stop
+
+**Goal:** test the corrected staged route exactly once through research,
+verification, presentation, and rendering without broadening into a benchmark.
+
+**What was checked:** exact commit/clean-state/output-directory binding, boolean
+key presence, zero-network plan/rate/ceiling preflight, the single live route,
+sanitized counters/usage/cost/privacy, first-terminal stop, and post-run state.
+
+**What was found:** research passed contract v3 with 12 candidates and 73
+canonical sources. Deterministic verification made 12 Shopping requests (212
+rows) and 13 bounded page attempts (three successes), but excluded every
+candidate. It produced no eligible/close match or presentation call, and no
+public response, card, source list, render, or result file.
+
+**What changed:** no product code changed. The new fixture is untracked, spent,
+and excluded from staging. Authoritative records now identify verification as
+the active first loss and preserve the attribution limit.
+
+**Why it matters:** PR-2D cleared research validation in a real response, but the
+active architecture still cannot produce a recommendation. The route currently
+discards the verifier's detailed structured diagnostics, so another paid attempt
+could produce another unattributable verification failure and cannot explain
+PR-2E.
+
+**Tests/live proof:** dry run passed; the one 59.154-second live attempt used one
+create, 23 retrieves, four searches, one cancel, 12 Shopping requests, and 13
+page/HTTP attempts, all inside ceilings. Usage/cost was independently
+recomputed. Fixture/privacy/clean-state audit returned `VERIFIED`.
+
+**Before/after:** PR-2C stopped at candidate sources before verification. PR-2E
+crossed research and reached deterministic verification, which then excluded
+12/12. This is progress in first-loss depth, not feasibility or quality proof.
+
+**Remaining issues:** the all-excluded cause is unknown; staged presentation and
+rendering remain untested live; all broader PR-005 through PR-008 and readiness
+debts remain open.
+
+**Next recommended step:** zero-live closed aggregate verifier first-loss
+diagnostics, with no eligibility change and no candidate/request/private fields.
+Reasoning level: High for privacy semantics, then Medium for aggregate plumbing.
