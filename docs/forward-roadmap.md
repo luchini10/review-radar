@@ -3710,6 +3710,46 @@ first-terminal/no-retry/no-fallback rules. A stop selects only a generalized
 offline reproduction; a safe shopper result unlocks Phase E. PR-3F does not
 prove PR-3E causation, live adherence, quality, latency, or cost.
 
+**Phase D continuation — PR-3G/PR-3H, 2026-08-29:** the one evidence-v4 PR-3G
+measurement at clean commit `ac53c10e` reached provider `completed` but failed
+local research validation as `research_candidate_invalid / candidate_sources /
+candidate_source_identity_unproven`. It stopped before page collection,
+Shopping, deterministic verification, presentation, or rendering. The
+75.501-second first-terminal run used one create, 31 retrieves, six hosted
+searches, one cancel, 56,876 input tokens, and 7,759 output tokens; frozen-
+conservative cost was `$0.354123`. No retry, replacement, fallback, second case,
+public result, flag change, or deployment occurred. The 26,300-byte artifact
+hash, terminal sequence, counters, usage, cost, and privacy independently
+returned `VERIFIED`, confidence 0.99. It is immutable and spent.
+
+The completed provider response below the output cap refutes the token-cap
+hypothesis. Its privacy boundary does not reveal whether every candidate failed
+or which title/brand/model/conflict/type reasons applied. PR-3H therefore fixes
+the generalized all-or-nothing handling rather than guessing a prompt change or
+weakening identity: after the unchanged strict 8–15-candidate parse, only
+candidates whose two exact response-owned source records both fail the shared
+asset verifier are quarantined. Survivors retain order and receive contiguous
+server-owned candidate/fact IDs; rejected URLs never enter collection. Zero
+survivors retain the same bounded failure triple.
+
+The server-only filter diagnostic reports only submitted/accepted/rejected
+counts and five reachable reason families. The verifier contributes one or two
+distinct families for each rejected candidate. Route sanitization binds
+completion to the actual survivor count, failure to the exact zero-survivor
+context, each family to no more than the rejected count, and the aggregate
+reason total from the rejected count through twice that count. Contract v8,
+runtime v7, and future sanitized evidence v5 roll old work closed; schema v5,
+prompt v6, public responses, network ceilings, and downstream trust rules are
+unchanged. Independent review returned `APPROVED`, no findings, confidence
+0.97 after context-binding, two-source conservation, unreachable-bucket, and
+mutation corrections.
+
+After a clean self-contained PR-3H closeout, PR-3I may run the same frozen case
+once in a new commit-derived directory under the unchanged first-terminal/no-
+retry/no-fallback envelope. A smaller survivor slate is not success. Only a
+safe public shopper result unlocks Phase E; another stop selects a generalized
+offline reproduction.
+
 **Phase E — quality/stability and promotion decision:** only after feasibility
 passes, compare multiple frozen categories against the existing baseline. A
 flag promotion, deployment, or retirement of the old path remains a separate

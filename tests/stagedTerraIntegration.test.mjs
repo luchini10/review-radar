@@ -144,7 +144,7 @@ describe("OAI-T10 staged Terra integration contracts", () => {
       {
         promptVersion: STAGED_TERRA_RESEARCH_PROMPT_VERSION,
         requestFingerprint: requestFingerprintForContractVersion(
-          "staged-terra-contract-v6",
+          "staged-terra-contract-v7",
         ),
       },
     ];

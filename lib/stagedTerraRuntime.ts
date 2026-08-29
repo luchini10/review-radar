@@ -46,7 +46,7 @@ import type {
 } from "./stagedTerraVerifier.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
 
-export const STAGED_TERRA_RUNTIME_VERSION = "staged-terra-runtime-v6";
+export const STAGED_TERRA_RUNTIME_VERSION = "staged-terra-runtime-v7";
 export const STAGED_TERRA_RUNTIME_LIMITS = Object.freeze({
   researchTimeoutMs: 120_000,
   presentationTimeoutMs: 120_000,
@@ -371,13 +371,15 @@ export async function pollStagedTerraResearch({
       validationReason: "research_candidate_invalid" as const,
       candidateValidationReason: "candidate_sources" as const,
       candidateSourceValidationReason: identitySources.reason,
+      identitySourceFilter: identitySources.identitySourceFilter,
     };
   }
   ledger.durationMs = Math.max(0, now() - startedAt);
   return {
     ok: true as const,
     state: "completed" as const,
-    researchOutput: parsed.value,
+    researchOutput: identitySources.value,
+    identitySourceFilter: identitySources.identitySourceFilter,
     ledger,
   };
 }

@@ -4,6 +4,61 @@
 
 ---
 
+## OAI-T10 PR-3G identity-source stop and PR-3H candidate quarantine (2026-08-29)
+
+- PR-3G spent exactly one frozen `shop vac` lifecycle at clean commit
+  `ac53c10e707b67945f7df4f4cbda129c7c6ef69d`. A first CLI form using separated
+  approval tokens was rejected by the local parser before directory creation,
+  counters, network, artifact, or spend. The one actual lifecycle invocation
+  used the required `--name=value` form and was not retried.
+- The provider reached terminal `completed`, but strict local research
+  validation failed as `research_candidate_invalid / candidate_sources /
+  candidate_source_identity_unproven`. No candidate/source/private identity was
+  retained, so the exact missing-title/brand/model/conflict/type distribution
+  and survivor count are unknown. Page fetching, Shopping, verification,
+  presentation, rendering, public output, fallback, and a second case all
+  remained zero.
+- The 75.501-second attempt used one create, 31 retrieves (30 in-progress, then
+  one completed-provider/failed-contract terminal poll after the queued start), six
+  hosted searches, one safety cancel, 56,876 input tokens, zero cached input,
+  and 7,759 output tokens. Frozen-conservative estimated cost was `$0.354123`;
+  the informational current estimate was `$0.266860`, both below `$3`.
+- The only artifact is untracked 26,300-byte evidence-v4 `attempt.json`, SHA-
+  256 `2E3296650224BF28EEE56166860A9B82C22EC7ED6B93C374594F2869FDE0C1CE`.
+  Independent strict read-only audit returned `VERIFIED`, no findings,
+  confidence 0.99. Never inspect, retry, edit, stage, reuse, or add files to its
+  spent directory.
+- PR-3G refutes the output-token-cap hypothesis: the provider completed with
+  output below the unchanged cap and local identity-source validation stopped
+  the lifecycle. Do not raise token limits, add a prompt-only patch, or weaken
+  identity from this evidence.
+- Contract v8/runtime v7 quarantine only candidates for which both exact
+  response-owned source records fail the unchanged shared asset-identity
+  predicate. Survivors retain discovery order and receive contiguous server-
+  owned candidate/fact IDs. Rejected URLs never reach collection; zero
+  survivors retain the exact bounded failure triple.
+- The server-only diagnostic contains submitted/accepted/rejected counts and
+  only five reachable families: missing title, brand absent, model absent,
+  model conflict, and wrong product type. Counts must conserve; each rejected
+  candidate contributes one or two distinct reasons. Completed evidence must
+  match the actual survivor count. Failed evidence is retained only for the
+  exact zero-survivor failure triple.
+- Contract v8 and runtime v7 invalidate old jobs; research schema v5 and prompt
+  v6 stay unchanged. Future sanitized Phase D evidence is v5. Public bodies,
+  network ceilings, source ownership, fetched-page trust, commerce, price,
+  relationship, requirement, evidence, eligibility, and ranking rules did not
+  change.
+- Independent review initially found context-unbound diagnostic counts, a
+  missing two-reasons-per-candidate upper bound, and two unreachable buckets.
+  Corrected terminal verdict was `APPROVED`, no findings, confidence 0.97.
+- PR-3H is a generalized zero-live correction and may reduce recall by
+  returning a smaller slate. It does not prove live survivor yield or a
+  complete shopper result. PR-3I may run the same frozen case once only after a
+  clean self-contained PR-3H commit, in a new commit-derived directory, under
+  the unchanged first-terminal/no-retry/no-fallback ceilings.
+
+---
+
 ## OAI-T10 PR-3E identity stop and PR-3F source-grounding contract (2026-08-29)
 
 - PR-3E spent exactly one frozen `shop vac` Phase D lifecycle at clean commit

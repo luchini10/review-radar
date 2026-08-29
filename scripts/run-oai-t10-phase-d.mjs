@@ -134,7 +134,7 @@ async function main() {
   };
   const diagnostics = [];
   const evidence = {
-    schemaVersion: "oai-t10-phase-d-sanitized-v4",
+    schemaVersion: "oai-t10-phase-d-sanitized-v5",
     capturedAt: new Date().toISOString(),
     commit,
     case: OAI_T10_PHASE_D_CASE,

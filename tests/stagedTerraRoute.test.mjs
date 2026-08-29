@@ -182,6 +182,18 @@ describe("OAI-T10 staged Terra route", () => {
         ok: true,
         state: "completed",
         researchOutput: research,
+        identitySourceFilter: {
+          submittedCandidates: 8,
+          acceptedCandidates: 8,
+          rejectedCandidates: 0,
+          rejectionCandidateCounts: {
+            missingTitle: 0,
+            brandNotInTitle: 0,
+            modelNotInTitle: 0,
+            modelConflictInTitle: 0,
+            wrongProductType: 0,
+          },
+        },
         ledger: {
           operation: "research_poll",
           responseIdHash: "hash-only",
@@ -252,6 +264,25 @@ describe("OAI-T10 staged Terra route", () => {
     assert.deepEqual(
       diagnostics.find(
         (diagnostic) =>
+          diagnostic.stage === "research_poll" &&
+          diagnostic.outcome === "completed",
+      )?.identitySourceFilter,
+      {
+        submittedCandidates: 8,
+        acceptedCandidates: 8,
+        rejectedCandidates: 0,
+        rejectionCandidateCounts: {
+          missingTitle: 0,
+          brandNotInTitle: 0,
+          modelNotInTitle: 0,
+          modelConflictInTitle: 0,
+          wrongProductType: 0,
+        },
+      },
+    );
+    assert.deepEqual(
+      diagnostics.find(
+        (diagnostic) =>
           diagnostic.stage === "verification" &&
           diagnostic.outcome === "completed",
       )?.verificationAttribution,
@@ -273,6 +304,152 @@ describe("OAI-T10 staged Terra route", () => {
     assert.deepEqual((await repeated.json()).finalAdvice, ["Verified advice"]);
     assert.equal(collectionCalls, 1);
     assert.equal(presentationCalls, 1);
+  });
+
+  it("binds completed identity-source filter counts to the surviving research slate", async () => {
+    const fingerprint = (
+      await import("../lib/stagedTerraContract.ts")
+    ).buildStagedTerraRequestFingerprint(shopper);
+    const zeroReasons = {
+      missingTitle: 0,
+      brandNotInTitle: 0,
+      modelNotInTitle: 0,
+      modelConflictInTitle: 0,
+      wrongProductType: 0,
+    };
+    const matchingPartial = {
+      submittedCandidates: 8,
+      acceptedCandidates: 7,
+      rejectedCandidates: 1,
+      rejectionCandidateCounts: {
+        ...zeroReasons,
+        modelNotInTitle: 1,
+      },
+    };
+    const cases = [
+      {
+        name: "matching partial slate",
+        value: matchingPartial,
+        expected: matchingPartial,
+      },
+      {
+        name: "mismatched survivor count",
+        value: {
+          submittedCandidates: 8,
+          acceptedCandidates: 8,
+          rejectedCandidates: 0,
+          rejectionCandidateCounts: zeroReasons,
+        },
+        expected: undefined,
+      },
+      {
+        name: "more than two reasons for one rejected candidate",
+        value: {
+          submittedCandidates: 8,
+          acceptedCandidates: 7,
+          rejectedCandidates: 1,
+          rejectionCandidateCounts: {
+            ...zeroReasons,
+            missingTitle: 1,
+            brandNotInTitle: 1,
+            modelNotInTitle: 1,
+          },
+        },
+        expected: undefined,
+      },
+    ];
+
+    for (const testCase of cases) {
+      const diagnostics = [];
+      const research = researchOutput();
+      research.candidates.pop();
+      const handlers = createStagedTerraRecommendationHandlers({
+        validateRequest: (body) => ({ data: body }),
+        getEnvironment: () => ({
+          openAiApiKey: "test-key",
+          jobTokenSecret: secret,
+          enabled: true,
+        }),
+        createOpenAIClient: async () => ({ responses: {} }),
+        startResearch: async () => ({
+          ok: true,
+          responseId: "resp_research123",
+          status: "queued",
+          requestFingerprint: fingerprint,
+          promptVersion: "staged-terra-research-prompt-v6",
+          ledger: { operation: "research_start" },
+        }),
+        pollResearch: async () => ({
+          ok: true,
+          state: "completed",
+          researchOutput: research,
+          identitySourceFilter: testCase.value,
+          ledger: { operation: "research_poll" },
+        }),
+        collectVerificationInputs: async () => ({
+          candidates: [],
+          diagnostics: {
+            candidateCount: 7,
+            sourceFetchAttempts: 0,
+            successfulSourceFetches: 0,
+            commerceRequests: 0,
+            commerceRows: 0,
+          },
+        }),
+        materializeEvidence: () => ({
+          evidencePackage: {
+            schemaVersion: "staged-terra-evidence-v1",
+            requestFingerprint: fingerprint,
+            requirements: [],
+            evidence: [],
+            candidates: Array.from({ length: 7 }, (_, index) => ({
+              eligibility: index === 0 ? "eligible" : "excluded",
+            })),
+          },
+          diagnostics: {
+            aggregate: verificationAttribution({
+              candidateFirstLossCounts: {
+                noLossEligible: 1,
+                assetIdentityUnproven: 6,
+              },
+              assetIdentityFailureCandidateCounts: {
+                noAssetCandidates: 6,
+              },
+            }),
+          },
+        }),
+        runPresentation: async () => ({
+          ok: true,
+          presentation: {
+            schemaVersion: "staged-terra-presentation-v1",
+            rankedProducts: [],
+            closeMatchCandidateIds: [],
+            finalAdvice: [],
+          },
+          ledger: { operation: "presentation" },
+        }),
+        renderPresentation: () => ({ cards: [], sources: [], finalAdvice: [] }),
+        onDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
+      });
+
+      const started = await handlers.POST(request("POST", shopper));
+      const pending = await started.json();
+      const completed = await handlers.GET(
+        request("GET", undefined, {
+          [STAGED_TERRA_JOB_TOKEN_HEADER]: pending.jobToken,
+        }),
+      );
+      assert.equal(completed.status, 200, testCase.name);
+      assert.deepEqual(
+        diagnostics.find(
+          (diagnostic) =>
+            diagnostic.stage === "research_poll" &&
+            diagnostic.outcome === "completed",
+        )?.identitySourceFilter,
+        testCase.expected,
+        testCase.name,
+      );
+    }
   });
 
   it("keeps legacy routing byte-equivalent unless both staged flags select it", async () => {
@@ -770,6 +947,123 @@ describe("OAI-T10 staged Terra route", () => {
       ]) {
         assert.equal(serializedDiagnostics.includes(privateValue), false);
       }
+    }
+  });
+
+  it("retains only exact, bounded, conserving identity-source filter counts", async () => {
+    const fingerprint = (
+      await import("../lib/stagedTerraContract.ts")
+    ).buildStagedTerraRequestFingerprint(shopper);
+    const zeroReasons = {
+      missingTitle: 0,
+      brandNotInTitle: 0,
+      modelNotInTitle: 0,
+      modelConflictInTitle: 0,
+      wrongProductType: 0,
+    };
+    const valid = {
+      submittedCandidates: 8,
+      acceptedCandidates: 0,
+      rejectedCandidates: 8,
+      rejectionCandidateCounts: {
+        ...zeroReasons,
+        modelNotInTitle: 8,
+      },
+    };
+    const privateCanary = "private_identity_filter_canary";
+    const cases = [
+      { value: valid, expected: valid },
+      {
+        value: valid,
+        validationReason: "research_shape",
+        expected: undefined,
+      },
+      {
+        value: { ...valid, privateField: privateCanary },
+        expected: undefined,
+      },
+      {
+        value: { ...valid, submittedCandidates: 7, rejectedCandidates: 7 },
+        expected: undefined,
+      },
+      {
+        value: { ...valid, acceptedCandidates: 1 },
+        expected: undefined,
+      },
+      {
+        value: {
+          ...valid,
+          acceptedCandidates: 7,
+          rejectedCandidates: 1,
+          rejectionCandidateCounts: zeroReasons,
+        },
+        expected: undefined,
+      },
+      {
+        value: {
+          ...valid,
+          acceptedCandidates: 7,
+          rejectedCandidates: 1,
+          rejectionCandidateCounts: {
+            ...zeroReasons,
+            modelNotInTitle: 2,
+          },
+        },
+        expected: undefined,
+      },
+    ];
+
+    for (const testCase of cases) {
+      const diagnostics = [];
+      const handlers = createStagedTerraRecommendationHandlers({
+        validateRequest: (body) => ({ data: body }),
+        getEnvironment: () => ({
+          openAiApiKey: "test-key",
+          jobTokenSecret: secret,
+          enabled: true,
+        }),
+        createOpenAIClient: async () => ({ responses: {} }),
+        startResearch: async () => ({
+          ok: true,
+          responseId: "resp_research123",
+          status: "queued",
+          requestFingerprint: fingerprint,
+          promptVersion: "staged-terra-research-prompt-v6",
+          ledger: { operation: "research_start" },
+        }),
+        pollResearch: async () => ({
+          ok: false,
+          validationReason:
+            testCase.validationReason ?? "research_candidate_invalid",
+          candidateValidationReason: "candidate_sources",
+          candidateSourceValidationReason:
+            "candidate_source_identity_unproven",
+          identitySourceFilter: testCase.value,
+          ledger: {
+            operation: "research_poll",
+            responseIdHash: "hash-only",
+            failureReason: "invalid_research_contract",
+          },
+        }),
+        onDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
+      });
+
+      const started = await handlers.POST(request("POST", shopper));
+      const pending = await started.json();
+      const failed = await handlers.GET(
+        request("GET", undefined, {
+          [STAGED_TERRA_JOB_TOKEN_HEADER]: pending.jobToken,
+        }),
+      );
+      assert.equal(failed.status, 502);
+      const failedPoll = diagnostics.find(
+        (diagnostic) =>
+          diagnostic.stage === "research_poll" &&
+          diagnostic.outcome === "failed",
+      );
+      assert.deepEqual(failedPoll?.identitySourceFilter, testCase.expected);
+      assert.equal("identitySourceFilter" in (await failed.json()), false);
+      assert.equal(JSON.stringify(diagnostics).includes(privateCanary), false);
     }
   });
 

@@ -207,12 +207,96 @@ describe("OAI-T10 staged Terra runtime", () => {
     assert.equal(JSON.stringify(polled).includes(exactCandidateUrl), false);
   });
 
-  it("rejects candidate-owned sources whose response titles do not prove identity", async () => {
+  it("quarantines a candidate whose response titles do not prove identity", async () => {
     const response = completedResearchResponse();
     response.output[0].action.sources[0].title =
       "Example Brand cordless vacuum buying guide";
     response.output[0].action.sources[1].title =
       "Example Brand cordless vacuum independent test";
+
+    const polled = await pollStagedTerraResearch({
+      client: { responses: { retrieve: async () => response } },
+      responseId: "resp_research123",
+      requestFingerprint: buildStagedTerraRequestFingerprint(shopper),
+      shopperRequest: shopper,
+    });
+
+    assert.equal(polled.ok, true);
+    assert.equal(polled.ok && polled.researchOutput.candidates.length, 7);
+    assert.deepEqual(polled.identitySourceFilter, {
+      submittedCandidates: 8,
+      acceptedCandidates: 7,
+      rejectedCandidates: 1,
+      rejectionCandidateCounts: {
+        missingTitle: 0,
+        brandNotInTitle: 0,
+        modelNotInTitle: 1,
+        modelConflictInTitle: 0,
+        wrongProductType: 0,
+      },
+    });
+    assert.equal(JSON.stringify(polled).includes("buying guide"), false);
+  });
+
+  it("quarantines multiple identity-unproven candidates, preserves order, and reindexes server ids", async () => {
+    const response = completedResearchResponse();
+    const rejectedUrls = [
+      ...response.output[0].action.sources.slice(0, 2).map((source) => source.url),
+      ...response.output[0].action.sources.slice(6, 8).map((source) => source.url),
+    ];
+    for (const source of [
+      ...response.output[0].action.sources.slice(0, 2),
+      ...response.output[0].action.sources.slice(6, 8),
+    ]) {
+      source.title = "Example Brand cordless vacuum buying guide";
+    }
+
+    const polled = await pollStagedTerraResearch({
+      client: { responses: { retrieve: async () => response } },
+      responseId: "resp_research123",
+      requestFingerprint: buildStagedTerraRequestFingerprint(shopper),
+      shopperRequest: shopper,
+    });
+
+    assert.equal(polled.ok, true);
+    assert.deepEqual(
+      polled.ok && polled.researchOutput.candidates.map((candidate) => candidate.model),
+      ["V200", "V300", "V500", "V600", "V700", "V800"],
+    );
+    assert.deepEqual(
+      polled.ok && polled.researchOutput.candidates.map((candidate) => candidate.candidateId),
+      Array.from({ length: 6 }, (_, index) => `candidate_${index + 1}`),
+    );
+    assert.deepEqual(
+      polled.ok && polled.researchOutput.candidates.map((candidate) => candidate.factLeads[0].factId),
+      Array.from({ length: 6 }, (_, index) => `candidate_${index + 1}_fact_1`),
+    );
+    assert.equal(polled.identitySourceFilter.rejectedCandidates, 2);
+    assert.equal(polled.identitySourceFilter.rejectionCandidateCounts.modelNotInTitle, 2);
+    for (const rejectedUrl of rejectedUrls) {
+      assert.equal(JSON.stringify(polled).includes(rejectedUrl), false);
+    }
+    const fetchedUrls = [];
+    const collected = await collectStagedTerraVerificationInputs({
+      researchOutput: polled.researchOutput,
+      fetchSource: async (url) => {
+        fetchedUrls.push(url);
+        return { ok: false, reason: "offline_test_failure" };
+      },
+    });
+    assert.equal(collected.diagnostics.candidateCount, 6);
+    assert.equal(collected.diagnostics.sourceFetchAttempts, 12);
+    assert.equal(fetchedUrls.length, 12);
+    for (const rejectedUrl of rejectedUrls) {
+      assert.equal(fetchedUrls.includes(rejectedUrl), false);
+    }
+  });
+
+  it("fails closed with bounded counts when no candidate proves source identity", async () => {
+    const response = completedResearchResponse();
+    for (const source of response.output[0].action.sources) {
+      source.title = "Generic cordless vacuum buying guide";
+    }
 
     const polled = await pollStagedTerraResearch({
       client: { responses: { retrieve: async () => response } },
@@ -228,7 +312,13 @@ describe("OAI-T10 staged Terra runtime", () => {
       polled.candidateSourceValidationReason,
       "candidate_source_identity_unproven",
     );
-    assert.equal(JSON.stringify(polled).includes("buying guide"), false);
+    assert.equal(polled.identitySourceFilter.submittedCandidates, 8);
+    assert.equal(polled.identitySourceFilter.acceptedCandidates, 0);
+    assert.equal(polled.identitySourceFilter.rejectedCandidates, 8);
+    assert.equal(
+      polled.identitySourceFilter.rejectionCandidateCounts.brandNotInTitle,
+      8,
+    );
   });
 
   it("does not borrow identity titles from canonical-equivalent URL variants", async () => {
@@ -252,11 +342,9 @@ describe("OAI-T10 staged Terra runtime", () => {
       shopperRequest: shopper,
     });
 
-    assert.equal(polled.ok, false);
-    assert.equal(
-      polled.candidateSourceValidationReason,
-      "candidate_source_identity_unproven",
-    );
+    assert.equal(polled.ok, true);
+    assert.equal(polled.ok && polled.researchOutput.candidates.length, 7);
+    assert.equal(polled.identitySourceFilter.rejectedCandidates, 1);
   });
 
   it("propagates only the bounded candidate field group for invalid research", async () => {

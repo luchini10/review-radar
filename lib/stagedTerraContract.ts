@@ -7,6 +7,7 @@ import {
 import {
   directTerraAssetTargetIsCoherent,
   verifyDirectTerraAssetCandidates,
+  type DirectTerraAssetDecision,
 } from "./directTerraAssetVerifier.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
 import {
@@ -14,7 +15,7 @@ import {
   type DirectTerraSource,
 } from "./directTerraResponse.ts";
 
-export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v7";
+export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v8";
 export const STAGED_TERRA_RESEARCH_SCHEMA_VERSION =
   "staged-terra-research-v5";
 export const STAGED_TERRA_EVIDENCE_PACKAGE_VERSION =
@@ -47,6 +48,24 @@ export type StagedTerraResearchCandidateValidationReason =
   (typeof STAGED_TERRA_RESEARCH_CANDIDATE_VALIDATION_REASONS)[number];
 export type StagedTerraResearchCandidateSourceValidationReason =
   (typeof STAGED_TERRA_RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS)[number];
+
+export const STAGED_TERRA_RESEARCH_IDENTITY_SOURCE_REJECTION_KEYS = [
+  "missingTitle",
+  "brandNotInTitle",
+  "modelNotInTitle",
+  "modelConflictInTitle",
+  "wrongProductType",
+] as const;
+
+export type StagedTerraResearchIdentitySourceFilterDiagnostic = {
+  submittedCandidates: number;
+  acceptedCandidates: number;
+  rejectedCandidates: number;
+  rejectionCandidateCounts: Record<
+    (typeof STAGED_TERRA_RESEARCH_IDENTITY_SOURCE_REJECTION_KEYS)[number],
+    number
+  >;
+};
 
 const RESEARCH_FACT_KINDS = [
   "identity",
@@ -793,8 +812,27 @@ export function validateStagedTerraResearchIdentitySources({
 }: {
   researchOutput: StagedTerraResearchOutput;
   responseSources: readonly DirectTerraSource[];
-}): { ok: true } | ValidationFailure<"candidate_source_identity_unproven"> {
+}):
+  | (ValidationSuccess<StagedTerraResearchOutput> & {
+      identitySourceFilter: StagedTerraResearchIdentitySourceFilterDiagnostic;
+    })
+  | (ValidationFailure<"candidate_source_identity_unproven"> & {
+      identitySourceFilter: StagedTerraResearchIdentitySourceFilterDiagnostic;
+    }) {
   const sources = new Map(responseSources.map((source) => [source.url, source]));
+  const identitySourceFilter: StagedTerraResearchIdentitySourceFilterDiagnostic = {
+    submittedCandidates: researchOutput.candidates.length,
+    acceptedCandidates: 0,
+    rejectedCandidates: 0,
+    rejectionCandidateCounts: {
+      missingTitle: 0,
+      brandNotInTitle: 0,
+      modelNotInTitle: 0,
+      modelConflictInTitle: 0,
+      wrongProductType: 0,
+    },
+  };
+  const accepted: StagedTerraResearchCandidate[] = [];
   for (const [index, candidate] of researchOutput.candidates.entries()) {
     const verification = verifyDirectTerraAssetCandidates({
       target: {
@@ -810,11 +848,66 @@ export function validateStagedTerraResearchIdentitySources({
         productUrl: url,
       })),
     });
-    if (!verification.decisions.some((decision) => decision.identityAccepted)) {
-      return { ok: false, reason: "candidate_source_identity_unproven" };
+    if (verification.decisions.some((decision) => decision.identityAccepted)) {
+      accepted.push(candidate);
+      continue;
+    }
+    identitySourceFilter.rejectedCandidates += 1;
+    for (const reason of new Set(
+      verification.decisions.map((decision) => decision.identityReason),
+    )) {
+      const key = identitySourceRejectionKey(reason);
+      if (key) identitySourceFilter.rejectionCandidateCounts[key] += 1;
     }
   }
-  return { ok: true };
+  identitySourceFilter.acceptedCandidates = accepted.length;
+  if (accepted.length === 0) {
+    return {
+      ok: false,
+      reason: "candidate_source_identity_unproven",
+      identitySourceFilter,
+    };
+  }
+  return {
+    ok: true,
+    value: {
+      schemaVersion: researchOutput.schemaVersion,
+      candidates: accepted.map(reindexResearchCandidate),
+    },
+    identitySourceFilter,
+  };
+}
+
+function identitySourceRejectionKey(
+  reason: DirectTerraAssetDecision["identityReason"],
+): keyof StagedTerraResearchIdentitySourceFilterDiagnostic["rejectionCandidateCounts"] | null {
+  if (reason === "missing_title") return "missingTitle";
+  if (reason === "brand_not_in_title") return "brandNotInTitle";
+  if (reason === "model_not_in_title") return "modelNotInTitle";
+  if (reason === "model_conflict_in_title") return "modelConflictInTitle";
+  if (reason === "wrong_product_type") return "wrongProductType";
+  if (
+    reason === "invalid_target_identity" ||
+    reason === "weak_target_identity"
+  ) {
+    throw new Error("staged_terra_identity_source_filter_inconsistent");
+  }
+  return null;
+}
+
+function reindexResearchCandidate(
+  candidate: StagedTerraResearchCandidate,
+  index: number,
+): StagedTerraResearchCandidate {
+  const candidateId = `candidate_${index + 1}`;
+  return {
+    ...candidate,
+    candidateId,
+    factLeads: candidate.factLeads.map((fact, factIndex) => ({
+      ...fact,
+      factId: `${candidateId}_fact_${factIndex + 1}`,
+    })),
+  };
 }
 
 function parseEvidence(

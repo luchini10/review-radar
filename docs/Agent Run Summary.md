@@ -2294,3 +2294,90 @@ tree, run one PR-3G commit-pinned `shop vac` measurement in a new directory unde
 the unchanged ceilings and first-terminal/no-retry policy. This is stronger
 than broad live QA because feasibility remains the proven blocker. Reasoning
 level: High for trust/evidence adjudication and Medium for mechanical execution.
+
+## Codex Run - 2026-08-29 PR-3G live stop and PR-3H candidate quarantine
+
+**Goal:** measure the source-grounded staged contract once, preserve the first
+terminal result as privacy-bounded evidence, then fix only the generalized
+all-or-nothing rejection behavior established by the executable path.
+
+**Live outcome:** one frozen `shop vac` lifecycle ran at clean commit
+`ac53c10e707b67945f7df4f4cbda129c7c6ef69d`. A preliminary CLI form used
+separated approval tokens; the local parser rejected it before counters,
+directory creation, network, artifact, or spend. The one actual lifecycle used
+the required `--name=value` form and was not retried.
+
+The provider reached terminal `completed`, but strict local validation stopped
+at `research_candidate_invalid / candidate_sources /
+candidate_source_identity_unproven`. Page collection, Shopping, deterministic
+verification, presentation, rendering, and a public result did not run. The
+75.501-second attempt used one create, 31 retrieves, six hosted searches, one
+safety cancel, 56,876 input tokens, zero cached input, and 7,759 output tokens.
+Frozen-conservative estimated cost was `$0.354123`; no retry, replacement,
+fallback, organic/SearchAPI request, second case, flag change, or deployment
+occurred.
+
+The only artifact is untracked 26,300-byte evidence-v4 `attempt.json`, SHA-256
+`2E3296650224BF28EEE56166860A9B82C22EC7ED6B93C374594F2869FDE0C1CE`.
+Independent strict read-only audit returned `VERIFIED`, no findings, confidence
+0.99 for commit/case/schema binding, terminal sequence, counters, usage, cost,
+and privacy. It retains no raw/provider/candidate/product/source identity,
+prompt, body, header, credential, key, secret, or token. The exact rejection
+distribution is therefore unknown, and the artifact is spent.
+
+**Why prompt or gate relaxation was rejected:** the response completed below
+the output cap, refuting the token-cap hypothesis. A prompt-only revision would
+leave schema-valid all-or-nothing behavior intact, while weaker identity would
+permit ambiguous products. Candidate-level fail-closed quarantine preserves
+the trust predicate and useful schema-valid survivors.
+
+**What changed:** after the strict 8–15-candidate parse, each candidate's two
+exact response-owned title/URL records run through the unchanged shared asset
+verifier. Candidates with no accepted record are removed before any fetch or
+Shopping request; survivors retain discovery order and receive contiguous
+server-owned candidate and fact IDs. Zero survivors fail with the same bounded
+validation triple.
+
+The server-only diagnostic reports submitted, accepted, and rejected candidate
+counts plus five reachable reason families. The verifier contributes one or
+two distinct families for each rejected candidate. The route requires exact
+keys, safe integers, conservation, each family no greater than the rejected
+count, an aggregate reason total from the rejected count through twice that
+count, completed-count equality with the actual survivor slate, and the exact
+zero-survivor failure context. Malformed/private counts are omitted.
+Contract v8/runtime v7 and authentic stale-token coverage roll old jobs closed;
+future sanitized Phase D evidence is v5. Schema v5, prompt v6, public bodies,
+flags, ceilings, and downstream trust gates remain unchanged.
+
+**Tests and proof:** the corrected focused contract/integration/runtime/route/
+runner/shared-verifier wall passed 126/126. The complete suite passed
+1,495/1,495 across 214 suites; E2E passed 17/17. Typecheck, production build,
+legacy eval, fixed ranking comparison, zero-network dry run, five-partition
+reconciliation, tracked benchmark 10/10 cases and 29/29 invariants, and diff
+checks passed. Lint had zero errors and the same three pre-existing warnings;
+`next-env.d.ts` was restored.
+
+**Independent review:** review found context-unbound evidence counts, no upper
+bound for two sources per rejected candidate, and two unreachable proposed
+reason buckets. After context binding, two-times conservation, five-branch
+materializer coverage, and impossible-state fail-closed handling, terminal
+verdict was `APPROVED`, no findings, confidence 0.97. The reviewer personally
+passed 89/89, non-incremental typecheck, and final tracked-state authentication.
+
+**Process caveat:** two overbroad repository searches traversed the live-fixture
+tree. The PR-3G match exposed only already-known terminal outcome keys; a later
+legacy-fixture match exposed only fixed rejection-reason tokens. No raw/private
+field, credential, product/source identity, prompt, or body was displayed. All
+subsequent searches excluded the live-fixture tree. No artifact was edited,
+staged, retried, or reused.
+
+**Limits:** candidate quarantine can reduce recall and the next live survivor
+count is unknown. PR-3H does not prove quality, latency, cost, stability, or a
+complete shopper lifecycle. RR-091/RR-092 and broader security, accessibility,
+operations, and active-path measurement debts remain open.
+
+**Next recommended step:** after a clean self-contained PR-3H closeout commit,
+run one PR-3I commit-pinned `shop vac` measurement in a new directory under the
+unchanged ceilings and first-terminal/no-retry policy. Only a safe public result
+unlocks PR-4. Reasoning level: High for trust/evidence adjudication and Medium
+for the bounded mechanical execution.

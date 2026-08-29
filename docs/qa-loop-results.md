@@ -12769,3 +12769,166 @@ once in a new commit-derived directory under every existing ceiling and first-
 terminal/no-retry/no-fallback rule. A stop selects only another generalized
 offline reproduction; a safe shopper result unlocks the bounded active-path
 matrix.
+
+## Agent Loop Run - 2026-08-29T12:08:14.409Z
+
+- **run id:** agent-loop-2026-08-29T12-07-42-962Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3943ms |
+| lint | Passed | 9912ms |
+| unit tests | Passed | 13168ms |
+| deterministic eval pipeline | Passed | 452ms |
+| tracked offline benchmark | Passed | 606ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-29T12-07-42-962Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## 🟧 Codex — 2026-08-29 — PR-3G identity-source stop and PR-3H candidate quarantine
+
+**Objective and bottleneck assessment:** the objective was one safe staged
+shopper lifecycle, not a larger candidate count. PR-3F had moved exact source
+identity preflight before collection; one commit-bound measurement was the
+smallest way to test whether that generalized correction crossed the proven
+feasibility blocker. A broad matrix, output-cap increase, prompt-only patch, or
+weaker identity gate was not justified while one complete lifecycle still had
+never succeeded.
+
+**PR-3G preflight and invocation:** focused Phase D tests passed 10/10; the
+zero-network dry run bound the frozen `shop vac` case and every ceiling to clean
+commit `ac53c10e707b67945f7df4f4cbda129c7c6ef69d`. Tracked/index state and
+generated `next-env.d.ts` were clean; defaults remained staged/direct off. The
+prospective commit-derived directory was absent, and required credentials were
+checked only for in-memory presence/shape without printing values, hashes, or
+prefixes.
+
+A first shell form used separated approval arguments. The runner parser
+rejected that form at local approval binding before network, counters,
+directory creation, artifact, or spend. The one actual lifecycle invocation
+then used the required `--name=value` tokens. It was not retried, replaced, or
+extended.
+
+**PR-3G terminal result:** provider research reached terminal `completed`, but
+strict local validation stopped as `research_candidate_invalid /
+candidate_sources / candidate_source_identity_unproven`. The route returned
+the safe research failure before source-page collection, Shopping,
+deterministic verification, presentation, rendering, or public cards. The
+response completed below the unchanged output cap, so this refutes the token-
+cap hypothesis; it does not reveal the exact candidate, source, title, identity
+field, or reachable reason distribution.
+
+The 75.501-second first-terminal envelope recorded:
+
+- one OpenAI create;
+- 31 retrieves: 30 in-progress snapshots and one completed-provider/failed-
+  contract terminal snapshot after the queued start;
+- one safety cancel and six hosted searches;
+- zero Shopping, source fetch, physical HTTP, presentation, retry,
+  replacement, fallback, organic, SearchAPI, second-case, and post-stop calls;
+- 56,876 input tokens, zero cached input, 7,759 output tokens, and six web
+  searches; and
+- `$0.318575` frozen approval-envelope cost, `$0.354123` frozen-conservative
+  cost, and `$0.266860` informational current estimate, all below `$3`.
+
+The only artifact is untracked
+`tests/fixtures/review-radar-live/oai-t10-phase-d-ac53c10/attempt.json`, 26,300
+bytes, SHA-256
+`2E3296650224BF28EEE56166860A9B82C22EC7ED6B93C374594F2869FDE0C1CE`.
+Independent strict read-only audit returned exact verdict `VERIFIED`, no
+findings, confidence 0.99. It authenticated evidence-v4, exact commit/case,
+terminal ordering, counters, usage, cost, and privacy. Its only URLs are the
+approved model/pricing documentation and its only provider correlation is one
+hashed response ID. No raw/provider/candidate/product/source identity, prompt,
+body, header, credential, key, secret, or token was retained. The directory is
+immutable and spent.
+
+**Process caveat:** the implementing agent did not intentionally open the spent
+artifact, but an overbroad repository search matched only already-known
+terminal outcome keys within it. A later symbol search traversed legacy live-
+fixture paths and emitted only fixed rejection-reason token matches. No raw or
+private field, product/source identity, body, prompt, or credential was
+displayed. All subsequent searches excluded
+`tests/fixtures/review-radar-live/**`. Nothing in that tree was edited, staged,
+retried, or reused.
+
+**Fail-first and generalized correction:** before PR-3H implementation, the
+five focused staged suites passed 58 checks and failed exactly 12 intended
+expectations. The existing implementation rejected the entire schema-valid
+research response whenever any candidate's exact source records failed the
+identity preflight. The strongest correction was candidate-level quarantine:
+retain only candidates with at least one identity-accepted exact source pair,
+preserve discovery order, reissue contiguous server candidate/fact IDs, and
+prevent every rejected URL from reaching fetch or Shopping. Zero survivors
+still fail with the same bounded validation triple.
+
+Contract v8/runtime v7 expose a closed server-only filter diagnostic:
+submitted, accepted, rejected, and five reachable candidate-level reason
+families (`missingTitle`, `brandNotInTitle`, `modelNotInTitle`,
+`modelConflictInTitle`, `wrongProductType`). Each rejected candidate contributes
+one or two distinct reasons from its two exact source decisions. Route
+sanitization requires exact keys, safe bounds, arithmetic conservation,
+completed accepted-count equality with the actual survivor slate, and the
+exact zero-survivor failure context. Malformed, private, under-attributed,
+over-attributed, or context-false evidence is omitted. Impossible invalid/weak
+target reasons fail closed as invariant violations after parser coherence.
+Future sanitized Phase D evidence is v5. Research schema v5 and prompt v6,
+network ceilings, public responses, flags, and all downstream identity,
+relationship, fetched-source, commerce, price, requirement, evidence,
+eligibility, and ranking gates remain unchanged.
+
+**Verification:**
+
+- corrected focused contract/integration/runtime/route/runner/shared-verifier
+  wall: 126/126;
+- final controller `agent-loop-2026-08-29T12-07-42-962Z`: passed;
+- complete deterministic suite: 1,495/1,495 across 214 suites;
+- five deterministic batch partitions: exact reconciliation passed;
+- tracked offline benchmark: 10/10 cases and 29/29 invariants;
+- credential-neutral Playwright E2E: 17/17;
+- non-incremental typecheck and production build: passed;
+- legacy deterministic eval: no red flags; fixed ranking comparison: passed;
+- zero-network Phase D dry run: passed;
+- lint: zero errors and the same three pre-existing warnings; and
+- `git diff --check`: passed; generated `next-env.d.ts`: restored/clean.
+
+Independent review first identified context-unbound diagnostic evidence and two
+unreachable proposed buckets, then added the missing two-sources-per-candidate
+upper conservation bound. The corrected implementation added matching-partial,
+survivor-mismatch, unrelated-failure, over-two-reasons, impossible-state, and
+all-five-reachable-branch mutations. Terminal verdict was `APPROVED`, no
+actionable findings, confidence 0.97. The reviewer personally passed 89/89,
+non-incremental typecheck, diff checks, and exact tracked-state reauthentication.
+
+**Limits and next decision:** PR-3H is a generalized default-off zero-live
+correction after the spent PR-3G measurement. It can reduce the research slate
+and does not prove live survivor yield, lifecycle feasibility, recommendation
+quality, latency, cost, stability, or market coverage. After the self-contained
+PR-3H closeout commit is clean, PR-3I may run the unchanged frozen case once in
+a new commit-derived directory under every existing ceiling and first-terminal/
+no-retry/no-fallback rule. A stop selects only another generalized offline
+reproduction; only a safe public shopper result unlocks PR-4.

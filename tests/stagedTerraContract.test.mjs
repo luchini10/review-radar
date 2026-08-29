@@ -565,7 +565,7 @@ describe("staged Terra request boundaries", () => {
   });
 
   it("rolls the research acceptance contract identity", () => {
-    assert.equal(STAGED_TERRA_CONTRACT_VERSION, "staged-terra-contract-v7");
+    assert.equal(STAGED_TERRA_CONTRACT_VERSION, "staged-terra-contract-v8");
   });
 
   it("rolls the research prompt identity", () => {
@@ -576,7 +576,7 @@ describe("staged Terra request boundaries", () => {
   });
 
   it("rolls the staged runtime identity", () => {
-    assert.equal(STAGED_TERRA_RUNTIME_VERSION, "staged-terra-runtime-v6");
+    assert.equal(STAGED_TERRA_RUNTIME_VERSION, "staged-terra-runtime-v7");
   });
 
   it("keeps the integrated path default-off and isolated from Direct Terra", () => {
@@ -658,15 +658,27 @@ describe("staged Terra research contract", () => {
       responseSourceUrls: fixture.responseSourceUrls,
     });
     assert.equal(parsed.ok, true);
-    assert.deepEqual(
-      validateStagedTerraResearchIdentitySources({
-        researchOutput: parsed.value,
-        responseSources: fixture.responseSources,
-      }),
-      { ok: true },
-    );
+    const accepted = validateStagedTerraResearchIdentitySources({
+      researchOutput: parsed.value,
+      responseSources: fixture.responseSources,
+    });
+    assert.equal(accepted.ok, true);
+    assert.equal(accepted.ok && accepted.value.candidates.length, 8);
+    assert.deepEqual(accepted.identitySourceFilter, {
+      submittedCandidates: 8,
+      acceptedCandidates: 8,
+      rejectedCandidates: 0,
+      rejectionCandidateCounts: {
+        missingTitle: 0,
+        brandNotInTitle: 0,
+        modelNotInTitle: 0,
+        modelConflictInTitle: 0,
+        wrongProductType: 0,
+      },
+    });
 
     const ungrounded = structuredClone(fixture.responseSources);
+    const rejectedUrls = [...parsed.value.candidates[0].sourceUrls];
     for (const source of ungrounded.slice(0, 2)) {
       source.title = "Brand 1 cordless vacuum buying guide";
     }
@@ -674,11 +686,126 @@ describe("staged Terra research contract", () => {
       researchOutput: parsed.value,
       responseSources: ungrounded,
     });
-    assert.deepEqual(rejected, {
-      ok: false,
-      reason: "candidate_source_identity_unproven",
+    assert.equal(rejected.ok, true);
+    assert.equal(rejected.ok && rejected.value.candidates.length, 7);
+    assert.deepEqual(rejected.identitySourceFilter, {
+      submittedCandidates: 8,
+      acceptedCandidates: 7,
+      rejectedCandidates: 1,
+      rejectionCandidateCounts: {
+        missingTitle: 0,
+        brandNotInTitle: 0,
+        modelNotInTitle: 1,
+        modelConflictInTitle: 0,
+        wrongProductType: 0,
+      },
     });
-    assert.equal(JSON.stringify(rejected).includes("https://"), false);
+    for (const rejectedUrl of rejectedUrls) {
+      assert.equal(JSON.stringify(rejected).includes(rejectedUrl), false);
+    }
+  });
+
+  it("attributes every reachable identity-source rejection without exposing source material", () => {
+    const cases = [
+      {
+        key: "missingTitle",
+        mutate(source) {
+          delete source.title;
+        },
+      },
+      {
+        key: "brandNotInTitle",
+        title: "M100 Cordless Vacuum",
+      },
+      {
+        key: "modelNotInTitle",
+        title: "Brand 1 Cordless Vacuum",
+      },
+      {
+        key: "modelConflictInTitle",
+        title: "Brand 1 M100 M900 Cordless Vacuum",
+      },
+      {
+        key: "wrongProductType",
+        candidate: {
+          brand: "DEWALT",
+          model: "DXV12P-QT",
+          product_type: "wet/dry vacuum",
+        },
+        title: "DEWALT DXV12P-QT wet/dry vacuum filter replacement",
+      },
+    ];
+
+    for (const testCase of cases) {
+      const fixture = researchFixture();
+      if (testCase.candidate) {
+        Object.assign(fixture.value.candidates[0], testCase.candidate);
+      }
+      const parsed = validateStagedTerraResearchOutput({
+        value: fixture.value,
+        shopperRequest: shopper,
+        responseSourceUrls: fixture.responseSourceUrls,
+      });
+      assert.equal(parsed.ok, true);
+      const rejectedUrls = [...parsed.value.candidates[0].sourceUrls];
+      const responseSources = structuredClone(fixture.responseSources);
+      for (const source of responseSources.slice(0, 2)) {
+        if (testCase.mutate) testCase.mutate(source);
+        else source.title = testCase.title;
+      }
+
+      const filtered = validateStagedTerraResearchIdentitySources({
+        researchOutput: parsed.value,
+        responseSources,
+      });
+
+      assert.equal(filtered.ok, true, testCase.key);
+      assert.equal(
+        filtered.ok && filtered.value.candidates.length,
+        7,
+        testCase.key,
+      );
+      assert.deepEqual(filtered.identitySourceFilter, {
+        submittedCandidates: 8,
+        acceptedCandidates: 7,
+        rejectedCandidates: 1,
+        rejectionCandidateCounts: {
+          missingTitle: testCase.key === "missingTitle" ? 1 : 0,
+          brandNotInTitle: testCase.key === "brandNotInTitle" ? 1 : 0,
+          modelNotInTitle: testCase.key === "modelNotInTitle" ? 1 : 0,
+          modelConflictInTitle:
+            testCase.key === "modelConflictInTitle" ? 1 : 0,
+          wrongProductType: testCase.key === "wrongProductType" ? 1 : 0,
+        },
+      }, testCase.key);
+      for (const rejectedUrl of rejectedUrls) {
+        assert.equal(JSON.stringify(filtered).includes(rejectedUrl), false);
+      }
+      if (testCase.title) {
+        assert.equal(JSON.stringify(filtered).includes(testCase.title), false);
+      }
+    }
+  });
+
+  it("fails closed if a typed caller violates the validated target invariant", () => {
+    const fixture = researchFixture();
+    const parsed = validateStagedTerraResearchOutput({
+      value: fixture.value,
+      shopperRequest: shopper,
+      responseSourceUrls: fixture.responseSourceUrls,
+    });
+    assert.equal(parsed.ok, true);
+    parsed.value.candidates[0].productName =
+      "Brand 1 M900 Cordless Vacuum";
+
+    assert.throws(
+      () =>
+        validateStagedTerraResearchIdentitySources({
+          researchOutput: parsed.value,
+          responseSources: fixture.responseSources,
+        }),
+      /staged_terra_identity_source_filter_inconsistent/,
+    );
   });
 
   it("intentionally accepts the shared safe retailer-slug identity path", () => {
@@ -712,13 +839,12 @@ describe("staged Terra research contract", () => {
       responseSourceUrls: fixture.responseSourceUrls,
     });
     assert.equal(parsed.ok, true);
-    assert.deepEqual(
-      validateStagedTerraResearchIdentitySources({
-        researchOutput: parsed.value,
-        responseSources: fixture.responseSources,
-      }),
-      { ok: true },
-    );
+    const accepted = validateStagedTerraResearchIdentitySources({
+      researchOutput: parsed.value,
+      responseSources: fixture.responseSources,
+    });
+    assert.equal(accepted.ok, true);
+    assert.equal(accepted.identitySourceFilter.rejectedCandidates, 0);
   });
 
   it("does not extend source identity to sibling slugs or unknown retailers", () => {
@@ -757,14 +883,14 @@ describe("staged Terra research contract", () => {
         responseSourceUrls: fixture.responseSourceUrls,
       });
       assert.equal(parsed.ok, true);
-      assert.deepEqual(
-        validateStagedTerraResearchIdentitySources({
-          researchOutput: parsed.value,
-          responseSources: fixture.responseSources,
-        }),
-        { ok: false, reason: "candidate_source_identity_unproven" },
-        source.url,
-      );
+      const filtered = validateStagedTerraResearchIdentitySources({
+        researchOutput: parsed.value,
+        responseSources: fixture.responseSources,
+      });
+      assert.equal(filtered.ok, true, source.url);
+      assert.equal(filtered.ok && filtered.value.candidates.length, 7, source.url);
+      assert.equal(filtered.identitySourceFilter.rejectedCandidates, 1, source.url);
+      assert.equal(JSON.stringify(filtered).includes(source.url), false, source.url);
     }
   });
 

@@ -33,6 +33,8 @@ import {
   isStagedTerraResearchCandidateSourceValidationReason,
   isStagedTerraResearchCandidateValidationReason,
   isStagedTerraResearchValidationReason,
+  STAGED_TERRA_RESEARCH_IDENTITY_SOURCE_REJECTION_KEYS,
+  type StagedTerraResearchIdentitySourceFilterDiagnostic,
   type StagedTerraResearchCandidateSourceValidationReason,
   type StagedTerraResearchCandidateValidationReason,
   type StagedTerraResearchValidationReason,
@@ -62,6 +64,7 @@ export type StagedTerraServerDiagnostic = {
   validationReason?: StagedTerraResearchValidationReason;
   candidateValidationReason?: StagedTerraResearchCandidateValidationReason;
   candidateSourceValidationReason?: StagedTerraResearchCandidateSourceValidationReason;
+  identitySourceFilter?: StagedTerraResearchIdentitySourceFilterDiagnostic;
   counts?: {
     candidates: number;
     sourceFetchAttempts: number;
@@ -187,6 +190,79 @@ function boundedCountRecord<const Keys extends readonly string[]>(
 
 function countTotal(value: Record<string, number>) {
   return Object.values(value).reduce((sum, count) => sum + count, 0);
+}
+
+const IDENTITY_SOURCE_FILTER_KEYS = [
+  "submittedCandidates",
+  "acceptedCandidates",
+  "rejectedCandidates",
+  "rejectionCandidateCounts",
+] as const;
+
+function sanitizeIdentitySourceFilter(
+  value: unknown,
+  context:
+    | {
+        outcome: "completed";
+        candidateCount: number;
+      }
+    | {
+        outcome: "failed";
+        validationReason: StagedTerraResearchValidationReason | undefined;
+        candidateValidationReason:
+          | StagedTerraResearchCandidateValidationReason
+          | undefined;
+        candidateSourceValidationReason:
+          | StagedTerraResearchCandidateSourceValidationReason
+          | undefined;
+      },
+): StagedTerraResearchIdentitySourceFilterDiagnostic | undefined {
+  const candidate = record(value);
+  if (!candidate || !hasExactKeys(candidate, IDENTITY_SOURCE_FILTER_KEYS)) {
+    return undefined;
+  }
+  const submittedCandidates = boundedCount(candidate.submittedCandidates, 15);
+  const acceptedCandidates = boundedCount(candidate.acceptedCandidates, 15);
+  const rejectedCandidates = boundedCount(candidate.rejectedCandidates, 15);
+  const rejectionCandidateCounts = boundedCountRecord(
+    candidate.rejectionCandidateCounts,
+    STAGED_TERRA_RESEARCH_IDENTITY_SOURCE_REJECTION_KEYS,
+    rejectedCandidates ?? 0,
+  );
+  const rejectionCountTotal = rejectionCandidateCounts
+    ? countTotal(rejectionCandidateCounts)
+    : null;
+  if (
+    submittedCandidates === null ||
+    submittedCandidates < 8 ||
+    acceptedCandidates === null ||
+    rejectedCandidates === null ||
+    !rejectionCandidateCounts ||
+    acceptedCandidates + rejectedCandidates !== submittedCandidates ||
+    (rejectedCandidates === 0 && rejectionCountTotal !== 0) ||
+    (rejectedCandidates > 0 &&
+      (rejectionCountTotal === null ||
+        rejectionCountTotal < rejectedCandidates ||
+        rejectionCountTotal > 2 * rejectedCandidates)) ||
+    (context.outcome === "completed" &&
+      (acceptedCandidates < 1 ||
+        acceptedCandidates !== context.candidateCount)) ||
+    (context.outcome === "failed" &&
+      (context.validationReason !== "research_candidate_invalid" ||
+        context.candidateValidationReason !== "candidate_sources" ||
+        context.candidateSourceValidationReason !==
+          "candidate_source_identity_unproven" ||
+        acceptedCandidates !== 0 ||
+        rejectedCandidates !== submittedCandidates))
+  ) {
+    return undefined;
+  }
+  return {
+    submittedCandidates,
+    acceptedCandidates,
+    rejectedCandidates,
+    rejectionCandidateCounts,
+  };
 }
 
 const VERIFICATION_ATTRIBUTION_KEYS = [
@@ -587,6 +663,15 @@ export function createStagedTerraRecommendationHandlers({
           )
             ? research.candidateSourceValidationReason
             : undefined;
+        const identitySourceFilter =
+          "identitySourceFilter" in research
+            ? sanitizeIdentitySourceFilter(research.identitySourceFilter, {
+                outcome: "failed",
+                validationReason,
+                candidateValidationReason,
+                candidateSourceValidationReason,
+              })
+            : undefined;
         report({
           stage: "research_poll",
           outcome: "failed",
@@ -596,6 +681,7 @@ export function createStagedTerraRecommendationHandlers({
           ...(candidateSourceValidationReason
             ? { candidateSourceValidationReason }
             : {}),
+          ...(identitySourceFilter ? { identitySourceFilter } : {}),
         });
         return failure("research_failed", ERROR_MESSAGES.researchFailed, 502);
       }
@@ -618,10 +704,18 @@ export function createStagedTerraRecommendationHandlers({
           202,
         );
       }
+      const identitySourceFilter =
+        "identitySourceFilter" in research
+          ? sanitizeIdentitySourceFilter(research.identitySourceFilter, {
+              outcome: "completed",
+              candidateCount: research.researchOutput.candidates.length,
+            })
+          : undefined;
       report({
         stage: "research_poll",
         outcome: "completed",
         ledger: research.ledger,
+        ...(identitySourceFilter ? { identitySourceFilter } : {}),
       });
       return await resolveCompletionOnce({
         responseId: verified.payload.responseId,

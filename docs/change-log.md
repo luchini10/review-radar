@@ -11,6 +11,54 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Quarantine staged candidates whose sources cannot prove identity
+
+#### Changed
+
+- Preserved the one PR-3G `shop vac` measurement as immutable evidence. The
+  provider completed research, but local validation stopped at
+  `research_candidate_invalid / candidate_sources /
+  candidate_source_identity_unproven` before page fetching, Shopping,
+  verification, presentation, or rendering. The independently verified
+  sanitized artifact is spent and was not retried or staged.
+- Changed the pre-collection identity wall from all-or-nothing response
+  rejection to candidate-level quarantine. A candidate survives only when at
+  least one of its two exact response-owned title/URL records passes the
+  unchanged shared asset-identity verifier. Rejected candidates and their
+  source URLs never reach collection or shopper output.
+- Preserved discovery order while reissuing contiguous server-owned candidate
+  and fact IDs for the surviving slate. Zero survivors still fail closed with
+  the same bounded validation triple.
+- Added a closed server-only filter diagnostic with submitted, accepted, and
+  rejected candidate counts plus five reachable reason families. The route
+  binds success counts to the actual surviving slate, binds failure counts to
+  the exact zero-survivor failure, and rejects nonconserving or over-attributed
+  diagnostics.
+- Rolled contract v8, runtime v7, and future sanitized Phase D evidence v5.
+  Research schema v5, prompt v6, public responses, flags, network ceilings, and
+  every downstream evidence and safety rule remain unchanged.
+
+#### Verified
+
+- Corrected focused contract/integration/runtime/route/runner/shared-verifier
+  wall: 126/126. Complete suite: 1,495/1,495 across 214 suites. Credential-
+  neutral E2E: 17/17.
+- Non-incremental typecheck, production build, deterministic eval, fixed
+  ranking comparison, zero-network Phase D dry run, exact five-batch
+  reconciliation, tracked benchmark 10/10 cases and 29/29 invariants, and diff
+  checks passed. Lint reported zero errors and the same three pre-existing
+  warnings.
+- Independent review found context-unbound evidence counts, an absent two-
+  source upper conservation bound, and two unreachable proposed reason
+  buckets. After correction it returned `APPROVED`, no findings, confidence
+  0.97; the reviewer personally passed 89/89 plus non-incremental typecheck and
+  exact tracked-state authentication.
+
+This default-off correction can reduce the surviving research slate. It does
+not prove live provider yield, recommendation quality, latency, cost, or a
+complete shopper lifecycle. One new commit-bound PR-3I measurement is required
+before a broad active-path matrix or any flag decision.
+
 ### Codex - Ground staged candidates in two response-owned sources
 
 #### Changed
