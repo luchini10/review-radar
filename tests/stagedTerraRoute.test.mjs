@@ -25,7 +25,7 @@ function request(method, body, headers = {}) {
 
 function researchOutput() {
   return {
-    schemaVersion: "staged-terra-research-v4",
+    schemaVersion: "staged-terra-research-v5",
     candidates: Array.from({ length: 8 }, (_, index) => ({
       candidateId: `candidate_${index + 1}`,
       productName: `Example V${index + 1}00 cordless vacuum`,
@@ -172,7 +172,7 @@ describe("OAI-T10 staged Terra route", () => {
         requestFingerprint: (
           await import("../lib/stagedTerraContract.ts")
         ).buildStagedTerraRequestFingerprint(shopper),
-        promptVersion: "staged-terra-research-prompt-v5",
+        promptVersion: "staged-terra-research-prompt-v6",
         ledger: {
           operation: "research_start",
           responseIdHash: "hash-only",
@@ -364,7 +364,7 @@ describe("OAI-T10 staged Terra route", () => {
         responseId: "resp_research123",
         status: "queued",
         requestFingerprint: fingerprint,
-        promptVersion: "staged-terra-research-prompt-v5",
+        promptVersion: "staged-terra-research-prompt-v6",
         ledger: { operation: "research_start" },
       }),
       pollResearch: async () => ({
@@ -542,7 +542,7 @@ describe("OAI-T10 staged Terra route", () => {
           responseId: "resp_research123",
           status: "queued",
           requestFingerprint: fingerprint,
-          promptVersion: "staged-terra-research-prompt-v5",
+          promptVersion: "staged-terra-research-prompt-v6",
           ledger: { operation: "research_start" },
         }),
         pollResearch: async () => ({
@@ -656,6 +656,14 @@ describe("OAI-T10 staged Terra route", () => {
       {
         validationReason: "research_candidate_invalid",
         expectedReason: "research_candidate_invalid",
+        candidateValidationReason: "candidate_sources",
+        expectedCandidateReason: "candidate_sources",
+        candidateSourceValidationReason: "candidate_source_identity_unproven",
+        expectedCandidateSourceReason: "candidate_source_identity_unproven",
+      },
+      {
+        validationReason: "research_candidate_invalid",
+        expectedReason: "research_candidate_invalid",
         candidateValidationReason: "private_candidate_field",
         expectedCandidateReason: undefined,
         candidateSourceValidationReason: "candidate_source_unregistered",
@@ -692,7 +700,7 @@ describe("OAI-T10 staged Terra route", () => {
           responseId: "resp_research123",
           status: "queued",
           requestFingerprint: fingerprint,
-          promptVersion: "staged-terra-research-prompt-v5",
+          promptVersion: "staged-terra-research-prompt-v6",
           ledger: { operation: "research_start" },
         }),
         pollResearch: async () => ({
@@ -782,7 +790,7 @@ describe("OAI-T10 staged Terra route", () => {
         responseId: "resp_research123",
         status: "queued",
         requestFingerprint: fingerprint,
-        promptVersion: "staged-terra-research-prompt-v5",
+        promptVersion: "staged-terra-research-prompt-v6",
         ledger: { operation: "research_start" },
       }),
       pollResearch: async () => ({

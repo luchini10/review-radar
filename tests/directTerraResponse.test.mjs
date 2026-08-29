@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   extractDirectTerraAssetTargets,
+  extractDirectTerraExactResponseSources,
   extractDirectTerraExactResponseSourceUrls,
   extractDirectTerraResponseSources,
   parseDirectTerraCompletedResponse,
@@ -591,6 +592,42 @@ describe("direct Terra V2 response boundary", () => {
     assert.deepEqual(extractDirectTerraExactResponseSourceUrls(response), [
       tracked,
       exact,
+    ]);
+    assert.deepEqual(extractDirectTerraExactResponseSources(response), [
+      { url: tracked, title: "Tracked" },
+      { url: exact, title: "Exact" },
+    ]);
+  });
+
+  it("backfills a titleless exact action source from the same exact annotation", () => {
+    const url = "https://one.example/product?sku=exact-1";
+    const response = {
+      output: [
+        {
+          type: "web_search_call",
+          action: { sources: [{ type: "url", url }] },
+        },
+        {
+          type: "message",
+          content: [
+            {
+              type: "output_text",
+              text: "{}",
+              annotations: [
+                {
+                  type: "url_citation",
+                  url,
+                  title: "Exact product title",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    assert.deepEqual(extractDirectTerraExactResponseSources(response), [
+      { url, title: "Exact product title" },
     ]);
   });
 

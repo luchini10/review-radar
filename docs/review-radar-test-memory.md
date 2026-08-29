@@ -4,6 +4,65 @@
 
 ---
 
+## OAI-T10 PR-3E identity stop and PR-3F source-grounding contract (2026-08-29)
+
+- PR-3E spent exactly one frozen `shop vac` Phase D lifecycle at clean commit
+  `bf7e37b43edbd6896b97a98cc1996bfa69b3aeb7`. An earlier invocation missing
+  explicit approval arguments was rejected before network, directory creation,
+  counters, artifact, or spend; it was not a lifecycle attempt. The approved
+  invocation ran once and was not retried.
+- Research completed with 12 candidates and 53 response-owned sources. Every
+  candidate supplied exactly one candidate-local source. Collection attempted
+  12 source pages/12 physical requests and four succeeded; 12 Shopping requests
+  returned 201 rows. Verification returned 0 eligible, 0 close, 12 excluded,
+  all `assetIdentityUnproven`; presentation and rendering never ran.
+- Closed asset subreasons were eight `noAssetCandidates` and four
+  `modelNotInTitle`. Overlapping commerce outcomes were five `brandNotInTitle`,
+  12 `stableIdentifierNotInTitle`, and five `missingMerchantProductUrl`. These
+  do not provide candidate/source mapping or causal proof and never authorize a
+  weaker downstream gate.
+- The attempt used one create, 14 retrieves, three hosted searches, one safety
+  cancel, 29,702 input tokens, zero cached input, 4,139 output tokens, and
+  `$0.184904` frozen-conservative estimated cost. The only artifact is untracked
+  16,119-byte `attempt.json`, SHA-256
+  `fb6fe1ad6324a9bb6b85a2a2634ab6eef25378ee1d696220fc5ef54510214a30`.
+  Independent audit returned `VERIFIED`, confidence 0.99. Never read, edit,
+  retry, stage, reuse, or add files to this spent directory.
+- Current research schema v5 requires exactly two source URLs per candidate;
+  zero, one, or three fail. Both URLs must be exact response-owned HTTPS/public-
+  host strings and must represent distinct physical fetches. A rejection-only
+  key removes established tracking parameters and fragments. Identity-bearing
+  query parameters stay distinct. Never use canonical equivalence to accept
+  ownership or borrow a title between URL variants.
+- The exact response registry preserves each URL/title pair separately. It may
+  backfill a titleless action record only from a later record with the identical
+  URL. A canonically related or fragment-related variant cannot lend metadata.
+- Before collection, at least one candidate-owned exact title/URL record must
+  pass the unchanged `verifyDirectTerraAssetCandidates()` identity predicate.
+  Title-visible identity is preferred. The existing safe direct-manufacturer or
+  established-retailer product-slug path is intentional; sibling slugs and
+  unknown-retailer slug authority remain negative. Response metadata is
+  preflight only, not fetched evidence or shopper-visible source content.
+- Candidate-local requirement/fact indexes are only 0 or 1 and at most two per
+  lead. Fifteen candidates times two source URLs must remain exactly equal to
+  `maximumSourceFetches: 30`.
+- Contract v7, research schema v5, prompt v6, and runtime v6 roll old jobs
+  closed. The only new bounded source failure is
+  `candidate_source_identity_unproven`; it contains no URL or private identity.
+- Fail-first passed 32 checks and failed exactly five new expectations.
+  Independent review found and drove correction of tracking/fragment fetch
+  equivalence, prompt/runtime slug alignment, same-exact title backfill, and the
+  explicit 15x2 ceiling. Terminal verdict was `APPROVED`, no findings,
+  confidence 0.98; the reviewer personally passed 150/150 plus non-incremental
+  typecheck and diff checks.
+- PR-3F is a generalized zero-live correction. It does not prove PR-3E's private
+  candidate-level cause or live feasibility/quality/latency/cost. PR-3G may run
+  the unchanged frozen case exactly once only after a clean self-contained
+  PR-3F commit, in a new commit-derived directory, under every existing ceiling
+  and first-terminal/no-retry/no-fallback rule.
+
+---
+
 ## OAI-T10 PR-3C identity stop and PR-3D structural identity contract (2026-08-29)
 
 - PR-3C spent exactly one frozen `shop vac` Phase D invocation at clean commit

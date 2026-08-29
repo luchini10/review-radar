@@ -11,6 +11,53 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Ground staged candidates in two response-owned sources
+
+#### Changed
+
+- Preserved the one PR-3E `shop vac` result as immutable evidence. Research
+  completed with 12 candidates and 53 response sources, but every candidate
+  supplied one local source. Four of 12 page fetches succeeded, 12 Shopping
+  calls returned 201 rows, and deterministic verification excluded all 12 at
+  asset identity before presentation. The independently verified sanitized
+  artifact is spent and was not retried or staged.
+- Changed staged research to require exactly two fetch-distinct exact response-
+  owned source URLs per candidate and local source indexes only 0 or 1. Known
+  tracking parameters and URL fragments are ignored only to reject two variants
+  of one physical page; identity-bearing queries remain distinct, and exact
+  membership still establishes ownership.
+- Added a pre-collection identity wall: one exact candidate-owned title/URL
+  record must pass the unchanged shared asset verifier. Safe direct manufacturer
+  and established-retailer product slugs remain supported; sibling and unknown-
+  retailer slug authority fail. Response metadata never becomes verified
+  evidence or shopper-visible source content.
+- Preserved exact title ownership. A titleless action source can be backfilled
+  only from a later record with the identical URL; canonical, tracking, or
+  fragment variants cannot lend a title.
+- Rolled research schema v5, contract v7, prompt v6, and runtime v6. The maximum
+  15 candidates times two sources remains exactly the existing 30-fetch ceiling.
+  Public API, flags, downstream verification, ranking, and deployment behavior
+  are unchanged.
+
+#### Verified
+
+- Fail-first passed 32 checks and failed exactly five new expectations. The
+  final complete suite passed 1,489/1,489 across 214 suites; credential-neutral
+  E2E passed 17/17.
+- Typecheck, production build, deterministic eval, fixed ranking comparison,
+  five-batch reconciliation, tracked benchmark 10/10 cases and 29/29
+  invariants, and diff checks passed. Lint reported zero errors and the same
+  three pre-existing warnings.
+- Independent review found fetch-equivalent tracking/fragment pairs, a prompt/
+  runtime slug mismatch, missing exact-title backfill coverage, and a missing
+  explicit 15x2 ceiling assertion. After correction it returned `APPROVED`, no
+  findings, confidence 0.98; the reviewer personally passed 150/150 plus
+  non-incremental typecheck and diff checks.
+
+This is a default-off, zero-live generalized correction after the PR-3E
+measurement. It does not prove PR-3E candidate-level causation, live provider
+adherence, recommendation quality, latency, cost, or lifecycle feasibility.
+
 ### Codex - Derive staged research names from atomic identity
 
 #### Changed

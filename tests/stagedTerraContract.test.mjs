@@ -16,6 +16,7 @@ import {
   STAGED_TERRA_RESEARCH_VALIDATION_REASONS,
   validateStagedTerraEvidencePackage,
   validateStagedTerraPresentationOutput,
+  validateStagedTerraResearchIdentitySources,
   validateStagedTerraResearchOutput,
 } from "../lib/stagedTerraContract.ts";
 import {
@@ -25,7 +26,10 @@ import {
   STAGED_TERRA_RESEARCH_PROMPT_VERSION,
   STAGED_TERRA_SCHEMA_VERSIONS,
 } from "../lib/stagedTerraPrompt.ts";
-import { STAGED_TERRA_RUNTIME_VERSION } from "../lib/stagedTerraRuntime.ts";
+import {
+  STAGED_TERRA_RUNTIME_LIMITS,
+  STAGED_TERRA_RUNTIME_VERSION,
+} from "../lib/stagedTerraRuntime.ts";
 import {
   stagedTerraClientEnabled,
   stagedTerraServerEnabled,
@@ -59,15 +63,27 @@ const requirementIds = [
 
 function researchFixture() {
   const responseSourceUrls = [];
+  const responseSources = [];
   const candidates = Array.from({ length: 8 }, (_, candidateIndex) => {
+    const number = candidateIndex + 1;
     const sourceUrls = [
-      `https://manufacturer${candidateIndex + 1}.example/products/model-${candidateIndex + 1}`,
-      `https://testing.example/reviews/model-${candidateIndex + 1}`,
+      `https://manufacturer${number}.example/products/model-${number}`,
+      `https://testing.example/reviews/model-${number}`,
     ];
     responseSourceUrls.push(...sourceUrls);
+    responseSources.push(
+      {
+        url: sourceUrls[0],
+        title: `Brand ${number} M${number}00 Cordless Vacuum`,
+      },
+      {
+        url: sourceUrls[1],
+        title: `Brand ${number} M${number}00 Cordless Vacuum independent test`,
+      },
+    );
     return {
-      brand: `Brand ${candidateIndex + 1}`,
-      model: `M${candidateIndex + 1}00`,
+      brand: `Brand ${number}`,
+      model: `M${number}00`,
       product_type: "cordless vacuum",
       source_urls: sourceUrls,
       requirement_leads: requirementIds.map((requirementId) => ({
@@ -96,6 +112,7 @@ function researchFixture() {
       candidates,
     },
     responseSourceUrls,
+    responseSources,
   };
 }
 
@@ -393,6 +410,21 @@ describe("staged Terra request boundaries", () => {
     );
     const researchCandidateSchema =
       research.text.format.schema.properties.candidates.items;
+    const maximumCandidates =
+      research.text.format.schema.properties.candidates.maxItems;
+    assert.equal(maximumCandidates, 15);
+    assert.equal(researchCandidateSchema.properties.source_urls.minItems, 2);
+    assert.equal(researchCandidateSchema.properties.source_urls.maxItems, 2);
+    assert.equal(
+      researchCandidateSchema.properties.source_urls.maxItems,
+      STAGED_TERRA_RUNTIME_LIMITS.maximumSourcesPerCandidate,
+    );
+    assert.equal(STAGED_TERRA_RUNTIME_LIMITS.maximumSourceFetches, 30);
+    assert.equal(
+      maximumCandidates *
+        researchCandidateSchema.properties.source_urls.maxItems,
+      STAGED_TERRA_RUNTIME_LIMITS.maximumSourceFetches,
+    );
     assert.equal(
       "candidate_id" in researchCandidateSchema.properties,
       false,
@@ -433,8 +465,8 @@ describe("staged Terra request boundaries", () => {
         maxItems: variant.properties.source_indexes.maxItems,
       })),
       [
-        { status: "supporting_evidence", minItems: 1, maxItems: 6 },
-        { status: "conflicting_evidence", minItems: 1, maxItems: 6 },
+        { status: "supporting_evidence", minItems: 1, maxItems: 2 },
+        { status: "conflicting_evidence", minItems: 1, maxItems: 2 },
         { status: "not_found", minItems: 0, maxItems: 0 },
       ],
     );
@@ -446,7 +478,7 @@ describe("staged Terra request boundaries", () => {
       assert.deepEqual(variant.properties.source_indexes.items, {
         type: "integer",
         minimum: 0,
-        maximum: 11,
+        maximum: 1,
       });
       assert.deepEqual(variant.required, [
         "requirement_id",
@@ -480,7 +512,8 @@ describe("staged Terra request boundaries", () => {
       false,
     );
     assert.equal(factSourceIndexes.minItems, 1);
-    assert.equal(factSourceIndexes.maxItems, 6);
+    assert.equal(factSourceIndexes.maxItems, 2);
+    assert.equal(factSourceIndexes.items.maximum, 1);
     assert.match(research.instructions, /assigns internal candidate and fact IDs/i);
     assert.match(research.instructions, /do not emit synthetic identifiers/i);
     assert.match(
@@ -496,6 +529,22 @@ describe("staged Terra request boundaries", () => {
       research.instructions,
       /supporting.{0,160}conflicting.{0,160}at least one.{0,160}not_found.{0,160}(?:empty|no source)/is,
     );
+    assert.match(
+      research.instructions,
+      /exactly two.{0,80}source_urls/is,
+    );
+    assert.match(
+      research.instructions,
+      /tracking-only or fragment-only variants.{0,100}do not count as distinct/is,
+    );
+    assert.match(
+      research.instructions,
+      /exact title.{0,80}exact URL.{0,160}(?:together|considered)/is,
+    );
+    assert.match(
+      research.instructions,
+      /manufacturer.{0,120}retailer.{0,180}(?:URL|url) slug/is,
+    );
 
     assert.equal(presentation.model, "gpt-5.6-terra");
     assert.deepEqual(presentation.reasoning, { effort: "medium" });
@@ -509,25 +558,25 @@ describe("staged Terra request boundaries", () => {
     assert.doesNotMatch(presentation.input, /image_url/i);
     assert.doesNotMatch(presentation.input, /https:\/\//i);
     assert.deepEqual(STAGED_TERRA_SCHEMA_VERSIONS, {
-      research: "staged-terra-research-v4",
+      research: "staged-terra-research-v5",
       evidence: "staged-terra-evidence-v1",
       presentation: "staged-terra-presentation-v1",
     });
   });
 
   it("rolls the research acceptance contract identity", () => {
-    assert.equal(STAGED_TERRA_CONTRACT_VERSION, "staged-terra-contract-v6");
+    assert.equal(STAGED_TERRA_CONTRACT_VERSION, "staged-terra-contract-v7");
   });
 
   it("rolls the research prompt identity", () => {
     assert.equal(
       STAGED_TERRA_RESEARCH_PROMPT_VERSION,
-      "staged-terra-research-prompt-v5",
+      "staged-terra-research-prompt-v6",
     );
   });
 
   it("rolls the staged runtime identity", () => {
-    assert.equal(STAGED_TERRA_RUNTIME_VERSION, "staged-terra-runtime-v5");
+    assert.equal(STAGED_TERRA_RUNTIME_VERSION, "staged-terra-runtime-v6");
   });
 
   it("keeps the integrated path default-off and isolated from Direct Terra", () => {
@@ -599,6 +648,124 @@ describe("staged Terra research contract", () => {
       result.ok && result.value.candidates[3].factLeads[1].sourceUrls,
       [fixture.value.candidates[3].source_urls[1]],
     );
+  });
+
+  it("requires candidate-owned response metadata to prove the exact asset identity", () => {
+    const fixture = researchFixture();
+    const parsed = validateStagedTerraResearchOutput({
+      value: fixture.value,
+      shopperRequest: shopper,
+      responseSourceUrls: fixture.responseSourceUrls,
+    });
+    assert.equal(parsed.ok, true);
+    assert.deepEqual(
+      validateStagedTerraResearchIdentitySources({
+        researchOutput: parsed.value,
+        responseSources: fixture.responseSources,
+      }),
+      { ok: true },
+    );
+
+    const ungrounded = structuredClone(fixture.responseSources);
+    for (const source of ungrounded.slice(0, 2)) {
+      source.title = "Brand 1 cordless vacuum buying guide";
+    }
+    const rejected = validateStagedTerraResearchIdentitySources({
+      researchOutput: parsed.value,
+      responseSources: ungrounded,
+    });
+    assert.deepEqual(rejected, {
+      ok: false,
+      reason: "candidate_source_identity_unproven",
+    });
+    assert.equal(JSON.stringify(rejected).includes("https://"), false);
+  });
+
+  it("intentionally accepts the shared safe retailer-slug identity path", () => {
+    const fixture = researchFixture();
+    const productUrl =
+      "https://www.homedepot.com/p/DEWALT-12-Gal-5-5-HP-Poly-Wet-Dry-Vacuum-with-Hose-and-Accessories-DXV12P/305323712";
+    const evidenceUrl = "https://testing.example/reviews/wet-dry-vacuums";
+    Object.assign(fixture.value.candidates[0], {
+      brand: "DEWALT",
+      model: "DXV12P-QT",
+      product_type: "wet/dry vacuum",
+      source_urls: [productUrl, evidenceUrl],
+    });
+    fixture.responseSourceUrls.splice(0, 2, productUrl, evidenceUrl);
+    fixture.responseSources.splice(
+      0,
+      2,
+      {
+        url: productUrl,
+        title: "DEWALT 12 Gal. 5.5 HP Poly Wet/Dry Vacuum - The Home Depot",
+      },
+      {
+        url: evidenceUrl,
+        title: "Independent wet/dry vacuum comparison",
+      },
+    );
+
+    const parsed = validateStagedTerraResearchOutput({
+      value: fixture.value,
+      shopperRequest: shopper,
+      responseSourceUrls: fixture.responseSourceUrls,
+    });
+    assert.equal(parsed.ok, true);
+    assert.deepEqual(
+      validateStagedTerraResearchIdentitySources({
+        researchOutput: parsed.value,
+        responseSources: fixture.responseSources,
+      }),
+      { ok: true },
+    );
+  });
+
+  it("does not extend source identity to sibling slugs or unknown retailers", () => {
+    for (const source of [
+      {
+        url: "https://www.homedepot.com/p/DEWALT-10-Gal-Vacuum-DXV10P/305300000",
+        title: "DEWALT 10 Gal. Wet/Dry Vacuum - The Home Depot",
+      },
+      {
+        url: "https://random-store.example/item/dxv12p",
+        title: "DEWALT 12 Gallon Wet/Dry Vacuum",
+      },
+    ]) {
+      const fixture = researchFixture();
+      const evidenceUrl = "https://testing.example/reviews/wet-dry-vacuums";
+      Object.assign(fixture.value.candidates[0], {
+        brand: "DEWALT",
+        model: "DXV12P-QT",
+        product_type: "wet/dry vacuum",
+        source_urls: [source.url, evidenceUrl],
+      });
+      fixture.responseSourceUrls.splice(0, 2, source.url, evidenceUrl);
+      fixture.responseSources.splice(
+        0,
+        2,
+        source,
+        {
+          url: evidenceUrl,
+          title: "Independent wet/dry vacuum comparison",
+        },
+      );
+
+      const parsed = validateStagedTerraResearchOutput({
+        value: fixture.value,
+        shopperRequest: shopper,
+        responseSourceUrls: fixture.responseSourceUrls,
+      });
+      assert.equal(parsed.ok, true);
+      assert.deepEqual(
+        validateStagedTerraResearchIdentitySources({
+          researchOutput: parsed.value,
+          responseSources: fixture.responseSources,
+        }),
+        { ok: false, reason: "candidate_source_identity_unproven" },
+        source.url,
+      );
+    }
   });
 
   it("accepts an empty candidate-local reference list only for not-found requirements", () => {
@@ -1004,11 +1171,46 @@ describe("staged Terra research contract", () => {
         },
       },
       {
+        expected: "candidate_source_shape",
+        mutate: (fixture) => {
+          fixture.value.candidates[0].source_urls.pop();
+        },
+      },
+      {
+        expected: "candidate_source_shape",
+        mutate: (fixture) => {
+          const third = "https://third.example/products/model-1";
+          fixture.responseSourceUrls.push(third);
+          fixture.value.candidates[0].source_urls.push(third);
+        },
+      },
+      {
         expected: "candidate_source_duplicate",
         mutate: (fixture) => {
-          fixture.value.candidates[0].source_urls.push(
-            fixture.value.candidates[0].source_urls[0],
-          );
+          fixture.value.candidates[0].source_urls[1] =
+            fixture.value.candidates[0].source_urls[0];
+        },
+      },
+      {
+        expected: "candidate_source_duplicate",
+        mutate: (fixture) => {
+          const base = fixture.value.candidates[0].source_urls[0];
+          const tracked = `${base}?utm_source=hosted`;
+          fixture.responseSourceUrls.push(tracked);
+          fixture.value.candidates[0].source_urls = [tracked, base];
+        },
+      },
+      {
+        expected: "candidate_source_duplicate",
+        mutate: (fixture) => {
+          const base = fixture.value.candidates[0].source_urls[0];
+          const overview = `${base}#overview`;
+          const specifications = `${base}#specifications`;
+          fixture.responseSourceUrls.push(overview, specifications);
+          fixture.value.candidates[0].source_urls = [
+            overview,
+            specifications,
+          ];
         },
       },
       {
@@ -1043,6 +1245,23 @@ describe("staged Terra research contract", () => {
       });
       assert.equal(JSON.stringify(result).includes("https://"), false);
     }
+  });
+
+  it("preserves identity-bearing query variants as distinct exact sources", () => {
+    const fixture = researchFixture();
+    const base = fixture.value.candidates[0].source_urls[0];
+    const urls = [`${base}?sku=M100`, `${base}?sku=M100-US`];
+    fixture.responseSourceUrls.push(...urls);
+    fixture.value.candidates[0].source_urls = urls;
+
+    const result = validateStagedTerraResearchOutput({
+      value: fixture.value,
+      shopperRequest: shopper,
+      responseSourceUrls: fixture.responseSourceUrls,
+    });
+
+    assert.equal(result.ok, true);
+    assert.deepEqual(result.value.candidates[0].sourceUrls, urls);
   });
 
   it("rejects duplicate identities", () => {
@@ -1114,6 +1333,7 @@ describe("staged Terra research contract", () => {
         "candidate_source_duplicate",
         "candidate_source_unsafe",
         "candidate_source_unregistered",
+        "candidate_source_identity_unproven",
       ],
     );
     assert.equal(

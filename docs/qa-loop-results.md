@@ -12547,3 +12547,225 @@ one PR-3E measurement of the unchanged frozen case in a new commit-derived
 directory under every existing ceiling and first-terminal/no-retry rule. A
 failure selects only the next generalized offline reproduction; a safe complete
 result unlocks the bounded active-path matrix.
+
+## Agent Loop Run - 2026-08-29T11:05:03.367Z
+
+- **run id:** agent-loop-2026-08-29T11-04-32-180Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 4220ms |
+| lint | Passed | 9904ms |
+| unit tests | Passed | 12689ms |
+| deterministic eval pipeline | Passed | 471ms |
+| tracked offline benchmark | Passed | 600ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-29T11-04-32-180Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-29T11:15:59.410Z
+
+- **run id:** agent-loop-2026-08-29T11-15-27-895Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3797ms |
+| lint | Passed | 10140ms |
+| unit tests | Passed | 13189ms |
+| deterministic eval pipeline | Passed | 482ms |
+| tracked offline benchmark | Passed | 564ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-29T11-15-27-895Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-29T11:30:00.907Z
+
+- **run id:** agent-loop-2026-08-29T11-28-52-079Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 4430ms |
+| lint | Passed | 46243ms |
+| unit tests | Passed | 13483ms |
+| deterministic eval pipeline | Passed | 504ms |
+| tracked offline benchmark | Passed | 614ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-29T11-28-52-079Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## 🟧 Codex — 2026-08-29 — PR-3E identity stop and PR-3F source grounding
+
+**Objective:** test the structural PR-3D identity contract once, use only the
+sanitized first loss to select a generalized offline correction, and align the
+research producer with the existing collection/identity consumer without
+weakening downstream trust.
+
+**PR-3E live ground truth:** exactly one approved frozen `shop vac` lifecycle
+ran at clean commit `bf7e37b43edbd6896b97a98cc1996bfa69b3aeb7`. An earlier
+command omitted the required explicit approval arguments and was rejected at
+commit binding before network, directory creation, counters, artifact, or
+spend. The actual lifecycle invocation then ran once and was not retried.
+
+Provider research completed with 12 candidates and 53 response-owned sources.
+Every candidate supplied exactly one local source. Collection attempted 12
+source pages and 12 physical HTTP requests, of which four succeeded. Twelve
+Shopping requests returned 201 rows. Deterministic verification returned 0
+eligible, 0 close match, and 12 excluded, all at
+`assetIdentityUnproven`; presentation, rendering, and public success did not
+run. The route returned HTTP 502 `verification_failed` after 42.273 seconds.
+
+The attempt used one OpenAI create, 14 retrieves (13 pending plus one completed),
+three hosted searches, one safety cancel, 29,702 input tokens, zero cached
+input, 4,139 output tokens, and three web searches. Approval-envelope estimated
+cost was `$0.166340`; frozen-conservative estimated cost was `$0.184904`; the
+informational current estimate was `$0.139072`. Every retry, replacement,
+fallback, organic, SearchAPI, second-case, and post-stop counter stayed zero.
+
+Closed asset subreasons were eight `noAssetCandidates` and four
+`modelNotInTitle`. Overlapping candidate-level commerce outcomes were five
+`brandNotInTitle`, 12 `stableIdentifierNotInTitle`, and five
+`missingMerchantProductUrl`. These groups are not a candidate/source mapping
+and cannot establish cause. Research reported 53 sources, but no retained
+source-role distribution exists. Source, claim, relationship, and product-URL
+rejection counts were zero because those were not the first loss, not because
+all later trust checks were proven.
+
+The only artifact is untracked 16,119-byte
+`tests/fixtures/review-radar-live/oai-t10-phase-d-bf7e37b/attempt.json`, SHA-256
+`fb6fe1ad6324a9bb6b85a2a2634ab6eef25378ee1d696220fc5ef54510214a30`.
+Independent strict read-only audit returned exact verdict `VERIFIED`, no
+findings, confidence 0.99. Exact commit/case/evidence-v4 binding, counters,
+usage, cost, first-stop reconciliation, branch bounds, and privacy allowlists
+passed. No raw/provider/candidate/product/source identity, prompt, request or
+response body, header, credential, key, secret, or token was retained; one
+response-ID hash was the only provider correlation. The directory is spent and
+was not read, edited, retried, staged, reused, or extended by the implementing
+agent.
+
+**Fail-first:** before PR-3F implementation, the six-file focused wall passed 32
+checks and failed exactly five intended expectations: missing exact-source
+record extraction, missing candidate-source identity validation, authentic old
+prompt acceptance, missing bounded route reason, and runtime acceptance of
+ungrounded source titles.
+
+**PR-3F correction:** research schema v5 requires exactly two exact response-
+owned sources per candidate. Zero, one, or three fail. A rejection-only fetch
+key removes established tracking parameters and URL fragments, so tracking or
+anchor variants of one physical page fail as `candidate_source_duplicate`.
+Identity-bearing query parameters remain distinct. Exact membership is still
+the only ownership rule; canonical equivalence never accepts a URL or lends a
+title. A titleless action source may be backfilled only from a later record with
+the identical URL.
+
+Before collection, at least one candidate-owned exact title/URL record must pass
+the unchanged shared asset verifier. Title-visible exact identity is preferred;
+the existing bounded manufacturer/established-retailer product-slug path is an
+intentional positive. Sibling slugs and unknown-retailer slug authority fail.
+The only retained new source reason is the fixed URL-free
+`candidate_source_identity_unproven`. Candidate-local requirement/fact indexes
+are limited to 0 or 1 and at most two. Fifteen candidates times two sources is
+locked to the unchanged 30-fetch ceiling. Response metadata is preflight only;
+it cannot become verified evidence or shopper-visible source content. Contract
+v7, schema v5, prompt v6, and runtime v6 roll old jobs closed.
+
+**Verification:**
+
+- corrected staged/shared-verifier review wall: 150/150;
+- final controller `agent-loop-2026-08-29T11-28-52-079Z`: pass;
+- complete deterministic suite: 1,489/1,489 across 214 suites;
+- five deterministic batch partitions: exact reconciliation passed;
+- tracked offline benchmark: 10/10 cases and 29/29 invariants;
+- credential-neutral Playwright E2E: 17/17;
+- non-incremental typecheck and production build: pass;
+- legacy eval: no red flags; fixed ranking comparison: pass;
+- lint: zero errors and the same three pre-existing warnings; and
+- `git diff --check`: pass; generated `next-env.d.ts`: restored/clean.
+
+Independent review initially found fetch-equivalent tracking variants,
+prompt/runtime disagreement about safe URL-slug identity, missing same-exact
+title-backfill coverage, and an unlocked 15x2 ceiling. Re-review then found
+fragment-only variants. After every correction, the exact terminal verdict was
+`APPROVED`, no remaining findings, confidence 0.98. The reviewer personally
+passed 150/150, non-incremental typecheck, the fragment mutation, and diff
+checks.
+
+**Limits and next decision:** PR-3F is a generalized zero-live correction. It
+does not prove PR-3E candidate-level causation, live provider adherence,
+recommendation quality, latency, cost, or lifecycle feasibility. After the
+self-contained PR-3F commit is clean, PR-3G may run the unchanged case exactly
+once in a new commit-derived directory under every existing ceiling and first-
+terminal/no-retry/no-fallback rule. A stop selects only another generalized
+offline reproduction; a safe shopper result unlocks the bounded active-path
+matrix.

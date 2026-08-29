@@ -138,13 +138,13 @@ describe("OAI-T10 staged Terra integration contracts", () => {
 
     const cases = [
       {
-        promptVersion: "staged-terra-research-prompt-v4",
+        promptVersion: "staged-terra-research-prompt-v5",
         requestFingerprint: buildStagedTerraRequestFingerprint(shopper),
       },
       {
         promptVersion: STAGED_TERRA_RESEARCH_PROMPT_VERSION,
         requestFingerprint: requestFingerprintForContractVersion(
-          "staged-terra-contract-v5",
+          "staged-terra-contract-v6",
         ),
       },
     ];

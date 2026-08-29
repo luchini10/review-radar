@@ -1,86 +1,95 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-08-29 by Codex after the independently approved zero-live PR-3D
-structural identity correction. The current approved base is the self-contained
-PR-3D closeout commit containing this file; resolve its exact full SHA with
+Updated: 2026-08-29 by Codex after the independently approved zero-live PR-3F
+source-grounding correction. The current approved base is the self-contained
+PR-3F closeout commit containing this file; resolve its exact full SHA with
 `git rev-parse HEAD`. Its expected parent is
-`a7434262f74d610322adf88c1e3556a11ae4b810`.
+`bf7e37b43edbd6896b97a98cc1996bfa69b3aeb7`.
 
 ## Current state
 
 ReviewRadar is **not production-ready**. The staged Terra path remains
 default-off, undeployed, and without a completed live shopper result.
 
-PR-3C spent exactly one frozen `shop vac` lifecycle invocation at clean commit
-`a7434262f74d610322adf88c1e3556a11ae4b810`. It stopped after provider research
-as HTTP 502 `research_failed / research_candidate_invalid / candidate_identity`,
-before source collection, Shopping, deterministic verification, presentation,
-or rendering. The first-terminal envelope held after 45.940 seconds: one create,
-20 retrieves, three hosted searches, one safety cancel, 29,986 input tokens,
-zero cached input, and 4,574 output tokens. Frozen-conservative estimated cost
-was `$0.192316`, below the unchanged `$3` ceiling. Every retry, replacement,
-fallback, product-data, second-case, and downstream counter stayed zero.
+PR-3E spent exactly one frozen `shop vac` lifecycle at clean PR-3D commit
+`bf7e37b43edbd6896b97a98cc1996bfa69b3aeb7`. Research completed with 12
+candidates and 53 response-owned sources, but every candidate supplied one
+local source. Collection attempted 12 source pages/12 physical requests, four
+succeeded, and 12 Shopping requests returned 201 rows. Verification returned
+0 eligible / 0 close / 12 excluded, all `assetIdentityUnproven`, before
+presentation or rendering.
 
-The only PR-3C artifact is untracked 18,255-byte
-`tests/fixtures/review-radar-live/oai-t10-phase-d-a743426/attempt.json`, SHA-256
-`d18471b3a9647ded7142b287dd914b3e2aed5afdfb582f84c624747f58ee917e`.
+The 42.273-second first-terminal run used one OpenAI create, 14 retrieves, three
+hosted searches, one safety cancel, 29,702 input tokens, zero cached input,
+4,139 output tokens, and `$0.184904` frozen-conservative estimated cost. There
+was no retry, replacement, fallback, organic/SearchAPI request, second case,
+public result, flag change, or deployment.
+
+The only PR-3E artifact is untracked 16,119-byte
+`tests/fixtures/review-radar-live/oai-t10-phase-d-bf7e37b/attempt.json`, SHA-256
+`fb6fe1ad6324a9bb6b85a2a2634ab6eef25378ee1d696220fc5ef54510214a30`.
 Independent strict read-only audit returned `VERIFIED`, no findings, confidence
-0.99. It contains no raw output, provider ID, candidate/product/source identity,
-prompt, request/response body, header, credential, key, secret, or token. It is
-immutable and spent: never read, edit, retry, stage, reuse, or add files there.
+0.99. The artifact is immutable and spent: never read, edit, retry, stage,
+reuse, or add files there.
 
-PR-3C localizes only its first invalid candidate to the identity field group.
-The exact field, invariant, candidate, and value remain private and unknown. It
-does not explain PR-3A or establish a live root cause.
+Closed asset subreasons were eight `noAssetCandidates` and four
+`modelNotInTitle`. Overlapping commerce outcomes were five `brandNotInTitle`,
+12 `stableIdentifierNotInTitle`, and five `missingMerchantProductUrl`. They are
+not candidate/source mappings or causal proof and cannot authorize a weaker
+identity gate.
 
-PR-3D closes an independently reproduced generalized contract weakness. Strict
-JSON Schema could bound `product_name`, brand, model, and product type
-independently but could not express their dynamic coherence relation. Four
-schema-valid incoherent tuples reproduced whole-response `candidate_identity`
-rejection under the unchanged shared verifier, despite prompt prose stating the
-relation.
+PR-3F closes the reproduced producer/consumer mismatch offline. Research schema
+v5 requires exactly two fetch-distinct exact response-owned URLs per candidate;
+local requirement/fact references are only 0 or 1. A rejection-only key removes
+established tracking parameters and URL fragments so two variants of one
+physical page fail as duplicates. Identity-bearing query parameters remain
+distinct. Exact string membership still establishes ownership; canonical
+equivalence never accepts a URL or lends a title between variants. A titleless
+action source may be backfilled only from a later identical-URL record.
 
-Research schema v4 therefore omits model-authored `product_name`. Brand, model,
-and concise complete-product type are bounded to 100, 120, and 78 characters;
-server normalization and two separators construct the internal name within the
-existing exact 300-character ceiling. Exact keys reject an unexpected composite
-field. The unchanged shared coherence and duplicate-identity checks still run
-before source work. Contract v6, prompt v5, and runtime v5 invalidate old work.
+Before collection, at least one candidate-owned exact title/URL record must pass
+the unchanged shared asset-identity verifier. Title-visible exact identity is
+preferred; the existing bounded direct-manufacturer or established-retailer
+product-slug path remains intentional. Sibling and unknown-retailer slug
+authority fail. Response source metadata is preflight only; it never becomes
+verified evidence or shopper-visible content. Fifteen candidates times two
+sources equals the unchanged 30-fetch ceiling. Contract v7, prompt v6, and
+runtime v6 roll old jobs closed. The only new fixed URL-free reason is
+`candidate_source_identity_unproven`.
 
-No source ownership, requirement, fact, exact identity, complete-product
-relationship, commerce, asset, evidence, eligibility, ranking, network, public-
-response, flag, or UI rule changed. PR-3D made no provider or product-data call.
+No downstream source/page, complete-product relationship, commerce, price,
+asset, requirement, evidence, eligibility, ranking, public-response, flag, UI,
+or deployment rule changed. PR-3F made no provider or product-data request.
 
-## PR-3C and PR-3D proof and limits
+## PR-3E and PR-3F proof and limits
 
 | Check | Result |
 | --- | --- |
-| PR-3C exact artifact audit | `VERIFIED`; no findings; confidence 0.99 |
-| PR-3D fail-first | exactly 5 intended failures |
-| Focused staged wall | 80/80 across 10 suites |
-| Complete deterministic suite | 1,482/1,482 across 214 suites |
+| PR-3E exact artifact audit | `VERIFIED`; no findings; confidence 0.99 |
+| PR-3F fail-first | 32 passed / exactly 5 intended failures |
+| Independent corrected staged/shared wall | 150/150 |
+| Complete deterministic suite | 1,489/1,489 across 214 suites |
 | Five deterministic batch partitions | exact reconciliation passed |
 | Tracked offline benchmark | 10/10 cases; 29/29 invariants |
 | Credential-neutral E2E | 17/17 |
 | Typecheck and production build | pass |
 | Legacy eval and fixed ranking comparison | pass; no red flags |
-| Phase D and scorecard dry runs | pass; zero network |
 | Lint | 0 errors / 3 pre-existing warnings |
 | Diff and generated-file state | pass; `next-env.d.ts` clean |
-| Independent PR-3D review | `APPROVED`; no findings; confidence 0.98 |
-| Reviewer personal checks | 67/67 focused; typecheck and diff pass |
-| PR-3D live/provider/product-data calls | none |
+| Independent PR-3F review | `APPROVED`; no findings; confidence 0.98 |
+| PR-3F live/provider/product-data calls | none |
 
-Independent review found one mutation gap before approval: version assertions
-did not present a cryptographically valid old job. The corrected integration
-test has a current AES-GCM positive control plus independent old-prompt-v4 and
-old-contract-v5 fingerprint negatives. Deleting either stale-version check is
-now observable.
+Independent review found and drove correction of tracking-equivalent and
+fragment-equivalent source pairs, prompt/runtime disagreement about bounded URL-
+slug identity, missing same-exact title-backfill coverage, and an unlocked
+15x2=30 ceiling. The final exact-snapshot verdict was `APPROVED`; the reviewer
+personally passed 150/150, non-incremental typecheck, the adversarial fragment
+probe, and diff checks.
 
-This proof establishes the offline structural correction only. Conservative
-atomic maxima may reject an unusually long legitimate identity. Live model
-adherence, recall, recommendation quality, lifecycle feasibility, and PR-3C
-causation remain unproven.
+This proves the generalized offline correction only. It does not establish
+PR-3E candidate-level causation, live provider adherence, lifecycle feasibility,
+recommendation quality, latency, or cost. Nonstandard query parameters remain
+conservatively distinct because collapsing them can erase product identity.
 
 ## Objective and decision frame for the next phase
 
@@ -90,34 +99,34 @@ staged shopper lifecycle.
 
 Stronger alternatives were evaluated:
 
-- Reading, editing, or retrying PR-3C is prohibited; its terminal result and
+- Reading, editing, or retrying PR-3E is prohibited; its terminal result and
   hash are immutable.
-- Another unchanged live call or wider private diagnostics would not remove the
-  reproduced schema-inexpressible relation.
-- Prompt-only reinforcement already existed and is not an executable trust
-  boundary.
-- Filtering individual invalid candidates may later improve resilience, but it
-  can hide systematic drift and first needs a justified minimum-candidate rule.
-- Weakening or truncating identity fields would risk unsupported product cards.
+- Weakening title/model, commerce, or asset gates would manufacture ambiguous
+  cards rather than correct the upstream mismatch.
+- Another unchanged live call or blind extra fetches would repeat the one-source
+  contract and cannot create response-owned identity metadata.
+- Exactly two URLs without physical-page distinction or identity grounding can
+  spend both slots on tracking/anchor variants or weak pages.
+- Canonical ownership or cross-variant title borrowing would weaken provenance.
 - A broad live matrix remains premature until one staged lifecycle succeeds.
 
-The strongest next step is therefore one PR-3E measurement of the unchanged
-frozen `shop vac` case at the clean PR-3D commit. This is not a PR-3C retry: it
-uses a new commit-derived directory and a new schema/prompt/runtime contract. If
-it stops, its bounded first loss selects only the next generalized zero-live
-reproduction target. If it completes safely, PR-4 can begin.
+The strongest next step is therefore one PR-3G measurement of the unchanged
+frozen `shop vac` case at the clean PR-3F closeout commit. This is not a PR-3E
+retry: it uses a new commit-derived directory and a new schema/prompt/runtime
+contract. If it stops, its bounded first loss selects only the next generalized
+zero-live reproduction target. If it completes safely, PR-4 can begin.
 
 **Recommended reasoning level:** High for live trust, privacy, cost, and
 terminal-evidence adjudication; Medium for the bounded mechanical invocation.
 
-## Current approved phase: PR-3E one post-correction lifecycle measurement
+## Current approved phase: PR-3G one post-correction lifecycle measurement
 
-1. Authenticate this repository, `main`, exact PR-3D HEAD/parent, clean tracked
+1. Authenticate this repository, `main`, exact PR-3F HEAD/parent, clean tracked
    and index state, clean `next-env.d.ts`, committed default-off flags, and
    unchanged user-owned untracked artifacts.
-2. Inspect the Phase D dry run from the exact commit. Check only boolean
-   presence and safe shape of required server credentials; never print, copy,
-   hash, or stage their values.
+2. Run the focused Phase D runner tests and inspect the Phase D dry run from the
+   exact commit. Check only boolean presence and safe shape of required server
+   credentials; never print, copy, hash, or stage their values.
 3. Confirm the new commit-derived output directory does not exist. Do not read,
    edit, retry, stage, reuse, or add files to any spent Phase D directory.
 4. Run exactly one `scripts/run-oai-t10-phase-d.mjs --execute` invocation bound
@@ -127,7 +136,7 @@ terminal-evidence adjudication; Medium for the bounded mechanical invocation.
    `sourcePageHttpAttempts=90`, and `hardCeilingUsd=3`.
 5. Stop at the first terminal route/result state. Do not retry, replace, add a
    case, fall back, continue downstream after a stop, use organic/SearchAPI,
-   promote a flag, or deploy. The single invocation spends PR-3E whether it
+   promote a flag, or deploy. The single invocation spends PR-3G whether it
    succeeds or fails.
 6. Validate exact commit/case/evidence-v4 schema, counters, usage, cost, hashes,
    privacy/credential exclusions, first-loss conservation, outcome
@@ -137,16 +146,17 @@ terminal-evidence adjudication; Medium for the bounded mechanical invocation.
    state. Terminal audit verdict must be `VERIFIED`; a failed lifecycle remains
    evidence and never authorizes a second invocation.
 8. If the route stops, select an evidence-supported target for a separate
-   zero-live reproduction. Do not infer candidate identity, treat a count as
-   causal, or change behavior from aggregate evidence alone. If it succeeds,
-   begin PR-4 planning against the tracked benchmark and current market truth.
+   zero-live reproduction. Do not infer candidate identity, treat lower counts
+   as success, or change behavior from overlapping aggregate evidence alone. If
+   it succeeds, begin PR-4 planning against the tracked benchmark and current
+   market truth.
 9. Update the living plan and authoritative records. Keep every live artifact
    untracked. Commit only phase-owned documentation or a separately verified
    deterministic correction; never stage live evidence.
 
 Taylor's 2026-08-29 production-readiness mandate authorizes this bounded low-
-parallelism live QA without another prompt. It authorizes one new PR-3E
-invocation after the clean PR-3D commit, not a retry or broader live matrix.
+parallelism live QA without another prompt. It authorizes one new PR-3G
+invocation after the clean PR-3F commit, not a retry or broader live matrix.
 
 ## Approval, cost, and flag state
 
@@ -173,8 +183,8 @@ current pricing is informational and cannot widen that wall.
   identity/image authority.
 - PR-013: staged lifecycle feasibility remains blocked; no live attempt has
   reached presentation/rendering.
-- PR-017: the generalized composite-identity defect is closed offline, but live
-  adherence and recall under the conservative atomic limits are unmeasured.
+- PR-018: the generalized source-selection defect is closed offline, but live
+  adherence, recall, and lifecycle effect are unmeasured.
 - Broader cache/concurrency, security, accessibility, mobile UX, production
   configuration, rollback, dependency, and observability gates remain planned
   in `docs/production-readiness-master-plan.md`.
@@ -182,18 +192,19 @@ current pricing is informational and cannot widen that wall.
 ## Hard boundaries
 
 - Never read, retry, edit, stage, or reuse any spent Phase D attempt or
-  directory, including `oai-t10-phase-d-a743426`,
-  `oai-t10-phase-d-43857e0`, `oai-t10-phase-d-ec528d7`,
-  `oai-t10-phase-d-a15d935`, `oai-t10-phase-d-140d465`,
-  `oai-t10-phase-d-56a5137`, `oai-t10-phase-d-b01c335`, and
-  `oai-t10-phase-d-06fa55f`.
-- PR-3E permits exactly one new frozen Phase D invocation at the clean PR-3D
+  directory, including `oai-t10-phase-d-bf7e37b`,
+  `oai-t10-phase-d-a743426`, `oai-t10-phase-d-43857e0`,
+  `oai-t10-phase-d-ec528d7`, `oai-t10-phase-d-a15d935`,
+  `oai-t10-phase-d-140d465`, `oai-t10-phase-d-56a5137`,
+  `oai-t10-phase-d-b01c335`, and `oai-t10-phase-d-06fa55f`.
+- PR-3G permits exactly one new frozen Phase D invocation at the clean PR-3F
   commit. No retry, replacement, second case, broader live QA, or approval reuse.
-- Do not infer PR-3C's exact cause or candidate identity from its bounded field
-  group. Reproduce generalized paths offline before naming causes.
-- Do not restore model-authored research `product_name`, raw lead URLs,
-  response-global source indexes, prompt-only cardinality, canonical ownership
-  matching, or cross-candidate evidence borrowing.
+- Do not infer PR-3E candidate/source mappings or cause from overlapping bounded
+  counts. Reproduce generalized paths offline before naming causes.
+- Do not restore model-authored research `product_name`, one-source candidate
+  cardinality, raw lead URLs, response-global indexes, prompt-only identity,
+  canonical ownership matching, cross-variant title borrowing, fragment-only
+  source multiplicity, or cross-candidate evidence borrowing.
 - Do not weaken brand, model, product type, relationship, requirement,
   availability, price, source/page, commerce, asset, redirect, private-network,
   diagnostic, or public-response boundaries.
@@ -207,10 +218,11 @@ current pricing is informational and cannot widen that wall.
 
 | Need | Retrieve |
 | --- | --- |
-| Living defects, sequence, exit criteria, PR-3E scope | `docs/production-readiness-master-plan.md` |
-| PR-3C artifact and PR-3D canonical verification | latest 2026-08-29 entry in `docs/qa-loop-results.md` |
+| Living defects, sequence, exit criteria, PR-3G scope | `docs/production-readiness-master-plan.md` |
+| PR-3E artifact and PR-3F canonical verification | latest 2026-08-29 entry in `docs/qa-loop-results.md` |
 | Staged architecture and phase sequence | OAI-T10 in `docs/forward-roadmap.md` |
+| Exact response source registry | `lib/directTerraResponse.ts`; `tests/directTerraResponse.test.mjs` |
 | Research producer and parser | `lib/stagedTerraPrompt.ts`; `lib/stagedTerraContract.ts` |
-| Job rollover boundary | `lib/stagedTerraJobToken.ts`; `tests/stagedTerraIntegration.test.mjs` |
+| Staged runtime and job rollover | `lib/stagedTerraRuntime.ts`; `tests/stagedTerraIntegration.test.mjs` |
 | Phase D runner and ceilings | `scripts/run-oai-t10-phase-d.mjs`; `scripts/oai-t10-phase-d.mjs` |
 | Offline benchmark integrity | `tests/fixtures/qa-benchmark-matrix-v1.json`; `scripts/qa-benchmark.mjs`; `tests/qaBenchmark.test.mjs` |

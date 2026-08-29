@@ -24,12 +24,15 @@ function researchValue() {
     schema_version: STAGED_TERRA_RESEARCH_SCHEMA_VERSION,
     candidates: Array.from({ length: 8 }, (_, index) => {
       const number = index + 1;
-      const url = `https://store${number}.example/products/v${number}00`;
+      const sourceUrls = [
+        `https://store${number}.example/products/v${number}00`,
+        `https://testing.example/reviews/v${number}00`,
+      ];
       return {
         brand: "Example Brand",
         model: `V${number}00`,
         product_type: "cordless vacuum",
-        source_urls: [url],
+        source_urls: sourceUrls,
         requirement_leads: [
           {
             requirement_id: "market_us",
@@ -75,10 +78,13 @@ function completedResearchResponse(
       {
         type: "web_search_call",
         action: {
-          sources: value.candidates.map((candidate) => ({
-            type: "url",
-            url: candidate.source_urls[0],
-          })),
+          sources: value.candidates.flatMap((candidate) =>
+            candidate.source_urls.map((url) => ({
+              type: "url",
+              url,
+              title: `${candidate.brand} ${candidate.model} ${candidate.product_type}`,
+            })),
+          ),
         },
       },
     ],
@@ -199,6 +205,58 @@ describe("OAI-T10 staged Terra runtime", () => {
       "candidate_source_unregistered",
     );
     assert.equal(JSON.stringify(polled).includes(exactCandidateUrl), false);
+  });
+
+  it("rejects candidate-owned sources whose response titles do not prove identity", async () => {
+    const response = completedResearchResponse();
+    response.output[0].action.sources[0].title =
+      "Example Brand cordless vacuum buying guide";
+    response.output[0].action.sources[1].title =
+      "Example Brand cordless vacuum independent test";
+
+    const polled = await pollStagedTerraResearch({
+      client: { responses: { retrieve: async () => response } },
+      responseId: "resp_research123",
+      requestFingerprint: buildStagedTerraRequestFingerprint(shopper),
+      shopperRequest: shopper,
+    });
+
+    assert.equal(polled.ok, false);
+    assert.equal(polled.validationReason, "research_candidate_invalid");
+    assert.equal(polled.candidateValidationReason, "candidate_sources");
+    assert.equal(
+      polled.candidateSourceValidationReason,
+      "candidate_source_identity_unproven",
+    );
+    assert.equal(JSON.stringify(polled).includes("buying guide"), false);
+  });
+
+  it("does not borrow identity titles from canonical-equivalent URL variants", async () => {
+    const value = researchValue();
+    const response = completedResearchResponse("resp_research123", value);
+    const sources = response.output[0].action.sources;
+    for (const exactUrl of value.candidates[0].source_urls) {
+      const exactSource = sources.find((source) => source.url === exactUrl);
+      sources.unshift({
+        type: "url",
+        url: `${exactUrl}?utm_source=hosted-search`,
+        title: exactSource.title,
+      });
+      delete exactSource.title;
+    }
+
+    const polled = await pollStagedTerraResearch({
+      client: { responses: { retrieve: async () => response } },
+      responseId: "resp_research123",
+      requestFingerprint: buildStagedTerraRequestFingerprint(shopper),
+      shopperRequest: shopper,
+    });
+
+    assert.equal(polled.ok, false);
+    assert.equal(
+      polled.candidateSourceValidationReason,
+      "candidate_source_identity_unproven",
+    );
   });
 
   it("propagates only the bounded candidate field group for invalid research", async () => {
@@ -384,10 +442,10 @@ describe("OAI-T10 staged Terra runtime", () => {
       now: () => Date.parse("2026-07-25T12:00:00.000Z"),
     });
 
-    assert.equal(fetchCalls, 8);
+    assert.equal(fetchCalls, 16);
     assert.equal(shoppingCalls, 8);
     assert.equal(collected.candidates.length, 8);
-    assert.equal(collected.diagnostics.sourceFetchAttempts, 8);
+    assert.equal(collected.diagnostics.sourceFetchAttempts, 16);
     assert.equal("sourceUrls" in collected.diagnostics, false);
   });
 

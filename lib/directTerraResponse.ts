@@ -217,22 +217,32 @@ export function extractDirectTerraResponseSources(
   return distinctSources(collectDirectTerraResponseSources(response));
 }
 
+export function extractDirectTerraExactResponseSources(
+  response: unknown,
+): DirectTerraSource[] {
+  const indexes = new Map<string, number>();
+  const exactSources: DirectTerraSource[] = [];
+  for (const source of collectDirectTerraResponseSources(response)) {
+    if (canonicalizeDirectTerraCitationUrl(source.url) === null) continue;
+    const index = indexes.get(source.url);
+    if (index === undefined) {
+      indexes.set(source.url, exactSources.length);
+      exactSources.push(source);
+      continue;
+    }
+    if (!exactSources[index].title && source.title) {
+      exactSources[index] = { ...exactSources[index], title: source.title };
+    }
+  }
+  return exactSources;
+}
+
 export function extractDirectTerraExactResponseSourceUrls(
   response: unknown,
 ): string[] {
-  const exactUrls: string[] = [];
-  const seen = new Set<string>();
-  for (const source of collectDirectTerraResponseSources(response)) {
-    if (
-      canonicalizeDirectTerraCitationUrl(source.url) === null ||
-      seen.has(source.url)
-    ) {
-      continue;
-    }
-    seen.add(source.url);
-    exactUrls.push(source.url);
-  }
-  return exactUrls;
+  return extractDirectTerraExactResponseSources(response).map(
+    (source) => source.url,
+  );
 }
 
 function outputText(response: Record<string, unknown>) {

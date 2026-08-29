@@ -4,12 +4,19 @@ import {
   buildDirectTerraRequirementContract,
   type DirectTerraRequirementContractEntry,
 } from "./directTerraCandidateSlate.ts";
-import { directTerraAssetTargetIsCoherent } from "./directTerraAssetVerifier.ts";
+import {
+  directTerraAssetTargetIsCoherent,
+  verifyDirectTerraAssetCandidates,
+} from "./directTerraAssetVerifier.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
+import {
+  canonicalizeDirectTerraCitationUrl,
+  type DirectTerraSource,
+} from "./directTerraResponse.ts";
 
-export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v6";
+export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v7";
 export const STAGED_TERRA_RESEARCH_SCHEMA_VERSION =
-  "staged-terra-research-v4";
+  "staged-terra-research-v5";
 export const STAGED_TERRA_EVIDENCE_PACKAGE_VERSION =
   "staged-terra-evidence-v1";
 export const STAGED_TERRA_PRESENTATION_SCHEMA_VERSION =
@@ -31,6 +38,7 @@ export const STAGED_TERRA_RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS = [
   "candidate_source_duplicate",
   "candidate_source_unsafe",
   "candidate_source_unregistered",
+  "candidate_source_identity_unproven",
 ] as const;
 
 export type StagedTerraResearchValidationReason =
@@ -318,8 +326,7 @@ function parseCandidateSourceUrls(
   | ValidationSuccess<string[]> {
   if (
     !Array.isArray(value) ||
-    value.length < 1 ||
-    value.length > 12 ||
+    value.length !== 2 ||
     value.some((item) => !boundedString(item, 4_096))
   ) {
     return { ok: false, reason: "candidate_source_shape" };
@@ -331,6 +338,19 @@ function parseCandidateSourceUrls(
   const urls = items.map(exactHttpsUrl);
   if (urls.some((url) => url === null)) {
     return { ok: false, reason: "candidate_source_unsafe" };
+  }
+  const canonicalUrls = urls.map((url) => {
+    const canonical = canonicalizeDirectTerraCitationUrl(url!);
+    if (!canonical) return null;
+    const fetchUrl = new URL(canonical);
+    fetchUrl.hash = "";
+    return fetchUrl.toString();
+  });
+  if (
+    canonicalUrls.some((url) => url === null) ||
+    new Set(canonicalUrls).size !== canonicalUrls.length
+  ) {
+    return { ok: false, reason: "candidate_source_duplicate" };
   }
   if (urls.some((url) => !registered.has(url!))) {
     return { ok: false, reason: "candidate_source_unregistered" };
@@ -410,7 +430,7 @@ export function stagedTerraResearchJsonSchema(
       | "conflicting_evidence"
       | "not_found",
     minItems: 0 | 1,
-    maxItems: 0 | 6,
+    maxItems: 0 | 2,
   ) =>
     ({
       type: "object",
@@ -431,7 +451,7 @@ export function stagedTerraResearchJsonSchema(
           items: {
             type: "integer",
             minimum: 0,
-            maximum: 11,
+            maximum: 1,
           },
         },
       },
@@ -478,8 +498,8 @@ export function stagedTerraResearchJsonSchema(
             },
             source_urls: {
               type: "array",
-              minItems: 1,
-              maxItems: 12,
+              minItems: 2,
+              maxItems: 2,
               items: { type: "string", minLength: 1, maxLength: 4_096 },
             },
             requirement_leads: {
@@ -488,8 +508,8 @@ export function stagedTerraResearchJsonSchema(
               maxItems: requirementIds.length,
               items: {
                 anyOf: [
-                  requirementLeadVariant("supporting_evidence", 1, 6),
-                  requirementLeadVariant("conflicting_evidence", 1, 6),
+                  requirementLeadVariant("supporting_evidence", 1, 2),
+                  requirementLeadVariant("conflicting_evidence", 1, 2),
                   requirementLeadVariant("not_found", 0, 0),
                 ],
               },
@@ -512,11 +532,11 @@ export function stagedTerraResearchJsonSchema(
                   source_indexes: {
                     type: "array",
                     minItems: 1,
-                    maxItems: 6,
+                    maxItems: 2,
                     items: {
                       type: "integer",
                       minimum: 0,
-                      maximum: 11,
+                      maximum: 1,
                     },
                   },
                 },
@@ -636,7 +656,7 @@ function parseResearchCandidate(
     }
     const urls = parseCandidateSourceIndexes(lead.source_indexes, sourceUrls, {
       minimum: lead.status === "not_found" ? 0 : 1,
-      maximum: 6,
+      maximum: 2,
     });
     if (!urls || (lead.status === "not_found" && urls.length !== 0)) {
       return { ok: false, reason: "candidate_requirements" };
@@ -669,7 +689,7 @@ function parseResearchCandidate(
     }
     const urls = parseCandidateSourceIndexes(fact.source_indexes, sourceUrls, {
       minimum: 1,
-      maximum: 6,
+      maximum: 2,
     });
     if (!urls) return { ok: false, reason: "candidate_facts" };
     factLeads.push({
@@ -765,6 +785,36 @@ export function validateStagedTerraResearchOutput({
       candidates: parsed,
     },
   };
+}
+
+export function validateStagedTerraResearchIdentitySources({
+  researchOutput,
+  responseSources,
+}: {
+  researchOutput: StagedTerraResearchOutput;
+  responseSources: readonly DirectTerraSource[];
+}): { ok: true } | ValidationFailure<"candidate_source_identity_unproven"> {
+  const sources = new Map(responseSources.map((source) => [source.url, source]));
+  for (const [index, candidate] of researchOutput.candidates.entries()) {
+    const verification = verifyDirectTerraAssetCandidates({
+      target: {
+        key: candidate.candidateId,
+        rank: index + 1,
+        productName: candidate.productName,
+        brand: candidate.brand,
+        model: candidate.model,
+        category: candidate.productType,
+      },
+      candidates: candidate.sourceUrls.map((url) => ({
+        title: sources.get(url)?.title,
+        productUrl: url,
+      })),
+    });
+    if (!verification.decisions.some((decision) => decision.identityAccepted)) {
+      return { ok: false, reason: "candidate_source_identity_unproven" };
+    }
+  }
+  return { ok: true };
 }
 
 function parseEvidence(

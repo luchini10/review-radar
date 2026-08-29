@@ -157,9 +157,10 @@ all three. It is selected only when the server flag
 header to be sent. Both committed defaults are off.
 
 The first request is one background Terra/high Responses job with hosted web
-search. Research schema v4 returns 8–15 ordered atomic product identities,
-response-owned source URLs, and evidence leads; it cannot rank products, mint
-internal IDs, author a composite `product_name`, or write shopper-facing cards.
+search. Research schema v5 returns 8–15 ordered atomic product identities,
+exactly two fetch-distinct response-owned source URLs per candidate, and
+evidence leads; it cannot rank products, mint internal IDs, author a composite
+`product_name`, or write shopper-facing cards.
 Brand, model, and concise complete-product type are separately required and
 bounded to 100, 120, and 78 characters. After validation, ReviewRadar normalizes
 those fields, constructs the internal product name deterministically within the
@@ -172,8 +173,8 @@ leads into request order for every downstream consumer.
 
 The browser receives only an encrypted, authenticated app job token and polls
 that token in a header. Provider response IDs and diagnostics remain server-
-only. Contract v6 is part of the request fingerprint, research prompt v5 is
-bound into the token, and runtime v5 records the acceptance semantics, so older
+only. Contract v7 is part of the request fingerprint, research prompt v6 is
+bound into the token, and runtime v6 records the acceptance semantics, so older
 in-flight jobs fail closed across a deployment rollover.
 
 After research completes, the server fetches at most two candidate-owned source
@@ -213,10 +214,10 @@ class: shape, source registry, candidate validity, or duplicate identity. A
 candidate-validity failure may additionally retain only identity, sources,
 requirements, or facts as a server-side field group. The route validates all
 three enums and their hierarchy independently. When the field group is sources,
-it may additionally retain only shape, duplicate, unsafe, or unregistered as a
-URL-free source
-subreason. Unknown reasons and raw provider material are discarded, and no
-validation class enters the client response.
+it may additionally retain only shape, duplicate, unsafe, unregistered, or
+identity-unproven as a URL-free source subreason. Unknown reasons and raw
+provider material are discarded, and no validation class enters the client
+response.
 
 Staged source ownership uses a dedicated exact registry that keeps every
 parseable exact URL string found in response-owned search actions or citations
@@ -224,7 +225,21 @@ once. The existing canonicalized source view remains unchanged for display and
 source counts. A model-authored candidate URL must still be the exact
 response-owned string, unique within its candidate, HTTPS, public-host shaped,
 credential-free, and free of a non-default port; canonical equivalence alone
-never establishes ownership.
+never establishes ownership. Each candidate must supply exactly two physical-
+fetch-distinct URLs. A rejection-only fetch key removes established tracking
+parameters and URL fragments so two exact variants of one physical page cannot
+consume both collection slots; it preserves identity-bearing query parameters
+and cannot lend ownership or title metadata. Exact source-title backfill occurs
+only when the later record has the identical URL.
+
+Before collection, at least one exact candidate-owned title/URL record must pass
+the unchanged shared asset-identity predicate. Title-visible brand, model, and
+complete-product type is preferred. The existing conservative direct
+manufacturer or established-retailer product-slug path remains intentional,
+while sibling slugs and unknown-retailer slug authority fail. This response
+metadata only preflights whether downstream collection is warranted; it never
+becomes verified evidence or shopper-visible source content. Fifteen candidates
+times two source URLs equals the unchanged thirty-fetch ceiling.
 
 Cost accounting uses
 terminal provider usage even when local validation later fails; repeated
@@ -238,12 +253,14 @@ identity-safe product-URL gate. Its spent sanitized-evidence-v3 artifact cannot
 distinguish the exact direct-asset, Shopping, or URL reason and remains
 immutable.
 
-The latest live evidence is PR-3C at clean commit `a7434262`: one frozen `shop
-vac` lifecycle stopped after provider research but before collection as
-`research_candidate_invalid / candidate_identity`. Sanitized evidence v4
-retains only that URL-free field group, accounting, counters, and cost; it does
-not reveal the exact field, invariant, candidate, or private value and does not
-explain PR-3A. The one-file artifact independently returned `VERIFIED` and is
+The latest live evidence is PR-3E at clean commit `bf7e37b4`: one frozen `shop
+vac` lifecycle completed research and collection, then verification excluded
+all 12 candidates at asset identity before presentation. Every candidate
+supplied one local source despite 53 response sources and a two-source runtime
+capacity. Twelve page fetches yielded four receipts; 12 Shopping requests
+yielded 201 rows. Evidence v4 retained only bounded counts, accounting, and
+privacy-safe subreasons, not candidate mappings or raw source identity. The
+one-file artifact independently returned `VERIFIED`, confidence 0.99, and is
 spent.
 
 PR-3D replaces the earlier prompt-enforced PR-2H relation with a structural
@@ -255,6 +272,14 @@ generalized zero-live correction for the reproduced schema-inexpressible
 relation, not attribution of PR-3C's hidden exact cause or proof of provider
 adherence, lifecycle feasibility, or recommendation-quality improvement.
 
+PR-3F aligns the research producer with the source collector before any page or
+Shopping work. It requires two fetch-distinct exact response-owned sources and
+one candidate-owned exact title/URL pair that already satisfies the shared
+asset-identity rule. This closes the reproduced one-source/no-upstream-identity
+mismatch without changing downstream evidence, relationship, commerce,
+eligibility, ranking, or public behavior. It does not prove PR-3E's private
+candidate-level cause or guarantee a successful live lifecycle.
+
 PR-2J closes a separately reproduced producer/parser mismatch without a live
 request. Candidate `source_urls` remains the exact response-owned URL registry
 for that candidate. Requirement and fact leads no longer repeat raw URLs; they
@@ -263,13 +288,13 @@ server first validates each candidate URL for exact response ownership,
 uniqueness, HTTPS/public-host safety, credential absence, and default port, then
 maps only integer, unique, in-range indexes back to those exact strings.
 
-PR-2J introduced research schema v3 with nested closed variants so supporting/conflicting
-requirements require one to six references and `not_found` requires an empty
-array; every fact requires one to six. Runtime independently retains those
-checks and enforces the candidate-length-dependent upper bound and uniqueness
-that the provider schema cannot fully express. Its contract v5, prompt v4, and
-runtime v4 rollover remains historical; current PR-3D identities are v6/v5/v5
-with research schema v4. Existing token verification rejects old prompt
+PR-2J introduced research schema v3 with nested closed variants so supporting/
+conflicting requirements require local references and `not_found` requires an
+empty array. PR-3F now limits the enclosing source list to exactly two, so every
+nonempty lead reference is unique, integer, and restricted to 0 or 1 with at
+most two indexes. Runtime independently retains those dynamic checks. PR-2J's
+contract v5, prompt v4, and runtime v4 rollover remains historical; current
+PR-3F identities are v7/v6/v6 with research schema v5. Existing token verification rejects old prompt
 versions and recomputes the current contract fingerprint. Neither correction
 changes downstream requirement, evidence, page, commerce, price, asset,
 eligibility, diagnostic, public-response, network-ceiling, or default-flag

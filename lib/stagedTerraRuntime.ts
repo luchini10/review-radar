@@ -21,7 +21,7 @@ import {
   type DirectTerraSerperShoppingTransport,
 } from "./directTerraSerperAssetAdapter.ts";
 import {
-  extractDirectTerraExactResponseSourceUrls,
+  extractDirectTerraExactResponseSources,
   extractDirectTerraResponseSources,
 } from "./directTerraResponse.ts";
 import {
@@ -29,6 +29,7 @@ import {
   type StagedTerraEvidencePackage,
   type StagedTerraResearchCandidate,
   type StagedTerraResearchOutput,
+  validateStagedTerraResearchIdentitySources,
   validateStagedTerraPresentationOutput,
   validateStagedTerraResearchOutput,
 } from "./stagedTerraContract.ts";
@@ -45,7 +46,7 @@ import type {
 } from "./stagedTerraVerifier.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
 
-export const STAGED_TERRA_RUNTIME_VERSION = "staged-terra-runtime-v5";
+export const STAGED_TERRA_RUNTIME_VERSION = "staged-terra-runtime-v6";
 export const STAGED_TERRA_RUNTIME_LIMITS = Object.freeze({
   researchTimeoutMs: 120_000,
   presentationTimeoutMs: 120_000,
@@ -338,8 +339,8 @@ export async function pollStagedTerraResearch({
   } catch {
     return failed(ledger, "invalid_json", startedAt, now);
   }
-  const responseSourceUrls =
-    extractDirectTerraExactResponseSourceUrls(response);
+  const responseSources = extractDirectTerraExactResponseSources(response);
+  const responseSourceUrls = responseSources.map((source) => source.url);
   const parsed = validateStagedTerraResearchOutput({
     value,
     shopperRequest,
@@ -358,6 +359,18 @@ export async function pollStagedTerraResearch({
               parsed.candidateSourceValidationReason,
           }
         : {}),
+    };
+  }
+  const identitySources = validateStagedTerraResearchIdentitySources({
+    researchOutput: parsed.value,
+    responseSources,
+  });
+  if (!identitySources.ok) {
+    return {
+      ...failed(ledger, "invalid_research_contract", startedAt, now),
+      validationReason: "research_candidate_invalid" as const,
+      candidateValidationReason: "candidate_sources" as const,
+      candidateSourceValidationReason: identitySources.reason,
     };
   }
   ledger.durationMs = Math.max(0, now() - startedAt);

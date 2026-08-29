@@ -2218,3 +2218,79 @@ derived directory under the unchanged first-terminal/no-retry envelope. Use the
 evidence-v4 subreason distribution to select an offline reproduction; do not
 change behavior from aggregate inference alone. Reasoning level: High for
 evidence adjudication and Medium for the bounded mechanical run.
+
+## Codex Run - 2026-08-29 PR-3E live stop and PR-3F source grounding
+
+**Goal:** revalidate the structural staged research contract once, preserve the
+terminal result as immutable privacy-bounded evidence, then fix only the
+highest-impact generalized producer/consumer mismatch it established.
+
+**Live outcome:** one approved frozen `shop vac` lifecycle ran at clean commit
+`bf7e37b43edbd6896b97a98cc1996bfa69b3aeb7`. An earlier command missing the
+runner's explicit approval arguments was rejected before network, directory
+creation, counters, artifact, or spend. The actual lifecycle invocation then
+ran once and was not retried.
+
+Research completed with 12 candidates and 53 response sources. Each candidate
+supplied one local source. Twelve source-page requests produced four receipts;
+12 Shopping requests produced 201 rows. Verification excluded all 12 at asset
+identity before presentation. Asset subreasons were eight no-asset-candidate
+and four model-not-in-title; overlapping commerce counts were diagnostic only.
+The 42.273-second run used one create, 14 retrieves, three hosted searches, one
+cancel, and `$0.184904` frozen-conservative estimated cost. There was no retry,
+replacement, fallback, second case, public result, flag change, or deployment.
+
+The only artifact is untracked 16,119-byte `attempt.json`, SHA-256
+`fb6fe1ad6324a9bb6b85a2a2634ab6eef25378ee1d696220fc5ef54510214a30`.
+Independent strict read-only audit returned `VERIFIED`, no findings, confidence
+0.99 for commit/case/schema binding, counters, usage, cost, conservation,
+branch bounds, and privacy. It contains no raw/provider/candidate/product/source
+identity, prompt, body, header, credential, key, secret, or token. The artifact
+is spent and was not read or staged by the implementing agent.
+
+**Why downstream relaxation was rejected:** all 12 first losses showed upstream
+identity misalignment, not permission to display ambiguous products. Another
+unchanged call, blind extra fetches, or two URLs without identity grounding
+would repeat the producer/consumer gap. Canonical ownership or cross-variant
+title borrowing would weaken provenance.
+
+**What changed:** research schema v5 requires exactly two fetch-distinct exact
+response-owned sources per candidate and local lead indexes only 0/1. A
+rejection-only key removes established tracking parameters and fragments so
+same-physical-page variants fail; identity-bearing queries remain distinct.
+Exact membership still establishes ownership, and title backfill is allowed
+only for the identical URL.
+
+At least one candidate-owned exact title/URL record must pass the unchanged
+shared asset-identity verifier before collection. Title-visible identity is
+preferred; the existing bounded direct-manufacturer/established-retailer slug
+path remains supported, while sibling and unknown-retailer slugs fail. Source
+metadata is preflight only and cannot become final evidence or shopper output.
+The maximum 15 candidates times two sources equals the unchanged 30-fetch
+ceiling. Contract v7, prompt v6, and runtime v6 invalidate old jobs.
+
+**Tests and proof:** fail-first passed 32 checks and failed exactly five new
+expectations. The complete suite passed 1,489/1,489 across 214 suites; E2E
+passed 17/17; five deterministic partitions reconciled; the benchmark passed
+10/10 cases and 29/29 invariants. Typecheck, production build, lint (zero errors,
+three existing warnings), legacy eval, fixed ranking comparison, and diff checks
+passed; `next-env.d.ts` was restored.
+
+**Independent review:** review found fetch-equivalent tracking and fragment
+variants, prompt/runtime disagreement about safe slug identity, missing same-
+exact title-backfill coverage, and an unlocked 15x2 ceiling. After correction,
+terminal verdict was `APPROVED`, no findings, confidence 0.98. The reviewer
+personally passed 150/150 plus non-incremental typecheck, the fragment mutation,
+and diff checks.
+
+**Limits:** this is a generalized zero-live correction after the PR-3E
+measurement. It does not prove PR-3E candidate-level causation, live adherence,
+recommendation quality, latency, cost, or lifecycle feasibility. RR-091/RR-092
+and the wider security, accessibility, operations, and active-path measurement
+debts remain open.
+
+**Next recommended step:** after the PR-3F closeout commit leaves a clean tracked
+tree, run one PR-3G commit-pinned `shop vac` measurement in a new directory under
+the unchanged ceilings and first-terminal/no-retry policy. This is stronger
+than broad live QA because feasibility remains the proven blocker. Reasoning
+level: High for trust/evidence adjudication and Medium for mechanical execution.

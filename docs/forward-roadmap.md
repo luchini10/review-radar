@@ -3667,6 +3667,49 @@ same first-terminal/no-retry/no-fallback ceilings. A stop selects only another
 offline reproduction target; a complete shopper result unlocks Phase E's
 bounded quality/stability matrix.
 
+**Phase D continuation — PR-3E/PR-3F, 2026-08-29:** the one evidence-v4 PR-3E
+measurement at clean commit `bf7e37b4` completed provider research with 12
+candidates and 53 response-owned sources. Every candidate supplied one local
+source. Collection attempted 12 candidate pages, four succeeded, and 12
+Shopping requests returned 201 rows. Deterministic verification then excluded
+all 12 candidates at asset identity before presentation: eight had no asset
+candidate and four observed asset records lacked the model in their titles.
+Overlapping commerce outcomes are diagnostic only and do not prove a private
+candidate-level cause.
+
+The 42.273-second first-terminal run used one create, 14 retrieves, three hosted
+searches, one cancel, and `$0.184904` frozen-conservative estimated cost. No
+retry, replacement, fallback, second case, organic/SearchAPI call, public
+result, flag change, or deployment occurred. The 16,119-byte one-file artifact
+hash, counters, usage, conservation, branch bounds, and privacy independently
+returned `VERIFIED`, confidence 0.99. It is immutable and spent.
+
+PR-3F closes the reproduced upstream mismatch without loosening verification.
+Research schema v5 requires exactly two fetch-distinct exact response-owned
+URLs per candidate and limits local source indexes to 0/1. Exact membership
+still establishes ownership. A separate rejection key removes only established
+tracking parameters and URL fragments so two exact anchors or tracking variants
+of one physical page cannot spend both fetch slots; identity-bearing query
+parameters remain distinct. Exact titles are retained or backfilled only for
+the identical URL and never borrowed between canonical variants.
+
+Before collection, at least one candidate-owned exact title/URL record must pass
+the unchanged shared asset-identity verifier. Title-visible identity is
+preferred, while the existing bounded manufacturer/established-retailer
+product-slug path remains intentional; sibling and unknown-retailer slug
+authority fail. Response metadata is preflight only and cannot become final
+evidence or shopper output. The 15-candidate schema maximum times two sources
+equals the unchanged 30-fetch ceiling. Contract v7, prompt v6, and runtime v6
+roll old jobs closed. Independent review returned `APPROVED`, no findings,
+confidence 0.98 after fetch-equivalence, prompt/runtime alignment, title-
+backfill, ceiling, slug-path, and mutation corrections.
+
+After a clean self-contained PR-3F closeout, PR-3G may run the unchanged frozen
+case exactly once in a new commit-derived directory under the same ceilings and
+first-terminal/no-retry/no-fallback rules. A stop selects only a generalized
+offline reproduction; a safe shopper result unlocks Phase E. PR-3F does not
+prove PR-3E causation, live adherence, quality, latency, or cost.
+
 **Phase E — quality/stability and promotion decision:** only after feasibility
 passes, compare multiple frozen categories against the existing baseline. A
 flag promotion, deployment, or retirement of the old path remains a separate
