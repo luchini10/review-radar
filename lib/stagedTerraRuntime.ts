@@ -349,6 +349,9 @@ export async function pollStagedTerraResearch({
     return {
       ...failed(ledger, "invalid_research_contract", startedAt, now),
       validationReason: parsed.reason,
+      ...("candidateValidationReason" in parsed
+        ? { candidateValidationReason: parsed.candidateValidationReason }
+        : {}),
     };
   }
   ledger.durationMs = Math.max(0, now() - startedAt);

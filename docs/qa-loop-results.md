@@ -11390,3 +11390,61 @@ change, or push.
 **Next:** zero-live prompt/schema/adapter/validator alignment with deterministic
 candidate-field mutations. Do not loosen trust gates or spend again until the
 exact generalized mismatch is proven and corrected.
+
+---
+
+## 🟩 Codex — 2026-08-29 — Production readiness PR-2A contract-v2 closeout
+
+**Objective:** correct only a proven generalized acceptance mismatch inside the
+`research_candidate_invalid` first-loss class, without seeing or retaining raw
+model output and without weakening product-trust gates.
+
+**Fail-first evidence:** the focused contract/route run passed 18 checks and
+failed exactly four new assertions. Research schema v1 still required
+model-authored `candidate_id` and `fact_id`; the validator required exact
+array-relative values even though the candidate schema guaranteed only a loose
+pattern, the fact schema guaranteed no numbering format, and the prompt did not
+fully define the fact-ID contract. The schema fixed requirement count and ID
+membership but could not force response-array order, while runtime rejected a
+safe permutation. Runtime and route also lacked a bounded candidate field-group
+reason.
+
+**Correction:** staged contract, research schema, and research prompt v2 remove
+model ownership of internal IDs. After candidate-array validation, ReviewRadar
+assigns `candidate_<n>` and `candidate_<n>_fact_<m>`. The validator requires each
+candidate's exact unique requirement-ID set and emits it in canonical shopper
+request order. Schema and runtime now share non-whitespace rules for identity,
+requirement summaries, and fact statements. Contract v2 changes the request
+fingerprint so cross-version jobs fail closed.
+
+Candidate failures may retain only `candidate_identity`, `candidate_sources`,
+`candidate_requirements`, or `candidate_facts`, and only under the existing
+`research_candidate_invalid` class. Runtime forwards that enum and the route
+independently validates it. Unknown values, raw output, candidate objects,
+provider IDs, prompts, source URLs, headers, credentials, secrets, and bodies
+remain unavailable to diagnostics and public responses.
+
+**Verification (zero live):**
+
+- fail-first: 18 pass / 4 intended fail;
+- focused contract/runtime/route: 28/28;
+- full staged subsystem: 54/54 across ten suites;
+- complete suite: 1,438/1,438 across 209 suites;
+- E2E: 17/17 on the credential-neutral dedicated server;
+- typecheck, production build, deterministic eval, fixed ranking comparison,
+  Phase D dry run, and `git diff --check`: pass;
+- lint: zero errors and three pre-existing warnings; and
+- independent read-only review: `APPROVED` with no actionable findings; the
+  reviewer personally ran 40/40 scoped staged tests, non-incremental typecheck,
+  and `git diff --check`.
+
+No OpenAI API, Serper, SearchAPI, Shopping, source-page, or other product-data
+request ran. No `.env.local` edit, flag promotion, deployment, production
+change, push, issue-status mutation, or user-owned fixture/baseline cleanup
+occurred.
+
+**Limitation and decision:** this proves and corrects a generalized v1
+schema/runtime defect that could cause the observed live class. It cannot prove
+which exact private field failed in the spent response. Staged Terra therefore
+remains default-off, undeployed, and live-feasibility-unproven. PR-010's stale
+frozen-rate label remains a separate zero-live evidence-integrity correction.

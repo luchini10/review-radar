@@ -12,12 +12,17 @@ suite look green. It is to show the strongest genuinely suitable products,
 exclude unsafe or misleading cards, preserve uncertainty, and give shoppers a
 reliable decision brief at acceptable latency and cost.
 
-The newest staged Terra path currently fails before product verification or
-ranking. Its first live response was provider-complete but failed the research
-contract, while the retained diagnostic omitted the bounded validation class
-and the cost estimator reported zero spend. That is the earliest proven loss
-in the newest architecture. Until it is attributable, changing the prompt,
-schema, verifier, or ranking would target an unproven cause.
+The newest staged Terra path has not yet produced a live result. Its latest
+provider-complete response failed at candidate validation before product
+verification or ranking. Static fail-first comparison then proved a generalized
+strict-schema/runtime mismatch: the model owned candidate and fact identifiers
+that the runtime required to equal array-relative values the schema and prompt
+did not fully specify, and the runtime rejected requirement order that the
+schema could not constrain. The v2 research boundary now assigns identifiers
+server-side and canonicalizes the exact requirement set without weakening
+source, identity, fact, or requirement trust gates. The exact private field in
+the already-spent response remains unknowable, so this is not yet live
+feasibility proof.
 
 Stronger alternatives considered:
 
@@ -166,6 +171,37 @@ shopper-facing recommendation quality.
   of the candidate schema, prompt, adapter, and validator to identify the exact
   generalized invalid-candidate invariant before any correction.
 
+### PR-2A candidate-contract correction
+
+- **Verified fail-first defect:** `staged-terra-research-v1` required the model
+  to author `candidate_id` and `fact_id`. The validator demanded exact
+  array-relative numbering, while the candidate schema guaranteed only a loose
+  pattern, the fact schema guaranteed no numbering pattern, and the prompt did
+  not define fact-ID syntax. The schema also fixed requirement count and IDs but
+  could not guarantee the exact runtime order.
+- **Verified correction:** contract, research schema, and research prompt v2
+  remove model-authored internal IDs. ReviewRadar assigns `candidate_<n>` and
+  `candidate_<n>_fact_<m>` by validated array order, accepts the exact unique
+  requirement-ID set in any response order, and emits canonical requirement
+  order downstream. Non-whitespace string rules now appear in both schema and
+  validator.
+- **Privacy and rollover:** candidate failures may add only one server-side
+  group—identity, sources, requirements, or facts—under
+  `research_candidate_invalid`. The route independently guards both enums and
+  never exposes either in the public body. Contract v2 changes the request
+  fingerprint so an old in-flight token fails closed across a version rollover.
+- **Verification:** fail-first was 18 pass / 4 intended fail. Final staged wall
+  passed 54/54, full tests passed 1,438/1,438 across 209 suites, E2E passed
+  17/17, and typecheck, lint (0 errors / 3 pre-existing warnings), production
+  build, synthetic eval, fixed ranking comparison, Phase D dry run, and diff
+  checks passed. Independent read-only review returned `APPROVED`; the reviewer
+  personally ran 40/40 scoped staged tests, non-incremental typecheck, and diff
+  checks.
+- **Limitation:** this proves and corrects a generalized acceptance defect in
+  the live failure class; privacy-preserving evidence cannot prove which exact
+  field failed in the spent response. No provider, search, Shopping, or page
+  request ran during PR-2A.
+
 ## Confirmed defects and weaknesses
 
 | ID | Severity | Status | User impact and evidence | Likely root cause | Generalized solution | Required proof | Risk, rollback, dependencies |
@@ -178,7 +214,7 @@ shopper-facing recommendation quality.
 | PR-006 | P1 | investigating | Current market-leader recall, final-set stability, exact/near truth, price coverage, and first-loss distribution are not established for today's commit. Historical evidence found zero final overlap and severe leader loss. | Provider variance, planning variance, discovery loss, strict evidence gates, and/or ranking may contribute; attribution remains unmeasured on the active path. | After feasibility, run a bounded benchmark matrix with repeated broad and constrained cases, record candidate and final Jaccard, hard-requirement truth, first-loss stage, latency, calls, and cost. Fix only the earliest repeated generalized loss. | Commit-pinned fixtures, market-coverage sets reviewed for recency, repeated samples, invariant-based scoring, before/after controls across unrelated categories. | High cost/variance risk. Stop on any safety failure. Requires PR-001/002 and a passing staged feasibility result. |
 | PR-007 | P1 | investigating | RR-091 says same-page related-product price can satisfy autonomous card binding. A wrong variant price is release-blocking if the affected path is promoted. | Product entity selection may not bind offer identity tightly enough when multiple products share a page. | Reproduce with tracked synthetic multi-entity pages, then require exact entity/offer binding using shared identity rules. | Original and cross-category reproductions; exact-product positive controls; no unsafe price/product URL; full price and identity wall. | High false-negative/false-positive risk. The affected experimental path remains default-off; no promotion before closure. |
 | PR-008 | P1 | investigating | RR-092 says editorial Product markup can verify identity/image without proving the tested model. A wrong model image/link is release-blocking if promoted. | Structured markup establishes a product entity without sufficient tested-model attribution or page role. | Require exact tested-model attribution from eligible page evidence; editorial markup remains evidence-only unless the commerce/page boundary independently passes. | Editorial review negatives, manufacturer/retailer positives, sibling-model and accessory mutations, asset-wall regression. | High asset-recall tradeoff. Default-off path must stay off until resolved. |
-| PR-009 | P1 | investigating | The commit-pinned PR-2 request again completed provider research but failed before verification, now attributable as `research_candidate_invalid`. No staged result can reach users. | One or more candidate fields, requirement mappings, source references, or exact-key constraints violate `staged-terra-research-v1`; the retained class intentionally does not expose the raw candidate or exact field. | Cross-compare the strict API schema, prompt, adapter, validator, and every candidate-field branch. Add deterministic contract-generation/mutation coverage and correct only a proven mismatch; do not loosen product-trust requirements merely to pass. | Fail-first reproduction of any schema/validator mismatch; complete candidate-field matrix; unrelated-category controls; focused/full walls; independent review. | High trust-boundary risk. Zero live until corrected and committed. Depends on sanitized evidence only. |
+| PR-009 | P1 | corrected locally; live revalidation pending | The commit-pinned PR-2 request completed provider research but failed before verification as `research_candidate_invalid`. No staged result has reached users. | The v1 schema made the model author internal candidate/fact IDs while runtime required stricter array-relative values not fully specified by schema/prompt; it also rejected requirement ordering the schema could not constrain. The exact old failing field remains private and unknown. | Research contract/schema/prompt v2 make IDs server-owned, validate the exact unique requirement set before canonical ordering, align non-whitespace constraints, and retain only a guarded candidate field-group reason. Trust gates remain unchanged. | Fail-first 18 pass / 4 intended fail; candidate group matrix; staged 54/54; full 1,438/1,438; E2E/build/static/eval/ranking/dry-run walls; independent review. | Local correction is complete and default-off. A future one-attempt, new-commit/new-directory feasibility check is still needed; never reuse either spent attempt. |
 | PR-010 | P2 | planned | The Phase D estimator's field named `standardUsd` still uses its frozen 2026-07-25 rates, while official current Terra prices are lower. Readiness reporting can confuse a conservative approval rate with current estimated spend. | The rate object is intentionally frozen for approval reproducibility but the output label does not distinguish frozen-envelope and current-market estimates. | Preserve the immutable approval-rate calculation and add a separately named current-rate estimate sourced and dated from official documentation, or rename the frozen result so it cannot be mistaken for current billing. | Exact historical and current-rate tests; long-context/cache-write/web-search cases; no weakening of the `$3` fail-closed gate. | Low spend risk because the frozen rate currently overestimates, but medium evidence-integrity risk. No live dependency. |
 
 ## Suspected weaknesses requiring measurement
@@ -263,9 +299,8 @@ reachability but not staged feasibility.
 
 ### Phase PR-2A — Diagnose and correct candidate-contract alignment
 
-- Status: **investigating**
-- Severity addressed: PR-009 P1; PR-010 P2 may be closed separately if the
-  rate-label correction stays independent of the candidate contract.
+- Status: **verified locally 2026-08-29; no live revalidation**
+- Severity addressed: PR-009 P1. PR-010 remains separate.
 - Scope: zero-live comparison of the research prompt, strict JSON schema,
   provider adapter, and every validator branch; fail-first deterministic proof
   for any actual mismatch; smallest generalized correction only.
@@ -275,6 +310,26 @@ reachability but not staged feasibility.
   safe field-level reason enum only if it can be proven privacy-preserving; do
   not retain raw candidate data and do not spend again.
 - Reasoning: **High**.
+
+Result: v1 exposed server-internal IDs to the model without schema/prompt rules
+strong enough to satisfy the runtime and required an unexpressed order. V2 owns
+IDs server-side, canonicalizes the exact requirement set, and adds a closed
+field-group diagnostic. All local gates passed. The exact spent-output field and
+live feasibility remain unknown.
+
+### Phase PR-2B — Make frozen and current spend estimates unambiguous
+
+- Status: **next; zero live**
+- Severity addressed: PR-010 P2.
+- Scope: preserve the immutable July approval-envelope rates and `$3` gate, but
+  rename their outputs so they cannot be mistaken for current billing. Add a
+  separately dated current-rate estimate only if it can remain reproducible and
+  official-source-bound.
+- Proof: fail-first exact-label/rate tests, historical fixture totals,
+  long-context/cache-write/search cases, staged/full walls, and dry run.
+- Stop condition: do not weaken or silently reprice the approved hard ceiling;
+  do not make a live request.
+- Reasoning: **Medium** for localized evidence/accounting plumbing.
 
 ### Phase PR-3 — Build a real offline benchmark matrix
 

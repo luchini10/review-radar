@@ -157,11 +157,16 @@ all three. It is selected only when the server flag
 header to be sent. Both committed defaults are off.
 
 The first request is one background Terra/high Responses job with hosted web
-search. It returns 8–15 ordered product identities, response-owned source
-URLs, and evidence leads; it cannot rank products or write shopper-facing
-cards. The browser receives only an encrypted, authenticated app job token and
-polls that token in a header. Provider response IDs and diagnostics remain
-server-only.
+search. Research schema v2 returns 8–15 ordered product identities,
+response-owned source URLs, and evidence leads; it cannot rank products, mint
+internal IDs, or write shopper-facing cards. After validation, ReviewRadar
+assigns `candidate_<n>` and `candidate_<n>_fact_<m>` from array order. It
+requires the exact unique normalized-requirement set, then canonicalizes those
+leads into request order for every downstream consumer. The browser receives
+only an encrypted, authenticated app job token and polls that token in a header.
+Provider response IDs and diagnostics remain server-only. Contract v2 is part
+of the request fingerprint, so tokens from the previous research contract fail
+closed across a deployment rollover.
 
 After research completes, the server fetches at most two candidate-owned source
 pages per product through the existing DNS-pinned bounded-fetch seam and may
@@ -183,14 +188,18 @@ Unexpected non-terminal presentation jobs and unusable provider/token state
 also receive a bounded safety cancel. Completed verification/presentation is
 de-duplicated per research response so repeat polling cannot repeat provider
 work. A failed research poll may retain only one closed server-side validation
-class: shape, source registry, candidate validity, or duplicate identity.
-Unknown reasons and raw provider material are discarded, and no validation
-class enters the client response. Cost accounting uses terminal provider usage
-even when local validation later fails; repeated snapshots deduplicate only by
-the same safe response hash, while distinct or unidentifiable responses sum
-conservatively and block successful acceptance as an anomaly. The entire branch
-is still live-feasibility-unproven and undeployed; its next boundary is one
-commit-pinned Phase D feasibility smoke inside the frozen case and ceilings.
+class: shape, source registry, candidate validity, or duplicate identity. A
+candidate-validity failure may additionally retain only identity, sources,
+requirements, or facts as a server-side field group. The route validates both
+enums independently; unknown reasons and raw provider material are discarded,
+and no validation class enters the client response. Cost accounting uses
+terminal provider usage even when local validation later fails; repeated
+snapshots deduplicate only by the same safe response hash, while distinct or
+unidentifiable responses sum conservatively and block successful acceptance as
+an anomaly. The entire branch remains default-off, undeployed, and without a
+successful live feasibility result. Its latest live response failed candidate
+validation; the generalized v1 schema/runtime mismatch is corrected locally in
+v2, but the exact private field from that spent response remains unknowable.
 
 ## 2. Full user flow
 

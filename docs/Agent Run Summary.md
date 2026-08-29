@@ -1615,3 +1615,37 @@ evidence directory is spent.
 prompt, strict schema, provider adapter, and validator, followed by fail-first
 candidate-field mutations and the smallest generalized correction. Reasoning
 level: High.
+
+## Codex Run - 2026-08-29 Production readiness PR-2A contract v2
+
+**Goal:** fix only a proven generalized schema/runtime mismatch inside the
+staged research candidate-validation first loss, with zero live spend and no raw
+response access.
+
+**Root cause:** research v1 made Terra author internal candidate/fact IDs while
+runtime demanded exact array-relative numbering not fully specified by the
+strict schema or prompt. Runtime also rejected requirement order that the schema
+could not constrain, despite the response containing the exact ID set.
+
+**Changes:** contract/schema/prompt v2 make candidate/fact IDs server-owned,
+canonicalize the exact unique requirement set, align non-whitespace schema and
+runtime rules, and change the request fingerprint for fail-closed version
+rollover. A new closed server-only candidate subreason identifies identity,
+sources, requirements, or facts; the route guards it and the browser still sees
+only the generic failure.
+
+**Proof:** fail-first was 18 pass / 4 intended fail; focused final 28/28; staged
+wall 54/54; full tests 1,438/1,438 across 209 suites; E2E 17/17; typecheck,
+build, eval, ranking comparison, zero-network Phase D dry run, and diff checks
+passed; lint had zero errors and three existing warnings. Independent read-only
+review returned `APPROVED` after personally running 40/40 scoped tests,
+non-incremental typecheck, and diff checks.
+
+**Scope and limitation:** no provider, search, Shopping, or page request; no
+`.env.local` edit, flag promotion, deployment, production change, push, issue
+status change, or user-artifact cleanup. The exact private field in the spent
+live response remains unknowable, so live feasibility is not claimed.
+
+**Next recommended step:** correct PR-010's stale frozen/current cost labeling
+as a separate zero-live phase before deciding whether one new-commit,
+new-directory feasibility attempt is justified. Reasoning level: Medium.

@@ -8,6 +8,7 @@ import {
   startStagedTerraResearch,
 } from "../lib/stagedTerraRuntime.ts";
 import {
+  buildStagedTerraRequestFingerprint,
   STAGED_TERRA_PRESENTATION_SCHEMA_VERSION,
   STAGED_TERRA_RESEARCH_SCHEMA_VERSION,
 } from "../lib/stagedTerraContract.ts";
@@ -25,7 +26,6 @@ function researchValue() {
       const number = index + 1;
       const url = `https://store${number}.example/products/v${number}00`;
       return {
-        candidate_id: `candidate_${number}`,
         product_name: `Example Brand V${number}00 cordless vacuum`,
         brand: "Example Brand",
         model: `V${number}00`,
@@ -53,7 +53,6 @@ function researchValue() {
         ],
         fact_leads: [
           {
-            fact_id: `candidate_${number}_fact_1`,
             kind: "specification",
             statement: "Battery powered",
             source_urls: [url],
@@ -64,17 +63,20 @@ function researchValue() {
   };
 }
 
-function completedResearchResponse(id = "resp_research123") {
+function completedResearchResponse(
+  id = "resp_research123",
+  value = researchValue(),
+) {
   return {
     id,
     model: "gpt-5.6-terra",
     status: "completed",
-    output_text: JSON.stringify(researchValue()),
+    output_text: JSON.stringify(value),
     output: [
       {
         type: "web_search_call",
         action: {
-          sources: researchValue().candidates.map((candidate) => ({
+          sources: value.candidates.map((candidate) => ({
             type: "url",
             url: candidate.source_urls[0],
           })),
@@ -149,6 +151,25 @@ describe("OAI-T10 staged Terra runtime", () => {
     assert.equal(polled.state, "completed");
     assert.equal(polled.researchOutput.candidates.length, 8);
     assert.equal(JSON.stringify(polled.ledger).includes("resp_research123"), false);
+  });
+
+  it("propagates only the bounded candidate field group for invalid research", async () => {
+    const value = researchValue();
+    value.candidates[0].fact_leads[0].statement = " ";
+    const polled = await pollStagedTerraResearch({
+      client: {
+        responses: {
+          retrieve: async () => completedResearchResponse("resp_research123", value),
+        },
+      },
+      responseId: "resp_research123",
+      requestFingerprint: buildStagedTerraRequestFingerprint(shopper),
+      shopperRequest: shopper,
+    });
+    assert.equal(polled.ok, false);
+    assert.equal(polled.validationReason, "research_candidate_invalid");
+    assert.equal(polled.candidateValidationReason, "candidate_facts");
+    assert.equal("rawOutput" in polled, false);
   });
 
   it("cancels a non-terminal research job whose provider id cannot fit the app token", async () => {

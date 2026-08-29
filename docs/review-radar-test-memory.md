@@ -4,6 +4,35 @@
 
 ---
 
+## OAI-T10 PR-2A research-contract v2 correction (2026-08-29)
+
+- Fail-first comparison proved a generalized v1 acceptance mismatch. The strict
+  schema required model-authored candidate/fact IDs, but runtime required exact
+  array-relative numbering that the candidate schema only partially expressed,
+  the fact schema did not express, and the prompt did not fully specify.
+  Requirement count/IDs were schema-bound, but exact response order was not.
+- Research contract/schema/prompt v2 remove both model-authored ID fields.
+  ReviewRadar assigns `candidate_<n>` and `candidate_<n>_fact_<m>` only after
+  validating the ordered candidate array. It accepts each exact unique
+  requirement-ID set and canonicalizes it to request order downstream.
+- The schema and validator now both reject whitespace-only identity, summary,
+  and fact strings. Existing exact-source ownership, URL, duplicate identity,
+  requirement status/source, fact source, count, eligibility, and evidence gates
+  remain fail-closed.
+- A candidate failure may retain only `candidate_identity`,
+  `candidate_sources`, `candidate_requirements`, or `candidate_facts`, and only
+  beneath `research_candidate_invalid`. The route guards both enums; unknown
+  values and all raw/private fields remain absent from diagnostics and clients.
+- Contract v2 changes the request fingerprint, so an old token cannot silently
+  continue under the new research contract. Fail-first was 18 pass / 4 intended
+  fail; final staged tests were 54/54 and the complete suite was 1,438/1,438.
+- No live request ran. The correction does not reveal which exact private field
+  failed in the spent PR-2 response and does not prove live feasibility. Correct
+  PR-010's stale cost label separately before deciding whether one new-commit,
+  new-directory feasibility attempt is information-valuable.
+
+---
+
 ## OAI-T10 PR-2 candidate-invalid live stop (2026-08-29)
 
 - The one commit-pinned attempt at

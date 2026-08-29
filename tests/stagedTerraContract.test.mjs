@@ -4,9 +4,12 @@ import { describe, it } from "node:test";
 
 import {
   buildStagedTerraRequestFingerprint,
+  isStagedTerraResearchCandidateValidationReason,
   isStagedTerraResearchValidationReason,
+  STAGED_TERRA_CONTRACT_VERSION,
   STAGED_TERRA_EVIDENCE_PACKAGE_VERSION,
   STAGED_TERRA_PRESENTATION_SCHEMA_VERSION,
+  STAGED_TERRA_RESEARCH_CANDIDATE_VALIDATION_REASONS,
   STAGED_TERRA_RESEARCH_SCHEMA_VERSION,
   STAGED_TERRA_RESEARCH_VALIDATION_REASONS,
   validateStagedTerraEvidencePackage,
@@ -53,14 +56,12 @@ const requirementIds = [
 function researchFixture() {
   const responseSourceUrls = [];
   const candidates = Array.from({ length: 8 }, (_, candidateIndex) => {
-    const candidateId = `candidate_${candidateIndex + 1}`;
     const sourceUrls = [
       `https://manufacturer${candidateIndex + 1}.example/products/model-${candidateIndex + 1}`,
       `https://testing.example/reviews/model-${candidateIndex + 1}`,
     ];
     responseSourceUrls.push(...sourceUrls);
     return {
-      candidate_id: candidateId,
       product_name: `Brand ${candidateIndex + 1} Model ${candidateIndex + 1}`,
       brand: `Brand ${candidateIndex + 1}`,
       model: `M${candidateIndex + 1}00`,
@@ -74,13 +75,11 @@ function researchFixture() {
       })),
       fact_leads: [
         {
-          fact_id: `${candidateId}_fact_1`,
           kind: "identity",
           statement: "The manufacturer identifies the exact model.",
           source_urls: [sourceUrls[0]],
         },
         {
-          fact_id: `${candidateId}_fact_2`,
           kind: "performance",
           statement: "The testing source reported strong pickup.",
           source_urls: [sourceUrls[1]],
@@ -368,6 +367,42 @@ describe("staged Terra request boundaries", () => {
       Object.keys(research.text.format.schema.properties),
       ["schema_version", "candidates"],
     );
+    const researchCandidateSchema =
+      research.text.format.schema.properties.candidates.items;
+    assert.equal(
+      "candidate_id" in researchCandidateSchema.properties,
+      false,
+    );
+    assert.equal(
+      researchCandidateSchema.required.includes("candidate_id"),
+      false,
+    );
+    for (const property of ["product_name", "brand", "model", "product_type"]) {
+      assert.equal(researchCandidateSchema.properties[property].pattern, "\\S");
+    }
+    assert.equal(
+      researchCandidateSchema.properties.requirement_leads.items.properties
+        .summary.pattern,
+      "\\S",
+    );
+    assert.equal(
+      "fact_id" in
+        researchCandidateSchema.properties.fact_leads.items.properties,
+      false,
+    );
+    assert.equal(
+      researchCandidateSchema.properties.fact_leads.items.required.includes(
+        "fact_id",
+      ),
+      false,
+    );
+    assert.equal(
+      researchCandidateSchema.properties.fact_leads.items.properties.statement
+        .pattern,
+      "\\S",
+    );
+    assert.match(research.instructions, /assigns internal candidate and fact IDs/i);
+    assert.match(research.instructions, /do not emit synthetic identifiers/i);
 
     assert.equal(presentation.model, "gpt-5.6-terra");
     assert.deepEqual(presentation.reasoning, { effort: "medium" });
@@ -381,10 +416,11 @@ describe("staged Terra request boundaries", () => {
     assert.doesNotMatch(presentation.input, /image_url/i);
     assert.doesNotMatch(presentation.input, /https:\/\//i);
     assert.deepEqual(STAGED_TERRA_SCHEMA_VERSIONS, {
-      research: "staged-terra-research-v1",
+      research: "staged-terra-research-v2",
       evidence: "staged-terra-evidence-v1",
       presentation: "staged-terra-presentation-v1",
     });
+    assert.equal(STAGED_TERRA_CONTRACT_VERSION, "staged-terra-contract-v2");
   });
 
   it("keeps the integrated path default-off and isolated from Direct Terra", () => {
@@ -447,39 +483,118 @@ describe("staged Terra research contract", () => {
     );
   });
 
-  it("rejects invented URLs, reordered requirements, and malformed not-found leads", () => {
-    for (const mutate of [
-      (fixture) => {
-        fixture.value.candidates[0].source_urls[0] =
-          "https://invented.example/product";
+  it("assigns synthetic IDs server-side and canonicalizes requirement order", () => {
+    const fixture = researchFixture();
+    for (const candidate of fixture.value.candidates) {
+      candidate.requirement_leads.reverse();
+    }
+
+    const result = validateStagedTerraResearchOutput({
+      value: fixture.value,
+      shopperRequest: shopper,
+      responseSourceUrls: fixture.responseSourceUrls,
+    });
+    assert.equal(result.ok, true);
+    assert.equal(result.value.candidates[0].candidateId, "candidate_1");
+    assert.equal(result.value.candidates[0].factLeads[0].factId, "candidate_1_fact_1");
+    assert.deepEqual(
+      result.value.candidates[0].requirementLeads.map(
+        (lead) => lead.requirementId,
+      ),
+      requirementIds,
+    );
+  });
+
+  it("attributes invalid candidates to one bounded field group", () => {
+    const cases = [
+      {
+        candidateValidationReason: "candidate_identity",
+        mutate: (fixture) => {
+          fixture.value.candidates[0].product_name = " ";
+        },
       },
-      (fixture) => {
-        fixture.responseSourceUrls[0] = "https://manufacturer1.example";
-        fixture.value.candidates[0].source_urls[0] =
-          "https://manufacturer1.example/";
+      {
+        candidateValidationReason: "candidate_sources",
+        mutate: (fixture) => {
+          fixture.value.candidates[0].source_urls[0] =
+            "https://invented.example/product";
+        },
       },
-      (fixture) => {
-        fixture.value.candidates[0].requirement_leads.reverse();
+      {
+        candidateValidationReason: "candidate_requirements",
+        mutate: (fixture) => {
+          fixture.value.candidates[0].requirement_leads[1].requirement_id =
+            fixture.value.candidates[0].requirement_leads[0].requirement_id;
+        },
       },
-      (fixture) => {
-        fixture.value.candidates[0].requirement_leads[0].status =
-          "not_found";
+      {
+        candidateValidationReason: "candidate_facts",
+        mutate: (fixture) => {
+          fixture.value.candidates[0].fact_leads[0].statement = " ";
+        },
       },
-    ]) {
+    ];
+    for (const testCase of cases) {
       const fixture = researchFixture();
-      mutate(fixture);
+      testCase.mutate(fixture);
       assert.deepEqual(
         validateStagedTerraResearchOutput({
           value: fixture.value,
           shopperRequest: shopper,
           responseSourceUrls: fixture.responseSourceUrls,
         }),
-        { ok: false, reason: "research_candidate_invalid" },
+        {
+          ok: false,
+          reason: "research_candidate_invalid",
+          candidateValidationReason: testCase.candidateValidationReason,
+        },
       );
     }
   });
 
-  it("rejects duplicate identities and candidate-id/order drift", () => {
+  it("rejects invented URLs and malformed not-found leads", () => {
+    for (const testCase of [
+      {
+        candidateValidationReason: "candidate_sources",
+        mutate: (fixture) => {
+        fixture.value.candidates[0].source_urls[0] =
+          "https://invented.example/product";
+        },
+      },
+      {
+        candidateValidationReason: "candidate_sources",
+        mutate: (fixture) => {
+          fixture.responseSourceUrls[0] = "https://manufacturer1.example";
+          fixture.value.candidates[0].source_urls[0] =
+            "https://manufacturer1.example/";
+        },
+      },
+      {
+        candidateValidationReason: "candidate_requirements",
+        mutate: (fixture) => {
+          fixture.value.candidates[0].requirement_leads[0].status =
+            "not_found";
+        },
+      },
+    ]) {
+      const fixture = researchFixture();
+      testCase.mutate(fixture);
+      assert.deepEqual(
+        validateStagedTerraResearchOutput({
+          value: fixture.value,
+          shopperRequest: shopper,
+          responseSourceUrls: fixture.responseSourceUrls,
+        }),
+        {
+          ok: false,
+          reason: "research_candidate_invalid",
+          candidateValidationReason: testCase.candidateValidationReason,
+        },
+      );
+    }
+  });
+
+  it("rejects duplicate identities", () => {
     const duplicate = researchFixture();
     duplicate.value.candidates[1].brand =
       duplicate.value.candidates[0].brand;
@@ -491,23 +606,6 @@ describe("staged Terra research contract", () => {
         responseSourceUrls: duplicate.responseSourceUrls,
       }),
       { ok: false, reason: "research_candidate_duplicate" },
-    );
-
-    const reordered = researchFixture();
-    [
-      reordered.value.candidates[0],
-      reordered.value.candidates[1],
-    ] = [
-      reordered.value.candidates[1],
-      reordered.value.candidates[0],
-    ];
-    assert.deepEqual(
-      validateStagedTerraResearchOutput({
-        value: reordered.value,
-        shopperRequest: shopper,
-        responseSourceUrls: reordered.responseSourceUrls,
-      }),
-      { ok: false, reason: "research_candidate_invalid" },
     );
   });
 
@@ -524,7 +622,7 @@ describe("staged Terra research contract", () => {
       {
         reason: "research_candidate_invalid",
         mutate: (fixture) => {
-          fixture.value.candidates[0].candidate_id = "candidate_2";
+          fixture.value.candidates[0].product_name = " ";
         },
       },
       {
@@ -552,6 +650,20 @@ describe("staged Terra research contract", () => {
     assert.deepEqual(observed, [...STAGED_TERRA_RESEARCH_VALIDATION_REASONS]);
     assert.equal(isStagedTerraResearchValidationReason("raw_model_output"), false);
     assert.equal(isStagedTerraResearchValidationReason({}), false);
+    assert.deepEqual(STAGED_TERRA_RESEARCH_CANDIDATE_VALIDATION_REASONS, [
+      "candidate_identity",
+      "candidate_sources",
+      "candidate_requirements",
+      "candidate_facts",
+    ]);
+    assert.equal(
+      isStagedTerraResearchCandidateValidationReason("candidate_sources"),
+      true,
+    );
+    assert.equal(
+      isStagedTerraResearchCandidateValidationReason("private_candidate_field"),
+      false,
+    );
   });
 });
 

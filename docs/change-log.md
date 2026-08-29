@@ -11,6 +11,38 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Align staged research schema and runtime ownership
+
+#### Changed
+
+- Research contract/schema/prompt v2 no longer ask Terra to author internal
+  candidate or fact IDs. ReviewRadar assigns deterministic IDs after validating
+  the ordered candidate array.
+- Requirement leads must still contain the exact unique shopper-requirement set,
+  but ReviewRadar now canonicalizes safe response order instead of rejecting a
+  schema-valid permutation.
+- Non-whitespace identity, summary, and fact rules are present in both the strict
+  schema and runtime validator.
+- Candidate validation can retain only one guarded server-side group—identity,
+  sources, requirements, or facts—without exposing raw candidate material or
+  changing the generic browser error.
+- Contract v2 participates in the request fingerprint, making a cross-version
+  in-flight job fail closed.
+
+#### Verified
+
+- Fail-first passed 18 checks and produced the four intended failures. The
+  corrected staged wall passed 54/54; the complete suite passed 1,438/1,438
+  across 209 suites; E2E passed 17/17.
+- Typecheck, production build, synthetic evaluation, fixed ranking comparison,
+  Phase D zero-network dry run, and diff checks passed. Lint remained at zero
+  errors and three pre-existing warnings.
+- Independent read-only review returned `APPROVED` after 40/40 scoped tests,
+  non-incremental typecheck, and diff checks.
+- No provider/search/page request, `.env.local` edit, flag promotion, deployment,
+  production change, or push occurred. The exact failing field in the spent live
+  response remains unknown, and staged live feasibility is not claimed.
+
 ### Codex - Make readiness checks hermetic and failed provider spend honest
 
 #### Changed

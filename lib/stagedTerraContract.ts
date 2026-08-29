@@ -6,9 +6,9 @@ import {
 } from "./directTerraCandidateSlate.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
 
-export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v1";
+export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v2";
 export const STAGED_TERRA_RESEARCH_SCHEMA_VERSION =
-  "staged-terra-research-v1";
+  "staged-terra-research-v2";
 export const STAGED_TERRA_EVIDENCE_PACKAGE_VERSION =
   "staged-terra-evidence-v1";
 export const STAGED_TERRA_PRESENTATION_SCHEMA_VERSION =
@@ -19,9 +19,17 @@ export const STAGED_TERRA_RESEARCH_VALIDATION_REASONS = [
   "research_candidate_invalid",
   "research_candidate_duplicate",
 ] as const;
+export const STAGED_TERRA_RESEARCH_CANDIDATE_VALIDATION_REASONS = [
+  "candidate_identity",
+  "candidate_sources",
+  "candidate_requirements",
+  "candidate_facts",
+] as const;
 
 export type StagedTerraResearchValidationReason =
   (typeof STAGED_TERRA_RESEARCH_VALIDATION_REASONS)[number];
+export type StagedTerraResearchCandidateValidationReason =
+  (typeof STAGED_TERRA_RESEARCH_CANDIDATE_VALIDATION_REASONS)[number];
 
 const RESEARCH_FACT_KINDS = [
   "identity",
@@ -175,11 +183,32 @@ type ValidationFailure<Reason extends string = string> = {
 };
 type ValidationSuccess<T> = { ok: true; value: T };
 
+type ResearchCandidateParseResult =
+  | ValidationFailure<StagedTerraResearchCandidateValidationReason>
+  | ValidationSuccess<StagedTerraResearchCandidate>;
+
+type StagedTerraResearchValidationFailure =
+  | ValidationFailure<Exclude<
+      StagedTerraResearchValidationReason,
+      "research_candidate_invalid"
+    >>
+  | (ValidationFailure<"research_candidate_invalid"> & {
+      candidateValidationReason: StagedTerraResearchCandidateValidationReason;
+    });
+
 export function isStagedTerraResearchValidationReason(
   value: unknown,
 ): value is StagedTerraResearchValidationReason {
   return STAGED_TERRA_RESEARCH_VALIDATION_REASONS.includes(
     value as StagedTerraResearchValidationReason,
+  );
+}
+
+export function isStagedTerraResearchCandidateValidationReason(
+  value: unknown,
+): value is StagedTerraResearchCandidateValidationReason {
+  return STAGED_TERRA_RESEARCH_CANDIDATE_VALIDATION_REASONS.includes(
+    value as StagedTerraResearchCandidateValidationReason,
   );
 }
 
@@ -328,11 +357,30 @@ export function stagedTerraResearchJsonSchema(
           type: "object",
           additionalProperties: false,
           properties: {
-            candidate_id: { type: "string", pattern: "^candidate_[1-9][0-9]?$" },
-            product_name: { type: "string", minLength: 1, maxLength: 300 },
-            brand: { type: "string", minLength: 1, maxLength: 120 },
-            model: { type: "string", minLength: 1, maxLength: 200 },
-            product_type: { type: "string", minLength: 1, maxLength: 160 },
+            product_name: {
+              type: "string",
+              minLength: 1,
+              maxLength: 300,
+              pattern: "\\S",
+            },
+            brand: {
+              type: "string",
+              minLength: 1,
+              maxLength: 120,
+              pattern: "\\S",
+            },
+            model: {
+              type: "string",
+              minLength: 1,
+              maxLength: 200,
+              pattern: "\\S",
+            },
+            product_type: {
+              type: "string",
+              minLength: 1,
+              maxLength: 160,
+              pattern: "\\S",
+            },
             source_urls: {
               type: "array",
               minItems: 1,
@@ -356,7 +404,12 @@ export function stagedTerraResearchJsonSchema(
                       "not_found",
                     ],
                   },
-                  summary: { type: "string", minLength: 1, maxLength: 400 },
+                  summary: {
+                    type: "string",
+                    minLength: 1,
+                    maxLength: 400,
+                    pattern: "\\S",
+                  },
                   source_urls: {
                     type: "array",
                     maxItems: 6,
@@ -379,9 +432,13 @@ export function stagedTerraResearchJsonSchema(
                 type: "object",
                 additionalProperties: false,
                 properties: {
-                  fact_id: { type: "string", minLength: 1, maxLength: 100 },
                   kind: { type: "string", enum: RESEARCH_FACT_KINDS },
-                  statement: { type: "string", minLength: 1, maxLength: 500 },
+                  statement: {
+                    type: "string",
+                    minLength: 1,
+                    maxLength: 500,
+                    pattern: "\\S",
+                  },
                   source_urls: {
                     type: "array",
                     minItems: 1,
@@ -389,12 +446,11 @@ export function stagedTerraResearchJsonSchema(
                     items: { type: "string", minLength: 1, maxLength: 4_096 },
                   },
                 },
-                required: ["fact_id", "kind", "statement", "source_urls"],
+                required: ["kind", "statement", "source_urls"],
               },
             },
           },
           required: [
-            "candidate_id",
             "product_name",
             "brand",
             "model",
@@ -415,11 +471,10 @@ function parseResearchCandidate(
   index: number,
   requirements: DirectTerraRequirementContractEntry[],
   registered: Set<string>,
-): StagedTerraResearchCandidate | null {
+): ResearchCandidateParseResult {
   if (
     !isRecord(value) ||
     !exactKeys(value, [
-      "candidate_id",
       "product_name",
       "brand",
       "model",
@@ -428,30 +483,31 @@ function parseResearchCandidate(
       "requirement_leads",
       "fact_leads",
     ]) ||
-    value.candidate_id !== `candidate_${index + 1}` ||
     !boundedString(value.product_name, 300) ||
     !boundedString(value.brand, 120) ||
     !boundedString(value.model, 200) ||
     !boundedString(value.product_type, 160)
   ) {
-    return null;
+    return { ok: false, reason: "candidate_identity" };
   }
+  const candidateId = `candidate_${index + 1}`;
   const sourceUrls = parseExactSourceUrls(value.source_urls, registered, {
     minimum: 1,
   });
-  if (!sourceUrls) return null;
+  if (!sourceUrls) return { ok: false, reason: "candidate_sources" };
   const candidateSources = new Set(sourceUrls);
 
   if (
     !Array.isArray(value.requirement_leads) ||
     value.requirement_leads.length !== requirements.length
   ) {
-    return null;
+    return { ok: false, reason: "candidate_requirements" };
   }
-  const requirementLeads: StagedTerraResearchRequirementLead[] = [];
-  for (let requirementIndex = 0; requirementIndex < requirements.length; requirementIndex++) {
-    const lead = value.requirement_leads[requirementIndex];
-    const expected = requirements[requirementIndex];
+  const expectedRequirementIds = new Set(
+    requirements.map((requirement) => requirement.id),
+  );
+  const rawRequirementLeads = new Map<string, Record<string, unknown>>();
+  for (const lead of value.requirement_leads) {
     if (
       !isRecord(lead) ||
       !exactKeys(lead, [
@@ -460,19 +516,34 @@ function parseResearchCandidate(
         "summary",
         "source_urls",
       ]) ||
-      lead.requirement_id !== expected.id ||
+      typeof lead.requirement_id !== "string" ||
+      !expectedRequirementIds.has(lead.requirement_id) ||
+      rawRequirementLeads.has(lead.requirement_id)
+    ) {
+      return { ok: false, reason: "candidate_requirements" };
+    }
+    rawRequirementLeads.set(lead.requirement_id, lead);
+  }
+
+  const requirementLeads: StagedTerraResearchRequirementLead[] = [];
+  for (const expected of requirements) {
+    const lead = rawRequirementLeads.get(expected.id);
+    if (
+      !lead ||
       !["supporting_evidence", "conflicting_evidence", "not_found"].includes(
         String(lead.status),
       ) ||
       !boundedString(lead.summary, 400)
     ) {
-      return null;
+      return { ok: false, reason: "candidate_requirements" };
     }
     const urls = parseExactSourceUrls(lead.source_urls, candidateSources, {
       minimum: lead.status === "not_found" ? 0 : 1,
       maximum: 6,
     });
-    if (!urls || (lead.status === "not_found" && urls.length !== 0)) return null;
+    if (!urls || (lead.status === "not_found" && urls.length !== 0)) {
+      return { ok: false, reason: "candidate_requirements" };
+    }
     requirementLeads.push({
       requirementId: expected.id,
       status: lead.status as StagedTerraResearchRequirementLead["status"],
@@ -486,27 +557,26 @@ function parseResearchCandidate(
     value.fact_leads.length < 1 ||
     value.fact_leads.length > 24
   ) {
-    return null;
+    return { ok: false, reason: "candidate_facts" };
   }
   const factLeads: StagedTerraResearchFactLead[] = [];
   for (let factIndex = 0; factIndex < value.fact_leads.length; factIndex++) {
     const fact = value.fact_leads[factIndex];
     if (
       !isRecord(fact) ||
-      !exactKeys(fact, ["fact_id", "kind", "statement", "source_urls"]) ||
-      fact.fact_id !== `candidate_${index + 1}_fact_${factIndex + 1}` ||
+      !exactKeys(fact, ["kind", "statement", "source_urls"]) ||
       !enumContains(RESEARCH_FACT_KINDS, fact.kind) ||
       !boundedString(fact.statement, 500)
     ) {
-      return null;
+      return { ok: false, reason: "candidate_facts" };
     }
     const urls = parseExactSourceUrls(fact.source_urls, candidateSources, {
       minimum: 1,
       maximum: 6,
     });
-    if (!urls) return null;
+    if (!urls) return { ok: false, reason: "candidate_facts" };
     factLeads.push({
-      factId: fact.fact_id as string,
+      factId: `${candidateId}_fact_${factIndex + 1}`,
       kind: fact.kind,
       statement: fact.statement as string,
       sourceUrls: urls,
@@ -514,14 +584,17 @@ function parseResearchCandidate(
   }
 
   return {
-    candidateId: value.candidate_id as string,
-    productName: value.product_name as string,
-    brand: value.brand as string,
-    model: value.model as string,
-    productType: value.product_type as string,
-    sourceUrls,
-    requirementLeads,
-    factLeads,
+    ok: true,
+    value: {
+      candidateId,
+      productName: value.product_name as string,
+      brand: value.brand as string,
+      model: value.model as string,
+      productType: value.product_type as string,
+      sourceUrls,
+      requirementLeads,
+      factLeads,
+    },
   };
 }
 
@@ -534,7 +607,7 @@ export function validateStagedTerraResearchOutput({
   shopperRequest: DirectTerraShopperRequest;
   responseSourceUrls: readonly string[];
 }):
-  | ValidationFailure<StagedTerraResearchValidationReason>
+  | StagedTerraResearchValidationFailure
   | ValidationSuccess<StagedTerraResearchOutput> {
   if (
     !isRecord(value) ||
@@ -554,13 +627,25 @@ export function validateStagedTerraResearchOutput({
     return { ok: false, reason: "research_source_registry" };
   }
   const requirements = buildDirectTerraRequirementContract(shopperRequest);
-  const candidates = value.candidates.map((candidate, index) =>
+  const candidateResults = value.candidates.map((candidate, index) =>
     parseResearchCandidate(candidate, index, requirements, registered),
   );
-  if (candidates.some((candidate) => candidate === null)) {
-    return { ok: false, reason: "research_candidate_invalid" };
+  const invalidCandidate = candidateResults.find((candidate) => !candidate.ok);
+  if (invalidCandidate && !invalidCandidate.ok) {
+    return {
+      ok: false,
+      reason: "research_candidate_invalid",
+      candidateValidationReason: invalidCandidate.reason,
+    };
   }
-  const parsed = candidates as StagedTerraResearchCandidate[];
+  const parsed = candidateResults
+    .filter(
+      (
+        candidate,
+      ): candidate is ValidationSuccess<StagedTerraResearchCandidate> =>
+        candidate.ok,
+    )
+    .map((candidate) => candidate.value);
   const identities = parsed.map((candidate) =>
     identityKey(candidate.brand, candidate.model),
   );

@@ -27,7 +27,9 @@ import {
 } from "./stagedTerraRuntime.ts";
 import { materializeStagedTerraEvidencePackage } from "./stagedTerraVerifier.ts";
 import {
+  isStagedTerraResearchCandidateValidationReason,
   isStagedTerraResearchValidationReason,
+  type StagedTerraResearchCandidateValidationReason,
   type StagedTerraResearchValidationReason,
 } from "./stagedTerraContract.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
@@ -53,6 +55,7 @@ export type StagedTerraServerDiagnostic = {
   outcome: "pending" | "completed" | "failed";
   ledger?: StagedTerraRuntimeLedger;
   validationReason?: StagedTerraResearchValidationReason;
+  candidateValidationReason?: StagedTerraResearchCandidateValidationReason;
   counts?: {
     candidates: number;
     sourceFetchAttempts: number;
@@ -352,11 +355,20 @@ export function createStagedTerraRecommendationHandlers({
           isStagedTerraResearchValidationReason(research.validationReason)
             ? research.validationReason
             : undefined;
+        const candidateValidationReason =
+          validationReason === "research_candidate_invalid" &&
+          "candidateValidationReason" in research &&
+          isStagedTerraResearchCandidateValidationReason(
+            research.candidateValidationReason,
+          )
+            ? research.candidateValidationReason
+            : undefined;
         report({
           stage: "research_poll",
           outcome: "failed",
           ledger: research.ledger,
           ...(validationReason ? { validationReason } : {}),
+          ...(candidateValidationReason ? { candidateValidationReason } : {}),
         });
         return failure("research_failed", ERROR_MESSAGES.researchFailed, 502);
       }

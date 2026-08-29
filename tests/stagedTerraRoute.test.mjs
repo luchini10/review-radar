@@ -24,7 +24,7 @@ function request(method, body, headers = {}) {
 
 function researchOutput() {
   return {
-    schemaVersion: "staged-terra-research-v1",
+    schemaVersion: "staged-terra-research-v2",
     candidates: Array.from({ length: 8 }, (_, index) => ({
       candidateId: `candidate_${index + 1}`,
       productName: `Example V${index + 1}00 cordless vacuum`,
@@ -85,7 +85,7 @@ describe("OAI-T10 staged Terra route", () => {
         requestFingerprint: (
           await import("../lib/stagedTerraContract.ts")
         ).buildStagedTerraRequestFingerprint(shopper),
-        promptVersion: "staged-terra-research-prompt-v1",
+        promptVersion: "staged-terra-research-prompt-v2",
         ledger: {
           operation: "research_start",
           responseIdHash: "hash-only",
@@ -249,10 +249,26 @@ describe("OAI-T10 staged Terra route", () => {
       {
         validationReason: "research_candidate_duplicate",
         expectedReason: "research_candidate_duplicate",
+        candidateValidationReason: undefined,
+        expectedCandidateReason: undefined,
+      },
+      {
+        validationReason: "research_candidate_invalid",
+        expectedReason: "research_candidate_invalid",
+        candidateValidationReason: "candidate_facts",
+        expectedCandidateReason: "candidate_facts",
+      },
+      {
+        validationReason: "research_candidate_invalid",
+        expectedReason: "research_candidate_invalid",
+        candidateValidationReason: "private_candidate_field",
+        expectedCandidateReason: undefined,
       },
       {
         validationReason: "unbounded_private_reason",
         expectedReason: undefined,
+        candidateValidationReason: "candidate_sources",
+        expectedCandidateReason: undefined,
       },
     ]) {
       const diagnostics = [];
@@ -269,12 +285,13 @@ describe("OAI-T10 staged Terra route", () => {
           responseId: "resp_research123",
           status: "queued",
           requestFingerprint: fingerprint,
-          promptVersion: "staged-terra-research-prompt-v1",
+          promptVersion: "staged-terra-research-prompt-v2",
           ledger: { operation: "research_start" },
         }),
         pollResearch: async () => ({
           ok: false,
           validationReason: testCase.validationReason,
+          candidateValidationReason: testCase.candidateValidationReason,
           rawOutput: "private raw model output",
           providerResponseId: "resp_private-provider-id",
           sourceUrl: "https://private.example/product",
@@ -312,6 +329,10 @@ describe("OAI-T10 staged Terra route", () => {
       );
       assert.equal(failedPoll?.validationReason, testCase.expectedReason);
       assert.equal(
+        failedPoll?.candidateValidationReason,
+        testCase.expectedCandidateReason,
+      );
+      assert.equal(
         JSON.stringify(publicBody).includes(testCase.validationReason),
         false,
       );
@@ -323,6 +344,7 @@ describe("OAI-T10 staged Terra route", () => {
         "private prompt canary",
         "private secret canary",
         "unbounded_private_reason",
+        "private_candidate_field",
       ]) {
         assert.equal(serializedDiagnostics.includes(privateValue), false);
       }
@@ -346,7 +368,7 @@ describe("OAI-T10 staged Terra route", () => {
         responseId: "resp_research123",
         status: "queued",
         requestFingerprint: fingerprint,
-        promptVersion: "staged-terra-research-prompt-v1",
+        promptVersion: "staged-terra-research-prompt-v2",
         ledger: { operation: "research_start" },
       }),
       pollResearch: async () => ({
