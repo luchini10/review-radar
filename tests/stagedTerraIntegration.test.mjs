@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
+import { createCipheriv, createHash, hkdfSync } from "node:crypto";
 import { describe, it } from "node:test";
 
+import { buildDirectTerraRequirementContract } from "../lib/directTerraCandidateSlate.ts";
 import {
   buildStagedTerraRequestFingerprint,
 } from "../lib/stagedTerraContract.ts";
@@ -23,6 +25,64 @@ const shopper = {
   budget: "under $500",
   priorities: "battery powered",
 };
+
+function requestFingerprintForContractVersion(contractVersion) {
+  const requirements = buildDirectTerraRequirementContract(shopper).map(
+    ({ id, kind, hard }) => ({ id, kind, hard }),
+  );
+  return createHash("sha256")
+    .update(contractVersion)
+    .update("\0")
+    .update(
+      JSON.stringify({
+        query: shopper.query,
+        budget: shopper.budget ?? null,
+        priorities: shopper.priorities ?? null,
+        avoid: shopper.avoid ?? null,
+        selectedFeatures: shopper.selectedFeatures ?? [],
+        requirements,
+      }),
+    )
+    .digest("hex");
+}
+
+function issueCryptographicallyValidTestToken({
+  promptVersion,
+  requestFingerprint,
+}) {
+  const tokenVersion = "staged-terra-job-v1";
+  const key = Buffer.from(
+    hkdfSync(
+      "sha256",
+      Buffer.from(secret, "utf8"),
+      Buffer.from("ReviewRadar staged Terra token salt v1", "utf8"),
+      Buffer.from("ReviewRadar staged Terra token key v1", "utf8"),
+      32,
+    ),
+  );
+  const nonce = Buffer.alloc(12, 7);
+  const cipher = createCipheriv("aes-256-gcm", key, nonce);
+  cipher.setAAD(Buffer.from(tokenVersion, "utf8"));
+  const payload = {
+    version: tokenVersion,
+    responseId: "resp_research123",
+    promptVersion,
+    requestFingerprint,
+    shopperRequest: shopper,
+    issuedAtMs: 1_000,
+    expiresAtMs: 61_000,
+  };
+  const ciphertext = Buffer.concat([
+    cipher.update(JSON.stringify(payload), "utf8"),
+    cipher.final(),
+  ]);
+  return [
+    tokenVersion,
+    nonce.toString("base64url"),
+    ciphertext.toString("base64url"),
+    cipher.getAuthTag().toString("base64url"),
+  ].join(".");
+}
 
 describe("OAI-T10 staged Terra integration contracts", () => {
   it("keeps provider ids encrypted inside a bounded, tamper-evident job token", () => {
@@ -61,6 +121,44 @@ describe("OAI-T10 staged Terra integration contracts", () => {
       }).ok,
       false,
     );
+  });
+
+  it("rejects cryptographically valid jobs from an old prompt or contract", () => {
+    assert.equal(
+      verifyStagedTerraJobToken({
+        token: issueCryptographicallyValidTestToken({
+          promptVersion: STAGED_TERRA_RESEARCH_PROMPT_VERSION,
+          requestFingerprint: buildStagedTerraRequestFingerprint(shopper),
+        }),
+        secret,
+        nowMs: 2_000,
+      }).ok,
+      true,
+    );
+
+    const cases = [
+      {
+        promptVersion: "staged-terra-research-prompt-v4",
+        requestFingerprint: buildStagedTerraRequestFingerprint(shopper),
+      },
+      {
+        promptVersion: STAGED_TERRA_RESEARCH_PROMPT_VERSION,
+        requestFingerprint: requestFingerprintForContractVersion(
+          "staged-terra-contract-v5",
+        ),
+      },
+    ];
+
+    for (const legacy of cases) {
+      assert.deepEqual(
+        verifyStagedTerraJobToken({
+          token: issueCryptographicallyValidTestToken(legacy),
+          secret,
+          nowMs: 2_000,
+        }),
+        { ok: false, reason: "invalid_token" },
+      );
+    }
   });
 
   it("renders identity, assets, and evidence from the verified package rather than model prose", () => {

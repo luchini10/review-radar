@@ -25,7 +25,7 @@ function request(method, body, headers = {}) {
 
 function researchOutput() {
   return {
-    schemaVersion: "staged-terra-research-v3",
+    schemaVersion: "staged-terra-research-v4",
     candidates: Array.from({ length: 8 }, (_, index) => ({
       candidateId: `candidate_${index + 1}`,
       productName: `Example V${index + 1}00 cordless vacuum`,
@@ -172,7 +172,7 @@ describe("OAI-T10 staged Terra route", () => {
         requestFingerprint: (
           await import("../lib/stagedTerraContract.ts")
         ).buildStagedTerraRequestFingerprint(shopper),
-        promptVersion: "staged-terra-research-prompt-v4",
+        promptVersion: "staged-terra-research-prompt-v5",
         ledger: {
           operation: "research_start",
           responseIdHash: "hash-only",
@@ -364,7 +364,7 @@ describe("OAI-T10 staged Terra route", () => {
         responseId: "resp_research123",
         status: "queued",
         requestFingerprint: fingerprint,
-        promptVersion: "staged-terra-research-prompt-v4",
+        promptVersion: "staged-terra-research-prompt-v5",
         ledger: { operation: "research_start" },
       }),
       pollResearch: async () => ({
@@ -542,7 +542,7 @@ describe("OAI-T10 staged Terra route", () => {
           responseId: "resp_research123",
           status: "queued",
           requestFingerprint: fingerprint,
-          promptVersion: "staged-terra-research-prompt-v4",
+          promptVersion: "staged-terra-research-prompt-v5",
           ledger: { operation: "research_start" },
         }),
         pollResearch: async () => ({
@@ -692,7 +692,7 @@ describe("OAI-T10 staged Terra route", () => {
           responseId: "resp_research123",
           status: "queued",
           requestFingerprint: fingerprint,
-          promptVersion: "staged-terra-research-prompt-v4",
+          promptVersion: "staged-terra-research-prompt-v5",
           ledger: { operation: "research_start" },
         }),
         pollResearch: async () => ({
@@ -782,7 +782,7 @@ describe("OAI-T10 staged Terra route", () => {
         responseId: "resp_research123",
         status: "queued",
         requestFingerprint: fingerprint,
-        promptVersion: "staged-terra-research-prompt-v4",
+        promptVersion: "staged-terra-research-prompt-v5",
         ledger: { operation: "research_start" },
       }),
       pollResearch: async () => ({

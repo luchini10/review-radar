@@ -11,6 +11,44 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Derive staged research names from atomic identity
+
+#### Changed
+
+- Preserved the one PR-3C `shop vac` result as immutable evidence. It stopped
+  after provider research in the bounded candidate-identity group and performed
+  no source-page, Shopping, verification, presentation, or rendering work. The
+  sanitized artifact does not reveal the exact field, candidate, value, or live
+  cause.
+- Removed `product_name` from the staged research model's strict output schema.
+  ReviewRadar now normalizes bounded brand, model, and complete-product type and
+  constructs the internal name server-side within the existing 300-character
+  limit before applying the unchanged shared identity-coherence rule.
+- Rolled research schema v4, contract v6, prompt v5, and runtime v5 together.
+  Unexpected model-authored composite names fail exact-key validation, and
+  authentic old-prompt or old-contract job tokens fail closed.
+- Kept source ownership, exact identity, complete-product relationship,
+  commerce, assets, requirements, evidence, eligibility, ranking, public API,
+  flags, and deployment behavior unchanged.
+
+#### Verified
+
+- Fail-first produced exactly five intended failures. The corrected staged wall
+  passed 80/80; the complete suite passed 1,482/1,482 across 214 suites.
+- All five deterministic worker partitions reconciled; the tracked benchmark
+  passed 10/10 cases and 29/29 invariants. E2E passed 17/17.
+- Typecheck, production build, legacy eval, ranking comparison, zero-network
+  Phase D and scorecard dry runs, and diff checks passed. Lint reported zero
+  errors and the same three pre-existing warnings.
+- Independent review added authentic stale-token mutation coverage and returned
+  `APPROVED`, no remaining findings, confidence 0.98.
+
+This correction removes a reproduced schema-inexpressible relation, but it does
+not prove PR-3C's private cause, live provider adherence, recommendation-quality
+improvement, or lifecycle feasibility. Conservative atomic limits may reject an
+unusually long legitimate identity; PR-3E must measure the reviewed contract
+once before the active-path quality matrix begins.
+
 ### Codex - Attribute staged verification failures without exposing products
 
 #### Changed

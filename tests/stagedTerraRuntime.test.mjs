@@ -26,7 +26,6 @@ function researchValue() {
       const number = index + 1;
       const url = `https://store${number}.example/products/v${number}00`;
       return {
-        product_name: `Example Brand V${number}00 cordless vacuum`,
         brand: "Example Brand",
         model: `V${number}00`,
         product_type: "cordless vacuum",

@@ -12391,3 +12391,159 @@ rule. Treat it as a new evidence-v4 measurement, not a retry of PR-3A. If it
 fails, use the overlapping branch-specific counts only to select an evidence-
 supported offline reproduction target, and establish a generalized cause there
 before changing behavior; if it succeeds, proceed to PR-4.
+
+## Agent Loop Run - 2026-08-29T10:20:56.011Z
+
+- **run id:** agent-loop-2026-08-29T10-20-28-678Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust
+- **parallel:** 1
+- **worker result files checked:** 1
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3205ms |
+| lint | Passed | 9879ms |
+| unit tests | Passed | 12604ms |
+| deterministic eval pipeline | Passed | 440ms |
+| tracked offline benchmark | Passed | 571ms |
+
+### Executed Benchmark Cases
+
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-29T10-20-28-678Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-29T10:30:25.587Z
+
+- **run id:** agent-loop-2026-08-29T10-29-53-068Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3487ms |
+| lint | Passed | 11015ms |
+| unit tests | Passed | 13679ms |
+| deterministic eval pipeline | Passed | 474ms |
+| tracked offline benchmark | Passed | 592ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-29T10-29-53-068Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## 🟧 Codex — 2026-08-29 — PR-3C identity stop and PR-3D structural identity correction
+
+**Objective:** use one bounded post-observability lifecycle result to select the
+strongest generalized offline repair target, without inferring private product
+data or weakening exact-product trust gates.
+
+**PR-3C live ground truth:** exactly one frozen `shop vac` invocation ran at
+clean commit `a7434262f74d610322adf88c1e3556a11ae4b810`. It stopped after provider
+research as HTTP 502 `research_failed / research_candidate_invalid /
+candidate_identity`, before source collection, Shopping, deterministic
+verification, presentation, or rendering. The 45.940-second first-terminal
+envelope used one create, 20 retrieves, three hosted searches, one safety
+cancel, 29,986 input tokens, zero cached input, and 4,574 output tokens. Every
+retry, replacement, fallback, product-data, second-case, and downstream counter
+remained zero. Frozen-conservative cost was `$0.192316`, below `$3`.
+
+The spent directory contains only an untracked 18,255-byte evidence-v4
+`attempt.json`, SHA-256
+`d18471b3a9647ded7142b287dd914b3e2aed5afdfb582f84c624747f58ee917e`.
+Independent strict read-only audit returned exact `VERIFIED`, confidence 0.99.
+The artifact retains no raw output, provider ID, candidate/product/source
+identity, prompt, request/response body, header, credential, key, secret, or
+token. It localizes only the first invalid candidate's field group; the exact
+field, invariant, candidate, and value remain private and unknown. It neither
+explains PR-3A nor establishes a live cause.
+
+**Generalized offline reproduction:** strict JSON Schema independently bounded
+`product_name`, `brand`, `model`, and `product_type`, while runtime additionally
+required the composite name to agree dynamically with all three atomic fields.
+Four schema-valid missing-brand, missing-model, conflicting-model, and wrong-
+type tuples already reproduced `candidate_identity` under the unchanged shared
+coherence predicate. Prompt v4 stated the relation, but JSON Schema cannot
+encode it and prompt prose is not an executable trust boundary.
+
+**Fail-first:** the selected request-boundary/version/canonical-construction
+tests produced exactly five intended failures: the schema still exposed
+`product_name`, contract/prompt/runtime retained v5/v4/v4, and a wire candidate
+without the composite failed validation.
+
+**PR-3D correction:** research schema v4 removes model-authored `product_name`.
+Brand, model, and concise complete-product type have 100/120/78-character
+limits; plus two separators, the server-constructed canonical name has the
+existing exact 300-character ceiling. Runtime normalizes whitespace, derives
+the name, rejects any extra composite field through exact keys, and still runs
+the unchanged shared coherence and duplicate-identity checks. Contract v6,
+prompt v5, and runtime v5 roll old jobs closed.
+
+**Independent correction loop:** the reviewer found that version assertions did
+not prove rejection of an authentic old job. A deterministic AES-GCM token
+builder now has a current positive control and two independent negatives: old
+prompt v4 with the current fingerprint, and current prompt v5 with the old
+contract-v5 fingerprint. Deleting either stale-version check is now observable.
+Terminal verdict: `APPROVED`, no remaining findings, confidence 0.98. The
+reviewer personally passed 67/67 focused checks, typecheck, and diff validation.
+
+**Final verification:**
+
+- focused staged wall: 80/80 across ten suites;
+- complete deterministic suite: 1,482/1,482 across 214 suites;
+- five exact deterministic worker partitions: reconciled;
+- tracked benchmark: 10/10 cases and 29/29 invariants;
+- credential-neutral Playwright E2E: 17/17;
+- typecheck and production build: pass;
+- legacy eval: no red flags; fixed ranking comparison: pass;
+- zero-network Phase D and scorecard dry runs: pass;
+- lint: zero errors and the same three pre-existing warnings;
+- `git diff --check`: pass; generated `next-env.d.ts`: restored/clean; and
+- PR-3D provider/product-data/live calls: zero.
+
+**Scope and limits:** source ownership, requirements, facts, exact identity,
+complete-product relationship, commerce, assets, evidence, eligibility,
+ranking, public API, flags, and deployment behavior are unchanged. Conservative
+atomic limits may reject an unusually long legitimate identity. PR-3D closes
+the reproduced redundant relation; it does not prove provider adherence,
+recommendation-quality improvement, lifecycle feasibility, or PR-3C causation.
+
+**Next decision:** after the self-contained PR-3D commit is clean, run exactly
+one PR-3E measurement of the unchanged frozen case in a new commit-derived
+directory under every existing ceiling and first-terminal/no-retry rule. A
+failure selects only the next generalized offline reproduction; a safe complete
+result unlocks the bounded active-path matrix.

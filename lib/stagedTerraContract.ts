@@ -7,9 +7,9 @@ import {
 import { directTerraAssetTargetIsCoherent } from "./directTerraAssetVerifier.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
 
-export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v5";
+export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v6";
 export const STAGED_TERRA_RESEARCH_SCHEMA_VERSION =
-  "staged-terra-research-v3";
+  "staged-terra-research-v4";
 export const STAGED_TERRA_EVIDENCE_PACKAGE_VERSION =
   "staged-terra-evidence-v1";
 export const STAGED_TERRA_PRESENTATION_SCHEMA_VERSION =
@@ -49,6 +49,15 @@ const RESEARCH_FACT_KINDS = [
   "availability",
   "price",
 ] as const;
+
+const RESEARCH_BRAND_MAX_LENGTH = 100;
+const RESEARCH_MODEL_MAX_LENGTH = 120;
+const RESEARCH_PRODUCT_TYPE_MAX_LENGTH = 78;
+const RESEARCH_PRODUCT_NAME_MAX_LENGTH =
+  RESEARCH_BRAND_MAX_LENGTH +
+  RESEARCH_MODEL_MAX_LENGTH +
+  RESEARCH_PRODUCT_TYPE_MAX_LENGTH +
+  2;
 const EVIDENCE_KINDS = ["claim", "product_page", "image"] as const;
 const SOURCE_TYPES = [
   "manufacturer",
@@ -251,6 +260,10 @@ function boundedString(value: unknown, maximum: number) {
   );
 }
 
+function normalizeResearchIdentityField(value: string) {
+  return value.replace(/\s+/g, " ").trim();
+}
+
 function exactHttpsUrl(value: unknown) {
   if (typeof value !== "string" || value.length > 4_096) return null;
   try {
@@ -445,28 +458,22 @@ export function stagedTerraResearchJsonSchema(
           type: "object",
           additionalProperties: false,
           properties: {
-            product_name: {
-              type: "string",
-              minLength: 1,
-              maxLength: 300,
-              pattern: "\\S",
-            },
             brand: {
               type: "string",
               minLength: 1,
-              maxLength: 120,
+              maxLength: RESEARCH_BRAND_MAX_LENGTH,
               pattern: "\\S",
             },
             model: {
               type: "string",
               minLength: 1,
-              maxLength: 200,
+              maxLength: RESEARCH_MODEL_MAX_LENGTH,
               pattern: "\\S",
             },
             product_type: {
               type: "string",
               minLength: 1,
-              maxLength: 160,
+              maxLength: RESEARCH_PRODUCT_TYPE_MAX_LENGTH,
               pattern: "\\S",
             },
             source_urls: {
@@ -518,7 +525,6 @@ export function stagedTerraResearchJsonSchema(
             },
           },
           required: [
-            "product_name",
             "brand",
             "model",
             "product_type",
@@ -542,7 +548,6 @@ function parseResearchCandidate(
   if (
     !isRecord(value) ||
     !exactKeys(value, [
-      "product_name",
       "brand",
       "model",
       "product_type",
@@ -550,19 +555,21 @@ function parseResearchCandidate(
       "requirement_leads",
       "fact_leads",
     ]) ||
-    !boundedString(value.product_name, 300) ||
-    !boundedString(value.brand, 120) ||
-    !boundedString(value.model, 200) ||
-    !boundedString(value.product_type, 160)
+    !boundedString(value.brand, RESEARCH_BRAND_MAX_LENGTH) ||
+    !boundedString(value.model, RESEARCH_MODEL_MAX_LENGTH) ||
+    !boundedString(value.product_type, RESEARCH_PRODUCT_TYPE_MAX_LENGTH)
   ) {
     return { ok: false, reason: "candidate_identity" };
   }
   const candidateId = `candidate_${index + 1}`;
-  const productName = value.product_name as string;
-  const brand = value.brand as string;
-  const model = value.model as string;
-  const productType = value.product_type as string;
+  const brand = normalizeResearchIdentityField(value.brand as string);
+  const model = normalizeResearchIdentityField(value.model as string);
+  const productType = normalizeResearchIdentityField(
+    value.product_type as string,
+  );
+  const productName = `${brand} ${model} ${productType}`;
   if (
+    !boundedString(productName, RESEARCH_PRODUCT_NAME_MAX_LENGTH) ||
     !directTerraAssetTargetIsCoherent({
       key: candidateId,
       rank: index + 1,

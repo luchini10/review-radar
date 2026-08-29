@@ -157,21 +157,24 @@ all three. It is selected only when the server flag
 header to be sent. Both committed defaults are off.
 
 The first request is one background Terra/high Responses job with hosted web
-search. Research schema v2 returns 8–15 ordered product identities,
+search. Research schema v4 returns 8–15 ordered atomic product identities,
 response-owned source URLs, and evidence leads; it cannot rank products, mint
-internal IDs, or write shopper-facing cards. After validation, ReviewRadar
-assigns `candidate_<n>` and `candidate_<n>_fact_<m>` from array order. It
-requires each `product_name`/brand/model/type tuple to satisfy the same unchanged
-target-coherence predicate used by downstream asset verification before any
-candidate source or verification work. It then requires the exact unique
-normalized-requirement set and canonicalizes those leads into request order for
-every downstream consumer. The browser receives only an encrypted,
-authenticated app job token and polls that token in a header. Provider response
-IDs and diagnostics remain server-only. Contract v4 is part of the request
-fingerprint, research prompt v3 is bound into the token, and runtime v3 records
-the new acceptance semantics, so older in-flight jobs fail closed across a
-deployment rollover. The provider-facing research schema remains v2 because
-the JSON shape is unchanged.
+internal IDs, author a composite `product_name`, or write shopper-facing cards.
+Brand, model, and concise complete-product type are separately required and
+bounded to 100, 120, and 78 characters. After validation, ReviewRadar normalizes
+those fields, constructs the internal product name deterministically within the
+existing 300-character limit, assigns `candidate_<n>` and
+`candidate_<n>_fact_<m>` from array order, and runs the unchanged shared target-
+coherence predicate before candidate source or verification work. Unexpected
+model-authored composite names fail exact-key validation. The server then
+requires the exact unique normalized-requirement set and canonicalizes those
+leads into request order for every downstream consumer.
+
+The browser receives only an encrypted, authenticated app job token and polls
+that token in a header. Provider response IDs and diagnostics remain server-
+only. Contract v6 is part of the request fingerprint, research prompt v5 is
+bound into the token, and runtime v5 records the acceptance semantics, so older
+in-flight jobs fail closed across a deployment rollover.
 
 After research completes, the server fetches at most two candidate-owned source
 pages per product through the existing DNS-pinned bounded-fetch seam and may
@@ -228,30 +231,29 @@ terminal provider usage even when local validation later fails; repeated
 snapshots deduplicate only by the same safe response hash, while distinct or
 unidentifiable responses sum conservatively and block successful acceptance as
 an anomaly. The entire branch remains default-off, undeployed, and without a
-successful live feasibility result. The latest live evidence is PR-3A at commit
-`43857e072da54ee8f988887d3813722ed6fd005b`: Terra completed research with ten
-candidates and 79 canonical sources; seven of 15 selected source pages fetched
-successfully; and ten Shopping requests returned 192 rows. Deterministic
-verification then excluded all ten candidates before presentation, with nine
-first losses at `assetIdentityUnproven` and one at
-`identitySafeProductUrlUnavailable`. The spent sanitized-evidence-v3 artifact
-cannot distinguish the exact direct-asset, Shopping, or URL reason and retains
-no candidate identity or private decision detail. Zero source/claim rejection
-counts do not prove those later gates passed for candidates that stopped
-earlier. Verifier v3 and sanitized evidence v4 make a future separate attempt's
-closed subreason distribution observable; they do not retroactively explain
-PR-3A or change verification behavior. Earlier spent evidence remains immutable
-and keeps its original schema meaning.
+successful live feasibility result. PR-3A at commit `43857e0` crossed research
+and collection, then deterministic verification excluded all ten candidates
+before presentation: nine first losses at asset identity and one at the
+identity-safe product-URL gate. Its spent sanitized-evidence-v3 artifact cannot
+distinguish the exact direct-asset, Shopping, or URL reason and remains
+immutable.
 
-The zero-live PR-2H correction closes one independently reproduced generalized
-self-mismatch: bounded identity strings can no longer pass research when their
-product name omits or conflicts with the supplied brand, model, or complete-
-product type under the shared verifier rule. Such a tuple now fails as the
-existing URL-free `research_candidate_invalid / candidate_identity` class
-before source parsing, Shopping, or page work. Valid numeric model trimming
-remains accepted. This does not explain PR-2G or change asset eligibility.
-PR-2I crossed far enough to report the fact field group, but that does not prove
-every candidate cleared identity or establish staged feasibility.
+The latest live evidence is PR-3C at clean commit `a7434262`: one frozen `shop
+vac` lifecycle stopped after provider research but before collection as
+`research_candidate_invalid / candidate_identity`. Sanitized evidence v4
+retains only that URL-free field group, accounting, counters, and cost; it does
+not reveal the exact field, invariant, candidate, or private value and does not
+explain PR-3A. The one-file artifact independently returned `VERIFIED` and is
+spent.
+
+PR-3D replaces the earlier prompt-enforced PR-2H relation with a structural
+producer boundary. The model no longer repeats a composite name that can drift
+from its own brand, model, or type. Server construction makes that relation true
+by design, while the unchanged coherence predicate, duplicate identity rule,
+and all downstream asset/evidence/commerce gates still fail closed. This is a
+generalized zero-live correction for the reproduced schema-inexpressible
+relation, not attribution of PR-3C's hidden exact cause or proof of provider
+adherence, lifecycle feasibility, or recommendation-quality improvement.
 
 PR-2J closes a separately reproduced producer/parser mismatch without a live
 request. Candidate `source_urls` remains the exact response-owned URL registry
@@ -261,17 +263,17 @@ server first validates each candidate URL for exact response ownership,
 uniqueness, HTTPS/public-host safety, credential absence, and default port, then
 maps only integer, unique, in-range indexes back to those exact strings.
 
-Research schema v3 uses nested closed variants so supporting/conflicting
+PR-2J introduced research schema v3 with nested closed variants so supporting/conflicting
 requirements require one to six references and `not_found` requires an empty
 array; every fact requires one to six. Runtime independently retains those
 checks and enforces the candidate-length-dependent upper bound and uniqueness
-that the provider schema cannot fully express. Contract v5, prompt v4, and
-runtime v4 roll the request/job identity; existing token verification rejects
-old prompt versions and recomputes the current contract fingerprint. The
-correction changes no downstream requirement, evidence, page, commerce, price,
-asset, eligibility, diagnostic, public-response, network-ceiling, or default-
-flag rule. It deterministically prevents the reproduced wire mismatch but does
-not prove the private PR-2I cause, live model adherence, or lifecycle success.
+that the provider schema cannot fully express. Its contract v5, prompt v4, and
+runtime v4 rollover remains historical; current PR-3D identities are v6/v5/v5
+with research schema v4. Existing token verification rejects old prompt
+versions and recomputes the current contract fingerprint. Neither correction
+changes downstream requirement, evidence, page, commerce, price, asset,
+eligibility, diagnostic, public-response, network-ceiling, or default-flag
+rules.
 
 The route reconstructs only bounded integer values from the exact verifier-v3
 aggregate and nested key allowlists. It requires first-loss conservation,

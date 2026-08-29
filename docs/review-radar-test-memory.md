@@ -4,6 +4,50 @@
 
 ---
 
+## OAI-T10 PR-3C identity stop and PR-3D structural identity contract (2026-08-29)
+
+- PR-3C spent exactly one frozen `shop vac` Phase D invocation at clean commit
+  `a7434262f74d610322adf88c1e3556a11ae4b810`. It stopped after provider research
+  as `research_candidate_invalid / candidate_identity`, before source
+  collection, Shopping, verification, presentation, or rendering. The first-
+  terminal envelope used one create, 20 retrieves, three hosted searches, one
+  cancel, 29,986 input tokens, and 4,574 output tokens; frozen-conservative cost
+  was `$0.192316`. There was no retry, replacement, fallback, product-data work,
+  or second case.
+- The spent PR-3C directory contains only untracked 18,255-byte `attempt.json`,
+  SHA-256
+  `d18471b3a9647ded7142b287dd914b3e2aed5afdfb582f84c624747f58ee917e`.
+  Independent audit returned `VERIFIED`, confidence 0.99. Never read, edit,
+  retry, stage, reuse, or add files to that directory.
+- Evidence v4 reveals only the first invalid candidate's identity field group.
+  The exact field, invariant, candidate, and value remain private and unknown.
+  It does not explain PR-3A or prove a live cause.
+- Current research schema v4 must not expose or require model-authored
+  `product_name`. It requires exact brand, model, and concise complete-product
+  type with 100/120/78-character maxima. Runtime normalizes those atomic fields,
+  joins them with two spaces into the internal name, rechecks the exact 300-
+  character bound, and still runs the unchanged
+  `directTerraAssetTargetIsCoherent()` and duplicate-identity rules.
+- Exact-key parsing must reject an unexpected research `product_name`. Do not
+  truncate the atomic fields, restore redundant model ownership, or weaken any
+  downstream source, identity, relationship, commerce, evidence, eligibility,
+  or public-response gate.
+- Contract v6, prompt v5, and runtime v5 roll old work closed. Token tests must
+  include a cryptographically valid current positive control, old prompt v4
+  with the current fingerprint, and current prompt v5 with an old contract-v5
+  fingerprint. Both old jobs must return `invalid_token`.
+- Fail-first produced exactly five intended failures. Final staged tests passed
+  80/80, full tests 1,482/1,482, five batch partitions reconciled, the benchmark
+  passed 10/10 cases and 29/29 invariants, and E2E passed 17/17. Independent
+  review returned `APPROVED`, no findings, confidence 0.98.
+- PR-3D proves a generalized offline structural correction only. Conservative
+  atomic maxima may reduce recall; live adherence, lifecycle feasibility,
+  recommendation quality, and PR-3C causation remain unknown. PR-3E may run the
+  unchanged frozen case exactly once after the clean PR-3D commit under the
+  existing ceilings and first-terminal/no-retry policy.
+
+---
+
 ## OAI-T10 PR-3A live stop and PR-3B subreason contract (2026-08-29)
 
 - PR-3A spent exactly one frozen `shop vac` Phase D invocation at clean commit
@@ -55,12 +99,10 @@
   and diff checks passed. Independent review found the three unreachable
   buckets and a missing subreason-coverage mutation wall; after correction the
   terminal verdict was `APPROVED`.
-- PR-3B changes observability only. It does not change eligibility, evidence,
+- PR-3B changed observability only. It did not change eligibility, evidence,
   identity, relationship, URL, commerce, price, ranking, network, public API,
-  flag, or UI behavior and proves no live cause. Any next measurement must be a
-  separately documented PR-3C invocation at the clean committed PR-3B snapshot,
-  in a new commit-derived directory, exactly once under the unchanged Phase D
-  ceilings and first-terminal/no-retry policy.
+  flag, or UI behavior and proved no live cause. Its separately documented
+  PR-3C successor is now spent; use the newer PR-3C/PR-3D contract above.
 
 ---
 
@@ -176,9 +218,11 @@
 ## OAI-T10 PR-2H research/asset identity alignment (2026-08-29)
 
 - Research identity acceptance and downstream asset verification must use the
-  same unchanged `directTerraAssetTargetIsCoherent()` predicate. Do not create a
-  second brand/model/type algorithm, synthesize a product name, or loosen asset
-  identity to improve acceptance.
+  same unchanged `directTerraAssetTargetIsCoherent()` predicate. PR-2H's
+  historical scope prohibited name synthesis while the model still authored a
+  composite. PR-3D supersedes only that producer ownership: server construction
+  from exact bounded atomic fields is now required. Do not create a second
+  brand/model/type algorithm or loosen asset identity to improve acceptance.
 - After bounded nonempty identity strings, construct the exact downstream
   target fields (`candidate_<n>`, rank, product name, brand, model, category)
   and reject incoherence as

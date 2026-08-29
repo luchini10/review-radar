@@ -66,7 +66,6 @@ function researchFixture() {
     ];
     responseSourceUrls.push(...sourceUrls);
     return {
-      product_name: `Brand ${candidateIndex + 1} M${candidateIndex + 1}00 cordless vacuum`,
       brand: `Brand ${candidateIndex + 1}`,
       model: `M${candidateIndex + 1}00`,
       product_type: "cordless vacuum",
@@ -402,9 +401,28 @@ describe("staged Terra request boundaries", () => {
       researchCandidateSchema.required.includes("candidate_id"),
       false,
     );
-    for (const property of ["product_name", "brand", "model", "product_type"]) {
+    assert.equal("product_name" in researchCandidateSchema.properties, false);
+    assert.equal(
+      researchCandidateSchema.required.includes("product_name"),
+      false,
+    );
+    for (const property of ["brand", "model", "product_type"]) {
       assert.equal(researchCandidateSchema.properties[property].pattern, "\\S");
     }
+    assert.deepEqual(
+      ["brand", "model", "product_type"].map(
+        (property) => researchCandidateSchema.properties[property].maxLength,
+      ),
+      [100, 120, 78],
+    );
+    assert.equal(
+      ["brand", "model", "product_type"].reduce(
+        (length, property) =>
+          length + researchCandidateSchema.properties[property].maxLength,
+        2,
+      ),
+      300,
+    );
     const requirementLeadVariants =
       researchCandidateSchema.properties.requirement_leads.items.anyOf;
     assert.equal(requirementLeadVariants.length, 3);
@@ -467,7 +485,7 @@ describe("staged Terra request boundaries", () => {
     assert.match(research.instructions, /do not emit synthetic identifiers/i);
     assert.match(
       research.instructions,
-      /product_name.{0,240}(?:agree|match).{0,160}brand.{0,120}model.{0,160}product[_ -]?type/is,
+      /do not emit product_name.{0,240}(?:constructs|derives).{0,240}brand.{0,120}model.{0,160}product[_ -]?type/is,
     );
     assert.match(
       research.instructions,
@@ -491,25 +509,25 @@ describe("staged Terra request boundaries", () => {
     assert.doesNotMatch(presentation.input, /image_url/i);
     assert.doesNotMatch(presentation.input, /https:\/\//i);
     assert.deepEqual(STAGED_TERRA_SCHEMA_VERSIONS, {
-      research: "staged-terra-research-v3",
+      research: "staged-terra-research-v4",
       evidence: "staged-terra-evidence-v1",
       presentation: "staged-terra-presentation-v1",
     });
   });
 
   it("rolls the research acceptance contract identity", () => {
-    assert.equal(STAGED_TERRA_CONTRACT_VERSION, "staged-terra-contract-v5");
+    assert.equal(STAGED_TERRA_CONTRACT_VERSION, "staged-terra-contract-v6");
   });
 
   it("rolls the research prompt identity", () => {
     assert.equal(
       STAGED_TERRA_RESEARCH_PROMPT_VERSION,
-      "staged-terra-research-prompt-v4",
+      "staged-terra-research-prompt-v5",
     );
   });
 
   it("rolls the staged runtime identity", () => {
-    assert.equal(STAGED_TERRA_RUNTIME_VERSION, "staged-terra-runtime-v4");
+    assert.equal(STAGED_TERRA_RUNTIME_VERSION, "staged-terra-runtime-v5");
   });
 
   it("keeps the integrated path default-off and isolated from Direct Terra", () => {
@@ -742,6 +760,55 @@ describe("staged Terra research contract", () => {
     );
   });
 
+  it("constructs a bounded canonical product name from normalized atomic identity fields", () => {
+    const fixture = researchFixture();
+    Object.assign(fixture.value.candidates[0], {
+      brand: "  DEWALT  ",
+      model: "  DXV12P-QT ",
+      product_type: " shop   vac ",
+    });
+
+    const result = validateStagedTerraResearchOutput({
+      value: fixture.value,
+      shopperRequest: shopper,
+      responseSourceUrls: fixture.responseSourceUrls,
+    });
+
+    assert.equal(result.ok, true);
+    assert.deepEqual(
+      {
+        productName: result.value.candidates[0].productName,
+        brand: result.value.candidates[0].brand,
+        model: result.value.candidates[0].model,
+        productType: result.value.candidates[0].productType,
+      },
+      {
+        productName: "DEWALT DXV12P-QT shop vac",
+        brand: "DEWALT",
+        model: "DXV12P-QT",
+        productType: "shop vac",
+      },
+    );
+  });
+
+  it("accepts the exact 300-character canonical identity allocation", () => {
+    const fixture = researchFixture();
+    Object.assign(fixture.value.candidates[0], {
+      brand: "B".repeat(100),
+      model: `M1${"x".repeat(118)}`,
+      product_type: `shop vacuum ${"t".repeat(66)}`,
+    });
+
+    const result = validateStagedTerraResearchOutput({
+      value: fixture.value,
+      shopperRequest: shopper,
+      responseSourceUrls: fixture.responseSourceUrls,
+    });
+
+    assert.equal(result.ok, true);
+    assert.equal(result.value.candidates[0].productName.length, 300);
+  });
+
   it("assigns synthetic IDs server-side and canonicalizes requirement order", () => {
     const fixture = researchFixture();
     for (const candidate of fixture.value.candidates) {
@@ -764,36 +831,32 @@ describe("staged Terra research contract", () => {
     );
   });
 
+  it("rejects an unexpected model-authored composite product name", () => {
+    const fixture = researchFixture();
+    fixture.value.candidates[0].product_name = "Brand 1 M999 robot vacuum";
+
+    assert.deepEqual(
+      validateStagedTerraResearchOutput({
+        value: fixture.value,
+        shopperRequest: shopper,
+        responseSourceUrls: fixture.responseSourceUrls,
+      }),
+      {
+        ok: false,
+        reason: "research_candidate_invalid",
+        candidateValidationReason: "candidate_identity",
+      },
+    );
+  });
+
   for (const testCase of [
-    {
-      name: "a product name missing its brand",
-      mutate: (candidate) => {
-        candidate.product_name = "M100 cordless vacuum";
-      },
-    },
-    {
-      name: "a product name missing its model core",
-      mutate: (candidate) => {
-        candidate.product_name = "Brand 1 cordless vacuum";
-      },
-    },
-    {
-      name: "a product name containing a conflicting model",
-      mutate: (candidate) => {
-        candidate.product_name = "Brand 1 M999 cordless vacuum";
-      },
-    },
-    {
-      name: "a product name mismatching its complete-product type",
-      mutate: (candidate) => {
-        candidate.product_name = "Brand 1 M100 robot vacuum";
-        candidate.product_type = "shop vac";
-      },
-    },
+    { field: "brand", value: "B".repeat(101) },
+    { field: "model", value: "M".repeat(121) },
+    { field: "product_type", value: "T".repeat(79) },
   ]) {
-    it(`rejects ${testCase.name} before downstream verification`, () => {
+    it(`rejects an overlong atomic ${testCase.field} before downstream verification`, () => {
       const fixture = researchFixture();
-      testCase.mutate(fixture.value.candidates[0]);
+      fixture.value.candidates[0][testCase.field] = testCase.value;
 
       assert.deepEqual(
         validateStagedTerraResearchOutput({
@@ -810,10 +873,9 @@ describe("staged Terra research contract", () => {
     });
   }
 
-  it("preserves the shared verifier's numeric model-trim coherence", () => {
+  it("constructs a canonical identity without losing a numeric model trim", () => {
     const fixture = researchFixture();
     Object.assign(fixture.value.candidates[0], {
-      product_name: "DEWALT DXV12P shop vac",
       brand: "DEWALT",
       model: "DXV12P-QT",
       product_type: "shop vac",
@@ -834,7 +896,7 @@ describe("staged Terra research contract", () => {
       {
         candidateValidationReason: "candidate_identity",
         mutate: (fixture) => {
-          fixture.value.candidates[0].product_name = " ";
+          fixture.value.candidates[0].brand = " ";
         },
       },
       {
@@ -988,8 +1050,6 @@ describe("staged Terra research contract", () => {
     duplicate.value.candidates[1].brand =
       duplicate.value.candidates[0].brand;
     duplicate.value.candidates[1].model = "M 100";
-    duplicate.value.candidates[1].product_name =
-      "Brand 1 M 100 cordless vacuum";
     assert.deepEqual(
       validateStagedTerraResearchOutput({
         value: duplicate.value,
@@ -1013,7 +1073,7 @@ describe("staged Terra research contract", () => {
       {
         reason: "research_candidate_invalid",
         mutate: (fixture) => {
-          fixture.value.candidates[0].product_name = " ";
+          fixture.value.candidates[0].brand = " ";
         },
       },
       {
@@ -1021,8 +1081,6 @@ describe("staged Terra research contract", () => {
         mutate: (fixture) => {
           fixture.value.candidates[1].brand = fixture.value.candidates[0].brand;
           fixture.value.candidates[1].model = fixture.value.candidates[0].model;
-          fixture.value.candidates[1].product_name =
-            fixture.value.candidates[0].product_name;
         },
       },
     ];

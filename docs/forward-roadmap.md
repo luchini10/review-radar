@@ -3640,6 +3640,33 @@ evidence-supported offline reproduction target; establish a generalized cause
 there before changing behavior. Phase E remains blocked until a shopper
 lifecycle succeeds.
 
+**Phase D continuation — PR-3C/PR-3D, 2026-08-29:** the one evidence-v4 PR-3C
+measurement at clean commit `a7434262` stopped after provider research as
+`research_candidate_invalid / candidate_identity`, before source collection,
+Shopping, verification, presentation, or rendering. The first-terminal/no-
+retry envelope, `$0.192316` frozen-conservative cost, one-file hash, and privacy
+allowlist independently returned `VERIFIED`. The sanitized artifact identifies
+only the first invalid candidate's field group; the exact field, invariant,
+candidate, and value remain unknown, and the result does not explain PR-3A.
+
+Offline inspection selected a stronger generalized target than more diagnostics
+or another unchanged call. Strict JSON Schema bounded `product_name`, `brand`,
+`model`, and `product_type` independently but could not express their dynamic
+coherence relation. Existing deterministic cases reproduced four schema-valid
+tuples that the unchanged shared verifier necessarily rejected. PR-3D removes
+the redundant composite from the research wire contract: schema v4 emits only
+bounded atomic identity fields, and server code normalizes them and constructs
+the internal name within the existing 300-character limit before running the
+same fail-closed coherence rule. Contract v6, prompt v5, and runtime v5 roll old
+work closed. No downstream identity, source, relationship, evidence, commerce,
+eligibility, ranking, public API, flag, or deployment rule changes.
+
+After independent approval and a clean self-contained PR-3D commit, PR-3E may
+run the unchanged frozen case once in a new commit-derived directory under the
+same first-terminal/no-retry/no-fallback ceilings. A stop selects only another
+offline reproduction target; a complete shopper result unlocks Phase E's
+bounded quality/stability matrix.
+
 **Phase E — quality/stability and promotion decision:** only after feasibility
 passes, compare multiple frozen categories against the existing baseline. A
 flag promotion, deployment, or retirement of the old path remains a separate
