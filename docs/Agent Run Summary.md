@@ -1855,3 +1855,51 @@ open.
 `shop vac` attempt under the unchanged Phase D envelope, with no retry,
 replacement, fallback, second case, or gate change. Reasoning level: routine for
 execution and High for evidence adjudication.
+
+## Codex Run - 2026-08-29 Production readiness PR-2G asset-identity stop
+
+**Goal:** execute the one independently authorized evidence-v3 lifecycle attempt
+and stop at its first terminal outcome.
+
+**Preflight:** PR-2F was clean and committed at
+`b01c335908e78101501bf0b40cd833f0e8f3b5d1`; the commit directory was absent;
+required keys were confirmed only by boolean presence; the focused Phase D test
+passed 10/10; and the zero-network dry run reproduced plan v2, exact commit,
+frozen case/rates, and unchanged ceilings.
+
+**Outcome:** research passed with 12 candidates and 58 canonical sources.
+Verification used 12 Shopping requests/194 rows and 12 source fetches/seven
+successes, then excluded every candidate. The route stopped at HTTP 502
+`verification_failed` after 51.618 seconds, before presentation or rendering.
+
+**Attribution:** evidence v3 conserved all 12 first losses as asset identity
+unproven. Every later first-loss bucket and retained source/claim rejection
+counter was zero. This proves only that attempt's earliest aggregate loss; it
+does not reveal why identity failed, which candidates/evidence were affected,
+what shadowed gates would do, or a generalized/category-wide cause.
+
+**Envelope and cost:** one create, 20 retrieves, three hosted searches, one
+cancel, 12 Shopping requests, 12 fetches, and 19 physical HTTP attempts. There
+was no retry, replacement, fallback, second case, organic/SearchAPI,
+presentation, public response, card, source list, or result file. Usage was
+28,335 input and 6,029 output; cost was `$0.191272` frozen nominal,
+`$0.208982` frozen conservative, and `$0.159018` current.
+
+**Privacy and audit:** the 19,053-byte fixture retains only fixed aggregate/
+schema fields, approved pricing URLs, and a response hash; both local key values
+and raw/private candidate/provider material are absent. Independent read-only
+audit returned `VERIFIED` after recomputing counters, costs, conservation,
+privacy, first-stop behavior, and clean tracked state. The fixture is spent.
+
+**Separate offline finding:** a zero-network reproduction showed eight bounded,
+unique, schema-valid research identity tuples pass contract validation while
+all fail `directTerraAssetTargetIsCoherent()`; even an otherwise exact asset is
+then rejected as `invalid_target_identity`. This is a real generalized
+contract/verifier mismatch that can produce the live class, but the saved live
+aggregate cannot prove it caused PR-2G.
+
+**Next recommended step:** zero-live fail-first alignment of staged research
+identity acceptance and prompt wording with the unchanged asset-coherence
+predicate, including fail-closed contract/prompt rollover. Do not loosen the
+asset verifier or make another request. Reasoning level: High for identity and
+rollover semantics, Medium for localized implementation.

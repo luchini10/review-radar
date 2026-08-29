@@ -11770,3 +11770,93 @@ attempt under the unchanged Phase D envelope, stopping at its first terminal
 outcome with no retry/replacement/fallback. That one attempt can establish only
 lifecycle evidence and its own first loss, not quality, stability, or benchmark
 readiness.
+
+---
+
+## 🟧 Codex — 2026-08-29 — Production readiness PR-2G asset-identity stop
+
+**Objective:** answer once whether the PR-2F evidence-v3 route could cross
+research, verification, no-web presentation, and rendering, while preserving
+the frozen case, network/cost envelope, privacy boundary, and first-terminal
+stop.
+
+**Preflight:** tracked state and `next-env.d.ts` were clean at
+`b01c335908e78101501bf0b40cd833f0e8f3b5d1`; the commit-specific directory was
+absent; OpenAI/Serper keys were confirmed by boolean presence only; static runner
+inspection and focused test 10/10 proved evidence v3; and the zero-network dry
+run reproduced plan v2, exact commit, both dated rate cards, and all ceilings.
+
+**Outcome: failed safely at deterministic asset identity.** Research completed
+and passed contract v3 with 12 candidates and 58 canonical sources. Verification
+made 12 Shopping requests returning 194 rows and attempted 12 source fetches
+with seven successes and 19 physical HTTP attempts. It returned zero eligible,
+zero close match, and 12 excluded. The route stopped at HTTP 502
+`verification_failed` after 51.618 seconds; presentation/rendering did not run.
+
+| Counter | Actual | Approved ceiling |
+| --- | ---: | ---: |
+| OpenAI creates | 1 | 2 |
+| retrieves | 20 | 60 |
+| safety cancels | 1 | 1 |
+| hosted searches | 3 | 10 |
+| Serper Shopping | 12 | 15 |
+| source-page fetches | 12 | 30 |
+| physical page HTTP attempts | 19 | 90 |
+| retries / replacements / fallbacks | 0 / 0 / 0 | 0 / 0 / 0 |
+
+There was no second create/case, Serper organic, SearchAPI, presentation
+diagnostic, public response, render, card, source list, or result file.
+
+**Aggregate attribution:** evidence schema
+`oai-t10-phase-d-sanitized-v3` retained this conserved/reconciled distribution:
+
+| Candidate first loss | Count |
+| --- | ---: |
+| asset identity unproven | 12 |
+| complete-product relationship unproven | 0 |
+| identity-safe product URL unavailable | 0 |
+| hard requirement failed | 0 |
+| hard requirement not verified | 0 |
+| no-loss eligible | 0 |
+
+All separate unowned-source, invalid-source-input, and invalid-observed-claim
+candidate counters were zero. This proves only PR-2G's earliest aggregate loss.
+It cannot distinguish an incoherent target from candidate asset titles failing
+brand/model/conflict/type checks, identify candidates/evidence, evaluate
+shadowed later gates, or establish a generalized/category-wide cause.
+
+**Usage and cost:** the completed research ledger recorded 28,335 input, zero
+cached input, 6,029 output, and three hosted searches. All 21 snapshots shared
+one nonempty response hash, so one completed ledger was accounted and none
+duplicated. Independent recomputation matched `$0.191272` frozen nominal,
+`$0.208982` frozen conservative, and `$0.159018` current, below the frozen `$3`
+gate.
+
+**Privacy and state:** the spent directory
+`tests/fixtures/review-radar-live/oai-t10-phase-d-b01c335` contains only untracked
+`attempt.json` (19,053 bytes; SHA-256
+`a8696d6b12c6da6163d0de278da504bbff579338a9fda4326beb2dcf85c70930`). Its
+only URLs are approved OpenAI pricing sources. Both local key values and all raw
+output, provider/prompt/body/header, source/product URL, candidate/request/
+evidence identifier, credential, or secret material are absent. Tracked state
+and index remained clean.
+
+**Independent audit:** `VERIFIED`. The auditor rebound exact commit/case/schema,
+recomputed all counters/costs/conservation, confirmed the sole terminal stop and
+no downstream work, inspected the privacy allowlist, and reauthenticated Git.
+
+**Separate generalized defect reproduction:** without reading private live data,
+an eight-candidate synthetic research response with bounded, unique, schema-
+valid identity fields passed `validateStagedTerraResearchOutput()`, while all
+eight targets failed `directTerraAssetTargetIsCoherent()`. An otherwise exact
+asset for one such target still returned `invalid_target_identity`. Research
+acceptance validates independent string shape, while the later verifier requires
+relational product-name/brand/model/type coherence; the prompt does not state
+that exact relation. This defect can produce the observed live class but is not
+proven to have caused PR-2G.
+
+**Decision:** no retry or replacement. Align research acceptance and prompt
+wording with the unchanged shared asset-coherence predicate in a zero-live,
+fail-first phase; roll contract/prompt identity so old jobs fail closed. Do not
+synthesize product names, loosen identity gates, widen private diagnostics, or
+make another live request before independent approval.

@@ -11,6 +11,34 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Attribute the staged live stop to asset identity
+
+#### Observed
+
+- One clean, commit-pinned `shop vac` attempt passed research with 12 candidates
+  and 58 canonical sources, then failed deterministic verification with all 12
+  candidates excluded before presentation.
+- Evidence v3 conserved all 12 first losses as asset identity unproven. Every
+  later first-loss bucket and separate source/claim rejection counter was zero.
+  This is the distribution for one attempt, not a generalized cause.
+- The run used one create, 20 retrieves, three hosted searches, one cancel, 12
+  Shopping requests/194 rows, 12 source fetches/seven successes, and 19 physical
+  page HTTP attempts. There was no retry, replacement, fallback, second case,
+  organic/SearchAPI call, presentation, public result, or result file.
+
+#### Verified
+
+- Usage/cost recomputed to 28,335 input, 6,029 output, `$0.191272` frozen
+  nominal, `$0.208982` frozen conservative, and `$0.159018` current, below `$3`.
+- The v3 fixture retained only fixed aggregate/schema fields, approved pricing
+  URLs, and a response hash; both local key values and all raw/private candidate
+  or provider material were absent. Independent audit returned `VERIFIED`.
+- Offline reproduction separately showed that research validation accepts eight
+  identity tuples the asset verifier considers incoherent and rejects even with
+  an otherwise exact asset title. That generalized mismatch may produce the live
+  class but is not proven to have caused this attempt; it will be corrected
+  zero-live before any further request.
+
 ### Codex - Add privacy-safe staged verification attribution
 
 #### Changed

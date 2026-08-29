@@ -1,154 +1,155 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-08-29 by Codex after PR-2F safe verification attribution.
-PR-2F is the self-contained current HEAD after this closeout; resolve its exact
-commit with `git rev-parse HEAD`. Its parent is
-`888de1fbece1854a6aab56e6b82c6a6ec520a2c9`.
+Updated: 2026-08-29 by Codex after the PR-2G asset-identity live stop.
+The PR-2G documentation closeout is current HEAD after its self-contained
+commit; resolve the exact SHA with `git rev-parse HEAD`. Its code parent is
+`b01c335908e78101501bf0b40cd833f0e8f3b5d1`.
 
 ## Current state
 
 ReviewRadar is **not production-ready**.
 
-PR-2F is complete, zero-live, and independently approved. Verifier v2 derives a
-privacy-safe aggregate from existing server-owned decisions. Every candidate
-has exactly one first loss in this order:
+PR-2G executed the one authorized broad `shop vac` attempt at `b01c335`. Research
+passed contract v3 with 12 candidates and 58 canonical sources. Deterministic
+verification made 12 Shopping requests returning 194 rows and attempted 12
+source fetches with seven successes/19 physical HTTP calls. It produced zero
+eligible, zero close match, and 12 excluded candidates. The route stopped at
+HTTP 502 `verification_failed` after 51.618 seconds, before presentation or
+rendering. No public response, card, source list, or result file exists.
 
-1. asset identity unproven;
-2. complete-product relationship unproven;
-3. identity-safe product URL unavailable;
-4. hard requirement failed;
-5. hard requirement not verified; or
-6. no-loss eligible.
+Sanitized evidence v3 conserved every candidate's earliest loss as
+`assetIdentityUnproven`:
 
-Those counts must conserve to candidate total and reconcile with eligible,
-close-match, and excluded totals. Separate counters report only how many
-candidates had an unowned source, invalid source input, or invalid observed
-claim. They are not mutually exclusive first losses.
+| First loss | Count |
+| --- | ---: |
+| asset identity unproven | 12 |
+| complete-product relationship unproven | 0 |
+| identity-safe product URL unavailable | 0 |
+| hard requirement failed | 0 |
+| hard requirement not verified | 0 |
+| no-loss eligible | 0 |
 
-The route reconstructs only fixed bounded integer keys, drops malformed,
-non-conserving, non-reconciling, unknown, or private values, and retains the
-aggregate only for server-side verification failed/completed diagnostics.
-Sanitized Phase D evidence is now `oai-t10-phase-d-sanitized-v3`. The public 502
-body, verifier eligibility, evidence acceptance, prompt/research contract,
-network behavior, flags, and all ceilings are unchanged.
+The separate unowned-source, invalid-source-input, and invalid-observed-claim
+candidate counters were all zero. The six first-loss counts conserve to 12 and
+reconcile with eligible/close/excluded.
 
-Independent review initially blocked the proposed implementation because a
-`completeProductTypeUnproven` bucket was unreachable under its own derived
-facts. The corrected design uses real `DirectTerraAssetDecision` identity,
-complete/bundle relationship, and identity-safe accepted-product evidence.
-Materializer-origin tests prove the relationship and safe-product-URL states are
-reachable. Independent re-review returned the exact terminal verdict
-`APPROVED` with no actionable findings.
+This proves only PR-2G's aggregate earliest loss. It does not reveal whether a
+research identity tuple was incoherent or whether available page/Shopping titles
+failed brand, model, conflict, or product-type checks. It identifies no candidate
+or evidence, says nothing about shadowed later gates, and is not a generalized or
+category-wide distribution.
 
-## Verification result
+## PR-2G envelope, cost, privacy, and audit
 
-- fail-first: 23 pass / 6 intended fail;
-- corrected focused verifier/route/Phase D: 30/30;
-- staged subsystem: 62/62 across ten suites;
-- complete deterministic suite: 1,447/1,447 across 209 suites;
-- credential-neutral E2E: 17/17;
-- typecheck, production build, deterministic eval, fixed ranking comparison,
-  zero-network Phase D dry run, and diff checks: pass;
-- lint: zero errors and three pre-existing warnings at
-  `tests/finalSelectionTrace.test.mjs:102` and
-  `tests/sourceQualityUpgrade.test.mjs:2417`; and
-- independent re-review: `APPROVED` after personal focused/full/typecheck/diff
-  runs and exact-scope/clean-state reauthentication.
+| Measure | Actual | Ceiling |
+| --- | ---: | ---: |
+| OpenAI creates | 1 | 2 |
+| retrieves | 20 | 60 |
+| safety cancels | 1 | 1 |
+| hosted searches | 3 | 10 |
+| Serper Shopping | 12 | 15 |
+| source-page fetches | 12 | 30 |
+| physical page HTTP attempts | 19 | 90 |
+| retries / replacements / fallbacks | 0 / 0 / 0 | 0 / 0 / 0 |
 
-No provider, search, Shopping, source-page, or other product-data request ran in
-PR-2F. No local flag/config, deployment, production system, remote, spent
-fixture, or user-owned artifact changed.
+There was no second create/case, Serper organic, SearchAPI, presentation
+diagnostic, public response, render, card, source list, or result file.
 
-## Last live evidence and attribution limit
+Usage was 28,335 input, zero cached input, 6,029 output, and three hosted
+searches. All 21 ledger snapshots had one nonempty response hash; one completed
+ledger was accounted and none duplicated. Cost is `$0.191272` frozen nominal,
+`$0.208982` frozen conservative, and `$0.159018` at the dated current card,
+below the frozen `$3` gate.
 
-PR-2E ran once at `56a513784e195ee255410e6f49d29763d87af5c7`.
-Research passed contract v3 with 12 candidates and 73 canonical sources.
-Verification made 12 Shopping requests (212 rows) and 13 bounded page/HTTP
-attempts (three successes), then returned zero eligible, zero close match, and
-12 excluded. The route stopped at HTTP 502 `verification_failed` after 59.154
-seconds; presentation/rendering did not run and no public result was produced.
+The untracked spent evidence is
+`tests/fixtures/review-radar-live/oai-t10-phase-d-b01c335/attempt.json` (19,053
+bytes; SHA-256
+`a8696d6b12c6da6163d0de278da504bbff579338a9fda4326beb2dcf85c70930`). Its
+only URLs are approved OpenAI pricing sources. Both local key values and every
+raw provider, prompt/body/header, candidate/request/evidence identifier,
+product/source URL, credential, and secret field are absent.
 
-PR-2E used one create, 23 retrieves, four hosted searches, one cancel, 12
-Shopping requests, and 13 page/HTTP attempts, with zero retries, replacements,
-fallbacks, second cases, Serper organic, or SearchAPI calls. Usage was 38,274
-input and 6,884 output tokens. Cost was `$0.238945` frozen nominal,
-`$0.262866` frozen conservative, and `$0.199156` at the dated current card.
-
-Its untracked fixture
-`tests/fixtures/review-radar-live/oai-t10-phase-d-56a5137/attempt.json` is spent.
-Because it predates evidence v3, its verifier distribution is permanently
-unknowable. PR-2F does not and cannot explain it.
+Independent read-only audit returned `VERIFIED` after rebinding the exact
+commit/case/schema, recomputing counters/cost/conservation, confirming the first
+terminal stop and no downstream work, inspecting privacy, and authenticating a
+clean tracked tree/index. The directory is spent: never retry, edit, stage, or
+reuse it.
 
 ## Objective and decision frame for the next phase
 
-The proven bottleneck is staged lifecycle feasibility at deterministic
-verification. PR-2F removed the observability prerequisite for a future
-attempt; it did not fix or measure the actual verifier distribution.
+The proven product bottleneck is asset identity, before relationship,
+requirements, presentation, ranking, rendering, and UI can matter. The exact
+PR-2G identity reason is intentionally unavailable.
+
+Read-only offline inspection separately proved a generalized self-mismatch:
+
+- `validateStagedTerraResearchOutput()` accepts bounded nonempty
+  `product_name`, `brand`, `model`, and `product_type` independently.
+- An eight-candidate schema-valid response with unique identity tuples passed
+  research validation while all eight failed
+  `directTerraAssetTargetIsCoherent()`.
+- Even an otherwise exact asset title/URL for one such target was rejected as
+  `invalid_target_identity` before asset acceptance.
+- The research prompt says to keep exact brand/model/type identities separate,
+  but does not require `product_name` to contain and agree with all three as the
+  unchanged verifier requires.
+
+This defect can produce PR-2G's aggregate class. The private live evidence does
+not prove it caused PR-2G.
 
 Stronger alternatives considered:
 
-- Loosening identity, relationship, product-URL, requirement, source, page, or
-  commerce gates is rejected because no measured first loss supports it.
-- Offline verifier tuning is rejected because it would target an unmeasured
-  distribution.
-- A broad benchmark is premature because the staged route has not produced one
-  result; one new attempt also cannot itself prove accuracy or stability.
+- Loosening brand/model/type identity is rejected because it risks sibling-
+  model or wrong-product assets.
+- Running another paid attempt is rejected because the contract can still admit
+  impossible targets and waste Shopping/page work.
+- Adding candidate/private diagnostics is rejected because the independently
+  reproduced mismatch can be corrected without widening the privacy surface.
+- Synthesizing or silently repairing a product name is rejected because it
+  would create identity content not supplied as one coherent provider claim.
 
-The strongest next step is exactly one new-commit, new-directory broad
-`shop vac` attempt. It is now information-valuable because a verification
-outcome must carry the v3 aggregate or fail the evidence contract. Stop at the
-first terminal result and do not infer a generalized fix from a single case
-without deterministic reproduction.
+The strongest next step is to reuse the same unchanged target-coherence
+predicate during research acceptance, explicitly state the relational identity
+contract in the prompt, and roll contract/prompt job identity so old work fails
+closed. This changes failure timing for impossible targets, not asset
+eligibility; it prevents guaranteed downstream work from running.
 
-Verified facts:
+**Recommended reasoning level:** High for identity-contract equivalence and
+fingerprint rollover; Medium for localized implementation/tests.
 
-- PR-2F's aggregate contract is green and independently approved.
-- PR-2E's distribution is unrecoverable.
-- The Phase D runner still enforces the same fixed case, counters, cost gate,
-  privacy scan, commit binding, clean tracked state, and single-use directory.
+## Current approved phase: PR-2H research/asset identity alignment
 
-Engineering judgment:
+1. Add fail-first tests proving a schema-valid research candidate can currently
+   pass with each incoherent identity class:
+   - product name missing/mismatching brand;
+   - product name missing the model core;
+   - conflicting model in product name; and
+   - product name/type mismatch.
+2. Preserve coherent positives, including numeric-core/trim behavior already
+   accepted by `directTerraAssetTargetIsCoherent()`; do not introduce a second
+   identity algorithm.
+3. During staged research candidate parsing, construct the same target fields
+   the verifier will use and reject a non-coherent tuple as
+   `research_candidate_invalid / candidate_identity` before Shopping/page work.
+4. Update the research instructions to require `product_name` to agree with the
+   separate brand, model, and complete-product type under the same existing
+   coherence rule. Keep the strict JSON shape at research schema v2 unless a
+   shape change is actually needed.
+5. Roll the contract and prompt version/fingerprint; update runtime/token/tests
+   so an older in-flight job cannot cross the new acceptance boundary.
+6. Do not change `directTerraAssetTargetIsCoherent()`, asset identity/relationship
+   rules, eligibility, evidence acceptance, source/page/commerce/requirement
+   gates, public responses, aggregate diagnostics, flags, or network/cost
+   ceilings.
+7. Run focused contract/prompt/token/runtime/verifier/route tests, staged wall,
+   complete deterministic wall, typecheck, lint, build, credential-neutral E2E,
+   eval, ranking, zero-network dry run, diff review, and independent read-only
+   review.
+8. Update authoritative records, fully regenerate this handoff, stage only
+   phase-owned tracked paths, and make one self-contained local commit.
 
-- A single PR-2G attempt has higher information value than speculative tuning.
-- Any resulting first loss must be reproduced offline before implementation.
-
-Uncertainty:
-
-- The next route may fail at research, verification, presentation, or another
-  lifecycle boundary, or may produce a result.
-- One attempt does not measure quality, stability, recall, latency distribution,
-  or benchmark readiness.
-
-**Recommended reasoning level:** routine for the frozen execution; High for
-privacy, counter, cost, and first-loss adjudication afterward.
-
-## Current approved phase: PR-2G one attributable staged lifecycle attempt
-
-1. Confirm the PR-2F closeout commit is current HEAD, tracked state is clean,
-   `next-env.d.ts` is clean, and the new directory
-   `tests/fixtures/review-radar-live/oai-t10-phase-d-<HEAD7>` is absent.
-2. Re-read the PR-2F test-memory contract. Confirm OpenAI and Serper keys only
-   by boolean presence/nonempty in the child process; never print values.
-3. Confirm evidence v3 statically in the runner and focused regression test.
-   Run the zero-network Phase D dry run and confirm plan v2, exact commit,
-   unchanged rates, and every unchanged ceiling.
-4. Execute exactly one broad `shop vac` attempt with:
-   - OpenAI creates: 2;
-   - hosted searches: 10;
-   - retrieves: 60;
-   - safety cancels: 1;
-   - Serper Shopping attempts: 15;
-   - source-page fetches: 30;
-   - physical page HTTP attempts: 90; and
-   - frozen conservative cost: `$3`.
-5. Stop at the first terminal route outcome. No retry, replacement, fallback,
-   second case, Serper organic, SearchAPI, or manual provider interaction.
-6. Treat the output directory as spent immediately. Audit exact counters,
-   usage/cost, first-stop behavior, privacy, and tracked state. If verification
-   failed or completed, require valid aggregate conservation/reconciliation;
-   otherwise stop at evidence invalidity.
-7. Obtain independent read-only content audit. Document the result before any
-   offline correction, benchmark expansion, or subsequent live request.
+PR-2H is zero-live. It does not authorize another provider, search, Shopping,
+or page request.
 
 ## Approval and flag state
 
@@ -175,27 +176,30 @@ Direct Terra. Never edit, stage, or print it.
 - PR-005: named deterministic QA workers execute the same shared synthetic
   evaluator rather than their listed category batches.
 - PR-006: current leader recall, final-set stability, hard-requirement truth,
-  first-loss distribution, latency, calls, and cost are unmeasured.
+  latency distribution, calls, and cost are not benchmarked.
 - PR-007 / RR-091: same-page related-product price binding needs exact-offer
   proof.
 - PR-008 / RR-092: editorial Product markup can overstate tested-model
   identity/image authority.
-- PR-013: staged lifecycle feasibility remains unproven; presentation and
-  rendering have not run live on the current architecture.
+- PR-013: staged lifecycle feasibility remains blocked; presentation and
+  rendering have not run live.
+- PR-014: research accepts identity tuples that the asset verifier can never
+  accept; correction is the current zero-live phase.
 - Broader cache/concurrency, security, accessibility, mobile UX, production
   configuration, rollback, and observability gates remain planned in
   `docs/production-readiness-master-plan.md`.
 
 ## Hard boundaries
 
-- Never retry, edit, stage, or reuse a spent Phase D attempt or directory,
+- Never retry, edit, stage, or reuse any spent Phase D attempt or directory,
   including `oai-t10-phase-d-ec528d7`, `oai-t10-phase-d-a15d935`,
-  `oai-t10-phase-d-140d465`, and `oai-t10-phase-d-56a5137`.
-- PR-2G permits exactly one attempt at the new PR-2F commit. No retry,
-  replacement, fallback, second case, or additional live request.
-- Do not alter verifier eligibility or weaken identity, complete-product,
-  requirement, availability, price, source/page, commerce, asset, redirect, or
-  private-network gates.
+  `oai-t10-phase-d-140d465`, `oai-t10-phase-d-56a5137`, and
+  `oai-t10-phase-d-b01c335`.
+- Do not make any external product/provider request in PR-2H.
+- Do not claim the reproduced contract mismatch caused PR-2G.
+- Do not synthesize/repair identity or loosen brand, model, product type,
+  relationship, requirement, availability, price, source/page, commerce, asset,
+  redirect, or private-network gates.
 - Retain aggregate counts only. No candidate/request/evidence-identifying or raw
   provider material may enter diagnostics or evidence.
 - The client response and default-off routing must remain unchanged.
@@ -209,12 +213,12 @@ Direct Terra. Never edit, stage, or print it.
 | Need | Retrieve |
 | --- | --- |
 | Living defects, phase sequence, and exit criteria | `docs/production-readiness-master-plan.md` |
-| PR-2F canonical proof | latest 2026-08-29 entry in `docs/qa-loop-results.md` |
-| Durable attribution/live boundaries | top of `docs/review-radar-test-memory.md` |
-| Verifier aggregate and eligibility | `lib/stagedTerraVerifier.ts` |
-| Route sanitizer and diagnostic boundary | `lib/stagedTerraRecommendationRoute.ts` |
-| Runtime counters | `lib/stagedTerraRuntime.ts` |
-| Research/evidence contracts | `lib/stagedTerraContract.ts` |
-| Phase D plan/runner | `scripts/oai-t10-phase-d.mjs`; `scripts/run-oai-t10-phase-d.mjs` |
-| Focused regression tests | `tests/stagedTerraVerifier.test.mjs`; `tests/stagedTerraRoute.test.mjs`; `tests/stagedTerraPhaseDRunner.test.mjs` |
-| Spent PR-2E evidence | `tests/fixtures/review-radar-live/oai-t10-phase-d-56a5137/attempt.json` |
+| PR-2G canonical result | latest 2026-08-29 entry in `docs/qa-loop-results.md` |
+| Durable live/identity boundaries | top of `docs/review-radar-test-memory.md` |
+| Research parser and fingerprint | `lib/stagedTerraContract.ts` |
+| Research instructions/request | `lib/stagedTerraPrompt.ts` |
+| Shared target-coherence rule | `lib/directTerraAssetVerifier.ts` |
+| Runtime/job-token rollover | `lib/stagedTerraRuntime.ts`; `lib/stagedTerraJobToken.ts` |
+| Verifier first loss | `lib/stagedTerraVerifier.ts` |
+| Focused tests | `tests/stagedTerraContract.test.mjs`; `tests/stagedTerraIntegration.test.mjs`; `tests/stagedTerraRuntime.test.mjs`; `tests/stagedTerraVerifier.test.mjs`; `tests/stagedTerraRoute.test.mjs` |
+| Spent PR-2G evidence | `tests/fixtures/review-radar-live/oai-t10-phase-d-b01c335/attempt.json` |

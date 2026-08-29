@@ -219,16 +219,21 @@ unidentifiable responses sum conservatively and block successful acceptance as
 an anomaly. The entire branch remains default-off, undeployed, and without a
 successful live feasibility result. Its latest live response passed research
 validation with 12 candidates, then deterministic verification excluded all 12
-before presentation. That PR-2E evidence predates aggregate attribution, so its
-identity, relationship, safe-product-URL, requirement, source, or claim first
-loss remains permanently unknowable. For future verification outcomes, the
-route reconstructs only bounded integer values from the fixed verifier-v2 keys,
-requires first-loss conservation and reconciliation with eligible/close/excluded
-totals, drops malformed or unknown/private values, and retains the aggregate
-only for server-side verification diagnostics. Sanitized Phase D evidence v3
-may preserve those counts for its own attempt. The public 502 body is unchanged,
-and no candidate identity, URL, requirement, claim, page content, provider
-material, prompt, credential, or secret crosses the route boundary.
+before presentation. Sanitized Phase D evidence v3 conserved all 12 first losses
+as `assetIdentityUnproven`; every later first-loss bucket and the separate
+source/claim rejection counters were zero. This identifies only that attempt's
+earliest aggregate loss. It does not say whether a research identity tuple was
+internally incoherent or whether available page/Shopping identities failed
+brand, model, conflict, or product-type checks, and it cannot expose candidate
+details to answer that question. The earlier PR-2E evidence predates aggregate
+attribution and remains permanently unknowable.
+
+The route reconstructs only bounded integer values from the fixed verifier-v2
+keys, requires first-loss conservation and reconciliation with eligible/close/
+excluded totals, drops malformed or unknown/private values, and retains the
+aggregate only for server-side verification diagnostics. The public 502 body is
+unchanged, and no candidate identity, URL, requirement, claim, page content,
+provider material, prompt, credential, or secret crosses the route boundary.
 
 ## 2. Full user flow
 

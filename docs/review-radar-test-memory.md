@@ -4,6 +4,42 @@
 
 ---
 
+## OAI-T10 PR-2G asset-identity live stop (2026-08-29)
+
+- The one attempt at `b01c335908e78101501bf0b40cd833f0e8f3b5d1` is spent.
+  Never retry it, edit/stage its evidence, or reuse
+  `tests/fixtures/review-radar-live/oai-t10-phase-d-b01c335`.
+- Research passed contract v3 after 20 retrieves with 28,335 input, 6,029
+  output, three hosted searches, and 58 canonical sources. Verification made 12
+  Shopping requests returning 194 rows and 12 source fetches/seven successes
+  using 19 physical HTTP attempts.
+- Verification produced zero eligible, zero close match, and 12 excluded.
+  Evidence v3 conserved all 12 first losses as `assetIdentityUnproven`; all
+  later first-loss buckets and retained source/claim counters were zero. Do not
+  interpret that as a candidate list, exact identity reason, shadowed-gate
+  result, generalized defect, or category-wide distribution.
+- The route stopped at HTTP 502 `verification_failed` after 51.618 seconds.
+  There was one create/cancel and no retry, replacement, fallback, second case,
+  organic/SearchAPI, presentation, public response, render, or result file.
+- Cost was `$0.191272` frozen nominal, `$0.208982` frozen conservative, and
+  `$0.159018` at the dated current card. One completed ledger was accounted,
+  none duplicated, and the frozen conservative gate remained `$3`.
+- The 19,053-byte `attempt.json` SHA-256 is
+  `a8696d6b12c6da6163d0de278da504bbff579338a9fda4326beb2dcf85c70930`.
+  It contains only approved pricing URLs and a hashed response identity. Both
+  local key values and all raw output, provider/prompt/body/header material,
+  product/source URL, secret, and candidate/request/evidence identifier are
+  absent. Independent read-only audit returned `VERIFIED`.
+- A separate zero-network reproduction proves a generalized self-mismatch:
+  staged research accepts bounded unique identity tuples that
+  `directTerraAssetTargetIsCoherent()` rejects, after which even an otherwise
+  exact asset receives `invalid_target_identity`. This may produce the PR-2G
+  class but is not its proven cause. Align early acceptance and the prompt with
+  the unchanged shared predicate before any new live request; do not loosen the
+  asset verifier or synthesize a product name.
+
+---
+
 ## OAI-T10 PR-2F safe verification attribution (2026-08-29)
 
 - `staged-terra-verifier-v2` derives one mutually exclusive first loss per
