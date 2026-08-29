@@ -1,182 +1,169 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-08-29 by Codex after the independently approved PR-3J tri-state
-source-metadata correction. This file was regenerated from current evidence.
-The current approved base is the self-contained PR-3J closeout commit containing
-this file; resolve its exact full SHA with `git rev-parse HEAD`. Its expected
-parent is `bd54de9076cf6752ee2beefd686689852f6f9994`.
+Updated: 2026-08-29 by Codex after the independently verified PR-3K staged
+lifecycle. This file was regenerated from current evidence. The current
+approved base is the self-contained PR-3K closeout commit containing this file;
+resolve its exact full SHA with `git rev-parse HEAD`. Its expected parent is
+`8c57cd594a7f060aa358afedb0e1baab429a5d89`.
 
 ## Current state
 
 ReviewRadar is **not production-ready**. The staged Terra path remains default-
-off, undeployed, and without a completed live shopper result.
+off and undeployed. It has now produced one safe shopper result, which closes
+one-lifecycle feasibility but does not establish accuracy, repeatability,
+latency distribution, category coverage, or production authority.
 
-PR-3I spent exactly one frozen `shop vac` lifecycle at clean PR-3H commit
-`bd54de9076cf6752ee2beefd686689852f6f9994`. Provider research reached terminal
-`completed`, but local preflight stopped as `research_candidate_invalid /
-candidate_sources / candidate_source_identity_unproven` before page collection,
-Shopping, deterministic verification, presentation, rendering, or public output.
+PR-3K spent exactly one frozen `shop vac` lifecycle at clean PR-3J commit
+`8c57cd594a7f060aa358afedb0e1baab429a5d89`. Research, deterministic
+verification, presentation, and public-response rendering completed in 116.495
+seconds. The route returned four eligible cards, zero close matches, six
+exclusions, and eight source entries representing four unique HTTPS URLs; every
+card reference and commerce URL resolves.
 
-The 56.020-second first-terminal run used one OpenAI create, 24 retrieves, five
-hosted searches, one safety cancel, 47,475 input tokens, zero cached input, and
-5,516 output tokens. Approval-envelope cost was `$0.251428`; frozen-conservative
-cost was `$0.281099`; the informational current estimate was `$0.211142`. Every
-retry, replacement, fallback, organic/SearchAPI, product-data, second-case,
-post-stop, flag-change, and deployment counter stayed zero.
+The single first-terminal run used:
 
-The only PR-3I artifact is untracked 21,584-byte
-`tests/fixtures/review-radar-live/oai-t10-phase-d-bd54de9/attempt.json`, SHA-256
-`03D442FFE14D819D6C23A2E76C2458E37AF6A2EBE7691A6DC4F6EA0ED2827B3F`.
-Independent strict read-only audit returned `VERIFIED`, no findings, confidence
-0.99 for exact commit/case/evidence-v5 binding, sequence, counters, usage, cost,
-and privacy. It retains no raw/provider/candidate/product/source identity,
-prompt, page, body, header, credential, key, secret, or token. The directory is
-immutable and spent.
+- two OpenAI creates and 40 retrieves;
+- eight hosted searches;
+- 10 Serper Shopping calls returning 156 rows;
+- 20 source-page fetches, 14 successful, and 25 physical HTTP attempts;
+- 77,273 input tokens, zero cached input, and 9,064 output tokens;
+- approval-envelope cost `$0.409142`, frozen-conservative cost `$0.457438`,
+  and informational current estimate `$0.343314`.
 
-The closed filter reports 10 submitted, zero accepted, 10 rejected, and at least
-one `missingTitle` source decision for each candidate; all four affirmative
-mismatch families are zero. This aggregate cannot identify a source or say
-whether one or both sources lacked a title. It establishes no downstream page
-or product truth.
+Retry, replacement, fallback, organic, SearchAPI, second-case, and safety-
+cancel counters were zero. All 10 submitted candidates were accepted and
+deferred for missing source-title metadata; zero were rejected and every
+affirmative mismatch family stayed zero. The first-loss distribution was five
+asset-identity exclusions, one missing/invalid-product-URL exclusion, and four
+no-loss eligible candidates. Relationship and hard-requirement first losses
+were zero. These aggregates do not reveal candidate/source mappings or whether
+one or both exact sources were titleless.
 
-Official Responses documentation defines `web_search_call.action.sources` as
-the complete consulted URL list with URL-only records. Citation annotations can
-carry titles; action-source titles are not guaranteed. No documented stable
-text-result title schema was found that should become a trust boundary.
+The exact untracked artifact is the 51,640-byte evidence-v6 `result.json` in
+`tests/fixtures/review-radar-live/oai-t10-phase-d-8c57cd5`, SHA-256
+`9DFB2A82691ACAC640F146038DC08510786F53578D768105CF8347A03EABC2E4`.
+Independent strict read-only audit returned exact verdict `VERIFIED`, no
+findings, confidence 0.99. It authenticated the exact commit, case, schema,
+sequence, counters, usage, cost, public reconciliation, privacy, clean tracked
+state, and default-off behavior. The directory is immutable and spent. The
+main agent must never inspect, enumerate, edit, retry, stage, reuse, or add to
+it.
 
-PR-3J therefore preserves exact ownership and final identity authority while
-making source preflight tri-state:
+PR-3J remains the deterministic trust base: contract v9, research schema v5,
+prompt v6, runtime v8, and evidence v6. Its tri-state source preflight accepts
+title-proven exact sources, defers title-unavailable exact sources only to the
+existing bounded DNS-pinned page/entity verifier, and quarantines only all-
+affirmative mismatches. Deferral grants no evidence or eligibility. Exact URL
+ownership, two fetch-distinct sources per candidate, the 30-fetch ceiling, and
+all downstream identity/evidence/commerce/requirement/asset/public gates remain
+unchanged.
 
-1. If any exact response-owned source has an available title that passes the
-   unchanged shared verifier, continue the candidate.
-2. If none passes and any exact source lacks a title, defer the candidate to the
-   existing bounded DNS-pinned page fetch and unchanged page/entity verifier.
-3. If every available title affirmatively mismatches, quarantine the candidate
-   before network collection.
+Official Responses documentation defines the complete consulted-source action
+as URL-only records; cited annotations can carry titles, but action-source
+titles are not guaranteed. No documented stable text-result title schema was
+found that should become a trust boundary.
 
-Deferral grants no evidence, eligibility, rank, source role, or shopper-visible
-claim. The provider still must submit 8–15 schema-valid candidates with exactly
-two fetch-distinct exact response-owned sources each. The 30-fetch ceiling,
-source ownership, canonical non-borrowing, page/entity/relationship/commerce/
-requirement/asset gates, public responses, and committed defaults are unchanged.
-
-The server-only aggregate now reports submitted, accepted/continued, deferred-
-missing-title, rejected, and four affirmative mismatch families. Deferred is a
-subset of accepted. Exact-key route sanitization requires 0–15 integer bounds,
-accepted+rejected=submitted, deferred<=accepted, completion equality with the
-actual continued slate, mismatch-count conservation for rejected candidates,
-and zero deferred candidates in the exact all-rejected failure context.
-
-Current identities are contract v9, research schema v5, prompt v6, runtime v8,
-and future sanitized evidence v6. Old signed jobs fail closed. PR-3J made no
-external request and changed no public body, flag, deployment rule, model,
-timeout, retry, or network ceiling.
-
-## PR-3I and PR-3J proof and limits
+## Current proof and limits
 
 | Check | Result |
 | --- | --- |
-| PR-3I terminal artifact audit | `VERIFIED`; no findings; confidence 0.99 |
 | PR-3J fail-first | 58 passed / exactly 5 intended failures |
 | Corrected staged/shared trust wall | 169/169 across 15 suites |
 | Complete deterministic suite | 1,498/1,498 across 214 suites |
 | Five named worker partitions | exact reconciliation passed |
 | Tracked offline benchmark | 10/10 cases; 29/29 invariants |
 | Playwright E2E | 17/17 |
-| Nonincremental typecheck | passed |
-| Production build | passed |
-| Deterministic eval | no red flags |
-| Fixed ranking comparison | passed |
+| Nonincremental typecheck and production build | passed |
+| Deterministic eval and fixed ranking comparison | passed |
 | Lint | zero errors; same three pre-existing warnings |
-| Diff/generated-file checks | passed; `next-env.d.ts` restored/clean |
 | Independent PR-3J source review | `APPROVED`; no findings; confidence 0.96 |
-| PR-3J live/provider/product-data calls | none |
+| PR-3K terminal artifact audit | `VERIFIED`; no findings; confidence 0.99 |
+| PR-3K public result | 4 cards; 8 source entries; 4 unique HTTPS URLs; all card references resolve |
+| PR-3K retry/replacement/fallback/second case | all zero |
 
-The independent reviewer disclosed that its attempted filtered test command
+The independent PR-3J reviewer disclosed that an attempted filtered command
 unexpectedly executed an existing test that reads tracked public
-`.env.example`. That entire 92-test run is non-authorizing and excluded from
-proof. No `.env.local`, credential, secret value, live fixture, or network was
-accessed; the terminal source verdict rests only on the permitted eight-file
-diff and traced control flow.
+`.env.example`. That entire 92-test run is excluded from proof. No `.env.local`,
+credential, secret value, live fixture, or network was accessed; the source
+verdict rests on the permitted diff and traced control flow.
 
-Two earlier overbroad searches traversed live-fixture paths and exposed only
-already-known terminal keys or fixed rejection tokens. No private field,
-product/source identity, body, prompt, or credential was displayed. Every
-subsequent repository search must exclude
-`tests/fixtures/review-radar-live/**`. Never inspect, retry, edit, stage, reuse,
-or add to any spent live directory.
-
-PR-3J can increase page-fetch work for title-unavailable sources up to the
-unchanged 30-attempt ceiling. It does not prove page success, post-fetch survivor
-quality, safe shopper output, latency, cost, repeatability, or market coverage.
+Earlier overbroad searches traversed live-fixture paths and exposed only known
+terminal keys or fixed rejection tokens. No private identity, body, prompt, or
+credential was displayed. Every repository search must exclude
+`tests/fixtures/review-radar-live/**`.
 
 ## Objective and decision frame for the next phase
 
-The earliest dependency remains PR-013 staged lifecycle feasibility. PR-4
-accuracy/stability measurement still requires one complete safe staged shopper
-lifecycle.
+The product objective is to return the strongest genuinely suitable products
+with truthful constraints and evidence at acceptable latency and cost. PR-3K
+proves the staged architecture can complete once. The proven bottleneck is now
+measurement integrity for current staged-path accuracy and repeatability, not
+lifecycle feasibility.
 
-Stronger alternatives were evaluated:
+Verified facts:
 
-- Reading, editing, or retrying PR-3I is prohibited; its terminal evidence and
-  hash are immutable.
-- Trusting model-authored titles or broad URL-slug identity would weaken source
-  authority and can admit sibling products.
-- Consuming undocumented `web_search_call.results` title shapes would make an
-  unstable provider detail a security/trust contract.
-- Weakening title/model/type, relationship, commerce, or asset identity would
-  manufacture ambiguous cards.
-- A broad live matrix remains premature until one staged lifecycle succeeds.
+- `scripts/qualityScorecard.mjs` and `scripts/qualityConsistencyHarness.mjs`
+  call the legacy `/api/recommendations` route, not the staged path.
+- `scripts/goldBenchmark.mjs` uses a frozen July 2026 leader set that may have
+  drifted.
+- one staged `shop vac` result exists, but there is no repeated or cross-
+  category staged baseline.
 
-The strongest next step is one PR-3K measurement of the unchanged frozen `shop
-vac` case at the clean PR-3J closeout commit. This is not a PR-3I retry: it uses
-a new commit-derived directory and tests contract v9/runtime v8/evidence v6. A
-stop selects only the next generalized zero-live reproduction target. A safe
-shopper result unlocks PR-4.
+Engineering judgment:
 
-**Recommended reasoning level:** High for live trust, privacy, cost, and
-terminal-evidence adjudication; Medium for the bounded mechanical invocation.
+- a broad live matrix now would spend against the wrong or stale scoring
+  boundary and could not support a trustworthy before/after claim;
+- a small, dated, reviewable current-truth set plus a staged-specific harness is
+  the strongest prerequisite to useful live measurement;
+- current truth must distinguish must-consider leaders from illustrative
+  products and preserve uncertainty rather than manufacture a single ranking.
 
-## Current approved phase: PR-3K one post-deferral lifecycle measurement
+Uncertainty:
 
-Taylor's 2026-08-29 production-readiness mandate authorizes this one bounded
-low-parallelism measurement after a clean PR-3J commit. It does not authorize a
-retry, replacement, broader matrix, flag promotion, deployment, or publication.
+- the categories and current products that best discriminate discovery,
+  constraint truth, and no-exact behavior still require current-source review;
+- the safe aggregate live budget and repetition count must be derived from the
+  frozen case plan and PR-3K accounting, then independently reviewed.
 
-1. Authenticate this repository, branch `main`, exact PR-3J HEAD/parent, clean
-   tracked and index state, clean `next-env.d.ts`, committed default-off flags,
-   and unchanged user-owned untracked artifacts.
-2. Run the focused Phase D runner tests and inspect the zero-network dry run
-   from the exact commit. Check required server credentials only for in-memory
-   presence and safe shape; never print, copy, hash, or stage their values.
-3. Confirm the new commit-derived output directory does not exist. Do not read,
-   edit, retry, stage, reuse, or add files to any spent Phase D directory.
-4. Run exactly one lifecycle command using only `--name=value` approval tokens:
+**Recommended reasoning level:** High for market-truth, metric, and trust-
+boundary design; Medium for routine harness implementation and deterministic
+execution.
 
-   ```powershell
-   $pr3jCommit = (git rev-parse HEAD).Trim()
-   node scripts/run-oai-t10-phase-d.mjs --execute --approved-commit=$pr3jCommit --approved-openai-creates=2 --approved-hosted-searches=10 --approved-openai-retrieves=60 --approved-safety-cancels=1 --approved-serper-shopping-attempts=15 --approved-source-page-fetches=30 --approved-source-page-http-attempts=90 --approved-dollar-ceiling=3
-   ```
+## Current approved phase: PR-4A current truth and staged measurement boundary
 
-5. Stop at the first terminal route/result state. Do not retry, replace, add a
-   case, continue downstream after a stop, fall back, use organic/SearchAPI,
-   promote a flag, or deploy. The single invocation spends PR-3K regardless of
-   outcome.
-6. Validate exact commit/case/evidence-v6 schema, counters, usage, cost, hashes,
-   privacy/credential exclusions, terminal sequence, tri-state count
-   conservation/context binding, downstream first-loss conservation if reached,
-   and public-response reconciliation. Treat the artifact as immutable spent
-   evidence immediately.
-7. Obtain independent read-only audit of the exact artifact and clean tracked
-   state. Terminal audit verdict must be `VERIFIED`; a failed lifecycle remains
-   evidence and never authorizes a second invocation.
-8. Deferral, fetching, or a smaller slate is not success. If the route stops,
-   select an evidence-supported target for a separate generalized zero-live
-   reproduction. If it returns a safe shopper result, begin PR-4 planning
-   against tracked benchmark and reviewed current-market truth.
-9. Update the living plan and authoritative records. Keep every live artifact
-   untracked. Commit only phase-owned documentation or a separately verified
-   deterministic correction; never stage live evidence.
+Taylor's production-readiness mandate authorizes this zero-live design and
+implementation phase. It does not authorize a new staged lifecycle, live
+matrix, flag promotion, deployment, or publication.
+
+1. Authenticate this repository, branch `main`, exact PR-3K closeout HEAD and
+   parent, clean tracked/index state, clean `next-env.d.ts`, committed default-
+   off flags, and preserved user-owned untracked files.
+2. Inspect only the staged request/public/evidence contracts and the legacy
+   quality harnesses needed to establish the routing gap. Exclude the entire
+   live-fixture tree from every search and never open a spent artifact.
+3. Refresh a deliberately small current-market truth set from dated,
+   attributable sources. Record provenance, inclusion rationale, identity,
+   constraints, and uncertainty. Do not treat retailer rank, search position,
+   or one editorial list as ground truth.
+4. Freeze versioned case definitions spanning broad, constrained, adversarial,
+   and over-constrained behavior only when each case materially tests a distinct
+   failure mode. Keep request inputs within the existing staged contract.
+5. Build a zero-network staged-specific scoring and reconciliation harness. It
+   must consume only tracked synthetic/frozen schemas, never call an API route,
+   provider, product-data service, or live fixture.
+6. Define before any live result exists: leader/coverage truth, exact/near
+   status truth, hard-requirement and wrong-type failures, source/price/card
+   reconciliation, candidate/final Jaccard, first-loss conservation, latency,
+   calls, tokens, cost, privacy, and terminal stop rules.
+7. Add fail-first and mutation coverage for missing/duplicate/unknown cases,
+   fabricated outcomes, identity drift, requirement violations, malformed
+   accounting, and incomparable repetitions. Run focused checks, then the
+   complete deterministic wall justified by the implementation.
+8. Obtain independent read-only source/diff review of the truth and harness.
+   Correct findings, regenerate this handoff, update authoritative records, and
+   make one self-contained local commit with explicit paths.
+9. Do not begin PR-4B until PR-4A is clean, independently approved, and its
+   bounded low-parallelism live plan and aggregate ceiling are explicit.
 
 ## Approval, cost, and flag state
 
@@ -189,53 +176,48 @@ Committed defaults remain:
 - `REVIEW_RADAR_CONSTRAINT_ALLOCATION=off`
 - staged research/presentation model: `gpt-5.6-terra`
 
-The ignored developer `.env.local` is user-owned and may locally enable Direct
-Terra. Never edit, stage, or print it. The frozen hard ceiling is `$3`; current
-pricing is informational and cannot widen that wall.
+The ignored developer `.env.local` is user-owned. Never edit, stage, print,
+hash, or copy it. PR-4A permits no new provider or product-data request and no
+credential check is needed. Web research for current truth must remain read-
+only and attributable; it is not authority to change external state.
 
 ## Outstanding readiness debts
 
-- PR-006: current leader recall, final-set stability, hard-requirement truth,
-  price coverage, latency distribution, calls, and cost are not benchmarked.
+- PR-006: current staged leader recall, card truth, hard-requirement accuracy,
+  final-set stability, price coverage, first-loss distribution, latency, calls,
+  tokens, and cost remain unmeasured.
 - PR-007 / RR-091: same-page related-product price binding needs exact-offer
-  proof before an experimental path can be promoted.
+  proof before the experimental path can be promoted.
 - PR-008 / RR-092: editorial Product markup can overstate tested-model
   identity/image authority.
-- PR-013: staged lifecycle feasibility remains blocked; no live attempt has
-  reached presentation/rendering.
-- PR-020: tri-state title-metadata handling is closed offline, but fetched-page
-  yield, survivor quality, and lifecycle effect are unmeasured.
-- Broader cache/concurrency, security, accessibility, mobile UX, production
-  configuration, rollback, dependency, and observability gates remain planned
-  in `docs/production-readiness-master-plan.md`.
+- Broader cancellation/fault behavior, cache/concurrency, security,
+  accessibility, mobile UX, production configuration, rollback, dependency,
+  observability, and operational gates remain planned.
+
+PR-013 is closed only as one-lifecycle feasibility. PR-020 is live-revalidated
+as the title-metadata correction. Neither status proves production readiness.
 
 ## Hard boundaries
 
-- Never read, retry, edit, stage, reuse, or add to any spent Phase D attempt or
-  directory, including `oai-t10-phase-d-bd54de9`,
-  `oai-t10-phase-d-ac53c10`, `oai-t10-phase-d-bf7e37b`,
-  `oai-t10-phase-d-a743426`, `oai-t10-phase-d-43857e0`,
-  `oai-t10-phase-d-ec528d7`, `oai-t10-phase-d-a15d935`,
-  `oai-t10-phase-d-140d465`, `oai-t10-phase-d-56a5137`,
-  `oai-t10-phase-d-b01c335`, and `oai-t10-phase-d-06fa55f`. Exclude the
-  entire live-fixture tree from broad repository searches.
-- PR-3K permits exactly one new frozen invocation at the clean PR-3J commit.
-  No retry, replacement, second case, broader live QA, or approval reuse.
-- Do not infer candidate/source mappings, source title distribution, or
-  downstream truth from the bounded counts. Reproduce generalized paths offline
-  before naming causes.
-- Do not restore response-wide rejection for one affirmative mismatch, treat
-  missing title as final acceptance, trust model-authored titles, canonical-
-  match ownership, lend metadata across URL variants, or broaden URL-slug
-  authority.
-- Do not lower the strict provider candidate count, change two-source
-  cardinality, grant deferred candidates evidence/eligibility, accept an
-  affirmatively ungrounded candidate, or let diagnostic counts authorize trust.
-- Do not weaken brand, model, product type, relationship, requirement,
-  availability, price, source/page, commerce, asset, redirect, private-network,
-  diagnostic, or public-response boundaries.
+- Never read, enumerate, retry, edit, stage, reuse, or add to any spent Phase D
+  attempt or directory, including `oai-t10-phase-d-8c57cd5`,
+  `oai-t10-phase-d-bd54de9`, `oai-t10-phase-d-ac53c10`,
+  `oai-t10-phase-d-bf7e37b`, `oai-t10-phase-d-a743426`,
+  `oai-t10-phase-d-43857e0`, `oai-t10-phase-d-ec528d7`,
+  `oai-t10-phase-d-a15d935`, `oai-t10-phase-d-140d465`,
+  `oai-t10-phase-d-56a5137`, `oai-t10-phase-d-b01c335`, and
+  `oai-t10-phase-d-06fa55f`. Exclude the whole live-fixture tree from search.
+- PR-4A permits no staged, provider, Serper, product-data, live-route, replay,
+  retry, replacement, fallback, or second-case invocation.
+- Do not infer candidate/source mappings, product truth, leader coverage, or
+  repeatability from PR-3K's closed aggregate or public cardinalities.
+- Do not weaken source ownership, title/model/type, page/entity, relationship,
+  requirement, availability, price, commerce, asset, redirect, private-network,
+  diagnostic, privacy, or public-response boundaries to improve a score.
+- Do not let a truth fixture, scoring count, prior recommendation, retailer
+  popularity, or model-authored title authorize eligibility.
 - Never stage `.env.local`, `.claude/`, `.rr_baseline*`, `fable-transfer-kit/`,
-  ignored worker results, historical live fixtures, or any Phase D fixture.
+  ignored worker results, historical live fixtures, or any Phase D artifact.
   Never use `git add -A`.
 - No deployment, production change, push, publication, destructive action, or
   external scope expansion is authorized.
@@ -244,11 +226,11 @@ pricing is informational and cannot widen that wall.
 
 | Need | Retrieve |
 | --- | --- |
-| Living defects, sequence, exit criteria, PR-3K scope | `docs/production-readiness-master-plan.md` |
-| PR-3I artifact and PR-3J canonical verification | latest 2026-08-29 entry in `docs/qa-loop-results.md` |
-| Staged architecture and phase sequence | OAI-T10 section in `docs/forward-roadmap.md` |
-| Tri-state filter and aggregate | `lib/stagedTerraContract.ts`; `lib/stagedTerraRecommendationRoute.ts` |
-| Staged runtime and job rollover | `lib/stagedTerraRuntime.ts`; `tests/stagedTerraIntegration.test.mjs` |
-| Phase D runner and ceilings | `scripts/run-oai-t10-phase-d.mjs`; `scripts/oai-t10-phase-d.mjs` |
-| Durable trust/live rules | top entry in `docs/review-radar-test-memory.md` |
-| Offline benchmark integrity | `tests/fixtures/qa-benchmark-matrix-v1.json`; `scripts/qa-benchmark.mjs`; `tests/qaBenchmark.test.mjs` |
+| Living defects, sequence, exit criteria, PR-4A scope | `docs/production-readiness-master-plan.md` |
+| PR-3K canonical verification | latest PR-3K entry in `docs/qa-loop-results.md` |
+| Staged architecture and sequence | OAI-T10 section in `docs/forward-roadmap.md` |
+| Staged request/contract | `lib/stagedTerraContract.ts`; `lib/stagedTerraRecommendationRoute.ts` |
+| Staged runtime and Phase D evidence capture | `lib/stagedTerraRuntime.ts`; `scripts/run-oai-t10-phase-d.mjs`; `scripts/oai-t10-phase-d.mjs` |
+| Legacy measurement gap | `scripts/qualityScorecard.mjs`; `scripts/qualityConsistencyHarness.mjs`; `scripts/goldBenchmark.mjs` |
+| Durable live/trust rules | top entries in `docs/review-radar-test-memory.md` |
+| Existing deterministic benchmark integrity | `tests/fixtures/qa-benchmark-matrix-v1.json`; `scripts/qa-benchmark.mjs`; `tests/qaBenchmark.test.mjs` |

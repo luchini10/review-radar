@@ -4,6 +4,55 @@
 
 ---
 
+## OAI-T10 PR-3K first complete staged lifecycle (2026-08-29)
+
+- PR-3K spent exactly one frozen `shop vac` lifecycle at clean PR-3J commit
+  `8c57cd594a7f060aa358afedb0e1baab429a5d89`. The exact output directory is
+  `tests/fixtures/review-radar-live/oai-t10-phase-d-8c57cd5/`; it is immutable,
+  untracked, and spent. Never inspect, retry, edit, stage, reuse, or add to it.
+- The first and only invocation completed the entire research, deterministic
+  verification, no-web presentation, and public-response lifecycle. It returned
+  four sequential unique cards and eight registered source entries. All card
+  source references and commerce URLs reconcile; the eight source IDs represent
+  four unique HTTPS URLs.
+- The 116.495-second lifecycle used two OpenAI creates, 40 retrieves (39 in-
+  progress, then the 40th completed), eight hosted searches, 10 Shopping
+  requests, 20 source fetches, and 25 physical HTTP attempts. Cancels, retries,
+  replacements, fallbacks, organic, and SearchAPI were zero.
+- The exact spent directory contains only 51,640-byte evidence-v6
+  `result.json`, SHA-256
+  `9DFB2A82691ACAC640F146038DC08510786F53578D768105CF8347A03EABC2E4`.
+  Independent strict read-only audit returned `VERIFIED`, no findings,
+  confidence 0.99. Successful completion correctly removed `attempt.json`.
+- Tri-state preflight reported 10 submitted, 10 accepted/continued, 10 deferred-
+  missing-title, zero rejected, and zero in all four affirmative mismatch
+  families. Deferral itself granted no trust; all 10 candidates entered bounded
+  product-data verification.
+- Page collection attempted 20 exact sources and succeeded for 14. Shopping ran
+  10 requests and returned 156 rows. Deterministic verification produced four
+  eligible, zero close, and six excluded candidates. First loss conserved as
+  five asset-identity, one product-URL, and four no-loss eligible candidates.
+- Closed subreasons were one no-asset, three asset brand-absent-from-title, one
+  asset model-absent-from-title, and one missing/invalid product URL. Relationship
+  and hard-requirement losses were zero; source rejection was zero; four claims
+  were rejected. These are aggregate counts and cannot map exclusions to private
+  candidate identities.
+- Two distinct completed ledgers accounted 77,273 input tokens, zero cached
+  input, 9,064 output tokens, and eight searches. Exact estimates were
+  `$0.409142` frozen nominal, `$0.457438` frozen conservative, and `$0.343314`
+  current; the conservative result was below the unchanged `$3` gate.
+- The artifact uses exact closed fields and retains only two response-ID hashes.
+  No raw/provider ID, job token, prompt, evidence package, headers, bodies,
+  credential, key/secret pattern, private-network URL, or non-public candidate/
+  source identity was found. Tracked/index/default-off state remained clean.
+- PR-3K proves one safe bounded staged lifecycle, not repeatability, current
+  market-leader accuracy, stability, or category-wide quality. PR-4 must use a
+  staged-path-specific benchmark with independently refreshed current truth;
+  the legacy quality harness and July leader set cannot authorize broad spend by
+  themselves.
+
+---
+
 ## OAI-T10 PR-3I title-metadata stop and PR-3J tri-state deferral (2026-08-29)
 
 - PR-3I spent exactly one frozen `shop vac` lifecycle at clean commit

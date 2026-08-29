@@ -11,6 +11,41 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Complete the first safe staged shopper lifecycle
+
+#### Changed
+
+- Ran the single PR-3K `shop vac` measurement from clean PR-3J commit
+  `8c57cd5` under the unchanged first-terminal/no-retry ceilings. The staged path
+  completed research, deterministic verification, no-web presentation, and
+  public-response rendering with four cards and eight resolving source entries.
+- Preserved the successful evidence-v6 result as one immutable, untracked,
+  independently verified artifact. No live evidence was opened, edited, reused,
+  or staged by the implementing agent.
+- Closed staged lifecycle feasibility as a one-attempt result. The experimental
+  path remains default-off and undeployed; this does not promote a flag or claim
+  repeatability, current-market accuracy, or production readiness.
+- Selected a staged-path-specific, current-truth PR-4 measurement boundary as
+  the next phase. The older scorecard calls the legacy route and its July leader
+  snapshot may be stale, so it cannot measure the newly feasible path directly.
+
+#### Verified
+
+- First and only invocation: 2 creates, 40 retrieves, 8 hosted searches, 10
+  Shopping requests, 20 source fetches/25 physical HTTP attempts, and zero
+  cancels, retries, replacements, fallbacks, organic, or SearchAPI calls.
+- Tri-state filter: 10 submitted/accepted/deferred, zero rejected. Verification:
+  4 eligible, 0 close, 6 excluded; first-loss and subreason aggregates conserve.
+- Usage: 77,273 input, 0 cached, 9,064 output, 8 searches. Frozen-conservative
+  cost: `$0.457438`, below `$3`.
+- Independent strict audit returned `VERIFIED`, no findings, confidence 0.99 for
+  commit/case/evidence-v6 binding, sequence, accounting, public reconciliation,
+  privacy, and default-off state.
+
+ReviewRadar remains **NOT READY**. Current leader recall, hard-requirement truth,
+final-set stability, latency/cost distributions, RR-091/RR-092, and wider UX,
+security, accessibility, and operations gates remain unresolved.
+
 ### Codex - Defer titleless staged sources to bounded page verification
 
 #### Changed

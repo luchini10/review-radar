@@ -243,33 +243,48 @@ authority still fail. Response metadata is preflight only, never verified
 evidence or shopper-visible content. Fifteen candidates times two source URLs
 equals the unchanged thirty-fetch ceiling.
 
-Cost accounting uses
-terminal provider usage even when local validation later fails; repeated
+Cost accounting uses terminal provider usage even when local validation later
+fails; repeated
 snapshots deduplicate only by the same safe response hash, while distinct or
 unidentifiable responses sum conservatively and block successful acceptance as
-an anomaly. The entire branch remains default-off, undeployed, and without a
-successful live feasibility result. PR-3A at commit `43857e0` crossed research
-and collection, then deterministic verification excluded all ten candidates
-before presentation: nine first losses at asset identity and one at the
-identity-safe product-URL gate. Its spent sanitized-evidence-v3 artifact cannot
-distinguish the exact direct-asset, Shopping, or URL reason and remains
-immutable.
+an anomaly. The entire branch remains default-off and undeployed. One PR-3K
+lifecycle has now returned a safe shopper result, but that single case does not
+establish repeatability, current-market accuracy, or production readiness.
+PR-3A at commit `43857e0` crossed research and collection, then deterministic
+verification excluded all ten candidates before presentation: nine first
+losses at asset identity and one at the identity-safe product-URL gate. Its
+spent sanitized-evidence-v3 artifact cannot distinguish the exact direct-asset,
+Shopping, or URL reason and remains immutable.
 
 PR-3G at clean commit `ac53c10e` historically reached provider `completed` but
 stopped at candidate-source identity before product-data work. PR-3H then made
 that preflight candidate-local rather than response-wide while keeping the
 identity predicate unchanged.
 
-The latest live evidence is PR-3I at clean commit `bd54de90`: one frozen `shop
-vac` lifecycle again reached provider `completed`, but local preflight stopped
-as `research_candidate_invalid / candidate_sources /
-candidate_source_identity_unproven` before page collection, Shopping,
-verification, presentation, or rendering. Evidence v5 reports 10 submitted,
-zero accepted, 10 rejected, and at least one missing-title source decision for
-every candidate; every affirmative mismatch family is zero. It deliberately
-retains no candidate/source mapping and cannot say which source was titleless
-or whether both were. The 21,584-byte one-file artifact independently returned
-`VERIFIED`, confidence 0.99, and is spent.
+PR-3I at clean commit `bd54de90` historically reached provider `completed`, but
+local preflight stopped before product-data work. Evidence v5 reports 10
+submitted, zero accepted, 10 rejected, and at least one missing-title source
+decision for every candidate; every affirmative mismatch family is zero. It
+deliberately retains no candidate/source mapping and cannot say which source was
+titleless or whether both were. The 21,584-byte one-file artifact independently
+returned `VERIFIED`, confidence 0.99, and is spent.
+
+The latest live evidence is PR-3K at clean PR-3J commit `8c57cd59`. Exactly one
+frozen `shop vac` lifecycle completed research, deterministic verification,
+presentation, and public-response rendering in 116.495 seconds. All 10
+submitted candidates were accepted through the missing-title deferral path;
+page verification used 20 bounded fetches with 14 successes, Shopping used 10
+requests and returned 156 rows, and the verifier produced four eligible cards,
+zero close matches, and six exclusions. The public v1 response contains four
+sequential unique cards and eight source entries representing four unique HTTPS
+URLs; every card reference and commerce URL resolves. No retry, replacement,
+fallback, second case, or safety cancellation
+occurred. The 51,640-byte evidence-v6 artifact, SHA-256
+`9DFB2A82691ACAC640F146038DC08510786F53578D768105CF8347A03EABC2E4`,
+independently returned exact verdict `VERIFIED`, no findings, confidence 0.99,
+and is immutable spent evidence. It proves one bounded lifecycle only—not
+leader recall, card truth, repeatability, latency distribution, or category-
+wide accuracy.
 
 PR-3D replaces the earlier prompt-enforced PR-2H relation with a structural
 producer boundary. The model no longer repeats a composite name that can drift
@@ -324,6 +339,16 @@ continued slate, and an all-rejected failure requires zero deferred candidates.
 Contract v9, runtime v8, and future evidence v6 roll old work closed. Schema v5,
 prompt v6, exact URL ownership, source cardinality, the thirty-fetch ceiling,
 downstream trust, public responses, and default-off behavior are unchanged.
+
+PR-3K executed those unchanged semantics once. The tri-state diagnostic
+conserved 10 submitted, 10 accepted, 10 deferred-missing-title, and zero
+rejected candidates; all affirmative mismatch families stayed zero. The first-
+loss aggregate recorded five asset-identity exclusions, one missing/invalid-
+product-URL exclusion, and four no-loss eligible candidates. That aggregate is
+intentionally too coarse to map candidates or infer the one-versus-two
+titleless-source distribution. The legacy quality scorecards still target
+`/api/recommendations`, so they cannot measure this staged path; a staged-
+specific, current-truth harness is required before any broader live matrix.
 
 PR-2J closes a separately reproduced producer/parser mismatch without a live
 request. Candidate `source_urls` remains the exact response-owned URL registry

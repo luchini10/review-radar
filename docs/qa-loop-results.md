@@ -13093,3 +13093,81 @@ result, latency, cost, repeatability, or market coverage. After a self-contained
 clean PR-3J closeout commit, PR-3K may measure the unchanged frozen case once in
 a new commit-derived directory under every first-terminal/no-retry/no-fallback/
 no-second-case rule. Only a safe public shopper result unlocks PR-4.
+
+## 🟧 Codex — 2026-08-29 — PR-3K first complete staged lifecycle
+
+**Objective and decision:** success required a complete safe staged shopper
+result, not provider completion, title deferral, page-fetch activity, or a
+smaller slate. PR-3J was independently approved and self-contained; one clean
+commit-bound invocation was the smallest test of its tri-state boundary. A
+retry, second case, broad matrix, legacy scorecard run, flag change, or weaker
+trust gate was not authorized.
+
+**Preflight:** branch `main` and exact clean commit
+`8c57cd594a7f060aa358afedb0e1baab429a5d89` were authenticated. The index,
+tracked tree, and generated `next-env.d.ts` were clean; committed staged/direct
+defaults remained off. Focused Phase D runner tests passed 10/10. The zero-
+network dry run reproduced plan v2, exact case/model/reasoning, all ceilings,
+current/frozen pricing, and prospective directory
+`oai-t10-phase-d-8c57cd5`; that directory was absent. OpenAI presence and Serper
+safe shape were checked in memory as booleans only, without values, lengths,
+hashes, or prefixes.
+
+**Invocation and terminal lifecycle:** exactly one command used the required
+`--name=value` approvals. Research returned one queued start, 39 in-progress
+retrieves, and completed on retrieve 40. Deterministic verification and the
+separate no-web presentation call then completed within the same route
+lifecycle. Total wall time was 116,495 ms.
+
+The terminal envelope recorded:
+
+- two OpenAI creates, 40 retrieves, and eight hosted searches;
+- 10 Shopping requests, 20 source-page fetches, and 25 physical HTTP attempts;
+- zero safety cancels, retries, replacements, fallbacks, organic, SearchAPI,
+  additional cases, flag changes, or deployment;
+- 77,273 input tokens, zero cached input, 9,064 output tokens, and eight search
+  calls; and
+- `$0.409142` approval-envelope nominal, `$0.457438` frozen-conservative, and
+  `$0.343314` informational current estimates, all below `$3`.
+
+**Tri-state and verification evidence:** all 10 submitted candidates were
+accepted/continued and all 10 were deferred-missing-title; zero candidates were
+affirmatively rejected and all four mismatch families were zero. Collection
+attempted 20 sources and succeeded for 14. Ten Shopping requests returned 156
+rows. Deterministic verification returned four eligible, zero close, and six
+excluded candidates.
+
+First-loss counts conserve: five asset identity, one product URL, zero
+relationship, zero hard requirement, and four no-loss eligible. Asset subreasons
+were one no-asset, three brand-absent-from-title, and one model-absent-from-title;
+the product-URL loss was one missing/invalid URL. Source rejection was zero and
+four claims were rejected. These closed aggregates cannot map the six excluded
+candidates to identities or determine whether one or both candidate sources
+were titleless.
+
+**Public and artifact reconciliation:** the completed API-v1/presentation-v1
+response contains four sequential unique cards and eight source entries. All
+source references resolve and all four commerce URLs are registered; eight
+source IDs represent four unique HTTPS URLs.
+
+The exact spent directory contains only 51,640-byte evidence-v6 `result.json`,
+SHA-256
+`9DFB2A82691ACAC640F146038DC08510786F53578D768105CF8347A03EABC2E4`.
+Successful completion correctly removed `attempt.json`. Independent strict
+read-only audit returned exact verdict `VERIFIED`, no findings, confidence 0.99.
+It authenticated binding, sequence, counters, two distinct ledgers, exact cost,
+conservation, public reconciliation, and the closed privacy allowlist. No raw
+provider ID, job token, prompt, evidence package, header, body, credential,
+secret/key pattern, private-network URL, or non-public candidate/source identity
+was retained. Tracked/index/default-off state remained clean. The implementing
+agent did not open or enumerate artifact contents.
+
+**Outcome and next decision:** PR-3K closes one-attempt staged lifecycle
+feasibility. It does not prove repeatability, independent market accuracy,
+leader recall, hard-requirement truth across categories, final-set stability,
+latency/cost distribution, or production readiness. The existing quality
+scorecard calls the legacy route and its July leader snapshot may be stale.
+PR-4A must first refresh a small current-market truth set and build a staged-
+path-specific, privacy-safe aggregate harness with frozen cases, metrics,
+ceilings, and independent zero-live review. Only then may the low-parallelism
+PR-4 matrix spend begin.

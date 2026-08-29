@@ -2445,3 +2445,57 @@ quality, latency, cost, stability, or shopper success. After a clean PR-3J
 commit, run one PR-3K commit-pinned measurement in a new directory under the
 unchanged first-terminal/no-retry envelope. Reasoning level: High for evidence
 and trust adjudication; Medium for the mechanical invocation.
+
+## Codex Run - 2026-08-29 PR-3K first complete staged lifecycle
+
+**Goal:** measure the reviewed tri-state contract once and require a complete,
+safe, privacy-bounded shopper result—not merely research completion, deferral,
+page-fetch activity, or a smaller slate.
+
+**Preflight and invocation:** focused runner tests passed 10/10. A zero-network
+dry run bound the exact frozen `shop vac` case, model/reasoning levels, `$3`
+gate, and all counters to clean PR-3J commit
+`8c57cd594a7f060aa358afedb0e1baab429a5d89`. Branch, tracked/index state,
+`next-env.d.ts`, and committed defaults were clean. The prospective directory
+was absent; required credentials were checked only for boolean presence/safe
+shape. Exactly one `--name=value` invocation ran.
+
+**Terminal result:** the route completed research, deterministic verification,
+no-web presentation, and public output in 116.495 seconds. Research returned a
+queued start, 39 in-progress retrieves, and completed on retrieve 40. Public
+output contained four sequential unique cards and eight registered source
+entries; every card reference and commerce URL resolved.
+
+The envelope used two OpenAI creates, eight hosted searches, 10 Shopping
+requests, 20 source fetches, and 25 physical HTTP attempts. Safety cancels,
+retries, replacements, fallbacks, organic, SearchAPI, second cases, flag
+changes, and deployment were zero.
+
+Tri-state preflight reported 10 submitted, 10 accepted/continued, 10 deferred-
+missing-title, zero rejected, and zero in all four affirmative mismatch
+families. Product-data collection succeeded for 14 of 20 exact sources and
+Shopping returned 156 rows. Verification produced four eligible, zero close,
+and six excluded. First loss conserves as five asset identity, one product URL,
+and four no-loss eligible; relationship and hard-requirement losses were zero.
+
+Two distinct completed ledgers account 77,273 input tokens, zero cached input,
+9,064 output tokens, and eight searches. Estimated cost was `$0.409142` frozen
+nominal, `$0.457438` frozen conservative, and `$0.343314` current, below `$3`.
+
+**Independent evidence:** the exact spent directory contains only 51,640-byte
+evidence-v6 `result.json`, SHA-256
+`9DFB2A82691ACAC640F146038DC08510786F53578D768105CF8347A03EABC2E4`.
+Independent strict read-only audit returned `VERIFIED`, no findings, confidence
+0.99. It authenticated commit/case/ceilings, lifecycle order, counts,
+conservation, cost arithmetic, four-card/eight-source public reconciliation,
+closed privacy fields, response hashes in place of IDs, and clean default-off
+state. The implementing agent never opened or enumerated artifact contents.
+
+**Assessment and next step:** PR-3K closes the PR-013 one-lifecycle feasibility
+blocker. It does not prove repeatability, current market-leader recall,
+hard-requirement truth across categories, final-set stability, latency/cost
+distribution, or production readiness. The legacy scorecard targets the legacy
+route and its July leader set may be stale. PR-4A should therefore refresh a
+small current-market truth set and build an exact staged-path aggregate harness
+with independent review before any matrix spend. Reasoning level: High for
+truth/trust design; Medium for routine harness execution.

@@ -3789,6 +3789,39 @@ measure the unchanged frozen case once in a new directory. It is not a retry of
 PR-3I: it tests contract v9/runtime v8/evidence v6. Only a safe public shopper
 result unlocks Phase E.
 
+**Phase D continuation — PR-3K, 2026-08-29:** the one evidence-v6 measurement
+at clean PR-3J commit `8c57cd59` completed the entire frozen `shop vac`
+lifecycle. Research started once, returned 39 in-progress retrieves, and
+completed on retrieve 40. Deterministic verification and the no-web presentation
+then completed in the same route lifecycle. Public output contained four unique
+sequential cards and eight resolving source entries.
+
+The 116.495-second run used two creates, eight hosted searches, 10 Shopping
+requests, 20 source fetches, and 25 physical HTTP attempts. It used no cancel,
+retry, replacement, fallback, organic, SearchAPI, second case, flag change, or
+deployment. Usage was 77,273 input, zero cached input, 9,064 output, and eight
+search calls; frozen-conservative cost was `$0.457438`, below `$3`.
+
+Tri-state preflight continued and deferred all 10 submitted candidates, with
+zero affirmative mismatch rejection. Four became eligible, zero close, and six
+excluded after bounded product-data verification. First-loss counts conserve as
+five asset identity, one product URL, and four no-loss eligible; relationship and
+hard-requirement loss stayed zero. The aggregate cannot identify excluded
+products or distinguish one versus two titleless sources.
+
+The exact spent directory contains only 51,640-byte `result.json`, SHA-256
+`9DFB2A82691ACAC640F146038DC08510786F53578D768105CF8347A03EABC2E4`.
+Independent strict audit returned `VERIFIED`, no findings, confidence 0.99 for
+binding, sequence, conservation, cost, public reconciliation, privacy, and
+default-off state. This closes one-attempt feasibility only.
+
+Phase E/PR-4 must now measure the staged path itself. The existing quality
+scorecard targets `/api/recommendations` and a July leader snapshot, so reusing
+it unchanged would measure the wrong route and possibly stale truth. Freeze a
+small current-market broad/constrained/adversarial/over-constrained matrix,
+review its truth and cost boundary independently, then run at low parallelism.
+No production flag or deployment decision follows from PR-3K alone.
+
 **Phase E — quality/stability and promotion decision:** only after feasibility
 passes, compare multiple frozen categories against the existing baseline. A
 flag promotion, deployment, or retirement of the old path remains a separate
