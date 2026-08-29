@@ -11,6 +11,43 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Sanitize the staged-readiness credential launch
+
+#### Changed
+
+- Replaced the proposed broad Node environment-file invocation with a dedicated
+  launcher that authenticates the commit, exact approval arguments, and full
+  local trust surface before reading credentials and again before process
+  creation.
+- Reads the fixed ignored credential file through one identity-checked handle,
+  rejects path swaps and inherited loader/debug/TLS controls, and rebuilds a
+  minimal child environment containing only required Windows launch variables,
+  fixed locale/timezone, the official OpenAI endpoint, and the two required
+  credentials.
+- Pinned the runner's OpenAI client to the official endpoint with SDK retries
+  disabled. Existing serial attempt, append-only artifact, network, cost, and
+  no-retry boundaries are unchanged.
+
+#### Verified
+
+- Fail-first observed the missing launcher. The first independent source review
+  returned `CHANGES REQUIRED` after reproducing a debug-mode canary leak and
+  identifying a path-read swap race; both received regression-backed fixes.
+- Replacement review returned `VERIFIED`, no actionable finding, confidence
+  0.98. Focused launcher tests pass 5/5, launcher/runner tests 20/20, combined
+  PR-4A/launcher/runner tests 53/53, and the full suite passes 1,552/1,552
+  across 217 suites.
+- Typecheck, production build, Playwright 17/17, syntax, and lint passed. A
+  sanitized dummy child dry run produced only expected precommit trust
+  failures. Deterministic controller
+  `agent-loop-2026-08-29T23-47-19-401Z` passed all five serial partitions,
+  1,552/1,552 tests, deterministic eval, and the 10-case/29-invariant
+  benchmark. No provider, product-data, replay, or live-fixture call ran.
+
+This source review does not authenticate the closeout commit. Its exact commit,
+trust manifest, absent output, launcher command, and attempt-1 dry plan require
+a new independent verdict before any paid request.
+
 ### Codex - Add a commit-bound serial readiness runner
 
 #### Changed

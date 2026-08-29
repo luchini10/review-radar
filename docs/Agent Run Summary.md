@@ -2596,3 +2596,52 @@ the self-contained commit, clean state, trust-manifest digest, exact
 arguments in a separate independent review. Only then may exactly one bounded
 invocation be considered. Recommended reasoning: High for commit/live/artifact
 authority; Medium for deterministic execution.
+
+## Codex Run - 2026-08-29 PR-4B sanitized credential-launch correction
+
+**Goal:** load the two user-owned live credentials without allowing the local
+environment file or inherited shell to alter endpoint, loader, proxy, TLS,
+debug, retry, argument, or trust behavior.
+
+**Assessment and root cause:** the exact committed runner dry plan was already
+independently verified, but the inherited shell did not contain the required
+credentials. A value-blind broad `--env-file` probe returned only `ready`.
+Independent review showed that using it for execution would import unrelated
+process controls, so the proposed invocation was rejected before spend. The
+strongest correction was a source-authenticated allowlist launcher, not a
+broader shell or manual secret handling.
+
+**What changed:** added a launcher that authenticates the exact commit,
+arguments, and full trust surface before credential access and immediately
+before spawn; rejects inherited debug/loader/TLS controls; and reads the fixed
+ignored file through one identity-checked handle with stable realpath and
+device/inode/size/mtime/ctime metadata. It retains only the two required
+credentials, rebuilds a minimal child environment, fixes locale/timezone and
+the official OpenAI endpoint, and spawns the exact runner with `shell:false`.
+The runner's SDK client also fixes that endpoint and disables retries.
+
+**Fail-first and independent evidence:** fail-first produced the expected
+missing-launcher error. The first review returned `CHANGES REQUIRED`,
+confidence 0.995, after reproducing a debug-mode canary leak and identifying a
+path-read swap race. Corrections reject controls before reading and before
+spawn, with no asynchronous gap, and read only from one authenticated handle.
+Replacement review returned exact `VERIFIED`, no finding, confidence 0.98. The
+reviewer accessed no environment file, credential, provider, network, or live
+fixture.
+
+**Verification:** launcher 5/5; launcher/runner 20/20; combined PR-4A/launcher/
+runner 53/53; complete suite 1,552/1,552 across 217 suites; typecheck,
+production build, E2E 17/17, syntax, and lint with zero errors/three old
+warnings passed. A sanitized dummy child dry run exited zero with only the five
+expected precommit trust failures. No actual credential value was inspected,
+printed, copied, hashed, or staged, and no live call ran. Deterministic
+controller `agent-loop-2026-08-29T23-47-19-401Z` passed typecheck, lint, all
+1,552 tests, deterministic eval, all five serial partitions, and the tracked
+10-case/29-invariant benchmark with no repeated failure candidate.
+
+**Limits and next step:** host Node, Windows process launching, NTFS, Git, PATH,
+and installed dependency bytes remain trusted. At source review time, the
+correction was not commit-authenticated. Bind it in this self-contained local
+commit, generate a new zero-network plan, and obtain a fresh independent exact-
+commit verdict before at most attempt 1. Recommended reasoning: High for
+commit/live authority; Medium for deterministic plan generation.

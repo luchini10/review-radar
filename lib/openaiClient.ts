@@ -23,6 +23,7 @@ type OpenAIClient = {
 
 type OpenAIConstructor = new (options: {
   apiKey: string;
+  baseURL?: string;
   maxRetries?: number;
 }) => OpenAIClient;
 
@@ -35,7 +36,7 @@ export class MissingOpenAISdkError extends Error {
 
 export async function createOpenAIClient(
   apiKey: string,
-  options: { maxRetries?: number } = {},
+  options: { baseURL?: string; maxRetries?: number } = {},
 ) {
   try {
     const loadSdk = new Function(

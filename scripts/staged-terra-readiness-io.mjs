@@ -5,6 +5,7 @@ import path from "node:path";
 import ts from "typescript";
 
 export const STAGED_TERRA_READINESS_TRUST_SURFACE_ROOT_PATHS = Object.freeze([
+  "scripts/launch-staged-terra-readiness.mjs",
   "scripts/run-staged-terra-readiness.mjs",
   "scripts/staged-terra-readiness-io.mjs",
 ]);

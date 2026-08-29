@@ -13437,3 +13437,112 @@ The controller left advisory output in the ignored worker artifact `agent-loop-2
 ### Report
 
 See `docs/agent-loop-report.md`.
+
+## 🟧 Codex — 2026-08-29 — PR-4B sanitized credential-launch correction
+
+**Objective and root cause:** the committed PR-4B runner plan was exact and
+independently `VERIFIED`, but the ignored user-owned credentials were not
+present in the inherited shell. A value-blind `node --env-file=.env.local`
+shape check returned only `ready`; independent challenge then showed that using
+the broad loader for the live process would import unrelated endpoint, proxy,
+loader, TLS, and debug controls. That proposed invocation was rejected before
+any provider call.
+
+**Implemented boundary:** a dedicated launcher now authenticates branch
+`main`, clean tracked state, exact HEAD, the 27 runner approval arguments, and
+the complete local trust surface including itself before credential access and
+again immediately before spawn. It rejects inherited Node/debug/loader/TLS
+controls case-insensitively at both boundaries. It reads only the fixed ignored
+`.env.local` through one identity-checked regular-file handle, brackets the read
+with stable bigint device/inode/size/mtime/ctime and direct-realpath checks,
+parses stable bytes with `util.parseEnv`, and retains only the two required
+credential names.
+
+The child environment is rebuilt rather than merged: required Windows process
+launch variables, fixed locale/timezone, the two credentials, and
+`OPENAI_BASE_URL=https://api.openai.com/v1`. The exact Node executable and
+runner arguments are spawned with `shell:false`. The runner's OpenAI SDK client
+also fixes the official endpoint and `maxRetries:0`. Serial attempt identity,
+ceilings, append-only checkpoints, no-replace publication, and no automatic
+advance are unchanged.
+
+**Independent correction loop:** fail-first produced the expected launcher
+`ERR_MODULE_NOT_FOUND`. The first frozen source review returned
+`CHANGES REQUIRED`, confidence 0.995: a nonsecret canary reproduced
+`NODE_DEBUG=child_process` disclosure of the child environment, and the
+validated path followed by `readFile(path)` admitted a credential-file swap.
+The correction rejects all relevant controls before reading and immediately
+before spawn, with no asynchronous gap, and reads only from one authenticated
+handle. Replacement review returned exact `VERIFIED`, no actionable finding,
+confidence 0.98. The reviewer accessed no credential or environment file,
+provider, network, or live fixture.
+
+Frozen corrected source SHA-256 values are:
+
+- OpenAI client: `feaa0bceb6c219a3029ded7f5ad97aa4001c1a4200acffc3ee3e4ee75afb9b6f`;
+- launcher: `fb806931187720657ba65a7b96a00d9d83252cabdab17ccc910ee4f4d3818daa`;
+- executable: `78533332220d58c83a03b4818797ea9d416188c9e4cf1cc2fd7cc9aa7504382a`;
+- IO: `c2c82ed986a411532a101f433036e783e8bb3488719276dc769347a7dfeb08a6`;
+- runner: `684f26000e455ad9760c605c96eb3b8e50ba15f8fa01632027f50a36c2c16549`;
+  and
+- launcher tests: `97ba1e269acfeeb6fe5d21a1b9219248b692de641348292f1cc3d1bcda622539`.
+
+**Deterministic evidence:** launcher tests pass 5/5; launcher/runner tests
+20/20; combined PR-4A/launcher/runner tests 53/53; complete tests pass
+1,552/1,552 across 217 suites; typecheck, production build, E2E 17/17, syntax,
+scoped lint, and complete lint pass with zero errors and the same three old
+warnings. A sanitized dummy-credential child dry run exited zero and reported
+only the five expected unauthenticated precommit trust failures. No real value
+was printed, copied, hashed, staged, or manually inspected. Deterministic
+controller `agent-loop-2026-08-29T23-47-19-401Z` then passed typecheck, lint,
+all 1,552 tests, deterministic eval, exact reconciliation of all five serial
+partitions, and the tracked 10-case/29-invariant benchmark. It found no repeated
+failure candidate.
+
+**Evidence limit and next gate:** no OpenAI, hosted-search, Serper, product-data,
+route, replay, credential-bearing live, or live-fixture call ran. The production
+build automatically loaded ignored `.env.local`, but no value was exposed. The
+corrected source was intentionally unauthenticated while modified/untracked.
+Bind the exact reviewed snapshot in one self-contained commit, independently
+adjudicate that clean commit, trust-manifest digest, absent prospective output,
+exact launcher command and dry plan, then execute at most attempt 1. Neither
+source verdict authorizes spend.
+
+## Agent Loop Run - 2026-08-29T23:49:41.136Z
+
+- **run id:** agent-loop-2026-08-29T23-47-19-401Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 11462ms |
+| lint | Passed | 36610ms |
+| unit tests | Passed | 79398ms |
+| deterministic eval pipeline | Passed | 1148ms |
+| tracked offline benchmark | Passed | 1552ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-29T23-47-19-401Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.

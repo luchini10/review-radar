@@ -26,6 +26,8 @@ export const STAGED_TERRA_READINESS_CHECKPOINT_VERSION =
   "staged-terra-readiness-runner-checkpoint-v1";
 export const STAGED_TERRA_READINESS_MATRIX_FILE_SHA256 =
   "289ada281c3f8185c4b4bdec64cb34dc55a1af3ccb5ed0f25b51b1483bdfae2c";
+export const STAGED_TERRA_READINESS_OFFICIAL_OPENAI_BASE_URL =
+  "https://api.openai.com/v1";
 
 const HASH_40 = /^[a-f0-9]{40}$/;
 const HASH_64 = /^[a-f0-9]{64}$/;
@@ -44,7 +46,7 @@ const RUNNER_FAILURE_CODES = new Set([
   "artifact_build_failed",
   "unexpected_execution_failure",
 ]);
-const APPROVAL_FIELDS = [
+export const STAGED_TERRA_READINESS_APPROVAL_FIELDS = Object.freeze([
   "approved-commit",
   "approved-matrix-file-sha256",
   "approved-matrix-canonical-sha256",
@@ -71,7 +73,7 @@ const APPROVAL_FIELDS = [
   "approved-search-api-attempts",
   "approved-additional-cases",
   "approved-output-relative-path",
-];
+]);
 
 function requireCondition(condition, message) {
   if (!condition) throw new Error(message);
@@ -173,7 +175,10 @@ function presentationRequestIsClosed(body) {
 }
 
 function parseApprovalArguments(args) {
-  const allowed = new Set(["execute", ...APPROVAL_FIELDS]);
+  const allowed = new Set([
+    "execute",
+    ...STAGED_TERRA_READINESS_APPROVAL_FIELDS,
+  ]);
   const values = new Map();
   for (const argument of args) {
     requireCondition(
@@ -195,11 +200,11 @@ function parseApprovalArguments(args) {
     }
   }
   requireCondition(values.get("execute") === "true", "Live execution was not explicitly selected.");
-  for (const field of APPROVAL_FIELDS) {
+  for (const field of STAGED_TERRA_READINESS_APPROVAL_FIELDS) {
     requireCondition(values.has(field), `Live approval is missing ${field}.`);
   }
   requireCondition(
-    values.size === APPROVAL_FIELDS.length + 1,
+    values.size === STAGED_TERRA_READINESS_APPROVAL_FIELDS.length + 1,
     "Live approval field count is invalid.",
   );
   return values;

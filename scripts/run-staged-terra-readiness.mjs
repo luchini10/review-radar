@@ -25,6 +25,7 @@ import {
 import {
   buildStagedTerraReadinessRunPlan,
   executeStagedTerraReadinessAttempt,
+  STAGED_TERRA_READINESS_OFFICIAL_OPENAI_BASE_URL,
   stagedTerraReadinessCeilingFailures,
   validateStagedTerraReadinessCreateRequest,
   validateStagedTerraReadinessRunApproval,
@@ -157,6 +158,7 @@ async function main() {
   });
 
   const sdkClient = await createOpenAIClient(process.env.OPENAI_API_KEY, {
+    baseURL: STAGED_TERRA_READINESS_OFFICIAL_OPENAI_BASE_URL,
     maxRetries: 0,
   });
   if (sdkClient.maxRetries !== 0) {

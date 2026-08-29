@@ -1353,12 +1353,53 @@ directory is spent.
   the 10-case/29-invariant benchmark, deterministic eval, typecheck, lint, and
   the complete unit wall. No provider, product-data, credential, replay, or
   live call ran.
-- Current gate: before commit, the runner deliberately reports an
-  unauthenticated trust surface because its new source is not in HEAD. The
-  self-contained commit must be reauthenticated, then its exact dry plan and
-  approval arguments must receive a separate independent verdict before the
-  first `broad-shop-vac:1` provider call. Source verification is not live
-  authorization.
+- First committed-plan adjudication: commit
+  `d2df488431c4da4176c8de56baf6d9f44efa1dc8` and its 60-entry trust manifest
+  received independent `VERIFIED`, no finding, confidence 0.995. Its exact
+  27-argument attempt-1 plan was sound, but the bare shell had no credentials.
+  A proposed `node --env-file=.env.local` prefix then received
+  `CHANGES REQUIRED`: broad loading could import `OPENAI_BASE_URL`,
+  `NODE_OPTIONS`, or another unreviewed behavior control.
+- Credential-origin correction: a dedicated launcher authenticates itself and
+  the complete trust surface before reading credentials and again before
+  spawn; requires exact Node arguments and the 27 approved runner arguments;
+  reads one direct bounded `.env.local` through a single identity-checked file
+  handle; reconstructs the child environment from fixed host essentials, only
+  the two credential values, and the official OpenAI endpoint; rejects inherited
+  loader, debug, TLS, certificate, and proxy-enable controls; uses the exact
+  Node binary with no shell; and pins `https://api.openai.com/v1` explicitly in
+  the SDK options. Unknown file variables and parent proxies do not survive.
+- Credential review loop: fail-first launcher execution produced the expected
+  missing-module failure. The first frozen review returned `CHANGES REQUIRED`
+  because inherited `NODE_DEBUG=child_process` could print child credentials
+  and the validated credential path could be swapped before a separate path
+  read. The corrected launcher rejects both debug variables before credential
+  access and immediately before spawn, and brackets one handle read with
+  device/inode/size/mtime/ctime plus direct-realpath checks. Replacement review
+  returned exact `VERIFIED`, no actionable finding, confidence 0.98.
+- Corrected source SHA-256 values are OpenAI client
+  `feaa0bceb6c219a3029ded7f5ad97aa4001c1a4200acffc3ee3e4ee75afb9b6f`,
+  launcher
+  `fb806931187720657ba65a7b96a00d9d83252cabdab17ccc910ee4f4d3818daa`,
+  executable
+  `78533332220d58c83a03b4818797ea9d416188c9e4cf1cc2fd7cc9aa7504382a`,
+  IO
+  `c2c82ed986a411532a101f433036e783e8bb3488719276dc769347a7dfeb08a6`,
+  runner
+  `684f26000e455ad9760c605c96eb3b8e50ba15f8fa01632027f50a36c2c16549`,
+  and launcher tests
+  `97ba1e269acfeeb6fe5d21a1b9219248b692de641348292f1cc3d1bcda622539`.
+  Focused launcher tests pass 5/5; launcher/runner 20/20; PR-4A/runner/launcher
+  53/53; complete tests pass 1,552/1,552 across 217 suites; typecheck, build,
+  E2E 17/17, syntax, and lint pass. Deterministic controller
+  `agent-loop-2026-08-29T23-47-19-401Z` independently reran typecheck, lint,
+  all 1,552 tests, deterministic eval, five serial partitions, and the tracked
+  10-case/29-invariant benchmark with no repeated failure candidate.
+- Current gate: the corrected source verdict is not commit authority. Bind the
+  exact reviewed correction in one self-contained commit, then independently
+  authenticate that commit, its trust manifest, absent output, and derived
+  launcher command before at most attempt 1. Neither earlier verdict authorizes
+  the changed invocation.
 - Run the independently approved, low-parallelism broad/constrained/adversarial/
   over-constrained matrix, with repeated samples only where needed to measure
   variance.

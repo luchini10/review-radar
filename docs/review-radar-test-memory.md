@@ -4,6 +4,68 @@
 
 ---
 
+## PR-4B sanitized credential-launch contract (2026-08-29)
+
+- Do not invoke the readiness runner with Node's broad `--env-file` loader.
+  That mechanism can import unrelated process controls such as endpoint,
+  loader, proxy, TLS, and debug variables into the credential-bearing process.
+  A value-blind shape probe returned only `ready`, but the broad invocation was
+  rejected before any provider request and is not an approved launch path.
+- Invoke only `node --no-warnings scripts/launch-staged-terra-readiness.mjs`
+  plus the runner's exact 27 approval arguments. The launcher authenticates
+  branch `main`, clean tracked state, exact HEAD, approval arguments, and the
+  complete trust surface including itself before reading credentials and again
+  immediately before spawning the runner.
+- Reject inherited Node/debug/loader/TLS controls case-insensitively before
+  credential access and immediately before spawn: `NODE_DEBUG`,
+  `NODE_DEBUG_NATIVE`, `NODE_OPTIONS`, `NODE_PATH`, `NODE_EXTRA_CA_CERTS`,
+  `OPENSSL_CONF`, `SSL_CERT_FILE`, `SSL_CERT_DIR`,
+  `NODE_TLS_REJECT_UNAUTHORIZED`, and `NODE_USE_ENV_PROXY`.
+- Read only the fixed ignored `.env.local` through one open `FileHandle`, never
+  a second path read. Require a direct regular file, fixed realpath, a 65,536-
+  byte cap, and stable bigint device/inode/size/mtime/ctime metadata across the
+  pre-open path, opened handle, post-open path, post-read handle, and post-read
+  path. Parse the stable bytes with Node `util.parseEnv`; retain only
+  `OPENAI_API_KEY` and `SERPER_API_KEY` in memory.
+- Rebuild, never merge, the child environment. Preserve only required Windows
+  process-launch variables; fix `LANG=C`, `LC_ALL=C`, `TZ=UTC`, and
+  `OPENAI_BASE_URL=https://api.openai.com/v1`; add only the two required
+  credentials. Spawn exact `process.execPath`, exact runner and arguments,
+  `shell:false`. The OpenAI SDK is also constructed with that official base URL
+  and `maxRetries:0`.
+- Frozen corrected SHA-256 values are OpenAI client
+  `feaa0bceb6c219a3029ded7f5ad97aa4001c1a4200acffc3ee3e4ee75afb9b6f`,
+  launcher
+  `fb806931187720657ba65a7b96a00d9d83252cabdab17ccc910ee4f4d3818daa`,
+  executable
+  `78533332220d58c83a03b4818797ea9d416188c9e4cf1cc2fd7cc9aa7504382a`,
+  IO `c2c82ed986a411532a101f433036e783e8bb3488719276dc769347a7dfeb08a6`,
+  runner
+  `684f26000e455ad9760c605c96eb3b8e50ba15f8fa01632027f50a36c2c16549`,
+  and launcher tests
+  `97ba1e269acfeeb6fe5d21a1b9219248b692de641348292f1cc3d1bcda622539`.
+- Fail-first produced the expected launcher `ERR_MODULE_NOT_FOUND`. The first
+  source review returned `CHANGES REQUIRED`: a nonsecret canary reproduced
+  `NODE_DEBUG=child_process` environment disclosure, and the path-based read
+  left a swap race. The corrected exact snapshot received `VERIFIED`, no
+  actionable finding, confidence 0.98. The reviewer accessed no credential,
+  environment file, provider, network, or live fixture.
+- Proof remains zero-live: launcher 5/5; launcher/runner 20/20; combined PR-4A/
+  launcher/runner 53/53; full 1,552/1,552 across 217 suites; typecheck, build,
+  E2E 17/17, syntax, and lint passed. A sanitized dummy-credential child dry run
+  exited cleanly with the expected unauthenticated precommit failures. No
+  actual value was printed, copied, hashed, staged, or manually inspected.
+  Controller `agent-loop-2026-08-29T23-47-19-401Z` then passed typecheck, lint,
+  all 1,552 tests, deterministic eval, five exact serial partitions, and the
+  10-case/29-invariant benchmark with no repeated failure candidate.
+- This source verdict does not authorize spend. Before attempt 1, bind the exact
+  snapshot in a self-contained commit and independently authenticate that clean commit,
+  new trust-manifest digest, exact launcher command and dry plan, absent output,
+  and complete approval arguments. Never retry, replace, or advance
+  automatically.
+
+---
+
 ## PR-4B commit-bound serial runner contract (2026-08-29)
 
 - The runner is dry-run-first and may execute only one exact PR-4A attempt. It
