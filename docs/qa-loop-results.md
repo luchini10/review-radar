@@ -11448,3 +11448,55 @@ schema/runtime defect that could cause the observed live class. It cannot prove
 which exact private field failed in the spent response. Staged Terra therefore
 remains default-off, undeployed, and live-feasibility-unproven. PR-010's stale
 frozen-rate label remains a separate zero-live evidence-integrity correction.
+
+---
+
+## 🟩 Codex — 2026-08-29 — Production readiness PR-2B cost-evidence closeout
+
+**Objective:** make Phase D spending evidence reproducible and unambiguous
+without weakening the existing approval ceiling or making another live request.
+
+**Fail-first evidence:** the focused suite passed its five existing controls and
+failed five new assertions. The plan still used schema v1, published frozen July
+rates under the ambiguous `standardUsd` name, omitted an independently dated
+current estimate, and let the runner gate/persist the v1 contract.
+
+**Correction:** Phase D plan schema v2 carries two complete, sourced cards: a
+frozen 2026-07-25 `approvalEnvelope` and a 2026-08-29
+`standard_non_regional` `currentEstimate`. Cost output now exposes
+`approvalEnvelopeUsd`, `approvalEnvelopeConservativeUsd`, and
+`currentEstimateUsd`, plus both source dates. The runner emits sanitized
+evidence schema v2 and persists both rate cards.
+
+The frozen approval card remains `$2.50` input, `$0.25` cached input, and `$15`
+output per million under 272K; the dated current card uses `$2.00`, `$0.20`, and
+`$12`. Both explicitly model long context, 1.25x cache writes, and `$0.01`
+hosted searches. The unchanged `$3` hard ceiling consults only
+`approvalEnvelopeConservativeUsd`; a lower current estimate cannot expand the
+approved spend. Historical v1 fixtures remain immutable.
+
+**Verification (zero live):**
+
+- fail-first: 5 pass / 5 intended fail;
+- focused Phase D runner: 10/10;
+- full staged subsystem: 56/56 across ten suites;
+- complete suite: 1,440/1,440 across 209 suites;
+- E2E: 17/17 on the credential-neutral dedicated server;
+- typecheck, production build, deterministic eval, fixed ranking comparison,
+  zero-network dry run, and `git diff --check`: pass;
+- lint: zero errors and three pre-existing warnings; and
+- independent read-only review: `APPROVED` after a personal 10/10 focused rerun
+  and full inspection of the scoped runner/accounting path.
+
+The historical failed usage recomputes to `$0.154600` approval-envelope nominal,
+`$0.168307` approval-envelope conservative, and `$0.127680` at the dated current
+card. A 300K-input/100K-cached/1K-output/one-search boundary control proves the
+long-context and cache-write math. Failed terminal usage, successful two-stage
+usage, same-hash-only deduplication, and distinct/unknown conservative summing
+remain covered.
+
+No OpenAI API, Serper, SearchAPI, Shopping, source-page, or other product-data
+request ran. No `.env.local` edit, flag promotion, deployment, production
+change, push, issue-status mutation, historical-fixture rewrite, or user-owned
+artifact cleanup occurred. This closes PR-010 only; staged lifecycle feasibility
+and shopper-result quality remain unproven.

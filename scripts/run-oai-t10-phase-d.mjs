@@ -134,11 +134,12 @@ async function main() {
   };
   const diagnostics = [];
   const evidence = {
-    schemaVersion: "oai-t10-phase-d-sanitized-v1",
+    schemaVersion: "oai-t10-phase-d-sanitized-v2",
     capturedAt: new Date().toISOString(),
     commit,
     case: OAI_T10_PHASE_D_CASE,
     ceilings: OAI_T10_PHASE_D_CEILINGS,
+    pricing: runPlan.pricing,
     counters,
     diagnostics,
     cost: null,
@@ -363,7 +364,7 @@ async function main() {
       );
     }
     if (
-      evidence.cost.conservativeUsd >
+      evidence.cost.approvalEnvelopeConservativeUsd >
       OAI_T10_PHASE_D_CEILINGS.hardCeilingUsd
     ) {
       throw new Error("Estimated cost exceeded the approved dollar ceiling.");

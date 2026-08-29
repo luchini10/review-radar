@@ -14,10 +14,12 @@ export const OAI_T10_PHASE_D_CEILINGS = Object.freeze({
   hardCeilingUsd: 3,
 });
 
-export const OAI_T10_TERRA_PRICING_AS_OF_2026_07_25 = Object.freeze({
+export const OAI_T10_TERRA_APPROVAL_PRICING_AS_OF_2026_07_25 = Object.freeze({
+  asOf: "2026-07-25",
+  purpose: "frozen_approval_envelope",
   source: "https://developers.openai.com/api/docs/models/gpt-5.6-terra",
   longContextThresholdInputTokens: 272_000,
-  standard: Object.freeze({
+  shortContext: Object.freeze({
     inputPerMillionUsd: 2.5,
     cachedInputPerMillionUsd: 0.25,
     outputPerMillionUsd: 15,
@@ -26,6 +28,29 @@ export const OAI_T10_TERRA_PRICING_AS_OF_2026_07_25 = Object.freeze({
     inputPerMillionUsd: 5,
     cachedInputPerMillionUsd: 0.5,
     outputPerMillionUsd: 22.5,
+  }),
+  cacheWriteMultiplier: 1.25,
+  webSearchCallUsd: 0.01,
+});
+
+export const OAI_T10_TERRA_CURRENT_PRICING_AS_OF_2026_08_29 = Object.freeze({
+  asOf: "2026-08-29",
+  purpose: "dated_current_estimate",
+  billingMode: "standard_non_regional",
+  sources: Object.freeze([
+    "https://developers.openai.com/api/docs/models/gpt-5.6-terra",
+    "https://developers.openai.com/api/docs/pricing",
+  ]),
+  longContextThresholdInputTokens: 272_000,
+  shortContext: Object.freeze({
+    inputPerMillionUsd: 2,
+    cachedInputPerMillionUsd: 0.2,
+    outputPerMillionUsd: 12,
+  }),
+  longContext: Object.freeze({
+    inputPerMillionUsd: 4,
+    cachedInputPerMillionUsd: 0.4,
+    outputPerMillionUsd: 18,
   }),
   cacheWriteMultiplier: 1.25,
   webSearchCallUsd: 0.01,
@@ -46,7 +71,7 @@ function numericArgument(args, name) {
 
 export function phaseDPlan(commit) {
   return {
-    schemaVersion: "oai-t10-phase-d-plan-v1",
+    schemaVersion: "oai-t10-phase-d-plan-v2",
     phase: "OAI-T10 Phase D",
     mode: "dry-run",
     commit,
@@ -55,7 +80,10 @@ export function phaseDPlan(commit) {
     researchReasoning: "high",
     presentationReasoning: "medium",
     ceilings: OAI_T10_PHASE_D_CEILINGS,
-    pricing: OAI_T10_TERRA_PRICING_AS_OF_2026_07_25,
+    pricing: {
+      approvalEnvelope: OAI_T10_TERRA_APPROVAL_PRICING_AS_OF_2026_07_25,
+      currentEstimate: OAI_T10_TERRA_CURRENT_PRICING_AS_OF_2026_08_29,
+    },
     networkPolicy: {
       openAiResponses: true,
       openAiHostedWebSearch: true,
@@ -169,6 +197,35 @@ function mergeUsage(left, right) {
   };
 }
 
+function publishedUsageCost(usage, pricing) {
+  const rates =
+    usage.inputTokens > pricing.longContextThresholdInputTokens
+      ? pricing.longContext
+      : pricing.shortContext;
+  const cached = Math.min(usage.inputTokens, usage.cachedInputTokens);
+  const uncached = usage.inputTokens - cached;
+  return (
+    (uncached / 1_000_000) * rates.inputPerMillionUsd +
+    (cached / 1_000_000) * rates.cachedInputPerMillionUsd +
+    (usage.outputTokens / 1_000_000) * rates.outputPerMillionUsd +
+    usage.webSearchCalls * pricing.webSearchCallUsd
+  );
+}
+
+function conservativeCacheWriteCost(usage, pricing) {
+  const rates =
+    usage.inputTokens > pricing.longContextThresholdInputTokens
+      ? pricing.longContext
+      : pricing.shortContext;
+  return (
+    (usage.inputTokens / 1_000_000) *
+      rates.inputPerMillionUsd *
+      pricing.cacheWriteMultiplier +
+    (usage.outputTokens / 1_000_000) * rates.outputPerMillionUsd +
+    usage.webSearchCalls * pricing.webSearchCallUsd
+  );
+}
+
 export function estimatePhaseDCost(diagnostics) {
   const terminalByOperation = new Map();
   let duplicateTerminalLedgerCount = 0;
@@ -222,8 +279,9 @@ export function estimatePhaseDCost(diagnostics) {
     terminalByOperation.set(operation, existing);
   }
   const accountedLedgers = [...terminalByOperation.values()].flat();
-  let standardUsd = 0;
-  let conservativeUsd = 0;
+  let approvalEnvelopeUsd = 0;
+  let approvalEnvelopeConservativeUsd = 0;
+  let currentEstimateUsd = 0;
   const totals = {
     inputTokens: 0,
     cachedInputTokens: 0,
@@ -231,26 +289,18 @@ export function estimatePhaseDCost(diagnostics) {
     webSearchCalls: 0,
   };
   for (const { usage } of accountedLedgers) {
-    const rates =
-      usage.inputTokens >
-      OAI_T10_TERRA_PRICING_AS_OF_2026_07_25.longContextThresholdInputTokens
-        ? OAI_T10_TERRA_PRICING_AS_OF_2026_07_25.longContext
-        : OAI_T10_TERRA_PRICING_AS_OF_2026_07_25.standard;
-    const cached = Math.min(usage.inputTokens, usage.cachedInputTokens);
-    const uncached = usage.inputTokens - cached;
-    standardUsd +=
-      (uncached / 1_000_000) * rates.inputPerMillionUsd +
-      (cached / 1_000_000) * rates.cachedInputPerMillionUsd +
-      (usage.outputTokens / 1_000_000) * rates.outputPerMillionUsd +
-      usage.webSearchCalls *
-        OAI_T10_TERRA_PRICING_AS_OF_2026_07_25.webSearchCallUsd;
-    conservativeUsd +=
-      (usage.inputTokens / 1_000_000) *
-        rates.inputPerMillionUsd *
-        OAI_T10_TERRA_PRICING_AS_OF_2026_07_25.cacheWriteMultiplier +
-      (usage.outputTokens / 1_000_000) * rates.outputPerMillionUsd +
-      usage.webSearchCalls *
-        OAI_T10_TERRA_PRICING_AS_OF_2026_07_25.webSearchCallUsd;
+    approvalEnvelopeUsd += publishedUsageCost(
+      usage,
+      OAI_T10_TERRA_APPROVAL_PRICING_AS_OF_2026_07_25,
+    );
+    approvalEnvelopeConservativeUsd += conservativeCacheWriteCost(
+      usage,
+      OAI_T10_TERRA_APPROVAL_PRICING_AS_OF_2026_07_25,
+    );
+    currentEstimateUsd += publishedUsageCost(
+      usage,
+      OAI_T10_TERRA_CURRENT_PRICING_AS_OF_2026_08_29,
+    );
     for (const key of Object.keys(totals)) totals[key] += usage[key];
   }
   return {
@@ -260,7 +310,16 @@ export function estimatePhaseDCost(diagnostics) {
     ).length,
     duplicateTerminalLedgerCount,
     usage: totals,
-    standardUsd: Number(standardUsd.toFixed(6)),
-    conservativeUsd: Number(conservativeUsd.toFixed(6)),
+    pricingBasis: {
+      approvalEnvelopeAsOf:
+        OAI_T10_TERRA_APPROVAL_PRICING_AS_OF_2026_07_25.asOf,
+      currentEstimateAsOf:
+        OAI_T10_TERRA_CURRENT_PRICING_AS_OF_2026_08_29.asOf,
+    },
+    approvalEnvelopeUsd: Number(approvalEnvelopeUsd.toFixed(6)),
+    approvalEnvelopeConservativeUsd: Number(
+      approvalEnvelopeConservativeUsd.toFixed(6),
+    ),
+    currentEstimateUsd: Number(currentEstimateUsd.toFixed(6)),
   };
 }

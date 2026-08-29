@@ -4,6 +4,36 @@
 
 ---
 
+## OAI-T10 PR-2B dated pricing-evidence contract (2026-08-29)
+
+- Phase D plan/evidence schema v2 separates the immutable 2026-07-25
+  `approvalEnvelope` from the informational 2026-08-29 `currentEstimate`.
+  Evidence fields are `approvalEnvelopeUsd`,
+  `approvalEnvelopeConservativeUsd`, and `currentEstimateUsd`; do not revive
+  the ambiguous v1 names `standardUsd` or `conservativeUsd` in new evidence.
+- The approval envelope remains `$2.50` input, `$0.25` cached input, and `$15`
+  output per million below the 272K threshold, doubling input/cache and using
+  `$22.50` output above it. Cache writes remain 1.25x and hosted search remains
+  `$0.01` per call.
+- The dated current `standard_non_regional` card is `$2.00` input, `$0.20`
+  cached input, and `$12` output below 272K, doubling input/cache and using
+  `$18` output above it. Cache writes are 1.25x and hosted search is `$0.01`.
+  Re-check and re-date this informational card before using it as a current
+  estimate in a later run.
+- The unchanged `$3` hard ceiling is evaluated only against
+  `approvalEnvelopeConservativeUsd`. A lower current estimate cannot authorize
+  more spend. Immutable v1 fixtures keep their historical names and values.
+- Terminal provider usage after local failure remains billable; only snapshots
+  with the same nonempty response hash deduplicate. Distinct or unidentifiable
+  terminal responses still sum conservatively.
+- Fail-first was 5 pass / 5 intended fail; focused Phase D tests passed 10/10,
+  the staged wall passed 56/56, and the complete suite passed 1,440/1,440. No
+  provider, search, Shopping, or page request ran. Independent read-only review
+  returned `APPROVED` after personally rerunning 10/10 focused tests and
+  inspecting the scoped runner/accounting path.
+
+---
+
 ## OAI-T10 PR-2A research-contract v2 correction (2026-08-29)
 
 - Fail-first comparison proved a generalized v1 acceptance mismatch. The strict

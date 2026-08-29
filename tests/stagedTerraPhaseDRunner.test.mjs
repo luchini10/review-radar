@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import fs from "node:fs";
 import { describe, it } from "node:test";
 
 import {
@@ -41,6 +42,27 @@ describe("OAI-T10 Phase D live-feasibility harness", () => {
     assert.equal(plan.networkPolicy.searchApi, false);
     assert.equal(plan.networkPolicy.additionalCases, false);
     assert.equal(plan.networkPolicy.deployment, false);
+    assert.equal(plan.schemaVersion, "oai-t10-phase-d-plan-v2");
+    assert.deepEqual(Object.keys(plan.pricing), [
+      "approvalEnvelope",
+      "currentEstimate",
+    ]);
+    assert.equal(plan.pricing.approvalEnvelope.asOf, "2026-07-25");
+    assert.equal(
+      plan.pricing.approvalEnvelope.purpose,
+      "frozen_approval_envelope",
+    );
+    assert.equal(plan.pricing.currentEstimate.asOf, "2026-08-29");
+    assert.equal(plan.pricing.currentEstimate.purpose, "dated_current_estimate");
+    assert.equal(
+      plan.pricing.currentEstimate.billingMode,
+      "standard_non_regional",
+    );
+    assert.deepEqual(plan.pricing.currentEstimate.shortContext, {
+      inputPerMillionUsd: 2,
+      cachedInputPerMillionUsd: 0.2,
+      outputPerMillionUsd: 12,
+    });
   });
 
   it("defaults the executable runner to a zero-network dry run", () => {
@@ -190,9 +212,21 @@ describe("OAI-T10 Phase D live-feasibility harness", () => {
       outputTokens: 6_000,
       webSearchCalls: 7,
     });
-    assert.ok(cost.standardUsd > 0);
-    assert.ok(cost.conservativeUsd >= cost.standardUsd);
-    assert.ok(cost.conservativeUsd < OAI_T10_PHASE_D_CEILINGS.hardCeilingUsd);
+    assert.equal("standardUsd" in cost, false);
+    assert.equal("conservativeUsd" in cost, false);
+    assert.ok(cost.approvalEnvelopeUsd > 0);
+    assert.ok(
+      cost.approvalEnvelopeConservativeUsd >= cost.approvalEnvelopeUsd,
+    );
+    assert.ok(cost.currentEstimateUsd < cost.approvalEnvelopeUsd);
+    assert.ok(
+      cost.approvalEnvelopeConservativeUsd <
+        OAI_T10_PHASE_D_CEILINGS.hardCeilingUsd,
+    );
+    assert.deepEqual(cost.pricingBasis, {
+      approvalEnvelopeAsOf: "2026-07-25",
+      currentEstimateAsOf: "2026-08-29",
+    });
   });
 
   it("prices terminal provider usage even when local research validation fails", () => {
@@ -231,8 +265,38 @@ describe("OAI-T10 Phase D live-feasibility harness", () => {
       outputTokens: 5_318,
       webSearchCalls: 2,
     });
-    assert.equal(cost.standardUsd, 0.1546);
-    assert.equal(cost.conservativeUsd, 0.168307);
+    assert.equal(cost.approvalEnvelopeUsd, 0.1546);
+    assert.equal(cost.approvalEnvelopeConservativeUsd, 0.168307);
+    assert.equal(cost.currentEstimateUsd, 0.12768);
+  });
+
+  it("uses explicit short/long-context, cache, and web-search rate cards", () => {
+    const cost = estimatePhaseDCost([
+      {
+        stage: "research_poll",
+        outcome: "completed",
+        ledger: {
+          operation: "research_poll",
+          usage: {
+            inputTokens: 300_000,
+            cachedInputTokens: 100_000,
+            outputTokens: 1_000,
+            webSearchCalls: 1,
+          },
+        },
+      },
+    ]);
+
+    assert.equal(cost.approvalEnvelopeUsd, 1.0825);
+    assert.equal(cost.approvalEnvelopeConservativeUsd, 1.9075);
+    assert.equal(cost.currentEstimateUsd, 0.868);
+  });
+
+  it("gates only on the frozen approval envelope and versions new evidence", () => {
+    const runner = fs.readFileSync("scripts/run-oai-t10-phase-d.mjs", "utf8");
+    assert.match(runner, /approvalEnvelopeConservativeUsd/);
+    assert.doesNotMatch(runner, /cost\.conservativeUsd/);
+    assert.match(runner, /oai-t10-phase-d-sanitized-v2/);
   });
 
   it("deduplicates only repeated terminal diagnostics for the same response", () => {

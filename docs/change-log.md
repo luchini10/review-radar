@@ -11,6 +11,33 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Separate frozen approval cost from current estimates
+
+#### Changed
+
+- Phase D plan and sanitized evidence schema v2 name the frozen July approval
+  envelope and the dated August current standard estimate separately.
+- Cost output now uses `approvalEnvelopeUsd`,
+  `approvalEnvelopeConservativeUsd`, and `currentEstimateUsd`; new evidence
+  rejects the ambiguous v1 field names.
+- Long-context, cached-input, cache-write, and hosted-search pricing are explicit
+  in both rate cards. The current card is labeled `standard_non_regional`.
+- The unchanged `$3` hard ceiling still evaluates only the frozen conservative
+  approval envelope. Lower current prices cannot expand the approved budget.
+
+#### Verified
+
+- Fail-first produced five intended failures. Focused Phase D tests passed
+  10/10; staged tests passed 56/56; the complete suite passed 1,440/1,440; and
+  E2E passed 17/17.
+- Typecheck, production build, synthetic evaluation, fixed ranking comparison,
+  zero-network dry run, and diff checks passed. Lint remained at zero errors and
+  three pre-existing warnings.
+- Independent read-only review returned `APPROVED` after a personal 10/10
+  focused rerun and full scoped runner/accounting inspection.
+- No provider/search/page request, `.env.local` edit, flag promotion, deployment,
+  production change, push, or historical-fixture rewrite occurred.
+
 ### Codex - Align staged research schema and runtime ownership
 
 #### Changed

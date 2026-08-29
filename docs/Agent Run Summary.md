@@ -1649,3 +1649,37 @@ live response remains unknowable, so live feasibility is not claimed.
 **Next recommended step:** correct PR-010's stale frozen/current cost labeling
 as a separate zero-live phase before deciding whether one new-commit,
 new-directory feasibility attempt is justified. Reasoning level: Medium.
+
+## Codex Run - 2026-08-29 Production readiness PR-2B pricing evidence v2
+
+**Goal:** remove ambiguity between Phase D's frozen approval-rate calculation
+and a dated current-cost estimate without weakening spend controls or touching
+the provider.
+
+**Root cause:** the intentionally frozen 2026-07-25 rate card was emitted as
+`standardUsd`, which looked current, while neither plan nor evidence contained a
+separately sourced and dated current estimate.
+
+**Changes:** plan/evidence schema v2 nests a frozen `approvalEnvelope` and a
+2026-08-29 `standard_non_regional` `currentEstimate`. Cost fields are now
+`approvalEnvelopeUsd`, `approvalEnvelopeConservativeUsd`, and
+`currentEstimateUsd`. Both cards model the 272K threshold, cached input,
+1.25x cache writes, and hosted searches. Only the frozen conservative value
+controls the unchanged `$3` gate.
+
+**Proof:** fail-first was 5 pass / 5 intended fail; focused final 10/10; staged
+wall 56/56; full tests 1,440/1,440 across 209 suites; E2E 17/17; typecheck,
+build, eval, ranking comparison, zero-network dry run, and diff checks passed;
+lint had zero errors and three existing warnings. Independent read-only review
+returned `APPROVED` after personally rerunning 10/10 focused tests and
+inspecting the full scoped runner/accounting path.
+
+**Scope:** no provider, search, Shopping, or page request; no `.env.local` edit,
+flag promotion, deployment, production change, push, issue-status change,
+historical-fixture rewrite, or user-artifact cleanup. PR-010 is closed, but
+staged feasibility and recommendation quality remain unproven.
+
+**Next recommended step:** one new-commit, new-directory, frozen `shop vac`
+contract-v2 feasibility attempt, with no retry/replacement/fallback and a stop
+at the first terminal outcome. Reasoning level: High for adjudicating trust,
+usage, and feasibility evidence.

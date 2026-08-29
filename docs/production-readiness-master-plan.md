@@ -22,7 +22,9 @@ schema could not constrain. The v2 research boundary now assigns identifiers
 server-side and canonicalizes the exact requirement set without weakening
 source, identity, fact, or requirement trust gates. The exact private field in
 the already-spent response remains unknowable, so this is not yet live
-feasibility proof.
+feasibility proof. Separately, Phase D cost evidence now names its frozen July
+approval envelope and dated August current estimate explicitly; only the
+conservative frozen envelope controls the hard spending gate.
 
 Stronger alternatives considered:
 
@@ -158,18 +160,21 @@ shopper-facing recommendation quality.
   safety cancel, zero retries/replacements/fallbacks, and no SearchAPI, Serper
   organic, Shopping, or page requests. The sanitized untracked evidence contains
   no raw output, provider ID, prompt, source URL, header, secret, or API key.
-- The committed July rate card estimates `$0.155445` standard and `$0.168869`
-  conservatively. The official OpenAI
+- The immutable July approval envelope estimates `$0.155445` nominal and
+  `$0.168869` conservatively. The official OpenAI
   [Terra model page](https://developers.openai.com/api/docs/models/gpt-5.6-terra)
   and [pricing page](https://developers.openai.com/api/docs/pricing), checked on
   2026-08-29, list lower current standard rates of `$2.00` input, `$0.20`
   cached input, and `$12.00` output per million tokens plus `$0.01` per web
-  search, which implies approximately `$0.128356` for this usage. The frozen
-  estimator remains safe for its `$3` ceiling but its `standardUsd` label is no
-  longer current.
-- No retry or replacement is permitted. The next phase is zero-live alignment
-  of the candidate schema, prompt, adapter, and validator to identify the exact
-  generalized invalid-candidate invariant before any correction.
+  search, which implies approximately `$0.128356` for this usage. Plan and new
+  sanitized evidence schema v2 expose `approvalEnvelopeUsd`,
+  `approvalEnvelopeConservativeUsd`, and `currentEstimateUsd` with both source
+  dates. Only `approvalEnvelopeConservativeUsd` can trip the unchanged `$3`
+  ceiling. Immutable v1 fixtures retain their historical field names.
+- No retry or replacement of this spent attempt is permitted. PR-2A performed
+  the subsequent zero-live contract alignment, and PR-2B corrected the cost
+  evidence labels; only a new-commit, new-directory attempt can now answer the
+  remaining feasibility question.
 
 ### PR-2A candidate-contract correction
 
@@ -202,6 +207,32 @@ shopper-facing recommendation quality.
   field failed in the spent response. No provider, search, Shopping, or page
   request ran during PR-2A.
 
+### PR-2B frozen/current cost-evidence correction
+
+- **Verified defect:** Phase D intentionally retained its 2026-07-25 approval
+  rates, but emitted them as `standardUsd` and `conservativeUsd`. The first name
+  could be mistaken for current billing, and the evidence carried no separately
+  reproducible current estimate.
+- **Verified correction:** plan schema v2 nests a frozen `approvalEnvelope` and
+  a dated `currentEstimate`. Cost evidence now uses
+  `approvalEnvelopeUsd`, `approvalEnvelopeConservativeUsd`, and
+  `currentEstimateUsd`, plus explicit source dates. The current card is labeled
+  `standard_non_regional`; regional billing remains outside this estimate.
+- **Safety boundary:** the runner persists both rate cards but evaluates the
+  unchanged `$3` hard ceiling only against the frozen conservative approval
+  envelope. Historical v1 fixtures remain immutable. Terminal-failure usage,
+  successful two-stage accounting, and same-hash-only deduplication are
+  unchanged.
+- **Verification:** fail-first was 5 pass / 5 intended fail; focused Phase D
+  tests passed 10/10; the staged subsystem passed 56/56; the full suite passed
+  1,440/1,440 across 209 suites; E2E passed 17/17; typecheck, lint (0 errors / 3
+  pre-existing warnings), production build, synthetic eval, fixed ranking
+  comparison, zero-network dry run, and diff checks passed. Independent
+  read-only review returned `APPROVED`; the reviewer personally reran 10/10
+  focused tests and inspected the full scoped runner path and accounting gates.
+- **Limitation:** this repairs reporting integrity, not route feasibility or
+  shopper-result quality. No provider, search, Shopping, or page request ran.
+
 ## Confirmed defects and weaknesses
 
 | ID | Severity | Status | User impact and evidence | Likely root cause | Generalized solution | Required proof | Risk, rollback, dependencies |
@@ -215,7 +246,7 @@ shopper-facing recommendation quality.
 | PR-007 | P1 | investigating | RR-091 says same-page related-product price can satisfy autonomous card binding. A wrong variant price is release-blocking if the affected path is promoted. | Product entity selection may not bind offer identity tightly enough when multiple products share a page. | Reproduce with tracked synthetic multi-entity pages, then require exact entity/offer binding using shared identity rules. | Original and cross-category reproductions; exact-product positive controls; no unsafe price/product URL; full price and identity wall. | High false-negative/false-positive risk. The affected experimental path remains default-off; no promotion before closure. |
 | PR-008 | P1 | investigating | RR-092 says editorial Product markup can verify identity/image without proving the tested model. A wrong model image/link is release-blocking if promoted. | Structured markup establishes a product entity without sufficient tested-model attribution or page role. | Require exact tested-model attribution from eligible page evidence; editorial markup remains evidence-only unless the commerce/page boundary independently passes. | Editorial review negatives, manufacturer/retailer positives, sibling-model and accessory mutations, asset-wall regression. | High asset-recall tradeoff. Default-off path must stay off until resolved. |
 | PR-009 | P1 | corrected locally; live revalidation pending | The commit-pinned PR-2 request completed provider research but failed before verification as `research_candidate_invalid`. No staged result has reached users. | The v1 schema made the model author internal candidate/fact IDs while runtime required stricter array-relative values not fully specified by schema/prompt; it also rejected requirement ordering the schema could not constrain. The exact old failing field remains private and unknown. | Research contract/schema/prompt v2 make IDs server-owned, validate the exact unique requirement set before canonical ordering, align non-whitespace constraints, and retain only a guarded candidate field-group reason. Trust gates remain unchanged. | Fail-first 18 pass / 4 intended fail; candidate group matrix; staged 54/54; full 1,438/1,438; E2E/build/static/eval/ranking/dry-run walls; independent review. | Local correction is complete and default-off. A future one-attempt, new-commit/new-directory feasibility check is still needed; never reuse either spent attempt. |
-| PR-010 | P2 | planned | The Phase D estimator's field named `standardUsd` still uses its frozen 2026-07-25 rates, while official current Terra prices are lower. Readiness reporting can confuse a conservative approval rate with current estimated spend. | The rate object is intentionally frozen for approval reproducibility but the output label does not distinguish frozen-envelope and current-market estimates. | Preserve the immutable approval-rate calculation and add a separately named current-rate estimate sourced and dated from official documentation, or rename the frozen result so it cannot be mistaken for current billing. | Exact historical and current-rate tests; long-context/cache-write/web-search cases; no weakening of the `$3` fail-closed gate. | Low spend risk because the frozen rate currently overestimates, but medium evidence-integrity risk. No live dependency. |
+| PR-010 | P2 | verified | The Phase D estimator's field named `standardUsd` used its frozen 2026-07-25 rates, while official current Terra prices are lower. Readiness reporting could confuse a conservative approval rate with current estimated spend. | The rate object was intentionally frozen for approval reproducibility but the output label did not distinguish frozen-envelope and current-market estimates. | Plan/evidence schema v2 names the dated frozen approval envelope and dated `standard_non_regional` current estimate separately. Only the frozen conservative value controls the unchanged hard ceiling. | Fail-first 5 pass / 5 intended fail; exact short/long/cache-write/search rates and totals; focused 10/10; staged 56/56; full 1,440/1,440; E2E/build/static/eval/ranking/dry-run walls; independent review. | Closed locally without live spend. Re-check and date the informational card when official prices change; never silently reprice an existing approval envelope. |
 
 ## Suspected weaknesses requiring measurement
 
@@ -300,7 +331,7 @@ reachability but not staged feasibility.
 ### Phase PR-2A — Diagnose and correct candidate-contract alignment
 
 - Status: **verified locally 2026-08-29; no live revalidation**
-- Severity addressed: PR-009 P1. PR-010 remains separate.
+- Severity addressed: PR-009 P1. PR-010 was closed separately in PR-2B.
 - Scope: zero-live comparison of the research prompt, strict JSON schema,
   provider adapter, and every validator branch; fail-first deterministic proof
   for any actual mismatch; smallest generalized correction only.
@@ -319,7 +350,7 @@ live feasibility remain unknown.
 
 ### Phase PR-2B — Make frozen and current spend estimates unambiguous
 
-- Status: **next; zero live**
+- Status: **verified locally 2026-08-29; zero live**
 - Severity addressed: PR-010 P2.
 - Scope: preserve the immutable July approval-envelope rates and `$3` gate, but
   rename their outputs so they cannot be mistaken for current billing. Add a
@@ -330,6 +361,28 @@ live feasibility remain unknown.
 - Stop condition: do not weaken or silently reprice the approved hard ceiling;
   do not make a live request.
 - Reasoning: **Medium** for localized evidence/accounting plumbing.
+
+Result: plan/evidence schema v2 now carries dated frozen and current rate cards,
+rejects the ambiguous v1 output keys, and gates only on the frozen conservative
+value. All deterministic gates passed and no external request ran.
+
+### Phase PR-2C — Re-test staged contract-v2 feasibility once
+
+- Status: **next after the PR-2B closeout commit**
+- Dependency: PR-2A and PR-2B are independently approved and committed; the
+  exact new commit and a new commit-specific evidence directory pass preflight.
+- Scope: run exactly one frozen broad `shop vac` request through the complete
+  staged route. Use the existing create/search/retrieve/cancel/page ceilings,
+  no retry, replacement, fallback, or second case, and stop at the first
+  terminal outcome.
+- Decision value: a completion proves only lifecycle feasibility and permits a
+  later bounded benchmark. A new candidate failure must be attributed from the
+  closed server-only class/subreason and corrected offline before any more
+  spend. Any safety, privacy, usage, or ceiling anomaly stops the program.
+- Proof: commit-pinned sanitized evidence, exact counters/usage/cost, full
+  acceptance gates on success, privacy scan, and post-run clean-state audit.
+- Reasoning: **High** for outcome adjudication; execution is routine and
+  strictly bounded.
 
 ### Phase PR-3 — Build a real offline benchmark matrix
 
