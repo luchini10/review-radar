@@ -1,155 +1,141 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-08-29 by Codex after the PR-2G asset-identity live stop.
-The PR-2G documentation closeout is current HEAD after its self-contained
-commit; resolve the exact SHA with `git rev-parse HEAD`. Its code parent is
-`b01c335908e78101501bf0b40cd833f0e8f3b5d1`.
+Updated: 2026-08-29 by Codex after the zero-live PR-2H research/asset identity
+alignment. The PR-2H closeout is current HEAD after its self-contained commit;
+resolve the exact SHA with `git rev-parse HEAD`. Its parent is
+`90a1c7119438c91f67032781e83c1a7e98fe214f`.
 
 ## Current state
 
 ReviewRadar is **not production-ready**.
 
-PR-2G executed the one authorized broad `shop vac` attempt at `b01c335`. Research
-passed contract v3 with 12 candidates and 58 canonical sources. Deterministic
-verification made 12 Shopping requests returning 194 rows and attempted 12
-source fetches with seven successes/19 physical HTTP calls. It produced zero
-eligible, zero close match, and 12 excluded candidates. The route stopped at
-HTTP 502 `verification_failed` after 51.618 seconds, before presentation or
-rendering. No public response, card, source list, or result file exists.
+The newest staged Terra path remains default-off, undeployed, and without a
+user-visible live result. PR-2G passed research contract v3 with 12 candidates
+and 58 canonical sources, then deterministic verification excluded all 12
+before presentation. Sanitized evidence v3 conserved every earliest loss as
+`assetIdentityUnproven`; all later first-loss buckets and separate source/claim
+counters were zero. That proves only PR-2G's attempt-specific aggregate first
+loss, not its private identity reason or a generalized/category-wide cause.
 
-Sanitized evidence v3 conserved every candidate's earliest loss as
-`assetIdentityUnproven`:
+PR-2H closed a separate generalized zero-network self-mismatch. Before the
+correction, research accepted bounded nonempty `product_name`, `brand`, `model`,
+and `product_type` independently even when the unchanged asset verifier could
+never accept the resulting target. Four schema-valid mutations passed research
+despite a product name missing its brand, missing its model core, containing a
+conflicting model, or mismatching its complete-product type.
 
-| First loss | Count |
-| --- | ---: |
-| asset identity unproven | 12 |
-| complete-product relationship unproven | 0 |
-| identity-safe product URL unavailable | 0 |
-| hard requirement failed | 0 |
-| hard requirement not verified | 0 |
-| no-loss eligible | 0 |
+Research candidate parsing now calls the unchanged
+`directTerraAssetTargetIsCoherent()` immediately after bounded identity parsing,
+using the same candidate key, rank, product name, brand, model, and category that
+downstream asset verification receives. Incoherence returns only the existing
+URL-free `research_candidate_invalid / candidate_identity` class before
+candidate-source, Shopping, page-fetch, or verification work. It does not
+synthesize or repair identity.
 
-The separate unowned-source, invalid-source-input, and invalid-observed-claim
-candidate counters were all zero. The six first-loss counts conserve to 12 and
-reconcile with eligible/close/excluded.
+Research prompt v3 states the relational identity rule. Contract v4 changes the
+request fingerprint, and runtime v3 records the new acceptance semantics.
+Existing job-token verification requires the current prompt version and
+recomputes the current fingerprint, so older in-flight work fails closed.
+Research schema v2 remains unchanged because the JSON shape did not change.
 
-This proves only PR-2G's aggregate earliest loss. It does not reveal whether a
-research identity tuple was incoherent or whether available page/Shopping titles
-failed brand, model, conflict, or product-type checks. It identifies no candidate
-or evidence, says nothing about shadowed later gates, and is not a generalized or
-category-wide distribution.
+## PR-2H proof and limits
 
-## PR-2G envelope, cost, privacy, and audit
+| Check | Result |
+| --- | --- |
+| Fail-first contract run | 18 pass / 8 intended fail |
+| Corrected contract suite | 26/26 |
+| Five focused staged surfaces | 57/57 |
+| Full staged subsystem | 70/70 across 10 suites |
+| Complete deterministic wall | 1,455/1,455 across 209 suites |
+| Credential-neutral E2E | 17/17 |
+| Typecheck / production build | pass / pass |
+| Lint | 0 errors; 3 pre-existing warnings |
+| Deterministic eval / fixed ranking | no red flags / unchanged order |
+| Phase D dry run / diff check | pass, zero network / pass |
+| Independent code review | `APPROVED`; personal 57/57 rerun |
 
-| Measure | Actual | Ceiling |
-| --- | ---: | ---: |
-| OpenAI creates | 1 | 2 |
-| retrieves | 20 | 60 |
-| safety cancels | 1 | 1 |
-| hosted searches | 3 | 10 |
-| Serper Shopping | 12 | 15 |
-| source-page fetches | 12 | 30 |
-| physical page HTTP attempts | 19 | 90 |
-| retries / replacements / fallbacks | 0 / 0 / 0 | 0 / 0 / 0 |
+The generated `next-env.d.ts` was restored to its tracked production form. The
+shared asset predicate, asset/relationship/requirement/source/page/commerce/
+price/eligibility gates, aggregate diagnostics, generic public response,
+network/cost ceilings, and committed default-off flags did not change. Valid
+numeric model trimming remains accepted, and coherent duplicates remain
+rejected.
 
-There was no second create/case, Serper organic, SearchAPI, presentation
-diagnostic, public response, render, card, source list, or result file.
-
-Usage was 28,335 input, zero cached input, 6,029 output, and three hosted
-searches. All 21 ledger snapshots had one nonempty response hash; one completed
-ledger was accounted and none duplicated. Cost is `$0.191272` frozen nominal,
-`$0.208982` frozen conservative, and `$0.159018` at the dated current card,
-below the frozen `$3` gate.
-
-The untracked spent evidence is
-`tests/fixtures/review-radar-live/oai-t10-phase-d-b01c335/attempt.json` (19,053
-bytes; SHA-256
-`a8696d6b12c6da6163d0de278da504bbff579338a9fda4326beb2dcf85c70930`). Its
-only URLs are approved OpenAI pricing sources. Both local key values and every
-raw provider, prompt/body/header, candidate/request/evidence identifier,
-product/source URL, credential, and secret field are absent.
-
-Independent read-only audit returned `VERIFIED` after rebinding the exact
-commit/case/schema, recomputing counters/cost/conservation, confirming the first
-terminal stop and no downstream work, inspecting privacy, and authenticating a
-clean tracked tree/index. The directory is spent: never retry, edit, stage, or
-reuse it.
+PR-2H made no OpenAI API, hosted-search, Serper, SearchAPI, Shopping,
+source-page, or other product-data request. It proves deterministic prevention
+of one generalized impossible-target class. It does not prove that class caused
+PR-2G, that a live recommendation now succeeds, or that accuracy, latency,
+stability, or cost improved.
 
 ## Objective and decision frame for the next phase
 
-The proven product bottleneck is asset identity, before relationship,
-requirements, presentation, ranking, rendering, and UI can matter. The exact
-PR-2G identity reason is intentionally unavailable.
-
-Read-only offline inspection separately proved a generalized self-mismatch:
-
-- `validateStagedTerraResearchOutput()` accepts bounded nonempty
-  `product_name`, `brand`, `model`, and `product_type` independently.
-- An eight-candidate schema-valid response with unique identity tuples passed
-  research validation while all eight failed
-  `directTerraAssetTargetIsCoherent()`.
-- Even an otherwise exact asset title/URL for one such target was rejected as
-  `invalid_target_identity` before asset acceptance.
-- The research prompt says to keep exact brand/model/type identities separate,
-  but does not require `product_name` to contain and agree with all three as the
-  unchanged verifier requires.
-
-This defect can produce PR-2G's aggregate class. The private live evidence does
-not prove it caused PR-2G.
+The active product bottleneck remains staged lifecycle feasibility at asset
+identity. PR-2H corrected one upstream generalized cause, but no post-correction
+measurement exists.
 
 Stronger alternatives considered:
 
-- Loosening brand/model/type identity is rejected because it risks sibling-
-  model or wrong-product assets.
-- Running another paid attempt is rejected because the contract can still admit
-  impossible targets and waste Shopping/page work.
-- Adding candidate/private diagnostics is rejected because the independently
-  reproduced mismatch can be corrected without widening the privacy surface.
-- Synthesizing or silently repairing a product name is rejected because it
-  would create identity content not supplied as one coherent provider claim.
+- Loosening identity remains rejected because it could attach sibling models,
+  accessories, or wrong product types.
+- More offline identity implementation is rejected until new evidence proves a
+  different generalized loss; otherwise it would tune an unproven cause.
+- Candidate/private diagnostics remain rejected because evidence v3 already
+  supplies a privacy-safe conserved aggregate.
+- A broad benchmark remains necessary but premature while the staged path has
+  never produced a result; it would measure an unproven lifecycle.
+- Every earlier live directory is spent and cannot be retried or reused.
 
-The strongest next step is to reuse the same unchanged target-coherence
-predicate during research acceptance, explicitly state the relational identity
-contract in the prompt, and roll contract/prompt job identity so old work fails
-closed. This changes failure timing for impossible targets, not asset
-eligibility; it prevents guaranteed downstream work from running.
+The strongest next step is exactly one clean, commit-pinned, new-directory
+post-correction `shop vac` lifecycle attempt under the unchanged Phase D
+envelope. It directly measures whether coherent research targets can cross the
+verified asset-identity first loss. The first terminal outcome ends the phase.
+Even success establishes only lifecycle feasibility, not quality or stability.
 
-**Recommended reasoning level:** High for identity-contract equivalence and
-fingerprint rollover; Medium for localized implementation/tests.
+**Recommended reasoning level:** routine for bounded execution; High for cost,
+privacy, conservation, and causal adjudication of the result.
 
-## Current approved phase: PR-2H research/asset identity alignment
+## Current approved phase: PR-2I post-correction lifecycle measurement
 
-1. Add fail-first tests proving a schema-valid research candidate can currently
-   pass with each incoherent identity class:
-   - product name missing/mismatching brand;
-   - product name missing the model core;
-   - conflicting model in product name; and
-   - product name/type mismatch.
-2. Preserve coherent positives, including numeric-core/trim behavior already
-   accepted by `directTerraAssetTargetIsCoherent()`; do not introduce a second
-   identity algorithm.
-3. During staged research candidate parsing, construct the same target fields
-   the verifier will use and reject a non-coherent tuple as
-   `research_candidate_invalid / candidate_identity` before Shopping/page work.
-4. Update the research instructions to require `product_name` to agree with the
-   separate brand, model, and complete-product type under the same existing
-   coherence rule. Keep the strict JSON shape at research schema v2 unless a
-   shape change is actually needed.
-5. Roll the contract and prompt version/fingerprint; update runtime/token/tests
-   so an older in-flight job cannot cross the new acceptance boundary.
-6. Do not change `directTerraAssetTargetIsCoherent()`, asset identity/relationship
-   rules, eligibility, evidence acceptance, source/page/commerce/requirement
-   gates, public responses, aggregate diagnostics, flags, or network/cost
-   ceilings.
-7. Run focused contract/prompt/token/runtime/verifier/route tests, staged wall,
-   complete deterministic wall, typecheck, lint, build, credential-neutral E2E,
-   eval, ranking, zero-network dry run, diff review, and independent read-only
-   review.
-8. Update authoritative records, fully regenerate this handoff, stage only
-   phase-owned tracked paths, and make one self-contained local commit.
+1. Start only after PR-2H is committed and independently approved. Authenticate
+   the exact HEAD, clean tracked tree/index, clean `next-env.d.ts`, and absence
+   of the new commit-specific evidence directory.
+2. Read the PR-2H section at the top of `docs/review-radar-test-memory.md` and the
+   PR-2I section of `docs/production-readiness-master-plan.md` before any live
+   action. Never inspect a spent attempt for private candidate detail.
+3. Confirm required OpenAI/Serper child-process configuration only as boolean
+   present/nonempty. Never print values, edit `.env.local`, or expose secrets.
+4. Rerun the focused Phase D harness test and the zero-network dry run from the
+   exact commit. Require plan schema v2, the exact commit/case, both dated rate
+   cards, no retry/replacement/fallback, and every unchanged ceiling.
+5. Use a new directory named for the PR-2H commit. Execute exactly one broad
+   `shop vac` route attempt with these maximums:
 
-PR-2H is zero-live. It does not authorize another provider, search, Shopping,
-or page request.
+   | Resource | Ceiling |
+   | --- | ---: |
+   | OpenAI creates | 2 |
+   | hosted searches | 10 |
+   | retrieves | 60 |
+   | safety cancels | 1 |
+   | Serper Shopping attempts | 15 |
+   | source-page fetches | 30 |
+   | physical page HTTP attempts | 90 |
+   | frozen-conservative cost | `$3` |
+
+6. Stop at the first terminal route result. No retry, replacement, fallback,
+   second case, Serper organic, SearchAPI, gate change, flag promotion,
+   deployment, production change, or push is authorized.
+7. If verification fails or completes, require the existing evidence-v3
+   first-loss aggregate to conserve to candidate count and reconcile with
+   eligible/close/excluded. If evidence is malformed, stop at evidence
+   invalidity; do not infer the missing distribution.
+8. Independently audit exact commit/case/schema binding, counters, provider
+   usage, costs, first-stop behavior, evidence conservation/reconciliation,
+   privacy, and absence of downstream work after the terminal outcome.
+9. Treat any created commit-specific directory as spent after the one attempt,
+   regardless of outcome. Never edit, retry, stage, or reuse it.
+10. Update authoritative records, fully regenerate this handoff, stage only
+    phase-owned tracked documentation, and make one self-contained local commit
+    after independent `VERIFIED` adjudication.
 
 ## Approval and flag state
 
@@ -181,10 +167,8 @@ Direct Terra. Never edit, stage, or print it.
   proof.
 - PR-008 / RR-092: editorial Product markup can overstate tested-model
   identity/image authority.
-- PR-013: staged lifecycle feasibility remains blocked; presentation and
-  rendering have not run live.
-- PR-014: research accepts identity tuples that the asset verifier can never
-  accept; correction is the current zero-live phase.
+- PR-013: staged lifecycle feasibility remains blocked; PR-2G stopped at asset
+  identity and no post-PR-2H live result exists.
 - Broader cache/concurrency, security, accessibility, mobile UX, production
   configuration, rollback, and observability gates remain planned in
   `docs/production-readiness-master-plan.md`.
@@ -195,8 +179,10 @@ Direct Terra. Never edit, stage, or print it.
   including `oai-t10-phase-d-ec528d7`, `oai-t10-phase-d-a15d935`,
   `oai-t10-phase-d-140d465`, `oai-t10-phase-d-56a5137`, and
   `oai-t10-phase-d-b01c335`.
-- Do not make any external product/provider request in PR-2H.
-- Do not claim the reproduced contract mismatch caused PR-2G.
+- PR-2I permits exactly one new commit-specific attempt and no other external
+  product-data request.
+- Do not claim PR-2H caused or explains PR-2G. Do not infer a private identity
+  branch from an aggregate count.
 - Do not synthesize/repair identity or loosen brand, model, product type,
   relationship, requirement, availability, price, source/page, commerce, asset,
   redirect, or private-network gates.
@@ -212,13 +198,14 @@ Direct Terra. Never edit, stage, or print it.
 
 | Need | Retrieve |
 | --- | --- |
-| Living defects, phase sequence, and exit criteria | `docs/production-readiness-master-plan.md` |
-| PR-2G canonical result | latest 2026-08-29 entry in `docs/qa-loop-results.md` |
-| Durable live/identity boundaries | top of `docs/review-radar-test-memory.md` |
+| Living defects, phase sequence, exit criteria, PR-2I envelope | `docs/production-readiness-master-plan.md` |
+| PR-2H canonical deterministic result | latest 2026-08-29 entry in `docs/qa-loop-results.md` |
+| Durable PR-2H and spent-live boundaries | top of `docs/review-radar-test-memory.md` |
 | Research parser and fingerprint | `lib/stagedTerraContract.ts` |
 | Research instructions/request | `lib/stagedTerraPrompt.ts` |
 | Shared target-coherence rule | `lib/directTerraAssetVerifier.ts` |
-| Runtime/job-token rollover | `lib/stagedTerraRuntime.ts`; `lib/stagedTerraJobToken.ts` |
-| Verifier first loss | `lib/stagedTerraVerifier.ts` |
-| Focused tests | `tests/stagedTerraContract.test.mjs`; `tests/stagedTerraIntegration.test.mjs`; `tests/stagedTerraRuntime.test.mjs`; `tests/stagedTerraVerifier.test.mjs`; `tests/stagedTerraRoute.test.mjs` |
+| Runtime and job-token rollover | `lib/stagedTerraRuntime.ts`; `lib/stagedTerraJobToken.ts` |
+| Verifier first-loss aggregate | `lib/stagedTerraVerifier.ts` |
+| Phase D plan/evidence/runner | `scripts/oai-t10-phase-d.mjs`; `scripts/run-oai-t10-phase-d.mjs` |
+| Focused tests | `tests/stagedTerraContract.test.mjs`; `tests/stagedTerraIntegration.test.mjs`; `tests/stagedTerraRuntime.test.mjs`; `tests/stagedTerraVerifier.test.mjs`; `tests/stagedTerraRoute.test.mjs`; `tests/stagedTerraPhaseDRunner.test.mjs` |
 | Spent PR-2G evidence | `tests/fixtures/review-radar-live/oai-t10-phase-d-b01c335/attempt.json` |

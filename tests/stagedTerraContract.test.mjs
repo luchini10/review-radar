@@ -22,8 +22,10 @@ import {
   buildStagedTerraPresentationRequest,
   buildStagedTerraResearchRequest,
   STAGED_TERRA_MODEL,
+  STAGED_TERRA_RESEARCH_PROMPT_VERSION,
   STAGED_TERRA_SCHEMA_VERSIONS,
 } from "../lib/stagedTerraPrompt.ts";
+import { STAGED_TERRA_RUNTIME_VERSION } from "../lib/stagedTerraRuntime.ts";
 import {
   stagedTerraClientEnabled,
   stagedTerraServerEnabled,
@@ -64,7 +66,7 @@ function researchFixture() {
     ];
     responseSourceUrls.push(...sourceUrls);
     return {
-      product_name: `Brand ${candidateIndex + 1} Model ${candidateIndex + 1}`,
+      product_name: `Brand ${candidateIndex + 1} M${candidateIndex + 1}00 cordless vacuum`,
       brand: `Brand ${candidateIndex + 1}`,
       model: `M${candidateIndex + 1}00`,
       product_type: "cordless vacuum",
@@ -139,7 +141,7 @@ function evidencePackageFixture() {
           kind: "claim",
           url: "https://manufacturer1.example/products/model-1",
           host: "manufacturer1.example",
-          title: "Brand 1 Model 1",
+          title: "Brand 1 M100 cordless vacuum",
           source_type: "manufacturer",
         },
         {
@@ -148,7 +150,7 @@ function evidencePackageFixture() {
           kind: "claim",
           url: "https://testing.example/reviews/model-1",
           host: "testing.example",
-          title: "Independent test of Model 1",
+          title: "Independent test of M100 cordless vacuum",
           source_type: "independent_testing",
         },
         {
@@ -157,7 +159,7 @@ function evidencePackageFixture() {
           kind: "product_page",
           url: "https://retailer.example/products/brand-1-model-1",
           host: "retailer.example",
-          title: "Brand 1 Model 1 cordless vacuum",
+          title: "Brand 1 M100 cordless vacuum",
           source_type: "retailer",
         },
         {
@@ -166,7 +168,7 @@ function evidencePackageFixture() {
           kind: "image",
           url: "https://images.retailer.example/brand-1-model-1.webp",
           host: "images.retailer.example",
-          title: "Brand 1 Model 1 product image",
+          title: "Brand 1 M100 cordless vacuum product image",
           source_type: "retailer",
         },
         {
@@ -175,14 +177,14 @@ function evidencePackageFixture() {
           kind: "claim",
           url: "https://manufacturer2.example/products/model-2",
           host: "manufacturer2.example",
-          title: "Brand 2 Model 2",
+          title: "Brand 2 M200 cordless vacuum",
           source_type: "manufacturer",
         },
       ],
       candidates: [
         {
           candidate_id: "candidate_1",
-          product_name: "Brand 1 Model 1",
+          product_name: "Brand 1 M100 cordless vacuum",
           brand: "Brand 1",
           model: "M100",
           product_type: "cordless vacuum",
@@ -227,7 +229,7 @@ function evidencePackageFixture() {
         },
         {
           candidate_id: "candidate_2",
-          product_name: "Brand 2 Model 2",
+          product_name: "Brand 2 M200 cordless vacuum",
           brand: "Brand 2",
           model: "M200",
           product_type: "cordless vacuum",
@@ -260,7 +262,7 @@ function evidencePackageFixture() {
           const candidateNumber = index + 3;
           return {
             candidate_id: `candidate_${candidateNumber}`,
-            product_name: `Brand ${candidateNumber} Model ${candidateNumber}`,
+            product_name: `Brand ${candidateNumber} M${candidateNumber}00 cordless vacuum`,
             brand: `Brand ${candidateNumber}`,
             model: `M${candidateNumber}00`,
             product_type: "cordless vacuum",
@@ -303,7 +305,7 @@ function presentationFixture() {
       {
         rank: 1,
         candidate_id: "candidate_1",
-        product_name: "Brand 1 Model 1",
+        product_name: "Brand 1 M100 cordless vacuum",
         why_ranked: {
           text: "The exact product fits the verified requirements.",
           fact_ids: ["vf1"],
@@ -405,6 +407,10 @@ describe("staged Terra request boundaries", () => {
     );
     assert.match(research.instructions, /assigns internal candidate and fact IDs/i);
     assert.match(research.instructions, /do not emit synthetic identifiers/i);
+    assert.match(
+      research.instructions,
+      /product_name.{0,240}(?:agree|match).{0,160}brand.{0,120}model.{0,160}product[_ -]?type/is,
+    );
 
     assert.equal(presentation.model, "gpt-5.6-terra");
     assert.deepEqual(presentation.reasoning, { effort: "medium" });
@@ -422,7 +428,21 @@ describe("staged Terra request boundaries", () => {
       evidence: "staged-terra-evidence-v1",
       presentation: "staged-terra-presentation-v1",
     });
-    assert.equal(STAGED_TERRA_CONTRACT_VERSION, "staged-terra-contract-v3");
+  });
+
+  it("rolls the research acceptance contract identity", () => {
+    assert.equal(STAGED_TERRA_CONTRACT_VERSION, "staged-terra-contract-v4");
+  });
+
+  it("rolls the research prompt identity", () => {
+    assert.equal(
+      STAGED_TERRA_RESEARCH_PROMPT_VERSION,
+      "staged-terra-research-prompt-v3",
+    );
+  });
+
+  it("rolls the staged runtime identity", () => {
+    assert.equal(STAGED_TERRA_RUNTIME_VERSION, "staged-terra-runtime-v3");
   });
 
   it("keeps the integrated path default-off and isolated from Direct Terra", () => {
@@ -504,6 +524,71 @@ describe("staged Terra research contract", () => {
         (lead) => lead.requirementId,
       ),
       requirementIds,
+    );
+  });
+
+  for (const testCase of [
+    {
+      name: "a product name missing its brand",
+      mutate: (candidate) => {
+        candidate.product_name = "M100 cordless vacuum";
+      },
+    },
+    {
+      name: "a product name missing its model core",
+      mutate: (candidate) => {
+        candidate.product_name = "Brand 1 cordless vacuum";
+      },
+    },
+    {
+      name: "a product name containing a conflicting model",
+      mutate: (candidate) => {
+        candidate.product_name = "Brand 1 M999 cordless vacuum";
+      },
+    },
+    {
+      name: "a product name mismatching its complete-product type",
+      mutate: (candidate) => {
+        candidate.product_name = "Brand 1 M100 robot vacuum";
+        candidate.product_type = "shop vac";
+      },
+    },
+  ]) {
+    it(`rejects ${testCase.name} before downstream verification`, () => {
+      const fixture = researchFixture();
+      testCase.mutate(fixture.value.candidates[0]);
+
+      assert.deepEqual(
+        validateStagedTerraResearchOutput({
+          value: fixture.value,
+          shopperRequest: shopper,
+          responseSourceUrls: fixture.responseSourceUrls,
+        }),
+        {
+          ok: false,
+          reason: "research_candidate_invalid",
+          candidateValidationReason: "candidate_identity",
+        },
+      );
+    });
+  }
+
+  it("preserves the shared verifier's numeric model-trim coherence", () => {
+    const fixture = researchFixture();
+    Object.assign(fixture.value.candidates[0], {
+      product_name: "DEWALT DXV12P shop vac",
+      brand: "DEWALT",
+      model: "DXV12P-QT",
+      product_type: "shop vac",
+    });
+
+    assert.equal(
+      validateStagedTerraResearchOutput({
+        value: fixture.value,
+        shopperRequest: shopper,
+        responseSourceUrls: fixture.responseSourceUrls,
+      }).ok,
+      true,
     );
   });
 
@@ -666,6 +751,8 @@ describe("staged Terra research contract", () => {
     duplicate.value.candidates[1].brand =
       duplicate.value.candidates[0].brand;
     duplicate.value.candidates[1].model = "M 100";
+    duplicate.value.candidates[1].product_name =
+      "Brand 1 M 100 cordless vacuum";
     assert.deepEqual(
       validateStagedTerraResearchOutput({
         value: duplicate.value,
@@ -697,6 +784,8 @@ describe("staged Terra research contract", () => {
         mutate: (fixture) => {
           fixture.value.candidates[1].brand = fixture.value.candidates[0].brand;
           fixture.value.candidates[1].model = fixture.value.candidates[0].model;
+          fixture.value.candidates[1].product_name =
+            fixture.value.candidates[0].product_name;
         },
       },
     ];
@@ -887,7 +976,8 @@ describe("staged Terra evidence-bounded presentation", () => {
     for (const mutate of [
       (value) => {
         value.ranked_products[0].candidate_id = "candidate_2";
-        value.ranked_products[0].product_name = "Brand 2 Model 2";
+        value.ranked_products[0].product_name =
+          "Brand 2 M200 cordless vacuum";
       },
       (value) => {
         value.ranked_products[0].why_ranked.fact_ids = ["invented"];

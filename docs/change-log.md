@@ -11,6 +11,39 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Reject incoherent staged research identities before verification
+
+#### Changed
+
+- Staged research now applies the unchanged shared asset target-coherence
+  predicate immediately after bounded identity parsing. A product name that
+  omits or conflicts with its separate brand, model, or complete-product type
+  fails as the existing URL-free `candidate_identity` class before source,
+  Shopping, or page work.
+- Research prompt v3 states the same relational identity requirement. Contract
+  v4 changes the request fingerprint and runtime v3 records the new semantics;
+  job tokens remain bound to both the current prompt and recomputed fingerprint,
+  so older in-flight work fails closed.
+- Research schema v2, the asset verifier, eligibility, source/evidence gates,
+  aggregate diagnostics, public responses, network ceilings, and committed
+  default-off flags are unchanged. Valid numeric model trimming remains valid.
+
+#### Verified
+
+- Fail-first ran 26 tests: 18 passed and exactly eight intended checks failed
+  for the four incoherent tuples, missing prompt relation, and three rollovers.
+- Corrected contract tests passed 26/26, the five focused staged surfaces passed
+  57/57, the staged subsystem passed 70/70 across ten suites, the complete suite
+  passed 1,455/1,455 across 209 suites, and credential-neutral E2E passed 17/17.
+- Typecheck, production build, deterministic evaluation, fixed ranking
+  comparison, zero-network Phase D dry run, lint (zero errors and three existing
+  warnings), and diff checks passed. `next-env.d.ts` returned to its tracked
+  production form.
+- Independent read-only review returned `APPROVED` after personally rerunning
+  57/57 focused tests. No provider, search, Shopping, source-page, or other
+  product-data request ran. The correction can prevent PR-2G's aggregate class
+  but is not proven to explain that spent attempt or staged feasibility.
+
 ### Codex - Attribute the staged live stop to asset identity
 
 #### Observed

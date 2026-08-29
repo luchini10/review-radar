@@ -4,6 +4,38 @@
 
 ---
 
+## OAI-T10 PR-2H research/asset identity alignment (2026-08-29)
+
+- Research identity acceptance and downstream asset verification must use the
+  same unchanged `directTerraAssetTargetIsCoherent()` predicate. Do not create a
+  second brand/model/type algorithm, synthesize a product name, or loosen asset
+  identity to improve acceptance.
+- After bounded nonempty identity strings, construct the exact downstream
+  target fields (`candidate_<n>`, rank, product name, brand, model, category)
+  and reject incoherence as
+  `research_candidate_invalid / candidate_identity` before candidate-source,
+  Shopping, page-fetch, or verification work. Retain no identity detail.
+- Preserve negatives for product names missing the brand, missing the model
+  core, naming a conflicting sibling model, or mismatching the complete-product
+  type. Preserve coherent positives, including shared numeric model-trim
+  behavior such as `DXV12P-QT` represented by `DXV12P` in the product name.
+- Contract v4 changes the request fingerprint; research prompt v3 states the
+  relational identity requirement; runtime v3 records the acceptance semantics.
+  Job-token parsing still requires the current prompt version and recomputes the
+  current fingerprint, so older in-flight work fails closed. Research schema v2
+  remains unchanged because the JSON shape did not change.
+- Fail-first was 18 pass / 8 intended fail. Corrected contract tests passed
+  26/26, focused staged tests 57/57, staged tests 70/70, full tests
+  1,455/1,455, and credential-neutral E2E 17/17. Typecheck, build, eval,
+  ranking, zero-network dry run, lint, and diff checks passed. Independent
+  review returned `APPROVED` after a personal 57/57 rerun.
+- PR-2H made no external product-data request and changed no asset, relationship,
+  requirement, source, price, eligibility, diagnostic, public-response, flag, or
+  network-ceiling rule. It closes a generalized offline self-mismatch but does
+  not prove that mismatch caused PR-2G or that staged feasibility now passes.
+
+---
+
 ## OAI-T10 PR-2G asset-identity live stop (2026-08-29)
 
 - The one attempt at `b01c335908e78101501bf0b40cd833f0e8f3b5d1` is spent.

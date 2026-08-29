@@ -1903,3 +1903,57 @@ identity acceptance and prompt wording with the unchanged asset-coherence
 predicate, including fail-closed contract/prompt rollover. Do not loosen the
 asset verifier or make another request. Reasoning level: High for identity and
 rollover semantics, Medium for localized implementation.
+
+## Codex Run - 2026-08-29 Production readiness PR-2H identity alignment
+
+**Goal:** prevent staged research from accepting an identity tuple that the
+unchanged downstream asset verifier can never accept, before spending on
+another lifecycle attempt.
+
+**What was checked:** staged research field/schema validation, prompt wording,
+request fingerprinting, runtime/job-token identity, the shared asset target-
+coherence predicate, duplicate classification, numeric model trimming, source-
+validation order, public/diagnostic boundaries, default flags, and the complete
+static/browser walls.
+
+**What was found:** research validated nonempty product-name/brand/model/type
+strings independently, while the asset verifier required those same fields to
+agree relationally. Four schema-valid mutations passed research despite missing
+the brand, missing the model core, naming a conflicting model, or mismatching the
+complete-product type. This can produce PR-2G's aggregate class but is not its
+proven private cause.
+
+**What changed:** research candidate parsing now calls the unchanged
+`directTerraAssetTargetIsCoherent()` immediately after bounded identity parsing
+and returns only `candidate_identity` on failure. Prompt v3 states the same
+relation; contract v4 rolls the request fingerprint; runtime v3 records the new
+semantics. Existing token verification checks both current prompt version and
+recomputed current fingerprint. Research schema v2 and every downstream trust
+gate remain unchanged.
+
+**Why it matters:** an impossible target now stops before candidate-source,
+Shopping, page, or verification work instead of consuming those resources and
+then being guaranteed to fail. Valid numeric model trimming and coherent
+duplicate rejection are preserved; no product identity is synthesized and no
+private diagnostic surface is added.
+
+**Tests and before/after proof:** fail-first was 18 pass / 8 intended fail;
+corrected contract 26/26; focused 57/57; staged 70/70 across ten suites; full
+1,455/1,455 across 209 suites; credential-neutral E2E 17/17. Typecheck, build,
+eval, ranking, zero-network dry run, lint (zero errors and three existing
+warnings), and diff checks passed. The generated `next-env.d.ts` returned to its
+tracked production form. Independent read-only review returned `APPROVED` after
+a personal 57/57 rerun and found no import, trust, privacy, or rollover issue.
+
+**Live checks:** none. No provider, search, Shopping, source-page, or other
+product-data request ran.
+
+**Remaining issues:** no post-correction staged result exists; PR-2G's exact
+identity reason remains private; presentation/rendering and shopper quality are
+still unproven; PR-005 through PR-008 and PR-013 remain open. This phase proves
+deterministic prevention, not a live accuracy, latency, or cost improvement.
+
+**Next recommended step:** one clean, commit-pinned, new-directory `shop vac`
+post-correction lifecycle attempt under the unchanged Phase D ceilings, with no
+retry/replacement/fallback and a first-terminal stop. Reasoning level: routine
+for execution and High for evidence/privacy adjudication.

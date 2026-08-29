@@ -4,9 +4,10 @@ import {
   buildDirectTerraRequirementContract,
   type DirectTerraRequirementContractEntry,
 } from "./directTerraCandidateSlate.ts";
+import { directTerraAssetTargetIsCoherent } from "./directTerraAssetVerifier.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
 
-export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v3";
+export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v4";
 export const STAGED_TERRA_RESEARCH_SCHEMA_VERSION =
   "staged-terra-research-v2";
 export const STAGED_TERRA_EVIDENCE_PACKAGE_VERSION =
@@ -538,6 +539,22 @@ function parseResearchCandidate(
     return { ok: false, reason: "candidate_identity" };
   }
   const candidateId = `candidate_${index + 1}`;
+  const productName = value.product_name as string;
+  const brand = value.brand as string;
+  const model = value.model as string;
+  const productType = value.product_type as string;
+  if (
+    !directTerraAssetTargetIsCoherent({
+      key: candidateId,
+      rank: index + 1,
+      productName,
+      brand,
+      model,
+      category: productType,
+    })
+  ) {
+    return { ok: false, reason: "candidate_identity" };
+  }
   const parsedSourceUrls = parseCandidateSourceUrls(
     value.source_urls,
     registered,
@@ -642,10 +659,10 @@ function parseResearchCandidate(
     ok: true,
     value: {
       candidateId,
-      productName: value.product_name as string,
-      brand: value.brand as string,
-      model: value.model as string,
-      productType: value.product_type as string,
+      productName,
+      brand,
+      model,
+      productType,
       sourceUrls,
       requirementLeads,
       factLeads,

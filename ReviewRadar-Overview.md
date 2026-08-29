@@ -161,13 +161,17 @@ search. Research schema v2 returns 8–15 ordered product identities,
 response-owned source URLs, and evidence leads; it cannot rank products, mint
 internal IDs, or write shopper-facing cards. After validation, ReviewRadar
 assigns `candidate_<n>` and `candidate_<n>_fact_<m>` from array order. It
-requires the exact unique normalized-requirement set, then canonicalizes those
-leads into request order for every downstream consumer. The browser receives
-only an encrypted, authenticated app job token and polls that token in a header.
-Provider response IDs and diagnostics remain server-only. Contract v3 is part
-of the request fingerprint, so tokens from either previous research contract
-fail closed across a deployment rollover. The provider-facing research schema
-remains v2 because PR-2D changes ownership validation, not its JSON shape.
+requires each `product_name`/brand/model/type tuple to satisfy the same unchanged
+target-coherence predicate used by downstream asset verification before any
+candidate source or verification work. It then requires the exact unique
+normalized-requirement set and canonicalizes those leads into request order for
+every downstream consumer. The browser receives only an encrypted,
+authenticated app job token and polls that token in a header. Provider response
+IDs and diagnostics remain server-only. Contract v4 is part of the request
+fingerprint, research prompt v3 is bound into the token, and runtime v3 records
+the new acceptance semantics, so older in-flight jobs fail closed across a
+deployment rollover. The provider-facing research schema remains v2 because
+the JSON shape is unchanged.
 
 After research completes, the server fetches at most two candidate-owned source
 pages per product through the existing DNS-pinned bounded-fetch seam and may
@@ -227,6 +231,15 @@ internally incoherent or whether available page/Shopping identities failed
 brand, model, conflict, or product-type checks, and it cannot expose candidate
 details to answer that question. The earlier PR-2E evidence predates aggregate
 attribution and remains permanently unknowable.
+
+The zero-live PR-2H correction closes one independently reproduced generalized
+self-mismatch: bounded identity strings can no longer pass research when their
+product name omits or conflicts with the supplied brand, model, or complete-
+product type under the shared verifier rule. Such a tuple now fails as the
+existing URL-free `research_candidate_invalid / candidate_identity` class
+before source parsing, Shopping, or page work. Valid numeric model trimming
+remains accepted. This does not explain PR-2G, change asset eligibility, or prove
+live staged feasibility; no post-correction provider attempt has run yet.
 
 The route reconstructs only bounded integer values from the fixed verifier-v2
 keys, requires first-loss conservation and reconciliation with eligible/close/

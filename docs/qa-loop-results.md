@@ -11860,3 +11860,84 @@ wording with the unchanged shared asset-coherence predicate in a zero-live,
 fail-first phase; roll contract/prompt identity so old jobs fail closed. Do not
 synthesize product names, loosen identity gates, widen private diagnostics, or
 make another live request before independent approval.
+
+---
+
+## 🟧 Codex — 2026-08-29 — Production readiness PR-2H research/asset identity alignment
+
+**Objective:** close the independently reproduced staged research/asset
+identity self-mismatch before any further paid lifecycle attempt, without
+changing downstream asset eligibility or widening private diagnostics.
+
+**Ground truth and fail-first proof:** at parent
+`90a1c7119438c91f67032781e83c1a7e98fe214f`, research accepted bounded nonempty
+`product_name`, `brand`, `model`, and `product_type` independently. The unchanged
+asset verifier required those fields to form a coherent target. After making
+the shared test fixture coherent, 26 focused tests produced 18 passes and
+exactly eight intended failures: missing prompt relation; contract, prompt, and
+runtime rollover; product name missing its brand; missing its model core;
+containing a conflicting model; and mismatching its complete-product type.
+
+**Root cause:** the research schema/parser established field shape but not the
+relational identity invariant already enforced by
+`directTerraAssetTargetIsCoherent()`. The prompt required separate exact fields
+without requiring `product_name` to agree with them. A contract-valid tuple
+could therefore be guaranteed to fail before asset acceptance, even when an
+otherwise exact asset was available.
+
+**Correction:** `parseResearchCandidate()` now applies that exact unchanged
+shared predicate immediately after bounded identity parsing, using the same
+candidate key/rank/product-name/brand/model/category fields consumed downstream.
+Incoherence returns only the existing
+`research_candidate_invalid / candidate_identity` class before source parsing,
+Shopping, page fetching, or verification. Prompt v3 states the relational rule;
+contract v4 changes the request fingerprint; runtime v3 records the semantics.
+The existing job token binds the current prompt version and recomputes the
+current fingerprint, so older work fails closed.
+
+| Deterministic behavior | Before PR-2H | After PR-2H |
+| --- | --- | --- |
+| product name missing brand | research accepted | `candidate_identity` |
+| product name missing model core | research accepted | `candidate_identity` |
+| product name conflicts on model | research accepted | `candidate_identity` |
+| product name/type mismatch | research accepted | `candidate_identity` |
+| coherent numeric model trim | research accepted | still accepted |
+| duplicate coherent identity | duplicate rejection | still duplicate rejection |
+
+The research schema stays v2. The shared asset predicate itself, asset/
+relationship/requirement/source/page/commerce/price/eligibility gates, aggregate
+diagnostics, generic public response, network/cost ceilings, and default-off
+flags did not change. No identity or provider detail was added to diagnostics.
+
+**Verification (zero live):**
+
+- corrected contract suite: 26/26;
+- five focused contract/token/runtime/verifier/route surfaces: 57/57;
+- full staged subsystem: 70/70 across ten suites;
+- complete deterministic suite: 1,455/1,455 across 209 suites;
+- credential-neutral E2E: 17/17 on the dedicated default-off server;
+- typecheck, production build, deterministic evaluation, fixed ranking
+  comparison, Phase D zero-network dry run, and `git diff --check`: pass;
+- lint: zero errors and the same three pre-existing warnings; and
+- generated `next-env.d.ts`: restored to its tracked production form.
+
+**Independent review:** `APPROVED` with no actionable findings. The reviewer
+personally reran the five focused suites (57/57), confirmed direct reuse of the
+unchanged predicate, checked the no-back-edge module graph, and verified that
+old jobs fail closed through both current prompt-version and current-fingerprint
+checks. The review noted that it did not mint a historical v2 token; the two
+unchanged verifier checks plus current-token integration coverage establish the
+rollover boundary without duplicating the encryption implementation in tests.
+
+No OpenAI API, hosted search, Serper, SearchAPI, Shopping, source-page, or other
+product-data request ran. No `.env.local` edit, flag promotion, deployment,
+production change, push, fixture mutation, or user-artifact cleanup occurred.
+
+**Limitation and next decision:** this closes a generalized deterministic defect
+that can produce PR-2G's aggregate first-loss class, but the private spent
+evidence cannot show that it did. It proves no live recommendation, accuracy,
+latency, or cost improvement. The strongest next measurement is exactly one
+clean, commit-pinned, new-directory post-correction `shop vac` lifecycle attempt
+under the unchanged Phase D envelope and first-terminal stop. A broad benchmark
+still waits for staged feasibility; another implementation without new evidence
+would risk tuning an unproven cause.

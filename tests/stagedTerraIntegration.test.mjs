@@ -15,6 +15,7 @@ import {
   isStagedTerraPendingResponse,
 } from "../lib/stagedTerraApiContract.ts";
 import { renderStagedTerraPresentation } from "../lib/stagedTerraRenderer.ts";
+import { STAGED_TERRA_RESEARCH_PROMPT_VERSION } from "../lib/stagedTerraPrompt.ts";
 
 const secret = "s".repeat(32);
 const shopper = {
@@ -35,9 +36,19 @@ describe("OAI-T10 staged Terra integration contracts", () => {
     });
     assert.equal(token.includes("resp_research123"), false);
     assert.ok(token.length < 12_000);
+    const verified = verifyStagedTerraJobToken({
+      token,
+      secret,
+      nowMs: 2_000,
+    });
+    assert.equal(verified.ok, true);
     assert.equal(
-      verifyStagedTerraJobToken({ token, secret, nowMs: 2_000 }).ok,
-      true,
+      verified.ok && verified.payload.promptVersion,
+      STAGED_TERRA_RESEARCH_PROMPT_VERSION,
+    );
+    assert.equal(
+      verified.ok && verified.payload.requestFingerprint,
+      buildStagedTerraRequestFingerprint(shopper),
     );
     assert.equal(
       verifyStagedTerraJobToken({

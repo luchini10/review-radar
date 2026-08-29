@@ -90,7 +90,7 @@ describe("OAI-T10 staged Terra route", () => {
         requestFingerprint: (
           await import("../lib/stagedTerraContract.ts")
         ).buildStagedTerraRequestFingerprint(shopper),
-        promptVersion: "staged-terra-research-prompt-v2",
+        promptVersion: "staged-terra-research-prompt-v3",
         ledger: {
           operation: "research_start",
           responseIdHash: "hash-only",
@@ -308,7 +308,7 @@ describe("OAI-T10 staged Terra route", () => {
         responseId: "resp_research123",
         status: "queued",
         requestFingerprint: fingerprint,
-        promptVersion: "staged-terra-research-prompt-v2",
+        promptVersion: "staged-terra-research-prompt-v3",
         ledger: { operation: "research_start" },
       }),
       pollResearch: async () => ({
@@ -453,7 +453,7 @@ describe("OAI-T10 staged Terra route", () => {
           responseId: "resp_research123",
           status: "queued",
           requestFingerprint: fingerprint,
-          promptVersion: "staged-terra-research-prompt-v2",
+          promptVersion: "staged-terra-research-prompt-v3",
           ledger: { operation: "research_start" },
         }),
         pollResearch: async () => ({
@@ -603,7 +603,7 @@ describe("OAI-T10 staged Terra route", () => {
           responseId: "resp_research123",
           status: "queued",
           requestFingerprint: fingerprint,
-          promptVersion: "staged-terra-research-prompt-v2",
+          promptVersion: "staged-terra-research-prompt-v3",
           ledger: { operation: "research_start" },
         }),
         pollResearch: async () => ({
@@ -693,7 +693,7 @@ describe("OAI-T10 staged Terra route", () => {
         responseId: "resp_research123",
         status: "queued",
         requestFingerprint: fingerprint,
-        promptVersion: "staged-terra-research-prompt-v2",
+        promptVersion: "staged-terra-research-prompt-v3",
         ledger: { operation: "research_start" },
       }),
       pollResearch: async () => ({
