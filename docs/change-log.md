@@ -11,6 +11,44 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Freeze the staged readiness measurement boundary
+
+#### Changed
+
+- Added a dated four-shape, six-attempt staged Terra readiness matrix with
+  current-source provenance, explicit uncertainty, precommitted serial run IDs
+  and nonces, per-run/aggregate ceilings, absolute safety/quality bars, and a
+  prior-artifact hash chain.
+- Added a canonical sanitized artifact producer and strict readiness analyzer.
+  They reconcile the staged public response with closed server diagnostics,
+  usage, counters, timing, sources, cards, requirements, prices, offers,
+  images, manual audits, and exact capture identity without retaining raw
+  provider or private candidate material.
+- Made every analyzer result non-authorizing and stop-required. A clean prefix
+  can request independent review of one next attempt; a clean complete matrix
+  can request independent final review. Neither can dispatch live work, promote
+  a flag, deploy, or release.
+- Recorded candidate-pool Jaccard as not scored at the privacy boundary while
+  retaining final-card stability. The experimental staged path remains
+  default-off and undeployed; no live request ran in this phase.
+
+#### Verified
+
+- Focused readiness tests: 34/34. Complete suite: 1,532/1,532 across 215
+  suites. Five worker partitions and the 10-case/29-invariant benchmark
+  reconciled exactly.
+- Typecheck, production build, Playwright 17/17, deterministic eval, fixed
+  ranking, both zero-network dry runs, syntax, and diff checks passed. Lint had
+  zero errors and the same three pre-existing warnings.
+- Independent replacement review returned `VERIFIED`, no actionable finding,
+  confidence 0.97 after closed terminal-state, presentation-trace, and URL-
+  fragment corrections.
+
+ReviewRadar remains **NOT READY**. The matrix is a trustworthy measurement
+boundary, not live accuracy evidence. Its truth expires 2026-09-12; all six
+staged outcomes, repeatability, latency/cost distributions, RR-091/RR-092, and
+wider UX, security, accessibility, and operational gates remain unresolved.
+
 ### Codex - Complete the first safe staged shopper lifecycle
 
 #### Changed

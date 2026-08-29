@@ -4,6 +4,66 @@
 
 ---
 
+## PR-4A staged Terra readiness measurement contract (2026-08-29)
+
+- `tests/fixtures/staged-terra-readiness-matrix-v1.json` freezes four distinct
+  request shapes and exactly six serial attempts: broad `shop vac` twice,
+  constrained four-main-burner gas grill twice, adversarial mesh/lumbar office
+  chair once, and over-constrained self-emptying/pet-hair/cord robot vacuum
+  once. The truth was reviewed 2026-08-29 and expires 2026-09-12. Do not run
+  against an expired or modified matrix.
+- Exact SHA-256 values are matrix
+  `289ada281c3f8185c4b4bdec64cb34dc55a1af3ccb5ed0f25b51b1483bdfae2c`,
+  artifact producer
+  `0b5f5f95c72fad52461cd50537916bc7084deb3055fd821e73c1f1de482d059c`,
+  analyzer
+  `8bf1985964734dbce53010d9a8a243b986ea6fea9999b23f7640bf328440c5dd`,
+  and tests
+  `38e0f585f18965a908b5db35e0c57b418b1108a509a0ffbee01228af8af77411`.
+  Authenticate them and the self-contained PR-4A commit before PR-4B.
+- Every attempt is bound to an exact index, key, request, run ID, nonce, commit,
+  matrix hash, capture window, and prior canonical artifact hash. Attempts are
+  serial. A missing, duplicate, out-of-order, resealed, reused, stale, future,
+  or incomparable artifact fails closed. Never retry or replace a spent run.
+- The producer accepts only the closed staged public response plus sanitized
+  server diagnostics/counters. Canonical UTF-8 bytes, raw/payload seals, exact
+  versions, terminal tuples, counters, per-stage usage, evidence activity,
+  commerce activity, timing, and safe manual-audit fields are mandatory. Raw
+  provider/private content, credentials, arbitrary audit values, unsafe IDs,
+  private URLs, credential-shaped URLs, ports, sensitive query keys, and
+  nonempty URL fragments are rejected.
+- Safety bars are zero wrong-type cards, hard-requirement failures, budget
+  violations, unregistered source references, retries, replacements, fallbacks,
+  organic/SearchAPI work, and extra cases. A completed run must finish within
+  720,000 ms, use evidence no older than 86,400,000 ms, stay under the existing
+  network ceilings and `$1` conservative per-run ceiling, and the complete set
+  must stay below `$6` conservative aggregate cost.
+- Quality bars include two broad must-consider products per run and union,
+  complete product/source/requirement/price/offer/image/manual review, and at
+  least 0.60 pairwise final-card Jaccard. Candidate-pool Jaccard is deliberately
+  `not_scored_privacy_boundary`: the sanitized contract has no non-public
+  candidate identities, and stable hashes would create dictionary-attack risk.
+- Analyzer output is never authority. It always returns
+  `originAuthenticated=false`, `machineAuthorization=false`,
+  `releaseAuthorized=false`, and `stopRequired=true`. A clean prefix returns
+  only `next_attempt_review_required`; a clean complete set returns only
+  `independent_review_required`. Independent inspection and explicit origin
+  authority are required before every paid attempt and after every artifact.
+- Proof is zero-live: focused 34/34; complete 1,532/1,532 across 215 suites;
+  five partitions and 10-case/29-invariant benchmark reconciled; typecheck,
+  build, E2E 17/17, lint, eval, ranking, dry-run, syntax, and diff walls passed.
+  Independent replacement review returned exact `VERIFIED`, no finding,
+  confidence 0.97. Provider behavior, recommendation quality, stability,
+  latency, and real cost remain unmeasured.
+- Process note: during PR-4A the main agent accidentally printed live-fixture
+  filenames via one overbroad file search and one status command. It did not
+  open, hash, parse, or display fixture contents or values. The independent
+  reviewer stayed inside the exact four-file offline envelope. Future commands
+  must use tracked-only or explicit paths and exclude the whole live-fixture
+  tree.
+
+---
+
 ## OAI-T10 PR-3K first complete staged lifecycle (2026-08-29)
 
 - PR-3K spent exactly one frozen `shop vac` lifecycle at clean PR-3J commit

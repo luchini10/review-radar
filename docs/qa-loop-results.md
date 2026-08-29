@@ -13171,3 +13171,159 @@ PR-4A must first refresh a small current-market truth set and build a staged-
 path-specific, privacy-safe aggregate harness with frozen cases, metrics,
 ceilings, and independent zero-live review. Only then may the low-parallelism
 PR-4 matrix spend begin.
+
+## Agent Loop Run - 2026-08-29T16:04:27.684Z
+
+- **run id:** agent-loop-2026-08-29T16-03-49-064Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3455ms |
+| lint | Passed | 11886ms |
+| unit tests | Passed | 18083ms |
+| deterministic eval pipeline | Passed | 722ms |
+| tracked offline benchmark | Passed | 635ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-29T16-03-49-064Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## 🟧 Codex — 2026-08-29 — PR-4A staged readiness measurement boundary
+
+**Objective and bottleneck:** PR-3K proved one complete staged lifecycle, but
+not current-market accuracy, cross-category constraint truth, repeatability,
+latency distribution, or cost. The existing scorecard/consistency scripts call
+the legacy route and their July truth may have drifted. PR-4A therefore froze a
+current, staged-specific, zero-live measurement boundary before any repeated
+spend. A broader immediate matrix would have produced evidence against the
+wrong scoring/truth contract.
+
+**Current truth and plan:** `staged-terra-readiness-matrix-v1` was reviewed
+2026-08-29 and expires 2026-09-12. It contains four materially distinct cases
+and six exact serial attempts: broad `shop vac` runs 1 and 2, constrained four-
+main-burner gas-grill runs 1 and 2, adversarial mesh/lumbar office-chair run 1,
+and over-constrained self-emptying/pet-hair/cord robot-vacuum run 1. Every
+attempt has a precommitted index, key, request, run ID, nonce, and prior-
+artifact position.
+
+The matrix records dated sources, exact product identities, source-backed
+requirements, must-consider versus illustrative status, and uncertainty.
+Must-consider products require at least two independent current sources.
+Retailer rank, search rank, a single editorial list, illustrative prices, and
+cross-model inference are explicitly non-authoritative.
+
+**Absolute bars and ceilings:** each completed run permits zero wrong-type
+cards, hard-requirement failures, budget violations, unregistered source
+references, retries, replacements, fallbacks, organic/SearchAPI work, or extra
+cases. Broad runs require at least two must-consider products per run and union;
+repeated final sets require at least 0.60 pairwise Jaccard. Completed wall time
+is capped at 720,000 ms and evidence age at 86,400,000 ms. Existing network
+ceilings remain, conservative cost is capped at `$1` per run and `$6`
+aggregate, and all six attempts are serial.
+
+Candidate-pool identity Jaccard is deliberately
+`not_scored_privacy_boundary`. The sanitized staged evidence retains no non-
+public candidate identities, and stable identity hashes would introduce a
+dictionary-attackable privacy surface. Final-card Jaccard is scored.
+
+**Artifact and analyzer:** the producer creates canonical strict UTF-8 JSON
+with raw and payload SHA-256 seals from only the staged public response plus
+closed sanitized diagnostics/counters. It binds exact runtime, prompt, model,
+presentation, request, route trace, operation/failure tuples, usage,
+accounting, evidence activity, commerce activity, timing, source/card/
+requirement/price/offer/image/manual audits, and the previous canonical
+artifact hash. It rejects unknown/private fields, unsafe identifiers,
+credentials, ports, non-public hosts, sensitive query keys, and any nonempty URL
+fragment.
+
+The analyzer authenticates the complete frozen matrix hash, exact commit and
+capture window, request/run/nonce/index/order/chain, artifact bytes, stage
+timing and wall time, per-terminal usage, counters, cost, conservation, final
+card identities, every public source reference, and complete manual audits.
+Expected over-constrained no-exact output is safe evidence but still a quality
+failure; every other terminal failure halts.
+
+No analyzer result can authorize action. All prefixes and complete results set
+`originAuthenticated=false`, `machineAuthorization=false`,
+`releaseAuthorized=false`, and `stopRequired=true`. A clean prefix returns only
+`next_attempt_review_required`; a clean complete set returns only
+`independent_review_required`.
+
+**Authenticated implementation:** base HEAD is
+`1724bc1088320f97391493b9161c7285aac8d7a0`. Exact SHA-256 values are:
+
+- matrix: `289ada281c3f8185c4b4bdec64cb34dc55a1af3ccb5ed0f25b51b1483bdfae2c`;
+- artifact producer:
+  `0b5f5f95c72fad52461cd50537916bc7084deb3055fd821e73c1f1de482d059c`;
+- analyzer:
+  `8bf1985964734dbce53010d9a8a243b986ea6fea9999b23f7640bf328440c5dd`;
+  and
+- tests: `38e0f585f18965a908b5db35e0c57b418b1108a509a0ffbee01228af8af77411`.
+
+**Independent correction loop:** the reviewer first required closed
+operation/failure/status combinations and exact failed-presentation trace
+binding, then rejection of all nonempty URL fragments. The corrected hashes
+above received replacement verdict `VERIFIED`, no actionable finding,
+confidence 0.97. The reviewer independently ran 34/34 focused tests, scoped
+ESLint, and a direct fragment probe within the exact four-file offline envelope.
+It did not access credentials, environment files, network, or live fixtures.
+Residuals are source-currentness not being independently refreshed offline,
+provider/runtime behavior remaining unmeasured, and origin deliberately
+remaining unauthenticated.
+
+**Final deterministic wall:** controller
+`agent-loop-2026-08-29T16-03-49-064Z` passed all five exact worker partitions,
+typecheck, lint, the complete unit suite, deterministic eval, and the tracked
+benchmark. Final results were:
+
+- focused PR-4A suite: 34/34;
+- complete deterministic suite: 1,532/1,532 across 215 suites;
+- five named worker partitions: exact reconciliation passed;
+- tracked benchmark: 10/10 cases and 29/29 invariants;
+- Playwright E2E: 17/17;
+- typecheck and production build: passed;
+- deterministic eval: no red flags; fixed ranking comparison: passed;
+- Phase D and diagnostic scorecard zero-network dry runs: passed;
+- syntax and `git diff --check`: passed;
+- lint: zero errors and the same three pre-existing warnings; and
+- generated `next-env.d.ts`: restored and clean.
+
+PR-4A made zero OpenAI, hosted-search, Serper, page, product-data, live-route,
+replay, retry, or replacement calls. The production build automatically loaded
+the existing ignored `.env.local`, but no value was inspected, printed, copied,
+hashed, or staged. An optional unpinned Prettier probe downloaded Prettier 3.9.6
+to the npm cache because the repository does not declare it; its warnings are
+excluded from proof and it changed no repository file.
+
+**Process deviation and evidence limit:** one earlier `rg --files` and one
+unfiltered `git status` printed live-fixture filenames. No fixture content,
+hash, parse, field, or value was read or displayed, and nothing was modified.
+This violated the main-agent no-enumeration process boundary and is retained as
+a residual. All subsequent commands used explicit or tracked-only paths; the
+independent reviewer stayed clean. PR-4A proves only a deterministic and
+reviewed measurement contract. It does not prove any live recommendation,
+stability, latency, cost, or readiness result and does not authorize PR-4B,
+flag promotion, deployment, or release.

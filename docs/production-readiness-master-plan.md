@@ -181,13 +181,25 @@ truth registry. Missing, duplicate, unknown, mismatched, fabricated, or
 incomparable work fails closed while authentic historical failing evidence
 remains comparable after a fix.
 
-PR-3K has now supplied the one complete staged lifecycle. The strongest next
-step is PR-4A: refresh a small current-market truth set, define staged-specific
-accuracy/stability/cost metrics and stop rules, and build a zero-network harness
-that exercises the staged public/evidence boundary. Independent review and a
-clean commit are required before PR-4B may spend on a low-parallelism live
-matrix. This attacks the current measurement-integrity bottleneck without
-mistaking one successful case—or legacy-route results—for accuracy evidence.
+PR-3K supplied the one complete staged lifecycle. PR-4A now closes the next
+measurement-integrity prerequisite without making a live call. A dated four-
+shape matrix freezes six serial attempts, exact request hashes and nonces,
+current-source provenance, absolute safety/quality bars, per-run and aggregate
+ceilings, and an artifact chain against the staged public and sanitized server
+contracts. A strict analyzer independently rederives source/card/requirement/
+price/accounting/latency/stability results and requires exact manual card and
+source review.
+
+The harness deliberately cannot authenticate its caller. Every result reports
+`originAuthenticated=false`, `machineAuthorization=false`,
+`releaseAuthorized=false`, and `stopRequired=true`; a clean prefix selects only
+`next_attempt_review_required`, while a mechanically and manually clean full
+set selects only `independent_review_required`. Candidate-pool identity Jaccard
+is explicitly not scored because the privacy-safe staged evidence contains no
+non-public candidate identities; final-card Jaccard remains measured. PR-4B
+must therefore proceed, if separately reviewed, one precommitted attempt at a
+time. PR-4A proves the integrity of that boundary, not staged recommendation
+quality.
 
 Recommended reasoning level: **High** for benchmark truth, scoring, and trust-
 boundary design; **Medium** for routine harness implementation and deterministic
@@ -636,7 +648,7 @@ shopper-facing recommendation quality.
 | PR-003 | P1 | verified | Required E2E checks produced 11 false failures whenever a developer enabled Direct Terra locally, hiding real regressions and encouraging ignored checks. | Playwright's dev server inherited `.env.local`; tests intercepted `/api/recommendations` while the browser called `/api/recommendations-v2`. | The E2E server owns a dedicated port, forces committed default-off/legacy routing, disables server reuse, and explicitly neutralizes all provider/job credentials. The developer's `.env.local` is untouched. | Full 17/17 E2E under the existing local config; independent inspection of Playwright's environment merge; no production code change. | Closed locally. Experimental-path E2E must opt into its own isolated fixture and credentials boundary. |
 | PR-004 | P2 | verified | One valid Direct-Terra preview failed its test even though the two safe links rendered. | UI copy changed from generic `Product website` to the more informative `View at <host>` accessible name; the test stayed exact-string brittle. | The test now asserts the user-visible role/name pattern and both links' safe target/rel attributes. | Full E2E passes and still requires both safe links. | Closed; test-only rollback. |
 | PR-005 | P1 | verified | Five named deterministic QA batches reported different search pools but all executed the same five synthetic eval cases, so green output overstated coverage. | `runDeterministicBatch()` delegated every batch to `eval-pipeline.mjs` and recorded batch searches only as metadata. The controller also overwrote the authoritative handoff and copied Markdown outside the repo. | A tracked 10-case/29-invariant benchmark now gives every batch a unique partition. Results persist executed IDs/outcomes; reconciliation independently rederives them from persisted streams and complete tracked price/product oracles. Controller next-task output is ignored/advisory only, and no Desktop copy occurs. | Fail-first 9 pass / 1 intended fail; corrected focused 26/26; complete 1,477/1,477; exact five-batch reconciliation; benchmark 10/10 and 29/29; E2E/build/static/eval/ranking/dry-run walls; independent `APPROVED`. | Closed without production or live behavior changes. Synthetic fixtures/oracles require deliberate maintenance and do not prove market coverage or provider quality. Ignored artifacts are reconciled, not cryptographically immutable. |
-| PR-006 | P1 | current blocker; investigating | Current staged-path market-leader recall, final-set stability, exact/near truth, hard-requirement accuracy, price coverage, first-loss distribution, latency, and cost are not established. PR-3K proves only one safe `shop vac` result; historical legacy-path evidence found zero final overlap and severe leader loss. | Provider variance, planning variance, discovery loss, strict evidence gates, and/or ranking may contribute; attribution remains unmeasured on the active path. Existing quality harnesses call the legacy route and the July leader set may have drifted. | PR-4A must refresh a small reviewed current-truth set and build a zero-network staged-specific harness with exact scoring and stop rules. Only after independent review may PR-4B run a bounded repeated matrix and fix the earliest repeated generalized loss. | Commit-pinned staged artifacts; dated market-coverage truth with provenance; repeated samples; invariant-based scoring; candidate/final Jaccard; hard-requirement truth; first-loss, latency, call, token, and cost reconciliation; before/after controls across unrelated categories. | High cost/variance risk. Stop on any safety failure. PR-001/002 and one-lifecycle feasibility are closed prerequisites; no new spend before PR-4A is reviewed and committed. |
+| PR-006 | P1 | measurement boundary verified; live evidence pending | Current staged-path market-leader recall, final-set stability, exact/near truth, hard-requirement accuracy, price coverage, first-loss distribution, latency, and cost are not established. PR-3K proves only one safe `shop vac` result; historical legacy-path evidence found zero final overlap and severe leader loss. | Provider variance, planning variance, discovery loss, strict evidence gates, and/or ranking may contribute; attribution remains unmeasured on the active path. Existing quality harnesses call the legacy route and the July leader set may have drifted. | PR-4A freezes a dated four-shape/six-attempt staged matrix, canonical artifact producer, exact analyzer, manual audits, serial hash chain, and fail-closed stop rules. PR-4B must collect independently reviewed artifacts one attempt at a time, then select only the earliest repeated generalized loss. | Exact commit/matrix/request/run/nonce/prior-artifact binding; dated provenance; repeated final-card Jaccard; leader and illustrative coverage; exact/near, requirement, wrong-type, source, price, offer, image, first-loss, latency, call, token, and cost reconciliation; complete manual card/source audits. Candidate-pool Jaccard is `not_scored_privacy_boundary`. | High cost/variance risk. Stop on every prefix and any safety failure. Truth expires 2026-09-12. The analyzer cannot authenticate origin or authorize another attempt, release, flag, or deployment; independent review remains mandatory. |
 | PR-007 | P1 | investigating | RR-091 says same-page related-product price can satisfy autonomous card binding. A wrong variant price is release-blocking if the affected path is promoted. | Product entity selection may not bind offer identity tightly enough when multiple products share a page. | Reproduce with tracked synthetic multi-entity pages, then require exact entity/offer binding using shared identity rules. | Original and cross-category reproductions; exact-product positive controls; no unsafe price/product URL; full price and identity wall. | High false-negative/false-positive risk. The affected experimental path remains default-off; no promotion before closure. |
 | PR-008 | P1 | investigating | RR-092 says editorial Product markup can verify identity/image without proving the tested model. A wrong model image/link is release-blocking if promoted. | Structured markup establishes a product entity without sufficient tested-model attribution or page role. | Require exact tested-model attribution from eligible page evidence; editorial markup remains evidence-only unless the commerce/page boundary independently passes. | Editorial review negatives, manufacturer/retailer positives, sibling-model and accessory mutations, asset-wall regression. | High asset-recall tradeoff. Default-off path must stay off until resolved. |
 | PR-009 | P1 | verified correction; successor blocker isolated | The commit-pinned PR-2 request completed provider research but failed before verification as an unattributed `research_candidate_invalid`. | The v1 schema made the model author internal candidate/fact IDs while runtime required stricter array-relative values not fully specified by schema/prompt; it also rejected requirement ordering the schema could not constrain. The exact old failing field remains private and unknown. | Research contract/schema/prompt v2 make IDs server-owned, validate the exact unique requirement set before canonical ordering, align non-whitespace constraints, and retain only a guarded candidate field-group reason. Trust gates remain unchanged. | Fail-first 18 pass / 4 intended fail; candidate group matrix; staged 54/54; full 1,438/1,438; E2E/build/static/eval/ranking/dry-run walls; independent review. | Contract-v2 revalidation produced the narrower `candidate_sources` first loss. PR-011 now owns that successor blocker. Never reuse any spent attempt. |
@@ -1242,31 +1254,80 @@ directory is spent.
 
 ### Phase PR-4A — Establish current truth and a staged measurement boundary
 
-- Status: **planned**
-- Dependency: clean PR-3K documentation commit.
-- Refresh a small current-market truth set from dated, reviewable evidence.
-  Separate must-consider leaders from illustrative candidates and record
-  uncertainty; do not freeze search-engine popularity as product truth.
-- Build a zero-network staged-specific harness against the staged public and
-  sanitized evidence contracts. The legacy scorecard/consistency harness calls
-  `/api/recommendations` and cannot authorize this phase.
-- Define exact coverage, identity, hard-requirement, source, price, stability,
-  latency, calls, tokens, cost, privacy, and fail-closed stop rules before live
-  evidence exists. Authenticate case hashes and deterministic scoring.
-- Obtain independent review and make a self-contained local commit. No new live
-  matrix request is authorized by PR-4A.
+- Status: **verified locally 2026-08-29; independently `VERIFIED`; zero live**
+- Matrix: `staged-terra-readiness-matrix-v1` is reviewed 2026-08-29 and expires
+  2026-09-12. It freezes broad `shop vac` twice, constrained four-main-burner
+  gas grill twice, adversarial mesh/lumbar office chair once, and over-
+  constrained self-emptying/pet-hair/cord robot vacuum once. Exact order, run
+  IDs, nonces, requests, sources, product identities, uncertainty, and manual
+  audit registries are versioned. Must-consider truth requires at least two
+  independent current sources; illustrative products cannot satisfy broad
+  recall by implication.
+- Bars: zero wrong type, hard-requirement, budget, or unregistered-source
+  failures; at least two broad must-consider products per run and union; at
+  least 0.60 pairwise final-card Jaccard; completed wall time no more than 12
+  minutes; evidence age no more than 24 hours; per-run conservative cost no
+  more than `$1` and aggregate no more than `$6`; existing network ceilings;
+  zero retries, replacements, fallback, organic, SearchAPI, or extra cases.
+- Artifact boundary: canonical UTF-8 JSON plus raw and payload SHA-256 seals,
+  exact staged runtime/prompt/model/presentation versions, public-response and
+  private-diagnostic reconciliation, closed terminal tuples, per-stage usage,
+  counters, evidence activity, commerce rows, timing, source/card/requirement/
+  price/offer/image/manual audits, and a precommitted prior-artifact chain.
+  Conservative URL handling rejects credentials, ports, non-public hosts,
+  sensitive query keys, and every nonempty fragment. Raw provider/private
+  content is outside the schema.
+- Analyzer: authenticates the full frozen matrix hash and every commit, request,
+  run, nonce, attempt index, artifact, prior hash, capture window, version,
+  counter, token, cost, timing, audit, and final-card identity. Candidate-pool
+  Jaccard is intentionally `not_scored_privacy_boundary`; adding stable private
+  candidate hashes would create a dictionary-attackable surface.
+- Authority: every prefix and full result stops. Clean prefixes return only
+  `next_attempt_review_required`; a clean complete set returns only
+  `independent_review_required`. Origin, machine, and release authorization are
+  always false. No fixture or analyzer output can dispatch or approve spend,
+  flag promotion, deployment, or release.
+- Proof: exact implementation hashes are matrix
+  `289ada281c3f8185c4b4bdec64cb34dc55a1af3ccb5ed0f25b51b1483bdfae2c`,
+  artifact producer
+  `0b5f5f95c72fad52461cd50537916bc7084deb3055fd821e73c1f1de482d059c`,
+  analyzer
+  `8bf1985964734dbce53010d9a8a243b986ea6fea9999b23f7640bf328440c5dd`,
+  and tests
+  `38e0f585f18965a908b5db35e0c57b418b1108a509a0ffbee01228af8af77411`.
+  Focused 34/34; complete 1,532/1,532 across 215 suites; exact five-partition
+  reconciliation; benchmark 10/10 cases and 29/29 invariants; typecheck,
+  production build, E2E 17/17, lint, eval, ranking, both dry runs, syntax, and
+  diff checks passed. Independent replacement review returned exact verdict
+  `VERIFIED`, no actionable finding, confidence 0.97.
+- Limits: source truth was reviewed, not refreshed by the offline reviewer;
+  provider behavior and all six results remain unknown. The source window can
+  drift before expiry. A main-agent process deviation enumerated live-fixture
+  filenames in two command outputs but read no content, hash, or value; the
+  independent reviewer did not access the live-fixture tree. No PR-4A provider,
+  product-data, route, replay, or live-fixture call ran.
 - Reasoning: **High** for truth and metric design; **Medium** for implementation.
 
 ### Phase PR-4B — Measure staged accuracy, stability, latency, and cost
 
-- Status: **planned; blocked on reviewed PR-4A**
+- Status: **planned; PR-4A prerequisite closed, but every attempt still requires
+  independent review and explicit origin authority**
 - Run the independently approved, low-parallelism broad/constrained/adversarial/
   over-constrained matrix, with repeated samples only where needed to measure
   variance.
 - Record leader coverage, exact/near truth, wrong-type and page leakage,
-  duplicate families, verified price coverage, first-loss stage, final/pool
-  Jaccard, stage timing, calls, tokens, and estimated cost.
-- Stop immediately on any P0/P1 safety or trust failure.
+  duplicate families, verified price coverage, first-loss stage, final-card
+  Jaccard, the candidate-pool privacy non-score, stage timing, calls, tokens,
+  and estimated cost.
+- Execute in the exact six-run serial order. Before each paid invocation,
+  authenticate the clean commit, unexpired matrix, exact request/run/nonce,
+  absent prospective artifact, previous artifact hash, runner, and aggregate
+  remainder. After each result, build and independently inspect the canonical
+  artifact and manual audits, run prefix analysis, and stop. Machine output
+  never authorizes the next attempt.
+- Stop immediately on any P0/P1 safety/trust failure, expired truth, malformed
+  or stale evidence, accounting/timing drift, unexpected terminal failure, or
+  missed per-run/aggregate ceiling. No retry or replacement.
 - Reasoning: **High**.
 
 ### Phase PR-5 — Correct the highest-impact repeated first loss
@@ -1334,10 +1395,11 @@ Release blockers today:
 
 - current staged-path accuracy, hard-requirement truth, leader recall,
   repeatability, latency distribution, and cost have not been measured against
-  a reviewed current-truth set. PR-3K proves one safe lifecycle only;
-- the legacy scorecard/consistency harness targets `/api/recommendations`, and
-  the July leader set may be stale. PR-4A must establish a staged-specific,
-  current-truth measurement boundary before PR-4B spends;
+  the now-reviewed PR-4A current-truth set. PR-3K proves one safe lifecycle
+  only; the six PR-4B artifacts do not yet exist;
+- the PR-4A truth expires 2026-09-12, candidate-pool Jaccard is intentionally
+  not scored for privacy, and every serial attempt still requires independent
+  origin/fixture/manual review. The legacy scorecard remains non-authorizing;
 - RR-091 and RR-092 remain unresolved for an experimental path that cannot be
   promoted safely.
 

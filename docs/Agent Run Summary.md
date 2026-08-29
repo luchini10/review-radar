@@ -2499,3 +2499,52 @@ route and its July leader set may be stale. PR-4A should therefore refresh a
 small current-market truth set and build an exact staged-path aggregate harness
 with independent review before any matrix spend. Reasoning level: High for
 truth/trust design; Medium for routine harness execution.
+
+## Codex Run - 2026-08-29 PR-4A staged readiness measurement boundary
+
+**Goal:** replace the legacy-route/stale-truth measurement gap with a dated,
+privacy-safe staged-path contract before spending on repeated live evidence.
+
+**Assessment:** this was the proven prerequisite. PR-3K established one safe
+lifecycle but not current accuracy or repeatability; immediately widening live
+spend would have produced results that the legacy harness could not score
+honestly. The stronger alternative was to freeze truth, attempt identity,
+absolute bars, and manual authority first.
+
+**What changed:** added a reviewed four-case/six-attempt matrix, a canonical
+artifact producer, a strict aggregate/prefix analyzer, and 34 mutation-heavy
+tests. Exact serial order, run IDs, nonces, request hashes, prior-artifact hash
+chain, current-source window, per-run/aggregate cost and network ceilings,
+latency/currentness rules, public/private reconciliation, manual card/source
+audits, and final-card stability are bound before any result exists.
+
+Candidate-pool Jaccard is explicitly not scored because the sanitized contract
+contains no non-public candidate identities and stable hashes would weaken
+privacy. Every output stops: clean prefixes require review of the next attempt,
+and a clean complete set requires independent review. Origin, machine, and
+release authorization remain false, so the harness cannot dispatch spend,
+promote a flag, deploy, or release.
+
+**Independent evidence:** after corrections for impossible terminal tuples,
+failed-presentation trace binding, and nonempty URL fragments, replacement
+review returned exact `VERIFIED`, no actionable finding, confidence 0.97 on
+the authenticated four-file snapshot.
+
+**Verification:** focused 34/34; complete 1,532/1,532 across 215 suites; all
+five worker partitions reconciled; benchmark 10/10 cases and 29/29 invariants;
+typecheck, build, E2E 17/17, lint with zero errors/three old warnings, eval,
+ranking, both zero-network dry runs, syntax, and diff checks passed. No PR-4A
+provider, product-data, route, replay, or live-fixture call ran.
+
+**Residuals:** source truth expires 2026-09-12 and was not independently
+refreshed by the offline reviewer. Provider behavior and all six results remain
+unknown. Two main-agent command outputs accidentally enumerated live-fixture
+filenames, without reading content or values; the independent reviewer did not
+touch the tree. The process deviation is documented and future work must use
+only explicit/tracked paths.
+
+**Next decision:** authenticate the self-contained PR-4A commit and obtain an
+independent, origin-bound review of the first exact PR-4B attempt and capture
+path. Execute at most one precommitted run, analyze its canonical artifact and
+manual audits, then stop. Recommended reasoning: High for each live/evidence
+gate; Medium for mechanical capture and deterministic checks.
