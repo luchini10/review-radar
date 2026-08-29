@@ -12,9 +12,10 @@ suite look green. It is to show the strongest genuinely suitable products,
 exclude unsafe or misleading cards, preserve uncertainty, and give shoppers a
 reliable decision brief at acceptable latency and cost.
 
-The newest staged Terra path has not yet produced a live result. Its latest
-provider-complete response failed at candidate validation before product
-verification or ranking. Static fail-first comparison then proved a generalized
+The newest staged Terra path has not yet produced a user-visible live result.
+Its latest contract-v2 provider-complete response failed at candidate source
+validation before product verification or ranking. Earlier static fail-first
+comparison proved a generalized
 strict-schema/runtime mismatch: the model owned candidate and fact identifiers
 that the runtime required to equal array-relative values the schema and prompt
 did not fully specify, and the runtime rejected requirement order that the
@@ -233,6 +234,33 @@ shopper-facing recommendation quality.
 - **Limitation:** this repairs reporting integrity, not route feasibility or
   shopper-result quality. No provider, search, Shopping, or page request ran.
 
+### PR-2C contract-v2 live stop
+
+- **Verified outcome:** the one new-commit, new-directory `shop vac` attempt at
+  `140d465a0ac835efb73713e988c140b7e35be6e9` completed Terra research but
+  failed closed as `research_candidate_invalid / candidate_sources`. It stopped
+  after 64.959 seconds before deterministic verification, presentation,
+  Shopping, page fetching, or rendering.
+- **Envelope:** one create, 29 retrieves, six hosted searches, and one safety
+  cancel; zero retries, replacements, fallbacks, second cases, Shopping, page,
+  Serper organic, or SearchAPI calls. Returned usage was 57,041 input and 6,744
+  output tokens. Cost was `$0.303762` frozen nominal, `$0.339413` frozen
+  conservative, and `$0.255010` at the dated current card.
+- **Privacy:** sanitized evidence schema v2 contains only approved fields, three
+  official pricing-source URL values, and 64-character response hashes. It
+  contains no raw output, provider ID, prompt, product-source URL, header, key,
+  secret, body, or candidate object; both local key values are absent.
+- **Attribution limit:** `candidate_sources` proves only that at least one
+  candidate source array was duplicate, unsafe/malformed, or not an exact member
+  of the retained response-owned registry. It does not identify which branch.
+- **Verified static risk:** the shared response-source extractor canonically
+  deduplicates URL variants and retains only the first exact string, while the
+  staged contract requires exact string membership. A synthetic two-variant
+  response proves the later response-owned exact variant is lost. This is a
+  generalized self-mismatch, but the sanitized live evidence cannot prove it
+  caused PR-2C. Independent read-only content and clean-state audit returned
+  `VERIFIED` and agreed the exact live source branch is not inferable.
+
 ## Confirmed defects and weaknesses
 
 | ID | Severity | Status | User impact and evidence | Likely root cause | Generalized solution | Required proof | Risk, rollback, dependencies |
@@ -245,8 +273,9 @@ shopper-facing recommendation quality.
 | PR-006 | P1 | investigating | Current market-leader recall, final-set stability, exact/near truth, price coverage, and first-loss distribution are not established for today's commit. Historical evidence found zero final overlap and severe leader loss. | Provider variance, planning variance, discovery loss, strict evidence gates, and/or ranking may contribute; attribution remains unmeasured on the active path. | After feasibility, run a bounded benchmark matrix with repeated broad and constrained cases, record candidate and final Jaccard, hard-requirement truth, first-loss stage, latency, calls, and cost. Fix only the earliest repeated generalized loss. | Commit-pinned fixtures, market-coverage sets reviewed for recency, repeated samples, invariant-based scoring, before/after controls across unrelated categories. | High cost/variance risk. Stop on any safety failure. Requires PR-001/002 and a passing staged feasibility result. |
 | PR-007 | P1 | investigating | RR-091 says same-page related-product price can satisfy autonomous card binding. A wrong variant price is release-blocking if the affected path is promoted. | Product entity selection may not bind offer identity tightly enough when multiple products share a page. | Reproduce with tracked synthetic multi-entity pages, then require exact entity/offer binding using shared identity rules. | Original and cross-category reproductions; exact-product positive controls; no unsafe price/product URL; full price and identity wall. | High false-negative/false-positive risk. The affected experimental path remains default-off; no promotion before closure. |
 | PR-008 | P1 | investigating | RR-092 says editorial Product markup can verify identity/image without proving the tested model. A wrong model image/link is release-blocking if promoted. | Structured markup establishes a product entity without sufficient tested-model attribution or page role. | Require exact tested-model attribution from eligible page evidence; editorial markup remains evidence-only unless the commerce/page boundary independently passes. | Editorial review negatives, manufacturer/retailer positives, sibling-model and accessory mutations, asset-wall regression. | High asset-recall tradeoff. Default-off path must stay off until resolved. |
-| PR-009 | P1 | corrected locally; live revalidation pending | The commit-pinned PR-2 request completed provider research but failed before verification as `research_candidate_invalid`. No staged result has reached users. | The v1 schema made the model author internal candidate/fact IDs while runtime required stricter array-relative values not fully specified by schema/prompt; it also rejected requirement ordering the schema could not constrain. The exact old failing field remains private and unknown. | Research contract/schema/prompt v2 make IDs server-owned, validate the exact unique requirement set before canonical ordering, align non-whitespace constraints, and retain only a guarded candidate field-group reason. Trust gates remain unchanged. | Fail-first 18 pass / 4 intended fail; candidate group matrix; staged 54/54; full 1,438/1,438; E2E/build/static/eval/ranking/dry-run walls; independent review. | Local correction is complete and default-off. A future one-attempt, new-commit/new-directory feasibility check is still needed; never reuse either spent attempt. |
+| PR-009 | P1 | verified correction; successor blocker isolated | The commit-pinned PR-2 request completed provider research but failed before verification as an unattributed `research_candidate_invalid`. | The v1 schema made the model author internal candidate/fact IDs while runtime required stricter array-relative values not fully specified by schema/prompt; it also rejected requirement ordering the schema could not constrain. The exact old failing field remains private and unknown. | Research contract/schema/prompt v2 make IDs server-owned, validate the exact unique requirement set before canonical ordering, align non-whitespace constraints, and retain only a guarded candidate field-group reason. Trust gates remain unchanged. | Fail-first 18 pass / 4 intended fail; candidate group matrix; staged 54/54; full 1,438/1,438; E2E/build/static/eval/ranking/dry-run walls; independent review. | Contract-v2 revalidation produced the narrower `candidate_sources` first loss. PR-011 now owns that successor blocker. Never reuse any spent attempt. |
 | PR-010 | P2 | verified | The Phase D estimator's field named `standardUsd` used its frozen 2026-07-25 rates, while official current Terra prices are lower. Readiness reporting could confuse a conservative approval rate with current estimated spend. | The rate object was intentionally frozen for approval reproducibility but the output label did not distinguish frozen-envelope and current-market estimates. | Plan/evidence schema v2 names the dated frozen approval envelope and dated `standard_non_regional` current estimate separately. Only the frozen conservative value controls the unchanged hard ceiling. | Fail-first 5 pass / 5 intended fail; exact short/long/cache-write/search rates and totals; focused 10/10; staged 56/56; full 1,440/1,440; E2E/build/static/eval/ranking/dry-run walls; independent review. | Closed locally without live spend. Re-check and date the informational card when official prices change; never silently reprice an existing approval envelope. |
+| PR-011 | P1 | investigating | Contract-v2 research completed with 69 response-owned sources but still failed before verification as `research_candidate_invalid / candidate_sources`. No staged result reached users. | Exact cause is privacy-hidden. Candidate arrays can fail for duplicate, unsafe/malformed, or unregistered URLs. Separately, the shared canonical source dedupe provably discards later exact response-owned URL variants before exact-membership validation. | First make source failure branches independently attributable with closed reason codes. Preserve every safe exact response-owned URL variant in the staged ownership registry without weakening exact ownership, HTTPS, uniqueness, or downstream display dedupe. Fix only deterministic mismatches proved fail-first. | Exact-variant fail-first reproduction; duplicate/unsafe/invented negatives; action/citation variant matrix; unchanged display dedupe; staged/full walls; independent review; zero live. | High source-ownership risk. Do not canonical-match model-authored URLs, accept invented variants, retain URLs in diagnostics, or spend again until the offline boundary is independently green. |
 
 ## Suspected weaknesses requiring measurement
 
@@ -368,7 +397,7 @@ value. All deterministic gates passed and no external request ran.
 
 ### Phase PR-2C — Re-test staged contract-v2 feasibility once
 
-- Status: **next after the PR-2B closeout commit**
+- Status: **stopped safely 2026-08-29; spent**
 - Dependency: PR-2A and PR-2B are independently approved and committed; the
   exact new commit and a new commit-specific evidence directory pass preflight.
 - Scope: run exactly one frozen broad `shop vac` request through the complete
@@ -383,6 +412,28 @@ value. All deterministic gates passed and no external request ran.
   acceptance gates on success, privacy scan, and post-run clean-state audit.
 - Reasoning: **High** for outcome adjudication; execution is routine and
   strictly bounded.
+
+Result: research completed but failed at `candidate_sources`; all counters and
+costs remained inside the envelope, privacy checks passed, and no downstream or
+fallback call ran. The attempt and evidence directory are spent.
+
+### Phase PR-2D — Diagnose and correct candidate-source ownership offline
+
+- Status: **next; zero live**
+- Severity addressed: PR-011 P1.
+- Scope: split `candidate_sources` into closed, server-only branch reasons;
+  prove the exact-variant registry loss and other candidate-source branches with
+  synthetic response objects; preserve all safe exact response-owned variants
+  for staged validation while keeping shared canonical display dedupe stable.
+- Stop condition: do not accept canonical-equivalent model-authored URLs unless
+  that exact string is response-owned; do not retain any URL or candidate data
+  in diagnostics; do not loosen HTTPS, uniqueness, or ownership checks; do not
+  make a live request.
+- Proof: fail-first exact-variant test, duplicate/unsafe/invented mutation
+  matrix, route privacy negatives, focused/full walls, independent review, and
+  a clean default-off commit.
+- Reasoning: **High** for source-ownership semantics; **Medium** for the
+  localized extractor/diagnostic implementation after the invariant is fixed.
 
 ### Phase PR-3 — Build a real offline benchmark matrix
 

@@ -4,6 +4,35 @@
 
 ---
 
+## OAI-T10 PR-2C candidate-source live stop (2026-08-29)
+
+- The one attempt at `140d465a0ac835efb73713e988c140b7e35be6e9` is
+  spent and terminal. Never retry it, edit or stage its evidence, or reuse
+  `tests/fixtures/review-radar-live/oai-t10-phase-d-140d465`.
+- Terra research completed after 29 retrieves with 57,041 input tokens, 6,744
+  output tokens, six hosted searches, and 69 response-owned sources. ReviewRadar
+  stopped at `research_candidate_invalid / candidate_sources` before
+  deterministic verification, presentation, Shopping, page fetching, or
+  rendering.
+- One safety cancel ran. There were no retries, replacements, fallbacks, second
+  cases, SearchAPI calls, Serper organic/Shopping calls, or source-page requests.
+- Cost was `$0.303762` frozen nominal, `$0.339413` frozen conservative, and
+  `$0.255010` at the dated current card. The frozen hard ceiling remained `$3`.
+- Sanitized evidence v2 has no prohibited key paths, raw output, provider ID,
+  prompt, product-source URL, header, key, secret, body, or candidate object.
+  Its only URL values are the approved OpenAI pricing sources, and both local
+  key values are absent.
+- `candidate_sources` does not distinguish a duplicate candidate URL, an unsafe
+  or malformed URL, or a URL absent from the retained exact source registry. Do
+  not guess the live cause or retain a URL to diagnose it.
+- A separate deterministic reproduction proves that the shared canonical
+  response-source dedupe drops a later exact response-owned URL variant while
+  staged validation requires exact string membership. Treat that as a
+  generalized self-mismatch hypothesis, not proof of the private live field.
+  Diagnose and correct it offline before considering any more spend.
+
+---
+
 ## OAI-T10 PR-2B dated pricing-evidence contract (2026-08-29)
 
 - Phase D plan/evidence schema v2 separates the immutable 2026-07-25

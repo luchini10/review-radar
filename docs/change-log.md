@@ -11,6 +11,33 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Stop contract-v2 feasibility at candidate source ownership
+
+#### Observed
+
+- One commit-pinned `shop vac` attempt completed Terra research but failed
+  closed as `research_candidate_invalid / candidate_sources` before
+  verification, presentation, Shopping, page fetching, or public results.
+- The run used one create, 29 retrieves, six hosted searches, and one safety
+  cancel. It made no retry, replacement, fallback, second-case, SearchAPI,
+  Serper organic/Shopping, or source-page request.
+- Returned usage was 57,041 input and 6,744 output tokens. Cost was `$0.303762`
+  frozen nominal, `$0.339413` frozen conservative, and `$0.255010` at the dated
+  current card, all within the frozen `$3` approval ceiling.
+
+#### Verified
+
+- Sanitized evidence v2 contains the closed class/subreason and approved pricing
+  metadata but no raw output, provider ID, prompt, product-source URL, header,
+  key, secret, body, or candidate object. Both local key values are absent.
+- A synthetic response proves the shared canonical source dedupe can discard a
+  later exact response-owned URL variant before staged exact-membership
+  validation. The live evidence cannot prove that specific branch caused the
+  stop, so the next phase is zero-live attribution and source-registry repair.
+- The first terminal outcome ended the live phase. No `.env.local` edit, flag
+  promotion, deployment, production change, push, tracked-code change, or
+  user-artifact cleanup occurred.
+
 ### Codex - Separate frozen approval cost from current estimates
 
 #### Changed

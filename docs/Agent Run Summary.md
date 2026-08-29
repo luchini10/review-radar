@@ -1683,3 +1683,36 @@ staged feasibility and recommendation quality remain unproven.
 contract-v2 feasibility attempt, with no retry/replacement/fallback and a stop
 at the first terminal outcome. Reasoning level: High for adjudicating trust,
 usage, and feasibility evidence.
+
+## Codex Run - 2026-08-29 Production readiness PR-2C candidate-source stop
+
+**Goal:** test contract-v2 lifecycle feasibility once at the clean PR-2B commit,
+without broadening into a benchmark or retrying either spent attempt.
+
+**Outcome:** Terra completed research, but ReviewRadar stopped at
+`research_candidate_invalid / candidate_sources` before verification,
+presentation, Shopping, page fetching, cards, sources, or rendering. The single
+attempt at `140d465a0ac835efb73713e988c140b7e35be6e9` ended after 64.959
+seconds.
+
+**Envelope:** one create, 29 retrieves, six hosted searches, one safety cancel;
+zero retries, replacements, fallbacks, second cases, SearchAPI, Serper
+organic/Shopping, or page calls. Usage was 57,041 input and 6,744 output tokens.
+Cost was `$0.303762` frozen nominal, `$0.339413` frozen conservative, and
+`$0.255010` at the dated current card, below the frozen `$3` ceiling.
+
+**Privacy:** sanitized evidence v2 contains no prohibited raw/provider/prompt/
+product-source/header/key/secret/body/candidate field. Its only URL values are
+approved pricing sources, both local key values are absent, and the tracked tree
+remained clean. The untracked evidence directory is spent.
+
+**Assessment:** the closed source group cannot reveal whether the live cause was
+a duplicate, unsafe/malformed, or unregistered URL. Static inspection did prove
+a separate generalized mismatch: canonical response-source dedupe drops later
+exact URL variants before staged exact-membership validation. That risk is
+real, but it is not proven to be the live cause.
+
+**Next recommended step:** zero-live source-branch attribution and exact-registry
+alignment, preserving exact ownership, HTTPS, uniqueness, privacy, and shared
+display dedupe. Reasoning level: High for source-ownership semantics, then
+Medium for localized implementation.

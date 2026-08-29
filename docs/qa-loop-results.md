@@ -11500,3 +11500,74 @@ request ran. No `.env.local` edit, flag promotion, deployment, production
 change, push, issue-status mutation, historical-fixture rewrite, or user-owned
 artifact cleanup occurred. This closes PR-010 only; staged lifecycle feasibility
 and shopper-result quality remain unproven.
+
+---
+
+## 🟧 Codex — 2026-08-29 — Production readiness PR-2C candidate-source stop
+
+**Objective:** answer only whether the independently approved contract-v2 route
+could pass research and reach deterministic verification, using one new-commit,
+new-directory frozen `shop vac` attempt.
+
+**Preflight:** tracked state was clean at
+`140d465a0ac835efb73713e988c140b7e35be6e9`; the commit-specific output
+directory was absent; required keys were confirmed by presence/nonempty only;
+and the zero-network dry run reproduced plan schema v2, both dated rate cards,
+and every existing numerical/network ceiling.
+
+**Outcome: failed safely at candidate source validation.** Terra completed the
+research response, but ReviewRadar returned HTTP 502 `research_failed` with
+`research_candidate_invalid / candidate_sources`. The attempt stopped at this
+first terminal route outcome after 64.959 seconds.
+
+| Counter | Actual | Approved ceiling |
+| --- | ---: | ---: |
+| OpenAI creates | 1 | 2 |
+| retrieves | 29 | 60 |
+| safety cancels | 1 | 1 |
+| hosted searches | 6 | 10 |
+| Serper Shopping | 0 | 15 |
+| source-page fetches | 0 | 30 |
+| physical page HTTP attempts | 0 | 90 |
+| retries / replacements / fallbacks | 0 / 0 / 0 | 0 / 0 / 0 |
+
+There was no second case, SearchAPI call, Serper organic call, deterministic
+verification, presentation create, Shopping request, page fetch, card, source,
+or public result.
+
+**Usage and cost:** the completed provider ledger retained 57,041 input tokens,
+6,744 output tokens, six hosted searches, and 69 response-owned sources. The
+accounted failed-route cost is `$0.303762` frozen nominal, `$0.339413` frozen
+conservative, and `$0.255010` at the dated current card. There was one accounted
+ledger, zero duplicate terminal ledgers, and no cached input. The unchanged `$3`
+gate was respected.
+
+**Privacy and state:** the spent untracked evidence is
+`tests/fixtures/review-radar-live/oai-t10-phase-d-140d465/attempt.json`.
+Its key-path scan found no raw output, provider ID, prompt, product-source URL,
+header, API key, secret, body, request, or candidate object. All three URL values
+are approved OpenAI pricing sources; both local key values are absent; the
+longest strings are 64-character response hashes. The tracked tree remained
+clean and only the new fixture appeared untracked.
+
+**Attribution:** `candidate_sources` narrows the first loss to the candidate's
+top-level source array, but cannot distinguish a duplicate, an unsafe/malformed
+URL, or a URL absent from the retained exact registry. Raw output was not read or
+retained, so the exact live branch remains unknown.
+
+Read-only static inspection separately found that
+`extractDirectTerraResponseSources()` canonically deduplicates response-owned
+URL variants and retains only the first exact string, while staged validation
+requires exact string membership. A synthetic two-variant response produced two
+raw exact strings but only one extracted string, dropping the later exact
+response-owned variant. This is a generalized deterministic self-mismatch; it
+is not proof that this private field caused PR-2C.
+
+**Decision:** no retry or replacement. First add closed, URL-free source-branch
+attribution and correct only deterministic source-registry mismatches offline.
+Do not canonical-match a model-authored URL, loosen exact ownership/HTTPS/
+uniqueness, or spend again until that boundary is independently green.
+
+**Independent audit:** `VERIFIED`. The auditor independently confirmed the
+counters, cost math, privacy boundary, first terminal stop, no downstream call,
+exact-cause uncertainty, clean tracked state, and untracked spent fixture.
