@@ -13,59 +13,65 @@ exclude unsafe or misleading cards, preserve uncertainty, and give shoppers a
 reliable decision brief at acceptable latency and cost.
 
 The newest staged Terra path has not yet produced a user-visible live result.
-PR-2G's contract-v3 response passed research with 12 candidates and 58 canonical
-sources. Verification used 12 Shopping requests/194 rows and 12 source fetches
-with seven successes, then excluded all 12 before presentation. Evidence v3
-conserved every first loss as `assetIdentityUnproven`; later first-loss buckets
-and retained source/claim rejection counters were zero. That proves only this
-attempt's aggregate earliest loss, not why identity was unproven or a
-generalized/category-wide cause. PR-2E's discarded distribution remains
-permanently unknowable. Phase D cost evidence separately names its frozen July
-approval envelope and dated August current estimate; only the conservative
-frozen envelope controls spending.
+PR-2H deterministically closed one research/asset identity self-mismatch, but
+the single post-correction PR-2I measurement stopped earlier: Terra completed
+research with 47 canonical sources, and local contract validation returned
+`research_candidate_invalid / candidate_facts` before verification. The fixed
+sanitized evidence can establish only that the first reported invalid candidate
+reached its fact group; it cannot identify the candidate or field, show raw
+output, or prove that later candidates passed identity.
 
-PR-2H has now closed a separately reproduced generalized acceptance mismatch.
-Before correction, eight bounded, unique, schema-valid research identity tuples
-could pass the staged contract while every target failed the asset verifier's
-coherence predicate; even an otherwise exact asset then received
-`invalid_target_identity`. Research now calls that exact unchanged predicate at
-acceptance, prompt v3 states the relation, and contract v4/runtime v3 roll the
-job boundary. Four generalized incoherent tuples fail before source/Shopping/
-page work while numeric model trimming remains accepted. This deterministic
-correction can prevent PR-2G's class, but the sanitized live evidence cannot
-prove it caused that attempt and no post-correction live metric exists.
+PR-2I was bound to clean commit
+`06fa55fb38f6675a897053eb21328ac8845d4e14` and stopped once after 54.485
+seconds. It used one create, 24 retrieves, three hosted searches, and one safety
+cancel, with zero Shopping/page/presentation/retry/replacement/fallback work.
+Usage was 30,215 input and 7,537 output tokens. Frozen-conservative cost was
+`$0.237477`, below the unchanged `$3` gate. Independent read-only audit returned
+`VERIFIED`; the spent fixture retained no raw/private provider or candidate
+material and neither configured key value.
+
+A separate zero-network matrix proves a generalized producer/parser mismatch.
+The strict schema and prompt allow a fact or requirement URL that is registered
+to the response but absent from its enclosing candidate's `source_urls`; they
+also do not express lead-reference uniqueness or the supporting/not-found URL
+cardinality enforced by the validator. A schema-conforming cross-candidate fact
+URL fails exactly as `candidate_facts`. This can produce PR-2I's bounded class,
+but the private live response cannot prove that it did.
 
 Stronger alternatives considered:
 
-- **Loosen asset identity now:** rejected. PR-2G proves identity was unproven,
-  not that brand/model/type safety is too strict. Lowering that wall could attach
-  a sibling model or wrong product.
+- **Retry PR-2I:** rejected. The first terminal result answered the authorized
+  measurement, and its directory is permanently spent. A retry would spend
+  against an already-proven model-facing contract mismatch.
+- **Accept any response-owned lead URL:** rejected. That would let one
+  candidate borrow another candidate's evidence and weaken product attribution.
+- **Add prompt prose only:** rejected as incomplete. It can reduce mistakes but
+  cannot structurally prevent cross-candidate URL references or repeated long
+  exact strings.
+- **Use candidate-local integer source references:** preferred. It preserves
+  the exact candidate source-ownership wall while making cross-candidate URL
+  attribution unrepresentable and reducing repeated URL output. Official
+  OpenAI [Structured Outputs documentation](https://developers.openai.com/api/docs/guides/structured-outputs)
+  supports integer arrays and numeric/array bounds, while cross-field
+  conditionals are unsupported; the runtime must retain range/cardinality
+  checks that the schema cannot express.
 - **Tune legacy discovery or ranking first:** deferred. Historical evidence
   shows serious recall and stability weakness, but the current strategic path
-  is the staged architecture and its first loss occurs before those downstream
-  stages. Legacy fixes remain appropriate only when fresh first-loss evidence
-  shows they materially improve the active user path.
-- **Keep tuning identity offline:** rejected for now. The reproduced contract
-  self-mismatch is closed and no second generalized identity defect is proven.
-  More implementation without new first-loss evidence would be speculative.
-- **Add candidate/private identity diagnostics:** rejected. The reproduced
-  contract mismatch was fixed without widening the privacy surface.
+  now stops before verification and presentation.
+- **Add candidate/private fact diagnostics:** rejected. The generalized defect
+  is reproducible without widening the fixed privacy surface.
 - **Expand immediately into a broad benchmark:** deferred. The benchmark is
   necessary, but no staged result exists yet; it would measure an architecture
-  whose active lifecycle still has not crossed asset verification.
-- **Repeat an old or uncorrected attempt:** rejected. Only a clean new commit and
-  new directory can test the corrected boundary; every earlier directory stays
-  spent.
+  whose active lifecycle still has not crossed research validation reliably.
 
-The strongest next step is one bounded post-correction lifecycle measurement.
-It directly tests whether coherent research targets can now cross the proven
-asset-identity first loss, while the existing evidence-v3 aggregate preserves
-privacy if they cannot. It must use the clean PR-2H commit, a new commit-specific
-directory, unchanged Phase D ceilings, and the first-terminal stop. Success can
-establish only lifecycle feasibility; it cannot establish quality or stability.
+The strongest next step is PR-2J: a zero-live, fail-first conversion from
+repeated lead URLs to candidate-local source indexes, with exact parser mapping,
+schema/prompt/runtime/contract rollover, adversarial ownership/range/cardinality
+tests, and no source-gate relaxation. Only after independent approval may a new
+measurement be considered.
 
-Recommended reasoning level: routine for the bounded execution; **High** for
-cost, privacy, conservation, and causal adjudication of the resulting evidence.
+Recommended reasoning level: **High** for source-ownership and wire-contract
+design; **Medium** for localized implementation and deterministic verification.
 
 ## Evidence labels
 
@@ -356,6 +362,39 @@ shopper-facing recommendation quality.
   titles failing brand/model/conflict/type checks, reveal shadowed later gates,
   or establish a generalized cause.
 
+### PR-2I post-correction research-fact stop
+
+- **Verified outcome:** the one new-directory attempt at
+  `06fa55fb38f6675a897053eb21328ac8845d4e14` completed Terra research, then
+  failed closed as `research_candidate_invalid / candidate_facts` after 54.485
+  seconds. Verification, presentation, Shopping, page fetching, and rendering
+  did not run.
+- **Envelope:** one create, 24 retrieves, three hosted searches, and one safety
+  cancel; zero retries, replacements, fallbacks, second cases, Shopping, page,
+  Serper organic, or SearchAPI calls.
+- **Usage/cost:** one terminal ledger recorded 30,215 input, zero cached input,
+  7,537 output, and three hosted searches. Exact frozen nominal arithmetic is
+  `$0.2185925`; JavaScript's binary `toFixed(6)` path stores `$0.218592`.
+  Frozen conservative cost was `$0.237477` and the dated current estimate was
+  `$0.180874`, below the `$3` gate.
+- **Privacy/stop:** the spent directory contains only untracked `attempt.json`
+  (21,149 bytes; SHA-256
+  `4741a595633335708c2446b1682e05631ab1ed8fb2ef9e0044b41725ce1f9513`).
+  Its only URLs are the approved Terra-model and pricing pages. Both configured
+  key values and all raw/provider/prompt/body/header, product/source URL,
+  candidate/evidence identifier, credential, and secret material are absent.
+  There is no public response or `result.json`. Independent audit returned
+  `VERIFIED`.
+- **Attribution limit:** `candidate_facts` identifies only the field group for
+  the first reported invalid candidate. It cannot reveal the exact fact defect,
+  candidate, raw output, or whether later candidates passed identity.
+- **Separate offline finding:** schema-conforming response-owned URLs can be
+  rejected when a fact or requirement lead references a URL outside its own
+  candidate source list; source-reference uniqueness and supporting/not-found
+  cardinality also differ between producer contract and parser. This is a real
+  generalized mismatch that can produce the bounded class, not proof of the
+  private PR-2I cause.
+
 ## Confirmed defects and weaknesses
 
 | ID | Severity | Status | User impact and evidence | Likely root cause | Generalized solution | Required proof | Risk, rollback, dependencies |
@@ -372,8 +411,9 @@ shopper-facing recommendation quality.
 | PR-010 | P2 | verified | The Phase D estimator's field named `standardUsd` used its frozen 2026-07-25 rates, while official current Terra prices are lower. Readiness reporting could confuse a conservative approval rate with current estimated spend. | The rate object was intentionally frozen for approval reproducibility but the output label did not distinguish frozen-envelope and current-market estimates. | Plan/evidence schema v2 names the dated frozen approval envelope and dated `standard_non_regional` current estimate separately. Only the frozen conservative value controls the unchanged hard ceiling. | Fail-first 5 pass / 5 intended fail; exact short/long/cache-write/search rates and totals; focused 10/10; staged 56/56; full 1,440/1,440; E2E/build/static/eval/ranking/dry-run walls; independent review. | Closed locally without live spend. Re-check and date the informational card when official prices change; never silently reprice an existing approval envelope. |
 | PR-011 | P1 | verified | Contract-v2 research completed with 69 response-owned sources but failed before verification as `research_candidate_invalid / candidate_sources`. | The exact historical cause is privacy-hidden. A generalized deterministic cause was proven: canonical display dedupe discarded later exact response-owned variants before exact-membership validation. | A dedicated staged registry preserves every parseable exact response-owned variant once; canonical display/count behavior is unchanged. Closed source subreasons distinguish shape, duplicate, unsafe, and unregistered without retaining URLs. | Fail-first 27/3; focused 55/55; staged 59/59; full 1,444/1,444; E2E/static/build/dry-run walls; independent approval; a new live response crossed research validation. | Closed. Never canonical-match a model-authored URL or infer the spent response's branch. PR-012 closed the successor observability blocker; PR-013 owns lifecycle feasibility. |
 | PR-012 | P1 | verified | The first research-valid staged run verified zero of 12 candidates, while the route retained only totals and made its first-loss distribution unknowable. | `materializeStagedTerraEvidencePackage()` computed real server-owned decisions, but the route discarded them before its sanitized verification diagnostic. | Verifier v2 derives six mutually exclusive candidate first-loss counts plus three separate affected-candidate rejection counts. The route accepts only fixed bounded integers, conservation, and eligible/close/excluded reconciliation; all malformed, unknown, and private values are dropped. Evidence v3 can retain the aggregate only for its own attempt. | Initial fail-first 23/6; corrected focused 30/30; staged 62/62; full 1,447/1,447; E2E 17/17; typecheck/build/static/dry-run/privacy/public-body walls; independent approval after correction of an unreachable proposed bucket. | Closed as observability only. PR-2E remains permanently unattributable. No eligibility/evidence rule changed, and the counts cannot authorize looser verification. |
-| PR-013 | P1 | verified blocker; first loss isolated | The staged lifecycle still has no user-visible result. PR-2G research passed, but verification excluded all 12 candidates and presentation/rendering did not run. | Evidence v3 proves this attempt's first-loss distribution was 12/12 `assetIdentityUnproven`; it intentionally cannot retain the private detail needed to distinguish target incoherence from asset-title identity rejection. | Correct only independently reproduced generalized identity-contract defects offline; preserve the aggregate/privacy boundary and do not loosen asset gates. | Exact commit/case/schema; conserved/reconciled aggregate; counters/usage/cost/privacy; no retry or downstream work; independent `VERIFIED`. | The live cause remains narrower but unresolved. One attempt is not category-wide evidence and cannot authorize benchmark expansion. PR-014 owns the proven contract mismatch. |
-| PR-014 | P1 | verified correction | Research validation accepted bounded nonempty `product_name`, `brand`, `model`, and `product_type` independently, while the asset verifier rejected every candidate when those same fields did not form a coherent target. Exact downstream assets could not overcome `invalid_target_identity`, wasting Shopping/page work and guaranteeing exclusion. | Provider schema/runtime established field shape but not the relational brand/model/type invariant already required by `directTerraAssetTargetIsCoherent()`; the prompt asked for separate identities without requiring `product_name` to agree. | Research now reuses the unchanged shared predicate before source work, prompt v3 states the relation, contract v4 rolls the fingerprint, and runtime v3 records the boundary. No name synthesis or asset-verifier change. | Fail-first 18/8; corrected contract 26/26; focused 57/57; staged 70/70; full 1,455/1,455; E2E 17/17; typecheck/build/eval/ranking/dry-run/lint/diff walls; independent `APPROVED`; zero live. | Closed deterministically. The stricter early wall can reduce accepted candidate count, which is preferable to guaranteed downstream exclusion. It can prevent PR-2G's class but is not proven to explain that attempt; post-correction lifecycle feasibility remains unmeasured. |
+| PR-013 | P1 | verified blocker; first losses isolated | The staged lifecycle still has no user-visible result. PR-2G stopped at verification asset identity; after PR-014's correction, PR-2I stopped earlier at research `candidate_facts`. Presentation/rendering has never run. | Privacy-safe evidence isolates only bounded field groups or aggregate first losses. It intentionally cannot retain the private candidate detail needed to identify either exact live cause. | Correct only independently reproduced generalized contract defects offline; preserve privacy and never loosen asset/evidence gates to manufacture a result. | Exact commit/case/schema; counters/usage/cost/privacy; first-terminal stop; conserved verification aggregate when reached; no retry/downstream work; independent `VERIFIED`. | Lifecycle feasibility remains unresolved. Neither isolated attempt is category-wide evidence or benchmark authorization. PR-015 owns the current proven research-contract mismatch. |
+| PR-014 | P1 | verified correction | Research validation accepted bounded nonempty `product_name`, `brand`, `model`, and `product_type` independently, while the asset verifier rejected every candidate when those same fields did not form a coherent target. Exact downstream assets could not overcome `invalid_target_identity`, wasting Shopping/page work and guaranteeing exclusion. | Provider schema/runtime established field shape but not the relational brand/model/type invariant already required by `directTerraAssetTargetIsCoherent()`; the prompt asked for separate identities without requiring `product_name` to agree. | Research now reuses the unchanged shared predicate before source work, prompt v3 states the relation, contract v4 rolls the fingerprint, and runtime v3 records the boundary. No name synthesis or asset-verifier change. | Fail-first 18/8; corrected contract 26/26; focused 57/57; staged 70/70; full 1,455/1,455; E2E 17/17; typecheck/build/eval/ranking/dry-run/lint/diff walls; independent `APPROVED`; zero live. | Closed deterministically. The stricter early wall can reduce accepted candidate count, which is preferable to guaranteed downstream exclusion. It can prevent PR-2G's class but is not proven to explain that attempt. PR-2I crossed the identity group but stopped at facts; that does not prove every candidate passed identity. |
+| PR-015 | P1 | verified blocker; correction planned | The only post-PR-2H attempt completed research generation but local validation stopped as `candidate_facts`, so no verification or user result exists. Offline, a strict-schema-conforming fact can cite a response-owned URL that belongs to another candidate and then fail the parser; sibling requirement/cardinality/duplicate mismatches also reproduce. | The provider-facing contract repeats raw URLs in each lead and states only response-level ownership. The parser correctly requires each lead URL to be an exact unique member of its enclosing candidate sources and requires status-dependent cardinality that the schema/prompt do not fully express. | Replace lead URL repetition with candidate-local integer source references, map them to already validated exact candidate URLs, state the remaining range/uniqueness/cardinality rules, and roll every job/contract identity. Preserve fail-closed candidate ownership and all downstream gates. | Fail-first cross-candidate fact/requirement, duplicate, out-of-range, status-cardinality, schema/prompt, and rollover tests; focused/staged/full/E2E/static/dry-run walls; independent review; zero live. | Do not accept another candidate's evidence, expose private facts, or infer the live private branch. Structured Outputs cannot express every cross-field rule, so runtime validation remains authoritative. |
 
 ## Suspected weaknesses requiring measurement
 
@@ -646,7 +686,7 @@ returned `APPROVED`. No external product-data request ran.
 
 ### Phase PR-2I — One post-correction staged lifecycle attempt
 
-- Status: **next; one bounded live measurement after clean PR-2H commit**
+- Status: **stopped safely 2026-08-29; spent**
 - Severity measured: PR-013 P1; revalidation dependency: PR-014.
 - Dependency: PR-2H is committed and independently approved; tracked state and
   `next-env.d.ts` are clean; a new commit-specific directory is absent; required
@@ -666,6 +706,40 @@ returned `APPROVED`. No external product-data request ran.
 - Reasoning: execution is routine; **High** for deciding whether the result
   demonstrates progression, a new generalized first loss, or another safe stop.
   One result cannot establish quality, stability, or benchmark readiness.
+
+Result: the exact clean PR-2H commit ran once and stopped at HTTP 502
+`research_failed / research_candidate_invalid / candidate_facts` after 54.485
+seconds. It used one create, 24 retrieves, three hosted searches, one cancel,
+and `$0.237477` frozen-conservative cost. Shopping, page, verification,
+presentation, retry, replacement, fallback, public result, and result file were
+all absent. The one-file sanitized artifact passed privacy/accounting audit and
+independent `VERIFIED`. Its exact private fact failure is unknowable. The
+directory is spent.
+
+### Phase PR-2J — Candidate-local research source references
+
+- Status: **next; zero-live generalized correction**
+- Severity addressed: PR-015 P1.
+- Scope: fail-first prove every producer/parser mismatch in lead source
+  ownership, reference range/uniqueness, and requirement status cardinality;
+  replace repeated requirement/fact URLs with candidate-local integer source
+  references; map only to already validated exact candidate URLs; update prompt
+  wording; and roll research schema, contract fingerprint, prompt, runtime, and
+  job-token identity as required.
+- Stop condition: no candidate source, exact ownership, HTTPS/private-host,
+  requirement, fact, verification, evidence, price, asset, eligibility, public
+  response, diagnostic privacy, network ceiling, or default flag may be
+  weakened. Do not infer PR-2I's private field, add a live request, or retry any
+  spent directory.
+- Proof: fail-first and corrected cross-candidate fact/requirement, duplicate,
+  out-of-range, empty/supporting/not-found, coherent positive, schema/prompt,
+  fingerprint/token/runtime tests; focused and full staged walls; complete
+  deterministic, typecheck, lint, build, credential-neutral E2E, eval, ranking,
+  zero-network dry-run, and diff checks; independent read-only review and clean
+  self-contained commit.
+- Reasoning: **High** for source-ownership/wire-contract design; **Medium** for
+  localized parser/schema/prompt/test implementation. Candidate-local indexes
+  are preferred over prompt-only prose or accepting cross-candidate evidence.
 
 ### Phase PR-3 — Build a real offline benchmark matrix
 
@@ -755,10 +829,10 @@ Current verdict: **NOT READY** (confidence 0.98).
 
 Release blockers today:
 
-- staged lifecycle feasibility has not passed; PR-2G research validation passed,
-  but verification excluded all 12 at asset identity. PR-2H closed one
-  generalized contract/asset coherence mismatch offline, but the exact PR-2G
-  cause remains private and no post-correction live result exists;
+- staged lifecycle feasibility has not passed. PR-2H closed one generalized
+  identity mismatch, but the single post-correction PR-2I attempt stopped at
+  research `candidate_facts`; its exact private field is unknowable and PR-015's
+  independently reproduced lead-source contract mismatch remains uncorrected;
 - deterministic QA batch names overstate the distinct cases actually run;
 - current live accuracy, stability, latency, and cost have not been measured;
 - RR-091 and RR-092 remain unresolved for an experimental path that cannot be

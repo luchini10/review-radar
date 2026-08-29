@@ -221,16 +221,22 @@ terminal provider usage even when local validation later fails; repeated
 snapshots deduplicate only by the same safe response hash, while distinct or
 unidentifiable responses sum conservatively and block successful acceptance as
 an anomaly. The entire branch remains default-off, undeployed, and without a
-successful live feasibility result. Its latest live response passed research
-validation with 12 candidates, then deterministic verification excluded all 12
-before presentation. Sanitized Phase D evidence v3 conserved all 12 first losses
-as `assetIdentityUnproven`; every later first-loss bucket and the separate
-source/claim rejection counters were zero. This identifies only that attempt's
-earliest aggregate loss. It does not say whether a research identity tuple was
-internally incoherent or whether available page/Shopping identities failed
-brand, model, conflict, or product-type checks, and it cannot expose candidate
-details to answer that question. The earlier PR-2E evidence predates aggregate
-attribution and remains permanently unknowable.
+successful live feasibility result. The latest PR-2I response completed Terra
+research with 47 canonical sources, then failed local contract validation as
+`research_candidate_invalid / candidate_facts` before Shopping, verification,
+presentation, or rendering. This bounded class identifies only the first
+reported invalid candidate's fact group; it cannot reveal the candidate or
+exact field, retain raw output, or prove that later candidates passed identity.
+
+The preceding PR-2G response passed research with 12 candidates, then
+deterministic verification excluded all 12 before presentation. Sanitized Phase
+D evidence v3 conserved all 12 first losses as `assetIdentityUnproven`; every
+later first-loss bucket and separate source/claim rejection counter was zero.
+That identifies only PR-2G's earliest aggregate loss. It does not say whether a
+research identity tuple was internally incoherent or whether available page/
+Shopping identities failed brand, model, conflict, or product-type checks. The
+earlier PR-2E evidence predates aggregate attribution and remains permanently
+unknowable.
 
 The zero-live PR-2H correction closes one independently reproduced generalized
 self-mismatch: bounded identity strings can no longer pass research when their
@@ -238,8 +244,17 @@ product name omits or conflicts with the supplied brand, model, or complete-
 product type under the shared verifier rule. Such a tuple now fails as the
 existing URL-free `research_candidate_invalid / candidate_identity` class
 before source parsing, Shopping, or page work. Valid numeric model trimming
-remains accepted. This does not explain PR-2G, change asset eligibility, or prove
-live staged feasibility; no post-correction provider attempt has run yet.
+remains accepted. This does not explain PR-2G or change asset eligibility.
+PR-2I crossed far enough to report the fact field group, but that does not prove
+every candidate cleared identity or establish staged feasibility.
+
+A separate zero-network reproduction shows that the current producer contract
+states response-level URL ownership while the parser correctly requires every
+requirement/fact lead URL to belong to its enclosing candidate, be unique, and
+obey status-dependent cardinality. A strict-schema-conforming cross-candidate
+fact URL therefore fails as `candidate_facts`. The planned correction uses
+candidate-local source references instead of repeated raw URLs; it must preserve
+the exact candidate ownership wall and roll the research job contract.
 
 The route reconstructs only bounded integer values from the fixed verifier-v2
 keys, requires first-loss conservation and reconciliation with eligible/close/

@@ -11,6 +11,34 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Stop post-correction staged research at fact validation
+
+#### Observed
+
+- The single clean, commit-pinned post-PR-2H `shop vac` attempt completed Terra
+  research with 47 canonical sources, then failed local validation as
+  `research_candidate_invalid / candidate_facts` before Shopping,
+  verification, presentation, or rendering.
+- It used one create, 24 retrieves, three hosted searches, one safety cancel,
+  and no retry, replacement, fallback, second case, organic/SearchAPI,
+  Shopping, or page request. The first terminal result ended the phase.
+- Usage was 30,215 input and 7,537 output tokens. Frozen-conservative estimated
+  cost was `$0.237477`, below the unchanged `$3` ceiling.
+
+#### Verified
+
+- The one-file spent artifact is bound to commit
+  `06fa55fb38f6675a897053eb21328ac8845d4e14`, contains no public result or raw/
+  private provider/candidate material, and excludes both configured key values.
+  Independent read-only audit returned `VERIFIED`.
+- `candidate_facts` does not reveal the exact field or prove every candidate
+  passed identity. Separately, zero-network schema-conforming probes reproduced
+  lead-source ownership, uniqueness, and cardinality mismatches between the
+  producer contract and parser. They can produce this bounded class but are not
+  proven to be the private live cause.
+- No retry is authorized. The next phase is a zero-live candidate-local source-
+  reference correction; the staged route remains default-off and not ready.
+
 ### Codex - Reject incoherent staged research identities before verification
 
 #### Changed

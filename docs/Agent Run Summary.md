@@ -1957,3 +1957,50 @@ deterministic prevention, not a live accuracy, latency, or cost improvement.
 post-correction lifecycle attempt under the unchanged Phase D ceilings, with no
 retry/replacement/fallback and a first-terminal stop. Reasoning level: routine
 for execution and High for evidence/privacy adjudication.
+
+## Codex Run - 2026-08-29 Production readiness PR-2I research-fact stop
+
+**Goal:** run exactly one clean post-PR-2H staged `shop vac` lifecycle attempt
+to its first terminal result, then determine only what its sanitized evidence
+supports.
+
+**What was checked:** exact commit/directory and clean-state binding; Phase D
+plan/case/ceilings; boolean-only provider configuration; focused runner and
+zero-network dry-run preflight; terminal diagnostics, counters, usage, cost,
+privacy allowlist, secret absence, result absence, and first-stop behavior; plus
+the research producer/parser contract offline.
+
+**Live outcome:** the one attempt at
+`06fa55fb38f6675a897053eb21328ac8845d4e14` completed Terra research with 47
+canonical sources, then failed local validation as
+`research_candidate_invalid / candidate_facts`. It stopped at HTTP 502 after
+54.485 seconds, before Shopping, page fetching, verification, presentation, or
+rendering. There was no retry, replacement, fallback, second case, organic/
+SearchAPI call, public response, or result file.
+
+**Envelope and cost:** one create, 24 retrieves, three hosted searches, and one
+safety cancel. Usage was 30,215 input and 7,537 output tokens. Exact frozen
+nominal arithmetic is `$0.2185925`; JavaScript's binary six-decimal conversion
+stored `$0.218592`. Frozen conservative/current estimates were `$0.237477` and
+`$0.180874`, below the `$3` gate.
+
+**Privacy and audit:** the only file is a 21,149-byte untracked sanitized
+`attempt.json` with SHA-256
+`4741a595633335708c2446b1682e05631ab1ed8fb2ef9e0044b41725ce1f9513`.
+It contains only approved fixed fields and OpenAI documentation URLs; both
+configured key values and all prohibited raw/private material are absent.
+Independent read-only audit returned `VERIFIED`.
+
+**Finding and limit:** `candidate_facts` identifies only the first reported
+invalid candidate's field group. It cannot reveal the candidate, exact private
+defect, or whether later candidates passed identity. Separately, zero-network
+schema-conforming probes proved that response-level lead URL ownership,
+reference uniqueness, and status/cardinality in the producer contract are
+weaker than the parser's correct candidate-local trust rules. That generalized
+mismatch can produce the bounded class but is not proven to be the live cause.
+
+**Next recommended step:** PR-2J, zero-live. Replace repeated lead URLs with
+candidate-local integer source references, retain exact ownership/range/
+uniqueness/cardinality validation, and roll schema/contract/prompt/runtime job
+identity. Do not retry PR-2I or loosen evidence ownership. Reasoning level:
+High for contract design and Medium for localized implementation.

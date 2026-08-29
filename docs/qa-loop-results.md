@@ -11941,3 +11941,80 @@ clean, commit-pinned, new-directory post-correction `shop vac` lifecycle attempt
 under the unchanged Phase D envelope and first-terminal stop. A broad benchmark
 still waits for staged feasibility; another implementation without new evidence
 would risk tuning an unproven cause.
+
+---
+
+## 🟧 Codex — 2026-08-29 — Production readiness PR-2I research-fact stop
+
+**Objective:** measure once whether the clean PR-2H identity alignment could
+cross staged research and the earlier asset-identity first loss, under the
+unchanged frozen case, ceilings, privacy contract, and first-terminal stop.
+
+**Preflight:** tracked state, index, and `next-env.d.ts` were clean at
+`06fa55fb38f6675a897053eb21328ac8845d4e14`; the new commit-specific directory
+was absent; OpenAI and Serper configuration was confirmed only by boolean
+presence; the focused Phase D test passed 10/10; and the zero-network dry run
+reproduced plan v2, the exact commit/case, both dated price cards, every ceiling,
+and zero retry/replacement/fallback.
+
+**Outcome: failed safely at research facts.** Terra completed one research
+response with 47 canonical sources. Local validation returned
+`research_candidate_invalid / candidate_facts`, so the route stopped at HTTP
+502 `research_failed` after 54.485 seconds. The class identifies only the fact
+field group for the first reported invalid candidate. It does not reveal the
+candidate, exact fact/subfield, raw response, or whether later candidates passed
+the PR-2H identity boundary.
+
+| Counter | Actual | Approved ceiling |
+| --- | ---: | ---: |
+| OpenAI creates | 1 | 2 |
+| retrieves | 24 | 60 |
+| safety cancels | 1 | 1 |
+| hosted searches | 3 | 10 |
+| Serper Shopping | 0 | 15 |
+| source-page fetches | 0 | 30 |
+| physical page HTTP attempts | 0 | 90 |
+| retries / replacements / fallbacks | 0 / 0 / 0 | 0 / 0 / 0 |
+
+There was no second create/case, Serper organic, SearchAPI, verification,
+presentation, public response, render, card, source list, or `result.json`.
+
+**Usage and cost:** all 25 diagnostics shared one 64-character response hash,
+runtime v3, and research prompt v3. The terminal provider ledger was completed
+with 30,215 input, zero cached input, 7,537 output, 37,752 total tokens, and
+three hosted searches. One failed-route ledger was accounted and none
+duplicated. Exact frozen nominal arithmetic is `$0.2185925`; its binary double
+is slightly lower, so the tracked `Number(toFixed(6))` path stores `$0.218592`.
+Frozen conservative cost was `$0.237477`, the dated current estimate was
+`$0.180874`, and the `$3` ceiling held.
+
+**Privacy and state:** the spent directory
+`tests/fixtures/review-radar-live/oai-t10-phase-d-06fa55f` contains only
+untracked `attempt.json` (21,149 bytes; SHA-256
+`4741a595633335708c2446b1682e05631ab1ed8fb2ef9e0044b41725ce1f9513`). Its
+only URLs are the approved Terra-model and pricing pages. Both configured key
+values and all raw output, provider ID, prompt/body/header, product/source URL,
+candidate/request/evidence identifier, credential, secret, and secret-like
+material are absent. Tracked state and index remained clean.
+
+**Independent audit:** `VERIFIED`. The auditor rebound the exact commit, case,
+schema, runner, counters, terminal ledger, costs, privacy allowlist, and
+first-stop semantics. It confirmed no downstream work or result file and agreed
+that `candidate_facts` cannot support a more specific private inference.
+
+**Separate generalized defect reproduction:** without reading private live
+data, strict-schema-conforming synthetic responses were rejected when a fact or
+requirement lead used a URL that was response-owned but absent from its own
+candidate's `source_urls`. Duplicate lead references, an empty supporting lead,
+and the same relation in requirements exposed sibling producer/parser gaps. The
+schema and prompt state response-level ownership; the parser correctly requires
+candidate-level exact ownership, unique references, and status-dependent
+cardinality. This mismatch can produce the live bounded class but is not proven
+to be PR-2I's hidden exact cause.
+
+**Decision:** no retry or replacement. PR-015 records the P1 generalized
+contract mismatch. Correct it zero-live by replacing repeated lead URLs with
+candidate-local source references, retaining parser authority for range,
+uniqueness, and cardinality, and rolling schema/contract/prompt/runtime identity.
+Do not accept cross-candidate evidence, widen private diagnostics, or make
+another request before deterministic and independent approval.

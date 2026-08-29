@@ -4,6 +4,42 @@
 
 ---
 
+## OAI-T10 PR-2I research-fact live stop (2026-08-29)
+
+- The one attempt at `06fa55fb38f6675a897053eb21328ac8845d4e14` is spent.
+  Never retry it, edit or stage its evidence, or reuse
+  `tests/fixtures/review-radar-live/oai-t10-phase-d-06fa55f`.
+- Terra completed one research response after 24 retrieves with 30,215 input,
+  7,537 output, three hosted searches, and 47 canonical response sources. Local
+  validation stopped at HTTP 502 `research_failed` with only the bounded class
+  `research_candidate_invalid / candidate_facts` after 54.485 seconds.
+- The field group proves only that the first reported invalid candidate reached
+  fact validation. It does not reveal the candidate, exact fact/subfield, raw
+  response, or whether later candidates passed identity. Never claim PR-2H
+  cleared every candidate from this evidence.
+- The run used one create and one best-effort safety cancel. Shopping, source
+  fetches, physical page HTTP, verification, presentation, retry, replacement,
+  fallback, organic/SearchAPI, public response, cards, sources, and
+  `result.json` were all absent.
+- Exact frozen nominal arithmetic is `$0.2185925`; the estimator's binary
+  `Number(toFixed(6))` representation stores `$0.218592`. Frozen conservative
+  cost was `$0.237477`, current estimate `$0.180874`, and the `$3` gate held.
+- The directory contains only 21,149-byte `attempt.json`, SHA-256
+  `4741a595633335708c2446b1682e05631ab1ed8fb2ef9e0044b41725ce1f9513`.
+  It retains only approved fixed schema/aggregate fields and the two approved
+  OpenAI URLs. Both configured key values and all raw/provider/prompt/body/
+  header, product/source URL, candidate/evidence identifier, credential, and
+  secret material are absent. Independent audit returned `VERIFIED`.
+- A separate zero-network matrix proves that response-owned but
+  cross-candidate lead URLs, duplicate lead references, and status/source
+  cardinality accepted by the producer schema/prompt can fail the stricter
+  parser. This generalized mismatch can produce `candidate_facts` but is not
+  the proven private PR-2I cause. Correct it zero-live with candidate-local
+  source references; do not accept cross-candidate evidence or make another
+  request first.
+
+---
+
 ## OAI-T10 PR-2H research/asset identity alignment (2026-08-29)
 
 - Research identity acceptance and downstream asset verification must use the
