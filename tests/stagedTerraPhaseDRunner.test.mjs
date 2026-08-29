@@ -296,8 +296,8 @@ describe("OAI-T10 Phase D live-feasibility harness", () => {
     const runner = fs.readFileSync("scripts/run-oai-t10-phase-d.mjs", "utf8");
     assert.match(runner, /approvalEnvelopeConservativeUsd/);
     assert.doesNotMatch(runner, /cost\.conservativeUsd/);
-    assert.match(runner, /oai-t10-phase-d-sanitized-v5/);
-    assert.doesNotMatch(runner, /oai-t10-phase-d-sanitized-v4/);
+    assert.match(runner, /oai-t10-phase-d-sanitized-v6/);
+    assert.doesNotMatch(runner, /oai-t10-phase-d-sanitized-v5/);
   });
 
   it("deduplicates only repeated terminal diagnostics for the same response", () => {

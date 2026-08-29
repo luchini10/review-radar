@@ -4,6 +4,67 @@
 
 ---
 
+## OAI-T10 PR-3I title-metadata stop and PR-3J tri-state deferral (2026-08-29)
+
+- PR-3I spent exactly one frozen `shop vac` lifecycle at clean commit
+  `bd54de9076cf6752ee2beefd686689852f6f9994`. The exact output directory is
+  `tests/fixtures/review-radar-live/oai-t10-phase-d-bd54de9/`; it is immutable,
+  untracked, and spent. Never inspect, retry, edit, stage, reuse, or add to it.
+- Provider research reached terminal `completed`, but local validation failed as
+  `research_candidate_invalid / candidate_sources /
+  candidate_source_identity_unproven`. The route returned the safe 502 before
+  page fetching, Shopping, deterministic verification, presentation, rendering,
+  or public output. There was no retry, replacement, fallback, organic,
+  SearchAPI, product-data call, or second case.
+- The 56.020-second envelope used one create that returned the queued start,
+  then 24 retrieves (23 in-progress and the 24th/sole completed-provider/local-
+  failure terminal retrieve),
+  one safety cancel, five hosted searches, 47,475 input tokens, zero cached
+  input, and 5,516 output tokens. Approval-envelope, frozen-conservative, and
+  informational current estimates were `$0.251428`, `$0.281099`, and
+  `$0.211142`, all below `$3`.
+- The only file is a 21,584-byte evidence-v5 `attempt.json`, SHA-256
+  `03D442FFE14D819D6C23A2E76C2458E37AF6A2EBE7691A6DC4F6EA0ED2827B3F`.
+  Independent strict read-only audit returned `VERIFIED`, no findings,
+  confidence 0.99. Its privacy allowlist retains no raw/provider/candidate/
+  source identity, page, prompt, header, credential, key, secret, or token.
+- The filter diagnostic records 10 submitted, zero accepted, 10 rejected, and
+  `missingTitle=10`; every other family is zero. This proves only that each
+  candidate had at least one source decision without title metadata. It does
+  not reveal which source, whether both sources lacked titles, or any downstream
+  product truth.
+- Official Responses API source actions guarantee the complete consulted URL
+  list as URL-only `{type,url}` records. Cited annotations may carry titles, but
+  a source-action title is not guaranteed. Therefore absence of title metadata
+  is an unknown preflight state, not affirmative identity failure.
+- Contract v9/runtime v8 now use a three-state preflight. Any exact response-
+  owned source whose title proves identity retains the candidate. With none
+  accepted but at least one missing title, the candidate is deferred to the
+  existing bounded DNS-pinned fetch and unchanged page/entity verifier. Only
+  candidates whose available titles all affirmatively mismatch are quarantined.
+- The closed diagnostic now reports submitted, accepted/continued, deferred-
+  missing-title (a subset of accepted), rejected, and four affirmative mismatch
+  families. Route sanitization requires exact keys, safe bounds, conservation,
+  `deferred <= accepted`, success/slate binding, and zero deferred candidates in
+  the exact all-rejected failure context. Evidence rolls to v6. Schema v5,
+  prompt v6, public bodies, flags, network ceilings, source ownership, and every
+  downstream trust gate remain unchanged.
+- Fail-first passed 58 checks and failed exactly five new expectations. The
+  corrected trust wall passed 169/169; the complete suite passed 1,498/1,498
+  across 214 suites; E2E passed 17/17; typecheck, build, lint, eval, ranking,
+  five-partition reconciliation, and the 10-case/29-invariant benchmark passed.
+  Independent source-only review returned `APPROVED`, no findings, confidence
+  0.96. Its accidental 92-test run read the tracked public `.env.example`; that
+  run is excluded from proof and no `.env.local`, credential, fixture, or
+  network was accessed.
+- PR-3J is a default-off, zero-live correction. It can spend up to the unchanged
+  30 source-page attempts on deferred candidates and does not prove post-fetch
+  survivor quality or a complete lifecycle. After a clean self-contained PR-3J
+  commit, PR-3K may run the unchanged case once in a new commit-derived
+  directory under the same first-terminal/no-retry/no-fallback ceilings.
+
+---
+
 ## OAI-T10 PR-3G identity-source stop and PR-3H candidate quarantine (2026-08-29)
 
 - PR-3G spent exactly one frozen `shop vac` lifecycle at clean commit

@@ -565,7 +565,7 @@ describe("staged Terra request boundaries", () => {
   });
 
   it("rolls the research acceptance contract identity", () => {
-    assert.equal(STAGED_TERRA_CONTRACT_VERSION, "staged-terra-contract-v8");
+    assert.equal(STAGED_TERRA_CONTRACT_VERSION, "staged-terra-contract-v9");
   });
 
   it("rolls the research prompt identity", () => {
@@ -576,7 +576,7 @@ describe("staged Terra request boundaries", () => {
   });
 
   it("rolls the staged runtime identity", () => {
-    assert.equal(STAGED_TERRA_RUNTIME_VERSION, "staged-terra-runtime-v7");
+    assert.equal(STAGED_TERRA_RUNTIME_VERSION, "staged-terra-runtime-v8");
   });
 
   it("keeps the integrated path default-off and isolated from Direct Terra", () => {
@@ -667,9 +667,9 @@ describe("staged Terra research contract", () => {
     assert.deepEqual(accepted.identitySourceFilter, {
       submittedCandidates: 8,
       acceptedCandidates: 8,
+      deferredMissingTitleCandidates: 0,
       rejectedCandidates: 0,
       rejectionCandidateCounts: {
-        missingTitle: 0,
         brandNotInTitle: 0,
         modelNotInTitle: 0,
         modelConflictInTitle: 0,
@@ -691,9 +691,9 @@ describe("staged Terra research contract", () => {
     assert.deepEqual(rejected.identitySourceFilter, {
       submittedCandidates: 8,
       acceptedCandidates: 7,
+      deferredMissingTitleCandidates: 0,
       rejectedCandidates: 1,
       rejectionCandidateCounts: {
-        missingTitle: 0,
         brandNotInTitle: 0,
         modelNotInTitle: 1,
         modelConflictInTitle: 0,
@@ -705,7 +705,63 @@ describe("staged Terra research contract", () => {
     }
   });
 
-  it("attributes every reachable identity-source rejection without exposing source material", () => {
+  it("defers API-contract URL-only sources to bounded page verification", () => {
+    const fixture = researchFixture();
+    for (const source of fixture.responseSources) delete source.title;
+    const parsed = validateStagedTerraResearchOutput({
+      value: fixture.value,
+      shopperRequest: shopper,
+      responseSourceUrls: fixture.responseSourceUrls,
+    });
+    assert.equal(parsed.ok, true);
+
+    const filtered = validateStagedTerraResearchIdentitySources({
+      researchOutput: parsed.value,
+      responseSources: fixture.responseSources,
+    });
+
+    assert.equal(filtered.ok, true);
+    assert.equal(filtered.ok && filtered.value.candidates.length, 8);
+    assert.equal(filtered.identitySourceFilter.acceptedCandidates, 8);
+    assert.equal(
+      filtered.identitySourceFilter.deferredMissingTitleCandidates,
+      8,
+    );
+    assert.equal(filtered.identitySourceFilter.rejectedCandidates, 0);
+  });
+
+  it("defers one unresolved source even when its companion title mismatches", () => {
+    const fixture = researchFixture();
+    delete fixture.responseSources[0].title;
+    fixture.responseSources[1].title = "Brand 1 cordless vacuum buying guide";
+    const parsed = validateStagedTerraResearchOutput({
+      value: fixture.value,
+      shopperRequest: shopper,
+      responseSourceUrls: fixture.responseSourceUrls,
+    });
+    assert.equal(parsed.ok, true);
+
+    const filtered = validateStagedTerraResearchIdentitySources({
+      researchOutput: parsed.value,
+      responseSources: fixture.responseSources,
+    });
+
+    assert.equal(filtered.ok, true);
+    assert.equal(filtered.ok && filtered.value.candidates.length, 8);
+    assert.equal(
+      filtered.identitySourceFilter.deferredMissingTitleCandidates,
+      1,
+    );
+    assert.equal(filtered.identitySourceFilter.rejectedCandidates, 0);
+    assert.deepEqual(filtered.identitySourceFilter.rejectionCandidateCounts, {
+      brandNotInTitle: 0,
+      modelNotInTitle: 0,
+      modelConflictInTitle: 0,
+      wrongProductType: 0,
+    });
+  });
+
+  it("defers missing metadata and attributes every reachable identity mismatch", () => {
     const cases = [
       {
         key: "missingTitle",
@@ -759,18 +815,19 @@ describe("staged Terra research contract", () => {
         responseSources,
       });
 
+      const deferred = testCase.key === "missingTitle";
       assert.equal(filtered.ok, true, testCase.key);
       assert.equal(
         filtered.ok && filtered.value.candidates.length,
-        7,
+        deferred ? 8 : 7,
         testCase.key,
       );
       assert.deepEqual(filtered.identitySourceFilter, {
         submittedCandidates: 8,
-        acceptedCandidates: 7,
-        rejectedCandidates: 1,
+        acceptedCandidates: deferred ? 8 : 7,
+        deferredMissingTitleCandidates: deferred ? 1 : 0,
+        rejectedCandidates: deferred ? 0 : 1,
         rejectionCandidateCounts: {
-          missingTitle: testCase.key === "missingTitle" ? 1 : 0,
           brandNotInTitle: testCase.key === "brandNotInTitle" ? 1 : 0,
           modelNotInTitle: testCase.key === "modelNotInTitle" ? 1 : 0,
           modelConflictInTitle:
@@ -778,8 +835,14 @@ describe("staged Terra research contract", () => {
           wrongProductType: testCase.key === "wrongProductType" ? 1 : 0,
         },
       }, testCase.key);
-      for (const rejectedUrl of rejectedUrls) {
-        assert.equal(JSON.stringify(filtered).includes(rejectedUrl), false);
+      if (deferred) {
+        for (const deferredUrl of rejectedUrls) {
+          assert.equal(JSON.stringify(filtered).includes(deferredUrl), true);
+        }
+      } else {
+        for (const rejectedUrl of rejectedUrls) {
+          assert.equal(JSON.stringify(filtered).includes(rejectedUrl), false);
+        }
       }
       if (testCase.title) {
         assert.equal(JSON.stringify(filtered).includes(testCase.title), false);

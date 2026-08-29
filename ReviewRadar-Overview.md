@@ -173,8 +173,8 @@ leads into request order for every downstream consumer.
 
 The browser receives only an encrypted, authenticated app job token and polls
 that token in a header. Provider response IDs and diagnostics remain server-
-only. Contract v8 is part of the request fingerprint, research prompt v6 is
-bound into the token, and runtime v7 records the acceptance semantics, so older
+only. Contract v9 is part of the request fingerprint, research prompt v6 is
+bound into the token, and runtime v8 records the acceptance semantics, so older
 in-flight jobs fail closed across a deployment rollover.
 
 After research completes, the server fetches at most two candidate-owned source
@@ -232,14 +232,16 @@ consume both collection slots; it preserves identity-bearing query parameters
 and cannot lend ownership or title metadata. Exact source-title backfill occurs
 only when the later record has the identical URL.
 
-Before collection, at least one exact candidate-owned title/URL record must pass
-the unchanged shared asset-identity predicate. Title-visible brand, model, and
-complete-product type is preferred. The existing conservative direct
-manufacturer or established-retailer product-slug path remains intentional,
-while sibling slugs and unknown-retailer slug authority fail. This response
-metadata only preflights whether downstream collection is warranted; it never
-becomes verified evidence or shopper-visible source content. Fifteen candidates
-times two source URLs equals the unchanged thirty-fetch ceiling.
+Before collection, an exact candidate-owned title/URL record that passes the
+unchanged shared asset-identity predicate continues immediately. Title-visible
+brand, model, and complete-product type is preferred, and the existing
+conservative direct-manufacturer or established-retailer product-slug path
+remains intentional. When no exact record passes but at least one lacks title
+metadata, the candidate is deferred to bounded page verification. Only all-
+affirmative mismatches quarantine it; sibling slugs and unknown-retailer slug
+authority still fail. Response metadata is preflight only, never verified
+evidence or shopper-visible content. Fifteen candidates times two source URLs
+equals the unchanged thirty-fetch ceiling.
 
 Cost accounting uses
 terminal provider usage even when local validation later fails; repeated
@@ -253,13 +255,20 @@ identity-safe product-URL gate. Its spent sanitized-evidence-v3 artifact cannot
 distinguish the exact direct-asset, Shopping, or URL reason and remains
 immutable.
 
-The latest live evidence is PR-3G at clean commit `ac53c10e`: one frozen `shop
-vac` lifecycle reached provider `completed`, but local research validation
-stopped as `research_candidate_invalid / candidate_sources /
+PR-3G at clean commit `ac53c10e` historically reached provider `completed` but
+stopped at candidate-source identity before product-data work. PR-3H then made
+that preflight candidate-local rather than response-wide while keeping the
+identity predicate unchanged.
+
+The latest live evidence is PR-3I at clean commit `bd54de90`: one frozen `shop
+vac` lifecycle again reached provider `completed`, but local preflight stopped
+as `research_candidate_invalid / candidate_sources /
 candidate_source_identity_unproven` before page collection, Shopping,
-verification, presentation, or rendering. Evidence v4 retained only bounded
-accounting and the fixed validation triple, not candidate/source identity or a
-reason distribution. The 26,300-byte one-file artifact independently returned
+verification, presentation, or rendering. Evidence v5 reports 10 submitted,
+zero accepted, 10 rejected, and at least one missing-title source decision for
+every candidate; every affirmative mismatch family is zero. It deliberately
+retains no candidate/source mapping and cannot say which source was titleless
+or whether both were. The 21,584-byte one-file artifact independently returned
 `VERIFIED`, confidence 0.99, and is spent.
 
 PR-3D replaces the earlier prompt-enforced PR-2H relation with a structural
@@ -295,8 +304,26 @@ sanitizer requires arithmetic conservation, each family no greater than the
 rejected count, an aggregate reason total between the rejected count and twice
 that count, completed accepted-count equality with the actual surviving slate,
 and the exact zero-survivor failure context. Invalid or private evidence is
-omitted. Contract v8 and runtime v7 roll old work closed; future sanitized
-Phase D evidence is v5. Research schema v5 and prompt v6 do not change.
+omitted. Historically, PR-3H rolled contract v8/runtime v7 and its next
+sanitized Phase D evidence boundary to v5. PR-3J below supersedes those three
+versions; research schema v5 and prompt v6 do not change.
+
+PR-3J updates only the missing-metadata branch. The complete consulted-source
+action supplied by the Responses API is URL-only; a citation annotation can
+carry a title, but source-action titles are not guaranteed. Source preflight is
+therefore tri-state: any available exact title that proves identity retains the
+candidate; when none proves identity but any exact source lacks title metadata,
+the candidate is deferred to the existing bounded DNS-pinned fetch and
+unchanged page/entity verifier; only all-affirmative title mismatches quarantine
+it. Deferral grants no evidence, eligibility, or shopper-visible claim.
+
+The current exact-key diagnostic reports submitted, accepted/continued,
+deferred-missing-title, rejected, and four affirmative mismatch families. The
+deferred count is a subset of accepted; completion binds accepted to the actual
+continued slate, and an all-rejected failure requires zero deferred candidates.
+Contract v9, runtime v8, and future evidence v6 roll old work closed. Schema v5,
+prompt v6, exact URL ownership, source cardinality, the thirty-fetch ceiling,
+downstream trust, public responses, and default-off behavior are unchanged.
 
 PR-2J closes a separately reproduced producer/parser mismatch without a live
 request. Candidate `source_urls` remains the exact response-owned URL registry
@@ -311,10 +338,11 @@ conflicting requirements require local references and `not_found` requires an
 empty array. PR-3F now limits the enclosing source list to exactly two, so every
 nonempty lead reference is unique, integer, and restricted to 0 or 1 with at
 most two indexes. Runtime independently retains those dynamic checks. PR-2J's
-contract v5, prompt v4, and runtime v4 rollover remains historical; current
-PR-3H identities are contract v8, prompt v6, and runtime v7 with research
-schema v5. Existing token verification rejects old prompt versions and
-recomputes the current contract fingerprint. Neither correction
+contract v5, prompt v4, and runtime v4 rollover remains historical. Current
+PR-3J identities are contract v9, prompt v6, and runtime v8 with
+research schema v5 and future sanitized evidence v6. Existing token verification
+rejects old prompt versions and recomputes the current contract fingerprint.
+Neither correction
 changes downstream requirement, evidence, page, commerce, price, asset,
 eligibility, diagnostic, public-response, network-ceiling, or default-flag
 rules.
@@ -328,8 +356,8 @@ whole attribution aggregate to be omitted. The public success and 502 bodies
 are unchanged, and no candidate identity, URL, requirement, claim, page
 content, provider material, prompt, credential, or secret crosses the route
 boundary. The verifier aggregate remains evidence v4-compatible; future Phase
-D records use sanitized evidence v5 so they can also carry the separately
-sanitized candidate-quarantine counts.
+D records use sanitized evidence v6 so they can also carry the separately
+sanitized tri-state source-filter counts.
 
 ## 2. Full user flow
 

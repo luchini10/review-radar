@@ -3750,6 +3750,45 @@ retry/no-fallback envelope. A smaller survivor slate is not success. Only a
 safe public shopper result unlocks Phase E; another stop selects a generalized
 offline reproduction.
 
+**Phase D continuation — PR-3I/PR-3J, 2026-08-29:** PR-3I spent the one
+evidence-v5 measurement at clean commit `bd54de90`. Provider research completed,
+then local preflight stopped as `research_candidate_invalid / candidate_sources
+/ candidate_source_identity_unproven` before every product-data and presentation
+stage. The 56.020-second run used one create, 24 retrieves, five hosted searches,
+one cancel, 47,475 input tokens, zero cached input, and 5,516 output tokens;
+frozen-conservative cost was `$0.281099`. Its 21,584-byte artifact, SHA-256
+`03D442FFE14D819D6C23A2E76C2458E37AF6A2EBE7691A6DC4F6EA0ED2827B3F`,
+independently returned `VERIFIED`, no findings, confidence 0.99, and is spent.
+
+The bounded filter reported 10 submitted, zero accepted, 10 rejected, and one
+or more missing-title decisions for every candidate, with every affirmative
+mismatch family at zero. That aggregate does not reveal which source was
+titleless or whether both were. It does establish a generalized consumer/API-
+contract mismatch: the official complete consulted-source action is URL-only,
+while the preflight treated unavailable title metadata as identity rejection.
+
+PR-3J keeps the shared identity predicate intact but makes source preflight
+three-state. Any exact titled record that proves identity retains the candidate;
+if none does and at least one exact record lacks a title, the candidate is
+deferred to the existing bounded DNS-pinned fetch and unchanged page/entity
+verifier. Only all-affirmative title mismatches quarantine it. The diagnostic
+adds a deferred-missing-title subset of accepted/continued candidates and keeps
+only four affirmative mismatch families. Exact-key sanitization enforces
+conservation, `deferred <= accepted`, completion-slate binding, and zero
+deferred candidates in the all-rejected failure context. Contract v9, runtime
+v8, and future evidence v6 roll old work closed; schema v5, prompt v6, URL
+ownership, public behavior, default-off flags, ceilings, and downstream trust
+rules remain unchanged.
+
+Independent source-only review returned `APPROVED`, no findings, confidence
+0.96. Its accidental test run that read tracked public `.env.example` is
+non-authorizing and excluded from proof; the source verdict and the implementing
+agent's 169/169 focused, 1,498/1,498 full, 17/17 E2E, static, build, benchmark,
+and reconciliation walls are separate. After a clean PR-3J closeout, PR-3K may
+measure the unchanged frozen case once in a new directory. It is not a retry of
+PR-3I: it tests contract v9/runtime v8/evidence v6. Only a safe public shopper
+result unlocks Phase E.
+
 **Phase E — quality/stability and promotion decision:** only after feasibility
 passes, compare multiple frozen categories against the existing baseline. A
 flag promotion, deployment, or retirement of the old path remains a separate

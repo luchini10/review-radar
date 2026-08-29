@@ -12932,3 +12932,164 @@ PR-3H closeout commit is clean, PR-3I may run the unchanged frozen case once in
 a new commit-derived directory under every existing ceiling and first-terminal/
 no-retry/no-fallback rule. A stop selects only another generalized offline
 reproduction; only a safe public shopper result unlocks PR-4.
+
+## Agent Loop Run - 2026-08-29T13:05:53.383Z
+
+- **run id:** agent-loop-2026-08-29T13-05-21-408Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3926ms |
+| lint | Passed | 10692ms |
+| unit tests | Passed | 13069ms |
+| deterministic eval pipeline | Passed | 436ms |
+| tracked offline benchmark | Passed | 574ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-29T13-05-21-408Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## 🟧 Codex — 2026-08-29 — PR-3I title-metadata stop and PR-3J tri-state deferral
+
+**Objective and bottleneck assessment:** the objective remained one safe staged
+shopper lifecycle, not a higher candidate count. PR-3H had corrected response-
+wide quarantine while preserving strict source identity. One commit-bound
+measurement was the smallest test of that new boundary; a broad matrix, retry,
+title invention, URL-slug inference, or weaker downstream identity was not
+justified while feasibility remained the first dependency.
+
+**PR-3I preflight and invocation:** focused Phase D runner tests passed 10/10;
+the zero-network dry run bound the unchanged frozen `shop vac` case and every
+ceiling to clean commit `bd54de9076cf6752ee2beefd686689852f6f9994`.
+Tracked/index state and `next-env.d.ts` were clean; committed staged/direct
+defaults remained off. The new commit-derived directory was absent, and required
+server credentials were checked only for in-memory presence/shape without
+printing, copying, hashing, or staging values.
+
+Exactly one lifecycle invocation used the required `--name=value` approval
+tokens. It was not retried, replaced, extended, or followed by another case.
+
+**PR-3I terminal result:** provider research reached terminal `completed`, but
+strict local preflight stopped as `research_candidate_invalid /
+candidate_sources / candidate_source_identity_unproven`. The route returned the
+safe 502 `research_failed` before page fetching, Shopping, deterministic
+verification, presentation, rendering, or public output.
+
+The 56.020-second first-terminal envelope recorded:
+
+- one OpenAI create;
+- 24 retrieves: 23 in-progress and the 24th/sole completed-provider local-
+  failure terminal retrieve, after the create returned the queued start;
+- one safety cancel and five hosted searches;
+- zero Shopping, source-page fetch, physical HTTP, retry, replacement, fallback,
+  organic, SearchAPI, presentation, card, source, public-response, and second-
+  case work;
+- 47,475 input tokens, zero cached input, 5,516 output tokens, and five web
+  searches; and
+- `$0.251428` approval-envelope, `$0.281099` frozen-conservative, and
+  `$0.211142` informational current estimates, all below `$3`.
+
+The only artifact is untracked
+`tests/fixtures/review-radar-live/oai-t10-phase-d-bd54de9/attempt.json`, 21,584
+bytes, SHA-256
+`03D442FFE14D819D6C23A2E76C2458E37AF6A2EBE7691A6DC4F6EA0ED2827B3F`.
+Independent strict read-only audit returned exact verdict `VERIFIED`, no
+findings, confidence 0.99. It authenticated evidence v5, exact commit/case,
+terminal ordering, counters, usage, cost, and privacy. No raw/provider/
+candidate/product/source identity, prompt, page, body, header, credential, key,
+secret, or token is retained. The directory is immutable and spent; the
+implementing agent did not inspect, retry, edit, stage, reuse, or extend it.
+
+**Evidence interpretation:** the closed filter reports 10 submitted, zero
+accepted, 10 rejected, and `missingTitle=10`; every affirmative mismatch family
+is zero. That means every candidate had at least one source decision without
+title metadata. It does not identify a source, distinguish one titleless source
+from two, or establish any downstream product truth.
+
+The official
+[OpenAI web-search guide](https://developers.openai.com/api/docs/guides/tools-web-search)
+defines the complete consulted-source action as URL-only `{type,url}` entries.
+URL-citation annotations can carry a title, but action-source titles are not
+guaranteed, and no documented stable text-result title schema was found for
+`web_search_call.results`. Therefore the earliest generalized defect is consumer
+handling of unavailable metadata, not the strict identity predicate or the
+provider's candidate cardinality.
+
+**PR-3J fail-first and correction:** before implementation, the focused wall
+passed 58 checks and failed exactly five intended expectations: contract v9,
+runtime v8, URL-only contract deferral, URL-only runtime continuation, and
+evidence v6. The corrected rule is tri-state:
+
+- any exact response-owned source whose available title passes the unchanged
+  shared verifier retains the candidate;
+- with none accepted but at least one `missing_title`, continue the candidate to
+  the existing bounded DNS-pinned source fetch and unchanged page/entity
+  verifier; and
+- only all-affirmative title mismatches quarantine the candidate before network.
+
+Deferred candidates receive no eligibility or evidence merely by deferral.
+Exact ownership, two fetch-distinct source URLs, canonical non-borrowing,
+discovery order/reindexing, affirmative-mismatch URL exclusion, the 30-fetch
+ceiling, page/entity/relationship/commerce/requirement/asset gates, public
+responses, and default-off flags are unchanged.
+
+The server-only diagnostic now reports submitted, accepted/continued,
+deferred-missing-title, rejected, and four affirmative mismatch families. The
+deferred count is a subset of accepted. Exact-key route sanitization requires
+safe 0–15 bounds, accepted+rejected=submitted, deferred<=accepted, completed
+accepted-count equality with the actual continued slate, mismatch-count
+conservation for rejected candidates, and zero deferred candidates in the exact
+all-rejected failure context. Contract/runtime/evidence roll to v9/v8/v6;
+schema v5 and prompt v6 remain unchanged.
+
+**Verification:**
+
+- corrected 15-suite staged/shared trust wall: 169/169;
+- final controller `agent-loop-2026-08-29T13-05-21-408Z`: passed;
+- complete deterministic suite: 1,498/1,498 across 214 suites;
+- five deterministic batch partitions: exact reconciliation passed;
+- tracked offline benchmark: 10/10 cases and 29/29 invariants;
+- credential-neutral Playwright E2E: 17/17;
+- nonincremental typecheck and production build: passed;
+- deterministic eval: no red flags; fixed ranking comparison: passed;
+- lint: zero errors and the same three pre-existing warnings; and
+- `git diff --check`: passed; generated `next-env.d.ts`: restored/clean.
+
+Independent source-only review returned `APPROVED`, no actionable findings,
+confidence 0.96. The reviewer disclosed that its attempted filtered test command
+unexpectedly executed an existing test that reads tracked public
+`.env.example`. The entire 92-test run is non-authorizing and excluded from
+proof. It did not access `.env.local`, credentials, secret values, live
+fixtures, or network; the terminal source verdict rests only on the permitted
+eight-file diff and traced control flow.
+
+**Limits and next decision:** PR-3J is a default-off zero-live generalized
+correction. Deferring URL-only sources can consume up to the unchanged 30-fetch
+ceiling and does not establish fetched-page success, survivor quality, shopper
+result, latency, cost, repeatability, or market coverage. After a self-contained
+clean PR-3J closeout commit, PR-3K may measure the unchanged frozen case once in
+a new commit-derived directory under every first-terminal/no-retry/no-fallback/
+no-second-case rule. Only a safe public shopper result unlocks PR-4.

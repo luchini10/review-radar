@@ -195,6 +195,7 @@ function countTotal(value: Record<string, number>) {
 const IDENTITY_SOURCE_FILTER_KEYS = [
   "submittedCandidates",
   "acceptedCandidates",
+  "deferredMissingTitleCandidates",
   "rejectedCandidates",
   "rejectionCandidateCounts",
 ] as const;
@@ -223,6 +224,10 @@ function sanitizeIdentitySourceFilter(
   }
   const submittedCandidates = boundedCount(candidate.submittedCandidates, 15);
   const acceptedCandidates = boundedCount(candidate.acceptedCandidates, 15);
+  const deferredMissingTitleCandidates = boundedCount(
+    candidate.deferredMissingTitleCandidates,
+    15,
+  );
   const rejectedCandidates = boundedCount(candidate.rejectedCandidates, 15);
   const rejectionCandidateCounts = boundedCountRecord(
     candidate.rejectionCandidateCounts,
@@ -236,9 +241,11 @@ function sanitizeIdentitySourceFilter(
     submittedCandidates === null ||
     submittedCandidates < 8 ||
     acceptedCandidates === null ||
+    deferredMissingTitleCandidates === null ||
     rejectedCandidates === null ||
     !rejectionCandidateCounts ||
     acceptedCandidates + rejectedCandidates !== submittedCandidates ||
+    deferredMissingTitleCandidates > acceptedCandidates ||
     (rejectedCandidates === 0 && rejectionCountTotal !== 0) ||
     (rejectedCandidates > 0 &&
       (rejectionCountTotal === null ||
@@ -253,6 +260,7 @@ function sanitizeIdentitySourceFilter(
         context.candidateSourceValidationReason !==
           "candidate_source_identity_unproven" ||
         acceptedCandidates !== 0 ||
+        deferredMissingTitleCandidates !== 0 ||
         rejectedCandidates !== submittedCandidates))
   ) {
     return undefined;
@@ -260,6 +268,7 @@ function sanitizeIdentitySourceFilter(
   return {
     submittedCandidates,
     acceptedCandidates,
+    deferredMissingTitleCandidates,
     rejectedCandidates,
     rejectionCandidateCounts,
   };

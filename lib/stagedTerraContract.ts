@@ -15,7 +15,7 @@ import {
   type DirectTerraSource,
 } from "./directTerraResponse.ts";
 
-export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v8";
+export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v9";
 export const STAGED_TERRA_RESEARCH_SCHEMA_VERSION =
   "staged-terra-research-v5";
 export const STAGED_TERRA_EVIDENCE_PACKAGE_VERSION =
@@ -50,7 +50,6 @@ export type StagedTerraResearchCandidateSourceValidationReason =
   (typeof STAGED_TERRA_RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS)[number];
 
 export const STAGED_TERRA_RESEARCH_IDENTITY_SOURCE_REJECTION_KEYS = [
-  "missingTitle",
   "brandNotInTitle",
   "modelNotInTitle",
   "modelConflictInTitle",
@@ -60,6 +59,7 @@ export const STAGED_TERRA_RESEARCH_IDENTITY_SOURCE_REJECTION_KEYS = [
 export type StagedTerraResearchIdentitySourceFilterDiagnostic = {
   submittedCandidates: number;
   acceptedCandidates: number;
+  deferredMissingTitleCandidates: number;
   rejectedCandidates: number;
   rejectionCandidateCounts: Record<
     (typeof STAGED_TERRA_RESEARCH_IDENTITY_SOURCE_REJECTION_KEYS)[number],
@@ -823,9 +823,9 @@ export function validateStagedTerraResearchIdentitySources({
   const identitySourceFilter: StagedTerraResearchIdentitySourceFilterDiagnostic = {
     submittedCandidates: researchOutput.candidates.length,
     acceptedCandidates: 0,
+    deferredMissingTitleCandidates: 0,
     rejectedCandidates: 0,
     rejectionCandidateCounts: {
-      missingTitle: 0,
       brandNotInTitle: 0,
       modelNotInTitle: 0,
       modelConflictInTitle: 0,
@@ -850,6 +850,15 @@ export function validateStagedTerraResearchIdentitySources({
     });
     if (verification.decisions.some((decision) => decision.identityAccepted)) {
       accepted.push(candidate);
+      continue;
+    }
+    if (
+      verification.decisions.some(
+        (decision) => decision.identityReason === "missing_title",
+      )
+    ) {
+      accepted.push(candidate);
+      identitySourceFilter.deferredMissingTitleCandidates += 1;
       continue;
     }
     identitySourceFilter.rejectedCandidates += 1;
@@ -881,7 +890,7 @@ export function validateStagedTerraResearchIdentitySources({
 function identitySourceRejectionKey(
   reason: DirectTerraAssetDecision["identityReason"],
 ): keyof StagedTerraResearchIdentitySourceFilterDiagnostic["rejectionCandidateCounts"] | null {
-  if (reason === "missing_title") return "missingTitle";
+  if (reason === "missing_title") return null;
   if (reason === "brand_not_in_title") return "brandNotInTitle";
   if (reason === "model_not_in_title") return "modelNotInTitle";
   if (reason === "model_conflict_in_title") return "modelConflictInTitle";

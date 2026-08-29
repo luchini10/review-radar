@@ -2381,3 +2381,67 @@ run one PR-3I commit-pinned `shop vac` measurement in a new directory under the
 unchanged ceilings and first-terminal/no-retry policy. Only a safe public result
 unlocks PR-4. Reasoning level: High for trust/evidence adjudication and Medium
 for the bounded mechanical execution.
+
+## Codex Run - 2026-08-29 PR-3I title-metadata stop and PR-3J tri-state deferral
+
+**Goal:** measure the candidate-quarantine contract once, preserve the first
+terminal result, and correct only the earliest generalized API-metadata mismatch
+proven by that evidence.
+
+**Live outcome:** one frozen `shop vac` lifecycle ran at clean commit
+`bd54de9076cf6752ee2beefd686689852f6f9994`. Provider research completed, then
+local validation stopped at `research_candidate_invalid / candidate_sources /
+candidate_source_identity_unproven`. Page fetching, Shopping, deterministic
+verification, presentation, rendering, and public output remained zero. There
+was no retry, replacement, fallback, second case, organic/SearchAPI work, flag
+change, or deployment.
+
+The 56.020-second envelope used one create, 24 retrieves, one safety cancel,
+five hosted searches, 47,475 input tokens, zero cached input, and 5,516 output
+tokens. Approval-envelope, frozen-conservative, and informational current costs
+were `$0.251428`, `$0.281099`, and `$0.211142`.
+
+The only artifact is untracked 21,584-byte evidence-v5 `attempt.json`, SHA-256
+`03D442FFE14D819D6C23A2E76C2458E37AF6A2EBE7691A6DC4F6EA0ED2827B3F`.
+Independent strict read-only audit returned `VERIFIED`, no findings, confidence
+0.99 for exact commit/case/schema, terminal sequence, counters, usage, cost,
+and privacy. The directory is immutable and spent.
+
+**Root cause and decision:** the aggregate reports 10 submitted, zero accepted,
+10 rejected, and at least one missing-title decision per candidate; all
+affirmative mismatch families are zero. It cannot reveal a source mapping or
+whether both sources lacked titles. Official Responses source actions provide
+the complete consulted URL list as URL-only records, so treating missing title
+as affirmative failure was a generalized consumer/API mismatch. Trusting model-
+authored titles, URL-slug inference, undocumented result shapes, or weakening
+downstream identity would be materially less safe.
+
+**What changed:** contract v9/runtime v8 use three states. A title-proven exact
+source retains the candidate. With none accepted but any titleless exact source,
+the candidate is deferred to the existing bounded DNS-pinned page fetch and
+unchanged entity verifier. Only all-affirmative title mismatches quarantine it.
+The aggregate now reports a deferred-missing-title subset of accepted/continued
+candidates plus four affirmative mismatch families; exact-key sanitization
+binds conservation, context, and slate counts. Future sanitized evidence is v6.
+Schema v5, prompt v6, public responses, flags, ceilings, ownership, and every
+downstream trust gate remain unchanged.
+
+**Tests and proof:** fail-first passed 58 checks and failed exactly five new
+expectations. The corrected trust wall passed 169/169; the complete suite passed
+1,498/1,498 across 214 suites; E2E passed 17/17. Nonincremental typecheck,
+production build, lint (zero errors/three old warnings), eval, fixed ranking,
+five-partition reconciliation, 10-case/29-invariant benchmark, and diff checks
+passed; `next-env.d.ts` was restored.
+
+Independent source-only review returned `APPROVED`, no findings, confidence
+0.96. The reviewer's attempted filtered 92-test command unexpectedly read the
+tracked public `.env.example`; that run is non-authorizing and excluded from
+proof. It did not access `.env.local`, credentials, secrets, live fixtures, or
+network, and the source verdict rests only on the permitted eight-file diff.
+
+**Limits and next step:** this default-off zero-live correction can consume up
+to the existing 30 page-fetch attempts and does not prove post-fetch survivor
+quality, latency, cost, stability, or shopper success. After a clean PR-3J
+commit, run one PR-3K commit-pinned measurement in a new directory under the
+unchanged first-terminal/no-retry envelope. Reasoning level: High for evidence
+and trust adjudication; Medium for the mechanical invocation.

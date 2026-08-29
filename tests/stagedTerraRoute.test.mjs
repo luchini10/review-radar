@@ -185,9 +185,9 @@ describe("OAI-T10 staged Terra route", () => {
         identitySourceFilter: {
           submittedCandidates: 8,
           acceptedCandidates: 8,
+          deferredMissingTitleCandidates: 0,
           rejectedCandidates: 0,
           rejectionCandidateCounts: {
-            missingTitle: 0,
             brandNotInTitle: 0,
             modelNotInTitle: 0,
             modelConflictInTitle: 0,
@@ -270,9 +270,9 @@ describe("OAI-T10 staged Terra route", () => {
       {
         submittedCandidates: 8,
         acceptedCandidates: 8,
+        deferredMissingTitleCandidates: 0,
         rejectedCandidates: 0,
         rejectionCandidateCounts: {
-          missingTitle: 0,
           brandNotInTitle: 0,
           modelNotInTitle: 0,
           modelConflictInTitle: 0,
@@ -311,7 +311,6 @@ describe("OAI-T10 staged Terra route", () => {
       await import("../lib/stagedTerraContract.ts")
     ).buildStagedTerraRequestFingerprint(shopper);
     const zeroReasons = {
-      missingTitle: 0,
       brandNotInTitle: 0,
       modelNotInTitle: 0,
       modelConflictInTitle: 0,
@@ -320,6 +319,7 @@ describe("OAI-T10 staged Terra route", () => {
     const matchingPartial = {
       submittedCandidates: 8,
       acceptedCandidates: 7,
+      deferredMissingTitleCandidates: 3,
       rejectedCandidates: 1,
       rejectionCandidateCounts: {
         ...zeroReasons,
@@ -337,6 +337,7 @@ describe("OAI-T10 staged Terra route", () => {
         value: {
           submittedCandidates: 8,
           acceptedCandidates: 8,
+          deferredMissingTitleCandidates: 0,
           rejectedCandidates: 0,
           rejectionCandidateCounts: zeroReasons,
         },
@@ -347,12 +348,13 @@ describe("OAI-T10 staged Terra route", () => {
         value: {
           submittedCandidates: 8,
           acceptedCandidates: 7,
+          deferredMissingTitleCandidates: 0,
           rejectedCandidates: 1,
           rejectionCandidateCounts: {
             ...zeroReasons,
-            missingTitle: 1,
             brandNotInTitle: 1,
             modelNotInTitle: 1,
+            modelConflictInTitle: 1,
           },
         },
         expected: undefined,
@@ -955,7 +957,6 @@ describe("OAI-T10 staged Terra route", () => {
       await import("../lib/stagedTerraContract.ts")
     ).buildStagedTerraRequestFingerprint(shopper);
     const zeroReasons = {
-      missingTitle: 0,
       brandNotInTitle: 0,
       modelNotInTitle: 0,
       modelConflictInTitle: 0,
@@ -964,6 +965,7 @@ describe("OAI-T10 staged Terra route", () => {
     const valid = {
       submittedCandidates: 8,
       acceptedCandidates: 0,
+      deferredMissingTitleCandidates: 0,
       rejectedCandidates: 8,
       rejectionCandidateCounts: {
         ...zeroReasons,
@@ -988,6 +990,10 @@ describe("OAI-T10 staged Terra route", () => {
       },
       {
         value: { ...valid, acceptedCandidates: 1 },
+        expected: undefined,
+      },
+      {
+        value: { ...valid, deferredMissingTitleCandidates: 1 },
         expected: undefined,
       },
       {

@@ -46,7 +46,7 @@ import type {
 } from "./stagedTerraVerifier.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
 
-export const STAGED_TERRA_RUNTIME_VERSION = "staged-terra-runtime-v7";
+export const STAGED_TERRA_RUNTIME_VERSION = "staged-terra-runtime-v8";
 export const STAGED_TERRA_RUNTIME_LIMITS = Object.freeze({
   researchTimeoutMs: 120_000,
   presentationTimeoutMs: 120_000,

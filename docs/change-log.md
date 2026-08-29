@@ -11,6 +11,49 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Defer titleless staged sources to bounded page verification
+
+#### Changed
+
+- Preserved the single PR-3I `shop vac` measurement as immutable evidence. The
+  provider completed research, but local preflight rejected all ten candidates
+  before product-data work because every candidate had at least one source with
+  unavailable title metadata. The independently verified artifact is spent and
+  was not inspected, retried, reused, or staged by the implementing agent.
+- Reclassified missing source-title metadata from affirmative identity failure
+  to a deferred state. A candidate with no title-proven source but at least one
+  exact response-owned titleless source now proceeds only to the existing
+  bounded DNS-pinned fetch and unchanged page/entity verifier. Available titles
+  that affirmatively mismatch still quarantine the candidate.
+- Preserved exact URL ownership, two fetch-distinct sources per candidate,
+  discovery order/reindexing, rejected-URL network exclusion, the 30-fetch
+  ceiling, downstream evidence/commerce/identity gates, public responses, and
+  default-off flags.
+- Replaced the five-family quarantine diagnostic with a tri-state aggregate:
+  submitted, accepted/continued, deferred-missing-title, rejected, and four
+  affirmative mismatch families. Route validation binds the deferred subset to
+  the accepted slate and forbids it in an all-rejected failure.
+- Rolled contract v9, runtime v8, and future sanitized Phase D evidence v6.
+  Research schema v5 and prompt v6 remain unchanged.
+
+#### Verified
+
+- Fail-first: 58 passed / exactly 5 intended failures. Corrected staged trust
+  wall: 169/169. Complete suite: 1,498/1,498 across 214 suites. E2E: 17/17.
+- Nonincremental typecheck, production build, deterministic eval, fixed ranking
+  comparison, exact five-batch reconciliation, tracked benchmark 10/10 cases
+  and 29/29 invariants, and diff checks passed. Lint reported zero errors and
+  the same three pre-existing warnings.
+- Independent source-only review returned `APPROVED`, no actionable findings,
+  confidence 0.96. Its accidental run that read tracked public `.env.example`
+  was excluded from proof; no local credentials, secrets, live fixtures, or
+  network were accessed.
+
+This default-off correction is aligned with the official URL-only consulted-
+source contract, but it can increase bounded page-fetch work. It does not prove
+live post-fetch survivor quality, latency, cost, or a complete shopper result.
+One clean commit-bound PR-3K measurement remains required before PR-4.
+
 ### Codex - Quarantine staged candidates whose sources cannot prove identity
 
 #### Changed
