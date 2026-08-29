@@ -11,6 +11,49 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Make deterministic QA batches prove the cases they run
+
+#### Changed
+
+- Replaced metadata-only deterministic batch reporting with one tracked offline
+  benchmark: five named batches now uniquely partition ten cases and 29
+  invariant checks across broad, constrained, over-constrained, wrong-type and
+  accessory, fake-price, non-product-page, duplicate-family, compatibility,
+  and missing-evidence shapes.
+- Each worker records its declared and executed case IDs plus every invariant
+  outcome. Reconciliation independently derives expected outcomes from the
+  persisted exact/near streams, manifest bounds/statuses, and a complete
+  candidate price/product ground-truth registry. Missing, duplicate, unknown,
+  mismatched, fabricated, and incomparable evidence is rejected.
+- Unknown direct worker modes and missing verifier input paths now fail closed.
+  The verifier can still compare an authentic historical failure to a passing
+  result after the implementation is fixed.
+- The controller retains the legacy evaluator as a separate compatibility
+  check, runs the new full benchmark, writes next-task suggestions only to
+  ignored artifacts, and no longer overwrites the authoritative handoff or
+  copies repository Markdown to Desktop.
+
+#### Verified
+
+- Fail-first: nine existing checks passed and exactly one new coverage check
+  failed because differently named batches executed the same five cases.
+- Corrected focused harness/mutation tests passed 26/26. The final controller
+  run reconciled all five exact partitions, the tracked benchmark passed 10/10
+  cases and 29/29 invariants, and the complete suite passed 1,477/1,477 across
+  214 suites.
+- Typecheck, production build, credential-neutral E2E 17/17, legacy
+  deterministic evaluation, fixed ranking comparison, zero-network Phase D
+  dry run, and diff checks passed. Lint reported zero errors and the same three
+  pre-existing warnings; generated `next-env.d.ts` was restored.
+- Independent review found and drove correction of fabricated price/product
+  failures, unknown worker modes, missing verifier paths, and a historical-
+  before incompatibility. Final verdict: `APPROVED`, with 26/26 personal
+  focused tests and no production/library or live-call change.
+
+This phase improves evaluation integrity, not recommendation quality. The
+synthetic fixtures and manually maintained oracles do not establish live market
+coverage, provider adherence, lifecycle feasibility, latency, or cost.
+
 ### Codex - Make staged research lead sources candidate-local
 
 #### Changed

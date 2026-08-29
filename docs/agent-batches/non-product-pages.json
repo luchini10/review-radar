@@ -1,6 +1,10 @@
 {
+  "schemaVersion": "review-radar-agent-batch-v2",
   "name": "non-product-pages",
   "description": "Articles, forums, support pages, deal roundups, collection pages, and comparison pages may be evidence but must not render as product cards.",
+  "benchmarkCaseIds": [
+    "non-product-espresso-review"
+  ],
   "searchesPerRun": 3,
   "searches": [
     {

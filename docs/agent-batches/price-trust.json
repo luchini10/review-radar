@@ -1,6 +1,11 @@
 {
+  "schemaVersion": "review-radar-agent-batch-v2",
   "name": "price-trust",
   "description": "Products should not show misleading prices or pass budget checks with stale, variant, financing, or conflicting price evidence.",
+  "benchmarkCaseIds": [
+    "fake-price-propane-grill",
+    "missing-price-evidence-laptop"
+  ],
   "searchesPerRun": 2,
   "searches": [
     {

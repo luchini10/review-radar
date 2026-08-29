@@ -768,7 +768,7 @@ npm run lint           # eslint
 npm run build          # next build (production compile)
 npm run test:e2e       # Playwright (e2e/), uses mocked route deps where possible
 ```
-There are ~48 `tests/*.test.mjs` files covering extraction, validation, scoring, price plausibility,
+There are 128 `tests/*.test.mjs` files covering extraction, validation, scoring, price plausibility,
 the discovery filter, form-factor logic, editorial seeding, schema/contract, and result quality.
 `.mjs` tests type-strip the `.ts` modules (Node emits a harmless `MODULE_TYPELESS_PACKAGE_JSON` warning).
 
@@ -777,6 +777,7 @@ the discovery filter, form-factor logic, editorial seeding, schema/contract, and
 node scripts/eval-pipeline.mjs                                   # multi-category exact/near split + red-flag checks
 REVIEW_RADAR_CREDIBILITY_PENALTY=on node scripts/eval-pipeline.mjs
 node scripts/ab-ranking.mjs                                      # one fixed candidate set, flags off vs on
+node --no-warnings scripts/qa-benchmark.mjs                      # tracked 10-case/29-invariant named-batch matrix
 npm run qa:ledger-benchmark                                     # ledger CPU/serialization overhead, zero provider calls
 ```
 
@@ -799,17 +800,31 @@ npm run qa:worker -- --batch price-trust --mode live
 npm run qa:loop -- --batches price-trust,broad-mainstream,requirement-units
 npm run qa:verify -- --before docs/agent-worker-results/before.json --after docs/agent-worker-results/after.json
 ```
-The worker batches live in `docs/agent-batches/`. Deterministic mode is the default. Live mode posts to
-localhost with `x-reviewradar-debug: true` and records exact/near counts, product names, suspicious flags,
-likely root causes, and debug summaries when available.
+The worker batches live in `docs/agent-batches/`. Deterministic mode is the
+default. Each batch declares distinct tracked case IDs from
+`tests/fixtures/qa-benchmark-matrix-v1.json`; the five partitions cover ten
+cases and 29 invariants. Workers persist declared/executed IDs and every
+outcome. Reconciliation independently rederives statuses/counts from the
+persisted exact/near streams and price/product trust from a complete tracked
+candidate oracle, failing closed on missing, duplicate, unknown, mismatched,
+fabricated, or incomparable work. The legacy `eval-pipeline.mjs` remains a
+separate compatibility/flag check.
+
+Live mode posts to localhost with `x-reviewradar-debug: true` and records
+exact/near counts, product names, suspicious flags, likely root causes, and
+debug summaries when available.
 Live workers retry temporary localhost/rate-limit/server failures before creating a next task, and label
 temporary research failures separately from true localhost availability problems.
 Batch files can include a larger `searchPool`; the worker rotates through that pool and records the
 current slice in `searchRotation`, so repeated agent runs test different product searches over time.
 
-The controller writes `docs/agent-next-task.md`, appends to `docs/qa-loop-results.md`, and generates
-`docs/agent-loop-report.md`. Workers do not edit code. Fix agents should use `docs/agent-fix-template.md`
-and make one generalized fix at a time.
+The controller appends to `docs/qa-loop-results.md`, generates
+`docs/agent-loop-report.md`, and leaves next-task suggestions only in ignored
+worker artifacts. It never overwrites the authoritative
+`docs/agent-next-task.md` or copies repository Markdown to Desktop. Workers do
+not edit code. Fix agents should use `docs/agent-fix-template.md` and make one
+generalized fix at a time. The verifier requires every explicitly named input
+file and exact matching before/after case coverage.
 
 **Live debug**: send header `x-reviewradar-debug: true` (non-production only) to `POST /api/recommendations`
 to receive a `debug` payload (search plan stages, candidate specs/validation, Serper call counts,

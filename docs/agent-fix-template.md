@@ -62,12 +62,18 @@ Run the smallest focused checks first, then the full checks:
 npm run qa:worker -- --batch price-trust
 npm run qa:worker -- --batch broad-mainstream
 npm run qa:loop -- --batches price-trust,broad-mainstream
-npm run qa:verify
+npm run qa:verify -- --before <matching-before-worker-files> --after <matching-after-worker-files>
 npm run typecheck
 npm run lint
 npm test
 npm run build
 ```
+
+In deterministic mode, each named batch must execute only the case IDs declared
+in its tracked `benchmarkCaseIds`. The worker result must persist those executed
+IDs and every per-case invariant outcome. The controller and before/after
+verifier reject missing, duplicated, unknown, mismatched, or incomparable case
+coverage; different batches are not interchangeable evidence.
 
 When the fix is meaningful enough for the change log, run the controller with a plain-English change note:
 
@@ -85,11 +91,10 @@ Update plain-English docs when the change is meaningful:
 - `docs/change-log.md`: concise dated entry with `Changed` and `Verified`.
 - `ReviewRadar-Overview.md`: only when architecture, pipeline behavior, APIs, modules, or important system rules changed.
 
-After updating those repo markdowns, copy them to:
-
-```text
-C:\Users\tluch\Desktop\RR Markdowns
-```
+Keep authoritative Markdown in the repository. Do not copy snapshots to the
+Desktop. The controller writes an ignored advisory next-task artifact for its
+run, but it does not overwrite `docs/agent-next-task.md`; regenerate that
+handoff deliberately at phase closeout.
 
 ## 8. Final Response
 

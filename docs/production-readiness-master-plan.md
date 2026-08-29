@@ -70,15 +70,25 @@ Stronger alternatives considered:
   necessary, but no staged result exists yet; it would measure an architecture
   whose active lifecycle still has not crossed research validation reliably.
 
-The strongest next step is PR-3: repair the deterministic QA harness so named
-batches execute distinct tracked benchmark cases and invariants rather than the
-same synthetic evaluator with different metadata. A new paid staged attempt
-would test lifecycle feasibility, but it would not repair the current ground-
-truth gap; broad accuracy measurement should not rely on a harness that
-misstates what it executed.
+PR-3 now closes that evaluation-integrity defect without changing production
+behavior. Five named batches uniquely partition ten tracked cases and 29
+invariants across all required request/trap shapes. Results persist exact case
+IDs and outcomes; reconciliation rederives every invariant from the persisted
+exact/near streams, tracked bounds/statuses, and a complete candidate ground-
+truth registry. Missing, duplicate, unknown, mismatched, fabricated, or
+incomparable work fails closed while authentic historical failing evidence
+remains comparable after a fix.
 
-Recommended reasoning level: **High** for benchmark validity, case partitioning,
-and mutation design; **Medium** for localized harness and fixture plumbing.
+The strongest next step is one bounded post-PR-2J staged lifecycle feasibility
+revalidation. The benchmark is now trustworthy, but PR-4 accuracy measurement
+still cannot start because the active staged path has never produced a shopper
+result. The existing frozen `shop vac` Phase D runner provides a stricter and
+cheaper answer than a broad live matrix: one exact commit, one case, no retry,
+replacement, fallback, or second case, and a first-terminal stop. If it fails,
+fix only a newly reproduced generalized cause or retain the blocker.
+
+Recommended reasoning level: **High** for the live trust/cost boundary and
+terminal-evidence adjudication; **Medium** for the bounded mechanical run.
 
 ## Evidence labels
 
@@ -410,7 +420,7 @@ shopper-facing recommendation quality.
 | PR-002 | P1 | verified | The consumed Phase D request was billed but recorded as `$0`, weakening cost control and readiness evidence. | The estimator equated route success with billable provider completion. | Terminal provider usage is now accounted regardless of later local outcome. Only a matching nonempty response hash deduplicates; distinct or unknown responses sum conservatively, and any duplicate terminal anomaly blocks acceptance. | Historical exact-usage replay; successful research+presentation control; pending/start exclusion; same-response and distinct/unknown adversarial tests; exact expected costs. | Closed locally. Roll back if independent billing evidence ever shows over- or under-counting. No network dependency. |
 | PR-003 | P1 | verified | Required E2E checks produced 11 false failures whenever a developer enabled Direct Terra locally, hiding real regressions and encouraging ignored checks. | Playwright's dev server inherited `.env.local`; tests intercepted `/api/recommendations` while the browser called `/api/recommendations-v2`. | The E2E server owns a dedicated port, forces committed default-off/legacy routing, disables server reuse, and explicitly neutralizes all provider/job credentials. The developer's `.env.local` is untouched. | Full 17/17 E2E under the existing local config; independent inspection of Playwright's environment merge; no production code change. | Closed locally. Experimental-path E2E must opt into its own isolated fixture and credentials boundary. |
 | PR-004 | P2 | verified | One valid Direct-Terra preview failed its test even though the two safe links rendered. | UI copy changed from generic `Product website` to the more informative `View at <host>` accessible name; the test stayed exact-string brittle. | The test now asserts the user-visible role/name pattern and both links' safe target/rel attributes. | Full E2E passes and still requires both safe links. | Closed; test-only rollback. |
-| PR-005 | P1 | verified defect; next correction | Five named deterministic QA batches report different search pools but all execute the same five synthetic eval cases. A green batch can falsely imply that its listed categories, fake-price traps, or non-product pages were exercised. | `runDeterministicBatch()` delegates every batch to `eval-pipeline.mjs` and records the batch searches only as metadata. | Build a reusable offline benchmark matrix whose fixtures/invariants are actually selected by batch. Preserve category diversity without exact-name brittleness. | Fail-first test showing two batches currently execute identical cases; per-batch executed-case IDs; cross-category positive/negative invariants; controller reconciliation. | Medium harness-design risk and fixture work. Do not claim quality improvement from harness changes alone. Depends on trustworthy fixtures. |
+| PR-005 | P1 | verified | Five named deterministic QA batches reported different search pools but all executed the same five synthetic eval cases, so green output overstated coverage. | `runDeterministicBatch()` delegated every batch to `eval-pipeline.mjs` and recorded batch searches only as metadata. The controller also overwrote the authoritative handoff and copied Markdown outside the repo. | A tracked 10-case/29-invariant benchmark now gives every batch a unique partition. Results persist executed IDs/outcomes; reconciliation independently rederives them from persisted streams and complete tracked price/product oracles. Controller next-task output is ignored/advisory only, and no Desktop copy occurs. | Fail-first 9 pass / 1 intended fail; corrected focused 26/26; complete 1,477/1,477; exact five-batch reconciliation; benchmark 10/10 and 29/29; E2E/build/static/eval/ranking/dry-run walls; independent `APPROVED`. | Closed without production or live behavior changes. Synthetic fixtures/oracles require deliberate maintenance and do not prove market coverage or provider quality. Ignored artifacts are reconciled, not cryptographically immutable. |
 | PR-006 | P1 | investigating | Current market-leader recall, final-set stability, exact/near truth, price coverage, and first-loss distribution are not established for today's commit. Historical evidence found zero final overlap and severe leader loss. | Provider variance, planning variance, discovery loss, strict evidence gates, and/or ranking may contribute; attribution remains unmeasured on the active path. | After feasibility, run a bounded benchmark matrix with repeated broad and constrained cases, record candidate and final Jaccard, hard-requirement truth, first-loss stage, latency, calls, and cost. Fix only the earliest repeated generalized loss. | Commit-pinned fixtures, market-coverage sets reviewed for recency, repeated samples, invariant-based scoring, before/after controls across unrelated categories. | High cost/variance risk. Stop on any safety failure. Requires PR-001/002 and a passing staged feasibility result. |
 | PR-007 | P1 | investigating | RR-091 says same-page related-product price can satisfy autonomous card binding. A wrong variant price is release-blocking if the affected path is promoted. | Product entity selection may not bind offer identity tightly enough when multiple products share a page. | Reproduce with tracked synthetic multi-entity pages, then require exact entity/offer binding using shared identity rules. | Original and cross-category reproductions; exact-product positive controls; no unsafe price/product URL; full price and identity wall. | High false-negative/false-positive risk. The affected experimental path remains default-off; no promotion before closure. |
 | PR-008 | P1 | investigating | RR-092 says editorial Product markup can verify identity/image without proving the tested model. A wrong model image/link is release-blocking if promoted. | Structured markup establishes a product entity without sufficient tested-model attribution or page role. | Require exact tested-model attribution from eligible page evidence; editorial markup remains evidence-only unless the commerce/page boundary independently passes. | Editorial review negatives, manufacturer/retailer positives, sibling-model and accessory mutations, asset-wall regression. | High asset-recall tradeoff. Default-off path must stay off until resolved. |
@@ -751,15 +761,50 @@ directory is spent.
 
 ### Phase PR-3 — Build a real offline benchmark matrix
 
-- Status: **next; zero-live evaluation-integrity correction**
+- Status: **verified; zero-live evaluation-integrity correction**
 - Severity addressed: PR-005 P1.
-- Scope: make each deterministic QA batch execute relevant tracked cases and
-  invariant checks, including broad, constrained, over-constrained,
-  wrong-type, fake-price, non-product, duplicate, compatibility, and missing
-  evidence traps.
-- Proof: executed-case IDs, per-batch distinct coverage, mutation tests, and
-  controller reconciliation.
+- Outcome: five batches uniquely partition ten tracked cases and 29 invariant
+  checks covering broad, constrained, over-constrained, wrong-type/accessory,
+  fake-price, non-product, duplicate-family, compatibility, and missing-
+  evidence shapes. The legacy evaluator is byte-unchanged and remains a
+  separate compatibility check.
+- Integrity: the matrix requires a complete candidate price/product oracle;
+  workers persist declared/executed IDs and invariant outcomes; reconciliation
+  rederives all outcomes and rejects missing, duplicate, unknown, mismatched,
+  fabricated, or incomparable evidence. Missing verifier files and unknown
+  worker modes fail closed. Historical failing-before evidence remains valid
+  after the code is corrected.
+- Authority: the controller writes only ignored advisory next-task output. It
+  cannot overwrite `docs/agent-next-task.md` or copy Markdown to Desktop.
+- Proof: fail-first 9 pass / 1 intended fail; corrected focused 26/26; complete
+  1,477/1,477; exact five-batch reconciliation; tracked benchmark 10/10 cases
+  and 29/29 invariants; build, E2E 17/17, typecheck, lint, legacy eval, ranking,
+  zero-network Phase D dry run, and diff walls; independent `APPROVED` after
+  four material fail-closed/semantics corrections.
+- Limitation: this repairs evaluation validity, not product quality. The
+  synthetic cases and manually reviewed oracles do not establish live market
+  coverage, provider adherence, latency, cost, or lifecycle feasibility.
 - Reasoning: **High** for evaluation validity, **Medium** for fixture plumbing.
+
+### Phase PR-3A — Revalidate staged lifecycle feasibility once
+
+- Status: **next; bounded live measurement**
+- Severity addressed: PR-013 P1 and dependency for PR-006/PR-4.
+- Scope: after the PR-3 closeout commit leaves a clean tracked tree, run the
+  existing frozen broad `shop vac` Phase D case exactly once at that full
+  commit. Keep the existing ceilings: two OpenAI creates, ten hosted searches,
+  60 retrieves, one safety cancel, 15 Shopping attempts, 30 source-page
+  selections, 90 physical page attempts, and `$3` frozen-conservative maximum.
+- Stop policy: first terminal result ends the phase. No retry, replacement,
+  fallback, second case, organic/SearchAPI request, promotion, or deployment.
+- Proof: commit/case/schema binding; counters, usage, cost, privacy, hashes, and
+  clean-state evidence; conserved verification aggregate if reached; exact
+  first loss or complete shopper result; independent read-only audit.
+- Alternatives: a broad live matrix is premature until one staged lifecycle
+  succeeds; another offline contract edit is speculative without a reproduced
+  failure; weakening gates to manufacture a result is prohibited.
+- Reasoning: **High** for boundary/evidence adjudication; **Medium** for the
+  bounded mechanical execution.
 
 ### Phase PR-4 — Measure active-path accuracy, stability, latency, and cost
 
@@ -841,7 +886,6 @@ Release blockers today:
   independently reproduced contract mismatches, but the latest live attempt
   remains PR-2I's `candidate_facts` stop and no post-PR-2J provider result has
   reached verification or presentation;
-- deterministic QA batch names overstate the distinct cases actually run;
 - current live accuracy, stability, latency, and cost have not been measured;
 - RR-091 and RR-092 remain unresolved for an experimental path that cannot be
   promoted safely.

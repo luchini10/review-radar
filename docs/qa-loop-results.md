@@ -12094,3 +12094,202 @@ private cause is unknowable. PR-013 remains a P1 blocker. Before broader active-
 path measurement, PR-3 should make the named deterministic QA batches execute
 real distinct cases rather than one shared synthetic evaluator. No spent live
 fixture was read, edited, retried, staged, or reused.
+
+## Agent Loop Run - 2026-08-29T08:49:33.506Z
+
+- **run id:** agent-loop-2026-08-29T08-49-03-879Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3230ms |
+| lint | Passed | 9765ms |
+| unit tests | Passed | 12776ms |
+| deterministic eval pipeline | Passed | 597ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-29T08-49-03-879Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## 🟧 Codex — 2026-08-29 — Production readiness PR-3 tracked offline benchmark
+
+**Verdict: PASS for evaluation integrity; zero live calls and no production-
+quality gain claimed. PR-005 is closed. ReviewRadar remains NOT READY.**
+
+**Objective:** make each named deterministic QA batch execute and prove a
+distinct, tracked partition rather than reuse one shared evaluator while
+reporting different category metadata.
+
+**Fail-first evidence:** after adding only the behavioral regression,
+`tests/qaWorker.test.mjs` passed nine checks and failed exactly one. The broad
+and price workers both executed the same legacy case keys—leaf blower,
+cordless vacuum, gas grill, king mattress, and running shoes—and emitted the
+same stdout SHA-256 despite advertising different product categories. This
+proved that metadata-only differences did not represent coverage.
+
+**Correction:** `qa-benchmark-matrix-v1.json` defines ten explicit synthetic
+cases, a complete candidate price/product ground-truth registry, and 29
+invariants. Five versioned batch files uniquely partition broad, constrained,
+over-constrained, wrong-type/accessory, fake-price, non-product-page,
+duplicate-family, compatibility, and missing-evidence shapes. The worker calls
+the selected case IDs through the production scoring entry point and persists
+declared/executed IDs, exact/near candidate IDs, effective flags, and every
+invariant result.
+
+Reconciliation rederives status/count/subset outcomes from persisted exact/near
+streams and price/product outcomes from exact IDs plus the tracked oracle. It
+rejects missing, duplicate, unknown, mismatched, malformed, fabricated, and
+incomparable evidence. Historical failing streams remain valid before evidence
+after production code is corrected; the verifier regression proves one finding
+can resolve to zero. Every explicitly requested verifier path must exist and
+parse. The direct worker accepts only exact `deterministic` or `live` modes,
+and deterministic work does not read or mutate live rotation state.
+
+The legacy `eval-pipeline.mjs` remains byte-for-byte unchanged and runs as a
+separate compatibility check. The controller now also runs the complete tracked
+benchmark. It writes next-task suggestions only to ignored worker artifacts,
+never overwrites the authoritative handoff, and does not copy repository
+Markdown to Desktop.
+
+**Independent correction loop:** review found four blocking issues before the
+terminal verdict: worker-supplied price/product failures were trusted; unknown
+worker modes silently became deterministic; missing verifier paths were
+dropped; and whole-result current-code replay made genuine historical failures
+unverifiable after a fix. Each was corrected with a focused regression. Final
+verdict: `APPROVED`, no actionable findings. The reviewer personally passed
+26/26 focused tests, the 10/10 and 29/29 benchmark, legacy eval, typecheck, and
+diff/authentication checks.
+
+**Final verification:**
+
+- focused harness/mutation matrix: 26/26;
+- complete deterministic suite: 1,477/1,477 across 214 suites;
+- final controller `agent-loop-2026-08-29T09-04-07-472Z`: all five exact
+  partitions reconciled; 10/10 cases and 29/29 invariants passed;
+- exact five-file verifier integrity/comparability check: accepted with no
+  missing or mismatched coverage (same files on both sides, so no improvement
+  is inferred from that check);
+- credential-neutral E2E: 17/17;
+- typecheck, production build, legacy deterministic eval, fixed ranking
+  comparison, zero-network Phase D dry run, and `git diff --check`: pass;
+- lint: zero errors and the same three pre-existing warnings; and
+- generated `next-env.d.ts`: restored to its tracked production form.
+
+The 08:49 and 09:00 raw controller entries surrounding this record are
+intermediate, non-authorizing runs from before the final independent
+corrections. Only the 09:04 run below plus the terminal independent review binds
+the corrected snapshot.
+
+**Scope and limits:** no `app/`, `components/`, `lib/`, production flag,
+discovery, ranking, price, evidence, eligibility, provider, or UI behavior
+changed. No OpenAI, hosted-search, Serper, SearchAPI, Shopping, source-page, or
+other product-data request ran. The synthetic matrix and manually maintained
+oracles do not prove live market coverage, model adherence, latency, cost, or
+staged lifecycle feasibility. Ignored artifacts are structurally reconciled,
+not cryptographically immutable.
+
+**Next decision:** PR-013 is now the earliest dependency. After the PR-3
+closeout commit leaves a clean tracked tree, run one frozen commit-pinned broad
+`shop vac` Phase D lifecycle revalidation under the existing first-terminal,
+no-retry/no-replacement ceilings. A broad active-path matrix remains premature
+until one staged lifecycle succeeds.
+
+## Agent Loop Run - 2026-08-29T09:00:33.955Z
+
+- **run id:** agent-loop-2026-08-29T09-00-02-038Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3250ms |
+| lint | Passed | 10454ms |
+| unit tests | Passed | 12917ms |
+| deterministic eval pipeline | Passed | 464ms |
+| tracked offline benchmark | Passed | 589ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-29T09-00-02-038Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-29T09:04:38.681Z
+
+- **run id:** agent-loop-2026-08-29T09-04-07-472Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3334ms |
+| lint | Passed | 10751ms |
+| unit tests | Passed | 12735ms |
+| deterministic eval pipeline | Passed | 492ms |
+| tracked offline benchmark | Passed | 580ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-29T09-04-07-472Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.

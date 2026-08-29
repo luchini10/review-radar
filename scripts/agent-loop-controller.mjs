@@ -1,22 +1,22 @@
 #!/usr/bin/env node
-import { appendFile, copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { basename, join, resolve } from "node:path";
 import { spawn } from "node:child_process";
+import {
+  loadBenchmarkManifest,
+  loadTrackedBatchDefinitions,
+  reconcileBenchmarkWorkerResults,
+  validateBatchMatrix,
+} from "./qa-benchmark.mjs";
 
 const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const docsDir = join(repoRoot, "docs");
 const workerDir = join(docsDir, "agent-worker-results");
 const qaLogPath = join(docsDir, "qa-loop-results.md");
 const changeLogPath = join(docsDir, "change-log.md");
-const nextTaskPath = join(docsDir, "agent-next-task.md");
 const reportPath = join(docsDir, "agent-loop-report.md");
-const desktopMarkdownDir = join(
-  process.env.USERPROFILE || "",
-  "Desktop",
-  "RR Markdowns",
-);
 
 const checks = [
   { name: "typecheck", command: "npm", args: ["run", "typecheck"] },
@@ -29,6 +29,14 @@ if (existsSync(join(repoRoot, "scripts", "eval-pipeline.mjs"))) {
     name: "deterministic eval pipeline",
     command: "node",
     args: ["scripts/eval-pipeline.mjs"],
+  });
+}
+
+if (existsSync(join(repoRoot, "scripts", "qa-benchmark.mjs"))) {
+  checks.push({
+    name: "tracked offline benchmark",
+    command: "node",
+    args: ["--no-warnings", "scripts/qa-benchmark.mjs"],
   });
 }
 
@@ -60,7 +68,7 @@ function severityWeight(value) {
   return 1;
 }
 
-function runCommand({ command, args }) {
+function runCommand({ command, args, stdoutLimit = 6000 }) {
   return new Promise((resolveRun) => {
     const startedAt = Date.now();
     const executable = process.platform === "win32" && command === "npm" ? "cmd.exe" : command;
@@ -86,7 +94,7 @@ function runCommand({ command, args }) {
         code,
         durationMs: Date.now() - startedAt,
         stderr: stderr.slice(-6000),
-        stdout: stdout.slice(-6000),
+        stdout: stdout.slice(-stdoutLimit),
       });
     });
   });
@@ -107,7 +115,11 @@ async function runWorker(batchName, options) {
     args.push("--base-url", options.baseUrl);
   }
 
-  const result = await runCommand({ command: "node", args });
+  const result = await runCommand({
+    command: "node",
+    args,
+    stdoutLimit: 250000,
+  });
   let outputPath = "";
 
   try {
@@ -255,7 +267,7 @@ function nextTaskMarkdown(runId, repeatedFailures) {
   const top = repeatedFailures[0];
 
   if (!top) {
-    return `# Agent Next Task\n\nGenerated: ${new Date().toISOString()}\nRun: ${runId}\n\nNo repeated worker failures were found in this run.\n\nSuggested next step: run a live worker batch against localhost, then rerun the controller.\n`;
+    return `# Agent Next Task Suggestion\n\nGenerated: ${new Date().toISOString()}\nRun: ${runId}\n\nNo repeated worker failures were found in this run.\n\nThis ignored run artifact is advisory only. It does not replace docs/agent-next-task.md or authorize a live batch.\n`;
   }
 
   const examples = top.examples
@@ -269,16 +281,28 @@ function nextTaskMarkdown(runId, repeatedFailures) {
     .map((module) => `- ${module}`)
     .join("\n");
 
-  return `# Agent Next Task\n\nGenerated: ${new Date().toISOString()}\nRun: ${runId}\n\n## Selected Root Cause\n\nInvestigate shared root cause: **${top.rootCause}**.\n\nPriority score: ${top.priorityScore}\nFrequency: ${top.frequency}\nCategories affected: ${top.sharedCategoryCount}\nExact-match affected findings: ${top.exactMatchAffectedCount}\n\n## Failing Examples\n\n${examples}\n\n## Suspected Shared Modules\n\n${modules}\n\n## Forbidden Fixes\n\n- Do not hardcode one product, store, brand, or category.\n- Do not weaken hard requirements to make a bad result pass.\n- Do not hide failures in the UI instead of fixing shared logic.\n- Do not change public API or response shape without explicit approval.\n\n## Required Tests\n\n- Add regression coverage for the root cause using at least two examples when possible.\n- Include a category-agnostic test if the failure can happen across categories.\n- Keep existing exact/near match behavior intact unless the test proves it was wrong.\n\n## Required Verification\n\n- npm run typecheck\n- npm run lint\n- npm test\n- npm run qa:loop -- --batches ${top.examples.map((example) => example.batchName).filter(Boolean).join(",") || "price-trust"}\n- npm run build\n\n## Stop Condition\n\nStop after one generalized fix and update docs/qa-loop-results.md with before/after proof.\n`;
+  return `# Agent Next Task Suggestion\n\nGenerated: ${new Date().toISOString()}\nRun: ${runId}\n\n## Selected Root Cause\n\nInvestigate shared root cause: **${top.rootCause}**.\n\nPriority score: ${top.priorityScore}\nFrequency: ${top.frequency}\nCategories affected: ${top.sharedCategoryCount}\nExact-match affected findings: ${top.exactMatchAffectedCount}\n\n## Failing Examples\n\n${examples}\n\n## Suspected Shared Modules\n\n${modules}\n\n## Forbidden Fixes\n\n- Do not hardcode one product, store, brand, or category.\n- Do not weaken hard requirements to make a bad result pass.\n- Do not hide failures in the UI instead of fixing shared logic.\n- Do not change public API or response shape without explicit approval.\n\n## Required Tests\n\n- Add regression coverage for the root cause using at least two examples when possible.\n- Include a category-agnostic test if the failure can happen across categories.\n- Keep existing exact/near match behavior intact unless the test proves it was wrong.\n\n## Required Verification\n\n- npm run typecheck\n- npm run lint\n- npm test\n- npm run qa:loop -- --batches ${top.examples.map((example) => example.batchName).filter(Boolean).join(",") || "price-trust"}\n- npm run build\n\n## Authority Boundary\n\nThis ignored run artifact is advisory only. It does not replace docs/agent-next-task.md or authorize implementation, live spend, or a later phase.\n`;
 }
 
-function statusLabel(commandResults, workerRuns, verifierSummary, repeatedFailures = []) {
+function statusLabel(
+  commandResults,
+  workerRuns,
+  verifierSummary,
+  repeatedFailures = [],
+  benchmarkReconciliation = null,
+) {
   if (commandResults.some((result) => result.code !== 0)) {
     return "failed-checks";
   }
 
+  if (benchmarkReconciliation && !benchmarkReconciliation.passed) {
+    return "benchmark-reconciliation-failed";
+  }
+
   if (workerRuns.some((result) => result.code !== 0)) {
-    return "worker-error";
+    return benchmarkReconciliation?.passed && repeatedFailures.length > 0
+      ? "needs-fix"
+      : "worker-error";
   }
 
   if (verifierSummary && verifierSummary.accepted === false) {
@@ -292,7 +316,35 @@ function statusLabel(commandResults, workerRuns, verifierSummary, repeatedFailur
   return "passed";
 }
 
-function qaLogMarkdown(runId, commandResults, workerResults, repeatedFailures, runOptions) {
+function benchmarkCoverageMarkdown(benchmarkReconciliation) {
+  if (!benchmarkReconciliation) {
+    return "- Not applicable to this live run.";
+  }
+
+  if (!benchmarkReconciliation.passed) {
+    return [
+      "- Reconciliation failed closed.",
+      ...benchmarkReconciliation.errors.map((error) => `- ${error}`),
+    ].join("\n");
+  }
+
+  return benchmarkReconciliation.perBatch
+    .map(
+      (item) =>
+        `- ${item.batchName}: ${item.executedCaseIds.join(", ")}`,
+    )
+    .join("\n");
+}
+
+function qaLogMarkdown(
+  runId,
+  commandResults,
+  workerResults,
+  repeatedFailures,
+  runOptions,
+  benchmarkReconciliation,
+  nextTaskSuggestionFile,
+) {
   const commandRows = commandResults
     .map(
       (result) =>
@@ -305,10 +357,19 @@ function qaLogMarkdown(runId, commandResults, workerResults, repeatedFailures, r
         .join("\n")
     : "- No repeated worker failures found.";
 
-  return `\n## Agent Loop Run - ${new Date().toISOString()}\n\n- **run id:** ${runId}\n- **controller:** scripts/agent-loop-controller.mjs\n- **mode:** ${runOptions.mode}\n- **batches:** ${runOptions.batches.join(", ")}\n- **parallel:** ${runOptions.parallel}\n- **worker result files checked:** ${workerResults.length}\n\n### Checks\n\n| Command | Result | Duration |\n| --- | --- | ---: |\n${commandRows}\n\n### Repeated Failure Candidates\n\n${repeated}\n\n### Next Task\n\nSee \`docs/agent-next-task.md\`.\n\n### Report\n\nSee \`docs/agent-loop-report.md\`.\n`;
+  return `\n## Agent Loop Run - ${new Date().toISOString()}\n\n- **run id:** ${runId}\n- **controller:** scripts/agent-loop-controller.mjs\n- **mode:** ${runOptions.mode}\n- **batches:** ${runOptions.batches.join(", ")}\n- **parallel:** ${runOptions.parallel}\n- **worker result files checked:** ${workerResults.length}\n\n### Checks\n\n| Command | Result | Duration |\n| --- | --- | ---: |\n${commandRows}\n\n### Executed Benchmark Cases\n\n${benchmarkCoverageMarkdown(benchmarkReconciliation)}\n\n### Repeated Failure Candidates\n\n${repeated}\n\n### Next Task Suggestion\n\nThe controller left advisory output in the ignored worker artifact \`${nextTaskSuggestionFile}\`. The authoritative handoff remains \`docs/agent-next-task.md\` and must be regenerated deliberately at phase closeout.\n\n### Report\n\nSee \`docs/agent-loop-report.md\`.\n`;
 }
 
-function reportMarkdown(runId, commandResults, workerRuns, workerResults, repeatedFailures, verifierSummary, runOptions) {
+function reportMarkdown(
+  runId,
+  commandResults,
+  workerRuns,
+  workerResults,
+  repeatedFailures,
+  verifierSummary,
+  runOptions,
+  benchmarkReconciliation,
+) {
   const checkLines = commandResults
     .map((result) => `- ${result.name}: ${result.code === 0 ? "Passed" : "Failed"} (${result.durationMs}ms)`)
     .join("\n");
@@ -323,9 +384,11 @@ function reportMarkdown(runId, commandResults, workerRuns, workerResults, repeat
     : "- No repeated root causes found in this run.";
   const nextBatch =
     repeatedFailures[0]?.examples?.[0]?.batchName ||
-    (runOptions.mode === "live" ? "price-trust" : "price-trust --mode live");
+    (runOptions.mode === "live"
+      ? "price-trust"
+      : "No live batch is implied; obtain the phase-specific approval first.");
 
-  return `# Agent Loop Report\n\nGenerated: ${new Date().toISOString()}\nRun: ${runId}\nStatus: ${statusLabel(commandResults, workerRuns, verifierSummary, repeatedFailures)}\nMode: ${runOptions.mode}\nParallel workers: ${runOptions.parallel}\nChange log: ${runOptions.changeNote ? "updated" : "not updated; no meaningful change note was provided"}\n\n## Batches Run\n\n${batchLines || "- No worker batches ran."}\n\n## Checks\n\n${checkLines}\n\n## Top Repeated Root Causes\n\n${rootLines}\n\n## Verifier Status\n\n${
+  return `# Agent Loop Report\n\nGenerated: ${new Date().toISOString()}\nRun: ${runId}\nStatus: ${statusLabel(commandResults, workerRuns, verifierSummary, repeatedFailures, benchmarkReconciliation)}\nMode: ${runOptions.mode}\nParallel workers: ${runOptions.parallel}\nChange log: ${runOptions.changeNote ? "updated" : "not updated; no meaningful change note was provided"}\n\n## Batches Run\n\n${batchLines || "- No worker batches ran."}\n\n## Executed Benchmark Cases\n\n${benchmarkCoverageMarkdown(benchmarkReconciliation)}\n\n## Checks\n\n${checkLines}\n\n## Top Repeated Root Causes\n\n${rootLines}\n\n## Verifier Status\n\n${
     verifierSummary
       ? `- ${verifierSummary.accepted ? "Accepted" : "Rejected"}: ${verifierSummary.rejectedReasons?.join("; ") || "No rejection reasons."}`
       : "- No before/after verifier was requested for this controller run."
@@ -349,66 +412,74 @@ async function appendChangeLogIfNeeded(changeNote, verifiedCommands) {
   return true;
 }
 
-async function syncMarkdownSnapshots() {
-  if (!process.env.USERPROFILE) {
-    return;
-  }
-
-  await mkdir(desktopMarkdownDir, { recursive: true });
-
-  const files = [
-    {
-      source: join(repoRoot, "ReviewRadar-Overview.md"),
-      target: join(desktopMarkdownDir, "ReviewRadar-Overview.md"),
-    },
-    {
-      source: qaLogPath,
-      target: join(desktopMarkdownDir, "qa-loop-results.md"),
-    },
-    {
-      source: join(docsDir, "change-log.md"),
-      target: join(desktopMarkdownDir, "change-log.md"),
-    },
-  ];
-
-  for (const file of files) {
-    if (existsSync(file.source)) {
-      await copyFile(file.source, file.target);
-    }
-  }
-}
-
 async function main() {
   const runId = `agent-loop-${nowStamp()}`;
-  const batches = splitList(argValue("batches", "price-trust"));
+  const batchNames = splitList(argValue("batches", "price-trust"));
   const mode = argValue("mode", "deterministic");
   const parallel = Math.max(1, Math.min(Number(argValue("parallel", "1")) || 1, 4));
   const baseUrl = argValue("base-url", "http://localhost:3000");
   const changeNote = argValue("change-note", "");
   const changeVerified = splitList(argValue("change-verified", ""));
+  const manifest = await loadBenchmarkManifest();
+  const trackedBatches = await loadTrackedBatchDefinitions();
+  validateBatchMatrix(trackedBatches, manifest);
+
+  if (!["deterministic", "live"].includes(mode)) {
+    throw new Error(`Unknown QA worker mode: ${mode}`);
+  }
+
+  if (
+    batchNames.length === 0 ||
+    new Set(batchNames).size !== batchNames.length
+  ) {
+    throw new Error("QA batches must be a nonempty unique list.");
+  }
+
+  const knownBatchNames = new Set(trackedBatches.map((batch) => batch.name));
+  const unknownBatchNames = batchNames.filter((name) => !knownBatchNames.has(name));
+  if (unknownBatchNames.length > 0) {
+    throw new Error(`Unknown QA batch(es): ${unknownBatchNames.join(", ")}`);
+  }
+
   await mkdir(workerDir, { recursive: true });
 
-  const workerRuns = await runWorkerBatches(batches, {
+  const workerRuns = await runWorkerBatches(batchNames, {
     baseUrl,
     mode,
     parallel,
     runId,
   });
-  const commandResults = [];
-
-  for (const item of checks) {
-    const result = await runCommand(item);
-    commandResults.push({ name: item.name, ...result });
-  }
-
   const workerResults = await loadCurrentWorkerResults(workerRuns, runId);
   const repeatedFailures = repeatedFailureSummary(workerResults);
-  const runOptions = { batches, changeNote, mode, parallel };
+  const benchmarkReconciliation =
+    mode === "deterministic"
+      ? reconcileBenchmarkWorkerResults({
+          batches: trackedBatches,
+          manifest,
+          requestedBatchNames: batchNames,
+          workerResults,
+        })
+      : null;
+  const commandResults = [];
+
+  if (
+    workerRuns.every((result) => result.code === 0) &&
+    (!benchmarkReconciliation || benchmarkReconciliation.passed)
+  ) {
+    for (const item of checks) {
+      const result = await runCommand(item);
+      commandResults.push({ name: item.name, ...result });
+    }
+  }
+
+  const runOptions = { batches: batchNames, changeNote, mode, parallel };
   const changeLogUpdated = await appendChangeLogIfNeeded(changeNote, changeVerified);
+  const nextTaskSuggestionFile = `${runId}.next-task.md`;
   const runResult = {
     runId,
     createdAt: new Date().toISOString(),
     checks: commandResults,
+    benchmarkReconciliation,
     changeLogUpdated,
     mode,
     parallel,
@@ -426,28 +497,55 @@ async function main() {
     join(workerDir, `${runId}.controller.json`),
     JSON.stringify(runResult, null, 2),
   );
-  await writeFile(nextTaskPath, nextTaskMarkdown(runId, repeatedFailures));
+  await writeFile(
+    join(workerDir, nextTaskSuggestionFile),
+    nextTaskMarkdown(runId, repeatedFailures),
+  );
   await appendFile(
     qaLogPath,
-    qaLogMarkdown(runId, commandResults, workerResults, repeatedFailures, runOptions),
+    qaLogMarkdown(
+      runId,
+      commandResults,
+      workerResults,
+      repeatedFailures,
+      runOptions,
+      benchmarkReconciliation,
+      nextTaskSuggestionFile,
+    ),
   );
   await writeFile(
     reportPath,
-    reportMarkdown(runId, commandResults, workerRuns, workerResults, repeatedFailures, null, runOptions),
+    reportMarkdown(
+      runId,
+      commandResults,
+      workerRuns,
+      workerResults,
+      repeatedFailures,
+      null,
+      runOptions,
+      benchmarkReconciliation,
+    ),
   );
-  await syncMarkdownSnapshots();
 
   console.log(JSON.stringify(runResult, null, 2));
 
   if (
     commandResults.some((result) => result.code !== 0) ||
-    workerRuns.some((result) => result.code !== 0)
+    workerRuns.some((result) => result.code !== 0) ||
+    (benchmarkReconciliation && !benchmarkReconciliation.passed)
   ) {
     process.exitCode = 1;
   }
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}
+
+export const agentLoopControllerTestExports = {
+  benchmarkCoverageMarkdown,
+  statusLabel,
+};

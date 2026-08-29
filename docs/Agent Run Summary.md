@@ -2080,3 +2080,74 @@ final readiness report are incomplete.
 execute distinct tracked benchmark cases and invariants rather than sharing one
 synthetic evaluator while reporting different metadata. Reasoning level: High
 for benchmark validity and mutation design; Medium for harness plumbing.
+
+## Codex Run - 2026-08-29 Production readiness PR-3 offline benchmark integrity
+
+**Goal:** make deterministic QA batch names prove distinct executed coverage so
+later product-quality decisions cannot rely on metadata-only green results.
+
+**What was checked:** the five batch definitions, deterministic worker and live
+rotation boundary, legacy evaluator, controller result loading/status/reporting,
+before/after verifier, authoritative handoff ownership, Desktop-copy behavior,
+tracked fixture design, production scoring entry point, and every required
+static/browser/zero-network wall.
+
+**What was found:** all five named deterministic batches delegated to the same
+five legacy evaluator cases while recording different live search metadata.
+The controller also overwrote `docs/agent-next-task.md` and copied Markdown
+outside the repo. During independent review, reconciliation was shown to accept
+fabricated price/product failures; the direct worker accepted misspelled modes;
+the verifier silently skipped missing input paths; and an initial whole-result
+replay correction made genuine historical before evidence unverifiable after a
+fix.
+
+**What changed:** one tracked manifest now supplies ten synthetic cases and 29
+invariants, uniquely partitioned across all five batches. It covers broad,
+constrained, over-constrained, wrong-type/accessory, fake-price, non-product-
+page, duplicate-family, compatibility, and missing-evidence shapes. Every
+candidate has explicit price/product ground truth. Workers persist exact case
+IDs and invariant outcomes; reconciliation rederives them from persisted
+exact/near streams and the tracked manifest. Unknown modes and every missing
+verifier path fail closed. Historical failing streams remain comparable to a
+passing post-fix result.
+
+The controller now runs both the byte-unchanged legacy evaluator and the new
+full benchmark. It writes only ignored advisory next-task output and does not
+copy Markdown to Desktop. The operator template states the same authority and
+exact before/after requirements.
+
+**Why it matters:** a green price, non-product, or requirement batch now proves
+that its declared trap cases actually ran. The verifier cannot hide missing
+work or turn a fabricated trust failure into apparent improvement. This raises
+confidence in future diagnosis without changing production recommendations.
+
+**Tests and before/after proof:** the fail-first worker suite passed nine checks
+and failed exactly one new assertion because broad and price batches executed
+the same five cases. Corrected focused harness/mutation tests passed 26/26. The
+final low-parallelism controller reconciled all five exact partitions; the
+benchmark passed 10/10 cases and 29/29 invariants; and the complete suite passed
+1,477/1,477 across 214 suites. Typecheck, production build, credential-neutral
+E2E 17/17, legacy eval, fixed ranking comparison, zero-network Phase D dry run,
+and diff checks passed. Lint had zero errors and the same three pre-existing
+warnings; `next-env.d.ts` was restored.
+
+**Independent review:** the reviewer produced four blocking findings described
+above. After each correction, the final exact-snapshot verdict was `APPROVED`
+with no findings; the reviewer personally passed 26/26 focused tests, the full
+benchmark, legacy eval, typecheck, and diff/authentication checks.
+
+**Live checks:** none. No OpenAI, hosted search, Serper, SearchAPI, Shopping,
+source-page, or other product-data request ran.
+
+**Remaining issues:** the matrix is synthetic, its candidate oracles are
+manually maintained, and ignored worker artifacts are structurally reconciled
+rather than cryptographically immutable. PR-013 still blocks staged lifecycle
+feasibility, while active-path market coverage, stability, latency, and cost
+remain unmeasured. RR-091 and RR-092 remain release blockers for promotion.
+
+**Next recommended step:** after the PR-3 commit leaves a clean tracked tree,
+run one frozen commit-pinned `shop vac` Phase D lifecycle revalidation with the
+existing ceilings and first-terminal/no-retry policy. This is stronger than a
+broad live matrix now because PR-4 depends on proving one complete staged
+lifecycle first. Reasoning level: High for boundary/evidence adjudication and
+Medium for the bounded mechanical run.

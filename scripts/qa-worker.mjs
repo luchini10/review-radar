@@ -7,6 +7,11 @@ import { spawn } from "node:child_process";
 import { productRecommendationEligibility } from "../lib/productEligibility.ts";
 import { assessProductPriceTrust } from "../lib/productPriceTrust.ts";
 import { parseMaxBudgetAmount } from "../lib/priceParsing.ts";
+import {
+  loadBenchmarkManifest,
+  reconcileBenchmarkWorkerResult,
+  validateBatchDefinition,
+} from "./qa-benchmark.mjs";
 
 const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const docsDir = join(repoRoot, "docs");
@@ -55,6 +60,10 @@ async function loadBatch(batchName) {
   }
 
   const batch = await readJson(path);
+
+  if (batch.name !== batchName) {
+    throw new Error(`QA batch name does not match its filename: ${path}`);
+  }
 
   if (!Array.isArray(batch.searches)) {
     throw new Error(`QA batch is missing a searches array: ${path}`);
@@ -115,7 +124,7 @@ function pickRotatedSearches(batch, state, key) {
   };
 }
 
-function runCommand(command, args) {
+function runCommand(command, args, { stdoutLimit = 6000 } = {}) {
   return new Promise((resolveRun) => {
     const startedAt = Date.now();
     const executable =
@@ -138,7 +147,7 @@ function runCommand(command, args) {
         code,
         durationMs: Date.now() - startedAt,
         stderr: stderr.slice(-6000),
-        stdout: stdout.slice(-6000),
+        stdout: stdout.slice(-stdoutLimit),
       });
     });
   });
@@ -189,27 +198,6 @@ function liveFailureNote(response) {
   return response.attempts && response.attempts > 1
     ? `${message} Retried ${response.attempts} times.`
     : message;
-}
-
-function findingsFromEval(output) {
-  const normalized = output.replace(/\s+/g, " ").trim();
-
-  if (/RED-FLAG CHECKS.*(?:no issues|passed)/i.test(normalized)) {
-    return [];
-  }
-
-  if (/\b(?:failed|wrong|over budget|no exact|red[- ]flag issue)\b/i.test(output)) {
-    return [
-      finding(
-        "medium",
-        "eval_red_flag",
-        "needs_triage_from_eval_output",
-        "The deterministic eval output mentioned a possible issue. Inspect command output before editing.",
-      ),
-    ];
-  }
-
-  return [];
 }
 
 function suspiciousNameFlags(productNames) {
@@ -484,23 +472,90 @@ async function postRecommendationWithRetry(baseUrl, search) {
 }
 
 async function runDeterministicBatch(batch) {
-  const evalAvailable = existsSync(join(repoRoot, "scripts", "eval-pipeline.mjs"));
-  const command = evalAvailable
-    ? await runCommand("node", ["scripts/eval-pipeline.mjs"])
+  const benchmarkAvailable = existsSync(
+    join(repoRoot, "scripts", "qa-benchmark.mjs"),
+  );
+  const manifest = await loadBenchmarkManifest();
+  validateBatchDefinition(batch, manifest);
+  const rawCommand = benchmarkAvailable
+    ? await runCommand(
+        "node",
+        [
+          "--no-warnings",
+          "scripts/qa-benchmark.mjs",
+          "--json",
+          "--case-ids",
+          batch.benchmarkCaseIds.join(","),
+        ],
+        { stdoutLimit: 250000 },
+      )
     : {
-        code: 0,
+        code: 1,
         durationMs: 0,
-        stdout: "No deterministic eval pipeline found; worker recorded batch only.",
-        stderr: "",
+        stdout: "",
+        stderr: "The tracked offline benchmark is missing.",
       };
+  let benchmark = null;
+
+  try {
+    benchmark = JSON.parse(rawCommand.stdout);
+  } catch {
+    benchmark = null;
+  }
+
+  const provisionalResult = {
+    batchName: batch.name,
+    benchmark,
+    mode: "deterministic-benchmark",
+  };
+  const reconciliation = reconcileBenchmarkWorkerResult({
+    batch,
+    manifest,
+    workerResult: provisionalResult,
+  });
+  const command = {
+    ...rawCommand,
+    code:
+      rawCommand.code === 0 && reconciliation.passed ? 0 : rawCommand.code || 1,
+    stdout: benchmark
+      ? `Executed ${benchmark.executedCaseIds.length} tracked benchmark case(s): ${benchmark.executedCaseIds.join(", ")}.`
+      : rawCommand.stdout,
+    stderr: [rawCommand.stderr, ...reconciliation.errors]
+      .filter(Boolean)
+      .join("\n")
+      .slice(-6000),
+  };
+  const failedInvariants = (benchmark?.caseResults || []).flatMap((caseResult) =>
+    (caseResult.invariantResults || [])
+      .filter((invariant) => !invariant.passed)
+      .map((invariant) => ({ caseResult, invariant })),
+  );
 
   return {
+    benchmark,
     command,
-    findings: findingsFromEval(`${command.stdout}\n${command.stderr}`),
-    mode: evalAvailable ? "deterministic-eval" : "simulated-batch",
-    searches: batch.searches.map((search) => ({
-      search,
-      note: "Deterministic mode runs the shared eval pipeline; use live mode for per-search API output.",
+    findings: failedInvariants.map(({ caseResult, invariant }) =>
+      finding(
+        "high",
+        "offline_benchmark_invariant_failed",
+        "deterministic_benchmark_regression",
+        `${caseResult.caseId} failed invariant ${invariant.id}.`,
+        {
+          benchmarkCaseId: caseResult.caseId,
+          category: caseResult.input?.query,
+        },
+      ),
+    ),
+    mode: "deterministic-benchmark",
+    searches: (benchmark?.caseResults || []).map((caseResult) => ({
+      benchmarkCaseId: caseResult.caseId,
+      executed: true,
+      passed: caseResult.passed,
+      search: {
+        budget: caseResult.input?.budget,
+        category: caseResult.input?.query,
+        priorities: caseResult.input?.priorities,
+      },
     })),
   };
 }
@@ -555,19 +610,34 @@ async function runLiveBatch(batch, baseUrl) {
   };
 }
 
+function validateWorkerMode(mode) {
+  if (mode !== "deterministic" && mode !== "live") {
+    throw new Error(
+      `Unsupported QA worker mode ${JSON.stringify(mode)}; expected deterministic or live.`,
+    );
+  }
+
+  return mode;
+}
+
 async function main() {
   const batchName = argValue("batch", "broad-mainstream");
-  const mode = argValue("mode", "deterministic");
+  const mode = validateWorkerMode(argValue("mode", "deterministic"));
   const baseUrl = argValue("base-url", DEFAULT_BASE_URL);
   const controllerRunId = argValue("run-id", "");
   const loadedBatch = await loadBatch(batchName);
-  const rotationState = await readRotationState();
+  const rotationState = mode === "live" ? await readRotationState() : {};
   const rotationKey = `${mode}:${batchName}`;
-  const rotated = pickRotatedSearches(loadedBatch, rotationState, rotationKey);
+  const rotated =
+    mode === "live"
+      ? pickRotatedSearches(loadedBatch, rotationState, rotationKey)
+      : { batch: loadedBatch, state: rotationState };
   const batch = rotated.batch;
   const runId = `${controllerRunId ? `${controllerRunId}.` : ""}worker-${batchName}-${nowStamp()}`;
   await mkdir(workerDir, { recursive: true });
-  await writeRotationState(rotated.state);
+  if (mode === "live") {
+    await writeRotationState(rotated.state);
+  }
 
   const run =
     mode === "live"
@@ -577,6 +647,7 @@ async function main() {
     runId,
     batchDescription: batch.description,
     batchName,
+    benchmark: run.benchmark,
     createdAt: new Date().toISOString(),
     command: run.command,
     findings: run.findings,
@@ -611,4 +682,6 @@ export const qaWorkerTestExports = {
   pickRotatedSearches,
   priceTrustFlags,
   productEligibilityFlags,
+  runDeterministicBatch,
+  validateWorkerMode,
 };

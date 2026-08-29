@@ -3,6 +3,12 @@ import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { basename, join, resolve } from "node:path";
+import {
+  loadBenchmarkManifest,
+  loadTrackedBatchDefinitions,
+  reconcileBenchmarkWorkerResults,
+  validateBatchMatrix,
+} from "./qa-benchmark.mjs";
 
 const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const workerDir = join(repoRoot, "docs", "agent-worker-results");
@@ -77,13 +83,26 @@ async function loadResultSet(paths) {
 
   for (const path of paths) {
     if (!existsSync(path)) {
-      continue;
+      throw new Error(`Verifier input does not exist: ${path}`);
     }
 
-    results.push({
-      file: basename(path),
-      ...(await readJson(path)),
-    });
+    try {
+      const details = await stat(path);
+      if (!details.isFile()) {
+        throw new Error(`Verifier input is not a file: ${path}`);
+      }
+      results.push({
+        file: basename(path),
+        ...(await readJson(path)),
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("Verifier input")) {
+        throw error;
+      }
+      throw new Error(`Unable to read verifier input ${path}: ${error.message}`, {
+        cause: error,
+      });
+    }
   }
 
   return results;
@@ -125,7 +144,75 @@ function containsProductSpecificFix(results) {
   return /\b(?:hardcode|hard-coded|only this product|specific product patch|single product fix|just this product|patch this sku)\b/.test(text);
 }
 
-function verify(beforeResults, afterResults) {
+function isDeterministicResult(result) {
+  return typeof result?.mode === "string" && result.mode.startsWith("deterministic");
+}
+
+function benchmarkCoverageSignature(results) {
+  return results
+    .map((result) => ({
+      batchName: result.batchName,
+      executedCaseIds: result.benchmark?.executedCaseIds,
+    }))
+    .sort((first, second) => first.batchName.localeCompare(second.batchName));
+}
+
+function benchmarkComparison({ beforeResults, afterResults, batches, manifest }) {
+  const beforeDeterministic = beforeResults.some(isDeterministicResult);
+  const afterDeterministic = afterResults.some(isDeterministicResult);
+
+  if (!beforeDeterministic && !afterDeterministic) {
+    return {
+      applicable: false,
+      errors: [],
+      passed: true,
+    };
+  }
+
+  const errors = [];
+  if (!beforeResults.every(isDeterministicResult)) {
+    errors.push("Before set mixes deterministic and non-deterministic worker results.");
+  }
+  if (!afterResults.every(isDeterministicResult)) {
+    errors.push("After set mixes deterministic and non-deterministic worker results.");
+  }
+
+  const beforeReconciliation = reconcileBenchmarkWorkerResults({
+    batches,
+    manifest,
+    requestedBatchNames: beforeResults.map((result) => result.batchName),
+    workerResults: beforeResults,
+  });
+  const afterReconciliation = reconcileBenchmarkWorkerResults({
+    batches,
+    manifest,
+    requestedBatchNames: afterResults.map((result) => result.batchName),
+    workerResults: afterResults,
+  });
+
+  errors.push(
+    ...beforeReconciliation.errors.map((error) => `Before benchmark: ${error}`),
+    ...afterReconciliation.errors.map((error) => `After benchmark: ${error}`),
+  );
+
+  const beforeCoverage = benchmarkCoverageSignature(beforeResults);
+  const afterCoverage = benchmarkCoverageSignature(afterResults);
+  if (JSON.stringify(beforeCoverage) !== JSON.stringify(afterCoverage)) {
+    errors.push("Before and after benchmark coverage does not exactly match.");
+  }
+
+  return {
+    applicable: true,
+    beforeCoverage,
+    beforeReconciliation,
+    afterCoverage,
+    afterReconciliation,
+    errors,
+    passed: errors.length === 0,
+  };
+}
+
+function verify(beforeResults, afterResults, benchmarkContext = null) {
   const beforeFindings = allFindings(beforeResults);
   const afterFindings = allFindings(afterResults);
   const beforeRoots = rootCauseCounts(beforeResults);
@@ -143,6 +230,19 @@ function verify(beforeResults, afterResults) {
   const wrongProductAfter = suspiciousFailureCount(afterResults, /wrong_product|category|identity/i);
   const nonProductBefore = suspiciousFailureCount(beforeResults, /non_product|article|forum|support|deal/i);
   const nonProductAfter = suspiciousFailureCount(afterResults, /non_product|article|forum|support|deal/i);
+  const benchmarkResult = benchmarkContext
+    ? benchmarkComparison({
+        afterResults,
+        beforeResults,
+        ...benchmarkContext,
+      })
+    : {
+        applicable: false,
+        errors: [],
+        passed: true,
+      };
+
+  rejectedReasons.push(...benchmarkResult.errors);
 
   if (afterFindings.length > beforeFindings.length) {
     rejectedReasons.push("After set has more findings than before.");
@@ -176,6 +276,7 @@ function verify(beforeResults, afterResults) {
     accepted: rejectedReasons.length === 0,
     afterFindingCount: afterFindings.length,
     beforeFindingCount: beforeFindings.length,
+    benchmarkComparison: benchmarkResult,
     newRootCauses,
     rejectedReasons,
     requiredFollowUp:
@@ -200,12 +301,15 @@ async function main() {
 
   const beforeResults = await loadResultSet(beforePaths);
   const afterResults = await loadResultSet(afterPaths);
+  const manifest = await loadBenchmarkManifest();
+  const batches = await loadTrackedBatchDefinitions();
+  validateBatchMatrix(batches, manifest);
   const summary = {
     runId: `verify-${nowStamp()}`,
     afterFiles: afterResults.map((result) => result.file),
     beforeFiles: beforeResults.map((result) => result.file),
     createdAt: new Date().toISOString(),
-    ...verify(beforeResults, afterResults),
+    ...verify(beforeResults, afterResults, { batches, manifest }),
     rule: "Accept only generalized improvements that do not harm broader QA.",
   };
 
@@ -221,7 +325,15 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}
+
+export const qaLoopVerifierTestExports = {
+  benchmarkComparison,
+  loadResultSet,
+  verify,
+};

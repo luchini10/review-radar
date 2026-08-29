@@ -1,6 +1,12 @@
 {
+  "schemaVersion": "review-radar-agent-batch-v2",
   "name": "requirement-units",
   "description": "Numeric and unit requirements should be parsed, displayed, and verified consistently across categories.",
+  "benchmarkCaseIds": [
+    "constrained-leaf-blower",
+    "soft-spec-cordless-vacuum",
+    "overconstrained-leaf-blower"
+  ],
   "searchesPerRun": 2,
   "searches": [
     {

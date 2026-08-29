@@ -4,6 +4,43 @@
 
 ---
 
+## PR-3 tracked offline benchmark contract (2026-08-29)
+
+- `tests/fixtures/qa-benchmark-matrix-v1.json` is the deterministic named-batch
+  ground truth. Every candidate ID is unique across the matrix and must have
+  exactly one tracked `priceTrusted`/`productEligible` oracle. Every case is
+  assigned exactly once to the matching `docs/agent-batches/*.json` partition.
+- The current matrix has ten cases and 29 invariants covering broad,
+  constrained, over-constrained, wrong-type/accessory, fake-price, non-product-
+  page, duplicate-family, compatibility, and missing-evidence shapes. Prefer
+  status/count/trust invariants over brittle exact winner order.
+- Deterministic workers must call `scripts/qa-benchmark.mjs` with only their
+  declared case IDs and persist declared/executed IDs plus every invariant
+  result. They must not read or update live search rotation state. Only exact
+  `deterministic` and `live` mode names are valid.
+- Reconciliation must rederive candidate statuses and counts from persisted
+  exact/near streams and rederive price/product failures from exact IDs plus the
+  tracked oracles. Reject missing, duplicate, unknown, mismatched, malformed,
+  fabricated, or incomparable work. Do not rerun historical before evidence
+  under current production code: that makes a real pre-fix failure impossible
+  to compare after correction.
+- Every explicitly requested verifier path must exist, be a file, and parse;
+  never silently drop one member of a before/after set. Both sides must cover
+  the same exact batches/cases. A same-set verification checks integrity and
+  comparability only; it does not prove an improvement.
+- `scripts/eval-pipeline.mjs` remains the legacy flag-comparison evaluator and
+  is byte-unchanged by PR-3. The controller runs it and the tracked benchmark as
+  separate checks. Its next-task output is ignored/advisory only; only a
+  deliberate phase closeout may regenerate `docs/agent-next-task.md`. Never
+  copy repository Markdown to Desktop from the controller.
+- PR-3 proof: fail-first 9 pass / 1 intended fail; focused 26/26; full
+  1,477/1,477; exact five-batch reconciliation; benchmark 10/10 cases and 29/29
+  invariants; E2E 17/17; independent final `APPROVED`. This proves harness
+  integrity only, not current product/provider quality. Candidate oracles are
+  manually maintained and ignored artifacts are not cryptographically sealed.
+
+---
+
 ## OAI-T10 PR-2J candidate-local source-reference contract (2026-08-29)
 
 - Candidate `source_urls` is still the exact response-owned registry boundary

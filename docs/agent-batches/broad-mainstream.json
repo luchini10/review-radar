@@ -1,6 +1,11 @@
 {
+  "schemaVersion": "review-radar-agent-batch-v2",
   "name": "broad-mainstream",
   "description": "Broad common searches should return mainstream, trustworthy products instead of false no-exact states or obscure picks.",
+  "benchmarkCaseIds": [
+    "broad-running-mainstream",
+    "duplicate-monitor-family"
+  ],
   "searchesPerRun": 3,
   "searches": [
     {

@@ -9,7 +9,55 @@ const {
   liveFailureNote,
   liveFailureRootCause,
   pickRotatedSearches,
+  runDeterministicBatch,
+  validateWorkerMode,
 } = qaWorkerTestExports;
+
+describe("deterministic QA batch execution", () => {
+  it("fails closed on an unknown direct worker mode", () => {
+    assert.throws(
+      () => validateWorkerMode("deterministc"),
+      /Unsupported QA worker mode.*deterministic or live/,
+    );
+  });
+
+  it("executes the cases declared by each named batch", async () => {
+    const broad = await runDeterministicBatch({
+      schemaVersion: "review-radar-agent-batch-v2",
+      name: "broad-mainstream",
+      benchmarkCaseIds: ["broad-running-mainstream"],
+      searches: [{ category: "running shoes" }],
+      searchPool: [{ category: "running shoes" }],
+    });
+    const price = await runDeterministicBatch({
+      schemaVersion: "review-radar-agent-batch-v2",
+      name: "price-trust",
+      benchmarkCaseIds: ["fake-price-propane-grill"],
+      searches: [{ category: "gas grill" }],
+      searchPool: [{ category: "gas grill" }],
+    });
+
+    assert.deepEqual(broad.benchmark.declaredCaseIds, [
+      "broad-running-mainstream",
+    ]);
+    assert.deepEqual(broad.benchmark.executedCaseIds, [
+      "broad-running-mainstream",
+    ]);
+    assert.deepEqual(price.benchmark.declaredCaseIds, [
+      "fake-price-propane-grill",
+    ]);
+    assert.deepEqual(price.benchmark.executedCaseIds, [
+      "fake-price-propane-grill",
+    ]);
+    assert.notDeepEqual(
+      broad.benchmark.executedCaseIds,
+      price.benchmark.executedCaseIds,
+      "named batches must not substitute the same shared evaluator cases",
+    );
+    assert.equal(broad.command.code, 0);
+    assert.equal(price.command.code, 0);
+  });
+});
 
 describe("live QA worker failure handling", () => {
   it("retries temporary localhost, rate-limit, and server failures", () => {

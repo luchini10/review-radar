@@ -1,6 +1,11 @@
 {
+  "schemaVersion": "review-radar-agent-batch-v2",
   "name": "wrong-category",
   "description": "Wrong product types, accessories, components, and category substitutions should not become exact matches.",
+  "benchmarkCaseIds": [
+    "wrong-type-and-accessory-office-chair",
+    "compatibility-king-mattress"
+  ],
   "searchesPerRun": 3,
   "searches": [
     {

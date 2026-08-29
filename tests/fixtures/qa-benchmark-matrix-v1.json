@@ -1,0 +1,702 @@
+{
+  "schemaVersion": "review-radar-offline-benchmark-v1",
+  "profile": "committed-defaults-with-case-flags-v1",
+  "candidateOracles": {
+    "brooks-ghost-15": { "priceTrusted": true, "productEligible": true },
+    "generic-runner": { "priceTrusted": true, "productEligible": true },
+    "carbon-elite-over-budget": { "priceTrusted": true, "productEligible": true },
+    "m27q-manufacturer": { "priceTrusted": true, "productEligible": true },
+    "m27q-retailer": { "priceTrusted": true, "productEligible": true },
+    "dell-g2724d-control": { "priceTrusted": true, "productEligible": true },
+    "ego-650-control": { "priceTrusted": true, "productEligible": true },
+    "budgetair-400": { "priceTrusted": true, "productEligible": true },
+    "quietpro-unproven": { "priceTrusted": true, "productEligible": true },
+    "dyson-v15-control": { "priceTrusted": true, "productEligible": true },
+    "valuevac-soft-unknown": { "priceTrusted": true, "productEligible": true },
+    "ego-650-too-weak": { "priceTrusted": true, "productEligible": true },
+    "maxblow-800-too-weak": { "priceTrusted": true, "productEligible": true },
+    "ergonomic-chair-control": { "priceTrusted": true, "productEligible": true },
+    "gaming-chair-wrong-type": { "priceTrusted": true, "productEligible": true },
+    "lumbar-pillow-accessory": { "priceTrusted": true, "productEligible": true },
+    "king-mattress-control": { "priceTrusted": true, "productEligible": true },
+    "twin-mattress-incompatible": { "priceTrusted": true, "productEligible": true },
+    "queen-mattress-incompatible": { "priceTrusted": true, "productEligible": true },
+    "weber-e310-control": { "priceTrusted": true, "productEligible": true },
+    "weber-one-dollar-trap": { "priceTrusted": false, "productEligible": true },
+    "verified-laptop-control": { "priceTrusted": true, "productEligible": true },
+    "missing-price-laptop": { "priceTrusted": false, "productEligible": true },
+    "breville-control": { "priceTrusted": true, "productEligible": true },
+    "editorial-roundup": { "priceTrusted": false, "productEligible": false }
+  },
+  "cases": [
+    {
+      "id": "broad-running-mainstream",
+      "partition": "broad-mainstream",
+      "coverage": ["broad"],
+      "label": "Broad running-shoe request preserves a trustworthy in-budget option",
+      "input": {
+        "query": "running shoes",
+        "budget": "under $150"
+      },
+      "candidates": [
+        {
+          "id": "brooks-ghost-15",
+          "name": "Brooks Ghost 15 Running Shoes",
+          "category": "running shoes",
+          "host": "brooksrunning.com",
+          "brand": "Brooks",
+          "model": "Ghost 15",
+          "offer": 140,
+          "consensus": "Strong",
+          "rating": 4.6,
+          "reviews": 5000,
+          "pros": ["Cushioned running shoe for daily training."],
+          "evidence": "strong"
+        },
+        {
+          "id": "generic-runner",
+          "name": "Generic Runner Running Shoes",
+          "category": "running shoes",
+          "host": "generic.example",
+          "brand": "Generic",
+          "model": "Runner 1",
+          "offer": 59,
+          "consensus": "Weak",
+          "rating": 4.4,
+          "reviews": 70,
+          "pros": ["Lightweight running shoes."],
+          "evidence": "retailer"
+        },
+        {
+          "id": "carbon-elite-over-budget",
+          "name": "Carbon Elite Racer Running Shoes",
+          "category": "running shoes",
+          "host": "racer.example",
+          "brand": "Racer",
+          "model": "Carbon Elite",
+          "offer": 250,
+          "consensus": "Mixed",
+          "rating": 4.7,
+          "reviews": 400,
+          "pros": ["Carbon plate for racing."],
+          "evidence": "retailer"
+        }
+      ],
+      "invariants": [
+        {
+          "id": "trusted-mainstream-control-is-exact",
+          "type": "candidate_status",
+          "candidateId": "brooks-ghost-15",
+          "status": "exact"
+        },
+        {
+          "id": "over-budget-candidate-is-not-exact",
+          "type": "candidate_status",
+          "candidateId": "carbon-elite-over-budget",
+          "status": "not_exact"
+        },
+        {
+          "id": "broad-case-retains-an-exact-choice",
+          "type": "exact_count",
+          "min": 1
+        },
+        {
+          "id": "every-exact-price-is-trusted",
+          "type": "all_exact_price_trusted"
+        }
+      ]
+    },
+    {
+      "id": "duplicate-monitor-family",
+      "partition": "broad-mainstream",
+      "coverage": ["duplicate_family"],
+      "label": "Cross-retailer copies of one exact monitor model consume one slot",
+      "input": {
+        "query": "gaming monitor",
+        "budget": "under $500"
+      },
+      "candidates": [
+        {
+          "id": "m27q-manufacturer",
+          "name": "Gigabyte M27Q Gaming Monitor Rev 1.0",
+          "category": "gaming monitor",
+          "host": "gigabyte.com",
+          "brand": "Gigabyte",
+          "model": "M27Q",
+          "offer": 299,
+          "consensus": "Strong",
+          "rating": 4.6,
+          "reviews": 1800,
+          "pros": ["M27Q QHD gaming monitor."],
+          "evidence": "strong"
+        },
+        {
+          "id": "m27q-retailer",
+          "name": "Gigabyte M27Q 27 Inch QHD Gaming Monitor",
+          "category": "gaming monitor",
+          "host": "bestbuy.example",
+          "brand": "Gigabyte",
+          "model": "M27Q",
+          "offer": 289,
+          "consensus": "Strong",
+          "rating": 4.6,
+          "reviews": 1200,
+          "pros": ["M27Q QHD gaming monitor."],
+          "evidence": "strong"
+        },
+        {
+          "id": "dell-g2724d-control",
+          "name": "Dell G2724D Gaming Monitor",
+          "category": "gaming monitor",
+          "host": "dell.com",
+          "brand": "Dell",
+          "model": "G2724D",
+          "offer": 249,
+          "consensus": "Strong",
+          "rating": 4.5,
+          "reviews": 900,
+          "pros": ["G2724D QHD gaming monitor."],
+          "evidence": "strong"
+        }
+      ],
+      "invariants": [
+        {
+          "id": "one-m27q-representation-at-most",
+          "type": "max_exact_from_candidates",
+          "candidateIds": ["m27q-manufacturer", "m27q-retailer"],
+          "max": 1
+        },
+        {
+          "id": "distinct-model-control-is-exact",
+          "type": "candidate_status",
+          "candidateId": "dell-g2724d-control",
+          "status": "exact"
+        },
+        {
+          "id": "duplicate-case-retains-two-distinct-models",
+          "type": "exact_count",
+          "min": 2
+        }
+      ]
+    },
+    {
+      "id": "constrained-leaf-blower",
+      "partition": "requirement-units",
+      "coverage": ["constrained"],
+      "label": "Hard 600 CFM requirement rejects lower or unproven airflow",
+      "flags": {
+        "REVIEW_RADAR_SPEC_VALIDATION": "on"
+      },
+      "input": {
+        "query": "cordless leaf blower",
+        "priorities": "at least 600 cfm",
+        "budget": "under $300"
+      },
+      "candidates": [
+        {
+          "id": "ego-650-control",
+          "name": "EGO Power Plus 650 CFM Cordless Leaf Blower Battery Included",
+          "category": "cordless leaf blower",
+          "host": "egopowerplus.com",
+          "brand": "EGO",
+          "model": "LB6504",
+          "offer": 299,
+          "consensus": "Strong",
+          "rating": 4.7,
+          "reviews": 2000,
+          "pros": ["Battery included.", "650 CFM airflow."],
+          "evidence": "strong"
+        },
+        {
+          "id": "budgetair-400",
+          "name": "BudgetAir 400 CFM Cordless Leaf Blower",
+          "category": "cordless leaf blower",
+          "host": "budgetair.example",
+          "brand": "BudgetAir",
+          "model": "BA400",
+          "offer": 89,
+          "consensus": "Weak",
+          "rating": 4.1,
+          "reviews": 60,
+          "pros": ["400 CFM cordless airflow."],
+          "evidence": "retailer"
+        },
+        {
+          "id": "quietpro-unproven",
+          "name": "QuietPro Cordless Leaf Blower",
+          "category": "cordless leaf blower",
+          "host": "quietpro.example",
+          "brand": "QuietPro",
+          "model": "QP1",
+          "offer": 179,
+          "consensus": "Mixed",
+          "rating": 4.3,
+          "reviews": 150,
+          "pros": ["Quiet cordless operation."],
+          "evidence": "retailer"
+        }
+      ],
+      "invariants": [
+        {
+          "id": "verified-hard-spec-control-is-exact",
+          "type": "candidate_status",
+          "candidateId": "ego-650-control",
+          "status": "exact"
+        },
+        {
+          "id": "lower-airflow-is-not-exact",
+          "type": "candidate_status",
+          "candidateId": "budgetair-400",
+          "status": "not_exact"
+        },
+        {
+          "id": "unproven-airflow-is-not-exact",
+          "type": "candidate_status",
+          "candidateId": "quietpro-unproven",
+          "status": "not_exact"
+        }
+      ]
+    },
+    {
+      "id": "soft-spec-cordless-vacuum",
+      "partition": "requirement-units",
+      "coverage": ["missing_evidence"],
+      "label": "Soft suction target does not become an unsupported hard rejection",
+      "flags": {
+        "REVIEW_RADAR_SPEC_VALIDATION": "on"
+      },
+      "input": {
+        "query": "cordless vacuum",
+        "priorities": "around 150 aw suction",
+        "budget": "under $500"
+      },
+      "candidates": [
+        {
+          "id": "dyson-v15-control",
+          "name": "Dyson V15 240 AW Cordless Vacuum",
+          "category": "cordless vacuum",
+          "host": "dyson.com",
+          "brand": "Dyson",
+          "model": "V15",
+          "offer": 499,
+          "consensus": "Strong",
+          "rating": 4.6,
+          "reviews": 3000,
+          "pros": ["240 AW suction.", "60 minute runtime."],
+          "evidence": "strong"
+        },
+        {
+          "id": "valuevac-soft-unknown",
+          "name": "ValueVac Cordless Vacuum",
+          "category": "cordless vacuum",
+          "host": "valuevac.example",
+          "brand": "ValueVac",
+          "model": "VV1",
+          "offer": 199,
+          "consensus": "Weak",
+          "rating": 4.2,
+          "reviews": 80,
+          "pros": ["Lightweight cordless cleaning."],
+          "evidence": "retailer"
+        }
+      ],
+      "invariants": [
+        {
+          "id": "soft-unknown-remains-exact-eligible",
+          "type": "candidate_status",
+          "candidateId": "valuevac-soft-unknown",
+          "status": "exact"
+        },
+        {
+          "id": "verified-control-remains-exact",
+          "type": "candidate_status",
+          "candidateId": "dyson-v15-control",
+          "status": "exact"
+        }
+      ]
+    },
+    {
+      "id": "overconstrained-leaf-blower",
+      "partition": "requirement-units",
+      "coverage": ["overconstrained"],
+      "label": "An over-constrained hard-spec request may honestly return no exact match",
+      "flags": {
+        "REVIEW_RADAR_SPEC_VALIDATION": "on"
+      },
+      "input": {
+        "query": "cordless leaf blower",
+        "priorities": "at least 900 cfm, under 5 lb, battery included",
+        "budget": "under $300"
+      },
+      "candidates": [
+        {
+          "id": "ego-650-too-weak",
+          "name": "EGO Power Plus 650 CFM Cordless Leaf Blower Battery Included",
+          "category": "cordless leaf blower",
+          "host": "egopowerplus.com",
+          "brand": "EGO",
+          "model": "LB6504",
+          "offer": 299,
+          "consensus": "Strong",
+          "rating": 4.7,
+          "reviews": 2000,
+          "pros": ["Battery included.", "650 CFM airflow.", "Weighs 7.4 lb."],
+          "evidence": "strong"
+        },
+        {
+          "id": "maxblow-800-too-weak",
+          "name": "Maxblow 800 CFM Cordless Leaf Blower",
+          "category": "cordless leaf blower",
+          "host": "maxblow.example",
+          "brand": "Maxblow",
+          "model": "MB800",
+          "offer": 249,
+          "consensus": "Mixed",
+          "rating": 4.3,
+          "reviews": 300,
+          "pros": ["800 CFM cordless airflow.", "Battery included."],
+          "evidence": "retailer"
+        }
+      ],
+      "invariants": [
+        {
+          "id": "overconstrained-case-has-no-exact-match",
+          "type": "exact_count",
+          "max": 0
+        }
+      ]
+    },
+    {
+      "id": "wrong-type-and-accessory-office-chair",
+      "partition": "wrong-category",
+      "coverage": ["wrong_type", "accessory"],
+      "label": "Gaming chairs and lumbar accessories cannot satisfy a complete office-chair request",
+      "input": {
+        "query": "office chair",
+        "priorities": "lumbar support, not a gaming chair, complete chair not an accessory",
+        "budget": "under $400"
+      },
+      "candidates": [
+        {
+          "id": "ergonomic-chair-control",
+          "name": "ErgoWork E2 Ergonomic Office Chair",
+          "category": "office chair",
+          "host": "ergowork.example",
+          "brand": "ErgoWork",
+          "model": "E2",
+          "offer": 349,
+          "consensus": "Strong",
+          "rating": 4.6,
+          "reviews": 1100,
+          "pros": ["Complete office chair with adjustable lumbar support."],
+          "evidence": "strong"
+        },
+        {
+          "id": "gaming-chair-wrong-type",
+          "name": "Racer Pro Gaming Chair",
+          "category": "gaming chair",
+          "host": "racerchair.example",
+          "brand": "Racer",
+          "model": "PRO-G",
+          "offer": 299,
+          "consensus": "Mixed",
+          "rating": 4.5,
+          "reviews": 900,
+          "pros": ["Gaming chair with lumbar pillow."],
+          "evidence": "retailer"
+        },
+        {
+          "id": "lumbar-pillow-accessory",
+          "name": "Lumbar Support Pillow for Office Chair",
+          "category": "office chair accessory",
+          "host": "chairparts.example",
+          "brand": "ChairParts",
+          "model": "LP1",
+          "offer": 29,
+          "consensus": "Mixed",
+          "rating": 4.4,
+          "reviews": 600,
+          "pros": ["Lumbar support accessory for an existing chair."],
+          "evidence": "retailer"
+        }
+      ],
+      "invariants": [
+        {
+          "id": "complete-chair-control-is-exact",
+          "type": "candidate_status",
+          "candidateId": "ergonomic-chair-control",
+          "status": "exact"
+        },
+        {
+          "id": "gaming-chair-is-not-exact",
+          "type": "candidate_status",
+          "candidateId": "gaming-chair-wrong-type",
+          "status": "not_exact"
+        },
+        {
+          "id": "accessory-is-not-exact",
+          "type": "candidate_status",
+          "candidateId": "lumbar-pillow-accessory",
+          "status": "not_exact"
+        },
+        {
+          "id": "all-exact-cards-are-product-eligible",
+          "type": "all_exact_product_eligible"
+        }
+      ]
+    },
+    {
+      "id": "compatibility-king-mattress",
+      "partition": "wrong-category",
+      "coverage": ["compatibility"],
+      "label": "Wrong-size mattress variants do not satisfy a king-size request",
+      "input": {
+        "query": "king size mattress",
+        "budget": "under $2000"
+      },
+      "candidates": [
+        {
+          "id": "king-mattress-control",
+          "name": "Leesa Studio King Mattress",
+          "category": "king size mattress",
+          "host": "leesa.example",
+          "brand": "Leesa",
+          "model": "Studio King",
+          "offer": 799,
+          "consensus": "Strong",
+          "rating": 4.4,
+          "reviews": 1200,
+          "pros": ["King size memory foam mattress."],
+          "evidence": "strong"
+        },
+        {
+          "id": "twin-mattress-incompatible",
+          "name": "Leesa Studio Twin Mattress",
+          "category": "king size mattress",
+          "host": "leesa.example",
+          "brand": "Leesa",
+          "model": "Studio Twin",
+          "offer": 384,
+          "consensus": "Mixed",
+          "rating": 4.3,
+          "reviews": 600,
+          "pros": ["Twin size memory foam mattress."],
+          "evidence": "retailer"
+        },
+        {
+          "id": "queen-mattress-incompatible",
+          "name": "Leesa Studio Queen Mattress",
+          "category": "king size mattress",
+          "host": "leesa.example",
+          "brand": "Leesa",
+          "model": "Studio Queen",
+          "offer": 559,
+          "consensus": "Mixed",
+          "rating": 4.3,
+          "reviews": 700,
+          "pros": ["Queen size memory foam mattress."],
+          "evidence": "retailer"
+        }
+      ],
+      "invariants": [
+        {
+          "id": "king-control-is-exact",
+          "type": "candidate_status",
+          "candidateId": "king-mattress-control",
+          "status": "exact"
+        },
+        {
+          "id": "twin-is-not-exact",
+          "type": "candidate_status",
+          "candidateId": "twin-mattress-incompatible",
+          "status": "not_exact"
+        },
+        {
+          "id": "queen-is-not-exact",
+          "type": "candidate_status",
+          "candidateId": "queen-mattress-incompatible",
+          "status": "not_exact"
+        }
+      ]
+    },
+    {
+      "id": "fake-price-propane-grill",
+      "partition": "price-trust",
+      "coverage": ["fake_price"],
+      "label": "Accessory-like one-dollar evidence cannot create an exact grill",
+      "input": {
+        "query": "gas grill",
+        "priorities": "must be propane",
+        "budget": "under $700"
+      },
+      "candidates": [
+        {
+          "id": "weber-e310-control",
+          "name": "Weber Spirit E-310 Gas Grill Liquid Propane",
+          "category": "gas grill",
+          "host": "weber.com",
+          "brand": "Weber",
+          "model": "E-310",
+          "offer": 449,
+          "consensus": "Strong",
+          "rating": 4.6,
+          "reviews": 1500,
+          "pros": ["Liquid propane fuel.", "Three-burner gas grill."],
+          "evidence": "strong"
+        },
+        {
+          "id": "weber-one-dollar-trap",
+          "name": "Weber Spirit II E-315 Gas Grill Liquid Propane",
+          "category": "gas grill",
+          "host": "marketplace.example",
+          "brand": "Weber",
+          "model": "E-315",
+          "offer": 1,
+          "priceText": "$1",
+          "consensus": "Mixed",
+          "rating": 4.5,
+          "reviews": 800,
+          "pros": ["Liquid propane gas grill."],
+          "evidence": "retailer"
+        }
+      ],
+      "invariants": [
+        {
+          "id": "plausible-price-control-is-exact",
+          "type": "candidate_status",
+          "candidateId": "weber-e310-control",
+          "status": "exact"
+        },
+        {
+          "id": "one-dollar-trap-is-not-exact",
+          "type": "candidate_status",
+          "candidateId": "weber-one-dollar-trap",
+          "status": "not_exact"
+        },
+        {
+          "id": "all-exact-prices-are-trusted",
+          "type": "all_exact_price_trusted"
+        }
+      ]
+    },
+    {
+      "id": "missing-price-evidence-laptop",
+      "partition": "price-trust",
+      "coverage": ["missing_evidence"],
+      "label": "Budget exactness requires a trusted current laptop price",
+      "input": {
+        "query": "laptop",
+        "priorities": "16GB RAM, 512GB SSD, not refurbished",
+        "budget": "under $900"
+      },
+      "candidates": [
+        {
+          "id": "verified-laptop-control",
+          "name": "Acer Aspire 5 A515 Laptop 16GB 512GB SSD",
+          "category": "laptop",
+          "host": "acer.com",
+          "brand": "Acer",
+          "model": "A515",
+          "offer": 749,
+          "consensus": "Strong",
+          "rating": 4.5,
+          "reviews": 1400,
+          "pros": ["16GB RAM.", "512GB SSD.", "New condition laptop."],
+          "evidence": "strong"
+        },
+        {
+          "id": "missing-price-laptop",
+          "name": "ExampleBook Pro 16GB 512GB SSD Laptop",
+          "category": "laptop",
+          "host": "examplebook.example",
+          "brand": "ExampleBook",
+          "model": "PRO16",
+          "priceText": "Check current price",
+          "consensus": "Mixed",
+          "rating": 4.4,
+          "reviews": 500,
+          "pros": ["16GB RAM.", "512GB SSD.", "New condition laptop."],
+          "evidence": "retailer"
+        }
+      ],
+      "invariants": [
+        {
+          "id": "verified-price-control-is-exact",
+          "type": "candidate_status",
+          "candidateId": "verified-laptop-control",
+          "status": "exact"
+        },
+        {
+          "id": "missing-price-is-not-exact",
+          "type": "candidate_status",
+          "candidateId": "missing-price-laptop",
+          "status": "not_exact"
+        },
+        {
+          "id": "all-exact-laptop-prices-are-trusted",
+          "type": "all_exact_price_trusted"
+        }
+      ]
+    },
+    {
+      "id": "non-product-espresso-review",
+      "partition": "non-product-pages",
+      "coverage": ["non_product_page"],
+      "label": "Editorial roundups remain evidence and never become product cards",
+      "input": {
+        "query": "espresso machine",
+        "priorities": "built-in grinder, beginner friendly, not a pod-only machine",
+        "budget": "under $700"
+      },
+      "candidates": [
+        {
+          "id": "breville-control",
+          "name": "Breville Barista Express Espresso Machine",
+          "category": "espresso machine",
+          "host": "breville.com",
+          "brand": "Breville",
+          "model": "BES870",
+          "offer": 699,
+          "consensus": "Strong",
+          "rating": 4.7,
+          "reviews": 3200,
+          "pros": ["Built-in grinder.", "Beginner-friendly controls.", "Traditional espresso machine, not pod-only."],
+          "evidence": "strong"
+        },
+        {
+          "id": "editorial-roundup",
+          "name": "The 8 Best Espresso Machines of 2026 Review",
+          "category": "espresso machine",
+          "url": "https://reviews.example/gear/best-espresso-machines/",
+          "host": "reviews.example",
+          "brand": "Review Desk",
+          "model": "ROUNDUP",
+          "priceText": "Prices vary",
+          "consensus": "Strong",
+          "rating": 4.8,
+          "reviews": 100,
+          "pros": ["Compares beginner-friendly espresso machines with built-in grinders."],
+          "evidence": "editorial"
+        }
+      ],
+      "invariants": [
+        {
+          "id": "product-page-control-is-exact",
+          "type": "candidate_status",
+          "candidateId": "breville-control",
+          "status": "exact"
+        },
+        {
+          "id": "editorial-roundup-is-not-exact",
+          "type": "candidate_status",
+          "candidateId": "editorial-roundup",
+          "status": "not_exact"
+        },
+        {
+          "id": "all-exact-results-are-product-cards",
+          "type": "all_exact_product_eligible"
+        }
+      ]
+    }
+  ]
+}
