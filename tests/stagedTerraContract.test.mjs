@@ -4,9 +4,11 @@ import { describe, it } from "node:test";
 
 import {
   buildStagedTerraRequestFingerprint,
+  isStagedTerraResearchValidationReason,
   STAGED_TERRA_EVIDENCE_PACKAGE_VERSION,
   STAGED_TERRA_PRESENTATION_SCHEMA_VERSION,
   STAGED_TERRA_RESEARCH_SCHEMA_VERSION,
+  STAGED_TERRA_RESEARCH_VALIDATION_REASONS,
   validateStagedTerraEvidencePackage,
   validateStagedTerraPresentationOutput,
   validateStagedTerraResearchOutput,
@@ -507,6 +509,49 @@ describe("staged Terra research contract", () => {
       }),
       { ok: false, reason: "research_candidate_invalid" },
     );
+  });
+
+  it("distinguishes every bounded research validation class", () => {
+    const cases = [
+      {
+        reason: "research_shape",
+        mutate: (fixture) => fixture.value.candidates.pop(),
+      },
+      {
+        reason: "research_source_registry",
+        mutate: (fixture) => fixture.responseSourceUrls.push("not-an-https-url"),
+      },
+      {
+        reason: "research_candidate_invalid",
+        mutate: (fixture) => {
+          fixture.value.candidates[0].candidate_id = "candidate_2";
+        },
+      },
+      {
+        reason: "research_candidate_duplicate",
+        mutate: (fixture) => {
+          fixture.value.candidates[1].brand = fixture.value.candidates[0].brand;
+          fixture.value.candidates[1].model = fixture.value.candidates[0].model;
+        },
+      },
+    ];
+    const observed = [];
+    for (const testCase of cases) {
+      const fixture = researchFixture();
+      testCase.mutate(fixture);
+      const result = validateStagedTerraResearchOutput({
+        value: fixture.value,
+        shopperRequest: shopper,
+        responseSourceUrls: fixture.responseSourceUrls,
+      });
+      assert.equal(result.ok, false);
+      assert.equal(result.reason, testCase.reason);
+      assert.equal(isStagedTerraResearchValidationReason(result.reason), true);
+      observed.push(result.reason);
+    }
+    assert.deepEqual(observed, [...STAGED_TERRA_RESEARCH_VALIDATION_REASONS]);
+    assert.equal(isStagedTerraResearchValidationReason("raw_model_output"), false);
+    assert.equal(isStagedTerraResearchValidationReason({}), false);
   });
 });
 

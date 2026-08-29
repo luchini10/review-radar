@@ -26,6 +26,10 @@ import {
   type StagedTerraRuntimeLedger,
 } from "./stagedTerraRuntime.ts";
 import { materializeStagedTerraEvidencePackage } from "./stagedTerraVerifier.ts";
+import {
+  isStagedTerraResearchValidationReason,
+  type StagedTerraResearchValidationReason,
+} from "./stagedTerraContract.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
 import type { RecommendationApiRequest } from "../types/review-radar.ts";
 
@@ -48,6 +52,7 @@ export type StagedTerraServerDiagnostic = {
     | "presentation";
   outcome: "pending" | "completed" | "failed";
   ledger?: StagedTerraRuntimeLedger;
+  validationReason?: StagedTerraResearchValidationReason;
   counts?: {
     candidates: number;
     sourceFetchAttempts: number;
@@ -342,10 +347,16 @@ export function createStagedTerraRecommendationHandlers({
         now,
       });
       if (!research.ok) {
+        const validationReason =
+          "validationReason" in research &&
+          isStagedTerraResearchValidationReason(research.validationReason)
+            ? research.validationReason
+            : undefined;
         report({
           stage: "research_poll",
           outcome: "failed",
           ledger: research.ledger,
+          ...(validationReason ? { validationReason } : {}),
         });
         return failure("research_failed", ERROR_MESSAGES.researchFailed, 502);
       }

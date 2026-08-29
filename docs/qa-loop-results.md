@@ -11285,3 +11285,54 @@ replacement attempt.
 No raw model output, provider ID, prompt, source URL, fetched page body, header,
 or secret was retained. No retry, replacement, additional case, flag change,
 `.env.local` edit, deployment, production change, or push occurred.
+
+---
+
+## 🟧 Codex — 2026-08-29 — Production readiness PR-0/PR-1 closeout
+
+**Objective:** establish a trustworthy local gate and repair the earliest
+proven staged-Terra observability losses before spending on another live
+feasibility request.
+
+**Baseline and fail-first evidence:** the required E2E suite initially passed
+5/17 because the dev server inherited locally enabled Direct Terra while the
+tests mocked the legacy route; the remaining preview failure asserted obsolete
+link copy. Separately, two added staged tests failed because a bounded research
+validation class was dropped and provider-complete/local-failed usage priced at
+zero.
+
+**Corrections:** Playwright now owns a dedicated non-reused server, forces
+legacy/default-off routing, and explicitly neutralizes OpenAI, Serper,
+SearchAPI, and job-token credentials. The preview test asserts the current
+`View at <host>` role/name plus safe target/rel attributes. Staged research
+diagnostics runtime-whitelist the four existing validation classes and never
+copy arbitrary failure fields. Phase D cost accounting includes terminal
+provider usage after local failure, merges only the same safely hashed response,
+sums distinct or unknown responses conservatively, and keeps duplicate terminal
+activity as an acceptance-blocking anomaly.
+
+**Privacy and accounting proof:** the route matrix replays all four bounded
+classes, rejects an unbounded class, and proves raw output, provider ID, source
+URL, prompt, and secret canaries cannot enter diagnostics or the public body.
+The historical `ec528d7` fixture still stores its immutable false-zero result;
+current-code replay accounts one failed terminal ledger with 21,932 input
+tokens, 5,318 output tokens, two hosted searches, `$0.154600` standard, and
+`$0.168307` conservative cost. The missing historical class is not recoverable.
+
+**Verification (zero live):**
+
+- fail-first: exactly two intended failures;
+- focused staged wall: 33/33 across seven suites;
+- complete suite: 1,435/1,435 across 209 suites;
+- E2E: 17/17 on the credential-neutral dedicated server;
+- typecheck, production build, deterministic eval, and fixed ranking
+  comparison: pass;
+- lint: zero errors and three pre-existing warnings;
+- Phase D dry run: pass, no network; and
+- independent read-only review: `APPROVED` after its initial findings on
+  credential inheritance and distinct-response undercount were corrected.
+
+No OpenAI, Serper, SearchAPI, source-page, or other external request ran. No
+`.env.local` edit, behavior flag promotion, deployment, production change,
+push, issue-status change, or user-owned fixture/baseline cleanup occurred.
+Staged Terra remains default-off, undeployed, and live-feasibility-unproven.

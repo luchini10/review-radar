@@ -4,6 +4,31 @@
 
 ---
 
+## OAI-T10 Phase D diagnostic and accounting correction (2026-08-29)
+
+- Failed research diagnostics may retain only `research_shape`,
+  `research_source_registry`, `research_candidate_invalid`, or
+  `research_candidate_duplicate`. The route runtime-checks the value; unknown
+  values, raw output, provider IDs, prompts, source URLs, headers, and secrets
+  remain absent from diagnostics and the client response.
+- Phase D cost accounting includes terminal provider usage even when local
+  contract validation fails. It merges repeated terminal snapshots only when
+  they carry the same nonempty response hash. Distinct or unidentifiable
+  responses sum conservatively, and any duplicate terminal anomaly blocks
+  successful acceptance.
+- Replaying the historical `ec528d7` fixture now accounts for 21,932 input
+  tokens, 5,318 output tokens, two hosted searches, `$0.154600` standard, and
+  `$0.168307` conservative cost. The historical missing validation class cannot
+  be recovered; do not guess it.
+- Playwright's default E2E server forces legacy/default-off routing on a
+  dedicated port and neutralizes OpenAI, Serper, SearchAPI, and job-token
+  credentials. A missed mock therefore cannot make a paid provider call.
+- The next live question remains only staged lifecycle feasibility for the
+  frozen broad `shop vac` case. One commit-pinned attempt inside the existing
+  ceilings is sufficient; stop at its first terminal outcome.
+
+---
+
 ## OAI-T10 Phase D first live outcome (2026-07-25)
 
 - The one approved attempt at `ec528d7` is spent and terminal. Never retry or

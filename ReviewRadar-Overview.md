@@ -182,8 +182,15 @@ Known unfinished research jobs are cancelled on browser abort or expiry.
 Unexpected non-terminal presentation jobs and unusable provider/token state
 also receive a bounded safety cancel. Completed verification/presentation is
 de-duplicated per research response so repeat polling cannot repeat provider
-work. The entire branch is still offline-unproven and undeployed; its next
-boundary is a separately approved Phase D feasibility smoke.
+work. A failed research poll may retain only one closed server-side validation
+class: shape, source registry, candidate validity, or duplicate identity.
+Unknown reasons and raw provider material are discarded, and no validation
+class enters the client response. Cost accounting uses terminal provider usage
+even when local validation later fails; repeated snapshots deduplicate only by
+the same safe response hash, while distinct or unidentifiable responses sum
+conservatively and block successful acceptance as an anomaly. The entire branch
+is still live-feasibility-unproven and undeployed; its next boundary is one
+commit-pinned Phase D feasibility smoke inside the frozen case and ceilings.
 
 ## 2. Full user flow
 

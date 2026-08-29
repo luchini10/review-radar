@@ -182,6 +182,8 @@ describe("OAI-T10 Phase D live-feasibility harness", () => {
       },
     ]);
     assert.equal(cost.completedLedgerCount, 2);
+    assert.equal(cost.accountedLedgerCount, 2);
+    assert.equal(cost.duplicateTerminalLedgerCount, 0);
     assert.deepEqual(cost.usage, {
       inputTokens: 30_000,
       cachedInputTokens: 2_000,
@@ -191,5 +193,145 @@ describe("OAI-T10 Phase D live-feasibility harness", () => {
     assert.ok(cost.standardUsd > 0);
     assert.ok(cost.conservativeUsd >= cost.standardUsd);
     assert.ok(cost.conservativeUsd < OAI_T10_PHASE_D_CEILINGS.hardCeilingUsd);
+  });
+
+  it("prices terminal provider usage even when local research validation fails", () => {
+    const cost = estimatePhaseDCost([
+      {
+        stage: "research_start",
+        outcome: "pending",
+        ledger: {
+          operation: "research_start",
+          usage: { inputTokens: 999_999 },
+        },
+      },
+      {
+        stage: "research_poll",
+        outcome: "failed",
+        validationReason: "research_candidate_duplicate",
+        ledger: {
+          operation: "research_poll",
+          failureReason: "invalid_research_contract",
+          usage: {
+            inputTokens: 21_932,
+            cachedInputTokens: 0,
+            outputTokens: 5_318,
+            webSearchCalls: 2,
+          },
+        },
+      },
+    ]);
+
+    assert.equal(cost.accountedLedgerCount, 1);
+    assert.equal(cost.completedLedgerCount, 0);
+    assert.equal(cost.duplicateTerminalLedgerCount, 0);
+    assert.deepEqual(cost.usage, {
+      inputTokens: 21_932,
+      cachedInputTokens: 0,
+      outputTokens: 5_318,
+      webSearchCalls: 2,
+    });
+    assert.equal(cost.standardUsd, 0.1546);
+    assert.equal(cost.conservativeUsd, 0.168307);
+  });
+
+  it("deduplicates only repeated terminal diagnostics for the same response", () => {
+    const cost = estimatePhaseDCost([
+      {
+        stage: "research_poll",
+        outcome: "completed",
+        ledger: {
+          operation: "research_poll",
+          responseIdHash: "same-safe-response-hash",
+          usage: {
+            inputTokens: 100,
+            cachedInputTokens: 20,
+            outputTokens: 30,
+            webSearchCalls: 1,
+          },
+        },
+      },
+      {
+        stage: "research_poll",
+        outcome: "failed",
+        ledger: {
+          operation: "research_poll",
+          responseIdHash: "same-safe-response-hash",
+          usage: {
+            inputTokens: 120,
+            cachedInputTokens: 10,
+            outputTokens: 25,
+            webSearchCalls: 1,
+          },
+        },
+      },
+    ]);
+
+    assert.equal(cost.accountedLedgerCount, 1);
+    assert.equal(cost.completedLedgerCount, 0);
+    assert.equal(cost.duplicateTerminalLedgerCount, 1);
+    assert.deepEqual(cost.usage, {
+      inputTokens: 120,
+      cachedInputTokens: 20,
+      outputTokens: 30,
+      webSearchCalls: 1,
+    });
+  });
+
+  it("sums distinct or unidentifiable terminal responses conservatively", () => {
+    const cost = estimatePhaseDCost([
+      {
+        stage: "research_poll",
+        outcome: "completed",
+        ledger: {
+          operation: "research_poll",
+          responseIdHash: "first-safe-response-hash",
+          usage: {
+            inputTokens: 100,
+            cachedInputTokens: 20,
+            outputTokens: 30,
+            webSearchCalls: 1,
+          },
+        },
+      },
+      {
+        stage: "research_poll",
+        outcome: "failed",
+        ledger: {
+          operation: "research_poll",
+          responseIdHash: "second-safe-response-hash",
+          usage: {
+            inputTokens: 120,
+            cachedInputTokens: 10,
+            outputTokens: 25,
+            webSearchCalls: 2,
+          },
+        },
+      },
+      {
+        stage: "research_poll",
+        outcome: "failed",
+        ledger: {
+          operation: "research_poll",
+          responseIdHash: null,
+          usage: {
+            inputTokens: 40,
+            cachedInputTokens: 5,
+            outputTokens: 10,
+            webSearchCalls: 1,
+          },
+        },
+      },
+    ]);
+
+    assert.equal(cost.accountedLedgerCount, 3);
+    assert.equal(cost.completedLedgerCount, 1);
+    assert.equal(cost.duplicateTerminalLedgerCount, 2);
+    assert.deepEqual(cost.usage, {
+      inputTokens: 260,
+      cachedInputTokens: 35,
+      outputTokens: 65,
+      webSearchCalls: 4,
+    });
   });
 });

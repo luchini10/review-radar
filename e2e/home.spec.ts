@@ -67,7 +67,15 @@ test("renders Direct-Terra product assets as optional exact-product decoration",
   ).toBeVisible();
   await expect(page.getByText("Example Atlas One", { exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Full research" })).toHaveCount(3);
-  await expect(page.getByRole("link", { name: "Product website" })).toHaveCount(2);
+  const productWebsiteLinks = page.getByRole("link", { name: /^View at / });
+  await expect(productWebsiteLinks).toHaveCount(2);
+  for (let index = 0; index < 2; index += 1) {
+    await expect(productWebsiteLinks.nth(index)).toHaveAttribute("target", "_blank");
+    await expect(productWebsiteLinks.nth(index)).toHaveAttribute(
+      "rel",
+      "noreferrer noopener",
+    );
+  }
   await expect(page.getByText("Product image unavailable")).toHaveCount(3);
   await expect(
     page.getByText(/exact product-identity check/i),

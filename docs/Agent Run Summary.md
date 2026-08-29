@@ -1543,3 +1543,42 @@ New entries should keep the same format and stay easy to read.
 **Commit:** Phase 6D safety-stop report `566a7bf`.
 
 **Next recommended step:** Diagnose/fix RR-061 wrong-model image safety separately; keep RR-070 independently scoped.
+
+## Codex Run - 2026-08-29 Production readiness PR-0/PR-1
+
+**Goal:** make the baseline gate trustworthy and repair the staged-Terra
+diagnostic/cost defects that blocked an evidence-based feasibility retry.
+
+**Baseline:** Typecheck, lint, 1,430 tests, production build, synthetic eval,
+and fixed ranking comparison were green. Required E2E was only 5/17 because it
+inherited local Direct-Terra flags; five named deterministic QA workers all ran
+the same shared synthetic cases. The old `.rr_baseline` was rejected because it
+contained two harness errors, zero provider calls, and no usable quality data.
+
+**Changes:** Playwright now owns a credential-neutral dedicated default-off
+server, and its stale preview selector now asserts both current safe links.
+Staged research failure diagnostics retain only the four closed validation
+classes. Terminal usage is billed after local failure, same-response snapshots
+deduplicate by safe hash, and distinct/unknown responses sum conservatively.
+
+**Adversarial review:** the first independent read-only review returned
+`CHANGES REQUIRED` because provider credentials remained inherited and
+operation-only cost merging could undercount distinct responses. Both were
+fixed; prompt/secret and unbounded-reason negatives were added; the final
+independent verdict was `APPROVED` with no findings.
+
+**Proof:** fail-first produced exactly two intended failures; focused final
+passed 33/33; full tests passed 1,435/1,435; E2E passed 17/17; typecheck, build,
+eval, ranking comparison, and zero-network Phase D dry run passed; lint had zero
+errors and three existing warnings. Historical replay recomputed the failed
+request at `$0.154600` standard / `$0.168307` conservative instead of `$0`.
+
+**Scope:** no live or other external request, `.env.local` edit, flag promotion,
+deployment, production change, push, issue-status mutation, product selection,
+ranking, discovery, verification, rendering, or public API behavior change.
+Staged Terra remains default-off and live-feasibility-unproven.
+
+**Next recommended step:** one commit-pinned Phase D `shop vac` feasibility
+attempt inside the frozen request/network/$3 envelope, stopping at its first
+terminal outcome. Reasoning level: High for outcome adjudication; execution is
+routine.

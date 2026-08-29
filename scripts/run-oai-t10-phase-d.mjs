@@ -353,7 +353,11 @@ async function main() {
         throw new Error(`The ${stage} stage did not complete successfully.`);
       }
     }
-    if (evidence.cost.completedLedgerCount !== 2) {
+    if (
+      evidence.cost.accountedLedgerCount !== 2 ||
+      evidence.cost.completedLedgerCount !== 2 ||
+      evidence.cost.duplicateTerminalLedgerCount !== 0
+    ) {
       throw new Error(
         "Research and presentation usage were not both accounted.",
       );

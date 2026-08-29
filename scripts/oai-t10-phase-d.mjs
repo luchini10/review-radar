@@ -157,15 +157,71 @@ function usageFromLedger(ledger) {
   };
 }
 
+function mergeUsage(left, right) {
+  return {
+    inputTokens: Math.max(left.inputTokens, right.inputTokens),
+    cachedInputTokens: Math.max(
+      left.cachedInputTokens,
+      right.cachedInputTokens,
+    ),
+    outputTokens: Math.max(left.outputTokens, right.outputTokens),
+    webSearchCalls: Math.max(left.webSearchCalls, right.webSearchCalls),
+  };
+}
+
 export function estimatePhaseDCost(diagnostics) {
-  const completedLedgers = diagnostics
-    .filter(
-      (diagnostic) =>
-        diagnostic?.outcome === "completed" &&
-        ["research_poll", "presentation"].includes(diagnostic.stage) &&
-        diagnostic.ledger,
+  const terminalByOperation = new Map();
+  let duplicateTerminalLedgerCount = 0;
+  for (const diagnostic of diagnostics) {
+    if (
+      !["completed", "failed"].includes(diagnostic?.outcome) ||
+      !["research_poll", "presentation"].includes(diagnostic?.stage) ||
+      !diagnostic?.ledger
+    ) {
+      continue;
+    }
+    const operation = ["research_poll", "presentation"].includes(
+      diagnostic.ledger.operation,
     )
-    .map((diagnostic) => usageFromLedger(diagnostic.ledger));
+      ? diagnostic.ledger.operation
+      : diagnostic.stage;
+    const next = {
+      outcome: diagnostic.outcome,
+      responseIdHash:
+        typeof diagnostic.ledger.responseIdHash === "string" &&
+        diagnostic.ledger.responseIdHash.length > 0
+          ? diagnostic.ledger.responseIdHash
+          : null,
+      usage: usageFromLedger(diagnostic.ledger),
+    };
+    const existing = terminalByOperation.get(operation) ?? [];
+    if (existing.length === 0) {
+      terminalByOperation.set(operation, [next]);
+      continue;
+    }
+    duplicateTerminalLedgerCount += 1;
+    const sameResponseIndex = next.responseIdHash
+      ? existing.findIndex(
+          (entry) => entry.responseIdHash === next.responseIdHash,
+        )
+      : -1;
+    if (sameResponseIndex < 0) {
+      existing.push(next);
+      terminalByOperation.set(operation, existing);
+      continue;
+    }
+    const sameResponse = existing[sameResponseIndex];
+    existing[sameResponseIndex] = {
+      outcome:
+        sameResponse.outcome === "completed" && next.outcome === "completed"
+          ? "completed"
+          : "failed",
+      responseIdHash: sameResponse.responseIdHash,
+      usage: mergeUsage(sameResponse.usage, next.usage),
+    };
+    terminalByOperation.set(operation, existing);
+  }
+  const accountedLedgers = [...terminalByOperation.values()].flat();
   let standardUsd = 0;
   let conservativeUsd = 0;
   const totals = {
@@ -174,7 +230,7 @@ export function estimatePhaseDCost(diagnostics) {
     outputTokens: 0,
     webSearchCalls: 0,
   };
-  for (const usage of completedLedgers) {
+  for (const { usage } of accountedLedgers) {
     const rates =
       usage.inputTokens >
       OAI_T10_TERRA_PRICING_AS_OF_2026_07_25.longContextThresholdInputTokens
@@ -198,7 +254,11 @@ export function estimatePhaseDCost(diagnostics) {
     for (const key of Object.keys(totals)) totals[key] += usage[key];
   }
   return {
-    completedLedgerCount: completedLedgers.length,
+    accountedLedgerCount: accountedLedgers.length,
+    completedLedgerCount: accountedLedgers.filter(
+      (ledger) => ledger.outcome === "completed",
+    ).length,
+    duplicateTerminalLedgerCount,
     usage: totals,
     standardUsd: Number(standardUsd.toFixed(6)),
     conservativeUsd: Number(conservativeUsd.toFixed(6)),

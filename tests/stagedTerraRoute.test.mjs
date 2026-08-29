@@ -240,6 +240,95 @@ describe("OAI-T10 staged Terra route", () => {
     assert.equal(starts, 0);
   });
 
+  it("retains only a bounded research validation reason on a failed poll", async () => {
+    const fingerprint = (
+      await import("../lib/stagedTerraContract.ts")
+    ).buildStagedTerraRequestFingerprint(shopper);
+
+    for (const testCase of [
+      {
+        validationReason: "research_candidate_duplicate",
+        expectedReason: "research_candidate_duplicate",
+      },
+      {
+        validationReason: "unbounded_private_reason",
+        expectedReason: undefined,
+      },
+    ]) {
+      const diagnostics = [];
+      const handlers = createStagedTerraRecommendationHandlers({
+        validateRequest: (body) => ({ data: body }),
+        getEnvironment: () => ({
+          openAiApiKey: "test-key",
+          jobTokenSecret: secret,
+          enabled: true,
+        }),
+        createOpenAIClient: async () => ({ responses: {} }),
+        startResearch: async () => ({
+          ok: true,
+          responseId: "resp_research123",
+          status: "queued",
+          requestFingerprint: fingerprint,
+          promptVersion: "staged-terra-research-prompt-v1",
+          ledger: { operation: "research_start" },
+        }),
+        pollResearch: async () => ({
+          ok: false,
+          validationReason: testCase.validationReason,
+          rawOutput: "private raw model output",
+          providerResponseId: "resp_private-provider-id",
+          sourceUrl: "https://private.example/product",
+          prompt: "private prompt canary",
+          secret: "private secret canary",
+          ledger: {
+            operation: "research_poll",
+            responseIdHash: "hash-only",
+            failureReason: "invalid_research_contract",
+            usage: {
+              inputTokens: 21_932,
+              cachedInputTokens: 0,
+              outputTokens: 5_318,
+              totalTokens: 27_250,
+              webSearchCalls: 2,
+            },
+          },
+        }),
+        onDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
+      });
+
+      const started = await handlers.POST(request("POST", shopper));
+      const pending = await started.json();
+      const failed = await handlers.GET(
+        request("GET", undefined, {
+          [STAGED_TERRA_JOB_TOKEN_HEADER]: pending.jobToken,
+        }),
+      );
+      assert.equal(failed.status, 502);
+      const publicBody = await failed.json();
+      const failedPoll = diagnostics.find(
+        (diagnostic) =>
+          diagnostic.stage === "research_poll" &&
+          diagnostic.outcome === "failed",
+      );
+      assert.equal(failedPoll?.validationReason, testCase.expectedReason);
+      assert.equal(
+        JSON.stringify(publicBody).includes(testCase.validationReason),
+        false,
+      );
+      const serializedDiagnostics = JSON.stringify(diagnostics);
+      for (const privateValue of [
+        "private raw model output",
+        "resp_private-provider-id",
+        "https://private.example/product",
+        "private prompt canary",
+        "private secret canary",
+        "unbounded_private_reason",
+      ]) {
+        assert.equal(serializedDiagnostics.includes(privateValue), false);
+      }
+    }
+  });
+
   it("sanitizes a completion-stage exception instead of rejecting the route promise", async () => {
     const fingerprint = (
       await import("../lib/stagedTerraContract.ts")

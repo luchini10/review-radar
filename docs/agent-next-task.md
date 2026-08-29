@@ -1,122 +1,92 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-07-25 by Codex after the first OAI-T10 Phase D live outcome.
-Use `git log -1` for the current scoped closeout commit.
+Updated: 2026-08-29 by Codex after production-readiness phases PR-0/PR-1.
+The scoped closeout is the commit containing this regenerated handoff; use
+`git log -1` after commit creation for its immutable SHA.
 
 ## Current state
 
-OAI-T9 remains terminally complete with `single_call_architecture_no_go`.
-Direct-Terra remains default-off and undeployed.
+ReviewRadar is **not production-ready**. The tracked starting point for this
+run was `dc9ab1fa1d85608e39cf29b5603d0c59692beb29` on `main`. PR-0 and PR-1 are
+verified locally and ready for one self-contained closeout commit:
 
-OAI-T10 Phases A-C built the default-off staged Terra path:
+1. Playwright owns a dedicated non-reused server at `127.0.0.1:3100`, forces
+   committed legacy/default-off routing, and neutralizes OpenAI, Serper,
+   SearchAPI, and job-token credentials.
+2. The preview E2E assertion follows the current `View at <host>` accessible
+   name and still requires safe new-tab link attributes.
+3. Failed staged research diagnostics retain only the four closed validation
+   classes already produced by the validator. Arbitrary values and private
+   provider material remain discarded and never enter the client response.
+4. Phase D cost accounting includes terminal usage after local validation
+   failure. Repeated snapshots merge only when their nonempty response hashes
+   match; distinct or unidentifiable responses sum conservatively, and any
+   duplicate terminal activity blocks successful acceptance.
 
-1. one compact Terra/high background response researches 8-15 candidates;
-2. deterministic server code owns identity, requirement, fact, eligibility,
-   price, product-page, and image trust; and
-3. one independent Terra/medium response with no tools receives only the
-   verified evidence package and owns presentation.
+The historical Phase D `shop vac` attempt remains failed and immutable. Current
+code replays its usage as 21,932 input tokens, 5,318 output tokens, two hosted
+searches, `$0.154600` standard, and `$0.168307` conservative cost. Its missing
+validation class cannot be recovered retroactively and must not be guessed.
 
-Phase D's first and only approved feasibility attempt ran at
-`ec528d758030388c44912e25ff0c57d464fb46e1`. It stopped after its first
-terminal outcome as required.
+## Verification result
 
-## Phase D live result
+- fail-first staged proof: exactly 2 intended failures;
+- focused staged wall: 33/33 across 7 suites;
+- complete suite: 1,435/1,435 across 209 suites;
+- E2E: 17/17 on the credential-neutral dedicated server;
+- typecheck: pass;
+- production build: pass;
+- lint: 0 errors and 3 pre-existing warnings;
+- deterministic eval: no red flags;
+- fixed ranking comparison: pass, order unchanged;
+- Phase D dry run: pass with zero network; and
+- independent read-only review: `APPROVED` after credential-inheritance and
+  distinct-response accounting findings were corrected.
 
-The frozen request was `{ "query": "shop vac" }`.
+No OpenAI, Serper, SearchAPI, source-page, or other external request ran during
+PR-0/PR-1. No `.env.local` edit, flag promotion, deployment, production change,
+push, issue-status mutation, or user-owned artifact cleanup occurred.
 
-Terra research completed at the provider with:
+## Current approved next phase
 
-- one Responses create;
-- thirteen retrieves;
-- two hosted web searches;
-- 21,932 input tokens;
-- 5,318 output tokens;
-- 36 response-owned sources; and
-- one bounded safety cancel after the application rejected completion.
+Phase PR-2 is one commit-pinned staged-Terra feasibility recheck using only the
+already frozen broad request `{ "query": "shop vac" }` and the existing Phase D
+ceilings:
 
-ReviewRadar returned HTTP 502 `research_failed` because the completed output
-failed `staged-terra-research-v1` validation with
-`invalid_research_contract`.
+- 2 OpenAI creates;
+- 10 hosted searches;
+- 60 retrieves;
+- 1 safety cancel;
+- 15 Serper Shopping attempts;
+- 30 DNS-pinned source-page fetches;
+- 90 physical page HTTP attempts including redirects; and
+- `$3.00` estimated OpenAI cost.
 
-The failure occurred before:
+Prerequisites are the exact PR-0/PR-1 closeout commit, clean tracked state,
+process-only OpenAI and Serper keys, and an unused commit-specific evidence
+directory. Stop at the first terminal outcome. No retry, replacement, fallback,
+additional case, SearchAPI call, Serper organic call, flag promotion,
+deployment, production change, or push is part of PR-2.
 
-- deterministic verification;
-- the Terra/medium presentation request;
-- Serper Shopping;
-- source-page fetches; or
-- public cards and sources.
+If research fails, use only its retained validation class to choose a prompt,
+schema, adapter, or duplicate-identity correction. Do not infer a downstream
+accuracy cause from a pre-verification failure. If feasibility succeeds, it
+still proves only real provider/lifecycle viability, not quality, stability, or
+production readiness.
 
-There was no retry, replacement, fallback, extra case, Serper organic,
-SearchAPI, flag change, `.env.local` edit, deployment, production change, or
-push. The sanitized untracked evidence is:
-
-`tests/fixtures/review-radar-live/oai-t10-phase-d-ec528d7/attempt.json`
-
-## Important accounting correction
-
-The attempt file currently reports `$0` because the Phase D cost estimator
-counts only diagnostics whose route outcome is `completed`. It incorrectly
-excludes a provider-completed response whose structured output later fails
-validation.
-
-Using the recorded usage and the frozen Terra rates:
-
-- standard estimate: `$0.154600`;
-- conservative estimate: `$0.168307`; and
-- approved ceiling: `$3.00`.
-
-The usage stayed within the approved ceiling, but the estimator must be fixed
-before any future live attempt.
-
-## What remains unknown
-
-The runtime produced a safe `validationReason` enum when research validation
-failed, but the route's diagnostic reporter retained only the broader
-`invalid_research_contract` failure. Raw model output and provider IDs were
-correctly not retained.
-
-Therefore static code and the sanitized fixture cannot prove whether this
-specific response failed because of:
-
-- the top-level research shape or 8-15 candidate count;
-- an unregistered source URL;
-- an invalid candidate field or requirement mapping; or
-- a duplicate normalized brand/model identity.
-
-Do not guess which one occurred and do not change the research contract yet.
-
-## Next step and approval boundary
-
-The next step should be a **zero-live Phase D diagnostic correction**, not a
-retry:
-
-1. retain the bounded `validationReason` enum in server-only diagnostics and
-   sanitized Phase D evidence;
-2. count terminal provider usage even when later schema validation fails;
-3. add tests proving no raw output, provider ID, source URL, prompt, or secret
-   is retained;
-4. replay deterministic malformed outputs to prove every validation class is
-   distinguishable; and
-5. adversarially review and commit the correction.
-
-Only after that correction identifies the exact failed invariant should Taylor
-decide whether to repair the prompt, schema, or adapter. Any new OpenAI,
-Serper, page, or other external request requires a separately approved
-commit-pinned envelope. No replacement spend is authorized.
-
-**Recommended reasoning level:** High. The correction is small, but separating
-provider success, schema failure, safe attribution, and actual cost requires
-careful trust-boundary reasoning. Highest is unnecessary.
+**Recommended reasoning level:** High for terminal-outcome adjudication because
+it crosses provider completion, structured validation, privacy, and spending
+boundaries. The single runner execution itself is routine.
 
 ## Approval and flag state
 
-Taylor approved and consumed exactly one OAI-T10 Phase D live attempt. Taylor
-also requested automatic scoped local commits.
+Taylor's 2026-08-29 production-readiness mandate authorizes ordinary scoped
+local implementation, bounded low-parallelism live QA, documentation, and
+self-contained local commits. It does not authorize deployment, production
+mutation, push, publication, secret exposure, destructive cleanup, or broader
+external spending.
 
-No diagnostic correction, replacement live attempt, flag promotion,
-deployment, production change, or push is currently approved.
-
-Committed defaults:
+Committed defaults remain:
 
 - `REVIEW_RADAR_STAGED_TERRA=off`
 - `NEXT_PUBLIC_REVIEW_RADAR_STAGED_TERRA=false`
@@ -125,33 +95,50 @@ Committed defaults:
 - `REVIEW_RADAR_CONSTRAINT_ALLOCATION=off`
 - staged research/presentation model: `gpt-5.6-terra`
 
+The developer's ignored `.env.local` still locally enables Direct Terra. It is
+user-owned and must not be edited or staged. E2E now overrides it hermetically.
+
+## Outstanding readiness debts
+
+- PR-005: five named deterministic QA workers still execute the same shared
+  synthetic evaluator rather than their listed category batches.
+- PR-006: current live leader recall, final-set stability, hard-requirement
+  truth, first-loss distribution, latency, calls, and cost are unmeasured.
+- PR-007 / RR-091: same-page related-product price binding needs a tracked
+  multi-entity reproduction and generalized exact-offer proof.
+- PR-008 / RR-092: editorial Product markup can overstate tested-model
+  identity/image authority on an experimental path.
+- Broader lifecycle, cache/concurrency, security, accessibility, mobile UX,
+  production configuration, rollback, and observability gates remain planned
+  in `docs/production-readiness-master-plan.md`.
+
 ## Hard boundaries
 
-- Do not retry or replace the consumed Phase D attempt.
-- Do not infer the exact schema defect from `invalid_research_contract`.
-- Do not retain raw model responses, provider IDs, prompts, source URLs,
-  fetched bodies, request headers, or secrets in diagnostics.
-- Do not weaken the 8-15 candidate, exact-source, identity, requirement,
+- Do not weaken candidate-count, exact-source, identity, requirement,
   duplicate, eligibility, product-type, sibling/accessory, editorial/support,
   redirect, private-network, price, or wrong-image gates.
-- Do not revive OAI-T9's single-call design, substitute Sol, hardcode leaders,
-  or add product-, brand-, category-, or retailer-specific rules.
-- No external request, `.env.local` edit, flag promotion, deployment,
-  production change, publication, or push without its explicit boundary.
-- Never stage the live fixture or unrelated `.claude/`, baseline,
-  `fable-transfer-kit/`, or historical live artifacts. Never use `git add -A`.
+- Do not retain raw model responses, provider IDs, prompts, source URLs,
+  fetched bodies, request headers, credentials, or secrets in diagnostics.
+- Do not retry the historical `ec528d7` attempt or reuse its evidence path.
+- Do not hardcode leaders or add product-, brand-, category-, retailer-, or
+  fixture-specific behavior.
+- Do not claim product-quality improvement from PR-0/PR-1; they repair test and
+  evidence integrity only.
+- Never stage the existing `.claude/`, `.rr_baseline*`, `fable-transfer-kit/`,
+  historical live fixtures, or a new live fixture. Never use `git add -A`.
+- No deployment, production change, push, publication, destructive action, or
+  external scope expansion is authorized.
 
 ## Retrieval map
 
 | Need | Retrieve |
-|---|---|
-| Current state and next boundary | this file |
-| Phase D sanitized result | `tests/fixtures/review-radar-live/oai-t10-phase-d-ec528d7/attempt.json` |
-| Phase D harness | `scripts/oai-t10-phase-d.mjs`, `scripts/run-oai-t10-phase-d.mjs` |
-| Research validator | `lib/stagedTerraContract.ts`, `validateStagedTerraResearchOutput()` |
-| Runtime reason code | `lib/stagedTerraRuntime.ts`, `pollStagedTerraResearch()` |
-| Route diagnostic loss | `lib/stagedTerraRecommendationRoute.ts`, failed `research_poll` report |
-| Canonical live result | latest OAI-T10 Phase D entry in `docs/qa-loop-results.md` |
-| Durable live-test lesson | top of `docs/review-radar-test-memory.md` |
-| Peer channel | dialogue entry `[123]` |
-| Architecture | `docs/forward-roadmap.md`, OAI-T10 |
+| --- | --- |
+| Living objective, defects, phases, proof, and exit criteria | `docs/production-readiness-master-plan.md` |
+| PR-0/PR-1 canonical verification | latest 2026-08-29 entry in `docs/qa-loop-results.md` |
+| Durable live-test and accounting contract | top of `docs/review-radar-test-memory.md` |
+| Staged research validator and reason set | `lib/stagedTerraContract.ts` |
+| Safe route propagation | `lib/stagedTerraRecommendationRoute.ts` |
+| Phase D accounting and frozen envelope | `scripts/oai-t10-phase-d.mjs` |
+| Dry-run/live approval gate | `scripts/run-oai-t10-phase-d.mjs` |
+| Historical sanitized result | `tests/fixtures/review-radar-live/oai-t10-phase-d-ec528d7/attempt.json` |
+| Architecture | staged Terra section in `ReviewRadar-Overview.md` and OAI-T10 in `docs/forward-roadmap.md` |

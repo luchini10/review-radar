@@ -13,6 +13,15 @@ export const STAGED_TERRA_EVIDENCE_PACKAGE_VERSION =
   "staged-terra-evidence-v1";
 export const STAGED_TERRA_PRESENTATION_SCHEMA_VERSION =
   "staged-terra-presentation-v1";
+export const STAGED_TERRA_RESEARCH_VALIDATION_REASONS = [
+  "research_shape",
+  "research_source_registry",
+  "research_candidate_invalid",
+  "research_candidate_duplicate",
+] as const;
+
+export type StagedTerraResearchValidationReason =
+  (typeof STAGED_TERRA_RESEARCH_VALIDATION_REASONS)[number];
 
 const RESEARCH_FACT_KINDS = [
   "identity",
@@ -160,8 +169,19 @@ export type StagedTerraPresentationOutput = {
   }>;
 };
 
-type ValidationFailure = { ok: false; reason: string };
+type ValidationFailure<Reason extends string = string> = {
+  ok: false;
+  reason: Reason;
+};
 type ValidationSuccess<T> = { ok: true; value: T };
+
+export function isStagedTerraResearchValidationReason(
+  value: unknown,
+): value is StagedTerraResearchValidationReason {
+  return STAGED_TERRA_RESEARCH_VALIDATION_REASONS.includes(
+    value as StagedTerraResearchValidationReason,
+  );
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -513,7 +533,9 @@ export function validateStagedTerraResearchOutput({
   value: unknown;
   shopperRequest: DirectTerraShopperRequest;
   responseSourceUrls: readonly string[];
-}): ValidationFailure | ValidationSuccess<StagedTerraResearchOutput> {
+}):
+  | ValidationFailure<StagedTerraResearchValidationReason>
+  | ValidationSuccess<StagedTerraResearchOutput> {
   if (
     !isRecord(value) ||
     !exactKeys(value, ["schema_version", "candidates"]) ||

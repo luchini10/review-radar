@@ -9,6 +9,39 @@ Update this file after:
 - important bug fixes
 - live QA fixes worth remembering
 
+## 2026-08-29
+
+### Codex - Make readiness checks hermetic and failed provider spend honest
+
+#### Changed
+
+- Playwright now owns a dedicated default-off legacy server and neutralizes
+  inherited OpenAI, Serper, SearchAPI, and job-token credentials, so local
+  experimental flags or missed mocks cannot silently turn E2E into live spend.
+- Failed staged-Terra research retains only one closed server diagnostic class;
+  unknown reasons and raw/private provider material remain unavailable to both
+  diagnostics and the browser.
+- The Phase D estimator now prices terminal provider usage after local contract
+  failure, deduplicates only the same safely hashed response, conservatively
+  sums distinct or unidentifiable responses, and rejects duplicate anomalies
+  from a successful acceptance.
+- The Direct-Terra preview test follows the current `View at <host>` accessible
+  name and still requires safe new-tab link attributes.
+
+#### Verified
+
+- Fail-first proof produced exactly the two intended failures. The corrected
+  focused wall passed 33/33 across seven suites; the complete suite passed
+  1,435/1,435 across 209 suites.
+- E2E passed 17/17 with credentials neutralized. Typecheck, production build,
+  synthetic evaluation, and ranking comparison passed; lint remained at zero
+  errors and three pre-existing warnings.
+- The historical failed Phase D fixture recomputes from false `$0` to
+  `$0.154600` standard / `$0.168307` conservative without altering the saved
+  evidence. An independent read-only review approved the corrected diff.
+- No live request, `.env.local` edit, flag promotion, deployment, production
+  change, or push occurred.
+
 ## 2026-07-24
 
 ### Codex - Harden final acceptance fetch and spend boundaries
