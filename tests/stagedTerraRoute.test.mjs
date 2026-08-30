@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { beforeEach, describe, it } from "node:test";
 
 import { createRecommendationRouteHandlers } from "../app/api/recommendations/route.ts";
 import {
@@ -7,10 +7,30 @@ import {
   STAGED_TERRA_CLIENT_REQUEST_HEADER,
   STAGED_TERRA_JOB_TOKEN_HEADER,
 } from "../lib/stagedTerraApiContract.ts";
-import { createStagedTerraRecommendationHandlers } from "../lib/stagedTerraRecommendationRoute.ts";
+import { createStagedTerraRecommendationHandlers as createProductionStagedTerraRecommendationHandlers } from "../lib/stagedTerraRecommendationRoute.ts";
+import { buildStagedTerraRequestFingerprint } from "../lib/stagedTerraContract.ts";
+import { issueStagedTerraJobToken } from "../lib/stagedTerraJobToken.ts";
+import {
+  createPaidRequestAdmission,
+  DEFAULT_PAID_REQUEST_ADMISSION,
+} from "../lib/paidRequestAdmission.ts";
 
 const secret = "s".repeat(32);
 const shopper = { query: "cordless vacuum", budget: "under $500" };
+
+beforeEach(() => {
+  DEFAULT_PAID_REQUEST_ADMISSION.resetForTests();
+});
+
+function createStagedTerraRecommendationHandlers(options = {}) {
+  return createProductionStagedTerraRecommendationHandlers({
+    paidRequestAdmission: createPaidRequestAdmission({
+      maxConcurrent: 100,
+      maxStartsPerWindow: 1_000,
+    }),
+    ...options,
+  });
+}
 
 function request(method, body, headers = {}) {
   return new Request("http://localhost/api/recommendations", {
@@ -156,6 +176,10 @@ describe("OAI-T10 staged Terra route", () => {
       assetIdentityFailureCandidateCounts: { noAssetCandidates: 7 },
       commerceOutcomeCandidateCounts: { noShoppingRows: 7 },
     });
+    const admission = createPaidRequestAdmission({
+      maxConcurrent: 1,
+      maxStartsPerWindow: 10,
+    });
     const handlers = createStagedTerraRecommendationHandlers({
       validateRequest: (body) => ({ data: body }),
       getEnvironment: () => ({
@@ -165,6 +189,7 @@ describe("OAI-T10 staged Terra route", () => {
       }),
       createOpenAIClient: async () => ({ responses: {} }),
       now: () => 10_000,
+      paidRequestAdmission: admission,
       startResearch: async () => ({
         ok: true,
         responseId: "resp_research123",
@@ -246,6 +271,7 @@ describe("OAI-T10 staged Terra route", () => {
 
     const started = await handlers.POST(request("POST", shopper));
     assert.equal(started.status, 202);
+    assert.equal(admission.stats().active, 1);
     const pending = await started.json();
     assert.equal(pending.pipeline, "staged_terra");
     assert.equal(JSON.stringify(pending).includes("resp_research123"), false);
@@ -256,6 +282,7 @@ describe("OAI-T10 staged Terra route", () => {
       }),
     );
     assert.equal(completed.status, 200);
+    assert.equal(admission.stats().active, 0);
     const body = await completed.json();
     assert.deepEqual(body.finalAdvice, ["Verified advice"]);
     assert.equal("diagnostics" in body, false);
@@ -301,6 +328,7 @@ describe("OAI-T10 staged Terra route", () => {
       }),
     );
     assert.equal(repeated.status, 200);
+    assert.equal(admission.stats().active, 0);
     assert.deepEqual((await repeated.json()).finalAdvice, ["Verified advice"]);
     assert.equal(collectionCalls, 1);
     assert.equal(presentationCalls, 1);
@@ -1115,5 +1143,223 @@ describe("OAI-T10 staged Terra route", () => {
     const body = await completed.json();
     assert.equal(body.code, "verification_failed");
     assert.equal(JSON.stringify(body).includes("private source failure"), false);
+  });
+});
+
+describe("PR-023 staged Terra request admission", () => {
+  function admissionHandlers({ admission, onClientCreate }) {
+    return createStagedTerraRecommendationHandlers({
+      validateRequest: (body) => ({ data: body }),
+      getEnvironment: () => ({
+        openAiApiKey: "test-key",
+        jobTokenSecret: secret,
+        enabled: true,
+      }),
+      createOpenAIClient: async () => {
+        onClientCreate();
+        return { responses: {} };
+      },
+      paidRequestAdmission: admission,
+    });
+  }
+
+  it("rejects oversized JSON and a saturated paid-work boundary before client creation", async () => {
+    let clientCreates = 0;
+    const openAdmission = createPaidRequestAdmission({
+      maxConcurrent: 10,
+      maxStartsPerWindow: 100,
+    });
+    const oversizedHandlers = admissionHandlers({
+      admission: openAdmission,
+      onClientCreate: () => {
+        clientCreates += 1;
+      },
+    });
+    const oversized = await oversizedHandlers.POST(
+      request("POST", {
+        ...shopper,
+        padding: "x".repeat(65_536),
+      }),
+    );
+
+    assert.equal(oversized.status, 413);
+    assert.equal((await oversized.json()).code, "request_body_too_large");
+    assert.equal(clientCreates, 0);
+
+    const admission = createPaidRequestAdmission({
+      maxConcurrent: 1,
+      maxStartsPerWindow: 100,
+    });
+    const occupied = admission.tryAcquire();
+    assert.equal(occupied.ok, true);
+    const saturatedHandlers = admissionHandlers({
+      admission,
+      onClientCreate: () => {
+        clientCreates += 1;
+      },
+    });
+    const saturated = await saturatedHandlers.POST(request("POST", shopper));
+    const saturatedBody = await saturated.json();
+
+    assert.equal(saturated.status, 429);
+    assert.equal(saturated.headers.get("Retry-After"), "1");
+    assert.equal(saturatedBody.code, "temporarily_rate_limited");
+    assert.equal(clientCreates, 0);
+    occupied.release();
+  });
+
+  it("holds a background-job permit until cancellation", async () => {
+    const admission = createPaidRequestAdmission({
+      maxConcurrent: 1,
+      maxStartsPerWindow: 100,
+    });
+    const handlers = createStagedTerraRecommendationHandlers({
+      validateRequest: (body) => ({ data: body }),
+      getEnvironment: () => ({
+        openAiApiKey: "test-key",
+        jobTokenSecret: secret,
+        enabled: true,
+      }),
+      createOpenAIClient: async () => ({ responses: {} }),
+      now: () => 10_000,
+      paidRequestAdmission: admission,
+      startResearch: async ({ shopperRequest }) => ({
+        ok: true,
+        responseId: "resp_background123",
+        status: "queued",
+        requestFingerprint: buildStagedTerraRequestFingerprint(shopperRequest),
+        promptVersion: "staged-terra-research-prompt-v6",
+        ledger: { operation: "research_start" },
+      }),
+      cancelResearch: async () => ({
+        ok: true,
+        status: "cancelled",
+        ledger: { operation: "research_cancel" },
+      }),
+    });
+
+    const first = await handlers.POST(request("POST", shopper));
+    const firstBody = await first.json();
+    assert.equal(first.status, 202);
+    assert.equal((await handlers.POST(request("POST", shopper))).status, 429);
+
+    const cancelled = await handlers.DELETE(
+      request("DELETE", undefined, {
+        [STAGED_TERRA_JOB_TOKEN_HEADER]: firstBody.jobToken,
+      }),
+    );
+    assert.equal(cancelled.status, 200);
+    assert.equal((await handlers.POST(request("POST", shopper))).status, 202);
+  });
+
+  it("contains a queued job when app-token construction fails", async () => {
+    let currentTime = 10_000;
+    let cancelCalls = 0;
+    const admission = createPaidRequestAdmission({
+      maxConcurrent: 1,
+      maxStartsPerWindow: 100,
+      now: () => currentTime,
+    });
+    const handlers = createStagedTerraRecommendationHandlers({
+      validateRequest: (body) => ({ data: body }),
+      getEnvironment: () => ({
+        openAiApiKey: "test-key",
+        jobTokenSecret: secret,
+        enabled: true,
+      }),
+      createOpenAIClient: async () => ({ responses: {} }),
+      issueJobToken: () => {
+        throw new Error("expected token failure");
+      },
+      now: () => currentTime,
+      paidRequestAdmission: admission,
+      startResearch: async ({ shopperRequest }) => ({
+        ok: true,
+        responseId: "resp_token_failure123",
+        status: "queued",
+        requestFingerprint: buildStagedTerraRequestFingerprint(shopperRequest),
+        promptVersion: "staged-terra-research-prompt-v6",
+        ledger: { operation: "research_start", status: "queued" },
+      }),
+      cancelResearch: async () => {
+        cancelCalls += 1;
+        return {
+          ok: true,
+          status: "in_progress",
+          ledger: { operation: "research_cancel", status: "in_progress" },
+        };
+      },
+    });
+
+    const failed = await handlers.POST(request("POST", shopper));
+    assert.equal(failed.status, 502);
+    assert.equal(cancelCalls, 1);
+    assert.equal(admission.stats().active, 1);
+    assert.equal(admission.tryAcquire().ok, false);
+
+    currentTime += 24 * 60 * 60 * 1_000;
+    const recovered = admission.tryAcquire();
+    assert.equal(recovered.ok, true);
+    recovered.release();
+  });
+
+  it("admits the de-duplicated completion loader and never caches rejection or failure", async () => {
+    const admission = createPaidRequestAdmission({
+      maxConcurrent: 1,
+      maxStartsPerWindow: 100,
+    });
+    let collectionCalls = 0;
+    let presentationCalls = 0;
+    const handlers = createStagedTerraRecommendationHandlers({
+      validateRequest: (body) => ({ data: body }),
+      getEnvironment: () => ({
+        openAiApiKey: "test-key",
+        jobTokenSecret: secret,
+        enabled: true,
+      }),
+      createOpenAIClient: async () => ({ responses: {} }),
+      now: () => 10_000,
+      paidRequestAdmission: admission,
+      pollResearch: async () => ({
+        ok: true,
+        state: "completed",
+        researchOutput: researchOutput(),
+        ledger: { operation: "research_poll", status: "completed" },
+      }),
+      collectVerificationInputs: async () => {
+        collectionCalls += 1;
+        throw new Error("expected collection failure");
+      },
+      runPresentation: async () => {
+        presentationCalls += 1;
+        throw new Error("presentation must not run");
+      },
+    });
+    const token = issueStagedTerraJobToken({
+      responseId: "resp_completion123",
+      requestFingerprint: buildStagedTerraRequestFingerprint(shopper),
+      shopperRequest: shopper,
+      secret,
+      nowMs: 10_000,
+      ttlMs: 60_000,
+    });
+    const getRequest = () =>
+      request("GET", undefined, { [STAGED_TERRA_JOB_TOKEN_HEADER]: token });
+    const occupied = admission.tryAcquire();
+    assert.equal(occupied.ok, true);
+
+    const rejected = await handlers.GET(getRequest());
+    assert.equal(rejected.status, 429);
+    assert.equal(rejected.headers.get("Retry-After"), "1");
+    assert.equal(collectionCalls, 0);
+    assert.equal(presentationCalls, 0);
+
+    occupied.release();
+    assert.equal((await handlers.GET(getRequest())).status, 502);
+    assert.equal(admission.stats().active, 0);
+    assert.equal((await handlers.GET(getRequest())).status, 502);
+    assert.equal(collectionCalls, 2);
+    assert.equal(presentationCalls, 0);
+    assert.equal(admission.stats().active, 0);
   });
 });

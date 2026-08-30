@@ -11,6 +11,43 @@ Update this file after:
 
 ## 2026-08-30
 
+### Codex - Bound public paid work and cache residency before provider calls
+
+#### Changed
+
+- Added one 64 KiB streaming JSON boundary and exact field/container limits to
+  the public feature and recommendation routes, so oversized or malformed input
+  stops before client creation.
+- Added a shared one-realm paid-work authority: four active operations, 12
+  starts per rolling minute, no queue, explicit retry timing, and background-
+  job leases held through terminal state or signed-token expiry. Deferred
+  staged commerce/presentation and direct asset work must reacquire admission.
+- Replaced unbounded value maps with TTL/LRU caches capped at 256 shared legacy
+  values and 100 generated-feature values. Identical misses coalesce, failures
+  clear for retry, zero-TTL work is not retained, and context-complete keys hash
+  user detail instead of storing it in plaintext.
+- Added regressions for declared/actual body overflow, malformed JSON/length/
+  UTF-8, every bounded field, burst and parallel rejection, success/failure/
+  expiry recovery, cross-route leases, post-ack token failure, cache eviction,
+  miss coalescing, failure cleanup, and deferred-work retry safety.
+
+#### Verified
+
+- Final focused checks pass 89/89; the full suite passes 1,658/1,658 across 227
+  suites; typecheck, production build, Playwright 17/17, diff, and lint with zero
+  errors/three old warnings pass.
+- Controller `agent-loop-2026-08-30T08-03-27-675Z` passed all five partitions,
+  10/10 cases, and 29/29 invariants. After two corrective review rounds, the
+  frozen replacement verdict was `VERIFIED`, no material correction, confidence
+  0.98.
+- No provider, product-data, credential, manual environment-file, real network,
+  or live-fixture content was accessed.
+
+RR-104 is **contained/narrowed**, not Fixed: these bounds are shared within one
+JavaScript realm only and do not prove worker-, restart-, multi-instance-,
+edge-, or deployment-wide enforcement. ReviewRadar remains **NOT READY**;
+PR-024/RR-105 cancellation and broader live-quality/operations gates remain.
+
 ### Codex - Contain every legacy citation and product-page fetch to public destinations
 
 #### Changed

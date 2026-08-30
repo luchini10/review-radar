@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { beforeEach, describe, it } from "node:test";
 
 import {
   createRecommendationRouteHandlers,
@@ -14,10 +14,18 @@ import {
   issueTwoLayerJobToken,
   verifyTwoLayerJobToken,
 } from "../lib/twoLayerJobToken.ts";
+import {
+  createPaidRequestAdmission,
+  DEFAULT_PAID_REQUEST_ADMISSION,
+} from "../lib/paidRequestAdmission.ts";
 
 const secret = "test-only-route-secret-with-at-least-32-bytes";
 const nowMs = 1_789_000_000_000;
 const responseId = "resp_route_123456789";
+
+beforeEach(() => {
+  DEFAULT_PAID_REQUEST_ADMISSION.resetForTests();
+});
 
 const productUrl = "https://shop.example.com/products/example-vacuum";
 const testUrl = "https://tests.example.org/example-vacuum";
@@ -250,6 +258,116 @@ describe("OAI-T4B exact server-mode dispatcher", () => {
       assert.equal(response.status, status);
       assert.deepEqual(calls, []);
     }
+  });
+});
+
+describe("PR-023 two-layer request admission", () => {
+  it("rejects oversized JSON and a saturated paid-work boundary before client creation", async () => {
+    const oversizedSimulation = lifecycle();
+    const oversizedHandlers = buildTwoLayerHandlers(oversizedSimulation);
+    const oversized = await oversizedHandlers.POST(
+      request("POST", {
+        query: "vacuum",
+        padding: "x".repeat(65_536),
+      }),
+    );
+
+    assert.equal(oversized.status, 413);
+    assert.deepEqual(await oversized.json(), {
+      error: "The request body is too large.",
+    });
+    assert.deepEqual(oversizedSimulation.calls, []);
+
+    const admission = createPaidRequestAdmission({
+      maxConcurrent: 1,
+      maxStartsPerWindow: 100,
+    });
+    const occupied = admission.tryAcquire();
+    assert.equal(occupied.ok, true);
+    const saturatedSimulation = lifecycle();
+    const saturatedHandlers = buildTwoLayerHandlers(saturatedSimulation, {
+      paidRequestAdmission: admission,
+    });
+    const saturated = await saturatedHandlers.POST(
+      request("POST", { query: "vacuum" }),
+    );
+    const saturatedBody = await saturated.json();
+
+    assert.equal(saturated.status, 429);
+    assert.equal(saturated.headers.get("Retry-After"), "1");
+    assert.equal(saturatedBody.code, "temporarily_rate_limited");
+    assert.deepEqual(saturatedSimulation.calls, []);
+    occupied.release();
+  });
+
+  it("holds a background-job permit until terminal polling", async () => {
+    const admission = createPaidRequestAdmission({
+      maxConcurrent: 1,
+      maxStartsPerWindow: 100,
+    });
+    const simulation = lifecycle({ retrieveResponses: [completedResponse()] });
+    const handlers = buildTwoLayerHandlers(simulation, {
+      paidRequestAdmission: admission,
+    });
+
+    const first = await readJson(
+      await handlers.POST(request("POST", { query: "vacuum" })),
+    );
+    assert.equal(first.status, 202);
+    assert.equal(
+      (await handlers.POST(request("POST", { query: "vacuum" }))).status,
+      429,
+    );
+
+    assert.equal(
+      (
+        await handlers.GET(
+          request("GET", undefined, first.body.jobToken),
+        )
+      ).status,
+      200,
+    );
+    assert.equal(
+      (await handlers.POST(request("POST", { query: "vacuum" }))).status,
+      202,
+    );
+  });
+
+  it("contains a queued job when app-token construction fails", async () => {
+    let currentTime = nowMs;
+    let cancelCalls = 0;
+    const admission = createPaidRequestAdmission({
+      maxConcurrent: 1,
+      maxStartsPerWindow: 100,
+      now: () => currentTime,
+    });
+    const simulation = lifecycle();
+    const handlers = buildTwoLayerHandlers(simulation, {
+      cancelResearch: async () => {
+        cancelCalls += 1;
+        return {
+          ok: true,
+          status: "in_progress",
+          ledger: { status: "in_progress" },
+        };
+      },
+      issueJobToken: () => {
+        throw new Error("expected token failure");
+      },
+      now: () => currentTime,
+      paidRequestAdmission: admission,
+    });
+
+    const failed = await handlers.POST(request("POST", { query: "vacuum" }));
+    assert.equal(failed.status, 502);
+    assert.equal(cancelCalls, 1);
+    assert.equal(admission.stats().active, 1);
+    assert.equal(admission.tryAcquire().ok, false);
+
+    currentTime += 24 * 60 * 60 * 1_000;
+    const recovered = admission.tryAcquire();
+    assert.equal(recovered.ok, true);
+    recovered.release();
   });
 });
 

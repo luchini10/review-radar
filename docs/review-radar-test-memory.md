@@ -3450,3 +3450,46 @@ a known conservative undercount.
   five-partition controller with 10/10 cases and 29/29 invariants, and frozen
   independent `VERIFIED` at confidence 0.98. Zero network/provider/live-fixture
   content was used.
+
+## Shared paid-request admission and bounded-cache contract - 2026-08-30
+
+- Read public JSON as a stream before route parsing. Enforce both declared and
+  actual 64 KiB ceilings, reject malformed `Content-Length`, invalid UTF-8, and
+  malformed JSON, then apply exact route field/container bounds before client
+  creation, cache insertion, or provider work. Boundary-equal ordinary requests
+  must remain positive controls.
+- One JavaScript realm must share one paid-work authority across feature,
+  legacy, two-layer, staged, and direct paths. Keep concurrency (four active)
+  distinct from rolling frequency (12 starts per 60 seconds), queue nothing,
+  return a retry interval, and make release idempotent. A process/realm limiter
+  never proves IP, account, worker, restart, multi-instance, edge, or deployment-
+  wide enforcement.
+- A background provider acknowledgment does not complete paid work. Transfer
+  the permit to an admission-owned namespaced lease through terminal poll/
+  cancel or signed-token expiry. Any route acquisition/stat read must sweep all
+  expired leases, not only its own namespace. If app-token construction fails
+  after acknowledgment, attempt one safety cancel while holding the permit;
+  release on proven terminal cancel and otherwise lease until expiry.
+- Poll/cancel control requests operate under the existing held lease. Any later
+  paid stage, including staged commerce/presentation or direct asset lookup,
+  must reacquire admission. Identical terminal completion loads may coalesce,
+  but rejection or failure must clear the in-flight promise so a later retry is
+  possible and must not start outbound setup while saturated.
+- Bounded caches must sweep expired values, update LRU on hit, evict before
+  exceeding capacity, coalesce identical misses, clear rejected loaders, and
+  retain no zero-TTL value. Retain only successful values. Keys must include all
+  result-affecting context and keep user detail out of plaintext key material;
+  a visible constant namespace plus SHA-256 of normalized JSON is the current
+  contract.
+- Keep deterministic mutations for declared/actual overflow, malformed length/
+  JSON/UTF-8, every field/container bound, parallel and rolling rejection,
+  success/failure/double-release recovery, duplicate-module sharing, cross-
+  route lease expiry, every post-ack token-failure path, terminal/nonterminal/
+  thrown cancel, eviction/TTL, coalescing, failure retry, and no cross-request
+  leakage.
+- PR-6C proof: focused 89/89, full 1,658/1,658 across 227 suites, typecheck,
+  lint/build/Playwright 17/17, five-partition controller with 10/10 cases and
+  29/29 invariants, and final independent `VERIFIED` at confidence 0.98 after
+  two corrective review rounds. Zero provider, network, credential, or live-
+  fixture content was used. RR-104 remains contained/narrowed until distributed
+  deployment authority is separately proven.

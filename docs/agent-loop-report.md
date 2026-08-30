@@ -1,7 +1,7 @@
 # Agent Loop Report
 
-Generated: 2026-08-30T06:36:24.051Z
-Run: agent-loop-2026-08-30T06-35-39-277Z
+Generated: 2026-08-30T08:04:13.148Z
+Run: agent-loop-2026-08-30T08-03-27-675Z
 Status: passed
 Mode: deterministic
 Parallel workers: 1
@@ -9,11 +9,11 @@ Change log: not updated; no meaningful change note was provided
 
 ## Batches Run
 
-- broad-mainstream: Completed (agent-loop-2026-08-30T06-35-39-277Z.worker-broad-mainstream-2026-08-30T06-35-39-557Z.json)
-- requirement-units: Completed (agent-loop-2026-08-30T06-35-39-277Z.worker-requirement-units-2026-08-30T06-35-40-243Z.json)
-- wrong-category: Completed (agent-loop-2026-08-30T06-35-39-277Z.worker-wrong-category-2026-08-30T06-35-40-911Z.json)
-- price-trust: Completed (agent-loop-2026-08-30T06-35-39-277Z.worker-price-trust-2026-08-30T06-35-41-655Z.json)
-- non-product-pages: Completed (agent-loop-2026-08-30T06-35-39-277Z.worker-non-product-pages-2026-08-30T06-35-42-357Z.json)
+- broad-mainstream: Completed (agent-loop-2026-08-30T08-03-27-675Z.worker-broad-mainstream-2026-08-30T08-03-27-942Z.json)
+- requirement-units: Completed (agent-loop-2026-08-30T08-03-27-675Z.worker-requirement-units-2026-08-30T08-03-28-588Z.json)
+- wrong-category: Completed (agent-loop-2026-08-30T08-03-27-675Z.worker-wrong-category-2026-08-30T08-03-29-291Z.json)
+- price-trust: Completed (agent-loop-2026-08-30T08-03-27-675Z.worker-price-trust-2026-08-30T08-03-30-012Z.json)
+- non-product-pages: Completed (agent-loop-2026-08-30T08-03-27-675Z.worker-non-product-pages-2026-08-30T08-03-30-693Z.json)
 
 ## Executed Benchmark Cases
 
@@ -25,11 +25,11 @@ Change log: not updated; no meaningful change note was provided
 
 ## Checks
 
-- typecheck: Passed (3493ms)
-- lint: Passed (10729ms)
-- unit tests: Passed (25992ms)
-- deterministic eval pipeline: Passed (448ms)
-- tracked offline benchmark: Passed (583ms)
+- typecheck: Passed (3382ms)
+- lint: Passed (10788ms)
+- unit tests: Passed (26626ms)
+- deterministic eval pipeline: Passed (596ms)
+- tracked offline benchmark: Passed (581ms)
 
 ## Top Repeated Root Causes
 
@@ -52,8 +52,8 @@ Change log: not updated; no meaningful change note was provided
 
 ## Current Worker Files
 
-- agent-loop-2026-08-30T06-35-39-277Z.worker-broad-mainstream-2026-08-30T06-35-39-557Z.json
-- agent-loop-2026-08-30T06-35-39-277Z.worker-requirement-units-2026-08-30T06-35-40-243Z.json
-- agent-loop-2026-08-30T06-35-39-277Z.worker-wrong-category-2026-08-30T06-35-40-911Z.json
-- agent-loop-2026-08-30T06-35-39-277Z.worker-price-trust-2026-08-30T06-35-41-655Z.json
-- agent-loop-2026-08-30T06-35-39-277Z.worker-non-product-pages-2026-08-30T06-35-42-357Z.json
+- agent-loop-2026-08-30T08-03-27-675Z.worker-broad-mainstream-2026-08-30T08-03-27-942Z.json
+- agent-loop-2026-08-30T08-03-27-675Z.worker-requirement-units-2026-08-30T08-03-28-588Z.json
+- agent-loop-2026-08-30T08-03-27-675Z.worker-wrong-category-2026-08-30T08-03-29-291Z.json
+- agent-loop-2026-08-30T08-03-27-675Z.worker-price-trust-2026-08-30T08-03-30-012Z.json
+- agent-loop-2026-08-30T08-03-27-675Z.worker-non-product-pages-2026-08-30T08-03-30-693Z.json

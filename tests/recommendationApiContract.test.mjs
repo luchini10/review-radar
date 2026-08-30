@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, it } from "node:test";
 
 import { createRecommendationPostHandler } from "../app/api/recommendations/route.ts";
 import { USER_ERROR_MESSAGES } from "../lib/errorMessages.ts";
+import { createPaidRequestAdmission } from "../lib/paidRequestAdmission.ts";
 
 const originalOpenAiKey = process.env.OPENAI_API_KEY;
 const originalOpenAiModel = process.env.OPENAI_MODEL;
@@ -211,7 +212,12 @@ function buildHandler({
   collectReachableCitationUrls = async () => new Set(),
   createError,
   modelError,
+  onClientCreate = () => {},
   onModelCreate = () => {},
+  paidRequestAdmission = createPaidRequestAdmission({
+    maxConcurrent: 100,
+    maxStartsPerWindow: 1_000,
+  }),
   response = modelResponse([buildProduct()]),
   searchSerperForProducts = async () => emptySerperResult(),
   upgradeWeakSourceEvidence = async (result) => ({
@@ -223,6 +229,7 @@ function buildHandler({
   return createRecommendationPostHandler({
     collectReachableCitationUrls,
     createOpenAIClient: async () => {
+      onClientCreate();
       if (createError) {
         throw createError;
       }
@@ -243,6 +250,7 @@ function buildHandler({
     },
     enrichProductAssets: async (result) => result,
     enrichResultWithReviewEvidence: async (result) => result,
+    paidRequestAdmission,
     searchSerperForProducts,
     upgradeWeakSourceEvidence,
     verifyMissingRequirementEvidence: async (result) => result,
@@ -268,6 +276,107 @@ describe("recommendation API contract", () => {
     assert.deepEqual(response.body, {
       error: "The request body must be a JSON object.",
     });
+  });
+
+  it("rejects declared and actual oversized bodies before client creation", async () => {
+    for (const request of [
+      new Request("http://localhost/api/recommendations", {
+        body: JSON.stringify({ query: "microwave" }),
+        headers: {
+          "Content-Length": "65537",
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+      }),
+      rawRequest(
+        JSON.stringify({
+          query: "microwave",
+          padding: "x".repeat(65_536),
+        }),
+      ),
+    ]) {
+      let clientCreates = 0;
+      const handler = buildHandler({
+        onClientCreate: () => {
+          clientCreates += 1;
+        },
+      });
+
+      const response = await readJson(await handler(request));
+
+      assert.equal(response.status, 413);
+      assert.equal(clientCreates, 0);
+    }
+  });
+
+  it("rejects oversized shopper fields before client creation", async () => {
+    const oversizedBodies = [
+      { query: `microwave ${"q".repeat(200)}` },
+      { query: "microwave", budget: "b".repeat(501) },
+      { query: "microwave", priorities: "p".repeat(2_001) },
+      { query: "microwave", avoid: "a".repeat(2_001) },
+      {
+        query: "microwave",
+        selectedFeatures: [
+          {
+            id: "feature-id",
+            name: "Feature name",
+            type: "text",
+            operator: "equals",
+            value: "v".repeat(501),
+            required: true,
+            source: "smart_features",
+          },
+        ],
+      },
+    ];
+
+    for (const body of oversizedBodies) {
+      let clientCreates = 0;
+      const handler = buildHandler({
+        onClientCreate: () => {
+          clientCreates += 1;
+        },
+      });
+
+      const response = await readJson(await handler(jsonRequest(body)));
+
+      assert.equal(response.status, 400);
+      assert.equal(clientCreates, 0);
+    }
+  });
+
+  it("rejects saturated paid work before client creation and releases successful work", async () => {
+    let clientCreates = 0;
+    const paidRequestAdmission = createPaidRequestAdmission({
+      maxConcurrent: 1,
+      maxStartsPerWindow: 100,
+    });
+    const occupied = paidRequestAdmission.tryAcquire();
+    assert.equal(occupied.ok, true);
+    const handler = buildHandler({
+      onClientCreate: () => {
+        clientCreates += 1;
+      },
+      paidRequestAdmission,
+    });
+
+    const rejected = await readJson(
+      await handler(jsonRequest({ query: "microwave" })),
+    );
+    assert.equal(rejected.status, 429);
+    assert.deepEqual(rejected.body, {
+      error: USER_ERROR_MESSAGES.temporaryRateLimit,
+    });
+    assert.equal(clientCreates, 0);
+
+    occupied.release();
+    const accepted = await readJson(
+      await handler(jsonRequest({ query: "microwave" })),
+    );
+    assert.equal(accepted.status, 200);
+    assert.equal(clientCreates, 1);
+    assert.equal(paidRequestAdmission.stats().active, 0);
   });
 
   it("requires a product category query", async () => {
@@ -304,6 +413,10 @@ describe("recommendation API contract", () => {
       },
       enrichProductAssets: async (result) => result,
       enrichResultWithReviewEvidence: async (result) => result,
+      paidRequestAdmission: createPaidRequestAdmission({
+        maxConcurrent: 100,
+        maxStartsPerWindow: 1_000,
+      }),
       searchSerperForProducts: async () => emptySerperResult(),
       upgradeWeakSourceEvidence: async (result) => ({ result, sourceUpgradeTraces: [] }),
       verifyMissingRequirementEvidence: async (result) => result,

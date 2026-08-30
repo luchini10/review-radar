@@ -1,5 +1,15 @@
-import { getSearchValidationError } from "./errorMessages.ts";
+import {
+  getSearchValidationError,
+  USER_ERROR_MESSAGES,
+} from "./errorMessages.ts";
 import { createOpenAIClient as createDefaultOpenAIClient } from "./openaiClient.ts";
+import { readBoundedJsonBody } from "./boundedJsonRequest.ts";
+import {
+  createPaidRequestLeaseRegistry,
+  DEFAULT_PAID_REQUEST_ADMISSION,
+  paidProviderJobStatusIsTerminal,
+  type PaidRequestAdmission,
+} from "./paidRequestAdmission.ts";
 import {
   cancelDirectTerraResearch,
   pollDirectTerraResearch,
@@ -66,9 +76,11 @@ type HandlerOptions = {
   createOpenAIClient?: typeof createDefaultOpenAIClient;
   getEnvironment?: () => DirectTerraEnvironment;
   now?: () => number;
+  paidRequestAdmission?: PaidRequestAdmission;
   startResearch?: typeof startDirectTerraResearch;
   pollResearch?: typeof pollDirectTerraResearch;
   cancelResearch?: typeof cancelDirectTerraResearch;
+  issueJobToken?: typeof issueDirectTerraJobToken;
   createSerperTransport?: typeof createDefaultSerperTransport;
   createSerperOrganicTransport?: typeof createDefaultSerperOrganicTransport;
   createProductPageTransport?: typeof createDefaultProductPageTransport;
@@ -76,6 +88,7 @@ type HandlerOptions = {
 };
 
 const ERROR_MESSAGES = {
+  bodyTooLarge: "The request body is too large.",
   invalidJson: "The request body must be valid JSON.",
   invalidRequest: "The shopper request is invalid.",
   invalidJob: "This research job is invalid. Please start a new search.",
@@ -117,14 +130,21 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function json(body: unknown, status: number) {
+function json(body: unknown, status: number, headers?: HeadersInit) {
+  const responseHeaders = new Headers(headers);
+  responseHeaders.set("Cache-Control", "no-store");
   return Response.json(body, {
-    headers: { "Cache-Control": "no-store" },
+    headers: responseHeaders,
     status,
   });
 }
 
-function failure(code: string, error: string, status: number) {
+function failure(
+  code: string,
+  error: string,
+  status: number,
+  headers?: HeadersInit,
+) {
   return json(
     {
       pipeline: "direct_terra",
@@ -134,6 +154,7 @@ function failure(code: string, error: string, status: number) {
       error,
     } satisfies DirectTerraFailureResponse,
     status,
+    headers,
   );
 }
 
@@ -306,14 +327,21 @@ export function createDirectTerraRecommendationHandlers({
     enabled: process.env.REVIEW_RADAR_DIRECT_TERRA === "on",
   }),
   now = Date.now,
+  paidRequestAdmission = DEFAULT_PAID_REQUEST_ADMISSION,
   startResearch = startDirectTerraResearch,
   pollResearch = pollDirectTerraResearch,
   cancelResearch = cancelDirectTerraResearch,
+  issueJobToken = issueDirectTerraJobToken,
   createSerperTransport = createDefaultSerperTransport,
   createSerperOrganicTransport = createDefaultSerperOrganicTransport,
   createProductPageTransport = createDefaultProductPageTransport,
   resolveProductAssets = resolveDefaultProductAssets,
 }: HandlerOptions = {}): DirectTerraRecommendationHandlers {
+  const backgroundPaidLeases = createPaidRequestLeaseRegistry({
+    admission: paidRequestAdmission,
+    namespace: "direct-terra",
+    now,
+  });
   const assetResolutions = new Map<
     string,
     { expiresAtMs: number; promise: Promise<DirectTerraProductAsset[]> }
@@ -342,7 +370,9 @@ export function createDirectTerraRecommendationHandlers({
       if (oldestKey) assetResolutions.delete(oldestKey);
     }
     const promise = load().catch((error) => {
-      assetResolutions.delete(responseId);
+      if (assetResolutions.get(responseId)?.promise === promise) {
+        assetResolutions.delete(responseId);
+      }
       throw error;
     });
     assetResolutions.set(responseId, { expiresAtMs, promise });
@@ -372,22 +402,39 @@ export function createDirectTerraRecommendationHandlers({
   }
 
   const POST: RouteHandler = async (request) => {
+    backgroundPaidLeases.sweep();
     const environment = getEnvironment();
     if (!configuredEnvironment(environment)) {
       return failure("invalid_config", ERROR_MESSAGES.missingConfig, 500);
     }
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      return failure("invalid_json", ERROR_MESSAGES.invalidJson, 400);
+    const bodyResult = await readBoundedJsonBody(request);
+    if (!bodyResult.ok) {
+      return failure(
+        bodyResult.reason === "body_too_large"
+          ? "request_body_too_large"
+          : "invalid_json",
+        bodyResult.reason === "body_too_large"
+          ? ERROR_MESSAGES.bodyTooLarge
+          : ERROR_MESSAGES.invalidJson,
+        bodyResult.reason === "body_too_large" ? 413 : 400,
+      );
     }
-    const shopperRequest = validateRequest(body);
+    const shopperRequest = validateRequest(bodyResult.value);
     if (!shopperRequest) {
       return failure("invalid_request", ERROR_MESSAGES.invalidRequest, 400);
     }
 
     const progressId = searchProgressIdFromRequest(request);
+    const admission = paidRequestAdmission.tryAcquire();
+    if (!admission.ok) {
+      return failure(
+        "temporarily_rate_limited",
+        USER_ERROR_MESSAGES.temporaryRateLimit,
+        429,
+        { "Retry-After": String(admission.retryAfterSeconds) },
+      );
+    }
+    let admissionTransferred = false;
     try {
       const client = await createOpenAIClient(environment.openAiApiKey!, {
         maxRetries: 0,
@@ -404,16 +451,54 @@ export function createDirectTerraRecommendationHandlers({
       const issuedAtMs = now();
       const requirementContract =
         buildDirectTerraRequirementContract(shopperRequest);
-      const token = issueDirectTerraJobToken({
-        responseId: result.responseId,
-        promptVersion: result.promptVersion,
-        promptHash: result.promptHash,
-        productCategory: shopperRequest.query,
-        requirementContract,
-        secret: environment.jobTokenSecret!,
-        nowMs: issuedAtMs,
-        ttlMs: DIRECT_TERRA_JOB_TTL_MS,
-      });
+      let token: string;
+      try {
+        token = issueJobToken({
+          responseId: result.responseId,
+          promptVersion: result.promptVersion,
+          promptHash: result.promptHash,
+          productCategory: shopperRequest.query,
+          requirementContract,
+          secret: environment.jobTokenSecret!,
+          nowMs: issuedAtMs,
+          ttlMs: DIRECT_TERRA_JOB_TTL_MS,
+        });
+      } catch {
+        if (["queued", "in_progress"].includes(result.status)) {
+          let cancellationIsTerminal = false;
+          try {
+            const cancellation = await cancelResearch({
+              client,
+              responseId: result.responseId,
+              promptVersion: result.promptVersion,
+              promptHash: result.promptHash,
+              now,
+            });
+            cancellationIsTerminal =
+              paidProviderJobStatusIsTerminal(cancellation.ledger.status) ||
+              (cancellation.ok &&
+                paidProviderJobStatusIsTerminal(cancellation.status));
+          } catch {
+            // A failed safety cancel leaves the known job admitted to expiry.
+          }
+          if (!cancellationIsTerminal) {
+            admissionTransferred = backgroundPaidLeases.track(
+              result.responseId,
+              issuedAtMs + DIRECT_TERRA_JOB_TTL_MS,
+              admission,
+            );
+          }
+        }
+        if (progressId) completeSearchProgress(progressId, "error");
+        return failure("research_failed", ERROR_MESSAGES.researchFailed, 502);
+      }
+      if (["queued", "in_progress"].includes(result.status)) {
+        admissionTransferred = backgroundPaidLeases.track(
+          result.responseId,
+          issuedAtMs + DIRECT_TERRA_JOB_TTL_MS,
+          admission,
+        );
+      }
       return json(
         {
           pipeline: "direct_terra",
@@ -429,10 +514,13 @@ export function createDirectTerraRecommendationHandlers({
     } catch {
       if (progressId) completeSearchProgress(progressId, "error");
       return failure("research_failed", ERROR_MESSAGES.researchFailed, 502);
+    } finally {
+      if (!admissionTransferred) admission.release();
     }
   };
 
   const GET: RouteHandler = async (request) => {
+    backgroundPaidLeases.sweep();
     const environment = getEnvironment();
     if (!configuredEnvironment(environment)) {
       return failure("invalid_config", ERROR_MESSAGES.missingConfig, 500);
@@ -473,6 +561,9 @@ export function createDirectTerraRecommendationHandlers({
         now,
       });
       if (!result.ok) {
+        if (paidProviderJobStatusIsTerminal(result.ledger.status)) {
+          backgroundPaidLeases.release(verified.payload.responseId);
+        }
         if (progressId) completeSearchProgress(progressId, "error");
         return failureForResearchReason(result.reason);
       }
@@ -497,6 +588,7 @@ export function createDirectTerraRecommendationHandlers({
           202,
         );
       }
+      backgroundPaidLeases.release(verified.payload.responseId);
       reportProgressUpTo(progressId, "rank_results");
       const assetTargets = result.assetTargets.map((target) => ({
         ...target,
@@ -515,33 +607,44 @@ export function createDirectTerraRecommendationHandlers({
         }),
       );
       try {
-        const serperTransport =
-          environment.serperApiKey &&
-          directTerraSerperApiKeyIsValid(environment.serperApiKey)
-            ? createSerperTransport({ apiKey: environment.serperApiKey })
-            : undefined;
-        const serperOrganicTransport =
-          environment.serperApiKey &&
-          directTerraSerperApiKeyIsValid(environment.serperApiKey)
-            ? createSerperOrganicTransport({ apiKey: environment.serperApiKey })
-            : undefined;
-        // T8B: one bounded fetch per verified product page so the photo and
-        // canonical clean URL come from the manufacturer's or retailer's own
-        // page. Needs no provider key; it only touches already-verified URLs.
-        const productPageTransport = createProductPageTransport({});
         const resolved = await resolveProductAssetsOnce({
           responseId: verified.payload.responseId,
           expiresAtMs: verified.payload.expiresAtMs,
-          load: () =>
-            resolveProductAssets({
-              targets: assetTargets,
-              reportMarkdown: result.reportMarkdown,
-              activeCitationUrls: result.citationUrls,
-              responseSources: result.responseSources,
-              serperTransport,
-              serperOrganicTransport,
-              productPageTransport,
-            }),
+          load: async () => {
+            const assetAdmission = paidRequestAdmission.tryAcquire();
+            if (!assetAdmission.ok) {
+              throw new Error("Product asset admission is unavailable.");
+            }
+            try {
+              const serperTransport =
+                environment.serperApiKey &&
+                directTerraSerperApiKeyIsValid(environment.serperApiKey)
+                  ? createSerperTransport({ apiKey: environment.serperApiKey })
+                  : undefined;
+              const serperOrganicTransport =
+                environment.serperApiKey &&
+                directTerraSerperApiKeyIsValid(environment.serperApiKey)
+                  ? createSerperOrganicTransport({
+                      apiKey: environment.serperApiKey,
+                    })
+                  : undefined;
+              // T8B: one bounded fetch per verified product page so the photo
+              // and canonical clean URL come from the manufacturer's or
+              // retailer's own page. It only touches already-verified URLs.
+              const productPageTransport = createProductPageTransport({});
+              return await resolveProductAssets({
+                targets: assetTargets,
+                reportMarkdown: result.reportMarkdown,
+                activeCitationUrls: result.citationUrls,
+                responseSources: result.responseSources,
+                serperTransport,
+                serperOrganicTransport,
+                productPageTransport,
+              });
+            } finally {
+              assetAdmission.release();
+            }
+          },
         });
         productAssets = safeAssetsForTargets(assetTargets, resolved);
       } catch {
@@ -572,6 +675,7 @@ export function createDirectTerraRecommendationHandlers({
   };
 
   const DELETE: RouteHandler = async (request) => {
+    backgroundPaidLeases.sweep();
     const environment = getEnvironment();
     if (!configuredEnvironment(environment)) {
       return failure("invalid_config", ERROR_MESSAGES.missingConfig, 500);
@@ -602,6 +706,12 @@ export function createDirectTerraRecommendationHandlers({
         promptHash: verified.payload.promptHash,
         now,
       });
+      if (
+        paidProviderJobStatusIsTerminal(result.ledger.status) ||
+        (result.ok && paidProviderJobStatusIsTerminal(result.status))
+      ) {
+        backgroundPaidLeases.release(verified.payload.responseId);
+      }
       if (!result.ok) return failureForResearchReason(result.reason);
       if (result.status !== "cancelled") {
         return failure(

@@ -1,6 +1,14 @@
 import {
   createOpenAIClient as createDefaultOpenAIClient,
 } from "./openaiClient.ts";
+import { readBoundedJsonBody } from "./boundedJsonRequest.ts";
+import { USER_ERROR_MESSAGES } from "./errorMessages.ts";
+import {
+  createPaidRequestLeaseRegistry,
+  DEFAULT_PAID_REQUEST_ADMISSION,
+  paidProviderJobStatusIsTerminal,
+  type PaidRequestAdmission,
+} from "./paidRequestAdmission.ts";
 import { buildNormalizedShopperRequest } from "./autonomousResearchContract.ts";
 import {
   buildTwoLayerStructuredProductCards,
@@ -69,10 +77,12 @@ type TwoLayerRecommendationHandlerOptions = {
   createOpenAIClient?: typeof createDefaultOpenAIClient;
   getEnvironment?: () => TwoLayerEnvironment;
   now?: () => number;
+  paidRequestAdmission?: PaidRequestAdmission;
   validateRequest: (body: unknown) => ValidatedRequest;
   startResearch?: typeof startTwoLayerResearch;
   pollResearch?: typeof pollTwoLayerResearch;
   cancelResearch?: typeof cancelTwoLayerResearch;
+  issueJobToken?: typeof issueTwoLayerJobToken;
   buildPresentation?: typeof buildTwoLayerStructuredProductCards;
   onVerificationFailure?: (
     diagnostic: TwoLayerVerificationFailureDiagnostic,
@@ -92,6 +102,7 @@ export type TwoLayerRecommendationHandlers = {
 };
 
 const ERROR_MESSAGES = {
+  bodyTooLarge: "The request body is too large.",
   invalidJson: "The request body must be valid JSON.",
   invalidJob: "This research job is invalid. Please start a new search.",
   expiredJob: "This research job expired. Please start a new search.",
@@ -103,14 +114,21 @@ const ERROR_MESSAGES = {
     "Research finished, but its evidence could not be verified safely.",
 } as const;
 
-function json(body: unknown, status: number) {
+function json(body: unknown, status: number, headers?: HeadersInit) {
+  const responseHeaders = new Headers(headers);
+  responseHeaders.set("Cache-Control", "no-store");
   return Response.json(body, {
-    headers: { "Cache-Control": "no-store" },
+    headers: responseHeaders,
     status,
   });
 }
 
-function failure(code: string, error: string, status: number) {
+function failure(
+  code: string,
+  error: string,
+  status: number,
+  headers?: HeadersInit,
+) {
   return json(
     {
       pipeline: "two_layer",
@@ -120,6 +138,7 @@ function failure(code: string, error: string, status: number) {
       error,
     } satisfies TwoLayerFailureResponse,
     status,
+    headers,
   );
 }
 
@@ -192,15 +211,22 @@ export function createTwoLayerRecommendationHandlers({
     jobTokenSecret: process.env.REVIEW_RADAR_JOB_TOKEN_SECRET,
   }),
   now = Date.now,
+  paidRequestAdmission = DEFAULT_PAID_REQUEST_ADMISSION,
   validateRequest,
   startResearch = startTwoLayerResearch,
   pollResearch = pollTwoLayerResearch,
   cancelResearch = cancelTwoLayerResearch,
+  issueJobToken = issueTwoLayerJobToken,
   buildPresentation = buildTwoLayerStructuredProductCards,
   onVerificationFailure = defaultVerificationFailureReporter,
   onResearchCompleted = defaultCompletionReporter,
   onResearchStructured = defaultStructuredCompletionReporter,
 }: TwoLayerRecommendationHandlerOptions): TwoLayerRecommendationHandlers {
+  const backgroundPaidLeases = createPaidRequestLeaseRegistry({
+    admission: paidRequestAdmission,
+    namespace: "two-layer",
+    now,
+  });
   const reportVerificationFailure = (
     diagnostic: TwoLayerVerificationFailureDiagnostic,
   ) => {
@@ -228,13 +254,20 @@ export function createTwoLayerRecommendationHandlers({
   };
 
   const POST: RouteHandler = async (request) => {
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      return json({ error: ERROR_MESSAGES.invalidJson }, 400);
+    backgroundPaidLeases.sweep();
+    const bodyResult = await readBoundedJsonBody(request);
+    if (!bodyResult.ok) {
+      return json(
+        {
+          error:
+            bodyResult.reason === "body_too_large"
+              ? ERROR_MESSAGES.bodyTooLarge
+              : ERROR_MESSAGES.invalidJson,
+        },
+        bodyResult.reason === "body_too_large" ? 413 : 400,
+      );
     }
-    const validation = validateRequest(body);
+    const validation = validateRequest(bodyResult.value);
     if ("error" in validation) {
       return json({ error: validation.error }, 400);
     }
@@ -244,6 +277,16 @@ export function createTwoLayerRecommendationHandlers({
       return failure("invalid_config", ERROR_MESSAGES.missingConfig, 500);
     }
 
+    const admission = paidRequestAdmission.tryAcquire();
+    if (!admission.ok) {
+      return failure(
+        "temporarily_rate_limited",
+        USER_ERROR_MESSAGES.temporaryRateLimit,
+        429,
+        { "Retry-After": String(admission.retryAfterSeconds) },
+      );
+    }
+    let admissionTransferred = false;
     try {
       const client = await createOpenAIClient(environment.openAiApiKey!, {
         maxRetries: 0,
@@ -260,17 +303,54 @@ export function createTwoLayerRecommendationHandlers({
 
       const issuedAtMs = now();
       const expiresAtMs = issuedAtMs + TWO_LAYER_JOB_TTL_MS;
-      const jobToken = issueTwoLayerJobToken({
-        responseId: result.responseId,
-        promptVersion: result.promptVersion,
-        promptHash: result.promptHash,
-        requirementsHash: hashTwoLayerRequirementTexts(
-          normalizedRequest.evaluation_requirements.map((item) => item.text),
-        ),
-        secret: environment.jobTokenSecret!,
-        nowMs: issuedAtMs,
-        ttlMs: TWO_LAYER_JOB_TTL_MS,
-      });
+      let jobToken: string;
+      try {
+        jobToken = issueJobToken({
+          responseId: result.responseId,
+          promptVersion: result.promptVersion,
+          promptHash: result.promptHash,
+          requirementsHash: hashTwoLayerRequirementTexts(
+            normalizedRequest.evaluation_requirements.map((item) => item.text),
+          ),
+          secret: environment.jobTokenSecret!,
+          nowMs: issuedAtMs,
+          ttlMs: TWO_LAYER_JOB_TTL_MS,
+        });
+      } catch {
+        if (["queued", "in_progress"].includes(result.status)) {
+          let cancellationIsTerminal = false;
+          try {
+            const cancellation = await cancelResearch({
+              client,
+              responseId: result.responseId,
+              promptVersion: result.promptVersion,
+              promptHash: result.promptHash,
+              now,
+            });
+            cancellationIsTerminal =
+              paidProviderJobStatusIsTerminal(cancellation.ledger.status) ||
+              (cancellation.ok &&
+                paidProviderJobStatusIsTerminal(cancellation.status));
+          } catch {
+            // A failed safety cancel leaves the known job admitted to expiry.
+          }
+          if (!cancellationIsTerminal) {
+            admissionTransferred = backgroundPaidLeases.track(
+              result.responseId,
+              expiresAtMs,
+              admission,
+            );
+          }
+        }
+        return failure("research_start_failed", ERROR_MESSAGES.startFailed, 502);
+      }
+      if (["queued", "in_progress"].includes(result.status)) {
+        admissionTransferred = backgroundPaidLeases.track(
+          result.responseId,
+          expiresAtMs,
+          admission,
+        );
+      }
       return json(
         {
           pipeline: "two_layer",
@@ -285,10 +365,13 @@ export function createTwoLayerRecommendationHandlers({
       );
     } catch {
       return failure("research_start_failed", ERROR_MESSAGES.startFailed, 502);
+    } finally {
+      if (!admissionTransferred) admission.release();
     }
   };
 
   const GET: RouteHandler = async (request) => {
+    backgroundPaidLeases.sweep();
     const environment = getEnvironment();
     if (!configuredEnvironment(environment)) {
       return failure("invalid_config", ERROR_MESSAGES.missingConfig, 500);
@@ -321,6 +404,9 @@ export function createTwoLayerRecommendationHandlers({
         now,
       });
       if (!result.ok) {
+        if (paidProviderJobStatusIsTerminal(result.ledger.status)) {
+          backgroundPaidLeases.release(verified.payload.responseId);
+        }
         if (result.ledger.status === "completed") {
           reportCompletion({
             modelRequested: result.ledger.modelRequested,
@@ -358,6 +444,8 @@ export function createTwoLayerRecommendationHandlers({
           202,
         );
       }
+
+      backgroundPaidLeases.release(verified.payload.responseId);
 
       reportCompletion({
         modelRequested: result.ledger.modelRequested,
@@ -433,6 +521,7 @@ export function createTwoLayerRecommendationHandlers({
   };
 
   const DELETE: RouteHandler = async (request) => {
+    backgroundPaidLeases.sweep();
     const environment = getEnvironment();
     if (!configuredEnvironment(environment)) {
       return failure("invalid_config", ERROR_MESSAGES.missingConfig, 500);
@@ -463,6 +552,12 @@ export function createTwoLayerRecommendationHandlers({
         promptHash: verified.payload.promptHash,
         now,
       });
+      if (
+        paidProviderJobStatusIsTerminal(result.ledger.status) ||
+        (result.ok && paidProviderJobStatusIsTerminal(result.status))
+      ) {
+        backgroundPaidLeases.release(verified.payload.responseId);
+      }
       if (!result.ok) return failureForResearchReason(result.reason);
       if (result.status !== "cancelled") {
         return failure(

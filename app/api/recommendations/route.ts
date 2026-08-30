@@ -22,6 +22,7 @@ import {
   USER_ERROR_MESSAGES,
 } from "../../../lib/errorMessages.ts";
 import { collectReachableCitationUrls } from "../../../lib/citationUrlVerification.ts";
+import { readBoundedJsonBody } from "../../../lib/boundedJsonRequest.ts";
 import {
   filterResultToVerifiedCitations,
   getProductPageCitationVerificationResult,
@@ -66,7 +67,14 @@ import {
   parseNarration,
 } from "../../../lib/finalSynthesis.ts";
 import { detectRequirementConflicts } from "../../../lib/requirementConflicts.ts";
-import { normalizeSelectedSmartFeatures } from "../../../lib/smartFeatureSelection.ts";
+import {
+  isSelectedSmartFeature,
+  normalizeSelectedSmartFeatures,
+} from "../../../lib/smartFeatureSelection.ts";
+import {
+  DEFAULT_PAID_REQUEST_ADMISSION,
+  type PaidRequestAdmission,
+} from "../../../lib/paidRequestAdmission.ts";
 import {
   augmentSearchPlanWithDiscoveryStrategy,
   buildOpenAIDiscoveryGapCheck,
@@ -122,12 +130,22 @@ export const runtime = "nodejs";
 
 const SERVER_RESEARCH_TIMEOUT_MS = 180000;
 const DEBUG_HEADER = "x-reviewradar-debug";
+const QUERY_MAX_LENGTH = 200;
+const BUDGET_MAX_LENGTH = 500;
+const DETAILS_MAX_LENGTH = 2_000;
+const LEGACY_FEATURE_MAX_LENGTH = 500;
+const FEATURE_ID_MAX_LENGTH = 100;
+const FEATURE_NAME_MAX_LENGTH = 200;
+const FEATURE_VALUE_MAX_LENGTH = 500;
+const FEATURE_UNIT_MAX_LENGTH = 50;
 
 const REQUEST_ERROR_MESSAGES = {
   invalidAvoid: "Deal-breakers must be text.",
   invalidBody: "The request body must be a JSON object.",
+  bodyTooLarge: "The request body is too large.",
   invalidBudget: "Budget must be text.",
   invalidJson: "The request body must be valid JSON.",
+  queryTooLong: "The product search is too long.",
   invalidPriorities: "Important details must be text.",
   invalidSmartFeature: "One Smart Feature selection could not be read.",
   invalidSmartFeatureList: "Smart Features must be sent as a list of selections.",
@@ -147,6 +165,7 @@ type RecommendationRouteDependencies = {
   createOpenAIClient: typeof createOpenAIClient;
   enrichProductAssets: typeof enrichProductAssets;
   enrichResultWithReviewEvidence: typeof enrichResultWithReviewEvidence;
+  paidRequestAdmission: PaidRequestAdmission;
   resolveSerperIdentityLeads: typeof resolveSerperIdentityLeads;
   searchSerperForProducts: typeof searchSerperForProducts;
   upgradeWeakSourceEvidence: typeof upgradeWeakSourceEvidence;
@@ -158,6 +177,7 @@ const defaultRecommendationRouteDependencies: RecommendationRouteDependencies = 
   createOpenAIClient,
   enrichProductAssets,
   enrichResultWithReviewEvidence,
+  paidRequestAdmission: DEFAULT_PAID_REQUEST_ADMISSION,
   resolveSerperIdentityLeads,
   searchSerperForProducts,
   upgradeWeakSourceEvidence,
@@ -200,6 +220,14 @@ function getOptionalString(
     };
   }
 
+  const maximumLength =
+    field === "budget" ? BUDGET_MAX_LENGTH : DETAILS_MAX_LENGTH;
+  if (value.length > maximumLength) {
+    return {
+      error: optionalStringError(field),
+    };
+  }
+
   const trimmed = value.trim();
   return trimmed ? trimmed : undefined;
 }
@@ -223,6 +251,58 @@ function getOptionalSelectedFeatures(
   if (value.length > 12) {
     return {
       error: REQUEST_ERROR_MESSAGES.tooManySmartFeatures,
+    };
+  }
+
+  const expectedKeys = new Set([
+    "id",
+    "name",
+    "type",
+    "operator",
+    "value",
+    "unit",
+    "required",
+    "source",
+  ]);
+  const featureValueIsBounded = (featureValue: unknown) => {
+    if (typeof featureValue === "string") {
+      return featureValue.length <= FEATURE_VALUE_MAX_LENGTH;
+    }
+    if (typeof featureValue === "number") return Number.isFinite(featureValue);
+    if (typeof featureValue === "boolean") return true;
+    return (
+      Array.isArray(featureValue) &&
+      featureValue.length === 2 &&
+      featureValue.every(
+        (item) => typeof item === "number" && Number.isFinite(item),
+      )
+    );
+  };
+  const featureIsBounded = (item: unknown) => {
+    if (item === null || item === undefined) return true;
+    if (typeof item === "string") {
+      return item.length <= LEGACY_FEATURE_MAX_LENGTH;
+    }
+    if (
+      !isSelectedSmartFeature(item) ||
+      Object.keys(item).some((key) => !expectedKeys.has(key))
+    ) {
+      return false;
+    }
+    return (
+      item.id.trim().length > 0 &&
+      item.id.length <= FEATURE_ID_MAX_LENGTH &&
+      item.name.trim().length > 0 &&
+      item.name.length <= FEATURE_NAME_MAX_LENGTH &&
+      featureValueIsBounded(item.value) &&
+      (item.unit === undefined ||
+        (typeof item.unit === "string" &&
+          item.unit.length <= FEATURE_UNIT_MAX_LENGTH))
+    );
+  };
+  if (!value.every(featureIsBounded)) {
+    return {
+      error: REQUEST_ERROR_MESSAGES.invalidSmartFeature,
     };
   }
 
@@ -253,6 +333,12 @@ function validateRequest(body: unknown) {
   if (typeof query !== "string") {
     return {
       error: USER_ERROR_MESSAGES.emptySearch,
+    };
+  }
+
+  if (query.length > QUERY_MAX_LENGTH) {
+    return {
+      error: REQUEST_ERROR_MESSAGES.queryTooLong,
     };
   }
 
@@ -690,7 +776,6 @@ async function handleRecommendationPostWithContext(
     timing: timing.summary(),
   });
   let debugStage = "read_request";
-  let body: unknown;
   // Captured after Serper discovery so a later AI-research failure can still
   // return verified search candidates instead of a hard error.
   let fallbackContext: {
@@ -700,14 +785,21 @@ async function handleRecommendationPostWithContext(
     serperResult: Awaited<ReturnType<typeof searchSerperForProducts>>;
   } | null = null;
 
-  try {
-    body = await timing.measure("read_request_body", () => request.json());
-  } catch {
+  const bodyResult = await timing.measure("read_request_body", () =>
+    readBoundedJsonBody(request),
+  );
+  if (!bodyResult.ok) {
     return NextResponse.json(
-      { error: REQUEST_ERROR_MESSAGES.invalidJson },
-      { status: 400 },
+      {
+        error:
+          bodyResult.reason === "body_too_large"
+            ? REQUEST_ERROR_MESSAGES.bodyTooLarge
+            : REQUEST_ERROR_MESSAGES.invalidJson,
+      },
+      { status: bodyResult.reason === "body_too_large" ? 413 : 400 },
     );
   }
+  const body = bodyResult.value;
 
   const validation = validateRequest(body);
 
@@ -723,6 +815,17 @@ async function handleRecommendationPostWithContext(
         error: USER_ERROR_MESSAGES.missingApiKey,
       },
       { status: 500 },
+    );
+  }
+
+  const admission = routeDependencies.paidRequestAdmission.tryAcquire();
+  if (!admission.ok) {
+    return NextResponse.json(
+      { error: USER_ERROR_MESSAGES.temporaryRateLimit },
+      {
+        headers: { "Retry-After": String(admission.retryAfterSeconds) },
+        status: 429,
+      },
     );
   }
 
@@ -1671,6 +1774,8 @@ async function handleRecommendationPostWithContext(
       }),
       includeDebug,
     );
+  } finally {
+    admission.release();
   }
 }
 

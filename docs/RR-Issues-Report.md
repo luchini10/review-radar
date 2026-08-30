@@ -1,9 +1,9 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through production-readiness PR-6B
+## Compiled for AI Agent Consumption — Phase 0 through production-readiness PR-6C
 
 **Generated:** 2026-08-30
-**Scope:** All phases from initial measurement harness through the PR-6B
-shared bounded outbound-fetch correction
+**Scope:** All phases from initial measurement harness through the PR-6C
+paid-request admission and bounded-cache correction
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -25,8 +25,8 @@ only when maintaining this register or auditing its full history.
 | High | 50 |
 | Medium | 35 |
 | Low | 5 |
-| Open | 2 |
-| Needs Investigation | 5 |
+| Open | 1 |
+| Needs Investigation | 6 |
 | Fixed | 97 |
 | Won't Fix | 1 |
 
@@ -4240,7 +4240,7 @@ live-server exercised. These limits do not reopen the private-destination gate.
 | **Phase** | Production readiness PR-6A boundary audit |
 | **Severity** | High |
 | **Title** | Public paid routes lack a shared request-admission and cache-capacity boundary |
-| **Status** | Open |
+| **Status** | Needs Investigation — contained/narrowed |
 
 **Description:** `/api/recommendations` and `/api/features` buffer JSON before
 an application body-byte ceiling and have no tracked shared rate, quota, or
@@ -4252,11 +4252,33 @@ and does not coalesce identical concurrent misses. In deterministic zero-
 network proof, a 50,010-character query reached the injected client-creation
 seam and 512 unique zero-TTL cache keys remained resident.
 
-**Expected:** A separate successor must stop oversized declared/actual bodies
-and fields before client creation, bound concurrent paid work, document a
-deployment-aware rate policy, and use capacity/TTL-bounded caches with in-flight
-coalescing. A process-local IP-only limiter or undocumented CDN assumption is
-not production authority.
+**PR-6C correction:** Both public POST routes now stream no more than 64 KiB and
+reject malformed/oversized declared length, actual overflow, invalid UTF-8,
+malformed JSON, and bounded-field/container violations before client creation.
+One JavaScript-realm admission authority is shared by legacy, feature, two-
+layer, staged, and direct paid paths: at most four operations are active and 12
+may start per rolling 60 seconds, with no queue and an explicit retry interval.
+Background permits remain held through terminal state or app-token expiry;
+later Shopping/presentation/asset work reacquires admission. The legacy cache
+is capped at 256 successful values and the feature cache at 100 values for six
+hours; both sweep TTLs, evict deterministically by LRU, coalesce identical
+misses, clear failures, and use context-complete hashed keys.
+
+Final focused tests passed 89/89; the complete suite passed 1,658/1,658 across
+227 suites; typecheck, lint, build, Playwright 17/17, deterministic evaluation,
+all five exact partitions, 10/10 benchmark cases, and 29/29 invariants passed.
+After two `CHANGES REQUIRED` rounds, the final exact independent verdict was
+`VERIFIED`, no material correction, confidence 0.98. No provider, network,
+credential, environment-file, or live-fixture-content work ran.
+
+**Residual:** The reachable application defect is contained within one
+JavaScript realm, but this is not deployment-wide authority. Worker copies,
+process restart, multiple instances, edge/CDN enforcement, account/IP quotas,
+and production load behavior remain unproven. Poll/cancel request frequency is
+not separately metered, and a background lease expires with its signed app
+token even if remote terminal state is not independently proven. Keep RR-104
+open as contained/narrowed until tracked deployment architecture and bounded
+multi-instance verification close those claims.
 
 ---
 
@@ -4286,16 +4308,17 @@ remains unverified until that source-level contract exists.
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (2 issues)
-- RR-104: Public paid routes lack shared admission and bounded caches
+### Open (1 issue)
 - RR-105: Legacy browser cancellation is not wired into provider work
 
-### Needs Investigation (5 issues)
+### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 - RR-091: Same-page related-product price can satisfy autonomous card binding
+- RR-104: Paid admission/cache defect is locally contained; deployment-wide enforcement remains unproven
+
 ### Fixed (97 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
 RR-038 through RR-044, RR-046 through RR-090, and RR-092 through RR-103
@@ -4307,10 +4330,11 @@ RR-038 through RR-044, RR-046 through RR-090, and RR-092 through RR-103
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-104** — add the paid-request admission and bounded-cache unit now that
-   PR-6B has closed the outbound destination boundary.
-2. **RR-105** — wire and prove legacy cancellation after the admission boundary
-   is explicit.
+1. **RR-105** — wire and prove legacy cancellation now that the local admission
+   boundary is explicit.
+2. **RR-104** — retain the one-realm correction, then bind deployment-wide
+   ownership and multi-instance/load enforcement when tracked infrastructure is
+   available. Do not relabel the local limiter as distributed authority.
 3. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
    final overlap. Recovery stays default-off and R7A stays blocked.
 4. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3

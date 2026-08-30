@@ -2916,3 +2916,48 @@ or tracked-only discovery followed. RR-103 is Fixed. ReviewRadar remains NOT
 READY. The next blocker is PR-023/RR-104 paid-request body/field/admission and
 bounded/coalesced caches; recommended reasoning is High for admission and
 multi-instance limits, Medium for localized cache/test implementation.
+
+## Codex Run - 2026-08-30 PR-6C paid-request admission and bounded caches
+
+**Goal and assessment:** close the reachable paid-input, one-realm concurrency,
+and cache-residency defects without claiming distributed rate authority or
+mixing in cancellation. The strongest correction was one shared pre-provider
+body/admission primitive plus bounded asynchronous cache ownership across all
+route modes, not independent per-route counters.
+
+**Change:** both public POST routes now stream at most 64 KiB and enforce exact
+field/container limits before client creation. One `globalThis` admission
+authority permits four active operations and 12 starts per rolling minute,
+queues none, and owns namespaced background leases through terminal state or
+signed-token expiry. Later staged commerce/presentation and direct asset work
+reacquire admission. Shared legacy values are capped at 256; generated features
+at 100 for six hours. Both caches sweep TTLs, evict by LRU, coalesce identical
+misses, clear failures, and hash full normalized key context.
+
+**Fail-first and review:** initial walls reproduced body, field, cache,
+deferred-work, and job-lifecycle defects. The first independent review returned
+`CHANGES REQUIRED` because later paid stages bypassed admission and acknowledged
+jobs released permits. A replacement review returned `CHANGES REQUIRED` because
+lease expiry was owner-route-local and post-ack app-token failure could orphan
+paid work. Direct regressions preceded admission-owned cross-route leases and
+one safety-cancel/lease-transfer containment. Final replacement review returned
+`VERIFIED`, no material correction, confidence 0.98; all 16 hashes matched and
+independent zero-network probes covered the corrected paths.
+
+**Verification:** focused 89/89; complete 1,658/1,658 across 227 suites;
+typecheck; production build; Playwright 17/17; diff; and lint with zero errors/
+three old warnings. Controller `agent-loop-2026-08-30T08-03-27-675Z` passed the
+complete wall, deterministic eval, all five serial partitions, 10/10 cases,
+and 29/29 invariants. Generated `next-env.d.ts` was restored.
+
+**Live calls, limits, and next step:** zero. No credential, manual environment-
+file, provider, product-data service, network, or live-fixture content was
+accessed. The verified authority is one JavaScript realm only; worker copies,
+restart, multiple instances, edge/CDN behavior, IP/account quotas, poll/cancel
+frequency, and remote terminal proof at lease expiry remain unverified. Two
+bounded documentation reads displayed historical fixture path text quoted in
+tracked records, but no fixture filesystem entry or content was accessed.
+RR-104 is contained/narrowed, not Fixed. ReviewRadar remains NOT READY. PR-6D/
+PR-024 should next propagate cancellation through the synchronous legacy paid
+path. Recommended reasoning: High for cancellation/timeout ownership; Medium
+for bounded signal plumbing and deterministic tests.

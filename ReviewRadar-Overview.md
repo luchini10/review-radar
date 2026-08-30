@@ -664,7 +664,14 @@ each requirement resolves to **pass / fail / unknown**:
 - `lib/smartFeatureSuggestions.ts` (catalog + fallback + schema), `lib/smartFeatureSelection.ts`, `lib/smartFeatureCategory.ts`, `types/smart-features.ts`.
 
 **Shared infra**
-- `lib/openaiClient.ts` — `createOpenAIClient` (dynamic `import("openai")`; throws `MissingOpenAISdkError` if absent), `lib/cache.ts`, `lib/errorMessages.ts`, `lib/utils.ts`.
+- `lib/openaiClient.ts` — `createOpenAIClient` (dynamic `import("openai")`; throws `MissingOpenAISdkError` if absent).
+- `lib/boundedJsonRequest.ts` — streaming 64 KiB JSON admission before route
+  parsing or client creation.
+- `lib/paidRequestAdmission.ts` — one-JavaScript-realm paid-work concurrency,
+  rolling-start, and background-lease authority shared across route modes.
+- `lib/cache.ts` — capacity/TTL-bounded LRU values, identical-miss coalescing,
+  failure cleanup, and normalized hashed keys.
+- `lib/errorMessages.ts`, `lib/utils.ts` — shared user-safe errors and utilities.
 
 ---
 
@@ -689,6 +696,22 @@ Requires `SERPER_API_KEY`. **If missing**, discovery is skipped (`stats.skippedR
   token is AES-256-GCM authenticated encryption and is carried in the
   `x-reviewradar-job-token` header, never the request URL.
 - The SDK is loaded dynamically; if `openai` isn't installed the route returns the missing-key user message.
+
+**Shared paid-request boundary:** both public POST routes stream and parse at
+most 64 KiB, then enforce route-owned type/length/container limits. Paid work
+shares one process-realm authority capped at four active operations and 12
+starts per rolling 60 seconds; it queues none and returns `429` with
+`Retry-After`. Background routes retain the permit through terminal polling or
+signed-token expiry, and separately paid completion/asset work reacquires it.
+This is not a distributed/IP/account limiter and must not be described as CDN,
+worker, multi-instance, or deployment-wide protection.
+
+The shared legacy cache retains at most 256 successful values. Generated Smart
+Features retain at most 100 successful values for six hours. Both sweep
+expiration, evict least-recently-used values deterministically, coalesce
+identical misses, and clear failed in-flight loads for retry. Cache keys keep a
+visible namespace and hash normalized request context so shopper detail is not
+stored as plaintext key material.
 
 **What each contributes:** Serper = breadth + real prices/retailers; OpenAI = query strategy, web-search synthesis, requirement-aware structuring, and buyer-facing prose. Deterministic TS code does the filtering, validation, scoring, and selection.
 
@@ -1677,3 +1700,31 @@ No production pipeline or API contract changed in Phase 6A.
   paid-request admission, global concurrency, and cache containment. PR-024/
   RR-105 cancellation remains separate. ReviewRadar remains NOT READY and no
   flag, deployment, release, or push authority changed.
+
+## 41. PR-6C paid-request admission and bounded caches (2026-08-30)
+
+- **Reachability and root cause:** public feature and recommendation routes
+  buffered arbitrary JSON before an application byte ceiling, legacy fields
+  lacked length maxima, paid paths had no shared admission authority, and
+  value caches had no hard capacity or identical-miss coalescing.
+- **Request and admission boundary:** both POST routes now stream at most 64
+  KiB and validate length, UTF-8, JSON, types, field lengths, and feature
+  containers before client creation. One `globalThis` authority in a JavaScript
+  realm caps paid work at four active operations and 12 starts per rolling
+  minute with no queue. Background creates retain permits through terminal
+  state or token expiry; later paid stages reacquire admission.
+- **Cache boundary:** the shared legacy cache holds at most 256 successful
+  values; Smart Features holds at most 100 values for six hours. TTL sweep,
+  deterministic LRU eviction, identical-miss coalescing, failed-load cleanup,
+  zero-TTL non-retention, and context-complete hashed keys are common rules.
+- **Proof:** final focused 89/89; full 1,658/1,658 across 227 suites; typecheck,
+  build, Playwright 17/17, lint, diff, deterministic eval, all five partitions,
+  10/10 benchmark cases, and 29/29 invariants passed. Two independent
+  `CHANGES REQUIRED` rounds were corrected fail-first; final replacement review
+  returned `VERIFIED`, confidence 0.98. Zero provider/network/live work ran.
+- **State and limit:** RR-104 is `Needs Investigation — contained/narrowed`.
+  Process-realm sharing is not worker-, restart-, multi-instance-, edge-, IP-,
+  account-, or deployment-wide enforcement. Poll/cancel frequency and remote
+  terminal proof at lease expiry remain residual. PR-024/RR-105 cancellation is
+  next; ReviewRadar remains NOT READY, with no flag/deployment/release/push
+  authority changed.

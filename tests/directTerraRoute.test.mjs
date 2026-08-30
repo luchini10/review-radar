@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { beforeEach, describe, it } from "node:test";
 
 import { createDirectTerraRecommendationHandlers } from "../lib/directTerraRecommendationRoute.ts";
 import {
@@ -8,15 +8,25 @@ import {
   isDirectTerraPendingResponse,
 } from "../lib/directTerraApiContract.ts";
 import { DIRECT_TERRA_PROMPT_VERSION } from "../lib/directTerraPrompt.ts";
+import { buildDirectTerraRequirementContract } from "../lib/directTerraCandidateSlate.ts";
+import { issueDirectTerraJobToken } from "../lib/directTerraJobToken.ts";
 import { SEARCH_PROGRESS_ID_HEADER } from "../lib/searchProgress.ts";
 import {
   getSearchProgress,
   searchProgressTestExports,
 } from "../lib/searchProgressStore.ts";
+import {
+  createPaidRequestAdmission,
+  DEFAULT_PAID_REQUEST_ADMISSION,
+} from "../lib/paidRequestAdmission.ts";
 
 const secret = "test-only-direct-terra-secret-32-bytes";
 const nowMs = 1_789_000_000_000;
 const exactReport = "# Ranked products\n\n## #1 Best Match — Model A\n\nExact explanation [Source](https://example.com/a).";
+
+beforeEach(() => {
+  DEFAULT_PAID_REQUEST_ADMISSION.resetForTests();
+});
 
 function request(method, body, token) {
   return new Request("http://localhost/api/recommendations-v2", {
@@ -343,6 +353,250 @@ describe("clean direct Terra V2 route", () => {
       }),
       false,
     );
+  });
+});
+
+describe("PR-023 direct Terra request admission", () => {
+  function admissionHandlers({ admission, onClientCreate }) {
+    return createDirectTerraRecommendationHandlers({
+      getEnvironment: () => ({
+        openAiApiKey: "test-key",
+        jobTokenSecret: secret,
+        enabled: true,
+      }),
+      createOpenAIClient: async () => {
+        onClientCreate();
+        return { responses: {} };
+      },
+      paidRequestAdmission: admission,
+    });
+  }
+
+  it("rejects oversized JSON and a saturated paid-work boundary before client creation", async () => {
+    let clientCreates = 0;
+    const openAdmission = createPaidRequestAdmission({
+      maxConcurrent: 10,
+      maxStartsPerWindow: 100,
+    });
+    const oversizedHandlers = admissionHandlers({
+      admission: openAdmission,
+      onClientCreate: () => {
+        clientCreates += 1;
+      },
+    });
+    const oversized = await oversizedHandlers.POST(
+      request("POST", {
+        query: "refrigerator",
+        padding: "x".repeat(65_536),
+      }),
+    );
+
+    assert.equal(oversized.status, 413);
+    assert.equal((await oversized.json()).code, "request_body_too_large");
+    assert.equal(clientCreates, 0);
+
+    const admission = createPaidRequestAdmission({
+      maxConcurrent: 1,
+      maxStartsPerWindow: 100,
+    });
+    const occupied = admission.tryAcquire();
+    assert.equal(occupied.ok, true);
+    const saturatedHandlers = admissionHandlers({
+      admission,
+      onClientCreate: () => {
+        clientCreates += 1;
+      },
+    });
+    const saturated = await saturatedHandlers.POST(
+      request("POST", { query: "refrigerator" }),
+    );
+    const saturatedBody = await saturated.json();
+
+    assert.equal(saturated.status, 429);
+    assert.equal(saturated.headers.get("Retry-After"), "1");
+    assert.equal(saturatedBody.code, "temporarily_rate_limited");
+    assert.equal(clientCreates, 0);
+    occupied.release();
+  });
+
+  it("holds a background-job permit until cancellation", async () => {
+    const admission = createPaidRequestAdmission({
+      maxConcurrent: 1,
+      maxStartsPerWindow: 100,
+    });
+    const handlers = createDirectTerraRecommendationHandlers({
+      getEnvironment: () => ({
+        openAiApiKey: "test-key",
+        jobTokenSecret: secret,
+        enabled: true,
+      }),
+      createOpenAIClient: async () => ({ responses: {} }),
+      now: () => nowMs,
+      paidRequestAdmission: admission,
+      startResearch: async () => ({
+        ok: true,
+        responseId: "resp_background123",
+        status: "queued",
+        promptVersion: DIRECT_TERRA_PROMPT_VERSION,
+        promptHash: "a".repeat(64),
+        ledger: {},
+      }),
+      cancelResearch: async () => ({
+        ok: true,
+        status: "cancelled",
+        ledger: {},
+      }),
+    });
+
+    const first = await handlers.POST(
+      request("POST", { query: "refrigerator" }),
+    );
+    const firstBody = await first.json();
+    assert.equal(first.status, 202);
+    assert.equal(
+      (await handlers.POST(request("POST", { query: "refrigerator" }))).status,
+      429,
+    );
+    assert.equal(
+      (await handlers.DELETE(request("DELETE", null, firstBody.jobToken))).status,
+      200,
+    );
+    assert.equal(
+      (await handlers.POST(request("POST", { query: "refrigerator" }))).status,
+      202,
+    );
+  });
+
+  it("contains a queued job when app-token construction fails", async () => {
+    let currentTime = nowMs;
+    let cancelCalls = 0;
+    const admission = createPaidRequestAdmission({
+      maxConcurrent: 1,
+      maxStartsPerWindow: 100,
+      now: () => currentTime,
+    });
+    const handlers = createDirectTerraRecommendationHandlers({
+      getEnvironment: () => ({
+        openAiApiKey: "test-key",
+        jobTokenSecret: secret,
+        enabled: true,
+      }),
+      createOpenAIClient: async () => ({ responses: {} }),
+      issueJobToken: () => {
+        throw new Error("expected token failure");
+      },
+      now: () => currentTime,
+      paidRequestAdmission: admission,
+      startResearch: async () => ({
+        ok: true,
+        responseId: "resp_token_failure123",
+        status: "queued",
+        promptVersion: DIRECT_TERRA_PROMPT_VERSION,
+        promptHash: "a".repeat(64),
+        ledger: { status: "queued" },
+      }),
+      cancelResearch: async () => {
+        cancelCalls += 1;
+        return {
+          ok: true,
+          status: "in_progress",
+          ledger: { status: "in_progress" },
+        };
+      },
+    });
+
+    const failed = await handlers.POST(
+      request("POST", { query: "refrigerator" }),
+    );
+    assert.equal(failed.status, 502);
+    assert.equal(cancelCalls, 1);
+    assert.equal(admission.stats().active, 1);
+    assert.equal(admission.tryAcquire().ok, false);
+
+    currentTime += 24 * 60 * 60 * 1_000;
+    const recovered = admission.tryAcquire();
+    assert.equal(recovered.ok, true);
+    recovered.release();
+  });
+
+  it("skips saturated optional asset work and retries it after capacity recovers", async () => {
+    const admission = createPaidRequestAdmission({
+      maxConcurrent: 1,
+      maxStartsPerWindow: 100,
+    });
+    let assetCalls = 0;
+    const handlers = createDirectTerraRecommendationHandlers({
+      getEnvironment: () => ({
+        openAiApiKey: "test-key",
+        jobTokenSecret: secret,
+        enabled: true,
+      }),
+      createOpenAIClient: async () => ({ responses: {} }),
+      now: () => nowMs,
+      paidRequestAdmission: admission,
+      pollResearch: async () => ({
+        ok: true,
+        state: "completed",
+        status: "completed",
+        reportMarkdown: exactReport,
+        citationUrls: ["https://example.com/a"],
+        sourceHosts: ["example.com"],
+        assetTargets: [
+          {
+            key: "rank-1-example-model-a",
+            rank: 1,
+            productName: "Model A",
+            brand: "Example",
+            model: "Model A",
+            category: "refrigerator",
+          },
+        ],
+        responseSources: [],
+        disabledCitationCount: 0,
+        priceEstimates: [],
+        rejectedPriceObservationCount: 0,
+        ledger: { usage: { webSearchCalls: 1 } },
+      }),
+      resolveProductAssets: async () => {
+        assetCalls += 1;
+        return [
+          {
+            rank: 1,
+            productName: "Model A",
+            productUrl: "https://example.com/a",
+            imageUrl: "https://images.example/model-a.jpg",
+          },
+        ];
+      },
+    });
+    const shopperRequest = { query: "refrigerator" };
+    const token = issueDirectTerraJobToken({
+      responseId: "resp_assets123",
+      promptVersion: DIRECT_TERRA_PROMPT_VERSION,
+      promptHash: "a".repeat(64),
+      productCategory: shopperRequest.query,
+      requirementContract: buildDirectTerraRequirementContract(shopperRequest),
+      secret,
+      nowMs,
+      ttlMs: 60_000,
+    });
+    const occupied = admission.tryAcquire();
+    assert.equal(occupied.ok, true);
+
+    const saturated = await handlers.GET(request("GET", null, token));
+    assert.equal(saturated.status, 200);
+    assert.equal(assetCalls, 0);
+    assert.equal((await saturated.json()).productAssets[0].productUrl, null);
+
+    occupied.release();
+    const recovered = await handlers.GET(request("GET", null, token));
+    assert.equal(recovered.status, 200);
+    assert.equal(assetCalls, 1);
+    assert.equal(
+      (await recovered.json()).productAssets[0].productUrl,
+      "https://example.com/a",
+    );
+    assert.equal(admission.stats().active, 0);
   });
 });
 

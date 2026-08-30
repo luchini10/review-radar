@@ -1,4 +1,12 @@
 import { createOpenAIClient as createDefaultOpenAIClient } from "./openaiClient.ts";
+import { readBoundedJsonBody } from "./boundedJsonRequest.ts";
+import { USER_ERROR_MESSAGES } from "./errorMessages.ts";
+import {
+  createPaidRequestLeaseRegistry,
+  DEFAULT_PAID_REQUEST_ADMISSION,
+  paidProviderJobStatusIsTerminal,
+  type PaidRequestAdmission,
+} from "./paidRequestAdmission.ts";
 import {
   createDirectTerraSerperShoppingTransport as createDefaultShoppingTransport,
   directTerraSerperApiKeyIsValid,
@@ -83,9 +91,11 @@ type HandlerOptions = {
   getEnvironment?: () => Environment;
   validateRequest: (body: unknown) => ValidatedRequest;
   now?: () => number;
+  paidRequestAdmission?: PaidRequestAdmission;
   startResearch?: typeof startStagedTerraResearch;
   pollResearch?: typeof pollStagedTerraResearch;
   cancelResearch?: typeof cancelStagedTerraResearch;
+  issueJobToken?: typeof issueStagedTerraJobToken;
   collectVerificationInputs?: typeof collectStagedTerraVerificationInputs;
   materializeEvidence?: typeof materializeStagedTerraEvidencePackage;
   runPresentation?: typeof runStagedTerraPresentation;
@@ -103,6 +113,7 @@ export type StagedTerraRecommendationHandlers = {
 };
 
 const ERROR_MESSAGES = {
+  bodyTooLarge: "The request body is too large.",
   invalidJson: "The request body must be valid JSON.",
   invalidJob: "This research job is invalid. Please start a new search.",
   expiredJob: "This research job expired. Please start a new search.",
@@ -114,14 +125,21 @@ const ERROR_MESSAGES = {
     "Evidence was verified, but the final briefing could not be completed safely.",
 } as const;
 
-function json(body: unknown, status: number) {
+function json(body: unknown, status: number, headers?: HeadersInit) {
+  const responseHeaders = new Headers(headers);
+  responseHeaders.set("Cache-Control", "no-store");
   return Response.json(body, {
-    headers: { "Cache-Control": "no-store" },
+    headers: responseHeaders,
     status,
   });
 }
 
-function failure(code: string, error: string, status: number) {
+function failure(
+  code: string,
+  error: string,
+  status: number,
+  headers?: HeadersInit,
+) {
   return json(
     {
       pipeline: "staged_terra",
@@ -131,6 +149,7 @@ function failure(code: string, error: string, status: number) {
       error,
     } satisfies StagedTerraFailureResponse,
     status,
+    headers,
   );
 }
 
@@ -474,9 +493,11 @@ export function createStagedTerraRecommendationHandlers({
   }),
   validateRequest,
   now = Date.now,
+  paidRequestAdmission = DEFAULT_PAID_REQUEST_ADMISSION,
   startResearch = startStagedTerraResearch,
   pollResearch = pollStagedTerraResearch,
   cancelResearch = cancelStagedTerraResearch,
+  issueJobToken = issueStagedTerraJobToken,
   collectVerificationInputs = collectStagedTerraVerificationInputs,
   materializeEvidence = materializeStagedTerraEvidencePackage,
   runPresentation = runStagedTerraPresentation,
@@ -484,11 +505,20 @@ export function createStagedTerraRecommendationHandlers({
   createShoppingTransport = createDefaultShoppingTransport,
   onDiagnostic = defaultDiagnosticReporter,
 }: HandlerOptions): StagedTerraRecommendationHandlers {
+  const backgroundPaidLeases = createPaidRequestLeaseRegistry({
+    admission: paidRequestAdmission,
+    namespace: "staged-terra",
+    now,
+  });
   const completions = new Map<
     string,
     {
       expiresAtMs: number;
-      promise: Promise<{ body: unknown; status: number }>;
+      promise: Promise<{
+        body: unknown;
+        retryAfter: string | undefined;
+        status: number;
+      }>;
     }
   >();
 
@@ -507,18 +537,53 @@ export function createStagedTerraRecommendationHandlers({
     }
     const existing = completions.get(responseId);
     if (existing) {
-      return existing.promise.then((result) => json(result.body, result.status));
+      return existing.promise.then((result) =>
+        json(
+          result.body,
+          result.status,
+          result.retryAfter
+            ? { "Retry-After": result.retryAfter }
+            : undefined,
+        ),
+      );
     }
     if (completions.size >= 100) {
       const oldest = completions.keys().next().value;
       if (oldest) completions.delete(oldest);
     }
-    const promise = load().then(async (response) => ({
+    const loaded = load().then(async (response) => ({
       body: await response.json(),
+      retryAfter: response.headers.get("Retry-After") ?? undefined,
       status: response.status,
     }));
+    type CompletionPromise = Promise<{
+      body: unknown;
+      retryAfter: string | undefined;
+      status: number;
+    }>;
+    const deleteIfCurrent = (expected: CompletionPromise) => {
+      if (completions.get(responseId)?.promise === expected) {
+        completions.delete(responseId);
+      }
+    };
+    const promise: CompletionPromise = loaded.then(
+      (result) => {
+        if (result.status === 429) deleteIfCurrent(promise);
+        return result;
+      },
+      (error) => {
+        deleteIfCurrent(promise);
+        throw error;
+      },
+    );
     completions.set(responseId, { expiresAtMs, promise });
-    return promise.then((result) => json(result.body, result.status));
+    return promise.then((result) =>
+      json(
+        result.body,
+        result.status,
+        result.retryAfter ? { "Retry-After": result.retryAfter } : undefined,
+      ),
+    );
   }
 
   const report = (diagnostic: StagedTerraServerDiagnostic) => {
@@ -530,17 +595,24 @@ export function createStagedTerraRecommendationHandlers({
   };
 
   const POST: RouteHandler = async (request) => {
+    backgroundPaidLeases.sweep();
     const environment = getEnvironment();
     if (!configured(environment)) {
       return failure("invalid_config", ERROR_MESSAGES.missingConfig, 500);
     }
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      return failure("invalid_json", ERROR_MESSAGES.invalidJson, 400);
+    const bodyResult = await readBoundedJsonBody(request);
+    if (!bodyResult.ok) {
+      return failure(
+        bodyResult.reason === "body_too_large"
+          ? "request_body_too_large"
+          : "invalid_json",
+        bodyResult.reason === "body_too_large"
+          ? ERROR_MESSAGES.bodyTooLarge
+          : ERROR_MESSAGES.invalidJson,
+        bodyResult.reason === "body_too_large" ? 413 : 400,
+      );
     }
-    const validation = validateRequest(body);
+    const validation = validateRequest(bodyResult.value);
     if ("error" in validation) return json({ error: validation.error }, 400);
     const normalized = shopperRequest(validation.data);
     const currentTime = now();
@@ -554,6 +626,16 @@ export function createStagedTerraRecommendationHandlers({
     ) {
       return failure("invalid_request", "The shopper request is too large.", 400);
     }
+    const admission = paidRequestAdmission.tryAcquire();
+    if (!admission.ok) {
+      return failure(
+        "temporarily_rate_limited",
+        USER_ERROR_MESSAGES.temporaryRateLimit,
+        429,
+        { "Retry-After": String(admission.retryAfterSeconds) },
+      );
+    }
+    let admissionTransferred = false;
     try {
       const client = await createOpenAIClient(environment.openAiApiKey!, {
         maxRetries: 0,
@@ -579,7 +661,7 @@ export function createStagedTerraRecommendationHandlers({
       const issuedAtMs = now();
       let jobToken: string;
       try {
-        jobToken = issueStagedTerraJobToken({
+        jobToken = issueJobToken({
           responseId: result.responseId,
           requestFingerprint: result.requestFingerprint,
           shopperRequest: normalized,
@@ -588,18 +670,37 @@ export function createStagedTerraRecommendationHandlers({
           ttlMs: STAGED_TERRA_JOB_TTL_MS,
         });
       } catch {
-        if (result.status !== "completed") {
+        if (["queued", "in_progress"].includes(result.status)) {
+          let cancellationIsTerminal = false;
           try {
-            await cancelResearch({
+            const cancellation = await cancelResearch({
               client,
               responseId: result.responseId,
               now,
             });
+            cancellationIsTerminal =
+              paidProviderJobStatusIsTerminal(cancellation.ledger.status) ||
+              (cancellation.ok &&
+                paidProviderJobStatusIsTerminal(cancellation.status));
           } catch {
-            // The known non-terminal research job received one safety cancel.
+            // A failed safety cancel leaves the known job admitted to expiry.
+          }
+          if (!cancellationIsTerminal) {
+            admissionTransferred = backgroundPaidLeases.track(
+              result.responseId,
+              issuedAtMs + STAGED_TERRA_JOB_TTL_MS,
+              admission,
+            );
           }
         }
         return failure("research_failed", ERROR_MESSAGES.researchFailed, 502);
+      }
+      if (["queued", "in_progress"].includes(result.status)) {
+        admissionTransferred = backgroundPaidLeases.track(
+          result.responseId,
+          issuedAtMs + STAGED_TERRA_JOB_TTL_MS,
+          admission,
+        );
       }
       return json(
         {
@@ -615,10 +716,13 @@ export function createStagedTerraRecommendationHandlers({
       );
     } catch {
       return failure("research_failed", ERROR_MESSAGES.researchFailed, 502);
+    } finally {
+      if (!admissionTransferred) admission.release();
     }
   };
 
   const GET: RouteHandler = async (request) => {
+    backgroundPaidLeases.sweep();
     const environment = getEnvironment();
     if (!configured(environment)) {
       return failure("invalid_config", ERROR_MESSAGES.missingConfig, 500);
@@ -651,6 +755,9 @@ export function createStagedTerraRecommendationHandlers({
         now,
       });
       if (!research.ok) {
+        if (paidProviderJobStatusIsTerminal(research.ledger.status)) {
+          backgroundPaidLeases.release(verified.payload.responseId);
+        }
         const validationReason =
           "validationReason" in research &&
           isStagedTerraResearchValidationReason(research.validationReason)
@@ -713,6 +820,7 @@ export function createStagedTerraRecommendationHandlers({
           202,
         );
       }
+      backgroundPaidLeases.release(verified.payload.responseId);
       const identitySourceFilter =
         "identitySourceFilter" in research
           ? sanitizeIdentitySourceFilter(research.identitySourceFilter, {
@@ -730,117 +838,136 @@ export function createStagedTerraRecommendationHandlers({
         responseId: verified.payload.responseId,
         expiresAtMs: verified.payload.expiresAtMs,
         load: async () => {
-          const shoppingTransport =
-            environment.serperApiKey &&
-            directTerraSerperApiKeyIsValid(environment.serperApiKey)
-              ? createShoppingTransport({ apiKey: environment.serperApiKey })
-              : undefined;
-          const collected = await collectVerificationInputs({
-            researchOutput: research.researchOutput,
-            shoppingTransport,
-            now,
-          });
-          const verifiedEvidence = materializeEvidence({
-            shopperRequest: verified.payload.shopperRequest,
-            researchOutput: research.researchOutput,
-            market: "US",
-            candidates: collected.candidates,
-          });
-          const eligibilityCounts =
-            verifiedEvidence.evidencePackage.candidates.reduce(
-              (counts, candidate) => {
-                counts[candidate.eligibility] += 1;
-                return counts;
+          const completionAdmission = paidRequestAdmission.tryAcquire();
+          if (!completionAdmission.ok) {
+            return failure(
+              "temporarily_rate_limited",
+              USER_ERROR_MESSAGES.temporaryRateLimit,
+              429,
+              {
+                "Retry-After": String(
+                  completionAdmission.retryAfterSeconds,
+                ),
               },
-              { eligible: 0, close_match: 0, excluded: 0 },
             );
-          const counts = {
-            candidates: collected.diagnostics.candidateCount,
-            sourceFetchAttempts: collected.diagnostics.sourceFetchAttempts,
-            successfulSourceFetches:
-              collected.diagnostics.successfulSourceFetches,
-            commerceRequests: collected.diagnostics.commerceRequests,
-            commerceRows: collected.diagnostics.commerceRows,
-            eligibleCandidates: eligibilityCounts.eligible,
-            closeMatchCandidates: eligibilityCounts.close_match,
-            excludedCandidates: eligibilityCounts.excluded,
-          };
-          const verificationAttribution = sanitizeVerificationAttribution(
-            verifiedEvidence.diagnostics.aggregate,
-            {
-              candidates: counts.candidates,
-              eligible: counts.eligibleCandidates,
-              closeMatch: counts.closeMatchCandidates,
-              excluded: counts.excludedCandidates,
-            },
-          );
-          if (eligibilityCounts.eligible === 0) {
+          }
+          try {
+            const shoppingTransport =
+              environment.serperApiKey &&
+              directTerraSerperApiKeyIsValid(environment.serperApiKey)
+                ? createShoppingTransport({ apiKey: environment.serperApiKey })
+                : undefined;
+            const collected = await collectVerificationInputs({
+              researchOutput: research.researchOutput,
+              shoppingTransport,
+              now,
+            });
+            const verifiedEvidence = materializeEvidence({
+              shopperRequest: verified.payload.shopperRequest,
+              researchOutput: research.researchOutput,
+              market: "US",
+              candidates: collected.candidates,
+            });
+            const eligibilityCounts =
+              verifiedEvidence.evidencePackage.candidates.reduce(
+                (counts, candidate) => {
+                  counts[candidate.eligibility] += 1;
+                  return counts;
+                },
+                { eligible: 0, close_match: 0, excluded: 0 },
+              );
+            const counts = {
+              candidates: collected.diagnostics.candidateCount,
+              sourceFetchAttempts: collected.diagnostics.sourceFetchAttempts,
+              successfulSourceFetches:
+                collected.diagnostics.successfulSourceFetches,
+              commerceRequests: collected.diagnostics.commerceRequests,
+              commerceRows: collected.diagnostics.commerceRows,
+              eligibleCandidates: eligibilityCounts.eligible,
+              closeMatchCandidates: eligibilityCounts.close_match,
+              excludedCandidates: eligibilityCounts.excluded,
+            };
+            const verificationAttribution = sanitizeVerificationAttribution(
+              verifiedEvidence.diagnostics.aggregate,
+              {
+                candidates: counts.candidates,
+                eligible: counts.eligibleCandidates,
+                closeMatch: counts.closeMatchCandidates,
+                excluded: counts.excludedCandidates,
+              },
+            );
+            if (eligibilityCounts.eligible === 0) {
+              report({
+                stage: "verification",
+                outcome: "failed",
+                counts,
+                ...(verificationAttribution
+                  ? { verificationAttribution }
+                  : {}),
+              });
+              return failure(
+                "verification_failed",
+                ERROR_MESSAGES.verificationFailed,
+                502,
+              );
+            }
             report({
               stage: "verification",
-              outcome: "failed",
+              outcome: "completed",
               counts,
               ...(verificationAttribution ? { verificationAttribution } : {}),
             });
-            return failure(
-              "verification_failed",
-              ERROR_MESSAGES.verificationFailed,
-              502,
-            );
-          }
-          report({
-            stage: "verification",
-            outcome: "completed",
-            counts,
-            ...(verificationAttribution ? { verificationAttribution } : {}),
-          });
-          const presented = await runPresentation({
-            client,
-            evidencePackage: verifiedEvidence.evidencePackage,
-            now,
-          });
-          if (!presented.ok) {
+            const presented = await runPresentation({
+              client,
+              evidencePackage: verifiedEvidence.evidencePackage,
+              now,
+            });
+            if (!presented.ok) {
+              report({
+                stage: "presentation",
+                outcome: "failed",
+                ledger: presented.ledger,
+              });
+              return failure(
+                "presentation_failed",
+                ERROR_MESSAGES.presentationFailed,
+                502,
+              );
+            }
             report({
               stage: "presentation",
-              outcome: "failed",
+              outcome: "completed",
               ledger: presented.ledger,
             });
-            return failure(
-              "presentation_failed",
-              ERROR_MESSAGES.presentationFailed,
-              502,
+            let rendered;
+            try {
+              rendered = renderPresentation({
+                evidencePackage: verifiedEvidence.evidencePackage,
+                presentation: presented.presentation,
+                observedAt: new Date(now()).toISOString(),
+              });
+            } catch {
+              return failure(
+                "presentation_failed",
+                ERROR_MESSAGES.presentationFailed,
+                502,
+              );
+            }
+            return json(
+              {
+                pipeline: "staged_terra",
+                version: STAGED_TERRA_API_VERSION,
+                state: "completed",
+                presentationVersion: presented.presentation.schemaVersion,
+                cards: rendered.cards,
+                sources: rendered.sources,
+                finalAdvice: rendered.finalAdvice,
+              },
+              200,
             );
+          } finally {
+            completionAdmission.release();
           }
-          report({
-            stage: "presentation",
-            outcome: "completed",
-            ledger: presented.ledger,
-          });
-          let rendered;
-          try {
-            rendered = renderPresentation({
-              evidencePackage: verifiedEvidence.evidencePackage,
-              presentation: presented.presentation,
-              observedAt: new Date(now()).toISOString(),
-            });
-          } catch {
-            return failure(
-              "presentation_failed",
-              ERROR_MESSAGES.presentationFailed,
-              502,
-            );
-          }
-          return json(
-            {
-              pipeline: "staged_terra",
-              version: STAGED_TERRA_API_VERSION,
-              state: "completed",
-              presentationVersion: presented.presentation.schemaVersion,
-              cards: rendered.cards,
-              sources: rendered.sources,
-              finalAdvice: rendered.finalAdvice,
-            },
-            200,
-          );
         },
       });
     } catch {
@@ -849,6 +976,7 @@ export function createStagedTerraRecommendationHandlers({
   };
 
   const DELETE: RouteHandler = async (request) => {
+    backgroundPaidLeases.sweep();
     const environment = getEnvironment();
     if (!configured(environment)) {
       return failure("invalid_config", ERROR_MESSAGES.missingConfig, 500);
@@ -877,6 +1005,12 @@ export function createStagedTerraRecommendationHandlers({
         responseId: verified.payload.responseId,
         now,
       });
+      if (
+        paidProviderJobStatusIsTerminal(result.ledger.status) ||
+        (result.ok && paidProviderJobStatusIsTerminal(result.status))
+      ) {
+        backgroundPaidLeases.release(verified.payload.responseId);
+      }
       if (!result.ok || result.status !== "cancelled") {
         return failure("research_failed", ERROR_MESSAGES.researchFailed, 502);
       }

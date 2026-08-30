@@ -14627,3 +14627,278 @@ live-fixture filenames. No content, hash, field, value, parse, or modification
 occurred. Subsequent status/discovery used tracked-only or exact paths. This
 filename-only deviation does not contaminate the code evidence, but it repeated
 a known process failure and must not recur.
+
+## Agent Loop Run - 2026-08-30T07:20:24.308Z
+
+- **run id:** agent-loop-2026-08-30T07-19-03-682Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust
+- **parallel:** 1
+- **worker result files checked:** 1
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3854ms |
+| lint | Passed | 45649ms |
+| unit tests | Passed | 29272ms |
+| deterministic eval pipeline | Passed | 487ms |
+| tracked offline benchmark | Passed | 624ms |
+
+### Executed Benchmark Cases
+
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T07-19-03-682Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T07:47:23.677Z
+
+- **run id:** agent-loop-2026-08-30T07-46-40-820Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust
+- **parallel:** 1
+- **worker result files checked:** 1
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3356ms |
+| lint | Passed | 10962ms |
+| unit tests | Passed | 26781ms |
+| deterministic eval pipeline | Passed | 462ms |
+| tracked offline benchmark | Passed | 596ms |
+
+### Executed Benchmark Cases
+
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T07-46-40-820Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T07:58:30.467Z
+
+- **run id:** agent-loop-2026-08-30T07-57-47-139Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust
+- **parallel:** 1
+- **worker result files checked:** 1
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3204ms |
+| lint | Passed | 10878ms |
+| unit tests | Passed | 27488ms |
+| deterministic eval pipeline | Passed | 490ms |
+| tracked offline benchmark | Passed | 591ms |
+
+### Executed Benchmark Cases
+
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T07-57-47-139Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T08:04:13.147Z
+
+- **run id:** agent-loop-2026-08-30T08-03-27-675Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3382ms |
+| lint | Passed | 10788ms |
+| unit tests | Passed | 26626ms |
+| deterministic eval pipeline | Passed | 596ms |
+| tracked offline benchmark | Passed | 581ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T08-03-27-675Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## PR-6C paid-request admission and bounded-cache correction — 2026-08-30
+
+**Scope and frozen base:** PR-023/RR-104 only, from clean PR-6B commit
+`78ef542e4ee321d72c5c59b70b92703a0ca91530`. The phase was deterministic and
+zero-provider/zero-network. It did not implement PR-024 cancellation, external
+rate-limit infrastructure, deployment, flag promotion, or live load testing.
+
+**Verified before state:** both public paid POST routes buffered with
+`request.json()` before an application byte ceiling. The active legacy request
+accepted unbounded query, budget, priorities, and avoid strings. There was no
+shared admission authority across feature, legacy, and experimental paid work.
+The feature and shared legacy maps had no hard resident-value capacity and did
+not coalesce identical concurrent misses. Deterministic injected probes had
+already shown a 50,010-character query reach client creation and 512 unique
+zero-TTL keys remain resident.
+
+**Fail-first ladder and reviewer corrections:**
+
+- The initial body/field/cache wall passed 18 controls and produced four
+  intended failures before the missing shared modules/exports existed.
+- The first full route-lifecycle wall passed 36 controls and produced five
+  intended failures. Independent review returned `CHANGES REQUIRED`, confidence
+  0.98: later staged Shopping/presentation bypassed admission, and background
+  jobs released permits immediately after provider acknowledgment.
+- After lifecycle correction, 41/41 passed. Success, failure, expiry, shared-
+  registry, cache-retry, and duplicate-load mutations increased the wall to
+  48/48.
+- Replacement review again returned `CHANGES REQUIRED`: lease registries were
+  owner-route-local, so an expired job could starve another route until its
+  owner swept; and failure while constructing an app token after provider
+  acknowledgment could leave two-layer, staged, or direct work untracked.
+- Four direct regressions reproduced those findings: 48 controls passed and
+  four intended failures remained. The generalized correction moved every
+  background lease into the admission authority so any route acquisition or
+  statistics read sweeps all expired leases. Each post-ack token failure now
+  attempts one cancel while holding the permit; terminal cancel releases it,
+  while failed, nonterminal, or thrown cancel transfers it to the lease until
+  expiry. The final lifecycle wall passed 52/52 and the complete focused wall
+  passed 89/89.
+
+**Final behavior:**
+
+- `readBoundedJsonBody()` streams at most 64 KiB and rejects malformed or
+  oversized `Content-Length`, actual overflow, invalid UTF-8, and malformed JSON
+  before client creation. Route-specific type, length, and selected-feature
+  container ceilings preserve ordinary and boundary-equal requests.
+- `DEFAULT_PAID_REQUEST_ADMISSION` is shared through `globalThis` within one
+  JavaScript realm. It admits at most four active paid/provider operations and
+  12 starts per rolling 60 seconds, queues none, returns an explicit retry
+  interval, and has idempotent release. Background jobs hold admission through
+  terminal poll/cancel or signed-token expiry using admission-owned namespaced
+  leases. Later staged commerce/presentation and direct asset work reacquire
+  admission, deduplicate identical loads, and remain retryable after failure or
+  rejection.
+- The shared legacy cache retains at most 256 successful values. Generated
+  features retain at most 100 successful values for six hours. Both sweep
+  expired entries, use deterministic LRU eviction, coalesce identical misses,
+  clear failed in-flight work, and retain nothing for zero TTL. Cache identity
+  is a visible constant namespace plus SHA-256 of normalized full context;
+  feature details are not retained in plaintext keys.
+
+**Exact final verification:** focused route/admission/cache/lifecycle tests
+passed 89/89. `npm test` passed 1,658/1,658 across 227 suites; typecheck passed;
+lint passed with zero errors and the same three pre-existing warnings;
+production build passed; Playwright passed 17/17 with one worker; and scoped
+diff checks passed. Build-generated `next-env.d.ts` was restored to Git blob
+`9edff1c7cacb3bfac9a1eadcf6f51eaa99565e38`. Final controller
+`agent-loop-2026-08-30T08-03-27-675Z` passed typecheck, lint, the complete unit
+wall, deterministic eval, exact reconciliation of all five serial partitions,
+10/10 benchmark cases, and 29/29 invariants with no repeated failure.
+
+**Frozen 16-file SHA-256 manifest:**
+
+- `app/api/features/route.ts`:
+  `90ca898b422bb53e92dabd35fd5f2c9d160b8565412ae904c34fec896b821549`;
+- `app/api/recommendations/route.ts`:
+  `3ee9d6f8c14fda3100af7e3395b81963cd5d5183908f73ab0d27a93a4b7ba643`;
+- `lib/boundedJsonRequest.ts`:
+  `4233c758060906dac37a478900e7fc0c710152d09efba27da0f02884d83c4123`;
+- `lib/cache.ts`:
+  `5a86f56730e03931e64a7f9360920eccbe6ae77030f10ffc4236db3bf86db4ae`;
+- `lib/paidRequestAdmission.ts`:
+  `c408f71d46f1349bbf76e6f42b7703da39176b430bbac54f23cbd499170ff73b`;
+- `lib/twoLayerRecommendationRoute.ts`:
+  `0e41cb816d935164e6e47ce1028d0c94ca8dbe6ba3fdcccab4af08e0c976be6d`;
+- `lib/stagedTerraRecommendationRoute.ts`:
+  `188cef07d468964406fc948118e1efa42d94c31416ba7602fbe3d0aec33eb71d`;
+- `lib/directTerraRecommendationRoute.ts`:
+  `e56cb0efd9dac3a5198e9221a4fdbbfe8bd2518e410490692bd033335ede1445`;
+- `tests/boundedJsonRequest.test.mjs`:
+  `52cd60025a78ff0479a19e41d2ce87f9e194c9d47357efaef0a71b1e344e1b29`;
+- `tests/cache.test.mjs`:
+  `82e09e9b591f98be4a2ce817d1231c1b434cc152d4d976516c535dbfec379758`;
+- `tests/paidRequestAdmission.test.mjs`:
+  `6d86236f88d70ae32ed62c5868a70b456c005f80dd5266073602c769c17d9776`;
+- `tests/featureRoute.test.mjs`:
+  `74bd0e4c1d56c4fe840f4a6d494705281dc3762ccdc54683fd8a80af37188236`;
+- `tests/recommendationApiContract.test.mjs`:
+  `528eb83827ca31617cbd2a033bf7135fccba01f9469e20307dbe795077bbf39b`;
+- `tests/twoLayerRoute.test.mjs`:
+  `24a30d59923506003fd00620fc857c99b93af7484e5d520b45513cb0232de22a`;
+- `tests/stagedTerraRoute.test.mjs`:
+  `8cebc4b738c993204d6370d11bce41651449d9e160b1e0ed666b8b29367d2157`;
+- `tests/directTerraRoute.test.mjs`:
+  `9c238dd35a51d477638cd0d27380452d0158784e35698b35226ff1ce9b24de7e`.
+
+**Independent final replacement review:** exact verdict `VERIFIED`, no material
+correction, confidence 0.98. The reviewer authenticated baseline HEAD and all
+16 hashes before and after review; passed 89/89 and typecheck; checked the
+scoped diff; and ran independent zero-network probes for duplicate-module
+sharing, cross-route expiry recovery, all three post-ack token-failure paths,
+terminal/nonterminal/thrown cancellation, namespace isolation, reset/late
+release, and staged/direct retry cleanup.
+
+**Residual uncertainty and authority:** this admission state is shared only
+inside one JavaScript realm/process. It proves no worker-copy, restart, multi-
+instance, edge/CDN, IP/account, or deployment-wide enforcement. Poll and cancel
+control-request frequency remains unmetered. A lease expires at signed app-
+token TTL even if the remote job is not proven terminal. No live server,
+provider, product-data service, credential, manual environment file, real
+network, or live-fixture content was accessed. RR-104 is therefore `Needs
+Investigation — contained/narrowed`, not Fixed. PR-024/RR-105 is the next local
+unit; no cancellation, flag, deployment, release, push, or readiness authority
+is granted.
+
+**Process residual:** two bounded documentation reads displayed historical
+live-fixture path text quoted inside tracked records. No fixture filesystem
+entry, content, hash, metadata, parse, or modification was accessed. This
+filename-only documentation output does not contaminate the code evidence, but
+it is a repeated process deviation and must not recur.
