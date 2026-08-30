@@ -3187,3 +3187,47 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
   deterministic controller 10/10 cases with 29/29 invariants pass.
 - Lint: zero errors and three pre-existing test warnings.
 - Zero live/provider requests; staged and Direct Terra flags remain off.
+
+## 2026-08-30 — 🟧 Codex — Fresh staged-accuracy protocol v2
+
+### Changed
+
+- Preserved the reviewed four-shape truth but retired the spent attempt chain
+  from execution by minting six disjoint PR-9B run IDs and nonces in matrix v2.
+- Added a nonnegative exact-product Kendall rank-stability gate alongside the
+  existing `0.60` final-set Jaccard gate. Reversal and unscorable sparse overlap
+  now fail without treating harmless product-name drift as a new product.
+- Closed a pre-spend chain gap that accepted an arbitrary well-formed previous
+  artifact hash. Every later attempt now reads and authenticates the complete
+  direct, bounded canonical prefix twice before creating a provider client.
+- Pinned a proposed six-search serial envelope with a `$2.744628` planning basis,
+  `$6` hard ceiling, and zero retries, replacements, fallbacks, or extra cases.
+
+### Verified
+
+- Fail-first: the v1-only implementation rejected matrix v2 and did not enforce
+  the new Kendall gate.
+- Pre-spend fail-first: 54/56 passed; only invented/missing prior-prefix
+  authentication failed. Corrected focused readiness/runner/trust/runtime/
+  verifier suites: 106/106.
+- Full tests: 1,711/1,711 across 232 suites; typecheck passed; lint passed with
+  zero errors and three pre-existing warnings.
+- Deterministic controller `agent-loop-2026-08-30T21-24-13-213Z`: all five
+  serial partitions, 10/10 cases, and 29/29 invariants passed.
+- Zero live/provider/credential/source-page requests; no paid dispatch is
+  authorized by this protocol work.
+- One local PR-9B history commit and one High-reasoning independent exact-commit
+  review were separately authorized; push, PR, CI, merge, deployment, release,
+  flags, provider calls, and the proposed paid window remain outside that scope.
+- Independent review rejected the initial exact commit because malformed
+  execute attempt selectors could reach prefix artifact I/O before the later
+  range check. The runner now validates the closed approval arguments and
+  canonical in-range selector before prefix loading and repeats the check inside
+  the shared loader before any path construction or reader call.
+- Selector fail-first: 16/17. Corrected runner: 17/17. Seven-suite protocol wall:
+  107/107. Full tests: 1,712/1,712 across 232 suites. Typecheck passed; lint had
+  zero errors and the same three pre-existing warnings.
+- Corrected source snapshot `96424b6e1e22d56f947de041da04ce37fa2380a2`
+  received independent `VERIFIED`, no material findings, confidence 0.995. The
+  final commit changes only this closeout documentation relative to that
+  verified source snapshot and was reauthenticated by the same reviewer.

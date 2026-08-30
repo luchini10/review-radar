@@ -2149,6 +2149,68 @@ directory is spent.
   attempt 1, skipping it, inventing a prior hash, or calling attempt 2 is
   forbidden.
 
+### Phase PR-9B — Fresh attributable staged-accuracy protocol
+
+- Status: **implemented and locally focused-validated; zero live; one local
+  history commit and one High-reasoning independent exact-commit review are
+  authorized; exact paid-envelope ratification remains pending**.
+- Bottleneck: PR-9A is independently `VERIFIED`, but the active route still has
+  no current multi-shape accuracy sample. The PR-4B chain cannot resume because
+  attempt 1 was consumed without an artifact. Ranking or discovery changes now
+  would still be speculative.
+- Matrix v2: preserve the reviewed v1 truth, requests, sources, four shapes, and
+  six-run order; retain the 2026-08-29 review and 2026-09-12 expiry; mint six
+  disjoint `pr9b-*` run IDs/nonces; and move the executable/trust manifest to
+  the new file while preserving v1 as non-executable history.
+- Pre-spend chain gate: the first protocol accepted any syntactically valid
+  previous-artifact hash. Live-plan v3 instead reads every exact prior artifact
+  through a bounded direct-file boundary, authenticates the complete canonical
+  prefix, commit, chain, mechanics, quality result, expected next run, and hash,
+  and repeats the same proof immediately before provider-client construction.
+  Missing, malformed, indirect, changed, incomplete, unsafe, or failing prefix
+  evidence prevents the next paid attempt.
+- Rank gate: exact normalized brand/model identity drives final-set and order
+  comparison. Keep Jaccard at `0.60` and require pairwise shared-order Kendall
+  tau at least `0`. Full reversal fails. Fewer than two shared products is an
+  explicit unscorable quality failure; product-name drift remains the same
+  product. Variant/trim correctness stays a mandatory manual evidence decision,
+  not an inferred automated score.
+- Proposed paid envelope: six serial logical searches; PR-3K conservative
+  planning basis `$2.744628`; hard ceiling `$1` per run and `$6` aggregate; at
+  most 12 creates, 360 retrieves, 60 hosted searches, six cancels, 90 Shopping
+  attempts, 180 source fetches, 540 HTTP attempts, and 60 human public-source
+  opens. Zero retry, replacement, fallback, organic, SearchAPI, extra case,
+  promotion, deployment, or release.
+- Authority: Taylor separately authorized one local PR-9B history commit and
+  one High-reasoning independent exact-commit review. The earlier broad
+  paid-call approval did not name these exact limits and still does not
+  authorize dispatch. Independent review must ratify the exact snapshot and
+  bars, then Taylor must explicitly approve exactly six logical searches, the
+  `$6` ceiling, and the 60-page human-audit ceiling. A replacement always needs
+  new approval.
+- Proof: initial protocol fail-first 10/55; pre-spend correction fail-first
+  54/56; corrected 106/106 across readiness, trace, runner, launcher, typed
+  terminal, runtime, and verifier suites; full 1,711/1,711 across 232 suites;
+  typecheck; lint with zero errors and three pre-existing warnings; and
+  deterministic controller `agent-loop-2026-08-30T21-24-13-213Z` across all
+  five serial partitions, 10/10 cases, and 29/29 invariants.
+- Independent correction: initial exact commit
+  `81c54d76ab88488f65790b2b341bdf8f877a5685` received `CHANGES REQUIRED`,
+  confidence 0.99, because invalid execute indices could derive/open non-prefix
+  artifacts before the later range check. The corrected runner validates the
+  closed approval set and canonical selector before prefix I/O and repeats the
+  range/registry check inside the loader. Fail-first 16/17; corrected runner
+  17/17; focused wall 107/107; full 1,712/1,712; typecheck; lint zero
+  errors/three old warnings. Corrected source snapshot
+  `96424b6e1e22d56f947de041da04ce37fa2380a2` then received independent
+  `VERIFIED`, no material findings, confidence 0.995. The same reviewer
+  reauthenticated the final documentation-only closeout commit.
+- Expected effect: no direct product change. The protocol should turn the next
+  live sample into attributable evidence for PR-006 without weakening any
+  price, source, identity, variant, requirement, image, or safety gate.
+- Reasoning: **High** for protocol review/execution; **Highest** for final
+  product, evidence, variant, and ranking adjudication.
+
 ## Phase documentation and commit policy
 
 For each meaningful verified phase:

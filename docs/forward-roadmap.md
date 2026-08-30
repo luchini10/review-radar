@@ -4068,6 +4068,93 @@ permanent verifier and route integration. A failed early gate ends the
 experiment; any later failure leaves the current application available through
 `legacy` mode.
 
+### PR-9B — fresh attributable staged-accuracy protocol
+
+**Status:** implemented locally with zero live calls; one local history commit
+and one High-reasoning independent exact-commit review are authorized. Exact
+paid-envelope ratification remains pending.
+
+**Objective and bottleneck challenge:** the North-Star objective is accurate,
+evidence-backed product choice. The active staged path still has no current
+multi-shape result. A recommendation heuristic or larger sample would therefore
+precede the evidence needed to locate failure. PR-9B refreshes only the spent
+execution chain and makes rank stability enforceable; it preserves the reviewed
+truth, requests, cases, sources, and all trust gates.
+
+**Frozen protocol:** `staged-terra-readiness-matrix-v2` retains the 2026-08-29
+truth review and 2026-09-12 expiry, all four request shapes, and the six-run
+serial order. Its six `pr9b-*` run IDs and six nonces are disjoint from the
+retired PR-4B chain. The old v1 matrix remains historical and cannot execute
+through the current runner. Before every attempt the runner must bind an exact
+clean commit, matrix file/canonical hashes, trust manifest, request, run ID,
+nonce, absent output leaf, flags, credentials, and the remaining ceilings. A
+later attempt must read every exact preceding `artifact.json` through a direct,
+bounded, non-link file boundary; authenticate the canonical prefix, commit,
+chain, mechanics, quality result, expected next run, and approved previous hash;
+and repeat that authentication immediately before provider-client construction.
+After every artifact, complete the bound manual audits and prefix analysis; any
+output still stops with no machine authority for the next attempt.
+
+**Quality bars:** preserve zero wrong type, hard-requirement, budget, or
+unregistered-source failures; broad must-consider recall at least two per run
+and in union; final-set Jaccard at least `0.60`; evidence no older than 24 hours;
+and completed wall time no more than 12 minutes. Shared exact-product order must
+have Kendall tau at least `0`: full reversal fails, and fewer than two shared
+products is explicitly unscorable/failing rather than silently passing. Exact
+product identity is normalized brand plus model. Automated variant scoring is
+unavailable; every card requires bound pass/fail manual variant/trim evidence.
+
+**Paid envelope proposed for ratification:** exactly six logical shopper
+searches, executed serially. PR-3K's comparable conservative result was
+`$0.457438`, so the planning basis is `6 × $0.457438 = $2.744628`; this is not a
+spend entitlement. Hard ceilings are 12 OpenAI creates, 360 retrieves, 60
+hosted searches, six safety cancels, 90 Serper Shopping attempts, 180 source
+fetches, 540 physical source HTTP attempts, `$1` per run, and `$6` aggregate.
+Human evidence adjudication may open at most 60 public source pages. Retries,
+replacements, fallbacks, Serper Organic, SearchAPI, extra cases, flag changes,
+deployment, and release remain zero. A replacement always requires new
+approval.
+
+**Kill rule:** stop on expired truth; trust/provenance failure; malformed,
+stale, or unreconciled evidence; any unsafe/wrong card, requirement, price,
+source, image, or variant decision; any per-run or aggregate ceiling breach;
+unexpected terminal failure; final-set Jaccard below `0.60`; Kendall below `0`
+or unscorable; missed broad recall; or any incomplete/failed manual audit. Do
+not spend a later attempt after a stop and do not reuse a spent identity.
+
+**Expected North-Star effect:** no direct accuracy change. It makes the first
+current six-result sample trustworthy enough to locate missing leaders, wrong
+products/variants, weak ranks, incorrect facts, unsupported evidence, and
+instability at the earliest attributable stage. No live/product accuracy gain
+is claimed until that sample exists.
+
+**Offline proof:** the first fail-first showed the v1-only implementation
+rejected the fresh matrix and lacked an enforceable rank gate. A later
+adversarial audit reproduced a second pre-spend defect: 54/56 passed while the
+runner accepted an invented 64-character prior hash and no actual prefix. The
+corrected live-plan v3 suites pass 106/106; full tests pass 1,711/1,711 across
+232 suites; typecheck passes; lint has zero errors and three pre-existing
+warnings; and deterministic controller
+`agent-loop-2026-08-30T21-24-13-213Z` passes all five serial partitions, 10/10
+cases, and 29/29 invariants. No provider, credential, live route, protected
+fixture, or external source page was accessed.
+
+The independent exact-commit review then rejected initial snapshot
+`81c54d76ab88488f65790b2b341bdf8f877a5685`: invalid execute indices reached
+prefix slicing before the plan's range check. The correction parses the closed
+approval set and canonical in-range selector before prefix I/O and repeats the
+numeric/registry check inside the loader. Its fail-first was 16/17; corrected
+runner 17/17, focused wall 107/107, full suite 1,712/1,712, typecheck pass, and
+lint zero errors/three old warnings. Final corrected exact-commit
+review returned `VERIFIED`, no material findings, confidence 0.995, on source
+snapshot `96424b6e1e22d56f947de041da04ce37fa2380a2`. The same reviewer
+reauthenticated the final documentation-only closeout commit; no implementation,
+test, matrix, ceiling, or trust-boundary blob changed afterward.
+
+**Recommended reasoning:** High for exact-snapshot protocol review and serial
+execution; Highest for source/variant/ranking adjudication or any disputed
+go/no-go decision.
+
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 
 Phase 3P/3Q source-upgrade items; RR-014/RR-015 aggregate measurement beyond

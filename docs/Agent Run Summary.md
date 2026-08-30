@@ -3297,3 +3297,72 @@ The already approved zero-live PR-9B phase may then mint fresh run IDs/nonces,
 reauthenticate the current truth set, and propose an exact logical-search count
 and dollar ceiling. No paid dispatch is authorized until those exact limits are
 fixed and reviewed.
+
+## 2026-08-30 — PR-9B fresh staged-accuracy protocol
+
+**Assessment:** a fresh attributable baseline remains stronger than another
+speculative product/ranking change. PR-9A is independently `VERIFIED`, but the
+old attempt chain is spent and the current staged route still has no
+multi-shape accuracy result.
+
+**Change:** matrix v2 preserves the reviewed truth, requests, sources, four
+shapes, and serial order while minting six disjoint PR-9B attempt IDs/nonces.
+The current runner and Git trust surface now select only v2. Final-set Jaccard
+remains at least `0.60`; shared exact-product Kendall tau must be at least `0`,
+and fewer than two shared products fails as unscorable. Product-name wording
+does not split brand/model identity, and variant/trim remains a mandatory human
+evidence audit.
+
+**Adversarial correction:** the first runner required only a syntactically
+valid previous-artifact hash, so an invented value could start another paid
+attempt and defer chain rejection until afterward. Live-plan v3 reads every
+exact prior artifact through a direct bounded file boundary, authenticates the
+complete canonical prefix and its safe `nextRun`, and repeats the proof before
+provider-client construction. Missing, indirect, malformed, changed,
+incomplete, unsafe, or failing prefix evidence stops before spend.
+
+**Proposed paid boundary:** six serial logical searches. The conservative
+planning basis is `6 × $0.457438 = $2.744628`; hard ceilings are 12 creates, 360
+retrieves, 60 hosted searches, six cancels, 90 Shopping attempts, 180 source
+fetches, 540 HTTP attempts, `$1` per run, `$6` aggregate, and 60 human public
+source-page opens. Retries, replacements, fallbacks, organic, SearchAPI, extra
+cases, promotion, and deployment remain zero.
+
+**Verification:** the first fail-first reproduced v1 rejection and absent
+rank-bar enforcement. The pre-spend fail-first passed 54/56 and failed only the
+invented/missing prefix cases. Corrected focused readiness/trace/runner/
+launcher/terminal/runtime/verifier suites pass 106/106; full tests pass
+1,711/1,711 across 232 suites; typecheck passes; lint has zero errors and three
+pre-existing warnings; and controller `agent-loop-2026-08-30T21-24-13-213Z`
+passes all five serial partitions, 10/10 cases, and 29/29 invariants. No live
+call, provider, credential, protected fixture, or external page was accessed.
+
+**Authority:** Taylor separately authorized one local PR-9B history commit and
+one High-reasoning independent exact-commit review. The broad paid-call approval
+did not name the now-proposed exact count, dollar, or human-page ceiling, so it
+does not authorize dispatch. Exact-snapshot review and explicit ratification of
+those limits remain required.
+
+**Independent correction:** exact commit
+`81c54d76ab88488f65790b2b341bdf8f877a5685` received `CHANGES REQUIRED`,
+confidence 0.99. Invalid execute attempt selectors reached prefix slicing before
+the later plan range check, allowing `0`, negative, fractional, or beyond-plan
+values to derive and open non-prefix protected artifacts. The corrected runner
+validates the closed approval argument set and canonical in-range selector
+before prefix loading, then defensively repeats the numeric/registry check inside
+the shared loader before path construction or reader invocation.
+
+**Correction proof:** fail-first runner 16/17; corrected runner 17/17 with zero
+artifact-reader calls for every invalid selector class; seven focused suites
+107/107; full tests 1,712/1,712 across 232 suites; typecheck pass; lint zero
+errors/three pre-existing warnings. No controller, provider, credential,
+protected-fixture, or external-page action ran.
+
+**Review closure:** corrected source snapshot
+`96424b6e1e22d56f947de041da04ce37fa2380a2` returned `VERIFIED`, no material
+findings, confidence 0.995. The reviewer independently rejected canonical and
+noncanonical invalid selectors plus a mismatched registry with zero artifact
+reader calls, then preserved every earlier matrix, rank, variant, chain,
+file-boundary, no-extra-work, and `NOT READY` conclusion. The same reviewer
+reauthenticated the final documentation-only closeout commit containing this
+record; no code, test, or matrix blob changed after the verified snapshot.

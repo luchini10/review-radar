@@ -22,7 +22,10 @@ import {
   buildStagedTerraReadinessRunPlan,
   buildStagedTerraReadinessRunnerCheckpoint,
   executeStagedTerraReadinessAttempt,
+  parseStagedTerraReadinessAttemptIndex,
+  readStagedTerraReadinessPriorArtifactPrefix,
   stagedTerraReadinessCeilingFailures,
+  stagedTerraReadinessOutputDirectory,
   STAGED_TERRA_READINESS_LIVE_PLAN_VERSION,
   STAGED_TERRA_READINESS_MATRIX_FILE_SHA256,
   validateStagedTerraReadinessCreateRequest,
@@ -33,10 +36,11 @@ import {
   createStagedTerraReadinessCheckpointWriter,
   discoverStagedTerraReadinessImportClosure,
   inspectStagedTerraReadinessOutputBoundary,
+  readStagedTerraReadinessArtifactFile,
 } from "../scripts/staged-terra-readiness-io.mjs";
 
 const matrixBytes = readFileSync(
-  "tests/fixtures/staged-terra-readiness-matrix-v1.json",
+  "tests/fixtures/staged-terra-readiness-matrix-v2.json",
 );
 const matrix = JSON.parse(matrixBytes.toString("utf8"));
 const commitSha = "f".repeat(40);
@@ -176,10 +180,11 @@ function response(status, body) {
   });
 }
 
-describe("PR-4B staged Terra readiness runner", () => {
+describe("PR-9B staged Terra readiness runner", () => {
   it("freezes the first exact matrix attempt and every no-extra-work ceiling", () => {
     const value = plan();
     assert.equal(value.schemaVersion, STAGED_TERRA_READINESS_LIVE_PLAN_VERSION);
+    assert.equal(value.schemaVersion, "staged-terra-readiness-live-plan-v3");
     assert.equal(value.mode, "dry-run");
     assert.equal(
       value.matrixFileSha256,
@@ -187,16 +192,16 @@ describe("PR-4B staged Terra readiness runner", () => {
     );
     assert.equal(
       value.matrixCanonicalSha256,
-      "e1481ed90d40856e9fc504e0177ab92c82929024d7d9cc363cdf381eddb353be",
+      "4959f977d56fb43c58714a5caaeb63c8c16fb290a0d74d04551eefe2e2f3d5e1",
     );
     assert.deepEqual(value.attempt, {
       index: 1,
       key: "broad-shop-vac:1",
       caseId: "broad-shop-vac",
       run: 1,
-      runId: "pr4b-01-broad-shop-vac-r1",
+      runId: "pr9b-01-broad-shop-vac-r1",
       nonce:
-        "nonce-b1749bc7b59de0de2b6d9542d94a00400345b790cdad57a9d8c7d53c185bf5c1",
+        "nonce-7ab37b2a41da6cc4411e81106c5e0d27fdc2c050bfffc4fc3cc87b09d12c54b8",
       previousArtifactSha256: null,
       shopperRequest: { query: "shop vac" },
       requestSha256:
@@ -217,7 +222,14 @@ describe("PR-4B staged Terra readiness runner", () => {
     });
     assert.equal(
       path.basename(value.outputDirectory),
-      "pr4b-01-broad-shop-vac-r1-fffffff",
+      "pr9b-01-broad-shop-vac-r1-fffffff",
+    );
+    assert.throws(() =>
+      stagedTerraReadinessOutputDirectory({
+        repoRoot: process.cwd(),
+        runId: "../outside",
+        commitSha,
+      }),
     );
   });
 
@@ -230,13 +242,63 @@ describe("PR-4B staged Terra readiness runner", () => {
     const value = JSON.parse(output);
     assert.equal(value.mode, "dry-run");
     assert.equal(value.attempt.index, 1);
-    assert.equal(value.attempt.runId, "pr4b-01-broad-shop-vac-r1");
+    assert.equal(value.attempt.runId, "pr9b-01-broad-shop-vac-r1");
     assert.equal(value.networkPolicy.nextAttemptAutomatic, false);
     assert.equal(value.ceilings.conservativeUsd, 1);
     assert.ok(
       ["authenticated", "unauthenticated"].includes(value.trustSurface.status),
     );
     assert.equal(typeof value.outputRelativePath, "string");
+  });
+
+  it("validates an execute attempt selector before prior artifact I/O", async () => {
+    const source = readFileSync(
+      "scripts/run-staged-terra-readiness.mjs",
+      "utf8",
+    );
+    const main = source.indexOf("async function main()");
+    const prefixRead = source.indexOf(
+      "readStagedTerraReadinessPriorArtifactPrefix({",
+      main,
+    );
+    const validation = source.lastIndexOf(
+      "parseStagedTerraReadinessAttemptIndex({",
+      prefixRead,
+    );
+    const approvalClosure = source.lastIndexOf(
+      "parseStagedTerraReadinessApprovalArguments(args)",
+      prefixRead,
+    );
+    assert.ok(main >= 0);
+    assert.ok(approvalClosure > main);
+    assert.ok(validation > main);
+    assert.ok(prefixRead >= 0);
+    assert.ok(approvalClosure < prefixRead);
+    assert.ok(validation < prefixRead);
+
+    for (const value of ["0", "-1", "1.5", "7"]) {
+      assert.throws(() =>
+        parseStagedTerraReadinessAttemptIndex({ matrix, value }),
+      );
+    }
+
+    let artifactReads = 0;
+    const readArtifactFile = async () => {
+      artifactReads += 1;
+      return { ok: true, bytes: Buffer.from("{}", "utf8") };
+    };
+    for (const attemptIndex of [0, -1, 1.5, matrix.attemptPlan.length + 1]) {
+      await assert.rejects(() =>
+        readStagedTerraReadinessPriorArtifactPrefix({
+          matrix,
+          attemptIndex,
+          commitSha,
+          repoRoot: process.cwd(),
+          readArtifactFile,
+        }),
+      );
+    }
+    assert.equal(artifactReads, 0);
   });
 
   it("requires exact origin, matrix, attempt, ceiling, clean-state, and credential approval", () => {
@@ -538,6 +600,68 @@ describe("PR-4B staged Terra readiness runner", () => {
     }
   });
 
+  it("reads only one direct bounded prior artifact file", async () => {
+    const temporaryRepo = mkdtempSync(path.join(tmpdir(), "rr-pr9b-prior-"));
+    try {
+      const outputDirectory = path.join(
+        temporaryRepo,
+        "tests",
+        "fixtures",
+        "review-radar-live",
+        "prior-attempt-abcdef0",
+      );
+      mkdirSync(outputDirectory, { recursive: true });
+      const artifactFile = path.join(outputDirectory, "artifact.json");
+      const expected = Buffer.from('{"artifact":"bounded"}', "utf8");
+      writeFileSync(artifactFile, expected);
+      const direct = await readStagedTerraReadinessArtifactFile({
+        repoRoot: temporaryRepo,
+        outputDirectory,
+      });
+      assert.equal(direct.ok, true);
+      assert.deepEqual(direct.bytes, expected);
+
+      rmSync(artifactFile);
+      mkdirSync(artifactFile);
+      const indirect = await readStagedTerraReadinessArtifactFile({
+        repoRoot: temporaryRepo,
+        outputDirectory,
+      });
+      assert.equal(indirect.ok, false);
+      assert.ok(indirect.failures.includes("prior_artifact_file_indirect"));
+
+      rmSync(artifactFile, { recursive: true });
+      writeFileSync(artifactFile, Buffer.alloc(1_000_001));
+      const oversized = await readStagedTerraReadinessArtifactFile({
+        repoRoot: temporaryRepo,
+        outputDirectory,
+      });
+      assert.equal(oversized.ok, false);
+      assert.ok(
+        oversized.failures.includes("prior_artifact_file_size_invalid"),
+      );
+
+      const outsideDirectory = path.join(temporaryRepo, "outside-live-root");
+      mkdirSync(outsideDirectory);
+      const outside = await readStagedTerraReadinessArtifactFile({
+        repoRoot: temporaryRepo,
+        outputDirectory: outsideDirectory,
+      });
+      assert.equal(outside.ok, false);
+      assert.ok(
+        outside.failures.includes(
+          "prior_artifact_output_leaf_outside_fixed_root",
+        ),
+      );
+      assert.equal(
+        outside.failures.includes("prior_artifact_file_unavailable"),
+        false,
+      );
+    } finally {
+      rmSync(temporaryRepo, { recursive: true, force: true });
+    }
+  });
+
   it("retains the prior append-only checkpoint when a later write is interrupted", async () => {
     const temporaryDirectory = mkdtempSync(
       path.join(tmpdir(), "rr-pr4b-checkpoint-"),
@@ -605,10 +729,11 @@ describe("PR-4B staged Terra readiness runner", () => {
     assert.throws(() =>
       plan({ attemptIndex: 2, previousArtifactSha256: null }),
     );
-    assert.doesNotThrow(() =>
+    assert.throws(() =>
       plan({
         attemptIndex: 2,
         previousArtifactSha256: "a".repeat(64),
+        priorArtifacts: [],
       }),
     );
   });
@@ -701,7 +826,7 @@ describe("PR-4B staged Terra readiness runner", () => {
       buildArtifact: (input) => {
         calls.build += 1;
         assert.equal(input.caseId, "broad-shop-vac");
-        assert.equal(input.runId, "pr4b-01-broad-shop-vac-r1");
+        assert.equal(input.runId, "pr9b-01-broad-shop-vac-r1");
         assert.equal(input.terminalResponse.statusCode, 200);
         assert.equal(input.terminalResponse.body.state, "completed");
         assert.equal("jobToken" in input.terminalResponse.body, false);
@@ -950,6 +1075,10 @@ describe("PR-4B staged Terra readiness runner", () => {
     assert.match(ioSource, /lstat/);
     assert.match(ioSource, /realpath/);
     assert.match(ioSource, /handle\.sync/);
+    assert.ok(
+      source.indexOf("finalPriorArtifacts") <
+        source.lastIndexOf("createOpenAIClient("),
+    );
     assert.doesNotMatch(completeSource, /readdir/);
     assert.doesNotMatch(completeSource, /result\.json/);
     assert.doesNotMatch(completeSource, /OAI_T10_PHASE_D_CASE/);

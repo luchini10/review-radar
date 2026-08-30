@@ -1,4 +1,4 @@
-// Dry-run-first serial capture for the PR-4B staged Terra readiness matrix.
+// Dry-run-first serial capture for the PR-9B staged Terra readiness matrix.
 
 import { createHash, randomBytes } from "node:crypto";
 import { execFileSync } from "node:child_process";
@@ -27,8 +27,12 @@ import {
   stagedTerraReadinessAccounting,
 } from "./staged-terra-readiness-artifact.mjs";
 import {
+  authenticateStagedTerraReadinessPriorPrefix,
   buildStagedTerraReadinessRunPlan,
   executeStagedTerraReadinessAttempt,
+  parseStagedTerraReadinessApprovalArguments,
+  parseStagedTerraReadinessAttemptIndex,
+  readStagedTerraReadinessPriorArtifactPrefix,
   STAGED_TERRA_READINESS_OFFICIAL_OPENAI_BASE_URL,
   stagedTerraReadinessCeilingFailures,
   validateStagedTerraReadinessCreateRequest,
@@ -38,6 +42,7 @@ import {
   authenticateStagedTerraReadinessTrustSurface,
   createStagedTerraReadinessCheckpointWriter,
   inspectStagedTerraReadinessOutputBoundary,
+  readStagedTerraReadinessArtifactFile,
   writeStagedTerraReadinessFileExclusive,
 } from "./staged-terra-readiness-io.mjs";
 import { createStagedTerraRegisteredProductTraceCollector } from "./staged-terra-readiness-trace.mjs";
@@ -47,7 +52,7 @@ const matrixPath = path.join(
   repoRoot,
   "tests",
   "fixtures",
-  "staged-terra-readiness-matrix-v1.json",
+  "staged-terra-readiness-matrix-v2.json",
 );
 
 function gitOutput(args) {
@@ -73,7 +78,7 @@ function argument(args, name) {
   return matches[0]?.slice(name.length + 3) ?? "";
 }
 
-function dryRunSelection(args) {
+function dryRunSelection(args, matrix) {
   const allowed = new Set(["attempt-index", "previous-artifact-sha256"]);
   for (const value of args) {
     if (!value.startsWith("--") || !value.includes("=")) {
@@ -83,12 +88,12 @@ function dryRunSelection(args) {
     if (!allowed.has(name)) throw new Error(`Unknown dry-run argument ${name}.`);
   }
   const attemptText = argument(args, "attempt-index") || "1";
-  if (!/^[1-6]$/.test(attemptText)) {
-    throw new Error("Dry-run attempt index is invalid.");
-  }
   const previousText = argument(args, "previous-artifact-sha256");
   return {
-    attemptIndex: Number(attemptText),
+    attemptIndex: parseStagedTerraReadinessAttemptIndex({
+      matrix,
+      value: attemptText,
+    }),
     previousArtifactSha256: previousText || null,
   };
 }
@@ -120,14 +125,28 @@ async function main() {
       repoRoot,
       commitSha,
     });
+  const approvalValues = execute
+    ? parseStagedTerraReadinessApprovalArguments(args)
+    : null;
+  const drySelection = execute ? null : dryRunSelection(args, matrix);
   const attemptIndex = execute
-    ? Number(argument(args, "approved-attempt-index"))
-    : dryRunSelection(args).attemptIndex;
+    ? parseStagedTerraReadinessAttemptIndex({
+        matrix,
+        value: approvalValues.get("approved-attempt-index"),
+      })
+    : drySelection.attemptIndex;
   const previousText = execute
-    ? argument(args, "approved-previous-artifact-sha256")
-    : dryRunSelection(args).previousArtifactSha256;
+    ? approvalValues.get("approved-previous-artifact-sha256")
+    : drySelection.previousArtifactSha256;
   const previousArtifactSha256 =
     previousText === "" || previousText === "none" ? null : previousText;
+  const priorArtifacts = await readStagedTerraReadinessPriorArtifactPrefix({
+    matrix,
+    attemptIndex,
+    commitSha,
+    repoRoot,
+    readArtifactFile: readStagedTerraReadinessArtifactFile,
+  });
   const plan = buildStagedTerraReadinessRunPlan({
     matrix,
     matrixBytes,
@@ -135,6 +154,7 @@ async function main() {
     commitSha,
     attemptIndex,
     previousArtifactSha256,
+    priorArtifacts,
     currentDate: new Date(),
     repoRoot,
   });
@@ -162,14 +182,6 @@ async function main() {
     },
   });
 
-  const sdkClient = await createOpenAIClient(process.env.OPENAI_API_KEY, {
-    baseURL: STAGED_TERRA_READINESS_OFFICIAL_OPENAI_BASE_URL,
-    maxRetries: 0,
-  });
-  if (sdkClient.maxRetries !== 0) {
-    throw new Error("OpenAI retry suppression is not active.");
-  }
-
   const finalTrustSurface =
     await authenticateStagedTerraReadinessTrustSurface({
       repoRoot,
@@ -188,6 +200,33 @@ async function main() {
     });
   if (!finalOutputBoundary.ok) {
     throw new Error("The readiness output boundary changed after approval.");
+  }
+  const finalPriorArtifacts =
+    await readStagedTerraReadinessPriorArtifactPrefix({
+      matrix,
+      attemptIndex,
+      commitSha,
+      repoRoot,
+      readArtifactFile: readStagedTerraReadinessArtifactFile,
+    });
+  const finalPriorPrefix = authenticateStagedTerraReadinessPriorPrefix({
+    matrix,
+    attemptIndex,
+    previousArtifactSha256,
+    priorArtifacts: finalPriorArtifacts,
+    approvedCommitSha: commitSha,
+    now: new Date(),
+  });
+  if (JSON.stringify(finalPriorPrefix) !== JSON.stringify(plan.priorPrefix)) {
+    throw new Error("The prior readiness artifact prefix changed after approval.");
+  }
+
+  const sdkClient = await createOpenAIClient(process.env.OPENAI_API_KEY, {
+    baseURL: STAGED_TERRA_READINESS_OFFICIAL_OPENAI_BASE_URL,
+    maxRetries: 0,
+  });
+  if (sdkClient.maxRetries !== 0) {
+    throw new Error("OpenAI retry suppression is not active.");
   }
 
   await fs.mkdir(plan.outputDirectory);

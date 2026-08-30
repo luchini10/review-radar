@@ -21,8 +21,13 @@ import {
   stagedTerraRegisteredProductMatchesIdentity,
   stagedTerraRegisteredProducts,
 } from "../scripts/staged-terra-readiness-trace.mjs";
+import { buildStagedTerraReadinessRunPlan } from "../scripts/staged-terra-readiness-runner.mjs";
 
 const fixturePath = new URL(
+  "./fixtures/staged-terra-readiness-matrix-v2.json",
+  import.meta.url,
+);
+const retiredFixturePath = new URL(
   "./fixtures/staged-terra-readiness-matrix-v1.json",
   import.meta.url,
 );
@@ -742,9 +747,10 @@ function manualReview(value, sample) {
   };
 }
 
-describe("PR-4A staged Terra readiness boundary", () => {
+describe("PR-9B staged Terra readiness boundary", () => {
   it("freezes four distinct shapes, six serial runs, current truth, and absolute bars", () => {
     const value = matrix();
+    const retired = JSON.parse(readFileSync(retiredFixturePath, "utf8"));
     const result = validateStagedTerraReadinessMatrix(value, {
       now: "2026-08-29",
     });
@@ -767,11 +773,56 @@ describe("PR-4A staged Terra readiness boundary", () => {
     );
     assert.equal(new Set(value.attemptPlan.map((attempt) => attempt.runId)).size, 6);
     assert.equal(new Set(value.attemptPlan.map((attempt) => attempt.nonce)).size, 6);
+    assert.deepEqual(
+      [
+        "reviewedAt",
+        "expiresAt",
+        "truthPolicy",
+        "sources",
+        "cases",
+        "runOrder",
+      ].map((key) => value[key]),
+      [
+        "reviewedAt",
+        "expiresAt",
+        "truthPolicy",
+        "sources",
+        "cases",
+        "runOrder",
+      ].map((key) => retired[key]),
+    );
+    assert.equal(
+      value.attemptPlan.some((attempt) =>
+        retired.attemptPlan.some(
+          (retiredAttempt) =>
+            retiredAttempt.runId === attempt.runId ||
+            retiredAttempt.nonce === attempt.nonce,
+        ),
+      ),
+      false,
+    );
+    assert.ok(
+      value.attemptPlan.every((attempt) => attempt.runId.startsWith("pr9b-")),
+    );
     assert.equal(value.qualityBars.minimumPairwiseFinalJaccard, 0.6);
+    assert.equal(value.qualityBars.minimumPairwiseSharedOrderKendallTau, 0);
     assert.equal(value.qualityBars.maximumCompletedWallClockMs, 720_000);
     assert.equal(value.qualityBars.maximumEvidenceAgeMs, 86_400_000);
     assert.equal(value.qualityBars.perRunCeilings.conservativeUsd, 1);
     assert.equal(value.qualityBars.aggregateCeilings.conservativeUsd, 6);
+    assert.equal(value.qualityBars.aggregateCeilings.openAiCreates, 12);
+    assert.equal(value.qualityBars.aggregateCeilings.openAiRetrieves, 360);
+    assert.equal(value.qualityBars.aggregateCeilings.hostedSearches, 60);
+    assert.equal(value.qualityBars.aggregateCeilings.safetyCancels, 6);
+    assert.equal(
+      value.qualityBars.aggregateCeilings.serperShoppingAttempts,
+      90,
+    );
+    assert.equal(value.qualityBars.aggregateCeilings.sourcePageFetches, 180);
+    assert.equal(
+      value.qualityBars.aggregateCeilings.sourcePageHttpAttempts,
+      540,
+    );
     assert.equal(value.truthPolicy.candidateIdentityJaccard, "not_scored_privacy_boundary");
     const broad = caseById(value, "broad-shop-vac");
     assert.deepEqual(
@@ -857,6 +908,7 @@ describe("PR-4A staged Terra readiness boundary", () => {
   it("does not let the versioned matrix weaken its own scope or absolute bars", () => {
     const weakened = matrix();
     weakened.qualityBars.minimumPairwiseFinalJaccard = 0.59;
+    weakened.qualityBars.minimumPairwiseSharedOrderKendallTau = -0.01;
     weakened.qualityBars.allowedRetries = 1;
     weakened.qualityBars.perRunCeilings.conservativeUsd = 1.01;
     weakened.cases[0].shopperRequest.query = "easy shop vacuum";
@@ -869,6 +921,11 @@ describe("PR-4A staged Terra readiness boundary", () => {
     });
     assert.equal(result.ok, false);
     assert.ok(result.errors.includes("minimum_pairwise_final_jaccard_weakened"));
+    assert.ok(
+      result.errors.includes(
+        "minimum_pairwise_shared_order_kendall_tau_weakened",
+      ),
+    );
     assert.ok(result.errors.includes("quality_bar_weakened:allowedRetries"));
     assert.ok(result.errors.includes("per_run_ceiling_weakened:conservativeUsd"));
     assert.ok(result.errors.includes("matrix_case_design_drift:broad-shop-vac"));
@@ -1018,14 +1075,22 @@ describe("PR-4A staged Terra readiness boundary", () => {
         approvedCommitSha: commitSha,
         now: "2026-08-29",
       });
-      return result.metrics.stability.find(
-        (item) => item.caseId === "broad-shop-vac",
-      );
+      return {
+        qualityFailures: result.qualityFailures,
+        stability: result.metrics.stability.find(
+          (item) => item.caseId === "broad-shop-vac",
+        ),
+      };
     };
 
     const reversed = analyzeBroadPair((cards) => [...cards].reverse());
-    assert.deepEqual(reversed.pairwise, [1]);
-    assert.deepEqual(reversed.sharedOrderKendallTau, [-1]);
+    assert.deepEqual(reversed.stability.pairwise, [1]);
+    assert.deepEqual(reversed.stability.sharedOrderKendallTau, [-1]);
+    assert.ok(
+      reversed.qualityFailures.some((failure) =>
+        failure.startsWith("rank_stability:"),
+      ),
+    );
 
     const partial = analyzeBroadPair((cards) => {
       const replacement = {
@@ -1039,8 +1104,8 @@ describe("PR-4A staged Terra readiness boundary", () => {
       };
       return [cards[1], cards[0], replacement];
     });
-    assert.deepEqual(partial.pairwise, [0.5]);
-    assert.deepEqual(partial.sharedOrderKendallTau, [-1]);
+    assert.deepEqual(partial.stability.pairwise, [0.5]);
+    assert.deepEqual(partial.stability.sharedOrderKendallTau, [-1]);
 
     const sparse = analyzeBroadPair((cards) =>
       cards.map((itemCard, index) =>
@@ -1057,7 +1122,12 @@ describe("PR-4A staged Terra readiness boundary", () => {
             },
       ),
     );
-    assert.deepEqual(sparse.sharedOrderKendallTau, [null]);
+    assert.deepEqual(sparse.stability.sharedOrderKendallTau, [null]);
+    assert.ok(
+      sparse.qualityFailures.some((failure) =>
+        failure.startsWith("rank_stability_unscorable:"),
+      ),
+    );
 
     const wordingDrift = analyzeBroadPair((cards) =>
       cards.map((itemCard) => ({
@@ -1068,8 +1138,14 @@ describe("PR-4A staged Terra readiness boundary", () => {
         },
       })),
     );
-    assert.deepEqual(wordingDrift.pairwise, [1]);
-    assert.deepEqual(wordingDrift.sharedOrderKendallTau, [1]);
+    assert.deepEqual(wordingDrift.stability.pairwise, [1]);
+    assert.deepEqual(wordingDrift.stability.sharedOrderKendallTau, [1]);
+    assert.equal(
+      wordingDrift.qualityFailures.some((failure) =>
+        failure.startsWith("rank_stability"),
+      ),
+      false,
+    );
   });
 
   it("attributes a registered eligible product omitted by presentation", () => {
@@ -1379,6 +1455,57 @@ describe("PR-4A staged Terra readiness boundary", () => {
     assert.equal(forkedResult.decision, "invalid");
     assert.ok(
       forkedResult.structuralFailures.includes("attempt_chain_mismatch:1"),
+    );
+  });
+
+  it("authenticates the complete prior prefix before planning another paid attempt", () => {
+    const value = matrix();
+    const matrixBytes = readFileSync(fixturePath);
+    const firstArtifact = artifacts(value, runs(value).slice(0, 1));
+    const previousArtifactSha256 = createHash("sha256")
+      .update(firstArtifact[0])
+      .digest("hex");
+    const input = {
+      matrix: value,
+      matrixBytes,
+      trustSurface: {
+        ok: true,
+        manifestSha256: "b".repeat(64),
+        entries: [{ path: "scripts/run-staged-terra-readiness.mjs" }],
+        failures: [],
+      },
+      commitSha,
+      attemptIndex: 2,
+      previousArtifactSha256,
+      priorArtifacts: firstArtifact,
+      currentDate: "2026-08-29",
+      repoRoot: process.cwd(),
+    };
+
+    const planned = buildStagedTerraReadinessRunPlan(input);
+    assert.deepEqual(planned.priorPrefix, {
+      status: "authenticated",
+      artifactCount: 1,
+      previousArtifactSha256,
+      nextRun: "con-gas-grill-600-4-main-burner:1",
+    });
+    assert.throws(() =>
+      buildStagedTerraReadinessRunPlan({
+        ...input,
+        previousArtifactSha256: "c".repeat(64),
+      }),
+    );
+    assert.throws(() =>
+      buildStagedTerraReadinessRunPlan({
+        ...input,
+        priorArtifacts: [Buffer.from("{}", "utf8")],
+      }),
+    );
+    assert.throws(() =>
+      buildStagedTerraReadinessRunPlan({
+        ...input,
+        attemptIndex: 3,
+      }),
     );
   });
 

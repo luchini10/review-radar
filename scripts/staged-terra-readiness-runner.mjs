@@ -15,23 +15,25 @@ import {
 } from "../lib/stagedTerraPrompt.ts";
 import { validatePhaseDCreateRequest } from "./oai-t10-phase-d.mjs";
 import {
+  analyzeStagedTerraReadinessPrefix,
   stagedTerraReadinessMatrixSha256,
   stagedTerraReadinessRequestSha256,
   validateStagedTerraReadinessMatrix,
 } from "./staged-terra-readiness.mjs";
 
 export const STAGED_TERRA_READINESS_LIVE_PLAN_VERSION =
-  "staged-terra-readiness-live-plan-v1";
+  "staged-terra-readiness-live-plan-v3";
 export const STAGED_TERRA_READINESS_CHECKPOINT_VERSION =
   "staged-terra-readiness-runner-checkpoint-v1";
 export const STAGED_TERRA_READINESS_MATRIX_FILE_SHA256 =
-  "289ada281c3f8185c4b4bdec64cb34dc55a1af3ccb5ed0f25b51b1483bdfae2c";
+  "2d4690beaa1b554c8048d10d56dbb38356d26994bdc6adfa653f70c6fa0d042d";
 export const STAGED_TERRA_READINESS_OFFICIAL_OPENAI_BASE_URL =
   "https://api.openai.com/v1";
 
 const HASH_40 = /^[a-f0-9]{40}$/;
 const HASH_64 = /^[a-f0-9]{64}$/;
 const ATTEMPT_NONCE = /^nonce-[a-f0-9]{64}$/;
+const RUN_ID = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
 const RUNNER_STATUSES = new Set([
   "running",
   "artifact_captured_review_required",
@@ -174,7 +176,7 @@ function presentationRequestIsClosed(body) {
   }
 }
 
-function parseApprovalArguments(args) {
+export function parseStagedTerraReadinessApprovalArguments(args) {
   const allowed = new Set([
     "execute",
     ...STAGED_TERRA_READINESS_APPROVAL_FIELDS,
@@ -212,6 +214,13 @@ function parseApprovalArguments(args) {
 
 function attemptFromMatrix(matrix, attemptIndex) {
   requireCondition(
+    matrix !== null &&
+      typeof matrix === "object" &&
+      !Array.isArray(matrix) &&
+      Array.isArray(matrix.attemptPlan),
+    "The readiness attempt registry is invalid.",
+  );
+  requireCondition(
     Number.isSafeInteger(attemptIndex) &&
       attemptIndex >= 1 &&
       attemptIndex <= matrix.attemptPlan.length,
@@ -229,6 +238,134 @@ function attemptFromMatrix(matrix, attemptIndex) {
   return { attempt, caseId, run, testCase };
 }
 
+export function parseStagedTerraReadinessAttemptIndex({ matrix, value }) {
+  requireCondition(
+    typeof value === "string" && /^[1-9][0-9]*$/.test(value),
+    "The readiness attempt index is invalid.",
+  );
+  const attemptIndex = Number(value);
+  attemptFromMatrix(matrix, attemptIndex);
+  return attemptIndex;
+}
+
+function exactArtifactBytes(value) {
+  if (Buffer.isBuffer(value)) return value;
+  if (value instanceof Uint8Array) return Buffer.from(value);
+  if (typeof value === "string") return Buffer.from(value, "utf8");
+  throw new Error("The prior readiness artifact bytes are invalid.");
+}
+
+export function authenticateStagedTerraReadinessPriorPrefix({
+  matrix,
+  attemptIndex,
+  previousArtifactSha256,
+  priorArtifacts,
+  approvedCommitSha,
+  now = new Date(),
+}) {
+  requireCondition(
+    Array.isArray(priorArtifacts),
+    "The readiness plan requires an exact prior artifact prefix.",
+  );
+  if (attemptIndex === 1) {
+    requireCondition(
+      previousArtifactSha256 === null && priorArtifacts.length === 0,
+      "The first readiness attempt cannot have a prior artifact prefix.",
+    );
+    return {
+      status: "not_required",
+      artifactCount: 0,
+      previousArtifactSha256: null,
+      nextRun: matrix.runOrder[0] ?? null,
+    };
+  }
+  requireCondition(
+    priorArtifacts.length === attemptIndex - 1,
+    "A later readiness attempt requires the complete prior artifact prefix.",
+  );
+  const artifacts = priorArtifacts.map(exactArtifactBytes);
+  const actualPreviousArtifactSha256 = createHash("sha256")
+    .update(artifacts.at(-1))
+    .digest("hex");
+  requireCondition(
+    actualPreviousArtifactSha256 === previousArtifactSha256,
+    "The reviewed previous artifact hash does not match the authenticated prefix.",
+  );
+  const analysis = analyzeStagedTerraReadinessPrefix({
+    matrix,
+    artifacts,
+    approvedCommitSha,
+    now,
+  });
+  const expectedNextRun = matrix.runOrder[attemptIndex - 1] ?? null;
+  requireCondition(
+    analysis.decision === "next_attempt_review_required" &&
+      analysis.nextRun === expectedNextRun &&
+      analysis.structuralFailures.length === 0 &&
+      analysis.haltFailures.length === 0 &&
+      analysis.qualityFailures.length === 0,
+    "The prior readiness artifact prefix is not safe to continue.",
+  );
+  return {
+    status: "authenticated",
+    artifactCount: artifacts.length,
+    previousArtifactSha256: actualPreviousArtifactSha256,
+    nextRun: analysis.nextRun,
+  };
+}
+
+export function stagedTerraReadinessOutputDirectory({
+  repoRoot,
+  runId,
+  commitSha,
+}) {
+  requireCondition(
+    RUN_ID.test(runId),
+    "The readiness output requires a run ID.",
+  );
+  requireCondition(
+    HASH_40.test(commitSha),
+    "The readiness output requires a full lowercase commit SHA.",
+  );
+  return path.resolve(
+    repoRoot,
+    "tests",
+    "fixtures",
+    "review-radar-live",
+    `${runId}-${commitSha.slice(0, 7)}`,
+  );
+}
+
+export async function readStagedTerraReadinessPriorArtifactPrefix({
+  matrix,
+  attemptIndex,
+  commitSha,
+  repoRoot,
+  readArtifactFile,
+}) {
+  const { attempt } = attemptFromMatrix(matrix, attemptIndex);
+  requireCondition(
+    typeof readArtifactFile === "function",
+    "The readiness prior artifact reader is unavailable.",
+  );
+  const priorArtifacts = [];
+  for (const priorAttempt of matrix.attemptPlan.slice(0, attempt.index - 1)) {
+    const outputDirectory = stagedTerraReadinessOutputDirectory({
+      repoRoot,
+      runId: priorAttempt.runId,
+      commitSha,
+    });
+    const record = await readArtifactFile({ repoRoot, outputDirectory });
+    if (!record?.ok) {
+      throw new Error(
+        "The complete prior readiness artifact prefix is unavailable or indirect.",
+      );
+    }
+    priorArtifacts.push(record.bytes);
+  }
+  return priorArtifacts;
+}
+
 export function buildStagedTerraReadinessRunPlan({
   matrix,
   matrixBytes,
@@ -236,6 +373,7 @@ export function buildStagedTerraReadinessRunPlan({
   commitSha,
   attemptIndex = 1,
   previousArtifactSha256 = null,
+  priorArtifacts = [],
   currentDate = new Date(),
   repoRoot = process.cwd(),
 }) {
@@ -275,18 +413,27 @@ export function buildStagedTerraReadinessRunPlan({
     attemptIndex,
   );
   requireCondition(ATTEMPT_NONCE.test(attempt.nonce), "The readiness attempt nonce is invalid.");
-  if (attemptIndex === 1) {
-    requireCondition(previousArtifactSha256 === null, "The first readiness attempt cannot have a previous artifact.");
-  } else {
-    requireCondition(HASH_64.test(previousArtifactSha256), "A later readiness attempt requires the reviewed previous artifact hash.");
-  }
-  const outputDirectory = path.resolve(
-    repoRoot,
-    "tests",
-    "fixtures",
-    "review-radar-live",
-    `${attempt.runId}-${commitSha.slice(0, 7)}`,
+  requireCondition(
+    attemptIndex === 1
+      ? previousArtifactSha256 === null
+      : HASH_64.test(previousArtifactSha256),
+    attemptIndex === 1
+      ? "The first readiness attempt cannot have a previous artifact."
+      : "A later readiness attempt requires the reviewed previous artifact hash.",
   );
+  const priorPrefix = authenticateStagedTerraReadinessPriorPrefix({
+    matrix,
+    attemptIndex,
+    previousArtifactSha256,
+    priorArtifacts,
+    approvedCommitSha: commitSha,
+    now: currentDate,
+  });
+  const outputDirectory = stagedTerraReadinessOutputDirectory({
+    repoRoot,
+    runId: attempt.runId,
+    commitSha,
+  });
   const trustSurfaceAuthenticated =
     trustSurface?.ok === true &&
     HASH_64.test(trustSurface.manifestSha256) &&
@@ -323,6 +470,7 @@ export function buildStagedTerraReadinessRunPlan({
           ? currentDate.toISOString().slice(0, 10)
           : String(currentDate).slice(0, 10),
     },
+    priorPrefix,
     model: "gpt-5.6-terra",
     researchReasoning: "high",
     presentationReasoning: "medium",
@@ -366,7 +514,7 @@ export function validateStagedTerraReadinessRunApproval({
   outputBoundary,
   credentials,
 }) {
-  const values = parseApprovalArguments(args);
+  const values = parseStagedTerraReadinessApprovalArguments(args);
   requireCondition(
     plan.trustSurface.status === "authenticated" &&
       HASH_64.test(plan.trustSurface.manifestSha256),

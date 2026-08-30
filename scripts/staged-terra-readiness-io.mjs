@@ -12,7 +12,7 @@ export const STAGED_TERRA_READINESS_TRUST_SURFACE_ROOT_PATHS = Object.freeze([
 export const STAGED_TERRA_READINESS_TRUST_SURFACE_FIXED_PATHS = Object.freeze([
   "package.json",
   "package-lock.json",
-  "tests/fixtures/staged-terra-readiness-matrix-v1.json",
+  "tests/fixtures/staged-terra-readiness-matrix-v2.json",
 ]);
 
 function sha256(bytes) {
@@ -362,6 +362,87 @@ export async function inspectStagedTerraReadinessOutputBoundary({
   return {
     ok: failures.length === 0,
     expectedLeafState,
+    failures: [...new Set(failures)],
+  };
+}
+
+export async function readStagedTerraReadinessArtifactFile({
+  repoRoot,
+  outputDirectory,
+}) {
+  const failures = [];
+  const boundary = await inspectStagedTerraReadinessOutputBoundary({
+    repoRoot,
+    outputDirectory,
+    expectedLeafState: "directory",
+  });
+  if (!boundary.ok) {
+    failures.push(
+      ...boundary.failures.map((failure) => `prior_artifact_${failure}`),
+    );
+    return {
+      ok: false,
+      bytes: null,
+      failures: [...new Set(failures)],
+    };
+  }
+  const artifactFile = path.join(outputDirectory, "artifact.json");
+  let handle;
+  let bytes = null;
+  try {
+    const pathStat = await fs.lstat(artifactFile, { bigint: true });
+    const realPath = await fs.realpath(artifactFile);
+    if (
+      !pathStat.isFile() ||
+      pathStat.isSymbolicLink() ||
+      !samePath(realPath, artifactFile)
+    ) {
+      failures.push("prior_artifact_file_indirect");
+    } else {
+      handle = await fs.open(artifactFile, "r");
+      const before = await handle.stat({ bigint: true });
+      if (
+        !before.isFile() ||
+        pathStat.dev !== before.dev ||
+        pathStat.ino !== before.ino ||
+        before.size < 1n ||
+        before.size > 1_000_000n
+      ) {
+        failures.push("prior_artifact_file_size_invalid");
+      } else {
+        bytes = await handle.readFile();
+        const after = await handle.stat({ bigint: true });
+        const finalPathStat = await fs.lstat(artifactFile, { bigint: true });
+        const finalRealPath = await fs.realpath(artifactFile);
+        if (
+          !after.isFile() ||
+          before.dev !== after.dev ||
+          before.ino !== after.ino ||
+          before.size !== after.size ||
+          before.mtimeNs !== after.mtimeNs ||
+          before.ctimeNs !== after.ctimeNs ||
+          after.dev !== finalPathStat.dev ||
+          after.ino !== finalPathStat.ino ||
+          !finalPathStat.isFile() ||
+          finalPathStat.isSymbolicLink() ||
+          bytes.length !== Number(after.size) ||
+          !samePath(finalRealPath, artifactFile)
+        ) {
+          failures.push("prior_artifact_file_changed");
+          bytes = null;
+        }
+      }
+    }
+  } catch {
+    failures.push("prior_artifact_file_unavailable");
+    bytes = null;
+  } finally {
+    await handle?.close();
+  }
+  if (failures.length > 0) bytes = null;
+  return {
+    ok: failures.length === 0 && Buffer.isBuffer(bytes),
+    bytes,
     failures: [...new Set(failures)],
   };
 }

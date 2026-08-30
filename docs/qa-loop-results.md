@@ -16239,3 +16239,260 @@ The controller left advisory output in the ignored worker artifact `agent-loop-2
 ### Report
 
 See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T21:00:55.872Z
+
+- **run id:** agent-loop-2026-08-30T21-00-09-288Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, price-trust, wrong-category, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3266ms |
+| lint | Passed | 11113ms |
+| unit tests | Passed | 27568ms |
+| deterministic eval pipeline | Passed | 467ms |
+| tracked offline benchmark | Passed | 590ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T21-00-09-288Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## PR-9B fresh attributable staged-accuracy protocol - 2026-08-30
+
+**Assessment:** the active staged path has no current multi-shape accuracy
+sample, while the old PR-4B attempt chain cannot resume because attempt 1 was
+spent without an artifact. Another product, discovery, or ranking change would
+therefore be speculative. The smallest evidence-producing next step is a fresh
+chain over the already reviewed four-shape truth, with rank stability promoted
+from a diagnostic to a fail-closed quality gate.
+
+**Fail-first:** before implementation, the focused protocol run passed 10/55
+and failed 45/55 because the v1-only matrix registry rejected v2, the runner
+still bound the retired file and attempt identity, and no Kendall threshold
+could fail analysis. The failures were intentionally cascading from those
+three missing boundaries.
+
+**Correction:** `staged-terra-readiness-matrix-v2` preserves the v1 review
+date, expiry, truth policy, sources, cases, shopper requests, and serial order,
+but uses six disjoint `pr9b-*` run IDs and nonces. The current runner and Git
+trust surface bind only v2; v1 remains immutable history. Analysis defines
+exact product identity as normalized brand plus model, retains final-set
+Jaccard at least `0.60`, and now requires shared-product Kendall tau at least
+`0`. Full reversal fails; fewer than two shared products is an explicit
+unscorable quality failure; harmless product-name drift does not split a
+physical product. Variant/trim correctness remains a mandatory bound manual
+evidence decision for every card because the live renderer supplies no
+trustworthy automated variant field.
+
+**Adversarial pre-spend fail-first and correction:** the initial runner
+accepted any well-formed 64-character previous-artifact hash without loading
+the artifact it purported to bind. The focused reproduction passed 54/56 and
+failed only the invented/missing-prefix cases. Live-plan v3 now derives every
+prior artifact path from the frozen run IDs and same full commit, accepts only a
+direct bounded `artifact.json`, authenticates the complete canonical prefix,
+commit, chain, mechanics, quality result, expected next run, and approved hash,
+and repeats the proof immediately before provider-client construction. A
+missing, malformed, oversized, indirect, changed, incomplete, unsafe, or
+quality-failing prefix cannot spend the next attempt.
+
+**Proposed paid boundary, not dispatch authority:** six serial logical searches;
+12 OpenAI creates; 360 retrieves; 60 hosted searches; six safety cancels; 90
+Serper Shopping attempts; 180 source fetches; 540 physical source HTTP attempts;
+`$1` per run; `$6` aggregate; and at most 60 human public-source-page opens.
+Retries, replacements, fallbacks, Serper Organic, SearchAPI, extra cases,
+automatic continuation, promotion, deployment, and release are zero. The
+planning basis is `6 × $0.457438 = $2.744628`; arithmetic is not approval.
+
+**Verification (zero live/provider):** focused readiness, trace, runner,
+launcher, typed-terminal, runtime, and verifier suites pass 106/106; full tests
+pass 1,711/1,711 across 232 suites; typecheck passes; lint has zero errors and
+three pre-existing warnings; and deterministic controller
+`agent-loop-2026-08-30T21-24-13-213Z` passes all five serial partitions, 10/10
+cases, and 29/29 invariants. Matrix file SHA-256 is
+`2d4690beaa1b554c8048d10d56dbb38356d26994bdc6adfa653f70c6fa0d042d`;
+canonical SHA-256 is
+`4959f977d56fb43c58714a5caaeb63c8c16fb290a0d74d04551eefe2e2f3d5e1`.
+
+**Limits and authority:** this protocol proves measurement integrity, not
+product accuracy. Taylor separately authorized one local PR-9B history commit
+and one High-reasoning independent exact-commit review. That does not authorize
+the exact six-search, `$6`, or 60-page ceilings, so no paid dispatch is
+authorized. No live/provider/credential,
+protected-fixture, external-source-page, flag, deployment, push, PR, merge, or
+release action occurred. PR-006 remains the decisive readiness debt and the
+verdict remains `NOT READY`, confidence 0.995.
+
+**Independent exact-commit correction:** review of
+`81c54d76ab88488f65790b2b341bdf8f877a5685` returned `CHANGES REQUIRED`,
+confidence 0.99. The execute path converted `approved-attempt-index` with
+`Number(...)` and used `slice(0, attemptIndex - 1)` before the plan's range
+check. Values `0`, negative, non-integer, or greater than the six-run registry
+could therefore derive and open non-prefix protected artifacts before failing.
+The fail-first runner passed 16/17 and failed only the new pre-I/O ordering
+contract. The corrected runner parses the complete closed approval set,
+validates a canonical in-range selector before prefix loading, and repeats the
+numeric/registry validation inside the shared prefix loader before constructing
+paths or invoking the injected reader. Invalid numeric selectors call that
+reader zero times.
+
+**Correction verification:** runner 17/17; seven focused readiness/trace/
+runner/launcher/terminal/runtime/verifier suites 107/107; full unit suite
+1,712/1,712 across 232 suites; typecheck pass; lint zero errors and three
+pre-existing warnings. No controller, live/provider/credential,
+protected-fixture, external-page, flag, push, PR, CI, merge, deployment, or
+release action occurred. At this correction checkpoint, the same unpushed
+history commit still required final exact-snapshot reauthentication after
+amendment.
+
+**Independent review closure:** corrected source snapshot
+`96424b6e1e22d56f947de041da04ce37fa2380a2`, parent
+`cf6f3fa33b4ff17078289b9d79af83a96e9f1f7a`, tree
+`f215b134a3da36495b3c6f4ba242189aeb644d5c`, and the exact 16-path `100644`
+manifest returned `VERIFIED`, no material findings, confidence 0.995. The
+reviewer independently rejected zero, negative, fractional, beyond-plan,
+leading-zero, exponent, signed, whitespace, overflow, `NaN`, `Infinity`, and
+registry-mismatched selectors with zero artifact-reader calls. Runner 17/17,
+seven focused suites 107/107, typecheck, focused ESLint, matrix hashes, complete
+diff, and `git diff --check` passed independently. The same reviewer then
+reauthenticated the final documentation-only closeout commit containing this
+record; its implementation, tests, matrix, and trust boundaries are byte-equal
+to the verified source snapshot.
+
+## Agent Loop Run - 2026-08-30T21:18:05.113Z
+
+- **run id:** agent-loop-2026-08-30T21-17-18-241Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, price-trust, wrong-category, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3244ms |
+| lint | Passed | 11011ms |
+| unit tests | Passed | 28083ms |
+| deterministic eval pipeline | Passed | 485ms |
+| tracked offline benchmark | Passed | 586ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T21-17-18-241Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T21:22:37.048Z
+
+- **run id:** agent-loop-2026-08-30T21-21-50-591Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, price-trust, wrong-category, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3283ms |
+| lint | Passed | 11027ms |
+| unit tests | Passed | 27586ms |
+| deterministic eval pipeline | Passed | 452ms |
+| tracked offline benchmark | Passed | 586ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T21-21-50-591Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T21:24:59.709Z
+
+- **run id:** agent-loop-2026-08-30T21-24-13-213Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, price-trust, wrong-category, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3264ms |
+| lint | Passed | 10815ms |
+| unit tests | Passed | 27804ms |
+| deterministic eval pipeline | Passed | 457ms |
+| tracked offline benchmark | Passed | 586ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T21-24-13-213Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.

@@ -3684,3 +3684,59 @@ a known conservative undercount.
   17/17, and controller `agent-loop-2026-08-30T20-30-25-650Z` with 10/10 cases
   and 29/29 invariants. This proves measurement integrity only; no live product
   accuracy or readiness result exists.
+
+## Fresh staged-accuracy protocol contract - 2026-08-30
+
+- Preserve the retired v1 readiness matrix as history. A new live chain must
+  use a new matrix version, file/canonical hashes, run IDs, and nonces with no
+  overlap with a spent chain; changing only the operator command is not fresh
+  evidence.
+- The v2 truth content is byte-independent but semantically identical to the
+  still-current v1 reviewed truth: review 2026-08-29, expiry 2026-09-12, the
+  same sources, cases, requests, registries, and serial run order. This is
+  reauthentication within the reviewed window, not a market-truth refresh.
+- A later live attempt cannot rely on a supplied hash alone. Read every exact
+  preceding artifact from its precommitted same-commit directory through a
+  direct, bounded file boundary; authenticate the canonical prefix, chain,
+  commit, mechanics, quality result, expected next run, and final hash; and
+  repeat the proof after approval but before provider-client construction.
+- Require both final-set Jaccard at least `0.60` and shared exact-product Kendall
+  tau at least `0`. A pair with fewer than two shared products is unscorable and
+  fails quality. Exact product identity is normalized brand plus model; name
+  wording or a nullable public variant must not split the identity.
+- The proposed live envelope is exactly six serial logical searches with
+  12 creates, 360 retrieves, 60 hosted searches, six cancels, 90 Shopping
+  attempts, 180 source fetches, 540 HTTP attempts, `$1` per run, `$6`
+  aggregate, and at most 60 human public-source opens. Every retry,
+  replacement, fallback, organic/SearchAPI attempt, extra case, and automatic
+  continuation is zero.
+- The `$2.744628` planning basis is six times PR-3K's `$0.457438` conservative
+  comparable result. Planning arithmetic is not approval. Do not dispatch
+  until independent exact-snapshot review and explicit approval of the six
+  logical searches, `$6`, and the human page-open ceiling.
+- The pre-spend fail-first passed 54/56 and failed only invented/missing prefix
+  authentication. Corrected focused protocol suites pass 106/106; full tests
+  pass 1,711/1,711 across 232 suites; typecheck passes; lint has zero errors and
+  three pre-existing test warnings; and deterministic controller
+  `agent-loop-2026-08-30T21-24-13-213Z` passes all five serial partitions,
+  10/10 cases, and 29/29 invariants. The prior PR-9A production build and
+  Playwright 17/17 remain the latest browser/build proof because PR-9B changes
+  only offline evaluation scripts, tests, its matrix, and documentation.
+- PR-9B made zero live/provider/credential/source-page requests. One local
+  history commit and one High-reasoning independent exact-commit review are
+  authorized; broad paid-call approval is not the exact count, dollar, and
+  page-open ratification required to dispatch.
+- Parse and range-check the complete live attempt selector before reading any
+  prior artifact. The shared prefix loader must independently validate a safe
+  integer in `1..attemptPlan.length` before slicing the registry, constructing
+  an output path, or invoking its reader. Regressions must prove zero reader
+  calls for zero, negative, non-integer, and beyond-plan selectors.
+- Initial exact commit `81c54d76ab88488f65790b2b341bdf8f877a5685`
+  failed this contract. The corrected fail-first/final proof is runner 16/17 to
+  17/17, focused wall 107/107, full 1,712/1,712, typecheck pass, and lint zero
+  errors/three old warnings.
+- Corrected source snapshot `96424b6e1e22d56f947de041da04ce37fa2380a2`
+  received independent `VERIFIED`, no material findings, confidence 0.995. The
+  final documentation-only closeout commit was reauthenticated by the same
+  reviewer and must retain byte-identical implementation, test, and matrix
+  blobs from that verified snapshot.

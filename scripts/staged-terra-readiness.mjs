@@ -23,13 +23,13 @@ export {
 } from "./staged-terra-readiness-artifact.mjs";
 
 export const STAGED_TERRA_READINESS_MATRIX_VERSION =
-  "staged-terra-readiness-matrix-v1";
+  "staged-terra-readiness-matrix-v2";
 export const STAGED_TERRA_READINESS_CAPTURE_VERSION =
   "staged-terra-readiness-capture-v2";
 export const STAGED_TERRA_READINESS_REVIEW_VERSION =
   "staged-terra-readiness-review-v3";
 const FROZEN_MATRIX_SHA256 =
-  "e1481ed90d40856e9fc504e0177ab92c82929024d7d9cc363cdf381eddb353be";
+  "4959f977d56fb43c58714a5caaeb63c8c16fb290a0d74d04551eefe2e2f3d5e1";
 
 const MATRIX_KEYS = [
   "schemaVersion",
@@ -52,6 +52,7 @@ const TRUTH_POLICY_KEYS = [
 ];
 const QUALITY_BAR_KEYS = [
   "minimumPairwiseFinalJaccard",
+  "minimumPairwiseSharedOrderKendallTau",
   "maximumWrongTypeCards",
   "maximumHardRequirementFailures",
   "maximumBudgetViolations",
@@ -633,6 +634,15 @@ export function validateStagedTerraReadinessMatrix(
     }
     if (bars.minimumPairwiseFinalJaccard < 0.6) {
       errors.push("minimum_pairwise_final_jaccard_weakened");
+    }
+    if (
+      !Number.isFinite(bars.minimumPairwiseSharedOrderKendallTau) ||
+      bars.minimumPairwiseSharedOrderKendallTau < -1 ||
+      bars.minimumPairwiseSharedOrderKendallTau > 1
+    ) {
+      errors.push("minimum_pairwise_shared_order_kendall_tau_invalid");
+    } else if (bars.minimumPairwiseSharedOrderKendallTau < 0) {
+      errors.push("minimum_pairwise_shared_order_kendall_tau_weakened");
     }
     for (const key of [
       "maximumWrongTypeCards",
@@ -1973,11 +1983,30 @@ function buildMetrics(matrix, runs, qualityFailures, haltFailures) {
       minimum: rounded(minimum),
       mean: rounded(mean),
       sharedOrderKendallTau,
+      minimumSharedOrderKendallTau:
+        sharedOrderKendallTau.some((value) => value === null)
+          ? null
+          : Math.min(...sharedOrderKendallTau),
+      minimumSharedOrderKendallTauBar:
+        matrix.qualityBars.minimumPairwiseSharedOrderKendallTau,
     });
     if (minimum < matrix.qualityBars.minimumPairwiseFinalJaccard) {
       qualityFailures.push(
         `final_jaccard:${testCase.id}:${rounded(minimum)}:${matrix.qualityBars.minimumPairwiseFinalJaccard}`,
       );
+    }
+    for (const [pairIndex, tau] of sharedOrderKendallTau.entries()) {
+      if (tau === null) {
+        qualityFailures.push(
+          `rank_stability_unscorable:${testCase.id}:${pairIndex + 1}`,
+        );
+      } else if (
+        tau < matrix.qualityBars.minimumPairwiseSharedOrderKendallTau
+      ) {
+        qualityFailures.push(
+          `rank_stability:${testCase.id}:${pairIndex + 1}:${tau}:${matrix.qualityBars.minimumPairwiseSharedOrderKendallTau}`,
+        );
+      }
     }
   }
 
