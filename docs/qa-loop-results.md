@@ -15454,3 +15454,168 @@ behavior, flag, infrastructure, deployment, release, or push work occurred.
 One final closure command named an unavailable `tsx` loader and failed before
 test discovery; the repository-native command immediately passed 14/14 and is
 the reported result. ReviewRadar remains `NOT READY`.
+
+## Agent Loop Run - 2026-08-30T10:52:04.510Z
+
+- **run id:** agent-loop-2026-08-30T10-51-12-969Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, non-product-pages, price-trust, requirement-units, wrong-category
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3320ms |
+| lint | Passed | 11784ms |
+| unit tests | Passed | 31616ms |
+| deterministic eval pipeline | Passed | 466ms |
+| tracked offline benchmark | Passed | 604ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- non-product-pages: non-product-espresso-review
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T10-51-12-969Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## 🟩 Codex Production Readiness PR-6H — optional-platform lock graph (2026-08-30)
+
+**Objective and frozen base:** close PR-026/RR-107 at PR-6G commit
+`610f0c5465fdcb7be2a2f699e8c56051c5e6cc4e` without changing root package
+specifications, broadly upgrading dependencies, remediating advisories,
+installing into the working dependency tree, or changing application behavior.
+The phase permitted only exact public npm registry reads and clean temporary
+downloads with no credentials.
+
+**Bottleneck challenge:** the complete package-only tree failed because
+Tailwind's optional WASM consumer declared runtime `^1.1.4` but resolved the
+hoisted `0.2.12` used by an unrelated optional WASM consumer. Public metadata
+showed Tailwind's tarball already bundled runtime 1.1.4 and five companions.
+Adding a root dependency or broadly upgrading would mask rather than repair the
+missing nested bundle metadata. The generalized correction was exact isolated
+lock regeneration plus a consumer-resolution/provenance regression.
+
+**Fail-first evidence:** before the lock change,
+`npm ls --package-lock-only --all --json` exited 1 with
+`invalid: @napi-rs/wasm-runtime@0.2.12`. The new deterministic test ran one case
+and failed exactly because `node_modules/@tailwindcss/oxide-wasm32-wasi`
+required `^1.1.4` but resolved root `0.2.12`. After lock correction, the first
+focused version passed 1/1. Independent review then found a separate test defect:
+the bounded caret helper discarded prerelease state. An added
+`1.1.4-beta.1` versus stable `^1.1.4` counterexample produced a second
+fail-first run of 1 pass / 1 intended failure before correction.
+
+**Registry and bundle provenance:** credential-free, no-redirect public registry
+requests authenticated:
+
+```text
+@tailwindcss/oxide-wasm32-wasi@4.3.0
+  tarball  https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.3.0.tgz
+  SRI      sha512-HNZGOUxEmElksYR7S6sC5jTeNGpobAsy9u7Gu0AskJ8/20FR9GqebUyB+HBcU/ax6BHuiuJi+Oda4B+YX6H1yA==
+  SHA-1    3f6538e511066d67d8683863dcaeeb16c22de849
+@napi-rs/wasm-runtime@1.1.4
+  tarball  https://registry.npmjs.org/@napi-rs/wasm-runtime/-/wasm-runtime-1.1.4.tgz
+  SRI      sha512-3NQNNgA1YSlJb/kMH1ildASP9HW7/7kYnRI2szWJaofaS1hWmbGI4H+d3+22aGzXXN9IJ+n+GiFVcGipJP18ow==
+  SHA-1    a46bbfedc29751b7170c5d23bc1d8ee8c7e3c1e1
+```
+
+The downloaded Tailwind tarball matched both digests and contained package
+manifests for `@emnapi/core@1.10.0`, `@emnapi/runtime@1.10.0`,
+`@emnapi/wasi-threads@1.2.1`, `@napi-rs/wasm-runtime@1.1.4`,
+`@tybys/wasm-util@0.10.1`, and `tslib@2.8.1`. Runtime dependencies and peers
+matched the generated records.
+
+**Correction and minimality:** npm 11.12.1 ran in a new temporary directory with
+empty user/global config files, isolated cache/log paths, auth-token environment
+removed, scripts ignored, and exact public registry. It changed only 66 lock
+lines: the six nested `inBundle` records already sealed by the Tailwind tarball.
+The applied repository lock is byte-identical to that generated file. Root
+`package.json`, every package version, outer registry URL/integrity, application
+source, and working `node_modules` are unchanged. Tailwind resolves nested
+runtime 1.1.4; unrs continues to resolve compatible root 0.2.12.
+
+**Platform evidence:**
+
+- Clean credential-isolated Windows x64 `npm ci --include=optional
+  --ignore-scripts` exited zero and native `@tailwindcss/oxide` loaded. The
+  untouched PR-6G lock installed 692 packages and left five npm-reported
+  optional-pruning extraneous packages. The corrected lock installed 688 and
+  left only the pre-existing `@emnapi/runtime@1.10.0` sharp-WASM pruning orphan;
+  npm exits zero and the lock hash remains exact.
+- WSL reported not installed; Docker and Podman were unavailable. None was
+  installed or changed.
+- A separate credential-isolated `npm ci --os=linux --cpu=wasm32 --libc=glibc`
+  exited zero. Target-scoped npm reported no problems, installed only Tailwind
+  WASM 4.3.0 for that binding family with nested runtime 1.1.4, retained the
+  exact lock, and loaded the WASI `Scanner` binding plus runtime exports on the
+  Windows host. This proves explicit target resolution and portable WASI load,
+  not actual native Linux execution.
+
+**Corrected verification:**
+
+| Check | Result |
+| --- | --- |
+| Focused lock/semver tests | 2/2 passed |
+| Reviewer adversarial semver probe | 15/15 passed |
+| Package-only npm tree | Exit 0; no problems |
+| Isolated generated lock comparison | Byte-identical |
+| Clean Windows install/load | Passed; native Oxide loaded |
+| Explicit Linux/WASM32 target install/load | Passed; nested runtime 1.1.4 and WASI binding loaded |
+| Complete unit suite | 1,695/1,695 across 230 suites |
+| Typecheck | Passed |
+| Lint | Passed with zero errors and three pre-existing warnings |
+| Production build | Passed with Next.js 16.2.6 |
+| Playwright | 17/17 passed |
+| Full deterministic controller | `agent-loop-2026-08-30T10-51-12-969Z`; five partitions; 10/10 cases; 29/29 invariants |
+| Generated file check | `next-env.d.ts` restored; tracked Git blob `9edff1c7cacb3bfac9a1eadcf6f51eaa99565e38` |
+
+**Frozen source/test manifest (SHA-256):**
+
+```text
+08856e09ba78ef697a0dddc5a99e45dbef9a7a711249b6174cc4d289c0caf96d  package-lock.json
+07073dacf6440d64f848b03cd5a0fdd0f2830aaec7ebdc8285c75895f8b6613b  tests/packageLockConsistency.test.mjs
+```
+
+**Independent review:** the first frozen review returned `CHANGES REQUIRED` at
+P2 for prerelease fail-open behavior in the new regression, while verifying the
+66-line lock correction, provenance, minimality, package-only tree, and platform
+evidence. After the exact fail-first counterexample and correction, replacement
+review recomputed both hashes, passed focused 2/2 and an adversarial 15-case
+stable/lower/upper/`0.x`/`0.0.x`/prerelease/exact matrix, and returned
+`VERIFIED`, confidence 0.99. The reviewer agreed actual native Linux execution
+is a residual rather than a blocker to the tracked source correction.
+
+**Process residuals and authority:** an initial direct require of the ESM runtime
+directory failed because the package has exports and no main entry; resolving it
+from the consumer with `createRequire` then loaded the expected exports. One
+reviewer probe initially omitted its `assert` binding and failed before any
+assertion; the corrected probe produced the reported 15/15. Build detected the
+user-owned ignored environment file through normal Next.js behavior, but no
+value/content/manual inspection, print, hash, copy, or edit occurred. Temporary
+install directories remain outside the repository; no destructive cleanup was
+performed. No credential, provider/live data, spent fixture, working-tree
+package install, advisory remediation, broad upgrade, hosted system,
+infrastructure, flag, deployment, release, or push was used.
+
+**Residual and next phase:** RR-107 is Fixed for the tracked lock graph. Actual
+native Linux deployment, the one pre-existing Windows optional-pruning orphan,
+and current advisory state remain unverified. ReviewRadar remains `NOT READY`.
+PR-7 final adversarial readiness adjudication must preserve every missing live,
+hosted, accessibility, distributed-control, advisory, and platform uncertainty
+and create `docs/production-readiness-report.md` with an evidence-bound verdict.

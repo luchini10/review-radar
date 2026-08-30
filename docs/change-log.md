@@ -11,6 +11,33 @@ Update this file after:
 
 ## 2026-08-30
 
+### Codex - Repair the optional-platform dependency lock graph
+
+#### Changed
+
+- Regenerated the lockfile in a credential-isolated temporary directory and
+  added only the six bundled dependency records missing beneath Tailwind's WASM
+  package. No dependency specification, version, or application source changed.
+- Tailwind WASM now resolves its bundled `@napi-rs/wasm-runtime@1.1.4`; the
+  unrelated unrs WASM consumer still resolves compatible root `0.2.12`.
+- Added a deterministic lock test covering nested/hoisted resolution, stable
+  caret bounds including `0.x`, prerelease rejection, outer registry provenance,
+  integrity, and bundle ownership.
+
+#### Verified
+
+- The corrected lock is byte-identical to npm 11.12.1 isolated regeneration.
+  Public metadata and the Tailwind tarball SRI/SHA-1 matched, and all six bundled
+  manifests were present. The package-only tree exits zero with no problems.
+- Clean temporary Windows x64 and explicit Linux/WASM32-target installations
+  succeeded; native Oxide and the portable WASI binding loaded. Actual native
+  Linux execution remains unverified because no Linux runtime was available.
+- Focused tests passed 2/2 after an independent prerelease-semver correction;
+  full tests passed 1,695/1,695 across 230 suites. Typecheck, production build,
+  Playwright 17/17, lint with zero errors/three old warnings, and controller
+  `agent-loop-2026-08-30T10-51-12-969Z` passed. Replacement independent review
+  returned `VERIFIED`, confidence 0.99.
+
 ### Codex - Make optional Serper setup safe by default
 
 #### Changed

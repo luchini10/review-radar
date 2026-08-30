@@ -3586,3 +3586,32 @@ a known conservative undercount.
   0.999. This proves safe tracked defaults and bounded placeholder rejection,
   not key validity, funding, hosted configuration, historical traffic, or
   billing.
+
+## Bundled optional-dependency lock contract - 2026-08-30
+
+- When a registry package declares `bundleDependencies`, its nested lock entries
+  may correctly omit individual `resolved` and `integrity` fields and instead
+  use `inBundle: true`. Authenticate those bytes through the nearest bundle
+  owner's exact npm-registry tarball URL and integrity, plus tarball manifest
+  inspection; do not invent standalone provenance fields.
+- Resolve each consumer through nested-to-ancestor npm paths before checking
+  version compatibility. Two optional consumers may legitimately retain
+  incompatible major lines when each resolves a compatible entry; do not mask
+  a missing nested record by adding a root dependency or upgrading unrelated
+  packages.
+- A bounded semver helper must preserve prerelease state. A prerelease such as
+  `1.1.4-beta.1` does not satisfy stable caret floor `^1.1.4`. Preserve correct
+  upper bounds for major, `0.x`, and `0.0.x` ranges, and fail closed on range
+  syntax the test does not explicitly support.
+- Regenerate lock evidence with empty user/global npm configs, an isolated
+  cache/log directory, no auth-token environment, ignored lifecycle scripts,
+  and exact public registry scope. Compare the result byte-for-byte before
+  applying a minimal patch; never use the working `node_modules` as authority.
+- Bind platform evidence precisely. A real Windows install and an explicit
+  Linux/WASM32 target install can prove npm resolution and portable WASI load,
+  but target flags on a Windows host do not prove native Linux deployment.
+  Record platform-pruning leftovers and compare them with the untouched base.
+- PR-6H proof: initial 0/1 lock failure, reviewer-driven prerelease fail-first
+  1/2, final 2/2, adversarial semver 15/15, package-only tree clean, exact
+  isolated lock, full 1,695/1,695, build/E2E/controller, and replacement
+  independent `VERIFIED`, confidence 0.99.

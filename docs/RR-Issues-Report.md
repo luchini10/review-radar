@@ -1,9 +1,9 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through production-readiness PR-6G
+## Compiled for AI Agent Consumption — Phase 0 through production-readiness PR-6H
 
 **Generated:** 2026-08-30
-**Scope:** All phases from initial measurement harness through the PR-6G safe
-public Serper configuration correction
+**Scope:** All phases from initial measurement harness through the PR-6H
+optional-platform lock-graph correction
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -25,9 +25,9 @@ only when maintaining this register or auditing its full history.
 | High | 51 |
 | Medium | 37 |
 | Low | 5 |
-| Open | 1 |
+| Open | 0 |
 | Needs Investigation | 6 |
-| Fixed | 100 |
+| Fixed | 101 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -4371,26 +4371,35 @@ correction cannot erase or authenticate past deployed logs.
 | **Phase** | Production readiness PR-6E operations/dependency baseline |
 | **Severity** | Medium |
 | **Title** | Optional-platform dependency graph is inconsistent in the tracked lockfile |
-| **Status** | Open |
+| **Status** | Fixed |
 
-**Description:** `package.json` agrees with the lockfile root, and every remote
-lock entry has npm-registry provenance and integrity. The complete package-only
-tree still exits `ELSPROBLEMS`: `@tailwindcss/oxide-wasm32-wasi@4.3.0` requires
-`@napi-rs/wasm-runtime ^1.1.4`, while the only locked runtime is optional
-`0.2.12`, which satisfies a different optional consumer. No compatible nested
-Tailwind runtime is locked.
+**Original defect:** `package.json` agreed with the lockfile root, and every
+remote lock entry had npm-registry provenance and integrity. The complete
+package-only tree nevertheless exited `ELSPROBLEMS`:
+`@tailwindcss/oxide-wasm32-wasi@4.3.0` required
+`@napi-rs/wasm-runtime ^1.1.4`, while the only locked runtime was optional
+`0.2.12`, which satisfied a different optional consumer. No compatible nested
+Tailwind runtime was locked.
 
-**Expected correction (PR-026):** In a separately authorized dependency unit,
-regenerate or minimally correct the lock graph without broad upgrades, then
-prove clean deterministic installation and resolution on supported Windows and
-a non-Windows target. Authenticate exact package provenance and rerun the build,
-static checks, complete suite, and independent review.
+**Resolution (PR-026/PR-6H):** Credential-isolated npm 11.12.1 regeneration
+added exactly the six `inBundle` records already sealed inside
+`@tailwindcss/oxide-wasm32-wasi@4.3.0`; no package specification or version
+changed. Tailwind now resolves its bundled `@napi-rs/wasm-runtime@1.1.4`, while
+the unrelated unrs WASM consumer retains compatible root `0.2.12`. The tracked
+lock is byte-identical to isolated regeneration and the complete package-only
+tree exits zero with no problems.
 
-**Residual:** The current installed tree reports no invalid or missing package;
-five extraneous installed packages are local workspace drift and were not
-cleaned. The mismatch is optional-platform dependent, and no real clean install
-was run. No registry/advisory query occurred, so current vulnerability status is
-unknown. This issue must not be bundled into RR-106's privacy correction.
+**Proof and residual:** Public-registry metadata and the Tailwind tarball SRI/
+SHA-1 matched; its six bundled manifests and runtime 1.1.4 were authenticated.
+The deterministic test passed 2/2 after an independent prerelease-semver finding
+was reproduced fail-first and corrected. A clean Windows install loaded native
+Oxide; an explicit Linux/WASM32 target install resolved the nested runtime and
+loaded the portable WASI binding. Full 1,695/1,695, static/build/Playwright/
+controller walls and replacement independent `VERIFIED` at confidence 0.99
+passed. No actual Linux host was available, so native Linux deployment behavior
+remains unverified. One clean-Windows `@emnapi/runtime` optional-pruning orphan
+predates this correction; npm still exits zero and the correction reduced five
+such baseline leftovers to one. Current advisory state remains unknown.
 
 ---
 
@@ -4432,8 +4441,8 @@ Keep this correction separate from RR-106 logging and RR-107 lock repair.
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (1 issue)
-- RR-107: Optional-platform dependency graph is inconsistent in the tracked lockfile
+### Open (0 issues)
+- None
 
 ### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
@@ -4443,10 +4452,10 @@ Keep this correction separate from RR-106 logging and RR-107 lock repair.
 - RR-091: Same-page related-product price can satisfy autonomous card binding
 - RR-104: Paid admission/cache defect is locally contained; deployment-wide enforcement remains unproven
 
-### Fixed (100 issues)
+### Fixed (101 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
 RR-038 through RR-044, RR-046 through RR-090, RR-092 through RR-103, and
-RR-105 through RR-106, and RR-108
+RR-105 through RR-108
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -4455,17 +4464,14 @@ RR-105 through RR-106, and RR-108
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-107** — correct the optional-platform lock graph in PR-6H with bounded
-   public-registry provenance, minimal lock churn, and clean temporary Windows/
-   non-Windows installation evidence. Do not bundle upgrades or advisory fixes.
-2. **RR-104** — retain the one-realm correction, then bind deployment-wide
+1. **RR-104** — retain the one-realm correction, then bind deployment-wide
    ownership and multi-instance/load enforcement when tracked infrastructure is
    available. Do not relabel the local limiter as distributed authority.
-3. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
+2. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
    final overlap. Recovery stays default-off and R7A stays blocked.
-4. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
+3. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
    but varied by model, while Tapo appeared raw and died in normalization.
-5. **RR-091** — PR-007 corrected the shared reachable exact-price boundaries,
+4. **RR-091** — PR-007 corrected the shared reachable exact-price boundaries,
    but the original membership-only adapter remains isolated and unsafe. Keep
    it unpromoted; any future routing proposal requires directly observed exact
    transactional binding and a new independent review.

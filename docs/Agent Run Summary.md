@@ -3115,3 +3115,41 @@ tracked defect using bounded public-registry provenance and clean temporary
 Windows/non-Windows resolution, with no broad upgrade or advisory remediation.
 Recommended reasoning: High for supply-chain and cross-platform judgment;
 Medium for the isolated lock/test mechanics.
+
+## Codex Run - 2026-08-30 PR-6H optional-platform lock graph
+
+**Goal and assessment:** close RR-107 without a root dependency, broad upgrade,
+advisory sweep, or working-tree install. The root was missing metadata for
+dependencies already bundled in Tailwind's optional WASM tarball, not wrong
+root specifications or missing published artifacts.
+
+**Change and provenance:** empty-config npm 11.12.1 regeneration added exactly
+six nested `inBundle` records; the repo lock is byte-identical to that isolated
+result. Exact registry metadata plus Tailwind tarball SRI/SHA-1 and manifest
+inspection authenticated runtime 1.1.4 and its five companions. No package
+version, outer artifact, `package.json`, application source, or working
+`node_modules` changed.
+
+**Fail-first and review:** initial 0/1 reproduced Tailwind `^1.1.4` resolving to
+root `0.2.12`. The first independent review found the test could accept a
+prerelease below a stable floor. That exact counterexample failed 1/2 before a
+narrow correction; final 2/2 and the reviewer's 15-case semver probe passed.
+Replacement verdict: `VERIFIED`, confidence 0.99.
+
+**Platform and complete verification:** package-only npm exits zero with no
+problems. Clean Windows x64 installed and loaded native Oxide; explicit Linux/
+WASM32 target resolution installed nested runtime 1.1.4, reported no problems,
+and loaded the WASI binding and runtime exports. Full tests pass 1,695/1,695
+across 230 suites; typecheck, production build, Playwright 17/17, diff, lint
+with zero errors/three old warnings, and controller
+`agent-loop-2026-08-30T10-51-12-969Z` with all five partitions, 10/10 cases,
+and 29/29 invariants pass.
+
+**Limits and next step:** no actual Linux runtime was available; target flags
+and portable WASI load do not prove native Linux deployment. One pre-existing
+clean-Windows optional-pruning orphan remains while npm exits zero, and current
+advisories are unknown. No credential, `.env.local`, provider/live, working-
+tree install, hosted system, deployment, release, or push was used. RR-107 is
+Fixed locally; ReviewRadar remains NOT READY. PR-7 should now run the final
+adversarial evidence audit and create the honest readiness report. Recommended
+reasoning: Highest for final adjudication.

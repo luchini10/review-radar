@@ -1818,3 +1818,28 @@ No production pipeline or API contract changed in Phase 6A.
   configuration, historical requests, and billing remain unknown. No real
   credential, provider, registry, network, flag, deployment, release, or push
   authority changed; ReviewRadar remains NOT READY.
+
+## 45. PR-6H optional-platform lock graph (2026-08-30)
+
+- **Root cause:** Tailwind's optional WASM tarball bundles runtime 1.1.4 and five
+  companion manifests, but the tracked lock omitted their nested `inBundle`
+  records. Package-only resolution therefore selected incompatible hoisted
+  runtime 0.2.12 used by another optional WASM consumer.
+- **Lock contract:** credential-isolated npm 11.12.1 regeneration added exactly
+  the six bundled records and nothing else. Tailwind resolves nested runtime
+  1.1.4; unrs retains root 0.2.12. `package.json`, every package version, outer
+  artifact, application module, and working dependency tree are unchanged.
+- **Provenance:** exact public metadata and the Tailwind 4.3.0 tarball SRI/SHA-1
+  matched. The tarball contained all six manifests and runtime 1.1.4. The
+  tracked lock is byte-identical to isolated generation and package-only npm
+  resolution reports no problems.
+- **Proof:** focused 2/2 plus a 15-case adversarial semver probe; full
+  1,695/1,695 across 230 suites; typecheck, lint, production build, Playwright
+  17/17, and five-partition controller with 10/10 cases and 29/29 invariants
+  passed. Clean Windows native and explicit Linux/WASM32-target installs passed.
+  Replacement independent review returned `VERIFIED`, confidence 0.99.
+- **State and limit:** RR-107 is Fixed for the tracked lock graph. Actual native
+  Linux execution was unavailable and remains unverified. One pre-existing
+  Windows optional-pruning orphan remains while npm exits zero; current
+  advisories are unknown. No credential, provider/live, broad upgrade,
+  deployment, release, or push authority changed; ReviewRadar remains NOT READY.
