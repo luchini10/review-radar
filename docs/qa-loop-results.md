@@ -15283,3 +15283,174 @@ package/lockfile, public template, README, infrastructure, flag, deployment,
 release, or push work occurred. ReviewRadar remains `NOT READY`. PR-6G alone is
 next; it grants no PR-026, package, registry, hosted-system, or final-readiness
 authority.
+
+## Agent Loop Run - 2026-08-30T10:17:39.401Z
+
+- **run id:** agent-loop-2026-08-30T10-16-51-473Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, non-product-pages, price-trust, requirement-units, wrong-category
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3392ms |
+| lint | Passed | 10846ms |
+| unit tests | Passed | 29209ms |
+| deterministic eval pipeline | Passed | 461ms |
+| tracked offline benchmark | Passed | 590ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- non-product-pages: non-product-espresso-review
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T10-16-51-473Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T10:19:51.475Z
+
+- **run id:** agent-loop-2026-08-30T10-19-03-369Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, non-product-pages, price-trust, requirement-units, wrong-category
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3301ms |
+| lint | Passed | 10873ms |
+| unit tests | Passed | 29338ms |
+| deterministic eval pipeline | Passed | 454ms |
+| tracked offline benchmark | Passed | 589ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- non-product-pages: non-product-espresso-review
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T10-19-03-369Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## 🟩 Codex Production Readiness PR-6G — safe public Serper configuration (2026-08-30)
+
+**Objective and frozen base:** close PR-027/RR-108 at PR-6F commit
+`83d44aa8f5ea4fb3e1f32995ef69e1c1303506f1` without inspecting user-owned
+configuration, inventing a provider credential format, changing valid-key
+behavior, or mixing dependency work into configuration. The phase was zero-
+provider, zero-live, zero-credential, zero-registry, and zero-network.
+
+**Bottleneck challenge:** documented setup copied a stale four-key template,
+both tracked examples supplied a nonempty optional-provider placeholder, and two
+runtime gates interpreted every nonempty value as configured. Removing optional
+Serper would change product capability, validating real keys would require
+provider authority, and repairing the lock graph would mix an unrelated root.
+The generalized local correction was one canonical blank-by-default public
+contract plus one shared pre-request placeholder gate.
+
+**Fail-first evidence:** an initial five-test draft passed two controls and
+failed three intended template/placeholder regressions. The expanded final
+pre-correction matrix ran 14 tests: four controls passed and exactly ten failed.
+Failures covered public-template equality/key completeness, unsafe README copy
+guidance, whitespace-only values, exact/case-folded documented placeholders,
+three additional bounded repository placeholder forms, and both direct-wrapper
+and top-level product-discovery gates. All transports were mocked. No real key,
+provider, or network was used.
+
+**Correction:** `.env.example` is the canonical exact 14-key public environment
+contract and assigns `SERPER_API_KEY=`. `.env.local.example` is retained as a
+byte-identical test-enforced compatibility copy. README copies the canonical
+file, explains explicit opt-in with a real key, and no longer provides a
+copyable fake-key assignment. `configuredSerperApiKey()` is shared before
+direct Serper dispatch and product discovery. It compares a trimmed,
+case-folded value only against blank and four exact known placeholders, returns
+unconfigured before request construction for those values, and returns every
+other original string byte-for-byte. Near misses remain enabled; no substring
+or invented provider-format rule was added.
+
+**Verification:**
+
+| Check | Result |
+| --- | --- |
+| Dedicated corrected tests | 14/14 passed |
+| Related configuration/Serper/logging/ledger/staged wall | 156/156 across 15 suites |
+| Complete unit suite | 1,693/1,693 across 229 suites |
+| Typecheck | Passed |
+| Lint | Passed with zero errors and the same three pre-existing unused-variable warnings |
+| Production build | Passed with Next.js 16.2.6 |
+| Playwright | 17/17 passed |
+| Full deterministic controller | `agent-loop-2026-08-30T10-19-03-369Z`; five serial partitions; 10/10 cases; 29/29 invariants |
+| Generated file check | `next-env.d.ts` restored; tracked Git blob `9edff1c7cacb3bfac9a1eadcf6f51eaa99565e38` |
+
+The earlier full controller
+`agent-loop-2026-08-30T10-16-51-473Z` also passed, but the later run after the
+final test correction is the authoritative phase proof.
+
+**Frozen source/test manifest (SHA-256):**
+
+```text
+0552e4ffc6873318c4a5eb4870e084e90149e60f54bc38a29fe71731913b482c  .env.example
+0552e4ffc6873318c4a5eb4870e084e90149e60f54bc38a29fe71731913b482c  .env.local.example
+2b3dbe8ccbdc72c118ef41a52f4c2d2935731166a1bc2ecd54bb6890804174ae  README.md
+1491bc7e386fcdaef4cbdce71cccf3e741162768cc20a851bd836c4500368720  lib/search/serper.ts
+03a5197a3d42d84f7c63111861f8364db200b10add236216ac8ce59f3197666e  tests/serperConfiguration.test.mjs
+```
+
+**Independent review:** the initial exact source/test review returned
+`VERIFIED`, no findings, confidence 0.99 after 14/14, typecheck, and extra
+zero-network placeholder/near-miss header probes. A later attempt to strengthen
+the public key-set assertion accidentally froze assignment order; independent
+review correctly returned `CHANGES REQUIRED` at P2. The test was changed to
+enforce exactly 14 unique expected names with order-insensitive set comparison,
+while retaining byte equality and exact blank Serper assignment. The final
+replacement reviewer authenticated the PR-6F base, all five final hashes, and
+14/14 tests, then returned exact `VERIFIED`, no findings, confidence 0.999.
+
+**Next-phase adjudication:** separate independent sequencing review returned
+`VERIFIED`, confidence 0.98, and selected PR-6H/PR-026 next. RR-107 is the only
+remaining Open tracked issue: Tailwind's optional WASM package requires
+`@napi-rs/wasm-runtime ^1.1.4`, while only optional `0.2.12` is locked. The next
+phase is limited to public npm provenance, a deterministic lock consistency
+regression, minimal isolated lock correction, and clean temporary Windows plus
+authenticated non-Windows optional resolution. It must roll back on unrelated
+churn, provenance failure, or unproven cross-platform behavior.
+
+**Residuals and authority:** RR-108 is Fixed locally. Exact bounded placeholder
+matching cannot identify every phrase a user might invent and does not validate
+whether a key is genuine, active, or funded. Hosted configuration, historical
+requests, and billing remain unknown. No credential, provider, real network,
+registry, `.env.local`, spent live fixture, package/lockfile, application
+behavior, flag, infrastructure, deployment, release, or push work occurred.
+One final closure command named an unavailable `tsx` loader and failed before
+test discovery; the repository-native command immediately passed 14/14 and is
+the reported result. ReviewRadar remains `NOT READY`.

@@ -1790,3 +1790,31 @@ No production pipeline or API contract changed in Phase 6A.
   authenticate hosted collectors, retention, historical log contents, or erase
   prior deployed records. No provider, credential, live data, flag, deployment,
   release, or push authority changed; ReviewRadar remains NOT READY.
+
+## 44. PR-6G safe public Serper configuration (2026-08-30)
+
+- **Root cause:** README copied a stale four-key compatibility template while
+  the canonical public template carried 14 keys. Both files assigned the
+  optional Serper credential a nonempty placeholder, and the runtime treated
+  every nonempty string as configured at both direct dispatch and product-
+  discovery gates.
+- **Public contract:** `.env.example` is canonical, optional Serper remains
+  blank, and `.env.local.example` is a byte-identical compatibility copy checked
+  by tests. README copies the canonical file, requires explicit real-key opt-in,
+  and contains no copyable fake-key assignment.
+- **Runtime contract:** `configuredSerperApiKey()` runs before request
+  construction in both reachable gates. It disables missing, empty,
+  whitespace-only, case-folded, and four exact known placeholder values. It
+  imposes no provider key format and preserves every other configured value
+  byte-for-byte, including near misses.
+- **Proof:** final fail-first 4 pass / 10 intended failures; dedicated 14/14;
+  related 156/156; full 1,693/1,693 across 229 suites; typecheck, lint,
+  production build, Playwright 17/17, and five-partition controller with 10/10
+  cases and 29/29 invariants passed. Final independent replacement review
+  returned `VERIFIED`, no findings, confidence 0.999, with all five hashes
+  stable.
+- **State and limit:** RR-108 is Fixed locally. Exact placeholder rejection is
+  not credential validation and cannot identify every invented phrase. Hosted
+  configuration, historical requests, and billing remain unknown. No real
+  credential, provider, registry, network, flag, deployment, release, or push
+  authority changed; ReviewRadar remains NOT READY.

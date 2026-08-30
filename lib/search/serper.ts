@@ -98,6 +98,26 @@ const SERPER_ENDPOINT_PATHS = {
 } as const;
 const SERPER_REQUEST_TIMEOUT_MS = 8000;
 const SERPER_CACHE_TTL_MS = 1000 * 60 * 20;
+const SERPER_API_KEY_PLACEHOLDERS = new Set([
+  "replace_me",
+  "replace_with_your_serper_api_key",
+  "your_serper_api_key_here",
+  "your_serper_key_here",
+]);
+
+function configuredSerperApiKey() {
+  const value = process.env.SERPER_API_KEY;
+  const normalizedValue = value?.trim().toLowerCase() || "";
+
+  if (
+    !normalizedValue ||
+    SERPER_API_KEY_PLACEHOLDERS.has(normalizedValue)
+  ) {
+    return undefined;
+  }
+
+  return value;
+}
 
 function configuredSerperAttemptCeiling() {
   const parsed = Number(process.env.REVIEW_RADAR_MAX_SERPER_ATTEMPTS || "0");
@@ -2316,7 +2336,7 @@ async function fetchSerper(
   executionOptions: SerperExecutionOptions = {},
 ): Promise<SerperFetchResult | null> {
   throwIfRequestCancelled(executionOptions.signal);
-  const apiKey = process.env.SERPER_API_KEY;
+  const apiKey = configuredSerperApiKey();
   const originalQuery = params.q || params.query;
   const query = sanitizeSerperQuery(originalQuery || "");
   const searchType = params.searchType || "search";
@@ -4250,7 +4270,7 @@ export async function searchSerperForProducts(
     seedProductNames: [],
   };
 
-  if (!process.env.SERPER_API_KEY) {
+  if (!configuredSerperApiKey()) {
     logSerperWarning({
       event: "discovery_skipped",
       searchType: "discovery",

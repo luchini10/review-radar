@@ -3558,3 +3558,31 @@ a known conservative undercount.
   and 29/29 invariants; independent exact `VERIFIED`, confidence 0.99. Hosted
   collector behavior, retention, and historical contents remain outside this
   source-level contract.
+
+## Safe public optional-provider configuration contract - 2026-08-30
+
+- Keep one canonical tracked public environment template. Any retained
+  compatibility template must be byte-identical under an automated regression;
+  public-template key-set checks must enforce exact membership and uniqueness
+  without treating harmless assignment order as product behavior.
+- Optional credentials must be blank by default. Documentation must copy the
+  canonical template, require explicit real-key opt-in, and avoid copyable fake
+  assignments that a truthiness gate could interpret as configured.
+- Centralize optional-provider configuration before request construction and
+  use it at every reachable dispatch gate. Missing, empty, whitespace-only, and
+  exact bounded repository placeholders are unconfigured. Normalize only for
+  blank/placeholder comparison; preserve every other configured value exactly.
+- Do not invent provider key formats, reject substrings, or treat a near miss as
+  a placeholder. Keep positive controls proving an ordinary synthetic value
+  dispatches once with its header bytes unchanged, and negative controls proving
+  both direct dispatch and higher-level discovery start zero mocked requests.
+- Configuration tests must remain zero-network and must never inspect, print,
+  copy, hash, stat for diagnosis, or modify the user's ignored `.env.local`.
+  Public examples, README, source gates, and synthetic mocked transport are the
+  complete authorized surface.
+- PR-6G proof: final fail-first 4 pass / 10 intended failures; dedicated 14/14;
+  related 156/156; full 1,693/1,693 across 229 suites; typecheck/lint/build/
+  Playwright/controller; final independent `VERIFIED`, no findings, confidence
+  0.999. This proves safe tracked defaults and bounded placeholder rejection,
+  not key validity, funding, hosted configuration, historical traffic, or
+  billing.

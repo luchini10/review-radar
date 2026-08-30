@@ -46,29 +46,29 @@ If PowerShell says running scripts are disabled, use the Windows npm command dir
 
 ## Create `.env.local`
 
-The app needs an OpenAI API key to run live product research. Serper is optional, but it helps ReviewRadar discover more Google search product candidates before the app applies strict filters.
+The app needs an OpenAI API key to run live product research. Serper is optional, but it helps ReviewRadar discover more Google search product candidates before the app applies strict filters. `.env.example` is the canonical public configuration template; `.env.local.example` is an exact compatibility copy checked by tests.
 
 Create a local environment file only if `.env.local` does not already exist:
 
 ```powershell
-if (!(Test-Path .env.local)) { Copy-Item .env.local.example .env.local }
+if (!(Test-Path .env.local)) { Copy-Item .env.example .env.local }
 ```
 
 Open `.env.local` in VS Code or Notepad and put your key after `OPENAI_API_KEY=`:
 
 ```text
 OPENAI_API_KEY=your_api_key_here
-SERPER_API_KEY=your_serper_key_here
+SERPER_API_KEY=
 SEARCH_DEPTH=standard
 ```
 
 Do not add quotes around the keys. Do not use `NEXT_PUBLIC_` for either key. API keys must stay server-side.
 
-Important: do not run `Copy-Item .env.local.example .env.local` again after adding your real key. That command can replace your real key with the blank example file.
+Important: do not run `Copy-Item .env.example .env.local` again after adding your real key. That command can replace your real key with the blank example file.
 
 Optional: you can leave `OPENAI_MODEL=` blank. The app defaults to `gpt-5.4-mini`, which gives the recommendation engine a good balance of quality, speed, and cost.
 
-Optional: you can leave `SERPER_API_KEY=` blank. The app will skip Serper and continue using the existing OpenAI research path.
+Optional: leave `SERPER_API_KEY=` blank to skip Serper and continue using the existing OpenAI research path. To enable Serper, replace the blank value with the real key issued by Serper. Sample values such as `your_serper_key_here` and `replace_me` are treated as unconfigured and never start a Serper request.
 
 Optional: `SEARCH_DEPTH` controls how broadly ReviewRadar searches before filtering. Use `dev` to spend fewer Serper credits while testing, `standard` for normal use, or `deep` for broader searches that use more credits.
 
@@ -205,14 +205,13 @@ After editing `.env.local`, stop and restart the dev server.
 
 ### Serper discovery is not adding candidates
 
-Serper is optional. To enable it, check that `.env.local` contains:
+Serper is optional. To enable it, set `SERPER_API_KEY` in `.env.local` to the real value issued by Serper, then choose the search depth:
 
 ```text
-SERPER_API_KEY=your_serper_key_here
 SEARCH_DEPTH=standard
 ```
 
-After editing `.env.local`, stop and restart the dev server. If the key is missing, invalid, rate-limited, or out of credits, the app should continue without Serper. If you want fewer Serper calls while testing, set `SEARCH_DEPTH=dev`.
+Do not use a sample or placeholder value. Blank, whitespace-only, `your_serper_key_here`, and other documented placeholder values keep Serper disabled. After editing `.env.local`, stop and restart the dev server. If the key is missing, invalid, rate-limited, or out of credits, the app should continue without Serper. If you want fewer Serper calls while testing, set `SEARCH_DEPTH=dev`.
 
 ### OpenAI quota or billing error
 

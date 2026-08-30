@@ -3077,3 +3077,41 @@ PR-026 because the documented placeholder is directly reachable and can be
 corrected zero-network, while the optional lock mismatch requires separate
 registry and cross-platform authority. Recommended reasoning: High for the
 configuration/privacy boundary; Medium for localized templates and tests.
+
+## Codex Run - 2026-08-30 PR-6G safe public Serper configuration
+
+**Goal and assessment:** close RR-108 without inspecting user configuration,
+inventing a provider key format, or mixing package work into configuration.
+The reachable root was the tracked copy path plus truthiness-only gates, not a
+need to validate real credentials or remove optional Serper support.
+
+**Change:** `.env.example` is the canonical 14-key public contract;
+`.env.local.example` is its byte-identical test-enforced compatibility copy;
+optional Serper is blank. README copies the canonical file and explains
+explicit real-key opt-in. One shared gate runs before direct dispatch and
+product discovery, disables missing/blank/whitespace and four exact known
+placeholders case-insensitively, and preserves every other value byte-for-byte.
+
+**Fail-first and review:** the final pre-correction matrix passed four controls
+and failed the exact ten intended regressions. Corrected dedicated tests pass
+14/14. An intermediate stronger key-list assertion was correctly rejected
+because it froze harmless assignment order; exact unique order-insensitive set
+comparison replaced it. Final replacement review returned `VERIFIED`, no
+findings, confidence 0.999, and all five source/test hashes matched.
+
+**Verification:** related wall 156/156 across 15 suites; complete suite
+1,693/1,693 across 229 suites; typecheck; production build; Playwright 17/17;
+diff; and lint with zero errors/the same three old warnings. Controller
+`agent-loop-2026-08-30T10-19-03-369Z` passed the complete wall, deterministic
+eval, all five serial partitions, 10/10 cases, and 29/29 invariants. Generated
+`next-env.d.ts` was restored to its tracked blob.
+
+**Live calls, limits, and next step:** zero. No real credential, provider,
+registry, network, `.env.local`, or spent live fixture was accessed. Exact
+placeholder rejection does not prove key validity, funding, hosted
+configuration, historical traffic, or billing. RR-108 is Fixed locally;
+ReviewRadar remains NOT READY. PR-6H/PR-026 should next correct the only Open
+tracked defect using bounded public-registry provenance and clean temporary
+Windows/non-Windows resolution, with no broad upgrade or advisory remediation.
+Recommended reasoning: High for supply-chain and cross-platform judgment;
+Medium for the isolated lock/test mechanics.

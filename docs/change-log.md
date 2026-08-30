@@ -11,6 +11,37 @@ Update this file after:
 
 ## 2026-08-30
 
+### Codex - Make optional Serper setup safe by default
+
+#### Changed
+
+- Made `.env.example` the canonical 14-key public setup contract and retained
+  `.env.local.example` as a byte-identical, test-enforced compatibility copy.
+  Optional `SERPER_API_KEY` is blank in both files.
+- Updated README setup to copy the canonical template and require explicit
+  opt-in with a real Serper key. Removed copyable fake-key assignments and
+  documented that known placeholder values stay disabled.
+- Added one shared server-only key gate before direct Serper dispatch and
+  product discovery. Missing, blank, whitespace-only, and four exact known
+  placeholders are unconfigured; every other value is preserved byte-for-byte.
+- Added zero-network regressions for template drift, README safety, both runtime
+  gates, normalized placeholders, valid synthetic keys, and near-miss values.
+
+#### Verified
+
+- Final fail-first passed 4 controls and failed exactly 10 intended
+  regressions. Corrected dedicated tests passed 14/14, the related wall passed
+  156/156 across 15 suites, and the full suite passed 1,693/1,693 across 229
+  suites.
+- Typecheck, production build, Playwright 17/17, and lint with zero errors/the
+  same three old warnings passed. Controller
+  `agent-loop-2026-08-30T10-19-03-369Z` passed all five serial partitions,
+  10/10 cases, and 29/29 invariants.
+- A final independent replacement review returned `VERIFIED`, no findings,
+  confidence 0.999, after confirming order-insensitive exact key-set coverage,
+  14/14 tests, and all five source/test hashes. No real credential, provider,
+  registry, network, or ignored local environment file was used.
+
 ### Codex - Remove shopper text from production Serper warnings
 
 #### Changed

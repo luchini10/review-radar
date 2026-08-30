@@ -669,7 +669,7 @@ shopper-facing recommendation quality.
 | PR-024 | P2 | verified local correction; hosted-disconnect residual retained | The browser could label a legacy search cancelled while the active synchronous server path continued provider, Serper, and page-fetch work. | The client aborted only its fetch. The legacy route, planning/final/narration calls, Serper retries/fallbacks, verification fetches, enrichment, and shared loaders had no request-owned cancellation contract. | PR-6D adds one typed server cancellation class, threads `Request.signal` through every proven cancel-safe legacy paid/network stage, returns a stable 499 cancellation result, prevents later fallback/retry work, and makes shared cache coalescing waiter-aware. Independent hard timeouts remain distinct. | Fail-first 58 pass / 10 intended fail; corrected focused 68/68; full 1,668/1,668; typecheck/lint/build/E2E/controller; independent late-loader and DNS cancellation/timeout probes; exact `VERIFIED`, confidence 0.97; all 17 source/test hashes stable. | Closed at the local source boundary. A deployed Next.js host/proxy may not deliver every browser disconnect through `Request.signal`; already-accepted upstream work cannot be retroactively unbilled; native DNS may finish internally although no later transport starts. No live cancellation was attempted. |
 | PR-025 | P1 | verified generalized correction | Every Serper vertical could emit a shopper-derived query and an uncontrolled error message through production `console.warn`. Zero-network production-mode probes captured both query and synthetic error canaries. | The shared warning helper suppressed only tests, while six wrapper catches and retry/fallback diagnostics passed raw query or `Error.message` detail directly to it. | One module-private allowlisted event contract now reconstructs each warning from fixed event/error categories plus normalized vertical and optional bounded opaque query ID, attempt number, and primary/fallback stage. Raw query, `Error.message`, URL, body, header, credential, key-shaped value, and query hash never enter the logger. | Fail-first dedicated wall: 1 pass / 8 intended failures. Corrected dedicated 11/11 and related four-file 101/101; full 1,679/1,679; typecheck/lint/build/Playwright/controller; adversarial cancellation probe; exact source/test hashes; independent `VERIFIED`, confidence 0.99. | Fixed locally by PR-6F without provider/network access or behavior changes to requests, retries, fallback, cancellation, timeout, results, or the observability ledger. Hosted log retention, history, and collector behavior remain unknown. Do not reintroduce free-form diagnostic fields or substitute a query hash for redaction. |
 | PR-026 | P2 | open; separately sequenced | The tracked lockfile fails its complete package-only consistency check: Tailwind's optional WASM package requires `@napi-rs/wasm-runtime ^1.1.4`, while the only locked runtime is optional version `0.2.12`. | Two optional WASM consumers with incompatible major ranges share one top-level lock entry and no compatible nested Tailwind runtime. | Regenerate or minimally correct the lock graph in a separately authorized dependency unit, then authenticate platform-specific optional resolution without broad upgrades. | Package-only dependency-tree check; clean deterministic install on supported Windows and a non-Windows target; build/static/full suite; exact diff/registry provenance and independent review. | Installed local dependencies currently resolve without an invalid/missing node, so impact is platform-dependent. Current advisory state is unknown. A package change requires separate registry/network authority and must not be mixed with PR-025. |
-| PR-027 | P2 | open; separately sequenced | The documented setup directs users to copy a stale four-key `.env.local.example`; both public templates assign a nonempty placeholder to optional `SERPER_API_KEY`. A zero-network mock proved that the placeholder passes the runtime's truthiness gate and initiates Serper work. | Public examples and README instructions drifted from the canonical 14-key environment contract, and optional provider enablement has no placeholder-value rejection. | Make one canonical public template authoritative, keep optional provider keys empty by default, document explicit opt-in, and reject known placeholder values before any request construction. | Public-template equality/derivation test; placeholder/blank/real-shaped key controls with mocked zero-network transport; README setup replay; unchanged valid-key behavior; independent review. | This is configuration correctness, not proof of credential validation. Keep it separate from production log redaction and dependency-lock repair. Never inspect or modify the user's ignored `.env.local`. |
+| PR-027 | P2 | verified generalized correction | The documented setup directed users to copy a stale four-key `.env.local.example`; both public templates assigned a nonempty placeholder to optional `SERPER_API_KEY`. A zero-network mock proved that the placeholder passed the runtime's truthiness gate and initiated Serper work. | Public examples and README instructions drifted from the canonical 14-key environment contract, and optional provider enablement had no placeholder-value rejection. | `.env.example` is now canonical; `.env.local.example` is its byte-identical tested compatibility copy; optional Serper is blank; README requires explicit real-key opt-in. One centralized server gate treats missing, blank, whitespace, and four exact known placeholders as unconfigured while preserving every other value byte-for-byte. | Final fail-first 4 pass / 10 intended failures; corrected dedicated 14/14; related 156/156; full 1,693/1,693; typecheck/lint/build/Playwright; exact final five-partition controller; template/key/header probes; hashes; independent replacement `VERIFIED`, confidence 0.999. | Fixed locally by PR-6G. Exact placeholder matching intentionally does not validate provider format or key validity. Hosted configuration, historical unintended requests, and billing remain unknown. Never inspect or modify the user's ignored `.env.local`. |
 
 ## Suspected weaknesses requiring measurement
 
@@ -1903,7 +1903,7 @@ directory is spent.
 
 #### PR-6G / PR-027 — Safe public Serper configuration
 
-- Status: **approved next; fail-first local correction; zero provider/network**
+- Status: **complete; independently verified; zero provider/network**
 - Objective: make documented setup safe by default, keep optional Serper access
   explicitly opt-in, and stop known placeholder values before request
   construction without inspecting or modifying the user's ignored
@@ -1918,26 +1918,69 @@ directory is spent.
   reproduced two mocked attempts from the tracked public placeholder and zero
   from a blank value, selected PR-027 over PR-026, and required one canonical
   template plus an automatically checked compatibility or migration rule.
-- Required contract: one canonical public environment example; optional
-  provider credentials blank by default; README instructions that require an
-  explicit real-key opt-in; and a server-only placeholder rejection boundary
-  before Serper request construction. Valid configured-key behavior must remain
-  unchanged. Never print, hash, copy, stat for diagnosis, or inspect
-  `.env.local`.
-- Required proof: fail-first public-template drift and documented-copy tests;
-  blank, known-placeholder, whitespace, and valid-shaped key controls with
-  mocked transport; zero attempted request for disabled/placeholder inputs; one
-  unchanged mocked request for a valid control; focused/full/static/build/E2E/
-  controller walls; exact diff/hash and independent review.
-- Boundaries: no real credential, provider, real network, registry, package,
-  lockfile, hosted account, infrastructure, flag-default promotion, deployment,
-  release, push, PR-026, or final-readiness claim. Recommended reasoning is High
-  for configuration/privacy authority and Medium for bounded template/test work.
+- Correction: `.env.example` is the canonical 14-key public contract and keeps
+  optional `SERPER_API_KEY` blank. `.env.local.example` is byte-identical and
+  retained only as a compatibility copy checked by tests. README copies the
+  canonical file, explains explicit real-key opt-in, and contains no copyable
+  fake Serper assignment.
+- Runtime boundary: `configuredSerperApiKey()` is shared by direct wrapper
+  dispatch and top-level product discovery. Missing, empty, whitespace-only,
+  case-folded repository placeholders, and four exact known placeholder values
+  stop before request construction. All other values, including near-miss text,
+  remain enabled and reach `X-API-KEY` byte-for-byte; no provider format was
+  invented.
+- Fail-first proof: an initial five-test draft passed two and failed three. The
+  final pre-correction matrix passed four controls and failed exactly ten
+  template/whitespace/placeholder regressions across direct wrapper and product-
+  discovery gates. All transport was mocked; no real credential or network.
+- Corrected verification: dedicated 14/14; related Serper/logging/ledger/staged
+  wall 156/156; full 1,693/1,693 across 229 suites; typecheck; production build;
+  Playwright 17/17; lint with zero errors and the same three old warnings; final
+  controller `agent-loop-2026-08-30T10-19-03-369Z` passed all five serial
+  partitions, 10/10 cases, and 29/29 invariants. `next-env.d.ts` was restored to
+  tracked blob `9edff1c7cacb3bfac9a1eadcf6f51eaa99565e38`.
+- Independent review: final replacement `VERIFIED`, no findings, confidence
+  0.999. Across the review sequence, the reviewer passed 14/14 and typecheck,
+  then separately blocked three normalized placeholder variants and dispatched
+  three near misses with exact headers.
+- Residual and authority: RR-108 is Fixed locally. The bounded allowlist cannot
+  identify every phrase a user might invent and does not validate whether a key
+  is genuine, funded, or active. Hosted configuration, historical requests, and
+  billing remain unknown. No real credential, provider, network, registry,
+  package, lockfile, infrastructure, flag promotion, deployment, release, or
+  push work occurred.
+
+#### PR-6H / PR-026 — Optional-platform lock graph correction
+
+- Status: **approved next after PR-6G closeout; bounded public registry/network**
+- Objective: make the tracked optional-platform dependency graph internally
+  valid and reproducible without a broad dependency upgrade or a direct root
+  dependency that merely masks transitive resolution.
+- Bottleneck judgment: RR-107 is the only remaining Open issue and a concrete
+  tracked graph defect. Hosted controls are unauthenticated unknowns,
+  accessibility has no newly isolated stronger defect, and final PR-7 review
+  cannot honestly close over a known Open lock inconsistency.
+- Independent sequencing review: exact `VERIFIED`, confidence 0.98. The reviewer
+  required public npm metadata/integrity authentication, minimal isolated lock
+  regeneration, clean temporary Windows and authenticated non-Windows optional-
+  package resolution, and rollback on provenance or unrelated lock churn.
+- Required contract: authenticate the exact Tailwind WASM and compatible
+  `@napi-rs/wasm-runtime` metadata/integrity from the public npm registry; correct
+  only the lock graph; prove semver/path/provenance on both target families. Add
+  one deterministic package-lock consistency regression. `package.json` may
+  change only if evidence proves an unavoidable root contract change.
+- Boundaries: public registry reads and clean temporary downloads only; no
+  credentials, advisory remediation, broad upgrade, install into the user's
+  working dependency tree, application behavior, `.env.local`, provider/live
+  work, hosted infrastructure, deployment, release, or push. Roll back the
+  isolated lock/test unit if minimality, provenance, or cross-platform proof
+  fails. Recommended reasoning is High for supply-chain/cross-platform judgment
+  and Medium for mechanical validation.
 
 ### Phase PR-6 — UX, resilience, security, and operational closure
 
-- Status: **in progress; PR-6A through PR-6F complete; PR-6G/PR-027 safe public
-  Serper configuration next**
+- Status: **in progress; PR-6A through PR-6G complete; PR-6H/PR-026 optional-
+  platform lock graph correction next**
 - Address proven comprehension, accessibility, cancellation, partial-success,
   cache, rate/payload, URL/redirect, redaction, health, configuration,
   dependency, deployment, and rollback gaps.
@@ -2009,10 +2052,10 @@ Release blockers today:
   also contains the native-resolver residual only within that realm. PR-024/
   RR-105 now closes the local legacy cancellation source contract, but deployed
   disconnect delivery and already-accepted upstream work remain residual.
-  PR-6F now closes PR-025/RR-106 locally with a verified fixed-field Serper
-  warning contract. PR-026/RR-107 still has an inconsistent optional-platform
-  lock graph, and PR-027/RR-108 can still enable unintended Serper requests
-  through documented placeholder configuration.
+  PR-6F closes PR-025/RR-106 locally with a verified fixed-field Serper warning
+  contract. PR-6G closes PR-027/RR-108 locally with canonical blank-by-default
+  templates and centralized placeholder rejection. PR-026/RR-107 still has an
+  inconsistent optional-platform lock graph.
   Distributed admission, load behavior, production headers/health/config/
   observability, current dependency advisories, accessibility, and deployment/
   rollback authority otherwise remain unknown release gates.

@@ -4779,3 +4779,29 @@ authority. PR-6G remains zero-network and may own only public templates, README,
 the Serper configuration gate, focused tests, and closeout records. This entry
 authorizes no `.env.local`, credential, provider, registry/package, hosted
 infrastructure, flag promotion, deployment, release, push, or readiness claim.
+
+## 🟧 [142] Codex → peer reviewer — 2026-08-30 (PR-6G safe public Serper configuration verified)
+
+PR-6G closes RR-108 at the tracked source/documentation boundary. The canonical
+14-key `.env.example` and byte-identical `.env.local.example` now leave optional
+Serper blank; README copies the canonical file and requires explicit real-key
+opt-in. Both direct dispatch and product discovery use one centralized gate
+that disables missing, blank, whitespace, case-folded, and four exact known
+placeholder values while preserving all other values byte-for-byte.
+
+Final fail-first passed 4 and failed exactly 10 regressions. Dedicated tests
+pass 14/14, the related wall 156/156, full tests 1,693/1,693, Playwright 17/17,
+and controller `agent-loop-2026-08-30T10-19-03-369Z` reconciles all five
+partitions, 10/10 cases, and 29/29 invariants. An intermediate strengthened test
+incorrectly froze key order; your `CHANGES REQUIRED` finding was corrected to
+exact, unique, order-insensitive set comparison. The replacement review
+returned `VERIFIED`, no findings, confidence 0.999, and all five hashes matched.
+
+Your separate sequencing review selected PR-6H/PR-026 next because RR-107 is
+the only remaining Open tracked defect. That phase may use bounded public npm
+registry reads and clean temporary downloads to prove a minimal lock-only
+correction on Windows and an authenticated non-Windows target. It may not use
+credentials, remediate advisories, broadly upgrade packages, install into the
+working dependency tree, access `.env.local` or providers, alter application
+behavior, deploy, release, or push. Roll back if provenance, minimality, or
+cross-platform optional resolution cannot be proved.

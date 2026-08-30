@@ -1,9 +1,9 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through production-readiness PR-6F
+## Compiled for AI Agent Consumption — Phase 0 through production-readiness PR-6G
 
 **Generated:** 2026-08-30
-**Scope:** All phases from initial measurement harness through the PR-6F
-production-safe Serper diagnostics correction
+**Scope:** All phases from initial measurement harness through the PR-6G safe
+public Serper configuration correction
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -25,9 +25,9 @@ only when maintaining this register or auditing its full history.
 | High | 51 |
 | Medium | 37 |
 | Low | 5 |
-| Open | 2 |
+| Open | 1 |
 | Needs Investigation | 6 |
-| Fixed | 99 |
+| Fixed | 100 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -4402,7 +4402,7 @@ unknown. This issue must not be bundled into RR-106's privacy correction.
 | **Phase** | Production readiness PR-6E operations/dependency baseline |
 | **Severity** | Medium |
 | **Title** | Documented environment templates can unintentionally enable Serper requests |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** README directs users to copy the tracked
 `.env.local.example`, but that file carries only four of the canonical public
@@ -4412,25 +4412,28 @@ says the key may be blank. Runtime checks only nonemptiness. A zero-network mock
 using the exact public placeholder initiated one attempted Serper request and
 reached the RR-106 warning path.
 
-**Expected correction (PR-027):** Establish one canonical public environment
-template, leave optional provider credentials blank by default, document
-explicit opt-in, and reject known placeholder values before request construction.
-Add zero-network blank/placeholder/valid-shaped key controls and a public-
-template drift test. Never inspect or modify the user's ignored `.env.local`.
+**Resolution (PR-027/PR-6G):** `.env.example` is the canonical 14-key public
+contract and leaves optional Serper blank. `.env.local.example` is a byte-
+identical, test-enforced compatibility copy. README copies the canonical file,
+documents explicit real-key opt-in, and no longer supplies a copyable fake
+Serper assignment. One centralized server gate stops missing, empty, whitespace,
+case-folded, and four exact known placeholder values before request construction
+while preserving every other configured value byte-for-byte.
 
-**Residual:** The probe proves documented local setup can initiate unintended
-work; it does not prove a real request was made in any deployment. Valid
-credential-format or rotation policy is a separate operations concern. Keep the
-template/configuration correction separate from RR-106 logging and RR-107 lock
-repair.
+**Proof and residual:** Final fail-first passed 4 and failed the 10 intended
+regressions; corrected dedicated 14/14, related 156/156, full 1,693/1,693,
+typecheck/lint/build/Playwright/controller, and independent exact `VERIFIED` at
+confidence 0.999 passed. The bounded exact allowlist does not validate whether a
+key is real, active, or funded and intentionally avoids invented provider key
+formats. Hosted configuration, historical requests, and billing remain unknown.
+Keep this correction separate from RR-106 logging and RR-107 lock repair.
 
 ---
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (2 issues)
+### Open (1 issue)
 - RR-107: Optional-platform dependency graph is inconsistent in the tracked lockfile
-- RR-108: Documented environment templates can unintentionally enable Serper requests
 
 ### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
@@ -4440,10 +4443,10 @@ repair.
 - RR-091: Same-page related-product price can satisfy autonomous card binding
 - RR-104: Paid admission/cache defect is locally contained; deployment-wide enforcement remains unproven
 
-### Fixed (99 issues)
+### Fixed (100 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
 RR-038 through RR-044, RR-046 through RR-090, RR-092 through RR-103, and
-RR-105 through RR-106
+RR-105 through RR-106, and RR-108
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -4452,21 +4455,17 @@ RR-105 through RR-106
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-108** — make one public environment example canonical, leave optional
-   provider credentials blank, document explicit opt-in, and reject known
-   placeholders before request construction. PR-6G is the only approved next
-   implementation and requires no access to the ignored local environment file.
-2. **RR-107** — correct the optional-platform lock graph only in a separately
-   authorized package unit with registry provenance and clean Windows/non-Windows
-   installation evidence. PR-6G grants no package or registry authority.
-3. **RR-104** — retain the one-realm correction, then bind deployment-wide
+1. **RR-107** — correct the optional-platform lock graph in PR-6H with bounded
+   public-registry provenance, minimal lock churn, and clean temporary Windows/
+   non-Windows installation evidence. Do not bundle upgrades or advisory fixes.
+2. **RR-104** — retain the one-realm correction, then bind deployment-wide
    ownership and multi-instance/load enforcement when tracked infrastructure is
    available. Do not relabel the local limiter as distributed authority.
-4. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
+3. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
    final overlap. Recovery stays default-off and R7A stays blocked.
-5. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
+4. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
    but varied by model, while Tapo appeared raw and died in normalization.
-6. **RR-091** — PR-007 corrected the shared reachable exact-price boundaries,
+5. **RR-091** — PR-007 corrected the shared reachable exact-price boundaries,
    but the original membership-only adapter remains isolated and unsafe. Keep
    it unpromoted; any future routing proposal requires directly observed exact
    transactional binding and a new independent review.
