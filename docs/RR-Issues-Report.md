@@ -1,9 +1,9 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through OAI-T9 terminal decision
+## Compiled for AI Agent Consumption — Phase 0 through production-readiness PR-6A
 
-**Generated:** 2026-07-24
-**Scope:** All phases from initial measurement harness through the OAI-T9
-terminal Sol acceptance decision
+**Generated:** 2026-08-30
+**Scope:** All phases from initial measurement harness through the PR-6A
+production-boundary baseline
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -20,12 +20,12 @@ only when maintaining this register or auditing its full history.
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 102 |
+| Total Issues | 105 |
 | Critical | 15 |
-| High | 48 |
-| Medium | 34 |
+| High | 50 |
+| Medium | 35 |
 | Low | 5 |
-| Open | 0 |
+| Open | 3 |
 | Needs Investigation | 5 |
 | Fixed | 96 |
 | Won't Fix | 1 |
@@ -96,6 +96,7 @@ only when maintaining this register or auditing its full history.
 | Phase 6D variance pilot | 1 |
 | Phase 6D post-RR-069 restart | 0 |
 | Phase 6D post-RR-061 restart | 1 |
+| Production readiness PR-6A boundary audit | 3 |
 | Reopened RR-061 image-safety mini-phase | 0 |
 | RR-069 source-upgrade identity safety mini-phase | 0 |
 | Phase A search-observability audit filing | 7 |
@@ -4197,10 +4198,92 @@ without changing the frozen request contract.
 
 ---
 
+#### RR-103
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-103 |
+| **Phase** | Production readiness PR-6A boundary audit |
+| **Severity** | High |
+| **Title** | Default legacy page fetches can reach private and link-local targets |
+| **Status** | Open |
+
+**Description:** The default `/api/recommendations` route passes untrusted
+provider/Serper citation and product-page URLs to `citationUrlVerification.ts`
+and `productAssets.ts`. Both consumers call `fetch` outside the shared bounded
+hybrid transport. They do not consistently restrict scheme, credentials, or
+ports; resolve and pin only public addresses; revalidate each redirect; cap
+redirects/body bytes; or bound request fan-out. Product assets also reads the
+complete HTML body. A zero-network mock intercepted direct requests from these
+exports to `http://169.254.169.254/latest/meta-data` and
+`http://169.254.169.254/latest/meta-data/instance-id`.
+
+**Expected:** Every untrusted citation/page fetch must use one HTTP(S)-only,
+credential-free, default-port, DNS-public, address-pinned transport with
+per-redirect revalidation, timeout/byte/content-type limits, and bounded
+consumer concurrency. Source ownership and exact-product gates remain
+unchanged. PR-6B/PR-022 owns fail-first correction and independent review.
+
+---
+
+#### RR-104
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-104 |
+| **Phase** | Production readiness PR-6A boundary audit |
+| **Severity** | High |
+| **Title** | Public paid routes lack a shared request-admission and cache-capacity boundary |
+| **Status** | Open |
+
+**Description:** `/api/recommendations` and `/api/features` buffer JSON before
+an application body-byte ceiling and have no tracked shared rate, quota, or
+global/provider-concurrency admission gate. The active legacy validator has no
+maximum length for query, budget, priorities, or avoid. Unique feature
+categories can trigger paid OpenAI calls and grow a module `Map`; the shared
+legacy cache is likewise capacity-unbounded, never sweeps expired unique keys,
+and does not coalesce identical concurrent misses. In deterministic zero-
+network proof, a 50,010-character query reached the injected client-creation
+seam and 512 unique zero-TTL cache keys remained resident.
+
+**Expected:** A separate successor must stop oversized declared/actual bodies
+and fields before client creation, bound concurrent paid work, document a
+deployment-aware rate policy, and use capacity/TTL-bounded caches with in-flight
+coalescing. A process-local IP-only limiter or undocumented CDN assumption is
+not production authority.
+
+---
+
+#### RR-105
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-105 |
+| **Phase** | Production readiness PR-6A boundary audit |
+| **Severity** | Medium |
+| **Title** | Legacy browser cancellation is not wired into server provider work |
+| **Status** | Open |
+
+**Description:** The browser aborts its recommendation fetch and changes the UI
+to cancelled, but the active synchronous legacy route does not pass the request
+abort signal into provider or page-fetch operations. Those calls have fixed
+timeouts only. Signed job-token cancellation exists for the default-off
+asynchronous paths, not the default legacy request.
+
+**Expected:** Deterministic abort-before-create, abort-in-flight, between-stage,
+late-abort, timeout, and cleanup tests must establish exact provider-call counts.
+One server-owned cancellation signal must prevent later paid stages and produce
+a stable cancellation result without retrying. Hosted disconnect behavior
+remains unverified until that source-level contract exists.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (0 issues)
-- None
+### Open (3 issues)
+- RR-103: Default legacy page fetches can reach private/link-local targets
+- RR-104: Public paid routes lack shared admission and bounded caches
+- RR-105: Legacy browser cancellation is not wired into provider work
 
 ### Needs Investigation (5 issues)
 - RR-014: Mean core-leader coverage critically low
@@ -4219,11 +4302,17 @@ RR-038 through RR-044, RR-046 through RR-090, and RR-092 through RR-102
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
+1. **RR-103** — correct the active legacy outbound-fetch boundary in PR-6B
+   with fail-first private-DNS, redirect, byte, content, and concurrency proof.
+2. **RR-104** — add a separate paid-request admission and bounded-cache unit;
+   do not bundle it into the URL-fetch correction.
+3. **RR-105** — wire and prove legacy cancellation after the admission boundary
+   is explicit.
+4. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
    final overlap. Recovery stays default-off and R7A stays blocked.
-2. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
+5. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
    but varied by model, while Tapo appeared raw and died in normalization.
-3. **RR-091** — PR-007 corrected the shared reachable exact-price boundaries,
+6. **RR-091** — PR-007 corrected the shared reachable exact-price boundaries,
    but the original membership-only adapter remains isolated and unsafe. Keep
    it unpromoted; any future routing proposal requires directly observed exact
    transactional binding and a new independent review.

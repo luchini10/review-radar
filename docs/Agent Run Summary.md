@@ -2829,3 +2829,45 @@ next step is PR-6A: a read-only production-boundary audit to identify the first
 evidence-proven security, resilience, accessibility, or operations blocker
 before implementation. Recommended reasoning: High for security/reliability
 selection; Medium for bounded deterministic execution.
+
+## Codex Run - 2026-08-30 PR-6A production-boundary baseline
+
+**Goal and assessment:** establish which reachable production boundary is the
+first release blocker while live quality measurement remains blocked. The
+audit found a stronger issue than generic headers or UX polish: the default
+legacy recommendation route sends untrusted provider/Serper URLs through two
+direct server fetchers outside the newer DNS-pinned bounded transport.
+
+**Confirmed findings:** a zero-network mock intercepted direct calls from
+`citationUrlVerification.ts` and `productAssets.ts` to two link-local metadata
+paths. The first fetcher accepts any parseable URL and launches all unique
+checks concurrently; the second follows redirects, reads full HTML, and
+enriches products concurrently. PR-022/RR-103 is therefore the highest blocker.
+PR-023/RR-104 separately records missing paid-request admission, input/body
+bounds, cache capacity/eviction, and miss coalescing. A 50,010-character query
+reached fake client creation and a zero-network cache probe retained 512 unique
+zero-TTL keys. PR-024/RR-105 records missing legacy request-signal propagation.
+
+**Covered and unknown:** bounded hybrid fetching, TTL/capacity-capped progress
+and experimental job stores, signed-job cancellation, production-gated debug
+logging, and existing keyboard/mobile/error E2E flows are covered but limited.
+Tracked evidence does not establish CDN/WAF limits, production headers,
+multi-instance ownership, health/rollback operations, fresh dependency
+advisories, assistive technology, or real-device mobile behavior.
+
+**Verification and review:** focused offline boundary tests passed 97/97. The
+independent reviewer passed 72/72 consumer/route/progress tests, 29/29 hybrid-
+fetch tests, and typecheck; repeated the no-network mock; and returned
+`VERIFIED`, no material correction, confidence 0.98. No application/test code
+changed, so the complete PR-007 wall remains the last full baseline rather than
+being presented as rerun evidence.
+
+**Limits and next step:** no provider, credential, environment-file, real
+network, deployment, or live-fixture content was accessed. One slash-only
+exclusion mistakenly printed five spent-fixture filenames when PowerShell used
+backslashes; no contents or metadata were read, and later discovery used only
+explicit root-level test files. PR-6B is the next isolated fail-first unit:
+reuse one DNS-pinned bounded fetch primitive at both legacy consumers and bound
+fan-out. Paid admission/cache and cancellation remain later separate units.
+Recommended reasoning: High for SSRF/DNS/redirect correctness; Medium for
+localized wrapper integration and deterministic tests.

@@ -14352,3 +14352,97 @@ semantic binding and independent review. ReviewRadar remains NOT READY because
 PR-006 live accuracy/repeatability, latency/cost evidence is blocked and the
 broader UX, security, and operations gates remain open. This phase authorizes no
 live call, flag change, deployment, release, or push.
+
+## 🟧 Codex Production Readiness PR-6A — production-boundary baseline (2026-08-30)
+
+**Objective and decision frame:** PR-006 remains the largest live-quality
+uncertainty, but its serial protocol is blocked and grants no live authority.
+PR-6A therefore audited the reachable production boundary without changing
+behavior. It marked evidence as confirmed defect, covered-but-limited, or
+unknown and selected one earliest generalized release blocker rather than
+combining unrelated security, admission, cache, accessibility, and operations
+work.
+
+**Highest confirmed blocker — PR-022/RR-103:** the default legacy mode in
+`app/api/recommendations/route.ts` invokes both
+`collectReachableCitationUrls()` and `enrichProductAssets()` with untrusted
+provider/Serper URL data. `lib/citationUrlVerification.ts` directly fetches any
+parseable URL and fans out all unique URLs with `Promise.all`.
+`lib/productAssets.ts` accepts HTTP(S), directly follows redirects, reads full
+HTML bodies, and concurrently enriches the result. Neither consumer uses the
+shared DNS-pinned public-network boundary. A mocked fetch with no real network
+intercepted the two exact attempted destinations:
+
+- `http://169.254.169.254/latest/meta-data`;
+- `http://169.254.169.254/latest/meta-data/instance-id`.
+
+Syntactic URL/source membership does not authorize a destination: an attacker-
+controlled public result can redirect or resolve differently at server fetch
+time. The existing `fetchHybridSource()` demonstrates the stronger reusable
+contract: HTTP(S) only, no credentials or non-default ports, complete public-
+address resolution, address pinning, per-hop redirect revalidation, and bounded
+time, redirects, bytes, and content types.
+
+**Ranked successor defects:** PR-023/RR-104 records that both public paid routes
+buffer JSON before an application body-byte ceiling and have no tracked shared
+rate/global-concurrency admission gate. Legacy query/budget/priorities/avoid
+have no maxima; generated feature and shared legacy caches have no hard
+capacity, expired unique keys are not swept, and concurrent misses are not
+coalesced. A 50,010-character query reached an injected client-creation seam,
+and 512 unique zero-TTL entries remained resident. PR-024/RR-105 records that
+browser cancellation aborts the client fetch but the active legacy server path
+passes fixed timeouts—not the request abort signal—to provider work.
+
+**Finite audit classification:** progress storage is TTL/capacity/event bounded;
+staged and Direct-Terra completion maps have TTL/capacity ceilings; signed jobs
+have cancellation; production debug error/image logging is gated/redacted; and
+the current E2E wall covers a keyboard skip link, validation, loading/cancel,
+safe error/empty states, mobile/desktop two-layer rendering, and safe links.
+Those are covered-but-limited. Tracked evidence does not establish CDN/WAF
+limits, production headers, multi-instance ownership, health/liveness,
+deployment/rollback operations, current advisory status, assistive technology,
+or real-device mobile behavior; those remain unknown rather than asserted safe
+or vulnerable.
+
+**Strongest correction and alternatives:** PR-6B must route both legacy
+consumers through one DNS-pinned bounded transport and limit consumer fan-out.
+A URL regex cannot validate DNS or redirect destinations. Resolving an IP and
+then using ordinary hostname fetch is still vulnerable unless the validated
+address is pinned and every redirect is revalidated. Immediate containment is
+to disable legacy citation/product-page enrichment, trading image/page fallback
+quality for safety. Paid admission/cache control remains a separate successor.
+
+**Exact source anchors at baseline
+`2db12ab44b690d3ad1e5f8646adffb7f3ab46037`:**
+
+- `app/api/recommendations/route.ts`:
+  `4af21d0a17aeb88bc393f5a1b3028f134e251c6c9c1e6d5f0f4df88108e64d3b`;
+- `app/api/features/route.ts`:
+  `99aa0689d69f1a0724937309f8cacfa902f91c01177dbd2997fa7c50f7b2aad5`;
+- `lib/citationUrlVerification.ts`:
+  `1daee436ee3a94a8fd09a7306f91d191817bf9b9437ad9e266ae124795ec6c29`;
+- `lib/productAssets.ts`:
+  `de3e7327d168c693e4948c04fc9de565680c2d19e4f0a4dc7c75f46e1545f8e9`;
+- `lib/cache.ts`:
+  `b6d7c13efeabd51d6e4505d13db50c231334912ee44f3286e65f1dd22e88990e`;
+- `lib/autonomousFactVerifier.ts`:
+  `3c2bd92d9ea3f3084819efc942e790ce3245e4169478f008f10ba7822a298ae6`;
+- `lib/directTerraProductPageFetcher.ts`:
+  `32657b4bf0c3aa7fcdd68a0effe8d2901425e2c63fe71c2fcafa28a7410c19c2`.
+
+**Verification:** the main-agent focused boundary wall passed 97/97 across 14
+suites. The reviewer independently passed 72/72 wrapper/route/progress tests,
+29/29 hybrid-verifier tests, and typecheck. Its independent zero-network mock
+observed the same two link-local fetch attempts. Exact audited source files
+matched HEAD. Final verdict was `VERIFIED`, no material correction, confidence
+0.98. The prior PR-007 full 1,604-test/build/E2E/controller baseline remains the
+last complete wall; PR-6A made no code change and did not relabel that prior
+wall as newly executed.
+
+**Process residual and authority limit:** one main-agent filename listing used
+a slash-only exclusion while PowerShell returned backslashes, so five spent
+live-fixture filenames were printed. No fixture content, hash, field, value,
+metadata, parse, or modification occurred; all later test discovery used
+explicit root-level files. No provider, product-data, credential, environment-
+file, real network, or live-fixture content was accessed. PR-6A authorizes no
+live exploit, provider call, flag change, deployment, release, or push.
