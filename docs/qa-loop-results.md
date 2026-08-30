@@ -15619,3 +15619,217 @@ and current advisory state remain unverified. ReviewRadar remains `NOT READY`.
 PR-7 final adversarial readiness adjudication must preserve every missing live,
 hosted, accessibility, distributed-control, advisory, and platform uncertainty
 and create `docs/production-readiness-report.md` with an evidence-bound verdict.
+
+## Agent Loop Run - 2026-08-30T11:10:57.504Z
+
+- **run id:** agent-loop-2026-08-30T11-10-10-939Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust
+- **parallel:** 1
+- **worker result files checked:** 1
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3241ms |
+| lint | Passed | 10861ms |
+| unit tests | Passed | 30729ms |
+| deterministic eval pipeline | Passed | 457ms |
+| tracked offline benchmark | Passed | 582ms |
+
+### Executed Benchmark Cases
+
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T11-10-10-939Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T11:12:32.042Z
+
+- **run id:** agent-loop-2026-08-30T11-11-42-585Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, non-product-pages, price-trust, requirement-units, wrong-category
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3388ms |
+| lint | Passed | 11108ms |
+| unit tests | Passed | 30279ms |
+| deterministic eval pipeline | Passed | 468ms |
+| tracked offline benchmark | Passed | 603ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- non-product-pages: non-product-espresso-review
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T11-11-42-585Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## 🟧 Codex Production Readiness PR-7 — final adversarial adjudication (2026-08-30)
+
+**Objective and frozen base:** adjudicate every production-readiness exit
+criterion at exact PR-6H commit
+`12f399e4997789bfd17895674d7c02f6a5803100`, parent
+`610f0c5465fdcb7be2a2f699e8c56051c5e6cc4e`, tree
+`43d86319eda2cf03891f42321d649eccf66a18a7`. Application and package behavior
+remained read-only. The only external evidence permitted was one credential-
+isolated, public-registry, lock-only advisory query.
+
+**Bottleneck challenge and decision:** another speculative local fix would not
+answer the decisive product and hosted questions. PR-3K proves one safe staged
+lifecycle; PR-4B attempt 1 is consumed pre-provider and has no artifact. Current
+leader recall, hard-requirement truth, repeatability, latency distribution, and
+cost remain unmeasured. Distributed admission, hosted cancellation, headers,
+health, deployment/rollback, logs, observability, and actual Linux behavior are
+not authenticated. PR-7 therefore reconciles evidence and returns exact
+verdict `NOT READY`, confidence 0.995, rather than treating deterministic green
+as release authority.
+
+**Deterministic verification:**
+
+| Check | Result |
+| --- | --- |
+| Focused lock/config/logging/network/body/cache/admission/cancellation/route/identity/asset wall | 191/191 passed |
+| Complete unit suite | 1,695/1,695 across 230 suites passed |
+| Typecheck | Passed |
+| Lint | Passed with zero errors and the same three old test warnings |
+| Production build | Passed with Next.js 16.2.6 |
+| Playwright | 17/17 passed |
+| Package-only tree | Exit 0; zero problems |
+| Final controller | `agent-loop-2026-08-30T11-11-42-585Z`; five serial partitions; 10/10 cases; 29/29 invariants |
+| Generated file | `next-env.d.ts` restored to blob `9edff1c7cacb3bfac9a1eadcf6f51eaa99565e38` |
+
+The first controller invocation used its documented default single
+`price-trust` partition. It passed but did not satisfy PR-7. The exact five-
+batch interface was then inspected and the final run above executed all
+partitions serially. The single-partition entry remains append-only evidence
+and is not presented as the final controller.
+
+**Current advisory evidence:** npm 11.12.1 ran from isolated copies of the
+exact root manifest and lock, with empty user/global configs, token variables
+cleared, exact public registry, lock-only mode, and no install, script, upgrade,
+or remediation. It ran from `2026-08-30T11:08:56.5570833Z` through
+`2026-08-30T11:09:00.7744252Z`. The source and post-query copied lock both
+matched SHA-256
+`08856e09ba78ef697a0dddc5a99e45dbef9a7a711249b6174cc4d289c0caf96d`.
+
+The audit exited 1 and reported 12 vulnerable package names: 8 high, 2
+moderate, 2 low, 0 critical. Direct production dependency `next@16.2.6` is
+high; npm reports fixes available. The remaining names are `brace-expansion`,
+`fast-uri`, `ip-address`, `js-yaml`, `nanoid`, `postcss`, `sharp`,
+`@hono/node-server`, `hono`, `@babel/core`, and `body-parser`. Exact versions
+and production/dev classification are in `docs/production-readiness-report.md`
+and RR-109. No claim is made that every advisory is exploitable. Tracked source
+has no middleware/proxy, Server Action, rewrite, or `next/image` reference, but
+it does use the App Router and four API routes; complete applicability remains
+unadjudicated.
+
+**Issue decision:** PR-028/RR-109 is P1/High/Open and release-blocking. PR-7
+records the finding but does not choose an upgrade. A separate correction must
+adjudicate advisories, make the smallest justified lock/package change, prove
+registry provenance, run clean Windows and actual Linux validation plus the
+complete wall, and obtain independent exact review. RR-107 remains Fixed for
+lock consistency.
+
+**Tracked production-operation evidence:** `next.config.ts` contains only the
+Turbopack root. The four tracked API routes include no health/readiness route.
+No tracked global security-header policy, CI/deploy/rollback/runbook, runtime-
+version file, package-manager pin, observability vendor, monitor, alert, or log-
+retention policy was found. This is repository evidence, not proof that an
+external platform lacks those controls. Hosted state remains unknown.
+
+**Privacy/configuration evidence:** public templates are byte-identical,
+blank/default-off, and secret keys are referenced only by server modules while
+the client sees two non-secret booleans. Production Serper warnings retain the
+verified fixed-field contract. Development discovery/timing/image logs are
+production-gated; staged/two-layer production diagnostics use bounded server
+types. No tracked browser storage or analytics client was found. Hosted
+collectors, historical logs, retention, configuration, key validity, and
+billing remain unknown.
+
+**Accessibility evidence:** source includes semantic regions, skip navigation,
+visible focus, associated errors, status/alert/busy semantics, and a reduced-
+motion rule. Playwright verifies the skip link and core desktop/mobile flows in
+Chromium. Broad keyboard, screen-reader, zoom/high-contrast, multi-browser, and
+real-device proof remains absent; no accessibility defect is invented from
+that absence.
+
+**Command corrections and process residuals:**
+
+- A Node `spawnSync` wrapper could not execute `npm.cmd` and failed before npm;
+  direct PowerShell capture then authenticated package-only exit 0. Its first
+  summary counted a null `problems` field as one; the corrected non-null count
+  was zero.
+- An over-complex isolated audit child launcher was rejected by command policy
+  before build or audit execution. A simpler isolated-copy invocation then
+  produced the recorded audit. Its `always-auth` clearing emitted only npm's
+  deprecation warning; no credential was intentionally supplied, inspected,
+  or printed.
+- Initial PowerShell lock parsing omitted `-AsHashtable` and stopped on the
+  root empty package key. The corrected read-only parse produced the recorded
+  versions. An earlier unquoted PowerShell tree expression also failed before
+  the exact quoted tree authentication succeeded.
+- A generic pre-PR-6H status command printed untracked spent-fixture filenames
+  despite the active exact-path rule. No fixture content, hash, parse, copy,
+  edit, delete, or evidentiary use occurred. Exact-path/excluded searches
+  resumed. This repeats the previously recorded filename-only process class and
+  is not product evidence.
+- One initial configuration search surfaced the filename of an untracked
+  `fable-transfer-kit` file and may have traversed untracked text. No result from
+  that artifact was used; subsequent audits used tracked-only `git grep` and
+  exact files. The live-fixture exclusion was present throughout that search.
+- An exploratory dependency note initially described `shadcn` as having no
+  tracked runtime import. Independent review identified
+  `app/globals.css:3` importing `shadcn/tailwind.css`. The inference is
+  withdrawn and was never used in the readiness report, issue decision, or
+  package recommendation. Any future dependency phase must adjudicate that
+  real stylesheet path rather than treating `shadcn` as unused.
+- Next build reported normal loading of the ignored user-owned `.env.local`.
+  No manual content/value inspection, print, hash, copy, edit, or diagnostic
+  stat occurred. Audit/controller temporary files remain outside the repository
+  because destructive cleanup was not authorized.
+
+**Independent review:** exact-snapshot review returned `VERIFIED`, no material
+findings, confidence 0.99. The reviewer authenticated the frozen base, branch,
+parent and tree; all six supplied document hashes; issue totals and severities;
+the final five-partition controller; package-only exit 0/no problems; report
+formatting; and the distinction between absent tracked evidence and unknown
+hosted state. The public registry audit was not independently repeated, so that
+finding remains bound to its recorded timestamp. Missing current live quality
+and hosted-production evidence independently require the same `NOT READY`
+verdict.
+
+**Authority and residual:** no live/provider/hosted request, credential access,
+spent-artifact reuse, package change, flag promotion, deployment, release,
+push, PR, or merge occurred. `docs/production-readiness-report.md` is the
+canonical final report. Independent review is `VERIFIED`; only explicit-path
+documentation closeout and local commit authentication remain.

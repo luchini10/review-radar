@@ -1,9 +1,9 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through production-readiness PR-6H
+## Compiled for AI Agent Consumption — Phase 0 through production-readiness PR-7
 
 **Generated:** 2026-08-30
-**Scope:** All phases from initial measurement harness through the PR-6H
-optional-platform lock-graph correction
+**Scope:** All phases from initial measurement harness through the PR-7 final
+production-readiness adjudication
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -20,12 +20,12 @@ only when maintaining this register or auditing its full history.
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 108 |
+| Total Issues | 109 |
 | Critical | 15 |
-| High | 51 |
+| High | 52 |
 | Medium | 37 |
 | Low | 5 |
-| Open | 0 |
+| Open | 1 |
 | Needs Investigation | 6 |
 | Fixed | 101 |
 | Won't Fix | 1 |
@@ -98,6 +98,7 @@ only when maintaining this register or auditing its full history.
 | Phase 6D post-RR-061 restart | 1 |
 | Production readiness PR-6A boundary audit | 3 |
 | Production readiness PR-6E operations/dependency baseline | 3 |
+| Production readiness PR-7 final adjudication | 1 |
 | Reopened RR-061 image-safety mini-phase | 0 |
 | RR-069 source-upgrade identity safety mini-phase | 0 |
 | Phase A search-observability audit filing | 7 |
@@ -4399,7 +4400,8 @@ controller walls and replacement independent `VERIFIED` at confidence 0.99
 passed. No actual Linux host was available, so native Linux deployment behavior
 remains unverified. One clean-Windows `@emnapi/runtime` optional-pruning orphan
 predates this correction; npm still exits zero and the correction reduced five
-such baseline leftovers to one. Current advisory state remains unknown.
+such baseline leftovers to one. Current advisory state is now tracked
+separately by RR-109 and does not reopen this lock-consistency correction.
 
 ---
 
@@ -4439,10 +4441,58 @@ Keep this correction separate from RR-106 logging and RR-107 lock repair.
 
 ---
 
+#### RR-109
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-109 |
+| **Phase** | Production readiness PR-7 final adjudication |
+| **Severity** | High |
+| **Title** | Exact production lock has current fix-available dependency advisories |
+| **Status** | Open |
+
+**Description:** A credential-isolated, public-registry, lock-only npm audit of
+the exact PR-6H package graph exited 1 and reported 12 vulnerable package names:
+8 high, 2 moderate, 2 low, and 0 critical. The high set includes direct
+production dependency `next@16.2.6`; the other reported package names are
+transitive. Npm reports a fix is available for every listed package name.
+
+**Evidence:** The audit ran from isolated copies of `package.json` and
+`package-lock.json` with empty user/global config, token variables cleared,
+the public registry fixed to `https://registry.npmjs.org/`, and no install,
+upgrade, script, or remediation. The repository and copied lock SHA-256 both
+remained
+`08856e09ba78ef697a0dddc5a99e45dbef9a7a711249b6174cc4d289c0caf96d`.
+The query ran from `2026-08-30T11:08:56.5570833Z` through
+`2026-08-30T11:09:00.7744252Z` using npm 11.12.1.
+
+The reported package/version set is `next@16.2.6`, `brace-expansion@5.0.6`
+plus dev-only 1.1.14 copies, `fast-uri@3.1.2`, `ip-address@10.2.0`,
+`js-yaml@4.1.1`, `nanoid@3.3.12`, `postcss@8.4.31` and `8.5.15` plus a
+dev-only 8.5.14 copy, `sharp@0.34.5`, `@hono/node-server@1.19.14`,
+`hono@4.12.25`, `@babel/core@7.29.0`, and `body-parser@2.2.2`.
+
+**Scope and applicability:** The tracked app has no middleware/proxy file,
+Server Action directive, rewrite, or `next/image` reference, narrowing several
+obvious Next-specific feature paths. It does use the App Router and four API
+routes. No complete advisory-applicability analysis was performed, so the
+audit is a known release blocker without a claim that every advisory is
+exploitable.
+
+**Required resolution:** Use a separately authorized dependency phase to
+adjudicate each production advisory, apply the smallest justified version/lock
+change, authenticate registry and lock provenance, run clean Windows and actual
+Linux installs, re-run the complete deterministic/build/E2E wall, obtain a
+credential-isolated clean or explicitly justified audit result, and receive
+independent exact-snapshot review. Do not run `npm audit fix`, broadly upgrade,
+or alter packages inside PR-7.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (0 issues)
-- None
+### Open (1 issue)
+- RR-109: Exact production lock has current fix-available dependency advisories
 
 ### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
@@ -4464,14 +4514,18 @@ RR-105 through RR-108
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-104** — retain the one-realm correction, then bind deployment-wide
+1. **RR-109** — separately adjudicate and minimally remediate the direct and
+   transitive production advisory set. Require exact lock provenance, a clean
+   credential-isolated audit or explicit non-applicability proof, actual Linux
+   validation, complete walls, and independent review.
+2. **RR-104** — retain the one-realm correction, then bind deployment-wide
    ownership and multi-instance/load enforcement when tracked infrastructure is
    available. Do not relabel the local limiter as distributed authority.
-2. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
+3. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
    final overlap. Recovery stays default-off and R7A stays blocked.
-3. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
+4. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
    but varied by model, while Tapo appeared raw and died in normalization.
-4. **RR-091** — PR-007 corrected the shared reachable exact-price boundaries,
+5. **RR-091** — PR-007 corrected the shared reachable exact-price boundaries,
    but the original membership-only adapter remains isolated and unsafe. Keep
    it unpromoted; any future routing proposal requires directly observed exact
    transactional binding and a new independent review.

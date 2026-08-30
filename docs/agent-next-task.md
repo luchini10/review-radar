@@ -1,148 +1,154 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-08-30 by Codex after the independently verified PR-6H optional-
-platform lock-graph correction. This file was regenerated from current
-evidence. The current approved base is the self-contained PR-6H closeout commit
-containing this file; resolve its full SHA with `git rev-parse HEAD`. Its
-expected parent is `610f0c5465fdcb7be2a2f699e8c56051c5e6cc4e`.
+Updated: 2026-08-30 by Codex after the independently verified PR-7 final
+production-readiness adjudication. This file was regenerated from current
+evidence.
+
+The current approved application/package base is PR-6H commit
+`12f399e4997789bfd17895674d7c02f6a5803100`, parent
+`610f0c5465fdcb7be2a2f699e8c56051c5e6cc4e`, tree
+`43d86319eda2cf03891f42321d649eccf66a18a7`. The PR-7 documentation closeout
+commit containing this file must have that exact PR-6H commit as its parent.
+After closeout, resolve and authenticate its full SHA with `git rev-parse HEAD`.
+No application or package behavior changed in PR-7.
 
 ## Current state
 
-ReviewRadar is **not production-ready**. Staged Terra and Direct Terra remain
-default-off and undeployed. PR-3K proves one safe complete lifecycle, not
-category-wide production quality. PR-4B attempt 1 stopped before provider work;
-its one-shot authorization is consumed, no artifact exists, and the serial live
-protocol cannot advance. Current staged-path recall, hard-requirement truth,
-repeatability, latency distribution, and cost remain unmeasured.
+ReviewRadar is **NOT READY** for production. Confidence in that verdict is
+**0.995**.
 
-The issue register is 108 total: 0 Open, 6 Needs Investigation, 101 Fixed, and
-1 Won't Fix. Zero Open tracked defects does not satisfy the release criteria.
-RR-104 remains contained/narrowed because distributed authority is unproven.
-Hosted controls, real accessibility breadth, current advisories, actual native
-Linux behavior, deployment/rollback, and production observability remain
-unknown where no authenticated evidence exists.
+The local deterministic baseline is strong, but the production exit criteria
+are not met:
 
-PR-6B through PR-6D closed reachable local network, admission/cache, and
-cancellation defects. PR-6F closed the production Serper warning privacy sink.
-PR-6G made tracked optional Serper setup safe by default. PR-6H now closes the
-tracked optional-platform lock inconsistency without changing package versions
-or application behavior.
+- current staged shopper quality, market-leader recall, hard-requirement truth,
+  repeatability, latency distribution, calls, tokens, and cost are unmeasured;
+- the exact lock has a known non-clean public audit, including direct production
+  dependency `next@16.2.6` in the high-severity set;
+- distributed and hosted admission, cancellation, headers, health, deployment,
+  rollback, logging, observability, and actual native Linux behavior are not
+  authenticated;
+- broad accessibility, assistive-technology, multi-browser, and real-device
+  proof is absent; and
+- staged Terra and Direct Terra remain default-off, undeployed, and
+  unauthorized for promotion.
 
-## PR-6H outcome
+The issue register contains **109** issues: **1 Open**, **6 Needs
+Investigation**, **101 Fixed**, and **1 Won't Fix**. Severity totals are **15
+Critical**, **52 High**, **37 Medium**, and **5 Low**. PR-028/RR-109 is the one
+Open item and is P1/High/release-blocking.
 
-- Credential-isolated npm 11.12.1 regeneration added exactly six nested
-  `inBundle` records already sealed inside
-  `@tailwindcss/oxide-wasm32-wasi@4.3.0`. No root package specification,
-  version, outer artifact, application source, or working dependency changed.
-- Tailwind resolves bundled `@napi-rs/wasm-runtime@1.1.4`; the unrelated unrs
-  WASM consumer retains compatible root `0.2.12`.
-- Public metadata and the Tailwind tarball SRI/SHA-1 matched. Its six bundled
-  manifests and runtime 1.1.4 were authenticated. The tracked lock is byte-
-  identical to isolated generation; package-only npm exits zero with no
-  problems.
-- Clean Windows x64 installed and loaded native Oxide. An explicit
-  Linux/WASM32 target install resolved nested runtime 1.1.4 and loaded the WASI
-  binding. No actual Linux runtime was available, so native Linux behavior
-  remains unverified.
-- The first reviewer found a prerelease fail-open error in the new semver test.
-  Its exact counterexample failed first; final focused tests pass 2/2 and the
-  reviewer adversarial matrix passes 15/15. Replacement verdict:
-  `VERIFIED`, confidence 0.99.
-- Full tests pass 1,695/1,695 across 230 suites. Typecheck, production build,
-  Playwright 17/17, lint with zero errors/three old warnings, and controller
-  `agent-loop-2026-08-30T10-51-12-969Z` with all five partitions, 10/10
-  cases, and 29/29 invariants pass.
+## PR-7 final outcome
 
-RR-107 is Fixed for the tracked lock graph. One pre-existing clean-Windows
-optional-pruning orphan remains while npm exits zero; current advisories and
-actual Linux deployment remain unknown.
+- Canonical report: `docs/production-readiness-report.md`.
+- Exact verdict: `NOT READY`, confidence 0.995.
+- Report SHA-256:
+  `b819cd58c5b0da7bb400b061b29fcf962087bda4641eff30f67a4173c6aa8a5d`.
+- Focused security/configuration/dependency wall: 191/191 passed.
+- Complete unit suite: 1,695/1,695 across 230 suites passed.
+- Typecheck passed.
+- Lint passed with zero errors and the same three pre-existing test warnings.
+- Next.js 16.2.6 production build passed.
+- Playwright passed 17/17 in Chromium across the bounded desktop/mobile,
+  validation, loading/cancel, safe-link, error, empty, and skip-link flows.
+- Package-only dependency tree exited 0 with no problems.
+- Final controller `agent-loop-2026-08-30T11-11-42-585Z` ran all five
+  partitions serially and reconciled 10/10 cases and 29/29 invariants.
+- Generated `next-env.d.ts` was restored to Git blob
+  `9edff1c7cacb3bfac9a1eadcf6f51eaa99565e38`.
 
-## Frozen PR-6H verification
+A credential-isolated public npm 11.12.1 audit ran from isolated exact
+manifest/lock copies with empty user/global configs, cleared standard token
+variables, exact public registry, and lock-only mode. It ran from
+`2026-08-30T11:08:56.5570833Z` through
+`2026-08-30T11:09:00.7744252Z`. The copied lock stayed byte-identical at
+SHA-256
+`08856e09ba78ef697a0dddc5a99e45dbef9a7a711249b6174cc4d289c0caf96d`.
+The audit exited 1 and reported 12 vulnerable package names: 8 high, 2
+moderate, 2 low, and 0 critical. Npm reported fixes available. PR-7 did not
+install, upgrade, or remediate any package, and it does not claim every
+advisory is exploitable.
 
-| Check | Result |
-| --- | --- |
-| Base | Exact PR-6G `610f0c5465fdcb7be2a2f699e8c56051c5e6cc4e` authenticated |
-| Lock fail-first | Focused 0/1; package-only npm exit 1 with incompatible runtime |
-| Review correction fail-first | 1 pass / 1 intended prerelease failure |
-| Corrected focused/adversarial | 2/2 and reviewer 15/15 passed |
-| Registry/tarball provenance | Exact metadata, SRI, SHA-1, six manifests, runtime 1.1.4 authenticated |
-| Isolated lock comparison | Byte-identical; package-only npm exit 0/no problems |
-| Platform evidence | Clean Windows native load and Linux/WASM32-target WASI load passed |
-| Complete unit suite | 1,695/1,695 across 230 suites |
-| Static/build/E2E | Typecheck, lint, production build, Playwright 17/17 passed |
-| Full controller | Five partitions, 10/10 cases, 29/29 invariants passed |
-| Lock SHA-256 | `08856e09ba78ef697a0dddc5a99e45dbef9a7a711249b6174cc4d289c0caf96d` |
-| Test SHA-256 | `07073dacf6440d64f848b03cd5a0fdd0f2830aaec7ebdc8285c75895f8b6613b` |
-| Independent verdict | Replacement `VERIFIED`; confidence 0.99 |
+## Independent review
 
-The canonical provenance, fail-first evidence, platform limits, review, and
-process residuals are in the latest PR-6H entry in
-`docs/qa-loop-results.md`.
+Independent exact-snapshot review returned `VERIFIED`, no material findings,
+confidence 0.99.
+
+The reviewer authenticated:
+
+- the frozen base commit, parent, tree, and `main` branch;
+- all six supplied pre-closeout document hashes;
+- issue-count and severity arithmetic;
+- final controller identity and results;
+- package-only exit 0/no problems;
+- readiness-report formatting and exact verdict; and
+- bounded wording that distinguishes missing tracked evidence from unknown
+  external hosted state.
+
+The reviewer did not independently repeat the public registry audit, so that
+finding remains timestamp-bound. Missing current live-quality and hosted
+production evidence independently require the same `NOT READY` verdict.
+
+The reviewer also corrected an exploratory note: `app/globals.css:3` imports
+`shadcn/tailwind.css`. The earlier inference that `shadcn` had no tracked runtime
+use is withdrawn. It never entered the readiness report, issue decision, or
+package recommendation. A future dependency phase must adjudicate that real
+stylesheet path.
 
 ## Objective, bottleneck challenge, and next decision
 
-**Objective:** perform one final adversarial, evidence-bound readiness
-adjudication and create `docs/production-readiness-report.md` with a truthful
-`READY`, `CONDITIONALLY READY`, or `NOT READY` verdict.
+**Objective:** remove the strongest known local release blocker without
+mistaking one dependency correction for production readiness, then obtain the
+separate live-quality and hosted-operation evidence required by the final
+report.
 
-**Verified facts:** the reachable local corrections are green and the issue
-register has no Open item. The required live quality matrix is still blocked
-before provider work, current category-wide quality/cost/latency/repeatability
-is absent, distributed enforcement is unproven, and hosted/deployment evidence
-is unauthenticated. Deterministic checks cannot answer those questions.
+**Verified facts:** PR-028/RR-109 is Open and release-blocking. The exact lock's
+public audit is non-clean, `next@16.2.6` is a direct high-severity production
+finding, and npm reports fixes available. PR-7 changed no package. The current
+quality matrix and hosted operational proof remain absent.
 
-**Engineering judgment:** PR-7 is stronger than another speculative
-implementation. Adding guessed hosted controls, accessibility fixes, or
-dependency upgrades without a reproduced defect would expand risk while the
-decisive production blockers are missing authority/evidence. The correct next
-step is a read-only audit, credential-free public advisory check, final
-verification wall, independent adversarial review, and an explicit NOT READY
-verdict unless the stated exit criteria are actually met.
+**Engineering judgment:** if Taylor authorizes another implementation phase,
+the strongest next local work is a separately scoped PR-028/RR-109 dependency
+adjudication and minimal correction. It should inspect each exact advisory and
+dependency path, preserve required runtime/style paths such as `shadcn`, avoid
+`npm audit fix` and broad upgrades, prove registry/lock provenance, run clean
+Windows and actual Linux validation, repeat the complete deterministic wall,
+and obtain independent exact review. That work can close one known blocker but
+cannot by itself improve the overall verdict above `NOT READY`.
 
-**Uncertainty:** a final audit may identify a new concrete local defect. If so,
-record it with evidence, keep the verdict NOT READY, and open a separately
-scoped corrective phase; do not silently fix it inside adjudication. Hosted,
-provider, real-device, and actual Linux evidence may remain unavailable.
+**Uncertainty:** complete exploitability/applicability has not been adjudicated,
+the audit can change with registry time, and no actual Linux host or hosted
+deployment evidence was authenticated. A minimal safe correction may require
+more than only `next`, but no package choice is approved yet.
 
-**Recommended reasoning level:** Highest for final readiness adjudication and
-evidence weighting; High for security/config/dependency review; Medium for
-routine deterministic execution and report assembly.
+**Recommended reasoning level:** High for the dependency/security correction
+and supply-chain evidence; Medium for bounded implementation and routine
+deterministic validation; Highest only for a later production-readiness or
+release adjudication.
 
-## Current approved phase: PR-7 final adversarial readiness adjudication
+## Current approved phase and authority
 
-This phase is read-only for application/package behavior. It may update only
-`docs/production-readiness-report.md`, the smallest authoritative status
-records, regenerated handoff, controller outputs, and one self-contained local
-documentation commit. A newly proved code defect requires a new phase before
-implementation.
+PR-7 is **complete and independently verified**. It is read-only for
+application/package behavior and permits only its explicit documentation
+closeout commit.
 
-1. Authenticate the intended repository, exact PR-6H closeout commit, parents,
-   trees, phase history, tracked state, flags, and issue totals. Exclude
-   prohibited fixtures from every repository search.
-2. Reconcile every master-plan exit criterion against canonical evidence.
-   Separate verified local facts, engineering judgment, and unresolved
-   uncertainty. No synthetic or old live artifact may substitute for current
-   evidence.
-3. Re-run the focused lock/config/security contracts, complete unit suite,
-   typecheck, lint, production build, Playwright, package-only tree, and full
-   five-partition controller. Restore `next-env.d.ts` if generated.
-4. Run a credential-isolated, read-only public npm advisory query against the
-   exact lock. Record results and timestamps; do not install, upgrade, or
-   remediate packages.
-5. Inspect tracked production-operation, security, privacy, configuration,
-   accessibility, deployment, rollback, and observability evidence. Absence of
-   tracked evidence does not prove absence of a hosted control; classify it as
-   unauthenticated/unknown.
-6. Do not retry or replace the consumed PR-4B live attempt, access credentials,
-   providers, hosting accounts, protected data, `.env.local`, spent fixtures,
-   or live servers. Missing current live quality remains a release blocker.
-7. Create `docs/production-readiness-report.md` with exact verdict wording,
-   decisive evidence, exit-criterion table, residual risks, confidence, and the
-   minimum evidence required to improve the verdict.
-8. Obtain independent read-only review of the exact final report and evidence
-   snapshot. Correct documentation findings. If exact `VERIFIED`, regenerate
-   this handoff, create one explicit-path local commit, authenticate its scope,
-   and stop before push, PR, merge, deployment, release, or flag promotion.
+No next implementation phase is approved. PR-028/RR-109 is a recommendation for
+Taylor's next decision, not authorization to edit packages, install
+dependencies, query registries again, or change source.
+
+The PR-7 closeout may include only these explicit tracked paths:
+
+- `docs/production-readiness-report.md`
+- `docs/production-readiness-master-plan.md`
+- `docs/RR-Issues-Report.md`
+- `docs/qa-loop-results.md`
+- `docs/Agent Run Summary.md`
+- `docs/agent-loop-report.md`
+- `docs/agent-dialogue.md`
+- `docs/agent-next-task.md`
+
+After the local closeout commit, authenticate its parent, tree, subject, exact
+path list, clean phase-owned paths, and `next-env.d.ts` blob. Stop before push,
+PR creation, CI, merge, deployment, release, or flag promotion.
 
 ## Approval, cost, and flag state
 
@@ -156,33 +162,41 @@ Committed defaults remain:
 - staged research/presentation model: `gpt-5.6-terra`
 
 The ignored `.env.local` is user-owned. Never edit, stage, print, hash, copy,
-stat for diagnosis, or manually inspect it. No provider spend, retry,
-replacement, live cancellation, hosted-account access, or production change is
-authorized. PR-7 permits only credential-free public advisory reads and the
-local deterministic/read-only work above.
+stat for diagnosis, or manually inspect it. No provider spend, live retry,
+replacement attempt, hosted-account access, production change, or flag
+promotion is authorized.
 
 ## Outstanding readiness debts
 
-- PR-006: current leader recall, card truth, hard-requirement accuracy, final-
-  card stability, verified price coverage, first-loss distribution, latency,
-  calls, tokens, and cost remain unmeasured. The live protocol is blocked.
-- PR-023 / RR-104: one-realm body/field/admission/cache correction is verified;
-  worker, restart, multi-instance, edge, account/IP, poll/cancel metering, load,
-  and remote-terminal behavior remain unproven.
-- PR-024 / RR-105: local cancellation is Fixed; hosted disconnect delivery,
-  upstream acceptance/billing, and native resolver continuation are residuals.
-- PR-025 / RR-106: local logging is Fixed; hosted collectors, retention, and
-  historical logs remain unknown.
-- PR-027 / RR-108: tracked Serper setup is Fixed; hosted configuration,
-  historical requests, key validity, and billing remain unknown.
-- PR-026 / RR-107: tracked lock graph is Fixed; actual Linux deployment, one
-  pre-existing optional-pruning orphan, and current advisories remain unknown.
-- Production operations: hosted headers/edge controls, health/liveness,
-  distributed state ownership, deployment/rollback, and production
-  observability remain unauthenticated.
-- UX/accessibility: deterministic E2E covers core desktop/mobile, skip-link,
-  validation, loading/cancel, empty/error, and safe-link flows, but broad
-  keyboard, screen-reader, reduced-motion, and real-device proof remains absent.
+- **PR-006 live quality:** current leader recall, card truth, hard-requirement
+  accuracy, final-card stability, verified price/source coverage, first-loss
+  distribution, repeatability, latency, calls, tokens, and cost remain
+  unmeasured. PR-4B attempt 1 is consumed before provider work, has no artifact,
+  and cannot be retried or relabeled.
+- **PR-028 / RR-109 dependencies:** the current exact-lock public audit is
+  non-clean. Advisory applicability and the smallest justified correction are
+  unadjudicated.
+- **PR-023 / RR-104 distributed authority:** local body/field/admission/cache and
+  lease behavior is verified; worker, restart, multi-instance, edge,
+  account/IP, poll/cancel metering, load, and remote-terminal behavior remain
+  unproven.
+- **PR-024 / RR-105 cancellation:** local cancellation is Fixed; hosted
+  disconnect delivery, upstream acceptance/billing, and native resolver
+  continuation remain unknown.
+- **PR-025 / RR-106 logging:** local production Serper logging is Fixed; hosted
+  collectors, retention, and historical logs remain unknown.
+- **PR-027 / RR-108 configuration:** tracked setup is Fixed and default-safe;
+  hosted configuration, historical requests, key validity, and billing remain
+  unknown.
+- **PR-026 / RR-107 platform graph:** tracked lock consistency is Fixed; actual
+  native Linux deployment and one pre-existing optional-pruning orphan remain
+  unverified.
+- **Production operations:** hosted security headers/edge controls,
+  health/liveness, deployment, rollback, runtime pins, CI, monitoring, alerts,
+  traces, and log-retention policy remain unauthenticated.
+- **Accessibility and UX:** deterministic Chromium E2E covers core flows, but
+  broad keyboard, screen-reader, zoom/high-contrast, reduced-motion,
+  multi-browser, and real-device proof remains absent.
 
 ## Hard boundaries and process residuals
 
@@ -191,35 +205,43 @@ local deterministic/read-only work above.
   `tests/fixtures/review-radar-live/**`; prefer exact root-level paths.
 - Do not access providers, credentials, hosting accounts, protected data,
   `.env.local`, live servers, product-data services, or authenticated
-  registries. Public npm advisory reads must use empty config and no auth.
-- Do not install/update packages, change application behavior, remediate
-  advisories, promote flags, deploy, push, publish, release, merge, or perform
-  destructive cleanup.
-- Preserve every verified identity, evidence, network, admission/cache,
-  cancellation, logging, configuration, dependency, and public-response
-  boundary.
-- PR-6H temporary install directories remain outside the repository because no
-  destructive cleanup was authorized. Its direct-runtime and reviewer-harness
-  command corrections are recorded in canonical evidence.
-- Earlier filename-only process deviations remain recorded in their canonical
-  phase evidence. No spent fixture content has been used as goal evidence.
-- E2E may regenerate `next-env.d.ts`; restore it with `apply_patch` and verify
-  blob `9edff1c7cacb3bfac9a1eadcf6f51eaa99565e38`.
-- Stage only exact phase-owned paths. Never use `git add -A`. A local commit
-  does not authorize push, PR creation, CI, merge, deployment, or release.
+  registries.
+- Do not install/update packages, remediate advisories, change application
+  behavior, promote flags, deploy, push, publish, release, merge, or perform
+  destructive cleanup without new explicit authority.
+- Preserve every verified identity, evidence, price, network, input,
+  admission/cache, cancellation, logging, configuration, dependency, and
+  public-response boundary.
+- Temporary audit/controller/install directories remain outside the repository
+  because destructive cleanup was not authorized.
+- Initial command corrections and filename-only process deviations are recorded
+  in the canonical PR-7/PR-6H evidence. No spent fixture content was used.
+- Normal Next build output reported the ignored `.env.local`; no manual
+  content/value inspection, print, hash, copy, edit, or diagnostic stat
+  occurred.
+- The withdrawn `shadcn` inference is a process correction, not product
+  evidence. Preserve its actual stylesheet import until a separately authorized
+  dependency review proves an appropriate change.
+- E2E/build activity may regenerate `next-env.d.ts`; restore it with
+  `apply_patch` and verify blob
+  `9edff1c7cacb3bfac9a1eadcf6f51eaa99565e38`.
+- Stage only exact phase-owned paths. Never use `git add -A`. A local commit does
+  not authorize push, PR creation, CI, merge, deployment, or release.
 
 ## Evidence pointers
 
 | Evidence | Location |
 | --- | --- |
-| Living readiness plan and PR-6H/PR-7 record | `docs/production-readiness-master-plan.md` |
-| PR-6H provenance, platform, verification, and review | latest PR-6H entry in `docs/qa-loop-results.md` |
-| Current issue state | `docs/RR-Issues-Report.md` |
-| Independent peer conclusions | latest entry in `docs/agent-dialogue.md` |
-| Phase run recap | latest entry in `docs/Agent Run Summary.md` |
-| Durable bundled-lock contract | `docs/review-radar-test-memory.md` |
-| Architecture summary | `ReviewRadar-Overview.md` section 45 |
+| Final readiness verdict and exit table | `docs/production-readiness-report.md` |
+| Living plan and PR-7 record | `docs/production-readiness-master-plan.md` |
+| PR-7 verification, audit, limits, and process record | latest PR-7 entry in `docs/qa-loop-results.md` |
+| Current issue state and RR-109 | `docs/RR-Issues-Report.md` |
+| Independent peer conclusion | entry [144] in `docs/agent-dialogue.md` |
+| Phase run recap | latest PR-7 entry in `docs/Agent Run Summary.md` |
+| Final controller output | `docs/agent-loop-report.md` |
+| Durable trust contracts | `docs/review-radar-test-memory.md` |
+| Architecture summary | `ReviewRadar-Overview.md` |
 
-`docs/production-readiness-report.md` does not yet exist. PR-7 must create it
-only after reconciling all exit criteria, and a truthful NOT READY verdict is a
-valid completed adjudication.
+The final report is authoritative for readiness. Fixing RR-109 alone would not
+change the verdict above `NOT READY` because missing current live-quality and
+hosted-production evidence are independently decisive.

@@ -1,6 +1,6 @@
 # ReviewRadar Production-Readiness Master Plan
 
-Updated: 2026-08-30 by Codex after PR-6D closeout
+Updated: 2026-08-30 by Codex after independently verified PR-7 adjudication
 Status: active living control document
 Starting branch: `main`
 Starting commit: `dc9ab1fa1d85608e39cf29b5603d0c59692beb29`
@@ -668,8 +668,10 @@ shopper-facing recommendation quality.
 | PR-023 | P1 | verified local correction; deployment residual retained | Public `/api/recommendations` and `/api/features` could buffer oversized bodies and start paid work without a shared request-frequency/concurrency admission gate. Unique feature categories and legacy searches could also grow process caches without a hard capacity; identical misses were not coalesced. | Request parsing, field validation, paid-operation admission, and cache ownership evolved independently. The active legacy validator had no maxima for query/budget/priorities/avoid, both routes called `json()` before a byte ceiling, and both cache maps retained unique keys without a capacity sweep. | PR-6C adds one 64 KiB streaming JSON boundary, exact route field/container limits, a shared one-realm paid-work admission contract, background-job leases, bounded TTL/LRU caches, in-flight coalescing, and hashed context-complete keys. | Final focused 89/89; full 1,658/1,658; typecheck/lint/build/E2E; five-partition controller; two corrective independent reviews followed by exact `VERIFIED` at confidence 0.98; zero provider/network/live work. | The reachable local application defect is contained. RR-104 remains `Needs Investigation — contained/narrowed` because the 4-concurrent/12-starts-per-minute authority is one JavaScript realm only; worker-, restart-, multi-instance-, edge-, and deployment-wide enforcement is unproven. |
 | PR-024 | P2 | verified local correction; hosted-disconnect residual retained | The browser could label a legacy search cancelled while the active synchronous server path continued provider, Serper, and page-fetch work. | The client aborted only its fetch. The legacy route, planning/final/narration calls, Serper retries/fallbacks, verification fetches, enrichment, and shared loaders had no request-owned cancellation contract. | PR-6D adds one typed server cancellation class, threads `Request.signal` through every proven cancel-safe legacy paid/network stage, returns a stable 499 cancellation result, prevents later fallback/retry work, and makes shared cache coalescing waiter-aware. Independent hard timeouts remain distinct. | Fail-first 58 pass / 10 intended fail; corrected focused 68/68; full 1,668/1,668; typecheck/lint/build/E2E/controller; independent late-loader and DNS cancellation/timeout probes; exact `VERIFIED`, confidence 0.97; all 17 source/test hashes stable. | Closed at the local source boundary. A deployed Next.js host/proxy may not deliver every browser disconnect through `Request.signal`; already-accepted upstream work cannot be retroactively unbilled; native DNS may finish internally although no later transport starts. No live cancellation was attempted. |
 | PR-025 | P1 | verified generalized correction | Every Serper vertical could emit a shopper-derived query and an uncontrolled error message through production `console.warn`. Zero-network production-mode probes captured both query and synthetic error canaries. | The shared warning helper suppressed only tests, while six wrapper catches and retry/fallback diagnostics passed raw query or `Error.message` detail directly to it. | One module-private allowlisted event contract now reconstructs each warning from fixed event/error categories plus normalized vertical and optional bounded opaque query ID, attempt number, and primary/fallback stage. Raw query, `Error.message`, URL, body, header, credential, key-shaped value, and query hash never enter the logger. | Fail-first dedicated wall: 1 pass / 8 intended failures. Corrected dedicated 11/11 and related four-file 101/101; full 1,679/1,679; typecheck/lint/build/Playwright/controller; adversarial cancellation probe; exact source/test hashes; independent `VERIFIED`, confidence 0.99. | Fixed locally by PR-6F without provider/network access or behavior changes to requests, retries, fallback, cancellation, timeout, results, or the observability ledger. Hosted log retention, history, and collector behavior remain unknown. Do not reintroduce free-form diagnostic fields or substitute a query hash for redaction. |
-| PR-026 | P2 | verified generalized correction | The tracked lockfile failed its complete package-only consistency check: Tailwind's optional WASM package required `@napi-rs/wasm-runtime ^1.1.4`, while the only locked runtime was optional version `0.2.12`. | The Tailwind tarball bundled six dependency manifests, but their `inBundle` lock records were absent. Npm therefore resolved Tailwind against the incompatible hoisted runtime used by another optional WASM consumer. | Credential-isolated npm regeneration adds exactly the six authenticated bundled records. Tailwind resolves nested runtime 1.1.4; unrs retains root 0.2.12. No package specification/version or application code changes. | Fail-first lock regression; public metadata plus tarball SRI/SHA-1 and bundled-manifest verification; byte-identical isolated lock; package-only tree; clean Windows and Linux/WASM32-target installs; native/WASI loads; full/static/build/E2E/controller; independent correction and replacement `VERIFIED`, confidence 0.99. | Fixed locally by PR-6H. Actual native Linux execution remains unverified because no Linux runtime was available. One pre-existing clean-Windows optional-pruning orphan remains, npm exits zero, and current advisory state is unknown. |
+| PR-026 | P2 | verified generalized correction | The tracked lockfile failed its complete package-only consistency check: Tailwind's optional WASM package required `@napi-rs/wasm-runtime ^1.1.4`, while the only locked runtime was optional version `0.2.12`. | The Tailwind tarball bundled six dependency manifests, but their `inBundle` lock records were absent. Npm therefore resolved Tailwind against the incompatible hoisted runtime used by another optional WASM consumer. | Credential-isolated npm regeneration adds exactly the six authenticated bundled records. Tailwind resolves nested runtime 1.1.4; unrs retains root 0.2.12. No package specification/version or application code changes. | Fail-first lock regression; public metadata plus tarball SRI/SHA-1 and bundled-manifest verification; byte-identical isolated lock; package-only tree; clean Windows and Linux/WASM32-target installs; native/WASI loads; full/static/build/E2E/controller; independent correction and replacement `VERIFIED`, confidence 0.99. | Fixed locally by PR-6H. Actual native Linux execution remains unverified because no Linux runtime was available. One pre-existing clean-Windows optional-pruning orphan remains and npm exits zero. Current advisories are tracked separately by PR-028/RR-109. |
 | PR-027 | P2 | verified generalized correction | The documented setup directed users to copy a stale four-key `.env.local.example`; both public templates assigned a nonempty placeholder to optional `SERPER_API_KEY`. A zero-network mock proved that the placeholder passed the runtime's truthiness gate and initiated Serper work. | Public examples and README instructions drifted from the canonical 14-key environment contract, and optional provider enablement had no placeholder-value rejection. | `.env.example` is now canonical; `.env.local.example` is its byte-identical tested compatibility copy; optional Serper is blank; README requires explicit real-key opt-in. One centralized server gate treats missing, blank, whitespace, and four exact known placeholders as unconfigured while preserving every other value byte-for-byte. | Final fail-first 4 pass / 10 intended failures; corrected dedicated 14/14; related 156/156; full 1,693/1,693; typecheck/lint/build/Playwright; exact final five-partition controller; template/key/header probes; hashes; independent replacement `VERIFIED`, confidence 0.999. | Fixed locally by PR-6G. Exact placeholder matching intentionally does not validate provider format or key validity. Hosted configuration, historical unintended requests, and billing remain unknown. Never inspect or modify the user's ignored `.env.local`. |
+
+| PR-028 | P1 | verified advisory finding; correction deferred to a separate phase | The exact production lock currently reports 12 vulnerable package names: 8 high, 2 moderate, and 2 low. Direct production dependency `next@16.2.6` is in the high set and npm reports fixes available. | The lock predates current public advisories; PR-6H corrected graph consistency without changing package versions or querying advisories. | Separately adjudicate each production advisory and apply only the smallest justified dependency/lock correction. Do not use `npm audit fix` or a broad upgrade. | Credential-isolated public lock-only audit; exact version and dependency-path review; clean audit or explicit non-applicability proof; registry/lock provenance; clean Windows and actual Linux installs; full/static/build/E2E/controller walls; independent exact review. | RR-109 is Open and release-blocking. PR-7 is read-only for package behavior, so it records but does not remediate the finding. Some Next feature paths are absent in tracked source, but no complete applicability review exists. |
 
 ## Suspected weaknesses requiring measurement
 
@@ -1996,15 +1998,15 @@ directory is spent.
 - Residual and authority: RR-107 is Fixed for the tracked lock graph. No actual
   Linux host was available, so native Linux deployment behavior remains
   unverified; target resolution and portable WASI load are not general Linux
-  proof. The one Windows optional-pruning orphan and current advisories remain
-  outside this narrow correction. No credential, `.env.local`, provider/live,
+  proof. The one Windows optional-pruning orphan remains outside this narrow
+  correction. PR-7 subsequently resolved advisory uncertainty into separate
+  Open RR-109 without reopening RR-107. No credential, `.env.local`, provider/live,
   working `node_modules`, broad upgrade, advisory remediation, hosted system,
   deployment, release, or push work occurred.
 
 ### Phase PR-6 — UX, resilience, security, and operational closure
 
-- Status: **complete locally through PR-6H; final PR-7 adversarial readiness
-  adjudication next**
+- Status: **complete locally through PR-6H; PR-7 adjudication complete**
 - Address proven comprehension, accessibility, cancellation, partial-success,
   cache, rate/payload, URL/redirect, redaction, health, configuration,
   dependency, deployment, and rollback gaps.
@@ -2015,8 +2017,8 @@ directory is spent.
 
 ### Phase PR-7 — Final adversarial readiness review
 
-- Status: **approved next after PR-6H closeout; read-only application/package
-  behavior with credential-free public advisory evidence only**
+- Status: **complete; independently verified; application/package behavior
+  remained read-only**
 - Run every required deterministic check, the real deterministic QA loop,
   accessibility/mobile flows, security/config review, and an independent final
   diff/adversarial pass. Reconcile existing live evidence and record the missing
@@ -2025,6 +2027,23 @@ directory is spent.
   `CONDITIONALLY READY`, or `NOT READY` verdict and confidence.
 - Production readiness requires no known release-blocking defect, not merely a
   long session or a green synthetic suite.
+- Current outcome: the final report returns exact verdict `NOT READY`,
+  confidence 0.995. Focused contracts pass 191/191; full tests pass
+  1,695/1,695; typecheck, lint, production build, Playwright 17/17, package-
+  only tree, and final five-partition controller
+  `agent-loop-2026-08-30T11-11-42-585Z` pass.
+- Advisory outcome: the isolated exact-lock audit exited 1 with 12 vulnerable
+  package names (8 high, 2 moderate, 2 low). Direct `next@16.2.6` is in the
+  high set. PR-028/RR-109 records the release blocker; no package was changed.
+- Existing live evidence was reconciled without opening any spent artifact or
+  dispatching a provider request. PR-4B remains consumed pre-provider and the
+  current staged quality matrix remains missing.
+- Independent exact-snapshot review returned `VERIFIED`, no material findings,
+  confidence 0.99. The reviewer authenticated all six supplied hashes, issue
+  arithmetic, commit/parent/tree, final controller, package-only tree, report
+  formatting, and the distinction between tracked absence and unknown hosted
+  state. The public audit was not independently repeated and remains timestamp-
+  bound; other blockers independently require `NOT READY`.
 - Reasoning: **Highest** for final adjudication.
 
 ## Phase documentation and commit policy
@@ -2052,7 +2071,7 @@ user-data deletion, or unrelated cleanup is authorized by this plan.
 
 ## Exit criteria tracking
 
-Current verdict: **NOT READY** (confidence 0.98).
+Current verdict: **NOT READY** (confidence 0.995).
 
 Release blockers today:
 
@@ -2071,6 +2090,11 @@ Release blockers today:
   price boundaries have a verified generalized correction. RR-092 is closed
   locally by PR-008. Neither zero-live correction substitutes for blocked live
   accuracy/repeatability evidence or the open UX/security/operations gates;
+- PR-028/RR-109 is Open and release-blocking. The credential-isolated exact-
+  lock audit reports 12 vulnerable package names (8 high, 2 moderate, 2 low),
+  including direct production dependency `next@16.2.6` in the high set. Npm
+  reports fixes available. PR-7 did not remediate or broadly upgrade packages;
+  a separate correction and advisory-applicability review are required;
 - PR-022/RR-103 is closed locally. PR-023 closes the reachable one-realm body,
   field, admission, background-lease, and cache defects, but RR-104 remains
   contained/narrowed because tracked evidence proves no worker-, restart-,
@@ -2082,9 +2106,10 @@ Release blockers today:
   contract. PR-6G closes PR-027/RR-108 locally with canonical blank-by-default
   templates and centralized placeholder rejection. PR-6H closes PR-026/RR-107
   for the tracked lock graph; actual native Linux execution, one pre-existing
-  Windows optional-pruning orphan, and current advisory state remain unknown.
+  Windows optional-pruning orphan, and current platform behavior remain
+  residuals. Advisory uncertainty is now the known RR-109 blocker.
   Distributed admission, load behavior, production headers/health/config/
-  observability, current dependency advisories, accessibility, and deployment/
+  observability, accessibility, and deployment/
   rollback authority otherwise remain unknown release gates.
 
 The verdict can improve only through the required evidence above. Passing

@@ -3153,3 +3153,48 @@ tree install, hosted system, deployment, release, or push was used. RR-107 is
 Fixed locally; ReviewRadar remains NOT READY. PR-7 should now run the final
 adversarial evidence audit and create the honest readiness report. Recommended
 reasoning: Highest for final adjudication.
+
+## Codex Run - 2026-08-30 PR-7 final adversarial readiness adjudication
+
+**Outcome:** final exact verdict `NOT READY`, confidence 0.995. The local
+correctness baseline is strong, but current staged shopper quality is missing,
+distributed/hosted operations are unauthenticated, accessibility proof is
+incomplete, actual Linux deployment is unverified, and the exact package lock
+now has a known non-clean public audit.
+
+**New finding:** credential-isolated npm 11.12.1 audited isolated copies of the
+exact manifest/lock with empty configs and cleared token variables. The lock
+remained SHA-256
+`08856e09ba78ef697a0dddc5a99e45dbef9a7a711249b6174cc4d289c0caf96d`.
+Audit exit 1 reports 12 vulnerable package names: 8 high, 2 moderate, 2 low.
+Direct production dependency `next@16.2.6` is high and npm reports fixes
+available. PR-028/RR-109 is Open. PR-7 made no package change; advisory
+applicability and the smallest justified correction belong to a separate phase.
+
+**Verification:** focused security/config/dependency wall 191/191; complete
+suite 1,695/1,695 across 230 suites; typecheck; build; Playwright 17/17;
+package-only tree exit 0/no problems; lint zero errors/three old warnings.
+Final controller `agent-loop-2026-08-30T11-11-42-585Z` passed all five serial
+partitions, 10/10 cases, and 29/29 invariants. `next-env.d.ts` matches its
+tracked blob.
+
+**Operations and UX evidence:** tracked source has bounded local network/input/
+admission/cache/cancellation contracts, blank/default-off templates, fixed
+Serper logs, semantic regions, skip navigation, focus treatment, reduced
+motion, and core desktop/mobile E2E. It has no tracked global header policy,
+health route, CI/deploy/rollback/runbook, runtime pin, or authenticated hosted
+observability. Those absences are unknown external state, not proof that a host
+lacks controls.
+
+**Authority and next step:** zero live/provider/hosted/credential work. No
+spent artifact was used, no package or flag changed, and no deploy/release/push
+occurred. Independent exact review returned `VERIFIED`, no material findings,
+confidence 0.99. It authenticated the six supplied hashes, issue arithmetic,
+frozen base, final controller, package-only tree, report formatting, and bounded
+hosted-state wording. The public audit was not independently repeated and stays
+timestamp-bound. An exploratory `shadcn`-unused inference was withdrawn after
+the reviewer identified `app/globals.css:3`; it never entered the report or
+issue decision. `docs/production-readiness-report.md` is the canonical final
+report. Regenerate the handoff and commit only the explicit PR-7 documentation
+paths. Recommended reasoning: Highest for verdict/review; High for the future
+advisory correction.
