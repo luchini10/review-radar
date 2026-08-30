@@ -13546,3 +13546,53 @@ The controller left advisory output in the ignored worker artifact `agent-loop-2
 ### Report
 
 See `docs/agent-loop-report.md`.
+
+## 🟧 Codex — 2026-08-29 — PR-4B attempt 1 consumed pre-provider
+
+**Objective and authority:** independently adjudicate and invoke exactly one
+commit-bound `broad-shop-vac:1` readiness attempt. Clean `main` commit
+`6e0446bfc19e435a584ebf3eab18522d47207164`, parent
+`d2df488431c4da4176c8de56baf6d9f44efa1dc8`, all six reviewed source hashes,
+the unexpired PR-4A matrix, a 61-entry authenticated trust surface with digest
+`f82e18a3ec21de995130128832d8dca03698309262a942e39fe2dae2ad6a5b1c`,
+the exact 27 approval arguments, direct absent output, and every network/cost/
+wall/no-extra-work ceiling received independent exact `VERIFIED`, no actionable
+finding, confidence 0.99. Authorization covered one invocation only and was
+consumed even if it failed closed.
+
+**Invocation result:** the exact approved launcher command ran once. It exited
+1 after about 9.55 seconds and emitted only:
+
+`Readiness launcher stopped before invoking the trusted runner.`
+
+No retry, replacement, direct-runner fallback, attempt 2, extra case, flag
+change, deployment, release, or push ran or is authorized.
+
+**Post-stop proof:** independent zero-network audit reauthenticated branch,
+HEAD/parent, clean tracked tree and index, the six source hashes, and all 61
+trust entries with the same digest and zero failures. Narrow inspection found
+the exact prospective output leaf still absent, with direct fixed parents and
+zero boundary failures. The trusted runner creates that directory before any
+provider request. Its absence therefore proves that the approved flow did not
+reach a provider call; confidence 0.99. No readiness artifact exists, and the
+main agent did not open or enumerate any live-fixture content.
+
+**Attribution limit:** the launcher catch receives every pre-spawn validation,
+credential-read, and reauthentication rejection, plus OS spawn errors and
+signaled/noninteger child exits. A normally spawned runner returning integer 1
+would propagate that code instead. The generic sentence and lack of runner
+stdout therefore do not prove the child never spawned or identify the stage.
+The approximate one-trust-pass duration, exact state/arguments, no forbidden
+inherited control names, and PATH presence make the credential gate the leading
+inference (confidence 0.75), not a diagnosed cause. No credential file,
+metadata, presence, value, length, hash, or prefix was manually accessed.
+
+**Verdict and selected correction:** independent terminal verdict is
+`CONSUMED — PRE-PROVIDER STOP, FAILURE STAGE UNATTRIBUTED; NO RETRY
+AUTHORIZED`. PR-021 is the earliest evidence-supported generalized defect: a
+one-shot protocol cannot collapse process, repository/trust, approval,
+credential, post-credential, child-construction, spawn, and signal failures
+into one misleading sentence. Add closed, versioned, nonsecret typed terminal
+stages with exhaustive fail-first tests. Never expose raw errors, paths, or
+credential facts. The correction requires independent review and cannot revive
+this authorization or authorize future live work.

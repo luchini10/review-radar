@@ -11,6 +11,37 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Stop the readiness matrix after an unattributed pre-provider launch failure
+
+#### Changed
+
+- Consumed the independently approved one-shot `broad-shop-vac:1` invocation.
+  The sanitized launcher stopped before the trusted runner's pre-provider output
+  creation point, so no provider request or readiness artifact occurred.
+- Stopped the serial matrix. Attempt 1 will not be retried or replaced, and
+  attempt 2, direct-runner execution, flag changes, deployment, and release
+  remain unauthorized.
+- Opened PR-021 for a closed, versioned, nonsecret launcher terminal contract.
+  The current generic message cannot distinguish process, trust, approval,
+  credential, post-credential, child-construction, spawn, or signal failures.
+
+#### Verified
+
+- Independent preflight authenticated clean commit `6e0446b`, all six source
+  hashes, 61 trust entries, the exact 27 arguments, absent output, and every
+  ceiling before returning `VERIFIED`, confidence 0.99.
+- Post-stop independent audit reauthenticated the unchanged commit, tree,
+  index, hashes, and trust digest. The exact prospective leaf remained absent
+  with direct parents and zero boundary failures; no-provider confidence is
+  0.99.
+- The failure stage remains unresolved. The credential gate is only the leading
+  inference, not a confirmed cause; no credential file or value was manually
+  accessed, and no retry or replacement ran.
+
+ReviewRadar remains **NOT READY**. The six-attempt accuracy/stability matrix is
+blocked, and PR-021 observability correction cannot itself authorize new live
+work.
+
 ### Codex - Sanitize the staged-readiness credential launch
 
 #### Changed

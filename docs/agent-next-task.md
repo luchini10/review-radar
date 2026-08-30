@@ -1,86 +1,83 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-08-29 by Codex after the independently verified, zero-live PR-4B
-credential-launch correction. This file was regenerated from current evidence.
-The current approved base is the self-contained correction commit containing
-this file; resolve its exact full SHA with `git rev-parse HEAD`. Its expected
-parent is `d2df488431c4da4176c8de56baf6d9f44efa1dc8`.
+Updated: 2026-08-29 by Codex after the independently audited PR-4B attempt-1
+pre-provider stop. This file was regenerated from current evidence. The current
+approved base is the self-contained evidence closeout commit containing this
+file; resolve its full SHA with `git rev-parse HEAD`. Its expected parent is
+`6e0446bfc19e435a584ebf3eab18522d47207164`.
 
 ## Current state
 
 ReviewRadar is **not production-ready**. The staged Terra path is default-off
 and undeployed. PR-3K proved one complete safe `shop vac` lifecycle. PR-4A
-froze a dated, privacy-safe readiness matrix and canonical analyzer. The first
-PR-4B commit added an independently verified one-attempt serial runner. This
-correction adds an independently verified allowlist credential launcher, but
-none of the six PR-4A readiness artifacts exists. Current accuracy,
-cross-category requirement truth, repeatability, latency distribution, and live
-cost therefore remain unmeasured.
+froze a dated four-shape/six-attempt readiness matrix. PR-4B built an
+independently verified commit-bound runner and sanitized credential launcher.
+The first PR-4B attempt was then authorized exactly once but stopped before
+provider work. No PR-4B readiness artifact exists, the authorization is
+consumed, and the serial matrix cannot advance.
 
-The correction adds or changes:
+Exact source commit `6e0446bfc19e435a584ebf3eab18522d47207164`
+contains the credential-launch correction. Its parent is
+`d2df488431c4da4176c8de56baf6d9f44efa1dc8`. Independent exact-commit review
+authenticated:
 
-- `scripts/launch-staged-terra-readiness.mjs`, the only approved credential-
-  bearing entry point;
-- `scripts/run-staged-terra-readiness.mjs`, which now includes the launcher in
-  the authenticated trust root;
-- `scripts/staged-terra-readiness-io.mjs`, which includes fixed launcher and
-  endpoint contracts;
-- `scripts/staged-terra-readiness-runner.mjs` and `lib/openaiClient.ts`, which
-  pin the SDK to `https://api.openai.com/v1` with `maxRetries:0`; and
-- `tests/stagedTerraReadinessLauncher.test.mjs`, five credential-boundary,
-  process-control, race, and child-environment regressions.
+- branch `main`, clean tracked tree and index;
+- exactly 14 commit paths, all Git mode `100644`;
+- all six reviewed source SHA-256 values;
+- the unexpired PR-4A matrix;
+- 61 trust entries, zero failures, manifest
+  `f82e18a3ec21de995130128832d8dca03698309262a942e39fe2dae2ad6a5b1c`;
+- the exact 27 attempt-1 approval arguments and all ceilings; and
+- the exact prospective output leaf as absent with direct fixed parents.
 
-Do not use Node's broad `--env-file` loader for a live request. It can import
-unrelated endpoint, proxy, loader, TLS, or debug controls into the credential-
-bearing process. A value-blind broad-loader shape probe returned only `ready`,
-but that invocation was rejected before any provider request.
+The terminal preflight verdict was `VERIFIED`, no actionable finding,
+confidence 0.99. It authorized one and only one exact
+`node --no-warnings scripts/launch-staged-terra-readiness.mjs` invocation for
+`broad-shop-vac:1`. The authorization was consumed regardless of outcome.
 
-The dedicated launcher authenticates branch `main`, clean tracked state, exact
-HEAD, all 27 runner approval arguments, and the complete local trust surface
-including itself before credential access and again immediately before spawn.
-It rejects inherited process controls case-insensitively at both boundaries. It
-reads only fixed ignored `.env.local` through one identity-checked regular-file
-handle and requires stable direct realpath plus bigint device/inode/size/mtime/
-ctime metadata before, during, and after the read. It parses stable bytes with
-Node `util.parseEnv` and retains only `OPENAI_API_KEY` and `SERPER_API_KEY`.
+## Consumed attempt-1 result
 
-The child environment is rebuilt rather than merged. It contains only required
-Windows launch variables, fixed `LANG=C`, `LC_ALL=C`, `TZ=UTC`, the official
-OpenAI endpoint, and the two credentials. The launcher spawns exact
-`process.execPath`, the exact runner and approval arguments, with `shell:false`.
-The serial runner's attempt identity, ceilings, append-only checkpoints,
-no-replace publication, and no automatic advance remain unchanged.
+The exact launcher command ran once. It exited 1 after about 9.55 seconds and
+emitted only:
 
-## Authenticated correction snapshot
+`Readiness launcher stopped before invoking the trusted runner.`
 
-The source reviewer authenticated this exact six-file snapshot:
+Post-stop independent audit reauthenticated the same branch, HEAD/parent,
+clean tree/index, six hashes, and 61-entry trust digest. The exact prospective
+leaf remained absent with direct fixed parents and zero boundary failures. The
+trusted runner creates that directory before any provider request. Therefore no
+provider request occurred and no readiness artifact exists; confidence 0.99.
 
-| File | SHA-256 |
-| --- | --- |
-| `lib/openaiClient.ts` | `feaa0bceb6c219a3029ded7f5ad97aa4001c1a4200acffc3ee3e4ee75afb9b6f` |
-| `scripts/launch-staged-terra-readiness.mjs` | `fb806931187720657ba65a7b96a00d9d83252cabdab17ccc910ee4f4d3818daa` |
-| `scripts/run-staged-terra-readiness.mjs` | `78533332220d58c83a03b4818797ea9d416188c9e4cf1cc2fd7cc9aa7504382a` |
-| `scripts/staged-terra-readiness-io.mjs` | `c2c82ed986a411532a101f433036e783e8bb3488719276dc769347a7dfeb08a6` |
-| `scripts/staged-terra-readiness-runner.mjs` | `684f26000e455ad9760c605c96eb3b8e50ba15f8fa01632027f50a36c2c16549` |
-| `tests/stagedTerraReadinessLauncher.test.mjs` | `97ba1e269acfeeb6fe5d21a1b9219248b692de641348292f1cc3d1bcda622539` |
+No retry, replacement, direct-runner fallback, attempt 2, extra case, flag
+change, deployment, release, or push ran or is authorized. The main agent did
+not inspect or enumerate any live-fixture content.
 
-Fail-first produced the expected launcher `ERR_MODULE_NOT_FOUND`. The first
-frozen source review returned `CHANGES REQUIRED`, confidence 0.995:
+Independent terminal verdict:
 
-1. inherited `NODE_DEBUG=child_process` could print child credentials; and
-2. validation followed by a separate path read admitted a credential-file swap.
+`CONSUMED — PRE-PROVIDER STOP, FAILURE STAGE UNATTRIBUTED; NO RETRY AUTHORIZED`
 
-A nonsecret canary reproduced the first issue. The correction rejects all
-relevant debug/loader/TLS controls before credential access and immediately
-before spawn, with no asynchronous gap, and reads only from one authenticated
-handle bracketed by path/handle identity checks. Replacement review returned
-exact `VERIFIED`, no actionable finding, confidence 0.98. The reviewer accessed
-no environment file, credential, provider, network, or live fixture.
+## Attribution limit and selected defect
 
-Residual engineering uncertainty: host Node, Windows process launching, NTFS,
-Git, PATH, and installed dependency bytes remain trusted. The handle protocol
-substantially narrows concurrent path substitution but cannot prove the host
-itself non-adversarial. These limits are not evidence of a current defect.
+The exact stop stage is unresolved. The launcher's generic catch receives:
+
+- initial process, repository, trust, and approval rejection;
+- credential file safety, parse, or configuration rejection;
+- post-credential trust/process reauthentication rejection;
+- child-environment or invocation-construction rejection;
+- OS spawn error; and
+- child termination by signal or without an integer exit code.
+
+A normally spawned runner returning integer exit code 1 would propagate that
+code instead. No runner stdout plus the approximate one-trust-pass duration,
+exact state/arguments, absence of forbidden inherited control names, and PATH
+presence make the credential gate the leading inference (confidence 0.75), not
+a diagnosed cause. No credential file, metadata, presence, value, length, hash,
+prefix, or arbitrary content was manually accessed.
+
+PR-021 is the earliest evidence-supported generalized defect: a one-shot,
+no-retry launcher collapses every safe pre-runner, spawn, and signal failure
+into one misleading sentence. That prevents privacy-safe attribution after the
+only authorization is consumed.
 
 ## Current verification
 
@@ -97,20 +94,18 @@ itself non-adversarial. These limits are not evidence of a current defect.
 | Deterministic eval | no red flags |
 | Syntax and diff checks | passed |
 | Lint | zero errors; same three pre-existing warnings |
-| Independent launcher source review | `VERIFIED`; no findings; confidence 0.98 |
-| PR-4B provider/product-data/live calls in correction | zero |
+| Launcher source review | `VERIFIED`; no findings; confidence 0.98 |
+| Exact commit/plan review | `VERIFIED`; no findings; confidence 0.99 |
+| Post-stop no-provider audit | `CONSUMED — PRE-PROVIDER STOP`; confidence 0.99 |
+| PR-4B attempt-1 provider calls | zero |
+| PR-4B attempt-1 artifacts | zero |
 
-Deterministic controller `agent-loop-2026-08-29T23-47-19-401Z` reran
-typecheck, lint, the complete unit wall, deterministic eval, all five serial
-partitions, and the tracked benchmark. It passed and found no repeated failure
-candidate. A sanitized dummy-credential child dry run exited zero with only the
-five expected unauthenticated precommit trust failures. No real credential
-value was printed, copied, hashed, staged, or manually inspected.
-
-The production build automatically loaded ignored user-owned `.env.local`; no
-value was exposed. Playwright's generated `next-env.d.ts` was restored and is
-clean. The broad value-blind credential probe emitted only `ready`; it was not
-used for a live request and is not an approved invocation.
+Deterministic controller `agent-loop-2026-08-29T23-47-19-401Z` passed
+typecheck, lint, all 1,552 tests, deterministic eval, all five serial worker
+partitions, and the tracked 10-case/29-invariant benchmark with no repeated
+failure candidate. The production build loaded ignored user-owned `.env.local`
+automatically but exposed no value. Playwright's generated `next-env.d.ts` was
+restored and clean.
 
 Process residual from PR-4A remains on record: one earlier `rg --files` and one
 unfiltered `git status` printed live-fixture filenames. No fixture content,
@@ -120,78 +115,68 @@ remained clean. Do not repeat the deviation.
 
 ## Objective and decision frame
 
-The product objective is the strongest genuinely suitable products with
+The product objective remains the strongest genuinely suitable products with
 truthful requirements and evidence at acceptable latency and cost. The proven
-bottleneck is now exact commit/origin authorization for the corrected launcher,
-not credential availability, runner design, or another offline analyzer.
+next bottleneck is privacy-safe attribution of launcher stops, not provider
+quality, credential content, or a reason to retry.
 
 Verified facts:
 
-- PR-3K produced one safe result only;
-- PR-4A precommits four shapes, six serial attempts, exact truth, bars, ceilings,
-  artifact identity, stop rules, and manual audits through 2026-09-12;
-- the first PR-4B runner commit is
-  `d2df488431c4da4176c8de56baf6d9f44efa1dc8`;
-- the corrected launcher source received independent exact `VERIFIED`;
-- its complete deterministic wall passes; and
-- no corrected-launcher PR-4B live attempt or artifact exists.
+- attempt 1 was consumed before provider work and produced no artifact;
+- its exact failure stage is unavailable from the current terminal contract;
+- manual credential inspection would violate the trust boundary;
+- retry, replacement, and attempt 2 are not authorized; and
+- the current generic catch merges materially distinct failure classes.
 
 Engineering judgment:
 
-- the strongest next step is independent review of the exact correction commit,
-  its new trust-manifest digest, and its zero-network attempt-1 plan;
-- after that approval, exactly one `broad-shop-vac:1` invocation is justified
-  because it is the first matrix-owned successor and can stop later spend;
-- source review, machine output, and the standing bounded-live mandate are each
-  insufficient alone to authenticate the exact committed invocation; and
-- the main agent must not inspect the resulting fixture; an independent reviewer
-  must authenticate and summarize it.
+- the strongest next step is a closed typed terminal result, because it improves
+  future fault attribution without weakening credential privacy or live gates;
+- a manual `.env.local` inspection, credential diagnostic mode, raw-error log,
+  launcher retry, or alternate direct invocation is materially weaker and out
+  of bounds;
+- typed output must cover complete executable control flow, not only the leading
+  credential inference; and
+- no typed result, test, analyzer, or source verdict can authorize live work.
 
 Uncertainty:
 
-- the post-correction trust-manifest digest and exact generated approval
-  arguments are not yet independently adjudicated;
-- provider adherence, current leader recall, exact/near behavior, verified
-  price coverage, latency, tokens, calls, cost, and final stability are unknown;
-- source truth can drift before its 2026-09-12 expiry; and
-- the first invocation may complete, fail closed, or expose a stop condition.
+- PR-4B attempt 1's exact stage may remain permanently unknowable;
+- the final typed-stage taxonomy and public/stderr shape require independent
+  adversarial review;
+- provider adherence, current leader recall, hard-requirement truth,
+  repeatability, latency, and cost remain unmeasured; and
+- PR-4A truth expires 2026-09-12 and may drift earlier.
 
-**Recommended reasoning level:** High for commit/origin/live/artifact/manual-
-review authority; Medium for zero-network dry-plan execution and routine checks.
+**Recommended reasoning level:** High for error taxonomy, privacy, and authority;
+Medium for localized implementation and deterministic checks.
 
-## Current approved phase: corrected commit review, then at most attempt 1
+## Current approved phase: PR-021 typed launcher terminal attribution
 
-Taylor's production-readiness mandate authorizes bounded low-parallelism live
-QA, documentation, and self-contained local commits. It does not bypass the
-independent per-attempt gate and does not authorize retry, replacement, attempt
-2, flag change, deployment, push, or release.
+This phase is local, zero-network, and does not authorize a live invocation.
 
-1. Authenticate branch `main`, exact correction HEAD and parent
-   `d2df488431c4da4176c8de56baf6d9f44efa1dc8`, the six hashes above, exact Git
-   modes/blobs, complete trust-manifest digest, unexpired matrix, clean index/
-   tracked tree/`next-env.d.ts`, user-owned untracked preservation, and committed
-   default-off flags.
-2. Run only the runner's zero-network default dry plan for attempt 1. Confirm
-   exact commit, raw/canonical matrix seals, attempt key/index/request/run ID/
-   nonce, prior-artifact position, all ceilings, prospective absent output,
-   trust manifest, and complete 27 approval arguments. Do not execute.
-3. Derive the only eligible live command as exact
-   `node --no-warnings scripts/launch-staged-terra-readiness.mjs` plus those 27
-   arguments. Do not use `--env-file`, a shell wrapper, or inherited secrets.
-4. Obtain an independent read-only verdict on that exact committed state, dry
-   plan, absent output, and launcher command. The source verdict is necessary
-   but does not authorize live work. Correct any finding and repeat review.
-5. Only after exact `VERIFIED`, execute that one launcher command once for
-   `broad-shop-vac:1`. No retry, replacement, fallback, organic, SearchAPI,
-   extra case, second invocation, or automatic advance.
-6. The main agent must not open, enumerate, parse, copy, hash, or adapt the new
-   fixture. Have the independent reviewer authenticate exact files/bytes,
-   privacy, commit/route/accounting/currentness, source/card/requirement/price/
-   offer/image/manual audits, and prefix analysis.
-7. Stop after attempt 1. A clean prefix still returns only
-   `next_attempt_review_required`; obtain a new independent decision before any
-   attempt 2. A failed result selects no correction until its earliest repeated
-   generalized cause is evidence-supported.
+1. Add fail-first tests against the current generic terminal behavior. Require
+   one versioned, exact-key, nonsecret launcher terminal object with exhaustive
+   typed stages for process, repository/trust, approval, credential,
+   post-credential reauthentication, child invocation, spawn error, and child
+   signal/noninteger exit.
+2. Ensure every failure path maps to a fixed stage. Do not expose raw error
+   messages, stack traces, paths, environment names, credential presence,
+   values, lengths, hashes, prefixes, or arbitrary nested data.
+3. Preserve the successful child path and integer child exit-code propagation.
+   Preserve exact process controls, one-handle credential read, minimal child
+   environment, official endpoint, `maxRetries:0`, shell false, trust
+   reauthentication, serial attempt identity, and no-retry behavior.
+4. Include mutation/leak-negative tests with credential-shaped canaries and raw
+   exception strings for every stage. Prove exactly one terminal output and no
+   stage ambiguity.
+5. Run focused tests, complete deterministic walls, typecheck, lint, build,
+   E2E, controller, syntax, and diff checks. Obtain independent frozen-source
+   review, correct every finding, document, regenerate this handoff, and make a
+   self-contained local commit.
+6. Stop. Any future live continuation requires a separate protocol/governance
+   decision and exact independent authorization. PR-021 cannot revive attempt 1
+   or authorize attempt 2.
 
 ## Approval, cost, and flag state
 
@@ -204,19 +189,18 @@ Committed defaults remain:
 - `REVIEW_RADAR_CONSTRAINT_ALLOCATION=off`
 - staged research/presentation model: `gpt-5.6-terra`
 
-The ignored `.env.local` is user-owned. Never edit, stage, print, hash, copy, or
-manually inspect it. Only the exact authenticated launcher may read it in
-memory. It must retain only the two approved credentials and produce no value,
-length, hash, prefix, or diagnostic output. Per-attempt conservative cost is
-capped at `$1`; the complete six-attempt aggregate is capped at `$6`. A ceiling
-is a maximum, not authority to replace or add work.
+The ignored `.env.local` is user-owned. Never edit, stage, print, hash, copy,
+stat for diagnosis, or manually inspect it. Do not add a diagnostic mode that
+reads it. The consumed attempt had a `$1` conservative ceiling and made no
+provider request. That ceiling grants no future spend authority.
 
 ## Outstanding readiness debts
 
-- PR-006: all six staged artifacts are absent; current leader recall, card
-  truth, hard-requirement accuracy, final-card stability, verified price
-  coverage, first-loss distribution, latency, calls, tokens, and cost remain
-  unmeasured.
+- PR-006: live measurement is blocked. Current leader recall, card truth,
+  hard-requirement accuracy, final-card stability, verified price coverage,
+  first-loss distribution, latency, calls, tokens, and cost remain unmeasured.
+- PR-021: launcher terminal attribution is missing; exact attempt-1 cause is
+  unresolved.
 - PR-007 / RR-091: same-page related-product price binding needs exact-offer
   proof before the experimental path can be promoted.
 - PR-008 / RR-092: editorial Product markup can overstate tested-model
@@ -229,8 +213,8 @@ is a maximum, not authority to replace or add work.
   observability, and operational gates remain open.
 
 PR-013 is closed only as one-lifecycle feasibility. PR-020 is live-revalidated
-as the title-metadata correction. PR-4A closes measurement design. PR-4B source
-and launcher verification close neither live evidence nor production authority.
+as the title-metadata correction. PR-4A closes measurement design. PR-4B
+produced no readiness evidence and closes no production authority.
 
 ## Hard boundaries
 
@@ -238,17 +222,14 @@ and launcher verification close neither live evidence nor production authority.
   spent Phase D or readiness attempt/directory. Exclude
   `tests/fixtures/review-radar-live/**` from every repository search and use only
   tracked-only or explicit paths for status and staging.
-- Do not infer candidate/source mappings, product truth, leader coverage, or
-  repeatability from PR-3K's closed aggregate or public cardinalities.
-- Do not weaken source ownership, title/model/type, page/entity, relationship,
-  requirement, availability, price, commerce, asset, redirect, private-network,
-  diagnostic, privacy, or public-response boundaries to improve a score.
-- Do not let a truth fixture, score, prior recommendation, retailer popularity,
-  model-authored title, runner, launcher, or analyzer output authorize
-  eligibility or spend.
-- Execute no PR-4B attempt without exact independent committed-plan approval.
-  Execute at most one precommitted attempt before stopping for artifact review.
-  Never retry or replace a spent attempt.
+- Do not retry or replace `broad-shop-vac:1`, invoke the direct runner, or
+  advance to attempt 2. Do not treat absence of provider spend as authority to
+  revive the consumed invocation.
+- Do not infer the exact launcher failure stage or credential state from timing,
+  absence, or the generic sentence.
+- Do not weaken source ownership, identity, relationship, requirement,
+  availability, price, commerce, asset, redirect, private-network, diagnostic,
+  privacy, or public-response boundaries to improve a score.
 - Never stage `.env.local`, `.claude/`, `.rr_baseline*`, `fable-transfer-kit/`,
   ignored worker results, historical live fixtures, or any live artifact. Never
   use `git add -A`.
@@ -260,12 +241,11 @@ and launcher verification close neither live evidence nor production authority.
 
 | Need | Retrieve |
 | --- | --- |
-| Living defects, exit criteria, PR-4 evidence | `docs/production-readiness-master-plan.md` |
-| Canonical correction verification | latest PR-4B entry in `docs/qa-loop-results.md` |
-| Durable launcher/runner contracts | top entries in `docs/review-radar-test-memory.md` |
+| Living defects, exit criteria, PR-4/PR-021 evidence | `docs/production-readiness-master-plan.md` |
+| Canonical consumed-stop evidence | latest PR-4B entry in `docs/qa-loop-results.md` |
+| Durable launcher/stop contracts | top entries in `docs/review-radar-test-memory.md` |
+| Launcher source | `scripts/launch-staged-terra-readiness.mjs` |
+| Runner and trust seam | `scripts/run-staged-terra-readiness.mjs`; `scripts/staged-terra-readiness-io.mjs`; `scripts/staged-terra-readiness-runner.mjs` |
 | Current matrix and truth | `tests/fixtures/staged-terra-readiness-matrix-v1.json` |
-| Launcher and runner seam | `scripts/launch-staged-terra-readiness.mjs`; `scripts/run-staged-terra-readiness.mjs`; `scripts/staged-terra-readiness-io.mjs`; `scripts/staged-terra-readiness-runner.mjs` |
-| Canonical producer and analyzer | `scripts/staged-terra-readiness-artifact.mjs`; `scripts/staged-terra-readiness.mjs` |
-| Staged request/public/route contracts | `lib/stagedTerraApiContract.ts`; `lib/stagedTerraRecommendationRoute.ts` |
 | Staged architecture | OAI-T10 section in `docs/forward-roadmap.md` |
 | Peer challenge | latest entries in `docs/agent-dialogue.md` |

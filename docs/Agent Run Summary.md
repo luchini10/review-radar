@@ -2645,3 +2645,42 @@ correction was not commit-authenticated. Bind it in this self-contained local
 commit, generate a new zero-network plan, and obtain a fresh independent exact-
 commit verdict before at most attempt 1. Recommended reasoning: High for
 commit/live authority; Medium for deterministic plan generation.
+
+## Codex Run - 2026-08-29 PR-4B attempt 1 consumed pre-provider
+
+**Goal:** execute the first independently approved readiness attempt exactly
+once, preserve its evidence, and stop on any nonterminal or trust failure.
+
+**Exact authorization:** independent read-only review authenticated clean
+`main` commit `6e0446bfc19e435a584ebf3eab18522d47207164`, parent
+`d2df488431c4da4176c8de56baf6d9f44efa1dc8`, the six reviewed source hashes,
+61 trust entries with digest
+`f82e18a3ec21de995130128832d8dca03698309262a942e39fe2dae2ad6a5b1c`,
+the unexpired matrix, exact attempt/request/run/nonce, all 27 arguments and
+ceilings, and an absent direct prospective leaf. Terminal verdict was
+`VERIFIED`, no findings, confidence 0.99, for one invocation only.
+
+**Result:** the exact launcher command ran once, exited 1 after about 9.55
+seconds, and emitted only its generic pre-runner stop sentence. The authorization
+is consumed. No retry, replacement, direct-runner fallback, attempt 2, flag
+change, deployment, release, or push occurred or is authorized.
+
+**Independent post-stop proof:** branch, commit/parent, clean tree/index, six
+hashes, and the 61-entry trust digest remained exact. The prospective leaf was
+still absent, with direct fixed parents and zero failures. Because the trusted
+runner creates that leaf before provider work, no provider request occurred and
+no artifact exists; confidence 0.99. The main agent did not inspect or enumerate
+live-fixture content.
+
+**Root-cause limit:** the generic launcher catch combines every pre-spawn gate,
+spawn error, and signaled/noninteger child exit. The missing runner output and
+one-trust-pass duration make the credential gate the leading inference,
+confidence 0.75, but not a proven cause. No credential file, metadata, presence,
+value, length, hash, or prefix was manually accessed.
+
+**Verdict and next step:** `CONSUMED — PRE-PROVIDER STOP, FAILURE STAGE
+UNATTRIBUTED; NO RETRY AUTHORIZED`. PR-021 is the proven generalized defect.
+Add closed, versioned, nonsecret terminal stages with exhaustive fail-first and
+leak-negative tests, then obtain independent source review. That correction
+cannot revive the consumed authorization or permit new live work. Recommended
+reasoning: High for taxonomy/privacy/authority; Medium for localized execution.

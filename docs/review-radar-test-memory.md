@@ -4,6 +4,41 @@
 
 ---
 
+## PR-4B attempt-1 consumed pre-provider stop (2026-08-29)
+
+- Exact clean commit `6e0446bfc19e435a584ebf3eab18522d47207164`, parent
+  `d2df488431c4da4176c8de56baf6d9f44efa1dc8`, 61-entry trust manifest
+  `f82e18a3ec21de995130128832d8dca03698309262a942e39fe2dae2ad6a5b1c`,
+  six reviewed source hashes, unexpired matrix, 27 approval arguments, absent
+  prospective output, and every ceiling received independent exact `VERIFIED`,
+  no finding, confidence 0.99.
+- The one authorized command was invoked exactly once for
+  `broad-shop-vac:1`. It exited 1 after about 9.55 seconds and emitted only
+  `Readiness launcher stopped before invoking the trusted runner.` The
+  authorization is consumed regardless of the safe stop. Never retry, replace,
+  use the direct runner, or advance to attempt 2.
+- Post-stop authentication found the same clean commit/index, unchanged six
+  hashes, authenticated 61-entry manifest, and an absent exact prospective leaf
+  with direct fixed parents and zero failures. The trusted runner creates the
+  leaf before any provider request, so no provider request occurred (independent
+  confidence 0.99) and no readiness artifact exists.
+- The exact failure stage is unresolved. The generic launcher catch includes
+  every pre-spawn rejection, OS spawn error, and signaled/noninteger child exit.
+  Absence of runner stdout cannot distinguish them. One-trust-pass duration,
+  exact arguments/state, no forbidden control names, and PATH presence make the
+  credential gate the leading inference (confidence 0.75), not a diagnosis.
+- PR-021 is the earliest proven generalized defect: privacy-safe observability.
+  Replace the generic catch with one closed, versioned, nonsecret terminal
+  object using typed stages for process, repository/trust, approval, credential,
+  post-credential reauthentication, child invocation, spawn, and signal
+  failures. Never include raw errors, paths, credential presence, values,
+  lengths, hashes, prefixes, or arbitrary text.
+- Any future live continuation requires a separate reviewed protocol and
+  governance decision. A typed failure report, test, source verdict, or clean
+  commit cannot revive the consumed authorization.
+
+---
+
 ## PR-4B sanitized credential-launch contract (2026-08-29)
 
 - Do not invoke the readiness runner with Node's broad `--env-file` loader.
