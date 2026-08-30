@@ -12133,6 +12133,7 @@ The controller left advisory output in the ignored worker artifact `agent-loop-2
 
 See `docs/agent-loop-report.md`.
 
+
 ## 🟧 Codex — 2026-08-29 — Production readiness PR-3 tracked offline benchmark
 
 **Verdict: PASS for evaluation integrity; zero live calls and no production-
@@ -15833,3 +15834,210 @@ spent-artifact reuse, package change, flag promotion, deployment, release,
 push, PR, or merge occurred. `docs/production-readiness-report.md` is the
 canonical final report. Independent review is `VERIFIED`; only explicit-path
 documentation closeout and local commit authentication remain.
+
+## Agent Loop Run - 2026-08-30T16:31:28.652Z
+
+- **run id:** agent-loop-2026-08-30T16-30-37-902Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, non-product-pages, price-trust, requirement-units, wrong-category
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 6294ms |
+| lint | Passed | 11493ms |
+| unit tests | Passed | 28073ms |
+| deterministic eval pipeline | Passed | 469ms |
+| tracked offline benchmark | Passed | 621ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- non-product-pages: non-product-espresso-review
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T16-30-37-902Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T16:40:14.874Z
+
+- **run id:** agent-loop-2026-08-30T16-39-27-087Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, non-product-pages, price-trust, requirement-units, wrong-category
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3508ms |
+| lint | Passed | 10913ms |
+| unit tests | Passed | 28682ms |
+| deterministic eval pipeline | Passed | 469ms |
+| tracked offline benchmark | Passed | 605ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- non-product-pages: non-product-espresso-review
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T16-39-27-087Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## 🟧 Codex Production Readiness PR-8 — RR-109 dependency advisory correction (2026-08-30)
+
+**Objective and base:** resolve the known RR-109 advisory blocker with the
+smallest complete correction, without treating a clean package audit as
+production readiness. The exact base is
+`39fd2ff1a78c62f0f320c1bbbcf34b18b777bc98`, parent
+`12f399e4997789bfd17895674d7c02f6a5803100`, tree
+`4029854eec4a07e4f6ee408dcb45d790a9e96054`.
+
+**Bottleneck challenge and candidate decision:** root-only updates were not a
+complete solution. Next plus its lint config cleared the Next/nanoid/postcss/
+sharp group but left eight affected names. Updating shadcn alone left all 12;
+Tailwind alone left 11; ESLint plus its config left 11; all root groups still
+left seven. The selected candidate keeps `package.json` byte-identical and
+updates only the 12 affected resolved names, required companions, and
+`eslint-config-next@16.3.3` aligned with `next@16.3.3`. No `npm audit fix`,
+override, shadcn removal, or broad root upgrade was used.
+
+**Exact lock and provenance:** the corrected lock SHA-256 is
+`7c142f30e3670020d9b867d90d86f16fc53f7c2a8139120d368b9d4e6ad1501a`.
+The repository lock is byte-identical to the isolated candidate. Comparison to
+the base finds 63 changed lock entries: 61 current public-registry artifacts,
+zero changed non-registry artifacts, and two removed nested postcss copies that
+now resolve to a fixed hoisted entry. Every changed registry artifact matched
+its exact public metadata tarball URL and integrity value.
+
+The affected resolutions include `next@16.3.3`,
+`eslint-config-next@16.3.3`, `sharp@0.35.4`, `@babel/core@7.29.7`,
+`@hono/node-server@1.19.17`, `body-parser@2.3.0`, fixed
+`brace-expansion@1.1.18` and `5.0.9` lines, `fast-uri@3.1.6`,
+`hono@4.13.5`, `ip-address@10.7.0`, `js-yaml@4.3.2`,
+`nanoid@3.3.18`, and fixed postcss 8.5.x resolutions.
+
+**Audit and graph result:** npm 11.12.1 used isolated exact manifest/lock
+copies, empty user/global config, isolated cache/logs, cleared standard token
+variables, exact `https://registry.npmjs.org/`, ignored scripts, and no audit
+remediation. The corrected exact-lock audit exits 0 with zero vulnerabilities.
+`npm ls --package-lock-only --all --json` exits 0 with no problems.
+
+**Fail-first and regression:** the new lock-only RR-109 test runs against an
+explicit lock path. Against the exact base lock it passes the stable-
+prerelease and alignment controls but fails on affected
+`@babel/core@7.29.0` and nested `brace-expansion@1.1.14`. Against the correction
+it passes 4/4. An initial comparator discarded prerelease state; before final
+review, a `7.29.7-beta.1` counterexample exposed that fail-open and the narrow
+correction now rejects a prerelease at the corresponding stable floor. Together
+with the existing optional-lock test, the focused dependency wall passes 6/6.
+
+**Platform evidence:** an isolated clean Windows `npm ci --ignore-scripts`
+exits 0 and adds 689 packages. Next 16.3.3 loads; Sharp 0.35.4 with libvips
+8.18.6 generates a PNG; Tailwind Oxide loads; and the required
+`shadcn/tailwind.css` file exists. The installed Windows tree retains npm
+optional-platform pruning residuals while package-only graph, audit,
+installation, and native probes pass.
+
+WSL is not installed and Docker/Podman are unavailable; none was installed.
+Two explicit Linux-target npm installs exited 0 and retained the exact lock but
+pruned native Linux optional packages. Those are cross-target diagnostics only,
+not actual Linux install or execution proof. The native-Linux residual remains
+under RR-107 and does not reopen RR-109.
+
+The first working-tree `npm ci` encountered `EPERM` on an in-use unchanged
+Lightning CSS native binary. The lock hash remained exact. A following bounded
+working-tree install synchronized the intended versions without lock drift;
+the isolated clean install above is the clean Windows proof. An early shadcn
+probe incorrectly used an unexported Node subpath; the physical stylesheet and
+production build are the corrected evidence.
+
+**Complete validation:**
+
+| Check | Final result |
+| --- | --- |
+| RR-109 regression | 4/4 passed |
+| Focused dependency wall | 6/6 passed |
+| Credential-isolated public audit | Exit 0; zero vulnerabilities |
+| Package-only dependency tree | Exit 0; no problems |
+| Clean Windows install/native probes | Passed |
+| Complete unit suite | 1,699/1,699 across 231 suites passed |
+| Typecheck | Passed |
+| Lint | Passed with zero errors and three pre-existing warnings |
+| Production build | Passed with Next.js 16.3.3 |
+| Playwright | 17/17 passed |
+| Final controller | `agent-loop-2026-08-30T16-39-27-087Z`; five serial partitions; 10/10 cases; 29/29 invariants |
+| Generated file | `next-env.d.ts` restored to blob `9edff1c7cacb3bfac9a1eadcf6f51eaa99565e38` |
+
+Next 16.3.3 deterministically adds its documented agent-rule block to
+`AGENTS.md`. Retaining that generated companion prevents every later Next run
+from recreating an uncommitted tracked change; no unrelated agent instruction
+was added manually.
+
+**Issue and readiness decision:** RR-109 is Fixed. The issue register now has
+109 total: 0 Open, 6 Needs Investigation, 102 Fixed, and 1 Won't Fix; severity
+counts remain 15 Critical, 52 High, 37 Medium, and 5 Low. The exact readiness
+verdict remains `NOT READY`, confidence 0.995. Missing current live-quality and
+hosted-operation evidence are independently decisive.
+
+**Independent review gate:** the existing independent reviewer is rechecking
+the current frozen bytes, provenance, minimality, regression semantics,
+platform wording, generated Next companion, issue arithmetic, and unchanged
+readiness verdict. No final review verdict is claimed in this entry until a
+separate append-only closeout records it.
+
+**Authority:** no credential, `.env.local`, provider, spent live fixture,
+hosted account, protected data, flag promotion, deployment, release, push, PR,
+or merge was used. Temporary package/audit directories remain outside the
+repository; no destructive cleanup was performed. Only independent review,
+explicit-path documentation closeout, and one self-contained local commit
+remain authorized.
+
+## 🟧 PR-8 independent review closeout (2026-08-30)
+
+Independent exact-diff review returned `VERIFIED`, no material correction,
+confidence 0.98. The reviewer independently repeated the credential-isolated
+zero-vulnerability audit, package-only graph exit 0/no problems, all 61 changed
+registry metadata URL/integrity comparisons, focused dependency wall 6/6,
+adversarial version-range and nested-instance review, issue arithmetic, diff
+check, and the generated Next `AGENTS.md` source check.
+
+The review found and required correction of two stale `3/3` closeout claims and
+the missing canonical PR-8 QA narrative. Both were corrected before final
+authentication. The reviewer agreed RR-109 is Fixed while ReviewRadar remains
+`NOT READY`, confidence 0.995.
+
+The read-only reviewer did not repeat the clean Windows install/native Sharp
+probe; it authenticated the recorded evidence. Actual native Linux remains
+unproven, cross-target npm diagnostics are non-authorizing, and the public
+audit is time-bound. No prohibited fixture, credential, `.env.local`, provider,
+or live system was accessed.

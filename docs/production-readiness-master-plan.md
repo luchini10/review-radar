@@ -671,7 +671,7 @@ shopper-facing recommendation quality.
 | PR-026 | P2 | verified generalized correction | The tracked lockfile failed its complete package-only consistency check: Tailwind's optional WASM package required `@napi-rs/wasm-runtime ^1.1.4`, while the only locked runtime was optional version `0.2.12`. | The Tailwind tarball bundled six dependency manifests, but their `inBundle` lock records were absent. Npm therefore resolved Tailwind against the incompatible hoisted runtime used by another optional WASM consumer. | Credential-isolated npm regeneration adds exactly the six authenticated bundled records. Tailwind resolves nested runtime 1.1.4; unrs retains root 0.2.12. No package specification/version or application code changes. | Fail-first lock regression; public metadata plus tarball SRI/SHA-1 and bundled-manifest verification; byte-identical isolated lock; package-only tree; clean Windows and Linux/WASM32-target installs; native/WASI loads; full/static/build/E2E/controller; independent correction and replacement `VERIFIED`, confidence 0.99. | Fixed locally by PR-6H. Actual native Linux execution remains unverified because no Linux runtime was available. One pre-existing clean-Windows optional-pruning orphan remains and npm exits zero. Current advisories are tracked separately by PR-028/RR-109. |
 | PR-027 | P2 | verified generalized correction | The documented setup directed users to copy a stale four-key `.env.local.example`; both public templates assigned a nonempty placeholder to optional `SERPER_API_KEY`. A zero-network mock proved that the placeholder passed the runtime's truthiness gate and initiated Serper work. | Public examples and README instructions drifted from the canonical 14-key environment contract, and optional provider enablement had no placeholder-value rejection. | `.env.example` is now canonical; `.env.local.example` is its byte-identical tested compatibility copy; optional Serper is blank; README requires explicit real-key opt-in. One centralized server gate treats missing, blank, whitespace, and four exact known placeholders as unconfigured while preserving every other value byte-for-byte. | Final fail-first 4 pass / 10 intended failures; corrected dedicated 14/14; related 156/156; full 1,693/1,693; typecheck/lint/build/Playwright; exact final five-partition controller; template/key/header probes; hashes; independent replacement `VERIFIED`, confidence 0.999. | Fixed locally by PR-6G. Exact placeholder matching intentionally does not validate provider format or key validity. Hosted configuration, historical unintended requests, and billing remain unknown. Never inspect or modify the user's ignored `.env.local`. |
 
-| PR-028 | P1 | verified advisory finding; correction deferred to a separate phase | The exact production lock currently reports 12 vulnerable package names: 8 high, 2 moderate, and 2 low. Direct production dependency `next@16.2.6` is in the high set and npm reports fixes available. | The lock predates current public advisories; PR-6H corrected graph consistency without changing package versions or querying advisories. | Separately adjudicate each production advisory and apply only the smallest justified dependency/lock correction. Do not use `npm audit fix` or a broad upgrade. | Credential-isolated public lock-only audit; exact version and dependency-path review; clean audit or explicit non-applicability proof; registry/lock provenance; clean Windows and actual Linux installs; full/static/build/E2E/controller walls; independent exact review. | RR-109 is Open and release-blocking. PR-7 is read-only for package behavior, so it records but does not remediate the finding. Some Next feature paths are absent in tracked source, but no complete applicability review exists. |
+| PR-028 | P1 | verified minimal dependency correction | The PR-7 production lock reported 12 vulnerable package names: 8 high, 2 moderate, and 2 low, including direct `next@16.2.6`. | The lock predated current public advisories. Root-only Next, shadcn, Tailwind, or ESLint upgrades either left advisories or added unnecessary churn because vulnerable transitive copies remained. | Keep every direct specification unchanged; update only the affected resolved entries and align `eslint-config-next` with `next@16.3.3`. Add a lock-only safe-floor/alignment regression. | Base audit fail-first; root-candidate comparison; 61-artifact public-registry URL/integrity verification; exact isolated candidate hash; clean audit; package-only graph; clean Windows/native load; cross-target limitation record; full typecheck/lint/unit/build/E2E/controller wall; independent exact review. | RR-109 is Fixed by PR-8. Audit is zero. Actual native Linux execution remains an RR-107 platform residual; missing live-quality and hosted-operation evidence independently keep ReviewRadar `NOT READY`. |
 
 ## Suspected weaknesses requiring measurement
 
@@ -2046,6 +2046,43 @@ directory is spent.
   bound; other blockers independently require `NOT READY`.
 - Reasoning: **Highest** for final adjudication.
 
+### Phase PR-8 — RR-109 dependency advisory correction
+
+- Status: **complete and independently verified**
+- Kept `package.json` byte-identical and changed only resolved lock entries for
+  the 12 affected package names, their required companions, and aligned
+  `eslint-config-next@16.3.3` with `next@16.3.3`.
+- Root-only Next, shadcn, Tailwind, and ESLint candidates were rejected because
+  they left between 7 and 11 vulnerable package names or added unrelated root
+  churn. No `npm audit fix`, overrides, shadcn removal, or broad upgrade was
+  used.
+- The corrected lock SHA-256 is
+  `7c142f30e3670020d9b867d90d86f16fc53f7c2a8139120d368b9d4e6ad1501a`.
+  Sixty-one changed registry artifacts matched exact public metadata tarball
+  URLs and integrity values. The isolated npm 11.12.1 audit exits 0 with zero
+  vulnerabilities, and the package-only tree exits 0 with no problems.
+- The new RR-109 contract fails against the exact base lock, then passes 4/4 on
+  the correction. The complete suite passes 1,699/1,699 across 231 suites;
+  typecheck, lint with zero errors/three old warnings, Next 16.3.3 production
+  build, Playwright 17/17, and controller
+  `agent-loop-2026-08-30T16-39-27-087Z` with all five serial partitions,
+  10/10 cases, and 29/29 invariants pass.
+- Clean isolated Windows installation and native Sharp/libvips generation
+  passed. No actual Linux runtime exists locally. Two Linux-target npm installs
+  exited 0 and preserved the exact lock but pruned native optional packages;
+  they are recorded as cross-target diagnostics, not native Linux proof.
+- Next 16.3.3 deterministically adds its documented agent-rule block to
+  `AGENTS.md`; retaining that generated companion prevents every subsequent
+  Next run from dirtying the tracked file. Generated `next-env.d.ts` is restored
+  to its established tracked blob after validation.
+- Independent exact review returned `VERIFIED`, no material correction,
+  confidence 0.98 after repeating the zero audit, package-only tree,
+  61-artifact registry provenance, focused 6/6, version-range review, issue
+  arithmetic, diff check, and generated Next block authentication.
+- RR-109 is Fixed, but the exact readiness verdict remains `NOT READY`,
+  confidence 0.995. Current live quality and hosted operational evidence are
+  independently absent.
+
 ## Phase documentation and commit policy
 
 For each meaningful verified phase:
@@ -2090,11 +2127,11 @@ Release blockers today:
   price boundaries have a verified generalized correction. RR-092 is closed
   locally by PR-008. Neither zero-live correction substitutes for blocked live
   accuracy/repeatability evidence or the open UX/security/operations gates;
-- PR-028/RR-109 is Open and release-blocking. The credential-isolated exact-
-  lock audit reports 12 vulnerable package names (8 high, 2 moderate, 2 low),
-  including direct production dependency `next@16.2.6` in the high set. Npm
-  reports fixes available. PR-7 did not remediate or broadly upgrade packages;
-  a separate correction and advisory-applicability review are required;
+- PR-028/RR-109 is Fixed by the minimal PR-8 lock correction. The credential-
+  isolated exact-lock audit now exits 0 with zero vulnerabilities; every direct
+  package specification remains unchanged. Actual native Linux behavior is
+  still unverified under RR-107, and this dependency correction supplies none
+  of the missing live shopper-quality or hosted-operation evidence;
 - PR-022/RR-103 is closed locally. PR-023 closes the reachable one-realm body,
   field, admission, background-lease, and cache defects, but RR-104 remains
   contained/narrowed because tracked evidence proves no worker-, restart-,
@@ -2107,7 +2144,7 @@ Release blockers today:
   templates and centralized placeholder rejection. PR-6H closes PR-026/RR-107
   for the tracked lock graph; actual native Linux execution, one pre-existing
   Windows optional-pruning orphan, and current platform behavior remain
-  residuals. Advisory uncertainty is now the known RR-109 blocker.
+  residuals. The known RR-109 advisory blocker is closed.
   Distributed admission, load behavior, production headers/health/config/
   observability, accessibility, and deployment/
   rollback authority otherwise remain unknown release gates.

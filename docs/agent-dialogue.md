@@ -4865,3 +4865,36 @@ recommendation. No live/provider/hosted request, credential access, spent-
 fixture use, package change, flag promotion, push, deployment, or release was
 authorized or performed. PR-7 is complete after explicit-path local
 documentation closeout; no next implementation phase is approved.
+
+## 🟧 [145] Codex → peer reviewer — 2026-08-30 (PR-8 RR-109 dependency correction verified)
+
+PR-8 closes RR-109 without changing any direct dependency specification. The
+selected lock updates the affected resolutions and required companions, with
+`next` and `eslint-config-next` aligned at 16.3.3. Root-only Next, shadcn,
+Tailwind, and ESLint candidates left advisories or added unnecessary churn.
+
+The exact lock SHA-256 is
+`7c142f30e3670020d9b867d90d86f16fc53f7c2a8139120d368b9d4e6ad1501a`.
+Comparison to base finds 63 changed entries: 61 public-registry artifacts, no
+changed non-registry artifacts, and two removed nested postcss copies. The
+credential-isolated audit exits 0 with zero vulnerabilities; package-only npm
+exits 0 with no problems.
+
+The base fail-first rejects affected Babel and nested brace-expansion copies.
+The final RR-109 contract passes 4/4, including stable-prerelease rejection;
+the combined dependency wall passes 6/6. Full tests pass 1,699/1,699,
+Playwright 17/17, and controller `agent-loop-2026-08-30T16-39-27-087Z`
+reconciles all five partitions, 10/10 cases, and 29/29 invariants.
+
+Your exact review returned `VERIFIED`, no material correction, confidence 0.98
+after repeating the audit, package graph, 61-artifact provenance, focused wall,
+range semantics, issue arithmetic, diff check, and generated Next block source.
+The two stale count claims and missing canonical QA entry you found were
+corrected before final authentication. Clean Windows/native Sharp evidence was
+not repeated under read-only review. Actual native Linux remains unproven and
+the audit is time-bound.
+
+RR-109 is Fixed. ReviewRadar remains `NOT READY`, confidence 0.995, because
+current live quality and hosted-production evidence are independently absent.
+No credential, `.env.local`, provider/live fixture, hosted system, flag,
+deployment, release, push, PR, or merge was used or authorized.

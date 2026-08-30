@@ -3198,3 +3198,50 @@ issue decision. `docs/production-readiness-report.md` is the canonical final
 report. Regenerate the handoff and commit only the explicit PR-7 documentation
 paths. Recommended reasoning: Highest for verdict/review; High for the future
 advisory correction.
+
+## Codex Run - 2026-08-30 PR-8 RR-109 dependency correction
+
+**Goal and assessment:** remove the known advisory blocker without mistaking a
+clean audit for production readiness. Root-only Next, shadcn, Tailwind, and
+ESLint candidates were rejected because they left 7 to 11 affected names or
+added unnecessary root churn.
+
+**Change:** `package.json` remains byte-identical. The lock updates only the 12
+affected package names, their required companions, and
+`eslint-config-next@16.3.3` aligned with `next@16.3.3`. No `npm audit fix`,
+override, shadcn removal, or broad root upgrade was used. Next's generated
+`AGENTS.md` rule block is retained because framework runs deterministically
+recreate it.
+
+**Provenance and security:** the exact corrected lock SHA-256 is
+`7c142f30e3670020d9b867d90d86f16fc53f7c2a8139120d368b9d4e6ad1501a`.
+All 61 changed public-registry artifacts matched exact metadata tarball URLs
+and integrity values. Credential-isolated npm 11.12.1 audit exits 0 with zero
+vulnerabilities; package-only npm exits 0 with no problems.
+
+**Regression and verification:** the new four-test advisory contract fails
+against the base lock on affected Babel and brace-expansion versions, then
+passes after correction. The focused dependency wall passes 6/6; full tests
+pass 1,699/1,699 across 231 suites; typecheck, Next 16.3.3 production build,
+Playwright 17/17, and lint with zero errors/three old warnings pass. Controller
+`agent-loop-2026-08-30T16-39-27-087Z` passes all five serial partitions, 10/10
+cases, and 29/29 invariants.
+
+**Platform limits:** clean isolated Windows installation and native
+Sharp/libvips PNG generation pass. No actual Linux runtime is available. Two
+Linux-target npm installs exit 0 and preserve the lock but prune native
+optional artifacts, so they are diagnostics rather than Linux proof. The first
+working-tree `npm ci` hit an in-use Lightning CSS binary; the already-authorized
+isolated clean install is the clean Windows proof, and the lock stayed exact.
+
+**Outcome and authority:** RR-109 is Fixed. ReviewRadar remains `NOT READY`,
+confidence 0.995, because current live quality and hosted operational evidence
+are independently absent. No credential, `.env.local`, provider/live fixture,
+hosted system, flag, deployment, release, push, PR, or merge was used.
+
+**Independent review:** exact review returned `VERIFIED`, no material
+correction, confidence 0.98. It repeated the zero audit, package-only graph,
+61-artifact provenance check, focused 6/6, adversarial version-range review,
+issue arithmetic, diff check, and generated Next block authentication. The
+read-only reviewer did not repeat the clean Windows/native Sharp probe and kept
+actual Linux plus time-bound audit state as explicit residuals.

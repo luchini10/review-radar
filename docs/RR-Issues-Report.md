@@ -25,9 +25,9 @@ only when maintaining this register or auditing its full history.
 | High | 52 |
 | Medium | 37 |
 | Low | 5 |
-| Open | 1 |
+| Open | 0 |
 | Needs Investigation | 6 |
-| Fixed | 101 |
+| Fixed | 102 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -4446,10 +4446,10 @@ Keep this correction separate from RR-106 logging and RR-107 lock repair.
 | Field | Value |
 |-------|-------|
 | **ID** | RR-109 |
-| **Phase** | Production readiness PR-7 final adjudication |
+| **Phase** | Production readiness PR-8 dependency correction |
 | **Severity** | High |
 | **Title** | Exact production lock has current fix-available dependency advisories |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** A credential-isolated, public-registry, lock-only npm audit of
 the exact PR-6H package graph exited 1 and reported 12 vulnerable package names:
@@ -4479,20 +4479,40 @@ routes. No complete advisory-applicability analysis was performed, so the
 audit is a known release blocker without a claim that every advisory is
 exploitable.
 
-**Required resolution:** Use a separately authorized dependency phase to
-adjudicate each production advisory, apply the smallest justified version/lock
-change, authenticate registry and lock provenance, run clean Windows and actual
-Linux installs, re-run the complete deterministic/build/E2E wall, obtain a
-credential-isolated clean or explicitly justified audit result, and receive
-independent exact-snapshot review. Do not run `npm audit fix`, broadly upgrade,
-or alter packages inside PR-7.
+**Resolution:** PR-8 retained every direct `package.json` specification and
+updated only the affected resolved lock entries plus the matching
+`eslint-config-next` release. The resulting graph resolves `next@16.3.3`,
+`sharp@0.35.4`, and fixed transitive versions for all other RR-109 names. No
+`npm audit fix`, override, shadcn removal, or broad root upgrade was used.
+
+The corrected lock is SHA-256
+`7c142f30e3670020d9b867d90d86f16fc53f7c2a8139120d368b9d4e6ad1501a`.
+All 61 changed registry artifacts matched exact public metadata tarball URLs
+and integrity values. A credential-isolated npm 11.12.1 lock audit exited 0
+with zero vulnerabilities; the package-only tree exited 0 with no problems.
+The fail-first regression rejected the base lock and the corrected four-test
+RR-109 floor/alignment contract passed. Clean isolated Windows installation,
+native Sharp load, production build, 1,699/1,699 unit tests, Playwright 17/17,
+and five-partition controller `agent-loop-2026-08-30T16-39-27-087Z` passed.
+
+Actual native Linux execution remains unavailable on this machine. Two
+explicit Linux-target npm installs exited 0 and preserved the lock but pruned
+native optional artifacts, so they are not presented as Linux proof. This
+platform residual remains under RR-107 and does not reopen RR-109. Closing
+RR-109 removes the known advisory blocker but does not change the overall
+production verdict above `NOT READY`.
+
+Independent exact review returned `VERIFIED`, no material correction,
+confidence 0.98 after repeating the zero audit, package-only graph,
+61-artifact provenance, focused 6/6, version-range review, issue arithmetic,
+and generated Next companion authentication.
 
 ---
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (1 issue)
-- RR-109: Exact production lock has current fix-available dependency advisories
+### Open (0 issues)
+- None.
 
 ### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
@@ -4502,10 +4522,10 @@ or alter packages inside PR-7.
 - RR-091: Same-page related-product price can satisfy autonomous card binding
 - RR-104: Paid admission/cache defect is locally contained; deployment-wide enforcement remains unproven
 
-### Fixed (101 issues)
+### Fixed (102 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
 RR-038 through RR-044, RR-046 through RR-090, RR-092 through RR-103, and
-RR-105 through RR-108
+RR-105 through RR-109
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -4514,18 +4534,14 @@ RR-105 through RR-108
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-109** — separately adjudicate and minimally remediate the direct and
-   transitive production advisory set. Require exact lock provenance, a clean
-   credential-isolated audit or explicit non-applicability proof, actual Linux
-   validation, complete walls, and independent review.
-2. **RR-104** — retain the one-realm correction, then bind deployment-wide
+1. **RR-104** — retain the one-realm correction, then bind deployment-wide
    ownership and multi-instance/load enforcement when tracked infrastructure is
    available. Do not relabel the local limiter as distributed authority.
-3. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
+2. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
    final overlap. Recovery stays default-off and R7A stays blocked.
-4. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
+3. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
    but varied by model, while Tapo appeared raw and died in normalization.
-5. **RR-091** — PR-007 corrected the shared reachable exact-price boundaries,
+4. **RR-091** — PR-007 corrected the shared reachable exact-price boundaries,
    but the original membership-only adapter remains isolated and unsafe. Keep
    it unpromoted; any future routing proposal requires directly observed exact
    transactional binding and a new independent review.

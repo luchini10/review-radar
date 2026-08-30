@@ -3615,3 +3615,34 @@ a known conservative undercount.
   1/2, final 2/2, adversarial semver 15/15, package-only tree clean, exact
   isolated lock, full 1,695/1,695, build/E2E/controller, and replacement
   independent `VERIFIED`, confidence 0.99.
+
+## Known-clean dependency advisory floor contract - 2026-08-30
+
+- A clean audit is time-bound network evidence; preserve it with an offline
+  lock regression for every affected package name. Check every nested lock
+  instance, not only the hoisted copy, and bind each entry to a standard public
+  registry tarball URL plus SHA-512 integrity.
+- Use proven-clean floors only after exact candidate audit and provenance
+  checks. For disjoint vulnerable ranges such as `brace-expansion`, encode the
+  actual range shape: 1.x requires at least 1.1.18, 2.x is unaffected, 3.x/4.x
+  are rejected, and 5.x requires at least 5.0.9.
+- Keep framework runtime and configuration packages aligned when their release
+  versions are coupled. PR-8 requires locked `next` and `eslint-config-next`
+  versions to match without changing their direct caret specifications.
+- Compare bounded root candidates before choosing a correction. In PR-8,
+  root-only Next, shadcn, Tailwind, or ESLint updates left 7 to 11 affected
+  names or added unnecessary churn. Updating the affected lock resolutions and
+  required companions cleared all 12 names while keeping `package.json`
+  byte-identical.
+- Authenticate every changed registry artifact against exact public metadata,
+  and distinguish package-only graph proof from a platform-pruned installed
+  tree. A clean Windows install/native load is real Windows evidence; npm
+  target flags that prune Linux-native optional artifacts are not Linux proof.
+- PR-8 proof: fail-first base regression, final focused 6/6, zero-vulnerability
+  isolated audit, 61 changed artifacts authenticated, package-only tree clean,
+  clean Windows/native load, full 1,699/1,699, build/E2E/controller, and exact
+  corrected lock SHA-256
+  `7c142f30e3670020d9b867d90d86f16fc53f7c2a8139120d368b9d4e6ad1501a`.
+  Independent exact review repeated the audit, package graph, 61-artifact
+  provenance, focused wall, and range semantics and returned `VERIFIED`,
+  confidence 0.98.
