@@ -3036,3 +3036,44 @@ ReviewRadar remains NOT READY. PR-6F should add fail-first production-log
 canaries, then one allowlisted Serper diagnostic event contract. Recommended
 reasoning: High for the privacy contract; Medium for bounded implementation and
 deterministic validation.
+
+## Codex Run - 2026-08-30 PR-6F production-safe Serper diagnostics
+
+**Goal and assessment:** close RR-106 without weakening Serper usefulness,
+request semantics, cancellation, or search observability. The evidence-supported
+root cause was the free-form warning boundary shared by every vertical, not a
+need to suppress all diagnostics or hash shopper queries.
+
+**Change:** `logSerperWarning()` now accepts one closed module-private event and
+reconstructs the warning from fixed event/error categories, normalized search
+type, and optional bounded query ID, attempt, and primary/fallback stage. All six
+public wrappers, retry, fallback, and missing-key discovery use it. Raw query,
+free-form error, URL, body, header, credential, key-shaped text, and query hash
+cannot enter the helper. Request/retry/fallback/cancellation/timeout/result and
+ledger behavior remains unchanged.
+
+**Fail-first and review:** the initial production-mode file passed 1 and failed
+the exact 8 intended regressions. Corrected dedicated tests pass 11/11 and the
+related wall 101/101. Frozen source/test hashes are
+`e8f8819e87f3527e009f818be2e16155a4f0befe787478d1a07a26bde5696e9c`
+and `6dd06cc9681503dc63a95825fd6b55aaa6c86ad75cb4eec0d85888b979bd7de8`.
+Independent exact review returned `VERIFIED`, no material defect, confidence
+0.99, including an in-flight cancellation probe with one mocked fetch, zero
+warnings, and preserved rejection.
+
+**Verification:** full tests 1,679/1,679 across 228 suites; typecheck; production
+build; Playwright 17/17; focused diff; and lint with zero errors/the same three
+old warnings. Controller `agent-loop-2026-08-30T09-57-50-948Z` passed all five
+serial partitions, deterministic eval, 10/10 cases, and 29/29 invariants. The
+earlier default controller invocation covered price-trust only and was not used
+as the all-partition proof. `next-env.d.ts` remains at its tracked blob.
+
+**Live calls, limits, and next step:** zero. No provider, credential, real
+network, registry, `.env.local`, or spent live fixture was accessed. Hosted log
+collection, retention, historical contents, and downstream collectors remain
+unknown. RR-106 is Fixed locally; ReviewRadar remains NOT READY. Independent
+sequencing review selected PR-6G/PR-027 safe public Serper configuration over
+PR-026 because the documented placeholder is directly reachable and can be
+corrected zero-network, while the optional lock mismatch requires separate
+registry and cross-platform authority. Recommended reasoning: High for the
+configuration/privacy boundary; Medium for localized templates and tests.

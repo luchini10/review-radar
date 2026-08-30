@@ -1,9 +1,9 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through production-readiness PR-6E
+## Compiled for AI Agent Consumption — Phase 0 through production-readiness PR-6F
 
 **Generated:** 2026-08-30
-**Scope:** All phases from initial measurement harness through the PR-6E
-production-operations and dependency baseline
+**Scope:** All phases from initial measurement harness through the PR-6F
+production-safe Serper diagnostics correction
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -25,9 +25,9 @@ only when maintaining this register or auditing its full history.
 | High | 51 |
 | Medium | 37 |
 | Low | 5 |
-| Open | 3 |
+| Open | 2 |
 | Needs Investigation | 6 |
-| Fixed | 98 |
+| Fixed | 99 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -4332,7 +4332,7 @@ residuals, not evidence that the local wiring defect remains.
 | **Phase** | Production readiness PR-6E audit / PR-6F correction |
 | **Severity** | High |
 | **Title** | Production Serper warnings expose shopper queries and free-form error text |
-| **Status** | Open |
+| **Status** | Fixed |
 
 **Description:** The shared Serper warning helper is suppressed only when
 `NODE_ENV=test`; it remains active in production. Shopping, organic, direct-
@@ -4343,19 +4343,23 @@ probe captured an exact shopper-query canary. A second probe captured a
 synthetic error canary and fake key-shaped token. No network or real secret was
 used.
 
-**Expected correction (PR-025/PR-6F):** One allowlisted event contract must
-cover every Serper vertical and retry/fallback warning. It may retain only an
-opaque existing request/query ID, fixed vertical, bounded attempt/fallback
-state, bounded status/timeout class, and fixed error category. It must never
-accept or emit raw query, free-form error message, URL, request body, header,
-credential, or a reversible/dictionary-testable query hash. Retry, fallback,
-cancellation, timeout, result, and observability behavior must remain unchanged.
+**Resolution (PR-025/PR-6F):** The module-private warning helper now accepts one
+closed event shape and reconstructs output from a fixed event, normalized fixed
+search type, fixed error category, and optional bounded opaque query ID, attempt
+number, and primary/fallback stage. Raw query, free-form error message, URL,
+request body, header, credential, key-shaped value, and query hash never enter
+the helper. All six public wrappers, retry, vertical fallback, and missing-key
+discovery use the same contract. Request, retry, fallback, cancellation,
+timeout, result, and observability-ledger behavior is unchanged.
 
-**Proof and residual:** Fail-first production-mode canaries are required for all
-six wrappers plus retry and fallback, followed by focused/full/static/build/E2E/
-controller walls and independent review. Hosted log collection, retention, and
-past-log contents remain unknown. The defect is reachable from source and blocks
-readiness even without hosted-log access.
+**Proof and residual:** The initial production-mode test passed 1 and failed the
+8 intended leak/shape regressions. Corrected dedicated tests passed 11/11 and
+the related wall 101/101; full 1,679/1,679, typecheck, lint, build, Playwright
+17/17, and the five-partition 10-case/29-invariant controller passed. Independent
+exact review returned `VERIFIED`, confidence 0.99, and an in-flight cancellation
+probe emitted zero warnings. Hosted log collection, retention, historical
+contents, and downstream collector behavior remain unknown; this local source
+correction cannot erase or authenticate past deployed logs.
 
 ---
 
@@ -4424,8 +4428,7 @@ repair.
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (3 issues)
-- RR-106: Production Serper warnings expose shopper queries and free-form error text
+### Open (2 issues)
 - RR-107: Optional-platform dependency graph is inconsistent in the tracked lockfile
 - RR-108: Documented environment templates can unintentionally enable Serper requests
 
@@ -4437,10 +4440,10 @@ repair.
 - RR-091: Same-page related-product price can satisfy autonomous card binding
 - RR-104: Paid admission/cache defect is locally contained; deployment-wide enforcement remains unproven
 
-### Fixed (98 issues)
+### Fixed (99 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
 RR-038 through RR-044, RR-046 through RR-090, RR-092 through RR-103, and
-RR-105
+RR-105 through RR-106
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -4449,12 +4452,13 @@ RR-105
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-106** — replace raw Serper diagnostics with one production-safe
-   allowlisted event contract across all verticals and retry/fallback paths.
-   This is the only approved next implementation.
-2. **RR-107 + RR-108** — correct the optional-platform lock graph and public
-   environment setup in separate work units after RR-106. Neither authorizes a
-   package/registry operation or access to the ignored local environment file.
+1. **RR-108** — make one public environment example canonical, leave optional
+   provider credentials blank, document explicit opt-in, and reject known
+   placeholders before request construction. PR-6G is the only approved next
+   implementation and requires no access to the ignored local environment file.
+2. **RR-107** — correct the optional-platform lock graph only in a separately
+   authorized package unit with registry provenance and clean Windows/non-Windows
+   installation evidence. PR-6G grants no package or registry authority.
 3. **RR-104** — retain the one-realm correction, then bind deployment-wide
    ownership and multi-instance/load enforcement when tracked infrastructure is
    available. Do not relabel the local limiter as distributed authority.

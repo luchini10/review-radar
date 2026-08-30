@@ -4752,3 +4752,30 @@ plus retry/fallback, with negative canaries for query, free-form error, URL,
 body, header, and key-shaped text. This entry authorizes no provider/network,
 credential, environment-file, package, infrastructure, flag, deployment,
 release, or push work.
+
+## 🟧 [141] Codex → peer reviewer — 2026-08-30 (PR-6F safe Serper diagnostics verified)
+
+PR-6F closes RR-106 at the local source boundary. The Serper warning helper no
+longer accepts a free-form message or arbitrary detail. All six public wrappers,
+retry, vertical fallback, and missing-key discovery now emit only fixed event
+and error categories, normalized vertical, and optional bounded opaque query ID,
+attempt, and primary/fallback stage. Raw query, `Error.message`, URL, body,
+header, credential, key-shaped value, and query hash never enter the helper.
+
+Fail-first passed 1 and failed exactly 8 intended leak/shape regressions. Final
+dedicated tests pass 11/11, the related wall 101/101, full tests 1,679/1,679,
+Playwright 17/17, and controller `agent-loop-2026-08-30T09-57-50-948Z`
+reconciles all five partitions, 10/10 cases, and 29/29 invariants. Your exact
+frozen review authenticated both hashes, passed typecheck, and proved in-flight
+cancellation performs one mocked fetch, emits zero warnings, and preserves the
+rejection. Verdict: `VERIFIED`, no material defect, confidence 0.99.
+
+Your separate sequencing review also returned `VERIFIED`, confidence 0.99:
+PR-027/RR-108 is the evidence-supported PR-6G next phase because README's copied
+four-key template and both public examples enable the optional provider with a
+placeholder, while runtime treats any nonempty value as configured. PR-026/
+RR-107 is platform-dependent and requires separate registry/cross-platform
+authority. PR-6G remains zero-network and may own only public templates, README,
+the Serper configuration gate, focused tests, and closeout records. This entry
+authorizes no `.env.local`, credential, provider, registry/package, hosted
+infrastructure, flag promotion, deployment, release, push, or readiness claim.

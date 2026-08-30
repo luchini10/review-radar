@@ -15134,3 +15134,152 @@ deleted. No spent fixture entry/content/hash/stat/parse/modification occurred.
 No source/product behavior, package, lockfile, template, README, flag,
 infrastructure, external system, deployment, release, or push changed.
 ReviewRadar remains `NOT READY`.
+
+## Agent Loop Run - 2026-08-30T09:55:15.261Z
+
+- **run id:** agent-loop-2026-08-30T09-54-30-610Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust
+- **parallel:** 1
+- **worker result files checked:** 1
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3245ms |
+| lint | Passed | 10848ms |
+| unit tests | Passed | 28688ms |
+| deterministic eval pipeline | Passed | 458ms |
+| tracked offline benchmark | Passed | 588ms |
+
+### Executed Benchmark Cases
+
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T09-54-30-610Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T09:58:39.093Z
+
+- **run id:** agent-loop-2026-08-30T09-57-50-948Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, non-product-pages, price-trust, requirement-units, wrong-category
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3376ms |
+| lint | Passed | 10896ms |
+| unit tests | Passed | 29090ms |
+| deterministic eval pipeline | Passed | 483ms |
+| tracked offline benchmark | Passed | 628ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- non-product-pages: non-product-espresso-review
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T09-57-50-948Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## 🟩 Codex Production Readiness PR-6F — production-safe Serper diagnostics (2026-08-30)
+
+**Objective and frozen base:** close PR-025/RR-106 at PR-6E commit
+`d4eef54ecdf8506a9b2bfeaa30e566b12ec34b5b` without changing provider
+requests, retry/fallback policy, cancellation, timeout semantics, returned
+results, or the search observability ledger. The phase was zero-provider,
+zero-live, zero-credential, and zero-network.
+
+**Bottleneck challenge:** production warnings were a confirmed reachable shopper-
+data sink. Suppressing every warning would discard useful incident state; query
+hashing would retain dictionary-testable shopper data; package, template, and
+hosted-control work had different roots and authority. The generalized fix was
+one closed allowlisted logger boundary shared by every warning path.
+
+**Fail-first evidence:** a synthetic production-mode test file initially ran 9
+tests: 1 passed and exactly 8 failed. Shopping, organic, direct-retailer,
+evidence, image, and video wrappers exposed query canaries; retry/vertical
+fallback exposed free-form error detail; missing-key discovery did not emit the
+required fixed shape. Canaries covered query, free-form error, URL, header, fake
+key-shaped text, and body. Transport was mocked and no real secret was used.
+
+**Correction:** `logSerperWarning()` is module-private and accepts one closed
+event. It emits fixed event/error categories, normalized fixed search type, and
+only optional query IDs matching `q-` plus four to eight digits, integer attempts
+1 through 999, and `primary`/`fallback` stage. Raw query, `Error.message`, URL,
+body, header, credential, key-shaped text, and query hash never enter the helper.
+All six wrappers, retry, vertical fallback, attempt ceiling, and missing-key
+discovery are covered. Cancellation is rethrown before warning or fallback.
+
+**Verification:**
+
+| Check | Result |
+| --- | --- |
+| Dedicated corrected tests | 11/11 passed |
+| Related Serper/discovery/ledger wall | 101/101 across 10 suites |
+| Complete unit suite | 1,679/1,679 across 228 suites |
+| Typecheck | Passed |
+| Lint | Passed with zero errors and three pre-existing unused-variable warnings |
+| Production build | Passed with Next.js 16.2.6 |
+| Playwright | 17/17 passed |
+| Full deterministic controller | `agent-loop-2026-08-30T09-57-50-948Z`; five serial partitions; 10/10 cases; 29/29 invariants |
+| Generated file check | `next-env.d.ts` unchanged; tracked Git blob `9edff1c7cacb3bfac9a1eadcf6f51eaa99565e38` |
+
+The earlier default controller run
+`agent-loop-2026-08-30T09-54-30-610Z` covered only `price-trust`; it is retained
+as truthful advisory history but does not supply the all-partition claim.
+
+**Frozen source/test manifest (SHA-256):**
+
+```text
+e8f8819e87f3527e009f818be2e16155a4f0befe787478d1a07a26bde5696e9c  lib/search/serper.ts
+6dd06cc9681503dc63a95825fd6b55aaa6c86ad75cb4eec0d85888b979bd7de8  tests/serperProductionLogging.test.mjs
+```
+
+**Independent review:** the reviewer authenticated the exact base and both
+hashes before and after review, inspected every reachable warning site, passed
+11/11 and typecheck, and ran a zero-network in-flight cancellation probe. It
+performed exactly one mocked fetch, emitted zero warnings, and preserved the
+rejection. Exact verdict: `VERIFIED`; no material defect; confidence 0.99.
+
+**Next-phase adjudication:** a separate read-only review independently reproduced
+two mocked attempts from the public Serper placeholder and zero from a blank
+value. It selected PR-027/RR-108 as PR-6G over PR-026/RR-107 because the
+documented setup defect is directly reachable and fully testable without
+network, while honest lock repair needs registry and clean Windows/non-Windows
+installation authority. Verdict: `VERIFIED`; confidence 0.99.
+
+**Residuals and authority:** RR-106 is Fixed locally. Hosted log collectors,
+retention, historical contents, and prior deployments remain unknown. No
+provider, real network, credential, registry, `.env.local`, spent live fixture,
+package/lockfile, public template, README, infrastructure, flag, deployment,
+release, or push work occurred. ReviewRadar remains `NOT READY`. PR-6G alone is
+next; it grants no PR-026, package, registry, hosted-system, or final-readiness
+authority.

@@ -106,6 +106,46 @@ function configuredSerperAttemptCeiling() {
 
 type SerperVertical = keyof typeof SERPER_ENDPOINT_PATHS;
 
+type SerperWarningEventName =
+  | "direct_retailer_search_skipped"
+  | "discovery_skipped"
+  | "evidence_search_skipped"
+  | "image_evidence_search_skipped"
+  | "organic_search_skipped"
+  | "request_retry"
+  | "shopping_search_skipped"
+  | "vertical_fallback"
+  | "video_evidence_search_skipped";
+
+type SerperWarningSearchType =
+  | "direct_retailer"
+  | "discovery"
+  | "evidence"
+  | "images"
+  | "organic"
+  | "shopping"
+  | "videos";
+
+type SerperWarningErrorCategory =
+  | "attempt_ceiling"
+  | "configuration_error"
+  | "http_client_error"
+  | "http_other_error"
+  | "http_server_error"
+  | "provider_error"
+  | "request_timeout"
+  | "transport_error"
+  | "unknown_error";
+
+type SerperWarningEvent = {
+  attemptNumber?: number;
+  errorCategory: SerperWarningErrorCategory;
+  event: SerperWarningEventName;
+  queryId?: string;
+  requestStage?: "fallback" | "primary";
+  searchType: string;
+};
+
 export type SerperSearchStats = {
   categoryGroup: string;
   generatedQueries: string[];
@@ -2423,9 +2463,13 @@ async function fetchSerper(
           throw error;
         }
 
-        logSerperWarning("Retrying Serper request after a transient error.", {
+        logSerperWarning({
+          event: "request_retry",
           searchType,
-          message: error instanceof Error ? error.message : "Unknown error",
+          errorCategory: serperWarningErrorCategory(error),
+          queryId,
+          attemptNumber,
+          requestStage: fallback ? "fallback" : "primary",
         });
 
         return await runRequest(
@@ -2447,9 +2491,13 @@ async function fetchSerper(
         throw error;
       }
 
-      logSerperWarning("Vertical search fell back to standard search.", {
+      logSerperWarning({
+        event: "vertical_fallback",
         searchType,
-        message: error instanceof Error ? error.message : "Unknown error",
+        errorCategory: serperWarningErrorCategory(error),
+        queryId,
+        attemptNumber,
+        requestStage: "primary",
       });
 
       return await runRequestWithRetry(fallbackEndpoint, true);
@@ -2490,12 +2538,100 @@ function isTransientSerperError(error: unknown) {
   return !/status 4\d\d/.test(error.message);
 }
 
-function logSerperWarning(message: string, detail?: unknown) {
+function serperWarningSearchType(searchType: string): SerperWarningSearchType {
+  if (searchType.startsWith("direct-")) {
+    return "direct_retailer";
+  }
+
+  if (
+    searchType === "discovery" ||
+    searchType === "evidence" ||
+    searchType === "images" ||
+    searchType === "organic" ||
+    searchType === "shopping" ||
+    searchType === "videos"
+  ) {
+    return searchType;
+  }
+
+  return "organic";
+}
+
+function serperWarningErrorCategory(
+  error: unknown,
+): SerperWarningErrorCategory {
+  if (isSerperAttemptCeilingError(error)) {
+    return "attempt_ceiling";
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    error.name === "AbortError"
+  ) {
+    return "request_timeout";
+  }
+
+  if (!(error instanceof Error)) {
+    return "unknown_error";
+  }
+
+  if (/status 4\d\d/.test(error.message)) {
+    return "http_client_error";
+  }
+
+  if (/status 5\d\d/.test(error.message)) {
+    return "http_server_error";
+  }
+
+  if (/status \d{3}/.test(error.message)) {
+    return "http_other_error";
+  }
+
+  if (error.message === "Serper returned an error.") {
+    return "provider_error";
+  }
+
+  if (error instanceof TypeError) {
+    return "transport_error";
+  }
+
+  return "unknown_error";
+}
+
+function safeSerperWarningQueryId(queryId: string | undefined) {
+  return queryId && /^q-\d{4,8}$/.test(queryId) ? queryId : undefined;
+}
+
+function safeSerperWarningAttemptNumber(attemptNumber: number | undefined) {
+  return Number.isInteger(attemptNumber) &&
+    (attemptNumber || 0) >= 1 &&
+    (attemptNumber || 0) <= 999
+    ? attemptNumber
+    : undefined;
+}
+
+function logSerperWarning(input: SerperWarningEvent) {
   if (process.env.NODE_ENV === "test") {
     return;
   }
 
-  console.warn("[ReviewRadar Serper]", message, detail || "");
+  const queryId = safeSerperWarningQueryId(input.queryId);
+  const attemptNumber = safeSerperWarningAttemptNumber(input.attemptNumber);
+  const requestStage =
+    input.requestStage === "fallback" || input.requestStage === "primary"
+      ? input.requestStage
+      : undefined;
+
+  console.warn("[ReviewRadar Serper]", {
+    event: input.event,
+    searchType: serperWarningSearchType(input.searchType),
+    errorCategory: input.errorCategory,
+    ...(queryId ? { queryId } : {}),
+    ...(attemptNumber ? { attemptNumber } : {}),
+    ...(requestStage ? { requestStage } : {}),
+  });
 }
 
 function directRetailerSiteQuery(engine: DirectRetailerEngine) {
@@ -2564,9 +2700,10 @@ export async function searchSerperShoppingWithDiagnostics(
     };
   } catch (error) {
     rethrowIfRequestCancelled(error, executionOptions.signal);
-    logSerperWarning("Shopping search skipped after an API error.", {
-      query,
-      message: error instanceof Error ? error.message : "Unknown error",
+    logSerperWarning({
+      event: "shopping_search_skipped",
+      searchType: "shopping",
+      errorCategory: serperWarningErrorCategory(error),
     });
     return {
       candidates: [],
@@ -2641,9 +2778,10 @@ export async function searchSerperOrganic(
     return normalization.candidates;
   } catch (error) {
     rethrowIfRequestCancelled(error, executionOptions.signal);
-    logSerperWarning("Organic search skipped after an API error.", {
-      query,
-      message: error instanceof Error ? error.message : "Unknown error",
+    logSerperWarning({
+      event: "organic_search_skipped",
+      searchType: "organic",
+      errorCategory: serperWarningErrorCategory(error),
     });
     return [];
   }
@@ -2688,10 +2826,10 @@ export async function searchSerperDirectRetailer(
     return normalization.candidates;
   } catch (error) {
     rethrowIfRequestCancelled(error, executionOptions.signal);
-    logSerperWarning("Direct retailer search skipped after an API error.", {
-      engine,
-      query,
-      message: error instanceof Error ? error.message : "Unknown error",
+    logSerperWarning({
+      event: "direct_retailer_search_skipped",
+      searchType: `direct-${engine}`,
+      errorCategory: serperWarningErrorCategory(error),
     });
     return [];
   }
@@ -2719,9 +2857,10 @@ export async function searchSerperOrganicEvidence(
       : [];
   } catch (error) {
     rethrowIfRequestCancelled(error, executionOptions.signal);
-    logSerperWarning("Evidence search skipped after an API error.", {
-      query,
-      message: error instanceof Error ? error.message : "Unknown error",
+    logSerperWarning({
+      event: "evidence_search_skipped",
+      searchType: "evidence",
+      errorCategory: serperWarningErrorCategory(error),
     });
     return [];
   }
@@ -2780,9 +2919,10 @@ export async function searchSerperImageEvidence(
       : normalizeSerperOrganicSources(response.response, maxResults);
   } catch (error) {
     rethrowIfRequestCancelled(error, executionOptions.signal);
-    logSerperWarning("Image evidence search skipped after an API error.", {
-      query,
-      message: error instanceof Error ? error.message : "Unknown error",
+    logSerperWarning({
+      event: "image_evidence_search_skipped",
+      searchType: "images",
+      errorCategory: serperWarningErrorCategory(error),
     });
     return [];
   }
@@ -2816,9 +2956,10 @@ export async function searchSerperVideoEvidence(
       : normalizeSerperOrganicSources(response.response, maxResults);
   } catch (error) {
     rethrowIfRequestCancelled(error, executionOptions.signal);
-    logSerperWarning("Video evidence search skipped after an API error.", {
-      query,
-      message: error instanceof Error ? error.message : "Unknown error",
+    logSerperWarning({
+      event: "video_evidence_search_skipped",
+      searchType: "videos",
+      errorCategory: serperWarningErrorCategory(error),
     });
     return [];
   }
@@ -4110,7 +4251,11 @@ export async function searchSerperForProducts(
   };
 
   if (!process.env.SERPER_API_KEY) {
-    logSerperWarning("SERPER_API_KEY is missing. Skipping Serper discovery.");
+    logSerperWarning({
+      event: "discovery_skipped",
+      searchType: "discovery",
+      errorCategory: "configuration_error",
+    });
     return {
       candidates: [],
       identityResolutionLeads: [],

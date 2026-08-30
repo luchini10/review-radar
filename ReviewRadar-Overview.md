@@ -1763,3 +1763,30 @@ No production pipeline or API contract changed in Phase 6A.
   already accepted, and cannot stop native DNS internals already running. No
   provider/network/live cancellation ran. ReviewRadar remains NOT READY; no
   flag, deployment, release, or push authority changed.
+
+## 43. PR-6F production-safe Serper diagnostics (2026-08-30)
+
+- **Root cause:** the production Serper warning helper accepted a free-form
+  message and arbitrary detail. Six public wrapper catches passed shopper query
+  and uncontrolled `Error.message`; retry and vertical fallback passed free-form
+  errors. Test suppression hid the output only during `NODE_ENV=test`.
+- **Logging contract:** `logSerperWarning()` is module-private and accepts one
+  closed event shape. It reconstructs output from a fixed event, normalized
+  search type, fixed error category, and optional bounded `q-0001`-shaped query
+  ID, integer attempt, and primary/fallback stage. Raw query, free-form error,
+  URL, body, header, credential, key-shaped text, and query hash never enter the
+  warning helper.
+- **Behavior preservation:** shopping, organic, direct-retailer, evidence,
+  image, video, retry, vertical fallback, and missing-key discovery all use the
+  shared contract. Request bodies, provider call counts, retry/fallback policy,
+  cancellation rethrow, timeout semantics, results, search-ledger records, and
+  test-mode suppression are unchanged.
+- **Proof:** fail-first 1 pass / 8 intended failures; dedicated 11/11; related
+  101/101; full 1,679/1,679 across 228 suites; typecheck, lint, production build,
+  Playwright 17/17, deterministic eval, all five controller partitions, 10/10
+  cases, and 29/29 invariants passed. Independent exact review returned
+  `VERIFIED`, confidence 0.99, including a zero-warning cancellation probe.
+- **State and limit:** RR-106 is Fixed locally. Mocked zero-network proof cannot
+  authenticate hosted collectors, retention, historical log contents, or erase
+  prior deployed records. No provider, credential, live data, flag, deployment,
+  release, or push authority changed; ReviewRadar remains NOT READY.

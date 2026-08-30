@@ -11,6 +11,35 @@ Update this file after:
 
 ## 2026-08-30
 
+### Codex - Remove shopper text from production Serper warnings
+
+#### Changed
+
+- Replaced free-form Serper warning messages and detail objects with one closed,
+  module-private event contract used by shopping, organic, direct-retailer,
+  evidence, image, video, retry, fallback, and missing-key paths.
+- Production warnings now retain only fixed event/error categories, a normalized
+  vertical, and optional bounded opaque query ID, attempt number, and request
+  stage. Raw shopper query, free-form error text, URL, body, header, credential,
+  key-shaped value, and query hash are excluded at the logging boundary.
+- Preserved request construction, return shapes, retry/fallback counts,
+  cancellation, timeout handling, search-ledger behavior, and test-mode warning
+  suppression. Added synthetic production-mode leak regressions for every path.
+
+#### Verified
+
+- Fail-first passed 1 and failed exactly 8 new regressions. The corrected
+  dedicated file passed 11/11; the related Serper/discovery/ledger wall passed
+  101/101; the full suite passed 1,679/1,679 across 228 suites.
+- Typecheck, production build, Playwright 17/17, and lint with zero errors/the
+  same three old warnings passed. Controller
+  `agent-loop-2026-08-30T09-57-50-948Z` passed all five serial partitions,
+  10/10 cases, and 29/29 invariants.
+- Independent frozen review returned `VERIFIED`, confidence 0.99, after an
+  in-flight cancellation probe produced one mocked fetch, zero warnings, and
+  the unchanged rejection. No provider, credential, real network, or live data
+  was used; hosted log history and retention remain unknown.
+
 ### Codex - Stop legacy server work after request cancellation
 
 #### Changed

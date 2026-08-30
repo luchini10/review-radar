@@ -3530,3 +3530,31 @@ a known conservative undercount.
   disconnect delivery or reversal of already-accepted provider billing. Native
   DNS may continue internally after cancellation, although no later transport
   can start.
+
+## Production-safe Serper warning contract - 2026-08-30
+
+- A production diagnostic logger must not accept a raw message plus arbitrary
+  detail. Use a module-private closed input and reconstruct output from an
+  allowlist; type declarations alone do not sanitize runtime objects.
+- The current Serper warning allowlist is fixed event, normalized search type,
+  fixed error category, optional existing query ID matching `q-` plus four to
+  eight digits, optional integer attempt 1 through 999, and optional `primary`
+  or `fallback` stage. Do not emit shopper query, `Error.message`, URL, body,
+  header, credential, key-shaped text, or any raw/reversible query hash.
+- Keep every reachable warning site in the regression matrix: shopping,
+  organic, direct-retailer, evidence, image, video, transient retry, vertical
+  fallback, request attempt ceiling, and missing-key discovery. Cover 4xx, 5xx,
+  other HTTP, provider, timeout, transport, unknown, and configuration classes.
+- Negative canaries must exercise query, free-form error, URL, header, fake key,
+  and body values under production mode with mocked transport. Assert exact safe
+  fields, bounded optional fields, and test-mode suppression; never use a real
+  credential or network request for a logging test.
+- Preserve cancellation before warning/retry/fallback. An in-flight cancelled
+  request must rethrow, emit no warning, and start no retry or vertical fallback.
+  Preserve request payloads, return shapes, observability records, and configured
+  retry/fallback counts independently of logging.
+- PR-6F proof: fail-first 1 pass / 8 intended failures; dedicated 11/11;
+  related wall 101/101; full 1,679/1,679; five-partition controller 10/10 cases
+  and 29/29 invariants; independent exact `VERIFIED`, confidence 0.99. Hosted
+  collector behavior, retention, and historical contents remain outside this
+  source-level contract.
