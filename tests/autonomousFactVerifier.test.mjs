@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  AUTONOMOUS_FACT_VERIFIER_VERSION,
   fetchHybridSource,
   isPublicHybridFetchAddress,
   observeHybridSourceHtml,
@@ -98,6 +99,7 @@ describe("autonomous exact-product fact verifier", () => {
       observation,
     });
 
+    assert.equal(AUTONOMOUS_FACT_VERIFIER_VERSION, "oai-hybrid-verifier-v2");
     assert.equal(result.identity.status, "verified");
     assert.equal(result.exactEntityIndex, 0);
     assert.equal(result.price.status, "verified");
@@ -112,6 +114,13 @@ describe("autonomous exact-product fact verifier", () => {
     const observation = observe(`
       <html><head><title>Shark PowerDetect AZ4002 review</title></head><body>
         <h1>Shark PowerDetect AZ4002 Review</h1>
+        ${productJsonLd({
+          "@type": "Product",
+          name: "Shark PowerDetect AZ4002",
+          brand: { name: "Shark" },
+          model: "AZ4002",
+          image: "https://reviews.example/images/az4002.jpg",
+        })}
         <table><tr><th>Model Tested</th><td>AZ405KT1</td></tr></table>
       </body></html>
     `);
@@ -127,12 +136,336 @@ describe("autonomous exact-product fact verifier", () => {
       observation,
     });
 
+    assert.equal(result.identity.status, "contradicted");
+    assert.equal(result.identity.reason, "different_tested_model_observed");
+    assert.equal(result.exactEntityIndex, null);
+    assert.equal(result.imageUrl.status, "inconclusive");
+    assert.equal(result.imageUrl.reason, "different_tested_model_observed");
     assert.equal(result.editorialModel.status, "contradicted");
     assert.equal(result.editorialModel.reason, "different_tested_model_observed");
     assert.equal(result.editorialModel.observedValue, "AZ405KT1");
     assert.equal(result.purchaseUrl.status, "cleared");
     assert.equal(result.purchaseUrl.reason, "source_role_cannot_establish_offer");
     assert.equal(result.rating.reason, "source_role_cannot_establish_owner_rating");
+  });
+
+  it("does not let page-topic Product markup establish professional-test identity or imagery without a tested-model match", () => {
+    const cases = [
+      {
+        identity: {
+          brand: "Example",
+          productName: "Example C100 office chair",
+          model: "C100",
+        },
+        name: "Example C100 office chair",
+        testedModel: null,
+        expectedReason: "tested_model_not_exposed",
+      },
+      {
+        identity: {
+          brand: "Example",
+          productName: "Example B200 blender",
+          model: "B200",
+        },
+        name: "Example B200 blender",
+        testedModel: "B201",
+        expectedReason: "different_tested_model_observed",
+      },
+    ];
+
+    for (const testCase of cases) {
+      const modelRow = testCase.testedModel
+        ? `<table><tr><th>Model Tested</th><td>${testCase.testedModel}</td></tr></table>`
+        : "";
+      const observation = observe(`
+        <html><head><title>${testCase.name} review</title></head><body>
+          <h1>${testCase.name} Review</h1>
+          ${productJsonLd({
+            "@type": "Product",
+            name: testCase.name,
+            brand: { name: testCase.identity.brand },
+            model: testCase.identity.model,
+            image: `https://reviews.example/images/${testCase.identity.model.toLowerCase()}.jpg`,
+          })}
+          ${modelRow}
+        </body></html>
+      `);
+      const result = verifyHybridProductSource({
+        product: product({ identity: testCase.identity }),
+        sourceRole: "professional_test",
+        observation,
+      });
+
+      assert.notEqual(result.identity.status, "verified");
+      assert.equal(result.identity.reason, testCase.expectedReason);
+      assert.equal(result.exactEntityIndex, null);
+      assert.notEqual(result.imageUrl.status, "verified");
+      assert.equal(result.imageUrl.reason, testCase.expectedReason);
+    }
+  });
+
+  it("rejects shared-family tested models and clears provisional images without exact tested-model authority", () => {
+    const provisionalImage = "https://proposal.example/images/x100-a1.jpg";
+    const cases = [
+      {
+        testedModel: null,
+        expectedReason: "tested_model_not_exposed",
+      },
+      {
+        testedModel: "X100 B2",
+        expectedReason: "different_tested_model_observed",
+      },
+    ];
+
+    for (const testCase of cases) {
+      const modelRow = testCase.testedModel
+        ? `<table><tr><th>Model Tested</th><td>${testCase.testedModel}</td></tr></table>`
+        : "";
+      const observation = observe(`
+        <html><head><title>Example X100 A1 review</title></head><body>
+          <h1>Example X100 A1 Review</h1>
+          ${productJsonLd({
+            "@type": "Product",
+            name: "Example X100 A1",
+            brand: { name: "Example" },
+            model: "X100 A1",
+            image: "https://reviews.example/images/x100-a1.jpg",
+          })}
+          ${modelRow}
+        </body></html>
+      `);
+      const result = verifyHybridProductSource({
+        product: product({
+          identity: {
+            brand: "Example",
+            productName: "Example X100 A1",
+            model: "X100 A1",
+          },
+          imageUrl: provisionalImage,
+        }),
+        sourceRole: "professional_test",
+        observation,
+      });
+
+      assert.notEqual(result.editorialModel.status, "verified");
+      assert.equal(result.editorialModel.reason, testCase.expectedReason);
+      assert.notEqual(result.identity.status, "verified");
+      assert.equal(result.identity.reason, testCase.expectedReason);
+      assert.equal(result.exactEntityIndex, null);
+      assert.equal(result.imageUrl.status, "cleared");
+      assert.equal(result.imageUrl.reason, testCase.expectedReason);
+      assert.equal(result.imageUrl.provisionalValue, provisionalImage);
+      assert.equal(result.imageUrl.observedValue, null);
+    }
+  });
+
+  it("does not let an exact tested-model row authorize sibling Product markup", () => {
+    const observation = observe(`
+      <html><head><title>Example X100 comparison</title></head><body>
+        <h1>Example X100 comparison</h1>
+        ${productJsonLd({
+          "@type": "Product",
+          name: "Example X100 B2",
+          brand: { name: "Example" },
+          model: "X100 B2",
+          image: "https://reviews.example/images/x100-b2.jpg",
+        })}
+        <table><tr><th>Model Tested</th><td>X100 A1</td></tr></table>
+      </body></html>
+    `);
+    const result = verifyHybridProductSource({
+      product: product({
+        identity: {
+          brand: "Example",
+          productName: "Example X100 A1",
+          model: "X100 A1",
+        },
+      }),
+      sourceRole: "professional_test",
+      observation,
+    });
+
+    assert.equal(result.editorialModel.status, "verified");
+    assert.equal(result.identity.status, "contradicted");
+    assert.equal(result.identity.reason, "exact_product_not_found");
+    assert.equal(result.exactEntityIndex, null);
+    assert.notEqual(result.imageUrl.status, "verified");
+    assert.equal(result.imageUrl.observedValue, null);
+  });
+
+  it("does not let a target-looking Product name override an unrelated explicit model", () => {
+    const observation = observe(`
+      <html><head><title>Example X100 A1 review</title></head><body>
+        <h1>Example X100 A1 review</h1>
+        ${productJsonLd({
+          "@type": "Product",
+          name: "Example X100 A1",
+          brand: { name: "Example" },
+          model: "B900",
+          image: "https://reviews.example/images/b900.jpg",
+        })}
+        <table><tr><th>Model Tested</th><td>X100 A1</td></tr></table>
+      </body></html>
+    `);
+    const result = verifyHybridProductSource({
+      product: product({
+        identity: {
+          brand: "Example",
+          productName: "Example X100 A1",
+          model: "X100 A1",
+        },
+      }),
+      sourceRole: "professional_test",
+      observation,
+    });
+
+    assert.equal(result.editorialModel.status, "verified");
+    assert.equal(result.identity.status, "contradicted");
+    assert.equal(result.identity.reason, "exact_product_not_found");
+    assert.equal(result.exactEntityIndex, null);
+    assert.notEqual(result.imageUrl.status, "verified");
+    assert.equal(result.imageUrl.observedValue, null);
+  });
+
+  it("does not let another exact entity identifier override an unrelated explicit model", () => {
+    const observation = observe(`
+      <html><head><title>Example X100 A1 review</title></head><body>
+        ${productJsonLd({
+          "@type": "Product",
+          name: "Example X100 A1",
+          brand: { name: "Example" },
+          model: "B900",
+          sku: "X100 A1",
+          image: "https://reviews.example/images/b900.jpg",
+        })}
+        <table><tr><th>Model Tested</th><td>X100 A1</td></tr></table>
+      </body></html>
+    `);
+    const result = verifyHybridProductSource({
+      product: product({
+        identity: {
+          brand: "Example",
+          productName: "Example X100 A1",
+          model: "X100 A1",
+        },
+      }),
+      sourceRole: "professional_test",
+      observation,
+    });
+
+    assert.equal(result.editorialModel.status, "verified");
+    assert.equal(result.identity.status, "contradicted");
+    assert.equal(result.exactEntityIndex, null);
+    assert.notEqual(result.imageUrl.status, "verified");
+  });
+
+  it("falls back from an unavailable Product model to an exact SKU or exact name", () => {
+    const cases = [
+      {
+        name: "Example review topic",
+        sku: "X100 A1",
+      },
+      {
+        name: "Example X100 A1",
+        sku: "",
+      },
+    ];
+
+    for (const testCase of cases) {
+      const observation = observe(`
+        <html><head><title>Example X100 A1 review</title></head><body>
+          ${productJsonLd({
+            "@type": "Product",
+            name: testCase.name,
+            brand: { name: "Example" },
+            model: "",
+            sku: testCase.sku,
+            image: "https://reviews.example/images/x100-a1.jpg",
+          })}
+          <table><tr><th>Model Tested</th><td>X100 A1</td></tr></table>
+        </body></html>
+      `);
+      const result = verifyHybridProductSource({
+        product: product({
+          identity: {
+            brand: "Example",
+            productName: "Example X100 A1",
+            model: "X100 A1",
+          },
+        }),
+        sourceRole: "professional_test",
+        observation,
+      });
+
+      assert.equal(result.editorialModel.status, "verified");
+      assert.equal(result.identity.status, "verified");
+      assert.equal(result.exactEntityIndex, 0);
+      assert.equal(result.imageUrl.status, "verified");
+    }
+  });
+
+  it("accepts an exact tested-model member of an explicit proposed alias set", () => {
+    const observation = observe(`
+      <html><head><title>Miele Guard L1 Cat & Dog review</title></head><body>
+        <h1>Miele Guard L1 Cat & Dog Review</h1>
+        ${productJsonLd({
+          "@type": "Product",
+          name: "Miele Guard L1 Cat & Dog",
+          brand: { name: "Miele" },
+          model: "SUZE0",
+          sku: "12704570",
+          image: "https://reviews.example/images/guard-l1.jpg",
+        })}
+        <table><tr><th>Model Tested</th><td>SUZE0</td></tr></table>
+      </body></html>
+    `);
+    const result = verifyHybridProductSource({
+      product: product({
+        identity: {
+          brand: "Miele",
+          productName: "Guard L1 Cat & Dog",
+          model: "12704570 / SUZE0",
+        },
+      }),
+      sourceRole: "professional_test",
+      observation,
+    });
+
+    assert.equal(result.editorialModel.status, "verified");
+    assert.equal(result.editorialModel.observedValue, "SUZE0");
+    assert.equal(result.identity.status, "verified");
+    assert.equal(result.exactEntityIndex, 0);
+    assert.equal(result.imageUrl.status, "verified");
+  });
+
+  it("keeps professional-test exact identity and imagery when tested-model evidence matches", () => {
+    const observation = observe(`
+      <html><head><title>Example X100 review</title></head><body>
+        <h1>Example X100 Review</h1>
+        ${productJsonLd({
+          "@type": "Product",
+          name: "Example Model X100",
+          brand: { name: "Example" },
+          model: "X100",
+          image: "https://reviews.example/images/x100.jpg",
+        })}
+        <table><tr><th>Model Tested</th><td>X100</td></tr></table>
+      </body></html>
+    `);
+    const result = verifyHybridProductSource({
+      product: product(),
+      sourceRole: "professional_test",
+      observation,
+    });
+
+    assert.equal(result.editorialModel.status, "verified");
+    assert.equal(result.identity.status, "verified");
+    assert.equal(result.exactEntityIndex, 0);
+    assert.equal(result.imageUrl.status, "verified");
+    assert.equal(
+      result.imageUrl.observedValue,
+      "https://reviews.example/images/x100.jpg",
+    );
   });
 
   it("keeps exact Miele identity and price but does not claim dealer-only availability", () => {

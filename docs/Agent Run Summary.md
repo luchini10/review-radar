@@ -2737,3 +2737,44 @@ price defect already has an exact-entity regression and is not imported by the
 application route, so it should be audited after the active staged asset gate.
 Recommended reasoning: High for tested-model/image authority; Medium for
 localized fixture and regression work.
+
+## Codex Run - 2026-08-29 PR-008 professional-test exact-model authority
+
+**Goal and assessment:** close RR-092 without adding publisher/product special
+cases or weakening image recall beyond the proven trust boundary. The complete
+staged fail-first did not reproduce image borrowing because existing asset
+safety already rejected it. The shared verifier did reproduce exact
+identity/image authority from Product JSON-LD without exact tested-model proof,
+so the correction belongs in `lib/autonomousFactVerifier.ts`.
+
+**Change:** verifier v2 requires a complete stable tested identifier or explicit
+proposed alias, rejects shared-family/sibling tokens, and gates professional-test
+identity, entity selection, and imagery on a verified tested model. A stable
+explicit Product model is authoritative: unrelated/conflicting values reject
+before name or SKU fallback. Missing or contradictory authority clears a
+provisional image. Official, purchase-page, commerce, owner, and manufacturer
+behavior remains unchanged.
+
+**Fail-first and review:** initial shared tests produced two intended failures;
+review mutations reproduced sibling-token/entity bypasses, then an unrelated
+`B900` explicit-model bypass. Two frozen reviews returned `CHANGES REQUIRED`.
+After generalized corrections and direct negative/positive controls, the final
+review returned `VERIFIED`, no findings, confidence 0.995. Final hashes are
+verifier `efe5a0c2…cc2ebf6`, verifier tests `4764e6b1…be0a2d`, and staged tests
+`d4bc7248…7816961d`.
+
+**Verification:** focused 57/57; complete 1,568/1,568 across 218 suites;
+typecheck; production build; Playwright 17/17; syntax/diff; full lint with zero
+errors and three old warnings. Controller
+`agent-loop-2026-08-30T01-03-39-664Z` passed all five serial partitions,
+deterministic eval, 10/10 cases, and 29/29 invariants with no repeated failure.
+The first default controller run covered only `price-trust` and was not
+misrepresented as the full matrix.
+
+**Live calls and limits:** zero. No environment file was manually accessed and
+no credential, provider, product-data service, network, or live fixture was
+used. RR-092 is Fixed, but ReviewRadar remains NOT READY: PR-006 live quality
+measurement is blocked, RR-091 is unresolved, and UX/security/operations remain
+open. The next phase is a zero-live RR-091 reachability/exact-price audit; only a
+current reproduction may justify code changes. Recommended reasoning: High for
+reachability and price-authority judgment; Medium for deterministic audit work.

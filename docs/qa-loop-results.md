@@ -13691,3 +13691,143 @@ product-data service, network, or live fixture was accessed. PR-021 improves
 future attribution only. Attempt 1 remains consumed; its exact historical stage
 is unresolved. No retry, replacement, attempt 2, direct-runner fallback, flag
 change, deployment, release, push, or spend ran or is authorized.
+
+## Agent Loop Run - 2026-08-30T01:03:10.053Z
+
+- **run id:** agent-loop-2026-08-30T01-02-28-495Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust
+- **parallel:** 1
+- **worker result files checked:** 1
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3701ms |
+| lint | Passed | 10796ms |
+| unit tests | Passed | 25269ms |
+| deterministic eval pipeline | Passed | 450ms |
+| tracked offline benchmark | Passed | 612ms |
+
+### Executed Benchmark Cases
+
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T01-02-28-495Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T01:04:23.043Z
+
+- **run id:** agent-loop-2026-08-30T01-03-39-664Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3297ms |
+| lint | Passed | 10362ms |
+| unit tests | Passed | 25212ms |
+| deterministic eval pipeline | Passed | 443ms |
+| tracked offline benchmark | Passed | 577ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T01-03-39-664Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## 🟧 Codex — 2026-08-29 — PR-008 professional-test exact-model authority
+
+**Objective and evidence selection:** close RR-092 at the earliest reachable
+shared boundary without weakening purchase, commerce, or asset safety. A new
+complete staged-materializer negative passed on the old code: the existing
+asset path already refused to borrow a URL-less professional-review image. The
+shared verifier nevertheless reproduced the historical defect directly: exact
+page-topic Product markup verified identity/image when tested-model evidence was
+missing or different. The shared boundary, not staged selection, was therefore
+the evidence-supported root cause.
+
+**Fail-first and correction:** the original shared fail-first produced 11 pass /
+2 intended failures. Reviewer mutations then reproduced shared-family
+`X100 A1`/`X100 B2` acceptance and exact-tested/sibling-entity acceptance (14
+pass / 2 intended failures). A later fail-first reproduced target-looking name
+fallback over explicit `model:B900`, including when SKU carried the exact target
+(17 pass / 2 intended failures in the expanded 19-test suite).
+
+`oai-hybrid-verifier-v2` now requires a complete stable tested identifier or one
+member of an explicitly declared proposed alias set. Every observed stable token
+must be documented; one shared family token is insufficient. Professional-test
+Product entity selection separately requires strict identity: a stable explicit
+model that is unrelated or conflicting rejects immediately, only an unavailable
+model may fall through, and conflicting alternate identifiers reject. Missing
+or contradictory tested-model evidence withholds identity/exact-entity/image
+authority and clears a non-null provisional image. The stricter entity matcher
+is professional-test-only; official and purchase-page matching are unchanged.
+
+**Independent correction loop:** review one returned `CHANGES REQUIRED`,
+confidence 0.99, for shared-family token acceptance and missing non-null clearing
+coverage. Review two returned `CHANGES REQUIRED`, confidence 0.995, because an
+unrelated explicit Product model could be ignored in favor of a target-looking
+name. The final replacement returned exact `VERIFIED`, no actionable findings,
+confidence 0.995. The reviewer independently reproduced the closed negatives,
+alias and unavailable-model positives, exact-plus-sibling tested rows, and image
+clearing without network, environment, credential, or live-fixture access.
+
+Frozen final SHA-256 values:
+
+- `lib/autonomousFactVerifier.ts`:
+  `efe5a0c2a457780eb815164843e579f8054ba86f6baa2b2dde3afd5e5cc2ebf6`;
+- `tests/autonomousFactVerifier.test.mjs`:
+  `4764e6b1a62af273006e12ae59c0eae2efb0631ab669531d109c4d969cbe0a2d`;
+- `tests/stagedTerraVerifier.test.mjs`:
+  `d4bc7248e64787f29b6f90c6e4dca5f13fb1767c9bdbd0a1f11ffcfe7816961d`.
+
+**Verification:** final focused shared/asset/staged checks pass 57/57; full tests
+pass 1,568/1,568 across 218 suites; nonincremental typecheck, production build,
+Playwright 17/17, syntax, scoped/full lint, and diff checks pass. Full lint has
+zero errors and the same three pre-existing warnings. The first controller
+invocation used its one-batch default and is retained honestly as partial.
+Explicit five-batch controller `agent-loop-2026-08-30T01-03-39-664Z` then
+passed all 1,568 tests, deterministic eval, exact reconciliation of all five
+serial partitions, and the tracked 10/10-case, 29/29-invariant benchmark with no
+repeated failure candidate. The build noted ignored user-owned `.env.local`
+automatically without exposing any value; E2E-generated `next-env.d.ts` was
+restored.
+
+**Limits and next gate:** no provider, hosted search, product-data service,
+network, credential, or live fixture was accessed. RR-092 is fixed locally, but
+source-role semantic classification and live product quality were not measured.
+Default-off flags remain off. This phase authorizes no live call, retry,
+replacement, flag promotion, deployment, release, or push. With PR-006 blocked,
+PR-007/RR-091 is next as a zero-live reachability and exact-price audit; code
+must not change unless current execution evidence reproduces a remaining gap.

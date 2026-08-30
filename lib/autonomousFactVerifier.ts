@@ -4,7 +4,7 @@ import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import { isIP } from "node:net";
 
-export const AUTONOMOUS_FACT_VERIFIER_VERSION = "oai-hybrid-verifier-v1";
+export const AUTONOMOUS_FACT_VERIFIER_VERSION = "oai-hybrid-verifier-v2";
 
 export type HybridVerificationStatus =
   | "verified"
@@ -221,6 +221,46 @@ function identifierTokens(value: string) {
   );
 }
 
+type StableIdentifierRelation =
+  | "exact_alias"
+  | "conflicting"
+  | "unrelated"
+  | "unavailable";
+
+function proposedIdentifierAliases(value: string) {
+  // A spaced separator is an explicit alias declaration. Whitespace alone is
+  // not: `X100 A1` is one compound identity, while `12704570 / SUZE0`
+  // documents two acceptable stable identifiers.
+  const aliases = value.split(/\s+(?:\/|\||;|or)\s+/i);
+  return aliases
+    .map((alias) => identifierTokens(alias))
+    .filter((tokens) => tokens.size > 0);
+}
+
+function stableIdentifierRelation(
+  proposedModel: string,
+  observedModel: string,
+): StableIdentifierRelation {
+  const aliases = proposedIdentifierAliases(proposedModel);
+  const observedTokens = identifierTokens(observedModel);
+  if (aliases.length === 0 || observedTokens.size === 0) return "unavailable";
+
+  const proposedTokens = new Set(aliases.flatMap((tokens) => [...tokens]));
+  const overlaps = [...observedTokens].some((token) => proposedTokens.has(token));
+  if (!overlaps) return "unrelated";
+
+  const containsExactAlias = aliases.some((alias) =>
+    [...alias].every((token) => observedTokens.has(token)),
+  );
+  const containsUndocumentedIdentifier = [...observedTokens].some(
+    (token) => !proposedTokens.has(token),
+  );
+
+  return containsExactAlias && !containsUndocumentedIdentifier
+    ? "exact_alias"
+    : "conflicting";
+}
+
 function identityBrandMatches(proposedBrand: string, entity: HybridObservedProductEntity) {
   const proposed = normalizeIdentity(proposedBrand);
   const observed = normalizeIdentity(entity.brand || entity.name);
@@ -248,6 +288,37 @@ function entityMatchesExactProduct(
   if (proposedModels.size === 0) return false;
   const observedModels = entityModelTokens(entity);
   return [...proposedModels].some((token) => observedModels.has(token));
+}
+
+function professionalTestEntityMatchesExactProduct(
+  product: HybridProvisionalProduct,
+  entity: HybridObservedProductEntity,
+) {
+  if (!identityBrandMatches(product.identity.brand, entity)) return false;
+
+  const modelRelation = stableIdentifierRelation(
+    product.identity.model,
+    entity.model,
+  );
+  if (modelRelation === "conflicting" || modelRelation === "unrelated") {
+    return false;
+  }
+
+  const alternateIdentifierRelations = [entity.mpn, entity.sku, entity.gtin]
+    .filter(Boolean)
+    .map((value) => stableIdentifierRelation(product.identity.model, value));
+
+  if (alternateIdentifierRelations.includes("conflicting")) return false;
+  if (
+    modelRelation === "exact_alias" ||
+    alternateIdentifierRelations.includes("exact_alias")
+  ) {
+    return true;
+  }
+
+  return (
+    stableIdentifierRelation(product.identity.model, entity.name) === "exact_alias"
+  );
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -628,17 +699,18 @@ function editorialModelReceipt(
   product: HybridProvisionalProduct,
   observation: HybridPageObservation,
 ) {
-  const proposedTokens = identifierTokens(product.identity.model);
-  const matching = observation.testedModels.find((model) => {
-    const tokens = identifierTokens(model);
-    return [...proposedTokens].some((token) => tokens.has(token));
-  });
-  if (matching) {
+  const relations = observation.testedModels.map((model) => ({
+    model,
+    relation: stableIdentifierRelation(product.identity.model, model),
+  }));
+  const matching = relations.find((item) => item.relation === "exact_alias");
+  const conflicting = relations.some((item) => item.relation === "conflicting");
+  if (matching && !conflicting) {
     return receipt({
       status: "verified",
       reason: "exact_tested_model_observed",
       provisionalValue: product.identity.model,
-      observedValue: matching,
+      observedValue: matching.model,
       observation,
     });
   }
@@ -660,6 +732,27 @@ function editorialModelReceipt(
   });
 }
 
+function professionalTestIdentityReceipt(
+  product: HybridProvisionalProduct,
+  observation: HybridPageObservation,
+  editorialModel: HybridVerificationReceipt<string>,
+) {
+  return receipt({
+    status:
+      editorialModel.status === "contradicted"
+        ? "contradicted"
+        : "inconclusive",
+    reason: editorialModel.reason,
+    provisionalValue: {
+      brand: product.identity.brand,
+      productName: product.identity.productName,
+      model: product.identity.model,
+    },
+    observedValue: null,
+    observation,
+  });
+}
+
 export function verifyHybridProductSource(input: {
   product: HybridProvisionalProduct;
   sourceRole: HybridSourceRole;
@@ -667,10 +760,22 @@ export function verifyHybridProductSource(input: {
 }): HybridSourceVerification {
   const { product, sourceRole, observation } = input;
   const matches = observation.entities.flatMap((entity, index) =>
-    entityMatchesExactProduct(product, entity) ? [index] : [],
+    (sourceRole === "professional_test"
+      ? professionalTestEntityMatchesExactProduct(product, entity)
+      : entityMatchesExactProduct(product, entity))
+      ? [index]
+      : [],
   );
-  const identity = identityReceipt(product, observation, matches);
-  const exactEntity = matches.length === 1 ? observation.entities[matches[0]] : null;
+  const editorialModel = editorialModelReceipt(product, observation);
+  const professionalTestEntityAuthorized =
+    sourceRole !== "professional_test" || editorialModel.status === "verified";
+  const identity = professionalTestEntityAuthorized
+    ? identityReceipt(product, observation, matches)
+    : professionalTestIdentityReceipt(product, observation, editorialModel);
+  const exactEntity =
+    professionalTestEntityAuthorized && matches.length === 1
+      ? observation.entities[matches[0]]
+      : null;
   const canEstablishOffer =
     sourceRole === "purchase_page" || sourceRole === "official_product";
   const canEstablishOwnerRating =
@@ -815,11 +920,22 @@ export function verifyHybridProductSource(input: {
     }
   }
 
+  if (!professionalTestEntityAuthorized) {
+    imageUrl = missingReceipt(
+      product.imageUrl,
+      observation,
+      editorialModel.reason,
+    );
+  }
+
   return {
     verifierVersion: AUTONOMOUS_FACT_VERIFIER_VERSION,
     sourceRole,
     sourceUrl: observation.finalUrl,
-    exactEntityIndex: matches.length === 1 ? matches[0] : null,
+    exactEntityIndex:
+      professionalTestEntityAuthorized && matches.length === 1
+        ? matches[0]
+        : null,
     identity,
     price,
     currency,
@@ -829,7 +945,7 @@ export function verifyHybridProductSource(input: {
     imageUrl,
     rating,
     reviewCount,
-    editorialModel: editorialModelReceipt(product, observation),
+    editorialModel,
   };
 }
 

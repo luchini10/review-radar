@@ -26,8 +26,8 @@ only when maintaining this register or auditing its full history.
 | Medium | 34 |
 | Low | 5 |
 | Open | 0 |
-| Needs Investigation | 6 |
-| Fixed | 95 |
+| Needs Investigation | 5 |
+| Fixed | 96 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -3380,7 +3380,7 @@ test, not as a constraint that can weaken price truth.
 | **Phase** | OAI-H2 direct-verification feasibility |
 | **Severity** | High |
 | **Title** | Editorial Product markup can verify identity/image without proving the tested model |
-| **Status** | Needs Investigation |
+| **Status** | Fixed |
 
 **Description:** The bounded H2 fetch of TechGearLab's Shark PowerDetect
 AZ4002 review extracted a structured Product entity named `Shark PowerDetect
@@ -3415,6 +3415,22 @@ professional-test evidence fail closed unless a generalized tested-model
 extractor or a separately verified exact-model oracle positively binds the
 tested unit. Preserve purchase-page exact-entity verification and avoid
 retailer-, publisher-, product-, or fixture-specific rules.
+
+**PR-008 resolution (2026-08-29):** Fixed in the shared verifier. A
+professional-test page now receives exact identity and image authority only
+when its tested-model receipt positively matches a complete stable identifier
+or one member of an explicitly documented alias set. Shared family tokens,
+missing tested-model evidence, contradictory variants, and an unrelated stable
+JSON-LD `model` all fail closed. Without that authority, no exact Product entity
+is selected and a provisional image is cleared rather than upgraded. The rule
+is scoped to professional-test entity selection; official and purchase-page
+behavior is unchanged. The complete staged materializer regression also proves
+that separate exact commerce evidence cannot borrow the unverified editorial
+image. Two frozen reviews returned `CHANGES REQUIRED` for shared-token and
+explicit-model bypasses; the final replacement returned `VERIFIED`, no
+findings, confidence 0.995. Deterministic proof is recorded in
+`docs/qa-loop-results.md`; no live fixture, provider, credential, or network was
+accessed.
 
 ---
 
@@ -4163,16 +4179,15 @@ without changing the frozen request contract.
 ### Open (0 issues)
 - None
 
-### Needs Investigation (6 issues)
+### Needs Investigation (5 issues)
 - RR-014: Mean core-leader coverage critically low
 - RR-015: Run-to-run stability ~19%
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 - RR-091: Same-page related-product price can satisfy autonomous card binding
-- RR-092: Editorial Product markup can verify identity/image without proving the tested model
-### Fixed (95 issues)
+### Fixed (96 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
-RR-038 through RR-044, RR-046 through RR-090, and RR-093 through RR-102
+RR-038 through RR-044, RR-046 through RR-090, and RR-092 through RR-102
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -4185,6 +4200,7 @@ RR-038 through RR-044, RR-046 through RR-090, and RR-093 through RR-102
    final overlap. Recovery stays default-off and R7A stays blocked.
 2. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
    but varied by model, while Tapo appeared raw and died in normalization.
-3. **RR-091 + RR-092** — the autonomous hybrid remains isolated and cannot be
-   integrated until exact transactional binding and exact tested-model
-   attribution pass an independently verified boundary.
+3. **RR-091** — the original autonomous adapter remains isolated. Audit whether
+   its same-page price defect is already closed on every reachable target path
+   before changing code; no promotion is safe without exact transactional
+   binding.

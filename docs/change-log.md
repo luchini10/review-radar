@@ -11,6 +11,37 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Require exact tested-model proof before trusting review-page product markup
+
+#### Changed
+
+- Professional-review Product markup can no longer verify an exact identity or
+  image unless the page positively exposes the tested model. Missing evidence,
+  sibling variants, shared family codes, and unrelated explicit models now fail
+  closed.
+- Explicit model aliases remain supported, including `12704570 / SUZE0` tested
+  as `SUZE0`. Official and retailer product-page behavior is unchanged.
+- When tested-model authority is absent, the verifier clears a provisional
+  image instead of replacing it from page-topic markup. The complete staged
+  materializer also cannot borrow that image when separate commerce evidence
+  makes the candidate otherwise eligible.
+
+#### Verified
+
+- Fail-first tests reproduced the shared-token, sibling-entity, and unrelated-
+  model bypasses. Two independent frozen reviews returned `CHANGES REQUIRED`;
+  the final replacement returned `VERIFIED`, no findings, confidence 0.995.
+- Focused checks pass 57/57; the full suite passes 1,568/1,568 across 218 suites;
+  typecheck, production build, Playwright 17/17, syntax, diff, and lint with zero
+  errors/three old warnings passed.
+- Controller `agent-loop-2026-08-30T01-03-39-664Z` passed deterministic eval,
+  all five partitions, and the tracked 10-case/29-invariant benchmark. No
+  provider, network, credential, or live fixture was accessed.
+
+RR-092 is fixed locally. ReviewRadar remains **NOT READY** because the current
+staged accuracy/repeatability matrix is blocked and RR-091 plus broader UX,
+security, and operational gates remain open.
+
 ### Codex - Make one-shot readiness launcher failures attributable without exposing secrets
 
 #### Changed

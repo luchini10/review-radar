@@ -261,6 +261,55 @@ describe("OAI-T10 deterministic evidence materializer", () => {
     );
   });
 
+  it("does not borrow a professional-review Product image when tested-model authority is missing", () => {
+    const sourceUrl = "https://manufacturer1.example/products/v100";
+    const result = materializeStagedTerraEvidencePackage({
+      shopperRequest: { query: "cordless vacuum" },
+      researchOutput: researchOutput(),
+      market: "US",
+      candidates: [
+        exactCandidateInput({
+          sources: [
+            {
+              sourceUrl,
+              sourceRole: "professional_test",
+              ...productPageSource({
+                image: "https://reviews.example/images/v100.jpg",
+                url: sourceUrl,
+                visibleClaim: "",
+              }),
+              claims: [],
+            },
+          ],
+          shoppingResults: [
+            {
+              title: "Example Brand V100 cordless vacuum",
+              productLink: "https://merchant.example/products/v100",
+              source: "Example Store",
+              price: "$399.00",
+            },
+          ],
+        }),
+      ],
+    });
+    const candidate = result.evidencePackage.candidates[0];
+
+    assert.equal(candidate.eligibility, "eligible");
+    assert.equal(
+      candidate.assets.productUrl,
+      "https://merchant.example/products/v100",
+    );
+    assert.equal(candidate.assets.imageUrl, null);
+    assert.equal(candidate.assets.imageUrlEvidenceId, null);
+    assert.equal(
+      result.evidencePackage.evidence.some(
+        (item) => item.candidateId === "candidate_1" && item.kind === "image",
+      ),
+      false,
+    );
+    assert.equal(result.diagnostics.candidates[0].imageUrlAvailable, false);
+  });
+
   it("separates identity, complete-product relationship, and identity-safe URL loss from real asset decisions", () => {
     const source = exactCandidateInput().sources[0];
     const relationshipUnknown = materializeStagedTerraEvidencePackage({

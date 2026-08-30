@@ -4,6 +4,40 @@
 
 ---
 
+## PR-008 professional-test exact-model authority (2026-08-29)
+
+- `professional_test` Product markup is page-topic evidence, not exact-product
+  authority by itself. Identity, `exactEntityIndex`, and image may become
+  verified only when `editorialModel.status === "verified"`.
+- Tested-model matching requires a complete stable identifier. Whitespace alone
+  joins a compound identity (`X100 A1`); a spaced `/`, `|`, `;`, or `or`
+  explicitly declares aliases (`12704570 / SUZE0`). Every observed stable token
+  must belong to the proposed alias set. One shared family token never proves a
+  variant.
+- For professional-test Product entities, a nonempty stable JSON-LD `model` is
+  authoritative: exact alias may support identity, while unrelated or
+  conflicting values reject before name/SKU fallback. An unavailable model may
+  fall through to an exact alternate identifier or exact name. Conflicting
+  MPN/SKU/GTIN tokens still reject; unrelated alternate namespaces may coexist
+  with an exact model.
+- Missing or contradictory tested-model evidence forces identity closed, clears
+  the exact entity, and turns a non-null provisional image into `cleared` with
+  `observedValue:null`. Official and purchase-page verification are unchanged.
+- Preserve mutations for shared siblings, exact-tested/sibling-entity,
+  target-name/`B900`, `B900` plus exact SKU, exact aliases, missing tested model,
+  non-null image clearing, and full staged materialization.
+- Frozen SHA-256: verifier
+  `efe5a0c2a457780eb815164843e579f8054ba86f6baa2b2dde3afd5e5cc2ebf6`;
+  verifier tests
+  `4764e6b1a62af273006e12ae59c0eae2efb0631ab669531d109c4d969cbe0a2d`;
+  staged tests
+  `d4bc7248e64787f29b6f90c6e4dca5f13fb1767c9bdbd0a1f11ffcfe7816961d`.
+- Two independent snapshots returned `CHANGES REQUIRED`; the final replacement
+  returned `VERIFIED`, no findings, confidence 0.995. Final focused 57/57, full
+  1,568/1,568, build, typecheck, E2E 17/17, and the five-partition controller
+  passed. No live fixture, provider, network, credential, flag, or deployment
+  authority was used or granted.
+
 ## PR-021 typed nonsecret launcher-terminal contract (2026-08-29)
 
 - Future launcher failures emit one canonical JSON line with schema version

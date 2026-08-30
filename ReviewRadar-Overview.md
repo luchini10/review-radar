@@ -510,6 +510,13 @@ The default legacy path is orchestrated in `app/api/recommendations/route.ts`
 - Exact Best Matches with a shopper budget now require a renderable product page plus trusted in-budget price evidence. Weak, missing, suspicious, or conflicting prices should become close matches that need verification, not exact matches.
 - 🟩 **Text-priced products are budget-usable when the price is specific and plausible.** A price that comes only from recommendation text (no structured `metadata.offers`) but has already cleared the implausibly-low and conflicting checks now counts as `canUseForBudget` (so it can be an exact match), while still flagged `needs_verification` on the card. Only *vague* text prices (ranges, or "around/about/approximately $X") stay budget-unusable. This stops budget-only/thin-evidence searches (e.g. `shop vac` / `$400`) from returning 0 exact matches when retailers bot-wall the structured-offer fetch. The suspicious/financing/conflicting/full-size-appliance protections are unchanged — they run before this branch. See QA log "Claude Change 1 — Budget-usable text prices".
 - Evidence pages such as reviews, Reddit/forums, buying guides, support pages, category/search pages, and comparison pages may still help the research, but they should not become product cards or primary CTA links.
+- `lib/autonomousFactVerifier.ts` applies a separate exact-model boundary to
+  professional tests. Page-topic Product JSON-LD cannot verify identity or
+  imagery unless the page positively exposes the tested model. Complete
+  compound identifiers and explicitly documented aliases are accepted; shared
+  family tokens, missing/conflicting tested models, and unrelated explicit
+  Product models fail closed. Official and purchase-page entity rules are not
+  changed by this professional-test-only gate.
 
 ### Discovery internals (`lib/search/serper.ts` → `searchSerperForProducts`, ~line 2370)
 - **Depth budgets** from `SEARCH_DEPTH` via `SEARCH_DEPTH_CONFIGS` (`lib/search/sourcePacks.ts`): `dev` / `standard` / `deep` set max shopping/organic/retailer/direct queries, `maxEnrichedProducts`, and `maxRawCandidates`.
@@ -1584,3 +1591,24 @@ No production pipeline or API contract changed in Phase 6A.
   warnings. Zero live calls.
 - **State:** C3 is complete. C4 requires a separate peer checkpoint, benchmark
   decision, and six-search approval. R7A remains blocked and separately gated.
+
+## 38. PR-008 professional-test exact-model authority (2026-08-29)
+
+- **Root cause:** the reachable shared hybrid verifier selected Product JSON-LD
+  independently of the tested-model receipt and treated any shared digit-bearing
+  token as exact. A target-looking Product name could also override an unrelated
+  explicit model. The full staged materializer already refused the reproduced
+  unbound image, so the generalized defect was fixed at the shared verifier.
+- **Behavior:** verifier v2 requires complete stable tested-model proof or an
+  explicit proposed alias. Professional-test Product entity selection also
+  treats a stable explicit model as authoritative. Without both authorities,
+  identity/image stay unverified, no exact entity is selected, and a provisional
+  image is cleared. Official, purchase, owner, manufacturer, commerce, and
+  staged asset rules remain unchanged.
+- **Proof:** focused 57/57; full 1,568/1,568 across 218 suites; typecheck, build,
+  Playwright 17/17, five-partition controller, 10/10 benchmark cases, and 29/29
+  invariants passed. After two `CHANGES REQUIRED` correction rounds, the final
+  frozen source review returned `VERIFIED`, no findings, confidence 0.995.
+- **State:** RR-092 is fixed locally with zero live work. The staged route stays
+  default-off, production readiness remains blocked, and RR-091 now requires a
+  reachability/exact-price audit before any code change is assumed necessary.

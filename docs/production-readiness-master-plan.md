@@ -650,7 +650,7 @@ shopper-facing recommendation quality.
 | PR-005 | P1 | verified | Five named deterministic QA batches reported different search pools but all executed the same five synthetic eval cases, so green output overstated coverage. | `runDeterministicBatch()` delegated every batch to `eval-pipeline.mjs` and recorded batch searches only as metadata. The controller also overwrote the authoritative handoff and copied Markdown outside the repo. | A tracked 10-case/29-invariant benchmark now gives every batch a unique partition. Results persist executed IDs/outcomes; reconciliation independently rederives them from persisted streams and complete tracked price/product oracles. Controller next-task output is ignored/advisory only, and no Desktop copy occurs. | Fail-first 9 pass / 1 intended fail; corrected focused 26/26; complete 1,477/1,477; exact five-batch reconciliation; benchmark 10/10 and 29/29; E2E/build/static/eval/ranking/dry-run walls; independent `APPROVED`. | Closed without production or live behavior changes. Synthetic fixtures/oracles require deliberate maintenance and do not prove market coverage or provider quality. Ignored artifacts are reconciled, not cryptographically immutable. |
 | PR-006 | P1 | attempt 1 consumed pre-provider; live measurement protocol blocked | Current staged-path market-leader recall, final-set stability, exact/near truth, hard-requirement accuracy, price coverage, first-loss distribution, latency, and cost are not established. PR-3K proves only one safe `shop vac` result; historical legacy-path evidence found zero final overlap and severe leader loss. | Provider variance, planning variance, discovery loss, strict evidence gates, and/or ranking may contribute; attribution remains unmeasured on the active path. Existing quality harnesses call the legacy route and the July leader set may have drifted. | PR-4A freezes a dated four-shape/six-attempt staged matrix, canonical artifact producer, exact analyzer, manual audits, serial hash chain, and fail-closed stop rules. PR-4B's exact committed launcher plan was approved, but attempt 1 stopped before provider work without an artifact. PR-021 now provides independently verified typed attribution for future launcher stops, but governance must separately decide whether any future measurement protocol is permissible. No retry, replacement, or attempt 2 is authorized. | Exact commit/matrix/request/run/nonce/prior-artifact binding; dated provenance; repeated final-card Jaccard; leader and illustrative coverage; exact/near, requirement, wrong-type, source, price, offer, image, first-loss, latency, call, token, and cost reconciliation; complete manual card/source audits. Candidate-pool Jaccard is `not_scored_privacy_boundary`. | High cost/variance risk. Attempt 1 is consumed. Stop on every prefix and any safety failure. Truth expires 2026-09-12. The runner and analyzer cannot authorize another attempt, release, flag, or deployment; independent review remains mandatory. |
 | PR-007 | P1 | investigating | RR-091 says same-page related-product price can satisfy autonomous card binding. A wrong variant price is release-blocking if the affected path is promoted. | Product entity selection may not bind offer identity tightly enough when multiple products share a page. | Reproduce with tracked synthetic multi-entity pages, then require exact entity/offer binding using shared identity rules. | Original and cross-category reproductions; exact-product positive controls; no unsafe price/product URL; full price and identity wall. | High false-negative/false-positive risk. The affected experimental path remains default-off; no promotion before closure. |
-| PR-008 | P1 | investigating | RR-092 says editorial Product markup can verify identity/image without proving the tested model. A wrong model image/link is release-blocking if promoted. | Structured markup establishes a product entity without sufficient tested-model attribution or page role. | Require exact tested-model attribution from eligible page evidence; editorial markup remains evidence-only unless the commerce/page boundary independently passes. | Editorial review negatives, manufacturer/retailer positives, sibling-model and accessory mutations, asset-wall regression. | High asset-recall tradeoff. Default-off path must stay off until resolved. |
+| PR-008 | P1 | verified generalized correction | Historical RR-092 evidence showed editorial Product markup verifying identity/image without proving the tested unit. The complete staged regression already rejected the unbound image, but the reachable shared verifier reproduced the unsafe authority. | Professional-test entity selection was independent of tested-model status, and both tested-model and Product-entity matchers accepted any shared digit-bearing token. A target-looking name could also override an unrelated explicit JSON-LD model. | Verifier v2 requires a complete stable tested identifier or explicit proposed alias, rejects shared-token conflicts, treats a stable explicit Product model as authoritative, and withholds identity/entity/image authority when tested-model evidence is missing or contradictory. Stricter entity matching is professional-test-only. | Initial shared fail-first, staged full-path negative, cross-category and alias controls, sibling/missing/conflicting/unrelated mutations, non-null clearing, focused/full/static/build/E2E/controller walls, and final independent `VERIFIED`. | Closed locally with conservative false-negative risk. Source-role semantic classification remains outside this snapshot; default-off and no-live/no-release boundaries remain. |
 | PR-009 | P1 | verified correction; successor blocker isolated | The commit-pinned PR-2 request completed provider research but failed before verification as an unattributed `research_candidate_invalid`. | The v1 schema made the model author internal candidate/fact IDs while runtime required stricter array-relative values not fully specified by schema/prompt; it also rejected requirement ordering the schema could not constrain. The exact old failing field remains private and unknown. | Research contract/schema/prompt v2 make IDs server-owned, validate the exact unique requirement set before canonical ordering, align non-whitespace constraints, and retain only a guarded candidate field-group reason. Trust gates remain unchanged. | Fail-first 18 pass / 4 intended fail; candidate group matrix; staged 54/54; full 1,438/1,438; E2E/build/static/eval/ranking/dry-run walls; independent review. | Contract-v2 revalidation produced the narrower `candidate_sources` first loss. PR-011 now owns that successor blocker. Never reuse any spent attempt. |
 | PR-010 | P2 | verified | The Phase D estimator's field named `standardUsd` used its frozen 2026-07-25 rates, while official current Terra prices are lower. Readiness reporting could confuse a conservative approval rate with current estimated spend. | The rate object was intentionally frozen for approval reproducibility but the output label did not distinguish frozen-envelope and current-market estimates. | Plan/evidence schema v2 names the dated frozen approval envelope and dated `standard_non_regional` current estimate separately. Only the frozen conservative value controls the unchanged hard ceiling. | Fail-first 5 pass / 5 intended fail; exact short/long/cache-write/search rates and totals; focused 10/10; staged 56/56; full 1,440/1,440; E2E/build/static/eval/ranking/dry-run walls; independent review. | Closed locally without live spend. Re-check and date the informational card when official prices change; never silently reprice an existing approval envelope. |
 | PR-011 | P1 | verified | Contract-v2 research completed with 69 response-owned sources but failed before verification as `research_candidate_invalid / candidate_sources`. | The exact historical cause is privacy-hidden. A generalized deterministic cause was proven: canonical display dedupe discarded later exact response-owned variants before exact-membership validation. | A dedicated staged registry preserves every parseable exact response-owned variant once; canonical display/count behavior is unchanged. Closed source subreasons distinguish shape, duplicate, unsafe, and unregistered without retaining URLs. | Fail-first 27/3; focused 55/55; staged 59/59; full 1,444/1,444; E2E/static/build/dry-run walls; independent approval; a new live response crossed research validation. | Closed. Never canonical-match a model-authored URL or infer the spent response's branch. PR-012 closed the successor observability blocker; PR-013 owns lifecycle feasibility. |
@@ -1489,7 +1489,7 @@ directory is spent.
 
 ### Phase PR-5 — Correct the highest-impact repeated first loss
 
-- Status: **planned**
+- Status: **in progress; PR-008 complete locally**
 - Select only after PR-4 evidence. Add fail-first regression coverage, make one
   generalized correction, run focused and broad controls, compare against the
   same baseline, reject or revert speculative complexity, document, and commit.
@@ -1497,6 +1497,45 @@ directory is spent.
   or closes a release blocker.
 - Reasoning: **High** for root-cause selection; **Medium** for routine localized
   implementation.
+
+#### PR-5A / PR-008 — Close professional-test exact-model authority
+
+- Status: **complete locally; zero live; independently verified**
+- Objective and bottleneck: close RR-092 at the earliest reachable shared
+  boundary. A full staged fail-first proved that downstream asset safety already
+  refused the URL-less editorial image, so changing staged selection would have
+  targeted a symptom. The shared verifier itself reproduced exact identity and
+  image authority from page-topic Product markup without a tested-model match.
+- Correction: `oai-hybrid-verifier-v2` requires a complete stable tested-model
+  identifier or one explicit proposed alias. A shared family token is
+  insufficient, unexpected stable identifiers conflict, and a stable explicit
+  Product `model` that is unrelated or conflicting rejects the entity before
+  name/SKU fallback. Only professional-test entity selection is stricter;
+  official and purchase-page rules remain unchanged. Missing or contradictory
+  tested-model evidence clears exact entity authority and any provisional image.
+- Controls: exact `X100 A1`, sibling `X100 B2`, unrelated `B900`, missing model,
+  cross-category C100/B200, exact `12704570 / SUZE0` alias, non-null image
+  clearing, exact-entity price, official-product, purchase-page, staged commerce,
+  and full materializer coverage.
+- Independent correction loop: review one found shared-family and coverage
+  defects; review two found explicit-model precedence. Both returned `CHANGES
+  REQUIRED`. The third frozen review returned `VERIFIED`, no findings,
+  confidence 0.995.
+- Frozen SHA-256: verifier
+  `efe5a0c2a457780eb815164843e579f8054ba86f6baa2b2dde3afd5e5cc2ebf6`;
+  verifier tests
+  `4764e6b1a62af273006e12ae59c0eae2efb0631ab669531d109c4d969cbe0a2d`;
+  staged tests
+  `d4bc7248e64787f29b6f90c6e4dca5f13fb1767c9bdbd0a1f11ffcfe7816961d`.
+- Proof: final focused 57/57; full 1,568/1,568 across 218 suites; typecheck,
+  production build, Playwright 17/17, syntax, diff, and lint with zero errors/
+  three old warnings. Controller `agent-loop-2026-08-30T01-03-39-664Z`
+  reconciled all five partitions, 10/10 benchmark cases, 29/29 invariants, and
+  deterministic eval with no repeated failure candidate.
+- Limits: no provider, network, credential, or live fixture was accessed. This
+  closes RR-092 locally but does not establish live quality, source-role
+  semantics, production readiness, flag promotion, deployment, release, or
+  push authority.
 
 ### Phase PR-6 — UX, resilience, security, and operational closure
 
@@ -1560,8 +1599,10 @@ Release blockers today:
   origin/fixture/manual review. PR-021 now closes future launcher attribution,
   but it grants no new live protocol or authority; the legacy scorecard remains
   non-authorizing;
-- RR-091 and RR-092 remain unresolved for an experimental path that cannot be
-  promoted safely.
+- RR-091 remains unresolved for the isolated historical adapter and must be
+  audited against current reachability and the shared exact-entity verifier
+  before any promotion. RR-092 is closed locally by PR-008, but that does not
+  substitute for blocked live accuracy/repeatability evidence.
 
 The verdict can improve only through the required evidence above. Passing
 unit tests alone cannot change it.
