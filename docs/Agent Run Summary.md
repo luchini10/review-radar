@@ -3002,3 +3002,37 @@ accessed. RR-105 is Fixed locally; ReviewRadar remains NOT READY. PR-6E should
 next run a read-only production-operations/dependency baseline. Recommended
 reasoning: High for security/config/deployment trust boundaries; Medium for
 bounded repository inventory and deterministic diagnostics.
+
+## Codex Run - 2026-08-30 PR-6E production operations and dependency baseline
+
+**Goal and assessment:** identify the earliest tracked production blocker after
+PR-6D without changing application behavior or assuming an absent repository
+control is absent from hosting. The confirmed priority is a reachable production
+privacy sink in Serper warnings, not speculative platform hardening, a broad
+package upgrade, or another process-local limiter.
+
+**Evidence:** zero-network production-mode mocks captured a shopper-query canary,
+an uncontrolled synthetic error canary, and a fake key-shaped token from the
+shared Serper warning paths. All six search wrappers pass raw query/error detail;
+retry and fallback warnings pass free-form errors. Separately, the package-only
+lock tree exits `ELSPROBLEMS` because Tailwind optional WASM requires runtime
+`^1.1.4` but only optional `0.2.12` is locked. README's copied public template
+has 4 of 14 canonical keys, and both public examples give the optional Serper key
+a nonempty placeholder that starts a mocked request.
+
+**Classification and review:** PR-025/RR-106 is P1/High and PR-6F is the only
+approved next implementation. PR-026/RR-107 and PR-027/RR-108 are separate
+P2/Medium dependency and configuration issues. Independent exact verdict:
+`VERIFIED`, no material correction, confidence 0.99. Hosted headers, health,
+deployment/rollback, distributed ownership, observability, clean cross-platform
+install behavior, and current advisories remain unknown.
+
+**Boundaries and next step:** no provider, network, credential, registry,
+package, lockfile, source, template, flag, infrastructure, deployment, release,
+or push change occurred. An initial root inventory printed and statted the
+ignored `.env.local` filename without reading any content/value/hash; a failing
+npm check wrote an uninspected external debug log. No fixture access occurred.
+ReviewRadar remains NOT READY. PR-6F should add fail-first production-log
+canaries, then one allowlisted Serper diagnostic event contract. Recommended
+reasoning: High for the privacy contract; Medium for bounded implementation and
+deterministic validation.

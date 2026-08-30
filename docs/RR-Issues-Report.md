@@ -1,9 +1,9 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through production-readiness PR-6D
+## Compiled for AI Agent Consumption — Phase 0 through production-readiness PR-6E
 
 **Generated:** 2026-08-30
-**Scope:** All phases from initial measurement harness through the PR-6D
-legacy request-cancellation correction
+**Scope:** All phases from initial measurement harness through the PR-6E
+production-operations and dependency baseline
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -20,12 +20,12 @@ only when maintaining this register or auditing its full history.
 
 | Metric | Count |
 |--------|-------|
-| Total Issues | 105 |
+| Total Issues | 108 |
 | Critical | 15 |
-| High | 50 |
-| Medium | 35 |
+| High | 51 |
+| Medium | 37 |
 | Low | 5 |
-| Open | 0 |
+| Open | 3 |
 | Needs Investigation | 6 |
 | Fixed | 98 |
 | Won't Fix | 1 |
@@ -97,6 +97,7 @@ only when maintaining this register or auditing its full history.
 | Phase 6D post-RR-069 restart | 0 |
 | Phase 6D post-RR-061 restart | 1 |
 | Production readiness PR-6A boundary audit | 3 |
+| Production readiness PR-6E operations/dependency baseline | 3 |
 | Reopened RR-061 image-safety mini-phase | 0 |
 | RR-069 source-upgrade identity safety mini-phase | 0 |
 | Phase A search-observability audit filing | 7 |
@@ -4323,10 +4324,110 @@ residuals, not evidence that the local wiring defect remains.
 
 ---
 
+#### RR-106
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-106 |
+| **Phase** | Production readiness PR-6E audit / PR-6F correction |
+| **Severity** | High |
+| **Title** | Production Serper warnings expose shopper queries and free-form error text |
+| **Status** | Open |
+
+**Description:** The shared Serper warning helper is suppressed only when
+`NODE_ENV=test`; it remains active in production. Shopping, organic, direct-
+retailer, evidence, image, and video catches pass the raw query and uncontrolled
+`Error.message` into `console.warn`. Inner transient-retry and vertical-fallback
+warnings also pass uncontrolled error text. A deterministic mocked production
+probe captured an exact shopper-query canary. A second probe captured a
+synthetic error canary and fake key-shaped token. No network or real secret was
+used.
+
+**Expected correction (PR-025/PR-6F):** One allowlisted event contract must
+cover every Serper vertical and retry/fallback warning. It may retain only an
+opaque existing request/query ID, fixed vertical, bounded attempt/fallback
+state, bounded status/timeout class, and fixed error category. It must never
+accept or emit raw query, free-form error message, URL, request body, header,
+credential, or a reversible/dictionary-testable query hash. Retry, fallback,
+cancellation, timeout, result, and observability behavior must remain unchanged.
+
+**Proof and residual:** Fail-first production-mode canaries are required for all
+six wrappers plus retry and fallback, followed by focused/full/static/build/E2E/
+controller walls and independent review. Hosted log collection, retention, and
+past-log contents remain unknown. The defect is reachable from source and blocks
+readiness even without hosted-log access.
+
+---
+
+#### RR-107
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-107 |
+| **Phase** | Production readiness PR-6E operations/dependency baseline |
+| **Severity** | Medium |
+| **Title** | Optional-platform dependency graph is inconsistent in the tracked lockfile |
+| **Status** | Open |
+
+**Description:** `package.json` agrees with the lockfile root, and every remote
+lock entry has npm-registry provenance and integrity. The complete package-only
+tree still exits `ELSPROBLEMS`: `@tailwindcss/oxide-wasm32-wasi@4.3.0` requires
+`@napi-rs/wasm-runtime ^1.1.4`, while the only locked runtime is optional
+`0.2.12`, which satisfies a different optional consumer. No compatible nested
+Tailwind runtime is locked.
+
+**Expected correction (PR-026):** In a separately authorized dependency unit,
+regenerate or minimally correct the lock graph without broad upgrades, then
+prove clean deterministic installation and resolution on supported Windows and
+a non-Windows target. Authenticate exact package provenance and rerun the build,
+static checks, complete suite, and independent review.
+
+**Residual:** The current installed tree reports no invalid or missing package;
+five extraneous installed packages are local workspace drift and were not
+cleaned. The mismatch is optional-platform dependent, and no real clean install
+was run. No registry/advisory query occurred, so current vulnerability status is
+unknown. This issue must not be bundled into RR-106's privacy correction.
+
+---
+
+#### RR-108
+
+| Field | Value |
+|-------|-------|
+| **ID** | RR-108 |
+| **Phase** | Production readiness PR-6E operations/dependency baseline |
+| **Severity** | Medium |
+| **Title** | Documented environment templates can unintentionally enable Serper requests |
+| **Status** | Open |
+
+**Description:** README directs users to copy the tracked
+`.env.local.example`, but that file carries only four of the canonical public
+template's 14 keys and omits current mode/flag settings. Both public templates
+assign the optional `SERPER_API_KEY` a nonempty placeholder even though README
+says the key may be blank. Runtime checks only nonemptiness. A zero-network mock
+using the exact public placeholder initiated one attempted Serper request and
+reached the RR-106 warning path.
+
+**Expected correction (PR-027):** Establish one canonical public environment
+template, leave optional provider credentials blank by default, document
+explicit opt-in, and reject known placeholder values before request construction.
+Add zero-network blank/placeholder/valid-shaped key controls and a public-
+template drift test. Never inspect or modify the user's ignored `.env.local`.
+
+**Residual:** The probe proves documented local setup can initiate unintended
+work; it does not prove a real request was made in any deployment. Valid
+credential-format or rotation policy is a separate operations concern. Keep the
+template/configuration correction separate from RR-106 logging and RR-107 lock
+repair.
+
+---
+
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (0 issues)
-- None.
+### Open (3 issues)
+- RR-106: Production Serper warnings expose shopper queries and free-form error text
+- RR-107: Optional-platform dependency graph is inconsistent in the tracked lockfile
+- RR-108: Documented environment templates can unintentionally enable Serper requests
 
 ### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
@@ -4348,14 +4449,20 @@ RR-105
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-104** — retain the one-realm correction, then bind deployment-wide
+1. **RR-106** — replace raw Serper diagnostics with one production-safe
+   allowlisted event contract across all verticals and retry/fallback paths.
+   This is the only approved next implementation.
+2. **RR-107 + RR-108** — correct the optional-platform lock graph and public
+   environment setup in separate work units after RR-106. Neither authorizes a
+   package/registry operation or access to the ignored local environment file.
+3. **RR-104** — retain the one-realm correction, then bind deployment-wide
    ownership and multi-instance/load enforcement when tracked infrastructure is
    available. Do not relabel the local limiter as distributed authority.
-2. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
+4. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
    final overlap. Recovery stays default-off and R7A stays blocked.
-3. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
+5. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
    but varied by model, while Tapo appeared raw and died in normalization.
-4. **RR-091** — PR-007 corrected the shared reachable exact-price boundaries,
+6. **RR-091** — PR-007 corrected the shared reachable exact-price boundaries,
    but the original membership-only adapter remains isolated and unsafe. Keep
    it unpromoted; any future routing proposal requires directly observed exact
    transactional binding and a new independent review.

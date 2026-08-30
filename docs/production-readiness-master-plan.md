@@ -667,6 +667,9 @@ shopper-facing recommendation quality.
 | PR-022 | P1 | verified generalized correction | The default legacy route sent provider/Serper-owned citation and product-page URLs through direct server fetches. Deterministic mocked transport observed both consumers request the link-local metadata address. | `citationUrlVerification.ts` and `productAssets.ts` predated the shared DNS-pinned fetch boundary and had no complete scheme/address/redirect/body/fan-out contract. | Both consumers now reuse `fetchHybridSource()`: HTTP(S)-only parsing, credential/default-port enforcement, complete public-address resolution, address pinning, per-hop redirect revalidation, one hard DNS-plus-transport wall, declared/actual byte and content-type limits, and ordered concurrency capped at four. Citation bot-wall compatibility and product best-effort identity/asset behavior remain explicit. | Fail-first literal/mapped/IPv6 private addresses, private DNS, mixed DNS, public-to-private redirects, credential/port/scheme, malformed/limit redirects, hard DNS/transport timeout, content-type, declared/actual byte, order/concurrency, bot-wall, cache-key, and public controls; final focused 74/74; full 1,620/1,620; static/build/E2E/controller walls; independent frozen `VERIFIED`, confidence 0.98. | Closed locally by PR-6B. OS `dns.lookup` cannot cancel native resolver work after the caller's hard deadline, although no later transport can start; PR-023's admission/global-concurrency boundary owns sustained-traffic containment. Citation leniency does not prove final page usability or truth. No live exploit occurred. |
 | PR-023 | P1 | verified local correction; deployment residual retained | Public `/api/recommendations` and `/api/features` could buffer oversized bodies and start paid work without a shared request-frequency/concurrency admission gate. Unique feature categories and legacy searches could also grow process caches without a hard capacity; identical misses were not coalesced. | Request parsing, field validation, paid-operation admission, and cache ownership evolved independently. The active legacy validator had no maxima for query/budget/priorities/avoid, both routes called `json()` before a byte ceiling, and both cache maps retained unique keys without a capacity sweep. | PR-6C adds one 64 KiB streaming JSON boundary, exact route field/container limits, a shared one-realm paid-work admission contract, background-job leases, bounded TTL/LRU caches, in-flight coalescing, and hashed context-complete keys. | Final focused 89/89; full 1,658/1,658; typecheck/lint/build/E2E; five-partition controller; two corrective independent reviews followed by exact `VERIFIED` at confidence 0.98; zero provider/network/live work. | The reachable local application defect is contained. RR-104 remains `Needs Investigation — contained/narrowed` because the 4-concurrent/12-starts-per-minute authority is one JavaScript realm only; worker-, restart-, multi-instance-, edge-, and deployment-wide enforcement is unproven. |
 | PR-024 | P2 | verified local correction; hosted-disconnect residual retained | The browser could label a legacy search cancelled while the active synchronous server path continued provider, Serper, and page-fetch work. | The client aborted only its fetch. The legacy route, planning/final/narration calls, Serper retries/fallbacks, verification fetches, enrichment, and shared loaders had no request-owned cancellation contract. | PR-6D adds one typed server cancellation class, threads `Request.signal` through every proven cancel-safe legacy paid/network stage, returns a stable 499 cancellation result, prevents later fallback/retry work, and makes shared cache coalescing waiter-aware. Independent hard timeouts remain distinct. | Fail-first 58 pass / 10 intended fail; corrected focused 68/68; full 1,668/1,668; typecheck/lint/build/E2E/controller; independent late-loader and DNS cancellation/timeout probes; exact `VERIFIED`, confidence 0.97; all 17 source/test hashes stable. | Closed at the local source boundary. A deployed Next.js host/proxy may not deliver every browser disconnect through `Request.signal`; already-accepted upstream work cannot be retroactively unbilled; native DNS may finish internally although no later transport starts. No live cancellation was attempted. |
+| PR-025 | P1 | open; PR-6F approved next | Every Serper vertical can emit a shopper-derived query and an uncontrolled error message through production `console.warn`. Zero-network production-mode probes captured both query and synthetic error canaries. | The shared warning helper suppresses only tests, while six wrapper catches and retry/fallback diagnostics pass raw query or `Error.message` detail directly to it. | Replace the free-form detail surface with one allowlisted production-safe event contract across shopping, organic, direct-retailer, evidence, image, video, retry, and fallback paths. Preserve only opaque query/request ID, vertical, attempt/fallback state, bounded status/timeout class, and a fixed error category. | Fail-first production-mode canaries across every vertical and inner retry/fallback path; secret-, URL-, header-, body-, query-, and error-message-negative assertions; unchanged attempts, fallback, cancellation, timeout, and returned-result behavior; focused/full/static/build/E2E/controller walls; exact independent review. | Privacy and incident-diagnostic tradeoff. Do not hash the raw query as a substitute for redaction. Roll back the logger/test unit if bounded diagnostics cannot be preserved without shopper text. No provider/network access is needed. |
+| PR-026 | P2 | open; separately sequenced | The tracked lockfile fails its complete package-only consistency check: Tailwind's optional WASM package requires `@napi-rs/wasm-runtime ^1.1.4`, while the only locked runtime is optional version `0.2.12`. | Two optional WASM consumers with incompatible major ranges share one top-level lock entry and no compatible nested Tailwind runtime. | Regenerate or minimally correct the lock graph in a separately authorized dependency unit, then authenticate platform-specific optional resolution without broad upgrades. | Package-only dependency-tree check; clean deterministic install on supported Windows and a non-Windows target; build/static/full suite; exact diff/registry provenance and independent review. | Installed local dependencies currently resolve without an invalid/missing node, so impact is platform-dependent. Current advisory state is unknown. A package change requires separate registry/network authority and must not be mixed with PR-025. |
+| PR-027 | P2 | open; separately sequenced | The documented setup directs users to copy a stale four-key `.env.local.example`; both public templates assign a nonempty placeholder to optional `SERPER_API_KEY`. A zero-network mock proved that the placeholder passes the runtime's truthiness gate and initiates Serper work. | Public examples and README instructions drifted from the canonical 14-key environment contract, and optional provider enablement has no placeholder-value rejection. | Make one canonical public template authoritative, keep optional provider keys empty by default, document explicit opt-in, and reject known placeholder values before any request construction. | Public-template equality/derivation test; placeholder/blank/real-shaped key controls with mocked zero-network transport; README setup replay; unchanged valid-key behavior; independent review. | This is configuration correctness, not proof of credential validation. Keep it separate from production log redaction and dependency-lock repair. Never inspect or modify the user's ignored `.env.local`. |
 
 ## Suspected weaknesses requiring measurement
 
@@ -1811,32 +1814,83 @@ directory is spent.
 
 #### PR-6E — Production-operations and dependency baseline
 
-- Status: **approved next; read-only source audit; zero network/credentials**
-- Objective: determine the earliest evidence-backed remaining production-
-  operations release blocker before changing configuration, dependencies, or
-  deployment behavior.
-- Bottleneck judgment: PR-6B through PR-6D closed the three concrete reachable
-  local defects from PR-6A. PR-006 live quality evidence is blocked and RR-104
-  cannot become distributed authority without tracked deployment architecture.
-  A repository-bound operations audit is therefore stronger than speculative
-  UX work, broad dependency upgrades, or another process-local limiter.
-- Scope: authenticate package/lockfile integrity, framework/middleware/runtime
-  configuration, public headers, health/readiness behavior, safe error/log
-  paths, public environment-name contracts, cache/store diagnostics, and
-  deployment/rollback documentation. Classify source-enforced, test-only,
-  documented, platform-dependent, absent, and unknown evidence separately.
-- Boundaries: no `.env.local`, credentials, registry/network advisory query,
-  package install/update, lockfile regeneration, hosted account, infrastructure,
-  live traffic, remediation, deployment, release, or push. Repository absence
-  is not proof that an untracked hosting control is missing in production.
-- Completion: independent review must authenticate the evidence and selected
-  bottleneck. Record one separate fail-first successor only if a concrete defect
-  is proven; regenerate the handoff and create a documentation-only local commit.
+- Status: **complete as an evidence-only audit; zero provider/network;
+  independently verified**
+- Objective and decision: identify the earliest reachable production-operations
+  release blocker without treating absent repository evidence as a deployed
+  vulnerability. The proven P1 is PR-025/RR-106 production Serper log exposure;
+  it outranks speculative header/hosting work and the separate P2 dependency and
+  template defects.
+- Logging evidence: `logSerperWarning()` is active in production. Shopping,
+  organic, direct-retailer, evidence, image, and video wrappers pass raw query
+  and uncontrolled error message detail; inner retry and vertical-fallback
+  warnings also pass uncontrolled messages. Main-agent and independent mocked
+  production probes used no network and captured query canaries; an adversarial
+  synthetic error carried both an error canary and a fake key-shaped token into
+  warning output. No real secret was used.
+- Dependency evidence: `package.json` and the lock root agree, all 762 remote
+  lock entries use the npm registry and carry integrity, and the installed tree
+  has no invalid/missing package. The tracked package-only graph nevertheless
+  exits `ELSPROBLEMS`: Tailwind's optional WASM binding requests runtime
+  `^1.1.4`, but only optional `0.2.12` is locked. Five installed packages are
+  extraneous local workspace drift and were not cleaned. No registry or advisory
+  query ran; current vulnerability status remains unknown.
+- Configuration evidence: README directs copying `.env.local.example`. That
+  public tracked file has four keys versus the canonical example's 14 and omits
+  the canonical file's current flag settings. Both assign the optional Serper
+  key a nonempty placeholder. The runtime checks only nonemptiness. A mocked probe
+  proved the placeholder initiates one attempted request and the same unsafe
+  warning path. PR-027/RR-108 owns this distinct setup defect.
+- Unknowns: no tracked global header policy, health/readiness route, CI/deploy/
+  rollback/runbook, runtime-version pin, or authenticated current-advisory proof
+  was found. Hosted edge controls and operational systems may exist elsewhere,
+  so deployed headers, health, observability, distributed ownership, rollback,
+  and advisory state remain unknown—not asserted vulnerable or safe.
+- Independent review: exact `VERIFIED`; the reviewer reproduced the zero-network
+  query warning, authenticated the lock mismatch and template behavior, agreed
+  with PR-025/RR-106 P1 High, PR-026/RR-107 and PR-027/RR-108 P2 Medium, and
+  required PR-6F to be the only next implementation. Confidence 0.99.
+- Process residuals: an initial root-file inventory printed the ignored
+  `.env.local` filename and necessarily statted root entries. Its content,
+  value, hash, or copy was never read or produced, and it was not edited. A
+  failing local npm consistency command wrote its normal debug log outside the
+  repository in the user's npm cache; that file was not inspected or deleted.
+  Neither event contributes to product evidence. Exact-path discipline resumed.
+- Authority limit: no source/product behavior, package, lockfile, public
+  template, README, infrastructure, flag, or external system changed. No live,
+  provider, credential, registry, hosted-account, deployment, release, or push
+  authority follows from this audit.
+
+#### PR-6F / PR-025 — Production-safe Serper diagnostics
+
+- Status: **approved next; fail-first local correction; zero provider/network**
+- Objective: prevent shopper queries, free-form error text, URLs, request bodies,
+  headers, and key-shaped values from reaching production Serper warnings while
+  retaining enough bounded state to diagnose vertical, retry, fallback, timeout,
+  and status-class behavior.
+- Bottleneck judgment: a confirmed reachable privacy sink is stronger than
+  adding speculative hosting controls, changing dependencies, or synchronizing
+  templates. PR-026 and PR-027 remain separate and unauthorized in this phase.
+- Required contract: one allowlisted warning event across all six public search
+  wrappers plus inner retry/fallback diagnostics. It may retain only an opaque
+  existing query/request ID, fixed vertical, bounded attempt/fallback state,
+  bounded status or timeout class, and a fixed error category. It must never
+  accept or emit raw query, `Error.message`, URL, body, header, credential, or a
+  reversible/dictionary-testable query hash.
+- Required proof: first capture production-mode failures for shopping, organic,
+  direct-retailer, evidence, image, and video plus retry and vertical fallback.
+  Assert canaries absent and exact safe fields present. Preserve cancellation,
+  timeout, retry/fallback counts, return values, observability ledger, and
+  test-mode behavior. Then run focused, full, static, build, E2E, controller,
+  exact diff/hash, and independent adversarial review.
+- Boundaries: no provider, real network, credentials, `.env.local`, public
+  template/README, dependency/lockfile, infrastructure, flag, deployment,
+  release, push, PR-026, or PR-027 work.
 
 ### Phase PR-6 — UX, resilience, security, and operational closure
 
-- Status: **in progress; PR-6A through local PR-6D complete; PR-6E production-
-  operations and dependency baseline next**
+- Status: **in progress; PR-6A through evidence-only PR-6E complete; PR-6F/
+  PR-025 production-safe Serper diagnostics next**
 - Address proven comprehension, accessibility, cancellation, partial-success,
   cache, rate/payload, URL/redirect, redaction, health, configuration,
   dependency, deployment, and rollback gaps.
@@ -1908,9 +1962,13 @@ Release blockers today:
   also contains the native-resolver residual only within that realm. PR-024/
   RR-105 now closes the local legacy cancellation source contract, but deployed
   disconnect delivery and already-accepted upstream work remain residual.
+  PR-6E also proves three open tracked defects: PR-025/RR-106 can expose shopper
+  queries and free-form errors in production Serper warnings; PR-026/RR-107 has
+  an inconsistent optional-platform lock graph; and PR-027/RR-108 can enable
+  unintended Serper requests through documented placeholder configuration.
   Distributed admission, load behavior, production headers/health/config/
-  observability, dependency risk, accessibility, and deployment/rollback
-  authority remain release blockers.
+  observability, current dependency advisories, accessibility, and deployment/
+  rollback authority otherwise remain unknown release gates.
 
 The verdict can improve only through the required evidence above. Passing
 unit tests alone cannot change it.

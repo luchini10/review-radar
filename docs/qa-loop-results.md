@@ -15063,3 +15063,74 @@ occurred. RR-105 is Fixed locally; ReviewRadar remains `NOT READY`. PR-6E is a
 read-only production-operations/dependency baseline, not authorization for
 credentials, package changes, infrastructure, live traffic, deployment,
 release, or push.
+
+## 🟧 Codex Production Readiness PR-6E — operations and dependency baseline (2026-08-30)
+
+**Objective and frozen base:** audit the tracked production-operating boundary
+at PR-6D commit `e22e83db14d62762da706b281585a70cc675a37b` before changing
+configuration, dependencies, or hosting behavior. The phase was evidence-only
+for product/source, zero-provider, zero-live, zero-credential, and zero-network.
+Repository absence was classified as unknown unless source itself proved a
+reachable defect.
+
+**Bottleneck challenge:** speculative security headers, a broad dependency
+upgrade, another process-local limiter, or UX work would not attack the strongest
+proved release risk. Production Serper warnings are reachable shopper-data
+sinks. The lock mismatch and public-template drift are real but have separate
+root causes and lower immediate impact. Hosted headers, health, distributed
+ownership, deployment/rollback, observability, and current advisories remain
+unknown without separate authority.
+
+**Deterministic evidence:**
+
+| Check | Result |
+| --- | --- |
+| Repository/base | Exact `e22e83db14d62762da706b281585a70cc675a37b`; PR-6D parent/tree authenticated before audit |
+| Production Serper probe | Mocked `global.fetch`; zero network; query canary captured in warnings |
+| Adversarial log probe | Synthetic free-form error and fake key-shaped canaries both captured; no real secret |
+| Warning reachability | Shopping, organic, direct-retailer, evidence, image, and video catches pass raw query/error; retry/fallback pass free-form error |
+| Root manifest/lock | Direct dependency specifications agree exactly |
+| Registry/integrity parse | 762 remote entries; all npm-registry URLs; every remote entry has integrity |
+| Package-only tree | Exit 1, `ELSPROBLEMS invalid: @napi-rs/wasm-runtime@0.2.12` |
+| Lock cause | Tailwind optional WASM requires `^1.1.4`; only top-level optional `0.2.12` is locked; unrs optional WASM accepts `^0.2.11` |
+| Installed tree | No invalid/missing dependency in the independent full-tree check; five extraneous packages are local workspace drift |
+| Public environment contract | `.env.local.example` has 4 keys versus 14; both public examples use a nonempty optional Serper placeholder |
+| Placeholder probe | Exact public placeholder passed the truthiness gate and initiated one mocked request; zero network |
+| Tracked operations evidence | No global header policy, health/readiness route, tracked CI/deploy/rollback/runbook, or runtime-version pin found |
+| Current advisories | Unknown; no registry/network audit ran |
+
+The tracked lock has 763 package entries including the root. Three packages
+declare install scripts (`fsevents`, `sharp`, and `unrs-resolver`); no script,
+install, update, or lock regeneration ran. `next.config.ts` contains only the
+Turbopack root setting. The four tracked API routes have no health/readiness
+endpoint. These are repository facts, not proof that an external platform lacks
+equivalent controls.
+
+**Issue classification:**
+
+- PR-025/RR-106 — P1 / High / Open: raw shopper query and uncontrolled error
+  text can reach production Serper warnings. PR-6F is the only approved next
+  implementation.
+- PR-026/RR-107 — P2 / Medium / Open: optional-platform lock graph is
+  inconsistent. Keep it out of PR-6F and require separate package/network
+  authority.
+- PR-027/RR-108 — P2 / Medium / Open: documented public templates can
+  unintentionally enable Serper work. Keep it separate from logging and lock
+  correction.
+
+**Independent review:** the reviewer authenticated the exact base and source
+paths, reproduced the production query-warning result with mocked transport,
+confirmed the package-only mismatch and public-template behavior, and rejected
+false claims about deployed controls or current advisories. Exact verdict:
+`VERIFIED`; no material correction; confidence 0.99. Residual uncertainty is
+hosted configuration, real clean-install behavior, and registry advisory state.
+
+**Process residuals and authority:** one root-level file inventory printed the
+ignored `.env.local` filename and necessarily statted root entries before exact-
+path discipline resumed. No environment content, value, hash, copy, or edit
+occurred. The failing npm consistency check wrote its normal debug log outside
+the repository in the user npm cache; that file was neither inspected nor
+deleted. No spent fixture entry/content/hash/stat/parse/modification occurred.
+No source/product behavior, package, lockfile, template, README, flag,
+infrastructure, external system, deployment, release, or push changed.
+ReviewRadar remains `NOT READY`.
