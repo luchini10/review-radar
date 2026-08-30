@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import { describe, it } from "node:test";
 
 import {
@@ -492,6 +493,71 @@ describe("OAI-1 isolated Responses adapter", () => {
         error.startsWith("purchase_url_not_bound_to_purchase_source:"),
       ),
     );
+  });
+
+  it("characterizes membership-only price acceptance and keeps the isolated adapter off routed code", () => {
+    const request = buildNormalizedShopperRequest({ query: "vacuum" });
+    const sourceUrl = "https://merchant.example/products/hz4002";
+    const exactProductPrice = 329.99;
+    const relatedProductPrice = 319.99;
+    const historicalShape = slate({
+      products: [
+        card({
+          identity: {
+            brand: "Shark",
+            product_name: "Shark HZ4002 corded stick vacuum",
+            model: "HZ4002",
+            source_ids: ["s1"],
+          },
+          purchase_offer: {
+            verification_status: "Claimed current",
+            price_amount: relatedProductPrice,
+            currency: "USD",
+            price_text: "$319.99",
+            seller: "Example Store",
+            product_url: sourceUrl,
+            source_ids: ["s1"],
+          },
+        }),
+      ],
+      sources: [
+        {
+          id: "s1",
+          role: "purchase_page",
+          title: "Shark HZ4002 product page",
+          publisher: "Example Store",
+          url: sourceUrl,
+        },
+      ],
+    });
+
+    // This legacy validator has no page-observation input. Its success proves
+    // only URL/source-role membership, not that the displayed amount belongs
+    // to the exact product on a multi-product page.
+    const membershipOnly = validateAutonomousSlateForRequest(
+      historicalShape,
+      request,
+    );
+    assert.equal(
+      membershipOnly.valid,
+      true,
+      JSON.stringify(membershipOnly.errors),
+    );
+    assert.equal(
+      historicalShape.products[0].purchase_offer.price_amount,
+      relatedProductPrice,
+    );
+    assert.notEqual(relatedProductPrice, exactProductPrice);
+
+    for (const relativePath of [
+      "app/api/recommendations/route.ts",
+      "app/api/recommendations-v2/route.ts",
+      "lib/stagedTerraRecommendationRoute.ts",
+      "lib/directTerraRecommendationRoute.ts",
+    ]) {
+      const source = fs.readFileSync(relativePath, "utf8");
+      assert.doesNotMatch(source, /autonomousResearchAdapter/);
+    }
   });
 
   it("requires the deterministic market and active-budget checks and rejects invented IDs", () => {

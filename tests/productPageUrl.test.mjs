@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import {
   getProductPageLink,
   prioritizeProductPageUrlsInResult,
+  productPageMatchesIdentity,
 } from "../lib/productPageUrl.ts";
 
 const verifiedAt = "2026-06-11T00:00:00.000Z";
@@ -218,6 +219,397 @@ describe("product page URL selection", () => {
 
     assert.equal(getProductPageLink(wrongOnly), null);
     assert.equal(cleared.recommendations[0].product_page_url, "");
+  });
+
+  it("rejects contradictory model evidence before the product-page fast path", () => {
+    const base = {
+      brand: "Example",
+      model: "Q50 Max",
+      productName: "Example Q50 Max robot vacuum",
+    };
+
+    assert.equal(
+      productPageMatchesIdentity({
+        ...base,
+        pageTitle: "Example Q50 Max and Q50 Pro robot vacuum",
+        pageUrl: "https://merchant.example/products/q50-max",
+      }),
+      false,
+    );
+    assert.equal(
+      productPageMatchesIdentity({
+        ...base,
+        pageTitle: "Example Q50 Max robot vacuum",
+        pageUrl: "https://merchant.example/products/q50-pro",
+      }),
+      false,
+    );
+    assert.equal(
+      productPageMatchesIdentity({
+        ...base,
+        pageTitle: "Example Q50 Max robot vacuum",
+        pageUrl: "https://merchant.example/products/q50-max/123456789",
+      }),
+      true,
+    );
+
+    const compound = {
+      brand: "Example",
+      model: "X100 A1",
+      productName: "Example X100 A1 appliance",
+    };
+    for (const pageTitle of [
+      "Example X100 (A1) and X100 (B2) appliance",
+      "Example X100 A1 plus B2 appliance",
+      "Example X100 A1 alongside B2 appliance",
+      "Example X100 A1 featuring B2 appliance",
+      "Example X100 A1 model B2 appliance",
+      "Example X100 A1 variant B2 appliance",
+      "Example X100 A1 trim B2 appliance",
+      "Example X100 A1 version B2 appliance",
+      "Example X100 A1 aka B2 appliance",
+      "Example X100 A1 includes B2 appliance",
+      "Example X100 appliance",
+    ]) {
+      assert.equal(
+        productPageMatchesIdentity({
+          ...compound,
+          pageTitle,
+          pageUrl: "https://merchant.example/products/x100-a1/123456",
+        }),
+        false,
+        pageTitle,
+      );
+      const pageUrl =
+        "https://www.bestbuy.com/site/example-x100-a1/123456.p";
+      assert.equal(
+        getProductPageLink(
+          buildProduct({
+            category: "appliance",
+            citations: [
+              {
+                title: pageTitle,
+                url: pageUrl,
+                what_it_supports: "Captured retailer result.",
+              },
+            ],
+            metadata: {
+              brand: field("Example", pageUrl),
+              offers: [],
+            },
+            name: compound.productName,
+            product_page_url: "",
+          }),
+        ),
+        null,
+        `general selection: ${pageTitle}`,
+      );
+    }
+
+    for (const pageTitle of [
+      "Example X100 (A1) appliance",
+      "Example X100-A1 appliance",
+      "Example X100/A1 appliance",
+      "Example X100 A1 4-Burner appliance",
+      "Example X100 A1 4 Burner appliance",
+      "Example X100 A1 5Ah appliance",
+      "Example X100 A1 5 Ah appliance",
+      "Example X100 A1 12-Cup appliance",
+      "Example X100 A1 12 Cup appliance",
+      "Example X100 A1 3000RPM appliance",
+      "Example X100 A1 3000 RPM appliance",
+    ]) {
+      assert.equal(
+        productPageMatchesIdentity({
+          ...compound,
+          pageTitle,
+          pageUrl: "https://merchant.example/products/x100-a1/123456",
+        }),
+        true,
+        pageTitle,
+      );
+      const pageUrl =
+        "https://www.bestbuy.com/site/example-x100-a1/123456.p";
+      assert.equal(
+        getProductPageLink(
+          buildProduct({
+            category: "appliance",
+            citations: [
+              {
+                title: pageTitle,
+                url: pageUrl,
+                what_it_supports: "Captured retailer result.",
+              },
+            ],
+            metadata: {
+              brand: field("Example", pageUrl),
+              offers: [],
+            },
+            name: compound.productName,
+            product_page_url: "",
+          }),
+        )?.url,
+        pageUrl,
+        `general selection: ${pageTitle}`,
+      );
+    }
+
+    const numeric = {
+      brand: "Example",
+      model: "X100 20",
+      productName: "Example X100 20 appliance",
+    };
+    for (const pageTitle of [
+      "Example X100 20 plus 30 appliance",
+      "Example X100 20 alongside 30 appliance",
+      "Example X100 20 variant 30 appliance",
+      "Example X100 20 and 30 appliance",
+      "Example X100 20, 30 appliance",
+      "Example 30 alongside X100 20 appliance",
+      "Example X100 20 plus X100 model 2024 appliance",
+      "Example X100 20 plus X100 30.0 appliance",
+      "Example X100 20 plus model number 2024 appliance",
+      "Example X100 20 plus model no. 2024 appliance",
+      "Example X100 20 plus model code 2024 appliance",
+      "Example X100 20 plus version number 30.0 appliance",
+      "Example X100 20 plus variant number 30.0 appliance",
+      "Example X100 20 plus variant code 2024 appliance",
+      "Example X100 20 plus trim level 30.0 appliance",
+      "Example X100 20 plus trim code 2024 appliance",
+      "Example X100 20 plus 2024 model X100 appliance",
+      "Example X100 20 plus B2 with Bluetooth Low Energy version 5.0 appliance",
+      "Example X100 20 plus model Bluetooth LE version 5.0 appliance",
+      "Example X100 20 plus variant USB Type-C version 3.2 appliance",
+      "Example X100 20 plus trim HDMI eARC version 2.1 appliance",
+      "Example X100 20 plus model Wi-Fi 6E appliance",
+      "Example X100 20 plus Wi-Fi 6E model appliance",
+      "Example X100 20 plus model ID: Wi-Fi 6E appliance",
+      "Example X100 20 plus model identifier Bluetooth LE version 5.0 appliance",
+      "Example X100 20 plus model-name USB Type-C version 3.2 appliance",
+      "Example X100 20 plus variant ID HDMI eARC version 2.1 appliance",
+      "Example X100 20 plus trim name DisplayPort Alt Mode version 2.0 appliance",
+      "Example X100 20 plus Wi-Fi 6E model identifier appliance",
+      "Example X100 20 plus Bluetooth LE version 5.0 model name appliance",
+      "Example X100 20 plus ModelID Wi-Fi 6E appliance",
+      "Example X100 20 plus modelIdentifier Bluetooth LE version 5.0 appliance",
+      "Example X100 20 plus modelName USB Type-C version 3.2 appliance",
+      "Example X100 20 plus variantID HDMI eARC version 2.1 appliance",
+      "Example X100 20 plus variantIdentifier DisplayPort Alt Mode version 2.0 appliance",
+      "Example X100 20 plus variantName Wi-Fi 7 appliance",
+      "Example X100 20 plus trimID Bluetooth Low Energy version 5.0 appliance",
+      "Example X100 20 plus trimIdentifier Wi-Fi 6E appliance",
+      "Example X100 20 plus trimName USB Type-C version 3.2 appliance",
+      "Example X100 20 plus Wi-Fi 6E ModelID appliance",
+      "Example X100 20 plus Bluetooth LE version 5.0 trimName appliance",
+      "Example X100 20 plus Model ID is Wi-Fi 6E appliance",
+      "Example X100 20 plus ModelID equals Wi-Fi 6E appliance",
+      "Example X100 20 plus model called Bluetooth LE version 5.0 appliance",
+      "Example X100 20 plus model named USB Type-C version 3.2 appliance",
+      "Example X100 20 plus variant is Wi-Fi 6E appliance",
+      "Example X100 20 plus Wi-Fi 6E is the Model ID appliance",
+      "Example X100 20 plus Bluetooth LE version 5.0 is the modelName appliance",
+      "Example X100 20 plus model designation is DisplayPort Alt Mode version 2.0 appliance",
+      "Example X100 20 plus model is called Bluetooth LE version 5.0 appliance",
+      "Example X100 20 plus model is named USB Type-C version 3.2 appliance",
+      "Example X100 20 plus model is designated Wi-Fi 6E appliance",
+      "Example X100 20 plus model is designated as Wi-Fi 6E appliance",
+      "Example X100 20 plus variant is called HDMI eARC version 2.1 appliance",
+      "Example X100 20 plus trim is named DisplayPort Alt Mode version 2.0 appliance",
+      "Example X100 20 plus model is known as Wi-Fi 6E appliance",
+      "Example X100 20 plus model also known as Wi-Fi 6E appliance",
+      "Example X100 20 plus model is also known as Wi-Fi 6E appliance",
+      "Example X100 20 plus model is the Wi-Fi 6E appliance",
+      "Example X100 20 plus Wi-Fi 6E is known as the model appliance",
+      "Example X100 20 plus Wi-Fi 6E is designated as the model appliance",
+      "Example X100 20 plus Bluetooth LE version 5.0 is called the modelName appliance",
+      "Example X100 20 plus USB Type-C version 3.2 is named the variantID appliance",
+      "Example X100 20; the model, also known as Wi-Fi 6E, appliance",
+      "Example X100 20 plus model, is designated as Wi-Fi 6E appliance",
+      "Example X100 20 plus model is, also known as Wi-Fi 6E appliance",
+      "Example X100 20 plus Wi-Fi 6E, also known as the model appliance",
+      "Example X100 20 plus Wi-Fi 6E is, also known as the model appliance",
+    ]) {
+      assert.equal(
+        productPageMatchesIdentity({
+          ...numeric,
+          pageTitle,
+          pageUrl: "https://merchant.example/products/x100-20/123456",
+        }),
+        false,
+        pageTitle,
+      );
+      const pageUrl =
+        "https://www.bestbuy.com/site/example-x100-20/123456.p";
+      assert.equal(
+        getProductPageLink(
+          buildProduct({
+            category: "appliance",
+            citations: [
+              {
+                title: pageTitle,
+                url: pageUrl,
+                what_it_supports: "Captured retailer result.",
+              },
+            ],
+            metadata: {
+              brand: field("Example", pageUrl),
+              modelNumber: field("X100 20", pageUrl),
+              offers: [],
+            },
+            name: numeric.productName,
+            product_page_url: "",
+          }),
+        ),
+        null,
+        `general numeric selection: ${pageTitle}`,
+      );
+    }
+
+    for (const testCase of [
+      {
+        exactTitle: "Example X100 2024 appliance",
+        model: "X100 2024",
+        productName: "Example X100 2024 appliance",
+        siblingTitle: "Example X100 2030 appliance",
+      },
+      {
+        exactTitle: "Example X100 30.0 appliance",
+        model: "X100 30.0",
+        productName: "Example X100 30.0 appliance",
+        siblingTitle: "Example X100 31.0 appliance",
+      },
+    ]) {
+      assert.equal(
+        productPageMatchesIdentity({
+          brand: "Example",
+          model: testCase.model,
+          productName: testCase.productName,
+          pageTitle: testCase.siblingTitle,
+          pageUrl: "https://merchant.example/products/numeric-sibling/123456",
+        }),
+        false,
+        testCase.siblingTitle,
+      );
+      const pageUrl =
+        "https://www.bestbuy.com/site/numeric-sibling/123456.p";
+      assert.equal(
+        getProductPageLink(
+          buildProduct({
+            category: "appliance",
+            citations: [
+              {
+                title: testCase.siblingTitle,
+                url: pageUrl,
+                what_it_supports: "Captured retailer result.",
+              },
+            ],
+            metadata: {
+              brand: field("Example", pageUrl),
+              modelNumber: field(testCase.model, pageUrl),
+              offers: [],
+            },
+            name: testCase.productName,
+            product_page_url: "",
+          }),
+        ),
+        null,
+        `general numeric context: ${testCase.siblingTitle}`,
+      );
+
+      const exactSlug = testCase.model.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const exactPageUrl =
+        `https://www.bestbuy.com/site/example-${exactSlug}/123456.p`;
+      assert.equal(
+        productPageMatchesIdentity({
+          brand: "Example",
+          model: testCase.model,
+          productName: testCase.productName,
+          pageTitle: testCase.exactTitle,
+          pageUrl: exactPageUrl,
+        }),
+        true,
+        `exact numeric context: ${testCase.model}`,
+      );
+      assert.equal(
+        getProductPageLink(
+          buildProduct({
+            category: "appliance",
+            citations: [
+              {
+                title: testCase.exactTitle,
+                url: exactPageUrl,
+                what_it_supports: "Captured exact retailer result.",
+              },
+            ],
+            metadata: {
+              brand: field("Example", exactPageUrl),
+              modelNumber: field(testCase.model, exactPageUrl),
+              offers: [],
+            },
+            name: testCase.productName,
+            product_page_url: "",
+          }),
+        )?.url,
+        exactPageUrl,
+        `general exact numeric context: ${testCase.model}`,
+      );
+    }
+
+    for (const pageTitle of [
+      "Example X100 20 4-Burner appliance",
+      "Example X100 20 4 Burner appliance",
+      "Example X100 20 5Ah appliance",
+      "Example X100 20 5 Ah appliance",
+      "Example X100 20 5.5 HP appliance",
+      "Example X100 20 appliance - $199.99",
+      "Example X100 20 2024 edition appliance",
+      "Example X100 20 with Bluetooth version number 5.0 appliance",
+      "Example X100 20 with WiFi version 6.0 appliance",
+      "Example X100 20 with Bluetooth LE version 5.0 appliance",
+      "Example X100 20 with Bluetooth Low Energy version 5.0 appliance",
+      "Example X100 20 with USB Type-C version 3.2 appliance",
+      "Example X100 20 with HDMI eARC version 2.1 appliance",
+      "Example X100 20 with Wi-Fi 6E version 2.0 appliance",
+      "Example X100 20 with DisplayPort Alt Mode version 2.0 appliance",
+      "Example X100 20 with Wi-Fi 6E appliance",
+      "Example X100 20 with Wi-Fi 7 appliance",
+      "Example X100 20 appliance (Upgraded from X100 10)",
+    ]) {
+      assert.equal(
+        productPageMatchesIdentity({
+          ...numeric,
+          pageTitle,
+          pageUrl: "https://merchant.example/products/x100-20/123456",
+        }),
+        true,
+        pageTitle,
+      );
+      const pageUrl =
+        "https://www.bestbuy.com/site/example-x100-20/123456.p";
+      assert.equal(
+        getProductPageLink(
+          buildProduct({
+            category: "appliance",
+            citations: [
+              {
+                title: pageTitle,
+                url: pageUrl,
+                what_it_supports: "Captured retailer result.",
+              },
+            ],
+            metadata: {
+              brand: field("Example", pageUrl),
+              modelNumber: field("X100 20", pageUrl),
+              offers: [],
+            },
+            name: numeric.productName,
+            product_page_url: "",
+          }),
+        )?.url,
+        pageUrl,
+        `general numeric selection: ${pageTitle}`,
+      );
+    }
   });
 
   it("preserves same-brand cross-retailer pages and source titles that safely omit the brand", () => {

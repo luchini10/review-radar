@@ -99,7 +99,7 @@ describe("autonomous exact-product fact verifier", () => {
       observation,
     });
 
-    assert.equal(AUTONOMOUS_FACT_VERIFIER_VERSION, "oai-hybrid-verifier-v2");
+    assert.equal(AUTONOMOUS_FACT_VERIFIER_VERSION, "oai-hybrid-verifier-v3");
     assert.equal(result.identity.status, "verified");
     assert.equal(result.exactEntityIndex, 0);
     assert.equal(result.price.status, "verified");
@@ -108,6 +108,375 @@ describe("autonomous exact-product fact verifier", () => {
     assert.notEqual(result.price.observedValue, 319.99);
     assert.equal(result.currency.observedValue, "USD");
     assert.equal(result.seller.observedValue, "Best Buy");
+  });
+
+  it("binds cross-category prices only to the exact structured Product entity", () => {
+    const url = "https://www.example.com/products/c100";
+    const observation = observeHybridSourceHtml({
+      html: `
+        <html><head><title>Example C100 office chair</title></head><body>
+        ${productJsonLd({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Product",
+              name: "Example C100 office chair",
+              brand: { name: "Example" },
+              model: "C100",
+              offers: {
+                "@type": "Offer",
+                price: "499.00",
+                priceCurrency: "USD",
+                url,
+              },
+            },
+            {
+              "@type": "Product",
+              name: "Example B200 blender",
+              brand: { name: "Example" },
+              model: "B200",
+              offers: {
+                "@type": "Offer",
+                price: "99.00",
+                priceCurrency: "USD",
+                url: "https://www.example.com/products/b200",
+              },
+            },
+          ],
+        })}
+        </body></html>`,
+      requestedUrl: url,
+      observedAt,
+    });
+    const result = verifyHybridProductSource({
+      product: product({
+        identity: {
+          brand: "Example",
+          productName: "Example C100 office chair",
+          model: "C100",
+        },
+        priceAmount: null,
+        productUrl: url,
+      }),
+      sourceRole: "purchase_page",
+      observation,
+    });
+
+    assert.equal(result.identity.status, "verified");
+    assert.equal(result.exactEntityIndex, 0);
+    assert.equal(result.price.status, "verified");
+    assert.equal(result.price.observedValue, 499);
+    assert.notEqual(result.price.observedValue, 99);
+  });
+
+  it("does not mistake measurement or technology title details for sibling models", () => {
+    for (const detail of [
+      "4-Burner",
+      "4 Burner",
+      "5Ah",
+      "5 Ah",
+      "12-Cup",
+      "12 Cup",
+      "3000RPM",
+      "3000 RPM",
+      "with Bluetooth LE version 5.0",
+      "with Bluetooth Low Energy version 5.0",
+      "with USB Type-C version 3.2",
+      "with HDMI eARC version 2.1",
+      "with Wi-Fi 6E version 2.0",
+      "with DisplayPort Alt Mode version 2.0",
+      "with Wi-Fi 6E",
+      "with Wi-Fi 7",
+    ]) {
+      const url = "https://www.example.com/products/x100";
+      const productName = `Example X100 ${detail} appliance`;
+      const observation = observeHybridSourceHtml({
+        html: `
+          <html><head><title>${productName}</title></head><body>
+          ${productJsonLd({
+            "@type": "Product",
+            name: productName,
+            brand: { name: "Example" },
+            model: "X100",
+            offers: {
+              "@type": "Offer",
+              price: "199.00",
+              priceCurrency: "USD",
+              url,
+            },
+          })}
+          </body></html>`,
+        requestedUrl: url,
+        observedAt,
+      });
+      const result = verifyHybridProductSource({
+        product: product({
+          identity: {
+            brand: "Example",
+            productName,
+            model: "X100",
+          },
+          priceAmount: null,
+          productUrl: url,
+        }),
+        sourceRole: "purchase_page",
+        observation,
+      });
+
+      assert.equal(result.identity.status, "verified", detail);
+      assert.equal(result.price.status, "verified", detail);
+      assert.equal(result.price.observedValue, 199, detail);
+    }
+  });
+
+  it("does not let target-looking commerce markup hide a conflicting explicit model", () => {
+    const cases = [
+      { sourceRole: "purchase_page", observedModel: "X100 B2" },
+      { sourceRole: "official_product", observedModel: "B900" },
+    ];
+
+    for (const testCase of cases) {
+      const url = "https://www.example.com/products/x100-a1";
+      const observation = observeHybridSourceHtml({
+        html: `
+          <html><head><title>Example X100 A1</title></head><body>
+          ${productJsonLd({
+            "@type": "Product",
+            name: "Example X100 A1",
+            brand: { name: "Example" },
+            model: testCase.observedModel,
+            image: "https://www.example.com/images/x100-a1.jpg",
+            offers: {
+              "@type": "Offer",
+              price: "99.00",
+              priceCurrency: "USD",
+              url,
+            },
+          })}
+          </body></html>`,
+        requestedUrl: url,
+        observedAt,
+      });
+      const result = verifyHybridProductSource({
+        product: product({
+          identity: {
+            brand: "Example",
+            productName: "Example X100 A1",
+            model: "X100 A1",
+          },
+          priceAmount: null,
+          productUrl: url,
+        }),
+        sourceRole: testCase.sourceRole,
+        observation,
+      });
+
+      assert.notEqual(result.identity.status, "verified");
+      assert.equal(result.exactEntityIndex, null);
+      assert.notEqual(result.price.status, "verified");
+      assert.equal(result.price.observedValue, null);
+      assert.notEqual(result.purchaseUrl.status, "verified");
+      assert.notEqual(result.imageUrl.status, "verified");
+    }
+  });
+
+  it("does not let a descriptive trim sibling share exact commerce authority", () => {
+    const url = "https://www.example.com/products/q50-max";
+    const observation = observeHybridSourceHtml({
+      html: `
+        <html><head><title>Example Q50 Max robot vacuum</title></head><body>
+        ${productJsonLd({
+          "@type": "Product",
+          name: "Example Q50 Max robot vacuum",
+          brand: { name: "Example" },
+          model: "Q50 Pro",
+          offers: {
+            "@type": "Offer",
+            price: "99.00",
+            priceCurrency: "USD",
+            url,
+          },
+        })}
+        </body></html>`,
+      requestedUrl: url,
+      observedAt,
+    });
+    const result = verifyHybridProductSource({
+      product: product({
+        identity: {
+          brand: "Example",
+          productName: "Example Q50 Max robot vacuum",
+          model: "Q50 Max",
+        },
+        priceAmount: null,
+        productUrl: url,
+      }),
+      sourceRole: "purchase_page",
+      observation,
+    });
+
+    assert.notEqual(result.identity.status, "verified");
+    assert.equal(result.exactEntityIndex, null);
+    assert.notEqual(result.price.status, "verified");
+    assert.equal(result.price.observedValue, null);
+  });
+
+  it("keeps exact compound commerce identity while rejecting its cheaper sibling", () => {
+    const url = "https://www.example.com/products/x100-a1";
+    const observation = observeHybridSourceHtml({
+      html: `
+        <html><head><title>Example X100 family</title></head><body>
+        ${productJsonLd({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Product",
+              name: "Example X100 A1",
+              brand: { name: "Example" },
+              model: "X100 A1",
+              sku: "merchant-123",
+              offers: {
+                "@type": "Offer",
+                price: "199.00",
+                priceCurrency: "USD",
+                url,
+              },
+            },
+            {
+              "@type": "Product",
+              name: "Example X100 B2",
+              brand: { name: "Example" },
+              model: "X100 B2",
+              offers: {
+                "@type": "Offer",
+                price: "99.00",
+                priceCurrency: "USD",
+                url,
+              },
+            },
+          ],
+        })}
+        </body></html>`,
+      requestedUrl: url,
+      observedAt,
+    });
+    const result = verifyHybridProductSource({
+      product: product({
+        identity: {
+          brand: "Example",
+          productName: "Example X100 A1",
+          model: "X100 A1",
+        },
+        priceAmount: null,
+        productUrl: url,
+      }),
+      sourceRole: "purchase_page",
+      observation,
+    });
+
+    assert.equal(result.identity.status, "verified");
+    assert.equal(result.exactEntityIndex, 0);
+    assert.equal(result.price.status, "verified");
+    assert.equal(result.price.observedValue, 199);
+    assert.notEqual(result.price.observedValue, 99);
+  });
+
+  it("falls back from an unavailable commerce model to an exact alternate identifier", () => {
+    const url = "https://www.example.com/products/x100-a1";
+    const observation = observeHybridSourceHtml({
+      html: `
+        <html><head><title>Example product detail</title></head><body>
+        ${productJsonLd({
+          "@type": "Product",
+          name: "Example product detail",
+          brand: { name: "Example" },
+          model: "",
+          sku: "X100 A1",
+          offers: {
+            "@type": "Offer",
+            price: "199.00",
+            priceCurrency: "USD",
+            url,
+          },
+        })}
+        </body></html>`,
+      requestedUrl: url,
+      observedAt,
+    });
+    const result = verifyHybridProductSource({
+      product: product({
+        identity: {
+          brand: "Example",
+          productName: "Example X100 A1",
+          model: "X100 A1",
+        },
+        priceAmount: null,
+        productUrl: url,
+      }),
+      sourceRole: "official_product",
+      observation,
+    });
+
+    assert.equal(result.identity.status, "verified");
+    assert.equal(result.exactEntityIndex, 0);
+    assert.equal(result.price.status, "verified");
+    assert.equal(result.price.observedValue, 199);
+  });
+
+  it("accepts the exact structured member of compound and descriptive alias sets", () => {
+    const cases = [
+      {
+        proposedModel: "X100 A1 / Y200 B2",
+        observedModel: "X100 A1",
+        productName: "Example X100 A1 cordless vacuum",
+      },
+      {
+        proposedModel: "Q50 Max / Q60 Pro",
+        observedModel: "Q50 Max",
+        productName: "Example Q50 Max robot vacuum",
+      },
+    ];
+
+    for (const testCase of cases) {
+      const url = "https://www.example.com/products/exact-alias";
+      const observation = observeHybridSourceHtml({
+        html: `
+          <html><head><title>${testCase.productName}</title></head><body>
+          ${productJsonLd({
+            "@type": "Product",
+            name: testCase.productName,
+            brand: { name: "Example" },
+            model: testCase.observedModel,
+            offers: {
+              "@type": "Offer",
+              price: "199.00",
+              priceCurrency: "USD",
+              url,
+            },
+          })}
+          </body></html>`,
+        requestedUrl: url,
+        observedAt,
+      });
+      const result = verifyHybridProductSource({
+        product: product({
+          identity: {
+            brand: "Example",
+            productName: testCase.productName,
+            model: testCase.proposedModel,
+          },
+          priceAmount: null,
+          productUrl: url,
+        }),
+        sourceRole: "official_product",
+        observation,
+      });
+
+      assert.equal(result.identity.status, "verified");
+      assert.equal(result.exactEntityIndex, 0);
+      assert.equal(result.price.status, "verified");
+      assert.equal(result.price.observedValue, 199);
+    }
   });
 
   it("contradicts editorial evidence when the page exposes a different tested model", () => {
@@ -357,6 +726,193 @@ describe("autonomous exact-product fact verifier", () => {
     assert.equal(result.identity.status, "contradicted");
     assert.equal(result.exactEntityIndex, null);
     assert.notEqual(result.imageUrl.status, "verified");
+  });
+
+  it("does not let an exact Product model override a conflicting sibling Product name", () => {
+    for (const name of [
+      "Example X100 B2 cordless vacuum",
+      "Example X100 A1 plus B2 cordless vacuum",
+      "Example X100 A1 alongside B2 cordless vacuum",
+      "Example X100 A1 featuring B2 cordless vacuum",
+    ]) {
+      const observation = observe(`
+        <html><head><title>Example X100 comparison</title></head><body>
+          ${productJsonLd({
+            "@type": "Product",
+            name,
+            brand: { name: "Example" },
+            model: "X100 A1",
+            offers: {
+              "@type": "Offer",
+              price: 99,
+              priceCurrency: "USD",
+            },
+          })}
+        </body></html>
+      `);
+      const result = verifyHybridProductSource({
+        product: product({
+          identity: {
+            brand: "Example",
+            productName: "Example X100 A1 cordless vacuum",
+            model: "X100 A1",
+          },
+          priceAmount: 99,
+        }),
+        sourceRole: "purchase_page",
+        observation,
+      });
+
+      assert.equal(result.identity.status, "contradicted", name);
+      assert.equal(result.identity.reason, "exact_product_not_found", name);
+      assert.equal(result.exactEntityIndex, null, name);
+      assert.notEqual(result.price.status, "verified", name);
+      assert.equal(result.price.observedValue, null, name);
+    }
+  });
+
+  it("does not let an exact numeric-suffix Product model price its numeric sibling", () => {
+    for (const name of [
+      "Example X100 20 plus 30 cordless vacuum",
+      "Example X100 20 alongside 30 cordless vacuum",
+      "Example X100 20 variant 30 cordless vacuum",
+      "Example X100 20 and 30 cordless vacuum",
+      "Example X100 20, 30 cordless vacuum",
+      "Example 30 alongside X100 20 cordless vacuum",
+      "Example X100 20 plus X100 model 2024 cordless vacuum",
+      "Example X100 20 plus X100 30.0 cordless vacuum",
+      "Example X100 20 plus model Bluetooth LE version 5.0 cordless vacuum",
+      "Example X100 20 plus variant USB Type-C version 3.2 cordless vacuum",
+      "Example X100 20 plus trim HDMI eARC version 2.1 cordless vacuum",
+      "Example X100 20 plus model Wi-Fi 6E cordless vacuum",
+      "Example X100 20 plus Wi-Fi 6E model cordless vacuum",
+      "Example X100 20 plus model ID: Wi-Fi 6E cordless vacuum",
+      "Example X100 20 plus model identifier Bluetooth LE version 5.0 cordless vacuum",
+      "Example X100 20 plus model-name USB Type-C version 3.2 cordless vacuum",
+      "Example X100 20 plus variant ID HDMI eARC version 2.1 cordless vacuum",
+      "Example X100 20 plus trim name DisplayPort Alt Mode version 2.0 cordless vacuum",
+      "Example X100 20 plus Wi-Fi 6E model identifier cordless vacuum",
+      "Example X100 20 plus Bluetooth LE version 5.0 model name cordless vacuum",
+      "Example X100 20 plus ModelID Wi-Fi 6E cordless vacuum",
+      "Example X100 20 plus modelIdentifier Bluetooth LE version 5.0 cordless vacuum",
+      "Example X100 20 plus modelName USB Type-C version 3.2 cordless vacuum",
+      "Example X100 20 plus variantID HDMI eARC version 2.1 cordless vacuum",
+      "Example X100 20 plus variantIdentifier DisplayPort Alt Mode version 2.0 cordless vacuum",
+      "Example X100 20 plus variantName Wi-Fi 7 cordless vacuum",
+      "Example X100 20 plus trimID Bluetooth Low Energy version 5.0 cordless vacuum",
+      "Example X100 20 plus trimIdentifier Wi-Fi 6E cordless vacuum",
+      "Example X100 20 plus trimName USB Type-C version 3.2 cordless vacuum",
+      "Example X100 20 plus Wi-Fi 6E ModelID cordless vacuum",
+      "Example X100 20 plus Bluetooth LE version 5.0 trimName cordless vacuum",
+      "Example X100 20 plus Model ID is Wi-Fi 6E cordless vacuum",
+      "Example X100 20 plus ModelID equals Wi-Fi 6E cordless vacuum",
+      "Example X100 20 plus model called Bluetooth LE version 5.0 cordless vacuum",
+      "Example X100 20 plus model named USB Type-C version 3.2 cordless vacuum",
+      "Example X100 20 plus variant is Wi-Fi 6E cordless vacuum",
+      "Example X100 20 plus Wi-Fi 6E is the Model ID cordless vacuum",
+      "Example X100 20 plus Bluetooth LE version 5.0 is the modelName cordless vacuum",
+      "Example X100 20 plus model designation is DisplayPort Alt Mode version 2.0 cordless vacuum",
+      "Example X100 20 plus model is called Bluetooth LE version 5.0 cordless vacuum",
+      "Example X100 20 plus model is named USB Type-C version 3.2 cordless vacuum",
+      "Example X100 20 plus model is designated Wi-Fi 6E cordless vacuum",
+      "Example X100 20 plus model is designated as Wi-Fi 6E cordless vacuum",
+      "Example X100 20 plus variant is called HDMI eARC version 2.1 cordless vacuum",
+      "Example X100 20 plus trim is named DisplayPort Alt Mode version 2.0 cordless vacuum",
+      "Example X100 20 plus model is known as Wi-Fi 6E cordless vacuum",
+      "Example X100 20 plus model also known as Wi-Fi 6E cordless vacuum",
+      "Example X100 20 plus model is also known as Wi-Fi 6E cordless vacuum",
+      "Example X100 20 plus model is the Wi-Fi 6E cordless vacuum",
+      "Example X100 20 plus Wi-Fi 6E is known as the model cordless vacuum",
+      "Example X100 20 plus Wi-Fi 6E is designated as the model cordless vacuum",
+      "Example X100 20 plus Bluetooth LE version 5.0 is called the modelName cordless vacuum",
+      "Example X100 20 plus USB Type-C version 3.2 is named the variantID cordless vacuum",
+      "Example X100 20; the model, also known as Wi-Fi 6E, cordless vacuum",
+      "Example X100 20 plus model, is designated as Wi-Fi 6E cordless vacuum",
+      "Example X100 20 plus model is, also known as Wi-Fi 6E cordless vacuum",
+      "Example X100 20 plus Wi-Fi 6E, also known as the model cordless vacuum",
+      "Example X100 20 plus Wi-Fi 6E is, also known as the model cordless vacuum",
+    ]) {
+      const observation = observe(`
+        <html><head><title>Example X100 comparison</title></head><body>
+          ${productJsonLd({
+            "@type": "Product",
+            name,
+            brand: { name: "Example" },
+            model: "X100 20",
+            offers: {
+              "@type": "Offer",
+              price: 99,
+              priceCurrency: "USD",
+            },
+          })}
+        </body></html>
+      `);
+      const result = verifyHybridProductSource({
+        product: product({
+          identity: {
+            brand: "Example",
+            productName: "Example X100 20 cordless vacuum",
+            model: "X100 20",
+          },
+          priceAmount: 99,
+        }),
+        sourceRole: "purchase_page",
+        observation,
+      });
+
+      assert.equal(result.identity.status, "contradicted", name);
+      assert.equal(result.identity.reason, "exact_product_not_found", name);
+      assert.equal(result.exactEntityIndex, null, name);
+      assert.notEqual(result.price.status, "verified", name);
+      assert.equal(result.price.observedValue, null, name);
+    }
+  });
+
+  it("binds year-like and decimal Product models without collapsing siblings", () => {
+    for (const testCase of [
+      {
+        model: "X100 2024",
+        exactName: "Example X100 2024 cordless vacuum",
+        siblingName: "Example X100 2030 cordless vacuum",
+      },
+      {
+        model: "X100 30.0",
+        exactName: "Example X100 30.0 cordless vacuum",
+        siblingName: "Example X100 31.0 cordless vacuum",
+      },
+    ]) {
+      const observation = observe(`
+        <html><head><title>Example sibling product</title></head><body>
+          ${productJsonLd({
+            "@type": "Product",
+            name: testCase.siblingName,
+            brand: { name: "Example" },
+            model: testCase.siblingName.split(" ").slice(1, 3).join(" "),
+            offers: {
+              "@type": "Offer",
+              price: 99,
+              priceCurrency: "USD",
+            },
+          })}
+        </body></html>
+      `);
+      const result = verifyHybridProductSource({
+        product: product({
+          identity: {
+            brand: "Example",
+            productName: testCase.exactName,
+            model: testCase.model,
+          },
+          priceAmount: 99,
+        }),
+        sourceRole: "purchase_page",
+        observation,
+      });
+
+      assert.equal(result.identity.status, "contradicted", testCase.model);
+      assert.equal(result.exactEntityIndex, null, testCase.model);
+      assert.notEqual(result.price.status, "verified", testCase.model);
+    }
   });
 
   it("falls back from an unavailable Product model to an exact SKU or exact name", () => {

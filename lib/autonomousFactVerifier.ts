@@ -3,8 +3,12 @@ import { lookup } from "node:dns/promises";
 import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import { isIP } from "node:net";
+import {
+  isModelIdentityMeasurementToken,
+  modelIdentityRelation,
+} from "./productIdentity.ts";
 
-export const AUTONOMOUS_FACT_VERIFIER_VERSION = "oai-hybrid-verifier-v2";
+export const AUTONOMOUS_FACT_VERIFIER_VERSION = "oai-hybrid-verifier-v3";
 
 export type HybridVerificationStatus =
   | "verified"
@@ -209,15 +213,21 @@ function normalizeIdentity(value: string) {
 }
 
 function identifierTokens(value: string) {
+  const rawTokens = (value.match(/[A-Za-z0-9]+/g) || []).map((token) =>
+    token.toLowerCase(),
+  );
   return new Set(
-    (value.match(/[A-Za-z0-9]+/g) || [])
-      .map((token) => token.toLowerCase())
-      .filter(
-        (token) =>
-          token.length >= 2 &&
-          /\d/.test(token) &&
-          !/^\d+(?:p|hz|gb|tb|mah|w|v|in|inch|psi|hp)$/i.test(token),
-      ),
+    rawTokens.filter((token, index) => {
+      const splitMeasurement =
+        /^\d+$/.test(token) &&
+        isModelIdentityMeasurementToken(`${token}${rawTokens[index + 1] || ""}`);
+      return (
+        token.length >= 2 &&
+        /\d/.test(token) &&
+        !isModelIdentityMeasurementToken(token) &&
+        !splitMeasurement
+      );
+    }),
   );
 }
 
@@ -227,36 +237,81 @@ type StableIdentifierRelation =
   | "unrelated"
   | "unavailable";
 
+const MODEL_DESCRIPTOR_STOP_WORDS = new Set([
+  "and",
+  "for",
+  "model",
+  "mpn",
+  "or",
+  "series",
+  "sku",
+  "the",
+  "with",
+]);
+
+function modelDescriptorTokens(value: string) {
+  return new Set(
+    (value.match(/[A-Za-z0-9]+/g) || [])
+      .filter((token) => /^[A-Za-z]+$/.test(token))
+      .map((token) => token.toLowerCase())
+      .filter(
+        (token) =>
+          token.length >= 3 && !MODEL_DESCRIPTOR_STOP_WORDS.has(token),
+      ),
+  );
+}
+
 function proposedIdentifierAliases(value: string) {
   // A spaced separator is an explicit alias declaration. Whitespace alone is
   // not: `X100 A1` is one compound identity, while `12704570 / SUZE0`
   // documents two acceptable stable identifiers.
   const aliases = value.split(/\s+(?:\/|\||;|or)\s+/i);
   return aliases
-    .map((alias) => identifierTokens(alias))
-    .filter((tokens) => tokens.size > 0);
+    .map((alias) => ({
+      descriptors: modelDescriptorTokens(alias),
+      identifiers: identifierTokens(alias),
+    }))
+    .filter((alias) => alias.identifiers.size > 0);
 }
 
 function stableIdentifierRelation(
   proposedModel: string,
   observedModel: string,
+  { strictDescriptors = false }: { strictDescriptors?: boolean } = {},
 ): StableIdentifierRelation {
   const aliases = proposedIdentifierAliases(proposedModel);
   const observedTokens = identifierTokens(observedModel);
   if (aliases.length === 0 || observedTokens.size === 0) return "unavailable";
 
-  const proposedTokens = new Set(aliases.flatMap((tokens) => [...tokens]));
+  const observedDescriptors = modelDescriptorTokens(observedModel);
+  const proposedTokens = new Set(
+    aliases.flatMap((alias) => [...alias.identifiers]),
+  );
   const overlaps = [...observedTokens].some((token) => proposedTokens.has(token));
   if (!overlaps) return "unrelated";
+  const sharedIdentityRelation = modelIdentityRelation(
+    proposedModel,
+    observedModel,
+  );
+  if (sharedIdentityRelation.hasConflict) {
+    return "conflicting";
+  }
 
   const containsExactAlias = aliases.some((alias) =>
-    [...alias].every((token) => observedTokens.has(token)),
+    [...alias.identifiers].every((token) => observedTokens.has(token)) &&
+    [...alias.descriptors].every((token) => observedDescriptors.has(token)) &&
+    (!strictDescriptors ||
+      [...observedDescriptors].every((token) => alias.descriptors.has(token))),
   );
   const containsUndocumentedIdentifier = [...observedTokens].some(
     (token) => !proposedTokens.has(token),
   );
 
-  return containsExactAlias && !containsUndocumentedIdentifier
+  return (
+    containsExactAlias &&
+    (!containsUndocumentedIdentifier ||
+      sharedIdentityRelation.matchesCompleteAlias)
+  )
     ? "exact_alias"
     : "conflicting";
 }
@@ -273,24 +328,7 @@ function identityBrandMatches(proposedBrand: string, entity: HybridObservedProdu
   );
 }
 
-function entityModelTokens(entity: HybridObservedProductEntity) {
-  return identifierTokens(
-    [entity.model, entity.sku, entity.mpn, entity.gtin, entity.name].join(" "),
-  );
-}
-
 function entityMatchesExactProduct(
-  product: HybridProvisionalProduct,
-  entity: HybridObservedProductEntity,
-) {
-  if (!identityBrandMatches(product.identity.brand, entity)) return false;
-  const proposedModels = identifierTokens(product.identity.model);
-  if (proposedModels.size === 0) return false;
-  const observedModels = entityModelTokens(entity);
-  return [...proposedModels].some((token) => observedModels.has(token));
-}
-
-function professionalTestEntityMatchesExactProduct(
   product: HybridProvisionalProduct,
   entity: HybridObservedProductEntity,
 ) {
@@ -299,10 +337,17 @@ function professionalTestEntityMatchesExactProduct(
   const modelRelation = stableIdentifierRelation(
     product.identity.model,
     entity.model,
+    { strictDescriptors: true },
   );
   if (modelRelation === "conflicting" || modelRelation === "unrelated") {
     return false;
   }
+
+  const nameRelation = stableIdentifierRelation(
+    product.identity.model,
+    entity.name,
+  );
+  if (nameRelation === "conflicting") return false;
 
   const alternateIdentifierRelations = [entity.mpn, entity.sku, entity.gtin]
     .filter(Boolean)
@@ -316,9 +361,7 @@ function professionalTestEntityMatchesExactProduct(
     return true;
   }
 
-  return (
-    stableIdentifierRelation(product.identity.model, entity.name) === "exact_alias"
-  );
+  return nameRelation === "exact_alias";
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -701,7 +744,9 @@ function editorialModelReceipt(
 ) {
   const relations = observation.testedModels.map((model) => ({
     model,
-    relation: stableIdentifierRelation(product.identity.model, model),
+    relation: stableIdentifierRelation(product.identity.model, model, {
+      strictDescriptors: true,
+    }),
   }));
   const matching = relations.find((item) => item.relation === "exact_alias");
   const conflicting = relations.some((item) => item.relation === "conflicting");
@@ -760,11 +805,7 @@ export function verifyHybridProductSource(input: {
 }): HybridSourceVerification {
   const { product, sourceRole, observation } = input;
   const matches = observation.entities.flatMap((entity, index) =>
-    (sourceRole === "professional_test"
-      ? professionalTestEntityMatchesExactProduct(product, entity)
-      : entityMatchesExactProduct(product, entity))
-      ? [index]
-      : [],
+    entityMatchesExactProduct(product, entity) ? [index] : [],
   );
   const editorialModel = editorialModelReceipt(product, observation);
   const professionalTestEntityAuthorized =

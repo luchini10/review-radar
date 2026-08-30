@@ -2778,3 +2778,54 @@ measurement is blocked, RR-091 is unresolved, and UX/security/operations remain
 open. The next phase is a zero-live RR-091 reachability/exact-price audit; only a
 current reproduction may justify code changes. Recommended reasoning: High for
 reachability and price-authority judgment; Medium for deterministic audit work.
+
+## Codex Run - 2026-08-30 PR-007 reachable exact-model price authority
+
+**Goal and assessment:** determine whether RR-091's historical related-product
+price defect reaches the current product before assuming a fix. Static import
+and route analysis found `lib/autonomousResearchAdapter.ts` in scripts/tests
+only; a tracked characterization confirms its URL/source-role contract remains
+unsafe. The staged and Direct-Terra routes remain default-off, Direct-Terra
+transactional output remains unverified, and the legacy route imports neither
+the historical adapter nor the shared experimental paths. Current shared
+experimental consumers nevertheless reproduced a generalized partial-model
+identity weakness capable of authorizing sibling transactional evidence.
+
+**Change:** introduced one shared `modelIdentityRelation()` for stable aliases,
+compound and descriptive models, contextual years/decimals, measurements,
+technology phrases, conflicts, bounded split/compact model/variant/trim labels,
+and symmetric assertion connectors. Commas work only inside a complete
+recognized assertion; feature-list and hard punctuation remain boundaries.
+Commerce verifier v2, SearchAPI offers v2, fact verifier v3, Direct-Terra asset
+verifier v6, product-page URL/title/path selection, and staged materialization
+reuse the relation. Accessory/replacement classification remains separate.
+
+**Fail-first and independent review:** successive review challenges found
+concrete gaps in sibling concatenation, years/decimals, multiword and compact
+labels, technology versions, labeled technology spans, forward/reverse single-
+and multiword copulas, and appositive commas. Each was locked fail-first before
+the generalized correction. Final frozen replacement review returned
+`VERIFIED`, no material correction, confidence 0.995, and independently rejected
+60/60 generated comma-punctuated connector assertions without feature-control
+false positives. Shared identity SHA-256 is `f6221405…23f13bc`; identity-test
+SHA-256 is `ca5a97f9…303cc07`; the complete 17-file manifest is in the canonical
+QA entry.
+
+**Verification:** focused 205/205 across 14 suites; complete 1,604/1,604 across
+218 suites; typecheck; production build; Playwright 17/17; diff; full lint with
+zero errors and three old warnings. Controller
+`agent-loop-2026-08-30T05-25-58-006Z` passed all five partitions, deterministic
+eval, 10/10 cases, and 29/29 invariants. The scorecard stopped at its cost guard
+before provider work. The ledger benchmark made zero provider calls and measured
+0.253 ms/request overhead. Build-generated `next-env.d.ts` was restored.
+
+**Live calls, limits, and next step:** zero. No credential, manual environment-
+file, provider, product-data service, network, or live fixture was accessed.
+RR-091 remains `Needs Investigation — contained/narrowed`: shared reachable
+boundaries are corrected, but the isolated historical adapter may not be
+promoted. ReviewRadar remains NOT READY because PR-006 live quality measurement
+is blocked and UX/security/operations gates remain open. The strongest available
+next step is PR-6A: a read-only production-boundary audit to identify the first
+evidence-proven security, resilience, accessibility, or operations blocker
+before implementation. Recommended reasoning: High for security/reliability
+selection; Medium for bounded deterministic execution.

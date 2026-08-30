@@ -649,7 +649,7 @@ shopper-facing recommendation quality.
 | PR-004 | P2 | verified | One valid Direct-Terra preview failed its test even though the two safe links rendered. | UI copy changed from generic `Product website` to the more informative `View at <host>` accessible name; the test stayed exact-string brittle. | The test now asserts the user-visible role/name pattern and both links' safe target/rel attributes. | Full E2E passes and still requires both safe links. | Closed; test-only rollback. |
 | PR-005 | P1 | verified | Five named deterministic QA batches reported different search pools but all executed the same five synthetic eval cases, so green output overstated coverage. | `runDeterministicBatch()` delegated every batch to `eval-pipeline.mjs` and recorded batch searches only as metadata. The controller also overwrote the authoritative handoff and copied Markdown outside the repo. | A tracked 10-case/29-invariant benchmark now gives every batch a unique partition. Results persist executed IDs/outcomes; reconciliation independently rederives them from persisted streams and complete tracked price/product oracles. Controller next-task output is ignored/advisory only, and no Desktop copy occurs. | Fail-first 9 pass / 1 intended fail; corrected focused 26/26; complete 1,477/1,477; exact five-batch reconciliation; benchmark 10/10 and 29/29; E2E/build/static/eval/ranking/dry-run walls; independent `APPROVED`. | Closed without production or live behavior changes. Synthetic fixtures/oracles require deliberate maintenance and do not prove market coverage or provider quality. Ignored artifacts are reconciled, not cryptographically immutable. |
 | PR-006 | P1 | attempt 1 consumed pre-provider; live measurement protocol blocked | Current staged-path market-leader recall, final-set stability, exact/near truth, hard-requirement accuracy, price coverage, first-loss distribution, latency, and cost are not established. PR-3K proves only one safe `shop vac` result; historical legacy-path evidence found zero final overlap and severe leader loss. | Provider variance, planning variance, discovery loss, strict evidence gates, and/or ranking may contribute; attribution remains unmeasured on the active path. Existing quality harnesses call the legacy route and the July leader set may have drifted. | PR-4A freezes a dated four-shape/six-attempt staged matrix, canonical artifact producer, exact analyzer, manual audits, serial hash chain, and fail-closed stop rules. PR-4B's exact committed launcher plan was approved, but attempt 1 stopped before provider work without an artifact. PR-021 now provides independently verified typed attribution for future launcher stops, but governance must separately decide whether any future measurement protocol is permissible. No retry, replacement, or attempt 2 is authorized. | Exact commit/matrix/request/run/nonce/prior-artifact binding; dated provenance; repeated final-card Jaccard; leader and illustrative coverage; exact/near, requirement, wrong-type, source, price, offer, image, first-loss, latency, call, token, and cost reconciliation; complete manual card/source audits. Candidate-pool Jaccard is `not_scored_privacy_boundary`. | High cost/variance risk. Attempt 1 is consumed. Stop on every prefix and any safety failure. Truth expires 2026-09-12. The runner and analyzer cannot authorize another attempt, release, flag, or deployment; independent review remains mandatory. |
-| PR-007 | P1 | investigating | RR-091 says same-page related-product price can satisfy autonomous card binding. A wrong variant price is release-blocking if the affected path is promoted. | Product entity selection may not bind offer identity tightly enough when multiple products share a page. | Reproduce with tracked synthetic multi-entity pages, then require exact entity/offer binding using shared identity rules. | Original and cross-category reproductions; exact-product positive controls; no unsafe price/product URL; full price and identity wall. | High false-negative/false-positive risk. The affected experimental path remains default-off; no promotion before closure. |
+| PR-007 | P1 | verified reachable correction; historical adapter contained | The historical adapter accepts same-page related-product prices from URL/source-role membership alone, but current reachability analysis found it only in scripts/tests. Separate shared experimental boundaries could still treat partial families, numeric siblings, technology/version prose, or partial URL/title identity as exact and thereby authorize the wrong transactional row. | Exact-model logic had diverged across token, structured-entity, asset, relationship, and page/URL consumers. Partial token overlap and context-free digit handling were not a safe exact-identity contract. | One shared relation now parses complete aliases, compounds, descriptive trims, contextual year/decimal identities, explicit model/variant/trim assertions, and conflict evidence. Commerce v2, SearchAPI offers v2, fact verifier v3, asset verifier v6, product-page URL selection, and staged materialization reuse it; relationship classification still preserves accessories/replacements. | Tracked historical characterization and route isolation; fail-first sibling/compound/year/decimal/technology/qualifier/copula/comma mutations across every consumer; exact positive and feature controls; final focused 205/205; full 1,604/1,604; static/build/E2E/controller walls; generated connector probes; exact frozen replacement review. | Current reachable experimental exact-price boundaries are corrected, but the historical adapter remains semantically unsafe if promoted and RR-091 stays `Needs Investigation — contained/narrowed`. Conservative false-negative risk remains. No path promotion or live work is authorized. |
 | PR-008 | P1 | verified generalized correction | Historical RR-092 evidence showed editorial Product markup verifying identity/image without proving the tested unit. The complete staged regression already rejected the unbound image, but the reachable shared verifier reproduced the unsafe authority. | Professional-test entity selection was independent of tested-model status, and both tested-model and Product-entity matchers accepted any shared digit-bearing token. A target-looking name could also override an unrelated explicit JSON-LD model. | Verifier v2 requires a complete stable tested identifier or explicit proposed alias, rejects shared-token conflicts, treats a stable explicit Product model as authoritative, and withholds identity/entity/image authority when tested-model evidence is missing or contradictory. Stricter entity matching is professional-test-only. | Initial shared fail-first, staged full-path negative, cross-category and alias controls, sibling/missing/conflicting/unrelated mutations, non-null clearing, focused/full/static/build/E2E/controller walls, and final independent `VERIFIED`. | Closed locally with conservative false-negative risk. Source-role semantic classification remains outside this snapshot; default-off and no-live/no-release boundaries remain. |
 | PR-009 | P1 | verified correction; successor blocker isolated | The commit-pinned PR-2 request completed provider research but failed before verification as an unattributed `research_candidate_invalid`. | The v1 schema made the model author internal candidate/fact IDs while runtime required stricter array-relative values not fully specified by schema/prompt; it also rejected requirement ordering the schema could not constrain. The exact old failing field remains private and unknown. | Research contract/schema/prompt v2 make IDs server-owned, validate the exact unique requirement set before canonical ordering, align non-whitespace constraints, and retain only a guarded candidate field-group reason. Trust gates remain unchanged. | Fail-first 18 pass / 4 intended fail; candidate group matrix; staged 54/54; full 1,438/1,438; E2E/build/static/eval/ranking/dry-run walls; independent review. | Contract-v2 revalidation produced the narrower `candidate_sources` first loss. PR-011 now owns that successor blocker. Never reuse any spent attempt. |
 | PR-010 | P2 | verified | The Phase D estimator's field named `standardUsd` used its frozen 2026-07-25 rates, while official current Terra prices are lower. Readiness reporting could confuse a conservative approval rate with current estimated spend. | The rate object was intentionally frozen for approval reproducibility but the output label did not distinguish frozen-envelope and current-market estimates. | Plan/evidence schema v2 names the dated frozen approval envelope and dated `standard_non_regional` current estimate separately. Only the frozen conservative value controls the unchanged hard ceiling. | Fail-first 5 pass / 5 intended fail; exact short/long/cache-write/search rates and totals; focused 10/10; staged 56/56; full 1,440/1,440; E2E/build/static/eval/ranking/dry-run walls; independent review. | Closed locally without live spend. Re-check and date the informational card when official prices change; never silently reprice an existing approval envelope. |
@@ -1489,7 +1489,7 @@ directory is spent.
 
 ### Phase PR-5 — Correct the highest-impact repeated first loss
 
-- Status: **in progress; PR-008 complete locally**
+- Status: **in progress; PR-008 and PR-007 complete locally**
 - Select only after PR-4 evidence. Add fail-first regression coverage, make one
   generalized correction, run focused and broad controls, compare against the
   same baseline, reject or revert speculative complexity, document, and commit.
@@ -1536,6 +1536,58 @@ directory is spent.
   closes RR-092 locally but does not establish live quality, source-role
   semantics, production readiness, flag promotion, deployment, release, or
   push authority.
+
+#### PR-5B / PR-007 — Close reachable exact-model price authority
+
+- Status: **complete locally; zero live; independently verified**
+- Objective and bottleneck: determine whether RR-091's historical same-page
+  related-price defect still reached an application path before changing code.
+  `lib/autonomousResearchAdapter.ts` remains scripts/tests-only and still has
+  only URL/source-role membership. The staged and Direct-Terra routes remain
+  default-off, the Direct-Terra output labels transactional data `unverified`,
+  and the legacy route imports neither the historical adapter nor these
+  experimental shared paths. Current shared consumers nevertheless reproduced
+  a generalized exact-identity weakness that could select a sibling row.
+- Correction: `productIdentity.ts` now owns one punctuation-aware identity
+  relation for complete aliases, compound and descriptive identities,
+  contextual year/decimal models, measurement exclusions, technology phrases,
+  strong conflicts, and bounded model/variant/trim label assertions. Forward
+  and reverse assertions share one connector grammar. A comma is allowed only
+  inside a fully recognized assertion; ordinary feature-list punctuation stays
+  a hard boundary. Commerce v2, SearchAPI offers v2, fact verifier v3, Direct-
+  Terra assets v6, product-page URL/title/path selection, and staged
+  materialization reuse the relation. Accessory/replacement classification is
+  preserved.
+- Controls: numeric and mixed siblings; compounds and descriptive trims;
+  year-like and decimal models; measurements; Bluetooth LE/Low Energy, USB
+  Type-C, HDMI eARC, Wi-Fi 6E, and DisplayPort Alt Mode; split and compact
+  labels; forward/reverse single- and multiword copulas; appositive commas;
+  negative feature prose; structured Product name/model conflicts; canonical,
+  token, offer, asset, title, path, CTA, relationship, and staged consumers.
+- Independent correction loop: successive reviewer challenges found sibling
+  concatenation, year/decimal collapse, incomplete qualifier vocabularies,
+  technology-span erasure, compact labels, single/multiword and asymmetric
+  copulas, and appositive commas. Every finding received fail-first coverage
+  before a shared correction. The final frozen replacement review returned
+  exact `VERIFIED`, no material finding, confidence 0.995, and independently
+  rejected 60/60 generated comma-punctuated connector assertions while keeping
+  feature controls accepted.
+- Frozen SHA-256 anchors: shared identity
+  `f62214058e938c7dfbc4024833ea91b711e4e11975b01a1ec6fd3c86d23f13bc`;
+  identity tests
+  `ca5a97f98945524248c6baf7baa677a2b0e6fb98adf12f17803d38944303cc07`;
+  the complete 17-file manifest is retained in `docs/qa-loop-results.md`.
+- Proof: final focused 205/205 across 14 suites; full 1,604/1,604 across 218
+  suites; typecheck; production build; Playwright 17/17; full lint with zero
+  errors/three old warnings; diff check; controller
+  `agent-loop-2026-08-30T05-25-58-006Z` with all five partitions, 10/10 cases,
+  and 29/29 invariants. The scorecard cost guard stopped before provider work;
+  the ledger benchmark made zero provider calls and measured 0.253 ms/request.
+- Limits: RR-091 remains `Needs Investigation — contained/narrowed` because the
+  isolated historical adapter is unsafe if ever promoted. No provider, network,
+  credential, manual environment-file, or live-fixture work occurred. This does
+  not establish live market quality, flag safety, production readiness,
+  deployment, release, or push authority.
 
 ### Phase PR-6 — UX, resilience, security, and operational closure
 
@@ -1599,10 +1651,11 @@ Release blockers today:
   origin/fixture/manual review. PR-021 now closes future launcher attribution,
   but it grants no new live protocol or authority; the legacy scorecard remains
   non-authorizing;
-- RR-091 remains unresolved for the isolated historical adapter and must be
-  audited against current reachability and the shared exact-entity verifier
-  before any promotion. RR-092 is closed locally by PR-008, but that does not
-  substitute for blocked live accuracy/repeatability evidence.
+- RR-091 is now contained and narrowed: the unsafe historical adapter is
+  scripts/tests-only and may not be promoted, while the reachable shared exact-
+  price boundaries have a verified generalized correction. RR-092 is closed
+  locally by PR-008. Neither zero-live correction substitutes for blocked live
+  accuracy/repeatability evidence or the open UX/security/operations gates.
 
 The verdict can improve only through the required evidence above. Passing
 unit tests alone cannot change it.

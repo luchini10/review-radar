@@ -9,6 +9,45 @@ Update this file after:
 - important bug fixes
 - live QA fixes worth remembering
 
+## 2026-08-30
+
+### Codex - Bind every shared transactional path to complete exact-model identity
+
+#### Changed
+
+- Replaced divergent partial-token model checks across shared commerce,
+  SearchAPI offers, structured Product facts, Direct-Terra assets, and product-
+  page URL/title/path selection with one complete-alias identity relation.
+- Numeric, compound, descriptive, year-like, and decimal siblings now fail
+  closed. Measurement and technology versions remain feature details unless a
+  bounded model/variant/trim assertion explicitly makes them identity.
+- Added symmetric split/compact identity labels and connector grammar, including
+  tightly bounded appositive commas. Ordinary feature lists and hard punctuation
+  cannot turn Bluetooth, USB, HDMI, Wi-Fi, or DisplayPort versions into models.
+- Preserved complete-product/accessory classification and exact positive
+  controls. The unsafe historical membership-only adapter remains isolated in
+  scripts/tests and was not promoted.
+
+#### Verified
+
+- Every reviewer counterexample was locked fail-first before correction. Final
+  focused checks pass 205/205; the full suite passes 1,604/1,604 across 218
+  suites; typecheck, production build, Playwright 17/17, diff, and full lint
+  with zero errors/three old warnings pass.
+- Controller `agent-loop-2026-08-30T05-25-58-006Z` passed all five partitions,
+  10/10 cases, and 29/29 invariants. The scorecard stopped at its cost guard
+  before provider work; the ledger benchmark used zero provider calls and
+  measured 0.253 ms/request overhead.
+- Final frozen replacement review returned `VERIFIED`, no material correction,
+  confidence 0.995, and independently rejected 60/60 generated connector
+  assertions without feature-control false positives. No provider, network,
+  credential, manual environment-file, or live-fixture work occurred.
+
+RR-091 is now **contained/narrowed**, not Fixed: current shared exact-price
+boundaries are corrected, but the isolated historical adapter remains unsafe if
+promoted. ReviewRadar remains **NOT READY** because live accuracy/repeatability,
+latency/cost, and broader UX, security, and operational gates remain open.
+
 ## 2026-08-29
 
 ### Codex - Require exact tested-model proof before trusting review-page product markup

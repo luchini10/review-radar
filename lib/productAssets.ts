@@ -21,8 +21,11 @@ import type {
   ProductOffer,
   ProductPriceTrust,
 } from "@/types/review-radar";
-import { haveConflictingCompoundModelSequences } from "./productIdentity.ts";
-import { sourceUrlPathIdentityText } from "./sourceUrlIdentity.ts";
+import {
+  haveConflictingCompoundModelSequences,
+  haveConflictingDescriptiveModelSequences,
+} from "./productIdentity.ts";
+import { sourceUrlPathIdentitySegments } from "./sourceUrlIdentity.ts";
 
 type ProductAssetRecommendation = {
   category?: string;
@@ -1275,10 +1278,18 @@ function withVerifiedOfferPriceFields<T extends ProductAssetRecommendation>(
 
 async function getVerifiedProductAssets(product: ProductAssetRecommendation) {
   const proposedProductPageUrl = normalizeUrl(product.product_page_url);
-  const primaryProductPageUrl = haveConflictingCompoundModelSequences(
-    product.name,
-    sourceUrlPathIdentityText(proposedProductPageUrl),
-  )
+  const proposedPathIdentitySegments = sourceUrlPathIdentitySegments(
+    proposedProductPageUrl,
+  );
+  const explicitModel = product.metadata?.modelNumber?.value || "";
+  const primaryProductPageUrl =
+    proposedPathIdentitySegments.some((segment) =>
+      haveConflictingCompoundModelSequences(product.name, segment),
+    ) ||
+    (explicitModel &&
+      proposedPathIdentitySegments.some((segment) =>
+        haveConflictingDescriptiveModelSequences(explicitModel, segment),
+      ))
     ? ""
     : proposedProductPageUrl;
   const citationProductPageUrl = primaryProductPageUrl

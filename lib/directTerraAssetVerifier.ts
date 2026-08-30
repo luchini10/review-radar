@@ -8,6 +8,9 @@ import { validateProductImageCandidate } from "./productImageResolver.ts";
 import { productPageMatchesIdentity } from "./productPageUrl.ts";
 import {
   haveConflictingCompoundModelSequences,
+  haveConflictingDescriptiveModelSequences,
+  isModelIdentityMeasurementToken,
+  modelIdentityRelation,
   strongModelTokens,
 } from "./productIdentity.ts";
 import { classifyProductTypeMatch } from "./productTypeMatch.ts";
@@ -21,7 +24,7 @@ import {
 } from "./directTerraProductRelationship.ts";
 
 export const DIRECT_TERRA_ASSET_VERIFIER_VERSION =
-  "direct-terra-asset-verifier-v5";
+  "direct-terra-asset-verifier-v6";
 
 export type DirectTerraAssetTarget = {
   key: string;
@@ -167,23 +170,37 @@ function titleModelCompatibleWithTarget(titleModel: string, targetModel: string)
 }
 
 function titleHasConflictingModel(targetModel: string, title: string) {
-  if (haveConflictingCompoundModelSequences(targetModel, title)) return true;
+  if (modelIdentityRelation(targetModel, title).matchesCompleteAlias) {
+    return false;
+  }
+  if (
+    haveConflictingCompoundModelSequences(targetModel, title) ||
+    haveConflictingDescriptiveModelSequences(targetModel, title)
+  ) {
+    return true;
+  }
 
   const identityModels = (value: string) =>
     new Set(
       [...strongModelTokens(value)].filter(
-        (model) => !DIRECT_TERRA_MEASUREMENT_MODEL.test(model),
+        (model) => !isModelIdentityMeasurementToken(model),
       ),
     );
   const targetModels = [...identityModels(targetModel)];
+  const comparableTargetModels =
+    targetModels.length > 0
+      ? targetModels
+      : modelCoreTokens(targetModel).filter(
+          (model) => /[a-z]/i.test(model) && /\d/.test(model),
+        );
   const titleModels = identityModels(title);
-  if (targetModels.length === 0) return false;
+  if (comparableTargetModels.length === 0) return false;
   // A title carries a conflicting model only when one of its strong models is
   // compatible with NO target model (so a base-model retailer listing is
   // compatible, while a sibling suffix or a different number is not).
   return [...titleModels].some(
     (titleModel) =>
-      !targetModels.some((target) =>
+      !comparableTargetModels.some((target) =>
         titleModelCompatibleWithTarget(titleModel, target),
       ),
   );
@@ -264,7 +281,6 @@ function compactIdentity(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
 }
 
-const DIRECT_TERRA_MEASUREMENT_MODEL = /^\d+(?:amp|amps|bit|btu|burner|burners|cc|cfm|cm|cup|cups|db|door|doors|dpi|drawer|drawers|ft|gal|gallon|gallons|gb|hp|hz|in|inch|inches|k|kg|l|lb|lbs|mah|mb|ml|mm|mp|oz|p|pc|pcs|piece|pieces|pk|psi|px|qt|speed|speeds|stage|stages|tb|tier|tiers|v|volt|volts|w|watt|watts|wh|zone|zones)$/i;
 const DIRECT_TERRA_DATE_MODEL = /^(?:19|20)\d{2}[-/.](?:0?[1-9]|1[0-2])(?:[-/.](?:0?[1-9]|[12]\d|3[01]))?$/;
 const DIRECT_TERRA_NUMERIC_COMPOUND_MODEL = /^\d{2,}(?:[-/]\d{2,})+$/;
 const DIRECT_TERRA_NON_MODEL_TECHNOLOGY = /^(?:ddr|gen|hdmi|hdr|ips|oled|qled|series|uhd|usb|wifi)\d+[a-z]*$/i;
@@ -285,7 +301,7 @@ export function directTerraStrongModelToken(value: string) {
     compact.length > 24 ||
     /^\d{4}$/.test(compact) ||
     DIRECT_TERRA_DATE_MODEL.test(value) ||
-    DIRECT_TERRA_MEASUREMENT_MODEL.test(compact)
+    isModelIdentityMeasurementToken(compact)
   ) {
     return false;
   }
@@ -330,7 +346,7 @@ export function extractDirectTerraHeadingIdentity(productName: string) {
     /\d/.test(model) &&
     /^\d{3,6}$/.test(suffix) &&
     !/^(?:19|20)\d{2}$/.test(suffix) &&
-    !DIRECT_TERRA_MEASUREMENT_MODEL.test(compactIdentity(suffix))
+    !isModelIdentityMeasurementToken(compactIdentity(suffix))
   ) {
     model = `${model} ${suffix}`;
   }

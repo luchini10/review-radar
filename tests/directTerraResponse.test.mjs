@@ -172,6 +172,8 @@ describe("direct Terra V2 response boundary", () => {
       "Acme X100 12-Cup Programmable Coffee Maker",
       "Acme X100 3-Stage Air Purifier",
       "Acme X100 2-Door Refrigerator",
+      "Acme X100 5Ah Cordless Drill",
+      "Acme X100 3000RPM Rotary Tool",
     ]) {
       assert.deepEqual(
         extractDirectTerraAssetTargets({

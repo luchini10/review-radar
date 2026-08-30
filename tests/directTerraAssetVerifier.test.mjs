@@ -41,6 +41,7 @@ describe("Direct-Terra asset safety boundary", () => {
       candidates: [shoppingResult()],
     });
 
+    assert.equal(DIRECT_TERRA_ASSET_VERIFIER_VERSION, "direct-terra-asset-verifier-v6");
     assert.equal(result.verifierVersion, DIRECT_TERRA_ASSET_VERIFIER_VERSION);
     assert.equal(result.targetKey, q7.key);
     assert.equal(result.rank, q7.rank);
@@ -177,6 +178,316 @@ describe("Direct-Terra asset safety boundary", () => {
     assert.equal(result.imageUrlStatus, "unavailable");
     assert.equal(result.decisions[0].productUrlReason, "product_url_identity_mismatch");
     assert.equal(result.decisions[0].imageUrlReason, "candidate_product_url_not_safe");
+  });
+
+  it("rejects assets whose title mixes an exact identity with an undocumented sibling", () => {
+    const cases = [
+      {
+        target: {
+          ...q7,
+          key: "rank-1-x100-a1",
+          productName: "Example X100 A1 cordless vacuum",
+          brand: "Example",
+          model: "X100 A1",
+          category: "cordless vacuum",
+        },
+        title: "Example X100 A1 and X100 B2 cordless vacuum",
+        productUrl: "https://merchant.example/products/x100-a1",
+        expectedReason: "model_conflict_in_title",
+      },
+      ...[
+        "plus",
+        "alongside",
+        "featuring",
+        "model",
+        "variant",
+        "trim",
+        "version",
+        "aka",
+        "includes",
+      ].map((connector) => ({
+        target: {
+          ...q7,
+          key: `rank-1-x100-a1-${connector}`,
+          productName: "Example X100 A1 cordless vacuum",
+          brand: "Example",
+          model: "X100 A1",
+          category: "cordless vacuum",
+        },
+        title: `Example X100 A1 ${connector} B2 cordless vacuum`,
+        productUrl: "https://merchant.example/products/x100-a1",
+        expectedReason: "model_conflict_in_title",
+      })),
+      {
+        target: {
+          ...q7,
+          key: "rank-1-x100-a1-parentheses",
+          productName: "Example X100 A1 cordless vacuum",
+          brand: "Example",
+          model: "X100 A1",
+          category: "cordless vacuum",
+        },
+        title: "Example X100 (A1) and X100 (B2) cordless vacuum",
+        productUrl: "https://merchant.example/products/x100-a1",
+        expectedReason: "model_conflict_in_title",
+      },
+      {
+        target: {
+          ...q7,
+          key: "rank-1-x100-20",
+          productName: "Example X100 20 cordless vacuum",
+          brand: "Example",
+          model: "X100 20",
+          category: "cordless vacuum",
+        },
+        title: "Example X100 30 cordless vacuum",
+        productUrl: "https://merchant.example/products/x100-20",
+        expectedReason: "model_not_in_title",
+      },
+      ...[
+        "Example X100 20 plus 30 cordless vacuum",
+        "Example X100 20 alongside 30 cordless vacuum",
+        "Example X100 20 variant 30 cordless vacuum",
+        "Example X100 20 and 30 cordless vacuum",
+        "Example X100 20, 30 cordless vacuum",
+        "Example 30 alongside X100 20 cordless vacuum",
+        "Example X100 20 plus X100 model 2024 cordless vacuum",
+        "Example X100 20 plus X100 30.0 cordless vacuum",
+        "Example X100 20 plus model number 2024 cordless vacuum",
+        "Example X100 20 plus model no. 2024 cordless vacuum",
+        "Example X100 20 plus model code 2024 cordless vacuum",
+        "Example X100 20 plus version number 30.0 cordless vacuum",
+        "Example X100 20 plus variant number 30.0 cordless vacuum",
+        "Example X100 20 plus variant code 2024 cordless vacuum",
+        "Example X100 20 plus trim level 30.0 cordless vacuum",
+        "Example X100 20 plus trim code 2024 cordless vacuum",
+        "Example X100 20 plus 2024 model X100 cordless vacuum",
+        "Example X100 20 plus B2 with Bluetooth Low Energy version 5.0 cordless vacuum",
+        "Example X100 20 plus model Bluetooth LE version 5.0 cordless vacuum",
+        "Example X100 20 plus variant USB Type-C version 3.2 cordless vacuum",
+        "Example X100 20 plus trim HDMI eARC version 2.1 cordless vacuum",
+        "Example X100 20 plus model Wi-Fi 6E cordless vacuum",
+        "Example X100 20 plus Wi-Fi 6E model cordless vacuum",
+        "Example X100 20 plus model ID: Wi-Fi 6E cordless vacuum",
+        "Example X100 20 plus model identifier Bluetooth LE version 5.0 cordless vacuum",
+        "Example X100 20 plus model-name USB Type-C version 3.2 cordless vacuum",
+        "Example X100 20 plus variant ID HDMI eARC version 2.1 cordless vacuum",
+        "Example X100 20 plus trim name DisplayPort Alt Mode version 2.0 cordless vacuum",
+        "Example X100 20 plus Wi-Fi 6E model identifier cordless vacuum",
+        "Example X100 20 plus Bluetooth LE version 5.0 model name cordless vacuum",
+        "Example X100 20 plus ModelID Wi-Fi 6E cordless vacuum",
+        "Example X100 20 plus modelIdentifier Bluetooth LE version 5.0 cordless vacuum",
+        "Example X100 20 plus modelName USB Type-C version 3.2 cordless vacuum",
+        "Example X100 20 plus variantID HDMI eARC version 2.1 cordless vacuum",
+        "Example X100 20 plus variantIdentifier DisplayPort Alt Mode version 2.0 cordless vacuum",
+        "Example X100 20 plus variantName Wi-Fi 7 cordless vacuum",
+        "Example X100 20 plus trimID Bluetooth Low Energy version 5.0 cordless vacuum",
+        "Example X100 20 plus trimIdentifier Wi-Fi 6E cordless vacuum",
+        "Example X100 20 plus trimName USB Type-C version 3.2 cordless vacuum",
+        "Example X100 20 plus Wi-Fi 6E ModelID cordless vacuum",
+        "Example X100 20 plus Bluetooth LE version 5.0 trimName cordless vacuum",
+        "Example X100 20 plus Model ID is Wi-Fi 6E cordless vacuum",
+        "Example X100 20 plus ModelID equals Wi-Fi 6E cordless vacuum",
+        "Example X100 20 plus model called Bluetooth LE version 5.0 cordless vacuum",
+        "Example X100 20 plus model named USB Type-C version 3.2 cordless vacuum",
+        "Example X100 20 plus variant is Wi-Fi 6E cordless vacuum",
+        "Example X100 20 plus Wi-Fi 6E is the Model ID cordless vacuum",
+        "Example X100 20 plus Bluetooth LE version 5.0 is the modelName cordless vacuum",
+        "Example X100 20 plus model designation is DisplayPort Alt Mode version 2.0 cordless vacuum",
+        "Example X100 20 plus model is called Bluetooth LE version 5.0 cordless vacuum",
+        "Example X100 20 plus model is named USB Type-C version 3.2 cordless vacuum",
+        "Example X100 20 plus model is designated Wi-Fi 6E cordless vacuum",
+        "Example X100 20 plus model is designated as Wi-Fi 6E cordless vacuum",
+        "Example X100 20 plus variant is called HDMI eARC version 2.1 cordless vacuum",
+        "Example X100 20 plus trim is named DisplayPort Alt Mode version 2.0 cordless vacuum",
+        "Example X100 20 plus model is known as Wi-Fi 6E cordless vacuum",
+        "Example X100 20 plus model also known as Wi-Fi 6E cordless vacuum",
+        "Example X100 20 plus model is also known as Wi-Fi 6E cordless vacuum",
+        "Example X100 20 plus model is the Wi-Fi 6E cordless vacuum",
+        "Example X100 20 plus Wi-Fi 6E is known as the model cordless vacuum",
+        "Example X100 20 plus Wi-Fi 6E is designated as the model cordless vacuum",
+        "Example X100 20 plus Bluetooth LE version 5.0 is called the modelName cordless vacuum",
+        "Example X100 20 plus USB Type-C version 3.2 is named the variantID cordless vacuum",
+        "Example X100 20; the model, also known as Wi-Fi 6E, cordless vacuum",
+        "Example X100 20 plus model, is designated as Wi-Fi 6E cordless vacuum",
+        "Example X100 20 plus model is, also known as Wi-Fi 6E cordless vacuum",
+        "Example X100 20 plus Wi-Fi 6E, also known as the model cordless vacuum",
+        "Example X100 20 plus Wi-Fi 6E is, also known as the model cordless vacuum",
+      ].map((title, index) => ({
+        target: {
+          ...q7,
+          key: `rank-1-x100-20-hidden-sibling-${index}`,
+          productName: "Example X100 20 cordless vacuum",
+          brand: "Example",
+          model: "X100 20",
+          category: "cordless vacuum",
+        },
+        title,
+        productUrl: "https://merchant.example/products/x100-20",
+        expectedReason: "model_conflict_in_title",
+      })),
+      ...[
+        {
+          model: "X100 2024",
+          exactName: "Example X100 2024 cordless vacuum",
+          siblingTitle: "Example X100 2030 cordless vacuum",
+        },
+        {
+          model: "X100 30.0",
+          exactName: "Example X100 30.0 cordless vacuum",
+          siblingTitle: "Example X100 31.0 cordless vacuum",
+        },
+      ].map((testCase, index) => ({
+        target: {
+          ...q7,
+          key: `rank-1-numeric-context-${index}`,
+          productName: testCase.exactName,
+          brand: "Example",
+          model: testCase.model,
+          category: "cordless vacuum",
+        },
+        title: testCase.siblingTitle,
+        productUrl: "https://merchant.example/products/numeric-sibling",
+        expectedReason: "model_not_in_title",
+      })),
+      {
+        target: {
+          ...q7,
+          key: "rank-1-q50-max",
+          productName: "Example Q50 Max robot vacuum",
+          brand: "Example",
+          model: "Q50 Max",
+        },
+        title: "Example Q50 Max and Q50 Pro robot vacuum",
+        productUrl: "https://merchant.example/products/q50-max",
+        expectedReason: "model_conflict_in_title",
+      },
+      {
+        target: {
+          ...q7,
+          key: "rank-1-q50-max-sibling-only",
+          productName: "Example Q50 Max robot vacuum",
+          brand: "Example",
+          model: "Q50 Max",
+        },
+        title: "Example Q50 Pro robot vacuum",
+        productUrl: "https://merchant.example/products/q50-pro",
+        expectedReason: "model_conflict_in_title",
+      },
+      {
+        target: {
+          ...q7,
+          key: "rank-1-q50-max-cross-family",
+          productName: "Example Q50 Max robot vacuum",
+          brand: "Example",
+          model: "Q50 Max",
+        },
+        title: "Example Q50 Max and HZ4002 robot vacuum",
+        productUrl: "https://merchant.example/products/q50-max",
+        expectedReason: "model_conflict_in_title",
+      },
+      {
+        target: {
+          ...q7,
+          key: "rank-1-q50-max-cross-compound",
+          productName: "Example Q50 Max robot vacuum",
+          brand: "Example",
+          model: "Q50 Max",
+        },
+        title: "Example Q50 Max and Y7 B2 robot vacuum",
+        productUrl: "https://merchant.example/products/q50-max",
+        expectedReason: "model_conflict_in_title",
+      },
+    ];
+
+    for (const testCase of cases) {
+      const result = verifyDirectTerraAssetCandidates({
+        target: testCase.target,
+        candidates: [
+          shoppingResult({
+            title: testCase.title,
+            productUrl: testCase.productUrl,
+            imageUrl: `${testCase.productUrl}.jpg`,
+          }),
+        ],
+      });
+
+      assert.equal(result.productUrl, null);
+      assert.equal(result.imageUrl, null);
+      assert.equal(result.decisions[0].identityReason, testCase.expectedReason);
+    }
+  });
+
+  it("accepts equivalent compound punctuation and joined or split measurements", () => {
+    const target = {
+      ...q7,
+      key: "rank-1-x100-a1-equivalent",
+      productName: "Example X100 A1 appliance",
+      brand: "Example",
+      model: "X100 A1",
+      category: "appliance",
+    };
+
+    for (const title of [
+      "Example X100 (A1) appliance",
+      "Example X100-A1 appliance",
+      "Example X100/A1 appliance",
+      "Example X100 A1 4-Burner appliance",
+      "Example X100 A1 4 Burner appliance",
+      "Example X100 A1 5Ah appliance",
+      "Example X100 A1 5 Ah appliance",
+      "Example X100 A1 12-Cup appliance",
+      "Example X100 A1 12 Cup appliance",
+      "Example X100 A1 3000RPM appliance",
+      "Example X100 A1 3000 RPM appliance",
+    ]) {
+      const result = verifyDirectTerraAssetCandidates({
+        target,
+        candidates: [
+          shoppingResult({
+            title,
+            productUrl: "https://merchant.example/products/x100-a1/123456",
+            imageUrl: "https://images.example.com/products/x100-a1.jpg",
+          }),
+        ],
+      });
+
+      assert.equal(result.productUrlStatus, "accepted_identity_safe", title);
+      assert.equal(result.imageUrlStatus, "accepted_identity_safe", title);
+    }
+
+    const numericTarget = {
+      ...target,
+      key: "rank-1-x100-20-technology-version",
+      productName: "Example X100 20 appliance",
+      model: "X100 20",
+    };
+    for (const title of [
+      "Example X100 20 with Bluetooth version number 5.0 appliance",
+      "Example X100 20 with WiFi version 6.0 appliance",
+      "Example X100 20 with Bluetooth LE version 5.0 appliance",
+      "Example X100 20 with Bluetooth Low Energy version 5.0 appliance",
+      "Example X100 20 with USB Type-C version 3.2 appliance",
+      "Example X100 20 with HDMI eARC version 2.1 appliance",
+      "Example X100 20 with Wi-Fi 6E version 2.0 appliance",
+      "Example X100 20 with DisplayPort Alt Mode version 2.0 appliance",
+      "Example X100 20 with Wi-Fi 6E appliance",
+      "Example X100 20 with Wi-Fi 7 appliance",
+    ]) {
+      const result = verifyDirectTerraAssetCandidates({
+        target: numericTarget,
+        candidates: [
+          shoppingResult({
+            title,
+            productUrl: "https://merchant.example/products/x100-20/123456",
+            imageUrl: "https://images.example.com/products/x100-20.jpg",
+          }),
+        ],
+      });
+
+      assert.equal(result.productUrlStatus, "accepted_identity_safe", title);
+      assert.equal(result.imageUrlStatus, "accepted_identity_safe", title);
+    }
   });
 
   it("rejects RR-061 wrong-model image filenames while preserving a safe product page", () => {

@@ -310,6 +310,328 @@ describe("OAI-T10 deterministic evidence materializer", () => {
     assert.equal(result.diagnostics.candidates[0].imageUrlAvailable, false);
   });
 
+  it("does not materialize a price from target-looking markup with a sibling explicit model", () => {
+    const sourceUrl = "https://manufacturer1.example/products/x100-a1";
+    const candidateIdentity = {
+      productName: "Example Brand X100 A1 cordless vacuum",
+      model: "X100 A1",
+      sourceUrls: [sourceUrl],
+    };
+    const result = materializeStagedTerraEvidencePackage({
+      shopperRequest: { query: "cordless vacuum" },
+      researchOutput: researchOutput({
+        candidateOverrides: { candidate_1: candidateIdentity },
+      }),
+      market: "US",
+      candidates: [
+        exactCandidateInput({
+          sources: [
+            {
+              sourceUrl,
+              sourceRole: "official_product",
+              ...productPageSource({
+                name: candidateIdentity.productName,
+                model: "X100 B2",
+                price: 99,
+                image: "https://manufacturer1.example/images/x100-a1.jpg",
+                url: sourceUrl,
+                visibleClaim: "",
+              }),
+              claims: [],
+            },
+          ],
+          shoppingResults: [],
+        }),
+      ],
+    });
+    const candidate = result.evidencePackage.candidates[0];
+
+    assert.notEqual(candidate.eligibility, "eligible");
+    assert.equal(
+      candidate.facts.some(
+        (fact) => fact.kind === "price" && fact.verification === "verified",
+      ),
+      false,
+    );
+    assert.equal(candidate.assets.productUrl, null);
+    assert.equal(candidate.assets.imageUrl, null);
+    assert.equal(result.diagnostics.candidates[0].verifiedPriceCount, 0);
+  });
+
+  it("materializes only the exact compound Shopping row, never its cheaper sibling", () => {
+    const candidateIdentity = {
+      productName: "Example Brand X100 A1 cordless vacuum",
+      model: "X100 A1",
+    };
+    const materialize = (shoppingResults) =>
+      materializeStagedTerraEvidencePackage({
+        shopperRequest: { query: "cordless vacuum" },
+        researchOutput: researchOutput({
+          candidateOverrides: { candidate_1: candidateIdentity },
+        }),
+        market: "US",
+        candidates: [
+          exactCandidateInput({
+            sources: [],
+            shoppingResults,
+          }),
+        ],
+      });
+    const exact = {
+      title: "Example Brand X100 A1 cordless vacuum",
+      productLink: "https://merchant.example/products/x100-a1",
+      source: "Example Store",
+      price: "$199.00",
+      position: 2,
+    };
+
+    for (const invalidTitle of [
+      "Example Brand X100 A1 and X100 B2 cordless vacuum",
+      "Example Brand X100 (A1) and X100 (B2) cordless vacuum",
+      "Example Brand X100 A1 plus B2 cordless vacuum",
+      "Example Brand X100 A1 alongside B2 cordless vacuum",
+      "Example Brand X100 A1 featuring B2 cordless vacuum",
+      "Example Brand X100 A1 model B2 cordless vacuum",
+      "Example Brand X100 A1 variant B2 cordless vacuum",
+      "Example Brand X100 A1 trim B2 cordless vacuum",
+      "Example Brand X100 A1 version B2 cordless vacuum",
+      "Example Brand X100 A1 aka B2 cordless vacuum",
+      "Example Brand X100 A1 includes B2 cordless vacuum",
+      "Example Brand X100 cordless vacuum",
+    ]) {
+      const invalid = {
+        title: invalidTitle,
+        productLink: "https://merchant.example/products/invalid-x100",
+        source: "Example Store",
+        price: "$99.00",
+      };
+      const withExact = materialize([invalid, exact]);
+      const exactCandidate = withExact.evidencePackage.candidates[0];
+      const exactPrice = exactCandidate.facts.find((fact) => fact.kind === "price");
+      assert.equal(exactCandidate.eligibility, "eligible", invalidTitle);
+      assert.match(exactPrice?.statement ?? "", /\$199\.00/, invalidTitle);
+      assert.doesNotMatch(exactPrice?.statement ?? "", /\$99\.00/, invalidTitle);
+
+      const invalidOnly = materialize([invalid]);
+      const rejectedCandidate = invalidOnly.evidencePackage.candidates[0];
+      assert.notEqual(rejectedCandidate.eligibility, "eligible", invalidTitle);
+      assert.equal(
+        rejectedCandidate.facts.some((fact) => fact.kind === "price"),
+        false,
+        invalidTitle,
+      );
+      assert.equal(
+        invalidOnly.diagnostics.candidates[0].verifiedPriceCount,
+        0,
+        invalidTitle,
+      );
+    }
+  });
+
+  it("never lets a numeric sibling Shopping row price the exact numeric-suffix model", () => {
+    const candidateIdentity = {
+      productName: "Example Brand X100 20 cordless vacuum",
+      model: "X100 20",
+    };
+    const materialize = (shoppingResults) =>
+      materializeStagedTerraEvidencePackage({
+        shopperRequest: { query: "cordless vacuum" },
+        researchOutput: researchOutput({
+          candidateOverrides: { candidate_1: candidateIdentity },
+        }),
+        market: "US",
+        candidates: [
+          exactCandidateInput({
+            sources: [],
+            shoppingResults,
+          }),
+        ],
+      });
+    const safeTechnologyTitles = [
+      "Example Brand X100 20 with Bluetooth LE version 5.0 cordless vacuum",
+      "Example Brand X100 20 with Bluetooth Low Energy version 5.0 cordless vacuum",
+      "Example Brand X100 20 with USB Type-C version 3.2 cordless vacuum",
+      "Example Brand X100 20 with HDMI eARC version 2.1 cordless vacuum",
+      "Example Brand X100 20 with Wi-Fi 6E version 2.0 cordless vacuum",
+      "Example Brand X100 20 with DisplayPort Alt Mode version 2.0 cordless vacuum",
+      "Example Brand X100 20 with Wi-Fi 6E cordless vacuum",
+      "Example Brand X100 20 with Wi-Fi 7 cordless vacuum",
+    ];
+
+    for (const [index, invalidTitle] of [
+      "Example Brand X100 20 plus 30 cordless vacuum",
+      "Example Brand X100 20 alongside 30 cordless vacuum",
+      "Example Brand X100 20 variant 30 cordless vacuum",
+      "Example Brand X100 20 and 30 cordless vacuum",
+      "Example Brand X100 20, 30 cordless vacuum",
+      "Example Brand 30 alongside X100 20 cordless vacuum",
+      "Example Brand X100 20 plus X100 model 2024 cordless vacuum",
+      "Example Brand X100 20 plus X100 30.0 cordless vacuum",
+      "Example Brand X100 20 plus model number 2024 cordless vacuum",
+      "Example Brand X100 20 plus model no. 2024 cordless vacuum",
+      "Example Brand X100 20 plus model code 2024 cordless vacuum",
+      "Example Brand X100 20 plus version number 30.0 cordless vacuum",
+      "Example Brand X100 20 plus variant number 30.0 cordless vacuum",
+      "Example Brand X100 20 plus variant code 2024 cordless vacuum",
+      "Example Brand X100 20 plus trim level 30.0 cordless vacuum",
+      "Example Brand X100 20 plus trim code 2024 cordless vacuum",
+      "Example Brand X100 20 plus 2024 model X100 cordless vacuum",
+      "Example Brand X100 20 plus B2 with Bluetooth Low Energy version 5.0 cordless vacuum",
+      "Example Brand X100 20 plus model Bluetooth LE version 5.0 cordless vacuum",
+      "Example Brand X100 20 plus variant USB Type-C version 3.2 cordless vacuum",
+      "Example Brand X100 20 plus trim HDMI eARC version 2.1 cordless vacuum",
+      "Example Brand X100 20 plus model Wi-Fi 6E cordless vacuum",
+      "Example Brand X100 20 plus Wi-Fi 6E model cordless vacuum",
+      "Example Brand X100 20 plus model ID: Wi-Fi 6E cordless vacuum",
+      "Example Brand X100 20 plus model identifier Bluetooth LE version 5.0 cordless vacuum",
+      "Example Brand X100 20 plus model-name USB Type-C version 3.2 cordless vacuum",
+      "Example Brand X100 20 plus variant ID HDMI eARC version 2.1 cordless vacuum",
+      "Example Brand X100 20 plus trim name DisplayPort Alt Mode version 2.0 cordless vacuum",
+      "Example Brand X100 20 plus Wi-Fi 6E model identifier cordless vacuum",
+      "Example Brand X100 20 plus Bluetooth LE version 5.0 model name cordless vacuum",
+      "Example Brand X100 20 plus ModelID Wi-Fi 6E cordless vacuum",
+      "Example Brand X100 20 plus modelIdentifier Bluetooth LE version 5.0 cordless vacuum",
+      "Example Brand X100 20 plus modelName USB Type-C version 3.2 cordless vacuum",
+      "Example Brand X100 20 plus variantID HDMI eARC version 2.1 cordless vacuum",
+      "Example Brand X100 20 plus variantIdentifier DisplayPort Alt Mode version 2.0 cordless vacuum",
+      "Example Brand X100 20 plus variantName Wi-Fi 7 cordless vacuum",
+      "Example Brand X100 20 plus trimID Bluetooth Low Energy version 5.0 cordless vacuum",
+      "Example Brand X100 20 plus trimIdentifier Wi-Fi 6E cordless vacuum",
+      "Example Brand X100 20 plus trimName USB Type-C version 3.2 cordless vacuum",
+      "Example Brand X100 20 plus Wi-Fi 6E ModelID cordless vacuum",
+      "Example Brand X100 20 plus Bluetooth LE version 5.0 trimName cordless vacuum",
+      "Example Brand X100 20 plus Model ID is Wi-Fi 6E cordless vacuum",
+      "Example Brand X100 20 plus ModelID equals Wi-Fi 6E cordless vacuum",
+      "Example Brand X100 20 plus model called Bluetooth LE version 5.0 cordless vacuum",
+      "Example Brand X100 20 plus model named USB Type-C version 3.2 cordless vacuum",
+      "Example Brand X100 20 plus variant is Wi-Fi 6E cordless vacuum",
+      "Example Brand X100 20 plus Wi-Fi 6E is the Model ID cordless vacuum",
+      "Example Brand X100 20 plus Bluetooth LE version 5.0 is the modelName cordless vacuum",
+      "Example Brand X100 20 plus model designation is DisplayPort Alt Mode version 2.0 cordless vacuum",
+      "Example Brand X100 20 plus model is called Bluetooth LE version 5.0 cordless vacuum",
+      "Example Brand X100 20 plus model is named USB Type-C version 3.2 cordless vacuum",
+      "Example Brand X100 20 plus model is designated Wi-Fi 6E cordless vacuum",
+      "Example Brand X100 20 plus model is designated as Wi-Fi 6E cordless vacuum",
+      "Example Brand X100 20 plus variant is called HDMI eARC version 2.1 cordless vacuum",
+      "Example Brand X100 20 plus trim is named DisplayPort Alt Mode version 2.0 cordless vacuum",
+      "Example Brand X100 20 plus model is known as Wi-Fi 6E cordless vacuum",
+      "Example Brand X100 20 plus model also known as Wi-Fi 6E cordless vacuum",
+      "Example Brand X100 20 plus model is also known as Wi-Fi 6E cordless vacuum",
+      "Example Brand X100 20 plus model is the Wi-Fi 6E cordless vacuum",
+      "Example Brand X100 20 plus Wi-Fi 6E is known as the model cordless vacuum",
+      "Example Brand X100 20 plus Wi-Fi 6E is designated as the model cordless vacuum",
+      "Example Brand X100 20 plus Bluetooth LE version 5.0 is called the modelName cordless vacuum",
+      "Example Brand X100 20 plus USB Type-C version 3.2 is named the variantID cordless vacuum",
+      "Example Brand X100 20; the model, also known as Wi-Fi 6E, cordless vacuum",
+      "Example Brand X100 20 plus model, is designated as Wi-Fi 6E cordless vacuum",
+      "Example Brand X100 20 plus model is, also known as Wi-Fi 6E cordless vacuum",
+      "Example Brand X100 20 plus Wi-Fi 6E, also known as the model cordless vacuum",
+      "Example Brand X100 20 plus Wi-Fi 6E is, also known as the model cordless vacuum",
+    ].entries()) {
+      const exact = {
+        title: safeTechnologyTitles[index % safeTechnologyTitles.length],
+        productLink: "https://merchant.example/products/x100-20",
+        source: "Example Store",
+        price: "$199.00",
+        position: 2,
+      };
+      const invalid = {
+        title: invalidTitle,
+        productLink: "https://merchant.example/products/invalid-x100",
+        source: "Example Store",
+        price: "$99.00",
+      };
+      const withExact = materialize([invalid, exact]);
+      const exactCandidate = withExact.evidencePackage.candidates[0];
+      const exactPrice = exactCandidate.facts.find((fact) => fact.kind === "price");
+      assert.equal(exactCandidate.eligibility, "eligible", invalidTitle);
+      assert.match(exactPrice?.statement ?? "", /\$199\.00/, invalidTitle);
+      assert.doesNotMatch(exactPrice?.statement ?? "", /\$99\.00/, invalidTitle);
+
+      const invalidOnly = materialize([invalid]);
+      const rejectedCandidate = invalidOnly.evidencePackage.candidates[0];
+      assert.notEqual(rejectedCandidate.eligibility, "eligible", invalidTitle);
+      assert.equal(
+        rejectedCandidate.facts.some((fact) => fact.kind === "price"),
+        false,
+        invalidTitle,
+      );
+      assert.equal(
+        invalidOnly.diagnostics.candidates[0].verifiedPriceCount,
+        0,
+        invalidTitle,
+      );
+    }
+  });
+
+  it("keeps year-like and decimal sibling Shopping prices out of staged evidence", () => {
+    for (const testCase of [
+      {
+        model: "X100 2024",
+        exactTitle: "Example Brand X100 2024 cordless vacuum",
+        siblingTitle: "Example Brand X100 2030 cordless vacuum",
+      },
+      {
+        model: "X100 30.0",
+        exactTitle: "Example Brand X100 30.0 cordless vacuum",
+        siblingTitle: "Example Brand X100 31.0 cordless vacuum",
+      },
+    ]) {
+      const modelSlug = testCase.model.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const materialize = (shoppingResults) =>
+        materializeStagedTerraEvidencePackage({
+          shopperRequest: { query: "cordless vacuum" },
+          researchOutput: researchOutput({
+            candidateOverrides: {
+              candidate_1: {
+                productName: testCase.exactTitle,
+                model: testCase.model,
+              },
+            },
+          }),
+          market: "US",
+          candidates: [
+            exactCandidateInput({
+              sources: [],
+              shoppingResults,
+            }),
+          ],
+        });
+      const sibling = {
+        title: testCase.siblingTitle,
+        productLink: "https://merchant.example/products/numeric-sibling",
+        source: "Example Store",
+        price: "$99.00",
+      };
+      const exact = {
+        title: testCase.exactTitle,
+        productLink: `https://merchant.example/products/${modelSlug}`,
+        source: "Example Store",
+        price: "$199.00",
+        position: 2,
+      };
+
+      const withExact = materialize([sibling, exact]);
+      const exactCandidate = withExact.evidencePackage.candidates[0];
+      const exactPrice = exactCandidate.facts.find((fact) => fact.kind === "price");
+      assert.equal(exactCandidate.eligibility, "eligible", testCase.model);
+      assert.match(exactPrice?.statement ?? "", /\$199\.00/, testCase.model);
+      assert.doesNotMatch(exactPrice?.statement ?? "", /\$99\.00/, testCase.model);
+
+      const siblingOnly = materialize([sibling]);
+      assert.notEqual(
+        siblingOnly.evidencePackage.candidates[0].eligibility,
+        "eligible",
+        testCase.model,
+      );
+      assert.equal(
+        siblingOnly.diagnostics.candidates[0].verifiedPriceCount,
+        0,
+        testCase.model,
+      );
+    }
+  });
+
   it("separates identity, complete-product relationship, and identity-safe URL loss from real asset decisions", () => {
     const source = exactCandidateInput().sources[0];
     const relationshipUnknown = materializeStagedTerraEvidencePackage({

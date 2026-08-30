@@ -4,11 +4,14 @@ import {
   detectKnownBrands,
 } from "./brandMatching.ts";
 import { classifyProductEligibility } from "./productEligibility.ts";
-import { strongModelTokens } from "./productIdentity.ts";
+import {
+  modelIdentityRelation,
+  stableModelIdentifiers,
+} from "./productIdentity.ts";
 import { parseBestMoneyAmount } from "./priceParsing.ts";
 
 export const AUTONOMOUS_COMMERCE_VERIFIER_VERSION =
-  "oai-hybrid-commerce-verifier-v1";
+  "oai-hybrid-commerce-verifier-v2";
 
 export type CommerceVerificationTarget = {
   key: string;
@@ -105,29 +108,8 @@ function normalizeToken(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
 }
 
-const MEASUREMENT_IDENTIFIERS = /^(?:\d+(?:p|hz|gb|tb|mah|w|v|in|inch|psi|hp))$/i;
-
 export function stableCommerceIdentifiers(value: string) {
-  return [
-    ...new Set(
-      (value.match(/[A-Za-z0-9]+(?:[-/.][A-Za-z0-9]+)*/g) || [])
-        .map(normalizeToken)
-        .filter(
-          (token) =>
-            token.length >= 3 &&
-            token.length <= 32 &&
-            /\d/.test(token) &&
-            !MEASUREMENT_IDENTIFIERS.test(token) &&
-            (/[a-z]/.test(token) || token.length >= 6),
-        ),
-    ),
-  ];
-}
-
-function titleContainsIdentifier(title: string, identifier: string) {
-  return (title.match(/[A-Za-z0-9]+(?:[-/.][A-Za-z0-9]+)*/g) || [])
-    .map(normalizeToken)
-    .includes(identifier);
+  return stableModelIdentifiers(value);
 }
 
 function parseHttpUrl(value: unknown) {
@@ -225,24 +207,27 @@ function decisionForResult(
   const seller = asString(result.source);
   const productUrl = merchantProductUrl(result);
   const priceAmount = resultPrice(result);
-  const identifiers = stableCommerceIdentifiers(target.model);
-  const matchedIdentifiers = identifiers.filter((identifier) =>
-    titleContainsIdentifier(title, identifier),
-  );
+  const identity = targetTitleMatches(target, title);
   const base = {
     index,
     title: title.slice(0, 240),
     seller: seller.slice(0, 120),
     productUrl,
     priceAmount,
-    matchedIdentifiers,
+    matchedIdentifiers: identity.matchedIdentifiers,
   };
 
   if (!title) return { ...base, accepted: false, reason: "missing_title" };
-  if (!brandEvidenceMatches(title, target.brand)) {
+  if (!identity.brandMatches || identity.brandConflicts) {
     return { ...base, accepted: false, reason: "brand_not_in_title" };
   }
-  if (identifiers.length === 0 || matchedIdentifiers.length === 0) {
+  if (
+    identity.identifiers.length === 0 ||
+    !identity.coreMatches ||
+    identity.modelConflicts ||
+    !identity.descriptiveModelTermsMatch ||
+    !identity.matchesCompleteAlias
+  ) {
     return {
       ...base,
       accepted: false,
@@ -323,7 +308,7 @@ export function verifyCommerceShoppingResults(input: {
 }
 
 export const SEARCHAPI_PRODUCT_OFFERS_VERIFIER_VERSION =
-  "oai-hybrid-searchapi-product-offers-v1";
+  "oai-hybrid-searchapi-product-offers-v2";
 
 type SearchApiShoppingResult = {
   position?: unknown;
@@ -469,33 +454,10 @@ function targetTitleMatches(
   target: CommerceVerificationTarget,
   title: string,
 ) {
-  const identifiers = stableCommerceIdentifiers(target.model);
-  const matchedIdentifiers = identifiers.filter((identifier) =>
-    titleContainsIdentifier(title, identifier),
-  );
-  const descriptiveModelTerms = [
-    ...new Set(
-      (target.model.match(/[A-Za-z]+/g) || [])
-        .map(normalizeToken)
-        .filter(
-          (term) =>
-            term.length >= 3 &&
-            !["and", "for", "model", "the", "with"].includes(term),
-        ),
-    ),
-  ];
-  const targetStrongModels = strongModelTokens(target.model);
-  const titleStrongModels = strongModelTokens(title);
+  const modelRelation = modelIdentityRelation(target.model, title);
   return {
-    identifiers,
-    matchedIdentifiers,
-    descriptiveModelTerms,
-    descriptiveModelTermsMatch: descriptiveModelTerms.every((term) =>
-      titleContainsIdentifier(title, term),
-    ),
-    modelConflicts:
-      targetStrongModels.size > 0 &&
-      [...titleStrongModels].some((model) => !targetStrongModels.has(model)),
+    ...modelRelation,
+    modelConflicts: modelRelation.hasConflict,
     brandMatches: Boolean(title && brandEvidenceMatches(title, target.brand)),
     brandConflicts: hasConflictingKnownBrand(title, target.brand),
   };
@@ -575,7 +537,7 @@ export function selectSearchApiProductToken(input: {
     }
     if (
       identity.identifiers.length === 0 ||
-      identity.matchedIdentifiers.length === 0
+      !identity.coreMatches
     ) {
       return {
         ...base,
@@ -588,6 +550,13 @@ export function selectSearchApiProductToken(input: {
         ...base,
         accepted: false,
         reason: "descriptive_model_terms_not_in_title",
+      };
+    }
+    if (!identity.matchesCompleteAlias) {
+      return {
+        ...base,
+        accepted: false,
+        reason: "stable_identifier_not_in_title",
       };
     }
     if (!token) {
@@ -654,25 +623,11 @@ function canonicalProductConflicts(input: {
   ) {
     return "canonical_brand_conflict" as const;
   }
-  const targetIdentifiers = stableCommerceIdentifiers(input.target.model);
-  const canonicalIdentifiers = stableCommerceIdentifiers(title);
-  if (
-    canonicalIdentifiers.length > 0 &&
-    !canonicalIdentifiers.some((identifier) =>
-      targetIdentifiers.includes(identifier),
-    )
-  ) {
-    return "canonical_model_conflict" as const;
-  }
   const canonicalIdentity = targetTitleMatches(input.target, title);
-  if (canonicalIdentity.modelConflicts) {
-    return "canonical_model_conflict" as const;
-  }
   if (
-    canonicalIdentifiers.some((identifier) =>
-      targetIdentifiers.includes(identifier),
-    ) &&
-    !canonicalIdentity.descriptiveModelTermsMatch
+    canonicalIdentity.modelConflicts ||
+    (canonicalIdentity.hasTargetEvidenceInObservedText &&
+      !canonicalIdentity.matchesCompleteAlias)
   ) {
     return "canonical_model_conflict" as const;
   }
@@ -719,7 +674,7 @@ function decisionForSearchApiOffer(
   }
   if (
     identity.identifiers.length === 0 ||
-    identity.matchedIdentifiers.length === 0
+    !identity.coreMatches
   ) {
     return {
       ...base,
@@ -732,6 +687,13 @@ function decisionForSearchApiOffer(
       ...base,
       accepted: false,
       reason: "descriptive_model_terms_not_in_offer_title",
+    };
+  }
+  if (!identity.matchesCompleteAlias) {
+    return {
+      ...base,
+      accepted: false,
+      reason: "stable_identifier_not_in_offer_title",
     };
   }
   if (!productUrl) {
@@ -817,8 +779,9 @@ export function verifySearchApiProductOffers(input: {
     selectedIdentity.brandConflicts ||
     selectedIdentity.modelConflicts ||
     selectedIdentity.identifiers.length === 0 ||
-    selectedIdentity.matchedIdentifiers.length === 0 ||
-    !selectedIdentity.descriptiveModelTermsMatch
+    !selectedIdentity.coreMatches ||
+    !selectedIdentity.descriptiveModelTermsMatch ||
+    !selectedIdentity.matchesCompleteAlias
   ) {
     return {
       ...base,

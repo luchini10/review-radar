@@ -228,21 +228,40 @@ export function classifyDirectTerraProductRelationship(
   }
 
   if (!input.identityAccepted) {
-    if (input.identityReason === "wrong_product_type") {
-      const rejectedTypeMatch = classifyProductTypeMatch({
-        evidenceText: primaryEvidence,
-        identityText: primaryEvidence,
-        requestedCategory: input.target.category,
-      });
-      if (
-        rejectedTypeMatch.status === "complement" ||
-        rejectedTypeMatch.status === "component_substitution"
-      ) {
-        return {
-          relationship: "accessory_or_replacement",
-          reason: "complement_primary_item",
-        };
-      }
+    const rejectedTypeMatch = classifyProductTypeMatch({
+      evidenceText: primaryEvidence,
+      identityText: primaryEvidence,
+      requestedCategory: input.target.category,
+    });
+    if (
+      rejectedTypeMatch.status === "complement" ||
+      rejectedTypeMatch.status === "component_substitution"
+    ) {
+      return {
+        relationship: "accessory_or_replacement",
+        reason: "complement_primary_item",
+      };
+    }
+    const rejectedTypeProven = completeProductTypeProven(
+      input.target,
+      typeEvidence,
+    );
+    const rejectedNamesComplement =
+      !requestedProductIsTheComplementItem(input.target) &&
+      COMPLEMENT_ITEM_PATTERN.test(allEvidence);
+    const rejectedDirectedComplement = DIRECTED_COMPLEMENT_PATTERN.test(allEvidence);
+    const rejectedComplementBeforeRelationship =
+      complementLeadsDirectedRelationship(input.target, primaryEvidence) ||
+      complementLeadsDirectedRelationship(input.target, pathEvidence);
+    if (
+      rejectedComplementBeforeRelationship ||
+      (rejectedDirectedComplement &&
+        (rejectedNamesComplement || !rejectedTypeProven))
+    ) {
+      return {
+        relationship: "accessory_or_replacement",
+        reason: "complement_relationship_wording",
+      };
     }
     return {
       relationship: "different_product",

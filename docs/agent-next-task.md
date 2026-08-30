@@ -1,190 +1,195 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-08-29 by Codex after the independently verified PR-008/RR-092
-professional-test exact-model correction. This file was regenerated from
-current evidence. The current approved base is the self-contained PR-008
-closeout commit containing this file; resolve its full SHA with
-`git rev-parse HEAD`. Its expected parent is
-`64dbd5e5677c98d89bcd0d06499438986a692270`.
+Updated: 2026-08-30 by Codex after the independently verified PR-007/RR-091
+reachable exact-model price correction. This file was regenerated from current
+evidence. The current approved base is the self-contained PR-007 closeout commit
+containing this file; resolve its full SHA with `git rev-parse HEAD`. Its expected
+parent is `f7d1cdd431190a29aa5a33be42ecc2a96b49eff4`.
 
 ## Current state
 
-ReviewRadar is **not production-ready**. The staged Terra path is default-off
-and undeployed. PR-3K proved one complete safe `shop vac` lifecycle. PR-4A
-froze a dated four-shape/six-attempt readiness matrix. PR-4B built an
-independently verified runner and sanitized launcher, but its first exactly
-authorized attempt stopped before provider work. That authorization is
-consumed, no PR-4B artifact exists, and the serial matrix cannot advance.
+ReviewRadar is **not production-ready**. The staged Terra and Direct-Terra paths
+remain default-off and undeployed. PR-3K proves one safe complete `shop vac`
+lifecycle, not current category-wide quality. PR-4A froze a dated readiness
+matrix, but PR-4B attempt 1 stopped before provider work. That authorization is
+consumed, no artifact exists, and the serial protocol cannot advance. PR-021
+improves attribution only for a separately authorized future protocol.
 
-PR-021 closes future launcher-stop attribution but cannot revive the attempt.
-PR-008 now closes RR-092 locally: professional-test Product markup no longer
-grants exact identity or image authority without positively matched tested-model
-evidence. This is a zero-live trust correction, not proof of current market
-accuracy, repeatability, latency, cost, or source-role semantics.
+PR-008 closes RR-092 locally at professional-test exact-model authority. PR-007
+now corrects generalized exact-model identity across the reachable shared
+experimental price/asset/page consumers. RR-091 remains
+`Needs Investigation — contained/narrowed`: its historical membership-only
+adapter is still semantically unsafe, but static analysis found it only in
+scripts/tests and it was not promoted.
 
-## PR-008 outcome
+These are zero-live trust corrections. Current market-leader recall, truthful
+hard-requirement coverage, final-set repeatability, latency distribution, and
+cost remain unmeasured on the staged path.
 
-`AUTONOMOUS_FACT_VERIFIER_VERSION` is now `oai-hybrid-verifier-v2`.
-Professional-test authority follows these contracts:
+## PR-007 outcome
 
-- tested-model evidence must carry a complete stable identifier or one member
-  of an explicitly declared proposed alias set;
-- whitespace joins one compound model (`X100 A1`), while a spaced `/`, `|`, `;`,
-  or `or` declares aliases (`12704570 / SUZE0`);
-- every observed stable identifier must be documented; a shared family token
-  cannot prove a sibling variant;
-- a stable explicit Product `model` is authoritative: exact alias may support
-  identity, while unrelated or conflicting values reject before name/SKU
-  fallback; only an unavailable model may fall through;
-- conflicting MPN/SKU/GTIN evidence rejects, while an exact alternate alias may
-  support identity; and
-- missing or contradictory tested-model evidence withholds identity,
-  `exactEntityIndex`, and image authority. A non-null provisional image becomes
-  `cleared` with `observedValue:null`.
+`lib/autonomousResearchAdapter.ts` still accepts a price when the URL is
+response-owned and the source role is `purchase_page`; it has no observed
+page/entity evidence binding that price to the exact model. A tracked synthetic
+characterization preserves this known unsafe behavior. Its imports are limited
+to scripts and tests. The legacy application route does not import it. The
+staged and Direct-Terra routes are default-off, and Direct-Terra output labels
+transactional fields `unverified`.
 
-The stricter Product matcher applies only to `professional_test`. Official and
-purchase-page entity/offer behavior is unchanged. The full staged materializer
-already refused the reproduced URL-less editorial image, and its regression now
-locks that separate exact commerce evidence cannot borrow it.
+The reachable shared experimental consumers did have a separate generalized
+defect: divergent token/entity/URL/title checks could treat a partial family,
+numeric sibling, technology/version phrase, or partial path/title as exact.
+PR-007 centralizes those decisions in `modelIdentityRelation()`:
 
-The independent correction loop was material:
+- one complete alias must match without a strong, compound, or descriptive
+  sibling conflict;
+- punctuation-aware compound and descriptive identities remain intact;
+- contextual year-like and decimal identifiers remain models when the request
+  makes them identity, while measurements remain excluded;
+- Bluetooth LE/Low Energy, USB Type-C, HDMI eARC, Wi-Fi 6E, and DisplayPort Alt
+  Mode remain technology prose unless a bounded model/variant/trim assertion
+  explicitly governs them;
+- split and compact number/code/id/identifier/name/designation labels share one
+  forward/reverse connector grammar with optional `is` and `also`;
+- commas are accepted only inside a fully recognized identity assertion;
+  ordinary feature-list commas, semicolon, ampersand, pipe, and plus remain hard
+  boundaries; and
+- structured Product names cannot override a conflicting explicit model.
 
-- review one returned `CHANGES REQUIRED`, confidence 0.99, for shared-family
-  acceptance and missing direct coverage of non-null image clearing;
-- review two returned `CHANGES REQUIRED`, confidence 0.995, because a target-
-  looking name could override unrelated explicit `model:B900`; and
-- the third frozen review returned exact `VERIFIED`, no actionable findings,
-  confidence 0.995.
+Commerce verifier v2, SearchAPI offers v2, hybrid fact verifier v3, Direct-Terra
+asset verifier v6, product-page URL/title/path and CTA selection, and staged
+materialization reuse the relation. Product relationship logic still preserves
+complete products and bundles while rejecting accessories/replacements,
+different products, and non-product pages from asset authority.
 
-Frozen final SHA-256 values:
+Successive independent challenges found real counterexamples in eleven mutation
+families. Every finding received fail-first coverage before correction. The
+final frozen replacement review returned exact `VERIFIED`, no material finding,
+confidence 0.995, and independently rejected 60/60 generated comma-punctuated
+connector assertions without a feature-control false positive.
 
-- verifier:
-  `efe5a0c2a457780eb815164843e579f8054ba86f6baa2b2dde3afd5e5cc2ebf6`;
-- verifier tests:
-  `4764e6b1a62af273006e12ae59c0eae2efb0631ab669531d109c4d969cbe0a2d`;
-- staged tests:
-  `d4bc7248e64787f29b6f90c6e4dca5f13fb1767c9bdbd0a1f11ffcfe7816961d`.
+Frozen anchors:
+
+- shared identity SHA-256:
+  `f62214058e938c7dfbc4024833ea91b711e4e11975b01a1ec6fd3c86d23f13bc`;
+- identity-test SHA-256:
+  `ca5a97f98945524248c6baf7baa677a2b0e6fb98adf12f17803d38944303cc07`;
+- full exact 17-file manifest: latest PR-007 entry in
+  `docs/qa-loop-results.md`.
 
 ## Current verification
 
 | Check | Result |
 | --- | --- |
-| Original shared fail-first | 11 pass / 2 intended failures |
-| Reviewer sibling/entity fail-first | 14 pass / 2 intended failures |
-| Explicit-model expanded fail-first | 17 pass / 2 intended failures |
-| Final shared/asset/staged focused wall | 57/57 |
-| Complete deterministic suite | 1,568/1,568 across 218 suites |
+| Final nine-file focused wall | 205/205 across 14 suites |
+| Complete deterministic suite | 1,604/1,604 across 218 suites |
 | Five named worker partitions | exact reconciliation passed |
 | Tracked offline benchmark | 10/10 cases; 29/29 invariants |
-| Playwright E2E | 17/17 |
-| Nonincremental typecheck and production build | passed |
 | Deterministic eval | no red flags |
-| Syntax and diff checks | passed |
-| Lint | zero errors; same three pre-existing warnings |
-| First frozen PR-008 review | `CHANGES REQUIRED`; confidence 0.99 |
-| Second frozen PR-008 review | `CHANGES REQUIRED`; confidence 0.995 |
-| Final frozen PR-008 review | `VERIFIED`; no findings; confidence 0.995 |
+| Nonincremental typecheck | passed |
+| Full lint | zero errors; same three pre-existing warnings |
+| Production build | passed |
+| Playwright E2E | 17/17 with one worker |
+| Diff check | passed; line-ending warnings only |
+| Scorecard | cost guard stopped before provider work |
+| Search-ledger benchmark | zero provider calls; 0.253 ms/request |
+| Final frozen independent review | `VERIFIED`; confidence 0.995 |
 | PR-4B attempt-1 provider calls/artifacts | zero / zero |
 
-Deterministic controller `agent-loop-2026-08-30T01-03-39-664Z` passed
-typecheck, lint, all 1,568 tests, deterministic eval, all five serial worker
-partitions, and the tracked 10-case/29-invariant benchmark with no repeated
-failure candidate. A preceding controller invocation used its one-batch default
-and is retained honestly as partial evidence, not the full matrix. The
-production build noted ignored user-owned `.env.local` automatically but
-exposed no value. E2E-generated `next-env.d.ts` was restored.
+Controller `agent-loop-2026-08-30T05-25-58-006Z` passed typecheck, lint, all
+1,604 tests, deterministic eval, all five partitions, and the tracked
+10-case/29-invariant benchmark with no repeated failure candidate.
 
-The final PR-008 source snapshot was independently reviewed before closeout.
+The production build automatically noted ignored user-owned `.env.local`
+without exposing a value. Generated `next-env.d.ts` was restored. The final
+17-file source/test hash set was reauthenticated unchanged after build/E2E.
 No environment file was manually accessed; no credential, provider,
 product-data service, network, or live fixture was accessed.
 
 Process residual from PR-4A remains on record: one earlier `rg --files` and one
-unfiltered `git status` printed live-fixture filenames. No fixture content,
+unfiltered `git status` printed live-fixture filenames only. No fixture content,
 hash, parse, field, or value was read or displayed, and nothing was modified.
-All later commands used tracked-only or explicit paths; independent reviewers
-remained clean. Do not repeat the deviation.
+Do not repeat the deviation.
 
 ## Objective and decision frame
 
 The product objective remains the strongest genuinely suitable products with
-truthful requirements and evidence at acceptable latency and cost. PR-006 live
-measurement is blocked. PR-008 is complete. The strongest next zero-live
-question is whether RR-091 still describes a reachable release blocker; a code
-change is not yet justified.
+truthful requirements and evidence at acceptable latency and cost. The proven
+largest quality uncertainty is PR-006 live measurement, but the serial protocol
+is blocked and this handoff grants no live authority. The strongest available
+zero-live alternative is not another identity special case or visual redesign;
+it is to establish which reachable production boundary in security, resilience,
+accessibility, or operations is actually release-blocking.
 
 Verified facts:
 
-- `lib/autonomousResearchAdapter.ts`, where RR-091 originated, is imported by
-  scripts and tests, not an application route;
-- the historical adapter validated response-owned URL membership and source
-  role without direct page-content price binding;
-- `lib/stagedTerraVerifier.ts` uses the shared hybrid fact verifier on the
-  staged materialization path;
-- the shared verifier already binds price to the one exact Product entity and
-  has a tracked multi-entity HZ4002/IW3511 regression that selects `$329.99`,
-  not the related `$319.99`; and
-- RR-091 remains `Needs Investigation`, while all experimental routes and flags
-  remain default-off.
+- the complete deterministic/build/E2E wall is green, but it proves synthetic
+  contracts rather than hostile production conditions;
+- current E2E covers loading, cancellation, empty/error states, mobile/desktop,
+  safe links/images, validation, and one keyboard skip link;
+- bounded verification fetches already have redirect, DNS/private-address,
+  byte/time/content, and credential-shaped URL tests;
+- staged and Direct-Terra routes and browser flags remain default-off;
+- current docs do not yet bind one complete production-readiness verdict to a
+  proven security, accessibility, resilience, configuration, rollback, and
+  operations baseline; and
+- no live quality evidence can be produced under current authority.
 
 Engineering judgment:
 
-- first build a current import/execution map and compare the historical adapter
-  contract against every potentially promotable path;
-- reproduce the same-page related-price shape with tracked synthetic inputs at
-  each current boundary rather than inferring a defect from the old live record;
-- if every reachable path is already exact-entity-bound, close or narrow RR-091
-  through evidence and documentation without behavior change;
-- if a reachable unsafe path reproduces, fix the earliest generalized price-
-  authority boundary with exact-entity and cross-category controls; and
-- do not revive the isolated adapter, add product/retailer special cases, or
-  weaken price truth to preserve one-call autonomy.
+- first inventory the reachable request-to-response and browser lifecycle,
+  including validation, payload/rate boundaries, background job ownership and
+  cancellation, provider failure handling, fetch/redirect safety, logging and
+  redaction, secret/config ownership, cache/concurrency, health/rollback, and
+  keyboard/mobile semantics;
+- distinguish already-tested contracts from untested assumptions and unreachable
+  historical code;
+- rank findings by reachability, exploitability, user harm, and release impact;
+- compare the strongest correction with simpler containment or operational
+  alternatives before changing code; and
+- select one earliest evidence-proven generalized blocker for fail-first repair.
+  Do not bundle a broad hardening rewrite or dependency upgrade.
 
 Uncertainty:
 
-- a script-only path may still be intended for future promotion even though it
-  is not currently routed;
-- shared exact-entity matching for non-professional roles still uses the
-  existing any-token model relation, so a compound sibling mutation must be
-  audited before claiming complete price safety;
-- the historical wrong price proves the old adapter defect but not current
-  staged/public behavior; and
-- live leader recall, hard-requirement truth, repeatability, latency, and cost
-  remain unmeasured because PR-006 is blocked.
+- a green local build does not prove deployment configuration, production
+  headers, rate control, observability, rollback, or hosted runtime behavior;
+- no dedicated broad accessibility audit has been authenticated in this phase;
+- dependency and runtime risk may have drifted since earlier checks; inspect
+  local manifests/lock data first and do not use network without authority; and
+- the first release blocker may be an operational absence rather than a code
+  defect. Evidence must decide.
 
-**Recommended reasoning level:** High for reachability and price-authority
-judgment; Medium for localized synthetic reproduction and routine checks.
+**Recommended reasoning level:** High for security/reliability reachability and
+release-blocker selection; Medium for bounded static inspection and routine
+deterministic checks.
 
-## Current approved phase: PR-007 / RR-091 reachability and exact-price audit
+## Current approved phase: PR-6A production-boundary baseline
 
-This phase is local, read-first, zero-network, and does not authorize live-
-fixture access or a live invocation.
+This phase is local, read-first, zero-network, and audit-first. It does not
+authorize live fixtures, provider calls, deployment, or broad implementation.
 
-1. Map every import and executable entry point for
-   `lib/autonomousResearchAdapter.ts`, `verifyHybridProductSource()`, and staged
-   price materialization. Distinguish currently routed code, scripts, test-only
-   code, and future/promotable tooling.
-2. Reproduce the historical same-page exact-product/related-product price shape
-   with tracked synthetic HTML and deterministic adapter inputs. Include a
-   compound sibling-model mutation and at least one unrelated category.
-3. Compare the old adapter's URL-membership contract with the shared exact-
-   entity receipt and the final card/commerce binding. Identify the earliest
-   currently reachable gap, if any.
-4. Do not change production code unless fail-first evidence proves a remaining
-   reachable defect. If no defect remains, update RR-091 and authoritative
-   readiness records with the bounded reachability conclusion and residual
-   promotion risk. If reproduced, implement the smallest generalized exact-
-   entity/offer correction and add positive/negative controls.
-5. Preserve source ownership, tested-model, relationship, requirement,
-   availability, image, redirect/private-network, diagnostic, privacy, and
-   default-off boundaries. Never accept a model-authored price as verification.
-6. Run focused tests, the complete deterministic wall, typecheck, lint, build,
-   E2E, controller, syntax, and diff checks. Obtain independent frozen-source
-   review for any material code change; otherwise independently review the
-   evidence-bound no-change conclusion. Update only authoritative records,
-   regenerate this handoff, and make one self-contained local commit.
-7. Close this phase before live work, flag change, deployment, release, or push.
-   The overarching production-readiness goal may then select the next proven
-   local blocker.
+1. Authenticate the intended repository, PR-007 closeout commit, tracked clean
+   state, default-off flags, and current deterministic verification.
+2. Build a finite map of application routes, server-only provider/fetch seams,
+   browser lifecycle, config/secret boundaries, logs/diagnostics, caching and
+   concurrency, health/rollback assets, and accessibility/mobile interaction.
+   Exclude spent live fixtures from every search.
+3. Retrieve only the active issue and prior QA evidence needed for each claimed
+   gap. Mark each item verified-safe, covered-but-limited, confirmed-defect, or
+   unknown. Do not convert absence of a test into a claimed vulnerability.
+4. Run non-mutating local checks that answer a named question. Do not access the
+   network, install/upgrade packages, inspect user configuration, or create
+   provider traffic. Preserve current green evidence as the baseline.
+5. Rank confirmed findings by reachable user/security impact and identify the
+   earliest generalized root cause. Challenge it against containment,
+   configuration, and simpler correction alternatives.
+6. If no release-blocking defect is proven, close PR-6A as an evidence-only
+   baseline and select the next bounded question. If one is proven, define a
+   separate smallest fail-first correction unit; do not silently fold multiple
+   hardening areas into this audit.
+7. Independently review the evidence-bound conclusion, update only authoritative
+   records, regenerate this handoff, and make one self-contained local commit.
 
 ## Approval, cost, and flag state
 
@@ -199,7 +204,7 @@ Committed defaults remain:
 
 The ignored `.env.local` is user-owned. Never edit, stage, print, hash, copy,
 stat for diagnosis, or manually inspect it. Do not add a diagnostic mode that
-reads it. Attempt 1's `$1` conservative ceiling was consumed without a provider
+reads it. Attempt 1's conservative ceiling was consumed without a provider
 request and grants no future spend authority.
 
 ## Outstanding readiness debts
@@ -207,54 +212,55 @@ request and grants no future spend authority.
 - PR-006: live measurement remains blocked. Current leader recall, card truth,
   hard-requirement accuracy, final-card stability, verified price coverage,
   first-loss distribution, latency, calls, tokens, and cost remain unmeasured.
-- PR-007 / RR-091: selected for a zero-live reachability and exact-price audit.
-  Do not assume the historical isolated defect still reaches the staged/public
-  path.
+- PR-007 / RR-091: reachable shared exact-price boundaries are corrected.
+  Historical membership-only adapter debt remains contained; never promote it
+  without directly observed exact transactional binding and new review.
 - PR-008 / RR-092: closed locally. Upstream source-role semantic corroboration
-  remains a residual risk but no longer lets missing/conflicting tested-model
-  evidence grant professional-test entity/image authority.
+  remains a residual risk but cannot grant professional-test entity/image
+  authority without tested-model proof.
 - Candidate-pool stability remains intentionally unscored at the privacy
   boundary; only final-card stability is available without a separate privacy
   design review.
-- Broader cancellation/fault behavior, cache/concurrency, security,
-  accessibility, mobile UX, production configuration, rollback, dependency,
-  observability, and operational gates remain open.
+- PR-6: security, resilience, accessibility, cache/concurrency, production
+  configuration, health, rollback, dependency, observability, and operational
+  gates require an evidence-ranked baseline and closure.
 
 PR-013 is closed only as one-lifecycle feasibility. PR-020 is live-revalidated
 as the title-metadata correction. PR-4A closes measurement design. PR-4B
 produced no readiness artifact. PR-021 closes future launcher attribution only.
-PR-008 closes RR-092 locally only. None grants production authority.
+PR-007 and PR-008 are local trust corrections only. None grants production
+authority.
 
 ## Hard boundaries
 
 - Never read, enumerate, retry, edit, stage, reuse, copy, hash, or add to any
   spent Phase D or readiness attempt/directory. Exclude
-  `tests/fixtures/review-radar-live/**` from every repository search and use only
-  tracked-only or explicit paths for status and staging.
+  `tests/fixtures/review-radar-live/**` from every repository search and use
+  only tracked-only or explicit paths for status and staging.
 - Do not retry or replace `broad-shop-vac:1`, invoke the direct runner, or
   advance to attempt 2. Do not treat absence of provider spend or the typed
   terminal as authority to revive the consumed invocation.
-- Do not infer the exact historical launcher failure stage or credential state.
+- Do not route or promote `lib/autonomousResearchAdapter.ts`.
 - Do not weaken source ownership, identity, tested-model, relationship,
   requirement, availability, price, commerce, asset, redirect, private-network,
   diagnostic, privacy, or public-response boundaries to improve a score.
-- Never stage `.env.local`, `.claude/`, `.rr_baseline*`, `fable-transfer-kit/`,
-  ignored worker results, historical live fixtures, or any live artifact. Never
-  use `git add -A`.
-- No deployment, production change, push, publication, destructive action,
-  secret exposure, user-data deletion, or external scope expansion is
-  authorized.
+- Never stage `.env.local`, `.claude/`, `.rr_baseline*`,
+  `fable-transfer-kit/`, ignored worker results, historical live fixtures, or
+  any live artifact. Never use `git add -A`.
+- No deployment, production change, push, publication, package installation or
+  upgrade, destructive action, secret exposure, user-data deletion, or external
+  scope expansion is authorized.
 
 ## Retrieval map
 
 | Need | Retrieve |
 | --- | --- |
 | Living defects, exit criteria, PR-007/PR-008 evidence | `docs/production-readiness-master-plan.md` |
-| Canonical PR-008 evidence | latest PR-008 entry in `docs/qa-loop-results.md` |
-| Durable tested-model contract | top entry in `docs/review-radar-test-memory.md` |
-| RR-091 historical record | bounded RR-091 section in `docs/RR-Issues-Report.md` |
-| Historical isolated adapter | `lib/autonomousResearchAdapter.ts`; its focused tests |
-| Shared exact-entity verification | `lib/autonomousFactVerifier.ts`; `tests/autonomousFactVerifier.test.mjs` |
-| Staged materialization | `lib/stagedTerraVerifier.ts`; `tests/stagedTerraVerifier.test.mjs` |
-| Staged architecture | OAI-T10 section in `docs/forward-roadmap.md` |
+| Canonical PR-007 evidence and 17-file manifest | latest PR-007 entry in `docs/qa-loop-results.md` |
+| Durable exact-model contract | top PR-007 entry in `docs/review-radar-test-memory.md` |
+| RR-091 historical and current state | bounded RR-091 section in `docs/RR-Issues-Report.md` |
+| Shared identity primitive | `lib/productIdentity.ts`; `tests/productIdentity.test.mjs` |
+| Route and server lifecycle | `app/`; bounded imports under `lib/` |
+| Standing guardrails and trust invariants | bounded sections of `docs/forward-roadmap.md` |
+| PR-6 plan and exit blockers | PR-6 and exit sections in `docs/production-readiness-master-plan.md` |
 | Peer challenge | latest entries in `docs/agent-dialogue.md` |

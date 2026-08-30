@@ -17,9 +17,15 @@ import {
   compoundModelSequences,
   haveConflictingCompoundModelSequences,
   haveConflictingNumericProductSpecs,
+  isModelIdentityMeasurementToken,
+  modelIdentityRelation,
+  splitModelIdentityAliases,
+  stableModelIdentifiers,
   strongModelTokens,
 } from "./productIdentity.ts";
-import { sourceUrlPathIdentityText } from "./sourceUrlIdentity.ts";
+import {
+  sourceUrlPathIdentitySegments,
+} from "./sourceUrlIdentity.ts";
 
 export type ProductPageUrlType = "official" | "retailer" | "source" | "unknown";
 
@@ -283,7 +289,9 @@ function splitModelTokens(value: string) {
 
 function pageIdentityModelTokens(value: string) {
   return new Set([
-    ...strongModelTokens(value),
+    ...[...strongModelTokens(value)].filter(
+      (token) => !isModelIdentityMeasurementToken(token),
+    ),
     ...splitModelTokens(value),
     ...compoundModelSequences(value),
   ]);
@@ -291,6 +299,7 @@ function pageIdentityModelTokens(value: string) {
 
 function hasCorroboratedLeadingIdentityConflict(input: {
   brands: string[];
+  model?: string;
   productName: string;
   sourceTitle?: string;
   sourceType: ProductPageCandidate["sourceType"];
@@ -300,10 +309,18 @@ function hasCorroboratedLeadingIdentityConflict(input: {
   // an offer whose title is only a retailer label. If both sides state a
   // compound short model and those identities conflict, the page cannot be
   // used for this card.
-  if (haveConflictingCompoundModelSequences(
-    input.productName,
-    sourceUrlPathIdentityText(input.url),
-  )) {
+  const pathIdentitySegments = sourceUrlPathIdentitySegments(input.url);
+  if (
+    pathIdentitySegments.some((segment) => {
+      const pathIdentity = input.model
+        ? restoreDocumentedDecimalModelInPath(input.model, segment)
+        : segment;
+      return haveConflictingCompoundModelSequences(
+        input.model || input.productName,
+        pathIdentity,
+      );
+    })
+  ) {
     return true;
   }
 
@@ -319,9 +336,12 @@ function hasCorroboratedLeadingIdentityConflict(input: {
   const sourceTitle = stripLeadingSourceOrRetailerLabel(input.sourceTitle);
   const pathText = urlPathText(input.url);
   const targetModels = pageIdentityModelTokens(input.productName);
-  const sourceModels = pageIdentityModelTokens(
-    `${sourceTitle} ${sourceUrlPathIdentityText(input.url)}`,
-  );
+  const sourceModels = new Set([
+    ...pageIdentityModelTokens(sourceTitle),
+    ...pathIdentitySegments.flatMap((segment) => [
+      ...pageIdentityModelTokens(segment),
+    ]),
+  ]);
 
   if (haveConflictingNumericProductSpecs(input.productName, sourceTitle)) {
     return true;
@@ -554,8 +574,46 @@ function isReputableRetailer(host: string) {
   return REPUTABLE_RETAILER_DOMAINS.some((domain) => domainMatches(host, domain));
 }
 
+function escapeRegularExpression(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function restoreDocumentedDecimalModelInPath(model: string, pathIdentity: string) {
+  let restored = pathIdentity;
+
+  for (const alias of splitModelIdentityAliases(model)) {
+    const tokens = alias.match(/\d+\.\d+|[A-Za-z0-9]+/g) || [];
+    if (!tokens.some((token) => /^\d+\.\d+$/.test(token))) continue;
+    const pathTokens = tokens.flatMap((token) =>
+      /^\d+\.\d+$/.test(token) ? token.split(".") : [token],
+    );
+    const pattern = pathTokens.map(escapeRegularExpression).join("\\s+");
+    restored = restored.replace(
+      new RegExp(`\\b${pattern}\\b`, "gi"),
+      tokens.join(" "),
+    );
+  }
+
+  return restored;
+}
+
+function sourceUrlPathModelIdentity(url: string) {
+  const segments = sourceUrlPathIdentitySegments(url);
+  const terminalIndex = segments.length - 1;
+  return segments
+    .filter(
+      (segment, index) =>
+        !(
+          index === terminalIndex &&
+          /^\d{6,}(?:\s+[a-z]{1,3})?$/i.test(segment)
+        ),
+    )
+    .join(" ");
+}
+
 function classifyCandidate(input: {
   brands: string[];
+  model?: string;
   productName: string;
   sourceTitle?: string;
   sourceType: ProductPageCandidate["sourceType"];
@@ -569,6 +627,31 @@ function classifyCandidate(input: {
 
   if (hasCorroboratedLeadingIdentityConflict({ ...input, url })) {
     return null;
+  }
+
+  if (input.model) {
+    const titleIdentity =
+      input.sourceType === "canonical" || input.sourceType === "citation"
+        ? input.sourceTitle || ""
+        : "";
+    const pathIdentity = restoreDocumentedDecimalModelInPath(
+      input.model,
+      sourceUrlPathModelIdentity(url),
+    );
+    const relations = [titleIdentity, pathIdentity]
+      .filter(Boolean)
+      .map((value) => modelIdentityRelation(input.model || "", value));
+    if (
+      relations.some(
+        (relation) =>
+          relation.hasConflict ||
+          (relation.hasDocumentedIdentity &&
+            relation.hasTargetEvidenceInObservedText &&
+            !relation.matchesCompleteAlias),
+      )
+    ) {
+      return null;
+    }
   }
 
   const host = hostname(url);
@@ -711,10 +794,12 @@ function citationCandidates(
   citations: Citation[],
   productName: string,
   brands: string[],
+  model: string,
 ): ProductPageCandidate[] {
   return citations.flatMap((citation) => {
     const candidate = classifyCandidate({
       brands,
+      model,
       productName,
       sourceTitle: citation.title,
       sourceType: "citation",
@@ -723,6 +808,22 @@ function citationCandidates(
 
     return candidate ? [candidate] : [];
   });
+}
+
+function productModel(product: ProductRecommendation) {
+  const explicitModel =
+    product.metadata?.modelNumber?.value ||
+    product.canonicalIdentity?.modelNumber ||
+    "";
+  if (explicitModel.trim()) return explicitModel.trim();
+
+  const compoundModels = [...compoundModelSequences(product.name)];
+  if (compoundModels.length === 1) {
+    return compoundModels[0].replace(/:/g, " ");
+  }
+
+  const stableModels = stableModelIdentifiers(product.name);
+  return stableModels.length === 1 ? stableModels[0] : "";
 }
 
 export function productPageMatchesIdentity(input: {
@@ -743,37 +844,73 @@ export function productPageMatchesIdentity(input: {
     .slice(0, 1);
   const candidate = classifyCandidate({
     brands,
+    model: input.model,
     productName: input.productName,
     sourceTitle: input.pageTitle,
     sourceType: "citation",
     url: input.pageUrl,
   });
 
+  const pathIdentitySegments = sourceUrlPathIdentitySegments(input.pageUrl);
+  const pathIdentity = pathIdentitySegments.join(" ");
+  // A terminal all-numeric retailer listing id is routing authority, not a
+  // model suffix. Keep it available to the older path-token checks, but do not
+  // let it extend a compound model sequence (X100 A1 -> X100 A1 123456).
+  const rawPathModelIdentity = sourceUrlPathModelIdentity(input.pageUrl);
+  const pathModelIdentity = input.model
+    ? restoreDocumentedDecimalModelInPath(input.model, rawPathModelIdentity)
+    : rawPathModelIdentity;
+  const titleModelRelation = input.model
+    ? modelIdentityRelation(input.model, input.pageTitle)
+    : null;
+  const pathModelRelation = input.model
+    ? modelIdentityRelation(input.model, pathModelIdentity)
+    : null;
+  if (
+    titleModelRelation &&
+    (titleModelRelation.hasConflict ||
+      (titleModelRelation.hasTargetEvidenceInObservedText &&
+        !titleModelRelation.matchesCompleteAlias))
+  ) {
+    return false;
+  }
+  if (
+    pathModelRelation &&
+    (pathModelRelation.hasConflict ||
+      (pathModelRelation.hasTargetEvidenceInObservedText &&
+        !pathModelRelation.matchesCompleteAlias))
+  ) {
+    return false;
+  }
+
   if (candidate?.isProductPage === true) return true;
   if (!candidate || !input.brand || !input.model) return false;
 
   const modelTokens = identityWords(input.model).filter((token) => token.length >= 2);
   const titleTokens = new Set(identityWords(input.pageTitle));
-  const pathTokens = new Set(identityWords(sourceUrlPathIdentityText(input.pageUrl)));
+  const pathTokens = new Set(identityWords(pathIdentity));
 
   return (
     modelTokens.length > 0 &&
+    titleModelRelation !== null &&
+    pathModelRelation !== null &&
     brandEvidenceMatches(input.pageTitle, input.brand) &&
     modelTokens.every((token) => titleTokens.has(token)) &&
     modelTokens.every((token) => pathTokens.has(token)) &&
-    !haveConflictingCompoundModelSequences(input.model, input.pageTitle) &&
-    !haveConflictingCompoundModelSequences(
-      input.model,
-      sourceUrlPathIdentityText(input.pageUrl),
-    )
+    (!titleModelRelation.hasDocumentedIdentity ||
+      titleModelRelation.matchesCompleteAlias) &&
+    (!pathModelRelation.hasDocumentedIdentity ||
+      pathModelRelation.matchesCompleteAlias)
   );
 }
 
 function getProductPageCandidates(product: ProductRecommendation) {
   const brands = productBrands(product);
+  const model = productModel(product);
   const candidates = [
     classifyCandidate({
       brands,
+      model,
       productName: product.name,
       sourceTitle: product.metadata?.title?.value || product.name,
       sourceType: "canonical",
@@ -781,6 +918,7 @@ function getProductPageCandidates(product: ProductRecommendation) {
     }),
     classifyCandidate({
       brands,
+      model,
       productName: product.name,
       sourceTitle: product.name,
       sourceType: "primary",
@@ -789,6 +927,7 @@ function getProductPageCandidates(product: ProductRecommendation) {
     ...(product.metadata?.offers || []).flatMap((offer) => {
       const candidate = classifyCandidate({
         brands,
+        model,
         productName: product.name,
         sourceTitle: offer.retailer || product.name,
         sourceType: "offer",
@@ -797,7 +936,7 @@ function getProductPageCandidates(product: ProductRecommendation) {
 
       return candidate ? [candidate] : [];
     }),
-    ...citationCandidates(product.citations, product.name, brands),
+    ...citationCandidates(product.citations, product.name, brands, model),
   ].filter((candidate): candidate is ProductPageCandidate => Boolean(candidate));
   const seen = new Set<string>();
 

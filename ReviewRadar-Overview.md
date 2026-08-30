@@ -1612,3 +1612,38 @@ No production pipeline or API contract changed in Phase 6A.
 - **State:** RR-092 is fixed locally with zero live work. The staged route stays
   default-off, production readiness remains blocked, and RR-091 now requires a
   reachability/exact-price audit before any code change is assumed necessary.
+
+## 39. PR-007 shared exact-model transactional authority (2026-08-30)
+
+- **Reachability:** the RR-091 historical adapter remains scripts/tests-only and
+  still proves only response-owned URL membership plus source role. It is not
+  imported by an application route. The staged and Direct-Terra routes stay
+  default-off; the Direct-Terra result contract continues to label
+  transactional data unverified; the legacy route does not import the isolated
+  adapter or shared experimental paths.
+- **Root cause:** shared current consumers had accumulated different token,
+  entity, URL, and title shortcuts. Partial family overlap, context-free numeric
+  handling, and feature-version tokens could be misread as an exact model and
+  allow a sibling price or asset through an otherwise valid product row.
+- **Behavior:** `productIdentity.ts` now provides one complete-alias relation
+  with stable, compound, descriptive, year/decimal, measurement, technology,
+  conflict, and bounded assertion rules. Commerce verifier v2, SearchAPI offers
+  v2, hybrid fact verifier v3, Direct-Terra asset verifier v6, product-page URL/
+  title/path selection, and staged materialization share it. Relationship logic
+  still distinguishes complete products, bundles, accessories/replacements,
+  different products, and non-product pages.
+- **Grammar boundary:** split and compact model/variant/trim qualifiers work in
+  both directions through one connector grammar. Commas are allowed only inside
+  a fully recognized assertion; regular feature-list commas and hard
+  punctuation remain separators. Technology phrases such as Bluetooth LE,
+  USB Type-C, HDMI eARC, Wi-Fi 6E, and DisplayPort Alt Mode are not sibling
+  models unless an explicit identity label governs them.
+- **Proof:** focused 205/205; full 1,604/1,604 across 218 suites; typecheck,
+  build, Playwright 17/17, full lint with zero errors/three old warnings, and
+  five-partition controller with 10/10 cases and 29/29 invariants passed. Final
+  independent frozen review returned `VERIFIED`, confidence 0.995, including
+  60/60 generated connector assertions. Zero provider/live calls occurred.
+- **State:** reachable shared exact-price boundaries are corrected. RR-091 stays
+  `Needs Investigation — contained/narrowed` because the historical adapter is
+  unsafe if promoted. No flag, release, deployment, or production authority
+  changed, and the readiness verdict remains NOT READY.

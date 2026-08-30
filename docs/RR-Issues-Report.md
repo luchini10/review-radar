@@ -501,7 +501,7 @@ only when maintaining this register or auditing its full history.
 | **Phase** | Phase 0 — Measurement |
 | **Severity** | High |
 | **Title** | Mean core-leader coverage critically low (3.0 / 7 in final results) |
-| **Status** | Needs Investigation |
+| **Status** | Needs Investigation — contained/narrowed |
 
 **Description:** The Phase 0 quality baseline revealed that across 14 gold-benchmark queries, core leaders (the expected top products per category) appeared in the final-7 results only 3.0 out of 7 times on average. Leaders were reaching the candidate pool (4.2/7 average) but being eliminated between pool and final result.
 
@@ -3360,15 +3360,38 @@ content, not merely by a page that contains the product and an unrelated price
 elsewhere. Unverified or conflicting prices must be cleared or the card must
 be rejected before display.
 
-**Suggested fix or next action:** Stop additional OAI-2A research spend. First
-design the smallest generalized semantic-verification boundary and reproduce
-this failure offline. Prompt wording or a model-authored evidence excerpt may
-reduce the error but cannot deterministically prove source semantics by itself.
-Compare a bounded direct-page verifier, structured commerce metadata, and a
-separate verification response; select the least complex option that can
-prove exact product/price association without reintroducing candidate ranking
-or rescue. Preserve one-call autonomous discovery as the hypothesis under
-test, not as a constraint that can weaken price truth.
+**PR-007 current reachability and correction:** A tracked synthetic
+characterization confirms that the historical adapter still accepts the unsafe
+shape from URL/source-role membership alone. Static import and route analysis
+found that adapter only in scripts and tests, not in an application route. The
+legacy route does not import it; the staged and Direct-Terra routes remain
+default-off; Direct-Terra transactional output remains explicitly unverified.
+
+The audit separately reproduced unsafe partial exact-identity decisions in the
+shared commerce, SearchAPI offer, structured Product, Direct-Terra asset,
+product-page URL/title/path, and staged-materialization boundaries. PR-007 now
+routes those consumers through one complete-alias relation that rejects sibling,
+compound, descriptive, numeric, year/decimal, technology/version, punctuation,
+and structured-entity conflicts while retaining exact and feature controls.
+Accessory/replacement classification remains separate and fail-closed.
+
+**Verification:** Every independently found mutation received fail-first
+coverage. Final focused checks pass 205/205 across 14 suites; the complete suite
+passes 1,604/1,604 across 218 suites; typecheck, production build, Playwright
+17/17, diff, and full lint with zero errors/three old warnings pass. Controller
+`agent-loop-2026-08-30T05-25-58-006Z` reconciles all five partitions, 10/10
+cases, and 29/29 invariants. Final frozen replacement review returned
+`VERIFIED`, no material correction, confidence 0.995, with 60/60 generated
+connector assertions rejected. Zero provider calls or live-fixture access
+occurred.
+
+**Residual action:** Do not promote or reuse
+`lib/autonomousResearchAdapter.ts`. Any future proposal to route it must first
+replace membership-only transactional authority with directly observed exact-
+entity/offer binding and receive new fail-first, complete-wall, and independent
+review. The issue therefore remains Needs Investigation as contained historical
+debt rather than being called Fixed. No additional OAI-2A research spend is
+authorized.
 
 ---
 
@@ -4200,7 +4223,7 @@ RR-038 through RR-044, RR-046 through RR-090, and RR-092 through RR-102
    final overlap. Recovery stays default-off and R7A stays blocked.
 2. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
    but varied by model, while Tapo appeared raw and died in normalization.
-3. **RR-091** — the original autonomous adapter remains isolated. Audit whether
-   its same-page price defect is already closed on every reachable target path
-   before changing code; no promotion is safe without exact transactional
-   binding.
+3. **RR-091** — PR-007 corrected the shared reachable exact-price boundaries,
+   but the original membership-only adapter remains isolated and unsafe. Keep
+   it unpromoted; any future routing proposal requires directly observed exact
+   transactional binding and a new independent review.

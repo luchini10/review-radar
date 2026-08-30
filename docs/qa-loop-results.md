@@ -13831,3 +13831,524 @@ Default-off flags remain off. This phase authorizes no live call, retry,
 replacement, flag promotion, deployment, release, or push. With PR-006 blocked,
 PR-007/RR-091 is next as a zero-live reachability and exact-price audit; code
 must not change unless current execution evidence reproduces a remaining gap.
+
+## Agent Loop Run - 2026-08-30T02:23:44.377Z
+
+- **run id:** agent-loop-2026-08-30T02-23-00-398Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3426ms |
+| lint | Passed | 10451ms |
+| unit tests | Passed | 25707ms |
+| deterministic eval pipeline | Passed | 443ms |
+| tracked offline benchmark | Passed | 580ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T02-23-00-398Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T02:57:26.422Z
+
+- **run id:** agent-loop-2026-08-30T02-56-46-049Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust
+- **parallel:** 1
+- **worker result files checked:** 1
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3184ms |
+| lint | Passed | 10598ms |
+| unit tests | Passed | 24905ms |
+| deterministic eval pipeline | Passed | 448ms |
+| tracked offline benchmark | Passed | 584ms |
+
+### Executed Benchmark Cases
+
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T02-56-46-049Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T02:58:35.312Z
+
+- **run id:** agent-loop-2026-08-30T02-57-52-236Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3175ms |
+| lint | Passed | 10608ms |
+| unit tests | Passed | 24934ms |
+| deterministic eval pipeline | Passed | 452ms |
+| tracked offline benchmark | Passed | 574ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T02-57-52-236Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T03:18:43.124Z
+
+- **run id:** agent-loop-2026-08-30T03-18-00-182Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust
+- **parallel:** 1
+- **worker result files checked:** 1
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3253ms |
+| lint | Passed | 11395ms |
+| unit tests | Passed | 26170ms |
+| deterministic eval pipeline | Passed | 597ms |
+| tracked offline benchmark | Passed | 838ms |
+
+### Executed Benchmark Cases
+
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T03-18-00-182Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T03:19:28.049Z
+
+- **run id:** agent-loop-2026-08-30T03-18-41-587Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 2
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3355ms |
+| lint | Passed | 11510ms |
+| unit tests | Passed | 27917ms |
+| deterministic eval pipeline | Passed | 524ms |
+| tracked offline benchmark | Passed | 631ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T03-18-41-587Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T03:36:19.205Z
+
+- **run id:** agent-loop-2026-08-30T03-35-36-696Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 2
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3204ms |
+| lint | Passed | 10861ms |
+| unit tests | Passed | 25274ms |
+| deterministic eval pipeline | Passed | 457ms |
+| tracked offline benchmark | Passed | 584ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T03-35-36-696Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T03:56:54.484Z
+
+- **run id:** agent-loop-2026-08-30T03-56-11-865Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 2
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3173ms |
+| lint | Passed | 10628ms |
+| unit tests | Passed | 25589ms |
+| deterministic eval pipeline | Passed | 463ms |
+| tracked offline benchmark | Passed | 580ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T03-56-11-865Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T04:07:48.741Z
+
+- **run id:** agent-loop-2026-08-30T04-07-05-378Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 2
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3317ms |
+| lint | Passed | 10850ms |
+| unit tests | Passed | 26008ms |
+| deterministic eval pipeline | Passed | 451ms |
+| tracked offline benchmark | Passed | 581ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T04-07-05-378Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T04:21:14.077Z
+
+- **run id:** agent-loop-2026-08-30T04-20-28-659Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 2
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3429ms |
+| lint | Passed | 10838ms |
+| unit tests | Passed | 27749ms |
+| deterministic eval pipeline | Passed | 447ms |
+| tracked offline benchmark | Passed | 606ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T04-20-28-659Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T04:33:00.773Z
+
+- **run id:** agent-loop-2026-08-30T04-32-18-795Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 2
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3323ms |
+| lint | Passed | 10564ms |
+| unit tests | Passed | 24905ms |
+| deterministic eval pipeline | Passed | 451ms |
+| tracked offline benchmark | Passed | 584ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T04-32-18-795Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T05:26:40.527Z
+
+- **run id:** agent-loop-2026-08-30T05-25-58-006Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 2
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3215ms |
+| lint | Passed | 10615ms |
+| unit tests | Passed | 25440ms |
+| deterministic eval pipeline | Passed | 449ms |
+| tracked offline benchmark | Passed | 605ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T05-25-58-006Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## 🟧 Codex Production Readiness PR-5B / PR-007 — reachable exact-model price authority (2026-08-30)
+
+**Objective and reachability:** audit RR-091 before assuming that its historical
+same-page related-price defect still reached the product. Tracked synthetic
+characterization confirms that `lib/autonomousResearchAdapter.ts` accepts the
+unsafe shape from response-owned URL plus source role alone. Static import and
+route analysis found that adapter only in scripts/tests. The legacy route does
+not import it; staged and Direct-Terra routes remain default-off; Direct-Terra
+transactional output remains explicitly unverified. The shared experimental
+commerce, fact, asset, page-selection, and staged boundaries were reachable and
+separately reproduced generalized partial exact-identity failures.
+
+**Fail-first and correction sequence:** independent challenges found material
+counterexamples in eleven families: concatenated numeric/compound siblings;
+year-like and decimal identities; multiword qualifiers; expanded technology
+phrases; technology spans under identity labels; split `id`/`identifier`/`name`
+qualifiers; compact qualifiers; single copulas; multiword copulas; forward/
+reverse and optional-adverb symmetry; and appositive commas. Each counterexample
+was added to every affected price-authorizing consumer and failed on the prior
+candidate before correction. Negative feature controls were added alongside the
+identity cases so broader token stripping could not manufacture a passing wall.
+
+`productIdentity.ts` now owns one punctuation-aware complete-alias relation for
+stable, compound, descriptive, contextual year/decimal, measurement,
+technology, conflict, and bounded identity-assertion grammar. Forward and
+reverse forms share one compositional connector parser. A comma is permitted
+only within a fully recognized assertion; semicolon, ampersand, pipe, plus, and
+ordinary feature-list commas remain boundaries. Commerce v2, SearchAPI offers
+v2, fact verifier v3, Direct-Terra assets v6, product-page URL/title/path and CTA
+selection, and staged materialization reuse it. Complete-product, bundle,
+accessory/replacement, different-product, and non-product relationships remain
+separate.
+
+**Final frozen 17-file SHA-256 manifest:**
+
+- `lib/autonomousCommerceVerifier.ts`:
+  `394e1dd1c08f201147d5ad73abc44222dee6bf5b045dea815abb3b41417d52da`;
+- `lib/autonomousFactVerifier.ts`:
+  `3c2bd92d9ea3f3084819efc942e790ce3245e4169478f008f10ba7822a298ae6`;
+- `lib/directTerraAssetVerifier.ts`:
+  `0abfd4b141d98c4d9d433d222789f96ef30a53300cfd18655c46882343379695`;
+- `lib/directTerraProductRelationship.ts`:
+  `56076e4bca9f6b740c9d51e30b56e12528688c23154913c88ad09de600af38d9`;
+- `lib/productAssets.ts`:
+  `de3e7327d168c693e4948c04fc9de565680c2d19e4f0a4dc7c75f46e1545f8e9`;
+- `lib/productIdentity.ts`:
+  `f62214058e938c7dfbc4024833ea91b711e4e11975b01a1ec6fd3c86d23f13bc`;
+- `lib/productPageUrl.ts`:
+  `f31b31bd88b831f37f5acd4f6fb8b69143ee46386ae99040f9455a1e91901a65`;
+- `lib/sourceUrlIdentity.ts`:
+  `aedfc85ddd07c954a39cd8d17c4e21f85cb2dc735a93fdc086c77798a9c6461a`;
+- `tests/autonomousCommerceVerifier.test.mjs`:
+  `f2bc473a56cb1be7f0068fd4c39f91d819f33f8fe72220ada5b837cbfdec66df`;
+- `tests/autonomousFactVerifier.test.mjs`:
+  `a46c3ced0179db32d637fe31ccc78a9150f59647fe91d3557388b656ee3d7e08`;
+- `tests/autonomousProductOffersVerifier.test.mjs`:
+  `94ade56b69940f4ad2406ed0ae8cb11d083c5a00364c1c09c04a8728149e3528`;
+- `tests/autonomousResearchAdapter.test.mjs`:
+  `469c6afb504d7acf967379f918a086a50ec32be4a74c5bfe286831fa318f27c9`;
+- `tests/directTerraAssetVerifier.test.mjs`:
+  `2bafdca6f19bb38edf1c37875c0f80fa6c3152a3717f2a331ac25e52214b2d32`;
+- `tests/directTerraResponse.test.mjs`:
+  `5a6a9640bbe6d49a2f1db5bb83324eb93fc2a1abd9eed2b21d2a92c1cdf7732e`;
+- `tests/productIdentity.test.mjs`:
+  `ca5a97f98945524248c6baf7baa677a2b0e6fb98adf12f17803d38944303cc07`;
+- `tests/productPageUrl.test.mjs`:
+  `c93366637fc6f783972328da6d94e0aa4baee9e35a425ab9f6fa09133c8fd4c7`;
+- `tests/stagedTerraVerifier.test.mjs`:
+  `52f87b407280039709fba3547a16dce2f4f79445b7691a6fd8ea993ea3e1e8ad`.
+
+**Independent replacement review:** the final frozen review returned exact
+`VERIFIED`, no material correction, confidence 0.995. It independently ran the
+nine-file 205/205 focused wall, typecheck, scoped lint, diff check, reachability
+searches excluding live fixtures, and generated 60 comma-punctuated forward/
+reverse connector assertions. All 60 identity assertions were rejected and no
+feature control was falsely rejected. Pre/post hashes matched the manifest and
+HEAD remained `f7d1cdd431190a29aa5a33be42ecc2a96b49eff4`.
+
+**Exact-snapshot verification:** `npm test` passed 1,604/1,604 across 218 suites;
+`npm run typecheck` passed; `npm run lint` passed with zero errors and the same
+three pre-existing warnings; `git diff --check` passed with line-ending warnings
+only. `npm run qa:scorecard` stopped at its >600-call cost guard before provider
+work. `npm run qa:ledger-benchmark` made zero provider calls and measured 0.253
+ms/request overhead, within budget. Controller
+`agent-loop-2026-08-30T05-25-58-006Z` passed typecheck, lint, all tests,
+deterministic eval, exact reconciliation of all five partitions, 10/10 cases,
+and 29/29 invariants. Production build passed. Playwright passed 17/17 with one
+worker. The build-generated `next-env.d.ts` change was restored, and all 17
+reviewed hashes were reauthenticated unchanged.
+
+**Limits and readiness state:** no provider, hosted search, product-data
+service, network, credential, manual environment-file, or live fixture was
+accessed. The historical adapter was not made safe or promoted. RR-091 remains
+`Needs Investigation — contained/narrowed`; current shared exact-price
+boundaries are corrected, but any future adapter promotion requires new direct
+semantic binding and independent review. ReviewRadar remains NOT READY because
+PR-006 live accuracy/repeatability, latency/cost evidence is blocked and the
+broader UX, security, and operations gates remain open. This phase authorizes no
+live call, flag change, deployment, release, or push.

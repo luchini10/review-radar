@@ -4,6 +4,47 @@
 
 ---
 
+## PR-007 shared exact-model identity and price authority (2026-08-30)
+
+- `lib/autonomousResearchAdapter.ts` remains a scripts/tests-only historical
+  contract. URL ownership plus `purchase_page` role is not semantic price proof.
+  Never route, promote, or reuse that membership-only authority without a new
+  directly observed exact-entity/offer boundary and independent review.
+- All reachable shared experimental consumers use `modelIdentityRelation()`.
+  Exact identity requires one complete alias and no strong, compound, or
+  descriptive sibling conflict. Whitespace may compose a model; partial family
+  tokens do not prove it. Contextual year-like and decimal identifiers remain
+  identities, while measurements and recognized technology versions remain
+  feature prose unless explicitly governed by a model/variant/trim assertion.
+- Model/variant/trim labels support bounded number/code/id/identifier/name/
+  designation forms, including compact spellings. Forward and reverse
+  assertions use the same optional `is`/`also` plus called/named/designated,
+  known-as, equal/equals, identified, labeled/labelled, and referred-to grammar.
+  A comma is permitted only inside a fully recognized identity assertion;
+  ordinary comma-separated feature prose, semicolon, ampersand, pipe, and plus
+  remain hard boundaries.
+- Preserve mutations for numeric and mixed siblings, compounds, descriptive
+  trims, years/decimals, measurements, Bluetooth LE/Low Energy, USB Type-C,
+  HDMI eARC, Wi-Fi 6E, DisplayPort Alt Mode, split/compact qualifiers, every
+  connector direction, appositive commas, negative feature controls, Product
+  name/model conflicts, canonical/token/offer surfaces, assets, URL title/path,
+  CTA selection, relationships, and staged materialization.
+- Final shared identity SHA-256 is
+  `f62214058e938c7dfbc4024833ea91b711e4e11975b01a1ec6fd3c86d23f13bc`;
+  identity-test SHA-256 is
+  `ca5a97f98945524248c6baf7baa677a2b0e6fb98adf12f17803d38944303cc07`.
+  The full 17-file manifest is in the PR-007 entry in
+  `docs/qa-loop-results.md`.
+- Successive independent challenge rounds found real generalized gaps; each
+  received fail-first coverage. Final replacement review returned `VERIFIED`,
+  no material finding, confidence 0.995, including 60/60 generated connector
+  assertions. Focused 205/205, full 1,604/1,604, build, typecheck, E2E 17/17,
+  and the five-partition controller passed. The cost guard made no provider
+  call. RR-091 remains `Needs Investigation — contained/narrowed`; no live,
+  route-promotion, release, deployment, or push authority was granted.
+
+---
+
 ## PR-008 professional-test exact-model authority (2026-08-29)
 
 - `professional_test` Product markup is page-topic evidence, not exact-product
