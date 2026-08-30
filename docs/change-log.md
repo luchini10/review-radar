@@ -11,6 +11,41 @@ Update this file after:
 
 ## 2026-08-29
 
+### Codex - Make one-shot readiness launcher failures attributable without exposing secrets
+
+#### Changed
+
+- Replaced the launcher's generic stop sentence with one versioned six-field
+  JSON terminal. Nine fixed stages now distinguish process, repository/trust,
+  approval, credential, post-credential, child-invocation, spawn, signal, and
+  internal failures while explicitly denying retry, replacement, and next-
+  attempt authority.
+- Added deterministic boundary injection and leak-negative tests. Raw errors,
+  paths, nested values, and credential-shaped canaries cannot enter the public
+  terminal; unknown failures map to one closed internal stage.
+- Privately branded genuine terminal errors after independent review proved that
+  a writable public stage and prototype spoof could inject arbitrary text.
+  Integer child exit behavior and all existing credential, trust, endpoint,
+  retry, process, and one-shot controls remain unchanged.
+
+#### Verified
+
+- Fail-first stopped on the missing typed-terminal export. The first independent
+  review returned `CHANGES REQUIRED`; replacement review returned `VERIFIED`,
+  no actionable findings, confidence 0.995.
+- Terminal tests pass 7/7; combined launcher/terminal/runner tests pass 27/27;
+  the full suite passes 1,559/1,559 across 218 suites. Typecheck, production
+  build, Playwright 17/17, syntax, diff, and lint with zero errors/three old
+  warnings passed.
+- Deterministic controller `agent-loop-2026-08-30T00-30-38-163Z` passed the
+  complete unit wall, deterministic eval, all five serial partitions, and the
+  tracked 10-case/29-invariant benchmark. No credential file, provider,
+  product-data service, network, or live fixture was accessed.
+
+This correction improves future failure attribution only. The historical
+attempt remains consumed and unattributed, and no retry, replacement, attempt
+2, flag change, deployment, release, push, or spend is authorized.
+
 ### Codex - Stop the readiness matrix after an unattributed pre-provider launch failure
 
 #### Changed

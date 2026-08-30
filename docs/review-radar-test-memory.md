@@ -4,6 +4,50 @@
 
 ---
 
+## PR-021 typed nonsecret launcher-terminal contract (2026-08-29)
+
+- Future launcher failures emit one canonical JSON line with schema version
+  `staged-terra-readiness-launcher-terminal-v1` and exactly six keys:
+  `schemaVersion`, `status`, `stage`, `retryAuthorized`,
+  `replacementAuthorized`, and `nextAttemptAuthorized`. All three authority
+  fields are always false.
+- The fixed stage registry is exhaustive for current launcher flow:
+  `process_gate_rejected`, `repository_or_trust_rejected`,
+  `approval_rejected`, `credential_gate_rejected`,
+  `post_credential_reauthentication_rejected`,
+  `child_invocation_rejected`, `child_spawn_failed`, `child_signaled`, and
+  `launcher_internal_failure`. Unknown or malformed errors map only to the
+  internal stage; never serialize raw errors, paths, arbitrary fields, or
+  credential facts.
+- Genuine terminal errors are branded in a module-private `WeakMap`. Their
+  public `stage` is nonwritable and nonconfigurable. Assignment,
+  `defineProperty`, and prototype spoofing cannot inject an arbitrary stage or
+  canary into output.
+- Tests may inject only an exact allowlist of launcher operations to exercise
+  every synchronous and asynchronous boundary. The CLI supplies no override.
+  Preserve the real process gates, twice-authenticated trust surface, one-handle
+  credential read, minimal child environment, official endpoint, SDK
+  `maxRetries:0`, `shell:false`, integer child-exit propagation, and the no-await
+  interval between final process validation and child construction/spawn.
+- The first frozen review returned `CHANGES REQUIRED`, confidence 0.995, after
+  reproducing writable-stage and prototype-spoof canary injection. Replacement
+  review of launcher SHA-256
+  `eaa98872a4fe8829438985b0e5c05cce3a7ca2117ac7863c72d245c26e386c72`
+  and test SHA-256
+  `4f6bdfe19af947e451b28fd63c26b43261c2ded9ae152b442993521fb7545c50`
+  returned `VERIFIED`, no actionable findings, confidence 0.995.
+- Proof: fail-first missing export; terminal 7/7; launcher/terminal/runner
+  27/27; full 1,559/1,559 across 218 suites; typecheck, production build,
+  Playwright 17/17, syntax, diff, and lint with zero errors/three old warnings;
+  deterministic controller `agent-loop-2026-08-30T00-30-38-163Z` reconciled
+  five named partitions plus 10/10 benchmark cases and 29/29 invariants.
+- This is privacy-safe observability only. It does not reveal the consumed
+  attempt's historical stage, authorize credential inspection, revive attempt
+  1, or authorize a retry, replacement, attempt 2, flag change, deployment,
+  release, push, or spend.
+
+---
+
 ## PR-4B attempt-1 consumed pre-provider stop (2026-08-29)
 
 - Exact clean commit `6e0446bfc19e435a584ebf3eab18522d47207164`, parent

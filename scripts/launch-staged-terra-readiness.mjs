@@ -21,6 +21,72 @@ export {
   STAGED_TERRA_READINESS_OFFICIAL_OPENAI_BASE_URL,
 };
 
+export const STAGED_TERRA_READINESS_LAUNCHER_TERMINAL_VERSION =
+  "staged-terra-readiness-launcher-terminal-v1";
+export const STAGED_TERRA_READINESS_LAUNCHER_TERMINAL_STAGES = Object.freeze([
+  "process_gate_rejected",
+  "repository_or_trust_rejected",
+  "approval_rejected",
+  "credential_gate_rejected",
+  "post_credential_reauthentication_rejected",
+  "child_invocation_rejected",
+  "child_spawn_failed",
+  "child_signaled",
+  "launcher_internal_failure",
+]);
+const STAGED_TERRA_READINESS_LAUNCHER_TERMINAL_STAGE_SET = new Set(
+  STAGED_TERRA_READINESS_LAUNCHER_TERMINAL_STAGES,
+);
+const STAGED_TERRA_READINESS_LAUNCHER_TERMINAL_STAGE_BY_ERROR = new WeakMap();
+
+export class StagedTerraReadinessLauncherTerminalError extends Error {
+  constructor(stage) {
+    if (!STAGED_TERRA_READINESS_LAUNCHER_TERMINAL_STAGE_SET.has(stage)) {
+      throw new Error("The readiness launcher terminal stage is invalid.");
+    }
+    super("The readiness launcher stopped.");
+    this.name = "StagedTerraReadinessLauncherTerminalError";
+    STAGED_TERRA_READINESS_LAUNCHER_TERMINAL_STAGE_BY_ERROR.set(this, stage);
+    Object.defineProperty(this, "stage", {
+      configurable: false,
+      enumerable: true,
+      value: stage,
+      writable: false,
+    });
+  }
+}
+
+export function buildStagedTerraReadinessLauncherTerminal(error) {
+  const candidate =
+    error !== null && typeof error === "object"
+      ? STAGED_TERRA_READINESS_LAUNCHER_TERMINAL_STAGE_BY_ERROR.get(error)
+      : undefined;
+  const stage = STAGED_TERRA_READINESS_LAUNCHER_TERMINAL_STAGE_SET.has(candidate)
+    ? candidate
+    : "launcher_internal_failure";
+  return Object.freeze({
+    schemaVersion: STAGED_TERRA_READINESS_LAUNCHER_TERMINAL_VERSION,
+    status: "launcher_stopped",
+    stage,
+    retryAuthorized: false,
+    replacementAuthorized: false,
+    nextAttemptAuthorized: false,
+  });
+}
+
+export function serializeStagedTerraReadinessLauncherTerminal(error) {
+  return `${JSON.stringify(buildStagedTerraReadinessLauncherTerminal(error))}\n`;
+}
+
+export function writeStagedTerraReadinessLauncherTerminal(
+  error,
+  writable = process.stderr,
+) {
+  const terminal = buildStagedTerraReadinessLauncherTerminal(error);
+  writable.write(`${JSON.stringify(terminal)}\n`);
+  return terminal;
+}
+
 const CREDENTIAL_FILE_NAME = ".env.local";
 const CREDENTIAL_FILE_BYTE_CEILING = 65_536;
 const FORBIDDEN_LAUNCH_ENVIRONMENT_KEYS = Object.freeze([
@@ -331,21 +397,101 @@ export function buildStagedTerraReadinessChildInvocation({
   };
 }
 
+async function readStagedTerraReadinessRepositoryState({ repoRoot }) {
+  const commitSha = gitOutput(repoRoot, ["rev-parse", "HEAD"]);
+  const branch = gitOutput(repoRoot, ["branch", "--show-current"]);
+  const currentTrackedChanges = trackedChanges(repoRoot);
+  const trustSurface = await authenticateStagedTerraReadinessTrustSurface({
+    repoRoot,
+    commitSha,
+  });
+  return {
+    branch,
+    commitSha,
+    trackedChanges: currentTrackedChanges,
+    trustSurface,
+  };
+}
+
+async function reauthenticateStagedTerraReadinessRepository({
+  repoRoot,
+  commitSha,
+}) {
+  const trustSurface = await authenticateStagedTerraReadinessTrustSurface({
+    repoRoot,
+    commitSha,
+  });
+  return {
+    trackedChanges: trackedChanges(repoRoot),
+    trustSurface,
+  };
+}
+
+const DEFAULT_LAUNCHER_OPERATIONS = Object.freeze({
+  validateProcess: validateStagedTerraReadinessLauncherProcess,
+  readRepositoryState: readStagedTerraReadinessRepositoryState,
+  validateArguments: validateStagedTerraReadinessLauncherArguments,
+  readCredentials: readStagedTerraReadinessCredentials,
+  reauthenticate: reauthenticateStagedTerraReadinessRepository,
+  buildInvocation: buildStagedTerraReadinessChildInvocation,
+  spawn,
+});
+const LAUNCHER_OPERATION_KEYS = Object.freeze(
+  Object.keys(DEFAULT_LAUNCHER_OPERATIONS),
+);
+
+function resolveLauncherOperations(overrides) {
+  requireCondition(
+    overrides !== null &&
+      typeof overrides === "object" &&
+      !Array.isArray(overrides) &&
+      Object.keys(overrides).every((key) =>
+        LAUNCHER_OPERATION_KEYS.includes(key),
+      ),
+    "The readiness launcher operations are invalid.",
+  );
+  const resolved = { ...DEFAULT_LAUNCHER_OPERATIONS, ...overrides };
+  requireCondition(
+    LAUNCHER_OPERATION_KEYS.every(
+      (key) => typeof resolved[key] === "function",
+    ),
+    "The readiness launcher operations are invalid.",
+  );
+  return Object.freeze(resolved);
+}
+
+function launcherTerminalError(stage) {
+  return new StagedTerraReadinessLauncherTerminalError(stage);
+}
+
 function spawnAndWait(spawnImplementation, invocation) {
   return new Promise((resolve, reject) => {
-    const child = spawnImplementation(
-      invocation.command,
-      invocation.args,
-      invocation.options,
-    );
-    child.once("error", reject);
-    child.once("exit", (code, signal) => {
-      if (signal !== null || !Number.isInteger(code)) {
-        reject(new Error("The readiness child did not return an exit code."));
-        return;
-      }
-      resolve(code);
-    });
+    let child;
+    try {
+      child = spawnImplementation(
+        invocation.command,
+        invocation.args,
+        invocation.options,
+      );
+      requireCondition(
+        child !== null &&
+          typeof child === "object" &&
+          typeof child.once === "function",
+        "The readiness child process is invalid.",
+      );
+      child.once("error", () => {
+        reject(launcherTerminalError("child_spawn_failed"));
+      });
+      child.once("exit", (code, signal) => {
+        if (signal !== null || !Number.isInteger(code)) {
+          reject(launcherTerminalError("child_signaled"));
+          return;
+        }
+        resolve(code);
+      });
+    } catch {
+      reject(launcherTerminalError("child_spawn_failed"));
+    }
   });
 }
 
@@ -355,76 +501,136 @@ export async function launchStagedTerraReadiness({
   processExecPath = process.execPath,
   execArgv = process.execArgv,
   hostEnvironment = process.env,
-  spawnImplementation = spawn,
+  operations = {},
 }) {
-  validateStagedTerraReadinessLauncherProcess({
-    execArgv,
-    hostEnvironment,
-  });
-  const commitSha = gitOutput(repoRoot, ["rev-parse", "HEAD"]);
-  requireCondition(
-    gitOutput(repoRoot, ["branch", "--show-current"]) === "main" &&
-      trackedChanges(repoRoot).length === 0,
-    "The readiness launcher repository state is unsafe.",
-  );
-  const trustSurface =
-    await authenticateStagedTerraReadinessTrustSurface({
-      repoRoot,
-      commitSha,
-    });
-  requireCondition(
-    trustSurface.ok === true &&
-      trustSurface.status === "authenticated" &&
-      trustSurface.failures.length === 0,
-    "The readiness launcher trust surface is unauthenticated.",
-  );
-  validateStagedTerraReadinessLauncherArguments({
-    runnerArgs,
-    commitSha,
-    trustSurfaceSha256: trustSurface.manifestSha256,
-  });
+  let runtime;
+  try {
+    runtime = resolveLauncherOperations(operations);
+  } catch {
+    throw launcherTerminalError("launcher_internal_failure");
+  }
 
-  const credentials = await readStagedTerraReadinessCredentials({ repoRoot });
-  const finalTrustSurface =
-    await authenticateStagedTerraReadinessTrustSurface({
-      repoRoot,
-      commitSha,
+  try {
+    runtime.validateProcess({ execArgv, hostEnvironment });
+  } catch {
+    throw launcherTerminalError("process_gate_rejected");
+  }
+
+  let repositoryState;
+  try {
+    repositoryState = await runtime.readRepositoryState({ repoRoot });
+    requireCondition(
+      repositoryState !== null &&
+        typeof repositoryState === "object" &&
+        repositoryState.branch === "main" &&
+        typeof repositoryState.commitSha === "string" &&
+        Array.isArray(repositoryState.trackedChanges) &&
+        repositoryState.trackedChanges.length === 0 &&
+        repositoryState.trustSurface?.ok === true &&
+        repositoryState.trustSurface.status === "authenticated" &&
+        typeof repositoryState.trustSurface.manifestSha256 === "string" &&
+        Array.isArray(repositoryState.trustSurface.failures) &&
+        repositoryState.trustSurface.failures.length === 0,
+      "The readiness launcher repository state is unsafe.",
+    );
+  } catch {
+    throw launcherTerminalError("repository_or_trust_rejected");
+  }
+
+  try {
+    runtime.validateArguments({
+      runnerArgs,
+      commitSha: repositoryState.commitSha,
+      trustSurfaceSha256: repositoryState.trustSurface.manifestSha256,
     });
-  requireCondition(
-    finalTrustSurface.ok === true &&
-      finalTrustSurface.manifestSha256 === trustSurface.manifestSha256 &&
-      finalTrustSurface.failures.length === 0 &&
-      trackedChanges(repoRoot).length === 0,
-    "The readiness launcher trust surface changed before execution.",
-  );
-  validateStagedTerraReadinessLauncherProcess({
-    execArgv,
-    hostEnvironment,
-  });
-  const invocation = buildStagedTerraReadinessChildInvocation({
-    repoRoot,
-    processExecPath,
-    runnerArgs,
-    hostEnvironment,
-    credentials,
-  });
-  return spawnAndWait(spawnImplementation, invocation);
+  } catch {
+    throw launcherTerminalError("approval_rejected");
+  }
+
+  let credentials;
+  try {
+    credentials = await runtime.readCredentials({ repoRoot });
+    requireCondition(
+      credentials !== null &&
+        typeof credentials === "object" &&
+        typeof credentials.openAiApiKey === "string" &&
+        credentials.openAiApiKey.length > 0 &&
+        directTerraSerperApiKeyIsValid(credentials.serperApiKey),
+      "The readiness launcher credentials are unsafe.",
+    );
+  } catch {
+    throw launcherTerminalError("credential_gate_rejected");
+  }
+
+  let finalState;
+  try {
+    finalState = await runtime.reauthenticate({
+      repoRoot,
+      commitSha: repositoryState.commitSha,
+    });
+    requireCondition(
+      finalState !== null &&
+        typeof finalState === "object" &&
+        finalState.trustSurface?.ok === true &&
+        finalState.trustSurface.status === "authenticated" &&
+        finalState.trustSurface.manifestSha256 ===
+          repositoryState.trustSurface.manifestSha256 &&
+        Array.isArray(finalState.trustSurface.failures) &&
+        finalState.trustSurface.failures.length === 0 &&
+        Array.isArray(finalState.trackedChanges) &&
+        finalState.trackedChanges.length === 0,
+      "The readiness launcher trust surface changed before execution.",
+    );
+    runtime.validateProcess({ execArgv, hostEnvironment });
+  } catch {
+    throw launcherTerminalError(
+      "post_credential_reauthentication_rejected",
+    );
+  }
+
+  let invocation;
+  try {
+    invocation = runtime.buildInvocation({
+      repoRoot,
+      processExecPath,
+      runnerArgs,
+      hostEnvironment,
+      credentials,
+    });
+    requireCondition(
+      invocation !== null &&
+        typeof invocation === "object" &&
+        typeof invocation.command === "string" &&
+        path.isAbsolute(invocation.command) &&
+        Array.isArray(invocation.args) &&
+        invocation.options !== null &&
+        typeof invocation.options === "object" &&
+        invocation.options.shell === false,
+      "The readiness child invocation is unsafe.",
+    );
+  } catch {
+    throw launcherTerminalError("child_invocation_rejected");
+  }
+
+  // No await may appear between the final process gate above and this exact
+  // child construction/spawn path.
+  return spawnAndWait(runtime.spawn, invocation);
 }
 
 const currentFile = fileURLToPath(import.meta.url);
 if (process.argv[1] && samePath(process.argv[1], currentFile)) {
   const repoRoot = path.resolve(path.dirname(currentFile), "..");
-  await launchStagedTerraReadiness({
-    repoRoot,
-    runnerArgs: process.argv.slice(2),
-  })
-    .then((code) => {
-      process.exitCode = code;
-    })
-    .catch(() => {
-      process.stderr.write(
-        "Readiness launcher stopped before invoking the trusted runner.\n",
-      );
-      process.exitCode = 1;
+  try {
+    process.exitCode = await launchStagedTerraReadiness({
+      repoRoot,
+      runnerArgs: process.argv.slice(2),
     });
+  } catch (error) {
+    try {
+      writeStagedTerraReadinessLauncherTerminal(error);
+    } catch {
+      // Never fall back to a raw error, stack, path, or credential-bearing value.
+    }
+    process.exitCode = 1;
+  }
 }

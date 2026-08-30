@@ -13596,3 +13596,98 @@ into one misleading sentence. Add closed, versioned, nonsecret typed terminal
 stages with exhaustive fail-first tests. Never expose raw errors, paths, or
 credential facts. The correction requires independent review and cannot revive
 this authorization or authorize future live work.
+
+## Agent Loop Run - 2026-08-30T00:31:35.768Z
+
+- **run id:** agent-loop-2026-08-30T00-30-38-163Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 4088ms |
+| lint | Passed | 13437ms |
+| unit tests | Passed | 34620ms |
+| deterministic eval pipeline | Passed | 499ms |
+| tracked offline benchmark | Passed | 617ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T00-30-38-163Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## 🟧 Codex — 2026-08-29 — PR-021 typed nonsecret launcher terminal
+
+**Objective and root cause:** preserve one-shot live governance while making a
+future launcher stop attributable without exposing credential state or raw
+diagnostics. The consumed PR-4B attempt established that the old launcher
+collapsed process, repository/trust, approval, credential, post-credential,
+child-construction, spawn-error, and signal/noninteger failures into one generic
+sentence. That was the proven generalized defect; the historical attempt's
+exact stage remains unknowable, and neither manual credential inspection nor a
+retry was permissible.
+
+**Fail-first and correction:** the first dedicated test run failed before test
+execution because the launcher exported no typed terminal contract. The
+correction adds `staged-terra-readiness-launcher-terminal-v1`, exactly six
+serialized keys, three always-false authority fields, and nine fixed stages:
+process, repository/trust, approval, credential, post-credential
+reauthentication, child invocation, child spawn, child signal/noninteger exit,
+and internal failure. Unknown errors map closed. Raw exception text, stacks,
+paths, arbitrary properties, and credential-shaped canaries never serialize.
+
+The deterministic operation seam accepts only the launcher's existing operation
+names and is used by tests; CLI execution passes no overrides. Every sync and
+async boundary is wrapped, integer child exit codes still pass through, and no
+`await` occurs between final process validation and child construction/spawn.
+All prior one-handle credential, minimal-environment, official-endpoint,
+`maxRetries:0`, `shell:false`, commit/trust, exact-argument, and no-retry
+controls remain intact.
+
+**Independent correction loop:** the first frozen review of launcher SHA-256
+`53a489…be92` and test SHA-256 `39ce1f…731d` returned `CHANGES REQUIRED`,
+confidence 0.995. A caller could mutate the exported error's public `stage` or
+prototype-spoof a recognized instance and serialize arbitrary credential-canary
+text. The replacement privately brands genuine instances and their stage in a
+module-local `WeakMap`; the public property is nonwritable/nonconfigurable, and
+spoofs map to `launcher_internal_failure`. Replacement hashes are launcher
+`eaa98872a4fe8829438985b0e5c05cce3a7ca2117ac7863c72d245c26e386c72`
+and test
+`4f6bdfe19af947e451b28fd63c26b43261c2ded9ae152b442993521fb7545c50`.
+Independent replacement review returned exact `VERIFIED`, no actionable
+findings, confidence 0.995.
+
+**Verification:** terminal tests pass 7/7; combined launcher/terminal/runner
+tests pass 27/27; syntax and scoped ESLint pass; complete tests pass
+1,559/1,559 across 218 suites; nonincremental typecheck and production build
+pass; Playwright passes 17/17; full lint has zero errors and the same three
+pre-existing warnings; generated `next-env.d.ts` was restored. Deterministic
+controller `agent-loop-2026-08-30T00-30-38-163Z` passed typecheck, lint, all
+1,559 tests, deterministic eval, all five serial worker partitions, and the
+tracked 10-case/29-invariant benchmark with no repeated failure candidate.
+
+**Authority and limits:** no environment file, credential, provider,
+product-data service, network, or live fixture was accessed. PR-021 improves
+future attribution only. Attempt 1 remains consumed; its exact historical stage
+is unresolved. No retry, replacement, attempt 2, direct-runner fallback, flag
+change, deployment, release, push, or spend ran or is authorized.

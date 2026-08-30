@@ -2684,3 +2684,56 @@ Add closed, versioned, nonsecret terminal stages with exhaustive fail-first and
 leak-negative tests, then obtain independent source review. That correction
 cannot revive the consumed authorization or permit new live work. Recommended
 reasoning: High for taxonomy/privacy/authority; Medium for localized execution.
+
+## Codex Run - 2026-08-29 PR-021 typed nonsecret launcher terminal
+
+**Goal:** make future one-shot readiness-launcher failures attributable without
+inspecting credentials, exposing raw diagnostics, or weakening the consumed-
+attempt and no-retry boundaries.
+
+**Assessment and root cause:** the generic terminal—not provider behavior—was
+the proven blocker. It merged every pre-spawn, spawn-error, and
+signal/noninteger-child failure into one sentence. Inspecting `.env.local`,
+logging raw errors, or repeating the invocation would have crossed the trust or
+authorization boundary. The strongest correction was a closed typed taxonomy
+covering complete executable control flow.
+
+**What changed:** the launcher emits one canonical
+`staged-terra-readiness-launcher-terminal-v1` JSON line with six exact keys,
+nine fixed stages, and false retry/replacement/next-attempt authority. A test-
+only operation seam covers every synchronous and asynchronous boundary while
+the CLI retains real operations. Unknown values map to internal failure; raw
+errors, paths, arbitrary properties, and credential canaries never serialize.
+Integer child exits and all existing trust, credential, environment, endpoint,
+retry, spawn, and one-shot controls remain unchanged.
+
+**Fail-first and independent evidence:** fail-first stopped on the missing
+terminal export. The first frozen source review returned `CHANGES REQUIRED`,
+confidence 0.995, because the public stage could be mutated and a prototype
+spoof could inject arbitrary text. The replacement uses a module-private
+`WeakMap` brand plus a nonwritable/nonconfigurable public stage. Replacement
+review returned `VERIFIED`, no actionable findings, confidence 0.995, for
+launcher SHA-256
+`eaa98872a4fe8829438985b0e5c05cce3a7ca2117ac7863c72d245c26e386c72`
+and test SHA-256
+`4f6bdfe19af947e451b28fd63c26b43261c2ded9ae152b442993521fb7545c50`.
+
+**Verification:** terminal 7/7; launcher/terminal/runner 27/27; complete suite
+1,559/1,559 across 218 suites; typecheck, production build, Playwright 17/17,
+syntax, diff, and lint with zero errors/three old warnings passed. Controller
+`agent-loop-2026-08-30T00-30-38-163Z` reconciled the full unit wall,
+deterministic eval, all five serial partitions, and 10/10 benchmark cases with
+29/29 invariants. The build automatically noted ignored user-owned `.env.local`
+without exposing a value; generated `next-env.d.ts` was restored. No credential
+file, provider, product-data service, network, or live fixture was accessed.
+
+**Limits and next step:** the consumed attempt's historical stage remains
+unknown. PR-021 cannot revive it or authorize any live continuation. With the
+measurement protocol blocked, the strongest next zero-live release gate is
+PR-008/RR-092: the shared fact verifier is reachable from the staged path, and
+its professional-test Product markup can still supply an image candidate even
+when tested-model attribution is inconclusive. RR-091's original isolated-path
+price defect already has an exact-entity regression and is not imported by the
+application route, so it should be audited after the active staged asset gate.
+Recommended reasoning: High for tested-model/image authority; Medium for
+localized fixture and regression work.

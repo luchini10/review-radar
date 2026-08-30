@@ -1,92 +1,84 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-08-29 by Codex after the independently audited PR-4B attempt-1
-pre-provider stop. This file was regenerated from current evidence. The current
-approved base is the self-contained evidence closeout commit containing this
-file; resolve its full SHA with `git rev-parse HEAD`. Its expected parent is
-`6e0446bfc19e435a584ebf3eab18522d47207164`.
+Updated: 2026-08-29 by Codex after the independently verified PR-021
+privacy-safe launcher-terminal correction. This file was regenerated from
+current evidence. The current approved base is the self-contained PR-021
+closeout commit containing this file; resolve its full SHA with
+`git rev-parse HEAD`. Its expected parent is
+`760fba7f57946175f3ef4951e0708c1e8b040397`.
 
 ## Current state
 
 ReviewRadar is **not production-ready**. The staged Terra path is default-off
 and undeployed. PR-3K proved one complete safe `shop vac` lifecycle. PR-4A
 froze a dated four-shape/six-attempt readiness matrix. PR-4B built an
-independently verified commit-bound runner and sanitized credential launcher.
-The first PR-4B attempt was then authorized exactly once but stopped before
-provider work. No PR-4B readiness artifact exists, the authorization is
-consumed, and the serial matrix cannot advance.
+independently verified commit-bound runner and sanitized launcher, but its first
+exactly authorized attempt stopped before provider work. That authorization is
+consumed, no PR-4B artifact exists, and the serial matrix cannot advance.
 
-Exact source commit `6e0446bfc19e435a584ebf3eab18522d47207164`
-contains the credential-launch correction. Its parent is
-`d2df488431c4da4176c8de56baf6d9f44efa1dc8`. Independent exact-commit review
-authenticated:
+PR-021 now closes the proven future-attribution defect. The launcher emits one
+closed, versioned, nonsecret terminal with a fixed stage instead of merging
+every stop into one sentence. This does not reveal the historical stop stage or
+grant any new live authority.
 
-- branch `main`, clean tracked tree and index;
-- exactly 14 commit paths, all Git mode `100644`;
-- all six reviewed source SHA-256 values;
-- the unexpired PR-4A matrix;
-- 61 trust entries, zero failures, manifest
-  `f82e18a3ec21de995130128832d8dca03698309262a942e39fe2dae2ad6a5b1c`;
-- the exact 27 attempt-1 approval arguments and all ceilings; and
-- the exact prospective output leaf as absent with direct fixed parents.
+## PR-021 outcome
 
-The terminal preflight verdict was `VERIFIED`, no actionable finding,
-confidence 0.99. It authorized one and only one exact
-`node --no-warnings scripts/launch-staged-terra-readiness.mjs` invocation for
-`broad-shop-vac:1`. The authorization was consumed regardless of outcome.
+The launcher terminal version is
+`staged-terra-readiness-launcher-terminal-v1`. Its exact six keys are:
 
-## Consumed attempt-1 result
+- `schemaVersion`;
+- `status` = `launcher_stopped`;
+- `stage`;
+- `retryAuthorized` = false;
+- `replacementAuthorized` = false; and
+- `nextAttemptAuthorized` = false.
 
-The exact launcher command ran once. It exited 1 after about 9.55 seconds and
-emitted only:
+The fixed stage registry covers:
 
-`Readiness launcher stopped before invoking the trusted runner.`
+- `process_gate_rejected`;
+- `repository_or_trust_rejected`;
+- `approval_rejected`;
+- `credential_gate_rejected`;
+- `post_credential_reauthentication_rejected`;
+- `child_invocation_rejected`;
+- `child_spawn_failed`;
+- `child_signaled`; and
+- `launcher_internal_failure`.
 
-Post-stop independent audit reauthenticated the same branch, HEAD/parent,
-clean tree/index, six hashes, and 61-entry trust digest. The exact prospective
-leaf remained absent with direct fixed parents and zero boundary failures. The
-trusted runner creates that directory before any provider request. Therefore no
-provider request occurred and no readiness artifact exists; confidence 0.99.
+Every current synchronous and asynchronous launcher boundary maps to one stage.
+Unknown errors map only to internal failure. Raw errors, stacks, paths, nested
+values, and credential-shaped canaries never serialize. Integer child exit
+codes still pass through without inventing a launcher terminal.
 
-No retry, replacement, direct-runner fallback, attempt 2, extra case, flag
-change, deployment, release, or push ran or is authorized. The main agent did
-not inspect or enumerate any live-fixture content.
+The first frozen independent review returned `CHANGES REQUIRED`, confidence
+0.995. The exported error's public stage could be changed or prototype-spoofed
+to serialize arbitrary canary text. The replacement stores genuine stage
+authority in a module-private `WeakMap`, makes the public property nonwritable
+and nonconfigurable, and maps spoofs closed. Replacement review returned exact
+`VERIFIED`, no actionable findings, confidence 0.995.
 
-Independent terminal verdict:
+Frozen replacement SHA-256 values:
 
-`CONSUMED — PRE-PROVIDER STOP, FAILURE STAGE UNATTRIBUTED; NO RETRY AUTHORIZED`
+- launcher:
+  `eaa98872a4fe8829438985b0e5c05cce3a7ca2117ac7863c72d245c26e386c72`;
+- terminal tests:
+  `4f6bdfe19af947e451b28fd63c26b43261c2ded9ae152b442993521fb7545c50`.
 
-## Attribution limit and selected defect
-
-The exact stop stage is unresolved. The launcher's generic catch receives:
-
-- initial process, repository, trust, and approval rejection;
-- credential file safety, parse, or configuration rejection;
-- post-credential trust/process reauthentication rejection;
-- child-environment or invocation-construction rejection;
-- OS spawn error; and
-- child termination by signal or without an integer exit code.
-
-A normally spawned runner returning integer exit code 1 would propagate that
-code instead. No runner stdout plus the approximate one-trust-pass duration,
-exact state/arguments, absence of forbidden inherited control names, and PATH
-presence make the credential gate the leading inference (confidence 0.75), not
-a diagnosed cause. No credential file, metadata, presence, value, length, hash,
-prefix, or arbitrary content was manually accessed.
-
-PR-021 is the earliest evidence-supported generalized defect: a one-shot,
-no-retry launcher collapses every safe pre-runner, spawn, and signal failure
-into one misleading sentence. That prevents privacy-safe attribution after the
-only authorization is consumed.
+The deterministic operation seam accepts only the real operation names and is
+used by tests; the CLI passes no override. Existing twice-authenticated
+commit/trust checks, exact arguments, one-handle credential read, minimal child
+environment, official OpenAI endpoint, SDK `maxRetries:0`, `shell:false`, and
+one-shot/no-retry controls remain intact. No `await` occurs between final
+process validation and child construction/spawn.
 
 ## Current verification
 
 | Check | Result |
 | --- | --- |
-| Focused launcher suite | 5/5 |
-| Launcher and runner suites | 20/20 |
-| Combined PR-4A/launcher/runner suites | 53/53 |
-| Complete deterministic suite | 1,552/1,552 across 217 suites |
+| Fail-first terminal suite | missing-export failure established |
+| Typed terminal suite | 7/7 |
+| Launcher, terminal, and runner suites | 27/27 |
+| Complete deterministic suite | 1,559/1,559 across 218 suites |
 | Five named worker partitions | exact reconciliation passed |
 | Tracked offline benchmark | 10/10 cases; 29/29 invariants |
 | Playwright E2E | 17/17 |
@@ -94,18 +86,21 @@ only authorization is consumed.
 | Deterministic eval | no red flags |
 | Syntax and diff checks | passed |
 | Lint | zero errors; same three pre-existing warnings |
-| Launcher source review | `VERIFIED`; no findings; confidence 0.98 |
-| Exact commit/plan review | `VERIFIED`; no findings; confidence 0.99 |
-| Post-stop no-provider audit | `CONSUMED — PRE-PROVIDER STOP`; confidence 0.99 |
+| First frozen PR-021 source review | `CHANGES REQUIRED`; confidence 0.995 |
+| Replacement PR-021 source review | `VERIFIED`; no findings; confidence 0.995 |
 | PR-4B attempt-1 provider calls | zero |
 | PR-4B attempt-1 artifacts | zero |
 
-Deterministic controller `agent-loop-2026-08-29T23-47-19-401Z` passed
-typecheck, lint, all 1,552 tests, deterministic eval, all five serial worker
+Deterministic controller `agent-loop-2026-08-30T00-30-38-163Z` passed
+typecheck, lint, all 1,559 tests, deterministic eval, all five serial worker
 partitions, and the tracked 10-case/29-invariant benchmark with no repeated
-failure candidate. The production build loaded ignored user-owned `.env.local`
-automatically but exposed no value. Playwright's generated `next-env.d.ts` was
-restored and clean.
+failure candidate. The production build noted ignored user-owned `.env.local`
+automatically but exposed no value. Generated `next-env.d.ts` was restored.
+
+The PR-021 source snapshot was independently reviewed before closeout. This
+zero-live phase does not require or claim an independent exact-commit/live-plan
+authorization. No environment file, credential, provider, product-data service,
+network, or live fixture was accessed.
 
 Process residual from PR-4A remains on record: one earlier `rg --files` and one
 unfiltered `git status` printed live-fixture filenames. No fixture content,
@@ -116,67 +111,82 @@ remained clean. Do not repeat the deviation.
 ## Objective and decision frame
 
 The product objective remains the strongest genuinely suitable products with
-truthful requirements and evidence at acceptable latency and cost. The proven
-next bottleneck is privacy-safe attribution of launcher stops, not provider
-quality, credential content, or a reason to retry.
+truthful requirements and evidence at acceptable latency and cost. PR-021 is
+complete, while PR-006 live measurement is blocked by the consumed serial
+attempt. The strongest next zero-live blocker is RR-092/PR-008, not another
+launcher diagnostic and not an assumed RR-091 rewrite.
 
 Verified facts:
 
-- attempt 1 was consumed before provider work and produced no artifact;
-- its exact failure stage is unavailable from the current terminal contract;
-- manual credential inspection would violate the trust boundary;
-- retry, replacement, and attempt 2 are not authorized; and
-- the current generic catch merges materially distinct failure classes.
+- `lib/stagedTerraVerifier.ts` imports the shared hybrid fact verifier and is on
+  the active staged materialization path;
+- a professional-test source becomes claim-eligible only when
+  `editorialModel.status === "verified"`;
+- the separate asset-candidate path currently accepts a JSON-LD image whenever
+  `verification.imageUrl.status === "verified"`, without checking professional-
+  test model attribution;
+- a commerce result can separately establish the identity-safe product URL and
+  candidate eligibility, allowing the professional-test image to remain a
+  potential downstream asset source;
+- RR-092 records a real historical mismatch between page-topic Product markup
+  and the tested model; and
+- `lib/autonomousResearchAdapter.ts`, where RR-091 originated, is reached by
+  scripts/tests rather than an application route, while the shared fact verifier
+  already has an exact-entity multi-product price regression.
 
 Engineering judgment:
 
-- the strongest next step is a closed typed terminal result, because it improves
-  future fault attribution without weakening credential privacy or live gates;
-- a manual `.env.local` inspection, credential diagnostic mode, raw-error log,
-  launcher retry, or alternate direct invocation is materially weaker and out
-  of bounds;
-- typed output must cover complete executable control flow, not only the leading
-  credential inference; and
-- no typed result, test, analyzer, or source verdict can authorize live work.
+- first reproduce RR-092 through the complete staged materializer with tracked
+  synthetic inputs; source inspection alone does not prove the unsafe image wins
+  final selection;
+- if reproduced, gate professional-test assets on positively verified tested-
+  model attribution at the earliest shared boundary that preserves official and
+  purchase-page behavior;
+- do not add publisher, product, model, or fixture special cases; and
+- audit RR-091 afterward against current reachability and contracts rather than
+  changing isolated historical code by assumption.
 
 Uncertainty:
 
-- PR-4B attempt 1's exact stage may remain permanently unknowable;
-- the final typed-stage taxonomy and public/stderr shape require independent
-  adversarial review;
-- provider adherence, current leader recall, hard-requirement truth,
-  repeatability, latency, and cost remain unmeasured; and
-- PR-4A truth expires 2026-09-12 and may drift earlier.
+- downstream identity, relationship, eligibility, or asset-priority logic may
+  already suppress the suspected professional-test image in some shapes;
+- the correct generalized correction may belong in source asset construction,
+  shared fact verification, or asset selection; fail-first evidence should
+  decide;
+- stricter professional-test asset authority can reduce image recall; exact
+  positive controls are required; and
+- current leader recall, hard-requirement truth, repeatability, latency, and
+  cost remain unmeasured because PR-006 is blocked.
 
-**Recommended reasoning level:** High for error taxonomy, privacy, and authority;
-Medium for localized implementation and deterministic checks.
+**Recommended reasoning level:** High for tested-model and image authority;
+Medium for localized reproduction, implementation, and deterministic checks.
 
-## Current approved phase: PR-021 typed launcher terminal attribution
+## Current approved phase: PR-008 / RR-092 staged professional-test asset authority
 
-This phase is local, zero-network, and does not authorize a live invocation.
+This phase is local, zero-network, and does not authorize live-fixture access or
+a live invocation.
 
-1. Add fail-first tests against the current generic terminal behavior. Require
-   one versioned, exact-key, nonsecret launcher terminal object with exhaustive
-   typed stages for process, repository/trust, approval, credential,
-   post-credential reauthentication, child invocation, spawn error, and child
-   signal/noninteger exit.
-2. Ensure every failure path maps to a fixed stage. Do not expose raw error
-   messages, stack traces, paths, environment names, credential presence,
-   values, lengths, hashes, prefixes, or arbitrary nested data.
-3. Preserve the successful child path and integer child exit-code propagation.
-   Preserve exact process controls, one-handle credential read, minimal child
-   environment, official endpoint, `maxRetries:0`, shell false, trust
-   reauthentication, serial attempt identity, and no-retry behavior.
-4. Include mutation/leak-negative tests with credential-shaped canaries and raw
-   exception strings for every stage. Prove exactly one terminal output and no
-   stage ambiguity.
-5. Run focused tests, complete deterministic walls, typecheck, lint, build,
-   E2E, controller, syntax, and diff checks. Obtain independent frozen-source
-   review, correct every finding, document, regenerate this handoff, and make a
-   self-contained local commit.
-6. Stop. Any future live continuation requires a separate protocol/governance
-   decision and exact independent authorization. PR-021 cannot revive attempt 1
-   or authorize attempt 2.
+1. Add a fail-first staged-materializer regression with an exact page-topic
+   Product entity and image, an absent or conflicting tested-model receipt, and
+   separate exact commerce evidence sufficient to make the candidate otherwise
+   eligible. Prove whether the editorial image reaches the evidence package.
+2. Add a cross-category negative and positive controls for a positively matched
+   tested model plus unchanged official-product and purchase-page assets.
+3. Trace the earliest evidence-supported root cause. If reproduced, implement
+   the smallest generalized gate that prevents professional-test identity or
+   imagery from receiving exact-model authority unless tested-model attribution
+   is positively verified.
+4. Preserve purchase-page exact-entity verification, Shopping exact-offer
+   binding, source ownership, relationship, requirement, availability, price,
+   redirect/private-network, and default-off route boundaries. Do not weaken a
+   test or backfill an asset from unverified evidence.
+5. Run focused tests, the complete deterministic wall, typecheck, lint, build,
+   E2E, controller, syntax, and diff checks. Obtain an independent frozen-source
+   review, correct every finding, update only authoritative records, regenerate
+   this handoff, and make one self-contained local commit.
+6. Stop that phase before RR-091, live work, flag change, deployment, release,
+   or push. The overarching production-readiness goal may then select the next
+   evidence-supported local blocker.
 
 ## Approval, cost, and flag state
 
@@ -191,20 +201,18 @@ Committed defaults remain:
 
 The ignored `.env.local` is user-owned. Never edit, stage, print, hash, copy,
 stat for diagnosis, or manually inspect it. Do not add a diagnostic mode that
-reads it. The consumed attempt had a `$1` conservative ceiling and made no
-provider request. That ceiling grants no future spend authority.
+reads it. Attempt 1's `$1` conservative ceiling was consumed without a provider
+request and grants no future spend authority.
 
 ## Outstanding readiness debts
 
-- PR-006: live measurement is blocked. Current leader recall, card truth,
+- PR-006: live measurement remains blocked. Current leader recall, card truth,
   hard-requirement accuracy, final-card stability, verified price coverage,
   first-loss distribution, latency, calls, tokens, and cost remain unmeasured.
-- PR-021: launcher terminal attribution is missing; exact attempt-1 cause is
-  unresolved.
-- PR-007 / RR-091: same-page related-product price binding needs exact-offer
-  proof before the experimental path can be promoted.
-- PR-008 / RR-092: editorial Product markup can overstate tested-model
-  identity/image authority.
+- PR-007 / RR-091: current target-path applicability and exact same-page offer
+  binding need a bounded audit; the original autonomous path is isolated.
+- PR-008 / RR-092: professional-test Product markup may overstate tested-model
+  image authority on the staged path; deterministic reproduction is selected.
 - Candidate-pool stability remains intentionally unscored at the privacy
   boundary; only final-card stability is available without a separate privacy
   design review.
@@ -214,7 +222,8 @@ provider request. That ceiling grants no future spend authority.
 
 PR-013 is closed only as one-lifecycle feasibility. PR-020 is live-revalidated
 as the title-metadata correction. PR-4A closes measurement design. PR-4B
-produced no readiness evidence and closes no production authority.
+produced no readiness artifact. PR-021 closes future launcher attribution only.
+None grants production authority.
 
 ## Hard boundaries
 
@@ -223,13 +232,12 @@ produced no readiness evidence and closes no production authority.
   `tests/fixtures/review-radar-live/**` from every repository search and use only
   tracked-only or explicit paths for status and staging.
 - Do not retry or replace `broad-shop-vac:1`, invoke the direct runner, or
-  advance to attempt 2. Do not treat absence of provider spend as authority to
-  revive the consumed invocation.
-- Do not infer the exact launcher failure stage or credential state from timing,
-  absence, or the generic sentence.
-- Do not weaken source ownership, identity, relationship, requirement,
-  availability, price, commerce, asset, redirect, private-network, diagnostic,
-  privacy, or public-response boundaries to improve a score.
+  advance to attempt 2. Do not treat absence of provider spend or the new typed
+  terminal as authority to revive the consumed invocation.
+- Do not infer the exact historical launcher failure stage or credential state.
+- Do not weaken source ownership, identity, tested-model, relationship,
+  requirement, availability, price, commerce, asset, redirect, private-network,
+  diagnostic, privacy, or public-response boundaries to improve a score.
 - Never stage `.env.local`, `.claude/`, `.rr_baseline*`, `fable-transfer-kit/`,
   ignored worker results, historical live fixtures, or any live artifact. Never
   use `git add -A`.
@@ -241,11 +249,11 @@ produced no readiness evidence and closes no production authority.
 
 | Need | Retrieve |
 | --- | --- |
-| Living defects, exit criteria, PR-4/PR-021 evidence | `docs/production-readiness-master-plan.md` |
-| Canonical consumed-stop evidence | latest PR-4B entry in `docs/qa-loop-results.md` |
-| Durable launcher/stop contracts | top entries in `docs/review-radar-test-memory.md` |
-| Launcher source | `scripts/launch-staged-terra-readiness.mjs` |
-| Runner and trust seam | `scripts/run-staged-terra-readiness.mjs`; `scripts/staged-terra-readiness-io.mjs`; `scripts/staged-terra-readiness-runner.mjs` |
-| Current matrix and truth | `tests/fixtures/staged-terra-readiness-matrix-v1.json` |
+| Living defects, exit criteria, PR-008/PR-021 evidence | `docs/production-readiness-master-plan.md` |
+| Canonical PR-021 evidence | latest PR-021 entry in `docs/qa-loop-results.md` |
+| Durable terminal and consumed-stop contracts | top entries in `docs/review-radar-test-memory.md` |
+| RR-092 historical record | bounded RR-092 section in `docs/RR-Issues-Report.md` |
+| Shared fact verification | `lib/autonomousFactVerifier.ts`; `tests/autonomousFactVerifier.test.mjs` |
+| Staged asset construction | `lib/stagedTerraVerifier.ts`; `tests/stagedTerraVerifier.test.mjs` |
 | Staged architecture | OAI-T10 section in `docs/forward-roadmap.md` |
 | Peer challenge | latest entries in `docs/agent-dialogue.md` |
