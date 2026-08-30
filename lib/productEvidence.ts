@@ -22,6 +22,7 @@ import {
   rubricImportanceRank,
 } from "./rubricFactImportance.ts";
 import { mapWithConcurrency } from "./recommendationPerformance.ts";
+import { throwIfRequestCancelled } from "./requestCancellation.ts";
 
 const MAX_EVIDENCE_QUERIES_PER_PRODUCT = 3;
 const MAX_EVIDENCE_CALLS_TOTAL = 16;
@@ -42,6 +43,7 @@ type ProductEvidenceEnrichmentOptions = {
   fullTrustLadderProductCount?: number;
   maxProducts?: number;
   mode?: ReviewEvidenceMode;
+  signal?: AbortSignal;
 };
 
 type ComplaintPattern = {
@@ -540,6 +542,7 @@ async function collectEvidenceSources(
   product: ProductRecommendation,
   state: EvidenceSearchState,
   mode: ReviewEvidenceMode = "standard",
+  signal?: AbortSignal,
 ) {
   const allQueries =
     mode === "trust_ladder"
@@ -563,6 +566,7 @@ async function collectEvidenceSources(
   const sources: SerperEvidenceSource[] = [];
 
   for (const query of queries) {
+    throwIfRequestCancelled(signal);
     if (state.callsUsed >= maxCalls) {
       break;
     }
@@ -583,6 +587,7 @@ async function collectEvidenceSources(
           originalQuery: query,
           sourceDetail: product.name,
         },
+        { signal },
       )),
     );
   }
@@ -594,6 +599,7 @@ async function collectAdditionalEvidenceSources(
   queries: string[],
   state: EvidenceSearchState,
   mode: ReviewEvidenceMode,
+  signal?: AbortSignal,
 ) {
   const maxCalls =
     mode === "trust_ladder"
@@ -602,6 +608,7 @@ async function collectAdditionalEvidenceSources(
   const sources: SerperEvidenceSource[] = [];
 
   for (const query of queries) {
+    throwIfRequestCancelled(signal);
     if (state.callsUsed >= maxCalls) {
       break;
     }
@@ -622,6 +629,7 @@ async function collectAdditionalEvidenceSources(
           originalQuery: query,
           sourceDetail: "additional_evidence",
         },
+        { signal },
       )),
     );
   }
@@ -633,6 +641,7 @@ async function collectRedditOwnerOpinionSources(
   product: ProductRecommendation,
   state: EvidenceSearchState,
   mode: ReviewEvidenceMode,
+  signal?: AbortSignal,
 ) {
   if (mode !== "trust_ladder") {
     return [];
@@ -645,6 +654,7 @@ async function collectRedditOwnerOpinionSources(
     ),
     state,
     mode,
+    signal,
   );
 }
 
@@ -1408,11 +1418,22 @@ export function applyEvidenceBucketToProduct(
 export async function enrichProductWithReviewEvidence(
   product: ProductRecommendation,
   state: EvidenceSearchState = { callsUsed: 0 },
-  options: { mode?: ReviewEvidenceMode } = {},
+  options: { mode?: ReviewEvidenceMode; signal?: AbortSignal } = {},
 ) {
+  throwIfRequestCancelled(options.signal);
   const mode = options.mode || "standard";
-  let sources = await collectEvidenceSources(product, state, mode);
-  const redditSources = await collectRedditOwnerOpinionSources(product, state, mode);
+  let sources = await collectEvidenceSources(
+    product,
+    state,
+    mode,
+    options.signal,
+  );
+  const redditSources = await collectRedditOwnerOpinionSources(
+    product,
+    state,
+    mode,
+    options.signal,
+  );
 
   if (redditSources.length > 0) {
     sources = dedupeSources([...sources, ...redditSources]);
@@ -1425,6 +1446,7 @@ export async function enrichProductWithReviewEvidence(
       buildNegativeEvidenceRetryQueries(product),
       state,
       mode,
+      options.signal,
     );
 
     if (retrySources.length > 0) {
@@ -1448,6 +1470,7 @@ export async function enrichResultWithReviewEvidence(
   result: RecommendationResult,
   options: ProductEvidenceEnrichmentOptions = {},
 ) {
+  throwIfRequestCancelled(options.signal);
   const state: EvidenceSearchState = { callsUsed: 0 };
   const productsToEnrich = new Map<string, ProductRecommendation>();
   const maxProducts = options.maxProducts ?? 10;
@@ -1470,6 +1493,7 @@ export async function enrichResultWithReviewEvidence(
     products,
     options.concurrency ?? 1,
     async ([name, product], index) => {
+      throwIfRequestCancelled(options.signal);
       const weakEvidence =
         product.source_consensus === "Weak" ||
         product.confidence_score < 65 ||
@@ -1482,7 +1506,10 @@ export async function enrichResultWithReviewEvidence(
 
       return [
         name,
-        await enrichProductWithReviewEvidence(product, state, { mode }),
+        await enrichProductWithReviewEvidence(product, state, {
+          mode,
+          signal: options.signal,
+        }),
       ] as const;
     },
   );

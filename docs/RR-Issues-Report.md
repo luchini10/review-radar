@@ -1,9 +1,9 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through production-readiness PR-6C
+## Compiled for AI Agent Consumption — Phase 0 through production-readiness PR-6D
 
 **Generated:** 2026-08-30
-**Scope:** All phases from initial measurement harness through the PR-6C
-paid-request admission and bounded-cache correction
+**Scope:** All phases from initial measurement harness through the PR-6D
+legacy request-cancellation correction
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -25,9 +25,9 @@ only when maintaining this register or auditing its full history.
 | High | 50 |
 | Medium | 35 |
 | Low | 5 |
-| Open | 1 |
+| Open | 0 |
 | Needs Investigation | 6 |
-| Fixed | 97 |
+| Fixed | 98 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -4290,26 +4290,43 @@ multi-instance verification close those claims.
 | **Phase** | Production readiness PR-6A boundary audit |
 | **Severity** | Medium |
 | **Title** | Legacy browser cancellation is not wired into server provider work |
-| **Status** | Open |
+| **Status** | Fixed — local source contract; hosted disconnect delivery unverified |
 
-**Description:** The browser aborts its recommendation fetch and changes the UI
-to cancelled, but the active synchronous legacy route does not pass the request
-abort signal into provider or page-fetch operations. Those calls have fixed
-timeouts only. Signed job-token cancellation exists for the default-off
-asynchronous paths, not the default legacy request.
+**Description:** The browser used to abort only its recommendation fetch. The
+active synchronous legacy route did not pass the request abort signal into
+provider, Serper, page-fetch, evidence, or enrichment work, so later paid stages
+could continue after the UI reported cancellation.
 
 **Expected:** Deterministic abort-before-create, abort-in-flight, between-stage,
 late-abort, timeout, and cleanup tests must establish exact provider-call counts.
 One server-owned cancellation signal must prevent later paid stages and produce
-a stable cancellation result without retrying. Hosted disconnect behavior
-remains unverified until that source-level contract exists.
+a stable cancellation result without retrying. Hosted disconnect behavior must
+remain explicitly separate from local source-level proof.
+
+**Resolution (PR-6D):** The legacy route now owns one typed cancellation class,
+checks `Request.signal` around every awaited stage, and passes it through
+planning/final/narration calls, Serper, citation/page verification, evidence,
+assets, requirement rescue, and source upgrade. Cancellation returns HTTP 499
+with a stable safe message, marks progress `cancelled`, and cannot enter a
+retry or fallback. Shared cache loaders retain work for surviving waiters,
+abort only when all waiters cancel, discard late abandoned values, and permit a
+clean retry. Provider and hybrid-fetch timeouts remain distinct.
+
+**Proof and residual:** Fail-first 58 pass / 10 intended fail; corrected focused
+68/68; full 1,668/1,668; typecheck/lint/build/Playwright/controller; frozen
+independent `VERIFIED`, confidence 0.97, including late-loader and DNS
+cancellation/timeout probes. A deployed host/proxy may not report every browser
+disconnect through `Request.signal`, and already-accepted provider work cannot
+be retroactively unbilled. Native DNS may continue internally after the caller
+stops awaiting it, although no later transport can start. Those are readiness
+residuals, not evidence that the local wiring defect remains.
 
 ---
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (1 issue)
-- RR-105: Legacy browser cancellation is not wired into provider work
+### Open (0 issues)
+- None.
 
 ### Needs Investigation (6 issues)
 - RR-014: Mean core-leader coverage critically low
@@ -4319,9 +4336,10 @@ remains unverified until that source-level contract exists.
 - RR-091: Same-page related-product price can satisfy autonomous card binding
 - RR-104: Paid admission/cache defect is locally contained; deployment-wide enforcement remains unproven
 
-### Fixed (97 issues)
+### Fixed (98 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
-RR-038 through RR-044, RR-046 through RR-090, and RR-092 through RR-103
+RR-038 through RR-044, RR-046 through RR-090, RR-092 through RR-103, and
+RR-105
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -4330,16 +4348,14 @@ RR-038 through RR-044, RR-046 through RR-090, and RR-092 through RR-103
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-105** — wire and prove legacy cancellation now that the local admission
-   boundary is explicit.
-2. **RR-104** — retain the one-realm correction, then bind deployment-wide
+1. **RR-104** — retain the one-realm correction, then bind deployment-wide
    ownership and multi-instance/load enforcement when tracked infrastructure is
    available. Do not relabel the local limiter as distributed authority.
-3. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
+2. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
    final overlap. Recovery stays default-off and R7A stays blocked.
-4. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
+3. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
    but varied by model, while Tapo appeared raw and died in normalization.
-5. **RR-091** — PR-007 corrected the shared reachable exact-price boundaries,
+4. **RR-091** — PR-007 corrected the shared reachable exact-price boundaries,
    but the original membership-only adapter remains isolated and unsafe. Keep
    it unpromoted; any future routing proposal requires directly observed exact
    transactional binding and a new independent review.

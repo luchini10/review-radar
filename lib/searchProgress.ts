@@ -6,7 +6,7 @@
 
 export const SEARCH_PROGRESS_ID_HEADER = "x-reviewradar-progress";
 
-export type SearchProgressStatus = "running" | "done" | "error";
+export type SearchProgressStatus = "running" | "done" | "error" | "cancelled";
 
 // The polling endpoint answers "unknown" for ids it has no record of
 // (expired, never registered, or a pipeline that does not report progress).

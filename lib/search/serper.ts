@@ -32,6 +32,11 @@ import { classifyProductTypeMatch } from "../productTypeMatch.ts";
 import { assessProductPriceTrust } from "../productPriceTrust.ts";
 import { parseBestMoneyAmount } from "../priceParsing.ts";
 import { getPremiumCap } from "../requirementExtraction.ts";
+import {
+  forwardAbortSignal,
+  rethrowIfRequestCancelled,
+  throwIfRequestCancelled,
+} from "../requestCancellation.ts";
 import { selectedSmartFeatureSearchText } from "../smartFeatureSelection.ts";
 import { sourceUrlPathIdentityText } from "../sourceUrlIdentity.ts";
 import {
@@ -79,6 +84,10 @@ export const MAX_RESULTS_PER_QUERY = 10;
 export const MAX_NORMALIZED_RESULTS_PER_QUERY = 20;
 export const DEFAULT_MAX_RAW_CANDIDATES = 75;
 export const MAX_ORGANIC_IDENTITY_RESOLUTION_QUERIES = 4;
+
+export type SerperExecutionOptions = {
+  signal?: AbortSignal;
+};
 
 const SERPER_BASE_URL = "https://google.serper.dev";
 const SERPER_ENDPOINT_PATHS = {
@@ -676,12 +685,14 @@ function serperEndpointForSearchType(searchType: string | undefined) {
 async function runWithConcurrency<T>(
   tasks: Array<() => Promise<T>>,
   concurrency: number,
+  signal?: AbortSignal,
 ) {
   const results: T[] = [];
   let nextIndex = 0;
 
   async function worker() {
     while (nextIndex < tasks.length) {
+      throwIfRequestCancelled(signal);
       const currentIndex = nextIndex;
       nextIndex += 1;
       results[currentIndex] = await tasks[currentIndex]();
@@ -2262,7 +2273,9 @@ export function sanitizeSerperQuery(query: string) {
 async function fetchSerper(
   params: Record<string, string>,
   context?: SearchQueryContext,
+  executionOptions: SerperExecutionOptions = {},
 ): Promise<SerperFetchResult | null> {
+  throwIfRequestCancelled(executionOptions.signal);
   const apiKey = process.env.SERPER_API_KEY;
   const originalQuery = params.q || params.query;
   const query = sanitizeSerperQuery(originalQuery || "");
@@ -2300,7 +2313,7 @@ async function fetchSerper(
   };
   const requestBody = JSON.stringify(sanitizedRequestBody);
   let attemptNumber = 0;
-  const response = await getCachedOrLoad(cacheKey, SERPER_CACHE_TTL_MS, async () => {
+  const response = await getCachedOrLoad(cacheKey, SERPER_CACHE_TTL_MS, async (sharedSignal) => {
     const requestHeaders = {
       "Content-Type": "application/json",
       "X-API-KEY": apiKey,
@@ -2313,8 +2326,13 @@ async function fetchSerper(
       verticalFallbackStatus: "none" | "fallback_initial" | "fallback_retry",
     ) => {
       reserveSearchAttempt(configuredSerperAttemptCeiling());
+      throwIfRequestCancelled(sharedSignal);
       attemptNumber += 1;
       const controller = new AbortController();
+      const removeSharedAbortListener = forwardAbortSignal(
+        sharedSignal,
+        controller,
+      );
       const timeout = setTimeout(
         () => controller.abort(),
         SERPER_REQUEST_TIMEOUT_MS,
@@ -2329,6 +2347,7 @@ async function fetchSerper(
           body: requestBody,
           signal: controller.signal,
         });
+        throwIfRequestCancelled(sharedSignal);
         responseStatus = response.status;
 
         if (!response.ok) {
@@ -2336,6 +2355,7 @@ async function fetchSerper(
         }
 
         const data = (await response.json()) as SerperResponse;
+        throwIfRequestCancelled(sharedSignal);
 
         if (data.error) {
           throw new Error("Serper returned an error.");
@@ -2383,9 +2403,11 @@ async function fetchSerper(
           results: [],
           error: responseStatus === null ? "request_error" : "serper_error",
         });
+        rethrowIfRequestCancelled(error, sharedSignal);
         throw error;
       } finally {
         clearTimeout(timeout);
+        removeSharedAbortListener();
       }
     };
     const runRequestWithRetry = async (url: string, fallback: boolean) => {
@@ -2396,6 +2418,7 @@ async function fetchSerper(
           fallback ? "fallback_initial" : "none",
         );
       } catch (error) {
+        rethrowIfRequestCancelled(error, sharedSignal);
         if (!isTransientSerperError(error)) {
           throw error;
         }
@@ -2416,6 +2439,7 @@ async function fetchSerper(
     try {
       return await runRequestWithRetry(endpoint, false);
     } catch (error) {
+      rethrowIfRequestCancelled(error, sharedSignal);
       if (isSerperAttemptCeilingError(error)) {
         throw error;
       }
@@ -2432,7 +2456,10 @@ async function fetchSerper(
     }
   }, (outcome) => {
     recordSearchCacheLookup({ queryId, cacheKey, outcome });
+  }, {
+    signal: executionOptions.signal,
   });
+  throwIfRequestCancelled(executionOptions.signal);
   const results = serperResultDigests(response);
   recordLogicalSearchResults(queryId, results);
 
@@ -2480,14 +2507,17 @@ export async function searchSerperShoppingWithDiagnostics(
   category = query,
   options: SerperShoppingNormalizationOptions = {},
   context?: SearchQueryContext,
+  executionOptions: SerperExecutionOptions = {},
 ): Promise<SerperShoppingSearchResult> {
   try {
+    throwIfRequestCancelled(executionOptions.signal);
     const response = await fetchSerper(
       {
         q: query,
         searchType: "shopping",
       },
       context,
+      executionOptions,
     );
 
     if (!response) {
@@ -2533,6 +2563,7 @@ export async function searchSerperShoppingWithDiagnostics(
       })),
     };
   } catch (error) {
+    rethrowIfRequestCancelled(error, executionOptions.signal);
     logSerperWarning("Shopping search skipped after an API error.", {
       query,
       message: error instanceof Error ? error.message : "Unknown error",
@@ -2563,12 +2594,14 @@ export async function searchSerperShopping(
   query: string,
   category = query,
   context?: SearchQueryContext,
+  executionOptions: SerperExecutionOptions = {},
 ): Promise<RawProductCandidate[]> {
   const result = await searchSerperShoppingWithDiagnostics(
     query,
     category,
     {},
     context,
+    executionOptions,
   );
 
   return result.candidates;
@@ -2578,14 +2611,17 @@ export async function searchSerperOrganic(
   query: string,
   category = query,
   context?: SearchQueryContext,
+  executionOptions: SerperExecutionOptions = {},
 ): Promise<RawProductCandidate[]> {
   try {
+    throwIfRequestCancelled(executionOptions.signal);
     const response = await fetchSerper(
       {
         q: query,
         searchType: "organic",
       },
       context,
+      executionOptions,
     );
 
     if (!response) {
@@ -2604,6 +2640,7 @@ export async function searchSerperOrganic(
     );
     return normalization.candidates;
   } catch (error) {
+    rethrowIfRequestCancelled(error, executionOptions.signal);
     logSerperWarning("Organic search skipped after an API error.", {
       query,
       message: error instanceof Error ? error.message : "Unknown error",
@@ -2617,14 +2654,17 @@ export async function searchSerperDirectRetailer(
   query: string,
   category = query,
   context?: SearchQueryContext,
+  executionOptions: SerperExecutionOptions = {},
 ): Promise<RawProductCandidate[]> {
   try {
+    throwIfRequestCancelled(executionOptions.signal);
     const response = await fetchSerper(
       {
         q: `${directRetailerSiteQuery(engine)} ${query}`,
         searchType: `direct-${engine}`,
       },
       context,
+      executionOptions,
     );
 
     if (!response) {
@@ -2647,6 +2687,7 @@ export async function searchSerperDirectRetailer(
     );
     return normalization.candidates;
   } catch (error) {
+    rethrowIfRequestCancelled(error, executionOptions.signal);
     logSerperWarning("Direct retailer search skipped after an API error.", {
       engine,
       query,
@@ -2660,20 +2701,24 @@ export async function searchSerperOrganicEvidence(
   query: string,
   maxResults = 6,
   context?: SearchQueryContext,
+  executionOptions: SerperExecutionOptions = {},
 ): Promise<SerperEvidenceSource[]> {
   try {
+    throwIfRequestCancelled(executionOptions.signal);
     const response = await fetchSerper(
       {
         q: query,
         searchType: "evidence",
       },
       context,
+      executionOptions,
     );
 
     return response
       ? normalizeSerperOrganicSources(response.response, maxResults)
       : [];
   } catch (error) {
+    rethrowIfRequestCancelled(error, executionOptions.signal);
     logSerperWarning("Evidence search skipped after an API error.", {
       query,
       message: error instanceof Error ? error.message : "Unknown error",
@@ -2711,14 +2756,17 @@ export async function searchSerperImageEvidence(
   query: string,
   maxResults = 6,
   context?: SearchQueryContext,
+  executionOptions: SerperExecutionOptions = {},
 ): Promise<SerperEvidenceSource[]> {
   try {
+    throwIfRequestCancelled(executionOptions.signal);
     const response = await fetchSerper(
       {
         q: query,
         searchType: "images",
       },
       context,
+      executionOptions,
     );
 
     if (!response) {
@@ -2731,6 +2779,7 @@ export async function searchSerperImageEvidence(
       ? imageSources
       : normalizeSerperOrganicSources(response.response, maxResults);
   } catch (error) {
+    rethrowIfRequestCancelled(error, executionOptions.signal);
     logSerperWarning("Image evidence search skipped after an API error.", {
       query,
       message: error instanceof Error ? error.message : "Unknown error",
@@ -2743,14 +2792,17 @@ export async function searchSerperVideoEvidence(
   query: string,
   maxResults = 6,
   context?: SearchQueryContext,
+  executionOptions: SerperExecutionOptions = {},
 ): Promise<SerperEvidenceSource[]> {
   try {
+    throwIfRequestCancelled(executionOptions.signal);
     const response = await fetchSerper(
       {
         q: query,
         searchType: "videos",
       },
       context,
+      executionOptions,
     );
 
     if (!response) {
@@ -2763,6 +2815,7 @@ export async function searchSerperVideoEvidence(
       ? videoSources
       : normalizeSerperOrganicSources(response.response, maxResults);
   } catch (error) {
+    rethrowIfRequestCancelled(error, executionOptions.signal);
     logSerperWarning("Video evidence search skipped after an API error.", {
       query,
       message: error instanceof Error ? error.message : "Unknown error",
@@ -3967,8 +4020,18 @@ function minimumUsefulCandidateTarget(depth: SearchDepthConfig["depth"]) {
 export async function searchSerperForProducts(
   searchInput: SearchPlan | string[],
   inputOrCategory?: RecommendationApiRequest | string,
-  category = "Product",
+  categoryOrExecutionOptions: string | SerperExecutionOptions = "Product",
+  executionOptions: SerperExecutionOptions = {},
 ): Promise<SerperSearchResult> {
+  const category =
+    typeof categoryOrExecutionOptions === "string"
+      ? categoryOrExecutionOptions
+      : "Product";
+  const requestExecutionOptions =
+    typeof categoryOrExecutionOptions === "string"
+      ? executionOptions
+      : categoryOrExecutionOptions;
+  throwIfRequestCancelled(requestExecutionOptions.signal);
   const input =
     typeof inputOrCategory === "object"
       ? inputOrCategory
@@ -4095,13 +4158,16 @@ export async function searchSerperForProducts(
   }
 
   async function runDiscoveryTasks(tasks: DiscoveryTask[]) {
+    throwIfRequestCancelled(requestExecutionOptions.signal);
     const taskResults = await runWithConcurrency(
       tasks.map((task) => async () => ({
         candidates: await task.run(),
         source: task.source,
       })),
       serperConcurrency(searchConfig.depth),
+      requestExecutionOptions.signal,
     );
+    throwIfRequestCancelled(requestExecutionOptions.signal);
 
     for (const result of taskResults) {
       if (result.source === "shopping") {
@@ -4127,6 +4193,7 @@ export async function searchSerperForProducts(
       baseCategoryName,
       {},
       context,
+      requestExecutionOptions,
     );
     identityResolutionLeads.push(...result.identityResolutionLeads);
     return result.candidates;
@@ -4204,6 +4271,7 @@ export async function searchSerperForProducts(
                 query.query,
                 baseCategoryName,
                 planQueryContext(query),
+                requestExecutionOptions,
               ),
             source: "retailerDomain",
           });
@@ -4255,6 +4323,7 @@ export async function searchSerperForProducts(
             `${query.query} product page`,
             baseCategoryName,
             planQueryContext(query),
+            requestExecutionOptions,
           ),
         source: "organic",
       });
@@ -4320,9 +4389,10 @@ export async function searchSerperForProducts(
               purpose: "evidence",
               originalQuery: query,
               sourceDetail: "best_of_source_query",
-            });
+            }, requestExecutionOptions);
           }),
         serperConcurrency(searchConfig.depth),
+        requestExecutionOptions.signal,
       )
     ).flat();
 
@@ -4411,6 +4481,7 @@ export async function searchSerperForProducts(
                 originalQuery: directBaseQuery,
                 sourceDetail: finalQuery,
               },
+              requestExecutionOptions,
             ),
           source: "directRetailer" as const,
         };
@@ -4635,8 +4706,9 @@ function identityResolutionSourceDetail(lead: OrganicIdentityResolutionLead) {
 export async function resolveSerperIdentityLeads(
   result: SerperSearchResult,
   input: RecommendationApiRequest,
-  options: { enabled?: boolean } = {},
+  options: { enabled?: boolean; signal?: AbortSignal } = {},
 ): Promise<SerperSearchResult> {
+  throwIfRequestCancelled(options.signal);
   const enabled =
     options.enabled ??
     process.env.REVIEW_RADAR_ORGANIC_IDENTITY_RESOLUTION === "on";
@@ -4746,12 +4818,15 @@ export async function resolveSerperIdentityLeads(
           parentQueryId: lead.parentQueryId,
           sourceDetail: identityResolutionSourceDetail(lead),
         },
+        { signal: options.signal },
       ),
       lead,
       query,
     })),
     Math.min(2, observedWithinCap.length),
+    options.signal,
   );
+  throwIfRequestCancelled(options.signal);
   const normalizedResolutionCandidates = queryResults.flatMap(
     ({ candidates }) => candidates,
   );

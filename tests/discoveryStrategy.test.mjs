@@ -229,6 +229,65 @@ describe("AI discovery strategy helpers", () => {
     assert.equal(fallback.buyingRubric, undefined);
   });
 
+  it("propagates request cancellation instead of converting it to planning fallbacks", async () => {
+    const strategyController = new AbortController();
+    let strategySignal;
+    const strategyClient = {
+      responses: {
+        create: async (_input, options) => {
+          strategySignal = options?.signal;
+          strategyController.abort();
+          return { output_text: JSON.stringify(strategy) };
+        },
+      },
+    };
+
+    await assert.rejects(
+      () =>
+        buildOpenAIDiscoveryStrategy({
+          client: strategyClient,
+          input: shoeRequest(),
+          model: "test-model",
+          signal: strategyController.signal,
+        }),
+      (error) => error?.name === "RequestCancelledError",
+    );
+    assert.equal(strategySignal, strategyController.signal);
+
+    const gapController = new AbortController();
+    let gapSignal;
+    const gapClient = {
+      responses: {
+        create: async (_input, options) => {
+          gapSignal = options?.signal;
+          gapController.abort();
+          return {
+            output_text: JSON.stringify({
+              followUpQueries: [],
+              missingExpectedProducts: [],
+              notes: [],
+              suspiciousCandidateNames: [],
+            }),
+          };
+        },
+      },
+    };
+
+    await assert.rejects(
+      () =>
+        buildOpenAIDiscoveryGapCheck({
+          candidates: [rawCandidate()],
+          client: gapClient,
+          input: shoeRequest(),
+          model: "test-model",
+          signal: gapController.signal,
+          strategy,
+        }),
+      (error) => error?.name === "RequestCancelledError",
+    );
+    assert.equal(gapSignal, gapController.signal);
+  });
+
   it("pins both planning calls only when REVIEW_RADAR_PINNED_PLANNING is on", async () => {
     const previous = process.env.REVIEW_RADAR_PINNED_PLANNING;
     const requests = [];

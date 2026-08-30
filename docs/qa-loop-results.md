@@ -14902,3 +14902,164 @@ live-fixture path text quoted inside tracked records. No fixture filesystem
 entry, content, hash, metadata, parse, or modification was accessed. This
 filename-only documentation output does not contaminate the code evidence, but
 it is a repeated process deviation and must not recur.
+
+## Agent Loop Run - 2026-08-30T08:52:17.521Z
+
+- **run id:** agent-loop-2026-08-30T08-51-32-073Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust
+- **parallel:** 1
+- **worker result files checked:** 1
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3247ms |
+| lint | Passed | 11021ms |
+| unit tests | Passed | 29251ms |
+| deterministic eval pipeline | Passed | 547ms |
+| tracked offline benchmark | Passed | 698ms |
+
+### Executed Benchmark Cases
+
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T08-51-32-073Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T08:52:53.776Z
+
+- **run id:** agent-loop-2026-08-30T08-52-05-714Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust, broad-mainstream, requirement-units, wrong-category, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3629ms |
+| lint | Passed | 11398ms |
+| unit tests | Passed | 28053ms |
+| deterministic eval pipeline | Passed | 472ms |
+| tracked offline benchmark | Passed | 602ms |
+
+### Executed Benchmark Cases
+
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T08-52-05-714Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## 🟧 Codex Production Readiness PR-6D — legacy request cancellation (2026-08-30)
+
+**Objective and frozen base:** close only PR-024/RR-105 from PR-6C commit
+`0b7e714d44ad02186f614729325c5e97ed37371d`. The browser already cancelled its
+own fetch, but the active synchronous route did not connect that event to
+provider, Serper, verification, enrichment, fallback, or shared-loader work.
+This phase was zero-provider, zero-network, and did not change flags, routing,
+admission ceilings, identity/evidence rules, deployment, or release authority.
+
+**Fail-first:** five focused files ran 68 tests before the correction: 58 passed
+and exactly 10 new regressions failed. The failures proved one-waiter and all-
+waiter cache semantics, external citation cancellation classification, Serper
+retry/fallback suppression, planning fallback suppression, and five route
+cancellation positions: pre-admission, planning, post-Serper, final-provider
+fallback, and enrichment.
+
+**Generalized correction:** `RequestCancelledError` is the typed request-owned
+cancellation class. The route checks `Request.signal` before and after awaited
+stages, forwards it through planning/final/narration OpenAI calls, Serper,
+citation/page verification, evidence, assets, requirement rescue, and source
+upgrade, then returns HTTP 499 with `The request was cancelled.` and progress
+status `cancelled`. Cancellation cannot enter planning, Serper, AI-error,
+search, or narration fallbacks. Independent provider/page-fetch timeouts retain
+their prior classification and retry semantics.
+
+The shared asynchronous cache now owns one loader controller plus a waiter
+count. A cancelled waiter detaches without aborting a loader used by another;
+the last cancelled waiter removes and aborts the loader. A late non-cooperative
+result cannot fill the abandoned entry, and a clean replacement may start
+immediately. Loader rejection always has an observer.
+
+**Corrected verification:**
+
+| Check | Result |
+| --- | --- |
+| Five focused cancellation/cache/search files | 68/68 passed |
+| Complete unit suite | 1,668/1,668 across 227 suites |
+| TypeScript | Passed |
+| ESLint | 0 errors; same 3 pre-existing warnings |
+| Production build | Passed |
+| Playwright | 17/17 passed |
+| Deterministic controller | `agent-loop-2026-08-30T08-52-05-714Z`; five partitions passed |
+| Tracked benchmark | 10/10 cases; 29/29 invariants |
+| Diff check | Passed |
+| Generated `next-env.d.ts` | Restored to Git blob `9edff1c7cacb3bfac9a1eadcf6f51eaa99565e38` |
+
+**Frozen source/test manifest (SHA-256):**
+
+```text
+aec13ef63b9d7bd806129154c6a3ffb88e6a0847773b6246938e68ce454b559b  app/api/recommendations/route.ts
+ade93abe85418ae5075e283b42cae4038da55653059797f6905dbfac38b2b27b  lib/requestCancellation.ts
+8071e33b5ce5e30b7efbe367688a648e71f71889bf5480064b9f11b4e3f3dc83  lib/cache.ts
+9fb686246e009b5750e40d1fced5491daf39d462fcb452681280dc74735ade8b  lib/autonomousFactVerifier.ts
+7ae8e2ff1d007d3b4d086ed50091201ae3097f52fb49ca7ddabeb4514a8af89d  lib/citationUrlVerification.ts
+b2862b76f4ac1018892dee96d113373266b24bf91f6b7274bbf5114fa24a7d9f  lib/discoveryStrategy.ts
+caba785fbdd293be753f00bc0d9da4cf6c99fcf16302a344b363b07c2768b28b  lib/search/serper.ts
+fda243e9e4b281693908c2b14500454eab6d973d4869131365f21cd751ffc545  lib/productEvidence.ts
+57534e1f07c0b0effb945bc27df118a74fa8dd30d069e3e4dbb8160c8cddb3f2  lib/productAssets.ts
+76d6dfd4ce3fa96cc1f9c68b708b4861f2d67bd513022cf2373fadd0520de602  lib/requirementEvidenceRescue.ts
+349ccddedfea4db39d61448352994595a7438d626247196a61953cc96dc826db  lib/errorMessages.ts
+4b7279eea81c195b69150d0003550d574ae8b81eb1e29af282a73777d75dc104  lib/searchProgress.ts
+8e1a05f451e5d0b674f0d33841e52289a3e4861fb7e73502356c5fa29cc62a7e  tests/cache.test.mjs
+11c09cf6b5d3282d36828245cf10c53ce63f7ec4a9812c435923f6d7e768c933  tests/citationUrlVerification.test.mjs
+ffa86cdcfc8432971bea3c32603ca9130fab1906a160b344e9f134274f95d63c  tests/discoveryImprovements.test.mjs
+6892eea6283de71d71e3a87f10bcd677b322fd7f57abd61fcea0a2fcf589b01c  tests/discoveryStrategy.test.mjs
+34af2dbd9a50082d38caeae1be026c7dcfd13218a40458dfc811788760ebf7fc  tests/recommendationApiContract.test.mjs
+```
+
+**Independent review:** the reviewer authenticated the PR-6C base, complete
+source/test scope, and all 17 hashes before and after review. Focused 68/68 and
+typecheck passed. A non-cooperative late-loader probe proved no stale cache fill
+and clean replacement; a DNS probe proved request cancellation starts no
+transport while an independent deadline remains `request_timeout`. Exact
+verdict: `VERIFIED`; no material defect; confidence 0.97.
+
+**Residuals and authority:** a deployed Next.js host/proxy may not deliver every
+browser disconnect through `Request.signal`; local abort cannot retroactively
+unbill upstream work already accepted; native DNS may continue internally but
+cannot proceed to transport. No live cancellation was attempted. One prohibited
+broad status command printed spent live-fixture filenames, and a later
+overbroad tracked-document search produced truncated output that may have shown
+historical path text. No fixture entry/content/hash/metadata/parse/modification
+occurred. RR-105 is Fixed locally; ReviewRadar remains `NOT READY`. PR-6E is a
+read-only production-operations/dependency baseline, not authorization for
+credentials, package changes, infrastructure, live traffic, deployment,
+release, or push.

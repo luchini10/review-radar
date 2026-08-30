@@ -1728,3 +1728,38 @@ No production pipeline or API contract changed in Phase 6A.
   terminal proof at lease expiry remain residual. PR-024/RR-105 cancellation is
   next; ReviewRadar remains NOT READY, with no flag/deployment/release/push
   authority changed.
+
+## 42. PR-6D legacy request cancellation (2026-08-30)
+
+- **Root cause:** browser cancellation stopped the client fetch only. The active
+  synchronous server path had independent timeouts but no request-owned signal
+  through provider, Serper, page verification, enrichment, fallback, or shared
+  loader boundaries.
+- **Server contract:** `RequestCancelledError` represents request cancellation.
+  The legacy route checks `Request.signal` before and after awaited stages,
+  passes it through planning/final/narration OpenAI calls and every reachable
+  Serper/fetch/enrichment consumer, returns HTTP 499 with the safe message `The
+  request was cancelled.`, and records progress as `cancelled`. Cancellation
+  cannot start a retry, vertical fallback, AI-error fallback, search fallback,
+  or narration fallback.
+- **Timeout contract:** request cancellation and independent hard timeouts are
+  different outcomes. Serper uses a fresh timeout controller for each attempt;
+  only an ordinary transient timeout can retry. Hybrid fetch forwards the
+  request signal across DNS and transport while preserving `request_timeout`
+  for its own deadline.
+- **Shared-loader contract:** each cache caller is a waiter. Cancelling one
+  waiter does not abort a loader still needed by another. When every waiter
+  cancels, the loader is aborted, the in-flight entry is removed immediately,
+  a late non-cooperative result cannot enter the cache, and a new request can
+  retry cleanly.
+- **Proof:** fail-first 58 pass / 10 intended fail; final focused 68/68; full
+  1,668/1,668 across 227 suites; typecheck, production build, Playwright 17/17,
+  lint, diff, deterministic eval, all five partitions, 10/10 benchmark cases,
+  and 29/29 invariants passed. Frozen independent review returned `VERIFIED`,
+  confidence 0.97, after late-loader and DNS cancellation/timeout probes.
+- **State and limit:** RR-105 is Fixed at the local source boundary. Offline
+  proof cannot guarantee that every deployed host/proxy delivers a browser
+  disconnect through `Request.signal`, cannot reverse billing for upstream work
+  already accepted, and cannot stop native DNS internals already running. No
+  provider/network/live cancellation ran. ReviewRadar remains NOT READY; no
+  flag, deployment, release, or push authority changed.

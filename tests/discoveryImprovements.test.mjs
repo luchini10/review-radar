@@ -325,6 +325,50 @@ describe("Serper coverage improvements", () => {
       else process.env.SERPER_API_KEY = originalKey;
     }
   });
+
+  it("propagates request cancellation through Serper without retrying or falling back", async () => {
+    const originalKey = process.env.SERPER_API_KEY;
+    const originalFetch = global.fetch;
+    const controller = new AbortController();
+    const seenSignals = [];
+    let fetchCalls = 0;
+
+    clearCacheForTests();
+    process.env.SERPER_API_KEY = "test-serper-key";
+    global.fetch = async (_url, init) => {
+      fetchCalls += 1;
+      seenSignals.push(init.signal);
+      controller.abort();
+      return new Response(JSON.stringify({ shopping: [] }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    };
+
+    try {
+      const input = { query: "sleeper sofa under $700" };
+      const requestWithRequirements = {
+        ...input,
+        extractedRequirements: extractStructuredRequirements(input),
+      };
+      const plan = generateSearchPlan(requestWithRequirements);
+
+      await assert.rejects(
+        () =>
+          searchSerperForProducts(plan, requestWithRequirements, {
+            signal: controller.signal,
+          }),
+        (error) => error?.name === "RequestCancelledError",
+      );
+      assert.equal(fetchCalls, 1);
+      assert.equal(seenSignals[0]?.aborted, true);
+    } finally {
+      clearCacheForTests();
+      global.fetch = originalFetch;
+      if (originalKey === undefined) delete process.env.SERPER_API_KEY;
+      else process.env.SERPER_API_KEY = originalKey;
+    }
+  });
 });
 
 describe("duplicate handling with model awareness", () => {

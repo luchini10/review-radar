@@ -76,6 +76,11 @@ import {
   type PaidRequestAdmission,
 } from "../../../lib/paidRequestAdmission.ts";
 import {
+  isRequestCancelledError,
+  rethrowIfRequestCancelled,
+  throwIfRequestCancelled,
+} from "../../../lib/requestCancellation.ts";
+import {
   augmentSearchPlanWithDiscoveryStrategy,
   buildOpenAIDiscoveryGapCheck,
   buildOpenAIDiscoveryStrategy,
@@ -449,6 +454,13 @@ function errorResponse(
   );
 }
 
+function requestCancelledResponse() {
+  return NextResponse.json(
+    { error: USER_ERROR_MESSAGES.requestCancelled },
+    { status: 499 },
+  );
+}
+
 function logDiscoveryDebug(stats: Record<string, unknown>) {
   if (
     process.env.NODE_ENV === "production" ||
@@ -606,6 +618,7 @@ async function buildServerSearchFallbackResult(options: {
   requestWithRequirements: RecommendationApiRequest;
   routeDependencies: RecommendationRouteDependencies;
   serperRecommendations: ProductRecommendation[];
+  signal?: AbortSignal;
 }) {
   const {
     baseResult,
@@ -614,7 +627,9 @@ async function buildServerSearchFallbackResult(options: {
     requestWithRequirements,
     routeDependencies,
     serperRecommendations,
+    signal,
   } = options;
+  throwIfRequestCancelled(signal);
   const searchCandidateResult = buildSearchCandidateFallbackResult(
     baseResult,
     serperRecommendations,
@@ -625,18 +640,25 @@ async function buildServerSearchFallbackResult(options: {
       searchCandidateResult,
       {
         maxProducts: maxEnrichedProducts,
+        signal,
       },
     );
+  throwIfRequestCancelled(signal);
   const fallbackAssetResult =
-    await routeDependencies.enrichProductAssets(fallbackEvidenceResult);
+    await routeDependencies.enrichProductAssets(fallbackEvidenceResult, {
+      signal,
+    });
+  throwIfRequestCancelled(signal);
   const fallbackVerifiedFactsResult =
     await routeDependencies.verifyMissingRequirementEvidence(
       fallbackAssetResult,
       requestWithRequirements,
       {
         maxProducts: maxEnrichedProducts,
+        signal,
       },
     );
+  throwIfRequestCancelled(signal);
   const fallbackRevalidatedResult = revalidateResultCandidates(
     fallbackVerifiedFactsResult,
     requestWithRequirements,
@@ -766,6 +788,7 @@ async function handleRecommendationPostWithContext(
   includeDebug: boolean,
   progressId: string | null = null,
 ) {
+  const signal = request.signal;
   const timing = createRequestTiming(
     progressId
       ? (label) => reportSearchProgressStage(progressId, label)
@@ -775,6 +798,15 @@ async function handleRecommendationPostWithContext(
     ...debug,
     timing: timing.summary(),
   });
+  const measureCancellable = async <T>(
+    label: string,
+    operation: () => Promise<T>,
+  ) => {
+    throwIfRequestCancelled(signal);
+    const value = await timing.measure(label, operation);
+    throwIfRequestCancelled(signal);
+    return value;
+  };
   let debugStage = "read_request";
   // Captured after Serper discovery so a later AI-research failure can still
   // return verified search candidates instead of a hard error.
@@ -785,7 +817,7 @@ async function handleRecommendationPostWithContext(
     serperResult: Awaited<ReturnType<typeof searchSerperForProducts>>;
   } | null = null;
 
-  const bodyResult = await timing.measure("read_request_body", () =>
+  const bodyResult = await measureCancellable("read_request_body", () =>
     readBoundedJsonBody(request),
   );
   if (!bodyResult.ok) {
@@ -831,7 +863,7 @@ async function handleRecommendationPostWithContext(
 
   try {
     debugStage = "openai_request";
-    const client = await timing.measure("create_openai_client", () =>
+    const client = await measureCancellable("create_openai_client", () =>
       routeDependencies.createOpenAIClient(apiKey),
     );
     const helperResearchModel = resolvePlanningModel(helperModel());
@@ -859,7 +891,7 @@ async function handleRecommendationPostWithContext(
     }
 
     debugStage = "discovery_strategy";
-    const discoveryStrategy = await timing.measure(
+    const discoveryStrategy = await measureCancellable(
       "openai_discovery_strategy",
       () =>
         buildOpenAIDiscoveryStrategy({
@@ -867,6 +899,7 @@ async function handleRecommendationPostWithContext(
           input: requestWithRequirements,
           model: helperResearchModel,
           observer: includeDebug ? searchPlanObservabilityObserver : undefined,
+          signal,
         }),
     );
     const searchPlan = timing.measureSync(
@@ -889,17 +922,18 @@ async function handleRecommendationPostWithContext(
     };
 
     debugStage = "serper_discovery";
-    let serperResult = await timing.measure(
+    let serperResult = await measureCancellable(
       "serper_discovery",
       () =>
         routeDependencies.searchSerperForProducts(
           searchPlan,
           requestWithStrategy,
+          { signal },
         ),
     );
 
     debugStage = "discovery_gap_check";
-    const discoveryGapCheck = await timing.measure(
+    const discoveryGapCheck = await measureCancellable(
       "openai_discovery_gap_check",
       () =>
         buildOpenAIDiscoveryGapCheck({
@@ -908,6 +942,7 @@ async function handleRecommendationPostWithContext(
           input: requestWithStrategy,
           model: helperResearchModel,
           observer: includeDebug ? searchPlanObservabilityObserver : undefined,
+          signal,
           strategy: discoveryStrategy,
         }),
     );
@@ -926,7 +961,7 @@ async function handleRecommendationPostWithContext(
 
     if (runFollowUpDiscovery) {
       const followUpSerperResult =
-        await timing.measure(
+        await measureCancellable(
           "serper_follow_up_discovery",
           () =>
             routeDependencies.searchSerperForProducts(
@@ -935,6 +970,7 @@ async function handleRecommendationPostWithContext(
                 ...requestWithStrategy,
                 discoveryGapCheck,
               },
+              { signal },
             ),
         );
 
@@ -945,12 +981,13 @@ async function handleRecommendationPostWithContext(
     }
 
     debugStage = "bounded_organic_identity_resolution";
-    serperResult = await timing.measure(
+    serperResult = await measureCancellable(
       "bounded_organic_identity_resolution",
       () =>
         routeDependencies.resolveSerperIdentityLeads(
           serperResult,
           requestWithStrategy,
+          { signal },
         ),
     );
 
@@ -986,7 +1023,7 @@ async function handleRecommendationPostWithContext(
         }),
     );
 
-    const response = await timing.measure("openai_final_research", () =>
+    const response = await measureCancellable("openai_final_research", () =>
       client.responses.create({
         model: finalSynthesisModel,
         max_output_tokens: 16000,
@@ -1022,6 +1059,7 @@ async function handleRecommendationPostWithContext(
           },
         },
       }, {
+        signal,
         timeout: SERVER_RESEARCH_TIMEOUT_MS,
       }),
     );
@@ -1127,11 +1165,13 @@ async function handleRecommendationPostWithContext(
       getProductPageCitationVerificationResult(candidateResult, verifiedUrls);
 
     if (productPagesNeedingVerification.recommendations.length > 0) {
-      const reachableProductPageUrls = await timing.measure(
+      const reachableProductPageUrls = await measureCancellable(
         "collect_reachable_product_page_urls",
         () =>
           routeDependencies.collectReachableCitationUrls(
             productPagesNeedingVerification,
+            undefined,
+            { signal },
           ),
       );
 
@@ -1140,8 +1180,12 @@ async function handleRecommendationPostWithContext(
 
     if (verifiedUrls.size === 0) {
       verifiedUrls =
-        await timing.measure("collect_reachable_citation_urls", () =>
-          routeDependencies.collectReachableCitationUrls(candidateResult),
+        await measureCancellable("collect_reachable_citation_urls", () =>
+          routeDependencies.collectReachableCitationUrls(
+            candidateResult,
+            undefined,
+            { signal },
+          ),
         );
     }
 
@@ -1187,7 +1231,7 @@ async function handleRecommendationPostWithContext(
         serperRecommendations.length > 0
       ) {
         debugStage = "search_candidate_fallback";
-        const fallbackOutcome = await timing.measure(
+        const fallbackOutcome = await measureCancellable(
           "search_candidate_fallback",
           () =>
             buildServerSearchFallbackResult({
@@ -1197,6 +1241,7 @@ async function handleRecommendationPostWithContext(
               requestWithRequirements: requestWithDiscovery,
               routeDependencies,
               serperRecommendations,
+              signal,
             }),
         );
         const prioritizedFallbackResult = fallbackOutcome.result;
@@ -1291,7 +1336,7 @@ async function handleRecommendationPostWithContext(
         }),
     );
     const evidenceEnrichedResult =
-      await timing.measure(
+      await measureCancellable(
         "review_evidence_enrichment",
         () =>
           routeDependencies.enrichResultWithReviewEvidence(
@@ -1302,15 +1347,18 @@ async function handleRecommendationPostWithContext(
               fullTrustLadderProductCount:
                 verificationBudget.fullTrustLadderProductCount,
               maxProducts: verificationBudget.maxProducts,
+              signal,
             },
           ),
       );
     const assetEnrichedResult =
-      await timing.measure("product_asset_enrichment", () =>
-        routeDependencies.enrichProductAssets(evidenceEnrichedResult),
+      await measureCancellable("product_asset_enrichment", () =>
+        routeDependencies.enrichProductAssets(evidenceEnrichedResult, {
+          signal,
+        }),
       );
     const verifiedFactsResult =
-      await timing.measure(
+      await measureCancellable(
         "missing_requirement_evidence_rescue",
         () =>
           routeDependencies.verifyMissingRequirementEvidence(
@@ -1320,6 +1368,7 @@ async function handleRecommendationPostWithContext(
               concurrency: verificationBudget.concurrency,
               maxFactsPerProduct: verificationBudget.maxFactsPerProduct,
               maxProducts: verificationBudget.maxProducts,
+              signal,
             },
           ),
       );
@@ -1337,7 +1386,7 @@ async function handleRecommendationPostWithContext(
       })
     ) {
       debugStage = "no_exact_sanity_fallback";
-      const sanityFallbackOutcome = await timing.measure(
+      const sanityFallbackOutcome = await measureCancellable(
         "no_exact_sanity_fallback",
         () =>
           buildServerSearchFallbackResult({
@@ -1353,6 +1402,7 @@ async function handleRecommendationPostWithContext(
             requestWithRequirements: requestWithDiscovery,
             routeDependencies,
             serperRecommendations,
+            signal,
           }),
       );
       const sanityFallbackResult = sanityFallbackOutcome.result;
@@ -1407,12 +1457,13 @@ async function handleRecommendationPostWithContext(
       sourceUpgradeDecisions = [],
       sourceUpgradeTraces,
     } =
-      await timing.measure(
+      await measureCancellable(
         "source_quality_upgrade",
         () =>
           routeDependencies.upgradeWeakSourceEvidence(
             revalidatedAssetResult,
             requestWithDiscovery,
+            { signal },
           ),
       );
     const { result: enrichedResult, finalSelectionTrace } = timing.measureSync(
@@ -1563,7 +1614,7 @@ async function handleRecommendationPostWithContext(
 
     if (process.env.REVIEW_RADAR_LLM_NARRATION?.trim() === "on") {
       try {
-        const narrationResponse = await timing.measure(
+        const narrationResponse = await measureCancellable(
           "openai_narration",
           () =>
             client.responses.create(
@@ -1589,7 +1640,7 @@ async function handleRecommendationPostWithContext(
                   },
                 },
               },
-              { timeout: 60000 },
+              { signal, timeout: 60000 },
             ),
         );
         const narration = timing.measureSync("parse_narration", () =>
@@ -1602,6 +1653,7 @@ async function handleRecommendationPostWithContext(
           );
         }
       } catch (error) {
+        rethrowIfRequestCancelled(error, signal);
         logDiscoveryDebug(withTimingDebug({
           stage: "llm_narration_failed",
           error: summarizeCaughtError(error),
@@ -1639,6 +1691,10 @@ async function handleRecommendationPostWithContext(
         : { result: userVisibleResult },
     );
   } catch (error) {
+    if (isRequestCancelledError(error) || signal.aborted) {
+      return requestCancelledResponse();
+    }
+
     if (error instanceof MissingOpenAISdkError) {
       return NextResponse.json(
         { error: USER_ERROR_MESSAGES.missingApiKey },
@@ -1660,7 +1716,7 @@ async function handleRecommendationPostWithContext(
             ),
         );
         const stats = activeFallbackContext.serperResult.stats;
-        const fallbackOutcome = await timing.measure(
+        const fallbackOutcome = await measureCancellable(
           "ai_error_search_fallback",
           () =>
             buildServerSearchFallbackResult({
@@ -1696,6 +1752,7 @@ async function handleRecommendationPostWithContext(
               requestWithRequirements: activeFallbackContext.requestWithRequirements,
               routeDependencies,
               serperRecommendations,
+              signal,
             }),
         );
         const prioritizedFallbackResult = fallbackOutcome.result;
@@ -1758,6 +1815,7 @@ async function handleRecommendationPostWithContext(
           );
         }
       } catch (fallbackError) {
+        rethrowIfRequestCancelled(fallbackError, signal);
         logDiscoveryDebug(withTimingDebug({
           stage: "ai_error_search_fallback_failed",
           error: summarizeCaughtError(fallbackError),
@@ -1808,10 +1866,23 @@ async function handleRecommendationPost(
       ),
     );
     if (progressId) {
-      completeSearchProgress(progressId, response.ok ? "done" : "error");
+      completeSearchProgress(
+        progressId,
+        response.status === 499
+          ? "cancelled"
+          : response.ok
+            ? "done"
+            : "error",
+      );
     }
     return response;
   } catch (error) {
+    if (isRequestCancelledError(error) || request.signal.aborted) {
+      if (progressId) {
+        completeSearchProgress(progressId, "cancelled");
+      }
+      return requestCancelledResponse();
+    }
     if (progressId) {
       completeSearchProgress(progressId, "error");
     }

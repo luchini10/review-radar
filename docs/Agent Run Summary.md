@@ -2961,3 +2961,44 @@ RR-104 is contained/narrowed, not Fixed. ReviewRadar remains NOT READY. PR-6D/
 PR-024 should next propagate cancellation through the synchronous legacy paid
 path. Recommended reasoning: High for cancellation/timeout ownership; Medium
 for bounded signal plumbing and deterministic tests.
+
+## Codex Run - 2026-08-30 PR-6D legacy request cancellation
+
+**Goal and assessment:** close RR-105 by stopping future legacy paid/network
+work after server-request cancellation without weakening independent timeouts,
+PR-6C admission, or shared-cache correctness. The generalized correction was
+one typed request-owned signal across the full reachable path, not isolated
+abort patches or a UI-only state change.
+
+**Change:** the route checks `Request.signal` around every awaited stage, passes
+it into planning/final/narration OpenAI calls, Serper, citation/page fetching,
+evidence, assets, requirement rescue, and source upgrade, and maps cancellation
+to HTTP 499 plus progress status `cancelled`. Fallbacks and Serper retries rethrow
+cancellation. Cache entries now track waiters so one caller may detach without
+aborting shared work; all-waiter cancellation removes and aborts the loader,
+blocks late cache fill, and permits clean retry.
+
+**Fail-first and review:** the initial five-file wall passed 58 and failed the
+10 intended cancellation regressions. The corrected wall passed 68/68. A
+frozen independent review authenticated the PR-6C base and all 17 source/test
+hashes, reran the focused wall and typecheck, and passed non-cooperative
+late-loader and DNS cancellation-versus-timeout probes. Exact verdict:
+`VERIFIED`, no material defect, confidence 0.97.
+
+**Verification:** complete suite 1,668/1,668 across 227 suites; typecheck;
+production build; Playwright 17/17; diff; and lint with zero errors/the same
+three old warnings. Controller `agent-loop-2026-08-30T08-52-05-714Z` passed the
+complete wall, deterministic eval, all five serial partitions, 10/10 cases,
+and 29/29 invariants. Generated `next-env.d.ts` was restored exactly.
+
+**Live calls, limits, and next step:** zero. No credential, manual environment-
+file, provider, product-data service, network, or live-fixture content was
+accessed. Offline proof cannot authenticate hosted disconnect delivery, reverse
+billing for provider work already accepted, or halt native DNS internals after
+the caller stops awaiting them. One prohibited broad status printed spent
+fixture filenames; a later overbroad tracked-document search was truncated and
+may have surfaced historical path text. No fixture entry/content/metadata was
+accessed. RR-105 is Fixed locally; ReviewRadar remains NOT READY. PR-6E should
+next run a read-only production-operations/dependency baseline. Recommended
+reasoning: High for security/config/deployment trust boundaries; Medium for
+bounded repository inventory and deterministic diagnostics.

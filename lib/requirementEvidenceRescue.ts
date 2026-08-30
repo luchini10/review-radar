@@ -43,6 +43,7 @@ import {
   hasExplicitVariantConflict,
 } from "./productEvidenceIdentity.ts";
 import { resolveBestProductImage } from "./productImageResolver.ts";
+import { throwIfRequestCancelled } from "./requestCancellation.ts";
 
 type VerifiableFactKind = "color" | "dimension" | "feature" | "price" | "spec";
 
@@ -66,6 +67,7 @@ type VerificationOptions = {
   concurrency?: number;
   maxFactsPerProduct?: number;
   maxProducts?: number;
+  signal?: AbortSignal;
 };
 
 const MAX_PRODUCTS_TO_VERIFY = 8;
@@ -1493,7 +1495,9 @@ async function applyCandidateEvidence(
   product: ProductRecommendation,
   fact: MissingFact,
   category: string,
+  signal?: AbortSignal,
 ) {
+  throwIfRequestCancelled(signal);
   const rescueOrigin = fact.rubricUnknownTopic
     ? "rubric_fact_rescue"
     : "requirement_fact_rescue";
@@ -1508,6 +1512,7 @@ async function applyCandidateEvidence(
       originalQuery: rescueQuery,
       sourceDetail: fact.label,
     },
+    { signal },
   );
   let updated = product;
   let metadata: ProductMetadata = updated.metadata || { offers: [] };
@@ -1612,7 +1617,9 @@ async function applyOrganicEvidence(
   product: ProductRecommendation,
   fact: MissingFact,
   query: string,
+  signal?: AbortSignal,
 ) {
+  throwIfRequestCancelled(signal);
   if (fact.kind === "price") {
     return product;
   }
@@ -1625,7 +1632,7 @@ async function applyOrganicEvidence(
     purpose: "requirement_rescue",
     originalQuery: query,
     sourceDetail: fact.label,
-  });
+  }, { signal });
   let updated = product;
 
   for (const source of sources) {
@@ -1775,12 +1782,23 @@ async function rescueProduct(
   let updated = product;
 
   for (const { fact, query } of [...requirementQueries, ...rubricQueries]) {
+    throwIfRequestCancelled(options.signal);
     if (fact.kind === "spec" && !specSearchEnabled()) {
       continue;
     }
 
-    updated = await applyCandidateEvidence(updated, fact, category);
-    updated = await applyOrganicEvidence(updated, fact, query);
+    updated = await applyCandidateEvidence(
+      updated,
+      fact,
+      category,
+      options.signal,
+    );
+    updated = await applyOrganicEvidence(
+      updated,
+      fact,
+      query,
+      options.signal,
+    );
   }
 
   return updated;
@@ -2032,7 +2050,9 @@ async function upgradeProductSource(
   category: string,
   searchFn: SourceUpgradeSearchFn,
   decision: SourceUpgradeDecision,
+  signal?: AbortSignal,
 ): Promise<{ product: ProductRecommendation; trace: SourceUpgradeTrace }> {
+  throwIfRequestCancelled(signal);
   const cleanedProductName = stripRetailDisplayFiller(product.name);
   const detectedBrand = sourceUpgradeBrand(product);
   const modelIdentityPhrase = buildModelIdentityQuery(
@@ -2161,6 +2181,7 @@ async function upgradeProductSource(
   };
 
   const primaryResult = sourceUpgradeSearchResult(await searchFn(query, category));
+  throwIfRequestCancelled(signal);
   trace.primarySearchDiagnostics = primaryResult.diagnostics;
   trace.primaryCandidatesReturned = primaryResult.candidates.length;
   trace.primaryOutcome = evaluateCandidates(primaryResult.candidates, "primary");
@@ -2184,6 +2205,7 @@ async function upgradeProductSource(
     const fallbackResult = sourceUpgradeSearchResult(
       await searchFn(fallbackQuery, category),
     );
+    throwIfRequestCancelled(signal);
     trace.fallbackSearchDiagnostics = fallbackResult.diagnostics;
     trace.fallbackCandidatesReturned = fallbackResult.candidates.length;
     trace.fallbackOutcome = evaluateCandidates(
@@ -2214,8 +2236,10 @@ export async function upgradeWeakSourceEvidence<T extends RecommendationResult>(
   options: {
     concurrency?: number;
     searchFn?: SourceUpgradeSearchFn;
+    signal?: AbortSignal;
   } = {},
 ): Promise<SourceUpgradeOutcome<T>> {
+  throwIfRequestCancelled(options.signal);
   const category = baseProductCategoryFromQuery(requirements.query);
   const searchFn =
     options.searchFn ??
@@ -2228,7 +2252,7 @@ export async function upgradeWeakSourceEvidence<T extends RecommendationResult>(
         purpose: "source_upgrade",
         originalQuery: query,
         sourceDetail: searchCategory,
-      }));
+      }, { signal: options.signal }));
 
   const seen = new Set<string>();
   const allCandidates = [
@@ -2291,8 +2315,16 @@ export async function upgradeWeakSourceEvidence<T extends RecommendationResult>(
   const upgrades = await mapWithConcurrency(
     selectedCandidates,
     options.concurrency ?? 1,
-    ({ decision, product }) =>
-      upgradeProductSource(product, category, searchFn, decision),
+    ({ decision, product }) => {
+      throwIfRequestCancelled(options.signal);
+      return upgradeProductSource(
+        product,
+        category,
+        searchFn,
+        decision,
+        options.signal,
+      );
+    },
   );
 
   const replacements = new Map<string, ProductRecommendation>();
@@ -2330,12 +2362,16 @@ export async function verifyMissingRequirementEvidence<T extends RecommendationR
   requirements: RecommendationApiRequest,
   options: VerificationOptions = {},
 ): Promise<T> {
+  throwIfRequestCancelled(options.signal);
   const maxProducts = options.maxProducts ?? MAX_PRODUCTS_TO_VERIFY;
   const productsToVerify = productsNeedingVerification(result).slice(0, maxProducts);
   const rescuedProducts = await mapWithConcurrency(
     productsToVerify,
     options.concurrency ?? 1,
-    (product) => rescueProduct(product, requirements, options),
+    (product) => {
+      throwIfRequestCancelled(options.signal);
+      return rescueProduct(product, requirements, options);
+    },
   );
   const replacements = new Map<string, ProductRecommendation>();
 

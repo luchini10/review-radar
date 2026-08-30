@@ -14,6 +14,10 @@ import type {
 import { baseProductCategoryFromQuery } from "./productCategory.ts";
 import { parseMaxBudgetAmount } from "./priceParsing.ts";
 import type { SearchPlanObservabilityObserver } from "./searchObservabilityTypes.ts";
+import {
+  rethrowIfRequestCancelled,
+  throwIfRequestCancelled,
+} from "./requestCancellation.ts";
 
 const DISCOVERY_STRATEGY_TIMEOUT_MS = 25000;
 const DISCOVERY_GAP_TIMEOUT_MS = 20000;
@@ -433,10 +437,12 @@ export async function buildOpenAIDiscoveryStrategy(options: {
   input: RecommendationApiRequest;
   model: string;
   observer?: SearchPlanObservabilityObserver;
+  signal?: AbortSignal;
 }) {
-  const { client, input, model, observer } = options;
+  const { client, input, model, observer, signal } = options;
 
   try {
+    throwIfRequestCancelled(signal);
     const response = await client.responses.create(
       {
         ...planningRequestControls(model),
@@ -462,9 +468,11 @@ export async function buildOpenAIDiscoveryStrategy(options: {
         },
       },
       {
+        signal,
         timeout: DISCOVERY_STRATEGY_TIMEOUT_MS,
       },
     );
+    throwIfRequestCancelled(signal);
     const text = outputText(response);
     const parsed = discoveryStrategySchema.safeParse(JSON.parse(text));
 
@@ -474,7 +482,8 @@ export async function buildOpenAIDiscoveryStrategy(options: {
     }
 
     return emptyDiscoveryStrategy();
-  } catch {
+  } catch (error) {
+    rethrowIfRequestCancelled(error, signal);
     return emptyDiscoveryStrategy();
   }
 }
@@ -593,15 +602,17 @@ export async function buildOpenAIDiscoveryGapCheck(options: {
   input: RecommendationApiRequest;
   model: string;
   observer?: SearchPlanObservabilityObserver;
+  signal?: AbortSignal;
   strategy: ProductDiscoveryStrategy;
 }) {
-  const { candidates, client, input, model, observer, strategy } = options;
+  const { candidates, client, input, model, observer, signal, strategy } = options;
 
   if (strategy.expectedProducts.length === 0) {
     return emptyGapCheck();
   }
 
   try {
+    throwIfRequestCancelled(signal);
     const response = await client.responses.create(
       {
         ...planningRequestControls(model),
@@ -641,9 +652,11 @@ export async function buildOpenAIDiscoveryGapCheck(options: {
         },
       },
       {
+        signal,
         timeout: DISCOVERY_GAP_TIMEOUT_MS,
       },
     );
+    throwIfRequestCancelled(signal);
     const text = outputText(response);
     const parsed = discoveryGapCheckSchema.safeParse(JSON.parse(text));
 
@@ -667,7 +680,8 @@ export async function buildOpenAIDiscoveryGapCheck(options: {
         suspiciousCandidateNames: normalized.suspiciousCandidateNames,
       });
     }
-  } catch {
+  } catch (error) {
+    rethrowIfRequestCancelled(error, signal);
     // Fall through to the deterministic check.
   }
 

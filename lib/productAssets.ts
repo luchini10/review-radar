@@ -34,6 +34,7 @@ import {
 } from "./productIdentity.ts";
 import { sourceUrlPathIdentitySegments } from "./sourceUrlIdentity.ts";
 import { mapWithConcurrency } from "./recommendationPerformance.ts";
+import { throwIfRequestCancelled } from "./requestCancellation.ts";
 
 type ProductAssetRecommendation = {
   category?: string;
@@ -61,6 +62,7 @@ type ProductAssetResult = {
 type ProductAssetEnrichmentOptions = {
   concurrency?: number;
   fetchDependencies?: HybridFetchDependencies;
+  signal?: AbortSignal;
 };
 
 type ProductPageFetchResult = {
@@ -309,21 +311,24 @@ function shouldClearRequestedProductUrl(result: HybridFetchResult) {
 async function fetchText(
   url: string,
   fetchDependencies: HybridFetchDependencies,
+  signal?: AbortSignal,
 ): Promise<ProductPageFetchResult> {
+  throwIfRequestCancelled(signal);
   const cacheKey = productPageCacheKey(url);
 
-  return getCachedOrLoad(cacheKey, PRODUCT_ASSET_CACHE_TTL_MS, async () => {
+  return getCachedOrLoad(cacheKey, PRODUCT_ASSET_CACHE_TTL_MS, async (sharedSignal) => {
     const result = await fetchHybridSource(url, fetchDependencies, {
       allowedContentTypes: PRODUCT_ASSET_CONTENT_TYPES,
       maxBytes: PRODUCT_ASSET_MAX_BYTES,
       maxRedirects: PRODUCT_ASSET_MAX_REDIRECTS,
       timeoutMs: PRODUCT_ASSET_TIMEOUT_MS,
+      signal: sharedSignal,
     });
     return {
       clearRequestedUrl: shouldClearRequestedProductUrl(result),
       html: result.ok ? result.body : "",
     };
-  });
+  }, undefined, { signal });
 }
 
 function productPageCacheKey(url: string) {
@@ -349,18 +354,24 @@ function productImageContext(
 async function getImageFromCitationPages(
   product: ProductAssetRecommendation,
   fetchDependencies: HybridFetchDependencies,
+  signal?: AbortSignal,
 ): Promise<ProductImageResolution> {
   const citationUrls = product.citations?.map((citation) => citation.url) || [];
   const rejected: ProductImageResolution["rejected"] = [];
 
   for (const citationUrl of citationUrls.slice(0, 3)) {
+    throwIfRequestCancelled(signal);
     const normalizedCitationUrl = normalizeUrl(citationUrl);
 
     if (!normalizedCitationUrl || !isHttpUrl(normalizedCitationUrl)) {
       continue;
     }
 
-    const { html } = await fetchText(normalizedCitationUrl, fetchDependencies);
+    const { html } = await fetchText(
+      normalizedCitationUrl,
+      fetchDependencies,
+      signal,
+    );
 
     if (!html || !productNameHasPageMatch(product.name, html)) {
       continue;
@@ -394,17 +405,23 @@ async function getImageFromCitationPages(
 async function getProductPageFromCitationPages(
   product: ProductAssetRecommendation,
   fetchDependencies: HybridFetchDependencies,
+  signal?: AbortSignal,
 ) {
   const citationUrls = product.citations?.map((citation) => citation.url) || [];
 
   for (const citationUrl of citationUrls.slice(0, 3)) {
+    throwIfRequestCancelled(signal);
     const normalizedCitationUrl = normalizeUrl(citationUrl);
 
     if (!normalizedCitationUrl || !isHttpUrl(normalizedCitationUrl)) {
       continue;
     }
 
-    const { html } = await fetchText(normalizedCitationUrl, fetchDependencies);
+    const { html } = await fetchText(
+      normalizedCitationUrl,
+      fetchDependencies,
+      signal,
+    );
 
     if (!html || !productNameHasPageMatch(product.name, html)) {
       continue;
@@ -444,7 +461,9 @@ async function getProductPageFromCitationPages(
 
 async function getImageFromSerper(
   product: ProductAssetRecommendation,
+  signal?: AbortSignal,
 ): Promise<ProductImageResolution> {
+  throwIfRequestCancelled(signal);
   const sources = await searchSerperImageEvidence(
     `${product.name} product image`,
     3,
@@ -455,6 +474,7 @@ async function getImageFromSerper(
       originalQuery: `${product.name} product image`,
       sourceDetail: product.name,
     },
+    { signal },
   );
   const candidates: ProductImageCandidate[] = sources.flatMap((source) => {
     const match = source.snippet.match(/\bImage:\s*(https?:\/\/\S+)/i);
@@ -1310,7 +1330,9 @@ function withVerifiedOfferPriceFields<T extends ProductAssetRecommendation>(
 async function getVerifiedProductAssets(
   product: ProductAssetRecommendation,
   fetchDependencies: HybridFetchDependencies,
+  signal?: AbortSignal,
 ) {
+  throwIfRequestCancelled(signal);
   const proposedProductPageUrl = normalizeUrl(product.product_page_url);
   const proposedPathIdentitySegments = sourceUrlPathIdentitySegments(
     proposedProductPageUrl,
@@ -1328,7 +1350,11 @@ async function getVerifiedProductAssets(
     : proposedProductPageUrl;
   const citationProductPageUrl = primaryProductPageUrl
     ? ""
-    : await getProductPageFromCitationPages(product, fetchDependencies);
+    : await getProductPageFromCitationPages(
+        product,
+        fetchDependencies,
+        signal,
+      );
   const productPageUrl =
     primaryProductPageUrl || citationProductPageUrl;
   const initialImageCandidates: ProductImageCandidate[] = [];
@@ -1367,7 +1393,7 @@ async function getVerifiedProductAssets(
   );
   const citationImageResolution =
     imageResolution.confidence === "none"
-      ? await getImageFromCitationPages(product, fetchDependencies)
+      ? await getImageFromCitationPages(product, fetchDependencies, signal)
       : {
           confidence: "none" as const,
           rejected: [],
@@ -1377,7 +1403,7 @@ async function getVerifiedProductAssets(
   const serperImageResolution =
     imageResolution.confidence === "none" &&
     citationImageResolution.confidence === "none"
-      ? await getImageFromSerper(product)
+      ? await getImageFromSerper(product, signal)
       : {
           confidence: "none" as const,
           rejected: [],
@@ -1433,7 +1459,11 @@ async function getVerifiedProductAssets(
     };
   }
 
-  const pageFetch = await fetchText(productPageUrl, fetchDependencies);
+  const pageFetch = await fetchText(
+    productPageUrl,
+    fetchDependencies,
+    signal,
+  );
   const html = pageFetch.html;
   const likelyProductPage = looksLikeProductPageUrl(
     productPageUrl,
@@ -1587,6 +1617,7 @@ export async function enrichProductAssets<T extends ProductAssetResult>(
   result: T,
   options: ProductAssetEnrichmentOptions = {},
 ): Promise<T> {
+  throwIfRequestCancelled(options.signal);
   const fetchDependencies =
     options.fetchDependencies ?? LIVE_HYBRID_FETCH_DEPENDENCIES;
   const requestedConcurrency = options.concurrency ?? PRODUCT_ASSET_CONCURRENCY;
@@ -1599,9 +1630,11 @@ export async function enrichProductAssets<T extends ProductAssetResult>(
 
   async function enrichProducts(products: ProductAssetRecommendation[]) {
     return mapWithConcurrency(products, concurrency, async (recommendation) => {
+      throwIfRequestCancelled(options.signal);
       const assets = await getVerifiedProductAssets(
         recommendation,
         fetchDependencies,
+        options.signal,
       );
 
       return withVerifiedOfferPriceFields({

@@ -1,7 +1,7 @@
 # Agent Loop Report
 
-Generated: 2026-08-30T08:04:13.148Z
-Run: agent-loop-2026-08-30T08-03-27-675Z
+Generated: 2026-08-30T08:52:53.777Z
+Run: agent-loop-2026-08-30T08-52-05-714Z
 Status: passed
 Mode: deterministic
 Parallel workers: 1
@@ -9,27 +9,27 @@ Change log: not updated; no meaningful change note was provided
 
 ## Batches Run
 
-- broad-mainstream: Completed (agent-loop-2026-08-30T08-03-27-675Z.worker-broad-mainstream-2026-08-30T08-03-27-942Z.json)
-- requirement-units: Completed (agent-loop-2026-08-30T08-03-27-675Z.worker-requirement-units-2026-08-30T08-03-28-588Z.json)
-- wrong-category: Completed (agent-loop-2026-08-30T08-03-27-675Z.worker-wrong-category-2026-08-30T08-03-29-291Z.json)
-- price-trust: Completed (agent-loop-2026-08-30T08-03-27-675Z.worker-price-trust-2026-08-30T08-03-30-012Z.json)
-- non-product-pages: Completed (agent-loop-2026-08-30T08-03-27-675Z.worker-non-product-pages-2026-08-30T08-03-30-693Z.json)
+- price-trust: Completed (agent-loop-2026-08-30T08-52-05-714Z.worker-price-trust-2026-08-30T08-52-06-011Z.json)
+- broad-mainstream: Completed (agent-loop-2026-08-30T08-52-05-714Z.worker-broad-mainstream-2026-08-30T08-52-06-752Z.json)
+- requirement-units: Completed (agent-loop-2026-08-30T08-52-05-714Z.worker-requirement-units-2026-08-30T08-52-07-496Z.json)
+- wrong-category: Completed (agent-loop-2026-08-30T08-52-05-714Z.worker-wrong-category-2026-08-30T08-52-08-319Z.json)
+- non-product-pages: Completed (agent-loop-2026-08-30T08-52-05-714Z.worker-non-product-pages-2026-08-30T08-52-09-122Z.json)
 
 ## Executed Benchmark Cases
 
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
 - broad-mainstream: broad-running-mainstream, duplicate-monitor-family
 - requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
 - wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
-- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
 - non-product-pages: non-product-espresso-review
 
 ## Checks
 
-- typecheck: Passed (3382ms)
-- lint: Passed (10788ms)
-- unit tests: Passed (26626ms)
-- deterministic eval pipeline: Passed (596ms)
-- tracked offline benchmark: Passed (581ms)
+- typecheck: Passed (3629ms)
+- lint: Passed (11398ms)
+- unit tests: Passed (28053ms)
+- deterministic eval pipeline: Passed (472ms)
+- tracked offline benchmark: Passed (602ms)
 
 ## Top Repeated Root Causes
 
@@ -52,8 +52,8 @@ Change log: not updated; no meaningful change note was provided
 
 ## Current Worker Files
 
-- agent-loop-2026-08-30T08-03-27-675Z.worker-broad-mainstream-2026-08-30T08-03-27-942Z.json
-- agent-loop-2026-08-30T08-03-27-675Z.worker-requirement-units-2026-08-30T08-03-28-588Z.json
-- agent-loop-2026-08-30T08-03-27-675Z.worker-wrong-category-2026-08-30T08-03-29-291Z.json
-- agent-loop-2026-08-30T08-03-27-675Z.worker-price-trust-2026-08-30T08-03-30-012Z.json
-- agent-loop-2026-08-30T08-03-27-675Z.worker-non-product-pages-2026-08-30T08-03-30-693Z.json
+- agent-loop-2026-08-30T08-52-05-714Z.worker-price-trust-2026-08-30T08-52-06-011Z.json
+- agent-loop-2026-08-30T08-52-05-714Z.worker-broad-mainstream-2026-08-30T08-52-06-752Z.json
+- agent-loop-2026-08-30T08-52-05-714Z.worker-requirement-units-2026-08-30T08-52-07-496Z.json
+- agent-loop-2026-08-30T08-52-05-714Z.worker-wrong-category-2026-08-30T08-52-08-319Z.json
+- agent-loop-2026-08-30T08-52-05-714Z.worker-non-product-pages-2026-08-30T08-52-09-122Z.json

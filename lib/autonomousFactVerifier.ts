@@ -7,6 +7,11 @@ import {
   isModelIdentityMeasurementToken,
   modelIdentityRelation,
 } from "./productIdentity.ts";
+import {
+  forwardAbortSignal,
+  RequestCancelledError,
+  throwIfRequestCancelled,
+} from "./requestCancellation.ts";
 
 export const AUTONOMOUS_FACT_VERIFIER_VERSION = "oai-hybrid-verifier-v3";
 
@@ -173,6 +178,7 @@ export type HybridFetchConfig = {
   maxBytes: number;
   timeoutMs: number;
   allowedContentTypes: readonly string[];
+  signal?: AbortSignal;
 };
 
 export const DEFAULT_HYBRID_FETCH_CONFIG: HybridFetchConfig = {
@@ -1212,10 +1218,12 @@ export async function fetchHybridSource(
   dependencies: HybridFetchDependencies,
   config: HybridFetchConfig = DEFAULT_HYBRID_FETCH_CONFIG,
 ): Promise<HybridFetchResult> {
+  throwIfRequestCancelled(config.signal);
   let currentValue = requestedUrl;
   let redirects = 0;
   let attempts = 0;
   while (true) {
+    throwIfRequestCancelled(config.signal);
     const parsed = parseSafeHybridUrl(currentValue);
     if (typeof parsed === "string") {
       return failure({
@@ -1226,6 +1234,10 @@ export async function fetchHybridSource(
       });
     }
     const hopController = new AbortController();
+    const removeRequestAbortListener = forwardAbortSignal(
+      config.signal,
+      hopController,
+    );
     const hopTimeout = setTimeout(
       () => hopController.abort(),
       config.timeoutMs,
@@ -1272,6 +1284,9 @@ export async function fetchHybridSource(
         hopController.signal,
       );
     } catch (error) {
+      if (config.signal?.aborted) {
+        throw new RequestCancelledError(error);
+      }
       let reason: HybridFetchFailureReason;
       if (
         hopController.signal.aborted ||
@@ -1297,6 +1312,7 @@ export async function fetchHybridSource(
       });
     } finally {
       clearTimeout(hopTimeout);
+      removeRequestAbortListener();
     }
     const location = headerValue(response.headers, "location");
     if ([301, 302, 303, 307, 308].includes(response.status)) {

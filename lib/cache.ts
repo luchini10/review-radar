@@ -1,4 +1,8 @@
 import { createHash } from "node:crypto";
+import {
+  RequestCancelledError,
+  throwIfRequestCancelled,
+} from "./requestCancellation.ts";
 
 type CacheEntry<T> = {
   expiresAt: number;
@@ -6,6 +10,17 @@ type CacheEntry<T> = {
 };
 
 type CacheLookupObserver = (outcome: "hit" | "miss") => void;
+
+type CacheLoadOptions = {
+  signal?: AbortSignal;
+};
+
+type InFlightEntry<T> = {
+  controller: AbortController;
+  promise: Promise<T>;
+  settled: boolean;
+  waiters: number;
+};
 
 export const SHARED_CACHE_MAX_ENTRIES = 256;
 
@@ -36,7 +51,7 @@ export function createBoundedAsyncCache({
     throw new Error("Cache entry ceiling must be a positive safe integer.");
   }
   const values = new Map<string, CacheEntry<unknown>>();
-  const inFlight = new Map<string, Promise<unknown>>();
+  const inFlight = new Map<string, InFlightEntry<unknown>>();
 
   const sweepExpired = (currentTime: number) => {
     for (const [key, entry] of values) {
@@ -47,9 +62,11 @@ export function createBoundedAsyncCache({
   const getCachedOrLoad = async <T>(
     key: string,
     ttlMs: number,
-    loader: () => Promise<T>,
+    loader: (signal: AbortSignal) => Promise<T>,
     onLookup?: CacheLookupObserver,
+    options: CacheLoadOptions = {},
   ): Promise<T> => {
+    throwIfRequestCancelled(options.signal);
     const currentTime = now();
     sweepExpired(currentTime);
     const existing = values.get(key) as CacheEntry<T> | undefined;
@@ -60,39 +77,92 @@ export function createBoundedAsyncCache({
       return existing.value;
     }
 
-    const pending = inFlight.get(key) as Promise<T> | undefined;
+    let pending = inFlight.get(key) as InFlightEntry<T> | undefined;
     if (pending) {
       onLookup?.("hit");
-      return pending;
+    } else {
+      onLookup?.("miss");
+      const controller = new AbortController();
+      const entry: InFlightEntry<T> = {
+        controller,
+        promise: null as unknown as Promise<T>,
+        settled: false,
+        waiters: 0,
+      };
+      entry.promise = (Promise.resolve()
+        .then(() => loader(controller.signal))
+        .then((value) => {
+          const storedAt = now();
+          if (
+            inFlight.get(key) === entry &&
+            !controller.signal.aborted &&
+            Number.isFinite(ttlMs) &&
+            ttlMs > 0
+          ) {
+            sweepExpired(storedAt);
+            while (values.size >= maxEntries) {
+              const oldestKey = values.keys().next().value;
+              if (oldestKey === undefined) break;
+              values.delete(oldestKey);
+            }
+            values.set(key, {
+              expiresAt: storedAt + ttlMs,
+              value,
+            });
+          }
+          return value;
+        })
+        .finally(() => {
+          entry.settled = true;
+          if (inFlight.get(key) === entry) inFlight.delete(key);
+        })) as Promise<T>;
+      // A cancelled final waiter stops awaiting this promise. Keep a rejection
+      // handler attached so a cooperative loader abort cannot become unhandled.
+      void entry.promise.catch(() => {});
+      inFlight.set(key, entry);
+      pending = entry;
     }
 
-    onLookup?.("miss");
-    const loadPromise = Promise.resolve().then(loader);
-    inFlight.set(key, loadPromise);
-    try {
-      const value = await loadPromise;
-      const storedAt = now();
-      if (Number.isFinite(ttlMs) && ttlMs > 0) {
-        sweepExpired(storedAt);
-        while (values.size >= maxEntries) {
-          const oldestKey = values.keys().next().value;
-          if (oldestKey === undefined) break;
-          values.delete(oldestKey);
+    const entry = pending;
+    entry.waiters += 1;
+
+    return new Promise<T>((resolve, reject) => {
+      let finished = false;
+      const finish = (callback: () => void) => {
+        if (finished) return;
+        finished = true;
+        options.signal?.removeEventListener("abort", onAbort);
+        entry.waiters = Math.max(0, entry.waiters - 1);
+
+        if (entry.waiters === 0 && !entry.settled) {
+          if (inFlight.get(key) === entry) inFlight.delete(key);
+          entry.controller.abort();
         }
-        values.set(key, {
-          expiresAt: storedAt + ttlMs,
-          value,
-        });
+
+        callback();
+      };
+      const onAbort = () =>
+        finish(() => reject(new RequestCancelledError(options.signal?.reason)));
+
+      options.signal?.addEventListener("abort", onAbort, { once: true });
+      if (options.signal?.aborted) {
+        onAbort();
+        return;
       }
-      return value;
-    } finally {
-      if (inFlight.get(key) === loadPromise) inFlight.delete(key);
-    }
+
+      entry.promise.then(
+        (value) => finish(() => resolve(value)),
+        (error) => finish(() => reject(error)),
+      );
+    });
   };
 
   return {
     clear() {
       values.clear();
+      for (const entry of inFlight.values()) {
+        entry.controller.abort();
+      }
       inFlight.clear();
     },
     getCachedOrLoad,
@@ -114,10 +184,11 @@ const cache = createBoundedAsyncCache();
 export function getCachedOrLoad<T>(
   key: string,
   ttlMs: number,
-  loader: () => Promise<T>,
+  loader: (signal: AbortSignal) => Promise<T>,
   onLookup?: CacheLookupObserver,
+  options: CacheLoadOptions = {},
 ) {
-  return cache.getCachedOrLoad(key, ttlMs, loader, onLookup);
+  return cache.getCachedOrLoad(key, ttlMs, loader, onLookup, options);
 }
 
 export function cacheStats() {

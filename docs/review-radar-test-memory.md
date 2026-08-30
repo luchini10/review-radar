@@ -3493,3 +3493,40 @@ a known conservative undercount.
   two corrective review rounds. Zero provider, network, credential, or live-
   fixture content was used. RR-104 remains contained/narrowed until distributed
   deployment authority is separately proven.
+
+## Legacy request-cancellation and shared-waiter contract - 2026-08-30
+
+- Represent active request cancellation with `RequestCancelledError`; do not
+  infer it from every provider `AbortError`. Check the request signal before and
+  after each awaited route stage and rethrow cancellation from every fallback.
+  The public legacy response is HTTP 499 with `The request was cancelled.`, and
+  progress status is `cancelled`.
+- Pass the request signal through planning/final/narration OpenAI calls, Serper
+  discovery/identity work, citation and product-page verification, evidence,
+  assets, requirement rescue, and source upgrade. A cancelled request must not
+  start another paid stage, retry Serper, switch verticals, or build an AI/search
+  fallback.
+- Preserve independent deadlines. Serper attempts each own a timeout controller
+  linked to the shared loader signal; a request cancellation is terminal while
+  an ordinary transient timeout retains existing retry behavior. Hybrid DNS and
+  transport use one per-hop deadline linked to the request signal; external
+  cancellation throws, while the local deadline remains `request_timeout`.
+- Model an in-flight cache entry as one shared loader plus explicit waiters.
+  One cancelled waiter detaches only itself. Abort the loader after the last
+  waiter cancels, remove that entry before aborting, never cache its late value,
+  and permit a replacement load immediately. Attach a rejection observer so a
+  cooperative loader abort cannot become unhandled.
+- Keep regressions for pre-abort before admission/client creation, in-flight
+  planning cancellation, between-stage suppression, final-provider fallback
+  suppression, enrichment suppression, Serper no-retry/no-fallback, external
+  fetch cancellation versus timeout, one-waiter survival, all-waiter abort,
+  late non-cooperative completion, clean retry, stable response/progress, and
+  permit cleanup.
+- PR-6D proof: fail-first 58 pass / 10 intended fail; final focused 68/68; full
+  1,668/1,668 across 227 suites; typecheck/lint/build/Playwright 17/17;
+  controller `agent-loop-2026-08-30T08-52-05-714Z` with all five partitions,
+  10/10 cases, and 29/29 invariants; independent late-loader and DNS probes;
+  exact `VERIFIED`, confidence 0.97. Offline proof does not authenticate hosted
+  disconnect delivery or reversal of already-accepted provider billing. Native
+  DNS may continue internally after cancellation, although no later transport
+  can start.

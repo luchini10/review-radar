@@ -54,6 +54,107 @@ describe("shared async cache bounds", () => {
     clearCacheForTests();
   });
 
+  it("lets one cancelled waiter leave a shared load running for another waiter", async () => {
+    const bounded = createBoundedAsyncCache({ maxEntries: 2 });
+    const firstController = new AbortController();
+    const secondController = new AbortController();
+    let loaderCalls = 0;
+    let release;
+    let sharedSignal;
+    const loader = async (signal) => {
+      loaderCalls += 1;
+      sharedSignal = signal;
+      return new Promise((resolve) => {
+        release = resolve;
+      });
+    };
+
+    const first = bounded.getCachedOrLoad(
+      "shared-cancel",
+      60_000,
+      loader,
+      undefined,
+      { signal: firstController.signal },
+    );
+    const second = bounded.getCachedOrLoad(
+      "shared-cancel",
+      60_000,
+      loader,
+      undefined,
+      { signal: secondController.signal },
+    );
+    await Promise.resolve();
+
+    firstController.abort();
+    release("shared-result");
+
+    await assert.rejects(first, (error) => error?.name === "RequestCancelledError");
+    assert.equal(await second, "shared-result");
+    assert.equal(loaderCalls, 1);
+    assert.equal(sharedSignal.aborted, false);
+    assert.equal(bounded.stats().entries, 1);
+  });
+
+  it("aborts a shared loader only after every waiter cancels and permits retry", async () => {
+    const bounded = createBoundedAsyncCache({ maxEntries: 2 });
+    const firstController = new AbortController();
+    const secondController = new AbortController();
+    let abortEvents = 0;
+    let release;
+    const loader = async (signal) =>
+      new Promise((resolve, reject) => {
+        release = resolve;
+        signal?.addEventListener(
+          "abort",
+          () => {
+            abortEvents += 1;
+            const error = new Error("shared loader aborted");
+            error.name = "AbortError";
+            reject(error);
+          },
+          { once: true },
+        );
+      });
+
+    const first = bounded.getCachedOrLoad(
+      "all-cancelled",
+      60_000,
+      loader,
+      undefined,
+      { signal: firstController.signal },
+    );
+    const second = bounded.getCachedOrLoad(
+      "all-cancelled",
+      60_000,
+      loader,
+      undefined,
+      { signal: secondController.signal },
+    );
+    await Promise.resolve();
+
+    firstController.abort();
+    secondController.abort();
+    release?.("late-result");
+
+    await assert.rejects(first, (error) => error?.name === "RequestCancelledError");
+    await assert.rejects(second, (error) => error?.name === "RequestCancelledError");
+    await Promise.resolve();
+    assert.equal(abortEvents, 1);
+    assert.deepEqual(bounded.stats(), {
+      entries: 0,
+      inFlight: 0,
+      maxEntries: 2,
+    });
+    assert.equal(
+      await bounded.getCachedOrLoad(
+        "all-cancelled",
+        60_000,
+        async () => "clean-retry",
+      ),
+      "clean-retry",
+    );
+  });
+
   it("does not retain zero-TTL entries", async () => {
     clearCacheForTests();
 

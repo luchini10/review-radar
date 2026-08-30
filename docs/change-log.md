@@ -11,6 +11,38 @@ Update this file after:
 
 ## 2026-08-30
 
+### Codex - Stop legacy server work after request cancellation
+
+#### Changed
+
+- Added one typed server cancellation contract from the active legacy request
+  through OpenAI planning/final/narration, Serper, URL verification, evidence,
+  product assets, requirement rescue, and source upgrade.
+- Cancellation now returns a stable HTTP 499 response, records progress as
+  cancelled, and cannot start a retry, provider/search fallback, or later paid
+  stage. Independent provider and page-fetch timeouts keep their prior meaning.
+- Made shared asynchronous cache loads waiter-aware: one cancelled caller can
+  leave a shared load running, all cancelled callers abort and remove it, late
+  abandoned values cannot be cached, and a clean retry can start immediately.
+- Added deterministic regressions for pre-abort, mid-stage and between-stage
+  aborts, fallback suppression, Serper no-retry behavior, page-fetch
+  cancellation, admission cleanup, shared waiters, late completion, and retry.
+
+#### Verified
+
+- Fail-first checks passed 58 and failed exactly 10 new regressions; the fixed
+  focused wall passed 68/68. The full suite passed 1,668/1,668 across 227 suites;
+  typecheck, production build, Playwright 17/17, diff, and lint with zero errors
+  and the same three old warnings passed.
+- Controller `agent-loop-2026-08-30T08-52-05-714Z` passed all five partitions,
+  10/10 cases, and 29/29 invariants. Independent frozen review returned
+  `VERIFIED`, confidence 0.97, after late-loader and DNS cancellation/timeout
+  probes; all 17 source/test hashes matched.
+- No provider, product-data, credential, manual environment-file, network, or
+  live cancellation was used. Hosted disconnect signaling and already-accepted
+  upstream billing remain explicit residuals. Native DNS may continue internally
+  after cancellation, although no later transport can start.
+
 ### Codex - Bound public paid work and cache residency before provider calls
 
 #### Changed

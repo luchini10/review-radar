@@ -283,4 +283,31 @@ describe("legacy citation URL public-network boundary", () => {
     });
     assert.deepEqual(directFetches, []);
   });
+
+  it("propagates request cancellation instead of treating it as a reachable timeout", async () => {
+    const controller = new AbortController();
+    let transportCalls = 0;
+    let transportSignal;
+    const dependencies = {
+      resolveHost: async () => ["93.184.216.34"],
+      transport: async ({ signal }) => {
+        transportCalls += 1;
+        transportSignal = signal;
+        controller.abort();
+        return htmlTransportResponse();
+      },
+    };
+
+    await assert.rejects(
+      () =>
+        collectReachableCitationUrls(
+          resultFor("https://public.example.test/product"),
+          dependencies,
+          { signal: controller.signal },
+        ),
+      (error) => error?.name === "RequestCancelledError",
+    );
+    assert.equal(transportCalls, 1);
+    assert.equal(transportSignal?.aborted, true);
+  });
 });

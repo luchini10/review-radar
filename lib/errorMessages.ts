@@ -7,6 +7,7 @@ export const USER_ERROR_MESSAGES = {
   networkError: "Something went wrong while researching. Try again.",
   noReliableEvidence: "I could not find enough reliable evidence for that search.",
   openAiFailure: "Something went wrong while researching. Try again.",
+  requestCancelled: "The request was cancelled.",
   slowResponse:
     "Research is taking longer than expected. Try again with a narrower search.",
   temporaryRateLimit:

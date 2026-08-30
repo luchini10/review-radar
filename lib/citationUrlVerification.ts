@@ -5,6 +5,7 @@ import {
   type HybridFetchResult,
 } from "./autonomousFactVerifier.ts";
 import { mapWithConcurrency } from "./recommendationPerformance.ts";
+import { throwIfRequestCancelled } from "./requestCancellation.ts";
 
 type CitationUrlRecommendation = {
   citations: {
@@ -66,7 +67,9 @@ function citationFetchIsReachable(result: HybridFetchResult) {
 async function citationUrlIsReachable(
   url: string,
   fetchDependencies: HybridFetchDependencies,
+  signal?: AbortSignal,
 ) {
+  throwIfRequestCancelled(signal);
   const normalizedUrl = normalizeUrl(url);
 
   if (!normalizedUrl) {
@@ -81,6 +84,7 @@ async function citationUrlIsReachable(
       maxBytes: CITATION_CHECK_MAX_BYTES,
       maxRedirects: CITATION_CHECK_MAX_REDIRECTS,
       timeoutMs: CITATION_CHECK_TIMEOUT_MS,
+      signal,
     },
   );
   return citationFetchIsReachable(fetchResult);
@@ -89,7 +93,9 @@ async function citationUrlIsReachable(
 export async function collectReachableCitationUrls(
   result: CitationUrlResult,
   fetchDependencies: HybridFetchDependencies = LIVE_HYBRID_FETCH_DEPENDENCIES,
+  options: { signal?: AbortSignal } = {},
 ) {
+  throwIfRequestCancelled(options.signal);
   const urls = Array.from(
     new Set(
       result.recommendations.flatMap((recommendation) =>
@@ -101,10 +107,17 @@ export async function collectReachableCitationUrls(
   const checks = await mapWithConcurrency(
     urls,
     CITATION_CHECK_CONCURRENCY,
-    async (url) => ({
-      ok: await citationUrlIsReachable(url, fetchDependencies),
-      url,
-    }),
+    async (url) => {
+      throwIfRequestCancelled(options.signal);
+      return {
+        ok: await citationUrlIsReachable(
+          url,
+          fetchDependencies,
+          options.signal,
+        ),
+        url,
+      };
+    },
   );
 
   return new Set(

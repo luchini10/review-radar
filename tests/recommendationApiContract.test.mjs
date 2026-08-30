@@ -4,18 +4,24 @@ import { afterEach, beforeEach, describe, it } from "node:test";
 import { createRecommendationPostHandler } from "../app/api/recommendations/route.ts";
 import { USER_ERROR_MESSAGES } from "../lib/errorMessages.ts";
 import { createPaidRequestAdmission } from "../lib/paidRequestAdmission.ts";
+import {
+  getSearchProgress,
+  searchProgressTestExports,
+} from "../lib/searchProgressStore.ts";
 
 const originalOpenAiKey = process.env.OPENAI_API_KEY;
 const originalOpenAiModel = process.env.OPENAI_MODEL;
 const originalPinnedPlanning = process.env.REVIEW_RADAR_PINNED_PLANNING;
 
 beforeEach(() => {
+  searchProgressTestExports.resetSearchProgressStore();
   process.env.OPENAI_API_KEY = "test-api-key";
   delete process.env.OPENAI_MODEL;
   delete process.env.REVIEW_RADAR_PINNED_PLANNING;
 });
 
 afterEach(() => {
+  searchProgressTestExports.resetSearchProgressStore();
   if (originalOpenAiKey === undefined) {
     delete process.env.OPENAI_API_KEY;
   } else {
@@ -35,7 +41,7 @@ afterEach(() => {
   }
 });
 
-function jsonRequest(body, headers = {}) {
+function jsonRequest(body, headers = {}, signal) {
   return new Request("http://localhost/api/recommendations", {
     body: JSON.stringify(body),
     headers: {
@@ -43,6 +49,7 @@ function jsonRequest(body, headers = {}) {
       ...headers,
     },
     method: "POST",
+    signal,
   });
 }
 
@@ -211,6 +218,8 @@ function modelResponse(products, verifiedUrls = undefined) {
 function buildHandler({
   collectReachableCitationUrls = async () => new Set(),
   createError,
+  enrichProductAssets = async (result) => result,
+  enrichResultWithReviewEvidence = async (result) => result,
   modelError,
   onClientCreate = () => {},
   onModelCreate = () => {},
@@ -218,6 +227,7 @@ function buildHandler({
     maxConcurrent: 100,
     maxStartsPerWindow: 1_000,
   }),
+  resolveSerperIdentityLeads = async (result) => result,
   response = modelResponse([buildProduct()]),
   searchSerperForProducts = async () => emptySerperResult(),
   upgradeWeakSourceEvidence = async (result) => ({
@@ -225,6 +235,7 @@ function buildHandler({
     sourceUpgradeDecisions: [],
     sourceUpgradeTraces: [],
   }),
+  verifyMissingRequirementEvidence = async (result) => result,
 } = {}) {
   return createRecommendationPostHandler({
     collectReachableCitationUrls,
@@ -237,7 +248,7 @@ function buildHandler({
       return {
         responses: {
           create: async (input, options) => {
-            onModelCreate(input, options);
+            await onModelCreate(input, options);
 
             if (modelError) {
               throw modelError;
@@ -248,12 +259,13 @@ function buildHandler({
         },
       };
     },
-    enrichProductAssets: async (result) => result,
-    enrichResultWithReviewEvidence: async (result) => result,
+    enrichProductAssets,
+    enrichResultWithReviewEvidence,
     paidRequestAdmission,
+    resolveSerperIdentityLeads,
     searchSerperForProducts,
     upgradeWeakSourceEvidence,
-    verifyMissingRequirementEvidence: async (result) => result,
+    verifyMissingRequirementEvidence,
   });
 }
 
@@ -377,6 +389,172 @@ describe("recommendation API contract", () => {
     assert.equal(accepted.status, 200);
     assert.equal(clientCreates, 1);
     assert.equal(paidRequestAdmission.stats().active, 0);
+  });
+
+  it("rejects a pre-aborted legacy request before client creation or admission", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    let clientCreates = 0;
+    const paidRequestAdmission = createPaidRequestAdmission({
+      maxConcurrent: 1,
+      maxStartsPerWindow: 100,
+    });
+    const handler = buildHandler({
+      onClientCreate: () => {
+        clientCreates += 1;
+      },
+      paidRequestAdmission,
+    });
+    const progressId = "cancelled-request-001";
+
+    const request = jsonRequest(
+      { query: "microwave" },
+      { "x-reviewradar-progress": progressId },
+      controller.signal,
+    );
+    const response = await readJson(await handler(request));
+
+    assert.equal(response.status, 499);
+    assert.deepEqual(response.body, { error: "The request was cancelled." });
+    assert.equal(clientCreates, 0);
+    assert.equal(getSearchProgress(progressId)?.status, "cancelled");
+    assert.deepEqual(paidRequestAdmission.stats(), {
+      active: 0,
+      maxConcurrent: 1,
+      maxStartsPerWindow: 100,
+      startsInWindow: 0,
+      windowMs: 60_000,
+    });
+  });
+
+  it("does not swallow cancellation in the planning fallback or start Serper", async () => {
+    const controller = new AbortController();
+    const seenSignals = [];
+    let modelCalls = 0;
+    let serperCalls = 0;
+    const paidRequestAdmission = createPaidRequestAdmission({
+      maxConcurrent: 1,
+      maxStartsPerWindow: 100,
+    });
+    const handler = buildHandler({
+      onModelCreate: (_input, options) => {
+        modelCalls += 1;
+        seenSignals.push(options?.signal);
+        if (modelCalls === 1) controller.abort();
+      },
+      paidRequestAdmission,
+      searchSerperForProducts: async () => {
+        serperCalls += 1;
+        return emptySerperResult();
+      },
+    });
+
+    const request = jsonRequest(
+      { query: "microwave" },
+      {},
+      controller.signal,
+    );
+    const response = await readJson(await handler(request));
+
+    assert.equal(response.status, 499);
+    assert.deepEqual(response.body, { error: "The request was cancelled." });
+    assert.equal(modelCalls, 1);
+    assert.equal(serperCalls, 0);
+    assert.equal(seenSignals[0], request.signal);
+    assert.equal(paidRequestAdmission.stats().active, 0);
+  });
+
+  it("stops between Serper discovery and the next paid stage", async () => {
+    const controller = new AbortController();
+    let modelCalls = 0;
+    let serperCalls = 0;
+    let serperExecution;
+    const handler = buildHandler({
+      onModelCreate: () => {
+        modelCalls += 1;
+      },
+      searchSerperForProducts: async (_plan, _request, execution) => {
+        serperCalls += 1;
+        serperExecution = execution;
+        controller.abort();
+        return emptySerperResult();
+      },
+    });
+
+    const request = jsonRequest(
+      { query: "microwave" },
+      {},
+      controller.signal,
+    );
+    const response = await readJson(await handler(request));
+
+    assert.equal(response.status, 499);
+    assert.equal(modelCalls, 1);
+    assert.equal(serperCalls, 1);
+    assert.equal(serperExecution?.signal, request.signal);
+  });
+
+  it("never converts a cancelled final provider call into a search fallback", async () => {
+    const controller = new AbortController();
+    let modelCalls = 0;
+    let fallbackEnrichmentCalls = 0;
+    const handler = buildHandler({
+      enrichResultWithReviewEvidence: async (result) => {
+        fallbackEnrichmentCalls += 1;
+        return result;
+      },
+      onModelCreate: () => {
+        modelCalls += 1;
+        if (modelCalls === 2) {
+          controller.abort();
+          throw new Error("provider connection closed after cancellation");
+        }
+      },
+      searchSerperForProducts: async () => fallbackSerperResult(),
+    });
+
+    const request = jsonRequest(
+      { query: "microwave" },
+      {},
+      controller.signal,
+    );
+    const response = await readJson(await handler(request));
+
+    assert.equal(response.status, 499);
+    assert.deepEqual(response.body, { error: "The request was cancelled." });
+    assert.equal(modelCalls, 2);
+    assert.equal(fallbackEnrichmentCalls, 0);
+  });
+
+  it("stops later enrichment after a request is cancelled between stages", async () => {
+    const controller = new AbortController();
+    let assetCalls = 0;
+    let evidenceCalls = 0;
+    let evidenceSignal;
+    const handler = buildHandler({
+      enrichProductAssets: async (result) => {
+        assetCalls += 1;
+        return result;
+      },
+      enrichResultWithReviewEvidence: async (result, options) => {
+        evidenceCalls += 1;
+        evidenceSignal = options?.signal;
+        controller.abort();
+        return result;
+      },
+    });
+
+    const request = jsonRequest(
+      { query: "microwave" },
+      {},
+      controller.signal,
+    );
+    const response = await readJson(await handler(request));
+
+    assert.equal(response.status, 499);
+    assert.equal(evidenceCalls, 1);
+    assert.equal(assetCalls, 0);
+    assert.equal(evidenceSignal, request.signal);
   });
 
   it("requires a product category query", async () => {
