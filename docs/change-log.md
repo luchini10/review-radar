@@ -3231,3 +3231,27 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
   received independent `VERIFIED`, no material findings, confidence 0.995. The
   final commit changes only this closeout documentation relative to that
   verified source snapshot and was reauthenticated by the same reviewer.
+
+## 2026-08-30 — 🟧 Codex — Readiness launcher contract correction
+
+### Changed
+
+- Corrected a real/mock contract mismatch that made every real staged-readiness
+  launch fail before credentials despite green mocked launcher tests.
+- Preserved all trust checks while removing only two requirements for a
+  nonexistent trust-surface `status` field.
+- Retired the consumed v2 execution chain and added matrix v3 with fresh run
+  identities/nonces while preserving the reviewed truth, cases, sources,
+  quality bars, serial order, and paid ceilings.
+- Strengthened replacement tests to reject identity reuse from either retired
+  matrix, not only the oldest chain.
+
+### Verified
+
+- Fail-first: 4/7 launcher-terminal tests passed and 3/7 reproduced
+  `repository_or_trust_rejected` with the real authenticator shape.
+- Corrected launcher/runner/readiness wall: 70/70.
+- Full unit suite passed; typecheck passed.
+- Lint: zero errors and three pre-existing test warnings.
+- The failed live dispatch stopped before credentials, runner spawn, provider
+  calls, source fetches, human page opens, or spend.

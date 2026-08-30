@@ -16496,3 +16496,33 @@ The controller left advisory output in the ignored worker artifact `agent-loop-2
 ### Report
 
 See `docs/agent-loop-report.md`.
+
+## 2026-08-30 — PR-9C launcher-contract correction and fresh chain
+
+**Observed live stop:** exact PR-9B attempt 1 returned the closed launcher
+terminal `repository_or_trust_rejected` in 12.35 seconds. Control flow stopped
+before credential access and runner spawn, so OpenAI creates/retrieves, hosted
+searches, Serper attempts, source fetches/HTTP attempts, human page opens, and
+spend were all zero. No retry or later attempt ran.
+
+**Root cause:** the real trust authenticator returns `{ok, manifestSha256,
+entries, failures}`. The launcher required both `ok === true` and the
+nonexistent `status === "authenticated"`; the terminal-test mock invented that
+field. A test-only change to the real contract shape produced 4/7 passing and
+3/7 failing, including the nominal integer child-exit path, all at the observed
+repository/trust stage.
+
+**Correction:** remove only both invalid status predicates. Preserve exact
+manifest equality, `ok`, empty failures, clean tracked state, main branch,
+commit/approval binding, closed process environment, bounded credentials, and
+post-credential reauthentication. Matrix v3 retains v2 truth and behavior but
+uses six fresh `pr9c-*` run IDs/nonces disjoint from v1 and v2.
+
+**Frozen matrix hashes:** file
+`d738c4493ababe10c5853f138862d71afeabc5d2502d8e0f2c0f13a1ad8cbd7a`;
+canonical
+`0bc9d3626e266c4ec6592cfc1489d9199cb42e51b537183964637e1ea46a3660`.
+
+**Verification:** corrected launcher/runner/readiness wall 70/70; full unit
+suite exit 0; typecheck exit 0; lint exit 0 with zero errors and the same three
+pre-existing warnings. Exact commit review remains required before live use.

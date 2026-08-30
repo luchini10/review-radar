@@ -4155,6 +4155,41 @@ test, matrix, ceiling, or trust-boundary blob changed afterward.
 execution; Highest for source/variant/ranking adjudication or any disputed
 go/no-go decision.
 
+### PR-9C — launcher-contract correction and replacement chain
+
+**Status:** implemented locally; exact commit and independent review pending.
+
+The first authorized PR-9B dispatch stopped before credentials or child spawn
+with typed stage `repository_or_trust_rejected`. The root cause was a real/mock
+contract mismatch: `authenticateStagedTerraReadinessTrustSurface()` returns
+`ok`, `manifestSha256`, `entries`, and `failures`, while the launcher additionally
+required a nonexistent `status` field. Terminal tests supplied that invented
+field, so the mocked success path passed while every real launch failed.
+
+PR-9C removes only the two invalid `status` predicates. It preserves the real
+`ok` result, exact manifest digest, empty failure list, clean tracked state,
+branch, commit, approval, credential, process, and second reauthentication
+checks. The fail-first changed the mock to the real authenticator shape and
+reproduced three failures, including the successful integer-child path; the
+correction restores the complete launcher/runner wall.
+
+Because the failed dispatch consumed the first v2 identity and the serial chain
+cannot skip its missing artifact, matrix v3 preserves byte-equivalent reviewed
+truth, sources, requests, cases, order, bars, and ceilings while minting six
+fresh `pr9c-*` run IDs and nonces. V1 and v2 remain immutable historical
+records. Tests require v3 to be identity-disjoint from both retired matrices.
+
+- matrix file SHA-256:
+  `d738c4493ababe10c5853f138862d71afeabc5d2502d8e0f2c0f13a1ad8cbd7a`;
+- matrix canonical SHA-256:
+  `0bc9d3626e266c4ec6592cfc1489d9199cb42e51b537183964637e1ea46a3660`.
+
+The existing six-search envelope and all zero-retry, zero-fallback, safety,
+evidence, identity, price, requirement, source, manual-review, and stop gates
+remain unchanged. Taylor granted standing authority on 2026-08-30 for all
+in-scope work needed to complete the product-accuracy goal; push, deployment,
+release, and flag promotion remain unnecessary and are not part of this phase.
+
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 
 Phase 3P/3Q source-upgrade items; RR-014/RR-015 aggregate measurement beyond

@@ -18,7 +18,6 @@ const COMMIT = "a".repeat(40);
 const TRUST_DIGEST = "b".repeat(64);
 const TRUST_SURFACE = Object.freeze({
   ok: true,
-  status: "authenticated",
   manifestSha256: TRUST_DIGEST,
   entries: [],
   failures: [],

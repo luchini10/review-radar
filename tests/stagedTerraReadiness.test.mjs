@@ -24,13 +24,13 @@ import {
 import { buildStagedTerraReadinessRunPlan } from "../scripts/staged-terra-readiness-runner.mjs";
 
 const fixturePath = new URL(
-  "./fixtures/staged-terra-readiness-matrix-v2.json",
+  "./fixtures/staged-terra-readiness-matrix-v3.json",
   import.meta.url,
 );
-const retiredFixturePath = new URL(
+const retiredFixturePaths = [
   "./fixtures/staged-terra-readiness-matrix-v1.json",
-  import.meta.url,
-);
+  "./fixtures/staged-terra-readiness-matrix-v2.json",
+].map((relativePath) => new URL(relativePath, import.meta.url));
 const commitSha = "a".repeat(40);
 
 function matrix() {
@@ -750,7 +750,10 @@ function manualReview(value, sample) {
 describe("PR-9B staged Terra readiness boundary", () => {
   it("freezes four distinct shapes, six serial runs, current truth, and absolute bars", () => {
     const value = matrix();
-    const retired = JSON.parse(readFileSync(retiredFixturePath, "utf8"));
+    const retiredMatrices = retiredFixturePaths.map((path) =>
+      JSON.parse(readFileSync(path, "utf8")),
+    );
+    const retired = retiredMatrices.at(-1);
     const result = validateStagedTerraReadinessMatrix(value, {
       now: "2026-08-29",
     });
@@ -793,16 +796,18 @@ describe("PR-9B staged Terra readiness boundary", () => {
     );
     assert.equal(
       value.attemptPlan.some((attempt) =>
-        retired.attemptPlan.some(
-          (retiredAttempt) =>
-            retiredAttempt.runId === attempt.runId ||
-            retiredAttempt.nonce === attempt.nonce,
+        retiredMatrices.some((retiredMatrix) =>
+          retiredMatrix.attemptPlan.some(
+            (retiredAttempt) =>
+              retiredAttempt.runId === attempt.runId ||
+              retiredAttempt.nonce === attempt.nonce,
+          ),
         ),
       ),
       false,
     );
     assert.ok(
-      value.attemptPlan.every((attempt) => attempt.runId.startsWith("pr9b-")),
+      value.attemptPlan.every((attempt) => attempt.runId.startsWith("pr9c-")),
     );
     assert.equal(value.qualityBars.minimumPairwiseFinalJaccard, 0.6);
     assert.equal(value.qualityBars.minimumPairwiseSharedOrderKendallTau, 0);

@@ -40,7 +40,7 @@ import {
 } from "../scripts/staged-terra-readiness-io.mjs";
 
 const matrixBytes = readFileSync(
-  "tests/fixtures/staged-terra-readiness-matrix-v2.json",
+  "tests/fixtures/staged-terra-readiness-matrix-v3.json",
 );
 const matrix = JSON.parse(matrixBytes.toString("utf8"));
 const commitSha = "f".repeat(40);
@@ -192,16 +192,16 @@ describe("PR-9B staged Terra readiness runner", () => {
     );
     assert.equal(
       value.matrixCanonicalSha256,
-      "4959f977d56fb43c58714a5caaeb63c8c16fb290a0d74d04551eefe2e2f3d5e1",
+      "0bc9d3626e266c4ec6592cfc1489d9199cb42e51b537183964637e1ea46a3660",
     );
     assert.deepEqual(value.attempt, {
       index: 1,
       key: "broad-shop-vac:1",
       caseId: "broad-shop-vac",
       run: 1,
-      runId: "pr9b-01-broad-shop-vac-r1",
+      runId: "pr9c-01-broad-shop-vac-r1",
       nonce:
-        "nonce-7ab37b2a41da6cc4411e81106c5e0d27fdc2c050bfffc4fc3cc87b09d12c54b8",
+        "nonce-08d54c916c21d7c3c98aa355420cdac73ca8fcd4878148eff2a6a663d63db5b5",
       previousArtifactSha256: null,
       shopperRequest: { query: "shop vac" },
       requestSha256:
@@ -222,7 +222,7 @@ describe("PR-9B staged Terra readiness runner", () => {
     });
     assert.equal(
       path.basename(value.outputDirectory),
-      "pr9b-01-broad-shop-vac-r1-fffffff",
+      "pr9c-01-broad-shop-vac-r1-fffffff",
     );
     assert.throws(() =>
       stagedTerraReadinessOutputDirectory({
@@ -242,7 +242,7 @@ describe("PR-9B staged Terra readiness runner", () => {
     const value = JSON.parse(output);
     assert.equal(value.mode, "dry-run");
     assert.equal(value.attempt.index, 1);
-    assert.equal(value.attempt.runId, "pr9b-01-broad-shop-vac-r1");
+    assert.equal(value.attempt.runId, "pr9c-01-broad-shop-vac-r1");
     assert.equal(value.networkPolicy.nextAttemptAutomatic, false);
     assert.equal(value.ceilings.conservativeUsd, 1);
     assert.ok(
@@ -826,7 +826,7 @@ describe("PR-9B staged Terra readiness runner", () => {
       buildArtifact: (input) => {
         calls.build += 1;
         assert.equal(input.caseId, "broad-shop-vac");
-        assert.equal(input.runId, "pr9b-01-broad-shop-vac-r1");
+        assert.equal(input.runId, "pr9c-01-broad-shop-vac-r1");
         assert.equal(input.terminalResponse.statusCode, 200);
         assert.equal(input.terminalResponse.body.state, "completed");
         assert.equal("jobToken" in input.terminalResponse.body, false);

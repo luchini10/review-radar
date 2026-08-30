@@ -527,7 +527,6 @@ export async function launchStagedTerraReadiness({
         Array.isArray(repositoryState.trackedChanges) &&
         repositoryState.trackedChanges.length === 0 &&
         repositoryState.trustSurface?.ok === true &&
-        repositoryState.trustSurface.status === "authenticated" &&
         typeof repositoryState.trustSurface.manifestSha256 === "string" &&
         Array.isArray(repositoryState.trustSurface.failures) &&
         repositoryState.trustSurface.failures.length === 0,
@@ -572,7 +571,6 @@ export async function launchStagedTerraReadiness({
       finalState !== null &&
         typeof finalState === "object" &&
         finalState.trustSurface?.ok === true &&
-        finalState.trustSurface.status === "authenticated" &&
         finalState.trustSurface.manifestSha256 ===
           repositoryState.trustSurface.manifestSha256 &&
         Array.isArray(finalState.trustSurface.failures) &&

@@ -170,6 +170,10 @@
   branch `main`, clean tracked state, exact HEAD, approval arguments, and the
   complete trust surface including itself before reading credentials and again
   immediately before spawning the runner.
+- Launcher tests must use the real trust-authenticator contract exactly:
+  `{ok, manifestSha256, entries, failures}`. Do not add derived plan fields such
+  as `status` to trust-surface mocks. A nominal child-exit test using that exact
+  shape is the regression for the 2026-08-30 pre-credential real-launch stop.
 - Reject inherited Node/debug/loader/TLS controls case-insensitively before
   credential access and immediately before spawn: `NODE_DEBUG`,
   `NODE_DEBUG_NATIVE`, `NODE_OPTIONS`, `NODE_PATH`, `NODE_EXTRA_CA_CERTS`,
