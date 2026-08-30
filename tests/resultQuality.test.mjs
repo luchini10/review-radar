@@ -223,41 +223,54 @@ describe("citation reachability leniency", () => {
   }
 
   it("treats bot-walled and slow responses as reachable", async () => {
-    const originalFetch = global.fetch;
+    let transport = async () => ({
+      status: 503,
+      headers: { "content-type": "text/html" },
+      body: new Uint8Array(),
+    });
+    const dependencies = {
+      resolveHost: async (hostname) => {
+        if (hostname === "no-such-host.example") {
+          throw new Error("getaddrinfo ENOTFOUND");
+        }
+        return ["93.184.216.34"];
+      },
+      transport: (input) => transport(input),
+    };
 
-    try {
-      global.fetch = async () => new Response("", { status: 503 });
-      let verified = await collectReachableCitationUrls(
-        resultWithCitation("https://www.example.com/p/botwalled"),
-      );
-      assert.equal(verified.size, 1);
+    let verified = await collectReachableCitationUrls(
+      resultWithCitation("https://www.example.com/p/botwalled"),
+      dependencies,
+    );
+    assert.equal(verified.size, 1);
 
-      global.fetch = async () => {
-        const error = new Error("timeout");
-        error.name = "AbortError";
-        throw error;
-      };
-      verified = await collectReachableCitationUrls(
-        resultWithCitation("https://www.example.com/p/slow"),
-      );
-      assert.equal(verified.size, 1);
+    transport = async () => {
+      const error = new Error("timeout");
+      error.name = "AbortError";
+      throw error;
+    };
+    verified = await collectReachableCitationUrls(
+      resultWithCitation("https://www.example.com/p/slow"),
+      dependencies,
+    );
+    assert.equal(verified.size, 1);
 
-      global.fetch = async () => new Response("", { status: 404 });
-      verified = await collectReachableCitationUrls(
-        resultWithCitation("https://www.example.com/p/missing"),
-      );
-      assert.equal(verified.size, 0);
+    transport = async () => ({
+      status: 404,
+      headers: { "content-type": "text/html" },
+      body: new Uint8Array(),
+    });
+    verified = await collectReachableCitationUrls(
+      resultWithCitation("https://www.example.com/p/missing"),
+      dependencies,
+    );
+    assert.equal(verified.size, 0);
 
-      global.fetch = async () => {
-        throw new Error("getaddrinfo ENOTFOUND");
-      };
-      verified = await collectReachableCitationUrls(
-        resultWithCitation("https://no-such-host.example/p/fake"),
-      );
-      assert.equal(verified.size, 0);
-    } finally {
-      global.fetch = originalFetch;
-    }
+    verified = await collectReachableCitationUrls(
+      resultWithCitation("https://no-such-host.example/p/fake"),
+      dependencies,
+    );
+    assert.equal(verified.size, 0);
   });
 });
 

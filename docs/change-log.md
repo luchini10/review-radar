@@ -11,6 +11,39 @@ Update this file after:
 
 ## 2026-08-30
 
+### Codex - Contain every legacy citation and product-page fetch to public destinations
+
+#### Changed
+
+- Routed both default recommendation consumers through one shared address-
+  pinned transport. Every URL and redirect must be HTTP(S), credential-free,
+  default-port, and resolve only to public addresses before a connection starts.
+- Added one hard DNS-plus-transport deadline, redirect and declared/actual body
+  limits, content-type limits, and ordered concurrency capped at four. Slow or
+  trickling requests are aborted instead of relying only on inactivity timeout.
+- Preserved existing citation 404/410 and bot-wall behavior plus product best-
+  effort identity/asset handling. Unsafe product URLs are cleared; failed page
+  reads cannot supply metadata; product cache keys now retain only a URL digest.
+- Added regression coverage for literal, mapped, compatible, special IPv6,
+  private and mixed DNS, public-to-private redirects, credentials, ports,
+  schemes, malformed/limited redirects, hard timeout, size/content/status,
+  concurrency/order, cache keys, and normal public controls.
+
+#### Verified
+
+- Final focused checks pass 74/74; the full suite passes 1,620/1,620 across 220
+  suites; typecheck, production build, Playwright 17/17, diff, and lint with zero
+  errors/three old warnings pass.
+- Controller `agent-loop-2026-08-30T06-35-39-277Z` passed all five partitions,
+  10/10 cases, and 29/29 invariants. Frozen independent review returned
+  `VERIFIED`, no material correction, confidence 0.98.
+- No provider, product-data, credential, manual environment-file, real network,
+  or live-fixture content was accessed.
+
+RR-103 is Fixed locally. ReviewRadar remains **NOT READY**: paid-request
+admission/body/field limits and bounded/coalesced caches (RR-104), cancellation
+(RR-105), blocked live quality evidence, and broader operational gates remain.
+
 ### Codex - Bind every shared transactional path to complete exact-model identity
 
 #### Changed

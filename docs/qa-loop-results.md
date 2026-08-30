@@ -14446,3 +14446,184 @@ metadata, parse, or modification occurred; all later test discovery used
 explicit root-level files. No provider, product-data, credential, environment-
 file, real network, or live-fixture content was accessed. PR-6A authorizes no
 live exploit, provider call, flag change, deployment, release, or push.
+
+## Agent Loop Run - 2026-08-30T06:28:13.745Z
+
+- **run id:** agent-loop-2026-08-30T06-27-29-731Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3182ms |
+| lint | Passed | 10597ms |
+| unit tests | Passed | 25695ms |
+| deterministic eval pipeline | Passed | 450ms |
+| tracked offline benchmark | Passed | 598ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T06-27-29-731Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T06:36:24.049Z
+
+- **run id:** agent-loop-2026-08-30T06-35-39-277Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, wrong-category, price-trust, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3493ms |
+| lint | Passed | 10729ms |
+| unit tests | Passed | 25992ms |
+| deterministic eval pipeline | Passed | 448ms |
+| tracked offline benchmark | Passed | 583ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T06-35-39-277Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## 🟧 Codex Production Readiness PR-6B — shared bounded outbound fetch (2026-08-30)
+
+**Objective and baseline:** close only PR-022/RR-103 at PR-6A closeout commit
+`d5c6f8be4c922b7c6279fd9e6412a537a17b87a4`. The default legacy route already
+reached both affected exports, so disabling default-off paths or adding URL
+text patterns would not close the proven boundary. The chosen generalized
+correction reused the shared address-pinned hybrid transport at both consumers
+and bounded their fan-out. PR-023 admission/cache and PR-024 cancellation code
+remained outside the phase.
+
+**Fail-first evidence:** wrapper-level deterministic transports reproduced the
+missing scheme, credential, port, literal/mapped/IPv6 private-address, private
+and mixed DNS, public-to-private redirect, redirect-limit, timeout, content-
+type, declared/actual-byte, and fan-out contracts without making a network
+request. The initial eight intended wrapper failures expanded to 14 intended
+failures across 64 tests as review mutations were added. A separate hard-wall
+test proved that the old implementation allowed DNS to outlive the configured
+deadline.
+
+**Generalized correction:**
+
+- `lib/autonomousFactVerifier.ts` now classifies special IPv6, mapped IPv4,
+  compatible IPv4, 6to4, documentation, loopback, link-local, unique-local,
+  multicast, private, and mixed DNS results conservatively; strips brackets
+  before DNS/SNI; pins the validated address; and repeats the complete check on
+  every redirect;
+- one per-hop `AbortController` and hard wall span DNS plus transport, and the
+  Node transport destroys a slow or trickling request on that signal;
+- declared and actual body ceilings are enforced while `bodyTruncated` retains
+  status, so oversized 404/410 responses remain unreachable rather than losing
+  their status semantics; malformed redirects return a typed invalid-URL result;
+- `lib/citationUrlVerification.ts` uses only the shared transport with a 5 s
+  hard wall, 4,096-byte ceiling, two redirects, common content types, stable
+  output order, and concurrency four. It preserves 404/410 rejection and the
+  established 403/405/429/503/timeout compatibility policy;
+- `lib/productAssets.ts` uses only the shared transport with a 5 s hard wall,
+  1.5 MB ceiling, two redirects, HTML/XHTML, stable order, and concurrency four.
+  Unsafe destination failures clear `product_page_url`; ordinary host/content/
+  size failures cannot parse metadata but retain likely product links under the
+  prior best-effort contract; and
+- product-asset cache keys store a SHA-256 URL digest, not a credential-bearing
+  URL. Existing product identity, source ownership, and fallback semantics stay
+  intact.
+
+**Correction rounds:** the first frozen review was superseded when main review
+found that an oversized 404/410 body lost status. Independent review then
+returned a material timeout finding: socket inactivity timeout did not bound
+DNS or a trickling response. Both issues received fail-first regressions and
+generalized corrections before the replacement freeze. The earlier controller
+run `agent-loop-2026-08-30T06-27-29-731Z` passed its then-current 1,619-test
+snapshot but is not final PR-6B proof.
+
+**Final frozen source/test manifest:**
+
+- `lib/autonomousFactVerifier.ts`:
+  `f33f7076ee1e5fd7f505fad67f8502adca7f17f0664ceb0507fa3d2ac21302d4`;
+- `lib/citationUrlVerification.ts`:
+  `c137696b21ced63df5ec900358fe75396407ce7c4b9dcbb001233cb93ca62d46`;
+- `lib/productAssets.ts`:
+  `a5135a1221259ac17845e8a4660c70115892e0f813ee2541a983c3d81dc00c5b`;
+- `tests/autonomousFactVerifier.test.mjs`:
+  `093f5470f17dba0606c25884d1240346045855567953be851c436afa069a12dd`;
+- `tests/citationUrlVerification.test.mjs`:
+  `7388c9b986c62e8e99810b969c3a105a1e8020f6b84367806bd486db60525a19`;
+- `tests/productAssets.test.mjs`:
+  `59f304a687c04fccee5fd09774158f1165a20fedf3ba47d334564d7f6a8e74f5`;
+- `tests/resultQuality.test.mjs`:
+  `4430bafeda47642643e351ffa60dee5d63d75c0325e0696d1af097e6da035f34`.
+
+**Exact final verification:** the final nine-suite focused wall passed 74/74;
+`npm run typecheck` passed; `npm test` passed 1,620/1,620 across 220 suites;
+`npm run lint` passed with zero errors and the same three pre-existing warnings;
+production build passed; Playwright passed 17/17 with one worker; and scoped
+`git diff --check` reported no whitespace errors. Controller
+`agent-loop-2026-08-30T06-35-39-277Z` passed typecheck, lint, the 1,620-test
+wall, deterministic eval, exact reconciliation of all five serial partitions,
+10/10 benchmark cases, and 29/29 invariants with no repeated failure. Build-
+generated `next-env.d.ts` was restored.
+
+**Independent replacement review:** exact verdict `VERIFIED`, no material
+correction, confidence 0.98. The reviewer authenticated baseline HEAD and all
+seven final hashes before and after review; passed the required 74/74 wall,
+typecheck, and diff check; confirmed every default-route consumer; found no
+direct global fetch in either wrapper; and independently proved the pinned
+address, mixed public/private DNS rejection, special IPv4/IPv6 rejection, and
+normal global-IPv6 control. PR-023/PR-024 source stayed at baseline.
+
+**Residual uncertainty and authority:** OS `dns.lookup` cannot cancel native
+resolver work. The caller returns at the hard deadline and no transport starts
+afterward, but sustained hostile traffic could pressure the resolver queue;
+PR-023's admission/global-concurrency boundary is the correct containment. The
+actual Node socket path was source-reviewed but not live-server exercised.
+Citation compatibility proves that every attempted hop is safe, not that an
+unread page is truthful or usable. No provider, product-data, credential,
+manual environment-file, real network, or live-fixture content was accessed.
+No flag, deployment, release, push, PR-023, or PR-024 authority is granted.
+
+**Process residual:** a prohibited broad `git status --short` printed spent
+live-fixture filenames. No content, hash, field, value, parse, or modification
+occurred. Subsequent status/discovery used tracked-only or exact paths. This
+filename-only deviation does not contaminate the code evidence, but it repeated
+a known process failure and must not recur.

@@ -1,3 +1,11 @@
+import {
+  fetchHybridSource,
+  LIVE_HYBRID_FETCH_DEPENDENCIES,
+  type HybridFetchDependencies,
+  type HybridFetchResult,
+} from "./autonomousFactVerifier.ts";
+import { mapWithConcurrency } from "./recommendationPerformance.ts";
+
 type CitationUrlRecommendation = {
   citations: {
     url: string;
@@ -9,6 +17,16 @@ type CitationUrlResult = {
 };
 
 const CITATION_CHECK_TIMEOUT_MS = 5000;
+const CITATION_CHECK_MAX_BYTES = 4096;
+const CITATION_CHECK_MAX_REDIRECTS = 2;
+const CITATION_CHECK_CONCURRENCY = 4;
+const CITATION_CHECK_CONTENT_TYPES = [
+  "application/json",
+  "application/pdf",
+  "application/xhtml+xml",
+  "text/html",
+  "text/plain",
+] as const;
 
 function normalizeUrl(url: string) {
   try {
@@ -25,43 +43,53 @@ function normalizeUrl(url: string) {
   }
 }
 
-async function citationUrlIsReachable(url: string) {
+function citationFetchIsReachable(result: HybridFetchResult) {
+  if (result.ok) return true;
+  if (
+    result.reason === "redirect_limit_exceeded" ||
+    result.reason === "redirect_missing_location" ||
+    result.reason === "request_timeout" ||
+    result.reason === "response_too_large" ||
+    result.reason === "unsupported_content_type"
+  ) {
+    return true;
+  }
+  if (result.reason !== "http_status_not_usable" || result.status === null) {
+    return false;
+  }
+  if (result.status === 404 || result.status === 410) return false;
+  return (
+    (result.status >= 200 && result.status < 500) || result.status === 503
+  );
+}
+
+async function citationUrlIsReachable(
+  url: string,
+  fetchDependencies: HybridFetchDependencies,
+) {
   const normalizedUrl = normalizeUrl(url);
 
   if (!normalizedUrl) {
     return false;
   }
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), CITATION_CHECK_TIMEOUT_MS);
-
-  try {
-    const response = await fetch(normalizedUrl, {
-      headers: {
-        Range: "bytes=0-2048",
-        "User-Agent": "ReviewRadar/0.1 citation verifier",
-      },
-      signal: controller.signal,
-    });
-
-    if (response.status === 404 || response.status === 410) {
-      return false;
-    }
-
-    // Bot walls commonly answer 403/405/429/503 for automated requests even
-    // though the page exists for real shoppers. Treat those as reachable so
-    // real products are not dropped.
-    return response.status < 500 || response.status === 503;
-  } catch (error) {
-    // A timeout means the host exists but is slow or blocking automated
-    // requests; only DNS/connection failures count as unreachable.
-    return error instanceof Error && error.name === "AbortError";
-  } finally {
-    clearTimeout(timeout);
-  }
+  const fetchResult = await fetchHybridSource(
+    normalizedUrl,
+    fetchDependencies,
+    {
+      allowedContentTypes: CITATION_CHECK_CONTENT_TYPES,
+      maxBytes: CITATION_CHECK_MAX_BYTES,
+      maxRedirects: CITATION_CHECK_MAX_REDIRECTS,
+      timeoutMs: CITATION_CHECK_TIMEOUT_MS,
+    },
+  );
+  return citationFetchIsReachable(fetchResult);
 }
 
-export async function collectReachableCitationUrls(result: CitationUrlResult) {
+export async function collectReachableCitationUrls(
+  result: CitationUrlResult,
+  fetchDependencies: HybridFetchDependencies = LIVE_HYBRID_FETCH_DEPENDENCIES,
+) {
   const urls = Array.from(
     new Set(
       result.recommendations.flatMap((recommendation) =>
@@ -70,11 +98,13 @@ export async function collectReachableCitationUrls(result: CitationUrlResult) {
     ),
   ).filter(Boolean);
 
-  const checks = await Promise.all(
-    urls.map(async (url) => ({
-      ok: await citationUrlIsReachable(url),
+  const checks = await mapWithConcurrency(
+    urls,
+    CITATION_CHECK_CONCURRENCY,
+    async (url) => ({
+      ok: await citationUrlIsReachable(url, fetchDependencies),
       url,
-    })),
+    }),
   );
 
   return new Set(

@@ -1647,3 +1647,33 @@ No production pipeline or API contract changed in Phase 6A.
   `Needs Investigation — contained/narrowed` because the historical adapter is
   unsafe if promoted. No flag, release, deployment, or production authority
   changed, and the readiness verdict remains NOT READY.
+
+## 40. PR-6B shared bounded outbound fetch (2026-08-30)
+
+- **Reachability and root cause:** the default legacy route passes untrusted
+  provider/Serper citation and product-page URLs to two enrichment consumers.
+  Those consumers predated the shared hybrid transport and fetched hostnames
+  directly, so syntactic URL/source membership could not contain DNS or
+  redirect destinations and fan-out was not bounded.
+- **Shared network boundary:** both consumers now call `fetchHybridSource()`.
+  Each hop accepts only credential-free HTTP(S) URLs on default ports, resolves
+  every address, rejects any non-public result, connects to the validated
+  pinned address, and reruns the contract after redirects. One hard deadline
+  spans DNS and transport; redirect count, declared/actual bytes, and content
+  types are bounded.
+- **Consumer behavior:** citation checks use a 4,096-byte ceiling and
+  concurrency four while retaining established 404/410 and bot-wall/timeout
+  semantics. Product-page enrichment uses a 1.5 MB HTML/XHTML ceiling and
+  concurrency four; unsafe URLs are cleared, ordinary best-effort failures
+  cannot contribute metadata, stable product order is preserved, and cache keys
+  retain a SHA-256 URL digest instead of a raw credential-bearing URL.
+- **Proof:** final focused 74/74; full 1,620/1,620 across 220 suites; typecheck,
+  build, Playwright 17/17, lint, diff, deterministic eval, five partitions,
+  10/10 benchmark cases, and 29/29 invariants passed. Final independent frozen
+  review returned `VERIFIED`, confidence 0.98. Zero real network/provider/live-
+  fixture-content work occurred.
+- **State:** RR-103 is Fixed. Native OS DNS work can finish after the caller's
+  hard deadline, although no transport can start afterward; PR-023/RR-104 owns
+  paid-request admission, global concurrency, and cache containment. PR-024/
+  RR-105 cancellation remains separate. ReviewRadar remains NOT READY and no
+  flag, deployment, release, or push authority changed.

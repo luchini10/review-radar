@@ -3415,3 +3415,38 @@ a known conservative undercount.
   development-only. A production request for the preview route must return 404.
   A prototype passing visual QA does not authorize route integration, live
   research, provider verification, feature-flag promotion, or deployment.
+
+## Shared public-network fetch contract - 2026-08-30
+
+- Every server fetch of an untrusted provider, search, citation, or product-page
+  URL must use the shared hybrid transport. URL syntax or source-registry
+  membership alone never authorizes the later DNS or redirect destination.
+- Each hop must be HTTP(S), credential-free, default-port, fully resolved, and
+  rejected if any DNS answer is non-public. Transport must connect to the
+  validated address while retaining the original host for HTTP/TLS identity;
+  every redirect repeats parsing, DNS classification, and pinning.
+- Keep literal and encoded IPv4, IPv6, IPv4-mapped/compatible IPv6, loopback,
+  link-local, private/unique-local, multicast, documentation, 6to4, mixed-DNS,
+  malformed-redirect, redirect-limit, and public controls in deterministic
+  injected tests. Never test this boundary by contacting a real private target.
+- One per-hop hard deadline spans DNS and transport. Inactivity timeout alone
+  is insufficient because DNS and trickling responses can outlive it. Pass the
+  abort signal to transport and ensure no transport starts after DNS timeout.
+  Native OS resolver work may still finish in the background; global request
+  admission/concurrency is the separate containment for resolver pressure.
+- Enforce both declared and actual byte ceilings. Preserve status separately
+  when a body truncates so status policy still decides oversized 404/410 and
+  similar responses. Bound redirect count, allowed content types, and consumer
+  concurrency while preserving output order.
+- Citation reachability may intentionally remain lenient for authenticated bot-
+  wall, timeout, redirect-limit, missing-location, size, or content outcomes;
+  that compatibility never bypasses destination checks and never proves page
+  truth. Product best-effort failures may retain a likely link but may not parse
+  metadata; unsafe destinations clear the proposed link.
+- Do not retain raw credential-bearing URLs in cache keys. Hash the URL for
+  lookup identity and keep existing source/product identity gates independent
+  of network reachability.
+- PR-6B proof: focused 74/74, full 1,620/1,620, build, Playwright 17/17,
+  five-partition controller with 10/10 cases and 29/29 invariants, and frozen
+  independent `VERIFIED` at confidence 0.98. Zero network/provider/live-fixture
+  content was used.

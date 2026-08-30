@@ -1,6 +1,6 @@
 # ReviewRadar Production-Readiness Master Plan
 
-Updated: 2026-08-29 by Codex
+Updated: 2026-08-30 by Codex after PR-6B closeout
 Status: active living control document
 Starting branch: `main`
 Starting commit: `dc9ab1fa1d85608e39cf29b5603d0c59692beb29`
@@ -664,9 +664,9 @@ shopper-facing recommendation quality.
 | PR-019 | P1 | verified generalized correction; live revalidated | PR-3G reached provider completion but rejected the entire schema-valid response at `candidate_source_identity_unproven` before collection. The privacy-safe artifact could not reveal whether every candidate failed. | The preflight validator returned one response-level failure on the first candidate whose exact sources did not prove identity, so mixed-quality candidates could not proceed independently. | After strict parsing, quarantine only candidates with no identity-accepted exact source, preserve survivor order, reissue contiguous server IDs, and fail only when zero survive. Retain closed context-bound counts; rejected URLs never reach network work. Contract/runtime/evidence rolled v8/v7/v5. | Fail-first 58 pass / 12 intended fail; focused 126/126; full 1,495/1,495; E2E/static/build/eval/benchmark walls; independent `APPROVED`; PR-3I executed the candidate-local filter and isolated title metadata as the successor stop. | Closed as the all-or-nothing correction. PR-3I still had zero survivors because missing title was treated as rejection; PR-020 owns that distinct successor. Never lower candidate cardinality, accept affirmative mismatches, leak identity, or let counts authorize trust. |
 | PR-020 | P1 | verified generalized correction; live revalidated | PR-3I completed provider research but filtered all 10 candidates before collection; every candidate had at least one missing-title source decision and no affirmative mismatch family fired. | The preflight treated unavailable source title metadata as identity rejection even though the official complete consulted-source action is URL-only. | Use a tri-state preflight: accept a title-proven exact source, defer any title-unavailable exact source to existing bounded page/entity verification when none is accepted, and quarantine only all-affirmative mismatches. Add a closed deferred subset and retain four mismatch families. Contract/runtime/evidence roll v9/v8/v6. | Fail-first 58/5; authentic URL-only and mixed unknown/mismatch cases; affirmative-mismatch quarantine; focused 169/169; full 1,498/1,498; complete deterministic walls; independent source-only `APPROVED`; PR-3K live conservation 10 submitted/accepted/deferred, zero rejected/mismatches, complete safe shopper result, independent artifact `VERIFIED`. | Closed as the missing-title correction. Deferral can increase page-fetch cost up to the unchanged 30 ceiling and never grants evidence or eligibility. One live success does not prove repeatability or recommendation quality; PR-006 now owns that measurement. |
 | PR-021 | P1 | verified privacy-safe observability correction | The independently authorized PR-4B attempt-1 launcher exited 1 after about 9.55 seconds with one generic sentence. The prospective output leaf remained absent, proving the trusted runner never reached its pre-provider directory-creation point, but the exact historical failure stage remains unknowable without inspecting credentials or retrying. | The one-shot launcher collapsed every process, repository/trust, approval, credential, post-credential reauthentication, child-construction, spawn-error, and signaled-child failure into one generic catch message. | The launcher now emits one closed `staged-terra-readiness-launcher-terminal-v1` object with exactly six keys, one of nine fixed stages, and three explicit false authority fields. A private `WeakMap` brands genuine typed errors so public-field mutation and prototype spoofing cannot inject arbitrary stage text. Deterministic operation injection is test-only; the CLI retains the real operations and existing one-shot controls. | Fail-first missing-export failure; exhaustive synchronous/asynchronous stage mapping; malformed-result, raw-error, credential-canary, public-field mutation, prototype-spoof, one-line CLI, integer-child-exit, and no-await controls; focused 7/7; combined launcher/runner 27/27; full 1,559/1,559; typecheck, lint, build, E2E 17/17, controller, syntax, and diff checks; independent replacement `VERIFIED`, no findings, confidence 0.995. | Attempt 1 remains consumed and no provider request occurred. The correction cannot authorize a retry, replacement, attempt 2, flag change, deployment, or release. Manual credential inspection remains prohibited; the exact past cause may remain unknowable. |
-| PR-022 | P1 | open; confirmed reachable defect | The default legacy route sends provider/Serper-owned citation and product-page URLs through direct server fetches. Deterministic mocked transport observed both consumers request the link-local metadata address. | `citationUrlVerification.ts` and `productAssets.ts` predate the shared DNS-pinned fetch boundary. They do not consistently restrict scheme/credentials/ports, reject private or link-local DNS results, revalidate redirects, cap redirect count/body bytes, or bound fan-out. | Route every untrusted citation/page URL through one shared HTTP(S)-only, credential-free, default-port, DNS-public, address-pinned, redirect-revalidated, timeout/byte/content-type-bounded transport; bound consumer concurrency. Preserve source ownership and exact-product rules. | Fail-first literal/mapped/IPv6 private addresses, private DNS, public-to-private redirects, credential/port/scheme, redirect-limit, timeout, content-type, byte, concurrency, bot-wall, and exact-product controls at both legacy consumers; focused/full/static/build/E2E walls; independent frozen review. | Highest PR-6A blocker and next PR-6B work unit. Immediate containment is to disable legacy citation/product-page fetch enrichment. URL regex or pre-resolution IP checks alone are insufficient. No live exploit is required or authorized. |
-| PR-023 | P1 | open; confirmed reachable defect | Public `/api/recommendations` and `/api/features` can buffer oversized bodies and start paid work without a shared request-frequency/concurrency admission gate. Unique feature categories and legacy searches can also grow process caches without a hard capacity; identical misses are not coalesced. | Request parsing, field validation, paid-operation admission, and cache ownership evolved independently. The active legacy validator has no maxima for query/budget/priorities/avoid, both routes call `json()` before a byte ceiling, and both cache maps retain unique keys without a capacity sweep. | In a separate successor, add a server-owned pre-provider admission contract: declared/actual body bounds, exact field limits, bounded global/provider concurrency, deployment-aware rate policy, bounded TTL/LRU caches, and in-flight coalescing. | Oversized declared/actual bodies and fields must stop before client creation; burst/parallel/unique-key mutations must prove rejection, coalescing, eviction, and recovery without provider/network calls; multi-instance limitations must be explicit. | Do not fold this into PR-6B. A process-local IP-only limiter is not sufficient production authority, and tracked CDN/WAF protection is absent rather than disproven. |
-| PR-024 | P2 | open; confirmed source-control gap | The browser can label a legacy search cancelled while the active synchronous server path has not wired request cancellation into its provider work. | The client aborts its fetch, but legacy provider calls receive fixed timeouts rather than the request abort signal. Job-token cancellation exists only for the default-off asynchronous routes. | Propagate one server-owned cancellation signal through every cancel-safe legacy provider/fetch stage, distinguish user cancellation from timeout/failure, and never retry or start later paid stages after cancellation. | Deterministic abort-before-create, abort-in-flight, between-stage, late-abort, timeout, and cleanup tests with exact provider-call counts and stable user errors. | Framework/host disconnect behavior still needs direct deterministic proof. Keep this behind PR-022 and PR-023; do not claim the current UI stops already-dispatched provider billing. |
+| PR-022 | P1 | verified generalized correction | The default legacy route sent provider/Serper-owned citation and product-page URLs through direct server fetches. Deterministic mocked transport observed both consumers request the link-local metadata address. | `citationUrlVerification.ts` and `productAssets.ts` predated the shared DNS-pinned fetch boundary and had no complete scheme/address/redirect/body/fan-out contract. | Both consumers now reuse `fetchHybridSource()`: HTTP(S)-only parsing, credential/default-port enforcement, complete public-address resolution, address pinning, per-hop redirect revalidation, one hard DNS-plus-transport wall, declared/actual byte and content-type limits, and ordered concurrency capped at four. Citation bot-wall compatibility and product best-effort identity/asset behavior remain explicit. | Fail-first literal/mapped/IPv6 private addresses, private DNS, mixed DNS, public-to-private redirects, credential/port/scheme, malformed/limit redirects, hard DNS/transport timeout, content-type, declared/actual byte, order/concurrency, bot-wall, cache-key, and public controls; final focused 74/74; full 1,620/1,620; static/build/E2E/controller walls; independent frozen `VERIFIED`, confidence 0.98. | Closed locally by PR-6B. OS `dns.lookup` cannot cancel native resolver work after the caller's hard deadline, although no later transport can start; PR-023's admission/global-concurrency boundary owns sustained-traffic containment. Citation leniency does not prove final page usability or truth. No live exploit occurred. |
+| PR-023 | P1 | open; confirmed reachable defect | Public `/api/recommendations` and `/api/features` can buffer oversized bodies and start paid work without a shared request-frequency/concurrency admission gate. Unique feature categories and legacy searches can also grow process caches without a hard capacity; identical misses are not coalesced. | Request parsing, field validation, paid-operation admission, and cache ownership evolved independently. The active legacy validator has no maxima for query/budget/priorities/avoid, both routes call `json()` before a byte ceiling, and both cache maps retain unique keys without a capacity sweep. | In PR-6C, add a server-owned pre-provider admission contract: declared/actual body bounds, exact field limits, bounded global/provider concurrency, deployment-aware rate policy, bounded TTL/LRU caches, and in-flight coalescing. | Oversized declared/actual bodies and fields must stop before client creation; burst/parallel/unique-key mutations must prove rejection, coalescing, eviction, and recovery without provider/network calls; multi-instance limitations must be explicit. | This is the active next unit after PR-6B. A process-local IP-only limiter is not sufficient production authority, and tracked CDN/WAF protection is absent rather than disproven. |
+| PR-024 | P2 | open; confirmed source-control gap | The browser can label a legacy search cancelled while the active synchronous server path has not wired request cancellation into its provider work. | The client aborts its fetch, but legacy provider calls receive fixed timeouts rather than the request abort signal. Job-token cancellation exists only for the default-off asynchronous routes. | Propagate one server-owned cancellation signal through every cancel-safe legacy provider/fetch stage, distinguish user cancellation from timeout/failure, and never retry or start later paid stages after cancellation. | Deterministic abort-before-create, abort-in-flight, between-stage, late-abort, timeout, and cleanup tests with exact provider-call counts and stable user errors. | Framework/host disconnect behavior still needs direct deterministic proof. Keep this behind PR-023; do not claim the current UI stops already-dispatched provider billing. |
 
 ## Suspected weaknesses requiring measurement
 
@@ -678,7 +678,7 @@ shopper-facing recommendation quality.
 | PR-S04 | P2 | investigating | Users may confuse Important Details, inferred dealbreakers, and the display-only strength slider. | Accessibility/UX walkthrough, field comprehension review, and E2E proof of what changes the request versus only the display. | A new avoid field changes request UX and should follow observed confusion, not aesthetic preference. |
 | PR-S05 | P1 | partially confirmed as PR-024 | Cancellation, provider timeouts, retry ownership, and partial-success behavior may leave work running or surface generic failures in edge states. The legacy request signal is not connected to provider calls; remaining stage behavior still needs fault injection. | Deterministic lifecycle fault injection at every create/retrieve/fetch/presentation boundary; inspect one bounded live cancellation only if offline proof is insufficient. | Do not create extra provider jobs merely to test cleanup. |
 | PR-S06 | P1 | partially confirmed as PR-023 | Cache keys, TTLs, and flag/config differences may contaminate requests or make development tests unrepresentative. The shared legacy cache and generated-feature cache are now proven capacity-unbounded; contamination semantics remain to be measured. | Enumerate caches and key inputs; mutation tests for request, flag, model, and evidence differences; restart and concurrency tests. | Avoid clearing user data or relying on global mutable state. |
-| PR-S07 | P1 | partially confirmed as PR-022/PR-023 | Input limits, rate limiting, unsafe URL handling, redirect safety, and log redaction may have untested operational gaps outside the existing trust boundaries. PR-6A confirmed unsafe legacy outbound fetches and missing paid-request admission; hosted edge controls and remaining log/header behavior stay unknown. | Threat-model route and external-fetch surfaces, then add bounded payload, SSRF, redirect, injection, and log-leak tests. | Security fixes take priority over performance work. |
+| PR-S07 | P1 | partially confirmed; PR-022 fixed, PR-023 open | Input limits, rate limiting, unsafe URL handling, redirect safety, and log redaction may have untested operational gaps outside the existing trust boundaries. PR-6B closed the confirmed legacy outbound destination gap; missing paid-request admission, hosted edge controls, and remaining log/header behavior stay open or unknown. | Threat-model route and external-fetch surfaces, then add bounded payload, admission, injection, and log-leak tests. | Security fixes take priority over performance work. |
 | PR-S08 | P2 | investigating | One-to-three-minute latency and provider cost may be dominated by redundant stages, retries, or low-yield enrichment. | Use stage timing, call counts, candidate contribution, cache hit rate, and accuracy-preserving ablations on the same cases. | A faster wrong answer is a regression; require unchanged or better quality gates. |
 
 ## Unknown-unknown investigation areas
@@ -1648,9 +1648,62 @@ directory is spent.
   authorize a provider call, live exploit, flag change, deployment, release,
   push, or production-readiness claim.
 
+#### PR-6B — Shared bounded outbound-fetch correction
+
+- Status: **complete locally; zero network; independently verified**
+- Objective and decision: close PR-022/RR-103 at the earliest shared network
+  boundary without disabling useful fallback enrichment or creating a second
+  URL denylist. Both default-route consumers now reuse the established hybrid
+  transport and an existing ordered concurrency helper. PR-023 admission/cache
+  work and PR-024 cancellation propagation remained untouched.
+- Public-network contract: every attempted hop is HTTP(S), credential-free,
+  default-port, completely resolved to public addresses, and transported to a
+  validated pinned address. Every redirect repeats that contract. Literal,
+  mapped, compatible, documentation, 6to4, loopback, link-local, unique-local,
+  multicast, private, and mixed public/private DNS results fail closed.
+- Resource contract: one per-hop controller spans DNS and transport; redirects,
+  declared and actual bytes, and allowed content types are bounded. Citation
+  checks use 5 seconds, 4,096 bytes, two redirects, and concurrency four.
+  Product-page enrichment uses 5 seconds, 1.5 MB, two redirects, HTML/XHTML,
+  and concurrency four. Output order remains stable.
+- Compatibility: citations still reject 404/410 and retain the intentional
+  403/405/429/503/timeout and safe non-content leniency. Unsafe product URLs are
+  cleared; ordinary host/content/size failures retain likely product links but
+  cannot supply parsed metadata. Product identity/source rules are unchanged,
+  and cache keys retain only a SHA-256 URL digest rather than a credential-
+  bearing URL.
+- Fail-first and correction history: the initial wrapper wall produced the
+  intended failures. Independent review then found that socket inactivity
+  timeout did not bound DNS or trickling responses; main review separately
+  found that truncated bodies could erase 404/410 status. Replacements added a
+  hard DNS-plus-transport deadline and status-preserving `bodyTruncated` result,
+  with direct regressions before the final freeze.
+- Verification: final focused 74/74 across nine suites; typecheck; full
+  1,620/1,620 across 220 suites; lint with zero errors and the same three old
+  warnings; production build; Playwright 17/17; deterministic eval, five exact
+  partitions, 10/10 benchmark cases, and 29/29 invariants in controller
+  `agent-loop-2026-08-30T06-35-39-277Z`. Independent final verdict:
+  `VERIFIED`, no material correction, confidence 0.98. The reviewer also
+  authenticated all seven hashes and independently exercised pinned-address,
+  mixed-DNS, special-IPv6, and global-IPv6 controls.
+- Limits: OS `dns.lookup` cannot cancel native resolver work; the caller returns
+  at the hard deadline and cannot begin transport afterward. Sustained hostile
+  resolver pressure therefore remains for PR-023's admission/global-concurrency
+  boundary. The real Node socket path was source-reviewed but not exercised on
+  a live server because network access was prohibited. Citation compatibility
+  proves safe reachability attempts, not final page truth or usability.
+- Process residual: a prohibited broad `git status --short` printed spent live-
+  fixture filenames. No fixture content, hash, field, value, parse, or
+  modification occurred; subsequent status and discovery used tracked-only or
+  exact paths. This repeated a filename-only process deviation and must not
+  recur.
+- Authority limit: no provider, product-data, credential, manual environment-
+  file, real-network, live-fixture-content, flag, deployment, release, push, or
+  successor-phase authority was used or granted.
+
 ### Phase PR-6 — UX, resilience, security, and operational closure
 
-- Status: **in progress; PR-6A complete, PR-6B/PR-022 next**
+- Status: **in progress; PR-6A and PR-6B complete, PR-6C/PR-023 next**
 - Address proven comprehension, accessibility, cancellation, partial-success,
   cache, rate/payload, URL/redirect, redaction, health, configuration,
   dependency, deployment, and rollback gaps.
@@ -1715,11 +1768,13 @@ Release blockers today:
   price boundaries have a verified generalized correction. RR-092 is closed
   locally by PR-008. Neither zero-live correction substitutes for blocked live
   accuracy/repeatability evidence or the open UX/security/operations gates;
-- PR-022/RR-103 is a confirmed release blocker on the default legacy route:
-  untrusted citation/product-page URLs can reach private or link-local targets
-  outside the bounded hybrid transport. PR-023/RR-104 and PR-024/RR-105 retain
-  the next paid-admission/cache and cancellation gaps. PR-6A proves and ranks
-  these defects but changes no behavior.
+- PR-022/RR-103 is closed locally: every default-route citation/product-page
+  fetch now uses the address-pinned, redirect-revalidated, deadline/byte/
+  content-bounded shared transport with consumer concurrency four. PR-023/
+  RR-104 is the next release blocker because paid routes still lack body/field/
+  admission bounds and capacity-bounded, coalesced caches. PR-024/RR-105 retains
+  the later cancellation gap. The native resolver residual is part of PR-023's
+  sustained-traffic containment, not a reason to reopen the destination gate.
 
 The verdict can improve only through the required evidence above. Passing
 unit tests alone cannot change it.

@@ -1,9 +1,9 @@
 # ReviewRadar Issues Report
-## Compiled for AI Agent Consumption — Phase 0 through production-readiness PR-6A
+## Compiled for AI Agent Consumption — Phase 0 through production-readiness PR-6B
 
 **Generated:** 2026-08-30
-**Scope:** All phases from initial measurement harness through the PR-6A
-production-boundary baseline
+**Scope:** All phases from initial measurement harness through the PR-6B
+shared bounded outbound-fetch correction
 **Purpose:** Comprehensive defect register for an AI agent to triage, track, and act on
 
 **Standing maintenance rule:** When a phase discovers, fixes, reopens, or
@@ -25,9 +25,9 @@ only when maintaining this register or auditing its full history.
 | High | 50 |
 | Medium | 35 |
 | Low | 5 |
-| Open | 3 |
+| Open | 2 |
 | Needs Investigation | 5 |
-| Fixed | 96 |
+| Fixed | 97 |
 | Won't Fix | 1 |
 
 ### Issues by Phase
@@ -4203,26 +4203,32 @@ without changing the frozen request contract.
 | Field | Value |
 |-------|-------|
 | **ID** | RR-103 |
-| **Phase** | Production readiness PR-6A boundary audit |
+| **Phase** | Production readiness PR-6A audit / PR-6B correction |
 | **Severity** | High |
 | **Title** | Default legacy page fetches can reach private and link-local targets |
-| **Status** | Open |
+| **Status** | Fixed |
 
-**Description:** The default `/api/recommendations` route passes untrusted
-provider/Serper citation and product-page URLs to `citationUrlVerification.ts`
-and `productAssets.ts`. Both consumers call `fetch` outside the shared bounded
-hybrid transport. They do not consistently restrict scheme, credentials, or
-ports; resolve and pin only public addresses; revalidate each redirect; cap
-redirects/body bytes; or bound request fan-out. Product assets also reads the
-complete HTML body. A zero-network mock intercepted direct requests from these
-exports to `http://169.254.169.254/latest/meta-data` and
-`http://169.254.169.254/latest/meta-data/instance-id`.
+**Description:** PR-6A proved that the default `/api/recommendations` route
+passed untrusted provider/Serper citation and product-page URLs to two direct
+fetchers outside the shared public-network boundary. A zero-network mock
+intercepted direct requests to the link-local metadata address from both
+exports.
 
-**Expected:** Every untrusted citation/page fetch must use one HTTP(S)-only,
-credential-free, default-port, DNS-public, address-pinned transport with
-per-redirect revalidation, timeout/byte/content-type limits, and bounded
-consumer concurrency. Source ownership and exact-product gates remain
-unchanged. PR-6B/PR-022 owns fail-first correction and independent review.
+**Resolution:** PR-6B routes both consumers through `fetchHybridSource()`.
+Every hop now enforces HTTP(S), no credentials, default ports, complete public-
+address resolution, address pinning, redirect revalidation, one hard DNS-plus-
+transport deadline, and redirect/byte/content-type bounds. Ordered citation and
+product fan-out is capped at four. Unsafe proposed product URLs are cleared;
+compatibility handling for citation bot walls and product best-effort failures
+remains explicit. Final focused 74/74, full 1,620/1,620, typecheck, lint, build,
+Playwright 17/17, controller 10/10 cases and 29/29 invariants, and an exact-hash
+independent `VERIFIED` verdict at confidence 0.98 passed with zero network.
+
+**Residual:** native `dns.lookup` work cannot itself be cancelled after the
+caller's hard deadline, although no transport can start later. PR-023/RR-104's
+request-admission and global-concurrency boundary owns sustained resolver-
+pressure containment. The real socket path remains source-reviewed rather than
+live-server exercised. These limits do not reopen the private-destination gate.
 
 ---
 
@@ -4280,8 +4286,7 @@ remains unverified until that source-level contract exists.
 
 ## Appendix: Issue Cross-Reference by Status
 
-### Open (3 issues)
-- RR-103: Default legacy page fetches can reach private/link-local targets
+### Open (2 issues)
 - RR-104: Public paid routes lack shared admission and bounded caches
 - RR-105: Legacy browser cancellation is not wired into provider work
 
@@ -4291,9 +4296,9 @@ remains unverified until that source-level contract exists.
 - RR-037: RIDGID absent from shop-vac pool (LLM variance)
 - RR-045: Tapo raw Serper coverage remains unconfirmed
 - RR-091: Same-page related-product price can satisfy autonomous card binding
-### Fixed (96 issues)
+### Fixed (97 issues)
 RR-001 through RR-013, RR-016 through RR-023, RR-025 through RR-036,
-RR-038 through RR-044, RR-046 through RR-090, and RR-092 through RR-102
+RR-038 through RR-044, RR-046 through RR-090, and RR-092 through RR-103
 
 ### Won't Fix (1 issue)
 - RR-024: Live fixture staleness (by design; graceful degradation is the accepted pattern)
@@ -4302,17 +4307,15 @@ RR-038 through RR-044, RR-046 through RR-090, and RR-092 through RR-102
 
 ## Appendix: Suggested Priority Order for Open/Needs-Investigation Issues
 
-1. **RR-103** — correct the active legacy outbound-fetch boundary in PR-6B
-   with fail-first private-DNS, redirect, byte, content, and concurrency proof.
-2. **RR-104** — add a separate paid-request admission and bounded-cache unit;
-   do not bundle it into the URL-fetch correction.
-3. **RR-105** — wire and prove legacy cancellation after the admission boundary
+1. **RR-104** — add the paid-request admission and bounded-cache unit now that
+   PR-6B has closed the outbound destination boundary.
+2. **RR-105** — wire and prove legacy cancellation after the admission boundary
    is explicit.
-4. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
+3. **RR-014 + RR-015** — C4 failed the recall gate and measured zero broad
    final overlap. Recovery stays default-off and R7A stays blocked.
-5. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
+4. **RR-037 + RR-045** (Low/Medium) — R2 narrowed both: RIDGID appeared 3/3
    but varied by model, while Tapo appeared raw and died in normalization.
-6. **RR-091** — PR-007 corrected the shared reachable exact-price boundaries,
+5. **RR-091** — PR-007 corrected the shared reachable exact-price boundaries,
    but the original membership-only adapter remains isolated and unsafe. Keep
    it unpromoted; any future routing proposal requires directly observed exact
    transactional binding and a new independent review.

@@ -1,4 +1,11 @@
+import { createHash } from "node:crypto";
 import { getCachedOrLoad, normalizeCacheKey } from "./cache.ts";
+import {
+  fetchHybridSource,
+  LIVE_HYBRID_FETCH_DEPENDENCIES,
+  type HybridFetchDependencies,
+  type HybridFetchResult,
+} from "./autonomousFactVerifier.ts";
 import {
   extractProductImageCandidatesFromHtml,
   imageResolutionToField,
@@ -26,6 +33,7 @@ import {
   haveConflictingDescriptiveModelSequences,
 } from "./productIdentity.ts";
 import { sourceUrlPathIdentitySegments } from "./sourceUrlIdentity.ts";
+import { mapWithConcurrency } from "./recommendationPerformance.ts";
 
 type ProductAssetRecommendation = {
   category?: string;
@@ -50,8 +58,25 @@ type ProductAssetResult = {
   nearMatches?: ProductAssetRecommendation[];
 };
 
+type ProductAssetEnrichmentOptions = {
+  concurrency?: number;
+  fetchDependencies?: HybridFetchDependencies;
+};
+
+type ProductPageFetchResult = {
+  clearRequestedUrl: boolean;
+  html: string;
+};
+
 const PRODUCT_ASSET_TIMEOUT_MS = 5000;
 const PRODUCT_ASSET_CACHE_TTL_MS = 1000 * 60 * 30;
+const PRODUCT_ASSET_MAX_BYTES = 1_500_000;
+const PRODUCT_ASSET_MAX_REDIRECTS = 2;
+const PRODUCT_ASSET_CONCURRENCY = 4;
+const PRODUCT_ASSET_CONTENT_TYPES = [
+  "application/xhtml+xml",
+  "text/html",
+] as const;
 const LIKELY_PRODUCT_PATH_PARTS = [
   "/dp/",
   "/gp/product/",
@@ -271,39 +296,41 @@ function productNameHasPageMatch(productName: string, html: string) {
   return matches.length >= Math.min(2, words.length);
 }
 
-async function fetchText(url: string) {
-  const cacheKey = normalizeCacheKey(["product-page", normalizeUrl(url)]);
+function shouldClearRequestedProductUrl(result: HybridFetchResult) {
+  return (
+    !result.ok &&
+    (result.reason === "credentials_forbidden" ||
+      result.reason === "invalid_url" ||
+      result.reason === "non_default_port" ||
+      result.reason === "non_public_address")
+  );
+}
+
+async function fetchText(
+  url: string,
+  fetchDependencies: HybridFetchDependencies,
+): Promise<ProductPageFetchResult> {
+  const cacheKey = productPageCacheKey(url);
 
   return getCachedOrLoad(cacheKey, PRODUCT_ASSET_CACHE_TTL_MS, async () => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), PRODUCT_ASSET_TIMEOUT_MS);
-
-    try {
-      const response = await fetch(url, {
-        headers: {
-          "User-Agent":
-            "ReviewRadar/0.1 product research metadata fetcher",
-        },
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        return "";
-      }
-
-      const contentType = response.headers.get("content-type") || "";
-
-      if (!contentType.includes("text/html")) {
-        return "";
-      }
-
-      return await response.text();
-    } catch {
-      return "";
-    } finally {
-      clearTimeout(timeout);
-    }
+    const result = await fetchHybridSource(url, fetchDependencies, {
+      allowedContentTypes: PRODUCT_ASSET_CONTENT_TYPES,
+      maxBytes: PRODUCT_ASSET_MAX_BYTES,
+      maxRedirects: PRODUCT_ASSET_MAX_REDIRECTS,
+      timeoutMs: PRODUCT_ASSET_TIMEOUT_MS,
+    });
+    return {
+      clearRequestedUrl: shouldClearRequestedProductUrl(result),
+      html: result.ok ? result.body : "",
+    };
   });
+}
+
+function productPageCacheKey(url: string) {
+  const urlDigest = createHash("sha256")
+    .update(normalizeUrl(url))
+    .digest("hex");
+  return normalizeCacheKey(["product-page", urlDigest]);
 }
 
 function productImageContext(
@@ -321,6 +348,7 @@ function productImageContext(
 
 async function getImageFromCitationPages(
   product: ProductAssetRecommendation,
+  fetchDependencies: HybridFetchDependencies,
 ): Promise<ProductImageResolution> {
   const citationUrls = product.citations?.map((citation) => citation.url) || [];
   const rejected: ProductImageResolution["rejected"] = [];
@@ -332,7 +360,7 @@ async function getImageFromCitationPages(
       continue;
     }
 
-    const html = await fetchText(normalizedCitationUrl);
+    const { html } = await fetchText(normalizedCitationUrl, fetchDependencies);
 
     if (!html || !productNameHasPageMatch(product.name, html)) {
       continue;
@@ -363,7 +391,10 @@ async function getImageFromCitationPages(
   };
 }
 
-async function getProductPageFromCitationPages(product: ProductAssetRecommendation) {
+async function getProductPageFromCitationPages(
+  product: ProductAssetRecommendation,
+  fetchDependencies: HybridFetchDependencies,
+) {
   const citationUrls = product.citations?.map((citation) => citation.url) || [];
 
   for (const citationUrl of citationUrls.slice(0, 3)) {
@@ -373,7 +404,7 @@ async function getProductPageFromCitationPages(product: ProductAssetRecommendati
       continue;
     }
 
-    const html = await fetchText(normalizedCitationUrl);
+    const { html } = await fetchText(normalizedCitationUrl, fetchDependencies);
 
     if (!html || !productNameHasPageMatch(product.name, html)) {
       continue;
@@ -1276,7 +1307,10 @@ function withVerifiedOfferPriceFields<T extends ProductAssetRecommendation>(
   return nextProduct;
 }
 
-async function getVerifiedProductAssets(product: ProductAssetRecommendation) {
+async function getVerifiedProductAssets(
+  product: ProductAssetRecommendation,
+  fetchDependencies: HybridFetchDependencies,
+) {
   const proposedProductPageUrl = normalizeUrl(product.product_page_url);
   const proposedPathIdentitySegments = sourceUrlPathIdentitySegments(
     proposedProductPageUrl,
@@ -1294,7 +1328,7 @@ async function getVerifiedProductAssets(product: ProductAssetRecommendation) {
     : proposedProductPageUrl;
   const citationProductPageUrl = primaryProductPageUrl
     ? ""
-    : await getProductPageFromCitationPages(product);
+    : await getProductPageFromCitationPages(product, fetchDependencies);
   const productPageUrl =
     primaryProductPageUrl || citationProductPageUrl;
   const initialImageCandidates: ProductImageCandidate[] = [];
@@ -1333,7 +1367,7 @@ async function getVerifiedProductAssets(product: ProductAssetRecommendation) {
   );
   const citationImageResolution =
     imageResolution.confidence === "none"
-      ? await getImageFromCitationPages(product)
+      ? await getImageFromCitationPages(product, fetchDependencies)
       : {
           confidence: "none" as const,
           rejected: [],
@@ -1399,11 +1433,32 @@ async function getVerifiedProductAssets(product: ProductAssetRecommendation) {
     };
   }
 
-  const html = await fetchText(productPageUrl);
+  const pageFetch = await fetchText(productPageUrl, fetchDependencies);
+  const html = pageFetch.html;
   const likelyProductPage = looksLikeProductPageUrl(
     productPageUrl,
     product.name,
   );
+
+  if (pageFetch.clearRequestedUrl) {
+    logImageResolutionDebug(product.name, imageResolution);
+
+    return {
+      metadata: {
+        ...(product.metadata || { offers: [] }),
+        ...(imageResolution.url
+          ? {
+              image: imageResolutionToField(
+                imageResolution,
+                imageResolution.url,
+              ),
+            }
+          : {}),
+      },
+      product_page_url: "",
+      product_image_url: imageResolution.url,
+    };
+  }
 
   if (looksLikeEditorialUrl(productPageUrl)) {
     logImageResolutionDebug(product.name, imageResolution);
@@ -1530,16 +1585,30 @@ async function getVerifiedProductAssets(product: ProductAssetRecommendation) {
 
 export async function enrichProductAssets<T extends ProductAssetResult>(
   result: T,
+  options: ProductAssetEnrichmentOptions = {},
 ): Promise<T> {
+  const fetchDependencies =
+    options.fetchDependencies ?? LIVE_HYBRID_FETCH_DEPENDENCIES;
+  const requestedConcurrency = options.concurrency ?? PRODUCT_ASSET_CONCURRENCY;
+  const concurrency = Number.isFinite(requestedConcurrency)
+    ? Math.min(
+        PRODUCT_ASSET_CONCURRENCY,
+        Math.max(1, Math.floor(requestedConcurrency)),
+      )
+    : PRODUCT_ASSET_CONCURRENCY;
+
   async function enrichProducts(products: ProductAssetRecommendation[]) {
-    return Promise.all(products.map(async (recommendation) => {
-      const assets = await getVerifiedProductAssets(recommendation);
+    return mapWithConcurrency(products, concurrency, async (recommendation) => {
+      const assets = await getVerifiedProductAssets(
+        recommendation,
+        fetchDependencies,
+      );
 
       return withVerifiedOfferPriceFields({
         ...recommendation,
         ...assets,
       });
-    }));
+    });
   }
 
   const recommendations = await enrichProducts(result.recommendations);
@@ -1567,5 +1636,6 @@ export const productAssetsTestExports = {
   extractDimensionFromText,
   extractSpecTableText,
   mergeMetadata,
+  productPageCacheKey,
   withVerifiedOfferPriceFields,
 };

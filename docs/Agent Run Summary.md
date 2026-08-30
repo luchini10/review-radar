@@ -2871,3 +2871,48 @@ reuse one DNS-pinned bounded fetch primitive at both legacy consumers and bound
 fan-out. Paid admission/cache and cancellation remain later separate units.
 Recommended reasoning: High for SSRF/DNS/redirect correctness; Medium for
 localized wrapper integration and deterministic tests.
+
+## Codex Run - 2026-08-30 PR-6B shared bounded outbound fetch
+
+**Goal and assessment:** close the default-route private-destination boundary
+without disabling useful citation/product enrichment or creating a partial URL
+denylist. PR-6A had proved both legacy consumers reachable. The strongest
+generalized correction was to reuse the existing address-pinned hybrid fetcher
+and bound each consumer's fan-out; PR-023 admission/cache and PR-024
+cancellation remained separate.
+
+**Change:** every citation and product-page hop now enforces HTTP(S), no
+credentials, default ports, complete public DNS, a validated pinned address,
+redirect revalidation, a hard DNS-plus-transport deadline, and redirect/byte/
+content limits. Citation checks use 4,096 bytes and concurrency four while
+preserving 404/410 and bot-wall compatibility. Product pages use 1.5 MB,
+HTML/XHTML, and concurrency four; unsafe URLs clear, ordinary best-effort
+failures cannot supply metadata, and cache keys retain only a URL digest.
+Special IPv6/mapped forms, mixed DNS, malformed redirects, declared sizes, and
+status-preserving truncation now fail closed.
+
+**Fail-first and review:** wrapper regressions produced the intended failures.
+Main review found truncated-body status loss, and independent review found that
+an inactivity timeout did not hard-bound DNS or trickling responses. Both were
+corrected with direct fail-first tests before the replacement freeze. The final
+independent verdict was `VERIFIED`, no material correction, confidence 0.98;
+all seven hashes matched before and after review, and independent injected
+probes confirmed pinned-address and special/mixed-DNS behavior.
+
+**Verification:** final focused 74/74 across nine suites; full 1,620/1,620
+across 220 suites; typecheck; production build; Playwright 17/17; diff; and
+lint with zero errors/three old warnings. Controller
+`agent-loop-2026-08-30T06-35-39-277Z` passed the full wall, deterministic eval,
+all five serial partitions, 10/10 benchmark cases, and 29/29 invariants with no
+repeated failure. Generated `next-env.d.ts` was restored.
+
+**Live calls, limits, and next step:** zero. No credential, manual environment-
+file, provider, product-data, network, or live-fixture content was accessed.
+Native OS DNS work may finish after the caller's hard deadline, though no later
+transport can start; the actual socket path was source-reviewed rather than
+live-server exercised. A prohibited broad status command printed spent-fixture
+filenames but no content/hash/field/value was read and no fixture changed; exact
+or tracked-only discovery followed. RR-103 is Fixed. ReviewRadar remains NOT
+READY. The next blocker is PR-023/RR-104 paid-request body/field/admission and
+bounded/coalesced caches; recommended reasoning is High for admission and
+multi-instance limits, Medium for localized cache/test implementation.

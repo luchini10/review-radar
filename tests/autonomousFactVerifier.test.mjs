@@ -1147,7 +1147,14 @@ describe("bounded hybrid fetch seam", () => {
     assert.equal(isPublicHybridFetchAddress("10.0.0.1"), false);
     assert.equal(isPublicHybridFetchAddress("169.254.169.254"), false);
     assert.equal(isPublicHybridFetchAddress("::1"), false);
+    assert.equal(isPublicHybridFetchAddress("fd00::1"), false);
+    assert.equal(isPublicHybridFetchAddress("fe80::1"), false);
+    assert.equal(isPublicHybridFetchAddress("ff02::1"), false);
     assert.equal(isPublicHybridFetchAddress("::ffff:127.0.0.1"), false);
+    assert.equal(isPublicHybridFetchAddress("::ffff:7f00:1"), false);
+    assert.equal(isPublicHybridFetchAddress("::ffff:a00:1"), false);
+    assert.equal(isPublicHybridFetchAddress("2001:db8::1"), false);
+    assert.equal(isPublicHybridFetchAddress("2002:7f00:1::"), false);
     assert.equal(isPublicHybridFetchAddress("93.184.216.34"), true);
     assert.equal(isPublicHybridFetchAddress("2606:2800:220:1:248:1893:25c8:1946"), true);
   });
@@ -1179,6 +1186,93 @@ describe("bounded hybrid fetch seam", () => {
     assert.equal(transports, 0);
   });
 
+  it("normalizes a bracketed IPv6 literal before resolution", async () => {
+    let resolvedHostname = "";
+    let transports = 0;
+    const result = await fetchHybridSource("http://[::1]/latest", {
+      resolveHost: async (hostname) => {
+        resolvedHostname = hostname;
+        return ["::1"];
+      },
+      transport: async () => {
+        transports += 1;
+        return htmlTransport();
+      },
+    });
+
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, "non_public_address");
+    assert.equal(resolvedHostname, "::1");
+    assert.equal(transports, 0);
+  });
+
+  it("enforces one hard per-hop wall clock across DNS and transport", async () => {
+    const timeoutConfig = {
+      maxRedirects: 2,
+      maxBytes: 1024,
+      timeoutMs: 10,
+      allowedContentTypes: ["text/html"],
+    };
+    const guard = Symbol("test guard elapsed");
+    const withinTestGuard = (promise) =>
+      Promise.race([
+        promise,
+        new Promise((resolve) => setTimeout(() => resolve(guard), 100)),
+      ]);
+
+    const dnsResult = await withinTestGuard(
+      fetchHybridSource(
+        "https://dns-stall.example.test/product",
+        {
+          resolveHost: async () => new Promise(() => {}),
+          transport: async () => htmlTransport(),
+        },
+        timeoutConfig,
+      ),
+    );
+    assert.notEqual(dnsResult, guard, "DNS escaped the configured timeout");
+    assert.equal(dnsResult.ok, false);
+    assert.equal(dnsResult.reason, "request_timeout");
+    assert.equal(dnsResult.attempts, 0);
+
+    let transportSignal;
+    let transportWasAborted = false;
+    const transportResult = await withinTestGuard(
+      fetchHybridSource(
+        "https://trickle.example.test/product",
+        {
+          resolveHost: publicResolver,
+          transport: async ({ signal }) => {
+            transportSignal = signal;
+            return new Promise((resolve, reject) => {
+              signal?.addEventListener(
+                "abort",
+                () => {
+                  transportWasAborted = true;
+                  const error = new Error("request_timeout");
+                  error.name = "AbortError";
+                  reject(error);
+                },
+                { once: true },
+              );
+            });
+          },
+        },
+        timeoutConfig,
+      ),
+    );
+    assert.notEqual(
+      transportResult,
+      guard,
+      "transport escaped the configured timeout",
+    );
+    assert.equal(transportResult.ok, false);
+    assert.equal(transportResult.reason, "request_timeout");
+    assert.equal(transportResult.attempts, 1);
+    assert.equal(transportSignal?.aborted, true);
+    assert.equal(transportWasAborted, true);
+  });
+
   it("revalidates DNS after redirects and blocks a private redirect target", async () => {
     let attempts = 0;
     const result = await fetchHybridSource("https://example.com/product", {
@@ -1197,6 +1291,17 @@ describe("bounded hybrid fetch seam", () => {
     assert.equal(result.reason, "non_public_address");
     assert.equal(result.attempts, 1);
     assert.equal(attempts, 1);
+
+    const malformed = await fetchHybridSource("https://example.com/product", {
+      resolveHost: async () => ["93.184.216.34"],
+      transport: async () => ({
+        status: 302,
+        headers: { location: "http://[::1" },
+        body: new Uint8Array(),
+      }),
+    });
+    assert.equal(malformed.ok, false);
+    assert.equal(malformed.reason, "invalid_url");
   });
 
   it("returns a bounded HTML envelope without exposing request headers", async () => {
@@ -1239,10 +1344,32 @@ describe("bounded hybrid fetch seam", () => {
         allowedContentTypes: ["text/html"],
       },
     );
+    const declaredOversized = await fetchHybridSource(
+      "https://example.com/declared-large",
+      {
+        resolveHost: publicResolver,
+        transport: async () => ({
+          status: 200,
+          headers: {
+            "content-length": "32",
+            "content-type": "text/html",
+          },
+          body: Buffer.from("<html></html>"),
+        }),
+      },
+      {
+        maxRedirects: 2,
+        maxBytes: 16,
+        timeoutMs: 1000,
+        allowedContentTypes: ["text/html"],
+      },
+    );
     assert.equal(pdf.ok, false);
     assert.equal(pdf.reason, "unsupported_content_type");
     assert.equal(oversized.ok, false);
     assert.equal(oversized.reason, "response_too_large");
+    assert.equal(declaredOversized.ok, false);
+    assert.equal(declaredOversized.reason, "response_too_large");
   });
 
   it("does not parse final bot-wall or missing-page HTML", async () => {

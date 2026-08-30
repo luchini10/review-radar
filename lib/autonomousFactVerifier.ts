@@ -186,6 +186,7 @@ export type HybridTransportResponse = {
   status: number;
   headers: Record<string, string | string[] | undefined>;
   body: Uint8Array;
+  bodyTruncated?: boolean;
 };
 
 export type HybridFetchDependencies = {
@@ -196,6 +197,7 @@ export type HybridFetchDependencies = {
     timeoutMs: number;
     maxBytes: number;
     accept?: string;
+    signal: AbortSignal;
   }) => Promise<HybridTransportResponse>;
 };
 
@@ -1024,26 +1026,74 @@ const BLOCKED_IPV4_RANGES: ReadonlyArray<readonly [string, number]> = [
 ];
 
 export function isPublicHybridFetchAddress(address: string) {
-  const kind = isIP(address);
+  const normalized = address.toLowerCase().split("%")[0];
+  const kind = isIP(normalized);
   if (kind === 4) {
-    const value = parseIpv4(address);
+    const value = parseIpv4(normalized);
     return (
       value !== null &&
       !BLOCKED_IPV4_RANGES.some(([base, prefix]) => inIpv4Range(value, base, prefix))
     );
   }
   if (kind !== 6) return false;
-  const normalized = address.toLowerCase().split("%")[0];
-  const mapped = normalized.match(/::ffff:(\d+\.\d+\.\d+\.\d+)$/)?.[1];
-  if (mapped) return isPublicHybridFetchAddress(mapped);
-  return !(
-    normalized === "::" ||
-    normalized === "::1" ||
-    /^f[cd]/.test(normalized) ||
-    /^fe[89ab]/.test(normalized) ||
-    /^ff/.test(normalized) ||
-    /^2001:db8(?::|$)/.test(normalized)
-  );
+  const segments = parseIpv6Segments(normalized);
+  if (!segments) return false;
+  const embedsIpv4 =
+    segments.slice(0, 6).every((segment) => segment === 0) ||
+    (segments.slice(0, 5).every((segment) => segment === 0) &&
+      segments[5] === 0xffff);
+  if (embedsIpv4) {
+    const high = segments[6];
+    const low = segments[7];
+    return isPublicHybridFetchAddress(
+      `${high >>> 8}.${high & 0xff}.${low >>> 8}.${low & 0xff}`,
+    );
+  }
+  const [first, second] = segments;
+  if (first < 0x2000 || first > 0x3fff) return false;
+  if (first === 0x2002 || first === 0x3fff) return false;
+  if (
+    first === 0x2001 &&
+    (second === 0 ||
+      second === 2 ||
+      (second >= 0x10 && second <= 0x2f) ||
+      second === 0xdb8)
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function parseIpv6Segments(address: string) {
+  let value = address;
+  const finalColon = value.lastIndexOf(":");
+  const finalToken = value.slice(finalColon + 1);
+  if (finalToken.includes(".")) {
+    const ipv4 = parseIpv4(finalToken);
+    if (ipv4 === null) return null;
+    value = `${value.slice(0, finalColon)}:${((ipv4 >>> 16) & 0xffff).toString(16)}:${(
+      ipv4 & 0xffff
+    ).toString(16)}`;
+  }
+  const halves = value.split("::");
+  if (halves.length > 2) return null;
+  const head = halves[0] ? halves[0].split(":") : [];
+  const tail = halves.length === 2 && halves[1] ? halves[1].split(":") : [];
+  const missing = 8 - head.length - tail.length;
+  if (
+    (halves.length === 1 && missing !== 0) ||
+    (halves.length === 2 && missing < 1)
+  ) {
+    return null;
+  }
+  const expanded = [
+    ...head,
+    ...Array.from({ length: Math.max(0, missing) }, () => "0"),
+    ...tail,
+  ].map((segment) => Number.parseInt(segment, 16));
+  return expanded.length === 8 && expanded.every(Number.isFinite)
+    ? expanded
+    : null;
 }
 
 function parseSafeHybridUrl(value: string): URL | HybridFetchFailureReason {
@@ -1070,6 +1120,12 @@ function parseSafeHybridUrl(value: string): URL | HybridFetchFailureReason {
   return parsed;
 }
 
+function hostnameWithoutIpv6Brackets(hostname: string) {
+  return hostname.startsWith("[") && hostname.endsWith("]")
+    ? hostname.slice(1, -1)
+    : hostname;
+}
+
 function headerValue(
   headers: Record<string, string | string[] | undefined>,
   name: string,
@@ -1078,6 +1134,54 @@ function headerValue(
     ([key]) => key.toLowerCase() === name.toLowerCase(),
   )?.[1];
   return Array.isArray(entry) ? entry[0] || "" : entry || "";
+}
+
+function declaredBodyExceedsLimit(
+  headers: Record<string, string | string[] | undefined>,
+  maxBytes: number,
+) {
+  const value = headerValue(headers, "content-length").trim();
+  if (!/^\d+$/.test(value)) return false;
+  const byteLength = Number(value);
+  return !Number.isSafeInteger(byteLength) || byteLength > maxBytes;
+}
+
+function hybridTimeoutError() {
+  const error = new Error("request_timeout");
+  error.name = "AbortError";
+  return error;
+}
+
+function awaitHybridStage<T>(
+  start: () => Promise<T>,
+  signal: AbortSignal,
+) {
+  return new Promise<T>((resolve, reject) => {
+    let settled = false;
+    const finish = (callback: () => void) => {
+      if (settled) return;
+      settled = true;
+      signal.removeEventListener("abort", onAbort);
+      callback();
+    };
+    const onAbort = () => finish(() => reject(hybridTimeoutError()));
+    signal.addEventListener("abort", onAbort, { once: true });
+    if (signal.aborted) {
+      onAbort();
+      return;
+    }
+    let pending: Promise<T>;
+    try {
+      pending = start();
+    } catch (error) {
+      finish(() => reject(error));
+      return;
+    }
+    pending.then(
+      (value) => finish(() => resolve(value)),
+      (error) => finish(() => reject(error)),
+    );
+  });
 }
 
 function failure(input: {
@@ -1121,52 +1225,69 @@ export async function fetchHybridSource(
         reason: parsed,
       });
     }
-    let addresses: string[];
-    try {
-      addresses = await dependencies.resolveHost(parsed.hostname);
-    } catch {
-      return failure({
-        requestedUrl,
-        currentUrl: parsed,
-        redirects,
-        attempts,
-        reason: "host_resolution_failed",
-      });
-    }
-    if (addresses.length === 0) {
-      return failure({
-        requestedUrl,
-        currentUrl: parsed,
-        redirects,
-        attempts,
-        reason: "host_resolution_failed",
-      });
-    }
-    if (addresses.some((address) => !isPublicHybridFetchAddress(address))) {
-      return failure({
-        requestedUrl,
-        currentUrl: parsed,
-        redirects,
-        attempts,
-        reason: "non_public_address",
-      });
-    }
-    attempts += 1;
+    const hopController = new AbortController();
+    const hopTimeout = setTimeout(
+      () => hopController.abort(),
+      config.timeoutMs,
+    );
+    let stage: "resolution" | "transport" = "resolution";
     let response: HybridTransportResponse;
     try {
-      response = await dependencies.transport({
-        url: parsed,
-        address: addresses[0],
-        timeoutMs: config.timeoutMs,
-        maxBytes: config.maxBytes,
-      });
+      const addresses = await awaitHybridStage(
+        () =>
+          dependencies.resolveHost(
+            hostnameWithoutIpv6Brackets(parsed.hostname),
+          ),
+        hopController.signal,
+      );
+      if (addresses.length === 0) {
+        return failure({
+          requestedUrl,
+          currentUrl: parsed,
+          redirects,
+          attempts,
+          reason: "host_resolution_failed",
+        });
+      }
+      if (addresses.some((address) => !isPublicHybridFetchAddress(address))) {
+        return failure({
+          requestedUrl,
+          currentUrl: parsed,
+          redirects,
+          attempts,
+          reason: "non_public_address",
+        });
+      }
+      stage = "transport";
+      attempts += 1;
+      response = await awaitHybridStage(
+        () =>
+          dependencies.transport({
+            url: parsed,
+            address: addresses[0],
+            timeoutMs: config.timeoutMs,
+            maxBytes: config.maxBytes,
+            signal: hopController.signal,
+          }),
+        hopController.signal,
+      );
     } catch (error) {
-      const reason: HybridFetchFailureReason =
-        error instanceof Error && error.name === "AbortError"
-          ? "request_timeout"
-          : error instanceof Error && error.message === "response_too_large"
-            ? "response_too_large"
-            : "request_failed";
+      let reason: HybridFetchFailureReason;
+      if (
+        hopController.signal.aborted ||
+        (error instanceof Error && error.name === "AbortError")
+      ) {
+        reason = "request_timeout";
+      } else if (stage === "resolution") {
+        reason = "host_resolution_failed";
+      } else if (
+        error instanceof Error &&
+        error.message === "response_too_large"
+      ) {
+        reason = "response_too_large";
+      } else {
+        reason = "request_failed";
+      }
       return failure({
         requestedUrl,
         currentUrl: parsed,
@@ -1174,6 +1295,8 @@ export async function fetchHybridSource(
         attempts,
         reason,
       });
+    } finally {
+      clearTimeout(hopTimeout);
     }
     const location = headerValue(response.headers, "location");
     if ([301, 302, 303, 307, 308].includes(response.status)) {
@@ -1197,7 +1320,18 @@ export async function fetchHybridSource(
           reason: "redirect_limit_exceeded",
         });
       }
-      currentValue = new URL(location, parsed).toString();
+      try {
+        currentValue = new URL(location, parsed).toString();
+      } catch {
+        return failure({
+          requestedUrl,
+          currentUrl: parsed,
+          status: response.status,
+          redirects,
+          attempts,
+          reason: "invalid_url",
+        });
+      }
       redirects += 1;
       continue;
     }
@@ -1215,6 +1349,21 @@ export async function fetchHybridSource(
         redirects,
         attempts,
         reason: "http_status_not_usable",
+      });
+    }
+    if (
+      response.bodyTruncated ||
+      declaredBodyExceedsLimit(response.headers, config.maxBytes)
+    ) {
+      return failure({
+        requestedUrl,
+        currentUrl: parsed,
+        status: response.status,
+        contentType,
+        byteLength: response.body.byteLength,
+        redirects,
+        attempts,
+        reason: "response_too_large",
       });
     }
     if (
@@ -1272,8 +1421,23 @@ export function nodeHybridTransport(input: {
   timeoutMs: number;
   maxBytes: number;
   accept?: string;
+  signal: AbortSignal;
 }): Promise<HybridTransportResponse> {
   return new Promise((resolve, reject) => {
+    let settled = false;
+    let removeAbortListener = () => {};
+    const finishResolve = (value: HybridTransportResponse) => {
+      if (settled) return;
+      settled = true;
+      removeAbortListener();
+      resolve(value);
+    };
+    const finishReject = (error: unknown) => {
+      if (settled) return;
+      settled = true;
+      removeAbortListener();
+      reject(error);
+    };
     const request = (input.url.protocol === "https:" ? httpsRequest : httpRequest)(
       {
         protocol: input.url.protocol,
@@ -1281,7 +1445,7 @@ export function nodeHybridTransport(input: {
         port: input.url.port || (input.url.protocol === "https:" ? 443 : 80),
         method: "GET",
         path: `${input.url.pathname}${input.url.search}`,
-        servername: input.url.hostname,
+        servername: hostnameWithoutIpv6Brackets(input.url.hostname),
         headers: {
           Host: input.url.host,
           Accept:
@@ -1294,31 +1458,53 @@ export function nodeHybridTransport(input: {
       (response) => {
         const chunks: Buffer[] = [];
         let byteLength = 0;
+        const finishResponse = (body: Uint8Array, bodyTruncated = false) =>
+          finishResolve({
+            status: response.statusCode || 0,
+            headers: response.headers,
+            body,
+            ...(bodyTruncated ? { bodyTruncated: true } : {}),
+          });
+        response.on("error", finishReject);
+        if (declaredBodyExceedsLimit(response.headers, input.maxBytes)) {
+          finishResponse(new Uint8Array(), true);
+          response.destroy();
+          return;
+        }
         response.on("data", (chunk: Buffer | string) => {
+          if (settled) return;
           const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
           byteLength += buffer.byteLength;
           if (byteLength > input.maxBytes) {
-            response.destroy(new Error("response_too_large"));
+            finishResponse(Buffer.concat(chunks), true);
+            response.destroy();
             return;
           }
           chunks.push(buffer);
         });
         response.on("end", () => {
-          resolve({
-            status: response.statusCode || 0,
-            headers: response.headers,
-            body: Buffer.concat(chunks),
-          });
+          finishResponse(Buffer.concat(chunks));
         });
-        response.on("error", reject);
       },
     );
+    const abortRequest = () => {
+      const error = hybridTimeoutError();
+      finishReject(error);
+      request.destroy(error);
+    };
+    removeAbortListener = () =>
+      input.signal.removeEventListener("abort", abortRequest);
+    if (input.signal.aborted) {
+      abortRequest();
+      return;
+    }
+    input.signal.addEventListener("abort", abortRequest, { once: true });
     request.setTimeout(input.timeoutMs, () => {
-      const error = new Error("request_timeout");
-      error.name = "AbortError";
+      const error = hybridTimeoutError();
+      finishReject(error);
       request.destroy(error);
     });
-    request.on("error", reject);
+    request.on("error", finishReject);
     request.end();
   });
 }

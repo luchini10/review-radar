@@ -1,196 +1,190 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-08-30 by Codex after the independently verified PR-6A
-production-boundary baseline. This file was regenerated from current evidence.
-The current approved base is the self-contained PR-6A closeout commit containing
-this file; resolve its full SHA with `git rev-parse HEAD`. Its expected parent is
-`2db12ab44b690d3ad1e5f8646adffb7f3ab46037`.
+Updated: 2026-08-30 by Codex after the independently verified PR-6B shared
+bounded outbound-fetch correction. This file was regenerated from current
+evidence. The current approved base is the self-contained PR-6B closeout commit
+containing this file; resolve its full SHA with `git rev-parse HEAD`. Its
+expected parent is `d5c6f8be4c922b7c6279fd9e6412a537a17b87a4`.
 
 ## Current state
 
-ReviewRadar is **not production-ready**. The staged Terra and Direct-Terra paths
-remain default-off and undeployed. PR-3K proves one safe complete `shop vac`
-lifecycle, not current category-wide quality. PR-4B attempt 1 stopped before
-provider work; its authorization is consumed, no artifact exists, and the
-serial protocol cannot advance. Current-market recall, hard-requirement truth,
-final-card repeatability, latency distribution, and cost therefore remain
-unmeasured on the staged path.
+ReviewRadar is **not production-ready**. Staged Terra and Direct Terra remain
+default-off and undeployed. PR-3K proves one safe complete `shop vac` lifecycle,
+not current category-wide quality. PR-4B attempt 1 stopped before provider work;
+its one-shot authorization is consumed, no artifact exists, and the serial
+protocol cannot advance. Current staged-path recall, hard-requirement truth,
+repeatability, latency distribution, and cost remain unmeasured.
 
-PR-008 closes RR-092 locally. PR-007 corrects reachable shared experimental
-exact-model identity while retaining RR-091 as contained historical debt.
-PR-6A now proves a separate release blocker on the default legacy route:
-untrusted provider/Serper URLs reach direct server fetches outside the bounded
-public-network transport. PR-022/RR-103 is Open and owns the next correction.
-PR-023/RR-104 (paid-request admission/caches) and PR-024/RR-105 (legacy
-cancellation wiring) are Open successor units.
+PR-008 closes RR-092. PR-007 corrects reachable shared experimental exact-model
+identity while retaining RR-091 as contained historical debt. PR-6A proved that
+the default legacy route used two unsafe outbound fetch consumers. PR-6B closes
+that reachable destination boundary locally: both consumers now use one
+address-pinned, redirect-revalidated, deadline/byte/content-bounded shared
+transport with ordered concurrency four. PR-022/RR-103 is Fixed.
 
-The issue register is 105 total: 3 Open, 5 Needs Investigation, 96 Fixed, and
+PR-023/RR-104 is now the earliest actionable release blocker: both public paid
+routes buffer JSON before an application ceiling; legacy fields have no maxima;
+there is no tracked shared paid-work admission/global-concurrency gate; and
+feature and shared legacy caches are capacity-unbounded and do not coalesce
+identical misses. PR-024/RR-105 cancellation propagation remains a separate
+successor.
+
+The issue register is 105 total: 2 Open, 5 Needs Investigation, 97 Fixed, and
 1 Won't Fix.
 
-## PR-6A outcome
+## PR-6B outcome
 
-The default route selects `legacy` when `REVIEW_RADAR_PIPELINE_MODE` is absent
-or empty. During that reachable lifecycle:
+The default legacy lifecycle still invokes `collectReachableCitationUrls()` and
+`enrichProductAssets()`, but their network behavior is now shared and bounded:
 
-- `collectReachableCitationUrls()` receives provider/Serper citation and
-  product-page URLs, accepts any parseable URL, and launches every unique check
-  through direct `fetch` with unbounded `Promise.all`;
-- `enrichProductAssets()` directly fetches citation/product pages, follows
-  redirects, reads complete HTML bodies, and concurrently enriches products;
-- neither consumer consistently restricts scheme/credentials/ports, resolves
-  and pins public addresses, revalidates redirects, or caps redirects/body/
-  fan-out; and
-- syntactic URL or response-source membership does not authorize the later
-  server-side destination because DNS and redirects can change.
+- only HTTP(S), no credentials, and default ports are accepted;
+- every DNS answer must be public, the validated address is pinned for
+  transport, and every redirect repeats parsing, resolution, and validation;
+- literal/special IPv4 and IPv6, IPv4-mapped/compatible forms, loopback,
+  private, link-local, unique-local, multicast, documentation, 6to4, and mixed
+  public/private DNS results fail closed;
+- one hard per-hop wall spans DNS and transport, and the live Node transport
+  destroys slow or trickling work when aborted;
+- redirect count, declared/actual body bytes, and content types are bounded;
+- citation checks use 5 seconds, 4,096 bytes, two redirects, and concurrency
+  four while preserving 404/410 and established bot-wall/timeout compatibility;
+- product pages use 5 seconds, 1.5 MB, two redirects, HTML/XHTML, and concurrency
+  four. Unsafe URLs clear; ordinary best-effort failures cannot parse metadata;
+  identity/source rules and result order stay intact; and
+- product-asset cache keys retain a SHA-256 URL digest instead of a raw
+  credential-bearing URL.
 
-A deterministic fetch mock made no network request and intercepted these exact
-attempted destinations from the two exports:
-
-- `http://169.254.169.254/latest/meta-data`;
-- `http://169.254.169.254/latest/meta-data/instance-id`.
-
-The stronger zero-live alternative already exists in `fetchHybridSource()`:
-HTTP(S)-only parsing, credential/non-default-port rejection, complete public-
-address resolution, address pinning, per-hop redirect revalidation, and bounded
-time, redirects, bytes, and content types. Direct-Terra page fetching uses it
-when running with production dependencies, but Direct-Terra remains default-off
-and does not contain the default legacy defect.
-
-PR-6A also proved but did not combine two lower-ranked units:
-
-- PR-023/RR-104: both public paid routes parse JSON before an application byte
-  ceiling; legacy request text has no maxima; no tracked shared rate/global-
-  concurrency admission gate exists; feature and shared legacy caches are
-  capacity-unbounded and do not coalesce identical misses. A 50,010-character
-  query reached injected client creation, and 512 unique zero-TTL keys remained
-  in the shared cache.
-- PR-024/RR-105: the browser aborts the legacy fetch, but server provider calls
-  receive fixed timeouts rather than the request abort signal. Signed job-token
-  cancellation covers only default-off asynchronous paths.
-
-Covered-but-limited evidence includes TTL/capacity-bounded progress and
-experimental completion stores, signed job cancellation, production-gated and
-redacted debug logging, and E2E coverage for skip navigation, validation,
-loading/cancel, error/empty states, safe links, and mobile/desktop rendering.
-Tracked evidence does not establish CDN/WAF controls, production headers,
-multi-instance ownership, health/liveness, deployment/rollback operations,
-fresh dependency advisories, assistive technology, or real-device behavior.
+The initial fail-first wrappers produced the intended failures. Main review
+found truncated-body status loss, and independent review found that inactivity
+timeout did not hard-bound DNS or trickling responses. Direct regressions and
+generalized corrections landed before the replacement freeze.
 
 ## Current verification
 
 | Check | Result |
 | --- | --- |
-| PR-6A main focused boundary wall | 97/97 across 14 suites |
-| Independent consumer/route/progress wall | 72/72 |
-| Independent hybrid-fetch wall | 29/29 |
-| Independent typecheck | passed |
-| Link-local fetch probe | both unsafe destinations intercepted; zero network |
-| Oversized-query probe | 50,010 characters reached fake client creation |
-| Cache-capacity probe | 512 unique zero-TTL keys retained |
-| Independent PR-6A verdict | `VERIFIED`; confidence 0.98 |
-| Last complete deterministic suite | PR-007: 1,604/1,604 across 218 suites |
-| Last build / Playwright wall | PR-007: passed / 17 of 17 |
+| Final PR-6B focused wall | 74/74 across 9 suites |
+| Complete unit wall | 1,620/1,620 across 220 suites |
+| Typecheck | passed |
+| Lint | passed; 0 errors, same 3 old warnings |
+| Production build | passed |
+| Playwright | 17/17 with one worker |
+| Final deterministic controller | `agent-loop-2026-08-30T06-35-39-277Z` |
+| Controller partitions/benchmark | 5 exact partitions; 10/10 cases; 29/29 invariants |
+| Independent PR-6B verdict | `VERIFIED`; no material correction; confidence 0.98 |
 | PR-4B attempt-1 provider calls/artifacts | zero / zero |
 
-PR-6A made no application or test-code change and did not relabel the PR-007
-complete wall as newly executed. Exact audited source files matched baseline
-commit `2db12ab44b690d3ad1e5f8646adffb7f3ab46037` throughout the audit.
+The reviewer authenticated baseline
+`d5c6f8be4c922b7c6279fd9e6412a537a17b87a4`, all default-route consumers, and
+all seven frozen hashes before and after review:
 
-Frozen PR-6A source anchors:
-
-- `app/api/recommendations/route.ts`:
-  `4af21d0a17aeb88bc393f5a1b3028f134e251c6c9c1e6d5f0f4df88108e64d3b`;
-- `app/api/features/route.ts`:
-  `99aa0689d69f1a0724937309f8cacfa902f91c01177dbd2997fa7c50f7b2aad5`;
-- `lib/citationUrlVerification.ts`:
-  `1daee436ee3a94a8fd09a7306f91d191817bf9b9437ad9e266ae124795ec6c29`;
-- `lib/productAssets.ts`:
-  `de3e7327d168c693e4948c04fc9de565680c2d19e4f0a4dc7c75f46e1545f8e9`;
-- `lib/cache.ts`:
-  `b6d7c13efeabd51d6e4505d13db50c231334912ee44f3286e65f1dd22e88990e`;
 - `lib/autonomousFactVerifier.ts`:
-  `3c2bd92d9ea3f3084819efc942e790ce3245e4169478f008f10ba7822a298ae6`;
-- `lib/directTerraProductPageFetcher.ts`:
-  `32657b4bf0c3aa7fcdd68a0effe8d2901425e2c63fe71c2fcafa28a7410c19c2`.
+  `f33f7076ee1e5fd7f505fad67f8502adca7f17f0664ceb0507fa3d2ac21302d4`;
+- `lib/citationUrlVerification.ts`:
+  `c137696b21ced63df5ec900358fe75396407ce7c4b9dcbb001233cb93ca62d46`;
+- `lib/productAssets.ts`:
+  `a5135a1221259ac17845e8a4660c70115892e0f813ee2541a983c3d81dc00c5b`;
+- `tests/autonomousFactVerifier.test.mjs`:
+  `093f5470f17dba0606c25884d1240346045855567953be851c436afa069a12dd`;
+- `tests/citationUrlVerification.test.mjs`:
+  `7388c9b986c62e8e99810b969c3a105a1e8020f6b84367806bd486db60525a19`;
+- `tests/productAssets.test.mjs`:
+  `59f304a687c04fccee5fd09774158f1165a20fedf3ba47d334564d7f6a8e74f5`;
+- `tests/resultQuality.test.mjs`:
+  `4430bafeda47642643e351ffa60dee5d63d75c0325e0696d1af097e6da035f34`.
+
+No provider, product-data service, credential, manual environment-file, real
+network, or live-fixture content was accessed. Generated `next-env.d.ts` was
+restored.
 
 ## Objective and decision frame
 
 The product objective remains the strongest genuinely suitable products with
-truthful requirements and evidence at acceptable latency and cost. The largest
-quality uncertainty is PR-006, but it is blocked and grants no live authority.
-The earliest currently actionable release blocker is PR-022/RR-103 because it
-is reachable on the default route and can make server requests to destinations
-that were never authorized as public.
+truthful requirements and evidence at acceptable latency and cost. PR-006 is
+the largest quality uncertainty, but it is blocked and grants no live authority.
+The earliest actionable blocker is now PR-023/RR-104 because uncontrolled input,
+paid-work admission, and cache residency are reachable before product quality
+can matter and can amplify the PR-6B native-resolver residual under load.
 
 Verified facts:
 
-- two legacy consumers reproduce direct link-local fetch attempts without any
-  provider or real network dependency;
-- the default route reaches both consumers;
-- the shared hybrid primitive already has private-address, redirect, timeout,
-  byte, content, and pinned-address tests;
-- a URL regex cannot evaluate DNS or redirect targets; and
-- disabling the two legacy enrichment consumers would contain the exposure but
-  reduce fallback page/image/citation quality.
+- both public paid routes call `request.json()` before an application byte
+  ceiling;
+- the active legacy validator has no maximum lengths for query, budget,
+  priorities, or avoid;
+- a deterministic 50,010-character query reached injected client creation;
+- no tracked shared rate/global-provider-concurrency admission gate protects
+  both routes;
+- feature and shared legacy cache maps have no hard capacity and do not
+  coalesce identical concurrent misses; and
+- a zero-network probe retained 512 unique zero-TTL legacy cache keys.
 
 Engineering judgment:
 
-- reuse one shared DNS-pinned bounded transport instead of creating a second
-  URL denylist or a legacy-only partial parser;
-- preserve current source ownership, product identity, bot-wall/reachability,
-  and best-effort enrichment semantics wherever they do not conflict with
-  network safety;
-- add explicit consumer concurrency ceilings so a safe destination check does
-  not remain a fan-out exhaustion surface; and
-- keep inbound admission/cache work and cancellation work in their own phases.
+- stop oversized bodies and fields before client creation or any paid work;
+- define one server-owned admission contract shared by both routes rather than
+  unrelated route-specific counters;
+- separate bounded provider concurrency from request-frequency policy, state
+  exactly what is process-local, and do not imply multi-instance enforcement
+  without shared infrastructure evidence;
+- use bounded TTL/LRU ownership and in-flight promise coalescing rather than
+  periodic cleanup alone; and
+- keep request cancellation, headers, dependency upgrades, health checks, and
+  deployment work out of PR-6C.
 
 Uncertainty:
 
-- hosted edge controls are not present in tracked configuration and were not
-  inspected externally;
-- exact production frequency and exploitability were not measured with a live
-  attack and do not need to be;
-- converting citation reachability to the shared transport must preserve the
-  intentional 403/405/429/503 and timeout policy or explicitly justify a safer
-  behavior change; and
-- cache capacity remains unsafe after PR-6B unless separately corrected.
+- tracked repository evidence does not establish CDN/WAF/request limits or the
+  number and lifecycle of production instances;
+- appropriate public request quotas and body/field maxima must be derived from
+  existing UI/API/provider contracts, not chosen solely to satisfy a test;
+- a process-local limiter can bound one instance but cannot alone establish a
+  distributed production rate limit; and
+- cache hit rate, hostile traffic frequency, and native resolver pressure are
+  not measured live and do not require live traffic for the correction.
 
-**Recommended reasoning level:** High for DNS pinning, redirect semantics,
-SSRF containment, and source-level review; Medium for localized wrapper wiring,
-focused tests, and routine documentation.
+**Recommended reasoning level:** High for admission semantics, pre-provider
+ordering, multi-instance claims, and failure/recovery behavior; Medium for
+localized cache structures, deterministic mutations, and routine docs.
 
-## Current approved phase: PR-6B / PR-022 outbound-fetch correction
+## Current approved phase: PR-6C / PR-023 paid-request admission and bounded caches
 
 This phase is local, zero-provider, zero-network, fail-first, and narrowly
-scoped to RR-103. It does not authorize PR-023/PR-024 implementation.
+scoped to RR-104. It does not authorize PR-024 implementation, external rate-
+limit infrastructure, deployment, package installation, or live traffic.
 
-1. Authenticate the intended repository, PR-6A closeout commit, tracked clean
-   state, frozen source hashes, default route/flags, and no unexpected edits.
-2. Add fail-first wrapper-level coverage for both legacy consumers:
-   literal IPv4/IPv6 and mapped private/link-local/loopback values, a public-
-   looking hostname resolving private, public-to-private redirects, credentials,
-   non-default ports, non-HTTP schemes, redirect count, timeout, content type,
-   declared/actual oversized bodies, bounded concurrency, and exact public HTML
-   controls. Use injected deterministic transports only; no real network.
-3. Reuse `fetchHybridSource()` or extract only the smallest shared transport
-   wrapper needed by both consumers. Pin the validated address for each hop and
-   revalidate every redirect. Do not use resolve-then-unpinned hostname fetch.
-4. Preserve intentional citation semantics with explicit tests: 404/410 remain
-   unreachable; established bot-wall statuses and timeout handling change only
-   if the safer behavior is justified and documented. Preserve product identity,
-   source ownership, HTML-only parsing, and best-effort missing-asset behavior.
-5. Bound citation and product-enrichment fan-out with an existing or small
-   shared concurrency helper. Do not implement global rate limiting, body
-   parsing, cache eviction/coalescing, cancellation propagation, security
-   headers, dependency upgrades, health checks, or deployment work here.
-6. Run focused wrapper/hybrid/route/product-asset controls first, then typecheck,
-   lint, complete unit suite, deterministic eval/partitions/benchmark, production
-   build, and Playwright. Restore generated `next-env.d.ts` if build changes it.
-7. Freeze the exact source/test manifest and obtain independent adversarial
-   review. The reviewer must challenge DNS rebinding/TOCTOU, redirect handling,
-   semantic regressions, fan-out limits, and incomplete consumer reachability.
-8. If verified, update only authoritative records, move RR-103/PR-022 to Fixed,
-   regenerate this handoff, and create one self-contained local commit.
+1. Authenticate the intended repository, PR-6B closeout commit, tracked clean
+   state, frozen hashes, default route/flags, and no unexpected edits. Use only
+   tracked-only or exact-path status/discovery.
+2. Trace both public routes from raw request through validation, cache lookup,
+   client creation, and every paid/provider stage. Retrieve existing UI,
+   provider, schema, and server limits before choosing exact maxima.
+3. Add fail-first deterministic tests for declared and actual oversized bodies,
+   each oversized field/container, malformed length, boundary-equal values, and
+   ordinary controls. Prove rejection occurs before client creation, cache
+   insertion, or provider invocation.
+4. Add fail-first serial and concurrent mutations for shared admission:
+   burst/parallel rejection, exact global/provider ceilings, recovery after
+   success/failure/abort, no permit leak, no queued later paid stage after
+   rejection, and explicit process-local/multi-instance semantics.
+5. Add fail-first cache mutations for unique-key capacity, expiration sweep,
+   deterministic LRU/TTL eviction, identical-miss coalescing, failure cleanup,
+   retry-after-failure, stable keys, and no cross-request result leakage.
+6. Implement the smallest shared pre-provider admission/body boundary and
+   bounded cache primitive that closes the reproduced contracts. Preserve API
+   response safety, existing provider timeouts, source/evidence/identity rules,
+   default flags, and public product behavior. Do not claim distributed rate
+   enforcement unless tracked infrastructure proves it.
+7. Run focused route/admission/cache walls first, then typecheck, lint, the
+   complete suite, deterministic eval/partitions/benchmark, production build,
+   and Playwright. Restore generated `next-env.d.ts` if necessary.
+8. Freeze the exact source/test manifest and obtain independent adversarial
+   review. The reviewer must challenge pre-provider ordering, bypasses through
+   cache hits/misses or both routes, permit leaks, stampedes, eviction/TTL,
+   failure recovery, multi-instance claims, and PR-024 scope leakage.
+9. If verified, update only authoritative records, move RR-104/PR-023 to Fixed
+   or state the exact residual, regenerate this handoff, and create one self-
+   contained local commit before continuing.
 
 ## Approval, cost, and flag state
 
@@ -213,12 +207,13 @@ request and grants no future spend authority.
 - PR-006: live measurement remains blocked. Current leader recall, card truth,
   hard-requirement accuracy, final-card stability, verified price coverage,
   first-loss distribution, latency, calls, tokens, and cost remain unmeasured.
-- PR-022 / RR-103: default legacy untrusted outbound fetches bypass the bounded
-  public-network transport. This is the active next blocker.
-- PR-023 / RR-104: paid-route body/field/admission and bounded/coalesced cache
-  controls remain Open after PR-6B.
+- PR-023 / RR-104: body/field/admission and bounded/coalesced cache controls are
+  the active next blocker.
 - PR-024 / RR-105: legacy request cancellation is not connected to provider
-  stages.
+  stages and remains separate after PR-6C.
+- PR-022 / RR-103: closed locally. Native OS DNS work can finish after the
+  caller deadline, although no later transport can start; sustained traffic
+  containment belongs to PR-023.
 - PR-007 / RR-091: reachable shared exact-price boundaries are corrected; the
   historical membership-only adapter remains contained and unpromotable.
 - PR-008 / RR-092: closed locally. Upstream source-role semantic corroboration
@@ -234,17 +229,18 @@ None of the above grants production authority.
 - Never read, enumerate, retry, edit, stage, reuse, copy, hash, or add to any
   spent Phase D or readiness attempt/directory. Exclude
   `tests/fixtures/review-radar-live/**` from every repository search. Prefer
-  explicit root-level test files; do not rely on slash-only filtering of
-  Windows paths.
-- Process residual: this PR-6A turn printed five spent-fixture filenames after
-  a slash-only exclusion failed against backslashes. No content, hash, field,
-  value, metadata, parse, or modification occurred. PR-4A already had two older
-  filename-only deviations. Do not repeat either pattern.
+  explicit root-level files. Do not use broad status or slash-only Windows
+  filtering.
+- Process residuals: PR-4A printed two historical spent-fixture filenames;
+  PR-6A printed five after a slash-only exclusion failed; PR-6B used a
+  prohibited broad status that printed spent-fixture filenames. No content,
+  hash, field, value, parse, or modification occurred. Do not repeat these
+  patterns.
 - Do not retry or replace `broad-shop-vac:1`, invoke the direct runner, or
   advance to attempt 2. Absence of provider spend does not revive the consumed
   invocation.
-- Do not make a real metadata/private-network request or run a live exploit.
-  All SSRF proof uses injected deterministic DNS/transport seams.
+- Do not make a real metadata/private-network request, live load test, or paid
+  admission probe. All proof uses injected deterministic seams.
 - Do not route or promote `lib/autonomousResearchAdapter.ts`.
 - Do not weaken source ownership, identity, tested-model, relationship,
   requirement, availability, price, commerce, asset, redirect, private-network,
@@ -260,14 +256,13 @@ None of the above grants production authority.
 
 | Need | Retrieve |
 | --- | --- |
-| PR-6A canonical evidence and hashes | latest PR-6A entry in `docs/qa-loop-results.md` |
+| PR-6B canonical evidence and hashes | latest PR-6B entry in `docs/qa-loop-results.md` |
 | PR-022/023/024 status and exit blockers | `docs/production-readiness-master-plan.md` |
 | RR-103/104/105 records | bounded bottom sections of `docs/RR-Issues-Report.md` |
-| Default route reachability | `app/api/recommendations/route.ts` |
-| Unsafe citation consumer | `lib/citationUrlVerification.ts` |
-| Unsafe page/asset consumer | `lib/productAssets.ts` |
-| Existing safe transport | bounded fetch seam in `lib/autonomousFactVerifier.ts` |
-| Existing page-fetch integration | `lib/directTerraProductPageFetcher.ts` |
-| Shared concurrency helper | `mapWithConcurrency()` in `lib/recommendationPerformance.ts` |
+| Public route request paths | `app/api/recommendations/route.ts`, `app/api/features/route.ts` |
+| Legacy input validation and cache | route-local validation plus `lib/cache.ts` |
+| Feature cache/client boundary | `app/api/features/route.ts` |
+| Shared concurrency patterns | `lib/recommendationPerformance.ts` and existing bounded stores |
+| PR-6B network boundary | `lib/autonomousFactVerifier.ts`, `lib/citationUrlVerification.ts`, `lib/productAssets.ts` |
 | Standing guardrails and trust invariants | bounded sections of `docs/forward-roadmap.md` |
 | Peer conclusion | latest entry in `docs/agent-dialogue.md` |

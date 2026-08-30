@@ -5,12 +5,14 @@ import {
   enrichProductAssets,
   productAssetsTestExports,
 } from "../lib/productAssets.ts";
+import { clearCacheForTests } from "../lib/cache.ts";
 
 const {
   buildMetadata,
   extractDimensionFromText,
   extractSpecTableText,
   mergeMetadata,
+  productPageCacheKey,
   withVerifiedOfferPriceFields,
 } = productAssetsTestExports;
 
@@ -650,5 +652,392 @@ describe("product asset metadata extraction", () => {
     } finally {
       global.fetch = originalFetch;
     }
+  });
+});
+
+function networkBoundaryProduct(productPageUrl) {
+  return {
+    category: "Tablet",
+    citations: [],
+    metadata: { offers: [] },
+    name: "Apple iPad Pro M4",
+    product_image_url:
+      "https://store.storeimages.cdn-apple.com/apple-ipad-pro-m4-product.jpg",
+    product_page_url: productPageUrl,
+  };
+}
+
+async function withFetchMock(mock, run) {
+  const originalFetch = global.fetch;
+  global.fetch = mock;
+  clearCacheForTests();
+  try {
+    return await run();
+  } finally {
+    clearCacheForTests();
+    global.fetch = originalFetch;
+  }
+}
+
+describe("legacy product asset public-network boundary", () => {
+  it("does not retain URL credentials in the page-cache key", () => {
+    const cacheKey = productPageCacheKey(
+      "https://user:private-password@public.example.test/products/apple-ipad-pro-m4",
+    );
+
+    assert.match(cacheKey, /^product-page\|[a-f0-9]{64}$/);
+    assert.doesNotMatch(cacheKey, /user|private-password|public\.example/i);
+  });
+
+  it("blocks literal link-local and private-DNS pages before transport", async () => {
+    const directFetches = [];
+    let transportCalls = 0;
+    const dependencies = {
+      resolveHost: async (hostname) =>
+        hostname === "metadata.example.test"
+          ? ["127.0.0.1"]
+          : hostname === "mapped.example.test"
+            ? ["::ffff:7f00:1"]
+          : [hostname],
+      transport: async () => {
+        transportCalls += 1;
+        return {
+          status: 200,
+          headers: { "content-type": "text/html" },
+          body: Buffer.from("<html><title>Apple iPad Pro M4</title></html>"),
+        };
+      },
+    };
+
+    const result = await withFetchMock(
+      async (input) => {
+        directFetches.push(String(input));
+        return new Response(
+          "<html><title>Apple iPad Pro M4</title><body>Apple iPad Pro M4</body></html>",
+          { status: 200, headers: { "content-type": "text/html" } },
+        );
+      },
+      () =>
+        enrichProductAssets(
+          {
+            recommendations: [
+              networkBoundaryProduct(
+                "http://169.254.169.254/products/apple-ipad-pro-m4",
+              ),
+              networkBoundaryProduct(
+                "http://[::1]/products/apple-ipad-pro-m4",
+              ),
+              networkBoundaryProduct(
+                "https://metadata.example.test/products/apple-ipad-pro-m4",
+              ),
+              networkBoundaryProduct(
+                "https://mapped.example.test/products/apple-ipad-pro-m4",
+              ),
+            ],
+          },
+          { fetchDependencies: dependencies },
+        ),
+    );
+
+    assert.deepEqual(
+      result.recommendations.map((product) => product.product_page_url),
+      ["", "", "", ""],
+    );
+    assert.deepEqual(directFetches, []);
+    assert.equal(transportCalls, 0);
+  });
+
+  it("revalidates redirects and clears a page that redirects to private DNS", async () => {
+    const directFetches = [];
+    const transportedHosts = [];
+    const dependencies = {
+      resolveHost: async (hostname) =>
+        hostname === "store.example.test"
+          ? ["93.184.216.34"]
+          : ["169.254.169.254"],
+      transport: async ({ url }) => {
+        transportedHosts.push(url.hostname);
+        return {
+          status: 302,
+          headers: { location: "http://metadata.example.test/latest" },
+          body: new Uint8Array(),
+        };
+      },
+    };
+
+    const result = await withFetchMock(
+      async (input) => {
+        directFetches.push(String(input));
+        return new Response(
+          "<html><title>Apple iPad Pro M4</title><body>Apple iPad Pro M4</body></html>",
+          { status: 200, headers: { "content-type": "text/html" } },
+        );
+      },
+      () =>
+        enrichProductAssets(
+          {
+            recommendations: [
+              networkBoundaryProduct(
+                "https://store.example.test/products/apple-ipad-pro-m4",
+              ),
+            ],
+          },
+          { fetchDependencies: dependencies },
+        ),
+    );
+
+    assert.equal(result.recommendations[0].product_page_url, "");
+    assert.deepEqual(directFetches, []);
+    assert.deepEqual(transportedHosts, ["store.example.test"]);
+  });
+
+  it("rejects oversized HTML before page metadata can be attached", async () => {
+    const oversizedHtml = `<html><title>Apple iPad Pro M4</title><body>${"x".repeat(
+      1_600_000,
+    )}</body></html>`;
+    const dependencies = {
+      resolveHost: async () => ["93.184.216.34"],
+      transport: async () => ({
+        status: 200,
+        headers: { "content-type": "text/html" },
+        body: Buffer.from(oversizedHtml),
+      }),
+    };
+
+    const result = await withFetchMock(
+      async () =>
+        new Response(oversizedHtml, {
+          status: 200,
+          headers: { "content-type": "text/html" },
+        }),
+      () =>
+        enrichProductAssets(
+          {
+            recommendations: [
+              networkBoundaryProduct(
+                "https://store.example.test/products/apple-ipad-pro-m4",
+              ),
+            ],
+          },
+          { fetchDependencies: dependencies },
+        ),
+    );
+
+    assert.equal(result.recommendations[0].metadata?.title, undefined);
+  });
+
+  it("rejects unsafe URL forms before transport", async () => {
+    const directFetches = [];
+    let transportCalls = 0;
+    const dependencies = {
+      resolveHost: async () => ["93.184.216.34"],
+      transport: async () => {
+        transportCalls += 1;
+        return {
+          status: 200,
+          headers: { "content-type": "text/html" },
+          body: Buffer.from("<html><title>Apple iPad Pro M4</title></html>"),
+        };
+      },
+    };
+
+    const result = await withFetchMock(
+      async (input) => {
+        directFetches.push(String(input));
+        return new Response("ok", {
+          status: 200,
+          headers: { "content-type": "text/html" },
+        });
+      },
+      () =>
+        enrichProductAssets(
+          {
+            recommendations: [
+              networkBoundaryProduct("file:///etc/passwd"),
+              networkBoundaryProduct("ftp://public.example.test/product"),
+              networkBoundaryProduct(
+                "https://user:password@public.example.test/products/apple-ipad-pro-m4",
+              ),
+              networkBoundaryProduct(
+                "https://public.example.test:8443/products/apple-ipad-pro-m4",
+              ),
+            ],
+          },
+          { fetchDependencies: dependencies },
+        ),
+    );
+
+    assert.deepEqual(
+      result.recommendations.map((product) => product.product_page_url),
+      ["", "", "", ""],
+    );
+    assert.deepEqual(directFetches, []);
+    assert.equal(transportCalls, 0);
+  });
+
+  it("bounds redirect depth and non-HTML or declared-oversized responses", async () => {
+    const directFetches = [];
+    const transportCounts = {
+      declared: 0,
+      redirect: 0,
+      timeout: 0,
+      unsupported: 0,
+    };
+    const dependencies = {
+      resolveHost: async () => ["93.184.216.34"],
+      transport: async ({ url }) => {
+        if (url.hostname.startsWith("redirect-")) {
+          transportCounts.redirect += 1;
+          const current = Number.parseInt(url.hostname.split("-")[1], 10);
+          return {
+            status: 302,
+            headers: {
+              location: `https://redirect-${current + 1}.example.test/products/apple-ipad-pro-m4`,
+            },
+            body: new Uint8Array(),
+          };
+        }
+        if (url.hostname === "timeout.example.test") {
+          transportCounts.timeout += 1;
+          const error = new Error("timeout");
+          error.name = "AbortError";
+          throw error;
+        }
+        if (url.hostname === "unsupported.example.test") {
+          transportCounts.unsupported += 1;
+          return {
+            status: 200,
+            headers: { "content-type": "application/pdf" },
+            body: Buffer.from("%PDF"),
+          };
+        }
+        transportCounts.declared += 1;
+        return {
+          status: 200,
+          headers: {
+            "content-length": "1600000",
+            "content-type": "text/html",
+          },
+          body: Buffer.from("<html><title>Apple iPad Pro M4</title></html>"),
+        };
+      },
+    };
+    const urls = [
+      "https://redirect-0.example.test/products/apple-ipad-pro-m4",
+      "https://timeout.example.test/products/apple-ipad-pro-m4",
+      "https://unsupported.example.test/products/apple-ipad-pro-m4",
+      "https://declared.example.test/products/apple-ipad-pro-m4",
+    ];
+
+    const result = await withFetchMock(
+      async (input) => {
+        directFetches.push(String(input));
+        return new Response(
+          "<html><title>Apple iPad Pro M4</title><body>Apple iPad Pro M4</body></html>",
+          { status: 200, headers: { "content-type": "text/html" } },
+        );
+      },
+      () =>
+        enrichProductAssets(
+          { recommendations: urls.map(networkBoundaryProduct) },
+          { fetchDependencies: dependencies },
+        ),
+    );
+
+    assert.deepEqual(
+      result.recommendations.map((product) => product.product_page_url),
+      urls,
+    );
+    assert.deepEqual(
+      result.recommendations.map((product) => product.metadata?.title),
+      [undefined, undefined, undefined, undefined],
+    );
+    assert.deepEqual(transportCounts, {
+      declared: 1,
+      redirect: 3,
+      timeout: 1,
+      unsupported: 1,
+    });
+    assert.deepEqual(directFetches, []);
+  });
+
+  it("accepts bounded HTML from an exact public page", async () => {
+    const dependencies = {
+      resolveHost: async () => ["93.184.216.34"],
+      transport: async () => ({
+        status: 200,
+        headers: { "content-type": "text/html" },
+        body: Buffer.from(
+          "<html><title>Apple iPad Pro M4</title><body>Apple iPad Pro M4</body></html>",
+        ),
+      }),
+    };
+    const url = "https://store.example.test/products/apple-ipad-pro-m4";
+
+    const result = await withFetchMock(
+      async () => {
+        throw new Error("direct fetch must not be used");
+      },
+      () =>
+        enrichProductAssets(
+          { recommendations: [networkBoundaryProduct(url)] },
+          { fetchDependencies: dependencies },
+        ),
+    );
+
+    assert.equal(result.recommendations[0].product_page_url, url);
+    assert.equal(result.recommendations[0].metadata?.title?.value, "Apple iPad Pro M4");
+  });
+
+  it("caps concurrent product-page enrichment without changing order", async () => {
+    const urls = Array.from(
+      { length: 9 },
+      (_, index) => `https://store-${index}.example.test/products/apple-ipad-pro-m4`,
+    );
+    let active = 0;
+    let maximumActive = 0;
+    const hold = async () => {
+      active += 1;
+      maximumActive = Math.max(maximumActive, active);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      active -= 1;
+    };
+    const dependencies = {
+      resolveHost: async () => ["93.184.216.34"],
+      transport: async () => {
+        await hold();
+        return {
+          status: 200,
+          headers: { "content-type": "text/html" },
+          body: Buffer.from(
+            "<html><title>Apple iPad Pro M4</title><body>Apple iPad Pro M4</body></html>",
+          ),
+        };
+      },
+    };
+
+    const result = await withFetchMock(
+      async () => {
+        await hold();
+        return new Response(
+          "<html><title>Apple iPad Pro M4</title><body>Apple iPad Pro M4</body></html>",
+          { status: 200, headers: { "content-type": "text/html" } },
+        );
+      },
+      () =>
+        enrichProductAssets(
+          { recommendations: urls.map(networkBoundaryProduct) },
+          { fetchDependencies: dependencies, concurrency: 4 },
+        ),
+    );
+
+    assert.deepEqual(
+      result.recommendations.map((product) => product.product_page_url),
+      urls,
+    );
+    assert.ok(
+      maximumActive <= 4,
+      `expected <=4 concurrent page fetches, saw ${maximumActive}`,
+    );
   });
 });
