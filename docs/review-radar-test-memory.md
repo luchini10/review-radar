@@ -3646,3 +3646,41 @@ a known conservative undercount.
   Independent exact review repeated the audit, package graph, 61-artifact
   provenance, focused wall, and range semantics and returned `VERIFIED`,
   confidence 0.98.
+
+## Staged accuracy lineage contract - 2026-08-30
+
+- Keep production recommendation behavior separate from evaluation capture.
+  The staged runtime may expose an optional immutable callback after research
+  schema validation and identity-source filtering, but production handlers must
+  not pass it. Never return this snapshot to the browser.
+- Match preregistered truth products only by exact normalized brand alias and
+  model alias. Do not accept prefix/suffix siblings, product-name similarity,
+  URL tokens, or a retailer's grouping as exact identity.
+- Persist only preregistered public product IDs, registry role, bounded stage
+  counts, verifier-owned first-loss counts, and final ranks. Never persist raw
+  candidate IDs, names, URLs, sources, prompts, responses, or credentials in the
+  readiness lineage artifact.
+- Reconcile validated-to-accepted counts, accepted-to-verifier outcomes,
+  outcome-to-first-loss counts, eligible-to-final-card counts, and the
+  cross-product sums of research counts, verifier outcomes, and every first-loss
+  bucket against aggregate diagnostics. Registered normalized brand/model alias
+  pairs must not overlap across products. Unknown keys and resealed private
+  fields must fail closed without echoing the rejected value.
+- Preserve public `variant` in readiness artifacts, but do not claim automated
+  variant stability while the live renderer supplies no trustworthy variant
+  field. Use exact normalized brand plus model for duplicate-card identity,
+  final-set Jaccard, and shared-order Kendall tau. Product-name wording and
+  nullable variant text must not create a different physical product identity.
+- Score both final-set overlap and shared-product rank order. A registered
+  product not displayed must remain attributable to discovery absence,
+  identity-source preflight, a specific verifier first loss, or presentation
+  omission. Require bound pass/fail human review for exact variant/trim evidence
+  on every card, even when public variant is null, plus specification claims,
+  top-pick support, relative ordering, evidence/tradeoff alignment, price offer,
+  image identity, requirements, sources, and advice.
+- PR-9A corrected proof: focused 77/77, runner/launcher 27/27, full
+  1,709/1,709 across 232
+  suites, typecheck, lint with zero errors/three old warnings, build, Playwright
+  17/17, and controller `agent-loop-2026-08-30T20-30-25-650Z` with 10/10 cases
+  and 29/29 invariants. This proves measurement integrity only; no live product
+  accuracy or readiness result exists.

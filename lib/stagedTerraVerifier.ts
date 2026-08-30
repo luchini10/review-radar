@@ -163,6 +163,7 @@ export type StagedTerraVerifierAggregateDiagnostic = {
 export type StagedTerraCandidateDiagnostic = {
   candidateId: string;
   outcome: StagedTerraVerifiedCandidate["eligibility"];
+  firstLoss: StagedTerraCandidateFirstLoss;
   acceptedSourceCount: number;
   rejectedSourceCount: number;
   rejectionReasons: StagedTerraVerifierRejectionReason[];
@@ -1498,6 +1499,7 @@ export function materializeStagedTerraEvidencePackage(
     diagnostics.push({
       candidateId: candidate.candidateId,
       outcome: eligibility,
+      firstLoss,
       acceptedSourceCount: acceptedSources.filter(
         (source) => source.claimEligible,
       ).length,

@@ -3245,3 +3245,55 @@ correction, confidence 0.98. It repeated the zero audit, package-only graph,
 issue arithmetic, diff check, and generated Next block authentication. The
 read-only reviewer did not repeat the clean Windows/native Sharp probe and kept
 actual Linux plus time-bound audit state as explicit residuals.
+
+## 2026-08-30 — PR-9A accuracy-measurement diagnostic closure
+
+**Goal and assessment:** improve real product-search accuracy by first making
+failures attributable. The current staged path has no multi-shape live result,
+so changing recommendation logic now would be speculative. Audit of PR-4A found
+that it discarded displayed variants, measured no rank-order stability, and
+could not locate a preregistered product's first missing stage.
+
+**Change:** readiness contracts now preserve nullable public variants and add a
+privacy-bounded preregistered-product trace across validated research,
+identity-source acceptance, verifier-owned first loss, and final rank. Analysis
+adds lineage, shared-product Kendall tau, and bound variant/specification/ranking
+manual audits. Production handlers do not enable the evaluation callback; no
+recommendation behavior, flag, evidence gate, or safety gate changed.
+
+**Independent correction:** review of the first local commit returned `CHANGES
+REQUIRED`, confidence 0.99. Cross-product trace totals could exceed aggregate
+diagnostics, the live renderer could not populate the field needed for claimed
+automated variant stability, and Kendall mutation proof was incomplete. The
+correction rejects overlapping registered aliases, reconciles every trace sum,
+uses stable normalized brand/model identity for set/order measurements, and
+requires a manual variant/trim evidence decision for every card. Review schema
+is v3; automated variant scoring is explicitly unavailable.
+
+**Verification:** focused accuracy/runtime/verifier 77/77; runner/launcher
+27/27; full suite 1,709/1,709 across 232 suites; typecheck; lint with zero
+errors/three old warnings; production build; Playwright 17/17; and controller
+`agent-loop-2026-08-30T20-30-25-650Z` with all five serial partitions, 10/10
+cases, and 29/29 invariants. `next-env.d.ts` was restored to tracked blob
+`9edff1c7cacb3bfac9a1eadcf6f51eaa99565e38`.
+
+**Live calls and limits:** zero provider/live/product-data calls were made.
+Product accuracy is therefore still unmeasured and not claimed improved. The
+old attempt chain cannot resume because attempt 1 was consumed without the
+artifact hash required by attempt 2. A fresh zero-live protocol and independent
+review must precede any paid sample.
+
+**Boundary record:** Next reported `.env.local` as a build environment source;
+no value was printed, manually inspected, hashed, copied, or sent. Two early
+status commands printed protected fixture filenames but opened no content or
+metadata. The first PR-9A snapshot was committed and independently rejected;
+the generalized correction is locally validated and will amend that unpushed
+commit before exact-commit re-review. No push, PR, deployment, release, or flag
+promotion occurred.
+
+**Next step:** amend the rejected unpushed snapshot so history contains one
+self-contained PR-9A commit, then independently re-review that exact commit.
+The already approved zero-live PR-9B phase may then mint fresh run IDs/nonces,
+reauthenticate the current truth set, and propose an exact logical-search count
+and dollar ceiling. No paid dispatch is authorized until those exact limits are
+fixed and reviewed.

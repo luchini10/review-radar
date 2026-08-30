@@ -1,147 +1,160 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-08-30 by Codex during PR-8 RR-109 dependency closeout. This file
-was regenerated from current evidence.
+Updated: 2026-08-30 by Codex for the corrected PR-9A closeout.
+This file was regenerated from current repository and review evidence.
 
-The approved PR-8 base is `39fd2ff1a78c62f0f320c1bbbcf34b18b777bc98`,
-parent `12f399e4997789bfd17895674d7c02f6a5803100`, tree
-`4029854eec4a07e4f6ee408dcb45d790a9e96054`. The local PR-8 closeout commit
-containing this file must have that exact base as its parent. Authenticate its
-full SHA, parent, tree, subject, and exact path list after commit.
+The final amended PR-9A commit must retain local `main` commit
+`b97446c3f2bd8a37e54f69885a165ae2a8cbad1f` as its exact parent. Authenticate
+the amended commit's full SHA, parent, tree, subject, and exact path list before
+independent correction review. This prospective handoff cannot contain its own
+commit SHA.
 
 ## Current state
 
 ReviewRadar remains **NOT READY** for production, confidence **0.995**.
 
-PR-8 closes the known RR-109 dependency-advisory blocker, but the decisive
-production gaps remain:
-
-- current staged shopper quality, market-leader recall, hard-requirement truth,
-  repeatability, latency distribution, calls, tokens, and cost are unmeasured;
-- distributed and hosted admission, cancellation, headers, health, deployment,
-  rollback, logging, observability, and actual native Linux behavior are not
-  authenticated;
-- broad accessibility, assistive-technology, multi-browser, and real-device
-  proof is absent; and
-- staged Terra and Direct Terra remain default-off, undeployed, and
-  unauthorized for promotion.
-
-The issue register contains **109** issues: **0 Open**, **6 Needs
+The issue register remains at **109** issues: **0 Open**, **6 Needs
 Investigation**, **102 Fixed**, and **1 Won't Fix**. Severity totals remain **15
 Critical**, **52 High**, **37 Medium**, and **5 Low**.
 
-## PR-8 RR-109 outcome
+PR-9A improves the integrity and diagnostic resolution of future staged
+measurement. It contains no live result and proves no product-accuracy gain.
+PR-006 remains decisive: current staged-path leader recall, exact
+product/variant truth, requirements, price/specification accuracy, source
+support, ranking, repeatability, latency, calls, tokens, and cost are
+unmeasured.
 
-- `package.json` is byte-identical to the approved base. No direct dependency
-  specification changed.
-- The selected lock correction updates only the affected resolved packages,
-  required companions, and `eslint-config-next@16.3.3` aligned with
-  `next@16.3.3`. No `npm audit fix`, override, shadcn removal, or broad root
-  upgrade was used.
-- Corrected `package-lock.json` SHA-256:
-  `7c142f30e3670020d9b867d90d86f16fc53f7c2a8139120d368b9d4e6ad1501a`.
-- Sixty-one changed registry artifacts matched exact public npm metadata
-  tarball URLs and integrity values; no changed non-registry artifact exists.
-- Credential-isolated npm 11.12.1 audit exits 0 with zero vulnerabilities.
-- Package-only dependency tree exits 0 with no problems.
-- The new RR-109 regression fails against the exact base lock, then passes 4/4
-  on the corrected lock. Together with the existing optional-lock contract, the
-  focused dependency wall passes 6/6.
-- Clean isolated Windows installation passes. Next 16.3.3 loads; Sharp 0.35.4
-  with libvips 8.18.6 generates a PNG; the required shadcn stylesheet exists.
-- Complete unit suite passes 1,699/1,699 across 231 suites.
-- Typecheck passes.
-- Lint passes with zero errors and the same three pre-existing test warnings.
-- Next.js 16.3.3 production build passes and emits the expected routes.
-- Playwright passes 17/17.
-- Final controller `agent-loop-2026-08-30T16-39-27-087Z` runs all five serial
-  partitions and reconciles 10/10 cases and 29/29 invariants.
-- Generated `next-env.d.ts` is restored to Git blob
-  `9edff1c7cacb3bfac9a1eadcf6f51eaa99565e38`.
+## PR-9A outcome and correction
 
-Next 16.3.3 deterministically adds its documented agent-rule block to
-`AGENTS.md`. Retaining that generated companion prevents subsequent Next runs
-from recreating an uncommitted tracked change.
+- Artifact/producer/capture contracts use v2 and preserve nullable public card
+  variants. Bound manual review uses v3.
+- A server-only evaluation trace maps exact normalized brand/model identities
+  to preregistered public product IDs and records bounded counts at validated
+  research, identity-source acceptance, verifier outcome/first loss, and final
+  rank.
+- The trace persists no raw candidate ID or identity, URL, source, prompt,
+  response, header, or credential. Unknown/raw fields and resealed canaries fail
+  closed.
+- Registered products are attributable to discovery absence, identity-source
+  preflight, exact verifier loss, presentation omission, or display.
+- Exact normalized brand plus model defines product identity for duplicate-card
+  rejection, final-set Jaccard, and shared-order Kendall tau. Product-name
+  wording and nullable variant text cannot split one physical product.
+- Automated variant scoring is explicitly unavailable because the live renderer
+  supplies no trustworthy variant field. Every card instead requires a bound
+  pass/fail manual audit of exact variant/trim evidence, even when the public
+  variant is null.
+- Production handlers do not pass the evaluation callback. Defaults, public
+  responses, ranking behavior, and all identity/evidence/price/requirement and
+  network gates remain unchanged.
 
-## Platform evidence and limits
+Independent review authenticated local commit
+`59e9b03352136d9da34a3a4f4caaed7aaf90a5f9` and returned **CHANGES REQUIRED**,
+confidence **0.99**. Three generalized defects were proven:
 
-WSL is not installed; Docker and Podman are unavailable. No system software was
-installed. Two explicit Linux-target npm installs exited 0 and preserved the
-exact lock but pruned native optional artifacts. They are diagnostics only and
-do not prove actual Linux installation or execution.
+1. per-product checks allowed cross-product registered totals to exceed the
+   aggregate diagnostics;
+2. the claimed automated variant-stability path was unreachable in live output;
+3. the Kendall claim lacked reversal, partial-overlap, sparse-overlap, and
+   harmless wording-drift mutations.
 
-The clean Windows installed tree retains optional-platform pruning residuals
-while installation, package-only graph, audit, and native loads pass. Actual
-native Linux and hosted deployment behavior remain RR-107/platform residuals;
-they do not reopen RR-109.
+The correction rejects overlapping normalized registered alias pairs;
+reconciles summed validated/accepted counts, every verifier outcome, and every
+first-loss bucket against aggregate diagnostics in the collector boundary,
+artifact builder/parser, and analyzer; uses stable exact-product identity for
+set/order metrics; and adds the missing mutations. The rejected unpushed commit
+must be amended, not followed by a second PR-9A commit, so the authorized history
+still contains exactly one PR-9A commit. The amended exact commit requires
+independent correction review.
 
-## Independent review
+## Verification
 
-Independent exact-diff review returned `VERIFIED`, no material correction,
-confidence 0.98. The reviewer independently repeated the corrected audit,
-package-only graph, 61-artifact registry metadata/integrity check, focused 6/6,
-version-range/adversarial regression review, issue arithmetic, diff check, and
-generated `AGENTS.md` source check. The review authenticated the explicit lack
-of actual Linux proof and agreed RR-109 may be Fixed while the overall verdict
-remains `NOT READY`, confidence 0.995.
+- Fail-first focused run: 31/43 passed and 12 failed, reproducing the review
+  findings plus expected temporary manual-review incompatibilities.
+- Corrected focused readiness/trace/runtime/verifier: 77/77.
+- Runner/launcher/typed-terminal: 27/27 in the prior PR-9A validation and green
+  again inside the complete suite.
+- Full unit suite: 1,709/1,709 across 232 suites.
+- Typecheck: pass.
+- Lint: zero errors and the same three pre-existing test warnings.
+- Corrected deterministic controller
+  `agent-loop-2026-08-30T20-30-25-650Z`: all five serial partitions, 10/10
+  cases, and 29/29 invariants pass.
+- The prior PR-9A Next 16.3.3 build and Playwright run passed 17/17. They were not
+  rerun for the correction because the correction changes only offline
+  readiness scripts, tests, and documentation.
+- Generated `next-env.d.ts` remains expected to match Git blob
+  `9edff1c7cacb3bfac9a1eadcf6f51eaa99565e38`; authenticate it before amendment.
 
-The reviewer did not repeat the clean Windows install/native Sharp probe
-because the review was read-only. It authenticated the recorded evidence and
-treated that limitation, time-bound audit state, and missing native Linux as
-explicit residuals.
+The earlier build reported `.env.local` as an environment source. No value was
+printed, manually inspected, hashed, copied, or used in a provider request.
+Treat it as compilation evidence, not credential-isolated evidence. Status
+commands unintentionally enumerated protected live-fixture path names; no
+fixture content, metadata, hash, or value was opened or used. Every subsequent
+repository search must exclude the protected tree.
 
-## Objective, bottleneck challenge, and next decision
+## Objective, bottleneck challenge, and next phase
 
-**Objective:** after RR-109 closeout, obtain the missing current product-quality
-and hosted-operation evidence without treating local deterministic success as
-release authority.
+**Objective:** discover and repair the highest-impact real product-accuracy
+failures without weakening the product's truth gates.
 
-**Verified facts:** the exact corrected audit is clean and RR-109 is Fixed.
-PR-3K proves one safe lifecycle, but PR-4B attempt 1 is consumed before provider
-work and has no artifact. No current multi-shape live matrix or authenticated
-hosted deployment evidence exists.
+**Verified facts:** deterministic behavior is green after correction. The active
+staged path still lacks a current multi-shape sample. PR-4B attempt 1 is spent
+without an artifact; attempt 2 requires the missing artifact hash and cannot
+legally execute.
 
-**Engineering judgment:** another speculative local package or product change
-does not attack the remaining proven bottleneck. The strongest next work is a
-separately approved evidence phase: either a new independently reviewed live-
-quality protocol or an authenticated hosted-operations audit. Those are
-materially stronger than more local refactoring because they directly measure
-the failed/unknown readiness criteria.
+**Engineering judgment:** speculative ranking/discovery changes remain weaker
+than an attributable baseline. The next protocol must mint a fresh chain;
+resuming, replaying, skipping, or inventing evidence for the old chain would
+corrupt the measurement. The reviewed four-shape repeated matrix remains the
+strongest first sample until it identifies the first repeated loss stage.
 
-**Uncertainty:** no live or hosted evidence was added in PR-8, registry advisory
-state can change after the recorded audit, and no actual Linux runtime was
-available.
+**Uncertainty:** the corrected PR-9A commit still requires exact-commit
+independent review. The truth set expires 2026-09-12 and must be reauthenticated.
+Kendall remains diagnostic until PR-9B ratifies a rank-stability bar. Real
+adherence, accuracy, latency, and cost remain unknown.
 
-**Recommended reasoning:** Highest for any new live-quality/release
-adjudication; High for security, hosted operations, and supply-chain review;
-Medium for routine deterministic execution.
+**Recommended reasoning:** Highest for live protocol and result adjudication;
+High for measurement/trust review; Medium for deterministic execution after the
+exact snapshot and ceilings are fixed.
 
-## Current approved phase and authority
+## Current phase and authority
 
-PR-8 is complete and independently verified. Only explicit-path documentation
-closeout and one self-contained local commit remain authorized. No next
-implementation, live, hosted, release, or deployment phase is approved.
+Taylor explicitly authorized:
 
-Allowed PR-8 tracked paths are:
+1. one self-contained local PR-9A commit;
+2. one independent subagent review, including correction follow-up by the same
+   reviewer;
+3. zero-live PR-9B protocol work; and
+4. paid calls in principle.
 
-- `AGENTS.md`
-- `package-lock.json`
-- `tests/packageAdvisoryFloor.test.mjs`
-- `docs/production-readiness-report.md`
+The paid approval does not yet supply the exact logical-search count and dollar
+ceiling required by the standing roadmap. It authorizes protocol planning, not
+dispatch. PR-9B must fix those numbers and pass independent zero-live review
+before any request is sent. Replacements always require new approval.
+
+PR-9A phase-owned paths are:
+
+- `lib/stagedTerraRuntime.ts`
+- `lib/stagedTerraVerifier.ts`
+- `scripts/run-staged-terra-readiness.mjs`
+- `scripts/staged-terra-readiness-artifact.mjs`
+- `scripts/staged-terra-readiness-trace.mjs`
+- `scripts/staged-terra-readiness.mjs`
+- `tests/stagedTerraReadiness.test.mjs`
+- `tests/stagedTerraReadinessTrace.test.mjs`
+- `tests/stagedTerraRuntime.test.mjs`
 - `docs/production-readiness-master-plan.md`
-- `docs/RR-Issues-Report.md`
 - `docs/qa-loop-results.md`
-- `docs/Agent Run Summary.md`
 - `docs/agent-loop-report.md`
-- `docs/agent-dialogue.md`
+- `docs/Agent Run Summary.md`
 - `docs/agent-next-task.md`
 - `docs/change-log.md`
 - `docs/review-radar-test-memory.md`
 
-Stage only these exact phase-owned paths. Never use `git add -A`. Preserve all
-untracked user files, including `docs/chatgpt-production-readiness-goal-summary.md`,
-and every spent live fixture. Stop before push, PR creation, CI, merge,
-deployment, release, or flag promotion.
+Stage only these exact paths and never use `git add -A`. Preserve every other
+tracked or untracked user file. The local commit does not authorize push, PR
+creation, CI, merge, deployment, release, or flag promotion.
 
 ## Approval, cost, and flags
 
@@ -154,34 +167,33 @@ Committed defaults remain:
 - `REVIEW_RADAR_CONSTRAINT_ALLOCATION=off`
 - staged research/presentation model: `gpt-5.6-terra`
 
-The ignored `.env.local` is user-owned. Never edit, stage, print, hash, copy,
-stat for diagnosis, or manually inspect it. PR-8 used no provider spend, live
-retry, replacement attempt, hosted account, production change, or flag
-promotion.
+PR-9A made zero OpenAI, hosted-search, Serper, source-page, product-data, or
+live-route calls. Do not dispatch any fresh attempt until PR-9B closes its exact
+protocol and cost authority. The ignored `.env.local` is user-owned: do not
+edit, stage, print, hash, copy, stat for diagnosis, or manually inspect it.
 
 ## Outstanding readiness debts
 
-- **PR-006 live quality:** current leader recall, card truth, hard-requirement
-  accuracy, final-card stability, price/source coverage, first losses,
-  repeatability, latency, calls, tokens, and cost remain unmeasured.
-- **PR-023 / RR-104 distributed authority:** local admission/cache is verified;
-  worker, restart, multi-instance, edge, account/IP, and load enforcement are
-  unproven.
-- **PR-024 / RR-105 cancellation:** local cancellation is Fixed; hosted
-  disconnect delivery and upstream acceptance/billing remain unknown.
-- **PR-025 / RR-106 logging:** local Serper logging is Fixed; hosted collectors,
-  retention, and historical logs remain unknown.
-- **PR-027 / RR-108 configuration:** tracked setup is Fixed/default-safe;
-  hosted configuration, historical requests, key validity, and billing remain
-  unknown.
-- **PR-026 / RR-107 platform:** tracked lock consistency is Fixed; actual native
-  Linux deployment and optional-pruning behavior remain unverified.
-- **Production operations:** headers/edge controls, health, deployment,
-  rollback, runtime pins, CI, monitoring, alerts, traces, and log retention are
-  unauthenticated.
-- **Accessibility and UX:** deterministic Chromium E2E covers core flows, but
-  broad keyboard, screen-reader, zoom/high-contrast, reduced-motion,
-  multi-browser, and real-device proof is absent.
+- **PR-006 live quality:** leader recall, product/variant truth, card/rank
+  quality, requirements, specifications, prices, sources, repeatability,
+  latency, calls, tokens, cost, and stage lineage remain unmeasured.
+- **Fresh protocol:** PR-9B must mint fresh identities/nonces, bind the exact
+  corrected PR-9A commit, ratify Kendall and all other bars, set exact
+  logical/physical ceilings, and receive independent zero-live review.
+- **PR-023 / RR-104 distributed authority:** worker, restart, multi-instance,
+  edge, account/IP, and load enforcement remain unproven.
+- **PR-024 / RR-105 cancellation:** hosted disconnect delivery and upstream
+  acceptance/billing remain unknown.
+- **PR-025 / RR-106 logging:** hosted collectors, retention, and historical logs
+  remain unknown.
+- **PR-027 / RR-108 configuration:** hosted configuration, key validity,
+  historical requests, and billing remain unknown.
+- **PR-026 / RR-107 platform:** native Linux deployment and optional-pruning
+  behavior remain unverified.
+- **Production operations:** headers, health, deployment, rollback, runtime
+  pins, CI, monitoring, alerts, traces, and retention remain unauthenticated.
+- **Accessibility and UX:** broad assistive-technology, multi-browser, and
+  real-device proof remains absent.
 
 ## Hard boundaries
 
@@ -189,30 +201,23 @@ promotion.
   do not open, enumerate, stat, hash, parse, copy, edit, delete, or reuse a spent
   live fixture.
 - Do not access providers, credentials, hosting accounts, protected data,
-  `.env.local`, live servers, product-data services, or authenticated
-  registries.
-- Do not change packages, application behavior, flags, hosted systems, or
-  production state without new explicit authority.
+  `.env.local`, live servers, product-data services, or authenticated registries
+  until the exact phase authority permits it.
 - Preserve all identity, evidence, price, network, input, admission/cache,
   cancellation, logging, configuration, dependency, and response boundaries.
-- E2E/build may regenerate `next-env.d.ts`; restore it with `apply_patch` and
-  verify blob `9edff1c7cacb3bfac9a1eadcf6f51eaa99565e38`.
-- A local commit does not authorize push, PR creation, CI, merge, deployment,
-  or release.
+- Independent review is read-only. A local commit does not authorize push, PR,
+  CI, merge, deployment, release, paid dispatch, or flag promotion.
 
 ## Evidence pointers
 
 | Evidence | Location |
 | --- | --- |
 | Current readiness verdict | `docs/production-readiness-report.md` |
-| PR-8 decision and evidence | `docs/production-readiness-master-plan.md` |
-| RR-109 status and issue arithmetic | `docs/RR-Issues-Report.md` |
-| Canonical validation record | latest PR-8 entry in `docs/qa-loop-results.md` |
-| Phase recap | latest entry in `docs/Agent Run Summary.md` |
-| Final controller | `docs/agent-loop-report.md` |
-| Durable dependency contract | `docs/review-radar-test-memory.md` |
-| Peer conclusion | latest entry in `docs/agent-dialogue.md` |
+| PR-9A decision and next boundary | `docs/production-readiness-master-plan.md` |
+| Canonical PR-9A verification | latest PR-9A entry in `docs/qa-loop-results.md` |
+| Deterministic controller | `docs/agent-loop-report.md` |
+| Durable accuracy-lineage contract | `docs/review-radar-test-memory.md` |
+| Issue arithmetic | `docs/RR-Issues-Report.md` |
 
-Closing RR-109 removes one known blocker. It does not change the exact
-`NOT READY` verdict because missing live-quality and hosted-production evidence
-are independently decisive.
+PR-9A makes the next sample diagnostically useful. It does not make the sample
+exist, improve a real result, or change the exact `NOT READY` verdict.

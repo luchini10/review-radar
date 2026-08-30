@@ -3157,3 +3157,33 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 - Ledger/analyzer: 23/23; typecheck, build, and offline eval pass.
 - Lint: 0 errors and 3 pre-existing warnings.
 - Zero live calls; `.env.local` unchanged; recovery remains default-off.
+
+## 2026-08-30 — 🟧 Codex — Staged accuracy diagnostics v2
+
+### Changed
+
+- Preserved displayed variants in readiness evidence and added privacy-bounded
+  preregistered-product lineage through discovery, preflight, verification, and
+  final presentation.
+- Added rank-order stability plus explicit manual checks for variant identity,
+  specification claims, top-pick support, relative order, and evidence-backed
+  tradeoffs.
+- Kept production behavior and all existing evidence, identity, requirement,
+  price, and safety gates unchanged.
+- After independent review rejected the first local snapshot, prevented
+  registered products from double-counting shared aliases or collectively
+  exceeding aggregate research/verifier diagnostics.
+- Defined stability on exact normalized brand/model identity, added real
+  Kendall reversal and overlap mutations, and made variant/trim evidence a
+  mandatory manual pass/fail check because live output has no trustworthy
+  automated variant signal.
+
+### Verified
+
+- Focused accuracy/runtime/verifier tests: 77/77.
+- Runner/launcher tests: 27/27.
+- Full unit suite: 1,709/1,709 across 232 suites.
+- Typecheck, the prior production build, prior Playwright 17/17, and corrected
+  deterministic controller 10/10 cases with 29/29 invariants pass.
+- Lint: zero errors and three pre-existing test warnings.
+- Zero live/provider requests; staged and Direct Terra flags remain off.

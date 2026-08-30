@@ -10,6 +10,12 @@ import {
   STAGED_TERRA_READINESS_FIRST_LOSS_KEYS,
   STAGED_TERRA_READINESS_VERIFICATION_KEYS,
 } from "./staged-terra-readiness-artifact.mjs";
+import {
+  STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS,
+  STAGED_TERRA_REGISTERED_PRODUCT_TRACE_VERSION,
+  stagedTerraRegisteredProductMatchesIdentity,
+  stagedTerraRegisteredProducts,
+} from "./staged-terra-readiness-trace.mjs";
 
 export {
   buildStagedTerraReadinessArtifact,
@@ -19,9 +25,9 @@ export {
 export const STAGED_TERRA_READINESS_MATRIX_VERSION =
   "staged-terra-readiness-matrix-v1";
 export const STAGED_TERRA_READINESS_CAPTURE_VERSION =
-  "staged-terra-readiness-capture-v1";
+  "staged-terra-readiness-capture-v2";
 export const STAGED_TERRA_READINESS_REVIEW_VERSION =
-  "staged-terra-readiness-review-v1";
+  "staged-terra-readiness-review-v3";
 const FROZEN_MATRIX_SHA256 =
   "e1481ed90d40856e9fc504e0177ab92c82929024d7d9cc363cdf381eddb353be";
 
@@ -126,6 +132,7 @@ const RUN_KEYS = [
   "finalAdvice",
   "cards",
   "sources",
+  "registeredProductTrace",
   "diagnostics",
   "accounting",
   "stageTimings",
@@ -151,6 +158,21 @@ const FIRST_LOSS_KEYS = [
   "hardRequirementNotVerified",
   "noLossEligible",
 ];
+const REGISTERED_PRODUCT_TRACE_KEYS = ["schemaVersion", "products"];
+const REGISTERED_PRODUCT_TRACE_PRODUCT_KEYS = [
+  "id",
+  "registry",
+  "validatedResearchCandidates",
+  "acceptedResearchCandidates",
+  "verification",
+  "finalRanks",
+];
+const REGISTERED_PRODUCT_TRACE_VERIFICATION_KEYS = [
+  "eligible",
+  "closeMatch",
+  "excluded",
+  "firstLoss",
+];
 if (
   JSON.stringify(FIRST_LOSS_KEYS) !==
   JSON.stringify(STAGED_TERRA_READINESS_FIRST_LOSS_KEYS)
@@ -168,7 +190,7 @@ const CARD_KEYS = [
   "sourceIds",
   "reviewEvidence",
 ];
-const IDENTITY_KEYS = ["brand", "productName", "model"];
+const IDENTITY_KEYS = ["brand", "productName", "model", "variant"];
 const IDENTITY_VERIFICATION_KEYS = ["state", "observedAt"];
 const REQUIREMENT_CHECK_KEYS = ["id", "status", "explanation", "sourceIds"];
 const COMMERCE_KEYS = [
@@ -234,6 +256,7 @@ const REVIEW_KEYS = [
   "sourceAudits",
   "noExactAudits",
   "adviceAudits",
+  "rankingAudits",
 ];
 const PRODUCT_AUDIT_KEYS = [
   "caseId",
@@ -244,6 +267,8 @@ const PRODUCT_AUDIT_KEYS = [
   "hardRequirements",
   "evidenceSupport",
   "requirementExplanations",
+  "variantIdentity",
+  "specificationClaims",
   "priceOfferBinding",
   "imageIdentity",
 ];
@@ -256,6 +281,13 @@ const SOURCE_AUDIT_KEYS = [
 ];
 const NO_EXACT_AUDIT_KEYS = ["caseId", "run", "status"];
 const ADVICE_AUDIT_KEYS = ["caseId", "run", "status"];
+const RANKING_AUDIT_KEYS = [
+  "caseId",
+  "run",
+  "topPickSupported",
+  "relativeOrderSupported",
+  "evidenceAndTradeoffsReflected",
+];
 const HEX_64 = /^[0-9a-f]{64}$/;
 const HEX_40 = /^[0-9a-f]{40}$/;
 const SAFE_ID = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
@@ -849,6 +881,11 @@ export function validateStagedTerraReadinessMatrix(
           }
         }
       }
+      try {
+        stagedTerraRegisteredProducts(testCase);
+      } catch {
+        errors.push(`registered_product_registry_invalid:${testCase.id}`);
+      }
     }
   }
 
@@ -920,6 +957,82 @@ export function validateStagedTerraReadinessMatrix(
 
 function captureKey(run) {
   return `${String(run?.caseId)}:${String(run?.run)}`;
+}
+
+function validateRegisteredProductTraceSchema(trace, fail) {
+  if (trace === null) return;
+  if (
+    !hasExactKeys(trace, REGISTERED_PRODUCT_TRACE_KEYS) ||
+    trace.schemaVersion !== STAGED_TERRA_REGISTERED_PRODUCT_TRACE_VERSION ||
+    !Array.isArray(trace.products) ||
+    trace.products.length > 32
+  ) {
+    fail("registeredProductTrace");
+    return;
+  }
+  const ids = new Set();
+  for (const [index, product] of trace.products.entries()) {
+    const path = `registeredProductTrace.${index}`;
+    if (!hasExactKeys(product, REGISTERED_PRODUCT_TRACE_PRODUCT_KEYS)) {
+      fail(`${path}.keys`);
+      continue;
+    }
+    if (!SAFE_ID.test(product.id) || ids.has(product.id)) fail(`${path}.id`);
+    ids.add(product.id);
+    if (!["must_consider", "illustrative"].includes(product.registry)) {
+      fail(`${path}.registry`);
+    }
+    if (
+      !isNonNegativeInteger(product.validatedResearchCandidates) ||
+      product.validatedResearchCandidates > 15 ||
+      !isNonNegativeInteger(product.acceptedResearchCandidates) ||
+      product.acceptedResearchCandidates >
+        product.validatedResearchCandidates
+    ) {
+      fail(`${path}.researchCounts`);
+    }
+    if (product.verification !== null) {
+      if (
+        !hasExactKeys(
+          product.verification,
+          REGISTERED_PRODUCT_TRACE_VERIFICATION_KEYS,
+        )
+      ) {
+        fail(`${path}.verification.keys`);
+      } else {
+        const verification = product.verification;
+        if (
+          ![
+            verification.eligible,
+            verification.closeMatch,
+            verification.excluded,
+          ].every(isNonNegativeInteger) ||
+          verification.eligible +
+            verification.closeMatch +
+            verification.excluded !==
+            product.acceptedResearchCandidates ||
+          !hasExactKeys(
+            verification.firstLoss,
+            STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS,
+          ) ||
+          !STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS.every((key) =>
+            isNonNegativeInteger(verification.firstLoss[key]),
+          )
+        ) {
+          fail(`${path}.verification`);
+        }
+      }
+    }
+    if (
+      !Array.isArray(product.finalRanks) ||
+      product.finalRanks.length !== new Set(product.finalRanks).size ||
+      !product.finalRanks.every(
+        (rank) => Number.isSafeInteger(rank) && rank >= 1 && rank <= 5,
+      )
+    ) {
+      fail(`${path}.finalRanks`);
+    }
+  }
 }
 
 function validateCaptureSchema(run, key, failures) {
@@ -996,8 +1109,14 @@ function validateCaptureSchema(run, key, failures) {
       if (!hasExactKeys(card.identity, IDENTITY_KEYS)) {
         fail(`card.${rank}.identity_keys`);
       } else {
-        for (const field of IDENTITY_KEYS) {
+        for (const field of ["brand", "productName", "model"]) {
           if (!isNonEmptyString(card.identity[field])) fail(`card.${rank}.identity.${field}`);
+        }
+        if (
+          card.identity.variant !== null &&
+          !isNonEmptyString(card.identity.variant)
+        ) {
+          fail(`card.${rank}.identity.variant`);
         }
       }
       if (!hasExactKeys(card.identityVerification, IDENTITY_VERIFICATION_KEYS)) {
@@ -1123,6 +1242,8 @@ function validateCaptureSchema(run, key, failures) {
       }
     }
   }
+
+  validateRegisteredProductTraceSchema(run.registeredProductTrace, fail);
 
   if (!Array.isArray(run.sources)) {
     fail("sources");
@@ -1258,17 +1379,11 @@ function identityKey(card) {
   return [
     normalized(card.identity.brand),
     normalized(card.identity.model),
-    normalized(card.identity.productName),
   ].join("|");
 }
 
 function cardMatchesTruthProduct(card, product) {
-  const brand = normalized(card.identity.brand);
-  const model = normalized(card.identity.model);
-  return (
-    product.brandAliases.some((alias) => brand === normalized(alias)) &&
-    product.modelAliases.some((alias) => model === normalized(alias))
-  );
+  return stagedTerraRegisteredProductMatchesIdentity(card.identity, product);
 }
 
 function pairwiseJaccard(sets) {
@@ -1286,16 +1401,190 @@ function pairwiseJaccard(sets) {
   return values;
 }
 
+function pairwiseSharedOrderKendallTau(lists) {
+  const values = [];
+  for (let left = 0; left < lists.length; left += 1) {
+    for (let right = left + 1; right < lists.length; right += 1) {
+      const rightRanks = new Map(
+        lists[right].map((identity, index) => [identity, index]),
+      );
+      const shared = lists[left].filter((identity) => rightRanks.has(identity));
+      if (shared.length < 2) {
+        values.push(null);
+        continue;
+      }
+      let concordant = 0;
+      let discordant = 0;
+      for (let first = 0; first < shared.length; first += 1) {
+        for (let second = first + 1; second < shared.length; second += 1) {
+          if (rightRanks.get(shared[first]) < rightRanks.get(shared[second])) {
+            concordant += 1;
+          } else {
+            discordant += 1;
+          }
+        }
+      }
+      values.push(
+        rounded(
+          (concordant - discordant) / (concordant + discordant),
+        ),
+      );
+    }
+  }
+  return values;
+}
+
 function rounded(value) {
   return Number(value.toFixed(12));
+}
+
+function registeredProductFirstLossStage(productTrace) {
+  if (productTrace.validatedResearchCandidates === 0) {
+    return "research_discovery_absent";
+  }
+  if (productTrace.acceptedResearchCandidates === 0) {
+    return "identity_source_preflight";
+  }
+  if (productTrace.verification === null) return "verification_not_observed";
+  if (productTrace.finalRanks.length > 0) return "displayed";
+  if (productTrace.verification.eligible > 0) return "presentation_omission";
+  const observed = STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS.filter(
+    (key) => productTrace.verification.firstLoss[key] > 0,
+  );
+  return observed.length === 1
+    ? `verification_${observed[0]}`
+    : "verification_mixed";
 }
 
 function unique(values) {
   return Array.from(new Set(values));
 }
 
+function validateRegisteredProductTraceBinding(run, testCase, haltFailures) {
+  const trace = run.registeredProductTrace;
+  const expected = stagedTerraRegisteredProducts(testCase);
+  const key = captureKey(run);
+  if (trace === null) {
+    if (
+      run.terminal.state === "completed" ||
+      run.diagnostics.research !== null ||
+      run.diagnostics.verification !== null
+    ) {
+      haltFailures.push(`registered_product_trace_missing:${key}`);
+    }
+    return;
+  }
+  if (trace.products.length !== expected.length) {
+    haltFailures.push(
+      `registered_product_trace_length:${key}:${trace.products.length}:${expected.length}`,
+    );
+    return;
+  }
+  const registeredTotals = {
+    validatedResearchCandidates: 0,
+    acceptedResearchCandidates: 0,
+    eligible: 0,
+    closeMatch: 0,
+    excluded: 0,
+    firstLoss: Object.fromEntries(
+      STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS.map((field) => [field, 0]),
+    ),
+  };
+  for (const [index, productTrace] of trace.products.entries()) {
+    const registered = expected[index];
+    const label = `${key}:${registered.product.id}`;
+    if (
+      productTrace.id !== registered.product.id ||
+      productTrace.registry !== registered.registry
+    ) {
+      haltFailures.push(`registered_product_trace_identity:${label}`);
+      continue;
+    }
+    const expectedFinalRanks = run.cards
+      .filter((card) =>
+        stagedTerraRegisteredProductMatchesIdentity(
+          card.identity,
+          registered.product,
+        ),
+      )
+      .map((card) => card.rank);
+    if (
+      JSON.stringify(productTrace.finalRanks) !==
+      JSON.stringify(expectedFinalRanks)
+    ) {
+      haltFailures.push(`registered_product_trace_final_ranks:${label}`);
+    }
+    if (
+      run.diagnostics.research !== null &&
+      (productTrace.validatedResearchCandidates >
+        run.diagnostics.research.submitted ||
+        productTrace.acceptedResearchCandidates >
+          run.diagnostics.research.accepted)
+    ) {
+      haltFailures.push(`registered_product_trace_research_counts:${label}`);
+    }
+    registeredTotals.validatedResearchCandidates +=
+      productTrace.validatedResearchCandidates;
+    registeredTotals.acceptedResearchCandidates +=
+      productTrace.acceptedResearchCandidates;
+    if (productTrace.verification === null) {
+      if (run.diagnostics.verification !== null) {
+        haltFailures.push(`registered_product_trace_verification_missing:${label}`);
+      }
+      continue;
+    }
+    if (run.diagnostics.verification === null) {
+      haltFailures.push(`registered_product_trace_verification_unexpected:${label}`);
+      continue;
+    }
+    const observed = productTrace.verification;
+    registeredTotals.eligible += observed.eligible;
+    registeredTotals.closeMatch += observed.closeMatch;
+    registeredTotals.excluded += observed.excluded;
+    for (const field of STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS) {
+      registeredTotals.firstLoss[field] += observed.firstLoss[field];
+    }
+    if (
+      observed.eligible > run.diagnostics.verification.eligible ||
+      observed.closeMatch > run.diagnostics.verification.closeMatch ||
+      observed.excluded > run.diagnostics.verification.excluded ||
+      STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS.some(
+        (field) =>
+          observed.firstLoss[field] >
+          run.diagnostics.verification.firstLoss[field],
+      )
+    ) {
+      haltFailures.push(`registered_product_trace_verification_counts:${label}`);
+    }
+  }
+  if (
+    run.diagnostics.research !== null &&
+    (registeredTotals.validatedResearchCandidates >
+      run.diagnostics.research.submitted ||
+      registeredTotals.acceptedResearchCandidates >
+        run.diagnostics.research.accepted)
+  ) {
+    haltFailures.push(`registered_product_trace_aggregate_research:${key}`);
+  }
+  if (
+    run.diagnostics.verification !== null &&
+    (registeredTotals.eligible > run.diagnostics.verification.eligible ||
+      registeredTotals.closeMatch >
+        run.diagnostics.verification.closeMatch ||
+      registeredTotals.excluded > run.diagnostics.verification.excluded ||
+      STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS.some(
+        (field) =>
+          registeredTotals.firstLoss[field] >
+          run.diagnostics.verification.firstLoss[field],
+      ))
+  ) {
+    haltFailures.push(`registered_product_trace_aggregate_verification:${key}`);
+  }
+}
+
 function validateRunMechanics(run, testCase, matrix, haltFailures, qualityFailures) {
   const key = captureKey(run);
+  validateRegisteredProductTraceBinding(run, testCase, haltFailures);
   const sourceById = new Map(run.sources.map((source) => [source.id, source]));
   const registeredSources = new Set(sourceById.keys());
   if (registeredSources.size !== run.sources.length) {
@@ -1665,10 +1954,14 @@ function buildMetrics(matrix, runs, qualityFailures, haltFailures) {
   for (const testCase of matrix.cases) {
     const caseRuns = byCase.get(testCase.id) || [];
     if (caseRuns.length < 2) continue;
+    const rankedIdentities = caseRuns.map((run) =>
+      run.cards.map((card) => identityKey(card)),
+    );
     const values = pairwiseJaccard(
-      caseRuns.map(
-        (run) => new Set(run.cards.map((card) => identityKey(card))),
-      ),
+      rankedIdentities.map((identities) => new Set(identities)),
+    );
+    const sharedOrderKendallTau = pairwiseSharedOrderKendallTau(
+      rankedIdentities,
     );
     const minimum = values.length ? Math.min(...values) : 1;
     const mean = values.length
@@ -1679,6 +1972,7 @@ function buildMetrics(matrix, runs, qualityFailures, haltFailures) {
       pairwise: values.map(rounded),
       minimum: rounded(minimum),
       mean: rounded(mean),
+      sharedOrderKendallTau,
     });
     if (minimum < matrix.qualityBars.minimumPairwiseFinalJaccard) {
       qualityFailures.push(
@@ -1713,16 +2007,34 @@ function buildMetrics(matrix, runs, qualityFailures, haltFailures) {
   const verifiedCommerceCards = allCards.filter(
     (card) => card.commerce.state === "verified",
   ).length;
+  const registeredProductLineage = runs.flatMap((run) =>
+    (run.registeredProductTrace?.products || []).map((product) => ({
+      caseId: run.caseId,
+      run: run.run,
+      productId: product.id,
+      registry: product.registry,
+      validatedResearchCandidates: product.validatedResearchCandidates,
+      acceptedResearchCandidates: product.acceptedResearchCandidates,
+      verification:
+        product.verification === null
+          ? null
+          : structuredClone(product.verification),
+      finalRanks: [...product.finalRanks],
+      firstLossStage: registeredProductFirstLossStage(product),
+    })),
+  );
 
   return {
     candidateIdentityJaccard: matrix.truthPolicy.candidateIdentityJaccard,
     candidateIdentityJaccardReason:
       matrix.truthPolicy.candidateIdentityJaccardReason,
+    variantIdentityMeasurement: "manual_variant_trim_evidence_required",
     broadMustConsider: {
       perRun: broadPerRun,
       union: broadUnion.size,
     },
     stability,
+    registeredProductLineage,
     totalAccounting,
     latencyMs: {
       perRun: runs.map((run) => ({
@@ -1792,6 +2104,7 @@ function manualExpectations(runs) {
   const sources = new Map();
   const noExact = new Set();
   const advice = new Set();
+  const rankings = new Map();
   for (const run of runs) {
     for (const card of run.cards) {
       products.set(auditKey({ ...run, rank: card.rank }), { run, card });
@@ -1812,9 +2125,10 @@ function manualExpectations(runs) {
     }
     if (run.terminal.state === "completed") {
       advice.add(auditKey(run, false));
+      rankings.set(auditKey(run, false), run);
     }
   }
-  return { products, sources, noExact, advice };
+  return { products, sources, noExact, advice, rankings };
 }
 
 function pendingManualExpectations(expectations) {
@@ -1823,6 +2137,7 @@ function pendingManualExpectations(expectations) {
     ...[...expectations.sources.keys()].map((key) => `source_audit:${key}`),
     ...[...expectations.noExact].map((key) => `no_exact_audit:${key}`),
     ...[...expectations.advice].map((key) => `advice_audit:${key}`),
+    ...[...expectations.rankings.keys()].map((key) => `ranking_audit:${key}`),
   ];
 }
 
@@ -1948,6 +2263,26 @@ function validateManualReview(
           haltFailures.push(`product_audit_failed:${key}:${field}`);
         }
       }
+      if (!AUDIT_PASS_FAIL.has(audit.variantIdentity)) {
+        failures.push(`product_audit_value_invalid:${key}:variantIdentity`);
+      } else if (audit.variantIdentity !== "pass") {
+        haltFailures.push(`product_audit_failed:${key}:variantIdentity`);
+      }
+      const expectedSpecificationStatus = card.reviewEvidence.claims.some(
+        (claim) => claim.claimType === "specification",
+      )
+        ? "pass"
+        : "not_applicable";
+      if (!AUDIT_OPTIONAL_BINDING.has(audit.specificationClaims)) {
+        failures.push(
+          `product_audit_value_invalid:${key}:specificationClaims`,
+        );
+      }
+      if (audit.specificationClaims !== expectedSpecificationStatus) {
+        haltFailures.push(
+          `product_audit_failed:${key}:specificationClaims`,
+        );
+      }
       const expectedPriceStatus =
         card.commerce.state === "verified" ? "pass" : "not_applicable";
       if (!AUDIT_OPTIONAL_BINDING.has(audit.priceOfferBinding)) {
@@ -2046,6 +2381,37 @@ function validateManualReview(
     },
   });
 
+  validateAuditCollection({
+    values: manualReview.rankingAudits,
+    expected: expectations.rankings,
+    keys: RANKING_AUDIT_KEYS,
+    kind: "ranking",
+    includeRank: false,
+    validate: (audit, run, key) => {
+      for (const field of [
+        "topPickSupported",
+        "evidenceAndTradeoffsReflected",
+      ]) {
+        if (!AUDIT_PASS_FAIL.has(audit[field])) {
+          failures.push(`ranking_audit_value_invalid:${key}:${field}`);
+        } else if (audit[field] !== "pass") {
+          haltFailures.push(`ranking_audit_failed:${key}:${field}`);
+        }
+      }
+      const expectedRelativeOrder =
+        run.cards.length >= 2 ? "pass" : "not_applicable";
+      if (!AUDIT_OPTIONAL_BINDING.has(audit.relativeOrderSupported)) {
+        failures.push(
+          `ranking_audit_value_invalid:${key}:relativeOrderSupported`,
+        );
+      } else if (audit.relativeOrderSupported !== expectedRelativeOrder) {
+        haltFailures.push(
+          `ranking_audit_failed:${key}:relativeOrderSupported`,
+        );
+      }
+    },
+  });
+
   return {
     failures: unique(failures),
     haltFailures: unique(haltFailures),
@@ -2060,8 +2426,10 @@ function emptyMetrics(matrix) {
       "not_scored_privacy_boundary",
     candidateIdentityJaccardReason:
       matrix?.truthPolicy?.candidateIdentityJaccardReason || null,
+    variantIdentityMeasurement: "manual_variant_trim_evidence_required",
     broadMustConsider: { perRun: [], union: 0 },
     stability: [],
+    registeredProductLineage: [],
     totalAccounting: Object.fromEntries(ACCOUNTING_KEYS.map((key) => [key, 0])),
     latencyMs: {
       perRun: [],
@@ -2174,6 +2542,7 @@ function authenticateArtifactRuns({
       finalAdvice: payload.finalAdvice,
       cards: payload.cards,
       sources: payload.sources,
+      registeredProductTrace: payload.registeredProductTrace,
       diagnostics: payload.diagnostics,
       accounting: stagedTerraReadinessAccounting(payload),
       stageTimings: payload.routeTrace

@@ -7,6 +7,7 @@ import {
   analyzeStagedTerraReadiness,
   analyzeStagedTerraReadinessPrefix,
   buildStagedTerraReadinessArtifact,
+  parseStagedTerraReadinessArtifact,
   STAGED_TERRA_READINESS_CAPTURE_VERSION,
   STAGED_TERRA_READINESS_MATRIX_VERSION,
   STAGED_TERRA_READINESS_REVIEW_VERSION,
@@ -14,6 +15,12 @@ import {
   stagedTerraReadinessRequestSha256,
   validateStagedTerraReadinessMatrix,
 } from "../scripts/staged-terra-readiness.mjs";
+import {
+  STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS,
+  STAGED_TERRA_REGISTERED_PRODUCT_TRACE_VERSION,
+  stagedTerraRegisteredProductMatchesIdentity,
+  stagedTerraRegisteredProducts,
+} from "../scripts/staged-terra-readiness-trace.mjs";
 
 const fixturePath = new URL(
   "./fixtures/staged-terra-readiness-matrix-v1.json",
@@ -62,6 +69,7 @@ function card(testCase, rank, identity) {
       brand,
       productName,
       model,
+      variant: null,
     },
     identityVerification: "verified",
     requirementChecks: testCase.requirementIds.map((id) => ({
@@ -295,7 +303,7 @@ function publicCard(itemCard, caseId, run) {
       brand: itemCard.identity.brand,
       product_name: itemCard.identity.productName,
       model: itemCard.identity.model,
-      variant: null,
+      variant: itemCard.identity.variant,
     },
     identityVerification: {
       state: itemCard.identityVerification,
@@ -384,6 +392,42 @@ function failureMessage(code) {
     presentation_failed:
       "Evidence was verified, but the final briefing could not be completed safely.",
   }[code];
+}
+
+function registeredProductTrace(value, item, hasVerification) {
+  if (!hasVerification) return null;
+  const testCase = caseById(value, item.caseId);
+  return {
+    schemaVersion: STAGED_TERRA_REGISTERED_PRODUCT_TRACE_VERSION,
+    products: stagedTerraRegisteredProducts(testCase).map(
+      ({ product, registry }) => {
+        const matched = item.cards.filter((itemCard) =>
+          stagedTerraRegisteredProductMatchesIdentity(
+            itemCard.identity,
+            product,
+          ),
+        ).length;
+        const firstLoss = Object.fromEntries(
+          STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS.map((key) => [
+            key,
+            key === "noLossEligible" ? matched : 0,
+          ]),
+        );
+        return {
+          id: product.id,
+          registry,
+          validatedResearchCandidates: matched,
+          acceptedResearchCandidates: matched,
+          verification: {
+            eligible: matched,
+            closeMatch: 0,
+            excluded: 0,
+            firstLoss,
+          },
+        };
+      },
+    ),
+  };
 }
 
 function artifactForRun(
@@ -583,6 +627,9 @@ function artifactForRun(
     },
     routeDiagnostics,
     counters,
+    registeredProductTrace:
+      overrides.registeredProductTrace ??
+      registeredProductTrace(value, item, hasVerification),
   });
 }
 
@@ -644,6 +691,8 @@ function manualReview(value, sample) {
       hardRequirements: "pass",
       evidenceSupport: "pass",
       requirementExplanations: "pass",
+      variantIdentity: "pass",
+      specificationClaims: "pass",
       priceOfferBinding:
         itemCard.commerce.state === "verified" ? "pass" : "not_applicable",
       imageIdentity: "pass",
@@ -665,6 +714,16 @@ function manualReview(value, sample) {
       run: item.run,
       status: "pass",
     }));
+  const rankingAudits = sample
+    .filter((item) => item.terminal.state === "completed")
+    .map((item) => ({
+      caseId: item.caseId,
+      run: item.run,
+      topPickSupported: "pass",
+      relativeOrderSupported:
+        item.cards.length >= 2 ? "pass" : "not_applicable",
+      evidenceAndTradeoffsReflected: "pass",
+    }));
   return {
     schemaVersion: STAGED_TERRA_READINESS_REVIEW_VERSION,
     matrixVersion: value.schemaVersion,
@@ -679,6 +738,7 @@ function manualReview(value, sample) {
     sourceAudits,
     noExactAudits: [],
     adviceAudits,
+    rankingAudits,
   };
 }
 
@@ -754,6 +814,23 @@ describe("PR-4A staged Terra readiness boundary", () => {
     assert.ok(result.errors.includes("matrix_registry_hash_mismatch"));
   });
 
+  it("rejects overlapping normalized registered-product aliases", () => {
+    const value = matrix();
+    const broad = caseById(value, "broad-shop-vac");
+    broad.illustrativeProducts[0].brandAliases = [" ridgid "];
+    broad.illustrativeProducts[0].modelAliases = [" HD1200 "];
+
+    const result = validateStagedTerraReadinessMatrix(value, {
+      now: "2026-08-29",
+    });
+    assert.equal(result.ok, false);
+    assert.ok(
+      result.errors.includes(
+        "registered_product_registry_invalid:broad-shop-vac",
+      ),
+    );
+  });
+
   it("requires two independent current sources for every must-consider product", () => {
     const value = matrix();
     const broad = caseById(value, "broad-shop-vac");
@@ -819,9 +896,47 @@ describe("PR-4A staged Terra readiness boundary", () => {
     assert.deepEqual(result.metrics.broadMustConsider.perRun, [2, 2]);
     assert.equal(result.metrics.broadMustConsider.union, 2);
     assert.deepEqual(result.metrics.stability.map((item) => item.minimum), [1, 1]);
+    assert.deepEqual(
+      result.metrics.stability.map((item) => item.sharedOrderKendallTau),
+      [[1], [1]],
+    );
     assert.equal(result.metrics.latencyMs.mean, 120_000);
     assert.equal(result.metrics.cardReconciliation.totalCards, 12);
     assert.equal(result.metrics.firstLoss.noLossEligible, 12);
+    assert.ok(
+      result.pendingManualReview.includes("ranking_audit:broad-shop-vac:1"),
+    );
+    assert.deepEqual(
+      result.metrics.registeredProductLineage.find(
+        (item) =>
+          item.caseId === "broad-shop-vac" &&
+          item.run === 1 &&
+          item.productId === "ridgid-hd1200",
+      ),
+      {
+        caseId: "broad-shop-vac",
+        run: 1,
+        productId: "ridgid-hd1200",
+        registry: "must_consider",
+        validatedResearchCandidates: 1,
+        acceptedResearchCandidates: 1,
+        verification: {
+          eligible: 1,
+          closeMatch: 0,
+          excluded: 0,
+          firstLoss: {
+            assetIdentity: 0,
+            relationship: 0,
+            productUrl: 0,
+            hardRequirementFailed: 0,
+            hardRequirementNotVerified: 0,
+            noLossEligible: 1,
+          },
+        },
+        finalRanks: [1],
+        firstLossStage: "displayed",
+      },
+    );
   });
 
   it("never machine-authorizes even after a complete exact manual review", () => {
@@ -843,6 +958,168 @@ describe("PR-4A staged Terra readiness boundary", () => {
     assert.deepEqual(result.manualReviewFailures, []);
     assert.equal(result.metrics.totalAccounting.openAiCreates, 12);
     assert.equal(result.metrics.totalAccounting.conservativeUsd, 2.744628);
+  });
+
+  it("preserves displayed variants while requiring manual variant/trim review", () => {
+    const value = matrix();
+    const sample = runs(value);
+    sample[0].cards[0].identity.variant = "2026 Edition";
+    const firstArtifact = artifactForRun(value, sample[0]);
+    const parsed = parseStagedTerraReadinessArtifact(firstArtifact);
+    assert.equal(parsed.ok, true);
+    assert.equal(parsed.payload.cards[0].identity.variant, "2026 Edition");
+
+    sample[4].cards[0].identity.variant = "Different Variant";
+    const result = analyzeStagedTerraReadiness({
+      matrix: value,
+      artifacts: artifacts(value, sample),
+      approvedCommitSha: commitSha,
+      now: "2026-08-29",
+    });
+    assert.equal(result.decision, "needs_manual_review");
+    assert.equal(
+      result.metrics.variantIdentityMeasurement,
+      "manual_variant_trim_evidence_required",
+    );
+    assert.deepEqual(result.metrics.stability[0].pairwise, [1]);
+
+    const duplicate = completedRun(value, "broad-shop-vac", 1);
+    duplicate.cards[0].identity.variant = "Red";
+    duplicate.cards[1].identity = {
+      ...duplicate.cards[0].identity,
+      variant: "Blue",
+    };
+    const duplicateResult = analyzeStagedTerraReadinessPrefix({
+      matrix: value,
+      artifacts: [artifactForRun(value, duplicate)],
+      approvedCommitSha: commitSha,
+      now: "2026-08-29",
+    });
+    assert.ok(
+      duplicateResult.haltFailures.some((item) =>
+        item.startsWith("duplicate_card_identity:"),
+      ),
+    );
+  });
+
+  it("measures exact-product rank reversals, partial overlap, sparse overlap, and wording drift", () => {
+    const analyzeBroadPair = (secondRunCards) => {
+      const value = matrix();
+      const sample = runs(value);
+      const secondRun = sample.find(
+        (item) => item.caseId === "broad-shop-vac" && item.run === 2,
+      );
+      secondRun.cards = secondRunCards(secondRun.cards).map(
+        (itemCard, index) => ({ ...itemCard, rank: index + 1 }),
+      );
+      const result = analyzeStagedTerraReadiness({
+        matrix: value,
+        artifacts: artifacts(value, sample),
+        approvedCommitSha: commitSha,
+        now: "2026-08-29",
+      });
+      return result.metrics.stability.find(
+        (item) => item.caseId === "broad-shop-vac",
+      );
+    };
+
+    const reversed = analyzeBroadPair((cards) => [...cards].reverse());
+    assert.deepEqual(reversed.pairwise, [1]);
+    assert.deepEqual(reversed.sharedOrderKendallTau, [-1]);
+
+    const partial = analyzeBroadPair((cards) => {
+      const replacement = {
+        ...cards[2],
+        identity: {
+          ...cards[2].identity,
+          brand: "Acme",
+          productName: "Acme Wet Dry Vacuum",
+          model: "A100",
+        },
+      };
+      return [cards[1], cards[0], replacement];
+    });
+    assert.deepEqual(partial.pairwise, [0.5]);
+    assert.deepEqual(partial.sharedOrderKendallTau, [-1]);
+
+    const sparse = analyzeBroadPair((cards) =>
+      cards.map((itemCard, index) =>
+        index === 0
+          ? itemCard
+          : {
+              ...itemCard,
+              identity: {
+                ...itemCard.identity,
+                brand: "Acme",
+                productName: `Acme Wet Dry Vacuum ${index}`,
+                model: `A10${index}`,
+              },
+            },
+      ),
+    );
+    assert.deepEqual(sparse.sharedOrderKendallTau, [null]);
+
+    const wordingDrift = analyzeBroadPair((cards) =>
+      cards.map((itemCard) => ({
+        ...itemCard,
+        identity: {
+          ...itemCard.identity,
+          productName: `${itemCard.identity.productName} with accessories`,
+        },
+      })),
+    );
+    assert.deepEqual(wordingDrift.pairwise, [1]);
+    assert.deepEqual(wordingDrift.sharedOrderKendallTau, [1]);
+  });
+
+  it("attributes a registered eligible product omitted by presentation", () => {
+    const value = matrix();
+    const item = completedRun(value, "broad-shop-vac", 1);
+    item.cards[0].identity = {
+      brand: "Stanley",
+      productName: "Stanley Wet Dry Vacuum",
+      model: "SL18116P",
+      variant: null,
+    };
+    item.diagnostics.verification.eligible = 4;
+    item.diagnostics.verification.excluded = 6;
+    item.diagnostics.verification.firstLoss.assetIdentity = 6;
+    item.diagnostics.verification.firstLoss.noLossEligible = 4;
+    const trace = registeredProductTrace(value, item, true);
+    trace.products[0] = {
+      ...trace.products[0],
+      validatedResearchCandidates: 1,
+      acceptedResearchCandidates: 1,
+      verification: {
+        eligible: 1,
+        closeMatch: 0,
+        excluded: 0,
+        firstLoss: {
+          assetIdentity: 0,
+          relationship: 0,
+          productUrl: 0,
+          hardRequirementFailed: 0,
+          hardRequirementNotVerified: 0,
+          noLossEligible: 1,
+        },
+      },
+    };
+    const result = analyzeStagedTerraReadinessPrefix({
+      matrix: value,
+      artifacts: [
+        artifactForRun(value, item, null, {
+          registeredProductTrace: trace,
+        }),
+      ],
+      approvedCommitSha: commitSha,
+      now: "2026-08-29",
+    });
+    assert.equal(
+      result.metrics.registeredProductLineage.find(
+        (product) => product.productId === "ridgid-hd1200",
+      ).firstLossStage,
+      "presentation_omission",
+    );
   });
 
   it("rejects missing, duplicate, unknown, and matrix-mismatched runs", () => {
@@ -887,6 +1164,104 @@ describe("PR-4A staged Terra readiness boundary", () => {
       result.structuralFailures.includes(
         "artifact_invalid:0:artifact_payload_keys_invalid",
       ),
+    );
+  });
+
+  it("rejects raw candidate material added to a resealed registered-product trace", () => {
+    const value = matrix();
+    const canary = "provider-private-candidate-title-canary";
+    const mutated = resealArtifact(artifacts(value)[0], (envelope) => {
+      envelope.payload.registeredProductTrace.products[0].rawCandidateName =
+        canary;
+    });
+    const parsed = parseStagedTerraReadinessArtifact(mutated);
+    assert.equal(parsed.ok, false);
+    assert.match(parsed.errors.join("\n"), /registeredProductTrace/);
+    assert.doesNotMatch(parsed.errors.join("\n"), new RegExp(canary, "i"));
+  });
+
+  it("rejects resealed registered-product totals that exceed aggregate diagnostics", () => {
+    const value = matrix();
+    const mutated = resealArtifact(artifacts(value)[0], (envelope) => {
+      for (const product of envelope.payload.registeredProductTrace.products) {
+        product.validatedResearchCandidates = 1;
+        product.acceptedResearchCandidates = 1;
+        product.verification = {
+          eligible: 1,
+          closeMatch: 0,
+          excluded: 0,
+          firstLoss: {
+            assetIdentity: 0,
+            relationship: 0,
+            productUrl: 0,
+            hardRequirementFailed: 0,
+            hardRequirementNotVerified: 0,
+            noLossEligible: 1,
+          },
+        };
+        product.finalRanks = [];
+      }
+    });
+
+    const parsed = parseStagedTerraReadinessArtifact(mutated);
+    assert.equal(parsed.ok, false);
+    assert.match(
+      parsed.errors.join("\n"),
+      /registeredProductTrace\.aggregate\.verification/,
+    );
+
+    const researchOvercount = resealArtifact(artifacts(value)[0], (envelope) => {
+      for (const product of envelope.payload.registeredProductTrace.products) {
+        product.validatedResearchCandidates = 3;
+        product.acceptedResearchCandidates = 0;
+        product.verification = {
+          eligible: 0,
+          closeMatch: 0,
+          excluded: 0,
+          firstLoss: {
+            assetIdentity: 0,
+            relationship: 0,
+            productUrl: 0,
+            hardRequirementFailed: 0,
+            hardRequirementNotVerified: 0,
+            noLossEligible: 0,
+          },
+        };
+        product.finalRanks = [];
+      }
+    });
+    const researchParsed = parseStagedTerraReadinessArtifact(researchOvercount);
+    assert.equal(researchParsed.ok, false);
+    assert.match(
+      researchParsed.errors.join("\n"),
+      /registeredProductTrace\.aggregate\.research/,
+    );
+
+    const item = completedRun(value, "broad-shop-vac", 1);
+    const overcountedTrace = registeredProductTrace(value, item, true);
+    for (const product of overcountedTrace.products) {
+      product.validatedResearchCandidates = 1;
+      product.acceptedResearchCandidates = 1;
+      product.verification = {
+        eligible: 1,
+        closeMatch: 0,
+        excluded: 0,
+        firstLoss: {
+          assetIdentity: 0,
+          relationship: 0,
+          productUrl: 0,
+          hardRequirementFailed: 0,
+          hardRequirementNotVerified: 0,
+          noLossEligible: 1,
+        },
+      };
+    }
+    assert.throws(
+      () =>
+        artifactForRun(value, item, null, {
+          registeredProductTrace: overcountedTrace,
+        }),
+      /registeredProductTrace\.aggregate\.verification/,
     );
   });
 
@@ -1215,7 +1590,7 @@ describe("PR-4A staged Terra readiness boundary", () => {
 
     const inconsistent = runs(value);
     inconsistent[0].diagnostics.research.rejected = 1;
-    inconsistent[1].diagnostics.verification.firstLoss.noLossEligible = 1;
+    inconsistent[1].diagnostics.verification.firstLoss.assetIdentity += 1;
     const inconsistentResult = analyzeStagedTerraReadiness({
       matrix: value,
       artifacts: artifacts(value, inconsistent),
@@ -1230,7 +1605,7 @@ describe("PR-4A staged Terra readiness boundary", () => {
     );
     assert.ok(
       inconsistentResult.haltFailures.includes(
-        "eligible_first_loss_mismatch:con-gas-grill-600-4-main-burner:1",
+        "first_loss_conservation:con-gas-grill-600-4-main-burner:1",
       ),
     );
   });
@@ -1469,6 +1844,7 @@ describe("PR-4A staged Terra readiness boundary", () => {
       brand: "Stanley",
       productName: "Stanley Wet Dry Vacuum",
       model: "SL18116P",
+      variant: null,
     };
     const result = analyzeStagedTerraReadiness({
       matrix: value,
@@ -1651,10 +2027,10 @@ describe("PR-4A staged Terra readiness boundary", () => {
       approvedCommitSha: commitSha,
       now: "2026-08-29",
     });
-    assert.equal(result.decision, "halt");
+    assert.equal(result.decision, "invalid");
     assert.ok(
-      result.haltFailures.includes(
-        "terminal_failure:over-robot-vac-300-selfempty-pet-cords:1:verification_failed",
+      result.structuralFailures.some((failure) =>
+        failure.includes("registeredProductTrace.aggregate.verification"),
       ),
     );
     assert.equal(result.metrics.safeNoExactRuns, 0);
@@ -1685,7 +2061,7 @@ describe("PR-4A staged Terra readiness boundary", () => {
     assert.ok(result.manualReviewFailures.some((item) => item.startsWith("missing_advice_audit:")));
   });
 
-  it("retains requirement explanations and final advice for bound human review", () => {
+  it("retains requirement, specification, ranking, and advice checks for bound human review", () => {
     const value = matrix();
     let missingExplanation = artifacts(value);
     missingExplanation = resealArtifactChain(
@@ -1727,7 +2103,10 @@ describe("PR-4A staged Terra readiness boundary", () => {
     const sample = runs(value);
     const failedReview = manualReview(value, sample);
     failedReview.productAudits[0].requirementExplanations = "fail";
+    failedReview.productAudits[0].variantIdentity = "fail";
+    failedReview.productAudits[0].specificationClaims = "fail";
     failedReview.adviceAudits[0].status = "fail";
+    failedReview.rankingAudits[0].topPickSupported = "fail";
     const failedReviewResult = analyzeStagedTerraReadiness({
       matrix: value,
       artifacts: artifacts(value, sample),
@@ -1744,6 +2123,36 @@ describe("PR-4A staged Terra readiness boundary", () => {
     assert.ok(
       failedReviewResult.haltFailures.includes(
         "advice_audit_failed:broad-shop-vac:1",
+      ),
+    );
+    assert.ok(
+      failedReviewResult.haltFailures.includes(
+        "product_audit_failed:broad-shop-vac:1:1:specificationClaims",
+      ),
+    );
+    assert.ok(
+      failedReviewResult.haltFailures.includes(
+        "product_audit_failed:broad-shop-vac:1:1:variantIdentity",
+      ),
+    );
+    assert.ok(
+      failedReviewResult.haltFailures.includes(
+        "ranking_audit_failed:broad-shop-vac:1:topPickSupported",
+      ),
+    );
+
+    const optionalVariantReview = manualReview(value, sample);
+    optionalVariantReview.productAudits[0].variantIdentity = "not_applicable";
+    const optionalVariantResult = analyzeStagedTerraReadiness({
+      matrix: value,
+      artifacts: artifacts(value, sample),
+      approvedCommitSha: commitSha,
+      manualReview: optionalVariantReview,
+      now: "2026-08-29",
+    });
+    assert.ok(
+      optionalVariantResult.manualReviewFailures.includes(
+        "product_audit_value_invalid:broad-shop-vac:1:1:variantIdentity",
       ),
     );
   });

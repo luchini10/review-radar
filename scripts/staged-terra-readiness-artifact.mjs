@@ -1,9 +1,16 @@
 import { createHash } from "node:crypto";
 
+import {
+  STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS,
+  STAGED_TERRA_REGISTERED_PRODUCT_TRACE_VERSION,
+  stagedTerraRegisteredProductMatchesIdentity,
+  stagedTerraRegisteredProducts,
+} from "./staged-terra-readiness-trace.mjs";
+
 export const STAGED_TERRA_READINESS_ARTIFACT_VERSION =
-  "staged-terra-readiness-artifact-v1";
+  "staged-terra-readiness-artifact-v2";
 export const STAGED_TERRA_READINESS_PRODUCER_VERSION =
-  "staged-terra-readiness-producer-v1";
+  "staged-terra-readiness-producer-v2";
 
 const ENVELOPE_KEYS = ["schemaVersion", "payload", "payloadSha256"];
 const PAYLOAD_KEYS = [
@@ -24,6 +31,7 @@ const PAYLOAD_KEYS = [
   "finalAdvice",
   "cards",
   "sources",
+  "registeredProductTrace",
   "routeTrace",
   "diagnostics",
   "counters",
@@ -42,7 +50,7 @@ const PROJECTED_CARD_KEYS = [
   "sourceIds",
   "reviewEvidence",
 ];
-const PROJECTED_IDENTITY_KEYS = ["brand", "productName", "model"];
+const PROJECTED_IDENTITY_KEYS = ["brand", "productName", "model", "variant"];
 const PROJECTED_IDENTITY_VERIFICATION_KEYS = ["state", "observedAt"];
 const PROJECTED_REQUIREMENT_KEYS = [
   "id",
@@ -65,6 +73,24 @@ const ASSESSMENT_KEYS = ["why", "bestFor", "mainTradeoff"];
 const REVIEW_POINT_KEYS = ["text", "sourceIds"];
 const REVIEW_CLAIM_KEYS = ["claimType", "text", "sourceIds", "evidenceScope"];
 const REVIEW_IMAGE_KEYS = ["state", "url"];
+const REGISTERED_PRODUCT_TRACE_KEYS = ["schemaVersion", "products"];
+const REGISTERED_PRODUCT_TRACE_INPUT_KEYS = [
+  "id",
+  "registry",
+  "validatedResearchCandidates",
+  "acceptedResearchCandidates",
+  "verification",
+];
+const REGISTERED_PRODUCT_TRACE_PRODUCT_KEYS = [
+  ...REGISTERED_PRODUCT_TRACE_INPUT_KEYS,
+  "finalRanks",
+];
+const REGISTERED_PRODUCT_TRACE_VERIFICATION_KEYS = [
+  "eligible",
+  "closeMatch",
+  "excluded",
+  "firstLoss",
+];
 const DIAGNOSTIC_KEYS = ["research", "verification"];
 const RESEARCH_KEYS = [
   "submitted",
@@ -261,6 +287,7 @@ const PRODUCER_INPUT_KEYS = [
   "terminalResponse",
   "routeDiagnostics",
   "counters",
+  "registeredProductTrace",
 ];
 const TERMINAL_RESPONSE_KEYS = ["statusCode", "body", "wallClockMs"];
 const PUBLIC_COMPLETED_KEYS = [
@@ -819,6 +846,7 @@ function projectPublicCards(value, sources) {
         brand: card.identity.brand,
         productName: card.identity.product_name,
         model: card.identity.model,
+        variant: card.identity.variant,
       },
       identityVerification: {
         state: "verified",
@@ -1336,6 +1364,210 @@ function projectTerminal(terminalResponse) {
   };
 }
 
+function registeredProductTraceAggregateStatus(products, diagnostics) {
+  const research = diagnostics?.research;
+  const verification = diagnostics?.verification;
+  if (!Array.isArray(products)) {
+    return { research: false, verification: false };
+  }
+  const totals = {
+    validatedResearchCandidates: 0,
+    acceptedResearchCandidates: 0,
+    eligible: 0,
+    closeMatch: 0,
+    excluded: 0,
+    firstLoss: Object.fromEntries(
+      STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS.map((key) => [key, 0]),
+    ),
+  };
+  for (const product of products) {
+    if (
+      !nonNegativeInteger(product?.validatedResearchCandidates) ||
+      !nonNegativeInteger(product?.acceptedResearchCandidates)
+    ) {
+      return { research: false, verification: false };
+    }
+    totals.validatedResearchCandidates +=
+      product.validatedResearchCandidates;
+    totals.acceptedResearchCandidates += product.acceptedResearchCandidates;
+    if (product.verification === null) continue;
+    if (
+      !product.verification ||
+      !["eligible", "closeMatch", "excluded"].every((key) =>
+        nonNegativeInteger(product.verification[key]),
+      ) ||
+      !product.verification.firstLoss ||
+      !STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS.every((key) =>
+        nonNegativeInteger(product.verification.firstLoss[key]),
+      )
+    ) {
+      return { research: false, verification: false };
+    }
+    totals.eligible += product.verification.eligible;
+    totals.closeMatch += product.verification.closeMatch;
+    totals.excluded += product.verification.excluded;
+    for (const key of STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS) {
+      totals.firstLoss[key] += product.verification.firstLoss[key];
+    }
+  }
+  return {
+    research:
+      research !== null &&
+      nonNegativeInteger(research?.submitted) &&
+      nonNegativeInteger(research?.accepted) &&
+      totals.validatedResearchCandidates <= research.submitted &&
+      totals.acceptedResearchCandidates <= research.accepted,
+    verification:
+      verification === null
+        ? products.every((product) => product.verification === null)
+        : ["eligible", "closeMatch", "excluded"].every((key) =>
+              nonNegativeInteger(verification?.[key]),
+            ) &&
+            verification.firstLoss &&
+            STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS.every((key) =>
+              nonNegativeInteger(verification.firstLoss[key]),
+            ) &&
+            totals.eligible <= verification.eligible &&
+            totals.closeMatch <= verification.closeMatch &&
+            totals.excluded <= verification.excluded &&
+            STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS.every(
+              (key) => totals.firstLoss[key] <= verification.firstLoss[key],
+            ),
+  };
+}
+
+function projectRegisteredProductTrace({
+  value,
+  testCase,
+  cards,
+  terminal,
+  diagnostics,
+}) {
+  const verificationObserved = diagnostics.verification !== null;
+  if (value === null) {
+    requireCondition(
+      terminal.state === "failed" && !verificationObserved,
+      "registeredProductTrace.missing",
+    );
+    return null;
+  }
+  requireCondition(
+    exactKeys(value, REGISTERED_PRODUCT_TRACE_KEYS) &&
+      value.schemaVersion === STAGED_TERRA_REGISTERED_PRODUCT_TRACE_VERSION &&
+      Array.isArray(value.products),
+    "registeredProductTrace.keys",
+  );
+  const registeredProducts = stagedTerraRegisteredProducts(testCase);
+  requireCondition(
+    value.products.length === registeredProducts.length,
+    "registeredProductTrace.products.length",
+  );
+  const projected = value.products.map((trace, index) => {
+    const expected = registeredProducts[index];
+    const path = `registeredProductTrace.products.${index}`;
+    requireCondition(
+      exactKeys(trace, REGISTERED_PRODUCT_TRACE_INPUT_KEYS),
+      `${path}.keys`,
+    );
+    requireCondition(
+      trace.id === expected.product.id && trace.registry === expected.registry,
+      `${path}.identity`,
+    );
+    requireCondition(
+      nonNegativeInteger(trace.validatedResearchCandidates) &&
+        trace.validatedResearchCandidates <= 15 &&
+        nonNegativeInteger(trace.acceptedResearchCandidates) &&
+        trace.acceptedResearchCandidates <= trace.validatedResearchCandidates,
+      `${path}.researchCounts`,
+    );
+    let verification = null;
+    if (trace.verification !== null) {
+      requireCondition(
+        verificationObserved &&
+          exactKeys(
+            trace.verification,
+            REGISTERED_PRODUCT_TRACE_VERIFICATION_KEYS,
+          ),
+        `${path}.verification.keys`,
+      );
+      const counts = trace.verification;
+      requireCondition(
+        [counts.eligible, counts.closeMatch, counts.excluded].every(
+          (count) => nonNegativeInteger(count) && count <= 15,
+        ) &&
+          counts.eligible + counts.closeMatch + counts.excluded ===
+            trace.acceptedResearchCandidates,
+        `${path}.verification.outcomes`,
+      );
+      requireCondition(
+        exactKeys(
+          counts.firstLoss,
+          STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS,
+        ) &&
+          STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS.every(
+            (key) =>
+              nonNegativeInteger(counts.firstLoss[key]) &&
+              counts.firstLoss[key] <= 15,
+          ),
+        `${path}.verification.firstLoss`,
+      );
+      requireCondition(
+        counts.firstLoss.noLossEligible === counts.eligible &&
+          counts.firstLoss.hardRequirementNotVerified === counts.closeMatch &&
+          counts.firstLoss.assetIdentity +
+            counts.firstLoss.relationship +
+            counts.firstLoss.productUrl +
+            counts.firstLoss.hardRequirementFailed ===
+            counts.excluded,
+        `${path}.verification.reconciliation`,
+      );
+      verification = structuredClone(counts);
+    } else {
+      requireCondition(!verificationObserved, `${path}.verification.missing`);
+    }
+    const finalRanks = cards
+      .filter((card) =>
+        stagedTerraRegisteredProductMatchesIdentity(
+          card.identity,
+          expected.product,
+        ),
+      )
+      .map((card) => card.rank);
+    requireCondition(
+      finalRanks.length === new Set(finalRanks).size &&
+        finalRanks.every(
+          (rank) => Number.isSafeInteger(rank) && rank >= 1 && rank <= 5,
+        ) &&
+        (verification === null || finalRanks.length <= verification.eligible),
+      `${path}.finalRanks`,
+    );
+    return {
+      id: trace.id,
+      registry: trace.registry,
+      validatedResearchCandidates: trace.validatedResearchCandidates,
+      acceptedResearchCandidates: trace.acceptedResearchCandidates,
+      verification,
+      finalRanks,
+    };
+  });
+  if (terminal.state === "completed") {
+    requireCondition(verificationObserved, "registeredProductTrace.completed");
+  }
+  const aggregate = registeredProductTraceAggregateStatus(projected, diagnostics);
+  requireCondition(
+    aggregate.research,
+    "registeredProductTrace.aggregate.research",
+  );
+  requireCondition(
+    aggregate.verification,
+    "registeredProductTrace.aggregate.verification",
+  );
+  return {
+    schemaVersion: STAGED_TERRA_REGISTERED_PRODUCT_TRACE_VERSION,
+    products: projected,
+  };
+}
+
 function validateProjectedUsageLedger(
   ledger,
   path,
@@ -1551,9 +1783,14 @@ function validateProjectedPayload(payload) {
     check(card.recommendationStatus === "Best Match", `${path}.recommendationStatus`);
     check(exactKeys(card.identity, PROJECTED_IDENTITY_KEYS), `${path}.identity.keys`);
     if (exactKeys(card.identity, PROJECTED_IDENTITY_KEYS)) {
-      for (const key of PROJECTED_IDENTITY_KEYS) {
+      for (const key of ["brand", "productName", "model"]) {
         check(boundedString(card.identity[key], 500), `${path}.identity.${key}`);
       }
+      check(
+        card.identity.variant === null ||
+          boundedString(card.identity.variant, 200),
+        `${path}.identity.variant`,
+      );
     }
     check(
       exactKeys(card.identityVerification, PROJECTED_IDENTITY_VERIFICATION_KEYS),
@@ -1692,6 +1929,137 @@ function validateProjectedPayload(payload) {
             : card.reviewEvidence.image.state === "not_verified" &&
                 card.reviewEvidence.image.url === null,
           `${path}.image.union`,
+        );
+      }
+    }
+  }
+
+  const registeredTrace = payload.registeredProductTrace;
+  if (registeredTrace === null) {
+    check(
+      payload.terminal?.state === "failed",
+      "registeredProductTrace.missing",
+    );
+  } else {
+    check(
+      exactKeys(registeredTrace, REGISTERED_PRODUCT_TRACE_KEYS),
+      "registeredProductTrace.keys",
+    );
+    if (exactKeys(registeredTrace, REGISTERED_PRODUCT_TRACE_KEYS)) {
+      check(
+        registeredTrace.schemaVersion ===
+          STAGED_TERRA_REGISTERED_PRODUCT_TRACE_VERSION,
+        "registeredProductTrace.schemaVersion",
+      );
+      const products = Array.isArray(registeredTrace.products)
+        ? registeredTrace.products
+        : [];
+      check(
+        Array.isArray(registeredTrace.products) && products.length <= 32,
+        "registeredProductTrace.products",
+      );
+      const productIds = new Set();
+      for (const [index, product] of products.entries()) {
+        const path = `registeredProductTrace.products.${index}`;
+        check(
+          exactKeys(product, REGISTERED_PRODUCT_TRACE_PRODUCT_KEYS),
+          `${path}.keys`,
+        );
+        if (!exactKeys(product, REGISTERED_PRODUCT_TRACE_PRODUCT_KEYS)) {
+          continue;
+        }
+        check(SAFE_ID.test(product.id), `${path}.id`);
+        check(!productIds.has(product.id), `${path}.duplicate_id`);
+        productIds.add(product.id);
+        check(
+          ["must_consider", "illustrative"].includes(product.registry),
+          `${path}.registry`,
+        );
+        check(
+          nonNegativeInteger(product.validatedResearchCandidates) &&
+            product.validatedResearchCandidates <= 15 &&
+            nonNegativeInteger(product.acceptedResearchCandidates) &&
+            product.acceptedResearchCandidates <=
+              product.validatedResearchCandidates,
+          `${path}.researchCounts`,
+        );
+        if (product.verification === null) {
+          check(
+            payload.terminal?.state === "failed",
+            `${path}.verification.missing`,
+          );
+        } else {
+          check(
+            exactKeys(
+              product.verification,
+              REGISTERED_PRODUCT_TRACE_VERIFICATION_KEYS,
+            ),
+            `${path}.verification.keys`,
+          );
+          if (
+            exactKeys(
+              product.verification,
+              REGISTERED_PRODUCT_TRACE_VERIFICATION_KEYS,
+            )
+          ) {
+            const verification = product.verification;
+            check(
+              [
+                verification.eligible,
+                verification.closeMatch,
+                verification.excluded,
+              ].every(
+                (count) => nonNegativeInteger(count) && count <= 15,
+              ) &&
+                verification.eligible +
+                  verification.closeMatch +
+                  verification.excluded ===
+                  product.acceptedResearchCandidates,
+              `${path}.verification.outcomes`,
+            );
+            check(
+              exactKeys(
+                verification.firstLoss,
+                STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS,
+              ) &&
+                STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS.every(
+                  (key) =>
+                    nonNegativeInteger(verification.firstLoss[key]) &&
+                    verification.firstLoss[key] <= 15,
+                ),
+              `${path}.verification.firstLoss`,
+            );
+            if (
+              exactKeys(
+                verification.firstLoss,
+                STAGED_TERRA_REGISTERED_PRODUCT_FIRST_LOSS_KEYS,
+              )
+            ) {
+              check(
+                verification.firstLoss.noLossEligible ===
+                  verification.eligible &&
+                  verification.firstLoss.hardRequirementNotVerified ===
+                    verification.closeMatch &&
+                  verification.firstLoss.assetIdentity +
+                    verification.firstLoss.relationship +
+                    verification.firstLoss.productUrl +
+                    verification.firstLoss.hardRequirementFailed ===
+                    verification.excluded,
+                `${path}.verification.reconciliation`,
+              );
+            }
+          }
+        }
+        check(
+          Array.isArray(product.finalRanks) &&
+            product.finalRanks.length === new Set(product.finalRanks).size &&
+            product.finalRanks.every(
+              (rank) =>
+                Number.isSafeInteger(rank) && rank >= 1 && rank <= 5,
+            ) &&
+            (product.verification === null ||
+              product.finalRanks.length <= product.verification.eligible),
+          `${path}.finalRanks`,
         );
       }
     }
@@ -1840,6 +2208,23 @@ function validateProjectedPayload(payload) {
     }
   }
 
+  if (
+    registeredTrace !== null &&
+    exactKeys(registeredTrace, REGISTERED_PRODUCT_TRACE_KEYS) &&
+    Array.isArray(registeredTrace.products) &&
+    exactKeys(payload.diagnostics, DIAGNOSTIC_KEYS)
+  ) {
+    const aggregate = registeredProductTraceAggregateStatus(
+      registeredTrace.products,
+      payload.diagnostics,
+    );
+    check(aggregate.research, "registeredProductTrace.aggregate.research");
+    check(
+      aggregate.verification,
+      "registeredProductTrace.aggregate.verification",
+    );
+  }
+
   check(exactKeys(payload.counters, STAGED_TERRA_READINESS_COUNTER_KEYS), "counters.keys");
   if (exactKeys(payload.counters, STAGED_TERRA_READINESS_COUNTER_KEYS)) {
     for (const key of STAGED_TERRA_READINESS_COUNTER_KEYS) {
@@ -1979,6 +2364,13 @@ export function buildStagedTerraReadinessArtifact(input) {
     input.counters,
     publicProjection.terminal,
   );
+  const registeredProductTrace = projectRegisteredProductTrace({
+    value: input.registeredProductTrace,
+    testCase,
+    cards: publicProjection.cards,
+    terminal: publicProjection.terminal,
+    diagnostics: diagnosticProjection.diagnostics,
+  });
   const payload = {
     schemaVersion: STAGED_TERRA_READINESS_PRODUCER_VERSION,
     matrixVersion: input.matrix.schemaVersion,
@@ -1997,6 +2389,7 @@ export function buildStagedTerraReadinessArtifact(input) {
     finalAdvice: publicProjection.finalAdvice,
     cards: publicProjection.cards,
     sources: publicProjection.sources,
+    registeredProductTrace,
     routeTrace: diagnosticProjection.routeTrace,
     diagnostics: diagnosticProjection.diagnostics,
     counters: structuredClone(input.counters),

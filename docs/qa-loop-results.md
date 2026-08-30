@@ -12133,7 +12133,6 @@ The controller left advisory output in the ignored worker artifact `agent-loop-2
 
 See `docs/agent-loop-report.md`.
 
-
 ## 🟧 Codex — 2026-08-29 — Production readiness PR-3 tracked offline benchmark
 
 **Verdict: PASS for evaluation integrity; zero live calls and no production-
@@ -16041,3 +16040,202 @@ probe; it authenticated the recorded evidence. Actual native Linux remains
 unproven, cross-target npm diagnostics are non-authorizing, and the public
 audit is time-bound. No prohibited fixture, credential, `.env.local`, provider,
 or live system was accessed.
+
+## Agent Loop Run - 2026-08-30T18:15:10.109Z
+
+- **run id:** agent-loop-2026-08-30T18-14-16-565Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, non-product-pages, price-trust, requirement-units, wrong-category
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 4150ms |
+| lint | Passed | 14388ms |
+| unit tests | Passed | 29710ms |
+| deterministic eval pipeline | Passed | 462ms |
+| tracked offline benchmark | Passed | 600ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- non-product-pages: non-product-espresso-review
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T18-14-16-565Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## 🟧 Codex — 2026-08-30 — PR-9A accuracy-measurement diagnostic closure
+
+**Objective and bottleneck challenge:** the user objective is real shopper
+accuracy: correct products and variants, strong ranking, exact prices/specs,
+source support, and repeatability. The active staged path still has no current
+multi-shape sample. Implementing another recommendation heuristic before that
+sample would be speculative. The strongest zero-live step was to audit whether
+PR-4A could locate failures precisely enough to support a generalized repair.
+
+**Verified measurement defects:** artifact v1 discarded the public
+`identity.variant`; the analyzer measured final-set overlap but not rank-order
+stability; and registered-product recall was visible only at the final card and
+aggregate first-loss levels. A missing leader could not be attributed to
+research discovery, identity-source preflight, deterministic verification, or
+presentation omission. Manual review also had no explicit specification or
+ranking-order decision.
+
+**Initial correction:** artifact/producer/capture contracts use v2. The
+runner injects an evaluation-only callback after validated research and
+identity-source filtering, then consumes verifier-owned per-candidate first-loss
+classification. A new collector maps exact normalized brand/model identities
+only to preregistered public product IDs and emits bounded stage counts. It
+never persists raw candidate IDs, identities, URLs, sources, prompts, or
+responses. Artifacts preserve nullable public variants, compute final ranks,
+reconcile trace counts against aggregate diagnostics, and reject unknown or raw
+fields. Analysis reports preregistered product lineage and shared-product
+Kendall tau; bound manual review adds variant, specification, top-pick,
+relative-order, and evidence/tradeoff audits. Duplicate cards remain prohibited
+by base product identity even when variants differ.
+
+**Independent review and generalized correction:** exact review of local commit
+`59e9b03352136d9da34a3a4f4caaed7aaf90a5f9` returned `CHANGES REQUIRED`,
+confidence 0.99. It proved that per-product trace checks did not prevent
+cross-product totals from exceeding aggregate diagnostics, variant text is not
+populated by the live renderer and therefore could not support an automated
+variant-stability claim, and the claimed Kendall coverage lacked reversal and
+overlap mutations. The correction rejects overlapping normalized registered
+alias pairs, reconciles the sums of research, verifier outcomes, and every
+first-loss bucket against aggregate diagnostics in builder, parser, and analyzer,
+and measures exact-product stability by normalized brand plus model. Review
+contract v3 requires a pass/fail manual variant-and-trim evidence decision for
+every card, including cards whose public variant is null; automated variant
+scoring is explicitly unavailable rather than inferred from a null field.
+
+**Fail-closed proof:** tests cover sibling suffix rejection, duplicate capture,
+immutable snapshots, absence of candidate IDs/URLs/private fields, exact first
+loss, presentation omission, cross-product overcount, overlapping aliases,
+base-identity duplicate rejection, resealed raw-field rejection without canary
+echo, exact-product Kendall reversal/partial overlap/sparse overlap/name drift,
+and mandatory variant/specification/ranking audit failures.
+
+**Verification (zero live/provider):**
+
+- focused readiness/trace/runtime/verifier: 77/77;
+- runner/launcher/typed-terminal: 27/27;
+- full unit suite: 1,709/1,709 across 232 suites;
+- typecheck: pass;
+- lint: zero errors, three pre-existing test warnings;
+- prior PR-9A Next 16.3.3 production build: pass; not rerun because the
+  correction changes offline scripts, tests, and documentation only;
+- prior PR-9A Playwright: 17/17 for the same unchanged UI boundary;
+- deterministic controller `agent-loop-2026-08-30T20-30-25-650Z`: all five
+  serial partitions, 10/10 cases, and 29/29 invariants pass; and
+- generated `next-env.d.ts`: restored to tracked blob
+  `9edff1c7cacb3bfac9a1eadcf6f51eaa99565e38`.
+
+**Limits, incidents, and authority:** no provider, hosted search, Serper,
+product-data, live-route, flag, deployment, push, PR, or release action ran.
+The Next build did report `.env.local` as an environment source; no value was
+printed, manually inspected, hashed, copied, or sent, so the build is valid
+compilation evidence but not credential-isolated evidence. Two early status
+commands printed filenames inside the protected spent-fixture tree; no content,
+metadata, hash, or value was read, and subsequent searches excluded the tree.
+
+The rejected PR-9A snapshot is being corrected in place so the authorized
+history still ends with one PR-9A commit; the amended exact commit requires
+independent re-review. More importantly, PR-4B attempt 1 remains consumed
+without an artifact, so the v1 serial hash chain
+cannot advance to attempt 2 and may not be restarted. The next permissible step
+is a separately approved zero-live PR-9B protocol with fresh attempt IDs and
+nonces plus an independently ratified Kendall rank-stability bar. The current
+Kendall output is diagnostic and cannot itself fail a run. Committing PR-9A,
+independent review, paid execution, and each live logical search remain separate
+authorization scopes. Product accuracy itself has not yet been measured or
+improved; the exact readiness verdict remains `NOT READY`, confidence 0.995.
+
+## Agent Loop Run - 2026-08-30T20:29:44.761Z
+
+- **run id:** agent-loop-2026-08-30T20-29-01-158Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** price-trust
+- **parallel:** 1
+- **worker result files checked:** 1
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3263ms |
+| lint | Passed | 11008ms |
+| unit tests | Passed | 27554ms |
+| deterministic eval pipeline | Passed | 474ms |
+| tracked offline benchmark | Passed | 595ms |
+
+### Executed Benchmark Cases
+
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T20-29-01-158Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.
+
+## Agent Loop Run - 2026-08-30T20:31:11.658Z
+
+- **run id:** agent-loop-2026-08-30T20-30-25-650Z
+- **controller:** scripts/agent-loop-controller.mjs
+- **mode:** deterministic
+- **batches:** broad-mainstream, requirement-units, price-trust, wrong-category, non-product-pages
+- **parallel:** 1
+- **worker result files checked:** 5
+
+### Checks
+
+| Command | Result | Duration |
+| --- | --- | ---: |
+| typecheck | Passed | 3273ms |
+| lint | Passed | 10863ms |
+| unit tests | Passed | 27405ms |
+| deterministic eval pipeline | Passed | 473ms |
+| tracked offline benchmark | Passed | 598ms |
+
+### Executed Benchmark Cases
+
+- broad-mainstream: broad-running-mainstream, duplicate-monitor-family
+- requirement-units: constrained-leaf-blower, soft-spec-cordless-vacuum, overconstrained-leaf-blower
+- price-trust: fake-price-propane-grill, missing-price-evidence-laptop
+- wrong-category: wrong-type-and-accessory-office-chair, compatibility-king-mattress
+- non-product-pages: non-product-espresso-review
+
+### Repeated Failure Candidates
+
+- No repeated worker failures found.
+
+### Next Task Suggestion
+
+The controller left advisory output in the ignored worker artifact `agent-loop-2026-08-30T20-30-25-650Z.next-task.md`. The authoritative handoff remains `docs/agent-next-task.md` and must be regenerated deliberately at phase closeout.
+
+### Report
+
+See `docs/agent-loop-report.md`.

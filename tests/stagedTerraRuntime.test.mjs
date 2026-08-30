@@ -158,6 +158,42 @@ describe("OAI-T10 staged Terra runtime", () => {
     assert.equal(JSON.stringify(polled.ledger).includes("resp_research123"), false);
   });
 
+  it("exposes an immutable evaluation-only identity snapshot after source filtering", async () => {
+    let snapshot = null;
+    const polled = await pollStagedTerraResearch({
+      client: {
+        responses: { retrieve: async () => completedResearchResponse() },
+      },
+      responseId: "resp_research123",
+      requestFingerprint: buildStagedTerraRequestFingerprint(shopper),
+      shopperRequest: shopper,
+      onEvaluationSnapshot: (value) => {
+        snapshot = value;
+      },
+    });
+
+    assert.equal(polled.ok, true);
+    assert.equal(snapshot.validatedCandidates.length, 8);
+    assert.equal(snapshot.acceptedCandidates.length, 8);
+    assert.deepEqual(Object.keys(snapshot.acceptedCandidates[0]).toSorted(), [
+      "brand",
+      "model",
+      "productName",
+      "productType",
+    ]);
+    assert.doesNotMatch(
+      JSON.stringify(snapshot),
+      /candidate_1|source_urls|https:/i,
+    );
+    assert.throws(
+      () => {
+        snapshot.acceptedCandidates[0].model = "MUTATED";
+      },
+      TypeError,
+    );
+    assert.equal(polled.researchOutput.candidates[0].model, "V100");
+  });
+
   it("continues URL-only consulted sources to the bounded fetch stage", async () => {
     const response = completedResearchResponse();
     for (const source of response.output[0].action.sources) delete source.title;

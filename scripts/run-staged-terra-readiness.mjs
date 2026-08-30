@@ -16,7 +16,11 @@ import {
 } from "../lib/directTerraSerperTransport.ts";
 import { createOpenAIClient } from "../lib/openaiClient.ts";
 import { createStagedTerraRecommendationHandlers } from "../lib/stagedTerraRecommendationRoute.ts";
-import { collectStagedTerraVerificationInputs } from "../lib/stagedTerraRuntime.ts";
+import {
+  collectStagedTerraVerificationInputs,
+  pollStagedTerraResearch,
+} from "../lib/stagedTerraRuntime.ts";
+import { materializeStagedTerraEvidencePackage } from "../lib/stagedTerraVerifier.ts";
 import {
   buildStagedTerraReadinessArtifact,
   parseStagedTerraReadinessArtifact,
@@ -36,6 +40,7 @@ import {
   inspectStagedTerraReadinessOutputBoundary,
   writeStagedTerraReadinessFileExclusive,
 } from "./staged-terra-readiness-io.mjs";
+import { createStagedTerraRegisteredProductTraceCollector } from "./staged-terra-readiness-trace.mjs";
 
 const repoRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const matrixPath = path.join(
@@ -230,6 +235,14 @@ async function main() {
     additionalCases: 0,
   };
   const routeDiagnostics = [];
+  const testCase = matrix.cases.find(
+    (candidate) => candidate.id === plan.attempt.caseId,
+  );
+  if (!testCase) {
+    throw new Error("The approved readiness case is missing from the matrix.");
+  }
+  const registeredProductTrace =
+    createStagedTerraRegisteredProductTraceCollector({ testCase });
 
   const client = {
     responses: {
@@ -316,11 +329,26 @@ async function main() {
       JSON.stringify(body) === JSON.stringify(plan.attempt.shopperRequest)
         ? { data: structuredClone(plan.attempt.shopperRequest) }
         : { error: "The request differs from the approved readiness case." },
+    pollResearch: (input) =>
+      pollStagedTerraResearch({
+        ...input,
+        onEvaluationSnapshot: (snapshot) => {
+          registeredProductTrace.captureResearch(snapshot);
+        },
+      }),
     collectVerificationInputs: (input) =>
       collectStagedTerraVerificationInputs({
         ...input,
         fetchSource,
       }),
+    materializeEvidence: (input) => {
+      const result = materializeStagedTerraEvidencePackage(input);
+      registeredProductTrace.captureVerification({
+        researchOutput: input.researchOutput,
+        verifierResult: result,
+      });
+      return result;
+    },
     createShoppingTransport: () => shoppingTransport,
     onDiagnostic: (diagnostic) => {
       routeDiagnostics.push(structuredClone(diagnostic));
@@ -342,7 +370,11 @@ async function main() {
     handlers,
     sleep,
     persistCheckpoint: scheduleCheckpoint,
-    buildArtifact: buildStagedTerraReadinessArtifact,
+    buildArtifact: (input) =>
+      buildStagedTerraReadinessArtifact({
+        ...input,
+        registeredProductTrace: registeredProductTrace.snapshot(),
+      }),
   });
   await checkpointWriter.drain();
 

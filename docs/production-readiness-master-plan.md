@@ -2083,6 +2083,72 @@ directory is spent.
   confidence 0.995. Current live quality and hosted operational evidence are
   independently absent.
 
+### Phase PR-9A — Accuracy-measurement diagnostic closure
+
+- Status: **initial local commit independently rejected; generalized correction
+  implemented and locally validated; corrected exact-commit review pending;
+  zero live calls**
+- Objective: make the next real staged-product sample capable of locating
+  accuracy loss, rather than only reporting that a leader was absent from the
+  final cards. The decisive unknown remains PR-006, not another speculative
+  recommendation change.
+- Measurement audit: the PR-4A contract preserved only aggregate first-loss
+  totals and discarded the public card `variant`. It could therefore miss a
+  wrong displayed variant, could not distinguish a registered product lost in
+  discovery from one lost in identity-source preflight, verification, or final
+  presentation, and measured set overlap without measuring rank-order drift.
+- Correction: artifact/capture contracts move to v2. A server-only,
+  evaluation-only collector matches only preregistered public product IDs and
+  retains bounded counts for validated research, accepted research, exact
+  verifier first loss, and final rank. It retains no raw candidate ID, name,
+  URL, source, prompt, response, or credential. Public card variants survive
+  artifact projection. Exact normalized brand/model identity drives duplicate
+  rejection, final-set stability, and shared-order stability; product-name
+  wording and nullable variant text cannot split one physical product.
+- Accuracy scoring: analysis now attributes each preregistered product to
+  discovery absence, identity-source preflight, a specific verifier loss,
+  presentation omission, or display; reports pairwise shared-product Kendall
+  tau in addition to final-set Jaccard; and requires bound human audits of
+  variant/trim identity evidence on every card, specification claims, top-pick
+  support, relative order, and whether evidence/tradeoffs justify the ranking.
+- Trust boundary: the production route does not provide the evaluation
+  callback. The snapshot is immutable and contains only four identity strings
+  long enough to compute preregistered matches in memory; only public IDs and
+  bounded counts cross into the artifact. Exact-key, cardinality,
+  reconciliation, resealing, raw-field canary, sibling-model, and duplicate-
+  identity mutations fail closed.
+- Independent finding and repair: review of `59e9b03352136d9da34a3a4f4caaed7aaf90a5f9`
+  returned `CHANGES REQUIRED`, confidence 0.99, because cross-product trace
+  sums were not bounded by aggregates, live variant automation was unreachable,
+  and Kendall mutations were incomplete. The correction rejects cross-product
+  alias overlap, reconciles all trace sums in builder/parser/analyzer, marks
+  automated variant scoring unavailable, advances bound manual review to v3,
+  and tests reversal, partial overlap, fewer than two shared products, and
+  harmless product-name drift.
+- Verification: focused accuracy/verifier/runtime suites pass 77/77; runner and
+  launcher suites pass 27/27; full unit suite passes 1,709/1,709 across 232
+  suites; typecheck passes; lint has zero errors and the same three pre-existing
+  test warnings; the prior unaffected production build and Playwright 17/17
+  remain valid for the unchanged UI boundary; and
+  controller `agent-loop-2026-08-30T20-30-25-650Z` passes all five serial
+  partitions, 10/10 cases, and 29/29 invariants. Generated `next-env.d.ts` was
+  restored to Git blob `9edff1c7cacb3bfac9a1eadcf6f51eaa99565e38`.
+- Boundary incident: the Next build reported that it loaded `.env.local` as an
+  environment source. No value was displayed, read manually, hashed, copied,
+  or used for a provider request, but that build must not be described as
+  credential-isolated. Status commands also printed protected live-fixture path
+  names; no fixture content, metadata, hash, or value was opened or used.
+  Subsequent searches used the required exclusion.
+- Next decision: the old PR-4A attempt chain is not resumable. Attempt 1 is
+  spent and produced no artifact, while every later attempt requires its prior
+  artifact hash. PR-9B must be a separately approved, zero-live protocol phase
+  that mints fresh attempt identities/nonces, reauthenticates the still-current
+  truth set, ratifies an explicit rank-stability bar for the new Kendall metric,
+  and receives independent review. Until then Kendall is diagnostic, not a
+  pass/fail gate. A later exact paid budget is a separate authorization. Reusing
+  attempt 1, skipping it, inventing a prior hash, or calling attempt 2 is
+  forbidden.
+
 ## Phase documentation and commit policy
 
 For each meaningful verified phase:

@@ -96,6 +96,18 @@ export type StagedTerraRuntimeLedger = {
   failureReason: string | null;
 };
 
+export type StagedTerraResearchEvaluationCandidate = Readonly<{
+  brand: string;
+  productName: string;
+  model: string;
+  productType: string;
+}>;
+
+export type StagedTerraResearchEvaluationSnapshot = Readonly<{
+  validatedCandidates: readonly StagedTerraResearchEvaluationCandidate[];
+  acceptedCandidates: readonly StagedTerraResearchEvaluationCandidate[];
+}>;
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -113,6 +125,34 @@ function responseId(response: unknown) {
   return isRecord(response) && typeof response.id === "string"
     ? response.id
     : null;
+}
+
+function researchEvaluationCandidate(
+  candidate: StagedTerraResearchCandidate,
+): StagedTerraResearchEvaluationCandidate {
+  return Object.freeze({
+    brand: candidate.brand,
+    productName: candidate.productName,
+    model: candidate.model,
+    productType: candidate.productType,
+  });
+}
+
+function researchEvaluationSnapshot({
+  validatedCandidates,
+  acceptedCandidates,
+}: {
+  validatedCandidates: readonly StagedTerraResearchCandidate[];
+  acceptedCandidates: readonly StagedTerraResearchCandidate[];
+}): StagedTerraResearchEvaluationSnapshot {
+  return Object.freeze({
+    validatedCandidates: Object.freeze(
+      validatedCandidates.map(researchEvaluationCandidate),
+    ),
+    acceptedCandidates: Object.freeze(
+      acceptedCandidates.map(researchEvaluationCandidate),
+    ),
+  });
 }
 
 function responseStatus(response: unknown) {
@@ -283,12 +323,16 @@ export async function pollStagedTerraResearch({
   requestFingerprint,
   shopperRequest,
   now = Date.now,
+  onEvaluationSnapshot,
 }: {
   client: StagedTerraResponsesClient;
   responseId: string;
   requestFingerprint: string;
   shopperRequest: DirectTerraShopperRequest;
   now?: () => number;
+  onEvaluationSnapshot?: (
+    snapshot: StagedTerraResearchEvaluationSnapshot,
+  ) => void;
 }) {
   const ledger = blankLedger(
     "research_poll",
@@ -366,6 +410,12 @@ export async function pollStagedTerraResearch({
     responseSources,
   });
   if (!identitySources.ok) {
+    onEvaluationSnapshot?.(
+      researchEvaluationSnapshot({
+        validatedCandidates: parsed.value.candidates,
+        acceptedCandidates: [],
+      }),
+    );
     return {
       ...failed(ledger, "invalid_research_contract", startedAt, now),
       validationReason: "research_candidate_invalid" as const,
@@ -374,6 +424,12 @@ export async function pollStagedTerraResearch({
       identitySourceFilter: identitySources.identitySourceFilter,
     };
   }
+  onEvaluationSnapshot?.(
+    researchEvaluationSnapshot({
+      validatedCandidates: parsed.value.candidates,
+      acceptedCandidates: identitySources.value.candidates,
+    }),
+  );
   ledger.durationMs = Math.max(0, now() - startedAt);
   return {
     ok: true as const,
