@@ -15,7 +15,7 @@ Current implementation snapshot:
 - correction commit: `62023fbfce64e4e426f00e233693e5b803c8cb1c`
 - implementation commit: `c2fa283ca8b33f18bde65a1ebc1c89532dd0b791`
 - parent of implementation: `5ac612930886401d3fc218b264ddb5ef9e7b3888`
-- current tree: `b675d39339f8541fd9d4d4f71224096094e9fd97`
+- implementation tree: `b675d39339f8541fd9d4d4f71224096094e9fd97`
 
 PR-9E final head `5ac61293` received independent exact-commit **VERIFIED**,
 no findings, confidence **0.998**. PR-9F is implemented and locally validated;
@@ -90,8 +90,11 @@ Frozen v6 identities:
   `e01db2c4b27029c22d6e0481846fb51857e1973c0001be87400b9d939e71d81a`
 - matrix canonical SHA-256:
   `4dc91c0656c9e374b7805c0dd5cd87a1fc3fef8a012384a8c718098399f75ba8`
-- clean trust-manifest SHA-256: pending final documentation commit and exact
-  zero-network reauthentication.
+- clean zero-network plan commit:
+  `ea89ecff04306a7e6cd8adde51a78e6227f469b8`
+- clean trust-manifest SHA-256:
+  `4e229b8108bd89ecc42c02df4ef1e455a7566e78694b89bddf47ab2e4f4de195`
+  across 66 authenticated entries with no failures.
 
 ## Authority and next action
 
@@ -103,8 +106,8 @@ Shopping attempts, 180 source fetches, 540 physical HTTP attempts, and at most
 60 human public-source opens. Retries, replacements, fallbacks,
 Organic/SearchAPI, extra cases, and automatic continuation remain zero.
 
-Next: complete the final clean-state dry run and independently review the exact
-PR-9F head at High reasoning. If verified, execute only v6 attempt 1. Analyze
+Next: independently review the exact PR-9F final head at High reasoning. If
+verified, execute only v6 attempt 1. Analyze
 its immutable artifact through the reviewed analyzer and stop. Use the exact
 subreason distribution to choose a generalized offline accuracy correction;
 do not automatically continue to attempt 2.

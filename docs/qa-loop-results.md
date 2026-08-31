@@ -16703,7 +16703,9 @@ canonical SHA-256 is
 **Verification:** fail-first produced the intended lost-attribution failure.
 Corrected readiness/runner tests pass 61/61; full tests pass 1,718/1,718 across
 232 suites; typecheck passes; lint reports zero errors and three pre-existing
-warnings.
+warnings. The clean zero-network plan at `ea89ecff` authenticated all 66 trust
+entries with no failures under manifest
+`4e229b8108bd89ecc42c02df4ef1e455a7566e78694b89bddf47ab2e4f4de195`.
 
 **Interpretation:** product accuracy remains NotScored. PR-9F improves causal
 measurement only. One v6 attempt may run only after exact-final-head High
