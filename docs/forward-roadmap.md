@@ -4339,8 +4339,9 @@ seconds, and `$0.249431`; every forbidden or alternate counter was zero.
 
 **Status:** implemented at `adef42f9dfe1c1873b43deaf242453eb4fd17817`
 with exact-byte matrix correction
-`41f4f22588c26b98f27cce3e3792f94d99661efa`; independent exact-final-head
-review pending.
+`41f4f22588c26b98f27cce3e3792f94d99661efa` and clean documentation-bound
+source snapshot `f55e912e01baedcbb55c7a1fd9f8d9cf55da8802`; independent
+exact-final-head review pending.
 
 PR-9F proved the dominant loss was not ranking: no candidate survived
 verification. The earliest generalized cause was the research-source filter,
@@ -4378,6 +4379,9 @@ Fail-first reproduced three intended defects. Corrected focused tests pass
 137/137; full tests pass 1,720/1,720 across 232 suites; typecheck passes; lint
 has zero errors and three old warnings. After one High exact-final-head review,
 execute only v7 attempt 1 and stop for immutable analysis.
+The zero-network plan at `f55e912e` authenticated all 66 trust entries with no
+failures under manifest
+`4542287e3a69deea0ffce5dc088e7d34b43b0235000fb30bf9b46b3fe9df0c98`.
 
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 

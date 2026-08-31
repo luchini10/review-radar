@@ -3352,3 +3352,5 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 - Lint: zero errors and three pre-existing warnings.
 - Matrix exact bytes and canonical value were independently hashed after
   removing one detected blank line at EOF.
+- The clean zero-network v7 plan authenticated 66 trust entries with no
+  failures before independent exact-head review.

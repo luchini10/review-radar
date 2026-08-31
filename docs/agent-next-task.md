@@ -13,6 +13,8 @@ Current implementation snapshot:
   `adef42f9dfe1c1873b43deaf242453eb4fd17817`
 - exact-byte matrix correction:
   `41f4f22588c26b98f27cce3e3792f94d99661efa`
+- documentation-bound clean source snapshot:
+  `f55e912e01baedcbb55c7a1fd9f8d9cf55da8802`
 - parent reviewed PR-9F head:
   `9181752ba954ef2bf01260c1a4ef19603dee67b5`
 
@@ -101,6 +103,9 @@ Current verification:
 - typecheck: pass;
 - lint: zero errors and three pre-existing warnings;
 - matrix byte normalization: `git diff --check` clean after correction.
+- zero-network v7 plan at `f55e912e`: 66 trust entries authenticated, no
+  failures, manifest SHA-256
+  `4542287e3a69deea0ffce5dc088e7d34b43b0235000fb30bf9b46b3fe9df0c98`.
 
 ## Authority and next action
 
@@ -108,12 +113,12 @@ Taylor granted standing authority on 2026-08-30 for all in-scope local work,
 commits, independent reviews, and paid calls needed to finish the accuracy
 goal. No further approval is required inside the existing hard envelope.
 
-Next: bind the final clean PR-9G documentation commit, run a zero-network v7
-plan, and obtain one independent High exact-commit review. If verified, execute
-only v7 attempt 1. Analyze its immutable artifact through the reviewed
-analyzer and stop. Use its observed stage and closed aggregate reasons to
-decide whether the sixth and final logical search is justified; do not continue
-automatically.
+Next: commit this documentation-only closeout and obtain one independent High
+review of that exact resulting head. Reauthenticate the zero-network v7 plan
+against the exact head. If verified, execute only v7 attempt 1. Analyze its
+immutable artifact through the reviewed analyzer and stop. Use its observed
+stage and closed aggregate reasons to decide whether the sixth and final
+logical search is justified; do not continue automatically.
 
 The hard envelope remains six serial logical searches, `$1` per run and `$6`
 aggregate; 12 creates, 360 retrieves, 60 hosted searches, six cancels, 90
