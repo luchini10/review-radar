@@ -1927,3 +1927,22 @@ No production pipeline or API contract changed in Phase 6A.
   identities. Corrected focused 138/138, full 1,721/1,721, typecheck, and lint with zero
   errors/three old warnings pass. Live product accuracy remains unproven until
   a reviewed exact v7 attempt executes.
+
+## 49. PR-9H failed source-filter evidence retention (2026-08-30)
+
+- **Observed capture defect:** the first live PR-9G source gate reached a
+  research terminal with no downstream network work, but the readiness
+  producer stopped as `artifact_build_failed` and published no artifact.
+- **Contradictory contracts:** source-filter failure legitimately creates a
+  bounded registered-product research trace; the producer previously omitted
+  aggregate research diagnostics for every failed terminal, making that trace
+  impossible to reconcile.
+- **Corrected evidence model:** when a validated identity-source filter exists,
+  its submitted, accepted, deferred, and rejected counts are retained for both
+  completed and failed research. Other failed research remains null, and no
+  private candidate data enters the artifact or review packet.
+- **Versioned execution:** artifact/producer v7, capture v7, review v8, and
+  matrix/live-plan v8 bind the corrected semantics. Matrix v8 preserves the
+  reviewed truth and ceilings with fresh identities. All product identity,
+  variant, relationship, price, requirement, evidence, ranking, and safety
+  gates remain unchanged.

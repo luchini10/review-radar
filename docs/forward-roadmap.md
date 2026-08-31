@@ -4390,6 +4390,48 @@ The zero-network plan at `f55e912e` authenticated all 66 trust entries with no
 failures under manifest
 `4542287e3a69deea0ffce5dc088e7d34b43b0235000fb30bf9b46b3fe9df0c98`.
 
+### PR-9H — retain failed source-filter evidence and v8 final measurement
+
+**Status:** generalized correction committed at
+`43db41fa8d6df4f15396081e9b28dd156778588d`; normalized v8 protocol and exact
+final review pending.
+
+PR-9G exact head `5309bd77c4fd752086ce1045c55994c2ce302ec4` received
+independent High `VERIFIED`, confidence 0.999. Its v7 attempt 1 consumed logical
+search 5 and reached a research terminal after one create, 35 retrieves, and
+seven hosted searches, with every Shopping, source-fetch, HTTP, alternate,
+retry, replacement, fallback, extra-case, and cancel counter at zero. Canonical
+capture stopped as `artifact_build_failed`, published no artifact, retained
+append-only checkpoints, and did not continue automatically.
+
+Fail-first reproduced the true producer contradiction. The source-filter
+failure path records a bounded registered-product trace, while artifact v6
+projected `diagnostics.research` only for completed research and nevertheless
+required every non-null trace to reconcile against non-null research counts.
+The old producer therefore throws
+`registeredProductTrace.aggregate.research` for the exact all-rejected state
+created by the earlier PR-9G gate.
+
+PR-9H projects the already-validated source-filter submitted/accepted/deferred/
+rejected counts whenever the diagnostic exists, including a failed research
+terminal. Completed research still requires the filter; other failures remain
+null. No candidate, URL, title, source text, provider ID, price, or weaker trust
+decision is synthesized or exposed.
+
+Artifact/producer v7, capture v7, review v8, and live-plan/matrix v8 bind the
+correction. Matrix v8 preserves v7 truth, sources, requests, cases, order,
+quality bars, and ceilings while minting six fresh `pr9h-*` IDs/nonces disjoint
+from v1-v7. Its normalized file SHA-256 is
+`773be3d5ec6cc7b03c8bd9ee077e64a9a838645ae86775c0036c334d6008dac6`;
+canonical SHA-256 is
+`152a0126de52112f0bcaeefff09040f186a3343c8aed50fb52c4dd9e62b108d1`.
+
+Corrected focused staged suites pass 138/138; full tests pass 1,721/1,721
+across 232 suites; typecheck passes; lint remains zero errors and three old
+warnings. After independent High exact-head verification, execute only v8
+attempt 1 as logical search 6 and stop for immutable analysis. The six-search
+live envelope is then exhausted.
+
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 
 Phase 3P/3Q source-upgrade items; RR-014/RR-015 aggregate measurement beyond

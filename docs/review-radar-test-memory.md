@@ -3861,3 +3861,27 @@ a known conservative undercount.
   provider IDs, headers, or credentials through this diagnostic expansion.
 - Matrix v7 preserves v6 truth, requests, cases, sources, order, bars, and paid
   ceilings, and uses six fresh IDs/nonces disjoint from spent v1-v6 chains.
+
+## PR-9H failed source-filter artifact contract (2026-08-30)
+
+- A research terminal may retain a registered-product trace whenever the
+  source filter evaluated a validated candidate slate, even if it accepted
+  zero candidates and returned `research_failed`.
+- If the terminal route diagnostic contains a validated identity-source
+  filter, the artifact must retain its bounded submitted, accepted, deferred,
+  and rejected aggregate counts. Do not make `diagnostics.research` null and
+  then require a non-null trace to reconcile against it.
+- Completed research still requires an identity-source filter. A failed
+  research terminal without one retains null research diagnostics and a null
+  registered-product trace; never synthesize either surface.
+- Regression coverage must exercise a source failure with a non-null trace,
+  zero accepted candidates, positive rejected candidates, null verification,
+  canonical artifact build, and successful parse/reconciliation.
+- The correction does not authorize candidate identities, names, titles,
+  URLs, raw provider output, prompts, response IDs, credentials, or headers in
+  the artifact, public shopper response, or manual-review packet.
+- A live attempt that stops before canonical artifact publication is consumed.
+  Do not retry, replace, reuse its ID/nonce/output path, or infer its missing
+  rejection distribution or cost from call counters.
+- Matrix v8 preserves v7 truth, requests, cases, sources, order, bars, and paid
+  ceilings, and uses six fresh IDs/nonces disjoint from v1-v7.

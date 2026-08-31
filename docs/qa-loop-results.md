@@ -16804,3 +16804,42 @@ the isolated URL regression, but returned `CHANGES REQUIRED`, confidence
 `candidate_source_unregistered` and therefore failed for the wrong reason. The
 fixture now explicitly sets `candidate_source_identity_unproven` before adding
 a positive product-page-unavailable count. No production logic changed.
+
+## PR-9H source-filter failure artifact recovery (2026-08-30)
+
+**Live observation:** independently verified PR-9G exact head
+`5309bd77c4fd752086ce1045c55994c2ce302ec4` executed v7 attempt 1 as logical
+search 5. The bounded launcher stopped as `artifact_build_failed` after one
+OpenAI create, 35 retrieves, and seven hosted searches. Shopping, source
+fetches, physical HTTP, retries, replacements, fallbacks, Organic/SearchAPI,
+extra cases, cancels, and automatic continuation were all zero. No canonical
+artifact was published; append-only checkpoints were retained.
+
+**Root cause:** a source-filter research failure records a bounded
+registered-product trace before returning the closed public failure. Artifact
+v6 projected `diagnostics.research` only when research completed, then required
+the non-null trace to reconcile against non-null research diagnostics.
+Fail-first recreated the all-rejected product-page case and failed exactly at
+`registeredProductTrace.aggregate.research`.
+
+**Generalized correction:** artifact/producer v7 projects the validated
+identity-source filter counts whenever that filter exists, including a failed
+research terminal. Completed research still requires the filter; unrelated
+failures remain null. No identity, candidate, URL, title, provider output, or
+weaker acceptance decision is created. The regression proves build, parse,
+eight submitted/eight rejected/zero accepted counts, a non-null bounded trace,
+and absent verification.
+
+**Fresh protocol:** capture v7, review v8, live-plan v8, and matrix v8 bind the
+change. Matrix v8 is otherwise value-identical to v7 for truth, sources,
+requests, cases, order, quality bars, and ceilings, with six fresh `pr9h-*`
+IDs/nonces disjoint from v1-v7. Normalized file SHA-256 is
+`773be3d5ec6cc7b03c8bd9ee077e64a9a838645ae86775c0036c334d6008dac6`;
+canonical SHA-256 is
+`152a0126de52112f0bcaeefff09040f186a3343c8aed50fb52c4dd9e62b108d1`.
+
+**Verification:** corrected focused staged suites pass 138/138; full tests pass
+1,721/1,721 across 232 suites; typecheck passes; lint reports zero errors and
+the same three pre-existing warnings. Search 5's exact source-failure reason,
+token usage, and actual cost remain unavailable because its artifact was not
+published. One logical search remains.

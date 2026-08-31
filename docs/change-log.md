@@ -3364,3 +3364,26 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 - Re-review found one artifact mutation used the wrong inherited source enum;
   the fixture now explicitly exercises the identity-enum/product-page-count
   contradiction rather than passing through a generic unsupported-reason path.
+
+## 2026-08-30 - Retain failed source-filter evidence
+
+### Changed
+
+- Fixed the readiness artifact producer so an all-rejected research
+  source-filter result retains its already-validated aggregate counts instead
+  of failing artifact construction when registered-product tracing is present.
+- Rolled the private artifact, capture, review, live-plan, and matrix protocol
+  to v7/v8 identities with a fresh six-attempt chain; shopper output, safety
+  gates, and feature flags are unchanged.
+- Recorded logical search 5 as consumed after its safe
+  `artifact_build_failed` stop. No retry or automatic continuation occurred.
+
+### Verified
+
+- Fail-first reproduced `registeredProductTrace.aggregate.research` on the old
+  producer; the corrected regression builds and parses the bounded failed
+  source-filter artifact.
+- Focused staged suites pass 138/138; full tests pass 1,721/1,721 across 232
+  suites; typecheck passes; lint reports zero errors and three old warnings.
+- Matrix v8 raw and canonical SHA-256 values were recomputed after exact-byte
+  normalization.
