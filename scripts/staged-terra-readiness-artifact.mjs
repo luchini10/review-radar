@@ -8,9 +8,9 @@ import {
 } from "./staged-terra-readiness-trace.mjs";
 
 export const STAGED_TERRA_READINESS_ARTIFACT_VERSION =
-  "staged-terra-readiness-artifact-v4";
+  "staged-terra-readiness-artifact-v5";
 export const STAGED_TERRA_READINESS_PRODUCER_VERSION =
-  "staged-terra-readiness-producer-v4";
+  "staged-terra-readiness-producer-v5";
 export const STAGED_TERRA_READINESS_REVIEW_PACKET_VERSION =
   "staged-terra-readiness-review-packet-v1";
 
@@ -36,6 +36,7 @@ const PAYLOAD_KEYS = [
   "registeredProductTrace",
   "routeTrace",
   "diagnostics",
+  "verificationAttribution",
   "counters",
   "usageLedgers",
 ];
@@ -486,6 +487,111 @@ const PRODUCT_URL_FAILURE_KEYS = [
 ];
 const SOURCE_REJECTION_KEYS = ["sourceNotOwnedByCandidate", "sourceInputInvalid"];
 const CLAIM_REJECTION_KEYS = ["observedClaimInvalid"];
+
+function validBoundedCountRecord(value, keys, maximum) {
+  return (
+    exactKeys(value, keys) &&
+    keys.every(
+      (key) => nonNegativeInteger(value[key]) && value[key] <= maximum,
+    )
+  );
+}
+
+function countRecordTotal(value, keys) {
+  return keys.reduce((total, key) => total + value[key], 0);
+}
+
+export function validateStagedTerraReadinessVerificationAttribution(
+  value,
+  verification,
+) {
+  if (verification === null) return value === null;
+  if (
+    !verification ||
+    !nonNegativeInteger(verification.candidates) ||
+    !exactKeys(verification.firstLoss, STAGED_TERRA_READINESS_FIRST_LOSS_KEYS) ||
+    !exactKeys(value, VERIFICATION_ATTRIBUTION_KEYS)
+  ) {
+    return false;
+  }
+  const candidates = verification.candidates;
+  const firstLoss = value.candidateFirstLossCounts;
+  if (
+    !validBoundedCountRecord(firstLoss, ROUTE_FIRST_LOSS_KEYS, candidates) ||
+    firstLoss.assetIdentityUnproven !== verification.firstLoss.assetIdentity ||
+    firstLoss.completeProductRelationshipUnproven !==
+      verification.firstLoss.relationship ||
+    firstLoss.identitySafeProductUrlUnavailable !==
+      verification.firstLoss.productUrl ||
+    firstLoss.hardRequirementFailed !==
+      verification.firstLoss.hardRequirementFailed ||
+    firstLoss.hardRequirementNotVerified !==
+      verification.firstLoss.hardRequirementNotVerified ||
+    firstLoss.noLossEligible !== verification.firstLoss.noLossEligible ||
+    firstLoss.noLossEligible !== verification.eligible ||
+    firstLoss.hardRequirementNotVerified !== verification.closeMatch ||
+    firstLoss.assetIdentityUnproven +
+        firstLoss.completeProductRelationshipUnproven +
+        firstLoss.identitySafeProductUrlUnavailable +
+        firstLoss.hardRequirementFailed !==
+      verification.excluded ||
+    countRecordTotal(firstLoss, ROUTE_FIRST_LOSS_KEYS) !== candidates
+  ) {
+    return false;
+  }
+  const branches = [
+    [
+      value.assetIdentityFailureCandidateCounts,
+      ASSET_IDENTITY_FAILURE_KEYS,
+      firstLoss.assetIdentityUnproven,
+      true,
+    ],
+    [
+      value.commerceOutcomeCandidateCounts,
+      COMMERCE_OUTCOME_KEYS,
+      firstLoss.assetIdentityUnproven,
+      true,
+    ],
+    [
+      value.completeProductRelationshipFailureCandidateCounts,
+      RELATIONSHIP_FAILURE_KEYS,
+      firstLoss.completeProductRelationshipUnproven,
+      true,
+    ],
+    [
+      value.identitySafeProductUrlFailureCandidateCounts,
+      PRODUCT_URL_FAILURE_KEYS,
+      firstLoss.identitySafeProductUrlUnavailable,
+      true,
+    ],
+    [value.sourceRejectionCandidateCounts, SOURCE_REJECTION_KEYS, candidates, false],
+    [value.claimRejectionCandidateCounts, CLAIM_REJECTION_KEYS, candidates, false],
+  ];
+  return branches.every(([record, keys, maximum, requiresCoverage]) =>
+    validBoundedCountRecord(record, keys, maximum) &&
+    (!requiresCoverage || countRecordTotal(record, keys) >= maximum),
+  );
+}
+
+function projectVerificationAttribution(value) {
+  return Object.fromEntries(
+    [
+      ["candidateFirstLossCounts", ROUTE_FIRST_LOSS_KEYS],
+      ["assetIdentityFailureCandidateCounts", ASSET_IDENTITY_FAILURE_KEYS],
+      ["commerceOutcomeCandidateCounts", COMMERCE_OUTCOME_KEYS],
+      [
+        "completeProductRelationshipFailureCandidateCounts",
+        RELATIONSHIP_FAILURE_KEYS,
+      ],
+      ["identitySafeProductUrlFailureCandidateCounts", PRODUCT_URL_FAILURE_KEYS],
+      ["sourceRejectionCandidateCounts", SOURCE_REJECTION_KEYS],
+      ["claimRejectionCandidateCounts", CLAIM_REJECTION_KEYS],
+    ].map(([field, keys]) => [
+      field,
+      Object.fromEntries(keys.map((key) => [key, value[field][key]])),
+    ]),
+  );
+}
 const HASH_64 = /^[0-9a-f]{64}$/;
 const HASH_40 = /^[0-9a-f]{40}$/;
 const SAFE_ID = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
@@ -1316,6 +1422,7 @@ function projectDiagnostics(routeDiagnostics, counters, terminal) {
   }
 
   let verification = null;
+  let verificationAttribution = null;
   if (verificationTerminal.length === 1) {
     const diagnostic = verificationTerminal[0];
     requireCondition(Boolean(diagnostic.counts), "routeDiagnostics.verification.counts");
@@ -1343,6 +1450,9 @@ function projectDiagnostics(routeDiagnostics, counters, terminal) {
         noLossEligible: loss.noLossEligible,
       },
     };
+    verificationAttribution = projectVerificationAttribution(
+      diagnostic.verificationAttribution,
+    );
     requireCondition(
       counters.sourcePageFetches === counts.sourceFetchAttempts,
       "counters.sourcePageFetches_reconciliation",
@@ -1405,6 +1515,7 @@ function projectDiagnostics(routeDiagnostics, counters, terminal) {
   return {
     routeTrace,
     diagnostics: { research, verification },
+    verificationAttribution,
     usageLedgers,
   };
 }
@@ -2341,6 +2452,13 @@ function validateProjectedPayload(payload) {
       "registeredProductTrace.aggregate.verification",
     );
   }
+  check(
+    validateStagedTerraReadinessVerificationAttribution(
+      payload.verificationAttribution,
+      payload.diagnostics.verification,
+    ),
+    "verificationAttribution",
+  );
 
   check(exactKeys(payload.counters, STAGED_TERRA_READINESS_COUNTER_KEYS), "counters.keys");
   if (exactKeys(payload.counters, STAGED_TERRA_READINESS_COUNTER_KEYS)) {
@@ -2509,6 +2627,7 @@ export function buildStagedTerraReadinessArtifact(input) {
     registeredProductTrace,
     routeTrace: diagnosticProjection.routeTrace,
     diagnostics: diagnosticProjection.diagnostics,
+    verificationAttribution: diagnosticProjection.verificationAttribution,
     counters: structuredClone(input.counters),
     usageLedgers: diagnosticProjection.usageLedgers,
   };

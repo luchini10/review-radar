@@ -6,6 +6,7 @@ import {
   isConservativePublicHttpsUrl,
   parseStagedTerraReadinessArtifact,
   stagedTerraReadinessAccounting,
+  validateStagedTerraReadinessVerificationAttribution,
   STAGED_TERRA_READINESS_COUNTER_KEYS,
   STAGED_TERRA_READINESS_FIRST_LOSS_KEYS,
   STAGED_TERRA_READINESS_VERIFICATION_KEYS,
@@ -23,13 +24,13 @@ export {
 } from "./staged-terra-readiness-artifact.mjs";
 
 export const STAGED_TERRA_READINESS_MATRIX_VERSION =
-  "staged-terra-readiness-matrix-v5";
+  "staged-terra-readiness-matrix-v6";
 export const STAGED_TERRA_READINESS_CAPTURE_VERSION =
-  "staged-terra-readiness-capture-v4";
+  "staged-terra-readiness-capture-v5";
 export const STAGED_TERRA_READINESS_REVIEW_VERSION =
-  "staged-terra-readiness-review-v5";
+  "staged-terra-readiness-review-v6";
 const FROZEN_MATRIX_SHA256 =
-  "d9ad036d67872289626b76ea60264a085ba6f0de640c4260898d6d820d303fd4";
+  "4dc91c0656c9e374b7805c0dd5cd87a1fc3fef8a012384a8c718098399f75ba8";
 
 const MATRIX_KEYS = [
   "schemaVersion",
@@ -135,6 +136,7 @@ const RUN_KEYS = [
   "sources",
   "registeredProductTrace",
   "diagnostics",
+  "verificationAttribution",
   "accounting",
   "stageTimings",
   "routeFailures",
@@ -1315,6 +1317,14 @@ function validateCaptureSchema(run, key, failures) {
       }
     }
   }
+  if (
+    !validateStagedTerraReadinessVerificationAttribution(
+      run.verificationAttribution,
+      run.diagnostics.verification,
+    )
+  ) {
+    fail("verificationAttribution");
+  }
 
   if (!hasExactKeys(run.accounting, ACCOUNTING_KEYS)) {
     fail("accounting_keys");
@@ -2112,6 +2122,13 @@ function buildMetrics(matrix, runs, qualityFailures, haltFailures) {
     },
     stability,
     registeredProductLineage,
+    verificationFailures: runs
+      .filter((run) => run.verificationAttribution !== null)
+      .map((run) => ({
+        caseId: run.caseId,
+        run: run.run,
+        ...structuredClone(run.verificationAttribution),
+      })),
     routeFailures: runs.flatMap((run) =>
       run.routeFailures.map((failure) => ({
         caseId: run.caseId,
@@ -2514,6 +2531,7 @@ function emptyMetrics(matrix) {
     broadMustConsider: { perRun: [], union: 0 },
     stability: [],
     registeredProductLineage: [],
+    verificationFailures: [],
     routeFailures: [],
     totalAccounting: Object.fromEntries(ACCOUNTING_KEYS.map((key) => [key, 0])),
     latencyMs: {
@@ -2629,6 +2647,7 @@ function authenticateArtifactRuns({
       sources: payload.sources,
       registeredProductTrace: payload.registeredProductTrace,
       diagnostics: payload.diagnostics,
+      verificationAttribution: payload.verificationAttribution,
       accounting: stagedTerraReadinessAccounting(payload),
       stageTimings: payload.routeTrace
         .filter((trace) => trace.ledger !== null)

@@ -28,7 +28,7 @@ import {
 } from "../scripts/staged-terra-readiness-artifact.mjs";
 
 const fixturePath = new URL(
-  "./fixtures/staged-terra-readiness-matrix-v5.json",
+  "./fixtures/staged-terra-readiness-matrix-v6.json",
   import.meta.url,
 );
 const retiredFixturePaths = [
@@ -36,6 +36,7 @@ const retiredFixturePaths = [
   "./fixtures/staged-terra-readiness-matrix-v2.json",
   "./fixtures/staged-terra-readiness-matrix-v3.json",
   "./fixtures/staged-terra-readiness-matrix-v4.json",
+  "./fixtures/staged-terra-readiness-matrix-v5.json",
 ].map((relativePath) => new URL(relativePath, import.meta.url));
 const commitSha = "a".repeat(40);
 
@@ -819,7 +820,7 @@ describe("PR-9B staged Terra readiness boundary", () => {
       false,
     );
     assert.ok(
-      value.attemptPlan.every((attempt) => attempt.runId.startsWith("pr9e-")),
+      value.attemptPlan.every((attempt) => attempt.runId.startsWith("pr9f-")),
     );
     assert.equal(value.qualityBars.minimumPairwiseFinalJaccard, 0.6);
     assert.equal(value.qualityBars.minimumPairwiseSharedOrderKendallTau, 0);
@@ -1045,6 +1046,7 @@ describe("PR-9B staged Terra readiness boundary", () => {
     assert.deepEqual(packet.finalAdvice, parsed.payload.finalAdvice);
     assert.equal("routeTrace" in packet, false);
     assert.equal("diagnostics" in packet, false);
+    assert.equal("verificationAttribution" in packet, false);
     assert.equal("counters" in packet, false);
     assert.equal("usageLedgers" in packet, false);
     assert.equal("attemptNonce" in packet, false);
@@ -1563,6 +1565,102 @@ describe("PR-9B staged Terra readiness boundary", () => {
     );
   });
 
+  it("retains authenticated aggregate verification subreasons without candidate data", () => {
+    const value = matrix();
+    const sample = runs(value);
+    const parsed = parseStagedTerraReadinessArtifact(
+      artifactForRun(value, sample[0]),
+    );
+    assert.equal(parsed.ok, true);
+    assert.deepEqual(
+      parsed.ok && parsed.payload.verificationAttribution,
+      verificationAttribution(sample[0].diagnostics.verification),
+    );
+
+    const result = analyzeStagedTerraReadiness({
+      matrix: value,
+      artifacts: artifacts(value, sample),
+      approvedCommitSha: commitSha,
+      now: "2026-08-29",
+    });
+    assert.equal(result.metrics.verificationFailures.length, 6);
+    assert.deepEqual(result.metrics.verificationFailures[0], {
+      caseId: "broad-shop-vac",
+      run: 1,
+      ...verificationAttribution(sample[0].diagnostics.verification),
+    });
+    assert.equal(
+      JSON.stringify(result.metrics.verificationFailures).includes("https://"),
+      false,
+    );
+  });
+
+  it("rejects malformed or privacy-expanded verification attribution", () => {
+    const value = matrix();
+    const original = artifacts(value)[0];
+    const mutations = [
+      (envelope) => {
+        envelope.payload.verificationAttribution.rawCandidate = {
+          title: "private-candidate-canary",
+        };
+      },
+      (envelope) => {
+        envelope.payload.verificationAttribution.candidateFirstLossCounts
+          .assetIdentityUnproven += 1;
+      },
+      (envelope) => {
+        envelope.payload.verificationAttribution.assetIdentityFailureCandidateCounts =
+          counts(routeCountKeys.asset, 0);
+      },
+      (envelope) => {
+        envelope.payload.verificationAttribution.assetIdentityFailureCandidateCounts
+          .noAssetCandidates =
+          envelope.payload.diagnostics.verification.candidates + 1;
+      },
+      (envelope) => {
+        envelope.payload.verificationAttribution = null;
+      },
+    ];
+    for (const mutate of mutations) {
+      const parsed = parseStagedTerraReadinessArtifact(
+        resealArtifact(original, mutate),
+      );
+      assert.equal(parsed.ok, false);
+      assert.match(parsed.errors.join("\n"), /verificationAttribution/);
+      assert.doesNotMatch(
+        parsed.errors.join("\n"),
+        /private-candidate-canary/,
+      );
+    }
+
+    const failed = runs(value)[0];
+    failed.terminal = {
+      state: "failed",
+      statusCode: 502,
+      code: "research_failed",
+      wallClockMs: 10_000,
+    };
+    failed.cards = [];
+    failed.sources = [];
+    failed.diagnostics = { research: null, verification: null };
+    const researchFailure = resealArtifact(
+      artifactForRun(value, failed),
+      (envelope) => {
+        envelope.payload.verificationAttribution = verificationAttribution(
+          runs(value)[0].diagnostics.verification,
+        );
+      },
+    );
+    const parsedResearchFailure = parseStagedTerraReadinessArtifact(
+      researchFailure,
+    );
+    assert.equal(parsedResearchFailure.ok, false);
+    assert.match(
+      parsedResearchFailure.errors.join("\n"),
+      /verificationAttribution/,
+    );
+  });
+
   it("returns invalid for resealed wrong types, trace, model, or response drift", () => {
     const value = matrix();
     const sample = artifacts(value);
@@ -1829,12 +1927,11 @@ describe("PR-9B staged Terra readiness boundary", () => {
       ),
     );
 
-    const inconsistent = runs(value);
-    inconsistent[0].diagnostics.research.rejected = 1;
-    inconsistent[1].diagnostics.verification.firstLoss.assetIdentity += 1;
+    const inconsistentResearch = runs(value);
+    inconsistentResearch[0].diagnostics.research.rejected = 1;
     const inconsistentResult = analyzeStagedTerraReadiness({
       matrix: value,
-      artifacts: artifacts(value, inconsistent),
+      artifacts: artifacts(value, inconsistentResearch),
       approvedCommitSha: commitSha,
       now: "2026-08-29",
     });
@@ -1844,9 +1941,24 @@ describe("PR-9B staged Terra readiness boundary", () => {
         "research_conservation:broad-shop-vac:1",
       ),
     );
+
+    const inconsistentVerification = artifacts(value);
+    inconsistentVerification[1] = resealArtifact(
+      inconsistentVerification[1],
+      (envelope) => {
+        envelope.payload.diagnostics.verification.firstLoss.assetIdentity += 1;
+      },
+    );
+    const invalidVerificationResult = analyzeStagedTerraReadiness({
+      matrix: value,
+      artifacts: inconsistentVerification,
+      approvedCommitSha: commitSha,
+      now: "2026-08-29",
+    });
+    assert.equal(invalidVerificationResult.decision, "invalid");
     assert.ok(
-      inconsistentResult.haltFailures.includes(
-        "first_loss_conservation:con-gas-grill-600-4-main-burner:1",
+      invalidVerificationResult.structuralFailures.some((item) =>
+        item.includes("verificationAttribution"),
       ),
     );
   });
@@ -2187,7 +2299,8 @@ describe("PR-9B staged Terra readiness boundary", () => {
     target.cards = [];
     target.sources = [];
     target.diagnostics.verification.eligible = 0;
-    target.diagnostics.verification.excluded = 10;
+    target.diagnostics.verification.closeMatch = 1;
+    target.diagnostics.verification.excluded = 9;
     target.diagnostics.verification.firstLoss.assetIdentity = 9;
     target.diagnostics.verification.firstLoss.hardRequirementNotVerified = 1;
     target.diagnostics.verification.firstLoss.noLossEligible = 0;
