@@ -8,9 +8,9 @@ import {
 } from "./staged-terra-readiness-trace.mjs";
 
 export const STAGED_TERRA_READINESS_ARTIFACT_VERSION =
-  "staged-terra-readiness-artifact-v6";
+  "staged-terra-readiness-artifact-v7";
 export const STAGED_TERRA_READINESS_PRODUCER_VERSION =
-  "staged-terra-readiness-producer-v6";
+  "staged-terra-readiness-producer-v7";
 export const STAGED_TERRA_READINESS_REVIEW_PACKET_VERSION =
   "staged-terra-readiness-review-packet-v1";
 
@@ -1450,9 +1450,11 @@ function projectDiagnostics(routeDiagnostics, counters, terminal) {
 
   const researchCompleted = researchTerminal;
   let research = null;
+  const sourceFilter = researchCompleted.identitySourceFilter;
   if (researchCompleted.outcome === "completed") {
-    const sourceFilter = researchCompleted.identitySourceFilter;
     requireCondition(Boolean(sourceFilter), "routeDiagnostics.identitySourceFilter");
+  }
+  if (sourceFilter) {
     research = {
       submitted: sourceFilter.submittedCandidates,
       accepted: sourceFilter.acceptedCandidates,

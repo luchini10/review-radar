@@ -24,13 +24,13 @@ export {
 } from "./staged-terra-readiness-artifact.mjs";
 
 export const STAGED_TERRA_READINESS_MATRIX_VERSION =
-  "staged-terra-readiness-matrix-v7";
+  "staged-terra-readiness-matrix-v8";
 export const STAGED_TERRA_READINESS_CAPTURE_VERSION =
-  "staged-terra-readiness-capture-v6";
+  "staged-terra-readiness-capture-v7";
 export const STAGED_TERRA_READINESS_REVIEW_VERSION =
-  "staged-terra-readiness-review-v7";
+  "staged-terra-readiness-review-v8";
 const FROZEN_MATRIX_SHA256 =
-  "ab0f5c831d030955c8691990725254cac780631564391316c76b0c1d9ccf3358";
+  "152a0126de52112f0bcaeefff09040f186a3343c8aed50fb52c4dd9e62b108d1";
 
 const MATRIX_KEYS = [
   "schemaVersion",

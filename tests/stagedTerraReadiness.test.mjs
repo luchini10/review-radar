@@ -28,7 +28,7 @@ import {
 } from "../scripts/staged-terra-readiness-artifact.mjs";
 
 const fixturePath = new URL(
-  "./fixtures/staged-terra-readiness-matrix-v7.json",
+  "./fixtures/staged-terra-readiness-matrix-v8.json",
   import.meta.url,
 );
 const retiredFixturePaths = [
@@ -38,6 +38,7 @@ const retiredFixturePaths = [
   "./fixtures/staged-terra-readiness-matrix-v4.json",
   "./fixtures/staged-terra-readiness-matrix-v5.json",
   "./fixtures/staged-terra-readiness-matrix-v6.json",
+  "./fixtures/staged-terra-readiness-matrix-v7.json",
 ].map((relativePath) => new URL(relativePath, import.meta.url));
 const commitSha = "a".repeat(40);
 
@@ -826,7 +827,7 @@ describe("PR-9B staged Terra readiness boundary", () => {
       false,
     );
     assert.ok(
-      value.attemptPlan.every((attempt) => attempt.runId.startsWith("pr9g-")),
+      value.attemptPlan.every((attempt) => attempt.runId.startsWith("pr9h-")),
     );
     assert.equal(value.qualityBars.minimumPairwiseFinalJaccard, 0.6);
     assert.equal(value.qualityBars.minimumPairwiseSharedOrderKendallTau, 0);
@@ -1794,6 +1795,55 @@ describe("PR-9B staged Terra readiness boundary", () => {
       () => artifactForRun(value, mismatchedIdentityReason),
       /identitySourceFilter\.failure_reason/,
     );
+
+    const tracedSourceFailure = structuredClone(failedRun);
+    tracedSourceFailure.researchFailureAttribution.candidateSourceValidationReason =
+      "candidate_source_product_page_unproven";
+    tracedSourceFailure.identitySourceFilter = {
+      submittedCandidates: 8,
+      acceptedCandidates: 0,
+      deferredMissingTitleCandidates: 0,
+      rejectedCandidates: 8,
+      rejectionCandidateCounts: {
+        missingTitle: 0,
+        brandNotInTitle: 0,
+        modelNotInTitle: 0,
+        modelConflictInTitle: 0,
+        wrongProductType: 0,
+        completeProductPageUnavailable: 8,
+      },
+    };
+    const registeredProducts = stagedTerraRegisteredProducts(
+      caseById(value, tracedSourceFailure.caseId),
+    );
+    const tracedFailureArtifact = artifactForRun(
+      value,
+      tracedSourceFailure,
+      null,
+      {
+        registeredProductTrace: {
+          schemaVersion: STAGED_TERRA_REGISTERED_PRODUCT_TRACE_VERSION,
+          products: registeredProducts.map(({ product, registry }, index) => ({
+            id: product.id,
+            registry,
+            validatedResearchCandidates: index === 0 ? 1 : 0,
+            acceptedResearchCandidates: 0,
+            verification: null,
+          })),
+        },
+      },
+    );
+    const parsedTracedFailure = parseStagedTerraReadinessArtifact(
+      tracedFailureArtifact,
+    );
+    assert.equal(parsedTracedFailure.ok, true);
+    assert.deepEqual(parsedTracedFailure.ok && parsedTracedFailure.payload.diagnostics.research, {
+      submitted: 8,
+      accepted: 0,
+      deferredMissingTitle: 0,
+      rejected: 8,
+    });
+
     const invalidAttribution = structuredClone(failedRun);
     invalidAttribution.researchFailureAttribution.validationReason =
       "private-model-output-canary";

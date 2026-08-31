@@ -53,7 +53,7 @@ const matrixPath = path.join(
   repoRoot,
   "tests",
   "fixtures",
-  "staged-terra-readiness-matrix-v7.json",
+  "staged-terra-readiness-matrix-v8.json",
 );
 
 function gitOutput(args) {
