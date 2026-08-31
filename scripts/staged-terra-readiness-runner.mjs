@@ -26,7 +26,7 @@ export const STAGED_TERRA_READINESS_LIVE_PLAN_VERSION =
 export const STAGED_TERRA_READINESS_CHECKPOINT_VERSION =
   "staged-terra-readiness-runner-checkpoint-v1";
 export const STAGED_TERRA_READINESS_MATRIX_FILE_SHA256 =
-  "981cd8bef14de66424ac6da65108c676cc1fa7e44a8ed3dd3f667d1e94e90d0d";
+  "e01db2c4b27029c22d6e0481846fb51857e1973c0001be87400b9d939e71d81a";
 export const STAGED_TERRA_READINESS_OFFICIAL_OPENAI_BASE_URL =
   "https://api.openai.com/v1";
 
