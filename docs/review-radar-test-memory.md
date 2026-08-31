@@ -3844,6 +3844,14 @@ a known conservative undercount.
   candidate had identity-accepted source metadata but no identity-safe
   complete-product page. Otherwise retain
   `candidate_source_identity_unproven`.
+- Bind that distinction at every retained consumer, not only the producer:
+  product-page-unproven requires
+  `completeProductPageUnavailable > 0`; identity-unproven requires the count
+  to equal zero. Mutation tests must cover both contradictory pairings.
+- The viability regression set must independently exercise identity,
+  relationship, and product-URL rejection. A title can prove exact identity
+  and complete-product type while a conflicting, unsafe, wrapped, ineligible,
+  or otherwise non-accepted URL still makes the source non-materializable.
 - Source-filter diagnostics have exact keys and integer counts. Legacy
   `deferredMissingTitleCandidates` remains in the versioned shape only for
   compatibility and must equal zero. Submitted equals accepted plus rejected;

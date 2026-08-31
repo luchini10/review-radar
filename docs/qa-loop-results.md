@@ -16784,3 +16784,16 @@ and should reduce deterministic verifier attrition and wasted paid work. It
 does not yet prove live recall, card quality, rankings, prices/specifications,
 source support, or repeatability. One v7 attempt remains required after an
 independent High exact-final-head review.
+
+**Independent-review correction:** the first exact PR-9G review returned
+`CHANGES REQUIRED`, confidence 0.995. A product-page failure enum could be
+retained with zero `completeProductPageUnavailable`, or the identity-only enum
+with a positive count. Also, deleting the product-URL acceptance conjunct would
+not fail the existing editorial and identity tests. Fail-first reproduced both
+contradictory route/artifact cases while the new URL-conflict regression passed
+the intended implementation. The correction now rejects both enum/count
+mismatches in the route and artifact, and the isolated regression quarantines
+an exact-title complete-product source whose URL names a sibling model.
+Corrected focused suites pass 138/138; full tests pass 1,721/1,721 across 232
+suites; typecheck passes; lint reports zero errors and the same three old
+warnings. No paid or external call occurred.

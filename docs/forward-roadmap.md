@@ -4377,8 +4377,15 @@ canonical SHA-256 is
 `ab0f5c831d030955c8691990725254cac780631564391316c76b0c1d9ccf3358`.
 Fail-first reproduced three intended defects. Corrected focused tests pass
 137/137; full tests pass 1,720/1,720 across 232 suites; typecheck passes; lint
-has zero errors and three old warnings. After one High exact-final-head review,
-execute only v7 attempt 1 and stop for immutable analysis.
+has zero errors and three old warnings. The first exact-final-head High review
+returned `CHANGES REQUIRED`, confidence 0.995: the failure enum was not tied to
+the product-page aggregate, and the URL-acceptance conjunct lacked an isolated
+regression. The correction binds both enum/count directions in route and
+artifact consumers and adds a complete-product/title-valid but
+identity-conflicting-URL quarantine test. Corrected focused tests pass 138/138;
+full tests pass 1,721/1,721; typecheck passes; lint remains zero errors/three
+old warnings. After exact-head re-review, execute only v7 attempt 1 and stop for
+immutable analysis.
 The zero-network plan at `f55e912e` authenticated all 66 trust entries with no
 failures under manifest
 `4542287e3a69deea0ffce5dc088e7d34b43b0235000fb30bf9b46b3fe9df0c98`.

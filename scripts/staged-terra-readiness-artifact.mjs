@@ -1248,6 +1248,19 @@ function validateRouteDiagnostic(value, index) {
             rejectionCountTotal <= 2 * sourceFilter.rejectedCandidates,
       `${path}.identitySourceFilter.rejection_counts`,
     );
+    if (attributedFailure) {
+      const productPageUnavailable =
+        sourceFilter.rejectionCandidateCounts.completeProductPageUnavailable;
+      requireCondition(
+        attribution.candidateSourceValidationReason ===
+        "candidate_source_product_page_unproven"
+          ? productPageUnavailable > 0
+          : attribution.candidateSourceValidationReason ===
+                "candidate_source_identity_unproven" &&
+              productPageUnavailable === 0,
+        `${path}.identitySourceFilter.failure_reason`,
+      );
+    }
   }
   if ("counts" in value) {
     requireCountRecord(value.counts, VERIFICATION_COUNT_KEYS, `${path}.counts`);

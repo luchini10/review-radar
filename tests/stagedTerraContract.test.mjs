@@ -758,6 +758,39 @@ describe("staged Terra research contract", () => {
     }
   });
 
+  it("rejects a complete-product source whose product URL conflicts with the identity", () => {
+    const fixture = researchFixture();
+    const conflictingUrl =
+      "https://manufacturer1.example/products/brand-1-m999-cordless-vacuum";
+    fixture.value.candidates[0].source_urls[0] = conflictingUrl;
+    fixture.responseSourceUrls[0] = conflictingUrl;
+    fixture.responseSources[0] = {
+      url: conflictingUrl,
+      title: "Brand 1 M100 Cordless Vacuum",
+    };
+    const parsed = validateStagedTerraResearchOutput({
+      value: fixture.value,
+      shopperRequest: shopper,
+      responseSourceUrls: fixture.responseSourceUrls,
+    });
+    assert.equal(parsed.ok, true);
+
+    const filtered = validateStagedTerraResearchIdentitySources({
+      researchOutput: parsed.value,
+      responseSources: fixture.responseSources,
+    });
+
+    assert.equal(filtered.ok, true);
+    assert.equal(filtered.ok && filtered.value.candidates.length, 7);
+    assert.equal(filtered.identitySourceFilter.rejectedCandidates, 1);
+    assert.equal(
+      filtered.identitySourceFilter.rejectionCandidateCounts
+        .completeProductPageUnavailable,
+      1,
+    );
+    assert.equal(JSON.stringify(filtered).includes(conflictingUrl), false);
+  });
+
   it("fails with a closed product-page reason when every identity source is editorial", () => {
     const fixture = researchFixture();
     for (const [candidateIndex, candidate] of fixture.value.candidates.entries()) {

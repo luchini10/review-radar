@@ -573,6 +573,9 @@ function artifactForRun(
     terminalResearch.ledger.status = "completed";
     terminalResearch.ledger.failureReason = "invalid_research_contract";
     Object.assign(terminalResearch, item.researchFailureAttribution);
+    if (item.identitySourceFilter) {
+      terminalResearch.identitySourceFilter = item.identitySourceFilter;
+    }
   }
   const publicSources = completed
     ? item.sources.map((source) => ({
@@ -1753,6 +1756,41 @@ describe("PR-9B staged Terra readiness boundary", () => {
     assert.deepEqual(
       attributed.ok && attributed.payload.routeTrace.at(-1).failureAttribution,
       failedRun.researchFailureAttribution,
+    );
+    const identityFailureFilter = {
+      submittedCandidates: 8,
+      acceptedCandidates: 0,
+      deferredMissingTitleCandidates: 0,
+      rejectedCandidates: 8,
+      rejectionCandidateCounts: {
+        missingTitle: 0,
+        brandNotInTitle: 0,
+        modelNotInTitle: 8,
+        modelConflictInTitle: 0,
+        wrongProductType: 0,
+        completeProductPageUnavailable: 0,
+      },
+    };
+    const mismatchedProductPageReason = structuredClone(failedRun);
+    mismatchedProductPageReason.researchFailureAttribution.candidateSourceValidationReason =
+      "candidate_source_product_page_unproven";
+    mismatchedProductPageReason.identitySourceFilter = identityFailureFilter;
+    assert.throws(
+      () => artifactForRun(value, mismatchedProductPageReason),
+      /identitySourceFilter\.failure_reason/,
+    );
+    const mismatchedIdentityReason = structuredClone(failedRun);
+    mismatchedIdentityReason.identitySourceFilter = {
+      ...identityFailureFilter,
+      rejectionCandidateCounts: {
+        ...identityFailureFilter.rejectionCandidateCounts,
+        modelNotInTitle: 0,
+        completeProductPageUnavailable: 8,
+      },
+    };
+    assert.throws(
+      () => artifactForRun(value, mismatchedIdentityReason),
+      /identitySourceFilter\.failure_reason/,
     );
     const invalidAttribution = structuredClone(failedRun);
     invalidAttribution.researchFailureAttribution.validationReason =

@@ -1915,9 +1915,15 @@ No production pipeline or API contract changed in Phase 6A.
   zero-survivor reason `candidate_source_product_page_unproven`. Route and
   artifact consumers enforce exact keys, zero retired deferrals, and
   conservation; public and manual-review output remain unchanged.
+- **Semantic binding:** the product-page failure enum is retained only with a
+  positive product-page-unavailable count; the identity-only enum requires a
+  zero count. The route and immutable artifact both enforce the pairing.
+- **Independent URL proof:** regression coverage now isolates an exact-title,
+  complete-product candidate whose URL conflicts with the target model. It is
+  quarantined even though identity and relationship independently pass.
 - **Versioned execution:** contract/prompt/runtime v11/v7/v10,
   artifact/producer v6, capture v6, review v7, and matrix/live-plan v7 bind the
   behavior. Matrix v7 keeps the reviewed truth and ceilings with fresh
-  identities. Focused 137/137, full 1,720/1,720, typecheck, and lint with zero
+  identities. Corrected focused 138/138, full 1,721/1,721, typecheck, and lint with zero
   errors/three old warnings pass. Live product accuracy remains unproven until
   a reviewed exact v7 attempt executes.

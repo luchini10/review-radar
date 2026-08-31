@@ -19,9 +19,12 @@ Current implementation snapshot:
   `9181752ba954ef2bf01260c1a4ef19603dee67b5`
 
 PR-9F exact head received independent High **VERIFIED**, no findings,
-confidence 0.997. PR-9G is implemented and locally validated. Its exact final
-documentation-bound head still requires one independent High review before a
-paid v7 attempt.
+confidence 0.997. The first PR-9G exact review of `c5a31c8e` returned
+**CHANGES REQUIRED**, confidence 0.995, for two P2 gaps: the retained failure
+enum was not bound to `completeProductPageUnavailable`, and no independent
+regression isolated the product-URL conjunct. Both are corrected locally; the
+new exact final head still requires independent High re-review before a paid
+v7 attempt.
 
 ## Objective and proven bottleneck
 
@@ -80,6 +83,11 @@ source support, latency, cost, and repeatability is unproven.
   `candidate_source_product_page_unproven`.
 - Route and artifact consumers require exact keys, zero retired deferrals,
   submitted/accepted/rejected conservation, and bounded reason coverage.
+- Route and artifact consumers also bind
+  `candidate_source_product_page_unproven` to a positive
+  `completeProductPageUnavailable` count and
+  `candidate_source_identity_unproven` to a zero count. Both contradictory
+  pairings fail closed.
 - Artifact/producer v6, capture v6, review v7, and live-plan/matrix v7 bind the
   change. Public shopper responses and manual-review packets do not gain
   diagnostics or private candidate data.
@@ -97,9 +105,9 @@ Frozen v7 identities:
 Current verification:
 
 - fail-first: 40/43, with exactly three intended failures;
-- corrected focused staged suites: 137/137;
+- corrected focused staged suites: 138/138;
 - corrected readiness/runner suites: 61/61;
-- full unit suite: 1,720/1,720 across 232 suites;
+- full unit suite: 1,721/1,721 across 232 suites;
 - typecheck: pass;
 - lint: zero errors and three pre-existing warnings;
 - matrix byte normalization: `git diff --check` clean after correction.
@@ -113,9 +121,9 @@ Taylor granted standing authority on 2026-08-30 for all in-scope local work,
 commits, independent reviews, and paid calls needed to finish the accuracy
 goal. No further approval is required inside the existing hard envelope.
 
-Next: commit this documentation-only closeout and obtain one independent High
-review of that exact resulting head. Reauthenticate the zero-network v7 plan
-against the exact head. If verified, execute only v7 attempt 1. Analyze its
+Next: commit the two independent-review corrections and obtain one independent
+High re-review of that exact resulting head. Reauthenticate the zero-network
+v7 plan against the exact head. If verified, execute only v7 attempt 1. Analyze its
 immutable artifact through the reviewed analyzer and stop. Use its observed
 stage and closed aggregate reasons to decide whether the sixth and final
 logical search is justified; do not continue automatically.

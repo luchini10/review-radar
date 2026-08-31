@@ -3354,3 +3354,10 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
   removing one detected blank line at EOF.
 - The clean zero-network v7 plan authenticated 66 trust entries with no
   failures before independent exact-head review.
+- Independent review found that retained product-page failure attribution was
+  not tied to its aggregate count and that the product-URL conjunct lacked an
+  isolated regression. Both contradictory enum/count pairings now fail closed
+  in route and artifact consumers, and a sibling-model URL regression directly
+  protects the URL gate.
+- Corrected focused tests pass 138/138; full tests pass 1,721/1,721. No paid
+  call occurred before the correction and re-review.

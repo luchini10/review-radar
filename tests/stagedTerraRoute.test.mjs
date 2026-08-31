@@ -1039,9 +1039,33 @@ describe("OAI-T10 staged Terra route", () => {
         modelNotInTitle: 8,
       },
     };
+    const validProductPageFailure = {
+      ...valid,
+      rejectionCandidateCounts: {
+        ...zeroReasons,
+        completeProductPageUnavailable: 8,
+      },
+    };
     const privateCanary = "private_identity_filter_canary";
     const cases = [
       { value: valid, expected: valid },
+      {
+        value: validProductPageFailure,
+        candidateSourceValidationReason:
+          "candidate_source_product_page_unproven",
+        expected: validProductPageFailure,
+      },
+      {
+        value: valid,
+        candidateSourceValidationReason:
+          "candidate_source_product_page_unproven",
+        expected: undefined,
+      },
+      {
+        value: validProductPageFailure,
+        candidateSourceValidationReason: "candidate_source_identity_unproven",
+        expected: undefined,
+      },
       {
         value: valid,
         validationReason: "research_shape",
@@ -1110,6 +1134,7 @@ describe("OAI-T10 staged Terra route", () => {
             testCase.validationReason ?? "research_candidate_invalid",
           candidateValidationReason: "candidate_sources",
           candidateSourceValidationReason:
+            testCase.candidateSourceValidationReason ??
             "candidate_source_identity_unproven",
           identitySourceFilter: testCase.value,
           ledger: {

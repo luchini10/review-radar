@@ -259,6 +259,8 @@ function sanitizeIdentitySourceFilter(
   const rejectionCountTotal = rejectionCandidateCounts
     ? countTotal(rejectionCandidateCounts)
     : null;
+  const completeProductPageUnavailable =
+    rejectionCandidateCounts?.completeProductPageUnavailable ?? null;
   if (
     submittedCandidates === null ||
     submittedCandidates < 8 ||
@@ -283,6 +285,12 @@ function sanitizeIdentitySourceFilter(
           "candidate_source_identity_unproven",
           "candidate_source_product_page_unproven",
         ].includes(context.candidateSourceValidationReason ?? "") ||
+        (context.candidateSourceValidationReason ===
+          "candidate_source_product_page_unproven" &&
+          completeProductPageUnavailable === 0) ||
+        (context.candidateSourceValidationReason ===
+          "candidate_source_identity_unproven" &&
+          completeProductPageUnavailable !== 0) ||
         acceptedCandidates !== 0 ||
         deferredMissingTitleCandidates !== 0 ||
         rejectedCandidates !== submittedCandidates))
