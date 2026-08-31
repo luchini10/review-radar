@@ -1843,3 +1843,22 @@ No production pipeline or API contract changed in Phase 6A.
   Windows optional-pruning orphan remains while npm exits zero; current
   advisories are unknown. No credential, provider/live, broad upgrade,
   deployment, release, or push authority changed; ReviewRadar remains NOT READY.
+
+## 46. PR-9D attributable staged-readiness failures (2026-08-30)
+
+- **Execution result:** the first current broad staged-readiness run reached a
+  completed Terra research response but failed local validation before product
+  verification, commerce, evidence fetching, ranking, or rendering.
+- **Artifact contract:** failed research artifacts now retain only a strictly
+  validated hierarchy of closed reason enums. The analyzer exposes this tuple
+  for root-cause selection; the public response and manual product-review packet
+  remain unchanged and raw/private runtime material remains excluded.
+- **Fresh chain:** matrix v4 keeps the reviewed four request shapes, product
+  truth, sources, order, accuracy bars, and paid ceilings while replacing all
+  six spent run IDs/nonces. Automatic continuation, retries, replacements,
+  fallbacks, Organic/SearchAPI, extra cases, flag changes, and deployment remain
+  disabled.
+- **Proof and limit:** focused 71/71, full 1,713/1,713, typecheck pass, lint zero
+  errors/three old warnings, and a 66-entry zero-network trust authentication
+  pass. This restores diagnostic integrity but does not yet prove product
+  accuracy or production readiness.

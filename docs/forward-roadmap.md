@@ -4198,6 +4198,44 @@ remain unchanged. Taylor granted standing authority on 2026-08-30 for all
 in-scope work needed to complete the product-accuracy goal; push, deployment,
 release, and flag promotion remain unnecessary and are not part of this phase.
 
+### PR-9D — bounded research-failure attribution and v4 chain
+
+**Status:** implemented at `0b46d5bf2939d12ea3ea983e2b7ab0edc94d7124`;
+independent exact-final-head review pending.
+
+Fresh PR-9C attempt 1 reached a completed Terra research response and then
+stopped as `research_failed / invalid_research_contract`. It used one create,
+30 retrieves, five hosted searches, 46,656 input tokens, 6,716 output tokens,
+70.588 seconds, and `$0.296540` conservative cost. Every Shopping, page-fetch,
+verification, presentation, card, source, human-open, retry, replacement,
+fallback, later-case, and deployment counter remained zero.
+
+The server already produced a privacy-safe validation reason and optional
+candidate/source subclasses, but artifact-v2 projected only the ledger's broad
+failure reason. That made the immutable evidence insufficient to select a
+generalized accuracy repair. PR-9D rolls the artifact, producer, capture, and
+review contracts forward and persists only the three conditional closed enums.
+Unknown values, impossible parent/child combinations, reasons attached to an
+unrelated stage, raw responses, candidate values, URLs, provider IDs, prompts,
+and credentials fail closed or remain absent. The shopper response and bounded
+manual-review packet are unchanged.
+
+Matrix v4 preserves v3's reviewed truth, sources, requests, cases, order,
+quality bars, and ceilings. Only the version and six fresh `pr9d-*` IDs/nonces
+differ; tests prove disjointness from v1-v3. Its file SHA-256 is
+`23fd7b495ec261a1508624aca17a212206241e27a4d8f93a283a5f19ddbeb960` and
+canonical SHA-256 is
+`7bc4b8cc578c905b8789456cd4eb017bec7039df9c65575f8056a0fe75d94afc`.
+The zero-network trust dry run authenticated 66 entries under manifest
+`64149ba00c3c16207d3691d8000a62ae1c74e633d0d96952c751f3e7972fb0ec`.
+
+Fail-first proved the analyzer lost the three expected enums. The corrected
+four-suite wall passes 71/71; full tests pass 1,713/1,713 across 232 suites;
+typecheck passes; lint has zero errors and three old warnings. No further paid
+call may occur until the exact final head is independently verified. A v4
+failure stops the chain and selects its closed offline repair target; a safe
+result still requires the complete bound manual audit before attempt 2.
+
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 
 Phase 3P/3Q source-upgrade items; RR-014/RR-015 aggregate measurement beyond

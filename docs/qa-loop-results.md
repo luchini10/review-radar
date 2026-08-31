@@ -16533,3 +16533,51 @@ and an artifact hash. The runner now emits a versioned review packet built from
 the successfully parsed public artifact projection. Exact tests bind its key
 set and prove omission of route trace, diagnostics, counters, usage ledgers,
 attempt nonce, and private/raw material. Corrected four-suite wall: 71/71.
+
+## 🟧 Codex — 2026-08-30 — PR-9C live stop and PR-9D attributable replacement
+
+**Objective:** use the first real fresh readiness result to select the earliest
+evidence-supported accuracy repair while preserving all trust and spend gates.
+
+**PR-9C live outcome:** exact attempt 1 at
+`5fcb38e8e06d6c51f8e2b0f1da9d54655bcbf9eb` reached provider `completed` but
+failed local research validation as `invalid_research_contract`. It stopped
+before Shopping, source fetching, verification, presentation, cards, sources,
+or human page review. The 70.588-second run used one create, 30 retrieves, five
+hosted searches, 46,656 input tokens, 6,716 output tokens, and `$0.296540`
+conservative cost. The artifact SHA-256 is
+`414fc3344ac79dbe33e372bfbd9a4632a674608a3a510a52f6e1e1656d982feb`.
+No retry, replacement, fallback, Organic/SearchAPI request, later case, flag
+change, deployment, or release occurred.
+
+**Root cause:** the server diagnostic contained closed `validationReason`,
+`candidateValidationReason`, and `candidateSourceValidationReason` values, but
+the readiness artifact projector discarded all three. The reviewed analyzer
+could authenticate the broad failure, counters, cost, and route timing but not
+the exact local invariant. The spent v3 result therefore cannot justify a
+discovery, identity, source, requirement, fact, or duplicate repair.
+
+**Fail-first:** a synthetic completed-provider research-contract failure carried
+`research_candidate_invalid / candidate_sources /
+candidate_source_unregistered`. Artifact construction succeeded, but analyzer
+`metrics.routeFailures` omitted all three enums; the targeted test failed 0/1.
+
+**PR-9D correction:** artifact-v3 retains only the conditional closed enum
+triple and validates its exact parent/child union. The analyzer exposes that
+authenticated tuple. Unknown strings, raw/private data, impossible nesting,
+and attribution on unrelated stages remain rejected. The public route and
+manual-review packet are unchanged. Matrix v4 preserves all reviewed product
+truth and ceilings while replacing every consumed run identity.
+
+**Verification:** targeted correction 1/1; complete readiness/runner/launcher
+wall 71/71; full unit suite 1,713/1,713 across 232 suites; typecheck passed;
+lint reported zero errors and the same three pre-existing warnings. Matrix file
+hash `23fd7b495ec261a1508624aca17a212206241e27a4d8f93a283a5f19ddbeb960`;
+canonical hash
+`7bc4b8cc578c905b8789456cd4eb017bec7039df9c65575f8056a0fe75d94afc`.
+The clean zero-network plan authenticated 66 trust entries with no failures.
+
+**Interpretation:** product accuracy remains NotScored. The change restores the
+measurement needed to select a generalized repair; it does not improve or
+weaken search results by itself. Independent exact-final-head review is the
+last pre-spend gate for v4 attempt 1.

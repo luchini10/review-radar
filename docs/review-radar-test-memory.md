@@ -3749,3 +3749,24 @@ a known conservative undercount.
   final documentation-only closeout commit was reauthenticated by the same
   reviewer and must retain byte-identical implementation, test, and matrix
   blobs from that verified snapshot.
+
+## Staged readiness research-failure attribution - 2026-08-30
+
+- A completed-provider `invalid_research_contract` artifact must retain the
+  closed local validation hierarchy: one of `research_shape`,
+  `research_source_registry`, `research_candidate_invalid`, or
+  `research_candidate_duplicate`; a candidate group only for candidate-invalid;
+  and a candidate-source reason only for candidate-sources.
+- The artifact must reject unknown enum strings, impossible parent/child
+  combinations, attribution on unrelated route stages, and extra keys. It must
+  never retain raw output, candidate values, source URLs/titles, prompts,
+  provider IDs, headers, credentials, or secrets for this purpose.
+- The analyzer may expose the authenticated closed tuple in
+  `metrics.routeFailures`. The public shopper response and bounded manual-review
+  packet must not expose it.
+- Fresh PR-9C attempt 1 is immutable evidence only for the broad class because
+  artifact-v2 discarded the server's subreason. Its usage was one create, 30
+  retrieves, five hosted searches, 46,656 input tokens, 6,716 output tokens,
+  `$0.296540`, and zero downstream calls. Never guess its missing subclass.
+- A replacement chain must preserve the reviewed matrix body and use a new
+  version plus six IDs/nonces disjoint from every spent v1-v3 identity.

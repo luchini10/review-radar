@@ -3257,3 +3257,24 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 - Lint: zero errors and three pre-existing test warnings.
 - The failed live dispatch stopped before credentials, runner spawn, provider
   calls, source fetches, human page opens, or spend.
+
+## 2026-08-30 — 🟧 Codex — Attribute failed staged research safely
+
+### Changed
+
+- Recorded the first real fresh readiness run as a paid research-contract stop:
+  one create, 30 retrieves, five hosted searches, `$0.296540`, and zero
+  downstream product-data or public-result work.
+- Retained the server's existing closed research-validation enum hierarchy in
+  immutable artifacts and analyzer metrics. Raw model output, candidates, URLs,
+  prompts, provider identifiers, and secrets remain unavailable.
+- Added matrix v4 with six fresh run identities while preserving all reviewed
+  product truth, cases, serial order, quality gates, and spend ceilings.
+
+### Verified
+
+- Fail-first: the analyzer lost all three synthetic bounded validation enums.
+- Corrected readiness/runner/launcher wall: 71/71.
+- Full unit suite: 1,713/1,713 across 232 suites; typecheck passed.
+- Lint: zero errors and three pre-existing warnings.
+- Zero-network v4 plan authenticated 66 trust entries with no failures.

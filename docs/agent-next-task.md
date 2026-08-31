@@ -1,98 +1,100 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-08-30 by Codex for PR-9C correction/replacement review.
+Updated: 2026-08-30 by Codex for PR-9D failure attribution and replacement review.
 This file was regenerated from current repository and execution evidence.
 
 ## Current state
 
 ReviewRadar remains **NOT READY** for production, confidence **0.995**. The
-active blocker is still the absence of a trustworthy current multi-shape live
-accuracy sample; no product-accuracy improvement may be claimed yet.
+current blocker is still the absence of a trustworthy multi-shape live product
+accuracy sample. One fresh broad `shop vac` attempt reached real Terra research
+but failed before product verification, ranking, or rendering.
 
-Base commit before the current local correction:
+Current implementation snapshot:
 
-- commit: `e334bd388355d34b45296140230642aeef296277`
-- parent: `cf6f3fa33b4ff17078289b9d79af83a96e9f1f7a`
-- tree: `372d2d6177a78ce440c8afb30539065e9ccf8257`
-- subject: `Add fresh staged accuracy protocol`
+- commit: `0b46d5bf2939d12ea3ea983e2b7ab0edc94d7124`
+- parent: `5fcb38e8e06d6c51f8e2b0f1da9d54655bcbf9eb`
+- tree: `b76ada8e34752471a1b57bc11bc151338459f238`
+- subject: `Retain bounded readiness failure attribution`
 
-PR-9B exact-commit review returned **VERIFIED**, no findings, confidence
-**0.999**. Its first paid-authorized launcher invocation then stopped before
-credentials and child spawn with `repository_or_trust_rejected`; provider,
-source, page-open, and spend counters were all zero.
+The parent was independently reviewed as **VERIFIED**, no findings, confidence
+**0.998**. PR-9D still requires an independent exact-final-head review before
+another paid call.
 
-## Objective and bottleneck
+## Objective and proven bottleneck
 
 **Objective:** discover and repair the highest-impact real product-search
 accuracy failures without weakening identity, evidence, price, requirement,
 network, or safety gates.
 
-**Verified fact:** the launch failure was deterministic infrastructure, not a
-product result. The real trust authenticator has no `status` field, but the
-launcher required one and tests invented it.
+**Verified facts:** fresh PR-9C attempt 1 at `5fcb38e8` used one OpenAI create,
+30 retrieves, five hosted searches, 46,656 input tokens, 6,716 output tokens,
+and `$0.296540` conservative cost. It stopped after 70.588 seconds as
+`research_failed / invalid_research_contract`; Shopping, source fetching,
+verification, presentation, cards, sources, and human page opens were all zero.
+There was no retry, replacement, fallback, Organic/SearchAPI attempt, later
+case, flag change, deployment, or release.
 
-**Engineering judgment:** correct that contract mismatch and refresh the spent
-serial identity chain before changing discovery or ranking. Speculative product
-logic changes still lack a measured failure to target.
+The server diagnostic already carried closed validation enums, but artifact-v2
+discarded them while retaining only `invalid_research_contract`. Therefore the
+spent evidence cannot distinguish shape, source-registry, candidate-field, or
+duplicate-identity failure. The earliest proven local defect is this loss of
+failure attribution; changing discovery or ranking before recovering the exact
+subclass would be speculation.
 
-**Uncertainty:** real leader recall, wrong product/variant rate, rank quality,
-price/spec accuracy, source support, consistency, latency, and cost remain
-unmeasured until the six fresh runs complete.
+**Uncertainty:** leader recall, wrong products/variants, rankings, prices/specs,
+source support, repeatability, and downstream first-loss lineage remain
+unmeasured because the first run did not pass research validation.
 
-## PR-9C correction
+## PR-9D correction
 
-- The launcher removes only two invalid `trustSurface.status` checks.
-- It still requires `ok === true`, an exact manifest digest, no failures, clean
-  tracked `main`, exact commit and approvals, bounded credentials, closed
-  process environment, and identical post-credential reauthentication.
-- Fail-first with the real authenticator shape: 4/7 terminal tests passed and
-  3/7 failed at `repository_or_trust_rejected`.
-- The runner terminal includes a versioned bounded public review packet so
-  card, variant, source, advice, and ranking audits do not require ordinary
-  access to protected artifact files. Private diagnostics, counters, usage,
-  nonce, raw responses, and credentials are excluded.
-- Corrected protocol/launcher/runner wall after this addition: 71/71.
-- Full unit suite: pass; typecheck: pass; lint: zero errors and three
-  pre-existing warnings.
+- Artifact/producer/capture/review contracts roll forward one version.
+- A failed research trace persists only three conditional closed enums:
+  validation reason, candidate-field group, and candidate-source reason.
+- The artifact builder rejects unknown strings, impossible parent/child enum
+  combinations, reasons on unrelated stages, and all raw/private fields.
+- The analyzer exposes those authenticated enums in `metrics.routeFailures`.
+- No public shopper response or bounded review packet gains diagnostic data.
+- Matrix v4 preserves v3 truth, sources, shopper requests, cases, serial order,
+  quality bars, and paid ceilings. Only its version and six `pr9d-*` run
+  IDs/nonces differ. Tests prove no identity reuse from v1, v2, or v3.
 
-## Fresh executable protocol
+Validation:
 
-`staged-terra-readiness-matrix-v3` preserves v2's reviewed 2026-08-29 truth,
-2026-09-12 expiry, sources, requests, cases, run order, quality bars, and
-ceilings. Only the matrix version and six fresh `pr9c-*` run IDs/nonces differ.
-Tests prove disjointness from both historical v1 and consumed v2.
+- targeted fail-first: the analyzer omitted all three expected enums;
+- corrected four-suite launcher/runner/analyzer wall: 71/71;
+- full unit suite: 1,713/1,713 across 232 suites;
+- typecheck: pass;
+- lint: zero errors and three pre-existing warnings;
+- zero-network dry run: authenticated 66 entries, no failures.
 
-- file SHA-256:
-  `d738c4493ababe10c5853f138862d71afeabc5d2502d8e0f2c0f13a1ad8cbd7a`
-- canonical SHA-256:
-  `0bc9d3626e266c4ec6592cfc1489d9199cb42e51b537183964637e1ea46a3660`
+Frozen v4 identities:
 
-Serial order remains:
-
-1. broad `shop vac` run 1;
-2. constrained under-$600 four-main-burner propane gas grill run 1;
-3. adversarial under-$350 mesh/lumbar office chair;
-4. overconstrained under-$300 self-emptying/pet-hair/cord-avoidance robot vac;
-5. broad `shop vac` run 2;
-6. constrained gas grill run 2.
+- matrix file SHA-256:
+  `23fd7b495ec261a1508624aca17a212206241e27a4d8f93a283a5f19ddbeb960`
+- matrix canonical SHA-256:
+  `7bc4b8cc578c905b8789456cd4eb017bec7039df9c65575f8056a0fe75d94afc`
+- trust manifest SHA-256:
+  `64149ba00c3c16207d3691d8000a62ae1c74e633d0d96952c751f3e7972fb0ec`
 
 ## Authority and next action
 
-Taylor granted standing authority on 2026-08-30 for all in-scope work needed
-to finish the accuracy goal, including local changes, commits, independent
-reviews, and paid live calls. Preserve the established `$1` per-run / `$6`
-aggregate ceiling, 12 creates, 360 retrieves, 60 hosted searches, six safety
-cancels, 90 Shopping attempts, 180 source fetches, 540 physical HTTP attempts,
-and at most 60 human public-source-page opens. Retries, fallbacks,
+Taylor granted standing authority on 2026-08-30 for all in-scope local work,
+commits, independent reviews, and paid calls needed to finish the accuracy goal.
+The hard envelope remains six serial logical searches, `$1` per run and `$6`
+aggregate; 12 creates, 360 retrieves, 60 hosted searches, six cancels, 90
+Shopping attempts, 180 source fetches, 540 physical HTTP attempts, and at most
+60 human public-source opens. Retries, replacements, fallbacks,
 Organic/SearchAPI, extra cases, and automatic continuation remain zero.
 
-Next: commit the exact PR-9C scope, obtain a High-reasoning independent
-exact-commit review, then execute each fresh attempt serially. After every
-artifact, complete the bound manual product/variant/source/ranking audit and
-prefix analysis before the next attempt.
+Next: independently review the exact final clean head at High reasoning. If and
+only if it is verified, execute v4 attempt 1. Analyze its immutable artifact
+through the reviewed analyzer. A failure stops the chain and selects the exact
+generalized offline repair target; a safe public result requires bound manual
+product, variant, source, requirement, price, specification, advice, and rank
+review before attempt 2.
 
-Push, deployment, release, and flag promotion are unnecessary and remain out of
-the execution plan.
+Push, deployment, release, and flag promotion remain unnecessary.
 
 ## Flags and secrets
 
@@ -110,21 +112,20 @@ required credentials.
 
 ## Hard boundaries
 
-- Every ordinary search/status command must exclude
-  `tests/fixtures/review-radar-live/**`. Never open, enumerate, stat, hash,
-  parse, copy, edit, or delete that protected tree. Only reviewed runtime code
-  may access the exact artifact prefix required for an authorized attempt.
+- Ordinary tools must never open, enumerate, stat, hash, parse, copy, edit, or
+  delete `tests/fixtures/review-radar-live/**`. Every ordinary search/status
+  command must exclude it. Only reviewed runtime/analyzer code may read an exact
+  required artifact.
 - Never reuse a spent run ID or nonce.
 - Preserve exact source, identity, variant, price, requirement, evidence,
   network, cancellation, and manual-review gates.
-- Machine output never authorizes another attempt; complete human adjudication
-  remains mandatory after every artifact.
+- Machine output never authorizes automatic continuation.
 
 ## Outstanding debts
 
-- **PR-006 live quality:** current leader recall, exact variant/card truth,
-  rankings, prices/specs, source support, repeatability, and first-loss lineage
-  remain unmeasured.
+- **PR-006 live quality:** leader recall, exact variant/card truth, rankings,
+  prices/specs, source support, repeatability, and downstream lineage remain
+  unmeasured.
 - **PR-023–PR-027 operations:** distributed authority, hosted cancellation,
   logging, configuration, Linux/runtime, and deployment evidence remain absent.
 - **Production operations:** CI, deployment, rollback, monitoring, alerts,
@@ -134,10 +135,10 @@ required credentials.
 
 | Evidence | Location |
 | --- | --- |
-| Protocol decision | `docs/forward-roadmap.md`, PR-9B/PR-9C |
-| Canonical correction proof | latest PR-9C entry in `docs/qa-loop-results.md` |
-| Durable launcher contract | `docs/review-radar-test-memory.md` |
+| Protocol decision | `docs/forward-roadmap.md`, PR-9B through PR-9D |
+| Canonical execution result | latest PR-9D entry in `docs/qa-loop-results.md` |
+| Durable trust contract | `docs/review-radar-test-memory.md` |
 | Readiness verdict | `docs/production-readiness-report.md` |
 | Issue arithmetic | `docs/RR-Issues-Report.md` |
 
-PR-9C repairs the measurement path; it does not itself prove product accuracy.
+PR-9D improves diagnostic integrity; it does not itself prove product accuracy.
