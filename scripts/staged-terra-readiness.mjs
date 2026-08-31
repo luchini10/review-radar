@@ -9,6 +9,7 @@ import {
   validateStagedTerraReadinessVerificationAttribution,
   STAGED_TERRA_READINESS_COUNTER_KEYS,
   STAGED_TERRA_READINESS_FIRST_LOSS_KEYS,
+  STAGED_TERRA_READINESS_RESEARCH_REJECTION_KEYS,
   STAGED_TERRA_READINESS_VERIFICATION_KEYS,
 } from "./staged-terra-readiness-artifact.mjs";
 import {
@@ -24,13 +25,13 @@ export {
 } from "./staged-terra-readiness-artifact.mjs";
 
 export const STAGED_TERRA_READINESS_MATRIX_VERSION =
-  "staged-terra-readiness-matrix-v8";
+  "staged-terra-readiness-matrix-v9";
 export const STAGED_TERRA_READINESS_CAPTURE_VERSION =
-  "staged-terra-readiness-capture-v7";
+  "staged-terra-readiness-capture-v8";
 export const STAGED_TERRA_READINESS_REVIEW_VERSION =
-  "staged-terra-readiness-review-v8";
+  "staged-terra-readiness-review-v9";
 const FROZEN_MATRIX_SHA256 =
-  "152a0126de52112f0bcaeefff09040f186a3343c8aed50fb52c4dd9e62b108d1";
+  "5da34085a7438dbfe9e990721e30da2162c922fd0225ee907532b3a71db6e40e";
 
 const MATRIX_KEYS = [
   "schemaVersion",
@@ -159,6 +160,7 @@ const RESEARCH_DIAGNOSTIC_KEYS = [
   "accepted",
   "deferredMissingTitle",
   "rejected",
+  "rejectionCandidateCounts",
 ];
 const VERIFICATION_DIAGNOSTIC_KEYS = [
   ...STAGED_TERRA_READINESS_VERIFICATION_KEYS,
@@ -1289,9 +1291,25 @@ function validateCaptureSchema(run, key, failures) {
       if (!hasExactKeys(run.diagnostics.research, RESEARCH_DIAGNOSTIC_KEYS)) {
         fail("diagnostics.research.keys");
       } else {
-        for (const field of RESEARCH_DIAGNOSTIC_KEYS) {
+        for (const field of RESEARCH_DIAGNOSTIC_KEYS.slice(0, 4)) {
           if (!isNonNegativeInteger(run.diagnostics.research[field])) {
             fail(`diagnostics.research.${field}`);
+          }
+        }
+        const rejectionCounts =
+          run.diagnostics.research.rejectionCandidateCounts;
+        if (
+          !hasExactKeys(
+            rejectionCounts,
+            STAGED_TERRA_READINESS_RESEARCH_REJECTION_KEYS,
+          )
+        ) {
+          fail("diagnostics.research.rejectionCandidateCounts.keys");
+        } else {
+          for (const field of STAGED_TERRA_READINESS_RESEARCH_REJECTION_KEYS) {
+            if (!isNonNegativeInteger(rejectionCounts[field])) {
+              fail(`diagnostics.research.rejectionCandidateCounts.${field}`);
+            }
           }
         }
       }
@@ -2110,6 +2128,22 @@ function buildMetrics(matrix, runs, qualityFailures, haltFailures) {
       firstLossStage: registeredProductFirstLossStage(product),
     })),
   );
+  const researchSourceFirstLossTotals = Object.fromEntries(
+    STAGED_TERRA_READINESS_RESEARCH_REJECTION_KEYS.map((field) => [field, 0]),
+  );
+  const researchSourceFirstLossPerRun = runs
+    .filter((run) => run.diagnostics.research !== null)
+    .map((run) => {
+      const counts = run.diagnostics.research.rejectionCandidateCounts;
+      for (const field of STAGED_TERRA_READINESS_RESEARCH_REJECTION_KEYS) {
+        researchSourceFirstLossTotals[field] += counts[field];
+      }
+      return {
+        caseId: run.caseId,
+        run: run.run,
+        counts: structuredClone(counts),
+      };
+    });
 
   return {
     candidateIdentityJaccard: matrix.truthPolicy.candidateIdentityJaccard,
@@ -2122,6 +2156,10 @@ function buildMetrics(matrix, runs, qualityFailures, haltFailures) {
     },
     stability,
     registeredProductLineage,
+    researchSourceFirstLoss: {
+      perRun: researchSourceFirstLossPerRun,
+      totals: researchSourceFirstLossTotals,
+    },
     verificationFailures: runs
       .filter((run) => run.verificationAttribution !== null)
       .map((run) => ({
@@ -2531,6 +2569,12 @@ function emptyMetrics(matrix) {
     broadMustConsider: { perRun: [], union: 0 },
     stability: [],
     registeredProductLineage: [],
+    researchSourceFirstLoss: {
+      perRun: [],
+      totals: Object.fromEntries(
+        STAGED_TERRA_READINESS_RESEARCH_REJECTION_KEYS.map((key) => [key, 0]),
+      ),
+    },
     verificationFailures: [],
     routeFailures: [],
     totalAccounting: Object.fromEntries(ACCOUNTING_KEYS.map((key) => [key, 0])),

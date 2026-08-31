@@ -1,0 +1,579 @@
+{
+  "schemaVersion": "staged-terra-readiness-matrix-v9",
+  "reviewedAt": "2026-08-29",
+  "expiresAt": "2026-09-12",
+  "truthPolicy": {
+    "mustConsiderMinimumIndependentSources": 2,
+    "priceClaimsAreIllustrativeOnly": true,
+    "retailerRankIsTruth": false,
+    "singleEditorialListIsTruth": false,
+    "candidateIdentityJaccard": "not_scored_privacy_boundary",
+    "candidateIdentityJaccardReason": "The sanitized staged evidence contract retains no non-public candidate identities. Stable candidate hashes would add a dictionary-attackable privacy surface and require separate review."
+  },
+  "qualityBars": {
+    "minimumPairwiseFinalJaccard": 0.6,
+    "minimumPairwiseSharedOrderKendallTau": 0,
+    "maximumWrongTypeCards": 0,
+    "maximumHardRequirementFailures": 0,
+    "maximumBudgetViolations": 0,
+    "maximumUnregisteredSourceReferences": 0,
+    "minimumBroadMustConsiderPerRun": 2,
+    "minimumBroadMustConsiderUnion": 2,
+    "maximumCompletedWallClockMs": 720000,
+    "maximumEvidenceAgeMs": 86400000,
+    "perRunCeilings": {
+      "openAiCreates": 2,
+      "openAiRetrieves": 60,
+      "hostedSearches": 10,
+      "safetyCancels": 1,
+      "serperShoppingAttempts": 15,
+      "sourcePageFetches": 30,
+      "sourcePageHttpAttempts": 90,
+      "conservativeUsd": 1
+    },
+    "aggregateCeilings": {
+      "openAiCreates": 12,
+      "openAiRetrieves": 360,
+      "hostedSearches": 60,
+      "safetyCancels": 6,
+      "serperShoppingAttempts": 90,
+      "sourcePageFetches": 180,
+      "sourcePageHttpAttempts": 540,
+      "conservativeUsd": 6
+    },
+    "allowedRetries": 0,
+    "allowedReplacements": 0,
+    "allowedFallbacks": 0,
+    "allowedSerperOrganicAttempts": 0,
+    "allowedSearchApiAttempts": 0,
+    "allowedAdditionalCases": 0
+  },
+  "runOrder": [
+    "broad-shop-vac:1",
+    "con-gas-grill-600-4-main-burner:1",
+    "adv-office-chair-350-mesh-lumbar:1",
+    "over-robot-vac-300-selfempty-pet-cords:1",
+    "broad-shop-vac:2",
+    "con-gas-grill-600-4-main-burner:2"
+  ],
+  "attemptPlan": [
+    {
+      "index": 1,
+      "key": "broad-shop-vac:1",
+      "runId": "pr9i-01-broad-shop-vac-r1",
+      "nonce": "nonce-9191919191919191919191919191919191919191919191919191919191919191"
+    },
+    {
+      "index": 2,
+      "key": "con-gas-grill-600-4-main-burner:1",
+      "runId": "pr9i-02-gas-grill-r1",
+      "nonce": "nonce-9292929292929292929292929292929292929292929292929292929292929292"
+    },
+    {
+      "index": 3,
+      "key": "adv-office-chair-350-mesh-lumbar:1",
+      "runId": "pr9i-03-office-chair-r1",
+      "nonce": "nonce-9393939393939393939393939393939393939393939393939393939393939393"
+    },
+    {
+      "index": 4,
+      "key": "over-robot-vac-300-selfempty-pet-cords:1",
+      "runId": "pr9i-04-robot-vac-r1",
+      "nonce": "nonce-9494949494949494949494949494949494949494949494949494949494949494"
+    },
+    {
+      "index": 5,
+      "key": "broad-shop-vac:2",
+      "runId": "pr9i-05-broad-shop-vac-r2",
+      "nonce": "nonce-9595959595959595959595959595959595959595959595959595959595959595"
+    },
+    {
+      "index": 6,
+      "key": "con-gas-grill-600-4-main-burner:2",
+      "runId": "pr9i-06-gas-grill-r2",
+      "nonce": "nonce-9696969696969696969696969696969696969696969696969696969696969696"
+    }
+  ],
+  "sources": [
+    {
+      "id": "shop-popular-mechanics-2026",
+      "publisher": "Popular Mechanics",
+      "url": "https://www.popularmechanics.com/home/g1976/best-shop-vacs/",
+      "sourceClass": "independent_test",
+      "independent": true,
+      "retrievedAt": "2026-08-29",
+      "claim": "Current tested roundup names Vacmaster Beast overall, Stanley SL18116P value, the RIDGID 12-gallon 5.0 HP NXT family for project cleanup, the DeWalt Stealthsonic 12-gallon family for wet cleanup, and Craftsman CMXEVBE17595 among its tested picks; it does not state exact RIDGID or DeWalt model codes."
+    },
+    {
+      "id": "shop-popular-mechanics-ridgid-2026",
+      "publisher": "Popular Mechanics",
+      "url": "https://www.popularmechanics.com/home/tools/a71179547/ridgid-nxt-rt1200-shop-vac-review/",
+      "sourceClass": "independent_test",
+      "independent": true,
+      "retrievedAt": "2026-08-29",
+      "claim": "May 2026 hands-on review explicitly says the tested unit is the RIDGID NXT HD1200 and reports its timed sawdust, water, and lift tests; the page's affiliate product card separately says RT1200, so that label conflict remains visible."
+    },
+    {
+      "id": "shop-car-and-driver-2026",
+      "publisher": "Car and Driver",
+      "url": "https://www.caranddriver.com/car-accessories/g44474128/best-wet-dry-shop-vacs-tested/",
+      "sourceClass": "independent_test",
+      "independent": true,
+      "retrievedAt": "2026-08-29",
+      "claim": "Current hands-on roundup names Stanley 6-gallon for everyday use and Craftsman 16-gallon for large messes."
+    },
+    {
+      "id": "shop-pro-tool-ridgid-2026",
+      "publisher": "Pro Tool Reviews",
+      "url": "https://www.protoolreviews.com/ridgid-12-gallon-hd1200-nxt-wet-dry-vac-shop-review/",
+      "sourceClass": "independent_test",
+      "independent": true,
+      "retrievedAt": "2026-08-29",
+      "claim": "June 2026 head-to-head test recommends RIDGID HD1200 and compares it directly with DeWalt DX12P-QT and Bauer 56579."
+    },
+    {
+      "id": "shop-vacuum-wars-2026",
+      "publisher": "Vacuum Wars",
+      "url": "https://vacuumwars.com/best-shop-vac-6-5-hp/",
+      "sourceClass": "independent_test",
+      "independent": true,
+      "retrievedAt": "2026-08-29",
+      "claim": "Current 6.5-HP comparison names Craftsman CMXEVBE17595 first among five purchased and tested large wet/dry vacuums."
+    },
+    {
+      "id": "shop-good-housekeeping-2026",
+      "publisher": "Good Housekeeping",
+      "url": "https://www.goodhousekeeping.com/appliances/g73464279/best-wet-dry-shop-vac/",
+      "sourceClass": "independent_test",
+      "independent": true,
+      "retrievedAt": "2026-08-29",
+      "claim": "August 2026 lab roundup names RIDGID 12-gallon best overall and a DeWalt Stealthsonic model best value."
+    },
+    {
+      "id": "shop-techgearlab-2026",
+      "publisher": "TechGearLab",
+      "url": "https://www.techgearlab.com/topics/floor-cleaning/best-shop-vac",
+      "sourceClass": "independent_test",
+      "independent": true,
+      "retrievedAt": "2026-08-29",
+      "claim": "Current lab comparison includes Craftsman, RIDGID, DeWalt, Vacmaster, and Stanley and names Craftsman 16-gallon for larger projects."
+    },
+    {
+      "id": "grill-food-network-2026",
+      "publisher": "Food Network",
+      "url": "https://www.foodnetwork.com/how-to/packages/shopping/product-reviews/best-gas-grills",
+      "sourceClass": "independent_test",
+      "independent": true,
+      "retrievedAt": "2026-08-29",
+      "claim": "Current tested roundup names Nexgrill 720-0925P its budget gas-grill pick, with four burners and an observed price below $600."
+    },
+    {
+      "id": "grill-nexgrill-720-0925pg",
+      "publisher": "Nexgrill",
+      "url": "https://nexgrill.com/products/4-burner-gas-grill-black",
+      "sourceClass": "manufacturer",
+      "independent": false,
+      "retrievedAt": "2026-08-29",
+      "claim": "Manufacturer page identifies 720-0925PG as a propane grill with four stainless main burners; the P versus PG suffix relationship is not treated as exact identity proof."
+    },
+    {
+      "id": "grill-consumer-reports-2026",
+      "publisher": "Consumer Reports Buying Guide 2026",
+      "url": "https://scplva-media.s3.amazonaws.com/20251230141812/Consumer_Reports_Buying_Guide_2026.pdf",
+      "sourceClass": "independent_test",
+      "independent": true,
+      "retrievedAt": "2026-08-29",
+      "claim": "The current buying guide lists multiple tested propane-capable gas grills with at least four main burners at observed prices below $600, establishing case feasibility rather than a required winner."
+    },
+    {
+      "id": "grill-royal-gourmet-ga5401t",
+      "publisher": "Royal Gourmet",
+      "url": "https://www.royalgourmetusa.com/products/royal-gourmet-ga5401t-5-burner-gas-grill-60000-btu",
+      "sourceClass": "manufacturer",
+      "independent": false,
+      "retrievedAt": "2026-08-29",
+      "claim": "Manufacturer page identifies GA5401T as propane with five main burners and shows a sub-$600 price, but also shows sold-out state; it is illustrative, not availability truth."
+    },
+    {
+      "id": "chair-toms-guide-ep200-2026",
+      "publisher": "Tom's Guide",
+      "url": "https://www.tomsguide.com/home/home-office/boulies-ep200-review",
+      "sourceClass": "independent_test",
+      "independent": true,
+      "retrievedAt": "2026-08-29",
+      "claim": "June 2026 review describes Boulies EP200 as an adjustable budget office chair with breathable mesh and an observed price below $350."
+    },
+    {
+      "id": "chair-techradar-ep200-2026",
+      "publisher": "TechRadar",
+      "url": "https://www.techradar.com/pro/i-love-the-price-of-this-office-chair-i-reviewed-almost-as-much-as-i-love-the-comfort",
+      "sourceClass": "independent_test",
+      "independent": true,
+      "retrievedAt": "2026-08-29",
+      "claim": "April 2026 long-term review recommends Boulies EP200 as a breathable, supportive office chair around the case budget."
+    },
+    {
+      "id": "chair-boulies-ep200",
+      "publisher": "Boulies",
+      "url": "https://boulies.com/products/ep200",
+      "sourceClass": "manufacturer",
+      "independent": false,
+      "retrievedAt": "2026-08-29",
+      "claim": "Manufacturer page identifies the 2026 EP200 office chair, adjustable lumbar support, breathable mesh, U.S. fulfillment, and a current list price below $350 before any coupon."
+    },
+    {
+      "id": "robot-toms-guide-overall-2026",
+      "publisher": "Tom's Guide",
+      "url": "https://www.tomsguide.com/us/best-robot-vacuums,review-2000.html",
+      "sourceClass": "independent_test",
+      "independent": true,
+      "retrievedAt": "2026-08-29",
+      "claim": "Current testing names Dreame D10 Plus Gen 2 a sub-$300 self-emptying value but warns it is weaker for heavy pet hair than premium models."
+    },
+    {
+      "id": "robot-toms-guide-cheap-2026",
+      "publisher": "Tom's Guide",
+      "url": "https://www.tomsguide.com/best-picks/best-cheap-robot-vacuums",
+      "sourceClass": "independent_test",
+      "independent": true,
+      "retrievedAt": "2026-08-29",
+      "claim": "Current cheap-robot tests separate pet-hair strength from self-empty convenience and name Tapo RV30 Max Plus the affordable self-empty pick."
+    },
+    {
+      "id": "robot-techgearlab-d10-2026",
+      "publisher": "TechGearLab",
+      "url": "https://www.techgearlab.com/reviews/smart-home/robot-vacuum/dreame-d10-plus-gen-2",
+      "sourceClass": "independent_test",
+      "independent": true,
+      "retrievedAt": "2026-08-29",
+      "claim": "April 2026 testing labels Dreame D10 Plus Gen 2 poor at real-time obstacle avoidance and specifically unsafe around cords, despite its budget value."
+    },
+    {
+      "id": "robot-tapo-rv30-max-plus",
+      "publisher": "TP-Link Tapo",
+      "url": "https://www.tapo.com/us/product/robot-vacuum/tapo-rv30-max-plus/",
+      "sourceClass": "manufacturer",
+      "independent": false,
+      "retrievedAt": "2026-08-29",
+      "claim": "Manufacturer page identifies RV30 Max Plus as self-emptying and marketed for pet-hair pickup; it does not independently prove power-cord avoidance."
+    },
+    {
+      "id": "robot-vacuum-wars-budget-2026",
+      "publisher": "Vacuum Wars",
+      "url": "https://vacuumwars.com/best-budget-robot-vacuum/",
+      "sourceClass": "independent_test",
+      "independent": true,
+      "retrievedAt": "2026-08-29",
+      "claim": "August 2026 independent budget testing finds self-emptying and pet-hair-capable options below $300 but identifies weak obstacle avoidance as the key compromise."
+    }
+  ],
+  "cases": [
+    {
+      "id": "broad-shop-vac",
+      "shape": "broad",
+      "runs": 2,
+      "shopperRequest": {
+        "query": "shop vac"
+      },
+      "requirementIds": [
+        "market_us"
+      ],
+      "completionPolicy": "required",
+      "minimumCards": 3,
+      "maximumCards": 5,
+      "maximumVerifiedPriceUsd": null,
+      "forbiddenIdentityTerms": [
+        "air purifier",
+        "canister vacuum",
+        "replacement filter",
+        "vacuum filter",
+        "handheld vacuum",
+        "replacement hose",
+        "vacuum hose",
+        "robot vacuum",
+        "stick vacuum",
+        "upright vacuum"
+      ],
+      "mustConsiderProducts": [
+        {
+          "id": "ridgid-hd1200",
+          "brandAliases": [
+            "RIDGID"
+          ],
+          "modelAliases": [
+            "HD1200"
+          ],
+          "sourceIds": [
+            "shop-popular-mechanics-ridgid-2026",
+            "shop-pro-tool-ridgid-2026"
+          ],
+          "rationale": "Two current independent hands-on reviews explicitly call the tested unit RIDGID HD1200 and identify it as a leading general-purpose shop vac.",
+          "uncertainty": "The Popular Mechanics prose repeatedly identifies NXT HD1200, while its affiliate product card says RT1200. Exact recall still requires the card's mandatory model field to equal HD1200; no RT1200 equivalence is inferred."
+        },
+        {
+          "id": "craftsman-cmxevbe17595",
+          "brandAliases": [
+            "CRAFTSMAN"
+          ],
+          "modelAliases": [
+            "CMXEVBE17595"
+          ],
+          "sourceIds": [
+            "shop-popular-mechanics-2026",
+            "shop-car-and-driver-2026",
+            "shop-vacuum-wars-2026",
+            "shop-techgearlab-2026"
+          ],
+          "rationale": "Multiple current independent tests identify the exact high-capacity Craftsman model or its exact 16-gallon family as a leading large-mess choice.",
+          "uncertainty": "Some roundup summaries state capacity rather than the full model string; exact-card matching still requires CMXEVBE17595."
+        }
+      ],
+      "illustrativeProducts": [
+        {
+          "id": "dewalt-stealthsonic-12-gallon-family",
+          "brandAliases": [
+            "DEWALT"
+          ],
+          "modelAliases": [
+            "DX12P-QT",
+            "DXV12P-QT"
+          ],
+          "sourceIds": [
+            "shop-popular-mechanics-2026",
+            "shop-pro-tool-ridgid-2026"
+          ],
+          "rationale": "Current independent tests identify the DeWalt Stealthsonic 12-gallon family as a leading quiet/wet-cleanup option.",
+          "uncertainty": "Popular Mechanics does not state an exact model and Pro Tool Reviews identifies DX12P-QT rather than DXV12P-QT. No cross-model inference is allowed, so this family is illustrative only."
+        },
+        {
+          "id": "stanley-sl18116p",
+          "brandAliases": [
+            "STANLEY"
+          ],
+          "modelAliases": [
+            "SL18116P"
+          ],
+          "sourceIds": [
+            "shop-popular-mechanics-2026",
+            "shop-car-and-driver-2026"
+          ],
+          "rationale": "Current independent tests name the Stanley 6-gallon value/everyday option, but one source summary omits the model string.",
+          "uncertainty": "Illustrative only; not in the scored denominator."
+        },
+        {
+          "id": "vacmaster-beast-5-gallon",
+          "brandAliases": [
+            "VACMASTER"
+          ],
+          "modelAliases": [
+            "BEAST 5 GALLON",
+            "VFB511B"
+          ],
+          "sourceIds": [
+            "shop-popular-mechanics-2026"
+          ],
+          "rationale": "Current tested roundup names this compact Vacmaster family best overall.",
+          "uncertainty": "Only one current independent source supports the exact family in this review, so it is not a must-consider denominator item."
+        }
+      ],
+      "sourceIds": [
+        "shop-popular-mechanics-2026",
+        "shop-popular-mechanics-ridgid-2026",
+        "shop-car-and-driver-2026",
+        "shop-pro-tool-ridgid-2026",
+        "shop-vacuum-wars-2026",
+        "shop-good-housekeeping-2026",
+        "shop-techgearlab-2026"
+      ]
+    },
+    {
+      "id": "con-gas-grill-600-4-main-burner",
+      "shape": "constrained",
+      "runs": 2,
+      "shopperRequest": {
+        "query": "gas grill",
+        "budget": "under $600",
+        "priorities": "at least 4 main burners, propane"
+      },
+      "requirementIds": [
+        "market_us",
+        "budget",
+        "important_details"
+      ],
+      "completionPolicy": "required",
+      "minimumCards": 2,
+      "maximumCards": 5,
+      "maximumVerifiedPriceUsd": 600,
+      "forbiddenIdentityTerms": [
+        "charcoal grill",
+        "electric grill",
+        "griddle",
+        "natural gas",
+        "pellet grill",
+        "smoker"
+      ],
+      "mustConsiderProducts": [],
+      "illustrativeProducts": [
+        {
+          "id": "nexgrill-720-0925p-family",
+          "brandAliases": [
+            "NEXGRILL"
+          ],
+          "modelAliases": [
+            "720-0925P",
+            "720-0925PG"
+          ],
+          "sourceIds": [
+            "grill-food-network-2026",
+            "grill-nexgrill-720-0925pg"
+          ],
+          "rationale": "Independent testing and the manufacturer establish a currently marketed four-main-burner propane family below the case budget.",
+          "uncertainty": "The independent and manufacturer pages use P and PG suffixes; no cross-suffix identity inference is allowed."
+        },
+        {
+          "id": "royal-gourmet-ga5401t",
+          "brandAliases": [
+            "ROYAL GOURMET"
+          ],
+          "modelAliases": [
+            "GA5401T"
+          ],
+          "sourceIds": [
+            "grill-consumer-reports-2026",
+            "grill-royal-gourmet-ga5401t"
+          ],
+          "rationale": "Independent testing and manufacturer specifications show a propane model with at least four main burners below the budget.",
+          "uncertainty": "The manufacturer page also shows sold-out status, so this is feasibility evidence, not current availability authority."
+        }
+      ],
+      "sourceIds": [
+        "grill-food-network-2026",
+        "grill-nexgrill-720-0925pg",
+        "grill-consumer-reports-2026",
+        "grill-royal-gourmet-ga5401t"
+      ]
+    },
+    {
+      "id": "adv-office-chair-350-mesh-lumbar",
+      "shape": "adversarial",
+      "runs": 1,
+      "shopperRequest": {
+        "query": "office chair",
+        "budget": "under $350",
+        "priorities": "lumbar support, breathable mesh back",
+        "avoid": "gaming chair, drafting stool"
+      },
+      "requirementIds": [
+        "market_us",
+        "budget",
+        "important_details",
+        "dealbreakers"
+      ],
+      "completionPolicy": "required",
+      "minimumCards": 1,
+      "maximumCards": 5,
+      "maximumVerifiedPriceUsd": 350,
+      "forbiddenIdentityTerms": [
+        "bar stool",
+        "drafting chair",
+        "drafting stool",
+        "gaming chair",
+        "kneeling chair",
+        "saddle stool"
+      ],
+      "mustConsiderProducts": [],
+      "illustrativeProducts": [
+        {
+          "id": "boulies-ep200",
+          "brandAliases": [
+            "BOULIES"
+          ],
+          "modelAliases": [
+            "EP200"
+          ],
+          "sourceIds": [
+            "chair-toms-guide-ep200-2026",
+            "chair-techradar-ep200-2026",
+            "chair-boulies-ep200"
+          ],
+          "rationale": "Two independent current reviews and the manufacturer establish that a professional-looking mesh office chair with lumbar support exists within the stable list-price case budget.",
+          "uncertainty": "Fit and comfort are person-specific; inclusion is feasibility evidence, not a required recommendation."
+        }
+      ],
+      "sourceIds": [
+        "chair-toms-guide-ep200-2026",
+        "chair-techradar-ep200-2026",
+        "chair-boulies-ep200"
+      ]
+    },
+    {
+      "id": "over-robot-vac-300-selfempty-pet-cords",
+      "shape": "over_constrained",
+      "runs": 1,
+      "shopperRequest": {
+        "query": "robot vacuum",
+        "budget": "under $300",
+        "priorities": "self-emptying, good for pet hair, avoids power cords"
+      },
+      "requirementIds": [
+        "market_us",
+        "budget",
+        "important_details"
+      ],
+      "completionPolicy": "safe_no_exact_allowed",
+      "minimumCards": 0,
+      "maximumCards": 5,
+      "maximumVerifiedPriceUsd": 300,
+      "forbiddenIdentityTerms": [
+        "canister vacuum",
+        "handheld vacuum",
+        "shop vac",
+        "stick vacuum",
+        "upright vacuum",
+        "wet dry vacuum"
+      ],
+      "mustConsiderProducts": [],
+      "illustrativeProducts": [
+        {
+          "id": "dreame-d10-plus-gen-2",
+          "brandAliases": [
+            "DREAME"
+          ],
+          "modelAliases": [
+            "D10 PLUS GEN 2"
+          ],
+          "sourceIds": [
+            "robot-toms-guide-overall-2026",
+            "robot-techgearlab-d10-2026"
+          ],
+          "rationale": "Current testing shows a sub-$300 self-emptying model that can collect pet hair but fails the power-cord requirement in independent obstacle tests.",
+          "uncertainty": "It is a negative control for the combined requirement, not an exact-match candidate."
+        },
+        {
+          "id": "tapo-rv30-max-plus",
+          "brandAliases": [
+            "TAPO",
+            "TP-LINK"
+          ],
+          "modelAliases": [
+            "RV30 MAX PLUS"
+          ],
+          "sourceIds": [
+            "robot-toms-guide-cheap-2026",
+            "robot-tapo-rv30-max-plus",
+            "robot-vacuum-wars-budget-2026"
+          ],
+          "rationale": "Current sources establish self-emptying and pet-hair claims at the budget edge but do not independently prove power-cord avoidance.",
+          "uncertainty": "LiDAR navigation is not treated as exact small-object or cord-avoidance proof."
+        }
+      ],
+      "sourceIds": [
+        "robot-toms-guide-overall-2026",
+        "robot-toms-guide-cheap-2026",
+        "robot-techgearlab-d10-2026",
+        "robot-tapo-rv30-max-plus",
+        "robot-vacuum-wars-budget-2026"
+      ]
+    }
+  ]
+}

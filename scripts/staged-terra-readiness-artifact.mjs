@@ -8,9 +8,9 @@ import {
 } from "./staged-terra-readiness-trace.mjs";
 
 export const STAGED_TERRA_READINESS_ARTIFACT_VERSION =
-  "staged-terra-readiness-artifact-v7";
+  "staged-terra-readiness-artifact-v8";
 export const STAGED_TERRA_READINESS_PRODUCER_VERSION =
-  "staged-terra-readiness-producer-v7";
+  "staged-terra-readiness-producer-v8";
 export const STAGED_TERRA_READINESS_REVIEW_PACKET_VERSION =
   "staged-terra-readiness-review-packet-v1";
 
@@ -100,6 +100,7 @@ const RESEARCH_KEYS = [
   "accepted",
   "deferredMissingTitle",
   "rejected",
+  "rejectionCandidateCounts",
 ];
 export const STAGED_TERRA_READINESS_VERIFICATION_KEYS = [
   "candidates",
@@ -305,7 +306,7 @@ const FAILURE_LEDGER_UNIONS = {
     invalid_presentation_contract: new Set(["completed"]),
   },
 };
-const RESEARCH_REJECTION_COUNT_KEYS = [
+export const STAGED_TERRA_READINESS_RESEARCH_REJECTION_KEYS = [
   "missingTitle",
   "brandNotInTitle",
   "modelNotInTitle",
@@ -1231,7 +1232,7 @@ function validateRouteDiagnostic(value, index) {
     }
     requireCountRecord(
       value.identitySourceFilter.rejectionCandidateCounts,
-      RESEARCH_REJECTION_COUNT_KEYS,
+      STAGED_TERRA_READINESS_RESEARCH_REJECTION_KEYS,
       `${path}.identitySourceFilter.rejectionCandidateCounts`,
     );
     const sourceFilter = value.identitySourceFilter;
@@ -1466,6 +1467,9 @@ function projectDiagnostics(routeDiagnostics, counters, terminal) {
       accepted: sourceFilter.acceptedCandidates,
       deferredMissingTitle: sourceFilter.deferredMissingTitleCandidates,
       rejected: sourceFilter.rejectedCandidates,
+      rejectionCandidateCounts: structuredClone(
+        sourceFilter.rejectionCandidateCounts,
+      ),
     };
   }
 
@@ -2453,9 +2457,42 @@ function validateProjectedPayload(payload) {
     if (payload.diagnostics.research !== null) {
       check(exactKeys(payload.diagnostics.research, RESEARCH_KEYS), "diagnostics.research.keys");
       if (exactKeys(payload.diagnostics.research, RESEARCH_KEYS)) {
-        for (const key of RESEARCH_KEYS) {
+        for (const key of RESEARCH_KEYS.slice(0, 4)) {
           check(nonNegativeInteger(payload.diagnostics.research[key]), `diagnostics.research.${key}`);
         }
+        const rejectionCounts = payload.diagnostics.research.rejectionCandidateCounts;
+        check(
+          exactKeys(
+            rejectionCounts,
+            STAGED_TERRA_READINESS_RESEARCH_REJECTION_KEYS,
+          ) &&
+            STAGED_TERRA_READINESS_RESEARCH_REJECTION_KEYS.every((field) =>
+              nonNegativeInteger(rejectionCounts[field]),
+            ),
+          "diagnostics.research.rejectionCandidateCounts",
+        );
+        const rejectionCountTotal = Object.values(rejectionCounts ?? {}).reduce(
+          (sum, count) => sum + count,
+          0,
+        );
+        check(
+          payload.diagnostics.research.submitted ===
+            payload.diagnostics.research.accepted +
+              payload.diagnostics.research.rejected,
+          "diagnostics.research.conservation",
+        );
+        check(
+          payload.diagnostics.research.deferredMissingTitle === 0,
+          "diagnostics.research.missing_title_deferral_retired",
+        );
+        check(
+          payload.diagnostics.research.rejected === 0
+            ? rejectionCountTotal === 0
+            : rejectionCountTotal >= payload.diagnostics.research.rejected &&
+                rejectionCountTotal <=
+                  2 * payload.diagnostics.research.rejected,
+          "diagnostics.research.rejection_counts",
+        );
       }
     }
     if (payload.diagnostics.verification !== null) {

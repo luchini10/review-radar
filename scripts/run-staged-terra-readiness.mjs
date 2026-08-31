@@ -1,4 +1,4 @@
-// Dry-run-first serial capture for the PR-9B staged Terra readiness matrix.
+// Dry-run-first serial capture for the PR-9I staged Terra readiness matrix.
 
 import { createHash, randomBytes } from "node:crypto";
 import { execFileSync } from "node:child_process";
@@ -53,7 +53,7 @@ const matrixPath = path.join(
   repoRoot,
   "tests",
   "fixtures",
-  "staged-terra-readiness-matrix-v8.json",
+  "staged-terra-readiness-matrix-v9.json",
 );
 
 function gitOutput(args) {

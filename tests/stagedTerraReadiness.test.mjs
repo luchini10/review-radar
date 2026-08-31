@@ -28,7 +28,7 @@ import {
 } from "../scripts/staged-terra-readiness-artifact.mjs";
 
 const fixturePath = new URL(
-  "./fixtures/staged-terra-readiness-matrix-v8.json",
+  "./fixtures/staged-terra-readiness-matrix-v9.json",
   import.meta.url,
 );
 const retiredFixturePaths = [
@@ -39,6 +39,7 @@ const retiredFixturePaths = [
   "./fixtures/staged-terra-readiness-matrix-v5.json",
   "./fixtures/staged-terra-readiness-matrix-v6.json",
   "./fixtures/staged-terra-readiness-matrix-v7.json",
+  "./fixtures/staged-terra-readiness-matrix-v8.json",
 ].map((relativePath) => new URL(relativePath, import.meta.url));
 const commitSha = "a".repeat(40);
 
@@ -155,6 +156,14 @@ function completedRun(value, caseId, run) {
         accepted,
         deferredMissingTitle: 0,
         rejected: 0,
+        rejectionCandidateCounts: {
+          missingTitle: 0,
+          brandNotInTitle: 0,
+          modelNotInTitle: 0,
+          modelConflictInTitle: 0,
+          wrongProductType: 0,
+          completeProductPageUnavailable: 0,
+        },
       },
       verification: {
         eligible: cards.length,
@@ -513,14 +522,8 @@ function artifactForRun(
               deferredMissingTitleCandidates:
                 item.diagnostics.research.deferredMissingTitle,
               rejectedCandidates: item.diagnostics.research.rejected,
-              rejectionCandidateCounts: {
-                missingTitle: 0,
-                brandNotInTitle: 0,
-                modelNotInTitle: 0,
-                modelConflictInTitle: 0,
-                wrongProductType: 0,
-                completeProductPageUnavailable: 0,
-              },
+              rejectionCandidateCounts:
+                item.diagnostics.research.rejectionCandidateCounts,
             },
           }
         : {}),
@@ -768,7 +771,7 @@ function manualReview(value, sample) {
   };
 }
 
-describe("PR-9B staged Terra readiness boundary", () => {
+describe("PR-9I staged Terra readiness boundary", () => {
   it("freezes four distinct shapes, six serial runs, current truth, and absolute bars", () => {
     const value = matrix();
     const retiredMatrices = retiredFixturePaths.map((path) =>
@@ -828,7 +831,7 @@ describe("PR-9B staged Terra readiness boundary", () => {
       false,
     );
     assert.ok(
-      value.attemptPlan.every((attempt) => attempt.runId.startsWith("pr9h-")),
+      value.attemptPlan.every((attempt) => attempt.runId.startsWith("pr9i-")),
     );
     assert.equal(value.qualityBars.minimumPairwiseFinalJaccard, 0.6);
     assert.equal(value.qualityBars.minimumPairwiseSharedOrderKendallTau, 0);
@@ -1843,7 +1846,59 @@ describe("PR-9B staged Terra readiness boundary", () => {
       accepted: 0,
       deferredMissingTitle: 0,
       rejected: 8,
+      rejectionCandidateCounts: {
+        missingTitle: 0,
+        brandNotInTitle: 0,
+        modelNotInTitle: 0,
+        modelConflictInTitle: 0,
+        wrongProductType: 0,
+        completeProductPageUnavailable: 8,
+      },
     });
+    const tracedAnalysis = analyzeStagedTerraReadinessPrefix({
+      matrix: value,
+      artifacts: [tracedFailureArtifact],
+      approvedCommitSha: commitSha,
+      now: "2026-08-29",
+    });
+    assert.deepEqual(tracedAnalysis.metrics.researchSourceFirstLoss, {
+      perRun: [
+        {
+          caseId: "broad-shop-vac",
+          run: 1,
+          counts: tracedSourceFailure.identitySourceFilter.rejectionCandidateCounts,
+        },
+      ],
+      totals: tracedSourceFailure.identitySourceFilter.rejectionCandidateCounts,
+    });
+
+    for (const mutate of [
+      (counts) => delete counts.missingTitle,
+      (counts) => {
+        counts.privateCandidateTitle = "provider-secret-canary";
+      },
+      (counts) => {
+        counts.modelNotInTitle = -1;
+      },
+      (counts) => {
+        counts.modelNotInTitle = 17;
+      },
+    ]) {
+      const malformedCounts = resealArtifact(
+        tracedFailureArtifact,
+        (envelope) => mutate(
+          envelope.payload.diagnostics.research.rejectionCandidateCounts,
+        ),
+      );
+      const parsedMalformedCounts = parseStagedTerraReadinessArtifact(
+        malformedCounts,
+      );
+      assert.equal(parsedMalformedCounts.ok, false);
+      assert.equal(
+        JSON.stringify(parsedMalformedCounts).includes("provider-secret-canary"),
+        false,
+      );
+    }
 
     assert.throws(
       () =>
@@ -2028,7 +2083,7 @@ describe("PR-9B staged Terra readiness boundary", () => {
     );
   });
 
-  it("rejects malformed accounting and halts on diagnostic conservation drift", () => {
+  it("rejects malformed accounting and diagnostic conservation drift", () => {
     const value = matrix();
     const retiredDeferral = runs(value)[0];
     retiredDeferral.diagnostics.research.deferredMissingTitle = 1;
@@ -2067,10 +2122,10 @@ describe("PR-9B staged Terra readiness boundary", () => {
       approvedCommitSha: commitSha,
       now: "2026-08-29",
     });
-    assert.equal(inconsistentResult.decision, "halt");
+    assert.equal(inconsistentResult.decision, "invalid");
     assert.ok(
-      inconsistentResult.haltFailures.includes(
-        "research_conservation:broad-shop-vac:1",
+      inconsistentResult.structuralFailures.some(
+        (item) => item.includes("diagnostics.research.conservation"),
       ),
     );
 
