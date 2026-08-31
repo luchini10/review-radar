@@ -11,6 +11,8 @@ export const STAGED_TERRA_READINESS_ARTIFACT_VERSION =
   "staged-terra-readiness-artifact-v2";
 export const STAGED_TERRA_READINESS_PRODUCER_VERSION =
   "staged-terra-readiness-producer-v2";
+export const STAGED_TERRA_READINESS_REVIEW_PACKET_VERSION =
+  "staged-terra-readiness-review-packet-v1";
 
 const ENVELOPE_KEYS = ["schemaVersion", "payload", "payloadSha256"];
 const PAYLOAD_KEYS = [
@@ -2447,6 +2449,28 @@ export function parseStagedTerraReadinessArtifact(raw) {
     ok: true,
     artifactSha256: sha256(bytes),
     payload: envelope.payload,
+  };
+}
+
+export function buildStagedTerraReadinessReviewPacket(raw) {
+  const parsed = parseStagedTerraReadinessArtifact(raw);
+  requireCondition(parsed.ok === true, "reviewPacket.artifact");
+  const payload = parsed.payload;
+  return {
+    schemaVersion: STAGED_TERRA_READINESS_REVIEW_PACKET_VERSION,
+    artifactSha256: parsed.artifactSha256,
+    matrixVersion: payload.matrixVersion,
+    matrixSha256: payload.matrixSha256,
+    commitSha: payload.commitSha,
+    caseId: payload.caseId,
+    run: payload.run,
+    runId: payload.runId,
+    capturedAt: payload.capturedAt,
+    terminal: structuredClone(payload.terminal),
+    finalAdvice: structuredClone(payload.finalAdvice),
+    cards: structuredClone(payload.cards),
+    sources: structuredClone(payload.sources),
+    registeredProductTrace: structuredClone(payload.registeredProductTrace),
   };
 }
 

@@ -23,6 +23,7 @@ import {
 import { materializeStagedTerraEvidencePackage } from "../lib/stagedTerraVerifier.ts";
 import {
   buildStagedTerraReadinessArtifact,
+  buildStagedTerraReadinessReviewPacket,
   parseStagedTerraReadinessArtifact,
   stagedTerraReadinessAccounting,
 } from "./staged-terra-readiness-artifact.mjs";
@@ -437,6 +438,7 @@ async function main() {
       .update(result.artifact)
       .digest("hex");
     const terminalFailed = result.terminalCode !== null;
+    const reviewPacket = buildStagedTerraReadinessReviewPacket(result.artifact);
     process.stdout.write(
       `${JSON.stringify({
         status:
@@ -453,6 +455,7 @@ async function main() {
         conservativeUsd: accounting.conservativeUsd,
         ceilingFailures,
         artifactSha256,
+        reviewPacket,
         outputDirectory: plan.outputDirectory,
         outputRelativePath: plan.outputRelativePath,
         appendOnlyCheckpointsRetained: true,

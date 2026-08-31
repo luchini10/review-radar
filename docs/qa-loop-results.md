@@ -16526,3 +16526,10 @@ canonical
 **Verification:** corrected launcher/runner/readiness wall 70/70; full unit
 suite exit 0; typecheck exit 0; lint exit 0 with zero errors and the same three
 pre-existing warnings. Exact commit review remains required before live use.
+
+**Manual-review boundary correction:** ordinary tools cannot read the protected
+artifact directory, while the original runner terminal exposed only counters
+and an artifact hash. The runner now emits a versioned review packet built from
+the successfully parsed public artifact projection. Exact tests bind its key
+set and prove omission of route trace, diagnostics, counters, usage ledgers,
+attempt nonce, and private/raw material. Corrected four-suite wall: 71/71.

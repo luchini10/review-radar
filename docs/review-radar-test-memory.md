@@ -174,6 +174,11 @@
   `{ok, manifestSha256, entries, failures}`. Do not add derived plan fields such
   as `status` to trust-surface mocks. A nominal child-exit test using that exact
   shape is the regression for the 2026-08-30 pre-credential real-launch stop.
+- Manual review must not require ordinary access to the protected live fixture
+  tree. The reviewed runner terminal emits only the authenticated public
+  review-packet projection: artifact/run binding, terminal, advice, cards,
+  public sources, and registered-product lineage. Keep raw/private diagnostics,
+  counters, usage, nonce, responses, and credentials out of that packet.
 - Reject inherited Node/debug/loader/TLS controls case-insensitively before
   credential access and immediately before spawn: `NODE_DEBUG`,
   `NODE_DEBUG_NATIVE`, `NODE_OPTIONS`, `NODE_PATH`, `NODE_EXTRA_CA_CERTS`,

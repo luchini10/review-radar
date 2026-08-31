@@ -22,6 +22,10 @@ import {
   stagedTerraRegisteredProducts,
 } from "../scripts/staged-terra-readiness-trace.mjs";
 import { buildStagedTerraReadinessRunPlan } from "../scripts/staged-terra-readiness-runner.mjs";
+import {
+  buildStagedTerraReadinessReviewPacket,
+  STAGED_TERRA_READINESS_REVIEW_PACKET_VERSION,
+} from "../scripts/staged-terra-readiness-artifact.mjs";
 
 const fixturePath = new URL(
   "./fixtures/staged-terra-readiness-matrix-v3.json",
@@ -999,6 +1003,43 @@ describe("PR-9B staged Terra readiness boundary", () => {
         firstLossStage: "displayed",
       },
     );
+  });
+
+  it("emits a bounded public review packet without private runtime material", () => {
+    const value = matrix();
+    const raw = artifacts(value)[0];
+    const parsed = parseStagedTerraReadinessArtifact(raw);
+    assert.equal(parsed.ok, true);
+    const packet = buildStagedTerraReadinessReviewPacket(raw);
+    assert.deepEqual(Object.keys(packet), [
+      "schemaVersion",
+      "artifactSha256",
+      "matrixVersion",
+      "matrixSha256",
+      "commitSha",
+      "caseId",
+      "run",
+      "runId",
+      "capturedAt",
+      "terminal",
+      "finalAdvice",
+      "cards",
+      "sources",
+      "registeredProductTrace",
+    ]);
+    assert.equal(
+      packet.schemaVersion,
+      STAGED_TERRA_READINESS_REVIEW_PACKET_VERSION,
+    );
+    assert.equal(packet.artifactSha256, parsed.artifactSha256);
+    assert.deepEqual(packet.cards, parsed.payload.cards);
+    assert.deepEqual(packet.sources, parsed.payload.sources);
+    assert.deepEqual(packet.finalAdvice, parsed.payload.finalAdvice);
+    assert.equal("routeTrace" in packet, false);
+    assert.equal("diagnostics" in packet, false);
+    assert.equal("counters" in packet, false);
+    assert.equal("usageLedgers" in packet, false);
+    assert.equal("attemptNonce" in packet, false);
   });
 
   it("never machine-authorizes even after a complete exact manual review", () => {

@@ -47,7 +47,11 @@ unmeasured until the six fresh runs complete.
   process environment, and identical post-credential reauthentication.
 - Fail-first with the real authenticator shape: 4/7 terminal tests passed and
   3/7 failed at `repository_or_trust_rejected`.
-- Corrected protocol/launcher/runner wall: 70/70.
+- The runner terminal includes a versioned bounded public review packet so
+  card, variant, source, advice, and ranking audits do not require ordinary
+  access to protected artifact files. Private diagnostics, counters, usage,
+  nonce, raw responses, and credentials are excluded.
+- Corrected protocol/launcher/runner wall after this addition: 71/71.
 - Full unit suite: pass; typecheck: pass; lint: zero errors and three
   pre-existing warnings.
 

@@ -1069,6 +1069,8 @@ describe("PR-9B staged Terra readiness runner", () => {
     );
     const completeSource = `${source}\n${ioSource}`;
     assert.match(source, /buildStagedTerraReadinessArtifact/);
+    assert.match(source, /buildStagedTerraReadinessReviewPacket/);
+    assert.match(source, /reviewPacket/);
     assert.match(source, /maxRetries:\s*0/);
     assert.match(ioSource, /ls-tree/);
     assert.match(ioSource, /hash-object/);

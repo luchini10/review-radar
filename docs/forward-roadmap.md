@@ -4179,6 +4179,14 @@ truth, sources, requests, cases, order, bars, and ceilings while minting six
 fresh `pr9c-*` run IDs and nonces. V1 and v2 remain immutable historical
 records. Tests require v3 to be identity-disjoint from both retired matrices.
 
+The runner also emits one bounded `staged-terra-readiness-review-packet-v1`
+inside its authenticated terminal line. It is projected only from the already
+validated public artifact fields needed for manual adjudication: exact run and
+artifact binding, terminal, final advice, cards, public sources, and registered
+product lineage. It excludes nonce, route trace, diagnostics, counters, usage,
+raw response, private candidates, and credentials. This permits manual review
+without ordinary access to the protected artifact tree.
+
 - matrix file SHA-256:
   `d738c4493ababe10c5853f138862d71afeabc5d2502d8e0f2c0f13a1ad8cbd7a`;
 - matrix canonical SHA-256:
