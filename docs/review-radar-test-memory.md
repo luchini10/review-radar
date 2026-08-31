@@ -3922,3 +3922,23 @@ a known conservative undercount.
   candidate-local, bounded, independently source-backed, and default-off until
   separately reviewed and measured. Future live work needs fresh authority,
   IDs, nonces, paths, and ceilings.
+
+## PR-9J stable local-development routing contract (2026-08-31)
+
+- `npm run dev` is the ordinary shopper-testing command and must force both
+  Direct-Terra and staged-Terra client/server flags off in the child process.
+  Process values intentionally outrank stale `.env.local` experiment flags.
+- Preserve every unrelated environment entry. Never inspect, print, rewrite,
+  or copy `.env.local`, credentials, or secrets to enforce stable mode.
+- Preserve user-supplied Next CLI arguments and invoke the resolved Next CLI
+  directly without a shell. Standard Ctrl+C/process exit semantics and inherited
+  console I/O remain available.
+- Experimental flag-controlled development must use the explicit
+  `npm run dev:experimental` command. That command is not evidence that Direct
+  Terra or staged Terra is safe, promoted, or production-ready.
+- Do not convert a failed experimental request into an automatic stable retry,
+  replacement, or fallback. Stable selection occurs before a shopper request;
+  trust and paid-work boundaries remain unchanged.
+- A zero-spend runtime check may call the disabled experimental route only far
+  enough to prove `invalid_config` occurs before parsing/client creation. Do not
+  submit a recommendation search merely to test launch selection.

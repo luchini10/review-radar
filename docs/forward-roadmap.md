@@ -4515,6 +4515,44 @@ identity, relationship, requirement, evidence, commerce, privacy, and safety
 gates. Prove recovery and non-borrowing offline first; any later live cohort
 requires a fresh protocol, identities, and ceilings.
 
+### PR-9J — keep ordinary localhost testing on the stable pipeline
+
+**Status:** implemented in the local working tree on base
+`d2c5f1488b1d99cc8dfcf80893387d56c2dd1dbf`; uncommitted pending separate
+commit authority.
+
+A user localhost search for `power washer` with a `$1,500` budget completed
+provider research but displayed the Direct-Terra `verification_failed` banner.
+The category and budget were not the cause. That exact banner proves the
+browser selected `/api/recommendations-v2`, which requires both Direct-Terra
+process flags. The standard `npm run dev` command previously invoked `next dev`
+directly, so stale local experimental flags silently replaced the stable main
+search path.
+
+This matters because OAI-T9 already rejected Direct-Terra V3 as
+`single_call_architecture_no_go`: only one of 12 final acceptance searches
+completed, six returned 502 route failures, and five remained pending at the
+retrieve ceiling. Direct Terra was deliberately default-off. Its public error
+also maps every completed-report contract failure to a citation-specific
+message, obscuring candidate-slate, rank, requirement, price-ledger, wrapper,
+and citation branches.
+
+PR-9J makes `npm run dev` invoke a small cross-platform launcher that passes
+the four Direct-Terra and staged-Terra flags as `off`/`false` in the child
+process. Next.js documents `process.env` as higher precedence than `.env.local`,
+so ordinary development cannot be silently redirected by stale experimental
+configuration. Other environment values, including credentials, remain
+unchanged and unprinted. `npm run dev:experimental` retains deliberate access
+to the original flag-controlled `next dev` behavior.
+
+This is a local-development routing correction, not a fallback. It does not
+retry a failed search, start a second paid request, alter production build/start
+behavior, remove an experimental API, weaken a trust gate, or change committed
+feature defaults. The existing server was stopped and restarted through the
+stable launcher. A zero-spend probe returned homepage HTTP 200 and
+`invalid_config` from the experimental V2 route before request parsing or
+provider creation. No recommendation search was submitted.
+
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 
 Phase 3P/3Q source-upgrade items; RR-014/RR-015 aggregate measurement beyond

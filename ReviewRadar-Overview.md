@@ -1973,3 +1973,20 @@ No production pipeline or API contract changed in Phase 6A.
   acquisition before acceptance while preserving the independent two-source
   rule and every downstream trust gate. The evidence does not support URL-only
   identity or weaker validation.
+
+## 51. Stable localhost search selection (2026-08-31)
+
+- **Ordinary development:** `npm run dev` starts Next through a stable launcher
+  that forces Direct-Terra and staged-Terra client/server flags off at process
+  precedence. Stale local experimental configuration can no longer replace the
+  main shopper path during normal localhost testing.
+- **Explicit experiments:** `npm run dev:experimental` retains the original
+  flag-controlled Next development command. Direct Terra remains a rejected,
+  default-off experiment rather than a normal shopper pipeline.
+- **No fallback or trust change:** selection happens before submission. The
+  launcher does not retry, replace, replay, or redirect a paid request and does
+  not alter evidence, identity, requirement, price, safety, or production
+  behavior.
+- **Credential boundary:** all unrelated environment entries pass through to
+  Next unchanged. The launcher neither reads nor prints the user-owned env file
+  or its secrets.

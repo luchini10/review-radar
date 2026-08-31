@@ -16925,3 +16925,42 @@ source-title metadata, not ranking or downstream verification. The next
 generalized repair is bounded candidate-local deterministic product-page
 resolution before acceptance. URL-only trust, model-authored identity, and a
 weaker evidence threshold remain unsupported.
+
+---
+
+## PR-9J stable localhost routing correction (2026-08-31)
+
+**Observed failure:** a normal localhost `power washer` request with a `$1,500`
+budget returned the Direct-Terra citation-verification banner and no results.
+The request passed input/config admission and completed provider research; it
+was not a no-product or over-budget outcome.
+
+**Root cause:** the running browser and server had both experimental
+Direct-Terra flags active. Standard `npm run dev` delegated directly to Next,
+which honors process/local environment flags. This routed the main UI into the
+known-no-go V3 single-call architecture. OAI-T9's frozen live acceptance had
+already produced only one completion from 12 attempts and had explicitly left
+Direct Terra off. The public banner further collapsed every `invalid_report`
+branch into a citation-specific message.
+
+**Correction:** standard development now launches Next with Direct-Terra and
+staged-Terra client/server flags forced off at process precedence. It preserves
+all other environment values without printing or editing `.env.local`.
+Explicit experimental work remains available as `npm run dev:experimental`.
+No production build/start behavior, API, evidence rule, retry policy, or trust
+gate changed.
+
+**Fail-first and verification:** the new launcher regression first failed
+because the stable launcher did not exist. Corrected focused coverage passed
+4/4, including stale-flag override, argument forwarding, actual child-process
+environment binding, non-mutation, and package-script routing. The full suite
+passed 1,728/1,728 across 234 suites; typecheck and the Next 16.3.3 production
+build passed; lint reported zero errors and three pre-existing warnings.
+`npm run dev -- --help` proved Next CLI argument forwarding.
+
+**Zero-spend runtime proof:** the prior PID was confirmed as this repository's
+Next listener on port 3000, stopped, and replaced by the stable launcher.
+Homepage GET returned 200. A bounded POST to the experimental V2 route returned
+`invalid_config` before shopper-body parsing or provider creation, proving the
+server override. No stable or experimental recommendation request was
+submitted, and there was no provider/search/page-fetch spend.

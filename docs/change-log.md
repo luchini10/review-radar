@@ -3420,3 +3420,26 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 - The live artifact authenticated with zero structural failures and attributed
   all nine candidate rejections to missing response-owned titles. The attempt
   stopped without Shopping, page fetches, retries, fallbacks, or continuation.
+
+## 2026-08-31 - Keep normal localhost searches on the stable pipeline
+
+### Changed
+
+- Changed `npm run dev` to override default-off experimental search flags in
+  the child process, preventing stale local configuration from silently routing
+  ordinary searches into Direct Terra or staged Terra.
+- Added `npm run dev:experimental` for deliberate flag-controlled research.
+- Preserved all other environment values and avoided inspecting or editing the
+  user-owned environment file.
+
+### Verified
+
+- Fail-first proved no stable launcher existed; corrected focused launcher
+  coverage passes 4/4.
+- Full tests pass 1,728/1,728 across 234 suites; typecheck and production build
+  pass; lint has zero errors and three pre-existing warnings.
+- The normal command forwards Next CLI options and launches the resolved CLI
+  without a shell.
+- The restarted localhost returned HTTP 200 while the experimental V2 route
+  failed at `invalid_config` before provider creation. No recommendation search
+  or paid call was made.
