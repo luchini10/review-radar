@@ -12,7 +12,7 @@ export const STAGED_TERRA_READINESS_TRUST_SURFACE_ROOT_PATHS = Object.freeze([
 export const STAGED_TERRA_READINESS_TRUST_SURFACE_FIXED_PATHS = Object.freeze([
   "package.json",
   "package-lock.json",
-  "tests/fixtures/staged-terra-readiness-matrix-v6.json",
+  "tests/fixtures/staged-terra-readiness-matrix-v7.json",
 ]);
 
 function sha256(bytes) {

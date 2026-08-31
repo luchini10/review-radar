@@ -197,7 +197,7 @@ describe("OAI-T10 staged Terra route", () => {
         requestFingerprint: (
           await import("../lib/stagedTerraContract.ts")
         ).buildStagedTerraRequestFingerprint(shopper),
-        promptVersion: "staged-terra-research-prompt-v6",
+        promptVersion: "staged-terra-research-prompt-v7",
         ledger: {
           operation: "research_start",
           responseIdHash: "hash-only",
@@ -213,10 +213,12 @@ describe("OAI-T10 staged Terra route", () => {
           deferredMissingTitleCandidates: 0,
           rejectedCandidates: 0,
           rejectionCandidateCounts: {
+            missingTitle: 0,
             brandNotInTitle: 0,
             modelNotInTitle: 0,
             modelConflictInTitle: 0,
             wrongProductType: 0,
+            completeProductPageUnavailable: 0,
           },
         },
         ledger: {
@@ -300,10 +302,12 @@ describe("OAI-T10 staged Terra route", () => {
         deferredMissingTitleCandidates: 0,
         rejectedCandidates: 0,
         rejectionCandidateCounts: {
+          missingTitle: 0,
           brandNotInTitle: 0,
           modelNotInTitle: 0,
           modelConflictInTitle: 0,
           wrongProductType: 0,
+          completeProductPageUnavailable: 0,
         },
       },
     );
@@ -339,15 +343,17 @@ describe("OAI-T10 staged Terra route", () => {
       await import("../lib/stagedTerraContract.ts")
     ).buildStagedTerraRequestFingerprint(shopper);
     const zeroReasons = {
+      missingTitle: 0,
       brandNotInTitle: 0,
       modelNotInTitle: 0,
       modelConflictInTitle: 0,
       wrongProductType: 0,
+      completeProductPageUnavailable: 0,
     };
     const matchingPartial = {
       submittedCandidates: 8,
       acceptedCandidates: 7,
-      deferredMissingTitleCandidates: 3,
+      deferredMissingTitleCandidates: 0,
       rejectedCandidates: 1,
       rejectionCandidateCounts: {
         ...zeroReasons,
@@ -406,7 +412,7 @@ describe("OAI-T10 staged Terra route", () => {
           responseId: "resp_research123",
           status: "queued",
           requestFingerprint: fingerprint,
-          promptVersion: "staged-terra-research-prompt-v6",
+          promptVersion: "staged-terra-research-prompt-v7",
           ledger: { operation: "research_start" },
         }),
         pollResearch: async () => ({
@@ -571,7 +577,7 @@ describe("OAI-T10 staged Terra route", () => {
         responseId: "resp_research123",
         status: "queued",
         requestFingerprint: fingerprint,
-        promptVersion: "staged-terra-research-prompt-v6",
+        promptVersion: "staged-terra-research-prompt-v7",
         ledger: { operation: "research_start" },
       }),
       pollResearch: async () => ({
@@ -749,7 +755,7 @@ describe("OAI-T10 staged Terra route", () => {
           responseId: "resp_research123",
           status: "queued",
           requestFingerprint: fingerprint,
-          promptVersion: "staged-terra-research-prompt-v6",
+          promptVersion: "staged-terra-research-prompt-v7",
           ledger: { operation: "research_start" },
         }),
         pollResearch: async () => ({
@@ -885,6 +891,16 @@ describe("OAI-T10 staged Terra route", () => {
       {
         validationReason: "research_candidate_invalid",
         expectedReason: "research_candidate_invalid",
+        candidateValidationReason: "candidate_sources",
+        expectedCandidateReason: "candidate_sources",
+        candidateSourceValidationReason:
+          "candidate_source_product_page_unproven",
+        expectedCandidateSourceReason:
+          "candidate_source_product_page_unproven",
+      },
+      {
+        validationReason: "research_candidate_invalid",
+        expectedReason: "research_candidate_invalid",
         candidateValidationReason: "private_candidate_field",
         expectedCandidateReason: undefined,
         candidateSourceValidationReason: "candidate_source_unregistered",
@@ -921,7 +937,7 @@ describe("OAI-T10 staged Terra route", () => {
           responseId: "resp_research123",
           status: "queued",
           requestFingerprint: fingerprint,
-          promptVersion: "staged-terra-research-prompt-v6",
+          promptVersion: "staged-terra-research-prompt-v7",
           ledger: { operation: "research_start" },
         }),
         pollResearch: async () => ({
@@ -1006,10 +1022,12 @@ describe("OAI-T10 staged Terra route", () => {
       await import("../lib/stagedTerraContract.ts")
     ).buildStagedTerraRequestFingerprint(shopper);
     const zeroReasons = {
+      missingTitle: 0,
       brandNotInTitle: 0,
       modelNotInTitle: 0,
       modelConflictInTitle: 0,
       wrongProductType: 0,
+      completeProductPageUnavailable: 0,
     };
     const valid = {
       submittedCandidates: 8,
@@ -1083,7 +1101,7 @@ describe("OAI-T10 staged Terra route", () => {
           responseId: "resp_research123",
           status: "queued",
           requestFingerprint: fingerprint,
-          promptVersion: "staged-terra-research-prompt-v6",
+          promptVersion: "staged-terra-research-prompt-v7",
           ledger: { operation: "research_start" },
         }),
         pollResearch: async () => ({
@@ -1139,7 +1157,7 @@ describe("OAI-T10 staged Terra route", () => {
         responseId: "resp_research123",
         status: "queued",
         requestFingerprint: fingerprint,
-        promptVersion: "staged-terra-research-prompt-v6",
+        promptVersion: "staged-terra-research-prompt-v7",
         ledger: { operation: "research_start" },
       }),
       pollResearch: async () => ({
@@ -1249,7 +1267,7 @@ describe("PR-023 staged Terra request admission", () => {
         responseId: "resp_background123",
         status: "queued",
         requestFingerprint: buildStagedTerraRequestFingerprint(shopperRequest),
-        promptVersion: "staged-terra-research-prompt-v6",
+        promptVersion: "staged-terra-research-prompt-v7",
         ledger: { operation: "research_start" },
       }),
       cancelResearch: async () => ({
@@ -1299,7 +1317,7 @@ describe("PR-023 staged Terra request admission", () => {
         responseId: "resp_token_failure123",
         status: "queued",
         requestFingerprint: buildStagedTerraRequestFingerprint(shopperRequest),
-        promptVersion: "staged-terra-research-prompt-v6",
+        promptVersion: "staged-terra-research-prompt-v7",
         ledger: { operation: "research_start", status: "queued" },
       }),
       cancelResearch: async () => {

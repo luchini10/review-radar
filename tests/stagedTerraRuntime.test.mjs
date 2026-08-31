@@ -194,7 +194,7 @@ describe("OAI-T10 staged Terra runtime", () => {
     assert.equal(polled.researchOutput.candidates[0].model, "V100");
   });
 
-  it("continues URL-only consulted sources to the bounded fetch stage", async () => {
+  it("rejects URL-only consulted sources before the bounded fetch stage", async () => {
     const response = completedResearchResponse();
     for (const source of response.output[0].action.sources) delete source.title;
 
@@ -205,30 +205,20 @@ describe("OAI-T10 staged Terra runtime", () => {
       shopperRequest: shopper,
     });
 
-    assert.equal(polled.ok, true);
-    assert.equal(polled.ok && polled.state, "completed");
-    assert.equal(polled.ok && polled.researchOutput.candidates.length, 8);
+    assert.equal(polled.ok, false);
+    assert.equal(polled.validationReason, "research_candidate_invalid");
+    assert.equal(polled.candidateValidationReason, "candidate_sources");
     assert.equal(
-      polled.identitySourceFilter.deferredMissingTitleCandidates,
+      polled.candidateSourceValidationReason,
+      "candidate_source_identity_unproven",
+    );
+    assert.equal(polled.identitySourceFilter.acceptedCandidates, 0);
+    assert.equal(polled.identitySourceFilter.deferredMissingTitleCandidates, 0);
+    assert.equal(polled.identitySourceFilter.rejectedCandidates, 8);
+    assert.equal(
+      polled.identitySourceFilter.rejectionCandidateCounts.missingTitle,
       8,
     );
-    assert.equal(polled.identitySourceFilter.rejectedCandidates, 0);
-
-    const fetchedUrls = [];
-    const collected = await collectStagedTerraVerificationInputs({
-      researchOutput: polled.researchOutput,
-      fetchSource: async (url) => {
-        fetchedUrls.push(url);
-        return { ok: false, reason: "offline_test_failure" };
-      },
-    });
-    assert.equal(collected.diagnostics.candidateCount, 8);
-    assert.equal(collected.diagnostics.sourceFetchAttempts, 16);
-    const expectedUrls = polled.researchOutput.candidates.flatMap(
-      (candidate) => candidate.sourceUrls,
-    );
-    assert.equal(new Set(fetchedUrls).size, 16);
-    assert.deepEqual(fetchedUrls.toSorted(), expectedUrls.toSorted());
   });
 
   it("accepts a later exact response-owned URL variant without canonical matching", async () => {
@@ -324,10 +314,12 @@ describe("OAI-T10 staged Terra runtime", () => {
       deferredMissingTitleCandidates: 0,
       rejectedCandidates: 1,
       rejectionCandidateCounts: {
+        missingTitle: 0,
         brandNotInTitle: 0,
         modelNotInTitle: 1,
         modelConflictInTitle: 0,
         wrongProductType: 0,
+        completeProductPageUnavailable: 0,
       },
     });
     assert.equal(JSON.stringify(polled).includes("buying guide"), false);
@@ -439,10 +431,14 @@ describe("OAI-T10 staged Terra runtime", () => {
     });
 
     assert.equal(polled.ok, true);
-    assert.equal(polled.ok && polled.researchOutput.candidates.length, 8);
-    assert.equal(polled.identitySourceFilter.acceptedCandidates, 8);
-    assert.equal(polled.identitySourceFilter.deferredMissingTitleCandidates, 1);
-    assert.equal(polled.identitySourceFilter.rejectedCandidates, 0);
+    assert.equal(polled.ok && polled.researchOutput.candidates.length, 7);
+    assert.equal(polled.identitySourceFilter.acceptedCandidates, 7);
+    assert.equal(polled.identitySourceFilter.deferredMissingTitleCandidates, 0);
+    assert.equal(polled.identitySourceFilter.rejectedCandidates, 1);
+    assert.equal(
+      polled.identitySourceFilter.rejectionCandidateCounts.missingTitle,
+      1,
+    );
   });
 
   it("propagates only the bounded candidate field group for invalid research", async () => {

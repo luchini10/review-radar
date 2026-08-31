@@ -267,7 +267,7 @@ function sanitizeIdentitySourceFilter(
     rejectedCandidates === null ||
     !rejectionCandidateCounts ||
     acceptedCandidates + rejectedCandidates !== submittedCandidates ||
-    deferredMissingTitleCandidates > acceptedCandidates ||
+    deferredMissingTitleCandidates !== 0 ||
     (rejectedCandidates === 0 && rejectionCountTotal !== 0) ||
     (rejectedCandidates > 0 &&
       (rejectionCountTotal === null ||
@@ -279,8 +279,10 @@ function sanitizeIdentitySourceFilter(
     (context.outcome === "failed" &&
       (context.validationReason !== "research_candidate_invalid" ||
         context.candidateValidationReason !== "candidate_sources" ||
-        context.candidateSourceValidationReason !==
-          "candidate_source_identity_unproven" ||
+        ![
+          "candidate_source_identity_unproven",
+          "candidate_source_product_page_unproven",
+        ].includes(context.candidateSourceValidationReason ?? "") ||
         acceptedCandidates !== 0 ||
         deferredMissingTitleCandidates !== 0 ||
         rejectedCandidates !== submittedCandidates))

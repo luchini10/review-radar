@@ -10,13 +10,14 @@ import {
   type DirectTerraAssetDecision,
   type DirectTerraAssetTargetCoherenceFailureReason,
 } from "./directTerraAssetVerifier.ts";
+import { directTerraRelationshipCanSupplyAsset } from "./directTerraProductRelationship.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
 import {
   canonicalizeDirectTerraCitationUrl,
   type DirectTerraSource,
 } from "./directTerraResponse.ts";
 
-export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v10";
+export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v11";
 export const STAGED_TERRA_RESEARCH_SCHEMA_VERSION =
   "staged-terra-research-v5";
 export const STAGED_TERRA_EVIDENCE_PACKAGE_VERSION =
@@ -48,6 +49,7 @@ export const STAGED_TERRA_RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS = [
   "candidate_source_unsafe",
   "candidate_source_unregistered",
   "candidate_source_identity_unproven",
+  "candidate_source_product_page_unproven",
 ] as const;
 
 export type StagedTerraResearchValidationReason =
@@ -60,10 +62,12 @@ export type StagedTerraResearchCandidateSourceValidationReason =
   (typeof STAGED_TERRA_RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS)[number];
 
 export const STAGED_TERRA_RESEARCH_IDENTITY_SOURCE_REJECTION_KEYS = [
+  "missingTitle",
   "brandNotInTitle",
   "modelNotInTitle",
   "modelConflictInTitle",
   "wrongProductType",
+  "completeProductPageUnavailable",
 ] as const;
 
 export type StagedTerraResearchIdentitySourceFilterDiagnostic = {
@@ -867,7 +871,10 @@ export function validateStagedTerraResearchIdentitySources({
   | (ValidationSuccess<StagedTerraResearchOutput> & {
       identitySourceFilter: StagedTerraResearchIdentitySourceFilterDiagnostic;
     })
-  | (ValidationFailure<"candidate_source_identity_unproven"> & {
+  | (ValidationFailure<
+      | "candidate_source_identity_unproven"
+      | "candidate_source_product_page_unproven"
+    > & {
       identitySourceFilter: StagedTerraResearchIdentitySourceFilterDiagnostic;
     }) {
   const sources = new Map(responseSources.map((source) => [source.url, source]));
@@ -877,13 +884,16 @@ export function validateStagedTerraResearchIdentitySources({
     deferredMissingTitleCandidates: 0,
     rejectedCandidates: 0,
     rejectionCandidateCounts: {
+      missingTitle: 0,
       brandNotInTitle: 0,
       modelNotInTitle: 0,
       modelConflictInTitle: 0,
       wrongProductType: 0,
+      completeProductPageUnavailable: 0,
     },
   };
   const accepted: StagedTerraResearchCandidate[] = [];
+  let identityProvenWithoutProductPage = 0;
   for (const [index, candidate] of researchOutput.candidates.entries()) {
     const verification = verifyDirectTerraAssetCandidates({
       target: {
@@ -899,18 +909,20 @@ export function validateStagedTerraResearchIdentitySources({
         productUrl: url,
       })),
     });
-    if (verification.decisions.some((decision) => decision.identityAccepted)) {
+    const hasIdentitySafeCompleteProductPage = verification.decisions.some(
+      (decision) =>
+        decision.identityAccepted &&
+        directTerraRelationshipCanSupplyAsset(decision.relationship) &&
+        decision.productUrlAccepted,
+    );
+    if (hasIdentitySafeCompleteProductPage) {
       accepted.push(candidate);
       continue;
     }
-    if (
-      verification.decisions.some(
-        (decision) => decision.identityReason === "missing_title",
-      )
-    ) {
-      accepted.push(candidate);
-      identitySourceFilter.deferredMissingTitleCandidates += 1;
-      continue;
+    if (verification.decisions.some((decision) => decision.identityAccepted)) {
+      identityProvenWithoutProductPage += 1;
+      identitySourceFilter.rejectionCandidateCounts
+        .completeProductPageUnavailable += 1;
     }
     identitySourceFilter.rejectedCandidates += 1;
     for (const reason of new Set(
@@ -924,7 +936,10 @@ export function validateStagedTerraResearchIdentitySources({
   if (accepted.length === 0) {
     return {
       ok: false,
-      reason: "candidate_source_identity_unproven",
+      reason:
+        identityProvenWithoutProductPage > 0
+          ? "candidate_source_product_page_unproven"
+          : "candidate_source_identity_unproven",
       identitySourceFilter,
     };
   }
@@ -941,7 +956,7 @@ export function validateStagedTerraResearchIdentitySources({
 function identitySourceRejectionKey(
   reason: DirectTerraAssetDecision["identityReason"],
 ): keyof StagedTerraResearchIdentitySourceFilterDiagnostic["rejectionCandidateCounts"] | null {
-  if (reason === "missing_title") return null;
+  if (reason === "missing_title") return "missingTitle";
   if (reason === "brand_not_in_title") return "brandNotInTitle";
   if (reason === "model_not_in_title") return "modelNotInTitle";
   if (reason === "model_conflict_in_title") return "modelConflictInTitle";

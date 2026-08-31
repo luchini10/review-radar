@@ -547,6 +547,10 @@ describe("staged Terra request boundaries", () => {
       research.instructions,
       /manufacturer.{0,120}retailer.{0,180}(?:URL|url) slug/is,
     );
+    assert.match(
+      research.instructions,
+      /at least one.{0,160}direct manufacturer.{0,120}retailer.{0,160}complete-product page/is,
+    );
 
     assert.equal(presentation.model, "gpt-5.6-terra");
     assert.deepEqual(presentation.reasoning, { effort: "medium" });
@@ -567,18 +571,18 @@ describe("staged Terra request boundaries", () => {
   });
 
   it("rolls the research acceptance contract identity", () => {
-    assert.equal(STAGED_TERRA_CONTRACT_VERSION, "staged-terra-contract-v10");
+    assert.equal(STAGED_TERRA_CONTRACT_VERSION, "staged-terra-contract-v11");
   });
 
   it("rolls the research prompt identity", () => {
     assert.equal(
       STAGED_TERRA_RESEARCH_PROMPT_VERSION,
-      "staged-terra-research-prompt-v6",
+      "staged-terra-research-prompt-v7",
     );
   });
 
   it("rolls the staged runtime identity", () => {
-    assert.equal(STAGED_TERRA_RUNTIME_VERSION, "staged-terra-runtime-v9");
+    assert.equal(STAGED_TERRA_RUNTIME_VERSION, "staged-terra-runtime-v10");
   });
 
   it("keeps the integrated path default-off and isolated from Direct Terra", () => {
@@ -672,10 +676,12 @@ describe("staged Terra research contract", () => {
       deferredMissingTitleCandidates: 0,
       rejectedCandidates: 0,
       rejectionCandidateCounts: {
+        missingTitle: 0,
         brandNotInTitle: 0,
         modelNotInTitle: 0,
         modelConflictInTitle: 0,
         wrongProductType: 0,
+        completeProductPageUnavailable: 0,
       },
     });
 
@@ -696,10 +702,12 @@ describe("staged Terra research contract", () => {
       deferredMissingTitleCandidates: 0,
       rejectedCandidates: 1,
       rejectionCandidateCounts: {
+        missingTitle: 0,
         brandNotInTitle: 0,
         modelNotInTitle: 1,
         modelConflictInTitle: 0,
         wrongProductType: 0,
+        completeProductPageUnavailable: 0,
       },
     });
     for (const rejectedUrl of rejectedUrls) {
@@ -707,7 +715,88 @@ describe("staged Terra research contract", () => {
     }
   });
 
-  it("defers API-contract URL-only sources to bounded page verification", () => {
+  it("requires an identity-safe complete-product page before accepting a research candidate", () => {
+    const fixture = researchFixture();
+    const candidate = fixture.value.candidates[0];
+    const editorialUrls = [
+      "https://testing.example/reviews/brand-1-m100",
+      "https://testing.example/reviews/brand-1-m100-comparison",
+    ];
+    candidate.source_urls = editorialUrls;
+    fixture.responseSourceUrls.splice(0, 2, ...editorialUrls);
+    fixture.responseSources.splice(
+      0,
+      2,
+      ...editorialUrls.map((url) => ({
+        url,
+        title: "Review: Brand 1 M100 Cordless Vacuum",
+      })),
+    );
+    const parsed = validateStagedTerraResearchOutput({
+      value: fixture.value,
+      shopperRequest: shopper,
+      responseSourceUrls: fixture.responseSourceUrls,
+    });
+    assert.equal(parsed.ok, true);
+
+    const filtered = validateStagedTerraResearchIdentitySources({
+      researchOutput: parsed.value,
+      responseSources: fixture.responseSources,
+    });
+
+    assert.equal(filtered.ok, true);
+    assert.equal(filtered.ok && filtered.value.candidates.length, 7);
+    assert.equal(filtered.identitySourceFilter.acceptedCandidates, 7);
+    assert.equal(filtered.identitySourceFilter.rejectedCandidates, 1);
+    assert.equal(
+      filtered.identitySourceFilter.rejectionCandidateCounts
+        .completeProductPageUnavailable,
+      1,
+    );
+    for (const url of editorialUrls) {
+      assert.equal(JSON.stringify(filtered).includes(url), false);
+    }
+  });
+
+  it("fails with a closed product-page reason when every identity source is editorial", () => {
+    const fixture = researchFixture();
+    for (const [candidateIndex, candidate] of fixture.value.candidates.entries()) {
+      for (const [sourceIndex, oldUrl] of candidate.source_urls.entries()) {
+        const newUrl = `https://testing.example/reviews/brand-${candidateIndex + 1}-m${candidateIndex + 1}00-${sourceIndex}`;
+        candidate.source_urls[sourceIndex] = newUrl;
+        const flatIndex = candidateIndex * 2 + sourceIndex;
+        fixture.responseSourceUrls[flatIndex] = newUrl;
+        fixture.responseSources[flatIndex] = {
+          url: newUrl,
+          title: `Review: Brand ${candidateIndex + 1} M${candidateIndex + 1}00 Cordless Vacuum`,
+        };
+        assert.notEqual(oldUrl, newUrl);
+      }
+    }
+    const parsed = validateStagedTerraResearchOutput({
+      value: fixture.value,
+      shopperRequest: shopper,
+      responseSourceUrls: fixture.responseSourceUrls,
+    });
+    assert.equal(parsed.ok, true);
+
+    const filtered = validateStagedTerraResearchIdentitySources({
+      researchOutput: parsed.value,
+      responseSources: fixture.responseSources,
+    });
+
+    assert.equal(filtered.ok, false);
+    assert.equal(filtered.reason, "candidate_source_product_page_unproven");
+    assert.equal(filtered.identitySourceFilter.acceptedCandidates, 0);
+    assert.equal(filtered.identitySourceFilter.rejectedCandidates, 8);
+    assert.equal(
+      filtered.identitySourceFilter.rejectionCandidateCounts
+        .completeProductPageUnavailable,
+      8,
+    );
+  });
+
+  it("rejects URL-only candidates before bounded page verification", () => {
     const fixture = researchFixture();
     for (const source of fixture.responseSources) delete source.title;
     const parsed = validateStagedTerraResearchOutput({
@@ -722,17 +811,21 @@ describe("staged Terra research contract", () => {
       responseSources: fixture.responseSources,
     });
 
-    assert.equal(filtered.ok, true);
-    assert.equal(filtered.ok && filtered.value.candidates.length, 8);
-    assert.equal(filtered.identitySourceFilter.acceptedCandidates, 8);
+    assert.equal(filtered.ok, false);
     assert.equal(
-      filtered.identitySourceFilter.deferredMissingTitleCandidates,
+      filtered.reason,
+      "candidate_source_identity_unproven",
+    );
+    assert.equal(filtered.identitySourceFilter.acceptedCandidates, 0);
+    assert.equal(filtered.identitySourceFilter.deferredMissingTitleCandidates, 0);
+    assert.equal(filtered.identitySourceFilter.rejectedCandidates, 8);
+    assert.equal(
+      filtered.identitySourceFilter.rejectionCandidateCounts.missingTitle,
       8,
     );
-    assert.equal(filtered.identitySourceFilter.rejectedCandidates, 0);
   });
 
-  it("defers one unresolved source even when its companion title mismatches", () => {
+  it("rejects one unresolved source when its companion title mismatches", () => {
     const fixture = researchFixture();
     delete fixture.responseSources[0].title;
     fixture.responseSources[1].title = "Brand 1 cordless vacuum buying guide";
@@ -749,21 +842,23 @@ describe("staged Terra research contract", () => {
     });
 
     assert.equal(filtered.ok, true);
-    assert.equal(filtered.ok && filtered.value.candidates.length, 8);
+    assert.equal(filtered.ok && filtered.value.candidates.length, 7);
     assert.equal(
       filtered.identitySourceFilter.deferredMissingTitleCandidates,
-      1,
+      0,
     );
-    assert.equal(filtered.identitySourceFilter.rejectedCandidates, 0);
+    assert.equal(filtered.identitySourceFilter.rejectedCandidates, 1);
     assert.deepEqual(filtered.identitySourceFilter.rejectionCandidateCounts, {
+      missingTitle: 1,
       brandNotInTitle: 0,
-      modelNotInTitle: 0,
+      modelNotInTitle: 1,
       modelConflictInTitle: 0,
       wrongProductType: 0,
+      completeProductPageUnavailable: 0,
     });
   });
 
-  it("defers missing metadata and attributes every reachable identity mismatch", () => {
+  it("rejects missing metadata and attributes every reachable identity mismatch", () => {
     const cases = [
       {
         key: "missingTitle",
@@ -817,34 +912,29 @@ describe("staged Terra research contract", () => {
         responseSources,
       });
 
-      const deferred = testCase.key === "missingTitle";
       assert.equal(filtered.ok, true, testCase.key);
       assert.equal(
         filtered.ok && filtered.value.candidates.length,
-        deferred ? 8 : 7,
+        7,
         testCase.key,
       );
       assert.deepEqual(filtered.identitySourceFilter, {
         submittedCandidates: 8,
-        acceptedCandidates: deferred ? 8 : 7,
-        deferredMissingTitleCandidates: deferred ? 1 : 0,
-        rejectedCandidates: deferred ? 0 : 1,
+        acceptedCandidates: 7,
+        deferredMissingTitleCandidates: 0,
+        rejectedCandidates: 1,
         rejectionCandidateCounts: {
+          missingTitle: testCase.key === "missingTitle" ? 1 : 0,
           brandNotInTitle: testCase.key === "brandNotInTitle" ? 1 : 0,
           modelNotInTitle: testCase.key === "modelNotInTitle" ? 1 : 0,
           modelConflictInTitle:
             testCase.key === "modelConflictInTitle" ? 1 : 0,
           wrongProductType: testCase.key === "wrongProductType" ? 1 : 0,
+          completeProductPageUnavailable: 0,
         },
       }, testCase.key);
-      if (deferred) {
-        for (const deferredUrl of rejectedUrls) {
-          assert.equal(JSON.stringify(filtered).includes(deferredUrl), true);
-        }
-      } else {
-        for (const rejectedUrl of rejectedUrls) {
-          assert.equal(JSON.stringify(filtered).includes(rejectedUrl), false);
-        }
+      for (const rejectedUrl of rejectedUrls) {
+        assert.equal(JSON.stringify(filtered).includes(rejectedUrl), false);
       }
       if (testCase.title) {
         assert.equal(JSON.stringify(filtered).includes(testCase.title), false);
@@ -1594,6 +1684,7 @@ describe("staged Terra research contract", () => {
         "candidate_source_unsafe",
         "candidate_source_unregistered",
         "candidate_source_identity_unproven",
+        "candidate_source_product_page_unproven",
       ],
     );
     assert.equal(

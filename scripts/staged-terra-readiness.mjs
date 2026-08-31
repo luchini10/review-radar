@@ -24,13 +24,13 @@ export {
 } from "./staged-terra-readiness-artifact.mjs";
 
 export const STAGED_TERRA_READINESS_MATRIX_VERSION =
-  "staged-terra-readiness-matrix-v6";
+  "staged-terra-readiness-matrix-v7";
 export const STAGED_TERRA_READINESS_CAPTURE_VERSION =
-  "staged-terra-readiness-capture-v5";
+  "staged-terra-readiness-capture-v6";
 export const STAGED_TERRA_READINESS_REVIEW_VERSION =
-  "staged-terra-readiness-review-v6";
+  "staged-terra-readiness-review-v7";
 const FROZEN_MATRIX_SHA256 =
-  "4dc91c0656c9e374b7805c0dd5cd87a1fc3fef8a012384a8c718098399f75ba8";
+  "ab0f5c831d030955c8691990725254cac780631564391316c76b0c1d9ccf3358";
 
 const MATRIX_KEYS = [
   "schemaVersion",
@@ -1892,8 +1892,8 @@ function validateRunMechanics(run, testCase, matrix, haltFailures, qualityFailur
       if (research.submitted !== research.accepted + research.rejected) {
         haltFailures.push(`research_conservation:${key}`);
       }
-      if (research.deferredMissingTitle > research.accepted) {
-        haltFailures.push(`research_deferred_exceeds_accepted:${key}`);
+      if (research.deferredMissingTitle !== 0) {
+        haltFailures.push(`research_missing_title_deferral_retired:${key}`);
       }
       if (
         verification.eligible + verification.closeMatch + verification.excluded !==

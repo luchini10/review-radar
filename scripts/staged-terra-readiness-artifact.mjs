@@ -8,9 +8,9 @@ import {
 } from "./staged-terra-readiness-trace.mjs";
 
 export const STAGED_TERRA_READINESS_ARTIFACT_VERSION =
-  "staged-terra-readiness-artifact-v5";
+  "staged-terra-readiness-artifact-v6";
 export const STAGED_TERRA_READINESS_PRODUCER_VERSION =
-  "staged-terra-readiness-producer-v5";
+  "staged-terra-readiness-producer-v6";
 export const STAGED_TERRA_READINESS_REVIEW_PACKET_VERSION =
   "staged-terra-readiness-review-packet-v1";
 
@@ -168,9 +168,9 @@ const ROUTE_TRACE_LEDGER_KEYS = [
   "sourceCount",
   "failureReason",
 ];
-const EXPECTED_RUNTIME_VERSION = "staged-terra-runtime-v9";
+const EXPECTED_RUNTIME_VERSION = "staged-terra-runtime-v10";
 const EXPECTED_MODEL = "gpt-5.6-terra";
-const EXPECTED_RESEARCH_PROMPT_VERSION = "staged-terra-research-prompt-v6";
+const EXPECTED_RESEARCH_PROMPT_VERSION = "staged-terra-research-prompt-v7";
 const EXPECTED_PRESENTATION_PROMPT_VERSION =
   "staged-terra-presentation-prompt-v1";
 const EXPECTED_PRESENTATION_VERSION = "staged-terra-presentation-v1";
@@ -255,6 +255,7 @@ const RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS = new Set([
   "candidate_source_unsafe",
   "candidate_source_unregistered",
   "candidate_source_identity_unproven",
+  "candidate_source_product_page_unproven",
 ]);
 const FAILURE_LEDGER_UNIONS = {
   research_start: {
@@ -305,10 +306,12 @@ const FAILURE_LEDGER_UNIONS = {
   },
 };
 const RESEARCH_REJECTION_COUNT_KEYS = [
+  "missingTitle",
   "brandNotInTitle",
   "modelNotInTitle",
   "modelConflictInTitle",
   "wrongProductType",
+  "completeProductPageUnavailable",
 ];
 const PRODUCER_INPUT_KEYS = [
   "matrix",
@@ -1225,6 +1228,26 @@ function validateRouteDiagnostic(value, index) {
       RESEARCH_REJECTION_COUNT_KEYS,
       `${path}.identitySourceFilter.rejectionCandidateCounts`,
     );
+    const sourceFilter = value.identitySourceFilter;
+    const rejectionCountTotal = Object.values(
+      sourceFilter.rejectionCandidateCounts,
+    ).reduce((sum, count) => sum + count, 0);
+    requireCondition(
+      sourceFilter.acceptedCandidates + sourceFilter.rejectedCandidates ===
+        sourceFilter.submittedCandidates,
+      `${path}.identitySourceFilter.conservation`,
+    );
+    requireCondition(
+      sourceFilter.deferredMissingTitleCandidates === 0,
+      `${path}.identitySourceFilter.missing_title_deferral_retired`,
+    );
+    requireCondition(
+      sourceFilter.rejectedCandidates === 0
+        ? rejectionCountTotal === 0
+        : rejectionCountTotal >= sourceFilter.rejectedCandidates &&
+            rejectionCountTotal <= 2 * sourceFilter.rejectedCandidates,
+      `${path}.identitySourceFilter.rejection_counts`,
+    );
   }
   if ("counts" in value) {
     requireCountRecord(value.counts, VERIFICATION_COUNT_KEYS, `${path}.counts`);
@@ -1267,6 +1290,10 @@ function validateRouteDiagnostic(value, index) {
       requireCondition(
         exactKeys(value, ["stage", "outcome", "ledger", "identitySourceFilter"]),
         `${path}.stage_keys`,
+      );
+      requireCondition(
+        value.identitySourceFilter.acceptedCandidates >= 1,
+        `${path}.identitySourceFilter.acceptedCandidates`,
       );
     }
   } else if (value.stage === "verification") {

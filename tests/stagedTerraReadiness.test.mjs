@@ -28,7 +28,7 @@ import {
 } from "../scripts/staged-terra-readiness-artifact.mjs";
 
 const fixturePath = new URL(
-  "./fixtures/staged-terra-readiness-matrix-v6.json",
+  "./fixtures/staged-terra-readiness-matrix-v7.json",
   import.meta.url,
 );
 const retiredFixturePaths = [
@@ -37,6 +37,7 @@ const retiredFixturePaths = [
   "./fixtures/staged-terra-readiness-matrix-v3.json",
   "./fixtures/staged-terra-readiness-matrix-v4.json",
   "./fixtures/staged-terra-readiness-matrix-v5.json",
+  "./fixtures/staged-terra-readiness-matrix-v6.json",
 ].map((relativePath) => new URL(relativePath, import.meta.url));
 const commitSha = "a".repeat(40);
 
@@ -151,7 +152,7 @@ function completedRun(value, caseId, run) {
       research: {
         submitted: accepted,
         accepted,
-        deferredMissingTitle: accepted,
+        deferredMissingTitle: 0,
         rejected: 0,
       },
       verification: {
@@ -247,11 +248,11 @@ function counts(keys, first = 0) {
 function ledger(operation, outcome, usage, durationMs = 1_000) {
   const presentation = operation === "presentation";
   return {
-    runtimeVersion: "staged-terra-runtime-v9",
+    runtimeVersion: "staged-terra-runtime-v10",
     operation,
     promptVersion: presentation
       ? "staged-terra-presentation-prompt-v1"
-      : "staged-terra-research-prompt-v6",
+      : "staged-terra-research-prompt-v7",
     modelRequested: "gpt-5.6-terra",
     modelReturned: "gpt-5.6-terra",
     status:
@@ -512,10 +513,12 @@ function artifactForRun(
                 item.diagnostics.research.deferredMissingTitle,
               rejectedCandidates: item.diagnostics.research.rejected,
               rejectionCandidateCounts: {
+                missingTitle: 0,
                 brandNotInTitle: 0,
                 modelNotInTitle: 0,
                 modelConflictInTitle: 0,
                 wrongProductType: 0,
+                completeProductPageUnavailable: 0,
               },
             },
           }
@@ -820,7 +823,7 @@ describe("PR-9B staged Terra readiness boundary", () => {
       false,
     );
     assert.ok(
-      value.attemptPlan.every((attempt) => attempt.runId.startsWith("pr9f-")),
+      value.attemptPlan.every((attempt) => attempt.runId.startsWith("pr9g-")),
     );
     assert.equal(value.qualityBars.minimumPairwiseFinalJaccard, 0.6);
     assert.equal(value.qualityBars.minimumPairwiseSharedOrderKendallTau, 0);
@@ -1910,6 +1913,13 @@ describe("PR-9B staged Terra readiness boundary", () => {
 
   it("rejects malformed accounting and halts on diagnostic conservation drift", () => {
     const value = matrix();
+    const retiredDeferral = runs(value)[0];
+    retiredDeferral.diagnostics.research.deferredMissingTitle = 1;
+    assert.throws(
+      () => artifactForRun(value, retiredDeferral),
+      /identitySourceFilter\.missing_title_deferral_retired/,
+    );
+
     const malformed = artifacts(value);
     malformed[0] = resealArtifact(malformed[0], (envelope) => {
       envelope.payload.usageLedgers[0].inputTokens = 1.5;
@@ -1927,11 +1937,16 @@ describe("PR-9B staged Terra readiness boundary", () => {
       ),
     );
 
-    const inconsistentResearch = runs(value);
-    inconsistentResearch[0].diagnostics.research.rejected = 1;
+    const inconsistentResearch = resealArtifactChain(
+      artifacts(value),
+      0,
+      (envelope) => {
+        envelope.payload.diagnostics.research.rejected = 1;
+      },
+    );
     const inconsistentResult = analyzeStagedTerraReadiness({
       matrix: value,
-      artifacts: artifacts(value, inconsistentResearch),
+      artifacts: inconsistentResearch,
       approvedCommitSha: commitSha,
       now: "2026-08-29",
     });
