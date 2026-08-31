@@ -1214,6 +1214,12 @@ function validateRouteDiagnostic(value, index) {
   );
   if ("identitySourceFilter" in value) {
     requireCondition(
+      (value.stage === "research_poll" && value.outcome === "completed") ||
+        (attributedFailure &&
+          attribution.candidateValidationReason === "candidate_sources"),
+      `${path}.identitySourceFilter.failure_context`,
+    );
+    requireCondition(
       exactKeys(value.identitySourceFilter, IDENTITY_SOURCE_FILTER_KEYS),
       `${path}.identitySourceFilter.keys`,
     );

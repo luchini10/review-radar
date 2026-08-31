@@ -3387,3 +3387,7 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
   suites; typecheck passes; lint reports zero errors and three old warnings.
 - Matrix v8 raw and canonical SHA-256 values were recomputed after exact-byte
   normalization.
+- Independent review found that unrelated failed polls could inject a
+  valid-shaped source filter. Failed-filter retention is now bound to the
+  exact invalid-research-contract/source-candidate context, with a mutation
+  regression protecting the boundary.

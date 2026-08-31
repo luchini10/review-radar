@@ -578,6 +578,7 @@ function artifactForRun(
       terminalResearch.identitySourceFilter = item.identitySourceFilter;
     }
   }
+  overrides.mutateRouteDiagnostics?.(routeDiagnostics);
   const publicSources = completed
     ? item.sources.map((source) => ({
         id: source.id,
@@ -1843,6 +1844,32 @@ describe("PR-9B staged Terra readiness boundary", () => {
       deferredMissingTitle: 0,
       rejected: 8,
     });
+
+    assert.throws(
+      () =>
+        artifactForRun(value, tracedSourceFailure, null, {
+          registeredProductTrace: {
+            schemaVersion: STAGED_TERRA_REGISTERED_PRODUCT_TRACE_VERSION,
+            products: registeredProducts.map(({ product, registry }, index) => ({
+              id: product.id,
+              registry,
+              validatedResearchCandidates: index === 0 ? 1 : 0,
+              acceptedResearchCandidates: 0,
+              verification: null,
+            })),
+          },
+          mutateRouteDiagnostics: (diagnostics) => {
+            const terminalResearch = diagnostics.at(-1);
+            terminalResearch.ledger.failureReason = "request_error";
+            terminalResearch.ledger.status = "not_started";
+            delete terminalResearch.validationReason;
+            delete terminalResearch.candidateValidationReason;
+            delete terminalResearch.candidateIdentityValidationReason;
+            delete terminalResearch.candidateSourceValidationReason;
+          },
+        }),
+      /identitySourceFilter\.failure_context/,
+    );
 
     const invalidAttribution = structuredClone(failedRun);
     invalidAttribution.researchFailureAttribution.validationReason =

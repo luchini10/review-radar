@@ -14,12 +14,15 @@ Current implementation snapshot:
 - PR-9H generalized producer and v8 protocol commit:
   `43db41fa8d6df4f15396081e9b28dd156778588d`
 - the normalized v8 matrix byte correction and this regenerated handoff are
-  local changes awaiting the final exact-head review.
+  committed in the exact protocol snapshot `34ac71b5428821b42ae693d69670a8211ac9a2d2`.
 
 PR-9G received independent High **VERIFIED**, no findings, confidence 0.999.
 Its exact v7 attempt 1 was then consumed and stopped safely as
 `artifact_build_failed`; no artifact was published and no automatic
-continuation occurred.
+continuation occurred. The first PR-9H exact review returned
+**CHANGES REQUIRED**, confidence 0.997, because an unrelated failed poll could
+inject a valid-shaped source filter. That context gap is corrected locally and
+requires exact-head re-review.
 
 ## Objective and proven bottleneck
 
@@ -62,6 +65,9 @@ measurement in the six-search envelope.
 - A regression recreates an all-rejected product-page source failure with a
   non-null registered-product trace and proves canonical build, parse, count
   retention, zero accepted products, and null verification.
+- Filter-bearing failed polls are accepted only for the exact
+  `invalid_research_contract` plus `candidate_sources` branch. A valid-shaped
+  filter injected into `request_error` now fails closed.
 - Artifact/producer v7, capture v7, review v8, and live-plan/matrix v8 bind the
   semantic correction. Public shopper output and the bounded manual-review
   packet remain unchanged.
@@ -80,6 +86,8 @@ Current verification:
 
 - fail-first: the new traced research-failure regression fails at
   `registeredProductTrace.aggregate.research` on the old producer;
+- independent-review fail-first: an unrelated `request_error` poll carrying a
+  valid-shaped filter authenticated before the context correction;
 - corrected focused staged suites: 138/138;
 - full unit suite: 1,721/1,721 across 232 suites;
 - typecheck: pass;

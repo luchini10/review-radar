@@ -16843,3 +16843,11 @@ canonical SHA-256 is
 the same three pre-existing warnings. Search 5's exact source-failure reason,
 token usage, and actual cost remain unavailable because its artifact was not
 published. One logical search remains.
+
+**Independent-review correction:** the first exact PR-9H review returned
+`CHANGES REQUIRED`, confidence 0.997. A valid-shaped source filter could be
+injected into an unrelated failed poll and projected despite the failure not
+supporting it. Fail-first authenticated the injected `request_error` case on
+the old producer. The correction now permits a filter-bearing failed poll only
+for `invalid_research_contract` with `candidate_sources`; the focused staged
+suites remain 138/138 and typecheck passes.

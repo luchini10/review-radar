@@ -4432,6 +4432,13 @@ warnings. After independent High exact-head verification, execute only v8
 attempt 1 as logical search 6 and stop for immutable analysis. The six-search
 live envelope is then exhausted.
 
+The first exact PR-9H review returned `CHANGES REQUIRED`, confidence 0.997: a
+valid-shaped identity-source filter on an unrelated failed poll such as
+`request_error` could be projected even though the failure did not support
+those counts. The correction binds a filter-bearing failure to the exact
+`invalid_research_contract` plus `candidate_sources` context and adds a
+mutation that fails on the old producer and passes only after the binding.
+
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 
 Phase 3P/3Q source-upgrade items; RR-014/RR-015 aggregate measurement beyond

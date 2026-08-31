@@ -3869,8 +3869,10 @@ a known conservative undercount.
   zero candidates and returned `research_failed`.
 - If the terminal route diagnostic contains a validated identity-source
   filter, the artifact must retain its bounded submitted, accepted, deferred,
-  and rejected aggregate counts. Do not make `diagnostics.research` null and
-  then require a non-null trace to reconcile against it.
+  and rejected aggregate counts only when the failed poll is exactly
+  `invalid_research_contract` with `candidate_sources`. Do not make
+  `diagnostics.research` null and then require a non-null trace to reconcile
+  against it, and do not accept a filter injected into another failure.
 - Completed research still requires an identity-source filter. A failed
   research terminal without one retains null research diagnostics and a null
   registered-product trace; never synthesize either surface.
