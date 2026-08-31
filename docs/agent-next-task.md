@@ -23,8 +23,11 @@ confidence 0.997. The first PR-9G exact review of `c5a31c8e` returned
 **CHANGES REQUIRED**, confidence 0.995, for two P2 gaps: the retained failure
 enum was not bound to `completeProductPageUnavailable`, and no independent
 regression isolated the product-URL conjunct. Both are corrected locally; the
-new exact final head still requires independent High re-review before a paid
-v7 attempt.
+first correction re-review confirmed the implementation but found that one
+artifact mutation test inherited `candidate_source_unregistered` instead of
+the intended identity-only enum. The fixture now sets the exact enum; the new
+exact final head still requires independent High re-review before a paid v7
+attempt.
 
 ## Objective and proven bottleneck
 

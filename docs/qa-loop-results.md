@@ -16797,3 +16797,10 @@ an exact-title complete-product source whose URL names a sibling model.
 Corrected focused suites pass 138/138; full tests pass 1,721/1,721 across 232
 suites; typecheck passes; lint reports zero errors and the same three old
 warnings. No paid or external call occurred.
+
+The first correction re-review confirmed both implementation invariants and
+the isolated URL regression, but returned `CHANGES REQUIRED`, confidence
+0.997, because the artifact-side identity-enum mutation inherited
+`candidate_source_unregistered` and therefore failed for the wrong reason. The
+fixture now explicitly sets `candidate_source_identity_unproven` before adding
+a positive product-page-unavailable count. No production logic changed.

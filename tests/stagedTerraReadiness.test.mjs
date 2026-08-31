@@ -1780,6 +1780,8 @@ describe("PR-9B staged Terra readiness boundary", () => {
       /identitySourceFilter\.failure_reason/,
     );
     const mismatchedIdentityReason = structuredClone(failedRun);
+    mismatchedIdentityReason.researchFailureAttribution.candidateSourceValidationReason =
+      "candidate_source_identity_unproven";
     mismatchedIdentityReason.identitySourceFilter = {
       ...identityFailureFilter,
       rejectionCandidateCounts: {

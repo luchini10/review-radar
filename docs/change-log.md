@@ -3361,3 +3361,6 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
   protects the URL gate.
 - Corrected focused tests pass 138/138; full tests pass 1,721/1,721. No paid
   call occurred before the correction and re-review.
+- Re-review found one artifact mutation used the wrong inherited source enum;
+  the fixture now explicitly exercises the identity-enum/product-page-count
+  contradiction rather than passing through a generic unsupported-reason path.
