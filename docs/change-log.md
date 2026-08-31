@@ -3397,3 +3397,26 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
   0/2, and no Shopping, page fetch, verifier, or ranking work ran.
 - The six-search envelope is exhausted. No flag, deployment, release, retry,
   replacement, or follow-on paid call occurred.
+
+## 2026-08-31 - Measure research source first loss
+
+### Changed
+
+- Added privacy-safe aggregate attribution for six research source-rejection
+  causes and exposed it only through authenticated readiness analysis.
+- Added a zero-network candidate-local shadow comparison for the existing
+  exact-product-page resolver, with strict uniqueness, cardinality, and
+  non-borrowing boundaries. Production routing and flags are unchanged.
+- Added a fresh v9 measurement protocol and recorded its one bounded attempt.
+
+### Verified
+
+- Independent review found duplicate-key sharing and unbounded baseline-source
+  lists in the first harness; both now fail before lookup or transport.
+- Corrected focused tests passed 142/142; full tests passed 1,724/1,724 across
+  233 suites; typecheck passed; lint had zero errors and three old warnings.
+- Independent exact-head High re-review returned `VERIFIED`, no findings,
+  confidence 0.999; the dry plan authenticated 66 trust entries.
+- The live artifact authenticated with zero structural failures and attributed
+  all nine candidate rejections to missing response-owned titles. The attempt
+  stopped without Shopping, page fetches, retries, fallbacks, or continuation.

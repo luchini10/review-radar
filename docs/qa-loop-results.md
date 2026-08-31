@@ -16877,3 +16877,51 @@ the final sample. The next evidence-supported target is candidate-local
 research source acquisition. Do not relax identity; first retain closed
 aggregate research-source first-loss counts and evaluate stricter direct-page
 selection versus deterministic targeted product-page resolution offline.
+
+---
+
+## PR-9I research-source first-loss measurement (2026-08-31)
+
+**Objective:** identify the earliest source-acquisition loss without weakening
+the product identity or evidence boundary, and test the existing candidate-
+local exact-page resolver as a zero-network shadow alternative.
+
+**Implementation:** artifact v8 and analyzer metrics retain six exact aggregate
+source-rejection counters. The shadow harness is offline-only, bounded to five
+unique targets and two response-owned sources per target, and forbids shared
+keys, ranks, unknown/non-array buckets, and cross-candidate borrowing. It has no
+production callsite.
+
+**Independent review:** the first exact review returned `CHANGES REQUIRED`
+because duplicate keys could share a baseline bucket and baseline lists were
+unbounded. Both now fail before lookup or transport. Corrected commit
+`74c39c4b262edcb19533848d6691ba6a2e47f2a9` received independent High
+`VERIFIED`, no findings, confidence 0.999.
+
+**Offline verification:** focused staged suites passed 142/142 across 11
+suites; the full suite passed 1,724/1,724 across 233 suites; typecheck passed;
+lint reported zero errors and three pre-existing warnings; `git diff --check`
+passed. The exact v9 dry plan authenticated 66 trust entries with no failures.
+
+**Live result:** one authorized v9 broad shop-vac attempt published artifact
+SHA-256
+`73e13f40b49d5131d13b3a36bf860b1bee607065c4c52cef965484bab9d9584f`.
+The reviewed analyzer returned `halt` with zero structural failures. Research
+failed at `candidate_source_identity_unproven`: all nine rejected candidates
+carried `missingTitle`; all five other first-loss counters were zero.
+Craftsman CMXEVBE17595 was discovered once but accepted zero times. RIDGID
+HD1200 and the illustrative products were absent at discovery. Broad
+must-consider recall was 0/2, so card, ranking, price, specification, and
+evidence quality were not scored.
+
+**Accounting:** one create, 38 retrieves, six hosted searches, 56,192 input
+tokens, 6,108 output tokens, 86.572 seconds, and `$0.327220`. Shopping, source
+fetches, physical HTTP, retries, replacements, fallbacks, Organic/SearchAPI,
+extra cases, cancels, ceiling failures, human page opens, and automatic
+continuation were zero.
+
+**Conclusion:** the earliest supported root cause is missing response-owned
+source-title metadata, not ranking or downstream verification. The next
+generalized repair is bounded candidate-local deterministic product-page
+resolution before acceptance. URL-only trust, model-authored identity, and a
+weaker evidence threshold remain unsupported.

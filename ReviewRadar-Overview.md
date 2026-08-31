@@ -1954,3 +1954,22 @@ No production pipeline or API contract changed in Phase 6A.
 - **Next architectural target:** improve candidate-local direct-product source
   acquisition, first with privacy-safe aggregate first-loss instrumentation.
   Do not treat the result as evidence for URL-only or model-authored identity.
+
+## 50. PR-9I research-source first-loss observability (2026-08-31)
+
+- **Private aggregate evidence:** the staged artifact retains six fixed source-
+  rejection counts without candidate identities, titles, URLs, raw provider
+  output, or provider IDs. The analyzer binds them to the authenticated run.
+- **Offline comparison:** a zero-network shadow harness compares response-owned
+  candidate-local sources with the existing exact-product-page resolver. It
+  caps targets and source buckets, requires unique coherent targets, forbids
+  cross-candidate borrowing, and has no production callsite.
+- **Measured bottleneck:** the first v9 run rejected nine candidates, all
+  because response-owned titles were missing. One must-consider product was
+  discovered but none was accepted; the other registered products were absent
+  at discovery. No downstream commerce, verification, ranking, price,
+  specification, or evidence-rendering work ran.
+- **Architecture implication:** add bounded candidate-local exact-product-page
+  acquisition before acceptance while preserving the independent two-source
+  rule and every downstream trust gate. The evidence does not support URL-only
+  identity or weaker validation.

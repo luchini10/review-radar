@@ -3896,3 +3896,29 @@ a known conservative undercount.
 - All six logical searches in the v3-v8 envelope are consumed. A future live
   measurement needs a fresh numeric envelope, identities, nonces, and output
   paths; no continuation from v8 is authorized by machine output.
+
+## PR-9I research-source first-loss and shadow-acquisition contract (2026-08-31)
+
+- Retain only `missingTitle`, `brandNotInTitle`, `modelNotInTitle`,
+  `modelConflictInTitle`, `wrongProductType`, and
+  `completeProductPageUnavailable`. Reject missing, extra, fractional,
+  negative, or non-conserving values and require one or two closed reasons per
+  rejected candidate.
+- Never expose candidate identities, titles, URLs, raw responses, prompts,
+  provider IDs, headers, or credentials through this measurement. Public and
+  manual-review output remain unchanged.
+- An offline candidate-local comparison must preflight coherent unique keys and
+  ranks before lookup; reject unknown keys, non-array buckets, and more than two
+  sources per candidate; cap the slate at five; and never borrow across
+  candidates.
+- The shadow resolver is measurement-only. It is not a production callsite,
+  does not authorize network work, and cannot make a candidate eligible or
+  weaken later trust gates.
+- V9 attempt 1 proved all nine rejected candidates carried `missingTitle`. The only
+  discovered must-consider product failed source-identity preflight and broad
+  recall remained 0/2. This is a source-acquisition failure, not evidence for
+  relaxing title or URL identity.
+- Production integration of deterministic exact-page resolution must remain
+  candidate-local, bounded, independently source-backed, and default-off until
+  separately reviewed and measured. Future live work needs fresh authority,
+  IDs, nonces, paths, and ceilings.

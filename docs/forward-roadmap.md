@@ -4460,6 +4460,61 @@ counts and compare stricter direct-product source selection with deterministic
 targeted product-page resolution offline. A future cohort requires fresh
 identities and a fresh numeric envelope.
 
+### PR-9I — source first-loss observability and candidate-local shadow comparison
+
+**Status:** executable snapshot complete and independently verified at
+`74c39c4b262edcb19533848d6691ba6a2e47f2a9`; one bounded v9 attempt executed
+and halted; no continuation is authorized.
+
+Artifact v8 and the analyzer retain only six exact aggregate rejection counts:
+`missingTitle`, `brandNotInTitle`, `modelNotInTitle`,
+`modelConflictInTitle`, `wrongProductType`, and
+`completeProductPageUnavailable`. Exact keys, non-negative integers,
+submitted/accepted/rejected conservation, zero retired deferral, and one or two
+closed reasons per rejected candidate are mandatory. Candidate identities,
+titles, URLs, response text, and provider IDs remain excluded.
+
+The zero-network shadow harness compares response-owned candidate-local sources
+with the existing deterministic exact-product resolver. It is not a production
+callsite and grants no authority. It validates coherent unique target keys and
+ranks before lookup, rejects unknown/non-array buckets, caps every bucket at
+two sources and the slate at five targets, and forbids cross-candidate
+borrowing. The first exact review found duplicate-key and unbounded-bucket
+gaps; both were corrected with fail-before-transport regressions. Exact-head
+High re-review returned `VERIFIED`, no findings, confidence 0.999.
+
+Matrix v9 preserves v8 truth, sources, requests, cases, order, bars, and safety
+ceilings with fresh `pr9i-*` IDs/nonces disjoint from v1-v8. Raw SHA-256 is
+`daf1cfb2e7762d7a3b5467e1481aeaff3530f81ea24d2e11f54cb80ef3111128`;
+canonical SHA-256 is
+`5da34085a7438dbfe9e990721e30da2162c922fd0225ee907532b3a71db6e40e`.
+The exact dry plan authenticated 66 trust entries under manifest
+`b31e52dee56a7c2f26c5a7969b7b98044bf00ad3cc9bf8d9f9cd5df81ddd33f1`.
+
+V9 attempt 1, `pr9i-01-broad-shop-vac-r1`, published artifact SHA-256
+`73e13f40b49d5131d13b3a36bf860b1bee607065c4c52cef965484bab9d9584f`
+and halted as `research_failed`. The reviewed analyzer returned `halt`, zero
+structural failures, and
+`invalid_research_contract -> research_candidate_invalid -> candidate_sources
+-> candidate_source_identity_unproven`. All nine rejected candidates carried
+`missingTitle`; every other retained first-loss count was zero. Craftsman
+CMXEVBE17595 was discovered once but failed source-identity preflight; RIDGID
+HD1200 and the illustrative products were absent at discovery. Must-consider
+recall was 0/2. No downstream product or ranking stage ran.
+
+The attempt used one create, 38 retrieves, six hosted searches, 56,192 input
+tokens, 6,108 output tokens, 86.572 seconds, and `$0.327220`. Shopping, source
+fetches, physical HTTP, retries, replacements, fallbacks, Organic/SearchAPI,
+extra cases, cancels, ceiling failures, automatic continuation, flag changes,
+deployment, and human page opens were zero.
+
+**Decision:** source acquisition is the earliest proven accuracy bottleneck.
+The next phase should integrate a bounded candidate-local exact-product-page
+resolver before acceptance while preserving the two-source requirement and all
+identity, relationship, requirement, evidence, commerce, privacy, and safety
+gates. Prove recovery and non-borrowing offline first; any later live cohort
+requires a fresh protocol, identities, and ceilings.
+
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 
 Phase 3P/3Q source-upgrade items; RR-014/RR-015 aggregate measurement beyond
