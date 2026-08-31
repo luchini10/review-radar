@@ -4243,6 +4243,50 @@ child and closed-set membership whenever it does. Both inactive-child cases
 now have fail-first regressions; focused/full/typecheck/lint results remain
 unchanged.
 
+### PR-9E — candidate-identity relation attribution and v5 chain
+
+**Status:** implemented locally at
+`e4f3a7c1b87075d9aeeba166e3acd86e2a643255`; independent exact-commit review
+pending.
+
+Fresh PR-9D attempt 1 at final reviewed head `88169407` stopped after one
+completed Terra research response as `research_candidate_invalid /
+candidate_identity`. The authenticated v4 artifact used one create, 35
+retrieves, five hosted searches, 47,666 input tokens, 7,495 output tokens,
+80.285 seconds, and `$0.311381`. Shopping, source fetches, physical HTTP,
+verification, presentation, cards, sources, retries, replacements, fallbacks,
+later cases, and human page opens remained zero. The immutable artifact SHA-256
+is `bf89f4a14ff7c8654a8ec5afbe4d22722eb6b3dd82ed1f06c505cf5c3a22b3b7`.
+
+The result proves the first loss is the candidate identity boundary, but that
+closed group still combines independent string-shape, brand, model-presence,
+model-conflict, and complete-product-type relations. PR-3D already removed the
+model-authored composite name, so another speculative prompt or identity-rule
+change would not be evidence-supported. PR-9E instead refactors the unchanged
+shared target-coherence boolean into a reason-bearing predicate and maps its
+five fixed outcomes to privacy-safe candidate identity enums. Acceptance order
+and behavior are unchanged. Contract v10 and runtime v9 roll old jobs closed;
+artifact/producer v4, capture v4, and review v5 authenticate the new optional
+child only when `candidate_identity` is active. Unknown strings, inactive
+children, impossible parent/child combinations, extra keys, and private values
+fail closed. Public shopper responses and review packets remain unchanged.
+
+Matrix v5 preserves v4 truth, sources, requests, cases, order, quality bars,
+and paid ceilings. Only its version and six fresh `pr9e-*` run IDs/nonces
+differ; tests prove disjointness from v1-v4. File SHA-256 is
+`1a850f0c34c49590e693d530db05f540be4ffd51c5ea20a0d071b6e7f10e303b` and
+canonical SHA-256 is
+`d9ad036d67872289626b76ea60264a085ba6f0de640c4260898d6d820d303fd4`.
+The clean zero-network plan authenticated 66 trust entries under manifest
+`d9b3bcd9cad8ec285c092fa1f8ce4fbfc7ff4e8c753bc98ab181d9fda8c96a03`.
+
+Fail-first produced nine intended failures across contract, runtime, artifact,
+and analyzer surfaces. Corrected focused tests pass 184/184, the full suite
+passes 1,716/1,716 across 232 suites, typecheck passes, and lint has zero errors
+with three pre-existing warnings. After independent High exact-commit review,
+one fresh v5 attempt may run. Any terminal failure stops the v5 chain; its
+authenticated four-level tuple selects the next generalized offline repair.
+
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 
 Phase 3P/3Q source-upgrade items; RR-014/RR-015 aggregate measurement beyond

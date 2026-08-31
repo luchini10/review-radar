@@ -16591,3 +16591,64 @@ children to be exactly null and active children to belong to their closed set.
 Targeted test, 71/71 focused wall, 1,713/1,713 full tests, typecheck, and lint
 with zero errors/three old warnings pass. The corrected 66-entry trust digest is
 `822b64d846c59d165bcfc507b7694c28cc9ce1f8f8632556c6e5bfda6ac4c43d`.
+
+---
+
+## 🟧 Codex — 2026-08-30 — PR-9D live result and PR-9E identity-relation attribution
+
+**Objective:** recover the earliest actionable cause of the fresh staged
+product-search failure without exposing candidate data or weakening exact
+identity, source, requirement, price, evidence, or safety gates.
+
+**PR-9D live evidence:** exact reviewed head
+`8816940786f8bac7a9fe5b8fc37a2b09e9e4adf5` executed only v4 attempt 1,
+`pr9d-01-broad-shop-vac-r1`. The launcher halted as required after terminal
+`research_failed`. The reviewed analyzer authenticated
+`research_poll / completed / invalid_research_contract /
+research_candidate_invalid / candidate_identity`; structural failures were
+zero and machine/release authority remained false.
+
+The 80.285-second attempt used one OpenAI create, 35 retrieves, five hosted
+searches, 47,666 input tokens, 7,495 output tokens, and `$0.311381`
+conservative cost. All safety cancels, Shopping attempts, source fetches,
+physical HTTP attempts, retries, replacements, fallbacks, Organic/SearchAPI,
+additional cases, cards, sources, verification, presentation, and human page
+opens were zero. Artifact SHA-256 is
+`bf89f4a14ff7c8654a8ec5afbe4d22722eb6b3dd82ed1f06c505cf5c3a22b3b7`.
+No v4 attempt 2 ran. Across the two paid attempts in this goal, cumulative
+usage is two creates, 65 retrieves, ten hosted searches, and `$0.607921`; all
+other network classes remain zero.
+
+**Root-cause boundary:** candidate identity is the earliest proven loss, but
+the old group still combined five independent invariants. Because PR-3D had
+already removed model-authored composite names, changing the prompt, search,
+ranking, or downstream verifier would be speculation. A stronger intermediate
+measurement is the smallest evidence-supported step.
+
+**PR-9E correction:** `directTerraAssetTargetCoherenceFailure()` now names
+target shape, brand relation, model relation, model conflict, or complete-
+product-type relation. The established boolean predicate delegates to it, so
+acceptance behavior and check order are unchanged. Staged parsing maps those
+outcomes to five fixed candidate-identity enums. Contract v10/runtime v9 and
+artifact/producer v4, capture v4, review v5 authenticate the conditional child;
+unknown, inactive, context-invalid, private, or extra fields fail closed. The
+public response and bounded review packet remain byte-shape unchanged.
+
+Fresh matrix v5 preserves the reviewed v4 truth, requests, cases, sources,
+quality bars, serial order, and ceilings, while six `pr9e-*` IDs/nonces are
+disjoint from v1-v4. File SHA-256 is
+`1a850f0c34c49590e693d530db05f540be4ffd51c5ea20a0d071b6e7f10e303b`;
+canonical SHA-256 is
+`d9ad036d67872289626b76ea60264a085ba6f0de640c4260898d6d820d303fd4`.
+
+**Verification:** fail-first produced nine intended failures. Corrected focused
+tests passed 184/184; full tests passed 1,716/1,716 across 232 suites;
+typecheck passed; lint reported zero errors and three pre-existing warnings;
+and the clean zero-network plan authenticated 66 entries under manifest
+`d9b3bcd9cad8ec285c092fa1f8ce4fbfc7ff4e8c753bc98ab181d9fda8c96a03`.
+
+**Interpretation:** product accuracy remains NotScored because no candidate
+passed research validation. PR-9E improves causal measurement, not product
+quality. A fresh v5 attempt is permitted only after independent High review of
+the exact final commit; any terminal failure stops that chain and selects the
+next offline repair from the authenticated relation enum.

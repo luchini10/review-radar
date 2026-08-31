@@ -3774,3 +3774,26 @@ a known conservative undercount.
   `$0.296540`, and zero downstream calls. Never guess its missing subclass.
 - A replacement chain must preserve the reviewed matrix body and use a new
   version plus six IDs/nonces disjoint from every spent v1-v3 identity.
+
+## PR-9E candidate-identity relation attribution (2026-08-30)
+
+- A live `candidate_identity` group is not sufficient evidence for a behavior
+  change when it combines target shape, brand relation, model relation, model
+  conflict, and complete-product-type relation. Preserve the shared acceptance
+  gate and first classify its existing branches with closed reasons.
+- The shared boolean target-coherence predicate must delegate to the same
+  reason-bearing function used by staged validation. Do not duplicate or
+  reorder identity rules merely for diagnostics.
+- Candidate identity attribution is active only when the top-level reason is
+  `research_candidate_invalid` and the candidate reason is
+  `candidate_identity`. It must otherwise be exactly null. Unknown strings,
+  inactive non-null values, extra keys, and private candidate/provider/source
+  values fail closed.
+- Keep this reason server-only and artifact-only. Public shopper failures and
+  bounded manual-review packets do not gain diagnostics.
+- Fresh PR-9D attempt 1 proved only
+  `research_candidate_invalid / candidate_identity`; it used one create, 35
+  retrieves, five hosted searches, and `$0.311381`, with every downstream and
+  alternate-network counter zero. Never infer which identity relation failed.
+- A replacement chain must preserve the reviewed matrix body and mint a new
+  version plus six IDs/nonces disjoint from every spent v1-v4 identity.

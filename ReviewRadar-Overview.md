@@ -171,10 +171,19 @@ model-authored composite names fail exact-key validation. The server then
 requires the exact unique normalized-requirement set and canonicalizes those
 leads into request order for every downstream consumer.
 
+The same target-coherence implementation also returns one server-only closed
+failure relation: target shape, brand relation, model relation, model conflict,
+or complete-product-type relation. The established boolean gate delegates to
+that classifier, so its acceptance behavior and check order do not diverge.
+Only a failed `candidate_identity` research result may carry the mapped staged
+reason; inactive, unknown, extra, or private values fail closed. Readiness
+artifacts may authenticate the reason, while the shopper response and bounded
+manual-review packet remain unchanged.
+
 The browser receives only an encrypted, authenticated app job token and polls
 that token in a header. Provider response IDs and diagnostics remain server-
-only. Contract v9 is part of the request fingerprint, research prompt v6 is
-bound into the token, and runtime v8 records the acceptance semantics, so older
+only. Contract v10 is part of the request fingerprint, research prompt v6 is
+bound into the token, and runtime v9 records the acceptance semantics, so older
 in-flight jobs fail closed across a deployment rollover.
 
 After research completes, the server fetches at most two candidate-owned source
@@ -336,7 +345,7 @@ The current exact-key diagnostic reports submitted, accepted/continued,
 deferred-missing-title, rejected, and four affirmative mismatch families. The
 deferred count is a subset of accepted; completion binds accepted to the actual
 continued slate, and an all-rejected failure requires zero deferred candidates.
-Contract v9, runtime v8, and future evidence v6 roll old work closed. Schema v5,
+Contract v10, runtime v9, and future evidence v6 roll old work closed. Schema v5,
 prompt v6, exact URL ownership, source cardinality, the thirty-fetch ceiling,
 downstream trust, public responses, and default-off behavior are unchanged.
 
@@ -364,7 +373,7 @@ empty array. PR-3F now limits the enclosing source list to exactly two, so every
 nonempty lead reference is unique, integer, and restricted to 0 or 1 with at
 most two indexes. Runtime independently retains those dynamic checks. PR-2J's
 contract v5, prompt v4, and runtime v4 rollover remains historical. Current
-PR-3J identities are contract v9, prompt v6, and runtime v8 with
+Current identities are contract v10, prompt v6, and runtime v9 with
 research schema v5 and future sanitized evidence v6. Existing token verification
 rejects old prompt versions and recomputes the current contract fingerprint.
 Neither correction

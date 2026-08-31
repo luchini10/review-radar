@@ -1,27 +1,26 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-08-30 by Codex for PR-9D failure attribution and replacement review.
+Updated: 2026-08-30 by Codex for PR-9E identity-relation attribution.
 This file was regenerated from current repository and execution evidence.
 
 ## Current state
 
 ReviewRadar remains **NOT READY** for production, confidence **0.995**. The
 current blocker is still the absence of a trustworthy multi-shape live product
-accuracy sample. One fresh broad `shop vac` attempt reached real Terra research
-but failed before product verification, ranking, or rendering.
+accuracy sample. Two fresh broad `shop vac` attempts reached completed Terra
+research but failed before product verification, ranking, or rendering.
 
 Current implementation snapshot:
 
-- commit: `6ef6cb7f9c019cfe1e6908892558a0959fdf412a`
-- parent: `c2bebee49e875e0648977736fef9713e72b18460`
-- tree: `03fb533b1651c7831dc2694aac427e1b010e4fe8`
-- subject: `Close inactive readiness attribution fields`
+- commit: `e4f3a7c1b87075d9aeeba166e3acd86e2a643255`
+- parent: `8816940786f8bac7a9fe5b8fc37a2b09e9e4adf5`
+- tree: `85c9edf01d711229c72c739489908177f4ffacb7`
+- subject: `Attribute staged candidate identity failures`
 
-Independent review of initial PR-9D head `c2bebee4` returned
-**CHANGES REQUIRED**, confidence **0.999**: an unknown child string passed when
-its parent enum made that field inactive. Commit `6ef6cb7f` now requires the
-inactive child to be exactly null and adds both missing regressions. PR-9D still
-requires independent exact-final-head re-review before another paid call.
+PR-9D final head `88169407` received independent exact-commit **VERIFIED**,
+no findings, confidence **0.999**. PR-9E is implemented and validated locally
+but still requires one independent High exact-final-head review before another
+paid attempt.
 
 ## Objective and proven bottleneck
 
@@ -29,57 +28,64 @@ requires independent exact-final-head re-review before another paid call.
 accuracy failures without weakening identity, evidence, price, requirement,
 network, or safety gates.
 
-**Verified facts:** fresh PR-9C attempt 1 at `5fcb38e8` used one OpenAI create,
-30 retrieves, five hosted searches, 46,656 input tokens, 6,716 output tokens,
-and `$0.296540` conservative cost. It stopped after 70.588 seconds as
-`research_failed / invalid_research_contract`; Shopping, source fetching,
-verification, presentation, cards, sources, and human page opens were all zero.
-There was no retry, replacement, fallback, Organic/SearchAPI attempt, later
-case, flag change, deployment, or release.
+**Verified facts:** v4 attempt 1 at `88169407` used one OpenAI create, 35
+retrieves, five hosted searches, 47,666 input tokens, 7,495 output tokens,
+80.285 seconds, and `$0.311381`. It stopped as
+`research_candidate_invalid / candidate_identity`; Shopping, source fetching,
+verification, presentation, cards, sources, human page opens, retries,
+replacements, fallbacks, and later cases were zero. Artifact SHA-256 is
+`bf89f4a14ff7c8654a8ec5afbe4d22722eb6b3dd82ed1f06c505cf5c3a22b3b7`.
+The v4 chain stopped and attempt 2 did not run.
 
-The server diagnostic already carried closed validation enums, but artifact-v2
-discarded them while retaining only `invalid_research_contract`. Therefore the
-spent evidence cannot distinguish shape, source-registry, candidate-field, or
-duplicate-identity failure. The earliest proven local defect is this loss of
-failure attribution; changing discovery or ranking before recovering the exact
-subclass would be speculation.
+Across the two paid attempts in this goal, cumulative usage is two creates, 65
+retrieves, ten hosted searches, and `$0.607921`; every other network class is
+zero.
 
-**Uncertainty:** leader recall, wrong products/variants, rankings, prices/specs,
-source support, repeatability, and downstream first-loss lineage remain
-unmeasured because the first run did not pass research validation.
+The earliest proven loss is candidate identity validation. That group still
+combines five independent relations, and PR-3D already removed the earlier
+model-authored composite-name mismatch. A prompt, ranking, search-breadth, or
+downstream verifier change before identifying the current relation would be
+speculative.
 
-## PR-9D correction
+**Uncertainty:** the exact failing identity relation remains unknown. Leader
+recall, wrong products/variants, rankings, prices/specs, source support,
+repeatability, and downstream first-loss lineage remain unmeasured because no
+fresh run passed research validation.
 
-- Artifact/producer/capture/review contracts roll forward one version.
-- A failed research trace persists only three conditional closed enums:
-  validation reason, candidate-field group, and candidate-source reason.
-- The artifact builder rejects unknown strings, impossible parent/child enum
-  combinations, reasons on unrelated stages, and all raw/private fields.
-- The analyzer exposes those authenticated enums in `metrics.routeFailures`.
-- No public shopper response or bounded review packet gains diagnostic data.
-- Matrix v4 preserves v3 truth, sources, shopper requests, cases, serial order,
-  quality bars, and paid ceilings. Only its version and six `pr9d-*` run
-  IDs/nonces differ. Tests prove no identity reuse from v1, v2, or v3.
+## PR-9E implementation
+
+- The shared target-coherence code now returns one fixed reason: target shape,
+  brand relation, model relation, model conflict, or complete-product-type
+  relation.
+- The established boolean predicate delegates to that function, preserving
+  check order and acceptance behavior.
+- Staged validation maps those branches to five privacy-safe closed enums.
+  Contract v10/runtime v9 roll older jobs closed.
+- Artifact/producer v4, capture v4, and review v5 authenticate the conditional
+  child. Unknown strings, inactive children, impossible parent/child
+  combinations, extra keys, and private values fail closed.
+- Public shopper responses and bounded manual-review packets remain unchanged.
+- Matrix v5 preserves v4 truth, sources, requests, cases, order, bars, and paid
+  ceilings. Its six `pr9e-*` IDs/nonces are disjoint from v1-v4.
 
 Validation:
 
-- targeted fail-first: the analyzer omitted all three expected enums;
-- independent-review fail-first: an unknown inactive candidate child was
-  accepted instead of rejected;
-- corrected four-suite launcher/runner/analyzer wall: 71/71;
-- full unit suite: 1,713/1,713 across 232 suites;
+- fail-first: nine intended failures across contract, runtime, artifact, and
+  analyzer surfaces;
+- corrected focused wall: 184/184;
+- full unit suite: 1,716/1,716 across 232 suites;
 - typecheck: pass;
 - lint: zero errors and three pre-existing warnings;
 - zero-network dry run: authenticated 66 entries, no failures.
 
-Frozen v4 identities:
+Frozen v5 identities:
 
 - matrix file SHA-256:
-  `23fd7b495ec261a1508624aca17a212206241e27a4d8f93a283a5f19ddbeb960`
+  `1a850f0c34c49590e693d530db05f540be4ffd51c5ea20a0d071b6e7f10e303b`
 - matrix canonical SHA-256:
-  `7bc4b8cc578c905b8789456cd4eb017bec7039df9c65575f8056a0fe75d94afc`
+  `d9ad036d67872289626b76ea60264a085ba6f0de640c4260898d6d820d303fd4`
 - trust manifest SHA-256:
-  `822b64d846c59d165bcfc507b7694c28cc9ce1f8f8632556c6e5bfda6ac4c43d`
+  `d9b3bcd9cad8ec285c092fa1f8ce4fbfc7ff4e8c753bc98ab181d9fda8c96a03`
 
 ## Authority and next action
 
@@ -91,12 +97,12 @@ Shopping attempts, 180 source fetches, 540 physical HTTP attempts, and at most
 60 human public-source opens. Retries, replacements, fallbacks,
 Organic/SearchAPI, extra cases, and automatic continuation remain zero.
 
-Next: independently review the exact final clean head at High reasoning. If and
-only if it is verified, execute v4 attempt 1. Analyze its immutable artifact
-through the reviewed analyzer. A failure stops the chain and selects the exact
-generalized offline repair target; a safe public result requires bound manual
-product, variant, source, requirement, price, specification, advice, and rank
-review before attempt 2.
+Next: independently review the exact final clean PR-9E head at High reasoning.
+If and only if it is verified, execute v5 attempt 1. Analyze its immutable
+artifact through the reviewed analyzer. A failure stops the chain and selects
+the exact generalized offline repair target; a safe public result requires
+bound manual product, variant, source, requirement, price, specification,
+advice, and rank review before attempt 2.
 
 Push, deployment, release, and flag promotion remain unnecessary.
 
@@ -139,10 +145,10 @@ required credentials.
 
 | Evidence | Location |
 | --- | --- |
-| Protocol decision | `docs/forward-roadmap.md`, PR-9B through PR-9D |
-| Canonical execution result | latest PR-9D entry in `docs/qa-loop-results.md` |
+| Protocol decision | `docs/forward-roadmap.md`, PR-9B through PR-9E |
+| Canonical execution result | latest PR-9E entry in `docs/qa-loop-results.md` |
 | Durable trust contract | `docs/review-radar-test-memory.md` |
 | Readiness verdict | `docs/production-readiness-report.md` |
 | Issue arithmetic | `docs/RR-Issues-Report.md` |
 
-PR-9D improves diagnostic integrity; it does not itself prove product accuracy.
+PR-9E improves diagnostic integrity; it does not itself prove product accuracy.

@@ -11,6 +11,29 @@ Update this file after:
 
 ## 2026-08-30
 
+### Codex - Attribute staged candidate identity failures precisely
+
+#### Changed
+
+- Split the staged research `candidate_identity` failure into five closed,
+  privacy-safe relation reasons while preserving the existing exact-product
+  acceptance predicate and check order.
+- Rolled the authenticated readiness artifact and analyzer contracts forward;
+  unknown or context-inactive child reasons fail closed and never enter the
+  public shopper response or manual-review packet.
+- Added a fresh six-identity v5 readiness chain whose reviewed truth, requests,
+  cases, sources, quality bars, and paid ceilings remain unchanged.
+
+#### Verified
+
+- A fresh one-run v4 measurement stopped before downstream work and proved the
+  earliest loss was `research_candidate_invalid / candidate_identity`; it did
+  not establish the exact relation or any product-quality result.
+- Fail-first produced nine intended failures. Focused tests passed 184/184;
+  full tests passed 1,716/1,716 across 232 suites; typecheck passed; lint had
+  zero errors and three pre-existing warnings; and the zero-network plan
+  authenticated all 66 trust entries.
+
 ### Codex - Resolve RR-109 dependency advisories
 
 #### Changed
