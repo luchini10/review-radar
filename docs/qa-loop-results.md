@@ -16851,3 +16851,29 @@ supporting it. Fail-first authenticated the injected `request_error` case on
 the old producer. The correction now permits a filter-bearing failed poll only
 for `invalid_research_contract` with `candidate_sources`; the focused staged
 suites remain 138/138 and typecheck passes.
+
+**Exact review and final live result:** corrected head
+`0ae3a11eb8f0601398eeea0e4c9b589685df3b17` received independent High
+`VERIFIED`, no findings, confidence 0.999. Logical search 6 published artifact
+SHA-256
+`33eb5ed7c216a16bd6c6ebe7b929eaeedb941060d07f0b77abb6b2992cec49f7`.
+The reviewed analyzer returned `halt`, zero structural failures, terminal
+`research_failed`, broad recall 0/2, and closed attribution
+`invalid_research_contract → research_candidate_invalid → candidate_sources →
+candidate_source_identity_unproven`. Every registered product first lost at
+`research_discovery_absent`; no downstream verifier or ranking stage ran.
+
+Search 6 used one create, 33 retrieves, six hosted searches, 57,313 input
+tokens, zero cached input tokens, 7,350 output tokens, 75.900 seconds, and
+`$0.349353`. Shopping, source fetches, physical HTTP, retries, replacements,
+fallbacks, Organic/SearchAPI, extra cases, cancels, and ceiling failures were
+zero. All six logical searches are consumed. Known cost is `$1.597756`; with
+search 5 conservatively bounded at its `$1` ceiling, total exposure is at most
+`$2.597756` against the `$6` aggregate ceiling.
+
+**Interpretation:** PR-9G reduced unsafe/wasted downstream work, and PR-9H
+made its failure measurable, but usable broad-query recall did not improve in
+the final sample. The next evidence-supported target is candidate-local
+research source acquisition. Do not relax identity; first retain closed
+aggregate research-source first-loss counts and evaluate stricter direct-page
+selection versus deterministic targeted product-page resolution offline.

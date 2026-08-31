@@ -1946,3 +1946,11 @@ No production pipeline or API contract changed in Phase 6A.
   reviewed truth and ceilings with fresh identities. All product identity,
   variant, relationship, price, requirement, evidence, ranking, and safety
   gates remain unchanged.
+- **Final measured outcome:** exact reviewed v8 execution successfully
+  retained the failed terminal, proving the capture repair. The formal result
+  still halted at research source identity with 0/2 must-consider recall and
+  every registered product absent from discovery. No downstream product card,
+  rank, price, specification, or evidence outcome was available to score.
+- **Next architectural target:** improve candidate-local direct-product source
+  acquisition, first with privacy-safe aggregate first-loss instrumentation.
+  Do not treat the result as evidence for URL-only or model-authored identity.

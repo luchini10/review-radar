@@ -4439,6 +4439,27 @@ those counts. The correction binds a filter-bearing failure to the exact
 `invalid_research_contract` plus `candidate_sources` context and adds a
 mutation that fails on the old producer and passes only after the binding.
 
+The corrected exact head
+`0ae3a11eb8f0601398eeea0e4c9b589685df3b17` received independent High
+`VERIFIED`, no findings, confidence 0.999. V8 attempt 1 then consumed logical
+search 6 and published authenticated artifact
+`33eb5ed7c216a16bd6c6ebe7b929eaeedb941060d07f0b77abb6b2992cec49f7`.
+The reviewed analyzer returned `halt`, zero structural failures, broad recall
+0/2, and the closed research failure
+`candidate_source_identity_unproven`. Every registered product was absent at
+research discovery; no Shopping, source fetch, verification, presentation,
+ranking, price/specification, or evidence stage ran. The attempt used one
+create, 33 retrieves, six hosted searches, 57,313 input tokens, 7,350 output
+tokens, 75.900 seconds, and `$0.349353`; every forbidden counter and ceiling
+failure was zero.
+
+All six logical searches are consumed. The evidence supports a future
+candidate-local source-acquisition investigation, not relaxation of identity.
+Before another live window, retain closed aggregate research-source first-loss
+counts and compare stricter direct-product source selection with deterministic
+targeted product-page resolution offline. A future cohort requires fresh
+identities and a fresh numeric envelope.
+
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 
 Phase 3P/3Q source-upgrade items; RR-014/RR-015 aggregate measurement beyond

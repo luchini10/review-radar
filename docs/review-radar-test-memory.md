@@ -3887,3 +3887,12 @@ a known conservative undercount.
   rejection distribution or cost from call counters.
 - Matrix v8 preserves v7 truth, requests, cases, sources, order, bars, and paid
   ceilings, and uses six fresh IDs/nonces disjoint from v1-v7.
+- Exact v8 search 6 proved the corrected producer publishes the intended
+  failed-source artifact. Its closed cause was
+  `candidate_source_identity_unproven`, registered must-consider recall was
+  0/2, and every registered product was absent at research discovery. Preserve
+  this as evidence of an acquisition/identity bottleneck, not permission to
+  weaken source identity.
+- All six logical searches in the v3-v8 envelope are consumed. A future live
+  measurement needs a fresh numeric envelope, identities, nonces, and output
+  paths; no continuation from v8 is authorized by machine output.
