@@ -22,11 +22,11 @@ import {
 } from "./staged-terra-readiness.mjs";
 
 export const STAGED_TERRA_READINESS_LIVE_PLAN_VERSION =
-  "staged-terra-readiness-live-plan-v3";
+  "staged-terra-readiness-live-plan-v4";
 export const STAGED_TERRA_READINESS_CHECKPOINT_VERSION =
   "staged-terra-readiness-runner-checkpoint-v1";
 export const STAGED_TERRA_READINESS_MATRIX_FILE_SHA256 =
-  "d738c4493ababe10c5853f138862d71afeabc5d2502d8e0f2c0f13a1ad8cbd7a";
+  "23fd7b495ec261a1508624aca17a212206241e27a4d8f93a283a5f19ddbeb960";
 export const STAGED_TERRA_READINESS_OFFICIAL_OPENAI_BASE_URL =
   "https://api.openai.com/v1";
 

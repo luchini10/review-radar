@@ -28,12 +28,13 @@ import {
 } from "../scripts/staged-terra-readiness-artifact.mjs";
 
 const fixturePath = new URL(
-  "./fixtures/staged-terra-readiness-matrix-v3.json",
+  "./fixtures/staged-terra-readiness-matrix-v4.json",
   import.meta.url,
 );
 const retiredFixturePaths = [
   "./fixtures/staged-terra-readiness-matrix-v1.json",
   "./fixtures/staged-terra-readiness-matrix-v2.json",
+  "./fixtures/staged-terra-readiness-matrix-v3.json",
 ].map((relativePath) => new URL(relativePath, import.meta.url));
 const commitSha = "a".repeat(40);
 
@@ -562,6 +563,12 @@ function artifactForRun(
         ]
       : []),
   ];
+  if (!hasVerification && item.researchFailureAttribution) {
+    const terminalResearch = routeDiagnostics.at(-1);
+    terminalResearch.ledger.status = "completed";
+    terminalResearch.ledger.failureReason = "invalid_research_contract";
+    Object.assign(terminalResearch, item.researchFailureAttribution);
+  }
   const publicSources = completed
     ? item.sources.map((source) => ({
         id: source.id,
@@ -811,7 +818,7 @@ describe("PR-9B staged Terra readiness boundary", () => {
       false,
     );
     assert.ok(
-      value.attemptPlan.every((attempt) => attempt.runId.startsWith("pr9c-")),
+      value.attemptPlan.every((attempt) => attempt.runId.startsWith("pr9d-")),
     );
     assert.equal(value.qualityBars.minimumPairwiseFinalJaccard, 0.6);
     assert.equal(value.qualityBars.minimumPairwiseSharedOrderKendallTau, 0);
@@ -1631,6 +1638,27 @@ describe("PR-9B staged Terra readiness boundary", () => {
       /terminalResponse\.body\.failed\.error/,
     );
 
+    failedRun.researchFailureAttribution = {
+      validationReason: "research_candidate_invalid",
+      candidateValidationReason: "candidate_sources",
+      candidateSourceValidationReason: "candidate_source_unregistered",
+    };
+    const attributed = parseStagedTerraReadinessArtifact(
+      artifactForRun(value, failedRun),
+    );
+    assert.equal(attributed.ok, true);
+    assert.deepEqual(
+      attributed.ok && attributed.payload.routeTrace.at(-1).failureAttribution,
+      failedRun.researchFailureAttribution,
+    );
+    const invalidAttribution = structuredClone(failedRun);
+    invalidAttribution.researchFailureAttribution.validationReason =
+      "private-model-output-canary";
+    assert.throws(
+      () => artifactForRun(value, invalidAttribution),
+      /failureAttribution/,
+    );
+
     const canary = "provider-secret-canary";
     let statusArtifacts = artifacts(value);
     statusArtifacts = resealArtifactChain(statusArtifacts, 0, (envelope) => {
@@ -2157,6 +2185,11 @@ describe("PR-9B staged Terra readiness boundary", () => {
     sample[0].cards = [];
     sample[0].sources = [];
     sample[0].diagnostics = { research: null, verification: null };
+    sample[0].researchFailureAttribution = {
+      validationReason: "research_candidate_invalid",
+      candidateValidationReason: "candidate_sources",
+      candidateSourceValidationReason: "candidate_source_unregistered",
+    };
     const result = analyzeStagedTerraReadiness({
       matrix: value,
       artifacts: artifacts(value, sample),
@@ -2167,6 +2200,18 @@ describe("PR-9B staged Terra readiness boundary", () => {
     assert.ok(
       result.haltFailures.includes("terminal_failure:broad-shop-vac:1:research_failed"),
     );
+    assert.deepEqual(result.metrics.routeFailures, [
+      {
+        caseId: "broad-shop-vac",
+        run: 1,
+        stage: "research_poll",
+        status: "completed",
+        failureReason: "invalid_research_contract",
+        validationReason: "research_candidate_invalid",
+        candidateValidationReason: "candidate_sources",
+        candidateSourceValidationReason: "candidate_source_unregistered",
+      },
+    ]);
   });
 
   it("does not misclassify an un-attributed verification exception as safe no-exact", () => {

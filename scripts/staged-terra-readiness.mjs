@@ -23,13 +23,13 @@ export {
 } from "./staged-terra-readiness-artifact.mjs";
 
 export const STAGED_TERRA_READINESS_MATRIX_VERSION =
-  "staged-terra-readiness-matrix-v3";
+  "staged-terra-readiness-matrix-v4";
 export const STAGED_TERRA_READINESS_CAPTURE_VERSION =
-  "staged-terra-readiness-capture-v2";
+  "staged-terra-readiness-capture-v3";
 export const STAGED_TERRA_READINESS_REVIEW_VERSION =
-  "staged-terra-readiness-review-v3";
+  "staged-terra-readiness-review-v4";
 const FROZEN_MATRIX_SHA256 =
-  "0bc9d3626e266c4ec6592cfc1489d9199cb42e51b537183964637e1ea46a3660";
+  "7bc4b8cc578c905b8789456cd4eb017bec7039df9c65575f8056a0fe75d94afc";
 
 const MATRIX_KEYS = [
   "schemaVersion",
@@ -137,9 +137,18 @@ const RUN_KEYS = [
   "diagnostics",
   "accounting",
   "stageTimings",
+  "routeFailures",
   "terminalUsage",
 ];
 const TERMINAL_KEYS = ["state", "statusCode", "code", "wallClockMs"];
+const ROUTE_FAILURE_KEYS = [
+  "stage",
+  "status",
+  "failureReason",
+  "validationReason",
+  "candidateValidationReason",
+  "candidateSourceValidationReason",
+];
 const CAPTURE_SOURCE_KEYS = ["id", "label", "title", "url"];
 const DIAGNOSTIC_KEYS = ["research", "verification"];
 const RESEARCH_DIAGNOSTIC_KEYS = [
@@ -1342,6 +1351,43 @@ function validateCaptureSchema(run, key, failures) {
       }
     }
   }
+  if (!Array.isArray(run.routeFailures)) {
+    fail("routeFailures");
+  } else {
+    for (const [index, routeFailure] of run.routeFailures.entries()) {
+      if (!hasExactKeys(routeFailure, ROUTE_FAILURE_KEYS)) {
+        fail(`routeFailures.${index}.keys`);
+        continue;
+      }
+      if (
+        !["research_start", "research_poll", "verification", "presentation"].includes(
+          routeFailure.stage,
+        )
+      ) {
+        fail(`routeFailures.${index}.stage`);
+      }
+      if (
+        routeFailure.stage === "verification"
+          ? routeFailure.status !== null || routeFailure.failureReason !== null
+          : !isNonEmptyString(routeFailure.status) ||
+            !isNonEmptyString(routeFailure.failureReason)
+      ) {
+        fail(`routeFailures.${index}.attribution`);
+      }
+      for (const field of [
+        "validationReason",
+        "candidateValidationReason",
+        "candidateSourceValidationReason",
+      ]) {
+        if (
+          routeFailure[field] !== null &&
+          !isNonEmptyString(routeFailure[field])
+        ) {
+          fail(`routeFailures.${index}.${field}`);
+        }
+      }
+    }
+  }
   if (
     !Array.isArray(run.terminalUsage) ||
     run.terminalUsage.length < 1 ||
@@ -2064,6 +2110,13 @@ function buildMetrics(matrix, runs, qualityFailures, haltFailures) {
     },
     stability,
     registeredProductLineage,
+    routeFailures: runs.flatMap((run) =>
+      run.routeFailures.map((failure) => ({
+        caseId: run.caseId,
+        run: run.run,
+        ...failure,
+      })),
+    ),
     totalAccounting,
     latencyMs: {
       perRun: runs.map((run) => ({
@@ -2459,6 +2512,7 @@ function emptyMetrics(matrix) {
     broadMustConsider: { perRun: [], union: 0 },
     stability: [],
     registeredProductLineage: [],
+    routeFailures: [],
     totalAccounting: Object.fromEntries(ACCOUNTING_KEYS.map((key) => [key, 0])),
     latencyMs: {
       perRun: [],
@@ -2580,6 +2634,19 @@ function authenticateArtifactRuns({
           operation: trace.stage,
           outcome: trace.outcome,
           durationMs: trace.ledger.durationMs,
+        })),
+      routeFailures: payload.routeTrace
+        .filter((trace) => trace.outcome === "failed")
+        .map((trace) => ({
+          stage: trace.stage,
+          status: trace.ledger?.status ?? null,
+          failureReason: trace.ledger?.failureReason ?? null,
+          validationReason:
+            trace.failureAttribution?.validationReason ?? null,
+          candidateValidationReason:
+            trace.failureAttribution?.candidateValidationReason ?? null,
+          candidateSourceValidationReason:
+            trace.failureAttribution?.candidateSourceValidationReason ?? null,
         })),
       terminalUsage: payload.usageLedgers,
     };

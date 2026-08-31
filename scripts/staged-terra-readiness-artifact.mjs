@@ -8,9 +8,9 @@ import {
 } from "./staged-terra-readiness-trace.mjs";
 
 export const STAGED_TERRA_READINESS_ARTIFACT_VERSION =
-  "staged-terra-readiness-artifact-v2";
+  "staged-terra-readiness-artifact-v3";
 export const STAGED_TERRA_READINESS_PRODUCER_VERSION =
-  "staged-terra-readiness-producer-v2";
+  "staged-terra-readiness-producer-v3";
 export const STAGED_TERRA_READINESS_REVIEW_PACKET_VERSION =
   "staged-terra-readiness-review-packet-v1";
 
@@ -143,7 +143,12 @@ const USAGE_LEDGER_KEYS = [
   "outputTokens",
   "webSearchCalls",
 ];
-const ROUTE_TRACE_KEYS = ["stage", "outcome", "ledger"];
+const ROUTE_TRACE_KEYS = ["stage", "outcome", "ledger", "failureAttribution"];
+const FAILURE_ATTRIBUTION_KEYS = [
+  "validationReason",
+  "candidateValidationReason",
+  "candidateSourceValidationReason",
+];
 const ROUTE_TRACE_LEDGER_KEYS = [
   "runtimeVersion",
   "operation",
@@ -222,6 +227,25 @@ const RUNTIME_FAILURE_REASONS = new Set([
   "invalid_json",
   "invalid_research_contract",
   "invalid_presentation_contract",
+]);
+const RESEARCH_VALIDATION_REASONS = new Set([
+  "research_shape",
+  "research_source_registry",
+  "research_candidate_invalid",
+  "research_candidate_duplicate",
+]);
+const RESEARCH_CANDIDATE_VALIDATION_REASONS = new Set([
+  "candidate_identity",
+  "candidate_sources",
+  "candidate_requirements",
+  "candidate_facts",
+]);
+const RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS = new Set([
+  "candidate_source_shape",
+  "candidate_source_duplicate",
+  "candidate_source_unsafe",
+  "candidate_source_unregistered",
+  "candidate_source_identity_unproven",
 ]);
 const FAILURE_LEDGER_UNIONS = {
   research_start: {
@@ -978,6 +1002,46 @@ function usageLedgerFromTraceLedger(ledger) {
   };
 }
 
+function validResearchFailureAttribution(value) {
+  if (!exactKeys(value, FAILURE_ATTRIBUTION_KEYS)) return false;
+  if (!RESEARCH_VALIDATION_REASONS.has(value.validationReason)) return false;
+  const candidateFailure = value.validationReason === "research_candidate_invalid";
+  if (
+    candidateFailure !==
+    RESEARCH_CANDIDATE_VALIDATION_REASONS.has(value.candidateValidationReason)
+  ) {
+    return false;
+  }
+  const sourceFailure = value.candidateValidationReason === "candidate_sources";
+  return (
+    sourceFailure ===
+    RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS.has(
+      value.candidateSourceValidationReason,
+    )
+  );
+}
+
+function projectResearchFailureAttribution(diagnostic) {
+  if (
+    diagnostic.stage !== "research_poll" ||
+    diagnostic.outcome !== "failed" ||
+    diagnostic.ledger?.failureReason !== "invalid_research_contract"
+  ) {
+    return null;
+  }
+  const attribution = {
+    validationReason: diagnostic.validationReason ?? null,
+    candidateValidationReason: diagnostic.candidateValidationReason ?? null,
+    candidateSourceValidationReason:
+      diagnostic.candidateSourceValidationReason ?? null,
+  };
+  requireCondition(
+    validResearchFailureAttribution(attribution),
+    "routeDiagnostics.research_failure_attribution",
+  );
+  return attribution;
+}
+
 function validateRouteDiagnostic(value, index) {
   const path = `routeDiagnostics.${index}`;
   requireCondition(onlyAllowedKeys(value, ROUTE_DIAGNOSTIC_ALLOWED_KEYS), `${path}.keys`);
@@ -992,13 +1056,22 @@ function validateRouteDiagnostic(value, index) {
     const ledger = runtimeLedger(value.ledger, `${path}.ledger`);
     requireCondition(ledger.operation === value.stage, `${path}.ledger.operation`);
   }
-  for (const field of [
-    "validationReason",
-    "candidateValidationReason",
-    "candidateSourceValidationReason",
-  ]) {
-    if (field in value) requireCondition(boundedString(value[field], 128), `${path}.${field}`);
-  }
+  const attribution = {
+    validationReason: value.validationReason ?? null,
+    candidateValidationReason: value.candidateValidationReason ?? null,
+    candidateSourceValidationReason:
+      value.candidateSourceValidationReason ?? null,
+  };
+  const attributedFailure =
+    value.stage === "research_poll" &&
+    value.outcome === "failed" &&
+    value.ledger?.failureReason === "invalid_research_contract";
+  requireCondition(
+    attributedFailure
+      ? validResearchFailureAttribution(attribution)
+      : FAILURE_ATTRIBUTION_KEYS.every((field) => attribution[field] === null),
+    `${path}.failureAttribution`,
+  );
   if ("identitySourceFilter" in value) {
     requireCondition(
       exactKeys(value.identitySourceFilter, IDENTITY_SOURCE_FILTER_KEYS),
@@ -1296,6 +1369,7 @@ function projectDiagnostics(routeDiagnostics, counters, terminal) {
             `routeTrace.${index}.ledger`,
           )
         : null,
+    failureAttribution: projectResearchFailureAttribution(diagnostic),
   }));
   return {
     routeTrace,
@@ -2096,6 +2170,16 @@ function validateProjectedPayload(payload) {
         check(trace.ledger.outcome === trace.outcome, `${path}.ledger.outcome`);
       }
     }
+    const attributedResearchFailure =
+      trace.stage === "research_poll" &&
+      trace.outcome === "failed" &&
+      trace.ledger?.failureReason === "invalid_research_contract";
+    check(
+      attributedResearchFailure
+        ? validResearchFailureAttribution(trace.failureAttribution)
+        : trace.failureAttribution === null,
+      `${path}.failureAttribution`,
+    );
   }
   const traceStages = routeTrace.map((trace) => trace?.stage);
   const tracePolls = routeTrace.filter((trace) => trace?.stage === "research_poll");
