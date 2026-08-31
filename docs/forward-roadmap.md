@@ -4287,6 +4287,39 @@ with three pre-existing warnings. After independent High exact-commit review,
 one fresh v5 attempt may run. Any terminal failure stops the v5 chain; its
 authenticated four-level tuple selects the next generalized offline repair.
 
+### PR-9F — authenticated verification-loss aggregates and v6 chain
+
+**Status:** implemented at `c2fa283ca8b33f18bde65a1ebc1c89532dd0b791`
+with matrix-byte correction `62023fbfce64e4e426f00e233693e5b803c8cb1c`;
+independent exact-final-head review pending.
+
+Fresh PR-9E attempt 1 at reviewed head `5ac61293` was the first current run to
+pass research validation. It accepted eight candidates, made eight Shopping
+attempts and 16 bounded source fetches, then stopped as `verification_failed`
+with zero cards. The authenticated first-loss total was seven asset-identity
+failures and one complete-product-relationship failure. Both registered broad
+leaders were absent at research discovery. The artifact did not retain the
+already-computed fixed verifier subreason aggregates, so changing search,
+ranking, or identity acceptance would still be speculative.
+
+PR-9F rolls artifact/producer to v5 and capture/review to v5/v6. It retains
+only seven fixed aggregate count records, validates exact keys, integer bounds,
+candidate/eligibility/first-loss conservation, branch coverage, and nullability,
+and exposes them only in authenticated analyzer metrics. It retains no candidate
+identity, title, URL, raw response, prompt, provider ID, or credential. The
+public shopper response and bounded manual-review packet are unchanged.
+
+Matrix v6 is semantically identical to v5 except for its version and six fresh
+`pr9f-*` IDs/nonces disjoint from v1-v5. File SHA-256 is
+`e01db2c4b27029c22d6e0481846fb51857e1973c0001be87400b9d939e71d81a`;
+canonical SHA-256 is
+`4dc91c0656c9e374b7805c0dd5cd87a1fc3fef8a012384a8c718098399f75ba8`.
+Fail-first proved artifact-v4 discarded the aggregate. Corrected readiness and
+runner tests pass 61/61; full tests pass 1,718/1,718 across 232 suites;
+typecheck passes; lint has zero errors and three old warnings. After one High
+exact-commit review, execute only v6 attempt 1 and stop. Its authenticated
+subreason distribution selects the next generalized offline accuracy repair.
+
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 
 Phase 3P/3Q source-upgrade items; RR-014/RR-015 aggregate measurement beyond

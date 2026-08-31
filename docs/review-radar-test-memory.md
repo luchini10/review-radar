@@ -3797,3 +3797,26 @@ a known conservative undercount.
   alternate-network counter zero. Never infer which identity relation failed.
 - A replacement chain must preserve the reviewed matrix body and mint a new
   version plus six IDs/nonces disjoint from every spent v1-v4 identity.
+
+## PR-9F verification-loss aggregate retention (2026-08-30)
+
+- A top-level verifier first loss is not actionable when its existing fixed
+  subreasons are discarded. Retain only aggregate count records already
+  sanitized by the route; never retain candidate identities, titles, URLs,
+  raw responses, prompts, provider IDs, headers, or credentials.
+- Authenticate exact record and child keys, non-negative integer values bounded
+  by the applicable candidate branch, complete first-loss conservation,
+  eligible/close-match/excluded equality, and at least one aggregate reason per
+  candidate entering an attributed failure branch.
+- Verification attribution must be exactly null when verification did not run
+  and complete when it did. Resealing cannot add private fields, omit a record,
+  substitute null, overcount, under-cover, or make the aggregate disagree with
+  normalized diagnostics.
+- Analyzer metrics may expose the authenticated fixed aggregates with case/run
+  binding. Public shopper responses and bounded human-review packets must omit
+  the aggregate entirely.
+- Fresh PR-9E attempt 1 proved seven asset-identity and one relationship loss
+  across eight accepted candidates, but artifact-v4 discarded their subreason
+  distribution. Never infer the missing distribution from the parent counts.
+- A replacement chain must preserve v5 truth and use a new version plus six
+  IDs/nonces disjoint from every spent v1-v5 identity.

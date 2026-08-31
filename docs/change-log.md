@@ -11,6 +11,27 @@ Update this file after:
 
 ## 2026-08-30
 
+### Codex - Retain staged verification failure causes
+
+#### Changed
+
+- Preserved the verifier's existing privacy-safe aggregate loss reasons in the
+  authenticated readiness artifact and analyzer, without retaining product
+  identities, titles, URLs, or raw provider data.
+- Added strict conservation, bounded-count, exact-key, and nullability checks;
+  malformed or privacy-expanded resealed evidence now fails closed.
+- Added a fresh v6 readiness chain with unchanged product truth, search cases,
+  accuracy bars, spend ceilings, and safety rules.
+
+#### Verified
+
+- The first v5 run to pass research accepted eight candidates but lost seven at
+  asset identity and one at product relationship; both registered broad leaders
+  were absent at research discovery, and no card reached presentation.
+- Fail-first reproduced the discarded aggregate. Focused tests passed 61/61;
+  full tests passed 1,718/1,718 across 232 suites; typecheck passed; lint had
+  zero errors and three pre-existing warnings.
+
 ### Codex - Attribute staged candidate identity failures precisely
 
 #### Changed

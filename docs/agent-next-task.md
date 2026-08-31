@@ -1,26 +1,26 @@
 # ReviewRadar Agent Handoff
 
-Updated: 2026-08-30 by Codex for PR-9E identity-relation attribution.
+Updated: 2026-08-30 by Codex for PR-9F verification-loss attribution.
 This file was regenerated from current repository and execution evidence.
 
 ## Current state
 
-ReviewRadar remains **NOT READY** for production, confidence **0.995**. The
-current blocker is still the absence of a trustworthy multi-shape live product
-accuracy sample. Two fresh broad `shop vac` attempts reached completed Terra
-research but failed before product verification, ranking, or rendering.
+ReviewRadar remains **NOT READY** for production, confidence **0.997**. The
+first fresh run to pass research validation reached deterministic product
+verification, but all eight accepted candidates were excluded and no product
+cards were rendered. Product accuracy is therefore still unscored.
 
 Current implementation snapshot:
 
-- commit: `e4f3a7c1b87075d9aeeba166e3acd86e2a643255`
-- parent: `8816940786f8bac7a9fe5b8fc37a2b09e9e4adf5`
-- tree: `85c9edf01d711229c72c739489908177f4ffacb7`
-- subject: `Attribute staged candidate identity failures`
+- correction commit: `62023fbfce64e4e426f00e233693e5b803c8cb1c`
+- implementation commit: `c2fa283ca8b33f18bde65a1ebc1c89532dd0b791`
+- parent of implementation: `5ac612930886401d3fc218b264ddb5ef9e7b3888`
+- current tree: `b675d39339f8541fd9d4d4f71224096094e9fd97`
 
-PR-9D final head `88169407` received independent exact-commit **VERIFIED**,
-no findings, confidence **0.999**. PR-9E is implemented and validated locally
-but still requires one independent High exact-final-head review before another
-paid attempt.
+PR-9E final head `5ac61293` received independent exact-commit **VERIFIED**,
+no findings, confidence **0.998**. PR-9F is implemented and locally validated;
+the exact final clean head still requires one independent High review before a
+paid v6 attempt.
 
 ## Objective and proven bottleneck
 
@@ -28,81 +28,86 @@ paid attempt.
 accuracy failures without weakening identity, evidence, price, requirement,
 network, or safety gates.
 
-**Verified facts:** v4 attempt 1 at `88169407` used one OpenAI create, 35
-retrieves, five hosted searches, 47,666 input tokens, 7,495 output tokens,
-80.285 seconds, and `$0.311381`. It stopped as
-`research_candidate_invalid / candidate_identity`; Shopping, source fetching,
-verification, presentation, cards, sources, human page opens, retries,
-replacements, fallbacks, and later cases were zero. Artifact SHA-256 is
-`bf89f4a14ff7c8654a8ec5afbe4d22722eb6b3dd82ed1f06c505cf5c3a22b3b7`.
-The v4 chain stopped and attempt 2 did not run.
+**Verified facts:** v5 attempt 1 at exact reviewed head `5ac61293` passed
+research validation, accepted eight candidates, and stopped as
+`verification_failed`. It used one OpenAI create, 35 retrieves, seven hosted
+searches, eight Shopping attempts, 16 source fetches, 19 physical HTTP
+attempts, 65,330 input tokens, 7,793 output tokens, 85.653 seconds, and
+`$0.391051`. It used zero cancels, retries, replacements, fallbacks,
+Organic/SearchAPI attempts, extra cases, later attempts, or human page opens.
+Artifact SHA-256 is
+`f1d745c30fcc2ff0655c95d1d62668a843a61810f863455a8094759d4b1d4830`.
 
-Across the two paid attempts in this goal, cumulative usage is two creates, 65
-retrieves, ten hosted searches, and `$0.607921`; every other network class is
-zero.
+The authenticated aggregate first-loss summary was seven asset-identity
+failures and one complete-product-relationship failure, with zero eligible
+candidates. Both must-consider leaders, RIDGID HD1200 and Craftsman
+CMXEVBE17595, had zero validated and accepted research candidates. DeWalt and
+Stanley reached verification but were lost there; Vacmaster did not reach
+verification.
 
-The earliest proven loss is candidate identity validation. That group still
-combines five independent relations, and PR-3D already removed the earlier
-model-authored composite-name mismatch. A prompt, ranking, search-breadth, or
-downstream verifier change before identifying the current relation would be
-speculative.
+Across three paid attempts, cumulative usage is three creates, 100 retrieves,
+17 hosted searches, eight Shopping attempts, 16 source fetches, 19 physical
+HTTP attempts, and `$0.998972`; all forbidden/alternate counters and human
+opens remain zero. Three of six logical searches are conservatively consumed.
 
-**Uncertainty:** the exact failing identity relation remains unknown. Leader
-recall, wrong products/variants, rankings, prices/specs, source support,
-repeatability, and downstream first-loss lineage remain unmeasured because no
-fresh run passed research validation.
+**Engineering judgment:** the highest-value next action is not a speculative
+prompt, ranking, or identity relaxation. The verifier already produced fixed,
+privacy-safe subreason aggregates, but artifact-v4 discarded them. Retaining
+and authenticating those existing counts is the smallest step that can separate
+missing assets from wrong brand/model/type, relationship, commerce, URL,
+source, or claim causes.
 
-## PR-9E implementation
+**Uncertainty:** the exact distribution within the seven asset losses and one
+relationship loss remains unknown until a fresh v6 artifact captures it.
+Leader discovery, final rankings, prices/specs, source support, and
+repeatability remain unmeasured because no card survived verification.
 
-- The shared target-coherence code now returns one fixed reason: target shape,
-  brand relation, model relation, model conflict, or complete-product-type
-  relation.
-- The established boolean predicate delegates to that function, preserving
-  check order and acceptance behavior.
-- Staged validation maps those branches to five privacy-safe closed enums.
-  Contract v10/runtime v9 roll older jobs closed.
-- Artifact/producer v4, capture v4, and review v5 authenticate the conditional
-  child. Unknown strings, inactive children, impossible parent/child
-  combinations, extra keys, and private values fail closed.
-- Public shopper responses and bounded manual-review packets remain unchanged.
-- Matrix v5 preserves v4 truth, sources, requests, cases, order, bars, and paid
-  ceilings. Its six `pr9e-*` IDs/nonces are disjoint from v1-v4.
+## PR-9F implementation
+
+- Artifact/producer v5 now projects the existing seven fixed verification
+  attribution records and no candidate identities, titles, URLs, or raw data.
+- The artifact validates exact keys, bounded integer counts, first-loss and
+  eligibility conservation, branch coverage, and nullability when verification
+  did not run. Resealed malformed or privacy-expanded aggregates fail closed.
+- Capture v5 and review v6 expose only authenticated aggregate counts in
+  `metrics.verificationFailures`. The shopper response and manual-review packet
+  remain unchanged and omit these diagnostics.
+- Matrix v6 preserves v5 truth, requests, sources, cases, order, bars, and paid
+  ceilings. Its six `pr9f-*` IDs/nonces are disjoint from v1-v5.
 
 Validation:
 
-- fail-first: nine intended failures across contract, runtime, artifact, and
-  analyzer surfaces;
-- corrected focused wall: 184/184;
-- full unit suite: 1,716/1,716 across 232 suites;
+- fail-first: the new retention test failed because artifact-v4 discarded the
+  aggregate;
+- focused readiness/runner wall: 61/61;
+- full unit suite: 1,718/1,718 across 232 suites;
 - typecheck: pass;
-- lint: zero errors and three pre-existing warnings;
-- zero-network dry run: authenticated 66 entries, no failures.
+- lint: zero errors and three pre-existing warnings.
 
-Frozen v5 identities:
+Frozen v6 identities:
 
 - matrix file SHA-256:
-  `1a850f0c34c49590e693d530db05f540be4ffd51c5ea20a0d071b6e7f10e303b`
+  `e01db2c4b27029c22d6e0481846fb51857e1973c0001be87400b9d939e71d81a`
 - matrix canonical SHA-256:
-  `d9ad036d67872289626b76ea60264a085ba6f0de640c4260898d6d820d303fd4`
-- trust manifest SHA-256:
-  `d9b3bcd9cad8ec285c092fa1f8ce4fbfc7ff4e8c753bc98ab181d9fda8c96a03`
+  `4dc91c0656c9e374b7805c0dd5cd87a1fc3fef8a012384a8c718098399f75ba8`
+- clean trust-manifest SHA-256: pending final documentation commit and exact
+  zero-network reauthentication.
 
 ## Authority and next action
 
 Taylor granted standing authority on 2026-08-30 for all in-scope local work,
-commits, independent reviews, and paid calls needed to finish the accuracy goal.
-The hard envelope remains six serial logical searches, `$1` per run and `$6`
-aggregate; 12 creates, 360 retrieves, 60 hosted searches, six cancels, 90
+commits, independent reviews, and paid calls needed to finish the accuracy
+goal. The hard envelope remains six serial logical searches, `$1` per run and
+`$6` aggregate; 12 creates, 360 retrieves, 60 hosted searches, six cancels, 90
 Shopping attempts, 180 source fetches, 540 physical HTTP attempts, and at most
 60 human public-source opens. Retries, replacements, fallbacks,
 Organic/SearchAPI, extra cases, and automatic continuation remain zero.
 
-Next: independently review the exact final clean PR-9E head at High reasoning.
-If and only if it is verified, execute v5 attempt 1. Analyze its immutable
-artifact through the reviewed analyzer. A failure stops the chain and selects
-the exact generalized offline repair target; a safe public result requires
-bound manual product, variant, source, requirement, price, specification,
-advice, and rank review before attempt 2.
+Next: complete the final clean-state dry run and independently review the exact
+PR-9F head at High reasoning. If verified, execute only v6 attempt 1. Analyze
+its immutable artifact through the reviewed analyzer and stop. Use the exact
+subreason distribution to choose a generalized offline accuracy correction;
+do not automatically continue to attempt 2.
 
 Push, deployment, release, and flag promotion remain unnecessary.
 
@@ -133,9 +138,9 @@ required credentials.
 
 ## Outstanding debts
 
-- **PR-006 live quality:** leader recall, exact variant/card truth, rankings,
-  prices/specs, source support, repeatability, and downstream lineage remain
-  unmeasured.
+- **PR-006 live quality:** leader discovery, exact variant/card truth,
+  rankings, prices/specs, source support, repeatability, and downstream lineage
+  remain unmeasured.
 - **PR-023–PR-027 operations:** distributed authority, hosted cancellation,
   logging, configuration, Linux/runtime, and deployment evidence remain absent.
 - **Production operations:** CI, deployment, rollback, monitoring, alerts,
@@ -145,10 +150,10 @@ required credentials.
 
 | Evidence | Location |
 | --- | --- |
-| Protocol decision | `docs/forward-roadmap.md`, PR-9B through PR-9E |
-| Canonical execution result | latest PR-9E entry in `docs/qa-loop-results.md` |
+| Protocol decision | `docs/forward-roadmap.md`, PR-9B through PR-9F |
+| Canonical execution result | latest PR-9F entry in `docs/qa-loop-results.md` |
 | Durable trust contract | `docs/review-radar-test-memory.md` |
 | Readiness verdict | `docs/production-readiness-report.md` |
 | Issue arithmetic | `docs/RR-Issues-Report.md` |
 
-PR-9E improves diagnostic integrity; it does not itself prove product accuracy.
+PR-9F improves diagnostic integrity; it does not itself prove product accuracy.

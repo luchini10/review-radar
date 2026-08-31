@@ -1872,3 +1872,24 @@ No production pipeline or API contract changed in Phase 6A.
   pass. Independent review found and the correction closed unknown strings in
   inactive child fields by requiring exact null. This restores diagnostic
   integrity but does not yet prove product accuracy or production readiness.
+
+## 47. PR-9F authenticated verification-loss aggregates (2026-08-30)
+
+- **Measured boundary:** v5 attempt 1 passed research with eight candidates but
+  verification excluded all eight: seven asset-identity losses and one
+  complete-product-relationship loss. The two registered broad leaders were
+  absent at research discovery, so discovery and verification are distinct
+  unresolved accuracy walls.
+- **Artifact contract:** artifact/producer v5 retains seven fixed aggregate
+  verifier records. It enforces exact keys, bounded integers, first-loss and
+  eligibility conservation, branch coverage, and null attribution when
+  verification did not run. Candidate identities, titles, URLs, raw responses,
+  prompts, provider IDs, and credentials remain excluded.
+- **Consumer boundary:** capture v5/review v6 binds aggregate counts to case/run
+  in analyzer metrics. Public shopper failures and the human product-review
+  packet do not expose them.
+- **Fresh chain and proof:** matrix v6 keeps v5 truth, sources, requests, cases,
+  order, bars, and ceilings and replaces all six run IDs/nonces. Focused 61/61,
+  full 1,718/1,718, typecheck, and lint with zero errors/three old warnings
+  pass. This enables causal diagnosis; it does not improve or prove product
+  accuracy by itself.

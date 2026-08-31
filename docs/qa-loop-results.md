@@ -16652,3 +16652,60 @@ passed research validation. PR-9E improves causal measurement, not product
 quality. A fresh v5 attempt is permitted only after independent High review of
 the exact final commit; any terminal failure stops that chain and selects the
 next offline repair from the authenticated relation enum.
+
+---
+
+## 🟧 Codex — 2026-08-30 — PR-9E live verifier stop and PR-9F aggregate retention
+
+**Objective:** identify the exact generalized cause of the first current
+verification-stage product loss without weakening exact identity or retaining
+private candidate data.
+
+**PR-9E live evidence:** exact reviewed head `5ac61293` executed only v5
+attempt 1, `pr9e-01-broad-shop-vac-r1`, and halted after terminal
+`verification_failed`. Research accepted eight candidates. Verification
+excluded all eight: seven at asset identity and one at complete-product
+relationship, with zero eligible or no-loss candidates. RIDGID HD1200 and
+Craftsman CMXEVBE17595 had zero validated/accepted research candidates; DeWalt
+and Stanley reached verification but were lost there; Vacmaster did not reach
+verification. No cards, sources, final advice, or human page opens existed.
+
+The 85.653-second attempt used one create, 35 retrieves, seven hosted searches,
+eight Shopping attempts, 16 source fetches, 19 physical HTTP attempts, 65,330
+input tokens, 7,793 output tokens, and `$0.391051`. Cancels, retries,
+replacements, fallbacks, Organic/SearchAPI, extra cases, and automatic attempt 2
+were zero. Artifact SHA-256 is
+`f1d745c30fcc2ff0655c95d1d62668a843a61810f863455a8094759d4b1d4830`.
+Cumulative usage across three paid attempts is three creates, 100 retrieves,
+17 hosted searches, eight Shopping attempts, 16 source fetches, 19 HTTP
+attempts, and `$0.998972`; all forbidden/alternate counters remain zero.
+
+**Root-cause boundary:** verifier attrition, plus earlier leader discovery
+absence, is now proven. The route already computed privacy-safe aggregate
+subreasons but artifact-v4 discarded them. A prompt, ranking, discovery, or
+verifier-acceptance change before distinguishing those causes would be
+speculative.
+
+**PR-9F correction:** artifact/producer v5 authenticates seven fixed verifier
+count records. Exact keys, bounded integers, candidate and eligibility
+conservation, first-loss equality, branch coverage, and verification-null
+behavior fail closed. Capture v5/review v6 expose only the authenticated counts
+as `metrics.verificationFailures`. Added candidate fields, private canaries,
+undercoverage, overcounts, and inconsistent/null attribution are rejected. The
+shopper response and manual-review packet still omit diagnostics.
+
+Fresh matrix v6 preserves v5 truth, sources, requests, cases, order, quality
+bars, and ceilings and uses six disjoint `pr9f-*` identities. Its file SHA-256
+is `e01db2c4b27029c22d6e0481846fb51857e1973c0001be87400b9d939e71d81a`;
+canonical SHA-256 is
+`4dc91c0656c9e374b7805c0dd5cd87a1fc3fef8a012384a8c718098399f75ba8`.
+
+**Verification:** fail-first produced the intended lost-attribution failure.
+Corrected readiness/runner tests pass 61/61; full tests pass 1,718/1,718 across
+232 suites; typecheck passes; lint reports zero errors and three pre-existing
+warnings.
+
+**Interpretation:** product accuracy remains NotScored. PR-9F improves causal
+measurement only. One v6 attempt may run only after exact-final-head High
+review, and it must stop for offline diagnosis rather than continue
+automatically.
