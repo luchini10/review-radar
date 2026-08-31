@@ -1006,19 +1006,24 @@ function validResearchFailureAttribution(value) {
   if (!exactKeys(value, FAILURE_ATTRIBUTION_KEYS)) return false;
   if (!RESEARCH_VALIDATION_REASONS.has(value.validationReason)) return false;
   const candidateFailure = value.validationReason === "research_candidate_invalid";
-  if (
-    candidateFailure !==
-    RESEARCH_CANDIDATE_VALIDATION_REASONS.has(value.candidateValidationReason)
-  ) {
+  if (candidateFailure) {
+    if (
+      !RESEARCH_CANDIDATE_VALIDATION_REASONS.has(
+        value.candidateValidationReason,
+      )
+    ) {
+      return false;
+    }
+  } else if (value.candidateValidationReason !== null) {
     return false;
   }
   const sourceFailure = value.candidateValidationReason === "candidate_sources";
-  return (
-    sourceFailure ===
-    RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS.has(
+  if (sourceFailure) {
+    return RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS.has(
       value.candidateSourceValidationReason,
-    )
-  );
+    );
+  }
+  return value.candidateSourceValidationReason === null;
 }
 
 function projectResearchFailureAttribution(diagnostic) {

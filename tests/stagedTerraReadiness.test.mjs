@@ -1658,6 +1658,25 @@ describe("PR-9B staged Terra readiness boundary", () => {
       () => artifactForRun(value, invalidAttribution),
       /failureAttribution/,
     );
+    const invalidInactiveCandidate = structuredClone(failedRun);
+    Object.assign(invalidInactiveCandidate.researchFailureAttribution, {
+      validationReason: "research_shape",
+      candidateValidationReason: "private-model-output-canary",
+      candidateSourceValidationReason: null,
+    });
+    assert.throws(
+      () => artifactForRun(value, invalidInactiveCandidate),
+      /failureAttribution/,
+    );
+    const invalidInactiveSource = structuredClone(failedRun);
+    Object.assign(invalidInactiveSource.researchFailureAttribution, {
+      candidateValidationReason: "candidate_identity",
+      candidateSourceValidationReason: "private-model-output-canary",
+    });
+    assert.throws(
+      () => artifactForRun(value, invalidInactiveSource),
+      /failureAttribution/,
+    );
 
     const canary = "provider-secret-canary";
     let statusArtifacts = artifacts(value);
