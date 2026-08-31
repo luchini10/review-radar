@@ -16711,3 +16711,72 @@ entries with no failures under manifest
 measurement only. One v6 attempt may run only after exact-final-head High
 review, and it must stop for offline diagnosis rather than continue
 automatically.
+
+---
+
+## 🟧 Codex — 2026-08-30 — PR-9F live source loss and PR-9G viability filter
+
+**Objective:** prevent research candidates that cannot possibly survive the
+existing product-page verifier from consuming downstream work, without
+weakening any identity, evidence, commerce, requirement, or safety rule.
+
+**PR-9F review and live evidence:** exact final head
+`9181752ba954ef2bf01260c1a4ef19603dee67b5` received independent High
+`VERIFIED`, no findings, confidence 0.997. Fresh v6 attempt 1,
+`pr9f-01-broad-shop-vac-r1`, halted as `verification_failed`; artifact SHA-256
+is `fadf8f99ae8e7f31a1621ffbfa8d7ed43a08d98b8a5330dbfad8c34cb1b7380c`.
+Nine candidates reached verification, zero were eligible: seven first failed
+asset identity, one complete-product relationship, and one identity-safe
+product URL. Aggregate subreasons were six `brandNotInTitle`, two
+`modelConflictInTitle`, one `modelNotInTitle`, one `nonProductPage`, and one
+`missingOrInvalidProductUrl`; counts within a family may overlap by candidate.
+Shopping accepted zero exact offers. RIDGID HD1200 reached verification and
+then failed the relationship gate; Craftsman CMXEVBE17595, DeWalt, Stanley, and
+Vacmaster were absent at research discovery.
+
+The attempt used one create, 26 retrieves, four hosted searches, nine Shopping
+attempts, 18 source fetches, 22 physical HTTP attempts, 39,946 input tokens,
+5,507 cached input tokens, 5,640 output tokens, 68.184 seconds, and `$0.249431`.
+Cancels, retries, replacements, fallbacks, Organic/SearchAPI, extra cases,
+automatic continuation, and human opens were zero. Cumulative usage across
+four paid attempts is four creates, 126 retrieves, 21 hosted searches, 17
+Shopping attempts, 34 source fetches, 41 physical HTTP attempts, and
+`$1.248403`; four of six logical searches are consumed.
+
+**Root cause:** the research source filter accepted a candidate when any exact
+response-owned title/URL pair proved identity, and it deferred missing source
+titles. It did not require any source record to pass the already-established
+complete-product relationship and identity-safe product-URL decisions. The
+model prompt likewise described a direct product page as optional. Thus
+editorial/non-product pages and candidates without a usable product destination
+advanced into deterministic verification and failed before ranking.
+
+**PR-9G correction:** contract/prompt/runtime v11/v7/v10 require at least one
+identity-safe complete-product page among each candidate's two exact
+response-owned sources. Missing titles no longer defer. Candidate-local
+quarantine, order preservation, server ID reindexing, the independent second
+source, and every downstream gate remain intact. Closed diagnostics add
+`missingTitle` and `completeProductPageUnavailable`; route and artifact
+sanitizers enforce exact keys, zero retired deferrals, and count conservation.
+The zero-survivor product-page branch uses only the bounded
+`candidate_source_product_page_unproven` enum.
+
+Artifact/producer v6, capture v6, review v7, live-plan v7, and matrix v7 bind
+the change. Matrix file SHA-256 is
+`9d1a06c3be8ff959b7fffea37cc3c1f2bbd99687ef20759cb161eab8fc495bcd`;
+canonical SHA-256 is
+`ab0f5c831d030955c8691990725254cac780631564391316c76b0c1d9ccf3358`.
+The six fresh `pr9g-*` IDs/nonces are disjoint from every spent v1-v6 chain.
+
+**Verification:** fail-first passed 40/43, with only the missing prompt
+requirement, editorial-page acceptance, and titleless-source deferral tests
+failing. Corrected focused staged suites pass 137/137; readiness/runner pass
+61/61; full tests pass 1,720/1,720 across 232 suites; typecheck passes; lint
+reports zero errors and three pre-existing warnings. Exact-byte normalization
+was separately corrected after `git diff --check` found one blank line at EOF.
+
+**Interpretation:** this moves an unchanged downstream viability rule earlier
+and should reduce deterministic verifier attrition and wasted paid work. It
+does not yet prove live recall, card quality, rankings, prices/specifications,
+source support, or repeatability. One v7 attempt remains required after an
+independent High exact-final-head review.

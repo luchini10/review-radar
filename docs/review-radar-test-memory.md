@@ -3820,3 +3820,36 @@ a known conservative undercount.
   distribution. Never infer the missing distribution from the parent counts.
 - A replacement chain must preserve v5 truth and use a new version plus six
   IDs/nonces disjoint from every spent v1-v5 identity.
+
+## PR-9G pre-verification product-page viability (2026-08-30)
+
+- An exact source title/URL identity is necessary but not sufficient for a
+  research candidate to enter paid page collection, Shopping, and
+  verification. At least one of the candidate's two exact response-owned
+  sources must also pass the shared complete-product relationship and
+  identity-safe product-URL decisions.
+- Editorial, review, comparison, support, category, search, listing, unsafe,
+  redirect-wrapper, wrong-type, and identity-conflicting destinations do not
+  satisfy the product-page viability rule. The downstream verifier remains the
+  final authority and must revalidate fetched page evidence independently.
+- A response-owned URL without a title is unresolved identity evidence, not a
+  deferred candidate. Missing titles are quarantined before network work and
+  counted only in the closed `missingTitle` aggregate.
+- Preserve candidate-local quarantine, source order, survivor order, server ID
+  reindexing, and the second logically distinct source for independent
+  evidence. Do not turn the viability rule into candidate backfill, a lower
+  cardinality target, or a relaxation of later identity/evidence gates.
+- The zero-survivor reason may be
+  `candidate_source_product_page_unproven` only when at least one rejected
+  candidate had identity-accepted source metadata but no identity-safe
+  complete-product page. Otherwise retain
+  `candidate_source_identity_unproven`.
+- Source-filter diagnostics have exact keys and integer counts. Legacy
+  `deferredMissingTitleCandidates` remains in the versioned shape only for
+  compatibility and must equal zero. Submitted equals accepted plus rejected;
+  each rejected candidate contributes one or two closed aggregate reasons.
+- Public shopper responses, manual-review packets, and retained artifacts must
+  never gain candidate identities, titles, URLs, raw response text, prompts,
+  provider IDs, headers, or credentials through this diagnostic expansion.
+- Matrix v7 preserves v6 truth, requests, cases, sources, order, bars, and paid
+  ceilings, and uses six fresh IDs/nonces disjoint from spent v1-v6 chains.

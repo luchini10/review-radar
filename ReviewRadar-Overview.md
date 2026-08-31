@@ -1893,3 +1893,31 @@ No production pipeline or API contract changed in Phase 6A.
   full 1,718/1,718, typecheck, and lint with zero errors/three old warnings
   pass. This enables causal diagnosis; it does not improve or prove product
   accuracy by itself.
+
+## 48. PR-9G pre-verification product-page viability (2026-08-30)
+
+- **Measured cause:** PR-9F v6 attempt 1 sent nine candidates into
+  verification and produced zero eligible products. Seven first failed asset
+  identity, one failed complete-product relationship, and one lacked an
+  identity-safe product URL. No candidate reached ranking.
+- **Earlier boundary:** staged research now requires at least one of each
+  candidate's two exact response-owned source records to pass the shared asset
+  identity, complete-product relationship, and identity-safe product-URL
+  decisions. Missing source titles are rejected instead of deferred. The
+  second distinct source remains mandatory for independent evidence.
+- **No trust relaxation:** fetched pages, structured product entities,
+  Shopping offers, prices, variants, requirements, claims, source ownership,
+  ranking inputs, and rendering still pass their existing downstream checks.
+  The new filter only prevents candidates that those checks would necessarily
+  reject from consuming later work.
+- **Bounded observability:** diagnostics add only the closed aggregate keys
+  `missingTitle` and `completeProductPageUnavailable`, plus the closed
+  zero-survivor reason `candidate_source_product_page_unproven`. Route and
+  artifact consumers enforce exact keys, zero retired deferrals, and
+  conservation; public and manual-review output remain unchanged.
+- **Versioned execution:** contract/prompt/runtime v11/v7/v10,
+  artifact/producer v6, capture v6, review v7, and matrix/live-plan v7 bind the
+  behavior. Matrix v7 keeps the reviewed truth and ceilings with fresh
+  identities. Focused 137/137, full 1,720/1,720, typecheck, and lint with zero
+  errors/three old warnings pass. Live product accuracy remains unproven until
+  a reviewed exact v7 attempt executes.

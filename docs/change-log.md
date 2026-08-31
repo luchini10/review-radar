@@ -3325,3 +3325,30 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 - Independent review rejected the first predicate because an unknown inactive
   child string was treated like null. Inactive children must now be exactly
   null, with regressions for both candidate and candidate-source branches.
+
+## 2026-08-30 — 🟧 Codex — Require viable product pages before verification
+
+### Changed
+
+- Recorded the independently verified PR-9F v6 attempt: nine research
+  candidates, zero verification survivors, seven asset-identity losses, one
+  non-product relationship loss, and one missing/invalid product URL.
+- Changed staged research so a candidate must have at least one exact
+  response-owned source that already passes the shared identity,
+  complete-product relationship, and identity-safe product-URL decisions.
+- Removed titleless-source deferral. Missing titles and identity-visible but
+  non-materializable pages are quarantined with closed aggregate reasons before
+  page fetching or Shopping.
+- Preserved the second independent source and every downstream identity,
+  variant, evidence, requirement, commerce, price, ranking, and safety gate.
+- Rolled the private artifact/capture/review protocol and added matrix v7 with
+  fresh run IDs/nonces; flags and public responses remain unchanged.
+
+### Verified
+
+- Fail-first: 40/43, with the three intended product-page-contract failures.
+- Corrected focused staged suites: 137/137; readiness/runner: 61/61.
+- Full tests: 1,720/1,720 across 232 suites; typecheck passed.
+- Lint: zero errors and three pre-existing warnings.
+- Matrix exact bytes and canonical value were independently hashed after
+  removing one detected blank line at EOF.

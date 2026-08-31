@@ -4289,9 +4289,9 @@ authenticated four-level tuple selects the next generalized offline repair.
 
 ### PR-9F — authenticated verification-loss aggregates and v6 chain
 
-**Status:** implemented at `c2fa283ca8b33f18bde65a1ebc1c89532dd0b791`
-with matrix-byte correction `62023fbfce64e4e426f00e233693e5b803c8cb1c`;
-independent exact-final-head review pending.
+**Status:** independently verified at exact final head
+`9181752ba954ef2bf01260c1a4ef19603dee67b5`; v6 attempt 1 executed and
+halted at verification as designed.
 
 Fresh PR-9E attempt 1 at reviewed head `5ac61293` was the first current run to
 pass research validation. It accepted eight candidates, made eight Shopping
@@ -4322,6 +4322,62 @@ subreason distribution selects the next generalized offline accuracy repair.
 The clean zero-network plan at `ea89ecff` authenticated 66 trust entries with
 no failures under manifest
 `4e229b8108bd89ecc42c02df4ef1e455a7566e78694b89bddf47ab2e4f4de195`.
+
+Exact-final-head High review returned `VERIFIED`, no findings, confidence
+0.997. Fresh v6 attempt 1, `pr9f-01-broad-shop-vac-r1`, halted as
+`verification_failed` after nine research candidates. Seven failed asset
+identity, one failed complete-product relationship, and one lacked an
+identity-safe product URL. The retained subreasons showed six candidates with
+brand absent from fetched page titles, two with conflicting title models, one
+with its model absent, one non-product page, and one missing/invalid product
+URL. Shopping accepted no exact offer. The attempt used one create, 26
+retrieves, four hosted searches, nine Shopping attempts, 18 source fetches, 22
+physical HTTP attempts, 39,946 input tokens, 5,640 output tokens, 68.184
+seconds, and `$0.249431`; every forbidden or alternate counter was zero.
+
+### PR-9G — require a viable product page before verification and v7 chain
+
+**Status:** implemented at `adef42f9dfe1c1873b43deaf242453eb4fd17817`
+with exact-byte matrix correction
+`41f4f22588c26b98f27cce3e3792f94d99661efa`; independent exact-final-head
+review pending.
+
+PR-9F proved the dominant loss was not ranking: no candidate survived
+verification. The earliest generalized cause was the research-source filter,
+which accepted any exact title/URL identity pair and even deferred titleless
+sources without requiring a page that the unchanged downstream verifier could
+classify as a complete product and expose as an identity-safe product URL.
+That admitted editorial/non-product pages and candidates with no usable product
+destination, then spent Shopping and source-fetch work on candidates already
+destined to fail.
+
+PR-9G rolls contract/prompt/runtime to v11/v7/v10. A research candidate now
+survives only when at least one of its two exact response-owned source records
+passes the existing identity, complete-product relationship, and identity-safe
+product-URL decisions. Missing hosted-search titles are rejected instead of
+deferred. The second source remains required for independent evidence. No
+downstream identity, variant, commerce, price, requirement, evidence, ranking,
+or safety gate is relaxed.
+
+The closed diagnostics add `missingTitle` and
+`completeProductPageUnavailable`; route and artifact consumers require exact
+keys, zero legacy deferrals, submitted/accepted/rejected conservation, and one
+or two bounded reasons per rejected candidate. A new
+`candidate_source_product_page_unproven` failure distinguishes a zero-survivor
+slate whose identities were visible only on non-materializable pages. Public
+shopper output and manual-review packets remain unchanged and private.
+
+Artifact/producer v6, capture v6, review v7, and live-plan/matrix v7 bind the
+new contract. Matrix v7 preserves all reviewed truth, sources, requests, cases,
+order, quality bars, and paid ceilings while minting six fresh `pr9g-*`
+IDs/nonces disjoint from v1-v6. Its normalized file SHA-256 is
+`9d1a06c3be8ff959b7fffea37cc3c1f2bbd99687ef20759cb161eab8fc495bcd`;
+canonical SHA-256 is
+`ab0f5c831d030955c8691990725254cac780631564391316c76b0c1d9ccf3358`.
+Fail-first reproduced three intended defects. Corrected focused tests pass
+137/137; full tests pass 1,720/1,720 across 232 suites; typecheck passes; lint
+has zero errors and three old warnings. After one High exact-final-head review,
+execute only v7 attempt 1 and stop for immutable analysis.
 
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 
