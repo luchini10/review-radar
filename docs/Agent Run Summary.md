@@ -3366,3 +3366,48 @@ reader calls, then preserved every earlier matrix, rank, variant, chain,
 file-boundary, no-extra-work, and `NOT READY` conclusion. The same reviewer
 reauthenticated the final documentation-only closeout commit containing this
 record; no code, test, or matrix blob changed after the verified snapshot.
+
+## Codex Run - 2026-08-31 PR-10 selection-only architecture reset
+
+**Goal:** make ReviewRadar materially faster and simpler while preserving
+product-selection correctness and returning only useful product cards.
+
+**Assessment:** matched baseline evidence showed that the report/research
+architecture—not one isolated stage—caused the delay. It averaged 101,212 ms,
+made three OpenAI calls, used 37–60+ Serper attempts, and returned 38–129 KB
+normal responses. A narrow optimization would have preserved the proven
+bottleneck.
+
+**What changed:** replaced every recommendation/report mode with one bounded
+selection-only POST path. It uses zero or one compact planner call, at most
+three Shopping queries, at most eight total search/page operations, and a
+minimal result contract. Deleted reports, citations, reviews, narrative,
+polling/jobs, rescue/retries, Direct Terra, staged Terra, two-layer output,
+report UI, obsolete evaluation scripts, and their report-only tests/fixtures.
+Smart Features now use existing deterministic local catalogs.
+
+**Correctness retained:** request conflicts fail before spend. Hard
+requirements, wrong product type, accessories/components, used products,
+budget, model identity, duplicates, product-page identity, plausible current
+price, SSRF, and image identity all fail closed. A missing safe image renders a
+placeholder.
+
+**Measured result:** the same three cases averaged 8,029.33 ms, 92.07% lower
+and 12.61x faster. Normal responses averaged 821.33 bytes, 99.05% lower and
+104.81x smaller. Each used one planner call and no more than eight operations.
+Two additional hard-language searches returned only compliant in-budget direct
+products.
+
+**Tests run:** final serial checks passed 241/241 unit tests across 41 suites,
+typecheck, ESLint with zero warnings, Next.js 16.3.3 production build, and
+Playwright 7/7 on desktop/mobile Chromium. The build contains only `/`,
+`/_not-found`, and `/api/recommendations` application routes.
+
+**Scope and limitations:** no push, deployment, release, or production-data
+change. `.env.local` and protected live fixture data were not manually
+accessed. The live sample is small and time-sensitive; hosted readiness is not
+claimed. The final local commit was explicitly authorized.
+
+**Next recommended step:** review and manually exercise the committed shopper
+UI. Use medium reasoning for ordinary UI/catalog follow-up and high reasoning
+before changing identity, hard-requirement, price, SSRF, or image gates.

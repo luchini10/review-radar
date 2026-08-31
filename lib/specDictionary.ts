@@ -194,7 +194,7 @@ export const SPEC_DICTIONARY: SpecDefinition[] = [
     kind: "numeric",
     direction: "higher",
     matchers: [
-      /(\d{2,3}(?:\.\d+)?)\s*(?:in\.?|inch|inches|["”])\b/i,
+      /(\d{2,3}(?:\.\d+)?)\s*(?:(?:in\.?|inch(?:es)?)\b|["”](?=\W|$))/i,
       /(\d{2,3}(?:\.\d+)?)\s*-\s*inch\b/i,
     ],
   },

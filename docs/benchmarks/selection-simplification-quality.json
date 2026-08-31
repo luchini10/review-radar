@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "measuredAt": "2026-08-31",
+  "baseUrl": "http://localhost:3100",
+  "cases": [
+    {
+      "id": "hard-robot",
+      "input": {
+        "query": "robot vacuum",
+        "budget": "under $300",
+        "priorities": "must be self-emptying"
+      },
+      "durationMs": 8210,
+      "openAiCalls": 1,
+      "physicalSearchAttempts": 6,
+      "products": [
+        {
+          "name": "iHome AutoVac Nova S1 Pro Self Empty Robot Vacuum",
+          "price": 169.99,
+          "productPageUrl": "https://www.walmart.com/ip/iHome-AutoVac-Nova-S1-Pro-Self-Empty-Robot-Vacuum-LIDAR-Mapping-150-Min-Runtime-Strong-Suction-New/3975534016",
+          "hasImage": false
+        },
+        {
+          "name": "Shark IQ Robot Self-Empty Vacuum",
+          "price": 184.88,
+          "productPageUrl": "https://www.samsclub.com/ip/shark-iq-robot-self-empty-vacuum-self-cleaning-brushroll/13592871139",
+          "hasImage": true
+        },
+        {
+          "name": "iHome AutoVac Nova Self Empty Robot Vacuum Mop, Laser and Home Map Navigation",
+          "price": 179,
+          "productPageUrl": "https://www.walmart.com/ip/iHome-AutoVac-Nova-Self-Empty-Robot-Vacuum-Mop-Laser-and-Home-Map-Navigation/322004830",
+          "hasImage": true
+        }
+      ],
+      "assessment": "All returned products explicitly state self-emptying, are distinct models, have product-detail links, and are within the requested budget."
+    },
+    {
+      "id": "hard-monitor",
+      "input": {
+        "query": "gaming monitor",
+        "budget": "under $500",
+        "priorities": "must be exactly 27-inch, must be 1440p, and at least 144Hz"
+      },
+      "durationMs": 5199,
+      "openAiCalls": 1,
+      "physicalSearchAttempts": 6,
+      "products": [
+        {
+          "name": "Acer 27\" KGB271U X1bmiipx Gaming Monitor IPS 2560x1440 200Hz 250Nit 0.5ms 100x100",
+          "price": 149.99,
+          "productPageUrl": "https://www.microcenter.com/product/702476/acer-nitro-kgb271u-bmiipx-27-2k-wqhd-(2560-x-1440)-180hz-%EA%B2%8C%EC%9D%B4%EB%B0%8D-%EB%AA%A8%EB%8B%88%ED%84%B0?osfs=true&osfs=true&storeid=215&bvstate=pg:2/ct:r&showfullsite=true",
+          "hasImage": false
+        },
+        {
+          "name": "ASUS TUF Gaming vg27aq5a 27\" 2K QHD 210Hz Gaming Monitor",
+          "price": 189.99,
+          "productPageUrl": "https://www.microcenter.com/product/698645/asus-tuf-gaming-vg27aq5a-27-2k-qhd-(2560-x-1440)-210hz-gaming-monitor",
+          "hasImage": false
+        }
+      ],
+      "assessment": "Every returned product explicitly states 27 inches, QHD or 2560x1440, at least 144Hz, a product-detail link, and a price below the requested budget."
+    }
+  ],
+  "limitations": [
+    "Prices and retailer availability are time-sensitive live observations.",
+    "A missing image is preferred over an image whose product identity cannot be verified.",
+    "The hard-quality runs reused some provider cache entries, so physical attempts are lower than the matched cold-process benchmark."
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "phase": "after",
+  "startedAt": "2026-08-31T18:59:17.657Z",
+  "completedAt": "2026-08-31T18:59:41.746Z",
+  "baseUrl": "http://localhost:3100",
+  "architecture": "selection_only_v1",
+  "cases": [
+    {
+      "id": "broad-shop-vac",
+      "input": { "query": "shop vac" },
+      "status": 200,
+      "durationMs": 5636,
+      "serverDurationMs": 5318,
+      "normalResponseBytes": 686,
+      "debugResponseBytes": 2490,
+      "openAiCalls": 1,
+      "serperCalls": { "logicalCalls": 8, "physicalAttempts": 8 },
+      "plannerPromptChars": 222,
+      "plannerSystemPromptChars": 696,
+      "slowestStages": [
+        { "durationMs": 3297, "label": "select_products" },
+        { "durationMs": 1774, "label": "openai_selection_plan" },
+        { "durationMs": 228, "label": "create_optional_openai_client" },
+        { "durationMs": 14, "label": "extract_requirements" },
+        { "durationMs": 5, "label": "read_request_body" }
+      ],
+      "products": [
+        {
+          "name": "Craftsman 5-Gallon 4 HP Corded Wet/Dry Shop Vacuum with Accessories Included",
+          "category": "shop vac",
+          "price": { "amount": 69.98, "currency": "USD" },
+          "productPageUrl": "https://www.lowes.com/pd/CRAFTSMAN-5-Gallon-Portable-Wet-Dry-Shop-Vacuum/5001562243",
+          "hasImage": true
+        },
+        {
+          "name": "Bauer 6 Gallon 4 Peak Hp Wet/dry Vacuum",
+          "category": "shop vac",
+          "price": { "amount": 54.99, "currency": "USD" },
+          "productPageUrl": "https://www.harborfreight.com/6-gallon-4-peak-hp-wetdry-vacuum-56201.html",
+          "hasImage": false
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "constrained-robot-vacuum",
+      "input": {
+        "query": "robot vacuum",
+        "budget": "under $300",
+        "priorities": "self-emptying"
+      },
+      "status": 200,
+      "durationMs": 11104,
+      "serverDurationMs": 11087,
+      "normalResponseBytes": 1050,
+      "debugResponseBytes": 3038,
+      "openAiCalls": 1,
+      "serperCalls": { "logicalCalls": 8, "physicalAttempts": 8 },
+      "plannerPromptChars": 275,
+      "plannerSystemPromptChars": 696,
+      "slowestStages": [
+        { "durationMs": 8506, "label": "select_products" },
+        { "durationMs": 2570, "label": "openai_selection_plan" },
+        { "durationMs": 10, "label": "extract_requirements" },
+        { "durationMs": 0, "label": "read_request_body" },
+        { "durationMs": 0, "label": "validate_request" }
+      ],
+      "products": [
+        {
+          "name": "Shark Navigator Robot Vacuum with Self-Empty Base",
+          "category": "robot vacuum",
+          "price": { "amount": 250, "currency": "USD" },
+          "productPageUrl": "https://www.bestbuy.com/product/shark-navigator-robot-vacuum-self-empty-base-gray/JXJVXLJPRR/sku/6641726",
+          "hasImage": false
+        },
+        {
+          "name": "iHome AutoVac Nova S1 Pro Self Empty Robot Vacuum",
+          "category": "robot vacuum",
+          "price": { "amount": 169.99, "currency": "USD" },
+          "productPageUrl": "https://www.walmart.com/ip/iHome-AutoVac-Nova-S1-Pro-Self-Empty-Robot-Vacuum-LIDAR-Mapping-150-Min-Runtime-Strong-Suction-New/3975534016",
+          "hasImage": false
+        },
+        {
+          "name": "iHome AutoVac Nova Self Empty Robot Vacuum Mop, Laser and Home Map Navigation",
+          "category": "robot vacuum",
+          "price": { "amount": 179, "currency": "USD" },
+          "productPageUrl": "https://www.walmart.com/ip/iHome-AutoVac-Nova-Self-Empty-Robot-Vacuum-Mop-Laser-and-Home-Map-Navigation/322004830",
+          "hasImage": true
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "technical-gaming-monitor",
+      "input": {
+        "query": "gaming monitor",
+        "budget": "under $500",
+        "priorities": "27-inch, 1440p, at least 144Hz"
+      },
+      "status": 200,
+      "durationMs": 7348,
+      "serverDurationMs": 7328,
+      "normalResponseBytes": 728,
+      "debugResponseBytes": 2743,
+      "openAiCalls": 1,
+      "serperCalls": { "logicalCalls": 8, "physicalAttempts": 8 },
+      "plannerPromptChars": 333,
+      "plannerSystemPromptChars": 696,
+      "slowestStages": [
+        { "durationMs": 5325, "label": "select_products" },
+        { "durationMs": 1995, "label": "openai_selection_plan" },
+        { "durationMs": 7, "label": "extract_requirements" },
+        { "durationMs": 1, "label": "read_request_body" },
+        { "durationMs": 0, "label": "validate_request" }
+      ],
+      "products": [
+        {
+          "name": "Dell S2725DSM 27\" 2K QHD 144Hz Gaming Monitor gtt45",
+          "category": "gaming monitor",
+          "price": { "amount": 189.99, "currency": "USD" },
+          "productPageUrl": "https://www.microcenter.com/product/705102/dell-s2725dsm-27-2k-qhd-(2560-x-1440)-144hz-gaming-monitor",
+          "hasImage": false
+        },
+        {
+          "name": "Acer 27\" KGB271U X1bmiipx Gaming Monitor IPS 2560x1440 200Hz 250Nit 0.5ms 100x100",
+          "category": "gaming monitor",
+          "price": { "amount": 149.99, "currency": "USD" },
+          "productPageUrl": "https://www.microcenter.com/product/702476/acer-nitro-kgb271u-bmiipx-27-2k-wqhd-(2560-x-1440)-180hz-%EA%B2%8C%EC%9D%B4%EB%B0%8D-%EB%AA%A8%EB%8B%88%ED%84%B0?osfs=true&osfs=true&storeid=215&bvstate=pg:2/ct:r&showfullsite=true",
+          "hasImage": false
+        }
+      ],
+      "error": null
+    }
+  ],
+  "aggregate": {
+    "averageDurationMs": 8029.33,
+    "averageNormalResponseBytes": 821.33,
+    "openAiCallsPerSearch": 1,
+    "serperPhysicalAttemptsPerSearch": 8,
+    "latencyReductionPercent": 92.07,
+    "speedupFactor": 12.61,
+    "normalResponseReductionPercent": 99.05,
+    "normalResponseSizeFactor": 104.81
+  }
+}

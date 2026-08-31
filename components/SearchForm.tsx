@@ -68,11 +68,11 @@ export function SearchForm({
   return (
     <Card className="overflow-visible rounded-[2rem] border-ink/10 bg-paper py-0 shadow-[0_24px_75px_rgba(12,27,22,0.11)]">
       <CardContent className="p-5 sm:p-7 lg:p-8">
-        <form aria-label="Product research" onSubmit={onSubmit}>
+        <form aria-label="Product search" onSubmit={onSubmit}>
           <div className="mb-7 flex flex-col gap-4 border-b border-ink/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-forest">Research brief</p>
-              <h2 className="mt-2 font-display text-2xl font-semibold leading-tight tracking-[-0.035em] sm:text-3xl">Tell us what a great choice looks like.</h2>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-forest">Product request</p>
+              <h2 className="mt-2 font-display text-2xl font-semibold leading-tight tracking-[-0.035em] sm:text-3xl">Tell us what the right product looks like.</h2>
             </div>
             <p className="max-w-sm text-xs leading-5 text-ink/65">Specific details help ReviewRadar separate a popular product from the right product.</p>
           </div>
@@ -116,12 +116,10 @@ export function SearchForm({
                 </p>
               ) : (
                 <p className="text-xs leading-5 text-ink/65" id="category-helper">
-                  The product you want researched. Be as specific as you like.
+                  The product you want matched. Be as specific as you like.
                 </p>
               )}
               <SmartFeatures
-                budget={value.budget}
-                importantDetails={value.priorities}
                 productCategory={value.category}
                 selectedFeatures={value.selectedFeatures}
                 onChange={(features) => onChange("selectedFeatures", features)}
@@ -146,8 +144,8 @@ export function SearchForm({
                 value={value.budget}
               />
               <p className="text-xs leading-5 text-ink/65" id="budget-helper">
-                Firm limits are enforced. Over-budget upgrades are labeled
-                separately, never mixed in.
+                Firm limits are enforced. Products with an unverified or
+                over-budget price are excluded.
               </p>
             </div>
 
@@ -214,8 +212,8 @@ export function SearchForm({
             <div className="flex items-start gap-2.5 sm:max-w-sm">
               <Clock3 aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-forest/60" />
               <p className="text-xs leading-5 text-ink/65">
-                Deep research usually takes one to three minutes. Keep this tab
-                open; we will show the work as it progresses.
+                ReviewRadar runs one bounded candidate search and verifies only
+                the finalist details needed for a safe shortlist.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -243,7 +241,7 @@ export function SearchForm({
                 ) : (
                   <ArrowRight aria-hidden="true" className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
                 )}
-                {isLoading ? "Preparing search..." : "Find Recommendations"}
+                {isLoading ? "Finding products..." : "Find products"}
               </Button>
             </div>
           </div>

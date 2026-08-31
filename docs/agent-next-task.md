@@ -4,147 +4,135 @@ Updated: 2026-08-31
 
 ## Current phase and exact snapshot
 
-PR-9J is implemented and verified in the local working tree on base commit
-`d2c5f1488b1d99cc8dfcf80893387d56c2dd1dbf` (tree
-`69fc69085e42750a3a0fd0d70b3fa60c0cccf145`, parent
-`74c39c4b262edcb19533848d6691ba6a2e47f2a9`). It is not committed; creating a
-commit requires separate explicit authority.
+PR-10, the selection-only architecture reset, is implemented and fully
+validated on the committed PR-9J snapshot
+`5117276c3b2909d629d9f19970b3e6f55c10af67`. This regenerated handoff is part
+of the final local PR-10 commit. Resolve its exact hash with
+`git rev-parse HEAD`; no push, deployment, or release is authorized or
+required.
 
-The stable development server is currently running at
-`http://localhost:3000` through the corrected `npm run dev` command. No paid
-search was submitted during correction or runtime verification.
+There is no running development server. No experimental recommendation mode,
+feature flag, background job, or report route remains in the application.
 
-## Objective and root cause
+## Objective, bottleneck, and decision
 
-**Objective:** restore reliable ordinary localhost search behavior without
-weakening product identity, evidence, requirements, prices, safety, or paid-
-work boundaries.
+**Objective:** reduce real shopper latency and complexity without weakening
+which products qualify.
 
-A user `power washer` search with a `$1,500` budget returned the Direct-Terra
-`verification_failed` citation banner. Product availability and budget were not
-the cause. The exact response proves both Direct-Terra client/server flags were
-active in the running process, so the normal homepage used the experimental
-`/api/recommendations-v2` route.
+Matched baseline searches averaged 101,212 ms. The delay was distributed across
+final report generation, review/editorial research, planning, rescue,
+discovery, and asset stages. The route made three OpenAI calls, used 37–60+
+Serper attempts, built prompts of roughly 17,000–19,000 characters plus a
+6,115-character system prompt, and returned 38–129 KB normal responses. This
+proved the report pipeline itself was the bottleneck; optimizing one stage or
+keeping alternate modes would not solve the objective.
 
-Standard `npm run dev` previously ran `next dev` directly and therefore honored
-stale experimental flags from process/local configuration. This silently
-selected a pipeline already rejected by OAI-T9 as
-`single_call_architecture_no_go`: one of 12 final acceptance searches
-completed, six returned 502 route failures, and five reached the retrieve
-ceiling without completion. Direct Terra was intentionally default-off.
+PR-10 therefore replaces the report architecture with one bounded product
+selection path. This supersedes Direct Terra, staged Terra, two-layer output,
+the earlier stable report path, and all report-era kickoffs.
 
-The citation wording was also overbroad: every completed Direct-Terra
-`invalid_report` branch maps to the same message, including wrapper,
-candidate-slate, rank, requirement, price-ledger, and citation failures. The
-exact leaf reason for the spent user search was not retained and must not be
-invented.
+## Current runtime contract
 
-## Correction
+- `/api/recommendations` is the only application API and exports only `POST`.
+- The request is validated before paid work. Conflicting hard requirements fail
+  before planning or search.
+- Planning uses zero or one compact OpenAI structured-output call. Missing,
+  timed-out, or invalid model output falls back to deterministic queries.
+- Search performs at most three Shopping queries and at most eight total
+  logical search/product-page operations. There are no retries, alternate
+  providers, editorial/review crawls, rescue passes, polling, or background
+  jobs.
+- Hard requirements, wrong product types, accessories/components, used items,
+  explicit model conflicts, duplicates, and over-budget products fail closed.
+- A budgeted result requires a trustworthy current price.
+- Product pages are identity-checked and fetched through bounded DNS-pinned
+  SSRF protection. Images require same-product evidence or render as a
+  placeholder.
+- Result cards contain only image or placeholder, category, exact product name,
+  trustworthy price or explicit missing-price state, and `View product`.
+- Smart Features are deterministic local catalogs. They make no provider call.
 
-- `npm run dev` now starts `scripts/run-stable-development.mjs`.
-- The launcher supplies these child-process values before Next loads env files:
-  - `REVIEW_RADAR_DIRECT_TERRA=off`
-  - `NEXT_PUBLIC_REVIEW_RADAR_DIRECT_TERRA=false`
-  - `REVIEW_RADAR_STAGED_TERRA=off`
-  - `NEXT_PUBLIC_REVIEW_RADAR_STAGED_TERRA=false`
-- Next 16.3.3 documents process environment as higher precedence than
-  `.env.local`, so stale experiment flags cannot replace ordinary local search.
-- Every unrelated environment value passes through unchanged and unprinted.
-  `.env.local` was neither inspected nor edited.
-- `npm run dev:experimental` preserves deliberate flag-controlled experiments.
-- CLI arguments remain supported, for example `npm run dev -- -p 3100`.
+## Measured result
 
-This is selection before submission, not an automatic retry, replacement, or
-fallback. Production build/start behavior and all application trust gates are
-unchanged.
+The same three representative searches produced:
+
+| Measure | Before | After | Change |
+| --- | ---: | ---: | ---: |
+| Mean client latency | 101,212 ms | 8,029.33 ms | 92.07% lower; 12.61x faster |
+| Mean normal response | 86,087.67 B | 821.33 B | 99.05% lower; 104.81x smaller |
+| OpenAI calls per search | 3 | 1 | 66.67% fewer |
+| Search/page ceiling | 37–60+ Serper attempts observed | 8 logical operations | hard bounded |
+
+Additional `must be` robot-vacuum and monitor searches returned only matching,
+in-budget direct products. The benchmark records are in `docs/benchmarks/`.
 
 ## Verification
 
-- Fail-first: the launcher test failed because no stable launcher existed.
-- Corrected focused launcher tests: 4/4.
-- Full unit suite: 1,728/1,728 across 234 suites.
+- Unit tests: 241/241 across 41 suites.
 - Typecheck: pass.
-- Production build: pass on Next.js 16.3.3.
-- Lint: zero errors and three pre-existing warnings.
-- `npm run dev -- --help`: pass; Next CLI arguments are forwarded.
-- Zero-spend runtime:
-  - confirmed the prior PID was this repository's port-3000 Next server;
-  - stopped it and restarted through the stable launcher;
-  - homepage GET returned HTTP 200;
-  - experimental V2 POST returned HTTP 500 `invalid_config` before request
-    parsing or provider creation.
-- No recommendation search, OpenAI call, hosted search, Shopping call, source
-  fetch, retry, replacement, or fallback occurred.
+- Lint: pass with zero warnings.
+- Production build: pass; application routes are only `/`, `/_not-found`, and
+  `/api/recommendations`.
+- Playwright: pass, 7/7 across Chromium desktop/mobile.
+- Live matched before/after: three representative searches completed and are
+  recorded without raw provider responses or credentials.
+- Live hard-language QA: two additional searches completed successfully.
 
-## Files in the PR-9J working tree
+The required checks were rerun serially against the final source snapshot.
 
-- `package.json`
-- `scripts/run-stable-development.mjs`
-- `tests/stableDevelopmentLauncher.test.mjs`
-- `next-env.d.ts` (Next 16 development-mode generated references, retained per
-  repository agent instructions)
-- `docs/agent-next-task.md`
-- `docs/forward-roadmap.md`
-- `docs/qa-loop-results.md`
-- `docs/review-radar-test-memory.md`
-- `ReviewRadar-Overview.md`
-- `docs/change-log.md`
+## Files and scope
 
+The phase changes the recommendation route, minimal client/result components,
+selection planner/search/ranking primitives, product-page/identity/price/image
+safety helpers, local Smart Features, request/result types, tests, E2E coverage,
+benchmark tooling/evidence, package surface, and canonical documentation.
+
+Report routes, progress APIs, report UI, report contracts, narrative/citation/
+review/evidence generators, Direct Terra, staged Terra, two-layer output,
+obsolete evaluation scripts, and report-specific tests/fixtures were deleted.
 Unrelated untracked user files remain untouched.
 
-## Recommended next step
-
-First let the user retry the ordinary search in the already-running stable
-localhost server. That search is user-initiated paid work; do not submit it
-automatically.
-
-If stable search still fails, diagnose that separate pipeline from its own
-response and logs rather than re-enabling Direct Terra. If it succeeds, request
-separate authority before creating one local PR-9J commit. Use **medium
-reasoning** for the commit-only step because implementation and validation are
-already complete; use **High reasoning** only if stable search exposes a new
-accuracy or trust failure.
-
-The previously recommended candidate-local acquisition work remains valid for
-the default-off staged architecture, but it is not required to restore normal
-localhost routing and must not be started in this completed step.
-
-## Flags, secrets, and hard boundaries
-
-Committed/default stable values remain:
-
-- `REVIEW_RADAR_STAGED_TERRA=off`
-- `NEXT_PUBLIC_REVIEW_RADAR_STAGED_TERRA=false`
-- `REVIEW_RADAR_DIRECT_TERRA=off`
-- `NEXT_PUBLIC_REVIEW_RADAR_DIRECT_TERRA=false`
-- `REVIEW_RADAR_CONSTRAINT_ALLOCATION=off`
+## Secrets and hard boundaries
 
 Never manually inspect, print, hash, copy, edit, or diagnose `.env.local`.
 Ordinary tools must never open, enumerate, stat, hash, parse, copy, edit, or
 delete `tests/fixtures/review-radar-live/**`; exclude it from ordinary search
 and status commands.
 
-Do not push, deploy, release, promote flags, automatically retry searches, or
-run another PR-9I readiness attempt. None occurred in PR-9J.
+PR-10 authorizes the local code/documentation work, representative paid
+searches, full local verification, and one final local commit. It does not
+require or perform a push, PR, deployment, release, production-data change, or
+credential disclosure.
 
-## Remaining risks
+## Remaining risks and uncertainty
 
-- The user has not yet repeated the search through the corrected stable path,
-  so end-to-end recommendation success is not claimed.
-- Stable/legacy search has its own known accuracy risks; this correction proves
-  route selection, not product-result quality.
-- Direct Terra still maps several internal contract failures to one inaccurate
-  public citation message. It is no longer selected by normal `npm run dev`,
-  but deliberate experimental runs retain that observability limitation.
-- Production configuration can still explicitly enable experimental modes;
-  this local-development safeguard does not change deployment behavior.
+- The live sample is deliberately small and prices/search inventory are
+  time-sensitive; it proves the latency/complexity change and representative
+  selection behavior, not universal catalog recall.
+- Missing identity-safe product imagery intentionally produces placeholders.
+- A hard requirement with insufficient evidence may exclude a real match. This
+  is the intentional fail-closed tradeoff.
+- Hosted and production-runtime readiness were not tested in this local phase.
+
+## Recommended next step
+
+Review the committed selection-only snapshot and manually exercise the shopper
+UI. Use **medium reasoning** for routine UI or catalog follow-up because the
+architecture is now small and directly tested. Use **high reasoning** before
+changing hard-requirement, identity, price, SSRF, or image safety rules because
+those are the remaining correctness boundaries.
+
+There is no approved follow-on implementation. Do not reintroduce report
+generation or an alternate recommendation architecture without a new product
+decision supported by current evidence.
 
 ## Evidence pointers
 
 | Evidence | Location |
 | --- | --- |
-| Root cause and correction | `docs/forward-roadmap.md`, PR-9J |
-| Canonical verification | latest PR-9J entry in `docs/qa-loop-results.md` |
-| Durable launch contract | `docs/review-radar-test-memory.md`, PR-9J |
-| Architecture | `ReviewRadar-Overview.md`, section 51 |
-| Base snapshot | commit `d2c5f1488b1d99cc8dfcf80893387d56c2dd1dbf` |
+| Phase decision and architecture | `docs/forward-roadmap.md`, PR-10 |
+| Canonical verification | latest PR-10 entry in `docs/qa-loop-results.md` |
+| Durable selection contract | `docs/review-radar-test-memory.md`, PR-10 |
+| Runtime architecture | `ReviewRadar-Overview.md` |
+| Before/after benchmark | `docs/benchmarks/selection-simplification-before.json`, `selection-simplification-after.json`, and `selection-simplification-quality.json` |
+| Parent snapshot | commit `5117276c3b2909d629d9f19970b3e6f55c10af67` |

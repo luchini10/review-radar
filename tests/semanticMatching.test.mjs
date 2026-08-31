@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
-  buildPositiveProductFactText,
   matchSemanticFeatureEvidence,
   violatesSemanticDealbreaker,
 } from "../lib/semanticMatching.ts";
@@ -72,16 +71,5 @@ describe("semantic matching", () => {
       violatesSemanticDealbreaker("Gas powered engine with pull start.", "gas"),
       true,
     );
-  });
-
-  it("does not use generated explanation copy as positive feature proof", () => {
-    const text = buildPositiveProductFactText({
-      name: "Example Black Refrigerator",
-      why_recommended: "Found during a red refrigerator search.",
-      pros: ["Available in black."],
-      citations: [],
-    });
-
-    assert.equal(matchSemanticFeatureEvidence(text, "red").status, "needs_verification");
   });
 });

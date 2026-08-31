@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     template: "%s | ReviewRadar",
   },
   description:
-    "ReviewRadar researches reviews, prices, features, and tradeoffs across public sources, then returns cited ranked Best Match recommendations.",
+    "ReviewRadar finds distinct products that match your requirements, with trustworthy product links and current prices when available.",
 };
 
 export default function RootLayout({

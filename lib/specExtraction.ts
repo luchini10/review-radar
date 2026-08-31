@@ -1,19 +1,11 @@
-// Deterministic, side-effect-free extraction of numeric/boolean performance
-// specs, driven entirely by SPEC_DICTIONARY. Two entry points:
-//
-//   extractSpecConstraints(text, source) -> spec *requirements* from user input
-//   extractProductSpecs(product)         -> observed spec values on a product
-//
-// SHADOW MODE: nothing in this file is consumed by search, validation, or
-// scoring yet. It is computed and surfaced for debugging so later phases can
-// promote it after before/after comparison.
+// Deterministic extraction and evaluation of numeric or boolean requirements
+// used by the selection filter. No model-generated product claims are accepted.
 
 import {
   SPEC_DICTIONARY,
   type SpecDefinition,
 } from "./specDictionary.ts";
 import type {
-  ProductRecommendation,
   ProductSpecMap,
   ProductSpecSource,
   SpecConstraint,
@@ -23,6 +15,7 @@ const MIN_WORDS =
   /(?:at least|minimum|\bmin\b|no less than|over|more than|greater than|above|starting at)/i;
 const MAX_WORDS =
   /(?:under|less than|below|at most|max(?:imum)?|no more than|up to|within)/i;
+const EXACT_WORDS = /(?:exactly|equal to|equals|precisely)/i;
 const HARD_WORDS =
   /(?:must|need|needs|required|require|requires|has to|have to|\bonly\b|at least|no less than|under|less than|below|at most|no more than|maximum|minimum)/i;
 
@@ -103,8 +96,11 @@ export function extractSpecConstraints(
           const hasPlus = /\d\s*\+/.test(matched);
           const hasMinWord = MIN_WORDS.test(cleanedPreWindow);
           const hasMaxWord = MAX_WORDS.test(cleanedPreWindow);
+          const hasExactWord = EXACT_WORDS.test(cleanedPreWindow);
           const operator: SpecConstraint["operator"] =
-            hasPlus || hasMinWord
+            hasExactWord
+              ? "equals"
+              : hasPlus || hasMinWord
               ? "min"
               : hasMaxWord
                 ? "max"
@@ -113,7 +109,7 @@ export function extractSpecConstraints(
                   : definition.direction === "exact"
                     ? "equals"
                     : "min";
-          const explicit = hasPlus || hasMinWord || hasMaxWord;
+          const explicit = hasPlus || hasMinWord || hasMaxWord || hasExactWord;
           const strictness: SpecConstraint["strictness"] =
             explicit || source === "smart_feature" || HARD_WORDS.test(cleanedPreWindow)
               ? "hard"
@@ -211,67 +207,6 @@ function readSpecFromText(definition: SpecDefinition, text: string) {
   }
 
   return null;
-}
-
-// Structural input so both ProductRecommendation and the narrower ProductLike
-// used by requirement validation can be passed without coupling.
-type SpecExtractableProduct = Pick<
-  ProductRecommendation,
-  | "name"
-  | "metadata"
-  | "why_recommended"
-  | "best_for"
-  | "pros"
-  | "cons"
-  | "common_complaints"
-  | "citations"
->;
-
-export function extractProductSpecs(product: SpecExtractableProduct): ProductSpecMap {
-  const citationText = product.citations
-    .map((citation) => `${citation.title} ${citation.what_it_supports}`)
-    .join(" ");
-  const evidenceText = [
-    product.why_recommended,
-    product.best_for,
-    ...product.pros,
-    ...product.cons,
-    ...product.common_complaints,
-    citationText,
-  ]
-    .filter(Boolean)
-    .join(" ");
-  // Highest-confidence text first: a verified product title beats prose.
-  const segments: Array<{ source: ProductSpecSource; text: string }> = [
-    { source: "title", text: product.metadata?.title?.value || "" },
-    { source: "name", text: product.name || "" },
-    { source: "evidence", text: evidenceText },
-  ];
-  const specs: ProductSpecMap = {};
-
-  for (const definition of SPEC_DICTIONARY) {
-    for (const segment of segments) {
-      if (!segment.text) {
-        continue;
-      }
-
-      const reading = readSpecFromText(definition, segment.text);
-
-      if (reading) {
-        specs[definition.id] = {
-          spec: definition.id,
-          kind: definition.kind,
-          value: reading.value,
-          unit: definition.unit,
-          raw: reading.raw,
-          source: segment.source,
-        };
-        break;
-      }
-    }
-  }
-
-  return specs;
 }
 
 export type SpecConstraintStatus = "pass" | "fail" | "unknown";

@@ -2,39 +2,11 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
-  fallbackFeatures,
   getFallbackSmartFeatures,
   smartFeatureCategoryKey,
-  smartFeatureResponseSchema,
 } from "../lib/smartFeatureSuggestions.ts";
 
-describe("smart feature suggestions schema", () => {
-  it("accepts the fallback feature shape", () => {
-    const result = smartFeatureResponseSchema.safeParse(fallbackFeatures);
-
-    assert.equal(result.success, true);
-  });
-
-  it("rejects too few generated features", () => {
-    const result = smartFeatureResponseSchema.safeParse({
-      category: "couch",
-      features: fallbackFeatures.features.slice(0, 4),
-    });
-
-    assert.equal(result.success, false);
-  });
-
-  it("rejects feature examples with too few options", () => {
-    const result = smartFeatureResponseSchema.safeParse({
-      category: "laptop",
-      features: fallbackFeatures.features.map((feature, index) =>
-        index === 0 ? { ...feature, examples: ["Only one"] } : feature,
-      ),
-    });
-
-    assert.equal(result.success, false);
-  });
-
+describe("deterministic smart feature suggestions", () => {
   it("returns stable catalog features for sofa and couch searches", () => {
     const sofa = getFallbackSmartFeatures("sofa");
     const couch = getFallbackSmartFeatures("couch");
@@ -79,10 +51,20 @@ describe("smart feature suggestions schema", () => {
 
       assert.ok(result, `${category} should have catalog features`);
       assert.ok(result.features.length >= 5, `${category} should have at least 5 features`);
+      assert.ok(
+        result.features.every(
+          (feature) =>
+            feature.id &&
+            feature.name &&
+            feature.examples.length >= 2 &&
+            feature.operators.length >= 1,
+        ),
+        `${category} should have complete selectable features`,
+      );
     }
   });
 
-  it("returns null for uncommon categories so the API can use AI fallback", () => {
+  it("returns null for uncommon categories so Important Details remains the fallback", () => {
     assert.equal(getFallbackSmartFeatures("portable pottery wheel"), null);
   });
 });

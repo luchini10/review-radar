@@ -1,8 +1,3 @@
-import type {
-  Citation,
-  ProductRecommendation,
-  RecommendationResult,
-} from "@/types/review-radar";
 import { classifyProductEligibility } from "./productEligibility.ts";
 import {
   classifyProductEvidenceIdentity,
@@ -20,29 +15,20 @@ import {
   isModelIdentityMeasurementToken,
   modelIdentityRelation,
   splitModelIdentityAliases,
-  stableModelIdentifiers,
   strongModelTokens,
 } from "./productIdentity.ts";
 import {
   sourceUrlPathIdentitySegments,
 } from "./sourceUrlIdentity.ts";
 
-export type ProductPageUrlType = "official" | "retailer" | "source" | "unknown";
-
-export type ProductPageLink = {
-  confidence: "high" | "medium" | "low";
-  isProductPage: boolean;
-  label: string;
-  type: ProductPageUrlType;
-  url: string;
-};
+type ProductPageUrlType = "official" | "retailer" | "source" | "unknown";
 
 type ProductPageCandidate = {
   confidence: "high" | "medium" | "low";
   isProductPage: boolean;
   score: number;
   sourceTitle?: string;
-  sourceType: "canonical" | "citation" | "offer" | "primary";
+  sourceType: "candidate" | "canonical" | "offer" | "primary";
   type: ProductPageUrlType;
   url: string;
 };
@@ -234,25 +220,6 @@ function compactBrand(value: string) {
   return value.replace(/[^a-z0-9]+/g, "");
 }
 
-function productNameBrand(product: ProductRecommendation) {
-  const lowerName = product.name.toLowerCase();
-  const knownBrand = Object.keys(OFFICIAL_BRAND_DOMAINS)
-    .sort((left, right) => right.length - left.length)
-    .find((brand) => lowerName.startsWith(`${brand} `));
-
-  return knownBrand || "";
-}
-
-function productBrands(product: ProductRecommendation) {
-  const brands = [
-    normalizeBrand(product.metadata?.brand?.value),
-    normalizeBrand(product.canonicalIdentity?.brand),
-    productNameBrand(product),
-  ].filter(Boolean);
-
-  return Array.from(new Set(brands));
-}
-
 function identityWords(value: string | undefined) {
   return normalizeBrand(value).split(" ").filter(Boolean);
 }
@@ -265,7 +232,6 @@ function firstSpecificIdentityWord(value: string | undefined) {
       !GENERIC_LEADING_IDENTITY_WORDS.has(word),
   );
 }
-
 function urlPathText(url: string) {
   try {
     return decodeURIComponent(new URL(url).pathname);
@@ -631,7 +597,7 @@ function classifyCandidate(input: {
 
   if (input.model) {
     const titleIdentity =
-      input.sourceType === "canonical" || input.sourceType === "citation"
+      input.sourceType === "canonical" || input.sourceType === "candidate"
         ? input.sourceTitle || ""
         : "";
     const pathIdentity = restoreDocumentedDecimalModelInPath(
@@ -731,7 +697,7 @@ function classifyCandidate(input: {
     ? "official"
     : retailer
       ? "retailer"
-      : isEditorial || input.sourceType === "citation"
+      : isEditorial || input.sourceType === "candidate"
         ? "source"
         : "unknown";
   const confidence =
@@ -772,60 +738,6 @@ function classifyCandidate(input: {
   };
 }
 
-function productPageLabel(candidate: ProductPageCandidate) {
-  if (candidate.type === "official") {
-    return candidate.isProductPage
-      ? "View Official Product Page"
-      : "View Official Brand Page";
-  }
-
-  if (candidate.type === "retailer") {
-    return "View Retailer Page";
-  }
-
-  if (candidate.type === "source") {
-    return "View Source Page";
-  }
-
-  return "View Product Page";
-}
-
-function citationCandidates(
-  citations: Citation[],
-  productName: string,
-  brands: string[],
-  model: string,
-): ProductPageCandidate[] {
-  return citations.flatMap((citation) => {
-    const candidate = classifyCandidate({
-      brands,
-      model,
-      productName,
-      sourceTitle: citation.title,
-      sourceType: "citation",
-      url: citation.url,
-    });
-
-    return candidate ? [candidate] : [];
-  });
-}
-
-function productModel(product: ProductRecommendation) {
-  const explicitModel =
-    product.metadata?.modelNumber?.value ||
-    product.canonicalIdentity?.modelNumber ||
-    "";
-  if (explicitModel.trim()) return explicitModel.trim();
-
-  const compoundModels = [...compoundModelSequences(product.name)];
-  if (compoundModels.length === 1) {
-    return compoundModels[0].replace(/:/g, " ");
-  }
-
-  const stableModels = stableModelIdentifiers(product.name);
-  return stableModels.length === 1 ? stableModels[0] : "";
-}
-
 export function productPageMatchesIdentity(input: {
   pageTitle: string;
   pageUrl: string;
@@ -847,7 +759,7 @@ export function productPageMatchesIdentity(input: {
     model: input.model,
     productName: input.productName,
     sourceTitle: input.pageTitle,
-    sourceType: "citation",
+    sourceType: "candidate",
     url: input.pageUrl,
   });
 
@@ -902,100 +814,4 @@ export function productPageMatchesIdentity(input: {
     (!pathModelRelation.hasDocumentedIdentity ||
       pathModelRelation.matchesCompleteAlias)
   );
-}
-
-function getProductPageCandidates(product: ProductRecommendation) {
-  const brands = productBrands(product);
-  const model = productModel(product);
-  const candidates = [
-    classifyCandidate({
-      brands,
-      model,
-      productName: product.name,
-      sourceTitle: product.metadata?.title?.value || product.name,
-      sourceType: "canonical",
-      url: product.metadata?.canonicalUrl?.value || "",
-    }),
-    classifyCandidate({
-      brands,
-      model,
-      productName: product.name,
-      sourceTitle: product.name,
-      sourceType: "primary",
-      url: product.product_page_url,
-    }),
-    ...(product.metadata?.offers || []).flatMap((offer) => {
-      const candidate = classifyCandidate({
-        brands,
-        model,
-        productName: product.name,
-        sourceTitle: offer.retailer || product.name,
-        sourceType: "offer",
-        url: offer.url,
-      });
-
-      return candidate ? [candidate] : [];
-    }),
-    ...citationCandidates(product.citations, product.name, brands, model),
-  ].filter((candidate): candidate is ProductPageCandidate => Boolean(candidate));
-  const seen = new Set<string>();
-
-  return candidates.filter((candidate) => {
-    if (seen.has(candidate.url)) {
-      return false;
-    }
-
-    seen.add(candidate.url);
-    return true;
-  });
-}
-
-export function getProductPageLink(
-  product: ProductRecommendation,
-): ProductPageLink | null {
-  const bestCandidate = getProductPageCandidates(product)
-    .filter((candidate) => candidate.isProductPage)
-    .sort((left, right) => right.score - left.score)[0];
-
-  if (!bestCandidate) {
-    return null;
-  }
-
-  return {
-    confidence: bestCandidate.confidence,
-    isProductPage: bestCandidate.isProductPage,
-    label: productPageLabel(bestCandidate),
-    type: bestCandidate.type,
-    url: bestCandidate.url,
-  };
-}
-
-export function prioritizeProductPageUrl(
-  product: ProductRecommendation,
-): ProductRecommendation {
-  const link = getProductPageLink(product);
-  const nextUrl = link?.url || "";
-
-  if (nextUrl === product.product_page_url) {
-    return product;
-  }
-
-  return {
-    ...product,
-    product_page_url: nextUrl,
-  };
-}
-
-export function prioritizeProductPageUrlsInResult(
-  result: RecommendationResult,
-): RecommendationResult {
-  return {
-    ...result,
-    exactMatches: result.exactMatches.map(prioritizeProductPageUrl),
-    nearMatches: result.nearMatches.map(prioritizeProductPageUrl),
-    premiumAboveBudget: (result.premiumAboveBudget || []).map(
-      prioritizeProductPageUrl,
-    ),
-    recommendations: result.recommendations.map(prioritizeProductPageUrl),
-  };
 }

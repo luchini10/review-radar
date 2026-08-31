@@ -16964,3 +16964,59 @@ Homepage GET returned 200. A bounded POST to the experimental V2 route returned
 `invalid_config` before shopper-body parsing or provider creation, proving the
 server override. No stable or experimental recommendation request was
 submitted, and there was no provider/search/page-fetch spend.
+
+---
+
+## PR-10 selection-only architecture reset (2026-08-31)
+
+**Assessment:** the proposed objective was correct, but optimizing the existing
+report pipeline was not. Three matched baseline searches showed latency spread
+across final report generation, review enrichment, planning, rescue,
+discovery, and assets. The earliest system-level cause was the report/research
+architecture itself.
+
+**Before measurement:** broad shop vac took 115,840 ms, self-emptying robot
+vacuum under $300 took 91,490 ms, and a 27-inch 1440p 144Hz monitor under $500
+took 96,306 ms. Mean latency was 101,212 ms and mean normal response size was
+86,087.67 bytes. Each path used three OpenAI calls. Observed Serper work was
+37–60+ attempts; the shop-vac case exhausted 60. The final prompts alone were
+17,031–19,088 characters plus a 6,115-character system prompt. Output included
+identity/URL defects, low exact recall, or duplicates/missing URLs.
+
+**Generalized correction:** the application now has one selection-only POST
+route, zero-or-one compact planner call with deterministic fallback, at most
+three Shopping queries, and a hard eight-operation ceiling including finalist
+product pages. It has no report synthesis, review/editorial crawl, rescue pass,
+retry, polling, background job, or alternate architecture. The response is a
+minimal product-card contract. Dynamic Smart Features use local catalogs and
+make no provider call.
+
+**Preserved gates:** request validation and conflict detection occur before
+paid work. Product type, component/accessory, used-item, hard requirement,
+budget, model identity, deduplication, page identity, plausible current price,
+SSRF, and image identity rules remain active. A budgeted product must have a
+trustworthy in-budget price, and unverified imagery becomes a placeholder.
+
+**Matched after measurement:** the same cases took 5,636 ms, 11,104 ms, and
+7,348 ms. Mean latency was 8,029.33 ms, 92.07% lower and 12.61x faster. Mean
+normal response size was 821.33 bytes, 99.05% lower and 104.81x smaller. Every
+case used one planner call and eight logical/physical search-page operations.
+Two additional hard-language cases completed in 8,210 ms and 5,199 ms and
+returned only matching, in-budget direct products. The lower six physical
+attempts in those two runs came from provider-cache reuse and are not presented
+as cold-process performance.
+
+**Verification:** final serial validation passed 241/241 unit tests across 41
+suites, TypeScript typecheck, ESLint with zero warnings, Next.js 16.3.3
+production build, and Playwright 7/7 across desktop/mobile Chromium. The build
+exposed only `/`, `/_not-found`, and `/api/recommendations` application routes.
+`git diff --check` and the final staged-snapshot review passed. The coherent
+reset changes 335 files, with 5,549 insertions and 146,152 deletions; unrelated
+untracked user files are excluded from the commit.
+
+**Boundaries and limitations:** `.env.local` was reported by Next as an
+environment source but was never manually opened, printed, hashed, copied, or
+edited. Protected live fixture content/metadata was not accessed. Live prices
+and inventory are time-sensitive, the sample is small, missing safe imagery is
+expected, and hosted/production-runtime readiness remains unverified. No push,
+deployment, release, or production-data change occurred.

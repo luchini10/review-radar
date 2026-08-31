@@ -3,7 +3,6 @@
 import { useState } from "react";
 import {
   ChevronRight,
-  LoaderCircle,
   Plus,
   SlidersHorizontal,
   Sparkles,
@@ -16,8 +15,8 @@ import { Input } from "@/components/ui/input";
 import type {
   SelectedSmartFeature,
   SmartFeature,
-  SmartFeatureResponse,
 } from "@/types/smart-features";
+import { getFallbackSmartFeatures } from "@/lib/smartFeatureSuggestions";
 import {
   createSelectedSmartFeature,
   smartFeatureCategoryKey,
@@ -26,26 +25,18 @@ import {
 } from "@/lib/smartFeatureSelection";
 
 type SmartFeaturesProps = {
-  budget: string;
-  importantDetails: string;
   productCategory: string;
   selectedFeatures: SelectedSmartFeature[];
   onChange: (features: SelectedSmartFeature[]) => void;
 };
 
 export default function SmartFeatures({
-  budget,
-  importantDetails,
   productCategory,
   selectedFeatures,
   onChange,
 }: SmartFeaturesProps) {
   const [features, setFeatures] = useState<SmartFeature[]>([]);
-  const [cachedFeatures, setCachedFeatures] = useState<
-    Record<string, SmartFeature[]>
-  >({});
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [activeFeatureName, setActiveFeatureName] = useState("");
   const [customValues, setCustomValues] = useState<Record<string, string>>({});
@@ -65,7 +56,7 @@ export default function SmartFeatures({
       .map((item) => selectedSmartFeatureLabel(item));
   }
 
-  async function generateFeatures() {
+  function generateFeatures() {
     if (!canGenerate) {
       return;
     }
@@ -73,56 +64,15 @@ export default function SmartFeatures({
     setIsOpen(true);
     setMessage("");
 
-    const cacheKey = categoryKey;
-
-    if (cachedFeatures[cacheKey]) {
-      setFeatures(cachedFeatures[cacheKey]);
-      setFeaturesCategoryKey(categoryKey);
-      setActiveFeatureName(cachedFeatures[cacheKey][0]?.name ?? "");
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const res = await fetch("/api/features", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          budget: budget.trim() || undefined,
-          importantDetails: importantDetails.trim() || undefined,
-          productCategory: cleanCategory,
-        }),
-      });
-
-      const data = (await res.json()) as SmartFeatureResponse | { error?: string };
-
-      if (!res.ok) {
-        throw new Error("error" in data ? data.error : "Failed to generate features.");
-      }
-
-      const returnedFeatures =
-        "features" in data && Array.isArray(data.features) ? data.features : [];
-
-      setFeatures(returnedFeatures);
-      setFeaturesCategoryKey(categoryKey);
-      setActiveFeatureName(returnedFeatures[0]?.name ?? "");
-      setCachedFeatures((current) => ({
-        ...current,
-        [cacheKey]: returnedFeatures,
-      }));
-
-      if ("warning" in data && data.warning) {
-        setMessage(data.warning);
-      }
-    } catch {
-      setFeatures([]);
-      setFeaturesCategoryKey(categoryKey);
-      setMessage("Feature suggestions could not load. Try again in a moment.");
-    } finally {
-      setIsLoading(false);
+    const returnedFeatures =
+      getFallbackSmartFeatures(cleanCategory)?.features ?? [];
+    setFeatures(returnedFeatures);
+    setFeaturesCategoryKey(categoryKey);
+    setActiveFeatureName(returnedFeatures[0]?.name ?? "");
+    if (returnedFeatures.length === 0) {
+      setMessage(
+        "No preset suggestions for this category. Add requirements in Important Details.",
+      );
     }
   }
 
@@ -179,20 +129,12 @@ export default function SmartFeatures({
       <Button
         type="button"
         onClick={generateFeatures}
-        disabled={!canGenerate || isLoading}
+        disabled={!canGenerate}
         className="min-h-10 gap-2 rounded-full border-forest/18 bg-[#eef3e5] px-4 text-sm font-semibold text-forest shadow-none hover:border-forest/30 hover:bg-signal/35 disabled:cursor-not-allowed disabled:opacity-45"
         variant="outline"
       >
-        {isLoading ? (
-          <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />
-        ) : (
-          <SlidersHorizontal aria-hidden="true" className="h-4 w-4" />
-        )}
-        {isLoading
-          ? "Finding features..."
-          : canGenerate
-            ? "Smart Features"
-            : "Enter a product first"}
+        <SlidersHorizontal aria-hidden="true" className="h-4 w-4" />
+        {canGenerate ? "Smart Features" : "Enter a product first"}
       </Button>
 
       {selectedFeatures.length > 0 ? (
@@ -268,17 +210,7 @@ export default function SmartFeatures({
             </Alert>
           ) : null}
 
-          {isLoading ? (
-            <Card className="border-slate-200 bg-slate-50 py-0 shadow-none">
-              <CardContent className="flex items-center gap-2 p-4 text-sm text-slate-500">
-              <LoaderCircle
-                aria-hidden="true"
-                className="h-4 w-4 animate-spin text-blue-600"
-              />
-              Generating product-specific features...
-              </CardContent>
-            </Card>
-          ) : displayedFeatures.length > 0 ? (
+          {displayedFeatures.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-[minmax(0,220px)_minmax(0,1fr)]">
               <div className="grid gap-2">
                 {displayedFeatures.map((feature) => {

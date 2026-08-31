@@ -1,4 +1,4 @@
-import { SOURCE_NAME_TOKENS } from "./search/sourceTier.ts";
+import { SOURCE_NAME_TOKENS } from "./search/sourceSafety.ts";
 
 type BrandDefinition = {
   aliases: string[];

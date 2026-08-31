@@ -200,39 +200,6 @@ export function parseBestMoneyAmount(
   return amounts.length > 0 ? Math.min(...amounts) : null;
 }
 
-export function priceTextLooksUnverified(value: string) {
-  return /\b(?:not verified|not surfaced|not listed|no price|price unavailable|price unknown|unknown|unavailable|varies|depends|likely|maybe|around above|roughly above)\b/i.test(
-    value,
-  );
-}
-
-function priceTextLooksLikeVagueCeiling(value: string) {
-  return /^\s*(?:under|below|less than|underneath|sub)\s+\$?\s*\d[\d,]*(?:\.\d+)?\s*(?:dollars?)?\s*$/i.test(
-    value,
-  );
-}
-
-export function parseBestProductPriceText(value: string | undefined) {
-  if (!value) {
-    return null;
-  }
-
-  if (priceTextLooksUnverified(value) || priceTextLooksLikeVagueCeiling(value)) {
-    return null;
-  }
-
-  const price = parseBestMoneyAmount(value, {
-    allowBareNumeric: true,
-    allowBareRange: true,
-  });
-
-  if (price !== null) {
-    return price;
-  }
-
-  return null;
-}
-
 const PRICE_ABS_FLOOR = 10;
 const PRICE_REL_FLOOR = 0.25;
 

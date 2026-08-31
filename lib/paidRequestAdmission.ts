@@ -2,19 +2,6 @@ export const PAID_REQUEST_MAX_CONCURRENT = 4;
 export const PAID_REQUEST_MAX_STARTS_PER_WINDOW = 12;
 export const PAID_REQUEST_WINDOW_MS = 60_000;
 
-const TERMINAL_PROVIDER_JOB_STATUSES = new Set([
-  "cancelled",
-  "completed",
-  "failed",
-  "incomplete",
-]);
-
-export function paidProviderJobStatusIsTerminal(status: unknown) {
-  return (
-    typeof status === "string" && TERMINAL_PROVIDER_JOB_STATUSES.has(status)
-  );
-}
-
 type PaidRequestAdmissionConfig = {
   maxConcurrent?: number;
   maxStartsPerWindow?: number;
@@ -52,10 +39,6 @@ export function createPaidRequestAdmission({
 
   let active = 0;
   const starts: number[] = [];
-  const leases = new Map<
-    string,
-    { expiresAtMs: number; permit: PaidRequestPermit }
-  >();
   const currentTime = () => {
     const value = now();
     if (!Number.isFinite(value)) {
@@ -69,19 +52,9 @@ export function createPaidRequestAdmission({
       starts.shift();
     }
   };
-  const sweepLeasesAt = (time: number) => {
-    for (const [key, lease] of leases) {
-      if (lease.expiresAtMs <= time) {
-        leases.delete(key);
-        lease.permit.release();
-      }
-    }
-  };
-
   return {
     tryAcquire(): PaidRequestPermit | PaidRequestRejection {
       const time = currentTime();
-      sweepLeasesAt(time);
       prune(time);
       if (active >= maxConcurrent) {
         return {
@@ -111,48 +84,8 @@ export function createPaidRequestAdmission({
         },
       };
     },
-    countLeases(prefix = "") {
-      sweepLeasesAt(currentTime());
-      let count = 0;
-      for (const key of leases.keys()) {
-        if (key.startsWith(prefix)) count += 1;
-      }
-      return count;
-    },
-    releaseLease(key: string) {
-      sweepLeasesAt(currentTime());
-      const lease = leases.get(key);
-      if (!lease) return false;
-      leases.delete(key);
-      lease.permit.release();
-      return true;
-    },
-    sweepLeases() {
-      sweepLeasesAt(currentTime());
-    },
-    trackLease(key: string, ttlMs: number, permit: PaidRequestPermit) {
-      const time = currentTime();
-      sweepLeasesAt(time);
-      const expiresAtMs = time + ttlMs;
-      if (
-        !key.trim() ||
-        !Number.isFinite(ttlMs) ||
-        ttlMs <= 0 ||
-        !Number.isFinite(expiresAtMs)
-      ) {
-        permit.release();
-        return false;
-      }
-      if (leases.has(key)) {
-        permit.release();
-        return false;
-      }
-      leases.set(key, { expiresAtMs, permit });
-      return true;
-    },
     stats() {
       const time = currentTime();
-      sweepLeasesAt(time);
       prune(time);
       return {
         active,
@@ -163,8 +96,6 @@ export function createPaidRequestAdmission({
       };
     },
     resetForTests() {
-      for (const lease of leases.values()) lease.permit.release();
-      leases.clear();
       active = 0;
       starts.length = 0;
     },
@@ -173,58 +104,6 @@ export function createPaidRequestAdmission({
 
 export type PaidRequestAdmission = ReturnType<
   typeof createPaidRequestAdmission
->;
-
-export function createPaidRequestLeaseRegistry({
-  admission,
-  namespace,
-  now = Date.now,
-}: {
-  admission: PaidRequestAdmission;
-  namespace: string;
-  now?: () => number;
-}) {
-  if (!/^[a-z0-9][a-z0-9_-]{0,63}$/.test(namespace)) {
-    throw new Error("Paid request lease namespace is invalid.");
-  }
-  const keyPrefix = `${namespace}:`;
-
-  const currentTime = () => {
-    const value = now();
-    if (!Number.isFinite(value)) {
-      throw new Error("Paid request lease clock must be finite.");
-    }
-    return value;
-  };
-  const scopedKey = (key: string) => `${keyPrefix}${key}`;
-
-  return {
-    release(key: string) {
-      return admission.releaseLease(scopedKey(key));
-    },
-    stats() {
-      return { activeLeases: admission.countLeases(keyPrefix) };
-    },
-    sweep() {
-      admission.sweepLeases();
-    },
-    track(
-      key: string,
-      expiresAtMs: number,
-      permit: PaidRequestPermit,
-    ) {
-      const time = currentTime();
-      if (!key.trim() || !Number.isFinite(expiresAtMs) || expiresAtMs <= time) {
-        permit.release();
-        return false;
-      }
-      return admission.trackLease(scopedKey(key), expiresAtMs - time, permit);
-    },
-  };
-}
-
-export type PaidRequestLeaseRegistry = ReturnType<
-  typeof createPaidRequestLeaseRegistry
 >;
 
 const sharedAdmissionGlobal = globalThis as typeof globalThis & {

@@ -3,7 +3,6 @@ import { describe, it } from "node:test";
 
 import {
   parseBestMoneyAmount,
-  parseBestProductPriceText,
   parseMaxBudgetAmount,
   plausibleProductPrice,
 } from "../lib/priceParsing.ts";
@@ -13,28 +12,7 @@ describe("price parsing", () => {
     assert.equal(parseBestMoneyAmount("Was $599.99, now $349.99"), 349.99);
   });
 
-  it("uses the lowest available price from a current product price range", () => {
-    assert.equal(parseBestProductPriceText("About $39.97 to $44.98"), 39.97);
-  });
-
-  it("does not treat model or review numbers as product prices", () => {
-    assert.equal(
-      parseBestProductPriceText(
-        "No price listed; model 9000 has 4.8-star owner feedback.",
-      ),
-      null,
-    );
-  });
-
-  it("does not treat vague ceiling text as an exact product price", () => {
-    assert.equal(parseBestProductPriceText("Under $300"), null);
-    assert.equal(parseBestProductPriceText("less than 500 dollars"), null);
-  });
-
   it("does not treat monthly or installment payments as product prices", () => {
-    assert.equal(parseBestProductPriceText("As low as $35/mo with financing"), null);
-    assert.equal(parseBestProductPriceText("Monthly payment $35 for 36 months"), null);
-    assert.equal(parseBestProductPriceText("Starting at $999 or $35/mo"), 999);
     assert.equal(parseBestMoneyAmount("Full price $899, or pay $35 per month"), 899);
   });
 

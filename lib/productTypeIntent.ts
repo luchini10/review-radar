@@ -248,8 +248,8 @@ export function classifyProductTypeIntent(input: {
   candidateIdentityText?: string | undefined;
   // Optional richer text used only for the allowed check. When provided,
   // `candidateText` is still used for blocked/complement checks. This lets callers
-  // include the recommendation narrative (why_recommended) for confirming the
-  // right type without risking that query-echoing language in that field falsely
+  // include bounded candidate evidence for confirming the right type without
+  // risking that query-echoing language in that field falsely
   // satisfies a substitute/component guard (e.g. "ice maker found during
   // refrigerator search" must not satisfy the refrigerator satisfiedBy guard).
   allowedCheckText?: string | undefined;

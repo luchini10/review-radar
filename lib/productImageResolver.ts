@@ -1,5 +1,5 @@
 import type { ProductFieldEvidence } from "@/types/review-radar";
-import { SOURCE_NAME_TOKENS } from "./search/sourceTier.ts";
+import { SOURCE_NAME_TOKENS } from "./search/sourceSafety.ts";
 
 export type ProductImageConfidence = "high" | "medium" | "low" | "none";
 
@@ -674,6 +674,48 @@ function conflictingModelIdentityReason(
   return `image filename identifies a different model (${Array.from(new Set(foreignTokens)).join(", ")})`;
 }
 
+function conflictingFilenameBrandReason(
+  url: string,
+  context: ProductImageContext,
+) {
+  const targetBrandWords = new Set(productWords(context.brand));
+  if (targetBrandWords.size === 0) return "";
+
+  let filename = "";
+  try {
+    filename =
+      safeDecodeURIComponent(new URL(url).pathname)
+        .split("/")
+        .filter(Boolean)
+        .at(-1) || "";
+  } catch {
+    return "";
+  }
+
+  const parts = filenameIdentityParts(filename);
+  const category = new Set(categoryWords(context));
+  const categoryIndex = parts.findIndex((part) => category.has(part));
+  if (categoryIndex <= 0) return "";
+
+  const assertedBrandWords = parts
+    .slice(0, categoryIndex)
+    .filter(
+      (part) =>
+        /^[a-z]{3,20}$/.test(part) &&
+        !GENERIC_IMAGE_FILENAME_WORDS.has(part) &&
+        !NON_PRODUCT_IDENTITY_WORDS.has(part) &&
+        !SOURCE_NAME_TOKENS.has(part),
+    );
+  if (
+    assertedBrandWords.length === 0 ||
+    assertedBrandWords.some((part) => targetBrandWords.has(part))
+  ) {
+    return "";
+  }
+
+  return `image filename identifies a different brand (${assertedBrandWords.join(", ")})`;
+}
+
 function dimensionFromUrl(url: string, names: string[]) {
   try {
     const parsed = new URL(url);
@@ -887,6 +929,19 @@ export function validateProductImageCandidate(
       accepted: false,
       rejection: {
         reason: modelConflictReason,
+        source: candidate.source,
+        url,
+      },
+    };
+  }
+
+  const brandConflictReason = conflictingFilenameBrandReason(url, context);
+
+  if (brandConflictReason) {
+    return {
+      accepted: false,
+      rejection: {
+        reason: brandConflictReason,
         source: candidate.source,
         url,
       },

@@ -4,6 +4,44 @@
 
 ---
 
+## PR-10 selection-only runtime contract (2026-08-31)
+
+- `/api/recommendations` is the sole recommendation API and exports only
+  `POST`. The browser sends one request and accepts only the minimal selection
+  result; report, citation, narrative, evidence, review, progress, job, and
+  alternate-mode fields are invalid.
+- Validate the bounded request and reject conflicting hard requirements before
+  constructing paid clients or acquiring search work.
+- Planning may make zero or one compact structured OpenAI call. Invalid,
+  missing, failed, or timed-out model output must fall back to deterministic
+  shopping queries; it must not trigger a retry or second model architecture.
+- Run at most three Shopping queries and eight total logical search/finalist
+  page operations. One uncached logical operation maps to one physical search
+  request. Do not add editorial/review research, retry, rescue, replacement,
+  fallback provider, background job, or polling paths.
+- Hard language fails closed. Reject wrong product types, standalone
+  components/accessories, used/refurbished items, explicit model conflicts,
+  unsatisfied or unproven hard features/specifications, duplicates, and
+  materially over-budget products.
+- A budgeted product requires a trustworthy current USD price. Foreign or
+  unknown-currency page offers and model-generated price prose are never price
+  authority. Product pages must be direct,
+  identity-compatible, and safe before they contribute structured price or
+  image metadata.
+- Preserve DNS-pinned SSRF checks across redirects, bounded HTML/content type,
+  exact product-page identity, plausible price rules, and same-product image
+  evidence. Missing safe imagery is a placeholder, never permission to borrow
+  another product's image.
+- Smart Features read deterministic local catalogs. They have no API route,
+  provider call, cache, job, or model-generated schema.
+- The matched live baseline was 101,212 ms and 86,087.67 bytes on average; the
+  selection path measured 8,029.33 ms and 821.33 bytes. Use the checked-in
+  benchmark files and reusable probe for future comparisons; do not regenerate
+  report-era fixtures.
+- Report generation and alternate recommendation modes were deliberately
+  deleted. Reintroducing them requires a new product decision, new evidence,
+  and explicit architecture review; do not leave dormant paths or flags.
+
 ## PR-007 shared exact-model identity and price authority (2026-08-30)
 
 - `lib/autonomousResearchAdapter.ts` remains a scripts/tests-only historical

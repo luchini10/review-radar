@@ -9,6 +9,33 @@ Update this file after:
 - important bug fixes
 - live QA fixes worth remembering
 
+## 2026-08-31
+
+### Codex - Simplify recommendations to product selection
+
+#### Changed
+
+- Replaced the report/research pipeline and every alternate recommendation
+  mode with one bounded selection-only POST route.
+- Reduced result cards to a safe image or placeholder, category, exact product
+  name, trustworthy current price or missing-price state, and a direct product
+  link.
+- Kept hard requirement, wrong-type/accessory/used-item, budget, identity,
+  deduplication, product-page, price, SSRF, and image safety checks.
+- Removed report generation, citations, review research, background jobs,
+  polling, rescue/retry paths, Direct Terra, staged Terra, two-layer output,
+  obsolete evaluation scripts, and their report-specific contracts/tests.
+- Made Smart Features deterministic and local, with no separate paid route.
+
+#### Verified
+
+- Matched representative searches improved from 101,212 ms to 8,029.33 ms on
+  average (92.07% lower; 12.61x faster), while normal responses shrank from
+  86,087.67 to 821.33 bytes (99.05% lower; 104.81x smaller).
+- Final serial validation passed 241/241 unit tests across 41 suites, typecheck,
+  zero-warning lint, production build with only the selection API, and
+  Playwright 7/7 on desktop/mobile Chromium.
+
 ## 2026-08-30
 
 ### Codex - Retain staged verification failure causes

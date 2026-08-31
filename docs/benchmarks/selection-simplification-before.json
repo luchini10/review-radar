@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "phase": "before",
+  "measurementDate": "2026-08-31",
+  "architecture": "report_generation",
+  "notes": [
+    "Measured locally against the pre-simplification application with live configured providers.",
+    "The old normal path made three OpenAI calls; optional narration could add another.",
+    "The observed Serper request range across the baseline was 37 to at least 60 attempts. Only the shop-vac case's exact exhausted ceiling was retained in the compact baseline."
+  ],
+  "cases": [
+    {
+      "id": "broad-shop-vac",
+      "input": {
+        "query": "shop vac"
+      },
+      "status": 200,
+      "durationMs": 115840,
+      "serverDurationMs": 115333,
+      "normalResponseBytes": 129249,
+      "debugResponseBytes": 856851,
+      "openAiCalls": 3,
+      "serperPhysicalAttempts": 60,
+      "finalPromptChars": 17031,
+      "finalSystemPromptChars": 6115,
+      "slowestStages": [
+        { "label": "openai_final_research", "durationMs": 63319 },
+        { "label": "review_enrichment", "durationMs": 15467 },
+        { "label": "openai_discovery_strategy", "durationMs": 12484 },
+        { "label": "rescue", "durationMs": 8671 },
+        { "label": "discovery", "durationMs": 4611 }
+      ],
+      "qualityNotes": [
+        "The response contained product and URL identity mismatches."
+      ]
+    },
+    {
+      "id": "constrained-robot-vacuum",
+      "input": {
+        "query": "robot vacuum",
+        "budget": "under $300",
+        "priorities": "self-emptying"
+      },
+      "status": 200,
+      "durationMs": 91490,
+      "serverDurationMs": 91452,
+      "normalResponseBytes": 38208,
+      "debugResponseBytes": null,
+      "openAiCalls": 3,
+      "serperPhysicalAttempts": null,
+      "finalPromptChars": 18804,
+      "finalSystemPromptChars": 6115,
+      "slowestStages": [
+        { "label": "openai_final_research", "durationMs": 39184 },
+        { "label": "review_enrichment", "durationMs": 16416 },
+        { "label": "openai_discovery_strategy", "durationMs": 12035 },
+        { "label": "rescue", "durationMs": 7012 }
+      ],
+      "qualityNotes": [
+        "Only one exact self-emptying product was returned."
+      ]
+    },
+    {
+      "id": "technical-gaming-monitor",
+      "input": {
+        "query": "gaming monitor",
+        "budget": "under $500",
+        "priorities": "27-inch, 1440p, at least 144Hz"
+      },
+      "status": 200,
+      "durationMs": 96306,
+      "serverDurationMs": 96276,
+      "normalResponseBytes": 90806,
+      "debugResponseBytes": null,
+      "openAiCalls": 3,
+      "serperPhysicalAttempts": null,
+      "finalPromptChars": 19088,
+      "finalSystemPromptChars": 6115,
+      "slowestStages": [
+        { "label": "openai_final_research", "durationMs": 31868 },
+        { "label": "review_enrichment", "durationMs": 14385 },
+        { "label": "asset_enrichment", "durationMs": 12422 },
+        { "label": "openai_discovery_strategy", "durationMs": 12402 },
+        { "label": "serper_search", "durationMs": 7017 }
+      ],
+      "qualityNotes": [
+        "Four cards were returned, including duplicate or missing product URLs."
+      ]
+    }
+  ],
+  "aggregate": {
+    "averageDurationMs": 101212,
+    "averageNormalResponseBytes": 86087.67,
+    "openAiCallsPerSearch": 3,
+    "observedSerperAttemptsRange": "37-60+"
+  }
+}

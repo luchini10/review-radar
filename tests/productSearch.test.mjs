@@ -1,0 +1,142 @@
+import assert from "node:assert/strict";
+import { afterEach, describe, it } from "node:test";
+
+import { clearCacheForTests } from "../lib/cache.ts";
+import {
+  prefilterProductCandidates,
+  productSearchTestExports,
+  searchShoppingProducts,
+} from "../lib/productSearch.ts";
+
+const originalFetch = globalThis.fetch;
+const originalApiKey = process.env.SERPER_API_KEY;
+
+afterEach(() => {
+  globalThis.fetch = originalFetch;
+  if (originalApiKey === undefined) delete process.env.SERPER_API_KEY;
+  else process.env.SERPER_API_KEY = originalApiKey;
+  clearCacheForTests();
+});
+
+function candidate(name, price = 100) {
+  return {
+    availableColors: [],
+    brand: null,
+    category: "robot vacuum",
+    dimensions: {
+      depth: null,
+      height: null,
+      unit: null,
+      width: null,
+    },
+    evidenceSources: [
+      {
+        snippet: name,
+        snippetProvenance: "source-derived",
+        title: name,
+        url: "https://shop.example/products/item",
+      },
+    ],
+    id: name,
+    imageUrl: null,
+    keySpecs: [name],
+    name,
+    price,
+    productUrl: "https://shop.example/products/item",
+  };
+}
+
+describe("bounded product search", () => {
+  it("normalizes shopping fields and rejects accessories", () => {
+    const normalized = productSearchTestExports.normalizeShoppingResult(
+      {
+        extracted_price: 169.99,
+        imageUrl: "https://cdn.example/ihome-nova.jpg",
+        link: "https://www.walmart.com/ip/iHome-Nova-S1-Pro/123456",
+        source: "Walmart",
+        title: "iHome Nova S1 Pro Self-Emptying Robot Vacuum",
+      },
+      "robot vacuum",
+    );
+    const accessory = productSearchTestExports.normalizeShoppingResult(
+      {
+        link: "https://shop.example/products/filter",
+        title: "Replacement filter for iHome Nova",
+      },
+      "robot vacuum",
+    );
+
+    assert.equal(normalized.candidate.price, 169.99);
+    assert.equal(accessory.candidate, null);
+    assert.equal(accessory.reason, "accessory_or_part");
+  });
+
+  it("filters wrong product types, accessories, used items, and extreme over-budget items", () => {
+    const input = { query: "robot vacuum", budget: "$300" };
+    const result = prefilterProductCandidates(
+      [
+        candidate("Shark IQ Robot Vacuum", 250),
+        candidate("Cordless Stick Vacuum", 150),
+        candidate("Replacement Filter for Shark Robot Vacuum", 20),
+        candidate("Refurbished Shark IQ Robot Vacuum", 200),
+        candidate("Premium Robot Vacuum", 900),
+      ],
+      input,
+      10,
+    );
+
+    assert.deepEqual(
+      result.candidates.map((item) => item.name),
+      ["Shark IQ Robot Vacuum"],
+    );
+    assert.deepEqual(
+      new Set(result.rejected.map((item) => item.reason)),
+      new Set([
+        "wrong_category",
+        "used_or_refurbished",
+        "over_budget",
+      ]),
+    );
+  });
+
+  it("performs one physical request per uncached logical search", async () => {
+    process.env.SERPER_API_KEY = "test-only-key";
+    let fetchCalls = 0;
+    let attempts = 0;
+    globalThis.fetch = async (_url, init) => {
+      fetchCalls += 1;
+      const request = JSON.parse(init.body);
+      assert.equal(request.num, 10);
+      return new Response(
+        JSON.stringify({
+          shopping: [
+            {
+              extractedPrice: 249,
+              link: "https://shop.example/products/shark-iq",
+              source: "Example",
+              title: "Shark IQ Robot Vacuum",
+            },
+          ],
+        }),
+        { headers: { "content-type": "application/json" }, status: 200 },
+      );
+    };
+
+    const query = `robot vacuum unit test ${Date.now()}`;
+    const first = await searchShoppingProducts(query, "robot vacuum", {
+      onAttempt: () => {
+        attempts += 1;
+      },
+    });
+    const second = await searchShoppingProducts(query, "robot vacuum", {
+      onAttempt: () => {
+        attempts += 1;
+      },
+    });
+
+    assert.equal(first.candidates.length, 1);
+    assert.equal(second.candidates.length, 1);
+    assert.equal(fetchCalls, 1);
+    assert.equal(attempts, 1);
+  });
+});

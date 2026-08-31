@@ -1,4 +1,3 @@
-import { z } from "zod";
 import type {
   SmartFeature,
   SmartFeatureOperator,
@@ -8,26 +7,6 @@ import type {
 import { smartFeatureCategoryKey } from "./smartFeatureCategory.ts";
 
 export { smartFeatureCategoryKey };
-
-const smartFeatureTypes = [
-  "enum",
-  "boolean",
-  "number",
-  "range",
-  "text",
-  "exclusion",
-] as const;
-
-const smartFeatureOperators = [
-  "equals",
-  "not_equals",
-  "includes",
-  "not_includes",
-  "lte",
-  "gte",
-  "between",
-  "required",
-] as const;
 
 function normalize(value: string) {
   return value
@@ -1495,104 +1474,3 @@ export function getFallbackSmartFeatures(category: string): SmartFeatureResponse
     features,
   };
 }
-
-export const fallbackFeatures: SmartFeatureResponse =
-  getFallbackSmartFeatures("refrigerator") as SmartFeatureResponse;
-
-export const smartFeatureSchema = z
-  .object({
-    id: z.string().min(1).max(60),
-    name: z.string().min(1).max(40),
-    description: z.string().min(1).max(180),
-    type: z.enum(smartFeatureTypes),
-    possibleValues: z.array(z.string().min(1).max(40)).max(12).optional(),
-    operators: z.array(z.enum(smartFeatureOperators)).min(1).max(4),
-    unit: z.string().max(20).optional(),
-    examples: z.array(z.string().min(1).max(40)).min(2).max(5),
-    commonlyImportant: z.boolean(),
-  })
-  .strict();
-
-export const smartFeatureResponseSchema = z
-  .object({
-    category: z.string().min(1),
-    features: z.array(smartFeatureSchema).min(5).max(10),
-  })
-  .strict();
-
-const featureJsonSchema = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    id: {
-      type: "string",
-    },
-    name: {
-      type: "string",
-    },
-    description: {
-      type: "string",
-    },
-    type: {
-      type: "string",
-      enum: smartFeatureTypes,
-    },
-    possibleValues: {
-      type: "array",
-      items: {
-        type: "string",
-      },
-    },
-    operators: {
-      type: "array",
-      minItems: 1,
-      maxItems: 4,
-      items: {
-        type: "string",
-        enum: smartFeatureOperators,
-      },
-    },
-    unit: {
-      type: "string",
-    },
-    examples: {
-      type: "array",
-      minItems: 2,
-      maxItems: 5,
-      items: {
-        type: "string",
-      },
-    },
-    commonlyImportant: {
-      type: "boolean",
-    },
-  },
-  required: [
-    "id",
-    "name",
-    "description",
-    "type",
-    "possibleValues",
-    "operators",
-    "unit",
-    "examples",
-    "commonlyImportant",
-  ],
-} as const;
-
-export const smartFeatureResponseJsonSchema = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    category: {
-      type: "string",
-    },
-    features: {
-      type: "array",
-      minItems: 5,
-      maxItems: 10,
-      items: featureJsonSchema,
-    },
-  },
-  required: ["category", "features"],
-} as const;

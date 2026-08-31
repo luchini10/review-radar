@@ -1,10 +1,4 @@
-import type {
-  Citation,
-  ProductEligibilityVerdict,
-  ProductRecommendation,
-  RawProductCandidate,
-} from "@/types/review-radar";
-import { parseBestProductPriceText } from "./priceParsing.ts";
+import type { ProductEligibilityVerdict } from "@/types/review-radar";
 import { isGenericProductEvidenceUrl } from "./productEvidenceIdentity.ts";
 
 type ProductEligibilityInput = {
@@ -17,7 +11,7 @@ type ProductEligibilityInput = {
   retailer?: string | null;
   snippet?: string | null;
   sourceTitle?: string | null;
-  sourceType?: "canonical" | "citation" | "offer" | "primary" | "search" | "serper";
+  sourceType?: "candidate" | "canonical" | "offer" | "primary" | "search" | "serper";
   url?: string | null;
 };
 
@@ -775,72 +769,6 @@ export function classifyProductEligibility(
   return verdict("unknown", "low", false, true, [
     "Could not prove this is a buyable product page.",
   ]);
-}
-
-export function productRecommendationEligibility(
-  product: ProductRecommendation,
-): ProductEligibilityVerdict {
-  const firstCitation = product.citations[0];
-  const firstOffer = product.metadata?.offers?.[0];
-
-  return classifyProductEligibility({
-    brand: product.metadata?.brand?.value || product.canonicalIdentity?.brand,
-    category: product.category,
-    imageUrl: product.product_image_url || product.metadata?.image?.value,
-    name: product.name,
-    price:
-      product.metadata?.offers?.find(
-        (offer) => offer.price.value !== null && Number.isFinite(offer.price.value),
-      )?.price.value ??
-      parseBestProductPriceText(product.estimated_price_range) ??
-      null,
-    productName: product.name,
-    retailer: firstOffer?.retailer,
-    snippet: firstCitation?.what_it_supports,
-    sourceTitle: product.metadata?.title?.value || product.name,
-    sourceType: "primary",
-    url:
-      product.product_page_url ||
-      product.metadata?.canonicalUrl?.value ||
-      firstOffer?.url ||
-      firstCitation?.url,
-  });
-}
-
-export function candidateEligibility(
-  candidate: RawProductCandidate,
-): ProductEligibilityVerdict {
-  const firstSource = candidate.evidenceSources[0];
-
-  return classifyProductEligibility({
-    brand: candidate.brand,
-    category: candidate.category,
-    imageUrl: candidate.imageUrl,
-    name: candidate.name,
-    price: candidate.price,
-    productName: candidate.name,
-    retailer: candidate.retailer,
-    snippet: firstSource?.snippet,
-    sourceTitle: firstSource?.title || candidate.name,
-    sourceType: "serper",
-    url: candidate.productUrl || firstSource?.url,
-  });
-}
-
-export function citationEligibility(
-  citation: Citation,
-  productName: string,
-  category?: string,
-): ProductEligibilityVerdict {
-  return classifyProductEligibility({
-    category,
-    name: productName,
-    productName,
-    snippet: citation.what_it_supports,
-    sourceTitle: citation.title,
-    sourceType: "citation",
-    url: citation.url,
-  });
 }
 
 export const productEligibilityTestExports = {

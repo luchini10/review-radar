@@ -1,11 +1,11 @@
 import { createHash } from "node:crypto";
 import { getCachedOrLoad, normalizeCacheKey } from "./cache.ts";
 import {
-  fetchHybridSource,
-  LIVE_HYBRID_FETCH_DEPENDENCIES,
-  type HybridFetchDependencies,
-  type HybridFetchResult,
-} from "./autonomousFactVerifier.ts";
+  fetchSafeProductPage,
+  LIVE_PRODUCT_PAGE_FETCH_DEPENDENCIES,
+  type SafeProductPageFetchDependencies,
+  type SafeProductPageFetchResult,
+} from "./safeProductPageFetch.ts";
 import {
   extractProductImageCandidatesFromHtml,
   imageResolutionToField,
@@ -13,15 +13,11 @@ import {
   resolveBestProductImage,
   type ProductImageCandidate,
   type ProductImageContext,
-  type ProductImageResolution,
 } from "./productImageResolver.ts";
 import {
   parseBestMoneyAmount,
-  priceTextLooksUnverified,
-  formatDollars,
 } from "./priceParsing.ts";
 import { assessProductPriceTrust } from "./productPriceTrust.ts";
-import { searchSerperImageEvidence } from "./search/serper.ts";
 import type {
   ProductFieldEvidence,
   ProductMetadata,
@@ -33,35 +29,24 @@ import {
   haveConflictingDescriptiveModelSequences,
 } from "./productIdentity.ts";
 import { sourceUrlPathIdentitySegments } from "./sourceUrlIdentity.ts";
-import { mapWithConcurrency } from "./recommendationPerformance.ts";
 import { throwIfRequestCancelled } from "./requestCancellation.ts";
 
 type ProductAssetRecommendation = {
   category?: string;
-  estimated_price_range?: string;
+  imageUrl: string;
   name: string;
+  pageUrl: string;
   priceTrust?: ProductPriceTrust;
-  price_value_verdict?: string;
-  product_page_url: string;
-  product_image_url: string;
-  citations?: {
-    title?: string;
-    url: string;
-    what_it_supports?: string;
-  }[];
   metadata?: ProductMetadata;
 };
 
 type ProductAssetResult = {
   recommendations: ProductAssetRecommendation[];
-  exactMatches?: ProductAssetRecommendation[];
-  premiumAboveBudget?: ProductAssetRecommendation[];
-  nearMatches?: ProductAssetRecommendation[];
 };
 
 type ProductAssetEnrichmentOptions = {
   concurrency?: number;
-  fetchDependencies?: HybridFetchDependencies;
+  fetchDependencies?: SafeProductPageFetchDependencies;
   signal?: AbortSignal;
 };
 
@@ -148,20 +133,13 @@ function normalizeUrl(url: string) {
         lowerKey === "linkcode" ||
         lowerKey === "camp" ||
         lowerKey === "creative" ||
-        lowerKey === "creativeasin"
+        lowerKey === "creativeasin" ||
+        lowerKey === "srsltid"
       ) {
         parsed.searchParams.delete(key);
       }
     }
     return parsed.toString();
-  } catch {
-    return "";
-  }
-}
-
-function normalizeHostname(url: string) {
-  try {
-    return new URL(url).hostname.toLowerCase().replace(/^www\./, "");
   } catch {
     return "";
   }
@@ -298,7 +276,7 @@ function productNameHasPageMatch(productName: string, html: string) {
   return matches.length >= Math.min(2, words.length);
 }
 
-function shouldClearRequestedProductUrl(result: HybridFetchResult) {
+function shouldClearRequestedProductUrl(result: SafeProductPageFetchResult) {
   return (
     !result.ok &&
     (result.reason === "credentials_forbidden" ||
@@ -310,14 +288,14 @@ function shouldClearRequestedProductUrl(result: HybridFetchResult) {
 
 async function fetchText(
   url: string,
-  fetchDependencies: HybridFetchDependencies,
+  fetchDependencies: SafeProductPageFetchDependencies,
   signal?: AbortSignal,
 ): Promise<ProductPageFetchResult> {
   throwIfRequestCancelled(signal);
   const cacheKey = productPageCacheKey(url);
 
   return getCachedOrLoad(cacheKey, PRODUCT_ASSET_CACHE_TTL_MS, async (sharedSignal) => {
-    const result = await fetchHybridSource(url, fetchDependencies, {
+    const result = await fetchSafeProductPage(url, fetchDependencies, {
       allowedContentTypes: PRODUCT_ASSET_CONTENT_TYPES,
       maxBytes: PRODUCT_ASSET_MAX_BYTES,
       maxRedirects: PRODUCT_ASSET_MAX_REDIRECTS,
@@ -351,151 +329,6 @@ function productImageContext(
   };
 }
 
-async function getImageFromCitationPages(
-  product: ProductAssetRecommendation,
-  fetchDependencies: HybridFetchDependencies,
-  signal?: AbortSignal,
-): Promise<ProductImageResolution> {
-  const citationUrls = product.citations?.map((citation) => citation.url) || [];
-  const rejected: ProductImageResolution["rejected"] = [];
-
-  for (const citationUrl of citationUrls.slice(0, 3)) {
-    throwIfRequestCancelled(signal);
-    const normalizedCitationUrl = normalizeUrl(citationUrl);
-
-    if (!normalizedCitationUrl || !isHttpUrl(normalizedCitationUrl)) {
-      continue;
-    }
-
-    const { html } = await fetchText(
-      normalizedCitationUrl,
-      fetchDependencies,
-      signal,
-    );
-
-    if (!html || !productNameHasPageMatch(product.name, html)) {
-      continue;
-    }
-
-    const resolution = resolveBestProductImage(
-      extractProductImageCandidatesFromHtml(
-        html,
-        normalizedCitationUrl,
-        productImageContext(product, normalizedCitationUrl),
-        { pageIdentityVerified: true },
-      ),
-      productImageContext(product, normalizedCitationUrl),
-    );
-
-    rejected.push(...resolution.rejected);
-
-    if (resolution.url && resolution.confidence !== "none") {
-      return resolution;
-    }
-  }
-
-  return {
-    confidence: "none",
-    rejected,
-    source: null,
-    url: "",
-  };
-}
-
-async function getProductPageFromCitationPages(
-  product: ProductAssetRecommendation,
-  fetchDependencies: HybridFetchDependencies,
-  signal?: AbortSignal,
-) {
-  const citationUrls = product.citations?.map((citation) => citation.url) || [];
-
-  for (const citationUrl of citationUrls.slice(0, 3)) {
-    throwIfRequestCancelled(signal);
-    const normalizedCitationUrl = normalizeUrl(citationUrl);
-
-    if (!normalizedCitationUrl || !isHttpUrl(normalizedCitationUrl)) {
-      continue;
-    }
-
-    const { html } = await fetchText(
-      normalizedCitationUrl,
-      fetchDependencies,
-      signal,
-    );
-
-    if (!html || !productNameHasPageMatch(product.name, html)) {
-      continue;
-    }
-
-    const anchorPattern =
-      /<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
-    let match: RegExpExecArray | null;
-
-    while ((match = anchorPattern.exec(html)) !== null) {
-      const href = resolveUrl(decodeHtml(match[1]), normalizedCitationUrl);
-      const anchorText = stripHtml(match[2]);
-
-      if (!href || !isHttpUrl(href) || looksLikeEditorialUrl(href)) {
-        continue;
-      }
-
-      const hrefHostDiffersFromCitation =
-        normalizeHostname(href) !== normalizeHostname(normalizedCitationUrl);
-      const hrefLooksLikeProduct = looksLikeProductPageUrl(href, product.name);
-      const anchorNamesProduct = productNameHasPageMatch(
-        product.name,
-        anchorText,
-      );
-
-      if (
-        hrefLooksLikeProduct ||
-        (hrefHostDiffersFromCitation && anchorNamesProduct)
-      ) {
-        return normalizeUrl(href);
-      }
-    }
-  }
-
-  return "";
-}
-
-async function getImageFromSerper(
-  product: ProductAssetRecommendation,
-  signal?: AbortSignal,
-): Promise<ProductImageResolution> {
-  throwIfRequestCancelled(signal);
-  const sources = await searchSerperImageEvidence(
-    `${product.name} product image`,
-    3,
-    {
-      origin: "image",
-      phase: "product_asset_enrichment",
-      purpose: "image",
-      originalQuery: `${product.name} product image`,
-      sourceDetail: product.name,
-    },
-    { signal },
-  );
-  const candidates: ProductImageCandidate[] = sources.flatMap((source) => {
-    const match = source.snippet.match(/\bImage:\s*(https?:\/\/\S+)/i);
-    const imageUrl = match?.[1]?.trim();
-
-    if (!imageUrl) {
-      return [];
-    }
-
-    return [
-      {
-        evidenceText: `${source.title} ${source.url} ${source.snippet}`,
-        source: "serp",
-        url: imageUrl,
-      },
-    ];
-  });
-
-  return resolveBestProductImage(candidates, productImageContext(product));
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -510,20 +343,6 @@ function asString(value: unknown) {
   }
 
   return "";
-}
-
-function asNumber(value: unknown) {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const match = value.replace(/,/g, "").match(/\d+(?:\.\d+)?/);
-
-  return match?.[0] ? Number(match[0]) : null;
 }
 
 function field<T>(
@@ -543,8 +362,8 @@ function field<T>(
 
 function offerKey(offer: ProductOffer) {
   return [
-    offer.url,
-    offer.retailer || "",
+    offer.price.sourceUrl,
+    offer.priceCurrency.value || "unknown-currency",
     offer.price.value ?? "unknown",
   ].join("|");
 }
@@ -581,9 +400,7 @@ function mergeMetadata(
   return {
     ...existing,
     ...incoming,
-    availability: incoming.availability || existing.availability,
     brand: incoming.brand || existing.brand,
-    canonicalUrl: incoming.canonicalUrl || existing.canonicalUrl,
     colors: incoming.colors || existing.colors,
     dimensions:
       incoming.dimensions || existing.dimensions
@@ -594,13 +411,9 @@ function mergeMetadata(
             width: incoming.dimensions?.width || existing.dimensions?.width,
           }
         : undefined,
-    gtin: incoming.gtin || existing.gtin,
     image: incoming.image || existing.image,
     modelNumber: incoming.modelNumber || existing.modelNumber,
     offers: mergeOffers(existing.offers, incoming.offers),
-    rating: incoming.rating || existing.rating,
-    reviewCount: incoming.reviewCount || existing.reviewCount,
-    sku: incoming.sku || existing.sku,
     title: incoming.title || existing.title,
   };
 }
@@ -1063,12 +876,6 @@ function getBrand(product: Record<string, unknown>) {
   return asString(brand);
 }
 
-function getAggregateRating(product: Record<string, unknown>) {
-  const rating = product.aggregateRating;
-
-  return isRecord(rating) ? rating : null;
-}
-
 function getCanonicalLink(html: string, pageUrl: string) {
   const match = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["'][^>]*>/i);
 
@@ -1163,7 +970,6 @@ function buildMetadata(input: {
   );
   const offers = product ? allOffers(product) : [];
   const offer = offers[0] || null;
-  const rating = product ? getAggregateRating(product) : null;
   const pageIdentityTitle =
     (product ? asString(product.name) : "") ||
     getMetaContent(input.html, "og:title") ||
@@ -1183,17 +989,8 @@ function buildMetadata(input: {
   const priceCurrency =
     (offer ? getPriceCurrencyFromRecord(offer) : "") ||
     priceCurrencyFromPageMetadata(input.html);
-  const availability = offer ? asString(offer.availability) : "";
-  const sku = product ? asString(product.sku) : "";
   const modelNumber = product
     ? asString(product.model) || asString(product.mpn)
-    : "";
-  const gtin = product
-    ? asString(product.gtin) ||
-      asString(product.gtin8) ||
-      asString(product.gtin12) ||
-      asString(product.gtin13) ||
-      asString(product.gtin14)
     : "";
   const colorValue = product ? asString(product.color) : "";
   const colors = Array.from(
@@ -1215,22 +1012,12 @@ function buildMetadata(input: {
     title: field(pageTitle, canonicalUrl, sourceType, product ? "High" : "Medium"),
   };
 
-  metadata.canonicalUrl = field(canonicalUrl, canonicalUrl, "retailer_page", "High");
-
   if (brand) {
     metadata.brand = field(brand, canonicalUrl, "json_ld", "High");
   }
 
-  if (sku) {
-    metadata.sku = field(sku, canonicalUrl, "json_ld", "High");
-  }
-
   if (modelNumber) {
     metadata.modelNumber = field(modelNumber, canonicalUrl, "json_ld", "High");
-  }
-
-  if (gtin) {
-    metadata.gtin = field(gtin, canonicalUrl, "json_ld", "High");
   }
 
   if (colors.length > 0) {
@@ -1256,29 +1043,13 @@ function buildMetadata(input: {
     metadata.image = field(input.productImageUrl, canonicalUrl, sourceType, "Medium");
   }
 
-  if (rating) {
-    const ratingValue = asNumber(rating.ratingValue);
-    const reviewCount = asNumber(rating.reviewCount || rating.ratingCount);
-
-    if (ratingValue !== null) {
-      metadata.rating = field(ratingValue, canonicalUrl, "json_ld", "High");
-    }
-
-    if (reviewCount !== null) {
-      metadata.reviewCount = field(reviewCount, canonicalUrl, "json_ld", "High");
-    }
-  }
-
-  if (offer || price !== null || availability || priceCurrency) {
+  if (offer || price !== null || priceCurrency) {
     const priceSourceType = offer ? "json_ld" : "retailer_page";
     const priceConfidence = offer ? "High" : "Medium";
 
     metadata.offers.push({
-      availability: field(availability || null, canonicalUrl, priceSourceType, offer ? "High" : "Low"),
       price: field(price, canonicalUrl, priceSourceType, priceConfidence),
       priceCurrency: field(priceCurrency || null, canonicalUrl, priceSourceType, priceConfidence),
-      retailer: normalizeHostname(canonicalUrl) || null,
-      url: canonicalUrl,
     });
   }
 
@@ -1288,52 +1059,19 @@ function buildMetadata(input: {
 function withVerifiedOfferPriceFields<T extends ProductAssetRecommendation>(
   product: T,
 ): T {
-  const priceTrust = assessProductPriceTrust(product);
-
-  if (!priceTrust.canUseForBudget || priceTrust.price === null) {
-    const hasAnyOfferPrice =
-      product.metadata?.offers.some(
-        (offer) => offer.price.value !== null && Number.isFinite(offer.price.value),
-      ) || priceTrust.price !== null;
-
-    return hasAnyOfferPrice
-      ? {
-          ...product,
-          priceTrust,
-          estimated_price_range: "Price not verified",
-          price_value_verdict:
-            "Price evidence looked unusually low for the full product; verify the current store price before buying.",
-        }
-      : {
-          ...product,
-          priceTrust,
-        };
-  }
-
-  const nextProduct = {
+  return {
     ...product,
-    priceTrust,
-    estimated_price_range: formatDollars(priceTrust.price),
+    priceTrust: assessProductPriceTrust(product),
   };
-
-  if (
-    product.price_value_verdict &&
-    priceTextLooksUnverified(product.price_value_verdict)
-  ) {
-    nextProduct.price_value_verdict =
-      "Price was found from product-page or shopping metadata; verify current price and availability before buying.";
-  }
-
-  return nextProduct;
 }
 
 async function getVerifiedProductAssets(
   product: ProductAssetRecommendation,
-  fetchDependencies: HybridFetchDependencies,
+  fetchDependencies: SafeProductPageFetchDependencies,
   signal?: AbortSignal,
 ) {
   throwIfRequestCancelled(signal);
-  const proposedProductPageUrl = normalizeUrl(product.product_page_url);
+  const proposedProductPageUrl = normalizeUrl(product.pageUrl);
   const proposedPathIdentitySegments = sourceUrlPathIdentitySegments(
     proposedProductPageUrl,
   );
@@ -1348,41 +1086,20 @@ async function getVerifiedProductAssets(
       ))
     ? ""
     : proposedProductPageUrl;
-  const citationProductPageUrl = primaryProductPageUrl
-    ? ""
-    : await getProductPageFromCitationPages(
-        product,
-        fetchDependencies,
-        signal,
-      );
-  const productPageUrl =
-    primaryProductPageUrl || citationProductPageUrl;
+  const productPageUrl = primaryProductPageUrl;
   const initialImageCandidates: ProductImageCandidate[] = [];
 
-  if (product.product_image_url) {
+  if (product.imageUrl) {
     initialImageCandidates.push({
       evidenceText: "",
       source: "existing",
-      url: product.product_image_url,
+      url: product.imageUrl,
     });
   }
 
   if (product.metadata?.image?.value) {
-    const imageSourceUrl = normalizeUrl(product.metadata.image.sourceUrl);
-    const supportingCitation = product.citations?.find(
-      (citation) => normalizeUrl(citation.url) === imageSourceUrl,
-    );
-    const sourceEvidence = supportingCitation
-      ? `${supportingCitation.title || ""} ${
-          supportingCitation.what_it_supports || ""
-        }`
-      : "";
-
     initialImageCandidates.push({
-      contextVerified:
-        Boolean(sourceEvidence) &&
-        productNameHasPageMatch(product.name, sourceEvidence),
-      evidenceText: sourceEvidence,
+      evidenceText: "",
       source: "trusted_metadata",
       url: product.metadata.image.value,
     });
@@ -1391,53 +1108,6 @@ async function getVerifiedProductAssets(
     initialImageCandidates,
     productImageContext(product, productPageUrl),
   );
-  const citationImageResolution =
-    imageResolution.confidence === "none"
-      ? await getImageFromCitationPages(product, fetchDependencies, signal)
-      : {
-          confidence: "none" as const,
-          rejected: [],
-          source: null,
-          url: "",
-        };
-  const serperImageResolution =
-    imageResolution.confidence === "none" &&
-    citationImageResolution.confidence === "none"
-      ? await getImageFromSerper(product, signal)
-      : {
-          confidence: "none" as const,
-          rejected: [],
-          source: null,
-          url: "",
-        };
-
-  imageResolution =
-    imageResolution.confidence !== "none"
-      ? {
-          ...imageResolution,
-          rejected: [
-            ...imageResolution.rejected,
-            ...citationImageResolution.rejected,
-            ...serperImageResolution.rejected,
-          ],
-        }
-      : citationImageResolution.confidence !== "none"
-        ? {
-            ...citationImageResolution,
-            rejected: [
-              ...imageResolution.rejected,
-              ...citationImageResolution.rejected,
-              ...serperImageResolution.rejected,
-            ],
-          }
-        : {
-            ...serperImageResolution,
-            rejected: [
-              ...imageResolution.rejected,
-              ...citationImageResolution.rejected,
-              ...serperImageResolution.rejected,
-            ],
-          };
 
   if (!productPageUrl || !isHttpUrl(productPageUrl)) {
     logImageResolutionDebug(product.name, imageResolution);
@@ -1454,8 +1124,8 @@ async function getVerifiedProductAssets(
             }
           : {}),
       },
-      product_page_url: "",
-      product_image_url: imageResolution.url,
+      pageUrl: "",
+      imageUrl: imageResolution.url,
     };
   }
 
@@ -1485,8 +1155,8 @@ async function getVerifiedProductAssets(
             }
           : {}),
       },
-      product_page_url: "",
-      product_image_url: imageResolution.url,
+      pageUrl: "",
+      imageUrl: imageResolution.url,
     };
   }
 
@@ -1505,8 +1175,8 @@ async function getVerifiedProductAssets(
             }
           : {}),
       },
-      product_page_url: "",
-      product_image_url: imageResolution.url,
+      pageUrl: "",
+      imageUrl: imageResolution.url,
     };
   }
 
@@ -1529,8 +1199,8 @@ async function getVerifiedProductAssets(
             }
           : {}),
       },
-      product_page_url: "",
-      product_image_url: imageResolution.url,
+      pageUrl: "",
+      imageUrl: imageResolution.url,
     };
   }
 
@@ -1549,8 +1219,8 @@ async function getVerifiedProductAssets(
             }
           : {}),
       },
-      product_page_url: "",
-      product_image_url: imageResolution.url,
+      pageUrl: "",
+      imageUrl: imageResolution.url,
     };
   }
 
@@ -1607,8 +1277,8 @@ async function getVerifiedProductAssets(
   logImageResolutionDebug(product.name, imageResolution);
 
   return {
-    product_page_url: productPageUrl,
-    product_image_url: productImageUrl,
+    pageUrl: productPageUrl,
+    imageUrl: productImageUrl,
     metadata: metadataWithImage,
   };
 }
@@ -1619,7 +1289,7 @@ export async function enrichProductAssets<T extends ProductAssetResult>(
 ): Promise<T> {
   throwIfRequestCancelled(options.signal);
   const fetchDependencies =
-    options.fetchDependencies ?? LIVE_HYBRID_FETCH_DEPENDENCIES;
+    options.fetchDependencies ?? LIVE_PRODUCT_PAGE_FETCH_DEPENDENCIES;
   const requestedConcurrency = options.concurrency ?? PRODUCT_ASSET_CONCURRENCY;
   const concurrency = Number.isFinite(requestedConcurrency)
     ? Math.min(
@@ -1629,37 +1299,36 @@ export async function enrichProductAssets<T extends ProductAssetResult>(
     : PRODUCT_ASSET_CONCURRENCY;
 
   async function enrichProducts(products: ProductAssetRecommendation[]) {
-    return mapWithConcurrency(products, concurrency, async (recommendation) => {
-      throwIfRequestCancelled(options.signal);
-      const assets = await getVerifiedProductAssets(
-        recommendation,
-        fetchDependencies,
-        options.signal,
-      );
-
-      return withVerifiedOfferPriceFields({
-        ...recommendation,
-        ...assets,
-      });
-    });
+    const output = new Array<ProductAssetRecommendation>(products.length);
+    let nextIndex = 0;
+    const workers = Array.from(
+      { length: Math.min(concurrency, products.length) },
+      async () => {
+        while (nextIndex < products.length) {
+          const index = nextIndex;
+          nextIndex += 1;
+          throwIfRequestCancelled(options.signal);
+          const recommendation = products[index];
+          const assets = await getVerifiedProductAssets(
+            recommendation,
+            fetchDependencies,
+            options.signal,
+          );
+          output[index] = withVerifiedOfferPriceFields({
+            ...recommendation,
+            ...assets,
+          });
+        }
+      },
+    );
+    await Promise.all(workers);
+    return output;
   }
 
   const recommendations = await enrichProducts(result.recommendations);
-  const exactMatches = result.exactMatches
-    ? await enrichProducts(result.exactMatches)
-    : undefined;
-  const nearMatches = result.nearMatches
-    ? await enrichProducts(result.nearMatches)
-    : undefined;
-  const premiumAboveBudget = result.premiumAboveBudget
-    ? await enrichProducts(result.premiumAboveBudget)
-    : undefined;
 
   return {
     ...result,
-    ...(exactMatches ? { exactMatches } : {}),
-    ...(premiumAboveBudget ? { premiumAboveBudget } : {}),
-    ...(nearMatches ? { nearMatches } : {}),
     recommendations,
   };
 }

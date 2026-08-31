@@ -14,47 +14,28 @@ export type RecommendationApiRequest = {
   avoid?: string;
   selectedFeatures?: SelectedSmartFeature[];
   extractedRequirements?: StructuredRequirements;
-  discoveryStrategy?: ProductDiscoveryStrategy;
-  discoveryGapCheck?: ProductDiscoveryGapCheck;
+};
+
+export type SelectionPrice = {
+  amount: number;
+  currency: "USD";
+};
+
+export type SelectionProductRecommendation = {
+  category: string;
+  imageUrl: string | null;
+  name: string;
+  price: SelectionPrice | null;
+  productPageUrl: string;
+};
+
+export type SelectionRecommendationResult = {
+  recommendations: SelectionProductRecommendation[];
 };
 
 export type RecommendationApiResponse =
-  | {
-      result: RecommendationResult;
-    }
-  | {
-      error: string;
-    };
-
-export type RecommendationType =
-  | "Best Match"
-  | "Close Match";
-
-export type SourceConsensus = "Strong" | "Mixed" | "Weak" | "Niche";
-
-export type Citation = {
-  title: string;
-  url: string;
-  what_it_supports: string;
-  // Set by the pipeline after citation verification; not provided by the AI.
-  citation_type?: string;
-};
-
-export type RequirementCheck = {
-  exactMatch: boolean;
-  passed: string[];
-  failed: string[];
-  unknown: string[];
-  // Non-gating: soft-spec misses that lower confidence but never eliminate.
-  softUnknown?: string[];
-  notApplicable?: string[];
-};
-
-export type RequirementComparison = {
-  required: string;
-  productHas: string;
-  status: "failed" | "unknown" | "matched" | "violated" | "missing_evidence" | "not_applicable";
-};
+  | { result: SelectionRecommendationResult }
+  | { error: string };
 
 export type StructuredConstraintType =
   | "brand"
@@ -105,13 +86,8 @@ export type BudgetRule = {
 };
 
 export type SpecConstraintKind = "numeric" | "boolean";
-
 export type SpecConstraintOperator = "min" | "max" | "equals";
 
-// A numeric/boolean performance-spec requirement parsed from user input
-// (e.g. "600+ CFM", "battery included"). Currently populated in shadow mode:
-// it is extracted and surfaced for debugging but is not yet consumed by
-// search, validation, or scoring.
 export type SpecConstraint = {
   id: string;
   spec: string;
@@ -138,67 +114,6 @@ export type StructuredRequirements = {
   summary: string[];
 };
 
-export type SearchQueryFamily =
-  | "canonical_shopping"
-  | "hard_filter"
-  | "retailer_domain"
-  | "editorial_review"
-  | "owner_experience"
-  | "synonym"
-  | "fallback";
-
-export type SearchQueryStage = 1 | 2 | 3;
-
-export type SearchQueryCandidate = {
-  family: SearchQueryFamily;
-  query: string;
-  stage: SearchQueryStage;
-};
-
-export type SearchPlan = {
-  categoryGroup: string;
-  queries: SearchQueryCandidate[];
-  stagedQueries: {
-    pass1: SearchQueryCandidate[];
-    pass2: SearchQueryCandidate[];
-    pass3: SearchQueryCandidate[];
-  };
-};
-
-export type ProductDiscoveryTarget = {
-  aliases: string[];
-  brand: string;
-  priority: "high" | "medium" | "low";
-  productLine: string;
-  whyExpected: string;
-};
-
-export type ProductBuyingRubric = {
-  category: string;
-  commonTradeoffs: string[];
-  mustVerifyFacts: string[];
-  qualitySignals: string[];
-  redFlags: string[];
-  reviewSignals: string[];
-  searchQueries: string[];
-};
-
-export type ProductDiscoveryStrategy = {
-  avoidCandidatePatterns: string[];
-  buyingRubric?: ProductBuyingRubric;
-  discoveryQueries: string[];
-  expectedProducts: ProductDiscoveryTarget[];
-  searchIntent: string;
-  verificationFacts: string[];
-};
-
-export type ProductDiscoveryGapCheck = {
-  followUpQueries: string[];
-  missingExpectedProducts: string[];
-  notes: string[];
-  suspiciousCandidateNames: string[];
-};
-
 export type ProductFieldEvidence<T = string | number | string[] | null> = {
   confidence: "High" | "Medium" | "Low";
   sourceType:
@@ -207,7 +122,6 @@ export type ProductFieldEvidence<T = string | number | string[] | null> = {
     | "retailer_page"
     | "manufacturer_page"
     | "serper"
-    | "openai"
     | "snippet";
   sourceUrl: string;
   value: T;
@@ -215,20 +129,9 @@ export type ProductFieldEvidence<T = string | number | string[] | null> = {
 };
 
 export type ProductOffer = {
-  availability: ProductFieldEvidence<string | null>;
   price: ProductFieldEvidence<number | null>;
   priceCurrency: ProductFieldEvidence<string | null>;
-  retailer: string | null;
-  url: string;
 };
-
-export type ProductPriceConfidence =
-  | "verified"
-  | "likely"
-  | "range"
-  | "suspicious"
-  | "unverified"
-  | "conflicting";
 
 export type ProductEligibilityVerdict = {
   status:
@@ -248,31 +151,14 @@ export type ProductPriceTrust = {
   status:
     | "verified"
     | "usable"
-    | "needs_verification"
     | "suspicious"
     | "conflicting"
     | "missing";
   price: number | null;
-  canUseForBudget: boolean;
-  canBeExactWithBudget: boolean;
-  displayText: string;
-  warnings: string[];
-  sources: string[];
-};
-
-export type ProductReliabilityCheck = {
-  canBeBestMatch: boolean;
-  identityConfidence: "high" | "medium" | "low";
-  price: number | null;
-  priceConfidence: ProductPriceConfidence;
-  reasons: string[];
-  warnings: string[];
 };
 
 export type ProductMetadata = {
-  availability?: ProductFieldEvidence<string | null>;
   brand?: ProductFieldEvidence<string | null>;
-  canonicalUrl?: ProductFieldEvidence<string | null>;
   colors?: ProductFieldEvidence<string[]>;
   dimensions?: {
     depth?: ProductFieldEvidence<number | null>;
@@ -280,13 +166,9 @@ export type ProductMetadata = {
     unit?: "in" | "cm" | null;
     width?: ProductFieldEvidence<number | null>;
   };
-  gtin?: ProductFieldEvidence<string | null>;
   image?: ProductFieldEvidence<string | null>;
   modelNumber?: ProductFieldEvidence<string | null>;
   offers: ProductOffer[];
-  rating?: ProductFieldEvidence<number | null>;
-  reviewCount?: ProductFieldEvidence<number | null>;
-  sku?: ProductFieldEvidence<string | null>;
   title?: ProductFieldEvidence<string | null>;
 };
 
@@ -297,8 +179,6 @@ export type ProductSpecSource =
   | "metadata"
   | "evidence";
 
-// A single performance spec observed on a product (e.g. cfm: 650). Extracted
-// in shadow mode for debugging; not yet consumed by validation or scoring.
 export type ProductSpecValue = {
   spec: string;
   kind: SpecConstraintKind;
@@ -310,122 +190,6 @@ export type ProductSpecValue = {
 
 export type ProductSpecMap = Record<string, ProductSpecValue>;
 
-export type CanonicalProductIdentity = {
-  brand: string | null;
-  canonicalId: string;
-  canonicalUrl: string | null;
-  confidence: "High" | "Medium" | "Low";
-  gtin: string | null;
-  modelNumber: string | null;
-  normalizedTitle: string;
-  sku: string | null;
-};
-
-export type ScoreBreakdown = {
-  availabilityScore: number;
-  categoryFitScore?: number;
-  categoryProfileKey?: string;
-  citationStrengthScore?: number;
-  credibilityFloorPenalty?: number;
-  evidenceScore: number;
-  evidenceSignalCount?: number;
-  expertMentionScore?: number;
-  fitScore: number;
-  marketConfidencePenalty?: number;
-  marketConfidenceScore?: number;
-  marketConfidenceTier?: ProductCredibilityTier;
-  missingDataPenalty?: number;
-  ownerOpinionScore?: number;
-  ownerRatingScore?: number;
-  ownerReviewStrengthScore?: number;
-  popularityScore?: number;
-  priceValueScore?: number;
-  qualityScore: number;
-  repeatedComplaintPenalty?: number;
-  requirementFitScore?: number;
-  rubricFitScore?: number;
-  rubricPenalty?: number;
-  rubricProfileKey?: string;
-  scoreDebug?: string[];
-  sourceQualityScore?: number;
-  totalScore: number;
-  valueScore: number;
-};
-
-export type ProductCredibilityTier = "strong" | "moderate" | "weak";
-
-export type ProductCredibility = {
-  dataCompletenessScore: number;
-  editorialSourceCount: number;
-  independentSourceCount: number;
-  label: string;
-  majorRetailerCount: number;
-  rating: number | null;
-  reviewCount: number | null;
-  score: number;
-  signals: string[];
-  sourceCount: number;
-  tier: ProductCredibilityTier;
-  warnings: string[];
-};
-
-export type SearchCoverage = {
-  canonicalProductCount: number;
-  enrichedProductCount: number;
-  exactMatchCount: number;
-  executedQueryCount: number;
-  generatedQueryCount: number;
-  nearMatchCount: number;
-  rawCandidateCount: number;
-  sourceTimeouts: number;
-  stageCounts: {
-    pass1: number;
-    pass2: number;
-    pass3: number;
-  };
-};
-
-export type EvidenceConfidence = "High" | "Medium" | "Low";
-
-export type ProductEvidenceItem = {
-  claim: string;
-  sourceTitle: string;
-  sourceUrl: string;
-  snippet: string;
-  confidence: EvidenceConfidence;
-};
-
-export type RepeatedComplaintEvidence = {
-  complaint: string;
-  sourceCount: number;
-  evidenceSnippets: string[];
-  severity: "low" | "medium" | "high";
-};
-
-export type ProductEvidenceUnknown = {
-  importance?: "critical" | "important" | "minor";
-  topic: string;
-  reason: string;
-};
-
-export type ProductOwnerOpinion = {
-  concerns: string[];
-  praises: string[];
-  redditThreadCount: number;
-  sentiment: "positive" | "mixed" | "negative" | "limited";
-  sourceCount: number;
-  sourceUrls: string[];
-  summary: string;
-};
-
-export type ProductEvidenceBucket = {
-  positiveEvidence: ProductEvidenceItem[];
-  negativeEvidence: ProductEvidenceItem[];
-  ownerOpinion?: ProductOwnerOpinion;
-  repeatedComplaints: RepeatedComplaintEvidence[];
-  unknowns: ProductEvidenceUnknown[];
-};
-
 export type RawProductCandidate = {
   id: string;
   name: string;
@@ -433,10 +197,7 @@ export type RawProductCandidate = {
   category: string;
   productUrl: string;
   imageUrl: string | null;
-  retailer: string | null;
   price: number | null;
-  rating: number | null;
-  reviewCount: number | null;
   availableColors: string[];
   dimensions: {
     width: number | null;
@@ -445,68 +206,10 @@ export type RawProductCandidate = {
     unit: "in" | "cm" | null;
   };
   keySpecs: string[];
-  evidenceSources: {
+  evidenceSources: Array<{
     title: string;
     url: string;
     snippet: string;
     snippetProvenance?: "source-derived" | "query-derived";
-  }[];
-  requirementCheck: RequirementCheck;
-};
-
-export type ProductRecommendation = {
-  recommendation_type: RecommendationType;
-  rank?: number;
-  rankLabel?: string;
-  rankReason?: string;
-  matchScore?: number;
-  credibilityScore?: number;
-  name: string;
-  category: string;
-  product_page_url: string;
-  product_image_url: string;
-  why_recommended: string;
-  pros: string[];
-  cons: string[];
-  common_complaints: string[];
-  estimated_price_range: string;
-  confidence_score: number;
-  source_consensus: SourceConsensus;
-  price_value_verdict: string;
-  best_for: string;
-  not_for: string[];
-  citations: Citation[];
-  near_match_reason?: string;
-  evidence_strength?: "strong" | "medium" | "weak";
-  slot_reasoning?: string;
-  requirementCheck?: RequirementCheck;
-  matchedRequirements?: string[];
-  missingRequirements?: string[];
-  unknownRequirements?: string[];
-  requirementComparisons?: RequirementComparison[];
-  evidenceBucket?: ProductEvidenceBucket;
-  disqualifiedReason?: string | null;
-  canonicalIdentity?: CanonicalProductIdentity;
-  metadata?: ProductMetadata;
-  marketConfidence?: ProductCredibility;
-  buyingRubric?: ProductBuyingRubric;
-  priceTrust?: ProductPriceTrust;
-  productEligibility?: ProductEligibilityVerdict;
-  reliabilityCheck?: ProductReliabilityCheck;
-  scoreBreakdown?: ScoreBreakdown;
-};
-
-export type RecommendationResult = {
-  search_summary: string;
-  assumptions: string[];
-  extractedRequirements?: StructuredRequirements;
-  generated_queries?: string[];
-  raw_candidate_count?: number;
-  exactMatches: ProductRecommendation[];
-  premiumAboveBudget?: ProductRecommendation[];
-  nearMatches: ProductRecommendation[];
-  recommendations: ProductRecommendation[];
-  searchCoverage?: SearchCoverage;
-  what_to_avoid: string[];
-  final_buying_advice: string;
+  }>;
 };

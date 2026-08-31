@@ -4553,6 +4553,64 @@ stable launcher. A zero-spend probe returned homepage HTTP 200 and
 `invalid_config` from the experimental V2 route before request parsing or
 provider creation. No recommendation search was submitted.
 
+### PR-10 — selection-only architecture reset
+
+**Status:** complete and fully validated on committed PR-9J parent snapshot
+`5117276c3b2909d629d9f19970b3e6f55c10af67`; included in the final local
+PR-10 commit.
+
+**Objective:** make ReviewRadar a fast, reliable product selector. A result
+card now contains only a safe image or placeholder, category, exact product
+name, trustworthy current price or explicit missing-price state, and a direct
+`View product` link.
+
+**Root cause:** matched baseline searches took 91–116 seconds because every
+request entered a report-generation architecture: multiple OpenAI stages,
+review/editorial research, rescue passes, repeated search transports, large
+prompts, and large response objects. The dominant delay was distributed across
+the final report, reviews, planning, assets, rescue, and discovery. Optimizing
+one stage would leave the proven system-level bottleneck intact.
+
+**Replacement:** `/api/recommendations` is now the only recommendation route
+and exports only `POST`. It validates the request and conflicting requirements,
+optionally makes one compact structured planner call, performs at most three
+Shopping queries plus bounded finalist product-page resolution, and returns a
+minimal selection result. Total logical search/page operations are capped at
+eight with no retry, editorial research, review crawl, report synthesis, rescue
+pass, polling, or alternate recommendation mode. A deterministic planner is
+used when OpenAI is unavailable or its output is invalid.
+
+Hard requirements, product type, accessories/components, used/refurbished
+items, explicit model conflicts, duplicates, budgets, exact product-page
+identity, price plausibility, SSRF boundaries, and image identity remain
+enforced. A budgeted result requires a trustworthy current price. The selector
+keeps limited brand diversity while ranking stronger exact matches first.
+
+Dynamic paid Smart Features were removed with their route. The form now reads
+the existing deterministic local category catalogs directly. Direct Terra,
+staged Terra, two-layer output, report/citation/evidence/narrative layers,
+progress/job APIs, report UI, evaluation launchers, report fixtures, and their
+production-only support code were deleted rather than left as inactive modes.
+
+**Measured result:** the same three representative searches averaged
+101,212 ms before and 8,029 ms after, a 92.07% latency reduction and 12.61x
+speedup. Normal response size averaged 86,087.67 bytes before and 821.33 bytes
+after, a 99.05% reduction and 104.81x smaller response. Each after search used
+one OpenAI planner call and no more than eight bounded search/page operations;
+the old path used three OpenAI calls and 37–60+ Serper attempts. Two additional
+hard-language searches returned only matching, in-budget products.
+
+**Verification:** the final unit suite passes 241/241 across 41 suites. The
+required typecheck, zero-warning lint, production build, and Chromium desktop/
+mobile E2E checks must remain green in the final committed snapshot. The build
+must expose only `/`, `/_not-found`, and `/api/recommendations` application
+routes.
+
+**Decision:** this phase supersedes every earlier recommendation/report
+experiment and related kickoff. Reintroducing report generation, citations,
+reviews, background jobs, or alternate architectures requires a new product
+decision and new evidence; none remains dormant in the runtime.
+
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 
 Phase 3P/3Q source-upgrade items; RR-014/RR-015 aggregate measurement beyond

@@ -75,8 +75,8 @@ describe("product type intent classifier", () => {
     }
   });
 
-  it("robot_vacuum: allows sparse-name robot vacuums via allowedCheckText (why_recommended)", () => {
-    // Product name alone does not contain 'robot vacuum'; why_recommended confirms it.
+  it("robot_vacuum: allows sparse names when bounded candidate evidence confirms the type", () => {
+    // Product name alone does not contain 'robot vacuum'.
     const v = classifyProductTypeIntent({
       requestedText: "robot vacuum",
       candidateText: "Roborock S8 MaxV Ultra",
@@ -87,7 +87,7 @@ describe("product type intent classifier", () => {
     assert.equal(v.canBeExactMatch, true);
   });
 
-  it("robot_vacuum: returns needs_verification when neither name nor why_recommended confirms robot vacuum", () => {
+  it("robot_vacuum: needs verification when neither name nor evidence confirms the type", () => {
     const v = classifyProductTypeIntent({
       requestedText: "robot vacuum",
       candidateText: "Roborock S7 MaxV Ultra",
