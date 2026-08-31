@@ -3278,3 +3278,6 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 - Full unit suite: 1,713/1,713 across 232 suites; typecheck passed.
 - Lint: zero errors and three pre-existing warnings.
 - Zero-network v4 plan authenticated 66 trust entries with no failures.
+- Independent review rejected the first predicate because an unknown inactive
+  child string was treated like null. Inactive children must now be exactly
+  null, with regressions for both candidate and candidate-source branches.

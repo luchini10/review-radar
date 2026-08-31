@@ -16581,3 +16581,13 @@ The clean zero-network plan authenticated 66 trust entries with no failures.
 measurement needed to select a generalized repair; it does not improve or
 weaken search results by itself. Independent exact-final-head review is the
 last pre-spend gate for v4 attempt 1.
+
+**Independent-review correction:** review of exact head `c2bebee4` returned
+`CHANGES REQUIRED`, confidence 0.999. The enum predicate accepted an arbitrary
+non-null candidate child under a non-candidate top-level reason, and likewise
+an arbitrary source child under a non-source candidate reason. New regressions
+reproduced the first missing exception. Commit `6ef6cb7f` now requires inactive
+children to be exactly null and active children to belong to their closed set.
+Targeted test, 71/71 focused wall, 1,713/1,713 full tests, typecheck, and lint
+with zero errors/three old warnings pass. The corrected 66-entry trust digest is
+`822b64d846c59d165bcfc507b7694c28cc9ce1f8f8632556c6e5bfda6ac4c43d`.

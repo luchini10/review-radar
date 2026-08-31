@@ -1860,5 +1860,6 @@ No production pipeline or API contract changed in Phase 6A.
   disabled.
 - **Proof and limit:** focused 71/71, full 1,713/1,713, typecheck pass, lint zero
   errors/three old warnings, and a 66-entry zero-network trust authentication
-  pass. This restores diagnostic integrity but does not yet prove product
-  accuracy or production readiness.
+  pass. Independent review found and the correction closed unknown strings in
+  inactive child fields by requiring exact null. This restores diagnostic
+  integrity but does not yet prove product accuracy or production readiness.

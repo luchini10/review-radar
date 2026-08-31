@@ -12,14 +12,16 @@ but failed before product verification, ranking, or rendering.
 
 Current implementation snapshot:
 
-- commit: `0b46d5bf2939d12ea3ea983e2b7ab0edc94d7124`
-- parent: `5fcb38e8e06d6c51f8e2b0f1da9d54655bcbf9eb`
-- tree: `b76ada8e34752471a1b57bc11bc151338459f238`
-- subject: `Retain bounded readiness failure attribution`
+- commit: `6ef6cb7f9c019cfe1e6908892558a0959fdf412a`
+- parent: `c2bebee49e875e0648977736fef9713e72b18460`
+- tree: `03fb533b1651c7831dc2694aac427e1b010e4fe8`
+- subject: `Close inactive readiness attribution fields`
 
-The parent was independently reviewed as **VERIFIED**, no findings, confidence
-**0.998**. PR-9D still requires an independent exact-final-head review before
-another paid call.
+Independent review of initial PR-9D head `c2bebee4` returned
+**CHANGES REQUIRED**, confidence **0.999**: an unknown child string passed when
+its parent enum made that field inactive. Commit `6ef6cb7f` now requires the
+inactive child to be exactly null and adds both missing regressions. PR-9D still
+requires independent exact-final-head re-review before another paid call.
 
 ## Objective and proven bottleneck
 
@@ -62,6 +64,8 @@ unmeasured because the first run did not pass research validation.
 Validation:
 
 - targeted fail-first: the analyzer omitted all three expected enums;
+- independent-review fail-first: an unknown inactive candidate child was
+  accepted instead of rejected;
 - corrected four-suite launcher/runner/analyzer wall: 71/71;
 - full unit suite: 1,713/1,713 across 232 suites;
 - typecheck: pass;
@@ -75,7 +79,7 @@ Frozen v4 identities:
 - matrix canonical SHA-256:
   `7bc4b8cc578c905b8789456cd4eb017bec7039df9c65575f8056a0fe75d94afc`
 - trust manifest SHA-256:
-  `64149ba00c3c16207d3691d8000a62ae1c74e633d0d96952c751f3e7972fb0ec`
+  `822b64d846c59d165bcfc507b7694c28cc9ce1f8f8632556c6e5bfda6ac4c43d`
 
 ## Authority and next action
 

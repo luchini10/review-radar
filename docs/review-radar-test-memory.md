@@ -3761,6 +3761,10 @@ a known conservative undercount.
   combinations, attribution on unrelated route stages, and extra keys. It must
   never retain raw output, candidate values, source URLs/titles, prompts,
   provider IDs, headers, credentials, or secrets for this purpose.
+- Set membership is not sufficient for an inactive child: both null and an
+  unknown string are outside the child set. The contract must explicitly
+  require exact null when the parent is inactive and closed-set membership only
+  when active; regress both hierarchy levels.
 - The analyzer may expose the authenticated closed tuple in
   `metrics.routeFailures`. The public shopper response and bounded manual-review
   packet must not expose it.
