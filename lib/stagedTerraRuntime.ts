@@ -46,7 +46,7 @@ import type {
 } from "./stagedTerraVerifier.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
 
-export const STAGED_TERRA_RUNTIME_VERSION = "staged-terra-runtime-v8";
+export const STAGED_TERRA_RUNTIME_VERSION = "staged-terra-runtime-v9";
 export const STAGED_TERRA_RUNTIME_LIMITS = Object.freeze({
   researchTimeoutMs: 120_000,
   presentationTimeoutMs: 120_000,
@@ -396,6 +396,12 @@ export async function pollStagedTerraResearch({
       validationReason: parsed.reason,
       ...("candidateValidationReason" in parsed
         ? { candidateValidationReason: parsed.candidateValidationReason }
+        : {}),
+      ...("candidateIdentityValidationReason" in parsed
+        ? {
+            candidateIdentityValidationReason:
+              parsed.candidateIdentityValidationReason,
+          }
         : {}),
       ...("candidateSourceValidationReason" in parsed
         ? {

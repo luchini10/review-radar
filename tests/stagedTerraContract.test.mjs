@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 
 import {
   buildStagedTerraRequestFingerprint,
+  isStagedTerraResearchCandidateIdentityValidationReason,
   isStagedTerraResearchCandidateSourceValidationReason,
   isStagedTerraResearchCandidateValidationReason,
   isStagedTerraResearchValidationReason,
@@ -11,6 +12,7 @@ import {
   STAGED_TERRA_EVIDENCE_PACKAGE_VERSION,
   STAGED_TERRA_PRESENTATION_SCHEMA_VERSION,
   STAGED_TERRA_RESEARCH_CANDIDATE_VALIDATION_REASONS,
+  STAGED_TERRA_RESEARCH_CANDIDATE_IDENTITY_VALIDATION_REASONS,
   STAGED_TERRA_RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS,
   STAGED_TERRA_RESEARCH_SCHEMA_VERSION,
   STAGED_TERRA_RESEARCH_VALIDATION_REASONS,
@@ -565,7 +567,7 @@ describe("staged Terra request boundaries", () => {
   });
 
   it("rolls the research acceptance contract identity", () => {
-    assert.equal(STAGED_TERRA_CONTRACT_VERSION, "staged-terra-contract-v9");
+    assert.equal(STAGED_TERRA_CONTRACT_VERSION, "staged-terra-contract-v10");
   });
 
   it("rolls the research prompt identity", () => {
@@ -576,7 +578,7 @@ describe("staged Terra request boundaries", () => {
   });
 
   it("rolls the staged runtime identity", () => {
-    assert.equal(STAGED_TERRA_RUNTIME_VERSION, "staged-terra-runtime-v8");
+    assert.equal(STAGED_TERRA_RUNTIME_VERSION, "staged-terra-runtime-v9");
   });
 
   it("keeps the integrated path default-off and isolated from Direct Terra", () => {
@@ -1201,6 +1203,7 @@ describe("staged Terra research contract", () => {
         ok: false,
         reason: "research_candidate_invalid",
         candidateValidationReason: "candidate_identity",
+        candidateIdentityValidationReason: "candidate_identity_shape",
       },
     );
   });
@@ -1224,6 +1227,7 @@ describe("staged Terra research contract", () => {
           ok: false,
           reason: "research_candidate_invalid",
           candidateValidationReason: "candidate_identity",
+          candidateIdentityValidationReason: "candidate_identity_shape",
         },
       );
     });
@@ -1247,10 +1251,61 @@ describe("staged Terra research contract", () => {
     );
   });
 
+  it("attributes schema-valid identity failures to the exact closed coherence relation", () => {
+    const cases = [
+      {
+        name: "model relation",
+        mutate: (candidate) => {
+          candidate.model = "X";
+        },
+        expected: "candidate_identity_model_relation",
+      },
+      {
+        name: "model conflict",
+        mutate: (candidate) => {
+          candidate.product_type = "HD1400 shop vac";
+        },
+        expected: "candidate_identity_model_conflict",
+      },
+      {
+        name: "product type relation",
+        mutate: (candidate) => {
+          candidate.product_type = "shop vacuum replacement filter";
+        },
+        expected: "candidate_identity_product_type_relation",
+      },
+    ];
+
+    for (const testCase of cases) {
+      const fixture = researchFixture();
+      Object.assign(fixture.value.candidates[0], {
+        brand: "RIDGID",
+        model: "HD1200",
+        product_type: "shop vac",
+      });
+      testCase.mutate(fixture.value.candidates[0]);
+      assert.deepEqual(
+        validateStagedTerraResearchOutput({
+          value: fixture.value,
+          shopperRequest: shopper,
+          responseSourceUrls: fixture.responseSourceUrls,
+        }),
+        {
+          ok: false,
+          reason: "research_candidate_invalid",
+          candidateValidationReason: "candidate_identity",
+          candidateIdentityValidationReason: testCase.expected,
+        },
+        testCase.name,
+      );
+    }
+  });
+
   it("attributes invalid candidates to one bounded field group", () => {
     const cases = [
       {
         candidateValidationReason: "candidate_identity",
+        candidateIdentityValidationReason: "candidate_identity_shape",
         mutate: (fixture) => {
           fixture.value.candidates[0].brand = " ";
         },
@@ -1290,6 +1345,12 @@ describe("staged Terra research contract", () => {
           ok: false,
           reason: "research_candidate_invalid",
           candidateValidationReason: testCase.candidateValidationReason,
+          ...(testCase.candidateIdentityValidationReason
+            ? {
+                candidateIdentityValidationReason:
+                  testCase.candidateIdentityValidationReason,
+              }
+            : {}),
           ...(testCase.candidateSourceValidationReason
             ? {
                 candidateSourceValidationReason:
@@ -1516,6 +1577,16 @@ describe("staged Terra research contract", () => {
       "candidate_facts",
     ]);
     assert.deepEqual(
+      STAGED_TERRA_RESEARCH_CANDIDATE_IDENTITY_VALIDATION_REASONS,
+      [
+        "candidate_identity_shape",
+        "candidate_identity_brand_relation",
+        "candidate_identity_model_relation",
+        "candidate_identity_model_conflict",
+        "candidate_identity_product_type_relation",
+      ],
+    );
+    assert.deepEqual(
       STAGED_TERRA_RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS,
       [
         "candidate_source_shape",
@@ -1528,6 +1599,18 @@ describe("staged Terra research contract", () => {
     assert.equal(
       isStagedTerraResearchCandidateValidationReason("candidate_sources"),
       true,
+    );
+    assert.equal(
+      isStagedTerraResearchCandidateIdentityValidationReason(
+        "candidate_identity_model_relation",
+      ),
+      true,
+    );
+    assert.equal(
+      isStagedTerraResearchCandidateIdentityValidationReason(
+        "private_identity_reason",
+      ),
+      false,
     );
     assert.equal(
       isStagedTerraResearchCandidateSourceValidationReason(

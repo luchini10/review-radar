@@ -40,7 +40,7 @@ import {
 } from "../scripts/staged-terra-readiness-io.mjs";
 
 const matrixBytes = readFileSync(
-  "tests/fixtures/staged-terra-readiness-matrix-v4.json",
+  "tests/fixtures/staged-terra-readiness-matrix-v5.json",
 );
 const matrix = JSON.parse(matrixBytes.toString("utf8"));
 const commitSha = "f".repeat(40);
@@ -184,7 +184,7 @@ describe("PR-9B staged Terra readiness runner", () => {
   it("freezes the first exact matrix attempt and every no-extra-work ceiling", () => {
     const value = plan();
     assert.equal(value.schemaVersion, STAGED_TERRA_READINESS_LIVE_PLAN_VERSION);
-    assert.equal(value.schemaVersion, "staged-terra-readiness-live-plan-v4");
+    assert.equal(value.schemaVersion, "staged-terra-readiness-live-plan-v5");
     assert.equal(value.mode, "dry-run");
     assert.equal(
       value.matrixFileSha256,
@@ -192,16 +192,16 @@ describe("PR-9B staged Terra readiness runner", () => {
     );
     assert.equal(
       value.matrixCanonicalSha256,
-      "7bc4b8cc578c905b8789456cd4eb017bec7039df9c65575f8056a0fe75d94afc",
+      "d9ad036d67872289626b76ea60264a085ba6f0de640c4260898d6d820d303fd4",
     );
     assert.deepEqual(value.attempt, {
       index: 1,
       key: "broad-shop-vac:1",
       caseId: "broad-shop-vac",
       run: 1,
-      runId: "pr9d-01-broad-shop-vac-r1",
+      runId: "pr9e-01-broad-shop-vac-r1",
       nonce:
-        "nonce-7ff3c7dde3d2c278afea18fe71284a60dc8de2451abdedf11bb854fb6762562b",
+        "nonce-c90dfa9c644a86572362ca76f9b61f0cad9a6dc0eefef6991a40953e60e4e91e",
       previousArtifactSha256: null,
       shopperRequest: { query: "shop vac" },
       requestSha256:
@@ -222,7 +222,7 @@ describe("PR-9B staged Terra readiness runner", () => {
     });
     assert.equal(
       path.basename(value.outputDirectory),
-      "pr9d-01-broad-shop-vac-r1-fffffff",
+      "pr9e-01-broad-shop-vac-r1-fffffff",
     );
     assert.throws(() =>
       stagedTerraReadinessOutputDirectory({
@@ -242,7 +242,7 @@ describe("PR-9B staged Terra readiness runner", () => {
     const value = JSON.parse(output);
     assert.equal(value.mode, "dry-run");
     assert.equal(value.attempt.index, 1);
-    assert.equal(value.attempt.runId, "pr9d-01-broad-shop-vac-r1");
+    assert.equal(value.attempt.runId, "pr9e-01-broad-shop-vac-r1");
     assert.equal(value.networkPolicy.nextAttemptAutomatic, false);
     assert.equal(value.ceilings.conservativeUsd, 1);
     assert.ok(
@@ -826,7 +826,7 @@ describe("PR-9B staged Terra readiness runner", () => {
       buildArtifact: (input) => {
         calls.build += 1;
         assert.equal(input.caseId, "broad-shop-vac");
-        assert.equal(input.runId, "pr9d-01-broad-shop-vac-r1");
+        assert.equal(input.runId, "pr9e-01-broad-shop-vac-r1");
         assert.equal(input.terminalResponse.statusCode, 200);
         assert.equal(input.terminalResponse.body.state, "completed");
         assert.equal("jobToken" in input.terminalResponse.body, false);

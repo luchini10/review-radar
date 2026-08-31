@@ -35,6 +35,17 @@ export type DirectTerraAssetTarget = {
   category: string;
 };
 
+export const DIRECT_TERRA_ASSET_TARGET_COHERENCE_FAILURE_REASONS = [
+  "target_shape",
+  "brand_relation",
+  "model_relation",
+  "model_conflict",
+  "product_type_relation",
+] as const;
+
+export type DirectTerraAssetTargetCoherenceFailureReason =
+  (typeof DIRECT_TERRA_ASSET_TARGET_COHERENCE_FAILURE_REASONS)[number];
+
 export type DirectTerraAssetCandidate = {
   title?: unknown;
   productUrl?: unknown;
@@ -364,9 +375,9 @@ export function directTerraAssetIdentitiesAgree(
   );
 }
 
-export function directTerraAssetTargetIsCoherent(
+export function directTerraAssetTargetCoherenceFailure(
   target: DirectTerraAssetTarget,
-) {
+): DirectTerraAssetTargetCoherenceFailureReason | null {
   if (
     !target.key.trim() ||
     !Number.isInteger(target.rank) ||
@@ -376,18 +387,33 @@ export function directTerraAssetTargetIsCoherent(
     !target.model.trim() ||
     !target.category.trim()
   ) {
-    return false;
+    return "target_shape";
   }
 
-  if (!brandEvidenceMatches(target.productName, target.brand)) return false;
-  if (!titleContainsEveryModelToken(target.productName, target.model)) return false;
-  if (titleHasConflictingModel(target.model, target.productName)) return false;
+  if (!brandEvidenceMatches(target.productName, target.brand)) {
+    return "brand_relation";
+  }
+  if (!titleContainsEveryModelToken(target.productName, target.model)) {
+    return "model_relation";
+  }
+  if (titleHasConflictingModel(target.model, target.productName)) {
+    return "model_conflict";
+  }
 
-  return classifyProductTypeMatch({
+  if (!classifyProductTypeMatch({
     evidenceText: target.productName,
     identityText: target.productName,
     requestedCategory: target.category,
-  }).canBeExactMatch;
+  }).canBeExactMatch) {
+    return "product_type_relation";
+  }
+  return null;
+}
+
+export function directTerraAssetTargetIsCoherent(
+  target: DirectTerraAssetTarget,
+) {
+  return directTerraAssetTargetCoherenceFailure(target) === null;
 }
 
 function identityDecision(

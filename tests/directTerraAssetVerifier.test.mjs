@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import {
   DIRECT_TERRA_ASSET_VERIFIER_VERSION,
+  directTerraAssetTargetCoherenceFailure,
   directTerraAssetTargetIsCoherent,
   extractDirectTerraHeadingIdentity,
   verifyDirectTerraAssetCandidates,
@@ -35,6 +36,29 @@ const shoppingResult = (overrides = {}) => ({
 });
 
 describe("Direct-Terra asset safety boundary", () => {
+  it("classifies target-coherence failures without changing the boolean trust gate", () => {
+    const cases = [
+      [{ ...q7, key: "" }, "target_shape"],
+      [{ ...q7, productName: "Q7 M5+ Robot Vacuum" }, "brand_relation"],
+      [{ ...q7, productName: "Roborock Robot Vacuum" }, "model_relation"],
+      [
+        { ...q7, productName: "Roborock Q7 M5+ Q70 Robot Vacuum" },
+        "model_conflict",
+      ],
+      [
+        { ...q7, productName: "Roborock Q7 M5+ Replacement Filter" },
+        "product_type_relation",
+      ],
+    ];
+
+    assert.equal(directTerraAssetTargetCoherenceFailure(q7), null);
+    assert.equal(directTerraAssetTargetIsCoherent(q7), true);
+    for (const [target, reason] of cases) {
+      assert.equal(directTerraAssetTargetCoherenceFailure(target), reason);
+      assert.equal(directTerraAssetTargetIsCoherent(target), false);
+    }
+  });
+
   it("accepts only identity-safe product-page and image assets without changing Terra rank or name", () => {
     const result = verifyDirectTerraAssetCandidates({
       target: q7,

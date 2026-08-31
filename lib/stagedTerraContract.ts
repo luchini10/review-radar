@@ -5,9 +5,10 @@ import {
   type DirectTerraRequirementContractEntry,
 } from "./directTerraCandidateSlate.ts";
 import {
-  directTerraAssetTargetIsCoherent,
+  directTerraAssetTargetCoherenceFailure,
   verifyDirectTerraAssetCandidates,
   type DirectTerraAssetDecision,
+  type DirectTerraAssetTargetCoherenceFailureReason,
 } from "./directTerraAssetVerifier.ts";
 import type { DirectTerraShopperRequest } from "./directTerraPrompt.ts";
 import {
@@ -15,7 +16,7 @@ import {
   type DirectTerraSource,
 } from "./directTerraResponse.ts";
 
-export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v9";
+export const STAGED_TERRA_CONTRACT_VERSION = "staged-terra-contract-v10";
 export const STAGED_TERRA_RESEARCH_SCHEMA_VERSION =
   "staged-terra-research-v5";
 export const STAGED_TERRA_EVIDENCE_PACKAGE_VERSION =
@@ -34,6 +35,13 @@ export const STAGED_TERRA_RESEARCH_CANDIDATE_VALIDATION_REASONS = [
   "candidate_requirements",
   "candidate_facts",
 ] as const;
+export const STAGED_TERRA_RESEARCH_CANDIDATE_IDENTITY_VALIDATION_REASONS = [
+  "candidate_identity_shape",
+  "candidate_identity_brand_relation",
+  "candidate_identity_model_relation",
+  "candidate_identity_model_conflict",
+  "candidate_identity_product_type_relation",
+] as const;
 export const STAGED_TERRA_RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS = [
   "candidate_source_shape",
   "candidate_source_duplicate",
@@ -46,6 +54,8 @@ export type StagedTerraResearchValidationReason =
   (typeof STAGED_TERRA_RESEARCH_VALIDATION_REASONS)[number];
 export type StagedTerraResearchCandidateValidationReason =
   (typeof STAGED_TERRA_RESEARCH_CANDIDATE_VALIDATION_REASONS)[number];
+export type StagedTerraResearchCandidateIdentityValidationReason =
+  (typeof STAGED_TERRA_RESEARCH_CANDIDATE_IDENTITY_VALIDATION_REASONS)[number];
 export type StagedTerraResearchCandidateSourceValidationReason =
   (typeof STAGED_TERRA_RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS)[number];
 
@@ -230,6 +240,7 @@ type ValidationSuccess<T> = { ok: true; value: T };
 
 type ResearchCandidateParseResult =
   | (ValidationFailure<StagedTerraResearchCandidateValidationReason> & {
+      candidateIdentityValidationReason?: StagedTerraResearchCandidateIdentityValidationReason;
       candidateSourceValidationReason?: StagedTerraResearchCandidateSourceValidationReason;
     })
   | ValidationSuccess<StagedTerraResearchCandidate>;
@@ -241,6 +252,7 @@ type StagedTerraResearchValidationFailure =
     >>
   | (ValidationFailure<"research_candidate_invalid"> & {
       candidateValidationReason: StagedTerraResearchCandidateValidationReason;
+      candidateIdentityValidationReason?: StagedTerraResearchCandidateIdentityValidationReason;
       candidateSourceValidationReason?: StagedTerraResearchCandidateSourceValidationReason;
     });
 
@@ -257,6 +269,14 @@ export function isStagedTerraResearchCandidateValidationReason(
 ): value is StagedTerraResearchCandidateValidationReason {
   return STAGED_TERRA_RESEARCH_CANDIDATE_VALIDATION_REASONS.includes(
     value as StagedTerraResearchCandidateValidationReason,
+  );
+}
+
+export function isStagedTerraResearchCandidateIdentityValidationReason(
+  value: unknown,
+): value is StagedTerraResearchCandidateIdentityValidationReason {
+  return STAGED_TERRA_RESEARCH_CANDIDATE_IDENTITY_VALIDATION_REASONS.includes(
+    value as StagedTerraResearchCandidateIdentityValidationReason,
   );
 }
 
@@ -290,6 +310,17 @@ function boundedString(value: unknown, maximum: number) {
 function normalizeResearchIdentityField(value: string) {
   return value.replace(/\s+/g, " ").trim();
 }
+
+const CANDIDATE_IDENTITY_REASON_BY_TARGET_COHERENCE = {
+  target_shape: "candidate_identity_shape",
+  brand_relation: "candidate_identity_brand_relation",
+  model_relation: "candidate_identity_model_relation",
+  model_conflict: "candidate_identity_model_conflict",
+  product_type_relation: "candidate_identity_product_type_relation",
+} as const satisfies Record<
+  DirectTerraAssetTargetCoherenceFailureReason,
+  StagedTerraResearchCandidateIdentityValidationReason
+>;
 
 function exactHttpsUrl(value: unknown) {
   if (typeof value !== "string" || value.length > 4_096) return null;
@@ -598,7 +629,11 @@ function parseResearchCandidate(
     !boundedString(value.model, RESEARCH_MODEL_MAX_LENGTH) ||
     !boundedString(value.product_type, RESEARCH_PRODUCT_TYPE_MAX_LENGTH)
   ) {
-    return { ok: false, reason: "candidate_identity" };
+    return {
+      ok: false,
+      reason: "candidate_identity",
+      candidateIdentityValidationReason: "candidate_identity_shape",
+    };
   }
   const candidateId = `candidate_${index + 1}`;
   const brand = normalizeResearchIdentityField(value.brand as string);
@@ -607,18 +642,28 @@ function parseResearchCandidate(
     value.product_type as string,
   );
   const productName = `${brand} ${model} ${productType}`;
-  if (
-    !boundedString(productName, RESEARCH_PRODUCT_NAME_MAX_LENGTH) ||
-    !directTerraAssetTargetIsCoherent({
+  if (!boundedString(productName, RESEARCH_PRODUCT_NAME_MAX_LENGTH)) {
+    return {
+      ok: false,
+      reason: "candidate_identity",
+      candidateIdentityValidationReason: "candidate_identity_shape",
+    };
+  }
+  const targetCoherenceFailure = directTerraAssetTargetCoherenceFailure({
       key: candidateId,
       rank: index + 1,
       productName,
       brand,
       model,
       category: productType,
-    })
-  ) {
-    return { ok: false, reason: "candidate_identity" };
+  });
+  if (targetCoherenceFailure) {
+    return {
+      ok: false,
+      reason: "candidate_identity",
+      candidateIdentityValidationReason:
+        CANDIDATE_IDENTITY_REASON_BY_TARGET_COHERENCE[targetCoherenceFailure],
+    };
   }
   const parsedSourceUrls = parseCandidateSourceUrls(
     value.source_urls,
@@ -772,6 +817,12 @@ export function validateStagedTerraResearchOutput({
       ok: false,
       reason: "research_candidate_invalid",
       candidateValidationReason: invalidCandidate.reason,
+      ...("candidateIdentityValidationReason" in invalidCandidate
+        ? {
+            candidateIdentityValidationReason:
+              invalidCandidate.candidateIdentityValidationReason,
+          }
+        : {}),
       ...("candidateSourceValidationReason" in invalidCandidate
         ? {
             candidateSourceValidationReason:

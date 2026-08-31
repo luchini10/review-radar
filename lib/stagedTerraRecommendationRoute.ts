@@ -38,11 +38,13 @@ import {
   type StagedTerraVerifierAggregateDiagnostic,
 } from "./stagedTerraVerifier.ts";
 import {
+  isStagedTerraResearchCandidateIdentityValidationReason,
   isStagedTerraResearchCandidateSourceValidationReason,
   isStagedTerraResearchCandidateValidationReason,
   isStagedTerraResearchValidationReason,
   STAGED_TERRA_RESEARCH_IDENTITY_SOURCE_REJECTION_KEYS,
   type StagedTerraResearchIdentitySourceFilterDiagnostic,
+  type StagedTerraResearchCandidateIdentityValidationReason,
   type StagedTerraResearchCandidateSourceValidationReason,
   type StagedTerraResearchCandidateValidationReason,
   type StagedTerraResearchValidationReason,
@@ -71,6 +73,7 @@ export type StagedTerraServerDiagnostic = {
   ledger?: StagedTerraRuntimeLedger;
   validationReason?: StagedTerraResearchValidationReason;
   candidateValidationReason?: StagedTerraResearchCandidateValidationReason;
+  candidateIdentityValidationReason?: StagedTerraResearchCandidateIdentityValidationReason;
   candidateSourceValidationReason?: StagedTerraResearchCandidateSourceValidationReason;
   identitySourceFilter?: StagedTerraResearchIdentitySourceFilterDiagnostic;
   counts?: {
@@ -779,6 +782,14 @@ export function createStagedTerraRecommendationHandlers({
           )
             ? research.candidateSourceValidationReason
             : undefined;
+        const candidateIdentityValidationReason =
+          candidateValidationReason === "candidate_identity" &&
+          "candidateIdentityValidationReason" in research &&
+          isStagedTerraResearchCandidateIdentityValidationReason(
+            research.candidateIdentityValidationReason,
+          )
+            ? research.candidateIdentityValidationReason
+            : undefined;
         const identitySourceFilter =
           "identitySourceFilter" in research
             ? sanitizeIdentitySourceFilter(research.identitySourceFilter, {
@@ -794,6 +805,9 @@ export function createStagedTerraRecommendationHandlers({
           ledger: research.ledger,
           ...(validationReason ? { validationReason } : {}),
           ...(candidateValidationReason ? { candidateValidationReason } : {}),
+          ...(candidateIdentityValidationReason
+            ? { candidateIdentityValidationReason }
+            : {}),
           ...(candidateSourceValidationReason
             ? { candidateSourceValidationReason }
             : {}),

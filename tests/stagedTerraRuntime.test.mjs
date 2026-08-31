@@ -280,6 +280,28 @@ describe("OAI-T10 staged Terra runtime", () => {
     assert.equal(JSON.stringify(polled).includes(exactCandidateUrl), false);
   });
 
+  it("retains only the closed candidate identity relation when research identity fails", async () => {
+    const value = researchValue();
+    value.candidates[0].model = "X";
+    const response = completedResearchResponse("resp_research123", value);
+
+    const polled = await pollStagedTerraResearch({
+      client: { responses: { retrieve: async () => response } },
+      responseId: "resp_research123",
+      requestFingerprint: buildStagedTerraRequestFingerprint(shopper),
+      shopperRequest: shopper,
+    });
+
+    assert.equal(polled.ok, false);
+    assert.equal(polled.validationReason, "research_candidate_invalid");
+    assert.equal(polled.candidateValidationReason, "candidate_identity");
+    assert.equal(
+      polled.candidateIdentityValidationReason,
+      "candidate_identity_model_relation",
+    );
+    assert.equal(JSON.stringify(polled).includes("Example Brand"), false);
+  });
+
   it("quarantines a candidate whose response titles do not prove identity", async () => {
     const response = completedResearchResponse();
     response.output[0].action.sources[0].title =

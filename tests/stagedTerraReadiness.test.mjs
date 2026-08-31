@@ -28,13 +28,14 @@ import {
 } from "../scripts/staged-terra-readiness-artifact.mjs";
 
 const fixturePath = new URL(
-  "./fixtures/staged-terra-readiness-matrix-v4.json",
+  "./fixtures/staged-terra-readiness-matrix-v5.json",
   import.meta.url,
 );
 const retiredFixturePaths = [
   "./fixtures/staged-terra-readiness-matrix-v1.json",
   "./fixtures/staged-terra-readiness-matrix-v2.json",
   "./fixtures/staged-terra-readiness-matrix-v3.json",
+  "./fixtures/staged-terra-readiness-matrix-v4.json",
 ].map((relativePath) => new URL(relativePath, import.meta.url));
 const commitSha = "a".repeat(40);
 
@@ -245,7 +246,7 @@ function counts(keys, first = 0) {
 function ledger(operation, outcome, usage, durationMs = 1_000) {
   const presentation = operation === "presentation";
   return {
-    runtimeVersion: "staged-terra-runtime-v8",
+    runtimeVersion: "staged-terra-runtime-v9",
     operation,
     promptVersion: presentation
       ? "staged-terra-presentation-prompt-v1"
@@ -818,7 +819,7 @@ describe("PR-9B staged Terra readiness boundary", () => {
       false,
     );
     assert.ok(
-      value.attemptPlan.every((attempt) => attempt.runId.startsWith("pr9d-")),
+      value.attemptPlan.every((attempt) => attempt.runId.startsWith("pr9e-")),
     );
     assert.equal(value.qualityBars.minimumPairwiseFinalJaccard, 0.6);
     assert.equal(value.qualityBars.minimumPairwiseSharedOrderKendallTau, 0);
@@ -1641,6 +1642,7 @@ describe("PR-9B staged Terra readiness boundary", () => {
     failedRun.researchFailureAttribution = {
       validationReason: "research_candidate_invalid",
       candidateValidationReason: "candidate_sources",
+      candidateIdentityValidationReason: null,
       candidateSourceValidationReason: "candidate_source_unregistered",
     };
     const attributed = parseStagedTerraReadinessArtifact(
@@ -1662,6 +1664,7 @@ describe("PR-9B staged Terra readiness boundary", () => {
     Object.assign(invalidInactiveCandidate.researchFailureAttribution, {
       validationReason: "research_shape",
       candidateValidationReason: "private-model-output-canary",
+      candidateIdentityValidationReason: null,
       candidateSourceValidationReason: null,
     });
     assert.throws(
@@ -1671,10 +1674,28 @@ describe("PR-9B staged Terra readiness boundary", () => {
     const invalidInactiveSource = structuredClone(failedRun);
     Object.assign(invalidInactiveSource.researchFailureAttribution, {
       candidateValidationReason: "candidate_identity",
+      candidateIdentityValidationReason: "candidate_identity_model_relation",
       candidateSourceValidationReason: "private-model-output-canary",
     });
     assert.throws(
       () => artifactForRun(value, invalidInactiveSource),
+      /failureAttribution/,
+    );
+    const invalidInactiveIdentity = structuredClone(failedRun);
+    invalidInactiveIdentity.researchFailureAttribution.candidateIdentityValidationReason =
+      "private-model-output-canary";
+    assert.throws(
+      () => artifactForRun(value, invalidInactiveIdentity),
+      /failureAttribution/,
+    );
+    const invalidActiveIdentity = structuredClone(failedRun);
+    Object.assign(invalidActiveIdentity.researchFailureAttribution, {
+      candidateValidationReason: "candidate_identity",
+      candidateIdentityValidationReason: "private-model-output-canary",
+      candidateSourceValidationReason: null,
+    });
+    assert.throws(
+      () => artifactForRun(value, invalidActiveIdentity),
       /failureAttribution/,
     );
 
@@ -2206,8 +2227,9 @@ describe("PR-9B staged Terra readiness boundary", () => {
     sample[0].diagnostics = { research: null, verification: null };
     sample[0].researchFailureAttribution = {
       validationReason: "research_candidate_invalid",
-      candidateValidationReason: "candidate_sources",
-      candidateSourceValidationReason: "candidate_source_unregistered",
+      candidateValidationReason: "candidate_identity",
+      candidateIdentityValidationReason: "candidate_identity_model_relation",
+      candidateSourceValidationReason: null,
     };
     const result = analyzeStagedTerraReadiness({
       matrix: value,
@@ -2227,8 +2249,9 @@ describe("PR-9B staged Terra readiness boundary", () => {
         status: "completed",
         failureReason: "invalid_research_contract",
         validationReason: "research_candidate_invalid",
-        candidateValidationReason: "candidate_sources",
-        candidateSourceValidationReason: "candidate_source_unregistered",
+        candidateValidationReason: "candidate_identity",
+        candidateIdentityValidationReason: "candidate_identity_model_relation",
+        candidateSourceValidationReason: null,
       },
     ]);
   });

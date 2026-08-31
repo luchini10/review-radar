@@ -8,9 +8,9 @@ import {
 } from "./staged-terra-readiness-trace.mjs";
 
 export const STAGED_TERRA_READINESS_ARTIFACT_VERSION =
-  "staged-terra-readiness-artifact-v3";
+  "staged-terra-readiness-artifact-v4";
 export const STAGED_TERRA_READINESS_PRODUCER_VERSION =
-  "staged-terra-readiness-producer-v3";
+  "staged-terra-readiness-producer-v4";
 export const STAGED_TERRA_READINESS_REVIEW_PACKET_VERSION =
   "staged-terra-readiness-review-packet-v1";
 
@@ -147,6 +147,7 @@ const ROUTE_TRACE_KEYS = ["stage", "outcome", "ledger", "failureAttribution"];
 const FAILURE_ATTRIBUTION_KEYS = [
   "validationReason",
   "candidateValidationReason",
+  "candidateIdentityValidationReason",
   "candidateSourceValidationReason",
 ];
 const ROUTE_TRACE_LEDGER_KEYS = [
@@ -166,7 +167,7 @@ const ROUTE_TRACE_LEDGER_KEYS = [
   "sourceCount",
   "failureReason",
 ];
-const EXPECTED_RUNTIME_VERSION = "staged-terra-runtime-v8";
+const EXPECTED_RUNTIME_VERSION = "staged-terra-runtime-v9";
 const EXPECTED_MODEL = "gpt-5.6-terra";
 const EXPECTED_RESEARCH_PROMPT_VERSION = "staged-terra-research-prompt-v6";
 const EXPECTED_PRESENTATION_PROMPT_VERSION =
@@ -239,6 +240,13 @@ const RESEARCH_CANDIDATE_VALIDATION_REASONS = new Set([
   "candidate_sources",
   "candidate_requirements",
   "candidate_facts",
+]);
+const RESEARCH_CANDIDATE_IDENTITY_VALIDATION_REASONS = new Set([
+  "candidate_identity_shape",
+  "candidate_identity_brand_relation",
+  "candidate_identity_model_relation",
+  "candidate_identity_model_conflict",
+  "candidate_identity_product_type_relation",
 ]);
 const RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS = new Set([
   "candidate_source_shape",
@@ -377,6 +385,7 @@ const ROUTE_DIAGNOSTIC_ALLOWED_KEYS = new Set([
   "ledger",
   "validationReason",
   "candidateValidationReason",
+  "candidateIdentityValidationReason",
   "candidateSourceValidationReason",
   "identitySourceFilter",
   "counts",
@@ -1017,6 +1026,19 @@ function validResearchFailureAttribution(value) {
   } else if (value.candidateValidationReason !== null) {
     return false;
   }
+  const identityFailure =
+    value.candidateValidationReason === "candidate_identity";
+  if (identityFailure) {
+    if (
+      !RESEARCH_CANDIDATE_IDENTITY_VALIDATION_REASONS.has(
+        value.candidateIdentityValidationReason,
+      )
+    ) {
+      return false;
+    }
+  } else if (value.candidateIdentityValidationReason !== null) {
+    return false;
+  }
   const sourceFailure = value.candidateValidationReason === "candidate_sources";
   if (sourceFailure) {
     return RESEARCH_CANDIDATE_SOURCE_VALIDATION_REASONS.has(
@@ -1037,6 +1059,8 @@ function projectResearchFailureAttribution(diagnostic) {
   const attribution = {
     validationReason: diagnostic.validationReason ?? null,
     candidateValidationReason: diagnostic.candidateValidationReason ?? null,
+    candidateIdentityValidationReason:
+      diagnostic.candidateIdentityValidationReason ?? null,
     candidateSourceValidationReason:
       diagnostic.candidateSourceValidationReason ?? null,
   };
@@ -1064,6 +1088,8 @@ function validateRouteDiagnostic(value, index) {
   const attribution = {
     validationReason: value.validationReason ?? null,
     candidateValidationReason: value.candidateValidationReason ?? null,
+    candidateIdentityValidationReason:
+      value.candidateIdentityValidationReason ?? null,
     candidateSourceValidationReason:
       value.candidateSourceValidationReason ?? null,
   };

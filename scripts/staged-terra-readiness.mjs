@@ -23,13 +23,13 @@ export {
 } from "./staged-terra-readiness-artifact.mjs";
 
 export const STAGED_TERRA_READINESS_MATRIX_VERSION =
-  "staged-terra-readiness-matrix-v4";
+  "staged-terra-readiness-matrix-v5";
 export const STAGED_TERRA_READINESS_CAPTURE_VERSION =
-  "staged-terra-readiness-capture-v3";
+  "staged-terra-readiness-capture-v4";
 export const STAGED_TERRA_READINESS_REVIEW_VERSION =
-  "staged-terra-readiness-review-v4";
+  "staged-terra-readiness-review-v5";
 const FROZEN_MATRIX_SHA256 =
-  "7bc4b8cc578c905b8789456cd4eb017bec7039df9c65575f8056a0fe75d94afc";
+  "d9ad036d67872289626b76ea60264a085ba6f0de640c4260898d6d820d303fd4";
 
 const MATRIX_KEYS = [
   "schemaVersion",
@@ -147,6 +147,7 @@ const ROUTE_FAILURE_KEYS = [
   "failureReason",
   "validationReason",
   "candidateValidationReason",
+  "candidateIdentityValidationReason",
   "candidateSourceValidationReason",
 ];
 const CAPTURE_SOURCE_KEYS = ["id", "label", "title", "url"];
@@ -1377,6 +1378,7 @@ function validateCaptureSchema(run, key, failures) {
       for (const field of [
         "validationReason",
         "candidateValidationReason",
+        "candidateIdentityValidationReason",
         "candidateSourceValidationReason",
       ]) {
         if (
@@ -2645,6 +2647,8 @@ function authenticateArtifactRuns({
             trace.failureAttribution?.validationReason ?? null,
           candidateValidationReason:
             trace.failureAttribution?.candidateValidationReason ?? null,
+          candidateIdentityValidationReason:
+            trace.failureAttribution?.candidateIdentityValidationReason ?? null,
           candidateSourceValidationReason:
             trace.failureAttribution?.candidateSourceValidationReason ?? null,
         })),

@@ -847,6 +847,18 @@ describe("OAI-T10 staged Terra route", () => {
       {
         validationReason: "research_candidate_invalid",
         expectedReason: "research_candidate_invalid",
+        candidateValidationReason: "candidate_identity",
+        expectedCandidateReason: "candidate_identity",
+        candidateIdentityValidationReason:
+          "candidate_identity_model_relation",
+        expectedCandidateIdentityReason:
+          "candidate_identity_model_relation",
+        candidateSourceValidationReason: undefined,
+        expectedCandidateSourceReason: undefined,
+      },
+      {
+        validationReason: "research_candidate_invalid",
+        expectedReason: "research_candidate_invalid",
         candidateValidationReason: "candidate_facts",
         expectedCandidateReason: "candidate_facts",
         candidateSourceValidationReason: undefined,
@@ -857,6 +869,8 @@ describe("OAI-T10 staged Terra route", () => {
         expectedReason: "research_candidate_invalid",
         candidateValidationReason: "candidate_sources",
         expectedCandidateReason: "candidate_sources",
+        candidateIdentityValidationReason: "private_identity_reason",
+        expectedCandidateIdentityReason: undefined,
         candidateSourceValidationReason: "candidate_source_unregistered",
         expectedCandidateSourceReason: "candidate_source_unregistered",
       },
@@ -914,6 +928,8 @@ describe("OAI-T10 staged Terra route", () => {
           ok: false,
           validationReason: testCase.validationReason,
           candidateValidationReason: testCase.candidateValidationReason,
+          candidateIdentityValidationReason:
+            testCase.candidateIdentityValidationReason,
           candidateSourceValidationReason:
             testCase.candidateSourceValidationReason,
           rawOutput: "private raw model output",
@@ -957,6 +973,10 @@ describe("OAI-T10 staged Terra route", () => {
         testCase.expectedCandidateReason,
       );
       assert.equal(
+        failedPoll?.candidateIdentityValidationReason,
+        testCase.expectedCandidateIdentityReason,
+      );
+      assert.equal(
         failedPoll?.candidateSourceValidationReason,
         testCase.expectedCandidateSourceReason,
       );
@@ -973,6 +993,7 @@ describe("OAI-T10 staged Terra route", () => {
         "private secret canary",
         "unbounded_private_reason",
         "private_candidate_field",
+        "private_identity_reason",
         "private_source_reason",
       ]) {
         assert.equal(serializedDiagnostics.includes(privateValue), false);
