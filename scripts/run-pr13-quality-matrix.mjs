@@ -70,11 +70,16 @@ function preparedRequest(value) {
   return input;
 }
 
-async function waitForIndexedEvidence(input, indexPath) {
-  const deadline = performance.now() + 75_000;
+async function waitForIndexedEvidence(input, indexPath, refreshStartedAtMs) {
+  const deadline = performance.now() + 135_000;
   while (performance.now() < deadline) {
     const lookup = await lookupMarketEvidence({ indexPath, input });
-    if (lookup.telemetry.indexStatus === "fresh") return lookup;
+    if (
+      lookup.telemetry.lastRefreshAttempt &&
+      lookup.telemetry.lastRefreshAttempt.completedAtMs >= refreshStartedAtMs
+    ) {
+      return lookup;
+    }
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
   return null;
@@ -88,6 +93,7 @@ async function refreshBenchmarkIndex(benchmarkCases, indexPath, portBase) {
     const server = startServer(portBase + index, indexPath);
     const baseUrl = `http://127.0.0.1:${portBase + index}`;
     const startedAt = performance.now();
+    const refreshStartedAtMs = Date.now();
     try {
       await waitUntilReady(baseUrl, server.child, server.output);
       const response = await fetch(`${baseUrl}/api/recommendations`, {
@@ -101,16 +107,20 @@ async function refreshBenchmarkIndex(benchmarkCases, indexPath, portBase) {
       });
       const body = asRecord(await response.json().catch(() => ({})));
       const lookup = response.status === 200
-        ? await waitForIndexedEvidence(input, indexPath)
+        ? await waitForIndexedEvidence(input, indexPath, refreshStartedAtMs)
         : null;
-      const research = lookup?.telemetry.indexedResearch;
+      const attempt = lookup?.telemetry.lastRefreshAttempt;
+      const research = attempt?.research;
+      const updated = attempt?.status === "updated" && lookup?.telemetry.indexStatus === "fresh";
       refreshes.push({
         acceptedSourceUrls: research?.acceptedSourceUrls || 0,
         durationMs: Math.round(performance.now() - startedAt),
         evidenceTiers: research?.evidenceTiers || { none: 0, strong: 0, supported: 0 },
         error:
-          response.status === 200 && lookup
+          response.status === 200 && updated
             ? null
+            : attempt?.fallbackReason
+              ? `Market research failed: ${attempt.fallbackReason}.`
             : typeof body.error === "string"
               ? body.error
               : `Index refresh did not complete after HTTP ${response.status}.`,
@@ -119,8 +129,19 @@ async function refreshBenchmarkIndex(benchmarkCases, indexPath, portBase) {
         inputTokens: research?.inputTokens || 0,
         openAiCalls: research?.openAiCalls || 0,
         outputTokens: research?.outputTokens || 0,
-        status: lookup ? "updated" : "failed",
-        targetCount: lookup?.plan.targets.length || 0,
+        sourceUrls: updated
+          ? [...new Set(lookup.plan.targets.flatMap((target) => target.sourceUrls))]
+          : [],
+        status: updated ? "updated" : "failed",
+        targetCount: updated ? lookup.plan.targets.length : 0,
+        targets: updated
+          ? lookup.plan.targets.map((target) => ({
+              brand: target.brand,
+              model: target.model,
+              sourceUrls: target.sourceUrls,
+              tier: target.evidenceTier,
+            }))
+          : [],
         totalTokens: research?.totalTokens || 0,
         warmLogicalSerperOperations: asFiniteNumber(
           asRecord(asRecord(body.debug).search).logicalSearchCalls,
@@ -138,7 +159,9 @@ async function refreshBenchmarkIndex(benchmarkCases, indexPath, portBase) {
         openAiCalls: 0,
         outputTokens: 0,
         status: "failed",
+        sourceUrls: [],
         targetCount: 0,
+        targets: [],
         totalTokens: 0,
         warmLogicalSerperOperations: 0,
       });

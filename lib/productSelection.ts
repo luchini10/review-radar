@@ -391,15 +391,20 @@ function marketTargetSearchQuery(
     .trim();
 }
 
-function strongTargetsNeedingSearch(
+function marketTargetsNeedingSearch(
   discovered: RawProductCandidate[],
   targets: MarketScoutTarget[],
 ) {
   return targets
     .filter(
       (target) =>
-        target.evidenceTier === "strong" &&
+        target.evidenceTier !== "none" &&
         !discovered.some((candidate) => candidateMatchesTarget(candidate, target)),
+    )
+    .sort(
+      (first, second) =>
+        tierScore(second.evidenceTier) - tierScore(first.evidenceTier) ||
+        first.consensusOrder - second.consensusOrder,
     )
     .slice(0, MAX_MARKET_TARGET_SEARCH_QUERIES);
 }
@@ -1662,11 +1667,11 @@ export async function selectProducts(options: {
       !isSecondaryMarketCandidate(candidate) &&
       !hasUnrequestedNonUsVoltage(candidate, input),
   );
-  const strongTargets = strongTargetsNeedingSearch(
+  const searchedTargets = marketTargetsNeedingSearch(
     neutralTargetCoverageCandidates,
     plan.targets,
   );
-  const marketTargetQueries = strongTargets
+  const marketTargetQueries = searchedTargets
     .map((target) => marketTargetSearchQuery(input, target))
     .filter(Boolean)
     .slice(0, MAX_MARKET_TARGET_SEARCH_QUERIES);
@@ -1679,6 +1684,47 @@ export async function selectProducts(options: {
       ),
     ),
   );
+  const shoppingDiscovered = interleaveSearchCandidates(
+    [...neutralSearchResults, ...marketTargetSearchResults].map(
+      (result) => result.candidates,
+    ),
+  );
+  const targetResolutionCandidates = prefilterProductCandidates(
+    shoppingDiscovered,
+    input,
+    MAX_PREFILTERED_CANDIDATES,
+  ).candidates.filter(
+    (candidate) =>
+      !isSecondaryMarketCandidate(candidate) &&
+      !hasUnrequestedNonUsVoltage(candidate, input),
+  );
+  const targetResolutionTargets = plan.targets
+    .filter(
+      (target) =>
+        target.evidenceTier === "strong" &&
+        !targetResolutionCandidates.some((candidate) =>
+          candidateMatchesTarget(candidate, target),
+        ),
+    )
+    .slice(0, MAX_MARKET_TARGET_SEARCH_QUERIES);
+  const targetResolutionQueries = targetResolutionTargets.map((target) =>
+    marketTargetSearchQuery(input, target),
+  );
+  const targetPageSearchResults = await Promise.all(
+    targetResolutionQueries.map((query) =>
+      searchProductPages(
+        query,
+        baseProductCategoryFromQuery(input.query),
+        executionOptions,
+      ),
+    ),
+  );
+  const targetResolvedCandidates = targetPageSearchResults.flatMap(
+    (candidates, index) =>
+      candidates.filter((candidate) =>
+        candidateMatchesTarget(candidate, targetResolutionTargets[index]),
+      ),
+  );
   const searchResults = [
     ...neutralSearchResults,
     ...marketTargetSearchResults,
@@ -1688,9 +1734,7 @@ export async function selectProducts(options: {
     MAX_DISCOVERY_SEARCH_QUERIES,
   );
   const discovered = attachMarketEvidence(
-    interleaveSearchCandidates(
-      searchResults.map((result) => result.candidates),
-    ).map((candidate, discoveryOrder) => ({
+    [...shoppingDiscovered, ...targetResolvedCandidates].map((candidate, discoveryOrder) => ({
       ...candidate,
       discoveryOrder,
     })),
@@ -1714,8 +1758,21 @@ export async function selectProducts(options: {
   );
   const category = baseProductCategoryFromQuery(input.query);
   const budgetLimit = maxBudget(input);
-  const resolutionDiagnostics: ProductSelectionTelemetry["resolutionDiagnostics"] = [];
-  const resolutionQueries: string[] = [];
+  const resolutionDiagnostics: ProductSelectionTelemetry["resolutionDiagnostics"] =
+    targetResolutionTargets.map((target, index) => ({
+      discoveryName: `${target.brand} ${target.model}`,
+      pageCandidates: targetPageSearchResults[index].map((candidate) => ({
+        name: candidate.name,
+        score: candidateMatchesTarget(candidate, target) ? 1 : 0,
+        url: candidate.productUrl,
+      })),
+      status: targetResolvedCandidates.some((candidate) =>
+        candidateMatchesTarget(candidate, target),
+      )
+        ? "resolved"
+        : "unresolved",
+    }));
+  const resolutionQueries: string[] = [...targetResolutionQueries];
   const verifiedCandidates: ProductSelectionTelemetry["verifiedCandidates"] = [];
   let assetCandidatesCount = 0;
   let rejectedByAssetSafety = 0;
@@ -1948,7 +2005,7 @@ export const productSelectionTestExports = {
   selectionRequirementResult,
   selectDistinctProducts,
   selectVerificationCandidates,
-  strongTargetsNeedingSearch,
+  marketTargetsNeedingSearch,
   trustedAvailability,
   trustedPrice,
 };

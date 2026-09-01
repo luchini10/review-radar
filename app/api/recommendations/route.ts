@@ -24,7 +24,7 @@ import {
 import { USER_ERROR_MESSAGES } from "../../../lib/errorMessages.ts";
 
 export const runtime = "nodejs";
-export const maxDuration = 75;
+export const maxDuration = 150;
 
 const DEBUG_HEADER = "x-reviewradar-debug";
 

@@ -21,7 +21,7 @@ import {
 
 type OpenAIResponsesClient = Parameters<typeof buildMarketScoutPlan>[0]["client"];
 
-export const MARKET_EVIDENCE_INDEX_VERSION = 1;
+export const MARKET_EVIDENCE_INDEX_VERSION = 2;
 export const MARKET_EVIDENCE_FRESH_MS = 24 * 60 * 60 * 1_000;
 export const MARKET_EVIDENCE_REFRESH_AFTER_MS = 20 * 60 * 60 * 1_000;
 export const MARKET_EVIDENCE_REFRESH_COOLDOWN_MS = 15 * 60 * 1_000;
@@ -39,34 +39,56 @@ const targetSchema = z
   })
   .strict();
 
+const researchSchema = z
+  .object({
+    acceptedSourceUrls: z.number().int().nonnegative(),
+    evidenceTiers: z
+      .object({
+        none: z.number().int().nonnegative(),
+        strong: z.number().int().nonnegative(),
+        supported: z.number().int().nonnegative(),
+      })
+      .strict(),
+    hostedSearchCalls: z.number().int().nonnegative().max(10),
+    inputTokens: z.number().int().nonnegative(),
+    openAiCalls: z.number().int().nonnegative().max(1),
+    outputTokens: z.number().int().nonnegative(),
+    totalTokens: z.number().int().nonnegative(),
+  })
+  .strict();
+
+const refreshAttemptSchema = z
+  .object({
+    completedAtMs: z.number().int().nonnegative(),
+    fallbackReason: z
+      .enum([
+        "insufficient_evidence",
+        "invalid_output",
+        "no_client",
+        "provider_error",
+        "timeout",
+        "tool_call_ceiling",
+      ])
+      .optional(),
+    research: researchSchema,
+    status: z.enum(["failed", "updated"]),
+    targetCount: z.number().int().nonnegative().max(5),
+  })
+  .strict();
+
 const entrySchema = z
   .object({
     createdAtMs: z.number().int().nonnegative(),
     model: z.string().min(1).max(100),
     promptVersion: z.string().min(1).max(100),
-    research: z
-      .object({
-        acceptedSourceUrls: z.number().int().nonnegative(),
-        evidenceTiers: z
-          .object({
-            none: z.number().int().nonnegative(),
-            strong: z.number().int().nonnegative(),
-            supported: z.number().int().nonnegative(),
-          })
-          .strict(),
-        hostedSearchCalls: z.number().int().nonnegative().max(3),
-        inputTokens: z.number().int().nonnegative(),
-        openAiCalls: z.number().int().nonnegative().max(1),
-        outputTokens: z.number().int().nonnegative(),
-        totalTokens: z.number().int().nonnegative(),
-      })
-      .strict(),
+    research: researchSchema,
     targets: z.array(targetSchema).min(1).max(5),
   })
   .strict();
 
 const indexSchema = z
   .object({
+    attempts: z.record(z.string().min(1).max(200), refreshAttemptSchema),
     entries: z.record(z.string().min(1).max(200), entrySchema),
     version: z.literal(MARKET_EVIDENCE_INDEX_VERSION),
   })
@@ -74,6 +96,7 @@ const indexSchema = z
 
 type MarketEvidenceIndex = z.infer<typeof indexSchema>;
 type MarketEvidenceIndexEntry = z.infer<typeof entrySchema>;
+type MarketEvidenceRefreshAttempt = z.infer<typeof refreshAttemptSchema>;
 
 export type MarketEvidenceIndexStatus =
   | "fresh"
@@ -85,6 +108,7 @@ export type MarketEvidenceLookupTelemetry = MarketScoutTelemetry & {
   indexAgeMs: number | null;
   indexedResearch: MarketEvidenceIndexEntry["research"] | null;
   indexStatus: MarketEvidenceIndexStatus;
+  lastRefreshAttempt: MarketEvidenceRefreshAttempt | null;
   refreshRecommended: boolean;
 };
 
@@ -112,7 +136,7 @@ function configuredIndexPath(override?: string) {
 }
 
 function emptyIndex(): MarketEvidenceIndex {
-  return { entries: {}, version: MARKET_EVIDENCE_INDEX_VERSION };
+  return { attempts: {}, entries: {}, version: MARKET_EVIDENCE_INDEX_VERSION };
 }
 
 function emptyTierCounts(): Record<MarketEvidenceTier, number> {
@@ -174,6 +198,7 @@ async function readIndex(indexPath: string) {
 function fallbackTelemetry(
   status: Exclude<MarketEvidenceIndexStatus, "fresh">,
   ageMs: number | null,
+  lastRefreshAttempt: MarketEvidenceRefreshAttempt | null = null,
 ): MarketEvidenceLookupTelemetry {
   return {
     acceptedSourceUrls: 0,
@@ -194,6 +219,7 @@ function fallbackTelemetry(
     outputTokens: 0,
     promptChars: 0,
     promptVersion: MARKET_SCOUT_PROMPT_VERSION,
+    lastRefreshAttempt,
     refreshRecommended: true,
     rejectedSourceUrls: 0,
     systemPromptChars: 0,
@@ -206,6 +232,7 @@ function freshTelemetry(
   entry: MarketEvidenceIndexEntry,
   targets: MarketScoutTarget[],
   ageMs: number,
+  lastRefreshAttempt: MarketEvidenceRefreshAttempt | null,
 ): MarketEvidenceLookupTelemetry {
   const evidenceTiers = emptyTierCounts();
   for (const target of targets) evidenceTiers[target.evidenceTier] += 1;
@@ -225,6 +252,7 @@ function freshTelemetry(
     outputTokens: 0,
     promptChars: 0,
     promptVersion: MARKET_SCOUT_PROMPT_VERSION,
+    lastRefreshAttempt,
     refreshRecommended: ageMs >= MARKET_EVIDENCE_REFRESH_AFTER_MS,
     rejectedSourceUrls: 0,
     systemPromptChars: 0,
@@ -252,12 +280,14 @@ export async function lookupMarketEvidence(options: {
     };
   }
 
-  const entry = stored.index.entries[marketEvidenceKey(options.input)];
+  const key = marketEvidenceKey(options.input);
+  const entry = stored.index.entries[key];
+  const lastRefreshAttempt = stored.index.attempts[key] || null;
   if (!entry) {
     return {
       needsRefresh: true,
       plan: fallbackPlan,
-      telemetry: fallbackTelemetry("miss", null),
+      telemetry: fallbackTelemetry("miss", null, lastRefreshAttempt),
     };
   }
   const ageMs = Math.max(0, now() - entry.createdAtMs);
@@ -269,7 +299,7 @@ export async function lookupMarketEvidence(options: {
     return {
       needsRefresh: true,
       plan: fallbackPlan,
-      telemetry: fallbackTelemetry("stale", ageMs),
+      telemetry: fallbackTelemetry("stale", ageMs, lastRefreshAttempt),
     };
   }
 
@@ -278,11 +308,11 @@ export async function lookupMarketEvidence(options: {
     return {
       needsRefresh: true,
       plan: fallbackPlan,
-      telemetry: fallbackTelemetry("invalid", ageMs),
+      telemetry: fallbackTelemetry("invalid", ageMs, lastRefreshAttempt),
     };
   }
 
-  const telemetry = freshTelemetry(entry, targets, ageMs);
+  const telemetry = freshTelemetry(entry, targets, ageMs, lastRefreshAttempt);
   return {
     needsRefresh: telemetry.refreshRecommended,
     plan: { queries: neutralShoppingQueries(options.input), targets },
@@ -290,34 +320,95 @@ export async function lookupMarketEvidence(options: {
   };
 }
 
-async function writeEntry(options: {
+function refreshResearch(
+  telemetry: Awaited<ReturnType<typeof buildMarketScoutPlan>>["telemetry"],
+): MarketEvidenceIndexEntry["research"] {
+  return {
+    acceptedSourceUrls: telemetry.acceptedSourceUrls,
+    evidenceTiers: telemetry.evidenceTiers,
+    hostedSearchCalls: telemetry.hostedSearchCalls,
+    inputTokens: telemetry.inputTokens,
+    openAiCalls: telemetry.openAiCalls,
+    outputTokens: telemetry.outputTokens,
+    totalTokens: telemetry.totalTokens,
+  };
+}
+
+function persistedFallbackReason(
+  reason: Awaited<ReturnType<typeof buildMarketScoutPlan>>["telemetry"]["fallbackReason"],
+): MarketEvidenceRefreshAttempt["fallbackReason"] {
+  return reason === "insufficient_evidence" ||
+    reason === "invalid_output" ||
+    reason === "no_client" ||
+    reason === "provider_error" ||
+    reason === "timeout" ||
+    reason === "tool_call_ceiling"
+    ? reason
+    : undefined;
+}
+
+async function writeRefreshOutcome(options: {
   createdAtMs: number;
+  fallbackReason?: MarketEvidenceRefreshAttempt["fallbackReason"];
   indexPath: string;
   input: RecommendationApiRequest;
   research: MarketEvidenceIndexEntry["research"];
+  status: "failed" | "updated";
   targets: MarketScoutTarget[];
 }) {
   const queued = writeQueue.then(async () => {
     const stored = await readIndex(options.indexPath);
     const index = stored.index || emptyIndex();
     const minimumCreatedAt = options.createdAtMs - MARKET_EVIDENCE_FRESH_MS;
-    const retained = Object.entries(index.entries)
+    const key = marketEvidenceKey(options.input);
+    const retainedEntries = Object.entries(index.entries)
       .filter(([, entry]) => entry.createdAtMs >= minimumCreatedAt)
       .sort((first, second) => second[1].createdAtMs - first[1].createdAtMs)
+      .filter(([entryKey]) => entryKey !== key)
+      .slice(
+        0,
+        options.status === "updated"
+          ? MARKET_EVIDENCE_INDEX_MAX_ENTRIES - 1
+          : MARKET_EVIDENCE_INDEX_MAX_ENTRIES,
+      );
+    const retainedAttempts = Object.entries(index.attempts)
+      .filter(([, attempt]) => attempt.completedAtMs >= minimumCreatedAt)
+      .sort((first, second) => second[1].completedAtMs - first[1].completedAtMs)
+      .filter(([attemptKey]) => attemptKey !== key)
       .slice(0, MARKET_EVIDENCE_INDEX_MAX_ENTRIES - 1);
-    const entry: MarketEvidenceIndexEntry = {
-      createdAtMs: options.createdAtMs,
-      model: MARKET_SCOUT_MODEL,
-      promptVersion: MARKET_SCOUT_PROMPT_VERSION,
+    const targets = normalizedStoredTargets(options.targets);
+    if (options.status === "updated" && targets.length === 0) {
+      throw new Error("No valid market targets to index.");
+    }
+    const attempt: MarketEvidenceRefreshAttempt = {
+      completedAtMs: options.createdAtMs,
+      ...(options.fallbackReason ? { fallbackReason: options.fallbackReason } : {}),
       research: options.research,
-      targets: normalizedStoredTargets(options.targets),
+      status: options.status,
+      targetCount: targets.length,
     };
-    if (entry.targets.length === 0) throw new Error("No valid market targets to index.");
     const next: MarketEvidenceIndex = {
-      entries: Object.fromEntries([
-        [marketEvidenceKey(options.input), entry],
-        ...retained.filter(([key]) => key !== marketEvidenceKey(options.input)),
-      ]),
+      attempts: Object.fromEntries([[key, attempt], ...retainedAttempts]),
+      entries:
+        options.status === "updated"
+          ? Object.fromEntries([
+              [
+                key,
+                {
+                  createdAtMs: options.createdAtMs,
+                  model: MARKET_SCOUT_MODEL,
+                  promptVersion: MARKET_SCOUT_PROMPT_VERSION,
+                  research: options.research,
+                  targets,
+                } satisfies MarketEvidenceIndexEntry,
+              ],
+              ...retainedEntries,
+            ])
+          : Object.fromEntries(
+              index.entries[key]
+                ? [[key, index.entries[key]], ...retainedEntries]
+                : retainedEntries,
+            ),
       version: MARKET_EVIDENCE_INDEX_VERSION,
     };
     const serialized = `${JSON.stringify(next)}\n`;
@@ -369,22 +460,27 @@ export function refreshMarketEvidenceIndex(options: {
       input: options.input,
       promptVersion: MARKET_SCOUT_PROMPT_VERSION,
     });
+    const createdAtMs = now();
+    const indexPath = configuredIndexPath(options.indexPath);
+    const research = refreshResearch(scouted.telemetry);
     if (scouted.telemetry.usedFallback || scouted.plan.targets.length === 0) {
+      await writeRefreshOutcome({
+        createdAtMs,
+        fallbackReason: persistedFallbackReason(scouted.telemetry.fallbackReason),
+        indexPath,
+        input: options.input,
+        research,
+        status: "failed",
+        targets: [],
+      });
       return { scouted, status: "failed" };
     }
-    await writeEntry({
-      createdAtMs: now(),
-      indexPath: configuredIndexPath(options.indexPath),
+    await writeRefreshOutcome({
+      createdAtMs,
+      indexPath,
       input: options.input,
-      research: {
-        acceptedSourceUrls: scouted.telemetry.acceptedSourceUrls,
-        evidenceTiers: scouted.telemetry.evidenceTiers,
-        hostedSearchCalls: scouted.telemetry.hostedSearchCalls,
-        inputTokens: scouted.telemetry.inputTokens,
-        openAiCalls: scouted.telemetry.openAiCalls,
-        outputTokens: scouted.telemetry.outputTokens,
-        totalTokens: scouted.telemetry.totalTokens,
-      },
+      research,
+      status: "updated",
       targets: scouted.plan.targets,
     });
     return { scouted, status: "updated" };

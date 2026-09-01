@@ -87,7 +87,7 @@ describe("market scout", () => {
     assert.equal(calls.length, 1);
     const options = calls[0].options;
     assert.equal(options.model, MARKET_SCOUT_MODEL);
-    assert.equal(options.max_tool_calls, 2);
+    assert.equal(options.max_tool_calls, 3);
     assert.equal(options.store, false);
     assert.deepEqual(options.include, ["web_search_call.action.sources"]);
     assert.deepEqual(options.tools, [
@@ -101,7 +101,7 @@ describe("market scout", () => {
     );
     const schemaText = JSON.stringify(options.text.format.schema);
     assert.doesNotMatch(schemaText, /price|explanation|reviewSummary|searchQueries/i);
-    assert.equal(calls[0].requestOptions.timeout, 60_000);
+    assert.equal(calls[0].requestOptions.timeout, 120_000);
     assert.equal(calls[0].requestOptions.maxRetries, 0);
     assert.equal(result.telemetry.openAiCalls, 1);
     assert.equal(result.telemetry.hostedSearchCalls, 1);
@@ -331,7 +331,7 @@ describe("market scout", () => {
     const prompt = marketScoutTestExports.systemPrompt;
 
     assert.match(prompt, /exact product models/i);
-    assert.match(prompt, /up to two focused web searches/i);
+    assert.match(prompt, /up to three focused web searches/i);
     assert.match(prompt, /independent domains/i);
     assert.match(prompt, /comparative test or best-of source/i);
     assert.match(prompt, /current US retail availability/i);

@@ -111,6 +111,7 @@ describe("market evidence index", () => {
     assert.equal(lookedUp.needsRefresh, false);
     assert.equal(lookedUp.telemetry.indexStatus, "fresh");
     assert.equal(lookedUp.telemetry.indexAgeMs, 1_000);
+    assert.equal(lookedUp.telemetry.lastRefreshAttempt.status, "updated");
     assert.equal(lookedUp.telemetry.openAiCalls, 0);
     assert.deepEqual(lookedUp.telemetry.indexedResearch, {
       acceptedSourceUrls: 2,
@@ -163,6 +164,7 @@ describe("market evidence index", () => {
     await writeFile(
       indexPath,
       JSON.stringify({
+        attempts: {},
         entries: {
           [key]: {
             createdAtMs: Date.now(),
@@ -208,7 +210,6 @@ describe("market evidence index", () => {
       input,
       now: () => now,
     });
-    const before = await readFile(indexPath, "utf8");
     clearCacheForTests();
     const failed = await refreshMarketEvidenceIndex({
       client: clientReturning(
@@ -221,7 +222,18 @@ describe("market evidence index", () => {
     });
 
     assert.equal(failed.status, "failed");
-    assert.equal(await readFile(indexPath, "utf8"), before);
+    const retained = await lookupMarketEvidence({
+      indexPath,
+      input,
+      now: () => now + 5_000,
+    });
+    assert.equal(retained.telemetry.indexStatus, "fresh");
+    assert.equal(retained.plan.targets[0].model, "Model Pro");
+    assert.equal(retained.telemetry.lastRefreshAttempt.status, "failed");
+    assert.equal(
+      retained.telemetry.lastRefreshAttempt.fallbackReason,
+      "insufficient_evidence",
+    );
   });
 
   it("coalesces concurrent refreshes and throttles repeated failures", async () => {
