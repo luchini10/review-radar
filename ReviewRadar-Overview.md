@@ -35,7 +35,7 @@ The production recommendation path is one synchronous POST route:
       -> at most three Shopping queries
       -> deterministic type, accessory, used-item, budget, and requirement filters
       -> candidate-local product-page resolution when needed
-      -> bounded finalist page and asset verification
+      -> adaptive three-candidate finalist verification waves
       -> distinct product selection
       -> minimal JSON result
 
@@ -74,7 +74,9 @@ branch.
 lib/selectionPlanner.ts may make one OpenAI Responses call. It asks only for
 mainstream model targets and concise Shopping queries under a strict JSON
 schema. It cannot provide product facts, prices, rankings, explanations, or
-evidence.
+evidence. Planner-generated queries remain brand- and model-neutral unless the
+shopper requested that brand or model, so model memory cannot narrow the live
+market before discovery.
 
 The planner is optional. A missing client, provider error, timeout, or invalid
 output falls back to deterministic queries. The route therefore uses either
@@ -84,7 +86,9 @@ zero or one OpenAI call.
 
 lib/productSearch.ts is the sole Serper transport. The selector executes at
 most three Shopping queries and may use the remaining request budget for
-candidate-local product-page lookups. The total logical ceiling is eight.
+candidate-local product-page lookups. It verifies a ranked queue of at most
+nine candidates in waves of three, without repeating discovery. The total
+logical ceiling is twelve.
 There are no retries, editorial queries, review queries, rescue queries, image
 queries, or alternative search providers.
 
@@ -104,18 +108,30 @@ Details.
 Selection remains deterministic after candidate discovery:
 
 1. Reject malformed and generic candidates.
-2. Reject a positively different product type.
+2. Reject a positively different product type, including a standalone dock or
+   base when the request is for a complete robot vacuum.
 3. Reject standalone accessories and replacement parts.
-4. Reject used or refurbished products unless requested.
-5. Remove obvious extreme over-budget candidates before enrichment.
-6. Deduplicate product identities across retailer URLs.
-7. Prefer mainstream planner targets and direct requirement matches.
-8. Resolve only candidate-local product pages.
-9. Require a safe product-detail URL.
+4. Reject used, refurbished, renewed, recertified, preowned, and open-box
+   products unless requested.
+5. Remove secondary-market, non-US-market, and obvious extreme over-budget
+   candidates before enrichment.
+6. Interleave query results and deduplicate stable model plus named-variant
+   identities across retailer URLs.
+7. Prefer direct requirement matches, resolvable identities, trustworthy
+   merchants, and a verification slate that is not dominated by one brand.
+8. Resolve only candidate-local product pages, preserving the Shopping
+   storefront when an exact merchant page is available, and retain at most two
+   exact page alternatives on distinct hosts from one resolution search.
+9. Require a safe product-detail URL and affirmative current availability.
 10. Fail closed on explicit hard feature, size, numeric, boolean, brand, and
     avoid requirements.
-11. Require a trustworthy in-budget price when the shopper specifies a budget.
-12. Return at most five distinct products, with basic brand diversity.
+11. Reject a known numeric contradiction to an ordinary soft preference while
+    leaving missing soft evidence unknown.
+12. Require a trustworthy in-budget price when the shopper specifies a budget.
+13. Backfill rejected finalist slots from the ranked queue without bypassing
+    any gate or repeating discovery.
+14. Return at most five distinct products, deduplicated by stable identity and
+    canonical product-page URL, with basic brand diversity.
 
 Soft preferences influence ordering but do not become invented facts.
 
@@ -126,8 +142,11 @@ Soft preferences influence ordering but do not become invented facts.
 lib/productPageUrl.ts, lib/productEligibility.ts, and
 lib/productEvidenceIdentity.ts enforce positive product identity. Category,
 search, editorial, discussion, support, documentation, question, and
-secondary-market pages cannot become card destinations. Model, descriptive
-variant, and robust numeric conflicts fail closed.
+secondary-market pages cannot become card destinations. Manufacturer family,
+lineup, range, and series landing pages are also ineligible. Model, descriptive
+variant, and robust numeric conflicts fail closed. Stable model IDs include
+nearby named variants; a tightly bounded official letter-only merchandising
+suffix may match its base model, but a different numeric model cannot.
 
 ### Page fetching
 
@@ -147,7 +166,21 @@ Shopping or product-page offer metadata is the only price authority.
 Model-generated price text is not accepted. Implausibly low and conflicting
 offers are not shown as trusted prices. The public contract is USD-only, so
 foreign or unknown-currency page offers are not relabeled. A budgeted search
-excludes products without a usable price.
+excludes products without a usable price. A current matching page offer takes
+precedence over discovery price evidence.
+
+### Availability
+
+A product must have affirmative current availability from matching structured
+availability, current product metadata, product-scoped fulfillment text, a
+buyable structured offer, or a current priced Shopping offer bound to an exact
+product page on the same Shopping merchant. The Shopping fallback exists for
+exact retailer pages that block or challenge server-side fetches; it does not
+apply across merchants or when price, merchant, identity, or product-page
+shape is missing. Explicit out-of-stock, sold-out, discontinued, preorder, or
+multi-channel unavailable page state always rejects the product. An
+availability-free price cannot create availability or override visible or
+metadata-backed unavailability.
 
 ### Images
 
@@ -161,7 +194,8 @@ The route acquires the shared paid-request admission permit before provider
 work and always releases it. Browser cancellation propagates through the
 planner, search, and page-fetch boundaries. Bounded caches coalesce identical
 concurrent work without allowing one cancelled waiter to cancel other active
-waiters.
+waiters. Shopping discovery entries expire after five minutes; fetched product
+page evidence used for current price and availability expires after two.
 
 ## Main implementation files
 
@@ -176,7 +210,8 @@ waiters.
 - lib/productSearch.ts — bounded Shopping and product-page search.
 - lib/productSelection.ts — filtering, page resolution, requirement checks,
   ranking, deduplication, and final selection.
-- lib/productAssets.ts — finalist metadata, price, page, and image enrichment.
+- lib/productAssets.ts — finalist metadata, availability, price, page, and
+  image enrichment.
 - lib/safeProductPageFetch.ts — DNS-pinned outbound fetch boundary.
 - types/review-radar.ts — selection-only public and internal types.
 
@@ -203,7 +238,7 @@ recorded local sample. It is not a hosted-service latency guarantee.
 
 ## Validation
 
-The PR-10 architecture is protected by:
+The PR-10 architecture and PR-11 accuracy gates are protected by:
 
 - unit and contract tests for request validation, planner fallback, one-call
   behavior, bounded search, type/accessory filtering, requirement enforcement,
@@ -212,6 +247,14 @@ The PR-10 architecture is protected by:
   and the minimal result card;
 - TypeScript, ESLint, and the Next production build.
 
+The PR-13 prerequisite source passes 295/295 unit tests across 42 suites,
+zero-warning lint, typecheck, production build, and Playwright 7/7. Its frozen
+three-round cache-cold matrix returned non-empty shortlists in 23/24 requests,
+including shop vacuum 2/3, with p95 18,806 ms and a 20,419 ms maximum. Every
+request used one OpenAI response and no more than twelve logical operations.
+This is selection-recall evidence, not proof that returned products are market
+leaders.
+
 The build route manifest must contain only /, /_not-found, and
 /api/recommendations.
 
@@ -219,6 +262,9 @@ The build route manifest must contain only /, /_not-found, and
 
 - Live prices and availability can change after a search.
 - Search-provider coverage can omit a good product.
+- Strict finalist verification can produce an empty shortlist even when a
+  qualifying product exists; the latest local frozen matrix observed one empty
+  run in 24, but provider variability prevents treating that rate as universal.
 - The optional planner can improve mainstream model recall but is not a product
   fact authority.
 - Missing or ambiguous product images are intentionally omitted.

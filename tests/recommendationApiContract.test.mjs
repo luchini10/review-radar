@@ -44,10 +44,15 @@ function dependencies(overrides = {}) {
         logicalSearchCalls: 3,
         physicalSearchAttempts: 3,
         queries: ["gaming monitor"],
+        rankedCandidates: [],
         rejectedByAssetSafety: 0,
+        rejectedByAvailability: 0,
+        rejectedByMerchant: 0,
         rejectedByRequirements: 0,
+        resolutionDiagnostics: [],
         resolutionQueries: [],
         searchDiagnostics: [],
+        verifiedCandidates: [],
       },
     }),
     ...overrides,
@@ -141,6 +146,45 @@ describe("selection-only recommendation API", () => {
     assert.equal(body.debug.search.candidatesReturned, 1);
     assert.equal("requirements" in body.debug, false);
     assert.equal(JSON.stringify(body.debug).includes("citations"), false);
+  });
+
+  it("returns an error instead of a false empty result when every Shopping search fails", async () => {
+    const failedSearch = {
+      errorKind: "api_error",
+      query: "gaming monitor",
+      rawShoppingResults: 0,
+      rejectionReasons: {},
+      returnedCandidates: 0,
+    };
+    const response = await routeModule.createRecommendationPostHandler(
+      dependencies({
+        selectProducts: async () => ({
+          result: { recommendations: [] },
+          telemetry: {
+            assetCandidates: 0,
+            candidatesAfterHardFilters: 0,
+            candidatesDiscovered: 0,
+            candidatesReturned: 0,
+            duplicateCandidatesRemoved: 0,
+            logicalSearchCalls: 3,
+            physicalSearchAttempts: 3,
+            queries: ["gaming monitor", "27 inch gaming monitor", "QHD monitor"],
+            rankedCandidates: [],
+            rejectedByAssetSafety: 0,
+            rejectedByAvailability: 0,
+            rejectedByMerchant: 0,
+            rejectedByRequirements: 0,
+            resolutionDiagnostics: [],
+            resolutionQueries: [],
+            searchDiagnostics: [failedSearch, failedSearch, failedSearch],
+            verifiedCandidates: [],
+          },
+        }),
+      }),
+    )(request({ query: "gaming monitor" }));
+
+    assert.equal(response.status, 502);
+    assert.match((await response.json()).error, /temporarily unavailable/i);
   });
 
   it("rejects saturated paid-work admission without planning", async () => {

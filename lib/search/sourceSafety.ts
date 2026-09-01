@@ -57,6 +57,20 @@ const RETAILER_DOMAINS = [
   "petsmart.com",
 ];
 
+const NON_PRODUCT_HOST_LABELS = new Set([
+  "community",
+  "docs",
+  "documentation",
+  "help",
+  "knowledgebase",
+  "manual",
+  "manuals",
+  "support",
+]);
+
+const NON_PRODUCT_PATH_TOKEN =
+  /(?:^|[-_])(?:community|docs|documentation|downloads?|help|knowledge-?base|manuals?|support)(?:[-_]|$)/i;
+
 function hostOf(input: string) {
   try {
     const url = input.includes("://")
@@ -74,9 +88,24 @@ function matchesDomain(host: string, domain: string) {
 
 export function isNonProductSource(urlOrHost: string) {
   const host = hostOf(urlOrHost);
-  return NON_PRODUCT_SOURCE_DOMAINS.some((domain) =>
-    matchesDomain(host, domain),
-  );
+  if (
+    NON_PRODUCT_SOURCE_DOMAINS.some((domain) => matchesDomain(host, domain)) ||
+    host.split(".").some((label) => NON_PRODUCT_HOST_LABELS.has(label))
+  ) {
+    return true;
+  }
+
+  try {
+    const url = urlOrHost.includes("://")
+      ? new URL(urlOrHost)
+      : new URL(`https://${urlOrHost}`);
+    return url.pathname
+      .split("/")
+      .filter(Boolean)
+      .some((segment) => NON_PRODUCT_PATH_TOKEN.test(segment));
+  } catch {
+    return false;
+  }
 }
 
 export const SOURCE_NAME_TOKENS = new Set(

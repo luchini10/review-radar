@@ -4,6 +4,18 @@ import { describe, it } from "node:test";
 import { productPageMatchesIdentity } from "../lib/productPageUrl.ts";
 
 describe("selection product-page identity", () => {
+  it("rejects a manufacturer series landing page with multiple model options", () => {
+    assert.equal(
+      productPageMatchesIdentity({
+        brand: "Roborock",
+        pageTitle: "Roborock Q10 Series",
+        pageUrl: "https://us.roborock.com/pages/roborock-q10-series",
+        productName: "Roborock Q10 Series Robot Vacuum and Mop",
+      }),
+      false,
+    );
+  });
+
   it("accepts a matching retailer product-detail page", () => {
     assert.equal(
       productPageMatchesIdentity({
@@ -49,6 +61,29 @@ describe("selection product-page identity", () => {
         productName: "Roborock Q10 S5 Plus Robot Vacuum",
       }),
       false,
+    );
+  });
+
+  it("rejects a missing named model variant around the same model number", () => {
+    assert.equal(
+      productPageMatchesIdentity({
+        brand: "Eureka",
+        model: "E20",
+        pageTitle: "Eureka E20 Plus Robot Vacuum",
+        pageUrl: "https://us.eureka.com/products/eureka-e20plus",
+        productName: "Eureka E20 Evo Plus Robot Vacuum",
+      }),
+      false,
+    );
+    assert.equal(
+      productPageMatchesIdentity({
+        brand: "Eureka",
+        model: "E20",
+        pageTitle: "Eureka E20 Evo Plus Robot Vacuum",
+        pageUrl: "https://us.eureka.com/products/eureka-e20-evo-plus",
+        productName: "Eureka E20 Evo Plus Robot Vacuum",
+      }),
+      true,
     );
   });
 

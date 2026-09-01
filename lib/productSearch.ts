@@ -16,7 +16,7 @@ const SERPER_BASE_URL = "https://google.serper.dev";
 const SEARCH_RESULT_LIMIT = 10;
 const SHOPPING_NORMALIZATION_LIMIT = 20;
 const REQUEST_TIMEOUT_MS = 8_000;
-const CACHE_TTL_MS = 20 * 60 * 1_000;
+export const PRODUCT_SEARCH_CACHE_TTL_MS = 5 * 60 * 1_000;
 
 type SerperShoppingResult = {
   extracted_price?: unknown;
@@ -121,7 +121,7 @@ function configuredApiKey() {
 
 function sanitizeQuery(value: string) {
   return value
-    .replace(/(?:^|\s)site:\*(?:\.[a-z0-9-]+)*(?=\s|$)/gi, " ")
+    .replace(/(?:^|\s)site:(?:"[^"]+"|'[^']+'|\S+)/gi, " ")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 500);
@@ -147,7 +147,7 @@ async function fetchSerper(
   ]);
   const response = await getCachedOrLoad(
     cacheKey,
-    CACHE_TTL_MS,
+    PRODUCT_SEARCH_CACHE_TTL_MS,
     async (sharedSignal) => {
       options.onAttempt?.();
       const controller = new AbortController();
@@ -269,7 +269,7 @@ function genericTitle(title: string, category: string) {
   );
 }
 
-function likelyAccessory(title: string) {
+export function likelyAccessory(title: string) {
   return (
     /\b(?:replacement|spare)\b/i.test(title) ||
     /\b(?:adapter|attachment|bag|battery|belt|brush|case|charger|cover|filter|hose|mount|parts?|stand)\s+(?:for|compatible\s+with)\b/i.test(
@@ -280,8 +280,10 @@ function likelyAccessory(title: string) {
 
 function candidateFromFields(input: {
   category: string;
+  currentShoppingOffer?: boolean;
   imageUrl: string;
   price: number | null;
+  retailer?: string | null;
   snippet: string;
   title: string;
   url: string;
@@ -298,6 +300,7 @@ function candidateFromFields(input: {
     availableColors,
     brand: inferKnownBrand(input.title),
     category: input.category,
+    ...(input.currentShoppingOffer ? { currentShoppingOffer: true } : {}),
     dimensions: {
       depth,
       height,
@@ -318,6 +321,7 @@ function candidateFromFields(input: {
     name: input.title,
     price: input.price,
     productUrl: input.url,
+    ...(input.retailer ? { retailer: input.retailer } : {}),
   } satisfies RawProductCandidate;
 }
 
@@ -364,6 +368,7 @@ function normalizeShoppingResult(
   return {
     candidate: candidateFromFields({
       category,
+      currentShoppingOffer: price !== null && Boolean(retailer),
       imageUrl: firstString(
         result.imageUrl,
         result.image,
@@ -371,6 +376,7 @@ function normalizeShoppingResult(
         result.thumbnail,
       ),
       price,
+      retailer,
       snippet,
       title,
       url,
@@ -471,7 +477,7 @@ export async function searchProductPages(
 }
 
 function requestedUsedOrRefurbished(input: RecommendationApiRequest) {
-  return /\b(?:preowned|pre-owned|refurbished|renewed|used)\b/i.test(
+  return /\b(?:open[- ]box|preowned|pre-owned|recertified|refurbished|renewed|used)\b/i.test(
     `${input.query} ${input.priorities || ""}`,
   );
 }
@@ -494,7 +500,9 @@ function prefilterRejectionReason(
   if (likelyAccessory(candidate.name)) return "accessory_or_part";
   if (
     !requestedUsedOrRefurbished(input) &&
-    /\b(?:preowned|pre-owned|refurbished|renewed|used)\b/i.test(candidate.name)
+    /\b(?:open[- ]box|preowned|pre-owned|recertified|refurbished|renewed|used)\b/i.test(
+      candidate.name,
+    )
   ) {
     return "used_or_refurbished";
   }

@@ -370,7 +370,9 @@ function pathLooksLikeOpaqueProductCollection(parsed: URL, title: string) {
     /(?:^|[-_.])ocs[-_.]?c$/i.test(finalSegment) ||
     /(?:^|[-_.])product[-_.]?(?:collection|family|lineup|range)s?$/i.test(
       finalSegment,
-    )
+    ) ||
+    (/(?:^|[-_.])series$/i.test(finalSegment) &&
+      /\bseries$/i.test(normalizeText(title)))
   ) {
     return true;
   }

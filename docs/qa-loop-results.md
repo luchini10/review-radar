@@ -17020,3 +17020,212 @@ edited. Protected live fixture content/metadata was not accessed. Live prices
 and inventory are time-sensitive, the sample is small, missing safe imagery is
 expected, and hosted/production-runtime readiness remains unverified. No push,
 deployment, release, or production-data change occurred.
+
+---
+
+## PR-11 live selection-accuracy hardening (2026-08-31)
+
+**Assessment:** PR-10 had successfully simplified the product card, but a fresh
+live accuracy audit showed that the selector was not yet broadly precise. One
+robot-vacuum run surfaced a standalone Shark self-empty base as a complete
+vacuum, and one coffee-maker run returned a 12-cup model for a 14-cup
+preference. Those were real false positives, not presentation defects.
+
+**Evidence-supported causes:** product-type intent did not cover a modified
+`Self-Empty XL Base` identity; nominal coffee-cup capacity was not represented
+in the spec dictionary; ordinary numeric preferences rejected missing evidence
+only when hard but did not reject a known contradiction; inferred brand/model
+queries and sequential result flattening concentrated the finalist pool;
+product resolution could lose named model variants, accept non-product or
+non-US pages, or spend its five slots on generic identities; availability was
+not an affirmative final gate; current page prices did not always dominate
+stale discovery prices; and all Shopping transport failures could be rendered
+as a legitimate empty success.
+
+**Generalized correction:** Shopping queries now strip site operators and stay
+brand/model neutral unless the shopper requested that identity. Query results
+are interleaved, verification is brand-diverse, resolvable model identities and
+trustworthy merchants rank ahead of generic/unknown offers, and secondary-
+market plus unrequested open-box/recertified/refurbished/used offers are removed
+before page work. Support, documentation, manual, listing, category, Q&A,
+review, and default non-US pages are ineligible destinations. Stable model IDs,
+nearby named variants, numeric specs, and a bounded official letter-only
+merchandising suffix govern page resolution and deduplication.
+
+Finalists now require affirmative current page availability. Explicit
+out-of-stock state outranks an availability-free priced structured offer.
+Current matching page prices outrank discovery prices; same-tier plausibility
+and cross-tier conflict checks remain fail closed. Concrete self-emptying and
+programmable features plus nominal cup capacity are extracted. Known numeric
+contradictions fail even for an ordinary soft preference, while missing soft
+evidence remains unknown. Standalone self-empty bases are complements, but a
+complete robot vacuum sold with its base remains eligible. When every Shopping
+call fails, the route returns 502 rather than false success.
+
+**Fresh exact-final-source live sample:** each request used one planner call and
+eight logical Shopping/page operations.
+
+| Request | Final result | Time | Physical attempts | Independent current-page check |
+| --- | --- | ---: | ---: | --- |
+| Coffee maker under $150; 14-cup programmable | Cuisinart DCC-3200, $119.95 | 6,858 ms | 7 | Official page showed model DCC-3200BKSNAS, 14 cups, 24-hour programmability, $119.95, and Add to Cart |
+| Robot vacuum under $300; self-emptying | AIRROBO L50+, $209.99 | 7,975 ms | 8 | Official page showed model L50+, self-emptying station, $209.99, and Add to Cart |
+| Gaming monitor under $300; 27-inch 1440p at least 144 Hz | Z-EDGE UG27Q, $179.99 | 9,524 ms | 8 | Official page showed 27 inches, QHD 2560x1440, 165 Hz, $179.99, and a buy action |
+| Shop vacuum under $200; wet/dry | Empty shortlist | 6,473 ms | 8 | No unsafe substitute was rendered; earlier phase runs found current valid shop vacuums, so recall is variable rather than the market being empty |
+
+Intermediate diagnosis also observed correct current Cuisinart, Mr. Coffee,
+bObsweep, RIDGID, Stanley, Dell, and Z-EDGE results, but those repeated runs are
+not treated as a controlled repeatability matrix. Prices and availability are
+time-sensitive.
+
+**Verification:** `npm test` passed 276/276 across 41 suites; `npm run
+typecheck` passed; `npm run lint -- --max-warnings=0` passed; `npm run build`
+passed on Next.js 16.3.3 and exposed only `/`, `/_not-found`, and
+`/api/recommendations`; `npm run test:e2e` passed 7/7 across Chromium desktop
+and mobile. Focused post-review tests passed 32/32. The local debug envelope
+contained counts, finalist identities, page-resolution decisions, availability,
+price status, and failed requirement labels only; it was not present without
+the localhost-only request header and contained no raw provider response or
+credential.
+
+**Boundaries and process incident:** Taylor explicitly approved live testing.
+`.env.local` was never manually opened, printed, hashed, copied, or edited. Two
+broad repository `rg` commands unintentionally traversed
+`tests/fixtures/review-radar-live/**` and printed matching fixture paths/lines.
+No fixture was deliberately opened, statted, hashed, copied, edited, or used as
+accuracy evidence, but the traversal itself violated the protected-fixture
+boundary and is recorded here. No push, deployment, release, production-data
+change, or dependency change occurred.
+
+**Interpretation:** the products actually returned by the exact final-source
+sample were accurate against current independent pages, and the two reproduced
+false-positive classes are now regression-protected. This does not prove
+universal accuracy or complete catalog recall. The final shop-vac empty result
+and earlier first-attempt empty shortlists show that provider/resolution recall
+still varies. The current safety decision is intentional: an empty shortlist
+is preferable to a wrong product, stale price, unavailable variant, or
+unverified destination.
+
+---
+
+## PR-12 adaptive recall and freshness hardening (2026-08-31)
+
+**Assessment:** adaptive backfill improved finalist opportunity without
+weakening safety, but the planned live recall acceptance gate failed.
+
+**Correction:** selection verifies a brand-diverse nine-candidate queue in
+three-candidate waves, stopping at five distinct accepted products, queue
+exhaustion, cancellation, or twelve logical Shopping/page-resolution searches.
+Discovery is not repeated. Discovery cache life is five minutes and current
+page evidence life is two minutes. Telemetry reports bounded wave, operation,
+and rejection counts. Canonical page URLs are deduplicated, manufacturer
+series-family pages are ineligible, and multi-tool combo kits cannot satisfy a
+standalone cordless-drill request.
+
+**Frozen 24-run matrix:** three cache-cold rounds each ran coffee maker, robot
+vacuum, gaming monitor, shop vacuum, pressure washer, cordless drill, laptop,
+and leaf blower exactly once. Non-empty rates were 2/3, 3/3, 3/3, 1/3, 3/3,
+3/3, 0/3, and 0/3 respectively: 15/24 overall. Every request used twelve
+logical and physical attempts. Mean latency was 13,795 ms, p95 was 18,677 ms,
+and maximum was 21,352 ms. No timeout exceeded 30 seconds. The 21/24 overall
+and shop-vac 2/3 recall gates failed. Page safety and affirmative availability
+were the main losses; requirements and price caused few losses.
+
+The frozen matrix exposed a duplicate Ryobi URL under two titles, multi-tool
+combo kits in a drill result, and a Roborock Q10 family page. Generalized
+post-matrix corrections were added. Two new cache-cold diagnostic probes then
+returned two exact self-emptying robot vacuums and three unique standalone
+brushless drill kits. Current independent retailer pages confirmed those probe
+identities, constraints, prices, and buyable states. These probes do not replace
+or improve the frozen matrix score.
+
+**Verification:** focused correction suites passed. Full unit tests passed
+285/285 across 41 suites; typecheck and zero-warning lint passed; the Next.js
+16.3.3 production build passed with only `/`, `/_not-found`, and
+`/api/recommendations`; Playwright passed 7/7 across Chromium desktop/mobile.
+
+**Boundaries:** no retry-until-success, fixture-content access, secret
+inspection, dependency change, push, deployment, release, or production-data
+mutation occurred. One initial `git status --short` command enumerated protected
+live-fixture paths. No fixture was opened, statted individually, hashed, copied,
+edited, or used as evidence, but the path traversal repeated the documented
+process-boundary violation. The product card and public request/response shapes
+are unchanged.
+
+---
+
+## PR-13 Step 1 prerequisite stabilization (2026-09-01)
+
+**Assessment:** PR-12's adaptive queue was sound, but the recorded 15/24 recall
+result did not satisfy the prerequisite for market-quality work. The dominant
+loss was not the card or candidate supply: exact product pages were frequently
+found, then rejected because major retailer pages blocked or challenged the
+server-side current-page fetch.
+
+**Frozen before the availability correction:** the QA-only
+`leaders-v2026-09a` registry covers the existing coffee maker, robot vacuum,
+gaming monitor, shop vacuum, pressure washer, cordless drill, laptop, and leaf
+blower cases. Each exact leader has two independent current source domains and
+at least one comparative source. The benchmark is not production input and
+does not grant price, availability, identity, or ranking authority.
+
+**Generalized corrections:** exact merchant product routes, stable-model
+queries, two-host page alternatives, decimal URL identities, measurement-only
+model rejection, battery-kit language, sibling-model URL conflicts,
+discontinued/parts routes, and cross-merchant price transfer were corrected.
+`contractorsupplynetwork.com` was accepted only after its exact Greenworks
+2415902 page was safely fetched and independently checked as a current U.S.
+merchant product page.
+
+A current priced Shopping offer may now fill an otherwise unknown availability
+state only when the resolved destination is an exact product page on the same
+Shopping merchant. This is not price-as-availability: the current offer marker,
+merchant binding, exact page identity, direct product-route safety, USD price,
+condition, and all later requirement/price/SSRF gates are required. Explicit
+page out-of-stock evidence wins, and cross-merchant alternatives lose both the
+Shopping price and availability marker.
+
+**Failed-first evidence:** the first cache-cold round after the earlier
+resolution fixes returned 4/8 non-empty. Coffee maker, gaming monitor, laptop,
+and leaf blower passed; robot vacuum, shop vacuum, pressure washer, and drill
+were empty. Debug telemetry attributed the losses primarily to exact resolved
+pages whose fetch result left availability unknown.
+
+**Final frozen 24-run matrix:** three fresh-server, cache-cold rounds ran each
+case once with no retries or changed inputs.
+
+| Category | Non-empty runs |
+| --- | ---: |
+| 14-cup programmable coffee maker under $150 | 3/3 |
+| Self-emptying robot vacuum under $300 | 3/3 |
+| 27-inch 1440p 144Hz gaming monitor under $300 | 3/3 |
+| Wet/dry shop vacuum under $200 | 2/3 |
+| Pressure washer at least 2,000 PSI under $300 | 3/3 |
+| Brushless cordless drill with battery under $200 | 3/3 |
+| Laptop with 16 GB RAM and 512 GB SSD under $900 | 3/3 |
+| Cordless leaf blower at least 400 CFM with battery under $250 | 3/3 |
+
+Overall recall was 23/24. Mean client-observed latency was 12,507 ms,
+nearest-rank p95 was 18,806 ms, maximum was 20,419 ms, and minimum was 7,093
+ms. Every request used one OpenAI response and at most twelve logical Serper
+operations. The prerequisite 21/24 and shop-vac 2/3 gates pass. The one empty
+shop-vac run remains honest provider variability; it was not retried.
+
+**Verification:** focused correction coverage passed 69/69. The full suite
+passed 295/295 across 42 suites; typecheck passed; ESLint passed with zero
+warnings; the Next.js 16.3.3 production build passed with only `/`,
+`/_not-found`, and `/api/recommendations`; Playwright passed 7/7 including the
+desktop and mobile shortlist checks. `git diff --check` is required again at
+the final staged snapshot.
+
+**Boundaries and process incident:** `.env.local` was not manually inspected,
+printed, hashed, copied, or edited. One broad `rg --files` at PR-13 planning
+start unintentionally enumerated protected live-fixture paths. No protected
+fixture was opened, statted individually, hashed, parsed, copied, edited,
+deleted, or used as evidence. This path-only violation is recorded and broad
+repository enumeration must not recur. No dependency, public API, card, push,
+deployment, release, or production-data action occurred.
+
+**Decision:** the PR-11/PR-12 selection prerequisite is stable enough to commit
+and stop. This result proves bounded non-empty recall and preserved constraints;
+it does not yet prove market-leader recall or best-in-budget ranking. PR-13
+Step 2 remains a separate phase decision.

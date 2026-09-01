@@ -60,6 +60,7 @@ export function strongModelTokens(value: string) {
       normalized.length > 24 ||
       !/[a-z]/.test(normalized) ||
       !/\d/.test(normalized) ||
+      isModelIdentityMeasurementCompoundToken(raw) ||
       /^\d+(?:p|hz|gb|tb|mah|w|v|in|inch)$/i.test(normalized) ||
       /^(?:ddr|gen|hdmi|hdr|ips|oled|qled|series|uhd|usb|wifi)\d+[a-z]*$/i.test(
         normalized,
@@ -75,10 +76,24 @@ export function strongModelTokens(value: string) {
 }
 
 const MODEL_IDENTITY_MEASUREMENT_TOKEN =
-  /^\d+(?:\.\d+)?(?:ah|amp|amps|battery|batteries|bit|blade|blades|btu|burner|burners|cc|cfm|channel|channels|cm|color|colors|core|cores|count|counts|cup|cups|day|days|db|degree|degrees|door|doors|dpi|drawer|drawers|ft|gal|gallon|gallons|gb|gpm|hp|hz|in|inch|inches|k|kg|l|lb|lbs|lumen|lumens|mah|mb|ml|mm|mode|modes|month|months|mp|mph|oz|p|pack|packs|pc|pcs|piece|pieces|pk|port|ports|pound|pounds|program|programs|psi|px|qt|quart|quarts|rpm|scfm|setting|settings|speed|speeds|stage|stages|tb|thread|threads|tier|tiers|v|volt|volts|w|watt|watts|wh|year|years|yr|yrs|zone|zones)$/i;
+  /^\d+(?:\.\d+)?(?:ah|amp|amps|battery|batteries|bit|blade|blades|btu|burner|burners|cc|cfm|channel|channels|cm|color|colors|core|cores|count|counts|cup|cups|day|days|db|degree|degrees|door|doors|dpi|drawer|drawers|ft|gal|gallon|gallons|gb|gpm|hp|hz|in|inch|inches|k|kg|l|lb|lbs|lumen|lumens|mah|mb|min|mins|minute|minutes|ml|mm|mode|modes|month|months|mp|mph|oz|p|pa|pack|packs|pc|pcs|piece|pieces|pk|port|ports|pound|pounds|program|programs|psi|px|qt|quart|quarts|rpm|scfm|setting|settings|speed|speeds|stage|stages|tb|thread|threads|tier|tiers|v|volt|volts|w|watt|watts|wh|year|years|yr|yrs|zone|zones)$/i;
 
 export function isModelIdentityMeasurementToken(value: string) {
   return MODEL_IDENTITY_MEASUREMENT_TOKEN.test(value.trim());
+}
+
+function isModelIdentityMeasurementCompoundToken(value: string) {
+  const parts = value.split(/[-/.]/).filter(Boolean);
+  return (
+    parts.length > 1 &&
+    parts.every(
+      (part) =>
+        /^\d+(?:\.\d+)?$/.test(part) ||
+        isModelIdentityMeasurementToken(part) ||
+        (/^[a-z]+$/i.test(part) &&
+          isModelIdentityMeasurementToken(`1${part}`)),
+    )
+  );
 }
 
 function looksLikeMixedCompoundModelComponent(token: string) {
@@ -119,17 +134,105 @@ export function stableModelIdentifiers(value: string) {
   return [
     ...new Set(
       (value.match(/[A-Za-z0-9]+(?:[-/.][A-Za-z0-9]+)*/g) || [])
-        .map((token) => token.toLowerCase().replace(/[^a-z0-9]+/g, ""))
+        .map((raw) => ({
+          normalized: raw.toLowerCase().replace(/[^a-z0-9]+/g, ""),
+          raw,
+        }))
         .filter(
-          (token) =>
-            token.length >= 3 &&
-            token.length <= 32 &&
-            /\d/.test(token) &&
-            !isModelIdentityMeasurementToken(token) &&
-            (/[a-z]/.test(token) || token.length >= 6),
-        ),
+          ({ normalized, raw }) =>
+            normalized.length >= 3 &&
+            normalized.length <= 32 &&
+            /\d/.test(normalized) &&
+            !isModelIdentityMeasurementToken(normalized) &&
+            !isModelIdentityMeasurementCompoundToken(raw) &&
+            (/[a-z]/.test(normalized) || normalized.length >= 6),
+        )
+        .map(({ normalized }) => normalized),
     ),
   ];
+}
+
+const NAMED_MODEL_VARIANT_WORDS = new Set([
+  "air",
+  "evo",
+  "lite",
+  "max",
+  "mini",
+  "plus",
+  "pro",
+  "se",
+  "slim",
+  "ultra",
+  "xl",
+  "xxl",
+]);
+
+function namedVariantWords(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/([a-z0-9])\+/g, "$1 plus")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function namedVariantModelAnchors(value: string) {
+  return new Set(
+    (value.match(/[A-Za-z0-9]+(?:[-/.][A-Za-z0-9]+)*/g) || [])
+      .filter((raw) => !isModelIdentityMeasurementCompoundToken(raw))
+      .map((token) => token.toLowerCase().replace(/[^a-z0-9]+/g, ""))
+      .filter(
+        (token) =>
+          token.length >= 2 &&
+          token.length <= 32 &&
+          /[a-z]/.test(token) &&
+          /\d/.test(token) &&
+          !isModelIdentityMeasurementToken(token) &&
+          !/^(?:ddr|gen|hdmi|hdr|ips|oled|qled|series|uhd|usb|wifi)\d+[a-z]*$/i.test(
+            token,
+          ),
+      ),
+  );
+}
+
+function variantsNearModelAnchors(value: string, anchors: Set<string>) {
+  const words = namedVariantWords(value);
+  const variants = new Set<string>();
+  for (let index = 0; index < words.length; index += 1) {
+    if (!anchors.has(words[index])) continue;
+    const start = Math.max(0, index - 3);
+    const end = Math.min(words.length - 1, index + 3);
+    for (let nearby = start; nearby <= end; nearby += 1) {
+      if (NAMED_MODEL_VARIANT_WORDS.has(words[nearby])) {
+        variants.add(words[nearby]);
+      }
+    }
+  }
+  return variants;
+}
+
+export function namedModelVariantTokens(value: string) {
+  return [...variantsNearModelAnchors(value, namedVariantModelAnchors(value))];
+}
+
+export function haveConflictingNamedModelVariants(
+  target: string,
+  observed: string,
+) {
+  const targetAnchors = namedVariantModelAnchors(target);
+  const observedAnchors = namedVariantModelAnchors(observed);
+  const sharedAnchors = new Set(
+    [...targetAnchors].filter((anchor) => observedAnchors.has(anchor)),
+  );
+  if (sharedAnchors.size === 0) return false;
+
+  const targetVariants = variantsNearModelAnchors(target, sharedAnchors);
+  const observedVariants = variantsNearModelAnchors(observed, sharedAnchors);
+  return (
+    [...targetVariants].some((variant) => !observedVariants.has(variant)) ||
+    [...observedVariants].some((variant) => !targetVariants.has(variant))
+  );
 }
 
 function mixedModelComponentTokens(value: string) {
@@ -999,6 +1102,13 @@ function isNonIdentityNumericLexeme(
     /^[a-z]+$/.test(next.token) &&
     !hasHardCompoundBoundary(separatorAfter) &&
     isModelIdentityMeasurementToken(`${lexeme.token}${next.token}`)
+  ) {
+    return true;
+  }
+  if (
+    next &&
+    /^(?:display|laptop|notebook|screen)$/.test(next.token) &&
+    !hasHardCompoundBoundary(separatorAfter)
   ) {
     return true;
   }

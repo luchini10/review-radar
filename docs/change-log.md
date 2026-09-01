@@ -9,7 +9,73 @@ Update this file after:
 - important bug fixes
 - live QA fixes worth remembering
 
+## 2026-09-01
+
+### Codex - Stabilize selection before market-quality ranking
+
+#### Changed
+
+- Corrected exact product-page resolution for merchant routes, decimal URL
+  identities, measurement-only model strings, battery-kit wording, sibling
+  model URLs, discontinued/parts pages, and cross-merchant price transfer.
+- Kept up to two exact page alternatives on distinct hosts from one bounded
+  candidate-local search, without raising the twelve-operation ceiling.
+- Added same-merchant current Shopping-offer availability fallback for exact
+  product pages that block server-side fetches. Explicit page unavailability
+  still wins, and price alone or a different merchant cannot provide the
+  fallback.
+- Froze a QA-only eight-case market-leader benchmark with two independent
+  current source domains and a comparative source per exact leader. It does not
+  affect production selection or the public card.
+
+#### Verified
+
+- The final three-round cache-cold matrix passed at 23/24 non-empty, including
+  shop vacuum 2/3, with no retries. Mean latency was 12,507 ms, p95 18,806 ms,
+  and maximum 20,419 ms; every request used one OpenAI response and no more
+  than twelve logical operations.
+- Full validation passed 295/295 unit tests across 42 suites, typecheck,
+  zero-warning lint, the Next.js 16.3.3 production build, and Playwright 7/7
+  across desktop/mobile Chromium.
+- Market-scout and quality-ranking behavior has not started; the public
+  response remains the minimal product card.
+
 ## 2026-08-31
+
+### Codex - Harden live product accuracy
+
+#### Changed
+
+- Required affirmative current page availability and made explicit out-of-stock
+  state override availability-free priced offers.
+- Made current page prices outrank discovery prices while preserving
+  implausible-price and conflicting-price rejection.
+- Broadened candidate discovery across neutral queries and brands, prioritized
+  resolvable product identities and trustworthy merchants, and rejected
+  secondary-market, foreign-market, support, listing, Q&A, accessory, and
+  unrequested non-new results.
+- Preserved stable model numbers and named variants during deduplication and
+  page resolution, including a bounded official merchandising-suffix rule.
+- Added concrete self-emptying, programmable, and cup-capacity checks; a known
+  12-cup product can no longer satisfy a 14-cup preference, and a standalone
+  self-empty base cannot satisfy a complete robot-vacuum request.
+- Made complete Shopping outages return a retryable error instead of a false
+  successful empty result. Added local-only finalist diagnostics without raw
+  provider responses or credentials.
+
+#### Verified
+
+- The final-source live sample returned a current Cuisinart DCC-3200 14-cup
+  programmable coffee maker at $119.95, AIRROBO L50+ self-emptying robot vacuum
+  at $209.99, and Z-EDGE UG27Q 27-inch QHD 165 Hz monitor at $179.99. Current
+  official or retailer pages independently matched the identities, required
+  specifications, prices, and buyable states.
+- The same final-source shop-vac request returned no card. Earlier runs found
+  valid current shop vacuums, so shortlist recall remains variable; the selector
+  correctly did not substitute an unverified result.
+- Final validation passed 276/276 unit tests across 41 suites, typecheck,
+  zero-warning lint, the Next.js 16.3.3 production build, and Playwright 7/7
+  across desktop/mobile Chromium.
 
 ### Codex - Simplify recommendations to product selection
 
@@ -3470,3 +3536,27 @@ Do not update this file for tiny typo fixes, formatting-only edits, or internal 
 - The restarted localhost returned HTTP 200 while the experimental V2 route
   failed at `invalid_config` before provider creation. No recommendation search
   or paid call was made.
+
+## 2026-08-31 - Backfill rejected product finalists safely
+
+### Changed
+
+- Added three-candidate verification waves so a rejected initial finalist does
+  not force an empty shortlist when another ranked candidate can pass.
+- Raised the bounded logical search/page-resolution ceiling from eight to
+  twelve while keeping three discovery queries and one planner call.
+- Shortened discovery and product-page cache windows for fresher inventory,
+  price, and availability evidence.
+- Prevented duplicate cards for one canonical product page, manufacturer
+  series landing pages, and multi-tool combo kits presented as one drill.
+
+### Verified
+
+- Frozen 24-run live matrix completed without retries: 15/24 non-empty, mean
+  13,795 ms, p95 18,677 ms, maximum 21,352 ms, and twelve attempts per run.
+- The planned 21/24 recall gate and shop-vac 2/3 gate did not pass; safety gates
+  were retained.
+- Two cache-cold correction probes returned exact unique robot-vacuum and drill
+  products, independently checked against current retailer pages.
+- Unit, typecheck, zero-warning lint, production build, and Chromium
+  desktop/mobile checks pass in the final working state.

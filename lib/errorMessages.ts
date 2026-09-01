@@ -2,6 +2,8 @@ export const USER_ERROR_MESSAGES = {
   emptySearch: "Please enter a product category.",
   networkError: "Something went wrong while finding products. Try again.",
   requestCancelled: "The request was cancelled.",
+  searchUnavailable:
+    "Product search is temporarily unavailable. Please try again shortly.",
   slowResponse:
     "The search is taking longer than expected. Try again with a narrower request.",
   temporaryRateLimit:

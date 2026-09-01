@@ -94,8 +94,15 @@ export function assessProductPriceTrust(
 ): ProductPriceTrust {
   const offerSignals = pricedOffers(product);
   const allSignals = offerSignals;
+  const strongestRank = Math.max(
+    0,
+    ...offerSignals.map((signal) => signalStrength(signal)),
+  );
+  const strongestSignals = offerSignals.filter(
+    (signal) => signalStrength(signal) === strongestRank,
+  );
   const plausible = plausibleProductPrice(
-    offerSignals.map((signal) => signal.price),
+    strongestSignals.map((signal) => signal.price),
     null,
     {
       category: product.category,
@@ -111,7 +118,7 @@ export function assessProductPriceTrust(
 
   if (
     priceEvidenceLooksImplausiblyLow(
-      offerSignals.map((signal) => signal.price),
+      strongestSignals.map((signal) => signal.price),
       null,
       {
         category: product.category,
@@ -135,7 +142,6 @@ export function assessProductPriceTrust(
   const strongestOffer = offerSignals[0];
 
   if (strongestOffer && plausible !== null) {
-    const strongestRank = signalStrength(strongestOffer);
     const status: ProductPriceTrust["status"] =
       strongestRank >= signalStrength({
         confidence: "Medium",

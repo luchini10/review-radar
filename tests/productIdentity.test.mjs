@@ -18,6 +18,12 @@ describe("selection product identity", () => {
       stableModelIdentifiers("27 inch 1440p 180Hz monitor"),
       [],
     );
+    assert.deepEqual(
+      stableModelIdentifiers(
+        "Greenworks 125 MPH/450 CFM 60V cordless leaf blower",
+      ),
+      [],
+    );
   });
 
   it("detects conflicting sibling compound models", () => {

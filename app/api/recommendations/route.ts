@@ -201,6 +201,17 @@ async function handlePost(
       }),
     );
     throwIfRequestCancelled(request.signal);
+    const everyShoppingSearchFailed =
+      selected.telemetry.searchDiagnostics.length > 0 &&
+      selected.telemetry.searchDiagnostics.every(
+        (diagnostic) => Boolean(diagnostic.errorKind),
+      );
+    if (everyShoppingSearchFailed) {
+      return NextResponse.json(
+        { error: USER_ERROR_MESSAGES.searchUnavailable },
+        { headers: { "Cache-Control": "no-store" }, status: 502 },
+      );
+    }
     const debug = {
       architecture: "selection_only_v1",
       openAiCalls: planned.telemetry.openAiCalls,

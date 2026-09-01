@@ -1,15 +1,52 @@
 # Market-Leader Evaluation Method and Dated Leader Snapshots
 
-**Mechanics version:** `leaders-v2026-07c` (Taylor ratified 2026-07-14)
-**Evidence status:** frozen mechanics/lists; C4 safety-stopped after 4/6 runs
-**Supersedes:** `leaders-v2026-07b` — see sections 3 and 5. Results are
-never compared across snapshot versions.
+**Mechanics version:** `leaders-v2026-09a` (PR-13 prerequisite freeze,
+2026-09-01)
+**Evidence status:** eight-case PR-13 registry frozen before market-scout or
+quality-ranking behavior; earlier C4 history remains safety-stopped after 4/6
+runs
+**Supersedes:** `leaders-v2026-07c` for PR-13 before/after evaluation only.
+Historical results are never compared across snapshot versions.
 **Owner:** Phase 6 freeze-point deliverable per
 `docs/phase-6-reliability-gauntlet-plan.md` section 7; QA-only data, never
 production logic (core rule 1).
 **Review cadence:** quarterly, or when a category's market visibly shifts.
 External editorial refresh research is separate from ReviewRadar live-search
 API spending and must be scoped, cited, and approved.
+
+## 0. PR-13 dated exact-leader registry (`leaders-v2026-09a`)
+
+The machine-readable freeze is
+`tests/benchmarks/pr13-market-leaders-v2026-09a.json`. It was created on
+2026-09-01 before any PR-13 market-scout or quality-ranking behavior. The
+registry is QA-only and must never become a production seed list, prompt input,
+or deterministic boost.
+
+Each registered leader has two current, independent evidence domains and at
+least one comparative test source. For subjective categories, both sources
+must support the same exact product line and configuration. A card covers a
+leader only when its stable model identity matches the registered model or a
+listed exact alias. Brand-only matches, sibling models, and configuration
+transfer are misses.
+
+| QA case | Frozen exact leader | Independent evidence |
+|---|---|---|
+| 14-cup programmable coffee maker under $150 | Cuisinart DCC-3200 | [Consumer Reports lab record](https://www.consumerreports.org/appliances/coffee-makers/cuisinart-perfectemp-14-cup-programmable-dcc-3200/m387328/); [Bean & Burr review](https://beanandburr.com/coffee-makers/cuisinart-coffee-maker-review) |
+| self-emptying robot vacuum under $300 | Dreame D10 Plus Gen 2 | [Tom's Guide budget comparison](https://www.tomsguide.com/best-picks/best-cheap-robot-vacuums); [TechGearLab tested review](https://www.techgearlab.com/reviews/smart-home/robot-vacuum/dreame-d10-plus-gen-2) |
+| 27-inch 1440p 144Hz+ gaming monitor under $300 | AOC Q27G3XMN | [RTINGS comparison](https://www.rtings.com/monitor/reviews/best/1440p-144hz); [Reviewed test](https://www.reviewed.com/gaming/content/aoc-q27g3xmn-review) |
+| wet/dry shop vacuum under $200 | Craftsman CMXEVBE17595 | [TechGearLab comparison](https://www.techgearlab.com/topics/floor-cleaning/best-shop-vac); [Vacuum Wars 6.5 HP comparison](https://vacuumwars.com/best-shop-vac-6-5-hp/) |
+| 2,000+ PSI pressure washer under $300 | Westinghouse WPX3200e | [Consumer Reports lab record](https://www.consumerreports.org/home-garden/pressure-washers/westinghouse-wpx3200e/m409196/); [SpruceRank under-$300 comparison](https://sprucerank.com/best-electric-pressure-washer-under-300/) |
+| brushless cordless drill kit under $200 | DeWalt DCD800D2 | [Consumer Reports lab record](https://www.consumerreports.org/home-garden/cordless-drills-impact-drivers/dewalt-dcd800d2/m408601/); [Pro Tool Reviews DCD800/DCD805 test](https://www.protoolreviews.com/dewalt-dcd805-20v-hammer-drill-driver-review/) |
+| laptop with 16 GB RAM and 512 GB SSD under $900 | Dell XPS 13 (2026), 16 GB/512 GB | [WIRED review](https://www.wired.com/review/dell-xps-13-2026/); [Tom's Hardware comparative testing](https://www.tomshardware.com/laptops/dell-xps-13-2026-review) |
+| 400+ CFM cordless leaf blower kit under $250 | Greenworks BL60L512 | [Consumer Reports results reported by Quartz](https://qz.com/leaf-blowers-ranked-by-type-consumer-reports); [OPE Reviews measured test](https://opereviews.com/greenworks-pro-60v-700-cfm-blower-review-bl60l512/) |
+
+The snapshot does not hard-code price or availability. A run is leader-eligible
+only when at least one registered exact leader independently has a current,
+new-condition US offer at or below that case's budget and satisfies every hard
+request constraint at run time. If no leader is eligible, the run is excluded
+from leader-recall denominator rather than counted as a pass or failure. The
+application's own returned price and availability still have to pass their
+normal authority gates; editorial evidence can never make a product buyable.
 
 ## 1. Matching contract (frozen, single implementation)
 

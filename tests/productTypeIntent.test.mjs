@@ -4,6 +4,28 @@ import { describe, it } from "node:test";
 import { classifyProductTypeIntent } from "../lib/productTypeIntent.ts";
 
 describe("product type intent classifier", () => {
+  it("rejects multi-tool combo kits as a standalone cordless drill", () => {
+    for (const candidateText of [
+      "Ryobi ONE+ HP 18V Brushless Cordless Compact 4-Tool Combo Kit",
+      "Ryobi ONE+ HP 18V Brushless Cordless 2-Tool Combo Kit with Drill and Impact Driver",
+    ]) {
+      const verdict = classifyProductTypeIntent({
+        requestedText: "cordless drill",
+        candidateText,
+        candidateIdentityText: candidateText,
+      });
+      assert.equal(verdict.status, "irrelevant", candidateText);
+      assert.equal(verdict.canBeExactMatch, false, candidateText);
+    }
+
+    const drillKit = classifyProductTypeIntent({
+      requestedText: "cordless drill",
+      candidateText:
+        "Craftsman V20 Brushless Cordless Drill Driver Kit with Battery and Charger",
+    });
+    assert.equal(drillKit.status, "exact");
+  });
+
   it("keeps toaster ovens separate from full-size ovens and ranges", () => {
     const valid = classifyProductTypeIntent({
       requestedText: "toaster oven",
@@ -96,6 +118,34 @@ describe("product type intent classifier", () => {
 
     assert.equal(v.status, "needs_verification");
     assert.equal(v.canBeExactMatch, false);
+  });
+
+  it("robot_vacuum: rejects a standalone self-empty base even when snippets mention the vacuum", () => {
+    const verdict = classifyProductTypeIntent({
+      requestedText: "robot vacuum",
+      candidateText:
+        "Shark Robot AI Self-Empty XL Base xdockav2501ae replacement base for the Shark robot vacuum",
+      candidateIdentityText:
+        "Shark Robot AI Self-Empty XL Base xdockav2501ae",
+      allowedCheckText:
+        "Shark Robot AI Self-Empty XL Base xdockav2501ae compatible with a Shark robot vacuum",
+    });
+
+    assert.equal(verdict.status, "complement");
+    assert.equal(verdict.canBeExactMatch, false);
+  });
+
+  it("robot_vacuum: preserves a complete vacuum sold with a self-empty base", () => {
+    const verdict = classifyProductTypeIntent({
+      requestedText: "robot vacuum",
+      candidateText:
+        "Shark Matrix Robot Vacuum with Self-Emptying XL Base RV2310AE",
+      candidateIdentityText:
+        "Shark Matrix Robot Vacuum with Self-Emptying XL Base RV2310AE",
+    });
+
+    assert.equal(verdict.status, "exact");
+    assert.equal(verdict.canBeExactMatch, true);
   });
 
   it("shop_vac: rejects household wet floor cleaners even when their titles say wet dry vacuum", () => {

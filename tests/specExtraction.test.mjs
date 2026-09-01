@@ -54,6 +54,23 @@ describe("selection spec requirements", () => {
     assert.equal(burners.strictness, "soft");
   });
 
+  it("extracts nominal cup capacity from coffee-maker requirements and evidence", () => {
+    const cups = bySpec(
+      extractSpecConstraints("14-cup programmable", "priorities"),
+      "capacityCups",
+    );
+
+    assert.deepEqual(
+      [cups.operator, cups.value, cups.strictness],
+      ["min", 14, "soft"],
+    );
+    assert.equal(
+      extractSpecsFromText("Hamilton Beach 12 Cup Programmable Coffee Maker")
+        .capacityCups.value,
+      12,
+    );
+  });
+
   it("extracts product facts from selector-controlled evidence text", () => {
     const specs = extractSpecsFromText(
       "Acer 27-inch 2560x1440 QHD gaming monitor with 180Hz refresh rate",
@@ -62,6 +79,23 @@ describe("selection spec requirements", () => {
 
     assert.equal(specs.screenSizeIn.value, 27);
     assert.equal(specs.refreshRateHz.value, 180);
+  });
+
+  it("recognizes bounded battery-kit title forms without overriding tool-only evidence", () => {
+    for (const title of [
+      "PowerSmart 450CFM Cordless Leaf Blower w/ Two 20V Battery and Charger",
+      "HART 40V Cordless Axial Leaf Blower Kit 1 4.0Ah Lithium-Ion Battery",
+      "Leaf Blower with 2 Battery and Charger",
+    ]) {
+      assert.equal(extractSpecsFromText(title).batteryIncluded.value, true);
+    }
+
+    assert.equal(
+      extractSpecsFromText(
+        "Cordless Leaf Blower Kit tool-only battery not included",
+      ).batteryIncluded.value,
+      false,
+    );
   });
 
   it("evaluates known facts and fails closed on missing hard facts", () => {

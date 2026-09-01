@@ -68,6 +68,27 @@ describe("selection planner", () => {
       brand: "iHome",
       model: "Nova S1 Pro",
     });
+    assert.match(result.plan.queries[1], /self-emptying|self emptying/i);
+    assert.ok(
+      result.plan.queries
+        .slice(0, 3)
+        .every((query) => !/iHome|Nova S1 Pro/i.test(query)),
+    );
+  });
+
+  it("allows a brand-specific search only when the shopper requested that brand", () => {
+    const value = {
+      mainstreamProducts: [
+        { aliases: [], brand: "iRobot", model: "Roomba i3+ EVO" },
+      ],
+      searchQueries: ["iRobot Roomba i3+ EVO self emptying robot vacuum"],
+    };
+    const result = selectionPlannerTestExports.normalizePlan(
+      { query: "iRobot robot vacuum", priorities: "self-emptying" },
+      value,
+    );
+
+    assert.ok(result.queries.some((query) => /iRobot Roomba i3\+ EVO/i.test(query)));
   });
 
   it("falls back safely on malformed model output", async () => {

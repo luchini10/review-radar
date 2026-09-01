@@ -118,19 +118,81 @@ function deterministicQueries(input: RecommendationApiRequest) {
   ]);
 }
 
+function targetQuery(
+  input: RecommendationApiRequest,
+  target: SelectionTarget,
+) {
+  return [
+    input.query,
+    target.brand,
+    target.model,
+    input.budget,
+    input.priorities,
+  ]
+    .filter((value): value is string => Boolean(value?.trim()))
+    .join(" ");
+}
+
+function normalizedPhrase(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function includesPhrase(value: string, phrase: string) {
+  const normalizedValue = ` ${normalizedPhrase(value)} `;
+  const normalizedTarget = normalizedPhrase(phrase);
+  return Boolean(
+    normalizedTarget && normalizedValue.includes(` ${normalizedTarget} `),
+  );
+}
+
+function targetWasRequested(
+  input: RecommendationApiRequest,
+  target: SelectionTarget,
+) {
+  const request = requestSearchText(input);
+  return [target.brand, target.model, ...target.aliases].some((value) =>
+    includesPhrase(request, value),
+  );
+}
+
+function namesUnrequestedTarget(
+  input: RecommendationApiRequest,
+  query: string,
+  targets: SelectionTarget[],
+) {
+  return targets.some(
+    (target) =>
+      !targetWasRequested(input, target) &&
+      [target.brand, target.model, ...target.aliases].some((value) =>
+        includesPhrase(query, value),
+      ),
+  );
+}
+
 function normalizePlan(
   input: RecommendationApiRequest,
   value: z.infer<typeof selectionPlanSchema> | null,
 ): SelectionPlan {
+  const targets = value?.mainstreamProducts || [];
+  const genericModelQueries = (value?.searchQueries || []).filter(
+    (query) => !namesUnrequestedTarget(input, query, targets),
+  );
   const queries = uniqueStrings([
     requestSearchText(input),
-    ...(value?.searchQueries || []),
+    ...genericModelQueries,
     ...deterministicQueries(input),
+    ...targets
+      .filter((target) => targetWasRequested(input, target))
+      .map((target) => targetQuery(input, target)),
   ]);
 
   return {
     queries,
-    targets: value?.mainstreamProducts || [],
+    targets,
   };
 }
 
@@ -141,6 +203,7 @@ const systemPrompt = [
   "Do not invent prices or claim that a requirement is verified.",
   "Exclude accessories, replacement parts, used or refurbished products unless requested, and unrelated product types.",
   "Favor distinct mainstream models spanning strong practical choices rather than cosmetic variants.",
+  "Search queries must stay brand- and model-neutral unless the shopper explicitly requested a brand or model; current availability comes from live search, not your product memory.",
   "Assume the United States retail market unless the shopper specifies another market; exclude 220-240V-only products by default.",
 ].join(" ");
 

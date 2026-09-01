@@ -11,6 +11,7 @@ import {
 import {
   compoundModelSequences,
   haveConflictingCompoundModelSequences,
+  haveConflictingNamedModelVariants,
   haveConflictingNumericProductSpecs,
   isModelIdentityMeasurementToken,
   modelIdentityRelation,
@@ -745,6 +746,15 @@ export function productPageMatchesIdentity(input: {
   brand?: string;
   model?: string;
 }) {
+  if (
+    haveConflictingNamedModelVariants(
+      input.productName,
+      `${input.pageTitle} ${input.pageUrl}`,
+    )
+  ) {
+    return false;
+  }
+
   const normalizedProductName = input.productName.toLowerCase();
   const brands = Object.keys(OFFICIAL_BRAND_DOMAINS)
     .sort((left, right) => right.length - left.length)

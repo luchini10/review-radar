@@ -1,5 +1,6 @@
 import type {
   ProductFieldEvidence,
+  ProductAvailabilityTrust,
   ProductMetadata,
   ProductPriceTrust,
   RawProductCandidate,
@@ -17,17 +18,23 @@ import {
 import { baseProductCategoryFromQuery } from "./productCategory.ts";
 import { enrichProductAssets } from "./productAssets.ts";
 import {
+  haveConflictingNamedModelVariants,
   haveConflictingNumericProductSpecs,
-  strongModelTokens,
+  namedModelVariantTokens,
+  stableModelIdentifiers,
 } from "./productIdentity.ts";
 import { productPageMatchesIdentity } from "./productPageUrl.ts";
+import { normalizeProductEligibilityUrl } from "./productEligibility.ts";
+import { sourceUrlPathIdentitySegments } from "./sourceUrlIdentity.ts";
 import {
+  likelyAccessory,
   prefilterProductCandidates,
   searchProductPages,
   searchShoppingProducts,
   type ProductSearchExecutionOptions,
 } from "./productSearch.ts";
 import { parseMaxBudgetAmount } from "./priceParsing.ts";
+import { throwIfRequestCancelled } from "./requestCancellation.ts";
 import {
   matchSemanticFeatureEvidence,
   semanticAliasesFor,
@@ -40,11 +47,15 @@ import {
 } from "./specExtraction.ts";
 
 const MAX_SEARCH_QUERIES = 3;
-const MAX_TOTAL_SEARCH_QUERIES = 8;
-const MAX_ASSET_CANDIDATES = 5;
+const MAX_TOTAL_SEARCH_QUERIES = 12;
+const MAX_VERIFICATION_CANDIDATES = 9;
+const VERIFICATION_WAVE_SIZE = 3;
+const MAX_PAGE_ALTERNATIVES_PER_CANDIDATE = 2;
+const MAX_PREFILTERED_CANDIDATES = MAX_VERIFICATION_CANDIDATES * 8;
 const MAX_RECOMMENDATIONS = 5;
 
 type SelectionAssetCandidate = {
+  availabilityTrust?: ProductAvailabilityTrust;
   candidate: RawProductCandidate;
   category: string;
   imageUrl: string;
@@ -52,6 +63,11 @@ type SelectionAssetCandidate = {
   name: string;
   pageUrl: string;
   priceTrust?: ProductPriceTrust;
+};
+
+type AcceptedSelection = {
+  asset: SelectionAssetCandidate;
+  recommendation: SelectionProductRecommendation;
 };
 
 export type ProductSelectionTelemetry = {
@@ -63,8 +79,26 @@ export type ProductSelectionTelemetry = {
   logicalSearchCalls: number;
   physicalSearchAttempts: number;
   queries: string[];
+  rankedCandidates: Array<{
+    name: string;
+    price: number | null;
+    productUrl: string;
+    retailer: string | null;
+  }>;
   rejectedByAssetSafety: number;
+  rejectedByAvailability: number;
+  rejectedByMerchant: number;
+  rejectedByPrice: number;
   rejectedByRequirements: number;
+  resolutionDiagnostics: Array<{
+    discoveryName: string;
+    pageCandidates: Array<{
+      name: string;
+      score: number;
+      url: string;
+    }>;
+    status: "direct" | "query_budget_exhausted" | "resolved" | "unresolved";
+  }>;
   resolutionQueries: string[];
   searchDiagnostics: Array<{
     errorKind?: string;
@@ -72,6 +106,25 @@ export type ProductSelectionTelemetry = {
     rawShoppingResults: number;
     rejectionReasons: Record<string, number>;
     returnedCandidates: number;
+  }>;
+  verificationWaves: Array<{
+    acceptedCandidates: number;
+    candidateNames: string[];
+    cumulativeAcceptedCandidates: number;
+    cumulativeLogicalSearchCalls: number;
+    rejectedByAssetSafety: number;
+    rejectedByAvailability: number;
+    rejectedByPrice: number;
+    rejectedByRequirements: number;
+    wave: number;
+  }>;
+  verifiedCandidates: Array<{
+    availabilityStatus: string;
+    name: string;
+    pageUrl: string;
+    price: number | null;
+    priceStatus: string;
+    requirementFailures: string[];
   }>;
 };
 
@@ -84,11 +137,7 @@ function normalizedText(value: string) {
 }
 
 function candidateModelTokens(value: string) {
-  return [...strongModelTokens(value)].filter(
-    (token) =>
-      !/(?:gallon|gallons|inch|inches|peak|volt|volts|watt|watts)$/i.test(token) &&
-      !/^\d+(?:hp|hz|rpm|psi)$/i.test(token),
-  );
+  return stableModelIdentifiers(value);
 }
 
 const NON_BRAND_LEADING_WORDS = new Set([
@@ -190,6 +239,52 @@ function targetPriority(candidate: RawProductCandidate, targets: SelectionTarget
   return index < 0 ? Number.POSITIVE_INFINITY : index;
 }
 
+function primaryRetailerName(value: string | null | undefined) {
+  return (value || "").split(/\s+(?:-|–|—|\||·)\s+/)[0]?.trim() || "";
+}
+
+function merchantTrustScore(candidate: RawProductCandidate) {
+  const retailer = primaryRetailerName(candidate.retailer);
+  const compactRetailer = normalizedText(retailer).replace(/\s+/g, "");
+  if (!compactRetailer || isSecondaryMarketCandidate(candidate)) return 0;
+
+  if (
+    REPUTABLE_PRODUCT_PAGE_DOMAINS.some((domain) => {
+      const merchant = normalizedText(
+        domain.replace(/\.(?:com|org|net)$/, ""),
+      ).replace(/\s+/g, "");
+      return (
+        merchant.length >= 4 &&
+        (compactRetailer.includes(merchant) ||
+          merchant.includes(compactRetailer))
+      );
+    })
+  ) {
+    return 3;
+  }
+
+  const brand = normalizedText(selectionBrand(candidate) || "").replace(
+    /\s+/g,
+    "",
+  );
+  if (
+    brand.length >= 4 &&
+    (compactRetailer.includes(brand) || brand.includes(compactRetailer))
+  ) {
+    return 2;
+  }
+
+  return /\.(?:com|net|org)\b/i.test(retailer) ? 1 : 0;
+}
+
+function resolutionAuthorityScore(candidate: RawProductCandidate) {
+  return (
+    (candidateHasUsablePage(candidate) ? 4 : 0) +
+    (candidateModelTokens(candidate.name).length > 0 ? 2 : 0) +
+    (selectionBrand(candidate) ? 1 : 0)
+  );
+}
+
 function rankCandidates(
   candidates: RawProductCandidate[],
   targets: SelectionTarget[],
@@ -199,6 +294,8 @@ function rankCandidates(
     .map((candidate, originalIndex) => ({
       candidate,
       originalIndex,
+      merchantScore: merchantTrustScore(candidate),
+      resolutionScore: resolutionAuthorityScore(candidate),
       requirementScore: candidateRequirementScore(candidate, input),
       targetIndex: targetPriority(candidate, targets),
       adjustedIndex:
@@ -210,6 +307,8 @@ function rankCandidates(
     .sort((first, second) => {
       return (
         second.requirementScore - first.requirementScore ||
+        second.resolutionScore - first.resolutionScore ||
+        second.merchantScore - first.merchantScore ||
         first.adjustedIndex - second.adjustedIndex ||
         first.originalIndex - second.originalIndex
       );
@@ -217,11 +316,47 @@ function rankCandidates(
     .map(({ candidate }) => candidate);
 }
 
+function selectVerificationCandidates(
+  candidates: RawProductCandidate[],
+  maximum: number,
+) {
+  if (maximum <= 0) return [];
+
+  const selected: RawProductCandidate[] = [];
+  const deferred: RawProductCandidate[] = [];
+  const seenIdentities = new Set<string>();
+  const brandCounts = new Map<string, number>();
+
+  for (const candidate of candidates) {
+    const identity = discoveryIdentityKey(candidate);
+    if (seenIdentities.has(identity)) continue;
+    seenIdentities.add(identity);
+
+    const brand = normalizedText(selectionBrand(candidate) || "");
+    if (brand && (brandCounts.get(brand) || 0) >= 2) {
+      deferred.push(candidate);
+      continue;
+    }
+
+    selected.push(candidate);
+    if (brand) brandCounts.set(brand, (brandCounts.get(brand) || 0) + 1);
+    if (selected.length >= maximum) return selected;
+  }
+
+  for (const candidate of deferred) {
+    selected.push(candidate);
+    if (selected.length >= maximum) break;
+  }
+
+  return selected;
+}
+
 function discoveryIdentityKey(candidate: RawProductCandidate) {
   const brand = normalizedText(selectionBrand(candidate) || "");
   const models = candidateModelTokens(candidate.name).sort();
+  const variants = namedModelVariantTokens(candidate.name).sort();
   return models.length > 0
-    ? `${brand}|${models.join("|")}`
+    ? `${brand}|${models.join("|")}|${variants.join("|")}`
     : normalizedText(candidate.name);
 }
 
@@ -237,24 +372,43 @@ function dedupeSelectionCandidates(candidates: RawProductCandidate[]) {
       continue;
     }
     duplicateCount += 1;
+    const existingHasDirectPage = candidateHasUsablePage(existing);
+    const candidateHasDirectPage = candidateHasUsablePage(candidate);
+    const primary =
+      candidateHasDirectPage && !existingHasDirectPage ? candidate : existing;
+    const secondary = primary === existing ? candidate : existing;
     seen.set(key, {
-      ...existing,
+      ...primary,
       availableColors: Array.from(
-        new Set([...existing.availableColors, ...candidate.availableColors]),
+        new Set([...primary.availableColors, ...secondary.availableColors]),
       ),
       evidenceSources: [
-        ...existing.evidenceSources,
-        ...candidate.evidenceSources,
+        ...primary.evidenceSources,
+        ...secondary.evidenceSources,
       ],
-      imageUrl: existing.imageUrl || candidate.imageUrl,
+      imageUrl: primary.imageUrl || secondary.imageUrl,
       keySpecs: Array.from(
-        new Set([...existing.keySpecs, ...candidate.keySpecs]),
+        new Set([...primary.keySpecs, ...secondary.keySpecs]),
       ).slice(0, 10),
-      price: existing.price ?? candidate.price,
+      price: primary.price ?? secondary.price,
     });
   }
 
   return { candidates: [...seen.values()], duplicateCount };
+}
+
+function interleaveSearchCandidates(
+  candidateGroups: RawProductCandidate[][],
+) {
+  const interleaved: RawProductCandidate[] = [];
+  const maximumLength = Math.max(0, ...candidateGroups.map((group) => group.length));
+  for (let index = 0; index < maximumLength; index += 1) {
+    for (const group of candidateGroups) {
+      const candidate = group[index];
+      if (candidate) interleaved.push(candidate);
+    }
+  }
+  return interleaved;
 }
 
 function candidateModel(candidate: RawProductCandidate) {
@@ -268,11 +422,19 @@ function productPageSearchQuery(
 ) {
   const models = candidateModelTokens(candidate.name);
   if (models.length > 0) {
-    return [selectionBrand(candidate), ...models, category, "product page"]
+    return [
+      selectionBrand(candidate),
+      ...models,
+      ...namedModelVariantTokens(candidate.name),
+      category,
+      "product page",
+    ]
       .filter(Boolean)
       .join(" ");
   }
-  return `"${candidate.name}" product page`;
+  return `"${candidate.name}" ${candidate.retailer || ""} product page`
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function candidateHasUsablePage(candidate: RawProductCandidate) {
@@ -292,6 +454,7 @@ const REPUTABLE_PRODUCT_PAGE_DOMAINS = [
   "bhphotovideo.com",
   "bestbuy.com",
   "costco.com",
+  "contractorsupplynetwork.com",
   "crateandbarrel.com",
   "crutchfield.com",
   "dickssportinggoods.com",
@@ -318,6 +481,37 @@ const SECONDARY_MARKET_DOMAINS = [
   "offerup.com",
   "poshmark.com",
 ];
+
+function isSecondaryMarketCandidate(candidate: RawProductCandidate) {
+  const retailer = normalizedText(primaryRetailerName(candidate.retailer));
+  if (
+    SECONDARY_MARKET_DOMAINS.some((domain) => {
+      const merchant = normalizedText(domain.replace(/\.(?:com|org|net)$/, ""));
+      return retailer.split(" ").includes(merchant);
+    }) ||
+    /\b(?:back market|reebelo)\b/.test(retailer) ||
+    /\bpawn(?:shop|america)?\b/.test(retailer)
+  ) {
+    return true;
+  }
+
+  const parsed = parsedPageUrl(candidate.productUrl);
+  if (!parsed) return false;
+  const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+  return SECONDARY_MARKET_DOMAINS.some((domain) => domainMatches(host, domain));
+}
+
+function isNonUsMarketHost(host: string) {
+  const labels = host.toLowerCase().replace(/^www\./, "").split(".");
+  const topLevelDomain = labels.at(-1) || "";
+  if (/^[a-z]{2}$/.test(topLevelDomain) && topLevelDomain !== "us") return true;
+  if (labels.length <= 2) return false;
+  const marketLabel = labels[0];
+  return (
+    /^(?:[a-z]{2}|[a-z]{2}-[a-z]{2})$/.test(marketLabel) &&
+    !["en-us", "us"].includes(marketLabel)
+  );
+}
 
 function parsedPageUrl(value: string) {
   try {
@@ -346,48 +540,96 @@ function brandMatchesHost(brand: string | null, host: string) {
   );
 }
 
-function pageSourceScore(candidate: RawProductCandidate) {
+function retailerMatchesHost(retailer: string | null | undefined, host: string) {
+  if (!retailer) return false;
+  const compactRetailer = normalizedText(primaryRetailerName(retailer)).replace(
+    /\s+/g,
+    "",
+  );
+  if (compactRetailer.length < 4) return false;
+  return host
+    .split(".")
+    .slice(0, -1)
+    .map((label) => normalizedText(label).replace(/\s+/g, ""))
+    .some(
+      (label) =>
+        label.length >= 4 &&
+        (compactRetailer.includes(label) || label.includes(compactRetailer)),
+    );
+}
+
+function reputableProductPageScore(host: string, path: string) {
+  if (
+    !REPUTABLE_PRODUCT_PAGE_DOMAINS.some((domain) =>
+      domainMatches(host, domain),
+    )
+  ) {
+    return -1;
+  }
+
+  const knownRetailerPath =
+    domainMatches(host, "amazon.com")
+      ? /\/(?:dp|gp\/product)\//.test(path)
+      : domainMatches(host, "walmart.com")
+        ? /\/ip\//.test(path)
+        : domainMatches(host, "homedepot.com")
+          ? /\/p\//.test(path) &&
+            !/\/p\/(?:answers?|questions?|reviews?)\//.test(path)
+          : domainMatches(host, "lowes.com")
+            ? /\/pd\//.test(path)
+            : domainMatches(host, "target.com")
+              ? /\/p\//.test(path)
+              : domainMatches(host, "bestbuy.com")
+                ? /(?:\/site\/[^/]+\/\d+\.p$|\/product\/[^/]+\/[a-z0-9]+(?:\/sku\/\d+)?$)/.test(
+                    path,
+                  )
+                : domainMatches(host, "newegg.com")
+                  ? /\/p\/[a-z0-9]{8,}$/.test(path)
+                  : /\/(?:dp|ip|item|p|pd|pdp|product|products|sku|site)\//.test(
+                      path,
+                    ) || /\d{5,}/.test(path.split("/").pop() || "");
+  return knownRetailerPath ? 300 : -1;
+}
+
+function hasProductPagePathShape(path: string) {
+  return (
+    /\/(?:dp|gp\/product|ip|item|p|pd|pdp|product|products|sku|site)\//.test(
+      path,
+    ) || /\d{5,}/.test(path.split("/").pop() || "")
+  );
+}
+
+function pageSourceScore(
+  candidate: RawProductCandidate,
+  expectedBrand = selectionBrand(candidate),
+  expectedRetailer = candidate.retailer,
+) {
   const parsed = parsedPageUrl(candidate.productUrl);
   if (!parsed) return -1;
 
   const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
   const path = parsed.pathname.toLowerCase();
   if (
+    isNonUsMarketHost(host) ||
     SECONDARY_MARKET_DOMAINS.some((domain) => domainMatches(host, domain)) ||
     isNonProductSource(candidate.productUrl) ||
-    /\/(?:article|best-|blog|deal|guide|news|reviews?|roundup)(?:[/.\-_]|$)/.test(
+    /\/(?:discontinued|partsaccessories)(?:[/._-]|$)/.test(path) ||
+    /\/(?:answers?|article|best-|blog|browse|categories?|collections?|compare|deals?|guide|news|questions?|reviews?|roundup|search)(?:[/.\-_]|$)/.test(
       path,
-    )
+    ) ||
+    /\/p\/pl(?:[/.\-_]|$)/.test(path)
   ) {
     return -1;
   }
 
-  if (brandMatchesHost(selectionBrand(candidate), host)) return 350;
-  if (
-    REPUTABLE_PRODUCT_PAGE_DOMAINS.some((domain) =>
-      domainMatches(host, domain),
-    )
-  ) {
-    const knownRetailerPath =
-      domainMatches(host, "amazon.com")
-        ? /\/(?:dp|gp\/product)\//.test(path)
-        : domainMatches(host, "walmart.com")
-          ? /\/ip\//.test(path)
-          : domainMatches(host, "homedepot.com")
-            ? /\/p\//.test(path) && !/\/p\/reviews\//.test(path)
-            : domainMatches(host, "lowes.com")
-              ? /\/pd\//.test(path)
-              : domainMatches(host, "target.com")
-                ? /\/p\//.test(path)
-                : domainMatches(host, "bestbuy.com")
-                  ? /(?:\/site\/[^/]+\/\d+\.p$|\/product\/[^/]+\/[a-z0-9]+\/sku\/\d+$)/.test(
-                      path,
-                    )
-                  : /\/(?:dp|ip|item|p|pd|pdp|product|products|sku|site)\//.test(
-                      path,
-                    ) || /\d{5,}/.test(path.split("/").pop() || "");
-    return knownRetailerPath ? 300 : -1;
-  }
+  const brandPage = brandMatchesHost(expectedBrand, host);
+  const retailerScore = reputableProductPageScore(host, path);
+  const merchantMatch = retailerMatchesHost(expectedRetailer, host);
+  if (merchantMatch && brandPage) return 450;
+  if (merchantMatch && retailerScore > 0) return 400;
+  if (merchantMatch && hasProductPagePathShape(path)) return 250;
+  if (brandPage) return 350;
+  if (retailerScore > 0) return retailerScore;
 
   return -1;
 }
@@ -409,6 +651,80 @@ function identityTokens(value: string) {
     .filter((token) => token.length > 2 && !identityNoise.has(token));
 }
 
+function escapeIdentityPattern(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function modelIdentifierShape(value: string) {
+  return value.replace(/\d+/g, "#");
+}
+
+function hasConflictingPathModelSibling(
+  discoveryCandidate: RawProductCandidate,
+  pageCandidate: RawProductCandidate,
+  pathIdentity: string,
+) {
+  const targetModels = stableModelIdentifiers(discoveryCandidate.name);
+  const titleModels = new Set(stableModelIdentifiers(pageCandidate.name));
+  const pathModels = stableModelIdentifiers(pathIdentity);
+  return targetModels.some(
+    (target) =>
+      titleModels.has(target) &&
+      pathModels.some(
+        (observed) =>
+          observed !== target &&
+          modelIdentifierShape(observed) === modelIdentifierShape(target),
+      ),
+  );
+}
+
+function officialLetterSuffixModelMatch(
+  discoveryCandidate: RawProductCandidate,
+  pageCandidate: RawProductCandidate,
+) {
+  const discoveryBrand = selectionBrand(discoveryCandidate);
+  const parsed = parsedPageUrl(pageCandidate.productUrl);
+  if (
+    !discoveryBrand ||
+    !parsed ||
+    !brandMatchesHost(discoveryBrand, parsed.hostname.toLowerCase())
+  ) {
+    return false;
+  }
+
+  const discoveryWords = new Set(
+    identityTokens(discoveryCandidate.name).filter(
+      (token) => !/\d/.test(token) && token !== normalizedText(discoveryBrand),
+    ),
+  );
+  const descriptiveOverlap = identityTokens(pageCandidate.name).filter(
+    (token) => discoveryWords.has(token),
+  ).length;
+  if (descriptiveOverlap < 2) return false;
+
+  let pageIdentity = `${pageCandidate.name} ${pageCandidate.productUrl}`;
+  try {
+    pageIdentity = decodeURIComponent(pageIdentity);
+  } catch {
+    // The undecoded URL still provides bounded identity evidence.
+  }
+
+  return candidateModelTokens(discoveryCandidate.name)
+    .filter(
+      (model) =>
+        model.length >= 6 && /[a-z]/i.test(model) && /\d/.test(model),
+    )
+    .some((model) => {
+      const parts = model.match(/[a-z]+|\d+/gi) || [];
+      if (parts.length < 2) return false;
+      const basePattern = parts.map(escapeIdentityPattern).join("[^a-z0-9]*");
+      return new RegExp(
+        `(?:^|[^a-z0-9])${basePattern}[a-z]{2,8}(?:[^a-z0-9]|$)`,
+        "i",
+      ).test(pageIdentity);
+    });
+}
+
 function pageIdentityScore(
   discoveryCandidate: RawProductCandidate,
   pageCandidate: RawProductCandidate,
@@ -419,7 +735,15 @@ function pageIdentityScore(
   } catch {
     // Keep the undecoded URL as identity evidence when it contains malformed escapes.
   }
+  const strongestPathIdentity = sourceUrlPathIdentitySegments(
+    pageCandidate.productUrl,
+  ).sort((first, second) => second.length - first.length)[0] || "";
   if (
+    likelyAccessory(`${pageCandidate.name} ${pageCandidate.productUrl}`) ||
+    haveConflictingNamedModelVariants(
+      discoveryCandidate.name,
+      `${pageCandidate.name} ${pageCandidate.productUrl}`,
+    ) ||
     haveConflictingNumericProductSpecs(
       discoveryCandidate.name,
       pageIdentityEvidence,
@@ -428,10 +752,14 @@ function pageIdentityScore(
     return 0;
   }
 
-  const sourceScore = pageSourceScore(pageCandidate);
+  const discoveryBrand = selectionBrand(discoveryCandidate);
+  const sourceScore = pageSourceScore(
+    pageCandidate,
+    discoveryBrand,
+    discoveryCandidate.retailer,
+  );
   if (sourceScore < 0) return 0;
 
-  const discoveryBrand = selectionBrand(discoveryCandidate);
   if (
     productPageMatchesIdentity({
       brand: discoveryBrand || undefined,
@@ -442,6 +770,19 @@ function pageIdentityScore(
     })
   ) {
     return 700 + sourceScore;
+  }
+
+  if (officialLetterSuffixModelMatch(discoveryCandidate, pageCandidate)) {
+    return 650 + sourceScore;
+  }
+  if (
+    hasConflictingPathModelSibling(
+      discoveryCandidate,
+      pageCandidate,
+      strongestPathIdentity,
+    )
+  ) {
+    return 0;
   }
 
   const discoveryModels = candidateModelTokens(discoveryCandidate.name);
@@ -489,25 +830,70 @@ function resolvedCandidate(
   discoveryCandidate: RawProductCandidate,
   pageCandidates: RawProductCandidate[],
 ) {
-  const page = pageCandidates
+  return resolvedCandidates(discoveryCandidate, pageCandidates)[0] || null;
+}
+
+function resolvedCandidates(
+  discoveryCandidate: RawProductCandidate,
+  pageCandidates: RawProductCandidate[],
+) {
+  const seenHosts = new Set<string>();
+  const rankedPages = pageCandidates
     .map((candidate) => ({
       candidate,
       score: pageIdentityScore(discoveryCandidate, candidate),
     }))
     .filter(({ score }) => score > 0)
-    .sort((first, second) => second.score - first.score)[0]?.candidate;
-  if (!page) return null;
+    .sort((first, second) => second.score - first.score);
+  const primary = rankedPages[0];
+  const remaining = rankedPages.slice(1).sort((first, second) => {
+    const commercePage = (entry: (typeof rankedPages)[number]) => {
+      const parsed = parsedPageUrl(entry.candidate.productUrl);
+      if (!parsed) return false;
+      const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+      return (
+        retailerMatchesHost(discoveryCandidate.retailer, host) ||
+        reputableProductPageScore(host, parsed.pathname.toLowerCase()) > 0
+      );
+    };
+    return (
+      Number(commercePage(second)) - Number(commercePage(first)) ||
+      second.score - first.score
+    );
+  });
 
-  return {
-    ...discoveryCandidate,
-    brand: selectionBrand(discoveryCandidate) || selectionBrand(page),
-    evidenceSources: [
-      ...discoveryCandidate.evidenceSources,
-      ...page.evidenceSources,
-    ],
-    imageUrl: discoveryCandidate.imageUrl || page.imageUrl,
-    productUrl: page.productUrl,
-  };
+  return (primary ? [primary, ...remaining] : []).flatMap(
+    ({ candidate: page }) => {
+      const pageHost =
+        parsedPageUrl(page.productUrl)?.hostname
+          .toLowerCase()
+          .replace(/^www\./, "") || "";
+      if (!pageHost || seenHosts.has(pageHost)) return [];
+      seenHosts.add(pageHost);
+
+      const pageMatchesShoppingMerchant = retailerMatchesHost(
+        discoveryCandidate.retailer,
+        pageHost,
+      );
+      return [
+        {
+          ...discoveryCandidate,
+          brand: selectionBrand(discoveryCandidate) || selectionBrand(page),
+          evidenceSources: [
+            ...discoveryCandidate.evidenceSources,
+            ...page.evidenceSources,
+          ],
+          imageUrl: discoveryCandidate.imageUrl || page.imageUrl,
+          price: pageMatchesShoppingMerchant ? discoveryCandidate.price : null,
+          currentShoppingOffer:
+            pageMatchesShoppingMerchant &&
+            discoveryCandidate.currentShoppingOffer === true,
+          productUrl: page.productUrl,
+        },
+      ];
+    },
+  )
+    .slice(0, MAX_PAGE_ALTERNATIVES_PER_CANDIDATE);
 }
 
 function hasUnrequestedNonUsVoltage(
@@ -535,8 +921,26 @@ async function resolveProductPages(options: {
 }) {
   const queries: string[] = [];
   const tasks = options.candidates.map(async (candidate) => {
-    if (candidateHasUsablePage(candidate)) return candidate;
-    if (queries.length >= options.maximumQueries) return null;
+    if (candidateHasUsablePage(candidate)) {
+      return {
+        candidates: [candidate],
+        diagnostic: {
+          discoveryName: candidate.name,
+          pageCandidates: [],
+          status: "direct" as const,
+        },
+      };
+    }
+    if (queries.length >= options.maximumQueries) {
+      return {
+        candidates: [],
+        diagnostic: {
+          discoveryName: candidate.name,
+          pageCandidates: [],
+          status: "query_budget_exhausted" as const,
+        },
+      };
+    }
 
     const query = productPageSearchQuery(candidate, options.category);
     queries.push(query);
@@ -545,17 +949,62 @@ async function resolveProductPages(options: {
       options.category,
       options.executionOptions,
     );
-    const resolved = resolvedCandidate(candidate, pageCandidates);
-    return resolved;
+    const resolved = resolvedCandidates(candidate, pageCandidates);
+    return {
+      candidates: resolved,
+      diagnostic: {
+        discoveryName: candidate.name,
+        pageCandidates: pageCandidates.map((pageCandidate) => ({
+          name: pageCandidate.name,
+          score: pageIdentityScore(candidate, pageCandidate),
+          url: pageCandidate.productUrl,
+        })),
+        status:
+          resolved.length > 0 ? ("resolved" as const) : ("unresolved" as const),
+      },
+    };
   });
   const resolved = await Promise.all(tasks);
 
   return {
-    candidates: resolved.filter(
-      (candidate): candidate is RawProductCandidate => candidate !== null,
-    ),
+    candidates: resolved.flatMap((entry) => entry.candidates),
+    diagnostics: resolved.map((entry) => entry.diagnostic),
     queries,
   };
+}
+
+async function processVerificationWaves<TCandidate, TAccepted, TOutcome>(options: {
+  acceptedCount: (accepted: TAccepted[]) => number;
+  candidates: TCandidate[];
+  maximumAccepted: number;
+  signal?: AbortSignal;
+  verifyWave: (
+    candidates: TCandidate[],
+    wave: number,
+    accepted: TAccepted[],
+  ) => Promise<{ accepted: TAccepted[]; outcome: TOutcome }>;
+  waveSize: number;
+}) {
+  const accepted: TAccepted[] = [];
+  const outcomes: TOutcome[] = [];
+
+  for (
+    let offset = 0, wave = 1;
+    offset < options.candidates.length;
+    offset += options.waveSize, wave += 1
+  ) {
+    throwIfRequestCancelled(options.signal);
+    const waveCandidates = options.candidates.slice(
+      offset,
+      offset + options.waveSize,
+    );
+    const result = await options.verifyWave(waveCandidates, wave, accepted);
+    accepted.push(...result.accepted);
+    outcomes.push(result.outcome);
+    if (options.acceptedCount(accepted) >= options.maximumAccepted) break;
+  }
+
+  return { accepted, outcomes };
 }
 
 function evidence<T>(
@@ -573,7 +1022,8 @@ function evidence<T>(
 }
 
 function candidateMetadata(candidate: RawProductCandidate): ProductMetadata {
-  const sourceUrl = candidate.productUrl;
+  const sourceUrl =
+    candidate.evidenceSources[0]?.url || candidate.productUrl;
   const price = candidate.price;
   const metadata: ProductMetadata = {
     offers:
@@ -608,6 +1058,9 @@ function toAssetCandidate(
   category: string,
 ): SelectionAssetCandidate {
   return {
+    availabilityTrust: candidate.currentShoppingOffer
+      ? { source: "shopping_offer", status: "available" }
+      : undefined,
     candidate,
     category,
     imageUrl: candidate.imageUrl || "",
@@ -723,9 +1176,15 @@ function selectionRequirementResult(
 
   const productSpecs = extractSpecsFromText(evidenceText, "metadata");
   for (const constraint of structured.specConstraints || []) {
+    const status = evaluateSpecConstraint(constraint, productSpecs);
+    const isKnownPreferenceConflict =
+      constraint.strictness === "soft" &&
+      constraint.source !== "avoid" &&
+      status === "fail";
+
     if (
-      constraint.strictness === "hard" &&
-      evaluateSpecConstraint(constraint, productSpecs) !== "pass"
+      (constraint.strictness === "hard" && status !== "pass") ||
+      isKnownPreferenceConflict
     ) {
       failed.push(constraint.label);
     }
@@ -792,29 +1251,37 @@ function trustedPrice(
   };
 }
 
+function trustedAvailability(product: SelectionAssetCandidate) {
+  return product.availabilityTrust?.status === "available";
+}
+
 function productIdentityKey(product: SelectionAssetCandidate) {
   const brand = normalizedText(selectionBrand(product.candidate) || "");
   const models = candidateModelTokens(product.name).sort();
-  if (models.length > 0) return `${brand}|${models.join("|")}`;
+  const variants = namedModelVariantTokens(product.name).sort();
+  if (models.length > 0) {
+    return `${brand}|${models.join("|")}|${variants.join("|")}`;
+  }
   return normalizedText(product.name);
 }
 
 function selectDistinctProducts(
-  products: Array<{
-    asset: SelectionAssetCandidate;
-    recommendation: SelectionProductRecommendation;
-  }>,
+  products: AcceptedSelection[],
 ) {
   const selected: typeof products = [];
   const seenIdentities = new Set<string>();
+  const seenPageUrls = new Set<string>();
   const brandCounts = new Map<string, number>();
 
   const tryAdd = (item: (typeof products)[number], enforceBrandDiversity: boolean) => {
     const identity = productIdentityKey(item.asset);
+    const pageUrl = normalizeProductEligibilityUrl(item.asset.pageUrl);
     const brand = normalizedText(selectionBrand(item.asset.candidate) || "unknown");
     if (seenIdentities.has(identity)) return;
+    if (pageUrl && seenPageUrls.has(pageUrl)) return;
     if (enforceBrandDiversity && (brandCounts.get(brand) || 0) >= 2) return;
     seenIdentities.add(identity);
+    if (pageUrl) seenPageUrls.add(pageUrl);
     brandCounts.set(brand, (brandCounts.get(brand) || 0) + 1);
     selected.push(item);
   };
@@ -859,91 +1326,166 @@ export async function selectProducts(options: {
       ),
     ),
   );
-  const discovered = searchResults.flatMap((result) => result.candidates);
+  const discovered = interleaveSearchCandidates(
+    searchResults.map((result) => result.candidates),
+  );
   const deduped = dedupeSelectionCandidates(discovered);
   const prefiltered = prefilterProductCandidates(
     deduped.candidates,
     input,
-    MAX_ASSET_CANDIDATES * 3,
+    MAX_PREFILTERED_CANDIDATES,
   );
-  const marketCompatibleCandidates = prefiltered.candidates.filter(
+  const primaryMarketCandidates = prefiltered.candidates.filter(
+    (candidate) => !isSecondaryMarketCandidate(candidate),
+  );
+  const marketCompatibleCandidates = primaryMarketCandidates.filter(
     (candidate) => !hasUnrequestedNonUsVoltage(candidate, input),
   );
-  const ranked = rankCandidates(
-    marketCompatibleCandidates,
-    plan.targets,
-    input,
-  ).slice(
-    0,
-    MAX_ASSET_CANDIDATES,
+  const ranked = selectVerificationCandidates(
+    rankCandidates(marketCompatibleCandidates, plan.targets, input),
+    MAX_VERIFICATION_CANDIDATES,
   );
-  const resolved = await resolveProductPages({
-    candidates: ranked,
-    category: baseProductCategoryFromQuery(input.query),
-    executionOptions,
-    maximumQueries: Math.max(
-      0,
-      MAX_TOTAL_SEARCH_QUERIES - queries.length,
-    ),
-  });
-  const assetCandidates = resolved.candidates
-    .map((candidate) =>
-      toAssetCandidate(candidate, baseProductCategoryFromQuery(input.query)),
-    );
-  const enriched = await enrichProductAssets(
-    { recommendations: assetCandidates },
-    {
-      concurrency: 4,
-      signal,
-    },
-  );
-  const validAssets = enriched.recommendations.filter(
-    (product) =>
-      Boolean(product.pageUrl) &&
-      selectionRequirementResult(product, input).isMatch,
-  );
+  const category = baseProductCategoryFromQuery(input.query);
   const budgetLimit = maxBudget(input);
-  const accepted = validAssets.flatMap((asset) => {
-    const price = trustedPrice(asset, budgetLimit);
-    if (!price.accepted) return [];
+  const resolutionDiagnostics: ProductSelectionTelemetry["resolutionDiagnostics"] = [];
+  const resolutionQueries: string[] = [];
+  const verifiedCandidates: ProductSelectionTelemetry["verifiedCandidates"] = [];
+  let assetCandidatesCount = 0;
+  let rejectedByAssetSafety = 0;
+  let rejectedByAvailability = 0;
+  let rejectedByPrice = 0;
+  let rejectedByRequirements = 0;
 
-    return [
-      {
-        asset,
-        recommendation: {
-          category: asset.category,
-          imageUrl: asset.imageUrl || null,
-          name: asset.name,
-          price:
-            price.price === null
-              ? null
-              : { amount: price.price, currency: "USD" as const },
-          productPageUrl: asset.pageUrl,
+  const verification = await processVerificationWaves<
+    RawProductCandidate,
+    AcceptedSelection,
+    ProductSelectionTelemetry["verificationWaves"][number]
+  >({
+    acceptedCount: (accepted) => selectDistinctProducts(accepted).length,
+    candidates: ranked,
+    maximumAccepted: MAX_RECOMMENDATIONS,
+    signal,
+    verifyWave: async (waveCandidates, wave, previouslyAccepted) => {
+      const resolved = await resolveProductPages({
+        candidates: waveCandidates,
+        category,
+        executionOptions,
+        maximumQueries: Math.max(
+          0,
+          MAX_TOTAL_SEARCH_QUERIES - queries.length - resolutionQueries.length,
+        ),
+      });
+      resolutionDiagnostics.push(...resolved.diagnostics);
+      resolutionQueries.push(...resolved.queries);
+
+      const assetCandidates = resolved.candidates.map((candidate) =>
+        toAssetCandidate(candidate, category),
+      );
+      assetCandidatesCount += assetCandidates.length;
+      const enriched = await enrichProductAssets(
+        { recommendations: assetCandidates },
+        {
+          concurrency: VERIFICATION_WAVE_SIZE,
+          signal,
         },
-      },
-    ];
+      );
+      const pageAssets = enriched.recommendations.filter((product) =>
+        Boolean(product.pageUrl),
+      );
+      const availableAssets = pageAssets.filter(trustedAvailability);
+      const validAssets = availableAssets.filter(
+        (product) => selectionRequirementResult(product, input).isMatch,
+      );
+      const waveAccepted: AcceptedSelection[] = validAssets.flatMap((asset) => {
+        const price = trustedPrice(asset, budgetLimit);
+        if (!price.accepted) return [];
+
+        return [
+          {
+            asset,
+            recommendation: {
+              category: asset.category,
+              imageUrl: asset.imageUrl || null,
+              name: asset.name,
+              price:
+                price.price === null
+                  ? null
+                  : { amount: price.price, currency: "USD" as const },
+              productPageUrl: asset.pageUrl,
+            },
+          },
+        ];
+      });
+      const waveRejectedByAssetSafety =
+        enriched.recommendations.length - pageAssets.length;
+      const waveRejectedByAvailability =
+        pageAssets.length - availableAssets.length;
+      const waveRejectedByRequirements =
+        availableAssets.length - validAssets.length;
+      const waveRejectedByPrice = validAssets.length - waveAccepted.length;
+      rejectedByAssetSafety += waveRejectedByAssetSafety;
+      rejectedByAvailability += waveRejectedByAvailability;
+      rejectedByRequirements += waveRejectedByRequirements;
+      rejectedByPrice += waveRejectedByPrice;
+      verifiedCandidates.push(
+        ...enriched.recommendations.map((product) => ({
+          availabilityStatus: product.availabilityTrust?.status || "unknown",
+          name: product.name,
+          pageUrl: product.pageUrl,
+          price: product.priceTrust?.price ?? null,
+          priceStatus: product.priceTrust?.status || "missing",
+          requirementFailures: selectionRequirementResult(product, input).failed,
+        })),
+      );
+
+      return {
+        accepted: waveAccepted,
+        outcome: {
+          acceptedCandidates: waveAccepted.length,
+          candidateNames: waveCandidates.map((candidate) => candidate.name),
+          cumulativeAcceptedCandidates: selectDistinctProducts([
+            ...previouslyAccepted,
+            ...waveAccepted,
+          ]).length,
+          cumulativeLogicalSearchCalls:
+            queries.length + resolutionQueries.length,
+          rejectedByAssetSafety: waveRejectedByAssetSafety,
+          rejectedByAvailability: waveRejectedByAvailability,
+          rejectedByPrice: waveRejectedByPrice,
+          rejectedByRequirements: waveRejectedByRequirements,
+          wave,
+        },
+      };
+    },
+    waveSize: VERIFICATION_WAVE_SIZE,
   });
-  const recommendations = selectDistinctProducts(accepted);
+  const recommendations = selectDistinctProducts(verification.accepted);
 
   return {
     result: { recommendations },
     telemetry: {
-      assetCandidates: assetCandidates.length,
+      assetCandidates: assetCandidatesCount,
       candidatesAfterHardFilters: marketCompatibleCandidates.length,
       candidatesDiscovered: discovered.length,
       candidatesReturned: recommendations.length,
       duplicateCandidatesRemoved: deduped.duplicateCount,
-      logicalSearchCalls: queries.length + resolved.queries.length,
+      logicalSearchCalls: queries.length + resolutionQueries.length,
       physicalSearchAttempts,
       queries,
-      rejectedByAssetSafety:
-        enriched.recommendations.length -
-        enriched.recommendations.filter((product) => product.pageUrl)
-          .length,
-      rejectedByRequirements:
-        enriched.recommendations.filter((product) => product.pageUrl)
-          .length - validAssets.length,
-      resolutionQueries: resolved.queries,
+      rankedCandidates: ranked.map((candidate) => ({
+        name: candidate.name,
+        price: candidate.price,
+        productUrl: candidate.productUrl,
+        retailer: candidate.retailer || null,
+      })),
+      rejectedByAssetSafety,
+      rejectedByAvailability,
+      rejectedByMerchant:
+        prefiltered.candidates.length - primaryMarketCandidates.length,
+      rejectedByPrice,
+      rejectedByRequirements,
+      resolutionDiagnostics,
+      resolutionQueries,
       searchDiagnostics: searchResults.map((searchResult, index) => ({
         ...(searchResult.diagnostics.errorKind
           ? { errorKind: searchResult.diagnostics.errorKind }
@@ -953,6 +1495,8 @@ export async function selectProducts(options: {
         rejectionReasons: searchResult.diagnostics.rejectionReasons,
         returnedCandidates: searchResult.diagnostics.returnedCandidates,
       })),
+      verificationWaves: verification.outcomes,
+      verifiedCandidates,
     },
   };
 }
@@ -964,15 +1508,22 @@ export const productSelectionTestExports = {
   candidateMetadata,
   dedupeSelectionCandidates,
   discoveryIdentityKey,
+  interleaveSearchCandidates,
+  isSecondaryMarketCandidate,
   maxBudget,
   pageIdentityScore,
   pageSourceScore,
+  processVerificationWaves,
   productIdentityKey,
   productPageSearchQuery,
   rankCandidates,
   resolvedCandidate,
+  resolvedCandidates,
+  resolveProductPages,
   selectionBrand,
   selectionRequirementResult,
   selectDistinctProducts,
+  selectVerificationCandidates,
+  trustedAvailability,
   trustedPrice,
 };

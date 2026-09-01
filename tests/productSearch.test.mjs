@@ -3,6 +3,7 @@ import { afterEach, describe, it } from "node:test";
 
 import { clearCacheForTests } from "../lib/cache.ts";
 import {
+  PRODUCT_SEARCH_CACHE_TTL_MS,
   prefilterProductCandidates,
   productSearchTestExports,
   searchShoppingProducts,
@@ -47,6 +48,19 @@ function candidate(name, price = 100) {
 }
 
 describe("bounded product search", () => {
+  it("keeps discovery evidence fresh for current inventory", () => {
+    assert.equal(PRODUCT_SEARCH_CACHE_TTL_MS, 5 * 60 * 1_000);
+  });
+
+  it("removes site operators from Shopping queries", () => {
+    assert.equal(
+      productSearchTestExports.sanitizeQuery(
+        'site:shopping.google.com robot vacuum site:example.com "self emptying"',
+      ),
+      'robot vacuum "self emptying"',
+    );
+  });
+
   it("normalizes shopping fields and rejects accessories", () => {
     const normalized = productSearchTestExports.normalizeShoppingResult(
       {
@@ -67,11 +81,26 @@ describe("bounded product search", () => {
     );
 
     assert.equal(normalized.candidate.price, 169.99);
+    assert.equal(normalized.candidate.retailer, "Walmart");
+    assert.equal(normalized.candidate.currentShoppingOffer, true);
     assert.equal(accessory.candidate, null);
     assert.equal(accessory.reason, "accessory_or_part");
   });
 
-  it("filters wrong product types, accessories, used items, and extreme over-budget items", () => {
+  it("does not mark an incomplete Shopping result as a current offer", () => {
+    const missingPrice = productSearchTestExports.normalizeShoppingResult(
+      {
+        link: "https://shop.example/products/shark-iq",
+        source: "Example",
+        title: "Shark IQ Robot Vacuum",
+      },
+      "robot vacuum",
+    );
+
+    assert.equal(missingPrice.candidate.currentShoppingOffer, undefined);
+  });
+
+  it("filters wrong product types, accessories, non-new items, and extreme over-budget items", () => {
     const input = { query: "robot vacuum", budget: "$300" };
     const result = prefilterProductCandidates(
       [
@@ -79,6 +108,8 @@ describe("bounded product search", () => {
         candidate("Cordless Stick Vacuum", 150),
         candidate("Replacement Filter for Shark Robot Vacuum", 20),
         candidate("Refurbished Shark IQ Robot Vacuum", 200),
+        candidate("Recertified Shark IQ Robot Vacuum", 200),
+        candidate("Open-Box Shark IQ Robot Vacuum", 200),
         candidate("Premium Robot Vacuum", 900),
       ],
       input,
@@ -97,6 +128,16 @@ describe("bounded product search", () => {
         "over_budget",
       ]),
     );
+  });
+
+  it("allows non-new condition terms only when the shopper requests them", () => {
+    const result = prefilterProductCandidates(
+      [candidate("Recertified MSI 27-inch Gaming Monitor", 110)],
+      { query: "recertified gaming monitor", budget: "$150" },
+      10,
+    );
+
+    assert.equal(result.candidates.length, 1);
   });
 
   it("performs one physical request per uncached logical search", async () => {

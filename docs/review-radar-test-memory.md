@@ -4,6 +4,50 @@
 
 ---
 
+## PR-11 live selection-accuracy contract (2026-08-31)
+
+- A returned card requires affirmative current product-page availability.
+  Unknown, explicitly unavailable, preorder, or unfetched pages do not qualify.
+  Explicit page or fulfillment unavailability outranks a priced structured
+  offer whose availability field is missing.
+- Prefer a current matching page offer over discovery price evidence. Compare
+  only the strongest available evidence tier for plausibility; keep cross-tier
+  material disagreements conflicting and ineligible. A budget never turns an
+  uncertain or stale amount into authority.
+- Keep Shopping queries brand- and model-neutral unless the shopper requested
+  the brand or model. Interleave query results before ranking so one query
+  cannot occupy every verification slot, and allow no more than two candidates
+  from one brand before using remaining brands.
+- Preserve retailer identity from Shopping. Prefer exact product pages from the
+  named storefront when identity is strong; otherwise a model-specific official
+  manufacturer page may qualify. Reject support, documentation, manual,
+  download, listing, category, review, Q&A, secondary-market, and default non-US
+  pages as destinations.
+- Product identity includes stable model IDs and nearby named variants such as
+  Evo, Plus, Pro, Max, and Ultra. A named sibling conflict fails closed. A
+  letter-only retail/color suffix may extend a stable base model only on the
+  official brand host with additional descriptive identity overlap; it must
+  never bridge a different numeric model.
+- Treat self-emptying and programmability as concrete evidence-backed features.
+  Extract nominal coffee-maker cup capacity. A known contradiction to a soft
+  numeric preference is ineligible, while missing evidence for that soft
+  preference remains unknown rather than invented.
+- A standalone robot-vacuum dock, station, or self-empty base remains a
+  complement even when surrounding snippets mention compatible vacuums. A
+  complete robot vacuum sold with its base remains eligible.
+- Reject unrequested used, refurbished, renewed, recertified, preowned, and
+  open-box offers before page verification. Exclude secondary-market merchants
+  unless a future explicitly approved product decision changes the new-product
+  contract.
+- If every Shopping query fails at the transport/provider boundary, return a
+  retryable 502. Do not misreport provider failure as a successful empty
+  shortlist.
+- The final-source live sample returned correct current coffee-maker, robot-
+  vacuum, and monitor cards but one shop-vac search returned empty. Preserve
+  that distinction: sampled precision improved materially; catalog recall and
+  empty-shortlist frequency remain unproven. Never retry until a preferred card
+  appears and call that repeatability.
+
 ## PR-10 selection-only runtime contract (2026-08-31)
 
 - `/api/recommendations` is the sole recommendation API and exports only
@@ -3980,3 +4024,55 @@ a known conservative undercount.
 - A zero-spend runtime check may call the disabled experimental route only far
   enough to prove `invalid_config` occurs before parsing/client creation. Do not
   submit a recommendation search merely to test launch selection.
+
+## PR-12 adaptive finalist contract (2026-08-31)
+
+- Discovery remains at most three Shopping queries. Verify at most nine ranked
+  candidates in waves of three, without repeating discovery, and never exceed
+  twelve logical Shopping/page-resolution searches.
+- Start another wave only while fewer than five distinct products have passed.
+  Cancellation prevents later waves. Direct product URLs remain eligible when
+  the resolution-search allowance is spent.
+- Every wave uses the same page, identity, product-type, condition, merchant,
+  availability, requirement, price, source, SSRF, and image gates. Later waves
+  are not a fallback around validation.
+- Deduplicate final cards by both stable identity and normalized canonical
+  product-page URL. One buyable page cannot occupy multiple cards under
+  different discovery titles.
+- Manufacturer family/lineup/range/series landing pages are not exact product
+  destinations. A multi-tool combo kit is not a standalone cordless drill;
+  an actual drill kit with battery and charger remains eligible.
+- Current Shopping discovery evidence expires after five minutes. Product-page
+  price and availability evidence expires after two minutes. Preserve cache
+  coalescing, size bounds, cancellation, and SSRF controls.
+- A failed recall threshold is evidence to investigate safe resolution and
+  availability coverage, not authority to retry, raise ceilings, accept family
+  pages, or infer availability from price.
+
+## PR-13 prerequisite market-quality contract (2026-09-01)
+
+- The dated market-leader registry is QA-only. A leader entry needs at least
+  two independent current source domains and one comparative test source; it
+  cannot become production discovery, eligibility, price, availability, or
+  ranking evidence.
+- Preserve exact stable model identity across Shopping discovery, organic page
+  resolution, URL path identity, and final cards. Decimal specifications must
+  survive URL separators; measurements such as MPH/CFM must not become model
+  IDs; named and numeric siblings never inherit evidence.
+- One candidate-local page search may yield at most two exact product pages on
+  distinct hosts. Do not add another resolution operation, transfer one
+  merchant's price, or use discontinued, parts, category, listing, editorial,
+  support, foreign-market, or unsafe pages.
+- A current priced Shopping offer can provide fallback availability only after
+  exact resolution to a product-shaped page on the same Shopping merchant.
+  Missing-price offers, unresolved Google offers, cross-merchant pages, and
+  page price alone do not qualify. Explicit current page unavailability always
+  overrides the fallback.
+- The PR-13 prerequisite matrix is three fresh-server, cache-cold single
+  attempts across the frozen eight cases, without retries. Required gates are
+  at least 21/24 non-empty and shop vac 2/3 while keeping one OpenAI response,
+  no more than twelve current logical operations, and all safety gates.
+- The accepted prerequisite result is 23/24 non-empty, shop vac 2/3, mean
+  12,507 ms, nearest-rank p95 18,806 ms, and maximum 20,419 ms. This authorizes
+  a stop-point, not market-scout implementation or a claim that current cards
+  are market leaders.

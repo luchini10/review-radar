@@ -111,6 +111,14 @@ export const SPEC_DICTIONARY: SpecDefinition[] = [
     ],
   },
   {
+    id: "capacityCups",
+    label: "Cup capacity",
+    unit: "cups",
+    kind: "numeric",
+    direction: "higher",
+    matchers: [/(\d{1,2})\s*-?\s*cups?\b/i],
+  },
+  {
     id: "btu",
     label: "BTU",
     unit: "BTU",
@@ -231,7 +239,7 @@ export const SPEC_DICTIONARY: SpecDefinition[] = [
     unit: null,
     kind: "boolean",
     truePattern:
-      /\b(?:batter(?:y|ies)\s+(?:and\s+charger\s+)?included|includes?\s+(?:a\s+)?batter(?:y|ies)|with\s+batter(?:y|ies)|batter(?:y|ies)\s+(?:and\s+charger\s+)?kit|comes?\s+with\s+(?:a\s+)?battery)\b/i,
+      /\b(?:batter(?:y|ies)\s+(?:and\s+charger\s+)?included|includes?\s+(?:\(\d+\)\s+)?(?:(?:a|one|two|three|four|\d+)\s+)?(?:\d+(?:\.\d+)?\s*(?:ah|v)\s+)?(?:lithium(?:-ion)?\s+)?batter(?:y|ies)|(?:with|w\/)\s+(?:\(\d+\)\s+)?(?:(?:a|one|two|three|four|\d+)\s+)?(?:\d+(?:\.\d+)?\s*(?:ah|v)\s+)?(?:lithium(?:-ion)?\s+)?batter(?:y|ies)|\bkit\b.{0,45}\bbatter(?:y|ies)|batter(?:y|ies)\s+(?:and\s+charger\s+)?kit|comes?\s+with\s+(?:a\s+)?battery)\b/i,
     falsePattern:
       /\b(?:bare\s*tool|tool[\s-]?only|without\s+(?:a\s+)?battery|no\s+battery|batter(?:y|ies)\s+not\s+included|sold\s+as\s+(?:a\s+)?bare\s*tool)\b/i,
   },

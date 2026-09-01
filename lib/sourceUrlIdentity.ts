@@ -13,9 +13,16 @@ export function sourceUrlPathIdentitySegments(
     const pathname = decodeURIComponent(new URL(value).pathname);
     return pathname
       .split("/")
-      .map((segment) =>
-        segment.replace(/[^a-z0-9]+/gi, " ").replace(/\s+/g, " ").trim(),
-      )
+      .map((segment) => {
+        const normalized = segment
+          .replace(/[^a-z0-9]+/gi, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+        return normalized.replace(
+          /\b(\d{1,3})\s+(\d)\s+(?=(?:display|in(?:ch)?|inches|laptop|notebook|screen)\b)/gi,
+          "$1.$2 ",
+        );
+      })
       .filter(Boolean);
   } catch {
     return [];

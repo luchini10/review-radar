@@ -19,6 +19,7 @@ import {
 } from "./priceParsing.ts";
 import { assessProductPriceTrust } from "./productPriceTrust.ts";
 import type {
+  ProductAvailabilityTrust,
   ProductFieldEvidence,
   ProductMetadata,
   ProductOffer,
@@ -32,6 +33,7 @@ import { sourceUrlPathIdentitySegments } from "./sourceUrlIdentity.ts";
 import { throwIfRequestCancelled } from "./requestCancellation.ts";
 
 type ProductAssetRecommendation = {
+  availabilityTrust?: ProductAvailabilityTrust;
   category?: string;
   imageUrl: string;
   name: string;
@@ -56,7 +58,7 @@ type ProductPageFetchResult = {
 };
 
 const PRODUCT_ASSET_TIMEOUT_MS = 5000;
-const PRODUCT_ASSET_CACHE_TTL_MS = 1000 * 60 * 30;
+export const PRODUCT_ASSET_CACHE_TTL_MS = 2 * 60 * 1_000;
 const PRODUCT_ASSET_MAX_BYTES = 1_500_000;
 const PRODUCT_ASSET_MAX_REDIRECTS = 2;
 const PRODUCT_ASSET_CONCURRENCY = 4;
@@ -480,6 +482,172 @@ function allOffers(product: Record<string, unknown>) {
   return isRecord(offers) ? [offers] : [];
 }
 
+type NormalizedAvailability = NonNullable<
+  ProductOffer["availability"]
+>["value"];
+
+function normalizeAvailability(value: unknown): NormalizedAvailability {
+  if (value === true) return "in_stock";
+  if (value === false) return "out_of_stock";
+
+  const normalized = asString(value)
+    .toLowerCase()
+    .replace(/^https?:\/\/(?:www\.)?schema\.org\//, "")
+    .replace(/[^a-z]/g, "");
+  if (["instock", "onlineonly"].includes(normalized)) return "in_stock";
+  if (normalized === "limitedavailability") return "limited_availability";
+  if (["outofstock", "soldout", "discontinued"].includes(normalized)) {
+    return "out_of_stock";
+  }
+  if (["backorder", "preorder", "presale"].includes(normalized)) {
+    return "preorder";
+  }
+  return "unknown";
+}
+
+function availabilityFromPageMetadata(html: string) {
+  const values = [
+    getMetaContent(html, "product:availability"),
+    getMetaContent(html, "og:availability"),
+    getMetaItempropContent(html, "availability"),
+  ];
+  const itempropLink = html.match(
+    /<link[^>]+itemprop=["']availability["'][^>]+href=["']([^"']+)["'][^>]*>/i,
+  )?.[1];
+  if (itempropLink) values.push(itempropLink);
+  return values
+    .map(normalizeAvailability)
+    .find((status) => status !== "unknown") || "unknown";
+}
+
+function availabilityField(
+  value: NormalizedAvailability,
+  sourceUrl: string,
+): ProductFieldEvidence<NormalizedAvailability> {
+  return field(value, sourceUrl, "json_ld", "High");
+}
+
+function unknownAvailability(): ProductAvailabilityTrust {
+  return { source: "unverified_page", status: "unknown" };
+}
+
+function productScopedVisibleText(html: string) {
+  const withoutNonVisibleContent = html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi, " ");
+  const visible = compactText(withoutNonVisibleContent);
+  const heading = getFirstHeadingText(html);
+  const start = heading
+    ? visible.toLowerCase().indexOf(heading.toLowerCase())
+    : -1;
+  const productStart = start >= 0 ? start : 0;
+  const bounded = visible.slice(productStart, productStart + 30_000);
+  const lower = bounded.toLowerCase();
+  const boundary = [
+    "members also considered",
+    "related products",
+    "similar items",
+    "we also recommend",
+    "you may also like",
+  ]
+    .map((marker) => lower.indexOf(marker))
+    .filter((index) => index > 0)
+    .sort((first, second) => first - second)[0];
+  return boundary === undefined ? bounded : bounded.slice(0, boundary);
+}
+
+function visibleAvailability(html: string) {
+  const text = productScopedVisibleText(html);
+  if (
+    /\b(?:currently unavailable|discontinued|out of stock|sold out)\b/i.test(
+      text,
+    )
+  ) {
+    return "unavailable" as const;
+  }
+  const unavailableChannels = new Set(
+    Array.from(
+      text.matchAll(
+        /\b(shipping|pickup|delivery)\b[\s:,-]{0,12}(?:not available|unavailable)\b/gi,
+      ),
+      (match) => match[1]?.toLowerCase(),
+    ).filter(Boolean),
+  );
+  if (unavailableChannels.size >= 2) return "unavailable" as const;
+
+  const positiveFulfillment =
+    /\b(?:shipping|pickup|delivery)\b[\s:,-]{0,12}(?:arrives|available|in stock)\b/i.test(
+      text,
+    ) ||
+    /\bavailable\s+for\s+(?:shipping|pickup|delivery)\b/i.test(text) ||
+    /\b(?:add to (?:bag|basket|cart)|buy now)\b/i.test(text);
+  return positiveFulfillment ? "available" as const : "unknown" as const;
+}
+
+function assessProductPageAvailability(input: {
+  html: string;
+  productName: string;
+}): ProductAvailabilityTrust {
+  if (!input.html) return unknownAvailability();
+
+  const product = selectMatchingJsonLdProduct(
+    parseJsonLdProducts(input.html),
+    input.productName,
+  );
+  const offers = product ? allOffers(product) : [];
+  const offerStatuses = offers.map((offer) =>
+    normalizeAvailability(offer.availability),
+  );
+  if (
+    offerStatuses.some(
+      (status) =>
+        status === "in_stock" || status === "limited_availability",
+    )
+  ) {
+    return { source: "structured_availability", status: "available" };
+  }
+
+  if (
+    offerStatuses.length > 0 &&
+    offerStatuses.every(
+      (status) => status === "out_of_stock" || status === "preorder",
+    )
+  ) {
+    return { source: "structured_availability", status: "unavailable" };
+  }
+
+  const pageAvailability = availabilityFromPageMetadata(input.html);
+  if (
+    pageAvailability === "in_stock" ||
+    pageAvailability === "limited_availability"
+  ) {
+    return { source: "page_metadata", status: "available" };
+  }
+  if (
+    pageAvailability === "out_of_stock" ||
+    pageAvailability === "preorder"
+  ) {
+    return { source: "page_metadata", status: "unavailable" };
+  }
+
+  const visibleStatus = visibleAvailability(input.html);
+  if (visibleStatus !== "unknown") {
+    return { source: "page_metadata", status: visibleStatus };
+  }
+
+  const unknownPricedOffer = offers.some(
+    (offer, index) =>
+      offerStatuses[index] === "unknown" && priceFromOffer(offer) !== null,
+  );
+  if (unknownPricedOffer) {
+    return { source: "structured_offer", status: "available" };
+  }
+
+  return unknownAvailability();
+}
+
 function priceFromValue(value: unknown) {
   return parseBestMoneyAmount(value, {
     allowBareNumeric: true,
@@ -862,7 +1030,8 @@ function priceCurrencyFromPageMetadata(html: string) {
   return (
     getMetaContent(html, "product:price:currency") ||
     getMetaContent(html, "og:price:currency") ||
-    getMetaItempropContent(html, "priceCurrency")
+    getMetaItempropContent(html, "priceCurrency") ||
+    (/\bUSD\s*\$/i.test(productScopedVisibleText(html)) ? "USD" : "")
   );
 }
 
@@ -969,7 +1138,22 @@ function buildMetadata(input: {
     input.product.name,
   );
   const offers = product ? allOffers(product) : [];
-  const offer = offers[0] || null;
+  const priceEligibleOffers = offers.filter((candidate) => {
+    const status = normalizeAvailability(candidate.availability);
+    return status !== "out_of_stock" && status !== "preorder";
+  });
+  const offer = priceEligibleOffers
+    .map((candidate) => ({
+      candidate,
+      price: priceFromOffer(candidate),
+    }))
+    .filter(
+      (candidate): candidate is {
+        candidate: Record<string, unknown>;
+        price: number;
+      } => candidate.price !== null,
+    )
+    .sort((first, second) => first.price - second.price)[0]?.candidate || null;
   const pageIdentityTitle =
     (product ? asString(product.name) : "") ||
     getMetaContent(input.html, "og:title") ||
@@ -985,7 +1169,7 @@ function buildMetadata(input: {
     pageIdentityTitle,
     targetName: input.product.name,
   });
-  const price = lowestOfferPrice(offers) ?? pageMetadataPrice;
+  const price = lowestOfferPrice(priceEligibleOffers) ?? pageMetadataPrice;
   const priceCurrency =
     (offer ? getPriceCurrencyFromRecord(offer) : "") ||
     priceCurrencyFromPageMetadata(input.html);
@@ -1048,6 +1232,14 @@ function buildMetadata(input: {
     const priceConfidence = offer ? "High" : "Medium";
 
     metadata.offers.push({
+      ...(offer
+        ? {
+            availability: availabilityField(
+              normalizeAvailability(offer.availability),
+              canonicalUrl,
+            ),
+          }
+        : {}),
       price: field(price, canonicalUrl, priceSourceType, priceConfidence),
       priceCurrency: field(priceCurrency || null, canonicalUrl, priceSourceType, priceConfidence),
     });
@@ -1113,6 +1305,7 @@ async function getVerifiedProductAssets(
     logImageResolutionDebug(product.name, imageResolution);
 
     return {
+      availabilityTrust: unknownAvailability(),
       metadata: {
         ...(product.metadata || { offers: [] }),
         ...(imageResolution.url
@@ -1144,6 +1337,7 @@ async function getVerifiedProductAssets(
     logImageResolutionDebug(product.name, imageResolution);
 
     return {
+      availabilityTrust: unknownAvailability(),
       metadata: {
         ...(product.metadata || { offers: [] }),
         ...(imageResolution.url
@@ -1164,6 +1358,7 @@ async function getVerifiedProductAssets(
     logImageResolutionDebug(product.name, imageResolution);
 
     return {
+      availabilityTrust: unknownAvailability(),
       metadata: {
         ...(product.metadata || { offers: [] }),
         ...(imageResolution.url
@@ -1188,6 +1383,7 @@ async function getVerifiedProductAssets(
     logImageResolutionDebug(product.name, imageResolution);
 
     return {
+      availabilityTrust: unknownAvailability(),
       metadata: {
         ...(product.metadata || { offers: [] }),
         ...(imageResolution.url
@@ -1208,6 +1404,7 @@ async function getVerifiedProductAssets(
     logImageResolutionDebug(product.name, imageResolution);
 
     return {
+      availabilityTrust: unknownAvailability(),
       metadata: {
         ...(product.metadata || { offers: [] }),
         ...(imageResolution.url
@@ -1257,6 +1454,16 @@ async function getVerifiedProductAssets(
   }
 
   const productImageUrl = imageResolution.url;
+  const pageAvailabilityTrust = assessProductPageAvailability({
+    html,
+    productName: product.name,
+  });
+  const availabilityTrust =
+    pageAvailabilityTrust.status === "unknown" &&
+    product.availabilityTrust?.source === "shopping_offer" &&
+    product.availabilityTrust.status === "available"
+      ? product.availabilityTrust
+      : pageAvailabilityTrust;
   const metadata = html
     ? mergeMetadata(
         product.metadata,
@@ -1277,6 +1484,7 @@ async function getVerifiedProductAssets(
   logImageResolutionDebug(product.name, imageResolution);
 
   return {
+    availabilityTrust,
     pageUrl: productPageUrl,
     imageUrl: productImageUrl,
     metadata: metadataWithImage,
@@ -1334,6 +1542,7 @@ export async function enrichProductAssets<T extends ProductAssetResult>(
 }
 
 export const productAssetsTestExports = {
+  assessProductPageAvailability,
   buildMetadata,
   extractDimensionFromText,
   extractSpecTableText,

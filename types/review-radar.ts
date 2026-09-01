@@ -129,8 +129,25 @@ export type ProductFieldEvidence<T = string | number | string[] | null> = {
 };
 
 export type ProductOffer = {
+  availability?: ProductFieldEvidence<
+    | "in_stock"
+    | "limited_availability"
+    | "out_of_stock"
+    | "preorder"
+    | "unknown"
+  >;
   price: ProductFieldEvidence<number | null>;
   priceCurrency: ProductFieldEvidence<string | null>;
+};
+
+export type ProductAvailabilityTrust = {
+  source:
+    | "page_metadata"
+    | "shopping_offer"
+    | "structured_availability"
+    | "structured_offer"
+    | "unverified_page";
+  status: "available" | "unavailable" | "unknown";
 };
 
 export type ProductEligibilityVerdict = {
@@ -198,6 +215,8 @@ export type RawProductCandidate = {
   productUrl: string;
   imageUrl: string | null;
   price: number | null;
+  currentShoppingOffer?: boolean;
+  retailer?: string | null;
   availableColors: string[];
   dimensions: {
     width: number | null;

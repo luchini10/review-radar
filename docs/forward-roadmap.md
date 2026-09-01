@@ -4611,6 +4611,165 @@ experiment and related kickoff. Reintroducing report generation, citations,
 reviews, background jobs, or alternate architectures requires a new product
 decision and new evidence; none remains dormant in the runtime.
 
+### PR-11 — live selection-accuracy hardening
+
+**Status:** complete and fully validated in the current uncommitted working
+tree on committed PR-10 snapshot
+`ce634ab3c2fab757601ae6fabd38b0ecab6534b4`. No push, deployment, release, or
+production-data action is part of this phase.
+
+**Objective:** test whether the simplified card is populated with the right
+current product, variant, price, availability, and product page across several
+unrelated shopping categories, then correct generalized false-positive paths.
+The card itself remains the PR-10 minimal card; this phase changes selection
+authority, not card complexity.
+
+**Observed causes:** fresh live probes exposed a standalone robot-vacuum dock
+as a complete product and a 12-cup coffee maker for a 14-cup preference. The
+broader trace also showed stale Shopping prices disagreeing with current page
+prices, unavailable or unverified pages, support/listing/foreign-market pages,
+model-family and named-variant ambiguity, inferred brand/model queries
+concentrating the finalist slate, and one query monopolizing the five page-
+verification slots. A complete Shopping transport failure could also look
+like a legitimate empty result.
+
+**Generalized correction:** availability is now an affirmative page gate;
+explicit out-of-stock state outranks an availability-free priced offer.
+Current structured page prices outrank discovery prices, and implausible or
+conflicting prices still fail closed. Candidate discovery is interleaved
+across neutral Shopping queries, prioritizes resolvable brand/model identity
+and trustworthy merchants, limits per-brand verification concentration, and
+rejects secondary-market, non-US, support/manual/listing/Q&A, accessory, and
+unrequested non-new offers. Product resolution preserves stable model IDs and
+named variants while allowing a bounded official letter-only merchandising
+suffix. The selector now recognizes concrete self-emptying and programmable
+features, nominal cup capacity, and known numeric contradictions even when an
+ordinary priority remains soft. Standalone self-empty bases are rejected
+without rejecting complete vacuum-and-base bundles. If every Shopping call
+fails, the API returns a retryable 502 instead of a false empty success.
+
+**Fresh final-source sample:** a 14-cup programmable coffee-maker search under
+$150 returned the current Cuisinart DCC-3200 at $119.95 in 6,858 ms; a self-
+emptying robot-vacuum search under $300 returned the AIRROBO L50+ at $209.99
+in 7,975 ms; and a 27-inch 1440p gaming-monitor search at 144 Hz or higher
+under $300 returned the Z-EDGE UG27Q at $179.99 in 9,524 ms. Current official
+or retailer pages independently matched each returned identity, specification,
+price, and buyable state. The same final-source shop-vac run under $200
+returned an empty shortlist in 6,473 ms. Earlier runs found valid current shop
+vacuums, so this is an intermittent provider/verification recall limitation,
+not evidence that no qualifying product exists. The intended safety tradeoff
+is to return nothing rather than fill the card with a wrong, stale, unavailable,
+or unverified product.
+
+**Verification:** 276/276 unit tests across 41 suites, TypeScript typecheck,
+zero-warning ESLint, Next.js 16.3.3 production build, and Playwright 7/7 across
+desktop/mobile Chromium pass. The build exposes only `/`, `/_not-found`, and
+`/api/recommendations`. Live debug telemetry remained local and contained no
+raw provider response or credential.
+
+**Decision:** the sampled returned cards are accurate, but broad recall is not
+yet universal. A future recall phase must measure empty-shortlist frequency
+without weakening the current availability, identity, requirement, product-
+type, price, or source gates. It must not treat retries until a desired answer
+appears as accuracy evidence.
+
+### PR-12 — adaptive recall and freshness hardening
+
+**Status:** implemented and locally validated in the current uncommitted tree
+on the PR-11 working state. The planned live recall gate did not pass.
+
+**Objective:** reduce false empty shortlists without weakening PR-11's product
+identity, type, condition, availability, requirement, price, source, or SSRF
+boundaries.
+
+**Implementation:** the three-query discovery path now ranks a nine-candidate
+verification queue and processes it in three-candidate waves. A rejected wave
+is backfilled without repeating discovery, up to five distinct cards or the
+hard ceiling of twelve logical Shopping/page-resolution searches. Final
+selection also deduplicates canonical product-page URLs. Discovery cache life
+is five minutes and current product-page price/availability evidence is two
+minutes. Local-only telemetry records bounded wave and gate-loss counts.
+
+The live matrix exposed two additional precision defects. Differently titled
+candidates could resolve to one product URL, and a manufacturer `...-series`
+landing page could represent multiple variants as one exact product. Both now
+fail closed. A cordless-drill request also rejects multi-tool combo kits while
+preserving a standalone drill kit with battery and charger.
+
+**Frozen live result:** 24 single-attempt, cache-cold requests covered eight
+categories over three rounds. Fifteen were non-empty: coffee maker 2/3, robot
+vacuum 3/3, gaming monitor 3/3, shop vacuum 1/3, pressure washer 3/3, cordless
+drill 3/3, laptop 0/3, and leaf blower 0/3. Every request stayed at twelve
+logical and physical attempts. Mean latency was 13,795 ms, nearest-rank p95 was
+18,677 ms, and maximum was 21,352 ms. Availability and safe page resolution
+were the dominant losses. The required 21/24 non-empty rate and shop-vac 2/3
+rate therefore failed; no gate was relaxed and no run was retried.
+
+Two separately identified cache-cold correction probes then returned only
+exact purchasable robot-vacuum models and three unique standalone drill kits.
+They are precision evidence, not replacements for the failed recall matrix.
+
+**Decision:** retain the adaptive implementation because it demonstrably found
+valid products in later waves and preserved bounded fail-closed behavior, but
+do not claim the PR-12 recall target passed. Any next recall work must first
+attribute safe page-resolution and availability losses; it must not increase
+the search ceiling or infer availability from price alone.
+
+### PR-13 — best-in-budget market quality
+
+**Status:** Step 1 prerequisite stabilization is complete and locally
+validated. PR-13 market-scout and quality-ranking behavior has not started.
+Stop at this boundary until Taylor approves Step 2.
+
+**Objective:** establish a safe, repeatable selection baseline and an
+independently sourced market-leader benchmark before adding market-quality
+evidence. The public card and `POST /api/recommendations` contract remain
+unchanged.
+
+**Frozen QA benchmark:** `tests/benchmarks/pr13-market-leaders-v2026-09a.json`
+registers one exact model for each of the eight existing live cases. Every
+leader has at least two current independent source domains and at least one
+comparative test source. This registry is QA-only; price and availability are
+evaluated at run time, and it cannot make a product eligible or enter the
+shopper response.
+
+**Prerequisite review and correction:** independent review reproduced page-
+resolution and availability losses without accessing the protected fixture
+tree. Stable-model page searches no longer pin one retailer. Exact product-
+shaped pages from the Shopping merchant are eligible, up to two exact pages
+on distinct hosts may be verified from one candidate-local search, and
+discontinued/parts pages remain ineligible. Decimal URL identity is preserved,
+measurement-only strings such as `MPH/450` do not become model IDs, battery-kit
+wording is recognized, sibling URL models fail closed, and one merchant's
+Shopping price/availability cannot move to another seller.
+
+The failed-first cache-cold round returned 4/8 non-empty. Debug attribution
+showed exact same-merchant product pages that major retailers blocked or
+challenged during server-side fetch. A priced current Shopping offer may now
+provide fallback availability only after exact product-page resolution to the
+same Shopping merchant. Explicit page unavailability overrides it; a missing
+price, cross-merchant page, unresolved identity, unsafe/non-product URL, or
+mere page price does not provide this authority.
+
+**Acceptance matrix:** the final precommitted matrix ran three cache-cold
+single attempts across the eight cases with no retries. Twenty-three of 24
+runs were non-empty, including shop vacuum 2/3. Mean latency was 12,507 ms,
+nearest-rank p95 was 18,806 ms, and maximum was 20,419 ms. Every request used
+one OpenAI response and no more than twelve logical Serper operations. The
+21/24 and shop-vac 2/3 prerequisite gates therefore pass while remaining below
+the future PR-13 15-operation ceiling.
+
+**Verification:** 295/295 unit tests across 42 suites, typecheck,
+zero-warning lint, the Next.js 16.3.3 production build, and Playwright 7/7
+across Chromium desktop/mobile pass. The build exposes only `/`,
+`/_not-found`, and `/api/recommendations`.
+
+**Next authorized decision:** Step 2 replaces the lightweight planner with the
+bounded market scout. It must retain one synchronous route, one OpenAI call,
+honest deterministic failure fallback, validated response-owned web-search
+sources, exact-model evidence binding, and no public payload expansion. Do not
+start it without the next phase approval.
+
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 
 Phase 3P/3Q source-upgrade items; RR-014/RR-015 aggregate measurement beyond

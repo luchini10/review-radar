@@ -1,0 +1,188 @@
+{
+  "version": "leaders-v2026-09a",
+  "frozenAt": "2026-09-01",
+  "market": "US",
+  "purpose": "QA-only PR-13 before/after leader-recall benchmark",
+  "cases": [
+    {
+      "id": "coffee-maker",
+      "request": {
+        "query": "coffee maker",
+        "budget": "$150",
+        "priorities": "14-cup programmable"
+      },
+      "leaders": [
+        {
+          "brand": "Cuisinart",
+          "model": "DCC-3200",
+          "aliases": ["DCC-3200P1", "DCC-3200BKSNAS"],
+          "sourceUrls": [
+            "https://www.consumerreports.org/appliances/coffee-makers/cuisinart-perfectemp-14-cup-programmable-dcc-3200/m387328/",
+            "https://beanandburr.com/coffee-makers/cuisinart-coffee-maker-review"
+          ],
+          "comparativeSourceUrls": [
+            "https://www.consumerreports.org/appliances/coffee-makers/cuisinart-perfectemp-14-cup-programmable-dcc-3200/m387328/"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "robot-vacuum",
+      "request": {
+        "query": "robot vacuum",
+        "budget": "$300",
+        "priorities": "self-emptying"
+      },
+      "leaders": [
+        {
+          "brand": "Dreame",
+          "model": "D10 Plus Gen 2",
+          "aliases": ["D10 Plus Gen2"],
+          "sourceUrls": [
+            "https://www.tomsguide.com/best-picks/best-cheap-robot-vacuums",
+            "https://www.techgearlab.com/reviews/smart-home/robot-vacuum/dreame-d10-plus-gen-2"
+          ],
+          "comparativeSourceUrls": [
+            "https://www.tomsguide.com/best-picks/best-cheap-robot-vacuums",
+            "https://www.techgearlab.com/reviews/smart-home/robot-vacuum/dreame-d10-plus-gen-2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gaming-monitor",
+      "request": {
+        "query": "gaming monitor",
+        "budget": "$300",
+        "priorities": "27-inch 1440p at least 144Hz"
+      },
+      "leaders": [
+        {
+          "brand": "AOC",
+          "model": "Q27G3XMN",
+          "aliases": ["Q27G3XMN/BK"],
+          "sourceUrls": [
+            "https://www.rtings.com/monitor/reviews/best/1440p-144hz",
+            "https://www.reviewed.com/gaming/content/aoc-q27g3xmn-review"
+          ],
+          "comparativeSourceUrls": [
+            "https://www.rtings.com/monitor/reviews/best/1440p-144hz"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shop-vacuum",
+      "request": {
+        "query": "shop vacuum",
+        "budget": "$200",
+        "priorities": "wet/dry"
+      },
+      "leaders": [
+        {
+          "brand": "Craftsman",
+          "model": "CMXEVBE17595",
+          "aliases": ["Craftsman 16-Gallon 6.5 HP"],
+          "sourceUrls": [
+            "https://www.techgearlab.com/topics/floor-cleaning/best-shop-vac",
+            "https://vacuumwars.com/best-shop-vac-6-5-hp/"
+          ],
+          "comparativeSourceUrls": [
+            "https://www.techgearlab.com/topics/floor-cleaning/best-shop-vac",
+            "https://vacuumwars.com/best-shop-vac-6-5-hp/"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pressure-washer",
+      "request": {
+        "query": "pressure washer",
+        "budget": "$300",
+        "priorities": "at least 2,000 PSI"
+      },
+      "leaders": [
+        {
+          "brand": "Westinghouse",
+          "model": "WPX3200e",
+          "aliases": [],
+          "sourceUrls": [
+            "https://www.consumerreports.org/home-garden/pressure-washers/westinghouse-wpx3200e/m409196/",
+            "https://sprucerank.com/best-electric-pressure-washer-under-300/"
+          ],
+          "comparativeSourceUrls": [
+            "https://www.consumerreports.org/home-garden/pressure-washers/westinghouse-wpx3200e/m409196/",
+            "https://sprucerank.com/best-electric-pressure-washer-under-300/"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cordless-drill",
+      "request": {
+        "query": "cordless drill",
+        "budget": "$200",
+        "priorities": "brushless with battery"
+      },
+      "leaders": [
+        {
+          "brand": "DeWalt",
+          "model": "DCD800D2",
+          "aliases": ["DCD800"],
+          "sourceUrls": [
+            "https://www.consumerreports.org/home-garden/cordless-drills-impact-drivers/dewalt-dcd800d2/m408601/",
+            "https://www.protoolreviews.com/dewalt-dcd805-20v-hammer-drill-driver-review/"
+          ],
+          "comparativeSourceUrls": [
+            "https://www.consumerreports.org/home-garden/cordless-drills-impact-drivers/dewalt-dcd800d2/m408601/"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "laptop",
+      "request": {
+        "query": "laptop",
+        "budget": "$900",
+        "priorities": "16 GB RAM and 512 GB SSD"
+      },
+      "leaders": [
+        {
+          "brand": "Dell",
+          "model": "XPS 13 (2026) 16GB 512GB",
+          "aliases": ["2026 Dell XPS 13 16 GB 512 GB"],
+          "sourceUrls": [
+            "https://www.wired.com/review/dell-xps-13-2026/",
+            "https://www.tomshardware.com/laptops/dell-xps-13-2026-review"
+          ],
+          "comparativeSourceUrls": [
+            "https://www.tomshardware.com/laptops/dell-xps-13-2026-review"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cordless-leaf-blower",
+      "request": {
+        "query": "cordless leaf blower",
+        "budget": "$250",
+        "priorities": "at least 400 CFM with battery"
+      },
+      "leaders": [
+        {
+          "brand": "Greenworks",
+          "model": "BL60L512",
+          "aliases": ["2419502VT"],
+          "sourceUrls": [
+            "https://qz.com/leaf-blowers-ranked-by-type-consumer-reports",
+            "https://opereviews.com/greenworks-pro-60v-700-cfm-blower-review-bl60l512/"
+          ],
+          "comparativeSourceUrls": [
+            "https://qz.com/leaf-blowers-ranked-by-type-consumer-reports",
+            "https://opereviews.com/greenworks-pro-60v-700-cfm-blower-review-bl60l512/"
+          ]
+        }
+      ]
+    }
+  ]
+}

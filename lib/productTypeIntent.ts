@@ -38,8 +38,10 @@ const SHOP_VAC_COMPLEMENT_PATTERN =
 const STANDALONE_SHOP_VAC_COMPLEMENT_PATTERN =
   /\b(?:wet\s+dry\s+(?:shop\s+)?vac(?:uum)?|shop\s+vac(?:uum)?|vacuum)\s+(?:replacement\s+)?(?:hose|filter\s+bags?|bags?|(?:utility\s+)?nozzles?(?:\s+attachments?)?|accessory\s+kit)\b|^(?:[a-z0-9-]+\s+){0,3}(?:utility\s+)?nozzles?(?:\s+attachments?)?$/i;
 
+const ROBOT_VACUUM_FULL_PRODUCT_PATTERN =
+  /\b(?:robot\s+(?:vac|vacuum|cleaner|mop)|robotic\s+(?:vac|vacuum))\b/i;
 const ROBOT_VACUUM_DOCK_COMPLEMENT_PATTERN =
-  /\b(?:replacement\s+)?(?:dock(?:ing)?(?:\s+station)?|charging\s+station|clean\s+base(?:\s+station)?|base\s+station|dust\s+disposal\s+base(?:\s+station)?|(?:self\s+empty(?:ing)?|auto\s+empty(?:ing)?)\s+(?:(?:clean\s+)?base(?:\s+station)?|dock(?:ing)?(?:\s+station)?|station))\b/i;
+  /\b(?:replacement\s+)?(?:dock(?:ing)?(?:\s+station)?|charging\s+station|clean\s+base(?:\s+station)?|base\s+station|dust\s+disposal\s+base(?:\s+station)?|(?:self\s+empty(?:ing)?|auto\s+empty(?:ing)?)\s+(?:[a-z0-9]+\s+){0,3}(?:(?:clean\s+)?base(?:\s+station)?|dock(?:ing)?(?:\s+station)?|station))\b/i;
 const ROBOT_VACUUM_EXISTING_COMPLEMENT_PATTERN =
   /\b(?:replacement\s+(?:filter|brush|mop\s+pad|side\s+brush)|dustbin|boundary\s+strip|virtual\s+wall)\b/i;
 const ROBOT_VACUUM_COMPLEMENT_PATTERN = new RegExp(
@@ -47,7 +49,7 @@ const ROBOT_VACUUM_COMPLEMENT_PATTERN = new RegExp(
   "i",
 );
 const STANDALONE_ROBOT_VACUUM_DOCK_PATTERN = new RegExp(
-  `^(?:${ROBOT_VACUUM_DOCK_COMPLEMENT_PATTERN.source})|${ROBOT_VACUUM_DOCK_COMPLEMENT_PATTERN.source}\\s+(?:for|compatible\\s+with|works\\s+with)\\b`,
+  `(?:${ROBOT_VACUUM_DOCK_COMPLEMENT_PATTERN.source}\\s+(?:for|compatible\\s+with|works\\s+with)\\b)|(?:^(?!.*${ROBOT_VACUUM_FULL_PRODUCT_PATTERN.source}).*${ROBOT_VACUUM_DOCK_COMPLEMENT_PATTERN.source})`,
   "i",
 );
 
@@ -162,6 +164,19 @@ const PRODUCT_TYPE_RULES: ProductTypeRule[] = [
       /\b(?:pressure washer|power washer)\s+(?:hose|nozzle|surface cleaner|extension wand|spray gun|spray wand|foam cannon|foam lance|soap cannon|detergent|soap|cleaning solution|cleaner concentrate)\b|\b(?:hose|nozzle|surface cleaner|extension wand|spray gun|spray wand|foam cannon|foam lance|soap cannon|detergent|soap|cleaning solution|cleaner concentrate)\s+(?:for|compatible with)\s+(?:a\s+)?(?:pressure washer|power washer)\b|(?:\d+(?:\.\d+)?\s*(?:fl\s*)?oz\b.{0,80}\bpressure wash)\b/i,
   },
   {
+    id: "cordless_drill",
+    requested:
+      /\b(?:cordless\s+)?(?:power\s+)?drill(?:\s*\/\s*driver|\s+driver)?\b/i,
+    allowed:
+      /\b(?:cordless\s+)?(?:power\s+)?drill(?:\s*\/\s*driver|\s+driver)?\b/i,
+    blocked:
+      /\b(?:(?:\d+|multi)[-\s]?tool|power\s+tool)\s+combo\s+kit\b/i,
+    exclusiveBlocked:
+      /\b(?:(?:\d+|multi)[-\s]?tool|power\s+tool)\s+combo\s+kit\b/i,
+    complements:
+      /\b(?:drill\s+bits?|replacement\s+batter(?:y|ies)|battery\s+charger|drill\s+case)\b/i,
+  },
+  {
     id: "portable_generator",
     requested:
       /\b(?:portable generator|inverter generator|dual fuel generator|tri fuel generator)\b/i,
@@ -205,8 +220,7 @@ const PRODUCT_TYPE_RULES: ProductTypeRule[] = [
     requested: /\b(?:robot\s+(?:vac|vacuum)|robotic\s+vacuum)\b/i,
     // "robot mop" covers combo robot vacuum-and-mop units; "robot cleaner" covers
     // some branded naming conventions that omit "vacuum"
-    allowed:
-      /\b(?:robot\s+(?:vac|vacuum|cleaner|mop)|robotic\s+(?:vac|vacuum))\b/i,
+    allowed: ROBOT_VACUUM_FULL_PRODUCT_PATTERN,
     // Block confirmed non-robot vacuum subtypes. "wet dry" (without requiring "vac"
     // after it) also catches truncated product names like "Wet/Dry ..." from Serper.
     blocked:

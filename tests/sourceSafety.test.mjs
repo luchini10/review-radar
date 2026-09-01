@@ -12,6 +12,20 @@ describe("product-source safety", () => {
     assert.equal(isNonProductSource("https://www.reddit.com/r/VacuumCleaners"), true);
     assert.equal(isNonProductSource("https://www.walmart.com/ip/123"), false);
     assert.equal(isNonProductSource("https://www.acer.com/us-en/monitors/nitro/xv2"), false);
+    assert.equal(
+      isNonProductSource(
+        "https://support.sharkninja.com/product/shark-ur2360s-robot-vacuum",
+      ),
+      true,
+    );
+    assert.equal(
+      isNonProductSource("https://www.sharkninja.com/products/shark-matrix"),
+      false,
+    );
+    assert.equal(
+      isNonProductSource("https://us.eureka.com/pages/support-e20-plus"),
+      true,
+    );
   });
 
   it("keeps retailer and publication names out of inferred product identity", () => {
