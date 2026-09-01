@@ -4262,3 +4262,26 @@ a known conservative undercount.
 - Current deterministic wall: 347/347 tests across 44 suites, typecheck, zero-
   warning lint, production build, Playwright 7/7, and one clean live desktop/
   mobile browser search. These do not override the failed live quality gates.
+
+## PR-14 direct-page feasibility memory (2026-09-01)
+
+- A Responses web-search source object provides a URL, not a trusted page title.
+  A source-bound opaque retailer SKU is therefore only a discovery lead; exact
+  identity must come from the independently fetched live page before any price,
+  availability, image, or URL can reach a card.
+- Direct manufacturer/retailer URLs never contribute to `strong` or `supported`
+  evidence. Editorial source binding and exact model isolation remain separate
+  invariants.
+- Preserve V11, V12, and V13 as distinct no-retry feasibility reports. V11
+  reached 4/9 eligible leaders but missed latency; V12 regressed to 1/10; V13
+  reached 2/10 and returned zero source-bound direct-page cards after all gates.
+  Do not select the best of these volatile runs as release proof.
+- The direct-page runtime experiment was removed. Do not restore it without a
+  new measured mechanism that produces canonical product identity and current
+  offer/page authority more reliably than this probe.
+- The live benchmark must declare `maximumP95LatencyMs: 25000` and
+  `maximumLatencyMs: 30000`; the runner must emit and enforce both acceptance
+  booleans. Reporting latency without evaluating these gates is a QA defect.
+- Current post-revert deterministic wall: 347/347 tests across 44 suites,
+  typecheck, zero-warning lint, production build, and Playwright 7/7. The latest
+  live result remains a release failure despite 10/10 non-empty.

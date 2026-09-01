@@ -4966,6 +4966,35 @@ progressive contract, but it must be compared against request-scoped canonical
 commerce resolution and a larger explicit operation/latency envelope rather
 than assumed superior.
 
+**Direct-page feasibility follow-up:** the scout was experimentally extended
+to return source-bound retailer/brand product-page leads. URLs had to occur in
+the completed Responses web-search source set, never contributed to evidence
+tier, and still passed the existing SSRF, fetched-page identity, condition,
+availability, USD price, budget, requirement, and product-page gates. Because
+Responses web-search source metadata exposes URLs but not a trusted page title,
+opaque retailer SKUs remained provisional until the live fetched page named the
+exact target; sibling pages failed closed.
+
+Three single-attempt ten-case reports preserve the progression. V11 returned
+10/10 non-empty and 4/9 eligible frozen leaders (44.44%) with 40,017 ms p95/
+maximum. V12's two-page alternative returned 9/10 non-empty and 1/10 leaders
+with 44,344 ms p95/maximum. The final fetched-identity V13 returned 10/10 non-
+empty and 2/10 leaders with 41,268 ms p95/maximum. It accepted four provisional
+product-page URLs, rejected six, and returned zero source-bound-page cards after
+all live gates. V13 used ten OpenAI Responses, thirty hosted searches, 125
+logical/physical Serper operations, 194,589 model tokens, and approximately
+$0.202525 model-token cost; its unchanged public payload averaged 753 bytes and
+peaked at 1,577 bytes.
+
+All three runs passed product safety, exact evidence binding, public shape, one
+OpenAI response/request, three hosted searches/request, and fifteen logical
+Serper operations/request. All failed the 80% leader and 25,000/30,000 ms
+latency gates. The direct-page runtime experiment was therefore removed instead
+of retaining an unproved second path. The only retained behavioral change is to
+the QA harness: its precommitted 25-second p95 and 30-second maximum thresholds
+are now explicit benchmark fields and executable acceptance checks. The runtime
+snapshot remains `61a914d`; PR-14 remains not release-qualified.
+
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 
 Phase 3P/3Q source-upgrade items; RR-014/RR-015 aggregate measurement beyond

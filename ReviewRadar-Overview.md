@@ -288,21 +288,23 @@ The request-time architecture and accuracy gates are protected by:
 The current source passes 347/347 unit tests across 44 suites, zero-warning
 lint, typecheck, production build, and Playwright 7/7. A separate live browser
 search passed at desktop and mobile widths with no overflow or console errors.
-The latest PR-14 ten-case, single-attempt live matrix completed 10/10 requests
-with one OpenAI response each, at most three hosted searches, and at most
+The latest PR-14 ten-case, single-attempt feasibility matrix completed 10/10
+requests with one OpenAI response each, three hosted searches each, and at most
 fifteen logical Serper operations. Exact evidence binding and product safety
-passed in all ten cells, but only 7/10 returned a product and only 1/7 currently
-eligible cells placed a frozen leader in the top three. Mean latency was 31,884
-ms and nearest-rank p95/maximum was 43,430 ms. The public five-field payload
-remained unchanged at 754 bytes mean and 1,552 bytes maximum. Runtime evidence
-and runtime `strong` each reached two cells; one scout fell back.
+passed in all ten cells and all ten returned a product, but only 2/10 placed a
+frozen leader in the top three. Mean latency was 29,405 ms and nearest-rank p95/
+maximum was 41,268 ms. The public five-field payload remained unchanged at 753
+bytes mean and 1,577 bytes maximum. Runtime evidence reached three cells,
+runtime `strong` reached two, and one scout fell back.
 
-PR-14 is not release-qualified: non-empty recall missed 8/10, eligible leader
-recall was 14.29% versus the 80% gate, and tail latency exceeded both the 25-
-second p95 and 30-second maximum gates. The source-binding and ranking mechanics
-are safer, but live Shopping/page resolution does not reliably supply exact
-purchasable leaders inside the target envelope. Full GPT-5.4 and medium-
-reasoning Mini experiments were inferior on measured output reliability/
+PR-14 is not release-qualified: leader recall was 20% versus the 80% gate, and
+tail latency exceeded both the 25-second p95 and 30-second maximum gates. A
+bounded experiment that asked the same scout for source-bound direct product
+pages returned no such card after all gates in the final matrix, so that code
+was removed. The source-binding and ranking mechanics are safer, but live
+Shopping/page resolution does not reliably supply exact purchasable leaders
+inside the target envelope. Full GPT-5.4 and medium-reasoning Mini experiments
+were inferior on measured output reliability/
 latency; further model tuning is not the supported fix for the remaining
 commerce-coverage loss.
 
@@ -314,13 +316,12 @@ The build route manifest must contain only /, /_not-found, and
 - Live prices and availability can change after a search.
 - Search-provider coverage can omit a good product.
 - Strict finalist verification can produce an empty shortlist even when a
-  qualifying product exists; the current authoritative PR-14 matrix returned
-  only seven non-empty shortlists in ten attempts.
+  qualifying product exists; the latest matrix returned all ten shortlists, but
+  earlier preserved runs returned as few as seven in ten attempts.
 - The market scout's source tier is not product-fact, price, availability, or
-  eligibility authority. The current matrix passed exact source binding but
-  commerce coverage still produced only 14.29% eligible frozen-leader recall
-  with 43,430 ms p95, so the architecture did not establish live best-in-budget
-  reliability.
+  eligibility authority. The latest matrix passed exact source binding but
+  commerce coverage still produced only 20% frozen-leader recall with 41,268
+  ms p95, so the architecture did not establish live best-in-budget reliability.
 - Missing or ambiguous product images are intentionally omitted.
 - The recorded live quality sample is small and local. It does not prove
   hosted operations, accessibility beyond the current browser suite, or

@@ -5,6 +5,8 @@
   "purpose": "QA-only request-time market-research audit across broad and constrained searches",
   "rounds": 1,
   "acceptance": {
+    "maximumLatencyMs": 30000,
+    "maximumP95LatencyMs": 25000,
     "minimumLeaderTopThreeRate": 0.8,
     "minimumNonEmpty": 8,
     "requiredCaseNonEmpty": {

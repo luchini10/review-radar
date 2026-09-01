@@ -110,6 +110,8 @@ describe("request-time live-accuracy benchmark", () => {
     assert.equal(value.frozenAt, "2026-09-01");
     assert.equal(value.market, "US");
     assert.equal(value.rounds, 1);
+    assert.equal(value.acceptance.maximumLatencyMs, 30_000);
+    assert.equal(value.acceptance.maximumP95LatencyMs, 25_000);
     assert.equal(value.cases.length, 10);
     assert.equal(new Set(value.cases.map((entry) => entry.id)).size, 10);
     assert.equal(value.cases.filter((entry) => entry.kind === "broad").length, 5);

@@ -11,6 +11,31 @@ Update this file after:
 
 ## 2026-09-01
 
+### Codex - Test and remove unproved direct-page discovery
+
+#### Changed
+
+- Tested a bounded scout-supplied product-page lead while preserving exact
+  source binding, fetched-page identity, SSRF, condition, availability, USD
+  price, budget, requirement, product-page, and minimal-payload safeguards.
+- Preserved three distinct no-retry live reports. The final run returned 10/10
+  non-empty but only 2/10 frozen leaders, exceeded both latency limits, and
+  returned no source-bound direct-page card after all gates.
+- Removed the direct-page runtime experiment because it did not demonstrate a
+  quality or latency improvement; the production selection path remains at
+  runtime snapshot `61a914d`.
+- Corrected the live benchmark and runner so the documented 25-second p95 and
+  30-second maximum latency gates are explicit, reported, and enforced.
+
+#### Verified
+
+- Full validation passed 347/347 unit tests across 44 suites, typecheck, zero-
+  warning lint, the Next.js 16.3.3 production build, and Playwright 7/7.
+- The final V13 matrix passed request success, non-empty recall, exact evidence
+  binding, product safety, public shape, and provider-call ceilings, but failed
+  leader recall at 20% and p95/maximum latency at 41,268 ms.
+- No push or deployment occurred; PR-14 remains not release-qualified.
+
 ### Codex - Tighten exact market evidence and live QA
 
 #### Changed

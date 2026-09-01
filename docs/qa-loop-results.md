@@ -17772,3 +17772,69 @@ containing brand references. Those lines were not used as evidence. No fixture
 was modified, copied, deleted, or hashed, and no further protected-tree access
 occurred. No push, deployment, release, dependency change, production-data
 action, or public response expansion occurred.
+
+---
+
+## PR-14 direct product-page feasibility probe (2026-09-01)
+
+**Assessment:** RELEASE FAIL; runtime experiment removed. The objective was to
+test the strongest no-new-provider path for getting source-backed market leaders
+through current-commerce resolution: let the same fresh scout return a bounded
+direct product-page lead, then subject it to every existing safety and commerce
+gate. This was a feasibility probe, not authority to treat a URL or model output
+as price, availability, identity, or leader evidence.
+
+**Safety design:** a product-page URL was accepted only when it occurred in the
+current completed Responses web-search source set and classified as a direct US
+primary-retailer or official-brand page. It never raised evidence tier. Because
+the API's web-search source objects provide URLs rather than a trusted page
+title, an opaque retailer SKU stayed provisional until the SSRF-safe live fetch
+exposed the exact target identity. Named/numeric siblings, non-US paths,
+secondary markets, listings, blocked pages, unavailable offers, untrusted USD
+prices, over-budget offers, and requirement failures remained ineligible.
+
+**Preserved no-retry progression:** each report is the fixed ten-case matrix,
+one cache-cold attempt per cell and no replacement runs.
+
+| Report | Non-empty | Frozen leader top three | Mean / p95 / max ms | Runtime direct-page result |
+| --- | ---: | ---: | ---: | --- |
+| V11 direct pages | 10/10 | 4/9 eligible (44.44%) | 32,764 / 40,017 / 40,017 | instrumentation not yet present |
+| V12 two alternatives | 9/10 | 1/10 (10%) | 31,617 / 44,344 / 44,344 | 2 accepted, 19 rejected, 2 returned runs |
+| V13 fetched identity | 10/10 | 2/10 (20%) | 29,405 / 41,268 / 41,268 | 4 accepted, 6 rejected, 0 returned runs |
+
+All three completed 10/10 HTTP requests, preserved exact evidence binding and
+accepted-candidate safety, kept the public payload unchanged, used exactly one
+OpenAI response/request and three hosted searches/request, and stayed at or
+below fifteen logical Serper operations/request. V13 totaled 125 logical and
+physical Serper attempts, 179,500 input and 15,089 output model tokens (194,589
+total), approximately $0.202525 model-token cost, and 753/1,577-byte mean/
+maximum public payload. Its 100% non-empty result passed the recall floor and
+both shop-vacuum cases returned products, but leader recall missed 80% and tail
+latency missed both configured thresholds.
+
+**Decision:** the final probe returned no source-bound direct-page card after
+all gates, while the two-page variation reduced quality and increased tail
+latency. The direct-page code and tests were removed; no unproved alternate
+runtime path remains. The QA benchmark/harness correction is retained so the
+documented 25,000 ms p95 and 30,000 ms maximum gates are executable and visible
+in acceptance output. The production runtime remains `61a914d` and is still not
+release-qualified. A materially better next attempt requires a request-scoped
+provider or retailer integration that returns canonical product identities,
+current offers, and direct pages; more scout prompt tuning is not supported by
+these results.
+
+**Verification:** after removing the experiment, unit tests passed 347/347
+across 44 suites, typecheck passed, ESLint passed with zero warnings, the
+Next.js 16.3.3 production build passed, Playwright passed 7/7 across Chromium
+desktop/mobile, and `git diff --check` passed. The E2E runner emitted only the
+environment-level `NO_COLOR`/`FORCE_COLOR` notices, not application warnings.
+
+**Boundaries and incidents:** `.env.local` was not manually inspected, printed,
+hashed, copied, or edited; ordinary build startup reported loading it. The
+protected live-fixture tree was not intentionally accessed or used as evidence.
+During this continuation, `git status --short --branch` unintentionally
+enumerated untracked protected-fixture path names. It did not open, read, stat,
+hash, parse, copy, edit, or delete fixture contents. This is the third disclosed
+path-boundary incident in the goal. Subsequent status checks used
+`--untracked-files=no`. No push, deployment, dependency change, production-data
+action, or public-contract expansion occurred.

@@ -545,7 +545,13 @@ function summarize(results, cases, acceptanceConfig) {
     (totalOutputTokens * 4.5) / 1_000_000;
   const minimumLeaderRate = asFiniteNumber(acceptanceConfig.minimumLeaderTopThreeRate);
   const minimumNonEmpty = asFiniteNumber(acceptanceConfig.minimumNonEmpty);
+  const maximumLatencyMs = asFiniteNumber(acceptanceConfig.maximumLatencyMs);
+  const maximumP95LatencyMs = asFiniteNumber(
+    acceptanceConfig.maximumP95LatencyMs,
+  );
   const requiredCaseNonEmpty = asRecord(acceptanceConfig.requiredCaseNonEmpty);
+  const maximumObservedLatencyMs = Math.max(0, ...durations);
+  const p95LatencyMs = nearestRankPercentile(durations, 0.95);
 
   return {
     acceptance: {
@@ -557,6 +563,10 @@ function summarize(results, cases, acceptanceConfig) {
       leaderTopThreeAtLeastConfiguredRate:
         benchmarkEligible.length > 0 &&
         leaderHits.length / benchmarkEligible.length >= minimumLeaderRate,
+      latencyMaximumAtMostConfigured:
+        maximumLatencyMs > 0 && maximumObservedLatencyMs <= maximumLatencyMs,
+      latencyP95AtMostConfigured:
+        maximumP95LatencyMs > 0 && p95LatencyMs <= maximumP95LatencyMs,
       nonEmptyAtLeastConfiguredMinimum: nonEmpty.length >= minimumNonEmpty,
       oneOpenAiResponseEach: successful.every((result) => result.openAiCalls === 1),
       publicShapeUnchanged: successful.every((result) => result.publicShapeValid),
@@ -594,12 +604,12 @@ function summarize(results, cases, acceptanceConfig) {
       ),
     },
     latencyMs: {
-      maximum: Math.max(0, ...durations),
+      maximum: maximumObservedLatencyMs,
       mean: durations.length
         ? Math.round(durations.reduce((total, value) => total + value, 0) / durations.length)
         : 0,
       minimum: durations.length ? Math.min(...durations) : 0,
-      p95NearestRank: nearestRankPercentile(durations, 0.95),
+      p95NearestRank: p95LatencyMs,
     },
     leaderRecall: {
       benchmarkEligibleRuns: benchmarkEligible.length,
