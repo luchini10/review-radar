@@ -155,4 +155,71 @@ describe("market-quality discovery orchestration", () => {
     ]);
     assert.equal(selected.result.recommendations.length, 0);
   });
+
+  it("does not let an aggregate Shopping hit suppress exact product-page recovery", async () => {
+    process.env.SERPER_API_KEY = "test-only-key";
+    globalThis.fetch = async (url, init) => {
+      const endpoint = String(url);
+      const request = JSON.parse(init.body);
+      if (endpoint.endsWith("/search")) {
+        return new Response(
+          JSON.stringify({
+            organic: [
+              {
+                link: "https://127.0.0.1/products/alpha-a100",
+                snippet: "Current Alpha A100 robot vacuum product page",
+                title: "Alpha A100 Robot Vacuum",
+              },
+            ],
+          }),
+          { headers: { "content-type": "application/json" }, status: 200 },
+        );
+      }
+      if (request.q === "Alpha A100 robot vacuum") {
+        return new Response(
+          JSON.stringify({
+            shopping: [
+              {
+                extractedPrice: 249,
+                link: "https://www.google.com/search?ibp=oshop&q=alpha+a100",
+                source: "Example Store",
+                title: "Alpha A100 Robot Vacuum",
+              },
+            ],
+          }),
+          { headers: { "content-type": "application/json" }, status: 200 },
+        );
+      }
+      return new Response(JSON.stringify({ shopping: [] }), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      });
+    };
+
+    const selected = await selectProducts({
+      input: { budget: "$300", query: "robot vacuum" },
+      plan: {
+        queries: [],
+        targets: [
+          {
+            aliases: [],
+            brand: "Alpha",
+            consensusOrder: 0,
+            evidenceTier: "strong",
+            model: "A100",
+            sourceUrls: ["https://www.rtings.com/example"],
+          },
+        ],
+      },
+    });
+
+    assert.deepEqual(selected.telemetry.marketTargetQueries, [
+      "Alpha A100 robot vacuum",
+    ]);
+    assert.ok(
+      selected.telemetry.resolutionQueries.includes("Alpha A100 robot vacuum"),
+    );
+    assert.equal(selected.telemetry.marketEvidenceCandidates, 1);
+    assert.ok(selected.telemetry.logicalSearchCalls <= 15);
+  });
 });

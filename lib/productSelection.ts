@@ -24,7 +24,10 @@ import {
   stableModelIdentifiers,
 } from "./productIdentity.ts";
 import { productPageMatchesIdentity } from "./productPageUrl.ts";
-import { normalizeProductEligibilityUrl } from "./productEligibility.ts";
+import {
+  classifyProductEligibility,
+  normalizeProductEligibilityUrl,
+} from "./productEligibility.ts";
 import { sourceUrlPathIdentitySegments } from "./sourceUrlIdentity.ts";
 import {
   likelyAccessory,
@@ -329,18 +332,44 @@ function candidateMatchesTarget(
   candidate: RawProductCandidate,
   target: MarketScoutTarget,
 ) {
-  const candidateBrand = selectionBrand(candidate);
-  if (
-    !candidateBrand ||
-    normalizedText(canonicalBrand(candidateBrand)) !==
-      normalizedText(canonicalBrand(target.brand))
-  ) {
-    return false;
-  }
-
-  return [target.model, ...target.aliases].some((label) =>
+  const matchingLabels = [target.model, ...target.aliases].filter((label) =>
     modelLabelMatchesCandidate(candidate.name, label, target.brand),
   );
+  if (matchingLabels.length === 0) return false;
+
+  const candidateBrand = selectionBrand(candidate);
+  const targetBrand = normalizedText(canonicalBrand(target.brand));
+  if (
+    candidateBrand &&
+    normalizedText(canonicalBrand(candidateBrand)) === targetBrand
+  ) {
+    return true;
+  }
+
+  const suppliedBrand = normalizedText(canonicalBrand(candidate.brand || ""));
+  if (!suppliedBrand || suppliedBrand !== targetBrand) return false;
+  if (!candidateBrand) return true;
+
+  const inferredLeadingBrand = normalizedText(canonicalBrand(candidateBrand));
+  return matchingLabels.some(
+    (label) =>
+      normalizedText(modelIdentityWords(label, target.brand)[0] || "") ===
+      inferredLeadingBrand,
+  );
+}
+
+function candidateHasDirectProductPage(candidate: RawProductCandidate) {
+  return classifyProductEligibility({
+    brand: candidate.brand,
+    category: candidate.category,
+    imageUrl: candidate.imageUrl,
+    name: candidate.name,
+    price: candidate.price,
+    retailer: candidate.retailer,
+    sourceTitle: candidate.name,
+    sourceType: "serper",
+    url: candidate.productUrl,
+  }).canRenderAsProductCard;
 }
 
 function tierScore(tier: "none" | "strong" | "supported" | undefined) {
@@ -1705,7 +1734,8 @@ export async function selectProducts(options: {
       (target) =>
         target.evidenceTier === "strong" &&
         !targetResolutionCandidates.some((candidate) =>
-          candidateMatchesTarget(candidate, target),
+          candidateMatchesTarget(candidate, target) &&
+          candidateHasDirectProductPage(candidate),
         ),
     )
     .slice(0, MAX_MARKET_TARGET_SEARCH_QUERIES);

@@ -168,6 +168,25 @@ describe("product type intent classifier", () => {
     }
   });
 
+  it("shop_vac: rejects ordinary household vacuum form factors", () => {
+    const householdVacuums = [
+      "Shark Navigator Lift Away Deluxe Upright Vacuum NV360",
+      "Dyson V15 Detect Cordless Stick Vacuum",
+      "Kenmore 200 Series Bagged Canister Vacuum",
+      "Black and Decker Dustbuster Handheld Vacuum",
+    ];
+
+    for (const candidateText of householdVacuums) {
+      const verdict = classifyProductTypeIntent({
+        requestedText: "shop vacuum",
+        candidateText,
+      });
+
+      assert.equal(verdict.status, "irrelevant", candidateText);
+      assert.equal(verdict.canBeExactMatch, false, candidateText);
+    }
+  });
+
   it("shop_vac: preserves conventional wet-dry utility vacuums", () => {
     const utilityVacuums = [
       "RIDGID 9 Gallon 4.25 Peak HP NXT Wet Dry Vac HD0900",

@@ -54,6 +54,8 @@ const STANDALONE_ROBOT_VACUUM_DOCK_PATTERN = new RegExp(
 );
 
 const NEVER_REQUESTED_PRODUCT_TYPE = /\b\B/;
+const HOUSEHOLD_VACUUM_PATTERN =
+  /\b(?:stick\s+(?:vac|vacuum)|canister\s+(?:vac|vacuum)|hand(?:held)?\s+(?:vac|vacuum)|upright\s+(?:vac|vacuum))\b/i;
 
 const PRODUCT_TYPE_RULES: ProductTypeRule[] = [
   {
@@ -82,8 +84,14 @@ const PRODUCT_TYPE_RULES: ProductTypeRule[] = [
       `${SHOP_VAC_PATTERN.source}|${SHOP_VAC_CONTEXT_PATTERN.source}`,
       "i",
     ),
-    blocked: HOUSEHOLD_FLOOR_CLEANER_PATTERN,
-    exclusiveBlocked: HOUSEHOLD_FLOOR_CLEANER_PATTERN,
+    blocked: new RegExp(
+      `${HOUSEHOLD_FLOOR_CLEANER_PATTERN.source}|${HOUSEHOLD_VACUUM_PATTERN.source}`,
+      "i",
+    ),
+    exclusiveBlocked: new RegExp(
+      `${HOUSEHOLD_FLOOR_CLEANER_PATTERN.source}|${HOUSEHOLD_VACUUM_PATTERN.source}`,
+      "i",
+    ),
     complements: SHOP_VAC_COMPLEMENT_PATTERN,
     exclusiveComplements: STANDALONE_SHOP_VAC_COMPLEMENT_PATTERN,
   },

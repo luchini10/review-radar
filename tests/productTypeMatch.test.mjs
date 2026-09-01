@@ -113,6 +113,26 @@ describe("classifyProductTypeMatch (shared wrong-product-type verdict)", () => {
     }
   });
 
+  it("rejects household upright, stick, canister, and handheld vacuums for shop-vac intent", () => {
+    const wrong = [
+      "Shark Navigator Lift Away Deluxe Upright Vacuum NV360",
+      "Dyson V15 Detect Cordless Stick Vacuum",
+      "Kenmore 200 Series Bagged Canister Vacuum",
+      "Black and Decker Dustbuster Handheld Vacuum",
+    ];
+
+    for (const evidenceText of wrong) {
+      const verdict = classifyProductTypeMatch({
+        evidenceText,
+        identityText: evidenceText,
+        requestedCategory: "shop vacuum",
+      });
+
+      assert.equal(verdict.canBeExactMatch, false, evidenceText);
+      assert.equal(verdict.status, "wrong_type", evidenceText);
+    }
+  });
+
   it("keeps conventional shop vacuums valid across unrelated brands", () => {
     const valid = [
       "HART 12 Gallon 6 Peak HP Wet Dry Shop Vacuum VOC1212PW",

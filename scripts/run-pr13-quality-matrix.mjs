@@ -6,6 +6,7 @@ import path from "node:path";
 import { performance } from "node:perf_hooks";
 
 import { productSelectionTestExports } from "../lib/productSelection.ts";
+import { classifyProductTypeMatch } from "../lib/productTypeMatch.ts";
 
 const require = createRequire(import.meta.url);
 const nextCli = require.resolve("next/dist/bin/next");
@@ -244,38 +245,64 @@ function verifiedLeaderState(search, leaders, request) {
       asArray(candidate.requirementFailures).length === 0
     );
   });
-  const currentIneligible =
-    matches.length > 0 &&
-    matches.every((value) => {
-      const candidate = asRecord(value);
-      const price = Number(candidate.price);
-      return (
-        (candidate.availabilityStatus !== "available" &&
-          candidate.availabilityStatus !== "unknown") ||
-        (Number.isFinite(price) && limit !== null && price > limit)
-      );
+  const rankedMatches = asArray(search.rankedCandidates).filter((value) => {
+    const candidate = asRecord(value);
+    return matchingLeader(String(candidate.name || ""), leaders);
+  });
+  const rankedOnlyOverBudget =
+    limit !== null &&
+    rankedMatches.length > 0 &&
+    rankedMatches.every((value) => {
+      const price = Number(asRecord(value).price);
+      return Number.isFinite(price) && price > limit;
     });
-  return { currentIneligible, eligible, observed: matches.length > 0 };
+  const currentIneligible =
+    !eligible &&
+    (rankedOnlyOverBudget ||
+      (matches.length > 0 &&
+        matches.every((value) => {
+          const candidate = asRecord(value);
+          const price = Number(candidate.price);
+          return (
+            (candidate.availabilityStatus !== "available" &&
+              candidate.availabilityStatus !== "unknown") ||
+            (Number.isFinite(price) && limit !== null && price > limit)
+          );
+        })));
+  return {
+    currentIneligible,
+    eligible,
+    observed: matches.length > 0 || rankedMatches.length > 0,
+  };
 }
 
 function acceptedCandidatesAreSafe(products, search, request) {
   const limit = budgetLimit(request);
   const verified = asArray(search.verifiedCandidates).map(asRecord);
-  return products.every((product) =>
-    verified.some((candidate) => {
-      const price = Number(candidate.price);
-      return (
-        candidate.name === product.name &&
-        candidate.pageUrl === product.productPageUrl &&
-        candidate.availabilityStatus === "available" &&
-        (candidate.priceStatus === "verified" || candidate.priceStatus === "usable") &&
-        Number.isFinite(price) &&
-        price > 0 &&
-        (limit === null || price <= limit) &&
-        asArray(candidate.requirementFailures).length === 0
-      );
-    }),
-  );
+  return products.every((product) => {
+    const typeMatch = classifyProductTypeMatch({
+      evidenceText: product.name,
+      identityText: product.name,
+      requestedCategory: request.query,
+    });
+    return (
+      typeMatch.canBeExactMatch &&
+      verified.some((candidate) => {
+        const price = Number(candidate.price);
+        return (
+          candidate.name === product.name &&
+          candidate.pageUrl === product.productPageUrl &&
+          candidate.availabilityStatus === "available" &&
+          (candidate.priceStatus === "verified" ||
+            candidate.priceStatus === "usable") &&
+          Number.isFinite(price) &&
+          price > 0 &&
+          (limit === null || price <= limit) &&
+          asArray(candidate.requirementFailures).length === 0
+        );
+      })
+    );
+  });
 }
 
 function strongBeforeUnscored(returnedSignals) {

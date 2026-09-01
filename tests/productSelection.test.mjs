@@ -487,6 +487,28 @@ describe("selection correctness", () => {
     assert.equal(attached[2].marketEvidence, undefined);
   });
 
+  it("uses a matching supplied brand when the exact model name leads the title", () => {
+    const target = marketTarget("Technivorm", "Moccamaster KBGV Select");
+    const attached = attachMarketEvidence(
+      [
+        candidate("Moccamaster KBGV Select Matte Silver", {
+          brand: "Technivorm",
+        }),
+        candidate("Moccamaster Cup-One Coffee Maker", {
+          brand: "Technivorm",
+        }),
+        candidate("Shark Moccamaster KBGV Select Vacuum", {
+          brand: "Technivorm",
+        }),
+      ],
+      [target],
+    );
+
+    assert.equal(attached[0].marketEvidence?.targetModel, "Moccamaster KBGV Select");
+    assert.equal(attached[1].marketEvidence, undefined);
+    assert.equal(attached[2].marketEvidence, undefined);
+  });
+
   it("does not transfer market evidence across a named sibling variant", () => {
     const target = marketTarget("iRobot", "Roomba i3+ EVO");
     const attached = attachMarketEvidence(
