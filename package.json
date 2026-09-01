@@ -7,7 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "market:index:refresh": "node --no-warnings scripts/refresh-market-evidence-index.mjs",
     "qa:pr13": "node --no-warnings scripts/run-pr13-quality-matrix.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --no-warnings --test tests/*.test.mjs",

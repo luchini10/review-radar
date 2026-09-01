@@ -22,19 +22,17 @@ function admission() {
 
 function dependencies(overrides = {}) {
   return {
-    createOpenAIClient: async () => null,
-    lookupMarketEvidence: async () => ({
-      needsRefresh: false,
+    buildMarketScoutPlan: async () => ({
       plan: { queries: ["gaming monitor"], targets: [] },
       telemetry: {
-        indexStatus: "fresh",
-        openAiCalls: 0,
+        openAiCalls: 1,
+        promptChars: 300,
+        systemPromptChars: 700,
         usedFallback: false,
       },
     }),
+    createOpenAIClient: async () => null,
     paidRequestAdmission: admission(),
-    refreshMarketEvidenceIndex: async () => ({ status: "updated" }),
-    scheduleAfterResponse: () => {},
     selectProducts: async () => ({
       result: { recommendations: [product] },
       telemetry: {
@@ -94,7 +92,7 @@ describe("selection-only recommendation API", () => {
     let calls = 0;
     const response = await routeModule.createRecommendationPostHandler(
       dependencies({
-        lookupMarketEvidence: async () => {
+        buildMarketScoutPlan: async () => {
           calls += 1;
           throw new Error("must not run");
         },
@@ -114,7 +112,7 @@ describe("selection-only recommendation API", () => {
     let calls = 0;
     const response = await routeModule.createRecommendationPostHandler(
       dependencies({
-        lookupMarketEvidence: async () => {
+        buildMarketScoutPlan: async () => {
           calls += 1;
           throw new Error("must not run");
         },
@@ -143,37 +141,28 @@ describe("selection-only recommendation API", () => {
     );
     const body = await response.json();
 
-    assert.equal(body.debug.architecture, "market_quality_v2");
-    assert.equal(body.debug.openAiCalls, 0);
+    assert.equal(body.debug.architecture, "market_quality_v1");
+    assert.equal(body.debug.openAiCalls, 1);
     assert.equal(body.debug.search.candidatesReturned, 1);
     assert.equal("requirements" in body.debug, false);
     assert.equal(JSON.stringify(body.debug).includes("citations"), false);
   });
 
-  it("returns indexed selection before a scheduled refresh finishes", async () => {
-    let finishRefresh;
-    let scheduledRefresh;
-    const refreshResult = new Promise((resolve) => {
-      finishRefresh = resolve;
+  it("starts product discovery before the market scout finishes", async () => {
+    let finishScout;
+    let markSelectionStarted;
+    const scoutResult = new Promise((resolve) => {
+      finishScout = resolve;
+    });
+    const selectionStarted = new Promise((resolve) => {
+      markSelectionStarted = resolve;
     });
     const base = dependencies();
-    const response = await routeModule.createRecommendationPostHandler(
+    const responsePromise = routeModule.createRecommendationPostHandler(
       dependencies({
-        createOpenAIClient: async () => ({ responses: {} }),
-        lookupMarketEvidence: async () => ({
-          needsRefresh: true,
-          plan: { queries: ["gaming monitor"], targets: [] },
-          telemetry: {
-            indexStatus: "miss",
-            openAiCalls: 0,
-            usedFallback: true,
-          },
-        }),
-        refreshMarketEvidenceIndex: async () => refreshResult,
-        scheduleAfterResponse: (operation) => {
-          scheduledRefresh = operation;
-        },
+        buildMarketScoutPlan: async () => scoutResult,
         selectProducts: async ({ plan }) => {
+          markSelectionStarted();
           const resolvedPlan = await plan;
           assert.deepEqual(resolvedPlan, {
             queries: ["gaming monitor"],
@@ -184,11 +173,14 @@ describe("selection-only recommendation API", () => {
       }),
     )(request({ query: "gaming monitor" }));
 
+    await selectionStarted;
+    finishScout({
+      plan: { queries: ["gaming monitor"], targets: [] },
+      telemetry: { openAiCalls: 1, usedFallback: false },
+    });
+    const response = await responsePromise;
+
     assert.equal(response.status, 200);
-    assert.equal(typeof scheduledRefresh, "function");
-    const scheduled = scheduledRefresh();
-    finishRefresh({ status: "updated" });
-    await scheduled;
   });
 
   it("returns an error instead of a false empty result when every Shopping search fails", async () => {
@@ -239,7 +231,7 @@ describe("selection-only recommendation API", () => {
             return { ok: false, retryAfterSeconds: 7 };
           },
         },
-        lookupMarketEvidence: async () => {
+        buildMarketScoutPlan: async () => {
           planned = true;
           throw new Error("must not run");
         },

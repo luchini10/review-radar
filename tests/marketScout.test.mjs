@@ -87,11 +87,11 @@ describe("market scout", () => {
     assert.equal(calls.length, 1);
     const options = calls[0].options;
     assert.equal(options.model, MARKET_SCOUT_MODEL);
-    assert.equal(options.max_tool_calls, 2);
+    assert.equal(options.max_tool_calls, 1);
     assert.equal(options.store, false);
     assert.deepEqual(options.include, ["web_search_call.action.sources"]);
     assert.deepEqual(options.tools, [
-      { type: "web_search", search_context_size: "medium" },
+      { type: "web_search", search_context_size: "low" },
     ]);
     assert.equal(options.text.format.strict, true);
     assert.equal(options.text.format.type, "json_schema");
@@ -101,7 +101,7 @@ describe("market scout", () => {
     );
     const schemaText = JSON.stringify(options.text.format.schema);
     assert.doesNotMatch(schemaText, /price|explanation|reviewSummary|searchQueries/i);
-    assert.equal(calls[0].requestOptions.timeout, 90_000);
+    assert.equal(calls[0].requestOptions.timeout, 10_500);
     assert.equal(calls[0].requestOptions.maxRetries, 0);
     assert.equal(result.telemetry.openAiCalls, 1);
     assert.equal(result.telemetry.hostedSearchCalls, 1);
@@ -289,37 +289,6 @@ describe("market scout", () => {
     assert.equal(providerAborted, true);
   });
 
-  it("aborts a hung provider at the independent scout deadline", async () => {
-    let providerAborted = false;
-    const result = await buildMarketScoutPlan({
-      client: {
-        responses: {
-          async create(_options, requestOptions) {
-            return new Promise((_resolve, reject) => {
-              requestOptions.signal.addEventListener(
-                "abort",
-                () => {
-                  providerAborted = true;
-                  reject(new Error("provider aborted"));
-                },
-                { once: true },
-              );
-            });
-          },
-        },
-      },
-      input,
-      promptVersion: "hard-timeout",
-      timeoutMs: 10,
-    });
-
-    assert.equal(providerAborted, true);
-    assert.equal(result.telemetry.usedFallback, true);
-    assert.equal(result.telemetry.fallbackReason, "timeout");
-    assert.equal(result.telemetry.openAiCalls, 1);
-    assert.deepEqual(result.plan.targets, []);
-  });
-
   it("rejects a response that exceeds the hosted-search call ceiling", async () => {
     const result = await buildMarketScoutPlan({
       client: clientReturning(responseWith({ callCount: 4 })),
@@ -362,7 +331,7 @@ describe("market scout", () => {
     const prompt = marketScoutTestExports.systemPrompt;
 
     assert.match(prompt, /exact product models/i);
-    assert.match(prompt, /at most two focused web searches/i);
+    assert.match(prompt, /one broad web search/i);
     assert.match(prompt, /independent domains/i);
     assert.match(prompt, /comparative test or best-of source/i);
     assert.match(prompt, /current US retail availability/i);

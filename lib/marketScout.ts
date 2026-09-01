@@ -17,13 +17,13 @@ type OpenAIResponsesClient = {
 };
 
 export const MARKET_SCOUT_MODEL = "gpt-5.4-mini";
-export const MARKET_SCOUT_PROMPT_VERSION = "pr14-market-index-v3";
+export const MARKET_SCOUT_PROMPT_VERSION = "pr13-market-scout-v3";
 export const MARKET_SCOUT_CACHE_TTL_MS = 24 * 60 * 60 * 1_000;
 
-const MARKET_SCOUT_TIMEOUT_MS = 90_000;
+const MARKET_SCOUT_TIMEOUT_MS = 10_500;
 const MAX_MARKET_SCOUT_TARGETS = 5;
 const MAX_MARKET_SCOUT_TOOL_CALLS = 3;
-const REQUESTED_MARKET_SCOUT_TOOL_CALLS = 2;
+const REQUESTED_MARKET_SCOUT_TOOL_CALLS = 1;
 const MAX_SELECTION_QUERIES = 3;
 
 export type MarketEvidenceTier = "strong" | "supported" | "none";
@@ -43,9 +43,6 @@ export type MarketScoutPlan = {
 };
 
 export type MarketScoutFallbackReason =
-  | "index_invalid"
-  | "index_miss"
-  | "index_stale"
   | "insufficient_evidence"
   | "invalid_output"
   | "no_client"
@@ -270,7 +267,7 @@ function normalizeStringArray(values: string[], maximum: number) {
   });
 }
 
-export function canonicalSourceUrl(value: string) {
+function canonicalSourceUrl(value: string) {
   try {
     const parsed = new URL(value);
     if (parsed.protocol !== "https:") return null;
@@ -341,7 +338,7 @@ function classifySourceUrl(value: string): SourceClassification | null {
   };
 }
 
-export function tierForSources(sourceUrls: string[]): MarketEvidenceTier {
+function tierForSources(sourceUrls: string[]): MarketEvidenceTier {
   const sources = sourceUrls.flatMap((sourceUrl) => {
     const classification = classifySourceUrl(sourceUrl);
     return classification?.editorial ? [classification] : [];
@@ -543,7 +540,7 @@ function normalizedRequestKey(input: RecommendationApiRequest) {
   });
 }
 
-export function scoutCacheKey(
+function scoutCacheKey(
   input: RecommendationApiRequest,
   model: string,
   promptVersion: string,
@@ -557,8 +554,8 @@ export function scoutCacheKey(
 }
 
 const systemPrompt = [
-  "You are ReviewRadar's offline US-market product scout.",
-  "Use at most two focused web searches to find up to five ordered exact product models that independent testing or editorial consensus supports as the best overall choices satisfying the category, budget, and hard requirements.",
+  "You are ReviewRadar's bounded US-market product scout.",
+  "Use one broad web search to find up to five ordered exact product models that independent testing or editorial consensus supports as the best overall choices satisfying the category, budget, and hard requirements.",
   "For every target, include two or three current test/editorial URLs from independent domains, with at least one comparative test or best-of source; omit a target when that evidence threshold is unavailable.",
   "Prioritize models repeatedly recommended across independent comparative sources, not one-article picks, and place the strongest overall in-budget model first.",
   "When several qualify, prefer broadly cross-tested models with current US retail availability over newer one-review picks.",
@@ -600,7 +597,6 @@ export async function buildMarketScoutPlan(options: {
   model?: string;
   promptVersion?: string;
   signal?: AbortSignal;
-  timeoutMs?: number;
 }): Promise<{ plan: MarketScoutPlan; telemetry: MarketScoutTelemetry }> {
   const {
     client,
@@ -608,19 +604,14 @@ export async function buildMarketScoutPlan(options: {
     model = MARKET_SCOUT_MODEL,
     promptVersion = MARKET_SCOUT_PROMPT_VERSION,
     signal,
-    timeoutMs = MARKET_SCOUT_TIMEOUT_MS,
   } = options;
-  const hardTimeoutSignal = AbortSignal.timeout(timeoutMs);
-  const operationSignal = signal
-    ? AbortSignal.any([signal, hardTimeoutSignal])
-    : hardTimeoutSignal;
   const prompt = userPrompt(input);
   const cacheState: { outcome: "hit" | "miss" } = { outcome: "miss" };
   let providerUsage: Usage = { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
   let hostedSearchCalls = 0;
 
   try {
-    throwIfRequestCancelled(operationSignal);
+    throwIfRequestCancelled(signal);
     const validated = await getCachedOrLoad(
       scoutCacheKey(input, model, promptVersion),
       MARKET_SCOUT_CACHE_TTL_MS,
@@ -641,7 +632,7 @@ export async function buildMarketScoutPlan(options: {
               { role: "system", content: systemPrompt },
               { role: "user", content: prompt },
             ],
-            max_output_tokens: 2_400,
+            max_output_tokens: 1_600,
             max_tool_calls: REQUESTED_MARKET_SCOUT_TOOL_CALLS,
             reasoning: { effort: "low" },
             store: false,
@@ -653,12 +644,12 @@ export async function buildMarketScoutPlan(options: {
                 strict: true,
               },
             },
-            tools: [{ type: "web_search", search_context_size: "medium" }],
+            tools: [{ type: "web_search", search_context_size: "low" }],
           },
           {
             maxRetries: 0,
             signal: sharedSignal,
-            timeout: timeoutMs,
+            timeout: MARKET_SCOUT_TIMEOUT_MS,
           },
         );
         providerUsage = responseUsage(response);
@@ -669,9 +660,9 @@ export async function buildMarketScoutPlan(options: {
       (outcome) => {
         cacheState.outcome = outcome;
       },
-      { signal: operationSignal },
+      { signal },
     );
-    throwIfRequestCancelled(operationSignal);
+    throwIfRequestCancelled(signal);
     const cacheHit = cacheState.outcome === "hit";
     return {
       plan: validated.plan,
@@ -692,8 +683,7 @@ export async function buildMarketScoutPlan(options: {
       },
     };
   } catch (error) {
-    const internallyTimedOut = hardTimeoutSignal.aborted && !signal?.aborted;
-    if (!internallyTimedOut) rethrowIfRequestCancelled(error, signal);
+    rethrowIfRequestCancelled(error, signal);
     const validationError =
       error instanceof MarketScoutValidationError ? error : null;
     return {
@@ -703,7 +693,7 @@ export async function buildMarketScoutPlan(options: {
         cacheHit: cacheState.outcome === "hit",
         evidenceTiers:
           validationError?.stats.evidenceTiers || emptyValidationStats().evidenceTiers,
-        fallbackReason: internallyTimedOut ? "timeout" : fallbackReasonForError(error),
+        fallbackReason: fallbackReasonForError(error),
         hostedSearchCalls:
           validationError?.hostedSearchCalls || hostedSearchCalls,
         inputTokens: validationError?.usage.inputTokens || providerUsage.inputTokens,

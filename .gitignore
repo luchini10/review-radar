@@ -28,7 +28,6 @@ reviewradar-*.err.log
 /test-results
 /playwright/.cache
 eval-results.json
-/.reviewradar-cache
 
 # TypeScript
 *.tsbuildinfo

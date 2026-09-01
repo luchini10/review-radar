@@ -1,16 +1,9 @@
 import { spawn } from "node:child_process";
-import { randomUUID } from "node:crypto";
-import { readFile, rename, unlink, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { tmpdir } from "node:os";
-import path from "node:path";
 import { performance } from "node:perf_hooks";
 
-import { detectRequirementConflicts } from "../lib/requirementConflicts.ts";
-import { extractStructuredRequirements } from "../lib/requirementExtraction.ts";
-import { lookupMarketEvidence } from "../lib/marketEvidenceIndex.ts";
 import { productSelectionTestExports } from "../lib/productSelection.ts";
-import { validateRecommendationRequest } from "../lib/recommendationRequestValidation.ts";
 
 const require = createRequire(import.meta.url);
 const nextCli = require.resolve("next/dist/bin/next");
@@ -19,7 +12,6 @@ const benchmarkUrl = new URL(
   import.meta.url,
 );
 const EXPECTED_RUNS = 24;
-const EXPECTED_INDEX_REFRESHES = 8;
 const REQUEST_TIMEOUT_MS = 30_000;
 const SERVER_START_TIMEOUT_MS = 45_000;
 const SERVER_STOP_TIMEOUT_MS = 5_000;
@@ -38,7 +30,6 @@ function argumentValue(name) {
 
 function requireApprovedRun() {
   const approvedRuns = Number(argumentValue("approved-runs"));
-  const approvedRefreshes = Number(argumentValue("approved-refreshes"));
   const phase = argumentValue("phase");
   if (approvedRuns !== EXPECTED_RUNS) {
     throw new Error(
@@ -48,156 +39,7 @@ function requireApprovedRun() {
   if (phase !== "before" && phase !== "after") {
     throw new Error("This live matrix requires --phase=before or --phase=after.");
   }
-  if (approvedRefreshes !== EXPECTED_INDEX_REFRESHES) {
-    throw new Error(
-      `This indexed matrix requires --approved-refreshes=${EXPECTED_INDEX_REFRESHES}; received ${String(approvedRefreshes)}.`,
-    );
-  }
   return phase;
-}
-
-async function persistReport(report) {
-  const requestedPath = argumentValue("report-file");
-  if (!requestedPath) return;
-
-  const reportPath = path.resolve(requestedPath);
-  const normalizedPath = reportPath.replaceAll("\\", "/").toLowerCase();
-  if (
-    path.basename(reportPath).toLowerCase() === ".env.local" ||
-    normalizedPath.includes("/tests/fixtures/review-radar-live/")
-  ) {
-    throw new Error("The report path cannot target a protected repository path.");
-  }
-
-  const temporaryPath = `${reportPath}.${process.pid}.${randomUUID()}.tmp`;
-  try {
-    await writeFile(temporaryPath, `${JSON.stringify(report, null, 2)}\n`, {
-      encoding: "utf8",
-      flag: "wx",
-    });
-    await rename(temporaryPath, reportPath);
-  } finally {
-    await unlink(temporaryPath).catch(() => {});
-  }
-}
-
-function preparedRequest(value) {
-  const validation = validateRecommendationRequest(value);
-  if ("error" in validation) throw new Error(validation.error);
-  const input = {
-    ...validation.data,
-    extractedRequirements: extractStructuredRequirements(validation.data),
-  };
-  const conflicts = detectRequirementConflicts(input);
-  if (conflicts.length > 0) {
-    throw new Error(`Conflicting benchmark requirements: ${conflicts.join(" ")}`);
-  }
-  return input;
-}
-
-async function waitForIndexedEvidence(input, indexPath, refreshStartedAtMs) {
-  const deadline = performance.now() + 135_000;
-  while (performance.now() < deadline) {
-    const lookup = await lookupMarketEvidence({ indexPath, input });
-    if (
-      lookup.telemetry.lastRefreshAttempt &&
-      lookup.telemetry.lastRefreshAttempt.completedAtMs >= refreshStartedAtMs
-    ) {
-      return lookup;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-  return null;
-}
-
-async function refreshBenchmarkIndex(benchmarkCases, indexPath, portBase) {
-  const refreshes = [];
-  const server = startServer(portBase, indexPath);
-  const baseUrl = `http://127.0.0.1:${portBase}`;
-  try {
-    await waitUntilReady(baseUrl, server.child, server.output);
-    for (const benchmarkCase of benchmarkCases) {
-      process.stderr.write(`[market index] refreshing case=${benchmarkCase.id}\n`);
-      const input = preparedRequest(benchmarkCase.request);
-      const startedAt = performance.now();
-      const refreshStartedAtMs = Date.now();
-      try {
-        await waitUntilReady(baseUrl, server.child, server.output);
-        const response = await fetch(`${baseUrl}/api/recommendations`, {
-          body: JSON.stringify(benchmarkCase.request),
-          headers: {
-            "Content-Type": "application/json",
-            "x-reviewradar-debug": "true",
-          },
-          method: "POST",
-          signal: AbortSignal.timeout(30_000),
-        });
-        const body = asRecord(await response.json().catch(() => ({})));
-        const lookup = response.status === 200
-          ? await waitForIndexedEvidence(input, indexPath, refreshStartedAtMs)
-          : null;
-        const attempt = lookup?.telemetry.lastRefreshAttempt;
-        const research = attempt?.research;
-        const updated = attempt?.status === "updated" && lookup?.telemetry.indexStatus === "fresh";
-        refreshes.push({
-          acceptedSourceUrls: research?.acceptedSourceUrls || 0,
-          durationMs: Math.round(performance.now() - startedAt),
-          evidenceTiers: research?.evidenceTiers || { none: 0, strong: 0, supported: 0 },
-          error:
-            response.status === 200 && updated
-              ? null
-              : attempt?.fallbackReason
-                ? `Market research failed: ${attempt.fallbackReason}.`
-              : typeof body.error === "string"
-                ? body.error
-                : `Index refresh did not complete after HTTP ${response.status}.`,
-          hostedSearchCalls: research?.hostedSearchCalls || 0,
-          id: benchmarkCase.id,
-          inputTokens: research?.inputTokens || 0,
-          openAiCalls: research?.openAiCalls || 0,
-          outputTokens: research?.outputTokens || 0,
-          sourceUrls: updated
-            ? [...new Set(lookup.plan.targets.flatMap((target) => target.sourceUrls))]
-            : [],
-          status: updated ? "updated" : "failed",
-          targetCount: updated ? lookup.plan.targets.length : 0,
-          targets: updated
-            ? lookup.plan.targets.map((target) => ({
-                brand: target.brand,
-                model: target.model,
-                sourceUrls: target.sourceUrls,
-                tier: target.evidenceTier,
-              }))
-            : [],
-          totalTokens: research?.totalTokens || 0,
-          warmLogicalSerperOperations: asFiniteNumber(
-            asRecord(asRecord(body.debug).search).logicalSearchCalls,
-          ),
-        });
-      } catch (error) {
-        refreshes.push({
-          acceptedSourceUrls: 0,
-          durationMs: Math.round(performance.now() - startedAt),
-          evidenceTiers: { none: 0, strong: 0, supported: 0 },
-          error: error instanceof Error ? error.message : String(error),
-          hostedSearchCalls: 0,
-          id: benchmarkCase.id,
-          inputTokens: 0,
-          openAiCalls: 0,
-          outputTokens: 0,
-          status: "failed",
-          sourceUrls: [],
-          targetCount: 0,
-          targets: [],
-          totalTokens: 0,
-          warmLogicalSerperOperations: 0,
-        });
-      }
-    }
-  } finally {
-    await stopServer(server.child);
-  }
-  return refreshes;
 }
 
 function asRecord(value) {
@@ -331,18 +173,14 @@ async function waitUntilReady(baseUrl, child, serverOutput) {
   throw new Error(`Next.js did not become ready in ${SERVER_START_TIMEOUT_MS} ms. ${serverOutput()}`);
 }
 
-function startServer(port, indexPath) {
+function startServer(port) {
   let output = "";
   const child = spawn(
     process.execPath,
     [nextCli, "dev", "-H", "127.0.0.1", "-p", String(port)],
     {
       cwd: process.cwd(),
-      env: {
-        ...process.env,
-        NEXT_TELEMETRY_DISABLED: "1",
-        REVIEWRADAR_MARKET_INDEX_PATH: indexPath,
-      },
+      env: { ...process.env, NEXT_TELEMETRY_DISABLED: "1" },
       shell: false,
       stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
@@ -437,9 +275,6 @@ function compactTelemetry(body, benchmarkCase) {
       benchmarkCase.request,
     ),
     hostedSearchCalls: asFiniteNumber(scout.hostedSearchCalls),
-    indexAgeMs:
-      typeof scout.indexAgeMs === "number" ? asFiniteNumber(scout.indexAgeMs) : null,
-    indexStatus: scout.indexStatus || null,
     logicalSerperOperations: asFiniteNumber(search.logicalSearchCalls),
     marketTargets: asArray(search.marketTargets).map((value) => {
       const target = asRecord(value);
@@ -480,8 +315,8 @@ function compactTelemetry(body, benchmarkCase) {
   };
 }
 
-async function runCase(benchmarkCase, round, port, indexPath) {
-  const server = startServer(port, indexPath);
+async function runCase(benchmarkCase, round, port) {
+  const server = startServer(port);
   const baseUrl = `http://127.0.0.1:${port}`;
   try {
     await waitUntilReady(baseUrl, server.child, server.output);
@@ -547,7 +382,7 @@ function nearestRankPercentile(values, percentile) {
   return ordered[Math.max(0, Math.ceil(percentile * ordered.length) - 1)];
 }
 
-function summarize(results, cases, indexRefreshes) {
+function summarize(results, cases) {
   const successful = results.filter((result) => result.status === 200 && !result.error);
   const nonEmpty = successful.filter((result) => asArray(result.products).length > 0);
   const benchmarkEligible = successful.filter(
@@ -569,12 +404,12 @@ function summarize(results, cases, indexRefreshes) {
       ];
     }),
   );
-  const totalInputTokens = indexRefreshes.reduce(
-    (total, result) => total + result.inputTokens,
+  const totalInputTokens = successful.reduce(
+    (total, result) => total + result.scoutInputTokens,
     0,
   );
-  const totalOutputTokens = indexRefreshes.reduce(
-    (total, result) => total + result.outputTokens,
+  const totalOutputTokens = successful.reduce(
+    (total, result) => total + result.scoutOutputTokens,
     0,
   );
   const estimatedModelCostUsd =
@@ -590,38 +425,17 @@ function summarize(results, cases, indexRefreshes) {
       leaderTopThreeAtLeast80Percent:
         benchmarkEligible.length > 0 && leaderHits.length / benchmarkEligible.length >= 0.8,
       nonEmptyAtLeast21Of24: nonEmpty.length >= 21,
-      freshIndexForEveryRequest: successful.every(
-        (result) => result.indexStatus === "fresh",
-      ),
-      indexRefreshAtMostThreeHostedSearches: indexRefreshes.every(
-        (result) => result.hostedSearchCalls <= 3,
-      ),
-      indexRefreshesSucceeded: indexRefreshes.every(
-        (result) => result.status === "updated",
-      ),
+      oneOpenAiResponseEach: successful.every((result) => result.openAiCalls === 1),
       publicShapeUnchanged: successful.every((result) => result.publicShapeValid),
       serperAtMost15: successful.every((result) => result.logicalSerperOperations <= 15),
       shopVacAtLeast2Of3: byCase["shop-vacuum"].nonEmpty >= 2,
       strongAheadOfUnscored: successful.every((result) => result.strongBeforeUnscored),
-      zeroOpenAiResponsesInRequest: successful.every(
-        (result) => result.openAiCalls === 0,
-      ),
-      zeroWebSearchInRequest: successful.every(
-        (result) => result.hostedSearchCalls === 0,
-      ),
+      webSearchAtMost3: successful.every((result) => result.hostedSearchCalls <= 3),
       zeroRequestFailures: successful.length === EXPECTED_RUNS,
     },
     byCase,
     calls: {
-      backgroundHostedSearchCalls: indexRefreshes.reduce(
-        (total, result) => total + result.hostedSearchCalls,
-        0,
-      ),
-      backgroundOpenAiResponses: indexRefreshes.reduce(
-        (total, result) => total + result.openAiCalls,
-        0,
-      ),
-      requestHostedSearchCalls: successful.reduce(
+      hostedSearchCalls: successful.reduce(
         (total, result) => total + result.hostedSearchCalls,
         0,
       ),
@@ -629,11 +443,7 @@ function summarize(results, cases, indexRefreshes) {
         (total, result) => total + result.logicalSerperOperations,
         0,
       ),
-      maximumBackgroundHostedSearchCalls: Math.max(
-        0,
-        ...indexRefreshes.map((result) => result.hostedSearchCalls),
-      ),
-      maximumRequestHostedSearchCalls: Math.max(
+      maximumHostedSearchCalls: Math.max(
         0,
         ...successful.map((result) => result.hostedSearchCalls),
       ),
@@ -641,10 +451,7 @@ function summarize(results, cases, indexRefreshes) {
         0,
         ...successful.map((result) => result.logicalSerperOperations),
       ),
-      requestOpenAiResponses: successful.reduce(
-        (total, result) => total + result.openAiCalls,
-        0,
-      ),
+      openAiResponses: successful.reduce((total, result) => total + result.openAiCalls, 0),
       physicalSerperAttempts: successful.reduce(
         (total, result) => total + result.physicalSerperAttempts,
         0,
@@ -683,9 +490,9 @@ function summarize(results, cases, indexRefreshes) {
         ? Math.round(normalBytes.reduce((total, value) => total + value, 0) / normalBytes.length)
         : 0,
     },
-    marketEvidence: {
-      indexFallbackRuns: successful.filter((result) => result.scoutUsedFallback).length,
-      indexFallbackReasons: successful.reduce((counts, result) => {
+    scout: {
+      fallbackRuns: successful.filter((result) => result.scoutUsedFallback).length,
+      fallbackReasons: successful.reduce((counts, result) => {
         const reason = result.scoutFallbackReason;
         if (reason) counts[reason] = (counts[reason] || 0) + 1;
         return counts;
@@ -696,7 +503,6 @@ function summarize(results, cases, indexRefreshes) {
         output: totalOutputTokens,
         total: totalInputTokens + totalOutputTokens,
       },
-      refreshes: indexRefreshes,
       returnedEvidenceRuns: successful.filter(
         (result) => result.evidencedTargetReturned,
       ).length,
@@ -719,40 +525,23 @@ if (asArray(benchmark.cases).length * 3 !== EXPECTED_RUNS) {
 const portBase = 43_000 + (process.pid % 1_000);
 const results = [];
 const startedAt = new Date().toISOString();
-const indexPath = path.join(
-  tmpdir(),
-  `reviewradar-market-index-${process.pid}-${randomUUID()}.json`,
-);
-let indexRefreshes = [];
-try {
-  indexRefreshes = await refreshBenchmarkIndex(
-    benchmark.cases,
-    indexPath,
-    portBase - 100,
-  );
-  for (let round = 1; round <= 3; round += 1) {
-    for (const benchmarkCase of benchmark.cases) {
-      const runNumber = results.length + 1;
-      process.stderr.write(
-        `[indexed quality ${phase}] ${runNumber}/${EXPECTED_RUNS} round=${round} case=${benchmarkCase.id}\n`,
-      );
-      results.push(
-        await runCase(benchmarkCase, round, portBase + runNumber, indexPath),
-      );
-    }
+for (let round = 1; round <= 3; round += 1) {
+  for (const benchmarkCase of benchmark.cases) {
+    const runNumber = results.length + 1;
+    process.stderr.write(
+      `[PR-13 ${phase}] ${runNumber}/${EXPECTED_RUNS} round=${round} case=${benchmarkCase.id}\n`,
+    );
+    results.push(await runCase(benchmarkCase, round, portBase + runNumber));
   }
-} finally {
-  await unlink(indexPath).catch(() => {});
 }
 
 const report = {
-  architecture: "market_quality_v2_indexed",
   benchmark: benchmark.version,
   completedAt: new Date().toISOString(),
   phase,
-  schemaVersion: 2,
+  schemaVersion: 1,
   startedAt,
-  summary: summarize(results, benchmark.cases, indexRefreshes),
+  summary: summarize(results, benchmark.cases),
   runs: results,
 };
 
@@ -766,8 +555,6 @@ const outputReport =
           error: result.error || null,
           evidencedTargetReturned: Boolean(result.evidencedTargetReturned),
           hostedSearchCalls: result.hostedSearchCalls ?? null,
-          indexAgeMs: result.indexAgeMs ?? null,
-          indexStatus: result.indexStatus || null,
           logicalSerperOperations: result.logicalSerperOperations ?? null,
           marketTargets: result.marketTargets || [],
           normalResponseBytes: result.normalResponseBytes ?? null,
@@ -782,7 +569,6 @@ const outputReport =
       }
     : report;
 
-await persistReport(outputReport);
 process.stdout.write(`${JSON.stringify(outputReport, null, 2)}\n`);
 if (Object.values(report.summary.acceptance).some((passed) => !passed)) {
   process.exitCode = 1;

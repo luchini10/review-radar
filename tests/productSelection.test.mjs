@@ -25,7 +25,7 @@ const {
   selectionRequirementResult,
   selectDistinctProducts,
   selectVerificationCandidates,
-  marketTargetsNeedingSearch,
+  strongTargetsNeedingSearch,
   trustedAvailability,
   trustedPrice,
 } = productSelectionTestExports;
@@ -515,7 +515,7 @@ describe("selection correctness", () => {
     assert.equal(attached[1].marketEvidence, undefined);
   });
 
-  it("searches strong targets first and uses supported targets only for remaining slots", () => {
+  it("searches only the three highest strong targets not already discovered", () => {
     const targets = [
       marketTarget("Alpha", "A100", "strong", 0),
       marketTarget("Beta", "B200", "strong", 1),
@@ -523,7 +523,7 @@ describe("selection correctness", () => {
       marketTarget("Delta", "D400", "strong", 3),
       marketTarget("Epsilon", "E500", "strong", 4),
     ];
-    const selected = marketTargetsNeedingSearch(
+    const selected = strongTargetsNeedingSearch(
       [candidate("Alpha A100 Robot Vacuum", { brand: "Alpha" })],
       targets,
     );
@@ -531,14 +531,6 @@ describe("selection correctness", () => {
     assert.deepEqual(
       selected.map((target) => target.model),
       ["B200", "D400", "E500"],
-    );
-    assert.deepEqual(
-      marketTargetsNeedingSearch([], [
-        marketTarget("Alpha", "A100", "strong", 0),
-        marketTarget("Beta", "B200", "supported", 1),
-        marketTarget("Gamma", "C300", "supported", 2),
-      ]).map((target) => target.model),
-      ["A100", "B200", "C300"],
     );
   });
 
