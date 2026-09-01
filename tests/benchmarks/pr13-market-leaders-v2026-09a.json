@@ -3,6 +3,14 @@
   "frozenAt": "2026-09-01",
   "market": "US",
   "purpose": "QA-only PR-13 before/after leader-recall benchmark",
+  "rounds": 3,
+  "acceptance": {
+    "minimumLeaderTopThreeRate": 0.8,
+    "minimumNonEmpty": 21,
+    "requiredCaseNonEmpty": {
+      "shop-vacuum": 2
+    }
+  },
   "cases": [
     {
       "id": "coffee-maker",

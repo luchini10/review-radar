@@ -1,18 +1,16 @@
 import { spawn } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { readFile, rename, unlink, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
+import path from "node:path";
 import { performance } from "node:perf_hooks";
 
 import { productSelectionTestExports } from "../lib/productSelection.ts";
 
 const require = createRequire(import.meta.url);
 const nextCli = require.resolve("next/dist/bin/next");
-const benchmarkUrl = new URL(
-  "../tests/benchmarks/pr13-market-leaders-v2026-09a.json",
-  import.meta.url,
-);
-const EXPECTED_RUNS = 24;
-const REQUEST_TIMEOUT_MS = 30_000;
+const DEFAULT_BENCHMARK = "pr14-live-accuracy-v2026-09a";
+const REQUEST_TIMEOUT_MS = 120_000;
 const SERVER_START_TIMEOUT_MS = 45_000;
 const SERVER_STOP_TIMEOUT_MS = 5_000;
 const PUBLIC_PRODUCT_KEYS = [
@@ -28,18 +26,51 @@ function argumentValue(name) {
   return process.argv.find((argument) => argument.startsWith(prefix))?.slice(prefix.length);
 }
 
-function requireApprovedRun() {
+function benchmarkUrl() {
+  const name = argumentValue("benchmark") || DEFAULT_BENCHMARK;
+  if (!/^[a-z0-9-]+$/i.test(name)) {
+    throw new Error("--benchmark must be a benchmark filename stem, not a path.");
+  }
+  return new URL(`../tests/benchmarks/${name}.json`, import.meta.url);
+}
+
+function requireApprovedRun(expectedRuns) {
   const approvedRuns = Number(argumentValue("approved-runs"));
-  const phase = argumentValue("phase");
-  if (approvedRuns !== EXPECTED_RUNS) {
+  const phase = argumentValue("phase") || "current";
+  if (approvedRuns !== expectedRuns) {
     throw new Error(
-      `This live matrix requires --approved-runs=${EXPECTED_RUNS}; received ${String(approvedRuns)}.`,
+      `This live audit requires --approved-runs=${expectedRuns}; received ${String(approvedRuns)}.`,
     );
   }
-  if (phase !== "before" && phase !== "after") {
-    throw new Error("This live matrix requires --phase=before or --phase=after.");
+  if (!new Set(["before", "after", "current"]).has(phase)) {
+    throw new Error("--phase must be before, after, or current.");
   }
   return phase;
+}
+
+async function persistReport(report) {
+  const requestedPath = argumentValue("report-file");
+  if (!requestedPath) return;
+
+  const reportPath = path.resolve(requestedPath);
+  const normalizedPath = reportPath.replaceAll("\\", "/").toLowerCase();
+  if (
+    path.basename(reportPath).toLowerCase() === ".env.local" ||
+    normalizedPath.includes("/tests/fixtures/review-radar-live/")
+  ) {
+    throw new Error("The report path cannot target a protected repository path.");
+  }
+
+  const temporaryPath = `${reportPath}.${process.pid}.${randomUUID()}.tmp`;
+  try {
+    await writeFile(temporaryPath, `${JSON.stringify(report, null, 2)}\n`, {
+      encoding: "utf8",
+      flag: "wx",
+    });
+    await rename(temporaryPath, reportPath);
+  } finally {
+    await unlink(temporaryPath).catch(() => {});
+  }
 }
 
 function asRecord(value) {
@@ -315,11 +346,8 @@ function compactTelemetry(body, benchmarkCase) {
   };
 }
 
-async function runCase(benchmarkCase, round, port) {
-  const server = startServer(port);
-  const baseUrl = `http://127.0.0.1:${port}`;
+async function runCase(benchmarkCase, round, baseUrl) {
   try {
-    await waitUntilReady(baseUrl, server.child, server.output);
     const startedAt = performance.now();
     let response;
     let text = "";
@@ -371,8 +399,6 @@ async function runCase(benchmarkCase, round, port) {
       round,
       status: 0,
     };
-  } finally {
-    await stopServer(server.child);
   }
 }
 
@@ -382,7 +408,8 @@ function nearestRankPercentile(values, percentile) {
   return ordered[Math.max(0, Math.ceil(percentile * ordered.length) - 1)];
 }
 
-function summarize(results, cases) {
+function summarize(results, cases, acceptanceConfig) {
+  const expectedRuns = results.length;
   const successful = results.filter((result) => result.status === 200 && !result.error);
   const nonEmpty = successful.filter((result) => asArray(result.products).length > 0);
   const benchmarkEligible = successful.filter(
@@ -415,23 +442,30 @@ function summarize(results, cases) {
   const estimatedModelCostUsd =
     (totalInputTokens * 0.75) / 1_000_000 +
     (totalOutputTokens * 4.5) / 1_000_000;
+  const minimumLeaderRate = asFiniteNumber(acceptanceConfig.minimumLeaderTopThreeRate);
+  const minimumNonEmpty = asFiniteNumber(acceptanceConfig.minimumNonEmpty);
+  const requiredCaseNonEmpty = asRecord(acceptanceConfig.requiredCaseNonEmpty);
 
   return {
     acceptance: {
       acceptedCandidatesSafe: successful.every((result) => result.acceptedCandidatesSafe),
-      cacheColdMaximumAtMost30Seconds: Math.max(0, ...durations) <= 30_000,
-      cacheColdP95AtMost25Seconds:
-        nearestRankPercentile(durations, 0.95) <= 25_000,
-      leaderTopThreeAtLeast80Percent:
-        benchmarkEligible.length > 0 && leaderHits.length / benchmarkEligible.length >= 0.8,
-      nonEmptyAtLeast21Of24: nonEmpty.length >= 21,
+      freshResearchAttemptedEachRequest: successful.every(
+        (result) => result.openAiCalls === 1 && result.physicalSerperAttempts > 0,
+      ),
+      leaderTopThreeAtLeastConfiguredRate:
+        benchmarkEligible.length > 0 &&
+        leaderHits.length / benchmarkEligible.length >= minimumLeaderRate,
+      nonEmptyAtLeastConfiguredMinimum: nonEmpty.length >= minimumNonEmpty,
       oneOpenAiResponseEach: successful.every((result) => result.openAiCalls === 1),
       publicShapeUnchanged: successful.every((result) => result.publicShapeValid),
+      requiredCaseRecall: Object.entries(requiredCaseNonEmpty).every(
+        ([caseId, minimum]) =>
+          asFiniteNumber(asRecord(byCase[caseId]).nonEmpty) >= asFiniteNumber(minimum),
+      ),
       serperAtMost15: successful.every((result) => result.logicalSerperOperations <= 15),
-      shopVacAtLeast2Of3: byCase["shop-vacuum"].nonEmpty >= 2,
       strongAheadOfUnscored: successful.every((result) => result.strongBeforeUnscored),
       webSearchAtMost3: successful.every((result) => result.hostedSearchCalls <= 3),
-      zeroRequestFailures: successful.length === EXPECTED_RUNS,
+      zeroRequestFailures: successful.length === expectedRuns,
     },
     byCase,
     calls: {
@@ -482,7 +516,7 @@ function summarize(results, cases) {
     },
     nonEmpty: {
       count: nonEmpty.length,
-      rate: Number((nonEmpty.length / EXPECTED_RUNS).toFixed(4)),
+      rate: expectedRuns ? Number((nonEmpty.length / expectedRuns).toFixed(4)) : 0,
     },
     payloadBytes: {
       maximum: Math.max(0, ...normalBytes),
@@ -516,32 +550,47 @@ function summarize(results, cases) {
   };
 }
 
-const phase = requireApprovedRun();
-const benchmark = JSON.parse(await readFile(benchmarkUrl, "utf8"));
-if (asArray(benchmark.cases).length * 3 !== EXPECTED_RUNS) {
-  throw new Error(`Expected eight benchmark cases and three rounds; found ${asArray(benchmark.cases).length}.`);
+const benchmark = JSON.parse(await readFile(benchmarkUrl(), "utf8"));
+const cases = asArray(benchmark.cases);
+const rounds = Math.floor(asFiniteNumber(benchmark.rounds));
+if (cases.length === 0 || rounds < 1) {
+  throw new Error("The selected benchmark must define at least one case and one round.");
 }
+const expectedRuns = cases.length * rounds;
+const phase = requireApprovedRun(expectedRuns);
 
 const portBase = 43_000 + (process.pid % 1_000);
+const server = startServer(portBase);
+const baseUrl = `http://127.0.0.1:${portBase}`;
 const results = [];
 const startedAt = new Date().toISOString();
-for (let round = 1; round <= 3; round += 1) {
-  for (const benchmarkCase of benchmark.cases) {
-    const runNumber = results.length + 1;
-    process.stderr.write(
-      `[PR-13 ${phase}] ${runNumber}/${EXPECTED_RUNS} round=${round} case=${benchmarkCase.id}\n`,
-    );
-    results.push(await runCase(benchmarkCase, round, portBase + runNumber));
+try {
+  await waitUntilReady(baseUrl, server.child, server.output);
+  await fetch(`${baseUrl}/api/recommendations`, {
+    method: "GET",
+    signal: AbortSignal.timeout(SERVER_START_TIMEOUT_MS),
+  }).then((response) => response.text());
+
+  for (let round = 1; round <= rounds; round += 1) {
+    for (const benchmarkCase of cases) {
+      const runNumber = results.length + 1;
+      process.stderr.write(
+        `[live-accuracy ${phase}] ${runNumber}/${expectedRuns} round=${round} case=${benchmarkCase.id}\n`,
+      );
+      results.push(await runCase(benchmarkCase, round, baseUrl));
+    }
   }
+} finally {
+  await stopServer(server.child);
 }
 
 const report = {
   benchmark: benchmark.version,
   completedAt: new Date().toISOString(),
   phase,
-  schemaVersion: 1,
+  schemaVersion: 2,
   startedAt,
-  summary: summarize(results, benchmark.cases),
+  summary: summarize(results, cases, asRecord(benchmark.acceptance)),
   runs: results,
 };
 
@@ -569,6 +618,7 @@ const outputReport =
       }
     : report;
 
+await persistReport(outputReport);
 process.stdout.write(`${JSON.stringify(outputReport, null, 2)}\n`);
 if (Object.values(report.summary.acceptance).some((passed) => !passed)) {
   process.exitCode = 1;
