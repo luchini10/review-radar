@@ -11,6 +11,35 @@ Update this file after:
 
 ## 2026-09-01
 
+### Codex - Rank exact market leaders within budget
+
+#### Changed
+
+- Started the market scout and three neutral Shopping searches concurrently,
+  then added up to three exact Shopping searches for the highest undiscovered
+  `strong` models.
+- Raised only the bounded logical ceiling from twelve to fifteen: at most six
+  discovery searches plus the existing nine candidate-local resolution
+  opportunities.
+- Captured Shopping rating, rating count, offer count, product ID, and position
+  internally. Ratings use a 4.0/50 Bayesian prior and never establish leader
+  status or public card content.
+- Attached market evidence only to canonical-brand, exact-model matches and
+  isolated named, numeric, generation, year, and model-code siblings.
+- Reapplied final ordering after all safety and commerce gates by evidence
+  tier, directly supported preferences, scout consensus, shrunken commerce
+  signals, page/merchant quality, and stable discovery order. Price is only an
+  eligibility ceiling.
+
+#### Verified
+
+- Full validation passed 317/317 unit tests across 43 suites, typecheck,
+  zero-warning lint, the Next.js 16.3.3 production build, and Playwright 7/7.
+- Tests prove scout/Shopping overlap, the six-discovery/nine-resolution
+  ceiling, all eight frozen leader identities, sibling isolation, post-gate
+  tier order, and that a 5.0/1 product cannot outrank a 4.6/1,000 product solely
+  through commerce metadata.
+
 ### Codex - Add a source-bound market scout
 
 #### Changed

@@ -17287,3 +17287,55 @@ to continue this goal without further approval pauses. It must add concurrent
 scout/neutral discovery, exact strong-target searches, exact-model evidence
 attachment, commerce-signal shrinkage, tier-aware ranking, and the fifteen-
 operation ceiling without changing the public card.
+
+---
+
+## PR-13 Step 3 exact-model quality ranking (2026-09-01)
+
+**Assessment:** the scout trust boundary alone could not improve final product
+quality. A supported target still needed a bounded path into Shopping, exact
+identity attachment, and post-verification ordering. Price proximity and raw
+5-star ratings were specifically rejected as quality shortcuts.
+
+**Implementation:** the route starts the market-scout promise and selector
+together. The selector immediately launches three neutral Shopping queries,
+then awaits the plan. It filters neutral results through early type, condition,
+market, and extreme-budget gates before deciding whether a `strong` exact model
+is already discovered. It searches at most the three highest remaining
+`strong` targets. Six maximum discovery calls plus nine existing candidate-
+local page resolutions preserve a fifteen-logical-operation ceiling.
+
+Serper Shopping rating, rating count, offer count, product ID, and position are
+stored only on internal candidates. A conservative exact matcher requires the
+canonical brand and exact stable model code/label or alias. Named variants,
+numeric siblings, generation/year omissions, and different model codes receive
+no evidence. The QA registry exercises all eight frozen leaders without
+becoming a runtime input.
+
+Both verification priority and final post-gate order use: evidence tier,
+directly supported preferences, scout consensus, Bayesian commerce rating with
+a 4.0/50 prior, review count, offer count, page resolvability, merchant trust,
+and stable discovery order. Final sorting occurs only after type, condition,
+hard requirements, identity, availability, price, budget, page, image, and
+SSRF gates pass. Price cannot improve rank. Basic brand diversity runs after
+quality ordering, preserving the strongest passing leader first.
+
+**Verification:** the full suite passes 317/317 tests across 43 suites;
+typecheck passes; ESLint passes with zero warnings; the Next.js 16.3.3
+production build passes with only `/`, `/_not-found`, and
+`/api/recommendations`; and Playwright passes 7/7 across desktop/mobile
+Chromium. Focused proofs cover source tier priority, exact identity and sibling
+isolation, explicit generations, all eight frozen leader identities,
+scout/neutral concurrency, three target searches, the six-plus-nine ceiling,
+post-gate sorting, and sparse rating shrinkage. Exact implementation commit:
+`1b4ca46a4e13cde6a9e81eb3744fda68b4671562`.
+
+**Measurement boundary:** no live provider run occurred in Step 3. The public
+payload remains unchanged, and the last measured baseline remains 23/24 non-
+empty, shop vacuum 2/3, mean 12,507 ms, p95 18,806 ms, and maximum 20,419 ms.
+Step 4 must measure leader recall, constraints, latency, provider/tool calls,
+tokens, cost, and payload size on the precommitted no-retry matrix.
+
+**Decision:** Step 3 is complete. Step 4 is authorized without another
+approval pause. Run the cache-cold three-by-eight matrix and treat any failed
+gate as evidence to diagnose, not permission to retry or weaken safety.

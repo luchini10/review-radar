@@ -31,8 +31,9 @@ The production recommendation path is one synchronous POST route:
       -> POST /api/recommendations
       -> validate and normalize the request
       -> extract deterministic requirements
-      -> optional one-call source-bound market scout
-      -> at most three Shopping queries
+      -> start optional one-call source-bound market scout
+         and three neutral Shopping queries concurrently
+      -> up to three exact-model Shopping queries for undiscovered strong targets
       -> deterministic type, accessory, used-item, budget, and requirement filters
       -> candidate-local product-page resolution when needed
       -> adaptive three-candidate finalist verification waves
@@ -90,11 +91,14 @@ neutral Shopping discovery with no market-quality target.
 
 ### Product search
 
-lib/productSearch.ts is the sole Serper transport. The selector executes at
-most three Shopping queries and may use the remaining request budget for
+lib/productSearch.ts is the sole Serper transport. The selector starts three
+neutral Shopping queries while the market scout is still running, then may
+search the three highest `strong` exact-model targets that did not already
+survive early discovery filters. It may use the remaining request budget for
 candidate-local product-page lookups. It verifies a ranked queue of at most
 nine candidates in waves of three, without repeating discovery. The total
-logical ceiling is twelve.
+logical ceiling is fifteen: at most six discovery searches plus nine
+candidate-local resolution opportunities.
 There are no retries, editorial queries, review queries, rescue queries, image
 queries, or alternative search providers.
 
@@ -123,20 +127,26 @@ Selection remains deterministic after candidate discovery:
    candidates before enrichment.
 6. Interleave query results and deduplicate stable model plus named-variant
    identities across retailer URLs.
-7. Prefer direct requirement matches, resolvable identities, trustworthy
-   merchants, and a verification slate that is not dominated by one brand.
-8. Resolve only candidate-local product pages, preserving the Shopping
+7. Attach market evidence only when brand and exact stable model identity
+   match; named, numeric, generation, and year siblings do not inherit it.
+8. Prioritize verification and final cards by `strong`, then `supported`, then
+   unscored; within a tier use directly supported preferences, scout consensus,
+   Bayesian-shrunken commerce rating, review/offer volume, resolvability,
+   merchant trust, and stable discovery order. Price never adds rank.
+9. Keep a verification slate that is not dominated by one brand.
+10. Resolve only candidate-local product pages, preserving the Shopping
    storefront when an exact merchant page is available, and retain at most two
    exact page alternatives on distinct hosts from one resolution search.
-9. Require a safe product-detail URL and affirmative current availability.
-10. Fail closed on explicit hard feature, size, numeric, boolean, brand, and
+11. Require a safe product-detail URL and affirmative current availability.
+12. Fail closed on explicit hard feature, size, numeric, boolean, brand, and
     avoid requirements.
-11. Reject a known numeric contradiction to an ordinary soft preference while
+13. Reject a known numeric contradiction to an ordinary soft preference while
     leaving missing soft evidence unknown.
-12. Require a trustworthy in-budget price when the shopper specifies a budget.
-13. Backfill rejected finalist slots from the ranked queue without bypassing
+14. Require a trustworthy in-budget price when the shopper specifies a budget.
+15. Backfill rejected finalist slots from the ranked queue without bypassing
     any gate or repeating discovery.
-14. Return at most five distinct products, deduplicated by stable identity and
+16. Reapply quality ordering only to products that passed every gate, then
+    return at most five distinct products, deduplicated by stable identity and
     canonical product-page URL, with basic brand diversity.
 
 Soft preferences influence ordering but do not become invented facts.
@@ -254,15 +264,16 @@ The PR-10 architecture and PR-11 accuracy gates are protected by:
   and the minimal result card;
 - TypeScript, ESLint, and the Next production build.
 
-The PR-13 Step 2 source passes 303/303 unit tests across 42 suites,
+The PR-13 Step 3 source passes 317/317 unit tests across 43 suites,
 zero-warning lint, typecheck, production build, and Playwright 7/7. Its frozen
 three-round cache-cold matrix returned non-empty shortlists in 23/24 requests,
 including shop vacuum 2/3, with p95 18,806 ms and a 20,419 ms maximum. Every
 request used one OpenAI response and no more than twelve logical operations.
-The Step 2 checkpoint validates the scout trust boundary but has not yet run a
-new live matrix or implemented tier-aware final ranking. The earlier 23/24
-selection-recall result is therefore not proof that returned products are
-market leaders.
+The Step 3 checkpoint validates exact-model attachment, concurrent discovery,
+tier-aware final ranking, commerce-signal shrinkage, and the fifteen-operation
+ceiling, but has not yet run the new live matrix. The earlier 23/24 selection-
+recall result is therefore not proof that the new path meets leader recall or
+latency gates.
 
 The build route manifest must contain only /, /_not-found, and
 /api/recommendations.
@@ -275,8 +286,8 @@ The build route manifest must contain only /, /_not-found, and
   qualifying product exists; the latest local frozen matrix observed one empty
   run in 24, but provider variability prevents treating that rate as universal.
 - The market scout can improve exact-model recall, but its source tier is not a
-  product-fact, price, availability, or eligibility authority. Step 3 still
-  needs to bind it through final quality ranking.
+  product-fact, price, availability, or eligibility authority. The cache-cold
+  Step 4 matrix still needs to prove live leader recall and latency.
 - Missing or ambiguous product images are intentionally omitted.
 - The recorded live quality sample is small and local. It does not prove
   hosted operations, accessibility beyond the current browser suite, or

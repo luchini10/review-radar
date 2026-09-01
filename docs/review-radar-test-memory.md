@@ -4104,3 +4104,33 @@ a known conservative undercount.
 - The public recommendation contract remains image, name, category,
   trustworthy price when available, and product-page URL. Source URLs, tiers,
   scores, and scout telemetry remain server-internal/local-debug only.
+
+## PR-13 exact-model quality-ranking contract (2026-09-01)
+
+- Start exactly three neutral Shopping queries while the market scout is still
+  pending. After early product-type, condition, secondary-market, non-US, and
+  extreme-budget filters, search at most the three highest `strong` exact
+  targets not already discovered. Supported targets do not receive an exact
+  search.
+- The logical ceiling is fifteen: no more than six discovery searches and nine
+  candidate-local resolution opportunities. Direct pages do not spend a
+  resolution operation. Preserve the three-candidate waves, nine-candidate
+  verification limit, cache coalescing, and cancellation.
+- Attach evidence only when canonical brand and an exact stable model label or
+  alias match. A different model code, named variant, numeric sibling,
+  generation, or year receives no tier, consensus, or source URLs. Dedupe may
+  merge market/commerce signals only inside the existing exact identity key.
+- Shopping rating, rating count, offer count, product ID, and position are
+  internal commerce metadata, not leader evidence. Use the Bayesian mean
+  `(rating * count + 4.0 * 50) / (count + 50)`; missing or malformed signals
+  remain unscored. A 5.0 rating with one review must rank below 4.6 with 1,000
+  reviews when commerce metadata is the only difference.
+- Apply the same quality order before bounded verification and again after all
+  existing gates pass: `strong`, `supported`, unscored; directly supported
+  preferences; scout consensus; Bayesian rating; review count; offer count;
+  page resolvability; merchant trust; stable discovery order.
+- Price is an eligibility ceiling only. It cannot add rank. Preserve basic
+  brand diversity, but the strongest qualifying leader remains the first card.
+- The QA registry may prove test coverage for its eight exact model identities
+  but remains test-only and cannot feed runtime discovery, evidence, price,
+  availability, eligibility, or ordering.

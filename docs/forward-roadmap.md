@@ -4717,10 +4717,11 @@ the search ceiling or infer availability from price alone.
 
 ### PR-13 — best-in-budget market quality
 
-**Status:** Steps 1 and 2 are complete and locally validated. Taylor approved
-Step 2 and explicitly removed further approval pauses for this goal. Step 3 is
-authorized: integrate exact-model evidence and commerce signals into bounded
-discovery and ranking, then continue to the precommitted acceptance matrix.
+**Status:** Steps 1 through 3 are complete and locally validated. Taylor
+explicitly removed further approval pauses for this goal. Step 4 is authorized:
+run the precommitted cache-cold acceptance matrix, audit the results, correct
+any evidence-supported failure without weakening gates, and publish the final
+measurement record.
 
 **Objective:** establish a safe, repeatable selection baseline and an
 independently sourced market-leader benchmark before adding market-quality
@@ -4784,13 +4785,38 @@ last measured north-star values remain the Step 1 result: 23/24 non-empty,
 shop vacuum 2/3, p95 18,806 ms, zero observed constraint failures, and no
 market-leader-recall claim.
 
-**Next authorized work:** Step 3 must search at most the three highest `strong`
-exact-model targets alongside three neutral Shopping queries, retain the
-fifteen-logical-operation ceiling, attach evidence only to exact stable model
-identity, and rank passing products by evidence tier, supported preferences,
-consensus order, shrunken commerce signals, page/merchant quality, and stable
-discovery order. The scout and Shopping work must begin concurrently; public
-cards and every existing safety gate remain unchanged.
+**Step 3 quality-selection checkpoint:** the route starts the market scout and
+three neutral Shopping queries concurrently. After neutral results pass early
+type, condition, market, and extreme-budget filters, the selector searches at
+most the three highest `strong` exact models not already discovered. At most
+six discovery searches plus nine candidate-local resolutions stay within
+fifteen logical Serper operations.
+
+Shopping rating, rating count, offer count, product ID, and provider position
+are retained internally. Evidence attaches only after canonical brand and
+exact stable model identity match; named, numeric, generation, year, and code
+siblings remain isolated. The final order is reapplied after every existing
+gate passes: `strong`, `supported`, unscored; directly supported preferences;
+scout consensus; Bayesian rating `(rating * count + 4.0 * 50) / (count + 50)`;
+review/offer volume; resolution/merchant quality; stable discovery order.
+Price is only an eligibility ceiling and never adds rank. Brand diversity
+preserves the strongest qualifying leader first.
+
+Step 3 is committed at `1b4ca46a4e13cde6a9e81eb3744fda68b4671562`.
+Validation passes 317/317 unit tests across 43 suites, typecheck, zero-warning
+lint, the production build, and Playwright 7/7. Tests prove all eight frozen
+leader identities bind in QA without runtime registry access, siblings do not
+inherit evidence, a 5.0/1 product loses the commerce tie-break to 4.6/1,000,
+the scout/neutral searches overlap, no more than three strong-target searches
+run, and final post-gate sorting preserves tier priority. No new live matrix
+has run, so the last measured values remain the Step 1 baseline.
+
+**Next authorized work:** execute the three-by-eight cache-cold matrix with no
+retries. Require zero safety/identity/requirements/availability/budget failures,
+leader top-three recall at least 80% of eligible runs, every passing `strong`
+leader ahead of unscored alternatives, non-empty recall at least 21/24 with
+shop vacuum 2/3, cache-cold p95 at most 25 seconds, one OpenAI response, at
+most three hosted searches, and at most fifteen logical Serper operations.
 
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 
