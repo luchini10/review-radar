@@ -31,8 +31,8 @@ The production recommendation path performs fresh work inside one POST route:
       -> POST /api/recommendations
       -> validate and normalize the request
       -> extract deterministic requirements
-      -> start one fresh source-bound market scout
-         and three neutral Shopping queries concurrently
+      -> run up to three current neutral Shopping queries
+      -> pass a bounded untrusted commerce roster to one fresh market scout
       -> up to three exact-model Shopping queries for undiscovered strong targets
       -> up to three organic exact-target product-page searches
       -> deterministic type, accessory, used-item, budget, and requirement filters
@@ -74,7 +74,8 @@ branch.
 
 ### Request-time market scout
 
-lib/marketScout.ts makes one fresh GPT-5.4 Mini Responses call per request with
+After current neutral Shopping discovery, lib/marketScout.ts makes one fresh
+GPT-5.4 Mini Responses call per request with
 Structured Outputs, three requested and three maximum hosted web-search calls,
 low reasoning, and a 6,000-token output ceiling. It sets `store: false`,
 disables SDK retries, and uses a 60-second deadline. It returns at most five
@@ -95,17 +96,29 @@ failure, timeout, malformed output, an exceeded tool ceiling, or insufficient
 evidence uses the same deterministic neutral Shopping discovery with no
 market-quality target.
 
+The scout receives at most fifteen current candidate summaries containing
+bounded names, brands, model tokens, retailers, observed prices, commerce
+ratings/counts, offer counts, and Shopping positions. The roster contains no
+URLs or snippets, is explicitly untrusted, and is not evidence. It helps the
+scout research products that the current request can actually see while still
+allowing a stronger independently supported omitted model. No roster field can
+establish product identity, eligibility, quality tier, price authority,
+availability, or a public card field.
+
 ### Product search
 
-lib/productSearch.ts is the sole Serper transport. The selector starts three
-neutral Shopping queries while the market scout is still running, then may
-search the three highest `strong` exact-model targets that did not already
-survive early discovery filters. It may run up to three organic exact-target
-page searches and use the remaining request budget for candidate-local product-
-page lookups. It verifies a ranked queue of at most nine candidates in waves of
+lib/productSearch.ts is the sole Serper transport. The selector first runs up to
+three current neutral Shopping queries, applies early product-safety filters,
+deduplicates the candidates, and builds the bounded roster described above. It
+then may search the three highest `strong` exact-model targets that did not
+already survive discovery. It may run up to three organic exact-target page
+searches and use the remaining request budget for candidate-local product-page
+lookups. It verifies a ranked queue of at most nine candidates in waves of
 three, without repeating discovery. The total logical ceiling remains fifteen.
 There are no retries, editorial queries, review queries, rescue queries, image
-queries, or alternative search providers.
+queries, or alternative search providers. Broad requests preserve three unique
+queries by adding brand-neutral `top rated` and `popular models` variants when
+empty budget and priority fields would otherwise collapse discovery.
 
 Search calls are timeout-bounded. A map allocated inside the current
 `selectProducts` call coalesces identical work for that request only and is
@@ -285,28 +298,30 @@ The request-time architecture and accuracy gates are protected by:
   and the minimal result card;
 - TypeScript, ESLint, and the Next production build.
 
-The current source passes 347/347 unit tests across 44 suites, zero-warning
+The current source passes 350/350 unit tests across 44 suites, zero-warning
 lint, typecheck, production build, and Playwright 7/7. A separate live browser
 search passed at desktop and mobile widths with no overflow or console errors.
-The latest PR-14 ten-case, single-attempt feasibility matrix completed 10/10
+The latest PR-14 ten-case, single-attempt V14 matrix completed 10/10
 requests with one OpenAI response each, three hosted searches each, and at most
 fifteen logical Serper operations. Exact evidence binding and product safety
-passed in all ten cells and all ten returned a product, but only 2/10 placed a
-frozen leader in the top three. Mean latency was 29,405 ms and nearest-rank p95/
-maximum was 41,268 ms. The public five-field payload remained unchanged at 753
-bytes mean and 1,577 bytes maximum. Runtime evidence reached three cells,
-runtime `strong` reached two, and one scout fell back.
+passed in all ten cells and all ten returned a product. Frozen-leader recall was
+2/9 currently eligible (22.22%); one benchmark leader was current-ineligible.
+Mean latency was 31,456 ms and nearest-rank p95/maximum was 40,163 ms. The public
+five-field payload remained unchanged at 803 bytes mean and 1,304 bytes maximum.
+Runtime evidence reached five cells, runtime `strong` reached three, and no
+scout fell back.
 
-PR-14 is not release-qualified: leader recall was 20% versus the 80% gate, and
-tail latency exceeded both the 25-second p95 and 30-second maximum gates. A
-bounded experiment that asked the same scout for source-bound direct product
-pages returned no such card after all gates in the final matrix, so that code
-was removed. The source-binding and ranking mechanics are safer, but live
-Shopping/page resolution does not reliably supply exact purchasable leaders
-inside the target envelope. Full GPT-5.4 and medium-reasoning Mini experiments
-were inferior on measured output reliability/
-latency; further model tuning is not the supported fix for the remaining
-commerce-coverage loss.
+PR-14 is not release-qualified: eligible leader recall was 22.22% versus the
+80% gate, and tail latency exceeded both the 25-second p95 and 30-second maximum
+gates. A
+commerce-informed handoff improved non-empty results from 7/10 to 10/10,
+evidence-bearing results from 2/10 to 5/10, and absolute frozen-leader hits from
+one to two versus the committed V10 baseline. The source-binding and ranking
+mechanics remain safe, but live Shopping/page resolution still does not
+reliably supply exact purchasable leaders inside the target envelope. The
+earlier direct-page, full GPT-5.4, and medium-reasoning Mini experiments did not
+establish a better path; further prompt tuning is not the supported fix for the
+remaining commerce-coverage loss.
 
 The build route manifest must contain only /, /_not-found, and
 /api/recommendations.
@@ -316,12 +331,12 @@ The build route manifest must contain only /, /_not-found, and
 - Live prices and availability can change after a search.
 - Search-provider coverage can omit a good product.
 - Strict finalist verification can produce an empty shortlist even when a
-  qualifying product exists; the latest matrix returned all ten shortlists, but
+  qualifying product exists; V14 returned all ten shortlists, but
   earlier preserved runs returned as few as seven in ten attempts.
 - The market scout's source tier is not product-fact, price, availability, or
-  eligibility authority. The latest matrix passed exact source binding but
-  commerce coverage still produced only 20% frozen-leader recall with 41,268
-  ms p95, so the architecture did not establish live best-in-budget reliability.
+  eligibility authority. V14 passed exact source binding but commerce coverage
+  still produced only 22.22% eligible frozen-leader recall with 40,163 ms p95,
+  so the architecture did not establish live best-in-budget reliability.
 - Missing or ambiguous product images are intentionally omitted.
 - The recorded live quality sample is small and local. It does not prove
   hosted operations, accessibility beyond the current browser suite, or

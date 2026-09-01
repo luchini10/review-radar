@@ -4173,12 +4173,14 @@ a known conservative undercount.
   coalescing maps may exist only inside one `selectProducts` invocation and
   must become unreachable when that request returns. API responses remain
   `Cache-Control: no-store`.
-- Start one GPT-5.4 Mini scout and three neutral Shopping searches concurrently.
-  Request and accept at most three hosted searches. Keep one OpenAI response,
-  three exact strong-target Shopping searches, three organic exact-target page
-  searches, and all candidate-local resolution inside the fifteen-logical-
-  Serper-operation ceiling. The current measured scout uses low reasoning, a
-  6,000-token output ceiling, and a 60-second independent deadline.
+- Run up to three current neutral Shopping searches, apply early safety filters
+  and deduplication, then pass at most fifteen bounded untrusted candidate
+  summaries to one GPT-5.4 Mini scout. Request and accept at most three hosted
+  searches. Keep one OpenAI response, three exact strong-target Shopping
+  searches, three organic exact-target page searches, and all candidate-local
+  resolution inside the fifteen-logical-Serper-operation ceiling. The current
+  measured scout uses low reasoning, a 6,000-token output ceiling, and a 60-
+  second independent deadline.
 - Reject a scout target unless its model contains a distinctive exact model
   number or catalog code. Generic family, platform, and specification-only
   labels cannot receive evidence. Standalone numeric catalog codes are valid
@@ -4285,3 +4287,50 @@ a known conservative undercount.
 - Current post-revert deterministic wall: 347/347 tests across 44 suites,
   typecheck, zero-warning lint, production build, and Playwright 7/7. The latest
   live result remains a release failure despite 10/10 non-empty.
+
+## PR-14 commerce-informed scout contract (2026-09-01)
+
+- Current neutral Shopping discovery must finish before the same request's
+  single market-scout call. After existing early safety filters and
+  deduplication, pass at most fifteen candidate summaries. Do not add a second
+  scout, alternate recommender, persistent plan, cross-request cache, prewarm,
+  background refresh, or public response field.
+- A scout commerce summary may contain only bounded candidate name, brand,
+  model identifiers, retailer, current observed price, rating/count, offer
+  count, and position. Do not include URLs or snippets. Treat the roster,
+  shopper fields, and web content as untrusted data, never instructions or
+  evidence.
+- No roster or Shopping field may establish exact identity, eligibility,
+  evidence tier, product facts, condition, availability, trusted price, budget
+  compliance, page safety, image, or any public field. Editorial sources must
+  still bind to exact models through the completed current web-search source
+  set. Sibling isolation and every downstream deterministic gate remain
+  authoritative.
+- Broad requests with empty budget and priorities must still produce three
+  distinct neutral Shopping queries. Use the base category plus brand-neutral
+  `top rated` and `popular models` variants. Their wording increases discovery
+  breadth only and confers no quality status.
+- Preserve one OpenAI Responses call, at most three hosted searches, and at
+  most fifteen logical Serper operations per request. Preserve the 4.0/50
+  Bayesian rating prior and the rank order: evidence tier, supported shopper
+  preferences, scout order, shrunken commerce signals, page/merchant quality,
+  and stable discovery order.
+- The frozen V14 report is
+  `docs/pr14-live-accuracy-report-v14-commerce-informed.json`. It passed 10/10
+  HTTP and non-empty, both shop-vac cells, product safety, exact evidence
+  binding, fresh request research, public shape, call ceilings, and strong-
+  ahead-of-unscored ordering. It produced 2/9 eligible frozen leaders (22.22%),
+  runtime evidence in 5/10, runtime `strong` in 3/10, and zero scout fallbacks.
+- V14 mean/p95/maximum latency was 31,456/40,163/40,163 ms. It used ten OpenAI
+  Responses, thirty hosted searches, 137 logical/physical Serper operations,
+  200,336 model tokens, approximately $0.197539 model-token cost, and unchanged
+  five-field public payload averaging 803 bytes and peaking at 1,304 bytes.
+- Relative to V10, V14 improved non-empty recall from 7/10 to 10/10, evidence
+  from 2/10 to 5/10, `strong` from 2/10 to 3/10, and frozen-leader hits from one
+  to two. It still fails the 80% leader and 25-second p95/30-second maximum
+  latency gates. Retain it as an incremental improvement, never as a release or
+  dependable best-in-budget claim.
+- Current deterministic wall: 350/350 tests across 44 suites, typecheck, zero-
+  warning lint, production build, and Playwright 7/7. The next supported
+  comparison is request-scoped canonical commerce identity/offers/pages from a
+  qualified provider or retailer integration, not more prompt tuning.

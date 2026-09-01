@@ -4852,9 +4852,10 @@ current implementation authority.
 
 ### PR-14 - request-time market-quality reset
 
-**Status:** implemented through runtime commit `61a914d`; deterministic
-verification passes, but the latest ten-case no-retry live matrix fails non-
-empty recall, leader recall, and latency gates. PR-14 is not release-qualified.
+**Status:** implemented through runtime commit `7077c37`; deterministic
+verification passes. The latest ten-case no-retry live matrix passes non-empty,
+safety, binding, public-shape, and call-ceiling gates but fails leader recall and
+latency gates. PR-14 is not release-qualified.
 
 **Objective:** research the current market for every shopper search, including
 repeated equivalent searches, without a retained market index, precomputation,
@@ -4862,17 +4863,21 @@ background refresh, or cross-request research/recommendation cache. Preserve
 the minimal public card and every product-safety gate.
 
 **Architecture:** the indexed/prewarm implementation was reversed. Each request
-starts one fresh GPT-5.4 Mini source-bound scout and three neutral Shopping
-queries concurrently. The scout requests and accepts at most three hosted
-searches, uses low reasoning and a 6,000-token output ceiling, and validates
-that every target carries a distinctive exact model/catalog identifier. Up to
-three exact-model Shopping searches, three organic exact-target page searches,
-and bounded candidate-local resolution fit within fifteen logical Serper
-operations. The only Shopping and product-page coalescing maps are allocated
-inside the current `selectProducts` call and are discarded when it returns. The
-response is `Cache-Control: no-store`; there is no production index, prewarm,
-polling, background work, persistent plan/result cache, or alternate
-recommender.
+first runs up to three current brand-neutral Shopping queries, applies the
+existing early product-safety filters, deduplicates results, and passes at most
+fifteen bounded candidate summaries to one fresh GPT-5.4 Mini source-bound
+scout. The roster contains no URL or snippet and is explicitly untrusted; no
+field establishes evidence, identity, eligibility, price authority,
+availability, or public content. The scout requests and accepts at most three
+hosted searches, uses low reasoning and a 6,000-token output ceiling, and
+validates that every target carries a distinctive exact model/catalog
+identifier. Up to three exact-model Shopping searches, three organic exact-
+target page searches, and bounded candidate-local resolution fit within
+fifteen logical Serper operations. The only Shopping and product-page
+coalescing maps are allocated inside the current `selectProducts` call and are
+discarded when it returns. The response is `Cache-Control: no-store`; there is
+no production index, prewarm, polling, background work, persistent plan/result
+cache, or alternate recommender.
 
 **Generalized accuracy corrections:** exact scout models are carried through
 retailer-page discovery; generic aliases cannot bypass an exact target; numeric,
@@ -4994,6 +4999,54 @@ of retaining an unproved second path. The only retained behavioral change is to
 the QA harness: its precommitted 25-second p95 and 30-second maximum thresholds
 are now explicit benchmark fields and executable acceptance checks. The runtime
 snapshot remains `61a914d`; PR-14 remains not release-qualified.
+
+**Commerce-informed scout follow-up at `7077c37`:** inspection found that a
+broad request with empty budget and priorities collapsed the first three
+nominal discovery queries to the same category string, leaving only two unique
+Shopping calls. Broad requests now preserve three brand-neutral variants: the
+category, `top rated`, and `popular models`. Query wording remains discovery
+only and never establishes leader evidence.
+
+The request orchestration now lets current commerce discovery inform the same
+single scout instead of asking the scout to nominate models before it knows what
+the current Shopping provider exposed. After early filters and deduplication,
+the scout receives at most fifteen bounded names, brands, exact-model tokens,
+retailers, observed prices, ratings/counts, offer counts, and positions. It is
+instructed to research this untrusted roster first and may nominate a stronger
+omitted model only with independent source support. The existing source
+binding, evidence tiers, exact-model isolation, product/requirement/condition/
+availability/price/page/image/SSRF gates, ranking order, one-OpenAI-call cap,
+three-hosted-search cap, fifteen-Serper-operation cap, request isolation, and
+minimal public payload remain unchanged.
+
+The preserved single-attempt/no-retry report
+`docs/pr14-live-accuracy-report-v14-commerce-informed.json` completed 10/10 HTTP
+requests and 10/10 non-empty, including both shop-vac cases. It passed safety,
+exact evidence binding, fresh request research, unchanged public shape, one
+OpenAI response/request, three hosted searches/request, at most fifteen logical
+Serper operations/request, and strong-ahead-of-unscored ordering. It produced
+2/9 currently eligible frozen leaders (22.22%; one leader was current-
+ineligible), runtime evidence in 5/10, runtime `strong` in 3/10, strong plans in
+8/10, and zero scout fallbacks. Mean latency was 31,456 ms and p95/maximum was
+40,163 ms. It used 137 logical/physical Serper operations, 187,726 input plus
+12,610 output tokens (200,336 total), approximately $0.197539 model-token cost,
+and an unchanged five-field payload averaging 803 bytes and peaking at 1,304
+bytes.
+
+Against the committed V10 authoritative baseline, V14 improved non-empty recall
+from 7/10 to 10/10, evidence-bearing results from 2/10 to 5/10, `strong` results
+from 2/10 to 3/10, frozen-leader hits from one to two, and p95 from 43,430 to
+40,163 ms. It added four Serper operations and 10,070 model tokens. This is a
+measured incremental improvement, not release proof: leader recall remains far
+below 80%, and both latency gates remain failed. The next evidence-supported
+comparison remains a request-scoped canonical-commerce provider/retailer
+integration; a progressive contract changes delivery but does not itself fix
+coverage.
+
+**Current verification:** 350/350 unit tests across 44 suites, typecheck, zero-
+warning lint, the Next.js 16.3.3 production build, Playwright 7/7 across
+Chromium desktop/mobile, and `git diff --check` pass. No push or deployment
+occurred.
 
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 

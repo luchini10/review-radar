@@ -17838,3 +17838,87 @@ hash, parse, copy, edit, or delete fixture contents. This is the third disclosed
 path-boundary incident in the goal. Subsequent status checks used
 `--untracked-files=no`. No push, deployment, dependency change, production-data
 action, or public-contract expansion occurred.
+
+---
+
+## PR-14 commerce-informed scout handoff (2026-09-01)
+
+**Assessment:** incremental improvement retained; RELEASE FAIL. The proven loss
+was not tier ordering but the request-time handoff between independent market
+research and the products current Shopping discovery could actually resolve.
+The earlier direct-page experiment returned no accepted card and more prompt
+tuning was unsupported, so this step tested the strongest no-new-provider
+alternative: let current commerce discovery inform the same single source-
+bound scout.
+
+**Root causes and correction:** broad requests with no priorities or budget
+collapsed the first three nominal Shopping queries to one unique base query,
+leaving only two discovery calls. Broad discovery now retains three brand-
+neutral variants: the category, `top rated`, and `popular models`. The selector
+also completes up to three current neutral Shopping searches, applies existing
+early product/accessory/condition/voltage/identity filters and deduplication,
+then passes at most fifteen candidate summaries into the one scout call. This
+bounded roster contains names, brands, model tokens, retailers, observed
+prices, ratings/counts, offer counts, and positions, but no URLs or snippets.
+
+The system prompt treats the commerce roster, shopper fields, and web content
+as untrusted data, never instructions or evidence. It asks the scout to research
+the visible roster first while retaining the ability to nominate a stronger
+omitted model. Commerce fields cannot establish identity, eligibility, evidence
+tier, product facts, availability, price authority, or public content. Exact
+source binding and every deterministic product, requirement, condition,
+availability, budget, price, page, image, duplicate, and SSRF gate remain
+unchanged. The production route still uses one Responses call, at most three
+hosted searches, at most fifteen logical Serper operations, request-local
+coalescing, `store: false`, `Cache-Control: no-store`, and the five-field public
+payload.
+
+**Frozen live result:**
+`docs/pr14-live-accuracy-report-v14-commerce-informed.json` records the same ten
+precommitted cases, one cache-cold attempt per cell with no retries or
+replacements.
+
+- 10/10 HTTP success and 10/10 non-empty, including both shop-vac cells.
+- 2/9 currently eligible frozen leaders in the top three (22.22%); one frozen
+  leader was current-ineligible.
+- Runtime evidence returned in 5/10, runtime `strong` in 3/10, strong targets
+  planned in 8/10, and zero scout fallbacks.
+- Safety, exact evidence binding, fresh request research, public shape, one
+  OpenAI response/request, three hosted searches/request, fifteen-logical-
+  operation maximum, and strong-ahead-of-unscored ordering all passed.
+- Mean latency was 31,456 ms and nearest-rank p95/maximum was 40,163 ms, failing
+  the 25,000 ms p95 and 30,000 ms maximum gates.
+- Ten OpenAI Responses, thirty hosted searches, and 137 logical/physical Serper
+  operations were used. Model usage was 187,726 input plus 12,610 output tokens
+  (200,336 total), approximately $0.197539 model-token cost at the harness's
+  published rates.
+- The unchanged public payload averaged 803 bytes and peaked at 1,304 bytes.
+  All ten requests supplied the scout with fifteen current commerce summaries.
+
+**Baseline comparison:** against committed V10, non-empty recall improved from
+7/10 to 10/10, evidence from 2/10 to 5/10, runtime `strong` from 2/10 to 3/10,
+absolute frozen-leader hits from one to two, fallback from one to zero, and p95
+from 43,430 to 40,163 ms. Mean latency improved slightly from 31,884 to 31,456
+ms. The cost was four additional Serper operations and 10,070 additional model
+tokens. This is meaningful evidence to retain, but it remains 57.78 percentage
+points below the leader gate and exceeds both latency gates.
+
+**Verification:** 350/350 unit tests pass across 44 suites; typecheck passes;
+ESLint passes with zero warnings; the Next.js 16.3.3 production build passes
+with only `/`, `/_not-found`, and `/api/recommendations`; Playwright passes 7/7
+across Chromium desktop/mobile; and `git diff --check` passes. The E2E runner
+emitted only environment-level `NO_COLOR`/`FORCE_COLOR` notices.
+
+**Decision:** retain runtime commit `7077c37` as the strongest measured current
+request-time path, but do not release or claim dependable best-in-budget
+quality. The remaining bottleneck is canonical current commerce identity,
+offers, and direct-page resolution. The next supported comparison requires a
+qualified request-scoped provider or retailer integration; more prompt tuning
+or operations through the same provider are not supported by V11-V14.
+
+**Boundaries:** `.env.local` and the protected live-fixture tree were not
+intentionally inspected or used as evidence during this step. The three already
+recorded fixture-boundary incidents remain the complete incident list. No push,
+deployment, release, dependency change, production-data action, public-contract
+expansion, retained index, background refresh, or cross-request research cache
+occurred.

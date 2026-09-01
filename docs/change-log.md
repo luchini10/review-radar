@@ -11,6 +11,36 @@ Update this file after:
 
 ## 2026-09-01
 
+### Codex - Inform market scouting with current commerce
+
+#### Changed
+
+- Ran current neutral Shopping discovery before the single request-time market
+  scout and supplied it with at most fifteen bounded, untrusted candidate
+  summaries so independent research can prioritize products the request can
+  actually resolve.
+- Preserved exact source binding and every product, requirement, condition,
+  availability, price, budget, page, image, duplicate, and SSRF gate. Commerce
+  observations remain internal context and cannot create evidence or public
+  card content.
+- Kept broad no-priority searches at three distinct brand-neutral discovery
+  queries by adding `top rated` and `popular models` variants after the base
+  category. Query wording remains discovery-only, never leader proof.
+- Retained the one-OpenAI-response, three-hosted-search, fifteen-Serper-
+  operation, request-isolation, no-retained-index, and unchanged five-field
+  public-response contracts.
+
+#### Verified
+
+- Full validation passed 350/350 unit tests across 44 suites, typecheck, zero-
+  warning lint, the Next.js 16.3.3 production build, and Playwright 7/7.
+- The frozen V14 no-retry matrix completed 10/10 requests and non-empty results,
+  passed both shop-vac, safety, exact-binding, public-shape, and call gates, and
+  improved evidence-bearing cells from 2/10 to 5/10 versus V10.
+- V14 improved frozen-leader hits from one to two and p95 from 43,430 to 40,163
+  ms, but 22.22% eligible leader recall and 40,163 ms tail latency still fail
+  release gates. No push or deployment occurred.
+
 ### Codex - Test and remove unproved direct-page discovery
 
 #### Changed
