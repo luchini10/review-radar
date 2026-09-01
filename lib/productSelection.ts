@@ -85,6 +85,13 @@ export type ProductSelectionTelemetry = {
   duplicateCandidatesRemoved: number;
   logicalSearchCalls: number;
   marketEvidenceCandidates: number;
+  marketTargets: Array<{
+    brand: string;
+    consensusOrder: number;
+    model: string;
+    sourceCount: number;
+    tier: "strong" | "supported";
+  }>;
   marketTargetQueries: string[];
   neutralQueries: string[];
   physicalSearchAttempts: number;
@@ -115,6 +122,17 @@ export type ProductSelectionTelemetry = {
     status: "direct" | "query_budget_exhausted" | "resolved" | "unresolved";
   }>;
   resolutionQueries: string[];
+  returnedCandidateSignals: Array<{
+    bayesianRating: number | null;
+    consensusOrder: number | null;
+    evidenceTier: "strong" | "supported" | null;
+    name: string;
+    offerCount: number | null;
+    productPageUrl: string;
+    rating: number | null;
+    ratingCount: number | null;
+    targetModel: string | null;
+  }>;
   searchDiagnostics: Array<{
     errorKind?: string;
     query: string;
@@ -1798,6 +1816,28 @@ export async function selectProducts(options: {
   });
   const rankedAccepted = rankAcceptedSelections(verification.accepted, input);
   const recommendations = selectDistinctProducts(rankedAccepted);
+  const returnedCandidateSignals = recommendations.flatMap((recommendation) => {
+    const accepted = rankedAccepted.find(
+      (candidate) =>
+        normalizeProductEligibilityUrl(candidate.recommendation.productPageUrl) ===
+        normalizeProductEligibilityUrl(recommendation.productPageUrl),
+    );
+    if (!accepted) return [];
+    const candidate = accepted.asset.candidate;
+    return [
+      {
+        bayesianRating: bayesianCommerceRating(candidate.commerceSignals),
+        consensusOrder: candidate.marketEvidence?.consensusOrder ?? null,
+        evidenceTier: candidate.marketEvidence?.tier || null,
+        name: recommendation.name,
+        offerCount: candidate.commerceSignals?.offerCount ?? null,
+        productPageUrl: recommendation.productPageUrl,
+        rating: candidate.commerceSignals?.rating ?? null,
+        ratingCount: candidate.commerceSignals?.ratingCount ?? null,
+        targetModel: candidate.marketEvidence?.targetModel || null,
+      },
+    ];
+  });
 
   return {
     result: { recommendations },
@@ -1812,6 +1852,19 @@ export async function selectProducts(options: {
         (candidate) => Boolean(candidate.marketEvidence),
       ).length,
       marketTargetQueries,
+      marketTargets: plan.targets.flatMap((target) =>
+        target.evidenceTier === "none"
+          ? []
+          : [
+              {
+                brand: target.brand,
+                consensusOrder: target.consensusOrder,
+                model: target.model,
+                sourceCount: target.sourceUrls.length,
+                tier: target.evidenceTier,
+              },
+            ],
+      ),
       neutralQueries,
       physicalSearchAttempts,
       queries,
@@ -1834,6 +1887,7 @@ export async function selectProducts(options: {
       rejectedByRequirements,
       resolutionDiagnostics,
       resolutionQueries,
+      returnedCandidateSignals,
       searchDiagnostics: searchResults.map((searchResult, index) => ({
         ...(searchResult.diagnostics.errorKind
           ? { errorKind: searchResult.diagnostics.errorKind }

@@ -56,6 +56,8 @@ describe("market-quality discovery orchestration", () => {
 
     assert.equal(selected.telemetry.logicalSearchCalls, 3);
     assert.deepEqual(selected.telemetry.marketTargetQueries, []);
+    assert.deepEqual(selected.telemetry.marketTargets, []);
+    assert.deepEqual(selected.telemetry.returnedCandidateSignals, []);
     assert.equal(selected.result.recommendations.length, 0);
   });
 
@@ -93,6 +95,10 @@ describe("market-quality discovery orchestration", () => {
     assert.equal(selected.telemetry.neutralQueries.length, 3);
     assert.equal(selected.telemetry.marketTargetQueries.length, 3);
     assert.equal(selected.telemetry.logicalSearchCalls, 6);
+    assert.deepEqual(
+      selected.telemetry.marketTargets.map(({ model, tier }) => ({ model, tier })),
+      targets.map(({ model }) => ({ model, tier: "strong" })),
+    );
     assert.deepEqual(
       selected.telemetry.marketTargetQueries.map((query) => query.split(" ")[1]),
       ["A100", "B200", "C300"],
