@@ -760,7 +760,8 @@ function candidateHasUsablePage(candidate: RawProductCandidate) {
     // The undecoded URL still provides bounded identity evidence.
   }
   if (
-    haveConflictingNumericProductSpecs(candidate.name, pageIdentityEvidence)
+    haveConflictingNumericProductSpecs(candidate.name, pageIdentityEvidence) ||
+    haveConflictingExtractedProductSpecs(candidate.name, pageIdentityEvidence)
   ) {
     return false;
   }
@@ -986,6 +987,22 @@ function modelIdentifierShape(value: string) {
   return value.replace(/\d+/g, "#");
 }
 
+function haveConflictingExtractedProductSpecs(
+  firstText: string,
+  secondText: string,
+) {
+  const first = extractSpecsFromText(firstText, "name");
+  const second = extractSpecsFromText(secondText, "evidence");
+  return Object.entries(first).some(([spec, firstValue]) => {
+    const secondValue = second[spec];
+    return (
+      firstValue?.kind === "numeric" &&
+      secondValue?.kind === "numeric" &&
+      firstValue.value !== secondValue.value
+    );
+  });
+}
+
 function hyphenatedCatalogModelBases(value: string) {
   return new Set(
     [...value.matchAll(/\b(\d{3,6})[-/]\d{1,4}[a-z]?\b/gi)].map(
@@ -1088,6 +1105,10 @@ function pageIdentityScore(
   ).sort((first, second) => second.length - first.length)[0] || "";
   if (
     likelyAccessory(`${pageCandidate.name} ${pageCandidate.productUrl}`) ||
+    haveConflictingExtractedProductSpecs(
+      discoveryCandidate.name,
+      pageIdentityEvidence,
+    ) ||
     haveConflictingHyphenatedCatalogModels(
       discoveryCandidate.name,
       pageIdentityEvidence,

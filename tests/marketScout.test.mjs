@@ -326,6 +326,29 @@ describe("market scout", () => {
     assert.deepEqual(result.plan.targets, []);
   });
 
+  it("does not count provider-ignored incomplete tool attempts as hosted searches", async () => {
+    const response = responseWith({ callCount: 2 });
+    response.output.push(
+      {
+        action: { sources: [], type: "search" },
+        status: "incomplete",
+        type: "web_search_call",
+      },
+      {
+        action: { sources: [], type: "search" },
+        status: "failed",
+        type: "web_search_call",
+      },
+    );
+    const result = await buildMarketScoutPlan({
+      client: clientReturning(response),
+      input,
+    });
+
+    assert.equal(result.telemetry.hostedSearchCalls, 2);
+    assert.equal(result.telemetry.usedFallback, false);
+  });
+
   it("falls back safely on malformed output and classifies timeouts", async () => {
     const malformed = await buildMarketScoutPlan({
       client: clientReturning({ output: [], output_text: "not-json" }),

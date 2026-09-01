@@ -362,7 +362,10 @@ function responseOutputText(response: unknown) {
 
 function responseHostedSearchCalls(response: unknown) {
   return responseOutputItems(response).filter(
-    (item) => isRecord(item) && item.type === "web_search_call",
+    (item) =>
+      isRecord(item) &&
+      item.type === "web_search_call" &&
+      (typeof item.status !== "string" || item.status === "completed"),
   ).length;
 }
 

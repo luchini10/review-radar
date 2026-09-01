@@ -410,8 +410,10 @@ function normalizeShoppingResult(
   const url = shoppingUrl(result);
   const parsed = parseHttpUrl(url);
   const price = priceFromResult(result);
-  const retailer = asString(result.source) || null;
   if (!title || !parsed) return { candidate: null, reason: "invalid_structure" };
+  const retailer =
+    asString(result.source) ||
+    (!googleOfferUrl(parsed) ? normalizedHost(parsed) : null);
   if (genericTitle(title, category)) {
     return { candidate: null, reason: "generic_title" };
   }

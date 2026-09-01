@@ -487,6 +487,18 @@ describe("selection correctness", () => {
     assert.equal(attached[2].marketEvidence, undefined);
   });
 
+  it("rejects a direct product URL whose capacity contradicts the offer title", () => {
+    assert.equal(
+      candidateHasUsablePage(
+        candidate("Cuisinart PerfecTemp 14 Cup Programmable Coffeemaker", {
+          productUrl:
+            "https://editorialist.com/p/cuisinart-5-cup-coffeemaker/?sku=89428415",
+        }),
+      ),
+      false,
+    );
+  });
+
   it("rejects a retailer page whose hyphenated catalog model belongs to a different product", () => {
     assert.equal(
       pageIdentityScore(

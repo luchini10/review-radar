@@ -105,6 +105,20 @@ describe("bounded product search", () => {
     assert.equal(missingPrice.candidate.currentShoppingOffer, undefined);
   });
 
+  it("binds a priced direct Shopping result to its retailer hostname when source is absent", () => {
+    const direct = productSearchTestExports.normalizeShoppingResult(
+      {
+        extractedPrice: 179,
+        link: "https://www.homedepot.com/p/Milwaukee-M18-FUEL-2904-20/320326855",
+        title: "Milwaukee M18 FUEL Hammer Drill Driver 2904-20",
+      },
+      "cordless drill",
+    );
+
+    assert.equal(direct.candidate.retailer, "homedepot.com");
+    assert.equal(direct.candidate.currentShoppingOffer, true);
+  });
+
   it("filters wrong product types, accessories, non-new items, and extreme over-budget items", () => {
     const input = { query: "robot vacuum", budget: "$300" };
     const result = prefilterProductCandidates(
