@@ -11,6 +11,35 @@ Update this file after:
 
 ## 2026-09-01
 
+### Codex - Run independent market research alongside commerce discovery
+
+#### Changed
+
+- Started the single request-time market scout concurrently with the three
+  neutral Shopping searches, removing the serialized commerce-first provider
+  stage.
+- Removed names, prices, ratings, retailers, offer counts, positions, URLs, and
+  snippets from the scout prompt so current commerce cannot steer or establish
+  independent market leadership.
+- Aligned the scout prompt with deterministic evidence validation: `strong`
+  requires two independent domains including a comparative source;
+  `supported` requires one comparative source or two reputable editorials.
+- Preserved one Responses call, three hosted searches, fifteen logical Serper
+  operations, all exact-model and product-safety gates, request-only state, and
+  the unchanged five-field public card.
+
+#### Verified
+
+- Focused concurrency/prompt/API coverage passed 34/34. Full validation passed
+  352/352 unit tests across 44 suites, typecheck, zero-warning lint, the
+  Next.js 16.3.3 production build, Playwright 7/7, and diff checking.
+- The first and only V20 no-retry matrix completed 10/10 requests and non-empty
+  results, passed all safety/binding/call gates and the 30-second maximum, and
+  improved frozen leaders from 4/10 in V19 to 5/10.
+- Mean latency improved from 28,715 to 23,629 ms and p95/maximum from 36,550 to
+  29,646 ms. The result still fails the 80% leader and 25-second p95 gates, so
+  it is retained but not release-qualified. No push or deployment occurred.
+
 ### Codex - Keep exact leader seller alternatives through verification
 
 #### Changed

@@ -17990,3 +17990,88 @@ used as evidence and no fixture was copied, edited, or deleted. This is the
 fourth disclosed fixture-boundary incident in the goal. No push, deployment,
 release, dependency change, production-data action, public-contract expansion,
 retained index, background refresh, or cross-request research cache occurred.
+
+---
+
+## PR-14 independent concurrent market scout (2026-09-01)
+
+**Assessment:** strongest retained request-time architecture; RELEASE FAIL at
+runtime commit `b4e1890`. The prior commerce-informed path serialized neutral
+Shopping before source research and required the model to research a commerce
+roster. It also asked every target for two or three source domains even though
+the validator intentionally permits a `supported` target with one comparative
+source. Those behaviors diverged from the approved independent concurrent
+design and added a provider stage to request latency.
+
+**Correction:** the route starts exactly one GPT-5.4 Mini Responses scout before
+selection. The selector starts three neutral Shopping calls and awaits them
+together with that scout promise. The scout no longer receives commerce names,
+ratings, prices, retailers, offer counts, positions, URLs, or snippets. Its
+prompt requests the exact deterministic thresholds: two independent domains
+including a comparative source for `strong`; one comparative source or two
+reputable editorial domains for `supported`. All exact-model binding, product,
+requirement, condition, availability, price, budget, page, image, duplicate,
+merchant, and SSRF gates remain unchanged.
+
+**Frozen V20 result:**
+`docs/pr14-live-accuracy-report-v20-independent-concurrent.json` records the
+first and only cache-cold attempt for each of the ten precommitted cases. There
+were no retries or replacements.
+
+- 10/10 HTTP success and 10/10 non-empty, including both shop-vac cases.
+- Frozen leaders appeared in the top three in 5/10 cells (50%), versus the 80%
+  release gate. A leader was observed in six cells and verified eligible in
+  five.
+- Runtime evidence returned in 6/10, runtime `strong` in 2/10, strong targets
+  were planned in 6/10, and one scout honestly fell back for insufficient
+  evidence.
+- Product safety, exact evidence binding, fresh research, public shape, one
+  Responses call/request, three hosted searches/request, fifteen-logical-
+  Serper maximum, and strong-ahead-of-unscored ordering passed in all cells.
+- Mean latency was 23,629 ms and nearest-rank p95/maximum was 29,646 ms. The
+  30-second maximum passed; the 25-second p95 failed by 4,646 ms.
+- Ten OpenAI Responses, thirty hosted searches, and 137 logical/physical Serper
+  operations were used. Model usage was 178,040 input plus 12,545 output tokens
+  (190,585 total), approximately $0.189982 model-token cost at the harness's
+  published rates.
+- The unchanged five-field public payload averaged 797 bytes and peaked at
+  1,542 bytes. The scout received zero commerce candidates by design.
+
+**Comparison to V19:** leader hits improved from 4/10 to 5/10, mean latency
+improved by 5,086 ms, p95/maximum by 6,904 ms, model tokens by 12,372, estimated
+model cost by about $0.008968, and mean payload by 201 bytes. Runtime evidence
+held at 6/10 while `strong` results fell from 5/10 to 2/10 and fallback rose
+from zero to one. V20 is the first retained PR-14 matrix to pass the 30-second
+maximum, but it remains 30 percentage points below the leader gate and fails
+p95.
+
+**Miss attribution:** saved-report inspection, without new provider calls,
+showed five evidence-supported categories of loss: the exact leader was absent
+from Shopping discovery; exact pages lacked trustworthy current price or
+availability; the resolved page did not prove a hard requested feature; or the
+scout returned no qualified target. The constrained robot-vacuum run found a
+registered leader but could not establish both current commerce and the hard
+self-emptying requirement on the same exact page. These are not authority to
+transfer facts across models/merchants, infer requirements from market sources,
+or tune queries to frozen products.
+
+**Verification:** focused scout/selection/API tests passed 34/34. The full wall
+passed 352/352 unit tests across 44 suites, typecheck, zero-warning lint, the
+Next.js 16.3.3 production build, Playwright 7/7 desktop/mobile, and
+`git diff --check`. The unit total decreased by one because the superseded
+commerce-roster orchestration test was deleted; independent prompt isolation and
+concurrent-start tests protect the replacement architecture. Playwright emitted
+only environment-level `NO_COLOR`/`FORCE_COLOR` notices.
+
+**Verdict:** retain `b4e1890`; do not release or claim dependable best-in-budget
+quality. Another prompt or same-provider benchmark loop is unsupported. The
+remaining evidence-backed architecture option is a qualified request-scoped
+canonical-commerce provider or retailer integration with stable exact identity,
+current offers, and direct seller pages. No such alternate is currently
+qualified in this repository.
+
+**Boundaries:** `.env.local` was not manually inspected. The protected fixture
+tree was not accessed during this step. The four previously disclosed incidents
+remain the complete incident list. No push, deployment, release, dependency
+change, production-data action, public-contract expansion, retained index,
+background refresh, cross-request research cache, or benchmark retry occurred.

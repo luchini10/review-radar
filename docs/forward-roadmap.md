@@ -4852,10 +4852,10 @@ current implementation authority.
 
 ### PR-14 - request-time market-quality reset
 
-**Status:** implemented through runtime commit `0b4c817`; deterministic
+**Status:** implemented through runtime commit `b4e1890`; deterministic
 verification passes. The latest ten-case no-retry live matrix passes non-empty,
-safety, binding, public-shape, and call-ceiling gates but fails leader recall and
-latency gates. PR-14 is not release-qualified.
+safety, binding, public-shape, call-ceiling, and 30-second maximum-latency gates,
+but fails leader recall and 25-second p95. PR-14 is not release-qualified.
 
 **Objective:** research the current market for every shopper search, including
 repeated equivalent searches, without a retained market index, precomputation,
@@ -4863,21 +4863,19 @@ background refresh, or cross-request research/recommendation cache. Preserve
 the minimal public card and every product-safety gate.
 
 **Architecture:** the indexed/prewarm implementation was reversed. Each request
-first runs up to three current brand-neutral Shopping queries, applies the
-existing early product-safety filters, deduplicates results, and passes at most
-fifteen bounded candidate summaries to one fresh GPT-5.4 Mini source-bound
-scout. The roster contains no URL or snippet and is explicitly untrusted; no
-field establishes evidence, identity, eligibility, price authority,
-availability, or public content. The scout requests and accepts at most three
-hosted searches, uses low reasoning and a 6,000-token output ceiling, and
-validates that every target carries a distinctive exact model/catalog
-identifier. Up to three exact-model Shopping searches, three organic exact-
-target page searches, and bounded candidate-local resolution fit within
-fifteen logical Serper operations. The only Shopping and product-page
-coalescing maps are allocated inside the current `selectProducts` call and are
-discarded when it returns. The response is `Cache-Control: no-store`; there is
-no production index, prewarm, polling, background work, persistent plan/result
-cache, or alternate recommender.
+starts one fresh GPT-5.4 Mini source-bound scout concurrently with three current
+brand-neutral Shopping queries. Commerce observations never enter the scout
+prompt and cannot steer or establish independent market leadership. The scout
+requests and accepts at most three hosted searches, uses low reasoning and a
+6,000-token output ceiling, and validates that every target carries a
+distinctive exact model/catalog identifier. Its requested `strong` and
+`supported` thresholds match deterministic validation. Up to three exact-model
+Shopping searches, three organic exact-target page searches, and bounded
+candidate-local resolution fit within fifteen logical Serper operations. The
+only Shopping and product-page coalescing maps are allocated inside the current
+`selectProducts` call and are discarded when it returns. The response is
+`Cache-Control: no-store`; there is no production index, prewarm, polling,
+background work, persistent plan/result cache, or alternate recommender.
 
 **Generalized accuracy corrections:** exact scout models are carried through
 retailer-page discovery; generic aliases cannot bypass an exact target; numeric,
@@ -4891,46 +4889,43 @@ checked independently, repeated identical slug models remain idempotent,
 placeholder `img-na` images are rejected, and leaf blowers are separated from
 compact workshop/jobsite blowers and accessories.
 
-**Frozen live audit:** `tests/benchmarks/pr14-live-accuracy-v2026-09a.json`
-precommits five broad and five constrained cases, one cache-cold attempt each
-with no retries. The final report is
-`docs/pr14-live-accuracy-report-v4-exact-scout.json`:
+**Current frozen live audit:**
+`tests/benchmarks/pr14-live-accuracy-v2026-09a.json` precommits five broad and
+five constrained cases, one cache-cold attempt each with no retries. The
+authoritative report is
+`docs/pr14-live-accuracy-report-v20-independent-concurrent.json`:
 
-- 10/10 HTTP 200 and 10/10 non-empty;
-- frozen leader top-three recall 1/9 currently eligible (11.11%), versus the
-  80% gate; one benchmark leader was current-ineligible;
-- runtime evidence returned in 4/10, runtime `strong` returned in 3/10, strong
-  targets were planned in 9/10, and no scout fell back;
-- mean 26,454 ms and nearest-rank p95/maximum 36,077 ms, versus 25,000/30,000
-  ms gates;
-- one OpenAI response/request, three hosted searches/request maximum, and
-  fifteen logical Serper operations/request maximum;
-- public payload unchanged, mean 710 bytes and maximum 1,378 bytes; and
-- 178,485 input plus 12,308 output model tokens, approximately $0.189250 in
-  model-token cost at the public rates used for the audit.
+- 10/10 HTTP 200 and 10/10 non-empty, including both shop-vac cells;
+- frozen leader top-three recall 5/10 (50%) versus the 80% gate;
+- runtime evidence returned in 6/10, runtime `strong` in 2/10, and one scout
+  used honest insufficient-evidence fallback;
+- mean 23,629 ms and nearest-rank p95/maximum 29,646 ms, passing the 30-second
+  maximum but failing the 25-second p95;
+- one OpenAI response/request, three hosted searches/request, and at most
+  fifteen logical Serper operations/request;
+- public payload unchanged, mean 797 bytes and maximum 1,542 bytes; and
+- 178,040 input plus 12,545 output model tokens, approximately $0.189982 in
+  model-token cost at the benchmark's published rates.
 
-The final exact-scout configuration eliminated the four invalid-output
-fallbacks in the preceding medium-reasoning report and reduced mean latency
-from 48,046 ms. Strong passing leaders ranked ahead of unscored alternatives,
-but source-backed exact leaders still frequently failed current commerce
-resolution. The aggregate quality and latency gates therefore remain failed.
-Both final reports are preserved rather than replaced.
+V20 improved leader hits from four to five, mean latency by 5,086 ms, p95/max
+by 6,904 ms, and model tokens by 12,372 versus V19. Every deterministic product
+safety, exact-binding, public-contract, call-ceiling, and strong-ahead-of-
+unscored gate passed. The aggregate leader and p95 gates remain failed.
 
-**Verification:** 333/333 unit tests across 43 suites, typecheck, zero-warning
+**Verification:** 352/352 unit tests across 44 suites, typecheck, zero-warning
 lint, the Next.js 16.3.3 production build, and Playwright 7/7 across Chromium
 desktop/mobile pass. The build exposes only `/`, `/_not-found`, and
 `/api/recommendations`.
 
-**Decision:** retain the request-time-only implementation as the current local
-architecture, but do not release or claim dependable best-in-budget selection.
-Do not restore the rejected evidence index and do not continue prompt/model
-tuning as a substitute for commerce coverage. The next evidence-supported
-comparison is request-scoped direct commerce resolution from a provider or
-retailer integration with canonical product identity, current offers, and
-direct product pages, versus a larger explicit latency/operation budget. A
-progressive/asynchronous response is a separate public-contract option, not an
-implicit workaround. Any major provider or contract change requires a
-separately measured architecture decision.
+**Decision:** retain the concurrent independent request-time implementation as
+the current local architecture, but do not release or claim dependable best-in-
+budget selection. Do not restore the rejected evidence index and do not
+continue same-provider prompt/query tuning as a substitute for commerce
+coverage. The next evidence-supported comparison requires a qualified request-
+scoped provider or retailer integration with canonical product identity,
+current offers, direct seller pages, and stable identifiers. A progressive or
+asynchronous response changes delivery but does not fix coverage and would be a
+separate public-contract decision.
 
 **Exact-binding follow-up at `61a914d`:** live QA exposed three generalized
 identity failures in successive preserved reports: a non-US locale path, an
@@ -5072,14 +5067,37 @@ model-token cost. Runtime evidence returned in 6/10 and runtime `strong` in
 five-field payload averaged 998 bytes and peaked at 1,589 bytes. It remains a
 release failure: 40% leader recall is below 80%, and both latency limits fail.
 
-The next bounded comparison corrects two plan mismatches rather than tuning to
-the frozen products: start the independent scout concurrently with the three
-neutral Shopping calls, and align its requested source thresholds with the
-validated `strong`/`supported` definitions. Preserve the first result. If that
-does not materially improve both failed gates, require a qualified request-
-scoped canonical-commerce provider/retailer integration.
+**Concurrent independent-scout follow-up at `b4e1890`:** the route now starts
+the one source-bound scout before selection, while `selectProducts` starts and
+awaits the three neutral Shopping queries alongside that already-running
+promise. Commerce summaries were removed from the scout interface and prompt.
+The system prompt now asks for exactly the thresholds enforced by validation:
+two independent domains including one comparative source for `strong`, or one
+comparative source / two reputable editorials for `supported`.
 
-**Current verification:** 353/353 unit tests across 44 suites, typecheck, zero-
+The first and only cache-cold V20 matrix for this architecture is preserved as
+`docs/pr14-live-accuracy-report-v20-independent-concurrent.json`. It completed
+10/10 HTTP and non-empty results, returned 5/10 frozen leaders, runtime evidence
+in 6/10 and runtime `strong` in 2/10, and used one honest insufficient-evidence
+fallback. It passed safety, exact binding, fresh research, both shop-vac cells,
+public shape, one-response, three-hosted-search, fifteen-Serper-operation,
+strong-ahead-of-unscored, and 30-second maximum gates.
+
+V20 used ten Responses calls, thirty hosted searches, 137 logical/physical
+Serper operations, 190,585 model tokens, and approximately $0.189982 model-
+token cost. Mean/p95/maximum latency was 23,629/29,646/29,646 ms and the
+unchanged payload averaged 797 bytes and peaked at 1,542 bytes. Versus V19 it
+improved leaders by one, mean by 5,086 ms, p95/max by 6,904 ms, and tokens by
+12,372. It remains a release failure at 50% leader recall and 29,646 ms p95.
+
+Saved-report inspection of the five misses found provider discovery,
+trustworthy current price/availability, hard-feature proof, and qualified-scout
+coverage gaps—not a safe deterministic ranking correction. Do not tune to
+benchmark products or weaken eligibility. The next supported architecture
+comparison requires a qualified request-scoped canonical-commerce provider or
+retailer integration.
+
+**Current verification:** 352/352 unit tests across 44 suites, typecheck, zero-
 warning lint, the Next.js 16.3.3 production build, Playwright 7/7 across
 Chromium desktop/mobile, and `git diff --check` pass. No push or deployment
 occurred.

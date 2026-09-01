@@ -4368,3 +4368,38 @@ a known conservative undercount.
 - V19 remains a release failure against 80% leader recall, 25-second p95, and
   30-second maximum. Current deterministic wall: 353/353 tests across 44 suites,
   typecheck, zero-warning lint, production build, and Playwright 7/7.
+
+## PR-14 independent concurrent-scout contract (2026-09-01)
+
+- This section supersedes the commerce-informed contract's requirement to run
+  Shopping before scouting. Start exactly one independent market scout
+  concurrently with the three neutral Shopping queries. Do not restore a
+  commerce roster, callback planner, second scout, retained plan, or cross-
+  request research cache.
+- Commerce names, retailers, prices, ratings/counts, offer counts, positions,
+  URLs, and snippets must not enter the scout prompt. Commerce can rank only
+  after exact evidence binding and every eligibility gate passes; it can never
+  establish market leadership or public content.
+- The scout prompt and validator must enforce the same evidence tiers. `strong`
+  requires two independent domains including one comparative test/best-of
+  source. `supported` requires one comparative source or two recognized
+  editorial domains. Manufacturer, retailer, marketplace, community, unknown,
+  incomplete-call, or unbound sources prove neither tier.
+- Preserve one Responses call, at most three hosted searches, at most fifteen
+  logical Serper operations, `store: false`, no SDK retries, cancellation, and
+  request-local coalescing. Promise-based orchestration must not turn provider
+  failure into a second scout or an HTTP-200 false empty.
+- Preserve V20 as the first and only no-retry result for runtime `b4e1890`.
+  V20 passed 10/10 HTTP/non-empty, all safety/exact-binding/public/call gates,
+  both shop-vac cells, and the 30-second maximum. It reached 5/10 leaders,
+  6/10 evidence cells, 2/10 `strong` cells, 23,629 ms mean, and 29,646 ms
+  p95/maximum.
+- V20 remains a release failure against 80% leader recall and 25-second p95.
+  Do not fix provider discovery, current commerce, or hard-feature proof losses
+  by weakening exact identity, availability, trusted price, budget, merchant,
+  or requirement authority, or by tuning to frozen benchmark products.
+- Current deterministic wall: focused concurrency/prompt tests 34/34; full
+  unit tests 352/352 across 44 suites; typecheck; zero-warning lint; production
+  build; Playwright 7/7; and diff check. The removed test covered the superseded
+  commerce-roster callback; replacement tests protect independent prompting and
+  concurrent start.
