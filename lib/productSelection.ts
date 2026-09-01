@@ -420,6 +420,34 @@ function marketTargetSearchQuery(
     .trim();
 }
 
+function targetResolutionCandidatesFor(
+  candidates: RawProductCandidate[],
+  target: MarketScoutTarget,
+  budgetLimit: number | null,
+) {
+  return candidates
+    .filter((candidate) => candidateMatchesTarget(candidate, target))
+    .map((candidate, originalIndex) => ({
+      candidate,
+      inBudget:
+        candidate.price !== null &&
+        (budgetLimit === null || candidate.price <= budgetLimit),
+      merchantScore: merchantTrustScore(candidate),
+      originalIndex,
+      ratingCount: candidate.commerceSignals?.ratingCount || 0,
+    }))
+    .sort(
+      (first, second) =>
+        Number(second.inBudget) - Number(first.inBudget) ||
+        Number(second.candidate.currentShoppingOffer === true) -
+          Number(first.candidate.currentShoppingOffer === true) ||
+        second.merchantScore - first.merchantScore ||
+        second.ratingCount - first.ratingCount ||
+        first.originalIndex - second.originalIndex,
+    )
+    .map(({ candidate }) => candidate);
+}
+
 function marketTargetsNeedingSearch(
   discovered: RawProductCandidate[],
   targets: MarketScoutTarget[],
@@ -958,6 +986,27 @@ function modelIdentifierShape(value: string) {
   return value.replace(/\d+/g, "#");
 }
 
+function hyphenatedCatalogModelBases(value: string) {
+  return new Set(
+    [...value.matchAll(/\b(\d{3,6})[-/]\d{1,4}[a-z]?\b/gi)].map(
+      (match) => match[1],
+    ),
+  );
+}
+
+function haveConflictingHyphenatedCatalogModels(
+  firstText: string,
+  secondText: string,
+) {
+  const first = hyphenatedCatalogModelBases(firstText);
+  const second = hyphenatedCatalogModelBases(secondText);
+  return (
+    first.size > 0 &&
+    second.size > 0 &&
+    ![...first].some((model) => second.has(model))
+  );
+}
+
 function hasConflictingPathModelSibling(
   discoveryCandidate: RawProductCandidate,
   pageCandidate: RawProductCandidate,
@@ -1039,6 +1088,10 @@ function pageIdentityScore(
   ).sort((first, second) => second.length - first.length)[0] || "";
   if (
     likelyAccessory(`${pageCandidate.name} ${pageCandidate.productUrl}`) ||
+    haveConflictingHyphenatedCatalogModels(
+      discoveryCandidate.name,
+      pageIdentityEvidence,
+    ) ||
     haveConflictingNamedModelVariants(
       discoveryCandidate.name,
       `${pageCandidate.name} ${pageCandidate.productUrl}`,
@@ -1661,6 +1714,7 @@ export async function selectProducts(options: {
   telemetry: ProductSelectionTelemetry;
 }> {
   const { input, signal } = options;
+  const budgetLimit = maxBudget(input);
   const neutralQueries = neutralShoppingQueries(input).slice(
     0,
     MAX_NEUTRAL_SEARCH_QUERIES,
@@ -1739,7 +1793,15 @@ export async function selectProducts(options: {
         ),
     )
     .slice(0, MAX_MARKET_TARGET_SEARCH_QUERIES);
-  const targetResolutionQueries = targetResolutionTargets.map((target) =>
+  const targetResolutionBindings = targetResolutionTargets.map((target) => ({
+    discoveryCandidates: targetResolutionCandidatesFor(
+      targetResolutionCandidates,
+      target,
+      budgetLimit,
+    ),
+    target,
+  }));
+  const targetResolutionQueries = targetResolutionBindings.map(({ target }) =>
     marketTargetSearchQuery(input, target),
   );
   const targetPageSearchResults = await Promise.all(
@@ -1751,11 +1813,20 @@ export async function selectProducts(options: {
       ),
     ),
   );
-  const targetResolvedCandidates = targetPageSearchResults.flatMap(
-    (candidates, index) =>
-      candidates.filter((candidate) =>
-        candidateMatchesTarget(candidate, targetResolutionTargets[index]),
-      ),
+  const targetResolvedCandidates = targetPageSearchResults.flatMap<RawProductCandidate>(
+    (candidates, index): RawProductCandidate[] => {
+      const binding = targetResolutionBindings[index];
+      if (!binding) return [];
+      const exactPages: RawProductCandidate[] = candidates.filter((candidate) =>
+        candidateMatchesTarget(candidate, binding.target),
+      );
+      return [
+        ...binding.discoveryCandidates.flatMap((candidate) =>
+          resolvedCandidates(candidate, exactPages),
+        ),
+        ...exactPages,
+      ];
+    },
   );
   const searchResults = [
     ...neutralSearchResults,
@@ -1789,7 +1860,6 @@ export async function selectProducts(options: {
     MAX_VERIFICATION_CANDIDATES,
   );
   const category = baseProductCategoryFromQuery(input.query);
-  const budgetLimit = maxBudget(input);
   const resolutionDiagnostics: ProductSelectionTelemetry["resolutionDiagnostics"] =
     targetResolutionTargets.map((target, index) => ({
       discoveryName: `${target.brand} ${target.model}`,

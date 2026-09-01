@@ -166,7 +166,7 @@ describe("market-quality discovery orchestration", () => {
           JSON.stringify({
             organic: [
               {
-                link: "https://127.0.0.1/products/alpha-a100",
+                link: "https://www.examplestore.com/products/alpha-a100",
                 snippet: "Current Alpha A100 robot vacuum product page",
                 title: "Alpha A100 Robot Vacuum",
               },
@@ -217,9 +217,21 @@ describe("market-quality discovery orchestration", () => {
       "Alpha A100 robot vacuum",
     ]);
     assert.ok(
-      selected.telemetry.resolutionQueries.includes("Alpha A100 robot vacuum"),
+      selected.telemetry.resolutionQueries.includes(
+        "Alpha A100 robot vacuum",
+      ),
     );
     assert.equal(selected.telemetry.marketEvidenceCandidates, 1);
+    assert.ok(
+      selected.telemetry.rankedCandidates.some(
+        (candidate) =>
+          candidate.evidenceTier === "strong" &&
+          candidate.price === 249 &&
+          candidate.productUrl ===
+            "https://www.examplestore.com/products/alpha-a100" &&
+          candidate.retailer === "Example Store",
+      ),
+    );
     assert.ok(selected.telemetry.logicalSearchCalls <= 15);
   });
 });

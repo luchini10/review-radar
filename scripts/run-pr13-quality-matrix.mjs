@@ -89,6 +89,7 @@ function asFiniteNumber(value) {
 
 function budgetLimit(request) {
   const values = String(request.budget || "")
+    .replaceAll(",", "")
     .match(/\d+(?:\.\d+)?/g)
     ?.map(Number)
     .filter((value) => Number.isFinite(value) && value > 0);

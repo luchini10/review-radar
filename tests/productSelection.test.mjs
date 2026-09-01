@@ -487,6 +487,24 @@ describe("selection correctness", () => {
     assert.equal(attached[2].marketEvidence, undefined);
   });
 
+  it("rejects a retailer page whose hyphenated catalog model belongs to a different product", () => {
+    assert.equal(
+      pageIdentityScore(
+        candidate("Milwaukee M18 FUEL Hammer Drill Driver Kit 2904-22", {
+          brand: "Milwaukee",
+          retailer: "Home Depot",
+        }),
+        candidate("Milwaukee M18 Compact Drill Driver 3601-21P", {
+          brand: "Milwaukee",
+          price: null,
+          productUrl:
+            "https://www.homedepot.com/p/Milwaukee-M18-Compact-Drill-Driver-3601-21P/325479354",
+        }),
+      ),
+      0,
+    );
+  });
+
   it("uses a matching supplied brand when the exact model name leads the title", () => {
     const target = marketTarget("Technivorm", "Moccamaster KBGV Select");
     const attached = attachMarketEvidence(
