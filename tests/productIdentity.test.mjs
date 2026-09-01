@@ -104,6 +104,13 @@ describe("selection product identity", () => {
       ),
       false,
     );
+    assert.equal(
+      haveConflictingNamedModelVariants(
+        "Craftsman CMEPW2100",
+        "Craftsman CMEPW2100 Craftsman 2100 max PSI electric pressure washer",
+      ),
+      false,
+    );
   });
 
   it("detects numeric variant conflicts", () => {

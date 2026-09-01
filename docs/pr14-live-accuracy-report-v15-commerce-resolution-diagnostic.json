@@ -1,0 +1,1639 @@
+{
+  "benchmark": "live-accuracy-v2026-09a",
+  "completedAt": "2026-09-01T22:07:36.785Z",
+  "phase": "current",
+  "schemaVersion": 2,
+  "startedAt": "2026-09-01T22:02:51.509Z",
+  "summary": {
+    "acceptance": {
+      "acceptedCandidatesSafe": true,
+      "evidenceBindingsExact": true,
+      "freshResearchAttemptedEachRequest": true,
+      "leaderTopThreeAtLeastConfiguredRate": false,
+      "latencyMaximumAtMostConfigured": false,
+      "latencyP95AtMostConfigured": false,
+      "nonEmptyAtLeastConfiguredMinimum": true,
+      "oneOpenAiResponseEach": true,
+      "publicShapeUnchanged": true,
+      "requiredCaseRecall": true,
+      "serperAtMost15": true,
+      "strongAheadOfUnscored": true,
+      "webSearchAtMost3": true,
+      "zeroRequestFailures": true
+    },
+    "byCase": {
+      "broad-robot-vacuum": {
+        "leaderTopThree": 1,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "broad-coffee-maker": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "broad-cordless-drill": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "broad-shop-vacuum": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "broad-cordless-leaf-blower": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "constrained-robot-vacuum": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "constrained-gaming-monitor": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "constrained-shop-vacuum": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "constrained-pressure-washer": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "constrained-coffee-maker": {
+        "leaderTopThree": 1,
+        "nonEmpty": 1,
+        "runs": 1
+      }
+    },
+    "calls": {
+      "hostedSearchCalls": 30,
+      "logicalSerperOperations": 139,
+      "maximumHostedSearchCalls": 3,
+      "maximumLogicalSerperOperations": 15,
+      "openAiResponses": 10,
+      "physicalSerperAttempts": 138
+    },
+    "latencyMs": {
+      "maximum": 33431,
+      "mean": 28238,
+      "minimum": 21977,
+      "p95NearestRank": 33431
+    },
+    "leaderRecall": {
+      "benchmarkEligibleRuns": 9,
+      "currentIneligibleRuns": 1,
+      "topThreeHits": 2,
+      "topThreeRate": 0.2222,
+      "verifiedEligibleHits": 2,
+      "verifiedEligibleRuns": 2,
+      "verifiedLeaderObservedRuns": 4
+    },
+    "nonEmpty": {
+      "count": 10,
+      "rate": 1
+    },
+    "payloadBytes": {
+      "maximum": 1460,
+      "mean": 756
+    },
+    "scout": {
+      "commerceCandidateTotal": 150,
+      "fallbackRuns": 1,
+      "fallbackReasons": {
+        "insufficient_evidence": 1
+      },
+      "modelTokens": {
+        "estimatedCostUsdAtPublishedModelRatesOnly": 0.207376,
+        "input": 188361,
+        "output": 14690,
+        "total": 203051
+      },
+      "returnedEvidenceRuns": 3,
+      "returnedStrongRuns": 2,
+      "strongTargetPlanRuns": 8
+    },
+    "successfulRuns": 10
+  },
+  "runs": [
+    {
+      "caseId": "broad-robot-vacuum",
+      "debugResponseBytes": 26996,
+      "durationMs": 33431,
+      "error": null,
+      "normalResponseBytes": 1460,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 33408,
+      "status": 200,
+      "acceptedCandidatesSafe": true,
+      "evidenceBindingsExact": true,
+      "commerceCandidateCount": 15,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 11,
+      "marketTargets": [
+        {
+          "aliases": [
+            "Saros 10R"
+          ],
+          "brand": "Roborock",
+          "model": "Saros 10R",
+          "sourceCount": 3,
+          "tier": "strong"
+        },
+        {
+          "aliases": [
+            "X60 Max Ultra Complete"
+          ],
+          "brand": "Dreame",
+          "model": "X60 Max Ultra Complete",
+          "sourceCount": 2,
+          "tier": "supported"
+        }
+      ],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 11,
+      "products": [
+        {
+          "name": "Roborock Saros 10R Robot Vacuum and Mop 22,000Pa Suction",
+          "price": 899.99,
+          "productPageUrl": "https://us.roborock.com/products/roborock-saros-10r"
+        },
+        {
+          "name": "Dreame X60 Max Ultra Complete Robot Vacuum and Mop, 35,000Pa Suction, 3.13in Ultra-Slim, Dual AI Cameras, Self-Cleaning Dock, Black",
+          "price": 1529.99,
+          "productPageUrl": "https://www.dreametech.com/products/x60-max-ultra-complete-robot-vacuum"
+        },
+        {
+          "name": "Dreame D30 Ultra Robot Vacuum",
+          "price": 449.99,
+          "productPageUrl": "https://www.dreametech.com/products/d30-ultra-robot-vacuum"
+        },
+        {
+          "name": "Roborock Qrevo S Pro Robot Vacuum and Mop",
+          "price": 429.99,
+          "productPageUrl": "https://us.roborock.com/products/roborock-qrevo-s-pro-robot-vacuum"
+        },
+        {
+          "name": "Ionvac OptiMax Robovac Laser Mapping Robot Vacuum Cleaner with Wi-Fi",
+          "price": 149,
+          "productPageUrl": "https://www.walmart.com/ip/Ionvac-OptiMax-Robovac-Laser-Mapping-Robot-Vacuum-Cleaner-with-Wi-Fi-New/2032133187"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": 4.391111111111111,
+          "evidenceTier": "strong",
+          "name": "Roborock Saros 10R Robot Vacuum and Mop 22,000Pa Suction",
+          "productPageUrl": "https://us.roborock.com/products/roborock-saros-10r",
+          "rating": 4.4,
+          "ratingCount": 2200,
+          "targetBrand": "Roborock",
+          "targetModel": "Saros 10R"
+        },
+        {
+          "bayesianRating": 3.935135135135135,
+          "evidenceTier": "supported",
+          "name": "Dreame X60 Max Ultra Complete Robot Vacuum and Mop, 35,000Pa Suction, 3.13in Ultra-Slim, Dual AI Cameras, Self-Cleaning Dock, Black",
+          "productPageUrl": "https://www.dreametech.com/products/x60-max-ultra-complete-robot-vacuum",
+          "rating": 3.8,
+          "ratingCount": 24,
+          "targetBrand": "Dreame",
+          "targetModel": "X60 Max Ultra Complete"
+        },
+        {
+          "bayesianRating": 4.680487804878049,
+          "evidenceTier": null,
+          "name": "Dreame D30 Ultra Robot Vacuum",
+          "productPageUrl": "https://www.dreametech.com/products/d30-ultra-robot-vacuum",
+          "rating": 4.9,
+          "ratingCount": 155,
+          "targetBrand": null,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.582608695652174,
+          "evidenceTier": null,
+          "name": "Roborock Qrevo S Pro Robot Vacuum and Mop",
+          "productPageUrl": "https://us.roborock.com/products/roborock-qrevo-s-pro-robot-vacuum",
+          "rating": 4.8,
+          "ratingCount": 134,
+          "targetBrand": null,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.573913043478261,
+          "evidenceTier": null,
+          "name": "Ionvac OptiMax Robovac Laser Mapping Robot Vacuum Cleaner with Wi-Fi",
+          "productPageUrl": "https://www.walmart.com/ip/Ionvac-OptiMax-Robovac-Laser-Mapping-Robot-Vacuum-Cleaner-with-Wi-Fi-New/2032133187",
+          "rating": 4.6,
+          "ratingCount": 1100,
+          "targetBrand": null,
+          "targetModel": null
+        }
+      ],
+      "rejectionCounts": {
+        "assetSafety": 0,
+        "availability": 2,
+        "condition": 1,
+        "merchant": 1,
+        "price": 0,
+        "requirements": 0
+      },
+      "verifiedCandidates": [
+        {
+          "availabilityStatus": "available",
+          "name": "Roborock Saros 10R Robot Vacuum and Mop 22,000Pa Suction",
+          "pageUrl": "https://us.roborock.com/products/roborock-saros-10r",
+          "price": 899.99,
+          "priceStatus": "verified",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Dreame X60 Max Ultra Complete Robot Vacuum and Mop, 35,000Pa Suction, 3.13in Ultra-Slim, Dual AI Cameras, Self-Cleaning Dock, Black",
+          "pageUrl": "https://www.dreametech.com/products/x60-max-ultra-complete-robot-vacuum",
+          "price": 1529.99,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "unknown",
+          "name": "eufy 11S MAX Robot Vacuum",
+          "pageUrl": "https://www.bestbuy.com/product/eufy-robot-vacuum-11s-max-super-thin-powerful-suction-quiet-self-charging-robotic-vacuum-cleaner-black/JJ858RGHP3",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Dreame D30 Ultra Robot Vacuum",
+          "pageUrl": "https://www.dreametech.com/products/d30-ultra-robot-vacuum",
+          "price": 449.99,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Roborock Qrevo S Pro Robot Vacuum and Mop",
+          "pageUrl": "https://us.roborock.com/products/roborock-qrevo-s-pro-robot-vacuum",
+          "price": 429.99,
+          "priceStatus": "verified",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "unavailable",
+          "name": "Roborock Qrevo S Pro Robot Vacuum and Mop",
+          "pageUrl": "https://www.roborockindia.com/product-page/roborock-qrevo-s-pro-robot-vacuum-and-mop-18-500pa-hot-water-air-0-hair-tangl",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Ionvac OptiMax Robovac Laser Mapping Robot Vacuum Cleaner with Wi-Fi",
+          "pageUrl": "https://www.walmart.com/ip/Ionvac-OptiMax-Robovac-Laser-Mapping-Robot-Vacuum-Cleaner-with-Wi-Fi-New/2032133187",
+          "price": 149,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Ionvac OptiMax Robovac Laser Mapping Robot Vacuum Cleaner with Wi-Fi",
+          "pageUrl": "https://business.walmart.com/ip/Ionvac-OptiMax-Robovac-Laser-Mapping-Robot-Vacuum-Cleaner-with-Wi-Fi-New/2032133187",
+          "price": 149,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        }
+      ],
+      "scoutFallbackReason": null,
+      "scoutInputTokens": 19399,
+      "scoutOutputTokens": 2215,
+      "scoutUsedFallback": false,
+      "evidencedTargetReturned": true,
+      "strongTargetReturned": true,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": true,
+      "topThreeLeaderPosition": 2,
+      "verifiedLeaderCurrentIneligible": false,
+      "verifiedLeaderEligible": true,
+      "verifiedLeaderObserved": true
+    },
+    {
+      "caseId": "broad-coffee-maker",
+      "debugResponseBytes": 28616,
+      "durationMs": 31313,
+      "error": null,
+      "normalResponseBytes": 1188,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 31294,
+      "status": 200,
+      "acceptedCandidatesSafe": true,
+      "evidenceBindingsExact": true,
+      "commerceCandidateCount": 15,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 12,
+      "marketTargets": [],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 12,
+      "products": [
+        {
+          "name": "Bella PRO 12-Cup Programmable Coffee Maker",
+          "price": 29.99,
+          "productPageUrl": "https://www.bestbuy.com/product/bella-pro-12-cup-programmable-coffee-maker-stainless-steel/J3P5RSSWCT"
+        },
+        {
+          "name": "Cuisinart 14 Cup Programmable Coffee Maker",
+          "price": 119.95,
+          "productPageUrl": "https://www.nfm.com/cuisinart-14-cup-programmable-coffee-maker-in-stainless-steel-68602457/68602457.html"
+        },
+        {
+          "name": "Cuisinart 12 Cup Coffeemaker",
+          "price": 69.95,
+          "productPageUrl": "https://www.walmart.com/ip/Cuisinart-12-Cup-Coffeemaker-Stainless-Steel-Black/808715278"
+        },
+        {
+          "name": "Ninja CE250 12-Cup Programmable Coffee Maker",
+          "price": 64.97,
+          "productPageUrl": "https://www.walmart.com/ip/Ninja-12-Cup-Programmable-Coffee-Maker-Glass-Carafe-Stainless-Steel-CE250/997508948"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": 4.487179487179487,
+          "evidenceTier": null,
+          "name": "Bella PRO 12-Cup Programmable Coffee Maker",
+          "productPageUrl": "https://www.bestbuy.com/product/bella-pro-12-cup-programmable-coffee-maker-stainless-steel/J3P5RSSWCT",
+          "rating": 4.5,
+          "ratingCount": 1900,
+          "targetBrand": null,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.3967479674796754,
+          "evidenceTier": null,
+          "name": "Cuisinart 14 Cup Programmable Coffee Maker",
+          "productPageUrl": "https://www.nfm.com/cuisinart-14-cup-programmable-coffee-maker-in-stainless-steel-68602457/68602457.html",
+          "rating": 4.4,
+          "ratingCount": 6100,
+          "targetBrand": null,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.391489361702128,
+          "evidenceTier": null,
+          "name": "Cuisinart 12 Cup Coffeemaker",
+          "productPageUrl": "https://www.walmart.com/ip/Cuisinart-12-Cup-Coffeemaker-Stainless-Steel-Black/808715278",
+          "rating": 4.4,
+          "ratingCount": 2300,
+          "targetBrand": null,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.29433962264151,
+          "evidenceTier": null,
+          "name": "Ninja CE250 12-Cup Programmable Coffee Maker",
+          "productPageUrl": "https://www.walmart.com/ip/Ninja-12-Cup-Programmable-Coffee-Maker-Glass-Carafe-Stainless-Steel-CE250/997508948",
+          "rating": 4.3,
+          "ratingCount": 2600,
+          "targetBrand": null,
+          "targetModel": null
+        }
+      ],
+      "rejectionCounts": {
+        "assetSafety": 0,
+        "availability": 1,
+        "condition": 0,
+        "merchant": 0,
+        "price": 0,
+        "requirements": 0
+      },
+      "verifiedCandidates": [
+        {
+          "availabilityStatus": "available",
+          "name": "Bella PRO 12-Cup Programmable Coffee Maker",
+          "pageUrl": "https://www.bestbuy.com/product/bella-pro-12-cup-programmable-coffee-maker-stainless-steel/J3P5RSSWCT",
+          "price": 29.99,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Cuisinart 14 Cup Programmable Coffee Maker",
+          "pageUrl": "https://www.nfm.com/cuisinart-14-cup-programmable-coffee-maker-in-stainless-steel-68602457/68602457.html",
+          "price": 119.95,
+          "priceStatus": "verified",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "unknown",
+          "name": "Cuisinart 14 Cup Programmable Coffee Maker",
+          "pageUrl": "https://www.cuisinart.com/14-cup-programmable-coffee-maker/DCC-3200NAS.html?item_list_id=Category+Page&item_list_name=Coffeemakers+%26+Coffee+Machines&index=8&bvstate=pg%3A53%2Fct%3Ar",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Cuisinart 12 Cup Coffeemaker",
+          "pageUrl": "https://www.walmart.com/ip/Cuisinart-12-Cup-Coffeemaker-Stainless-Steel-Black/808715278",
+          "price": 69.95,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Cuisinart 12 Cup Coffeemaker",
+          "pageUrl": "https://business.walmart.com/ip/Cuisinart-12-Cup-Coffeemaker-Stainless-Steel-Black/808715278",
+          "price": 69.95,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Ninja CE250 12-Cup Programmable Coffee Maker",
+          "pageUrl": "https://www.walmart.com/ip/Ninja-12-Cup-Programmable-Coffee-Maker-Glass-Carafe-Stainless-Steel-CE250/997508948",
+          "price": 64.97,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        }
+      ],
+      "scoutFallbackReason": "insufficient_evidence",
+      "scoutInputTokens": 18799,
+      "scoutOutputTokens": 1106,
+      "scoutUsedFallback": true,
+      "evidencedTargetReturned": false,
+      "strongTargetReturned": false,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": false,
+      "topThreeLeaderPosition": null,
+      "verifiedLeaderCurrentIneligible": false,
+      "verifiedLeaderEligible": false,
+      "verifiedLeaderObserved": true
+    },
+    {
+      "caseId": "broad-cordless-drill",
+      "debugResponseBytes": 26628,
+      "durationMs": 29682,
+      "error": null,
+      "normalResponseBytes": 1261,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 29666,
+      "status": 200,
+      "acceptedCandidatesSafe": true,
+      "evidenceBindingsExact": true,
+      "commerceCandidateCount": 15,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 14,
+      "marketTargets": [
+        {
+          "aliases": [
+            "DeWalt 20V Max Brushless 1/2 in. Cordless Compact Drill Driver DCD793B",
+            "DeWalt DCD793"
+          ],
+          "brand": "DeWalt",
+          "model": "DCD793B",
+          "sourceCount": 3,
+          "tier": "strong"
+        }
+      ],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 14,
+      "products": [
+        {
+          "name": "Hercules 20V Brushless Cordless 1/2 in. Compact Hammer Drill/driver",
+          "price": 79.99,
+          "productPageUrl": "https://www.harborfreight.com/20v-brushless-cordless-12-in-compact-hammer-drilldriver-tool-only-59419.html"
+        },
+        {
+          "name": "Craftsman V20 RP 1/2 in. Brushless Cordless Drill/Driver Kit",
+          "price": 129,
+          "productPageUrl": "https://www.acehardware.com/departments/tools/power-tools/cordless-drills/2838068"
+        },
+        {
+          "name": "Warrior 18V Cordless, 3/8 in. Drill Kit With Battery And Charger",
+          "price": 29.99,
+          "productPageUrl": "https://www.harborfreight.com/18v-cordless-38-in-drill-kit-with-battery-and-charger-58389.html"
+        },
+        {
+          "name": "Hercules 20V Brushless Cordless 1/2 in. Drill/Driver",
+          "price": 69.99,
+          "productPageUrl": "https://www.harborfreight.com/20v-brushless-cordless-12-in-drilldriver-kit-with-side-handle-2-ah-battery-and-charger-70067.html"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": 4.711894273127753,
+          "evidenceTier": null,
+          "name": "Hercules 20V Brushless Cordless 1/2 in. Compact Hammer Drill/driver",
+          "productPageUrl": "https://www.harborfreight.com/20v-brushless-cordless-12-in-compact-hammer-drilldriver-tool-only-59419.html",
+          "rating": 4.8,
+          "ratingCount": 404,
+          "targetBrand": null,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.654014598540146,
+          "evidenceTier": null,
+          "name": "Craftsman V20 RP 1/2 in. Brushless Cordless Drill/Driver Kit",
+          "productPageUrl": "https://www.acehardware.com/departments/tools/power-tools/cordless-drills/2838068",
+          "rating": 4.8,
+          "ratingCount": 224,
+          "targetBrand": null,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.5777777777777775,
+          "evidenceTier": null,
+          "name": "Warrior 18V Cordless, 3/8 in. Drill Kit With Battery And Charger",
+          "productPageUrl": "https://www.harborfreight.com/18v-cordless-38-in-drill-kit-with-battery-and-charger-58389.html",
+          "rating": 4.6,
+          "ratingCount": 1300,
+          "targetBrand": null,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.558299595141701,
+          "evidenceTier": null,
+          "name": "Hercules 20V Brushless Cordless 1/2 in. Drill/Driver",
+          "productPageUrl": "https://www.harborfreight.com/20v-brushless-cordless-12-in-drilldriver-kit-with-side-handle-2-ah-battery-and-charger-70067.html",
+          "rating": 4.7,
+          "ratingCount": 197,
+          "targetBrand": null,
+          "targetModel": null
+        }
+      ],
+      "rejectionCounts": {
+        "assetSafety": 0,
+        "availability": 1,
+        "condition": 0,
+        "merchant": 2,
+        "price": 0,
+        "requirements": 0
+      },
+      "verifiedCandidates": [
+        {
+          "availabilityStatus": "unknown",
+          "name": "DeWalt dcd793b 20V MAX Brushless Cordless 1/2 in. Drill/Driver",
+          "pageUrl": "https://www.dewalt.com/en-us/product/dcd793b/20v-max-brushless-cordless-12-drilldriver-tool-only",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Hercules 20V Brushless Cordless 1/2 in. Compact Hammer Drill/driver",
+          "pageUrl": "https://www.harborfreight.com/20v-brushless-cordless-12-in-compact-hammer-drilldriver-tool-only-59419.html",
+          "price": 79.99,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Craftsman V20 RP 1/2 in. Brushless Cordless Drill/Driver Kit",
+          "pageUrl": "https://www.acehardware.com/departments/tools/power-tools/cordless-drills/2838068",
+          "price": 129,
+          "priceStatus": "verified",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Warrior 18V Cordless, 3/8 in. Drill Kit With Battery And Charger",
+          "pageUrl": "https://www.harborfreight.com/18v-cordless-38-in-drill-kit-with-battery-and-charger-58389.html",
+          "price": 29.99,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Hercules 20V Brushless Cordless 1/2 in. Drill/Driver",
+          "pageUrl": "https://www.harborfreight.com/20v-brushless-cordless-12-in-drilldriver-kit-with-side-handle-2-ah-battery-and-charger-70067.html",
+          "price": 69.99,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        }
+      ],
+      "scoutFallbackReason": null,
+      "scoutInputTokens": 19513,
+      "scoutOutputTokens": 1449,
+      "scoutUsedFallback": false,
+      "evidencedTargetReturned": false,
+      "strongTargetReturned": false,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": false,
+      "topThreeLeaderPosition": null,
+      "verifiedLeaderCurrentIneligible": false,
+      "verifiedLeaderEligible": false,
+      "verifiedLeaderObserved": false
+    },
+    {
+      "caseId": "broad-shop-vacuum",
+      "debugResponseBytes": 29349,
+      "durationMs": 24571,
+      "error": null,
+      "normalResponseBytes": 496,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 24557,
+      "status": 200,
+      "acceptedCandidatesSafe": true,
+      "evidenceBindingsExact": true,
+      "commerceCandidateCount": 15,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 15,
+      "marketTargets": [
+        {
+          "aliases": [],
+          "brand": "Vacmaster",
+          "model": "VFB511B 0201",
+          "sourceCount": 3,
+          "tier": "strong"
+        },
+        {
+          "aliases": [
+            "Ridgid HD1200 NXT Wet/Dry Vacuum"
+          ],
+          "brand": "Ridgid",
+          "model": "HD1200",
+          "sourceCount": 3,
+          "tier": "strong"
+        }
+      ],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 15,
+      "products": [
+        {
+          "name": "Bauer 3 Gallon 3 Peak Hp Wet/dry Vacuum",
+          "price": 39.99,
+          "productPageUrl": "https://www.harborfreight.com/3-gallon-3-peak-hp-wetdry-vacuum-64753.html"
+        },
+        {
+          "name": "SL18116P Stanley Wet Dry Vacuum",
+          "price": 57.39,
+          "productPageUrl": "https://www.walmart.com/ip/STANLEY-6-Gallon-4-Peak-HP-Poly-Wet-Dry-Vacuum-SL18116P/28508951"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": 4.691358024691358,
+          "evidenceTier": null,
+          "name": "Bauer 3 Gallon 3 Peak Hp Wet/dry Vacuum",
+          "productPageUrl": "https://www.harborfreight.com/3-gallon-3-peak-hp-wetdry-vacuum-64753.html",
+          "rating": 4.7,
+          "ratingCount": 4000,
+          "targetBrand": null,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.653947368421052,
+          "evidenceTier": null,
+          "name": "SL18116P Stanley Wet Dry Vacuum",
+          "productPageUrl": "https://www.walmart.com/ip/STANLEY-6-Gallon-4-Peak-HP-Poly-Wet-Dry-Vacuum-SL18116P/28508951",
+          "rating": 4.7,
+          "ratingCount": 710,
+          "targetBrand": null,
+          "targetModel": null
+        }
+      ],
+      "rejectionCounts": {
+        "assetSafety": 0,
+        "availability": 1,
+        "condition": 0,
+        "merchant": 0,
+        "price": 1,
+        "requirements": 0
+      },
+      "verifiedCandidates": [
+        {
+          "availabilityStatus": "available",
+          "name": "Bauer 3 Gallon 3 Peak Hp Wet/dry Vacuum",
+          "pageUrl": "https://www.harborfreight.com/3-gallon-3-peak-hp-wetdry-vacuum-64753.html",
+          "price": 39.99,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "SL18116P Stanley Wet Dry Vacuum",
+          "pageUrl": "https://www.walmart.com/ip/STANLEY-6-Gallon-4-Peak-HP-Poly-Wet-Dry-Vacuum-SL18116P/28508951",
+          "price": 57.39,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "unknown",
+          "name": "Bissell MultiClean Wet and Dry Auto Vacuum 2035M",
+          "pageUrl": "https://www.homedepot.com/p/BISSELL-MultiClean-Wet-and-Dry-Bagless-Corded-Cartridge-Carpet-and-Hard-Surface-in-Red-Auto-Canister-Vacuum-2035M/342203421",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Bissell MultiClean Wet and Dry Auto Vacuum 2035M",
+          "pageUrl": "https://www.target.com/p/bissell-multiclean-wet-and-dry-auto-vacuum-2035m/-/A-79333905",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        }
+      ],
+      "scoutFallbackReason": null,
+      "scoutInputTokens": 18201,
+      "scoutOutputTokens": 1334,
+      "scoutUsedFallback": false,
+      "evidencedTargetReturned": false,
+      "strongTargetReturned": false,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": false,
+      "topThreeLeaderPosition": null,
+      "verifiedLeaderCurrentIneligible": false,
+      "verifiedLeaderEligible": false,
+      "verifiedLeaderObserved": false
+    },
+    {
+      "caseId": "broad-cordless-leaf-blower",
+      "debugResponseBytes": 26779,
+      "durationMs": 30730,
+      "error": null,
+      "normalResponseBytes": 302,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 30711,
+      "status": 200,
+      "acceptedCandidatesSafe": true,
+      "evidenceBindingsExact": true,
+      "commerceCandidateCount": 15,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 15,
+      "marketTargets": [
+        {
+          "aliases": [
+            "LB6151"
+          ],
+          "brand": "EGO",
+          "model": "LB6151",
+          "sourceCount": 3,
+          "tier": "strong"
+        },
+        {
+          "aliases": [
+            "51822"
+          ],
+          "brand": "Toro",
+          "model": "51822",
+          "sourceCount": 3,
+          "tier": "strong"
+        }
+      ],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 14,
+      "products": [
+        {
+          "name": "Atlas 80V Brushless Cordless 150 Mph/605 CFM Blower",
+          "price": 79.99,
+          "productPageUrl": "https://www.harborfreight.com/80v-brushless-cordless-150-mph605-cfm-blower-tool-only-56994.html"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": 4.770370370370371,
+          "evidenceTier": null,
+          "name": "Atlas 80V Brushless Cordless 150 Mph/605 CFM Blower",
+          "productPageUrl": "https://www.harborfreight.com/80v-brushless-cordless-150-mph605-cfm-blower-tool-only-56994.html",
+          "rating": 4.8,
+          "ratingCount": 1300,
+          "targetBrand": null,
+          "targetModel": null
+        }
+      ],
+      "rejectionCounts": {
+        "assetSafety": 1,
+        "availability": 3,
+        "condition": 0,
+        "merchant": 1,
+        "price": 1,
+        "requirements": 1
+      },
+      "verifiedCandidates": [
+        {
+          "availabilityStatus": "unknown",
+          "name": "EGO POWER+ 615 CFM Blower with Battery & Charger lb6151",
+          "pageUrl": "",
+          "price": 199.99,
+          "priceStatus": "usable",
+          "requirementFailures": [
+            "Feature: Cordless"
+          ]
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Toro 60V MAX* 157 mph Brushless Leaf Blower with 4.0Ah Battery ...",
+          "pageUrl": "https://www.toro.com/en/product/51822",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Atlas 80V Brushless Cordless 150 Mph/605 CFM Blower",
+          "pageUrl": "https://www.harborfreight.com/80v-brushless-cordless-150-mph605-cfm-blower-tool-only-56994.html",
+          "price": 79.99,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "unknown",
+          "name": "Atlas 80V Brushless Cordless 150 Mph/605 CFM Blower",
+          "pageUrl": "https://www.walmart.com/ip/ATLAS-80V-Brushless-Cordless-150-MPH-605-CFM-Blower/16328859800",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "unknown",
+          "name": "3017-20 Milwaukee M18 FUEL Blower",
+          "pageUrl": "https://www.homedepot.com/p/Milwaukee-M18-FUEL-120-MPH-500-CFM-18V-Lithium-Ion-Brushless-Cordless-Handheld-Blower-Tool-Only-3017-20/326290517",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "3017-20 Milwaukee M18 FUEL Blower",
+          "pageUrl": "https://www.acehardware.com/departments/lawn-and-garden/outdoor-power-equipment/leaf-blowers/7029528",
+          "price": 149,
+          "priceStatus": "verified",
+          "requirementFailures": [
+            "Feature: Cordless"
+          ]
+        },
+        {
+          "availabilityStatus": "unknown",
+          "name": "Greenworks 125 MPH/450 CFM 60V Cordless Handheld Leaf Blower, Battery and Charger Included",
+          "pageUrl": "https://www.tractorsupply.com/tsc/product/greenworks-pro-60v-450-cfm-leaf-blower-with-20-ah-battery-and-charger-bl60b210",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        }
+      ],
+      "scoutFallbackReason": null,
+      "scoutInputTokens": 19128,
+      "scoutOutputTokens": 1318,
+      "scoutUsedFallback": false,
+      "evidencedTargetReturned": false,
+      "strongTargetReturned": false,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": false,
+      "topThreeLeaderPosition": null,
+      "verifiedLeaderCurrentIneligible": false,
+      "verifiedLeaderEligible": false,
+      "verifiedLeaderObserved": false
+    },
+    {
+      "caseId": "constrained-robot-vacuum",
+      "debugResponseBytes": 24302,
+      "durationMs": 25706,
+      "error": null,
+      "normalResponseBytes": 329,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 25688,
+      "status": 200,
+      "acceptedCandidatesSafe": true,
+      "evidenceBindingsExact": true,
+      "commerceCandidateCount": 15,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 13,
+      "marketTargets": [
+        {
+          "aliases": [
+            "Roborock Q10 S5 Plus",
+            "Roborock Q10 S5+ Robot Vacuum and Mop Combo"
+          ],
+          "brand": "Roborock",
+          "model": "Q10 S5+",
+          "sourceCount": 3,
+          "tier": "strong"
+        },
+        {
+          "aliases": [
+            "Dreame D10 Plus Gen 2",
+            "Dreame D10 Plus 2nd Gen"
+          ],
+          "brand": "Dreame",
+          "model": "D10 Plus Gen 2",
+          "sourceCount": 3,
+          "tier": "strong"
+        }
+      ],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 13,
+      "products": [
+        {
+          "name": "Roborock Q10 S5+ Robot Vacuum and Mop with Auto-Empty Dock",
+          "price": 259.99,
+          "productPageUrl": "https://us.roborock.com/products/roborock-q10-s5-plus"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": 4.550576606260297,
+          "evidenceTier": "strong",
+          "name": "Roborock Q10 S5+ Robot Vacuum and Mop with Auto-Empty Dock",
+          "productPageUrl": "https://us.roborock.com/products/roborock-q10-s5-plus",
+          "rating": 4.6,
+          "ratingCount": 557,
+          "targetBrand": "Roborock",
+          "targetModel": "Q10 S5+"
+        }
+      ],
+      "rejectionCounts": {
+        "assetSafety": 0,
+        "availability": 2,
+        "condition": 0,
+        "merchant": 5,
+        "price": 2,
+        "requirements": 2
+      },
+      "verifiedCandidates": [
+        {
+          "availabilityStatus": "available",
+          "name": "Roborock Q10 S5+ Robot Vacuum and Mop with Auto-Empty Dock",
+          "pageUrl": "https://us.roborock.com/products/roborock-q10-s5-plus",
+          "price": 259.99,
+          "priceStatus": "verified",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "unknown",
+          "name": "Dreame d10 plus Gen 2",
+          "pageUrl": "https://www.dreametech.com/products/d10-plus-gen2-robot-vacuum",
+          "price": 304.11,
+          "priceStatus": "usable",
+          "requirementFailures": [
+            "Feature: Self-emptying"
+          ]
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Eureka J15 Ultra Self Emptying Robot Vacuum 19,000 Pa Suction Flex-Arm Mop Design",
+          "pageUrl": "https://us.eureka.com/products/eureka-j15-ultra-flagship-robot-vacuum",
+          "price": 399.99,
+          "priceStatus": "verified",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Roborock Q7 L5 Robot Vacuum and Mop with 8,000 Pa Power Suction",
+          "pageUrl": "https://us.roborock.com/products/roborock-q7-l5",
+          "price": 159.99,
+          "priceStatus": "verified",
+          "requirementFailures": [
+            "Feature: Self-emptying"
+          ]
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "eufy Omni C20 Robot Vacuum Cleaner with Mop",
+          "pageUrl": "https://www.eufy.com/products/t2280111",
+          "price": 329.99,
+          "priceStatus": "usable",
+          "requirementFailures": [
+            "Feature: Self-emptying"
+          ]
+        },
+        {
+          "availabilityStatus": "unknown",
+          "name": "eufy Omni C20 Robot Vacuum Cleaner with Mop",
+          "pageUrl": "https://www.lowes.com/pd/eufy-Robot-Vacuum-Omni-C20-Self-Emptying-Auto-Mop-Washing-Auto-Drying/7917815",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Eureka J15 Evo Ultra – Infinite Flexibility",
+          "pageUrl": "https://us.eureka.com/products/j15-evo-ultra",
+          "price": 389.99,
+          "priceStatus": "verified",
+          "requirementFailures": []
+        }
+      ],
+      "scoutFallbackReason": null,
+      "scoutInputTokens": 19001,
+      "scoutOutputTokens": 1402,
+      "scoutUsedFallback": false,
+      "evidencedTargetReturned": true,
+      "strongTargetReturned": true,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": false,
+      "topThreeLeaderPosition": null,
+      "verifiedLeaderCurrentIneligible": true,
+      "verifiedLeaderEligible": false,
+      "verifiedLeaderObserved": true
+    },
+    {
+      "caseId": "constrained-gaming-monitor",
+      "debugResponseBytes": 25509,
+      "durationMs": 24740,
+      "error": null,
+      "normalResponseBytes": 336,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 24724,
+      "status": 200,
+      "acceptedCandidatesSafe": true,
+      "evidenceBindingsExact": true,
+      "commerceCandidateCount": 15,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 15,
+      "marketTargets": [
+        {
+          "aliases": [
+            "Alienware AW2725DM",
+            "AW2725DM"
+          ],
+          "brand": "Dell",
+          "model": "Alienware AW2725DM",
+          "sourceCount": 3,
+          "tier": "supported"
+        },
+        {
+          "aliases": [
+            "ROG Strix XG27ACS",
+            "XG27ACS"
+          ],
+          "brand": "ASUS",
+          "model": "ROG Strix XG27ACS",
+          "sourceCount": 3,
+          "tier": "supported"
+        },
+        {
+          "aliases": [
+            "G274QPF-QD"
+          ],
+          "brand": "MSI",
+          "model": "G274QPF-QD",
+          "sourceCount": 3,
+          "tier": "supported"
+        }
+      ],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 15,
+      "products": [
+        {
+          "name": "Z-Edge AGEX A27Q 27\" 144Hz 2K QHD 2560x1440 Fast IPS 1ms Response Time LED Gaming Monitor",
+          "price": 149.99,
+          "productPageUrl": "https://www.z-edge.com/products/a27q"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": 4.654098360655738,
+          "evidenceTier": null,
+          "name": "Z-Edge AGEX A27Q 27\" 144Hz 2K QHD 2560x1440 Fast IPS 1ms Response Time LED Gaming Monitor",
+          "productPageUrl": "https://www.z-edge.com/products/a27q",
+          "rating": 4.9,
+          "ratingCount": 133,
+          "targetBrand": null,
+          "targetModel": null
+        }
+      ],
+      "rejectionCounts": {
+        "assetSafety": 1,
+        "availability": 3,
+        "condition": 0,
+        "merchant": 1,
+        "price": 0,
+        "requirements": 0
+      },
+      "verifiedCandidates": [
+        {
+          "availabilityStatus": "unknown",
+          "name": "MSI G274QPF-QD - LED monitor - gaming - 27\" - 2560 x 1440 WQHD @ 170 Hz - Fast IPS - 400 cd/m² - 1000:1 - 1 ms - 2xHDMI, DisplayPort, USB-C",
+          "pageUrl": "",
+          "price": 335.4,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "unknown",
+          "name": "Gaming monitor 27\" DELL Alienware AW2725DM, QHD, 180Hz, IPS, 1ms, 400cd/m2, 1000:1, crni",
+          "pageUrl": "https://www.amazon.com/Alienware-27-Gaming-Monitor-AdaptiveSync/dp/B0F146MYKD",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "unavailable",
+          "name": "Gaming monitor 27\" DELL Alienware AW2725DM, QHD, 180Hz, IPS, 1ms, 400cd/m2, 1000:1, crni",
+          "pageUrl": "https://www.dell.com/en-us/shop/alienware-27-gaming-monitor-aw2725dm/apd/210-bpky/monitors-monitor-accessories",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Z-Edge AGEX A27Q 27\" 144Hz 2K QHD 2560x1440 Fast IPS 1ms Response Time LED Gaming Monitor",
+          "pageUrl": "https://www.z-edge.com/products/a27q",
+          "price": 149.99,
+          "priceStatus": "verified",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "unavailable",
+          "name": "LG 27\" UltraGear IPS QHD 1440p 200Hz Gaming Monitor",
+          "pageUrl": "https://www.nfm.com/lg-27-ultragear-ips-qhd-1440p-200hz-gaming-monitor-in-black-69028645/69028645.html",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        }
+      ],
+      "scoutFallbackReason": null,
+      "scoutInputTokens": 18731,
+      "scoutOutputTokens": 1272,
+      "scoutUsedFallback": false,
+      "evidencedTargetReturned": false,
+      "strongTargetReturned": false,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": false,
+      "topThreeLeaderPosition": null,
+      "verifiedLeaderCurrentIneligible": false,
+      "verifiedLeaderEligible": false,
+      "verifiedLeaderObserved": false
+    },
+    {
+      "caseId": "constrained-shop-vacuum",
+      "debugResponseBytes": 25266,
+      "durationMs": 21977,
+      "error": null,
+      "normalResponseBytes": 706,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 21956,
+      "status": 200,
+      "acceptedCandidatesSafe": true,
+      "evidenceBindingsExact": true,
+      "commerceCandidateCount": 15,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 15,
+      "marketTargets": [
+        {
+          "aliases": [],
+          "brand": "Vacmaster",
+          "model": "VFB511B 0201",
+          "sourceCount": 3,
+          "tier": "strong"
+        },
+        {
+          "aliases": [],
+          "brand": "DeWalt",
+          "model": "DXV12P-QT",
+          "sourceCount": 3,
+          "tier": "strong"
+        },
+        {
+          "aliases": [
+            "Craftsman CMXEVBE17595 Wet-Dry Shop Vacuum"
+          ],
+          "brand": "Craftsman",
+          "model": "CMXEVBE17595",
+          "sourceCount": 2,
+          "tier": "strong"
+        }
+      ],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 15,
+      "products": [
+        {
+          "name": "Bauer 3 Gallon 3 Peak Hp Wet/dry Vacuum",
+          "price": 39.99,
+          "productPageUrl": "https://www.harborfreight.com/3-gallon-3-peak-hp-wetdry-vacuum-64753.html"
+        },
+        {
+          "name": "Bauer 14 Gallon Wet/dry Vacuum",
+          "price": 119.99,
+          "productPageUrl": "https://www.harborfreight.com/14-gallon-wetdry-vacuum-56579.html"
+        },
+        {
+          "name": "SL18116P Stanley Wet Dry Vacuum",
+          "price": 57.39,
+          "productPageUrl": "https://www.walmart.com/ip/STANLEY-6-Gallon-4-Peak-HP-Poly-Wet-Dry-Vacuum-SL18116P/28508951"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": 4.691358024691358,
+          "evidenceTier": null,
+          "name": "Bauer 3 Gallon 3 Peak Hp Wet/dry Vacuum",
+          "productPageUrl": "https://www.harborfreight.com/3-gallon-3-peak-hp-wetdry-vacuum-64753.html",
+          "rating": 4.7,
+          "ratingCount": 4000,
+          "targetBrand": null,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.675862068965517,
+          "evidenceTier": null,
+          "name": "Bauer 14 Gallon Wet/dry Vacuum",
+          "productPageUrl": "https://www.harborfreight.com/14-gallon-wetdry-vacuum-56579.html",
+          "rating": 4.7,
+          "ratingCount": 1400,
+          "targetBrand": null,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.653947368421052,
+          "evidenceTier": null,
+          "name": "SL18116P Stanley Wet Dry Vacuum",
+          "productPageUrl": "https://www.walmart.com/ip/STANLEY-6-Gallon-4-Peak-HP-Poly-Wet-Dry-Vacuum-SL18116P/28508951",
+          "rating": 4.7,
+          "ratingCount": 710,
+          "targetBrand": null,
+          "targetModel": null
+        }
+      ],
+      "rejectionCounts": {
+        "assetSafety": 0,
+        "availability": 2,
+        "condition": 0,
+        "merchant": 0,
+        "price": 0,
+        "requirements": 0
+      },
+      "verifiedCandidates": [
+        {
+          "availabilityStatus": "unknown",
+          "name": "12 Gallon 5.5 PHP STEALTHSONIC QUIET VACUUM - DeWalt",
+          "pageUrl": "https://www.lowes.com/pd/DEWALT-12Gal-5-5-PHP-Quiet-Vac/5013026391",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "unknown",
+          "name": "12 Gallon 5.5 PHP STEALTHSONIC QUIET VACUUM - DeWalt",
+          "pageUrl": "https://www.dewalt.com/en-us/product/dxv12p-qt/12-gallon-55-php-stealthsonic-quiet-vacuum",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Bauer 3 Gallon 3 Peak Hp Wet/dry Vacuum",
+          "pageUrl": "https://www.harborfreight.com/3-gallon-3-peak-hp-wetdry-vacuum-64753.html",
+          "price": 39.99,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Bauer 14 Gallon Wet/dry Vacuum",
+          "pageUrl": "https://www.harborfreight.com/14-gallon-wetdry-vacuum-56579.html",
+          "price": 119.99,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "SL18116P Stanley Wet Dry Vacuum",
+          "pageUrl": "https://www.walmart.com/ip/STANLEY-6-Gallon-4-Peak-HP-Poly-Wet-Dry-Vacuum-SL18116P/28508951",
+          "price": 57.39,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        }
+      ],
+      "scoutFallbackReason": null,
+      "scoutInputTokens": 18671,
+      "scoutOutputTokens": 1362,
+      "scoutUsedFallback": false,
+      "evidencedTargetReturned": false,
+      "strongTargetReturned": false,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": false,
+      "topThreeLeaderPosition": null,
+      "verifiedLeaderCurrentIneligible": false,
+      "verifiedLeaderEligible": false,
+      "verifiedLeaderObserved": false
+    },
+    {
+      "caseId": "constrained-pressure-washer",
+      "debugResponseBytes": 25618,
+      "durationMs": 29134,
+      "error": null,
+      "normalResponseBytes": 380,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 29120,
+      "status": 200,
+      "acceptedCandidatesSafe": true,
+      "evidenceBindingsExact": true,
+      "commerceCandidateCount": 15,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 15,
+      "marketTargets": [
+        {
+          "aliases": [],
+          "brand": "Ryobi",
+          "model": "RY142022VNM",
+          "sourceCount": 3,
+          "tier": "strong"
+        },
+        {
+          "aliases": [
+            "GPW2000"
+          ],
+          "brand": "Greenworks",
+          "model": "GPW2000",
+          "sourceCount": 3,
+          "tier": "strong"
+        },
+        {
+          "aliases": [
+            "SPX3000 XTREAM"
+          ],
+          "brand": "Sun Joe",
+          "model": "SPX3000 XTREAM",
+          "sourceCount": 3,
+          "tier": "supported"
+        }
+      ],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 15,
+      "products": [
+        {
+          "name": "Black + Decker 2000 PSI 1.2 GPM Cold Water Electric Pressure Washer bepw2000",
+          "price": 139.99,
+          "productPageUrl": "https://www.blackanddecker.com/products/bepw2000"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": 4.110126582278481,
+          "evidenceTier": null,
+          "name": "Black + Decker 2000 PSI 1.2 GPM Cold Water Electric Pressure Washer bepw2000",
+          "productPageUrl": "https://www.blackanddecker.com/products/bepw2000",
+          "rating": 4.3,
+          "ratingCount": 29,
+          "targetBrand": null,
+          "targetModel": null
+        }
+      ],
+      "rejectionCounts": {
+        "assetSafety": 0,
+        "availability": 6,
+        "condition": 0,
+        "merchant": 2,
+        "price": 0,
+        "requirements": 0
+      },
+      "verifiedCandidates": [
+        {
+          "availabilityStatus": "unknown",
+          "name": "Greenworks 2000 PSI 1.1-GPM Cold Water Electric Pressure Washer with 3 Spray Tips GPW2000-1RB",
+          "pageUrl": "https://www.lowes.com/pd/Greenworks-2000-PSI-1-1-Gallon-GPM-Cold-Water-Electric-Pressure-Washer/5005862425",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "unknown",
+          "name": "Greenworks Brushless 3000 PSI 2.0 GPM Max/ 1.1 GPM Electric Pressure Washer",
+          "pageUrl": "https://www.walmart.com/ip/Greenworks-Brushless-3000-PSI-2-0-GPM-Max-1-1-GPM-Electric-Pressure-Washer/16593224106",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "unknown",
+          "name": "Ryobi 2000 PSI 1.2 GPM Cold Water Electric Pressure Washer",
+          "pageUrl": "https://www.amazon.com/RYOBI-Water-Electric-Pressure-Washer/dp/B09FRLW2NV",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "unavailable",
+          "name": "A-ipower Pwe2000 Electric Cold Water Pressure Washer, 2000 PSI at 1.2 GPM",
+          "pageUrl": "https://aipower.com/products/pwe2000-electric-pressure-washer",
+          "price": 199.99,
+          "priceStatus": "verified",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "unknown",
+          "name": "A-ipower Pwe2000 Electric Cold Water Pressure Washer, 2000 PSI at 1.2 GPM",
+          "pageUrl": "https://www.lowes.com/pd/A-iPower-A-iPower-PWE2000-2000-PSI-1-2-GPM-Cold-Water-Electric-Pressure-Washer-with-25-ft-Hose-and-4-Quick-Connect-Nozzles/5020389255",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Black + Decker 2000 PSI 1.2 GPM Cold Water Electric Pressure Washer bepw2000",
+          "pageUrl": "https://www.blackanddecker.com/products/bepw2000",
+          "price": 139.99,
+          "priceStatus": "verified",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "unknown",
+          "name": "Black + Decker 2000 PSI 1.2 GPM Cold Water Electric Pressure Washer bepw2000",
+          "pageUrl": "https://www.walmart.com/ip/BLACK-DECKER-2000-Psi-1-2-Gpm-Pressure-Washer-BEPW2000/965447741",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        }
+      ],
+      "scoutFallbackReason": null,
+      "scoutInputTokens": 18130,
+      "scoutOutputTokens": 1321,
+      "scoutUsedFallback": false,
+      "evidencedTargetReturned": false,
+      "strongTargetReturned": false,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": false,
+      "topThreeLeaderPosition": null,
+      "verifiedLeaderCurrentIneligible": false,
+      "verifiedLeaderEligible": false,
+      "verifiedLeaderObserved": false
+    },
+    {
+      "caseId": "constrained-coffee-maker",
+      "debugResponseBytes": 27540,
+      "durationMs": 31091,
+      "error": null,
+      "normalResponseBytes": 1097,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 31078,
+      "status": 200,
+      "acceptedCandidatesSafe": true,
+      "evidenceBindingsExact": true,
+      "commerceCandidateCount": 15,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 14,
+      "marketTargets": [
+        {
+          "aliases": [
+            "Braun KF5650BK"
+          ],
+          "brand": "Braun",
+          "model": "KF5650BK",
+          "sourceCount": 3,
+          "tier": "strong"
+        },
+        {
+          "aliases": [
+            "Cuisinart DCC-3200"
+          ],
+          "brand": "Cuisinart",
+          "model": "DCC-3200",
+          "sourceCount": 3,
+          "tier": "supported"
+        },
+        {
+          "aliases": [
+            "Haden 75139"
+          ],
+          "brand": "Haden",
+          "model": "75139",
+          "sourceCount": 3,
+          "tier": "supported"
+        }
+      ],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 14,
+      "products": [
+        {
+          "name": "Cuisinart 14 Cup Programmable Coffeemaker DCC-3200",
+          "price": 119.95,
+          "productPageUrl": "https://www.cuisinart.com/14-cup-programmable-coffee-maker/DCC-3200BKSNAS.html"
+        },
+        {
+          "name": "Cuisinart 14 Cup Programmable",
+          "price": 119.95,
+          "productPageUrl": "https://www.wayfair.com/kitchen-tabletop/pdp/cuisinart-14-cup-programmable-coffeemaker-with-glass-carafe-fully-automatic-for-brew-strength-control-1-4-cup-setting-dvzj2904.html"
+        },
+        {
+          "name": "Mr Coffee 14 Cup Programmable Coffee Maker",
+          "price": 79.99,
+          "productPageUrl": "https://www.nfm.com/mr--coffee-14-cup-programmable-coffee-maker-in-black-and-stainless-steel-68953553/68953553.html"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": 4.495145631067961,
+          "evidenceTier": "supported",
+          "name": "Cuisinart 14 Cup Programmable Coffeemaker DCC-3200",
+          "productPageUrl": "https://www.cuisinart.com/14-cup-programmable-coffee-maker/DCC-3200BKSNAS.html",
+          "rating": 4.5,
+          "ratingCount": 5100,
+          "targetBrand": "Cuisinart",
+          "targetModel": "DCC-3200"
+        },
+        {
+          "bayesianRating": 4.496774193548387,
+          "evidenceTier": null,
+          "name": "Cuisinart 14 Cup Programmable",
+          "productPageUrl": "https://www.wayfair.com/kitchen-tabletop/pdp/cuisinart-14-cup-programmable-coffeemaker-with-glass-carafe-fully-automatic-for-brew-strength-control-1-4-cup-setting-dvzj2904.html",
+          "rating": 4.5,
+          "ratingCount": 7700,
+          "targetBrand": null,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.274662162162162,
+          "evidenceTier": null,
+          "name": "Mr Coffee 14 Cup Programmable Coffee Maker",
+          "productPageUrl": "https://www.nfm.com/mr--coffee-14-cup-programmable-coffee-maker-in-black-and-stainless-steel-68953553/68953553.html",
+          "rating": 4.3,
+          "ratingCount": 542,
+          "targetBrand": null,
+          "targetModel": null
+        }
+      ],
+      "rejectionCounts": {
+        "assetSafety": 0,
+        "availability": 3,
+        "condition": 0,
+        "merchant": 1,
+        "price": 0,
+        "requirements": 0
+      },
+      "verifiedCandidates": [
+        {
+          "availabilityStatus": "unknown",
+          "name": "Braun PureFlavor Coffee Maker KF5650BK",
+          "pageUrl": "https://www.homedepot.com/p/Braun-PureFlavor-14-Cup-Black-and-Stainless-Steel-Programmable-Drip-Coffee-Maker-with-FastBrew-System-KF5650BK/337938628",
+          "price": 99.95,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Cuisinart 14 Cup Programmable Coffeemaker DCC-3200",
+          "pageUrl": "https://www.cuisinart.com/14-cup-programmable-coffee-maker/DCC-3200BKSNAS.html",
+          "price": 119.95,
+          "priceStatus": "verified",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Cuisinart 14 Cup Programmable",
+          "pageUrl": "https://www.wayfair.com/kitchen-tabletop/pdp/cuisinart-14-cup-programmable-coffeemaker-with-glass-carafe-fully-automatic-for-brew-strength-control-1-4-cup-setting-dvzj2904.html",
+          "price": 119.95,
+          "priceStatus": "usable",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "available",
+          "name": "Mr Coffee 14 Cup Programmable Coffee Maker",
+          "pageUrl": "https://www.nfm.com/mr--coffee-14-cup-programmable-coffee-maker-in-black-and-stainless-steel-68953553/68953553.html",
+          "price": 79.99,
+          "priceStatus": "verified",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "unknown",
+          "name": "Mr Coffee 14 Cup Programmable Coffee Maker",
+          "pageUrl": "https://www.lowes.com/pd/Mr-Coffee-Mr-Coffee-14-Cup-Programmable-Coffee-Maker/5014667567",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": []
+        },
+        {
+          "availabilityStatus": "unknown",
+          "name": "Ninja Fresh Brew 14-Cup Drip Coffee Maker",
+          "pageUrl": "https://www.walmart.com/ip/Ninja-Fresh-Brew-CE451/18210159416",
+          "price": null,
+          "priceStatus": "missing",
+          "requirementFailures": [
+            "Feature: Programmable"
+          ]
+        }
+      ],
+      "scoutFallbackReason": null,
+      "scoutInputTokens": 18788,
+      "scoutOutputTokens": 1911,
+      "scoutUsedFallback": false,
+      "evidencedTargetReturned": true,
+      "strongTargetReturned": false,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": true,
+      "topThreeLeaderPosition": 1,
+      "verifiedLeaderCurrentIneligible": false,
+      "verifiedLeaderEligible": true,
+      "verifiedLeaderObserved": true
+    }
+  ]
+}

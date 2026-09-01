@@ -169,9 +169,20 @@ describe("market-quality discovery orchestration", () => {
           JSON.stringify({
             organic: [
               {
-                link: "https://127.0.0.1/products/alpha-a100",
+                link: "https://www.alpha.com/products/alpha-a100",
                 snippet: "Self-emptying robot vacuum",
                 title: "Alpha A100 Robot Vacuum",
+              },
+              {
+                link:
+                  "https://www.consumerreports.org/appliances/robot-vacuums/alpha-a100/m123456/",
+                snippet: "Independent test result",
+                title: "Alpha A100 Robot Vacuum Review",
+              },
+              {
+                link: "https://device.report/manual/alpha-a100",
+                snippet: "Owner manual",
+                title: "Alpha A100 Robot Vacuum Manual",
               },
             ],
           }),
@@ -211,6 +222,12 @@ describe("market-quality discovery orchestration", () => {
     assert.deepEqual(selected.telemetry.resolutionQueries, [
       "Alpha A100 robot vacuum",
     ]);
+    assert.deepEqual(
+      selected.telemetry.resolutionDiagnostics[0].pageCandidates.map(
+        ({ score }) => score,
+      ),
+      [1, 0, 0],
+    );
     assert.equal(selected.result.recommendations.length, 0);
   });
 

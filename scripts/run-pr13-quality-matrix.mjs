@@ -418,6 +418,58 @@ function compactTelemetry(body, benchmarkCase) {
       price: asFiniteNumber(search.rejectedByPrice),
       requirements: asFiniteNumber(search.rejectedByRequirements),
     },
+    rankedCandidates: asArray(search.rankedCandidates).map((value) => {
+      const candidate = asRecord(value);
+      return {
+        evidenceTier: candidate.evidenceTier || null,
+        name: candidate.name || "",
+        price: candidate.price ?? null,
+        productUrl: candidate.productUrl || "",
+        retailer: candidate.retailer || null,
+      };
+    }),
+    resolutionDiagnostics: asArray(search.resolutionDiagnostics).map((value) => {
+      const diagnostic = asRecord(value);
+      return {
+        discoveryName: diagnostic.discoveryName || "",
+        pageCandidates: asArray(diagnostic.pageCandidates).map((pageValue) => {
+          const page = asRecord(pageValue);
+          return {
+            name: page.name || "",
+            score: asFiniteNumber(page.score),
+            url: page.url || "",
+          };
+        }),
+        status: diagnostic.status || "unknown",
+      };
+    }),
+    resolutionQueries: asArray(search.resolutionQueries).map(String),
+    searchDiagnostics: asArray(search.searchDiagnostics).map((value) => {
+      const diagnostic = asRecord(value);
+      return {
+        errorKind: diagnostic.errorKind || null,
+        query: diagnostic.query || "",
+        rawShoppingResults: asFiniteNumber(diagnostic.rawShoppingResults),
+        rejectionReasons: asRecord(diagnostic.rejectionReasons),
+        returnedCandidates: asFiniteNumber(diagnostic.returnedCandidates),
+      };
+    }),
+    verificationWaves: asArray(search.verificationWaves).map((value) => {
+      const wave = asRecord(value);
+      return {
+        acceptedCandidates: asFiniteNumber(wave.acceptedCandidates),
+        candidateNames: asArray(wave.candidateNames).map(String),
+        cumulativeAcceptedCandidates: asFiniteNumber(
+          wave.cumulativeAcceptedCandidates,
+        ),
+        rejectedByAssetSafety: asFiniteNumber(wave.rejectedByAssetSafety),
+        rejectedByAvailability: asFiniteNumber(wave.rejectedByAvailability),
+        rejectedByCondition: asFiniteNumber(wave.rejectedByCondition),
+        rejectedByPrice: asFiniteNumber(wave.rejectedByPrice),
+        rejectedByRequirements: asFiniteNumber(wave.rejectedByRequirements),
+        wave: asFiniteNumber(wave.wave),
+      };
+    }),
     verifiedCandidates: asArray(search.verifiedCandidates).map((value) => {
       const candidate = asRecord(value);
       return {

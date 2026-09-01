@@ -106,6 +106,27 @@ describe("bounded product search", () => {
     assert.equal(missingPrice.candidate.currentShoppingOffer, undefined);
   });
 
+  it("rejects editorial and manual URLs returned through the Shopping vertical", () => {
+    for (const link of [
+      "https://www.consumerreports.org/home-garden/leaf-blowers/ego-lb7654/m407121/",
+      "https://www.rtings.com/robot-vacuum/tools/compare/one-vs-two/1/2",
+      "https://device.report/manual/6818421",
+    ]) {
+      const normalized = productSearchTestExports.normalizeShoppingResult(
+        {
+          extractedPrice: 199,
+          link,
+          source: "Search result",
+          title: "EGO LB7654 Cordless Leaf Blower",
+        },
+        "cordless leaf blower",
+      );
+
+      assert.equal(normalized.candidate, null);
+      assert.equal(normalized.reason, "non_product_source");
+    }
+  });
+
   it("binds a priced direct Shopping result to its retailer hostname when source is absent", () => {
     const direct = productSearchTestExports.normalizeShoppingResult(
       {

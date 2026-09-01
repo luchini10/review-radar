@@ -10,6 +10,7 @@ const {
   candidateMatchesTarget,
   candidateHasUsablePage,
   dedupeSelectionCandidates,
+  dedupeVerificationCandidates,
   interleaveSearchCandidates,
   isNonUsMarketUrl,
   isSecondaryMarketCandidate,
@@ -327,6 +328,64 @@ describe("selection correctness", () => {
     assert.match(query, /l50/i);
     assert.doesNotMatch(query, /walmart/i);
     assert.doesNotMatch(query, /240min/i);
+  });
+
+  it("keeps two source-backed seller alternatives until live verification", () => {
+    const marketEvidence = {
+      consensusOrder: 0,
+      sourceUrls: ["https://www.rtings.com/example"],
+      targetBrand: "Alpha",
+      targetModel: "A100",
+      tier: "strong",
+    };
+    const firstSeller = candidate("Alpha A100 Robot Vacuum", {
+      brand: "Alpha",
+      marketEvidence,
+      productUrl: "https://www.store-one.example/products/alpha-a100",
+      retailer: "Store One",
+    });
+    const secondSeller = candidate("Alpha A100 Robot Vacuum", {
+      brand: "Alpha",
+      marketEvidence,
+      productUrl: "https://www.store-two.example/products/alpha-a100",
+      retailer: "Store Two",
+    });
+    const thirdSeller = candidate("Alpha A100 Robot Vacuum", {
+      brand: "Alpha",
+      marketEvidence,
+      productUrl: "https://www.store-three.example/products/alpha-a100",
+      retailer: "Store Three",
+    });
+    const ordinaryDuplicate = candidate("Beta B200 Robot Vacuum", {
+      brand: "Beta",
+      productUrl: "https://www.store-two.example/products/beta-b200",
+    });
+    const ordinaryDuplicateTwo = candidate("Beta B200 Robot Vacuum", {
+      brand: "Beta",
+      productUrl: "https://www.store-three.example/products/beta-b200",
+    });
+
+    const deduped = dedupeVerificationCandidates([
+      firstSeller,
+      secondSeller,
+      thirdSeller,
+      ordinaryDuplicate,
+      ordinaryDuplicateTwo,
+    ]);
+    const selected = selectVerificationCandidates(deduped.candidates, 9);
+
+    assert.deepEqual(
+      selected.map((value) => new URL(value.productUrl).hostname),
+      ["www.store-one.example", "www.store-two.example", "www.store-two.example"],
+    );
+    assert.equal(
+      selected.filter((value) => value.name === "Alpha A100 Robot Vacuum").length,
+      2,
+    );
+    assert.equal(
+      selected.filter((value) => value.name === "Beta B200 Robot Vacuum").length,
+      1,
+    );
   });
 
   it("pins an unresolved current Shopping offer to its own merchant", () => {
@@ -859,6 +918,24 @@ describe("selection correctness", () => {
 
     assert.equal(attached[0].marketEvidence?.tier, "strong");
     assert.equal(attached[1].marketEvidence, undefined);
+  });
+
+  it("keeps an exact model binding beside a max-PSI performance phrase", () => {
+    const target = marketTarget("Craftsman", "CMEPW2100");
+    assert.equal(
+      candidateMatchesTarget(
+        candidate(
+          "Craftsman 2100-PSI 1.2-gpm Cold Water Electric Pressure Washer CMEPW2100",
+          {
+            brand: "Craftsman",
+            productUrl:
+              "https://www.acmetools.com/craftsman-2100-max-psi-electric-cold-water-pressure-washer-cmepw2100/S0000000077632.html",
+          },
+        ),
+        target,
+      ),
+      true,
+    );
   });
 
   it("requires an explicit model generation before attaching its evidence", () => {

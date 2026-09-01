@@ -227,6 +227,7 @@ function namedVariantWords(value: string) {
   return value
     .toLowerCase()
     .replace(/\b\d+(?:\.\d+)?\s*v(?:olt)?\s+max\b/g, " ")
+    .replace(/\b\d+(?:\.\d+)?\s+max\s+psi\b/g, " ")
     .replace(/([a-z0-9])\+/g, "$1 plus")
     .replace(/[^a-z0-9]+/g, " ")
     .trim()

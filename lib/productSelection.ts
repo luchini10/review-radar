@@ -740,13 +740,18 @@ function selectVerificationCandidates(
 
   const selected: RawProductCandidate[] = [];
   const deferred: RawProductCandidate[] = [];
-  const seenIdentities = new Set<string>();
+  const seenOffers = new Set<string>();
+  const identityCounts = new Map<string, number>();
   const brandCounts = new Map<string, number>();
 
   for (const candidate of candidates) {
     const identity = discoveryIdentityKey(candidate);
-    if (seenIdentities.has(identity)) continue;
-    seenIdentities.add(identity);
+    const maximumForIdentity = candidate.marketEvidence ? 2 : 1;
+    if ((identityCounts.get(identity) || 0) >= maximumForIdentity) continue;
+    const offer = verificationOfferKey(candidate);
+    if (seenOffers.has(offer)) continue;
+    seenOffers.add(offer);
+    identityCounts.set(identity, (identityCounts.get(identity) || 0) + 1);
 
     const brand = normalizedText(selectionBrand(candidate) || "");
     if (brand && (brandCounts.get(brand) || 0) >= 2) {
@@ -774,6 +779,17 @@ function discoveryIdentityKey(candidate: RawProductCandidate) {
   return models.length > 0
     ? `${brand}|${models.join("|")}|${variants.join("|")}`
     : normalizedText(candidate.name);
+}
+
+function candidateMerchantKey(candidate: RawProductCandidate) {
+  const parsed = parsedPageUrl(candidate.productUrl);
+  const host = parsed?.hostname.toLowerCase().replace(/^www\./, "") || "";
+  const retailer = normalizedText(primaryRetailerName(candidate.retailer));
+  return `${host}|${retailer}`;
+}
+
+function verificationOfferKey(candidate: RawProductCandidate) {
+  return `${discoveryIdentityKey(candidate)}|${candidateMerchantKey(candidate)}`;
 }
 
 function strongerMarketEvidence(
@@ -863,6 +879,30 @@ function dedupeSelectionCandidates(candidates: RawProductCandidate[]) {
   }
 
   return { candidates: [...seen.values()], duplicateCount };
+}
+
+function dedupeVerificationCandidates(candidates: RawProductCandidate[]) {
+  const evidencedOffers = new Set<string>();
+  const retained: RawProductCandidate[] = [];
+  const ordinary: RawProductCandidate[] = [];
+
+  for (const candidate of candidates) {
+    if (!candidate.marketEvidence) {
+      ordinary.push(candidate);
+      continue;
+    }
+    const offer = verificationOfferKey(candidate);
+    if (evidencedOffers.has(offer)) continue;
+    evidencedOffers.add(offer);
+    retained.push(candidate);
+  }
+
+  const dedupedOrdinary = dedupeSelectionCandidates(ordinary);
+  return {
+    candidates: [...retained, ...dedupedOrdinary.candidates],
+    duplicateCount:
+      candidates.length - retained.length - dedupedOrdinary.candidates.length,
+  };
 }
 
 function interleaveSearchCandidates(
@@ -1540,6 +1580,21 @@ function resolvedCandidates(
     .slice(0, MAX_PAGE_ALTERNATIVES_PER_CANDIDATE);
 }
 
+function targetPageIsUsable(
+  candidate: RawProductCandidate,
+  target: MarketScoutTarget,
+  discoveryCandidates: RawProductCandidate[],
+) {
+  return (
+    candidateMatchesTarget(candidate, target) &&
+    (pageSourceScore(candidate, target.brand, null) >= 0 ||
+      discoveryCandidates.some(
+        (discoveryCandidate) =>
+          pageIdentityScore(discoveryCandidate, candidate) > 0,
+      ))
+  );
+}
+
 function hasUnrequestedNonUsVoltage(
   candidate: RawProductCandidate,
   input: RecommendationApiRequest,
@@ -2142,7 +2197,11 @@ export async function selectProducts(options: {
       const binding = targetResolutionBindings[index];
       if (!binding) return [];
       const exactPages: RawProductCandidate[] = candidates.filter((candidate) =>
-        candidateMatchesTarget(candidate, binding.target),
+        targetPageIsUsable(
+          candidate,
+          binding.target,
+          binding.discoveryCandidates,
+        ),
       );
       const merchantBoundPages = binding.discoveryCandidates.flatMap((candidate) =>
           resolvedCandidates(candidate, exactPages),
@@ -2167,7 +2226,7 @@ export async function selectProducts(options: {
     })),
     plan.targets,
   );
-  const deduped = dedupeSelectionCandidates(discovered);
+  const deduped = dedupeVerificationCandidates(discovered);
   const prefiltered = prefilterProductCandidates(
     deduped.candidates,
     input,
@@ -2189,7 +2248,13 @@ export async function selectProducts(options: {
       discoveryName: `${target.brand} ${target.model}`,
       pageCandidates: targetPageSearchResults[index].map((candidate) => ({
         name: candidate.name,
-        score: candidateMatchesTarget(candidate, target) ? 1 : 0,
+        score: targetPageIsUsable(
+          candidate,
+          target,
+          targetResolutionBindings[index]?.discoveryCandidates || [],
+        )
+          ? 1
+          : 0,
         url: candidate.productUrl,
       })),
       status: targetResolvedCandidates.some((candidate) =>
@@ -2361,9 +2426,11 @@ export async function selectProducts(options: {
       candidatesReturned: recommendations.length,
       duplicateCandidatesRemoved: deduped.duplicateCount,
       logicalSearchCalls: queries.length + resolutionQueries.length,
-      marketEvidenceCandidates: marketCompatibleCandidates.filter(
-        (candidate) => Boolean(candidate.marketEvidence),
-      ).length,
+      marketEvidenceCandidates: new Set(
+        marketCompatibleCandidates
+          .filter((candidate) => Boolean(candidate.marketEvidence))
+          .map(discoveryIdentityKey),
+      ).size,
       marketTargetQueries,
       marketTargets: plan.targets.flatMap((target) =>
         target.evidenceTier === "none"
@@ -2426,6 +2493,7 @@ export const productSelectionTestExports = {
   candidateHasUsablePage,
   candidateMetadata,
   dedupeSelectionCandidates,
+  dedupeVerificationCandidates,
   discoveryIdentityKey,
   interleaveSearchCandidates,
   isNonUsMarketUrl,

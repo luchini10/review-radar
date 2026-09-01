@@ -10,6 +10,7 @@ import {
   rethrowIfRequestCancelled,
   throwIfRequestCancelled,
 } from "./requestCancellation.ts";
+import { isNonProductSource } from "./search/sourceSafety.ts";
 
 const SERPER_BASE_URL = "https://google.serper.dev";
 const SEARCH_RESULT_LIMIT = 10;
@@ -419,6 +420,9 @@ function normalizeShoppingResult(
   }
   if (likelyAccessory(title)) {
     return { candidate: null, reason: "accessory_or_part" };
+  }
+  if (isNonProductSource(parsed.toString())) {
+    return { candidate: null, reason: "non_product_source" };
   }
   if (googleOfferUrl(parsed) && (price === null || !retailer)) {
     return { candidate: null, reason: "incomplete_google_offer" };
