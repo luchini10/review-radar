@@ -600,6 +600,7 @@ export async function buildMarketScoutPlan(options: {
   model?: string;
   promptVersion?: string;
   signal?: AbortSignal;
+  timeoutMs?: number;
 }): Promise<{ plan: MarketScoutPlan; telemetry: MarketScoutTelemetry }> {
   const {
     client,
@@ -607,14 +608,19 @@ export async function buildMarketScoutPlan(options: {
     model = MARKET_SCOUT_MODEL,
     promptVersion = MARKET_SCOUT_PROMPT_VERSION,
     signal,
+    timeoutMs = MARKET_SCOUT_TIMEOUT_MS,
   } = options;
+  const hardTimeoutSignal = AbortSignal.timeout(timeoutMs);
+  const operationSignal = signal
+    ? AbortSignal.any([signal, hardTimeoutSignal])
+    : hardTimeoutSignal;
   const prompt = userPrompt(input);
   const cacheState: { outcome: "hit" | "miss" } = { outcome: "miss" };
   let providerUsage: Usage = { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
   let hostedSearchCalls = 0;
 
   try {
-    throwIfRequestCancelled(signal);
+    throwIfRequestCancelled(operationSignal);
     const validated = await getCachedOrLoad(
       scoutCacheKey(input, model, promptVersion),
       MARKET_SCOUT_CACHE_TTL_MS,
@@ -652,7 +658,7 @@ export async function buildMarketScoutPlan(options: {
           {
             maxRetries: 0,
             signal: sharedSignal,
-            timeout: MARKET_SCOUT_TIMEOUT_MS,
+            timeout: timeoutMs,
           },
         );
         providerUsage = responseUsage(response);
@@ -663,9 +669,9 @@ export async function buildMarketScoutPlan(options: {
       (outcome) => {
         cacheState.outcome = outcome;
       },
-      { signal },
+      { signal: operationSignal },
     );
-    throwIfRequestCancelled(signal);
+    throwIfRequestCancelled(operationSignal);
     const cacheHit = cacheState.outcome === "hit";
     return {
       plan: validated.plan,
@@ -686,7 +692,8 @@ export async function buildMarketScoutPlan(options: {
       },
     };
   } catch (error) {
-    rethrowIfRequestCancelled(error, signal);
+    const internallyTimedOut = hardTimeoutSignal.aborted && !signal?.aborted;
+    if (!internallyTimedOut) rethrowIfRequestCancelled(error, signal);
     const validationError =
       error instanceof MarketScoutValidationError ? error : null;
     return {
@@ -696,7 +703,7 @@ export async function buildMarketScoutPlan(options: {
         cacheHit: cacheState.outcome === "hit",
         evidenceTiers:
           validationError?.stats.evidenceTiers || emptyValidationStats().evidenceTiers,
-        fallbackReason: fallbackReasonForError(error),
+        fallbackReason: internallyTimedOut ? "timeout" : fallbackReasonForError(error),
         hostedSearchCalls:
           validationError?.hostedSearchCalls || hostedSearchCalls,
         inputTokens: validationError?.usage.inputTokens || providerUsage.inputTokens,

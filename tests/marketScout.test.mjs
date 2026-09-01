@@ -289,6 +289,37 @@ describe("market scout", () => {
     assert.equal(providerAborted, true);
   });
 
+  it("aborts a hung provider at the independent scout deadline", async () => {
+    let providerAborted = false;
+    const result = await buildMarketScoutPlan({
+      client: {
+        responses: {
+          async create(_options, requestOptions) {
+            return new Promise((_resolve, reject) => {
+              requestOptions.signal.addEventListener(
+                "abort",
+                () => {
+                  providerAborted = true;
+                  reject(new Error("provider aborted"));
+                },
+                { once: true },
+              );
+            });
+          },
+        },
+      },
+      input,
+      promptVersion: "hard-timeout",
+      timeoutMs: 10,
+    });
+
+    assert.equal(providerAborted, true);
+    assert.equal(result.telemetry.usedFallback, true);
+    assert.equal(result.telemetry.fallbackReason, "timeout");
+    assert.equal(result.telemetry.openAiCalls, 1);
+    assert.deepEqual(result.plan.targets, []);
+  });
+
   it("rejects a response that exceeds the hosted-search call ceiling", async () => {
     const result = await buildMarketScoutPlan({
       client: clientReturning(responseWith({ callCount: 4 })),
