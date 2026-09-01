@@ -288,6 +288,7 @@ function acceptedCandidatesAreSafe(products, search, request) {
     });
     return (
       typeMatch.canBeExactMatch &&
+      !productSelectionTestExports.isNonUsMarketUrl(product.productPageUrl) &&
       verified.some((candidate) => {
         const price = Number(candidate.price);
         return (
@@ -313,12 +314,62 @@ function strongBeforeUnscored(returnedSignals) {
   return lastStrong < 0 || firstUnscored < 0 || lastStrong < firstUnscored;
 }
 
+function evidenceBindingsAreExact(returnedSignals, marketTargets) {
+  const targetsByIdentity = new Map(
+    marketTargets.map((value) => {
+      const target = asRecord(value);
+      return [
+        `${String(target.brand || "").toLowerCase()}|${String(target.model || "").toLowerCase()}`,
+        target,
+      ];
+    }),
+  );
+  return returnedSignals.every((value) => {
+    const signal = asRecord(value);
+    const targetBrand = String(signal.targetBrand || "");
+    const targetModel = String(signal.targetModel || "");
+    if (!targetBrand || !targetModel) return !signal.evidenceTier;
+    const target = targetsByIdentity.get(
+      `${targetBrand.toLowerCase()}|${targetModel.toLowerCase()}`,
+    );
+    if (!target || !signal.evidenceTier) return false;
+    return productSelectionTestExports.candidateMatchesTarget(
+      {
+        brand: String(target.brand || ""),
+        evidenceSources: asArray(signal.identityEvidenceSources).map((value) => {
+          const source = asRecord(value);
+          return {
+            snippet: String(source.snippet || ""),
+            snippetProvenance:
+              source.snippetProvenance === "query-derived"
+                ? "query-derived"
+                : "source-derived",
+            title: String(source.title || ""),
+            url: String(source.url || ""),
+          };
+        }),
+        name: String(signal.name || ""),
+        productUrl: String(signal.productPageUrl || ""),
+      },
+      {
+        aliases: asArray(target.aliases).map(String),
+        brand: String(target.brand || ""),
+        consensusOrder: asFiniteNumber(target.consensusOrder),
+        evidenceTier: target.tier === "strong" ? "strong" : "supported",
+        model: targetModel,
+        sourceUrls: [],
+      },
+    );
+  });
+}
+
 function compactTelemetry(body, benchmarkCase) {
   const debug = asRecord(asRecord(body).debug);
   const scout = asRecord(debug.marketScout);
   const search = asRecord(debug.search);
   const products = uniqueProducts(asRecord(body).result);
   const returnedSignals = asArray(search.returnedCandidateSignals).map(asRecord);
+  const marketTargets = asArray(search.marketTargets).map(asRecord);
   const topThreeLeaderIndex = products
     .slice(0, 3)
     .findIndex((product) => matchingLeader(product.name, benchmarkCase.leaders));
@@ -333,11 +384,12 @@ function compactTelemetry(body, benchmarkCase) {
       search,
       benchmarkCase.request,
     ),
+    evidenceBindingsExact: evidenceBindingsAreExact(returnedSignals, marketTargets),
     hostedSearchCalls: asFiniteNumber(scout.hostedSearchCalls),
     logicalSerperOperations: asFiniteNumber(search.logicalSearchCalls),
-    marketTargets: asArray(search.marketTargets).map((value) => {
-      const target = asRecord(value);
+    marketTargets: marketTargets.map((target) => {
       return {
+        aliases: asArray(target.aliases).map(String),
         brand: target.brand || "",
         model: target.model || "",
         sourceCount: asFiniteNumber(target.sourceCount),
@@ -351,10 +403,31 @@ function compactTelemetry(body, benchmarkCase) {
       bayesianRating: signal.bayesianRating ?? null,
       evidenceTier: signal.evidenceTier || null,
       name: signal.name || "",
+      productPageUrl: signal.productPageUrl || "",
       rating: signal.rating ?? null,
       ratingCount: signal.ratingCount ?? null,
+      targetBrand: signal.targetBrand || null,
       targetModel: signal.targetModel || null,
     })),
+    rejectionCounts: {
+      assetSafety: asFiniteNumber(search.rejectedByAssetSafety),
+      availability: asFiniteNumber(search.rejectedByAvailability),
+      condition: asFiniteNumber(search.rejectedByCondition),
+      merchant: asFiniteNumber(search.rejectedByMerchant),
+      price: asFiniteNumber(search.rejectedByPrice),
+      requirements: asFiniteNumber(search.rejectedByRequirements),
+    },
+    verifiedCandidates: asArray(search.verifiedCandidates).map((value) => {
+      const candidate = asRecord(value);
+      return {
+        availabilityStatus: candidate.availabilityStatus || "unknown",
+        name: candidate.name || "",
+        pageUrl: candidate.pageUrl || "",
+        price: candidate.price ?? null,
+        priceStatus: candidate.priceStatus || "missing",
+        requirementFailures: asArray(candidate.requirementFailures).map(String),
+      };
+    }),
     scoutFallbackReason: scout.fallbackReason || null,
     scoutInputTokens: asFiniteNumber(scout.inputTokens),
     scoutOutputTokens: asFiniteNumber(scout.outputTokens),
@@ -477,6 +550,7 @@ function summarize(results, cases, acceptanceConfig) {
   return {
     acceptance: {
       acceptedCandidatesSafe: successful.every((result) => result.acceptedCandidatesSafe),
+      evidenceBindingsExact: successful.every((result) => result.evidenceBindingsExact),
       freshResearchAttemptedEachRequest: successful.every(
         (result) => result.openAiCalls === 1 && result.physicalSerperAttempts > 0,
       ),
@@ -629,6 +703,7 @@ const outputReport =
         runs: results.map((result) => ({
           caseId: result.caseId,
           durationMs: result.durationMs,
+          evidenceBindingsExact: Boolean(result.evidenceBindingsExact),
           error: result.error || null,
           evidencedTargetReturned: Boolean(result.evidencedTargetReturned),
           hostedSearchCalls: result.hostedSearchCalls ?? null,

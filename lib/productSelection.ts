@@ -91,6 +91,7 @@ export type ProductSelectionTelemetry = {
   logicalSearchCalls: number;
   marketEvidenceCandidates: number;
   marketTargets: Array<{
+    aliases: string[];
     brand: string;
     consensusOrder: number;
     model: string;
@@ -132,11 +133,18 @@ export type ProductSelectionTelemetry = {
     bayesianRating: number | null;
     consensusOrder: number | null;
     evidenceTier: "strong" | "supported" | null;
+    identityEvidenceSources: Array<{
+      snippet: string;
+      snippetProvenance?: "query-derived" | "source-derived";
+      title: string;
+      url: string;
+    }>;
     name: string;
     offerCount: number | null;
     productPageUrl: string;
     rating: number | null;
     ratingCount: number | null;
+    targetBrand: string | null;
     targetModel: string | null;
   }>;
   searchDiagnostics: Array<{
@@ -312,12 +320,39 @@ function modelLabelMatchesCandidate(
     return false;
   }
 
-  const targetIdentifiers = exactModelIdentifiers(label);
+  const brandWords = new Set(normalizedText(targetBrand).split(" "));
+  const targetIdentifiers = exactModelIdentifiers(label).filter(
+    (identifier) => !brandWords.has(identifier),
+  );
   const candidateIdentifiers = new Set(exactModelIdentifiers(candidateName));
+  const candidateWords = normalizedCandidateName.split(" ").filter(Boolean);
+  for (let start = 0; start < candidateWords.length; start += 1) {
+    let combined = "";
+    for (
+      let end = start;
+      end < Math.min(candidateWords.length, start + 3);
+      end += 1
+    ) {
+      combined += candidateWords[end];
+      if (
+        combined.length <= 32 &&
+        /[a-z]/.test(combined) &&
+        /\d/.test(combined)
+      ) {
+        candidateIdentifiers.add(combined);
+      }
+    }
+  }
   if (targetIdentifiers.length > 0) {
-    return targetIdentifiers.every((identifier) =>
-      candidateIdentifiers.has(identifier),
-    );
+    return targetIdentifiers.every((identifier) => {
+      if (candidateIdentifiers.has(identifier)) return true;
+      if (identifier.length < 3) return false;
+      return [...candidateIdentifiers].some(
+        (observed) =>
+          observed.startsWith(identifier) &&
+          observed.slice(identifier.length) === "b",
+      );
+    });
   }
 
   const expectedWords = modelIdentityWords(label, targetBrand);
@@ -332,18 +367,96 @@ function modelLabelMatchesCandidate(
   );
 }
 
+function identifierKind(identifier: string) {
+  if (/^\d+$/.test(identifier)) return "numeric";
+  if (/^[a-z]\d{1,2}$/.test(identifier)) return "short_alphanumeric";
+  if (/^[a-z]+$/.test(identifier)) return "alpha";
+  return "mixed";
+}
+
+function compatibleIdentifier(first: string, second: string) {
+  if (first === second) return true;
+  if (first.length < 3 || second.length < 3) return false;
+  const [shorter, longer] =
+    first.length <= second.length ? [first, second] : [second, first];
+  return (
+    longer.startsWith(shorter) &&
+    longer.slice(shorter.length) === "b"
+  );
+}
+
+function primaryIdentityConflictsWithLabel(
+  primaryIdentity: string,
+  label: string,
+  targetBrand: string,
+) {
+  const brandWords = new Set(normalizedText(targetBrand).split(" "));
+  const targetIdentifiers = exactModelIdentifiers(label).filter(
+    (identifier) => !brandWords.has(identifier),
+  );
+  const primaryIdentifiers = exactModelIdentifiers(primaryIdentity).filter(
+    (identifier) => !brandWords.has(identifier),
+  );
+
+  return primaryIdentifiers.some((observed) => {
+    if (
+      targetIdentifiers.some((target) =>
+        compatibleIdentifier(target, observed),
+      )
+    ) {
+      return false;
+    }
+    return targetIdentifiers.some(
+      (target) => identifierKind(target) === identifierKind(observed),
+    );
+  });
+}
+
 function candidateMatchesTarget(
   candidate: RawProductCandidate,
   target: MarketScoutTarget,
 ) {
+  const primaryIdentityText = [
+    candidate.name,
+    ...sourceUrlPathIdentitySegments(candidate.productUrl),
+  ].join(" ");
   const labels = [target.model, ...target.aliases];
+  const brandWords = new Set(normalizedText(target.brand).split(" "));
+  const specificIdentifiers = (label: string) =>
+    exactModelIdentifiers(label).filter(
+      (identifier) => !brandWords.has(identifier),
+    );
   const identityBearingLabels =
-    exactModelIdentifiers(target.model).length > 0
-      ? labels.filter((label) => exactModelIdentifiers(label).length > 0)
+    specificIdentifiers(target.model).length > 0
+      ? labels.filter((label) => specificIdentifiers(label).length > 0)
       : labels;
-  const matchingLabels = identityBearingLabels.filter((label) =>
-    modelLabelMatchesCandidate(candidate.name, label, target.brand),
+  let matchingLabels = identityBearingLabels.filter((label) =>
+    modelLabelMatchesCandidate(primaryIdentityText, label, target.brand),
   );
+  if (
+    matchingLabels.length === 0 &&
+    candidateHasDirectProductPage(candidate)
+  ) {
+    const sourceIdentityText = (candidate.evidenceSources || [])
+      .filter(
+        (source) =>
+          !source.snippetProvenance ||
+          source.snippetProvenance === "source-derived",
+      )
+      .map((source) => `${source.title} ${source.snippet}`)
+      .join(" ");
+    if (sourceIdentityText) {
+      matchingLabels = identityBearingLabels.filter(
+        (label) =>
+          !primaryIdentityConflictsWithLabel(
+            primaryIdentityText,
+            label,
+            target.brand,
+          ) &&
+          modelLabelMatchesCandidate(sourceIdentityText, label, target.brand),
+      );
+    }
+  }
   if (matchingLabels.length === 0) return false;
 
   const candidateBrand = selectionBrand(candidate);
@@ -355,8 +468,20 @@ function candidateMatchesTarget(
     return true;
   }
 
+  const explicitKnownBrand = inferKnownBrand(candidate.name);
+  if (
+    explicitKnownBrand &&
+    normalizedText(canonicalBrand(explicitKnownBrand)) !== targetBrand
+  ) {
+    return false;
+  }
+
   const suppliedBrand = normalizedText(canonicalBrand(candidate.brand || ""));
-  if (!suppliedBrand || suppliedBrand !== targetBrand) return false;
+  if (!suppliedBrand) {
+    const pageHost = parsedPageUrl(candidate.productUrl)?.hostname || "";
+    return brandMatchesHost(target.brand, pageHost);
+  }
+  if (suppliedBrand !== targetBrand) return false;
   if (!candidateBrand) return true;
 
   const inferredLeadingBrand = normalizedText(canonicalBrand(candidateBrand));
@@ -876,12 +1001,55 @@ function isNonUsMarketHost(host: string) {
   );
 }
 
+const NON_US_MARKET_PATH_SEGMENTS = new Set([
+  "au",
+  "ca",
+  "cn",
+  "de",
+  "es",
+  "eu",
+  "fr",
+  "gb",
+  "in",
+  "it",
+  "jp",
+  "kr",
+  "mx",
+  "my",
+  "nl",
+  "nz",
+  "sg",
+  "uk",
+]);
+
+function isNonUsMarketPath(path: string) {
+  const marketSegment = path
+    .split("/")
+    .filter(Boolean)[0]
+    ?.toLowerCase();
+  if (!marketSegment) return false;
+  if (NON_US_MARKET_PATH_SEGMENTS.has(marketSegment)) return true;
+  return (
+    /^[a-z]{2}-[a-z]{2}$/.test(marketSegment) &&
+    !marketSegment.split("-").includes("us")
+  );
+}
+
 function parsedPageUrl(value: string) {
   try {
     return new URL(value);
   } catch {
     return null;
   }
+}
+
+function isNonUsMarketUrl(value: string) {
+  const parsed = parsedPageUrl(value);
+  return Boolean(
+    parsed &&
+      (isNonUsMarketHost(parsed.hostname) ||
+        isNonUsMarketPath(parsed.pathname)),
+  );
 }
 
 function domainMatches(host: string, domain: string) {
@@ -973,7 +1141,7 @@ function pageSourceScore(
   const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
   const path = parsed.pathname.toLowerCase();
   if (
-    isNonUsMarketHost(host) ||
+    isNonUsMarketUrl(candidate.productUrl) ||
     SECONDARY_MARKET_DOMAINS.some((domain) => domainMatches(host, domain)) ||
     isNonProductSource(candidate.productUrl) ||
     /\/(?:discontinued|partsaccessories)(?:[/._-]|$)/.test(path) ||
@@ -1326,20 +1494,44 @@ function resolvedCandidates(
         discoveryCandidate.retailer,
         pageHost,
       );
+      const pageHasBoundShoppingOffer =
+        page.currentShoppingOffer === true &&
+        page.price !== null &&
+        retailerMatchesHost(page.retailer, pageHost) &&
+        candidateHasDirectProductPage(page);
       return [
         {
           ...discoveryCandidate,
           brand: selectionBrand(discoveryCandidate) || selectionBrand(page),
+          commerceSignals: pageHasBoundShoppingOffer
+            ? page.commerceSignals || discoveryCandidate.commerceSignals
+            : discoveryCandidate.commerceSignals,
           evidenceSources: [
             ...discoveryCandidate.evidenceSources,
             ...page.evidenceSources,
           ],
-          imageUrl: discoveryCandidate.imageUrl || page.imageUrl,
-          price: pageMatchesShoppingMerchant ? discoveryCandidate.price : null,
+          imageUrl: pageHasBoundShoppingOffer
+            ? page.imageUrl || discoveryCandidate.imageUrl
+            : discoveryCandidate.imageUrl || page.imageUrl,
+          price: pageHasBoundShoppingOffer
+            ? page.price
+            : pageMatchesShoppingMerchant
+              ? discoveryCandidate.price
+              : null,
           currentShoppingOffer:
-            pageMatchesShoppingMerchant &&
-            discoveryCandidate.currentShoppingOffer === true,
+            pageHasBoundShoppingOffer ||
+            (pageMatchesShoppingMerchant &&
+              discoveryCandidate.currentShoppingOffer === true),
+          keySpecs: [
+            ...new Set([
+              ...discoveryCandidate.keySpecs,
+              page.name,
+            ]),
+          ],
           productUrl: page.productUrl,
+          retailer: pageHasBoundShoppingOffer
+            ? page.retailer
+            : discoveryCandidate.retailer,
         },
       ];
     },
@@ -1528,6 +1720,14 @@ function maxBudget(input: RecommendationApiRequest) {
   );
 }
 
+function productPagePathEvidence(value: string) {
+  try {
+    return decodeURIComponent(new URL(value).pathname).replace(/[-_/]+/g, " ");
+  } catch {
+    return "";
+  }
+}
+
 function selectionEvidenceText(product: SelectionAssetCandidate) {
   const metadata = product.metadata;
   return [
@@ -1537,6 +1737,7 @@ function selectionEvidenceText(product: SelectionAssetCandidate) {
     metadata.modelNumber?.value || "",
     ...(metadata.colors?.value || []),
     ...product.candidate.keySpecs,
+    productPagePathEvidence(product.pageUrl),
   ]
     .filter(Boolean)
     .join(" ");
@@ -2109,11 +2310,20 @@ export async function selectProducts(options: {
         bayesianRating: bayesianCommerceRating(candidate.commerceSignals),
         consensusOrder: candidate.marketEvidence?.consensusOrder ?? null,
         evidenceTier: candidate.marketEvidence?.tier || null,
+        identityEvidenceSources: candidate.evidenceSources.slice(0, 8).map((source) => ({
+          snippet: source.snippet.slice(0, 500),
+          ...(source.snippetProvenance
+            ? { snippetProvenance: source.snippetProvenance }
+            : {}),
+          title: source.title.slice(0, 300),
+          url: source.url,
+        })),
         name: recommendation.name,
         offerCount: candidate.commerceSignals?.offerCount ?? null,
         productPageUrl: recommendation.productPageUrl,
         rating: candidate.commerceSignals?.rating ?? null,
         ratingCount: candidate.commerceSignals?.ratingCount ?? null,
+        targetBrand: candidate.marketEvidence?.targetBrand || null,
         targetModel: candidate.marketEvidence?.targetModel || null,
       },
     ];
@@ -2137,6 +2347,7 @@ export async function selectProducts(options: {
           ? []
           : [
               {
+                aliases: [...target.aliases],
                 brand: target.brand,
                 consensusOrder: target.consensusOrder,
                 model: target.model,
@@ -2194,6 +2405,7 @@ export const productSelectionTestExports = {
   dedupeSelectionCandidates,
   discoveryIdentityKey,
   interleaveSearchCandidates,
+  isNonUsMarketUrl,
   isSecondaryMarketCandidate,
   maxBudget,
   operationLimits: {

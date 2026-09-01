@@ -35,6 +35,10 @@ const brandDefinitions: BrandDefinition[] = [
   { canonical: "Dyson", aliases: ["dyson"] },
   { canonical: "Shark", aliases: ["shark"] },
   { canonical: "Bissell", aliases: ["bissell"] },
+  {
+    canonical: "Technivorm",
+    aliases: ["technivorm", "moccamaster", "technivorm moccamaster"],
+  },
   { canonical: "DeWalt", aliases: ["dewalt", "de walt", "20v max", "20 volt max", "atomic 20v", "atomic 20 volt", "flexvolt"] },
   { canonical: "Milwaukee", aliases: ["milwaukee", "m12 fuel", "m18 fuel", "m12 redlithium", "m18 redlithium"] },
   { canonical: "Makita", aliases: ["makita"] },

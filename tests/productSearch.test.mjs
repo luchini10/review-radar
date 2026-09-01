@@ -4,6 +4,7 @@ import { afterEach, describe, it } from "node:test";
 import {
   prefilterProductCandidates,
   productSearchTestExports,
+  searchProductPages,
   searchShoppingProducts,
 } from "../lib/productSearch.ts";
 
@@ -117,6 +118,54 @@ describe("bounded product search", () => {
 
     assert.equal(direct.candidate.retailer, "homedepot.com");
     assert.equal(direct.candidate.currentShoppingOffer, true);
+  });
+
+  it("reuses direct inline Shopping offers from a product-page search response", async () => {
+    process.env.SERPER_API_KEY = "test-only-key";
+    globalThis.fetch = async (url) => {
+      assert.match(String(url), /\/search$/);
+      return new Response(
+        JSON.stringify({
+          organic: [
+            {
+              link: "https://www.breville.com/en-us/product/bdc465",
+              title: "the Luxe Brewer Thermal",
+            },
+          ],
+          shopping: [
+            {
+              extractedPrice: 349.95,
+              link: "https://www.bestbuy.com/product/breville-luxe-brewer/J7266LF2LX",
+              productId: "123456789",
+              source: "Best Buy",
+              title: "Breville BDC465 Luxe Brewer Thermal",
+            },
+            {
+              extractedPrice: 349.95,
+              link: "https://www.google.com/search?ibp=oshop&udm=28&prds=productid:123456789",
+              source: "Best Buy",
+              title: "Breville BDC465 Luxe Brewer Thermal",
+            },
+          ],
+        }),
+        { headers: { "content-type": "application/json" }, status: 200 },
+      );
+    };
+
+    const pages = await searchProductPages(
+      "Breville BDC465 coffee maker",
+      "coffee maker",
+    );
+
+    assert.equal(pages.length, 2);
+    assert.equal(pages[0].currentShoppingOffer, true);
+    assert.equal(pages[0].price, 349.95);
+    assert.equal(pages[0].retailer, "Best Buy");
+    assert.equal(pages[0].commerceSignals.productId, "123456789");
+    assert.equal(
+      pages[1].productUrl,
+      "https://www.breville.com/en-us/product/bdc465",
+    );
   });
 
   it("filters wrong product types, accessories, non-new items, and extreme over-budget items", () => {

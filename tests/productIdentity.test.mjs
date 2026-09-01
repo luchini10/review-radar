@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import {
   exactModelIdentifiers,
   haveConflictingCompoundModelSequences,
+  haveConflictingNamedModelVariants,
   haveConflictingNumericProductSpecs,
   modelIdentityRelation,
   stableModelIdentifiers,
@@ -43,6 +44,11 @@ describe("selection product identity", () => {
       exactModelIdentifiers("Moccamaster KBGV Select"),
       ["kbgv"],
     );
+    assert.deepEqual(
+      exactModelIdentifiers("ECOVACS DEEBOT X9 PRO OMNI"),
+      ["x9", "deebot"],
+    );
+    assert.deepEqual(exactModelIdentifiers("4K 5G monitor"), []);
   });
 
   it("detects conflicting sibling compound models", () => {
@@ -64,6 +70,37 @@ describe("selection product identity", () => {
       haveConflictingCompoundModelSequences(
         "RIDGID HD1200",
         "RIDGID-HD1200-HD1200",
+      ),
+      false,
+    );
+  });
+
+  it("does not treat a voltage platform's MAX label as a named sibling", () => {
+    assert.equal(
+      haveConflictingNamedModelVariants(
+        "DeWalt DCD1007B",
+        "DeWalt DCD1007B 20V MAX XR Brushless Hammer Drill",
+      ),
+      false,
+    );
+    assert.equal(
+      haveConflictingNamedModelVariants(
+        "Eureka E20 Plus Robot Vacuum",
+        "Eureka E20 Evo Plus Robot Vacuum",
+      ),
+      true,
+    );
+    assert.equal(
+      haveConflictingNamedModelVariants(
+        "Dreame X60 Max Ultra Complete",
+        "Dreame X60 Max Ultra Kit",
+      ),
+      true,
+    );
+    assert.equal(
+      haveConflictingNamedModelVariants(
+        "DeWalt DCD701F2",
+        "DeWalt DCD701F2 Compact Drill Kit",
       ),
       false,
     );

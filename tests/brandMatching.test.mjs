@@ -3,11 +3,22 @@ import { describe, it } from "node:test";
 
 import {
   brandEvidenceMatches,
+  canonicalBrand,
   detectKnownBrands,
   inferKnownBrand,
   isSourceOrRetailerLabel,
   stripLeadingSourceOrRetailerLabel,
 } from "../lib/brandMatching.ts";
+
+describe("manufacturer and retail brand aliases", () => {
+  it("treats Moccamaster as Technivorm's product brand", () => {
+    assert.equal(canonicalBrand("Moccamaster"), "Technivorm");
+    assert.equal(
+      brandEvidenceMatches("Moccamaster KBGV Select", "Technivorm"),
+      true,
+    );
+  });
+});
 
 describe("ambiguous short brand aliases", () => {
   it("does not treat horsepower HP as Hewlett-Packard brand evidence", () => {

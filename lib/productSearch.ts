@@ -520,7 +520,15 @@ export async function searchProductPages(
   try {
     const response = await fetchSerper("search", query, options);
     if (!response) return [];
-    return (response.organic || [])
+    const inlineShoppingCandidates = (response.shopping || [])
+      .slice(0, SEARCH_RESULT_LIMIT)
+      .flatMap((result, index) => {
+        const normalized = normalizeShoppingResult(result, category, index + 1);
+        if (!normalized.candidate) return [];
+        const parsed = parseHttpUrl(normalized.candidate.productUrl);
+        return parsed && !googleOfferUrl(parsed) ? [normalized.candidate] : [];
+      });
+    const organicCandidates = (response.organic || [])
       .slice(0, SEARCH_RESULT_LIMIT)
       .flatMap((result) => {
         const candidate = candidateFromFields({
@@ -533,6 +541,15 @@ export async function searchProductPages(
         });
         return candidate ? [candidate] : [];
       });
+    const seenUrls = new Set<string>();
+    return [...inlineShoppingCandidates, ...organicCandidates].filter(
+      (candidate) => {
+        const normalizedUrl = candidate.productUrl.toLowerCase();
+        if (seenUrls.has(normalizedUrl)) return false;
+        seenUrls.add(normalizedUrl);
+        return true;
+      },
+    );
   } catch (error) {
     rethrowIfRequestCancelled(error, options.signal);
     if (process.env.NODE_ENV !== "test") {

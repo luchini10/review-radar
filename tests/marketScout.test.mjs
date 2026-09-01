@@ -285,6 +285,80 @@ describe("market scout", () => {
     assert.equal(providerAborted, true);
   });
 
+  it("keeps only aliases bound to the same distinctive model identity", async () => {
+    const result = await buildMarketScoutPlan({
+      client: clientReturning(
+        responseWith({
+          outputTargets: [
+            {
+              aliases: [
+                "DEEBOT X9 PRO OMNI",
+                "X9 PRO OMNI",
+                "DEEBOT T50 PRO OMNI",
+                "ECOVACS DEEBOT X9S PRO OMNI",
+              ],
+              brand: "Ecovacs",
+              model: "DEEBOT X9 PRO OMNI",
+              sourceUrls: [consumerReports],
+            },
+          ],
+        }),
+      ),
+      input,
+    });
+
+    assert.deepEqual(result.plan.targets[0].aliases, [
+      "DEEBOT X9 PRO OMNI",
+      "X9 PRO OMNI",
+    ]);
+  });
+
+  it("accepts a bare-tool B suffix as an exact-model alias", async () => {
+    const result = await buildMarketScoutPlan({
+      client: clientReturning(
+        responseWith({
+          outputTargets: [
+            {
+              aliases: ["DCD1007B", "DCD1008"],
+              brand: "DeWalt",
+              model: "DCD1007",
+              sourceUrls: [consumerReports],
+            },
+          ],
+        }),
+      ),
+      input,
+    });
+
+    assert.deepEqual(result.plan.targets[0].aliases, ["DCD1007B"]);
+  });
+
+  it("rejects an alias that drops an exact target variant qualifier", async () => {
+    const result = await buildMarketScoutPlan({
+      client: clientReturning(
+        responseWith({
+          outputTargets: [
+            {
+              aliases: [
+                "Dreame X60 Max Ultra Complete",
+                "Dreame X60 Max Ultra",
+                "Dreame X60 Max Ultra Kit",
+              ],
+              brand: "Dreame",
+              model: "X60 Max Ultra Complete",
+              sourceUrls: [consumerReports],
+            },
+          ],
+        }),
+      ),
+      input,
+    });
+
+    assert.deepEqual(result.plan.targets[0].aliases, [
+      "Dreame X60 Max Ultra Complete",
+    ]);
+  });
+
   it("rejects generic product-family targets without an exact model identity", async () => {
     const result = await buildMarketScoutPlan({
       client: clientReturning(

@@ -1,0 +1,512 @@
+{
+  "benchmark": "live-accuracy-v2026-09a",
+  "completedAt": "2026-09-01T20:23:25.093Z",
+  "phase": "after",
+  "schemaVersion": 2,
+  "startedAt": "2026-09-01T20:18:03.600Z",
+  "summary": {
+    "acceptance": {
+      "acceptedCandidatesSafe": true,
+      "evidenceBindingsExact": true,
+      "freshResearchAttemptedEachRequest": true,
+      "leaderTopThreeAtLeastConfiguredRate": false,
+      "nonEmptyAtLeastConfiguredMinimum": false,
+      "oneOpenAiResponseEach": true,
+      "publicShapeUnchanged": true,
+      "requiredCaseRecall": true,
+      "serperAtMost15": true,
+      "strongAheadOfUnscored": true,
+      "webSearchAtMost3": true,
+      "zeroRequestFailures": true
+    },
+    "byCase": {
+      "broad-robot-vacuum": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "broad-coffee-maker": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "broad-cordless-drill": {
+        "leaderTopThree": 0,
+        "nonEmpty": 0,
+        "runs": 1
+      },
+      "broad-shop-vacuum": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "broad-cordless-leaf-blower": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "constrained-robot-vacuum": {
+        "leaderTopThree": 0,
+        "nonEmpty": 0,
+        "runs": 1
+      },
+      "constrained-gaming-monitor": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "constrained-shop-vacuum": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "constrained-pressure-washer": {
+        "leaderTopThree": 0,
+        "nonEmpty": 0,
+        "runs": 1
+      },
+      "constrained-coffee-maker": {
+        "leaderTopThree": 1,
+        "nonEmpty": 1,
+        "runs": 1
+      }
+    },
+    "calls": {
+      "hostedSearchCalls": 30,
+      "logicalSerperOperations": 133,
+      "maximumHostedSearchCalls": 3,
+      "maximumLogicalSerperOperations": 15,
+      "openAiResponses": 10,
+      "physicalSerperAttempts": 133
+    },
+    "latencyMs": {
+      "maximum": 43430,
+      "mean": 31884,
+      "minimum": 24715,
+      "p95NearestRank": 43430
+    },
+    "leaderRecall": {
+      "benchmarkEligibleRuns": 7,
+      "currentIneligibleRuns": 3,
+      "topThreeHits": 1,
+      "topThreeRate": 0.1429,
+      "verifiedEligibleHits": 1,
+      "verifiedEligibleRuns": 1,
+      "verifiedLeaderObservedRuns": 4
+    },
+    "nonEmpty": {
+      "count": 7,
+      "rate": 0.7
+    },
+    "payloadBytes": {
+      "maximum": 1552,
+      "mean": 754
+    },
+    "scout": {
+      "fallbackRuns": 1,
+      "fallbackReasons": {
+        "insufficient_evidence": 1
+      },
+      "modelTokens": {
+        "estimatedCostUsdAtPublishedModelRatesOnly": 0.191525,
+        "input": 177246,
+        "output": 13020,
+        "total": 190266
+      },
+      "returnedEvidenceRuns": 2,
+      "returnedStrongRuns": 2,
+      "strongTargetPlanRuns": 5
+    },
+    "successfulRuns": 10
+  },
+  "runs": [
+    {
+      "caseId": "broad-robot-vacuum",
+      "durationMs": 43430,
+      "evidenceBindingsExact": true,
+      "error": null,
+      "evidencedTargetReturned": true,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 13,
+      "marketTargets": [
+        {
+          "aliases": [
+            "X50 Ultra Complete"
+          ],
+          "brand": "Dreame",
+          "model": "X50 Ultra",
+          "sourceCount": 3,
+          "tier": "strong"
+        },
+        {
+          "aliases": [
+            "S1 Pro"
+          ],
+          "brand": "eufy",
+          "model": "S1 Pro",
+          "sourceCount": 3,
+          "tier": "strong"
+        },
+        {
+          "aliases": [
+            "S8 MaxV Ultra"
+          ],
+          "brand": "Roborock",
+          "model": "S8 MaxV Ultra",
+          "sourceCount": 3,
+          "tier": "strong"
+        }
+      ],
+      "normalResponseBytes": 1273,
+      "openAiCalls": 1,
+      "products": [
+        "Eufy Omni S1 Pro, Robot Vacuum Cleaner with Mop, HydroJet, Incredible Suction, Obstacle Avoidance,Eco-Clean Ozone, Lift Mop, Auto Washing & Drying, Au",
+        "Eureka J15 Ultra Self Emptying Robot Vacuum 19,000 Pa Suction Flex-Arm Mop Design",
+        "Roborock Qrevo Series Robot Vacuum & Mop with Multifunctional Dock"
+      ],
+      "round": 1,
+      "scoutFallbackReason": null,
+      "status": 200,
+      "strongTargetReturned": true,
+      "topThreeLeader": false
+    },
+    {
+      "caseId": "broad-coffee-maker",
+      "durationMs": 39919,
+      "evidenceBindingsExact": true,
+      "error": null,
+      "evidencedTargetReturned": true,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 12,
+      "marketTargets": [
+        {
+          "aliases": [
+            "Moccamaster KBT",
+            "KBT 741",
+            "Technivorm Moccamaster KBT 79112"
+          ],
+          "brand": "Technivorm",
+          "model": "Moccamaster KBT",
+          "sourceCount": 3,
+          "tier": "strong"
+        },
+        {
+          "aliases": [
+            "CE251"
+          ],
+          "brand": "Ninja",
+          "model": "12-Cup Programmable CE251",
+          "sourceCount": 2,
+          "tier": "supported"
+        }
+      ],
+      "normalResponseBytes": 1552,
+      "openAiCalls": 1,
+      "products": [
+        "Technivorm Moccamaster KBT Coffee Maker",
+        "Ninja 12 Cup Programmable Brewer Coffee ce251",
+        "Bella PRO 12-Cup Programmable Coffee Maker",
+        "Cuisinart 14 Cup Programmable Coffee Maker",
+        "Ninja CE250 12-Cup Programmable Coffee Maker"
+      ],
+      "round": 1,
+      "scoutFallbackReason": null,
+      "status": 200,
+      "strongTargetReturned": true,
+      "topThreeLeader": false
+    },
+    {
+      "caseId": "broad-cordless-drill",
+      "durationMs": 30049,
+      "evidenceBindingsExact": true,
+      "error": null,
+      "evidencedTargetReturned": false,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 15,
+      "marketTargets": [
+        {
+          "aliases": [
+            "DCD1007"
+          ],
+          "brand": "DeWalt",
+          "model": "20V Max XR Hammer Drill DCD1007",
+          "sourceCount": 3,
+          "tier": "supported"
+        },
+        {
+          "aliases": [
+            "2904-20",
+            "2904-22",
+            "M18 FUEL 1/2 in. Hammer Drill"
+          ],
+          "brand": "Milwaukee",
+          "model": "M18 FUEL 2904 Hammer Drill",
+          "sourceCount": 3,
+          "tier": "strong"
+        },
+        {
+          "aliases": [
+            "FX1271T"
+          ],
+          "brand": "FLEX",
+          "model": "24V Brushless Hammer Drill with Turbo FX1271T",
+          "sourceCount": 3,
+          "tier": "strong"
+        }
+      ],
+      "normalResponseBytes": 33,
+      "openAiCalls": 1,
+      "products": [],
+      "round": 1,
+      "scoutFallbackReason": null,
+      "status": 200,
+      "strongTargetReturned": false,
+      "topThreeLeader": false
+    },
+    {
+      "caseId": "broad-shop-vacuum",
+      "durationMs": 28530,
+      "evidenceBindingsExact": true,
+      "error": null,
+      "evidencedTargetReturned": false,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 13,
+      "marketTargets": [
+        {
+          "aliases": [],
+          "brand": "Ridgid",
+          "model": "HD1200",
+          "sourceCount": 2,
+          "tier": "strong"
+        },
+        {
+          "aliases": [],
+          "brand": "DeWalt",
+          "model": "DXV09P",
+          "sourceCount": 2,
+          "tier": "strong"
+        }
+      ],
+      "normalResponseBytes": 1131,
+      "openAiCalls": 1,
+      "products": [
+        "Bauer 3 Gallon 3 Peak Hp Wet/dry Vacuum",
+        "SL18116P Stanley Wet Dry Vacuum",
+        "Stanley 5 Gallon Wet/Dry Vacuum",
+        "DeWalt 9 Gallon Poly Wet/Dry Vac DXV09PZ"
+      ],
+      "round": 1,
+      "scoutFallbackReason": null,
+      "status": 200,
+      "strongTargetReturned": false,
+      "topThreeLeader": false
+    },
+    {
+      "caseId": "broad-cordless-leaf-blower",
+      "durationMs": 24715,
+      "evidenceBindingsExact": true,
+      "error": null,
+      "evidencedTargetReturned": false,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 12,
+      "marketTargets": [
+        {
+          "aliases": [],
+          "brand": "Ryobi",
+          "model": "RY40HPLB01",
+          "sourceCount": 1,
+          "tier": "supported"
+        }
+      ],
+      "normalResponseBytes": 612,
+      "openAiCalls": 1,
+      "products": [
+        "Atlas 80V Brushless Cordless 150 Mph/605 CFM Blower",
+        "Ryobi 40V 120 MPH 550 CFM Cordless Battery Leaf Blower"
+      ],
+      "round": 1,
+      "scoutFallbackReason": null,
+      "status": 200,
+      "strongTargetReturned": false,
+      "topThreeLeader": false
+    },
+    {
+      "caseId": "constrained-robot-vacuum",
+      "durationMs": 35409,
+      "evidenceBindingsExact": true,
+      "error": null,
+      "evidencedTargetReturned": false,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 13,
+      "marketTargets": [
+        {
+          "aliases": [
+            "D10 Plus Gen 2",
+            "D10 Plus Gen2"
+          ],
+          "brand": "Dreame",
+          "model": "D10 Plus Gen 2",
+          "sourceCount": 3,
+          "tier": "strong"
+        }
+      ],
+      "normalResponseBytes": 33,
+      "openAiCalls": 1,
+      "products": [],
+      "round": 1,
+      "scoutFallbackReason": null,
+      "status": 200,
+      "strongTargetReturned": false,
+      "topThreeLeader": false
+    },
+    {
+      "caseId": "constrained-gaming-monitor",
+      "durationMs": 29058,
+      "evidenceBindingsExact": true,
+      "error": null,
+      "evidencedTargetReturned": false,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 15,
+      "marketTargets": [
+        {
+          "aliases": [],
+          "brand": "AOC",
+          "model": "Q27G3XMN",
+          "sourceCount": 3,
+          "tier": "supported"
+        },
+        {
+          "aliases": [
+            "Dell Alienware AW2725DM"
+          ],
+          "brand": "Dell",
+          "model": "Alienware AW2725DM",
+          "sourceCount": 3,
+          "tier": "supported"
+        },
+        {
+          "aliases": [
+            "ASUS ROG Strix XG27ACS"
+          ],
+          "brand": "ASUS",
+          "model": "ROG Strix XG27ACS",
+          "sourceCount": 2,
+          "tier": "supported"
+        }
+      ],
+      "normalResponseBytes": 682,
+      "openAiCalls": 1,
+      "products": [
+        "Z-Edge AGEX A27Q 27\" 144Hz 2K QHD 2560x1440 Fast IPS 1ms Response Time LED Gaming Monitor",
+        "27\" GIGABYTE GS27QA SA 2560x1440 IPS 1ms/ 180Hz AMD FreeSync Gaming Monitor"
+      ],
+      "round": 1,
+      "scoutFallbackReason": null,
+      "status": 200,
+      "strongTargetReturned": false,
+      "topThreeLeader": false
+    },
+    {
+      "caseId": "constrained-shop-vacuum",
+      "durationMs": 28386,
+      "evidenceBindingsExact": true,
+      "error": null,
+      "evidencedTargetReturned": false,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 12,
+      "marketTargets": [],
+      "normalResponseBytes": 1511,
+      "openAiCalls": 1,
+      "products": [
+        "Bauer 3 Gallon 3 Peak Hp Wet/dry Vacuum",
+        "SL18116P Stanley Wet Dry Vacuum",
+        "Stanley 5 Gallon Wet/Dry Vacuum",
+        "Shark MessMaster Portable Wet Dry Vacuum",
+        "DeWalt Stealthsonic Quiet 6-Gallon 4 HP Corded Wet/Dry Shop Vacuum with Accessories Included"
+      ],
+      "round": 1,
+      "scoutFallbackReason": "insufficient_evidence",
+      "status": 200,
+      "strongTargetReturned": false,
+      "topThreeLeader": false
+    },
+    {
+      "caseId": "constrained-pressure-washer",
+      "durationMs": 29605,
+      "evidenceBindingsExact": true,
+      "error": null,
+      "evidencedTargetReturned": false,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 15,
+      "marketTargets": [
+        {
+          "aliases": [
+            "RY142022"
+          ],
+          "brand": "Ryobi",
+          "model": "RY142022",
+          "sourceCount": 1,
+          "tier": "supported"
+        },
+        {
+          "aliases": [
+            "Sun Joe SPX3000 XTREAM"
+          ],
+          "brand": "Sun Joe",
+          "model": "SPX3000 XTREAM",
+          "sourceCount": 2,
+          "tier": "supported"
+        },
+        {
+          "aliases": [
+            "GPW2000"
+          ],
+          "brand": "Greenworks",
+          "model": "GPW2000",
+          "sourceCount": 2,
+          "tier": "supported"
+        }
+      ],
+      "normalResponseBytes": 33,
+      "openAiCalls": 1,
+      "products": [],
+      "round": 1,
+      "scoutFallbackReason": null,
+      "status": 200,
+      "strongTargetReturned": false,
+      "topThreeLeader": false
+    },
+    {
+      "caseId": "constrained-coffee-maker",
+      "durationMs": 29734,
+      "evidenceBindingsExact": true,
+      "error": null,
+      "evidencedTargetReturned": false,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 13,
+      "marketTargets": [
+        {
+          "aliases": [
+            "Cuisinart DCC-T20",
+            "Cuisinart DCC-T20 Touchscreen 14-Cup Programmable Coffeemaker"
+          ],
+          "brand": "Cuisinart",
+          "model": "DCC-T20",
+          "sourceCount": 1,
+          "tier": "supported"
+        }
+      ],
+      "normalResponseBytes": 678,
+      "openAiCalls": 1,
+      "products": [
+        "Cuisinart 14 Cup Programmable Coffeemaker DCC-3200",
+        "Mr Coffee 14 Cup Programmable Coffee Maker"
+      ],
+      "round": 1,
+      "scoutFallbackReason": null,
+      "status": 200,
+      "strongTargetReturned": false,
+      "topThreeLeader": true
+    }
+  ]
+}

@@ -145,7 +145,7 @@ export function stableModelIdentifiers(value: string) {
         }))
         .filter(
           ({ normalized, raw }) =>
-            normalized.length >= 3 &&
+            (normalized.length >= 3 || /^[a-z]\d$/.test(normalized)) &&
             normalized.length <= 32 &&
             /\d/.test(normalized) &&
             !isModelIdentityMeasurementToken(normalized) &&
@@ -208,7 +208,9 @@ export function exactModelIdentifiers(value: string) {
 
 const NAMED_MODEL_VARIANT_WORDS = new Set([
   "air",
+  "complete",
   "evo",
+  "kit",
   "lite",
   "max",
   "mini",
@@ -224,6 +226,7 @@ const NAMED_MODEL_VARIANT_WORDS = new Set([
 function namedVariantWords(value: string) {
   return value
     .toLowerCase()
+    .replace(/\b\d+(?:\.\d+)?\s*v(?:olt)?\s+max\b/g, " ")
     .replace(/([a-z0-9])\+/g, "$1 plus")
     .replace(/[^a-z0-9]+/g, " ")
     .trim()
@@ -283,9 +286,29 @@ export function haveConflictingNamedModelVariants(
 
   const targetVariants = variantsNearModelAnchors(target, sharedAnchors);
   const observedVariants = variantsNearModelAnchors(observed, sharedAnchors);
+  const packageVariants = new Set(["complete", "kit"]);
+  const targetPackages = new Set(
+    [...targetVariants].filter((variant) => packageVariants.has(variant)),
+  );
+  const observedPackages = new Set(
+    [...observedVariants].filter((variant) => packageVariants.has(variant)),
+  );
+  if (
+    targetPackages.size > 0 &&
+    observedPackages.size > 0 &&
+    ![...targetPackages].some((variant) => observedPackages.has(variant))
+  ) {
+    return true;
+  }
+  const targetIdentityVariants = [...targetVariants].filter(
+    (variant) => !packageVariants.has(variant),
+  );
+  const observedIdentityVariants = [...observedVariants].filter(
+    (variant) => !packageVariants.has(variant),
+  );
   return (
-    [...targetVariants].some((variant) => !observedVariants.has(variant)) ||
-    [...observedVariants].some((variant) => !targetVariants.has(variant))
+    targetIdentityVariants.some((variant) => !observedVariants.has(variant)) ||
+    observedIdentityVariants.some((variant) => !targetVariants.has(variant))
   );
 }
 

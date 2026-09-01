@@ -210,7 +210,7 @@ const GENERIC_IMAGE_FILENAME_WORDS = new Set([
 ]);
 
 const HARD_NON_PRODUCT_ASSET_PATTERN =
-  /(?:^|[-_/])(?:article|badge|banner|blog|category|collection|departments?|favicon|flyouts?|icon|layouts?|logo|manual|masthead|menus?|navigation|nav|rating|review|social|sprite|stars?|support|top-nav|tracking|wordmark)(?:[-_/.]|$)/i;
+  /(?:^|[-_/])(?:article|badge|banner|blog|category|collection|departments?|favicon|flyouts?|icon|layouts?|logo|manual|masthead|menus?|navbar|navigation|nav|rating|review|social|sprite|stars?|support|top-nav|tracking|wordmark)(?:[-_/.]|$)/i;
 const SOFT_NON_PRODUCT_ASSET_PATTERN =
   /(?:^|[-_/])hero(?:[-_/.]|$)/i;
 

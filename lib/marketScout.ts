@@ -1,7 +1,10 @@
 import { z } from "zod";
 
 import type { RecommendationApiRequest } from "@/types/review-radar";
-import { exactModelIdentifiers } from "./productIdentity.ts";
+import {
+  exactModelIdentifiers,
+  namedModelVariantTokens,
+} from "./productIdentity.ts";
 import {
   rethrowIfRequestCancelled,
   throwIfRequestCancelled,
@@ -370,6 +373,53 @@ function responseHostedSearchCalls(response: unknown) {
   ).length;
 }
 
+function modelIdentifiersFor(value: string, brand: string) {
+  const brandWords = new Set(normalizedIdentity(brand).split(" "));
+  return exactModelIdentifiers(value).filter(
+    (identifier) => !brandWords.has(identifier),
+  );
+}
+
+function compatibleModelIdentifier(first: string, second: string) {
+  if (first === second) return true;
+  const [shorter, longer] =
+    first.length <= second.length ? [first, second] : [second, first];
+  return (
+    shorter.length >= 3 &&
+    longer.startsWith(shorter) &&
+    longer.slice(shorter.length) === "b"
+  );
+}
+
+function validatedModelAliases(
+  aliases: string[],
+  brand: string,
+  model: string,
+) {
+  const modelIdentifiers = modelIdentifiersFor(model, brand);
+  const numericModelIdentifiers = modelIdentifiers.filter((identifier) =>
+    /\d/.test(identifier),
+  );
+  const requiredIdentifiers =
+    numericModelIdentifiers.length > 0
+      ? numericModelIdentifiers
+      : modelIdentifiers;
+  const requiredVariants = namedModelVariantTokens(model);
+
+  return normalizeStringArray(aliases, 4).filter((alias) => {
+    const aliasIdentifiers = modelIdentifiersFor(alias, brand);
+    const aliasVariants = new Set(namedModelVariantTokens(alias));
+    return (
+      requiredVariants.every((variant) => aliasVariants.has(variant)) &&
+      requiredIdentifiers.some((modelIdentifier) =>
+        aliasIdentifiers.some((aliasIdentifier) =>
+          compatibleModelIdentifier(modelIdentifier, aliasIdentifier),
+        ),
+      )
+    );
+  });
+}
+
 function responseSourceUrls(response: unknown) {
   const sourceUrls: string[] = [];
   for (const item of responseOutputItems(response)) {
@@ -468,10 +518,7 @@ function validateScoutResponse(
     const brand = compactText(rawTarget.brand, 80);
     const model = compactText(rawTarget.model, 120);
     const identity = `${normalizedIdentity(brand)}|${normalizedIdentity(model)}`;
-    const brandWords = new Set(normalizedIdentity(brand).split(" "));
-    const specificModelIdentifiers = exactModelIdentifiers(model).filter(
-      (identifier) => !brandWords.has(identifier),
-    );
+    const specificModelIdentifiers = modelIdentifiersFor(model, brand);
     if (
       !normalizedIdentity(brand) ||
       !normalizedIdentity(model) ||
@@ -506,7 +553,7 @@ function validateScoutResponse(
 
     return [
       {
-        aliases: normalizeStringArray(rawTarget.aliases, 4),
+        aliases: validatedModelAliases(rawTarget.aliases, brand, model),
         brand,
         consensusOrder,
         evidenceTier,

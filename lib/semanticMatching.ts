@@ -42,6 +42,22 @@ type SemanticFeatureDefinition = {
 const semanticFeatureDefinitions: SemanticFeatureDefinition[] = [
   {
     aliases: [
+      "cordless",
+      "battery powered",
+      "battery-powered",
+      "battery operated",
+      "battery-operated",
+      "lithium ion",
+      "lithium-ion",
+      "rechargeable",
+    ],
+    canonical: "cordless",
+    conflictingAliases: ["corded", "corded electric"],
+    concrete: true,
+    type: "feature",
+  },
+  {
+    aliases: [
       "pet hair",
       "pet fur",
       "dog hair",

@@ -235,6 +235,80 @@ describe("market-quality discovery orchestration", () => {
     assert.ok(selected.telemetry.logicalSearchCalls <= 15);
   });
 
+  it("recovers a strong target from an inline direct Shopping offer without another call", async () => {
+    process.env.SERPER_API_KEY = "test-only-key";
+    globalThis.fetch = async (url, init) => {
+      const endpoint = String(url);
+      const request = JSON.parse(init.body);
+      if (endpoint.endsWith("/search")) {
+        return new Response(
+          JSON.stringify({
+            shopping: [
+              {
+                extractedPrice: 239,
+                link: "https://www.homedepot.com/p/Alpha-A100-Robot-Vacuum/123456",
+                productId: "222",
+                rating: 4.7,
+                ratingCount: 800,
+                source: "Home Depot",
+                title: "Alpha A100 Robot Vacuum",
+              },
+            ],
+          }),
+          { headers: { "content-type": "application/json" }, status: 200 },
+        );
+      }
+      if (request.q === "Alpha A100 robot vacuum") {
+        return new Response(
+          JSON.stringify({
+            shopping: [
+              {
+                extractedPrice: 249,
+                link: "https://www.google.com/search?ibp=oshop&udm=28&prds=productid:111",
+                source: "Example Store",
+                title: "Alpha A100 Robot Vacuum",
+              },
+            ],
+          }),
+          { headers: { "content-type": "application/json" }, status: 200 },
+        );
+      }
+      return new Response(JSON.stringify({ shopping: [] }), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      });
+    };
+
+    const selected = await selectProducts({
+      input: { budget: "$300", query: "robot vacuum" },
+      plan: {
+        queries: [],
+        targets: [
+          {
+            aliases: [],
+            brand: "Alpha",
+            consensusOrder: 0,
+            evidenceTier: "strong",
+            model: "A100",
+            sourceUrls: ["https://www.rtings.com/example"],
+          },
+        ],
+      },
+    });
+
+    assert.equal(selected.telemetry.marketEvidenceCandidates, 1);
+    assert.ok(
+      selected.telemetry.rankedCandidates.some(
+        (candidate) =>
+          candidate.evidenceTier === "strong" &&
+          candidate.price === 239 &&
+          candidate.productUrl ===
+            "https://www.homedepot.com/p/Alpha-A100-Robot-Vacuum/123456",
+      ),
+    );
+    assert.ok(selected.telemetry.logicalSearchCalls <= 9);
+  });
+
   it("rejects a non-new condition exposed only by the resolved product URL", async () => {
     process.env.SERPER_API_KEY = "test-only-key";
     globalThis.fetch = async (url, init) => {

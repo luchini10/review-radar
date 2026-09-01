@@ -7,9 +7,11 @@ import { extractStructuredRequirements } from "../lib/requirementExtraction.ts";
 const {
   attachMarketEvidence,
   bayesianCommerceRating,
+  candidateMatchesTarget,
   candidateHasUsablePage,
   dedupeSelectionCandidates,
   interleaveSearchCandidates,
+  isNonUsMarketUrl,
   isSecondaryMarketCandidate,
   operationLimits,
   pageIdentityScore,
@@ -500,6 +502,14 @@ describe("selection correctness", () => {
         }),
       ) > 0,
     );
+    assert.equal(
+      isNonUsMarketUrl("https://www.eufy.com/eu-en/robot-vacuum-s1-pro"),
+      true,
+    );
+    assert.equal(
+      isNonUsMarketUrl("https://www.breville.com/en-us/product/bdc465"),
+      false,
+    );
   });
 
   it("removes secondary-market offers before page verification", () => {
@@ -542,6 +552,73 @@ describe("selection correctness", () => {
     assert.equal(attached[2].marketEvidence, undefined);
   });
 
+  it("binds an official target page when an exact alias appears only in its URL", () => {
+    const target = marketTarget(
+      "Breville",
+      "BDC465BSS1BNA1",
+      "strong",
+      0,
+      ["BDC465"],
+    );
+
+    assert.equal(
+      candidateMatchesTarget(
+        candidate("the Luxe Brewer Thermal", {
+          price: null,
+          productUrl: "https://www.breville.com/en-us/product/bdc465",
+        }),
+        target,
+      ),
+      true,
+    );
+    assert.equal(
+      candidateMatchesTarget(
+        candidate("the Luxe Brewer Thermal", {
+          price: null,
+          productUrl: "https://www.breville.com/en-us/product/bdc450",
+        }),
+        target,
+      ),
+      false,
+    );
+  });
+
+  it("preserves a resolved page's own direct current Shopping offer", () => {
+    const resolved = resolvedCandidate(
+      candidate("Alpha A100 Robot Vacuum", {
+        brand: "Alpha",
+        currentShoppingOffer: true,
+        price: 249,
+        productUrl:
+          "https://www.google.com/search?ibp=oshop&udm=28&prds=productid:111",
+        retailer: "Example Store",
+      }),
+      [
+        candidate("Alpha A100 Robot Vacuum", {
+          brand: "Alpha",
+          commerceSignals: {
+            offerCount: 4,
+            position: 1,
+            productId: "222",
+            rating: 4.7,
+            ratingCount: 800,
+          },
+          currentShoppingOffer: true,
+          price: 239,
+          productUrl:
+            "https://www.homedepot.com/p/Alpha-A100-Robot-Vacuum/123456",
+          retailer: "Home Depot",
+        }),
+      ],
+    );
+
+    assert.equal(resolved.price, 239);
+    assert.equal(resolved.retailer, "Home Depot");
+    assert.equal(resolved.currentShoppingOffer, true);
+    assert.equal(resolved.commerceSignals.productId, "222");
+    assert.ok(resolved.keySpecs.includes("Alpha A100 Robot Vacuum"));
+  });
+
   it("does not let a generic alias bypass the target catalog model", () => {
     const target = marketTarget(
       "Craftsman",
@@ -565,6 +642,122 @@ describe("selection correctness", () => {
 
     assert.equal(attached[0].marketEvidence?.targetModel, target.model);
     assert.equal(attached[1].marketEvidence, undefined);
+  });
+
+  it("does not treat a short all-caps brand as model identity", () => {
+    const target = marketTarget(
+      "FLEX",
+      "FX1271T",
+      "strong",
+      0,
+      [
+        "FLEX FX1271T-2B",
+        "FLEX 24V Hammer Drill with Turbo",
+      ],
+    );
+    const attached = attachMarketEvidence(
+      [
+        candidate("FLEX FX1271T-2B Hammer Drill", { brand: "FLEX" }),
+        candidate("FLEX FX1272T-2C Hammer Drill", { brand: "FLEX" }),
+      ],
+      [target],
+    );
+
+    assert.equal(attached[0].marketEvidence?.targetModel, "FX1271T");
+    assert.equal(attached[1].marketEvidence, undefined);
+  });
+
+  it("binds an exact catalog model split by retailer formatting", () => {
+    const target = {
+      aliases: [],
+      brand: "Vacmaster",
+      consensusOrder: 0,
+      evidenceTier: "strong",
+      model: "VFB511B0201",
+      sourceUrls: ["https://www.rtings.com/example"],
+    };
+
+    assert.equal(
+      candidateMatchesTarget(
+        {
+          brand: "Vacmaster",
+          name: "Vacmaster Wet/Dry Vacuum VFB511B 0201",
+          productUrl: "https://www.walmart.com/ip/vacmaster-vfb511b-0201/123",
+        },
+        target,
+      ),
+      true,
+    );
+    assert.equal(
+      candidateMatchesTarget(
+        {
+          brand: "Vacmaster",
+          name: "Vacmaster Wet/Dry Vacuum VFB512B 0201",
+          productUrl: "https://www.walmart.com/ip/vacmaster-vfb512b-0201/124",
+        },
+        target,
+      ),
+      false,
+    );
+  });
+
+  it("uses a source-derived exact model only when the page names no sibling", () => {
+    const target = marketTarget("DeWalt", "DCD701F2");
+    const candidateFromSource = candidate(
+      "DeWalt XTREME 12V MAX Cordless Drill Kit",
+      {
+        brand: "DeWalt",
+        evidenceSources: [
+          {
+            snippet: "DeWalt DCD701F2 compact drill kit with battery and charger.",
+            snippetProvenance: "source-derived",
+            title: "DeWalt XTREME 12V MAX Cordless Drill Kit",
+            url: "https://www.lowes.com/pd/dewalt-xtreme-drill/123",
+          },
+        ],
+        productUrl: "https://www.lowes.com/pd/dewalt-xtreme-drill/123",
+      },
+    );
+
+    assert.equal(candidateMatchesTarget(candidateFromSource, target), true);
+    assert.equal(
+      candidateMatchesTarget(
+        {
+          ...candidateFromSource,
+          name: "DeWalt DCD709 Cordless Drill Kit",
+        },
+        target,
+      ),
+      false,
+    );
+  });
+
+  it("does not let a source snippet override a short sibling model", () => {
+    assert.equal(
+      candidateMatchesTarget(
+        candidate("ECOVACS DEEBOT T50 PRO OMNI", {
+          brand: "Ecovacs",
+          evidenceSources: [
+            {
+              snippet: "Compare the DEEBOT X9 PRO OMNI.",
+              snippetProvenance: "source-derived",
+              title: "ECOVACS DEEBOT T50 PRO OMNI",
+              url: "https://www.bestbuy.com/product/ecovacs-t50/123",
+            },
+          ],
+          productUrl: "https://www.bestbuy.com/product/ecovacs-t50/123",
+        }),
+        marketTarget("Ecovacs", "DEEBOT X9 PRO OMNI"),
+      ),
+      false,
+    );
+    assert.equal(
+      candidateMatchesTarget(
+        candidate("ECOVACS DEEBOT T80S OMNI", { brand: "Ecovacs" }),
+        marketTarget("Ecovacs", "DEEBOT T80 OMNI"),
+      ),
+      false,
+    );
   });
 
   it("does not transfer a numeric catalog target across a tool-platform sibling", () => {
@@ -637,7 +830,7 @@ describe("selection correctness", () => {
     const attached = attachMarketEvidence(
       [
         candidate("Moccamaster KBGV Select Matte Silver", {
-          brand: "Technivorm",
+          brand: "Moccamaster",
         }),
         candidate("Moccamaster Cup-One Coffee Maker", {
           brand: "Technivorm",
@@ -1182,6 +1375,22 @@ describe("selection correctness", () => {
         robotInput,
       ).isMatch,
       false,
+    );
+
+    const cordlessInput = { query: "cordless leaf blower" };
+    cordlessInput.extractedRequirements =
+      extractStructuredRequirements(cordlessInput);
+    assert.equal(
+      selectionRequirementResult(
+        asset("RYOBI 40V HP Brushless Whisper Series Blower", {
+          candidate: {
+            productUrl:
+              "https://www.homedepot.com/p/RYOBI-40V-Cordless-Battery-Leaf-Blower/334570740",
+          },
+        }),
+        cordlessInput,
+      ).isMatch,
+      true,
     );
 
     const priorityInput = {

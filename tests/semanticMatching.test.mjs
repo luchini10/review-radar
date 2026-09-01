@@ -21,6 +21,7 @@ describe("semantic matching", () => {
       ["Small footprint works well on crowded countertops.", "compact"],
       ["Manual steam wand makes milk drinks.", "steam wand"],
       ["Dishwasher-safe parts and a removable water tank make cleanup easier.", "easy cleaning"],
+      ["18V lithium-ion hammer drill kit with battery and charger.", "cordless"],
     ];
 
     for (const [evidence, requirement] of cases) {
@@ -51,6 +52,16 @@ describe("semantic matching", () => {
     );
 
     assert.equal(match.status, "fail");
+  });
+
+  it("does not accept an explicitly corded product as cordless", () => {
+    assert.equal(
+      matchSemanticFeatureEvidence(
+        "Corded electric drill with a 10-foot power cable.",
+        "cordless",
+      ).status,
+      "fail",
+    );
   });
 
   it("does not accept separate accessories as built-in feature evidence", () => {

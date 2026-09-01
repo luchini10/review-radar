@@ -54,6 +54,7 @@ describe("product image resolver", () => {
       "https://example.com/favicon.ico",
       "https://example.com/no-image.jpg",
       "https://www.acmetools.com/images/img-na.png",
+      "https://www.acmetools.com/images/Navbar/tools-tool-accessories.jpg",
       "https://example.com/sprite.png",
       "https://example.com/products/apple-ipad-pro-80x80.jpg",
       "https://m.media-amazon.com/images/G/01/digital/video/merch/Other/countdown-product-banner.gif",
