@@ -1,138 +1,159 @@
 # ReviewRadar agent next task
 
-Updated: 2026-08-31
+Updated: 2026-09-01
 
 ## Current phase and exact snapshot
 
-PR-10, the selection-only architecture reset, is implemented and fully
-validated on the committed PR-9J snapshot
-`5117276c3b2909d629d9f19970b3e6f55c10af67`. This regenerated handoff is part
-of the final local PR-10 commit. Resolve its exact hash with
-`git rev-parse HEAD`; no push, deployment, or release is authorized or
-required.
+PR-13 Step 1, prerequisite stabilization, is complete at local implementation
+commit `5404142a5442260bdeb67bb4528a87e1cdafbfba`. That commit consolidates and
+reviews the former uncommitted PR-11/PR-12 work, adds the dated QA-only
+market-leader benchmark, corrects the measured resolution/availability losses,
+and passes the required prerequisite gates.
 
-There is no running development server. No experimental recommendation mode,
-feature flag, background job, or report route remains in the application.
+PR-13 market-scout and quality-ranking behavior has not started. The current
+runtime still uses the lightweight optional planner, three neutral Shopping
+queries, and at most nine candidate-local resolution opportunities under the
+twelve-logical-operation ceiling. There is one synchronous
+`POST /api/recommendations`, zero or one OpenAI call, no background work, and
+no alternate recommender.
 
-## Objective, bottleneck, and decision
+No development server is running. No push, PR, deployment, release,
+production-data action, dependency change, public API change, or product-card
+change occurred.
 
-**Objective:** reduce real shopper latency and complexity without weakening
-which products qualify.
+## Objective, bottleneck, and completed result
 
-Matched baseline searches averaged 101,212 ms. The delay was distributed across
-final report generation, review/editorial research, planning, rescue,
-discovery, and asset stages. The route made three OpenAI calls, used 37–60+
-Serper attempts, built prompts of roughly 17,000–19,000 characters plus a
-6,115-character system prompt, and returned 38–129 KB normal responses. This
-proved the report pipeline itself was the bottleneck; optimizing one stage or
-keeping alternate modes would not solve the objective.
+**Objective:** make the existing selection engine repeatably return safe,
+in-budget products before adding market-quality evidence.
 
-PR-10 therefore replaces the report architecture with one bounded product
-selection path. This supersedes Direct Terra, staged Terra, two-layer output,
-the earlier stable report path, and all report-era kickoffs.
+**Verified bottleneck:** exact candidate pages were often found, but major
+retailers blocked or challenged server-side page fetches. That converted
+current same-merchant Shopping offers into unknown availability and caused
+avoidable empty shortlists. Additional generalized losses came from retailer-
+pinned model queries, one-page-only verification, decimal URL identity loss,
+measurement text misclassified as a model, battery-kit wording, sibling model
+URLs, and cross-merchant price transfer.
 
-## Current runtime contract
+**Correction:** stable-model page queries are retailer-neutral. One
+candidate-local search may retain up to two exact product pages on distinct
+hosts. Exact merchant product paths are recognized; discontinued, parts,
+listing, support, editorial, foreign-market, sibling-model, and unsafe pages
+remain ineligible. Decimal URL specifications are preserved, strings such as
+`MPH/450` do not become stable model IDs, and bounded battery-kit forms are
+recognized.
 
-- `/api/recommendations` is the only application API and exports only `POST`.
-- The request is validated before paid work. Conflicting hard requirements fail
-  before planning or search.
-- Planning uses zero or one compact OpenAI structured-output call. Missing,
-  timed-out, or invalid model output falls back to deterministic queries.
-- Search performs at most three Shopping queries and at most eight total
-  logical search/product-page operations. There are no retries, alternate
-  providers, editorial/review crawls, rescue passes, polling, or background
-  jobs.
-- Hard requirements, wrong product types, accessories/components, used items,
-  explicit model conflicts, duplicates, and over-budget products fail closed.
-- A budgeted result requires a trustworthy current price.
-- Product pages are identity-checked and fetched through bounded DNS-pinned
-  SSRF protection. Images require same-product evidence or render as a
-  placeholder.
-- Result cards contain only image or placeholder, category, exact product name,
-  trustworthy price or explicit missing-price state, and `View product`.
-- Smart Features are deterministic local catalogs. They make no provider call.
+A priced current Shopping offer may fill an otherwise unknown availability
+state only after resolution to an exact product-shaped page on the same
+Shopping merchant. Explicit page unavailability overrides it. Missing-price,
+cross-merchant, unresolved, unsafe, or non-product destinations do not receive
+this authority, and page price alone never creates availability.
 
-## Measured result
+## Frozen market-leader benchmark
 
-The same three representative searches produced:
+`tests/benchmarks/pr13-market-leaders-v2026-09a.json` is the QA-only baseline
+for the existing eight categories. Each exact registered model has at least
+two independent current source domains and at least one comparative test
+source. The contract test rejects duplicate cases, non-HTTPS sources,
+insufficient domain independence, or a missing comparative source.
 
-| Measure | Before | After | Change |
-| --- | ---: | ---: | ---: |
-| Mean client latency | 101,212 ms | 8,029.33 ms | 92.07% lower; 12.61x faster |
-| Mean normal response | 86,087.67 B | 821.33 B | 99.05% lower; 104.81x smaller |
-| OpenAI calls per search | 3 | 1 | 66.67% fewer |
-| Search/page ceiling | 37–60+ Serper attempts observed | 8 logical operations | hard bounded |
+The registry cannot enter production discovery, eligibility, price,
+availability, or ranking. Dynamic in-budget availability is evaluated during
+future QA; a registered model is not automatically a passing leader.
 
-Additional `must be` robot-vacuum and monitor searches returned only matching,
-in-budget direct products. The benchmark records are in `docs/benchmarks/`.
+## Live prerequisite result
+
+The failed-first cache-cold round returned 4/8 non-empty and attributed the
+dominant losses to exact resolved pages with unknown availability.
+
+After the same-merchant current-offer correction, the frozen matrix ran three
+fresh-server, cache-cold single attempts across the eight unchanged cases with
+no retries:
+
+| Category | Non-empty runs |
+| --- | ---: |
+| 14-cup programmable coffee maker under $150 | 3/3 |
+| Self-emptying robot vacuum under $300 | 3/3 |
+| 27-inch 1440p 144Hz gaming monitor under $300 | 3/3 |
+| Wet/dry shop vacuum under $200 | 2/3 |
+| Pressure washer at least 2,000 PSI under $300 | 3/3 |
+| Brushless cordless drill with battery under $200 | 3/3 |
+| Laptop with 16 GB RAM and 512 GB SSD under $900 | 3/3 |
+| Cordless leaf blower at least 400 CFM with battery under $250 | 3/3 |
+
+Overall recall was 23/24. Shop vacuum was 2/3. Mean latency was 12,507 ms,
+nearest-rank p95 was 18,806 ms, minimum was 7,093 ms, and maximum was 20,419
+ms. Every request used one OpenAI response and no more than twelve logical
+Serper operations. The required 21/24 and shop-vac 2/3 gates pass.
+
+The one empty shop-vac attempt remains honest provider variability and was not
+retried. This matrix proves prerequisite recall and preserved safety, not
+market-leader recall or best-in-budget ranking.
 
 ## Verification
 
-- Unit tests: 241/241 across 41 suites.
+- Focused prerequisite suites: 69/69 pass.
+- Full unit tests: 295/295 across 42 suites.
 - Typecheck: pass.
-- Lint: pass with zero warnings.
-- Production build: pass; application routes are only `/`, `/_not-found`, and
-  `/api/recommendations`.
-- Playwright: pass, 7/7 across Chromium desktop/mobile.
-- Live matched before/after: three representative searches completed and are
-  recorded without raw provider responses or credentials.
-- Live hard-language QA: two additional searches completed successfully.
+- ESLint: pass with zero warnings.
+- Next.js 16.3.3 production build: pass; application routes are only `/`,
+  `/_not-found`, and `/api/recommendations`.
+- Playwright: 7/7 pass, including Chromium desktop and mobile shortlist checks.
+- Final staged `git diff --check`: pass.
+- Public request/response shape: unchanged.
 
-The required checks were rerun serially against the final source snapshot.
-
-## Files and scope
-
-The phase changes the recommendation route, minimal client/result components,
-selection planner/search/ranking primitives, product-page/identity/price/image
-safety helpers, local Smart Features, request/result types, tests, E2E coverage,
-benchmark tooling/evidence, package surface, and canonical documentation.
-
-Report routes, progress APIs, report UI, report contracts, narrative/citation/
-review/evidence generators, Direct Terra, staged Terra, two-layer output,
-obsolete evaluation scripts, and report-specific tests/fixtures were deleted.
-Unrelated untracked user files remain untouched.
-
-## Secrets and hard boundaries
+## Hard boundaries
 
 Never manually inspect, print, hash, copy, edit, or diagnose `.env.local`.
 Ordinary tools must never open, enumerate, stat, hash, parse, copy, edit, or
-delete `tests/fixtures/review-radar-live/**`; exclude it from ordinary search
-and status commands.
+delete `tests/fixtures/review-radar-live/**`; exclude it from searches.
 
-PR-10 authorizes the local code/documentation work, representative paid
-searches, full local verification, and one final local commit. It does not
-require or perform a push, PR, deployment, release, production-data change, or
-credential disclosure.
+PR-11 recorded two accidental broad-search traversals of the protected fixture
+tree. PR-12 recorded one path-only `git status --short` traversal. At PR-13
+planning start, one broad `rg --files` again enumerated protected fixture paths.
+No protected fixture was opened, statted individually, hashed, parsed, copied,
+edited, deleted, or used as evidence. These were still process-boundary
+violations; do not use broad repository enumeration again.
 
-## Remaining risks and uncertainty
+Do not infer availability from price alone, transfer Shopping authority across
+merchants, accept family/listing/discontinued/parts pages, retry until a desired
+product appears, or raise the current twelve-operation ceiling during the
+stabilized prerequisite. Do not reintroduce reports, review summaries,
+citations, background work, or alternate recommendation paths.
 
-- The live sample is deliberately small and prices/search inventory are
-  time-sensitive; it proves the latency/complexity change and representative
-  selection behavior, not universal catalog recall.
-- Missing identity-safe product imagery intentionally produces placeholders.
-- A hard requirement with insufficient evidence may exclude a real match. This
-  is the intentional fail-closed tradeoff.
-- Hosted and production-runtime readiness were not tested in this local phase.
+## Remaining risks and review debt
 
-## Recommended next step
+- Search inventory, prices, and merchant pages vary after a request. The five-
+  minute Shopping and two-minute product-page caches reduce but cannot remove
+  that uncertainty.
+- Same-merchant Shopping availability is current provider evidence, not a live
+  checkout guarantee. Explicit page unavailability remains authoritative.
+- The frozen leader registry is intentionally small and QA-only. It does not
+  yet measure leader recall, cross-source consensus order, or quality ranking.
+- Hosted and production-runtime behavior remains unverified.
+- PR-13 Step 2 still requires implementation and review of response-owned
+  web-search source binding, source tiers, exact model attachment, cache keying,
+  failure fallback, cancellation, and hosted-search ceilings.
 
-Review the committed selection-only snapshot and manually exercise the shopper
-UI. Use **medium reasoning** for routine UI or catalog follow-up because the
-architecture is now small and directly tested. Use **high reasoning** before
-changing hard-requirement, identity, price, SSRF, or image safety rules because
-those are the remaining correctness boundaries.
+## Next decision
 
-There is no approved follow-on implementation. Do not reintroduce report
-generation or an alternate recommendation architecture without a new product
-decision supported by current evidence.
+Stop here. The next phase is PR-13 Step 2: replace the lightweight planner with
+one bounded GPT-5.4 Mini market scout while preserving one synchronous request,
+one OpenAI response, structured output, at most three hosted searches, exact
+response-owned source binding, 24-hour validated-plan caching, and deterministic
+failure fallback with no quality boost.
+
+Use high reasoning for Step 2 because source ownership, domain independence,
+tool-call ceilings, and exact model identity are trust boundaries. Routine test
+and documentation execution can use medium reasoning after those contracts are
+settled. Wait for Taylor's explicit approval before beginning Step 2.
 
 ## Evidence pointers
 
 | Evidence | Location |
 | --- | --- |
-| Phase decision and architecture | `docs/forward-roadmap.md`, PR-10 |
-| Canonical verification | latest PR-10 entry in `docs/qa-loop-results.md` |
-| Durable selection contract | `docs/review-radar-test-memory.md`, PR-10 |
+| PR-13 Step 1 decision and next boundary | `docs/forward-roadmap.md`, PR-13 |
+| Canonical failed-first and 24-run outcome | latest PR-13 entry in `docs/qa-loop-results.md` |
+| Durable prerequisite contracts | `docs/review-radar-test-memory.md`, PR-13 |
+| Market-leader methodology and registry | `docs/phase-6-market-leader-evaluation.md` and `tests/benchmarks/pr13-market-leaders-v2026-09a.json` |
 | Runtime architecture | `ReviewRadar-Overview.md` |
-| Before/after benchmark | `docs/benchmarks/selection-simplification-before.json`, `selection-simplification-after.json`, and `selection-simplification-quality.json` |
-| Parent snapshot | commit `5117276c3b2909d629d9f19970b3e6f55c10af67` |
+| Exact implementation snapshot | `5404142a5442260bdeb67bb4528a87e1cdafbfba` |
