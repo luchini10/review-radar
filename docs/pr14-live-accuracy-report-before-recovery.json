@@ -1,0 +1,917 @@
+{
+  "benchmark": "live-accuracy-v2026-09a",
+  "completedAt": "2026-09-01T16:51:42.466Z",
+  "phase": "current",
+  "schemaVersion": 2,
+  "startedAt": "2026-09-01T16:46:32.558Z",
+  "summary": {
+    "acceptance": {
+      "acceptedCandidatesSafe": false,
+      "freshResearchAttemptedEachRequest": true,
+      "leaderTopThreeAtLeastConfiguredRate": false,
+      "nonEmptyAtLeastConfiguredMinimum": true,
+      "oneOpenAiResponseEach": true,
+      "publicShapeUnchanged": true,
+      "requiredCaseRecall": true,
+      "serperAtMost15": true,
+      "strongAheadOfUnscored": true,
+      "webSearchAtMost3": true,
+      "zeroRequestFailures": true
+    },
+    "byCase": {
+      "broad-robot-vacuum": {
+        "leaderTopThree": 1,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "broad-coffee-maker": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "broad-cordless-drill": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "broad-shop-vacuum": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "broad-cordless-leaf-blower": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "constrained-robot-vacuum": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "constrained-gaming-monitor": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "constrained-shop-vacuum": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "constrained-pressure-washer": {
+        "leaderTopThree": 0,
+        "nonEmpty": 1,
+        "runs": 1
+      },
+      "constrained-coffee-maker": {
+        "leaderTopThree": 1,
+        "nonEmpty": 1,
+        "runs": 1
+      }
+    },
+    "calls": {
+      "hostedSearchCalls": 28,
+      "logicalSerperOperations": 130,
+      "maximumHostedSearchCalls": 3,
+      "maximumLogicalSerperOperations": 15,
+      "openAiResponses": 10,
+      "physicalSerperAttempts": 130
+    },
+    "latencyMs": {
+      "maximum": 40585,
+      "mean": 30582,
+      "minimum": 19963,
+      "p95NearestRank": 40585
+    },
+    "leaderRecall": {
+      "benchmarkEligibleRuns": 10,
+      "currentIneligibleRuns": 0,
+      "topThreeHits": 2,
+      "topThreeRate": 0.2,
+      "verifiedEligibleHits": 1,
+      "verifiedEligibleRuns": 1,
+      "verifiedLeaderObservedRuns": 3
+    },
+    "nonEmpty": {
+      "count": 10,
+      "rate": 1
+    },
+    "payloadBytes": {
+      "maximum": 1653,
+      "mean": 894
+    },
+    "scout": {
+      "fallbackRuns": 1,
+      "fallbackReasons": {
+        "insufficient_evidence": 1
+      },
+      "modelTokens": {
+        "estimatedCostUsdAtPublishedModelRatesOnly": 0.145028,
+        "input": 131000,
+        "output": 10395,
+        "total": 141395
+      },
+      "returnedEvidenceRuns": 2,
+      "returnedStrongRuns": 1,
+      "strongTargetPlanRuns": 8
+    },
+    "successfulRuns": 10
+  },
+  "runs": [
+    {
+      "caseId": "broad-robot-vacuum",
+      "debugResponseBytes": 27674,
+      "durationMs": 40585,
+      "error": null,
+      "normalResponseBytes": 1653,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 40541,
+      "status": 200,
+      "acceptedCandidatesSafe": false,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 12,
+      "marketTargets": [
+        {
+          "brand": "Dreame",
+          "model": "X60 Max Ultra Complete",
+          "sourceCount": 1,
+          "tier": "supported"
+        }
+      ],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 12,
+      "products": [
+        {
+          "name": "Dreame - X60 Max Ultra Kit Robot Vacuum and Mop, 3.13in Ultra-Thin, 35KPa Suction, Self Emptying&Mop Cleaning - White",
+          "price": 1699.99,
+          "productPageUrl": "https://www.bestbuy.com/product/dreame-x60-max-ultra-kit-robot-vacuum-and-mop-3-13in-ultra-thin-35kpa-suction-self-emptying-mop-cleaning-white/J3R8FSV647/sku/12615450"
+        },
+        {
+          "name": "Eureka J15 Ultra Self Emptying Robot Vacuum 19,000 Pa Suction Flex-Arm Mop Design",
+          "price": 399.99,
+          "productPageUrl": "https://us.eureka.com/products/eureka-j15-ultra-flagship-robot-vacuum"
+        },
+        {
+          "name": "Shark Stratos 2-in-1 Robot Vacuum & Mop Rv2710ze 9\" Cleaning Path White",
+          "price": 799.99,
+          "productPageUrl": "https://www.target.com/p/shark-stratos-2-in-1-auto-empty-robot-vacuum/-/A-94757209"
+        },
+        {
+          "name": "Shark Matrix Self-Emptying Robot Vacuum rv2310ae",
+          "price": 499.99,
+          "productPageUrl": "https://www.sharkninja.com/shark-matrix-self-empty-robot-vacuum/RV2310AE.html"
+        },
+        {
+          "name": "Roborock Q7 M5+ Robot Vacuum and Mop with Auto",
+          "price": 249.99,
+          "productPageUrl": "https://us.roborock.com/products/roborock-q7-m5-plus"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": null,
+          "evidenceTier": "supported",
+          "name": "Dreame - X60 Max Ultra Kit Robot Vacuum and Mop, 3.13in Ultra-Thin, 35KPa Suction, Self Emptying&Mop Cleaning - White",
+          "rating": null,
+          "ratingCount": null,
+          "targetModel": "X60 Max Ultra Complete"
+        },
+        {
+          "bayesianRating": 4.51864406779661,
+          "evidenceTier": null,
+          "name": "Eureka J15 Ultra Self Emptying Robot Vacuum 19,000 Pa Suction Flex-Arm Mop Design",
+          "rating": 4.9,
+          "ratingCount": 68,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.154368932038834,
+          "evidenceTier": null,
+          "name": "Shark Stratos 2-in-1 Robot Vacuum & Mop Rv2710ze 9\" Cleaning Path White",
+          "rating": 4.3,
+          "ratingCount": 53,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4,
+          "evidenceTier": null,
+          "name": "Shark Matrix Self-Emptying Robot Vacuum rv2310ae",
+          "rating": 4,
+          "ratingCount": 560,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4,
+          "evidenceTier": null,
+          "name": "Roborock Q7 M5+ Robot Vacuum and Mop with Auto",
+          "rating": 4,
+          "ratingCount": 84,
+          "targetModel": null
+        }
+      ],
+      "scoutFallbackReason": null,
+      "scoutInputTokens": 13044,
+      "scoutOutputTokens": 1180,
+      "scoutUsedFallback": false,
+      "evidencedTargetReturned": true,
+      "strongTargetReturned": false,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": true,
+      "topThreeLeaderPosition": 1,
+      "verifiedLeaderCurrentIneligible": false,
+      "verifiedLeaderEligible": false,
+      "verifiedLeaderObserved": true
+    },
+    {
+      "caseId": "broad-coffee-maker",
+      "debugResponseBytes": 20522,
+      "durationMs": 32834,
+      "error": null,
+      "normalResponseBytes": 1025,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 32814,
+      "status": 200,
+      "acceptedCandidatesSafe": true,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 11,
+      "marketTargets": [
+        {
+          "brand": "Fellow",
+          "model": "Aiden Precision Coffee Maker",
+          "sourceCount": 3,
+          "tier": "strong"
+        }
+      ],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 11,
+      "products": [
+        {
+          "name": "Moccamaster KBGV Select Matte Silver",
+          "price": 359,
+          "productPageUrl": "https://momnemcoffee.com/products/moccamaster-kbgv-select"
+        },
+        {
+          "name": "Bella PRO 12-Cup Programmable Coffee Maker",
+          "price": 29.99,
+          "productPageUrl": "https://www.bestbuy.com/product/bella-pro-12-cup-programmable-coffee-maker-stainless-steel/J3P5RSSWCT"
+        },
+        {
+          "name": "Ninja CE250 12-Cup Programmable Coffee Maker",
+          "price": 64.97,
+          "productPageUrl": "https://www.walmart.com/ip/Ninja-12-Cup-Programmable-Coffee-Maker-Glass-Carafe-Stainless-Steel-CE250/997508948"
+        },
+        {
+          "name": "Ninja 12 Cup Programmable Brewer Coffee ce251",
+          "price": 89.99,
+          "productPageUrl": "https://www.target.com/p/ninja-12-cup-programmable-brewer-ce251/-/A-76618536"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": 4.491525423728813,
+          "evidenceTier": null,
+          "name": "Moccamaster KBGV Select Matte Silver",
+          "rating": 4.5,
+          "ratingCount": 2900,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.487179487179487,
+          "evidenceTier": null,
+          "name": "Bella PRO 12-Cup Programmable Coffee Maker",
+          "rating": 4.5,
+          "ratingCount": 1900,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.29433962264151,
+          "evidenceTier": null,
+          "name": "Ninja CE250 12-Cup Programmable Coffee Maker",
+          "rating": 4.3,
+          "ratingCount": 2600,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.294117647058823,
+          "evidenceTier": null,
+          "name": "Ninja 12 Cup Programmable Brewer Coffee ce251",
+          "rating": 4.3,
+          "ratingCount": 2500,
+          "targetModel": null
+        }
+      ],
+      "scoutFallbackReason": null,
+      "scoutInputTokens": 13396,
+      "scoutOutputTokens": 1283,
+      "scoutUsedFallback": false,
+      "evidencedTargetReturned": false,
+      "strongTargetReturned": false,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": false,
+      "topThreeLeaderPosition": null,
+      "verifiedLeaderCurrentIneligible": false,
+      "verifiedLeaderEligible": false,
+      "verifiedLeaderObserved": false
+    },
+    {
+      "caseId": "broad-cordless-drill",
+      "debugResponseBytes": 24541,
+      "durationMs": 24883,
+      "error": null,
+      "normalResponseBytes": 308,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 24867,
+      "status": 200,
+      "acceptedCandidatesSafe": true,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 14,
+      "marketTargets": [
+        {
+          "brand": "Milwaukee",
+          "model": "M18 Fuel 2904",
+          "sourceCount": 3,
+          "tier": "strong"
+        },
+        {
+          "brand": "DeWalt",
+          "model": "20V Max XR DCD1007",
+          "sourceCount": 3,
+          "tier": "strong"
+        }
+      ],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 14,
+      "products": [
+        {
+          "name": "Warrior 18V Cordless, 3/8 in. Drill Kit With Battery And Charger",
+          "price": 29.99,
+          "productPageUrl": "https://www.harborfreight.com/18v-cordless-38-in-drill-kit-with-battery-and-charger-58389.html"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": 4.5777777777777775,
+          "evidenceTier": null,
+          "name": "Warrior 18V Cordless, 3/8 in. Drill Kit With Battery And Charger",
+          "rating": 4.6,
+          "ratingCount": 1300,
+          "targetModel": null
+        }
+      ],
+      "scoutFallbackReason": null,
+      "scoutInputTokens": 13486,
+      "scoutOutputTokens": 710,
+      "scoutUsedFallback": false,
+      "evidencedTargetReturned": false,
+      "strongTargetReturned": false,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": false,
+      "topThreeLeaderPosition": null,
+      "verifiedLeaderCurrentIneligible": false,
+      "verifiedLeaderEligible": false,
+      "verifiedLeaderObserved": true
+    },
+    {
+      "caseId": "broad-shop-vacuum",
+      "debugResponseBytes": 28103,
+      "durationMs": 28959,
+      "error": null,
+      "normalResponseBytes": 1274,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 28947,
+      "status": 200,
+      "acceptedCandidatesSafe": true,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 13,
+      "marketTargets": [
+        {
+          "brand": "RIDGID",
+          "model": "12-Gallon 5.0 Peak HP NXT Shop Vac",
+          "sourceCount": 2,
+          "tier": "strong"
+        }
+      ],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 13,
+      "products": [
+        {
+          "name": "Bauer 3 Gallon 3 Peak Hp Wet/dry Vacuum",
+          "price": 39.99,
+          "productPageUrl": "https://www.harborfreight.com/3-gallon-3-peak-hp-wetdry-vacuum-64753.html"
+        },
+        {
+          "name": "Stanley 5 Gallon Wet/Dry Vacuum",
+          "price": 47.99,
+          "productPageUrl": "https://www.homedepot.com/p/Stanley-5-Gal-4-0-Peak-HP-Wet-Dry-Vac-SL18115/306534329"
+        },
+        {
+          "name": "DeWalt Stealthsonic Quiet 6-Gallon 4 HP Corded Wet/Dry Shop Vacuum with Accessories Included",
+          "price": 84.98,
+          "productPageUrl": "https://www.lowes.com/pd/DEWALT-DEWALT-6-GAL-5HP-QUIET-VACUUM/5014918155"
+        },
+        {
+          "name": "Shark Navigator Lift Away Deluxe Upright Vacuum NV360",
+          "price": 159.99,
+          "productPageUrl": "https://www.sharkninja.com/shark-navigator-lift-away-deluxe-upright-vacuum/NV360.html"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": 4.691358024691358,
+          "evidenceTier": null,
+          "name": "Bauer 3 Gallon 3 Peak Hp Wet/dry Vacuum",
+          "rating": 4.7,
+          "ratingCount": 4000,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.623076923076923,
+          "evidenceTier": null,
+          "name": "Stanley 5 Gallon Wet/Dry Vacuum",
+          "rating": 4.7,
+          "ratingCount": 405,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.42836676217765,
+          "evidenceTier": null,
+          "name": "DeWalt Stealthsonic Quiet 6-Gallon 4 HP Corded Wet/Dry Shop Vacuum with Accessories Included",
+          "rating": 4.5,
+          "ratingCount": 299,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.398753894080997,
+          "evidenceTier": null,
+          "name": "Shark Navigator Lift Away Deluxe Upright Vacuum NV360",
+          "rating": 4.4,
+          "ratingCount": 16000,
+          "targetModel": null
+        }
+      ],
+      "scoutFallbackReason": null,
+      "scoutInputTokens": 12211,
+      "scoutOutputTokens": 1448,
+      "scoutUsedFallback": false,
+      "evidencedTargetReturned": false,
+      "strongTargetReturned": false,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": false,
+      "topThreeLeaderPosition": null,
+      "verifiedLeaderCurrentIneligible": false,
+      "verifiedLeaderEligible": false,
+      "verifiedLeaderObserved": false
+    },
+    {
+      "caseId": "broad-cordless-leaf-blower",
+      "debugResponseBytes": 21078,
+      "durationMs": 33269,
+      "error": null,
+      "normalResponseBytes": 586,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 33255,
+      "status": 200,
+      "acceptedCandidatesSafe": true,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 13,
+      "marketTargets": [
+        {
+          "brand": "Ryobi",
+          "model": "RY40HPLB02K",
+          "sourceCount": 3,
+          "tier": "strong"
+        }
+      ],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 13,
+      "products": [
+        {
+          "name": "Bauer 20V Cordless 200 Mph/120 Cfm Compact Workshop Blower",
+          "price": 39.99,
+          "productPageUrl": "https://www.harborfreight.com/20v-cordless-200-mph120-cfm-compact-workshop-blower-tool-only-56416.html"
+        },
+        {
+          "name": "Atlas 80V Brushless Cordless 150 Mph/605 CFM Blower",
+          "price": 79.99,
+          "productPageUrl": "https://www.harborfreight.com/80v-brushless-cordless-150-mph605-cfm-blower-tool-only-56994.html"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": 4.772413793103448,
+          "evidenceTier": null,
+          "name": "Bauer 20V Cordless 200 Mph/120 Cfm Compact Workshop Blower",
+          "rating": 4.8,
+          "ratingCount": 1400,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.770370370370371,
+          "evidenceTier": null,
+          "name": "Atlas 80V Brushless Cordless 150 Mph/605 CFM Blower",
+          "rating": 4.8,
+          "ratingCount": 1300,
+          "targetModel": null
+        }
+      ],
+      "scoutFallbackReason": null,
+      "scoutInputTokens": 11386,
+      "scoutOutputTokens": 925,
+      "scoutUsedFallback": false,
+      "evidencedTargetReturned": false,
+      "strongTargetReturned": false,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": false,
+      "topThreeLeaderPosition": null,
+      "verifiedLeaderCurrentIneligible": false,
+      "verifiedLeaderEligible": false,
+      "verifiedLeaderObserved": false
+    },
+    {
+      "caseId": "constrained-robot-vacuum",
+      "debugResponseBytes": 23502,
+      "durationMs": 22789,
+      "error": null,
+      "normalResponseBytes": 308,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 22775,
+      "status": 200,
+      "acceptedCandidatesSafe": true,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 12,
+      "marketTargets": [],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 12,
+      "products": [
+        {
+          "name": "Eureka E20 Plus Robot Vacuum and Mop Combo",
+          "price": 299.99,
+          "productPageUrl": "https://us.eureka.com/products/eureka-e20plus"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": 4.6461538461538465,
+          "evidenceTier": null,
+          "name": "Eureka E20 Plus Robot Vacuum and Mop Combo",
+          "rating": 4.8,
+          "ratingCount": 210,
+          "targetModel": null
+        }
+      ],
+      "scoutFallbackReason": "insufficient_evidence",
+      "scoutInputTokens": 13408,
+      "scoutOutputTokens": 838,
+      "scoutUsedFallback": true,
+      "evidencedTargetReturned": false,
+      "strongTargetReturned": false,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": false,
+      "topThreeLeaderPosition": null,
+      "verifiedLeaderCurrentIneligible": false,
+      "verifiedLeaderEligible": false,
+      "verifiedLeaderObserved": false
+    },
+    {
+      "caseId": "constrained-gaming-monitor",
+      "debugResponseBytes": 25058,
+      "durationMs": 19963,
+      "error": null,
+      "normalResponseBytes": 1029,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 19948,
+      "status": 200,
+      "acceptedCandidatesSafe": true,
+      "hostedSearchCalls": 2,
+      "logicalSerperOperations": 13,
+      "marketTargets": [
+        {
+          "brand": "AOC",
+          "model": "Q27G3XMN",
+          "sourceCount": 4,
+          "tier": "strong"
+        }
+      ],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 13,
+      "products": [
+        {
+          "name": "Z-Edge AGEX A27Q 27\" 144Hz 2K QHD 2560x1440 Fast IPS 1ms Response Time LED Gaming Monitor",
+          "price": 149.99,
+          "productPageUrl": "https://www.z-edge.com/products/a27q"
+        },
+        {
+          "name": "Pixio PX278 Wave 27 inch 180Hz Refresh Rate FHD 1440p Resolution Fast IPS Panel 1ms GTG Response Time Gaming Monitor",
+          "price": 289.99,
+          "productPageUrl": "https://pixiogaming.com/products/px278-wave"
+        },
+        {
+          "name": "27\" GIGABYTE GS27QA SA 2560x1440 IPS 1ms/ 180Hz AMD FreeSync Gaming Monitor",
+          "price": 145.99,
+          "productPageUrl": "https://www.newegg.com/gigabyte-gs27qa-sa-27-qhd-180-hz-super-speed-ips-black/p/N82E16824012083"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": 4.654098360655738,
+          "evidenceTier": null,
+          "name": "Z-Edge AGEX A27Q 27\" 144Hz 2K QHD 2560x1440 Fast IPS 1ms Response Time LED Gaming Monitor",
+          "rating": 4.9,
+          "ratingCount": 133,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.540182648401827,
+          "evidenceTier": null,
+          "name": "Pixio PX278 Wave 27 inch 180Hz Refresh Rate FHD 1440p Resolution Fast IPS Panel 1ms GTG Response Time Gaming Monitor",
+          "rating": 4.7,
+          "ratingCount": 169,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.114285714285714,
+          "evidenceTier": null,
+          "name": "27\" GIGABYTE GS27QA SA 2560x1440 IPS 1ms/ 180Hz AMD FreeSync Gaming Monitor",
+          "rating": 4.4,
+          "ratingCount": 20,
+          "targetModel": null
+        }
+      ],
+      "scoutFallbackReason": null,
+      "scoutInputTokens": 13433,
+      "scoutOutputTokens": 1034,
+      "scoutUsedFallback": false,
+      "evidencedTargetReturned": false,
+      "strongTargetReturned": false,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": false,
+      "topThreeLeaderPosition": null,
+      "verifiedLeaderCurrentIneligible": false,
+      "verifiedLeaderEligible": false,
+      "verifiedLeaderObserved": false
+    },
+    {
+      "caseId": "constrained-shop-vacuum",
+      "debugResponseBytes": 21771,
+      "durationMs": 35925,
+      "error": null,
+      "normalResponseBytes": 469,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 35911,
+      "status": 200,
+      "acceptedCandidatesSafe": true,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 15,
+      "marketTargets": [
+        {
+          "brand": "Craftsman",
+          "model": "CMXEVBE17595",
+          "sourceCount": 2,
+          "tier": "strong"
+        },
+        {
+          "brand": "Vacmaster",
+          "model": "VFB511B0201",
+          "sourceCount": 2,
+          "tier": "strong"
+        }
+      ],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 15,
+      "products": [
+        {
+          "name": "Bauer 3 Gallon 3 Peak Hp Wet/dry Vacuum",
+          "price": 39.99,
+          "productPageUrl": "https://www.harborfreight.com/3-gallon-3-peak-hp-wetdry-vacuum-64753.html"
+        },
+        {
+          "name": "Bauer 14 Gallon Wet/dry Vacuum",
+          "price": 119.99,
+          "productPageUrl": "https://www.harborfreight.com/14-gallon-wetdry-vacuum-56579.html"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": 4.691358024691358,
+          "evidenceTier": null,
+          "name": "Bauer 3 Gallon 3 Peak Hp Wet/dry Vacuum",
+          "rating": 4.7,
+          "ratingCount": 4000,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.675862068965517,
+          "evidenceTier": null,
+          "name": "Bauer 14 Gallon Wet/dry Vacuum",
+          "rating": 4.7,
+          "ratingCount": 1400,
+          "targetModel": null
+        }
+      ],
+      "scoutFallbackReason": null,
+      "scoutInputTokens": 13749,
+      "scoutOutputTokens": 1039,
+      "scoutUsedFallback": false,
+      "evidencedTargetReturned": false,
+      "strongTargetReturned": false,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": false,
+      "topThreeLeaderPosition": null,
+      "verifiedLeaderCurrentIneligible": false,
+      "verifiedLeaderEligible": false,
+      "verifiedLeaderObserved": false
+    },
+    {
+      "caseId": "constrained-pressure-washer",
+      "debugResponseBytes": 26390,
+      "durationMs": 39505,
+      "error": null,
+      "normalResponseBytes": 1291,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 39493,
+      "status": 200,
+      "acceptedCandidatesSafe": true,
+      "hostedSearchCalls": 3,
+      "logicalSerperOperations": 14,
+      "marketTargets": [
+        {
+          "brand": "Westinghouse",
+          "model": "ePX3500",
+          "sourceCount": 2,
+          "tier": "strong"
+        },
+        {
+          "brand": "Sun Joe",
+          "model": "SPX3000 Pressure Washer",
+          "sourceCount": 2,
+          "tier": "strong"
+        }
+      ],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 14,
+      "products": [
+        {
+          "name": "Greenworks Premium 2000 PSI 1.2 GPM Electric Pressure Washer",
+          "price": 169.99,
+          "productPageUrl": "https://www.lowes.com/pd/Greenworks-Greenworks-2000-PSI-Pressure-Washer-with-Soap-Applicator-and-12-in-Surface-Cleaner/5015620079"
+        },
+        {
+          "name": "Bauer 2000 PSI Max Performance Electric Pressure Washer",
+          "price": 189.99,
+          "productPageUrl": "https://www.harborfreight.com/2000-psi-13-gpm-max-performance-electric-pressure-washer-56877.html"
+        },
+        {
+          "name": "Black + Decker 2000 PSI 1.2 GPM Cold Water Electric Pressure Washer bepw2000",
+          "price": 139.99,
+          "productPageUrl": "https://www.blackanddecker.com/products/bepw2000"
+        },
+        {
+          "name": "Ryobi 2000 PSI Electric Pressure Washer",
+          "price": 179,
+          "productPageUrl": "https://www.ryobitools.com/products/46396013231?bvstate=pg%3A37%2Fct%3Ar"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": 4.485714285714286,
+          "evidenceTier": null,
+          "name": "Greenworks Premium 2000 PSI 1.2 GPM Electric Pressure Washer",
+          "rating": 4.5,
+          "ratingCount": 1700,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.39245283018868,
+          "evidenceTier": null,
+          "name": "Bauer 2000 PSI Max Performance Electric Pressure Washer",
+          "rating": 4.4,
+          "ratingCount": 2600,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.110126582278481,
+          "evidenceTier": null,
+          "name": "Black + Decker 2000 PSI 1.2 GPM Cold Water Electric Pressure Washer bepw2000",
+          "rating": 4.3,
+          "ratingCount": 29,
+          "targetModel": null
+        },
+        {
+          "bayesianRating": 4.056603773584905,
+          "evidenceTier": null,
+          "name": "Ryobi 2000 PSI Electric Pressure Washer",
+          "rating": 5,
+          "ratingCount": 3,
+          "targetModel": null
+        }
+      ],
+      "scoutFallbackReason": null,
+      "scoutInputTokens": 13623,
+      "scoutOutputTokens": 848,
+      "scoutUsedFallback": false,
+      "evidencedTargetReturned": false,
+      "strongTargetReturned": false,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": false,
+      "topThreeLeaderPosition": null,
+      "verifiedLeaderCurrentIneligible": false,
+      "verifiedLeaderEligible": false,
+      "verifiedLeaderObserved": false
+    },
+    {
+      "caseId": "constrained-coffee-maker",
+      "debugResponseBytes": 25009,
+      "durationMs": 27112,
+      "error": null,
+      "normalResponseBytes": 1000,
+      "publicShapeValid": true,
+      "round": 1,
+      "serverDurationMs": 27100,
+      "status": 200,
+      "acceptedCandidatesSafe": true,
+      "hostedSearchCalls": 2,
+      "logicalSerperOperations": 13,
+      "marketTargets": [
+        {
+          "brand": "Cuisinart",
+          "model": "PerfecTemp 14 Cup Programmable DCC-3200",
+          "sourceCount": 3,
+          "tier": "strong"
+        },
+        {
+          "brand": "Ninja",
+          "model": "Fresh Brew 14-Cup Programmable CE251",
+          "sourceCount": 3,
+          "tier": "strong"
+        }
+      ],
+      "openAiCalls": 1,
+      "physicalSerperAttempts": 13,
+      "products": [
+        {
+          "name": "Cuisinart 14 Cup Programmable Coffeemaker DCC-3200",
+          "price": 119.95,
+          "productPageUrl": "https://www.cuisinart.com/14-cup-programmable-coffee-maker/DCC-3200BKSNAS.html"
+        },
+        {
+          "name": "Cuisinart 14 Cup Programmable",
+          "price": 119.95,
+          "productPageUrl": "https://www.wayfair.com/kitchen-tabletop/pdp/cuisinart-14-cup-programmable-coffeemaker-with-glass-carafe-fully-automatic-for-brew-strength-control-1-4-cup-setting-dvzj2904.html"
+        },
+        {
+          "name": "Mr Coffee 14 Cup Programmable Coffee Maker",
+          "price": 74.22,
+          "productPageUrl": "https://www.walmart.com/ip/Mr-Coffee-2143561-14-Cup-Coffee-Maker-with-Reusable-Filter-and-Advanced-Water-Filtration-Black/539646736"
+        }
+      ],
+      "returnedSignals": [
+        {
+          "bayesianRating": 4.496774193548387,
+          "evidenceTier": "strong",
+          "name": "Cuisinart 14 Cup Programmable Coffeemaker DCC-3200",
+          "rating": 4.5,
+          "ratingCount": 7700,
+          "targetModel": "PerfecTemp 14 Cup Programmable DCC-3200"
+        },
+        {
+          "bayesianRating": 4.496774193548387,
+          "evidenceTier": "strong",
+          "name": "Cuisinart 14 Cup Programmable",
+          "rating": 4.5,
+          "ratingCount": 7700,
+          "targetModel": "PerfecTemp 14 Cup Programmable DCC-3200"
+        },
+        {
+          "bayesianRating": 4.274662162162162,
+          "evidenceTier": null,
+          "name": "Mr Coffee 14 Cup Programmable Coffee Maker",
+          "rating": 4.3,
+          "ratingCount": 542,
+          "targetModel": null
+        }
+      ],
+      "scoutFallbackReason": null,
+      "scoutInputTokens": 13264,
+      "scoutOutputTokens": 1090,
+      "scoutUsedFallback": false,
+      "evidencedTargetReturned": true,
+      "strongTargetReturned": true,
+      "strongBeforeUnscored": true,
+      "topThreeLeader": true,
+      "topThreeLeaderPosition": 1,
+      "verifiedLeaderCurrentIneligible": false,
+      "verifiedLeaderEligible": true,
+      "verifiedLeaderObserved": true
+    }
+  ]
+}

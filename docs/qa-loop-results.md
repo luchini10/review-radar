@@ -17447,3 +17447,125 @@ a new architecture decision. The alternative is an explicit relaxation of the
 latency SLO. No push, deployment, release, provider substitution, benchmark
 rewrite, protected-fixture access, `.env.local` inspection, or safety
 weakening occurred.
+
+---
+
+## PR-14 request-time market-quality reset and live audit (2026-09-01)
+
+**Assessment:** PARTIAL / RELEASE FAIL. The authorized objective superseded the
+PR-13 index proposal: every fresh and repeated shopper search must research the
+current market at request time, with no retained research, index, prewarm,
+background refresh, or cross-request recommendation cache. That architecture is
+implemented and its deterministic wall passes. It improved exact leader recovery
+and retained every safety boundary, but did not meet the live 80% leader-recall
+or 25-second p95/30-second maximum gates.
+
+**Architecture reset:** the indexed implementation was reversed in bounded,
+history-preserving commits. One fresh GPT-5.4 Mini Responses scout runs for
+every request with `store: false`, no SDK retries, a 45-second deadline, two
+requested hosted searches, and a hard three-completed-call validator. Three
+neutral Shopping searches start concurrently. Up to three exact strong-target
+Shopping searches, three organic exact-target page searches, and candidate-
+local resolution remain within fifteen logical Serper operations. Shopping and
+product-page maps are created inside the current `selectProducts` invocation
+and discarded at return. The response remains `Cache-Control: no-store`.
+
+**Generalized recovery and safety work:** exact scout models now survive into
+page queries; organic product pages bind only to an exact Shopping offer from
+the same merchant; one seller's price and availability cannot transfer to
+another; direct priced retailer URLs can derive a missing merchant label from
+their hostname; explicit URL specification conflicts fail closed; exact-model
+resolution recognizes hyphenated catalog codes and targets the candidate's own
+merchant; unresolved aggregate Shopping candidates are not prematurely deduped
+away; and a product-detail URL whose leading slug brand conflicts with the
+candidate brand is rejected. These rules are model- and category-general, not
+benchmark identity allowlists.
+
+**Frozen audit:** `tests/benchmarks/pr14-live-accuracy-v2026-09a.json` contains
+five broad searches (robot vacuum, coffee maker, cordless drill, shop vacuum,
+cordless leaf blower) and five constrained searches (robot vacuum, gaming
+monitor, shop vacuum, pressure washer, coffee maker). Every cell ran once with
+no retry. The benchmark requires two current independent sources and cross-
+source consensus for each frozen leader; it is QA-only and never enters runtime
+discovery or ranking.
+
+**Preserved progression:** the five raw reports remain under `docs/`:
+
+| Report | Non-empty | Frozen leader | Runtime evidence / strong | Mean / p95 ms |
+| --- | ---: | ---: | ---: | ---: |
+| before recovery | 10/10 | 2/10 | 2/10 / 1/10 | 30,582 / 40,585 |
+| after exact recovery | 8/10 | 1/9 eligible | 4/10 / 3/10 | 27,619 / 40,813 |
+| after retailer binding | 9/10 | 1/10 | 4/10 / 3/10 | 27,402 / 38,294 |
+| final telemetry correction | 9/10 | 2/9 eligible | 4/10 / 4/10 | 28,226 / 39,707 |
+| final exact resolution | 9/10 | 2/10 | 6/10 / 4/10 | 26,714 / 47,732 |
+
+The first two reports' `acceptedCandidatesSafe: false` flags came from the audit
+parser treating the comma in a `$1,800` budget as a decimal separator, not from
+a verified over-budget card; the generalized budget parser was corrected. The
+retailer-binding report counted incomplete/provider-ignored web-search attempts
+and reported four; telemetry was corrected to count only completed calls. The
+final two reports then show a true maximum of two completed hosted searches.
+Failed reports were retained rather than rewritten.
+
+**Latest no-retry result:** all 10 requests returned HTTP 200; 9/10 were non-
+empty, with constrained robot vacuum empty. Frozen leaders appeared in the top
+three in 2/10 runs (20%): broad robot vacuum returned the Dreame X60 first and
+constrained coffee maker returned the frozen Cuisinart. Five runs observed a
+verified leader, but only two produced an eligible returned leader. Runtime
+evidence reached 6/10 and runtime `strong` reached 4/10. Every passing strong
+leader ranked ahead of unscored alternatives.
+
+Mean latency was 26,714 ms; minimum was 19,420 ms; nearest-rank p95 and maximum
+were 47,732 ms. Calls totaled ten OpenAI Responses, twenty hosted searches, and
+138 logical/physical Serper operations; maxima were one, two, and fifteen per
+request. The public payload remained the same five-field recommendation shape,
+averaging 858 bytes and peaking at 1,838 bytes. Model use was 132,684 input and
+9,392 output tokens, 142,076 total, with approximately $0.141777 model-token
+cost at the public rates used for the audit. Provider-specific Shopping cost was
+not recomputed because the account tier was not inspected.
+
+**Baseline versus final:** request-time recovery increased returned evidence
+from 2/10 to 6/10 and returned `strong` from 1/10 to 4/10 relative to the first
+PR-14 matrix. Frozen leader recall remained 2/10, non-empty fell from 10/10 to
+9/10, mean latency improved from 30,582 to 26,714 ms, and p95 worsened from
+40,585 to 47,732 ms. Relative to the earlier PR-13 prerequisite's 23/24 non-
+empty and 18,806 ms p95, the new ten-case matrix is not directly comparable in
+categories or sample size, but it provides no supportable overall quality or
+latency win. The honest product-quality conclusion is improved evidence
+attachment without improved aggregate leader recall.
+
+**Post-audit correction boundary:** manual inspection of the final report found
+a generic-title pressure washer whose Walmart product slug began with a
+different brand. The generalized leading-slug-brand conflict guard at `a80b38d`
+rejects that case and preserves same-brand retailer paths. The full deterministic
+suite covers the guard. The paid matrix was not retried, so the latest live
+report must not be represented as containing this final correction.
+
+**Verification:** 326/326 unit tests pass across 43 suites; typecheck passes;
+ESLint passes with zero warnings; the Next.js 16.3.3 production build passes
+with only `/`, `/_not-found`, and `/api/recommendations`; Playwright passes 7/7
+across Chromium desktop/mobile; and `git diff --check` passed at the final
+implementation snapshot. Playwright emitted environment-level `NO_COLOR`
+ignored because `FORCE_COLOR` was set; these were not application lint warnings.
+
+**Root-cause verdict:** the ranker behaves correctly when a leader survives,
+but live commerce resolution does not reliably bind source-backed exact leaders
+to current exact purchasable pages inside the latency envelope. Increasing
+request-time resolution recovered evidence while worsening tail latency. More
+prompt or model-specific tuning is not an evidence-supported generalized fix.
+
+**Decision:** retain the request-time-only local implementation but do not
+release it or claim dependable best-in-budget quality. Do not restore the
+rejected persistent evidence index. The strongest next comparison consistent
+with the objective is request-scoped direct canonical commerce resolution from
+a provider or retailer integration, versus an explicit larger latency/operation
+budget or a request-scoped progressive/asynchronous result.
+
+**Boundaries and incident:** `.env.local` was not inspected, printed, hashed,
+copied, or edited. During this goal, one broad `rg --files docs tests` command
+unintentionally enumerated protected fixture path names. No protected fixture
+content was opened, read, statted individually, hashed, parsed, copied, edited,
+deleted, or used as evidence; the incident was disclosed immediately and the
+tree was not touched again. No push, deployment, release, dependency change,
+production-data action, public API expansion, benchmark retry, or safety-gate
+weakening occurred.

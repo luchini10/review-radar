@@ -11,6 +11,39 @@ Update this file after:
 
 ## 2026-09-01
 
+### Codex - Restore fresh request-time market research
+
+#### Changed
+
+- Removed the persistent/background market-index, prewarm, and cross-request
+  research-cache path. Every search now performs one fresh source-backed market
+  scout plus live commerce discovery, with only request-local Shopping and
+  product-page coalescing.
+- Added up to three exact-target organic page searches while preserving the
+  fifteen-operation Serper ceiling and unchanged minimal public response.
+- Bound exact leader pages to exact Shopping offers on the same merchant,
+  carried exact models into merchant-specific resolution, and preserved
+  numeric, named, generation, year, and hyphenated catalog sibling isolation.
+- Accepted current direct retailer Shopping URLs when their hostname supplies a
+  missing merchant label, without moving price or availability across sellers.
+- Rejected conflicting product-route specifications and product slugs whose
+  leading brand conflicts with the candidate brand.
+- Added a dated ten-case broad/constrained one-attempt live benchmark and
+  retained each raw before/correction report.
+
+#### Verified
+
+- Full validation passed 326/326 unit tests across 43 suites, typecheck,
+  zero-warning lint, the Next.js 16.3.3 production build, and Playwright 7/7.
+- The latest no-retry live matrix completed 10/10 requests and returned 9/10
+  non-empty with one OpenAI response/request, maximum two hosted searches,
+  maximum fifteen logical Serper operations, and unchanged public payload.
+- Release gates failed: frozen-leader top-three recall was 2/10 (20%), mean
+  latency was 26,714 ms, and p95/maximum was 47,732 ms. The implementation is
+  not release-qualified and no best-in-budget reliability claim is supported.
+- The live matrix predates the final slug-brand safety guard; that guard passed
+  the deterministic suite and the paid matrix was not retried.
+
 ### Codex - Complete PR-13 with a failed live release gate
 
 #### Changed

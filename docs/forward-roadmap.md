@@ -4842,17 +4842,84 @@ retain per-card identities; the honest comparison is that non-empty recall
 fell from 23/24 to 18/24 and the new path returned any evidence-tiered card in
 only one run.
 
-**Decision:** stop tuning this architecture. The live bottleneck is the
-synchronous scout/commerce handoff, not the deterministic ranker. Meeting p95
-requires a short scout deadline that frequently removes the quality signal;
-when a strong target exists, current Shopping/page verification still often
-cannot surface a qualifying exact offer. The strongest successor is a
-periodically refreshed source-bound evidence index outside the shopper-request
-latency path, followed by current commerce verification at request time. That
-breaks PR-13's no-background boundary and requires a new architecture decision
-covering freshness, invalidation, operating cost, and trust. The alternative
-is to retain live scouting and explicitly relax the latency SLO. Do not claim
-best-in-budget reliability or release PR-13 under the failed result.
+**Historical decision:** stop tuning this architecture. The live bottleneck is
+the synchronous scout/commerce handoff, not the deterministic ranker. At this
+checkpoint the proposed successor was a periodically refreshed source-bound
+evidence index, with live scouting plus a relaxed latency SLO as the alternative.
+PR-14 below supersedes that proposal: the persistent/background index was
+explicitly rejected and removed. Do not use this historical paragraph as
+current implementation authority.
+
+### PR-14 - request-time market-quality reset
+
+**Status:** implemented locally through `a80b38d`; deterministic verification
+passes, but the ten-case live release matrix fails leader-recall and latency
+gates. PR-14 is not release-qualified.
+
+**Objective:** research the current market for every shopper search, including
+repeated equivalent searches, without a retained market index, precomputation,
+background refresh, or cross-request research/recommendation cache. Preserve
+the minimal public card and every product-safety gate.
+
+**Architecture:** the indexed/prewarm implementation was reversed. Each request
+starts one fresh GPT-5.4 Mini source-bound scout and three neutral Shopping
+queries concurrently. The scout requests no more than two hosted searches and
+validates no more than three completed calls. Up to three strong exact-model
+Shopping searches, up to three organic exact-target page searches, and bounded
+candidate-local resolution fit within fifteen logical Serper operations. The
+only Shopping and product-page coalescing maps are allocated inside the current
+`selectProducts` call and are discarded when it returns. The response is
+`Cache-Control: no-store`; there is no production index, prewarm, polling,
+background work, persistent plan/result cache, or alternate recommender.
+
+**Generalized accuracy corrections:** exact scout models are carried through
+retailer-page discovery; organic pages bind only to exact Shopping offers on
+the same merchant; prices and availability never move across merchants;
+direct retailer Shopping URLs with missing source labels derive their merchant
+from the URL; numeric, named, generation, and hyphenated catalog-model siblings
+remain isolated; candidate-local resolution retains the exact model and targets
+its own merchant; and a product-detail URL whose leading slug brand conflicts
+with the candidate brand fails closed.
+
+**Frozen live audit:** `tests/benchmarks/pr14-live-accuracy-v2026-09a.json`
+precommits five broad and five constrained cases, one attempt each with no
+retries. The latest executed report is
+`docs/pr14-live-accuracy-report-final-exact-resolution.json`:
+
+- 10/10 HTTP 200 and 9/10 non-empty;
+- frozen leader top-three recall 2/10 (20%), versus the 80% gate;
+- runtime evidence returned in 6/10 and runtime `strong` returned in 4/10;
+- mean 26,714 ms and nearest-rank p95/maximum 47,732 ms, versus 25,000/30,000
+  ms gates;
+- one OpenAI response/request, two hosted searches/request maximum, and fifteen
+  logical/physical Serper operations/request maximum;
+- public payload unchanged, mean 858 bytes and maximum 1,838 bytes; and
+- 132,684 input plus 9,392 output model tokens, approximately $0.141777 in
+  model-token cost at the public rates used for the audit.
+
+The broad robot-vacuum leader ranked first, and every passing strong leader
+ranked ahead of unscored alternatives. The aggregate quality and latency gates
+still fail. The raw before/correction progression is preserved in the five
+`docs/pr14-live-accuracy-report-*.json` artifacts.
+
+**Post-audit safety correction:** audit review exposed a generic pressure-washer
+title resolving to a Walmart slug with a conflicting leading brand. The
+generalized slug-brand conflict guard is committed at `a80b38d` and covered by
+the final unit suite; the paid matrix was not retried after that correction.
+
+**Verification:** 326/326 unit tests across 43 suites, typecheck, zero-warning
+lint, the Next.js 16.3.3 production build, and Playwright 7/7 across Chromium
+desktop/mobile pass. The build exposes only `/`, `/_not-found`, and
+`/api/recommendations`.
+
+**Decision:** retain the request-time-only implementation as the current local
+architecture, but do not release or claim dependable best-in-budget selection.
+Do not restore the rejected evidence index. The next evidence-supported design
+comparison is request-scoped direct commerce resolution from a provider or
+retailer integration with canonical product identity, current offers, and
+direct product pages, versus a larger explicit latency/operation budget or a
+request-scoped progressive/asynchronous response. Any provider or public-
+contract change requires a separately measured architecture decision.
 
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 

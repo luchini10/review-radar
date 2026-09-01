@@ -25,24 +25,26 @@ deleted in PR-10.
 
 ## Runtime architecture
 
-The production recommendation path is one synchronous POST route:
+The production recommendation path performs fresh work inside one POST route:
 
     Search form
       -> POST /api/recommendations
       -> validate and normalize the request
       -> extract deterministic requirements
-      -> start optional one-call source-bound market scout
+      -> start one fresh source-bound market scout
          and three neutral Shopping queries concurrently
       -> up to three exact-model Shopping queries for undiscovered strong targets
+      -> up to three organic exact-target product-page searches
       -> deterministic type, accessory, used-item, budget, and requirement filters
       -> candidate-local product-page resolution when needed
       -> adaptive three-candidate finalist verification waves
       -> distinct product selection
       -> minimal JSON result
 
-There is no alternate recommendation route, polling job, progress store,
-experimental pipeline mode, rescue stage, review-enrichment stage, narration
-stage, or final research stage.
+There is no retained evidence index, prewarm, background refresh, cross-request
+research or recommendation cache, alternate recommendation route, polling job,
+progress store, experimental pipeline mode, rescue stage, review-enrichment
+stage, narration stage, or final research stage.
 
 The only application routes are:
 
@@ -70,10 +72,12 @@ branch.
 
 ## Provider use and bounds
 
-### Optional market scout
+### Request-time market scout
 
-lib/marketScout.ts may make one GPT-5.4 Mini Responses call with Structured
-Outputs and at most three hosted web-search calls. It returns at most five
+lib/marketScout.ts makes one fresh GPT-5.4 Mini Responses call per request with
+Structured Outputs, two requested hosted web-search calls, and a hard validator
+ceiling of three completed calls. It sets `store: false`, disables SDK retries,
+and uses a 45-second deadline. It returns at most five
 ordered exact-model targets with source URLs and cannot provide prices,
 Shopping queries, explanations, review summaries, scores, or card content.
 Only URLs present in completed web-search source metadata from that same
@@ -83,28 +87,29 @@ Deterministic code classifies the bound URLs conservatively. `strong` requires
 two independent recognized editorial/test domains including a comparative
 test source; `supported` requires one comparative source or two independent
 recognized editorial domains. Manufacturer, retailer, marketplace, community,
-unknown, incomplete-call, and unbound URLs cannot support a target. Validated
-plans are cached for 24 hours by normalized request, fixed model, and prompt
-version. Missing credentials, provider failure, timeout, malformed output, an
-exceeded tool ceiling, or insufficient evidence uses the same deterministic
-neutral Shopping discovery with no market-quality target.
+unknown, incomplete-call, and unbound URLs cannot support a target. No plan or
+provider response is retained after the request. Missing credentials, provider
+failure, timeout, malformed output, an exceeded tool ceiling, or insufficient
+evidence uses the same deterministic neutral Shopping discovery with no
+market-quality target.
 
 ### Product search
 
 lib/productSearch.ts is the sole Serper transport. The selector starts three
 neutral Shopping queries while the market scout is still running, then may
 search the three highest `strong` exact-model targets that did not already
-survive early discovery filters. It may use the remaining request budget for
-candidate-local product-page lookups. It verifies a ranked queue of at most
-nine candidates in waves of three, without repeating discovery. The total
-logical ceiling is fifteen: at most six discovery searches plus nine
-candidate-local resolution opportunities.
+survive early discovery filters. It may run up to three organic exact-target
+page searches and use the remaining request budget for candidate-local product-
+page lookups. It verifies a ranked queue of at most nine candidates in waves of
+three, without repeating discovery. The total logical ceiling remains fifteen.
 There are no retries, editorial queries, review queries, rescue queries, image
 queries, or alternative search providers.
 
-Search calls are timeout-bounded and use a bounded in-process cache. Local
-debug telemetry reports logical calls and physical attempts without exposing
-credentials or raw provider responses.
+Search calls are timeout-bounded. A map allocated inside the current
+`selectProducts` call coalesces identical work for that request only and is
+discarded when the request finishes. Local debug telemetry reports logical
+calls and physical attempts without exposing credentials or raw provider
+responses.
 
 ### Smart Features
 
@@ -204,14 +209,14 @@ Images are optional. Existing and product-page image candidates pass URL,
 placeholder, navigation-artwork, brand, model, family, and page-provenance
 checks. ReviewRadar returns null rather than showing a questionable image.
 
-## Cancellation, admission, and caching
+## Cancellation, admission, and request-scoped coalescing
 
 The route acquires the shared paid-request admission permit before provider
 work and always releases it. Browser cancellation propagates through the
-market scout, search, and page-fetch boundaries. Bounded caches coalesce identical
-concurrent work without allowing one cancelled waiter to cancel other active
-waiters. Shopping discovery entries expire after five minutes; fetched product
-page evidence used for current price and availability expires after two.
+market scout, search, and page-fetch boundaries. Shopping and product-page maps
+exist only inside one `selectProducts` invocation, where they coalesce duplicate
+work in that request. They are discarded at return and cannot serve a later
+search. The API response uses `Cache-Control: no-store`.
 
 ## Main implementation files
 
@@ -222,7 +227,7 @@ page evidence used for current price and availability expires after two.
 - components/ProductCard.tsx — minimal result card.
 - lib/recommendationRequestValidation.ts — server request validation.
 - lib/requirementExtraction.ts — deterministic structured requirements.
-- lib/marketScout.ts — optional bounded source-validated exact-model scout.
+- lib/marketScout.ts — fresh bounded source-validated exact-model scout.
 - lib/productSearch.ts — bounded Shopping and product-page search.
 - lib/productSelection.ts — filtering, page resolution, requirement checks,
   ranking, deduplication, and final selection.
@@ -254,28 +259,31 @@ recorded local sample. It is not a hosted-service latency guarantee.
 
 ## Validation
 
-The PR-10 architecture and PR-11 accuracy gates are protected by:
+The request-time architecture and accuracy gates are protected by:
 
 - unit and contract tests for request validation, scout fallback, source
-  binding, evidence tiers, caching, cancellation, one-call behavior, bounded
+  binding, evidence tiers, request isolation, cancellation, one-call behavior, bounded
   search, type/accessory filtering, requirement enforcement,
   deduplication, trusted prices, page identity, image identity, and SSRF safety;
 - Playwright desktop/mobile coverage for validation, submission, cancellation,
   and the minimal result card;
 - TypeScript, ESLint, and the Next production build.
 
-The final PR-13 source passes 319/319 unit tests across 43 suites, zero-warning
-lint, typecheck, production build, and Playwright 7/7. The corrected Step 4
-three-round cache-cold matrix completed 24/24 requests with one OpenAI response
-each, at most two hosted searches, at most thirteen logical Serper operations,
-p95 22,975 ms, and maximum 26,174 ms. The public payload remained unchanged at
-725 bytes mean and 1,738 bytes maximum.
+The current source passes 326/326 unit tests across 43 suites, zero-warning
+lint, typecheck, production build, and Playwright 7/7. The PR-14 ten-case,
+single-attempt live matrix completed 10/10 requests with one OpenAI response
+each, at most two hosted searches, and at most fifteen logical Serper operations.
+It returned 9/10 non-empty, but only 2/10 placed a frozen leader in the top three.
+Mean latency was 26,714 ms and nearest-rank p95/maximum was 47,732 ms. The public
+payload remained unchanged at 858 bytes mean and 1,838 bytes maximum.
 
-PR-13 is not release-qualified: only 18/24 requests were non-empty and only
-3/24 put the frozen leader in the top three. Nineteen scouts fell back, and no
-run returned a `strong` target as a strong card. The source-binding and ranking
-mechanics are valid, but the synchronous scout/commerce handoff does not
-reliably supply purchasable leaders within the latency budget.
+PR-14 is not release-qualified: leader recall was 20% versus the 80% gate, and
+tail latency exceeded both the 25-second p95 and 30-second maximum gates. The
+source-binding and ranking mechanics work, but live Shopping/page resolution
+does not reliably supply exact purchasable leaders inside the target envelope.
+The paid matrix predates the final deterministic conflicting-slug-brand guard;
+that guard is covered by the final unit suite and the live cells were not
+retried.
 
 The build route manifest must contain only /, /_not-found, and
 /api/recommendations.
@@ -285,11 +293,10 @@ The build route manifest must contain only /, /_not-found, and
 - Live prices and availability can change after a search.
 - Search-provider coverage can omit a good product.
 - Strict finalist verification can produce an empty shortlist even when a
-  qualifying product exists; the corrected PR-13 matrix observed six empty
-  runs in 24.
+  qualifying product exists; the PR-14 matrix observed one empty run in ten.
 - The market scout's source tier is not product-fact, price, availability, or
-  eligibility authority. A short synchronous deadline preserved p95 but led to
-  nineteen fallbacks in 24 runs, so this architecture did not establish live
+  eligibility authority. Live exact-offer resolution improved evidence return
+  but pushed p95 to 47,732 ms, so this architecture did not establish live
   best-in-budget reliability.
 - Missing or ambiguous product images are intentionally omitted.
 - The recorded live quality sample is small and local. It does not prove

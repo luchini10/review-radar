@@ -4161,3 +4161,49 @@ a known conservative undercount.
   commerce verification do not reliably fit the same short synchronous path.
   Evaluate an externally refreshed source-bound evidence index versus an
   explicit latency-SLO relaxation before more PR-13 provider spend.
+
+## PR-14 request-time market-quality contract (2026-09-01)
+
+- This contract supersedes PR-13's proposed refreshed evidence index. Every
+  fresh or repeated shopper search must perform current market scouting and
+  commerce discovery for that request. Do not add a retained leader index,
+  prewarm, background refresh, polling path, persistent plan/result cache, or
+  cross-request recommendation reuse.
+- `store: false` is mandatory for the Responses call. Shopping and product-page
+  coalescing maps may exist only inside one `selectProducts` invocation and
+  must become unreachable when that request returns. API responses remain
+  `Cache-Control: no-store`.
+- Start one GPT-5.4 Mini scout and three neutral Shopping searches concurrently.
+  Request at most two hosted searches and reject more than three completed
+  calls. Keep one OpenAI response, three exact strong-target Shopping searches,
+  three organic exact-target page searches, and all candidate-local resolution
+  inside the fifteen-logical-Serper-operation ceiling.
+- Exact target-page discovery must preserve the scout model, bind an organic
+  page only to an exact Shopping offer on the same merchant, and never transfer
+  price or availability across merchants. Direct non-Google Shopping URLs may
+  derive the merchant from their hostname when `source` is absent.
+- Evidence never transfers by brand or across numeric, named, generation, year,
+  or hyphenated catalog-model siblings. Candidate-local resolution must retain
+  the exact stable model and target the candidate's own merchant. A product
+  slug whose leading brand conflicts with the candidate brand fails closed.
+- Commerce rating, review count, offer count, position, and product ID remain
+  tie-breakers after evidence tier and supported preferences. They cannot
+  establish leader status, eligibility, price, availability, identity, or any
+  public field. Preserve the 4.0/50 Bayesian shrinkage rule.
+- The frozen PR-14 audit is five broad plus five constrained cases, one attempt
+  per cell with no retries. Preserve every raw progression report; do not
+  replace a failed cell or rerun after inspecting the desired output.
+- The latest paid audit is a failed release result: 9/10 non-empty, frozen
+  leader top-three 2/10, runtime evidence returned 6/10, runtime `strong`
+  returned 4/10, mean 26,714 ms, p95/maximum 47,732 ms, one OpenAI response,
+  maximum two hosted searches, maximum fifteen Serper operations, and unchanged
+  mean 858-byte/maximum 1,838-byte public payload.
+- The paid audit predates the final slug-brand conflict guard. The final
+  deterministic wall is 326/326 unit tests, typecheck, zero-warning lint,
+  production build, and Playwright 7/7. Never imply that this post-audit guard
+  passed a paid live rerun.
+- Passing exact-leader-first ordering does not prove market coverage. Do not
+  claim dependable best-in-budget quality while the 80% leader and 25-second
+  p95/30-second maximum gates fail. The next architecture comparison must stay
+  request-scoped: direct canonical commerce resolution versus a larger explicit
+  latency/operation budget or a request-scoped progressive/asynchronous result.
