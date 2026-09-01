@@ -17229,3 +17229,61 @@ deployment, release, or production-data action occurred.
 and stop. This result proves bounded non-empty recall and preserved constraints;
 it does not yet prove market-leader recall or best-in-budget ranking. PR-13
 Step 2 remains a separate phase decision.
+
+---
+
+## PR-13 Step 2 source-bound market scout (2026-09-01)
+
+**Assessment:** replacing the planner is the correct quality seam. The removed
+planner could nominate mainstream models from memory, but it had no current
+market evidence, no response-owned source binding, no evidence tiers, and no
+validated plan cache. Price proximity and Shopping order therefore remained
+the only practical ordering signals.
+
+**Implementation:** `lib/marketScout.ts` makes one fixed GPT-5.4 Mini Responses
+call with strict Structured Outputs, one web-search tool definition,
+`max_tool_calls: 3`, and included `web_search_call.action.sources`. The model
+may return at most five ordered exact-model targets containing only brand,
+model, aliases, and source URLs. Model-generated Shopping queries and the old
+planner were deleted.
+
+Each emitted URL is canonicalized and must occur in a completed search call's
+actual source set. Conservative recognized-domain rules require two
+independent domains plus comparative testing for `strong`, or one comparative
+source/two independent editorials for `supported`. All other evidence is
+`none` and the target is removed before selection. This is evidence of market
+quality only; it cannot establish product fit, identity, price, condition,
+availability, page safety, or any public card field.
+
+Only validated plans cache for 24 hours by normalized request, fixed model,
+and prompt version. Invalid output, insufficient evidence, provider/tool
+failure, missing credentials, and timeouts return the existing three neutral
+deterministic Shopping queries with no quality target. Cancellation propagates
+through shared cache coalescing to the provider when the final waiter leaves.
+
+**Verification:** focused market-scout coverage passes 13/13. The full suite
+passes 303/303 across 42 suites; typecheck passes; ESLint passes with zero
+warnings; the Next.js 16.3.3 production build passes; and Playwright passes
+7/7 on desktop/mobile Chromium. The route manifest remains `/`,
+`/_not-found`, and `/api/recommendations`. The public response shape is
+unchanged. Exact implementation commit:
+`a9a2036bd25dd3ff3af6e255dd864ffe323bdbeb`.
+
+**Measurement boundary:** no new live provider matrix ran in Step 2. The last
+measured values remain 23/24 non-empty, shop vacuum 2/3, mean 12,507 ms, p95
+18,806 ms, and maximum 20,419 ms under one OpenAI response and twelve logical
+Serper operations. Step 2 proves the scout trust boundary, not market-leader
+recall or tier-aware final ordering.
+
+**Process boundary:** `.env.local` was not manually inspected, printed, hashed,
+copied, or edited. A `git status --short --branch` command at Step 2 resumption
+again enumerated protected live-fixture paths. No protected fixture was opened,
+statted individually, hashed, parsed, copied, edited, deleted, or used as
+evidence. The path-only incident is recorded; all later status/search commands
+use explicit paths or suppress untracked enumeration.
+
+**Decision:** Step 2 is complete. Step 3 is authorized by Taylor's instruction
+to continue this goal without further approval pauses. It must add concurrent
+scout/neutral discovery, exact strong-target searches, exact-model evidence
+attachment, commerce-signal shrinkage, tier-aware ranking, and the fifteen-
+operation ceiling without changing the public card.

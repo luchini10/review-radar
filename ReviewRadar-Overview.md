@@ -1,6 +1,6 @@
 # ReviewRadar technical overview
 
-Updated: 2026-08-31
+Updated: 2026-09-01
 
 ## Product purpose
 
@@ -31,7 +31,7 @@ The production recommendation path is one synchronous POST route:
       -> POST /api/recommendations
       -> validate and normalize the request
       -> extract deterministic requirements
-      -> optional one-call selection planner
+      -> optional one-call source-bound market scout
       -> at most three Shopping queries
       -> deterministic type, accessory, used-item, budget, and requirement filters
       -> candidate-local product-page resolution when needed
@@ -69,18 +69,24 @@ branch.
 
 ## Provider use and bounds
 
-### Optional selection planner
+### Optional market scout
 
-lib/selectionPlanner.ts may make one OpenAI Responses call. It asks only for
-mainstream model targets and concise Shopping queries under a strict JSON
-schema. It cannot provide product facts, prices, rankings, explanations, or
-evidence. Planner-generated queries remain brand- and model-neutral unless the
-shopper requested that brand or model, so model memory cannot narrow the live
-market before discovery.
+lib/marketScout.ts may make one GPT-5.4 Mini Responses call with Structured
+Outputs and at most three hosted web-search calls. It returns at most five
+ordered exact-model targets with source URLs and cannot provide prices,
+Shopping queries, explanations, review summaries, scores, or card content.
+Only URLs present in completed web-search source metadata from that same
+response can enter a target.
 
-The planner is optional. A missing client, provider error, timeout, or invalid
-output falls back to deterministic queries. The route therefore uses either
-zero or one OpenAI call.
+Deterministic code classifies the bound URLs conservatively. `strong` requires
+two independent recognized editorial/test domains including a comparative
+test source; `supported` requires one comparative source or two independent
+recognized editorial domains. Manufacturer, retailer, marketplace, community,
+unknown, incomplete-call, and unbound URLs cannot support a target. Validated
+plans are cached for 24 hours by normalized request, fixed model, and prompt
+version. Missing credentials, provider failure, timeout, malformed output, an
+exceeded tool ceiling, or insufficient evidence uses the same deterministic
+neutral Shopping discovery with no market-quality target.
 
 ### Product search
 
@@ -192,7 +198,7 @@ checks. ReviewRadar returns null rather than showing a questionable image.
 
 The route acquires the shared paid-request admission permit before provider
 work and always releases it. Browser cancellation propagates through the
-planner, search, and page-fetch boundaries. Bounded caches coalesce identical
+market scout, search, and page-fetch boundaries. Bounded caches coalesce identical
 concurrent work without allowing one cancelled waiter to cancel other active
 waiters. Shopping discovery entries expire after five minutes; fetched product
 page evidence used for current price and availability expires after two.
@@ -206,7 +212,7 @@ page evidence used for current price and availability expires after two.
 - components/ProductCard.tsx — minimal result card.
 - lib/recommendationRequestValidation.ts — server request validation.
 - lib/requirementExtraction.ts — deterministic structured requirements.
-- lib/selectionPlanner.ts — optional bounded model/query planner.
+- lib/marketScout.ts — optional bounded source-validated exact-model scout.
 - lib/productSearch.ts — bounded Shopping and product-page search.
 - lib/productSelection.ts — filtering, page resolution, requirement checks,
   ranking, deduplication, and final selection.
@@ -240,20 +246,23 @@ recorded local sample. It is not a hosted-service latency guarantee.
 
 The PR-10 architecture and PR-11 accuracy gates are protected by:
 
-- unit and contract tests for request validation, planner fallback, one-call
-  behavior, bounded search, type/accessory filtering, requirement enforcement,
+- unit and contract tests for request validation, scout fallback, source
+  binding, evidence tiers, caching, cancellation, one-call behavior, bounded
+  search, type/accessory filtering, requirement enforcement,
   deduplication, trusted prices, page identity, image identity, and SSRF safety;
 - Playwright desktop/mobile coverage for validation, submission, cancellation,
   and the minimal result card;
 - TypeScript, ESLint, and the Next production build.
 
-The PR-13 prerequisite source passes 295/295 unit tests across 42 suites,
+The PR-13 Step 2 source passes 303/303 unit tests across 42 suites,
 zero-warning lint, typecheck, production build, and Playwright 7/7. Its frozen
 three-round cache-cold matrix returned non-empty shortlists in 23/24 requests,
 including shop vacuum 2/3, with p95 18,806 ms and a 20,419 ms maximum. Every
 request used one OpenAI response and no more than twelve logical operations.
-This is selection-recall evidence, not proof that returned products are market
-leaders.
+The Step 2 checkpoint validates the scout trust boundary but has not yet run a
+new live matrix or implemented tier-aware final ranking. The earlier 23/24
+selection-recall result is therefore not proof that returned products are
+market leaders.
 
 The build route manifest must contain only /, /_not-found, and
 /api/recommendations.
@@ -265,8 +274,9 @@ The build route manifest must contain only /, /_not-found, and
 - Strict finalist verification can produce an empty shortlist even when a
   qualifying product exists; the latest local frozen matrix observed one empty
   run in 24, but provider variability prevents treating that rate as universal.
-- The optional planner can improve mainstream model recall but is not a product
-  fact authority.
+- The market scout can improve exact-model recall, but its source tier is not a
+  product-fact, price, availability, or eligibility authority. Step 3 still
+  needs to bind it through final quality ranking.
 - Missing or ambiguous product images are intentionally omitted.
 - The recorded live quality sample is small and local. It does not prove
   hosted operations, accessibility beyond the current browser suite, or

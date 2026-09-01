@@ -4076,3 +4076,31 @@ a known conservative undercount.
   12,507 ms, nearest-rank p95 18,806 ms, and maximum 20,419 ms. This authorizes
   a stop-point, not market-scout implementation or a claim that current cards
   are market leaders.
+
+## PR-13 source-bound market-scout contract (2026-09-01)
+
+- Production scouting is exactly one GPT-5.4 Mini Responses call with strict
+  Structured Outputs, at most three hosted web-search tool calls, included
+  `web_search_call.action.sources`, and no stored response. The output schema
+  contains only up to five ordered brand, exact model, aliases, and source URL
+  targets; it contains no prices, Shopping queries, prose, scores, or card
+  content.
+- Canonical URL membership in a completed web-search call's actual source set
+  is mandatory. Unbound, malformed, non-HTTPS, incomplete-call, manufacturer,
+  commerce, marketplace, community, and unrecognized URLs cannot support a
+  target.
+- `strong` requires two independent recognized editorial/test domains and at
+  least one comparative test source. `supported` requires one comparative
+  source or two independent recognized editorial domains. `none` targets do
+  not enter the production plan and cannot boost a product.
+- Cache only successfully validated plans for 24 hours using normalized
+  request, model, and prompt version. Invalid output, insufficient evidence,
+  tool-ceiling violations, timeouts, provider failures, and missing clients
+  fall back to deterministic neutral Shopping discovery with zero quality
+  targets and are not cached.
+- Coalesce concurrent identical scouting without allowing one cancelled waiter
+  to cancel another. If every waiter cancels, abort the shared provider request.
+  Cache hits report zero OpenAI and hosted-search work for that request.
+- The public recommendation contract remains image, name, category,
+  trustworthy price when available, and product-page URL. Source URLs, tiers,
+  scores, and scout telemetry remain server-internal/local-debug only.

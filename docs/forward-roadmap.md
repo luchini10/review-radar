@@ -4717,9 +4717,10 @@ the search ceiling or infer availability from price alone.
 
 ### PR-13 — best-in-budget market quality
 
-**Status:** Step 1 prerequisite stabilization is complete and locally
-validated. PR-13 market-scout and quality-ranking behavior has not started.
-Stop at this boundary until Taylor approves Step 2.
+**Status:** Steps 1 and 2 are complete and locally validated. Taylor approved
+Step 2 and explicitly removed further approval pauses for this goal. Step 3 is
+authorized: integrate exact-model evidence and commerce signals into bounded
+discovery and ranking, then continue to the precommitted acceptance matrix.
 
 **Objective:** establish a safe, repeatable selection baseline and an
 independently sourced market-leader benchmark before adding market-quality
@@ -4764,11 +4765,32 @@ zero-warning lint, the Next.js 16.3.3 production build, and Playwright 7/7
 across Chromium desktop/mobile pass. The build exposes only `/`,
 `/_not-found`, and `/api/recommendations`.
 
-**Next authorized decision:** Step 2 replaces the lightweight planner with the
-bounded market scout. It must retain one synchronous route, one OpenAI call,
-honest deterministic failure fallback, validated response-owned web-search
-sources, exact-model evidence binding, and no public payload expansion. Do not
-start it without the next phase approval.
+**Step 2 market-scout checkpoint:** the lightweight planner and its model-
+generated Shopping queries are deleted. One fixed GPT-5.4 Mini Responses call
+uses Structured Outputs, `max_tool_calls: 3`, and included web-search source
+metadata. It returns only exact-model targets and source URLs. A URL binds only
+after exact canonical membership in a completed search call's response-owned
+source set. Conservative recognized-domain rules assign `strong`, `supported`,
+or `none`; unsupported targets do not enter the production plan. Validated
+plans cache for 24 hours by normalized request, model, and prompt version.
+Invalid, insufficient, unavailable, or timed-out scouting is not cached and
+falls back to neutral deterministic Shopping queries with no quality target.
+Cancellation reaches shared in-flight provider work.
+
+Step 2 is committed at `a9a2036bd25dd3ff3af6e255dd864ffe323bdbeb`.
+Validation passes 303/303 unit tests across 42 suites, typecheck, zero-warning
+lint, the production build, and Playwright 7/7. No new live matrix ran, so the
+last measured north-star values remain the Step 1 result: 23/24 non-empty,
+shop vacuum 2/3, p95 18,806 ms, zero observed constraint failures, and no
+market-leader-recall claim.
+
+**Next authorized work:** Step 3 must search at most the three highest `strong`
+exact-model targets alongside three neutral Shopping queries, retain the
+fifteen-logical-operation ceiling, attach evidence only to exact stable model
+identity, and rank passing products by evidence tier, supported preferences,
+consensus order, shrunken commerce signals, page/merchant quality, and stable
+discovery order. The scout and Shopping work must begin concurrently; public
+cards and every existing safety gate remain unchanged.
 
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 

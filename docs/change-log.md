@@ -11,6 +11,33 @@ Update this file after:
 
 ## 2026-09-01
 
+### Codex - Add a source-bound market scout
+
+#### Changed
+
+- Replaced the lightweight product-memory planner with one bounded GPT-5.4
+  Mini market scout using Structured Outputs and at most three hosted web
+  searches.
+- Bound every accepted leader source to the completed web-search source set
+  returned by that exact response. Manufacturer, commerce, community,
+  unrecognized, incomplete-call, and unbound URLs cannot provide market-
+  quality evidence.
+- Added conservative `strong` and `supported` evidence tiers, exact-model
+  targets, 24-hour validated-plan caching, request cancellation, provider/tool
+  telemetry, and deterministic no-boost fallback. Removed model-generated
+  Shopping queries and the legacy planner entirely.
+- Kept the public API and minimal product card unchanged. Tier-aware final
+  ranking and the live quality matrix remain Step 3/4 work.
+
+#### Verified
+
+- Full validation passed 303/303 unit tests across 42 suites, typecheck,
+  zero-warning lint, the Next.js 16.3.3 production build, and Playwright 7/7
+  across desktop/mobile Chromium.
+- Focused tests prove source binding, tiers, invalid-output non-caching,
+  normalized cache keys, 24-hour TTL, cancellation, timeouts, and the three-
+  hosted-search ceiling.
+
 ### Codex - Stabilize selection before market-quality ranking
 
 #### Changed
