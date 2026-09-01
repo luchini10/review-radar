@@ -40,14 +40,21 @@ import {
   semanticAliasesFor,
 } from "./semanticMatching.ts";
 import { isNonProductSource } from "./search/sourceSafety.ts";
-import type { MarketScoutPlan, MarketScoutTarget } from "./marketScout.ts";
+import {
+  neutralShoppingQueries,
+  type MarketScoutPlan,
+  type MarketScoutTarget,
+} from "./marketScout.ts";
 import {
   evaluateSpecConstraint,
   extractSpecsFromText,
 } from "./specExtraction.ts";
 
-const MAX_SEARCH_QUERIES = 3;
-const MAX_TOTAL_SEARCH_QUERIES = 12;
+const MAX_NEUTRAL_SEARCH_QUERIES = 3;
+const MAX_MARKET_TARGET_SEARCH_QUERIES = 3;
+const MAX_DISCOVERY_SEARCH_QUERIES =
+  MAX_NEUTRAL_SEARCH_QUERIES + MAX_MARKET_TARGET_SEARCH_QUERIES;
+const MAX_TOTAL_SEARCH_QUERIES = 15;
 const MAX_VERIFICATION_CANDIDATES = 9;
 const VERIFICATION_WAVE_SIZE = 3;
 const MAX_PAGE_ALTERNATIVES_PER_CANDIDATE = 2;
@@ -77,12 +84,20 @@ export type ProductSelectionTelemetry = {
   candidatesReturned: number;
   duplicateCandidatesRemoved: number;
   logicalSearchCalls: number;
+  marketEvidenceCandidates: number;
+  marketTargetQueries: string[];
+  neutralQueries: string[];
   physicalSearchAttempts: number;
   queries: string[];
   rankedCandidates: Array<{
+    bayesianRating: number | null;
+    evidenceTier: "strong" | "supported" | null;
     name: string;
+    offerCount: number | null;
     price: number | null;
     productUrl: string;
+    rating: number | null;
+    ratingCount: number | null;
     retailer: string | null;
   }>;
   rejectedByAssetSafety: number;
@@ -200,43 +215,175 @@ function selectionBrand(candidate: RawProductCandidate) {
   return null;
 }
 
-function targetTerms(target: MarketScoutTarget) {
+const MODEL_CONFIGURATION_UNITS = new Set([
+  "gb",
+  "tb",
+  "hz",
+  "mah",
+  "w",
+  "watt",
+  "watts",
+  "v",
+  "volt",
+  "volts",
+]);
+
+function modelIdentityWords(value: string, brand: string) {
+  const brandWords = new Set(normalizedText(brand).split(" ").filter(Boolean));
+  const words = normalizedText(value).split(" ").filter(Boolean);
+  const identityWords: string[] = [];
+
+  for (let index = 0; index < words.length; index += 1) {
+    const word = words[index];
+    const next = words[index + 1];
+    if (brandWords.has(word)) continue;
+    if (/^\d+(?:\.\d+)?(?:gb|tb|hz|mah|w|v)$/.test(word)) continue;
+    if (/^\d+(?:\.\d+)?$/.test(word) && MODEL_CONFIGURATION_UNITS.has(next)) {
+      index += 1;
+      continue;
+    }
+    identityWords.push(word);
+  }
+
+  return identityWords;
+}
+
+function containsContiguousWords(observed: string[], expected: string[]) {
+  if (expected.length === 0 || observed.length < expected.length) return false;
+  return observed.some((_, start) =>
+    expected.every((word, offset) => observed[start + offset] === word),
+  );
+}
+
+function requiredModelQualifiers(value: string) {
+  const normalized = normalizedText(value)
+    .replace(/\bgeneration\s*(\d+)\b/g, "gen$1")
+    .replace(/\bgen\s*(\d+)\b/g, "gen$1");
   return [
-    `${target.brand} ${target.model}`,
-    target.model,
-    ...target.aliases,
-  ]
-    .map(normalizedText)
-    .filter(Boolean);
+    ...(normalized.match(/\bgen\d+\b/g) || []),
+    ...(normalized.match(/\b20\d{2}\b/g) || []),
+  ];
+}
+
+function modelLabelMatchesCandidate(
+  candidateName: string,
+  label: string,
+  targetBrand: string,
+) {
+  if (
+    haveConflictingNamedModelVariants(label, candidateName) ||
+    haveConflictingNumericProductSpecs(label, candidateName)
+  ) {
+    return false;
+  }
+  const normalizedCandidateName = normalizedText(candidateName)
+    .replace(/\bgeneration\s*(\d+)\b/g, "gen$1")
+    .replace(/\bgen\s*(\d+)\b/g, "gen$1");
+  if (
+    requiredModelQualifiers(label).some(
+      (qualifier) => !normalizedCandidateName.includes(qualifier),
+    )
+  ) {
+    return false;
+  }
+
+  const targetIdentifiers = stableModelIdentifiers(label);
+  const candidateIdentifiers = new Set(stableModelIdentifiers(candidateName));
+  if (targetIdentifiers.length > 0) {
+    return targetIdentifiers.every((identifier) =>
+      candidateIdentifiers.has(identifier),
+    );
+  }
+
+  const expectedWords = modelIdentityWords(label, targetBrand);
+  const observedWords = normalizedText(candidateName).split(" ").filter(Boolean);
+  if (expectedWords.length === 0) return false;
+  if (containsContiguousWords(observedWords, expectedWords)) return true;
+
+  return (
+    expectedWords.length >= 2 &&
+    expectedWords.every((word) => observedWords.includes(word)) &&
+    containsContiguousWords(observedWords, expectedWords.slice(0, 2))
+  );
 }
 
 function candidateMatchesTarget(
   candidate: RawProductCandidate,
   target: MarketScoutTarget,
 ) {
-  const candidateText = normalizedText(
-    [
-      candidate.name,
-      candidate.brand || "",
-      candidate.keySpecs.join(" "),
-      candidate.evidenceSources
-        .map((source) => `${source.title} ${source.snippet}`)
-        .join(" "),
-    ].join(" "),
-  );
-  const brand = normalizedText(target.brand);
+  const candidateBrand = selectionBrand(candidate);
+  if (
+    !candidateBrand ||
+    normalizedText(canonicalBrand(candidateBrand)) !==
+      normalizedText(canonicalBrand(target.brand))
+  ) {
+    return false;
+  }
 
-  return (
-    (!brand || candidateText.includes(brand)) &&
-    targetTerms(target).some((term) => candidateText.includes(term))
+  return [target.model, ...target.aliases].some((label) =>
+    modelLabelMatchesCandidate(candidate.name, label, target.brand),
   );
 }
 
-function targetPriority(candidate: RawProductCandidate, targets: MarketScoutTarget[]) {
-  const index = targets.findIndex((target) =>
-    candidateMatchesTarget(candidate, target),
-  );
-  return index < 0 ? Number.POSITIVE_INFINITY : index;
+function tierScore(tier: "none" | "strong" | "supported" | undefined) {
+  return tier === "strong" ? 2 : tier === "supported" ? 1 : 0;
+}
+
+function matchingMarketTarget(
+  candidate: RawProductCandidate,
+  targets: MarketScoutTarget[],
+) {
+  return targets
+    .filter((target) => candidateMatchesTarget(candidate, target))
+    .sort(
+      (first, second) =>
+        tierScore(second.evidenceTier) - tierScore(first.evidenceTier) ||
+        first.consensusOrder - second.consensusOrder,
+    )[0];
+}
+
+function attachMarketEvidence(
+  candidates: RawProductCandidate[],
+  targets: MarketScoutTarget[],
+) {
+  return candidates.map((candidate) => {
+    const target = matchingMarketTarget(candidate, targets);
+    if (!target || target.evidenceTier === "none") return candidate;
+    return {
+      ...candidate,
+      marketEvidence: {
+        consensusOrder: target.consensusOrder,
+        sourceUrls: [...target.sourceUrls],
+        targetBrand: target.brand,
+        targetModel: target.model,
+        tier: target.evidenceTier,
+      },
+    } satisfies RawProductCandidate;
+  });
+}
+
+function marketTargetSearchQuery(
+  input: RecommendationApiRequest,
+  target: MarketScoutTarget,
+) {
+  return [target.brand, target.model, baseProductCategoryFromQuery(input.query)]
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function strongTargetsNeedingSearch(
+  discovered: RawProductCandidate[],
+  targets: MarketScoutTarget[],
+) {
+  return targets
+    .filter(
+      (target) =>
+        target.evidenceTier === "strong" &&
+        !discovered.some((candidate) => candidateMatchesTarget(candidate, target)),
+    )
+    .slice(0, MAX_MARKET_TARGET_SEARCH_QUERIES);
 }
 
 function primaryRetailerName(value: string | null | undefined) {
@@ -285,31 +432,67 @@ function resolutionAuthorityScore(candidate: RawProductCandidate) {
   );
 }
 
+function bayesianCommerceRating(
+  signals: RawProductCandidate["commerceSignals"],
+) {
+  const rating = signals?.rating;
+  const count = signals?.ratingCount;
+  if (
+    rating === null ||
+    rating === undefined ||
+    count === null ||
+    count === undefined ||
+    !Number.isFinite(rating) ||
+    !Number.isSafeInteger(count) ||
+    rating < 0 ||
+    rating > 5 ||
+    count < 0
+  ) {
+    return null;
+  }
+  return (rating * count + 4.0 * 50) / (count + 50);
+}
+
+function commerceVolume(candidate: RawProductCandidate) {
+  return {
+    offerCount: candidate.commerceSignals?.offerCount || 0,
+    ratingCount: candidate.commerceSignals?.ratingCount || 0,
+  };
+}
+
 function rankCandidates(
   candidates: RawProductCandidate[],
   targets: MarketScoutTarget[],
   input: RecommendationApiRequest,
 ) {
-  return candidates
+  return attachMarketEvidence(candidates, targets)
     .map((candidate, originalIndex) => ({
+      bayesianRating:
+        bayesianCommerceRating(candidate.commerceSignals) ??
+        Number.NEGATIVE_INFINITY,
       candidate,
-      originalIndex,
+      consensusOrder:
+        candidate.marketEvidence?.consensusOrder ?? Number.POSITIVE_INFINITY,
+      discoveryOrder: candidate.discoveryOrder ?? originalIndex,
+      evidenceScore: tierScore(candidate.marketEvidence?.tier),
       merchantScore: merchantTrustScore(candidate),
+      offerCount: commerceVolume(candidate).offerCount,
+      preferenceScore: candidatePreferenceScore(candidate, input),
+      ratingCount: commerceVolume(candidate).ratingCount,
       resolutionScore: resolutionAuthorityScore(candidate),
-      requirementScore: candidateRequirementScore(candidate, input),
-      targetIndex: targetPriority(candidate, targets),
-      adjustedIndex:
-        originalIndex -
-        (Number.isFinite(targetPriority(candidate, targets))
-          ? Math.max(1, 3 - targetPriority(candidate, targets))
-          : 0),
+      originalIndex,
     }))
     .sort((first, second) => {
       return (
-        second.requirementScore - first.requirementScore ||
+        second.evidenceScore - first.evidenceScore ||
+        second.preferenceScore - first.preferenceScore ||
+        first.consensusOrder - second.consensusOrder ||
+        second.bayesianRating - first.bayesianRating ||
+        second.ratingCount - first.ratingCount ||
+        second.offerCount - first.offerCount ||
         second.resolutionScore - first.resolutionScore ||
         second.merchantScore - first.merchantScore ||
-        first.adjustedIndex - second.adjustedIndex ||
+        first.discoveryOrder - second.discoveryOrder ||
         first.originalIndex - second.originalIndex
       );
     })
@@ -360,6 +543,41 @@ function discoveryIdentityKey(candidate: RawProductCandidate) {
     : normalizedText(candidate.name);
 }
 
+function strongerMarketEvidence(
+  first: RawProductCandidate["marketEvidence"],
+  second: RawProductCandidate["marketEvidence"],
+) {
+  if (!first) return second;
+  if (!second) return first;
+  return (
+    tierScore(second.tier) > tierScore(first.tier) ||
+    (second.tier === first.tier &&
+      second.consensusOrder < first.consensusOrder)
+  )
+    ? second
+    : first;
+}
+
+function strongerCommerceSignals(
+  first: RawProductCandidate["commerceSignals"],
+  second: RawProductCandidate["commerceSignals"],
+) {
+  if (!first) return second;
+  if (!second) return first;
+  const firstRatingCount = first.ratingCount || 0;
+  const secondRatingCount = second.ratingCount || 0;
+  if (secondRatingCount !== firstRatingCount) {
+    return secondRatingCount > firstRatingCount ? second : first;
+  }
+  const firstOffers = first.offerCount || 0;
+  const secondOffers = second.offerCount || 0;
+  if (secondOffers !== firstOffers) return secondOffers > firstOffers ? second : first;
+  return (second.position ?? Number.POSITIVE_INFINITY) <
+    (first.position ?? Number.POSITIVE_INFINITY)
+    ? second
+    : first;
+}
+
 function dedupeSelectionCandidates(candidates: RawProductCandidate[]) {
   const seen = new Map<string, RawProductCandidate>();
   let duplicateCount = 0;
@@ -377,6 +595,18 @@ function dedupeSelectionCandidates(candidates: RawProductCandidate[]) {
     const primary =
       candidateHasDirectPage && !existingHasDirectPage ? candidate : existing;
     const secondary = primary === existing ? candidate : existing;
+    const earliestDiscoveryOrder = Math.min(
+      primary.discoveryOrder ?? Number.POSITIVE_INFINITY,
+      secondary.discoveryOrder ?? Number.POSITIVE_INFINITY,
+    );
+    const mergedCommerceSignals = strongerCommerceSignals(
+      primary.commerceSignals,
+      secondary.commerceSignals,
+    );
+    const mergedMarketEvidence = strongerMarketEvidence(
+      primary.marketEvidence,
+      secondary.marketEvidence,
+    );
     seen.set(key, {
       ...primary,
       availableColors: Array.from(
@@ -386,10 +616,15 @@ function dedupeSelectionCandidates(candidates: RawProductCandidate[]) {
         ...primary.evidenceSources,
         ...secondary.evidenceSources,
       ],
+      ...(mergedCommerceSignals ? { commerceSignals: mergedCommerceSignals } : {}),
+      ...(Number.isFinite(earliestDiscoveryOrder)
+        ? { discoveryOrder: earliestDiscoveryOrder }
+        : {}),
       imageUrl: primary.imageUrl || secondary.imageUrl,
       keySpecs: Array.from(
         new Set([...primary.keySpecs, ...secondary.keySpecs]),
       ).slice(0, 10),
+      ...(mergedMarketEvidence ? { marketEvidence: mergedMarketEvidence } : {}),
       price: primary.price ?? secondary.price,
     });
   }
@@ -1193,7 +1428,7 @@ function selectionRequirementResult(
   return { failed, isMatch: failed.length === 0 };
 }
 
-function candidateRequirementScore(
+function candidatePreferenceScore(
   candidate: RawProductCandidate,
   input: RecommendationApiRequest,
 ) {
@@ -1201,30 +1436,42 @@ function candidateRequirementScore(
   if (!structured) return 0;
   const evidenceText = [candidate.name, ...candidate.keySpecs].join(" ");
   let score = 0;
-  for (const constraint of structured.requiredConstraints) {
-    if (constraint.type === "budget") continue;
-    if (directConstraintMatch(evidenceText, constraint.value)) score += 40;
-  }
   for (const constraint of structured.preferredConstraints) {
-    if (directConstraintMatch(evidenceText, constraint.value)) score += 20;
+    if (directConstraintMatch(evidenceText, constraint.value)) score += 1;
   }
   for (const constraint of structured.specConstraints || []) {
     if (
+      constraint.strictness === "soft" &&
       evaluateSpecConstraint(
         constraint,
         extractSpecsFromText(evidenceText, "name"),
       ) === "pass"
     ) {
-      score += constraint.strictness === "hard" ? 30 : 12;
+      score += 1;
     }
   }
-  const budgetLimit = maxBudget(input);
-  if (
-    budgetLimit !== null &&
-    candidate.price !== null &&
-    candidate.price <= budgetLimit
-  ) {
-    score += 10;
+  return score;
+}
+
+function selectionPreferenceScore(
+  product: SelectionAssetCandidate,
+  input: RecommendationApiRequest,
+) {
+  const structured = input.extractedRequirements;
+  if (!structured) return 0;
+  const evidenceText = selectionEvidenceText(product);
+  let score = 0;
+  for (const constraint of structured.preferredConstraints) {
+    if (directConstraintMatch(evidenceText, constraint.value)) score += 1;
+  }
+  const productSpecs = extractSpecsFromText(evidenceText, "metadata");
+  for (const constraint of structured.specConstraints || []) {
+    if (
+      constraint.strictness === "soft" &&
+      evaluateSpecConstraint(constraint, productSpecs) === "pass"
+    ) {
+      score += 1;
+    }
   }
   return score;
 }
@@ -1265,6 +1512,47 @@ function productIdentityKey(product: SelectionAssetCandidate) {
   return normalizedText(product.name);
 }
 
+function rankAcceptedSelections(
+  products: AcceptedSelection[],
+  input: RecommendationApiRequest,
+) {
+  return products
+    .map((product, originalIndex) => {
+      const candidate = product.asset.candidate;
+      const volume = commerceVolume(candidate);
+      return {
+        bayesianRating:
+          bayesianCommerceRating(candidate.commerceSignals) ??
+          Number.NEGATIVE_INFINITY,
+        consensusOrder:
+          candidate.marketEvidence?.consensusOrder ?? Number.POSITIVE_INFINITY,
+        discoveryOrder: candidate.discoveryOrder ?? originalIndex,
+        evidenceScore: tierScore(candidate.marketEvidence?.tier),
+        merchantScore: merchantTrustScore(candidate),
+        offerCount: volume.offerCount,
+        originalIndex,
+        preferenceScore: selectionPreferenceScore(product.asset, input),
+        product,
+        ratingCount: volume.ratingCount,
+        resolutionScore: resolutionAuthorityScore(candidate),
+      };
+    })
+    .sort(
+      (first, second) =>
+        second.evidenceScore - first.evidenceScore ||
+        second.preferenceScore - first.preferenceScore ||
+        first.consensusOrder - second.consensusOrder ||
+        second.bayesianRating - first.bayesianRating ||
+        second.ratingCount - first.ratingCount ||
+        second.offerCount - first.offerCount ||
+        second.resolutionScore - first.resolutionScore ||
+        second.merchantScore - first.merchantScore ||
+        first.discoveryOrder - second.discoveryOrder ||
+        first.originalIndex - second.originalIndex,
+    )
+    .map(({ product }) => product);
+}
+
 function selectDistinctProducts(
   products: AcceptedSelection[],
 ) {
@@ -1302,14 +1590,17 @@ function selectDistinctProducts(
 
 export async function selectProducts(options: {
   input: RecommendationApiRequest;
-  plan: MarketScoutPlan;
+  plan: MarketScoutPlan | Promise<MarketScoutPlan>;
   signal?: AbortSignal;
 }): Promise<{
   result: SelectionRecommendationResult;
   telemetry: ProductSelectionTelemetry;
 }> {
-  const { input, plan, signal } = options;
-  const queries = plan.queries.slice(0, MAX_SEARCH_QUERIES);
+  const { input, signal } = options;
+  const neutralQueries = neutralShoppingQueries(input).slice(
+    0,
+    MAX_NEUTRAL_SEARCH_QUERIES,
+  );
   let physicalSearchAttempts = 0;
   const executionOptions: ProductSearchExecutionOptions = {
     onAttempt: () => {
@@ -1317,8 +1608,8 @@ export async function selectProducts(options: {
     },
     signal,
   };
-  const searchResults = await Promise.all(
-    queries.map((query) =>
+  const neutralSearchPromise = Promise.all(
+    neutralQueries.map((query) =>
       searchShoppingProducts(
         query,
         baseProductCategoryFromQuery(input.query),
@@ -1326,8 +1617,54 @@ export async function selectProducts(options: {
       ),
     ),
   );
-  const discovered = interleaveSearchCandidates(
-    searchResults.map((result) => result.candidates),
+  const plan = await options.plan;
+  throwIfRequestCancelled(signal);
+  const neutralSearchResults = await neutralSearchPromise;
+  const neutralDiscovered = interleaveSearchCandidates(
+    neutralSearchResults.map((result) => result.candidates),
+  );
+  const neutralTargetCoverageCandidates = prefilterProductCandidates(
+    neutralDiscovered,
+    input,
+    MAX_PREFILTERED_CANDIDATES,
+  ).candidates.filter(
+    (candidate) =>
+      !isSecondaryMarketCandidate(candidate) &&
+      !hasUnrequestedNonUsVoltage(candidate, input),
+  );
+  const strongTargets = strongTargetsNeedingSearch(
+    neutralTargetCoverageCandidates,
+    plan.targets,
+  );
+  const marketTargetQueries = strongTargets
+    .map((target) => marketTargetSearchQuery(input, target))
+    .filter(Boolean)
+    .slice(0, MAX_MARKET_TARGET_SEARCH_QUERIES);
+  const marketTargetSearchResults = await Promise.all(
+    marketTargetQueries.map((query) =>
+      searchShoppingProducts(
+        query,
+        baseProductCategoryFromQuery(input.query),
+        executionOptions,
+      ),
+    ),
+  );
+  const searchResults = [
+    ...neutralSearchResults,
+    ...marketTargetSearchResults,
+  ].slice(0, MAX_DISCOVERY_SEARCH_QUERIES);
+  const queries = [...neutralQueries, ...marketTargetQueries].slice(
+    0,
+    MAX_DISCOVERY_SEARCH_QUERIES,
+  );
+  const discovered = attachMarketEvidence(
+    interleaveSearchCandidates(
+      searchResults.map((result) => result.candidates),
+    ).map((candidate, discoveryOrder) => ({
+      ...candidate,
+      discoveryOrder,
+    })),
+    plan.targets,
   );
   const deduped = dedupeSelectionCandidates(discovered);
   const prefiltered = prefilterProductCandidates(
@@ -1459,7 +1796,8 @@ export async function selectProducts(options: {
     },
     waveSize: VERIFICATION_WAVE_SIZE,
   });
-  const recommendations = selectDistinctProducts(verification.accepted);
+  const rankedAccepted = rankAcceptedSelections(verification.accepted, input);
+  const recommendations = selectDistinctProducts(rankedAccepted);
 
   return {
     result: { recommendations },
@@ -1470,12 +1808,22 @@ export async function selectProducts(options: {
       candidatesReturned: recommendations.length,
       duplicateCandidatesRemoved: deduped.duplicateCount,
       logicalSearchCalls: queries.length + resolutionQueries.length,
+      marketEvidenceCandidates: marketCompatibleCandidates.filter(
+        (candidate) => Boolean(candidate.marketEvidence),
+      ).length,
+      marketTargetQueries,
+      neutralQueries,
       physicalSearchAttempts,
       queries,
       rankedCandidates: ranked.map((candidate) => ({
+        bayesianRating: bayesianCommerceRating(candidate.commerceSignals),
+        evidenceTier: candidate.marketEvidence?.tier || null,
         name: candidate.name,
+        offerCount: candidate.commerceSignals?.offerCount ?? null,
         price: candidate.price,
         productUrl: candidate.productUrl,
+        rating: candidate.commerceSignals?.rating ?? null,
+        ratingCount: candidate.commerceSignals?.ratingCount ?? null,
         retailer: candidate.retailer || null,
       })),
       rejectedByAssetSafety,
@@ -1502,6 +1850,8 @@ export async function selectProducts(options: {
 }
 
 export const productSelectionTestExports = {
+  attachMarketEvidence,
+  bayesianCommerceRating,
   candidateMatchesTarget,
   candidateModelTokens,
   candidateHasUsablePage,
@@ -1511,11 +1861,19 @@ export const productSelectionTestExports = {
   interleaveSearchCandidates,
   isSecondaryMarketCandidate,
   maxBudget,
+  operationLimits: {
+    discoverySearches: MAX_DISCOVERY_SEARCH_QUERIES,
+    neutralSearches: MAX_NEUTRAL_SEARCH_QUERIES,
+    resolutionCandidates: MAX_VERIFICATION_CANDIDATES,
+    targetSearches: MAX_MARKET_TARGET_SEARCH_QUERIES,
+    totalLogicalSearches: MAX_TOTAL_SEARCH_QUERIES,
+  },
   pageIdentityScore,
   pageSourceScore,
   processVerificationWaves,
   productIdentityKey,
   productPageSearchQuery,
+  rankAcceptedSelections,
   rankCandidates,
   resolvedCandidate,
   resolvedCandidates,
@@ -1524,6 +1882,7 @@ export const productSelectionTestExports = {
   selectionRequirementResult,
   selectDistinctProducts,
   selectVerificationCandidates,
+  strongTargetsNeedingSearch,
   trustedAvailability,
   trustedPrice,
 };

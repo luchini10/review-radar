@@ -148,6 +148,41 @@ describe("selection-only recommendation API", () => {
     assert.equal(JSON.stringify(body.debug).includes("citations"), false);
   });
 
+  it("starts product discovery before the market scout finishes", async () => {
+    let finishScout;
+    let markSelectionStarted;
+    const scoutResult = new Promise((resolve) => {
+      finishScout = resolve;
+    });
+    const selectionStarted = new Promise((resolve) => {
+      markSelectionStarted = resolve;
+    });
+    const base = dependencies();
+    const responsePromise = routeModule.createRecommendationPostHandler(
+      dependencies({
+        buildMarketScoutPlan: async () => scoutResult,
+        selectProducts: async ({ plan }) => {
+          markSelectionStarted();
+          const resolvedPlan = await plan;
+          assert.deepEqual(resolvedPlan, {
+            queries: ["gaming monitor"],
+            targets: [],
+          });
+          return base.selectProducts();
+        },
+      }),
+    )(request({ query: "gaming monitor" }));
+
+    await selectionStarted;
+    finishScout({
+      plan: { queries: ["gaming monitor"], targets: [] },
+      telemetry: { openAiCalls: 1, usedFallback: false },
+    });
+    const response = await responsePromise;
+
+    assert.equal(response.status, 200);
+  });
+
   it("returns an error instead of a false empty result when every Shopping search fails", async () => {
     const failedSearch = {
       errorKind: "api_error",

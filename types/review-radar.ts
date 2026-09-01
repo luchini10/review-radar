@@ -216,6 +216,21 @@ export type RawProductCandidate = {
   imageUrl: string | null;
   price: number | null;
   currentShoppingOffer?: boolean;
+  commerceSignals?: {
+    offerCount: number | null;
+    position: number | null;
+    productId: string | null;
+    rating: number | null;
+    ratingCount: number | null;
+  };
+  discoveryOrder?: number;
+  marketEvidence?: {
+    consensusOrder: number;
+    sourceUrls: string[];
+    targetBrand: string;
+    targetModel: string;
+    tier: "strong" | "supported";
+  };
   retailer?: string | null;
   availableColors: string[];
   dimensions: {

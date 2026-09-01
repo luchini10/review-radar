@@ -67,6 +67,11 @@ describe("bounded product search", () => {
         extracted_price: 169.99,
         imageUrl: "https://cdn.example/ihome-nova.jpg",
         link: "https://www.walmart.com/ip/iHome-Nova-S1-Pro/123456",
+        offers: "10+",
+        position: 2,
+        productId: "4195027484078128635",
+        rating: 4.6,
+        ratingCount: 1000,
         source: "Walmart",
         title: "iHome Nova S1 Pro Self-Emptying Robot Vacuum",
       },
@@ -83,6 +88,13 @@ describe("bounded product search", () => {
     assert.equal(normalized.candidate.price, 169.99);
     assert.equal(normalized.candidate.retailer, "Walmart");
     assert.equal(normalized.candidate.currentShoppingOffer, true);
+    assert.deepEqual(normalized.candidate.commerceSignals, {
+      offerCount: 10,
+      position: 2,
+      productId: "4195027484078128635",
+      rating: 4.6,
+      ratingCount: 1000,
+    });
     assert.equal(accessory.candidate, null);
     assert.equal(accessory.reason, "accessory_or_part");
   });

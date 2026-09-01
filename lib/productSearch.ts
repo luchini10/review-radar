@@ -25,11 +25,16 @@ type SerperShoppingResult = {
   image?: unknown;
   imageUrl?: unknown;
   link?: unknown;
+  offers?: unknown;
+  position?: unknown;
   price?: unknown;
   price_raw?: unknown;
   priceRaw?: unknown;
   product_link?: unknown;
   productLink?: unknown;
+  productId?: unknown;
+  rating?: unknown;
+  ratingCount?: unknown;
   snippet?: unknown;
   source?: unknown;
   thumbnail?: unknown;
@@ -69,6 +74,56 @@ function asString(value: unknown) {
 
 function firstString(...values: unknown[]) {
   return values.map(asString).find(Boolean) || "";
+}
+
+function finiteNumber(value: unknown) {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string" && value.trim()
+        ? Number(value.replace(/,/g, "").trim())
+        : Number.NaN;
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function nonnegativeInteger(value: unknown) {
+  const parsed = finiteNumber(value);
+  return parsed !== null && parsed >= 0 && Number.isSafeInteger(parsed)
+    ? parsed
+    : null;
+}
+
+function positiveInteger(value: unknown) {
+  const parsed = nonnegativeInteger(value);
+  return parsed !== null && parsed > 0 ? parsed : null;
+}
+
+function offerCount(value: unknown) {
+  if (typeof value === "number") return nonnegativeInteger(value);
+  if (typeof value !== "string") return null;
+  const match = value.replace(/,/g, "").match(/\d+/);
+  return match ? nonnegativeInteger(Number(match[0])) : null;
+}
+
+function productIdentifier(value: unknown) {
+  if (typeof value === "string") {
+    const compact = value.trim().slice(0, 200);
+    return compact || null;
+  }
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0
+    ? String(value)
+    : null;
+}
+
+function commerceSignals(result: SerperShoppingResult, fallbackPosition: number) {
+  const rating = finiteNumber(result.rating);
+  return {
+    offerCount: offerCount(result.offers),
+    position: positiveInteger(result.position) ?? fallbackPosition,
+    productId: productIdentifier(result.productId),
+    rating: rating !== null && rating >= 0 && rating <= 5 ? rating : null,
+    ratingCount: nonnegativeInteger(result.ratingCount),
+  };
 }
 
 function parseHttpUrl(value: string) {
@@ -280,6 +335,7 @@ export function likelyAccessory(title: string) {
 
 function candidateFromFields(input: {
   category: string;
+  commerceSignals?: RawProductCandidate["commerceSignals"];
   currentShoppingOffer?: boolean;
   imageUrl: string;
   price: number | null;
@@ -300,6 +356,7 @@ function candidateFromFields(input: {
     availableColors,
     brand: inferKnownBrand(input.title),
     category: input.category,
+    ...(input.commerceSignals ? { commerceSignals: input.commerceSignals } : {}),
     ...(input.currentShoppingOffer ? { currentShoppingOffer: true } : {}),
     dimensions: {
       depth,
@@ -342,6 +399,7 @@ function shoppingUrl(result: SerperShoppingResult) {
 function normalizeShoppingResult(
   result: SerperShoppingResult,
   category: string,
+  fallbackPosition = 1,
 ) {
   const title = asString(result.title);
   const url = shoppingUrl(result);
@@ -368,6 +426,7 @@ function normalizeShoppingResult(
   return {
     candidate: candidateFromFields({
       category,
+      commerceSignals: commerceSignals(result, fallbackPosition),
       currentShoppingOffer: price !== null && Boolean(retailer),
       imageUrl: firstString(
         result.imageUrl,
@@ -413,8 +472,8 @@ export async function searchShoppingProducts(
       };
     }
     const raw = (response.shopping || []).slice(0, SHOPPING_NORMALIZATION_LIMIT);
-    const normalized = raw.map((result) =>
-      normalizeShoppingResult(result, category),
+    const normalized = raw.map((result, index) =>
+      normalizeShoppingResult(result, category, index + 1),
     );
     const rejectionReasons: Record<string, number> = {};
     for (const item of normalized) {
@@ -539,6 +598,7 @@ export function prefilterProductCandidates(
 }
 
 export const productSearchTestExports = {
+  commerceSignals,
   candidateFromFields,
   genericTitle,
   googleOfferUrl,

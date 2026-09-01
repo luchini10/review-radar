@@ -5,13 +5,17 @@ import { productSelectionTestExports } from "../lib/productSelection.ts";
 import { extractStructuredRequirements } from "../lib/requirementExtraction.ts";
 
 const {
+  attachMarketEvidence,
+  bayesianCommerceRating,
   dedupeSelectionCandidates,
   interleaveSearchCandidates,
   isSecondaryMarketCandidate,
+  operationLimits,
   pageIdentityScore,
   pageSourceScore,
   processVerificationWaves,
   productPageSearchQuery,
+  rankAcceptedSelections,
   rankCandidates,
   resolvedCandidate,
   resolvedCandidates,
@@ -20,6 +24,7 @@ const {
   selectionRequirementResult,
   selectDistinctProducts,
   selectVerificationCandidates,
+  strongTargetsNeedingSearch,
   trustedAvailability,
   trustedPrice,
 } = productSelectionTestExports;
@@ -81,6 +86,39 @@ function asset(name, overrides = {}) {
       source: "page_metadata",
     },
     ...(overrides.priceTrust ? { priceTrust: overrides.priceTrust } : {}),
+  };
+}
+
+function marketTarget(
+  brand,
+  model,
+  evidenceTier = "strong",
+  consensusOrder = 0,
+  aliases = [],
+) {
+  return {
+    aliases,
+    brand,
+    consensusOrder,
+    evidenceTier,
+    model,
+    sourceUrls: ["https://www.rtings.com/example/reviews/best/product"],
+  };
+}
+
+function emptyRequirements(preferredConstraints = []) {
+  return {
+    ambiguousConstraints: [],
+    avoidConstraints: [],
+    brandConstraints: [],
+    budgetRules: [],
+    colorConstraints: [],
+    materialConstraints: [],
+    preferredConstraints,
+    requiredConstraints: [],
+    sizeConstraints: [],
+    specConstraints: [],
+    summary: [],
   };
 }
 
@@ -416,6 +454,250 @@ describe("selection correctness", () => {
         candidate("Shark Matrix RV2310AE", { retailer: "Reebelo USA" }),
       ),
       true,
+    );
+  });
+
+  it("attaches market evidence only to the exact stable model identity", () => {
+    const target = marketTarget("AOC", "Q27G3XMN");
+    const attached = attachMarketEvidence(
+      [
+        candidate("AOC Q27G3XMN 27-inch Gaming Monitor", { brand: "AOC" }),
+        candidate("AOC Q27G4X 27-inch Gaming Monitor", { brand: "AOC" }),
+        candidate("AOC 27-inch Gaming Monitor", { brand: "AOC" }),
+      ],
+      [target],
+    );
+
+    assert.equal(attached[0].marketEvidence.tier, "strong");
+    assert.equal(attached[0].marketEvidence.targetModel, "Q27G3XMN");
+    assert.equal(attached[1].marketEvidence, undefined);
+    assert.equal(attached[2].marketEvidence, undefined);
+  });
+
+  it("does not transfer market evidence across a named sibling variant", () => {
+    const target = marketTarget("iRobot", "Roomba i3+ EVO");
+    const attached = attachMarketEvidence(
+      [
+        candidate("iRobot Roomba i3+ EVO Robot Vacuum", { brand: "iRobot" }),
+        candidate("iRobot Roomba i3 EVO Robot Vacuum", { brand: "iRobot" }),
+      ],
+      [target],
+    );
+
+    assert.equal(attached[0].marketEvidence?.tier, "strong");
+    assert.equal(attached[1].marketEvidence, undefined);
+  });
+
+  it("requires an explicit model generation before attaching its evidence", () => {
+    const target = marketTarget("Dreame", "D10 Plus Gen 2");
+    const attached = attachMarketEvidence(
+      [
+        candidate("Dreame D10 Plus Gen 2 Robot Vacuum", { brand: "Dreame" }),
+        candidate("Dreame D10 Plus Robot Vacuum", { brand: "Dreame" }),
+      ],
+      [target],
+    );
+
+    assert.equal(attached[0].marketEvidence?.tier, "strong");
+    assert.equal(attached[1].marketEvidence, undefined);
+  });
+
+  it("searches only the three highest strong targets not already discovered", () => {
+    const targets = [
+      marketTarget("Alpha", "A100", "strong", 0),
+      marketTarget("Beta", "B200", "strong", 1),
+      marketTarget("Gamma", "C300", "supported", 2),
+      marketTarget("Delta", "D400", "strong", 3),
+      marketTarget("Epsilon", "E500", "strong", 4),
+    ];
+    const selected = strongTargetsNeedingSearch(
+      [candidate("Alpha A100 Robot Vacuum", { brand: "Alpha" })],
+      targets,
+    );
+
+    assert.deepEqual(
+      selected.map((target) => target.model),
+      ["B200", "D400", "E500"],
+    );
+  });
+
+  it("keeps the discovery and resolution work within the fifteen-operation ceiling", () => {
+    assert.deepEqual(operationLimits, {
+      discoverySearches: 6,
+      neutralSearches: 3,
+      resolutionCandidates: 9,
+      targetSearches: 3,
+      totalLogicalSearches: 15,
+    });
+    assert.equal(
+      operationLimits.discoverySearches + operationLimits.resolutionCandidates,
+      operationLimits.totalLogicalSearches,
+    );
+  });
+
+  it("ranks evidence tiers before commerce metadata and never rewards price proximity", () => {
+    const leader = candidate("Alpha A100 Robot Vacuum", {
+      brand: "Alpha",
+      commerceSignals: {
+        offerCount: 1,
+        position: 10,
+        productId: "leader",
+        rating: 4.1,
+        ratingCount: 10,
+      },
+      price: 120,
+    });
+    const unscored = candidate("Beta B200 Robot Vacuum", {
+      brand: "Beta",
+      commerceSignals: {
+        offerCount: 50,
+        position: 1,
+        productId: "unscored",
+        rating: 4.9,
+        ratingCount: 5000,
+      },
+      price: 299,
+    });
+    const ranked = rankCandidates(
+      [unscored, leader],
+      [marketTarget("Alpha", "A100")],
+      { query: "robot vacuum", budget: "$300" },
+    );
+
+    assert.equal(ranked[0].name, leader.name);
+    assert.equal(ranked[0].marketEvidence.tier, "strong");
+  });
+
+  it("shrinks sparse ratings so 5.0 with one review cannot beat 4.6 with 1,000", () => {
+    const sparse = candidate("Alpha A100 Robot Vacuum", {
+      commerceSignals: {
+        offerCount: 1,
+        position: 1,
+        productId: "sparse",
+        rating: 5,
+        ratingCount: 1,
+      },
+    });
+    const supported = candidate("Beta B200 Robot Vacuum", {
+      commerceSignals: {
+        offerCount: 1,
+        position: 2,
+        productId: "supported",
+        rating: 4.6,
+        ratingCount: 1000,
+      },
+    });
+
+    assert.ok(
+      bayesianCommerceRating(sparse.commerceSignals) <
+        bayesianCommerceRating(supported.commerceSignals),
+    );
+    assert.equal(
+      rankCandidates([sparse, supported], [], { query: "robot vacuum" })[0]
+        .name,
+      supported.name,
+    );
+  });
+
+  it("uses directly supported preferences before scout consensus within one tier", () => {
+    const preferred = {
+      id: "quiet",
+      label: "Quiet operation",
+      source: "important_details",
+      type: "feature",
+      value: "quiet",
+    };
+    const ranked = rankCandidates(
+      [
+        candidate("Alpha A100 Robot Vacuum", { brand: "Alpha" }),
+        candidate("Beta B200 Quiet Robot Vacuum", { brand: "Beta" }),
+      ],
+      [
+        marketTarget("Alpha", "A100", "strong", 0),
+        marketTarget("Beta", "B200", "strong", 1),
+      ],
+      {
+        query: "robot vacuum",
+        extractedRequirements: emptyRequirements([preferred]),
+      },
+    );
+
+    assert.equal(ranked[0].name, "Beta B200 Quiet Robot Vacuum");
+  });
+
+  it("uses scout consensus before commerce metadata within one evidence tier", () => {
+    const ranked = rankCandidates(
+      [
+        candidate("Beta B200 Robot Vacuum", {
+          brand: "Beta",
+          commerceSignals: {
+            offerCount: 20,
+            position: 1,
+            productId: "beta",
+            rating: 5,
+            ratingCount: 1000,
+          },
+        }),
+        candidate("Alpha A100 Robot Vacuum", {
+          brand: "Alpha",
+          commerceSignals: {
+            offerCount: 1,
+            position: 10,
+            productId: "alpha",
+            rating: 4,
+            ratingCount: 1,
+          },
+        }),
+      ],
+      [
+        marketTarget("Alpha", "A100", "strong", 0),
+        marketTarget("Beta", "B200", "strong", 1),
+      ],
+      { query: "robot vacuum" },
+    );
+
+    assert.equal(ranked[0].name, "Alpha A100 Robot Vacuum");
+  });
+
+  it("reapplies quality ordering after every eligibility gate passes", () => {
+    const leaderAsset = asset("Alpha A100 Robot Vacuum", {
+      candidate: {
+        brand: "Alpha",
+        marketEvidence: {
+          consensusOrder: 0,
+          sourceUrls: ["https://www.rtings.com/example"],
+          targetBrand: "Alpha",
+          targetModel: "A100",
+          tier: "strong",
+        },
+      },
+    });
+    const popularAsset = asset("Beta B200 Robot Vacuum", {
+      candidate: {
+        brand: "Beta",
+        commerceSignals: {
+          offerCount: 20,
+          position: 1,
+          productId: "beta",
+          rating: 4.9,
+          ratingCount: 5000,
+        },
+      },
+    });
+    const accepted = [popularAsset, leaderAsset].map((item) => ({
+      asset: item,
+      recommendation: {
+        category: item.category,
+        imageUrl: null,
+        name: item.name,
+        price: null,
+        productPageUrl: item.pageUrl,
+      },
+    }));
+
+    assert.equal(
+      rankAcceptedSelections(accepted, { query: "robot vacuum" })[0].asset.name,
+      leaderAsset.name,
     );
   });
 

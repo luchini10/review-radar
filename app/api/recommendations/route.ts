@@ -176,21 +176,24 @@ async function handlePost(
     const client = await timing.measure("create_optional_openai_client", () =>
       optionalOpenAIClient(process.env.OPENAI_API_KEY, dependencies),
     );
-    const scouted = await timing.measure("openai_market_scout", () =>
+    const scoutPromise = timing.measure("openai_market_scout", () =>
       dependencies.buildMarketScoutPlan({
         client,
         input,
         signal: request.signal,
       }),
     );
-    throwIfRequestCancelled(request.signal);
-    const selected = await timing.measure("select_products", () =>
+    const selectionPromise = timing.measure("select_products", () =>
       dependencies.selectProducts({
         input,
-        plan: scouted.plan,
+        plan: scoutPromise.then((scouted) => scouted.plan),
         signal: request.signal,
       }),
     );
+    const [scouted, selected] = await Promise.all([
+      scoutPromise,
+      selectionPromise,
+    ]);
     throwIfRequestCancelled(request.signal);
     const everyShoppingSearchFailed =
       selected.telemetry.searchDiagnostics.length > 0 &&

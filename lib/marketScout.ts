@@ -235,7 +235,7 @@ function requestSearchText(input: RecommendationApiRequest) {
     .join(" ");
 }
 
-function deterministicQueries(input: RecommendationApiRequest) {
+export function neutralShoppingQueries(input: RecommendationApiRequest) {
   return uniqueStrings([
     requestSearchText(input),
     `${input.query} ${input.priorities || ""}`,
@@ -245,7 +245,7 @@ function deterministicQueries(input: RecommendationApiRequest) {
 }
 
 function fallbackPlan(input: RecommendationApiRequest): MarketScoutPlan {
-  return { queries: deterministicQueries(input), targets: [] };
+  return { queries: neutralShoppingQueries(input), targets: [] };
 }
 
 function normalizedIdentity(value: string) {
@@ -516,7 +516,7 @@ function validateScoutResponse(
 
   return {
     ...stats,
-    plan: { queries: deterministicQueries(input), targets },
+    plan: { queries: neutralShoppingQueries(input), targets },
   };
 }
 
@@ -706,7 +706,7 @@ export async function buildMarketScoutPlan(options: {
 export const marketScoutTestExports = {
   canonicalSourceUrl,
   classifySourceUrl,
-  deterministicQueries,
+  deterministicQueries: neutralShoppingQueries,
   effectiveDomain,
   marketScoutJsonSchema,
   normalizedRequestKey,

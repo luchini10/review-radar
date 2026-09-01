@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { describe, it } from "node:test";
 
+import { productSelectionTestExports } from "../lib/productSelection.ts";
+
 const benchmarkPath = new URL(
   "./benchmarks/pr13-market-leaders-v2026-09a.json",
   import.meta.url,
@@ -44,6 +46,50 @@ describe("PR-13 market-leader benchmark", () => {
       );
       assert.equal(new Set(domains).size, domains.length);
       assert.ok(leader.sourceUrls.every((url) => new URL(url).protocol === "https:"));
+    }
+  });
+
+  it("can attach every frozen exact leader without giving the registry runtime authority", async () => {
+    const value = await benchmark();
+
+    for (const entry of value.cases) {
+      const leader = entry.leaders[0];
+      const candidate = {
+        availableColors: [],
+        brand: leader.brand,
+        category: entry.request.query,
+        dimensions: {
+          depth: null,
+          height: null,
+          unit: null,
+          width: null,
+        },
+        evidenceSources: [],
+        id: entry.id,
+        imageUrl: null,
+        keySpecs: [],
+        name: `${leader.brand} ${leader.model} ${entry.request.query}`,
+        price: 1,
+        productUrl: "https://shop.example/products/exact-model",
+      };
+      const target = {
+        aliases: leader.aliases,
+        brand: leader.brand,
+        consensusOrder: 0,
+        evidenceTier: "strong",
+        model: leader.model,
+        sourceUrls: leader.sourceUrls,
+      };
+      const [attached] = productSelectionTestExports.attachMarketEvidence(
+        [candidate],
+        [target],
+      );
+
+      assert.equal(
+        attached.marketEvidence?.targetModel,
+        leader.model,
+        `${entry.id} exact leader did not bind`,
+      );
     }
   });
 });
