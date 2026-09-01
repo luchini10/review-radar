@@ -33,9 +33,12 @@ function dependencies(overrides = {}) {
     }),
     createOpenAIClient: async () => null,
     paidRequestAdmission: admission(),
-    selectProducts: async () => ({
-      result: { recommendations: [product] },
-      telemetry: {
+    selectProducts: async ({ plan }) => {
+      if (typeof plan === "function") await plan([]);
+      else await plan;
+      return {
+        result: { recommendations: [product] },
+        telemetry: {
         assetCandidates: 1,
         candidatesAfterHardFilters: 1,
         candidatesDiscovered: 3,
@@ -53,8 +56,9 @@ function dependencies(overrides = {}) {
         resolutionQueries: [],
         searchDiagnostics: [],
         verifiedCandidates: [],
-      },
-    }),
+        },
+      };
+    },
     ...overrides,
   };
 }
@@ -141,44 +145,55 @@ describe("selection-only recommendation API", () => {
     );
     const body = await response.json();
 
-    assert.equal(body.debug.architecture, "market_quality_live_v2");
+    assert.equal(
+      body.debug.architecture,
+      "market_quality_live_v3_commerce_informed",
+    );
     assert.equal(body.debug.openAiCalls, 1);
     assert.equal(body.debug.search.candidatesReturned, 1);
     assert.equal("requirements" in body.debug, false);
     assert.equal(JSON.stringify(body.debug).includes("citations"), false);
   });
 
-  it("starts product discovery before the market scout finishes", async () => {
-    let finishScout;
-    let markSelectionStarted;
-    const scoutResult = new Promise((resolve) => {
-      finishScout = resolve;
-    });
-    const selectionStarted = new Promise((resolve) => {
-      markSelectionStarted = resolve;
-    });
+  it("starts the market scout only after current commerce candidates are available", async () => {
+    let scoutStarted = false;
+    const commerceCandidates = [
+      {
+        brand: "Acer",
+        modelIdentifiers: ["XV272U"],
+        name: "Acer Nitro XV272U",
+        offerCount: 8,
+        position: 1,
+        price: 179.99,
+        rating: 4.6,
+        ratingCount: 1200,
+        retailer: "Best Buy",
+      },
+    ];
     const base = dependencies();
-    const responsePromise = routeModule.createRecommendationPostHandler(
+    const response = await routeModule.createRecommendationPostHandler(
       dependencies({
-        buildMarketScoutPlan: async () => scoutResult,
+        buildMarketScoutPlan: async (options) => {
+          scoutStarted = true;
+          assert.deepEqual(options.commerceCandidates, commerceCandidates);
+          return {
+            plan: { queries: ["gaming monitor"], targets: [] },
+            telemetry: { openAiCalls: 1, usedFallback: false },
+          };
+        },
         selectProducts: async ({ plan }) => {
-          markSelectionStarted();
-          const resolvedPlan = await plan;
+          assert.equal(scoutStarted, false);
+          assert.equal(typeof plan, "function");
+          const resolvedPlan = await plan(commerceCandidates);
           assert.deepEqual(resolvedPlan, {
             queries: ["gaming monitor"],
             targets: [],
           });
-          return base.selectProducts();
+          assert.equal(scoutStarted, true);
+          return base.selectProducts({ plan: resolvedPlan });
         },
       }),
     )(request({ query: "gaming monitor" }));
-
-    await selectionStarted;
-    finishScout({
-      plan: { queries: ["gaming monitor"], targets: [] },
-      telemetry: { openAiCalls: 1, usedFallback: false },
-    });
-    const response = await responsePromise;
 
     assert.equal(response.status, 200);
   });

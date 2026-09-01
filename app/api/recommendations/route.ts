@@ -177,24 +177,39 @@ async function handlePost(
     const client = await timing.measure("create_optional_openai_client", () =>
       optionalOpenAIClient(process.env.OPENAI_API_KEY, dependencies),
     );
-    const scoutPromise = timing.measure("openai_market_scout", () =>
-      dependencies.buildMarketScoutPlan({
-        client,
-        input,
-        signal: request.signal,
-      }),
-    );
-    const selectionPromise = timing.measure("select_products", () =>
+    let scoutPromise: ReturnType<typeof dependencies.buildMarketScoutPlan> | null =
+      null;
+    const planFromCurrentCommerce = (
+      commerceCandidates: Parameters<
+        typeof dependencies.buildMarketScoutPlan
+      >[0]["commerceCandidates"],
+    ) => {
+      scoutPromise ??= timing.measure("openai_market_scout", () =>
+        dependencies.buildMarketScoutPlan({
+          client,
+          commerceCandidates,
+          input,
+          signal: request.signal,
+        }),
+      );
+      return scoutPromise.then((scouted) => scouted.plan);
+    };
+    const selected = await timing.measure("select_products", () =>
       dependencies.selectProducts({
         input,
-        plan: scoutPromise.then((scouted) => scouted.plan),
+        plan: planFromCurrentCommerce,
         signal: request.signal,
       }),
     );
-    const [scouted, selected] = await Promise.all([
-      scoutPromise,
-      selectionPromise,
-    ]);
+    const scouted = await (scoutPromise ||
+      timing.measure("openai_market_scout", () =>
+        dependencies.buildMarketScoutPlan({
+          client,
+          commerceCandidates: [],
+          input,
+          signal: request.signal,
+        }),
+      ));
     throwIfRequestCancelled(request.signal);
     const everyShoppingSearchFailed =
       selected.telemetry.searchDiagnostics.length > 0 &&
@@ -208,7 +223,7 @@ async function handlePost(
       );
     }
     const debug = {
-      architecture: "market_quality_live_v2",
+      architecture: "market_quality_live_v3_commerce_informed",
       marketScout: scouted.telemetry,
       openAiCalls: scouted.telemetry.openAiCalls,
       search: selected.telemetry,
@@ -231,7 +246,7 @@ async function handlePost(
         ? {
             error: "ReviewRadar could not complete this product search.",
             debug: {
-              architecture: "market_quality_live_v2",
+              architecture: "market_quality_live_v3_commerce_informed",
               error:
                 error instanceof Error
                   ? { name: error.name, message: error.message.slice(0, 300) }

@@ -47,6 +47,7 @@ import {
 import { isNonProductSource } from "./search/sourceSafety.ts";
 import {
   neutralShoppingQueries,
+  type MarketScoutCommerceCandidate,
   type MarketScoutPlan,
   type MarketScoutTarget,
 } from "./marketScout.ts";
@@ -2007,7 +2008,10 @@ function selectDistinctProducts(
 
 export async function selectProducts(options: {
   input: RecommendationApiRequest;
-  plan: MarketScoutPlan | Promise<MarketScoutPlan>;
+  plan:
+    | MarketScoutPlan
+    | Promise<MarketScoutPlan>
+    | ((candidates: MarketScoutCommerceCandidate[]) => Promise<MarketScoutPlan>);
   signal?: AbortSignal;
 }): Promise<{
   result: SelectionRecommendationResult;
@@ -2037,9 +2041,8 @@ export async function selectProducts(options: {
       ),
     ),
   );
-  const plan = await options.plan;
-  throwIfRequestCancelled(signal);
   const neutralSearchResults = await neutralSearchPromise;
+  throwIfRequestCancelled(signal);
   const neutralDiscovered = interleaveSearchCandidates(
     neutralSearchResults.map((result) => result.candidates),
   );
@@ -2052,6 +2055,26 @@ export async function selectProducts(options: {
       !isSecondaryMarketCandidate(candidate) &&
       !hasUnrequestedNonUsVoltage(candidate, input),
   );
+  const commerceCandidates = dedupeSelectionCandidates(
+    neutralTargetCoverageCandidates,
+  ).candidates.map(
+    (candidate): MarketScoutCommerceCandidate => ({
+      brand: selectionBrand(candidate),
+      modelIdentifiers: candidateModelTokens(candidate.name),
+      name: candidate.name,
+      offerCount: candidate.commerceSignals?.offerCount ?? null,
+      position: candidate.commerceSignals?.position ?? null,
+      price: candidate.price,
+      rating: candidate.commerceSignals?.rating ?? null,
+      ratingCount: candidate.commerceSignals?.ratingCount ?? null,
+      retailer: candidate.retailer || null,
+    }),
+  );
+  const plan =
+    typeof options.plan === "function"
+      ? await options.plan(commerceCandidates)
+      : await options.plan;
+  throwIfRequestCancelled(signal);
   const searchedTargets = marketTargetsNeedingSearch(
     neutralTargetCoverageCandidates,
     plan.targets,
