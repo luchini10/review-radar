@@ -11,6 +11,34 @@ Update this file after:
 
 ## 2026-09-01
 
+### Codex - Reject two unproven market-quality experiments
+
+#### Changed
+
+- Measured an allowed-domain/high-context scout with supported-target page
+  recovery (V21), then a broader editorial scout with normalized target queries
+  and concurrent exact Shopping/page recovery (V22).
+- Reverted both experimental runtime and test paths after their frozen matrices
+  failed to improve leader recall. The retained runtime remains the independent
+  concurrent V20 architecture at `b4e1890`; the two reports remain audit-only.
+- Confirmed that more evidence-bearing or `strong` scout plans do not by
+  themselves solve exact current offer, seller-page, and hard-requirement
+  convergence. The next credible comparison requires a qualified request-scoped
+  canonical-commerce source.
+
+#### Verified
+
+- V21 completed 10/10 requests, 9/10 non-empty, 2/10 leaders, and
+  23,674/26,274/26,274 ms mean/p95/maximum. It passed safety, exact binding,
+  public shape, call ceilings, and the 30-second maximum but failed leader and
+  p95 gates.
+- V22 completed 10/10 requests/non-empty and passed safety, exact binding,
+  public shape, and call ceilings, but returned 2/10 leaders and
+  26,008/32,916/32,916 ms mean/p95/maximum, failing both latency gates.
+- The V22 experimental tree passed 354/354 unit tests, typecheck, zero-warning
+  lint, and production build. After the full revert, Playwright passed 7/7 and
+  tracked runtime/test diff was empty. No push or deployment occurred.
+
 ### Codex - Run independent market research alongside commerce discovery
 
 #### Changed

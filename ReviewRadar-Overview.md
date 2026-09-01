@@ -307,6 +307,15 @@ ms. The public five-field payload remained unchanged at 797 bytes mean and 1,542
 bytes maximum. Runtime evidence reached six cells, runtime `strong` reached two,
 and one scout honestly fell back for insufficient evidence.
 
+Two later same-provider architecture experiments were rejected and removed.
+V21 restricted scout discovery to recognized editorial domains with high search
+context and fell to 9/10 non-empty and 2/10 leaders at 26,274 ms p95/maximum.
+V22 broadened editorial scouting, normalized target queries, and ran exact
+Shopping plus target-page recovery concurrently; it returned 10/10 non-empty
+but still only 2/10 leaders and regressed to 32,916 ms p95/maximum. Both passed
+the deterministic safety, binding, public-shape, and call ceilings. Their reports
+are retained for audit, but none of their runtime code remains.
+
 PR-14 is not release-qualified: leader recall was 50% versus the 80% gate, and
 tail latency exceeded the 25-second p95 gate despite passing the 30-second
 maximum. Starting independent research concurrently with neutral commerce
@@ -330,6 +339,11 @@ The build route manifest must contain only /, /_not-found, and
   eligibility authority. V20 passed exact source binding but market/commerce
   coverage still produced only 50% frozen-leader recall with 29,646 ms p95,
   so the architecture did not establish live best-in-budget reliability.
+- Source filtering, broader prompt coverage, normalized target-query wording,
+  and extra same-provider target-page concurrency were measured in V21/V22 and
+  did not improve leader recall. A new comparison should first qualify a
+  request-scoped commerce source that exposes canonical identity, current offers,
+  and direct seller pages.
 - Missing or ambiguous product images are intentionally omitted.
 - The recorded live quality sample is small and local. It does not prove
   hosted operations, accessibility beyond the current browser suite, or

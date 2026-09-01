@@ -18075,3 +18075,63 @@ tree was not accessed during this step. The four previously disclosed incidents
 remain the complete incident list. No push, deployment, release, dependency
 change, production-data action, public-contract expansion, retained index,
 background refresh, cross-request research cache, or benchmark retry occurred.
+
+---
+
+## PR-14 rejected same-provider market-quality experiments (2026-09-01)
+
+**Assessment:** V21 and V22 are preserved failed experiments, not retained
+runtime baselines and not retries from which a preferred volatile result was
+selected. After each run, the experimental source and tests were removed with
+`apply_patch`; the retained runtime remains `b4e1890` and authoritative live
+result remains V20.
+
+**V21 source-focused result:**
+`docs/pr14-live-accuracy-report-v21-source-focused.json` is the only cache-cold
+attempt for its ten precommitted cells. It tested an allowed-domain scout with
+high web-search context and US location plus supported-target page recovery.
+It completed 10/10 HTTP requests but only 9/10 non-empty and 2/10 frozen leaders.
+Safety, exact evidence binding, fresh research, public shape, one Responses call,
+three hosted searches, at most fifteen logical Serper operations, strong-ahead-
+of-unscored ordering, and the 30-second maximum passed. The 80% leader and
+25-second p95 gates failed. Mean/p95/maximum latency was
+23,674/26,274/26,274 ms; calls were 139 logical and 137 physical Serper
+operations; model use was 168,606 input plus 11,045 output tokens (179,651
+total), approximately $0.176157 model-token cost; and the unchanged public
+payload averaged 658 bytes and peaked at 1,440 bytes.
+
+**V22 concurrent-target result:**
+`docs/pr14-live-accuracy-report-v22-concurrent-target-recovery.json` is likewise
+one attempt per cell with no retry or replacement. It restored unrestricted
+medium-context web search, separated editorial scouting from commerce checks,
+canonicalized duplicated brand/model query labels, and started exact Shopping
+and strong-target page recovery concurrently. It completed 10/10 HTTP and
+non-empty results and passed every safety, exact-binding, fresh-research,
+public-shape, ranking, and provider/operation ceiling. It nevertheless returned
+only 2/10 frozen leaders and failed both latency gates: mean 26,008 ms and
+p95/maximum 32,916 ms. It used 144 logical and 143 physical Serper operations,
+176,214 input plus 14,916 output tokens (191,130 total), approximately $0.199282
+model-token cost, and a public payload averaging 907 bytes and peaking at 1,617
+bytes.
+
+**Decision:** reject and remove both architectures. V21 lost one non-empty case
+and three frozen leaders versus V20. V22 retained non-empty safety but lost
+three leaders, added seven logical Serper operations, and regressed p95/maximum
+by 3,270 ms versus V20. More evidence-bearing or `strong` scout output did not
+translate into more exact currently purchasable benchmark leaders. The next
+credible comparison remains a qualified request-scoped canonical-commerce
+provider or retailer integration, not another prompt/source/query variant over
+the same provider set.
+
+**Verification:** the experimental V22 tree passed 354/354 unit tests across 44
+suites, typecheck, zero-warning lint, and the Next.js 16.3.3 production build
+before live execution. After reverting all experimental runtime/test changes,
+`git diff --check` showed no tracked source drift and Playwright passed 7/7 on
+the retained V20 runtime. A final retained-source deterministic wall is recorded
+in the regenerated current-state handoff.
+
+**Boundaries:** `.env.local` was not manually inspected. The protected fixture
+tree was not accessed. The four previously disclosed incidents remain the
+complete incident list. No push, deployment, release, dependency change,
+production-data action, public-contract change, background work, retained
+research cache, or benchmark retry occurred.

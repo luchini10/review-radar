@@ -5102,6 +5102,33 @@ warning lint, the Next.js 16.3.3 production build, Playwright 7/7 across
 Chromium desktop/mobile, and `git diff --check` pass. No push or deployment
 occurred.
 
+**Rejected V21/V22 follow-up:** two further single-attempt, cache-cold matrices
+tested generalized same-provider changes and were fully reverted. V21 restricted
+the scout to the recognized editorial-domain set with high search context and
+US location, and allowed supported targets to consume target-page recovery.
+`docs/pr14-live-accuracy-report-v21-source-focused.json` passed product safety,
+exact binding, public shape, all call ceilings, and the 30-second maximum, but
+fell to 9/10 non-empty and 2/10 frozen leaders. Mean/p95/maximum latency was
+23,674/26,274/26,274 ms; it used 139 logical and 137 physical Serper operations,
+179,651 model tokens, and approximately $0.176157 model-token cost.
+
+V22 restored unrestricted medium-context search, then tested an editorial-only
+scout responsibility, canonicalized brand/model target queries, and started
+exact Shopping plus strong-target page recovery concurrently. The preserved
+`docs/pr14-live-accuracy-report-v22-concurrent-target-recovery.json` passed
+10/10 HTTP/non-empty, product safety, exact binding, public shape, and all call
+ceilings, but again reached only 2/10 frozen leaders and exceeded both latency
+limits at 26,008/32,916/32,916 ms mean/p95/maximum. It used 144 logical and 143
+physical Serper operations, 191,130 model tokens, and approximately $0.199282
+model-token cost.
+
+Neither run was retried or selected opportunistically. Both experimental code
+paths were removed, leaving no tracked runtime or test diff from `b4e1890`.
+Together they strengthen the prior conclusion: source filtering, prompt
+expansion, target-query wording, and extra same-provider target-page concurrency
+do not solve the canonical current-offer/page bottleneck. V20 remains the
+authoritative retained report and PR-14 remains not release-qualified.
+
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 
 Phase 3P/3Q source-upgrade items; RR-014/RR-015 aggregate measurement beyond

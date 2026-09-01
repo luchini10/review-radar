@@ -4403,3 +4403,32 @@ a known conservative undercount.
   build; Playwright 7/7; and diff check. The removed test covered the superseded
   commerce-roster callback; replacement tests protect independent prompting and
   concurrent start.
+
+## PR-14 rejected source/query/concurrency experiments (2026-09-01)
+
+- Preserve V21 and V22 as failed, single-attempt evidence. They are distinct
+  architecture experiments, not retries, and neither authorizes selecting a
+  preferred volatile run or changing the V20 authoritative baseline.
+- V21 allowed-domain/high-context scouting plus supported-target page recovery
+  passed safety, exact binding, public shape, call ceilings, and the 30-second
+  maximum but returned 9/10 non-empty, 2/10 leaders, and 26,274 ms p95/maximum.
+  Do not restore source-domain filtering merely because validation already uses
+  an editorial allowlist; restricting search discovery and validating returned
+  evidence are different operations.
+- V22's broader editorial prompt, brand/model query canonicalization, and
+  concurrent exact Shopping/strong-target page recovery passed 10/10 non-empty
+  and all safety/call gates but returned 2/10 leaders and 32,916 ms p95/maximum.
+  More `strong` target plans and more same-provider target resolution did not
+  improve purchasable frozen-leader coverage.
+- Both experimental code paths were removed. Preserve V20 runtime `b4e1890`,
+  its one independent scout concurrent with three neutral Shopping calls, and
+  its strong-only target-page recovery. V20 remains the strongest measured
+  retained architecture at 5/10 leaders and 29,646 ms p95/maximum.
+- Do not infer that duplicated-brand query labels or serialized target-page
+  recovery are harmless in isolation; the two combined experiments do not
+  isolate those effects. They do prove that the tested bundles are not safe
+  evidence for promotion.
+- The remaining measured bottleneck is canonical current commerce coverage:
+  exact model identity, current in-budget offer, direct seller page, and hard-
+  requirement proof must converge in one request. Qualify a provider/retailer
+  contract for those fields before another architecture matrix.
