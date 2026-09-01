@@ -1837,20 +1837,24 @@ checkpoint. R7A remains blocked and separately approval-gated.
   are absent. Every request performs fresh research; duplicate Shopping/page
   work is coalesced only inside that request.
 - Added live exact-target page recovery and exact same-merchant Shopping/page
-  binding without raising the fifteen-logical-operation ceiling. Generalized
-  identity corrections preserve exact retailer models, isolate sibling catalog
-  codes, reject cross-merchant evidence transfer, and reject conflicting route
-  specifications or leading slug brands.
-- Preserved five broad and five constrained one-attempt audit cells plus all raw
-  correction reports. Latest live result: 10/10 HTTP 200, 9/10 non-empty,
-  frozen leader 2/10, runtime evidence 6/10, runtime `strong` 4/10, mean 26,714
-  ms, p95/maximum 47,732 ms, one OpenAI response/request, maximum two hosted
-  searches, maximum fifteen Serper operations, and unchanged public payload.
-- Final deterministic wall: 326/326 unit tests, typecheck, zero-warning lint,
-  production build, and Playwright 7/7. The live audit predates the final
-  slug-brand conflict guard; it was not retried after that unit-tested fix.
-- PR-14 is implemented locally through `a80b38d` but not release-qualified.
-  Do not restore the rejected index or claim best-in-budget reliability. The
-  next sound comparison is request-scoped direct canonical commerce resolution
-  versus a larger explicit latency/operation envelope or a request-scoped
-  progressive/asynchronous response.
+  binding without raising the fifteen-logical-operation ceiling. The final
+  scout uses three hosted searches, low reasoning, and exact model/catalog
+  validation. Generic aliases cannot bypass target identity, sibling catalog
+  models remain isolated, and measurements do not become model numbers.
+- Rechecked condition after resolution; separated page-title and URL hard-spec
+  conflicts; kept repeated identical slug models idempotent; rejected `img-na`
+  placeholders; and separated full-size leaf blowers from workshop/jobsite
+  blowers and accessories.
+- Preserved five broad and five constrained one-attempt audit cells. The final
+  report completed 10/10 HTTP 200 and 10/10 non-empty with zero scout fallbacks,
+  frozen leader 1/9 currently eligible, runtime evidence 4/10, runtime `strong`
+  3/10, mean 26,454 ms, p95/maximum 36,077 ms, one OpenAI response/request,
+  maximum three hosted searches, maximum fifteen logical Serper operations,
+  and unchanged public payload.
+- Final deterministic wall: 333/333 unit tests, typecheck, zero-warning lint,
+  production build, and Playwright 7/7. Runtime snapshot: `f55096d`.
+- PR-14 is not release-qualified. Do not restore the rejected index, continue
+  prompt/model tuning as a substitute for commerce coverage, or claim best-in-
+  budget reliability. The next sound comparison is request-scoped direct
+  canonical commerce resolution versus a larger explicit latency/operation
+  envelope. Progressive/asynchronous output is a separate contract decision.

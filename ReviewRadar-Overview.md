@@ -75,11 +75,13 @@ branch.
 ### Request-time market scout
 
 lib/marketScout.ts makes one fresh GPT-5.4 Mini Responses call per request with
-Structured Outputs, two requested hosted web-search calls, and a hard validator
-ceiling of three completed calls. It sets `store: false`, disables SDK retries,
-and uses a 45-second deadline. It returns at most five
+Structured Outputs, three requested and three maximum hosted web-search calls,
+low reasoning, and a 6,000-token output ceiling. It sets `store: false`,
+disables SDK retries, and uses a 60-second deadline. It returns at most five
 ordered exact-model targets with source URLs and cannot provide prices,
 Shopping queries, explanations, review summaries, scores, or card content.
+Every target must contain a distinctive exact model number or catalog code;
+generic family, platform, and specification-only targets fail validation.
 Only URLs present in completed web-search source metadata from that same
 response can enter a target.
 
@@ -133,16 +135,20 @@ Selection remains deterministic after candidate discovery:
 6. Interleave query results and deduplicate stable model plus named-variant
    identities across retailer URLs.
 7. Attach market evidence only when brand and exact stable model identity
-   match; named, numeric, generation, and year siblings do not inherit it.
+   match; generic aliases and named, numeric, generation, year, or catalog-code
+   siblings do not inherit it. Performance measurements, years, and prices do
+   not become model identity.
 8. Prioritize verification and final cards by `strong`, then `supported`, then
    unscored; within a tier use directly supported preferences, scout consensus,
    Bayesian-shrunken commerce rating, review/offer volume, resolvability,
    merchant trust, and stable discovery order. Price never adds rank.
 9. Keep a verification slate that is not dominated by one brand.
-10. Resolve only candidate-local product pages, preserving the Shopping
-   storefront when an exact merchant page is available, and retain at most two
-   exact page alternatives on distinct hosts from one resolution search.
-11. Require a safe product-detail URL and affirmative current availability.
+10. Resolve only candidate-local product pages, preserving and targeting the
+   Shopping storefront when an exact merchant page is available, and retain at
+   most two exact page alternatives on distinct hosts from one search.
+11. Recheck non-new condition after resolution, including title, evidence, and
+   product-route disclosures; then require a safe product-detail URL and
+   affirmative current availability.
 12. Fail closed on explicit hard feature, size, numeric, boolean, brand, and
     avoid requirements.
 13. Reject a known numeric contradiction to an ordinary soft preference while
@@ -269,21 +275,23 @@ The request-time architecture and accuracy gates are protected by:
   and the minimal result card;
 - TypeScript, ESLint, and the Next production build.
 
-The current source passes 326/326 unit tests across 43 suites, zero-warning
-lint, typecheck, production build, and Playwright 7/7. The PR-14 ten-case,
+The current source passes 333/333 unit tests across 43 suites, zero-warning
+lint, typecheck, production build, and Playwright 7/7. The final PR-14 ten-case,
 single-attempt live matrix completed 10/10 requests with one OpenAI response
-each, at most two hosted searches, and at most fifteen logical Serper operations.
-It returned 9/10 non-empty, but only 2/10 placed a frozen leader in the top three.
-Mean latency was 26,714 ms and nearest-rank p95/maximum was 47,732 ms. The public
-payload remained unchanged at 858 bytes mean and 1,838 bytes maximum.
+each, at most three hosted searches, and at most fifteen logical Serper
+operations. It returned 10/10 non-empty, but only 1/9 currently eligible runs
+placed a frozen leader in the top three. Mean latency was 26,454 ms and nearest-
+rank p95/maximum was 36,077 ms. The public payload remained unchanged at 710
+bytes mean and 1,378 bytes maximum. The scout returned valid output in all ten
+runs, runtime evidence in four, and runtime `strong` evidence in three.
 
-PR-14 is not release-qualified: leader recall was 20% versus the 80% gate, and
-tail latency exceeded both the 25-second p95 and 30-second maximum gates. The
-source-binding and ranking mechanics work, but live Shopping/page resolution
-does not reliably supply exact purchasable leaders inside the target envelope.
-The paid matrix predates the final deterministic conflicting-slug-brand guard;
-that guard is covered by the final unit suite and the live cells were not
-retried.
+PR-14 is not release-qualified: eligible leader recall was 11.11% versus the
+80% gate, and tail latency exceeded both the 25-second p95 and 30-second maximum
+gates. The source-binding and ranking mechanics work, but live Shopping/page
+resolution does not reliably supply exact purchasable leaders inside the target
+envelope. Full GPT-5.4 and medium-reasoning Mini experiments were inferior on
+measured output reliability/latency; further model tuning is not the supported
+fix for the remaining commerce-coverage loss.
 
 The build route manifest must contain only /, /_not-found, and
 /api/recommendations.
@@ -293,11 +301,13 @@ The build route manifest must contain only /, /_not-found, and
 - Live prices and availability can change after a search.
 - Search-provider coverage can omit a good product.
 - Strict finalist verification can produce an empty shortlist even when a
-  qualifying product exists; the PR-14 matrix observed one empty run in ten.
+  qualifying product exists; the final PR-14 matrix happened to return ten
+  non-empty shortlists, but that sample does not remove the underlying risk.
 - The market scout's source tier is not product-fact, price, availability, or
-  eligibility authority. Live exact-offer resolution improved evidence return
-  but pushed p95 to 47,732 ms, so this architecture did not establish live
-  best-in-budget reliability.
+  eligibility authority. The final exact-scout matrix removed provider
+  fallbacks and reduced p95 to 36,077 ms, but commerce coverage still produced
+  only 11.11% eligible frozen-leader recall, so the architecture did not
+  establish live best-in-budget reliability.
 - Missing or ambiguous product images are intentionally omitted.
 - The recorded live quality sample is small and local. It does not prove
   hosted operations, accessibility beyond the current browser suite, or

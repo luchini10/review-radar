@@ -28,21 +28,33 @@ Update this file after:
   missing merchant label, without moving price or availability across sellers.
 - Rejected conflicting product-route specifications and product slugs whose
   leading brand conflicts with the candidate brand.
-- Added a dated ten-case broad/constrained one-attempt live benchmark and
-  retained each raw before/correction report.
+- Required distinctive exact model/catalog identifiers in scout targets,
+  prevented generic aliases from inheriting model evidence, and recognized
+  standalone catalog codes without confusing price, year, pressure, airflow,
+  or other measurements for product identity.
+- Reused the current Shopping merchant for exact target-page resolution and
+  rechecked non-new condition after resolution, including URL-only
+  `reconditioned` disclosures.
+- Checked product-page title and route specifications independently, kept
+  repeated identical slug models idempotent, rejected `img-na` placeholders,
+  and separated full-size leaf blowers from workshop/jobsite blowers and
+  accessories.
+- Retained the dated ten-case broad/constrained one-attempt benchmark and both
+  final raw reports, including the failed medium-reasoning run.
 
 #### Verified
 
-- Full validation passed 326/326 unit tests across 43 suites, typecheck,
+- Full validation passed 333/333 unit tests across 43 suites, typecheck,
   zero-warning lint, the Next.js 16.3.3 production build, and Playwright 7/7.
-- The latest no-retry live matrix completed 10/10 requests and returned 9/10
-  non-empty with one OpenAI response/request, maximum two hosted searches,
+- The latest no-retry live matrix completed 10/10 requests and returned 10/10
+  non-empty with one OpenAI response/request, maximum three hosted searches,
   maximum fifteen logical Serper operations, and unchanged public payload.
-- Release gates failed: frozen-leader top-three recall was 2/10 (20%), mean
-  latency was 26,714 ms, and p95/maximum was 47,732 ms. The implementation is
-  not release-qualified and no best-in-budget reliability claim is supported.
-- The live matrix predates the final slug-brand safety guard; that guard passed
-  the deterministic suite and the paid matrix was not retried.
+- The final low-reasoning exact-scout matrix actually returned 10/10 non-empty,
+  eliminated all scout fallbacks, and cut mean latency from 48,046 ms in the
+  preceding medium-reasoning run to 26,454 ms.
+- Release gates still failed: frozen-leader top-three recall was 1/9 currently
+  eligible (11.11%), and p95/maximum was 36,077 ms. The implementation is not
+  release-qualified and no dependable best-in-budget claim is supported.
 
 ### Codex - Complete PR-13 with a failed live release gate
 

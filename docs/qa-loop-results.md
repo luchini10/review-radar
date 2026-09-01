@@ -17569,3 +17569,99 @@ deleted, or used as evidence; the incident was disclosed immediately and the
 tree was not touched again. No push, deployment, release, dependency change,
 production-data action, public API expansion, benchmark retry, or safety-gate
 weakening occurred.
+
+---
+
+## PR-14 exact-scout and commerce-safety follow-up (2026-09-01)
+
+**Assessment:** PARTIAL / RELEASE FAIL. The final request-time implementation
+at `f55096d` materially improved scout reliability, exact-model binding, and
+live product safety, but it still did not meet the independently frozen market-
+leader gate. The limiting evidence remains live commerce coverage, not final
+ranking order.
+
+**Fail-first evidence:** GPT-5.4 Mini with medium reasoning, three hosted
+searches, and a 6,000-token output ceiling completed all ten no-retry cells but
+fell back in 4/10 because the structured output reached the ceiling and was
+invalid. The preserved report is
+`docs/pr14-live-accuracy-report-v3-merchant-spec-safety.json`: 10/10 HTTP 200,
+10/10 non-empty, 0/10 frozen-leader top-three, runtime evidence 2/10, runtime
+`strong` 1/10, mean 48,046 ms, p95/maximum 59,998 ms, 30 hosted searches, 125
+logical Serper operations with maximum 15/request, 232,237 model tokens, and
+approximately $0.346059 model-token cost at the public rates used for the
+audit. A separate full GPT-5.4 probe timed out at 75 seconds without usable
+output or usage evidence and was rejected as nonviable for this path.
+
+**Generalized corrections:** the scout now requires a distinctive exact model
+number or catalog code and rejects generic family/platform/specification
+targets. Exact-model comparison recognizes safe standalone numeric catalog
+codes while excluding currencies, years, and measurements; qualified values
+such as `5.0-Peak HP` no longer create false model identities. Generic aliases
+cannot transfer evidence to a sibling, and repeated identical catalog
+components in a retailer slug are idempotent.
+
+Exact target resolution now reuses a known current Shopping merchant when
+available, without adding provider work or moving price/availability across
+merchants. Non-new condition is rechecked after page resolution, including URL-
+only `reconditioned` disclosures. Product-page titles and URL specifications
+are checked independently, preventing a `2000 PSI` echoed title from masking a
+`1500-psi-rated` path. `img-na` images are treated as placeholders. A new leaf-
+blower type rule accepts explicit or full-size high-CFM leaf blowers while
+rejecting compact workshop/jobsite blowers, air dusters, inflators, and
+accessories.
+
+**Final no-retry result:** low reasoning retained three hosted searches and the
+6,000-token ceiling while eliminating every scout fallback. The preserved
+`docs/pr14-live-accuracy-report-v4-exact-scout.json` records 10/10 HTTP 200 and
+10/10 non-empty. Frozen leaders appeared in the top three in 1/9 currently
+eligible runs (11.11%); one benchmark leader was current-ineligible. Runtime
+evidence reached 4/10, runtime `strong` reached 3/10, and strong targets were
+planned in 9/10. Every passing strong leader ranked ahead of unscored
+alternatives.
+
+Mean latency was 26,454 ms; minimum was 17,093 ms; nearest-rank p95 and maximum
+were 36,077 ms. Calls totaled ten OpenAI Responses, thirty hosted searches, 137
+logical Serper operations, and 136 physical attempts; maxima were one, three,
+and fifteen logical operations per request. The public payload remained the
+same five-field recommendation shape, averaging 710 bytes and peaking at 1,378
+bytes. Model use was 178,485 input and 12,308 output tokens, 190,793 total,
+with approximately $0.189250 model-token cost at the public rates used for the
+audit. Provider-specific Shopping cost was not recomputed because the account
+tier was not inspected.
+
+**Observed quality and safety:** the broad robot-vacuum run returned strong
+Roborock Saros 10R first and three additional credible current alternatives;
+constrained robot vacuum returned strong eufy C10 first; constrained shop vac
+returned strong RIDGID RT1200 first; and constrained coffee maker returned the
+frozen Cuisinart DCC-3200 first. The leaf-blower correction removed the observed
+Bauer 120-CFM workshop blower while retaining full-size Atlas/Ryobi products.
+The pressure-washer correction returned only products meeting the requested
+minimum and rejected the observed title/URL mismatch. These examples prove the
+new gates, not aggregate market-leader coverage.
+
+**Verification:** 333/333 unit tests pass across 43 suites; typecheck passes;
+ESLint passes with zero warnings; the Next.js 16.3.3 production build passes
+with only `/`, `/_not-found`, and `/api/recommendations`; Playwright passes 7/7
+across Chromium desktop/mobile; and `git diff --check` passes. Playwright
+emitted environment-level `NO_COLOR` ignored because `FORCE_COLOR` was set;
+these were not application lint warnings.
+
+**Root-cause verdict and decision:** low reasoning solved the measured scout-
+output reliability loss and improved cost/latency, but source-backed exact
+leaders still frequently lack a qualifying current Shopping/page binding. The
+ranker correctly orders leaders that survive; it cannot promote evidence that
+fails current identity, condition, availability, price, budget, or page gates.
+Do not release or claim dependable best-in-budget quality, restore a retained
+index/background path, or continue prompt/model tuning as a substitute for
+commerce coverage. The next evidence-supported comparison is request-scoped
+direct canonical commerce resolution versus a larger explicit latency/
+operation envelope. Progressive/asynchronous output is a separate public-
+contract decision.
+
+**Boundaries and incident:** `.env.local` was not inspected, printed, hashed,
+copied, or edited. The previously disclosed broad `rg --files docs tests`
+command enumerated protected fixture path names only. No fixture content was
+opened, read, statted individually, hashed, parsed, copied, edited, deleted, or
+used as evidence, and the tree was not touched again. No push, deployment,
+release, dependency change, production-data action, public API expansion,
+matrix retry, or safety-gate weakening occurred.
