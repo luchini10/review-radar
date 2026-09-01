@@ -4207,13 +4207,13 @@ a known conservative undercount.
 - The frozen PR-14 audit is five broad plus five constrained cases, one attempt
   per cell with no retries. Preserve every raw progression report; do not
   replace a failed cell or rerun after inspecting the desired output.
-- The latest paid audit is a failed release result: 10/10 non-empty, frozen
+- The prior exact-scout paid audit was a failed release result: 10/10 non-empty, frozen
   leader top-three 1/9 currently eligible (11.11%), runtime evidence returned
   4/10, runtime `strong` returned 3/10, zero scout fallbacks, mean 26,454 ms,
   p95/maximum 36,077 ms, one OpenAI response, maximum three hosted searches,
   maximum fifteen logical Serper operations, and unchanged mean 710-byte /
   maximum 1,378-byte public payload.
-- The final deterministic wall is 333/333 unit tests, typecheck, zero-warning
+- The prior deterministic wall was 333/333 unit tests, typecheck, zero-warning
   lint, production build, and Playwright 7/7. Unit tests cover generic target
   rejection, standalone catalog codes, generic-alias and sibling isolation,
   merchant-bound target resolution, post-resolution condition, URL-only hard-
@@ -4224,3 +4224,41 @@ a known conservative undercount.
   p95/30-second maximum gates fail. The next architecture comparison must stay
   request-scoped: direct canonical commerce resolution versus a larger explicit
   latency/operation budget or a request-scoped progressive/asynchronous result.
+
+### PR-14 exact-binding follow-up contract (`61a914d`)
+
+- Scout aliases must retain at least one exact model identifier compatible with
+  the target and every named target variant. Only an exact identifier or the
+  bounded trailing `B` bare-tool SKU is compatible; arbitrary alpha suffixes
+  and aliases that drop `Complete`, `Kit`, or another named variant fail.
+- Genuine short letter-digit catalog codes such as `X9` are model identity;
+  display/network measurements such as `4K` and `5G` are not. Retailer-split
+  formatting may rejoin one exact catalog code.
+- Exact market evidence may bind through a direct page name or decoded path. A
+  source-derived Shopping title/snippet is allowed only on a direct product
+  page and only when the primary page identity contains no same-kind sibling
+  conflict. Query-derived snippets cannot establish identity.
+- Moccamaster canonicalizes to Technivorm. A known explicit conflicting brand
+  fails. An official target-brand host may establish a missing candidate brand,
+  but a brand alone never establishes the model.
+- Reject non-US locale path prefixes as well as foreign hosts. The live QA
+  safety predicate must call the same URL-market rule.
+- Product-page search may consume direct Shopping results already included in
+  the same response. Aggregate Google offer URLs remain ineligible. A resolved
+  candidate may use only its exact current direct same-page/same-merchant offer;
+  never transfer price, availability, image, retailer, or commerce metadata.
+- Resolved page titles and decoded paths are bounded requirement evidence.
+  Cordless, battery-powered/operated, rechargeable, and lithium-ion are
+  equivalent only with an explicit corded conflict. Navigation-bar images are
+  hard non-product assets.
+- Every evidence-bearing returned card in a live matrix must independently
+  rebind to the recorded target brand/model/aliases using its bounded identity
+  sources. An evidence tier without target identity, or target identity without
+  a tier, fails the matrix.
+- Preserve both new reports. V9 is a failed QA-harness run because its debug
+  envelope omitted retained source identity. V10 is authoritative and passed
+  exact binding/safety but failed release: 7/10 non-empty, 1/7 eligible frozen
+  leaders, p95/maximum 43,430 ms, runtime evidence and `strong` each 2/10.
+- Current deterministic wall: 347/347 tests across 44 suites, typecheck, zero-
+  warning lint, production build, Playwright 7/7, and one clean live desktop/
+  mobile browser search. These do not override the failed live quality gates.

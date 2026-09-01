@@ -4852,9 +4852,9 @@ current implementation authority.
 
 ### PR-14 - request-time market-quality reset
 
-**Status:** implemented through runtime commit `f55096d`; deterministic
-verification passes, but the final ten-case no-retry live matrix fails leader-
-recall and latency gates. PR-14 is not release-qualified.
+**Status:** implemented through runtime commit `61a914d`; deterministic
+verification passes, but the latest ten-case no-retry live matrix fails non-
+empty recall, leader recall, and latency gates. PR-14 is not release-qualified.
 
 **Objective:** research the current market for every shopper search, including
 repeated equivalent searches, without a retained market index, precomputation,
@@ -4926,6 +4926,45 @@ direct product pages, versus a larger explicit latency/operation budget. A
 progressive/asynchronous response is a separate public-contract option, not an
 implicit workaround. Any major provider or contract change requires a
 separately measured architecture decision.
+
+**Exact-binding follow-up at `61a914d`:** live QA exposed three generalized
+identity failures in successive preserved reports: a non-US locale path, an
+arbitrary trailing-letter sibling, and an alias that dropped an exact named
+variant. The current implementation rejects non-US market path prefixes,
+requires scout aliases to preserve exact identifiers and named variants,
+accepts only the bounded bare-tool `B` suffix, supports genuine short catalog
+models and retailer-split codes, and permits source-derived exact identity only
+for a direct product page whose primary identity names no sibling. It also
+consumes direct inline Shopping offers already returned by a product-page
+search, preserves them only on the same exact page and merchant, adds resolved
+page-title/path requirement evidence, canonicalizes Moccamaster to Technivorm,
+and rejects navigation-bar artwork. None of these signals creates eligibility
+or changes the public card.
+
+The new live runner independently rebinds every evidence-bearing returned card
+to the exact target. Its first preserved run,
+`docs/pr14-live-accuracy-report-v9-authoritative.json`, completed 10/10 requests
+and 10/10 non-empty but failed that assertion because the debug envelope had
+discarded earlier exact source identity used by a valid direct-page binding.
+After correcting only debug telemetry, the replacement one-attempt/no-retry
+run `docs/pr14-live-accuracy-report-v10-authoritative.json` passed exact binding
+and safety in all ten cells. It returned 7/10 non-empty, one frozen leader in
+seven currently eligible cells (14.29%), runtime evidence in 2/10, runtime
+`strong` in 2/10, and one scout fallback. Mean latency was 31,884 ms and p95/
+maximum was 43,430 ms. It used ten OpenAI Responses, thirty hosted searches,
+133 logical and physical Serper attempts, maximum fifteen logical operations
+per request, 190,266 model tokens, approximately $0.191525 model-token cost,
+and an unchanged five-field payload averaging 754 bytes and peaking at 1,552
+bytes.
+
+Compared with the prior exact-scout baseline, absolute frozen-leader hits did
+not improve, non-empty recall fell from 10/10 to 7/10, and tail latency
+worsened. The follow-up strengthens safety and attribution but does not prove
+better aggregate product quality. The release verdict and next architecture
+decision are unchanged. Taylor has authorized evaluating an asynchronous or
+progressive contract, but it must be compared against request-scoped canonical
+commerce resolution and a larger explicit operation/latency envelope rather
+than assumed superior.
 
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 

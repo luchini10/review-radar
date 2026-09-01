@@ -1858,3 +1858,30 @@ checkpoint. R7A remains blocked and separately approval-gated.
   budget reliability. The next sound comparison is request-scoped direct
   canonical commerce resolution versus a larger explicit latency/operation
   envelope. Progressive/asynchronous output is a separate contract decision.
+
+### PR-14 exact-binding and inline-commerce follow-up (2026-09-01)
+
+- Runtime commit `61a914d` rejects non-US locale paths, arbitrary suffix and
+  dropped-variant aliases, conflicting known brands, named package siblings,
+  and navigation-bar images. It supports short exact catalog codes, retailer-
+  split codes, official-host brand recovery, and bounded source-derived exact
+  identity with sibling isolation.
+- Product-page searches now consume direct inline Shopping results from the
+  same response without raising the fifteen-operation ceiling. Resolved offers
+  stay exact-page and same-merchant; no commerce or availability signal moves
+  between sellers. Page title/path evidence also participates in hard
+  requirement verification.
+- The live runner independently rebinds evidence-bearing cards. Preserve the
+  failed v9 harness report and authoritative v10 report. V10 completed 10/10
+  HTTP responses, passed exact binding and safety, but returned only 7/10 non-
+  empty, one frozen leader in seven eligible cells, and 43,430 ms p95/maximum.
+- Final wall: 347/347 unit tests, typecheck, zero-warning lint, production
+  build, Playwright 7/7, and a clean live desktop/mobile browser search.
+- PR-14 remains a release failure. The next decision is a measured comparison
+  of request-scoped canonical commerce resolution, a larger operation/latency
+  envelope, and an explicitly progressive response contract. No retained
+  recommendation research, push, or deployment is part of the current state.
+- Two protected-fixture process incidents are authoritative: one path-name
+  enumeration and one later broad content search that printed a few brand-
+  reference lines. No fixture was modified or used as evidence. Do not run
+  broad searches over `tests`; use explicit paths only.

@@ -17665,3 +17665,110 @@ opened, read, statted individually, hashed, parsed, copied, edited, deleted, or
 used as evidence, and the tree was not touched again. No push, deployment,
 release, dependency change, production-data action, public API expansion,
 matrix retry, or safety-gate weakening occurred.
+
+---
+
+## PR-14 exact-binding, inline-commerce, and locale follow-up (2026-09-01)
+
+**Assessment:** PARTIAL / RELEASE FAIL at runtime commit `61a914d`. The change
+closes the exact identity transfers observed during the live progression and
+adds a direct same-response commerce opportunity, but the corrected final
+matrix did not improve the product-quality objective enough to release.
+
+**Fail-first attribution:** successive preserved live reports exposed three
+generalized evidence-binding defects rather than one query-specific miss:
+
+- a product hosted on a US domain used a non-US `/eu-en/` market path;
+- the scout accepted an arbitrary trailing-letter alias and allowed `T80`
+  evidence to reach `T80S`; and
+- an alias dropped the target's `Complete` variant and allowed evidence to
+  reach a different `Kit` package.
+
+Product-page search responses also sometimes contained exact direct Shopping
+offers that the selector ignored, while resolved page paths held bounded
+requirement facts such as `cordless` that were not included in final evidence.
+Brand aliases, short catalog codes, retailer-split codes, source-derived exact
+identity, and navigation artwork caused additional generalized false rejection
+or asset risks.
+
+**Corrections:** scout aliases now retain exact model identifiers and named
+variants. Only the bounded bare-tool `B` suffix is compatible; arbitrary suffix
+siblings are not. Exact binding supports genuine short letter-digit catalog
+codes and retailer-split identifiers, can use an exact direct-page URL, and may
+use source-derived identity only when the primary page identity names no same-
+kind sibling. Known conflicting brands fail closed, official brand hosts may
+supply a missing brand, and Moccamaster canonicalizes to Technivorm.
+
+Non-US locale paths fail in addition to foreign hosts. Product-page searches
+consume same-response direct Shopping results without adding an operation. A
+resolved page may preserve only its own exact direct same-merchant offer and
+commerce signals. Resolved titles and paths contribute bounded requirement
+evidence, cordless/battery wording is normalized with an explicit corded
+conflict, and `navbar` artwork is rejected.
+
+**QA harness correction:** the matrix now records target aliases, returned
+target brand/model, bounded identity sources, rejection counts, and verified
+candidates internally. It independently re-runs exact target binding for every
+evidence-bearing returned card and checks non-US paths. The first new report,
+`docs/pr14-live-accuracy-report-v9-authoritative.json`, returned 10/10 non-empty
+and 3/9 eligible frozen leaders but failed one exact-binding assertion. Review
+showed that the debug envelope had discarded exact source-derived identity
+which the production candidate legitimately retained; the assertion could not
+reproduce the allowed binding. The report remains preserved as a failed QA-
+harness run and was not used as product-mismatch proof.
+
+After adding only the missing debug identity inputs, the replacement predeclared
+one-attempt/no-retry report
+`docs/pr14-live-accuracy-report-v10-authoritative.json` is authoritative:
+
+- 10/10 HTTP 200, zero request failures, product safety 10/10, exact evidence
+  binding 10/10, and unchanged public shape;
+- 7/10 non-empty versus the 8/10 gate, with the broad drill, constrained robot
+  vacuum, and constrained pressure washer returning honest empty shortlists;
+- frozen leader top-three 1/7 currently eligible (14.29%) versus 80%; three
+  benchmark leaders were currently ineligible;
+- runtime evidence 2/10, runtime `strong` 2/10, strong plans 5/10, and one
+  `insufficient_evidence` scout fallback;
+- every returned strong card ranked ahead of unscored alternatives;
+- mean 31,884 ms, minimum 24,715 ms, and nearest-rank p95/maximum 43,430 ms;
+- ten OpenAI Responses, thirty hosted searches, 133 logical and 133 physical
+  Serper attempts, maximum three hosted and fifteen logical operations/request;
+- 177,246 input and 13,020 output model tokens, 190,266 total, with estimated
+  model-token cost $0.191525 at the public rates encoded by the harness; and
+- mean 754-byte and maximum 1,552-byte normal payload, still the same five-field
+  card contract.
+
+Compared with `docs/pr14-live-accuracy-report-v4-exact-scout.json`, absolute
+frozen-leader hits stayed at one, non-empty fell from 10/10 to 7/10, runtime
+evidence fell from 4/10 to 2/10, and p95 rose from 36,077 ms to 43,430 ms. The
+new safety checks are meaningful, but the live sample does not establish better
+aggregate product quality.
+
+**Verification:** 347/347 unit tests pass across 44 suites; typecheck passes;
+ESLint passes with zero warnings; the Next.js 16.3.3 production build passes
+with only `/`, `/_not-found`, and `/api/recommendations`; and Playwright passes
+7/7 across Chromium desktop/mobile. A separate live under-$400 drip-coffee-
+maker browser request completed HTTP 200 in 28.6 seconds and rendered five
+minimal cards. At 1440x1000 and 390x844, the document had no horizontal
+overflow, all five cards stayed inside the viewport, and the browser console
+had no warnings or errors. The browser skill materially supplied this live
+responsive verification; it did not change application code.
+
+**Root-cause verdict:** the implementation can now prove exact evidence binding
+more reliably, but exact leaders still frequently lack a current in-budget US
+commerce page that survives merchant, availability, price, requirement, and
+page verification. The remaining bottleneck is request-time commerce coverage,
+not rank order. Do not release, claim dependable best-in-budget quality, weaken
+safety, or retry until a preferred result appears. Compare request-scoped
+canonical commerce resolution against a larger operation/latency envelope and
+an explicitly progressive public contract.
+
+**Boundaries and incidents:** `.env.local` was not manually opened, printed,
+hashed, copied, edited, or used as evidence; Next.js reported loading it during
+ordinary dev/build startup. In addition to the previously disclosed path-name
+enumeration, a later broad `rg` content search scoped to implementation files
+and `tests` unintentionally matched and printed a few protected-fixture lines
+containing brand references. Those lines were not used as evidence. No fixture
+was modified, copied, deleted, or hashed, and no further protected-tree access
+occurred. No push, deployment, release, dependency change, production-data
+action, or public response expansion occurred.

@@ -11,6 +11,38 @@ Update this file after:
 
 ## 2026-09-01
 
+### Codex - Tighten exact market evidence and live QA
+
+#### Changed
+
+- Required scout aliases to preserve exact model identifiers and named
+  variants, rejected arbitrary suffix siblings and non-US locale paths, and
+  added bounded support for short and retailer-split catalog codes.
+- Allowed exact identity from a direct page URL or retained source-derived
+  Shopping text only when the page names no sibling, while keeping brand and
+  merchant isolation fail-closed.
+- Reused direct Shopping offers already returned by product-page searches
+  without another operation and kept price, availability, image, retailer, and
+  commerce signals on the same exact merchant page.
+- Added resolved page-title/path requirement evidence, cordless/battery wording
+  equivalence with a corded conflict, Moccamaster/Technivorm brand equivalence,
+  and navigation-bar image rejection.
+- Extended the live runner to reject non-US paths and independently rebind each
+  evidence-bearing card to its exact target. Preserved both the failed v9 QA-
+  harness report and the corrected v10 authoritative report.
+
+#### Verified
+
+- Full validation passed 347/347 unit tests across 44 suites, typecheck, zero-
+  warning lint, the Next.js 16.3.3 production build, and Playwright 7/7.
+- A live browser search rendered five minimal cards without overflow at desktop
+  and mobile widths and emitted no browser-console warnings or errors.
+- The authoritative v10 no-retry matrix passed safety, exact evidence binding,
+  public shape, and call ceilings across 10/10 requests, but returned only 7/10
+  non-empty, one frozen leader in seven eligible cells, and 43,430 ms p95.
+- Release gates remain failed. The change improves safety and auditability, not
+  proven aggregate market quality; no push or deployment occurred.
+
 ### Codex - Restore fresh request-time market research
 
 #### Changed
