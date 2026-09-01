@@ -40,7 +40,7 @@ import {
   semanticAliasesFor,
 } from "./semanticMatching.ts";
 import { isNonProductSource } from "./search/sourceSafety.ts";
-import type { SelectionPlan, SelectionTarget } from "./selectionPlanner.ts";
+import type { MarketScoutPlan, MarketScoutTarget } from "./marketScout.ts";
 import {
   evaluateSpecConstraint,
   extractSpecsFromText,
@@ -200,7 +200,7 @@ function selectionBrand(candidate: RawProductCandidate) {
   return null;
 }
 
-function targetTerms(target: SelectionTarget) {
+function targetTerms(target: MarketScoutTarget) {
   return [
     `${target.brand} ${target.model}`,
     target.model,
@@ -212,7 +212,7 @@ function targetTerms(target: SelectionTarget) {
 
 function candidateMatchesTarget(
   candidate: RawProductCandidate,
-  target: SelectionTarget,
+  target: MarketScoutTarget,
 ) {
   const candidateText = normalizedText(
     [
@@ -232,7 +232,7 @@ function candidateMatchesTarget(
   );
 }
 
-function targetPriority(candidate: RawProductCandidate, targets: SelectionTarget[]) {
+function targetPriority(candidate: RawProductCandidate, targets: MarketScoutTarget[]) {
   const index = targets.findIndex((target) =>
     candidateMatchesTarget(candidate, target),
   );
@@ -287,7 +287,7 @@ function resolutionAuthorityScore(candidate: RawProductCandidate) {
 
 function rankCandidates(
   candidates: RawProductCandidate[],
-  targets: SelectionTarget[],
+  targets: MarketScoutTarget[],
   input: RecommendationApiRequest,
 ) {
   return candidates
@@ -1302,7 +1302,7 @@ function selectDistinctProducts(
 
 export async function selectProducts(options: {
   input: RecommendationApiRequest;
-  plan: SelectionPlan;
+  plan: MarketScoutPlan;
   signal?: AbortSignal;
 }): Promise<{
   result: SelectionRecommendationResult;

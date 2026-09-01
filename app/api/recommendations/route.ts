@@ -17,7 +17,7 @@ import {
   isRequestCancelledError,
   throwIfRequestCancelled,
 } from "../../../lib/requestCancellation.ts";
-import { buildSelectionPlan } from "../../../lib/selectionPlanner.ts";
+import { buildMarketScoutPlan } from "../../../lib/marketScout.ts";
 import { USER_ERROR_MESSAGES } from "../../../lib/errorMessages.ts";
 
 export const runtime = "nodejs";
@@ -30,14 +30,14 @@ type TimingStage = {
 };
 
 type RecommendationRouteDependencies = {
-  buildSelectionPlan: typeof buildSelectionPlan;
+  buildMarketScoutPlan: typeof buildMarketScoutPlan;
   createOpenAIClient: typeof createOpenAIClient;
   paidRequestAdmission: PaidRequestAdmission;
   selectProducts: typeof selectProducts;
 };
 
 const defaultDependencies: RecommendationRouteDependencies = {
-  buildSelectionPlan,
+  buildMarketScoutPlan,
   createOpenAIClient,
   paidRequestAdmission: DEFAULT_PAID_REQUEST_ADMISSION,
   selectProducts,
@@ -86,14 +86,6 @@ function wantsLocalDebug(request: Request) {
   return (
     process.env.NODE_ENV !== "production" &&
     request.headers.get(DEBUG_HEADER) === "true"
-  );
-}
-
-function plannerModel() {
-  return (
-    process.env.OPENAI_SELECTION_MODEL ||
-    process.env.OPENAI_HELPER_MODEL ||
-    "gpt-5.4-mini"
   );
 }
 
@@ -184,11 +176,10 @@ async function handlePost(
     const client = await timing.measure("create_optional_openai_client", () =>
       optionalOpenAIClient(process.env.OPENAI_API_KEY, dependencies),
     );
-    const planned = await timing.measure("openai_selection_plan", () =>
-      dependencies.buildSelectionPlan({
+    const scouted = await timing.measure("openai_market_scout", () =>
+      dependencies.buildMarketScoutPlan({
         client,
         input,
-        model: plannerModel(),
         signal: request.signal,
       }),
     );
@@ -196,7 +187,7 @@ async function handlePost(
     const selected = await timing.measure("select_products", () =>
       dependencies.selectProducts({
         input,
-        plan: planned.plan,
+        plan: scouted.plan,
         signal: request.signal,
       }),
     );
@@ -213,9 +204,9 @@ async function handlePost(
       );
     }
     const debug = {
-      architecture: "selection_only_v1",
-      openAiCalls: planned.telemetry.openAiCalls,
-      planner: planned.telemetry,
+      architecture: "market_quality_v1",
+      marketScout: scouted.telemetry,
+      openAiCalls: scouted.telemetry.openAiCalls,
       search: selected.telemetry,
       timing: timing.summary(),
     };
@@ -236,7 +227,7 @@ async function handlePost(
         ? {
             error: "ReviewRadar could not complete this product search.",
             debug: {
-              architecture: "selection_only_v1",
+              architecture: "market_quality_v1",
               error:
                 error instanceof Error
                   ? { name: error.name, message: error.message.slice(0, 300) }

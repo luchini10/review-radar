@@ -22,7 +22,7 @@ function admission() {
 
 function dependencies(overrides = {}) {
   return {
-    buildSelectionPlan: async () => ({
+    buildMarketScoutPlan: async () => ({
       plan: { queries: ["gaming monitor"], targets: [] },
       telemetry: {
         openAiCalls: 1,
@@ -92,7 +92,7 @@ describe("selection-only recommendation API", () => {
     let calls = 0;
     const response = await routeModule.createRecommendationPostHandler(
       dependencies({
-        buildSelectionPlan: async () => {
+        buildMarketScoutPlan: async () => {
           calls += 1;
           throw new Error("must not run");
         },
@@ -112,7 +112,7 @@ describe("selection-only recommendation API", () => {
     let calls = 0;
     const response = await routeModule.createRecommendationPostHandler(
       dependencies({
-        buildSelectionPlan: async () => {
+        buildMarketScoutPlan: async () => {
           calls += 1;
           throw new Error("must not run");
         },
@@ -141,7 +141,7 @@ describe("selection-only recommendation API", () => {
     );
     const body = await response.json();
 
-    assert.equal(body.debug.architecture, "selection_only_v1");
+    assert.equal(body.debug.architecture, "market_quality_v1");
     assert.equal(body.debug.openAiCalls, 1);
     assert.equal(body.debug.search.candidatesReturned, 1);
     assert.equal("requirements" in body.debug, false);
@@ -196,7 +196,7 @@ describe("selection-only recommendation API", () => {
             return { ok: false, retryAfterSeconds: 7 };
           },
         },
-        buildSelectionPlan: async () => {
+        buildMarketScoutPlan: async () => {
           planned = true;
           throw new Error("must not run");
         },
