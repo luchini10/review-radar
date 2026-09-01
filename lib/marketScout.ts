@@ -17,12 +17,13 @@ type OpenAIResponsesClient = {
 };
 
 export const MARKET_SCOUT_MODEL = "gpt-5.4-mini";
-export const MARKET_SCOUT_PROMPT_VERSION = "pr13-market-scout-v1";
+export const MARKET_SCOUT_PROMPT_VERSION = "pr13-market-scout-v3";
 export const MARKET_SCOUT_CACHE_TTL_MS = 24 * 60 * 60 * 1_000;
 
-const MARKET_SCOUT_TIMEOUT_MS = 20_000;
+const MARKET_SCOUT_TIMEOUT_MS = 10_500;
 const MAX_MARKET_SCOUT_TARGETS = 5;
 const MAX_MARKET_SCOUT_TOOL_CALLS = 3;
+const REQUESTED_MARKET_SCOUT_TOOL_CALLS = 1;
 const MAX_SELECTION_QUERIES = 3;
 
 export type MarketEvidenceTier = "strong" | "supported" | "none";
@@ -554,9 +555,12 @@ function scoutCacheKey(
 
 const systemPrompt = [
   "You are ReviewRadar's bounded US-market product scout.",
-  "Use live web search to identify up to five ordered exact product models that current independent comparative testing or reputable editorial consensus supports as the best overall choices satisfying the shopper's category, budget ceiling, and hard requirements.",
+  "Use one broad web search to find up to five ordered exact product models that independent testing or editorial consensus supports as the best overall choices satisfying the category, budget, and hard requirements.",
+  "For every target, include two or three current test/editorial URLs from independent domains, with at least one comparative test or best-of source; omit a target when that evidence threshold is unavailable.",
+  "Prioritize models repeatedly recommended across independent comparative sources, not one-article picks, and place the strongest overall in-budget model first.",
+  "When several qualify, prefer broadly cross-tested models with current US retail availability over newer one-review picks.",
   "A high price or proximity to the budget is never evidence of quality.",
-  "Search current independent testing and editorial sources; do not use manufacturer, retailer, marketplace, affiliate-commerce, community, forum, or social sources as leader evidence.",
+  "Use only current independent test/editorial evidence; exclude manufacturer, retailer, marketplace, affiliate-commerce, community, forum, and social sources.",
   "Copy every sourceUrls value exactly from sources returned by your web searches and attach evidence only to the exact model it evaluates; never transfer evidence by brand or to a sibling variant.",
   "Return only brand, exact model, useful exact-model aliases, and source URLs.",
   "Do not return explanations, review summaries, prices, scores, shopping queries, card content, or unsupported products.",
@@ -629,7 +633,7 @@ export async function buildMarketScoutPlan(options: {
               { role: "user", content: prompt },
             ],
             max_output_tokens: 1_600,
-            max_tool_calls: MAX_MARKET_SCOUT_TOOL_CALLS,
+            max_tool_calls: REQUESTED_MARKET_SCOUT_TOOL_CALLS,
             reasoning: { effort: "low" },
             store: false,
             text: {
@@ -640,9 +644,13 @@ export async function buildMarketScoutPlan(options: {
                 strict: true,
               },
             },
-            tools: [{ type: "web_search", search_context_size: "medium" }],
+            tools: [{ type: "web_search", search_context_size: "low" }],
           },
-          { signal: sharedSignal, timeout: MARKET_SCOUT_TIMEOUT_MS },
+          {
+            maxRetries: 0,
+            signal: sharedSignal,
+            timeout: MARKET_SCOUT_TIMEOUT_MS,
+          },
         );
         providerUsage = responseUsage(response);
         hostedSearchCalls = responseHostedSearchCalls(response);

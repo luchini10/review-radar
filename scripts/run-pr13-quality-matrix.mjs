@@ -300,6 +300,12 @@ function compactTelemetry(body, benchmarkCase) {
     scoutInputTokens: asFiniteNumber(scout.inputTokens),
     scoutOutputTokens: asFiniteNumber(scout.outputTokens),
     scoutUsedFallback: Boolean(scout.usedFallback),
+    evidencedTargetReturned: returnedSignals.some(
+      (signal) => signal.evidenceTier === "strong" || signal.evidenceTier === "supported",
+    ),
+    strongTargetReturned: returnedSignals.some(
+      (signal) => signal.evidenceTier === "strong",
+    ),
     strongBeforeUnscored: strongBeforeUnscored(returnedSignals),
     topThreeLeader: topThreeLeaderIndex >= 0,
     topThreeLeaderPosition: topThreeLeaderIndex < 0 ? null : topThreeLeaderIndex + 1,
@@ -497,6 +503,14 @@ function summarize(results, cases) {
         output: totalOutputTokens,
         total: totalInputTokens + totalOutputTokens,
       },
+      returnedEvidenceRuns: successful.filter(
+        (result) => result.evidencedTargetReturned,
+      ).length,
+      returnedStrongRuns: successful.filter((result) => result.strongTargetReturned)
+        .length,
+      strongTargetPlanRuns: successful.filter((result) =>
+        asArray(result.marketTargets).some((target) => asRecord(target).tier === "strong"),
+      ).length,
     },
     successfulRuns: successful.length,
   };

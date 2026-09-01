@@ -51,6 +51,13 @@ describe("selection product identity", () => {
       ),
       true,
     );
+    assert.equal(
+      haveConflictingNumericProductSpecs(
+        "17.3 inch laptop with 16GB RAM and 512GB SSD",
+        "hp-14-inch-laptop-4gb-ram-128gb-ufs",
+      ),
+      true,
+    );
   });
 
   it("recognizes an exact model relation and rejects a sibling model", () => {

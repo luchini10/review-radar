@@ -691,6 +691,18 @@ function productPageSearchQuery(
 }
 
 function candidateHasUsablePage(candidate: RawProductCandidate) {
+  let pageIdentityEvidence = candidate.productUrl;
+  try {
+    pageIdentityEvidence = decodeURIComponent(pageIdentityEvidence);
+  } catch {
+    // The undecoded URL still provides bounded identity evidence.
+  }
+  if (
+    haveConflictingNumericProductSpecs(candidate.name, pageIdentityEvidence)
+  ) {
+    return false;
+  }
+
   return productPageMatchesIdentity({
     brand: selectionBrand(candidate) || undefined,
     model: candidateModel(candidate),

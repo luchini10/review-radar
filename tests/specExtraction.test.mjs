@@ -79,6 +79,20 @@ describe("selection spec requirements", () => {
 
     assert.equal(specs.screenSizeIn.value, 27);
     assert.equal(specs.refreshRateHz.value, 180);
+    assert.equal(specs.displayResolutionHeightPx.value, 1440);
+  });
+
+  it("rejects a known lower display resolution in a soft priority", () => {
+    const [constraint] = extractSpecConstraints("1440p", "priorities");
+
+    assert.deepEqual(
+      [constraint.spec, constraint.operator, constraint.value, constraint.strictness],
+      ["displayResolutionHeightPx", "min", 1440, "soft"],
+    );
+    assert.equal(
+      evaluateSpecConstraint(constraint, extractSpecsFromText("1080p monitor")),
+      "fail",
+    );
   });
 
   it("recognizes bounded battery-kit title forms without overriding tool-only evidence", () => {

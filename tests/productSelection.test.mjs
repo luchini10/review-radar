@@ -7,6 +7,7 @@ import { extractStructuredRequirements } from "../lib/requirementExtraction.ts";
 const {
   attachMarketEvidence,
   bayesianCommerceRating,
+  candidateHasUsablePage,
   dedupeSelectionCandidates,
   interleaveSearchCandidates,
   isSecondaryMarketCandidate,
@@ -204,6 +205,18 @@ describe("selection correctness", () => {
     assert.deepEqual(
       result.diagnostics.map((entry) => entry.status),
       ["direct", "direct"],
+    );
+  });
+
+  it("rejects a direct product URL whose explicit configuration contradicts the offer", () => {
+    assert.equal(
+      candidateHasUsablePage(
+        candidate("17.3 inch Laptop with 16GB RAM and 512GB SSD", {
+          productUrl:
+            "https://www.walmart.com/ip/HP-14-inch-Laptop-4GB-RAM-128GB-UFS/13989468860",
+        }),
+      ),
+      false,
     );
   });
 
@@ -1027,6 +1040,13 @@ describe("selection correctness", () => {
     assert.equal(
       selectionRequirementResult(
         asset("Acer 32-inch 4K 144Hz Gaming Monitor"),
+        monitorInput,
+      ).isMatch,
+      false,
+    );
+    assert.equal(
+      selectionRequirementResult(
+        asset("Acer 27-inch 1080p 180Hz Gaming Monitor"),
         monitorInput,
       ).isMatch,
       false,

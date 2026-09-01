@@ -1749,19 +1749,37 @@ const CONFLICT_SPEC_UNIT_ALIASES: Record<string, string> = {
 function numericSpecValues(text: string) {
   const values = new Map<string, Set<number>>();
 
+  const add = (unit: string, rawValue: string) => {
+    const value = Number(rawValue);
+    if (!Number.isFinite(value)) return;
+    const existing = values.get(unit) || new Set<number>();
+    existing.add(value);
+    values.set(unit, existing);
+  };
+
   for (const match of text.matchAll(
     /(\d+(?:\.\d+)?)[\s-]*(?:peak[\s-]*)?(gallons?|gal|hp|quarts?|qt|psi|scfm|cfm|btu|watts?|volts?|amps?|ah|lbs?|pounds?)\b/gi,
   )) {
     const unit = CONFLICT_SPEC_UNIT_ALIASES[(match[2] || "").toLowerCase()];
-    const value = Number(match[1]);
+    if (unit) add(unit, match[1]);
+  }
 
-    if (!unit || !Number.isFinite(value)) {
-      continue;
-    }
+  for (const match of text.matchAll(
+    /(\d{1,3}(?:\.\d+)?)\s*(?:-\s*)?(?:inches?|inch)\b|\b(\d{1,3}(?:\.\d+)?)\s*["”]/gi,
+  )) {
+    add("inch", match[1] || match[2]);
+  }
 
-    const existing = values.get(unit) || new Set<number>();
-    existing.add(value);
-    values.set(unit, existing);
+  for (const match of text.matchAll(
+    /(\d{1,3})\s*gb\s*(?:ram|memory)\b|(?:ram|memory)\b[^\d]{0,12}(\d{1,3})\s*gb\b/gi,
+  )) {
+    add("memoryGb", match[1] || match[2]);
+  }
+
+  for (const match of text.matchAll(
+    /(\d{2,5})\s*gb\s*(?:ssd|storage|ufs|emmc)\b|(?:ssd|storage|ufs|emmc)\b[^\d]{0,12}(\d{2,5})\s*gb\b/gi,
+  )) {
+    add("storageGb", match[1] || match[2]);
   }
 
   return values;

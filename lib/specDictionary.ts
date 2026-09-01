@@ -215,6 +215,17 @@ export const SPEC_DICTIONARY: SpecDefinition[] = [
     matchers: [/(\d{2,3})\s*\+?\s*hz\b/i],
   },
   {
+    id: "displayResolutionHeightPx",
+    label: "Display resolution",
+    unit: "p",
+    kind: "numeric",
+    direction: "higher",
+    matchers: [
+      /(\d{3,4})\s*p\b/i,
+      /\b\d{3,5}\s*[x×]\s*(\d{3,4})\b/i,
+    ],
+  },
+  {
     id: "storageGb",
     label: "Storage",
     unit: "GB",
