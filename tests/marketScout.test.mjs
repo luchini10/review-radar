@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
-import { beforeEach, describe, it } from "node:test";
+import { describe, it } from "node:test";
 
-import { clearCacheForTests } from "../lib/cache.ts";
 import {
   buildMarketScoutPlan,
-  MARKET_SCOUT_CACHE_TTL_MS,
   MARKET_SCOUT_MODEL,
   marketScoutTestExports,
 } from "../lib/marketScout.ts";
@@ -63,8 +61,6 @@ function clientReturning(response, calls = []) {
   };
 }
 
-beforeEach(() => clearCacheForTests());
-
 describe("market scout", () => {
   it("uses deterministic neutral discovery with no quality boost when no client exists", async () => {
     const result = await buildMarketScoutPlan({ client: null, input });
@@ -87,11 +83,12 @@ describe("market scout", () => {
     assert.equal(calls.length, 1);
     const options = calls[0].options;
     assert.equal(options.model, MARKET_SCOUT_MODEL);
-    assert.equal(options.max_tool_calls, 1);
+    assert.equal(options.max_tool_calls, 2);
+    assert.equal(options.max_output_tokens, 2_400);
     assert.equal(options.store, false);
     assert.deepEqual(options.include, ["web_search_call.action.sources"]);
     assert.deepEqual(options.tools, [
-      { type: "web_search", search_context_size: "low" },
+      { type: "web_search", search_context_size: "medium" },
     ]);
     assert.equal(options.text.format.strict, true);
     assert.equal(options.text.format.type, "json_schema");
@@ -101,7 +98,7 @@ describe("market scout", () => {
     );
     const schemaText = JSON.stringify(options.text.format.schema);
     assert.doesNotMatch(schemaText, /price|explanation|reviewSummary|searchQueries/i);
-    assert.equal(calls[0].requestOptions.timeout, 10_500);
+    assert.equal(calls[0].requestOptions.timeout, 45_000);
     assert.equal(calls[0].requestOptions.maxRetries, 0);
     assert.equal(result.telemetry.openAiCalls, 1);
     assert.equal(result.telemetry.hostedSearchCalls, 1);
@@ -196,7 +193,7 @@ describe("market scout", () => {
     );
   });
 
-  it("does not cache invalid or insufficiently supported output", async () => {
+  it("runs a fresh scout for every request, including identical requests", async () => {
     let calls = 0;
     const client = {
       responses: {
@@ -218,7 +215,7 @@ describe("market scout", () => {
     assert.deepEqual(first.plan.targets, []);
   });
 
-  it("caches validated plans for 24 hours by normalized request, model, and prompt version", async () => {
+  it("does not reuse a validated plan across later searches", async () => {
     let calls = 0;
     const client = {
       responses: {
@@ -238,22 +235,20 @@ describe("market scout", () => {
         priorities: "must be self-emptying",
       },
     });
-    await buildMarketScoutPlan({
+    const third = await buildMarketScoutPlan({
       client,
       input,
       promptVersion: "different-prompt-version",
     });
 
-    assert.equal(MARKET_SCOUT_CACHE_TTL_MS, 86_400_000);
-    assert.equal(calls, 2);
-    assert.equal(first.telemetry.cacheHit, false);
+    assert.equal(calls, 3);
     assert.equal(first.telemetry.openAiCalls, 1);
-    assert.equal(second.telemetry.cacheHit, true);
-    assert.equal(second.telemetry.openAiCalls, 0);
-    assert.equal(second.telemetry.hostedSearchCalls, 0);
+    assert.equal(second.telemetry.openAiCalls, 1);
+    assert.equal(third.telemetry.openAiCalls, 1);
+    assert.equal(second.telemetry.hostedSearchCalls, 1);
   });
 
-  it("propagates cancellation and aborts the shared provider request", async () => {
+  it("propagates cancellation and aborts the provider request", async () => {
     const controller = new AbortController();
     let providerAborted = false;
     let markProviderStarted;
@@ -287,6 +282,36 @@ describe("market scout", () => {
     await assert.rejects(promise, { name: "RequestCancelledError" });
     await new Promise((resolve) => setImmediate(resolve));
     assert.equal(providerAborted, true);
+  });
+
+  it("aborts a hung provider at the independent live-scout deadline", async () => {
+    let providerAborted = false;
+    const result = await buildMarketScoutPlan({
+      client: {
+        responses: {
+          async create(_options, requestOptions) {
+            return new Promise((_resolve, reject) => {
+              requestOptions.signal.addEventListener(
+                "abort",
+                () => {
+                  providerAborted = true;
+                  reject(new Error("provider aborted"));
+                },
+                { once: true },
+              );
+            });
+          },
+        },
+      },
+      input,
+      timeoutMs: 10,
+    });
+
+    assert.equal(providerAborted, true);
+    assert.equal(result.telemetry.usedFallback, true);
+    assert.equal(result.telemetry.fallbackReason, "timeout");
+    assert.equal(result.telemetry.openAiCalls, 1);
+    assert.deepEqual(result.plan.targets, []);
   });
 
   it("rejects a response that exceeds the hosted-search call ceiling", async () => {
@@ -331,7 +356,8 @@ describe("market scout", () => {
     const prompt = marketScoutTestExports.systemPrompt;
 
     assert.match(prompt, /exact product models/i);
-    assert.match(prompt, /one broad web search/i);
+    assert.match(prompt, /at most two focused web searches/i);
+    assert.match(prompt, /current request/i);
     assert.match(prompt, /independent domains/i);
     assert.match(prompt, /comparative test or best-of source/i);
     assert.match(prompt, /current US retail availability/i);

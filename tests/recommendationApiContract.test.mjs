@@ -141,7 +141,7 @@ describe("selection-only recommendation API", () => {
     );
     const body = await response.json();
 
-    assert.equal(body.debug.architecture, "market_quality_v1");
+    assert.equal(body.debug.architecture, "market_quality_live_v2");
     assert.equal(body.debug.openAiCalls, 1);
     assert.equal(body.debug.search.candidatesReturned, 1);
     assert.equal("requirements" in body.debug, false);

@@ -1,9 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
 
-import { clearCacheForTests } from "../lib/cache.ts";
 import {
-  PRODUCT_SEARCH_CACHE_TTL_MS,
   prefilterProductCandidates,
   productSearchTestExports,
   searchShoppingProducts,
@@ -16,7 +14,6 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
   if (originalApiKey === undefined) delete process.env.SERPER_API_KEY;
   else process.env.SERPER_API_KEY = originalApiKey;
-  clearCacheForTests();
 });
 
 function candidate(name, price = 100) {
@@ -48,10 +45,6 @@ function candidate(name, price = 100) {
 }
 
 describe("bounded product search", () => {
-  it("keeps discovery evidence fresh for current inventory", () => {
-    assert.equal(PRODUCT_SEARCH_CACHE_TTL_MS, 5 * 60 * 1_000);
-  });
-
   it("removes site operators from Shopping queries", () => {
     assert.equal(
       productSearchTestExports.sanitizeQuery(
@@ -152,7 +145,7 @@ describe("bounded product search", () => {
     assert.equal(result.candidates.length, 1);
   });
 
-  it("performs one physical request per uncached logical search", async () => {
+  it("coalesces only within one request and refetches for a later search", async () => {
     process.env.SERPER_API_KEY = "test-only-key";
     let fetchCalls = 0;
     let attempts = 0;
@@ -176,20 +169,30 @@ describe("bounded product search", () => {
     };
 
     const query = `robot vacuum unit test ${Date.now()}`;
+    const requestCache = new Map();
     const first = await searchShoppingProducts(query, "robot vacuum", {
       onAttempt: () => {
         attempts += 1;
       },
+      requestCache,
     });
     const second = await searchShoppingProducts(query, "robot vacuum", {
       onAttempt: () => {
         attempts += 1;
       },
+      requestCache,
+    });
+    const laterSearch = await searchShoppingProducts(query, "robot vacuum", {
+      onAttempt: () => {
+        attempts += 1;
+      },
+      requestCache: new Map(),
     });
 
     assert.equal(first.candidates.length, 1);
     assert.equal(second.candidates.length, 1);
-    assert.equal(fetchCalls, 1);
-    assert.equal(attempts, 1);
+    assert.equal(laterSearch.candidates.length, 1);
+    assert.equal(fetchCalls, 2);
+    assert.equal(attempts, 2);
   });
 });

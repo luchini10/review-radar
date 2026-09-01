@@ -21,6 +21,7 @@ import { buildMarketScoutPlan } from "../../../lib/marketScout.ts";
 import { USER_ERROR_MESSAGES } from "../../../lib/errorMessages.ts";
 
 export const runtime = "nodejs";
+export const maxDuration = 150;
 
 const DEBUG_HEADER = "x-reviewradar-debug";
 
@@ -207,7 +208,7 @@ async function handlePost(
       );
     }
     const debug = {
-      architecture: "market_quality_v1",
+      architecture: "market_quality_live_v2",
       marketScout: scouted.telemetry,
       openAiCalls: scouted.telemetry.openAiCalls,
       search: selected.telemetry,
@@ -230,7 +231,7 @@ async function handlePost(
         ? {
             error: "ReviewRadar could not complete this product search.",
             debug: {
-              architecture: "market_quality_v1",
+              architecture: "market_quality_live_v2",
               error:
                 error instanceof Error
                   ? { name: error.name, message: error.message.slice(0, 300) }

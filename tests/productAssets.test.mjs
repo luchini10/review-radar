@@ -1,18 +1,12 @@
 import assert from "node:assert/strict";
-import { beforeEach, describe, it } from "node:test";
+import { describe, it } from "node:test";
 
-import { clearCacheForTests } from "../lib/cache.ts";
 import {
-  PRODUCT_ASSET_CACHE_TTL_MS,
   enrichProductAssets,
   productAssetsTestExports,
 } from "../lib/productAssets.ts";
 
 const { buildMetadata, mergeMetadata } = productAssetsTestExports;
-
-beforeEach(() => {
-  clearCacheForTests();
-});
 
 function field(value, sourceUrl = "https://shop.example/products/item") {
   return {
@@ -50,8 +44,30 @@ function publicDependencies(html, onTransport = () => {}) {
 }
 
 describe("selection product asset enrichment", () => {
-  it("expires current price and availability evidence after two minutes", () => {
-    assert.equal(PRODUCT_ASSET_CACHE_TTL_MS, 2 * 60 * 1_000);
+  it("coalesces page reads only within one selection request", async () => {
+    let transports = 0;
+    const html = '<html><head><title>Apple iPad Pro M4</title></head><body><h1>Apple iPad Pro M4</h1></body></html>';
+    const fetchDependencies = publicDependencies(html, () => {
+      transports += 1;
+    });
+    const requestCache = new Map();
+
+    await Promise.all([
+      enrichProductAssets(
+        { recommendations: [candidate()] },
+        { fetchDependencies, requestCache },
+      ),
+      enrichProductAssets(
+        { recommendations: [candidate()] },
+        { fetchDependencies, requestCache },
+      ),
+    ]);
+    await enrichProductAssets(
+      { recommendations: [candidate()] },
+      { fetchDependencies, requestCache: new Map() },
+    );
+
+    assert.equal(transports, 2);
   });
 
   it("does not treat a search offer as verified when the page has no current offer", () => {

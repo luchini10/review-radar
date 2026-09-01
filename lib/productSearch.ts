@@ -3,7 +3,6 @@ import type {
   RecommendationApiRequest,
 } from "@/types/review-radar";
 import { inferKnownBrand } from "./brandMatching.ts";
-import { getCachedOrLoad, normalizeCacheKey } from "./cache.ts";
 import { parseBestMoneyAmount, parseMaxBudgetAmount } from "./priceParsing.ts";
 import { baseProductCategoryFromQuery } from "./productCategory.ts";
 import { classifyProductTypeMatch } from "./productTypeMatch.ts";
@@ -16,7 +15,6 @@ const SERPER_BASE_URL = "https://google.serper.dev";
 const SEARCH_RESULT_LIMIT = 10;
 const SHOPPING_NORMALIZATION_LIMIT = 20;
 const REQUEST_TIMEOUT_MS = 8_000;
-export const PRODUCT_SEARCH_CACHE_TTL_MS = 5 * 60 * 1_000;
 
 type SerperShoppingResult = {
   extracted_price?: unknown;
@@ -58,6 +56,7 @@ type SerperResponse = {
 
 export type ProductSearchExecutionOptions = {
   onAttempt?: () => void;
+  requestCache?: Map<string, Promise<SerperResponse | null>>;
   signal?: AbortSignal;
 };
 
@@ -192,22 +191,20 @@ async function fetchSerper(
   const safeQuery = sanitizeQuery(query);
   if (!apiKey || !safeQuery) return null;
 
-  const cacheKey = normalizeCacheKey([
-    "selection-serper",
+  const cacheKey = JSON.stringify([
     vertical,
-    safeQuery,
+    safeQuery.toLowerCase(),
     "us",
     "en",
     SEARCH_RESULT_LIMIT,
   ]);
-  const response = await getCachedOrLoad(
-    cacheKey,
-    PRODUCT_SEARCH_CACHE_TTL_MS,
-    async (sharedSignal) => {
+  let request = options.requestCache?.get(cacheKey);
+  if (!request) {
+    request = (async () => {
       options.onAttempt?.();
       const controller = new AbortController();
-      const forwardAbort = () => controller.abort(sharedSignal.reason);
-      sharedSignal.addEventListener("abort", forwardAbort, { once: true });
+      const forwardAbort = () => controller.abort(options.signal?.reason);
+      options.signal?.addEventListener("abort", forwardAbort, { once: true });
       const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
       try {
         const result = await fetch(`${SERPER_BASE_URL}/${vertical}`, {
@@ -232,12 +229,20 @@ async function fetchSerper(
         return body;
       } finally {
         clearTimeout(timeout);
-        sharedSignal.removeEventListener("abort", forwardAbort);
+        options.signal?.removeEventListener("abort", forwardAbort);
       }
-    },
-    undefined,
-    { signal: options.signal },
-  );
+    })();
+    options.requestCache?.set(cacheKey, request);
+  }
+  let response: SerperResponse | null;
+  try {
+    response = await request;
+  } catch (error) {
+    if (options.requestCache?.get(cacheKey) === request) {
+      options.requestCache.delete(cacheKey);
+    }
+    throw error;
+  }
   throwIfRequestCancelled(options.signal);
   return response;
 }

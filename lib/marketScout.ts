@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 import type { RecommendationApiRequest } from "@/types/review-radar";
-import { getCachedOrLoad, normalizeCacheKey } from "./cache.ts";
 import {
   rethrowIfRequestCancelled,
   throwIfRequestCancelled,
@@ -17,13 +16,12 @@ type OpenAIResponsesClient = {
 };
 
 export const MARKET_SCOUT_MODEL = "gpt-5.4-mini";
-export const MARKET_SCOUT_PROMPT_VERSION = "pr13-market-scout-v3";
-export const MARKET_SCOUT_CACHE_TTL_MS = 24 * 60 * 60 * 1_000;
+export const MARKET_SCOUT_PROMPT_VERSION = "pr14-live-market-scout-v1";
 
-const MARKET_SCOUT_TIMEOUT_MS = 10_500;
+const MARKET_SCOUT_TIMEOUT_MS = 45_000;
 const MAX_MARKET_SCOUT_TARGETS = 5;
 const MAX_MARKET_SCOUT_TOOL_CALLS = 3;
-const REQUESTED_MARKET_SCOUT_TOOL_CALLS = 1;
+const REQUESTED_MARKET_SCOUT_TOOL_CALLS = 2;
 const MAX_SELECTION_QUERIES = 3;
 
 export type MarketEvidenceTier = "strong" | "supported" | "none";
@@ -52,7 +50,6 @@ export type MarketScoutFallbackReason =
 
 export type MarketScoutTelemetry = {
   acceptedSourceUrls: number;
-  cacheHit: boolean;
   evidenceTiers: Record<MarketEvidenceTier, number>;
   fallbackReason?: MarketScoutFallbackReason;
   hostedSearchCalls: number;
@@ -179,7 +176,7 @@ type ValidationStats = {
   rejectedSourceUrls: number;
 };
 
-type CachedScoutResult = ValidationStats & {
+type ValidatedScoutResult = ValidationStats & {
   plan: MarketScoutPlan;
 };
 
@@ -415,7 +412,7 @@ function emptyValidationStats(): ValidationStats {
 function validateScoutResponse(
   response: unknown,
   input: RecommendationApiRequest,
-): CachedScoutResult {
+): ValidatedScoutResult {
   const hostedSearchCalls = responseHostedSearchCalls(response);
   const usage = responseUsage(response);
   if (hostedSearchCalls > MAX_MARKET_SCOUT_TOOL_CALLS) {
@@ -521,41 +518,9 @@ function validateScoutResponse(
   };
 }
 
-function normalizedRequestKey(input: RecommendationApiRequest) {
-  const normalize = (value?: string) => compactText(value || "", 2_000).toLowerCase();
-  return JSON.stringify({
-    avoid: normalize(input.avoid),
-    budget: normalize(input.budget),
-    priorities: normalize(input.priorities),
-    query: normalize(input.query),
-    requirementSummary: (input.extractedRequirements?.summary || []).map(normalize),
-    selectedFeatures: (input.selectedFeatures || []).map((feature) => ({
-      id: normalize(feature.id),
-      name: normalize(feature.name),
-      operator: feature.operator,
-      type: feature.type,
-      unit: normalize(feature.unit),
-      value: feature.value,
-    })),
-  });
-}
-
-function scoutCacheKey(
-  input: RecommendationApiRequest,
-  model: string,
-  promptVersion: string,
-) {
-  return normalizeCacheKey([
-    "market-scout",
-    promptVersion,
-    model,
-    normalizedRequestKey(input),
-  ]);
-}
-
 const systemPrompt = [
-  "You are ReviewRadar's bounded US-market product scout.",
-  "Use one broad web search to find up to five ordered exact product models that independent testing or editorial consensus supports as the best overall choices satisfying the category, budget, and hard requirements.",
+  "You are ReviewRadar's live US-market product scout for the shopper's current request.",
+  "Use at most two focused web searches to find up to five ordered exact product models that independent testing or editorial consensus supports as the best overall choices satisfying the category, budget, and hard requirements.",
   "For every target, include two or three current test/editorial URLs from independent domains, with at least one comparative test or best-of source; omit a target when that evidence threshold is unavailable.",
   "Prioritize models repeatedly recommended across independent comparative sources, not one-article picks, and place the strongest overall in-budget model first.",
   "When several qualify, prefer broadly cross-tested models with current US retail availability over newer one-review picks.",
@@ -597,6 +562,7 @@ export async function buildMarketScoutPlan(options: {
   model?: string;
   promptVersion?: string;
   signal?: AbortSignal;
+  timeoutMs?: number;
 }): Promise<{ plan: MarketScoutPlan; telemetry: MarketScoutTelemetry }> {
   const {
     client,
@@ -604,100 +570,93 @@ export async function buildMarketScoutPlan(options: {
     model = MARKET_SCOUT_MODEL,
     promptVersion = MARKET_SCOUT_PROMPT_VERSION,
     signal,
+    timeoutMs = MARKET_SCOUT_TIMEOUT_MS,
   } = options;
+  const hardTimeoutSignal = AbortSignal.timeout(timeoutMs);
+  const operationSignal = signal
+    ? AbortSignal.any([signal, hardTimeoutSignal])
+    : hardTimeoutSignal;
   const prompt = userPrompt(input);
-  const cacheState: { outcome: "hit" | "miss" } = { outcome: "miss" };
   let providerUsage: Usage = { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
   let hostedSearchCalls = 0;
+  let openAiCalls = 0;
 
   try {
-    throwIfRequestCancelled(signal);
-    const validated = await getCachedOrLoad(
-      scoutCacheKey(input, model, promptVersion),
-      MARKET_SCOUT_CACHE_TTL_MS,
-      async (sharedSignal) => {
-        if (!client) {
-          throw new MarketScoutValidationError(
-            "no_client",
-            0,
-            emptyValidationStats(),
-            providerUsage,
-          );
-        }
-        const response = await client.responses.create(
-          {
-            model,
-            include: ["web_search_call.action.sources"],
-            input: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: prompt },
-            ],
-            max_output_tokens: 1_600,
-            max_tool_calls: REQUESTED_MARKET_SCOUT_TOOL_CALLS,
-            reasoning: { effort: "low" },
-            store: false,
-            text: {
-              format: {
-                type: "json_schema",
-                name: "review_radar_market_scout",
-                schema: marketScoutJsonSchema,
-                strict: true,
-              },
-            },
-            tools: [{ type: "web_search", search_context_size: "low" }],
+    throwIfRequestCancelled(operationSignal);
+    if (!client) {
+      throw new MarketScoutValidationError(
+        "no_client",
+        0,
+        emptyValidationStats(),
+        providerUsage,
+      );
+    }
+    openAiCalls = 1;
+    const response = await client.responses.create(
+      {
+        model,
+        include: ["web_search_call.action.sources"],
+        input: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: prompt },
+        ],
+        max_output_tokens: 2_400,
+        max_tool_calls: REQUESTED_MARKET_SCOUT_TOOL_CALLS,
+        reasoning: { effort: "low" },
+        store: false,
+        text: {
+          format: {
+            type: "json_schema",
+            name: "review_radar_market_scout",
+            schema: marketScoutJsonSchema,
+            strict: true,
           },
-          {
-            maxRetries: 0,
-            signal: sharedSignal,
-            timeout: MARKET_SCOUT_TIMEOUT_MS,
-          },
-        );
-        providerUsage = responseUsage(response);
-        hostedSearchCalls = responseHostedSearchCalls(response);
-        throwIfRequestCancelled(sharedSignal);
-        return validateScoutResponse(response, input);
+        },
+        tools: [{ type: "web_search", search_context_size: "medium" }],
       },
-      (outcome) => {
-        cacheState.outcome = outcome;
+      {
+        maxRetries: 0,
+        signal: operationSignal,
+        timeout: timeoutMs,
       },
-      { signal },
     );
-    throwIfRequestCancelled(signal);
-    const cacheHit = cacheState.outcome === "hit";
+    providerUsage = responseUsage(response);
+    hostedSearchCalls = responseHostedSearchCalls(response);
+    throwIfRequestCancelled(operationSignal);
+    const validated = validateScoutResponse(response, input);
     return {
       plan: validated.plan,
       telemetry: {
         acceptedSourceUrls: validated.acceptedSourceUrls,
-        cacheHit,
         evidenceTiers: validated.evidenceTiers,
-        hostedSearchCalls: cacheHit ? 0 : hostedSearchCalls,
-        inputTokens: cacheHit ? 0 : providerUsage.inputTokens,
-        openAiCalls: cacheHit || !client ? 0 : 1,
-        outputTokens: cacheHit ? 0 : providerUsage.outputTokens,
+        hostedSearchCalls,
+        inputTokens: providerUsage.inputTokens,
+        openAiCalls,
+        outputTokens: providerUsage.outputTokens,
         promptChars: prompt.length,
         promptVersion,
         rejectedSourceUrls: validated.rejectedSourceUrls,
         systemPromptChars: systemPrompt.length,
-        totalTokens: cacheHit ? 0 : providerUsage.totalTokens,
+        totalTokens: providerUsage.totalTokens,
         usedFallback: false,
       },
     };
   } catch (error) {
-    rethrowIfRequestCancelled(error, signal);
+    const internallyTimedOut = hardTimeoutSignal.aborted && !signal?.aborted;
+    if (!internallyTimedOut) rethrowIfRequestCancelled(error, signal);
     const validationError =
       error instanceof MarketScoutValidationError ? error : null;
     return {
       plan: fallbackPlan(input),
       telemetry: {
         acceptedSourceUrls: validationError?.stats.acceptedSourceUrls || 0,
-        cacheHit: cacheState.outcome === "hit",
         evidenceTiers:
           validationError?.stats.evidenceTiers || emptyValidationStats().evidenceTiers,
-        fallbackReason: fallbackReasonForError(error),
+        fallbackReason: internallyTimedOut ? "timeout" : fallbackReasonForError(error),
         hostedSearchCalls:
           validationError?.hostedSearchCalls || hostedSearchCalls,
         inputTokens: validationError?.usage.inputTokens || providerUsage.inputTokens,
-        openAiCalls: cacheState.outcome === "miss" && client ? 1 : 0,
+        openAiCalls,
         outputTokens:
           validationError?.usage.outputTokens || providerUsage.outputTokens,
         promptChars: prompt.length,
@@ -717,9 +676,7 @@ export const marketScoutTestExports = {
   deterministicQueries: neutralShoppingQueries,
   effectiveDomain,
   marketScoutJsonSchema,
-  normalizedRequestKey,
   rawMarketScoutSchema,
-  scoutCacheKey,
   systemPrompt,
   tierForSources,
   userPrompt,

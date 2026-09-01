@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import { getCachedOrLoad, normalizeCacheKey } from "./cache.ts";
 import {
   fetchSafeProductPage,
   LIVE_PRODUCT_PAGE_FETCH_DEPENDENCIES,
@@ -49,6 +48,7 @@ type ProductAssetResult = {
 type ProductAssetEnrichmentOptions = {
   concurrency?: number;
   fetchDependencies?: SafeProductPageFetchDependencies;
+  requestCache?: Map<string, Promise<ProductPageFetchResult>>;
   signal?: AbortSignal;
 };
 
@@ -58,7 +58,6 @@ type ProductPageFetchResult = {
 };
 
 const PRODUCT_ASSET_TIMEOUT_MS = 5000;
-export const PRODUCT_ASSET_CACHE_TTL_MS = 2 * 60 * 1_000;
 const PRODUCT_ASSET_MAX_BYTES = 1_500_000;
 const PRODUCT_ASSET_MAX_REDIRECTS = 2;
 const PRODUCT_ASSET_CONCURRENCY = 4;
@@ -291,31 +290,41 @@ function shouldClearRequestedProductUrl(result: SafeProductPageFetchResult) {
 async function fetchText(
   url: string,
   fetchDependencies: SafeProductPageFetchDependencies,
+  requestCache?: Map<string, Promise<ProductPageFetchResult>>,
   signal?: AbortSignal,
 ): Promise<ProductPageFetchResult> {
   throwIfRequestCancelled(signal);
   const cacheKey = productPageCacheKey(url);
-
-  return getCachedOrLoad(cacheKey, PRODUCT_ASSET_CACHE_TTL_MS, async (sharedSignal) => {
-    const result = await fetchSafeProductPage(url, fetchDependencies, {
-      allowedContentTypes: PRODUCT_ASSET_CONTENT_TYPES,
-      maxBytes: PRODUCT_ASSET_MAX_BYTES,
-      maxRedirects: PRODUCT_ASSET_MAX_REDIRECTS,
-      timeoutMs: PRODUCT_ASSET_TIMEOUT_MS,
-      signal: sharedSignal,
-    });
-    return {
-      clearRequestedUrl: shouldClearRequestedProductUrl(result),
-      html: result.ok ? result.body : "",
-    };
-  }, undefined, { signal });
+  let request = requestCache?.get(cacheKey);
+  if (!request) {
+    request = (async () => {
+      const result = await fetchSafeProductPage(url, fetchDependencies, {
+        allowedContentTypes: PRODUCT_ASSET_CONTENT_TYPES,
+        maxBytes: PRODUCT_ASSET_MAX_BYTES,
+        maxRedirects: PRODUCT_ASSET_MAX_REDIRECTS,
+        timeoutMs: PRODUCT_ASSET_TIMEOUT_MS,
+        signal,
+      });
+      return {
+        clearRequestedUrl: shouldClearRequestedProductUrl(result),
+        html: result.ok ? result.body : "",
+      };
+    })();
+    requestCache?.set(cacheKey, request);
+  }
+  try {
+    return await request;
+  } catch (error) {
+    if (requestCache?.get(cacheKey) === request) requestCache.delete(cacheKey);
+    throw error;
+  }
 }
 
 function productPageCacheKey(url: string) {
   const urlDigest = createHash("sha256")
     .update(normalizeUrl(url))
     .digest("hex");
-  return normalizeCacheKey(["product-page", urlDigest]);
+  return `product-page|${urlDigest}`;
 }
 
 function productImageContext(
@@ -1260,6 +1269,7 @@ function withVerifiedOfferPriceFields<T extends ProductAssetRecommendation>(
 async function getVerifiedProductAssets(
   product: ProductAssetRecommendation,
   fetchDependencies: SafeProductPageFetchDependencies,
+  requestCache?: Map<string, Promise<ProductPageFetchResult>>,
   signal?: AbortSignal,
 ) {
   throwIfRequestCancelled(signal);
@@ -1325,6 +1335,7 @@ async function getVerifiedProductAssets(
   const pageFetch = await fetchText(
     productPageUrl,
     fetchDependencies,
+    requestCache,
     signal,
   );
   const html = pageFetch.html;
@@ -1520,6 +1531,7 @@ export async function enrichProductAssets<T extends ProductAssetResult>(
           const assets = await getVerifiedProductAssets(
             recommendation,
             fetchDependencies,
+            options.requestCache,
             options.signal,
           );
           output[index] = withVerifiedOfferPriceFields({
