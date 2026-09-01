@@ -18,6 +18,7 @@ import {
 import { baseProductCategoryFromQuery } from "./productCategory.ts";
 import { enrichProductAssets } from "./productAssets.ts";
 import {
+  exactModelIdentifiers,
   haveConflictingNamedModelVariants,
   haveConflictingNumericProductSpecs,
   namedModelVariantTokens,
@@ -30,6 +31,7 @@ import {
 } from "./productEligibility.ts";
 import { sourceUrlPathIdentitySegments } from "./sourceUrlIdentity.ts";
 import {
+  hasUnrequestedNonNewCondition,
   likelyAccessory,
   prefilterProductCandidates,
   searchProductPages,
@@ -112,6 +114,7 @@ export type ProductSelectionTelemetry = {
   }>;
   rejectedByAssetSafety: number;
   rejectedByAvailability: number;
+  rejectedByCondition: number;
   rejectedByMerchant: number;
   rejectedByPrice: number;
   rejectedByRequirements: number;
@@ -150,6 +153,7 @@ export type ProductSelectionTelemetry = {
     cumulativeLogicalSearchCalls: number;
     rejectedByAssetSafety: number;
     rejectedByAvailability: number;
+    rejectedByCondition: number;
     rejectedByPrice: number;
     rejectedByRequirements: number;
     wave: number;
@@ -308,8 +312,8 @@ function modelLabelMatchesCandidate(
     return false;
   }
 
-  const targetIdentifiers = stableModelIdentifiers(label);
-  const candidateIdentifiers = new Set(stableModelIdentifiers(candidateName));
+  const targetIdentifiers = exactModelIdentifiers(label);
+  const candidateIdentifiers = new Set(exactModelIdentifiers(candidateName));
   if (targetIdentifiers.length > 0) {
     return targetIdentifiers.every((identifier) =>
       candidateIdentifiers.has(identifier),
@@ -332,7 +336,12 @@ function candidateMatchesTarget(
   candidate: RawProductCandidate,
   target: MarketScoutTarget,
 ) {
-  const matchingLabels = [target.model, ...target.aliases].filter((label) =>
+  const labels = [target.model, ...target.aliases];
+  const identityBearingLabels =
+    exactModelIdentifiers(target.model).length > 0
+      ? labels.filter((label) => exactModelIdentifiers(label).length > 0)
+      : labels;
+  const matchingLabels = identityBearingLabels.filter((label) =>
     modelLabelMatchesCandidate(candidate.name, label, target.brand),
   );
   if (matchingLabels.length === 0) return false;
@@ -418,6 +427,24 @@ function marketTargetSearchQuery(
     .join(" ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function marketTargetResolutionQuery(
+  input: RecommendationApiRequest,
+  target: MarketScoutTarget,
+  discoveryCandidates: RawProductCandidate[],
+) {
+  const merchantOffer = discoveryCandidates.find(
+    (candidate) =>
+      candidate.currentShoppingOffer === true &&
+      Boolean(primaryRetailerName(candidate.retailer)),
+  );
+  return merchantOffer
+    ? productPageSearchQuery(
+        merchantOffer,
+        baseProductCategoryFromQuery(input.query),
+      )
+    : marketTargetSearchQuery(input, target);
 }
 
 function targetResolutionCandidatesFor(
@@ -1150,7 +1177,11 @@ function pageIdentityScore(
     ) ||
     haveConflictingExtractedProductSpecs(
       discoveryCandidate.name,
-      pageIdentityEvidence,
+      pageCandidate.name,
+    ) ||
+    haveConflictingExtractedProductSpecs(
+      discoveryCandidate.name,
+      pageCandidate.productUrl,
     ) ||
     haveConflictingHyphenatedCatalogModels(
       discoveryCandidate.name,
@@ -1162,7 +1193,11 @@ function pageIdentityScore(
     ) ||
     haveConflictingNumericProductSpecs(
       discoveryCandidate.name,
-      pageIdentityEvidence,
+      pageCandidate.name,
+    ) ||
+    haveConflictingNumericProductSpecs(
+      discoveryCandidate.name,
+      pageCandidate.productUrl,
     )
   ) {
     return 0;
@@ -1865,8 +1900,9 @@ export async function selectProducts(options: {
     ),
     target,
   }));
-  const targetResolutionQueries = targetResolutionBindings.map(({ target }) =>
-    marketTargetSearchQuery(input, target),
+  const targetResolutionQueries = targetResolutionBindings.map(
+    ({ discoveryCandidates, target }) =>
+      marketTargetResolutionQuery(input, target, discoveryCandidates),
   );
   const targetPageSearchResults = await Promise.all(
     targetResolutionQueries.map((query) =>
@@ -1943,6 +1979,7 @@ export async function selectProducts(options: {
   let assetCandidatesCount = 0;
   let rejectedByAssetSafety = 0;
   let rejectedByAvailability = 0;
+  let rejectedByCondition = 0;
   let rejectedByPrice = 0;
   let rejectedByRequirements = 0;
 
@@ -1968,7 +2005,10 @@ export async function selectProducts(options: {
       resolutionDiagnostics.push(...resolved.diagnostics);
       resolutionQueries.push(...resolved.queries);
 
-      const assetCandidates = resolved.candidates.map((candidate) =>
+      const conditionCompatibleCandidates = resolved.candidates.filter(
+        (candidate) => !hasUnrequestedNonNewCondition(candidate, input),
+      );
+      const assetCandidates = conditionCompatibleCandidates.map((candidate) =>
         toAssetCandidate(candidate, category),
       );
       assetCandidatesCount += assetCandidates.length;
@@ -2009,6 +2049,8 @@ export async function selectProducts(options: {
       });
       const waveRejectedByAssetSafety =
         enriched.recommendations.length - pageAssets.length;
+      const waveRejectedByCondition =
+        resolved.candidates.length - conditionCompatibleCandidates.length;
       const waveRejectedByAvailability =
         pageAssets.length - availableAssets.length;
       const waveRejectedByRequirements =
@@ -2016,6 +2058,7 @@ export async function selectProducts(options: {
       const waveRejectedByPrice = validAssets.length - waveAccepted.length;
       rejectedByAssetSafety += waveRejectedByAssetSafety;
       rejectedByAvailability += waveRejectedByAvailability;
+      rejectedByCondition += waveRejectedByCondition;
       rejectedByRequirements += waveRejectedByRequirements;
       rejectedByPrice += waveRejectedByPrice;
       verifiedCandidates.push(
@@ -2042,6 +2085,7 @@ export async function selectProducts(options: {
             queries.length + resolutionQueries.length,
           rejectedByAssetSafety: waveRejectedByAssetSafety,
           rejectedByAvailability: waveRejectedByAvailability,
+          rejectedByCondition: waveRejectedByCondition,
           rejectedByPrice: waveRejectedByPrice,
           rejectedByRequirements: waveRejectedByRequirements,
           wave,
@@ -2117,6 +2161,7 @@ export async function selectProducts(options: {
       })),
       rejectedByAssetSafety,
       rejectedByAvailability,
+      rejectedByCondition,
       rejectedByMerchant:
         prefiltered.candidates.length - primaryMarketCandidates.length,
       rejectedByPrice,

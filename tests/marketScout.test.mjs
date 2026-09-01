@@ -25,7 +25,7 @@ function responseWith({
     {
       aliases: ["Example Pro"],
       brand: "Example",
-      model: "Model Pro",
+      model: "Model X100 Pro",
       sourceUrls: actualUrls,
     },
   ],
@@ -83,9 +83,10 @@ describe("market scout", () => {
     assert.equal(calls.length, 1);
     const options = calls[0].options;
     assert.equal(options.model, MARKET_SCOUT_MODEL);
-    assert.equal(options.max_tool_calls, 2);
-    assert.equal(options.max_output_tokens, 2_400);
+    assert.equal(options.max_tool_calls, 3);
+    assert.equal(options.max_output_tokens, 6_000);
     assert.equal(options.store, false);
+    assert.deepEqual(options.reasoning, { effort: "low" });
     assert.deepEqual(options.include, ["web_search_call.action.sources"]);
     assert.deepEqual(options.tools, [
       { type: "web_search", search_context_size: "medium" },
@@ -98,7 +99,7 @@ describe("market scout", () => {
     );
     const schemaText = JSON.stringify(options.text.format.schema);
     assert.doesNotMatch(schemaText, /price|explanation|reviewSummary|searchQueries/i);
-    assert.equal(calls[0].requestOptions.timeout, 45_000);
+    assert.equal(calls[0].requestOptions.timeout, 60_000);
     assert.equal(calls[0].requestOptions.maxRetries, 0);
     assert.equal(result.telemetry.openAiCalls, 1);
     assert.equal(result.telemetry.hostedSearchCalls, 1);
@@ -122,7 +123,7 @@ describe("market scout", () => {
             {
               aliases: [],
               brand: "Example",
-              model: "Model Pro",
+              model: "Model X100 Pro",
               sourceUrls: [consumerReports, rtings],
             },
           ],
@@ -284,6 +285,28 @@ describe("market scout", () => {
     assert.equal(providerAborted, true);
   });
 
+  it("rejects generic product-family targets without an exact model identity", async () => {
+    const result = await buildMarketScoutPlan({
+      client: clientReturning(
+        responseWith({
+          outputTargets: [
+            {
+              aliases: [],
+              brand: "DeWalt",
+              model: "20V MAX XR Hammer Drill",
+              sourceUrls: [consumerReports],
+            },
+          ],
+        }),
+      ),
+      input,
+    });
+
+    assert.equal(result.telemetry.usedFallback, true);
+    assert.equal(result.telemetry.fallbackReason, "insufficient_evidence");
+    assert.deepEqual(result.plan.targets, []);
+  });
+
   it("aborts a hung provider at the independent live-scout deadline", async () => {
     let providerAborted = false;
     const result = await buildMarketScoutPlan({
@@ -379,13 +402,14 @@ describe("market scout", () => {
     const prompt = marketScoutTestExports.systemPrompt;
 
     assert.match(prompt, /exact product models/i);
-    assert.match(prompt, /at most two focused web searches/i);
+    assert.match(prompt, /three focused web searches/i);
     assert.match(prompt, /current request/i);
     assert.match(prompt, /independent domains/i);
     assert.match(prompt, /comparative test or best-of source/i);
     assert.match(prompt, /current US retail availability/i);
     assert.match(prompt, /never transfer evidence/i);
+    assert.match(prompt, /distinctive exact model number or catalog code/i);
     assert.doesNotMatch(prompt, /write (?:a )?report|pros and cons|card copy/i);
-    assert.ok(prompt.length < 1_500);
+    assert.ok(prompt.length < 2_100);
   });
 });

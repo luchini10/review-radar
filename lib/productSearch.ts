@@ -542,9 +542,37 @@ export async function searchProductPages(
   }
 }
 
+const NON_NEW_CONDITION_PATTERN =
+  /\b(?:open[- ]box|preowned|pre-owned|recertified|reconditioned|refurbished|renewed|used)\b/i;
+
 function requestedUsedOrRefurbished(input: RecommendationApiRequest) {
-  return /\b(?:open[- ]box|preowned|pre-owned|recertified|refurbished|renewed|used)\b/i.test(
+  return NON_NEW_CONDITION_PATTERN.test(
     `${input.query} ${input.priorities || ""}`,
+  );
+}
+
+function productPathConditionText(value: string) {
+  try {
+    return new URL(value).pathname.replace(/[-_]+/g, " ");
+  } catch {
+    return "";
+  }
+}
+
+export function hasUnrequestedNonNewCondition(
+  candidate: RawProductCandidate,
+  input: RecommendationApiRequest,
+) {
+  if (requestedUsedOrRefurbished(input)) return false;
+  return NON_NEW_CONDITION_PATTERN.test(
+    [
+      candidate.name,
+      candidate.keySpecs.join(" "),
+      productPathConditionText(candidate.productUrl),
+      candidate.evidenceSources
+        .map((source) => `${source.title} ${source.snippet}`)
+        .join(" "),
+    ].join(" "),
   );
 }
 
@@ -564,12 +592,7 @@ function prefilterRejectionReason(
     return "wrong_category";
   }
   if (likelyAccessory(candidate.name)) return "accessory_or_part";
-  if (
-    !requestedUsedOrRefurbished(input) &&
-    /\b(?:open[- ]box|preowned|pre-owned|recertified|refurbished|renewed|used)\b/i.test(
-      candidate.name,
-    )
-  ) {
+  if (hasUnrequestedNonNewCondition(candidate, input)) {
     return "used_or_refurbished";
   }
   const budgetLimit =

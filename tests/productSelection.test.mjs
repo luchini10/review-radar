@@ -430,6 +430,24 @@ describe("selection correctness", () => {
     );
   });
 
+  it("rejects a page whose echoed title masks a conflicting hard spec in its path", () => {
+    assert.equal(
+      pageIdentityScore(
+        candidate("Sun Joe 2000 PSI Max Electric Pressure Washer", {
+          brand: "Sun Joe",
+          retailer: "Sam's Club",
+        }),
+        candidate("Sun Joe 2000 PSI Max Electric Pressure Washer", {
+          brand: "Sun Joe",
+          price: null,
+          productUrl:
+            "https://www.samsclub.com/ip/sun-joe-electric-pressure-washer-1500-psi-rated-pressure/19730005534",
+        }),
+      ),
+      0,
+    );
+  });
+
   it("does not use performance measurements as product models", () => {
     const query = productPageSearchQuery(
       candidate(
@@ -522,6 +540,54 @@ describe("selection correctness", () => {
     assert.equal(attached[0].marketEvidence.targetModel, "Q27G3XMN");
     assert.equal(attached[1].marketEvidence, undefined);
     assert.equal(attached[2].marketEvidence, undefined);
+  });
+
+  it("does not let a generic alias bypass the target catalog model", () => {
+    const target = marketTarget(
+      "Craftsman",
+      "CMXEVBE17595 16-Gallon Wet/Dry Vac",
+      "supported",
+      0,
+      ["Craftsman 16-Gallon 6 HP Corded Wet/Dry Shop Vacuum with Accessories"],
+    );
+    const attached = attachMarketEvidence(
+      [
+        candidate("Craftsman CMXEVBE17595 16-Gallon Wet/Dry Vac", {
+          brand: "Craftsman",
+        }),
+        candidate(
+          "Craftsman 16-Gallon 6 HP Corded Wet/Dry Shop Vacuum with Accessories CMXECXA8101645",
+          { brand: "Craftsman" },
+        ),
+      ],
+      [target],
+    );
+
+    assert.equal(attached[0].marketEvidence?.targetModel, target.model);
+    assert.equal(attached[1].marketEvidence, undefined);
+  });
+
+  it("does not transfer a numeric catalog target across a tool-platform sibling", () => {
+    const target = marketTarget(
+      "Milwaukee",
+      "M18 2904 Hammer Drill",
+      "strong",
+      0,
+    );
+    const attached = attachMarketEvidence(
+      [
+        candidate("Milwaukee M18 FUEL 2904-20 Hammer Drill", {
+          brand: "Milwaukee",
+        }),
+        candidate("Milwaukee M18 FUEL 2903-20 Hammer Drill", {
+          brand: "Milwaukee",
+        }),
+      ],
+      [target],
+    );
+
+    assert.equal(attached[0].marketEvidence?.targetModel, target.model);
+    assert.equal(attached[1].marketEvidence, undefined);
   });
 
   it("rejects a direct product URL whose capacity contradicts the offer title", () => {

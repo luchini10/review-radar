@@ -250,6 +250,39 @@ describe("selection product asset enrichment", () => {
     });
   });
 
+  it("keeps an exact product page whose slug repeats the same model identifier", async () => {
+    const pageUrl =
+      "https://www.homedepot.com/p/RIDGID-12-Gal-5-0-Peak-HP-NXT-Shop-Vacuum-HD1200-HD1200/304006023";
+    const result = await enrichProductAssets(
+      {
+        recommendations: [
+          candidate({
+            availabilityTrust: {
+              source: "shopping_offer",
+              status: "available",
+            },
+            name: "RIDGID HD1200 12 Gal. 5.0-Peak HP NXT Shop Vacuum",
+            pageUrl,
+          }),
+        ],
+      },
+      {
+        fetchDependencies: {
+          resolveHost: async () => ["8.8.8.8"],
+          transport: async () => {
+            throw new Error("merchant blocks server-side fetches");
+          },
+        },
+      },
+    );
+
+    assert.equal(result.recommendations[0].pageUrl, pageUrl);
+    assert.deepEqual(result.recommendations[0].availabilityTrust, {
+      source: "shopping_offer",
+      status: "available",
+    });
+  });
+
   it("lets explicit page unavailability override a current Shopping offer", async () => {
     const html = `<html><head>
       <meta property="og:title" content="Apple iPad Pro M4">

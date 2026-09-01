@@ -123,6 +123,9 @@ function looksLikeCompoundModelComponent(token: string) {
 
 const EXPLICIT_MODEL_ALIAS_SEPARATOR = /\s+(?:\/|\||;|or)\s+/i;
 
+const QUALIFIED_MEASUREMENT_PHRASE =
+  /\b\d+(?:\.\d+)?[\s-]*(?:peak|max(?:imum)?)[\s-]*(?:ah|amps?|btu|cfm|gal(?:lons?)?|gpm|hp|lbs?|lumens?|mah|mph|psi|qt|quarts?|rpm|scfm|volts?|watts?|wh)\b/gi;
+
 export function splitModelIdentityAliases(value: string) {
   return value
     .split(EXPLICIT_MODEL_ALIAS_SEPARATOR)
@@ -131,9 +134,11 @@ export function splitModelIdentityAliases(value: string) {
 }
 
 export function stableModelIdentifiers(value: string) {
+  const identityText = value.replace(QUALIFIED_MEASUREMENT_PHRASE, " ");
+
   return [
     ...new Set(
-      (value.match(/[A-Za-z0-9]+(?:[-/.][A-Za-z0-9]+)*/g) || [])
+      (identityText.match(/[A-Za-z0-9]+(?:[-/.][A-Za-z0-9]+)*/g) || [])
         .map((raw) => ({
           normalized: raw.toLowerCase().replace(/[^a-z0-9]+/g, ""),
           raw,
@@ -150,6 +155,55 @@ export function stableModelIdentifiers(value: string) {
         .map(({ normalized }) => normalized),
     ),
   ];
+}
+
+const EXACT_ALPHA_MODEL_STOP_WORDS = new Set([
+  "CFM",
+  "EVO",
+  "FUEL",
+  "HDR",
+  "IPS",
+  "LED",
+  "MAX",
+  "NXT",
+  "OLED",
+  "OMNI",
+  "ONE",
+  "PLUS",
+  "PRO",
+  "PSI",
+  "QHD",
+  "SELECT",
+  "UHD",
+  "ULTRA",
+  "WQHD",
+]);
+
+export function exactModelIdentifiers(value: string) {
+  const identifiers = new Set(stableModelIdentifiers(value));
+  for (const match of value.matchAll(/\b\d{4,6}\b/g)) {
+    const raw = match[0];
+    const index = match.index ?? 0;
+    const before = value.slice(Math.max(0, index - 4), index);
+    const after = value.slice(index + raw.length, index + raw.length + 16);
+    const number = Number(raw);
+    if (
+      /[$£€¥]\s*$/.test(before) ||
+      (number >= 1900 && number <= 2099) ||
+      /^[\s-]*(?:cfm|gpm|hp|hz|lumens?|mah|mph|pa|psi|rpm|volts?|watts?|wh)\b/i.test(
+        after,
+      )
+    ) {
+      continue;
+    }
+    identifiers.add(raw.toLowerCase());
+  }
+  for (const match of value.matchAll(/\b[A-Z]{3,6}\b/g)) {
+    if (!EXACT_ALPHA_MODEL_STOP_WORDS.has(match[0])) {
+      identifiers.add(match[0].toLowerCase());
+    }
+  }
+  return [...identifiers];
 }
 
 const NAMED_MODEL_VARIANT_WORDS = new Set([
@@ -1401,7 +1455,7 @@ function compoundModelSequencesWithContext(
         looksLikeMixedCompoundModelComponent(token) ||
         (looksLikeNumericCompoundModelComponent(token) && run.length > 0)
       ) {
-        run.push(token);
+        if (run[run.length - 1] !== token) run.push(token);
       } else {
         flush();
       }

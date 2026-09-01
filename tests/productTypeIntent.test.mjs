@@ -4,6 +4,34 @@ import { describe, it } from "node:test";
 import { classifyProductTypeIntent } from "../lib/productTypeIntent.ts";
 
 describe("product type intent classifier", () => {
+  it("keeps leaf blowers separate from compact workshop blowers", () => {
+    for (const candidateText of [
+      "EGO Power+ 615 CFM Cordless Leaf Blower",
+      "Atlas 80V Brushless Cordless 150 MPH/605 CFM Blower",
+    ]) {
+      const verdict = classifyProductTypeIntent({
+        requestedText: "cordless leaf blower",
+        candidateText,
+        candidateIdentityText: candidateText,
+      });
+      assert.equal(verdict.status, "exact", candidateText);
+      assert.equal(verdict.canBeExactMatch, true, candidateText);
+    }
+
+    for (const candidateText of [
+      "Bauer 20V Cordless 200 MPH/120 CFM Compact Workshop Blower",
+      "20V Jobsite Blower",
+      "Leaf Blower Replacement Nozzle Attachment",
+    ]) {
+      const verdict = classifyProductTypeIntent({
+        requestedText: "cordless leaf blower",
+        candidateText,
+        candidateIdentityText: candidateText,
+      });
+      assert.equal(verdict.canBeExactMatch, false, candidateText);
+    }
+  });
+
   it("rejects multi-tool combo kits as a standalone cordless drill", () => {
     for (const candidateText of [
       "Ryobi ONE+ HP 18V Brushless Cordless Compact 4-Tool Combo Kit",

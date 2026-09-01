@@ -49,6 +49,7 @@ const PLACEHOLDER_TERMS = [
   "default-image",
   "favicon",
   "icon",
+  "img-na",
   "logo",
   "missing-image",
   "no-image",

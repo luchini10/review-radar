@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
+  exactModelIdentifiers,
   haveConflictingCompoundModelSequences,
   haveConflictingNumericProductSpecs,
   modelIdentityRelation,
@@ -24,6 +25,24 @@ describe("selection product identity", () => {
       ),
       [],
     );
+    assert.deepEqual(
+      stableModelIdentifiers(
+        "RIDGID HD1200 12 Gal. 5.0-Peak HP NXT wet/dry shop vacuum",
+      ),
+      ["hd1200"],
+    );
+    assert.deepEqual(
+      exactModelIdentifiers("Milwaukee M18 2904 Hammer Drill"),
+      ["m18", "2904"],
+    );
+    assert.deepEqual(
+      exactModelIdentifiers("Sun Joe 2000 PSI pressure washer"),
+      [],
+    );
+    assert.deepEqual(
+      exactModelIdentifiers("Moccamaster KBGV Select"),
+      ["kbgv"],
+    );
   });
 
   it("detects conflicting sibling compound models", () => {
@@ -38,6 +57,13 @@ describe("selection product identity", () => {
       haveConflictingCompoundModelSequences(
         "Roborock Q10 S5 Plus",
         "roborock-q10-s5-plus",
+      ),
+      false,
+    );
+    assert.equal(
+      haveConflictingCompoundModelSequences(
+        "RIDGID HD1200",
+        "RIDGID-HD1200-HD1200",
       ),
       false,
     );

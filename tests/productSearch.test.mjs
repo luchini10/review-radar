@@ -129,6 +129,11 @@ describe("bounded product search", () => {
         candidate("Refurbished Shark IQ Robot Vacuum", 200),
         candidate("Recertified Shark IQ Robot Vacuum", 200),
         candidate("Open-Box Shark IQ Robot Vacuum", 200),
+        {
+          ...candidate("Shark IQ Robot Vacuum", 200),
+          productUrl:
+            "https://shop.example/products/shark-iq-reconditioned-vacuum",
+        },
         candidate("Premium Robot Vacuum", 900),
       ],
       input,
@@ -157,6 +162,20 @@ describe("bounded product search", () => {
     );
 
     assert.equal(result.candidates.length, 1);
+
+    const urlOnly = prefilterProductCandidates(
+      [
+        {
+          ...candidate("Shark IQ Robot Vacuum", 110),
+          productUrl:
+            "https://shop.example/products/shark-iq-reconditioned-vacuum",
+        },
+      ],
+      { query: "reconditioned robot vacuum", budget: "$150" },
+      10,
+    );
+
+    assert.equal(urlOnly.candidates.length, 1);
   });
 
   it("coalesces only within one request and refetches for a later search", async () => {

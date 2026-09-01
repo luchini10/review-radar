@@ -38,6 +38,15 @@ const SHOP_VAC_COMPLEMENT_PATTERN =
 const STANDALONE_SHOP_VAC_COMPLEMENT_PATTERN =
   /\b(?:wet\s+dry\s+(?:shop\s+)?vac(?:uum)?|shop\s+vac(?:uum)?|vacuum)\s+(?:replacement\s+)?(?:hose|filter\s+bags?|bags?|(?:utility\s+)?nozzles?(?:\s+attachments?)?|accessory\s+kit)\b|^(?:[a-z0-9-]+\s+){0,3}(?:utility\s+)?nozzles?(?:\s+attachments?)?$/i;
 
+const LEAF_BLOWER_PATTERN =
+  /\b(?:(?:leaf|yard|lawn|garden)\s+(?:vac(?:uum)?\s+)?blower|blower\s+(?:vacuum|mulcher))s?\b/i;
+const FULL_SIZE_LEAF_BLOWER_CONTEXT_PATTERN =
+  /(?:\b(?:[3-9]\d{2}|1\d{3})\s*cfm\b.{0,80}\bblower\b|\bblower\b.{0,80}\b(?:[3-9]\d{2}|1\d{3})\s*cfm\b)/i;
+const NON_LEAF_BLOWER_PATTERN =
+  /\b(?:(?:compact\s+)?(?:workshop|jobsite|shop|dust)\s+(?:air\s+)?blower|air\s+duster|inflator)\b/i;
+const LEAF_BLOWER_COMPLEMENT_PATTERN =
+  /\b(?:replacement\s+)?(?:blower\s+)?(?:nozzle|tube|attachment|shoulder\s+strap|collection\s+bag)\b/i;
+
 const ROBOT_VACUUM_FULL_PRODUCT_PATTERN =
   /\b(?:robot\s+(?:vac|vacuum|cleaner|mop)|robotic\s+(?:vac|vacuum))\b/i;
 const ROBOT_VACUUM_DOCK_COMPLEMENT_PATTERN =
@@ -76,6 +85,18 @@ const PRODUCT_TYPE_RULES: ProductTypeRule[] = [
     blocked: SHOP_VAC_PATTERN,
     complements:
       /\b(?:cleaning\s+solution|cleaning\s+formula|replacement\s+(?:brush|brushroll|filter|pad)|brush\s+roll|mop\s+pad)\b/i,
+  },
+  {
+    id: "leaf_blower",
+    requested: LEAF_BLOWER_PATTERN,
+    allowed: new RegExp(
+      `${LEAF_BLOWER_PATTERN.source}|${FULL_SIZE_LEAF_BLOWER_CONTEXT_PATTERN.source}`,
+      "i",
+    ),
+    blocked: NON_LEAF_BLOWER_PATTERN,
+    exclusiveBlocked: NON_LEAF_BLOWER_PATTERN,
+    complements: LEAF_BLOWER_COMPLEMENT_PATTERN,
+    exclusiveComplements: LEAF_BLOWER_COMPLEMENT_PATTERN,
   },
   {
     id: "shop_vac",

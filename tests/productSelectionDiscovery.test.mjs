@@ -218,7 +218,7 @@ describe("market-quality discovery orchestration", () => {
     ]);
     assert.ok(
       selected.telemetry.resolutionQueries.includes(
-        "Alpha A100 robot vacuum",
+        "Alpha a100 robot vacuum Example Store product page",
       ),
     );
     assert.equal(selected.telemetry.marketEvidenceCandidates, 1);
@@ -233,5 +233,55 @@ describe("market-quality discovery orchestration", () => {
       ),
     );
     assert.ok(selected.telemetry.logicalSearchCalls <= 15);
+  });
+
+  it("rejects a non-new condition exposed only by the resolved product URL", async () => {
+    process.env.SERPER_API_KEY = "test-only-key";
+    globalThis.fetch = async (url, init) => {
+      const endpoint = String(url);
+      const request = JSON.parse(init.body);
+      if (endpoint.endsWith("/search")) {
+        return new Response(
+          JSON.stringify({
+            organic: [
+              {
+                link:
+                  "https://www.examplestore.com/products/alpha-a100-reconditioned",
+                snippet: "Current Alpha A100 robot vacuum product page",
+                title: "Alpha A100 Robot Vacuum",
+              },
+            ],
+          }),
+          { headers: { "content-type": "application/json" }, status: 200 },
+        );
+      }
+      if (request.q === "robot vacuum $300") {
+        return new Response(
+          JSON.stringify({
+            shopping: [
+              {
+                extractedPrice: 249,
+                link: "https://www.google.com/search?ibp=oshop&q=alpha+a100",
+                source: "Example Store",
+                title: "Alpha A100 Robot Vacuum",
+              },
+            ],
+          }),
+          { headers: { "content-type": "application/json" }, status: 200 },
+        );
+      }
+      return new Response(JSON.stringify({ shopping: [] }), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      });
+    };
+
+    const selected = await selectProducts({
+      input: { budget: "$300", query: "robot vacuum" },
+      plan: { queries: [], targets: [] },
+    });
+
+    assert.equal(selected.telemetry.rejectedByCondition, 1);
+    assert.deepEqual(selected.result.recommendations, []);
   });
 });
