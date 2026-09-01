@@ -17922,3 +17922,71 @@ recorded fixture-boundary incidents remain the complete incident list. No push,
 deployment, release, dependency change, production-data action, public-contract
 expansion, retained index, background refresh, or cross-request research cache
 occurred.
+
+---
+
+## PR-14 seller-alternative commerce resolution (2026-09-01)
+
+**Assessment:** generalized correctness improvement retained; RELEASE FAIL.
+V14 diagnostics showed that exact-model pages from multiple sellers were
+already discovered, but identity deduplication and finalist selection retained
+only one before live availability and price verification. A blocked or stale
+chosen seller therefore erased a viable already-discovered alternative.
+
+**Corrections:** an evidence-bound exact model may retain two distinct
+merchant/page alternatives until verification; unscored identities still keep
+one and final output remains deduplicated. Shopping results and exact-target
+page searches now reject editorial, comparison, review, support, and manual
+URLs as commerce candidates. Unknown merchant pages require an exact current
+Shopping-to-merchant binding. The named-variant parser also removes `N max PSI`
+performance phrases before sibling comparison, preventing an exact
+`CMEPW2100` card from being rejected because its retailer URL says `2100 max
+PSI`.
+
+The live runner now preserves bounded ranking, page-resolution, search, and
+verification-wave diagnostics in non-summary reports. It does not retain raw
+provider responses, prompts, secrets, or request headers.
+
+**Preserved live sequence:** all reports use the same frozen ten cases, one
+cache-cold attempt each, with no per-case retry or replacement.
+
+- V15 (`pr14-live-accuracy-report-v15-commerce-resolution-diagnostic.json`):
+  10/10 non-empty, 2/9 eligible leaders, 33,431 ms p95/maximum.
+- V16 (`pr14-live-accuracy-report-v16-seller-alternative-verification.json`):
+  9/10 non-empty, 4/10 leaders, 37,360 ms p95/maximum.
+- V17 (`pr14-live-accuracy-report-v17-commerce-candidate-safety.json`): 10/10
+  non-empty, 2/10 leaders, 44,593 ms p95/maximum.
+- V18 (`pr14-live-accuracy-report-v18-final-commerce-resolution.json`): 9/10
+  non-empty and 1/10 leaders; its exact-binding gate exposed the false
+  `max PSI` variant classification and remains preserved as failing evidence.
+- V19 (`pr14-live-accuracy-report-v19-final-validated.json`): 10/10 HTTP and
+  non-empty, 4/10 frozen leaders, runtime evidence in 6/10, runtime `strong` in
+  5/10, and zero scout fallbacks.
+
+**V19 gates and cost:** product safety, exact evidence binding, fresh research,
+both shop-vac cells, public shape, one OpenAI response/request, at most three
+hosted searches/request, at most fifteen logical Serper operations/request, and
+strong-ahead-of-unscored ordering all passed. Mean/p95/maximum latency was
+28,715/36,550/36,550 ms. The run used ten OpenAI Responses, thirty hosted
+searches, 135 logical and 133 physical Serper operations, 190,495 input plus
+12,462 output tokens (202,957 total), and approximately $0.198950 model-token
+cost. Public payload averaged 998 bytes and peaked at 1,589 bytes.
+
+**Verdict:** V19 improves absolute leader hits from two to four versus V14 and
+reduces mean/p95 latency by 2,741/3,613 ms, while preserving 10/10 non-empty.
+It still misses the 80% leader gate by 40 percentage points and exceeds the
+25,000/30,000 ms latency limits. Retain commit `0b4c817`; do not release or
+claim dependable best-in-budget quality.
+
+**Verification:** 353/353 unit tests across 44 suites, typecheck, zero-warning
+lint, Next.js 16.3.3 production build, Playwright 7/7 desktop/mobile, and
+`git diff --check` pass. The E2E runner emitted only environment-level
+`NO_COLOR`/`FORCE_COLOR` notices.
+
+**Boundaries and incident:** `.env.local` was not manually inspected. During
+the V18 binding investigation, a broad `rg` over `tests` again matched and
+printed several protected-fixture lines before being narrowed; they were not
+used as evidence and no fixture was copied, edited, or deleted. This is the
+fourth disclosed fixture-boundary incident in the goal. No push, deployment,
+release, dependency change, production-data action, public-contract expansion,
+retained index, background refresh, or cross-request research cache occurred.

@@ -4334,3 +4334,37 @@ a known conservative undercount.
   warning lint, production build, and Playwright 7/7. The next supported
   comparison is request-scoped canonical commerce identity/offers/pages from a
   qualified provider or retailer integration, not more prompt tuning.
+
+## PR-14 seller-alternative and commerce-source contract (2026-09-01)
+
+- Preserve up to two distinct merchant/page alternatives for one exact
+  evidence-bound model until live verification. Unscored identities remain
+  capped at one. Final output must still deduplicate to one card per product and
+  page identity and preserve brand diversity.
+- Distinct seller alternatives must not add discovery or resolution searches.
+  They reuse already returned pages and remain inside the nine-finalist and
+  fifteen-logical-operation ceilings.
+- Shopping-normalized candidates and exact-target page candidates must reject
+  editorial, comparison, review, support, documentation, and manual sources as
+  commerce. Those URLs remain eligible only for independent scout evidence.
+- An unknown merchant exact-target page is admissible only when a current exact
+  Shopping candidate binds that merchant. Manufacturer and recognized retailer
+  product-detail pages may pass without that binding; listing and family pages
+  remain rejected.
+- Do not interpret `N max PSI` as a named `Max` model variant. This normalization
+  must not weaken genuine named sibling isolation such as `E20 Plus` versus
+  `E20 Evo Plus` or exact kit/package distinctions.
+- Non-summary live reports must retain bounded ranked-candidate, resolution,
+  search, and verification-wave diagnostics. Do not retain raw provider
+  responses, prompts, request headers, or secrets.
+- Preserve V15-V19 as one diagnostic progression, not retries from which to
+  select the preferred score. V18 is intentionally retained as the failing
+  `max PSI` binding observation. V19 is authoritative for runtime `0b4c817`.
+- V19 passed 10/10 request/non-empty, all safety and exact-binding gates, both
+  shop-vac cells, public shape, one-response/three-hosted-search/fifteen-Serper
+  ceilings, and strong-ahead-of-unscored ordering. It reached 4/10 frozen
+  leaders, 6/10 evidence cells, 5/10 `strong` cells, 28,715 ms mean, and 36,550
+  ms p95/maximum.
+- V19 remains a release failure against 80% leader recall, 25-second p95, and
+  30-second maximum. Current deterministic wall: 353/353 tests across 44 suites,
+  typecheck, zero-warning lint, production build, and Playwright 7/7.

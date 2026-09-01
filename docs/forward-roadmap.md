@@ -4852,7 +4852,7 @@ current implementation authority.
 
 ### PR-14 - request-time market-quality reset
 
-**Status:** implemented through runtime commit `7077c37`; deterministic
+**Status:** implemented through runtime commit `0b4c817`; deterministic
 verification passes. The latest ten-case no-retry live matrix passes non-empty,
 safety, binding, public-shape, and call-ceiling gates but fails leader recall and
 latency gates. PR-14 is not release-qualified.
@@ -5043,7 +5043,43 @@ comparison remains a request-scoped canonical-commerce provider/retailer
 integration; a progressive contract changes delivery but does not itself fix
 coverage.
 
-**Current verification:** 350/350 unit tests across 44 suites, typecheck, zero-
+**Seller-alternative and commerce-source follow-up at `0b4c817`:** V14
+diagnostics proved that page discovery could find two exact-model seller pages,
+but identity deduplication and finalist selection collapsed them before current
+page verification. An evidence-bound exact model may now retain up to two
+distinct merchant/page alternatives through verification; the final public
+shortlist still emits one distinct card. This adds no search operation.
+
+The Shopping normalizer and exact-target page admission now reject editorial,
+comparison, review, support, and manual URLs before they can consume commerce
+or verification slots. Exact-target pages from unknown merchants remain valid
+only when a current Shopping candidate binds that merchant. A separate identity
+correction prevents a pressure measurement such as `2100 max PSI` from being
+misclassified as a `Max` sibling-model qualifier. Exact sibling isolation and
+all downstream gates remain unchanged.
+
+Five single-attempt/no-retry reports preserve the investigation instead of
+selecting a preferred run. V15 diagnosed the unchanged path; V16 reached 4/10
+leaders and 9/10 non-empty after retaining seller alternatives; V17 reached
+2/10 and 10/10 after early source rejection; V18 exposed the false `max PSI`
+binding result; and the corrected authoritative V19 report reached 4/10 leaders
+and 10/10 non-empty while passing every safety and binding gate.
+
+V19 used ten OpenAI Responses, thirty hosted searches, 135 logical and 133
+physical Serper operations, and 202,957 model tokens at approximately $0.198950
+model-token cost. Runtime evidence returned in 6/10 and runtime `strong` in
+5/10. Mean latency was 28,715 ms and p95/maximum was 36,550 ms. The unchanged
+five-field payload averaged 998 bytes and peaked at 1,589 bytes. It remains a
+release failure: 40% leader recall is below 80%, and both latency limits fail.
+
+The next bounded comparison corrects two plan mismatches rather than tuning to
+the frozen products: start the independent scout concurrently with the three
+neutral Shopping calls, and align its requested source thresholds with the
+validated `strong`/`supported` definitions. Preserve the first result. If that
+does not materially improve both failed gates, require a qualified request-
+scoped canonical-commerce provider/retailer integration.
+
+**Current verification:** 353/353 unit tests across 44 suites, typecheck, zero-
 warning lint, the Next.js 16.3.3 production build, Playwright 7/7 across
 Chromium desktop/mobile, and `git diff --check` pass. No push or deployment
 occurred.

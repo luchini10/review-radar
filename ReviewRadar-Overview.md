@@ -298,30 +298,27 @@ The request-time architecture and accuracy gates are protected by:
   and the minimal result card;
 - TypeScript, ESLint, and the Next production build.
 
-The current source passes 350/350 unit tests across 44 suites, zero-warning
+The current source passes 353/353 unit tests across 44 suites, zero-warning
 lint, typecheck, production build, and Playwright 7/7. A separate live browser
 search passed at desktop and mobile widths with no overflow or console errors.
-The latest PR-14 ten-case, single-attempt V14 matrix completed 10/10
+The latest PR-14 ten-case, single-attempt V19 matrix completed 10/10
 requests with one OpenAI response each, three hosted searches each, and at most
 fifteen logical Serper operations. Exact evidence binding and product safety
 passed in all ten cells and all ten returned a product. Frozen-leader recall was
-2/9 currently eligible (22.22%); one benchmark leader was current-ineligible.
-Mean latency was 31,456 ms and nearest-rank p95/maximum was 40,163 ms. The public
-five-field payload remained unchanged at 803 bytes mean and 1,304 bytes maximum.
-Runtime evidence reached five cells, runtime `strong` reached three, and no
-scout fell back.
+4/10 (40%). Mean latency was 28,715 ms and nearest-rank p95/maximum was 36,550
+ms. The public five-field payload remained unchanged at 998 bytes mean and 1,589
+bytes maximum. Runtime evidence reached six cells, runtime `strong` reached five,
+and no scout fell back.
 
-PR-14 is not release-qualified: eligible leader recall was 22.22% versus the
+PR-14 is not release-qualified: eligible leader recall was 40% versus the
 80% gate, and tail latency exceeded both the 25-second p95 and 30-second maximum
-gates. A
-commerce-informed handoff improved non-empty results from 7/10 to 10/10,
-evidence-bearing results from 2/10 to 5/10, and absolute frozen-leader hits from
-one to two versus the committed V10 baseline. The source-binding and ranking
-mechanics remain safe, but live Shopping/page resolution still does not
-reliably supply exact purchasable leaders inside the target envelope. The
-earlier direct-page, full GPT-5.4, and medium-reasoning Mini experiments did not
-establish a better path; further prompt tuning is not the supported fix for the
-remaining commerce-coverage loss.
+gates. Retaining two already-discovered seller pages for an evidence-bound exact
+model, rejecting evidence pages from commerce resolution, and correcting a
+`max PSI` identity false positive improved absolute frozen-leader hits from two
+in V14 to four in V19 while preserving 10/10 non-empty. The source-binding and
+ranking mechanics remain safe, but live market research and Shopping/page
+resolution still do not reliably converge on exact purchasable leaders inside
+the target envelope.
 
 The build route manifest must contain only /, /_not-found, and
 /api/recommendations.
@@ -331,11 +328,11 @@ The build route manifest must contain only /, /_not-found, and
 - Live prices and availability can change after a search.
 - Search-provider coverage can omit a good product.
 - Strict finalist verification can produce an empty shortlist even when a
-  qualifying product exists; V14 returned all ten shortlists, but
+  qualifying product exists; V19 returned all ten shortlists, but
   earlier preserved runs returned as few as seven in ten attempts.
 - The market scout's source tier is not product-fact, price, availability, or
-  eligibility authority. V14 passed exact source binding but commerce coverage
-  still produced only 22.22% eligible frozen-leader recall with 40,163 ms p95,
+  eligibility authority. V19 passed exact source binding but market/commerce
+  coverage still produced only 40% frozen-leader recall with 36,550 ms p95,
   so the architecture did not establish live best-in-budget reliability.
 - Missing or ambiguous product images are intentionally omitted.
 - The recorded live quality sample is small and local. It does not prove

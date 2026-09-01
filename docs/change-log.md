@@ -11,6 +11,32 @@ Update this file after:
 
 ## 2026-09-01
 
+### Codex - Keep exact leader seller alternatives through verification
+
+#### Changed
+
+- Retained up to two already-discovered seller pages for an exact evidence-
+  bound model until current availability and price verification, without adding
+  search calls or emitting duplicate public cards.
+- Rejected editorial, comparison, review, support, and manual pages when they
+  appear through Shopping or exact-target page discovery. They remain valid
+  only as independently bound scout evidence.
+- Corrected product-variant parsing so a performance phrase such as `2100 max
+  PSI` cannot falsely turn an exact model into a `Max` sibling.
+- Added bounded per-run ranking, resolution, search, and verification-wave
+  diagnostics to the live QA report without retaining raw provider data.
+
+#### Verified
+
+- Full validation passed 353/353 unit tests across 44 suites, typecheck, zero-
+  warning lint, the Next.js 16.3.3 production build, and Playwright 7/7.
+- The authoritative V19 no-retry matrix completed 10/10 requests and non-empty
+  results and passed safety, exact binding, public shape, both shop-vac, and all
+  provider/operation ceilings.
+- V19 improved frozen-leader hits from 2/9 eligible in V14 to 4/10, with 28,715
+  ms mean and 36,550 ms p95/maximum latency. It still fails the 80% leader and
+  25-second p95/30-second maximum gates. No push or deployment occurred.
+
 ### Codex - Inform market scouting with current commerce
 
 #### Changed
