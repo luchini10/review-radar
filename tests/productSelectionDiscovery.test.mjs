@@ -13,64 +13,6 @@ afterEach(() => {
 });
 
 describe("market-quality discovery orchestration", () => {
-  it("builds the scout plan from a bounded current-commerce roster", async () => {
-    process.env.SERPER_API_KEY = "test-only-key";
-    let serperCalls = 0;
-    let observedCandidates = null;
-    globalThis.fetch = async (url, init) => {
-      if (String(url).includes("google.serper.dev")) {
-        serperCalls += 1;
-        const request = JSON.parse(init.body);
-        return new Response(
-          JSON.stringify({
-            shopping:
-              request.q === "robot vacuum $300"
-                ? [
-                    {
-                      extractedPrice: 249,
-                      link: "https://www.homedepot.com/p/Alpha-A100-Robot-Vacuum/123456",
-                      offers: "8+",
-                      position: 1,
-                      productId: "123",
-                      rating: 4.6,
-                      ratingCount: 1200,
-                      source: "Home Depot",
-                      title: "Alpha A100 Robot Vacuum",
-                    },
-                  ]
-                : [],
-          }),
-          { headers: { "content-type": "application/json" }, status: 200 },
-        );
-      }
-      return new Response("unavailable", { status: 503 });
-    };
-
-    const selected = await selectProducts({
-      input: { budget: "$300", query: "robot vacuum" },
-      plan: async (candidates) => {
-        observedCandidates = candidates;
-        assert.equal(serperCalls, 3);
-        return { queries: [], targets: [] };
-      },
-    });
-
-    assert.deepEqual(observedCandidates, [
-      {
-        brand: "Alpha",
-        modelIdentifiers: ["a100"],
-        name: "Alpha A100 Robot Vacuum",
-        offerCount: 8,
-        position: 1,
-        price: 249,
-        rating: 4.6,
-        ratingCount: 1200,
-        retailer: "Home Depot",
-      },
-    ]);
-    assert.equal(selected.telemetry.logicalSearchCalls, 3);
-  });
-
   it("starts all three neutral Shopping searches while the scout plan is pending", async () => {
     process.env.SERPER_API_KEY = "test-only-key";
     let finishPlan;

@@ -147,7 +147,7 @@ describe("selection-only recommendation API", () => {
 
     assert.equal(
       body.debug.architecture,
-      "market_quality_live_v3_commerce_informed",
+      "market_quality_live_v4_independent_concurrent",
     );
     assert.equal(body.debug.openAiCalls, 1);
     assert.equal(body.debug.search.candidatesReturned, 1);
@@ -155,41 +155,33 @@ describe("selection-only recommendation API", () => {
     assert.equal(JSON.stringify(body.debug).includes("citations"), false);
   });
 
-  it("starts the market scout only after current commerce candidates are available", async () => {
+  it("starts the market scout concurrently with product discovery", async () => {
     let scoutStarted = false;
-    const commerceCandidates = [
-      {
-        brand: "Acer",
-        modelIdentifiers: ["XV272U"],
-        name: "Acer Nitro XV272U",
-        offerCount: 8,
-        position: 1,
-        price: 179.99,
-        rating: 4.6,
-        ratingCount: 1200,
-        retailer: "Best Buy",
-      },
-    ];
+    let markSelectionStarted;
+    const selectionStarted = new Promise((resolve) => {
+      markSelectionStarted = resolve;
+    });
     const base = dependencies();
     const response = await routeModule.createRecommendationPostHandler(
       dependencies({
         buildMarketScoutPlan: async (options) => {
           scoutStarted = true;
-          assert.deepEqual(options.commerceCandidates, commerceCandidates);
+          assert.equal("commerceCandidates" in options, false);
+          await selectionStarted;
           return {
             plan: { queries: ["gaming monitor"], targets: [] },
             telemetry: { openAiCalls: 1, usedFallback: false },
           };
         },
         selectProducts: async ({ plan }) => {
-          assert.equal(scoutStarted, false);
-          assert.equal(typeof plan, "function");
-          const resolvedPlan = await plan(commerceCandidates);
+          assert.equal(scoutStarted, true);
+          assert.notEqual(typeof plan, "function");
+          markSelectionStarted();
+          const resolvedPlan = await plan;
           assert.deepEqual(resolvedPlan, {
             queries: ["gaming monitor"],
             targets: [],
           });
-          assert.equal(scoutStarted, true);
           return base.selectProducts({ plan: resolvedPlan });
         },
       }),
