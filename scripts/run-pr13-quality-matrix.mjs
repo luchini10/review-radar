@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { readFile, unlink } from "node:fs/promises";
+import { readFile, rename, unlink, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -54,6 +54,31 @@ function requireApprovedRun() {
     );
   }
   return phase;
+}
+
+async function persistReport(report) {
+  const requestedPath = argumentValue("report-file");
+  if (!requestedPath) return;
+
+  const reportPath = path.resolve(requestedPath);
+  const normalizedPath = reportPath.replaceAll("\\", "/").toLowerCase();
+  if (
+    path.basename(reportPath).toLowerCase() === ".env.local" ||
+    normalizedPath.includes("/tests/fixtures/review-radar-live/")
+  ) {
+    throw new Error("The report path cannot target a protected repository path.");
+  }
+
+  const temporaryPath = `${reportPath}.${process.pid}.${randomUUID()}.tmp`;
+  try {
+    await writeFile(temporaryPath, `${JSON.stringify(report, null, 2)}\n`, {
+      encoding: "utf8",
+      flag: "wx",
+    });
+    await rename(temporaryPath, reportPath);
+  } finally {
+    await unlink(temporaryPath).catch(() => {});
+  }
 }
 
 function preparedRequest(value) {
@@ -754,6 +779,7 @@ const outputReport =
       }
     : report;
 
+await persistReport(outputReport);
 process.stdout.write(`${JSON.stringify(outputReport, null, 2)}\n`);
 if (Object.values(report.summary.acceptance).some((passed) => !passed)) {
   process.exitCode = 1;
