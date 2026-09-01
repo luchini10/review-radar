@@ -112,6 +112,15 @@ describe("market evidence index", () => {
     assert.equal(lookedUp.telemetry.indexStatus, "fresh");
     assert.equal(lookedUp.telemetry.indexAgeMs, 1_000);
     assert.equal(lookedUp.telemetry.openAiCalls, 0);
+    assert.deepEqual(lookedUp.telemetry.indexedResearch, {
+      acceptedSourceUrls: 2,
+      evidenceTiers: { none: 0, strong: 1, supported: 0 },
+      hostedSearchCalls: 1,
+      inputTokens: 200,
+      openAiCalls: 1,
+      outputTokens: 50,
+      totalTokens: 250,
+    });
     assert.equal(lookedUp.plan.targets[0].evidenceTier, "strong");
     assert.deepEqual(lookedUp.plan.targets[0].sourceUrls, [
       "https://rtings.com/vacuum/reviews/example/model-pro",
@@ -159,6 +168,15 @@ describe("market evidence index", () => {
             createdAtMs: Date.now(),
             model: MARKET_SCOUT_MODEL,
             promptVersion: MARKET_SCOUT_PROMPT_VERSION,
+            research: {
+              acceptedSourceUrls: 1,
+              evidenceTiers: { none: 0, strong: 1, supported: 0 },
+              hostedSearchCalls: 1,
+              inputTokens: 100,
+              openAiCalls: 1,
+              outputTokens: 20,
+              totalTokens: 120,
+            },
             targets: [
               {
                 aliases: [],

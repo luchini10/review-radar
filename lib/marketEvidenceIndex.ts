@@ -44,6 +44,23 @@ const entrySchema = z
     createdAtMs: z.number().int().nonnegative(),
     model: z.string().min(1).max(100),
     promptVersion: z.string().min(1).max(100),
+    research: z
+      .object({
+        acceptedSourceUrls: z.number().int().nonnegative(),
+        evidenceTiers: z
+          .object({
+            none: z.number().int().nonnegative(),
+            strong: z.number().int().nonnegative(),
+            supported: z.number().int().nonnegative(),
+          })
+          .strict(),
+        hostedSearchCalls: z.number().int().nonnegative().max(3),
+        inputTokens: z.number().int().nonnegative(),
+        openAiCalls: z.number().int().nonnegative().max(1),
+        outputTokens: z.number().int().nonnegative(),
+        totalTokens: z.number().int().nonnegative(),
+      })
+      .strict(),
     targets: z.array(targetSchema).min(1).max(5),
   })
   .strict();
@@ -66,6 +83,7 @@ export type MarketEvidenceIndexStatus =
 
 export type MarketEvidenceLookupTelemetry = MarketScoutTelemetry & {
   indexAgeMs: number | null;
+  indexedResearch: MarketEvidenceIndexEntry["research"] | null;
   indexStatus: MarketEvidenceIndexStatus;
   refreshRecommended: boolean;
 };
@@ -169,6 +187,7 @@ function fallbackTelemetry(
           : "index_miss",
     hostedSearchCalls: 0,
     indexAgeMs: ageMs,
+    indexedResearch: null,
     indexStatus: status,
     inputTokens: 0,
     openAiCalls: 0,
@@ -184,6 +203,7 @@ function fallbackTelemetry(
 }
 
 function freshTelemetry(
+  entry: MarketEvidenceIndexEntry,
   targets: MarketScoutTarget[],
   ageMs: number,
 ): MarketEvidenceLookupTelemetry {
@@ -198,6 +218,7 @@ function freshTelemetry(
     evidenceTiers,
     hostedSearchCalls: 0,
     indexAgeMs: ageMs,
+    indexedResearch: entry.research,
     indexStatus: "fresh",
     inputTokens: 0,
     openAiCalls: 0,
@@ -261,7 +282,7 @@ export async function lookupMarketEvidence(options: {
     };
   }
 
-  const telemetry = freshTelemetry(targets, ageMs);
+  const telemetry = freshTelemetry(entry, targets, ageMs);
   return {
     needsRefresh: telemetry.refreshRecommended,
     plan: { queries: neutralShoppingQueries(options.input), targets },
@@ -273,6 +294,7 @@ async function writeEntry(options: {
   createdAtMs: number;
   indexPath: string;
   input: RecommendationApiRequest;
+  research: MarketEvidenceIndexEntry["research"];
   targets: MarketScoutTarget[];
 }) {
   const queued = writeQueue.then(async () => {
@@ -287,6 +309,7 @@ async function writeEntry(options: {
       createdAtMs: options.createdAtMs,
       model: MARKET_SCOUT_MODEL,
       promptVersion: MARKET_SCOUT_PROMPT_VERSION,
+      research: options.research,
       targets: normalizedStoredTargets(options.targets),
     };
     if (entry.targets.length === 0) throw new Error("No valid market targets to index.");
@@ -353,6 +376,15 @@ export function refreshMarketEvidenceIndex(options: {
       createdAtMs: now(),
       indexPath: configuredIndexPath(options.indexPath),
       input: options.input,
+      research: {
+        acceptedSourceUrls: scouted.telemetry.acceptedSourceUrls,
+        evidenceTiers: scouted.telemetry.evidenceTiers,
+        hostedSearchCalls: scouted.telemetry.hostedSearchCalls,
+        inputTokens: scouted.telemetry.inputTokens,
+        openAiCalls: scouted.telemetry.openAiCalls,
+        outputTokens: scouted.telemetry.outputTokens,
+        totalTokens: scouted.telemetry.totalTokens,
+      },
       targets: scouted.plan.targets,
     });
     return { scouted, status: "updated" };

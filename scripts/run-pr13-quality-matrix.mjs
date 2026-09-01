@@ -6,10 +6,9 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
 
-import { createOpenAIClient } from "../lib/openaiClient.ts";
 import { detectRequirementConflicts } from "../lib/requirementConflicts.ts";
 import { extractStructuredRequirements } from "../lib/requirementExtraction.ts";
-import { refreshMarketEvidenceIndex } from "../lib/marketEvidenceIndex.ts";
+import { lookupMarketEvidence } from "../lib/marketEvidenceIndex.ts";
 import { productSelectionTestExports } from "../lib/productSelection.ts";
 import { validateRecommendationRequest } from "../lib/recommendationRequestValidation.ts";
 
@@ -71,32 +70,81 @@ function preparedRequest(value) {
   return input;
 }
 
-async function refreshBenchmarkIndex(benchmarkCases, indexPath) {
-  const apiKey = process.env.OPENAI_API_KEY?.trim();
-  if (!apiKey) throw new Error("OPENAI_API_KEY is required for indexed quality QA.");
-  const client = await createOpenAIClient(apiKey, { maxRetries: 0 });
+async function waitForIndexedEvidence(input, indexPath) {
+  const deadline = performance.now() + 75_000;
+  while (performance.now() < deadline) {
+    const lookup = await lookupMarketEvidence({ indexPath, input });
+    if (lookup.telemetry.indexStatus === "fresh") return lookup;
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  return null;
+}
+
+async function refreshBenchmarkIndex(benchmarkCases, indexPath, portBase) {
   const refreshes = [];
-  for (const benchmarkCase of benchmarkCases) {
+  for (const [index, benchmarkCase] of benchmarkCases.entries()) {
     process.stderr.write(`[market index] refreshing case=${benchmarkCase.id}\n`);
-    const result = await refreshMarketEvidenceIndex({
-      client,
-      force: true,
-      indexPath,
-      input: preparedRequest(benchmarkCase.request),
-    });
-    const telemetry = result.scouted?.telemetry;
-    refreshes.push({
-      acceptedSourceUrls: telemetry?.acceptedSourceUrls || 0,
-      evidenceTiers: telemetry?.evidenceTiers || { none: 0, strong: 0, supported: 0 },
-      hostedSearchCalls: telemetry?.hostedSearchCalls || 0,
-      id: benchmarkCase.id,
-      inputTokens: telemetry?.inputTokens || 0,
-      openAiCalls: telemetry?.openAiCalls || 0,
-      outputTokens: telemetry?.outputTokens || 0,
-      status: result.status,
-      targetCount: result.scouted?.plan.targets.length || 0,
-      totalTokens: telemetry?.totalTokens || 0,
-    });
+    const input = preparedRequest(benchmarkCase.request);
+    const server = startServer(portBase + index, indexPath);
+    const baseUrl = `http://127.0.0.1:${portBase + index}`;
+    const startedAt = performance.now();
+    try {
+      await waitUntilReady(baseUrl, server.child, server.output);
+      const response = await fetch(`${baseUrl}/api/recommendations`, {
+        body: JSON.stringify(benchmarkCase.request),
+        headers: {
+          "Content-Type": "application/json",
+          "x-reviewradar-debug": "true",
+        },
+        method: "POST",
+        signal: AbortSignal.timeout(30_000),
+      });
+      const body = asRecord(await response.json().catch(() => ({})));
+      const lookup = response.status === 200
+        ? await waitForIndexedEvidence(input, indexPath)
+        : null;
+      const research = lookup?.telemetry.indexedResearch;
+      refreshes.push({
+        acceptedSourceUrls: research?.acceptedSourceUrls || 0,
+        durationMs: Math.round(performance.now() - startedAt),
+        evidenceTiers: research?.evidenceTiers || { none: 0, strong: 0, supported: 0 },
+        error:
+          response.status === 200 && lookup
+            ? null
+            : typeof body.error === "string"
+              ? body.error
+              : `Index refresh did not complete after HTTP ${response.status}.`,
+        hostedSearchCalls: research?.hostedSearchCalls || 0,
+        id: benchmarkCase.id,
+        inputTokens: research?.inputTokens || 0,
+        openAiCalls: research?.openAiCalls || 0,
+        outputTokens: research?.outputTokens || 0,
+        status: lookup ? "updated" : "failed",
+        targetCount: lookup?.plan.targets.length || 0,
+        totalTokens: research?.totalTokens || 0,
+        warmLogicalSerperOperations: asFiniteNumber(
+          asRecord(asRecord(body.debug).search).logicalSearchCalls,
+        ),
+      });
+    } catch (error) {
+      refreshes.push({
+        acceptedSourceUrls: 0,
+        durationMs: Math.round(performance.now() - startedAt),
+        evidenceTiers: { none: 0, strong: 0, supported: 0 },
+        error: error instanceof Error ? error.message : String(error),
+        hostedSearchCalls: 0,
+        id: benchmarkCase.id,
+        inputTokens: 0,
+        openAiCalls: 0,
+        outputTokens: 0,
+        status: "failed",
+        targetCount: 0,
+        totalTokens: 0,
+        warmLogicalSerperOperations: 0,
+      });
+    } finally {
+      await stopServer(server.child);
+    }
   }
   return refreshes;
 }
@@ -626,7 +674,11 @@ const indexPath = path.join(
 );
 let indexRefreshes = [];
 try {
-  indexRefreshes = await refreshBenchmarkIndex(benchmark.cases, indexPath);
+  indexRefreshes = await refreshBenchmarkIndex(
+    benchmark.cases,
+    indexPath,
+    portBase - 100,
+  );
   for (let round = 1; round <= 3; round += 1) {
     for (const benchmarkCase of benchmark.cases) {
       const runNumber = results.length + 1;
