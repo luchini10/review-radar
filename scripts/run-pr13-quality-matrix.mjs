@@ -112,87 +112,90 @@ async function waitForIndexedEvidence(input, indexPath, refreshStartedAtMs) {
 
 async function refreshBenchmarkIndex(benchmarkCases, indexPath, portBase) {
   const refreshes = [];
-  for (const [index, benchmarkCase] of benchmarkCases.entries()) {
-    process.stderr.write(`[market index] refreshing case=${benchmarkCase.id}\n`);
-    const input = preparedRequest(benchmarkCase.request);
-    const server = startServer(portBase + index, indexPath);
-    const baseUrl = `http://127.0.0.1:${portBase + index}`;
-    const startedAt = performance.now();
-    const refreshStartedAtMs = Date.now();
-    try {
-      await waitUntilReady(baseUrl, server.child, server.output);
-      const response = await fetch(`${baseUrl}/api/recommendations`, {
-        body: JSON.stringify(benchmarkCase.request),
-        headers: {
-          "Content-Type": "application/json",
-          "x-reviewradar-debug": "true",
-        },
-        method: "POST",
-        signal: AbortSignal.timeout(30_000),
-      });
-      const body = asRecord(await response.json().catch(() => ({})));
-      const lookup = response.status === 200
-        ? await waitForIndexedEvidence(input, indexPath, refreshStartedAtMs)
-        : null;
-      const attempt = lookup?.telemetry.lastRefreshAttempt;
-      const research = attempt?.research;
-      const updated = attempt?.status === "updated" && lookup?.telemetry.indexStatus === "fresh";
-      refreshes.push({
-        acceptedSourceUrls: research?.acceptedSourceUrls || 0,
-        durationMs: Math.round(performance.now() - startedAt),
-        evidenceTiers: research?.evidenceTiers || { none: 0, strong: 0, supported: 0 },
-        error:
-          response.status === 200 && updated
-            ? null
-            : attempt?.fallbackReason
-              ? `Market research failed: ${attempt.fallbackReason}.`
-            : typeof body.error === "string"
-              ? body.error
-              : `Index refresh did not complete after HTTP ${response.status}.`,
-        hostedSearchCalls: research?.hostedSearchCalls || 0,
-        id: benchmarkCase.id,
-        inputTokens: research?.inputTokens || 0,
-        openAiCalls: research?.openAiCalls || 0,
-        outputTokens: research?.outputTokens || 0,
-        sourceUrls: updated
-          ? [...new Set(lookup.plan.targets.flatMap((target) => target.sourceUrls))]
-          : [],
-        status: updated ? "updated" : "failed",
-        targetCount: updated ? lookup.plan.targets.length : 0,
-        targets: updated
-          ? lookup.plan.targets.map((target) => ({
-              brand: target.brand,
-              model: target.model,
-              sourceUrls: target.sourceUrls,
-              tier: target.evidenceTier,
-            }))
-          : [],
-        totalTokens: research?.totalTokens || 0,
-        warmLogicalSerperOperations: asFiniteNumber(
-          asRecord(asRecord(body.debug).search).logicalSearchCalls,
-        ),
-      });
-    } catch (error) {
-      refreshes.push({
-        acceptedSourceUrls: 0,
-        durationMs: Math.round(performance.now() - startedAt),
-        evidenceTiers: { none: 0, strong: 0, supported: 0 },
-        error: error instanceof Error ? error.message : String(error),
-        hostedSearchCalls: 0,
-        id: benchmarkCase.id,
-        inputTokens: 0,
-        openAiCalls: 0,
-        outputTokens: 0,
-        status: "failed",
-        sourceUrls: [],
-        targetCount: 0,
-        targets: [],
-        totalTokens: 0,
-        warmLogicalSerperOperations: 0,
-      });
-    } finally {
-      await stopServer(server.child);
+  const server = startServer(portBase, indexPath);
+  const baseUrl = `http://127.0.0.1:${portBase}`;
+  try {
+    await waitUntilReady(baseUrl, server.child, server.output);
+    for (const benchmarkCase of benchmarkCases) {
+      process.stderr.write(`[market index] refreshing case=${benchmarkCase.id}\n`);
+      const input = preparedRequest(benchmarkCase.request);
+      const startedAt = performance.now();
+      const refreshStartedAtMs = Date.now();
+      try {
+        await waitUntilReady(baseUrl, server.child, server.output);
+        const response = await fetch(`${baseUrl}/api/recommendations`, {
+          body: JSON.stringify(benchmarkCase.request),
+          headers: {
+            "Content-Type": "application/json",
+            "x-reviewradar-debug": "true",
+          },
+          method: "POST",
+          signal: AbortSignal.timeout(30_000),
+        });
+        const body = asRecord(await response.json().catch(() => ({})));
+        const lookup = response.status === 200
+          ? await waitForIndexedEvidence(input, indexPath, refreshStartedAtMs)
+          : null;
+        const attempt = lookup?.telemetry.lastRefreshAttempt;
+        const research = attempt?.research;
+        const updated = attempt?.status === "updated" && lookup?.telemetry.indexStatus === "fresh";
+        refreshes.push({
+          acceptedSourceUrls: research?.acceptedSourceUrls || 0,
+          durationMs: Math.round(performance.now() - startedAt),
+          evidenceTiers: research?.evidenceTiers || { none: 0, strong: 0, supported: 0 },
+          error:
+            response.status === 200 && updated
+              ? null
+              : attempt?.fallbackReason
+                ? `Market research failed: ${attempt.fallbackReason}.`
+              : typeof body.error === "string"
+                ? body.error
+                : `Index refresh did not complete after HTTP ${response.status}.`,
+          hostedSearchCalls: research?.hostedSearchCalls || 0,
+          id: benchmarkCase.id,
+          inputTokens: research?.inputTokens || 0,
+          openAiCalls: research?.openAiCalls || 0,
+          outputTokens: research?.outputTokens || 0,
+          sourceUrls: updated
+            ? [...new Set(lookup.plan.targets.flatMap((target) => target.sourceUrls))]
+            : [],
+          status: updated ? "updated" : "failed",
+          targetCount: updated ? lookup.plan.targets.length : 0,
+          targets: updated
+            ? lookup.plan.targets.map((target) => ({
+                brand: target.brand,
+                model: target.model,
+                sourceUrls: target.sourceUrls,
+                tier: target.evidenceTier,
+              }))
+            : [],
+          totalTokens: research?.totalTokens || 0,
+          warmLogicalSerperOperations: asFiniteNumber(
+            asRecord(asRecord(body.debug).search).logicalSearchCalls,
+          ),
+        });
+      } catch (error) {
+        refreshes.push({
+          acceptedSourceUrls: 0,
+          durationMs: Math.round(performance.now() - startedAt),
+          evidenceTiers: { none: 0, strong: 0, supported: 0 },
+          error: error instanceof Error ? error.message : String(error),
+          hostedSearchCalls: 0,
+          id: benchmarkCase.id,
+          inputTokens: 0,
+          openAiCalls: 0,
+          outputTokens: 0,
+          status: "failed",
+          sourceUrls: [],
+          targetCount: 0,
+          targets: [],
+          totalTokens: 0,
+          warmLogicalSerperOperations: 0,
+        });
+      }
     }
+  } finally {
+    await stopServer(server.child);
   }
   return refreshes;
 }
