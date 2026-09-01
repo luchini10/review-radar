@@ -17339,3 +17339,111 @@ tokens, cost, and payload size on the precommitted no-retry matrix.
 **Decision:** Step 3 is complete. Step 4 is authorized without another
 approval pause. Run the cache-cold three-by-eight matrix and treat any failed
 gate as evidence to diagnose, not permission to retry or weaken safety.
+
+---
+
+## PR-13 Step 4 live acceptance and failed-release verdict (2026-09-01)
+
+**Assessment:** FAIL. The source-bound scout, exact-model attachment, and
+post-gate ranking implementation are mechanically correct, but the proposed
+single synchronous scout does not reliably deliver purchasable market leaders
+within the combined latency and evidence constraints. PR-13 must not be
+released or described as best-in-budget reliable.
+
+**First preserved matrix:** the first precommitted three-by-eight, cache-cold,
+single-attempt run returned 17/24 non-empty results. Four requests hit the
+30-second client deadline, nearest-rank p95 was 30,009 ms, maximum was 30,010
+ms, and frozen leader recall was 2/20 among successful responses. Thirteen
+scouts fell back after responses contained four counted hosted calls and failed
+the hard three-call validator. The SDK's documented default timeout retries
+made a nominal 20-second scout last beyond the request budget.
+
+Manual audit of that failed matrix also found two precision losses that the
+first scorer had not recognized: a known 1080p monitor contradicted the 1440p
+preference, and one generic laptop title claimed 17.3 inches, 16 GB RAM, and
+512 GB SSD while its direct product URL explicitly named a 14-inch, 4 GB,
+128 GB product. Those observations were not accepted as a release pass.
+
+**Generalized corrections:** the scout now disables SDK retries, requests one
+broad hosted search while validating at most three actual calls, uses prompt
+version v3, low search context, a 1,600-token structured-output budget, and a
+10.5-second deadline. Each target is asked to carry two or three independent
+test/editorial URLs including a comparative source. Display resolution is now
+a deterministic numeric spec, so a known 1080p product fails a 1440p priority.
+Direct product routes fail when explicit URL size, memory, or storage values
+conflict with the offer title. Focused tests pass 71/71.
+
+**Corrected no-retry matrix:** a new, separately recorded matrix then ran the
+same frozen eight cases for three cache-cold rounds, once per cell:
+
+| Category | Non-empty | Frozen leader top three |
+| --- | ---: | ---: |
+| 14-cup programmable coffee maker under $150 | 3/3 | 3/3 |
+| Self-emptying robot vacuum under $300 | 2/3 | 0/3 |
+| 27-inch 1440p 144Hz gaming monitor under $300 | 3/3 | 0/3 |
+| Wet/dry shop vacuum under $200 | 3/3 | 0/3 |
+| Pressure washer at least 2,000 PSI under $300 | 3/3 | 0/3 |
+| Brushless cordless drill with battery under $200 | 3/3 | 0/3 |
+| Laptop with 16 GB RAM and 512 GB SSD under $900 | 0/3 | 0/3 |
+| Cordless leaf blower at least 400 CFM with battery under $250 | 1/3 | 0/3 |
+
+Overall non-empty recall was 18/24 and frozen-leader top-three recall was
+3/24 (12.5%). The benchmark registry treated all 24 as eligible because no
+current exact-leader evidence established unavailability or over-budget state;
+the laptop result shows that this denominator may overstate proven live
+eligibility, but even excluding all three laptop cells leaves 3/21, far below
+80%.
+
+Nineteen scouts fell back: fourteen timeouts, two invalid outputs, and three
+insufficient-evidence responses. Four requests produced at least one `strong`
+plan target, but zero returned a strong target as a card. Only one run returned
+any evidence-tiered card, a `supported` Cuisinart. Strong-before-unscored order
+therefore passed mechanically but did not provide useful strong coverage.
+
+**Performance and calls:** all 24 requests completed. Mean client latency was
+19,235 ms, nearest-rank p95 was 22,975 ms, minimum 13,915 ms, and maximum
+26,174 ms. Each used one OpenAI response; the maximum actual hosted-search
+count was two and maximum logical/physical Serper work was thirteen. Totals
+were 24 OpenAI responses, 20 hosted searches, and 287 logical/physical Serper
+attempts. Normal public payloads averaged 725 bytes and peaked at 1,738 bytes;
+the shape remained `{result:{recommendations:[imageUrl,name,category,price,
+productPageUrl]}}`.
+
+Measured model use was 91,828 input and 10,742 output tokens, 102,570 total.
+At current [OpenAI API pricing](https://developers.openai.com/api/docs/pricing),
+model tokens cost about $0.11721 and twenty hosted searches at $10/1,000 add
+about $0.20. [Serper's public Starter rate](https://serper.dev/) makes 287
+operations about $0.287, for an approximate public-rate matrix cost of
+$0.60421 before tax. The account-specific Serper tier was not inspected.
+
+**Safety and regression result:** the corrected matrix had no request failure
+and no detected post-correction wrong type, accessory/condition, exact-model,
+URL configuration, hard requirement, availability, trusted-USD-price, budget,
+duplicate URL, public-shape, or SSRF failure. Monitor outputs visibly carried
+1440p/QHD evidence; laptop remained empty rather than reusing the mismatched
+route. The full wall passes 319/319 unit tests across 43 suites, typecheck,
+zero-warning ESLint, the Next.js 16.3.3 production build with only `/`,
+`/_not-found`, and `/api/recommendations`, and Playwright 7/7 desktop/mobile.
+
+**Baseline versus new:** non-empty recall regressed from 23/24 before the
+market scout to 18/24 after the final safety-corrected implementation. Step 1
+did not retain a complete per-card identity ledger, so before leader recall
+cannot be reconstructed honestly. The new evidence path produced only one
+evidence-tiered returned-card run and zero strong returned-card runs; there is
+no supportable quality improvement claim.
+
+**Root-cause verdict:** latency is no longer the release blocker after SDK
+retry removal. Quality evidence supply is. The live scout must be cut off to
+meet p95, yielding frequent no-boost fallback; strong target plans that do
+arrive often lack a current exact purchasable offer after Shopping/page gates.
+The deterministic ranker cannot rank evidence that never survives discovery
+and eligibility.
+
+**Decision:** stop tuning the scout prompt or timeout. The strongest successor
+is a periodically refreshed, source-bound market-evidence index outside the
+latency-critical shopper request, followed by current commerce verification at
+request time. That breaks the explicit no-background PR-13 boundary and needs
+a new architecture decision. The alternative is an explicit relaxation of the
+latency SLO. No push, deployment, release, provider substitution, benchmark
+rewrite, protected-fixture access, `.env.local` inspection, or safety
+weakening occurred.

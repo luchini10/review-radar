@@ -264,16 +264,18 @@ The PR-10 architecture and PR-11 accuracy gates are protected by:
   and the minimal result card;
 - TypeScript, ESLint, and the Next production build.
 
-The PR-13 Step 3 source passes 317/317 unit tests across 43 suites,
-zero-warning lint, typecheck, production build, and Playwright 7/7. Its frozen
-three-round cache-cold matrix returned non-empty shortlists in 23/24 requests,
-including shop vacuum 2/3, with p95 18,806 ms and a 20,419 ms maximum. Every
-request used one OpenAI response and no more than twelve logical operations.
-The Step 3 checkpoint validates exact-model attachment, concurrent discovery,
-tier-aware final ranking, commerce-signal shrinkage, and the fifteen-operation
-ceiling, but has not yet run the new live matrix. The earlier 23/24 selection-
-recall result is therefore not proof that the new path meets leader recall or
-latency gates.
+The final PR-13 source passes 319/319 unit tests across 43 suites, zero-warning
+lint, typecheck, production build, and Playwright 7/7. The corrected Step 4
+three-round cache-cold matrix completed 24/24 requests with one OpenAI response
+each, at most two hosted searches, at most thirteen logical Serper operations,
+p95 22,975 ms, and maximum 26,174 ms. The public payload remained unchanged at
+725 bytes mean and 1,738 bytes maximum.
+
+PR-13 is not release-qualified: only 18/24 requests were non-empty and only
+3/24 put the frozen leader in the top three. Nineteen scouts fell back, and no
+run returned a `strong` target as a strong card. The source-binding and ranking
+mechanics are valid, but the synchronous scout/commerce handoff does not
+reliably supply purchasable leaders within the latency budget.
 
 The build route manifest must contain only /, /_not-found, and
 /api/recommendations.
@@ -283,11 +285,12 @@ The build route manifest must contain only /, /_not-found, and
 - Live prices and availability can change after a search.
 - Search-provider coverage can omit a good product.
 - Strict finalist verification can produce an empty shortlist even when a
-  qualifying product exists; the latest local frozen matrix observed one empty
-  run in 24, but provider variability prevents treating that rate as universal.
-- The market scout can improve exact-model recall, but its source tier is not a
-  product-fact, price, availability, or eligibility authority. The cache-cold
-  Step 4 matrix still needs to prove live leader recall and latency.
+  qualifying product exists; the corrected PR-13 matrix observed six empty
+  runs in 24.
+- The market scout's source tier is not product-fact, price, availability, or
+  eligibility authority. A short synchronous deadline preserved p95 but led to
+  nineteen fallbacks in 24 runs, so this architecture did not establish live
+  best-in-budget reliability.
 - Missing or ambiguous product images are intentionally omitted.
 - The recorded live quality sample is small and local. It does not prove
   hosted operations, accessibility beyond the current browser suite, or

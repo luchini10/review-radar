@@ -4,99 +4,121 @@ Updated: 2026-09-01
 
 ## Current phase and exact snapshot
 
-PR-13 Steps 1 through 3 are complete. The exact quality-ranking implementation
-commit is `1b4ca46a4e13cde6a9e81eb3744fda68b4671562`. It follows the
-source-bound scout commit `a9a2036bd25dd3ff3af6e255dd864ffe323bdbeb`
-and its checkpoint documentation commit `4b25dfc`.
+PR-13 Steps 1 through 4 have been executed locally. The implementation is
+complete at `9a61b40`, following the source-bound scout and exact-model ranking
+commits, but the Step 4 live release gates failed. PR-13 is therefore **not
+release-qualified** and must not be described as reliably returning the best
+in-budget products.
 
-The runtime is one synchronous `POST /api/recommendations`: deterministic
-request/requirement validation; one optional bounded GPT-5.4 Mini market scout;
-three neutral Shopping searches started concurrently with that scout; up to
-three exact searches for undiscovered `strong` targets; deterministic filtering
-and verification; post-gate quality ordering; and the unchanged minimal JSON
-card. There is no background job, alternate recommender, legacy planner, model-
-generated Shopping query, report, citation, or review-summary path.
+The public path remains one synchronous `POST /api/recommendations`, one
+optional GPT-5.4 Mini Responses call, bounded Shopping/page verification, and
+the unchanged minimal card. No push, deployment, release, production-data
+action, dependency change, public API change, or card change occurred.
 
-Taylor explicitly removed further approval pauses for this goal. Step 4 is
-authorized and should continue without asking. No push, deployment, release,
-production-data action, dependency change, public API change, or card change is
-included.
+Taylor explicitly removed approval pauses for the executed PR-13 goal. That
+authority did not permit weakening evidence or safety gates, replacing failed
+matrix cells, or silently changing the one-scout/no-background architecture.
 
-## Implemented quality path
+## Implemented PR-13 path
 
-`lib/marketScout.ts` makes at most one GPT-5.4 Mini Responses call with strict
-Structured Outputs, at most three hosted web-search calls, and included source
-metadata. It returns up to five ordered brand/model/aliases/sourceUrls targets.
-Only exact canonical URLs in completed response-owned search calls bind.
-`strong` requires two independent recognized editorial/test domains including
-a comparative source; `supported` requires one comparative source or two
-independent recognized editorial domains. All other targets are removed.
+`lib/marketScout.ts` makes one GPT-5.4 Mini Responses request with strict
+Structured Outputs, included `web_search_call.action.sources`, no SDK retries,
+a 10.5-second timeout, low search context, and a request for one broad hosted
+search. The runtime still validates a hard maximum of three actual hosted
+calls. It accepts only response-owned canonical URLs and assigns `strong` only
+for two independent recognized editorial/test domains including a comparative
+source. Validated plans cache for 24 hours; every failure falls back without a
+quality boost.
 
-Validated plans cache for 24 hours by normalized request, model, and prompt
-version. Invalid, insufficient, missing-client, timed-out, provider-failed, or
-over-ceiling results are not cached and fall back to neutral discovery with no
-quality target. Cancellation propagates through shared provider work.
+`lib/productSelection.ts` starts three neutral Shopping searches concurrently,
+then may search the three highest undiscovered `strong` exact models. The hard
+ceiling is six discovery searches plus nine candidate-local resolution
+opportunities, at most fifteen logical Serper operations. Evidence attaches
+only to exact brand/model identity. Final post-gate ordering is evidence tier,
+supported preferences, scout consensus, Bayesian commerce rating with a
+4.0/50 prior, review/offer volume, page/merchant quality, and stable discovery
+order. Price remains an eligibility ceiling only.
 
-`lib/productSelection.ts` launches the neutral Shopping work before the scout
-finishes. It searches at most the three highest `strong` exact models not
-already present after early product, condition, market, and extreme-budget
-filters. The total logical Serper ceiling is fifteen: no more than six discovery
-searches and nine candidate-local page-resolution opportunities.
+Step 4 also added generalized guards for two live safety losses: 1440p display
+requirements now reject known 1080p contradictions, and direct product URLs
+whose explicit size, RAM, or storage configuration conflicts with the offer
+title are ineligible.
 
-Market evidence attaches only when canonical brand and exact stable model code,
-label, or alias match. Named, numeric, generation, year, and model-code siblings
-do not inherit evidence. Shopping rating, rating count, offer count, product ID,
-and position remain internal commerce signals. Bayesian rating uses
-`(rating * count + 4.0 * 50) / (count + 50)`.
+## Frozen baseline and executed matrices
 
-Before bounded verification and again after every existing gate passes, order
-by: `strong`, `supported`, unscored; directly supported preferences; scout
-consensus; Bayesian rating; review count; offer count; page resolvability;
-merchant trust; stable discovery order. Price is an eligibility ceiling only.
-Brand diversity runs afterward while retaining the strongest passing leader in
-the first card.
+The Step 1 pre-quality baseline was 23/24 non-empty, shop vacuum 2/3, mean
+12,507 ms, nearest-rank p95 18,806 ms, and maximum 20,419 ms. It did not retain
+enough per-card identity evidence to compute a trustworthy before leader-
+recall value.
 
-## Frozen baseline and benchmark
+The first Step 4 matrix was preserved as a failure: 17/24 non-empty, four
+request timeouts, p95 30,009 ms, 2/20 top-three frozen-leader hits among
+successful requests, and thirteen scout fallbacks caused by four counted
+hosted calls exceeding the three-call validator. It exposed SDK timeout retries
+plus the display-resolution and direct-URL configuration defects.
 
-The last live result remains the Step 1 cache-cold baseline; Steps 2 and 3 made
-no live provider calls:
+After the bounded corrections, a new three-round, eight-case cache-cold matrix
+ran exactly 24 attempts with no retries:
 
-| Category | Non-empty runs |
-| --- | ---: |
-| 14-cup programmable coffee maker under $150 | 3/3 |
-| Self-emptying robot vacuum under $300 | 3/3 |
-| 27-inch 1440p 144Hz gaming monitor under $300 | 3/3 |
-| Wet/dry shop vacuum under $200 | 2/3 |
-| Pressure washer at least 2,000 PSI under $300 | 3/3 |
-| Brushless cordless drill with battery under $200 | 3/3 |
-| Laptop with 16 GB RAM and 512 GB SSD under $900 | 3/3 |
-| Cordless leaf blower at least 400 CFM with battery under $250 | 3/3 |
+| Metric | Corrected result | Gate |
+| --- | ---: | ---: |
+| Non-empty | 18/24 | at least 21/24 — **fail** |
+| Shop vacuum | 3/3 | at least 2/3 — pass |
+| Frozen leader in top three | 3/24 (12.5%) | at least 80% — **fail** |
+| Strong plan returned as a strong card | 0/4 | coverage failed |
+| Mean latency | 19,235 ms | report |
+| Nearest-rank p95 | 22,975 ms | at most 25,000 ms — pass |
+| Maximum latency | 26,174 ms | at most 30,000 ms — pass |
+| OpenAI Responses | 24 total, one/request | one/request — pass |
+| Hosted searches | 20 total, maximum two/request | at most three — pass |
+| Logical Serper operations | 287 total, maximum 13/request | at most fifteen — pass |
+| Public payload | mean 725 B, max 1,738 B | unchanged/no material growth — pass |
 
-Overall non-empty recall was 23/24, shop vacuum 2/3, mean 12,507 ms,
-nearest-rank p95 18,806 ms, minimum 7,093 ms, and maximum 20,419 ms under one
-OpenAI response and no more than twelve then-current logical Serper operations.
+Nineteen of 24 scouts fell back: fourteen timeouts, two invalid outputs, and
+three insufficient-evidence results. Only one run returned any evidence-tiered
+card, and it was `supported`; no `strong` target survived commerce and safety
+verification. The frozen leader appeared only in all three coffee-maker runs.
+Laptop was honestly empty 3/3 after the URL-configuration correction.
 
-The QA-only registry is
-`tests/benchmarks/pr13-market-leaders-v2026-09a.json`. It cannot enter runtime
-discovery, evidence, eligibility, price, availability, or ordering. Tests only
-prove that its eight exact identities can bind under the generalized matcher.
+Measured corrected-matrix model usage was 91,828 input plus 10,742 output
+tokens. At current [OpenAI pricing](https://developers.openai.com/api/docs/pricing),
+model tokens cost about $0.11721 and twenty hosted searches about $0.20. The
+287 operations are about $0.287 at [Serper's public Starter rate](https://serper.dev/),
+so the public-rate estimate is about $0.60421 before tax; the account's actual
+tier was not inspected.
 
-## Step 3 verification
+## Verification
 
-- Full unit tests: 317/317 across 43 suites.
+- Full unit tests: 319/319 across 43 suites.
 - Typecheck: pass.
 - ESLint: pass with zero warnings.
-- Next.js 16.3.3 production build: pass; routes are only `/`,
-  `/_not-found`, and `/api/recommendations`.
+- Next.js 16.3.3 production build: pass; only `/`, `/_not-found`, and
+  `/api/recommendations` are exposed.
 - Playwright: 7/7 pass across Chromium desktop/mobile.
-- `git diff --check`: pass at the staged implementation snapshot.
-- Public request/response shape: unchanged.
+- `git diff --check`: pass at each committed implementation snapshot.
+- Corrected matrix: zero request failures and no detected product-type,
+  condition, identity, hard-requirement, availability, USD-budget, duplicate-
+  URL, public-shape, or SSRF regression.
 
-Focused tests prove scout/neutral concurrency, at most three exact strong-
-target searches, six discovery plus nine resolution operations, exact model and
-sibling isolation, all eight frozen identities, tier order before commerce,
-preference and consensus precedence, final post-gate sorting, and that 5.0/1
-cannot outrank 4.6/1,000 solely through ratings.
+## Assessment and next architecture decision
+
+The proposed ranking logic is sound, but it does not attack the proven live
+bottleneck. A synchronous source-backed web scout must be cut off quickly to
+meet p95, causing frequent no-boost fallback; when it does produce a strong
+target, current Shopping/page verification often cannot surface a purchasable
+exact offer. More prompt/timeout tuning would trade latency against evidence
+yield and is not an evidence-supported next step.
+
+The strongest alternative is to move market-quality research outside the
+latency-critical request into a periodically refreshed, source-bound evidence
+index, then perform only current commerce/eligibility verification during the
+shopper request. That materially changes PR-13's no-background architecture.
+The other honest option is to retain live scouting and relax the latency SLO.
+Do not implement either by stealth; first write a new architecture decision
+with measured freshness, invalidation, operating cost, and trust boundaries.
+
+Recommended reasoning level: **highest** for that architecture decision;
+medium for routine verification and documentation.
 
 ## Hard boundaries
 
@@ -105,49 +127,23 @@ Never open, enumerate, stat, hash, parse, copy, edit, or delete
 `tests/fixtures/review-radar-live/**`; suppress untracked enumeration and use
 explicit path-scoped searches.
 
-Several earlier sessions and Step 2 recorded path-only protected-fixture
-enumerations, most recently from `git status --short --branch`. No protected
-fixture was opened, statted individually, hashed, parsed, copied, edited,
-deleted, or used as evidence. Do not repeat the process violation.
+Earlier sessions and Step 2 recorded path-only protected-fixture enumerations,
+most recently from `git status --short --branch`. No protected fixture content
+was opened or used. Do not repeat the process violation.
 
-Do not weaken product type/accessory/condition, hard requirements, exact model
-and sibling identity, merchant binding, availability, USD budget, price
-authority, page eligibility, duplicate URL, image, or SSRF gates. Market or
-commerce signals cannot create eligibility or reach the public payload. Do not
-retry until desired output appears.
-
-## Next authorized work
-
-Execute PR-13 Step 4 using the precommitted three-by-eight cache-cold matrix,
-one single attempt per case per round, no retries:
-
-- zero safety, identity, hard-requirement, availability, or budget failures;
-- at least one independently registered in-budget leader in the top three in
-  at least 80% of eligible runs;
-- every passing `strong` leader ahead of unscored alternatives;
-- non-empty recall at least 21/24, including shop vacuum at least 2/3;
-- cache-cold nearest-rank p95 at most 25 seconds and maximum at most 30 seconds;
-- one OpenAI response, at most three hosted searches, and at most fifteen
-  logical Serper operations per request;
-- unchanged public payload shape and no material size increase.
-
-Record per-run latency, result names/URLs/prices, market tiers, neutral/target/
-resolution calls, physical attempts, hosted calls, OpenAI calls, input/output/
-total tokens, approximate cost, response bytes, constraint verdicts, eligible
-leader/top-three verdicts, and baseline-versus-new quality. If a gate fails,
-attribute the earliest safe cause before changing code and rerun only with a
-new explicitly recorded matrix, never by replacing failed attempts.
-
-Use high reasoning for live failure attribution and identity/quality judgment;
-routine command execution and document maintenance can use medium reasoning.
+Do not weaken product type/accessory/condition, hard requirements, exact-model
+identity, merchant binding, availability, USD budget, price authority, page
+eligibility, duplicate URL, image, or SSRF gates. Market/commerce signals never
+create eligibility or reach the public payload. Do not retry until a preferred
+card appears.
 
 ## Evidence pointers
 
 | Evidence | Location |
 | --- | --- |
-| Active PR-13 decision | `docs/forward-roadmap.md`, PR-13 |
-| Canonical Step 3 result | latest PR-13 entry in `docs/qa-loop-results.md` |
+| PR-13 decision and failed Step 4 verdict | `docs/forward-roadmap.md`, PR-13 |
+| Canonical live record | latest PR-13 entry in `docs/qa-loop-results.md` |
 | Durable quality contracts | `docs/review-radar-test-memory.md`, PR-13 |
 | Frozen QA benchmark | `tests/benchmarks/pr13-market-leaders-v2026-09a.json` |
 | Runtime architecture | `ReviewRadar-Overview.md` |
-| Exact Step 3 implementation | `1b4ca46a4e13cde6a9e81eb3744fda68b4671562` |
+| Final implementation before docs | `9a61b40` |

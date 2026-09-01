@@ -1810,3 +1810,22 @@ Stop. C3 is the next separately approval-gated phase; R7A remains blocked.
 
 Stop. C4 requires a separate six-search approval and the deferred C2+C3 peer
 checkpoint. R7A remains blocked and separately approval-gated.
+
+### PR-13 best-in-budget market quality closeout (2026-09-01)
+
+- Implemented one source-bound GPT-5.4 Mini scout, exact-model evidence tiers,
+  target Shopping discovery, Bayesian commerce tie-breaking, and final
+  post-gate ranking without changing the minimal public card.
+- Added and preserved a precommitted 24-run quality matrix. The first attempt
+  failed at 17/24 non-empty with four timeouts and exposed hidden SDK retries
+  plus two live constraint/identity losses. Generalized corrections disabled
+  retries, added 1440p evidence, and rejected conflicting URL configurations.
+- The corrected no-retry matrix passed latency, call, safety, shape, and shop-
+  vac gates but failed at 18/24 non-empty and 3/24 frozen-leader top-three
+  recall. Nineteen scouts fell back; no strong target returned as a strong card.
+- Final wall: 319/319 unit tests, typecheck, zero-warning lint, production build,
+  and Playwright 7/7. PR-13 is implemented locally but not release-qualified.
+- Do not continue prompt/timeout tuning or claim best-in-budget reliability.
+  The next sound decision is a new architecture comparison: a periodically
+  refreshed source-bound evidence index outside request latency versus an
+  explicitly relaxed latency SLO.

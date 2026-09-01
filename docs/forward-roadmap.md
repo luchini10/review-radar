@@ -4717,11 +4717,10 @@ the search ceiling or infer availability from price alone.
 
 ### PR-13 — best-in-budget market quality
 
-**Status:** Steps 1 through 3 are complete and locally validated. Taylor
-explicitly removed further approval pauses for this goal. Step 4 is authorized:
-run the precommitted cache-cold acceptance matrix, audit the results, correct
-any evidence-supported failure without weakening gates, and publish the final
-measurement record.
+**Status:** Steps 1 through 4 were executed locally. The implementation is
+complete, but Step 4 failed the non-empty and leader-recall release gates.
+PR-13 is not release-qualified. Taylor removed approval pauses for this goal,
+but no gate was weakened and no failed matrix cell was replaced.
 
 **Objective:** establish a safe, repeatable selection baseline and an
 independently sourced market-leader benchmark before adding market-quality
@@ -4811,12 +4810,49 @@ the scout/neutral searches overlap, no more than three strong-target searches
 run, and final post-gate sorting preserves tier priority. No new live matrix
 has run, so the last measured values remain the Step 1 baseline.
 
-**Next authorized work:** execute the three-by-eight cache-cold matrix with no
-retries. Require zero safety/identity/requirements/availability/budget failures,
-leader top-three recall at least 80% of eligible runs, every passing `strong`
-leader ahead of unscored alternatives, non-empty recall at least 21/24 with
-shop vacuum 2/3, cache-cold p95 at most 25 seconds, one OpenAI response, at
-most three hosted searches, and at most fifteen logical Serper operations.
+**Step 4 actual:** the first no-retry matrix was preserved as a failure at
+17/24 non-empty, four request timeouts, p95 30,009 ms, and 2/20 frozen-leader
+hits among successful requests. It exposed default OpenAI SDK timeout retries,
+frequent four-call scout responses rejected by the three-call validator, a
+known 1080p contradiction to the 1440p preference, and one direct laptop URL
+whose explicit configuration contradicted its title.
+
+The bounded correction disabled SDK retries, requested one broad hosted
+search while retaining the three-call hard validator, used a 10.5-second scout
+deadline and prompt version v3, added display-resolution extraction, and made
+explicit URL size/RAM/storage conflicts ineligible. A second distinct
+three-by-eight matrix then completed all 24 cache-cold requests once:
+
+- 18/24 non-empty, shop vacuum 3/3;
+- frozen leader in the top three in 3/24 eligible-registry runs (12.5%);
+- four runs produced a `strong` plan, but zero returned that strong target;
+- mean 19,235 ms, nearest-rank p95 22,975 ms, maximum 26,174 ms;
+- one OpenAI response per request, maximum two hosted searches, maximum
+  thirteen logical Serper operations;
+- unchanged public shape, mean 725-byte and maximum 1,738-byte normal payload;
+- nineteen scout fallbacks: fourteen timeout, two invalid output, three
+  insufficient evidence; and
+- zero detected post-correction safety, identity, requirement, availability,
+  budget, source, public-shape, or SSRF violations.
+
+The latency, call, shape, safety, strong-before-unscored ordering, and shop-vac
+gates pass. The 21/24 non-empty and 80% leader-recall gates fail decisively.
+Before-quality leader recall is not reconstructible because Step 1 did not
+retain per-card identities; the honest comparison is that non-empty recall
+fell from 23/24 to 18/24 and the new path returned any evidence-tiered card in
+only one run.
+
+**Decision:** stop tuning this architecture. The live bottleneck is the
+synchronous scout/commerce handoff, not the deterministic ranker. Meeting p95
+requires a short scout deadline that frequently removes the quality signal;
+when a strong target exists, current Shopping/page verification still often
+cannot surface a qualifying exact offer. The strongest successor is a
+periodically refreshed source-bound evidence index outside the shopper-request
+latency path, followed by current commerce verification at request time. That
+breaks PR-13's no-background boundary and requires a new architecture decision
+covering freshness, invalidation, operating cost, and trust. The alternative
+is to retain live scouting and explicitly relax the latency SLO. Do not claim
+best-in-budget reliability or release PR-13 under the failed result.
 
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 

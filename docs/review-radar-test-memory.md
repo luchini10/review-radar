@@ -4134,3 +4134,30 @@ a known conservative undercount.
 - The QA registry may prove test coverage for its eight exact model identities
   but remains test-only and cannot feed runtime discovery, evidence, price,
   availability, eligibility, or ordering.
+
+## PR-13 failed live-quality contract (2026-09-01)
+
+- Preserve both Step 4 matrices. The first failed at 17/24 non-empty, four
+  request timeouts, p95 30,009 ms, and 2/20 frozen-leader hits. It exposed SDK
+  timeout retries, four-call scout responses, a 1080p/1440p contradiction, and
+  a direct laptop URL configuration conflict.
+- OpenAI SDK request timeouts retry by default. The bounded scout must use
+  `maxRetries: 0`; otherwise one logical Responses invocation can exceed the
+  synchronous latency envelope through hidden physical retries.
+- Display-resolution priorities are numeric evidence. A known 1080p product
+  cannot satisfy 1440p. Direct offer routes whose explicit size, RAM, or
+  storage contradicts the offer title fail before page use.
+- The corrected matrix is also a failed release result: 18/24 non-empty,
+  shop vacuum 3/3, frozen leader 3/24, mean 19,235 ms, p95 22,975 ms, maximum
+  26,174 ms, one OpenAI response/request, maximum two hosted calls, and maximum
+  thirteen logical Serper operations.
+- Nineteen of 24 corrected scouts fell back. Four runs had a `strong` plan,
+  zero returned a strong card, and only one returned any evidence-tiered card.
+  Passing deterministic tier-order tests do not establish live quality supply.
+- Do not tune until a desired product appears, weaken the two-source threshold,
+  search `supported` targets as if they were `strong`, let ratings become
+  leader evidence, or reinterpret unscored cards as quality wins.
+- The proven next problem is architectural: live source research and current
+  commerce verification do not reliably fit the same short synchronous path.
+  Evaluate an externally refreshed source-bound evidence index versus an
+  explicit latency-SLO relaxation before more PR-13 provider spend.

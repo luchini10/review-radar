@@ -11,6 +11,32 @@ Update this file after:
 
 ## 2026-09-01
 
+### Codex - Complete PR-13 with a failed live release gate
+
+#### Changed
+
+- Disabled hidden OpenAI SDK retries and bounded the live scout to one broad
+  requested search, a hard three-call validator, and a 10.5-second deadline.
+- Added deterministic display-resolution requirements and rejected direct
+  product URLs whose explicit size, RAM, or storage conflicts with the offer.
+- Added a reproducible, cost-guarded 24-run PR-13 quality matrix with compact
+  internal telemetry; the public card and API remain unchanged.
+
+#### Verified
+
+- The corrected matrix completed 24/24 requests with p95 22,975 ms, maximum
+  26,174 ms, one OpenAI response/request, no more than two hosted searches, no
+  more than thirteen logical Serper operations, and no detected safety or
+  public-contract regression.
+- Release gates failed: 18/24 non-empty and 3/24 frozen-leader top-three recall;
+  nineteen scouts fell back and no strong plan target returned as a strong
+  card. PR-13 is not release-qualified.
+- Full validation passed 319/319 unit tests across 43 suites, typecheck,
+  zero-warning lint, the production build, and Playwright 7/7 desktop/mobile.
+- Public-rate estimate for the corrected matrix was about $0.60421 before tax:
+  $0.11721 model tokens, $0.20 hosted search, and approximately $0.287 Serper
+  Starter-rate operations. No account-specific pricing was inspected.
+
 ### Codex - Rank exact market leaders within budget
 
 #### Changed
