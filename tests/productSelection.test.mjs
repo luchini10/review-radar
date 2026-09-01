@@ -536,6 +536,18 @@ describe("selection correctness", () => {
     );
   });
 
+  it("rejects a direct product URL whose slug names a different leading brand", () => {
+    assert.equal(
+      candidateHasUsablePage(
+        candidate("Kffkff Cold Electric Pressure Washer 2000 PSI", {
+          productUrl:
+            "https://www.walmart.com/ip/SKYSHALO-Cold-Electric-Pressure-Washer-2000-PSI/5463804498",
+        }),
+      ),
+      false,
+    );
+  });
+
   it("rejects a retailer page whose hyphenated catalog model belongs to a different product", () => {
     assert.equal(
       pageIdentityScore(

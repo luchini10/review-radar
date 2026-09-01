@@ -768,7 +768,8 @@ function candidateHasUsablePage(candidate: RawProductCandidate) {
   }
   if (
     haveConflictingNumericProductSpecs(candidate.name, pageIdentityEvidence) ||
-    haveConflictingExtractedProductSpecs(candidate.name, pageIdentityEvidence)
+    haveConflictingExtractedProductSpecs(candidate.name, pageIdentityEvidence) ||
+    hasConflictingProductUrlBrand(candidate)
   ) {
     return false;
   }
@@ -994,6 +995,35 @@ function modelIdentifierShape(value: string) {
   return value.replace(/\d+/g, "#");
 }
 
+function productSlugLeadingBrand(value: string) {
+  const parsed = parsedPageUrl(value);
+  if (!parsed) return null;
+  const segments = parsed.pathname
+    .split("/")
+    .map((segment) => {
+      try {
+        return decodeURIComponent(segment);
+      } catch {
+        return segment;
+      }
+    })
+    .filter(Boolean);
+  const detailIndex = segments.findIndex((segment) =>
+    /^(?:dp|ip|item|p|pd|pdp|product|products|site)$/i.test(segment),
+  );
+  const slug = detailIndex >= 0 ? segments[detailIndex + 1] || "" : "";
+  return slug ? leadingBrandCandidate(slug.replace(/[-_]+/g, " ")) : null;
+}
+
+function hasConflictingProductUrlBrand(
+  candidate: RawProductCandidate,
+  productUrl = candidate.productUrl,
+) {
+  const expected = normalizedText(selectionBrand(candidate) || "");
+  const observed = normalizedText(productSlugLeadingBrand(productUrl) || "");
+  return Boolean(expected && observed && expected !== observed);
+}
+
 function haveConflictingExtractedProductSpecs(
   firstText: string,
   secondText: string,
@@ -1114,6 +1144,10 @@ function pageIdentityScore(
   ).sort((first, second) => second.length - first.length)[0] || "";
   if (
     likelyAccessory(`${pageCandidate.name} ${pageCandidate.productUrl}`) ||
+    hasConflictingProductUrlBrand(
+      discoveryCandidate,
+      pageCandidate.productUrl,
+    ) ||
     haveConflictingExtractedProductSpecs(
       discoveryCandidate.name,
       pageIdentityEvidence,
