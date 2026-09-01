@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server.js";
+import { after, NextResponse } from "next/server.js";
 
 import { readBoundedJsonBody } from "../../../lib/boundedJsonRequest.ts";
 import { createOpenAIClient } from "../../../lib/openaiClient.ts";
@@ -17,10 +17,14 @@ import {
   isRequestCancelledError,
   throwIfRequestCancelled,
 } from "../../../lib/requestCancellation.ts";
-import { buildMarketScoutPlan } from "../../../lib/marketScout.ts";
+import {
+  lookupMarketEvidence,
+  refreshMarketEvidenceIndex,
+} from "../../../lib/marketEvidenceIndex.ts";
 import { USER_ERROR_MESSAGES } from "../../../lib/errorMessages.ts";
 
 export const runtime = "nodejs";
+export const maxDuration = 75;
 
 const DEBUG_HEADER = "x-reviewradar-debug";
 
@@ -30,16 +34,20 @@ type TimingStage = {
 };
 
 type RecommendationRouteDependencies = {
-  buildMarketScoutPlan: typeof buildMarketScoutPlan;
   createOpenAIClient: typeof createOpenAIClient;
+  lookupMarketEvidence: typeof lookupMarketEvidence;
   paidRequestAdmission: PaidRequestAdmission;
+  refreshMarketEvidenceIndex: typeof refreshMarketEvidenceIndex;
+  scheduleAfterResponse: (operation: () => Promise<void> | void) => void;
   selectProducts: typeof selectProducts;
 };
 
 const defaultDependencies: RecommendationRouteDependencies = {
-  buildMarketScoutPlan,
   createOpenAIClient,
+  lookupMarketEvidence,
   paidRequestAdmission: DEFAULT_PAID_REQUEST_ADMISSION,
+  refreshMarketEvidenceIndex,
+  scheduleAfterResponse: after,
   selectProducts,
 };
 
@@ -173,27 +181,16 @@ async function handlePost(
     }
 
     throwIfRequestCancelled(request.signal);
-    const client = await timing.measure("create_optional_openai_client", () =>
-      optionalOpenAIClient(process.env.OPENAI_API_KEY, dependencies),
+    const indexed = await timing.measure("read_market_evidence_index", () =>
+      dependencies.lookupMarketEvidence({ input }),
     );
-    const scoutPromise = timing.measure("openai_market_scout", () =>
-      dependencies.buildMarketScoutPlan({
-        client,
-        input,
-        signal: request.signal,
-      }),
-    );
-    const selectionPromise = timing.measure("select_products", () =>
+    const selected = await timing.measure("select_products", () =>
       dependencies.selectProducts({
         input,
-        plan: scoutPromise.then((scouted) => scouted.plan),
+        plan: indexed.plan,
         signal: request.signal,
       }),
     );
-    const [scouted, selected] = await Promise.all([
-      scoutPromise,
-      selectionPromise,
-    ]);
     throwIfRequestCancelled(request.signal);
     const everyShoppingSearchFailed =
       selected.telemetry.searchDiagnostics.length > 0 &&
@@ -206,10 +203,24 @@ async function handlePost(
         { headers: { "Cache-Control": "no-store" }, status: 502 },
       );
     }
+    if (indexed.needsRefresh) {
+      dependencies.scheduleAfterResponse(async () => {
+        try {
+          const client = await optionalOpenAIClient(
+            process.env.OPENAI_API_KEY,
+            dependencies,
+          );
+          if (!client) return;
+          await dependencies.refreshMarketEvidenceIndex({ client, input });
+        } catch {
+          // A background refresh failure must not alter the completed response.
+        }
+      });
+    }
     const debug = {
-      architecture: "market_quality_v1",
-      marketScout: scouted.telemetry,
-      openAiCalls: scouted.telemetry.openAiCalls,
+      architecture: "market_quality_v2",
+      marketScout: indexed.telemetry,
+      openAiCalls: 0,
       search: selected.telemetry,
       timing: timing.summary(),
     };
@@ -230,7 +241,7 @@ async function handlePost(
         ? {
             error: "ReviewRadar could not complete this product search.",
             debug: {
-              architecture: "market_quality_v1",
+              architecture: "market_quality_v2",
               error:
                 error instanceof Error
                   ? { name: error.name, message: error.message.slice(0, 300) }

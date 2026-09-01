@@ -17,13 +17,13 @@ type OpenAIResponsesClient = {
 };
 
 export const MARKET_SCOUT_MODEL = "gpt-5.4-mini";
-export const MARKET_SCOUT_PROMPT_VERSION = "pr13-market-scout-v3";
+export const MARKET_SCOUT_PROMPT_VERSION = "pr14-market-index-v1";
 export const MARKET_SCOUT_CACHE_TTL_MS = 24 * 60 * 60 * 1_000;
 
-const MARKET_SCOUT_TIMEOUT_MS = 10_500;
+const MARKET_SCOUT_TIMEOUT_MS = 60_000;
 const MAX_MARKET_SCOUT_TARGETS = 5;
 const MAX_MARKET_SCOUT_TOOL_CALLS = 3;
-const REQUESTED_MARKET_SCOUT_TOOL_CALLS = 1;
+const REQUESTED_MARKET_SCOUT_TOOL_CALLS = 2;
 const MAX_SELECTION_QUERIES = 3;
 
 export type MarketEvidenceTier = "strong" | "supported" | "none";
@@ -43,6 +43,9 @@ export type MarketScoutPlan = {
 };
 
 export type MarketScoutFallbackReason =
+  | "index_invalid"
+  | "index_miss"
+  | "index_stale"
   | "insufficient_evidence"
   | "invalid_output"
   | "no_client"
@@ -267,7 +270,7 @@ function normalizeStringArray(values: string[], maximum: number) {
   });
 }
 
-function canonicalSourceUrl(value: string) {
+export function canonicalSourceUrl(value: string) {
   try {
     const parsed = new URL(value);
     if (parsed.protocol !== "https:") return null;
@@ -338,7 +341,7 @@ function classifySourceUrl(value: string): SourceClassification | null {
   };
 }
 
-function tierForSources(sourceUrls: string[]): MarketEvidenceTier {
+export function tierForSources(sourceUrls: string[]): MarketEvidenceTier {
   const sources = sourceUrls.flatMap((sourceUrl) => {
     const classification = classifySourceUrl(sourceUrl);
     return classification?.editorial ? [classification] : [];
@@ -540,7 +543,7 @@ function normalizedRequestKey(input: RecommendationApiRequest) {
   });
 }
 
-function scoutCacheKey(
+export function scoutCacheKey(
   input: RecommendationApiRequest,
   model: string,
   promptVersion: string,
@@ -554,8 +557,8 @@ function scoutCacheKey(
 }
 
 const systemPrompt = [
-  "You are ReviewRadar's bounded US-market product scout.",
-  "Use one broad web search to find up to five ordered exact product models that independent testing or editorial consensus supports as the best overall choices satisfying the category, budget, and hard requirements.",
+  "You are ReviewRadar's offline US-market product scout.",
+  "Use up to two focused web searches to find up to five ordered exact product models that independent testing or editorial consensus supports as the best overall choices satisfying the category, budget, and hard requirements.",
   "For every target, include two or three current test/editorial URLs from independent domains, with at least one comparative test or best-of source; omit a target when that evidence threshold is unavailable.",
   "Prioritize models repeatedly recommended across independent comparative sources, not one-article picks, and place the strongest overall in-budget model first.",
   "When several qualify, prefer broadly cross-tested models with current US retail availability over newer one-review picks.",
@@ -632,7 +635,7 @@ export async function buildMarketScoutPlan(options: {
               { role: "system", content: systemPrompt },
               { role: "user", content: prompt },
             ],
-            max_output_tokens: 1_600,
+            max_output_tokens: 2_400,
             max_tool_calls: REQUESTED_MARKET_SCOUT_TOOL_CALLS,
             reasoning: { effort: "low" },
             store: false,
@@ -644,7 +647,7 @@ export async function buildMarketScoutPlan(options: {
                 strict: true,
               },
             },
-            tools: [{ type: "web_search", search_context_size: "low" }],
+            tools: [{ type: "web_search", search_context_size: "medium" }],
           },
           {
             maxRetries: 0,

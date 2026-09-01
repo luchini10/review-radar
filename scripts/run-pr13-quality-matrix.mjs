@@ -1,9 +1,17 @@
 import { spawn } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { readFile, unlink } from "node:fs/promises";
 import { createRequire } from "node:module";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { performance } from "node:perf_hooks";
 
+import { createOpenAIClient } from "../lib/openaiClient.ts";
+import { detectRequirementConflicts } from "../lib/requirementConflicts.ts";
+import { extractStructuredRequirements } from "../lib/requirementExtraction.ts";
+import { refreshMarketEvidenceIndex } from "../lib/marketEvidenceIndex.ts";
 import { productSelectionTestExports } from "../lib/productSelection.ts";
+import { validateRecommendationRequest } from "../lib/recommendationRequestValidation.ts";
 
 const require = createRequire(import.meta.url);
 const nextCli = require.resolve("next/dist/bin/next");
@@ -12,6 +20,7 @@ const benchmarkUrl = new URL(
   import.meta.url,
 );
 const EXPECTED_RUNS = 24;
+const EXPECTED_INDEX_REFRESHES = 8;
 const REQUEST_TIMEOUT_MS = 30_000;
 const SERVER_START_TIMEOUT_MS = 45_000;
 const SERVER_STOP_TIMEOUT_MS = 5_000;
@@ -30,6 +39,7 @@ function argumentValue(name) {
 
 function requireApprovedRun() {
   const approvedRuns = Number(argumentValue("approved-runs"));
+  const approvedRefreshes = Number(argumentValue("approved-refreshes"));
   const phase = argumentValue("phase");
   if (approvedRuns !== EXPECTED_RUNS) {
     throw new Error(
@@ -39,7 +49,56 @@ function requireApprovedRun() {
   if (phase !== "before" && phase !== "after") {
     throw new Error("This live matrix requires --phase=before or --phase=after.");
   }
+  if (approvedRefreshes !== EXPECTED_INDEX_REFRESHES) {
+    throw new Error(
+      `This indexed matrix requires --approved-refreshes=${EXPECTED_INDEX_REFRESHES}; received ${String(approvedRefreshes)}.`,
+    );
+  }
   return phase;
+}
+
+function preparedRequest(value) {
+  const validation = validateRecommendationRequest(value);
+  if ("error" in validation) throw new Error(validation.error);
+  const input = {
+    ...validation.data,
+    extractedRequirements: extractStructuredRequirements(validation.data),
+  };
+  const conflicts = detectRequirementConflicts(input);
+  if (conflicts.length > 0) {
+    throw new Error(`Conflicting benchmark requirements: ${conflicts.join(" ")}`);
+  }
+  return input;
+}
+
+async function refreshBenchmarkIndex(benchmarkCases, indexPath) {
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+  if (!apiKey) throw new Error("OPENAI_API_KEY is required for indexed quality QA.");
+  const client = await createOpenAIClient(apiKey, { maxRetries: 0 });
+  const refreshes = [];
+  for (const benchmarkCase of benchmarkCases) {
+    process.stderr.write(`[market index] refreshing case=${benchmarkCase.id}\n`);
+    const result = await refreshMarketEvidenceIndex({
+      client,
+      force: true,
+      indexPath,
+      input: preparedRequest(benchmarkCase.request),
+    });
+    const telemetry = result.scouted?.telemetry;
+    refreshes.push({
+      acceptedSourceUrls: telemetry?.acceptedSourceUrls || 0,
+      evidenceTiers: telemetry?.evidenceTiers || { none: 0, strong: 0, supported: 0 },
+      hostedSearchCalls: telemetry?.hostedSearchCalls || 0,
+      id: benchmarkCase.id,
+      inputTokens: telemetry?.inputTokens || 0,
+      openAiCalls: telemetry?.openAiCalls || 0,
+      outputTokens: telemetry?.outputTokens || 0,
+      status: result.status,
+      targetCount: result.scouted?.plan.targets.length || 0,
+      totalTokens: telemetry?.totalTokens || 0,
+    });
+  }
+  return refreshes;
 }
 
 function asRecord(value) {
@@ -173,14 +232,18 @@ async function waitUntilReady(baseUrl, child, serverOutput) {
   throw new Error(`Next.js did not become ready in ${SERVER_START_TIMEOUT_MS} ms. ${serverOutput()}`);
 }
 
-function startServer(port) {
+function startServer(port, indexPath) {
   let output = "";
   const child = spawn(
     process.execPath,
     [nextCli, "dev", "-H", "127.0.0.1", "-p", String(port)],
     {
       cwd: process.cwd(),
-      env: { ...process.env, NEXT_TELEMETRY_DISABLED: "1" },
+      env: {
+        ...process.env,
+        NEXT_TELEMETRY_DISABLED: "1",
+        REVIEWRADAR_MARKET_INDEX_PATH: indexPath,
+      },
       shell: false,
       stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
@@ -275,6 +338,9 @@ function compactTelemetry(body, benchmarkCase) {
       benchmarkCase.request,
     ),
     hostedSearchCalls: asFiniteNumber(scout.hostedSearchCalls),
+    indexAgeMs:
+      typeof scout.indexAgeMs === "number" ? asFiniteNumber(scout.indexAgeMs) : null,
+    indexStatus: scout.indexStatus || null,
     logicalSerperOperations: asFiniteNumber(search.logicalSearchCalls),
     marketTargets: asArray(search.marketTargets).map((value) => {
       const target = asRecord(value);
@@ -315,8 +381,8 @@ function compactTelemetry(body, benchmarkCase) {
   };
 }
 
-async function runCase(benchmarkCase, round, port) {
-  const server = startServer(port);
+async function runCase(benchmarkCase, round, port, indexPath) {
+  const server = startServer(port, indexPath);
   const baseUrl = `http://127.0.0.1:${port}`;
   try {
     await waitUntilReady(baseUrl, server.child, server.output);
@@ -382,7 +448,7 @@ function nearestRankPercentile(values, percentile) {
   return ordered[Math.max(0, Math.ceil(percentile * ordered.length) - 1)];
 }
 
-function summarize(results, cases) {
+function summarize(results, cases, indexRefreshes) {
   const successful = results.filter((result) => result.status === 200 && !result.error);
   const nonEmpty = successful.filter((result) => asArray(result.products).length > 0);
   const benchmarkEligible = successful.filter(
@@ -404,12 +470,12 @@ function summarize(results, cases) {
       ];
     }),
   );
-  const totalInputTokens = successful.reduce(
-    (total, result) => total + result.scoutInputTokens,
+  const totalInputTokens = indexRefreshes.reduce(
+    (total, result) => total + result.inputTokens,
     0,
   );
-  const totalOutputTokens = successful.reduce(
-    (total, result) => total + result.scoutOutputTokens,
+  const totalOutputTokens = indexRefreshes.reduce(
+    (total, result) => total + result.outputTokens,
     0,
   );
   const estimatedModelCostUsd =
@@ -425,17 +491,38 @@ function summarize(results, cases) {
       leaderTopThreeAtLeast80Percent:
         benchmarkEligible.length > 0 && leaderHits.length / benchmarkEligible.length >= 0.8,
       nonEmptyAtLeast21Of24: nonEmpty.length >= 21,
-      oneOpenAiResponseEach: successful.every((result) => result.openAiCalls === 1),
+      freshIndexForEveryRequest: successful.every(
+        (result) => result.indexStatus === "fresh",
+      ),
+      indexRefreshAtMostThreeHostedSearches: indexRefreshes.every(
+        (result) => result.hostedSearchCalls <= 3,
+      ),
+      indexRefreshesSucceeded: indexRefreshes.every(
+        (result) => result.status === "updated",
+      ),
       publicShapeUnchanged: successful.every((result) => result.publicShapeValid),
       serperAtMost15: successful.every((result) => result.logicalSerperOperations <= 15),
       shopVacAtLeast2Of3: byCase["shop-vacuum"].nonEmpty >= 2,
       strongAheadOfUnscored: successful.every((result) => result.strongBeforeUnscored),
-      webSearchAtMost3: successful.every((result) => result.hostedSearchCalls <= 3),
+      zeroOpenAiResponsesInRequest: successful.every(
+        (result) => result.openAiCalls === 0,
+      ),
+      zeroWebSearchInRequest: successful.every(
+        (result) => result.hostedSearchCalls === 0,
+      ),
       zeroRequestFailures: successful.length === EXPECTED_RUNS,
     },
     byCase,
     calls: {
-      hostedSearchCalls: successful.reduce(
+      backgroundHostedSearchCalls: indexRefreshes.reduce(
+        (total, result) => total + result.hostedSearchCalls,
+        0,
+      ),
+      backgroundOpenAiResponses: indexRefreshes.reduce(
+        (total, result) => total + result.openAiCalls,
+        0,
+      ),
+      requestHostedSearchCalls: successful.reduce(
         (total, result) => total + result.hostedSearchCalls,
         0,
       ),
@@ -443,7 +530,11 @@ function summarize(results, cases) {
         (total, result) => total + result.logicalSerperOperations,
         0,
       ),
-      maximumHostedSearchCalls: Math.max(
+      maximumBackgroundHostedSearchCalls: Math.max(
+        0,
+        ...indexRefreshes.map((result) => result.hostedSearchCalls),
+      ),
+      maximumRequestHostedSearchCalls: Math.max(
         0,
         ...successful.map((result) => result.hostedSearchCalls),
       ),
@@ -451,7 +542,10 @@ function summarize(results, cases) {
         0,
         ...successful.map((result) => result.logicalSerperOperations),
       ),
-      openAiResponses: successful.reduce((total, result) => total + result.openAiCalls, 0),
+      requestOpenAiResponses: successful.reduce(
+        (total, result) => total + result.openAiCalls,
+        0,
+      ),
       physicalSerperAttempts: successful.reduce(
         (total, result) => total + result.physicalSerperAttempts,
         0,
@@ -490,9 +584,9 @@ function summarize(results, cases) {
         ? Math.round(normalBytes.reduce((total, value) => total + value, 0) / normalBytes.length)
         : 0,
     },
-    scout: {
-      fallbackRuns: successful.filter((result) => result.scoutUsedFallback).length,
-      fallbackReasons: successful.reduce((counts, result) => {
+    marketEvidence: {
+      indexFallbackRuns: successful.filter((result) => result.scoutUsedFallback).length,
+      indexFallbackReasons: successful.reduce((counts, result) => {
         const reason = result.scoutFallbackReason;
         if (reason) counts[reason] = (counts[reason] || 0) + 1;
         return counts;
@@ -503,6 +597,7 @@ function summarize(results, cases) {
         output: totalOutputTokens,
         total: totalInputTokens + totalOutputTokens,
       },
+      refreshes: indexRefreshes,
       returnedEvidenceRuns: successful.filter(
         (result) => result.evidencedTargetReturned,
       ).length,
@@ -525,23 +620,36 @@ if (asArray(benchmark.cases).length * 3 !== EXPECTED_RUNS) {
 const portBase = 43_000 + (process.pid % 1_000);
 const results = [];
 const startedAt = new Date().toISOString();
-for (let round = 1; round <= 3; round += 1) {
-  for (const benchmarkCase of benchmark.cases) {
-    const runNumber = results.length + 1;
-    process.stderr.write(
-      `[PR-13 ${phase}] ${runNumber}/${EXPECTED_RUNS} round=${round} case=${benchmarkCase.id}\n`,
-    );
-    results.push(await runCase(benchmarkCase, round, portBase + runNumber));
+const indexPath = path.join(
+  tmpdir(),
+  `reviewradar-market-index-${process.pid}-${randomUUID()}.json`,
+);
+let indexRefreshes = [];
+try {
+  indexRefreshes = await refreshBenchmarkIndex(benchmark.cases, indexPath);
+  for (let round = 1; round <= 3; round += 1) {
+    for (const benchmarkCase of benchmark.cases) {
+      const runNumber = results.length + 1;
+      process.stderr.write(
+        `[indexed quality ${phase}] ${runNumber}/${EXPECTED_RUNS} round=${round} case=${benchmarkCase.id}\n`,
+      );
+      results.push(
+        await runCase(benchmarkCase, round, portBase + runNumber, indexPath),
+      );
+    }
   }
+} finally {
+  await unlink(indexPath).catch(() => {});
 }
 
 const report = {
+  architecture: "market_quality_v2_indexed",
   benchmark: benchmark.version,
   completedAt: new Date().toISOString(),
   phase,
-  schemaVersion: 1,
+  schemaVersion: 2,
   startedAt,
-  summary: summarize(results, benchmark.cases),
+  summary: summarize(results, benchmark.cases, indexRefreshes),
   runs: results,
 };
 
@@ -555,6 +663,8 @@ const outputReport =
           error: result.error || null,
           evidencedTargetReturned: Boolean(result.evidencedTargetReturned),
           hostedSearchCalls: result.hostedSearchCalls ?? null,
+          indexAgeMs: result.indexAgeMs ?? null,
+          indexStatus: result.indexStatus || null,
           logicalSerperOperations: result.logicalSerperOperations ?? null,
           marketTargets: result.marketTargets || [],
           normalResponseBytes: result.normalResponseBytes ?? null,
