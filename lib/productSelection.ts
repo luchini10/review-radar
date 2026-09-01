@@ -736,12 +736,19 @@ function productPageSearchQuery(
   category: string,
 ) {
   const models = candidateModelTokens(candidate.name);
-  if (models.length > 0) {
+  const catalogModels = hyphenatedCatalogModelTokens(candidate.name);
+  const targetModel = candidate.marketEvidence?.targetModel || "";
+  if (models.length > 0 || catalogModels.length > 0 || targetModel) {
     return [
       selectionBrand(candidate),
+      targetModel,
       ...models,
+      ...catalogModels,
       ...namedModelVariantTokens(candidate.name),
       category,
+      candidate.currentShoppingOffer
+        ? primaryRetailerName(candidate.retailer)
+        : "",
       "product page",
     ]
       .filter(Boolean)
@@ -1005,10 +1012,12 @@ function haveConflictingExtractedProductSpecs(
 
 function hyphenatedCatalogModelBases(value: string) {
   return new Set(
-    [...value.matchAll(/\b(\d{3,6})[-/]\d{1,4}[a-z]?\b/gi)].map(
-      (match) => match[1],
-    ),
+    hyphenatedCatalogModelTokens(value).map((model) => model.split(/[-/]/)[0]),
   );
+}
+
+function hyphenatedCatalogModelTokens(value: string) {
+  return [...new Set(value.match(/\b\d{3,6}[-/]\d{1,4}[a-z]?\b/gi) || [])];
 }
 
 function haveConflictingHyphenatedCatalogModels(
@@ -1841,12 +1850,12 @@ export async function selectProducts(options: {
       const exactPages: RawProductCandidate[] = candidates.filter((candidate) =>
         candidateMatchesTarget(candidate, binding.target),
       );
-      return [
-        ...binding.discoveryCandidates.flatMap((candidate) =>
+      const merchantBoundPages = binding.discoveryCandidates.flatMap((candidate) =>
           resolvedCandidates(candidate, exactPages),
-        ),
-        ...exactPages,
-      ];
+        );
+      return merchantBoundPages.length > 0 || binding.discoveryCandidates.length > 0
+        ? merchantBoundPages
+        : exactPages;
     },
   );
   const searchResults = [

@@ -327,6 +327,43 @@ describe("selection correctness", () => {
     assert.doesNotMatch(query, /240min/i);
   });
 
+  it("pins an unresolved current Shopping offer to its own merchant", () => {
+    const query = productPageSearchQuery(
+      candidate("Milwaukee M18 FUEL Hammer Drill 2904-20", {
+        brand: "Milwaukee",
+        currentShoppingOffer: true,
+        productUrl: "https://www.google.com/search?ibp=oshop&udm=28",
+        retailer: "Home Depot",
+      }),
+      "cordless drill",
+    );
+
+    assert.match(query, /2904/i);
+    assert.match(query, /home depot/i);
+  });
+
+  it("keeps a scout numeric model in a truncated offer's resolution query", () => {
+    const query = productPageSearchQuery(
+      candidate("Milwaukee M18 FUEL Cordless Hammer Drill ...", {
+        brand: "Milwaukee",
+        currentShoppingOffer: true,
+        marketEvidence: {
+          consensusOrder: 0,
+          sourceUrls: ["https://www.popularmechanics.com/example"],
+          targetBrand: "Milwaukee",
+          targetModel: "M18 2904 Hammer Drill",
+          tier: "strong",
+        },
+        productUrl: "https://www.google.com/search?ibp=oshop&udm=28",
+        retailer: "Home Depot",
+      }),
+      "cordless drill",
+    );
+
+    assert.match(query, /2904/i);
+    assert.match(query, /home depot/i);
+  });
+
   it("accepts a product-shaped page from the exact Shopping merchant", () => {
     assert.equal(
       pageSourceScore(
