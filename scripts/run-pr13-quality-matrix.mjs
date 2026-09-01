@@ -545,7 +545,31 @@ const report = {
   runs: results,
 };
 
-process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+const outputReport =
+  argumentValue("summary-only") === "true"
+    ? {
+        ...report,
+        runs: results.map((result) => ({
+          caseId: result.caseId,
+          durationMs: result.durationMs,
+          error: result.error || null,
+          evidencedTargetReturned: Boolean(result.evidencedTargetReturned),
+          hostedSearchCalls: result.hostedSearchCalls ?? null,
+          logicalSerperOperations: result.logicalSerperOperations ?? null,
+          marketTargets: result.marketTargets || [],
+          normalResponseBytes: result.normalResponseBytes ?? null,
+          openAiCalls: result.openAiCalls ?? null,
+          products: asArray(result.products).map((product) => asRecord(product).name || ""),
+          round: result.round,
+          scoutFallbackReason: result.scoutFallbackReason || null,
+          status: result.status,
+          strongTargetReturned: Boolean(result.strongTargetReturned),
+          topThreeLeader: Boolean(result.topThreeLeader),
+        })),
+      }
+    : report;
+
+process.stdout.write(`${JSON.stringify(outputReport, null, 2)}\n`);
 if (Object.values(report.summary.acceptance).some((passed) => !passed)) {
   process.exitCode = 1;
 }
