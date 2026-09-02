@@ -11,6 +11,45 @@ Update this file after:
 
 ## 2026-09-01
 
+### Codex - Remove SerpApi and restore Serper-only commerce
+
+#### Changed
+
+- Removed the second-provider SerpApi adapter, environment key, provider
+  provenance, parallel product/store resolution branch, separate three-plus-
+  three telemetry, QA-report fields, adapter tests, and orchestration tests.
+- Restored all twelve touched runtime, configuration, harness, type, and test
+  paths exactly to the snapshot before the SerpApi detour. Serper is again the
+  sole product-search and commerce transport.
+- Preserved the independent request-time market scout, Serper Shopping and page
+  discovery, fifteen-operation ceiling, exact-model evidence binding, sibling
+  isolation, seller alternatives, Bayesian ranking, every eligibility/safety
+  gate, request-only coalescing, cancellation, and the minimal five-field card.
+- Removed `SERPAPI_API_KEY` from the example configuration and restored debug
+  architecture `market_quality_live_v4_independent_concurrent` plus the prior
+  live-report schema.
+
+#### Verified
+
+- Exact diff comparison proves every path touched by `c829fa4` matches its
+  parent, and current runtime/config/test searches find zero SerpApi or canonical-
+  adapter references.
+- Focused validation passed 109/109; full validation passed 352/352 tests across
+  44 suites, typecheck, zero-warning lint, the Next.js 16.3.3 production build,
+  Playwright 7/7 desktop/mobile, and diff checking.
+- A current-runtime Serper-only debug smoke returned HTTP 200 with four products,
+  one successful scout, and 13 logical/physical Serper operations in 28,346 ms.
+- The precommitted cache-cold V23 matrix then ran once with no retries: 10/10
+  HTTP/non-empty, exact binding and safety clean, but only 1/9 eligible leader
+  hits (11.1%) and 29,930/34,196/34,196 ms mean/p95/maximum. It used 138
+  logical/physical Serper operations, ten Responses calls, thirty hosted
+  searches, 196,243 tokens, approximately $0.206068 model-token cost, and an
+  unchanged payload averaging 812 bytes (1,357 maximum).
+- The provider correction passes, but PR-14 remains a release failure against
+  the 80% leader, 25-second p95, and 30-second maximum gates. V20 remains the
+  stronger historical comparison; V23 is current-runtime authority. No push or
+  deployment occurred.
+
 ### Codex - Add bounded canonical commerce resolution
 
 #### Changed

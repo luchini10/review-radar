@@ -1931,3 +1931,45 @@ checkpoint. R7A remains blocked and separately approval-gated.
   server-only `SERPAPI_API_KEY`. Then run one bounded strong-target smoke before
   the frozen matrix. These are external configuration requirements, not
   authority to weaken gates or change the public contract.
+
+### PR-14 SerpApi removal and Serper-only restoration (2026-09-01)
+
+- This section supersedes the preceding SerpApi implementation and prerequisite
+  record. Taylor clarified that ReviewRadar must remove SerpApi and switch back
+  to Serper. Runtime commit `ff8f3a0` performs that correction without resetting
+  history or discarding unrelated PR-14 work.
+- Deleted `lib/canonicalCommerce.ts` and its test. Removed `SERPAPI_API_KEY`,
+  SerpApi provenance, the product/store resolution branch, its separate 3+3
+  counters, QA schema fields, two orchestration tests, and the debug architecture
+  version that advertised the second provider.
+- All twelve touched runtime/config/harness/type/test paths exactly match the
+  parent of `c829fa4`; current source searches find zero SerpApi or canonical-
+  adapter references. Serper is the sole product-search and commerce transport.
+- Preserved the one independent request-time market scout, three neutral plus
+  three exact-model Shopping searches, three organic target-page searches,
+  candidate-local resolution, fifteen-logical-Serper ceiling, request-only
+  coalescing, exact identity and sibling isolation, Bayesian ranking, all safety
+  and commerce-authority gates, and the unchanged five-field public card.
+- Verification: focused 109/109; full 352/352 across 44 suites; typecheck;
+  zero-warning lint; Next.js 16.3.3 production build; Playwright 7/7 desktop/
+  mobile; diff check; only `/`, `/_not-found`, and `/api/recommendations`.
+- A current-runtime debug smoke returned HTTP 200, four products, one successful
+  scout, 13 logical/physical Serper operations, and no SerpApi/debug field in
+  28,346 ms. The OpenAI credit blocker therefore cleared without introducing a
+  second commerce provider.
+- The precommitted Serper-only V23 matrix ran once with no retries or case
+  substitutions. It completed 10/10 HTTP/non-empty with exact binding, product
+  safety, public shape, one-response, three-hosted-search, and fifteen-Serper-
+  operation gates passing. Frozen-leader recall was only 1/9 eligible runs
+  (11.1%); mean/p95/maximum latency was 29,930/34,196/34,196 ms. The report used
+  138 logical/physical Serper operations, 196,243 model tokens, approximately
+  $0.206068 model-token cost, and an unchanged 812/1,357-byte mean/maximum
+  payload.
+- V23 is current-runtime authority and fails the 80% leader, 25-second p95, and
+  30-second maximum gates. V20 remains the stronger historical comparison at
+  5/10 leaders and 29,646 ms p95/maximum. The next work is generalized loss
+  attribution inside the Serper discovery and verification path—not restoring
+  SerpApi, adding a second commerce provider, or weakening safety. No push or
+  deployment occurred.
+- The authoritative process incident count remains four. `.env.local` was not
+  manually inspected and the protected fixture tree was not accessed.

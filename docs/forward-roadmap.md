@@ -4852,16 +4852,15 @@ current implementation authority.
 
 ### PR-14 - request-time market-quality reset
 
-**Status:** implemented through runtime commit `c829fa4`; deterministic
-verification passes. The bounded canonical-commerce addition has not completed
-a live quality matrix because three diverse diagnostic requests reached scout
-`provider_error` before producing a strong target. A sanitized isolated request
-then attributed the scout failure to HTTP 429 `credit_balance_exhausted` /
-`insufficient_quota`; a separate production-adapter diagnostic found no usable
-`SERPAPI_API_KEY` and made zero SerpApi attempts. V20 at `b4e1890` remains the
-authoritative prior live comparison; it passes non-empty, safety, binding,
-public-shape, call-ceiling, and 30-second maximum gates but fails leader recall
-and 25-second p95. PR-14 is not release-qualified.
+**Status:** implemented through runtime commit `ff8f3a0`; deterministic
+verification passes. Serper is the sole product-search and commerce transport.
+The later SerpApi adapter, key, orchestration, telemetry, harness fields, and
+tests were explicitly removed. The current Serper-only runtime completed V23:
+all ten requests were non-empty and safety/binding/public/call gates passed,
+but leader recall was 1/9 eligible runs (11.1%) and p95/maximum was 34,196 ms.
+V20 at equivalent retained runtime `b4e1890` remains the stronger historical
+comparison at 5/10 leaders and 29,646 ms p95/maximum. PR-14 is not release-
+qualified.
 
 **Objective:** research the current market for every shopper search, including
 repeated equivalent searches, without a retained market index, precomputation,
@@ -4883,19 +4882,6 @@ only Shopping and product-page coalescing maps are allocated inside the current
 `Cache-Control: no-store`; there is no production index, prewarm, polling,
 background work, persistent plan/result cache, or alternate recommender.
 
-For at most three unresolved `strong` targets, the current selector also starts
-an optional request-scoped SerpApi canonical-commerce pipeline concurrently
-with exact-target Serper work. Each target consumes at most one Google Shopping
-Light product lookup and one exact-token Google Immersive Product stores lookup,
-for a separate three-product/three-offer ceiling. Direct seller offers must bind
-the exact stable model, reject sibling variants and explicit unavailability,
-and pass every existing page, merchant, condition, requirement, price, budget,
-image, duplicate, and SSRF gate. Missing credentials, provider failure, invalid
-output, or no exact offer returns no candidate and preserves deterministic
-fallback. Provider work is timeout-bounded, cancellation-aware, no-cache, and
-coalesced only for the current request; it adds no background or cross-request
-state.
-
 **Generalized accuracy corrections:** exact scout models are carried through
 retailer-page discovery; generic aliases cannot bypass an exact target; numeric,
 named, generation, and hyphenated catalog siblings remain isolated; standalone
@@ -4908,7 +4894,7 @@ checked independently, repeated identical slug models remain idempotent,
 placeholder `img-na` images are rejected, and leaf blowers are separated from
 compact workshop/jobsite blowers and accessories.
 
-**Prior authoritative frozen live audit (runtime `b4e1890`):**
+**Authoritative frozen live audit (equivalent Serper-only runtime `b4e1890`):**
 `tests/benchmarks/pr14-live-accuracy-v2026-09a.json` precommits five broad and
 five constrained cases, one cache-cold attempt each with no retries. The
 authoritative report is
@@ -4931,18 +4917,38 @@ by 6,904 ms, and model tokens by 12,372 versus V19. Every deterministic product
 safety, exact-binding, public-contract, call-ceiling, and strong-ahead-of-
 unscored gate passed. The aggregate leader and p95 gates remain failed.
 
-**Verification:** the current `c829fa4` source passes 358/358 unit tests across
-45 suites, typecheck, zero-warning lint, the Next.js 16.3.3 production build,
-and Playwright 7/7 across Chromium desktop/mobile. The build exposes only `/`,
-`/_not-found`, and `/api/recommendations`. This deterministic result does not
-replace the earlier V20 live measurement.
+**Current-runtime frozen audit (`ff8f3a0`):** after one successful bounded
+debug smoke, the same precommitted ten-case matrix ran once per cell with no
+retries or substitutions. The authoritative current-runtime report is
+`docs/pr14-live-accuracy-report-v23-serper-only-restored.json`:
 
-**Decision:** retain the independent request-time scout and bounded canonical-
-commerce integration locally, but do not release or claim dependable best-in-
-budget selection. Do not restore the rejected evidence index or continue prompt
-and query tuning as a substitute for commerce coverage. First restore a working
-scout response and exercise the optional provider on one bounded strong-target
-request; only then run the precommitted ten-case matrix once. A progressive or
+- 10/10 HTTP 200 and 10/10 non-empty, with every safety, exact-binding, fresh-
+  research, public-shape, one-response, three-hosted-search, fifteen-Serper-
+  operation, required-recall, and strong-ahead-of-unscored gate passing;
+- frozen leader top-three recall 1/9 benchmark-eligible runs (11.1%); runtime
+  evidence 7/10, runtime `strong` 2/10, and no scout fallback;
+- mean/p95/maximum latency 29,930/34,196/34,196 ms, failing both latency gates;
+- ten Responses calls, thirty hosted searches, 138 logical/physical Serper
+  operations, 196,243 model tokens, and approximately $0.206068 model-token
+  cost; and
+- unchanged public payload at 812 bytes mean and 1,357 bytes maximum.
+
+V23 is current-runtime authority. V20 remains the stronger historical result;
+the provider correction did not resolve the market-to-current-commerce
+convergence bottleneck.
+
+**Verification:** the current `ff8f3a0` source passes 352/352 unit tests across
+44 suites, typecheck, zero-warning lint, the Next.js 16.3.3 production build,
+and Playwright 7/7 across Chromium desktop/mobile. Focused Serper product-search,
+selection, discovery, and API tests pass 109/109. The build exposes only `/`,
+`/_not-found`, and `/api/recommendations`.
+
+**Decision:** retain the independent request-time scout and Serper-only
+discovery, product-page resolution, and verification architecture locally, but
+do not release or claim dependable best-in-budget selection. Do not restore the
+rejected evidence index, SerpApi adapter, or another commerce provider. Attribute
+the generalized V23 losses inside Serper discovery, exact-target recovery, and
+page verification before another implementation experiment. A progressive or
 asynchronous response changes delivery but does not fix coverage and remains a
 separate public-contract decision.
 
@@ -5109,12 +5115,12 @@ unchanged payload averaged 797 bytes and peaked at 1,542 bytes. Versus V19 it
 improved leaders by one, mean by 5,086 ms, p95/max by 6,904 ms, and tokens by
 12,372. It remains a release failure at 50% leader recall and 29,646 ms p95.
 
-Saved-report inspection of the five misses found provider discovery,
+Saved-report inspection of the five V20 misses found provider discovery,
 trustworthy current price/availability, hard-feature proof, and qualified-scout
 coverage gaps—not a safe deterministic ranking correction. Do not tune to
-benchmark products or weaken eligibility. The next supported architecture
-comparison requires a qualified request-scoped canonical-commerce provider or
-retailer integration.
+benchmark products or weaken eligibility. The later SerpApi comparison was
+rejected and removed; the next correction must first attribute generalized V23
+losses within the retained request-time Serper path.
 
 **Current verification:** 352/352 unit tests across 44 suites, typecheck, zero-
 warning lint, the Next.js 16.3.3 production build, Playwright 7/7 across
@@ -5148,45 +5154,27 @@ expansion, target-query wording, and extra same-provider target-page concurrency
 do not solve the canonical current-offer/page bottleneck. V20 remains the
 authoritative retained report and PR-14 remains not release-qualified.
 
-**Canonical-commerce resolver follow-up at `c829fa4`:** official provider-
-contract qualification selected SerpApi's synchronous Google Shopping Light
-product identity and Google Immersive Product seller-store surfaces over
-DataForSEO's task-POST/task-GET workflow and Amazon Business's onboarding and
-account-scoped catalog boundary. The optional server-only adapter is limited to
-the first three unresolved `strong` targets, one exact product lookup and one
-bound stores lookup per target. It uses no-cache US requests, a 6.5-second
-timeout, cancellation, and request-only coalescing. The existing fifteen-
-logical-Serper ceiling remains separate and unchanged.
+**Rejected SerpApi detour removed at `ff8f3a0`:** commit `c829fa4` added a
+second commerce provider after the retained V20 architecture. Taylor clarified
+that ReviewRadar must use Serper rather than SerpApi. The adapter source and
+tests were deleted; its environment key, provenance type, selection branch,
+3+3 counters, debug architecture version, and QA-report fields were restored
+exactly to their pre-detour state.
 
-All canonical candidates retain exact stable-model and sibling isolation.
-Explicitly unavailable stores, unsafe URLs, and invalid responses are dropped;
-unknown availability remains provisional. A provider token never transfers
-identity, evidence, price, availability, or facts across a sibling or merchant.
-Every existing safety, requirement, current-page, price, budget, image,
-duplicate, and SSRF gate still runs before ranking or output. Missing key or
-provider failure falls back with no quality boost. The public five-field card
-and one synchronous request remain unchanged.
+The twelve touched runtime/config/test paths exactly match the parent of
+`c829fa4`, and source searches find zero remaining SerpApi or canonical-adapter
+references. The removal preserves the independent scout, all Serper searches,
+fifteen-operation ceiling, exact-model evidence binding, seller alternatives,
+Bayesian commerce ranking, every safety/price/availability/requirement gate,
+request-only coalescing, cancellation, and the minimal five-field card.
 
-Deterministic validation passes 358/358 unit tests across 45 suites, typecheck,
-zero-warning lint, production build, Playwright 7/7, and diff checking. Three
-diverse debug diagnostics returned HTTP 200 and non-empty results, but their
-scouts all ended in `provider_error`; no strong targets or canonical calls were
-produced. A fourth sanitized Responses diagnostic using the same model, web-
-search, sources-include, reasoning, and Structured Output features reached
-OpenAI and returned HTTP 429 `credit_balance_exhausted` / `insufficient_quota`.
-Official OpenAI documentation still lists those request features as supported
-for GPT-5.4 Mini. A separate non-benchmark adapter diagnostic loaded the ordinary
-Next environment and returned `missing_api_key_or_query` with zero attempts, so
-the adapter sees no usable SerpApi key. `.env.local` was not inspected. These
-diagnostics establish configuration blockers and fallback integrity only.
-
-Next, replenish the OpenAI API project's credit balance and configure a usable
-server-side `SERPAPI_API_KEY` without exposing credentials or inspecting
-`.env.local`. Require one bounded debug request with a strong target and non-
-zero product/offer telemetry, verify exact binding and the three-plus-three
-ceiling, then execute the frozen ten-case cache-cold matrix once with no retries.
-Until that evidence exists, `c829fa4` has no live leader, latency, cost, call, or
-payload qualification and V20 remains prior baseline evidence only.
+Focused validation passes 109/109 and the full wall passes 352/352 across 44
+suites, typecheck, zero-warning lint, production build, Playwright 7/7, and diff
+checking. One current-runtime debug smoke and the no-retry V23 matrix then ran.
+V23 returned 10/10 non-empty but only 1/9 eligible leaders and regressed to
+34,196 ms p95/maximum. Its full call, token, cost, payload, and per-cell evidence
+is preserved in `docs/pr14-live-accuracy-report-v23-serper-only-restored.json`.
+A SerpApi credential is neither needed nor allowed by the current architecture.
 
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 

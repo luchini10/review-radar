@@ -18243,3 +18243,91 @@ credit and configure the server-only SerpApi key. After both are available, run
 one strong-target debug smoke and then the frozen ten-case matrix once. No
 additional provider retry or fallback-only benchmark was run, and the release
 verdict remains failed.
+
+---
+
+## PR-14 SerpApi removal and Serper-only restoration (2026-09-01)
+
+**Assessment:** PASS for the requested provider correction at runtime commit
+`ff8f3a0`; RELEASE FAIL remains for market-quality SLOs. Taylor clarified that
+the second-provider SerpApi direction was wrong and ReviewRadar must return to
+Serper. This entry supersedes the implementation and prerequisite decisions in
+the immediately preceding SerpApi entries; those remain historical evidence,
+not current architecture or next-action authority.
+
+**Root cause and removal:** commit `c829fa4` added a 469-line SerpApi transport,
+an optional `SERPAPI_API_KEY`, provider provenance, a parallel product/store
+resolution branch, separate three-product/three-offer telemetry, QA schema
+fields, 260 adapter-test lines, and two orchestration tests. Review of every
+hunk found the twelve-file change isolated to that provider detour. The exact
+inverse was applied with `apply_patch`, and the two provider-only files were
+deleted. No history reset or unrelated rollback was used.
+
+Serper is again the sole product-search and commerce provider. The route debug
+architecture is restored to `market_quality_live_v4_independent_concurrent`.
+The selector still starts the one independent GPT-5.4 Mini scout concurrently
+with three neutral Serper Shopping searches, may add three exact-target Shopping
+and three organic strong-target page searches, and uses candidate-local page
+resolution inside the same fifteen-logical-operation ceiling. Request-only
+coalescing, cancellation, exact evidence binding, sibling isolation, seller
+alternatives, Bayesian commerce ranking, and every product, condition,
+requirement, availability, price, budget, page, image, duplicate, merchant, and
+SSRF gate remain unchanged.
+
+**Removal proof:** all twelve runtime/config/harness/type/test paths touched by
+`c829fa4` exactly match that commit's parent. Searches across current application,
+library, script, type, environment-example, and affected test paths find zero
+`SerpApi`, `SERPAPI_API_KEY`, `canonicalCommerce`, or canonical-adapter
+references. `lib/canonicalCommerce.ts` and
+`tests/canonicalCommerce.test.mjs` no longer exist.
+
+**Verification:** focused product-search, selection, discovery, and API tests
+passed 109/109. The full wall passed 352/352 tests across 44 suites, typecheck,
+zero-warning lint, the Next.js 16.3.3 production build, Playwright 7/7 across
+desktop/mobile Chromium, cached and unstaged diff checking, and the three-route
+build manifest. Playwright emitted only environment-level
+`NO_COLOR`/`FORCE_COLOR` notices.
+
+**Current-runtime smoke:** after the OpenAI credit blocker cleared, one bounded
+debug request returned HTTP 200 with four products in 28,346 ms. It used one
+successful market scout, three hosted searches, and 13 logical/physical Serper
+operations, with `scoutFallback: null`. Debug architecture remained
+`market_quality_live_v4_independent_concurrent`; no canonical-commerce field or
+SerpApi text was present.
+
+**Frozen V23 result:** the precommitted cache-cold matrix ran exactly once per
+cell with no retry, restart, or substitution. The preserved report is
+`docs/pr14-live-accuracy-report-v23-serper-only-restored.json` (schema 2):
+
+- 10/10 HTTP 200 and 10/10 non-empty, including both shop-vac cases;
+- all accepted-candidate safety, exact evidence binding, fresh research, public
+  shape, one-response, three-hosted-search, fifteen-Serper-operation, required-
+  recall, and strong-ahead-of-unscored checks passed;
+- frozen-leader top-three recall was 1/9 benchmark-eligible runs (11.1%) versus
+  the 80% gate; only constrained coffee maker hit;
+- runtime evidence returned in 7/10, runtime `strong` in 2/10, and scout
+  fallback in 0/10;
+- mean/p95/maximum latency was 29,930/34,196/34,196 ms, failing both latency
+  gates;
+- ten Responses calls, thirty hosted searches, and 138 logical/physical Serper
+  operations; every request remained at or below fifteen;
+- 180,540 input plus 15,703 output tokens (196,243 total), approximately
+  $0.206068 model-token cost at published benchmark rates; and
+- unchanged public payload at 812 bytes mean and 1,357 bytes maximum.
+
+V20 remains the stronger historical Serper-only comparison at 5/10 leaders and
+29,646 ms p95/maximum. V23 is the authoritative current-runtime measurement.
+The provider correction passed; the market-quality release gate failed more
+decisively and the 30-second maximum regressed.
+
+**Decision:** do not restore SerpApi, require a SerpApi credential, or add a
+second commerce-provider fallback. Any further quality correction must first
+attribute generalized V23 losses in the request-time Serper discovery and page-
+verification path without weakening safety, tuning to frozen identities, or
+moving research outside the user's request.
+
+**Boundaries:** `.env.local` was not manually inspected. The protected fixture
+tree was not accessed. The four previously disclosed incidents remain the
+complete list. No push, deployment, release, production-data action, dependency
+change, public-contract expansion, background work, retained research cache, or
+benchmark retry occurred.

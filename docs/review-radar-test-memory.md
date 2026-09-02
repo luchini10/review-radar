@@ -4428,55 +4428,46 @@ a known conservative undercount.
   recovery are harmless in isolation; the two combined experiments do not
   isolate those effects. They do prove that the tested bundles are not safe
   evidence for promotion.
-- The remaining measured bottleneck is canonical current commerce coverage:
-  exact model identity, current in-budget offer, direct seller page, and hard-
-  requirement proof must converge in one request. Qualify a provider/retailer
-  contract for those fields before another architecture matrix.
+- The measured bottleneck is exact current commerce convergence: exact model,
+  in-budget offer, direct seller page, and hard-requirement proof must meet in
+  one request. The earlier suggestion to add another commerce provider is
+  superseded by Taylor's explicit Serper-only decision.
 
-## PR-14 canonical-commerce resolution contract (2026-09-01)
+## PR-14 Serper-only provider contract (2026-09-01)
 
-- Only unresolved `strong` exact-model targets may enter canonical resolution,
-  in scout consensus order, with an absolute maximum of three targets.
-- Each target may make at most one Google Shopping Light product lookup and one
-  exact-token Google Immersive Product stores lookup. Keep the canonical ceiling
-  at three product searches plus three offer lookups, separately from the
-  unchanged fifteen-logical-Serper ceiling.
-- A provider product ID or immersive token groups current provider data only.
-  It cannot establish ReviewRadar identity, evidence tier, eligibility, or
-  sibling equivalence. Seller title/page identity must exact-match the target;
-  named, numeric, generation, year, kit, and catalog siblings stay isolated.
-- Explicit out-of-stock, sold-out, discontinued, preorder, or unavailable store
-  results must be dropped before candidate creation. Unknown availability is
-  provisional and must pass the existing current-page verification; provider
-  price alone cannot create availability.
-- Do not transfer price, availability, image, commerce signals, product facts,
-  or market evidence across a product token, sibling, retailer, or merchant.
-- Canonical candidates pass the same product type, accessory, new-condition,
-  exact identity, hard-requirement, current availability, trusted USD price,
-  budget, direct-page, merchant, image, duplicate, and SSRF gates as every other
-  candidate. The public response remains the same five fields.
-- Provider ratings, review counts, offer counts, and position are post-gate
-  commerce tie-breakers only. Preserve Bayesian shrinkage so a 5.0 product with
-  one review cannot outrank a well-supported 4.6/1,000-review product solely on
-  raw rating.
-- Use no-cache US requests, bounded timeout, cancellation, and request-only
-  coalescing. Do not add retry loops, background work, prewarming, persistence,
-  or cross-request canonical/product/page caches. Keep the API key server-side,
-  out of logs, and out of cache identity.
-- Missing key, timeout, provider error, invalid output, no exact product, or no
-  usable offer must return deterministic fallback with no quality boost and no
-  second scout or alternate recommender.
-- Current deterministic wall: 358/358 unit tests across 45 suites, typecheck,
-  zero-warning lint, production build, Playwright 7/7, and diff checking.
-- Do not run the frozen matrix until one bounded debug request actually yields
-  a strong target and non-zero canonical product/offer calls. The first three
-  `c829fa4` debug diagnostics all reached scout `provider_error`, produced zero
-  canonical calls, and prove fallback only. The runtime is not live qualified;
-  V20 remains prior baseline evidence, not evidence for the adapter.
-- The current provider blockers are independently attributed: a same-contract
-  Responses diagnostic returned HTTP 429 `credit_balance_exhausted` /
-  `insufficient_quota`, and the production canonical adapter returned
-  `missing_api_key_or_query` with zero attempts after ordinary Next environment
-  loading. Replenish OpenAI API credit and configure a usable server-only
-  SerpApi key before the strong-target smoke. Do not inspect `.env.local`, print
-  secrets, or turn provider configuration failures into benchmark cells.
+- Serper is the sole product-search and commerce transport. Do not restore
+  SerpApi, `SERPAPI_API_KEY`, `lib/canonicalCommerce.ts`, provider provenance,
+  product/store token lookups, separate provider counters, or a second commerce-
+  provider fallback.
+- Start one independent request-time market scout concurrently with up to three
+  neutral Serper Shopping searches. After scouting, use no more than three exact-
+  model Shopping searches, three organic strong-target product-page searches,
+  and bounded candidate-local resolution inside fifteen logical Serper calls.
+- Evidence attaches only to the exact stable model. Named, numeric, generation,
+  year, kit, and catalog siblings remain isolated; price, availability, facts,
+  images, and commerce signals never transfer between products or merchants.
+- Preserve product type, accessory, new-condition, hard-requirement, current
+  availability, trusted USD price, budget, direct-page, merchant, image,
+  duplicate, and SSRF gates. The public response remains the same five fields.
+- Shopping ratings, review counts, offer counts, and position are post-gate tie-
+  breakers only. Preserve Bayesian shrinkage and never reward price proximity.
+- Keep Serper calls timeout-bounded, cancellation-aware, no-retry, and coalesced
+  only within the current request. Do not add background work, prewarming,
+  persistence, or cross-request research/product/page caches.
+- Removal proof at `ff8f3a0`: every runtime/config/harness/type/test path touched
+  by `c829fa4` matches its parent; the two SerpApi-only files are deleted; source
+  searches find zero current adapter references.
+- Current deterministic wall: focused 109/109, full 352/352 across 44 suites,
+  typecheck, zero-warning lint, production build, Playwright 7/7, and diff check.
+- Preserve V23 as the one-shot current-runtime Serper-only report: 10/10 HTTP/
+  non-empty and all safety/binding/public/call gates pass, but frozen-leader
+  recall is 1/9 eligible runs (11.1%) and mean/p95/maximum latency is
+  29,930/34,196/34,196 ms. Runtime evidence is 7/10, runtime `strong` 2/10,
+  and fallback 0/10. Do not retry or replace cells.
+- V23 used 138 logical/physical Serper operations, ten Responses calls, thirty
+  hosted searches, 196,243 model tokens, approximately $0.206068 token cost,
+  and an unchanged 812/1,357-byte mean/maximum public payload.
+- V20 remains the stronger historical Serper-only comparison at 5/10 leaders
+  and 29,646 ms p95/maximum; V23 is current-runtime authority. Future work must
+  attribute generalized Serper discovery/verification losses before editing.
+  No SerpApi credential is needed or permitted.

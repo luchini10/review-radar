@@ -34,7 +34,6 @@ The production recommendation path performs fresh work inside one POST route:
       -> start one fresh independent market scout
       -> run up to three current neutral Shopping queries concurrently
       -> up to three exact-model Shopping queries for undiscovered strong targets
-      -> up to three canonical product lookups and three bound seller-offer lookups
       -> up to three organic exact-target product-page searches
       -> deterministic type, accessory, used-item, budget, and requirement filters
       -> candidate-local product-page resolution when needed
@@ -117,33 +116,6 @@ There are no retries, editorial queries, review queries, rescue queries, image
 queries, or alternate recommender. Broad requests preserve three unique
 queries by adding brand-neutral `top rated` and `popular models` variants when
 empty budget and priority fields would otherwise collapse discovery.
-
-### Canonical commerce resolution
-
-lib/canonicalCommerce.ts is an optional server-only SerpApi transport for
-unresolved `strong` exact-model targets. For only the first three eligible
-targets, it makes at most one Google Shopping Light request, binds an exact
-returned product identity, and then makes at most one Google Immersive Product
-stores request with `more_stores=true`. Its independent ceiling is three product
-searches plus three offer lookups; it does not consume or expand the fifteen-
-logical-Serper-operation ceiling.
-
-Canonical provider work starts concurrently with existing exact-target Serper
-work after scouting and neutral discovery. Requests are US-bound, no-cache,
-timeout-bounded, cancellation-aware, and coalesced only inside the current
-request. The optional `SERPAPI_API_KEY` remains server-side. A missing key,
-timeout, provider error, malformed result, absent exact match, or unusable offer
-returns no canonical candidate and leaves deterministic fallback unchanged.
-
-A Google product token groups one provider product and its store results; it
-does not establish ReviewRadar identity or leader evidence. Direct seller
-titles and pages must still bind the exact stable model and reject sibling
-variants. Explicit out-of-stock, sold-out, and unavailable stores are removed;
-unknown availability stays provisional until existing page verification. Every
-candidate still passes product type, accessory, condition, identity, hard-
-requirement, availability, trusted USD price, budget, merchant, direct-page,
-image, duplicate, and SSRF gates. Provider ratings and offer counts are only
-post-gate commerce tie-breakers and never public content.
 
 Search calls are timeout-bounded. A map allocated inside the current
 `selectProducts` call coalesces identical work for that request only and is
@@ -267,11 +239,10 @@ checks. ReviewRadar returns null rather than showing a questionable image.
 
 The route acquires the shared paid-request admission permit before provider
 work and always releases it. Browser cancellation propagates through the market
-scout, Serper search, canonical-commerce, and page-fetch boundaries. Shopping,
-canonical-commerce, and product-page maps exist only inside one
-`selectProducts` invocation, where they coalesce duplicate work in that request.
-They are discarded at return and cannot serve a later search. The API response
-uses `Cache-Control: no-store`.
+scout, Serper search, and page-fetch boundaries. Shopping and product-page maps
+exist only inside one `selectProducts` invocation, where they coalesce duplicate
+work in that request. They are discarded at return and cannot serve a later
+search. The API response uses `Cache-Control: no-store`.
 
 ## Main implementation files
 
@@ -283,8 +254,6 @@ uses `Cache-Control: no-store`.
 - lib/recommendationRequestValidation.ts — server request validation.
 - lib/requirementExtraction.ts — deterministic structured requirements.
 - lib/marketScout.ts — fresh bounded source-validated exact-model scout.
-- lib/canonicalCommerce.ts — bounded exact-product and direct-seller commerce
-  resolution for unresolved strong targets.
 - lib/productSearch.ts — bounded Shopping and product-page search.
 - lib/productSelection.ts — filtering, page resolution, requirement checks,
   ranking, deduplication, and final selection.
@@ -326,31 +295,35 @@ The request-time architecture and accuracy gates are protected by:
   and the minimal result card;
 - TypeScript, ESLint, and the Next production build.
 
-The current source at runtime `c829fa4` passes 358/358 unit tests across 45
-suites, zero-warning lint, typecheck, production build, and Playwright 7/7.
-This deterministic wall covers canonical source/token/direct-offer binding,
-exact sibling isolation, availability and unsafe-URL rejection, request-only
-coalescing, failure fallback, cancellation, key-safe cache identity, and the
-three-product/three-offer ceiling.
+The current Serper-only source at runtime `ff8f3a0` passes 352/352 unit tests
+across 44 suites, zero-warning lint, typecheck, production build, and Playwright
+7/7. Focused product-search, selection, discovery, and API coverage passes
+109/109. The removed SerpApi adapter, key, provider provenance, parallel branch,
+3+3 counters, harness fields, and tests are absent; the touched runtime files
+exactly match their pre-SerpApi snapshot.
 
-The latest completed ten-case matrix remains V20 on the earlier `b4e1890`
-runtime; it is prior baseline evidence, not validation of the canonical path.
-Three diverse `c829fa4` debug diagnostics returned HTTP 200 with non-empty
-fallback products, but all three scouts ended in `provider_error` before any
-strong target existed, so canonical product and offer calls remained zero. The
-failure was later isolated to OpenAI HTTP 429 `credit_balance_exhausted` /
-`insufficient_quota`. A separate production-adapter diagnostic found no usable
-`SERPAPI_API_KEY` and made zero SerpApi attempts. The frozen matrix was not run
-against that fallback-only and unconfigured state.
+The current Serper-only runtime completed a new precommitted cache-cold V23
+matrix after the OpenAI market-scout credit became available. All ten one-shot
+requests returned HTTP 200 and non-empty products with one OpenAI response,
+three hosted searches, and no more than fifteen logical Serper operations per
+request. Exact evidence binding, product safety, and the public five-field shape
+passed in all ten cells.
 
-The latest PR-14 ten-case, single-attempt V20 matrix completed 10/10
-requests with one OpenAI response each, three hosted searches each, and at most
-fifteen logical Serper operations. Exact evidence binding and product safety
-passed in all ten cells and all ten returned a product. Frozen-leader recall was
-5/10 (50%). Mean latency was 23,629 ms and nearest-rank p95/maximum was 29,646
-ms. The public five-field payload remained unchanged at 797 bytes mean and 1,542
-bytes maximum. Runtime evidence reached six cells, runtime `strong` reached two,
-and one scout honestly fell back for insufficient evidence.
+V23 did not pass the quality or latency release gates. Frozen-leader top-three
+recall was 1/9 benchmark-eligible runs (11.1%), with the constrained coffee-
+maker cell the only hit. Runtime evidence reached 7/10 cells and runtime
+`strong` reached 2/10, but evidence coverage did not convert into purchasable
+leader recovery. Mean latency was 29,930 ms and nearest-rank p95/maximum was
+34,196 ms. The unchanged payload averaged 812 bytes and peaked at 1,357 bytes.
+The run used 138 logical/physical Serper operations, ten Responses calls,
+thirty hosted searches, 196,243 model tokens, and approximately $0.206068 in
+published model-token cost. No request used scout fallback.
+
+V20 on equivalent retained Serper-only runtime `b4e1890` remains the stronger
+historical comparison at 10/10 non-empty, 5/10 leaders, and 29,646 ms p95/
+maximum. V23 is the current-runtime authority and establishes that restoring
+Serper removed the unwanted provider without improving the underlying market-
+to-commerce convergence bottleneck.
 
 Two later same-provider architecture experiments were rejected and removed.
 V21 restricted scout discovery to recognized editorial domains with high search
@@ -361,14 +334,11 @@ but still only 2/10 leaders and regressed to 32,916 ms p95/maximum. Both passed
 the deterministic safety, binding, public-shape, and call ceilings. Their reports
 are retained for audit, but none of their runtime code remains.
 
-PR-14 is not release-qualified: leader recall was 50% versus the 80% gate, and
-tail latency exceeded the 25-second p95 gate despite passing the 30-second
-maximum. Starting independent research concurrently with neutral commerce
-improved absolute frozen-leader hits from four in V19 to five in V20 and reduced
-p95/maximum by 6,904 ms while preserving 10/10 non-empty. The source-binding and
-ranking mechanics remain safe, but live market research and Shopping/page
-resolution still do not reliably converge on exact purchasable leaders inside
-the target envelope.
+PR-14 is not release-qualified: current-runtime leader recall is 11.1% versus
+the 80% gate, and V23 exceeded both the 25-second p95 and 30-second maximum.
+The source-binding and ranking mechanics remain safe, but live market research
+and Serper Shopping/page resolution still do not reliably converge on exact
+purchasable leaders inside the target envelope.
 
 The build route manifest must contain only /, /_not-found, and
 /api/recommendations.
@@ -378,17 +348,17 @@ The build route manifest must contain only /, /_not-found, and
 - Live prices and availability can change after a search.
 - Search-provider coverage can omit a good product.
 - Strict finalist verification can produce an empty shortlist even when a
-  qualifying product exists; V20 returned all ten shortlists, but
+  qualifying product exists; V20 and V23 returned all ten shortlists, but
   earlier preserved runs returned as few as seven in ten attempts.
 - The market scout's source tier is not product-fact, price, availability, or
-  eligibility authority. V20 passed exact source binding but market/commerce
-  coverage still produced only 50% frozen-leader recall with 29,646 ms p95,
-  so the architecture did not establish live best-in-budget reliability.
+  eligibility authority. V23 passed exact source binding but market/commerce
+  coverage produced only 11.1% eligible frozen-leader recall with 34,196 ms
+  p95, so the architecture did not establish live best-in-budget reliability.
 - Source filtering, broader prompt coverage, normalized target-query wording,
   and extra same-provider target-page concurrency were measured in V21/V22 and
-  did not improve leader recall. A new comparison should first qualify a
-  request-scoped commerce source that exposes canonical identity, current offers,
-  and direct seller pages.
+  did not improve leader recall. The later SerpApi detour was explicitly removed;
+  future accuracy work must improve the request-time Serper discovery and page-
+  resolution path rather than add another commerce provider.
 - Missing or ambiguous product images are intentionally omitted.
 - The recorded live quality sample is small and local. It does not prove
   hosted operations, accessibility beyond the current browser suite, or
