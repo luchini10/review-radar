@@ -367,6 +367,7 @@ function compactTelemetry(body, benchmarkCase) {
   const debug = asRecord(asRecord(body).debug);
   const scout = asRecord(debug.marketScout);
   const search = asRecord(debug.search);
+  const canonicalCommerce = asRecord(search.canonicalCommerce);
   const products = uniqueProducts(asRecord(body).result);
   const returnedSignals = asArray(search.returnedCandidateSignals).map(asRecord);
   const marketTargets = asArray(search.marketTargets).map(asRecord);
@@ -386,6 +387,16 @@ function compactTelemetry(body, benchmarkCase) {
     ),
     evidenceBindingsExact: evidenceBindingsAreExact(returnedSignals, marketTargets),
     commerceCandidateCount: asFiniteNumber(scout.commerceCandidateCount),
+    canonicalCommerceCandidates: asFiniteNumber(
+      canonicalCommerce.candidatesReturned,
+    ),
+    canonicalCommerceErrors: asArray(canonicalCommerce.errorKinds).map(String),
+    canonicalCommerceOfferLookups: asFiniteNumber(
+      canonicalCommerce.offerLookupAttempts,
+    ),
+    canonicalCommerceProductSearches: asFiniteNumber(
+      canonicalCommerce.productSearchAttempts,
+    ),
     hostedSearchCalls: asFiniteNumber(scout.hostedSearchCalls),
     logicalSerperOperations: asFiniteNumber(search.logicalSearchCalls),
     marketTargets: marketTargets.map((target) => {
@@ -627,6 +638,11 @@ function summarize(results, cases, acceptanceConfig) {
         ([caseId, minimum]) =>
           asFiniteNumber(asRecord(byCase[caseId]).nonEmpty) >= asFiniteNumber(minimum),
       ),
+      canonicalCommerceAtMostThreePlusThree: successful.every(
+        (result) =>
+          result.canonicalCommerceProductSearches <= 3 &&
+          result.canonicalCommerceOfferLookups <= 3,
+      ),
       serperAtMost15: successful.every((result) => result.logicalSerperOperations <= 15),
       strongAheadOfUnscored: successful.every((result) => result.strongBeforeUnscored),
       webSearchAtMost3: successful.every((result) => result.hostedSearchCalls <= 3),
@@ -634,6 +650,14 @@ function summarize(results, cases, acceptanceConfig) {
     },
     byCase,
     calls: {
+      canonicalCommerceOfferLookups: successful.reduce(
+        (total, result) => total + result.canonicalCommerceOfferLookups,
+        0,
+      ),
+      canonicalCommerceProductSearches: successful.reduce(
+        (total, result) => total + result.canonicalCommerceProductSearches,
+        0,
+      ),
       hostedSearchCalls: successful.reduce(
         (total, result) => total + result.hostedSearchCalls,
         0,
@@ -645,6 +669,14 @@ function summarize(results, cases, acceptanceConfig) {
       maximumHostedSearchCalls: Math.max(
         0,
         ...successful.map((result) => result.hostedSearchCalls),
+      ),
+      maximumCanonicalCommerceOfferLookups: Math.max(
+        0,
+        ...successful.map((result) => result.canonicalCommerceOfferLookups),
+      ),
+      maximumCanonicalCommerceProductSearches: Math.max(
+        0,
+        ...successful.map((result) => result.canonicalCommerceProductSearches),
       ),
       maximumLogicalSerperOperations: Math.max(
         0,
@@ -757,7 +789,7 @@ const report = {
   benchmark: benchmark.version,
   completedAt: new Date().toISOString(),
   phase,
-  schemaVersion: 2,
+  schemaVersion: 3,
   startedAt,
   summary: summarize(results, cases, asRecord(benchmark.acceptance)),
   runs: results,
@@ -769,6 +801,10 @@ const outputReport =
         ...report,
         runs: results.map((result) => ({
           caseId: result.caseId,
+          canonicalCommerceOfferLookups:
+            result.canonicalCommerceOfferLookups ?? null,
+          canonicalCommerceProductSearches:
+            result.canonicalCommerceProductSearches ?? null,
           durationMs: result.durationMs,
           evidenceBindingsExact: Boolean(result.evidenceBindingsExact),
           error: result.error || null,

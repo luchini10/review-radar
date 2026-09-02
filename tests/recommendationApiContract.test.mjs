@@ -147,7 +147,7 @@ describe("selection-only recommendation API", () => {
 
     assert.equal(
       body.debug.architecture,
-      "market_quality_live_v4_independent_concurrent",
+      "market_quality_live_v5_canonical_commerce",
     );
     assert.equal(body.debug.openAiCalls, 1);
     assert.equal(body.debug.search.candidatesReturned, 1);

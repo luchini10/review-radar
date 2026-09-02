@@ -11,7 +11,14 @@ type ProductEligibilityInput = {
   retailer?: string | null;
   snippet?: string | null;
   sourceTitle?: string | null;
-  sourceType?: "candidate" | "canonical" | "offer" | "primary" | "search" | "serper";
+  sourceType?:
+    | "candidate"
+    | "canonical"
+    | "offer"
+    | "primary"
+    | "search"
+    | "serpapi"
+    | "serper";
   url?: string | null;
 };
 

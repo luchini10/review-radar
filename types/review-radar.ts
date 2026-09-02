@@ -121,6 +121,7 @@ export type ProductFieldEvidence<T = string | number | string[] | null> = {
     | "open_graph"
     | "retailer_page"
     | "manufacturer_page"
+    | "serpapi"
     | "serper"
     | "snippet";
   sourceUrl: string;
@@ -216,6 +217,7 @@ export type RawProductCandidate = {
   imageUrl: string | null;
   price: number | null;
   currentShoppingOffer?: boolean;
+  discoveryProvider?: "serpapi" | "serper";
   commerceSignals?: {
     offerCount: number | null;
     position: number | null;

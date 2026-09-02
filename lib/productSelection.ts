@@ -15,6 +15,12 @@ import {
   inferKnownBrand,
   stripLeadingSourceOrRetailerLabel,
 } from "./brandMatching.ts";
+import {
+  fetchCanonicalCommerceOffers,
+  searchCanonicalCommerceProducts,
+  type CanonicalCommerceExecutionOptions,
+  type CanonicalCommerceProduct,
+} from "./canonicalCommerce.ts";
 import { baseProductCategoryFromQuery } from "./productCategory.ts";
 import { enrichProductAssets } from "./productAssets.ts";
 import {
@@ -57,6 +63,7 @@ import {
 
 const MAX_NEUTRAL_SEARCH_QUERIES = 3;
 const MAX_MARKET_TARGET_SEARCH_QUERIES = 3;
+const MAX_CANONICAL_COMMERCE_TARGETS = 3;
 const MAX_DISCOVERY_SEARCH_QUERIES =
   MAX_NEUTRAL_SEARCH_QUERIES + MAX_MARKET_TARGET_SEARCH_QUERIES;
 const MAX_TOTAL_SEARCH_QUERIES = 15;
@@ -84,6 +91,14 @@ type AcceptedSelection = {
 
 export type ProductSelectionTelemetry = {
   assetCandidates: number;
+  canonicalCommerce: {
+    candidatesReturned: number;
+    errorKinds: string[];
+    matchedProducts: number;
+    offerLookupAttempts: number;
+    productSearchAttempts: number;
+    targets: string[];
+  };
   candidatesAfterHardFilters: number;
   candidatesDiscovered: number;
   candidatesReturned: number;
@@ -501,7 +516,7 @@ function candidateHasDirectProductPage(candidate: RawProductCandidate) {
     price: candidate.price,
     retailer: candidate.retailer,
     sourceTitle: candidate.name,
-    sourceType: "serper",
+    sourceType: candidate.discoveryProvider || "serper",
     url: candidate.productUrl,
   }).canRenderAsProductCard;
 }
@@ -616,6 +631,55 @@ function marketTargetsNeedingSearch(
         first.consensusOrder - second.consensusOrder,
     )
     .slice(0, MAX_MARKET_TARGET_SEARCH_QUERIES);
+}
+
+function canonicalCommerceTargetsNeedingResolution(
+  discovered: RawProductCandidate[],
+  targets: MarketScoutTarget[],
+) {
+  return targets
+    .filter(
+      (target) =>
+        target.evidenceTier === "strong" &&
+        !discovered.some(
+          (candidate) =>
+            candidateMatchesTarget(candidate, target) &&
+            candidateHasDirectProductPage(candidate),
+        ),
+    )
+    .sort((first, second) => first.consensusOrder - second.consensusOrder)
+    .slice(0, MAX_CANONICAL_COMMERCE_TARGETS);
+}
+
+function selectCanonicalCommerceProduct(
+  products: CanonicalCommerceProduct[],
+  target: MarketScoutTarget,
+  budgetLimit: number | null,
+  input: RecommendationApiRequest,
+) {
+  return products
+    .filter(
+      (product) =>
+        candidateMatchesTarget(product.candidate, target) &&
+        !hasUnrequestedNonNewCondition(product.candidate, input),
+    )
+    .map((product, originalIndex) => ({
+      inBudget:
+        product.candidate.price !== null &&
+        (budgetLimit === null || product.candidate.price <= budgetLimit),
+      originalIndex,
+      position:
+        product.candidate.commerceSignals?.position ?? Number.MAX_SAFE_INTEGER,
+      product,
+      ratingCount: product.candidate.commerceSignals?.ratingCount || 0,
+    }))
+    .sort(
+      (first, second) =>
+        Number(second.inBudget) - Number(first.inBudget) ||
+        second.ratingCount - first.ratingCount ||
+        first.position - second.position ||
+        first.originalIndex - second.originalIndex,
+    )[0]?.product;
 }
 
 function primaryRetailerName(value: string | null | undefined) {
@@ -1709,10 +1773,11 @@ function evidence<T>(
   value: T,
   sourceUrl: string,
   confidence: ProductFieldEvidence<T>["confidence"] = "Medium",
+  sourceType: ProductFieldEvidence<T>["sourceType"] = "serper",
 ): ProductFieldEvidence<T> {
   return {
     confidence,
-    sourceType: "serper",
+    sourceType,
     sourceUrl,
     value,
     verifiedAt: new Date().toISOString(),
@@ -1723,29 +1788,55 @@ function candidateMetadata(candidate: RawProductCandidate): ProductMetadata {
   const sourceUrl =
     candidate.evidenceSources[0]?.url || candidate.productUrl;
   const price = candidate.price;
+  const sourceType = candidate.discoveryProvider || "serper";
   const metadata: ProductMetadata = {
     offers:
       price === null
         ? []
         : [
             {
-              price: evidence<number | null>(price, sourceUrl),
-              priceCurrency: evidence<string | null>("USD", sourceUrl),
+              price: evidence<number | null>(price, sourceUrl, "Medium", sourceType),
+              priceCurrency: evidence<string | null>(
+                "USD",
+                sourceUrl,
+                "Medium",
+                sourceType,
+              ),
             },
           ],
-    title: evidence<string | null>(candidate.name, sourceUrl),
+    title: evidence<string | null>(
+      candidate.name,
+      sourceUrl,
+      "Medium",
+      sourceType,
+    ),
   };
 
   const brand = selectionBrand(candidate);
   if (brand) {
-    metadata.brand = evidence<string | null>(brand, sourceUrl);
+    metadata.brand = evidence<string | null>(
+      brand,
+      sourceUrl,
+      "Medium",
+      sourceType,
+    );
   }
   if (candidate.imageUrl) {
-    metadata.image = evidence<string | null>(candidate.imageUrl, sourceUrl);
+    metadata.image = evidence<string | null>(
+      candidate.imageUrl,
+      sourceUrl,
+      "Medium",
+      sourceType,
+    );
   }
   const modelTokens = candidateModelTokens(candidate.name);
   if (modelTokens.length === 1) {
-    metadata.modelNumber = evidence<string | null>(modelTokens[0], sourceUrl);
+    metadata.modelNumber = evidence<string | null>(
+      modelTokens[0],
+      sourceUrl,
+      "Medium",
+      sourceType,
+    );
   }
 
   return metadata;
@@ -2070,11 +2161,14 @@ export async function selectProducts(options: {
 }> {
   const { input, signal } = options;
   const budgetLimit = maxBudget(input);
+  const category = baseProductCategoryFromQuery(input.query);
   const neutralQueries = neutralShoppingQueries(input).slice(
     0,
     MAX_NEUTRAL_SEARCH_QUERIES,
   );
   let physicalSearchAttempts = 0;
+  let canonicalProductSearchAttempts = 0;
+  let canonicalOfferLookupAttempts = 0;
   const assetRequestCache = new Map();
   const executionOptions: ProductSearchExecutionOptions = {
     onAttempt: () => {
@@ -2083,11 +2177,19 @@ export async function selectProducts(options: {
     requestCache: new Map(),
     signal,
   };
+  const canonicalExecutionOptions: CanonicalCommerceExecutionOptions = {
+    onAttempt: (kind) => {
+      if (kind === "product_search") canonicalProductSearchAttempts += 1;
+      else canonicalOfferLookupAttempts += 1;
+    },
+    requestCache: new Map(),
+    signal,
+  };
   const neutralSearchPromise = Promise.all(
     neutralQueries.map((query) =>
       searchShoppingProducts(
         query,
-        baseProductCategoryFromQuery(input.query),
+        category,
         executionOptions,
       ),
     ),
@@ -2118,14 +2220,56 @@ export async function selectProducts(options: {
     .map((target) => marketTargetSearchQuery(input, target))
     .filter(Boolean)
     .slice(0, MAX_MARKET_TARGET_SEARCH_QUERIES);
-  const marketTargetSearchResults = await Promise.all(
+  const canonicalTargets = canonicalCommerceTargetsNeedingResolution(
+    neutralTargetCoverageCandidates,
+    plan.targets,
+  );
+  const canonicalTargetQueries = canonicalTargets.map((target) =>
+    marketTargetSearchQuery(input, target),
+  );
+  const marketTargetSearchPromise = Promise.all(
     marketTargetQueries.map((query) =>
       searchShoppingProducts(
         query,
-        baseProductCategoryFromQuery(input.query),
+        category,
         executionOptions,
       ),
     ),
+  );
+  const canonicalResolutionPromise = Promise.all(
+    canonicalTargets.map(async (target, index) => {
+      const productSearch = await searchCanonicalCommerceProducts(
+        canonicalTargetQueries[index] || marketTargetSearchQuery(input, target),
+        category,
+        canonicalExecutionOptions,
+      );
+      const product = selectCanonicalCommerceProduct(
+        productSearch.products,
+        target,
+        budgetLimit,
+        input,
+      );
+      const offerLookup = product
+        ? await fetchCanonicalCommerceOffers(
+            product,
+            category,
+            canonicalExecutionOptions,
+          )
+        : null;
+      return { offerLookup, product, productSearch, target };
+    }),
+  );
+  const [marketTargetSearchResults, canonicalResolutionResults] =
+    await Promise.all([marketTargetSearchPromise, canonicalResolutionPromise]);
+  const canonicalResolvedCandidates = canonicalResolutionResults.flatMap(
+    ({ offerLookup, target }) =>
+      (offerLookup?.candidates || []).filter(
+        (candidate) =>
+          candidateMatchesTarget(candidate, target) &&
+          !hasUnrequestedNonNewCondition(candidate, input) &&
+          !isSecondaryMarketCandidate(candidate) &&
+          !hasUnrequestedNonUsVoltage(candidate, input),
+      ),
   );
   const shoppingDiscovered = interleaveSearchCandidates(
     [...neutralSearchResults, ...marketTargetSearchResults].map(
@@ -2133,7 +2277,7 @@ export async function selectProducts(options: {
     ),
   );
   const targetResolutionCandidates = prefilterProductCandidates(
-    shoppingDiscovered,
+    [...shoppingDiscovered, ...canonicalResolvedCandidates],
     input,
     MAX_PREFILTERED_CANDIDATES,
   ).candidates.filter(
@@ -2167,7 +2311,7 @@ export async function selectProducts(options: {
     targetResolutionQueries.map((query) =>
       searchProductPages(
         query,
-        baseProductCategoryFromQuery(input.query),
+        category,
         executionOptions,
       ),
     ),
@@ -2200,7 +2344,11 @@ export async function selectProducts(options: {
     MAX_DISCOVERY_SEARCH_QUERIES,
   );
   const discovered = attachMarketEvidence(
-    [...shoppingDiscovered, ...targetResolvedCandidates].map((candidate, discoveryOrder) => ({
+    [
+      ...shoppingDiscovered,
+      ...canonicalResolvedCandidates,
+      ...targetResolvedCandidates,
+    ].map((candidate, discoveryOrder) => ({
       ...candidate,
       discoveryOrder,
     })),
@@ -2222,7 +2370,6 @@ export async function selectProducts(options: {
     rankCandidates(marketCompatibleCandidates, plan.targets, input),
     MAX_VERIFICATION_CANDIDATES,
   );
-  const category = baseProductCategoryFromQuery(input.query);
   const resolutionDiagnostics: ProductSelectionTelemetry["resolutionDiagnostics"] =
     targetResolutionTargets.map((target, index) => ({
       discoveryName: `${target.brand} ${target.model}`,
@@ -2401,6 +2548,22 @@ export async function selectProducts(options: {
     result: { recommendations },
     telemetry: {
       assetCandidates: assetCandidatesCount,
+      canonicalCommerce: {
+        candidatesReturned: canonicalResolvedCandidates.length,
+        errorKinds: canonicalResolutionResults.flatMap(
+          ({ offerLookup, productSearch }) =>
+            [
+              productSearch.diagnostics.errorKind,
+              offerLookup?.diagnostics.errorKind,
+            ].flatMap((value) => (value ? [value] : [])),
+        ),
+        matchedProducts: canonicalResolutionResults.filter(
+          ({ product }) => Boolean(product),
+        ).length,
+        offerLookupAttempts: canonicalOfferLookupAttempts,
+        productSearchAttempts: canonicalProductSearchAttempts,
+        targets: canonicalTargetQueries,
+      },
       candidatesAfterHardFilters: marketCompatibleCandidates.length,
       candidatesDiscovered: discovered.length,
       candidatesReturned: recommendations.length,
@@ -2480,6 +2643,8 @@ export const productSelectionTestExports = {
   isSecondaryMarketCandidate,
   maxBudget,
   operationLimits: {
+    canonicalCommerceOfferLookups: MAX_CANONICAL_COMMERCE_TARGETS,
+    canonicalCommerceProductSearches: MAX_CANONICAL_COMMERCE_TARGETS,
     discoverySearches: MAX_DISCOVERY_SEARCH_QUERIES,
     neutralSearches: MAX_NEUTRAL_SEARCH_QUERIES,
     resolutionCandidates: MAX_VERIFICATION_CANDIDATES,
