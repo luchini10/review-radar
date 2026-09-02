@@ -4855,11 +4855,13 @@ current implementation authority.
 **Status:** implemented through runtime commit `c829fa4`; deterministic
 verification passes. The bounded canonical-commerce addition has not completed
 a live quality matrix because three diverse diagnostic requests reached scout
-`provider_error` before producing a strong target, leaving the new provider path
-unexercised. V20 at `b4e1890` remains the authoritative prior live comparison;
-it passes non-empty, safety, binding, public-shape, call-ceiling, and 30-second
-maximum gates but fails leader recall and 25-second p95. PR-14 is not release-
-qualified.
+`provider_error` before producing a strong target. A sanitized isolated request
+then attributed the scout failure to HTTP 429 `credit_balance_exhausted` /
+`insufficient_quota`; a separate production-adapter diagnostic found no usable
+`SERPAPI_API_KEY` and made zero SerpApi attempts. V20 at `b4e1890` remains the
+authoritative prior live comparison; it passes non-empty, safety, binding,
+public-shape, call-ceiling, and 30-second maximum gates but fails leader recall
+and 25-second p95. PR-14 is not release-qualified.
 
 **Objective:** research the current market for every shopper search, including
 repeated equivalent searches, without a retained market index, precomputation,
@@ -5169,17 +5171,22 @@ Deterministic validation passes 358/358 unit tests across 45 suites, typecheck,
 zero-warning lint, production build, Playwright 7/7, and diff checking. Three
 diverse debug diagnostics returned HTTP 200 and non-empty results, but their
 scouts all ended in `provider_error`; no strong targets or canonical calls were
-produced. Those diagnostics prove fallback integrity only. The credential state
-is unverified because `.env.local` was not inspected, and the frozen matrix was
-correctly withheld rather than measuring fallback again.
+produced. A fourth sanitized Responses diagnostic using the same model, web-
+search, sources-include, reasoning, and Structured Output features reached
+OpenAI and returned HTTP 429 `credit_balance_exhausted` / `insufficient_quota`.
+Official OpenAI documentation still lists those request features as supported
+for GPT-5.4 Mini. A separate non-benchmark adapter diagnostic loaded the ordinary
+Next environment and returned `missing_api_key_or_query` with zero attempts, so
+the adapter sees no usable SerpApi key. `.env.local` was not inspected. These
+diagnostics establish configuration blockers and fallback integrity only.
 
-Next, restore the scout and make the canonical provider credential available
-without inspecting `.env.local`. Require one bounded debug request with a
-strong target and non-zero product/offer telemetry, verify exact binding and the
-three-plus-three ceiling, then execute the frozen ten-case cache-cold matrix
-once with no retries. Until that evidence exists, `c829fa4` has no live leader,
-latency, cost, call, or payload qualification and V20 remains prior baseline
-evidence only.
+Next, replenish the OpenAI API project's credit balance and configure a usable
+server-side `SERPAPI_API_KEY` without exposing credentials or inspecting
+`.env.local`. Require one bounded debug request with a strong target and non-
+zero product/offer telemetry, verify exact binding and the three-plus-three
+ceiling, then execute the frozen ten-case cache-cold matrix once with no retries.
+Until that evidence exists, `c829fa4` has no live leader, latency, cost, call, or
+payload qualification and V20 remains prior baseline evidence only.
 
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 

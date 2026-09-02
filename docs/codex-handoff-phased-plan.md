@@ -1921,3 +1921,13 @@ checkpoint. R7A remains blocked and separately approval-gated.
 - The authoritative process incident count is four, not the two recorded in the
   preceding historical subsection. The canonical-commerce work added no new
   incident; do not inspect `.env.local` or access the protected fixture tree.
+- A sanitized same-contract Responses diagnostic subsequently attributed the
+  scout failure to HTTP 429 `credit_balance_exhausted` / `insufficient_quota`.
+  A separate non-benchmark adapter diagnostic loaded the ordinary Next
+  environment and returned `missing_api_key_or_query` with zero SerpApi
+  attempts. No raw provider output, headers, key, or protected file was read.
+- Replace the preceding generic restore step with these exact prerequisites:
+  replenish the OpenAI API project's credit balance and configure a usable
+  server-only `SERPAPI_API_KEY`. Then run one bounded strong-target smoke before
+  the frozen matrix. These are external configuration requirements, not
+  authority to weaken gates or change the public contract.

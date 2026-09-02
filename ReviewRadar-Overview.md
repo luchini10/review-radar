@@ -338,7 +338,10 @@ runtime; it is prior baseline evidence, not validation of the canonical path.
 Three diverse `c829fa4` debug diagnostics returned HTTP 200 with non-empty
 fallback products, but all three scouts ended in `provider_error` before any
 strong target existed, so canonical product and offer calls remained zero. The
-frozen matrix was not run against that fallback-only state.
+failure was later isolated to OpenAI HTTP 429 `credit_balance_exhausted` /
+`insufficient_quota`. A separate production-adapter diagnostic found no usable
+`SERPAPI_API_KEY` and made zero SerpApi attempts. The frozen matrix was not run
+against that fallback-only and unconfigured state.
 
 The latest PR-14 ten-case, single-attempt V20 matrix completed 10/10
 requests with one OpenAI response each, three hosted searches each, and at most

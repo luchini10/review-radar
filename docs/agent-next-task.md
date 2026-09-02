@@ -6,10 +6,11 @@ Updated: 2026-09-01
 
 PR-14 request-time market quality is implemented through local runtime commit
 `c829fa4` (`Add bounded canonical commerce resolution`) on branch `main`.
-Every recommendation request independently starts one fresh market scout beside
-three neutral Shopping searches. For at most three unresolved `strong` exact-
-model targets, the selector may then perform bounded canonical product and
-seller-offer resolution before applying the existing deterministic gates.
+Documentation commit `c070882` records the initial qualification gate. Every
+recommendation request independently starts one fresh market scout beside three
+neutral Shopping searches. For at most three unresolved `strong` exact-model
+targets, the selector may then perform bounded canonical product and seller-
+offer resolution before applying the existing deterministic gates.
 
 The public contract remains one `POST /api/recommendations` returning only
 image, name, category, trustworthy current USD price when available, and direct
@@ -17,11 +18,13 @@ product-page URL. No push, deployment, release, production-data action,
 dependency change, public-API change, or card expansion occurred.
 
 The new canonical-commerce path is deterministic-test complete but **not live
-release-qualified**. Three diverse diagnostic requests returned HTTP 200 and
-non-empty fallback results, but the upstream market scout returned
-`provider_error` before producing any strong target, so the canonical provider
-made zero product or offer calls. The frozen ten-case matrix was intentionally
-not run against that fallback-only state.
+release-qualified**. Three diverse application diagnostics returned HTTP 200
+and non-empty fallback results, but the upstream market scout returned
+`provider_error` before producing any strong target. A later sanitized direct
+Responses diagnostic established the root cause: HTTP 429
+`credit_balance_exhausted` / `insufficient_quota`. A separate adapter diagnostic
+after ordinary Next environment loading found no usable `SERPAPI_API_KEY` and
+made zero SerpApi calls. The frozen ten-case matrix was therefore not run.
 
 V20 at runtime `b4e1890` remains the strongest authoritative live comparison,
 not evidence for `c829fa4`. It reached frozen-leader top-three recall of 5/10
@@ -106,6 +109,12 @@ for the current one-response route. Amazon Business exposes catalog and offer
 operations but requires Business Product Catalog onboarding and account-scoped
 access. Neither alternative is integrated.
 
+Current official OpenAI documentation still lists Responses, Structured
+Outputs, and web search as supported for GPT-5.4 Mini and lists
+`web_search_call.action.sources` as a valid Responses include field. Combined
+with the explicit 429 diagnostic, there is no current evidence that the scout
+request shape or selected model caused the application failures.
+
 ## Authoritative and diagnostic live results
 
 The V20 report remains the authoritative measured baseline:
@@ -132,11 +141,23 @@ run without retries:
 | gaming monitor | 200 / yes | 11,644 ms | `provider_error` | 0 / 0 | 12 / 12 |
 | coffee maker | 200 / yes | 11,843 ms | `provider_error` | 0 / 0 | 12 / 12 |
 
-These diagnostics prove fallback integrity only. They do not prove canonical
-binding, provider call ceilings under live work, leader recall, quality,
-latency, tokens, cost, or payload for the new runtime. A separate production
-smoke request also returned HTTP 200 and products, but debug telemetry was
-disabled and it is not matrix evidence.
+A fourth, isolated Responses request used the same model, sources include,
+Structured Output, reasoning, and web-search features with sanitized reporting.
+It reached OpenAI and returned `RateLimitError`, HTTP 429, code
+`credit_balance_exhausted`, type `insufficient_quota`. No raw response, prompt
+output, source content, headers, or credential was printed or retained.
+
+A separate non-benchmark exact-model adapter diagnostic loaded the ordinary
+Next environment, then called the production adapter. It returned
+`missing_api_key_or_query` with zero product attempts, zero offer attempts, and
+no provider result. The query was valid, so this means the adapter sees no
+usable SerpApi key. `.env.local` was not opened or inspected.
+
+These diagnostics prove fallback and blocker attribution only. They do not
+prove canonical binding, provider call ceilings under live work, leader recall,
+quality, latency, tokens, cost, or payload for the new runtime. A separate
+production smoke request also returned HTTP 200 and products, but debug
+telemetry was disabled and it is not matrix evidence.
 
 ## Verification
 
@@ -158,12 +179,16 @@ deterministic invariants, not the unexecuted live market-quality SLO.
 
 ## Next action and release gate
 
-First restore a working market-scout response and make a SerpApi credential
-available to the ordinary server process without inspecting `.env.local`.
-Then run one bounded debug request that actually produces at least one `strong`
-target and non-zero canonical product/offer telemetry. Inspect exact-model
-binding, direct seller URLs, availability filtering, and the three-plus-three
-provider ceiling from that request.
+Two external prerequisites are required: replenish the OpenAI API project's
+credit balance and configure a usable server-side `SERPAPI_API_KEY` for the
+ordinary Next process. Neither action can be completed from repository code.
+Do not expose either credential in chat, logs, commits, client code, or debug
+payloads, and do not inspect `.env.local` to verify them.
+
+After configuration, run one bounded debug request that actually produces at
+least one `strong` target and non-zero canonical product/offer telemetry.
+Inspect exact-model binding, direct seller URLs, availability filtering, and the
+three-plus-three provider ceiling from that request.
 
 Only after that smoke proof should the precommitted ten-case cache-cold matrix
 run, exactly once per cell with no retries or replacements. It must report
@@ -180,8 +205,8 @@ payload.
 If the live SerpApi contract cannot satisfy exact identity, direct seller URL,
 availability, or bounded-call requirements, remove or replace the adapter; do
 not weaken existing gates or add retained/background research. Recommended
-reasoning level: medium for the deterministic provider smoke and harness work;
-high only if provider/scout failures require a new contract decision.
+reasoning level: medium for the deterministic provider smoke and matrix;
+high only if a restored provider exposes a new contract failure.
 
 ## Hard boundaries and process incidents
 
@@ -204,16 +229,17 @@ Four process incidents occurred earlier in this goal:
 4. During the V18 investigation, a broad `rg` over `tests` again printed several
    protected-fixture lines before narrowing. They were not used as evidence.
 
-The canonical-commerce phase added no incident. Do not repeat those command
-patterns. No push, deployment, release, production-data action, destructive
-operation, background work, retained research cache, or benchmark retry
-occurred.
+The canonical-commerce and provider-diagnostic steps added no incident. Do not
+repeat those command patterns. No push, deployment, release, production-data
+action, destructive operation, background work, retained research cache, or
+benchmark retry occurred.
 
 ## Evidence pointers
 
 | Evidence | Location |
 | --- | --- |
 | Current runtime snapshot | `c829fa4` |
+| Initial qualification record | `c070882` |
 | Prior authoritative live snapshot | `b4e1890` |
 | Current decision | `docs/forward-roadmap.md`, PR-14 |
 | Canonical executed QA | latest PR-14 entry in `docs/qa-loop-results.md` |

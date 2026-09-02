@@ -4473,3 +4473,10 @@ a known conservative undercount.
   `c829fa4` debug diagnostics all reached scout `provider_error`, produced zero
   canonical calls, and prove fallback only. The runtime is not live qualified;
   V20 remains prior baseline evidence, not evidence for the adapter.
+- The current provider blockers are independently attributed: a same-contract
+  Responses diagnostic returned HTTP 429 `credit_balance_exhausted` /
+  `insufficient_quota`, and the production canonical adapter returned
+  `missing_api_key_or_query` with zero attempts after ordinary Next environment
+  loading. Replenish OpenAI API credit and configure a usable server-only
+  SerpApi key before the strong-target smoke. Do not inspect `.env.local`, print
+  secrets, or turn provider configuration failures into benchmark cells.

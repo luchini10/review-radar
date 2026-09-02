@@ -18217,3 +18217,29 @@ tree was not accessed. The four previously disclosed incidents remain the
 complete incident list. No push, deployment, release, dependency addition,
 production-data action, public-contract change, background work, retained or
 cross-request research cache, or benchmark retry occurred.
+
+### Provider-blocker attribution follow-up
+
+The application-level `provider_error` was isolated without changing source or
+printing secrets. One direct Responses request used GPT-5.4 Mini with the same
+web-search tool, `web_search_call.action.sources` include, low reasoning,
+Structured Output, no storage, and no retries. It reached OpenAI and returned a
+sanitized `RateLimitError`: HTTP 429, code `credit_balance_exhausted`, type
+`insufficient_quota`. No raw response, generated output, web source, headers,
+prompt body, or credential was printed or retained. Current official OpenAI
+documentation continues to list Responses, Structured Outputs, and web search
+for GPT-5.4 Mini and the sources include field for Responses, so the evidence
+attributes this failure to account credit rather than the request contract.
+
+A separate non-benchmark exact-model smoke loaded the ordinary Next environment
+and invoked `searchCanonicalCommerceProducts` directly. It returned
+`missing_api_key_or_query`, zero products, and zero product/offer attempts. The
+query was non-empty, so the production adapter sees no usable
+`SERPAPI_API_KEY`. It did not contact SerpApi. `.env.local` was neither opened
+nor inspected.
+
+The live gate now has two precise external prerequisites: replenish OpenAI API
+credit and configure the server-only SerpApi key. After both are available, run
+one strong-target debug smoke and then the frozen ten-case matrix once. No
+additional provider retry or fallback-only benchmark was run, and the release
+verdict remains failed.
