@@ -23,7 +23,7 @@ function admission() {
 function dependencies(overrides = {}) {
   return {
     buildMarketScoutPlan: async () => ({
-      plan: { queries: ["gaming monitor"], targets: [] },
+      plan: { targets: [] },
       telemetry: {
         openAiCalls: 1,
         promptChars: 300,
@@ -34,28 +34,37 @@ function dependencies(overrides = {}) {
     createOpenAIClient: async () => null,
     paidRequestAdmission: admission(),
     selectProducts: async ({ plan }) => {
-      if (typeof plan === "function") await plan([]);
-      else await plan;
+      await plan;
       return {
         result: { recommendations: [product] },
         telemetry: {
-        assetCandidates: 1,
-        candidatesAfterHardFilters: 1,
-        candidatesDiscovered: 3,
-        candidatesReturned: 1,
-        duplicateCandidatesRemoved: 0,
-        logicalSearchCalls: 3,
-        physicalSearchAttempts: 3,
-        queries: ["gaming monitor"],
-        rankedCandidates: [],
-        rejectedByAssetSafety: 0,
-        rejectedByAvailability: 0,
-        rejectedByMerchant: 0,
-        rejectedByRequirements: 0,
-        resolutionDiagnostics: [],
-        resolutionQueries: [],
-        searchDiagnostics: [],
-        verifiedCandidates: [],
+          assetCandidates: 1,
+          candidateFunnel: {
+            deduplicated: [],
+            discovered: [],
+            marketCompatible: [],
+            prefilterRejected: [],
+            prefiltered: [],
+            ranked: [],
+            returned: [],
+            verified: [],
+          },
+          candidatesAfterHardFilters: 1,
+          candidatesDiscovered: 3,
+          candidatesReturned: 1,
+          duplicateCandidatesRemoved: 0,
+          logicalSearchCalls: 3,
+          physicalSearchAttempts: 3,
+          queries: ["gaming monitor"],
+          rankedCandidates: [],
+          rejectedByAssetSafety: 0,
+          rejectedByAvailability: 0,
+          rejectedByMerchant: 0,
+          rejectedByRequirements: 0,
+          resolutionDiagnostics: [],
+          resolutionQueries: [],
+          searchDiagnostics: [],
+          verifiedCandidates: [],
         },
       };
     },
@@ -147,7 +156,7 @@ describe("selection-only recommendation API", () => {
 
     assert.equal(
       body.debug.architecture,
-      "market_quality_live_v4_independent_concurrent",
+      "phase1_request_time_market_discovery",
     );
     assert.equal(body.debug.openAiCalls, 1);
     assert.equal(body.debug.search.candidatesReturned, 1);
@@ -169,7 +178,7 @@ describe("selection-only recommendation API", () => {
           assert.equal("commerceCandidates" in options, false);
           await selectionStarted;
           return {
-            plan: { queries: ["gaming monitor"], targets: [] },
+            plan: { targets: [] },
             telemetry: { openAiCalls: 1, usedFallback: false },
           };
         },
@@ -178,16 +187,62 @@ describe("selection-only recommendation API", () => {
           assert.notEqual(typeof plan, "function");
           markSelectionStarted();
           const resolvedPlan = await plan;
-          assert.deepEqual(resolvedPlan, {
-            queries: ["gaming monitor"],
-            targets: [],
-          });
+          assert.deepEqual(resolvedPlan, { targets: [] });
           return base.selectProducts({ plan: resolvedPlan });
         },
       }),
     )(request({ query: "gaming monitor" }));
 
     assert.equal(response.status, 200);
+  });
+
+  it("builds fresh request-bound research for unrelated searches", async () => {
+    const scoutedQueries = [];
+    const selectedPlans = [];
+    const handler = routeModule.createRecommendationPostHandler(
+      dependencies({
+        buildMarketScoutPlan: async ({ input }) => {
+          scoutedQueries.push(input.query);
+          return {
+            plan: {
+              targets: [
+                {
+                  aliases: [],
+                  brand: input.query === "robot vacuum" ? "Alpha" : "Beta",
+                  consensusOrder: 0,
+                  evidenceTier: "supported",
+                  model: input.query === "robot vacuum" ? "A100" : "B200",
+                  sourceUrls: ["https://example.com/current-request-source"],
+                },
+              ],
+            },
+            telemetry: { openAiCalls: 1, usedFallback: false },
+          };
+        },
+        selectProducts: async ({ input, plan }) => {
+          const resolvedPlan = await plan;
+          selectedPlans.push({ query: input.query, plan: resolvedPlan });
+          return dependencies().selectProducts({ plan: resolvedPlan });
+        },
+      }),
+    );
+
+    const first = await handler(request({ query: "robot vacuum" }));
+    const second = await handler(request({ query: "drip coffee maker" }));
+
+    assert.equal(first.status, 200);
+    assert.equal(second.status, 200);
+    assert.deepEqual(scoutedQueries, ["robot vacuum", "drip coffee maker"]);
+    assert.deepEqual(
+      selectedPlans.map(({ query, plan }) => ({
+        model: plan.targets[0].model,
+        query,
+      })),
+      [
+        { model: "A100", query: "robot vacuum" },
+        { model: "B200", query: "drip coffee maker" },
+      ],
+    );
   });
 
   it("returns an error instead of a false empty result when every Shopping search fails", async () => {

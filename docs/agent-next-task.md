@@ -1,163 +1,176 @@
 # ReviewRadar agent next task
 
-Updated: 2026-09-01
+Updated: 2026-09-02
 
-## Current phase and exact snapshot
+## Current authority and exact snapshot
 
-PR-14 request-time market quality is retained at local runtime commit `ff8f3a0`
-(`Remove SerpApi canonical commerce adapter`) on branch `main`. Serper is the
-sole product-search and commerce transport. The rejected SerpApi adapter,
-environment key, provider provenance, parallel product/store branch, separate
-provider counters, QA fields, and adapter tests are deleted.
+Phase 1, Request-Time Market Discovery Coverage, is complete in the local
+working tree and has a methodologically `VALID` sealed V1 comparison. The
+repository is on branch `main`, based on
+`866c5fc9ab9ea72a135393d84f996189d13647c6` (`Record Serper-only restoration
+evidence`). The authoritative Phase 1 source is the local commit containing
+this handoff (resolve current `HEAD`); the exact live-run source is additionally
+bound by per-file hashes inside the accepted raw artifact.
 
-The public contract remains one `POST /api/recommendations` returning only
-image, name, category, trustworthy current USD price when available, and direct
-product-page URL. No push, deployment, release, production-data action,
-dependency change, breaking public-API change, or card expansion occurred.
+Accepted raw artifact:
+`benchmarks/accuracy-v1/results/phase1-accepted-v5-raw.json`
 
-The provider correction passes, but PR-14 is **not release-qualified**. The
-current-runtime V23 matrix returned 10/10 non-empty products safely, while
-frozen-leader top-three recall was only 1/9 benchmark-eligible runs (11.1%) and
-cache-cold p95/maximum was 34,196 ms. Do not describe ReviewRadar as reliably
-returning the universal best product in budget.
+SHA-256:
+`9EC5744A37C5063B2B663ECCFAE9865B8AF7659EDC73E97A5605D77EF27208A6`
 
-Taylor authorized all in-scope local work and commits for this goal. No further
-phase-approval pause is required. The prohibition on retained, precomputed, or
-background recommendation research remains binding.
+The run completed 2026-09-02 with one attempt per frozen case, no benchmark
+retry or substitution, all displayed cards adjudicated, and no methodological
+blockers. Several earlier Phase 1 checkpoints were rejected when guardrails or
+exact-source binding failed; none is a substitute for v5.
 
-## Retained request-time architecture
+No Phase 2 implementation or live spend is approved. Stop after Phase 1 and
+wait for Taylor's explicit direction.
 
-Every request starts one fresh GPT-5.4 Mini Responses scout concurrently with
-three neutral Serper Shopping searches. Commerce names, positions, ratings,
-prices, retailers, offers, URLs, and snippets never enter the scout prompt and
-cannot establish independent market leadership.
+## Architecture and public contract
 
-The scout uses strict Structured Outputs, `store: false`, no SDK retries, a
-60-second deadline, at most three hosted web searches, low reasoning, and a
-6,000-token output ceiling. It returns at most five ordered exact-model targets.
-A source URL binds only when present in that response's completed web-search
-source set. `strong` requires two independent recognized domains including a
-comparative source; `supported` requires one comparative source or two
-recognized editorial domains. Invalid or insufficient scouting falls back to
-neutral discovery with no quality boost.
+All research remains fresh and request-bound:
 
-After neutral discovery, the selector may run up to three exact-model Serper
-Shopping searches for the highest evidence targets not already found, up to
-three organic strong-target page searches, and candidate-local page resolution.
-All work stays inside fifteen logical Serper operations. An evidence-bound exact
-model may retain two already-discovered merchant/page alternatives through
-verification; final output still deduplicates to one card per product/page
-identity and preserves brand diversity.
+    shopper request
+      -> POST /api/recommendations
+      -> validation + deterministic requirement extraction
+      -> fresh request-local market map
+           - current market leaders
+           - request-fit contenders
+           - coverage-gap contenders
+      -> independent bare-category + neutral request-fit Shopping
+      -> targeted Shopping for strongest expected contenders
+      -> path-fair candidate admission and nine-candidate slate
+      -> adaptive page/commerce verification
+      -> safety gates, existing post-gate ordering, distinct selection
+      -> no-store minimal JSON
 
-Editorial, comparison, review, support, and manual URLs are scout evidence only.
-Unknown merchant pages are admissible only when an exact current Shopping
-candidate binds that merchant. Product type, accessory, condition, exact
-identity, hard requirement, availability, trusted USD price, budget, direct
-page, image, duplicate, merchant, and SSRF gates remain authoritative. Prices
-and facts never transfer across models or merchants.
+Current request ceilings are nine market-map targets (four market-leader,
+three request-fit, two coverage-gap), two neutral Shopping queries, four
+expected-target Shopping queries, three page queries, fifteen logical search
+operations, forty normalized results per Shopping query, nine verification
+candidates, and five displayed cards.
 
-Final ordering is evidence tier; directly supported shopper preferences; scout
-consensus; Bayesian commerce rating with a 4.0/50 prior; review and offer volume;
-page and merchant quality; stable discovery order. Price is an eligibility
-ceiling, never a quality bonus. Commerce signals never create leader evidence,
-eligibility, or public content.
+Research/editorial/list sources may establish an internal candidate identity
+but can never become a final card. Final cards still require a safe, legitimate,
+identity-compatible current product page, source-derived requirement evidence,
+acceptable new-product condition, affirmative availability, trustworthy price
+when required, and duplicate/family protections.
 
-Shopping and page coalescing exists only within the current request. The
-response is `Cache-Control: no-store`. There is no production index, prewarm,
-polling, background refresh, persistent plan/result cache, cross-request
-Shopping/page cache, second commerce provider, or alternate recommender.
+There is no production market index, prewarm, startup/background research,
+saved recommendation, persistent evidence store, cross-request product cache,
+benchmark lookup, product-specific answer table, or new commerce provider.
+Request-local Maps and candidate state are discarded at return. The public card
+remains image when safe, name, category, current USD price when trustworthy, and
+View Product URL.
 
-## SerpApi removal authority
+## Phase 1 behavior and observability
 
-Commit `c829fa4` introduced a second commerce provider. Taylor clarified that
-ReviewRadar must use Serper rather than SerpApi. Commit `ff8f3a0` applies the
-exact inverse of that isolated detour: all twelve touched runtime,
-configuration, harness, type, and test paths match the parent of `c829fa4`, and
-the two SerpApi-only files no longer exist.
+The scout prompt and schema are `phase1-request-market-map-v1`. The market map
+separates expected contenders by purpose instead of emitting one undifferentiated
+target list. Neutral queries stay brand/model neutral unless the shopper asked
+for a brand/model. Candidate interleaving prevents one high-volume search family
+from consuming the verification slate merely by returning first. Verification
+continues in bounded waves only while unresolved candidates and operation budget
+can add useful work.
 
-Do not restore `SERPAPI_API_KEY`, `lib/canonicalCommerce.ts`, SerpApi provenance,
-canonical product/store lookups, separate provider counters, or a second
-commerce-provider fallback. Future accuracy work must improve request-time
-Serper discovery, exact-target recovery, candidate prioritization, and page
-verification within the approved call envelope.
+Development diagnostics now establish:
 
-## Authoritative current-runtime live result
+- every serious candidate's discovery path or paths;
+- accepted/rejected/missing expected targets and their target class;
+- query execution, stop reason, raw results, normalization limit, dropped count,
+  admitted count, and rejection reasons;
+- candidate counts before and after each gate, path-fair slate selection, and
+  limit-driven crowd-out;
+- verification waves, cumulative accepted products, remaining operation budget,
+  and page-query exhaustion; and
+- distinct plausible products contributed by each discovery path.
 
-After the earlier OpenAI credit failure cleared, one bounded debug smoke on
-`ff8f3a0` returned HTTP 200 with four products in 28,346 ms. It used one
-successful scout, three hosted searches, and 13 logical/physical Serper
-operations. `scoutFallback` was null, architecture remained
-`market_quality_live_v4_independent_concurrent`, and no canonical-commerce field
-or SerpApi text was present.
+Safety corrections generalized from rejected live checkpoints include separate
+page-source specification evidence, alphanumeric sibling-model isolation,
+TB/GB configuration normalization, named suffix/variant identity, rental/hire
+exclusion, support/editorial destination exclusion, source-derived-only hard
+requirements, primary-identity brand enforcement, and stronger model-family
+deduplication. No benchmark product or answer is present in runtime logic.
 
-The precommitted ten-case cache-cold V23 matrix then ran once per cell with no
-retry, restart, or substitution. Its report is
-`docs/pr14-live-accuracy-report-v23-serper-only-restored.json`:
+## Accepted V1 comparison
 
-- 10/10 HTTP 200 and 10/10 non-empty, including both shop-vac cases;
-- accepted-candidate safety, exact evidence binding, fresh research, public
-  shape, one-response, three-hosted-search, fifteen-Serper-operation, required-
-  recall, and strong-ahead-of-unscored checks all passed;
-- frozen leader top-three recall 1/9 benchmark-eligible runs (11.1%) versus the
-  80% gate; only constrained coffee maker hit;
-- runtime evidence 7/10, runtime `strong` 2/10, and scout fallback 0/10;
-- mean/p95/maximum latency 29,930/34,196/34,196 ms, failing the 25-second p95
-  and 30-second maximum gates;
-- ten Responses calls, thirty hosted searches, and 138 logical/physical Serper
-  operations, with every request at or below fifteen;
-- 180,540 input plus 15,703 output tokens (196,243 total), approximately
-  $0.206068 model-token cost at the benchmark's published rates; and
-- unchanged five-field payload averaging 812 bytes and peaking at 1,357 bytes.
+| Metric | Phase 0 | Phase 1 | Change |
+|---|---:|---:|---:|
+| Leader discovery recall | 62/142 (43.66%) | 77/142 (54.23%) | +15, +10.57 pp |
+| Broad-search discovery | 19/36 (52.78%) | 24/36 (66.67%) | +5, +13.89 pp |
+| Final leader recall | 7/142 (4.93%) | 10/142 (7.04%) | +3, +2.11 pp |
+| Empty searches | 8/48 | 10/48 | +2, worse |
+| Top-K precision | 50/102 (49.02%) | 24/77 (31.17%) | -17.85 pp |
+| NDCG@3 | 0.4082 | 0.3039 | -0.1043 |
+| Hard-requirement accuracy | 163/172 (94.77%) | 118/118 (100%) | +5.23 pp |
+| Wrong-product leakage | 6/102 (5.88%) | 3/77 (3.90%) | -1.98 pp |
+| Model-family duplicate leakage | 4/102 (3.92%) | 1/77 (1.30%) | -2.62 pp |
+| Product-page accuracy, checked | 25/31 (80.65%) | 19/23 (82.61%) | +1.96 pp |
+| Latency p50 / p95 | 26,125 / 34,642 ms | 30,654 / 41,481 ms | slower |
 
-V23 is current-runtime authority. V20 on equivalent retained Serper-only
-runtime `b4e1890` remains the stronger historical result: 10/10 non-empty,
-5/10 leaders, 23,629 ms mean, and 29,646 ms p95/maximum. V21 and V22 remain
-rejected same-provider experiments whose code was removed and reports retained
-for audit only.
+Phase 1 used 48 Responses calls, 143 hosted searches, 672 logical and 667
+physical Serper operations, 869,232 input tokens, and 89,107 output tokens.
+Compared with Phase 0, this is seven additional hosted searches, twenty
+additional logical operations, fifteen additional physical attempts, and
+71,021 additional model tokens; Responses volume remained one per request.
 
-## Deterministic verification
+## Proven loss attribution and next decision
 
-- Focused product-search, selection, discovery, and API tests: 109/109.
-- Full unit tests: 352/352 across 44 suites.
-- TypeScript typecheck: pass.
-- ESLint: pass with zero warnings.
-- Next.js 16.3.3 production build: pass; only `/`, `/_not-found`, and
-  `/api/recommendations` are exposed.
-- Playwright: 7/7 across Chromium desktop/mobile; only environment-level
-  `NO_COLOR` / `FORCE_COLOR` notices were emitted.
-- Exact removal audit: all twelve paths touched by `c829fa4` match its parent;
-  runtime/config/test searches find zero SerpApi or canonical-adapter references.
+Earliest loss across 142 frozen grade-2/3 references:
 
-These checks prove the SerpApi removal, Serper-only deterministic invariants,
-and unchanged public contract. V23 proves that the quality and latency SLOs are
-still failed; green deterministic checks do not supersede that live result.
+- never discovered: 65 (baseline 80);
+- candidate truncation or ranking before the verification slate: 43 (baseline
+  26);
+- final-selection crowd-out: 9 (baseline 10);
+- page/commerce verification: 6 (baseline 8);
+- prefilter: 5 (baseline 6);
+- merchant/market filter: 3 (baseline 2);
+- candidate deduplication: 1 (baseline 3); and
+- returned: 10 (baseline 7).
 
-## Next action and release gate
+The primary objective improved: fifteen additional leaders entered discovery.
+The main bottleneck is now compatible-candidate survival into the verification
+slate. Phase 2 should, if approved, determine why path-fair admission still
+loses 43 discovered leaders and why empty results rose to ten before changing
+final ranking weights. The precision/NDCG decline must remain visible; it may
+partly reflect newly admitted weak cards and fewer returned cards, but that is
+an inference, not yet a verified cause.
 
-First attribute the generalized V23 misses through the current Serper pipeline:
-scout target qualification, neutral/exact Shopping discovery, exact-model
-binding, current offer and page recovery, hard-feature proof, availability,
-trusted price, and finalist verification. Use the saved report and new bounded
-diagnostics; do not tune to frozen product names or rerun V23 opportunistically.
+Recommended reasoning level: high for Phase 2 attribution/design because it
+crosses candidate diversity, identity, safety, latency, and cutoff behavior;
+medium for routine implementation once the causal rule is proven. Do not
+default to maximum reasoning for mechanical follow-up.
 
-Only implement a correction after identifying the earliest general loss. Keep
-one Responses call, at most three hosted searches, at most fifteen logical
-Serper operations, current-request-only research, all safety and eligibility
-gates, and the unchanged public response. Do not add SerpApi or any second
-commerce provider.
+## Current verification
 
-Release still requires zero safety, binding, hard-requirement, availability, or
-budget failures; at least 80% eligible leader top-three recall; any passing
-`strong` leader ahead of unscored alternatives; required non-empty recall;
-cache-cold p95 at most 25 seconds and maximum 30 seconds; one Responses call;
-at most three hosted searches and fifteen logical Serper operations; and
-unchanged payload shape.
+- `npm test`: 376/376 across 45 suites.
+- `npm run typecheck`: pass.
+- `npm run lint`: pass with zero warnings/errors.
+- `npm run build`: pass, Next.js 16.3.3; routes `/`, `/_not-found`, and
+  `/api/recommendations` only.
+- `npm run test:e2e`: 7/7 Chromium desktop/mobile.
+- Benchmark integrity: pass inside the unit wall.
+- Accepted sealed benchmark: 48/48 first attempts, evaluator `VALID`, all 77
+  displayed products adjudicated and run-hash bound.
 
-Recommended reasoning level: high for loss attribution because quality misses
-cross independent research, Serper discovery, and page verification; medium for
-a bounded deterministic correction after root cause is established.
+These checks ran against the exact production source used for accepted v5.
+Documentation-only closeout changes followed; `git diff --check` and final Git
+review must pass before commit.
 
-## Hard boundaries and process incidents
+## Flag and provider state
+
+The tracked `REVIEW_RADAR_CONSTRAINT_ALLOCATION` flag remains default `off` in
+checked-in examples. The user-owned local override remains unknown because
+`.env.local` was not manually inspected. Next.js ordinarily auto-loaded the
+local environment during approved dev/build/benchmark execution; no secret was
+printed or copied.
+
+The accepted runtime used `gpt-5.4-mini` at low reasoning, at most three hosted
+searches, fifteen logical Serper operations, nine verification candidates, and
+five displayed cards. Provider use is established from captured telemetry.
+Serper remains the sole commerce transport.
+
+## Hard boundaries and incident record
 
 Never manually inspect, print, hash, copy, edit, or diagnose `.env.local`.
 Next.js may auto-load it during ordinary build/dev startup; its contents are not
@@ -167,33 +180,34 @@ Never open, enumerate, stat, hash, parse, copy, edit, or delete
 `tests/fixtures/review-radar-live/**`. Suppress untracked enumeration and use
 explicit path-scoped searches.
 
-Four process incidents occurred earlier in this goal:
+During earlier stabilization/Phase 0 work, broad status listings printed
+protected fixture path names. During Phase 1, one broad text search over the
+tests tree also printed protected path names and a truncated fixture excerpt
+before the boundary violation was recognized. That material was not used to
+design, tune, adjudicate, or verify the implementation, and no protected file
+was directly opened or modified. Future inspection must keep the directory
+excluded.
 
-1. A broad `rg --files docs tests` unintentionally enumerated protected fixture
-   path names without opening contents.
-2. A later broad `rg` content search matched and printed a few protected-fixture
-   brand lines. They were not used as evidence.
-3. `git status --short --branch` unintentionally enumerated untracked protected-
-   fixture path names. Subsequent status checks use `--untracked-files=no`.
-4. During V18 investigation, a broad `rg` over `tests` printed several protected-
-   fixture lines before narrowing. They were not used as evidence.
-
-The SerpApi removal, debug smoke, and V23 matrix added no incident. No push,
-deployment, release, production-data action, destructive operation, background
-work, retained research cache, or benchmark retry occurred.
+Do not start Phase 2, dispatch live spend, push, deploy, release, change
+production data, add a major dependency/provider, change the public API, or
+discard unrelated user work without explicit authority. The Phase 1 local
+commit was explicitly authorized; no other external write is authorized.
 
 ## Evidence pointers
 
 | Evidence | Location |
-| --- | --- |
-| Current runtime snapshot | `ff8f3a0` |
-| Removed detour snapshot | `c829fa4` |
-| Stronger historical live snapshot | `b4e1890` |
-| Current decision | `docs/forward-roadmap.md`, PR-14 |
-| Executed QA | latest PR-14 entry in `docs/qa-loop-results.md` |
-| Durable trust contracts | latest PR-14 entry in `docs/review-radar-test-memory.md` |
-| Frozen benchmark | `tests/benchmarks/pr14-live-accuracy-v2026-09a.json` |
-| Current-runtime report | `docs/pr14-live-accuracy-report-v23-serper-only-restored.json` |
-| Historical comparison | `docs/pr14-live-accuracy-report-v20-independent-concurrent.json` |
-| Rejected reports | V21 and V22 under `docs/` |
-| Runtime architecture | `ReviewRadar-Overview.md` |
+|---|---|
+| Human Phase 1 report | `benchmarks/accuracy-v1/results/phase1-accepted-v5-report.md` |
+| Machine scored report | `benchmarks/accuracy-v1/results/phase1-accepted-v5-report.json` |
+| Raw run and exact-source seal | `benchmarks/accuracy-v1/results/phase1-accepted-v5-raw.json` |
+| Baseline comparison | `benchmarks/accuracy-v1/results/phase1-accepted-v5-comparison.json` |
+| Per-search diagnostics | `benchmarks/accuracy-v1/results/phase1-accepted-v5-diagnostics.md` |
+| Run-bound adjudications | `benchmarks/accuracy-v1/results/phase1-accepted-v5-adjudications.json` |
+| Frozen method and run rules | `benchmarks/accuracy-v1/README.md` |
+| Baseline report | `benchmarks/accuracy-v1/results/baseline-report.md` |
+| Architecture | `ReviewRadar-Overview.md` |
+| QA record | latest Phase 1 entry in `docs/qa-loop-results.md` |
+| Roadmap authority | top Phase 1 section in `docs/forward-roadmap.md` |
+| Durable test contracts | top Phase 1 entry in `docs/review-radar-test-memory.md` |
+| Meaningful changes | top 2026-09-02 entry in `docs/change-log.md` |
+| Run summary | latest Phase 1 entry in `docs/Agent Run Summary.md` |

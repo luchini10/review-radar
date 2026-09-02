@@ -1,0 +1,4165 @@
+{
+  "baseline": {
+    "benchmarkStartTimestamp": "2026-09-02T08:31:21.109Z",
+    "branch": "main",
+    "head": "866c5fc9ab9ea72a135393d84f996189d13647c6",
+    "productionFiles": [
+      "app/api/recommendations/route.ts",
+      "app/globals.css",
+      "app/layout.tsx",
+      "app/page.tsx",
+      "components/BrandMark.tsx",
+      "components/ProductCard.tsx",
+      "components/ResultsSummary.tsx",
+      "components/SearchForm.tsx",
+      "components/SmartFeatures.tsx",
+      "components/ui/alert.tsx",
+      "components/ui/button.tsx",
+      "components/ui/card.tsx",
+      "components/ui/input.tsx",
+      "components/ui/label.tsx",
+      "components/ui/skeleton.tsx",
+      "components/ui/textarea.tsx",
+      "lib/boundedJsonRequest.ts",
+      "lib/brandMatching.ts",
+      "lib/budgetInputFormatting.ts",
+      "lib/errorMessages.ts",
+      "lib/formFactor.ts",
+      "lib/marketScout.ts",
+      "lib/openaiClient.ts",
+      "lib/paidRequestAdmission.ts",
+      "lib/priceParsing.ts",
+      "lib/productAssets.ts",
+      "lib/productCategory.ts",
+      "lib/productEligibility.ts",
+      "lib/productEvidenceIdentity.ts",
+      "lib/productIdentity.ts",
+      "lib/productImageResolver.ts",
+      "lib/productPageUrl.ts",
+      "lib/productPriceTrust.ts",
+      "lib/productSearch.ts",
+      "lib/productSelection.ts",
+      "lib/productTypeIntent.ts",
+      "lib/productTypeMatch.ts",
+      "lib/recommendationClient.ts",
+      "lib/recommendationRequestValidation.ts",
+      "lib/requestCancellation.ts",
+      "lib/requirementConflicts.ts",
+      "lib/requirementExtraction.ts",
+      "lib/safeProductPageFetch.ts",
+      "lib/search/sourcePacks.ts",
+      "lib/search/sourceSafety.ts",
+      "lib/searchRequestPayload.ts",
+      "lib/semanticMatching.ts",
+      "lib/smartFeatureCategory.ts",
+      "lib/smartFeatureSelection.ts",
+      "lib/smartFeatureSuggestions.ts",
+      "lib/sourceUrlIdentity.ts",
+      "lib/specDictionary.ts",
+      "lib/specExtraction.ts",
+      "lib/utils.ts",
+      "next.config.ts",
+      "package-lock.json",
+      "package.json",
+      "types/review-radar.ts",
+      "types/smart-features.ts"
+    ],
+    "productionFileSha256": {
+      "app/api/recommendations/route.ts": "c579eb9f819a4d0cb58a7193518812a35ee8bc940f68a29ae41af62accd70254",
+      "app/globals.css": "3d5844c886699eae20f63fc659412cbc9cc7591300036d2867e3f9424ab737d8",
+      "app/layout.tsx": "26149aaf5985b2f2fee20a763bad2ff054df395f1b63304bebd52218e38f9857",
+      "app/page.tsx": "40e5bd8dbdff9a8363d7aa69940268b6f271296e220f3ff2630977e85b9c35a4",
+      "components/BrandMark.tsx": "1b8a7e2d7ac24110847fb5da9566dd33c7c230cfcb9c2917d05838ba25486201",
+      "components/ProductCard.tsx": "ae04e193e87a6fee3c0c89593f85842dbca629bf2e70a6436835853c2e1d0bc4",
+      "components/ResultsSummary.tsx": "cb04a7ffa2aa526dc49b8a2edae2311c8925fd3b47788d8487ca45de3bec4ed3",
+      "components/SearchForm.tsx": "9a3155268d52929b4f0caaf83615ac3c0b71c11aaf445b3e65b4ab77a5b9cfde",
+      "components/SmartFeatures.tsx": "7e16ba81e7ce4bbbb93da252bd958e37f560c76af6220360ba9791511b12657d",
+      "components/ui/alert.tsx": "126a26b401ab2cd3f3855551d012b5dca7a96b7d6984a921add3ce2d441af4b6",
+      "components/ui/button.tsx": "d14549ab3ba7a9d5d1f424c2599233bffa0b317121abf3b6efa2fb902d5e2781",
+      "components/ui/card.tsx": "d8113cbf964f8d1aadf2649d2944d8bbc6e3cfd49d36746f76868cbc4dde3cfe",
+      "components/ui/input.tsx": "f7d6ecff9a4d631feeaf401c02bb87e26ddb38131c55d15a43b9290747390847",
+      "components/ui/label.tsx": "7f19b8476658d25ff197c84030e58cd7395059d876a54630e025951e474ebdae",
+      "components/ui/skeleton.tsx": "8110bba70d0cb9fe968c0b7bd092ad12258caef40b028b4a87f402bdab907faf",
+      "components/ui/textarea.tsx": "58b58d84fc54ba5f4ca46937870c619349fd9eccc4d494250ac7bc73a94e05e9",
+      "lib/boundedJsonRequest.ts": "4233c758060906dac37a478900e7fc0c710152d09efba27da0f02884d83c4123",
+      "lib/brandMatching.ts": "e6242270f7078522abe10784583f9deeb726d4c297c2284fb655b40ab7972d13",
+      "lib/budgetInputFormatting.ts": "e6f3157c178336f8a094cfb5bce4a93c9dd900b869c0f10ef51e9109b5d9021c",
+      "lib/errorMessages.ts": "75b7dff017d1ab70e83d102d26aee58d25c75c584ad703a1e26600e736e3442b",
+      "lib/formFactor.ts": "7293ee96bc26a883fbb0a6a427a1c4b646c235c65950723e42819b3b3df8f8a0",
+      "lib/marketScout.ts": "870a03f090da28055c9c010fbb038946e9a8825e28bb1604f2ae9445196152ac",
+      "lib/openaiClient.ts": "be9b171a87458219959f0bca9bae417de503901264c3d58e3810100e6e2e520d",
+      "lib/paidRequestAdmission.ts": "91038b8187ba7f739812a4cb66ee5ee4977c7613425fceaa5c10c4e168ac74dc",
+      "lib/priceParsing.ts": "7ee15ff055d30161b40c31d9d1efaa96214189b78c0fe142ba0bd91edd3013f2",
+      "lib/productAssets.ts": "aa36c658e714c638c3539dc0245f2eb07566187a6c9e4ecb6cc840b1159adbf5",
+      "lib/productCategory.ts": "c0d8a08add6e4af3c04189f24b40d23862bd1b90f7bf623db5cfc50812b88fd7",
+      "lib/productEligibility.ts": "24a0d23424d431b47cc5b01533210c0845e093e14f1500499dc1e0356688ae05",
+      "lib/productEvidenceIdentity.ts": "5b62f1c76ccc9b9462e540e4df794a0b7b8def6b515b8227dbd55fa10200608c",
+      "lib/productIdentity.ts": "9a02b755ce0b48735fc69c60a4460cf1d5080dada58a15186e9d3488008d72d3",
+      "lib/productImageResolver.ts": "6ba4f0d0d2cffa51eb8f82a2113e13b6be138bddb691366b71f27ec6ffbe048c",
+      "lib/productPageUrl.ts": "4fdd4bc1cb90eb493499fc8013b85a3f8893121309944881ccdd6163c6e675d9",
+      "lib/productPriceTrust.ts": "188801f3843084ef9bd89a51482e68923172db5fff972a3802708be7c6d09ce4",
+      "lib/productSearch.ts": "3d0c55f4a2bf36469b7769ffaea84a59d4dfd1cc4e63e54f302a211011dc5ae9",
+      "lib/productSelection.ts": "badad5811aef10e06c0b8d821416e55d22600caba855b48a03995a58abfca254",
+      "lib/productTypeIntent.ts": "a0ff069925d9c428ca18ff2fb5c06623b1a9c88135fd6d138e89d9fce3b40d66",
+      "lib/productTypeMatch.ts": "e62e02f18bce7c0a3cc5fe43301083872c62628da653e9623e381842a4fa33e3",
+      "lib/recommendationClient.ts": "1b6367128d00343eb70c384c0e907338656a0ac31b55ab60d3dc0de81e38eb12",
+      "lib/recommendationRequestValidation.ts": "01a7af50c24d43489f96433e2f6820c35c2035c84479a66652304f2bfe0bead0",
+      "lib/requestCancellation.ts": "ade93abe85418ae5075e283b42cae4038da55653059797f6905dbfac38b2b27b",
+      "lib/requirementConflicts.ts": "912f449adfb8a157c3f6c254d7dcb59484dc62f0a3aac1a30a303ece69d248dc",
+      "lib/requirementExtraction.ts": "ac75864fa47b5bbc5175a5d118f7614255c1331204e6d30f8a533d126244f452",
+      "lib/safeProductPageFetch.ts": "1d26b06141104a3b4764c688cb76cd7f37e00e4ff4d61212833e2f48665c516c",
+      "lib/search/sourcePacks.ts": "82794f8dbb9c8c4a18664ea87d2b3b38a025913cc416276ad8a8a265b9bbc6e9",
+      "lib/search/sourceSafety.ts": "d7d6802238ae050e5776e8f3ba26f06d251b8550665d12e6083d43bd73bf9671",
+      "lib/searchRequestPayload.ts": "e76de3888e9e4c9f5c2ff94e101b40f254796c90dcd29181257fa686e43f556b",
+      "lib/semanticMatching.ts": "ad871ca5eacd3df8d3920423259076381c2ec330647b572ce88516583e560085",
+      "lib/smartFeatureCategory.ts": "82bc351ed8e6124641e127252391c4ffc7998ff32a673efcf5f28e75c79f2751",
+      "lib/smartFeatureSelection.ts": "99306bcff473db6359732af3cee850642c1e8d3f7d76080eddf16a81ec0a20ed",
+      "lib/smartFeatureSuggestions.ts": "47f8fea8dc754dcd685152e8157c6b296c16073ad65bc0689c0116aed14c9cc6",
+      "lib/sourceUrlIdentity.ts": "54206ade01b60c2e3f0704cd162fdc3bdd7a3103adfddb6135a6edae30328024",
+      "lib/specDictionary.ts": "a17c774e6a0c071ead4c0ff0d23c934eee01f41d6864d0d7d55ba20327508c2f",
+      "lib/specExtraction.ts": "22cc994dd2d29109d55bcdf6bb26c8cf3251dd1915a5a11f92fce98246f313dc",
+      "lib/utils.ts": "d1f1e0d62cb8d8d1e04c26e14de842d8a151f75812d81b046c65b5d1fe8e4b27",
+      "next.config.ts": "91f40db73abada98801bc82fb55a9afe18c5fb9743a78e61526f44f3fd2d7023",
+      "package-lock.json": "f2c48ed06eb51e744f2df5ca09ad28926ffc6bead3591ea213eb4dc0d01db4df",
+      "package.json": "cac13163ca353c99d0cfeb872af1c239968c0d5aac44f0015cb4eb230cee1251",
+      "types/review-radar.ts": "02a776257dc36fcecf927de083d6eb762bdc844734aad89537a35a9294c5cb59",
+      "types/smart-features.ts": "10b58b31b0960f920c9283b94c22bc2465adcdea921f2cbeb6755fd14ab33a4c"
+    },
+    "relevantWorkingTreeDiffSha256": "6d7c6debe04b023f5a76596e34b634ce400137088b2e0b753a4d98c473343ac7",
+    "relevantWorkingTreeStatus": [
+      "M app/api/recommendations/route.ts",
+      " M lib/marketScout.ts",
+      " M lib/openaiClient.ts",
+      " M lib/productEligibility.ts",
+      " M lib/productIdentity.ts",
+      " M lib/productSearch.ts",
+      " M lib/productSelection.ts",
+      " M lib/productTypeIntent.ts",
+      " M lib/requirementExtraction.ts",
+      " M lib/search/sourceSafety.ts",
+      " M lib/semanticMatching.ts",
+      " M lib/specDictionary.ts",
+      " M package.json",
+      " M types/review-radar.ts"
+    ],
+    "repositoryState": "dirty_reproducibly_sealed",
+    "runtimeConfiguration": {
+      "market": "US",
+      "marketScoutModel": "gpt-5.4-mini",
+      "marketScoutReasoningEffort": "low",
+      "maximumHostedSearchCalls": 3,
+      "maximumMarketScoutTargets": 9,
+      "maximumLogicalSerperOperations": 15,
+      "maximumNeutralShoppingQueries": 2,
+      "maximumTargetShoppingQueries": 4,
+      "maximumVerificationCandidates": 9,
+      "maximumDisplayedProducts": 5,
+      "nextEnvironment": "development",
+      "responseCache": "no-store",
+      "retryPolicy": "no application or benchmark retries",
+      "secretConfiguration": "not inspected; provider use is established from request telemetry",
+      "constraintAllocation": "captured per run from deterministic query output; .env.local was not inspected"
+    }
+  },
+  "benchmark": "review-radar-accuracy-v1",
+  "completedAt": "2026-09-02T08:58:48.881Z",
+  "failureTaxonomy": {
+    "never_discovered": 65,
+    "candidate_truncation_or_ranking": 43,
+    "returned": 10,
+    "final_selection_crowd_out": 9,
+    "page_or_commerce_verification": 6,
+    "prefilter_rejection": 5,
+    "merchant_or_market_filter": 3,
+    "candidate_deduplication": 1
+  },
+  "methodology": {
+    "debatableDisplayedProducts": 51,
+    "methodologicalBlockers": [],
+    "phaseStatus": "VALID",
+    "scoredAttempts": 48,
+    "unadjudicatedDisplayedProducts": 0
+  },
+  "metrics": {
+    "availabilityAccuracy": {
+      "denominator": 1,
+      "numerator": 1,
+      "rate": 1
+    },
+    "broadSearch": {
+      "finalLeaderRecall": {
+        "denominator": 36,
+        "numerator": 3,
+        "rate": 0.0833
+      },
+      "leaderDiscoveryRecall": {
+        "denominator": 36,
+        "numerator": 24,
+        "rate": 0.6667
+      },
+      "strongResultPrecision": {
+        "denominator": 31,
+        "numerator": 7,
+        "rate": 0.2258
+      },
+      "mainstreamBrandModelCoverage": {
+        "denominator": 30,
+        "numerator": 3,
+        "rate": 0.1
+      }
+    },
+    "budgetSearch": {
+      "higherPriceStrongerRankingInversions": {
+        "denominator": 3,
+        "numerator": 1,
+        "rate": 0.3333
+      },
+      "inversionCases": [
+        "budget-robot-vacuum-800"
+      ]
+    },
+    "calls": {
+      "hostedWebSearchCalls": 143,
+      "logicalSerperOperations": 672,
+      "openAiResponses": 48,
+      "physicalSerperAttempts": 667,
+      "tokens": {
+        "input": 869232,
+        "output": 89107
+      }
+    },
+    "exactDuplicateLeakage": {
+      "denominator": 77,
+      "numerator": 0,
+      "rate": 0
+    },
+    "finalLeaderRecall": {
+      "denominator": 142,
+      "numerator": 10,
+      "rate": 0.0704
+    },
+    "hardRequirementViolations": {
+      "denominator": 118,
+      "numerator": 0,
+      "rate": 0
+    },
+    "hardRequirementAccuracy": {
+      "denominator": 118,
+      "numerator": 118,
+      "rate": 1
+    },
+    "hardRequirementUnknowns": {
+      "denominator": 118,
+      "numerator": 0,
+      "rate": 0
+    },
+    "imageAccuracy": {
+      "denominator": 1,
+      "numerator": 1,
+      "rate": 1
+    },
+    "latencyMs": {
+      "maximum": 42428,
+      "mean": 31805,
+      "p50NearestRank": 30654,
+      "p95NearestRank": 41481
+    },
+    "marketLeaderDiscoveryRecall": {
+      "denominator": 142,
+      "numerator": 77,
+      "rate": 0.5423
+    },
+    "modelFamilyDuplicateLeakage": {
+      "denominator": 77,
+      "numerator": 1,
+      "rate": 0.013
+    },
+    "ndcgAt3": 0.3039,
+    "priceAccuracy": {
+      "denominator": 1,
+      "numerator": 1,
+      "rate": 1
+    },
+    "productPageAccuracy": {
+      "denominator": 23,
+      "numerator": 19,
+      "rate": 0.8261
+    },
+    "requestSuccess": {
+      "denominator": 48,
+      "numerator": 48,
+      "rate": 1
+    },
+    "topResultQualityPrecision": {
+      "denominator": 77,
+      "numerator": 24,
+      "rate": 0.3117
+    },
+    "wrongProductLeakage": {
+      "denominator": 77,
+      "numerator": 3,
+      "rate": 0.039
+    }
+  },
+  "perCase": [
+    {
+      "caseId": "broad-robot-vacuum",
+      "category": "cleaning",
+      "clientDurationMs": 41835,
+      "ndcgAt3": 0.701,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-robot-vacuum",
+            "evidenceUrls": [
+              "https://www.bestbuy.com/product/roborock-qrevo-curv-5xc-robot-vacuum-and-mop-dual-anti-tangle-system-flexiarm-intelligent-dirt-detection-self-washing-drying-white/JJ8F5PC6XQ",
+              "https://www.techradar.com/home/robot-vacuums/best-robot-vacuum",
+              "https://vacuumwars.com/vacuum-wars-best-robot-vacuums/",
+              "https://www.tomsguide.com/us/best-robot-vacuums,review-2000.html",
+              "https://www.rtings.com/robot-vacuum/reviews/best/robot-vacuum"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Roborock - Qrevo Curv 5XC Robot Vacuum and Mop, Dual Anti-Tangle System, FlexiArm, Intelligent Dirt Detection, Self-Washing&Drying - White",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 3
+          },
+          "matchedReferenceId": "roborock-qrevo-curv",
+          "matchedReferenceGrade": 3,
+          "name": "Roborock - Qrevo Curv 5XC Robot Vacuum and Mop, Dual Anti-Tangle System, FlexiArm, Intelligent Dirt Detection, Self-Washing&Drying - White",
+          "position": 1,
+          "price": 699.99,
+          "productPageUrl": "https://www.bestbuy.com/product/roborock-qrevo-curv-5xc-robot-vacuum-and-mop-dual-anti-tangle-system-flexiarm-intelligent-dirt-detection-self-washing-drying-white/JJ8F5PC6XQ"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-robot-vacuum",
+            "evidenceUrls": [
+              "https://us.mova.tech/products/p10-pro-ultra-robot-vacuum",
+              "https://www.techradar.com/home/robot-vacuums/best-robot-vacuum",
+              "https://vacuumwars.com/vacuum-wars-best-robot-vacuums/",
+              "https://www.tomsguide.com/us/best-robot-vacuums,review-2000.html",
+              "https://www.rtings.com/robot-vacuum/reviews/best/robot-vacuum"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "MOVA P10 Pro Ultra Robot Vacuum & Mop",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "MOVA P10 Pro Ultra Robot Vacuum & Mop",
+          "position": 2,
+          "price": 355,
+          "productPageUrl": "https://us.mova.tech/products/p10-pro-ultra-robot-vacuum"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-robot-vacuum",
+            "evidenceUrls": [
+              "https://www.lowes.com/pd/eufy-C28-Robot-Vacuum-and-Mop-Combo-HydroJet-Self-Cleaning-Roller-Mop-DuoSpiral-Detangle-Brush-15000-Pa-Auto-Mop-Washing-and-Drying/9583977",
+              "https://www.techradar.com/home/robot-vacuums/best-robot-vacuum",
+              "https://vacuumwars.com/vacuum-wars-best-robot-vacuums/",
+              "https://www.tomsguide.com/us/best-robot-vacuums,review-2000.html",
+              "https://www.rtings.com/robot-vacuum/reviews/best/robot-vacuum"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "eufy Robot Vacuum and Mop Combo C28 with official solution Ideal for Pet Hair 15000 Pa Suction HydroJet Self Clean Roller Mop Auto Mop Washing Drying",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "eufy Robot Vacuum and Mop Combo C28 with official solution Ideal for Pet Hair 15000 Pa Suction HydroJet Self Clean Roller Mop Auto Mop Washing Drying",
+          "position": 3,
+          "price": 499.99,
+          "productPageUrl": "https://www.lowes.com/pd/eufy-C28-Robot-Vacuum-and-Mop-Combo-HydroJet-Self-Cleaning-Roller-Mop-DuoSpiral-Detangle-Brush-15000-Pa-Auto-Mop-Washing-and-Drying/9583977"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-robot-vacuum",
+            "evidenceUrls": [
+              "https://www.dreametech.com/products/d30-ultra-robot-vacuum",
+              "https://www.techradar.com/home/robot-vacuums/best-robot-vacuum",
+              "https://vacuumwars.com/vacuum-wars-best-robot-vacuums/",
+              "https://www.tomsguide.com/us/best-robot-vacuums,review-2000.html",
+              "https://www.rtings.com/robot-vacuum/reviews/best/robot-vacuum"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Dreame D30 Ultra Robot Vacuum",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Dreame D30 Ultra Robot Vacuum",
+          "position": 4,
+          "price": 449.99,
+          "productPageUrl": "https://www.dreametech.com/products/d30-ultra-robot-vacuum"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-robot-vacuum",
+            "evidenceUrls": [
+              "https://www.bestbuy.com/product/dreame-l10s-ultra-robot-vacuum-and-mop-auto-mop-cleaning-drying-self-refilling-emptying-base-for-60-days-5300pa-white/J3R8WP6JZ4",
+              "https://www.techradar.com/home/robot-vacuums/best-robot-vacuum",
+              "https://vacuumwars.com/vacuum-wars-best-robot-vacuums/",
+              "https://www.tomsguide.com/us/best-robot-vacuums,review-2000.html",
+              "https://www.rtings.com/robot-vacuum/reviews/best/robot-vacuum"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Dreame L10s Ultra Gen 2 Robot Vacuum",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Dreame L10s Ultra Gen 2 Robot Vacuum",
+          "position": 5,
+          "price": 349.99,
+          "productPageUrl": "https://www.bestbuy.com/product/dreame-l10s-ultra-robot-vacuum-and-mop-auto-mop-cleaning-drying-self-refilling-emptying-base-for-60-days-5300pa-white/J3R8WP6JZ4"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "roborock-qrevo-curv",
+          "lossStage": "returned"
+        },
+        {
+          "id": "dreame-x60-max-ultra-complete",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "roborock-saros-10r",
+          "lossStage": "candidate_truncation_or_ranking"
+        }
+      ],
+      "searchType": "broad",
+      "status": 200
+    },
+    {
+      "caseId": "broad-drip-coffee-maker",
+      "category": "kitchen",
+      "clientDurationMs": 38058,
+      "ndcgAt3": 0.3333,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-drip-coffee-maker",
+            "evidenceUrls": [
+              "https://www.delonghi.com/en-us/e/truebrew-drip-coffee-maker",
+              "https://www.bonappetit.com/story/best-drip-coffee-makers",
+              "https://www.wired.com/gallery/best-coffee-makers/",
+              "https://www.foodnetwork.com/how-to/packages/shopping/product-reviews/best-drip-coffee-makers",
+              "https://www.consumerreports.org/appliances/coffee-makers/cuisinart-perfectemp-14-cup-programmable-dcc-3200/m387328/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "De'Longhi DeLonghi TrueBrew Drip Coffee Maker",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "De'Longhi DeLonghi TrueBrew Drip Coffee Maker",
+          "position": 1,
+          "price": 599.95,
+          "productPageUrl": "https://www.delonghi.com/en-us/e/truebrew-drip-coffee-maker"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-drip-coffee-maker",
+            "evidenceUrls": [
+              "https://forums.woot.com/t/2553390",
+              "https://www.bonappetit.com/story/best-drip-coffee-makers",
+              "https://www.wired.com/gallery/best-coffee-makers/",
+              "https://www.foodnetwork.com/how-to/packages/shopping/product-reviews/best-drip-coffee-makers",
+              "https://www.consumerreports.org/appliances/coffee-makers/cuisinart-perfectemp-14-cup-programmable-dcc-3200/m387328/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": "De'Longhi DeLonghi TrueBrew Drip Coffee Maker",
+            "notes": "Same DeLonghi TrueBrew family as position 1, linked to a forum/deal discussion rather than a legitimate product page.",
+            "priceAccuracy": "unknown",
+            "productName": "De'Longhi TrueBrew Drip Coffee Maker",
+            "productPageAccuracy": "incorrect",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "De'Longhi TrueBrew Drip Coffee Maker",
+          "position": 2,
+          "price": 239.99,
+          "productPageUrl": "https://forums.woot.com/t/2553390"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-drip-coffee-maker",
+            "evidenceUrls": [
+              "https://lincolnparkemporium.com/products/breville-the-breville-precision-brewer-glass",
+              "https://www.bonappetit.com/story/best-drip-coffee-makers",
+              "https://www.wired.com/gallery/best-coffee-makers/",
+              "https://www.foodnetwork.com/how-to/packages/shopping/product-reviews/best-drip-coffee-makers",
+              "https://www.consumerreports.org/appliances/coffee-makers/cuisinart-perfectemp-14-cup-programmable-dcc-3200/m387328/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Breville Coffee Maker Precision Brewer",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Breville Coffee Maker Precision Brewer",
+          "position": 3,
+          "price": 279.95,
+          "productPageUrl": "https://lincolnparkemporium.com/products/breville-the-breville-precision-brewer-glass"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-drip-coffee-maker",
+            "evidenceUrls": [
+              "https://makerscoffee.com/product/technivorm-moccamaster-kbgv-select-coffee-maker/",
+              "https://www.bonappetit.com/story/best-drip-coffee-makers",
+              "https://www.wired.com/gallery/best-coffee-makers/",
+              "https://www.foodnetwork.com/how-to/packages/shopping/product-reviews/best-drip-coffee-makers",
+              "https://www.consumerreports.org/appliances/coffee-makers/cuisinart-perfectemp-14-cup-programmable-dcc-3200/m387328/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Technivorm Moccamaster KBGV Select Coffee Maker",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 3
+          },
+          "matchedReferenceId": "technivorm-kbgv-select",
+          "matchedReferenceGrade": 3,
+          "name": "Technivorm Moccamaster KBGV Select Coffee Maker",
+          "position": 4,
+          "price": 369,
+          "productPageUrl": "https://makerscoffee.com/product/technivorm-moccamaster-kbgv-select-coffee-maker/"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "fellow-aiden",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "technivorm-kbgv-select",
+          "lossStage": "returned"
+        },
+        {
+          "id": "cuisinart-dcc-3200",
+          "lossStage": "candidate_truncation_or_ranking"
+        }
+      ],
+      "searchType": "broad",
+      "status": 200
+    },
+    {
+      "caseId": "broad-pressure-washer",
+      "category": "outdoor_equipment",
+      "clientDurationMs": 26206,
+      "ndcgAt3": 0.19,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-pressure-washer",
+            "evidenceUrls": [
+              "https://www.lowes.com/pd/Westinghouse-ePX3500-Includes-4-Nozzles-Turbo-Nozzle-2500-PSI-1-76-Gallons-GPM-Cold-Water-Electric-Pressure-Washer/5014487411",
+              "https://www.protoolreviews.com/best-electric-pressure-washer-reviews/",
+              "https://www.dewalt.com/product/dwpw2600/2600-psi-11-gpm-cold-water-electric-pressure-washer",
+              "https://www.consumerreports.org/home-garden/pressure-washers/westinghouse-wpx3200e/m409196/",
+              "https://westinghouseoutdoorpower.com/products/wpx3200e-electric-pressure-washer"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Westinghouse ePX3500 Electric Pressure Washer 2500 Max PSI 1.76 Max GPM with Anti-Tipping Technology",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Westinghouse ePX3500 Electric Pressure Washer 2500 Max PSI 1.76 Max GPM with Anti-Tipping Technology",
+          "position": 1,
+          "price": 169,
+          "productPageUrl": "https://www.lowes.com/pd/Westinghouse-ePX3500-Includes-4-Nozzles-Turbo-Nozzle-2500-PSI-1-76-Gallons-GPM-Cold-Water-Electric-Pressure-Washer/5014487411"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "dewalt-dwpw2600",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "westinghouse-wpx3200e",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "ego-hpw3200",
+          "lossStage": "candidate_truncation_or_ranking"
+        }
+      ],
+      "searchType": "broad",
+      "status": 200
+    },
+    {
+      "caseId": "broad-gaming-monitor",
+      "category": "electronics",
+      "clientDurationMs": 30541,
+      "ndcgAt3": 0.1697,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-gaming-monitor",
+            "evidenceUrls": [
+              "https://rog.asus.com/us/monitors/27-to-31-5-inches/rog-swift-oled-pg27aqdp/",
+              "https://www.rtings.com/monitor/reviews/best/by-usage/gaming",
+              "https://www.tomshardware.com/reviews/best-gaming-monitors,4533.html",
+              "https://www.rtings.com/monitor/reviews/best/1440p-144hz",
+              "https://www.reviewed.com/gaming/content/aoc-q27g3xmn-review"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "ASUS ROG Swift OLED 27 1440P Gaming Monitor pg27aqdp WOLED",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "ASUS ROG Swift OLED 27 1440P Gaming Monitor pg27aqdp WOLED",
+          "position": 1,
+          "price": 799,
+          "productPageUrl": "https://rog.asus.com/us/monitors/27-to-31-5-inches/rog-swift-oled-pg27aqdp/"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "sony-inzone-m10s",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "aoc-q27g3xmn",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "alienware-aw3426dw",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "broad",
+      "status": 200
+    },
+    {
+      "caseId": "broad-laptop",
+      "category": "computers",
+      "clientDurationMs": 39401,
+      "ndcgAt3": 0.2398,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-laptop",
+            "evidenceUrls": [
+              "https://www.bestbuy.com/product/dell-xps-14-3k-oled-touchscreen-laptop-intel-core-ultra-x9-series-3-388h-2026-32gb-memory-1tb-storage-copilot-pc-graphite/J3K4L6QWVR",
+              "https://www.tomsguide.com/computing/toms-guide-computing-awards-2026-22-game-changing-laptops-desktops-and-peripherals",
+              "https://www.pcworld.com/article/436674/best-pc-laptops.html",
+              "https://www.techradar.com/news/mobile-computing/laptops/best-laptops-1304361",
+              "https://www.apple.com/macbook-neo/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "wrong_configuration",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "The card names a Core Ultra X7 configuration but links to the different X9 configuration.",
+            "priceAccuracy": "unknown",
+            "productName": "Dell - XPS - 14\" 3K OLED Touchscreen Laptop - Intel Core Ultra X7 Series 3 358H 2026 - 32GB Memory - 1TB Storage - Copilot+ PC - Graphite",
+            "productPageAccuracy": "incorrect",
+            "relevanceGrade": 0
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Dell - XPS - 14\" 3K OLED Touchscreen Laptop - Intel Core Ultra X7 Series 3 358H 2026 - 32GB Memory - 1TB Storage - Copilot+ PC - Graphite",
+          "position": 1,
+          "price": 2899.99,
+          "productPageUrl": "https://www.bestbuy.com/product/dell-xps-14-3k-oled-touchscreen-laptop-intel-core-ultra-x9-series-3-388h-2026-32gb-memory-1tb-storage-copilot-pc-graphite/J3K4L6QWVR"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-laptop",
+            "evidenceUrls": [
+              "https://www.newegg.com/microsoft-surface-laptop-13-0-touch-screen-qualcomm-snapdragon-x-plus-x1p-64-100-integrated-graphics-16gb-memory-256-gb-ssd-platinum/p/N82E16834820120",
+              "https://www.tomsguide.com/computing/toms-guide-computing-awards-2026-22-game-changing-laptops-desktops-and-peripherals",
+              "https://www.pcworld.com/article/436674/best-pc-laptops.html",
+              "https://www.techradar.com/news/mobile-computing/laptops/best-laptops-1304361",
+              "https://www.apple.com/macbook-neo/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Current Surface Laptop Copilot+ configuration; strong contender.",
+            "priceAccuracy": "unknown",
+            "productName": "Microsoft 13\" Surface Laptop Copilot+ PC",
+            "productPageAccuracy": "correct",
+            "relevanceGrade": 2
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Microsoft 13\" Surface Laptop Copilot+ PC",
+          "position": 2,
+          "price": null,
+          "productPageUrl": "https://www.newegg.com/microsoft-surface-laptop-13-0-touch-screen-qualcomm-snapdragon-x-plus-x1p-64-100-integrated-graphics-16gb-memory-256-gb-ssd-platinum/p/N82E16834820120"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "dell-xps-13-2026",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "dell-14s-2026",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "macbook-neo-2026",
+          "lossStage": "candidate_truncation_or_ranking"
+        }
+      ],
+      "searchType": "broad",
+      "status": 200
+    },
+    {
+      "caseId": "broad-cordless-drill",
+      "category": "tools",
+      "clientDurationMs": 30654,
+      "ndcgAt3": 0.701,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-cordless-drill",
+            "evidenceUrls": [
+              "https://www.homedepot.com/p/Milwaukee-M18-FUEL-18V-Lithium-Ion-Brushless-Cordless-1-2-in-Hammer-Drill-Driver-Kit-with-Two-5-0-Ah-Batteries-and-Hard-Case-2904-22/320326862",
+              "https://www.homedepot.com/p/Milwaukee-M18-FUEL-18V-Lithium-Ion-Brushless-Cordless-1-2-in-Hammer-Drill-Driver-Tool-Only-2904-20/320326855",
+              "https://www.popularmechanics.com/home/tools/a27923491/best-cordless-drills/",
+              "https://www.protoolreviews.com/best-cordless-drill-professional-contractors-tradesmen/",
+              "https://www.goodhousekeeping.com/home-products/g71669384/best-cordless-drill/",
+              "https://www.ridgid.com/us/en/18v-brushless-hammer-drill-kit"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "wrong_configuration",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Frozen grade-3 2904-22 kit, but View Product resolves to 2904-20 tool-only.",
+            "priceAccuracy": "unknown",
+            "productName": "Milwaukee M18 FUEL Hammer Drill/Driver Kit 2904-22",
+            "productPageAccuracy": "incorrect",
+            "relevanceGrade": 3
+          },
+          "matchedReferenceId": "milwaukee-2904-22",
+          "matchedReferenceGrade": 3,
+          "name": "Milwaukee M18 FUEL Hammer Drill/Driver Kit 2904-22",
+          "position": 1,
+          "price": 329,
+          "productPageUrl": "https://www.homedepot.com/p/Milwaukee-M18-FUEL-18V-Lithium-Ion-Brushless-Cordless-1-2-in-Hammer-Drill-Driver-Kit-with-Two-5-0-Ah-Batteries-and-Hard-Case-2904-22/320326862"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-cordless-drill",
+            "evidenceUrls": [
+              "https://www.homedepot.com/p/DEWALT-20V-MAX-Cordless-1-2-in-Drill-Driver-2-20V-1-3Ah-Batteries-Charger-and-Bag-DCD771C2/204279858",
+              "https://www.popularmechanics.com/home/tools/a27923491/best-cordless-drills/",
+              "https://www.protoolreviews.com/best-cordless-drill-professional-contractors-tradesmen/",
+              "https://www.goodhousekeeping.com/home-products/g71669384/best-cordless-drill/",
+              "https://www.ridgid.com/us/en/18v-brushless-hammer-drill-kit"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "DeWalt 20V MAX Compact Drill/Driver Kit DCD771C2",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "DeWalt 20V MAX Compact Drill/Driver Kit DCD771C2",
+          "position": 2,
+          "price": 119,
+          "productPageUrl": "https://www.homedepot.com/p/DEWALT-20V-MAX-Cordless-1-2-in-Drill-Driver-2-20V-1-3Ah-Batteries-Charger-and-Bag-DCD771C2/204279858"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-cordless-drill",
+            "evidenceUrls": [
+              "https://www.lowes.com/pd/CRAFTSMAN-V20/5017892173",
+              "https://www.popularmechanics.com/home/tools/a27923491/best-cordless-drills/",
+              "https://www.protoolreviews.com/best-cordless-drill-professional-contractors-tradesmen/",
+              "https://www.goodhousekeeping.com/home-products/g71669384/best-cordless-drill/",
+              "https://www.ridgid.com/us/en/18v-brushless-hammer-drill-kit"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Craftsman V20 RP 1/2 in. Brushless Cordless Drill/Driver Kit cmcd714d1",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Craftsman V20 RP 1/2 in. Brushless Cordless Drill/Driver Kit cmcd714d1",
+          "position": 3,
+          "price": 79,
+          "productPageUrl": "https://www.lowes.com/pd/CRAFTSMAN-V20/5017892173"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "milwaukee-2904-22",
+          "lossStage": "returned"
+        },
+        {
+          "id": "dewalt-dcd805d2",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "ridgid-r86115k",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "broad",
+      "status": 200
+    },
+    {
+      "caseId": "broad-cordless-leaf-blower",
+      "category": "outdoor_equipment",
+      "clientDurationMs": 31419,
+      "ndcgAt3": 0.3616,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-cordless-leaf-blower",
+            "evidenceUrls": [
+              "https://www.homedepot.com/p/Milwaukee-M18-FUEL-120-MPH-500-CFM-18V-Lithium-Ion-Brushless-Cordless-Handheld-Blower-Tool-Only-3017-20/326290517",
+              "https://www.homedepot.com/p/Milwaukee-M18-FUEL-120-MPH-500-CFM-18V-Brushless-Cordless-Battery-Powered-Leaf-Blower-with-Tinted-Safety-Glasses-3017-20-48-73-2015/332733250",
+              "https://www.popularmechanics.com/home/lawn-garden/a2195/best-battery-powered-leaf-blowers/",
+              "https://www.ryobitools.com/products/details/46396047187",
+              "https://egopowerplus.com/blower-765cfm-lb7654/",
+              "https://www.consumerreports.org/home-garden/leaf-blowers/greenworks-bl60l512/m418991/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "3017-20 Milwaukee M18 FUEL Blower",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "3017-20 Milwaukee M18 FUEL Blower",
+          "position": 1,
+          "price": 149,
+          "productPageUrl": "https://www.homedepot.com/p/Milwaukee-M18-FUEL-120-MPH-500-CFM-18V-Lithium-Ion-Brushless-Cordless-Handheld-Blower-Tool-Only-3017-20/326290517"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-cordless-leaf-blower",
+            "evidenceUrls": [
+              "https://www.lowes.com/pd/Husqvarna-Leaf-Blaster-350iB-40-volt-800-CFM-200-MPH-Battery-Handheld-Leaf-Blower-7-5-Ah-Battery-and-Charger-Included/5013820347",
+              "https://www.popularmechanics.com/home/lawn-garden/a2195/best-battery-powered-leaf-blowers/",
+              "https://www.ryobitools.com/products/details/46396047187",
+              "https://egopowerplus.com/blower-765cfm-lb7654/",
+              "https://www.consumerreports.org/home-garden/leaf-blowers/greenworks-bl60l512/m418991/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Husqvarna 350iB Leaf Blaster Battery Blower Kit",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Husqvarna 350iB Leaf Blaster Battery Blower Kit",
+          "position": 2,
+          "price": 379,
+          "productPageUrl": "https://www.lowes.com/pd/Husqvarna-Leaf-Blaster-350iB-40-volt-800-CFM-200-MPH-Battery-Handheld-Leaf-Blower-7-5-Ah-Battery-and-Charger-Included/5013820347"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-cordless-leaf-blower",
+            "evidenceUrls": [
+              "https://www.harborfreight.com/80v-brushless-cordless-150-mph605-cfm-blower-tool-only-56994.html",
+              "https://www.popularmechanics.com/home/lawn-garden/a2195/best-battery-powered-leaf-blowers/",
+              "https://www.ryobitools.com/products/details/46396047187",
+              "https://egopowerplus.com/blower-765cfm-lb7654/",
+              "https://www.consumerreports.org/home-garden/leaf-blowers/greenworks-bl60l512/m418991/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "correct",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Atlas 80V Brushless Cordless 150 Mph/605 CFM Blower",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Atlas 80V Brushless Cordless 150 Mph/605 CFM Blower",
+          "position": 3,
+          "price": 79.99,
+          "productPageUrl": "https://www.harborfreight.com/80v-brushless-cordless-150-mph605-cfm-blower-tool-only-56994.html"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "ryobi-ry404010",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "ego-lb7654",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "greenworks-bl60l512",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "broad",
+      "status": 200
+    },
+    {
+      "caseId": "broad-air-purifier",
+      "category": "home_products",
+      "clientDurationMs": 42428,
+      "ndcgAt3": 0.3616,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-air-purifier",
+            "evidenceUrls": [
+              "https://www.target.com/p/blueair-pure-511i-max-hepa-silent-air-purifier-for-small-room-white-gray/-/A-91920668",
+              "https://www.rtings.com/air-purifier/reviews/best/air-purifiers",
+              "https://www.techgearlab.com/topics/health-fitness/best-air-purifier",
+              "https://www.goodhousekeeping.com/appliances/air-purifier-reviews/g22866172/best-air-purifiers/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Blueair Blue Pure 511i Max Bundle",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Blueair Blue Pure 511i Max Bundle",
+          "position": 1,
+          "price": null,
+          "productPageUrl": "https://www.target.com/p/blueair-pure-511i-max-hepa-silent-air-purifier-for-small-room-white-gray/-/A-91920668"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-air-purifier",
+            "evidenceUrls": [
+              "https://www.walmart.com/ip/PuroAir-Lite-HEPA-Air-Purifiers-for-Home-Pets-Covers-500-Sq-ft/18717771558",
+              "https://www.rtings.com/air-purifier/reviews/best/air-purifiers",
+              "https://www.techgearlab.com/topics/health-fitness/best-air-purifier",
+              "https://www.goodhousekeeping.com/appliances/air-purifier-reviews/g22866172/best-air-purifiers/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Puroair Lite Hepa Air Purifiers for Home Pets",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Puroair Lite Hepa Air Purifiers for Home Pets",
+          "position": 2,
+          "price": 69,
+          "productPageUrl": "https://www.walmart.com/ip/PuroAir-Lite-HEPA-Air-Purifiers-for-Home-Pets-Covers-500-Sq-ft/18717771558"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-air-purifier",
+            "evidenceUrls": [
+              "https://www.target.com/p/levoit-core-200s-smart-air-purifier-gray-1-year-warranty-4-settings-etl-38-carb-certified-energy-star-100-300-sq-ft/-/A-82174242",
+              "https://www.rtings.com/air-purifier/reviews/best/air-purifiers",
+              "https://www.techgearlab.com/topics/health-fitness/best-air-purifier",
+              "https://www.goodhousekeeping.com/appliances/air-purifier-reviews/g22866172/best-air-purifiers/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Levoit Core 200s Smart Air Purifier Gray: 1-Year Warranty, 4 Settings, ETL & CARB Certified, 100-300 sq. ft.",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Levoit Core 200s Smart Air Purifier Gray: 1-Year Warranty, 4 Settings, ETL & CARB Certified, 100-300 sq. ft.",
+          "position": 3,
+          "price": 74.99,
+          "productPageUrl": "https://www.target.com/p/levoit-core-200s-smart-air-purifier-gray-1-year-warranty-4-settings-etl-38-carb-certified-energy-star-100-300-sq-ft/-/A-82174242"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-air-purifier",
+            "evidenceUrls": [
+              "https://www.amazon.com/Alen-Purifier-BreatheSmart-Perfect-Bedrooms/dp/B0FPD2J63T",
+              "https://www.rtings.com/air-purifier/reviews/best/air-purifiers",
+              "https://www.techgearlab.com/topics/health-fitness/best-air-purifier",
+              "https://www.goodhousekeeping.com/appliances/air-purifier-reviews/g22866172/best-air-purifiers/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Alen BreatheSmart 45i Air Purifier HEPA",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Alen BreatheSmart 45i Air Purifier HEPA",
+          "position": 4,
+          "price": null,
+          "productPageUrl": "https://www.amazon.com/Alen-Purifier-BreatheSmart-Perfect-Bedrooms/dp/B0FPD2J63T"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-air-purifier",
+            "evidenceUrls": [
+              "https://www.target.com/p/canopy-4-in-1-air-purifier-white/-/A-94899555",
+              "https://www.rtings.com/air-purifier/reviews/best/air-purifiers",
+              "https://www.techgearlab.com/topics/health-fitness/best-air-purifier",
+              "https://www.goodhousekeeping.com/appliances/air-purifier-reviews/g22866172/best-air-purifiers/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Canopy Air Purifier-Multi-Stage HEPA Filtration Reduces 99.97% of Air",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Canopy Air Purifier-Multi-Stage HEPA Filtration Reduces 99.97% of Air",
+          "position": 5,
+          "price": 119.99,
+          "productPageUrl": "https://www.target.com/p/canopy-4-in-1-air-purifier-white/-/A-94899555"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "winix-5530",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "blueair-311i-plus-max",
+          "lossStage": "page_or_commerce_verification"
+        },
+        {
+          "id": "levoit-vital-200s",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "broad",
+      "status": 200
+    },
+    {
+      "caseId": "broad-office-chair",
+      "category": "furniture",
+      "clientDurationMs": 32617,
+      "ndcgAt3": 0.8303,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-office-chair",
+            "evidenceUrls": [
+              "https://store.hermanmiller.com/office-chairs-aeron/aeron-chair/2195348.html?lang=en_US",
+              "https://www.wired.com/gallery/best-office-chairs/",
+              "https://www.forbes.com/sites/forbes-personal-shopper/article/best-office-chairs/",
+              "https://www.techradar.com/best/best-office-chairs"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Long-established premium ergonomic leader with current independent category support.",
+            "priceAccuracy": "unknown",
+            "productName": "Aeron Chair",
+            "productPageAccuracy": "correct",
+            "relevanceGrade": 3
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Aeron Chair",
+          "position": 1,
+          "price": 2150,
+          "productPageUrl": "https://store.hermanmiller.com/office-chairs-aeron/aeron-chair/2195348.html?lang=en_US"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-office-chair",
+            "evidenceUrls": [
+              "https://store.hermanmiller.com/office-chairs-ergonomic-chairs/embody-chair/4737.html?lang=en_US",
+              "https://www.wired.com/gallery/best-office-chairs/",
+              "https://www.forbes.com/sites/forbes-personal-shopper/article/best-office-chairs/",
+              "https://www.techradar.com/best/best-office-chairs"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Long-established premium Herman Miller ergonomic leader.",
+            "priceAccuracy": "unknown",
+            "productName": "Embody Chair",
+            "productPageAccuracy": "correct",
+            "relevanceGrade": 3
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Embody Chair",
+          "position": 2,
+          "price": 2090,
+          "productPageUrl": "https://store.hermanmiller.com/office-chairs-ergonomic-chairs/embody-chair/4737.html?lang=en_US"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "branch-ergonomic-chair-pro",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "herman-miller-sayl",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "steelcase-gesture",
+          "lossStage": "candidate_truncation_or_ranking"
+        }
+      ],
+      "searchType": "broad",
+      "status": 200
+    },
+    {
+      "caseId": "broad-treadmill",
+      "category": "fitness",
+      "clientDurationMs": 26237,
+      "ndcgAt3": 0.2768,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-treadmill",
+            "evidenceUrls": [
+              "https://www.360fitnesssuperstore.com/products/nordictrack-new-commercial-1750-treadmill",
+              "https://www.outdoorgearlab.com/topics/fitness/best-treadmill",
+              "https://www.nordictrack.com/product/x16-incline-trainer",
+              "https://www.horizonfitness.com/horizon-7-0-at-treadmill",
+              "https://health.yahoo.com/wellness/fitness/equipment/article/best-treadmill-023119211.html"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "NordicTrack Commercial 1750 Treadmill",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "NordicTrack Commercial 1750 Treadmill",
+          "position": 1,
+          "price": 1999,
+          "productPageUrl": "https://www.360fitnesssuperstore.com/products/nordictrack-new-commercial-1750-treadmill"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-treadmill",
+            "evidenceUrls": [
+              "https://www.lowes.com/pd/WalkingPad-LED-Foldable-Treadmill/5013944073",
+              "https://www.outdoorgearlab.com/topics/fitness/best-treadmill",
+              "https://www.nordictrack.com/product/x16-incline-trainer",
+              "https://www.horizonfitness.com/horizon-7-0-at-treadmill",
+              "https://health.yahoo.com/wellness/fitness/equipment/article/best-treadmill-023119211.html"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Legitimate compact walking treadmill, but not established as an unconstrained market leader.",
+            "priceAccuracy": "unknown",
+            "productName": "WalkingPad Foldable Treadmill one_size in Black | A1PRO",
+            "productPageAccuracy": "correct",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "WalkingPad Foldable Treadmill one_size in Black | A1PRO",
+          "position": 2,
+          "price": 599.99,
+          "productPageUrl": "https://www.lowes.com/pd/WalkingPad-LED-Foldable-Treadmill/5013944073"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "nordictrack-x16",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "horizon-7-0-at",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "bowflex-t6",
+          "lossStage": "candidate_truncation_or_ranking"
+        }
+      ],
+      "searchType": "broad",
+      "status": 200
+    },
+    {
+      "caseId": "broad-wireless-earbuds",
+      "category": "personal_electronics",
+      "clientDurationMs": 33369,
+      "ndcgAt3": 0.1697,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-wireless-earbuds",
+            "evidenceUrls": [
+              "https://www.bestbuy.com/product/samsung-galaxy-buds3-pro-wireless-earbud-headphones-silver/J3ZYG2KRJL",
+              "https://www.rtings.com/headphones/reviews/best/by-type/truly-wireless-earbuds",
+              "https://www.whathifi.com/best-buys/best-wireless-earbuds-budget-and-premium",
+              "https://www.techgearlab.com/topics/audio/best-wireless-earbuds"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Samsung Galaxy Buds3 Pro Wireless",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Samsung Galaxy Buds3 Pro Wireless",
+          "position": 1,
+          "price": 149.99,
+          "productPageUrl": "https://www.bestbuy.com/product/samsung-galaxy-buds3-pro-wireless-earbud-headphones-silver/J3ZYG2KRJL"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "sony-wf-1000xm6",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "bose-qc-ultra-earbuds-2",
+          "lossStage": "page_or_commerce_verification"
+        },
+        {
+          "id": "technics-eah-az100",
+          "lossStage": "prefilter_rejection"
+        }
+      ],
+      "searchType": "broad",
+      "status": 200
+    },
+    {
+      "caseId": "broad-gas-grill",
+      "category": "outdoor_equipment",
+      "clientDurationMs": 28419,
+      "ndcgAt3": 0.3838,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-gas-grill",
+            "evidenceUrls": [
+              "https://www.weber.com/US/en/gas/spirit/spirit-ex-325-lp-blk/1501843.html",
+              "https://www.bonappetit.com/story/best-gas-grills",
+              "https://www.foodnetwork.com/how-to/packages/shopping/product-reviews/best-gas-grills",
+              "https://www.consumerreports.org/home-garden/grills/best-gas-grills-of-the-year-a6005011720/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Weber Spirit EX-325 Smart Gas Grill",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Weber Spirit EX-325 Smart Gas Grill",
+          "position": 1,
+          "price": 549,
+          "productPageUrl": "https://www.weber.com/US/en/gas/spirit/spirit-ex-325-lp-blk/1501843.html"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "broad-gas-grill",
+            "evidenceUrls": [
+              "https://www.homedepot.com/p/Fuego-Professional-F24C-Propane-Gas-Grill-F24C/303760143",
+              "https://www.bonappetit.com/story/best-gas-grills",
+              "https://www.foodnetwork.com/how-to/packages/shopping/product-reviews/best-gas-grills",
+              "https://www.consumerreports.org/home-garden/grills/best-gas-grills-of-the-year-a6005011720/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Distinctive compact premium gas grill with a legitimate manufacturer-linked retail page; credible strong contender.",
+            "priceAccuracy": "unknown",
+            "productName": "Fuego F24C Professional Propane Gas Grill",
+            "productPageAccuracy": "correct",
+            "relevanceGrade": 2
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Fuego F24C Professional Propane Gas Grill",
+          "position": 2,
+          "price": 699,
+          "productPageUrl": "https://www.homedepot.com/p/Fuego-Professional-F24C-Propane-Gas-Grill-F24C/303760143"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "weber-spirit-ep-435",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "weber-genesis-s-435",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "nexgrill-4-burner-side-burner",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "broad",
+      "status": 200
+    },
+    {
+      "caseId": "budget-robot-vacuum-800",
+      "category": "cleaning",
+      "clientDurationMs": 38827,
+      "ndcgAt3": 0.4299,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "budget-robot-vacuum-800",
+            "evidenceUrls": [
+              "https://www.target.com/p/eufy-c28-robot-vacuum-and-mop-combo-15-000-pa-suction-hydrojet-self-cleaning-roller-mop-zero-tangle-design-for-pet-hair-self-emptying-refilling/-/A-1010943032",
+              "https://www.techradar.com/home/robot-vacuums/best-robot-vacuum",
+              "https://vacuumwars.com/vacuum-wars-best-robot-vacuums/",
+              "https://us.roborock.com/products/roborock-q7-m5",
+              "https://www.rtings.com/robot-vacuum/reviews/best/robot-vacuum"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "eufy Omni C28 Robot Vacuum with Dust Bag, 15,000 Pa Suction, HydroJet Self-Cleaning Roller Mop, Zero-Tangle Design, Self-Emptying&Refilling",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "eufy Omni C28 Robot Vacuum with Dust Bag, 15,000 Pa Suction, HydroJet Self-Cleaning Roller Mop, Zero-Tangle Design, Self-Emptying&Refilling",
+          "position": 1,
+          "price": 499.99,
+          "productPageUrl": "https://www.target.com/p/eufy-c28-robot-vacuum-and-mop-combo-15-000-pa-suction-hydrojet-self-cleaning-roller-mop-zero-tangle-design-for-pet-hair-self-emptying-refilling/-/A-1010943032"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "budget-robot-vacuum-800",
+            "evidenceUrls": [
+              "https://us.roborock.com/products/roborock-q7-m5",
+              "https://www.techradar.com/home/robot-vacuums/best-robot-vacuum",
+              "https://vacuumwars.com/vacuum-wars-best-robot-vacuums/",
+              "https://www.rtings.com/robot-vacuum/reviews/best/robot-vacuum"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Roborock Q7 M5 Robot Vacuum and Mop with 10,000 Pa Power Suction",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 2
+          },
+          "matchedReferenceId": "roborock-q7-m5",
+          "matchedReferenceGrade": 2,
+          "name": "Roborock Q7 M5 Robot Vacuum and Mop with 10,000 Pa Power Suction",
+          "position": 2,
+          "price": 229.99,
+          "productPageUrl": "https://us.roborock.com/products/roborock-q7-m5"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "budget-robot-vacuum-800",
+            "evidenceUrls": [
+              "https://us.mova.tech/products/p10-pro-ultra-robot-vacuum",
+              "https://www.techradar.com/home/robot-vacuums/best-robot-vacuum",
+              "https://vacuumwars.com/vacuum-wars-best-robot-vacuums/",
+              "https://us.roborock.com/products/roborock-q7-m5",
+              "https://www.rtings.com/robot-vacuum/reviews/best/robot-vacuum"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "wrong_configuration",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "The card names P10 Pro Ultra Gen2 but links to the base P10 Pro Ultra page.",
+            "priceAccuracy": "unknown",
+            "productName": "MOVA P10 Pro Ultra Gen2 Robot Vacuum & Mop",
+            "productPageAccuracy": "incorrect",
+            "relevanceGrade": 0
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "MOVA P10 Pro Ultra Gen2 Robot Vacuum & Mop",
+          "position": 3,
+          "price": 355,
+          "productPageUrl": "https://us.mova.tech/products/p10-pro-ultra-robot-vacuum"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "budget-robot-vacuum-800",
+            "evidenceUrls": [
+              "https://www.dreametech.com/products/d30-ultra-robot-vacuum",
+              "https://www.techradar.com/home/robot-vacuums/best-robot-vacuum",
+              "https://vacuumwars.com/vacuum-wars-best-robot-vacuums/",
+              "https://us.roborock.com/products/roborock-q7-m5",
+              "https://www.rtings.com/robot-vacuum/reviews/best/robot-vacuum"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Dreame D30 Ultra Robot Vacuum",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Dreame D30 Ultra Robot Vacuum",
+          "position": 4,
+          "price": 449.99,
+          "productPageUrl": "https://www.dreametech.com/products/d30-ultra-robot-vacuum"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "budget-robot-vacuum-800",
+            "evidenceUrls": [
+              "https://www.bestbuy.com/product/dreame-l10s-ultra-robot-vacuum-and-mop-auto-mop-cleaning-drying-self-refilling-emptying-base-for-60-days-5300pa-white/J3R8WP6JZ4",
+              "https://www.techradar.com/home/robot-vacuums/best-robot-vacuum",
+              "https://vacuumwars.com/vacuum-wars-best-robot-vacuums/",
+              "https://us.roborock.com/products/roborock-q7-m5",
+              "https://www.rtings.com/robot-vacuum/reviews/best/robot-vacuum"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Dreame L10s Ultra Gen 2 Robot Vacuum",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Dreame L10s Ultra Gen 2 Robot Vacuum",
+          "position": 5,
+          "price": 349.99,
+          "productPageUrl": "https://www.bestbuy.com/product/dreame-l10s-ultra-robot-vacuum-and-mop-auto-mop-cleaning-drying-self-refilling-emptying-base-for-60-days-5300pa-white/J3R8WP6JZ4"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "roborock-qrevo-curv",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "roborock-q7-m5",
+          "lossStage": "returned"
+        },
+        {
+          "id": "dreame-l40-ultra",
+          "lossStage": "candidate_truncation_or_ranking"
+        }
+      ],
+      "searchType": "broad_budget",
+      "status": 200
+    },
+    {
+      "caseId": "budget-coffee-maker-250",
+      "category": "kitchen",
+      "clientDurationMs": 41481,
+      "ndcgAt3": 0.4465,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "budget-coffee-maker-250",
+            "evidenceUrls": [
+              "https://www.wayfair.com/kitchen-tabletop/pdp/cuisinart-14-cup-programmable-coffeemaker-with-glass-carafe-fully-automatic-for-brew-strength-control-1-4-cup-setting-dvzj2904.html",
+              "https://www.bonappetit.com/story/best-drip-coffee-makers",
+              "https://www.wired.com/gallery/best-coffee-makers/",
+              "https://www.foodnetwork.com/how-to/packages/shopping/product-reviews/best-drip-coffee-makers",
+              "https://www.consumerreports.org/appliances/coffee-makers/cuisinart-perfectemp-14-cup-programmable-dcc-3200/m387328/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Current Cuisinart 14-cup automatic brewer; strong under-budget contender.",
+            "priceAccuracy": "unknown",
+            "productName": "Cuisinart 14 Cup Programmable",
+            "productPageAccuracy": "correct",
+            "relevanceGrade": 2
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Cuisinart 14 Cup Programmable",
+          "position": 1,
+          "price": 119.95,
+          "productPageUrl": "https://www.wayfair.com/kitchen-tabletop/pdp/cuisinart-14-cup-programmable-coffeemaker-with-glass-carafe-fully-automatic-for-brew-strength-control-1-4-cup-setting-dvzj2904.html"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "correct",
+            "caseId": "budget-coffee-maker-250",
+            "evidenceUrls": [
+              "https://www.bestbuy.com/product/bella-pro-12-cup-programmable-coffee-maker-stainless-steel/J3P5RSSWCT",
+              "https://www.bonappetit.com/story/best-drip-coffee-makers",
+              "https://www.wired.com/gallery/best-coffee-makers/",
+              "https://www.foodnetwork.com/how-to/packages/shopping/product-reviews/best-drip-coffee-makers",
+              "https://www.consumerreports.org/appliances/coffee-makers/cuisinart-perfectemp-14-cup-programmable-dcc-3200/m387328/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "correct",
+            "productName": "Bella PRO 12-Cup Programmable Coffee Maker",
+            "productPageAccuracy": "correct",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Bella PRO 12-Cup Programmable Coffee Maker",
+          "position": 2,
+          "price": 29.99,
+          "productPageUrl": "https://www.bestbuy.com/product/bella-pro-12-cup-programmable-coffee-maker-stainless-steel/J3P5RSSWCT"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "fellow-aiden",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "cuisinart-dcc-3200",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "oxo-9-cup",
+          "lossStage": "candidate_truncation_or_ranking"
+        }
+      ],
+      "searchType": "broad_budget",
+      "status": 200
+    },
+    {
+      "caseId": "budget-65-inch-tv-1000",
+      "category": "electronics",
+      "clientDurationMs": 29064,
+      "ndcgAt3": 0.1697,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "budget-65-inch-tv-1000",
+            "evidenceUrls": [
+              "https://www.bestbuy.com/product/tcl-65-class-qm7k-series-4k-uhd-hdr-qd-mini-led-smart-tv-with-google-tv-2025/J36QYTQTCT",
+              "https://www.rtings.com/tv/reviews/best/by-size/65-inch",
+              "https://www.tomsguide.com/tvs/4k-tvs/hisense-u7sg-vs-tcl-qm7l-we-tested-both-mid-range-tvs-and-one-is-better-for-most-people",
+              "https://www.vizio.com/en/tv/mini-led"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "TCL Class QM7K Series 4K UHD QD-Mini LED Smart Google TV",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "TCL Class QM7K Series 4K UHD QD-Mini LED Smart Google TV",
+          "position": 1,
+          "price": 899.99,
+          "productPageUrl": "https://www.bestbuy.com/product/tcl-65-class-qm7k-series-4k-uhd-hdr-qd-mini-led-smart-tv-with-google-tv-2025/J36QYTQTCT"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "hisense-u7sg-65",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "tcl-qm7l-65",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "vizio-mini-led-quantum-65",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "broad_budget",
+      "status": 200
+    },
+    {
+      "caseId": "budget-laptop-1000",
+      "category": "computers",
+      "clientDurationMs": 31676,
+      "ndcgAt3": 0.5701,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "budget-laptop-1000",
+            "evidenceUrls": [
+              "https://www.bestbuy.com/product/dell-xps-13-4-2-5k-120hz-touchscreen-laptop-ai-pc-intel-core-5-320-2026-wi-fi-7-8gb-ram-1tb-ssd-windows-11-sky/J3GWQRF863/sku/11147153",
+              "https://www.tomsguide.com/computing/toms-guide-computing-awards-2026-22-game-changing-laptops-desktops-and-peripherals",
+              "https://www.pcworld.com/article/436674/best-pc-laptops.html",
+              "https://www.techradar.com/news/mobile-computing/laptops/best-laptops-1304361",
+              "https://www.apple.com/macbook-neo/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Frozen XPS family match is potentially strong, but 8 GB RAM and third-party upgrade labeling make this exact configuration debatable rather than leader-grade.",
+            "priceAccuracy": "unknown",
+            "productName": "Dell - Upgraded - XPS - 13.4\" 2.5K 120Hz Touchscreen Laptop - AI PC - Intel Core 5 320 2026 - Wi-Fi 7 - 8GB RAM - 1TB SSD - Windows 11 - sky",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 3
+          },
+          "matchedReferenceId": "dell-xps-13-2026",
+          "matchedReferenceGrade": 3,
+          "name": "Dell - Upgraded - XPS - 13.4\" 2.5K 120Hz Touchscreen Laptop - AI PC - Intel Core 5 320 2026 - Wi-Fi 7 - 8GB RAM - 1TB SSD - Windows 11 - sky",
+          "position": 1,
+          "price": 949.99,
+          "productPageUrl": "https://www.bestbuy.com/product/dell-xps-13-4-2-5k-120hz-touchscreen-laptop-ai-pc-intel-core-5-320-2026-wi-fi-7-8gb-ram-1tb-ssd-windows-11-sky/J3GWQRF863/sku/11147153"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "dell-xps-13-2026",
+          "lossStage": "returned"
+        },
+        {
+          "id": "dell-14s-2026",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "macbook-neo-2026",
+          "lossStage": "final_selection_crowd_out"
+        }
+      ],
+      "searchType": "broad_budget",
+      "status": 200
+    },
+    {
+      "caseId": "budget-office-chair-500",
+      "category": "furniture",
+      "clientDurationMs": 37393,
+      "ndcgAt3": 0.19,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "budget-office-chair-500",
+            "evidenceUrls": [
+              "https://www.bestbuy.com/product/staples-dexley-ergonomic-mesh-swivel-task-chair-un61365-gray/JXTHLKZVZS",
+              "https://www.wired.com/gallery/best-office-chairs/",
+              "https://www.forbes.com/sites/forbes-personal-shopper/article/best-office-chairs/",
+              "https://www.branchfurniture.com/products/ergonomic-chair",
+              "https://www.techradar.com/best/best-office-chairs"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Staples Dexley Mesh Task Chair",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Staples Dexley Mesh Task Chair",
+          "position": 1,
+          "price": 149.99,
+          "productPageUrl": "https://www.bestbuy.com/product/staples-dexley-ergonomic-mesh-swivel-task-chair-un61365-gray/JXTHLKZVZS"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "branch-ergonomic-chair-pro",
+          "lossStage": "final_selection_crowd_out"
+        },
+        {
+          "id": "branch-ergonomic-chair",
+          "lossStage": "final_selection_crowd_out"
+        },
+        {
+          "id": "steelcase-series-2",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "broad_budget",
+      "status": 200
+    },
+    {
+      "caseId": "budget-air-purifier-300",
+      "category": "home_products",
+      "clientDurationMs": 36590,
+      "ndcgAt3": 0.1697,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "budget-air-purifier-300",
+            "evidenceUrls": [
+              "https://www.lowes.com/pd/Levoit-Core-200-3-Speed-Smart-Compatible-Gray-Activated-Carbon-Air-Purifier-ENERGY-STAR-Certified-Covers-915-sq-ft/5014542065",
+              "https://www.rtings.com/air-purifier/reviews/best/air-purifiers",
+              "https://www.techgearlab.com/topics/health-fitness/best-air-purifier",
+              "https://www.goodhousekeeping.com/appliances/air-purifier-reviews/g22866172/best-air-purifiers/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Levoit Core 200S-P With HEPA Sleep Mode Smart Compatible Gray Activated Carbon Air Purifier (Covers: 915-sq ft ) | HEAPAPLVSUS0077",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Levoit Core 200S-P With HEPA Sleep Mode Smart Compatible Gray Activated Carbon Air Purifier (Covers: 915-sq ft ) | HEAPAPLVSUS0077",
+          "position": 1,
+          "price": 89.99,
+          "productPageUrl": "https://www.lowes.com/pd/Levoit-Core-200-3-Speed-Smart-Compatible-Gray-Activated-Carbon-Air-Purifier-ENERGY-STAR-Certified-Covers-915-sq-ft/5014542065"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "winix-5530",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "blueair-311i-plus-max",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "levoit-vital-200s",
+          "lossStage": "merchant_or_market_filter"
+        }
+      ],
+      "searchType": "broad_budget",
+      "status": 200
+    },
+    {
+      "caseId": "budget-cordless-mower-700",
+      "category": "outdoor_equipment",
+      "clientDurationMs": 32648,
+      "ndcgAt3": 0,
+      "products": [],
+      "referenceDiagnostics": [
+        {
+          "id": "ego-lm2206sp",
+          "lossStage": "prefilter_rejection"
+        },
+        {
+          "id": "greenworks-25323",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "ryobi-ry401210",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "broad_budget",
+      "status": 200
+    },
+    {
+      "caseId": "budget-blender-300",
+      "category": "kitchen",
+      "clientDurationMs": 24480,
+      "ndcgAt3": 0.1697,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "budget-blender-300",
+            "evidenceUrls": [
+              "https://www.nutribullet.com/shop/blenders/nutribullet-blender/",
+              "https://www.bonappetit.com/story/best-blender",
+              "https://www.rtings.com/blender/reviews/best/blenders/",
+              "https://www.goodhousekeeping.com/appliances/blender-reviews/g4864/best-blender-reviews/",
+              "https://www.kitchenaid.com/countertop-appliances/blenders/blender-products/p.k150-3-speed-ice-crushing-blender.ksb1325.html"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "NutriBullet Blender Combo",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "NutriBullet Blender Combo",
+          "position": 1,
+          "price": 99.99,
+          "productPageUrl": "https://www.nutribullet.com/shop/blenders/nutribullet-blender/"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "nutribullet-powercore",
+          "lossStage": "page_or_commerce_verification"
+        },
+        {
+          "id": "vitamix-vx1",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "kitchenaid-k150",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "broad_budget",
+      "status": 200
+    },
+    {
+      "caseId": "spec-monitor-27-qhd-144",
+      "category": "electronics",
+      "clientDurationMs": 26419,
+      "ndcgAt3": 0.3801,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "spec-monitor-27-qhd-144",
+            "evidenceUrls": [
+              "https://www.microcenter.com/product/673281/lg-27gr83q-b-ultragear-27-2k-qhd-(2560-x-1440)-240hz-gaming-monitor",
+              "https://www.rtings.com/monitor/reviews/best/1440p-144hz",
+              "https://www.reviewed.com/gaming/content/aoc-q27g3xmn-review",
+              "https://www.dell.com/en-us/shop/dell-27-gaming-monitor-g2724d/apd/210-bhxc/monitors-monitor-accessories",
+              "https://www.lg.com/us/monitors/lg-27gr83q-b-gaming-monitor"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "LG 27GR83Q-B 27\" UltraGear QHD 1ms 240Hz Gaming Monitor",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 2
+          },
+          "matchedReferenceId": "lg-27gr83q-b",
+          "matchedReferenceGrade": 2,
+          "name": "LG 27GR83Q-B 27\" UltraGear QHD 1ms 240Hz Gaming Monitor",
+          "position": 1,
+          "price": 279.99,
+          "productPageUrl": "https://www.microcenter.com/product/673281/lg-27gr83q-b-ultragear-27-2k-qhd-(2560-x-1440)-240hz-gaming-monitor"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "aoc-q27g3xmn",
+          "lossStage": "final_selection_crowd_out"
+        },
+        {
+          "id": "dell-g2724d",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "lg-27gr83q-b",
+          "lossStage": "returned"
+        }
+      ],
+      "searchType": "hard_spec",
+      "status": 200
+    },
+    {
+      "caseId": "spec-leaf-blower-600-cfm",
+      "category": "outdoor_equipment",
+      "clientDurationMs": 31469,
+      "ndcgAt3": 0.3394,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "spec-leaf-blower-600-cfm",
+            "evidenceUrls": [
+              "https://www.harborfreight.com/80v-brushless-cordless-150-mph605-cfm-blower-tool-only-56994.html",
+              "https://www.popularmechanics.com/home/lawn-garden/a2195/best-battery-powered-leaf-blowers/",
+              "https://www.ryobitools.com/products/details/46396047187",
+              "https://egopowerplus.com/blower-765cfm-lb7654/",
+              "https://www.consumerreports.org/home-garden/leaf-blowers/greenworks-bl60l512/m418991/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Exact 605 CFM cordless blower under budget; strong qualifying contender.",
+            "priceAccuracy": "unknown",
+            "productName": "Atlas 80V Brushless Cordless 150 Mph/605 CFM Blower",
+            "productPageAccuracy": "correct",
+            "relevanceGrade": 2
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Atlas 80V Brushless Cordless 150 Mph/605 CFM Blower",
+          "position": 1,
+          "price": 79.99,
+          "productPageUrl": "https://www.harborfreight.com/80v-brushless-cordless-150-mph605-cfm-blower-tool-only-56994.html"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "ryobi-ry404010",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "ego-lb7654",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "greenworks-bl60l512",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "hard_spec",
+      "status": 200
+    },
+    {
+      "caseId": "spec-laptop-32gb-1tb",
+      "category": "computers",
+      "clientDurationMs": 32499,
+      "ndcgAt3": 0,
+      "products": [],
+      "referenceDiagnostics": [
+        {
+          "id": "lenovo-thinkpad-e16-gen2",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "asus-zenbook-14-oled-2026",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "hard_spec",
+      "status": 200
+    },
+    {
+      "caseId": "spec-drill-brushless-kit",
+      "category": "tools",
+      "clientDurationMs": 27670,
+      "ndcgAt3": 0.4465,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "spec-drill-brushless-kit",
+            "evidenceUrls": [
+              "https://www.harborfreight.com/20v-brushless-cordless-12-in-drilldriver-kit-with-side-handle-2-ah-battery-and-charger-70067.html",
+              "https://www.popularmechanics.com/home/tools/a27923491/best-cordless-drills/",
+              "https://www.protoolreviews.com/best-cordless-drill-professional-contractors-tradesmen/",
+              "https://www.goodhousekeeping.com/home-products/g71669384/best-cordless-drill/",
+              "https://www.ridgid.com/us/en/18v-brushless-hammer-drill-kit"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Exact brushless drill kit; credible strong qualifying contender.",
+            "priceAccuracy": "unknown",
+            "productName": "Hercules 20V Brushless Cordless, 1/2 in. Drill/driver Kit With Side Handle, 2 Ah Battery, And Charger",
+            "productPageAccuracy": "correct",
+            "relevanceGrade": 2
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Hercules 20V Brushless Cordless, 1/2 in. Drill/driver Kit With Side Handle, 2 Ah Battery, And Charger",
+          "position": 1,
+          "price": 97.99,
+          "productPageUrl": "https://www.harborfreight.com/20v-brushless-cordless-12-in-drilldriver-kit-with-side-handle-2-ah-battery-and-charger-70067.html"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "spec-drill-brushless-kit",
+            "evidenceUrls": [
+              "https://shop.durofix.com/products/a20-series-20v-cordless-brushless-power-drill-kit-with-battery-charger-variable-speed-283-in-lb-torque",
+              "https://www.popularmechanics.com/home/tools/a27923491/best-cordless-drills/",
+              "https://www.protoolreviews.com/best-cordless-drill-professional-contractors-tradesmen/",
+              "https://www.goodhousekeeping.com/home-products/g71669384/best-cordless-drill/",
+              "https://www.ridgid.com/us/en/18v-brushless-hammer-drill-kit"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "ACDelco ARD20137P 20V Cordless Drill Set, Power Drill Kit with Battery and Charger",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "ACDelco ARD20137P 20V Cordless Drill Set, Power Drill Kit with Battery and Charger",
+          "position": 2,
+          "price": 29.99,
+          "productPageUrl": "https://shop.durofix.com/products/a20-series-20v-cordless-brushless-power-drill-kit-with-battery-charger-variable-speed-283-in-lb-torque"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "milwaukee-2904-22",
+          "lossStage": "candidate_deduplication"
+        },
+        {
+          "id": "dewalt-dcd805d2",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "ridgid-r86115k",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "hard_spec",
+      "status": 200
+    },
+    {
+      "caseId": "spec-treadmill-300lb",
+      "category": "fitness",
+      "clientDurationMs": 32246,
+      "ndcgAt3": 0.31,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "spec-treadmill-300lb",
+            "evidenceUrls": [
+              "https://deerruntreadmill.com/products/deerrun-a1-pro-folding-smart-treadmill-with-incline-red",
+              "https://www.outdoorgearlab.com/topics/fitness/best-treadmill",
+              "https://www.horizonfitness.com/horizon-7-0-at-treadmill",
+              "https://health.yahoo.com/wellness/fitness/equipment/article/best-treadmill-023119211.html",
+              "https://www.bowflex.com/product/t6-treadmill/100973.html"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "The source evidence reports a qualifying 300-pound capacity; acceptable compact contender.",
+            "priceAccuracy": "unknown",
+            "productName": "DeerRun A1 Pro Move+ 6% Incline Foldable Upgraded Chip & NFC Support",
+            "productPageAccuracy": "correct",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "DeerRun A1 Pro Move+ 6% Incline Foldable Upgraded Chip & NFC Support",
+          "position": 1,
+          "price": 269,
+          "productPageUrl": "https://deerruntreadmill.com/products/deerrun-a1-pro-folding-smart-treadmill-with-incline-red"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "spec-treadmill-300lb",
+            "evidenceUrls": [
+              "https://www.nfm.com/lifesmart-tm2500-power-touch-folding-treadmill-66878281/66878281.html",
+              "https://www.outdoorgearlab.com/topics/fitness/best-treadmill",
+              "https://www.horizonfitness.com/horizon-7-0-at-treadmill",
+              "https://health.yahoo.com/wellness/fitness/equipment/article/best-treadmill-023119211.html",
+              "https://www.bowflex.com/product/t6-treadmill/100973.html"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "The source evidence reports a qualifying 300-pound capacity; acceptable compact contender.",
+            "priceAccuracy": "unknown",
+            "productName": "Lifesmart TM2500 Treadmill",
+            "productPageAccuracy": "correct",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Lifesmart TM2500 Treadmill",
+          "position": 2,
+          "price": 599,
+          "productPageUrl": "https://www.nfm.com/lifesmart-tm2500-power-touch-folding-treadmill-66878281/66878281.html"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "horizon-7-0-at",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "bowflex-t6",
+          "lossStage": "final_selection_crowd_out"
+        },
+        {
+          "id": "sole-f80",
+          "lossStage": "candidate_truncation_or_ranking"
+        }
+      ],
+      "searchType": "hard_spec",
+      "status": 200
+    },
+    {
+      "caseId": "spec-power-station-1500wh",
+      "category": "outdoor_equipment",
+      "clientDurationMs": 28007,
+      "ndcgAt3": 0,
+      "products": [],
+      "referenceDiagnostics": [
+        {
+          "id": "jackery-explorer-2000-v2",
+          "lossStage": "final_selection_crowd_out"
+        },
+        {
+          "id": "ecoflow-delta-3-max",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "anker-solix-f2000",
+          "lossStage": "candidate_truncation_or_ranking"
+        }
+      ],
+      "searchType": "hard_spec",
+      "status": 200
+    },
+    {
+      "caseId": "spec-dehumidifier-50-pint-pump",
+      "category": "appliances",
+      "clientDurationMs": 30077,
+      "ndcgAt3": 0.4299,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "spec-dehumidifier-50-pint-pump",
+            "evidenceUrls": [
+              "https://www.lowes.com/pd/Hisense-50-Pint-2-Speed-Dehumidifier-with-Built-In-Pump-ENERGY-STAR/1000195271",
+              "https://www.rtings.com/dehumidifier/reviews/best/dehumidifiers",
+              "https://www.geappliances.com/appliance/GE-50-Pint-Portable-Dehumidifier-with-Built-in-Pump-APYR50LC",
+              "https://dehumidifierverdict.com/best/best-50-pint-dehumidifier/",
+              "https://www.homelabs.com/products/4500-sq-ft-energy-star-dehumidifier-with-pump"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Hisense 50 pint Dehumidifier",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Hisense 50 pint Dehumidifier",
+          "position": 1,
+          "price": 289,
+          "productPageUrl": "https://www.lowes.com/pd/Hisense-50-Pint-2-Speed-Dehumidifier-with-Built-In-Pump-ENERGY-STAR/1000195271"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "spec-dehumidifier-50-pint-pump",
+            "evidenceUrls": [
+              "https://www.lowes.com/pd/Aeric-50-Pint-Large-Room-Dehumidifier-For-Basements-Crawlspaces-with-Built-In-Pump-ENERGY-STAR-Certified-White/5018956179",
+              "https://www.rtings.com/dehumidifier/reviews/best/dehumidifiers",
+              "https://www.geappliances.com/appliance/GE-50-Pint-Portable-Dehumidifier-with-Built-in-Pump-APYR50LC",
+              "https://dehumidifierverdict.com/best/best-50-pint-dehumidifier/",
+              "https://www.homelabs.com/products/4500-sq-ft-energy-star-dehumidifier-with-pump"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Exact 50-pint built-in-pump model under budget; strong qualifying contender.",
+            "priceAccuracy": "unknown",
+            "productName": "Aeric 50-Pint Portable Dehumidifier with Pump & Drain",
+            "productPageAccuracy": "correct",
+            "relevanceGrade": 2
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Aeric 50-Pint Portable Dehumidifier with Pump & Drain",
+          "position": 2,
+          "price": 251,
+          "productPageUrl": "https://www.lowes.com/pd/Aeric-50-Pint-Large-Room-Dehumidifier-For-Basements-Crawlspaces-with-Built-In-Pump-ENERGY-STAR-Certified-White/5018956179"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "ge-apyr50lc",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "homelabs-hme031004n",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "midea-mad50ps1qwt",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "hard_spec",
+      "status": 200
+    },
+    {
+      "caseId": "spec-shop-vac-12-gallon",
+      "category": "tools",
+      "clientDurationMs": 30338,
+      "ndcgAt3": 0.3801,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "spec-shop-vac-12-gallon",
+            "evidenceUrls": [
+              "https://www.harborfreight.com/14-gallon-wetdry-vacuum-56579.html",
+              "https://www.techgearlab.com/topics/floor-cleaning/best-shop-vac",
+              "https://vacuumwars.com/best-shop-vac-6-5-hp/",
+              "https://www.nytimes.com/wirecutter/reviews/a-great-shop-vacuum-or-wet-dry-vac/",
+              "https://www.ridgid.com/us/en/16-gallon-nxt-wet-dry-vac-hd1600"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "14-gallon wet/dry vacuum satisfies the at-least-12-gallon requirement.",
+            "priceAccuracy": "unknown",
+            "productName": "Bauer 14 Gallon Wet/dry Vacuum",
+            "productPageAccuracy": "correct",
+            "relevanceGrade": 2
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Bauer 14 Gallon Wet/dry Vacuum",
+          "position": 1,
+          "price": 119.99,
+          "productPageUrl": "https://www.harborfreight.com/14-gallon-wetdry-vacuum-56579.html"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "craftsman-cmxevbe17595",
+          "lossStage": "merchant_or_market_filter"
+        },
+        {
+          "id": "ridgid-hd1600",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "dewalt-dxv16pa",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "hard_spec",
+      "status": 200
+    },
+    {
+      "caseId": "brand-dewalt-drill-kit",
+      "category": "tools",
+      "clientDurationMs": 24456,
+      "ndcgAt3": 0.2346,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "brand-dewalt-drill-kit",
+            "evidenceUrls": [
+              "https://www.acehardware.com/departments/tools/power-tools/cordless-drills/2004142",
+              "https://www.goodhousekeeping.com/home-products/g71669384/best-cordless-drill/",
+              "https://www.popularmechanics.com/home/tools/a27923491/best-cordless-drills/",
+              "https://www.dewalt.com/product/dcd800p1/20v-max-xr-brushless-cordless-12-drilldriver-kit"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "DeWalt 12V MAX XTREME 3/8 in. Brushless Cordless Drill/Driver Kit (Battery & Charger)",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "DeWalt 12V MAX XTREME 3/8 in. Brushless Cordless Drill/Driver Kit (Battery & Charger)",
+          "position": 1,
+          "price": 169,
+          "productPageUrl": "https://www.acehardware.com/departments/tools/power-tools/cordless-drills/2004142"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "dewalt-dcd805d2",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "dewalt-dcd800p1",
+          "lossStage": "candidate_truncation_or_ranking"
+        }
+      ],
+      "searchType": "brand",
+      "status": 200
+    },
+    {
+      "caseId": "brand-non-apple-anc-earbuds",
+      "category": "personal_electronics",
+      "clientDurationMs": 32463,
+      "ndcgAt3": 0.6162,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "brand-non-apple-anc-earbuds",
+            "evidenceUrls": [
+              "https://www.adorama.com/bose-quietcomfort-ultra-earbuds-gen-2-wireless-noise-cancelling/p/bo89663700",
+              "https://www.rtings.com/headphones/reviews/best/by-type/truly-wireless-earbuds",
+              "https://www.whathifi.com/best-buys/best-wireless-earbuds-budget-and-premium",
+              "https://www.techgearlab.com/topics/audio/best-wireless-earbuds"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Independent comparative tests place Bose QuietComfort Ultra 2nd Gen among clear leaders.",
+            "priceAccuracy": "unknown",
+            "productName": "Bose QuietComfort 2nd Gen Ultra Wireless Noise Cancelling Earbuds + 20W 2-Port Wall Charger",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 3
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Bose QuietComfort 2nd Gen Ultra Wireless Noise Cancelling Earbuds + 20W 2-Port Wall Charger",
+          "position": 1,
+          "price": 299,
+          "productPageUrl": "https://www.adorama.com/bose-quietcomfort-ultra-earbuds-gen-2-wireless-noise-cancelling/p/bo89663700"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "brand-non-apple-anc-earbuds",
+            "evidenceUrls": [
+              "https://www.aliexpress.com/item/1005010080784173.html",
+              "https://www.rtings.com/headphones/reviews/best/by-type/truly-wireless-earbuds",
+              "https://www.whathifi.com/best-buys/best-wireless-earbuds-budget-and-premium",
+              "https://www.techgearlab.com/topics/audio/best-wireless-earbuds"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "OnePlus Buds 4 Wireless Earphones 6921815628736",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "OnePlus Buds 4 Wireless Earphones 6921815628736",
+          "position": 2,
+          "price": 68.01,
+          "productPageUrl": "https://www.aliexpress.com/item/1005010080784173.html"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "sony-wf-1000xm6",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "bose-qc-ultra-earbuds-2",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "technics-eah-az100",
+          "lossStage": "page_or_commerce_verification"
+        }
+      ],
+      "searchType": "brand_alternative",
+      "status": 200
+    },
+    {
+      "caseId": "brand-weber-napoleon-grill",
+      "category": "outdoor_equipment",
+      "clientDurationMs": 25567,
+      "ndcgAt3": 0.1697,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "brand-weber-napoleon-grill",
+            "evidenceUrls": [
+              "https://www.weber.com/US/en/gas/weber-q-series/q-2800n%2B-gas-grill-%28liquid-propane%29/1500375.html",
+              "https://www.bonappetit.com/story/best-gas-grills",
+              "https://www.foodnetwork.com/how-to/packages/shopping/product-reviews/best-gas-grills",
+              "https://www.consumerreports.org/home-garden/grills/best-gas-grills-of-the-year-a6005011720/",
+              "https://www.t3.com/features/best-barbecue"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Weber Q 2800N+ Liquid Propane Gas Tabletop Grill",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Weber Q 2800N+ Liquid Propane Gas Tabletop Grill",
+          "position": 1,
+          "price": 449,
+          "productPageUrl": "https://www.weber.com/US/en/gas/weber-q-series/q-2800n%2B-gas-grill-%28liquid-propane%29/1500375.html"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "weber-spirit-ep-435",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "weber-genesis-s-435",
+          "lossStage": "prefilter_rejection"
+        },
+        {
+          "id": "napoleon-freestyle-425-sib",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "brand",
+      "status": 200
+    },
+    {
+      "caseId": "brand-roborock-alternative",
+      "category": "cleaning",
+      "clientDurationMs": 34824,
+      "ndcgAt3": 0.7346,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "brand-roborock-alternative",
+            "evidenceUrls": [
+              "https://www.target.com/p/eufy-x10-pro-omni-black/-/A-1006291290",
+              "https://www.rtings.com/robot-vacuum/reviews/best/robot-vacuum",
+              "https://www.dreametech.com/products/l40-ultra",
+              "https://www.techradar.com/home/robot-vacuums/best-robot-vacuum",
+              "https://www.eufy.com/products/t2351111"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "eufy X10 Pro Omni Robot Vacuum and Mop Combo, Self-Emptying, 8000 Pa Suction, Auto Mop Washing&Drying + Floor Cleaning Solutions (2 Bottles) - Black",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 2
+          },
+          "matchedReferenceId": "eufy-x10-pro-omni",
+          "matchedReferenceGrade": 2,
+          "name": "eufy X10 Pro Omni Robot Vacuum and Mop Combo, Self-Emptying, 8000 Pa Suction, Auto Mop Washing&Drying + Floor Cleaning Solutions (2 Bottles) - Black",
+          "position": 1,
+          "price": 449.99,
+          "productPageUrl": "https://www.target.com/p/eufy-x10-pro-omni-black/-/A-1006291290"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "brand-roborock-alternative",
+            "evidenceUrls": [
+              "https://www.bestbuy.com/product/dreame-l10s-ultra-robot-vacuum-and-mop-auto-mop-cleaning-drying-self-refilling-emptying-base-for-60-days-5300pa-white/J3R8WP6JZ4",
+              "https://www.rtings.com/robot-vacuum/reviews/best/robot-vacuum",
+              "https://www.dreametech.com/products/l40-ultra",
+              "https://www.techradar.com/home/robot-vacuums/best-robot-vacuum",
+              "https://www.eufy.com/products/t2351111"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Dreame L10s Ultra Gen 2 Robot Vacuum",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Dreame L10s Ultra Gen 2 Robot Vacuum",
+          "position": 2,
+          "price": 349.99,
+          "productPageUrl": "https://www.bestbuy.com/product/dreame-l10s-ultra-robot-vacuum-and-mop-auto-mop-cleaning-drying-self-refilling-emptying-base-for-60-days-5300pa-white/J3R8WP6JZ4"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "brand-roborock-alternative",
+            "evidenceUrls": [
+              "https://www.dreametech.com/products/d30-ultra-robot-vacuum",
+              "https://www.rtings.com/robot-vacuum/reviews/best/robot-vacuum",
+              "https://www.dreametech.com/products/l40-ultra",
+              "https://www.techradar.com/home/robot-vacuums/best-robot-vacuum",
+              "https://www.eufy.com/products/t2351111"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Dreame D30 Ultra Robot Vacuum",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Dreame D30 Ultra Robot Vacuum",
+          "position": 3,
+          "price": 449.99,
+          "productPageUrl": "https://www.dreametech.com/products/d30-ultra-robot-vacuum"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "brand-roborock-alternative",
+            "evidenceUrls": [
+              "https://us.mova.tech/products/p10-pro-ultra-robot-vacuum",
+              "https://www.rtings.com/robot-vacuum/reviews/best/robot-vacuum",
+              "https://www.dreametech.com/products/l40-ultra",
+              "https://www.techradar.com/home/robot-vacuums/best-robot-vacuum",
+              "https://www.eufy.com/products/t2351111"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "MOVA P10 Pro Ultra Robot Vacuum & Mop",
+            "productPageAccuracy": "correct",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "MOVA P10 Pro Ultra Robot Vacuum & Mop",
+          "position": 4,
+          "price": 355,
+          "productPageUrl": "https://us.mova.tech/products/p10-pro-ultra-robot-vacuum"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "brand-roborock-alternative",
+            "evidenceUrls": [
+              "https://us.eureka.com/products/eureka-j15-ultra-flagship-robot-vacuum",
+              "https://www.rtings.com/robot-vacuum/reviews/best/robot-vacuum",
+              "https://www.dreametech.com/products/l40-ultra",
+              "https://www.techradar.com/home/robot-vacuums/best-robot-vacuum",
+              "https://www.eufy.com/products/t2351111"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Eureka J15 Ultra Self Emptying Robot Vacuum 19,000 Pa Suction Flex-Arm Mop Design",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Eureka J15 Ultra Self Emptying Robot Vacuum 19,000 Pa Suction Flex-Arm Mop Design",
+          "position": 5,
+          "price": 399.99,
+          "productPageUrl": "https://us.eureka.com/products/eureka-j15-ultra-flagship-robot-vacuum"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "dreame-l40-ultra",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "eufy-x10-pro-omni",
+          "lossStage": "returned"
+        },
+        {
+          "id": "shark-powerdetect-nevertrouch-pro",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "brand_alternative",
+      "status": 200
+    },
+    {
+      "caseId": "size-counter-depth-fridge-36",
+      "category": "appliances",
+      "clientDurationMs": 28753,
+      "ndcgAt3": 0,
+      "products": [],
+      "referenceDiagnostics": [
+        {
+          "id": "lg-lrflc2716s",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "samsung-rf24bb6600ql",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "bosch-b36ct80sns",
+          "lossStage": "prefilter_rejection"
+        }
+      ],
+      "searchType": "size_dimension",
+      "status": 200
+    },
+    {
+      "caseId": "size-compact-treadmill-70",
+      "category": "fitness",
+      "clientDurationMs": 32253,
+      "ndcgAt3": 0,
+      "products": [],
+      "referenceDiagnostics": [
+        {
+          "id": "bowflex-t6",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "echelon-stride-6",
+          "lossStage": "prefilter_rejection"
+        },
+        {
+          "id": "horizon-t101",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "size_dimension",
+      "status": 200
+    },
+    {
+      "caseId": "size-dishwasher-24",
+      "category": "appliances",
+      "clientDurationMs": 36478,
+      "ndcgAt3": 0.1697,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "size-dishwasher-24",
+            "evidenceUrls": [
+              "https://www.bestbuy.com/site/maytag-24-built-in-dishwasher/5212000.p?skuId=5212000",
+              "https://www.forbes.com/sites/forbes-personal-shopper/article/best-dishwasher/",
+              "https://reprints.theygsgroup.com/cr/reprints/BestDishwasherBrands_2026.pdf",
+              "https://www.lg.com/us/dishwashers",
+              "https://www.tomsguide.com/us/best-dishwashers,review-6292.html"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Maytag 24\" Built In Dishwasher",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Maytag 24\" Built In Dishwasher",
+          "position": 1,
+          "price": 549.99,
+          "productPageUrl": "https://www.bestbuy.com/site/maytag-24-built-in-dishwasher/5212000.p?skuId=5212000"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "bosch-shp78cm5n",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "lg-flushfit-quadwash",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "midea-mdf24p1b",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "size_dimension",
+      "status": 200
+    },
+    {
+      "caseId": "size-tv-55-width-49",
+      "category": "electronics",
+      "clientDurationMs": 30304,
+      "ndcgAt3": 0.3394,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "size-tv-55-width-49",
+            "evidenceUrls": [
+              "https://www.nfm.com/tcl-55-class-qm6k-series-4k-uhd-hdr-qd-mini-led---smart-google-tv-with-s-class-2-1-channel-soundbar-system-in-black-69441921/69441921.html",
+              "https://www.rtings.com/tv/reviews/best/by-size/55-inch",
+              "https://www.lg.com/us/tvs/lg-oled55c6pua-oled-4k-tv",
+              "https://www.samsung.com/us/televisions-home-theater/tvs/oled-tvs/55-class-s90h-oled-4k-smart-tv-2026-qn55s90hafxza/",
+              "https://www.hisense-usa.com/televisions/hisense-55-u7-series-mini-led-uled-4k-google-tv-55u7sg"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Credible 55-inch mini-LED TV; listing includes an unnecessary soundbar bundle but no demonstrated width violation.",
+            "priceAccuracy": "unknown",
+            "productName": "TCL 55\" Class QM6K Series 4K UHD HDR QD-Mini LED - Smart Google TV with S Class 2.1 Channel Soundbar System in Black",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 2
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "TCL 55\" Class QM6K Series 4K UHD HDR QD-Mini LED - Smart Google TV with S Class 2.1 Channel Soundbar System in Black",
+          "position": 1,
+          "price": 619.98,
+          "productPageUrl": "https://www.nfm.com/tcl-55-class-qm6k-series-4k-uhd-hdr-qd-mini-led---smart-google-tv-with-s-class-2-1-channel-soundbar-system-in-black-69441921/69441921.html"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "lg-c6-55",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "samsung-s90h-55",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "hisense-u7sg-55",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "size_dimension",
+      "status": 200
+    },
+    {
+      "caseId": "exclude-drip-no-pods",
+      "category": "kitchen",
+      "clientDurationMs": 40244,
+      "ndcgAt3": 0.2551,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "exclude-drip-no-pods",
+            "evidenceUrls": [
+              "https://www.dillards.com/p/cuisinart-perfecttemp-14-cup-programmable-coffee-maker/506247316",
+              "https://www.bonappetit.com/story/best-drip-coffee-makers",
+              "https://www.wired.com/gallery/best-coffee-makers/",
+              "https://www.foodnetwork.com/how-to/packages/shopping/product-reviews/best-drip-coffee-makers",
+              "https://www.consumerreports.org/appliances/coffee-makers/cuisinart-perfectemp-14-cup-programmable-dcc-3200/m387328/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Cuisinart 14 Cup Programmable",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Cuisinart 14 Cup Programmable",
+          "position": 1,
+          "price": 119.95,
+          "productPageUrl": "https://www.dillards.com/p/cuisinart-perfecttemp-14-cup-programmable-coffee-maker/506247316"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "exclude-drip-no-pods",
+            "evidenceUrls": [
+              "https://www.bestbuy.com/product/bella-pro-12-cup-programmable-coffee-maker-stainless-steel/J3P5RSSWCT",
+              "https://www.bonappetit.com/story/best-drip-coffee-makers",
+              "https://www.wired.com/gallery/best-coffee-makers/",
+              "https://www.foodnetwork.com/how-to/packages/shopping/product-reviews/best-drip-coffee-makers",
+              "https://www.consumerreports.org/appliances/coffee-makers/cuisinart-perfectemp-14-cup-programmable-dcc-3200/m387328/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Bella PRO 12-Cup Programmable Coffee Maker",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Bella PRO 12-Cup Programmable Coffee Maker",
+          "position": 2,
+          "price": 29.99,
+          "productPageUrl": "https://www.bestbuy.com/product/bella-pro-12-cup-programmable-coffee-maker-stainless-steel/J3P5RSSWCT"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "fellow-aiden",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "technivorm-kbgv-select",
+          "lossStage": "page_or_commerce_verification"
+        },
+        {
+          "id": "cuisinart-dcc-3200",
+          "lossStage": "candidate_truncation_or_ranking"
+        }
+      ],
+      "searchType": "exclusion",
+      "status": 200
+    },
+    {
+      "caseId": "exclude-leaf-no-jobsite",
+      "category": "outdoor_equipment",
+      "clientDurationMs": 27114,
+      "ndcgAt3": 0.1697,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "exclude-leaf-no-jobsite",
+            "evidenceUrls": [
+              "https://www.harborfreight.com/80v-brushless-cordless-150-mph605-cfm-blower-tool-only-56994.html",
+              "https://www.popularmechanics.com/home/lawn-garden/a2195/best-battery-powered-leaf-blowers/",
+              "https://www.ryobitools.com/products/details/46396047187",
+              "https://egopowerplus.com/blower-765cfm-lb7654/",
+              "https://www.consumerreports.org/home-garden/leaf-blowers/greenworks-bl60l512/m418991/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Atlas 80V Brushless Cordless 150 Mph/605 CFM Blower",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Atlas 80V Brushless Cordless 150 Mph/605 CFM Blower",
+          "position": 1,
+          "price": 79.99,
+          "productPageUrl": "https://www.harborfreight.com/80v-brushless-cordless-150-mph605-cfm-blower-tool-only-56994.html"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "ryobi-ry404010",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "ego-lb7654",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "greenworks-bl60l512",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "exclusion",
+      "status": 200
+    },
+    {
+      "caseId": "exclude-shop-vac-no-accessories",
+      "category": "tools",
+      "clientDurationMs": 34235,
+      "ndcgAt3": 0.31,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "exclude-shop-vac-no-accessories",
+            "evidenceUrls": [
+              "https://www.homedepot.com/p/Stanley-5-Gal-4-0-Peak-HP-Wet-Dry-Vac-SL18115/306534329",
+              "https://www.techgearlab.com/topics/floor-cleaning/best-shop-vac",
+              "https://vacuumwars.com/best-shop-vac-6-5-hp/",
+              "https://www.nytimes.com/wirecutter/reviews/a-great-shop-vacuum-or-wet-dry-vac/",
+              "https://www.ridgid.com/us/en/16-gallon-nxt-wet-dry-vac-hd1600"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Stanley 5 Gallon Wet/Dry Vacuum",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Stanley 5 Gallon Wet/Dry Vacuum",
+          "position": 1,
+          "price": 47.99,
+          "productPageUrl": "https://www.homedepot.com/p/Stanley-5-Gal-4-0-Peak-HP-Wet-Dry-Vac-SL18115/306534329"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "exclude-shop-vac-no-accessories",
+            "evidenceUrls": [
+              "https://www.lowes.com/pd/Shark-MessMaster-Portable-Wet-Dry-Vacuum-Corded-Wet-Dry-Bagless-Pet-Upright-Vacuum/5014283273?user=shopping&feed=yes",
+              "https://www.techgearlab.com/topics/floor-cleaning/best-shop-vac",
+              "https://vacuumwars.com/best-shop-vac-6-5-hp/",
+              "https://www.nytimes.com/wirecutter/reviews/a-great-shop-vacuum-or-wet-dry-vac/",
+              "https://www.ridgid.com/us/en/16-gallon-nxt-wet-dry-vac-hd1600"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Shark MessMaster Portable Wet Dry Vacuum",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Shark MessMaster Portable Wet Dry Vacuum",
+          "position": 2,
+          "price": 169.99,
+          "productPageUrl": "https://www.lowes.com/pd/Shark-MessMaster-Portable-Wet-Dry-Vacuum-Corded-Wet-Dry-Bagless-Pet-Upright-Vacuum/5014283273?user=shopping&feed=yes"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "craftsman-cmxevbe17595",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "ridgid-hd1600",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "dewalt-dxv16pa",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "exclusion",
+      "status": 200
+    },
+    {
+      "caseId": "exclude-upright-no-stick",
+      "category": "cleaning",
+      "clientDurationMs": 24885,
+      "ndcgAt3": 0.7455,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "exclude-upright-no-stick",
+            "evidenceUrls": [
+              "https://www.dyson.com/vacuum-cleaners/uprights/ball-animal-3/extra-copper",
+              "https://www.rtings.com/vacuum/reviews/best/upright",
+              "https://vacuumwars.com/vacuum-wars-best-upright-vacuums/",
+              "https://www.techradar.com/best/best-upright-vacuum-2021-top-models-tested-for-carpets-and-hard-floors",
+              "https://www.dyson.com/vacuum-cleaners/uprights/ball-animal-3"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Independent testing identifies this exact family as a category leader.",
+            "priceAccuracy": "unknown",
+            "productName": "Dyson Ball Animal 3 Extra Upright Vacuum",
+            "productPageAccuracy": "correct",
+            "relevanceGrade": 2
+          },
+          "matchedReferenceId": "dyson-ball-animal-3",
+          "matchedReferenceGrade": 2,
+          "name": "Dyson Ball Animal 3 Extra Upright Vacuum",
+          "position": 1,
+          "price": 399.99,
+          "productPageUrl": "https://www.dyson.com/vacuum-cleaners/uprights/ball-animal-3/extra-copper"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "exclude-upright-no-stick",
+            "evidenceUrls": [
+              "https://www.sharkninja.com/shark-stratos-duoclean-powerfins-hairpro-upright-vacuum/AZ3002.html",
+              "https://www.rtings.com/vacuum/reviews/best/upright",
+              "https://vacuumwars.com/vacuum-wars-best-upright-vacuums/",
+              "https://www.techradar.com/best/best-upright-vacuum-2021-top-models-tested-for-carpets-and-hard-floors",
+              "https://www.dyson.com/vacuum-cleaners/uprights/ball-animal-3"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Shark Stratos DuoClean Upright Vacuum AZ3002 10\" Cleaning Path ...",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 3
+          },
+          "matchedReferenceId": "shark-stratos-az3002",
+          "matchedReferenceGrade": 3,
+          "name": "Shark Stratos DuoClean Upright Vacuum AZ3002 10\" Cleaning Path ...",
+          "position": 2,
+          "price": 369.99,
+          "productPageUrl": "https://www.sharkninja.com/shark-stratos-duoclean-powerfins-hairpro-upright-vacuum/AZ3002.html"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "exclude-upright-no-stick",
+            "evidenceUrls": [
+              "https://www.walmart.com/ip/BISSELL-PowerForce-Helix-Bagless-Upright-Vacuum-3313/1107918809",
+              "https://www.rtings.com/vacuum/reviews/best/upright",
+              "https://vacuumwars.com/vacuum-wars-best-upright-vacuums/",
+              "https://www.techradar.com/best/best-upright-vacuum-2021-top-models-tested-for-carpets-and-hard-floors",
+              "https://www.dyson.com/vacuum-cleaners/uprights/ball-animal-3"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Bissell PowerForce Helix Bagless Upright Vacuum Pet Friendly Scatter-Free Technology 3313u",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Bissell PowerForce Helix Bagless Upright Vacuum Pet Friendly Scatter-Free Technology 3313u",
+          "position": 3,
+          "price": 59.76,
+          "productPageUrl": "https://www.walmart.com/ip/BISSELL-PowerForce-Helix-Bagless-Upright-Vacuum-3313/1107918809"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "sebo-felix-premium",
+          "lossStage": "page_or_commerce_verification"
+        },
+        {
+          "id": "shark-stratos-az3002",
+          "lossStage": "returned"
+        },
+        {
+          "id": "dyson-ball-animal-3",
+          "lossStage": "returned"
+        }
+      ],
+      "searchType": "exclusion",
+      "status": 200
+    },
+    {
+      "caseId": "multi-robot-self-empty-600",
+      "category": "cleaning",
+      "clientDurationMs": 36405,
+      "ndcgAt3": 1,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "multi-robot-self-empty-600",
+            "evidenceUrls": [
+              "https://www.target.com/p/eufy-x10-pro-omni-black/-/A-1006291290",
+              "https://www.rtings.com/robot-vacuum/reviews/eufy/x10-pro-omni",
+              "https://www.techradar.com/home/robot-vacuums/best-robot-vacuum",
+              "https://www.eufy.com/products/t2351111",
+              "https://www.rtings.com/robot-vacuum/reviews/best/robot-vacuum",
+              "https://www.dreametech.com/products/l10s-ultra-gen-2"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Independent testing supports strong qualifying contender status.",
+            "priceAccuracy": "unknown",
+            "productName": "eufy X10 Pro Omni Robot Vacuum and Mop Combo, Self-Emptying, 8000 Pa Suction, Auto Mop Washing&Drying + Floor Cleaning Solutions (2 Bottles) - Black",
+            "productPageAccuracy": "correct",
+            "relevanceGrade": 2
+          },
+          "matchedReferenceId": "eufy-x10-pro-omni",
+          "matchedReferenceGrade": 2,
+          "name": "eufy X10 Pro Omni Robot Vacuum and Mop Combo, Self-Emptying, 8000 Pa Suction, Auto Mop Washing&Drying + Floor Cleaning Solutions (2 Bottles) - Black",
+          "position": 1,
+          "price": 449.99,
+          "productPageUrl": "https://www.target.com/p/eufy-x10-pro-omni-black/-/A-1006291290"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "multi-robot-self-empty-600",
+            "evidenceUrls": [
+              "https://us.roborock.com/products/roborock-q10-s5-plus",
+              "https://www.techradar.com/home/robot-vacuums/best-robot-vacuum",
+              "https://www.eufy.com/products/t2351111",
+              "https://www.rtings.com/robot-vacuum/reviews/best/robot-vacuum",
+              "https://www.dreametech.com/products/l10s-ultra-gen-2"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "correct",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Exact qualifying Roborock docked model under budget; strong contender.",
+            "priceAccuracy": "unknown",
+            "productName": "Roborock Q10 S5+ Robot Vacuum and Mop with Auto-Empty Dock",
+            "productPageAccuracy": "correct",
+            "relevanceGrade": 2
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Roborock Q10 S5+ Robot Vacuum and Mop with Auto-Empty Dock",
+          "position": 2,
+          "price": 259.99,
+          "productPageUrl": "https://us.roborock.com/products/roborock-q10-s5-plus"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "multi-robot-self-empty-600",
+            "evidenceUrls": [
+              "https://us.eureka.com/products/eureka-j15-ultra-flagship-robot-vacuum",
+              "https://www.techradar.com/home/robot-vacuums/best-robot-vacuum",
+              "https://www.eufy.com/products/t2351111",
+              "https://www.rtings.com/robot-vacuum/reviews/best/robot-vacuum",
+              "https://www.dreametech.com/products/l10s-ultra-gen-2"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Exact self-emptying and mopping model under budget; strong qualifying contender.",
+            "priceAccuracy": "unknown",
+            "productName": "Eureka J15 Ultra Self Emptying Robot Vacuum 19,000 Pa Suction Flex-Arm Mop Design",
+            "productPageAccuracy": "correct",
+            "relevanceGrade": 2
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Eureka J15 Ultra Self Emptying Robot Vacuum 19,000 Pa Suction Flex-Arm Mop Design",
+          "position": 3,
+          "price": 399.99,
+          "productPageUrl": "https://us.eureka.com/products/eureka-j15-ultra-flagship-robot-vacuum"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "eufy-x10-pro-omni",
+          "lossStage": "returned"
+        },
+        {
+          "id": "dreame-l10s-ultra-gen2",
+          "lossStage": "final_selection_crowd_out"
+        },
+        {
+          "id": "roborock-qrevo-s",
+          "lossStage": "candidate_truncation_or_ranking"
+        }
+      ],
+      "searchType": "multiple_constraints",
+      "status": 200
+    },
+    {
+      "caseId": "multi-electric-pressure-2300",
+      "category": "outdoor_equipment",
+      "clientDurationMs": 28335,
+      "ndcgAt3": 0.3801,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "multi-electric-pressure-2300",
+            "evidenceUrls": [
+              "https://www.generac.com/residential-products/home-maintenance/pressure-washers/pressure-washer-2300-psi-electric/",
+              "https://www.protoolreviews.com/best-electric-pressure-washer-reviews/",
+              "https://www.dewalt.com/product/dwpw2600/2600-psi-11-gpm-cold-water-electric-pressure-washer",
+              "https://www.greenworkstools.com/products/3000-psi-trubrushless-electric-pressure-washer",
+              "https://www.nytimes.com/wirecutter/reviews/best-pressure-washer/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Exact 2,300 PSI electric model under budget; strong qualifying contender.",
+            "priceAccuracy": "unknown",
+            "productName": "Generac GC2300W 2300 PSI 1.2 GPM Electric Pressure Washer",
+            "productPageAccuracy": "correct",
+            "relevanceGrade": 2
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Generac GC2300W 2300 PSI 1.2 GPM Electric Pressure Washer",
+          "position": 1,
+          "price": 319,
+          "productPageUrl": "https://www.generac.com/residential-products/home-maintenance/pressure-washers/pressure-washer-2300-psi-electric/"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "dewalt-dwpw2600",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "greenworks-gpw3000",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "ryobi-ry142500",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "multiple_constraints",
+      "status": 200
+    },
+    {
+      "caseId": "multi-espresso-grinder-1000",
+      "category": "kitchen",
+      "clientDurationMs": 27698,
+      "ndcgAt3": 0,
+      "products": [],
+      "referenceDiagnostics": [
+        {
+          "id": "breville-barista-express-impress",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "ninja-luxe-cafe-premier",
+          "lossStage": "final_selection_crowd_out"
+        },
+        {
+          "id": "philips-2300-lattego",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "multiple_constraints",
+      "status": 200
+    },
+    {
+      "caseId": "multi-drill-no-combo",
+      "category": "tools",
+      "clientDurationMs": 30585,
+      "ndcgAt3": 0,
+      "products": [],
+      "referenceDiagnostics": [
+        {
+          "id": "milwaukee-2904-22",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "dewalt-dcd805d2",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "ridgid-r86115k",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "multiple_constraints",
+      "status": 200
+    },
+    {
+      "caseId": "multi-dehumidifier-basement-pump",
+      "category": "appliances",
+      "clientDurationMs": 30336,
+      "ndcgAt3": 0,
+      "products": [],
+      "referenceDiagnostics": [
+        {
+          "id": "ge-apyr50lc",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "homelabs-hme031004n",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "midea-mad50ps1qwt",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "multiple_constraints",
+      "status": 200
+    },
+    {
+      "caseId": "niche-left-vertical-mouse",
+      "category": "personal_electronics",
+      "clientDurationMs": 36957,
+      "ndcgAt3": 0,
+      "products": [],
+      "referenceDiagnostics": [
+        {
+          "id": "logitech-lift-left",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "evoluent-verticalmouse-4-left",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "kensington-pro-fit-ergo-left",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "niche",
+      "status": 200
+    },
+    {
+      "caseId": "niche-induction-1800w",
+      "category": "kitchen",
+      "clientDurationMs": 24465,
+      "ndcgAt3": 0.31,
+      "products": [
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "niche-induction-1800w",
+            "evidenceUrls": [
+              "https://business.walmart.com/ip/Duxtop-Induction-Electric-Stove-Cooktop-in-Black-with-Single-Burner/364204055",
+              "https://www.consumerreports.org/appliances/cooktops/best-portable-induction-cooktops-a3092408367/",
+              "https://www.cooktophunter.com/blog/best-portable-induction-cooktops/",
+              "https://www.avantcoequipment.com/product/177IC1800/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Duxtop Portable Induction Cooktop Countertop Burner Induction Hot Plate with LCD Sensor Touch 1800 Watts",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Duxtop Portable Induction Cooktop Countertop Burner Induction Hot Plate with LCD Sensor Touch 1800 Watts",
+          "position": 1,
+          "price": 116.99,
+          "productPageUrl": "https://business.walmart.com/ip/Duxtop-Induction-Electric-Stove-Cooktop-in-Black-with-Single-Burner/364204055"
+        },
+        {
+          "judgment": {
+            "availabilityAccuracy": "unknown",
+            "caseId": "niche-induction-1800w",
+            "evidenceUrls": [
+              "https://business.walmart.com/ip/Eurodib-C1823-1800-Watt-Portable-Induction-Cooktop/329135446",
+              "https://www.consumerreports.org/appliances/cooktops/best-portable-induction-cooktops-a3092408367/",
+              "https://www.cooktophunter.com/blog/best-portable-induction-cooktops/",
+              "https://www.avantcoequipment.com/product/177IC1800/"
+            ],
+            "hardRequirementViolations": [],
+            "hardRequirementUnknowns": [],
+            "identityIssue": "none",
+            "imageAccuracy": "unknown",
+            "modelFamilyDuplicateWith": null,
+            "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard.",
+            "priceAccuracy": "unknown",
+            "productName": "Eurodib c1823 1800-Watt Portable Induction Cooktop",
+            "productPageAccuracy": "unknown",
+            "relevanceGrade": 1
+          },
+          "matchedReferenceId": null,
+          "matchedReferenceGrade": null,
+          "name": "Eurodib c1823 1800-Watt Portable Induction Cooktop",
+          "position": 2,
+          "price": 138.43,
+          "productPageUrl": "https://business.walmart.com/ip/Eurodib-C1823-1800-Watt-Portable-Induction-Cooktop/329135446"
+        }
+      ],
+      "referenceDiagnostics": [
+        {
+          "id": "duxtop-9600ls",
+          "lossStage": "merchant_or_market_filter"
+        },
+        {
+          "id": "duxtop-9100mc",
+          "lossStage": "never_discovered"
+        },
+        {
+          "id": "avantco-ic1800",
+          "lossStage": "candidate_truncation_or_ranking"
+        }
+      ],
+      "searchType": "niche",
+      "status": 200
+    },
+    {
+      "caseId": "niche-inverter-generator",
+      "category": "outdoor_equipment",
+      "clientDurationMs": 28216,
+      "ndcgAt3": 0,
+      "products": [],
+      "referenceDiagnostics": [
+        {
+          "id": "honda-eu2200i",
+          "lossStage": "final_selection_crowd_out"
+        },
+        {
+          "id": "generac-iq3500",
+          "lossStage": "candidate_truncation_or_ranking"
+        },
+        {
+          "id": "champion-4650-dual-fuel-inverter",
+          "lossStage": "never_discovered"
+        }
+      ],
+      "searchType": "niche",
+      "status": 200
+    }
+  ],
+  "breakdowns": {
+    "byCategory": {
+      "appliances": {
+        "cases": 4,
+        "displayedProducts": 3,
+        "emptyResults": 2,
+        "finalLeaderRecall": {
+          "denominator": 12,
+          "numerator": 0,
+          "rate": 0
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 12,
+          "numerator": 1,
+          "rate": 0.0833
+        },
+        "ndcgAt3": 0.1499,
+        "strongResultPrecision": {
+          "denominator": 3,
+          "numerator": 1,
+          "rate": 0.3333
+        },
+        "latencyMs": {
+          "p50NearestRank": 30077,
+          "p95NearestRank": 36478
+        }
+      },
+      "cleaning": {
+        "cases": 5,
+        "displayedProducts": 21,
+        "emptyResults": 0,
+        "finalLeaderRecall": {
+          "denominator": 15,
+          "numerator": 6,
+          "rate": 0.4
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 15,
+          "numerator": 13,
+          "rate": 0.8667
+        },
+        "ndcgAt3": 0.7222,
+        "strongResultPrecision": {
+          "denominator": 21,
+          "numerator": 8,
+          "rate": 0.381
+        },
+        "latencyMs": {
+          "p50NearestRank": 36405,
+          "p95NearestRank": 41835
+        }
+      },
+      "computers": {
+        "cases": 3,
+        "displayedProducts": 3,
+        "emptyResults": 1,
+        "finalLeaderRecall": {
+          "denominator": 8,
+          "numerator": 1,
+          "rate": 0.125
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 8,
+          "numerator": 5,
+          "rate": 0.625
+        },
+        "ndcgAt3": 0.27,
+        "strongResultPrecision": {
+          "denominator": 3,
+          "numerator": 2,
+          "rate": 0.6667
+        },
+        "latencyMs": {
+          "p50NearestRank": 32499,
+          "p95NearestRank": 39401
+        }
+      },
+      "electronics": {
+        "cases": 4,
+        "displayedProducts": 4,
+        "emptyResults": 0,
+        "finalLeaderRecall": {
+          "denominator": 12,
+          "numerator": 1,
+          "rate": 0.0833
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 12,
+          "numerator": 2,
+          "rate": 0.1667
+        },
+        "ndcgAt3": 0.2647,
+        "strongResultPrecision": {
+          "denominator": 4,
+          "numerator": 2,
+          "rate": 0.5
+        },
+        "latencyMs": {
+          "p50NearestRank": 29064,
+          "p95NearestRank": 30541
+        }
+      },
+      "fitness": {
+        "cases": 3,
+        "displayedProducts": 4,
+        "emptyResults": 1,
+        "finalLeaderRecall": {
+          "denominator": 9,
+          "numerator": 0,
+          "rate": 0
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 9,
+          "numerator": 7,
+          "rate": 0.7778
+        },
+        "ndcgAt3": 0.1956,
+        "strongResultPrecision": {
+          "denominator": 4,
+          "numerator": 0,
+          "rate": 0
+        },
+        "latencyMs": {
+          "p50NearestRank": 32246,
+          "p95NearestRank": 32253
+        }
+      },
+      "furniture": {
+        "cases": 2,
+        "displayedProducts": 3,
+        "emptyResults": 0,
+        "finalLeaderRecall": {
+          "denominator": 6,
+          "numerator": 0,
+          "rate": 0
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 6,
+          "numerator": 5,
+          "rate": 0.8333
+        },
+        "ndcgAt3": 0.5101,
+        "strongResultPrecision": {
+          "denominator": 3,
+          "numerator": 2,
+          "rate": 0.6667
+        },
+        "latencyMs": {
+          "p50NearestRank": 32617,
+          "p95NearestRank": 37393
+        }
+      },
+      "home_products": {
+        "cases": 2,
+        "displayedProducts": 6,
+        "emptyResults": 0,
+        "finalLeaderRecall": {
+          "denominator": 6,
+          "numerator": 0,
+          "rate": 0
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 6,
+          "numerator": 3,
+          "rate": 0.5
+        },
+        "ndcgAt3": 0.2656,
+        "strongResultPrecision": {
+          "denominator": 6,
+          "numerator": 0,
+          "rate": 0
+        },
+        "latencyMs": {
+          "p50NearestRank": 36590,
+          "p95NearestRank": 42428
+        }
+      },
+      "kitchen": {
+        "cases": 6,
+        "displayedProducts": 11,
+        "emptyResults": 1,
+        "finalLeaderRecall": {
+          "denominator": 18,
+          "numerator": 1,
+          "rate": 0.0556
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 18,
+          "numerator": 14,
+          "rate": 0.7778
+        },
+        "ndcgAt3": 0.2524,
+        "strongResultPrecision": {
+          "denominator": 11,
+          "numerator": 2,
+          "rate": 0.1818
+        },
+        "latencyMs": {
+          "p50NearestRank": 27698,
+          "p95NearestRank": 41481
+        }
+      },
+      "outdoor_equipment": {
+        "cases": 10,
+        "displayedProducts": 10,
+        "emptyResults": 3,
+        "finalLeaderRecall": {
+          "denominator": 30,
+          "numerator": 0,
+          "rate": 0
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 30,
+          "numerator": 13,
+          "rate": 0.4333
+        },
+        "ndcgAt3": 0.1994,
+        "strongResultPrecision": {
+          "denominator": 10,
+          "numerator": 3,
+          "rate": 0.3
+        },
+        "latencyMs": {
+          "p50NearestRank": 28216,
+          "p95NearestRank": 32648
+        }
+      },
+      "personal_electronics": {
+        "cases": 3,
+        "displayedProducts": 3,
+        "emptyResults": 1,
+        "finalLeaderRecall": {
+          "denominator": 9,
+          "numerator": 0,
+          "rate": 0
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 9,
+          "numerator": 7,
+          "rate": 0.7778
+        },
+        "ndcgAt3": 0.262,
+        "strongResultPrecision": {
+          "denominator": 3,
+          "numerator": 1,
+          "rate": 0.3333
+        },
+        "latencyMs": {
+          "p50NearestRank": 33369,
+          "p95NearestRank": 36957
+        }
+      },
+      "tools": {
+        "cases": 6,
+        "displayedProducts": 9,
+        "emptyResults": 1,
+        "finalLeaderRecall": {
+          "denominator": 17,
+          "numerator": 1,
+          "rate": 0.0588
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 17,
+          "numerator": 7,
+          "rate": 0.4118
+        },
+        "ndcgAt3": 0.3454,
+        "strongResultPrecision": {
+          "denominator": 9,
+          "numerator": 3,
+          "rate": 0.3333
+        },
+        "latencyMs": {
+          "p50NearestRank": 30338,
+          "p95NearestRank": 34235
+        }
+      }
+    },
+    "bySearchType": {
+      "brand": {
+        "cases": 2,
+        "displayedProducts": 2,
+        "emptyResults": 0,
+        "finalLeaderRecall": {
+          "denominator": 5,
+          "numerator": 0,
+          "rate": 0
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 5,
+          "numerator": 2,
+          "rate": 0.4
+        },
+        "ndcgAt3": 0.2021,
+        "strongResultPrecision": {
+          "denominator": 2,
+          "numerator": 0,
+          "rate": 0
+        },
+        "latencyMs": {
+          "p50NearestRank": 24456,
+          "p95NearestRank": 25567
+        }
+      },
+      "brand_alternative": {
+        "cases": 2,
+        "displayedProducts": 7,
+        "emptyResults": 0,
+        "finalLeaderRecall": {
+          "denominator": 6,
+          "numerator": 1,
+          "rate": 0.1667
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 6,
+          "numerator": 4,
+          "rate": 0.6667
+        },
+        "ndcgAt3": 0.6754,
+        "strongResultPrecision": {
+          "denominator": 7,
+          "numerator": 2,
+          "rate": 0.2857
+        },
+        "latencyMs": {
+          "p50NearestRank": 32463,
+          "p95NearestRank": 34824
+        }
+      },
+      "broad": {
+        "cases": 12,
+        "displayedProducts": 31,
+        "emptyResults": 0,
+        "finalLeaderRecall": {
+          "denominator": 36,
+          "numerator": 3,
+          "rate": 0.0833
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 36,
+          "numerator": 24,
+          "rate": 0.6667
+        },
+        "ndcgAt3": 0.3932,
+        "strongResultPrecision": {
+          "denominator": 31,
+          "numerator": 7,
+          "rate": 0.2258
+        },
+        "latencyMs": {
+          "p50NearestRank": 31419,
+          "p95NearestRank": 42428
+        }
+      },
+      "broad_budget": {
+        "cases": 8,
+        "displayedProducts": 12,
+        "emptyResults": 1,
+        "finalLeaderRecall": {
+          "denominator": 24,
+          "numerator": 2,
+          "rate": 0.0833
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 24,
+          "numerator": 15,
+          "rate": 0.625
+        },
+        "ndcgAt3": 0.2682,
+        "strongResultPrecision": {
+          "denominator": 12,
+          "numerator": 3,
+          "rate": 0.25
+        },
+        "latencyMs": {
+          "p50NearestRank": 32648,
+          "p95NearestRank": 41481
+        }
+      },
+      "exclusion": {
+        "cases": 4,
+        "displayedProducts": 8,
+        "emptyResults": 0,
+        "finalLeaderRecall": {
+          "denominator": 12,
+          "numerator": 2,
+          "rate": 0.1667
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 12,
+          "numerator": 9,
+          "rate": 0.75
+        },
+        "ndcgAt3": 0.3701,
+        "strongResultPrecision": {
+          "denominator": 8,
+          "numerator": 2,
+          "rate": 0.25
+        },
+        "latencyMs": {
+          "p50NearestRank": 27114,
+          "p95NearestRank": 40244
+        }
+      },
+      "hard_spec": {
+        "cases": 8,
+        "displayedProducts": 9,
+        "emptyResults": 2,
+        "finalLeaderRecall": {
+          "denominator": 23,
+          "numerator": 1,
+          "rate": 0.0435
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 23,
+          "numerator": 12,
+          "rate": 0.5217
+        },
+        "ndcgAt3": 0.2858,
+        "strongResultPrecision": {
+          "denominator": 9,
+          "numerator": 5,
+          "rate": 0.5556
+        },
+        "latencyMs": {
+          "p50NearestRank": 30077,
+          "p95NearestRank": 32499
+        }
+      },
+      "multiple_constraints": {
+        "cases": 5,
+        "displayedProducts": 4,
+        "emptyResults": 3,
+        "finalLeaderRecall": {
+          "denominator": 15,
+          "numerator": 1,
+          "rate": 0.0667
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 15,
+          "numerator": 4,
+          "rate": 0.2667
+        },
+        "ndcgAt3": 0.276,
+        "strongResultPrecision": {
+          "denominator": 4,
+          "numerator": 4,
+          "rate": 1
+        },
+        "latencyMs": {
+          "p50NearestRank": 30336,
+          "p95NearestRank": 36405
+        }
+      },
+      "niche": {
+        "cases": 3,
+        "displayedProducts": 2,
+        "emptyResults": 2,
+        "finalLeaderRecall": {
+          "denominator": 9,
+          "numerator": 0,
+          "rate": 0
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 9,
+          "numerator": 5,
+          "rate": 0.5556
+        },
+        "ndcgAt3": 0.1033,
+        "strongResultPrecision": {
+          "denominator": 2,
+          "numerator": 0,
+          "rate": 0
+        },
+        "latencyMs": {
+          "p50NearestRank": 28216,
+          "p95NearestRank": 36957
+        }
+      },
+      "size_dimension": {
+        "cases": 4,
+        "displayedProducts": 2,
+        "emptyResults": 2,
+        "finalLeaderRecall": {
+          "denominator": 12,
+          "numerator": 0,
+          "rate": 0
+        },
+        "leaderDiscoveryRecall": {
+          "denominator": 12,
+          "numerator": 2,
+          "rate": 0.1667
+        },
+        "ndcgAt3": 0.1273,
+        "strongResultPrecision": {
+          "denominator": 2,
+          "numerator": 1,
+          "rate": 0.5
+        },
+        "latencyMs": {
+          "p50NearestRank": 30304,
+          "p95NearestRank": 36478
+        }
+      }
+    }
+  },
+  "schemaVersion": 1
+}

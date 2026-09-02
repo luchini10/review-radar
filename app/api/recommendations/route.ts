@@ -205,7 +205,7 @@ async function handlePost(
       );
     }
     const debug = {
-      architecture: "market_quality_live_v4_independent_concurrent",
+      architecture: "phase1_request_time_market_discovery",
       marketScout: scouted.telemetry,
       openAiCalls: scouted.telemetry.openAiCalls,
       search: selected.telemetry,
@@ -228,7 +228,7 @@ async function handlePost(
         ? {
             error: "ReviewRadar could not complete this product search.",
             debug: {
-              architecture: "market_quality_live_v4_independent_concurrent",
+              architecture: "phase1_request_time_market_discovery",
               error:
                 error instanceof Error
                   ? { name: error.name, message: error.message.slice(0, 300) }

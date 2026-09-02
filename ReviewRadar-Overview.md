@@ -33,7 +33,7 @@ The production recommendation path performs fresh work inside one POST route:
       -> extract deterministic requirements
       -> start one fresh independent market scout
       -> run up to three current neutral Shopping queries concurrently
-      -> up to three exact-model Shopping queries for undiscovered strong targets
+      -> up to three exact-model Shopping queries for undiscovered evidence-bearing targets
       -> up to three organic exact-target product-page searches
       -> deterministic type, accessory, used-item, budget, and requirement filters
       -> candidate-local product-page resolution when needed
@@ -253,7 +253,8 @@ search. The API response uses `Cache-Control: no-store`.
 - components/ProductCard.tsx — minimal result card.
 - lib/recommendationRequestValidation.ts — server request validation.
 - lib/requirementExtraction.ts — deterministic structured requirements.
-- lib/marketScout.ts — fresh bounded source-validated exact-model scout.
+- lib/marketScout.ts — fresh bounded request-time market map with market-leader,
+  request-fit, and coverage-gap targets.
 - lib/productSearch.ts — bounded Shopping and product-page search.
 - lib/productSelection.ts — filtering, page resolution, requirement checks,
   ranking, deduplication, and final selection.
@@ -261,6 +262,71 @@ search. The API response uses `Cache-Control: no-store`.
   image enrichment.
 - lib/safeProductPageFetch.ts — DNS-pinned outbound fetch boundary.
 - types/review-radar.ts — selection-only public and internal types.
+
+## Offline accuracy benchmark
+
+`benchmarks/accuracy-v1/` is an evaluation-only system for measuring the current
+request-bound pipeline. It contains 48 frozen searches, a 99-product independent
+source-bound reference registry, run-hash-bound result adjudications, a one-shot
+live runner, a separate evaluator, per-search diagnostics, and a same-version
+before/after comparator. Production modules do not import or load this directory.
+
+The live runner sends only request fields to the existing
+`POST /api/recommendations` route. Expected products are loaded only after the
+run by the evaluator. Additive debug telemetry in `lib/productSelection.ts`
+captures sanitized candidate identities at discovery, deduplication, prefilter,
+market compatibility, bounded ranking, commerce verification, and final return.
+Phase 1 extends that telemetry with discovery paths, missing expected targets,
+query stop reasons, result normalization/truncation, candidate-limit crowd-out,
+verification waves, and distinct plausible-product contributions by path. None
+of this telemetry changes the public response.
+
+The V1 baseline is bound to branch `main`, HEAD `866c5fc`, and SHA-256 hashes for
+every measured production file in the dirty stabilization tree. Its human report
+is `benchmarks/accuracy-v1/results/baseline-report.md`; machine-readable raw,
+adjudication, scored, and per-search artifacts are stored beside it. Benchmark
+references are not recommendation data and must never be imported into runtime
+search planning, prompts, candidate selection, or result lookup.
+
+### Phase 1 request-time discovery architecture
+
+For each shopper request, ReviewRadar now runs complementary discovery paths:
+
+1. a bare-category commerce query for broad current inventory;
+2. a neutral current/top-tested request-fit commerce query;
+3. a compact source-bound AI market map split into market-leader, request-fit,
+   and coverage-gap targets; and
+4. targeted Shopping for up to four strongest expected contenders, followed by
+   adaptive product-page resolution for the bounded verification slate.
+
+The request can use no more than nine market-map targets, two neutral Shopping
+queries, four target Shopping queries, three page queries, fifteen logical
+search operations, and nine verification candidates. Shopping normalization is
+bounded at forty results per query. Candidates are interleaved across discovery
+paths before the slate cutoff. Verification stops when the final shortlist is
+sufficiently filled or the remaining candidates/budget cannot add useful work.
+
+Market-map sources and research/editorial/list pages are candidate-identity
+evidence only. They cannot become product cards. A returned card still requires
+a safe, legitimate, identity-compatible current product page, affirmative
+availability, source-derived requirement evidence, acceptable condition and
+price, and family-aware deduplication. Every request creates and discards its
+own map and local candidate state; there is no index, prewarm, saved research,
+or cross-request product cache.
+
+The accepted exact-source Phase 1 comparison is
+`benchmarks/accuracy-v1/results/phase1-accepted-v5-report.md`. It improved market-
+leader discovery from 62/142 (43.66%) to 77/142 (54.23%) and broad-search
+discovery from 19/36 to 24/36. Final recall improved from 7/142 to 10/142 while
+hard-requirement accuracy reached 118/118, wrong-product leakage fell to 3/77,
+and model-family duplicate leakage fell to 1/77.
+
+The result is not a release-quality claim. Empty searches increased from 8/48
+to 10/48, precision fell to 24/77 (31.17%), NDCG@3 fell to 0.3039, and latency
+p50/p95 increased to 30,654/41,481 ms. The dominant loss moved from never
+discovered (80 to 65) to discovered-but-absent from the verification slate
+(26 to 43). That is evidence for a separately approved Phase 2 survival/cutoff
+phase, not permission to retune final ranking in Phase 1.
 
 ## Performance evidence
 
@@ -295,12 +361,29 @@ The request-time architecture and accuracy gates are protected by:
   and the minimal result card;
 - TypeScript, ESLint, and the Next production build.
 
-The current Serper-only source at runtime `ff8f3a0` passes 352/352 unit tests
-across 44 suites, zero-warning lint, typecheck, production build, and Playwright
-7/7. Focused product-search, selection, discovery, and API coverage passes
-109/109. The removed SerpApi adapter, key, provider provenance, parallel branch,
-3+3 counters, harness fields, and tests are absent; the touched runtime files
-exactly match their pre-SerpApi snapshot.
+The Phase 1 source based on `866c5fc` passes 376/376 unit tests across 45
+suites, zero-warning lint, typecheck, production build, and Playwright 7/7. The
+unit wall includes deterministic benchmark-binding tests and explicit
+proof that identical and unrelated requests each create fresh scout and Serper
+work. The removed evidence-index, prewarm, background-refresh, persistent cache,
+and SerpApi paths remain absent.
+
+The audit also removed dead scout-plan query data, an always-zero telemetry
+field, unused OpenAI retrieve/cancel contracts, stale environment examples, and
+the obsolete PR-13 QA alias. The maintained live harness is now named
+`scripts/run-live-accuracy-matrix.mjs`; it writes only an explicitly requested
+QA report and is not part of application startup or recommendation handling.
+
+A small live stabilization smoke set covered broad robot-vacuum and drip-coffee
+requests, a $200 shop-vac budget, a 27-inch/1440p/144-Hz monitor constraint, and
+a cordless-drill kit request with product-type exclusions. The first drip-
+coffee run exposed a generalized product-type gap: a French press could be
+treated as a drip maker. The shared type-intent boundary now separates drip
+machines from French press, pour-over, pod, moka, cold-brew, percolator,
+espresso, and grinder products. The corrected live request returned only drip
+machines, and a full process restart followed by the same request again made a
+fresh scout plus fresh Serper calls and returned a valid shortlist without any
+prewarm or retained market state.
 
 The current Serper-only runtime completed a new precommitted cache-cold V23
 matrix after the OpenAI market-scout credit became available. All ten one-shot

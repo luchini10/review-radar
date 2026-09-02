@@ -207,6 +207,12 @@ export type ProductSpecValue = {
 
 export type ProductSpecMap = Record<string, ProductSpecValue>;
 
+export type ProductDiscoveryPath =
+  | "broad_commerce"
+  | "expected_target_commerce"
+  | "expected_target_page"
+  | "request_fit_commerce";
+
 export type RawProductCandidate = {
   id: string;
   name: string;
@@ -224,6 +230,7 @@ export type RawProductCandidate = {
     ratingCount: number | null;
   };
   discoveryOrder?: number;
+  discoveryPaths?: ProductDiscoveryPath[];
   marketEvidence?: {
     consensusOrder: number;
     sourceUrls: string[];

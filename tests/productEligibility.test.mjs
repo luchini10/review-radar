@@ -232,8 +232,28 @@ describe("shared product eligibility classifier", () => {
       snippet: "Contact and support information for Shop-Vac customers.",
       url: "https://www.shopvac.com/pages/customer-service",
     });
+    const helpdeskKnowledge = classify({
+      category: "gaming monitor",
+      name: "ASUS TUF VG259Q5A Gaming Monitor",
+      sourceTitle: "ASUS TUF VG259Q5A Gaming Monitor",
+      url:
+        "https://www.asus.com/us/displays/monitors/tuf-vg259q5a/helpdesk_knowledge",
+    });
+    const editorialShoppingPage = classify({
+      category: "air purifier",
+      name: "Example Large Air Purifier",
+      sourceTitle: "Example Large Air Purifier",
+      url: "https://editorialist.com/p/example-large-air-purifier",
+    });
 
-    for (const result of [bissell, bestBuy, petsmart, shopVac]) {
+    for (const result of [
+      bissell,
+      bestBuy,
+      petsmart,
+      shopVac,
+      helpdeskKnowledge,
+      editorialShoppingPage,
+    ]) {
       assert.equal(result.canRenderAsProductCard, false);
       assert.equal(result.canUseAsEvidence, true);
     }

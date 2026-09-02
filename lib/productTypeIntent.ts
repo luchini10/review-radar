@@ -66,7 +66,21 @@ const NEVER_REQUESTED_PRODUCT_TYPE = /\b\B/;
 const HOUSEHOLD_VACUUM_PATTERN =
   /\b(?:stick\s+(?:vac|vacuum)|canister\s+(?:vac|vacuum)|hand(?:held)?\s+(?:vac|vacuum)|upright\s+(?:vac|vacuum))\b/i;
 
+const AIR_PURIFIER_PATTERN =
+  /\b(?:air\s+purifier|air\s+cleaner|hepa\s+air\s+cleaner)\b/i;
+const NON_PURIFIER_AIR_TREATMENT_PATTERN =
+  /\b(?:dehumidifier|humidifier|essential\s+oil\s+diffuser|aromatherapy\s+diffuser)\b/i;
+
 const PRODUCT_TYPE_RULES: ProductTypeRule[] = [
+  {
+    id: "air_purifier",
+    requested: AIR_PURIFIER_PATTERN,
+    allowed: AIR_PURIFIER_PATTERN,
+    blocked: NON_PURIFIER_AIR_TREATMENT_PATTERN,
+    exclusiveBlocked: NON_PURIFIER_AIR_TREATMENT_PATTERN,
+    complements:
+      /\b(?:replacement\s+)?(?:air\s+purifier\s+)?(?:filter|filter\s+set|pre-filter)\b/i,
+  },
   {
     // Identity-only class used by the cross-rule conflict check below. Keeping
     // it out of request matching preserves existing "refrigerator with ice
@@ -115,6 +129,17 @@ const PRODUCT_TYPE_RULES: ProductTypeRule[] = [
     ),
     complements: SHOP_VAC_COMPLEMENT_PATTERN,
     exclusiveComplements: STANDALONE_SHOP_VAC_COMPLEMENT_PATTERN,
+  },
+  {
+    id: "drip_coffee_maker",
+    requested:
+      /\b(?:(?:automatic\s+)?drip|filter)\s+coffee\s+(?:maker|machine)\b/i,
+    allowed:
+      /\b(?:(?:automatic\s+)?drip|filter)\s+coffee\s+(?:maker|machine)\b|\b(?:automatic|programmable)\s+coffee\s+maker\b|\b\d{1,2}[-\s]?cup\s+(?:programmable\s+)?coffee\s+maker\b/i,
+    blocked:
+      /\b(?:french\s+press|pour[-\s]?over|espresso\s+(?:maker|machine)|moka\s+pot|cold[-\s]?brew\s+(?:maker|system)|coffee\s+percolator|single[-\s]?serve\s+(?:pod\s+)?coffee\s+maker|pod\s+coffee\s+(?:maker|machine)|coffee\s+grinder)\b/i,
+    complements:
+      /\b(?:replacement\s+)?(?:coffee\s+)?(?:carafe|filter\s+basket|water\s+filter|brew\s+basket)\b/i,
   },
   {
     id: "toaster_oven",

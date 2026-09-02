@@ -54,6 +54,37 @@ describe("product type intent classifier", () => {
     assert.equal(drillKit.status, "exact");
   });
 
+  it("keeps explicit drip-coffee requests separate from other brewing methods", () => {
+    for (const candidateText of [
+      "Bodum Brazil French Press Coffee Maker - 51 oz (12 Cups)",
+      "Chemex Pour-Over Glass Coffeemaker",
+      "Keurig K-Elite Single-Serve Pod Coffee Maker",
+      "Bialetti Moka Express Moka Pot",
+    ]) {
+      const verdict = classifyProductTypeIntent({
+        requestedText: "drip coffee maker",
+        candidateText,
+        candidateIdentityText: candidateText,
+      });
+      assert.equal(verdict.status, "irrelevant", candidateText);
+      assert.equal(verdict.canBeExactMatch, false, candidateText);
+    }
+
+    for (const candidateText of [
+      "Bella Pro 12-Cup Programmable Coffee Maker",
+      "Technivorm Moccamaster Automatic Drip Coffee Maker",
+      "Ninja DualBrew Pro Drip Coffee Maker with Single-Serve System",
+    ]) {
+      const verdict = classifyProductTypeIntent({
+        requestedText: "drip coffee maker",
+        candidateText,
+        candidateIdentityText: candidateText,
+      });
+      assert.equal(verdict.status, "exact", candidateText);
+      assert.equal(verdict.canBeExactMatch, true, candidateText);
+    }
+  });
+
   it("keeps toaster ovens separate from full-size ovens and ranges", () => {
     const valid = classifyProductTypeIntent({
       requestedText: "toaster oven",

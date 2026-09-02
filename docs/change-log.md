@@ -9,7 +9,130 @@ Update this file after:
 - important bug fixes
 - live QA fixes worth remembering
 
+## 2026-09-02
+
+### Codex - Improve request-time market discovery coverage
+
+#### Changed
+
+- Replaced the single undifferentiated market-scout target list with a fresh
+  request-scoped market map containing independent market-leader, request-fit,
+  and coverage-gap targets. The map is used only during the current request and
+  is discarded afterward.
+- Added two neutral commerce paths (bare category and current top-rated
+  request-fit), targeted Shopping for the strongest expected contenders, and
+  adaptive product-page verification. Limits are explicit: up to nine scout
+  targets, two neutral queries, four targeted queries, three page queries,
+  fifteen logical search operations, and a nine-candidate verification slate.
+- Increased Shopping normalization coverage to forty results per query and
+  interleaved candidates across discovery paths before the verification cutoff
+  so one search family cannot consume the slate merely by returning first.
+- Added discovery-path lineage, expected-target coverage, query stop reasons,
+  per-query result truncation, candidate-limit crowd-out, verification-wave,
+  and distinct-path-contribution telemetry to development diagnostics.
+- Strengthened generalized safety seams exposed by live checkpoints: exact-page
+  source evidence is evaluated independently from page titles and URLs;
+  alphanumeric sibling models, storage configurations, named model suffixes,
+  rental listings, support/editorial destinations, and catalog-family variants
+  now fail closed where identity or product eligibility is not established.
+- Kept research/editorial/list sources internal to discovery. Final cards still
+  require a legitimate current product page and retain the minimal public shape.
+  No persistent research, index, prewarm, saved recommendation, cross-request
+  cache, benchmark lookup, product-specific exception, or ranking-weight
+  redesign was added.
+
+#### Verified
+
+- The exact-source accepted Phase 1 run completed all 48 frozen cases on their
+  first attempt and passed the unchanged evaluator and integrity rules. Leader
+  discovery improved from 62/142 (43.66%) to 77/142 (54.23%); broad-search
+  discovery improved from 19/36 to 24/36; final leader recall improved from
+  7/142 to 10/142.
+- Hard-requirement accuracy improved to 118/118 (100%). Wrong-product leakage
+  fell from 6/102 to 3/77, model-family duplicate leakage fell from 4/102 to
+  1/77, and exact duplicate leakage remained zero.
+- The phase did not pass every product-quality outcome: empty searches rose
+  from 8/48 to 10/48, precision fell from 49.02% to 31.17%, NDCG@3 fell from
+  0.4082 to 0.3039, and latency p50/p95 rose to 30,654/41,481 ms. Newly found
+  leaders were most often lost at candidate truncation/ranking (43/142), which
+  is the separately gated Phase 2 problem.
+- `npm test` passed 376/376 across 45 suites; typecheck, zero-warning lint,
+  Next.js 16.3.3 production build, and Playwright 7/7 passed. The accepted raw
+  artifact SHA-256 is
+  `9EC5744A37C5063B2B663ECCFAE9865B8AF7659EDC73E97A5605D77EF27208A6`.
+
 ## 2026-09-01
+
+### Codex - Establish Accuracy Benchmark V1 baseline
+
+#### Changed
+
+- Added an offline-only 48-search accuracy benchmark covering 11 categories and
+  nine broad, budget, specification, brand, size, exclusion, multi-constraint,
+  and niche search types.
+- Froze an independently researched 99-product reference registry before the
+  live run. Every scored reference has at least two source families; the live
+  runner never loads the registry or accesses reference-ID fields and dispatches
+  only an allowlisted request object.
+- Added behavior-neutral candidate-funnel debug telemetry, one-attempt live
+  execution, run-bound adjudication, scoring, per-search diagnostics, and a
+  same-version before/after comparator. No discovery, ranking, filtering,
+  verification, public contract, dependency, or production architecture was
+  changed.
+- Preserved the exact dirty stabilization baseline with branch, HEAD,
+  production-file hashes, relevant diff hash, safe configuration constants, and
+  timestamps. No unrelated work was committed or discarded.
+
+#### Verified
+
+- All 48 first attempts completed without retries. Discovery/final leader recall
+  was 62/142 and 7/142; top-K quality precision was 50/102; NDCG@3 was 0.4082;
+  and hard-requirement accuracy was 163/172.
+- The largest loss was upstream discovery: 80/142 reference leaders were never
+  discovered, and another 26/142 missed the bounded verification slate.
+- Benchmark integrity tests, 359/359 full unit tests across 45 suites,
+  typecheck, zero-warning lint, and the Next.js 16.3.3 production build passed.
+- No commit, push, deployment, release, dependency change, benchmark retry,
+  persistent research store, or product-specific recommendation fix occurred.
+
+### Codex - Stabilize the request-bound architecture baseline
+
+#### Changed
+
+- Audited the complete recommendation path and confirmed that product research
+  starts from the current request. No evidence index, prewarm, background
+  refresh, post-response research, cross-request recommendation cache, or
+  startup research dependency remains.
+- Removed dead scout-plan query data, an always-zero telemetry field, and unused
+  OpenAI retrieve/cancel contracts. Renamed the maintained live QA runner from
+  its obsolete PR-13 name, removed the stale PR-13 package alias, and reduced
+  the example environment files to variables the current runtime actually uses.
+- Replaced the stale report-generation README with the current one-POST,
+  five-field product-selection contract. Historical live reports remain audit
+  evidence only and have no runtime authority.
+- Fixed a generalized product-type regression found by live smoke testing: an
+  explicit drip-coffee request now rejects French press, pour-over, pod, moka,
+  cold-brew, percolator, espresso, and grinder substitutions while preserving
+  genuine drip and hybrid drip machines.
+- Did not change the ranking architecture, add a quality score, begin Phase 0,
+  or tune for a named benchmark product.
+
+#### Verified
+
+- Full deterministic validation passed: 355/355 unit tests across 44 suites,
+  typecheck, zero-warning lint, Next.js 16.3.3 production build, Playwright 7/7,
+  and deterministic benchmark-binding checks inside the unit wall.
+- Five required live scenarios returned current direct product cards: broad
+  robot vacuums, broad drip coffee makers, shop vacuums under $200, 27-inch
+  1440p gaming monitors at 144 Hz or faster under $300, and cordless drill kits
+  under $200 with battery/charger and accessory/combo exclusions.
+- The failed-first coffee sample returned a French press; the generalized fix
+  removed it. After terminating and restarting the entire dev process, a repeat
+  coffee search independently made one scout call, three hosted searches, and
+  13 Serper operations and again returned valid drip machines without startup
+  research.
+- No commit, push, deployment, release, production-data action, dependency
+  change, persistent research write, or Phase 0 benchmark run occurred.
 
 ### Codex - Remove SerpApi and restore Serper-only commerce
 

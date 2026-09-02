@@ -385,7 +385,6 @@ function compactTelemetry(body, benchmarkCase) {
       benchmarkCase.request,
     ),
     evidenceBindingsExact: evidenceBindingsAreExact(returnedSignals, marketTargets),
-    commerceCandidateCount: asFiniteNumber(scout.commerceCandidateCount),
     hostedSearchCalls: asFiniteNumber(scout.hostedSearchCalls),
     logicalSerperOperations: asFiniteNumber(search.logicalSearchCalls),
     marketTargets: marketTargets.map((target) => {
@@ -690,10 +689,6 @@ function summarize(results, cases, acceptanceConfig) {
         : 0,
     },
     scout: {
-      commerceCandidateTotal: successful.reduce(
-        (total, result) => total + result.commerceCandidateCount,
-        0,
-      ),
       fallbackRuns: successful.filter((result) => result.scoutUsedFallback).length,
       fallbackReasons: successful.reduce((counts, result) => {
         const reason = result.scoutFallbackReason;

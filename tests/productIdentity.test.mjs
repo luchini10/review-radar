@@ -111,6 +111,34 @@ describe("selection product identity", () => {
       ),
       false,
     );
+    assert.equal(
+      haveConflictingNamedModelVariants(
+        "Milwaukee M18 FUEL Dual Battery Blower",
+        "Milwaukee M18 Precision Blower",
+      ),
+      true,
+    );
+    assert.equal(
+      haveConflictingNamedModelVariants(
+        "Milwaukee M18 FUEL Dual Battery Blower",
+        "Milwaukee M18 FUEL Dual Battery Backpack Blower",
+      ),
+      true,
+    );
+    assert.equal(
+      haveConflictingNamedModelVariants(
+        "Dreame D30 Ultra CE Robot Vacuum",
+        "Dreame D30 Ultra Robot Vacuum",
+      ),
+      true,
+    );
+    assert.equal(
+      haveConflictingNamedModelVariants(
+        "Dreame D30 Ultra CE Robot Vacuum",
+        "Dreame D30 Ultra CE Robot Vacuum",
+      ),
+      false,
+    );
   });
 
   it("detects numeric variant conflicts", () => {
@@ -125,6 +153,13 @@ describe("selection product identity", () => {
       haveConflictingNumericProductSpecs(
         "17.3 inch laptop with 16GB RAM and 512GB SSD",
         "hp-14-inch-laptop-4gb-ram-128gb-ufs",
+      ),
+      true,
+    );
+    assert.equal(
+      haveConflictingNumericProductSpecs(
+        "13 inch laptop with 1TB SSD",
+        "13-inch-laptop-with-512gb-storage",
       ),
       true,
     );

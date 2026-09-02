@@ -4,6 +4,39 @@
 
 ---
 
+## Phase 1 request-time discovery contract (2026-09-02)
+
+- Discovery remains fresh and request-scoped. Use independent neutral commerce,
+  current market-leader, request-fit, expected-target, and coverage-gap paths;
+  never persist a market map, recommendation, product evidence, or cross-request
+  research result.
+- Current ceilings are nine scout targets (four market-leader, three
+  request-fit, two coverage-gap), two neutral Shopping queries, four expected-
+  target Shopping queries, three product-page queries, fifteen logical search
+  operations, and nine verification candidates. Adaptive verification may stop
+  early when the shortlist is sufficiently filled or continue only while a
+  useful unresolved candidate and query budget remain.
+- Normalize at most forty Shopping results per query and record raw/dropped/
+  admitted counts. Interleave viable candidates by discovery path before the
+  slate cutoff; do not let a high-volume search family crowd out every other
+  path merely because it returned first.
+- Every serious candidate carries its discovery paths. Diagnostics must expose
+  expected targets that were not discovered, stopping and budget-exhaustion
+  reasons, limit/truncation effects, verification waves, and the number of
+  distinct plausible products contributed by each path.
+- Research/editorial/list pages may generate an internal candidate identity but
+  never qualify as a final product card. Final cards still require a safe,
+  legitimate, identity-compatible current product page.
+- Requirement facts must come from source-derived evidence. Query wording is
+  not product evidence. Compare page-derived specification evidence separately
+  from title/URL identity, and fail closed on alphanumeric siblings, storage or
+  capacity configurations, named model variants, rentals, support/editorial
+  pages, and unresolved product-family duplicates.
+- The accepted V1 comparison improved leader discovery from 62/142 to 77/142,
+  but 43/142 leaders were then lost at the verification-slate cutoff. Do not
+  conceal that transfer by changing final ranking in the discovery phase. Empty
+  results rose from 8/48 to 10/48 and remain an explicit successor risk.
+
 ## PR-11 live selection-accuracy contract (2026-08-31)
 
 - A returned card requires affirmative current product-page availability.
@@ -4471,3 +4504,28 @@ a known conservative undercount.
   and 29,646 ms p95/maximum; V23 is current-runtime authority. Future work must
   attribute generalized Serper discovery/verification losses before editing.
   No SerpApi credential is needed or permitted.
+
+## Stabilization request-isolation contract (2026-09-01)
+
+- Product research is request-time and request-bound. A recommendation handler
+  invocation must create a fresh scout and its own neutral/exact Serper work;
+  neither an identical earlier search nor an unrelated earlier search may supply
+  targets, offers, pages, prices, images, or rankings.
+- Coalescing Maps must be created inside `selectProducts`. Passing the same Map
+  may coalesce duplicate work in one request; a new Map must refetch. Do not move
+  these Maps to module/global scope or restore the deleted generic cache.
+- The process-global paid-admission object may retain only concurrency/rate
+  counters. It must never contain query, product, market, evidence, price, page,
+  or result data.
+- The QA runner may persist only an explicitly requested report after a QA run.
+  It is not imported by production, is not a prewarm/population script, and its
+  reports have no recommendation authority. Its maintained name is
+  `scripts/run-live-accuracy-matrix.mjs`; do not restore the PR-13 alias.
+- An explicit drip-coffee-maker request must reject French press, pour-over,
+  espresso, moka, cold-brew, percolator, pod/single-serve, and grinder products.
+  Explicit drip/filter, automatic or programmable capacity-based drip makers,
+  and hybrid machines that name drip capability remain eligible.
+- Current wall after this contract: 355/355 unit tests across 44 suites,
+  typecheck, zero-warning lint, production build, and Playwright 7/7. The
+  process-restart live repeat made one fresh scout, three hosted searches, and
+  13 Serper operations without prewarm or retained research.

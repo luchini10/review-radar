@@ -44,7 +44,12 @@ function responseWith({
       status: "completed",
       type: "web_search_call",
     })),
-    output_text: JSON.stringify({ targets: outputTargets }),
+    output_text: JSON.stringify({
+      targets: outputTargets.map((target) => ({
+        discoveryPath: "market_leader",
+        ...target,
+      })),
+    }),
     status,
     usage,
   };
@@ -68,19 +73,24 @@ describe("market scout", () => {
     assert.equal(result.telemetry.openAiCalls, 0);
     assert.equal(result.telemetry.usedFallback, true);
     assert.equal(result.telemetry.fallbackReason, "no_client");
-    assert.deepEqual(result.plan.targets, []);
-    assert.ok(result.plan.queries.length >= 1);
-    assert.ok(result.plan.queries.every((query) => !/review|citation/i.test(query)));
+    assert.deepEqual(result.plan, { targets: [] });
   });
 
-  it("keeps three distinct brand-neutral discovery queries for broad requests", () => {
+  it("uses distinct broad-commerce and market-leader queries for broad requests", () => {
     assert.deepEqual(
       marketScoutTestExports.deterministicQueries({ query: "robot vacuum" }).slice(
         0,
-        3,
+        2,
       ),
-      ["robot vacuum", "robot vacuum top rated", "robot vacuum popular models"],
+      ["robot vacuum", "robot vacuum top rated current models"],
     );
+  });
+
+  it("preserves a bare-category commerce path for constrained requests", () => {
+    assert.deepEqual(marketScoutTestExports.deterministicQueries(input), [
+      "robot vacuum",
+      "robot vacuum $300 must be self-emptying",
+    ]);
   });
 
   it("makes one bounded GPT-5.4 Mini Structured Outputs call with source metadata", async () => {
@@ -105,7 +115,7 @@ describe("market scout", () => {
     assert.equal(options.text.format.type, "json_schema");
     assert.deepEqual(
       Object.keys(options.text.format.schema.properties.targets.items.properties),
-      ["aliases", "brand", "model", "sourceUrls"],
+      ["aliases", "brand", "discoveryPath", "model", "sourceUrls"],
     );
     const schemaText = JSON.stringify(options.text.format.schema);
     assert.doesNotMatch(schemaText, /price|explanation|reviewSummary|searchQueries/i);
@@ -113,8 +123,8 @@ describe("market scout", () => {
     assert.equal(calls[0].requestOptions.maxRetries, 0);
     assert.equal(result.telemetry.openAiCalls, 1);
     assert.equal(result.telemetry.hostedSearchCalls, 1);
-    assert.equal(result.telemetry.commerceCandidateCount, 0);
     assert.equal(result.telemetry.usedFallback, false);
+    assert.equal(result.telemetry.acceptedTargets, 1);
     assert.deepEqual(
       {
         input: result.telemetry.inputTokens,
@@ -127,13 +137,12 @@ describe("market scout", () => {
 
   it("keeps commerce observations out of the independent scout prompt", async () => {
     const calls = [];
-    const result = await buildMarketScoutPlan({
+    await buildMarketScoutPlan({
       client: clientReturning(responseWith(), calls),
       input,
     });
 
     const userMessage = calls[0].options.input[1].content;
-    assert.equal(result.telemetry.commerceCandidateCount, 0);
     assert.doesNotMatch(userMessage, /commerce roster|ratingCount|offerCount/i);
     assert.doesNotMatch(userMessage, /https?:\/\//i);
     assert.match(marketScoutTestExports.systemPrompt, /untrusted data/i);
@@ -219,6 +228,18 @@ describe("market scout", () => {
       ]),
       "none",
     );
+  });
+
+  it("keeps an actual non-commerce source as a discovery-only target without quality evidence", async () => {
+    const source = "https://www.independentlab.org/reviews/model-x100";
+    const result = await buildMarketScoutPlan({
+      client: clientReturning(responseWith({ actualUrls: [source] })),
+      input,
+    });
+
+    assert.equal(result.plan.targets[0].evidenceTier, "candidate");
+    assert.equal(result.telemetry.candidateSourceUrls, 1);
+    assert.equal(result.telemetry.evidenceTiers.candidate, 1);
   });
 
   it("runs a fresh scout for every request, including identical requests", async () => {
@@ -408,6 +429,48 @@ describe("market scout", () => {
     assert.deepEqual(result.plan.targets, []);
   });
 
+  it("accepts an unambiguous named consumer model without requiring a catalog number", async () => {
+    const result = await buildMarketScoutPlan({
+      client: clientReturning(
+        responseWith({
+          outputTargets: [
+            {
+              aliases: ["Example Aeris"],
+              brand: "Example",
+              model: "Aeris",
+              sourceUrls: [consumerReports],
+            },
+          ],
+        }),
+      ),
+      input,
+    });
+
+    assert.equal(result.plan.targets[0].model, "Aeris");
+    assert.deepEqual(result.plan.targets[0].aliases, ["Example Aeris"]);
+  });
+
+  it("rejects a long marketing description presented as a named model", async () => {
+    const result = await buildMarketScoutPlan({
+      client: clientReturning(
+        responseWith({
+          outputTargets: [
+            {
+              aliases: [],
+              brand: "Example",
+              model: "Extra Large French Door Countertop Oven with Convection",
+              sourceUrls: [consumerReports],
+            },
+          ],
+        }),
+      ),
+      input,
+    });
+
+    assert.equal(result.telemetry.fallbackReason, "insufficient_evidence");
+    assert.deepEqual(result.plan.targets, []);
+  });
+
   it("aborts a hung provider at the independent live-scout deadline", async () => {
     let providerAborted = false;
     const result = await buildMarketScoutPlan({
@@ -510,8 +573,8 @@ describe("market scout", () => {
     assert.match(prompt, /current US retail availability/i);
     assert.match(prompt, /supported target/i);
     assert.match(prompt, /never transfer evidence/i);
-    assert.match(prompt, /distinctive exact model number or catalog code/i);
+    assert.match(prompt, /unambiguous named consumer model/i);
     assert.doesNotMatch(prompt, /write (?:a )?report|pros and cons|card copy/i);
-    assert.ok(prompt.length < 2_100);
+    assert.ok(prompt.length < 3_200);
   });
 });

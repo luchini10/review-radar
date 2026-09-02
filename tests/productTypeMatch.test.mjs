@@ -4,6 +4,21 @@ import { describe, it } from "node:test";
 import { classifyProductTypeMatch } from "../lib/productTypeMatch.ts";
 
 describe("classifyProductTypeMatch (shared wrong-product-type verdict)", () => {
+  it("rejects humidifiers as air purifiers even when a page path mentions purifier", () => {
+    const verdict = classifyProductTypeMatch({
+      allowedCheckText:
+        "Levoit 200S humidifier levoit vital 200s true air purifier",
+      evidenceText:
+        "Levoit 200S humidifier levoit vital 200s true air purifier",
+      identityText:
+        "Levoit 200S humidifier levoit vital 200s true air purifier",
+      requestedCategory: "air purifier",
+    });
+
+    assert.equal(verdict.canBeExactMatch, false);
+    assert.equal(verdict.status, "wrong_type");
+  });
+
   it("rejects a different product type (gaming chair for an office chair)", () => {
     const verdict = classifyProductTypeMatch({
       evidenceText: "RESPAWN Racing Style Gaming Chair with footrest",
@@ -80,6 +95,17 @@ describe("classifyProductTypeMatch (shared wrong-product-type verdict)", () => {
 
     assert.equal(verdict.canBeExactMatch, true);
     assert.equal(verdict.status, "ok");
+  });
+
+  it("rejects an explicit non-drip brewer for a drip coffee maker request", () => {
+    const verdict = classifyProductTypeMatch({
+      evidenceText: "Bodum Brazil French Press Coffee Maker - 51 oz (12 Cups)",
+      identityText: "Bodum Brazil French Press Coffee Maker - 51 oz (12 Cups)",
+      requestedCategory: "drip coffee maker",
+    });
+
+    assert.equal(verdict.canBeExactMatch, false);
+    assert.equal(verdict.status, "wrong_type");
   });
 
   it("keeps a valid wet-dry shop vacuum after the shop-vac rule is enabled", () => {

@@ -93,6 +93,33 @@ describe("bounded product search", () => {
     assert.equal(accessory.reason, "accessory_or_part");
   });
 
+  it("admits forty returned Shopping rows and reports any provider-row truncation", async () => {
+    process.env.SERPER_API_KEY = "test-only-key";
+    globalThis.fetch = async () =>
+      new Response(
+        JSON.stringify({
+          shopping: Array.from({ length: 45 }, (_, index) => ({
+            extractedPrice: 100 + index,
+            link: `https://shop.example/products/model-${index}`,
+            source: "Example Store",
+            title: `Example Model X${100 + index} Robot Vacuum`,
+          })),
+        }),
+        { headers: { "content-type": "application/json" }, status: 200 },
+      );
+
+    const result = await searchShoppingProducts(
+      "forty-row admission test",
+      "robot vacuum",
+      { requestCache: new Map() },
+    );
+
+    assert.equal(result.candidates.length, 40);
+    assert.equal(result.diagnostics.normalizationLimit, 40);
+    assert.equal(result.diagnostics.rawShoppingResults, 45);
+    assert.equal(result.diagnostics.rawResultsDroppedByLimit, 5);
+  });
+
   it("does not mark an incomplete Shopping result as a current offer", () => {
     const missingPrice = productSearchTestExports.normalizeShoppingResult(
       {
@@ -255,7 +282,7 @@ describe("bounded product search", () => {
     globalThis.fetch = async (_url, init) => {
       fetchCalls += 1;
       const request = JSON.parse(init.body);
-      assert.equal(request.num, 10);
+      assert.equal(request.num, 40);
       return new Response(
         JSON.stringify({
           shopping: [

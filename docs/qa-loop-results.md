@@ -18331,3 +18331,293 @@ tree was not accessed. The four previously disclosed incidents remain the
 complete list. No push, deployment, release, production-data action, dependency
 change, public-contract expansion, background work, retained research cache, or
 benchmark retry occurred.
+
+---
+
+## Stabilization and request-bound architecture checkpoint (2026-09-01)
+
+**Assessment:** architecture PASS; baseline-ready but still release-failed.
+This checkpoint did not start Phase 0, redesign ranking, or attempt to improve
+the frozen V23 score.
+
+### Runtime proof
+
+The complete production path is:
+
+    POST /api/recommendations
+      -> bounded body and request validation
+      -> deterministic requirement extraction and conflict rejection
+      -> one fresh independent market scout + three fresh neutral Shopping calls
+      -> bounded exact-target Shopping and strong-target page recovery
+      -> prefilter, exact identity binding, deduplication, and ranking
+      -> adaptive request-local page/availability/price/image verification
+      -> hard requirement, type, condition, budget, and exclusion enforcement
+      -> distinct final selection
+      -> no-store five-field JSON
+
+Current runtime searches and direct inspection found no `marketEvidenceIndex`,
+prewarm/startup hook, scheduled/background refresh, post-response task, request-
+hash evidence store, saved target, refresh queue/ledger, application file-backed
+product research, or persistent plan/result/Shopping/page cache. `selectProducts`
+constructs both request Maps inside the function. Scout calls always use
+`store: false` and no SDK retries. Search/page cache tests prove same-request
+coalescing and later-request refetch. The API isolation regression sends robot-
+vacuum and drip-coffee requests through one handler and proves each gets its own
+fresh scout target.
+
+The only process-global mutable runtime object is `paidRequestAdmission`, which
+tracks request starts and in-flight permit counts. It contains no product,
+market, query-result, price, page, or recommendation data and cannot influence
+which products a later search receives. Static Maps elsewhere are immutable
+identity/semantic lookup tables, not researched market state. The live QA runner
+can write an explicitly requested report after an audit; it is not imported by
+the app and does not feed recommendations.
+
+After the complete dev process was terminated and restarted, a repeated broad
+drip-coffee request made one new OpenAI scout call, three new hosted searches,
+and 13 new logical/physical Serper operations and returned four products. No
+startup/prewarm operation ran. This is direct runtime evidence that clearing all
+temporary process state does not remove market-research capability.
+
+### Prior-goal accuracy-change classification
+
+| Class | Retained or removed change | Checkpoint judgment |
+| --- | --- | --- |
+| A | Exact model/alias and sibling isolation; conflicting slug-brand rejection; non-US locale rejection; direct Shopping offer-to-merchant binding; seller alternatives; early editorial/manual/support rejection; page-title/path requirement evidence; current availability/price precedence; false-empty provider failure; request-local finalist backfill; distinct product/page dedupe; shop-vac and leaf-blower type safety | Generalized protections with deterministic regression coverage and/or direct failure evidence. Retain. |
+| A | Three unique neutral queries for broad requests and independent scout/Shopping concurrency | Removes duplicate broad calls and reduces serialization without adding state. Retain. |
+| B | Deletion of the market evidence index, prewarm/refresh script and tests, background route behavior, and generic cross-request product cache; fresh scout and request-local Maps | Necessary to restore the required live request-time architecture. Retain the deletion. |
+| B | Removal of the later SerpApi detour and restoration of Serper-only commerce | Necessary to restore the currently approved request-time provider architecture; not an accuracy win by itself. |
+| C | Scout evidence tiers and consensus ordering; exact-target recovery breadth; Bayesian rating shrinkage, review/offer volume, merchant trust, and related post-gate ordering signals | Deterministically bounded and safety-preserving, but not isolated as quality improvements. V23 reached only 1/9 eligible leaders and failed latency gates. Retain unchanged for the Phase 0 baseline and evaluate rather than assume benefit. |
+| C | `top rated` / `popular models` neutral-query wording and supported-target fill after strong targets | Generalized, but live reports do not isolate its contribution. Retain unchanged for measurement. |
+| D | Persistent evidence index, stale/fresh evidence states, request-hash entries, refresh concurrency/ledger, prewarm script, cross-request cache, commerce-informed scout roster, direct-page scout experiment, V21/V22 source/query/concurrency experiments, and SerpApi adapter | Dead, rejected, or incompatible after reversal. Runtime code is removed; historical reports remain clearly labeled audit evidence. |
+| D | Unused scout `queries`, always-zero `commerceCandidateCount`, unused OpenAI retrieve/cancel contracts, stale PR-13 QA alias/filename, and obsolete environment examples | Residual contract/documentation debt removed in this checkpoint. |
+
+### Live smoke
+
+Eight live API executions occurred: five required scenarios, one correction
+check, and two post-restart repeats (the first repeat's observer script selected
+the wrong response property, so a second captured the full result). This was a
+small smoke, not the Phase 0 benchmark.
+
+- Broad robot vacuum: five cards — Roborock Saros 10R, Dreame X60 Max Ultra
+  Complete, Eureka J15 Ultra, eufy X10 Pro Omni, and Eureka J15 Evo Ultra. No
+  obvious wrong type, accessory, duplicate identity, price, or page problem.
+- Broad drip coffee maker, failed-first: Bella PRO 12-Cup Programmable, Bodum
+  Brazil French Press, and Cuisinart 14-Cup Programmable. The French press was a
+  severe generalized wrong-type regression.
+- Broad drip coffee maker, corrected: Bella PRO 12-Cup Programmable, Cuisinart
+  14-Cup Programmable, Ninja CE250, and Ninja CE251. No wrong brewing method or
+  duplicate identity remained.
+- Shop vacuum under $200: Bauer 3 Gallon Wet/Dry, Stanley SL18116P 6 Gallon,
+  Shark MessMaster, and DeWalt Stealthsonic 6 Gallon. All visible prices were at
+  or below $169.99; no standalone accessory or household floor washer appeared.
+- Gaming monitor under $300, exactly 27-inch/1440p/at least 144 Hz: ASUS TUF
+  VG27AQ5A 210 Hz at $189.99 and Z-EDGE G27IS 320 Hz at $299.99. Both displayed
+  all hard specs and met budget.
+- Cordless drill under $200, battery/charger required and impact drivers, combo
+  kits, replacement batteries, and bit sets excluded: Hercules 20V Brushless
+  Drill/Driver Kit at $97.99 and Warrior 18V Drill Kit at $29.99. Both named a
+  battery and charger; neither was an excluded product.
+- Post-restart drip repeat: Bella PRO 12-Cup Programmable, Zojirushi Zutto
+  EC-DAC50, Cuisinart 14-Cup Programmable, and Ninja CE250. One fresh scout,
+  three hosted searches, 13 Serper operations, no fallback, and no wrong type.
+
+Returned page URLs were direct retailer or manufacturer product-detail shapes,
+not Google/search/category/editorial pages. A direct external follow-up got HTTP
+200 from Target and Walmart with product identity visible. Williams-Sonoma
+returned its automation-blocking 403 and Best Buy produced a client transport
+error; both exact pages had already passed the application's fetched identity
+and availability checks. No URL was replaced or patched for the sample.
+
+### Correction and final verification
+
+The generalized `drip_coffee_maker` type-intent rule is the only accuracy-
+affecting checkpoint change. It separates explicit drip intent from French
+press, pour-over, espresso, moka, cold-brew, percolator, pod/single-serve, and
+grinder identities, while permitting explicit drip/filter, automatic,
+programmable/capacity, and hybrid drip products. Focused type/search tests pass
+46/46.
+
+Final deterministic wall:
+
+- `npm run typecheck`: pass;
+- `npm run lint`: pass with zero warnings;
+- `npm test`: 355/355 across 44 suites;
+- `npm run build`: pass on Next.js 16.3.3; only `/`, `/_not-found`, and
+  `/api/recommendations`;
+- `npm run test:e2e`: 7/7 Chromium desktop/mobile, with only environment-level
+  `NO_COLOR` / `FORCE_COLOR` notices; and
+- deterministic benchmark/schema binding: pass inside the unit wall.
+
+The large `qa:live-accuracy` matrix was not run because it is the upcoming
+measurement work, not a deterministic checkpoint check. V23 remains the honest
+current accuracy/latency baseline and still fails release qualification.
+
+---
+
+## Phase 0 Review Radar Accuracy Benchmark V1 (2026-09-01)
+
+**Assessment:** VALID measurement; current accuracy is not release-ready.
+
+### Frozen method and isolation
+
+V1 froze 48 one-attempt US-market searches across 11 categories and nine search
+types before any output was observed. The independent 99-product registry was
+also frozen before execution; every scored reference is timestamped and bound
+to at least two source families. The runner sends request-only fields and cannot
+load the registry. A separate evaluator loads references and run-hash-bound
+adjudications only after the run. Production imports and representative runtime
+source are checked for benchmark leakage.
+
+The measured baseline is `main` at
+`866c5fc9ab9ea72a135393d84f996189d13647c6`, plus an exact dirty-diff seal and
+per-production-file hashes. No commit was created. Additive sanitized candidate-
+funnel debug telemetry is the only production change; no search, ranking,
+filter, verification, or selection behavior changed.
+
+### Results
+
+| Metric | Result |
+|---|---:|
+| First-attempt HTTP success | 48/48 |
+| Empty results | 8/48 |
+| Market-leader discovery recall | 62/142 (43.66%) |
+| Final market-leader recall | 7/142 (4.93%) |
+| Top-K quality precision | 50/102 (49.02%) |
+| NDCG@3 | 0.4082 |
+| Hard-requirement accuracy | 163/172 (94.77%) |
+| Wrong-product/identity leakage | 6/102 (5.88%) |
+| Model-family duplicate leakage | 4/102 (3.92%) |
+| Price accuracy, checked subset | 6/7 (85.71%) |
+| Product-page accuracy, checked subset | 25/31 (80.65%) |
+| Latency p50 / p95 | 26,125 / 34,642 ms |
+
+The current application returns at most five products. V1 therefore measures
+top-K precision for K=1–5 instead of inventing a seven-slot denominator.
+
+### Earliest leader loss
+
+| Stage | Count |
+|---|---:|
+| Never discovered | 80 |
+| Compatible but absent from ranked/verification slate | 26 |
+| Verified then final-selection crowd-out | 10 |
+| Page/commerce verification | 8 |
+| Prefilter | 6 |
+| Deduplication/identity collapse | 3 |
+| Market/merchant filter | 2 |
+| Returned | 7 |
+
+Broad/no-criteria searches returned cards in all 12 cases, but discovered only
+19/36 leaders and returned 3/36. Their strong-result precision was 17/35 and
+NDCG@3 was 0.5278. For budget searches, 3/9 comparable pairs placed a cheaper,
+weaker product above a stronger, more expensive product that still fit budget;
+the small denominator supports a targeted finding, not a universal price-bias
+claim.
+
+### Representative preserved failures
+
+The output includes a humidifier for air-purifier intent; three sub-12-gallon
+shop vacs for an at-least-12-gallon request; two drills without established
+brushless construction; a right-handed mouse for left-handed intent; a 1,800-
+running-watt generator for an at-least-2,000-running-watt request; an unsupported
+$10,000 treadmill price; several card/page configuration mismatches; three
+wrong-model images in the checked subset; and four model-family duplicates.
+Eight cells were empty. None was retried or patched.
+
+### Work and verification
+
+The run used 48 Responses calls, 136 hosted web searches, 652 logical and 652
+physical Serper operations, 816,955 input and 70,363 output tokens. Mean/p50/
+p95/maximum latency was 26,488/26,125/34,642/37,807 ms.
+
+Benchmark integrity tests passed 4/4. The full wall passed 359/359 across 45
+suites, typecheck, zero-warning lint, and Next.js 16.3.3 production build.
+
+**Decision:** discovery coverage is the first generalized bottleneck: 80/142
+leaders never appeared, and 26/142 more did not reach the bounded verification
+slate. A final ranking redesign would attack a later, smaller loss. Preserve the
+request-bound architecture and V1 rules; a successor phase must compare against
+these artifacts without importing reference answers into production.
+
+Canonical artifacts:
+`benchmarks/accuracy-v1/results/baseline-report.md` and
+`benchmarks/accuracy-v1/results/baseline-report.json`.
+
+---
+
+## 🟧 Phase 1 Request-Time Market Discovery Coverage (2026-09-02)
+
+**Assessment:** VALID exact-source comparison. The discovery objective improved
+materially and the stated correctness guardrails held; final shortlist quality
+and latency remain below a release-ready standard.
+
+### Generalized implementation
+
+- The market scout now creates a request-local map of up to four market-leader,
+  three request-fit, and two coverage-gap targets from current hosted research.
+- Product discovery combines a bare-category query, a neutral current/top-rated
+  request-fit query, up to four expected-target Shopping queries, and up to
+  three adaptive product-page queries within fifteen logical operations.
+- Shopping normalizes up to forty results per query. Candidate admission and
+  verification use path-fair interleaving and a nine-candidate slate.
+- Diagnostics expose discovery lineage, missing expected targets, query/result
+  and candidate limits, stopping reasons, verification waves, and distinct
+  plausible contributions from each path.
+- Source-derived page facts are separated from query wording and page-identity
+  text. Generalized protections were added for alphanumeric sibling models,
+  storage/configuration mismatches, named suffixes, rentals, support/editorial
+  pages, and family duplicates.
+- No benchmark reference, product-specific lookup, persistent market research,
+  prewarm, saved recommendation, cross-request cache, new commerce provider, or
+  final ranking-weight redesign entered production.
+
+### Accepted sealed result
+
+The accepted artifact is
+`benchmarks/accuracy-v1/results/phase1-accepted-v5-raw.json`, SHA-256
+`9EC5744A37C5063B2B663ECCFAE9865B8AF7659EDC73E97A5605D77EF27208A6`.
+All 48 frozen cases completed on the first attempt. The evaluator was `VALID`;
+all 77 displayed products were adjudicated and no methodological blocker
+remained.
+
+| Metric | Baseline | Phase 1 |
+|---|---:|---:|
+| Leader discovery | 62/142 (43.66%) | 77/142 (54.23%) |
+| Broad discovery | 19/36 (52.78%) | 24/36 (66.67%) |
+| Final leader recall | 7/142 (4.93%) | 10/142 (7.04%) |
+| Empty searches | 8/48 | 10/48 |
+| Top-K precision | 50/102 (49.02%) | 24/77 (31.17%) |
+| NDCG@3 | 0.4082 | 0.3039 |
+| Hard-requirement accuracy | 163/172 (94.77%) | 118/118 (100%) |
+| Wrong-product leakage | 6/102 (5.88%) | 3/77 (3.90%) |
+| Family-duplicate leakage | 4/102 (3.92%) | 1/77 (1.30%) |
+| Latency p50 / p95 | 26,125 / 34,642 ms | 30,654 / 41,481 ms |
+
+Earliest losses were 65 never discovered, 43 candidate truncation/ranking, 9
+final-selection crowd-out, 6 page/commerce verification, 5 prefilter, 3
+merchant/market filter, 1 candidate deduplication, and 10 returned.
+
+The run used 48 Responses calls, 143 hosted searches, 672 logical and 667
+physical Serper operations, 869,232 input tokens, and 89,107 output tokens.
+
+### Verification and decision
+
+- `npm test`: 376/376 across 45 suites.
+- `npm run typecheck`: pass.
+- `npm run lint`: pass with zero warnings/errors.
+- `npm run build`: pass on Next.js 16.3.3; routes `/`, `/_not-found`, and
+  `/api/recommendations` only.
+- `npm run test:e2e`: 7/7 Chromium desktop/mobile.
+- Benchmark integrity and evaluator: pass/VALID on the accepted exact source.
+
+Phase 1 is complete. The fifteen-leader discovery gain is real, but 43 leaders
+now die before the verification slate; empty searches, precision/NDCG, and
+latency also regressed. Do not hide those facts behind retries or a ranking
+change in this phase. A separately approved Phase 2 should investigate
+candidate-universe-to-slate survival and false empties with the new telemetry.
+
+Canonical artifacts:
+`benchmarks/accuracy-v1/results/phase1-accepted-v5-report.md`,
+`benchmarks/accuracy-v1/results/phase1-accepted-v5-report.json`, and
+`benchmarks/accuracy-v1/results/phase1-accepted-v5-comparison.json`.

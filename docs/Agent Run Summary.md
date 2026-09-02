@@ -3411,3 +3411,134 @@ claimed. The final local commit was explicitly authorized.
 **Next recommended step:** review and manually exercise the committed shopper
 UI. Use medium reasoning for ordinary UI/catalog follow-up and high reasoning
 before changing identity, hard-requirement, price, SSRF, or image gates.
+
+## Codex Run - 2026-09-01 stabilization and architecture audit
+
+**Goal:** establish an honest, measurable post-reversal baseline without
+starting Phase 0 or changing the ranking architecture.
+
+**Architecture verdict:** PASS. The only production request path is one
+`POST /api/recommendations`. Each call extracts the current shopper's
+requirements, starts a fresh independent market scout and fresh neutral Serper
+Shopping work, performs bounded exact-target and product-page resolution, then
+filters, verifies, ranks, and returns the five-field card. Product research is
+request-time and request-bound.
+
+**Removal proof:** current runtime searches, history inspection, and execution-
+path tracing found no evidence index, prewarm, refresh queue/ledger, post-
+response job, startup market research, persistent product-research file, or
+cross-request plan/result/Shopping/page cache. The old index source, refresh
+script, index tests, and generic cross-request cache had already been deleted;
+this audit removed residual dead contracts and stale configuration/docs. The
+only process-global mutable object is paid-request admission accounting, which
+stores concurrency/rate counters rather than products or evidence.
+
+**Live correction:** the first broad drip-coffee smoke returned a Bodum French
+press. The earliest generalized cause was missing subtype separation in the
+shared product-type intent classifier. A new rule rejects explicit alternative
+brewing methods for a drip request while retaining real drip/hybrid machines.
+The corrected smoke and a post-process-restart repeat returned only drip coffee
+makers. No product-specific URL, model, brand, score, or ranking patch was added.
+
+**Live scope:** the audit exercised broad robot-vacuum and drip-coffee searches,
+a $200 shop-vac search, a 27-inch 1440p/144-Hz monitor search under $300, and a
+cordless-drill-kit request with battery/charger requirements plus impact-driver,
+combo-kit, battery, and bit-set exclusions. All corrected final shortlists were
+non-empty, direct-page based, distinct, visibly in budget where constrained,
+and free of obvious accessories or wrong product types. Eight API executions
+occurred in total: the five required scenarios, the coffee correction check,
+and two post-restart executions (one observer script misread the response shape,
+so the second captured the full result).
+
+**Verification:** 355/355 unit tests across 44 suites, typecheck, zero-warning
+lint, production build, and Playwright 7/7 passed. Deterministic benchmark-
+binding checks run inside the unit suite. The build contains only `/`,
+`/_not-found`, and `/api/recommendations`. The large live accuracy matrix was
+not run because this checkpoint explicitly does not start Phase 0.
+
+**Baseline decision:** ready to begin a separately approved Phase 0 measurement,
+but not release-qualified. Existing V23 market-leader recall and latency failures
+remain honest baseline limitations. No commit, push, deployment, release,
+production-data action, dependency change, or public-card expansion occurred.
+
+## Codex Run - 2026-09-01 Accuracy Benchmark V1
+
+**Goal:** measure the exact stabilized request-bound production behavior before
+any next-generation discovery, quality, or ranking change.
+
+**Baseline binding:** branch `main`, HEAD
+`866c5fc9ab9ea72a135393d84f996189d13647c6`, relevant dirty-diff SHA-256
+`84fa120a84d8af999b500349e36fcabe489e509dcc475dc32004cec96ee19e7b`, all
+measured production-file hashes, safe runtime constants, and the benchmark time
+window are preserved in `benchmarks/accuracy-v1/results/baseline-raw.json`. No
+commit was made because unrelated pre-existing work was present.
+
+**Method:** froze 48 searches across 11 categories and nine search types, plus a
+99-product independent registry with at least two source families per scored
+reference, before the first live request. The runner made one attempt per case
+with no retry or substitution and did not load expected products. A separate
+run-hash-bound process adjudicated all 102 displayed cards. Additive candidate-
+funnel telemetry was the only production edit; recommendation behavior and the
+five-field public card are unchanged.
+
+**Result:** 48/48 first attempts returned HTTP 200; eight were empty. Discovery
+recall was 62/142 (43.66%), final leader recall 7/142 (4.93%), top-K quality
+precision 50/102 (49.02%), NDCG@3 0.4082, and hard-requirement accuracy 163/172
+(94.77%). Broad searches discovered 19/36 leaders but returned only 3/36;
+strong precision was 17/35. Earliest losses were 80 never discovered, 26 before
+the verification slate, 10 final-selection crowd-outs, 8 page/commerce losses,
+6 prefilter losses, 3 deduplication losses, and 2 market/merchant losses.
+
+**Work baseline:** latency p50/p95 was 26,125/34,642 ms; 48 Responses calls, 136
+hosted searches, 652 logical/physical Serper operations, and 887,318 measured
+market-scout tokens. No currency cost is claimed without billing evidence.
+
+**Verification:** benchmark integrity 4/4; full unit wall 359/359 across 45
+suites; typecheck; zero-warning lint; production build. Benchmark references
+remain absent from the live runner and representative production imports.
+
+**Decision:** Phase 0 is valid. The next root cause is generalized request-time
+discovery coverage, then the compatible-pool-to-nine-candidate cutoff. Do not
+start with final ranking weights: 106/142 leader losses occur earlier. No fix,
+commit, push, deploy, release, dependency, background research, persistent
+market data, or benchmark-specific runtime rule was added.
+
+## Codex Run - 2026-09-02 Phase 1 request-time market discovery
+
+**Goal:** materially improve the strongest current products entering the viable
+candidate universe for the current shopper request, without persistent research,
+benchmark leakage, product-specific fixes, or final-ranking redesign.
+
+**Root cause and implementation:** Phase 0 showed 80/142 leaders never entered
+discovery and 26 more missed the verification slate. Phase 1 replaced the
+single discovery family with a bounded request-local market map and independent
+bare-category, neutral request-fit, expected-target, and adaptive page paths.
+Shopping normalization increased to forty per query, candidates are interleaved
+across paths before a nine-candidate slate, and diagnostics now attribute every
+serious candidate, expected-target gap, stop reason, result/candidate limit,
+verification wave, and distinct path contribution. Generalized identity,
+source-evidence, product-page, rental, support/editorial, configuration, and
+family-deduplication gates were hardened as live checkpoints exposed defects.
+
+**Accepted result:** the exact-source v5 sealed run completed 48/48 first
+attempts and was evaluator `VALID`. Discovery improved from 62/142 (43.66%) to
+77/142 (54.23%), broad discovery from 19/36 to 24/36, and final recall from
+7/142 to 10/142. Hard-requirement accuracy was 118/118; wrong-product leakage
+was 3/77; family-duplicate leakage was 1/77; exact duplicates were zero.
+
+**Honest regressions:** empty searches rose from 8/48 to 10/48; precision fell
+from 49.02% to 31.17%; NDCG@3 fell from 0.4082 to 0.3039; p50/p95 latency rose
+to 30,654/41,481 ms. The dominant loss moved downstream: 43 leaders were
+discovered but missed the verification slate. This is Phase 2 evidence, not
+permission to retune final ranking in Phase 1.
+
+**Work and verification:** 48 Responses calls, 143 hosted searches, 672 logical
+and 667 physical Serper operations, and 958,339 total market-scout tokens.
+`npm test` passed 376/376 across 45 suites; typecheck, zero-warning lint, the
+Next.js 16.3.3 production build, Playwright 7/7, benchmark integrity, and the
+sealed evaluator passed. Accepted raw SHA-256:
+`9EC5744A37C5063B2B663ECCFAE9865B8AF7659EDC73E97A5605D77EF27208A6`.
+
+**Scope:** no push, deployment, release, production-data action, dependency,
+persistent research, cross-request cache, public-card expansion, benchmark
+answer lookup, or product-specific production rule. Phase 2 is not approved.

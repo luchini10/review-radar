@@ -208,6 +208,7 @@ export function exactModelIdentifiers(value: string) {
 
 const NAMED_MODEL_VARIANT_WORDS = new Set([
   "air",
+  "ce",
   "complete",
   "evo",
   "kit",
@@ -221,6 +222,12 @@ const NAMED_MODEL_VARIANT_WORDS = new Set([
   "ultra",
   "xl",
   "xxl",
+]);
+
+const GLOBAL_NAMED_MODEL_VARIANT_WORDS = new Set([
+  "backpack",
+  "dual",
+  "precision",
 ]);
 
 function namedVariantWords(value: string) {
@@ -266,6 +273,9 @@ function variantsNearModelAnchors(value: string, anchors: Set<string>) {
         variants.add(words[nearby]);
       }
     }
+  }
+  for (const variant of GLOBAL_NAMED_MODEL_VARIANT_WORDS) {
+    if (words.includes(variant)) variants.add(variant);
   }
   return variants;
 }
@@ -1855,9 +1865,18 @@ function numericSpecValues(text: string) {
   }
 
   for (const match of text.matchAll(
-    /(\d{2,5})\s*gb\s*(?:ssd|storage|ufs|emmc)\b|(?:ssd|storage|ufs|emmc)\b[^\d]{0,12}(\d{2,5})\s*gb\b/gi,
+    /(\d{2,5})[\s-]*gb[\s-]*(?:ssd|storage|ufs|emmc)\b|(?:ssd|storage|ufs|emmc)\b[^\d]{0,12}(\d{2,5})[\s-]*gb\b/gi,
   )) {
     add("storageGb", match[1] || match[2]);
+  }
+
+  for (const match of text.matchAll(
+    /(\d{1,2}(?:\.\d+)?)[\s-]*tb[\s-]*(?:ssd|storage)\b|(?:ssd|storage)\b[^\d]{0,12}(\d{1,2}(?:\.\d+)?)[\s-]*tb\b/gi,
+  )) {
+    const terabytes = Number(match[1] || match[2]);
+    if (Number.isFinite(terabytes)) {
+      add("storageGb", String(terabytes * 1024));
+    }
   }
 
   return values;

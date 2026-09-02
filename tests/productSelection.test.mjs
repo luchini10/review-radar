@@ -19,6 +19,7 @@ const {
   pageSourceScore,
   processVerificationWaves,
   productPageSearchQuery,
+  productFamilyKeys,
   rankAcceptedSelections,
   rankCandidates,
   resolvedCandidate,
@@ -491,6 +492,65 @@ describe("selection correctness", () => {
     );
   });
 
+  it("rejects a resolved page whose title exposes a conflicting memory configuration", () => {
+    const pageUrl =
+      "https://www.bestbuy.com/product/acer-swift-go-16-ai-16-wuxga-touch-laptopryzen-ai-7-44516gb-ram1tb-ssd/JJ8V8H6Y77/sku/12838843";
+    assert.equal(
+      pageIdentityScore(
+        candidate(
+          'Acer Swift Go 16 AI 16" WUXGA Touch Laptop, Ryzen AI 9 465, 32GB RAM, 1TB SSD',
+          { brand: "Acer", retailer: "Best Buy" },
+        ),
+        candidate(
+          'Acer Swift Go 16 AI 16" WUXGA Touch Laptop, Ryzen AI 7 ...',
+          {
+            brand: "Acer",
+            evidenceSources: [
+              {
+                snippet:
+                  'Acer Swift Go 16 AI 16" WUXGA Touch Laptop, Ryzen AI 7 445, 16GB RAM, 1TB SSD',
+                snippetProvenance: "source-derived",
+                title: 'Acer Swift Go 16 AI 16" WUXGA Touch Laptop, Ryzen AI 7 ...',
+                url: pageUrl,
+              },
+            ],
+            price: null,
+            productUrl: pageUrl,
+          },
+        ),
+      ),
+      0,
+    );
+  });
+
+  it("rejects a resolved page whose source snippet exposes a sibling catalog model", () => {
+    const pageUrl =
+      "https://www.acmetools.com/stihl-bga-1600-36v-550-cfm-battery-powered-cordless-handheld-blower/S0000000080516.html";
+    assert.equal(
+      pageIdentityScore(
+        candidate("Stihl BGA 200 Battery Blower", {
+          brand: "Stihl",
+          retailer: "Acme Tools",
+        }),
+        candidate("Stihl BGA 160 36V 550 Cfm Battery-Powered Cordless ...", {
+          brand: "Stihl",
+          evidenceSources: [
+            {
+              snippet:
+                "The power of the BGA 160 sits above the BGA 86 and below the BGA 250.",
+              snippetProvenance: "source-derived",
+              title: "Stihl BGA 160 36V 550 Cfm Battery-Powered Cordless ...",
+              url: pageUrl,
+            },
+          ],
+          price: null,
+          productUrl: pageUrl,
+        }),
+      ),
+      0,
+    );
+  });
+
   it("rejects a page whose echoed title masks a conflicting hard spec in its path", () => {
     assert.equal(
       pageIdentityScore(
@@ -506,6 +566,71 @@ describe("selection correctness", () => {
         }),
       ),
       0,
+    );
+  });
+
+  it("rejects a page whose slug names a newer family configuration", () => {
+    assert.equal(
+      pageIdentityScore(
+        candidate("Roborock Qrevo Curv Robot Vacuum", {
+          brand: "Roborock",
+          marketEvidence: {
+            consensusOrder: 0,
+            sourceUrls: ["https://www.rtings.com/example"],
+            targetBrand: "Roborock",
+            targetModel: "Qrevo Curv",
+            tier: "strong",
+          },
+        }),
+        candidate("Roborock Qrevo Curv 2 Flow Robot Vacuum", {
+          brand: "Roborock",
+          price: null,
+          productUrl:
+            "https://us.roborock.com/products/roborock-qrevo-curv-2-flow",
+        }),
+      ),
+      0,
+    );
+  });
+
+  it("rejects a page whose slug names a sibling alphabetic catalog model", () => {
+    assert.equal(
+      pageIdentityScore(
+        candidate("ProForm Carbon TLS Treadmill", {
+          brand: "ProForm",
+          retailer: "Walmart",
+        }),
+        candidate("ProForm Carbon TLS Treadmill", {
+          brand: "ProForm",
+          price: null,
+          productUrl:
+            "https://www.walmart.com/ip/ProForm-Carbon-TLX-Treadmill/3315999798",
+        }),
+      ),
+      0,
+    );
+  });
+
+  it("rejects direct product URLs with conflicting memory, storage, or display configurations", () => {
+    assert.equal(
+      candidateHasUsablePage(
+        candidate("HP OmniBook 14 2K Laptop 8 GB Memory 512 GB SSD", {
+          brand: "HP",
+          productUrl:
+            "https://www.target.com/p/hp-omnibook-14-2k-laptop-4-gb-memory-256-gb-ssd/-/A-1010966807",
+        }),
+      ),
+      false,
+    );
+    assert.equal(
+      candidateHasUsablePage(
+        candidate("HP Omen 16 1440p 144Hz Gaming Laptop 32GB Memory 2TB SSD", {
+          brand: "HP",
+          productUrl:
+            "https://www.bestbuy.com/product/hp-omen-16-1080p-144hz-32gb-memory-2tb-ssd/J3GWQRF8KH",
+        }),
+      ),
+      false,
     );
   });
 
@@ -589,6 +714,16 @@ describe("selection correctness", () => {
     assert.equal(
       isSecondaryMarketCandidate(
         candidate("Shark Matrix RV2310AE", { retailer: "Reebelo USA" }),
+      ),
+      true,
+    );
+    assert.equal(
+      isSecondaryMarketCandidate(
+        candidate("Anker SOLIX F2000 Rental - Portable Power Station", {
+          productUrl:
+            "https://rentals.canalsoundlight.com/product/anker-solix-f2000-rental/",
+          retailer: "Canal Sound and Light",
+        }),
       ),
       true,
     );
@@ -967,7 +1102,7 @@ describe("selection correctness", () => {
 
     assert.deepEqual(
       selected.map((target) => target.model),
-      ["B200", "D400", "E500"],
+      ["B200", "D400", "E500", "C300"],
     );
     assert.deepEqual(
       marketTargetsNeedingSearch([], [
@@ -982,9 +1117,10 @@ describe("selection correctness", () => {
   it("keeps the discovery and resolution work within the fifteen-operation ceiling", () => {
     assert.deepEqual(operationLimits, {
       discoverySearches: 6,
-      neutralSearches: 3,
+      neutralSearches: 2,
       resolutionCandidates: 9,
-      targetSearches: 3,
+      targetResolutionSearches: 3,
+      targetSearches: 4,
       totalLogicalSearches: 15,
     });
     assert.equal(
@@ -1081,6 +1217,35 @@ describe("selection correctness", () => {
     );
 
     assert.equal(ranked[0].name, "Beta B200 Quiet Robot Vacuum");
+  });
+
+  it("does not satisfy a hard brand from incidental source evidence", () => {
+    const product = asset("Hyper Tough 20V Cordless Drill Kit", {
+      candidate: {
+        brand: "Hyper Tough",
+        evidenceSources: [
+          {
+            snippet: "Results also include DeWalt cordless drills.",
+            snippetProvenance: "source-derived",
+            title: "Cordless drill comparison",
+            url: "https://shop.example/products/hyper-tough-drill",
+          },
+        ],
+        productUrl: "https://shop.example/products/hyper-tough-drill",
+      },
+    });
+    const requirements = extractStructuredRequirements({
+      priorities: "Must be DeWalt only",
+      query: "cordless drill kit",
+    });
+
+    assert.equal(
+      selectionRequirementResult(product, {
+        query: "cordless drill kit",
+        extractedRequirements: requirements,
+      }).isMatch,
+      false,
+    );
   });
 
   it("uses scout consensus before commerce metadata within one evidence tier", () => {
@@ -1514,6 +1679,129 @@ describe("selection correctness", () => {
     );
   });
 
+  it("rejects generalized hard-requirement contradictions exposed by broader discovery", () => {
+    const shopVacInput = {
+      query: "wet dry shop vacuum",
+      priorities: "at least 12 gallon capacity",
+    };
+    shopVacInput.extractedRequirements = extractStructuredRequirements(shopVacInput);
+    assert.equal(
+      selectionRequirementResult(asset("Bauer 3 Gallon Wet/Dry Vacuum"), shopVacInput)
+        .isMatch,
+      false,
+    );
+    assert.equal(
+      selectionRequirementResult(asset("Bauer 14 Gallon Wet/Dry Vacuum"), shopVacInput)
+        .isMatch,
+      true,
+    );
+
+    const espressoInput = {
+      query: "espresso machine",
+      priorities: "built-in burr grinder and milk steaming wand",
+    };
+    espressoInput.extractedRequirements = extractStructuredRequirements(espressoInput);
+    assert.equal(
+      selectionRequirementResult(asset("Gaggia Classic Pro E24 Espresso Machine"), espressoInput)
+        .isMatch,
+      false,
+    );
+    assert.equal(
+      selectionRequirementResult(
+        asset("Breville Barista Express", {
+          candidate: {
+            evidenceSources: [
+              {
+                snippet: "Integrated burr grinder and milk steaming wand.",
+                snippetProvenance: "source-derived",
+                title: "Breville Barista Express",
+                url: "https://shop.example/products/breville",
+              },
+            ],
+          },
+        }),
+        espressoInput,
+      ).isMatch,
+      true,
+    );
+
+    const mouseInput = {
+      query: "ergonomic vertical mouse",
+      priorities: "left-handed and wireless",
+    };
+    mouseInput.extractedRequirements = extractStructuredRequirements(mouseInput);
+    assert.equal(
+      selectionRequirementResult(
+        asset("Logitech Lift Wireless Vertical Mouse for right hands"),
+        mouseInput,
+      ).isMatch,
+      false,
+    );
+    assert.equal(
+      selectionRequirementResult(
+        asset("Logitech Lift Left-Handed Wireless Vertical Mouse"),
+        mouseInput,
+      ).isMatch,
+      true,
+    );
+
+    const drillInput = {
+      avoid: "multi-tool combo kits and impact-driver-only kits",
+      query: "cordless drill kit",
+      priorities: "brushless drill, two batteries, and charger",
+    };
+    drillInput.extractedRequirements = extractStructuredRequirements(drillInput);
+    assert.equal(
+      selectionRequirementResult(
+        asset("Hercules 20V Brushless Drill Kit with 2 Ah Battery and Charger"),
+        drillInput,
+      ).isMatch,
+      false,
+    );
+    assert.equal(
+      selectionRequirementResult(
+        asset("Milwaukee M18 Brushless Drill 2-Tool Combo Kit with two batteries and charger"),
+        drillInput,
+      ).isMatch,
+      false,
+    );
+
+    const generatorInput = {
+      query: "portable inverter generator",
+      priorities: "at least 2,000 running watts and CO shutoff",
+    };
+    generatorInput.extractedRequirements = extractStructuredRequirements(generatorInput);
+    assert.equal(
+      selectionRequirementResult(
+        asset("Honda Portable Inverter Generator with CO shutoff 2,200 W / 1,800 W"),
+        generatorInput,
+      ).isMatch,
+      false,
+    );
+  });
+
+  it("never treats query-derived snippets as hard-feature proof", () => {
+    const input = {
+      query: "basement dehumidifier",
+      priorities: "built-in pump",
+    };
+    input.extractedRequirements = extractStructuredRequirements(input);
+    const queryEcho = asset("Waykar Continuous Drain Dehumidifier", {
+      candidate: {
+        evidenceSources: [
+          {
+            snippet: "Search results for built-in pump dehumidifier",
+            snippetProvenance: "query-derived",
+            title: "Waykar Dehumidifier",
+            url: "https://shop.example/products/waykar",
+          },
+        ],
+      },
+    });
+
+    assert.equal(selectionRequirementResult(queryEcho, input).isMatch, false);
+  });
+
   it("rejects a known numeric contradiction in an otherwise soft priority", () => {
     const coffeeInput = {
       query: "coffee maker",
@@ -1661,5 +1949,65 @@ describe("selection correctness", () => {
     });
 
     assert.equal(selectDistinctProducts(products).length, 1);
+  });
+
+  it("keeps one final card per named model family", () => {
+    const inputs = [
+      ["Herman Miller Embody Chair", "Herman Miller"],
+      ["Herman Miller Embody Office Chair", "Herman Miller"],
+      ["FlexiSpot C7 Max Ergonomic Office Chair", "FlexiSpot"],
+      ["FlexiSpot C7 Ergonomic Office Chair", "FlexiSpot"],
+      ["Levoit Core 300 Air Purifier", "Levoit"],
+      ["Levoit True HEPA Core 300 Air Purifier", "Levoit"],
+      ["Braun PureFlavor Coffee Maker KF5650BK", "Braun"],
+      ["Braun 14-Cup PureFlavor Coffee Maker", "Braun"],
+      ["Herman Miller Aeron Chair", "Herman Miller"],
+      ["Herman Miller Aeron Nightfall Standard Office Chair", "Herman Miller"],
+      ["Weber Spirit E-425 Gas Grill", "Weber"],
+      ["Weber Spirit SB-E-425 4-Burner Gas Grill", "Weber"],
+      ["Cuisinart DCC-3200 PerfecTemp Coffeemaker", "Cuisinart"],
+      ["Cuisinart DCC-3200WNAS Programmable Coffeemaker", "Cuisinart"],
+    ];
+    const products = inputs.map(([name, brand], index) => {
+      const value = asset(name, {
+        candidate: {
+          brand,
+          productUrl: `https://shop${index}.example/products/${index}`,
+        },
+      });
+      return {
+        asset: value,
+        recommendation: {
+          category: "product",
+          imageUrl: null,
+          name,
+          price: null,
+          productPageUrl: value.pageUrl,
+        },
+      };
+    });
+
+    assert.deepEqual(
+      selectDistinctProducts(products).map((item) => item.name),
+      [
+        "Herman Miller Embody Chair",
+        "FlexiSpot C7 Max Ergonomic Office Chair",
+        "Levoit Core 300 Air Purifier",
+        "Braun PureFlavor Coffee Maker KF5650BK",
+        "Herman Miller Aeron Chair",
+      ],
+    );
+    assert.ok(
+      [...productFamilyKeys(products[2].asset)].some((key) =>
+        [...productFamilyKeys(products[3].asset)].includes(key),
+      ),
+    );
+    for (const [first, second] of [[8, 9], [10, 11], [12, 13]]) {
+      assert.ok(
+        [...productFamilyKeys(products[first].asset)].some((key) =>
+          [...productFamilyKeys(products[second].asset)].includes(key),
+        ),
+      );
+    }
   });
 });

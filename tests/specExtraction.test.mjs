@@ -71,6 +71,69 @@ describe("selection spec requirements", () => {
     );
   });
 
+  it("extracts request-critical capacity, rated-output, and kit-count specs", () => {
+    const gallons = bySpec(
+      extractSpecConstraints("at least 12 gallon capacity", "priorities"),
+      "capacityGal",
+    );
+    const pints = bySpec(
+      extractSpecConstraints("50-pint capacity", "priorities"),
+      "capacityPint",
+    );
+    const runningWatts = bySpec(
+      extractSpecConstraints("at least 2,000 running watts", "priorities"),
+      "runningWattage",
+    );
+    const wattHours = bySpec(
+      extractSpecConstraints("at least 1,500 Wh capacity", "priorities"),
+      "energyCapacityWh",
+    );
+    const batteries = bySpec(
+      extractSpecConstraints("two batteries", "priorities"),
+      "twoBatteriesIncluded",
+    );
+
+    assert.deepEqual(
+      [gallons.operator, gallons.value, gallons.strictness],
+      ["min", 12, "hard"],
+    );
+    assert.deepEqual(
+      [pints.operator, pints.value, pints.strictness],
+      ["equals", 50, "soft"],
+    );
+    assert.deepEqual(
+      [runningWatts.operator, runningWatts.value, runningWatts.strictness],
+      ["min", 2000, "hard"],
+    );
+    assert.deepEqual(
+      [wattHours.operator, wattHours.value, wattHours.strictness],
+      ["min", 1500, "hard"],
+    );
+    assert.deepEqual(
+      [batteries.kind, batteries.value, batteries.strictness],
+      ["boolean", 1, "soft"],
+    );
+    assert.equal(extractSpecsFromText("3 gallon wet dry vacuum").capacityGal.value, 3);
+    assert.equal(extractSpecsFromText("80 pint dehumidifier").capacityPint.value, 80);
+    assert.equal(
+      extractSpecsFromText("2,200 W / 1,800 W inverter generator").runningWattage.value,
+      1800,
+    );
+    assert.equal(
+      extractSpecsFromText("portable power station with 2,048 Wh capacity")
+        .energyCapacityWh.value,
+      2048,
+    );
+    assert.equal(
+      extractSpecsFromText("kit with two 5.0Ah batteries").twoBatteriesIncluded.value,
+      true,
+    );
+    assert.equal(
+      extractSpecsFromText("kit with 2 Ah battery and charger").twoBatteriesIncluded.value,
+      false,
+    );
+  });
+
   it("extracts product facts from selector-controlled evidence text", () => {
     const specs = extractSpecsFromText(
       "Acer 27-inch 2560x1440 QHD gaming monitor with 180Hz refresh rate",

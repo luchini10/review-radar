@@ -1,0 +1,180 @@
+{
+  "baseline": {
+    "branch": "main",
+    "head": "866c5fc9ab9ea72a135393d84f996189d13647c6",
+    "reportFile": "C:\\Users\\tluch\\Documents\\GitHub\\review-radar-fixed\\benchmarks\\accuracy-v1\\results\\baseline-report.json"
+  },
+  "benchmark": "review-radar-accuracy-v1",
+  "candidate": {
+    "branch": "main",
+    "head": "866c5fc9ab9ea72a135393d84f996189d13647c6",
+    "reportFile": "C:\\Users\\tluch\\Documents\\GitHub\\review-radar-fixed\\benchmarks\\accuracy-v1\\results\\phase1-accepted-v5-report.json"
+  },
+  "comparisons": [
+    {
+      "after": 0.5423,
+      "afterMeasure": {
+        "denominator": 142,
+        "numerator": 77,
+        "rate": 0.5423
+      },
+      "before": 0.4366,
+      "beforeMeasure": {
+        "denominator": 142,
+        "numerator": 62,
+        "rate": 0.4366
+      },
+      "delta": 0.1057,
+      "metric": "marketLeaderDiscoveryRecall",
+      "preferredDirection": "higher"
+    },
+    {
+      "after": 0.0704,
+      "afterMeasure": {
+        "denominator": 142,
+        "numerator": 10,
+        "rate": 0.0704
+      },
+      "before": 0.0493,
+      "beforeMeasure": {
+        "denominator": 142,
+        "numerator": 7,
+        "rate": 0.0493
+      },
+      "delta": 0.0211,
+      "metric": "finalLeaderRecall",
+      "preferredDirection": "higher"
+    },
+    {
+      "after": 0.3117,
+      "afterMeasure": {
+        "denominator": 77,
+        "numerator": 24,
+        "rate": 0.3117
+      },
+      "before": 0.4902,
+      "beforeMeasure": {
+        "denominator": 102,
+        "numerator": 50,
+        "rate": 0.4902
+      },
+      "delta": -0.1785,
+      "metric": "topResultQualityPrecision",
+      "preferredDirection": "higher"
+    },
+    {
+      "after": 0.3039,
+      "afterMeasure": 0.3039,
+      "before": 0.4082,
+      "beforeMeasure": 0.4082,
+      "delta": -0.1043,
+      "metric": "ndcgAt3",
+      "preferredDirection": "higher"
+    },
+    {
+      "after": 1,
+      "afterMeasure": {
+        "denominator": 118,
+        "numerator": 118,
+        "rate": 1
+      },
+      "before": 0.9477,
+      "beforeMeasure": {
+        "denominator": 172,
+        "numerator": 163,
+        "rate": 0.9477
+      },
+      "delta": 0.0523,
+      "metric": "hardRequirementAccuracy",
+      "preferredDirection": "higher"
+    },
+    {
+      "after": 0.039,
+      "afterMeasure": {
+        "denominator": 77,
+        "numerator": 3,
+        "rate": 0.039
+      },
+      "before": 0.0588,
+      "beforeMeasure": {
+        "denominator": 102,
+        "numerator": 6,
+        "rate": 0.0588
+      },
+      "delta": -0.0198,
+      "metric": "wrongProductLeakage",
+      "preferredDirection": "lower"
+    },
+    {
+      "after": 0.013,
+      "afterMeasure": {
+        "denominator": 77,
+        "numerator": 1,
+        "rate": 0.013
+      },
+      "before": 0.0392,
+      "beforeMeasure": {
+        "denominator": 102,
+        "numerator": 4,
+        "rate": 0.0392
+      },
+      "delta": -0.0262,
+      "metric": "modelFamilyDuplicateLeakage",
+      "preferredDirection": "lower"
+    },
+    {
+      "after": 0.8261,
+      "afterMeasure": {
+        "denominator": 23,
+        "numerator": 19,
+        "rate": 0.8261
+      },
+      "before": 0.8065,
+      "beforeMeasure": {
+        "denominator": 31,
+        "numerator": 25,
+        "rate": 0.8065
+      },
+      "delta": 0.0196,
+      "metric": "productPageAccuracy",
+      "preferredDirection": "higher"
+    },
+    {
+      "after": 1,
+      "afterMeasure": {
+        "denominator": 1,
+        "numerator": 1,
+        "rate": 1
+      },
+      "before": 0.8571,
+      "beforeMeasure": {
+        "denominator": 7,
+        "numerator": 6,
+        "rate": 0.8571
+      },
+      "delta": 0.1429,
+      "metric": "priceAccuracy",
+      "preferredDirection": "higher"
+    },
+    {
+      "after": 30654,
+      "afterMeasure": 30654,
+      "before": 26125,
+      "beforeMeasure": 26125,
+      "delta": 4529,
+      "metric": "latencyMs.p50NearestRank",
+      "preferredDirection": "lower"
+    },
+    {
+      "after": 41481,
+      "afterMeasure": 41481,
+      "before": 34642,
+      "beforeMeasure": 34642,
+      "delta": 6839,
+      "metric": "latencyMs.p95NearestRank",
+      "preferredDirection": "lower"
+    }
+  ],
+  "generatedAt": "2026-09-02T08:58:49.849Z",
+  "schemaVersion": 1
+}

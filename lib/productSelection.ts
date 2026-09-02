@@ -1,6 +1,7 @@
 import type {
   ProductFieldEvidence,
   ProductAvailabilityTrust,
+  ProductDiscoveryPath,
   ProductMetadata,
   ProductPriceTrust,
   RawProductCandidate,
@@ -55,15 +56,16 @@ import {
   extractSpecsFromText,
 } from "./specExtraction.ts";
 
-const MAX_NEUTRAL_SEARCH_QUERIES = 3;
-const MAX_MARKET_TARGET_SEARCH_QUERIES = 3;
+const MAX_NEUTRAL_SEARCH_QUERIES = 2;
+const MAX_MARKET_TARGET_SEARCH_QUERIES = 4;
+const MAX_TARGET_RESOLUTION_QUERIES = 3;
 const MAX_DISCOVERY_SEARCH_QUERIES =
   MAX_NEUTRAL_SEARCH_QUERIES + MAX_MARKET_TARGET_SEARCH_QUERIES;
 const MAX_TOTAL_SEARCH_QUERIES = 15;
 const MAX_VERIFICATION_CANDIDATES = 9;
 const VERIFICATION_WAVE_SIZE = 3;
 const MAX_PAGE_ALTERNATIVES_PER_CANDIDATE = 2;
-const MAX_PREFILTERED_CANDIDATES = MAX_VERIFICATION_CANDIDATES * 8;
+const MAX_PREFILTERED_CANDIDATES = MAX_VERIFICATION_CANDIDATES * 16;
 const MAX_RECOMMENDATIONS = 5;
 
 type SelectionAssetCandidate = {
@@ -84,19 +86,85 @@ type AcceptedSelection = {
 
 export type ProductSelectionTelemetry = {
   assetCandidates: number;
+  candidateFunnel: {
+    deduplicated: Array<{
+      discoveryPaths: ProductDiscoveryPath[];
+      name: string;
+      productUrl: string;
+    }>;
+    discovered: Array<{
+      discoveryPaths: ProductDiscoveryPath[];
+      name: string;
+      productUrl: string;
+    }>;
+    marketCompatible: Array<{
+      discoveryPaths: ProductDiscoveryPath[];
+      name: string;
+      productUrl: string;
+    }>;
+    prefilterRejected: Array<{ name: string; reason: string }>;
+    prefiltered: Array<{
+      discoveryPaths: ProductDiscoveryPath[];
+      name: string;
+      productUrl: string;
+    }>;
+    ranked: Array<{
+      discoveryPaths: ProductDiscoveryPath[];
+      name: string;
+      productUrl: string;
+    }>;
+    returned: Array<{ name: string; productUrl: string }>;
+    verified: Array<{
+      availabilityStatus: string;
+      name: string;
+      pageUrl: string;
+      priceStatus: string;
+      requirementFailures: string[];
+    }>;
+  };
+  candidateLimit: {
+    deduplicatedCandidates: number;
+    prefilterAcceptedBeforeLimit: number;
+    prefilterLimit: number;
+    truncatedByPrefilterLimit: number;
+  };
   candidatesAfterHardFilters: number;
   candidatesDiscovered: number;
   candidatesReturned: number;
   duplicateCandidatesRemoved: number;
+  discoveryPathContributions: Array<{
+    admittedCandidates: number;
+    distinctPlausibleProducts: number;
+    path: ProductDiscoveryPath;
+    queries: string[];
+    rawShoppingResults: number;
+  }>;
+  discoveryStopReason:
+    | "all_expected_targets_covered"
+    | "expected_target_search_limit"
+    | "no_expected_targets"
+    | "searched_all_missing_expected_targets";
+  expectedTargetCoverage: Array<{
+    brand: string;
+    discoveryPath: MarketScoutTarget["discoveryPath"];
+    evidenceTier: MarketScoutTarget["evidenceTier"];
+    foundBy: ProductDiscoveryPath[];
+    model: string;
+    status:
+      | "found"
+      | "missing_after_target_search"
+      | "missing_not_searched_limit";
+  }>;
   logicalSearchCalls: number;
   marketEvidenceCandidates: number;
   marketTargets: Array<{
     aliases: string[];
     brand: string;
     consensusOrder: number;
+    discoveryPath: MarketScoutTarget["discoveryPath"];
     model: string;
     sourceCount: number;
-    tier: "strong" | "supported";
+    tier: MarketScoutTarget["evidenceTier"];
   }>;
   marketTargetQueries: string[];
   neutralQueries: string[];
@@ -105,6 +173,7 @@ export type ProductSelectionTelemetry = {
   rankedCandidates: Array<{
     bayesianRating: number | null;
     evidenceTier: "strong" | "supported" | null;
+    discoveryPaths: ProductDiscoveryPath[];
     name: string;
     offerCount: number | null;
     price: number | null;
@@ -149,7 +218,10 @@ export type ProductSelectionTelemetry = {
   }>;
   searchDiagnostics: Array<{
     errorKind?: string;
+    normalizationLimit: number;
+    path: ProductDiscoveryPath;
     query: string;
+    rawResultsDroppedByLimit: number;
     rawShoppingResults: number;
     rejectionReasons: Record<string, number>;
     returnedCandidates: number;
@@ -288,6 +360,69 @@ function containsContiguousWords(observed: string[], expected: string[]) {
   );
 }
 
+const MODEL_EXTENSION_WORDS = new Set([
+  "air",
+  "edge",
+  "flow",
+  "max",
+  "mini",
+  "plus",
+  "pro",
+  "slim",
+  "ultra",
+  "xl",
+]);
+
+const MODEL_EXTENSION_MEASUREMENT_UNITS = new Set([
+  "cm",
+  "gb",
+  "hz",
+  "in",
+  "inch",
+  "inches",
+  "lb",
+  "lbs",
+  "mm",
+  "tb",
+  "v",
+  "volt",
+  "volts",
+  "w",
+  "watt",
+  "watts",
+]);
+
+function hasUnrequestedModelExtension(
+  observedWords: string[],
+  expectedWords: string[],
+) {
+  for (
+    let start = 0;
+    start <= observedWords.length - expectedWords.length;
+    start += 1
+  ) {
+    if (
+      !expectedWords.every(
+        (word, offset) => observedWords[start + offset] === word,
+      )
+    ) {
+      continue;
+    }
+
+    const extension = observedWords[start + expectedWords.length] || "";
+    const extensionUnit = observedWords[start + expectedWords.length + 1] || "";
+    if (
+      /^\d+(?:\.\d+)?$/.test(extension) &&
+      !MODEL_EXTENSION_MEASUREMENT_UNITS.has(extensionUnit)
+    ) {
+      return true;
+    }
+    if (MODEL_EXTENSION_WORDS.has(extension)) return true;
+  }
+
+  return false;
+}
+
 function requiredModelQualifiers(value: string) {
   const normalized = normalizedText(value)
     .replace(/\bgeneration\s*(\d+)\b/g, "gen$1")
@@ -358,7 +493,9 @@ function modelLabelMatchesCandidate(
   const expectedWords = modelIdentityWords(label, targetBrand);
   const observedWords = normalizedText(candidateName).split(" ").filter(Boolean);
   if (expectedWords.length === 0) return false;
-  if (containsContiguousWords(observedWords, expectedWords)) return true;
+  if (containsContiguousWords(observedWords, expectedWords)) {
+    return !hasUnrequestedModelExtension(observedWords, expectedWords);
+  }
 
   return (
     expectedWords.length >= 2 &&
@@ -506,8 +643,14 @@ function candidateHasDirectProductPage(candidate: RawProductCandidate) {
   }).canRenderAsProductCard;
 }
 
-function tierScore(tier: "none" | "strong" | "supported" | undefined) {
+function tierScore(
+  tier: "candidate" | "none" | "strong" | "supported" | undefined,
+) {
   return tier === "strong" ? 2 : tier === "supported" ? 1 : 0;
+}
+
+function targetDiscoveryPath(target: MarketScoutTarget) {
+  return target.discoveryPath || "market_leader";
 }
 
 function matchingMarketTarget(
@@ -529,7 +672,13 @@ function attachMarketEvidence(
 ) {
   return candidates.map((candidate) => {
     const target = matchingMarketTarget(candidate, targets);
-    if (!target || target.evidenceTier === "none") return candidate;
+    if (
+      !target ||
+      target.evidenceTier === "candidate" ||
+      target.evidenceTier === "none"
+    ) {
+      return candidate;
+    }
     return {
       ...candidate,
       marketEvidence: {
@@ -600,7 +749,7 @@ function targetResolutionCandidatesFor(
     .map(({ candidate }) => candidate);
 }
 
-function marketTargetsNeedingSearch(
+function missingMarketTargets(
   discovered: RawProductCandidate[],
   targets: MarketScoutTarget[],
 ) {
@@ -614,8 +763,41 @@ function marketTargetsNeedingSearch(
       (first, second) =>
         tierScore(second.evidenceTier) - tierScore(first.evidenceTier) ||
         first.consensusOrder - second.consensusOrder,
-    )
-    .slice(0, MAX_MARKET_TARGET_SEARCH_QUERIES);
+    );
+}
+
+function marketTargetsNeedingSearch(
+  discovered: RawProductCandidate[],
+  targets: MarketScoutTarget[],
+) {
+  const missing = missingMarketTargets(discovered, targets);
+  const pathOrder: MarketScoutTarget["discoveryPath"][] = [
+    "market_leader",
+    "request_fit",
+    "coverage_gap",
+  ];
+  const selected: MarketScoutTarget[] = [];
+  const remaining = [...missing];
+  while (
+    selected.length < MAX_MARKET_TARGET_SEARCH_QUERIES &&
+    remaining.length > 0
+  ) {
+    let selectedInRound = false;
+    for (const path of pathOrder) {
+      const index = remaining.findIndex(
+        (target) => targetDiscoveryPath(target) === path,
+      );
+      if (index < 0) continue;
+      const [target] = remaining.splice(index, 1);
+      if (target) selected.push(target);
+      selectedInRound = true;
+      if (selected.length >= MAX_MARKET_TARGET_SEARCH_QUERIES) break;
+    }
+    if (!selectedInRound) {
+      selected.push(...remaining.splice(0, MAX_MARKET_TARGET_SEARCH_QUERIES));
+    }
+  }
+  return selected.slice(0, MAX_MARKET_TARGET_SEARCH_QUERIES);
 }
 
 function primaryRetailerName(value: string | null | undefined) {
@@ -868,6 +1050,12 @@ function dedupeSelectionCandidates(candidates: RawProductCandidate[]) {
       ...(Number.isFinite(earliestDiscoveryOrder)
         ? { discoveryOrder: earliestDiscoveryOrder }
         : {}),
+      discoveryPaths: [
+        ...new Set([
+          ...(primary.discoveryPaths || []),
+          ...(secondary.discoveryPaths || []),
+        ]),
+      ],
       imageUrl: primary.imageUrl || secondary.imageUrl,
       keySpecs: Array.from(
         new Set([...primary.keySpecs, ...secondary.keySpecs]),
@@ -878,6 +1066,16 @@ function dedupeSelectionCandidates(candidates: RawProductCandidate[]) {
   }
 
   return { candidates: [...seen.values()], duplicateCount };
+}
+
+function candidatesFromDiscoveryPath(
+  candidates: RawProductCandidate[],
+  path: ProductDiscoveryPath,
+) {
+  return candidates.map((candidate) => ({
+    ...candidate,
+    discoveryPaths: [...new Set([...(candidate.discoveryPaths || []), path])],
+  }));
 }
 
 function dedupeVerificationCandidates(candidates: RawProductCandidate[]) {
@@ -952,15 +1150,18 @@ function productPageSearchQuery(
 }
 
 function candidateHasUsablePage(candidate: RawProductCandidate) {
-  let pageIdentityEvidence = candidate.productUrl;
-  try {
-    pageIdentityEvidence = decodeURIComponent(pageIdentityEvidence);
-  } catch {
-    // The undecoded URL still provides bounded identity evidence.
-  }
+  const pageIdentityEvidence = productPagePathEvidence(candidate.productUrl);
   if (
     haveConflictingNumericProductSpecs(candidate.name, pageIdentityEvidence) ||
     haveConflictingExtractedProductSpecs(candidate.name, pageIdentityEvidence) ||
+    haveConflictingAlphaNumericCatalogModels(
+      candidate.name,
+      `${pageIdentityEvidence} ${pageSourceSpecEvidence(candidate)}`,
+    ) ||
+    haveConflictingAlphabeticCatalogModels(
+      candidate.name,
+      pageIdentityEvidence,
+    ) ||
     hasConflictingProductUrlBrand(candidate)
   ) {
     return false;
@@ -1012,13 +1213,19 @@ const SECONDARY_MARKET_DOMAINS = [
 
 function isSecondaryMarketCandidate(candidate: RawProductCandidate) {
   const retailer = normalizedText(primaryRetailerName(candidate.retailer));
+  const nonPurchaseEvidence = normalizedText(
+    `${candidate.name} ${productPagePathEvidence(candidate.productUrl)}`,
+  );
   if (
     SECONDARY_MARKET_DOMAINS.some((domain) => {
       const merchant = normalizedText(domain.replace(/\.(?:com|org|net)$/, ""));
       return retailer.split(" ").includes(merchant);
     }) ||
     /\b(?:back market|reebelo)\b/.test(retailer) ||
-    /\bpawn(?:shop|america)?\b/.test(retailer)
+    /\bpawn(?:shop|america)?\b/.test(retailer) ||
+    /\b(?:for hire|hire|rental|rentals)\b/.test(
+      `${retailer} ${nonPurchaseEvidence}`,
+    )
   ) {
     return true;
   }
@@ -1364,16 +1571,29 @@ function officialLetterSuffixModelMatch(
     });
 }
 
+function pageSourceSpecEvidence(candidate: RawProductCandidate) {
+  const pageUrl = normalizeProductEligibilityUrl(candidate.productUrl);
+  if (!pageUrl) return "";
+
+  return candidate.evidenceSources
+    .filter(
+      (source) =>
+        (!source.snippetProvenance ||
+          source.snippetProvenance === "source-derived") &&
+        normalizeProductEligibilityUrl(source.url) === pageUrl,
+    )
+    .flatMap((source) => [source.title, source.snippet])
+    .filter(Boolean)
+    .join(" ");
+}
+
 function pageIdentityScore(
   discoveryCandidate: RawProductCandidate,
   pageCandidate: RawProductCandidate,
 ) {
-  let pageIdentityEvidence = `${pageCandidate.name} ${pageCandidate.productUrl}`;
-  try {
-    pageIdentityEvidence = decodeURIComponent(pageIdentityEvidence);
-  } catch {
-    // Keep the undecoded URL as identity evidence when it contains malformed escapes.
-  }
+  const pagePathEvidence = productPagePathEvidence(pageCandidate.productUrl);
+  const pageIdentityEvidence = `${pageCandidate.name} ${pagePathEvidence}`;
+  const pageSourceEvidence = pageSourceSpecEvidence(pageCandidate);
   const strongestPathIdentity = sourceUrlPathIdentitySegments(
     pageCandidate.productUrl,
   ).sort((first, second) => second.length - first.length)[0] || "";
@@ -1389,7 +1609,11 @@ function pageIdentityScore(
     ) ||
     haveConflictingExtractedProductSpecs(
       discoveryCandidate.name,
-      pageCandidate.productUrl,
+      pagePathEvidence,
+    ) ||
+    haveConflictingExtractedProductSpecs(
+      discoveryCandidate.name,
+      pageSourceEvidence,
     ) ||
     haveConflictingHyphenatedCatalogModels(
       discoveryCandidate.name,
@@ -1405,7 +1629,27 @@ function pageIdentityScore(
     ) ||
     haveConflictingNumericProductSpecs(
       discoveryCandidate.name,
-      pageCandidate.productUrl,
+      pagePathEvidence,
+    ) ||
+    haveConflictingNumericProductSpecs(
+      discoveryCandidate.name,
+      pageSourceEvidence,
+    ) ||
+    haveConflictingAlphaNumericCatalogModels(
+      discoveryCandidate.name,
+      pageIdentityEvidence,
+    ) ||
+    haveConflictingAlphaNumericCatalogModels(
+      discoveryCandidate.name,
+      pageSourceEvidence,
+    ) ||
+    haveConflictingAlphabeticCatalogModels(
+      discoveryCandidate.name,
+      pageIdentityEvidence,
+    ) ||
+    hasConflictingExpectedTargetModel(
+      discoveryCandidate,
+      pageIdentityEvidence,
     )
   ) {
     return 0;
@@ -1783,8 +2027,117 @@ function productPagePathEvidence(value: string) {
   }
 }
 
+const ALPHABETIC_CATALOG_MODEL_NOISE = new Set([
+  "AMD",
+  "ANC",
+  "CPU",
+  "DDR",
+  "FHD",
+  "HDR",
+  "HDMI",
+  "HEPA",
+  "LED",
+  "MAX",
+  "OLED",
+  "QHD",
+  "RAM",
+  "SSD",
+  "UHD",
+  "USB",
+  "WIFI",
+  "WQHD",
+]);
+
+function alphabeticCatalogModelTokens(value: string) {
+  return new Set(
+    (value.match(/\b[A-Z]{3,8}\b/g) || []).filter(
+      (token) => !ALPHABETIC_CATALOG_MODEL_NOISE.has(token),
+    ),
+  );
+}
+
+function alphaNumericCatalogModels(value: string) {
+  const models = new Map<string, Set<string>>();
+  for (const match of value.matchAll(/\b([A-Z]{2,8})[\s-]*(\d{2,5})\b/g)) {
+    const prefix = match[1];
+    if (ALPHABETIC_CATALOG_MODEL_NOISE.has(prefix)) continue;
+    const suffixes = models.get(prefix) || new Set<string>();
+    suffixes.add(match[2]);
+    models.set(prefix, suffixes);
+  }
+  return models;
+}
+
+function haveConflictingAlphaNumericCatalogModels(
+  firstText: string,
+  secondText: string,
+) {
+  const first = alphaNumericCatalogModels(firstText);
+  const second = alphaNumericCatalogModels(secondText);
+  for (const [prefix, firstSuffixes] of first) {
+    const secondSuffixes = second.get(prefix);
+    if (
+      secondSuffixes &&
+      ![...firstSuffixes].some((suffix) => secondSuffixes.has(suffix))
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function haveConflictingAlphabeticCatalogModels(
+  firstText: string,
+  secondText: string,
+) {
+  const firstModels = alphabeticCatalogModelTokens(firstText);
+  if (firstModels.size === 0) return false;
+
+  const firstWords = new Set(identityTokens(firstText));
+  const secondWords = identityTokens(secondText);
+  const sharedWords = secondWords.filter((word) => firstWords.has(word));
+  if (new Set(sharedWords).size < 2) return false;
+
+  return [...firstModels].some((model) => {
+    const normalizedModel = model.toLowerCase();
+    return secondWords.some(
+      (observed) =>
+        observed !== normalizedModel &&
+        observed.length === normalizedModel.length &&
+        observed.slice(0, 2) === normalizedModel.slice(0, 2),
+    );
+  });
+}
+
+function hasConflictingExpectedTargetModel(
+  discoveryCandidate: RawProductCandidate,
+  pageIdentityEvidence: string,
+) {
+  const targetModel = discoveryCandidate.marketEvidence?.targetModel;
+  const targetBrand = discoveryCandidate.marketEvidence?.targetBrand;
+  if (!targetModel || !targetBrand) return false;
+
+  const expectedWords = modelIdentityWords(targetModel, targetBrand);
+  const observedWords = normalizedText(pageIdentityEvidence)
+    .split(" ")
+    .filter(Boolean);
+  return (
+    expectedWords.length > 0 &&
+    containsContiguousWords(observedWords, expectedWords) &&
+    hasUnrequestedModelExtension(observedWords, expectedWords)
+  );
+}
+
 function selectionEvidenceText(product: SelectionAssetCandidate) {
   const metadata = product.metadata;
+  const sourceDerivedEvidence = product.candidate.evidenceSources
+    .filter(
+      (source) =>
+        !source.snippetProvenance ||
+        source.snippetProvenance === "source-derived",
+    )
+    .slice(0, 8)
+    .flatMap((source) => [source.title, source.snippet.slice(0, 500)]);
   return [
     product.name,
     metadata.title?.value || "",
@@ -1792,6 +2145,7 @@ function selectionEvidenceText(product: SelectionAssetCandidate) {
     metadata.modelNumber?.value || "",
     ...(metadata.colors?.value || []),
     ...product.candidate.keySpecs,
+    ...sourceDerivedEvidence,
     productPagePathEvidence(product.pageUrl),
   ]
     .filter(Boolean)
@@ -1812,6 +2166,14 @@ function directConstraintMatch(text: string, value: string) {
   if (
     normalizedValue === "self emptying" &&
     /\bself empty(?:ing)?\b/.test(normalizedEvidence)
+  ) {
+    return true;
+  }
+  if (
+    /\bmulti tool combo kits?\b/.test(normalizedValue) &&
+    /\b(?:(?:two|three|four|\d+)[ -]?tool|multiple[ -]?tool)\b.{0,80}\bcombo kit\b/.test(
+      normalizedEvidence,
+    )
   ) {
     return true;
   }
@@ -1866,7 +2228,14 @@ function selectionRequirementResult(
     if (constraint.type === "budget") continue;
     const matches =
       constraint.type === "brand"
-        ? brandEvidenceMatches(evidenceText, constraint.value)
+        ? brandEvidenceMatches(
+            [
+              product.name,
+              product.metadata.brand?.value || "",
+              productPagePathEvidence(product.pageUrl),
+            ].join(" "),
+            constraint.value,
+          )
         : directConstraintMatch(evidenceText, constraint.value);
     if (!matches) failed.push(constraint.label);
   }
@@ -1984,6 +2353,88 @@ function productIdentityKey(product: SelectionAssetCandidate) {
   return normalizedText(product.name);
 }
 
+const PRODUCT_FAMILY_NOISE = new Set([
+  "air",
+  "automatic",
+  "best",
+  "black",
+  "blender",
+  "chair",
+  "chairs",
+  "coffee",
+  "complete",
+  "cordless",
+  "cup",
+  "cups",
+  "ergonomic",
+  "extra",
+  "hepa",
+  "maker",
+  "max",
+  "office",
+  "pro",
+  "professional",
+  "purifier",
+  "robot",
+  "smart",
+  "true",
+  "ultra",
+  "vacuum",
+  "white",
+]);
+
+function productFamilyKeys(product: SelectionAssetCandidate) {
+  const candidate = product.candidate;
+  const explicitBrand = candidate.brand || inferKnownBrand(product.name) || "";
+  const familyBrand = normalizedText(
+    explicitBrand || selectionBrand(candidate) || "unknown",
+  );
+  const keys = new Set<string>();
+  for (const model of candidateModelTokens(product.name)) {
+    keys.add(`${familyBrand}|model|${model}`);
+  }
+  for (const match of product.name.matchAll(
+    /\b([A-Za-z]{2,8})[\s-]*(\d{2,6})(?:[A-Za-z]{1,8})?\b/g,
+  )) {
+    keys.add(
+      `${familyBrand}|catalog-family|${match[1].toLowerCase()}${match[2]}`,
+    );
+  }
+
+  const unprefixedName = stripLeadingSourceOrRetailerLabel(product.name)
+    .replace(new RegExp(`^${escapeIdentityPattern(explicitBrand)}\\s+`, "i"), "")
+    .trim();
+  const namedFamily = unprefixedName.match(/^([A-Z][a-z]{4,})\b/)?.[1];
+  if (namedFamily && !PRODUCT_FAMILY_NOISE.has(namedFamily.toLowerCase())) {
+    keys.add(`${familyBrand}|named-family|${namedFamily.toLowerCase()}`);
+  }
+
+  const explicitBrandTokens = new Set(
+    normalizedText(explicitBrand).split(" ").filter(Boolean),
+  );
+  const lexicalTokens = normalizedText(
+    stripLeadingSourceOrRetailerLabel(product.name),
+  )
+    .split(" ")
+    .filter(Boolean)
+    .filter((token) => !explicitBrandTokens.has(token))
+    .filter((token) => !PRODUCT_FAMILY_NOISE.has(token))
+    .filter((token) => !/^\d+(?:\.\d+)?$/.test(token))
+    .filter(
+      (token) =>
+        !/^\d+(?:\.\d+)?(?:ah|cfm|cup|gal|gallon|gb|hz|inch|mph|pa|pint|psi|tb|v|w|wh)$/.test(
+          token,
+        ),
+    );
+  if (lexicalTokens.length > 0) {
+    keys.add(`${familyBrand}|name|${lexicalTokens.slice(0, 2).join(" ")}`);
+    if (lexicalTokens[0].length >= 8) {
+      keys.add(`${familyBrand}|name|${lexicalTokens[0]}`);
+    }
+  }
+  return keys;
+}
+
 function rankAcceptedSelections(
   products: AcceptedSelection[],
   input: RecommendationApiRequest,
@@ -2031,17 +2482,21 @@ function selectDistinctProducts(
   const selected: typeof products = [];
   const seenIdentities = new Set<string>();
   const seenPageUrls = new Set<string>();
+  const seenProductFamilies = new Set<string>();
   const brandCounts = new Map<string, number>();
 
   const tryAdd = (item: (typeof products)[number], enforceBrandDiversity: boolean) => {
     const identity = productIdentityKey(item.asset);
     const pageUrl = normalizeProductEligibilityUrl(item.asset.pageUrl);
+    const familyKeys = productFamilyKeys(item.asset);
     const brand = normalizedText(selectionBrand(item.asset.candidate) || "unknown");
     if (seenIdentities.has(identity)) return;
     if (pageUrl && seenPageUrls.has(pageUrl)) return;
+    if ([...familyKeys].some((key) => seenProductFamilies.has(key))) return;
     if (enforceBrandDiversity && (brandCounts.get(brand) || 0) >= 2) return;
     seenIdentities.add(identity);
     if (pageUrl) seenPageUrls.add(pageUrl);
+    familyKeys.forEach((key) => seenProductFamilies.add(key));
     brandCounts.set(brand, (brandCounts.get(brand) || 0) + 1);
     selected.push(item);
   };
@@ -2074,6 +2529,10 @@ export async function selectProducts(options: {
     0,
     MAX_NEUTRAL_SEARCH_QUERIES,
   );
+  const neutralQueryPaths: ProductDiscoveryPath[] = [
+    "broad_commerce",
+    "request_fit_commerce",
+  ];
   let physicalSearchAttempts = 0;
   const assetRequestCache = new Map();
   const executionOptions: ProductSearchExecutionOptions = {
@@ -2097,8 +2556,15 @@ export async function selectProducts(options: {
     Promise.resolve(options.plan),
   ]);
   throwIfRequestCancelled(signal);
+  const taggedNeutralSearchResults = neutralSearchResults.map((result, index) => ({
+    ...result,
+    candidates: candidatesFromDiscoveryPath(
+      result.candidates,
+      neutralQueryPaths[index] || "request_fit_commerce",
+    ),
+  }));
   const neutralDiscovered = interleaveSearchCandidates(
-    neutralSearchResults.map((result) => result.candidates),
+    taggedNeutralSearchResults.map((result) => result.candidates),
   );
   const neutralTargetCoverageCandidates = prefilterProductCandidates(
     neutralDiscovered,
@@ -2127,8 +2593,17 @@ export async function selectProducts(options: {
       ),
     ),
   );
+  const taggedMarketTargetSearchResults = marketTargetSearchResults.map(
+    (result) => ({
+      ...result,
+      candidates: candidatesFromDiscoveryPath(
+        result.candidates,
+        "expected_target_commerce",
+      ),
+    }),
+  );
   const shoppingDiscovered = interleaveSearchCandidates(
-    [...neutralSearchResults, ...marketTargetSearchResults].map(
+    [...taggedNeutralSearchResults, ...taggedMarketTargetSearchResults].map(
       (result) => result.candidates,
     ),
   );
@@ -2150,7 +2625,7 @@ export async function selectProducts(options: {
           candidateHasDirectProductPage(candidate),
         ),
     )
-    .slice(0, MAX_MARKET_TARGET_SEARCH_QUERIES);
+    .slice(0, MAX_TARGET_RESOLUTION_QUERIES);
   const targetResolutionBindings = targetResolutionTargets.map((target) => ({
     discoveryCandidates: targetResolutionCandidatesFor(
       targetResolutionCandidates,
@@ -2176,12 +2651,15 @@ export async function selectProducts(options: {
     (candidates, index): RawProductCandidate[] => {
       const binding = targetResolutionBindings[index];
       if (!binding) return [];
-      const exactPages: RawProductCandidate[] = candidates.filter((candidate) =>
-        targetPageIsUsable(
-          candidate,
-          binding.target,
-          binding.discoveryCandidates,
+      const exactPages = candidatesFromDiscoveryPath(
+        candidates.filter((candidate) =>
+          targetPageIsUsable(
+            candidate,
+            binding.target,
+            binding.discoveryCandidates,
+          ),
         ),
+        "expected_target_page",
       );
       const merchantBoundPages = binding.discoveryCandidates.flatMap((candidate) =>
           resolvedCandidates(candidate, exactPages),
@@ -2191,14 +2669,19 @@ export async function selectProducts(options: {
         : exactPages;
     },
   );
-  const searchResults = [
-    ...neutralSearchResults,
-    ...marketTargetSearchResults,
+  const discoverySearches = [
+    ...taggedNeutralSearchResults.map((result, index) => ({
+      path: neutralQueryPaths[index] || "request_fit_commerce",
+      query: neutralQueries[index],
+      result,
+    })),
+    ...taggedMarketTargetSearchResults.map((result, index) => ({
+      path: "expected_target_commerce" as const,
+      query: marketTargetQueries[index],
+      result,
+    })),
   ].slice(0, MAX_DISCOVERY_SEARCH_QUERIES);
-  const queries = [...neutralQueries, ...marketTargetQueries].slice(
-    0,
-    MAX_DISCOVERY_SEARCH_QUERIES,
-  );
+  const queries = discoverySearches.map((search) => search.query);
   const discovered = attachMarketEvidence(
     [...shoppingDiscovered, ...targetResolvedCandidates].map((candidate, discoveryOrder) => ({
       ...candidate,
@@ -2218,6 +2701,42 @@ export async function selectProducts(options: {
   const marketCompatibleCandidates = primaryMarketCandidates.filter(
     (candidate) => !hasUnrequestedNonUsVoltage(candidate, input),
   );
+  const expectedTargetCoverage: ProductSelectionTelemetry["expectedTargetCoverage"] =
+    plan.targets
+      .filter((target) => target.evidenceTier !== "none")
+      .map((target) => {
+        const foundBy = [
+          ...new Set(
+            discovered
+              .filter((candidate) => candidateMatchesTarget(candidate, target))
+              .flatMap((candidate) => candidate.discoveryPaths || []),
+          ),
+        ];
+        const searched = searchedTargets.includes(target);
+        return {
+          brand: target.brand,
+          discoveryPath: targetDiscoveryPath(target),
+          evidenceTier: target.evidenceTier,
+          foundBy,
+          model: target.model,
+          status:
+            foundBy.length > 0
+              ? ("found" as const)
+              : searched
+                ? ("missing_after_target_search" as const)
+                : ("missing_not_searched_limit" as const),
+        };
+      });
+  const discoveryStopReason: ProductSelectionTelemetry["discoveryStopReason"] =
+    expectedTargetCoverage.length === 0
+      ? "no_expected_targets"
+      : expectedTargetCoverage.every((target) => target.status === "found")
+        ? "all_expected_targets_covered"
+        : expectedTargetCoverage.some(
+              (target) => target.status === "missing_not_searched_limit",
+            )
+          ? "expected_target_search_limit"
+          : "searched_all_missing_expected_targets";
   const ranked = selectVerificationCandidates(
     rankCandidates(marketCompatibleCandidates, plan.targets, input),
     MAX_VERIFICATION_CANDIDATES,
@@ -2396,15 +2915,85 @@ export async function selectProducts(options: {
       },
     ];
   });
+  const traceCandidates = (candidates: RawProductCandidate[]) =>
+    candidates.map((candidate) => ({
+      discoveryPaths: [...(candidate.discoveryPaths || [])],
+      name: candidate.name,
+      productUrl: candidate.productUrl,
+    }));
+  const discoveryPaths: ProductDiscoveryPath[] = [
+    "broad_commerce",
+    "request_fit_commerce",
+    "expected_target_commerce",
+    "expected_target_page",
+  ];
+  const discoveryPathContributions = discoveryPaths.map((path) => {
+    const searches = discoverySearches.filter((search) => search.path === path);
+    const pathCandidates =
+      path === "expected_target_page"
+        ? targetResolvedCandidates.filter((candidate) =>
+            candidate.discoveryPaths?.includes(path),
+          )
+        : searches.flatMap((search) => search.result.candidates);
+    return {
+      admittedCandidates: pathCandidates.length,
+      distinctPlausibleProducts: new Set(
+        marketCompatibleCandidates
+          .filter((candidate) => candidate.discoveryPaths?.includes(path))
+          .map(discoveryIdentityKey),
+      ).size,
+      path,
+      queries:
+        path === "expected_target_page"
+          ? [...targetResolutionQueries]
+          : searches.map((search) => search.query),
+      rawShoppingResults: searches.reduce(
+        (total, search) =>
+          total + search.result.diagnostics.rawShoppingResults,
+        0,
+      ),
+    };
+  });
 
   return {
     result: { recommendations },
     telemetry: {
       assetCandidates: assetCandidatesCount,
+      candidateFunnel: {
+        deduplicated: traceCandidates(deduped.candidates),
+        discovered: traceCandidates(discovered),
+        marketCompatible: traceCandidates(marketCompatibleCandidates),
+        prefilterRejected: prefiltered.rejected.map((candidate) => ({
+          name: candidate.name,
+          reason: candidate.reason,
+        })),
+        prefiltered: traceCandidates(prefiltered.candidates),
+        ranked: traceCandidates(ranked),
+        returned: recommendations.map((recommendation) => ({
+          name: recommendation.name,
+          productUrl: recommendation.productPageUrl,
+        })),
+        verified: verifiedCandidates.map((candidate) => ({
+          availabilityStatus: candidate.availabilityStatus,
+          name: candidate.name,
+          pageUrl: candidate.pageUrl,
+          priceStatus: candidate.priceStatus,
+          requirementFailures: candidate.requirementFailures,
+        })),
+      },
+      candidateLimit: {
+        deduplicatedCandidates: deduped.candidates.length,
+        prefilterAcceptedBeforeLimit: prefiltered.acceptedBeforeLimit,
+        prefilterLimit: MAX_PREFILTERED_CANDIDATES,
+        truncatedByPrefilterLimit: prefiltered.truncatedByLimit,
+      },
       candidatesAfterHardFilters: marketCompatibleCandidates.length,
       candidatesDiscovered: discovered.length,
       candidatesReturned: recommendations.length,
       duplicateCandidatesRemoved: deduped.duplicateCount,
+      discoveryPathContributions,
+      discoveryStopReason,
+      expectedTargetCoverage,
       logicalSearchCalls: queries.length + resolutionQueries.length,
       marketEvidenceCandidates: new Set(
         marketCompatibleCandidates
@@ -2418,9 +3007,10 @@ export async function selectProducts(options: {
           : [
               {
                 aliases: [...target.aliases],
-                brand: target.brand,
-                consensusOrder: target.consensusOrder,
-                model: target.model,
+              brand: target.brand,
+              consensusOrder: target.consensusOrder,
+              discoveryPath: targetDiscoveryPath(target),
+              model: target.model,
                 sourceCount: target.sourceUrls.length,
                 tier: target.evidenceTier,
               },
@@ -2431,6 +3021,7 @@ export async function selectProducts(options: {
       queries,
       rankedCandidates: ranked.map((candidate) => ({
         bayesianRating: bayesianCommerceRating(candidate.commerceSignals),
+        discoveryPaths: [...(candidate.discoveryPaths || [])],
         evidenceTier: candidate.marketEvidence?.tier || null,
         name: candidate.name,
         offerCount: candidate.commerceSignals?.offerCount ?? null,
@@ -2450,14 +3041,18 @@ export async function selectProducts(options: {
       resolutionDiagnostics,
       resolutionQueries,
       returnedCandidateSignals,
-      searchDiagnostics: searchResults.map((searchResult, index) => ({
-        ...(searchResult.diagnostics.errorKind
-          ? { errorKind: searchResult.diagnostics.errorKind }
+      searchDiagnostics: discoverySearches.map((search) => ({
+        ...(search.result.diagnostics.errorKind
+          ? { errorKind: search.result.diagnostics.errorKind }
           : {}),
-        query: queries[index],
-        rawShoppingResults: searchResult.diagnostics.rawShoppingResults,
-        rejectionReasons: searchResult.diagnostics.rejectionReasons,
-        returnedCandidates: searchResult.diagnostics.returnedCandidates,
+        normalizationLimit: search.result.diagnostics.normalizationLimit,
+        path: search.path,
+        query: search.query,
+        rawResultsDroppedByLimit:
+          search.result.diagnostics.rawResultsDroppedByLimit,
+        rawShoppingResults: search.result.diagnostics.rawShoppingResults,
+        rejectionReasons: search.result.diagnostics.rejectionReasons,
+        returnedCandidates: search.result.diagnostics.returnedCandidates,
       })),
       verificationWaves: verification.outcomes,
       verifiedCandidates,
@@ -2483,6 +3078,7 @@ export const productSelectionTestExports = {
     discoverySearches: MAX_DISCOVERY_SEARCH_QUERIES,
     neutralSearches: MAX_NEUTRAL_SEARCH_QUERIES,
     resolutionCandidates: MAX_VERIFICATION_CANDIDATES,
+    targetResolutionSearches: MAX_TARGET_RESOLUTION_QUERIES,
     targetSearches: MAX_MARKET_TARGET_SEARCH_QUERIES,
     totalLogicalSearches: MAX_TOTAL_SEARCH_QUERIES,
   },
@@ -2490,6 +3086,7 @@ export const productSelectionTestExports = {
   pageSourceScore,
   processVerificationWaves,
   productIdentityKey,
+  productFamilyKeys,
   productPageSearchQuery,
   rankAcceptedSelections,
   rankCandidates,

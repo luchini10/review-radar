@@ -13,8 +13,9 @@ import {
 import { isNonProductSource } from "./search/sourceSafety.ts";
 
 const SERPER_BASE_URL = "https://google.serper.dev";
-const SEARCH_RESULT_LIMIT = 10;
-const SHOPPING_NORMALIZATION_LIMIT = 20;
+const PAGE_SEARCH_RESULT_LIMIT = 10;
+const SHOPPING_REQUEST_RESULT_LIMIT = 40;
+const SHOPPING_NORMALIZATION_LIMIT = 40;
 const REQUEST_TIMEOUT_MS = 8_000;
 
 type SerperShoppingResult = {
@@ -63,6 +64,8 @@ export type ProductSearchExecutionOptions = {
 
 export type ShoppingSearchDiagnostics = {
   errorKind?: "api_error" | "missing_api_key_or_query";
+  normalizationLimit: number;
+  rawResultsDroppedByLimit: number;
   rawShoppingResults: number;
   rejectionReasons: Record<string, number>;
   returnedCandidates: number;
@@ -197,7 +200,9 @@ async function fetchSerper(
     safeQuery.toLowerCase(),
     "us",
     "en",
-    SEARCH_RESULT_LIMIT,
+    vertical === "shopping"
+      ? SHOPPING_REQUEST_RESULT_LIMIT
+      : PAGE_SEARCH_RESULT_LIMIT,
   ]);
   let request = options.requestCache?.get(cacheKey);
   if (!request) {
@@ -212,7 +217,10 @@ async function fetchSerper(
           body: JSON.stringify({
             gl: "us",
             hl: "en",
-            num: SEARCH_RESULT_LIMIT,
+            num:
+              vertical === "shopping"
+                ? SHOPPING_REQUEST_RESULT_LIMIT
+                : PAGE_SEARCH_RESULT_LIMIT,
             q: safeQuery,
           }),
           headers: {
@@ -460,6 +468,8 @@ function emptyShoppingDiagnostics(
 ): ShoppingSearchDiagnostics {
   return {
     errorKind,
+    normalizationLimit: SHOPPING_NORMALIZATION_LIMIT,
+    rawResultsDroppedByLimit: 0,
     rawShoppingResults: 0,
     rejectionReasons: {},
     returnedCandidates: 0,
@@ -482,6 +492,7 @@ export async function searchShoppingProducts(
         diagnostics: emptyShoppingDiagnostics("missing_api_key_or_query"),
       };
     }
+    const rawShoppingResults = response.shopping?.length || 0;
     const raw = (response.shopping || []).slice(0, SHOPPING_NORMALIZATION_LIMIT);
     const normalized = raw.map((result, index) =>
       normalizeShoppingResult(result, category, index + 1),
@@ -499,7 +510,12 @@ export async function searchShoppingProducts(
     return {
       candidates,
       diagnostics: {
-        rawShoppingResults: response.shopping?.length || 0,
+        normalizationLimit: SHOPPING_NORMALIZATION_LIMIT,
+        rawResultsDroppedByLimit: Math.max(
+          0,
+          rawShoppingResults - SHOPPING_NORMALIZATION_LIMIT,
+        ),
+        rawShoppingResults,
         rejectionReasons,
         returnedCandidates: candidates.length,
       },
@@ -525,7 +541,7 @@ export async function searchProductPages(
     const response = await fetchSerper("search", query, options);
     if (!response) return [];
     const inlineShoppingCandidates = (response.shopping || [])
-      .slice(0, SEARCH_RESULT_LIMIT)
+      .slice(0, PAGE_SEARCH_RESULT_LIMIT)
       .flatMap((result, index) => {
         const normalized = normalizeShoppingResult(result, category, index + 1);
         if (!normalized.candidate) return [];
@@ -533,7 +549,7 @@ export async function searchProductPages(
         return parsed && !googleOfferUrl(parsed) ? [normalized.candidate] : [];
       });
     const organicCandidates = (response.organic || [])
-      .slice(0, SEARCH_RESULT_LIMIT)
+      .slice(0, PAGE_SEARCH_RESULT_LIMIT)
       .flatMap((result) => {
         const candidate = candidateFromFields({
           category,
@@ -643,8 +659,10 @@ export function prefilterProductCandidates(
   }
   return {
     candidates: accepted.slice(0, maximum),
+    acceptedBeforeLimit: accepted.length,
     rejected,
     rejectedCount: rejected.length,
+    truncatedByLimit: Math.max(0, accepted.length - maximum),
   };
 }
 

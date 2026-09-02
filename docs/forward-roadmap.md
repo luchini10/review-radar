@@ -6,6 +6,27 @@ method remains owned by `docs/phase-6-reliability-gauntlet-plan.md`;
 `docs/agent-next-task.md` always points at the current active phase. No other
 forward-plan documents may be created.
 
+## Current authority: Phase 1 completed locally (2026-09-02)
+
+Taylor explicitly approved Phase 1 request-time market discovery coverage,
+including the sealed V1 rerun and a local commit. The accepted exact-source run
+is `benchmarks/accuracy-v1/results/phase1-accepted-v5-raw.json`, SHA-256
+`9EC5744A37C5063B2B663ECCFAE9865B8AF7659EDC73E97A5605D77EF27208A6`.
+
+Phase 1 added complementary request-time neutral commerce, market-leader,
+request-fit, coverage-gap, expected-target, and adaptive page-resolution paths.
+It did not add persistent research or change final ranking weights. Discovery
+recall improved from 62/142 to 77/142 and broad-search discovery from 19/36 to
+24/36. Hard-requirement accuracy reached 118/118, wrong-product leakage fell to
+3/77, and family-duplicate leakage fell to 1/77.
+
+The next bottleneck is now explicitly downstream: candidate truncation/ranking
+accounts for 43 leader losses, versus 26 at baseline. Empty searches also rose
+from 8/48 to 10/48, precision fell to 31.17%, NDCG@3 fell to 0.3039, and p95
+latency rose to 41,481 ms. No Phase 2 is authorized. A future proposal should
+target fair compatible-candidate survival into the nine-candidate slate and
+false-empty attribution before any broad final-score retune.
+
 ## Why this roadmap exists
 
 63 issues have been fixed and the product-level numbers are still failing:
@@ -5175,6 +5196,72 @@ V23 returned 10/10 non-empty but only 1/9 eligible leaders and regressed to
 34,196 ms p95/maximum. Its full call, token, cost, payload, and per-cell evidence
 is preserved in `docs/pr14-live-accuracy-report-v23-serper-only-restored.json`.
 A SerpApi credential is neither needed nor allowed by the current architecture.
+
+### PR-14 stabilization checkpoint — request-bound baseline (2026-09-01)
+
+The post-reversal architecture audit passed. Production has one request-time,
+request-bound recommendation path and no evidence index, prewarm, refresh job,
+post-response research, persistent plan/result/Shopping/page cache, or startup
+market-research dependency. Request-local Maps coalesce duplicate work only
+inside one `selectProducts` call; the sole process-global mutable object is
+product-free paid-request admission accounting.
+
+The audit removed dead scout-plan/telemetry/client contracts, obsolete package
+and environment examples, and stale current-product documentation. Historical
+reports and superseded sections stay on disk as labeled audit evidence and have
+no runtime authority. The live runner is now generically named
+`scripts/run-live-accuracy-matrix.mjs`.
+
+A five-scenario smoke found one generalized regression: an explicit drip-coffee
+request admitted a French press. The shared product-type intent classifier now
+rejects explicit alternative brewing methods for drip intent; focused coverage
+and corrected/post-restart live searches pass. No score, leader list, ranking
+architecture, discovery provider, benchmark-tuned rule, or public field changed.
+
+Final wall: 355/355 unit tests across 44 suites, typecheck, zero-warning lint,
+production build, and Playwright 7/7. A complete process restart followed by a
+repeat search produced fresh scout and Serper work without startup/prewarm state.
+The checkpoint is ready for a separately approved Phase 0 measurement. PR-14
+remains not release-qualified because V23's 11.1% eligible-leader recall and
+34,196 ms p95/maximum remain the current quality/latency evidence.
+
+Do not treat baseline readiness as permission to implement the next ranking
+architecture. Phase 0 must measure this exact request-bound behavior first.
+
+### Phase 0 — Review Radar Accuracy Benchmark V1 (2026-09-01)
+
+Phase 0 is complete as a measurement-only phase. The frozen suite contains 48
+one-attempt searches across 11 categories and nine search types. Its independent
+registry contains 99 timestamped products, each scored reference bound to at
+least two source families. References were frozen before the first production
+request and remain offline evaluation data. Production cannot import them, and
+the live runner strips reference IDs before calling the existing route.
+
+The baseline is reproducibly sealed to `main` at
+`866c5fc9ab9ea72a135393d84f996189d13647c6`, the relevant dirty-diff hash, runtime
+configuration constants, and hashes for every measured production file. No
+commit was made because the tree contains unrelated pre-existing work. The only
+runtime edit is additive debug candidate-funnel telemetry; recommendation
+planning, filtering, ranking, verification, selection, and public cards are
+unchanged.
+
+Primary evidence: discovery recall 62/142 (43.66%), final leader recall 7/142
+(4.93%), top-K quality precision 50/102 (49.02%), NDCG@3 0.4082, and hard-
+requirement accuracy 163/172 (94.77%). Eight of 48 HTTP-200 searches returned no
+products. Earliest leader losses were 80 never discovered, 26 lost before the
+nine-candidate verification slate, 10 final-selection crowd-outs, 8 page/
+commerce verification losses, 6 prefilter losses, 3 deduplication losses, and 2
+market/merchant losses.
+
+The next evidence-supported target is generalized request-time discovery
+coverage, followed by attribution and correction of the compatible-pool-to-
+verification cutoff. Do not begin with a Product Quality Score or final-ranking
+weight change: 106/142 leader losses occur earlier. Any successor must reuse V1
+unchanged for comparison or declare a new version/delta, preserve the request-
+bound architecture, and keep benchmark identities out of production.
+
+Authoritative report:
+`benchmarks/accuracy-v1/results/baseline-report.md`.
 
 ## Backlog (enters a phase only with evidence + Taylor's approval)
 

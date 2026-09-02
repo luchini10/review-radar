@@ -149,8 +149,31 @@ export const SPEC_DICTIONARY: SpecDefinition[] = [
     kind: "numeric",
     direction: "higher",
     matchers: [
-      /(\d{3,5})\s*\+?\s*(?:w|watt|watts)\b/i,
-      /(\d{3,5})\s*-?\s*watt\b/i,
+      /(\d[\d,]{2,5})\s*\+?\s*(?:w|watt|watts)\b/i,
+      /(\d[\d,]{2,5})\s*-?\s*watt\b/i,
+    ],
+  },
+  {
+    id: "energyCapacityWh",
+    label: "Energy capacity",
+    unit: "Wh",
+    kind: "numeric",
+    direction: "higher",
+    matchers: [
+      /(\d[\d,]{2,5})\s*\+?\s*(?:wh|watt[- ]?hours?)\b/i,
+      /(?:capacity|energy)\b[^.\d]{0,16}(\d[\d,]{2,5})\s*(?:wh|watt[- ]?hours?)\b/i,
+    ],
+  },
+  {
+    id: "runningWattage",
+    label: "Running wattage",
+    unit: "W",
+    kind: "numeric",
+    direction: "higher",
+    matchers: [
+      /(\d[\d,]{2,5})\s*\+?\s*(?:running|rated|continuous)\s*(?:w|watt|watts)\b/i,
+      /(?:running|rated|continuous)(?:\s+(?:output|power))?\b[^.\d]{0,16}(\d[\d,]{2,5})\s*(?:w|watt|watts)\b/i,
+      /\d[\d,]{2,5}\s*(?:w|watt|watts)\s*\/\s*(\d[\d,]{2,5})\s*(?:w|watt|watts)\b/i,
     ],
   },
   {
@@ -182,6 +205,28 @@ export const SPEC_DICTIONARY: SpecDefinition[] = [
     matchers: [
       /(\d{1,3}(?:\.\d+)?)\s*(?:qt|quart|quarts)\b/i,
       /(?:capacity)\b[^.\d]{0,12}(\d{1,3}(?:\.\d+)?)\s*(?:qt|quart|quarts)\b/i,
+    ],
+  },
+  {
+    id: "capacityGal",
+    label: "Capacity",
+    unit: "gal",
+    kind: "numeric",
+    direction: "higher",
+    matchers: [
+      /(\d{1,3}(?:\.\d+)?)\s*-?\s*(?:gal|gallon|gallons)\b/i,
+      /(?:capacity|tank)\b[^.\d]{0,12}(\d{1,3}(?:\.\d+)?)\s*(?:gal|gallon|gallons)\b/i,
+    ],
+  },
+  {
+    id: "capacityPint",
+    label: "Capacity",
+    unit: "pint",
+    kind: "numeric",
+    direction: "exact",
+    matchers: [
+      /(\d{1,3}(?:\.\d+)?)\s*-?\s*pints?\b/i,
+      /(?:capacity)\b[^.\d]{0,12}(\d{1,3}(?:\.\d+)?)\s*pints?\b/i,
     ],
   },
   {
@@ -253,6 +298,16 @@ export const SPEC_DICTIONARY: SpecDefinition[] = [
       /\b(?:batter(?:y|ies)\s+(?:and\s+charger\s+)?included|includes?\s+(?:\(\d+\)\s+)?(?:(?:a|one|two|three|four|\d+)\s+)?(?:\d+(?:\.\d+)?\s*(?:ah|v)\s+)?(?:lithium(?:-ion)?\s+)?batter(?:y|ies)|(?:with|w\/)\s+(?:\(\d+\)\s+)?(?:(?:a|one|two|three|four|\d+)\s+)?(?:\d+(?:\.\d+)?\s*(?:ah|v)\s+)?(?:lithium(?:-ion)?\s+)?batter(?:y|ies)|\bkit\b.{0,45}\bbatter(?:y|ies)|batter(?:y|ies)\s+(?:and\s+charger\s+)?kit|comes?\s+with\s+(?:a\s+)?battery)\b/i,
     falsePattern:
       /\b(?:bare\s*tool|tool[\s-]?only|without\s+(?:a\s+)?battery|no\s+battery|batter(?:y|ies)\s+not\s+included|sold\s+as\s+(?:a\s+)?bare\s*tool)\b/i,
+  },
+  {
+    id: "twoBatteriesIncluded",
+    label: "Two batteries included",
+    unit: null,
+    kind: "boolean",
+    truePattern:
+      /\b(?:(?:two|2|\(2\))\s+(?:(?:\d+(?:\.\d+)?)\s*(?:ah|v)\s+)?batteries|dual[\s-]?battery\s+kit)\b/i,
+    falsePattern:
+      /\b(?:(?:one|single|1|\(1\))\s+(?:(?:\d+(?:\.\d+)?)\s*(?:ah|v)\s+)?battery|\d+(?:\.\d+)?\s*ah\s+battery\b|bare\s*tool|tool[\s-]?only)\b/i,
   },
 ];
 

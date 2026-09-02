@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 1,
+  "benchmark": "review-radar-accuracy-v1",
+  "runReportSha256": "0cc4b0ce36fab81c07b399846721da2ca607225ba8ab3b07b19921f84de7a8d1",
+  "adjudicationTimestamp": "2026-09-01T23:45:00-04:00",
+  "defaultDecision": {
+    "relevanceGrade": 1,
+    "identityIssue": "none",
+    "productPageAccuracy": "unknown",
+    "priceAccuracy": "unknown",
+    "availabilityAccuracy": "unknown",
+    "imageAccuracy": "unknown",
+    "hardRequirementViolations": [],
+    "hardRequirementUnknowns": [],
+    "notes": "Acceptable or debatable candidate, but not independently established as a strong contender in the frozen reference standard."
+  },
+  "caseDecisions": {
+    "broad-robot-vacuum": [
+      {"productPageAccuracy":"correct","priceAccuracy":"correct","availabilityAccuracy":"correct","imageAccuracy":"correct","notes":"Frozen grade-2 contender; manufacturer page and current price/availability were independently checked."},
+      {"relevanceGrade":2,"productPageAccuracy":"correct","imageAccuracy":"incorrect","evidenceUrls":["https://www.techadvisor.com/article/2805973/eureka-j15-ultra-review.html"],"notes":"Independent review supports strong-contender status; returned image URL names the J15 EVO rather than the J15 Ultra."},
+      {"relevanceGrade":2,"productPageAccuracy":"correct","evidenceUrls":["https://www.rtings.com/robot-vacuum/reviews/dreame/x50-ultra","https://vacuumwars.com/dreame-x50-ultra-review-is-it-the-best-yet/"],"notes":"Multiple independent tests support strong-contender status."},
+      {"productPageAccuracy":"correct","notes":"Frozen grade-2 contender; exact retailer page identifies the X10 Pro Omni."},
+      {"duplicateOfPosition":2,"imageAccuracy":"correct","evidenceUrls":["https://vacuumchef.com/eureka-j15-evo-ultra-review-powerful-22000-pa-suction-but-is-it-worth-the-price/"],"notes":"Reasonable product, but a second Eureka J15-family model consumes another slot."}
+    ],
+    "broad-drip-coffee-maker": [
+      {"identityIssue":"wrong_configuration","productPageAccuracy":"incorrect","notes":"Card says KBT; URL identifies the different KBG/KBGV Select family."},
+      {"productPageAccuracy":"correct","priceAccuracy":"correct","availabilityAccuracy":"correct","notes":"Exact Best Buy page and $29.99 price were independently checked; acceptable value product, not a frozen leader."},
+      {"relevanceGrade":3,"productPageAccuracy":"correct","notes":"The Cuisinart 14-cup PerfecTemp family is a frozen grade-3 leader."}
+    ],
+    "broad-pressure-washer": [
+      {"productPageAccuracy":"correct","priceAccuracy":"correct","notes":"Exact Craftsman CMePW2100 page and $239 price were independently checked; acceptable rather than leader-grade."},
+      {},
+      {}
+    ],
+    "broad-gaming-monitor": [
+      {"relevanceGrade":2,"notes":"High-performing 27-inch 1440p 280 Hz OLED configuration; product-specific listing plus frozen gaming-monitor test standard support strong-contender treatment."},
+      {}
+    ],
+    "broad-laptop": [
+      {"relevanceGrade":2,"notes":"Mainstream high-performing current MacBook Pro configuration; defensible strong contender, though not an exact frozen-reference identity."},
+      {"relevanceGrade":2,"identityIssue":"wrong_configuration","productPageAccuracy":"incorrect","notes":"MacBook Air is a strong mainstream contender, but the generic /products/v URL does not bind the stated configuration."},
+      {},
+      {"relevanceGrade":2,"notes":"Current premium Windows convertible from a mainstream vendor; strong contender, not a frozen must-find leader."}
+    ],
+    "broad-cordless-drill": [
+      {"identityIssue":"wrong_configuration","productPageAccuracy":"incorrect","notes":"Frozen grade-3 2904-22 kit, but View Product resolves to 2904-20 tool-only."},
+      {}
+    ],
+    "broad-cordless-leaf-blower": [
+      {"relevanceGrade":2,"identityIssue":"wrong_configuration","productPageAccuracy":"incorrect","notes":"BGA 60 is a strong mainstream blower, but the URL identifies a BGA 2500/BA06 configuration."},
+      {"relevanceGrade":2,"notes":"Mainstream high-output battery blower; treated as a strong contender, not a frozen must-find leader."},
+      {"imageAccuracy":"correct"},
+      {}
+    ],
+    "broad-air-purifier": [
+      {"relevanceGrade":0,"identityIssue":"wrong_product_type","productPageAccuracy":"incorrect","hardRequirementViolations":["product_type:air_purifier"],"notes":"Card text describes a humidifier while the URL describes an air purifier; this is not an admissible purifier recommendation."},
+      {"productPageAccuracy":"correct","notes":"Exact frozen grade-3 Winix 5530 leader."}
+    ],
+    "broad-office-chair": [
+      {"productPageAccuracy":"correct","notes":"Legitimate ergonomic chair, but independent evidence did not establish it alongside the frozen leaders."}
+    ],
+    "broad-treadmill": [
+      {"relevanceGrade":2,"notes":"Established premium treadmill family; independent category evidence supports strong-contender status."},
+      {"relevanceGrade":2,"productPageAccuracy":"correct","priceAccuracy":"correct","availabilityAccuracy":"correct","notes":"Exact current Best Buy page and $999 price independently checked; strong mid-market contender."},
+      {},
+      {"priceAccuracy":"incorrect","notes":"Sole F65 is a plausible contender, but the displayed $10,000 price is implausible and not supported by current market evidence."}
+    ],
+    "broad-wireless-earbuds": [
+      {"relevanceGrade":3,"productPageAccuracy":"correct","notes":"Independent comparative tests place Bose QuietComfort Ultra 2nd Gen among clear leaders."},
+      {"relevanceGrade":2,"notes":"Current flagship Samsung ANC earbuds are a defensible strong contender."},
+      {"relevanceGrade":0,"notes":"Low-cost generic earbuds lack evidence to justify displacing established leaders in an unconstrained best-products search."}
+    ],
+    "broad-gas-grill": [
+      {"relevanceGrade":2,"notes":"Credible full-size smart grill; treated as a strong contender, not a frozen leader."},
+      {}
+    ],
+    "budget-robot-vacuum-800": [
+      {"relevanceGrade":2,"imageAccuracy":"correct","notes":"Current full-service dock robot with credible direct evidence; strong but not frozen leader."},
+      {"duplicateOfPosition":1,"imageAccuracy":"correct","notes":"Same T80S robot as position 1 bundled with accessories; family duplicate consumes a second slot."},
+      {},
+      {},
+      {"relevanceGrade":2,"imageAccuracy":"incorrect","notes":"Qrevo S-family contender; image URL identifies a Qrevo Edge 2 rather than the returned Qrevo S Pro."}
+    ],
+    "budget-coffee-maker-250": [
+      {"productPageAccuracy":"correct","priceAccuracy":"correct","availabilityAccuracy":"correct"},
+      {},
+      {"relevanceGrade":3,"productPageAccuracy":"correct","notes":"Frozen Cuisinart 14-cup leader remains eligible under budget."},
+      {},
+      {"duplicateOfPosition":4,"notes":"CE250 and CE251 are near-identical Ninja 12-cup model-family variants occupying separate slots."}
+    ],
+    "budget-65-inch-tv-1000": [
+      {"relevanceGrade":2,"notes":"Current QD-MiniLED TV from a mainstream maker; credible strong contender, although it is not one of the exact frozen leaders."}
+    ],
+    "budget-laptop-1000": [
+      {"notes":"Frozen XPS family match is potentially strong, but 8 GB RAM and third-party upgrade labeling make this exact configuration debatable rather than leader-grade."},
+      {"notes":"Frozen MacBook Neo contender, but the product URL labels a different color than the card; quality is acceptable while exact configuration certainty is limited."},
+      {}
+    ],
+    "budget-office-chair-500": [
+      {"relevanceGrade":2,"imageAccuracy":"incorrect","notes":"Credible ergonomic-chair contender under budget; returned image URL is malformed and does not identify an image asset."}
+    ],
+    "budget-air-purifier-300": [
+      {},
+      {},
+      {"relevanceGrade":3,"productPageAccuracy":"correct","priceAccuracy":"correct","notes":"Blue Pure 311i-family purifier is a frozen leader; exact Target page and $229.99 price independently checked."}
+    ],
+    "budget-cordless-mower-700": [
+      {"relevanceGrade":2,"productPageAccuracy":"correct","notes":"Mainstream brushless 40 V mower with exact manufacturer page; defensible strong contender under budget."}
+    ],
+    "budget-blender-300": [
+      {"relevanceGrade":2,"notes":"Established Ninja full-size blender family; strong contender under budget."}
+    ],
+    "spec-monitor-27-qhd-144": [
+      {"productPageAccuracy":"correct","notes":"Exact frozen grade-3 AOC leader and all numeric constraints are represented."},
+      {}
+    ],
+    "spec-laptop-32gb-1tb": [
+      {"identityIssue":"wrong_configuration","productPageAccuracy":"incorrect","notes":"Card states 32 GB while the linked Target configuration states 64 GB/2 TB. It still exceeds minimums, but exact identity is wrong."}
+    ],
+    "spec-drill-brushless-kit": [
+      {"relevanceGrade":2,"productPageAccuracy":"correct","notes":"Exact brushless drill kit; credible strong qualifying contender."},
+      {},
+      {"relevanceGrade":0,"hardRequirementViolations":["feature:brushless"],"notes":"Listing does not state brushless and therefore fails the explicit hard feature."},
+      {"relevanceGrade":0,"hardRequirementViolations":["feature:brushless"],"notes":"Listing does not state brushless and therefore fails the explicit hard feature."}
+    ],
+    "spec-dehumidifier-50-pint-pump": [
+      {"relevanceGrade":2,"notes":"Exact 50-pint pump-equipped model; strong qualifying contender."},
+      {}
+    ],
+    "spec-shop-vac-12-gallon": [
+      {"relevanceGrade":2,"productPageAccuracy":"correct","notes":"14-gallon wet/dry vacuum satisfies the at-least-12-gallon requirement."},
+      {"relevanceGrade":0,"hardRequirementViolations":["numeric_spec:at_least_12_gallons"],"notes":"The linked Bissell MultiClean is not evidenced as a 12-gallon-or-larger tank."},
+      {"relevanceGrade":0,"hardRequirementViolations":["numeric_spec:at_least_12_gallons"],"notes":"Portable MessMaster is far below the required 12-gallon capacity."},
+      {"relevanceGrade":0,"hardRequirementViolations":["numeric_spec:at_least_12_gallons"],"notes":"Card explicitly identifies a 1/2-gallon vacuum."}
+    ],
+    "brand-dewalt-drill-kit": [
+      {"productPageAccuracy":"correct","notes":"Correct brand, kit form, and budget; older acceptable model rather than independently established leader."}
+    ],
+    "brand-non-apple-anc-earbuds": [
+      {"relevanceGrade":3,"notes":"Independent comparative tests place Bose QuietComfort Ultra 2nd Gen among clear leaders."},
+      {"relevanceGrade":2,"notes":"Current flagship Samsung ANC earbuds are a defensible strong contender and meet the brand exclusion."}
+    ],
+    "brand-weber-napoleon-grill": [
+      {"relevanceGrade":2,"productPageAccuracy":"correct","notes":"Weber Spirit E-435 is a strong qualifying close relative of the frozen EP-435 leader."}
+    ],
+    "brand-roborock-alternative": [
+      {"relevanceGrade":2,"notes":"Strong current alternative with full dock; no Roborock brand leakage."},
+      {},
+      {}
+    ],
+    "size-tv-55-width-49": [
+      {"relevanceGrade":2,"notes":"Credible 55-inch mini-LED TV; listing includes an unnecessary soundbar bundle but no demonstrated width violation."}
+    ],
+    "exclude-drip-no-pods": [
+      {"relevanceGrade":2,"notes":"SCA-certified conventional drip brewer; strong qualifying contender."},
+      {"relevanceGrade":3,"notes":"Frozen Cuisinart leader and qualifying non-pod brewer."},
+      {},
+      {"relevanceGrade":3,"duplicateOfPosition":2,"notes":"Same Cuisinart 14-cup model family as position 2; duplicate consumes another slot."},
+      {}
+    ],
+    "exclude-leaf-no-jobsite": [
+      {},
+      {}
+    ],
+    "exclude-shop-vac-no-accessories": [
+      {},
+      {"relevanceGrade":2},
+      {},
+      {}
+    ],
+    "exclude-upright-no-stick": [
+      {"relevanceGrade":2,"notes":"Legitimate full-size lift-off upright with credible allergy/pet positioning."},
+      {},
+      {"relevanceGrade":2,"imageAccuracy":"correct","notes":"Established full-size allergy upright; credible strong contender."}
+    ],
+    "multi-robot-self-empty-600": [
+      {"relevanceGrade":2,"productPageAccuracy":"correct","imageAccuracy":"correct","notes":"Exact qualifying Roborock docked model under budget; strong contender."}
+    ],
+    "multi-electric-pressure-2300": [
+      {"relevanceGrade":2,"productPageAccuracy":"correct","notes":"Exact 2300 PSI electric model under budget; credible strong qualifying contender."}
+    ],
+    "multi-espresso-grinder-1000": [
+      {"relevanceGrade":2,"productPageAccuracy":"correct","notes":"Established integrated-grinder espresso machine under budget; strong contender, distinct from frozen Impress variant."}
+    ],
+    "multi-dehumidifier-basement-pump": [
+      {"relevanceGrade":2,"notes":"Exact pump-equipped 50-pint model; strong qualifying contender."},
+      {"relevanceGrade":2,"notes":"Exact pump-equipped 50-pint model; strong qualifying contender."},
+      {"relevanceGrade":2,"imageAccuracy":"correct","notes":"Pump-equipped 50-pint Cube model; strong qualifying contender."},
+      {"relevanceGrade":2,"notes":"Pump-equipped 50-pint GE model; strong qualifying contender."},
+      {"relevanceGrade":0,"hardRequirementViolations":["feature:built_in_pump"],"notes":"Listing states continuous drain but does not evidence the required built-in pump."}
+    ],
+    "niche-left-vertical-mouse": [
+      {"relevanceGrade":2,"productPageAccuracy":"correct","imageAccuracy":"correct","notes":"Exact left-handed semi-vertical model; strong qualifying niche contender."},
+      {"relevanceGrade":0,"hardRequirementViolations":["feature:left_handed"],"notes":"Razer Pro Click V2 Vertical is a right-handed design and fails the explicit left-handed requirement."}
+    ],
+    "niche-inverter-generator": [
+      {"relevanceGrade":0,"hardRequirementViolations":["numeric_spec:at_least_2000_running_watts"],"evidenceUrls":["https://aipower.com/products/gxs2300i-inverter-generator"],"notes":"Manufacturer specifies 1,800 running watts; 2,300 is starting watts, so the result fails the explicit running-watt requirement."},
+      {"productPageAccuracy":"correct","imageAccuracy":"correct","notes":"Exact frozen grade-2 Generac iQ3500 contender and qualifying output."}
+    ]
+  }
+}

@@ -493,4 +493,58 @@ describe("structured requirement extraction", () => {
       ),
     );
   });
+
+  it("keeps explicit commerce features deterministic across product categories", () => {
+    const espresso = extractStructuredRequirements({
+      priorities: "built-in burr grinder and milk steaming wand",
+      query: "espresso machine",
+    });
+    const dehumidifier = extractStructuredRequirements({
+      priorities: "50-pint capacity, built-in pump, continuous drain",
+      query: "basement dehumidifier",
+    });
+    const mouse = extractStructuredRequirements({
+      priorities: "left-handed and wireless",
+      query: "ergonomic vertical mouse",
+    });
+    const generator = extractStructuredRequirements({
+      priorities: "at least 2,000 running watts and CO shutoff",
+      query: "portable inverter generator",
+    });
+
+    assert.deepEqual(
+      espresso.requiredConstraints
+        .map((item) => item.normalizedMeaning)
+        .filter(Boolean)
+        .sort(),
+      ["built in burr grinder", "steam wand"],
+    );
+    assert.ok(
+      dehumidifier.requiredConstraints.some(
+        (item) => item.normalizedMeaning === "built in pump",
+      ),
+    );
+    assert.ok(
+      dehumidifier.requiredConstraints.some(
+        (item) => item.normalizedMeaning === "continuous drain",
+      ),
+    );
+    assert.deepEqual(
+      mouse.requiredConstraints
+        .map((item) => item.normalizedMeaning)
+        .filter(Boolean)
+        .sort(),
+      ["left handed", "wireless"],
+    );
+    assert.ok(
+      generator.requiredConstraints.some(
+        (item) => item.normalizedMeaning === "co shutoff",
+      ),
+    );
+    assert.ok(
+      generator.specConstraints.some(
+        (item) => item.spec === "runningWattage" && item.value === 2000,
+      ),
+    );
+  });
 });

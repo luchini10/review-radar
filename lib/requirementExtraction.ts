@@ -1250,10 +1250,9 @@ function classifyImportantDetails(value: string | undefined) {
   };
 }
 
-// Numeric/boolean performance specs are extracted in SHADOW MODE: collected and
-// returned so debugging and later phases can read them, but deliberately kept
-// out of `summary` and every other constraint bucket so no current consumer
-// (search, validation, scoring, the LLM prompt) changes behavior.
+// Numeric and boolean performance specs stay separate from the prose buckets.
+// Selection consumes this typed collection directly, which avoids reducing
+// exact amounts or concrete booleans to ambiguous free-form feature strings.
 function collectSpecConstraints(
   input: RecommendationApiRequest,
   selectedFeatures: RecommendationApiRequest["selectedFeatures"],

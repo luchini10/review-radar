@@ -13,20 +13,20 @@ afterEach(() => {
 });
 
 describe("market-quality discovery orchestration", () => {
-  it("starts all three neutral Shopping searches while the scout plan is pending", async () => {
+  it("starts both neutral Shopping paths while the scout plan is pending", async () => {
     process.env.SERPER_API_KEY = "test-only-key";
     let finishPlan;
-    let markThreeSearchesStarted;
+    let markTwoSearchesStarted;
     let fetchCalls = 0;
-    const threeSearchesStarted = new Promise((resolve) => {
-      markThreeSearchesStarted = resolve;
+    const twoSearchesStarted = new Promise((resolve) => {
+      markTwoSearchesStarted = resolve;
     });
     const pendingPlan = new Promise((resolve) => {
       finishPlan = resolve;
     });
     globalThis.fetch = async () => {
       fetchCalls += 1;
-      if (fetchCalls === 3) markThreeSearchesStarted();
+      if (fetchCalls === 2) markTwoSearchesStarted();
       return new Response(JSON.stringify({ shopping: [] }), {
         headers: { "content-type": "application/json" },
         status: 200,
@@ -42,22 +42,22 @@ describe("market-quality discovery orchestration", () => {
       plan: pendingPlan,
     });
 
-    await threeSearchesStarted;
-    assert.equal(fetchCalls, 3);
+    await twoSearchesStarted;
+    assert.equal(fetchCalls, 2);
     finishPlan({
       queries: [],
       targets: [],
     });
     const selected = await selectionPromise;
 
-    assert.equal(selected.telemetry.logicalSearchCalls, 3);
+    assert.equal(selected.telemetry.logicalSearchCalls, 2);
     assert.deepEqual(selected.telemetry.marketTargetQueries, []);
     assert.deepEqual(selected.telemetry.marketTargets, []);
     assert.deepEqual(selected.telemetry.returnedCandidateSignals, []);
     assert.equal(selected.result.recommendations.length, 0);
   });
 
-  it("adds no more than three exact Shopping searches and three strong-target page searches", async () => {
+  it("uses two neutral, four exact-target, and at most three target-page searches", async () => {
     process.env.SERPER_API_KEY = "test-only-key";
     let fetchCalls = 0;
     globalThis.fetch = async () => {
@@ -72,6 +72,13 @@ describe("market-quality discovery orchestration", () => {
         aliases: [],
         brand: `Brand${consensusOrder}`,
         consensusOrder,
+        discoveryPath: [
+          "market_leader",
+          "request_fit",
+          "coverage_gap",
+          "market_leader",
+          "request_fit",
+        ][consensusOrder],
         evidenceTier: "strong",
         model,
         sourceUrls: ["https://www.rtings.com/example"],
@@ -84,12 +91,12 @@ describe("market-quality discovery orchestration", () => {
         priorities: "self-emptying",
         query: "robot vacuum",
       },
-      plan: { queries: [], targets },
+      plan: { targets },
     });
 
     assert.equal(fetchCalls, 9);
-    assert.equal(selected.telemetry.neutralQueries.length, 3);
-    assert.equal(selected.telemetry.marketTargetQueries.length, 3);
+    assert.equal(selected.telemetry.neutralQueries.length, 2);
+    assert.equal(selected.telemetry.marketTargetQueries.length, 4);
     assert.equal(selected.telemetry.logicalSearchCalls, 9);
     assert.equal(selected.telemetry.resolutionQueries.length, 3);
     assert.deepEqual(
@@ -98,7 +105,35 @@ describe("market-quality discovery orchestration", () => {
     );
     assert.deepEqual(
       selected.telemetry.marketTargetQueries.map((query) => query.split(" ")[1]),
-      ["A100", "B200", "C300"],
+      ["A100", "B200", "C300", "D400"],
+    );
+    assert.equal(
+      selected.telemetry.discoveryStopReason,
+      "expected_target_search_limit",
+    );
+    assert.deepEqual(
+      selected.telemetry.expectedTargetCoverage.map(({ model, status }) => ({
+        model,
+        status,
+      })),
+      [
+        { model: "A100", status: "missing_after_target_search" },
+        { model: "B200", status: "missing_after_target_search" },
+        { model: "C300", status: "missing_after_target_search" },
+        { model: "D400", status: "missing_after_target_search" },
+        { model: "E500", status: "missing_not_searched_limit" },
+      ],
+    );
+    assert.deepEqual(
+      selected.telemetry.discoveryPathContributions.map(
+        ({ path, queries }) => ({ path, queries: queries.length }),
+      ),
+      [
+        { path: "broad_commerce", queries: 1 },
+        { path: "request_fit_commerce", queries: 1 },
+        { path: "expected_target_commerce", queries: 4 },
+        { path: "expected_target_page", queries: 3 },
+      ],
     );
   });
 
@@ -158,7 +193,7 @@ describe("market-quality discovery orchestration", () => {
       },
     });
 
-    assert.equal(selected.telemetry.logicalSearchCalls, 5);
+    assert.equal(selected.telemetry.logicalSearchCalls, 4);
     assert.equal(selected.telemetry.marketEvidenceCandidates, 1);
     assert.equal(selected.telemetry.rankedCandidates[0].evidenceTier, "strong");
     assert.deepEqual(selected.telemetry.resolutionQueries, [
@@ -369,7 +404,7 @@ describe("market-quality discovery orchestration", () => {
 
     const selected = await selectProducts({
       input: { budget: "$300", query: "robot vacuum" },
-      plan: { queries: [], targets: [] },
+      plan: { targets: [] },
     });
 
     assert.equal(selected.telemetry.rejectedByCondition, 1);

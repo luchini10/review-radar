@@ -10,11 +10,21 @@ describe("product-source safety", () => {
   it("rejects editorial and community hosts while allowing commerce pages", () => {
     assert.equal(isNonProductSource("https://www.nytimes.com/wirecutter/reviews/vacuums"), true);
     assert.equal(isNonProductSource("https://www.reddit.com/r/VacuumCleaners"), true);
+    assert.equal(
+      isNonProductSource("https://editorialist.com/p/example-air-purifier"),
+      true,
+    );
     assert.equal(isNonProductSource("https://www.walmart.com/ip/123"), false);
     assert.equal(isNonProductSource("https://www.acer.com/us-en/monitors/nitro/xv2"), false);
     assert.equal(
       isNonProductSource(
         "https://support.sharkninja.com/product/shark-ur2360s-robot-vacuum",
+      ),
+      true,
+    );
+    assert.equal(
+      isNonProductSource(
+        "https://www.asus.com/us/monitors/model/helpdesk_knowledge",
       ),
       true,
     );

@@ -24,6 +24,7 @@ const NON_PRODUCT_SOURCE_DOMAINS = [
   "nymag.com",
   "thestrategist.com",
   "engadget.com",
+  "editorialist.com",
   "digitaltrends.com",
   "soundguys.com",
   "housebeautiful.com",
@@ -69,7 +70,7 @@ const NON_PRODUCT_HOST_LABELS = new Set([
 ]);
 
 const NON_PRODUCT_PATH_TOKEN =
-  /(?:^|[-_])(?:community|docs|documentation|downloads?|help|knowledge-?base|manuals?|support)(?:[-_]|$)/i;
+  /(?:^|[-_])(?:community|docs|documentation|downloads?|help(?:desk)?(?:[-_]knowledge)?|knowledge-?base|manuals?|support)(?:[-_]|$)/i;
 
 function hostOf(input: string) {
   try {

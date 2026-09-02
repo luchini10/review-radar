@@ -1,0 +1,211 @@
+diff --git a/lib/marketScout.ts b/lib/marketScout.ts
+index 5257e7c..1388f02 100644
+--- a/lib/marketScout.ts
++++ b/lib/marketScout.ts
+@@ -41,7 +41,6 @@ export type MarketScoutTarget = {
+ };
+ 
+ export type MarketScoutPlan = {
+-  queries: string[];
+   targets: MarketScoutTarget[];
+ };
+ 
+@@ -55,7 +54,6 @@ export type MarketScoutFallbackReason =
+ 
+ export type MarketScoutTelemetry = {
+   acceptedSourceUrls: number;
+-  commerceCandidateCount: number;
+   evidenceTiers: Record<MarketEvidenceTier, number>;
+   fallbackReason?: MarketScoutFallbackReason;
+   hostedSearchCalls: number;
+@@ -250,8 +248,8 @@ export function neutralShoppingQueries(input: RecommendationApiRequest) {
+   ]);
+ }
+ 
+-function fallbackPlan(input: RecommendationApiRequest): MarketScoutPlan {
+-  return { queries: neutralShoppingQueries(input), targets: [] };
++function fallbackPlan(): MarketScoutPlan {
++  return { targets: [] };
+ }
+ 
+ function normalizedIdentity(value: string) {
+@@ -467,10 +465,7 @@ function emptyValidationStats(): ValidationStats {
+   };
+ }
+ 
+-function validateScoutResponse(
+-  response: unknown,
+-  input: RecommendationApiRequest,
+-): ValidatedScoutResult {
++function validateScoutResponse(response: unknown): ValidatedScoutResult {
+   const hostedSearchCalls = responseHostedSearchCalls(response);
+   const usage = responseUsage(response);
+   if (hostedSearchCalls > MAX_MARKET_SCOUT_TOOL_CALLS) {
+@@ -578,7 +573,7 @@ function validateScoutResponse(
+ 
+   return {
+     ...stats,
+-    plan: { queries: neutralShoppingQueries(input), targets },
++    plan: { targets },
+   };
+ }
+ 
+@@ -690,12 +685,11 @@ export async function buildMarketScoutPlan(options: {
+     providerUsage = responseUsage(response);
+     hostedSearchCalls = responseHostedSearchCalls(response);
+     throwIfRequestCancelled(operationSignal);
+-    const validated = validateScoutResponse(response, input);
++    const validated = validateScoutResponse(response);
+     return {
+       plan: validated.plan,
+       telemetry: {
+         acceptedSourceUrls: validated.acceptedSourceUrls,
+-        commerceCandidateCount: 0,
+         evidenceTiers: validated.evidenceTiers,
+         hostedSearchCalls,
+         inputTokens: providerUsage.inputTokens,
+@@ -715,10 +709,9 @@ export async function buildMarketScoutPlan(options: {
+     const validationError =
+       error instanceof MarketScoutValidationError ? error : null;
+     return {
+-      plan: fallbackPlan(input),
++      plan: fallbackPlan(),
+       telemetry: {
+         acceptedSourceUrls: validationError?.stats.acceptedSourceUrls || 0,
+-        commerceCandidateCount: 0,
+         evidenceTiers:
+           validationError?.stats.evidenceTiers || emptyValidationStats().evidenceTiers,
+         fallbackReason: internallyTimedOut ? "timeout" : fallbackReasonForError(error),
+diff --git a/lib/openaiClient.ts b/lib/openaiClient.ts
+index 22ac975..a9e9470 100644
+--- a/lib/openaiClient.ts
++++ b/lib/openaiClient.ts
+@@ -1,6 +1,5 @@
+ import type {
+   ResponseCreateParamsNonStreaming,
+-  ResponseRetrieveParamsNonStreaming,
+ } from "openai/resources/responses/responses";
+ 
+ type OpenAIClient = {
+@@ -9,15 +8,6 @@ type OpenAIClient = {
+       options: ResponseCreateParamsNonStreaming | Record<string, unknown>,
+       requestOptions?: Record<string, unknown>,
+     ) => Promise<unknown>;
+-    retrieve: (
+-      responseId: string,
+-      query?: ResponseRetrieveParamsNonStreaming | Record<string, unknown>,
+-      requestOptions?: Record<string, unknown>,
+-    ) => Promise<unknown>;
+-    cancel: (
+-      responseId: string,
+-      requestOptions?: Record<string, unknown>,
+-    ) => Promise<unknown>;
+   };
+ };
+ 
+diff --git a/lib/productSelection.ts b/lib/productSelection.ts
+index d7845c7..6b77294 100644
+--- a/lib/productSelection.ts
++++ b/lib/productSelection.ts
+@@ -84,6 +84,22 @@ type AcceptedSelection = {
+ 
+ export type ProductSelectionTelemetry = {
+   assetCandidates: number;
++  candidateFunnel: {
++    deduplicated: Array<{ name: string; productUrl: string }>;
++    discovered: Array<{ name: string; productUrl: string }>;
++    marketCompatible: Array<{ name: string; productUrl: string }>;
++    prefilterRejected: Array<{ name: string; reason: string }>;
++    prefiltered: Array<{ name: string; productUrl: string }>;
++    ranked: Array<{ name: string; productUrl: string }>;
++    returned: Array<{ name: string; productUrl: string }>;
++    verified: Array<{
++      availabilityStatus: string;
++      name: string;
++      pageUrl: string;
++      priceStatus: string;
++      requirementFailures: string[];
++    }>;
++  };
+   candidatesAfterHardFilters: number;
+   candidatesDiscovered: number;
+   candidatesReturned: number;
+@@ -2396,11 +2412,38 @@ export async function selectProducts(options: {
+       },
+     ];
+   });
++  const traceCandidates = (candidates: RawProductCandidate[]) =>
++    candidates.map((candidate) => ({
++      name: candidate.name,
++      productUrl: candidate.productUrl,
++    }));
+ 
+   return {
+     result: { recommendations },
+     telemetry: {
+       assetCandidates: assetCandidatesCount,
++      candidateFunnel: {
++        deduplicated: traceCandidates(deduped.candidates),
++        discovered: traceCandidates(discovered),
++        marketCompatible: traceCandidates(marketCompatibleCandidates),
++        prefilterRejected: prefiltered.rejected.map((candidate) => ({
++          name: candidate.name,
++          reason: candidate.reason,
++        })),
++        prefiltered: traceCandidates(prefiltered.candidates),
++        ranked: traceCandidates(ranked),
++        returned: recommendations.map((recommendation) => ({
++          name: recommendation.name,
++          productUrl: recommendation.productPageUrl,
++        })),
++        verified: verifiedCandidates.map((candidate) => ({
++          availabilityStatus: candidate.availabilityStatus,
++          name: candidate.name,
++          pageUrl: candidate.pageUrl,
++          priceStatus: candidate.priceStatus,
++          requirementFailures: candidate.requirementFailures,
++        })),
++      },
+       candidatesAfterHardFilters: marketCompatibleCandidates.length,
+       candidatesDiscovered: discovered.length,
+       candidatesReturned: recommendations.length,
+diff --git a/lib/productTypeIntent.ts b/lib/productTypeIntent.ts
+index c063739..6e92c56 100644
+--- a/lib/productTypeIntent.ts
++++ b/lib/productTypeIntent.ts
+@@ -116,6 +116,17 @@ const PRODUCT_TYPE_RULES: ProductTypeRule[] = [
+     complements: SHOP_VAC_COMPLEMENT_PATTERN,
+     exclusiveComplements: STANDALONE_SHOP_VAC_COMPLEMENT_PATTERN,
+   },
++  {
++    id: "drip_coffee_maker",
++    requested:
++      /\b(?:(?:automatic\s+)?drip|filter)\s+coffee\s+(?:maker|machine)\b/i,
++    allowed:
++      /\b(?:(?:automatic\s+)?drip|filter)\s+coffee\s+(?:maker|machine)\b|\b(?:automatic|programmable)\s+coffee\s+maker\b|\b\d{1,2}[-\s]?cup\s+(?:programmable\s+)?coffee\s+maker\b/i,
++    blocked:
++      /\b(?:french\s+press|pour[-\s]?over|espresso\s+(?:maker|machine)|moka\s+pot|cold[-\s]?brew\s+(?:maker|system)|coffee\s+percolator|single[-\s]?serve\s+(?:pod\s+)?coffee\s+maker|pod\s+coffee\s+(?:maker|machine)|coffee\s+grinder)\b/i,
++    complements:
++      /\b(?:replacement\s+)?(?:coffee\s+)?(?:carafe|filter\s+basket|water\s+filter|brew\s+basket)\b/i,
++  },
+   {
+     id: "toaster_oven",
+     requested:
+diff --git a/package.json b/package.json
+index 674401f..1e5b7d1 100644
+--- a/package.json
++++ b/package.json
+@@ -5,10 +5,11 @@
+   "scripts": {
+     "dev": "next dev",
+     "build": "next build",
++    "benchmark:accuracy:evaluate": "node --no-warnings scripts/evaluate-accuracy-benchmark.mjs",
++    "benchmark:accuracy:run": "node --no-warnings scripts/run-accuracy-benchmark.mjs",
+     "start": "next start",
+     "lint": "eslint",
+-    "qa:live-accuracy": "node --no-warnings scripts/run-pr13-quality-matrix.mjs",
+-    "qa:pr13": "node --no-warnings scripts/run-pr13-quality-matrix.mjs --benchmark=pr13-market-leaders-v2026-09a",
++    "qa:live-accuracy": "node --no-warnings scripts/run-live-accuracy-matrix.mjs",
+     "typecheck": "tsc --noEmit",
+     "test": "node --no-warnings --test tests/*.test.mjs",
+     "test:e2e": "playwright test",
