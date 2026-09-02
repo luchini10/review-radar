@@ -205,7 +205,7 @@ async function handlePost(
       );
     }
     const debug = {
-      architecture: "market_quality_live_v5_canonical_commerce",
+      architecture: "market_quality_live_v4_independent_concurrent",
       marketScout: scouted.telemetry,
       openAiCalls: scouted.telemetry.openAiCalls,
       search: selected.telemetry,

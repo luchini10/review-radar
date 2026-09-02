@@ -981,8 +981,6 @@ describe("selection correctness", () => {
 
   it("keeps the discovery and resolution work within the fifteen-operation ceiling", () => {
     assert.deepEqual(operationLimits, {
-      canonicalCommerceOfferLookups: 3,
-      canonicalCommerceProductSearches: 3,
       discoverySearches: 6,
       neutralSearches: 3,
       resolutionCandidates: 9,

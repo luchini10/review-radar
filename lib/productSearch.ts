@@ -339,11 +339,10 @@ export function likelyAccessory(title: string) {
   );
 }
 
-export function candidateFromFields(input: {
+function candidateFromFields(input: {
   category: string;
   commerceSignals?: RawProductCandidate["commerceSignals"];
   currentShoppingOffer?: boolean;
-  discoveryProvider?: RawProductCandidate["discoveryProvider"];
   imageUrl: string;
   price: number | null;
   retailer?: string | null;
@@ -365,9 +364,6 @@ export function candidateFromFields(input: {
     category: input.category,
     ...(input.commerceSignals ? { commerceSignals: input.commerceSignals } : {}),
     ...(input.currentShoppingOffer ? { currentShoppingOffer: true } : {}),
-    ...(input.discoveryProvider
-      ? { discoveryProvider: input.discoveryProvider }
-      : {}),
     dimensions: {
       depth,
       height,
